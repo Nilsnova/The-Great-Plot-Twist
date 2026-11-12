@@ -13,7 +13,7 @@ const freezePage = page => Object.freeze({...page, text: Object.freeze(page.text
 
 export const TUTORIAL_PAGES = Object.freeze([
   {id: 'island', title: 'Your island and coins',
-    text: ['Every game is one island: defend it alone or with friends.', 'You start with 🪙 100 coins.', 'Win waves to earn more.'],
+    text: ['Every game is one island: defend it alone or with friends.', 'You start with 🪙 200 coins.', 'Win waves to earn more.'],
     alt: 'A small house and a coin',
     art: [art('island-house.png', 64, 64, 2), art('coin-icon.png', 16, 16, 4)]},
   {id: 'build', title: 'Build',

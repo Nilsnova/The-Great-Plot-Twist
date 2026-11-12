@@ -8,7 +8,7 @@
 >
 > **Never** paste keys, SMTP passwords, tokens or student numbers into a chat, an issue or a commit message. Student numbers go only into the README line of their owner.
 >
-> Last updated: Wed 11 Nov 2026, late evening.
+> Last updated: Thu 12 Nov 2026, early morning (v3 is live).
 
 ## 1. If you jump in now (30 minutes to start)
 
@@ -19,13 +19,13 @@ The game is built and live; nobody waits for anyone. You extend it.
 - [ ] Give your coding agent the prompt in [contribute/AGENT-PROMPT.md](contribute/AGENT-PROMPT.md), pick ONE task below, and open a draft pull request from your own account, titled with the task ID.
 - [ ] Every member needs at least one merged pull request of their own before Sun 22 Nov (course rule: every member contributes code).
 
-## 2. Open tasks you can pick (small, independent; updated Wed 11 Nov, evening)
+## 2. Open tasks you can pick (small, independent; updated Thu 12 Nov)
 
 | ID | Task | Where | Size |
 |---|---|---|---|
-| T1 | **A new tower**: e.g. a harpoon tower (slows ships) or a fire tower (damage over time): stats in the simulation, a sprite, a build-card line, tests | `frontend/src/pirates/sim.js`, `frontend/scripts/pixel_art/pirates.py`, `docs/TOWER-DEFENSE.md` | M |
-| T2 | **A new pirate ship type** (fast raider or a ship that targets towers): sprite, stats, appears from wave N, tests | same as T1 | M |
-| T3 | **Balance pass**: play waves 1–15 with friends, write down what felt too easy or too hard, tune the numbers in the simulation's CONFIG, keep the balance tests green | `frontend/src/pirates/sim.js` | S–M |
+| T1 | **A new tower**: a harpoon tower (slows ships) or a fire tower (damage over time), planned for waves 12+ in [GAME-V3.md](GAME-V3.md) §5: stats in the simulation, a cartoon drawing, a build-card line, a campaign unlock, tests | `frontend/src/pirates/sim.js`, `frontend/src/art/`, `backend/content/campaign.json` | M |
+| T2 | **A new pirate type** (raiders, brutes, ironclads and dreadnoughts exist; e.g. a ship that targets towers): drawing, stats, appears from wave N, tests | same as T1 | M |
+| T3 | **Balance pass**: play waves 1–15 (and 30+ if you get there) with friends, write down what felt too easy or too hard, tune the numbers in the simulation's CONFIG, keep the balance and late-game tests green | `frontend/src/pirates/sim.js` | S–M |
 | T4 | **Sounds**: better cannon, mortar, musket, warship horn and victory sounds with the procedural audio | `frontend/src/audio/pirates.js` | S |
 | T5 | **Island decoration**: flags that show your best wave, a statue at wave 25, trees that grow with houses | `frontend/src/island/`, art | M |
 | T6 | **Harbor idea**: one more simple stall on real data (e.g. "Will it rain in Lisbon tomorrow?" on the weather API), same card style | `frontend/src/harbor/`, backend weather | M |
@@ -34,9 +34,9 @@ The game is built and live; nobody waits for anyone. You extend it.
 | T9 | **Invalid-input tests** for one route you understand (empty, too long, wrong type, repeated click) | `backend/server/tests/` | S |
 | T10 | **Your README line**: your name and student number (by Fri 20 Nov) | `README.md` | XS |
 
-**Live since Wed 11 Nov, late evening:** tower defense v2 plus the owner's play-test round: the wave bar at the top, a musket button (hold it or F), free aim (click anywhere to shoot that way), one fast walking speed, a foldable goals panel, a closable "Wave won" card, a 5 s countdown and an 8 s break, about twice the loot (new players start with 🪙 200), market calls decided after 5 minutes, and up to 30 matches on the board. Merge `main` before you start; build on [TOWER-DEFENSE.md](TOWER-DEFENSE.md).
+**Live since Thu 12 Nov, early morning: v3** ([GAME-V3.md](GAME-V3.md) is the contract, [TOWER-DEFENSE.md](TOWER-DEFENSE.md) stays valid where v3 does not change it). Play › **Create a game** or **Join** with a code or link, a lobby (code, link, QR, who is online) and **Start**; up to 10 players on **one shared island**, each with their own colour; Pause between waves and Continue later. A voiced narrator with captions introduces each new thing. Pirates come ashore and fight on foot (cutlass), an inner wall ring, rebuilding walls. Captains have hp, can fall, and a teammate holds E to help them up for coins; the wave is lost if the heart falls or every captain is down. The captain's skill tree and a weapon shop. A campaign that opens things by wave (the Harbor market stall after wave 4, a wreck at 6, the football board at 7, the Tech hub with tower skills at 8, tower levels 4–5 at 12–20, new pirate types at 12/20/30/50, the final battle at 100). Clean cartoon art drawn in code. Merge `main` before you start.
 
-**Being built right now (do not pick, they change `sim.js`, the island and the Captain card):** pirates that come ashore and fight on foot (close combat with a cutlass), a ring of inner walls and rebuilding broken walls; the captain's skill tree (Marksman, Brawler, Shipwright) and a weapon shop (pistols, blunderbuss, long rifle, fire bombs); a "How to play" tutorial in the Menu and a longer first-run intro. T1–T3 below wait until these are merged (check §7).
+**Next by the owner (do not pick):** sailing out to sea with the repaired wreck (GAME-V3.md §4, wave 10, phase 2), the missing narrator audio.
 
 ## 3. Every member, before the freeze (walkthrough = 20% of the grade)
 
@@ -81,7 +81,7 @@ The fortune teller was removed from the game on 11 Nov at the owner's request (n
 
 ## 5. Before the class demo (the new game)
 
-- [ ] **Two-phone test** (20 minutes): presenter laptop on the projector, signed in with the host account, press **J**. Two phones scan the QR and press Play. Check: both appear, build a cannon, ring the bell and win a wave, visit each other's island by code, place a 10 🪙 stake at the Harbor, and fight one Pirate Point wave together with the three lamps.
+- [ ] **Two-phone test** (20 minutes): presenter laptop on the projector, signed in. Play › **Create a game**, show the lobby QR. Two phones scan it and join; check that all three appear in the lobby in different colours. Press **Start** (the narrator speaks), build a cannon, ring the bell and win a wave together, let one captain fall and help them up with E, and check the Harbor stall stays closed until wave 4.
 - [ ] **Presenter laptop check** (5 minutes): on power, full screen, `https://the-great-plot-twist.vercel.app/?demo=1&captains=40&perf=1`; the FPS number stays around 50 or higher.
 - [ ] **Two rehearsals** of the 5-minute script in [PRESENTER-SCRIPT.md](PRESENTER-SCRIPT.md) (it is rewritten for the pirates after the freeze), with roles: who drives the projector, who holds the phones, who explains which part.
 - [ ] **The day before:** open the Supabase dashboard once, so a sleeping free project wakes up.
@@ -92,12 +92,12 @@ The fortune teller was removed from the game on 11 Nov at the owner's request (n
 - [ ] README complete by Fri 20 Nov: deployed URL, every member's name and student number, the install / run / test commands on the first screen.
 - [ ] One member submits the repository link on Moodle by **Sun 22 Nov** (deadline Mon 23 Nov, 23:59; later commits do not count); a named backup can submit if needed. Keep a screenshot of the confirmation.
 
-## 7. Status on Wed 11 Nov, ~20:30: multiplayer fixed and tested
+## 7. Status on Thu 12 Nov, ~05:30: v3 is live
 
-- **Live (main `2d0fbd9`):** tower defense v2 plus a multiplayer fix round: the host joins his own island room, musket shots pass the live room filter, simultaneous "Next wave" ends in one wave, co-op builds reach everyone within a second, friends who arrive mid-wave join automatically, a slow player keeps their loot, Pirate Point re-reads its towers before each battle. Polish: buildings show their level, pips and crew outside waves; a visible musket shot (pose, tracer, puff, "F · Musket" hint); the phone wave bar no longer covers the joystick; red edge flash on damage; coins count up after loot.
-- **New check:** `npm run test:mp` (frontend) plays a wave with 2 and then 4 browser pages on a shared fake world and asserts identical ships every second, shots crossing pages, loot, a shared Next wave and a mid-wave join.
-- **Checks before release:** frontend 2,563 tests (one Harbor overview test fails on main too, see below), build, budgets, text lint, `test:mp`, `test:a11y`, `test:demo` green; live smoke 0 failures; weather, Binance, Finnhub and football (Brazil) answered live.
-- **Known small issues (good first tasks):** `tests/harbor/cards.test.js` "lists the three stalls…" fails (cannot find the match stall button; also on the previous release); on phones the break panel is partly covered by toasts and the "Victory" caption (Auto next wave checkbox); Pirate Point with four players and lamps is reviewed but not yet in `test:mp`; a refused live room is not retried (a page reload fixes it).
+- **Live (main):** v3, see §2 and [GAME-V3.md](GAME-V3.md). The database has six new migrations (20261112020000 inner walls to 20261112070000 tower tiers), applied in order, each stored text checked against its file (md5), only the server may run the new functions (security advisor: nothing new above INFO).
+- **Checks before release:** frontend 2,744 tests, build, budgets, text lint, `test:mp` (4 pages: same ships and boarders on every screen, a fall and a revive on the same tick, a tower skill seen by all), `test:a11y`, `test:demo`, `test:market` green; backend 15,919 tests and ruff green; 87 SQL tests on a scratch Postgres; an independent review of the four new money migrations (two fixes taken).
+- **Live check:** health ok, security headers, flags, signed-out 401s and the build stamp were checked in a browser. Vercel's bot checkpoint now answers scripted requests (`curl`, `scripts/smoke-live.sh`) with a challenge page, so run the live check from a browser or ask the owner.
+- **Known small issues (good first tasks):** in a friend's game the arrival banner still says "Your island"; on phones the game chip covers the top of the goals strip; `docs/HOW-TO-PLAY.md` predates v3; five stars overlap a little over a level-5 building; a firing cannon or mortar shows the level-1 frame for a moment; the narrator lines without audio show as captions only. The late game (waves 30–100) is tuned on a headless model, not by playing (T3).
 
 ## 8. Small follow-ups (good first tasks if your lane waits)
 
