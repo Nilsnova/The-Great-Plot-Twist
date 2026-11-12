@@ -100,14 +100,45 @@ def test_wave_revive_changes_only_the_tavern_block():
     assert f"(100 - {load_island().revive.tavern_percent})" in after
 
 
-def test_the_migration_is_the_last_word_on_both_functions():
+def test_the_migration_is_the_last_word_on_wave_revive():
     later = [
         path.name
         for path in sorted(MIGRATIONS.glob("*.sql"))
         if path.name > ROLES.name
-        and re.search(r"function public\.(island_specialise|wave_revive)\(", path.read_text())
+        and re.search(r"function public\.wave_revive\(", path.read_text())
     ]
     assert later == []
+
+
+# The tests above pin 20261112090000 itself: it is applied to production and never edited, so what
+# it says about the tech hub's text stays true. What matters for the game is the LATEST definition
+# of the rule and of island_specialise(): a later migration (20261112100000_research_tiers.sql)
+# restates both, and one that forgot the house roles would silently remove them. So the latest
+# definition of each is checked to keep every pair and the house branch of this migration.
+def latest_with(pattern: str) -> tuple[str, str]:
+    for path in sorted(MIGRATIONS.glob("*.sql"), reverse=True):
+        text = path.read_text()
+        if re.search(pattern, text):
+            return path.name, text
+    raise AssertionError(pattern)
+
+
+def test_the_latest_definitions_keep_every_house_role():
+    name, text = latest_with(r"add constraint islet_buildings_spec_fits_kind")
+    rule = re.search(
+        r"add constraint islet_buildings_spec_fits_kind check \((.*?)\n  \);", text, re.S
+    )
+    assert rule, name
+    pairs = set(re.findall(r"\('(\w+)', '(\w+)'\)", rule.group(1)))
+    assert {("house", role) for role in HOUSE_ROLES} <= pairs, name
+    assert {(kind, spec) for kind, specs in RESEARCH_SPECS.items() for spec in specs} <= pairs
+
+    name, text = latest_with(r"create or replace function public\.island_specialise\(")
+    body = function(text, "island_specialise")
+    for role in HOUSE_ROLES:
+        assert f"('house', '{role}')" in body, name
+    assert HOUSE_LEVEL in body, name
+    assert f"v_building.level < {HOUSE_ROLE_LEVEL}" in body, name
 
 
 def test_the_workshop_charges_nothing_because_wall_repairs_are_free():

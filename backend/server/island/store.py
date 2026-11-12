@@ -39,7 +39,7 @@ from pydantic import AwareDatetime, BaseModel, StrictBool, StrictInt, StrictStr,
 from server.errors import ApiError
 from server.game.islet_store import player_not_set_up
 from server.island.codes import CODE_FORMAT, new_code
-from server.island.rules import Built
+from server.island.rules import Built, ResearchTier
 from server.supabase_admin import SupabaseAdmin, SupabaseRejected
 
 logger = logging.getLogger(__name__)
@@ -81,6 +81,10 @@ class BuildingRow(BaseModel):
 
 class ResearchRow(BaseModel):
     branch: StrictStr
+    # 20261112100000_research_tiers.sql: the tier reached and the choices of tiers 2 and 3.
+    tier: StrictInt = 1
+    choice_2: StrictStr | None = None
+    choice_3: StrictStr | None = None
 
 
 class PointBuildingRow(BaseModel):
@@ -311,16 +315,21 @@ async def read_built_spots(admin: SupabaseAdmin, player_id: str) -> dict[str, Bu
     return built
 
 
-async def read_research(admin: SupabaseAdmin, owner: str) -> tuple[str, ...]:
-    """The research branches done on the island of `owner` (island_research), in branch order."""
+async def read_research(admin: SupabaseAdmin, owner: str) -> dict[str, ResearchTier]:
+    """The research done on the island of `owner` (island_research): branch -> its tier and the
+    choices of tiers 2 and 3 (docs/GAME-V3.md section 5.1), in branch order."""
     query = {
-        "select": "branch",
+        "select": "branch,tier,choice_2,choice_3",
         "island_owner": f"eq.{owner}",
         "order": "branch.asc",
         "limit": str(MAX_RESEARCH_ROWS),
     }
     rows = await admin.select_rows("island_research", query)
-    return tuple(read_model(ResearchRow, row).branch for row in rows)
+    done = {}
+    for row in rows:
+        checked = read_model(ResearchRow, row)
+        done[checked.branch] = ResearchTier(checked.tier, checked.choice_2, checked.choice_3)
+    return done
 
 
 async def read_progress(admin: SupabaseAdmin, player_id: str) -> Progress:

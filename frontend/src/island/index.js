@@ -29,7 +29,7 @@ import {SPOTS, KINDS, BELL, CABIN, ISLAND_PLACE, POINT_PLACE, PP_SPOTS, isIsland
 import {buildCardModel, bellModel, inviteModel, crewModel, captainModel, captainsModel, skillsModel, weaponsModel, coinText,
   harborModel, techModel, wreckModel, demolishModel, refundToast} from './card-model.js';
 import {campaignOf, openedBetween, opensText, waveOf} from '../campaign/index.js';
-import {BRANCH_BY_ID, SPECS} from '../campaign/tech.js';
+import {BRANCH_BY_ID, SPECS, optionName, optionsOf} from '../campaign/tech.js';
 import {ROLES, activeRole, roleRadius} from '../campaign/houses.js';
 import {ROLE_BY_ID, SKILL_BY_ID, WEAPON_BY_ID, WEAPONS, isRole, readSkills, readWeapon} from '../pirates/captain-ids.js';
 import {displayIslandCode, islandCode, islandRoom, storeVisit, readVisit, forgetVisit} from './codes.js';
@@ -147,7 +147,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   // Before a wave we are in starts: the defended island once more, so a friend's co-op build is in it.
   const flow = createWaveFlow({api, emit, placeholder, now, setTimer, clearTimer, prepare: () => refreshDefended(),
     notify: (text, tone) => ui.toast(text, tone), banner: text => ui.banner(text), onChange: () => refreshCard(),
-    defensesOf: () => defenses(target()?.spots ?? [])});
+    defensesOf: () => defenses(target()?.spots ?? [], campaign()?.research?.tiers)});
   const stopFinished = on(WAVE_FINISHED, event => {
     if (disposed) return;
     tellCoins(event.coins, {tick: true}); // the loot counts up in the HUD
@@ -365,7 +365,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const tech = () => techModel({campaign: campaign(), coins: own?.coins ?? null, busy: busyResearch, message: cardMessage || (!target() ? ownMessage : '')});
   const wreck = () => wreckModel({campaign: campaign(), coins: own?.coins ?? null, busy: busyGift, message: cardMessage || (!target() ? ownMessage : '')});
   const harborHandlers = {open: id => { ui.close(); try { openHarborStall(id); } catch { /* The stall answers on its own. */ } }};
-  const techHandlers = {research: branch => void research(branch)};
+  const techHandlers = {research: step => void research(step)};
   const wreckHandlers = {give: amount => void giveWreck(amount)};
   function bell() {
     const wave = flow.current;
@@ -585,18 +585,24 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     const where = spotById(openSpot), role = activeRole((target()?.spots ?? []).find(item => item.id === openSpot));
     return where && role ? {x: where.x, z: where.z, radius: roleRadius(role), role} : null;
   }
-  async function research(branch) {
+  // GAME-V3.md §5.1: one research step: tier 1 of a branch, or one of the two options of tier 2 or 3 (change:
+  // the crew picked the other one before and pays the tier's price again to switch).
+  async function research(step) {
+    const {branch, tier = 1, choice = null, change = false} = typeof step === 'string' ? {branch: step} : step ?? {};
     if (busyResearch || !BRANCH_BY_ID[branch]) return;
-    busyResearch = branch; cardMessage = ''; refreshCard();
-    const answer = await api.research({branch, ...placeCode()});
+    busyResearch = `${branch}:${tier}:${choice ?? ''}`; cardMessage = ''; refreshCard();
+    const answer = await api.research({branch, tier, choice, change, ...placeCode()});
     if (disposed) return;
     busyResearch = null;
     if (answer.ok) {
       await landed(answer, 'tech_hub');
       if (disposed) return;
-      emit({type: 'tech_researched', branch});
-      ui.toast(`${BRANCH_BY_ID[branch].name} researched! Tap a ${KINDS[branch].name.toLowerCase()} to pick its skill.`, 'success');
-    } else { cardMessage = answer.message; if (['known', 'locked', 'insufficient_funds'].includes(answer.code)) await refreshDefended(); }
+      emit({type: 'tech_researched', branch, tier, choice});
+      const kind = KINDS[branch].name.toLowerCase();
+      ui.toast(tier === 1 ? `${BRANCH_BY_ID[branch].name} researched! Tap a ${kind} to pick its skill.`
+        : tier === 2 ? `${optionName(choice)}: every ${kind} fights with it from the next wave.`
+          : `${optionName(choice)}! Tap a ${kind} to pick it as its skill.`, 'success');
+    } else { cardMessage = answer.message; if (['known', 'locked', 'insufficient_funds', 'closed', 'needs_tier', 'top_tier'].includes(answer.code)) await refreshDefended(); }
     refreshCard();
   }
   async function giveWreck(amount) {
@@ -865,7 +871,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     get point() { return point ? structuredClone(point) : null; },
     // The wave on screen (src/pirates/, wired in game.js): the built defenses it fights with, the client
     // for Pirate Point, the island's room place (isle_<code>), joining a running wave, and the battle look.
-    defenses: () => defenses(target()?.spots ?? []),
+    defenses: () => defenses(target()?.spots ?? [], campaign()?.research?.tiers),
     get api() { return api; },
     roomPlace: () => islandRoom(visiting?.code ?? visitCode ?? own?.code ?? '') || null,
     async joinRunningWave() {

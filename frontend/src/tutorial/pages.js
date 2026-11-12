@@ -52,7 +52,7 @@ export const TUTORIAL_PAGES = Object.freeze([
   {id: 'unlocks', title: 'More as you win',
     text: ['You start with walls, cannons and your musket.',
       'Each new wave you win can unlock more: houses, mortars, a watchtower, crew and level 3.',
-      'After wave 8 the Tech hub opens: research skills there for every tower of a kind.'],
+      'After wave 8 the Tech hub opens: research skills for a tower kind, with team choices after waves 15 and 25.'],
     alt: 'A big mortar and a pirate flag won in battle',
     art: [art('island-mortar-l3', 48, 32, 2), art('pirate-flag-trophy', 32, 48, 2)]},
   {id: 'friend', title: 'Play with friends',

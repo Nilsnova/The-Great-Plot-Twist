@@ -158,15 +158,18 @@ background
 backgrounds
 backup
 backups
+badly
 balance
 balances
 balldontlie
+balls
 bank
 barnacle
 barracks
 barrel
 basket
 basketball
+bastion
 batteries
 battle
 bay
@@ -215,6 +218,7 @@ blackness
 blank
 blanked
 blanket
+blast
 blasts
 blazes
 blind
@@ -250,6 +254,7 @@ bright
 brine
 bring
 brings
+broadside
 broke
 broken
 browse
@@ -534,6 +539,7 @@ day
 de
 deadline
 december
+decide
 decided
 decides
 deciding
@@ -615,10 +621,12 @@ draws
 dreadnoughts
 driftline
 driftwood
+drill
 drink
 drinks
 drive
 drops
+drums
 dublin
 duel
 duels
@@ -628,7 +636,9 @@ duty
 e
 each
 eager
+eagle
 earlier
+early
 earn
 earned
 earns
@@ -849,6 +859,7 @@ frontend
 full
 functions
 further
+fuse
 g
 gain
 gallery
@@ -893,6 +904,7 @@ golden
 gone
 good
 got
+grapeshot
 graphics
 gray
 great
@@ -921,6 +933,7 @@ gull's
 gulls
 gun
 gunner
+guns
 h
 hack
 had
@@ -939,6 +952,7 @@ harbor
 harbor's
 harbormaster's
 hard
+harder
 hardy
 has
 have
@@ -1027,6 +1041,7 @@ identity
 idle
 ids
 if
+ii
 image
 images
 impact
@@ -1041,6 +1056,7 @@ including
 index
 indicators
 individual
+inferno
 informant
 information
 ink
@@ -1179,6 +1195,7 @@ ledger
 left
 legacy
 legal
+lends
 lenke
 lens
 lenses
@@ -1283,6 +1300,7 @@ markets
 marksman
 mask
 masked
+mason
 mast
 master
 master's
@@ -1465,6 +1483,7 @@ operators
 ophelia
 opponent
 opponent's
+option
 optional
 options
 or
@@ -2017,6 +2036,7 @@ shipped
 ships
 shipwright
 shoal
+shockwave
 shoots
 shop
 shore
@@ -2082,6 +2102,7 @@ slips
 sloop
 slow
 slower
+slowly
 slows
 small
 smaller
@@ -2297,6 +2318,7 @@ then
 there
 these
 they
+thick
 thicker
 thin
 things
@@ -2304,6 +2326,7 @@ thinking
 third
 thirty
 this
+thorns
 those
 three
 through
@@ -2492,10 +2515,12 @@ walrus
 wandering
 want
 wants
+war
 warm
 warmest
 warn
 warned
+warns
 warship
 warships
 was
@@ -2538,6 +2563,8 @@ whoever
 whole
 whose
 why
+wide
+wider
 width
 will
 win

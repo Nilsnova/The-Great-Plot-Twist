@@ -461,6 +461,20 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         spark(x, y + 1.6, { count: 4, speed: [.4, 1], angle: Math.PI / 2, spread: .8, gravity: -1.5, life: [.5, .9], colour: '#b8f0a0', size: [1, 2] });
         break;
       }
+      // The Tech hub's mortar skills (GAME-V3.md §5, §5.1): a Fire pot or Inferno lights the ground (Inferno wider
+      // and redder); Shockwave throws a boarder back with a pale ring where it lands.
+      case 'fire_lit': {
+        const radius = event.radius ?? 3, hot = event.inferno === true;
+        effects()?.ring(x, y, { radius, life: .9, colour: hot ? '#ff5a2a' : '#ff9a3a' });
+        effects()?.bloom(x, y + .4, { radius: radius * .7, life: .8, colour: hot ? '#ff4a1a' : '#ff8a3a' });
+        spark(x, y + .3, { count: hot ? 34 : 18, speed: [.6, 2.4], angle: Math.PI / 2, spread: 1.6, gravity: -2, life: [.6, 1.4], colour: hot ? '#ff6a2a' : '#ffb35a', size: [1, 3] });
+        break;
+      }
+      case 'boarder_pushed': {
+        effects()?.ring(x, y + .3, { radius: 1.4, life: .4, colour: '#e8f4ff' });
+        spark(x, y + .5, { count: 8, speed: [1, 3], angle: Math.PI / 2, spread: 2.6, gravity: 6, life: [.3, .6], colour: '#d9d6c8', size: [1, 2] });
+        break;
+      }
       case 'wall_rebuilt': {
         effects()?.bloom(x, y + 1, { radius: 1.8, life: .7, colour: '#bfe6a8' });
         spark(x, y + .8, { count: 14, speed: [.6, 2], angle: Math.PI / 2, spread: 2, gravity: 5, life: [.4, .8], colour: '#b8b2a0', size: [1, 2] });
@@ -624,6 +638,18 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       layers.air.push(flame, burst.x + Math.cos(a) * spread, y + Math.sin(a) * spread * Y, flame.w * .7, flame.h * .7, .5, flame.anchor * .7, { a: 1 - p });
     }
   }
+  // Burning ground (a Fire pot, or the wider Inferno of tier 3, GAME-V3.md §5.1): flames from the fire art in a
+  // ring as wide as the patch, flickering while it burns (still with reduced motion).
+  function drawBurning(patch) {
+    const y = drawnY(patch.z), count = Math.max(3, Math.round(patch.radius * 1.6)), tick = still() ? 0 : Math.floor(clock * 8);
+    for (let i = 0; i < count; i++) {
+      const flame = rect[pirateFrames.fire[(i + tick) % 3]];
+      if (!flame) continue;
+      const a = i / count * Math.PI * 2 + patch.x, spread = patch.radius * (i % 2 ? .45 : .8);
+      layers.air.push(flame, patch.x + Math.cos(a) * spread, y + Math.sin(a) * spread * Y, flame.w * .6, flame.h * .6, .5, flame.anchor * .6, { a: .85 });
+    }
+  }
+  // The shot: the firing pose with its flash, a short tracer from the muzzle to the ship, a puff on the hit.
   // Where the shooter stands now: your captain, a teammate's presence figure, else where the shot was fired.
   // The muzzle (flash and tracer) follows the hand of the body that fires.
   function shooterAt(tracer) {
@@ -762,6 +788,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       for (const ball of balls.items) drawBall(ball);
       for (const shell of shells.items) drawShell(shell);
       for (const burst of bursts.items) drawBurst(burst);
+      for (const patch of state.fires ?? []) drawBurning(patch);
       for (const tracer of tracers.items) drawTracer(tracer);
       for (const item of warnings.items) drawWarning(item);
       drawCaptain();

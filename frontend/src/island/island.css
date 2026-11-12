@@ -177,31 +177,73 @@
 .island-spec-line{color:var(--u-mute);font-size:14px}
 .island-spec-mark{position:absolute;top:6px;right:10px;color:var(--u-gold);font-weight:800}
 .island-stalls,.island-research{list-style:none;margin:0;padding:0;display:grid;gap:var(--u-2)}
-.island-stall,.island-research-row{display:flex;align-items:center;justify-content:space-between;gap:var(--u-3);padding:var(--u-2) var(--u-3);background:var(--u-card);border:2px solid var(--u-line);border-radius:var(--u-radius-xs)}
-.island-stall.is-locked,.island-research-row.is-locked{border-style:dashed}
-.island-research-row.is-done{border-color:var(--u-gold)}
-/* A research row: the title and its price on one full line, the skills (and why the button is off) below,
-   the button on the right of those lines; on a phone the button goes under them. */
-.island-research-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:2px var(--u-3)}
-.island-research-row .island-research-text{display:contents}
-.island-research-row .island-research-head{grid-column:1/-1;white-space:nowrap}
-.island-research-row .island-research-head strong{overflow:hidden;text-overflow:ellipsis}
-.island-research-row .island-research-skills,.island-research-row .island-research-reason{grid-column:1}
-.island-research-row .kit-button{grid-column:2;grid-row:2/span 2;align-self:center}
-.island-stall-text,.island-research-text{display:grid;gap:2px;min-width:0}
-.island-stall-text p,.island-research-text p{margin:0}
-.island-stall-line,.island-research-skills{color:var(--u-mute);font-size:15px}
-.island-stall-reason,.island-research-reason{color:var(--u-ink);font-size:14px;font-weight:700}
-.island-research-head{display:flex;gap:var(--u-2);align-items:baseline;justify-content:space-between}
-.island-research-price{font-weight:800;color:var(--u-gold)}
-.island-stall .kit-button,.island-research-row .kit-button{flex:none;min-width:0;white-space:nowrap}
+.island-stall{display:flex;align-items:center;justify-content:space-between;gap:var(--u-3);padding:var(--u-2) var(--u-3);background:var(--u-card);border:2px solid var(--u-line);border-radius:var(--u-radius-xs)}
+.island-stall.is-locked{border-style:dashed}
+.island-stall-text{display:grid;gap:2px;min-width:0}
+.island-stall-text p{margin:0}
+.island-stall-line{color:var(--u-mute);font-size:15px}
+.island-stall-reason{color:var(--u-ink);font-size:14px;font-weight:700}
+.island-stall .kit-button{flex:none;min-width:0;white-space:nowrap}
+/* The Tech hub (docs/GAME-V3.md §5.1): the next step on a gold slip; one folding row per tower kind; inside,
+   the three tiers as a short path from top to bottom (a dot per tier on a line, gold once done), tiers 2 and 3
+   a fork of two nodes side by side: the chosen one lit gold, the closed one greyed, a locked one dashed. */
+.island-tech-next{padding:var(--u-2) var(--u-3);background:var(--u-parch);color:var(--u-pink);border:2px solid var(--u-brown);border-radius:var(--u-radius-xs);font-weight:800}
+.island-research-branch{background:var(--u-card);border:2px solid var(--u-line);border-radius:var(--u-radius-xs)}
+.island-research-branch.is-done{border-color:var(--u-gold)}
+.island-research-branch.is-next{border-color:var(--u-brass);box-shadow:var(--u-bevel-quiet)}
+.island-research-summary{display:flex;align-items:center;justify-content:space-between;gap:var(--u-2);min-height:44px;padding:6px var(--u-3);cursor:pointer;list-style:none}
+.island-research-summary::-webkit-details-marker{display:none}
+.island-research-summary::before{content:'▸';color:var(--u-gold);font-weight:800}
+.island-research-branch[open]>.island-research-summary::before{content:'▾'}
+.island-research-summary:focus-visible{outline:3px solid var(--u-gold);outline-offset:2px}
+.island-research-name{flex:1;min-width:0}
+.island-research-flag{flex:none;padding:2px 8px;background:var(--u-gold);color:var(--u-deep);font:800 13px/1.3 var(--u-font);border-radius:999px}
+.island-research-step-path{list-style:none;margin:0;padding:0 var(--u-3) var(--u-3);display:grid;gap:var(--u-3)}
+.island-research-step{position:relative;display:grid;gap:6px;padding-left:34px}
+.island-research-step::before{content:'';position:absolute;left:12px;top:26px;bottom:calc(-1 * var(--u-3));width:4px;border-radius:2px;background:var(--u-line)}
+.island-research-step:last-child::before{display:none}
+.island-research-step.is-done::before{background:var(--u-gold)}
+.island-research-step-head{display:flex;align-items:center;gap:var(--u-2);margin:0}
+.island-research-step-dot{position:absolute;left:0;top:0;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;font:800 14px/1 var(--u-font);background:var(--u-deep);color:var(--u-mute);border:3px solid var(--u-line);box-sizing:border-box}
+.island-research-step.is-done .island-research-step-dot{background:var(--u-gold);border-color:var(--u-brass);color:var(--u-deep)}
+.island-research-step.is-next .island-research-step-dot{background:var(--u-parch);border-color:var(--u-gold);color:var(--u-pink)}
+.island-research-step-state{color:var(--u-mute);font-size:14px}
+.island-research-step.is-next .island-research-step-state{color:var(--u-gold);font-weight:800}
+.island-research-options{display:grid;gap:var(--u-2)}
+.island-research-step.is-fork .island-research-options{grid-template-columns:repeat(2,minmax(0,1fr))}
+.island-research-option{display:grid;align-content:start;gap:4px;min-width:0;padding:8px 10px;background:var(--u-deep);border:2px solid var(--u-line);border-radius:var(--u-radius-xs);font-size:15px;line-height:1.3}
+.island-research-option.is-open{border-color:var(--u-brass);background:var(--u-raise)}
+.island-research-option:is(.is-done,.is-chosen){border-color:var(--u-gold);background:var(--u-raise);box-shadow:0 0 0 2px #f3c35c55}
+.island-research-option.is-closed{opacity:.62;filter:grayscale(.7)}
+.island-research-option.is-locked{border-style:dashed;opacity:.8}
+.island-research-step-name{color:var(--u-ink)}
+.island-research-option:is(.is-done,.is-chosen) .island-research-step-name{color:var(--u-gold)}
+.island-research-step-line{color:var(--u-mute);font-size:14px}
+.island-research-step-note{color:var(--u-ink);font-size:14px;font-weight:700}
+.island-research-step-reason{margin:0;color:var(--u-rust);font-size:13px}
+.island-research-option .kit-button{min-width:0;min-height:44px;padding:6px 10px;font-size:15px;white-space:normal}
 .island-wreck-bar{height:18px;background:var(--u-deep);border:2px solid var(--u-line);border-radius:999px;overflow:hidden}
 .island-wreck-fill{display:block;height:100%;background:var(--u-gold);border-radius:999px;transition:width .3s}
 .island-wreck-progress{margin:0;color:var(--u-ink);font-weight:700}
 .island-wreck-done{margin:0;padding:var(--u-2) var(--u-3);background:var(--u-raise);border-left:4px solid var(--u-gold);font-weight:800;color:var(--u-gold)}
 .island-wreck-gifts{display:flex;flex-wrap:wrap;gap:var(--u-2)}
-@media(max-width:520px){.island-stall,.island-research-row{flex-direction:column;align-items:stretch}.island-spec-list{grid-template-columns:1fr}
-  .island-research-row{grid-template-columns:minmax(0,1fr)}.island-research-row .kit-button{grid-column:1;grid-row:auto;margin-top:var(--u-2)}}
+@media(max-width:520px){.island-stall{flex-direction:column;align-items:stretch}.island-spec-list{grid-template-columns:1fr}}
+/* The island's own cards dock (ui.js DOCKED): a panel down the right side under the top bar on a desktop, a
+   bottom sheet of at most 60% of the screen on a phone. No dark veil, so the island stays in view; the goals
+   panel and the musket button step aside while one is open (the card is modal, so they cannot be used then). */
+.island-card-docked::backdrop{background:transparent}
+@media(min-width:901px){
+  .kit-modal.island-card.island-card-docked[open]{position:fixed;inset:76px 16px 16px auto;margin:0;width:min(380px,calc(100vw - 32px));max-width:none;height:auto;max-height:calc(100dvh - 92px);overflow:auto;overscroll-behavior:contain}
+}
+@media(max-width:900px){
+  .kit-modal.island-card.island-card-docked[open]{position:fixed;inset:auto 0 0 0;margin:0;width:100%;max-width:none;max-height:60dvh;overflow:auto;overscroll-behavior:contain;
+    border-radius:var(--u-radius) var(--u-radius) 0 0;padding:0 14px max(16px,env(safe-area-inset-bottom))}
+}
+/* The goals panel folds away while a docked card is open; the musket button moves out from under the card:
+   to the left of the side panel on a desktop, just above the bottom sheet on a phone. */
+html:has(.island-card-docked[open]) .quest-strip{visibility:hidden}
+@media(min-width:901px){html:has(.island-card-docked[open]) .pirate-hud>.pirate-musket{right:calc(min(380px,100vw - 32px) + 32px)}}
+@media(max-width:900px){html:has(.island-card-docked[open]) .pirate-hud>.pirate-musket{bottom:calc(60dvh + 12px)}}
 @media(prefers-reduced-motion:reduce){.island-wreck-fill{transition:none}}
 /* GAME-V3.md §4.2: Tear down is secondary and red-outlined; the confirmation's red button is the only filled red. */
 .island-card-body>.island-teardown{justify-self:start;min-width:0;min-height:40px;padding:7px 14px;font-size:15px;color:#ffd6c8;

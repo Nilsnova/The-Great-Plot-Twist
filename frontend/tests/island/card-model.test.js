@@ -147,15 +147,44 @@ describe('the campaign buildings (GAME-V3.md §4, §5)', () => {
     expect(four.stalls.map(stall => [stall.id, stall.open, stall.reason])).toEqual([['market', true, ''], ['match', false, 'Opens after wave 7.']]);
     expect(harborModel({campaign: atWave(7)}).stalls.every(stall => stall.open)).toBe(true);
   });
-  it('the Tech hub: locked before wave 8, then one research row per tower kind, paid with coins', () => {
+  it('the Tech hub: locked before wave 8, then one branch per tower kind, tier 1 paid with coins', () => {
     const early = techModel({campaign: atWave(7), coins: 999});
-    expect(early).toMatchObject({open: false, line: 'Opens after wave 8.'});
-    expect(early.branches.every(row => row.disabled && row.reason === 'Opens after wave 8.')).toBe(true);
+    expect(early).toMatchObject({open: false, line: 'Opens after wave 8.', next: null});
+    expect(early.branches.every(row => row.tiers.every(tier => tier.state === 'locked' && tier.nodes.every(node => node.button === null)))).toBe(true);
     const hub = techModel({campaign: atWave(8, {research: {done: ['cannon']}}), coins: 150});
-    expect(hub.branches.map(row => [row.branch, row.button, row.disabled])).toEqual([
-      ['cannon', 'Researched', true], ['mortar', 'Research · 🪙 220', true], ['wall', 'Research · 🪙 120', false], ['watchtower', 'Research · 🪙 160', true]]);
-    expect(hub.branches[0]).toMatchObject({done: true, skills: ['Rapid', 'Heavy shot', 'Chain shot'], reason: 'Every cannon here can pick a skill.'});
-    expect(hub.branches[1].reason).toBe('Not enough 🪙: you need 🪙 70 more.');
+    expect(hub.branches.map(row => [row.branch, row.summary, row.folded])).toEqual([
+      ['cannon', 'Cannon skills · tier 1 of 3 ✓', true], ['mortar', 'Mortar skills', false], ['wall', 'Wall skills', false], ['watchtower', 'Watchtower skills', false]]);
+    const first = row => row.tiers[0].nodes[0];
+    expect(first(hub.branches[0])).toMatchObject({state: 'done', button: null, note: 'Every cannon here can pick one of them.', line: 'Rapid · Heavy shot · Chain shot'});
+    expect(hub.branches.slice(1).map(row => [first(row).button.label, first(row).button.disabled])).toEqual([
+      ['Research · 🪙 220', true], ['Research · 🪙 120', false], ['Research · 🪙 160', true]]);
+    expect(first(hub.branches[1]).button.reason).toBe('Not enough 🪙: you need 🪙 70 more.');
+    // Tier 2 of the cannon: locked until wave 15, both options shown with their line.
+    expect(hub.branches[0].tiers[1]).toMatchObject({tier: 2, fork: true, state: 'locked', reason: 'Opens after wave 15.'});
+    expect(hub.branches[0].tiers[1].nodes.map(node => [node.name, node.state, !!node.line])).toEqual([['Rapid II', 'locked', true], ['Long guns', 'locked', true]]);
+    expect(hub.next).toMatchObject({branch: 'mortar', tier: 1});
+  });
+  it('the Tech hub tiers: a fork of two, the chosen one lit, the other closed, a change at the tier price again', () => {
+    const tiers = {cannon: {tier: 2, tier2: 'long_guns', tier3: null}, mortar: {tier: 1, tier2: null, tier3: null}};
+    const hub = techModel({campaign: atWave(16, {research: {done: ['cannon', 'mortar'], tiers}}), coins: 500});
+    const [cannon, mortar] = hub.branches;
+    expect(cannon.summary).toBe('Cannon skills · tier 2 of 3 ✓');
+    expect(cannon.tiers.map(tier => tier.state)).toEqual(['done', 'done', 'locked']);
+    const [rapid, long] = cannon.tiers[1].nodes;
+    expect(long).toMatchObject({state: 'chosen', button: null});
+    expect(rapid).toMatchObject({state: 'closed', note: 'Closed: your crew chose Long guns.'});
+    expect(rapid.button).toMatchObject({label: 'Change to it · 🪙 360', disabled: false, action: {branch: 'cannon', tier: 2, choice: 'rapid_2', change: true}});
+    expect(cannon.tiers[2]).toMatchObject({state: 'locked', reason: 'Opens after wave 25.'});
+    // The mortar's tier 2 is the next step: both options open, side by side.
+    expect(mortar.tiers[1].state).toBe('next');
+    expect(mortar.tiers[1].nodes.map(node => [node.id, node.state, node.button.label])).toEqual([
+      ['quick_fuse', 'open', 'Pick · 🪙 440'], ['heavy_shells', 'open', 'Pick · 🪙 440']]);
+    expect(hub.next).toMatchObject({branch: 'mortar', tier: 2});
+    // Tier 3 after wave 25: a capstone the crew chose; a tower of that kind may pick it.
+    const late = techModel({campaign: atWave(25, {research: {done: ['cannon'], tiers: {cannon: {tier: 3, tier2: 'rapid_2', tier3: 'grapeshot'}}}}), coins: 0});
+    expect(late.branches[0].summary).toBe('Cannon skills · tier 3 of 3 ✓');
+    expect(late.branches[0].tiers[2].nodes.map(node => [node.id, node.state])).toEqual([['broadside', 'closed'], ['grapeshot', 'chosen']]);
+    expect(late.branches[0].tiers[2].nodes[0].button).toMatchObject({disabled: true, reason: 'Not enough 🪙: you need 🪙 630 more.'});
   });
   it('a built tower shows its skills: locked, research first, then a free pick', () => {
     const built = {...tower(true), level: 2};
@@ -167,6 +196,11 @@ describe('the campaign buildings (GAME-V3.md §4, §5)', () => {
       campaign: atWave(8, {research: {done: ['cannon']}})}).skills;
     expect(pick).toMatchObject({title: 'Skill: Heavy shot', current: 'heavy'});
     expect(pick.choices.map(choice => [choice.id, choice.active, choice.disabled])).toEqual([['rapid', false, false], ['heavy', true, true], ['chain', false, false]]);
+    // Tier 3: the capstone the island chose is one more pick; the other capstone is not offered.
+    const capstone = buildCardModel({spotId: 'cannon_1', slot: 'tower', spot: {...built, spec: 'grapeshot'}, coins: 100, unlocks: unlocksFor(25),
+      campaign: atWave(25, {research: {done: ['cannon'], tiers: {cannon: {tier: 3, tier2: 'rapid_2', tier3: 'grapeshot'}}}})}).skills;
+    expect(capstone.choices.map(choice => [choice.id, choice.capstone, choice.active])).toEqual([
+      ['rapid', false, false], ['heavy', false, false], ['chain', false, false], ['grapeshot', true, true]]);
     // Pirate Point's shared towers have no skills.
     expect(buildCardModel({spotId: 'pp_tower_1', slot: 'tower', spot: built, point: true, campaign: atWave(8, {research: {done: ['cannon']}})}).skills).toBe(null);
   });

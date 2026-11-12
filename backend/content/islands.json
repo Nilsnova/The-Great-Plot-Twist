@@ -608,12 +608,16 @@
     }
   ],
   "research": {
-    "about": "The Tech hub (docs/GAME-V3.md section 5): research a tower kind once per island with coins (any member pays), then every tower of that kind on the island may pick one of its skills. The ids repeat frontend/src/campaign/tech.js and the check rules of supabase/migrations/20261112060000_tech_hub.sql.",
+    "about": "The Tech hub (docs/GAME-V3.md section 5): three research tiers per tower kind and island, any member pays. Tier 1 unlocks the kind's skills (every tower of that kind may pick one). Tier 2 and tier 3 are a choice of two: the island picks one option and the other one is closed (a change costs the tier's price again). Tier 2 is a bonus for every tower of that kind; tier 3 is a capstone skill a tower may pick. coins: the price of tier 1, 2 and 3. The ids repeat frontend/src/campaign/tech.js and the check rules of supabase/migrations/20261112060000_tech_hub.sql and 20261112100000_research_tiers.sql.",
     "branches": [
       {
         "branch": "cannon",
         "name": "Cannon skills",
-        "coins": 180,
+        "coins": [
+          180,
+          360,
+          630
+        ],
         "specs": [
           {
             "spec": "rapid",
@@ -627,12 +631,36 @@
             "spec": "chain",
             "name": "Chain shot"
           }
+        ],
+        "tier2": [
+          {
+            "id": "rapid_2",
+            "name": "Rapid II"
+          },
+          {
+            "id": "long_guns",
+            "name": "Long guns"
+          }
+        ],
+        "tier3": [
+          {
+            "spec": "broadside",
+            "name": "Broadside"
+          },
+          {
+            "spec": "grapeshot",
+            "name": "Grapeshot"
+          }
         ]
       },
       {
         "branch": "mortar",
         "name": "Mortar skills",
-        "coins": 220,
+        "coins": [
+          220,
+          440,
+          770
+        ],
         "specs": [
           {
             "spec": "cluster",
@@ -646,12 +674,36 @@
             "spec": "long_range",
             "name": "Long range"
           }
+        ],
+        "tier2": [
+          {
+            "id": "quick_fuse",
+            "name": "Quick fuse"
+          },
+          {
+            "id": "heavy_shells",
+            "name": "Heavy shells"
+          }
+        ],
+        "tier3": [
+          {
+            "spec": "shockwave",
+            "name": "Shockwave"
+          },
+          {
+            "spec": "inferno",
+            "name": "Inferno"
+          }
         ]
       },
       {
         "branch": "wall",
         "name": "Wall skills",
-        "coins": 120,
+        "coins": [
+          120,
+          240,
+          420
+        ],
         "specs": [
           {
             "spec": "stone",
@@ -665,12 +717,36 @@
             "spec": "quick_mend",
             "name": "Quick mend"
           }
+        ],
+        "tier2": [
+          {
+            "id": "mason_drill",
+            "name": "Mason drill"
+          },
+          {
+            "id": "thick_walls",
+            "name": "Thick walls"
+          }
+        ],
+        "tier3": [
+          {
+            "spec": "bastion",
+            "name": "Bastion"
+          },
+          {
+            "spec": "thorns",
+            "name": "Thorns"
+          }
         ]
       },
       {
         "branch": "watchtower",
         "name": "Watchtower skills",
-        "coins": 160,
+        "coins": [
+          160,
+          320,
+          560
+        ],
         "specs": [
           {
             "spec": "spotter",
@@ -679,6 +755,26 @@
           {
             "spec": "signal_fire",
             "name": "Signal fire"
+          }
+        ],
+        "tier2": [
+          {
+            "id": "lookout_drill",
+            "name": "Lookout drill"
+          },
+          {
+            "id": "high_tower",
+            "name": "High tower"
+          }
+        ],
+        "tier3": [
+          {
+            "spec": "eagle_eye",
+            "name": "Eagle eye"
+          },
+          {
+            "spec": "war_drums",
+            "name": "War drums"
           }
         ]
       }

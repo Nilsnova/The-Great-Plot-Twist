@@ -50,7 +50,7 @@ import { createRandom, hasTavern, revivePrice } from './sim.js';
 import { BUILDINGS, CREW, CAPTAIN, readUnlocks, unlockWave, SLOT_KINDS } from '../island/td-rules.js';
 import { ROLES, ROLE_BY_ID, ROLE_LEVEL, SKILLS, SKILL_BY_ID, WEAPONS, WEAPON_BY_ID, isRole, respecPrice, pointsEarned, pointsSpent, readSkills, readWeapon, skillNeeds } from './captain-ids.js';
 import { STEPS as CAMPAIGN_STEPS, spotWave, waveOf } from '../campaign/index.js';
-import { BRANCHES, BRANCH_BY_ID, SPECS, readSpec } from '../campaign/tech.js';
+import { BRANCHES, BRANCH_BY_ID, SPECS, TOP_TIER, isCapstone, optionName, optionsOf, readSpec } from '../campaign/tech.js';
 import { ROLES as HOUSE_ROLES, ROLE_LEVEL as HOUSE_ROLE_LEVEL } from '../campaign/houses.js';
 
 export const ISLAND_RULES = Object.freeze({
@@ -105,6 +105,13 @@ function spotView(island, id) {
     spec: level > 0 ? readSpec(kind, island.specs?.get(id)) : null };
 }
 const lockedMessage = wave => `Opens after wave ${wave}.`;
+// The Tech hub's research of one branch on an island (GAME-V3.md §5.1): {tier 0-3, tier2, tier3}. island.research
+// lists the branches at tier 1 or more; island.tiers holds {branch: {tier, tier2, tier3}} once a branch went higher.
+function researchOf(island, branch) {
+  if (!(island.research ?? []).includes(branch)) return { tier: 0, tier2: null, tier3: null };
+  const sent = island.tiers?.[branch];
+  return { tier: Math.max(1, sent?.tier ?? 1), tier2: sent?.tier2 ?? null, tier3: sent?.tier3 ?? null };
+}
 // The campaign of an island (GAME-V3.md §4), in the shape of GET /api/island's `campaign`.
 export function campaignAt(island) {
   const wave = island.waveBest ?? 0, open = [], locked = {}, later = [];
@@ -113,8 +120,11 @@ export function campaignAt(island) {
   }
   return { wave, open, locked, later,
     research: { done: BRANCHES.map(item => item.branch).filter(branch => (island.research ?? []).includes(branch)),
-      branches: BRANCHES.map(item => ({ branch: item.branch, name: item.name, price: item.price,
-        specs: item.specs.map(id => ({ id, name: SPECS[id].name })) })) },
+      tiers: Object.fromEntries(BRANCHES.map(item => [item.branch, researchOf(island, item.branch)])),
+      branches: BRANCHES.map(item => ({ branch: item.branch, name: item.name, price: item.price, prices: [...item.prices],
+        specs: item.specs.map(id => ({ id, name: SPECS[id].name })),
+        tier2: item.tier2.map(id => ({ id, name: optionName(id) })), tier3: item.tier3.map(id => ({ id, name: optionName(id) })) })),
+      tierWaves: [1, 2, 3].map(tier => waveOf(tier === 1 ? 'tech_hub' : `research_${tier}`)) },
     wreck: { paid: Math.min(ISLAND_RULES.wreck.goal, island.wreck ?? 0), goal: ISLAND_RULES.wreck.goal, gifts: [...ISLAND_RULES.wreck.gifts] } };
 }
 
@@ -424,18 +434,33 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       island.equipped = weapon;
       return view();
     },
-    // GAME-V3.md §5: research a tower kind once for the island (yours, or the game of `code`), with coins.
-    async research({ branch, actionUid, code } = {}) {
+    // GAME-V3.md §5, §5.1: one research step for the island (yours, or the game of `code`), with coins: tier 1 of
+    // a branch, or one of the two options of tier 2 or 3 (change: true switches from the other one, at the tier's
+    // price again; switching tier 3 takes the old capstone off every tower that picked it).
+    async research({ branch, actionUid, code, tier = 1, choice = null, change = false } = {}) {
       if (typeof branch !== 'string' || !uid(actionUid)) invalid('Send the research and an action id.');
       const mine = world.islands.get(me().code), island = code === undefined ? mine : visited(code), player = me();
       const entry = BRANCH_BY_ID[branch];
       if (!entry) refuse(400, 'bad_research', 'There is no such research.');
+      if (!Number.isSafeInteger(tier) || tier < 1) refuse(400, 'bad_research', 'There is no such research.');
+      if (tier > TOP_TIER) refuse(409, 'top_tier', `${entry.name} have ${TOP_TIER} tiers.`);
+      if (tier === 1 ? choice !== null : !optionsOf(branch, tier).includes(choice)) refuse(400, 'bad_research', 'Pick one of the two options.');
       if (player.actions.has(`research:${actionUid}`)) return island === mine ? view() : visitedView(island);
-      if (unlocking && island.waveBest < waveOf('tech_hub')) refuse(409, 'locked', lockedMessage(waveOf('tech_hub')));
+      const item = tier === 1 ? 'tech_hub' : `research_${tier}`;
+      if (unlocking && island.waveBest < waveOf(item)) refuse(409, 'locked', lockedMessage(waveOf(item)));
       island.research = island.research ?? [];
-      if (island.research.includes(branch)) refuse(409, 'known', `${entry.name} are researched on this island already.`);
-      if (player.coins < entry.price) refuse(409, 'insufficient_funds', `${entry.name} cost ${entry.price} coins. You need more coins.`);
-      player.coins -= entry.price; island.research.push(branch); player.actions.set(`research:${actionUid}`, true);
+      const now = researchOf(island, branch), key = `tier${tier}`, price = entry.prices[tier - 1];
+      if (tier === 1 && now.tier >= 1) refuse(409, 'known', `${entry.name} are researched on this island already.`);
+      if (tier > 1 && now.tier < tier - 1) refuse(409, 'needs_tier', `Research tier ${tier - 1} of ${entry.name.toLowerCase()} first.`);
+      if (tier > 1 && now[key] === choice) refuse(409, 'known', `Your crew chose ${optionName(choice)} already.`);
+      if (tier > 1 && now[key] && !change) refuse(409, 'closed', `Closed: your crew chose ${optionName(now[key])}.`);
+      if (player.coins < price) refuse(409, 'insufficient_funds', `This costs ${price} coins. You need more coins.`);
+      player.coins -= price; player.actions.set(`research:${actionUid}`, true);
+      if (tier === 1) island.research.push(branch);
+      else {
+        island.tiers = { ...(island.tiers ?? {}), [branch]: { ...now, tier: Math.max(now.tier, tier), [key]: choice } };
+        if (tier === 3 && now.tier3 && island.specs instanceof Map) for (const [spot, spec] of island.specs) if (spec === now.tier3) island.specs.delete(spot);
+      }
       return island === mine ? view() : visitedView(island);
     },
     // A tower picks one skill of its researched kind (free; picking again changes it). A house of level 2 or
@@ -457,6 +482,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       if (!info) refuse(400, 'bad_spec', 'There is no such tower skill.');
       if (info.branch !== kind) refuse(422, 'wrong_kind', `A ${ISLAND_RULES.kinds[kind][0].toLowerCase()} cannot learn that skill.`);
       if (!(island.research ?? []).includes(kind)) refuse(409, 'not_researched', `Research ${BRANCH_BY_ID[kind].name.toLowerCase()} at the Tech hub first.`);
+      if (isCapstone(spec) && researchOf(island, kind).tier3 !== spec) refuse(409, 'not_researched', `Pick ${SPECS[spec].name} at tier 3 of the Tech hub first.`);
       if (!(island.specs instanceof Map)) island.specs = new Map();
       island.specs.set(spot, spec);
       return island === mine ? view() : visitedView(island);
@@ -731,7 +757,7 @@ const BODY_KEYS = Object.freeze({ '/api/island/build': ['spot', 'kind', 'actionU
   '/api/island/demolish': ['spot', 'actionUid'] });
 // Keys a body may also carry: `code` builds, upgrades, researches, picks a skill or mends the wreck on a game's island.
 const OPTIONAL_KEYS = Object.freeze({ '/api/island/build': ['code'], '/api/island/upgrade': ['code'], '/api/games': ['actionUid'],
-  '/api/island/research': ['code'], '/api/island/tower-skill': ['code'], '/api/island/wreck': ['code'], '/api/island/demolish': ['code'] });
+  '/api/island/research': ['code', 'tier', 'choice', 'change'], '/api/island/tower-skill': ['code'], '/api/island/wreck': ['code'], '/api/island/demolish': ['code'] });
 const ACTION_UID = /^[A-Za-z0-9_-]{8,64}$/;
 const exactKeys = (body, keys, optional = []) => !!body && typeof body === 'object' && !Array.isArray(body)
   && Object.keys(body).filter(key => !optional.includes(key)).sort().join() === [...keys].sort().join();

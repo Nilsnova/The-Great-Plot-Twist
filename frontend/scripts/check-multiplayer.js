@@ -465,6 +465,25 @@ try {
   await island(ben, async i => { await i.specialise('cannon_1', 'rapid'); });
   const rapid = await seesSpec(host, 'cannon_1', 'rapid', "the friend's cannon skill");
   results.push(`tower skill: the friend's Rapid on the owner's cannon_1 on the owner's island and card after ${rapid.took} ms`);
+  // 2d Research tiers (GAME-V3.md §5.1): the owner picks tier 2 of the cannons (Long guns), the friend picks the tier-3
+  // capstone (Grapeshot) on the owner's island and gives cannon_1 that skill; both pages then hold the same research
+  // and hand the wave the same defenses (checked again in the running wave's sim below).
+  await island(host, async i => { i.dev.setWaveBest(26); i.dev.setCoins(3000); await i.load(); });
+  await island(ben, async i => { i.dev.setCoins(3000); await i.load(); });
+  const researchOn = captain => captain.page.evaluate(() => ({tiers: window.__island.island.campaign.research.tiers.cannon,
+    cannons: window.__island.island.defenses().filter(item => item.kind === 'cannon')}));
+  await island(host, async i => { await i.research({branch: 'cannon', tier: 2, choice: 'long_guns'}); });
+  const tierAt = Date.now();
+  await ben.page.waitForFunction(() => window.__island.island.campaign.research.tiers.cannon.tier2 === 'long_guns', null, {timeout: 5000, polling: 100});
+  results.push(`research tier 2: the owner's Long guns on the friend's island after ${Date.now() - tierAt} ms`);
+  await island(ben, async i => { await i.research({branch: 'cannon', tier: 3, choice: 'grapeshot'}); await i.specialise('cannon_1', 'grapeshot'); });
+  await seesSpec(host, 'cannon_1', 'grapeshot', "the friend's capstone");
+  const [hostResearch, benResearch] = [await researchOn(host), await researchOn(ben)];
+  assert.deepEqual(hostResearch, benResearch, 'both pages hold the same research and hand the wave the same cannons');
+  assert.deepEqual(hostResearch.tiers, {tier: 3, tier2: 'long_guns', tier3: 'grapeshot'}, 'tier 3 of the cannons, chosen on the friend\'s page');
+  assert.ok(hostResearch.cannons.some(item => item.id === 'cannon_1' && item.spec === 'grapeshot' && item.bonus === 'long_guns'), 'cannon_1 fights with Grapeshot and Long guns');
+  results.push('research tier 3: the friend\'s Grapeshot and cannon_1\'s pick are the same research and defenses on both pages');
+  await shot('02e-research-tiers');
   // 2e House roles (GAME-V3.md "Houses"): below level 2 the card says what comes; at level 2 the owner picks the
   // Barracks on house_1 and the friend sees it on the map and the card; it fights in wave 3 below.
   await island(host, async i => { await i.build('house_1', 'house'); });
@@ -519,6 +538,12 @@ try {
   const first = await until(host, state => state?.ships > 0, 'the first ships', 60000);
   const benWave = await until(ben, state => state?.waveId === first.waveId && state.ships > 0, 'the friend in the same wave', 30000);
   results.push(`wave ${first.wave} (${first.waveId}) on both pages: ${first.ships} / ${benWave.ships} ships`);
+  // The tiers act the same in both sims: the same towers with the same skill, bonus and reach.
+  const simTowers = captain => captain.page.evaluate(() => window.__island.waves.island.wave.state.towers.map(item => ({id: item.id, spec: item.spec ?? null, bonus: item.bonus ?? null, range: item.range})));
+  const [hostTowers, benTowers] = [await simTowers(host), await simTowers(ben)];
+  assert.deepEqual(hostTowers, benTowers, 'both sims fight with the same towers');
+  assert.ok(hostTowers.some(item => item.id === 'cannon_1' && item.spec === 'grapeshot' && item.bonus === 'long_guns'), 'the wave\'s cannon_1 has Grapeshot and Long guns');
+  results.push(`research in the wave: ${hostTowers.length} towers alike in both sims, cannon_1 ${JSON.stringify(hostTowers.find(item => item.id === 'cannon_1'))}`);
   // 4 Both captains fire; each shot reaches the other page.
   const hostShot = await musket(host), benShot = await musket(ben);
   assert.ok(hostShot && benShot, 'both captains could fire');

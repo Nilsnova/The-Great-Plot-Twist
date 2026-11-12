@@ -5,7 +5,7 @@
 //   cabin   just north of the west end of the south cross path, standing from the start (not a build spot)
 //   bell    the harbor bell on the south beach, next to where you land
 import {surfaceClass} from '../world/places/surfaces.js';
-import {readSpec} from '../campaign/tech.js';
+import {isCapstone, readBonus, readSpec} from '../campaign/tech.js';
 
 export const ISLAND_PLACE = 'home_islet';
 export const KINDS = Object.freeze({
@@ -105,11 +105,15 @@ export function pointZones() {
 export const slotName = slot => (slot === 'tower' ? 'Tower spot' : KINDS[DEFAULT_KIND[slot]]?.name ?? 'Build spot');
 
 // The defences of an island answer, with their place, for the wave simulation (BUILD-PLAN 3.5):
-// [{id, kind, level, x, z, spec?}] of the built spots only (TOWER-DEFENSE.md §8); spec is the tower skill it
-// picked at the Tech hub (GAME-V3.md §5), read by the sim, so every screen fights the same island.
-export function defenses(spots = []) {
+// [{id, kind, level, x, z, spec?, bonus?}] of the built spots only (TOWER-DEFENSE.md §8); spec is the tower
+// skill it picked at the Tech hub (GAME-V3.md §5), bonus the island's tier-2 pick for its kind (§5.1, from
+// `tiers`: campaignOf(answer).research.tiers). The sim reads both, so every screen fights the same island.
+export function defenses(spots = [], tiers = null) {
   return spots.filter(item => item?.built === true && (spotById(item.id) || ppSpotById(item.id)))
     .map(item => { const where = spotById(item.id) ?? ppSpotById(item.id), spec = readSpec(item.kind, item.spec);
+      const bonus = readBonus(item.kind, tiers?.[item.kind]?.tier2);
+      // A capstone counts only while its island's tier-3 pick is that capstone.
+      const kept = spec && isCapstone(spec) && tiers?.[item.kind]?.tier3 !== spec ? null : spec;
       return {id: item.id, kind: item.kind, level: Number.isSafeInteger(item.level) && item.level > 0 ? item.level : 1, x: where.x, z: where.z,
-        ...(spec ? {spec} : {})}; });
+        ...(kept ? {spec: kept} : {}), ...(bonus ? {bonus} : {})}; });
 }
