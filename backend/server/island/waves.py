@@ -268,11 +268,12 @@ async def revive(
     """Captain health (docs/GAME-V3.md section 3): the signed-in player helped a fallen captain
     up in this wave and pays catalogue.revive.base + per_wave x the wave number (the database
     reads the wave number itself), tavern_percent less on an island with a Tavern (the database
-    checks the island's buildings: wave_revive() of 20261112090000_house_roles.sql). Only a member of the game (on an island; the owner always)
-    who is in the wave and has not finished it, while it runs. A repeated actionUid pays nothing
-    more and answers the same price. The fall and the standing up are the browsers' (the wave's
-    simulation); fallen and down_at (the tick of the fall, the same in every browser) name one
-    fall, which is paid for once: a second helper of it is refused already_up."""
+    checks the island's buildings: wave_revive() of 20261112090000_house_roles.sql). Only a
+    member of the game (on an island; the owner always) who is in the wave and has not finished
+    it, while it runs. A repeated actionUid pays nothing more and answers the same price. The
+    fall and the standing up are the browsers' (the wave's simulation); fallen and down_at (the
+    tick of the fall, the same in every browser) name one fall, which is paid for once: a second
+    helper of it is refused already_up."""
     where = await store.read_wave_place(admin, str(wave_id))
     if where is None:
         raise no_such_wave()

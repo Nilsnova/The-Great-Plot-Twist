@@ -33,7 +33,7 @@ def function(text: str, name: str) -> str:
 def test_the_catalogue_allows_five_levels_and_the_tower_kinds_have_them():
     assert MAX_LEVEL == 5
     levels = {kind.kind: kind.max_level for kind in load_island().kinds}
-    assert levels == {"wall": 5, "cannon": 5, "mortar": 5, "watchtower": 5, "house": 2}
+    assert levels == {"wall": 5, "cannon": 5, "mortar": 5, "watchtower": 5, "house": 3}
 
 
 def test_the_migration_widens_both_level_rules_to_five():

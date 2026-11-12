@@ -22,18 +22,24 @@
 --   Nothing else changes: both functions are the ones of
 --   20261112060000_tech_hub.sql and 20261112050000_captain_revive.sql, word for
 --   word, except the lines marked in sections 2 and 3 (and one more sentence in
---   each comment). backend/server/tests/test_house_roles_match_migration.py
---   checks that.
+--   each comment); their arguments, revokes and grants are the same.
+--   backend/server/tests/test_house_roles_match_migration.py checks that. A
+--   house keeps its role when it is raised to level 3 (island_upgrade() never
+--   touches spec).
 --
 -- WHY IT IS ISLAND-WIDE
 --   A Tavern heals captains near it, but the server never knows where a captain
 --   stands (positions live in the browsers' simulation). So the revive discount
 --   is checked on the island's buildings: any house of level 2 or more on that
 --   island with the role tavern. Two Taverns give the same 25% (the cap).
---   Wall repairs and rebuilds cost no coins (they are free inputs of the wave's
---   simulation), so the Workshop has nothing to discount here: it works only in
---   the simulation (faster repairs, a shorter rebuild, walls that mend).
---
+--   The Workshop's "30% cheaper" has no server side: repairing a damaged wall
+--   (E, 3 s) and rebuilding a broken one (E, then a 5 s wait) are free inputs
+--   of the wave's simulation (docs/TOWER-DEFENSE.md section 12, room event
+--   wall_rebuild), and every wall is whole again after a wave. No function
+--   charges coins for them, so there is nothing here to take 30% off; the
+--   Workshop works only in the simulation (repairs and rebuilds 30% faster, a
+--   broken wall in reach mends by itself). See section 4.
+
 -- WHO USES IT
 --   Only the Python server, with the secret key (service_role): POST
 --   /api/island/tower-skill (backend/server/routes/island.py) for the roles, and
@@ -54,6 +60,7 @@
 --   1. The check rule on spec: the tower skills and the house roles
 --   2. island_specialise(): a house of level 2 picks a role
 --   3. wave_revive(): a Tavern takes 25% off
+--   4. The Workshop: no coins to take off (a note, no statement)
 --
 -- HOW TO VERIFY (read-only queries, after applying)
 --   a. select pg_get_constraintdef(oid) from pg_constraint
@@ -298,3 +305,16 @@ grant execute on function public.wave_revive(uuid, uuid, text, integer, text, in
 
 comment on function public.wave_revive(uuid, uuid, text, integer, text, integer, integer) is
   'Pays for helping a fallen captain up in a pirate wave (docs/GAME-V3.md section 3): p_base + p_per_wave x the wave number, from the helper''s wallet (reason captain_revive, ref revive:<actionUid>). Locks the wallet first. Only a player in the wave who has not finished it, while it runs; on somebody else''s island only a member of that game. A repeated actionUid answers {status: done, repeat: true} with the price it paid. One fall (p_fallen at tick p_down_at) is paid for once: a second helper is refused already_up. Refuses player_not_set_up, no_such_wave, not_member, not_in_wave, wave_over, insufficient_funds and already_up, with nothing changed. Raises bad_wave_revive for a bad argument. On an island with a Tavern (a house of level 2 or more with the role tavern) the price is 25% less, rounded down. Only service_role may run it.';
+
+
+-- -----------------------------------------------------------------------------
+-- 4. The Workshop: no coins to take off
+-- -----------------------------------------------------------------------------
+-- Searched for every place a wall's repair or rebuild could be paid: no
+-- function of supabase/migrations charges for it (the only "repair" that costs
+-- coins is island_wreck_repair(), the wreck's, not a wall's), and the server has
+-- no route for it. If wall repairs ever cost coins, the discount belongs in that
+-- function, checked on the island's buildings like the Tavern's above:
+--   exists (select 1 from public.islet_buildings
+--            where player_id = <island owner> and building_type = 'house'
+--              and spec = 'workshop' and level >= 2)

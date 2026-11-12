@@ -1,7 +1,7 @@
-"""Real SQL checks for 20261112090000_house_roles.sql (docs/GAME-V3.md "Houses"): a house of level 2
-or more picks a role (barracks, tavern, workshop) with no research, a house below level 2 is refused
-house_level, the check rule allows the roles only on a house, and helping a captain up costs 25% less
-(rounded down) on an island with a Tavern.
+"""Real SQL checks for 20261112090000_house_roles.sql (docs/GAME-V3.md "Houses"): a house of
+level 2 or more picks a role (barracks, tavern, workshop) with no research, a house below level 2
+is refused house_level, the check rule allows the roles only on a house, and helping a captain up
+costs 25% less (rounded down) on an island with a Tavern.
 
 Opt-in, like test_tech_hub_sql.py, on a disposable local PostgreSQL with every migration applied
 twice. Run from backend/:
@@ -63,11 +63,27 @@ def test_a_house_of_level_two_picks_a_role_with_no_research(database):
     assert specialise(database, OWNER, "cannon_1", "house", "workshop")["reason"] == "wrong_kind"
     assert specialise(database, OWNER, "house_2", "house", "workshop")["reason"] == "not_built"
     assert spec_of(database, "house_1") == "tavern"
-    # A role is not a tower skill: a house cannot pick one, a cannon cannot pick a role.
+
+
+# A role is not a tower skill: a house cannot pick one, a cannon cannot pick a role (one raise per
+# test: a raise aborts the transaction).
+@pytest.mark.parametrize(
+    ("plot", "branch", "spec"), [("house_1", "house", "rapid"), ("cannon_1", "cannon", "tavern")]
+)
+def test_a_role_and_a_tower_skill_never_mix(database, plot, branch, spec):
+    game(database)
+    build(database, OWNER, "house_1", "house", "island:b-0001", 10)
+    build(database, OWNER, "cannon_1", "cannon", "island:b-0002", 30)
     with pytest.raises(psycopg.errors.RaiseException, match="bad_specialise"):
-        specialise(database, OWNER, "house_1", "house", "rapid")
-    with pytest.raises(psycopg.errors.RaiseException, match="bad_specialise"):
-        specialise(database, OWNER, "cannon_1", "cannon", "tavern")
+        specialise(database, OWNER, plot, branch, spec)
+
+
+def test_a_house_keeps_its_role_at_level_three(database):
+    game(database)
+    build(database, OWNER, "house_1", "house", "island:b-0001", 10)
+    raise_level(database, "house_1", 3)
+    assert specialise(database, MEMBER, "house_1", "house", "workshop")["spec"] == "workshop"
+    assert spec_of(database, "house_1") == "workshop"
 
 
 def test_the_tower_skills_still_need_their_research(database):
@@ -83,7 +99,8 @@ def test_the_check_rule_allows_a_role_only_on_a_house(database):
     build(database, OWNER, "wall_1", "wall", "island:b-0002", 10)
     as_owner(database)
     database.execute(
-        "update public.islet_buildings set spec = 'workshop' where player_id = %s and plot = 'house_1'",
+        "update public.islet_buildings set spec = 'workshop'"
+        " where player_id = %s and plot = 'house_1'",
         (OWNER,),
     )
     with pytest.raises(psycopg.errors.CheckViolation):
@@ -115,7 +132,10 @@ def test_a_tavern_on_the_island_takes_a_quarter_off_the_revive(database):
     assert revive(database, OWNER, wave_id, "help-0003", down_at=300)["price"] == 18
     as_owner(database)
     database.execute("update public.wave_runs set wave = 12 where id = %s", (wave_id,))
-    assert revive(database, OWNER, wave_id, "help-0004", down_at=400)["price"] == (20 + 5 * 12) * 3 // 4
+    assert (
+        revive(database, OWNER, wave_id, "help-0004", down_at=400)["price"]
+        == (20 + 5 * 12) * 3 // 4
+    )
 
 
 def test_a_tavern_needs_level_two(database):
@@ -124,7 +144,8 @@ def test_a_tavern_needs_level_two(database):
     # A level-1 house can never pick a role; one that has the role written cannot discount either.
     as_owner(database)
     database.execute(
-        "update public.islet_buildings set spec = 'tavern' where player_id = %s and plot = 'house_1'",
+        "update public.islet_buildings set spec = 'tavern'"
+        " where player_id = %s and plot = 'house_1'",
         (OWNER,),
     )
 
