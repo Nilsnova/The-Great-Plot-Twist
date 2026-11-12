@@ -28,6 +28,7 @@ import {buildCardModel, bellModel, inviteModel, crewModel, captainModel, captain
   harborModel, techModel, wreckModel} from './card-model.js';
 import {campaignOf, openedBetween, opensText, waveOf} from '../campaign/index.js';
 import {BRANCH_BY_ID, SPECS} from '../campaign/tech.js';
+import {ROLES, activeRole, roleRadius} from '../campaign/houses.js';
 import {SKILL_BY_ID, WEAPON_BY_ID, WEAPONS, readSkills, readWeapon} from '../pirates/captain-ids.js';
 import {displayIslandCode, islandCode, islandRoom, storeVisit, readVisit, forgetVisit} from './codes.js';
 import {ISLAND_BUILT, ISLAND_INVITE_OPENED, ISLAND_UPGRADED, CREW_HIRED, WAVE_FINISHED} from '../ui/quest-events.js';
@@ -47,6 +48,8 @@ export const NEWS_KEY = 'plot_twist_td_news_v1';
 // GAME-V3.md §4: a won wave opened something on the island on screen.
 export const CAMPAIGN_UNLOCKED = 'campaign_unlocked';
 export const TOWER_SPECIALISED = 'tower_specialised';
+// A house picked a role (GAME-V3.md "Houses"): {spot, role, first} (first: the first role on this island seen by this page).
+export const HOUSE_ROLE_PICKED = 'house_role_picked';
 export const CHART_NAMES = Object.freeze({home_islet: 'Your island', saltreach_harbor: 'The Harbor', lighthouse_isle: 'Pirate Point'});
 const notReady = () => Promise.resolve({ok: false, status: 503, code: 'not_ready',
   message: 'Sign in to build on your island. You can keep exploring.'});
@@ -486,7 +489,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     emit({type: SPOTS_CHANGED, place: visiting ? 'visit' : 'own', spot});
   }
   async function specialise(spotId, spec) {
-    if (busySpot || !SPECS[spec]) return;
+    if (busySpot || (!SPECS[spec] && !ROLES[spec])) return;
+    const role = !!ROLES[spec], first = role && !(target()?.spots ?? []).some(item => activeRole(item));
     busySpot = spotId; busyKind = `spec:${spec}`; cardMessage = ''; refreshCard();
     const answer = await api.specialise({spot: spotId, spec, ...placeCode()});
     if (disposed) return;
@@ -494,10 +498,21 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     if (answer.ok) {
       await landed(answer, spotId);
       if (disposed) return;
-      emit({type: TOWER_SPECIALISED, spot: spotId, spec});
-      ui.toast(`${SPECS[spec].name}: this tower fights with it from the next wave.`, 'success');
-    } else { cardMessage = answer.message; if (['not_researched', 'not_built', 'wrong_kind'].includes(answer.code)) await refreshDefended(); }
+      if (role) {
+        emit({type: HOUSE_ROLE_PICKED, spot: spotId, role: spec, first});
+        ui.toast(`${ROLES[spec].name}: this house works as one from the next wave.`, 'success');
+      } else {
+        emit({type: TOWER_SPECIALISED, spot: spotId, spec});
+        ui.toast(`${SPECS[spec].name}: this tower fights with it from the next wave.`, 'success');
+      }
+    } else { cardMessage = answer.message; if (['not_researched', 'not_built', 'wrong_kind', 'house_level'].includes(answer.code)) await refreshDefended(); }
     refreshCard();
+  }
+  // The reach of the open house card's role, for the ring on the ground (world.js), or null.
+  function houseRange() {
+    if (ui.open !== 'build' || !openSpot) return null;
+    const where = spotById(openSpot), role = activeRole((target()?.spots ?? []).find(item => item.id === openSpot));
+    return where && role ? {x: where.x, z: where.z, radius: roleRadius(role), role} : null;
   }
   async function research(branch) {
     if (busyResearch || !BRANCH_BY_ID[branch]) return;
@@ -679,7 +694,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     decorate(place, art, cleanups, adapters = {}) {
       world?.dispose();
       const deco = decorateIsland(place, {art, reducedMotion, canvas: adapters.canvas, camera: adapters.camera,
-        isActive: adapters.isActive, onPick: pick});
+        isActive: adapters.isActive, onPick: pick, range: houseRange});
       world = deco; applyWorld();
       const original = place.update;
       place.update = (dt, frame) => { original(dt, frame); deco.update(dt, frame?.time ?? 0); };

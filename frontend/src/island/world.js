@@ -9,6 +9,7 @@ import {pixelSizes} from '../pixel/catalog.js';
 import {SPOTS as ISLAND_SPOTS, CABIN, BELL, CAMPAIGN_BUILDINGS, islandZones} from './spots.js';
 import {isOpen, spotWave, waveOf} from '../campaign/index.js';
 import {SLOT_KINDS} from './td-rules.js';
+import {ROLE_IDS, activeRole, roleRadius} from '../campaign/houses.js';
 import {TIER_ART, crewArt, pirateLevels} from '../pixel/pirate-catalog.js';
 import {islandFrame} from '../art/registry.js';
 import {frameCanvas, smoothTexture, spriteMaterial} from '../art/textures.js';
@@ -31,10 +32,15 @@ export const LEVEL_ART = Object.freeze({wall: tiered('wall'), cannon: tiered('ca
 export const PIP_ART = 'fx-level-pip';
 export const PIP_TIER_ART = 'fx-level-pip-gold';
 export const pipArt = level => (level >= 4 ? PIP_TIER_ART : PIP_ART);
-export function buildingArt(kind, level = 1) {
+// A house with a role (level 2 and up, GAME-V3.md "Houses") wears its own look: the Barracks' crossed swords
+// and flag, the Tavern's hanging mug, the Workshop's gear and hammer (src/art/island.js).
+export const ROLE_ART = Object.freeze(Object.fromEntries(ROLE_IDS.map(id => [id, `island-house-${id}`])));
+export function buildingArt(kind, level = 1, spec = null) {
   const list = LEVEL_ART[kind];
   if (!list) return null;
   const n = Number.isSafeInteger(level) && level > 0 ? level : 1;
+  const role = activeRole({kind, level: n, spec});
+  if (role) return ROLE_ART[role];
   return list[Math.min(list.length, n) - 1];
 }
 // How many level pips stand above a building: towers always show theirs, the rest from level 2.
@@ -82,6 +88,29 @@ function sprite(group, {texture, size: [width, height], anchor = 0}, x, z, name)
   mesh.name = name; mesh.userData = {asset: name, ground: {x, z}};
   group.add(mesh);
   return mesh;
+}
+
+// A house role's reach on the ground (GAME-V3.md "Houses"): one unit disc and one unit rim, scaled to the radius
+// and squashed like the ground (projectPoint's 0.72), under everything that stands. Pure Three.js, no art.
+export const ROLE_COLOURS = Object.freeze({barracks: 0xe2463b, tavern: 0x3fa04d, workshop: 0xf2c14e});
+export function makeRangeRing(root) {
+  const disc = new THREE.Mesh(new THREE.CircleGeometry(1, 64), new THREE.MeshBasicMaterial({transparent: true, opacity: .14, depthTest: false, depthWrite: false}));
+  const rim = new THREE.Mesh(new THREE.RingGeometry(.975, 1, 96), new THREE.MeshBasicMaterial({transparent: true, opacity: .85, depthTest: false, depthWrite: false}));
+  for (const [mesh, order] of [[disc, 97], [rim, 98]]) { mesh.renderOrder = order; mesh.frustumCulled = false; mesh.visible = false; root.add(mesh); }
+  disc.name = 'island-range'; rim.name = 'island-range-rim';
+  let shown = null;
+  return {
+    show(range, time = 0) {
+      const on = !!range && Number.isFinite(range.radius) && range.radius > 0;
+      disc.visible = rim.visible = on;
+      if (!on) { shown = null; return; }
+      const point = projectPoint(range.x, range.z), colour = ROLE_COLOURS[range.role] ?? 0xffffff;
+      for (const mesh of [disc, rim]) { mesh.position.set(point.x, point.y, 0); mesh.scale.set(range.radius, range.radius * .72, 1); mesh.material.color.setHex(colour); }
+      disc.material.opacity = .12 + .04 * Math.sin(time * 2.4);
+      disc.userData = {range: {...range}}; shown = range;
+    },
+    get shown() { return shown; },
+  };
 }
 
 // The campaign (GAME-V3.md §4): which frame a campaign building shows. A building that is not open yet is a
@@ -141,6 +170,9 @@ export function decorateIsland(place, ctx = {}) {
     campaignMeshes.set(building.id, meshes);
   }
   if (layout.cabin !== false && ctx.art?.cabin) placeArt(root, ctx.art, 'cabin', CABIN.x, CABIN.z).name = 'island-cabin';
+  // The reach of a house's role while its card is open (GAME-V3.md "Houses"): a soft disc with a bright rim on
+  // the ground, in the role's colour. ctx.range() says which ({x, z, radius, role} or null), read every frame.
+  const rangeRing = makeRangeRing(root);
   const baseColliders = [...place.colliders];
   let state = {spots: [], visitor: false, battle: false, unlocks: null, crew: null, campaign: null}, disposed = false;
   // The real art once it has loaded (null until then: the drawn sprites stand in), and what each spot shows.
@@ -153,12 +185,13 @@ export function decorateIsland(place, ctx = {}) {
   function showSpot(spot, answer, hidden) {
     const built = answer?.built === true, kind = built ? (kindsOf(spot).includes(answer.kind) ? answer.kind : kindsOf(spot)[0]) : null;
     const level = Number.isSafeInteger(answer?.level) && answer.level > 0 ? answer.level : 1;
-    const id = kind ? buildingArt(kind, level) : null, pips = kind ? pipCount(kind, level) : 0;
+    const id = kind ? buildingArt(kind, level, answer?.spec) : null, pips = kind ? pipCount(kind, level) : 0;
     const key = !id || hidden ? '' : `${id}:${pips}`;
     if (shown.get(spot.id)?.key === key) return;
     clear(spot.id);
     if (!key) return;
     const mesh = put(id, spot.x, spot.z); mesh.name = `island-${kind}:${spot.id}`; mesh.userData.level = level;
+    mesh.userData.role = activeRole({kind, level, spec: answer?.spec}); mesh.userData.art = id;
     const meshes = [mesh], [, height, anchor] = artSizes[id], top = height * (1 - anchor) + .15;
     for (let i = 0; i < pips; i++) {
       const pip = put(pipArt(level), spot.x + (i - (pips - 1) / 2) * .6, spot.z, top, .01); pip.name = `island-pip:${spot.id}:${i + 1}`; meshes.push(pip);
@@ -210,7 +243,7 @@ export function decorateIsland(place, ctx = {}) {
   apply(state);
 
   // The real art (every level, the pips and the crew) replaces the drawn sprites once it has loaded.
-  const wanted = [...new Set([...SPOTS.flatMap(kindsOf).flatMap(kind => LEVEL_ART[kind] ?? []), PIP_ART, PIP_TIER_ART, ...Object.values(crewArt)])]
+  const wanted = [...new Set([...SPOTS.flatMap(kindsOf).flatMap(kind => LEVEL_ART[kind] ?? []), ...Object.values(ROLE_ART), PIP_ART, PIP_TIER_ART, ...Object.values(crewArt)])]
     .filter(id => Object.hasOwn(artSizes, id));
   (ctx.loadArt ?? loadArt)(wanted).then(loaded => {
     if (disposed) { Object.values(loaded).forEach(material => { material.map?.dispose(); material.dispose(); }); return; }
@@ -255,6 +288,7 @@ export function decorateIsland(place, ctx = {}) {
     ring() { ringing = 1.2; },
     update(dt, time = 0) {
       if (disposed) return;
+      rangeRing.show(ctx.range?.() ?? null, reduced() ? 0 : time);
       const still = reduced();
       const glow = still ? 1 : .7 + .3 * Math.sin(time * 3.2), bob = still ? 0 : Math.sin(time * 2.4) * 2.4 / UNIT;
       for (const marker of markers.values()) { marker.ring.material.opacity = glow; marker.badge.position.y = marker.badge.userData.baseY + bob; }

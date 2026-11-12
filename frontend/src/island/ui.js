@@ -106,12 +106,12 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
       if (act && !act.disabled) focusable = act;
       footer(body, model, act);
       if (model.locked) body.classList.add('is-locked');
-      // GAME-V3.md §5: the tower's skill, chosen once its kind is researched at the Tech hub.
+      // GAME-V3.md §5: the tower's skill, chosen once its kind is researched at the Tech hub; a house's role the same way.
       if (model.skills) {
-        const box = node('section', 'island-skills-pick'); box.setAttribute('aria-label', model.skills.title);
+        const box = node('section', `island-skills-pick${model.skills.role ? ' is-roles' : ''}`); box.setAttribute('aria-label', model.skills.title);
         box.append(node('h3', 'island-skills-title', model.skills.title), line('island-skills-line', model.skills.line));
         if (model.skills.choices.length) {
-          const list = node('div', 'island-spec-list'); list.setAttribute('role', 'group'); list.setAttribute('aria-label', 'Tower skills');
+          const list = node('div', 'island-spec-list'); list.setAttribute('role', 'group'); list.setAttribute('aria-label', model.skills.role ? 'House roles' : 'Tower skills');
           for (const choice of model.skills.choices) {
             const option = node('button', `island-spec${choice.active ? ' is-active' : ''}`); option.type = 'button';
             option.dataset.focus = `spec-${choice.id}`; option.dataset.spec = choice.id; option.disabled = choice.disabled;

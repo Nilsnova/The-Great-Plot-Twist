@@ -88,7 +88,9 @@ export function packAtlas(ids = ATLAS_IDS, dimensions = pirateDimensions, width 
 // replace the pixel boarders (PIXEL_ONLY_IDS) in the cartoon atlas. drawBoarder() takes the cartoon frame
 // when the atlas has it, else the pixel one (pixel packAtlas, tests).
 export const DOWN_IDS = Array.from({ length: 10 }, (_, i) => `captain-down-${i + 1}`);
-export const CARTOON_EXTRA_IDS = ['boarder', 'boarder-walk-1', 'boarder-walk-2', 'boarder-hit', 'boarder-hack', ...DOWN_IDS];
+// The Barracks' militia (GAME-V3.md "Houses"), cartoon only: a pixel atlas (tests) simply does not draw them.
+export const MILITIA_IDS = ['militia', 'militia-walk-1', 'militia-walk-2', 'militia-strike', 'militia-hit'];
+export const CARTOON_EXTRA_IDS = ['boarder', 'boarder-walk-1', 'boarder-walk-2', 'boarder-hit', 'boarder-hack', ...DOWN_IDS, ...MILITIA_IDS];
 export const PIXEL_ONLY_IDS = [...pirateFrames.boarder];
 // Levels 4 and 5 of walls, cannons and mortars and their gold pips (GAME-V3.md §4.1): cartoon-only, so a pixel
 // atlas (tests) draws a tier building with its level-3 art and plain pips.
@@ -200,7 +202,7 @@ function pool() {
 
 const colour = hex => { const c = new THREE.Color(hex); return { r: c.r, g: c.g, b: c.b }; };
 const GOLD = colour('#ffd77a'), RED = colour('#d8553f'), GREEN = colour('#9fd26a'), DARK = colour('#1f2622'), BEAM = colour('#ffe9a8');
-const BRASS = colour('#e0b04a');
+const BRASS = colour('#e0b04a'), TEAL = colour('#4fc3c9');
 const SHIP_SIZE = Object.fromEntries(['sloop', 'brig', 'flagship'].map(kind => {
   const [w, h] = pirateDimensions[pirateFrames[kind][0]]; return [kind, { w: w / UNIT, h: h / UNIT }];
 }));
@@ -269,6 +271,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   const ships = new Map(); // id -> {facing, phase, flashUntil, bornAt}
   const sinkers = pool(), wrecks = pool(), balls = pool(), splashes = pool(), shells = pool(), bursts = pool(), tracers = pool(), warnings = pool();
   const fallen = pool(), strikes = pool(), crew = new Map(); // boarders: id -> {phase, flashUntil}
+  const guards = new Map(); // the Barracks' militia: id -> {phase, flashUntil, strikeUntil, facing}
   let captain = null, revive = null, figures = null;
   const fire = new Map(), wallFlash = new Map();
   let clock = 0, simNow = 0, latest = null, visible = true, disposed = false;
@@ -428,6 +431,19 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         effects()?.ring(event.x + dir * 1.4, y + .9, { radius: .9, life: .25, colour: '#e8eee8' });
         break;
       }
+      // The house roles (GAME-V3.md "Houses"): a militia's spear thrust, a militia hurt or down, a Tavern's healing.
+      case 'militia_struck': militiaMeta(event.militiaId).strikeUntil = clock + STRIKE_SECONDS; break;
+      case 'militia_hit': militiaMeta(event.militiaId).flashUntil = clock + FLASH_SECONDS; break;
+      case 'militia_fell': {
+        fallen.add(item => Object.assign(item, { x: event.x, z: event.z, at: clock, facing: guards.get(event.militiaId)?.facing ?? 1, militia: true }));
+        guards.delete(event.militiaId);
+        break;
+      }
+      case 'captain_healed': {
+        effects()?.bloom(x, y + 1.2, { radius: .8, life: .45, colour: '#9fe08a' });
+        spark(x, y + 1.6, { count: 4, speed: [.4, 1], angle: Math.PI / 2, spread: .8, gravity: -1.5, life: [.5, .9], colour: '#b8f0a0', size: [1, 2] });
+        break;
+      }
       case 'wall_rebuilt': {
         effects()?.bloom(x, y + 1, { radius: 1.8, life: .7, colour: '#bfe6a8' });
         spark(x, y + .8, { count: 14, speed: [.6, 2], angle: Math.PI / 2, spread: 2, gravity: 5, life: [.4, .8], colour: '#b8b2a0', size: [1, 2] });
@@ -501,10 +517,34 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       layer.push(rect[WHITE], x - w / 2, top, w * share, .125, 0, 0, { ...(share > .5 ? GOLD : RED), a: 1 });
     }
   }
-  // A fallen boarder: the sprite sinks and fades under a puff of smoke.
+  function militiaMeta(id) {
+    let meta = guards.get(id);
+    if (!meta) {
+      let hash = 0; for (const char of id) hash = (hash * 31 + char.charCodeAt(0)) | 0;
+      meta = { phase: (hash >>> 0) % 983 / 983 * 2, flashUntil: -1, strikeUntil: -1, facing: 1 };
+      guards.set(id, meta);
+    }
+    return meta;
+  }
+  // A Barracks militia (GAME-V3.md "Houses"): walking (two frames), the spear thrust, a hit flash, a teal hp bar.
+  function drawMilitia(unit) {
+    const meta = militiaMeta(unit.id), layer = bands[bandOf(unit.z)], x = unit.x, y = drawnY(unit.z);
+    meta.facing = unit.facing ?? meta.facing;
+    const hit = clock < meta.flashUntil, striking = clock < meta.strikeUntil, step = still() ? 0 : Math.floor(clock * 5 + meta.phase) % 2;
+    const id = hit ? 'militia-hit' : striking ? 'militia-strike' : unit.state === 'walking' && !still() ? MILITIA_IDS[1 + step] : 'militia';
+    const r = rect[id];
+    if (!r) return;
+    layer.push(r, x, y, r.w * K(), r.h * K(), .5, r.anchor * K(), { flip: meta.facing < 0, flashing: hit ? .35 : 0 });
+    if (unit.hp < unit.maxHp) {
+      const top = y + (r.h - r.anchor) * K() - .35, w = .9, share = Math.max(0, unit.hp / unit.maxHp);
+      layer.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .25, 0, 0, { ...DARK, a: .8 });
+      layer.push(rect[WHITE], x - w / 2, top, w * share, .125, 0, 0, { ...(share > .5 ? TEAL : share > .25 ? GOLD : RED), a: 1 });
+    }
+  }
+  // A fallen boarder (or militia): the sprite sinks and fades under a puff of smoke.
   function drawFallen(item) {
     const p = Math.min(1, (clock - item.at) / FALL_SECONDS), layer = bands[bandOf(item.z)], y = drawnY(item.z);
-    const r = rect[BOARDER_ART.hit] ?? rect[FRAMES.boarder[0]], k = K();
+    const r = (item.militia ? rect['militia-hit'] : null) ?? rect[BOARDER_ART.hit] ?? rect[FRAMES.boarder[0]], k = K();
     if (r) layer.push(r, item.x, y, r.w * k, r.h * k * (1 - p * .5), .5, r.anchor * k, { flip: item.facing < 0, a: 1 - p, flashing: .5 * (1 - p) });
     const puff = rect[pirateFrames.smoke[still() ? 0 : Math.min(2, Math.floor(p * 3))]];
     if (puff) layer.push(puff, item.x, y - .1, puff.w * .6, puff.h * .6, .5, puff.anchor * .6, { a: 1 - p * p });
@@ -686,6 +726,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       }
       for (const ship of state.ships) drawShip(ship, shipMeta(ship.id, ship.kind, ship.x));
       for (const boarder of state.boarders ?? []) drawBoarder(boarder);
+      for (const unit of state.militia ?? []) drawMilitia(unit);
       for (const item of fallen.items) drawFallen(item);
       for (const item of strikes.items) drawStrike(item);
       for (const sinker of sinkers.items) {

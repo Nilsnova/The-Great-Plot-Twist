@@ -3,6 +3,8 @@
 // kind may pick once its branch is researched. The ids, names and prices repeat backend/content/islands.json
 // (research.branches); tests/campaign/campaign.test.js keeps them equal. The numbers of each skill live in
 // the sim (CONFIG.specs in src/pirates/sim.js), so every screen fights the same island. No DOM here.
+import {readRole} from './houses.js';
+
 export const BRANCHES = Object.freeze([
   Object.freeze({branch: 'cannon', name: 'Cannon skills', price: 180, specs: Object.freeze(['rapid', 'heavy', 'chain'])}),
   Object.freeze({branch: 'mortar', name: 'Mortar skills', price: 220, specs: Object.freeze(['cluster', 'fire_pot', 'long_range'])}),
@@ -25,6 +27,7 @@ export const SPECS = Object.freeze({
 });
 export const SPEC_IDS = Object.freeze(Object.keys(SPECS));
 export const branchOf = spec => SPECS[spec]?.branch ?? null;
-// A spec a building of `kind` may carry, else null (an unknown or another kind's spec is no spec).
-export const readSpec = (kind, spec) => (typeof spec === 'string' && SPECS[spec]?.branch === kind ? spec : null);
+// A spec a building of `kind` may carry, else null (an unknown or another kind's spec is no spec). A house's
+// spec is its role (src/campaign/houses.js).
+export const readSpec = (kind, spec) => (typeof spec === 'string' && SPECS[spec]?.branch === kind ? spec : readRole(kind, spec));
 export const specKinds = Object.freeze(BRANCHES.map(item => item.branch));

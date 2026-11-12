@@ -69,6 +69,11 @@ RESEARCH_SPECS = {
     "wall": ("stone", "spiked", "quick_mend"),
     "watchtower": ("spotter", "signal_fire"),
 }
+# The house roles (docs/GAME-V3.md "Houses"): from level 2 a house picks one of these, free, with no
+# research; it is stored like a tower skill (islet_buildings.spec). The check rule of
+# 20261112090000_house_roles.sql and frontend/src/campaign/houses.js list the same ids.
+HOUSE_ROLES = ("barracks", "tavern", "workshop")
+HOUSE_ROLE_LEVEL = 2
 # The campaign's own ids: the island's services and the tiers (everything that is not a level,
 # a crew member or a captain level). docs/GAME-V3.md section 4.
 SERVICE_IDS = (
@@ -182,9 +187,13 @@ class Loot:
 class Revive:
     base: int  # helping a fallen captain up during wave n costs the helper base + per_wave * n
     per_wave: int
+    # on an island with a Tavern (a house role) it costs this many percent less, rounded down;
+    # wave_revive() of 20261112090000_house_roles.sql takes it off (a test keeps the two equal)
+    tavern_percent: int = 25
 
-    def price(self, wave: int) -> int:
-        return self.base + self.per_wave * wave
+    def price(self, wave: int, tavern: bool = False) -> int:
+        price = self.base + self.per_wave * wave
+        return price * (100 - self.tavern_percent) // 100 if tavern else price
 
 
 @dataclass(frozen=True)
@@ -465,6 +474,7 @@ def read_revive(data: dict) -> Revive:
     return Revive(
         base=read_whole(entry, "base", "revive", 1, 1000),
         per_wave=read_whole(entry, "perWave", "revive", 0, 1000),
+        tavern_percent=read_whole(entry, "tavernPercent", "revive", 0, 100),
     )
 
 

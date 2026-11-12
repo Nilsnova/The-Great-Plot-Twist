@@ -499,9 +499,10 @@
     "latePerWave": 4
   },
   "revive": {
-    "about": "Captain health (docs/GAME-V3.md section 3): a teammate who helps a fallen captain up during wave n pays base + perWave x n coins (reason captain_revive). The same numbers are CONFIG.health.revive in frontend/src/pirates/sim.js; a test keeps them equal.",
+    "about": "Captain health (docs/GAME-V3.md section 3): a teammate who helps a fallen captain up during wave n pays base + perWave x n coins (reason captain_revive). The same numbers are CONFIG.health.revive in frontend/src/pirates/sim.js; a test keeps them equal. On an island with a Tavern (a house role, GAME-V3.md Houses) it costs tavernPercent percent less, rounded down: wave_revive() takes it off (20261112090000_house_roles.sql), CONFIG.houses.tavern.revive shows it.",
     "base": 20,
-    "perWave": 5
+    "perWave": 5,
+    "tavernPercent": 25
   },
   "waves": {
     "countdownSeconds": 5,

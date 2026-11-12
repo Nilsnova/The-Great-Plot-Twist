@@ -8,6 +8,7 @@
 //   victory             wave 100 won (once)                   wave_won / wave_lost  any other result (variant)
 //   boarders_ashore     the first boarders of a game (once)   player_fell / player_revived (variant)
 //   all_fallen          every captain is down (variant)       heart_low          the heart below 30% (variant)
+//   house_role          the first house role picked on an island (once; GAME-V3.md "Houses")
 // A line may list `covers` (other triggers it also answers): wave_5 is also the first boss.
 
 import {STEPS} from '../campaign/index.js';
@@ -36,6 +37,7 @@ export const RULES = Object.freeze({
   player_revived: {once: false, priority: LOW, ttl: 5000, cooldown: 30000},
   all_fallen: {once: false, priority: HIGH, ttl: 8000, cooldown: 60000},
   heart_low: {once: false, priority: HIGH, ttl: 6000},
+  house_role: {once: true, priority: NORMAL, ttl: 15000},
   wave_lost: {once: false, priority: NORMAL, ttl: 6000},
   wave_won: {once: false, priority: LOW, ttl: 6000},
 });

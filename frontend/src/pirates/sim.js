@@ -9,6 +9,7 @@
 import { surfaces } from '../world/places/surfaces.js';
 import { captainStats, readSkills } from './captain-stats.js';
 import { readSpec } from '../campaign/tech.js';
+import { ROLE_RADIUS } from '../campaign/houses.js';
 
 const freeze = value => {
   for (const inner of Object.values(value)) if (inner && typeof inner === 'object') freeze(inner);
@@ -176,6 +177,24 @@ export const CONFIG = freeze({
     spotter: { damage: 1.15, radius: 22 },       // watchtower: +15% damage to the towers within radius
     signal_fire: { warn: 5 },                    // watchtower: ships show 5 s earlier
   },
+  // The house roles (docs/GAME-V3.md "Houses"), picked on a house's card from level 2 and read from the island's
+  // spots like a tower skill (defense.spec), so every screen fights the same island. Two houses may pick the
+  // same role: the effects stack up to the caps below. Distances from the house's spot.
+  houses: {
+    level: 2,
+    // Barracks: `each` militia fighter per Barracks walks out of the door at the start of a wave (at most `max`
+    // on the island), goes for the nearest boarder within `guard` of the door, lets go past `leash` and walks
+    // home with none in reach. hp and the blow grow with the wave's hp curve (like the boarders); boarders fight
+    // a militia like a captain (GAME-V3.md §3) and can kill it. A fallen militia is back at the next wave.
+    barracks: { each: 1, max: 2, hp: 60, damage: 7, every: 1, reach: 1.1, guard: ROLE_RADIUS.barracks, leash: ROLE_RADIUS.barracks + 2, speed: 2.6, door: 1.6 },
+    // Tavern: a standing captain within `radius` gains `heal` hp a second per Tavern, at most `max` together;
+    // with a Tavern on the island a revive costs `revive` percent less (the server checks it: wave_revive()).
+    tavern: { radius: ROLE_RADIUS.tavern, heal: 2, max: 3, revive: 25 },
+    // Workshop: a wall within `radius` repairs `repair` faster per Workshop (at most maxRepair), is rebuilt
+    // (the cooldown, the carpenter's work) `faster` sooner per Workshop (at most maxFaster), and a broken one
+    // comes back by itself at `share` of its hp after `mend` seconds (8 with two Workshops).
+    workshop: { radius: ROLE_RADIUS.workshop, repair: .3, maxRepair: .5, faster: .3, maxFaster: .45, mend: 12, minMend: 8, share: .25 },
+  },
 });
 
 const KINDS = new Set(['wall', 'cannon', 'mortar', 'watchtower', 'house']);
@@ -264,11 +283,21 @@ export function warshipsFor(wave, boss = wave % CONFIG.boss.every === 0) {
   const regular = wave >= K.warshipsFrom ? 1 + Math.floor((wave - K.warshipsFrom) / K.warshipsEvery) : 0;
   return { bosses, regular };
 }
-/** The coins a revive costs on `wave` (paid by the reviver, checked by the server): 20 + 5 × wave. */
-export function revivePrice(wave) {
+/** The coins a revive costs on `wave` (paid by the reviver, checked by the server): 20 + 5 × wave, 25% less
+ * (rounded down, as wave_revive() does) on an island with a Tavern. */
+export function revivePrice(wave, { tavern = false } = {}) {
   const R = CONFIG.health.revive, n = Number.isInteger(wave) && wave > 0 ? Math.min(wave, CONFIG.maxWave) : 1;
-  return R.base + R.perWave * n;
+  const price = R.base + R.perWave * n;
+  return tavern ? Math.floor(price * (100 - CONFIG.houses.tavern.revive) / 100) : price;
 }
+/** The houses of an island's defenses that act with a role (level 2 and up): [{id, role, x, z}] in id order. */
+export function houseRoles(defenses) {
+  return readDefenses(defenses).filter(item => item.kind === 'house' && item.level >= CONFIG.houses.level && item.spec)
+    .map(item => ({ id: item.id, role: item.spec, x: item.x, z: item.z }));
+}
+/** True when the island has a Tavern (the revive discount of wave_revive()). */
+export const hasTavern = defenses => houseRoles(defenses).some(item => item.role === 'tavern');
+
 /** The share of a tier at `wave` (0 before it begins). */
 export function tierShare(tier, wave) {
   return wave < tier.from ? 0 : Math.min(tier.max, tier.share + tier.grow * (wave - tier.from));
@@ -391,10 +420,18 @@ export function createWave(options = {}) {
   const cannons = towers.filter(item => item.kind === 'cannon'), mortars = towers.filter(item => item.kind === 'mortar');
   // The sight the island shows (fog edge, the manual-fire reach): the level-1 cannon's, or the best cannon's.
   const sight = Math.max(C.cannon.range + towerBonus, ...cannons.map(item => item.range)) * fogShare;
+  // The house roles (CONFIG.houses): the houses of level 2 and up that picked one, in id order.
+  const HO = C.houses, roles = houseRoles(defenses), withRole = role => roles.filter(item => item.role === role);
+  const barracks = withRole('barracks'), taverns = withRole('tavern'), workshops = withRole('workshop');
+  const W = HO.workshop, near = (list, item, radius) => list.filter(house => distance(house.x, house.z, item.x, item.z) <= radius + 1e-9).length;
   const walls = defenses.filter(item => item.kind === 'wall').map(item => {
     const hp = C.levels.wall[item.level - 1].hp * (item.spec === 'stone' ? S.stone.hp : 1);
+    // Workshops in reach: faster repairs, a shorter rebuild, and a broken wall that mends by itself.
+    const shops = near(workshops, item, W.radius), sooner = 1 - Math.min(W.maxFaster, W.faster * shops);
     return { ...item, hp, maxHp: hp, repairLeft: 0, repaired: 0, crew: false, rebuildAt: -Infinity, rebuilding: 0,
-      inner: distance(item.x, item.z, heart.x, heart.z) <= heart.ring, bearing: Math.atan2(item.z - heart.z, item.x - heart.x) };
+      inner: distance(item.x, item.z, heart.x, heart.z) <= heart.ring, bearing: Math.atan2(item.z - heart.z, item.x - heart.x),
+      workshop: shops, boost: round2(1 + Math.min(W.maxRepair, W.repair * shops)), sooner: round2(sooner),
+      cooldown: round2(C.wall.rebuildCooldown * sooner), mendAfter: shops ? Math.max(W.minMend, W.mend / shops) : Infinity, mending: 0 };
   });
   const cannonById = new Map(cannons.map(item => [item.id, item]));
   const wallById = new Map(walls.map(item => [item.id, item]));
@@ -439,6 +476,10 @@ export function createWave(options = {}) {
   const ships = [], wrecks = [], balls = [], shells = [], captains = new Map(), blades = new Map(), boarders = [], fires = [];
   // Captain health (GAME-V3.md §3): id -> {id, x, z, hp, maxHp, down, downAt, seen, colour, away}.
   const H = C.health, party = new Map();
+  // The Barracks' militia (CONFIG.houses.barracks): {id, militia: true, houseId, homeX, homeZ, x, z, hp, maxHp,
+  // damage, state: idle|walking|fighting, foe, hitIn, facing}. They walk out at the start of the wave.
+  const militia = [], militiaById = new Map();
+  let militiaFell = 0;
   let queued = [];
   const now = () => round2(ticks * C.tick);
   const flagshipAfloat = () => ships.some(ship => ship.kind === 'flagship') ||
@@ -648,8 +689,19 @@ export function createWave(options = {}) {
     hero.down = false; hero.downAt = null; hero.hp = Math.max(1, Math.round(hero.maxHp * R.share));
     events.push({ type: 'captain_revived', t: now(), captainId: hero.id, by, hp: hero.hp, x: round2(hero.x), z: round2(hero.z) });
   }
+  // A boarder's blow at a militia fighter (the Barracks): at 0 hp it falls, and every boarder on it walks on.
+  function hurtMilitia(unit, boarder, events) {
+    const damage = Math.min(unit.hp, round2(H.damage * curve.damage));
+    unit.hp = round2(unit.hp - damage);
+    events.push({ type: 'militia_hit', t: now(), militiaId: unit.id, boarderId: boarder.id, damage, hp: unit.hp, x: round2(unit.x), z: round2(unit.z) });
+    if (unit.hp > 0) return;
+    militia.splice(militia.indexOf(unit), 1); militiaById.delete(unit.id); militiaFell++;
+    events.push({ type: 'militia_fell', t: now(), militiaId: unit.id, houseId: unit.houseId, x: round2(unit.x), z: round2(unit.z) });
+    for (const other of boarders) if (other.foe === unit.id) { other.foe = null; other.goal = null; if (other.state === 'fighting') other.state = 'walking'; }
+  }
   // A boarder's blow at a captain; at 0 hp the captain falls and every boarder on them walks on.
   function hurtCaptain(hero, boarder, events) {
+    if (hero.militia) { hurtMilitia(hero, boarder, events); return; }
     const damage = Math.min(hero.hp, round2(H.damage * curve.damage));
     hero.hp = round2(hero.hp - damage);
     events.push({ type: 'captain_hit', t: now(), captainId: hero.id, boarderId: boarder.id, damage, hp: hero.hp,
@@ -661,20 +713,24 @@ export function createWave(options = {}) {
   }
   // The captain a boarder goes for: the one it is on while they stand within the leash, else the nearest
   // standing captain within reach (ties: the lower id), else none. O(captains) per boarder.
+  // A Barracks militia counts as a captain here (the same reach, leash and crowd), so boarders fight it too.
   function foeOf(boarder) {
-    if (!party.size) return null;
+    if (!party.size && !militia.length) return null;
     const t = ticks * C.tick;
+    const fit = hero => (hero.militia ? hero.hp > 0 : !hero.down && presentAt(hero, t));
     if (boarder.foe) {
-      const hero = party.get(boarder.foe);
-      if (hero && !hero.down && presentAt(hero, t) && distance(boarder.x, boarder.z, hero.x, hero.z) <= H.leash + 1e-9) return hero;
+      const hero = party.get(boarder.foe) ?? militiaById.get(boarder.foe);
+      if (hero && fit(hero) && distance(boarder.x, boarder.z, hero.x, hero.z) <= H.leash + 1e-9) return hero;
       boarder.foe = null; boarder.goal = null;
     }
     let best = null, near = H.reach + 1e-9;
-    for (const hero of party.values()) {
-      if (hero.down || !presentAt(hero, t) || crowdOn(hero) >= H.crowd) continue;
+    const consider = hero => {
+      if (!fit(hero) || crowdOn(hero) >= H.crowd) return;
       const d = distance(boarder.x, boarder.z, hero.x, hero.z);
       if (d < near - 1e-9 || (best && Math.abs(d - near) <= 1e-9 && hero.id < best.id)) { best = hero; near = d; }
-    }
+    };
+    for (const hero of party.values()) consider(hero);
+    for (const unit of militia) consider(unit);
     if (best) { boarder.foe = best.id; boarder.goal = null; }
     return best;
   }
@@ -695,7 +751,7 @@ export function createWave(options = {}) {
   // the carpenter's CONFIG.wall.rebuild (40%).
   function rebuild(wall, by, events, share = C.wall.rebuild) {
     wall.hp = round2(Math.max(1, Math.round(wall.maxHp * share)));
-    wall.rebuildAt = ticks * C.tick; wall.rebuilding = 0; wall.repairLeft = 0;
+    wall.rebuildAt = ticks * C.tick; wall.rebuilding = 0; wall.repairLeft = 0; wall.mending = 0;
     events.push({ type: 'wall_rebuilt', t: now(), wallId: wall.id, hp: wall.hp, by, x: wall.x, z: wall.z });
   }
 
@@ -712,11 +768,11 @@ export function createWave(options = {}) {
       if (!wall || wall.hp <= 0 || wall.hp >= wall.maxHp) return; // a broken wall is rebuilt, not repaired
       if (wall.repairLeft <= 0) wall.repaired = 0;
       wall.repairLeft = C.wall.repairSeconds;
-      // The repairer's own skills (Quick fix, Master shipwright) set how fast this repair goes.
-      wall.repairRate = round2(C.wall.repairRate * captainStats(1, input.skills).repairMultiplier * (wall.spec === 'quick_mend' ? S.quick_mend.repair : 1));
+      // The repairer's own skills (Quick fix, Master shipwright) set how fast this repair goes; a Workshop nearby too.
+      wall.repairRate = round2(C.wall.repairRate * captainStats(1, input.skills).repairMultiplier * (wall.spec === 'quick_mend' ? S.quick_mend.repair : 1) * wall.boost);
     } else if (input.type === 'rebuild') {
       const wall = typeof input.wallId === 'string' ? wallById.get(input.wallId) : undefined;
-      if (!wall || wall.hp > 0 || ticks * C.tick - wall.rebuildAt < C.wall.rebuildCooldown - 1e-9) return;
+      if (!wall || wall.hp > 0 || ticks * C.tick - wall.rebuildAt < wall.cooldown - 1e-9) return;
       // The rebuilder's own skills: Master shipwright brings the wall back at 60% instead of 40%.
       rebuild(wall, 'player', events, captainStats(1, input.skills).rebuildShare);
     } else if (input.type === 'lamps_lit') {
@@ -885,6 +941,51 @@ export function createWave(options = {}) {
     }
     return pickBoarderTarget(boarder).kind === 'heart' && toHeart(boarder) <= B.heartRadius + 1e-6;
   }
+  // One tick of a Barracks militia (CONFIG.houses.barracks): keep to its boarder while that one stays within
+  // the leash of the door, else take the boarder nearest the door within guard (ties: the one that landed
+  // first), walk up and strike every `every` seconds; with none, walk home. No dice, so every screen agrees.
+  function moveMilitia(unit, events) {
+    const G = HO.barracks, fromDoor = item => distance(item.x, item.z, unit.homeX, unit.homeZ);
+    let foe = unit.foe ? boarders.find(item => item.id === unit.foe) ?? null : null;
+    if (foe && fromDoor(foe) > G.leash + 1e-9) foe = null;
+    if (!foe) {
+      let best = G.guard + 1e-9;
+      for (const boarder of boarders) { const d = fromDoor(boarder); if (d < best - 1e-9) { foe = boarder; best = d; } }
+    }
+    unit.foe = foe?.id ?? null;
+    const goal = foe ?? { x: unit.homeX, z: unit.homeZ }, dx = goal.x - unit.x, dz = goal.z - unit.z, d = Math.hypot(dx, dz);
+    if (Math.abs(dx) > .05) unit.facing = dx < 0 ? -1 : 1;
+    if (foe && d <= G.reach + 1e-9) {
+      unit.state = 'fighting';
+      if ((unit.hitIn -= C.tick) > 1e-9) return;
+      unit.hitIn += G.every;
+      events.push({ type: 'militia_struck', t: now(), militiaId: unit.id, targetId: foe.id, damage: unit.damage,
+        x: round2(unit.x), z: round2(unit.z), toX: round2(foe.x), toZ: round2(foe.z) });
+      damageBoarder(foe, unit.damage, `militia:${unit.id}`, events, { militia: true });
+      return;
+    }
+    unit.hitIn = G.every / 2; // the first blow half a second after it reaches a boarder
+    if (!foe && d <= .05) { unit.state = 'idle'; return; }
+    unit.state = 'walking';
+    const step = Math.min(G.speed * C.tick, Math.max(0, d - (foe ? G.reach * .9 : 0)));
+    if (d > 1e-9) { unit.x = round2(unit.x + dx / d * step); unit.z = round2(unit.z + dz / d * step); }
+  }
+  // A Tavern (CONFIG.houses.tavern): every standing captain within its radius regains hp, also in a wave; two
+  // Taverns together give at most `max` a second. A captain_healed event about every 2 hp (for the drawing).
+  function tavernHeal(t, events) {
+    const T = HO.tavern;
+    for (const hero of party.values()) {
+      if (hero.down || !presentAt(hero, t) || hero.hp >= hero.maxHp) continue;
+      const n = near(taverns, hero, T.radius);
+      if (!n) continue;
+      const amount = Math.min(hero.maxHp - hero.hp, Math.min(T.max, T.heal * n) * C.tick);
+      hero.hp = round2(hero.hp + amount); hero.healed = round2((hero.healed ?? 0) + amount);
+      if (hero.healed + 1e-9 >= 2 || hero.hp >= hero.maxHp) {
+        events.push({ type: 'captain_healed', t: now(), captainId: hero.id, amount: hero.healed, hp: hero.hp, x: round2(hero.x), z: round2(hero.z) });
+        hero.healed = 0;
+      }
+    }
+  }
 
   function tick(events) {
     if (started === false) {
@@ -900,6 +1001,15 @@ export function createWave(options = {}) {
         ...(tier.final && !withFlagship ? { final: true } : {}),
         fog, sight: round2(sight), heart: { x: heart.x, z: heart.z },
         lanes: lanes.slice(0, laneCount).map(lane => ({ id: lane.id, x: round2(lane.stop.x), z: round2(lane.stop.z) })) });
+      // The Barracks' militia walk out of their doors (CONFIG.houses.barracks), the same on every screen.
+      const G = HO.barracks;
+      for (const house of barracks) for (let k = 0; k < G.each && militia.length < G.max; k++) {
+        const id = `militia_${militia.length + 1}`, hp = Math.round(G.hp * curve.hp);
+        const unit = { id, militia: true, houseId: house.id, homeX: house.x + (k ? .8 : 0), homeZ: house.z + G.door, x: house.x, z: house.z + .6,
+          hp, maxHp: hp, damage: round2(G.damage * curve.hp), state: 'walking', foe: null, hitIn: G.every / 2, facing: 1 };
+        militia.push(unit); militiaById.set(id, unit);
+        events.push({ type: 'militia_out', t: 0, militiaId: id, houseId: house.id, hp, x: round2(unit.x), z: round2(unit.z) });
+      }
     }
     for (const input of queued) applyInput(input, events);
     queued = [];
@@ -978,6 +1088,8 @@ export function createWave(options = {}) {
       events.push({ type: 'island_damaged', t: now(), boarderId: boarder.id, damage, hp: islandHp, x: round2(boarder.x), z: round2(boarder.z) });
       if (islandHp <= 0) { end('island_lost', events); return; }
     }
+    for (const unit of [...militia]) moveMilitia(unit, events);
+    if (taverns.length) tavernHeal(t, events);
     if (party.size && allFallen(t)) { end('captains_fallen', events); return; }
     for (let i = balls.length - 1; i >= 0; i--) {
       const ball = balls[i];
@@ -1034,6 +1146,12 @@ export function createWave(options = {}) {
     }
     for (const wall of walls) {
       wall.crew = false;
+      // A Workshop in reach (CONFIG.houses.workshop): a broken wall comes back by itself after a while.
+      if (wall.hp <= 0 && wall.workshop) {
+        wall.mending = round2(wall.mending + C.tick);
+        if (wall.mending + 1e-9 >= wall.mendAfter) rebuild(wall, 'workshop', events, W.share);
+        continue;
+      }
       if (wall.repairLeft <= 0) continue;
       const amount = Math.min((wall.repairRate ?? C.wall.repairRate) * C.tick, wall.maxHp - wall.hp);
       wall.hp = round2(wall.hp + amount); wall.repaired += amount; wall.repairLeft -= C.tick;
@@ -1053,10 +1171,10 @@ export function createWave(options = {}) {
         wall.crew = true;
         if (wall.hp <= 0) {
           wall.rebuilding = round2(wall.rebuilding + C.tick);
-          if (wall.rebuilding + 1e-9 >= C.crew.carpenter.rebuild) rebuild(wall, 'carpenter', events);
+          if (wall.rebuilding + 1e-9 >= round2(C.crew.carpenter.rebuild * wall.sooner)) rebuild(wall, 'carpenter', events);
           continue;
         }
-        wall.hp = round2(Math.min(wall.maxHp, wall.hp + C.crew.carpenter.rate * (wall.spec === 'quick_mend' ? S.quick_mend.repair : 1) * C.tick));
+        wall.hp = round2(Math.min(wall.maxHp, wall.hp + C.crew.carpenter.rate * (wall.spec === 'quick_mend' ? S.quick_mend.repair : 1) * wall.boost * C.tick));
         if (wall.hp >= wall.maxHp) events.push({ type: 'wall_repaired', t: now(), wallId: wall.id, hp: wall.hp, by: 'carpenter', x: wall.x, z: wall.z });
       }
     }
@@ -1091,9 +1209,14 @@ export function createWave(options = {}) {
         party: [...party.values()].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)).map(hero => ({ id: hero.id,
           x: round2(hero.x), z: round2(hero.z), hp: hero.hp, maxHp: hero.maxHp, down: hero.down, downAt: hero.downAt,
           colour: hero.colour, present: presentAt(hero, t) })),
+        // The house roles (GAME-V3.md "Houses"): the Barracks' militia in the wave, and the houses that act.
+        militia: militia.map(unit => ({ id: unit.id, houseId: unit.houseId, x: unit.x, z: unit.z, hp: unit.hp, maxHp: unit.maxHp,
+          state: unit.state, foe: unit.foe, facing: unit.facing })),
+        militiaFell, houses: roles.map(item => ({ ...item })),
         wrecks: wrecks.map(item => ({ ...item })),
         walls: walls.map(wall => ({ id: wall.id, level: wall.level, ...(wall.spec ? { spec: wall.spec } : {}), hp: wall.hp, maxHp: wall.maxHp, repairing: wall.repairLeft > 0, crew: wall.crew,
-          broken: wall.hp <= 0, inner: wall.inner, rebuildReady: wall.hp <= 0 && t - wall.rebuildAt >= C.wall.rebuildCooldown - 1e-9 })),
+          broken: wall.hp <= 0, inner: wall.inner, rebuildReady: wall.hp <= 0 && t - wall.rebuildAt >= wall.cooldown - 1e-9,
+          ...(wall.workshop ? { workshop: wall.workshop } : {}) })),
         cannons: cannons.map(cannon => ({ id: cannon.id, x: cannon.x, z: cannon.z, reload: round2(cannon.reload), range: round2(cannon.sight) })),
         towers: towers.map(tower => ({ id: tower.id, kind: tower.kind, level: tower.level, ...(tower.spec ? { spec: tower.spec } : {}), x: tower.x, z: tower.z, manned: tower.manned,
           reload: round2(tower.reload), range: round2(tower.sight) })),

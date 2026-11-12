@@ -24,6 +24,8 @@ from dataclasses import dataclass
 
 from server.errors import ApiError
 from server.island.catalogue import (
+    HOUSE_ROLE_LEVEL,
+    HOUSE_ROLES,
     RESEARCH_SPECS,
     Crew,
     IslandCatalogue,
@@ -96,7 +98,13 @@ def spot_view(catalogue: IslandCatalogue, spot: Spot, built: Built | None) -> Sp
         )
     kind = kind_of(catalogue, built.kind)
     upgrade = kind.prices[built.level] if built.level < kind.max_level else None
-    spec = built.spec if built.spec in RESEARCH_SPECS.get(kind.kind, ()) else None
+    # A tower's skill (GAME-V3 section 5), or a house's role from level 2 (GAME-V3 "Houses").
+    allowed = (
+        (HOUSE_ROLES if built.level >= HOUSE_ROLE_LEVEL else ())
+        if kind.kind == "house"
+        else RESEARCH_SPECS.get(kind.kind, ())
+    )
+    spec = built.spec if built.spec in allowed else None
     return SpotView(spot.id, kind.kind, spot.kinds, True, built.level, kind.coins, upgrade, spec)
 
 
@@ -409,11 +417,20 @@ def check_specialise(
     researched: tuple[str, ...],
 ) -> tuple[Spot, str]:
     """A tower picks one skill of its kind (409 not_built, 400 bad_spec, 422 wrong_kind,
-    409 not_researched). Returns the spot and the branch (the tower's kind)."""
+    409 not_researched). A house of level 2 or more picks a role the same way, with no research
+    (docs/GAME-V3.md "Houses"; 422 wrong_kind on another building, 409 house_level below
+    level 2). Returns the spot and the branch (the building's kind)."""
     spot = find_spot(catalogue, spot_id)
     standing = built.get(spot.id)
     if standing is None or standing.kind not in spot.kinds:
         raise ApiError(409, "not_built", "Build something on this spot first.")
+    if spec in HOUSE_ROLES:
+        if standing.kind != "house":
+            name = kind_of(catalogue, standing.kind).name.lower()
+            raise BuildRefused(422, "wrong_kind", f"A {name} cannot take a house role.")
+        if standing.level < HOUSE_ROLE_LEVEL:
+            raise house_level()
+        return spot, "house"
     branch = branch_of_spec(spec)
     if branch is None:
         raise ApiError(400, "bad_spec", "There is no such tower skill.")
@@ -423,6 +440,10 @@ def check_specialise(
     if branch not in researched:
         raise not_researched(research_named(catalogue, branch))
     return spot, branch
+
+
+def house_level() -> ApiError:
+    return ApiError(409, "house_level", f"Raise this house to level {HOUSE_ROLE_LEVEL} first.")
 
 
 def not_researched(entry: Research) -> ApiError:
