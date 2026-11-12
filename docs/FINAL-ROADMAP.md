@@ -39,6 +39,8 @@ The order of the tasks below follows this table: the walkthrough and the UX carr
 
 Value: ★★★ moves a 20% criterion, ★★ a 10% criterion or a clear risk, ★ nice to have. Size: S (under 2 hours), M (half a day), L (a day).
 
+**V3 follow-up T19:** nearby building interactions implemented in [PR #7](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/7), with [visual evidence](evidence/T19/README.md) and Johannes's lane notes in [WALKTHROUGH.md](WALKTHROUGH.md). Human review is pending; the task row is in [OPEN-TODOS.md](OPEN-TODOS.md).
+
 ### A. Repository walkthrough (criterion 6, 20%)
 
 | ID | Value | Size | Task | Done when |

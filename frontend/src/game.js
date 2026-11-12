@@ -86,13 +86,15 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   const worldBlocked=()=>!!(harbor?.active||island?.active||classDemo?.active||shortcuts.active||tutorial.active||shell?.blocked||isAppBlocked?.()||marketUi?.active||sportsUi.active);
   function resetControls(){mapTouch?.cancel();input.reset();}
   const outsideBlocked=()=>externalOverlay()||world.busy;
+  const isCaptainDown=()=>!!(waves?.island.captainDown||waves?.point?.controller.captainDown);
+  const currentWaveAction=()=>waves?.island.wave?.action??waves?.point?.controller.wave?.action??null;
   const sportsUi=createSportsEntry({container,getToken:session.getToken,onSessionChange:session.onChange,resetInput:resetControls,focusGame:()=>graphics.renderer.domElement.focus(),onSignIn:()=>{sportsUi.close();openAccount?.();}},{load:loadMatchCard});
   // No prediction market in the game (D035, 11 Nov): the fortune teller and its desk are gone.
   function panelLabel(zone){return island?.label(zone);}
   const sailing = createSailing(container, reducedMotion, () => settings.quality === 'low');
   const world = createWorld({ emit, isBlocked:worldBlocked, disposeVisuals(){harbor?.dispose();mapTouch?.dispose();perf?.dispose();experience?.dispose();marketUi?.dispose();sportsUi.dispose();shortcuts.dispose();tutorial.dispose();isletState.dispose();stopIslet?.();stopActualIslet?.();}, transition: (id, options) => sailing.start(id, options),
-    cancelTransition: sailing.end, finishTransition() { sailing.end(); graphics.renderer.domElement.focus(); }, createPlace: id => createPlace({ id, isletState, island, reducedMotion, canvas: graphics.renderer.domElement, camera: view.camera,
-      isActive: () => active && !outsideBlocked() }), attach(place) { scene.add(place.group); water.setCoast(place.group); lightPools.setPlace(place.group); controller.setPlace(place); view.setPlace(place.id, controller.player.position); } });
+    cancelTransition: sailing.end, finishTransition() { sailing.end(); graphics.renderer.domElement.focus(); }, createPlace: id => createPlace({ id, isletState, island, reducedMotion, canvas: graphics.renderer.domElement, camera: view.camera, player: controller.player,
+      isActive: () => active && !outsideBlocked() && !isCaptainDown() && !currentWaveAction() }), attach(place) { scene.add(place.group); water.setCoast(place.group); lightPools.setPlace(place.group); controller.setPlace(place); view.setPlace(place.id, controller.player.position); } });
   async function travel(id, options) {
     mapTouch?.cancel();
     try { await world.goTo(id, options); }
@@ -251,7 +253,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     settings.hour = (settings.hour + (shell.blocked && !followLocalTime ? 0 : delta) * (settings.fastTime ? 0.8 : followLocalTime ? 1 / 3600 : 0.003)) % 24;
     mapTouch.update(delta);
     // Captain health (GAME-V3.md §3): a fallen captain cannot walk, and lies as the wave draws them.
-    const captainDown=!!(waves?.island.captainDown||waves?.point?.controller.captainDown);controller.player.visible=!captainDown;
+    const captainDown=isCaptainDown();controller.player.visible=!captainDown;
     const speed=captainDown?controller.update(delta,false):controller.update(delta, active && !outsideBlocked());
     const state = weather.update(reducedMotion()?0:delta, controller.player.position, settings.quality);
     const night = sky.update(settings.hour, state, reducedMotion()?0:time); lightPools.update(reducedMotion()?0:time, night); pixelFx.update(delta);
@@ -264,11 +266,12 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     // A captain down in the wave lies in the wave's drawing: their standing presence figure hides (pirates/figures.js).
     experience.update(delta,{speed,hide:waves?.figures?.(experience.figures())??null});
     const zone = active&&!outsideBlocked()&&!captainDown ? findZone(controller.player.position, world.current?.zones ?? []) : null;
-    touch.update(zone,active&&!outsideBlocked());
     classDemo?.update(delta,{blocked:!active||outsideBlocked(),zoneActive:!!zone});
     // During a wave E belongs to the wave's own prompt (fire, repair, rebuild: TOWER-DEFENSE.md §12) when it has one,
     // so a wall's build card does not open instead of the rebuild.
-    const waveAction=waves?.island.wave?.action??waves?.point?.controller.wave?.action??null;
+    const waveAction=currentWaveAction();
+    // The wave's own button supports holding to revive; the generic Use button must not compete.
+    touch.update(waveAction?null:zone,active&&!outsideBlocked());
     if(input.consume('KeyE')&&zone&&!waveAction)world.interact(zone);
     fpsFrames++;
     if (performance.now() - fpsStart >= 500) {

@@ -4,10 +4,11 @@
 >
 > **Who uses it:** players using keyboard/mouse or touch, and reviewers of the interaction code.
 
-- Status: in progress.
+- Status: implemented and verified locally; author and independent human review pending.
 - Responsible teammate: Johannes Franz Lang (@frcola), with Codex assistance.
 - Branch: `feat/t19-nearby-interactions`, from main `3a88a7a`.
 - Issue: [#6](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/6).
+- Draft PR: [#7](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/7).
 
 ## Scope and contract
 
@@ -27,13 +28,13 @@ wave-action rules; do not add a second interaction system.
 
 ## Acceptance checks
 
-- [ ] Near/far/boundary click tests: only the nearby target opens; distant clicks give a next step.
-- [ ] Keyboard E and phone Use open a nearby building once.
-- [ ] A nearby fallen captain takes priority over a building; overlays and a fallen local captain block input.
-- [ ] Existing tests remain valid; no false database/network evidence is claimed.
-- [ ] `npm test`, `npm run build`, `node scripts/report-budget.js --check`, `npm run test:a11y`, `npm run test:demo`, and the house text lint have exact recorded results.
-- [ ] Before/after captures at 1280 x 720 and 375 x 812.
-- [ ] WALKTHROUGH, TEST-MAP, OPEN-TODOS and required status/roadmap notes updated.
+- [x] Near/far/boundary click tests: only the nearby target opens; distant clicks give a next step.
+- [x] Keyboard E and phone Use open a nearby building once.
+- [x] A reported revive takes priority over a building; overlays and a fallen local captain block input.
+- [x] Existing tests remain valid; no false database/network evidence is claimed.
+- [x] `npm test`, `npm run build`, `node scripts/report-budget.js --check`, `npm run test:a11y`, `npm run test:demo`, and the house text lint have exact recorded results in the PR.
+- [x] Before/after captures at 1280 x 720 and 375 x 812: [evidence](../docs/evidence/T19/README.md).
+- [x] WALKTHROUGH, TEST-MAP, OPEN-TODOS and required status/roadmap notes updated.
 - [ ] Independent human review before merge.
 
 ## Limits and risks
