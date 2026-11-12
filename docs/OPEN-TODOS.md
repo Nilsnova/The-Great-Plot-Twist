@@ -8,7 +8,7 @@
 >
 > **Never** paste keys, SMTP passwords, tokens or student numbers into a chat, an issue or a commit message. Student numbers go only into the README line of their owner.
 >
-> Last updated: Thu 12 Nov 2026, early morning (v3 is live).
+> Last updated: Thu 12 Nov 2026, ~07:00 (v3 live; narrator voiced; faster walking).
 
 ## 1. If you jump in now (30 minutes to start)
 
@@ -31,12 +31,21 @@ The game is built and live; nobody waits for anyone. You extend it.
 | T6 | **Harbor idea**: one more simple stall on real data (e.g. "Will it rain in Lisbon tomorrow?" on the weather API), same card style | `frontend/src/harbor/`, backend weather | M |
 | T7 | **Leaderboard**: best waves of all islands this week (read-only route + a small card) | backend `island/`, `frontend/src/island/` | M |
 | T8 | **Walkthrough page for the part you touched** (what, where, why, limits, how it could change) | `docs/WALKTHROUGH.md` | S |
-| T9 | **Invalid-input tests** for one route you understand (empty, too long, wrong type, repeated click) | `backend/server/tests/` | S |
+| T9 | **Invalid-input tests** for one route you understand (empty, too long, wrong type, repeated click). **Claimed by Johannes** for the D1 sweep (branch `test/d1-invalid-inputs`, not merged yet); pick a different route if you take T9 too | `backend/server/tests/` | S |
 | T10 | **Your README line**: your name and student number (by Fri 20 Nov) | `README.md` | XS |
 
 **Live since Thu 12 Nov, early morning: v3** ([GAME-V3.md](GAME-V3.md) is the contract, [TOWER-DEFENSE.md](TOWER-DEFENSE.md) stays valid where v3 does not change it). Play › **Create a game** or **Join** with a code or link, a lobby (code, link, QR, who is online) and **Start**; up to 10 players on **one shared island**, each with their own colour; Pause between waves and Continue later. A voiced narrator with captions introduces each new thing. Pirates come ashore and fight on foot (cutlass), an inner wall ring, rebuilding walls. Captains have hp, can fall, and a teammate holds E to help them up for coins; the wave is lost if the heart falls or every captain is down. The captain's skill tree and a weapon shop. A campaign that opens things by wave (the Harbor market stall after wave 4, a wreck at 6, the football board at 7, the Tech hub with tower skills at 8, tower levels 4–5 at 12–20, new pirate types at 12/20/30/50, the final battle at 100). Clean cartoon art drawn in code. Merge `main` before you start.
 
-**Next by the owner (do not pick):** sailing out to sea with the repaired wreck (GAME-V3.md §4, wave 10, phase 2), the missing narrator audio.
+**Being built right now by the owner's agents (do not pick, and avoid these files until they land: `frontend/src/pirates/sim.js`, `render.js`, `hud.js`, the island cards, `src/player/`):**
+- small fixes: a calmer "Wave won" card, no extra captain when shooting, the friend's arrival banner, the phone game chip, level 4–5 stars, firing frames, `docs/HOW-TO-PLAY.md` rewritten;
+- Tear down a building (50% back to each payer) and a new build-spot marker;
+- house roles from level 2: Barracks (militia), Tavern (healing, cheaper revive), Workshop (cheaper, faster wall repairs);
+- island cards docked at the side; Tech hub research in 3 tiers with team choices (pick one of two);
+- wave events from wave 3 (fog, storm, night raid, fire ships, pincer, armada, siege barge, treasure galleon, smugglers, kraken) and boss finisher scenes;
+- cartoon title screen and intro drawn in code instead of the painted images;
+- next: walk up to a building and press E to open it (no clicking from afar); the captain's skill tree with exclusive choices; sailing out to sea (phase 2).
+
+T1–T3 wait until the wave events land (they change the same simulation). T4–T10 can start now.
 
 ## 3. Every member, before the freeze (walkthrough = 20% of the grade)
 
