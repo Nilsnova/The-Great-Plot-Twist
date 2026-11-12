@@ -449,7 +449,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     },
     async demolish({ spot, actionUid, code } = {}) {
       if (typeof spot !== 'string' || !uid(actionUid)) invalid('Send the spot and an action id.');
-      const mine = world.islands.get(me().code), island = code === undefined ? mine : visited(code), player = me();
+      const mine = world.islands.get(me().code), island = code === undefined || code === null ? mine : visited(code), player = me();
       const answer = () => (island === mine ? view() : visitedView(island));
       const done = player.actions.get(`demolish:${actionUid}`);
       if (done) return { ...answer(), demolished: { ...done, repeat: true } };

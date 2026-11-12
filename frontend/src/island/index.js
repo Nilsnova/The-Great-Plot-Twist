@@ -534,11 +534,15 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const heardRefunds = new Map();
   function heardDemolish(demolished) {
     const me = colours().me, key = JSON.stringify(demolished), at = Date.now();
-    if (disposed || !me || at - (heardRefunds.get(key) ?? -Infinity) < 15000) return;
+    if (disposed || !me) return;
+    const text = refundToast({demolished, me, whoName: lobby().rows?.find(row => row.id === demolished?.who)?.name ?? ''});
+    if (!text) return;
+    // On a teammate's island the HUD shows your own wallet: read it again at every note (the room says it
+    // twice; the first may come before the server's answer reached this screen). The toast shows once.
+    if (visiting) { wrote('own'); void reloadOwn(); }
+    if (at - (heardRefunds.get(key) ?? -Infinity) < 15000) return;
     heardRefunds.set(key, at);
-    const whoName = lobby().rows?.find(row => row.id === demolished?.who)?.name ?? '';
-    const text = refundToast({demolished, me, whoName});
-    if (text) ui.toast(text, 'success');
+    ui.toast(text, 'success');
   }
   // GAME-V3.md §5: a tower picks a skill (free); research a kind at the Tech hub; §4: coins into the wreck.
   // Each answer is the island; the room hears island_changed, so every screen reads it again.
