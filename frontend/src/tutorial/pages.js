@@ -54,7 +54,7 @@ export const TUTORIAL_PAGES = Object.freeze([
     alt: 'A big mortar and a pirate flag won in battle',
     art: [art('island-mortar-l3.png', 48, 32, 2), art('pirate-flag-trophy.png', 32, 48, 2)]},
   {id: 'friend', title: 'Play with friends',
-    text: ['Play › Create a game, then send its link or code. Friends choose Join a game.',
+    text: ['Play › Create a game, then send its link or code to friends, who choose Join a game.',
       'Up to 10 captains defend one island together, and everyone earns their own loot.',
       'Between waves anyone can tear a building down: everyone who paid for it gets back half of what they paid.'],
     alt: 'A captain waves hello',
