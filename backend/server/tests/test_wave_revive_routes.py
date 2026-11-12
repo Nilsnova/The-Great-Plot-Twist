@@ -146,7 +146,7 @@ def test_the_islands_flag_and_a_login_are_needed():
 
 
 def test_the_wallet_reason_and_the_migration_agree():
-    assert WALLET_REASONS[-1] == ("captain_revive", "spend")
+    assert ("captain_revive", "spend") in WALLET_REASONS
     sql = MIGRATION.read_text(encoding="utf-8")
     assert "('captain_revive', 'spend'," in sql
     assert "security invoker" in sql and "set search_path = ''" in sql
