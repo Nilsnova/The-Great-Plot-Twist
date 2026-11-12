@@ -109,7 +109,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   function quality(name) { settings.quality = name; setArtQuality(name); graphics.setQuality(name); water.setQuality(name); }
   hud = createHud(container, {
     start() { active = true; view.start(reducedMotion()); },
-    focus() { graphics.renderer.domElement.focus({ preventScroll: true }); }, settings(){shell?.openSettings();},menu:()=>shell.show('pause'),quality(name){setUserQuality(name);}, chart() { if (active) showChart(); },travel:()=>travelOpen(),controls:()=>void shortcuts.open(),tutorial:()=>void tutorial.open(),
+    focus() { graphics.renderer.domElement.focus({ preventScroll: true }); }, settings(){shell?.openSettings();},menu:()=>shell.show('pause'),quality(name){setUserQuality(name);}, chart() { if (active) showChart(); },travel:()=>travelOpen(),placeName:id=>island?.placeName?.(id)??null,controls:()=>void shortcuts.open(),tutorial:()=>void tutorial.open(),
   });
   experience=createWorldExperience({scene,container,art,world,player:controller.player,camera:view.camera,canvas:graphics.renderer.domElement,reducedMotion,preferences:getPreferences,
     send:(name,...args)=>sendIntent(adapter,name,...args),
@@ -162,9 +162,11 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     isDemo:()=>new URLSearchParams(location.search).get('demo')==='1'});
   void stopPlots.refresh();
   const stopArrivals = on('arrived', event => {hud.arrive(event.place);showQuests();emit({type:PLACE_ARRIVED,id:event.place});});
+  // A friend's game names its host once the island answers: the banner says "Nils's game", not "Your island".
+  const stopVisitNamed = on('island_visit_named', event => {if(event.place===world.current?.id)hud.renamePlace();});
   try { await world.goTo('saltreach_harbor'); }
   catch (error) {
-    disposed=true;container.removeEventListener('close',panelClosed,true);stopView();stopListening();for(const stopOne of stopScale)stopOne?.(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
+    disposed=true;container.removeEventListener('close',panelClosed,true);stopView();stopListening();for(const stopOne of stopScale)stopOne?.(); stopArrivals(); stopVisitNamed(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
     createLifetime(scene, art)(); graphics.renderer.dispose();graphics.renderer.domElement.remove(); throw error;
   }
   // ?perf=1 shows the frame-rate panel (the old highlights tour left with the mystery, 10 Nov).
@@ -286,7 +288,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     camera: view.camera, view, player: controller.player, settings, quality:setUserQuality, setWeather, emit, on, world, chart, sailing, shell, audio, adapter, get marketUi(){return marketUi;},sportsUi, get marketLoad(){return marketLoad;},mapTouch, experience,isletState,get classDemo(){return classDemo;},get waves(){return waves;} };
   function dispose() {
     if(disposed)return;disposed=true;narrator.dispose();container.removeEventListener('close',panelClosed,true);classDemo?.dispose();classDemo=null;waves?.dispose();waves=null;island?.dispose();island=null;void pirates?.then(harness=>harness?.dispose());
-    harbor?.dispose();mapTouch?.dispose();touch.dispose();gamepad.dispose();marketUi?.dispose();sportsUi.dispose();stopLiveWeather();stopPreferences();stopMotion();stop();stopView();stopListening();for(const stopOne of stopScale)stopOne?.(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
+    harbor?.dispose();mapTouch?.dispose();touch.dispose();gamepad.dispose();marketUi?.dispose();sportsUi.dispose();stopLiveWeather();stopPreferences();stopMotion();stop();stopView();stopListening();for(const stopOne of stopScale)stopOne?.(); stopArrivals(); stopVisitNamed(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
     window.removeEventListener('resize', resize); createLifetime(scene, art)();
     setMenuTravel(null);disposeDiagnostics();graphics.renderer.dispose();graphics.renderer.domElement.remove(); delete window.__island;
   }
