@@ -8,7 +8,7 @@
 >
 > **Never** paste keys, SMTP passwords, tokens or student numbers into a chat, an issue or a commit message. Student numbers go only into the README line of their owner.
 >
-> Last updated: Thu 12 Nov 2026, ~07:00 (v3 live; narrator voiced; faster walking).
+> Last updated: Thu 12 Nov 2026, ~07:15 (v3 live; narrator voiced; faster walking). The owner's agents are stopped: their unfinished work is now tasks T11–T19 below.
 
 ## 1. If you jump in now (30 minutes to start)
 
@@ -33,19 +33,21 @@ The game is built and live; nobody waits for anyone. You extend it.
 | T8 | **Walkthrough page for the part you touched** (what, where, why, limits, how it could change) | `docs/WALKTHROUGH.md` | S |
 | T9 | **Invalid-input tests** for one route you understand (empty, too long, wrong type, repeated click). **Claimed by Johannes** for the D1 sweep (branch `test/d1-invalid-inputs`, not merged yet); pick a different route if you take T9 too | `backend/server/tests/` | S |
 | T10 | **Your README line**: your name and student number (by Fri 20 Nov) | `README.md` | XS |
+| T11 | **Review and release the small fixes** on branch `fix/v3-small` (5 finished commits: the friend's arrival banner says "Nils's game", the phone game chip no longer covers the goals, level 4–5 stars, firing towers keep their level look, a compact "Wave won" card off the island's middle, HOW-TO-PLAY rewritten). Run all checks, look at it in the game, open a PR. The last commit (wip) is T12 | branch `fix/v3-small` | S |
+| T12 | **No extra captain when shooting**: today each musket shot draws a second captain sprite where you fired (`drawPose` in `frontend/src/pirates/render.js`). Make your own character (`src/player/character.js`) and teammates' figures (`src/world/others/`, matched like `src/pirates/figures.js`) play the firing pose instead; same for the cutlass. Started (wip commit on `fix/v3-small`) | `render.js`, `player/character.js` | M |
+| T13 | **Tear down a building**: any member, between waves; each payer gets back 50% of what they paid (build + upgrades); legacy buildings refund the host; confirmation shows each refund; every screen sees the empty spot. Needs migration `20261112080000_demolish.sql` (the owner applies it) and a new build-spot marker that reads "build here". Started on `feat/v3-demolish` (wip) | island cards, `backend/server/island/`, migration | L |
+| T14 | **House roles from level 2** (owner's decision): Barracks (1–2 militia fight boarders near it), Tavern (heals captains nearby; helping up costs 25% less on the island), Workshop (wall repairs 30% cheaper and faster, walls nearby mend between waves). Houses keep their loot. Migration `20261112090000_house_roles.sql`. Started on `feat/v3-houses` (wip) | `sim.js`, island cards, migration | L |
+| T15 | **Island cards docked at the side** (right panel on desktop, bottom sheet on phones) so the island stays visible; researched Tech hub branches collapse to one line | island card component | M |
+| T16 | **Research tree with team choices**: 3 tiers per branch (tier 2 after wave 15, tier 3 after wave 25); at tiers 2 and 3 the island picks ONE of two options (e.g. Rapid II or Long barrel; Broadside or Grapeshot), the other closes. Migration `20261112100000_research_tiers.sql`. T15+T16 started on `feat/v3-research` (wip) | Tech hub card, `sim.js`, migration | L |
+| T17 | **Wave events** from wave 3, deterministic from the wave seed, each with a banner and a narrator caption: fog, storm, night raid, fire ships, pincer, armada, siege barge, treasure galleon, smugglers' landing, kraken. Barely started on `feat/v3-waves` (wip) | new `src/pirates/wave-events.js`, `sim.js` | L |
+| T18 | **Boss finisher scenes**: below ~25% boss hp the battle freezes, letterbox + camera push-in, and the whole crew does a 10 s task together (haul the chain / aim the great cannon / board and duel; all three for Redtide). Success sinks the boss with bonus loot, failure gives it 15% hp back. Synced inputs (new message kind in `sync.js` + `live-rules.js`). Original design. Barely started on `feat/v3-waves` (wip) | new `src/pirates/finisher/` | L |
+| T19 | **Walk up and press E**: open a building's card only when standing next to it (E, or a Use button on phones); a fallen teammate nearby takes priority (hold E = help up); a click from far away says "Walk closer". Not started | `src/player/`, island input | M |
+| T20 | **Captain skill tree with exclusive choices**: branches where a captain picks one of two, so the crew splits roles (e.g. medic, engineer, gunner). Needs a migration. Not started | Captain card, `backend/server/island/` | L |
+| T21 | **Cartoon title screen and intro** drawn in code instead of the painted images in `frontend/public/cutscenes/` and `places/` (they look AI-generated); keep captions, Skip and the narrator timing. Not started | `src/cutscenes/`, title, `src/art/` | M |
 
 **Live since Thu 12 Nov, early morning: v3** ([GAME-V3.md](GAME-V3.md) is the contract, [TOWER-DEFENSE.md](TOWER-DEFENSE.md) stays valid where v3 does not change it). Play › **Create a game** or **Join** with a code or link, a lobby (code, link, QR, who is online) and **Start**; up to 10 players on **one shared island**, each with their own colour; Pause between waves and Continue later. A voiced narrator with captions introduces each new thing. Pirates come ashore and fight on foot (cutlass), an inner wall ring, rebuilding walls. Captains have hp, can fall, and a teammate holds E to help them up for coins; the wave is lost if the heart falls or every captain is down. The captain's skill tree and a weapon shop. A campaign that opens things by wave (the Harbor market stall after wave 4, a wreck at 6, the football board at 7, the Tech hub with tower skills at 8, tower levels 4–5 at 12–20, new pirate types at 12/20/30/50, the final battle at 100). Clean cartoon art drawn in code. Merge `main` before you start.
 
-**Being built right now by the owner's agents (do not pick, and avoid these files until they land: `frontend/src/pirates/sim.js`, `render.js`, `hud.js`, the island cards, `src/player/`):**
-- small fixes: a calmer "Wave won" card, no extra captain when shooting, the friend's arrival banner, the phone game chip, level 4–5 stars, firing frames, `docs/HOW-TO-PLAY.md` rewritten;
-- Tear down a building (50% back to each payer) and a new build-spot marker;
-- house roles from level 2: Barracks (militia), Tavern (healing, cheaper revive), Workshop (cheaper, faster wall repairs);
-- island cards docked at the side; Tech hub research in 3 tiers with team choices (pick one of two);
-- wave events from wave 3 (fog, storm, night raid, fire ships, pincer, armada, siege barge, treasure galleon, smugglers, kraken) and boss finisher scenes;
-- cartoon title screen and intro drawn in code instead of the painted images;
-- next: walk up to a building and press E to open it (no clicking from afar); the captain's skill tree with exclusive choices; sailing out to sea (phase 2).
-
-T1–T3 wait until the wave events land (they change the same simulation). T4–T10 can start now.
+**Nothing is being built by the owner's agents right now.** T11–T21 are the owner's next ideas; the `wip` branches are unfinished and untested, so read them before you build on them, or start fresh from `main`. Migrations are applied only by the project owner. T1, T2, T17 and T18 all change `frontend/src/pirates/sim.js`: claim one at a time, or agree in the group chat who goes first.
 
 ## 3. Every member, before the freeze (walkthrough = 20% of the grade)
 
