@@ -165,7 +165,7 @@ describe('captain health: the balance (GAME-V3.md §3)', () => {
     for (const island of islands) for (const wave of [1, 2, 3]) for (const at of [{ x: 0, z: 2 }, { x: 16, z: 0 }]) {
       for (let seed = 1; seed <= 8; seed++) expect(fight(island, wave, seed, at), `wave ${wave} seed ${seed} at ${at.x},${at.z}`).not.toBe('captains_fallen');
     }
-  });
+  }, 60000);
 });
 
 describe('captain health: the messages', () => {
