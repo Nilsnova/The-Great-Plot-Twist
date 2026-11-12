@@ -12,7 +12,10 @@
 //   shot reaches the other page; an upgrade in the wave's break shows on both; the host pauses the break
 //   and the friend's break says "Paused by Nils"; after Resume both press "Next wave" at the same moment,
 //   finish with loot and end up in one wave 2; two more friends open the ?game= link mid-wave, their lobby
-//   closes by itself (the game is on) and they join the wave. Ten players in one room are covered by the
+//   closes by itself (the game is on) and they join the wave. Captain health (GAME-V3.md §3): in the first
+//   wave the friend stands on the boarders until he falls, the owner walks up and holds E for 2 s (a short
+//   hold first, let go: nothing is paid), pays 20 + 5 × wave and helps him up; both pages see the same
+//   fall and the same revive at the same tick (screenshots at 1280 × 800 and 390 × 844). Ten players in one room are covered by the
 //   unit tests (tests/island/games.test.js, tests/pirates/ten-players.test.js).
 //   node scripts/check-multiplayer.js [folder]        (npm run test:mp)
 import assert from 'node:assert/strict';
@@ -70,7 +73,9 @@ async function openCaptain(name, playerId, visit = null, {create = false, join =
   // What every page heard: the sim's musket shots, the loot answers, and a ship list per frame.
   await page.evaluate(() => {
     const g = window.__island; g.settings.hour = 12;
-    window.__mp = {shots: [], loot: [], samples: [], heard: [], started: []};
+    window.__mp = {shots: [], loot: [], samples: [], heard: [], started: [], fell: [], revived: []};
+    g.on('captain_fell', event => window.__mp.fell.push({captainId: event.captainId, t: event.t}));
+    g.on('captain_revived', event => window.__mp.revived.push({captainId: event.captainId, by: event.by, t: event.t}));
     g.on('game_started', event => window.__mp.started.push(event));
     // What crossed the island room from the other tabs (the raw BroadcastChannel of pirates/room.js).
     const channel = new BroadcastChannel('tgpt:live:place:isle_k7q2m:1');
@@ -179,6 +184,98 @@ async function compare(a, b, waveId) {
 
 const results = [];
 const captainShots = [];
+// Where nobody fights: north of the heart, away from the three sea lanes (east, south, west).
+const SAFE = {x: 0, z: -12};
+const stand = (captain, at) => captain.page.evaluate(at => { const g = window.__island; g.player.position.set(at.x, g.world.current.groundHeight?.(at.x, at.z) ?? 1.03, at.z); }, at);
+const myCaptain = captain => captain.page.evaluate(() => { const w = window.__island.waves.island;
+  return {id: w.playerId, captain: w.captain, down: w.captainDown, revive: w.revive, party: w.state?.party ?? []}; });
+// The narrator's caption sits where the wave's prompt is: skip it before a screenshot of the prompt.
+const quiet = captain => captain.page.evaluate(() => document.querySelector('.narrator-card:not([hidden]) .narrator-skip')?.click());
+// Screenshots of the owner and the friend at the two sizes the brief asks for; the game goes back to 960 × 600.
+async function sized(name, captains) {
+  for (const [label, size] of [['1280x800', {width: 1280, height: 800}], ['390x844', {width: 390, height: 844}]]) {
+    for (const captain of captains) {
+      await quiet(captain);
+      await captain.page.setViewportSize(size); await captain.page.waitForTimeout(250); await settle(captain.page);
+      await captain.page.screenshot({path: `${out}/${name}-${label}-${captain.playerId}.png`});
+    }
+  }
+  for (const captain of captains) await captain.page.setViewportSize({width: 960, height: 600});
+}
+// GAME-V3.md §3: the friend falls on the boarders, the owner helps him up (a short hold that charges nothing
+// first), and both pages see the same fall and the same revive at the same tick.
+async function captainHealth(host, ben, wave) {
+  const lines = [];
+  await stand(host, SAFE);
+  const benId = (await myCaptain(ben)).id, hostId = (await myCaptain(host)).id;
+  // Both captains are in the wave with full hp, on both pages.
+  for (const captain of [host, ben]) {
+    await captain.page.waitForFunction(ids => { const party = window.__island.waves.island.state?.party ?? [];
+      return ids.every(id => party.some(hero => hero.id === id && hero.present)); }, [hostId, benId], {timeout: 15000, polling: 200});
+  }
+  // The friend stands on the nearest boarder until he falls.
+  let snapped = false;
+  const end = Date.now() + 120000;
+  while (Date.now() < end) {
+    const state = await ben.page.evaluate(() => { const w = window.__island.waves.island, s = w.wave;
+      if (!s || s.done) return {over: true};
+      const boarders = s.state.boarders ?? [];
+      const target = boarders.reduce((best, b) => (!best || Math.hypot(b.x, b.z - 2) < Math.hypot(best.x, best.z - 2) ? b : best), null);
+      if (target && !w.captainDown) { const g = window.__island; g.player.position.set(target.x + .4, g.world.current.groundHeight?.(target.x, target.z) ?? 1.03, target.z); }
+      return {down: w.captainDown, hp: w.captain?.hp ?? null, boarders: boarders.length};
+    });
+    if (state.over) throw new Error('the wave ended before the friend fell');
+    if (!snapped && state.hp !== null && state.hp < 90) { snapped = true; await sized('07-captain-hp-bar', [ben, host]); }
+    if (state.down) break;
+    await ben.page.waitForTimeout(300);
+  }
+  const fallenAt = await ben.page.evaluate(id => window.__mp.fell.find(item => item.captainId === id), benId);
+  assert.ok(fallenAt, 'the friend fell');
+  await host.page.waitForFunction(id => window.__mp.fell.some(item => item.captainId === id), benId, {timeout: 5000, polling: 100});
+  const hostFell = await host.page.evaluate(id => window.__mp.fell.find(item => item.captainId === id), benId);
+  lines.push(`captain health: the friend fell at sim time ${fallenAt.t} s on his page, ${hostFell.t} s on the owner's`);
+  assert.equal(hostFell.t, fallenAt.t, 'both pages saw the fall at the same tick');
+  // A fallen captain cannot walk: the page keeps him where he fell.
+  const pinned = await ben.page.evaluate(() => { const g = window.__island, p = g.player.position, was = {x: p.x, z: p.z};
+    p.set(p.x + 5, p.y, p.z + 5); return new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(() =>
+      resolve(Math.hypot(g.player.position.x - was.x, g.player.position.z - was.z))))); });
+  assert.ok(pinned < .01, `the fallen captain stays where he fell (moved ${pinned})`);
+  assert.equal(await ben.page.locator('.pirate-down:not([hidden])').count(), 1, 'the friend sees "You have fallen"');
+  await host.page.waitForFunction(() => document.querySelectorAll('.pirate-mark').length > 0, null, {timeout: 5000, polling: 100});
+  await sized('08-fallen-captain-ring-timer', [ben, host]);
+  // The owner walks up to him (where the owner's sim has him) and holds E.
+  const benHere = (await myCaptain(host)).party.find(hero => hero.id === benId);
+  await stand(host, {x: benHere.x + 1.2, z: benHere.z});
+  await host.page.waitForFunction(() => window.__island.waves.island.wave?.action?.kind === 'revive', null, {timeout: 5000, polling: 100});
+  const coins = async () => host.page.evaluate(() => window.__island.island.dev.read().coins);
+  const before = await coins();
+  for (const [label, size] of [['1280x800', {width: 1280, height: 800}], ['390x844', {width: 390, height: 844}]]) {
+    await host.page.setViewportSize(size); await host.page.waitForTimeout(250);
+    await stand(host, {x: benHere.x + 1.2, z: benHere.z});
+    await host.page.evaluate(() => document.activeElement?.blur?.()); // E goes to the game, not a button
+    await quiet(host);
+    await host.page.keyboard.down('KeyE'); await host.page.waitForTimeout(1100); await settle(host.page);
+    await host.page.screenshot({path: `${out}/09-revive-in-progress-${label}-${host.playerId}.png`});
+    const share = (await myCaptain(host)).revive?.share ?? 0;
+    await host.page.keyboard.up('KeyE'); await host.page.waitForTimeout(300);
+    assert.ok(share > .3 && share < 1, `the hold fills (${share})`);
+  }
+  await host.page.setViewportSize({width: 960, height: 600}); await host.page.waitForTimeout(250);
+  assert.equal(await coins(), before, 'a hold that lets go pays nothing');
+  await stand(host, {x: benHere.x + 1.2, z: benHere.z});
+  await host.page.evaluate(() => document.activeElement?.blur?.());
+  await host.page.keyboard.down('KeyE'); await host.page.waitForTimeout(2700); await host.page.keyboard.up('KeyE');
+  for (const captain of [host, ben]) await captain.page.waitForFunction(id => window.__mp.revived.some(item => item.captainId === id), benId, {timeout: 8000, polling: 100});
+  const [hostRevived, benRevived] = await Promise.all([host, ben].map(captain => captain.page.evaluate(id => window.__mp.revived.find(item => item.captainId === id), benId)));
+  const paid = before - await coins();
+  lines.push(`captain health: the owner helped him up for 🪙 ${paid} at sim time ${hostRevived.t} s (the friend's page ${benRevived.t} s), by ${hostRevived.by === hostId ? 'the owner' : hostRevived.by}`);
+  assert.equal(benRevived.t, hostRevived.t, 'both pages saw the revive at the same tick');
+  assert.equal(paid, 20 + 5 * wave.wave, 'the helper paid 20 + 5 × wave');
+  assert.equal((await myCaptain(ben)).down, false, 'the friend is back on his feet');
+  await shot('10-revived');
+  await stand(ben, SAFE); await stand(host, SAFE);
+  return lines;
+}
 const lobbyOf = captain => captain.page.evaluate(() => ({open: window.__island.island.ui.open === 'lobby',
   rows: [...document.querySelectorAll('.island-card-lobby[open] .island-lobby-player')].map(row => `${row.querySelector('.island-lobby-name').textContent}:${row.classList.contains('is-online') ? 'online' : 'away'}`),
   start: document.querySelector('.island-card-lobby[open] .island-lobby-start')?.disabled ?? null}));
@@ -248,6 +345,7 @@ try {
   // 4 Both captains fire; each shot reaches the other page.
   const hostShot = await musket(host), benShot = await musket(ben);
   assert.ok(hostShot && benShot, 'both captains could fire');
+  await stand(host, SAFE); await stand(ben, SAFE); // nobody stands on the beach doing nothing
   await host.page.waitForTimeout(1500);
   const shotsOn = captain => captain.page.evaluate(() => window.__mp.shots.map(item => item.by));
   const hostId = await host.page.evaluate(() => window.__island.waves.island.wave?.info && window.__mp.shots[0]?.by);
@@ -260,6 +358,9 @@ try {
   if (!hostHeard.length && !benHeard.length) results.push('note: both musket targets sank before the shots landed');
   results.push(`musket shots: owner's sim ${hostHeard.length} from ${new Set(hostHeard).size} captains, friend's sim ${benHeard.length} from ${new Set(benHeard).size} (first by ${hostId})`);
   await shot('03-wave1-muskets');
+  // 4b Captain health: the friend falls, the owner helps him up for coins, both pages agree.
+  const health = await captainHealth(host, ben, first);
+  results.push(...health);
   // 5 Everybody finishes with loot, then both press "Next wave" at the same moment.
   // The break lasts 15 s: press Next wave on both pages first, look at the loot after.
   for (const captain of pages) await until(captain, state => state?.pause, 'the break', 240000);
