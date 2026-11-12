@@ -217,8 +217,14 @@ it("visits a friend's island by code: their buildings, building there with your 
     const {on, emit} = await window.g20Import('/src/core/events.js');
     const transport = createFakeIslandTransport();
     const island = createIsland({container: document.body, emit, on, mode: 'fake', transport, storage: null});
+    const named = [];
+    const stopNamed = on('island_visit_named', event => named.push(event.name));
+    const before = island.placeName('home_islet');
     island.visit('isle-fr3nd');
+    const early = island.placeName('home_islet');
     await island.load();
+    stopNamed();
+    const banner = {before, early, loaded: island.placeName('home_islet'), named, harbor: island.placeName('saltreach_harbor')};
     const chip = document.querySelector('.island-visit');
     const visit = {text: chip.textContent, button: chip.querySelector('button').textContent, label: chip.querySelector('button').getAttribute('aria-label')};
     // GAME-V3.md §2, one island: the chip is the game and opens its lobby (no "Sail home").
@@ -247,10 +253,13 @@ it("visits a friend's island by code: their buildings, building there with your 
     const lobbyRows = [...document.querySelectorAll('.island-lobby-name')].map(node => node.textContent);
     island.ui.close();
     await island.sailHome();
-    const home = {room: island.presencePlace('home_islet'), visitHidden: document.querySelector('.island-visit').hidden, code: island.island.code};
+    const home = {room: island.presencePlace('home_islet'), visitHidden: document.querySelector('.island-visit').hidden, code: island.island.code,
+      name: island.placeName('home_islet')};
     island.dispose();
-    return {visit, built, wallCard, paid, room, cabin, noInvite, lobbyRows, home};
+    return {visit, banner, built, wallCard, paid, room, cabin, noInvite, lobbyRows, home};
   });
+  // The arrival banner names the friend's game (the chip's words), not "Your island"; your own island keeps the registry's.
+  expect(result.banner).toEqual({before: null, early: "A friend's game", loaded: "Captain Gull's game", named: ["Captain Gull's game"], harbor: null});
   expect(result.visit).toEqual({text: "Captain Gull's game · ISLE-FR3ND" + 'Players', button: 'Players', label: 'Players and invite', lobby: true});
   // The friend's island has won wave 2: level 2 is open there (its own campaign decides, GAME-V3.md §4).
   expect(result.built).toEqual({owner: "You pay · it stays on Captain Gull's island", pips: 'Level 1 of 5', soon: '', hire: false});
@@ -259,7 +268,7 @@ it("visits a friend's island by code: their buildings, building there with your 
   expect(result.room).toBe('isle_fr3nd');
   expect(result.noInvite).toBe(true);
   expect(result.lobbyRows[0]).toBe('Captain Gull');
-  expect(result.home).toEqual({room: 'isle_k7q2m', visitHidden: true, code: 'ISLE-K7Q2M'});
+  expect(result.home).toEqual({room: 'isle_k7q2m', visitHidden: true, code: 'ISLE-K7Q2M', name: null});
 });
 
 it("with travel (one island off) the old visit chip stays: Visiting the friend's island, Sail home", async () => {

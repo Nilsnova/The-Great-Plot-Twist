@@ -233,3 +233,95 @@ it('keeps the break between waves clear of the loot toasts and the victory capti
     }
   });
 });
+
+it("names a friend's game in the arrival banner, and follows when the host's name arrives late",async()=>{
+  await evaluate.withPage(async page=>{
+    const result=await page.evaluate(async()=>{
+      for(const sheet of ['/src/ui/base.css','/src/ui/kit/kit.css','/src/ui/styles.css'])await window.g20Import(sheet);
+      localStorage.clear();
+      const {createHud}=await window.g20Import('/src/ui/hud.js');
+      const game=document.createElement('main');game.id='game';document.body.append(game);
+      let name=null;
+      const hud=createHud(game,{focus(){},start(){},travel(){return false;},placeName:id=>id==='home_islet'?name:null});
+      hud.start();
+      const banner=()=>({shown:!document.querySelector('.hud-arrival').hidden,text:document.querySelector('.hud-arrival strong').textContent,status:document.querySelector('.hud .chapter').textContent});
+      hud.arrive('home_islet');const own=banner();
+      name="A friend's game";hud.arrive('home_islet');const early=banner();
+      name="Nils's game";hud.renamePlace();const late=banner();
+      hud.dispose();
+      return {own,early,late};
+    });
+    expect(result.own).toEqual({shown:true,text:'Your island',status:'Your island'});
+    expect(result.early).toEqual({shown:true,text:"A friend's game",status:"A friend's game"});
+    expect(result.late).toEqual({shown:true,text:"Nils's game",status:"Nils's game"});
+  });
+});
+
+it("keeps a friend's game chip and the goals strip apart at 390, 375 and 1280 px",async()=>{
+  await evaluate.withPage(async page=>{
+    await mount(page);
+    await page.evaluate(async()=>{
+      await window.g20Import('/src/island/island.css');
+      const {createIslandUi}=await window.g20Import('/src/island/ui.js');
+      const {visitChip}=await window.g20Import('/src/island/one-island.js');
+      window.testIslandUi=createIslandUi({container:document.querySelector('#game')});
+      window.testIslandUi.visit(visitChip({ownerName:'Captain Bartholomew Longname',code:'ISLE-FR3ND'}),()=>{});
+    });
+    for(const [width,height] of [[390,844],[375,812],[1280,800]]){
+      await page.setViewportSize({width,height});
+      const result=await page.evaluate(()=>{
+        const box=selector=>document.querySelector(selector).getBoundingClientRect();
+        const boxes={coins:box('.hud-coins'),menu:box('.hud-menu'),strip:box('.quest-strip'),chip:box('.island-visit')};
+        const overlap=(a,b)=>a.left<b.right&&b.left<a.right&&a.top<b.bottom&&b.top<a.bottom;
+        const pairs=Object.keys(boxes).filter(name=>name!=='chip'&&overlap(boxes.chip,boxes[name]));
+        const inside=Object.values(boxes).every(r=>r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight);
+        return {pairs,inside,overflow:document.documentElement.scrollWidth>innerWidth,chip:[boxes.chip.top,boxes.chip.bottom].map(Math.round),strip:Math.round(boxes.strip.top)};
+      });
+      expect(result,`${width}px ${JSON.stringify(result)}`).toMatchObject({pairs:[],inside:true,overflow:false});
+    }
+    // Without the chip the strip goes back under the Menu.
+    await page.setViewportSize({width:390,height:844});
+    const back=await page.evaluate(()=>{window.testIslandUi.visit(null);return Math.round(document.querySelector('.quest-strip').getBoundingClientRect().top);});
+    expect(back).toBeLessThan(80);
+  });
+});
+
+it('keeps the break card compact and off the island centre: × in its corner, Next wave and Pause on one row, clear of the bar, musket, narrator and goals',async()=>{
+  await evaluate.withPage(async page=>{
+    await mount(page);
+    await page.evaluate(async()=>{for(const sheet of ['/src/ui/toasts.css','/src/ui/shell.css','/src/pirates/pirates.css','/src/narrator/narrator.css'])await window.g20Import(sheet);});
+    for(const [width,height] of [[1280,800],[390,844]]){
+      await page.setViewportSize({width,height});
+      const result=await page.evaluate(async()=>{
+        const {createWaveHud}=await window.g20Import('/src/pirates/hud.js');
+        const box=document.createElement('div');box.className='game-layer';document.querySelector('#game').append(box);
+        const hud=createWaveHud({container:box});
+        document.activeElement?.blur?.();
+        hud.bar({wave:24,shipsLeft:0,islandHp:100,maxIslandHp:100});hud.musket({ready:true,share:1,label:'Musket'});
+        const narrator=document.createElement('div');narrator.className='narrator-card';narrator.innerHTML='<p class="narrator-text">The mortar is ready. It throws its shells high over the water and hits every ship near where they land.</p>';document.body.append(narrator);
+        hud.pause({title:'Wave 24 won!',line:'24 ships sunk · 🪙 +305',seconds:3,auto:false,ready:true,hold:{label:'Pause',enabled:true}});
+        await new Promise(resolve=>setTimeout(resolve,100));
+        const rect=node=>node.getBoundingClientRect(),q=selector=>box.querySelector(selector);
+        const overlap=(a,b)=>a.left<b.right&&b.left<a.right&&a.top<b.bottom&&b.top<a.bottom;
+        const brk=rect(q('.pirate-break')),title=rect(q('.pirate-break-title')),close=rect(q('.pirate-break-close')),next=rect(q('.pirate-next')),hold=rect(q('.pirate-hold')),auto=rect(q('.pirate-auto'));
+        const strip=document.querySelector('.quest-strip');
+        const out={
+          closeOnTitle:overlap(close,title),closeInCorner:close.right<=brk.right&&brk.right-close.right<=12&&close.top-brk.top<=12,
+          oneRow:Math.abs(next.top-hold.top)<2&&next.right<=hold.left,autoBelow:auto.top>=Math.max(next.bottom,hold.bottom),
+          targets:[close,next,hold,auto].every(r=>r.height>=44),focus:document.activeElement===q('.pirate-next'),
+          titleSize:parseFloat(getComputedStyle(q('.pirate-break-title')).fontSize),
+          centre:brk.left<innerWidth/2&&brk.right>innerWidth/2&&brk.top<innerHeight/2&&brk.bottom>innerHeight/2,
+          height:Math.round(brk.height),inside:brk.left>=0&&brk.right<=innerWidth&&brk.top>=0,
+          bar:overlap(brk,rect(q('.pirate-bar'))),musket:overlap(brk,rect(q('.pirate-musket'))),narrator:overlap(brk,rect(narrator)),
+          goals:strip.getClientRects().length>0&&overlap(brk,rect(strip)),
+        };
+        hud.dispose();box.remove();narrator.remove();
+        return out;
+      });
+      expect(result,`${width}px ${JSON.stringify(result)}`).toMatchObject({closeOnTitle:false,closeInCorner:true,oneRow:true,autoBelow:true,targets:true,focus:true,
+        centre:false,inside:true,bar:false,musket:false,narrator:false,goals:false});
+      expect(result.titleSize).toBeLessThanOrEqual(22);
+      expect(result.height).toBeLessThan(200);
+    }
+  });
+});
