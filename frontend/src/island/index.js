@@ -30,7 +30,7 @@ import {buildCardModel, bellModel, inviteModel, crewModel, captainModel, captain
   harborModel, techModel, wreckModel} from './card-model.js';
 import {campaignOf, openedBetween, opensText, waveOf} from '../campaign/index.js';
 import {BRANCH_BY_ID, SPECS} from '../campaign/tech.js';
-import {SKILL_BY_ID, WEAPON_BY_ID, WEAPONS, readSkills, readWeapon} from '../pirates/captain-ids.js';
+import {ROLE_BY_ID, SKILL_BY_ID, WEAPON_BY_ID, WEAPONS, isRole, readSkills, readWeapon} from '../pirates/captain-ids.js';
 import {displayIslandCode, islandCode, islandRoom, storeVisit, readVisit, forgetVisit} from './codes.js';
 import {ISLAND_BUILT, ISLAND_INVITE_OPENED, ISLAND_UPGRADED, CREW_HIRED, WAVE_FINISHED} from '../ui/quest-events.js';
 import {readUnlocks, CREW, BUILDINGS} from './td-rules.js';
@@ -66,6 +66,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   let busyKind = null, point = null, pointWorld = null, pointMessage = '', busyCrew = null, busyCaptain = false, here = new Map(), presenceReady = false;
   // The Captain and skills card: the open tab, the skill shown below the tree, a learn, buy or equip under way.
   let captainTab = 'captain', pickedSkill = null, busySkill = null, busyWeapon = null;
+  let pickedRole = null, busyRole = false, respecAsk = false, busyRespec = false;
   // The games (GAME-V3.md §2): the room state from the wave wiring, the codes joined this page, the lobby.
   let game = null, gameCode = null, lobbyAnswer = null, lobbyProblem = '', lobbyBusy = false, lobbyRead = 0, stopGame = () => {};
   const joined = new Set();
@@ -338,11 +339,14 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     const message = cardMessage || (!own ? ownMessage : ''), wonWave = own ? unlocks().wonWave : 0;
     return {tab: captainTab,
       captain: captainModel({captain: own?.captain ?? null, coins: own?.coins ?? null, unlocks: own ? unlocks() : null, busy: busyCaptain, message: captainTab === 'captain' ? message : ''}),
-      skills: skillsModel({skills: own?.skills ?? null, wonWave, picked: pickedSkill, busy: busySkill, message: captainTab === 'skills' ? message : ''}),
+      skills: skillsModel({skills: own?.skills ?? null, wonWave, picked: pickedSkill, busy: busySkill, message: captainTab === 'skills' ? message : '',
+        coins: own?.coins ?? null, captainLevel: own?.captain?.level ?? 1, pickedRole, busyRole, respecAsk, busyRespec}),
       weapons: weaponsModel({weapons: own?.weapons ?? null, coins: own?.coins ?? null, wonWave, busy: busyWeapon, message: captainTab === 'weapons' ? message : ''})};
   };
   const captainHandlers = {upgrade: () => void upgradeCaptain(), tab: id => { captainTab = id; },
     pick: id => { pickedSkill = id; cardMessage = ''; refreshCard(); }, learn: id => void learnSkill(id),
+    pickRole: id => { pickedRole = id; cardMessage = ''; refreshCard(); }, role: id => void takeRole(id),
+    respec: () => void respecCaptain(), respecCancel: () => { respecAsk = false; refreshCard(); },
     buy: id => void buyWeapon(id), equip: id => void equipWeapon(id)};
   const handlers = {build: (spotId, kind) => void build(spotId, kind), upgrade: spotId => void upgrade(spotId), hire: () => openCrew(),
     specialise: (spotId, spec) => void specialise(spotId, spec)};
@@ -572,7 +576,35 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       setOwn(answer.data);
       emit({type: 'captain_skill_learned', skill: id});
       ui.toast(`New skill: ${SKILL_BY_ID[id].name}!`, 'success');
-    } else { cardMessage = answer.message; if (['locked', 'no_points', 'known'].includes(answer.code)) await reloadOwn(); }
+    } else { cardMessage = answer.message; if (['locked', 'no_points', 'known', 'closed', 'wrong_role'].includes(answer.code)) await reloadOwn(); }
+    refreshCard();
+  }
+  // The role choice at captain level 3 (once), and the respec that clears skills and role (coins, asked twice).
+  async function takeRole(id) {
+    if (busyRole || !isRole(id)) return;
+    busyRole = true; pickedRole = id; cardMessage = ''; refreshCard();
+    const answer = await api.pickRole({role: id});
+    if (disposed) return;
+    busyRole = false;
+    if (answer.ok) {
+      setOwn(answer.data);
+      emit({type: 'captain_role_picked', role: id});
+      ui.toast(`You are the ${ROLE_BY_ID[id].name} now!`, 'success');
+    } else { cardMessage = answer.message; if (['locked', 'role_known'].includes(answer.code)) await reloadOwn(); }
+    refreshCard();
+  }
+  async function respecCaptain() {
+    if (busyRespec) return;
+    if (!respecAsk) { respecAsk = true; cardMessage = ''; refreshCard(); return; }
+    busyRespec = true; cardMessage = ''; refreshCard();
+    const answer = await api.respec();
+    if (disposed) return;
+    busyRespec = false; respecAsk = false;
+    if (answer.ok) {
+      setOwn(answer.data); pickedSkill = null; pickedRole = null;
+      emit({type: 'captain_respec'});
+      ui.toast(`Skills reset. You have ${coinText(own.coins)}.`, 'success');
+    } else { cardMessage = answer.message; if (answer.code === 'nothing_to_reset') await reloadOwn(); }
     refreshCard();
   }
   // §15: buy a weapon once with coins (the server equips it at once), or equip one you own.
@@ -723,9 +755,9 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       if (place !== ISLAND_PLACE) return null;
       return islandRoom(visiting?.code ?? visitCode ?? own?.code ?? '');
     },
-    load, loadPoint, playArrival, visit, sailHome, pick, build, upgrade, hire, upgradeCaptain, learnSkill, buyWeapon, equipWeapon, setPresence,
+    load, loadPoint, playArrival, visit, sailHome, pick, build, upgrade, hire, upgradeCaptain, learnSkill, takeRole, respecCaptain, buyWeapon, equipWeapon, setPresence,
     // Your captain for the wave (src/pirates/game-wiring.js): level, learnt skills (§14), equipped weapon (§15).
-    captainLoadout: () => ({level: own?.captain?.level ?? 1, skills: readSkills(own?.skills?.known ?? []), weapon: readWeapon(own?.weapons?.equipped),
+    captainLoadout: () => ({level: own?.captain?.level ?? 1, skills: readSkills([...(own?.skills?.known ?? []), ...(isRole(own?.skills?.role) ? [own.skills.role] : [])]), weapon: readWeapon(own?.weapons?.equipped),
       colour: captainColour()}),
     // Captain colours (GAME-V3.md §7): each member's 0-9 by join order, and your own (src/island/lobby.js).
     colourOf, captainColour,

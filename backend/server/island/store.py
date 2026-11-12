@@ -48,7 +48,7 @@ CODE_TRIES = 5
 MAX_BUILDING_ROWS = 50
 PROGRESS_COLUMNS = (
     "wave_best,next_wave,crew_gunner,crew_carpenter,crew_lookout,captain_level,won_wave_best,"
-    "captain_skills,weapons_owned,weapon_equipped,wreck_paid"
+    "captain_skills,weapons_owned,weapon_equipped,wreck_paid,captain_role"
 )
 # The Tech hub's research of an island (20261112060000_tech_hub.sql): at most one row per branch.
 MAX_RESEARCH_ROWS = 10
@@ -99,6 +99,7 @@ class ProgressRow(BaseModel):
     weapons_owned: list[StrictStr]
     weapon_equipped: StrictStr
     wreck_paid: StrictInt = 0
+    captain_role: StrictStr | None = None
 
 
 class LearnedRow(BaseModel):
@@ -107,6 +108,14 @@ class LearnedRow(BaseModel):
     status: Literal["done"]
     skills: list[StrictStr]
     points: StrictInt
+    repeat: StrictBool
+
+
+class RoleRow(BaseModel):
+    """The answer of island_pick_role."""
+
+    status: Literal["done"]
+    role: StrictStr
     repeat: StrictBool
 
 
@@ -196,6 +205,7 @@ class Progress:
     weapons_owned: tuple[str, ...] = ("musket",)
     weapon_equipped: str = "musket"
     wreck_paid: int = 0  # the coins paid into this island's wreck so far (GAME-V3 section 4)
+    role: str | None = None  # the captain's role: medic, engineer or gunner (captain tree)
 
     @property
     def unlock_wave(self) -> int:
@@ -329,6 +339,7 @@ async def read_progress(admin: SupabaseAdmin, player_id: str) -> Progress:
         tuple(row.weapons_owned),
         row.weapon_equipped,
         row.wreck_paid,
+        row.captain_role,
     )
 
 
@@ -366,6 +377,14 @@ async def learn_skill(admin: SupabaseAdmin, arguments: dict[str, Any]) -> Learne
     if isinstance(reply, dict) and reply.get("status") == "refused":
         return Refusal(read_model(PaidRefusedRow, reply).reason)
     return read_model(LearnedRow, reply)
+
+
+async def pick_role(admin: SupabaseAdmin, arguments: dict[str, Any]) -> RoleRow | Refusal:
+    """Run island_pick_role. A refusal changed nothing."""
+    reply = await admin.call_function("island_pick_role", arguments)
+    if isinstance(reply, dict) and reply.get("status") == "refused":
+        return Refusal(read_model(PaidRefusedRow, reply).reason)
+    return read_model(RoleRow, reply)
 
 
 async def equip_weapon(admin: SupabaseAdmin, player_id: str, weapon: str) -> EquippedRow | Refusal:

@@ -645,7 +645,7 @@ export function createWave(options = {}) {
     if (!helper || helper.down || !hero || hero === helper || !hero.down) return;
     if (distance(input.x, input.z, hero.x, hero.z) > R.reach + R.slack) return;
     helper.seen = ticks * C.tick; helper.away = false; helper.x = input.x; helper.z = input.z;
-    hero.down = false; hero.downAt = null; hero.hp = Math.max(1, Math.round(hero.maxHp * R.share));
+    hero.down = false; hero.downAt = null; hero.hp = Math.max(1, Math.round(hero.maxHp * captainStats(1, input.skills).reviveShare)); // a medic's help-up gives more hp (captain-stats.js)
     events.push({ type: 'captain_revived', t: now(), captainId: hero.id, by, hp: hero.hp, x: round2(hero.x), z: round2(hero.z) });
   }
   // A boarder's blow at a captain; at 0 hp the captain falls and every boarder on them walks on.
@@ -699,6 +699,12 @@ export function createWave(options = {}) {
     events.push({ type: 'wall_rebuilt', t: now(), wallId: wall.id, hp: wall.hp, by, x: wall.x, z: wall.z });
   }
 
+  // The engineer role (docs/GAME-V3.md "Captain tree and roles"): a wall they repair or rebuild gets +25% hp, once.
+  function boostWall(wall, stats) {
+    if (stats.wallHpMultiplier <= 1 || wall.boosted) return;
+    wall.boosted = true; wall.maxHp = round2(wall.maxHp * stats.wallHpMultiplier);
+  }
+
   function applyInput(input, events) {
     if (!input || typeof input !== 'object' || typeof input.type !== 'string') return;
     if (input.type === 'fire') {
@@ -713,12 +719,16 @@ export function createWave(options = {}) {
       if (wall.repairLeft <= 0) wall.repaired = 0;
       wall.repairLeft = C.wall.repairSeconds;
       // The repairer's own skills (Quick fix, Master shipwright) set how fast this repair goes.
-      wall.repairRate = round2(C.wall.repairRate * captainStats(1, input.skills).repairMultiplier * (wall.spec === 'quick_mend' ? S.quick_mend.repair : 1));
+      const stats = captainStats(1, input.skills);
+      wall.repairRate = round2(C.wall.repairRate * stats.repairMultiplier * (wall.spec === 'quick_mend' ? S.quick_mend.repair : 1));
+      boostWall(wall, stats); // an engineer's repair raises the wall's strength by 25% (once)
     } else if (input.type === 'rebuild') {
       const wall = typeof input.wallId === 'string' ? wallById.get(input.wallId) : undefined;
       if (!wall || wall.hp > 0 || ticks * C.tick - wall.rebuildAt < C.wall.rebuildCooldown - 1e-9) return;
       // The rebuilder's own skills: Master shipwright brings the wall back at 60% instead of 40%.
-      rebuild(wall, 'player', events, captainStats(1, input.skills).rebuildShare);
+      const stats = captainStats(1, input.skills);
+      boostWall(wall, stats);
+      rebuild(wall, 'player', events, stats.rebuildShare);
     } else if (input.type === 'lamps_lit') {
       if (!withFlagship || lampsLit) return;
       lampsLit = true; // the beam strikes the flagship on the next tick, or as soon as it appears

@@ -53,7 +53,7 @@ export function toMessage(input, { by, seq, tick, waveId }) {
     const colour = Number.isInteger(input.colour) && input.colour >= 0 && input.colour <= 9 ? { colour: input.colour } : {};
     return { type: ROOM_EVENTS.captain_move, payload: { ...base, x: input.x, z: input.z, ...colour, ...(input.away === true ? { away: true } : {}) } };
   }
-  if (input.type === 'captain_revive') return { type: ROOM_EVENTS.captain_revive, payload: { ...base, targetId: input.targetId, x: input.x, z: input.z } };
+  if (input.type === 'captain_revive') return { type: ROOM_EVENTS.captain_revive, payload: { ...base, targetId: input.targetId, x: input.x, z: input.z, skills: readSkills(input.skills) } };
   return null;
 }
 
@@ -104,10 +104,10 @@ export function readMessage(type, payload, waveId) {
     return { by, seq, tick, input: { type: 'captain_move', by, x, z, ...(colour !== undefined ? { colour } : {}), ...(away ? { away: true } : {}) } };
   }
   if (type === ROOM_EVENTS.captain_revive) {
-    const { targetId, x, z } = payload;
-    if (typeof targetId !== 'string' || !BY.test(targetId) || targetId === by || ![x, z].every(isAim)) return null;
-    // The reviver is the sender (who paid for it on the server).
-    return { by, seq, tick, input: { type: 'captain_revive', by, targetId, x, z } };
+    const { targetId, x, z, skills = [] } = payload;
+    if (typeof targetId !== 'string' || !BY.test(targetId) || targetId === by || ![x, z].every(isAim) || !isSkillList(skills)) return null;
+    // The reviver is the sender (who paid for it on the server); their role sets how much hp the captain gets back.
+    return { by, seq, tick, input: { type: 'captain_revive', by, targetId, x, z, skills: readSkills(skills) } };
   }
   return null;
 }

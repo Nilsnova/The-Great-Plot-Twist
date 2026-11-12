@@ -112,7 +112,15 @@ POST /api/island/skill  {"skill": "steady_aim", "actionUid": "..."}
     -> the island. One skill of the captain's skill tree, paid with skill points (no coins).
     A repeated actionUid learns nothing (captain_skill_learns ref skill:<actionUid>).
     Errors: 400 bad_skill, 409 known, 409 locked ("Learn Steady aim first."),
-            409 no_points ("Win new waves to earn skill points.")
+            409 closed (the other skill of its fork was chosen), 409 wrong_role (a capstone
+            of another role), 409 no_points ("Win new waves to earn skill points.")
+POST /api/island/role  {"role": "medic"}
+    -> the island. The captain's role (medic, engineer or gunner), once, from captain level 3.
+    Errors: 400 bad_role, 409 locked, 409 role_known (respec first)
+POST /api/island/respec  {"actionUid": "..."}
+    -> the island. Forgets every skill and the role for 100 coins x captain level (wallet
+    reason captain_respec, ref respec:<actionUid>). Errors: 409 nothing_to_reset,
+    409 insufficient_funds
 
 POST /api/island/weapon/buy  {"weapon": "pistols", "actionUid": "..."}
     -> the island. One weapon, bought once with coins and equipped at once (ledger ref
@@ -229,7 +237,15 @@ class SkillOut(BaseModel):
     branch: str
     tier: int
     cost: int
-    needs: str | None
+    needs: list[str]
+    excludes: str | None
+    role: str | None
+
+
+class RoleOut(BaseModel):
+    id: str
+    name: str
+    branch: str
 
 
 class SkillsOut(BaseModel):
@@ -237,6 +253,10 @@ class SkillsOut(BaseModel):
     spent: int
     known: list[str]
     tree: list[SkillOut]
+    role: str | None
+    roleLevel: int
+    roles: list[RoleOut]
+    respecPrice: int
 
 
 class WeaponOut(BaseModel):
@@ -349,6 +369,19 @@ class SkillRequest(BaseModel):
 
     # Any short text: an unknown skill is a 400 bad_skill (rules.py), not a 422.
     skill: str = Field(min_length=1, max_length=40)
+    actionUid: str = Field(pattern=ACTION_UID_PATTERN)
+
+
+class RoleRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    # Any short text: an unknown role is a 400 bad_role (rules.py), not a 422.
+    role: str = Field(min_length=1, max_length=40)
+
+
+class RespecRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     actionUid: str = Field(pattern=ACTION_UID_PATTERN)
 
 
@@ -465,10 +498,19 @@ def island_out(view: IslandView, catalogue: IslandCatalogue) -> IslandResponse:
                     branch=skill.branch,
                     tier=skill.tier,
                     cost=skill.cost,
-                    needs=skill.needs,
+                    needs=list(skill.needs),
+                    excludes=skill.excludes,
+                    role=skill.role,
                 )
                 for skill in catalogue.skills.tree
             ],
+            role=view.skills.role,
+            roleLevel=view.skills.role_level,
+            roles=[
+                RoleOut(id=role.role, name=role.name, branch=role.branch)
+                for role in catalogue.skills.roles
+            ],
+            respecPrice=view.skills.respec_price,
         ),
         weapons=WeaponsOut(
             owned=list(view.weapons.owned),
@@ -558,6 +600,32 @@ async def post_skill(
 ) -> IslandResponse:
     request.app.state.island_build_budget.spend(player.id)
     view = await service.learn_skill(admin, catalogue, player.id, body.skill, body.actionUid)
+    return island_out(view, catalogue)
+
+
+@router.post("/island/role")
+async def post_role(
+    body: RoleRequest,
+    player: IslandPlayerDep,
+    catalogue: IslandCatalogueDep,
+    admin: AdminDep,
+    request: Request,
+) -> IslandResponse:
+    request.app.state.island_build_budget.spend(player.id)
+    view = await service.pick_role(admin, catalogue, player.id, body.role)
+    return island_out(view, catalogue)
+
+
+@router.post("/island/respec")
+async def post_respec(
+    body: RespecRequest,
+    player: IslandPlayerDep,
+    catalogue: IslandCatalogueDep,
+    admin: AdminDep,
+    request: Request,
+) -> IslandResponse:
+    request.app.state.island_build_budget.spend(player.id)
+    view = await service.respec(admin, catalogue, player.id, body.actionUid)
     return island_out(view, catalogue)
 
 

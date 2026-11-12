@@ -22,7 +22,7 @@ it('the skill tree: points from won waves, learn, tier order, no points; the wea
     const card = () => document.querySelector('.island-card[open]');
     const tab = id => card().querySelector(`[data-focus="tab-${id}"]`);
     const skill = id => card().querySelector(`[data-skill="${id}"]`);
-    const tree = () => [...card().querySelectorAll('.island-skill')].map(item => `${item.dataset.skill}:${[...item.classList].find(name => /^is-(learned|ready|locked)$/.test(name))}`);
+    const tree = () => [...card().querySelectorAll('.island-skill')].map(item => `${item.dataset.skill}:${[...item.classList].find(name => /^is-(learned|ready|locked|closed)$/.test(name))}`);
     const detail = () => ({name: card().querySelector('.island-skill-detail strong').textContent,
       line: card().querySelector('.island-skill-line').textContent, button: card().querySelector('[data-focus="learn"]').textContent,
       disabled: card().querySelector('[data-focus="learn"]').disabled,
@@ -68,8 +68,9 @@ it('the skill tree: points from won waves, learn, tier order, no points; the wea
   expect(result.tabs).toEqual(['Captain', 'Skills', 'Weapons']);
   expect(result.fresh.points).toBe('Skill points: 0');
   expect(result.fresh.heads).toEqual(['Marksman', 'Brawler', 'Shipwright']);
-  expect(result.fresh.tree).toEqual(['steady_aim:is-locked', 'long_barrel:is-locked', 'quick_hands:is-locked', 'cutlass:is-locked', 'sweep:is-locked',
-    'second_wind:is-locked', 'quick_fix:is-locked', 'long_reach:is-locked', 'master_shipwright:is-locked']);
+  expect(result.fresh.tree).toEqual(['steady_aim', 'long_barrel', 'hot_shot', 'quick_hands', 'far_sight', 'heavy_shot', 'dead_eye',
+    'cutlass', 'sweep', 'heavy_blade', 'second_wind', 'snap_shot', 'bruiser', 'field_surgeon',
+    'quick_fix', 'long_reach', 'sturdy_planks', 'master_shipwright', 'swift_hammer', 'wide_arc', 'grand_engineer'].map(id => `${id}:is-locked`));
   expect(result.fresh.detail).toMatchObject({name: 'Steady aim', button: 'Learn', disabled: true, reason: 'Win new waves to earn skill points.'});
   expect(result.two.points).toBe('Skill points: 2');
   expect(result.two.tab).toBe('Skills (2)');
@@ -80,8 +81,8 @@ it('the skill tree: points from won waves, learn, tier order, no points; the wea
   expect(result.afterLearn.tree).toContain('steady_aim:is-learned');
   expect(result.afterLearn.toast).toBe('New skill: Steady aim!');
   expect(result.noPoints).toMatchObject({name: 'Long barrel', disabled: true, reason: 'Win new waves to earn skill points.'});
-  expect(result.linked).toEqual([false, true, false]);
-  expect(result.refused).toMatchObject({ok: false, status: 409, code: 'locked', message: 'Learn Sweep first.'});
+  expect(result.linked).toEqual([false, true, false, false, false]);
+  expect(result.refused).toMatchObject({ok: false, status: 409, code: 'locked', message: 'Learn Sweep or Heavy blade first.'});
   expect(result.shop).toEqual(['musket:Equipped:true', 'pistols:Buy · 🪙 60:false', 'blunderbuss:Buy · 🪙 120:true', 'long_rifle:Locked:true', 'fire_bombs:Locked:true']);
   expect(result.bought.toast).toBe('Pistols bought and equipped! You have 🪙 40.');
   expect(result.bought.coins).toBe(40);

@@ -3,7 +3,7 @@
 import {BUILDINGS, CREW, CREW_IDS, CAPTAIN, CAPTAIN_MAX, SLOT_KINDS, maxLevel, priceFor, statLine, captainLine, lockedWave} from './td-rules.js';
 import {displayIslandCode, visitUrl} from './codes.js';
 import {formatCoinDelta, formatCoins} from '../lib/coins.js';
-import {BRANCHES, SKILLS, SKILL_BY_ID, WEAPONS, WEAPON_BY_ID, pointsEarned, pointsSpent, readSkills, readWeapon, skillNeeds} from '../pirates/captain-ids.js';
+import {BRANCHES, ROLES, ROLE_BY_ID, ROLE_LEVEL, SKILLS, SKILL_BY_ID, WEAPONS, WEAPON_BY_ID, isRole, pointsEarned, pointsSpent, readSkills, readWeapon, respecPrice} from '../pirates/captain-ids.js';
 import {opensText, spotWave, waveOf, isOpen} from '../campaign/index.js';
 import {BRANCH_BY_ID, SPECS, readSpec} from '../campaign/tech.js';
 
@@ -147,33 +147,66 @@ export function captainModel({captain = null, coins = null, unlocks = null, busy
   return model;
 }
 
-// The skill tree (§14): skill points at the top, three branches of three tiers. skills: the island
-// answer's {points, spent, known, tree} (or null while loading: then derived from wonWave); picked:
-// the skill whose detail shows (one line, its cost and the Learn button).
-//   node.state  'learned' | 'ready' (you can learn it now) | 'locked' (learn the tier above first, or
-//               win new waves for points); node.reason says which.
+// The skill tree (§14, docs/GAME-V3.md "Captain tree and roles"): skill points at the top, the role card, then
+// three branches as vertical paths of five tiers. Tiers 2 and 4 are forks (two nodes side by side: pick ONE, the
+// other closes), tier 5 is the capstone of one role. skills: the island answer's {points, spent, known, tree, role,
+// respecPrice} (or null while loading: then derived from wonWave); picked: the skill whose detail shows.
+//   node.state  'learned' | 'ready' (you can learn it now) | 'locked' (the tier above first, the role, or points)
+//               | 'closed' (its fork twin was chosen; greyed until a respec); node.reason says which.
 export const skillPointsText = points => `Skill points: ${Number.isSafeInteger(points) ? points : '?'}`;
-export function skillsModel({skills = null, wonWave = 0, picked = null, busy = null, message = ''} = {}) {
-  const known = readSkills(skills?.known ?? []);
+export function skillsModel({skills = null, wonWave = 0, picked = null, busy = null, message = '', coins = null, captainLevel = 1,
+  pickedRole = null, busyRole = null, respecAsk = false, busyRespec = false} = {}) {
+  const role = isRole(skills?.role) ? skills.role : null;
+  const known = readSkills(skills?.known ?? []).filter(id => SKILL_BY_ID[id]);
   const points = Number.isSafeInteger(skills?.points) ? skills.points : Math.max(0, pointsEarned(wonWave) - pointsSpent(known));
-  const has = new Set(known);
+  const has = new Set(known), nameOf = id => SKILL_BY_ID[id].name;
   const nodeOf = skill => {
-    const needs = skillNeeds(skill.id), learned = has.has(skill.id);
+    const learned = has.has(skill.id), met = !skill.needs.length || skill.needs.some(id => has.has(id));
     let state = 'ready', reason = '';
     if (learned) { state = 'learned'; reason = 'Learned.'; }
-    else if (needs && !has.has(needs)) { state = 'locked'; reason = `Learn ${SKILL_BY_ID[needs].name} first.`; }
+    else if (skill.excludes && has.has(skill.excludes)) { state = 'closed'; reason = `You chose ${nameOf(skill.excludes)}, so this is closed. Respec to change.`; }
+    else if (!met) { state = 'locked'; reason = `Learn ${skill.needs.map(nameOf).join(' or ')} first.`; }
+    else if (skill.role && role !== skill.role) { state = 'locked'; reason = role ? `Only a ${ROLE_BY_ID[skill.role].name} can learn this.` : `Pick the ${ROLE_BY_ID[skill.role].name} role first.`; }
     else if (points < skill.cost) { state = 'locked'; reason = 'Win new waves to earn skill points.'; }
     const cost = `${skill.cost} ${skill.cost === 1 ? 'point' : 'points'}`;
+    const word = {learned: 'learned', ready: 'can learn', locked: 'locked', closed: 'closed'}[state];
     return {id: skill.id, name: skill.name, tier: skill.tier, cost: skill.cost, costText: cost, line: skill.line, state, reason,
-      label: `${skill.name}, tier ${skill.tier}, ${cost}, ${state === 'learned' ? 'learned' : state === 'ready' ? 'can learn' : 'locked'}`};
+      fork: !!skill.excludes, capstone: !!skill.role, role: skill.role,
+      label: `${skill.name}, tier ${skill.tier}${skill.excludes ? `, choose this or ${nameOf(skill.excludes)}` : ''}${skill.role ? `, ${ROLE_BY_ID[skill.role].name} only` : ''}, ${cost}, ${word}`};
   };
-  const branches = BRANCHES.map(branch => ({...branch, nodes: SKILLS.filter(skill => skill.branch === branch.id).map(nodeOf)}));
+  const branches = BRANCHES.map(branch => {
+    const nodes = SKILLS.filter(skill => skill.branch === branch.id).map(nodeOf);
+    const tiers = [1, 2, 3, 4, 5].map(tier => ({tier, fork: nodes.filter(node => node.tier === tier).length > 1, nodes: nodes.filter(node => node.tier === tier)}));
+    const owner = ROLES.find(item => item.branch === branch.id);
+    return {...branch, tiers, nodes, role: owner.id, roleName: owner.name};
+  });
   const nodes = branches.flatMap(branch => branch.nodes);
-  const chosen = nodes.find(item => item.id === picked) ?? nodes.find(item => item.state === 'ready') ?? nodes.find(item => item.state !== 'learned') ?? nodes[0];
-  const detail = {...chosen, button: busy === chosen.id ? 'Learning…' : chosen.state === 'learned' ? 'Learned' : 'Learn',
+  const chosen = nodes.find(item => item.id === picked) ?? nodes.find(item => item.state === 'ready') ?? nodes.find(item => item.state === 'locked') ?? nodes[0];
+  const detail = {...chosen, button: busy === chosen.id ? 'Learning…' : chosen.state === 'learned' ? 'Learned' : chosen.state === 'closed' ? 'Closed' : 'Learn',
     disabled: chosen.state !== 'ready' || busy !== null};
+  // The role choice (once, from captain level 3).
+  const roleLevel = Number.isSafeInteger(skills?.roleLevel) ? skills.roleLevel : ROLE_LEVEL;
+  const level = Number.isSafeInteger(captainLevel) ? captainLevel : 1, locked = level < roleLevel;
+  const choices = ROLES.map(item => ({id: item.id, name: item.name, icon: item.icon, line: item.line, branchName: BRANCHES.find(b => b.id === item.branch).name,
+    capstone: SKILLS.find(skill => skill.role === item.id).name,
+    state: role === item.id ? 'picked' : role ? 'closed' : locked ? 'locked' : 'ready',
+    label: `${item.name}, ${role === item.id ? 'your role' : role ? 'closed, respec to change' : locked ? `opens at captain level ${roleLevel}` : 'can pick'}`}));
+  const shownRole = ROLE_BY_ID[pickedRole] ? pickedRole : role ?? 'medic', pickedChoice = choices.find(item => item.id === shownRole);
+  const roleCard = {title: role ? `Your role: ${ROLE_BY_ID[role].name}` : 'Choose your role', current: role, icon: role ? ROLE_BY_ID[role].icon : '',
+    lead: role ? 'Your role is set. A respec lets you choose again.' : locked ? `Reach captain level ${roleLevel} to choose a role.` : 'Pick one role. It decides which capstone you can reach, and your crew sees it.',
+    choices, picked: shownRole, detail: {...pickedChoice, button: busyRole ? 'Choosing…' : role === shownRole ? 'Your role' : `Become ${/^[aeiou]/i.test(pickedChoice.name) ? 'an' : 'a'} ${pickedChoice.name}`,
+      disabled: true},
+    locked, level: roleLevel};
+  roleCard.detail.disabled = !!role || locked || !!busyRole;
+  // The respec: expensive, scaled with the captain level, server-checked.
+  const price = Number.isSafeInteger(skills?.respecPrice) && skills.respecPrice > 0 ? skills.respecPrice : respecPrice(level), nothing = !known.length && !role;
+  const respec = {price, priceText: coinText(price), line: 'Forget every skill and your role, get your points back and choose again.',
+    button: busyRespec ? 'Resetting…' : respecAsk ? `Yes, reset for ${coinText(price)}` : `Respec · ${coinText(price)}`, ask: respecAsk && !nothing, disabled: busyRespec, reason: ''};
+  if (nothing) { respec.disabled = true; respec.reason = 'Nothing to reset yet.'; }
+  else if (coins === null) respec.reason = 'Your coins are still loading.';
+  else if (coins < price) { respec.disabled = true; respec.reason = `Not enough 🪙: you need ${coinText(price - coins)} more.`; }
   return {title: 'Skills', points, pointsText: skillPointsText(points), line: 'Win new waves to earn skill points: one for every two waves.',
-    branches, picked: chosen.id, detail, message, learned: known.length};
+    branches, picked: chosen.id, detail, message, learned: known.length, role: roleCard, respec};
 }
 
 // The weapon shop (§15): buy once with coins, then equip one. weapons: the island answer's {owned,

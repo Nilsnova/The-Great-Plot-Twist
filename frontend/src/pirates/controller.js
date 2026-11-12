@@ -375,7 +375,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     if (!target || !holding || current.reviveWait) { current.revive = null; return; }
     const t = now();
     if (current.revive?.targetId !== target.id) current.revive = { targetId: target.id, since: t, share: 0, paying: false };
-    current.revive.share = Math.min(1, (t - current.revive.since) / (CONFIG.health.revive.hold * 1000));
+    current.revive.share = Math.min(1, (t - current.revive.since) / (myStats().reviveHold * 1000)); // a medic holds 1.2 s, not 2
     if (current.revive.share < 1) return;
     current.revive.paying = true; current.reviveWait = true;
     const round = value => Math.round(value * 100) / 100, at = { x: round(player.x), z: round(player.z) };
@@ -384,7 +384,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     Promise.resolve().then(() => (reviveCaptain ? reviveCaptain({ waveId: current.info.waveId, fallen: target.id, downAt }) : null)).then(() => {
       if (wave !== current) return;
       current.revive = null;
-      submit({ type: 'captain_revive', by: playerId, targetId: target.id, ...at });
+      submit({ type: 'captain_revive', by: playerId, targetId: target.id, skills: mySkills(), ...at });
     }).catch(error => {
       if (wave !== current) return;
       current.revive = null;

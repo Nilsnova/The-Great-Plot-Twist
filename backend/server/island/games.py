@@ -24,7 +24,7 @@ upgrade and the visit), waves.py (the bell and the wave join) and the tests.
 """
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Literal
 
 from pydantic import BaseModel, StrictInt, StrictStr, ValidationError
@@ -61,6 +61,7 @@ class Member:
     id: str
     name: str
     role: str
+    captain_role: str | None = None  # medic, engineer, gunner or None (captain tree)
 
 
 @dataclass(frozen=True)
@@ -101,6 +102,11 @@ class MemberRow(BaseModel):
     id: StrictStr
     name: StrictStr
     role: Literal["host", "member"]
+
+
+class CaptainRoleRow(BaseModel):
+    player_id: StrictStr
+    captain_role: StrictStr | None = None
 
 
 class MembershipRow(BaseModel):
@@ -225,6 +231,15 @@ async def mine(admin: SupabaseAdmin, player_id: str) -> tuple[Game, ...]:
     return tuple(games)
 
 
+async def captain_roles(admin: SupabaseAdmin, ids: list[str]) -> dict[str, str]:
+    """{player: role} of the members who picked a captain role (docs/GAME-V3.md, Captain tree
+    and roles): the lobby shows it so the crew sees who does what."""
+    query = {"select": "player_id,captain_role", "player_id": f"in.({','.join(ids)})"}
+    rows = await admin.select_rows("islands", query)
+    roles = (read(CaptainRoleRow, row) for row in rows if isinstance(row, dict))
+    return {row.player_id: row.captain_role for row in roles if row.captain_role}
+
+
 async def lobby(admin: SupabaseAdmin, typed_code: str, player_id: str) -> Lobby:
     """The lobby of a game you are in: its host and members (who is online: the room's
     presence). 404 no_such_game, 403 not_member."""
@@ -234,6 +249,8 @@ async def lobby(admin: SupabaseAdmin, typed_code: str, player_id: str) -> Lobby:
     if not isinstance(reply, list) or not reply:
         raise store.unreadable()
     members = tuple(Member(**read(MemberRow, value).model_dump()) for value in reply)
+    roles = await captain_roles(admin, [member.id for member in members])
+    members = tuple(replace(member, captain_role=roles.get(member.id)) for member in members)
     host = members[0]
     if host.role != "host" or host.id != island.owner:
         raise store.unreadable()

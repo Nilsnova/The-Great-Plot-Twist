@@ -18,7 +18,8 @@
 //   closes by itself (the game is on) and they join the wave. Captain health (GAME-V3.md §3): in the first
 //   wave the friend stands on the boarders until he falls, the owner walks up and holds E for 2 s (a short
 //   hold first, let go: nothing is paid), pays 20 + 5 × wave and helps him up; both pages see the same
-//   fall and the same revive at the same tick (screenshots at 1280 × 800 and 390 × 844). Ten players in one room are covered by the
+//   fall and the same revive at the same tick; the owner has picked the Medic role (captain tree): the friend's lobby shows
+//   the 🩹 icon on Nils, the hold needs only 1.2 s and the friend stands up with 75% hp on both pages (screenshots at 1280 × 800 and 390 × 844). Ten players in one room are covered by the
 //   unit tests (tests/island/games.test.js, tests/pirates/ten-players.test.js).
 //   node scripts/check-multiplayer.js [folder]        (npm run test:mp)
 import assert from 'node:assert/strict';
@@ -79,7 +80,7 @@ async function openCaptain(name, playerId, visit = null, {create = false, join =
     const g = window.__island; g.settings.hour = 12;
     window.__mp = {shots: [], loot: [], samples: [], heard: [], started: [], fell: [], revived: []};
     g.on('captain_fell', event => window.__mp.fell.push({captainId: event.captainId, t: event.t}));
-    g.on('captain_revived', event => window.__mp.revived.push({captainId: event.captainId, by: event.by, t: event.t}));
+    g.on('captain_revived', event => window.__mp.revived.push({captainId: event.captainId, by: event.by, t: event.t, hp: event.hp}));
     g.on('game_started', event => window.__mp.started.push(event));
     // What crossed the island room from the other tabs (the raw BroadcastChannel of pirates/room.js).
     const channel = new BroadcastChannel('tgpt:live:place:isle_k7q2m:1');
@@ -258,22 +259,27 @@ async function captainHealth(host, ben, wave) {
     await stand(host, {x: benHere.x + 1.2, z: benHere.z});
     await host.page.evaluate(() => document.activeElement?.blur?.()); // E goes to the game, not a button
     await quiet(host);
-    await host.page.keyboard.down('KeyE'); await host.page.waitForTimeout(1100); await settle(host.page);
+    await host.page.keyboard.down('KeyE'); await host.page.waitForTimeout(600); await settle(host.page);
     await host.page.screenshot({path: `${out}/09-revive-in-progress-${label}-${host.playerId}.png`});
     const share = (await myCaptain(host)).revive?.share ?? 0;
     await host.page.keyboard.up('KeyE'); await host.page.waitForTimeout(300);
-    assert.ok(share > .3 && share < 1, `the hold fills (${share})`);
+    assert.ok(share > .2 && share < 1, `the hold fills (${share})`);
   }
   await host.page.setViewportSize({width: 960, height: 600}); await host.page.waitForTimeout(250);
   assert.equal(await coins(), before, 'a hold that lets go pays nothing');
   await stand(host, {x: benHere.x + 1.2, z: benHere.z});
   await host.page.evaluate(() => document.activeElement?.blur?.());
-  await host.page.keyboard.down('KeyE'); await host.page.waitForTimeout(2700); await host.page.keyboard.up('KeyE');
+  // The owner is a Medic: the hold takes 1.2 s, not 2, so 1.6 s is enough (a plain captain would still be short).
+  await host.page.keyboard.down('KeyE'); await host.page.waitForTimeout(1600); await host.page.keyboard.up('KeyE');
   for (const captain of [host, ben]) await captain.page.waitForFunction(id => window.__mp.revived.some(item => item.captainId === id), benId, {timeout: 8000, polling: 100});
   const [hostRevived, benRevived] = await Promise.all([host, ben].map(captain => captain.page.evaluate(id => window.__mp.revived.find(item => item.captainId === id), benId)));
   const paid = before - await coins();
   lines.push(`captain health: the owner helped him up for 🪙 ${paid} at sim time ${hostRevived.t} s (the friend's page ${benRevived.t} s), by ${hostRevived.by === hostId ? 'the owner' : hostRevived.by}`);
   assert.equal(benRevived.t, hostRevived.t, 'both pages saw the revive at the same tick');
+  const maxHp = (await myCaptain(host)).party.find(hero => hero.id === benId).maxHp;
+  assert.equal(hostRevived.hp, Math.round(maxHp * .75), 'a Medic\'s help-up gives back 75% hp');
+  assert.equal(benRevived.hp, hostRevived.hp, 'both pages agree on the hp');
+  lines.push(`captain tree: the Medic helped him up after a 1.6 s hold, hp ${hostRevived.hp} of ${maxHp} on both pages`);
   assert.equal(paid, 20 + 5 * wave.wave, 'the helper paid 20 + 5 × wave');
   assert.equal((await myCaptain(ben)).down, false, 'the friend is back on his feet');
   await shot('10-revived');
@@ -302,6 +308,17 @@ try {
   assert.equal(lobbies.host.start, false, 'the host may start');
   assert.equal(lobbies.ben.start, true, 'a friend waits for the host');
   await shot('01-lobby-two-captains');
+  // 2a Captain tree (docs/GAME-V3.md, Captain tree and roles): the host reaches captain level 3 and picks Medic; the
+  // friend's lobby shows the role icon next to Nils. The faster help-up (1.2 s) is proved in the revive below.
+  await island(host, async i => { i.dev.setCaptain(3); await i.load(); const answer = await i.takeRole('medic'); return answer; });
+  assert.equal(await island(host, i => i.captainLoadout().skills.includes('medic')), true, 'the medic role is in the host\'s loadout');
+  await ben.page.evaluate(() => window.__island.island.openLobby());
+  await ben.page.waitForFunction(() => document.querySelector('.island-card-lobby[open] .island-lobby-player[data-captain-role="medic"] .island-lobby-role'), null, {timeout: 15000, polling: 200});
+  const medicRow = await ben.page.evaluate(() => { const row = document.querySelector('.island-card-lobby[open] .island-lobby-player[data-captain-role="medic"]');
+    return {name: row.querySelector('.island-lobby-name').textContent, icon: row.querySelector('.island-lobby-role').textContent, label: row.querySelector('.island-lobby-role').getAttribute('aria-label')}; });
+  assert.deepEqual(medicRow, {name: 'Nils (you)'.replace(' (you)', ''), icon: '🩹', label: 'Medic'}, 'the friend sees the Medic icon on Nils');
+  results.push(`captain tree: the friend's lobby shows ${medicRow.icon} ${medicRow.label} on ${medicRow.name}`);
+  await shot('01b-lobby-role-icons');
   // 3 Start: every lobby closes and game_started fires on every page.
   await host.page.locator('.island-card-lobby[open] .island-lobby-start').click();
   for (const captain of pages) {

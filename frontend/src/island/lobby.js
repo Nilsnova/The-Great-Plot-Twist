@@ -4,6 +4,7 @@
 //   lobbyModel({...})                      the card: code, link, members with who is online and their colour, Start
 //   captainColours(members)                each member's captain colour 0-9 by join order (host first)
 import {displayIslandCode, visitUrl} from './codes.js';
+import {ROLE_BY_ID} from '../pirates/captain-ids.js';
 
 export const MAX_PLAYERS = 10; // the host plus up to 9 friends (the server's 409 game_full)
 export const HOST_AWAY_MS = 60000; // Start and Pause pass to any member after this long without the host
@@ -38,7 +39,8 @@ export function lobbyModel({code = null, base, members = [], online = new Set(),
   const mine = !!me && me === hostId;
   const colours = captainColours(members);
   const rows = members.map(member => ({id: member.id, name: member.name || 'A captain', role: member.role,
-    you: member.id === me, online: member.id === me || online.has(member.id), colour: colours.get(member.id) ?? 0,
+    you: member.id === me, captainRole: ROLE_BY_ID[member.captainRole] ? member.captainRole : null,
+    roleName: ROLE_BY_ID[member.captainRole]?.name ?? '', roleIcon: ROLE_BY_ID[member.captainRole]?.icon ?? '', online: member.id === me || online.has(member.id), colour: colours.get(member.id) ?? 0,
     tag: member.role === 'host' ? 'Host' : ''}));
   const here = rows.filter(row => row.online).length;
   const control = canControl({me, hostId, hostAwayMs});

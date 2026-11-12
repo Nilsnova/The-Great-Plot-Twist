@@ -18,6 +18,12 @@ from server.tests.helpers import assert_error
 from server.tests.island_helpers import ISLAND_SETTINGS, PLAYER, World
 from server.wallet import WALLET_REASONS
 
+TREE_MIGRATION = (
+    Path(__file__).resolve().parents[3]
+    / "supabase"
+    / "migrations"
+    / "20261112120000_captain_tree.sql"
+)
 MIGRATION = (
     Path(__file__).resolve().parents[3]
     / "supabase"
@@ -61,7 +67,7 @@ def test_the_island_shows_skill_points_from_won_waves_and_the_weapon_shop():
     assert [item["id"] for item in body["skills"]["tree"]] == list(SKILL_IDS)
     assert body["skills"]["tree"][1] == {
         "id": "long_barrel", "name": "Long barrel", "branch": "marksman", "tier": 2, "cost": 2,
-        "needs": "steady_aim",
+        "needs": ["steady_aim"], "excludes": "hot_shot", "role": None,
     }  # fmt: skip
     assert body["weapons"]["owned"] == ["musket", "pistols"]
     assert body["weapons"]["equipped"] == "pistols"
@@ -89,7 +95,10 @@ def test_a_skill_is_learnt_with_points_and_the_tree_goes_to_the_database():
     assert (call["p_skill"], call["p_action_uid"], call["p_waves_per_point"]) == (
         "steady_aim", "click-0001", 2,
     )  # fmt: skip
-    assert call["p_tree"][2] == {"skill": "quick_hands", "needs": "long_barrel", "cost": 3}
+    assert call["p_tree"][3] == {
+        "skill": "quick_hands", "needs": ["long_barrel", "hot_shot"], "excludes": None,
+        "role": None, "cost": 3,
+    }  # fmt: skip
     assert "skills" in response.json()
 
 
@@ -193,7 +202,8 @@ def test_the_new_routes_are_closed_while_the_flag_is_off():
 def test_the_migration_knows_exactly_the_skills_and_weapons_of_the_file():
     sql = MIGRATION.read_text(encoding="utf-8")
     catalogue = load_island()
-    skills_check = re.search(r"islands_captain_skills_known check \((.*?)\);", sql, re.DOTALL)
+    tree_sql = TREE_MIGRATION.read_text(encoding="utf-8")
+    skills_check = re.search(r"islands_captain_skills_known check \((.*?)\);", tree_sql, re.DOTALL)
     weapons_check = re.search(r"islands_weapons_owned_known check \((.*?)\);", sql, re.DOTALL)
     assert skills_check and weapons_check
     assert re.findall(r"'([a-z_]+)'", skills_check.group(1).split("::")[0]) == [
