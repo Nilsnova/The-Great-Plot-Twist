@@ -274,7 +274,7 @@ begin
      where player_id = v_run.island_owner and building_type = 'house'
        and spec = 'tavern' and level >= 2
   ) then
-    v_price := v_price * (100 - 25) / 100;
+    v_price := greatest(1, v_price * (100 - 25) / 100);
   end if;
   if v_balance < v_price then
     return jsonb_build_object('status', 'refused', 'reason', 'insufficient_funds', 'price', v_price);

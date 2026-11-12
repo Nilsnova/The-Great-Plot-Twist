@@ -134,5 +134,5 @@ def test_the_database_tears_down_only_the_island_build_spots():
 def test_the_server_sends_every_kinds_price_list():
     table = price_table(load_island())
     assert table["cannon"] == [30, 60, 120, 240, 480]
-    assert table["house"] == [50, 100]
+    assert table["house"] == [50, 100, 200]
     assert set(table) == {"wall", "cannon", "mortar", "watchtower", "house"}

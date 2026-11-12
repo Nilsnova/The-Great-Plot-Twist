@@ -99,9 +99,9 @@
 --   20261112060000_tech_hub.sql (islet_buildings.spec).
 --
 -- SAFE TO RUN TWICE
---   The tables use "if not exists", the reason "on conflict do nothing", check
---   rules are dropped "if exists" first, functions use "create or replace", and
---   revokes, grants and comments repeat.
+--   The tables use "if not exists", the reason "on conflict do nothing",
+--   functions use "create or replace", and revokes, grants and comments repeat.
+--   (This file adds no check rule, so there is none to drop first.)
 --
 -- HOW THE FILE IS ORGANISED
 --   1. One wallet reason
@@ -548,6 +548,16 @@ begin
      or jsonb_array_length(p_prices -> v_building.building_type) < v_building.level then
     raise exception 'bad_demolish';
   end if;
+  -- Like island_upgrade(): every price of the kind is a whole number of 1 or more.
+  if exists (
+    select 1 from jsonb_array_elements(p_prices -> v_building.building_type) price
+     where case when jsonb_typeof(price) = 'number'
+                then (price #>> '{}')::numeric < 1
+                  or (price #>> '{}')::numeric <> trunc((price #>> '{}')::numeric)
+                else true end
+  ) then
+    raise exception 'bad_demolish';
+  end if;
 
   return jsonb_build_object(
     'status', 'quote', 'plot', p_plot, 'kind', v_building.building_type, 'level', v_building.level,
@@ -596,6 +606,7 @@ declare
   v_ref      text;
   v_done     public.building_demolitions;
   v_building public.islet_buildings;
+  v_first_ref text;
   v_payers   uuid[];
   v_locked   uuid[] := '{}';
   v_id       uuid;
@@ -639,6 +650,8 @@ begin
     return jsonb_build_object('status', 'refused', 'reason', 'not_built');
   end if;
 
+  v_first_ref := v_building.ref;
+
   -- Step 3: the wallets first, every payer of this building and the host, in
   -- player id order (the order every tear-down takes, so none waits in a circle).
   select array_agg(id order by id) into v_payers
@@ -658,6 +671,13 @@ begin
 
   -- Step 4: the island row (the lock wave_start() takes), then no running wave.
   perform 1 from public.islands where player_id = p_island_owner for update;
+  -- Still a member now? Somebody who left while this waited for the lock must not finish.
+  if p_player_id <> p_island_owner and not exists (
+    select 1 from public.island_members
+     where island_owner = p_island_owner and player_id = p_player_id and left_at is null
+  ) then
+    return jsonb_build_object('status', 'refused', 'reason', 'not_member');
+  end if;
   if exists (
     select 1 from public.wave_runs
      where island_owner = p_island_owner and finished_at is null
@@ -686,6 +706,21 @@ begin
   if jsonb_typeof(p_prices -> v_building.building_type) is distinct from 'array'
      or jsonb_array_length(p_prices -> v_building.building_type) < v_building.level then
     raise exception 'bad_demolish';
+  end if;
+  -- Like island_upgrade(): every price of the kind is a whole number of 1 or more.
+  if exists (
+    select 1 from jsonb_array_elements(p_prices -> v_building.building_type) price
+     where case when jsonb_typeof(price) = 'number'
+                then (price #>> '{}')::numeric < 1
+                  or (price #>> '{}')::numeric <> trunc((price #>> '{}')::numeric)
+                else true end
+  ) then
+    raise exception 'bad_demolish';
+  end if;
+  -- Torn down and built again since the first read: the wallets locked above
+  -- belong to the old building, so change nothing; the next click starts over.
+  if v_building.ref is distinct from v_first_ref then
+    return jsonb_build_object('status', 'refused', 'reason', 'busy');
   end if;
   -- Somebody paid for it after step 3 (an upgrade got the building lock first):
   -- their wallet is not locked, so stop here; the next click locks it.

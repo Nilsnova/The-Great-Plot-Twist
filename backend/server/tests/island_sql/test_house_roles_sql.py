@@ -150,3 +150,15 @@ def test_a_tavern_needs_level_two(database):
     )
 
     assert revive(database, OWNER, wave_id, "help-0001")["price"] == 25
+
+
+def test_a_tavern_never_takes_the_revive_price_down_to_nothing(database):
+    wave_id = running_wave(database)
+    build(database, OWNER, "house_1", "house", "island:b-0001", 10)
+    raise_level(database, "house_1")
+    specialise(database, OWNER, "house_1", "house", "tavern")
+    before = balance(database, OWNER)
+
+    # 1 x 75 / 100 rounds down to 0; the price stays at 1.
+    paid = revive(database, OWNER, wave_id, "help-0001", base=1, per_wave=0)
+    assert paid == {"status": "done", "price": 1, "balance": before - 1, "repeat": False}

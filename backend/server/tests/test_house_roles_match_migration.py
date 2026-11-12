@@ -30,7 +30,7 @@ TAVERN = """  -- A Tavern on the island (a house of level 2 or more with the rol
      where player_id = v_run.island_owner and building_type = 'house'
        and spec = 'tavern' and level >= 2
   ) then
-    v_price := v_price * (100 - 25) / 100;
+    v_price := greatest(1, v_price * (100 - 25) / 100);
   end if;
 """
 HOUSE_LEVEL = (
