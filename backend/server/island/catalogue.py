@@ -39,8 +39,9 @@ MAX_SPOTS = 30
 MAX_WAVE = 1000
 MAX_SECONDS = 86400
 MIN_SHIPS, MAX_SHIPS = 0.5, 3.0
-# A building has at most 3 levels and a captain 5 (the check rules of the migration).
-MAX_LEVEL = 3
+# A building has at most 5 levels and a captain 5 (the check rules of the migrations; levels 4 and 5
+# since 20261112070000_tower_tiers.sql, docs/GAME-V3.md section 4.1).
+MAX_LEVEL = 5
 MAX_CAPTAIN_LEVEL = 5
 # The crew of docs/TOWER-DEFENSE.md section 3. The database knows exactly these three.
 CREW_KINDS = ("gunner", "carpenter", "lookout")

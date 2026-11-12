@@ -13,12 +13,15 @@ describe('tower levels', () => {
     expect(state(undefined).towers[0]).toMatchObject({ level: 1, range: 28 });
     expect(state(2).towers[0]).toMatchObject({ level: 2, range: 31 });
     expect(state(3).towers[0]).toMatchObject({ level: 3, range: 34 });
-    expect(state(9).towers[0].level).toBe(3); // clamped
-    expect([1, 2, 3].map(level => state(level).walls[0].maxHp)).toEqual([60, 120, 200]);
-    const tower = level => createWave({ seed: 1, wave: 2, defenses: [spot('c', 'cannon', 45, .75), { ...watchtower(), level }] }).state().towers[0].range;
-    expect([tower(1), tower(2)]).toEqual([28 + 8, 28 + 12]);
-    const shot = level => first(runWave({ seed: 3, wave: 1, defenses: [{ ...spot('c', 'cannon', 45, .75), level }] }).events, 'cannon_fired');
-    expect([1, 2, 3].map(level => shot(level).damage)).toEqual([10, 16, 24]);
+    expect(state(5).towers[0]).toMatchObject({ level: 5, range: 38 });
+    expect(state(9).towers[0].level).toBe(5); // clamped
+    expect([1, 2, 3, 4, 5].map(level => state(level).walls[0].maxHp)).toEqual([60, 120, 200, 300, 420]);
+    const tower = level => createWave({ seed: 1, wave: 2, defenses: [spot('c', 'cannon', 45, .75), { ...watchtower(), level }] }).state().towers[0];
+    expect([1, 2, 3, 4, 5].map(level => tower(level).range)).toEqual([28 + 8, 28 + 12, 28 + 14, 28 + 16, 28 + 18]);
+    // From level 3 the watchtower adds 5%, 10%, 15% to every tower's damage (GAME-V3.md §4.1).
+    const shot = (level, extra = []) => first(runWave({ seed: 3, wave: 1, defenses: [{ ...spot('c', 'cannon', 45, .75), level }, ...extra] }).events, 'cannon_fired');
+    expect([1, 2, 3, 4, 5].map(level => shot(level).damage)).toEqual([10, 16, 24, 30, 38]);
+    expect([1, 2, 3, 4, 5].map(level => shot(1, [{ ...watchtower(), level }]).damage)).toEqual([10, 10, 10.5, 11, 11.5]);
   });
 });
 

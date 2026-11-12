@@ -72,7 +72,8 @@ async function openCaptain(name, playerId, visit = null, {create = false, join =
     else break;
     await page.waitForTimeout(300);
   }
-  await page.waitForFunction(() => window.__island.waves && (!new URLSearchParams(location.search).get('visit') || window.__island.island.visiting?.ownerName), null, {timeout: 30000});
+  // A visit link or a joined code: wait until the host's island has answered (the join's visit read).
+  await page.waitForFunction(joined => window.__island.waves && (!(joined || new URLSearchParams(location.search).get('visit')) || window.__island.island.visiting?.ownerName), !!join, {timeout: 30000});
   // What every page heard: the sim's musket shots, the loot answers, and a ship list per frame.
   await page.evaluate(() => {
     const g = window.__island; g.settings.hour = 12;
@@ -142,7 +143,7 @@ async function shows(captain, spot, level, what) {
   while (Date.now() - began < 2000 && !await ok()) await captain.page.waitForTimeout(100);
   assert.ok(await ok(), `${captain.name}'s map shows ${what} as level ${level}: ${JSON.stringify(await mapOf(captain, spot))}`);
   const card = await cardOf(captain, spot);
-  assert.equal(card.pips, `Level ${level} of 3`, `${captain.name}'s card shows ${what} at level ${level}`);
+  assert.equal(card.pips, `Level ${level} of 5`, `${captain.name}'s card shows ${what} at level ${level}`);
   const took = Date.now() - began;
   assert.ok(took <= 2200, `${what} reached ${captain.name} within 2 s (${took} ms)`);
   return took;
@@ -332,7 +333,7 @@ try {
   await cardOf(host, 'wall_2', true); // the owner keeps the card open while the friend upgrades
   await island(ben, async i => i.upgrade('wall_2'));
   const upgradedAt = Date.now();
-  await host.page.waitForFunction(() => document.querySelector('.island-card[open] .island-pips')?.getAttribute('aria-label') === 'Level 3 of 3', null, {timeout: 2000, polling: 100});
+  await host.page.waitForFunction(() => document.querySelector('.island-card[open] .island-pips')?.getAttribute('aria-label') === 'Level 3 of 5', null, {timeout: 2000, polling: 100});
   await shows(host, 'wall_2', 3, 'the wall the friend upgraded');
   const friendUpgrade = Date.now() - upgradedAt;
   await shows(ben, 'wall_2', 3, 'the wall the friend upgraded');

@@ -44,12 +44,17 @@ def test_the_prices_and_the_starting_coins_are_the_economy_table():
 
     assert catalogue.starting_coins == 200
     assert {kind.kind: kind.prices for kind in catalogue.kinds} == {
-        "wall": (10, 20, 40),
-        "cannon": (30, 60, 120),
-        "mortar": (60, 120, 240),
-        "watchtower": (40, 80),
+        "wall": (10, 20, 40, 80, 160),
+        "cannon": (30, 60, 120, 240, 480),
+        "mortar": (60, 120, 240, 480, 960),
+        "watchtower": (40, 80, 160, 320, 640),
         "house": (50, 100),
     }
+    # Levels 4 and 5 (docs/GAME-V3.md 4.1): 4 after wave 12 (the mortar 15), 5 after wave 20.
+    waves = {kind.kind: kind.level_waves for kind in catalogue.kinds}
+    assert waves["cannon"] == waves["wall"] == (0, 2, 5, 12, 20)
+    assert waves["mortar"] == (2, 2, 5, 15, 20)
+    assert waves["watchtower"] == (3, 3, 12, 15, 20)
     assert {m.crew: (m.coins, m.max, m.unlock_wave) for m in catalogue.crew} == {
         "gunner": (40, 2, 3),
         "carpenter": (30, 2, 5),
@@ -259,18 +264,21 @@ def test_the_spots_are_planned_in_file_order_with_their_state():
     built = {
         "wall_2": rules.Built("wall", 1),
         "cannon_1": rules.Built("mortar", 3),
+        "cannon_3": rules.Built("cannon", 5),
         "plot_3": rules.Built("windmill", 1),
     }
     plans = {plan.id: plan for plan in rules.plan_spots(load_island(), built)}
 
-    assert [plan.id for plan in plans.values() if plan.built] == ["wall_2", "cannon_1"]
+    assert [plan.id for plan in plans.values() if plan.built] == ["wall_2", "cannon_1", "cannon_3"]
     assert len(plans) == 22
     assert (plans["wall_2"].level, plans["wall_2"].upgrade_cost) == (1, 20)
+    # A level-3 mortar has two levels to go (docs/GAME-V3.md section 4.1); a level-5 cannon none.
     assert (plans["cannon_1"].kind, plans["cannon_1"].cost, plans["cannon_1"].upgrade_cost) == (
         "mortar",
         60,
-        None,
+        480,
     )
+    assert (plans["cannon_3"].level, plans["cannon_3"].upgrade_cost) == (5, None)
     assert (plans["cannon_2"].kind, plans["cannon_2"].kinds) == ("cannon", ("cannon", "mortar"))
 
 

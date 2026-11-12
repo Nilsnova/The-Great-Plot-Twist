@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { pirateDimensions } from '../src/pixel/pirate-catalog.js';
 import { pixelSizes } from '../src/pixel/catalog.js';
 import { ATLAS_IDS, CARTOON_EXTRA_IDS, PIXEL_ONLY_IDS } from '../src/pirates/render.js';
-import { LEVEL_ART, PIP_ART } from '../src/island/world.js';
+import { LEVEL_ART, PIP_ART, PIP_TIER_ART } from '../src/island/world.js';
 import { framesFor, hasCartoon, islandFrame } from '../src/art/registry.js';
 import { CAPTAIN_PALETTES } from '../src/art/people.js';
 import { ATLAS_BUDGET, artDensity, fitDensity } from '../src/art/textures.js';
@@ -23,12 +23,15 @@ describe('clean cartoon art', () => {
     for (const id of CARTOON_EXTRA_IDS) expect(frames[id].slice(0, 3)).toEqual(id.startsWith('captain-down-') ? [40, 24, 3] : [24, 32, 3]);
   });
   it('draws the island: level art, pips, the explorer frames and the scenery of the home island', () => {
-    const names = [...Object.values(LEVEL_ART).flat(), PIP_ART, 'cabin', 'oak', 'pine', 'birch', 'rock', 'flowers', 'grass-tuft', 'bench', 'barrel', 'lantern',
+    // Levels 4 and 5 (GAME-V3.md §4.1) are cartoon-only: they keep the box of their level-3 drawing (or pip).
+    const sibling = { 'island-watchtower-l4': 'island-watchtower', 'island-watchtower-l5': 'island-watchtower', [PIP_TIER_ART]: PIP_ART };
+    const box = name => pixelSizes[name] ?? pixelSizes[sibling[name] ?? name.replace(/-l[45]$/, '-l3')];
+    const names = [...Object.values(LEVEL_ART).flat(), PIP_ART, PIP_TIER_ART, 'cabin', 'oak', 'pine', 'birch', 'rock', 'flowers', 'grass-tuft', 'bench', 'barrel', 'lantern',
       ...['', '-back', '-side'].flatMap(view => [`explorer${view}`, `explorer${view}-walk-1`, `explorer${view}-walk-2`])];
     for (const name of names) {
       expect(islandFrame(name), name).not.toBeNull();
       const [w, h, anchor] = islandFrame(name);
-      expect([w / 16, h / 16, anchor / h]).toEqual(pixelSizes[name]);
+      expect([w / 16, h / 16, anchor / h], name).toEqual(box(name));
     }
     expect(hasGround('home_islet')).toBe(true);
     expect(hasCartoon('pirate-warship-2') && hasCartoon('fx-smoke-1') && !hasCartoon('market-hall')).toBe(true);

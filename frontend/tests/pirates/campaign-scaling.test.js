@@ -136,11 +136,10 @@ describe('100-wave scaling (GAME-V3.md §4)', () => {
     expect(measure(four, 4).won).toBe(8);
     expect(measure(four, 5).won).toBeGreaterThanOrEqual(7);
   });
-  it('wave 30 needs research or the captains; wave 50 the whole crew', () => {
+  it('wave 30 needs research or the captains (wave 50 and later: tests/pirates/late-game.test.js)', () => {
     expect(measure(ISLANDS.full, 30, { seeds: 4 }).won).toBeLessThanOrEqual(1); // the full island alone mostly falls
     expect(crewWins(ISLANDS.full, 30, 4)).toBe(4);                        // four captains with it hold
     expect(measure(specced(ISLANDS.full), 30, { seeds: 4 }).won).toBeGreaterThan(0); // the skills alone hold some
-    expect(crewWins(specced(ISLANDS.full), 50, 4)).toBe(0);               // four captains are not enough at 50
-    expect(crewWins(specced(ISLANDS.full), 50, 10)).toBeGreaterThanOrEqual(3); // ten (the whole crew) hold it
+    expect(crewWins(specced(ISLANDS.full), 50, 4)).toBe(0);               // four marksmen on level-3 towers are not enough at 50
   });
 });

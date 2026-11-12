@@ -64,27 +64,27 @@
     },
     {
       "wave": 12,
-      "opens": ["tier_12"],
-      "title": "Raiders join the fleet!",
-      "line": "Fast red-sailed raiders sail in from now on."
+      "opens": ["cannon:4", "wall:4", "watchtower:3", "tier_12"],
+      "title": "New: Level 4, and raiders!",
+      "line": "Cannons and walls go to level 4, the watchtower to level 3. Fast red-sailed raiders sail in from now on."
     },
     {
       "wave": 15,
-      "opens": ["tier_15"],
-      "title": "Bigger warships!",
-      "line": "The boss warships are tougher from now on."
+      "opens": ["mortar:4", "watchtower:4", "tier_15"],
+      "title": "New: Level 4 mortars, and bigger warships!",
+      "line": "Mortars and the watchtower go to level 4. The boss warships are tougher from now on."
     },
     {
       "wave": 20,
-      "opens": ["tier_20"],
-      "title": "Brutes come ashore!",
-      "line": "Big brutes hack walls faster and take more hits."
+      "opens": ["cannon:5", "mortar:5", "wall:5", "watchtower:5", "tier_20"],
+      "title": "New: Level 5, and brutes!",
+      "line": "Every tower and wall goes to level 5. Big brutes come ashore: they hack walls faster and take more hits."
     },
     {
       "wave": 30,
       "opens": ["tier_30"],
       "title": "Ironclads!",
-      "line": "Iron-plated brigs join the fleet. Research and skills matter now."
+      "line": "Iron-plated brigs join the fleet, and every ship grows tougher fast. Research and skills matter now."
     },
     {
       "wave": 50,

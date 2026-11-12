@@ -6,16 +6,18 @@
 import {STEPS as CAMPAIGN_STEPS, opensText} from '../campaign/index.js';
 
 // §2: per kind, per level (index 0 = level 1). price[n] is the price of building (n = 0) or of the
-// upgrade to level n + 1.
+// upgrade to level n + 1. Levels 4 and 5 (GAME-V3.md §4.1) open after waves 12, 15 and 20. The prices are
+// backend/content/islands.json's and the stats CONFIG.levels of src/pirates/sim.js (tests/island/tiers.test.js).
 export const BUILDINGS = Object.freeze({
-  wall: Object.freeze({name: 'Wall', line: 'Stops boarders until they break it; ships shell it.', price: [10, 20, 40],
-    stats: [{hp: 60}, {hp: 120}, {hp: 200}]}),
-  cannon: Object.freeze({name: 'Cannon', line: 'Fires at one ship at a time.', price: [30, 60, 120],
-    stats: [{damage: 10, range: 28}, {damage: 16, range: 31}, {damage: 24, range: 34}]}),
-  mortar: Object.freeze({name: 'Mortar', line: 'Hits every ship near the impact. Cannot hit close ships.', price: [60, 120, 240],
-    stats: [{damage: 14, range: 36}, {damage: 22, range: 40}, {damage: 32, range: 44}]}),
-  watchtower: Object.freeze({name: 'Watchtower', line: 'Gives all your towers more range.', price: [40, 80],
-    stats: [{range: 8}, {range: 12}]}),
+  wall: Object.freeze({name: 'Wall', line: 'Stops boarders until they break it; ships shell it.', price: [10, 20, 40, 80, 160],
+    stats: [{hp: 60}, {hp: 120}, {hp: 200}, {hp: 300}, {hp: 420}]}),
+  cannon: Object.freeze({name: 'Cannon', line: 'Fires at one ship at a time.', price: [30, 60, 120, 240, 480],
+    stats: [{damage: 10, range: 28}, {damage: 16, range: 31}, {damage: 24, range: 34}, {damage: 30, range: 36}, {damage: 38, range: 38}]}),
+  mortar: Object.freeze({name: 'Mortar', line: 'Hits every ship near the impact. Cannot hit close ships.', price: [60, 120, 240, 480, 960],
+    stats: [{damage: 14, range: 36}, {damage: 22, range: 40}, {damage: 32, range: 44}, {damage: 42, range: 46}, {damage: 54, range: 48}]}),
+  // From level 3 the watchtower also adds damage to every cannon and mortar (boost, in percent).
+  watchtower: Object.freeze({name: 'Watchtower', line: 'Gives all your towers more range, from level 3 more damage too.', price: [40, 80, 160, 320, 640],
+    stats: [{range: 8, boost: 0}, {range: 12, boost: 0}, {range: 14, boost: 5}, {range: 16, boost: 10}, {range: 18, boost: 15}]}),
   house: Object.freeze({name: 'House', line: 'Adds loot for every wave you win.', price: [50, 100],
     stats: [{loot: 5}, {loot: 10}]}),
 });
@@ -129,12 +131,14 @@ export function priceFor(kind, level, prices = null) {
   return BUILDINGS[kind]?.price[level] ?? null;
 }
 // "Damage 10 → 16 · Range 28 → 31" or "Hp 60 → 120": what an upgrade gives.
-const STAT_NAMES = {damage: 'Damage', range: 'Range', hp: 'Strength', loot: 'Loot'};
+const STAT_NAMES = {damage: 'Damage', range: 'Range', hp: 'Strength', loot: 'Loot', boost: 'Tower damage'};
 export function statLine(kind, level, nextLevel = null) {
   const now = BUILDINGS[kind]?.stats[level - 1], then = nextLevel ? BUILDINGS[kind]?.stats[nextLevel - 1] : null;
   if (!now) return '';
-  const plus = kind === 'watchtower' ? '+' : '', unit = kind === 'house' ? ' 🪙' : '';
-  return Object.keys(now).map(key => `${STAT_NAMES[key]} ${plus}${now[key]}${unit}${then ? ` → ${plus}${then[key]}${unit}` : ''}`).join(' · ');
+  const plus = kind === 'watchtower' ? '+' : '', unit = key => (kind === 'house' ? ' 🪙' : key === 'boost' ? '%' : '');
+  // A watchtower's damage boost shows once it has one (level 3), or when the next level brings it.
+  const keys = Object.keys(now).filter(key => key !== 'boost' || now.boost > 0 || (then?.boost ?? 0) > 0);
+  return keys.map(key => `${STAT_NAMES[key]} ${plus}${now[key]}${unit(key)}${then ? ` → ${plus}${then[key]}${unit(key)}` : ''}`).join(' · ');
 }
 export function captainLine(level, nextLevel = null) {
   const now = CAPTAIN.stats[level - 1], then = nextLevel ? CAPTAIN.stats[nextLevel - 1] : null;
