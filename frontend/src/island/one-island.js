@@ -1,6 +1,7 @@
 // "One island only" (docs/GAME-V3.md §2): while it is on, the sea chart and the travel to the Harbor and
-// Pirate Point leave the Menu and the goals; the Harbor comes back later as a building on the island
-// (lane P). The old travel code stays and still works with the flag off. Plain rules, no DOM.
+// Pirate Point leave the Menu and the goals; the Harbor is a building on the island that opens after wave 4
+// (src/island/spots.js CAMPAIGN_BUILDINGS, GAME-V3.md §4.1). The old travel code stays and still works with the
+// flag off. Plain rules, no DOM.
 //
 // ON by default in code. /api/config may send flags.one_island = false to bring travel back, and
 // ?oneisland=0 does the same for one tab (checks of the old paths). It only matters while the island game

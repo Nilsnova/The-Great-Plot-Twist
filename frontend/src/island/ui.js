@@ -85,6 +85,7 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
         for (const choice of model.choices) {
           const option = node('button', 'island-choice'); option.type = 'button'; option.dataset.focus = `choice-${choice.kind}`; option.dataset.kind = choice.kind;
           option.disabled = choice.disabled;
+          if (choice.locked) option.classList.add('is-locked');
           const head = node('span', 'island-choice-head'); head.append(node('strong', '', choice.busy ? 'Building…' : choice.name), node('span', 'island-choice-price', choice.price));
           option.append(head, node('span', 'island-choice-line', choice.line));
           if (choice.reason) option.append(node('span', 'island-choice-reason', choice.reason));
@@ -104,10 +105,108 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
       }
       if (act && !act.disabled) focusable = act;
       footer(body, model, act);
+      if (model.locked) body.classList.add('is-locked');
+      // GAME-V3.md §5: the tower's skill, chosen once its kind is researched at the Tech hub.
+      if (model.skills) {
+        const box = node('section', 'island-skills-pick'); box.setAttribute('aria-label', model.skills.title);
+        box.append(node('h3', 'island-skills-title', model.skills.title), line('island-skills-line', model.skills.line));
+        if (model.skills.choices.length) {
+          const list = node('div', 'island-spec-list'); list.setAttribute('role', 'group'); list.setAttribute('aria-label', 'Tower skills');
+          for (const choice of model.skills.choices) {
+            const option = node('button', `island-spec${choice.active ? ' is-active' : ''}`); option.type = 'button';
+            option.dataset.focus = `spec-${choice.id}`; option.dataset.spec = choice.id; option.disabled = choice.disabled;
+            option.setAttribute('aria-pressed', String(choice.active));
+            option.append(node('strong', '', choice.busy ? 'Picking…' : choice.name), node('span', 'island-spec-line', choice.line));
+            if (choice.active) option.append(node('span', 'island-spec-mark', '✓'));
+            option.addEventListener('click', () => on.specialise?.(model.spotId, choice.id));
+            list.append(option);
+          }
+          box.append(list);
+        }
+        body.append(box);
+      }
       if (model.hire && on.hire) {
         const hire = button('Hire crew', () => on.hire(), true); hire.classList.add('island-hire'); hire.dataset.focus = 'hire';
         body.append(hire); focusable ??= hire;
       }
+      return focusable;
+    });
+  }
+  // --- the campaign's buildings (GAME-V3.md §4, §5) ---
+  // A card for a building that is not open yet: its line says "Opens after wave N." and nothing more.
+  function lockedNote(body, model) {
+    const note = node('div', 'island-campaign-locked');
+    const lock = node('span', 'island-campaign-lock', '🔒'); lock.setAttribute('aria-hidden', 'true');
+    note.append(lock, node('strong', '', model.line));
+    body.append(note);
+  }
+  // handlers: {open(stall)}: the market stall ('market') or the match board ('match').
+  function harborCard(model, handlers = {}) {
+    open('harbor', model.title, body => {
+      if (!model.open) { lockedNote(body, model); return null; }
+      let focusable = null;
+      body.append(line('island-purpose', model.line));
+      const list = node('ul', 'island-stalls');
+      for (const stall of model.stalls) {
+        const item = node('li', `island-stall${stall.open ? '' : ' is-locked'}`); item.dataset.stall = stall.id;
+        const text = node('div', 'island-stall-text');
+        text.append(node('strong', '', stall.name), node('p', 'island-stall-line', stall.line));
+        if (stall.reason) text.append(node('p', 'island-stall-reason', stall.reason));
+        item.append(text);
+        if (stall.open) {
+          const go = button(stall.button, () => handlers.open?.(stall.id)); go.dataset.focus = `stall-${stall.id}`;
+          item.append(go); focusable ??= go;
+        }
+        list.append(item);
+      }
+      body.append(list);
+      return focusable;
+    });
+  }
+  // handlers: {research(branch)}
+  function techCard(model, handlers = {}) {
+    open('tech', model.title, body => {
+      let focusable = null;
+      if (!model.open) lockedNote(body, model); else body.append(line('island-purpose', model.line));
+      const list = node('ul', 'island-research');
+      for (const row of model.branches) {
+        const item = node('li', `island-research-row${row.done ? ' is-done' : ''}${model.open ? '' : ' is-locked'}`); item.dataset.branch = row.branch;
+        const text = node('div', 'island-research-text');
+        const head = node('p', 'island-research-head'); head.append(node('strong', '', row.name), node('span', 'island-research-price', row.done ? '✓' : row.price));
+        text.append(head, node('p', 'island-research-skills', row.skills.join(' · ')));
+        if (row.reason) text.append(node('p', 'island-research-reason', row.reason));
+        item.append(text);
+        if (model.open && !row.done) {
+          const go = button(row.button, () => handlers.research?.(row.branch)); go.dataset.focus = `research-${row.branch}`; go.disabled = row.disabled;
+          go.setAttribute('aria-label', `${row.button} ${row.name}`);
+          item.append(go); focusable ??= row.disabled ? null : go;
+        }
+        list.append(item);
+      }
+      body.append(list, line('island-message', model.message, 'alert'), line('island-coins', model.coins));
+      return focusable;
+    });
+  }
+  // handlers: {give(amount)}
+  function wreckCard(model, handlers = {}) {
+    open('wreck', model.title, body => {
+      if (!model.open) { lockedNote(body, model); return null; }
+      let focusable = null;
+      body.append(line('island-purpose', model.line));
+      const bar = node('div', 'island-wreck-bar'); bar.setAttribute('role', 'progressbar');
+      bar.setAttribute('aria-valuemin', '0'); bar.setAttribute('aria-valuemax', String(model.goal)); bar.setAttribute('aria-valuenow', String(model.paid));
+      bar.setAttribute('aria-label', `Repair: ${model.progress}`);
+      const fill = node('span', 'island-wreck-fill'); fill.style.width = `${model.percent}%`; bar.append(fill);
+      body.append(bar, node('p', 'island-wreck-progress', `${model.percent}% · ${model.progress}`));
+      if (model.done) body.append(node('p', 'island-wreck-done', 'Repaired, sailing opens later'));
+      const row = node('div', 'island-wreck-gifts');
+      for (const gift of model.gifts) {
+        const go = button(gift.label, () => handlers.give?.(gift.amount)); go.dataset.focus = `gift-${gift.amount}`; go.disabled = gift.disabled;
+        row.append(go); focusable ??= gift.disabled ? null : go;
+      }
+      if (model.gifts.length) body.append(row);
+      const reason = model.gifts.find(gift => gift.reason)?.reason ?? '';
+      body.append(line('island-reason', reason), line('island-message', model.message, 'alert'), line('island-coins', model.coins));
       return focusable;
     });
   }
@@ -313,7 +412,7 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
     });
   }
   return {
-    buildCard, bellCard, inviteCard, lobbyCard, crewCard, captainCard, captainsCard, close, copyLink,
+    buildCard, bellCard, inviteCard, lobbyCard, crewCard, captainCard, captainsCard, harborCard, techCard, wreckCard, close, copyLink,
     // Re-draw the open card from fresh models (the island controller calls this on every change).
     get open() { return kind; },
     get active() { return !!modal; },

@@ -73,7 +73,7 @@ describe('island spots', () => {
   });
   it('gives each spot a reachable zone; a visitor gets no cabin', () => {
     const zones = islandZones();
-    expect(zones.map(zone => zone.id)).toEqual([...SPOT_IDS, BELL.id, CABIN.id]);
+    expect(zones.map(zone => zone.id)).toEqual([...SPOT_IDS, BELL.id, 'island_harbor', 'island_techhub', 'island_wreck', CABIN.id]);
     for (const zone of zones) expect(onIsland(zone.x, zone.z), zone.id).toBe(true);
     expect(islandZones({visitor: true}).some(zone => zone.id === CABIN.id)).toBe(false);
     expect(isIslandZone('cannon_1') && isIslandZone(BELL.id) && !isIslandZone('market_hall')).toBe(true);
@@ -82,5 +82,8 @@ describe('island spots', () => {
     expect(defenses([{id: 'cannon_1', kind: 'cannon', built: true, cost: 30}, {id: 'wall_1', kind: 'wall', built: false, cost: 10},
       {id: 'moat', kind: 'wall', built: true, cost: 10}, {id: 'cannon_5', kind: 'mortar', built: true, level: 2, cost: 30}]))
       .toEqual([{id: 'cannon_1', kind: 'cannon', level: 1, x: -12.5, z: -14.5}, {id: 'cannon_5', kind: 'mortar', level: 2, x: -15, z: -6}]);
+    // A tower skill rides along (GAME-V3.md §5), only one of its own kind.
+    expect(defenses([{id: 'cannon_1', kind: 'cannon', built: true, level: 3, spec: 'chain'}, {id: 'wall_1', kind: 'wall', built: true, spec: 'chain'}]))
+      .toEqual([{id: 'cannon_1', kind: 'cannon', level: 3, x: -12.5, z: -14.5, spec: 'chain'}, {id: 'wall_1', kind: 'wall', level: 1, x: -18.5, z: -4}]);
   });
 });

@@ -10,17 +10,17 @@
 //   narrator.dispose()
 //
 // Bus events it listens to. The first group is emitted today; the second is the contract for the
-// lanes that build those parts (until then the narrator derives the unlocks from the wave won):
+// lanes that build those parts:
 //   wave_started_server {waveId, wave, boss?, where}   (island lane) a wave starts: waves 1-5 and 100,
 //       every 10th, the first boss. where is "own", an island code or "pirate_point".
 //   wave_controller_started {waveId, wave}             (pirates lane) the same wave on screen
 //   wave_finished {waveId, survived, wave?}             (pirates and island lanes, deduplicated by waveId)
-//       a win plays what that wave unlocks (GAME-V3 section 4), a milestone, or a "wave won" line.
+//       a win plays a milestone or a "wave won" line (not on a wave that opens something).
 //   --- to be emitted by the other lanes ---
 //   game_started {code, first?, resumed?, wave?}        (rooms lane R) the host pressed Start: the opening
 //       the first time on this island, else welcome back. Replaces narrator.begin().
-//   campaign_unlocked {wave, ids?}                      (campaign lane P) what winning `wave` opened;
-//       plays the wave_unlock:<wave> lines (each once, so the wave_finished fallback never repeats them).
+//   campaign_unlocked {wave, ids?, code?}               (campaign lane P, src/island/index.js) what winning
+//       `wave` opened on the island `code`; plays the wave_unlock:<wave> lines, each once per island game.
 //   boarders_ashore {wave?, count?}                     (boarding lane C) the first boarders land.
 //   heart_changed {hp, max}                             (boarding lane C) the island's heart; below 30% warns.
 //   player_fell {playerId, self?} / player_revived {playerId, by?, self?}  (health lane H)
@@ -187,7 +187,9 @@ export function createNarrator({container = globalThis.document?.body, on, audio
     on('wave_started_server', waveStarted),
     on('wave_controller_started', waveStarted),
     on('wave_finished', waveFinished),
-    on('campaign_unlocked', event => { if (Number.isSafeInteger(event?.wave)) say(`wave_unlock:${event.wave}`, {seed: event.wave}); }),
+    on('campaign_unlocked', event => {
+      if (Number.isSafeInteger(event?.wave)) say(`wave_unlock:${event.wave}`, {seed: event.wave, game: event?.code ? gameKey(event.code, current()) : current()});
+    }),
     on('boarders_ashore', () => say('boarders_ashore')),
     on('player_fell', event => say('player_fell', {seed: event?.self ? 1 : 0})),
     on('player_revived', event => say('player_revived', {seed: event?.self ? 0 : 1})),

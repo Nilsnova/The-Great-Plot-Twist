@@ -41,6 +41,7 @@ import {makeActionUid} from '../screens/islet/action-uid.js';
 import {islandCode, displayIslandCode} from './codes.js';
 import {localSpotId} from './spots.js';
 import {SKILL_BY_ID, WEAPON_BY_ID} from '../pirates/captain-ids.js';
+import {BRANCH_BY_ID, SPECS} from '../campaign/tech.js';
 
 export const PATHS = Object.freeze({
   island: '/api/island', build: '/api/island/build', visit: code => `/api/island/visit/${code}`,
@@ -50,6 +51,7 @@ export const PATHS = Object.freeze({
   skill: '/api/island/skill', weaponBuy: '/api/island/weapon/buy', weaponEquip: '/api/island/weapon/equip',
   point: '/api/pirate-point', pointBuild: '/api/pirate-point/build', pointUpgrade: '/api/pirate-point/upgrade',
   games: '/api/games', gameJoin: '/api/games/join', gameLeave: '/api/games/leave', game: code => `/api/games/${code}`,
+  research: '/api/island/research', specialise: '/api/island/tower-skill', wreck: '/api/island/wreck',
 });
 export const CREW_IDS = Object.freeze(['gunner', 'carpenter', 'lookout']);
 export const MESSAGES = Object.freeze({
@@ -62,6 +64,9 @@ export const MESSAGES = Object.freeze({
   badCrew: 'Choose a gunner, a carpenter or a lookout.',
   badSkill: 'There is no such skill.',
   badWeapon: 'There is no such weapon.',
+  badResearch: 'There is no such research.',
+  badSpec: 'There is no such tower skill.',
+  badGift: 'Pick one of the amounts shown.',
 });
 const isCount = value => Number.isSafeInteger(value) && value >= 0;
 const isText = value => typeof value === 'string' && value.length > 0 && value.length <= 200;
@@ -198,6 +203,29 @@ export function createIslandApi({transport, makeUid = makeActionUid} = {}) {
     equipWeapon({weapon} = {}) {
       if (!Object.hasOwn(WEAPON_BY_ID, weapon ?? '')) return refuse(400, 'bad_weapon', MESSAGES.badWeapon);
       return askSpots(() => transport.post(PATHS.weaponEquip, {weapon}), isIsland);
+    },
+    // GAME-V3.md §5: research a tower kind at the Tech hub of the island (yours, or the game of `code`).
+    research({branch, code = null} = {}) {
+      const where = code ? displayIslandCode(code) : '';
+      if (!Object.hasOwn(BRANCH_BY_ID, branch ?? '')) return refuse(400, 'bad_research', MESSAGES.badResearch);
+      if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
+      return writeSpots(`research:${where}:${branch}`, actionUid => transport.post(PATHS.research, {branch, actionUid, ...(where ? {code: where} : {})}),
+        where ? hasSpots : isIsland);
+    },
+    // A tower picks one skill of its researched kind (no coins, the same every time: no click id).
+    specialise({spot, spec, code = null} = {}) {
+      const where = code ? displayIslandCode(code) : '';
+      if (!Object.hasOwn(SPECS, spec ?? '')) return refuse(400, 'bad_spec', MESSAGES.badSpec);
+      if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
+      return askSpots(() => transport.post(PATHS.specialise, {spot: sent(spot), spec, ...(where ? {code: where} : {})}), where ? hasSpots : isIsland);
+    },
+    // GAME-V3.md §4: coins into the island's wreck (one of the gifts the answer lists).
+    repairWreck({amount, code = null} = {}) {
+      const where = code ? displayIslandCode(code) : '';
+      if (!Number.isSafeInteger(amount) || amount < 1) return refuse(400, 'bad_gift', MESSAGES.badGift);
+      if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
+      return writeSpots(`wreck:${where}:${amount}`, actionUid => transport.post(PATHS.wreck, {amount, actionUid, ...(where ? {code: where} : {})}),
+        where ? hasSpots : isIsland);
     },
     piratePoint: () => askSpots(() => transport.get(PATHS.point), isPoint),
     pointBuild({spot, kind} = {}) {

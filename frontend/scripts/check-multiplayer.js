@@ -6,7 +6,10 @@
 //   narrator's game_started fires on both pages, once); the owner builds a cannon; the friend builds a wall
 //   co-op and the owner's island shows it. Upgrades (11 Nov: "sometimes some upgrades were not visible"):
 //   the owner upgrades a wall and the friend's map and card show the level within 2 s, then the friend
-//   upgrades it on the owner's island and the owner's map and open card follow. Wave 3 with a second cannon
+//   upgrades it on the owner's island and the owner's map and open card follow. Tower skills (GAME-V3.md §5):
+//   after wave 8 the owner researches cannon skills at the Tech hub and picks Heavy shot for a cannon; the
+//   friend's island answer and card show the same skill within 2 s, then the friend picks Rapid on the owner's
+//   island and the owner's follows (the wave's sim reads the skill from the island). Wave 3 with a second cannon
 //   and the inner wall ring: the owner rings the bell; both run the same wave (the same ships at the same
 //   tick, and the same boarders ashore: TOWER-DEFENSE.md §12); both captains fire their musket and each
 //   shot reaches the other page; an upgrade in the wave's break shows on both; the host pauses the break
@@ -222,6 +225,8 @@ try {
   // 2b Upgrades are seen on the other page within 2 s: the owner's, then the friend's on the owner's island.
   await island(host, async i => { i.dev.setWaveBest(5); i.dev.setCoins(900); await i.load(); });
   await island(ben, async i => { i.dev.setWaveBest(5); i.dev.setCoins(900); await i.load(); });
+  // The inner wall ring opens after wave 5 (GAME-V3.md §4): the owner raises it now, for the wave further down.
+  await island(host, async i => { for (const id of ['wall_7', 'wall_8', 'wall_9', 'wall_10', 'wall_11', 'wall_12']) await i.build(id, 'wall'); });
   assert.deepEqual(await mapOf(ben, 'wall_2'), {level: 1, pips: 0});
   await island(host, async i => i.upgrade('wall_2'));
   const ownerUpgrade = await shows(ben, 'wall_2', 2, 'the owner\'s wall');
@@ -236,10 +241,43 @@ try {
   await shows(ben, 'wall_2', 3, 'the wall the friend upgraded');
   results.push(`friend upgrade to level 3 on the owner's map and open card after ${friendUpgrade} ms`);
   await shot('02c-friend-upgrade');
+  // 2c Tower skills (GAME-V3.md §5): research at the Tech hub (after wave 8), then a skill per tower, seen on both screens.
+  const specOf = (captain, spot) => captain.page.evaluate(spot => {
+    const i = window.__island.island, target = i.visiting?.spots ? i.visiting : i.island;
+    return target?.spots?.find(item => item.id === spot)?.spec ?? null;
+  }, spot);
+  const skillCard = (captain, spot) => captain.page.evaluate(async spot => {
+    const game = window.__island.island; game.pick(spot); await new Promise(resolve => setTimeout(resolve, 80));
+    const card = document.querySelector('.island-card[open]');
+    const read = {title: card?.querySelector('.island-skills-title')?.textContent ?? '',
+      active: card?.querySelector('.island-spec.is-active')?.dataset.spec ?? null};
+    game.ui.close();
+    return read;
+  }, spot);
+  async function seesSpec(captain, spot, spec, what) {
+    const began = Date.now();
+    while (Date.now() - began < 2000 && await specOf(captain, spot) !== spec) await captain.page.waitForTimeout(100);
+    assert.equal(await specOf(captain, spot), spec, `${captain.name}'s island shows ${what} as ${spec}`);
+    const card = await skillCard(captain, spot);
+    assert.equal(card.active, spec, `${captain.name}'s card marks ${spec} for ${what}`);
+    const took = Date.now() - began;
+    assert.ok(took <= 2200, `${what} reached ${captain.name} within 2 s (${took} ms)`);
+    return {took, title: card.title};
+  }
+  await island(host, async i => { i.dev.setWaveBest(8); i.dev.setCoins(900); await i.load(); });
+  await island(ben, async i => { await i.load(); });
+  await island(host, async i => { await i.research('cannon'); });
+  assert.deepEqual(await host.page.evaluate(() => [...window.__island.island.campaign.research.done]), ['cannon'], 'the owner researched cannon skills');
+  await island(host, async i => { await i.specialise('cannon_1', 'heavy'); });
+  const heavy = await seesSpec(ben, 'cannon_1', 'heavy', "the owner's cannon skill");
+  results.push(`tower skill: the owner's Heavy shot on cannon_1 on the friend's island and card after ${heavy.took} ms ("${heavy.title}")`);
+  await shot('02d-tower-skill');
+  await island(ben, async i => { await i.specialise('cannon_1', 'rapid'); });
+  const rapid = await seesSpec(host, 'cannon_1', 'rapid', "the friend's cannon skill");
+  results.push(`tower skill: the friend's Rapid on the owner's cannon_1 on the owner's island and card after ${rapid.took} ms`);
   // 3 Wave 3 (more ships, so both muskets find a target) with one more cannon and the inner wall ring
   // (TOWER-DEFENSE.md §12: two cannons let boarders come ashore, the ring holds them); the owner rings.
-  await island(host, async i => { i.dev.setWaveBest(2); i.dev.setCoins(400); await i.load(); await i.build('cannon_2', 'cannon');
-    for (const id of ['wall_7', 'wall_8', 'wall_9', 'wall_10', 'wall_11', 'wall_12']) await i.build(id, 'wall'); });
+  await island(host, async i => { i.dev.setWaveBest(2); i.dev.setCoins(400); await i.load(); await i.build('cannon_2', 'cannon'); });
   await ben.page.waitForFunction(() => window.__island.island.visiting?.spots?.find(spot => spot.id === 'wall_12')?.built, null, {timeout: 5000, polling: 100});
   await island(host, async i => i.ringBell());
   const first = await until(host, state => state?.ships > 0, 'the first ships', 60000);

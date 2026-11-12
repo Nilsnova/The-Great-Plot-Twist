@@ -3,9 +3,10 @@
 // chunk, imported only when a wave's atlas is drawn. Every frame: [width, height, anchor, draw].
 import {peopleFrames} from './people.js';
 import {islandFrames} from './island.js';
+import {campaignFrames} from './campaign.js';
 
 let local = null;
-const island = () => (local ??= {...peopleFrames(), ...islandFrames()});
+const island = () => (local ??= {...peopleFrames(), ...islandFrames(), ...campaignFrames()});
 let fleet = null;
 const FLEET = /^(pirate-|fx-)/;
 /** True when a cartoon drawing exists for the frame name (fleet names are known by their prefix). */
