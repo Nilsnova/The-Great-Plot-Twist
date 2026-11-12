@@ -6,6 +6,7 @@
 //   presencePlace(place)                      isle_<code> on an island (live:place:isle_k7q2m:1)
 //   playArrival() / visit(code) / sailHome()  the first landing, and visits by code
 //   chartVisible(id) / chartLabel(id)         the three sea chart destinations
+//   placeName(id)                             the arrival banner's name in a friend's game ("Nils's game")
 //   active / handleEscape() / dispose()
 //   decoratePoint(place, cleanups, adapters)  Pirate Point's shared build spots (TOWER-DEFENSE.md §5)
 //   openCrew() / openCaptain() / openInvite()  the Menu's Crew, Captain and skills (the musket, the skill
@@ -17,7 +18,8 @@
 // Events it emits on the game's bus: island_built {kind, spot}, island_upgraded {kind, spot, level},
 // campaign_unlocked {wave, ids, code} (a won wave opened something on the island on screen, once per
 // island and wave on this page; the narrator plays its lines), tower_specialised {spot, spec},
-// island_spots_changed {place, spot} (any build or upgrade, also a friend's island and Pirate Point), crew_hired {crew}, island_invite_opened, wave_started_server {...} and wave_finished {...} (wave-hooks.js).
+// island_spots_changed {place, spot} (any build or upgrade, also a friend's island and Pirate Point), island_visit_named {place, name}
+// (the friend's game on screen learned its host's name, so the arrival banner can follow), crew_hired {crew}, island_invite_opened, wave_started_server {...} and wave_finished {...} (wave-hooks.js).
 import {createIslandApi} from './api.js';
 import {createWaveFlow} from './wave-flow.js';
 import {createIslandUi} from './ui.js';
@@ -36,7 +38,7 @@ import {WAVE_STARTED} from './wave-hooks.js';
 import {addMenuExtras} from '../shell/menu-extras.js';
 import {GAME_STARTED, captainColours, lobbyModel} from './lobby.js';
 import {resolvePeer} from '../net/live-extras.js';
-import {travelAllowed, visitChip} from './one-island.js';
+import {travelAllowed, visitChip, visitName} from './one-island.js';
 
 export const ARRIVAL_KEY = 'plot_twist_island_arrival_v1';
 // A build or upgrade went through: {place: 'own' | 'visit' | 'point', spot}. The wave wiring tells the
@@ -47,6 +49,7 @@ export const NEWS_KEY = 'plot_twist_td_news_v1';
 // GAME-V3.md §4: a won wave opened something on the island on screen.
 export const CAMPAIGN_UNLOCKED = 'campaign_unlocked';
 export const TOWER_SPECIALISED = 'tower_specialised';
+export const VISIT_NAMED = 'island_visit_named';
 export const CHART_NAMES = Object.freeze({home_islet: 'Your island', saltreach_harbor: 'The Harbor', lighthouse_isle: 'Pirate Point'});
 const notReady = () => Promise.resolve({ok: false, status: 503, code: 'not_ready',
   message: 'Sign in to build on your island. You can keep exploring.'});
@@ -174,12 +177,17 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   function endVisit() { visiting = null; visitCode = null; forgetVisit(visitStorage); ui.visit(null); }
   // The chip of a friend's game: the old "Visiting … · Sail home" only where travel still applies (one
   // island off); with one island the game itself and a way to its lobby (GAME-V3.md §2).
+  const canTravel = () => { try { return travel() === true; } catch { return false; } };
   function showVisit() {
     if (!visiting) { ui.visit(null); return; }
-    let canTravel = false;
-    try { canTravel = travel() === true; } catch { canTravel = false; }
-    const chip = visitChip({ownerName: visiting.ownerName, code: displayIslandCode(visiting.code), travel: canTravel});
+    const chip = visitChip({ownerName: visiting.ownerName, code: displayIslandCode(visiting.code), travel: canTravel()});
     ui.visit(chip, () => (chip.action === 'home' ? void sailHome() : openLobby()));
+    emit({type: VISIT_NAMED, place: ISLAND_PLACE, name: placeName(ISLAND_PLACE)});
+  }
+  // The island on screen is a friend's game: the banner names it like the chip does; null for your own.
+  function placeName(id) {
+    if (id !== ISLAND_PLACE || (!visiting && !visitCode)) return null;
+    return visitName({ownerName: visiting?.ownerName, travel: canTravel()});
   }
 
   // A friend's game: join it first (once per page), so building and the bell are allowed (GAME-V3.md §2).
@@ -778,6 +786,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     },
     chartVisible: id => Object.hasOwn(CHART_NAMES, id),
     chartLabel: id => CHART_NAMES[id],
+    placeName,
     get visiting() { return visiting ? {...visiting} : visitCode ? {code: visitCode} : null; },
     get island() { return own ? structuredClone(own) : null; },
     get flow() { return flow; },

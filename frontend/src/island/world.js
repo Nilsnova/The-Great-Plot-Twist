@@ -9,7 +9,7 @@ import {pixelSizes} from '../pixel/catalog.js';
 import {SPOTS as ISLAND_SPOTS, CABIN, BELL, CAMPAIGN_BUILDINGS, islandZones} from './spots.js';
 import {isOpen, spotWave, waveOf} from '../campaign/index.js';
 import {SLOT_KINDS} from './td-rules.js';
-import {TIER_ART, crewArt, pirateLevels} from '../pixel/pirate-catalog.js';
+import {TIER_ART, crewArt, pipRow, pirateLevels} from '../pixel/pirate-catalog.js';
 import {islandFrame} from '../art/registry.js';
 import {frameCanvas, smoothTexture, spriteMaterial} from '../art/textures.js';
 
@@ -147,8 +147,8 @@ export function decorateIsland(place, ctx = {}) {
   let art = null;
   const shown = new Map(); // spot id (or 'crew') -> {key, meshes}
   const clear = id => { const item = shown.get(id); if (!item) return; for (const mesh of item.meshes) { root.remove(mesh); mesh.geometry.dispose(); } shown.delete(id); };
-  const put = (id, x, z, lift = 0, order = 0) => {
-    const mesh = placeArt(root, art, id, x, z); mesh.position.y += lift; mesh.renderOrder += order; return mesh;
+  const put = (id, x, z, lift = 0, order = 0, scale = 1) => {
+    const mesh = placeArt(root, art, id, x, z, scale); mesh.position.y += lift; mesh.renderOrder += order; return mesh;
   };
   function showSpot(spot, answer, hidden) {
     const built = answer?.built === true, kind = built ? (kindsOf(spot).includes(answer.kind) ? answer.kind : kindsOf(spot)[0]) : null;
@@ -160,9 +160,11 @@ export function decorateIsland(place, ctx = {}) {
     if (!key) return;
     const mesh = put(id, spot.x, spot.z); mesh.name = `island-${kind}:${spot.id}`; mesh.userData.level = level;
     const meshes = [mesh], [, height, anchor] = artSizes[id], top = height * (1 - anchor) + .15;
-    for (let i = 0; i < pips; i++) {
-      const pip = put(pipArt(level), spot.x + (i - (pips - 1) / 2) * .6, spot.z, top, .01); pip.name = `island-pip:${spot.id}:${i + 1}`; meshes.push(pip);
-    }
+    // One row (pipRow): 4 and 5 smaller and spaced wider than a disc, so the gold stars never overlap.
+    const row = pipCount(kind, level) ? pipRow(level, {step: .6}) : {offsets: []}, pipWidth = artSizes[PIP_ART][0];
+    row.offsets.forEach((offset, i) => {
+      const pip = put(pipArt(level), spot.x + offset * pipWidth, spot.z, top, .01, row.scale); pip.name = `island-pip:${spot.id}:${i + 1}`; meshes.push(pip);
+    });
     shown.set(spot.id, {key, meshes});
   }
   function showCrew(spots, crew, hidden) {

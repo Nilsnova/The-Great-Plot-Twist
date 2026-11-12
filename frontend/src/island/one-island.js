@@ -39,5 +39,13 @@ export function travelAllowed({islandsMode = 'off', classHarbor = false, ...rest
 export function visitChip({ownerName = '', code = '', travel = false} = {}) {
   const name = typeof ownerName === 'string' ? ownerName.trim() : '';
   if (travel) return {text: `Visiting ${name || 'a friend'}'s island · ${code}`, label: 'Sail home', action: 'home'};
-  return {text: `${name || 'A friend'}'s game · ${code}`, label: 'Players', action: 'lobby'};
+  return {text: `${visitName({ownerName: name})} · ${code}`, label: 'Players', action: 'lobby'};
+}
+
+// The name of somebody else's game for the arrival banner, in the chip's own words without the code:
+// "Gull's game" ("A friend's game" while the host's name is not known yet). With travel it stays a visit
+// of their island: "Gull's island".
+export function visitName({ownerName = '', travel = false} = {}) {
+  const name = typeof ownerName === 'string' ? ownerName.trim() : '';
+  return `${name || 'A friend'}'s ${travel ? 'island' : 'game'}`;
 }
