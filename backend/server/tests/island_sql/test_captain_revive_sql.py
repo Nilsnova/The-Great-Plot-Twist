@@ -1,6 +1,7 @@
 """Real SQL checks for 20261112050000_captain_revive.sql: a teammate who helps a fallen captain up
-pays 20 + 5 x the wave number through the ledger, once per click, only in a running wave they are
-in and, on somebody else's island, only as a member of that game.
+pays 20 + 5 x the wave number through the ledger, once per click and once per fall (a second
+helper of the same fall is refused already_up), only in a running wave they are in and, on
+somebody else's island, only as a member of that game.
 
 Opt-in, like test_captain_skills_sql.py, on a disposable local PostgreSQL with every migration
 applied twice. Run from backend/:
@@ -38,14 +39,17 @@ STRANGER = UUID(int=931)
 BASE, PER_WAVE = 20, 5  # backend/content/islands.json "revive"
 
 
-def revive(database, player, wave_id, uid, fallen="p-k3x9q2", base=BASE, per_wave=PER_WAVE):
+def revive(
+    database, player, wave_id, uid, fallen="p-k3x9q2", down_at=412, base=BASE, per_wave=PER_WAVE
+):
     as_server(database)
     return call(
         database,
-        "select public.wave_revive(%s, %s, %s, %s, %s, %s)",
+        "select public.wave_revive(%s, %s, %s, %s, %s, %s, %s)",
         player,
         wave_id,
         fallen,
+        down_at,
         uid,
         base,
         per_wave,
@@ -67,7 +71,8 @@ def running_wave(database, *friends):
 def revives(database, player):
     as_owner(database)
     return database.execute(
-        "select ref, fallen, price from public.captain_revives where player_id = %s order by ref",
+        "select ref, fallen, down_at, price from public.captain_revives"
+        " where player_id = %s order by ref",
         (player,),
     ).fetchall()
 
@@ -83,9 +88,39 @@ def test_a_revive_pays_twenty_plus_five_per_wave_once_per_click(database):
     assert again == {"status": "done", "price": 25, "balance": before - 25, "repeat": True}
     assert balance(database, OWNER) == before - 25
     assert ledger(database, OWNER, "captain_revive") == [(-25, "revive:help-0001")]
-    assert revives(database, OWNER) == [("revive:help-0001", "p-k3x9q2", 25)]
-    # A second fall is a second click: paid again.
-    assert revive(database, OWNER, wave_id, "help-0002")["balance"] == before - 50
+    assert revives(database, OWNER) == [("revive:help-0001", "p-k3x9q2", 412, 25)]
+    # A second fall is a second click and a later tick: paid again.
+    assert revive(database, OWNER, wave_id, "help-0002", down_at=900)["balance"] == before - 50
+
+
+def test_two_helpers_of_one_fall_the_first_pays_and_the_second_is_already_up(database):
+    wave_id = running_wave(database, FRIEND)
+    join_wave(database, FRIEND, wave_id)
+    owner_before, friend_before = balance(database, OWNER), balance(database, FRIEND)
+
+    first = revive(database, OWNER, wave_id, "help-0001", fallen="p-ben", down_at=412)
+    second = revive(database, FRIEND, wave_id, "help-0002", fallen="p-ben", down_at=412)
+
+    assert first == {"status": "done", "price": 25, "balance": owner_before - 25, "repeat": False}
+    assert second == {"status": "refused", "reason": "already_up"}
+    assert balance(database, FRIEND) == friend_before
+    assert ledger(database, FRIEND, "captain_revive") == []
+    assert revives(database, FRIEND) == []
+    # The winner's repeat answers what it paid; the second helper's repeat is refused again.
+    assert revive(database, OWNER, wave_id, "help-0001", fallen="p-ben")["repeat"] is True
+    again = revive(database, FRIEND, wave_id, "help-0002", fallen="p-ben", down_at=412)
+    assert again["reason"] == "already_up"
+    # Another captain's fall at the same tick, or the same captain's next fall, is a new revive.
+    assert (
+        revive(database, FRIEND, wave_id, "help-0003", fallen="p-ana", down_at=412)["status"]
+        == "done"
+    )
+    assert (
+        revive(database, FRIEND, wave_id, "help-0004", fallen="p-ben", down_at=640)["status"]
+        == "done"
+    )
+    assert balance(database, FRIEND) == friend_before - 50
+    assert balance(database, OWNER) == owner_before - 25
 
 
 def test_the_price_follows_the_waves_own_number(database):
@@ -159,6 +194,9 @@ def test_a_player_without_a_wallet_and_bad_arguments(database):
         {"uid": "short"},
         {"fallen": "p k3"},
         {"fallen": ""},
+        {"down_at": -1},
+        {"down_at": 100001},
+        {"down_at": None},
         {"base": 0},
         {"per_wave": -1},
     ]:
@@ -170,6 +208,7 @@ def test_a_player_without_a_wallet_and_bad_arguments(database):
                 wave_id,
                 arguments["uid"],
                 fallen=arguments.get("fallen", "p-k3x9q2"),
+                down_at=arguments.get("down_at", 412),
                 base=arguments.get("base", BASE),
                 per_wave=arguments.get("per_wave", PER_WAVE),
             )
@@ -180,33 +219,41 @@ def test_a_player_without_a_wallet_and_bad_arguments(database):
 def test_the_table_keeps_its_rules(database):
     wave_id = running_wave(database)
     as_owner(database)
-    for ref, fallen, price in [("help-0001", "p-k3", 25), ("revive:x", "p-k3", 25),
-                               ("revive:help-0001", "p k3", 25), ("revive:help-0001", "p-k3", 0)]:
+    insert = (
+        "insert into public.captain_revives (player_id, ref, wave_id, fallen, down_at, price)"
+        " values (%s, %s, %s, %s, %s, %s)"
+    )
+    for ref, fallen, down_at, price in [
+        ("help-0001", "p-k3", 4, 25),
+        ("revive:x", "p-k3", 4, 25),
+        ("revive:help-0001", "p k3", 4, 25),
+        ("revive:help-0001", "p-k3", 4, 0),
+        ("revive:help-0001", "p-k3", -1, 25),
+    ]:
         with pytest.raises(psycopg.errors.CheckViolation):
-            database.execute(
-                "insert into public.captain_revives (player_id, ref, wave_id, fallen, price)"
-                " values (%s, %s, %s, %s, %s)",
-                (OWNER, ref, wave_id, fallen, price),
-            )
+            database.execute(insert, (OWNER, ref, wave_id, fallen, down_at, price))
         database.rollback()
         wave_id = running_wave(database)
         as_owner(database)
+    # One fall, one row: a second row for the same wave, captain and tick is refused.
+    database.execute(insert, (OWNER, "revive:help-0001", wave_id, "p-k3", 4, 25))
+    with pytest.raises(psycopg.errors.UniqueViolation):
+        database.execute(insert, (OWNER, "revive:help-0002", wave_id, "p-k3", 4, 25))
 
 
 def test_no_browser_role_may_run_the_function_or_read_the_revives(database):
+    signature = "public.wave_revive(uuid, uuid, text, integer, text, integer, integer)"
     rights = database.execute(
         """
         select has_table_privilege('authenticated', 'public.captain_revives', 'select'),
                has_table_privilege('anon', 'public.captain_revives', 'select'),
                has_table_privilege('service_role', 'public.captain_revives', 'delete'),
                has_table_privilege('service_role', 'public.captain_revives', 'update'),
-               has_function_privilege('authenticated',
-                 'public.wave_revive(uuid, uuid, text, text, integer, integer)', 'execute'),
-               has_function_privilege('anon',
-                 'public.wave_revive(uuid, uuid, text, text, integer, integer)', 'execute'),
-               has_function_privilege('service_role',
-                 'public.wave_revive(uuid, uuid, text, text, integer, integer)', 'execute')
-        """
+               has_function_privilege('authenticated', %(signature)s, 'execute'),
+               has_function_privilege('anon', %(signature)s, 'execute'),
+               has_function_privilege('service_role', %(signature)s, 'execute')
+        """,
+        {"signature": signature},
     ).fetchone()
     assert rights == (False, False, False, False, False, False, True)
     secured = call(

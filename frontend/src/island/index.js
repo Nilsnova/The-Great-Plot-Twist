@@ -754,8 +754,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     },
     refreshDefended,
     // Captain health (GAME-V3.md §3): you stand a fallen teammate up and pay for it (your coins follow).
-    async reviveCaptain({waveId, fallen} = {}) {
-      const answer = await api.reviveCaptain({waveId, fallen});
+    async reviveCaptain({waveId, fallen, downAt} = {}) {
+      const answer = await api.reviveCaptain({waveId, fallen, downAt});
       if (!disposed && answer.ok) tookCoins(answer.data.coins);
       return answer;
     },

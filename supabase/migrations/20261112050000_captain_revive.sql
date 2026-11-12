@@ -11,13 +11,15 @@
 --
 --     captain_revives   one row per paid revive: the click (actionUid) that
 --                       paid it, the wave, the fallen captain's id in the
---                       wave and the price, so a repeated click is answered,
---                       not paid twice
+--                       wave, the tick of their fall and the price, so a
+--                       repeated click is answered, not paid twice, and one
+--                       fall is paid for once
 --
 --     wave_revive()     one revive, paid in coins through the wallet ledger
 --                       (reason captain_revive, ref revive:<uid>), only by a
 --                       member of the game who is in that wave and has not
---                       finished it, while the wave runs
+--                       finished it, while the wave runs; a second helper of
+--                       the same fall is refused already_up and pays nothing
 --
 --     wallet reason     captain_revive (spend).
 --
@@ -40,6 +42,14 @@
 --      length); on somebody else's island only a member of that game
 --      (island_members, not left; the owner always).
 --   5. The price is p_base + p_per_wave x the wave's own number.
+--   6. One fall is paid for once. Two teammates who finish "hold E" on the
+--      same fallen captain at the same moment hold different wallets, so
+--      the wallet lock does not order them: the unique index on (wave,
+--      fallen captain, tick of the fall) does. The first one pays; the
+--      second waits for the first to commit, then is refused already_up and
+--      pays nothing. The fall's tick is the same in every browser (the
+--      wave's simulation is deterministic), so both helpers send the same
+--      one; a later fall of the same captain is a new tick and a new revive.
 --
 -- WHAT IT NEEDS
 --   Every earlier migration, in particular 20261110010000_islands_and_waves.sql
@@ -47,7 +57,7 @@
 --   20261112040000_game_rooms.sql (island_members).
 --
 -- SAFE TO RUN TWICE
---   The table and its index use "if not exists", the reason "on conflict do
+--   The table and its unique index use "if not exists", the reason "on conflict do
 --   nothing", the function "create or replace", and revokes, grants and
 --   comments repeat.
 --
@@ -59,6 +69,8 @@
 -- HOW TO VERIFY (read-only queries, after applying)
 --   a. select relrowsecurity from pg_class where relname = 'captain_revives';  -- true
 --      select count(*) from pg_policies where tablename = 'captain_revives';   -- 0
+--      select indexdef from pg_indexes
+--       where indexname = 'captain_revives_one_per_fall';                      -- unique (wave_id, fallen, down_at)
 --   b. select reason, direction from public.wallet_reasons
 --       where reason = 'captain_revive';                                      -- 1 row, spend
 --   c. Only the server may run the function (browser and visitor false):
@@ -90,6 +102,7 @@ create table if not exists public.captain_revives (
   ref         text not null,
   wave_id     uuid not null references public.wave_runs (id) on delete cascade,
   fallen      text not null,
+  down_at     integer not null,
   price       integer not null,
   revived_at  timestamptz not null default now(),
 
@@ -97,12 +110,16 @@ create table if not exists public.captain_revives (
   constraint captain_revives_ref_format check (ref ~ '^revive:[A-Za-z0-9_-]{8,64}$'),
   -- The fallen captain's id in the wave's simulation (frontend/src/pirates/sync.js BY).
   constraint captain_revives_fallen_format check (fallen ~ '^[A-Za-z0-9_.:-]{1,64}$'),
+  -- The tick of the fall in the wave's simulation (50 ms ticks; a wave lasts at most 900 s).
+  constraint captain_revives_down_at_range check (down_at between 0 and 100000),
   -- The biggest change the wallet allows (MAX_DELTA in backend/server/wallet.py).
   constraint captain_revives_price_range check (price between 1 and 1000000)
 );
 
--- The revives of one wave, also for the cascade when a wave run is deleted.
-create index if not exists captain_revives_wave_idx on public.captain_revives (wave_id);
+-- One fall is paid for once (rule 6). It leads with the wave, so it also serves
+-- the cascade when a wave run is deleted.
+create unique index if not exists captain_revives_one_per_fall
+  on public.captain_revives (wave_id, fallen, down_at);
 
 comment on table public.captain_revives is
   'One row per revive a player paid for in a pirate wave (docs/GAME-V3.md section 3): the click that paid it (ref revive:<actionUid>), so a repeated click is answered and never pays twice. Written only by wave_revive(). No browser access.';
@@ -113,7 +130,9 @@ comment on column public.captain_revives.ref is
 comment on column public.captain_revives.wave_id is
   'The wave the revive happened in. Deleting the wave run deletes the row.';
 comment on column public.captain_revives.fallen is
-  'The fallen captain''s id in the wave''s simulation, as the browser sent it. Shown only; never checked against a player.';
+  'The fallen captain''s id in the wave''s simulation, as the browser sent it. Never checked against a player; with wave_id and down_at it names one fall.';
+comment on column public.captain_revives.down_at is
+  'The tick of the fall in the wave''s simulation (50 ms ticks), as the browser sent it: the same in every browser, so two helpers of one fall send the same value. Unique with wave_id and fallen: one fall is paid for once.';
 comment on column public.captain_revives.price is
   'The coins paid: base + per wave x the wave number, from backend/content/islands.json.';
 comment on column public.captain_revives.revived_at is
@@ -132,17 +151,20 @@ grant select, insert on table public.captain_revives to service_role;
 --   p_player_id   the helper (the signed-in player)
 --   p_wave_id     the wave they are in
 --   p_fallen      the fallen captain's id in the wave's simulation
+--   p_down_at     the tick of their fall in the simulation (the same everywhere)
 --   p_action_uid  the click id: one per hold of E
 --   p_base, p_per_wave  the price: p_base + p_per_wave x the wave number (islands.json)
 --
 -- Returns {status: done, price, balance, repeat} or {status: refused, reason:
 -- player_not_set_up | no_such_wave | not_member | not_in_wave | wave_over |
--- insufficient_funds (with price)}. Nothing changes on a refusal.
+-- insufficient_funds (with price) | already_up (a teammate paid for this fall
+-- first)}. Nothing changes on a refusal.
 
 create or replace function public.wave_revive(
   p_player_id   uuid,
   p_wave_id     uuid,
   p_fallen      text,
+  p_down_at     integer,
   p_action_uid  text,
   p_base        integer,
   p_per_wave    integer
@@ -159,9 +181,11 @@ declare
   v_joined   public.wave_participants;
   v_done     public.captain_revives;
   v_price    integer;
+  v_index    text;
 begin
   if p_player_id is null or p_wave_id is null
      or p_fallen is null or p_fallen !~ '^[A-Za-z0-9_.:-]{1,64}$'
+     or p_down_at is null or p_down_at < 0 or p_down_at > 100000
      or p_action_uid is null or p_action_uid !~ '^[A-Za-z0-9_-]{8,64}$'
      or p_base is null or p_base < 1 or p_base > 1000
      or p_per_wave is null or p_per_wave < 0 or p_per_wave > 1000 then
@@ -207,18 +231,28 @@ begin
     return jsonb_build_object('status', 'refused', 'reason', 'insufficient_funds', 'price', v_price);
   end if;
 
+  -- The fall first (rule 6): a helper who comes second waits here for the first
+  -- one's commit, then is refused, before any coin moves.
+  begin
+    insert into public.captain_revives (player_id, ref, wave_id, fallen, down_at, price)
+    values (p_player_id, v_ref, p_wave_id, p_fallen, p_down_at, v_price);
+  exception when unique_violation then
+    get stacked diagnostics v_index = constraint_name;
+    if v_index <> 'captain_revives_one_per_fall' then
+      raise;
+    end if;
+    return jsonb_build_object('status', 'refused', 'reason', 'already_up');
+  end;
   v_balance := public.apply_wallet_transaction(p_player_id, -v_price, 'captain_revive', v_ref);
-  insert into public.captain_revives (player_id, ref, wave_id, fallen, price)
-  values (p_player_id, v_ref, p_wave_id, p_fallen, v_price);
 
   return jsonb_build_object('status', 'done', 'price', v_price, 'balance', v_balance, 'repeat', false);
 end;
 $$;
 
-revoke all on function public.wave_revive(uuid, uuid, text, text, integer, integer)
+revoke all on function public.wave_revive(uuid, uuid, text, integer, text, integer, integer)
   from public, anon, authenticated, service_role;
-grant execute on function public.wave_revive(uuid, uuid, text, text, integer, integer)
+grant execute on function public.wave_revive(uuid, uuid, text, integer, text, integer, integer)
   to service_role;
 
-comment on function public.wave_revive(uuid, uuid, text, text, integer, integer) is
-  'Pays for helping a fallen captain up in a pirate wave (docs/GAME-V3.md section 3): p_base + p_per_wave x the wave number, from the helper''s wallet (reason captain_revive, ref revive:<actionUid>). Locks the wallet first. Only a player in the wave who has not finished it, while it runs; on somebody else''s island only a member of that game. A repeated actionUid answers {status: done, repeat: true} with the price it paid. Refuses player_not_set_up, no_such_wave, not_member, not_in_wave, wave_over and insufficient_funds, with nothing changed. Raises bad_wave_revive for a bad argument. Only service_role may run it.';
+comment on function public.wave_revive(uuid, uuid, text, integer, text, integer, integer) is
+  'Pays for helping a fallen captain up in a pirate wave (docs/GAME-V3.md section 3): p_base + p_per_wave x the wave number, from the helper''s wallet (reason captain_revive, ref revive:<actionUid>). Locks the wallet first. Only a player in the wave who has not finished it, while it runs; on somebody else''s island only a member of that game. A repeated actionUid answers {status: done, repeat: true} with the price it paid. One fall (p_fallen at tick p_down_at) is paid for once: a second helper is refused already_up. Refuses player_not_set_up, no_such_wave, not_member, not_in_wave, wave_over, insufficient_funds and already_up, with nothing changed. Raises bad_wave_revive for a bad argument. Only service_role may run it.';

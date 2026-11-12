@@ -24,7 +24,8 @@
 // room as captain_move (every MOVE_EVERY_MS or 2 × the room's wave gap when you moved, at least every
 // HEARD_EVERY_MS), so every sim lets the same boarders go for you. At 0 hp you fall: you cannot move, shoot
 // or build (the world asks captainDown), the HUD says so with a timer. Next to a fallen teammate, hold E (or
-// the prompt) for 2 s: reviveCaptain({waveId, fallen}) pays 20 + 5 × wave on the server, then the revive
+// the prompt) for 2 s: reviveCaptain({waveId, fallen, downAt}) pays 20 + 5 × wave on the server (downAt: the
+// tick of the fall, the same on every screen, so two helpers of one fall pay once), then the revive
 // goes to the room (captain_revive). For the narrator: player_fell {playerId, self}, player_revived
 // {playerId, self, by} and captains_all_fallen {} (every captain down: the wave is lost).
 //
@@ -378,7 +379,9 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     if (current.revive.share < 1) return;
     current.revive.paying = true; current.reviveWait = true;
     const round = value => Math.round(value * 100) / 100, at = { x: round(player.x), z: round(player.z) };
-    Promise.resolve().then(() => (reviveCaptain ? reviveCaptain({ waveId: current.info.waveId, fallen: target.id }) : null)).then(() => {
+    // The tick of the fall: the sim keeps it in seconds of 50 ms ticks, the same on every screen.
+    const downAt = Math.max(0, Math.round((target.downAt ?? 0) / TICK_SECONDS));
+    Promise.resolve().then(() => (reviveCaptain ? reviveCaptain({ waveId: current.info.waveId, fallen: target.id, downAt }) : null)).then(() => {
       if (wave !== current) return;
       current.revive = null;
       submit({ type: 'captain_revive', by: playerId, targetId: target.id, ...at });

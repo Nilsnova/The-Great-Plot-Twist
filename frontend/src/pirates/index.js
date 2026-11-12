@@ -22,7 +22,7 @@
 //   holdBreak()     the game's room-wide Pause (GAME-V3.md §2): null, or {paused, line, label, canToggle}
 //   toggleHold()    the break card's Pause / Resume button
 //   captainColour() your lobby colour 0-9 (your poses, and your fallen captain on every screen)
-//   reviveCaptain({waveId, fallen})  captain health (GAME-V3.md §3): POST /api/waves/revive, the reviver pays
+//   reviveCaptain({waveId, fallen, downAt})  captain health (GAME-V3.md §3): POST /api/waves/revive, the reviver pays
 //                   20 + 5 × wave; throws the refusal (its message is shown). Without it a revive is free.
 // The island lane emits `wave_started_server` on the bus after its start/join route answered.
 import { createWaveController } from './controller.js';

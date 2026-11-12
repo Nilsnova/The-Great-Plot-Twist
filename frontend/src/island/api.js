@@ -9,7 +9,7 @@
 //   await api.joinWave({waveId});                     // POST /api/waves/join
 //   await api.currentWave({where: 'own'});            // GET  /api/waves/current?where=
 //   await api.finishWave({waveId, survived, shipsSunk});   // POST /api/waves/finish
-//   await api.reviveCaptain({waveId, fallen});        // POST /api/waves/revive    (GAME-V3.md §3, you pay)
+//   await api.reviveCaptain({waveId, fallen, downAt}); // POST /api/waves/revive   (GAME-V3.md §3, you pay)
 //   await api.upgrade({spot});                        // POST /api/island/upgrade     (TOWER-DEFENSE.md §7)
 //   await api.build({spot, kind, code: 'ISLE-FR3ND'}) // on a friend's island, paid with your coins
 //   await api.hire({crew: 'gunner'});                 // POST /api/island/hire
@@ -285,11 +285,13 @@ export function createIslandApi({transport, makeUid = makeActionUid} = {}) {
       const body = {waveId, survived: survived === true, shipsSunk: isCount(shipsSunk) ? Math.min(shipsSunk, 1000) : 0};
       return ask(() => transport.post(PATHS.finish, body), isFinish);
     },
-    // A fallen teammate stood up (captain health): you pay 20 + 5 × wave; fallen is their id in the wave's sim.
-    reviveCaptain({waveId, fallen} = {}) {
+    // A fallen teammate stood up (captain health): you pay 20 + 5 × wave; fallen is their id in the wave's sim,
+    // downAt the tick of their fall (one fall is paid once: a second helper is refused 409 already_up).
+    reviveCaptain({waveId, fallen, downAt} = {}) {
       if (!isText(waveId)) return refuse(404, 'no_such_wave', MESSAGES.badWave);
       if (typeof fallen !== 'string' || !/^[A-Za-z0-9_.:-]{1,64}$/.test(fallen)) return refuse(422, 'validation_error', MESSAGES.unknown);
-      return write(`revive:${waveId}:${fallen}`, actionUid => transport.post(PATHS.revive, {waveId, fallen, actionUid}), isRevive);
+      if (!Number.isSafeInteger(downAt) || downAt < 0 || downAt > 100000) return refuse(422, 'validation_error', MESSAGES.unknown);
+      return write(`revive:${waveId}:${fallen}:${downAt}`, actionUid => transport.post(PATHS.revive, {waveId, fallen, downAt, actionUid}), isRevive);
     },
     // For tests and the console: the click id kept for an unknown outcome, if any.
     heldActionUid: key => held.get(key) ?? null,

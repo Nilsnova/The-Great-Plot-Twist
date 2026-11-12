@@ -280,7 +280,10 @@ describe('captain health: the controller', () => {
     expect(h.controller.revive.share).toBeGreaterThan(.4);
     await h.advance(1100);
     expect(h.reviveCaptain).toHaveBeenCalledTimes(1);
-    expect(h.reviveCaptain).toHaveBeenCalledWith({ waveId: INFO.waveId, fallen: 'p-ben' });
+    // The tick of the fall goes with it (the same on every screen): two helpers of one fall pay once.
+    const downAt = Math.round(ben.downAt / .05);
+    expect(Number.isSafeInteger(downAt) && downAt > 0).toBe(true);
+    expect(h.reviveCaptain).toHaveBeenCalledWith({ waveId: INFO.waveId, fallen: 'p-ben', downAt });
     await h.advance(400);
     const revive = h.sent.find(item => item.type === 'captain_revive');
     expect(revive.payload).toMatchObject({ by: 'p-me', targetId: 'p-ben' });
@@ -340,14 +343,63 @@ describe('captain health: the fake server (POST /api/waves/revive)', () => {
     const wave = await api.startWave({ where: 'own', actionUid: 'bell-0001' });
     const later = createFakeIslandApi({ world, playerId: 'me', code: 'K7Q2M', now: () => START + 15000 });
     const price = revivePrice(wave.wave), before = (await later.island()).coins;
-    const paid = await later.reviveCaptain({ waveId: wave.waveId, fallen: 'p-ben', actionUid: 'revive-0001' });
+    const paid = await later.reviveCaptain({ waveId: wave.waveId, fallen: 'p-ben', downAt: 412, actionUid: 'revive-0001' });
     expect(paid).toEqual({ price, coins: before - price, repeat: false });
-    expect(await later.reviveCaptain({ waveId: wave.waveId, fallen: 'p-ben', actionUid: 'revive-0001' })).toEqual({ price, coins: before - price, repeat: true });
+    expect(await later.reviveCaptain({ waveId: wave.waveId, fallen: 'p-ben', downAt: 412, actionUid: 'revive-0001' })).toEqual({ price, coins: before - price, repeat: true });
     const stranger = createFakeIslandApi({ world, playerId: 'ana', now: () => START + 15000 });
     await stranger.island();
-    await expect(stranger.reviveCaptain({ waveId: wave.waveId, fallen: 'p-me', actionUid: 'revive-0002' })).rejects.toBeInstanceOf(FakeApiError);
-    await expect(later.reviveCaptain({ waveId: 'fake-wave-99', fallen: 'p-ben', actionUid: 'revive-0003' })).rejects.toMatchObject({ code: 'no_such_wave' });
+    await expect(stranger.reviveCaptain({ waveId: wave.waveId, fallen: 'p-me', downAt: 9, actionUid: 'revive-0002' })).rejects.toBeInstanceOf(FakeApiError);
+    await expect(later.reviveCaptain({ waveId: 'fake-wave-99', fallen: 'p-ben', downAt: 412, actionUid: 'revive-0003' })).rejects.toMatchObject({ code: 'no_such_wave' });
+    // Without the tick of the fall the request does not fit.
+    await expect(later.reviveCaptain({ waveId: wave.waveId, fallen: 'p-ann', actionUid: 'revive-0005' })).rejects.toMatchObject({ status: 422 });
     world.players.get('me').coins = price - 1;
-    await expect(later.reviveCaptain({ waveId: wave.waveId, fallen: 'p-ben', actionUid: 'revive-0004' })).rejects.toMatchObject({ code: 'insufficient_funds' });
+    await expect(later.reviveCaptain({ waveId: wave.waveId, fallen: 'p-ben', downAt: 900, actionUid: 'revive-0004' })).rejects.toMatchObject({ code: 'insufficient_funds' });
+  });
+
+  it('two helpers who finish together on one fall: the first pays, the second is told Already up and pays nothing', async () => {
+    const world = createFakeWorld({ seed: 4 });
+    const owner = createFakeIslandApi({ world, playerId: 'me', code: 'K7Q2M', now: () => START });
+    const own = await owner.island();
+    const wave = await owner.startWave({ where: 'own', actionUid: 'bell-0001' });
+    const friend = createFakeIslandApi({ world, playerId: 'ana', now: () => START + 15000 });
+    await friend.island();
+    await friend.joinGame({ code: own.code, actionUid: 'join-0001' });
+    await friend.joinWave({ waveId: wave.waveId });
+    const host = createFakeIslandApi({ world, playerId: 'me', code: 'K7Q2M', now: () => START + 15000 });
+    const price = revivePrice(wave.wave), hostBefore = (await host.island()).coins, friendBefore = (await friend.island()).coins;
+    const [first, second] = await Promise.allSettled([
+      host.reviveCaptain({ waveId: wave.waveId, fallen: 'p-ben', downAt: 412, actionUid: 'revive-0001' }),
+      friend.reviveCaptain({ waveId: wave.waveId, fallen: 'p-ben', downAt: 412, actionUid: 'revive-0002' })]);
+    expect(first).toMatchObject({ status: 'fulfilled', value: { price, coins: hostBefore - price, repeat: false } });
+    expect(second).toMatchObject({ status: 'rejected', reason: { status: 409, code: 'already_up' } });
+    expect(second.reason.message).toMatch(/^Already up/);
+    expect((await friend.island()).coins).toBe(friendBefore);
+    // The same captain's next fall (a later tick) is a new revive.
+    expect(await friend.reviveCaptain({ waveId: wave.waveId, fallen: 'p-ben', downAt: 640, actionUid: 'revive-0003' }))
+      .toEqual({ price, coins: friendBefore - price, repeat: false });
+  });
+});
+
+describe('captain health: the second helper of one fall', () => {
+  it('sees "Already up", pays nothing and sends no revive to the room', async () => {
+    const reviveCaptain = vi.fn(async () => { throw new FakeApiError(409, 'already_up', 'Already up: a teammate helped them first.'); });
+    const h = harness({ reviveCaptain });
+    h.controller.start(INFO);
+    await h.advance(1100);
+    let seq = 1;
+    const benAt = { x: 40, z: 0 };
+    for (let i = 0; i < 6000 && !h.controller.state.party?.find(item => item.id === 'p-ben')?.down; i++) {
+      const boarder = h.controller.state.boarders[0];
+      if (boarder) { benAt.x = boarder.x; benAt.z = boarder.z; }
+      if (i % 10 === 0) h.hear('captain_move', { by: 'p-ben', seq: seq++, t: (h.controller.wave.ticks + 8) * .05, x: benAt.x, z: benAt.z });
+      h.player.x = -18; h.player.z = -10;
+      await h.advance(50);
+    }
+    const ben = h.controller.state.party.find(item => item.id === 'p-ben');
+    h.player.x = ben.x + 1; h.player.z = ben.z;
+    h.hold(true); await h.advance(2600);
+    expect(reviveCaptain).toHaveBeenCalledTimes(1);
+    expect(h.shown.prompt.at(-1)[0]).toBe('Already up: a teammate helped them first.');
+    expect(h.sent.some(item => item.type === 'captain_revive')).toBe(false);
   });
 });

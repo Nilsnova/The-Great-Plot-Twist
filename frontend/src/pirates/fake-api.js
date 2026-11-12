@@ -11,7 +11,7 @@
 //   await api.joinWave({waveId});                // POST /api/waves/join
 //   await api.currentWave(where);                // GET  /api/waves/current?where=
 //   await api.finishWave({waveId, survived, shipsSunk}); // POST /api/waves/finish
-//   await api.reviveCaptain({waveId, fallen, actionUid}); // POST /api/waves/revive  (GAME-V3.md §3: you pay 20 + 5 × wave)
+//   await api.reviveCaptain({waveId, fallen, downAt, actionUid}); // POST /api/waves/revive  (GAME-V3.md §3: you pay 20 + 5 × wave)
 //   await api.upgrade({spot, actionUid});        // POST /api/island/upgrade      (TOWER-DEFENSE.md §7)
 //   await api.hire({crew, actionUid});           // POST /api/island/hire
 //   await api.captain({actionUid});              // POST /api/island/captain      (§10)
@@ -543,10 +543,12 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     },
 
     // Captain health (GAME-V3.md §3): the reviver pays 20 + 5 × wave, once per actionUid; only a member of
-    // the game who is in this wave and has not finished it yet (the rules of wave_revive()).
-    async reviveCaptain({ waveId, fallen, actionUid } = {}) {
-      if (typeof waveId !== 'string' || typeof fallen !== 'string' || !/^[A-Za-z0-9_.:-]{1,64}$/.test(fallen) || !uid(actionUid)) {
-        invalid('Send the wave, the fallen captain and an action id.');
+    // the game who is in this wave and has not finished it yet (the rules of wave_revive()). One fall (the
+    // fallen captain at the tick downAt) is paid for once: a second helper is refused already_up.
+    async reviveCaptain({ waveId, fallen, downAt, actionUid } = {}) {
+      if (typeof waveId !== 'string' || typeof fallen !== 'string' || !/^[A-Za-z0-9_.:-]{1,64}$/.test(fallen) || !uid(actionUid)
+        || !Number.isSafeInteger(downAt) || downAt < 0 || downAt > 100000) {
+        invalid('Send the wave, the fallen captain, when they fell and an action id.');
       }
       const player = me(), repeat = player.actions.get(`revive:${actionUid}`);
       if (repeat) return { price: repeat, coins: player.coins, repeat: true };
@@ -558,6 +560,10 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       if (run.results.has(playerId) || elapsed < 0 || elapsed > ISLAND_RULES.waves.maximumSeconds) refuse(409, 'wave_over', 'This wave is over.');
       const price = revivePrice(run.wave);
       if (player.coins < price) refuse(409, 'insufficient_funds', `Helping a captain up costs ${price} coins. You need more coins.`);
+      run.revived ??= new Set();
+      const fall = `${fallen}@${downAt}`;
+      if (run.revived.has(fall)) refuse(409, 'already_up', 'Already up: a teammate helped them first.');
+      run.revived.add(fall);
       player.coins -= price; player.actions.set(`revive:${actionUid}`, price);
       return { price, coins: player.coins, repeat: false };
     },
@@ -623,7 +629,7 @@ const BODY_KEYS = Object.freeze({ '/api/island/build': ['spot', 'kind', 'actionU
   '/api/island/upgrade': ['spot', 'actionUid'], '/api/island/hire': ['crew', 'actionUid'], '/api/island/captain': ['actionUid'],
   '/api/island/skill': ['skill', 'actionUid'], '/api/island/weapon/buy': ['weapon', 'actionUid'], '/api/island/weapon/equip': ['weapon'],
   '/api/island/invite/join': ['code', 'actionUid'], '/api/pirate-point/build': ['spot', 'kind', 'actionUid'], '/api/pirate-point/upgrade': ['spot', 'actionUid'],
-  '/api/waves/join': ['waveId'], '/api/waves/finish': ['waveId', 'survived', 'shipsSunk'], '/api/waves/revive': ['waveId', 'fallen', 'actionUid'],
+  '/api/waves/join': ['waveId'], '/api/waves/finish': ['waveId', 'survived', 'shipsSunk'], '/api/waves/revive': ['waveId', 'fallen', 'downAt', 'actionUid'],
   '/api/games': [], '/api/games/join': ['code', 'actionUid'], '/api/games/leave': ['code'],
   '/api/island/research': ['branch', 'actionUid'], '/api/island/tower-skill': ['spot', 'spec'], '/api/island/wreck': ['amount', 'actionUid'] });
 // Keys a body may also carry: `code` builds, upgrades, researches, picks a skill or mends the wreck on a game's island.

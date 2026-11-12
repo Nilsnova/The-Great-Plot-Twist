@@ -518,6 +518,6 @@ class World:
         return self.client.post("/api/waves/finish", json=request, headers=headers)
 
     def revive(self, headers=PLAYER, **body) -> httpx.Response:
-        request = {"waveId": WAVE_ID, "fallen": "p-k3x9q2", "actionUid": "help-0001"}
+        request = {"waveId": WAVE_ID, "fallen": "p-k3x9q2", "downAt": 412, "actionUid": "help-0001"}
         request.update(body)
         return self.client.post("/api/waves/revive", json=request, headers=headers)

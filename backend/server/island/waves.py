@@ -250,6 +250,9 @@ def revive_refusal(refusal: Refusal) -> ApiError:
     if refusal.reason == "insufficient_funds":
         message = f"Helping a captain up costs {refusal.price} coins. You need more coins."
         return ApiError(409, "insufficient_funds", message)
+    if refusal.reason == "already_up":
+        # Two helpers of one fall: the first paid, this one pays nothing.
+        return ApiError(409, "already_up", "Already up: a teammate helped them first.")
     return SupabaseRejected()
 
 
@@ -259,6 +262,7 @@ async def revive(
     player_id: str,
     wave_id: UUID,
     fallen: str,
+    down_at: int,
     action_uid: str,
 ) -> WaveRevive:
     """Captain health (docs/GAME-V3.md section 3): the signed-in player helped a fallen captain
@@ -266,7 +270,8 @@ async def revive(
     reads the wave number itself). Only a member of the game (on an island; the owner always)
     who is in the wave and has not finished it, while it runs. A repeated actionUid pays nothing
     more and answers the same price. The fall and the standing up are the browsers' (the wave's
-    simulation); fallen is only recorded."""
+    simulation); fallen and down_at (the tick of the fall, the same in every browser) name one
+    fall, which is paid for once: a second helper of it is refused already_up."""
     where = await store.read_wave_place(admin, str(wave_id))
     if where is None:
         raise no_such_wave()
@@ -276,6 +281,7 @@ async def revive(
         "p_player_id": player_id,
         "p_wave_id": str(wave_id),
         "p_fallen": fallen,
+        "p_down_at": down_at,
         "p_action_uid": action_uid,
         "p_base": catalogue.revive.base,
         "p_per_wave": catalogue.revive.per_wave,
