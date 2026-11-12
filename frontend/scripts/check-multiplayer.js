@@ -325,17 +325,24 @@ async function captainHealth(host, ben, wave) {
     await stand(host, {x: benHere.x + 1.2, z: benHere.z});
     await host.page.evaluate(() => document.activeElement?.blur?.()); // E goes to the game, not a button
     await quiet(host);
-    await host.page.keyboard.down('KeyE'); await host.page.waitForTimeout(1100); await settle(host.page);
+    // Wait on the game's own progress, not on wall-clock time: on a busy machine frames stall, so a fixed wait
+    // read 0 (nothing drawn yet) or overshot into a finished revive. Let go as soon as the ring is a third full.
+    await host.page.keyboard.down('KeyE');
+    const share = await host.page.waitForFunction(() => { const s = window.__island.waves.island.revive?.share ?? 0;
+      return s >= .3 ? s : false; }, null, {timeout: 20000, polling: 30}).then(handle => handle.jsonValue()).catch(() => 0);
+    await host.page.keyboard.up('KeyE');
     await host.page.screenshot({path: `${out}/09-revive-in-progress-${label}-${host.playerId}.png`});
-    const share = (await myCaptain(host)).revive?.share ?? 0;
-    await host.page.keyboard.up('KeyE'); await host.page.waitForTimeout(300);
-    assert.ok(share > .3 && share < 1, `the hold fills (${share})`);
+    await host.page.waitForTimeout(300);
+    assert.ok(share >= .3 && share < 1, `the hold fills (${share})`);
   }
   await host.page.setViewportSize({width: 960, height: 600}); await host.page.waitForTimeout(250);
   assert.equal(await coins(), before, 'a hold that lets go pays nothing');
   await stand(host, {x: benHere.x + 1.2, z: benHere.z});
   await host.page.evaluate(() => document.activeElement?.blur?.());
-  await host.page.keyboard.down('KeyE'); await host.page.waitForTimeout(2700); await host.page.keyboard.up('KeyE');
+  // Hold until the revive lands (sim time), however slow the machine is.
+  await host.page.keyboard.down('KeyE');
+  await host.page.waitForFunction(id => window.__mp.revived.some(item => item.captainId === id), benId, {timeout: 30000, polling: 100});
+  await host.page.keyboard.up('KeyE');
   for (const captain of [host, ben]) await captain.page.waitForFunction(id => window.__mp.revived.some(item => item.captainId === id), benId, {timeout: 8000, polling: 100});
   const [hostRevived, benRevived] = await Promise.all([host, ben].map(captain => captain.page.evaluate(id => window.__mp.revived.find(item => item.captainId === id), benId)));
   const paid = before - await coins();
