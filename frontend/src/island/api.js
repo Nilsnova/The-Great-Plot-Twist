@@ -280,9 +280,11 @@ export function createIslandApi({transport, makeUid = makeActionUid} = {}) {
       if (!target) return refuse(422, 'validation_error', MESSAGES.badCode);
       return ask(() => transport.get(PATHS.current(target)), data => data === null || isWave(data));
     },
-    finishWave({waveId, survived, shipsSunk = 0} = {}) {
+    finishWave({waveId, survived, shipsSunk = 0, bonuses} = {}) {
       if (!isText(waveId)) return refuse(404, 'no_such_wave', MESSAGES.badWave);
-      const body = {waveId, survived: survived === true, shipsSunk: isCount(shipsSunk) ? Math.min(shipsSunk, 1000) : 0};
+      // v3 waves: the galleon sunk, a finisher won (known kinds only, each once; the server checks the wave).
+      const asked = Array.isArray(bonuses) ? [...new Set(bonuses.filter(kind => kind === 'galleon' || kind === 'finisher'))] : [];
+      const body = {waveId, survived: survived === true, shipsSunk: isCount(shipsSunk) ? Math.min(shipsSunk, 1000) : 0, ...(asked.length ? {bonuses: asked} : {})};
       return ask(() => transport.post(PATHS.finish, body), isFinish);
     },
     // A fallen teammate stood up (captain health): you pay 20 + 5 × wave; fallen is their id in the wave's sim,

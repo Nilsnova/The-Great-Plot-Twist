@@ -43,6 +43,7 @@
 // code, message, retryAfterSeconds}), plus dev helpers (setCoins, setWeather, startWaveAt, failNext,
 // read, reset). It is the one fake behind ?islands=fake: your island ISLE-K7Q2M and a friend's island
 // ISLE-FR3ND (Captain Gull) to visit.
+import { bonusLoot, eventFor } from './wave-events.js';
 import { createRandom, revivePrice } from './sim.js';
 import { BUILDINGS, CREW, CAPTAIN, readUnlocks, unlockWave, SLOT_KINDS } from '../island/td-rules.js';
 import { SKILLS, SKILL_BY_ID, WEAPONS, WEAPON_BY_ID, pointsEarned, pointsSpent, readSkills, readWeapon, skillNeeds } from './captain-ids.js';
@@ -503,8 +504,9 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       return null;
     },
 
-    async finishWave({ waveId, survived, shipsSunk } = {}) {
-      if (typeof waveId !== 'string' || typeof survived !== 'boolean' || !Number.isInteger(shipsSunk) || shipsSunk < 0 || shipsSunk > 1000) {
+    async finishWave({ waveId, survived, shipsSunk, bonuses } = {}) {
+      if (typeof waveId !== 'string' || typeof survived !== 'boolean' || !Number.isInteger(shipsSunk) || shipsSunk < 0 || shipsSunk > 1000
+        || (bonuses !== undefined && !(Array.isArray(bonuses) && bonuses.length <= 2 && bonuses.every(kind => kind === 'galleon' || kind === 'finisher')))) {
         invalid('Send the wave, whether the island held and the ships sunk (0 to 1000).');
       }
       const player = me(), run = world.waves.get(waveId);
@@ -523,7 +525,10 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       // §4: houses pay 5 or 10 by level, a boss wave pays double.
       const houseBonus = run.island ? [...run.island.built].filter(id => id.startsWith('house_'))
         .reduce((sum, id) => sum + ((run.island.levels?.get(id) ?? 1) >= 2 ? 10 : 5), 0) : 0;
-      const loot = survived && !late ? (lootFor(run.wave, 0, !run.island) + houseBonus) * (isBoss(run) ? 2 : 1) : 0;
+      // v3 waves: the bonuses the wave allows (wave_events.py): the galleon on a galleon wave, a finisher on a boss wave.
+      const allowed = run.island ? [...new Set(bonuses ?? [])].filter(kind => (kind === 'galleon' ? eventFor(run.wave, run.seed) === 'treasure_galleon' : isBoss(run))) : [];
+      const extra = allowed.reduce((sum, kind) => sum + bonusLoot(kind, run.wave), 0);
+      const loot = survived && !late ? (lootFor(run.wave, 0, !run.island) + houseBonus + extra) * (isBoss(run) ? 2 : 1) : 0;
       if (survived && !late && !run.island) player.pointBest = Math.max(player.pointBest ?? 0, run.wave);
       if (survived && !late) player.wonBest = Math.max(player.wonBest ?? 0, run.wave); // won_wave_best: any wave you fought and won
       if (!run.finishedAt) { run.finishedAt = nowMs(); run.expired = late; }
@@ -633,7 +638,7 @@ const BODY_KEYS = Object.freeze({ '/api/island/build': ['spot', 'kind', 'actionU
   '/api/games': [], '/api/games/join': ['code', 'actionUid'], '/api/games/leave': ['code'],
   '/api/island/research': ['branch', 'actionUid'], '/api/island/tower-skill': ['spot', 'spec'], '/api/island/wreck': ['amount', 'actionUid'] });
 // Keys a body may also carry: `code` builds, upgrades, researches, picks a skill or mends the wreck on a game's island.
-const OPTIONAL_KEYS = Object.freeze({ '/api/island/build': ['code'], '/api/island/upgrade': ['code'], '/api/games': ['actionUid'],
+const OPTIONAL_KEYS = Object.freeze({ '/api/waves/finish': ['bonuses'], '/api/island/build': ['code'], '/api/island/upgrade': ['code'], '/api/games': ['actionUid'],
   '/api/island/research': ['code'], '/api/island/tower-skill': ['code'], '/api/island/wreck': ['code'] });
 const ACTION_UID = /^[A-Za-z0-9_-]{8,64}$/;
 const exactKeys = (body, keys, optional = []) => !!body && typeof body === 'object' && !Array.isArray(body)
