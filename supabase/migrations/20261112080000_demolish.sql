@@ -599,7 +599,7 @@ declare
   v_payers   uuid[];
   v_locked   uuid[] := '{}';
   v_id       uuid;
-  v_refunds  jsonb;
+  v_refunds  jsonb := '[]'::jsonb;
   v_refund   jsonb;
 begin
   if p_player_id is null or p_island_owner is null or p_plot is null
@@ -697,16 +697,23 @@ begin
     return jsonb_build_object('status', 'refused', 'reason', 'busy');
   end if;
 
-  -- Step 6: the refunds, half of what each payer paid, into the wallets locked above.
-  v_refunds := public.island_refund_split(
-    p_island_owner, v_building.ref, v_building.building_type, v_building.level, p_prices
-  );
-  for v_refund in select value from jsonb_array_elements(v_refunds) loop
-    if (v_refund ->> 'coins')::bigint > 0 and ((v_refund ->> 'playerId')::uuid = any(v_locked)) then
+  -- Step 6: the refunds, half of what each payer paid, into the wallets locked above. A payer
+  -- without a wallet (never set up) gets nothing and is left out of the record, so the record
+  -- and the answer list only coins that were really paid.
+  for v_refund in
+    select value from jsonb_array_elements(public.island_refund_split(
+      p_island_owner, v_building.ref, v_building.building_type, v_building.level, p_prices
+    ))
+  loop
+    if not ((v_refund ->> 'playerId')::uuid = any(v_locked)) then
+      continue;
+    end if;
+    if (v_refund ->> 'coins')::bigint > 0 then
       perform public.apply_wallet_transaction(
         (v_refund ->> 'playerId')::uuid, (v_refund ->> 'coins')::bigint, 'building_refund', v_ref
       );
     end if;
+    v_refunds := v_refunds || jsonb_build_array(v_refund);
   end loop;
 
   -- Step 7: the spot is empty again; its payments are refunded; the record of the click.
