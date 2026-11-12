@@ -7,6 +7,8 @@
 // backend/content/islands.json (research.branches); tests/campaign/campaign.test.js keeps them equal. The
 // numbers of each skill live in the sim (CONFIG.specs and CONFIG.research in src/pirates/sim.js), so every
 // screen fights the same island. No DOM here.
+import {readRole} from './houses.js';
+
 const freeze = Object.freeze;
 export const TOP_TIER = 3;
 export const BRANCHES = freeze([
@@ -58,8 +60,9 @@ export const SPEC_IDS = freeze(Object.keys(SPECS));
 export const BONUS_IDS = freeze(Object.keys(BONUSES));
 export const isCapstone = spec => SPECS[spec]?.capstone === true;
 export const branchOf = spec => SPECS[spec]?.branch ?? null;
-// A spec a building of `kind` may carry, else null (an unknown or another kind's spec is no spec).
-export const readSpec = (kind, spec) => (typeof spec === 'string' && SPECS[spec]?.branch === kind ? spec : null);
+// A spec a building of `kind` may carry, else null (an unknown or another kind's spec is no spec). A house's
+// spec is its role (src/campaign/houses.js).
+export const readSpec = (kind, spec) => (typeof spec === 'string' && SPECS[spec]?.branch === kind ? spec : readRole(kind, spec));
 // A tier-2 bonus of `kind`, else null.
 export const readBonus = (kind, bonus) => (typeof bonus === 'string' && BONUSES[bonus]?.branch === kind ? bonus : null);
 // The two options of a tier (2 or 3) of a branch, or [].

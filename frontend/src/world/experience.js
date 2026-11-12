@@ -1,5 +1,6 @@
 // Owns optional live actors and their HUD. Receives snapshots; sends bounded position/emote intents only.
 import {loadArt,mergeArt,placeArt,projectPoint} from './art.js';
+import {POSE_IDS} from '../pirates/poses.js';
 import {characterArtIds} from '../pixel/story-catalog.js';
 import {createPositionReporter} from '../controls/presence-report.js';
 export function createWorldExperience(ctx){
@@ -9,6 +10,7 @@ export function createWorldExperience(ctx){
     if(pending||others||disposed)return;
     const ids=['deckhand','navigator','cook','salvager'].flatMap(role=>characterArtIds(`crew-${role}`));
     for(let n=1;n<=10;n++)for(const view of ['','-back','-side'])ids.push(`captain-${n}${view}`,`captain-${n}${view}-walk-1`,`captain-${n}${view}-walk-2`);
+    ids.push(...POSE_IDS); // a teammate's figure fires in its own body (pirates/poses.js)
     ids.push('lantern',...['wave','cheer','point','lantern','shrug'].map(id=>`emote-${id}`));
     pending=Promise.all([import('./others/index.js'),import('../screens/presence/index.js'),loadArt(ids),import('../ui/coin-counter.js')]).then(([actors,ui,art,counter])=>{
       if(disposed){releaseArt(art);return;}
@@ -35,7 +37,8 @@ export function createWorldExperience(ctx){
     else others?.ingest(latest?.presence??{status:'off',place:null,others:[],hiddenCount:0,sampledAt:Date.now()});
   }
   // hide: presence ids not to draw now (a fallen captain lies in the wave's drawing instead).
-  function update(dt,{speed=0,hide=null}={}){
+  // poses: Map(presence id -> {kind, flip, age}) of the captains who fire or strike now (pirates/poses.js).
+  function update(dt,{speed=0,hide=null,poses=null}={}){
     if((!latest&&!simulated)||disposed)return;
     // The class harbor (G29) stands in Saltreach Harbor but is its own presence place, with 40 drawn.
     const worldPlace=ctx.world.current?.id,place=ctx.presencePlace?.(worldPlace)??worldPlace,player=ctx.player,classRoom=place!==worldPlace;
@@ -49,7 +52,7 @@ export function createWorldExperience(ctx){
     const emote=presence.localEmote;if(localBubble){localBubble.visible=!!emote&&emote.until>Date.now()&&!ctx.isBlocked();if(localBubble.visible){const point=projectPoint(player.position.x,player.position.z),scale=classRoom?2:1;localBubble.material=ownedArt[`emote-${emote.id}`]??ownedArt['emote-wave'];localBubble.scale.setScalar(scale);localBubble.position.set(Math.round(point.x*16)/16,Math.round((point.y+2.05+(scale-1)*.75)*16)/16,0);localBubble.userData.emoteId=emote.id;}}
     if(!others)return;
     const stats=others.update(dt,{place,player:previous,camera:ctx.camera,canvas:ctx.canvas,now:Date.now(),
-      filter:presence.status==='off'?'off':filter,blocked:ctx.isBlocked(),hide,...(classRoom?{max:40,emoteScale:2}:{})});
+      filter:presence.status==='off'?'off':filter,blocked:ctx.isBlocked(),hide,poses,...(classRoom?{max:40,emoteScale:2}:{})});
     hud?.setCounts(stats);
     if(hud)hud.element.hidden=!!simulated||presence.status==='off'||ctx.isBlocked();
   }

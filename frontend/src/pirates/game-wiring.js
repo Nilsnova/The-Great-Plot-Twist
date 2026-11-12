@@ -12,7 +12,8 @@
 //   - landing on an island where a wave runs joins it (once per landing), so a friend who comes late
 //     fights too; a "Next wave" that finds the other captain's wave running joins it (island ringBell);
 //   - co-op builds: every build or upgrade sends island_changed into the room (Pirate Point's for its
-//     spots), and every other defender reads that island again within about a second;
+//     spots), and every other defender reads that island again within about a second; a tear-down
+//     (GAME-V3.md §4.2) adds who got coins back ({who, kind, level, refunds}), for their toast;
 //   - the island's own wall and cannon sprites step aside between wave_controller_started and _stopped;
 //   - Pirate Point: the island client (or, in a rehearsal without a server, the in-memory fake) as api;
 //   - the game (GAME-V3.md §2, src/island/game-room.js) rides on the same island room: the lobby's Start,
@@ -23,6 +24,7 @@ import {createRoomProxy} from './room.js';
 import {finishWave as finishIslandWave, registerWaveRenderer} from '../island/wave-hooks.js';
 import {defenses as spotDefenses} from '../island/spots.js';
 import {figurePositions, hiddenFigures, matchFigures} from './figures.js';
+import {figurePoses} from './poses.js';
 
 const ISLAND_PLACE = 'home_islet';
 export const SPOTS_CHANGED = 'island_spots_changed'; // src/island/index.js
@@ -64,6 +66,7 @@ export function wireWaves(ctx) {
   let landed = false, changedSoon = false;
   const islandRoom = createRoomProxy();
   let realRoom = null, roomTopic = null, disposed = false;
+  let figureMatches = new Map(); // sim captain id -> presence figure, from the last figures() (poses())
   const stopRenderer = island ? registerWaveRenderer({name: 'pirates'}) : () => {};
   const finishWave = async body => throwRefusal(await finishIslandWave(body));
   const api = island ? pointApiFrom(island.api) : ctx.fakeApi ?? null;
@@ -156,7 +159,9 @@ export function wireWaves(ctx) {
     // Co-op builds (TOWER-DEFENSE.md §6): ours go to the room, a friend's make us read the island again.
     stops.push(on(SPOTS_CHANGED, event => {
       if (typeof event?.spot !== 'string') return;
-      const tell = () => { if (event.place === 'point') pirates.point?.room?.send?.('island_changed', {spot: event.spot}); else islandRoom.send('island_changed', {spot: event.spot}); };
+      // A tear-down (GAME-V3.md §4.2) also says who got coins back, for their toast.
+      const note = event.demolished ? {spot: event.spot, demolished: event.demolished} : {spot: event.spot};
+      const tell = () => { if (event.place === 'point') pirates.point?.room?.send?.('island_changed', {spot: event.spot}); else islandRoom.send('island_changed', note); };
       tell(); after(tell, CHANGED_AGAIN_MS); relevel();
     }));
     // Back on this tab after a while: the room may have missed something.
@@ -165,7 +170,11 @@ export function wireWaves(ctx) {
       const visible = () => { if (!disposed && document.visibilityState === 'visible' && world.current?.id === ISLAND_PLACE) void readIsland(); };
       document.addEventListener('visibilitychange', visible); stops.push(() => document.removeEventListener('visibilitychange', visible));
     }
-    stops.push(islandRoom.on('island_changed', () => { if (!disposed) changed(); }));
+    stops.push(islandRoom.on('island_changed', payload => {
+      if (disposed) return;
+      changed();
+      if (payload?.demolished) { try { island.heardDemolish?.(payload.demolished); } catch { /* A toast cannot stop the wave. */ } }
+    }));
     landed = world.current?.id === ISLAND_PLACE;
     if (pirates.point?.room?.on) stops.push(pirates.point.room.on('island_changed', () => { if (!disposed) void Promise.resolve(island.loadPoint()).then(relevel).catch(() => {}); }));
     stops.push(on('wave_controller_started', event => { if (event?.flagship === true) island.setPointBattle(true); else island.setBattle(true); }));
@@ -186,10 +195,19 @@ export function wireWaves(ctx) {
       for (const controller of controllers) if (controller && !controller.wave) controller.setFigures?.(null);
       const controller = controllers.find(item => item?.wave && !item.wave.finished);
       const party = controller?.state?.party;
+      figureMatches = new Map();
       if (!controller || !Array.isArray(party) || !party.length) return null;
-      const matches = matchFigures({party, figures: list, mine: controller.playerId});
+      const matches = figureMatches = matchFigures({party, figures: list, mine: controller.playerId});
       controller.setFigures?.(figurePositions(matches));
       return hiddenFigures(matches, party);
+    },
+    // A shot or a blow poses the body that made it (src/pirates/poses.js): {own, figures} with your pose
+    // ({kind, flip, age} or null) and Map(presence figure id -> pose) by the matches of figures() above;
+    // a shooter with no figure has no pose (no second body). null outside a wave.
+    poses() {
+      const controller = [pirates.island, pirates.point?.controller].find(item => item?.wave && !item.wave.finished);
+      if (!controller?.pose) return null;
+      return {own: controller.pose(controller.playerId), figures: figurePoses({get: by => controller.pose(by)}, figureMatches)};
     },
     dispose() {
       if (disposed) return; disposed = true;

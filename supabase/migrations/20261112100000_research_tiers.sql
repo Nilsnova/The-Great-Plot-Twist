@@ -19,12 +19,17 @@
 --                           with check rules: a choice only of its own kind and
 --                           tier, and a choice for every tier reached.
 --     islet_buildings       the check rule islet_buildings_spec_fits_kind
---                           again, with the eight capstones added.
+--                           again, with the eight capstones added to the
+--                           tower skills and the three house roles of
+--                           20261112090000_house_roles.sql (all kept).
 --     island_research()     dropped and made again with three more arguments
 --                           (p_tier, p_choice, p_change): one research step,
 --                           raising the tier by one or changing a choice.
 --     island_specialise()   made again: a tower may pick a capstone too, but
---                           only the one its island chose at tier 3.
+--                           only the one its island chose at tier 3. The house
+--                           roles of 20261112090000_house_roles.sql stay: its
+--                           argument pairs and its house branch (level 2, else
+--                           house_level) are kept word for word.
 --
 -- WHO USES IT
 --   Only the Python server, with the secret key (service_role): the routes
@@ -52,14 +57,20 @@
 --
 -- WHAT IT NEEDS
 --   20261112060000_tech_hub.sql (island_research, islet_buildings.spec,
---   island_research(), island_specialise()).
+--   island_research(), island_specialise()) and
+--   20261112090000_house_roles.sql (the house roles).
 --
--- MERGE NOTE FOR THE CONTROLLER
---   20261112090000 (house roles, branch feat/v3-houses) changes the same check
---   rule islet_buildings_spec_fits_kind and makes island_specialise() again.
---   This file writes the rule with the full list known on main plus the eight
---   capstones, and island_specialise() as main has it plus the capstones. When
---   both land, merge the two lists (and both function bodies) in the later file.
+-- IT BUILDS ON 20261112090000_house_roles.sql
+--   That file runs first and changes the same check rule
+--   islet_buildings_spec_fits_kind and makes island_specialise() again, with
+--   the three house roles. This file starts from THOSE versions, not from the
+--   ones of 20261112060000: the rule lists the eleven tower pairs, the three
+--   house pairs and the eight capstones, and island_specialise() is the body
+--   of 20261112090000 plus exactly two additions (the capstone pairs in the
+--   argument check, and the not_researched refusal for a capstone the island
+--   did not choose). Nothing of the house roles is dropped.
+--   backend/server/tests/test_house_roles_match_migration.py checks that the
+--   latest definition keeps every house pair and branch.
 --
 -- SAFE TO RUN TWICE
 --   Columns use "if not exists", check rules are dropped "if exists" first,
@@ -144,9 +155,9 @@ grant update (tier, choice_2, choice_3, coins_paid, ref) on table public.island_
 -- -----------------------------------------------------------------------------
 -- 2. islet_buildings: the tower skills, with the capstones of tier 3
 -- -----------------------------------------------------------------------------
--- The full list known on main (20261112060000_tech_hub.sql) plus the eight
--- capstones. See the merge note in the header: 20261112090000 changes this rule
--- too.
+-- The list of 20261112090000_house_roles.sql (the eleven tower pairs of
+-- 20261112060000_tech_hub.sql and the three house pairs) plus the eight
+-- capstones. Nothing is dropped.
 
 alter table public.islet_buildings drop constraint if exists islet_buildings_spec_fits_kind;
 alter table public.islet_buildings
@@ -156,6 +167,7 @@ alter table public.islet_buildings
       ('mortar', 'cluster'), ('mortar', 'fire_pot'), ('mortar', 'long_range'),
       ('wall', 'stone'), ('wall', 'spiked'), ('wall', 'quick_mend'),
       ('watchtower', 'spotter'), ('watchtower', 'signal_fire'),
+      ('house', 'barracks'), ('house', 'tavern'), ('house', 'workshop'),
       ('cannon', 'broadside'), ('cannon', 'grapeshot'),
       ('mortar', 'shockwave'), ('mortar', 'inferno'),
       ('wall', 'bastion'), ('wall', 'thorns'),
@@ -164,7 +176,7 @@ alter table public.islet_buildings
   );
 
 comment on column public.islet_buildings.spec is
-  'The tower skill this building picked at the Tech hub (docs/GAME-V3.md sections 5 and 5.1), or null: a tier-1 skill of its kind, or the capstone its island chose at tier 3. Only island_specialise() sets it; a change of the tier-3 choice in island_research() clears the old capstone.';
+  'The tower skill this building picked at the Tech hub (docs/GAME-V3.md sections 5 and 5.1), or a house''s role (barracks, tavern, workshop; docs/GAME-V3.md "Houses"), or null: a tier-1 skill of its kind, or the capstone its island chose at tier 3. Only island_specialise() sets it, and only to a skill of its own kind or, on a house of level 2 or more, a role; a change of the tier-3 choice in island_research() clears the old capstone.';
 
 
 -- -----------------------------------------------------------------------------
@@ -330,9 +342,13 @@ comment on function public.island_research(uuid, uuid, text, text, integer, inte
 -- -----------------------------------------------------------------------------
 -- 4. island_specialise(): a tower picks one skill, a capstone only if chosen
 -- -----------------------------------------------------------------------------
--- The same signature and checks as 20261112060000_tech_hub.sql, with the eight
--- capstones in the list of known skills and one more check: a capstone needs
--- its island's tier-3 choice to be that capstone (else not_researched).
+-- The same signature and checks as 20261112090000_house_roles.sql (which has the
+-- house roles: their pairs in the argument check, and the house branch needing
+-- level 2, not research), with the eight capstones in the list of known skills
+-- and one more check: a capstone needs its island's tier-3 choice to be that
+-- capstone (else not_researched).
+-- Returns {status: done, plot, spec} or {status: refused, reason: no_island |
+-- not_member | not_built | wrong_kind | not_researched | house_level}.
 
 create or replace function public.island_specialise(
   p_player_id     uuid,
@@ -356,6 +372,7 @@ begin
        ('mortar', 'cluster'), ('mortar', 'fire_pot'), ('mortar', 'long_range'),
        ('wall', 'stone'), ('wall', 'spiked'), ('wall', 'quick_mend'),
        ('watchtower', 'spotter'), ('watchtower', 'signal_fire'),
+       ('house', 'barracks'), ('house', 'tavern'), ('house', 'workshop'),
        ('cannon', 'broadside'), ('cannon', 'grapeshot'),
        ('mortar', 'shockwave'), ('mortar', 'inferno'),
        ('wall', 'bastion'), ('wall', 'thorns'),
@@ -386,7 +403,12 @@ begin
   if v_building.building_type <> p_branch then
     return jsonb_build_object('status', 'refused', 'reason', 'wrong_kind');
   end if;
-  if not exists (
+  -- A house role (docs/GAME-V3.md "Houses") needs no research, only a house of level 2 or more.
+  if p_branch = 'house' then
+    if v_building.level < 2 then
+      return jsonb_build_object('status', 'refused', 'reason', 'house_level');
+    end if;
+  elsif not exists (
     select 1 from public.island_research where island_owner = p_island_owner and branch = p_branch
   ) then
     return jsonb_build_object('status', 'refused', 'reason', 'not_researched');
@@ -412,4 +434,4 @@ grant execute on function public.island_specialise(uuid, uuid, text, text, text)
   to service_role;
 
 comment on function public.island_specialise(uuid, uuid, text, text, text) is
-  'The tower on p_plot of the island of p_island_owner picks the skill p_spec of its kind p_branch (no coins; picking another one changes it): a tier-1 skill once the branch is researched, or the capstone the island chose at tier 3. Locks the island row, then the building. Refuses no_island, not_member (the caller is neither the host nor an active member), not_built, wrong_kind (another kind stands there) and not_researched (the branch is not researched there, or a capstone the island did not choose), with nothing changed. The same pick again changes nothing. Only service_role may run it.';
+  'The tower on p_plot of the island of p_island_owner picks the skill p_spec of its kind p_branch (no coins; picking another one changes it): a tier-1 skill once the branch is researched, or the capstone the island chose at tier 3. Locks the island row, then the building. Refuses no_island, not_member (the caller is neither the host nor an active member), not_built, wrong_kind (another kind stands there), not_researched (the branch is not researched there, or a capstone the island did not choose) and house_level (a house role on a house below level 2), with nothing changed. A house of level 2 or more picks a role (barracks, tavern or workshop) with p_branch house and no research. The same pick again changes nothing. Only service_role may run it.';

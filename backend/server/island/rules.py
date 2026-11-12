@@ -24,6 +24,8 @@ from dataclasses import dataclass
 
 from server.errors import ApiError
 from server.island.catalogue import (
+    HOUSE_ROLE_LEVEL,
+    HOUSE_ROLES,
     RESEARCH_CAPSTONES,
     RESEARCH_SPECS,
     RESEARCH_TIER_ITEMS,
@@ -117,7 +119,13 @@ def spot_view(catalogue: IslandCatalogue, spot: Spot, built: Built | None) -> Sp
         )
     kind = kind_of(catalogue, built.kind)
     upgrade = kind.prices[built.level] if built.level < kind.max_level else None
-    spec = built.spec if built.spec in tower_specs(kind.kind) else None
+    # A tower's skill (GAME-V3 section 5), or a house's role from level 2 (GAME-V3 "Houses").
+    allowed = (
+        (HOUSE_ROLES if built.level >= HOUSE_ROLE_LEVEL else ())
+        if kind.kind == "house"
+        else tower_specs(kind.kind)
+    )
+    spec = built.spec if built.spec in allowed else None
     return SpotView(spot.id, kind.kind, spot.kinds, True, built.level, kind.coins, upgrade, spec)
 
 
@@ -270,6 +278,45 @@ def check_upgrade(
         raise max_level(kind.name)
     check_unlocked(catalogue, kind, standing.level + 1, wave)
     return spot, kind, unlocked_level(catalogue, kind, wave)
+
+
+# --- tearing a building down (docs/GAME-V3.md section 4.2) ---
+
+# What is never torn down: the heart of the island (the cabin), the harbor bell and the campaign's
+# buildings. None of them has a building row; the database refuses every plot that is not an
+# island build spot as well (the home islet's buildings, the signal station among them).
+PROTECTED = frozenset(
+    {
+        CABIN,
+        "heart",
+        "island_cabin",
+        "island_bell",
+        "island_harbor",
+        "island_techhub",
+        "island_wreck",
+    }
+)
+
+
+def protected() -> ApiError:
+    return ApiError(
+        409, "protected", "The heart of the island stays. Only walls, towers and houses come down."
+    )
+
+
+def check_demolish(catalogue: IslandCatalogue, spot_id: str) -> Spot:
+    """The spot of a tear-down: 409 protected (the heart, the bell, the Harbor, the Tech hub, the
+    wreck), 404 no_such_spot. Whether something stands there, whether a wave runs and who paid
+    for it are the database's to say (island_demolish), so a repeated click is answered there."""
+    if spot_id in PROTECTED:
+        raise protected()
+    return find_spot(catalogue, spot_id)
+
+
+def price_table(catalogue: IslandCatalogue) -> dict[str, list[int]]:
+    """Every kind's price list, the catalogue the database refunds a level without a payment row
+    at (paid by the host: the host's own builds and everything from before the payment rows)."""
+    return {kind.kind: list(kind.prices) for kind in catalogue.kinds}
 
 
 def max_level(name: str) -> ApiError:
@@ -469,12 +516,21 @@ def check_specialise(
     researched: dict[str, ResearchTier],
 ) -> tuple[Spot, str]:
     """A tower picks one skill of its kind (409 not_built, 400 bad_spec, 422 wrong_kind,
-    409 not_researched; a capstone only once its island chose it at tier 3). Returns the spot and
-    the branch (the tower's kind)."""
+    409 not_researched; a capstone only once its island chose it at tier 3). A house of level 2 or
+    more picks a role the same way, with no research (docs/GAME-V3.md "Houses"; 422 wrong_kind on
+    another building, 409 house_level below level 2). Returns the spot and the branch (the
+    building's kind)."""
     spot = find_spot(catalogue, spot_id)
     standing = built.get(spot.id)
     if standing is None or standing.kind not in spot.kinds:
         raise ApiError(409, "not_built", "Build something on this spot first.")
+    if spec in HOUSE_ROLES:
+        if standing.kind != "house":
+            name = kind_of(catalogue, standing.kind).name.lower()
+            raise BuildRefused(422, "wrong_kind", f"A {name} cannot take a house role.")
+        if standing.level < HOUSE_ROLE_LEVEL:
+            raise house_level()
+        return spot, "house"
     branch = branch_of_spec(spec)
     if branch is None:
         raise ApiError(400, "bad_spec", "There is no such tower skill.")
@@ -486,6 +542,10 @@ def check_specialise(
     if spec in RESEARCH_CAPSTONES[branch] and researched[branch].choice_3 != spec:
         raise capstone_not_chosen(research_named(catalogue, branch), spec)
     return spot, branch
+
+
+def house_level() -> ApiError:
+    return ApiError(409, "house_level", f"Raise this house to level {HOUSE_ROLE_LEVEL} first.")
 
 
 def not_researched(entry: Research) -> ApiError:

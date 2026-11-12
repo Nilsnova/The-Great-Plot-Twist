@@ -8,8 +8,11 @@
     learn_skill()  one skill of the captain's skill tree, paid with skill points (section 14)
     buy_weapon(), equip_weapon()  the weapon shop (section 15)
     research()    the Tech hub: one research branch for the island, paid by any member (GAME-V3 5)
-    specialise()  one tower picks a skill of its researched branch (GAME-V3 section 5)
+    specialise()  one tower picks a skill of its researched branch (GAME-V3 section 5), or a
+                  house of level 2 a role (GAME-V3 "Houses")
     repair_wreck()  coins into the island's wreck (GAME-V3 section 4)
+    demolish(), demolish_quote()  tear a building down between waves; each payer gets half of what
+                  they paid back (GAME-V3 section 4.2)
     harbor_wave() the best wave of the games a player is in: the Harbor opens after wave 4
     visit()    another player's island, found by its code
     invite()   the friend invite: an anonymous guest with a valid island code is admitted
@@ -38,7 +41,7 @@ from server.island import games, rules, store
 from server.island.catalogue import IslandCatalogue
 from server.island.codes import read_code, shown
 from server.island.rules import Built, ResearchTier, SpotView
-from server.island.store import Island, Paid, Progress, Refusal
+from server.island.store import Demolished, Island, Paid, Progress, Refusal
 from server.supabase_admin import AlreadyApplied, InsufficientFunds, SupabaseAdmin, SupabaseRejected
 from server.wallet import validate_transaction
 
@@ -51,6 +54,7 @@ SKILL_PREFIX = "skill:"
 WEAPON_PREFIX = "weapon:"
 RESEARCH_PREFIX = "research:"
 WRECK_PREFIX = "wreck:"
+DEMOLISH_PREFIX = "demolish:"
 # The island has no timber any more (BUILD-PLAN 3.2): coins only.
 NO_TIMBER = 0
 
@@ -629,8 +633,10 @@ async def specialise(
     code: str | None = None,
 ) -> IslandView:
     """A tower on the island picks one skill of its researched branch (no coins; picking again
-    changes it, for the next wave). 400 bad_spec, 404 no_such_spot, 404 no_such_island, 403
-    not_member, 409 not_built, 422 wrong_kind, 409 not_researched. Safe to repeat."""
+    changes it, for the next wave). A house of level 2 or more picks a role (barracks, tavern,
+    workshop) the same way, with no research (docs/GAME-V3.md "Houses"). 400 bad_spec, 404
+    no_such_spot, 404 no_such_island, 403 not_member, 409 not_built, 422 wrong_kind, 409
+    not_researched, 409 house_level. Safe to repeat."""
     island, payer = await target_island(admin, catalogue, player_id, code)
     built = await store.read_built_spots(admin, island.owner)
     done = await store.read_research(admin, island.owner)
@@ -645,13 +651,17 @@ async def specialise(
     reply = await admin.call_function("island_specialise", arguments)
     refusal = store.refusal_or_none(reply)
     if refusal is not None:
-        name = rules.research_named(catalogue, branch).name
         if refusal.reason == "not_built":
             raise ApiError(409, "not_built", "Build something on this spot first.")
         if refusal.reason == "wrong_kind":
             raise rules.BuildRefused(422, "wrong_kind", "Something else stands on this spot.")
+        if refusal.reason == "house_level":
+            raise rules.house_level()
+        if branch == "house":
+            raise campaign_refusal(refusal, catalogue, "tech_hub", "House roles")
         if refusal.reason == "not_researched" and spec in rules.RESEARCH_CAPSTONES[branch]:
             raise rules.capstone_not_chosen(rules.research_named(catalogue, branch), spec)
+        name = rules.research_named(catalogue, branch).name
         raise campaign_refusal(refusal, catalogue, "tech_hub", name)
     return await look_open(admin, catalogue, island, payer)
 
@@ -685,6 +695,121 @@ async def repair_wreck(
         if isinstance(outcome, Refusal):
             raise campaign_refusal(outcome, catalogue, "wreck", "The wreck repair")
     return await look_open(admin, catalogue, island, payer)
+
+
+# --- tearing a building down (docs/GAME-V3.md section 4.2) ---
+
+
+@dataclass(frozen=True)
+class RefundView:
+    player_id: str
+    name: str
+    coins: int
+
+
+@dataclass(frozen=True)
+class DemolishView:
+    """A tear-down (or its quote): the building and what each payer gets back."""
+
+    spot: str
+    kind: str
+    name: str  # the kind's name: "Cannon"
+    level: int
+    refunds: tuple[RefundView, ...]
+    repeat: bool
+
+
+def demolish_refusal(refusal: Refusal) -> ApiError:
+    """The error for a tear-down (or its quote) that the database refused. Nothing changed."""
+    reason = refusal.reason
+    if reason == "protected":
+        return rules.protected()
+    if reason == "no_island":
+        return no_such_island()
+    if reason == "not_member":
+        return games.not_member()
+    if reason == "not_built":
+        return ApiError(409, "not_built", "Nothing stands on this spot now.")
+    if reason == "wave_running":
+        return ApiError(409, "wave_running", "A wave is under way. Tear it down between waves.")
+    if reason == "busy":
+        return ApiError(409, "busy", "Somebody changed this building just now. Try again.")
+    return SupabaseRejected()
+
+
+async def demolish_view(
+    admin: SupabaseAdmin, catalogue: IslandCatalogue, done: Demolished
+) -> DemolishView:
+    """The refunds with the captain names other players see (at most one per member)."""
+    names: dict[str, str] = {}
+    for refund in done.refunds:
+        if refund.player_id not in names:
+            names[refund.player_id] = await store.read_display_name(admin, refund.player_id)
+    kind = rules.kind_named(catalogue, done.kind)
+    return DemolishView(
+        done.plot,
+        done.kind,
+        kind.name if kind is not None else done.kind,
+        done.level,
+        tuple(
+            RefundView(item.player_id, names[item.player_id], item.coins) for item in done.refunds
+        ),
+        done.repeat,
+    )
+
+
+async def demolish_quote(
+    admin: SupabaseAdmin,
+    catalogue: IslandCatalogue,
+    player_id: str,
+    spot_id: str,
+    code: str | None = None,
+) -> DemolishView:
+    """What tearing down the building on `spot_id` would give back, per payer, worked out by the
+    database (island_demolish_quote): for the confirmation card. Changes nothing. 409 protected,
+    404 no_such_spot, 404 no_such_island, 403 not_member, 409 not_built, 409 wave_running."""
+    spot = rules.check_demolish(catalogue, spot_id)
+    island, _payer = await target_island(admin, catalogue, player_id, code)
+    arguments = {
+        "p_player_id": player_id,
+        "p_island_owner": island.owner,
+        "p_plot": spot.id,
+        "p_prices": rules.price_table(catalogue),
+    }
+    outcome = await store.run_demolish(admin, "island_demolish_quote", arguments)
+    if isinstance(outcome, Refusal):
+        raise demolish_refusal(outcome)
+    return await demolish_view(admin, catalogue, outcome)
+
+
+async def demolish(
+    admin: SupabaseAdmin,
+    catalogue: IslandCatalogue,
+    player_id: str,
+    spot_id: str,
+    action_uid: str,
+    code: str | None = None,
+) -> tuple[IslandView, DemolishView]:
+    """Tear down the building on `spot_id` (your own island, or with `code` the game you are a
+    member of) while no wave runs there. Every payer gets half of what they paid for it back,
+    rounded down (ledger ref demolish:<actionUid>, reason building_refund); the spot is empty
+    again and its tower skill is gone. A repeated actionUid pays nothing and answers the same
+    refunds. 409 protected, 404 no_such_spot, 404 no_such_island, 403 not_member, 409 not_built,
+    409 wave_running, 409 busy."""
+    spot = rules.check_demolish(catalogue, spot_id)
+    island, payer = await target_island(admin, catalogue, player_id, code)
+    arguments = {
+        "p_player_id": player_id,
+        "p_island_owner": island.owner,
+        "p_plot": spot.id,
+        "p_action_uid": action_uid,
+        "p_prices": rules.price_table(catalogue),
+    }
+    outcome = await store.run_demolish(admin, "island_demolish", arguments)
+    if isinstance(outcome, Refusal):
+        raise demolish_refusal(outcome)
+    done = await demolish_view(admin, catalogue, outcome)
+    return await look_open(admin, catalogue, island, payer), done
 
 
 async def harbor_wave(admin: SupabaseAdmin, player_id: str) -> int | None:

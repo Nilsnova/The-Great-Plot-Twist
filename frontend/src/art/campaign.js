@@ -3,6 +3,7 @@
 // that stands where something opens later, with a sign that shows the wave it opens after. Seen from the
 // game's three-quarter camera like the rest of src/art/island.js. Original designs, painted in code.
 import {INK, ellipse, line, mix, part, poly, rect, shadow, stroke} from './paint.js';
+import {groundRing} from './island.js';
 
 const WOOD = '#a8693a', WOOD_LIGHT = '#c98a4e', WOOD_DARK = '#7a4a2a', STONE = '#a9a39a', STONE_LIGHT = '#cfc8bb';
 const BRASS = '#f2c14e', IRON = '#3e4250', TEAL = '#2c7f8c', TEAL_LIGHT = '#4fb0bc', RED = '#d4553e', CREAM = '#fff1d0';
@@ -106,21 +107,37 @@ function site(wave) {
     part(c, ellipse(cx + 6.5, g - 19.6, .9), INK, {line: false, shade: false});
   };
 }
-// The lock badge over a build spot that opens later (20 x 24, like the build badges).
-function lockBadge(c, {w}) {
-  part(c, poly([[w / 2 - 3, 18], [w / 2, 22.4], [w / 2 + 3, 18]], .8), '#8a6a42', {width: 1.1, shade: false});
-  part(c, ellipse(w / 2, 10.2, 8.4), '#6b6f7c', {depth: 1.6, width: 1.3, light: '#9aa0ad'});
-  const shackle = new Path2D(); shackle.arc(w / 2, 9, 2.6, Math.PI, 0); stroke(c, shackle, CREAM, 1.4);
-  part(c, rect(w / 2 - 3.6, 9, 7.2, 5.6, 1.2), CREAM, {line: false, shade: false});
+// A build spot that opens later: a cool slate ring on the ground (48 x 24, dashed: not ready yet) and a
+// slate badge with a cream padlock (24 x 24, the size of the gold "+" badge); with a wave number, a small
+// parchment tag at its lower right says the wave it opens after ("Opens after wave N" on the card).
+const SLATE = '#5d6b80', SLATE_LIGHT = '#8a99ad';
+function lockRing(c, size) { groundRing(c, size, {band: '#56627a', light: '#8593a8', glow: '#9aa7b833', dash: [3.4, 2.2]}); }
+function lockBadge(wave = null) {
+  return (c, {w}) => {
+    const cx = w / 2, cy = 12;
+    part(c, ellipse(cx, cy, 10.6), '#dfe4ea', {width: 1.6, depth: 1.2, shade: '#b4bdc8'});
+    part(c, ellipse(cx, cy, 8.2), SLATE, {depth: 2, width: 1.1, shade: '#46526a', gloss: ellipse(cx - 3.2, cy - 4, 2.8, 1.4), light: SLATE_LIGHT});
+    const shackle = new Path2D(); shackle.arc(cx, cy - 1.4, 3, Math.PI, 0);
+    stroke(c, shackle, INK, 3.2); stroke(c, shackle, CREAM, 1.6);
+    part(c, rect(cx - 4.4, cy - 1.6, 8.8, 6.6, 1.6), CREAM, {width: 1.2, depth: 1, shade: '#e6cf9a'});
+    part(c, ellipse(cx, cy + 1.4, .9), INK, {line: false, shade: false});
+    if (wave === null) return;
+    part(c, ellipse(w - 5.4, 18.4, 5.2), '#f6e7c1', {width: 1.2, depth: .8, shade: '#d9c08f'});
+    c.save(); c.fillStyle = INK; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `bold ${wave > 9 ? 6 : 7.4}px sans-serif`;
+    c.fillText(String(wave), w - 5.4, 18.7); c.restore();
+  };
 }
+// The waves a build spot can wait for (the house after 1, the watchtower after 3, the inner ring after 5, ...).
+export const LOCK_WAVES = Object.freeze([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20]);
 
 /** The campaign frames: name -> [width, height, anchor, draw]. */
 export function campaignFrames() {
   const frames = {
     'island-harbor': [80, 72, 8, harbor], 'island-techhub': [80, 88, 8, techhub],
     'island-wreck': [96, 56, 6, wreck(false)], 'island-wreck-mended': [96, 80, 6, wreck(true)],
-    'island-site': [64, 56, 6, site(null)], 'build-badge-locked': [20, 24, 0, lockBadge],
+    'island-site': [64, 56, 6, site(null)], 'build-badge-locked': [24, 24, 0, lockBadge()], 'build-ring-locked': [48, 24, 0, lockRing],
   };
+  for (const wave of LOCK_WAVES) frames[`build-badge-locked-${wave}`] = [24, 24, 0, lockBadge(wave)];
   for (const wave of [4, 5, 6, 8]) frames[`island-site-${wave}`] = [64, 56, 6, site(wave)];
   return frames;
 }

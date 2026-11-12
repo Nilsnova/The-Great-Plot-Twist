@@ -9,7 +9,9 @@
 //   upgrades it on the owner's island and the owner's map and open card follow. Tower skills (GAME-V3.md §5):
 //   after wave 8 the owner researches cannon skills at the Tech hub and picks Heavy shot for a cannon; the
 //   friend's island answer and card show the same skill within 2 s, then the friend picks Rapid on the owner's
-//   island and the owner's follows (the wave's sim reads the skill from the island). Wave 3 with a second cannon
+//   island and the owner's follows (the wave's sim reads the skill from the island). Tear down (GAME-V3.md §4.2): the
+//   owner tears down the wall both paid for; his confirmation shows both refunds, the friend sees the empty spot, his
+//   toast and his coins. Wave 3 with a second cannon
 //   and the inner wall ring: the owner rings the bell; both run the same wave (the same ships at the same
 //   tick, and the same boarders ashore: TOWER-DEFENSE.md §12); both captains fire their musket and each
 //   shot reaches the other page; an upgrade in the wave's break shows on both; the host pauses the break
@@ -92,7 +94,9 @@ async function openCaptain(name, playerId, visit = null, {create = false, join =
         const last = window.__mp.samples.at(-1);
         if (!last || last.ticks !== wave.ticks) window.__mp.samples.push({waveId: wave.info.waveId, ticks: wave.ticks,
           ships: wave.state.ships.map(ship => ship.id).sort().join(','), hp: Math.round(wave.state.ships.reduce((sum, ship) => sum + ship.hp, 0)),
-          boarders: (wave.state.boarders ?? []).map(item => item.id).sort().join(','), landed: wave.state.boardersLanded ?? 0});
+          boarders: (wave.state.boarders ?? []).map(item => item.id).sort().join(','), landed: wave.state.boardersLanded ?? 0,
+          // A Barracks' militia (GAME-V3.md "Houses"): where each stands, its hp and what it does.
+          militia: (wave.state.militia ?? []).map(item => `${item.id}@${item.x},${item.z}:${item.hp}:${item.state}`).join('|')});
         if (window.__mp.samples.length > 6000) window.__mp.samples.splice(0, 3000);
       }
       requestAnimationFrame(sample);
@@ -183,9 +187,74 @@ async function compare(a, b, waveId) {
     worstBoarders = Math.max(worstBoarders, Math.abs(size(other.boarders) - size(sample.boarders)));
   }
   const landed = Math.max(0, ...left.map(item => item.landed));
-  return {checked, same, worst, sameBoarders, worstBoarders, withBoarders, landed};
+  // The militia at exactly the same tick (they move every tick, so ±1 would differ).
+  let militiaChecked = 0, sameMilitia = 0, fighting = 0;
+  const exact = new Map(right.map(item => [item.ticks, item]));
+  for (const sample of left.filter(item => item.militia)) {
+    const other = exact.get(sample.ticks);
+    if (!other) continue;
+    militiaChecked++;
+    if (other.militia === sample.militia) sameMilitia++;
+    if (sample.militia.includes(':fighting')) fighting++;
+  }
+  return {checked, same, worst, sameBoarders, worstBoarders, withBoarders, landed, militiaChecked, sameMilitia, fighting};
 }
 
+// The musket fires from the captain's own body (owner, 12 Nov): the owner's character and, on the friend's
+// page, the owner's figure switch to the musket pose; no second captain is drawn where the shot was fired.
+// poseSeen answers where the pose mesh is on screen ({x, y} in px), or null when none showed within 3 s.
+const poseSeen = (page, figure) => page.waitForFunction(figure => { let at = null;
+  const g = window.__island, {innerWidth: w, innerHeight: h} = window;
+  g.scene.traverse(item => { if (at || item.name !== 'captain-pose' || !item.visible || (item.parent?.parent?.name === 'other-captains') !== figure) return;
+    const p = item.getWorldPosition(item.position.clone()).project(g.camera); at = {x: (p.x + 1) / 2 * w, y: (1 - p.y) / 2 * h, frame: item.userData.pose}; });
+  return at; }, figure, {timeout: 3000, polling: 16}).then(handle => handle.jsonValue(), () => null);
+// A close crop around the pose (the screenshots' "zoomed in" view), as wide as a third of the page.
+const zoomClip = (page, at) => { const {width, height} = page.viewportSize(), w = Math.round(width / 3), h = Math.round(w * .7);
+  return {x: Math.max(0, Math.min(width - w, at.x - w / 2)), y: Math.max(0, Math.min(height - h, at.y - h * .65)), width: w, height: h}; };
+async function musketPose(host, ben) {
+  const sizes = [[1280, 800], [390, 844]], seen = {own: [], figure: []};
+  let probe = null;
+  for (const [width, height] of sizes) {
+    await host.page.setViewportSize({width, height}); await ben.page.setViewportSize({width, height});
+    const size = `${width}x${height}`;
+    let own = false, figure = false;
+    for (let attempt = 0; attempt < 4 && !(own && figure); attempt++) {
+      const spot = await host.page.evaluate(() => { const ships = window.__island.waves.island.wave?.state?.ships ?? [];
+        if (!ships.length) return null; const ship = ships.reduce((a, b) => (Math.hypot(a.x, a.z) < Math.hypot(b.x, b.z) ? a : b)), d = Math.hypot(ship.x, ship.z);
+        return {id: ship.id, x: ship.x * 14 / d, z: ship.z * 14 / d, bx: ship.x * 10 / d, bz: ship.z * 10 / d}; });
+      if (!spot) break;
+      await stand(host, spot); await stand(ben, {x: spot.bx, z: spot.bz});
+      // ?islands=fake has no live presence, so the friend's page draws no figure for the owner (a shooter
+      // without a figure shows only the flash, tracer and puff). Stand one in for it where the owner is,
+      // under his member id (his lobby colour), through the presence's own simulate().
+      await ben.page.evaluate(([x, z, id]) => { const g = window.__island, place = g.island.presencePlace('home_islet');
+        g.experience.simulate({status: 'live', place, others: [{id, name: 'Nils', x, y: z, facing: 'front', moving: false, place}], hiddenCount: 0, sampledAt: Date.now()}); },
+        [spot.x, spot.z, host.playerId]);
+      await host.page.waitForTimeout(1500); // the friend's page hears where the owner stands
+      let fired = false;
+      // At the ship by its id: the gun, never the cutlass (with no id a boarder in reach gets the blade).
+      for (let i = 0; i < 20 && !fired; i++) { fired = await host.page.evaluate(id => window.__island.waves.island.shoot(id), spot.id); if (!fired) await host.page.waitForTimeout(300); }
+      if (!fired) continue;
+      const [mine, theirs] = await Promise.all([poseSeen(host.page, false), poseSeen(ben.page, true)]);
+      if (mine && !own) {
+        await host.page.screenshot({path: `${out}/05b-musket-pose-own-zoom-${size}.png`, clip: zoomClip(host.page, mine)});
+        await host.page.screenshot({path: `${out}/05b-musket-pose-own-${size}.png`});
+        seen.own.push(`${size} ${mine.frame}`); own = true;
+      }
+      if (theirs && !figure) {
+        await ben.page.screenshot({path: `${out}/05b-musket-pose-teammate-zoom-${size}.png`, clip: zoomClip(ben.page, theirs)});
+        await ben.page.screenshot({path: `${out}/05b-musket-pose-teammate-${size}.png`});
+        seen.figure.push(`${size} ${theirs.frame}`); figure = true;
+      }
+      if (!theirs) probe = await ben.page.evaluate(() => { const g = window.__island, w = g.waves;
+        return {figures: g.experience.figures(), party: (w.island.state?.party ?? []).map(h => ({id: h.id, colour: h.colour, present: h.present, x: h.x, z: h.z})), mine: w.island.playerId}; });
+      await host.page.waitForTimeout(700); // the pose is over before the next shot
+    }
+  }
+  await ben.page.evaluate(() => window.__island.experience.simulate(null));
+  for (const captain of [host, ben]) await captain.page.setViewportSize({width: 960, height: 600});
+  return {seen, probe};
+}
 const results = [];
 const captainShots = [];
 // Where nobody fights: north of the heart, away from the three sea lanes (east, south, west).
@@ -258,17 +327,24 @@ async function captainHealth(host, ben, wave) {
     await stand(host, {x: benHere.x + 1.2, z: benHere.z});
     await host.page.evaluate(() => document.activeElement?.blur?.()); // E goes to the game, not a button
     await quiet(host);
-    await host.page.keyboard.down('KeyE'); await host.page.waitForTimeout(1100); await settle(host.page);
+    // Wait on the game's own progress, not on wall-clock time: on a busy machine frames stall, so a fixed wait
+    // read 0 (nothing drawn yet) or overshot into a finished revive. Let go as soon as the ring is a third full.
+    await host.page.keyboard.down('KeyE');
+    const share = await host.page.waitForFunction(() => { const s = window.__island.waves.island.revive?.share ?? 0;
+      return s >= .3 ? s : false; }, null, {timeout: 20000, polling: 30}).then(handle => handle.jsonValue()).catch(() => 0);
+    await host.page.keyboard.up('KeyE');
     await host.page.screenshot({path: `${out}/09-revive-in-progress-${label}-${host.playerId}.png`});
-    const share = (await myCaptain(host)).revive?.share ?? 0;
-    await host.page.keyboard.up('KeyE'); await host.page.waitForTimeout(300);
-    assert.ok(share > .3 && share < 1, `the hold fills (${share})`);
+    await host.page.waitForTimeout(300);
+    assert.ok(share >= .3 && share < 1, `the hold fills (${share})`);
   }
   await host.page.setViewportSize({width: 960, height: 600}); await host.page.waitForTimeout(250);
   assert.equal(await coins(), before, 'a hold that lets go pays nothing');
   await stand(host, {x: benHere.x + 1.2, z: benHere.z});
   await host.page.evaluate(() => document.activeElement?.blur?.());
-  await host.page.keyboard.down('KeyE'); await host.page.waitForTimeout(2700); await host.page.keyboard.up('KeyE');
+  // Hold until the revive lands (sim time), however slow the machine is.
+  await host.page.keyboard.down('KeyE');
+  await host.page.waitForFunction(id => window.__mp.revived.some(item => item.captainId === id), benId, {timeout: 30000, polling: 100});
+  await host.page.keyboard.up('KeyE');
   for (const captain of [host, ben]) await captain.page.waitForFunction(id => window.__mp.revived.some(item => item.captainId === id), benId, {timeout: 8000, polling: 100});
   const [hostRevived, benRevived] = await Promise.all([host, ben].map(captain => captain.page.evaluate(id => window.__mp.revived.find(item => item.captainId === id), benId)));
   const paid = before - await coins();
@@ -392,6 +468,52 @@ try {
   assert.ok(hostResearch.cannons.some(item => item.id === 'cannon_1' && item.spec === 'grapeshot' && item.bonus === 'long_guns'), 'cannon_1 fights with Grapeshot and Long guns');
   results.push('research tier 3: the friend\'s Grapeshot and cannon_1\'s pick are the same research and defenses on both pages');
   await shot('02e-research-tiers');
+  // 2e House roles (GAME-V3.md "Houses"): below level 2 the card says what comes; at level 2 the owner picks the
+  // Barracks on house_1 and the friend sees it on the map and the card; it fights in wave 3 below.
+  await island(host, async i => { await i.build('house_1', 'house'); });
+  const lowCard = await host.page.evaluate(async () => {
+    const game = window.__island.island; game.pick('house_1'); await new Promise(resolve => setTimeout(resolve, 80));
+    const line = document.querySelector('.island-card[open] .island-skills-line')?.textContent ?? ''; game.ui.close(); return line;
+  });
+  assert.equal(lowCard, 'Level 2: choose Barracks, Tavern or Workshop.', 'a level-1 house says what comes at level 2');
+  await island(host, async i => { await i.upgrade('house_1'); await i.specialise('house_1', 'barracks'); });
+  const barracks = await seesSpec(ben, 'house_1', 'barracks', "the owner's house role");
+  const looks = await ben.page.evaluate(() => { let art = ''; window.__island.scene.traverse(object => { if (object.name === 'island-house:house_1') art = object.userData.art; }); return art; });
+  assert.equal(looks, 'island-house-barracks', "the friend's map shows the Barracks look");
+  results.push(`house role: the owner's Barracks on house_1 on the friend's island, card ("${barracks.title}") and map (${looks}) after ${barracks.took} ms`);
+  await island(ben, async i => { await i.specialise('house_1', 'workshop'); });
+  const workshop = await seesSpec(host, 'house_1', 'workshop', "the friend's house role");
+  results.push(`house role: the friend's Workshop on house_1 on the owner's island and card after ${workshop.took} ms`);
+  await island(host, async i => { await i.specialise('house_1', 'barracks'); });
+  await seesSpec(ben, 'house_1', 'barracks', "the owner's house role again");
+  // 2d Tear down (GAME-V3.md §4.2): wall_2 was built by the friend (🪙 10), raised by the owner (🪙 20) and by the
+  // friend (🪙 40). The owner tears it down from its card: the confirmation shows both refunds, the friend's island
+  // shows the empty spot and his toast within 2 s, and his coins are 🪙 25 more. Then the owner builds it up again.
+  const benCoins = () => ben.page.evaluate(() => window.__island.island.island?.coins ?? null);
+  const benBefore = await benCoins();
+  await host.page.evaluate(async () => {
+    const game = window.__island.island; game.pick('wall_2'); await new Promise(resolve => setTimeout(resolve, 80));
+    document.querySelector('.island-card[open] .island-teardown').click();
+  });
+  await host.page.waitForFunction(() => document.querySelectorAll('.island-card-demolish[open] .island-refund').length === 2, null, {timeout: 5000, polling: 100});
+  const confirmation = await host.page.evaluate(() => ({question: document.querySelector('.island-card-demolish[open] .island-demolish-question').textContent,
+    lines: [...document.querySelectorAll('.island-card-demolish[open] .island-refund')].map(item => item.textContent),
+    focus: document.activeElement?.dataset?.focus ?? ''}));
+  assert.deepEqual(confirmation, {question: 'Tear down this Wall (level 3)?', lines: ['You get back 🪙 10.', 'Ben gets back 🪙 25.'], focus: 'keep'});
+  await sized('02e-teardown-confirm', [host]);
+  await host.page.locator('.island-card-demolish[open] [data-focus="confirm"]').click();
+  const tornAt = Date.now();
+  await ben.page.waitForFunction(() => window.__island.island.visiting?.spots?.find(spot => spot.id === 'wall_2')?.built === false, null, {timeout: 2000, polling: 50});
+  const emptyAfter = Date.now() - tornAt;
+  await ben.page.waitForFunction(() => /^Nils tore down the Wall\. You got back 🪙 25\.$/.test(window.__island.island.ui.toastText), null, {timeout: 3000, polling: 50});
+  const benToast = await ben.page.evaluate(() => window.__island.island.ui.toastText);
+  await ben.page.waitForFunction(before => window.__island.island.island?.coins === before + 25, benBefore, {timeout: 3000, polling: 100});
+  assert.deepEqual(await mapOf(ben, 'wall_2'), {level: 0, pips: 0}, "the friend's map shows no wall on wall_2");
+  assert.deepEqual(await mapOf(host, 'wall_2'), {level: 0, pips: 0}, "the owner's map shows no wall on wall_2");
+  results.push(`tear down: the owner's confirmation "${confirmation.question}" ${confirmation.lines.join(' ')}; the friend's island showed the empty spot after ${emptyAfter} ms, his toast "${benToast}", his coins ${benBefore} → ${benBefore + 25}`);
+  await sized('02f-teardown-after', [host, ben]);
+  await island(host, async i => { await i.build('wall_2', 'wall'); await i.upgrade('wall_2'); await i.upgrade('wall_2'); });
+  await shows(ben, 'wall_2', 3, 'the wall built up again');
   // 3 Wave 3 (more ships, so both muskets find a target) with one more cannon and the inner wall ring
   // (TOWER-DEFENSE.md §12: two cannons let boarders come ashore, the ring holds them); the owner rings.
   await island(host, async i => { i.dev.setWaveBest(2); i.dev.setCoins(400); await i.load(); await i.build('cannon_2', 'cannon'); });
@@ -454,6 +576,11 @@ try {
   assert.ok(sync1.checked >= 5 && sync1.same / sync1.checked >= .9 && sync1.worst <= 1, 'the two pages ran the same wave');
   assert.ok(sync1.landed > 0 && sync1.withBoarders > 0, 'boarders came ashore in the synced wave');
   assert.ok(sync1.sameBoarders / sync1.checked >= .9 && sync1.worstBoarders <= 1, 'the two pages saw the same boarders');
+  results.push(`wave 1 militia owner/friend: ${sync1.sameMilitia}/${sync1.militiaChecked} samples at the same tick identical (place, hp, state), ${sync1.fighting} fighting`);
+  assert.ok(sync1.militiaChecked >= 5 && sync1.sameMilitia === sync1.militiaChecked, "the Barracks' militia did the same on both pages");
+  // Whether a militia meets a boarder depends on where this wave's boarders land; the fight itself is covered by
+  // tests/pirates/houses.test.js. Here only the sync is required: both pages show the militia the same.
+  if (!sync1.fighting) results.push("wave 1 militia: no boarder came near the Barracks in this wave's samples");
   const second = await until(host, state => state && state.waveId !== first.waveId && !state.pause, 'wave 2 on the owner\'s page', 30000);
   await until(ben, state => state?.waveId === second.waveId, 'the friend in the owner\'s wave 2 (both pressed Next wave)', 30000);
   results.push(`both pressed Next wave: one wave ${second.wave} (${second.waveId}) on both pages`);
@@ -474,6 +601,14 @@ try {
   assert.deepEqual([...members].sort(), ['Ana', 'Ben', 'Max', 'Nils'], 'all four are members of the game');
   await host.page.waitForTimeout(3000);
   await shot('05-four-captains-mid-wave');
+  {
+    const {seen, probe} = await musketPose(host, ben);
+    results.push(`musket pose: the owner's own body posed at ${seen.own.join(', ') || 'no size'}, his figure on the friend's page at ${seen.figure.join(', ') || 'no size'}`);
+    if (probe) results.push(`musket pose probe on the friend's page: ${JSON.stringify(probe)}`);
+    assert.equal(seen.own.length, 2, "the owner's own character takes the musket pose when he fires (both sizes)");
+    assert.ok([...seen.own, ...seen.figure].every(item => /musket-[12]$/.test(item)), `the poses are the musket's: ${[...seen.own, ...seen.figure]}`);
+    assert.ok(seen.figure.length >= 1, "the owner's figure on the friend's page takes the musket pose");
+  }
   for (const captain of [ben, ana, max]) {
     const sync = await compare(host, captain, second.waveId);
     results.push(`wave 2 sync owner/${captain.name}: ${sync.same}/${sync.checked} same ships, ${sync.sameBoarders}/${sync.checked} same boarders, worst count gap ${sync.worst} / ${sync.worstBoarders}`);

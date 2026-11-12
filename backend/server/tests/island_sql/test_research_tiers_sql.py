@@ -178,6 +178,40 @@ def test_a_tower_carries_a_capstone_only_once_its_island_chose_it(database):
     assert specialise(database, MEMBER, "cannon_1", "cannon", "grapeshot")["spec"] == "grapeshot"
 
 
+def test_the_house_roles_survive_the_research_tiers_migration(database):
+    """20261112100000 is applied after 20261112090000: after all migrations a house of level 2 can
+    still pick tavern (the check rule and island_specialise() keep the house pairs, the house
+    branch and house_level) and a cannon can still pick the capstone its island chose."""
+    game(database)
+    best(database, OWNER, 25)
+    assert build(database, OWNER, "house_1", "house", "island:b-0001", 10)["status"] == "done"
+    assert build(database, OWNER, "cannon_1", "cannon", "island:b-0002", 30)["status"] == "done"
+    research(database, OWNER, "cannon", "click-0001", price=10)
+    step(database, OWNER, "cannon", "click-0002", 2, "rapid_2", price=10)
+    step(database, OWNER, "cannon", "click-0003", 3, "grapeshot", price=10, wave=25)
+
+    assert specialise(database, MEMBER, "house_1", "house", "tavern")["reason"] == "house_level"
+    as_owner(database)
+    database.execute(
+        "update public.islet_buildings set level = 2 where player_id = %s and plot = 'house_1'",
+        (OWNER,),
+    )
+    assert specialise(database, MEMBER, "house_1", "house", "tavern")["spec"] == "tavern"
+    assert spec_of(database, "house_1") == "tavern"
+    assert specialise(database, MEMBER, "cannon_1", "cannon", "broadside")["reason"] == (
+        "not_researched"
+    )
+    assert specialise(database, MEMBER, "cannon_1", "cannon", "grapeshot")["spec"] == "grapeshot"
+    assert spec_of(database, "cannon_1") == "grapeshot"
+    # The check rule lists the three house pairs and the eight capstones next to the eleven skills.
+    rule = database.execute(
+        "select pg_get_constraintdef(oid) from pg_constraint"
+        " where conname = 'islet_buildings_spec_fits_kind'"
+    ).fetchone()[0]
+    for spec in ("barracks", "tavern", "workshop", "grapeshot", "war_drums", "quick_mend"):
+        assert f"'{spec}'" in rule
+
+
 def test_the_check_rules_keep_the_tier_and_its_choices_together(database):
     game(database)
     research(database, OWNER, "watchtower", "click-0001", price=10)

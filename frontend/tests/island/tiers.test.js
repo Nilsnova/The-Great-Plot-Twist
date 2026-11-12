@@ -18,7 +18,7 @@ describe('tower levels 4 and 5', () => {
   it('cost the same in islands.json and on the cards', () => {
     for (const {kind, prices} of islands.kinds) expect(BUILDINGS[kind].price, kind).toEqual(prices);
     for (const kind of TOWERS) expect(maxLevel(kind), kind).toBe(5);
-    expect(maxLevel('house')).toBe(2);
+    expect(maxLevel('house')).toBe(3); // level 3 with the house roles (GAME-V3.md "Houses")
     expect(BUILDINGS.mortar.price).toEqual([60, 120, 240, 480, 960]);
   });
   it('show on the cards the numbers the sim fights with', () => {

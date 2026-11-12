@@ -48,7 +48,7 @@ def test_the_prices_and_the_starting_coins_are_the_economy_table():
         "cannon": (30, 60, 120, 240, 480),
         "mortar": (60, 120, 240, 480, 960),
         "watchtower": (40, 80, 160, 320, 640),
-        "house": (50, 100),
+        "house": (50, 100, 200),  # level 3: the house roles (docs/GAME-V3.md "Houses")
     }
     # Levels 4 and 5 (docs/GAME-V3.md 4.1): 4 after wave 12 (the mortar 15), 5 after wave 20.
     waves = {kind.kind: kind.level_waves for kind in catalogue.kinds}
@@ -111,6 +111,7 @@ def test_the_unlocks_follow_the_campaign_table_of_game_v3_section_four():
     }  # fmt: skip
     assert (table["captain:2"], table["captain:3"], table["house:1"]) == (1, 1, 1)
     assert (table["wall:2"], table["cannon:2"], table["house:2"]) == (2, 2, 2)
+    assert table["house:3"] == 5
     assert (table["mortar:1"], table["mortar:2"], table["watchtower:1"]) == (2, 2, 3)
     assert (table["crew:gunner"], table["crew:carpenter"], table["wall:3"]) == (3, 5, 5)
     assert (table["mortar:3"], table["crew:lookout"]) == (5, 8)
@@ -167,7 +168,7 @@ def test_upgrade_hire_and_captain_refuse_the_top_and_a_full_crew():
     catalogue = load_island()
 
     with pytest.raises(ApiError, match="highest level") as top:
-        rules.check_upgrade(catalogue, "house_1", {"house_1": rules.Built("house", 2)}, 99)
+        rules.check_upgrade(catalogue, "house_1", {"house_1": rules.Built("house", 3)}, 99)
     with pytest.raises(ApiError) as empty:
         rules.check_upgrade(catalogue, "wall_1", {}, 99)
     with pytest.raises(ApiError) as full:

@@ -134,7 +134,7 @@ def test_an_upgrade_refuses_not_built_max_level_locked_and_no_such_spot():
     world = world_at(2)
     world.database.buildings[PLAYER_ID] = [
         {"plot": "wall_1", "building_type": "wall", "level": 2},
-        {"plot": "house_1", "building_type": "house", "level": 2},
+        {"plot": "house_1", "building_type": "house", "level": 3},
     ]
 
     assert_error(world.post("/api/island/upgrade", spot="wall_2"), 409, "not_built")

@@ -21,6 +21,8 @@ FakeIslandDatabase answers exactly the calls the island and wave routes make, an
   * POST rpc/island_specialise               paid_replies[name] (default: SPECIALISED)
   * POST rpc/island_learn_skill, island_weapon_equip
                                              paid_replies[name] (default: LEARNED, EQUIPPED)
+  * POST rpc/island_demolish, island_demolish_quote
+                                             paid_replies[name] (default: DEMOLISHED, QUOTED)
   * GET pirate_point_buildings, GET wave_runs  Pirate Point's buildings and best wave, and where a
                                              wave runs (wave_places, by id)
   * POST rpc/game_join, game_leave, game_list, game_members, GET island_members
@@ -119,6 +121,19 @@ LEARNED = {"status": "done", "skills": ["steady_aim"], "points": 1, "repeat": Fa
 REVIVED = {"status": "done", "price": 35, "balance": 65, "repeat": False}
 EQUIPPED = {"status": "done", "weapon": "musket"}
 SPECIALISED = {"status": "done", "plot": "cannon_1", "spec": "rapid"}
+# A level-3 cannon that FRIEND built and PLAYER upgraded (20261112080000_demolish.sql).
+DEMOLISH_REFUNDS = [
+    {"playerId": FRIEND_ID, "paid": 150, "coins": 75},
+    {"playerId": PLAYER_ID, "paid": 60, "coins": 30},
+]
+DEMOLISHED = {
+    "status": "done", "plot": "cannon_1", "kind": "cannon", "level": 3,
+    "refunds": DEMOLISH_REFUNDS, "repeat": False,
+}  # fmt: skip
+QUOTED = {
+    "status": "quote", "plot": "cannon_1", "kind": "cannon", "level": 3,
+    "refunds": DEMOLISH_REFUNDS,
+}  # fmt: skip
 
 
 def opened(code: str = "K7Q2M", wave_best: int = 0, flags: int = 0) -> dict:
@@ -235,6 +250,12 @@ class FakeIslandDatabase:
         )
         handlers["POST /rpc/island_weapon_equip"] = lambda request: self.answer(
             self.paid_replies.get("island_weapon_equip", EQUIPPED)
+        )
+        handlers["POST /rpc/island_demolish"] = lambda request: self.answer(
+            self.paid_replies.get("island_demolish", DEMOLISHED)
+        )
+        handlers["POST /rpc/island_demolish_quote"] = lambda request: self.answer(
+            self.paid_replies.get("island_demolish_quote", QUOTED)
         )
         return handlers[route](request)
 

@@ -103,15 +103,37 @@ POST /api/island/research  {"branch": "cannon", "actionUid": "...", "tier"?: 1 |
 
 POST /api/island/tower-skill  {"spot": "cannon_1", "spec": "rapid", "code"?: "ISLE-K7Q2M"}
     -> the island. The tower on the spot picks one skill of its researched branch (no coins;
-    picking another one changes it, for the next wave). Safe to repeat.
+    picking another one changes it, for the next wave). Safe to repeat. A house of level 2 or
+    more picks a role the same way: "spec" barracks, tavern or workshop, with no research
+    (docs/GAME-V3.md "Houses"); the spot then carries it as "spec".
     Errors: 400 bad_spec, 403 not_member, 404 no_such_spot, 404 no_such_island, 409 not_built,
-            409 not_researched, 422 wrong_kind
+            409 not_researched, 409 house_level ("Raise this house to level 2 first."),
+            422 wrong_kind
 
 POST /api/island/wreck  {"amount": 25, "actionUid": "...", "code"?: "ISLE-K7Q2M"}
     -> the island. Coins into the island's wreck (GAME-V3 section 4, after wave 6; ledger ref
     wreck:<actionUid>, reason wreck_repair), never more than the repair still needs.
     Errors: 400 bad_gift, 403 not_member, 404 no_such_island, 409 locked, 409 repaired,
             409 insufficient_funds
+
+GET /api/island/demolish?spot=cannon_1&code=ISLE-K7Q2M   (code optional: your own island)
+    -> {"spot": "cannon_1", "kind": "cannon", "name": "Cannon", "level": 3,
+        "refunds": [{"id": "...", "name": "Ana", "coins": 75, "you": false}, ...], "repeat": false}
+    What tearing the building down would give back (GAME-V3 section 4.2), worked out by the
+    database, for the confirmation card: each payer half of what they paid for it, rounded down,
+    the biggest payer first; a level nobody has a payment row for counts as the host's. Changes
+    nothing.
+    Errors: 409 protected (the heart of the island, the bell, the Harbor, the Tech hub, the
+            wreck), 404 no_such_spot, 404 no_such_island, 403 not_member, 409 not_built, 409
+            wave_running
+
+POST /api/island/demolish  {"spot": "cannon_1", "actionUid": "...", "code"?: "ISLE-K7Q2M"}
+    -> the island (as GET /api/island, with your coins) plus "demolished": the quote's shape,
+    the refunds as paid. Any member of the game, between waves only: the building comes down,
+    every payer gets half of what they paid back (ledger ref demolish:<actionUid>, reason
+    building_refund), the spot is empty again and its tower skill goes with it. A repeated
+    actionUid pays nothing and answers the same refunds ("repeat": true).
+    Errors: the quote's, and 409 busy (a payment arrived at the same moment: try again)
 
 POST /api/island/captain  {"actionUid": "..."}
     -> the island. The captain one level up (ledger ref captain:<actionUid>). Always your own.
@@ -159,7 +181,7 @@ Used by: the island scene and the friends panel of the game client.
 
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, Path, Request, Response
+from fastapi import APIRouter, Depends, Path, Query, Request, Response
 from pydantic import BaseModel, ConfigDict, Field
 
 from server.auth import Player, PlayerDep
@@ -168,7 +190,7 @@ from server.flags import is_enabled
 from server.island import rules, service
 from server.island.catalogue import IslandCatalogue
 from server.island.rules import ResearchTier, SpotView
-from server.island.service import CampaignView, IslandCatalogueDep, IslandView
+from server.island.service import CampaignView, DemolishView, IslandCatalogueDep, IslandView
 from server.settings import SettingsDep
 from server.supabase_admin import AdminDep
 
@@ -412,6 +434,50 @@ class WreckRequest(BaseModel):
     amount: int = Field(strict=True, ge=1, le=100000)
     actionUid: str = Field(pattern=ACTION_UID_PATTERN)
     code: str | None = Field(default=None, max_length=CODE_MAX_LENGTH)
+
+
+class DemolishRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    spot: str = Field(pattern=ID_PATTERN)
+    actionUid: str = Field(pattern=ACTION_UID_PATTERN)
+    code: str | None = Field(default=None, max_length=CODE_MAX_LENGTH)
+
+
+class RefundOut(BaseModel):
+    id: str
+    name: str
+    coins: int
+    you: bool
+
+
+class DemolishOut(BaseModel):
+    spot: str
+    kind: str
+    name: str
+    level: int
+    refunds: list[RefundOut]
+    repeat: bool
+
+
+class DemolishResponse(IslandResponse):
+    demolished: DemolishOut
+
+
+def demolish_out(view: DemolishView, player_id: str) -> DemolishOut:
+    return DemolishOut(
+        spot=view.spot,
+        kind=view.kind,
+        name=view.name,
+        level=view.level,
+        refunds=[
+            RefundOut(
+                id=item.player_id, name=item.name, coins=item.coins, you=item.player_id == player_id
+            )
+            for item in view.refunds
+        ],
+        repeat=view.repeat,
+    )
 
 
 def spots_out(spots: tuple[SpotView, ...]) -> list[SpotOut]:
@@ -677,6 +743,37 @@ async def post_wreck(
         admin, catalogue, player.id, body.amount, body.actionUid, body.code
     )
     return island_out(view, catalogue)
+
+
+@router.get("/island/demolish")
+async def get_demolish(
+    spot: Annotated[str, Query(pattern=ID_PATTERN)],
+    player: IslandPlayerDep,
+    catalogue: IslandCatalogueDep,
+    admin: AdminDep,
+    request: Request,
+    code: Annotated[str | None, Query(max_length=CODE_MAX_LENGTH)] = None,
+) -> DemolishOut:
+    request.app.state.island_build_budget.spend(player.id)
+    view = await service.demolish_quote(admin, catalogue, player.id, spot, code)
+    return demolish_out(view, player.id)
+
+
+@router.post("/island/demolish")
+async def post_demolish(
+    body: DemolishRequest,
+    player: IslandPlayerDep,
+    catalogue: IslandCatalogueDep,
+    admin: AdminDep,
+    request: Request,
+) -> DemolishResponse:
+    request.app.state.island_build_budget.spend(player.id)
+    island, done = await service.demolish(
+        admin, catalogue, player.id, body.spot, body.actionUid, body.code
+    )
+    return DemolishResponse(
+        **island_out(island, catalogue).model_dump(), demolished=demolish_out(done, player.id)
+    )
 
 
 @router.get("/island/visit/{code}")

@@ -117,11 +117,11 @@ describe('unlocks (GAME-V3.md §4, the campaign table)', () => {
     expect(unlocksFor(1)).toMatchObject({levels: {house: 1, mortar: 0}, captain: 3});
     expect(unlocksFor(2)).toMatchObject({levels: {wall: 2, cannon: 2, house: 2, mortar: 2}, captain: 3});
     expect(wave3).toMatchObject({levels: {watchtower: 2}, crew: {gunner: true, carpenter: false}});
-    expect(wave5).toMatchObject({levels: {wall: 3, cannon: 3, mortar: 3, watchtower: 2, house: 2}, crew: {gunner: true, carpenter: true, lookout: false}, next: {wave: 8}});
+    expect(wave5).toMatchObject({levels: {wall: 3, cannon: 3, mortar: 3, watchtower: 2, house: 3}, crew: {gunner: true, carpenter: true, lookout: false}, next: {wave: 8}});
     expect(unlocksFor(8)).toMatchObject({captain: 5, crew: {lookout: true}, next: {wave: 12}});
-    expect(unlocksFor(12)).toMatchObject({levels: {wall: 4, cannon: 4, mortar: 3, watchtower: 3, house: 2}, next: {wave: 15}});
+    expect(unlocksFor(12)).toMatchObject({levels: {wall: 4, cannon: 4, mortar: 3, watchtower: 3, house: 3}, next: {wave: 15}});
     expect(unlocksFor(15)).toMatchObject({levels: {mortar: 4, watchtower: 4}, next: {wave: 20}});
-    expect(unlocksFor(20)).toMatchObject({levels: {wall: 5, cannon: 5, mortar: 5, watchtower: 5, house: 2}, next: null});
+    expect(unlocksFor(20)).toMatchObject({levels: {wall: 5, cannon: 5, mortar: 5, watchtower: 5, house: 3}, next: null});
   });
   it('reads the server unlocks first and names what a won wave brings', () => {
     // The backend's shape: ids "<kind>:<level>", "crew:<crew>", "captain:<level>" with the wave the rest needs.

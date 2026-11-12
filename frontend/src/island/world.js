@@ -8,7 +8,9 @@ import {artSizes, loadArt, placeArt, projectPoint} from '../world/art.js';
 import {pixelSizes} from '../pixel/catalog.js';
 import {SPOTS as ISLAND_SPOTS, CABIN, BELL, CAMPAIGN_BUILDINGS, islandZones} from './spots.js';
 import {isOpen, spotWave, waveOf} from '../campaign/index.js';
+import {LOCK_WAVES} from '../art/campaign.js';
 import {SLOT_KINDS} from './td-rules.js';
+import {ROLE_IDS, activeRole, roleRadius} from '../campaign/houses.js';
 import {TIER_ART, crewArt, pipRow, pirateLevels} from '../pixel/pirate-catalog.js';
 import {islandFrame} from '../art/registry.js';
 import {frameCanvas, smoothTexture, spriteMaterial} from '../art/textures.js';
@@ -31,10 +33,15 @@ export const LEVEL_ART = Object.freeze({wall: tiered('wall'), cannon: tiered('ca
 export const PIP_ART = 'fx-level-pip';
 export const PIP_TIER_ART = 'fx-level-pip-gold';
 export const pipArt = level => (level >= 4 ? PIP_TIER_ART : PIP_ART);
-export function buildingArt(kind, level = 1) {
+// A house with a role (level 2 and up, GAME-V3.md "Houses") wears its own look: the Barracks' crossed swords
+// and flag, the Tavern's hanging mug, the Workshop's gear and hammer (src/art/island.js).
+export const ROLE_ART = Object.freeze(Object.fromEntries(ROLE_IDS.map(id => [id, `island-house-${id}`])));
+export function buildingArt(kind, level = 1, spec = null) {
   const list = LEVEL_ART[kind];
   if (!list) return null;
   const n = Number.isSafeInteger(level) && level > 0 ? level : 1;
+  const role = activeRole({kind, level: n, spec});
+  if (role) return ROLE_ART[role];
   return list[Math.min(list.length, n) - 1];
 }
 // How many level pips stand above a building: towers always show theirs, the rest from level 2.
@@ -84,6 +91,29 @@ function sprite(group, {texture, size: [width, height], anchor = 0}, x, z, name)
   return mesh;
 }
 
+// A house role's reach on the ground (GAME-V3.md "Houses"): one unit disc and one unit rim, scaled to the radius
+// and squashed like the ground (projectPoint's 0.72), under everything that stands. Pure Three.js, no art.
+export const ROLE_COLOURS = Object.freeze({barracks: 0xe2463b, tavern: 0x3fa04d, workshop: 0xf2c14e});
+export function makeRangeRing(root) {
+  const disc = new THREE.Mesh(new THREE.CircleGeometry(1, 64), new THREE.MeshBasicMaterial({transparent: true, opacity: .14, depthTest: false, depthWrite: false}));
+  const rim = new THREE.Mesh(new THREE.RingGeometry(.975, 1, 96), new THREE.MeshBasicMaterial({transparent: true, opacity: .85, depthTest: false, depthWrite: false}));
+  for (const [mesh, order] of [[disc, 97], [rim, 98]]) { mesh.renderOrder = order; mesh.frustumCulled = false; mesh.visible = false; root.add(mesh); }
+  disc.name = 'island-range'; rim.name = 'island-range-rim';
+  let shown = null;
+  return {
+    show(range, time = 0) {
+      const on = !!range && Number.isFinite(range.radius) && range.radius > 0;
+      disc.visible = rim.visible = on;
+      if (!on) { shown = null; return; }
+      const point = projectPoint(range.x, range.z), colour = ROLE_COLOURS[range.role] ?? 0xffffff;
+      for (const mesh of [disc, rim]) { mesh.position.set(point.x, point.y, 0); mesh.scale.set(range.radius, range.radius * .72, 1); mesh.material.color.setHex(colour); }
+      disc.material.opacity = .12 + .04 * Math.sin(time * 2.4);
+      disc.userData = {range: {...range}}; shown = range;
+    },
+    get shown() { return shown; },
+  };
+}
+
 // The campaign (GAME-V3.md §4): which frame a campaign building shows. A building that is not open yet is a
 // building site whose sign shows the wave it opens after; the wreck shows mended once her repair is paid.
 export function campaignArt(building, campaign) {
@@ -96,6 +126,11 @@ export function campaignArt(building, campaign) {
 }
 // A spot the campaign opens later (the inner wall ring after wave 5) shows a lock badge instead of the build badge.
 export const spotLocked = (spot, campaign) => !!campaign && spotWave(spot.id) > (campaign.wave ?? 0);
+// The first wave any of the spot's kinds opens after (the house after 1, the watchtower after 3), or null.
+export function lockWave(kinds, unlocks) {
+  const waves = kinds.map(kind => unlocks?.locked?.[`${kind}:1`] ?? waveOf(`${kind}:1`)).filter(Number.isSafeInteger);
+  return waves.length ? Math.min(...waves) : null;
+}
 
 // ctx: {art (the place's loaded art, with 'cabin'), reducedMotion, canvas, camera, isActive, onPick(id),
 // loadArt (tests), and for Pirate Point: layout {spots, zones(), bell: false, cabin: false}}.
@@ -108,19 +143,29 @@ export function decorateIsland(place, ctx = {}) {
   const baseZones = [...(place.zones ?? [])];
   const reduced = () => (typeof ctx.reducedMotion === 'function' ? ctx.reducedMotion() : !!ctx.reducedMotion);
   const textures = Object.fromEntries(Object.entries(DRAWN).map(([kind, name]) => [kind, drawn(name)]));
-  const ringTexture = drawn('build-ring');
-  const badgeTextures = Object.fromEntries(['wall', 'tower', 'watchtower', 'house', 'locked'].map(kind => [kind, drawn(`build-badge-${kind}`)]));
+  // The marker (src/art/island.js): a gold ring on the ground and a gold "+" badge; a spot that opens later a
+  // slate ring and a padlock badge with the wave it opens after (src/art/campaign.js).
+  const ringTexture = drawn('build-ring'), lockRingTexture = drawn('build-ring-locked'), badgeTexture = drawn('build-badge');
+  const lockTextures = new Map();
+  const lockTexture = wave => {
+    const name = LOCK_WAVES.includes(wave) ? `build-badge-locked-${wave}` : 'build-badge-locked';
+    if (!lockTextures.has(name)) lockTextures.set(name, drawn(name));
+    return lockTextures.get(name);
+  };
   const markers = new Map(), buildings = new Map(); // buildings: 'spot:kind' -> mesh (a tower spot has a cannon and a mortar)
   const slotOf = spot => spot.slot ?? (spot.kind === 'cannon' ? 'tower' : spot.kind);
   const kindsOf = spot => SLOT_KINDS[slotOf(spot)] ?? [spot.kind];
   for (const spot of SPOTS) {
     const ring = sprite(root, ringTexture, spot.x, spot.z, `island-marker:${spot.id}`);
     ring.position.y -= .75; ring.renderOrder = 99; // on the ground, under the player
-    const badge = sprite(root, badgeTextures[slotOf(spot) === 'tower' ? 'tower' : spot.kind], spot.x, spot.z, `island-badge:${spot.id}`);
+    const badge = sprite(root, badgeTexture, spot.x, spot.z, `island-badge:${spot.id}`);
     badge.position.y += .6; badge.userData.baseY = badge.position.y;
-    const lock = sprite(root, badgeTextures.locked, spot.x, spot.z, `island-lock:${spot.id}`);
+    const lockRing = sprite(root, lockRingTexture, spot.x, spot.z, `island-lock-ring:${spot.id}`);
+    lockRing.position.y -= .75; lockRing.renderOrder = 99; lockRing.visible = false;
+    const lock = sprite(root, lockTexture(null), spot.x, spot.z, `island-lock:${spot.id}`);
     lock.position.y += .6; lock.visible = false;
-    markers.set(spot.id, {ring, badge, lock, set visible(value) { ring.visible = value; badge.visible = value; }});
+    markers.set(spot.id, {ring, badge, lock, lockRing, wave: null, set visible(value) { ring.visible = value; badge.visible = value; },
+      set locked(value) { lock.visible = value; lockRing.visible = value; }});
     for (const kind of kindsOf(spot)) {
       const building = sprite(root, textures[kind], spot.x, spot.z, `island-${kind}:${spot.id}`);
       building.visible = false; buildings.set(`${spot.id}:${kind}`, building);
@@ -141,6 +186,9 @@ export function decorateIsland(place, ctx = {}) {
     campaignMeshes.set(building.id, meshes);
   }
   if (layout.cabin !== false && ctx.art?.cabin) placeArt(root, ctx.art, 'cabin', CABIN.x, CABIN.z).name = 'island-cabin';
+  // The reach of a house's role while its card is open (GAME-V3.md "Houses"): a soft disc with a bright rim on
+  // the ground, in the role's colour. ctx.range() says which ({x, z, radius, role} or null), read every frame.
+  const rangeRing = makeRangeRing(root);
   const baseColliders = [...place.colliders];
   let state = {spots: [], visitor: false, battle: false, unlocks: null, crew: null, campaign: null}, disposed = false;
   // The real art once it has loaded (null until then: the drawn sprites stand in), and what each spot shows.
@@ -153,12 +201,13 @@ export function decorateIsland(place, ctx = {}) {
   function showSpot(spot, answer, hidden) {
     const built = answer?.built === true, kind = built ? (kindsOf(spot).includes(answer.kind) ? answer.kind : kindsOf(spot)[0]) : null;
     const level = Number.isSafeInteger(answer?.level) && answer.level > 0 ? answer.level : 1;
-    const id = kind ? buildingArt(kind, level) : null, pips = kind ? pipCount(kind, level) : 0;
+    const id = kind ? buildingArt(kind, level, answer?.spec) : null, pips = kind ? pipCount(kind, level) : 0;
     const key = !id || hidden ? '' : `${id}:${pips}`;
     if (shown.get(spot.id)?.key === key) return;
     clear(spot.id);
     if (!key) return;
     const mesh = put(id, spot.x, spot.z); mesh.name = `island-${kind}:${spot.id}`; mesh.userData.level = level;
+    mesh.userData.role = activeRole({kind, level, spec: answer?.spec}); mesh.userData.art = id;
     const meshes = [mesh], [, height, anchor] = artSizes[id], top = height * (1 - anchor) + .15;
     // One row (pipRow): 4 and 5 smaller and spaced wider than a disc, so the gold stars never overlap.
     const row = pipCount(kind, level) ? pipRow(level, {step: .6}) : {offsets: []}, pipWidth = artSizes[PIP_ART][0];
@@ -198,8 +247,12 @@ export function decorateIsland(place, ctx = {}) {
           && !(battle && ['wall', 'cannon', 'mortar'].includes(kind));
       }
       if (art) showSpot(spot, answer, hidden);
-      markers.get(spot.id).visible = !built && known && !battle && open; // a visitor builds too, with their own coins
-      markers.get(spot.id).lock.visible = !built && known && !battle && !open;
+      const marker = markers.get(spot.id);
+      marker.visible = !built && known && !battle && open; // a visitor builds too, with their own coins
+      marker.locked = !built && known && !battle && !open;
+      // The wave the padlock shows: the campaign step of the spot, else the first wave its kind opens after.
+      const wave = open ? null : spotLocked(spot, campaign) ? spotWave(spot.id) : lockWave(kindsOf(spot), unlocks);
+      if (marker.wave !== wave) { marker.wave = wave; marker.lock.material.map = lockTexture(wave).texture; marker.lock.material.needsUpdate = true; }
     }
     // The wave's renderer draws the crew during a battle; outside one they stand by their posts.
     if (art) showCrew(spots, crew, battle);
@@ -212,7 +265,7 @@ export function decorateIsland(place, ctx = {}) {
   apply(state);
 
   // The real art (every level, the pips and the crew) replaces the drawn sprites once it has loaded.
-  const wanted = [...new Set([...SPOTS.flatMap(kindsOf).flatMap(kind => LEVEL_ART[kind] ?? []), PIP_ART, PIP_TIER_ART, ...Object.values(crewArt)])]
+  const wanted = [...new Set([...SPOTS.flatMap(kindsOf).flatMap(kind => LEVEL_ART[kind] ?? []), ...Object.values(ROLE_ART), PIP_ART, PIP_TIER_ART, ...Object.values(crewArt)])]
     .filter(id => Object.hasOwn(artSizes, id));
   (ctx.loadArt ?? loadArt)(wanted).then(loaded => {
     if (disposed) { Object.values(loaded).forEach(material => { material.map?.dispose(); material.dispose(); }); return; }
@@ -257,6 +310,7 @@ export function decorateIsland(place, ctx = {}) {
     ring() { ringing = 1.2; },
     update(dt, time = 0) {
       if (disposed) return;
+      rangeRing.show(ctx.range?.() ?? null, reduced() ? 0 : time);
       const still = reduced();
       const glow = still ? 1 : .7 + .3 * Math.sin(time * 3.2), bob = still ? 0 : Math.sin(time * 2.4) * 2.4 / UNIT;
       for (const marker of markers.values()) { marker.ring.material.opacity = glow; marker.badge.position.y = marker.badge.userData.baseY + bob; }
@@ -268,6 +322,7 @@ export function decorateIsland(place, ctx = {}) {
     dispose() {
       if (disposed) return; disposed = true; cleanups.splice(0).forEach(stop => stop());
       for (const id of [...shown.keys()]) clear(id);
+      for (const item of lockTextures.values()) item.texture.dispose(); // the padlocks a spot no longer shows
       if (art) Object.values(art).forEach(material => { material.map?.dispose(); material.dispose(); });
     },
   };

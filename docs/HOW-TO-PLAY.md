@@ -56,6 +56,10 @@ Open a built spot's card and press **Upgrade**. Each level costs twice the one b
 
 Levels 4 and 5 have their own look: gold trim and the island's banner. A locked level says on its card when it opens.
 
+## Tear down
+
+Between waves, any player in the game can open a built spot's card and press **Tear down**. The card first shows what each player gets back: everyone who paid for the building gets half of what they paid for it (the build and the levels), rounded down. Your teammates get a message when their coins come back. The spot is empty again for everyone, and you can build anything there that is open. The heart of the island, the bell, the Harbor, the Tech hub and the wreck never come down.
+
 ## Ring the bell
 
 The **harbor bell** stands near the south beach. Press **E** next to it, or tap it, and choose **Ring the bell**.
