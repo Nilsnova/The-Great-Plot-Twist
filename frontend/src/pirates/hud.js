@@ -6,13 +6,15 @@
 import './pirates.css';
 import { node } from '../ui/kit/dom.js';
 
-export const waveBarText = ({ wave, shipsLeft, islandHp, maxIslandHp }) =>
-  `Wave ${wave} · ${shipsLeft} ${shipsLeft === 1 ? 'ship' : 'ships'} left · ♥ ${Math.round(islandHp / maxIslandHp * 100)}`;
+// Boarders on land (TOWER-DEFENSE.md §12) show between the ships and the heart while there are any.
+export const waveBarText = ({ wave, shipsLeft, islandHp, maxIslandHp, boardersLeft = 0 }) =>
+  `Wave ${wave} · ${shipsLeft} ${shipsLeft === 1 ? 'ship' : 'ships'} left${boardersLeft > 0 ? ` · ${boardersLeft} ashore` : ''} · ♥ ${Math.round(islandHp / maxIslandHp * 100)}`;
 
 export const runLootText = loot => `Loot this run: 🪙 ${Math.max(0, Math.round(loot) || 0)}`;
 
-// The button shows the equipped weapon's name (§15), or that nothing is in range.
-export const musketText = (ready, name = 'Musket') => (ready ? name : 'No ship in range');
+// The button: "Cutlass" with a boarder within strike reach (§12), else the equipped weapon's name (§15),
+// or that no pirate is in range.
+export const musketText = (ready, blade = false, name = 'Musket') => (blade ? 'Cutlass' : ready ? name : 'No pirate in range');
 
 export function createWaveHud({ container, onAction = () => {}, onNext = () => {}, onAuto = () => {}, onShoot = () => {}, reducedMotion = () => false }) {
   const layer = node('div', 'pirate-hud');
@@ -93,16 +95,18 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
       if (next === lastPrompt) return;
       lastPrompt = next; prompt.hidden = !text; action.textContent = text ?? ''; prompt.disabled = !enabled;
     },
-    // The gun button: {share: reload 0..1, ready: a ship is in range, label: the equipped weapon's name}
-    // while the wave runs, null hides it.
+    // The gun button: {share: reload 0..1, ready: a ship or boarder is in range, blade: a boarder within
+    // cutlass reach (the button then swings the cutlass), label: the equipped weapon's name} while the
+    // wave runs, null hides it.
     musket(info) {
       if (!info) { if (!musket.hidden) { musket.hidden = true; lastMusket = ''; release(); } return; }
       musket.hidden = false;
-      const name = typeof info.label === 'string' && info.label ? info.label : 'Musket';
-      const share = Math.max(0, Math.min(1, Number(info.share) || 0)), key = `${info.ready === true}|${Math.round(share * 20)}|${name}`;
+      const name = typeof info.label === 'string' && info.label ? info.label : 'Musket', blade = info.blade === true;
+      const share = Math.max(0, Math.min(1, Number(info.share) || 0)), key = `${info.ready === true}|${blade}|${Math.round(share * 20)}|${name}`;
       if (key === lastMusket) return;
-      lastMusket = key; musketLabel.textContent = musketText(info.ready === true, name);
-      musket.setAttribute('aria-label', `Fire your ${name.toLowerCase()} (F)`);
+      lastMusket = key; musketLabel.textContent = musketText(info.ready === true, blade, name);
+      musket.classList.toggle('pirate-musket-blade', blade);
+      musket.setAttribute('aria-label', blade ? 'Strike with your cutlass (F)' : `Fire your ${name.toLowerCase()} (F)`);
       musket.classList.toggle('pirate-musket-idle', info.ready !== true);
       musketFill.style.width = `${Math.round(share * 100)}%`;
     },

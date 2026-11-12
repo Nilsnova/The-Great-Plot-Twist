@@ -18,7 +18,8 @@ import { DEFAULT_WEAPON, isSkillList, isWeapon, readSkills, readWeapon } from '.
 export const TICK_SECONDS = CONFIG.tick;
 export const INPUT_LEAD_TICKS = 4;
 export const MAX_WAVE_SECONDS = 900;
-export const ROOM_EVENTS = Object.freeze({ fire: 'cannon_shot', repair: 'wall_repair', lamps_lit: 'lamps_lit', captain_shot: 'captain_shot' });
+export const ROOM_EVENTS = Object.freeze({ fire: 'cannon_shot', repair: 'wall_repair', lamps_lit: 'lamps_lit', captain_shot: 'captain_shot',
+  rebuild: 'wall_rebuild', captain_strike: 'captain_strike' });
 export const MAX_PLAYERS = 4; // TOWER-DEFENSE.md §11: up to four players defend one island together
 const ID = /^[a-z0-9_-]{1,32}$/i;
 const BY = /^[A-Za-z0-9_.:-]{1,64}$/;
@@ -31,8 +32,10 @@ export const secondsOf = tick => Math.round(tick * TICK_SECONDS * 1000) / 1000;
 export function toMessage(input, { by, seq, tick, waveId }) {
   const base = { by, seq, t: secondsOf(tick), waveId };
   if (input.type === 'fire') return { type: ROOM_EVENTS.fire, payload: { ...base, cannonId: input.cannonId, targetId: input.targetId } };
-  // A repair carries the repairer's skills (Quick fix, Master shipwright: §14), so every client repairs as fast.
+  // A repair or a rebuild carries the repairer's skills (Quick fix, Master shipwright: §14), so every
+  // client repairs as fast and rebuilds to the same share.
   if (input.type === 'repair') return { type: ROOM_EVENTS.repair, payload: { ...base, wallId: input.wallId, skills: readSkills(input.skills) } };
+  if (input.type === 'rebuild') return { type: ROOM_EVENTS.rebuild, payload: { ...base, wallId: input.wallId, skills: readSkills(input.skills) } };
   if (input.type === 'lamps_lit') return { type: ROOM_EVENTS.lamps_lit, payload: base };
   // The captain's gun: the shooter's own level, skills, weapon and position at send time (and the aim
   // point for a spray or a bomb), so every client agrees (§10, §14, §15).
@@ -41,6 +44,9 @@ export function toMessage(input, { by, seq, tick, waveId }) {
     return { type: ROOM_EVENTS.captain_shot, payload: { ...base, targetId: typeof input.targetId === 'string' ? input.targetId : null,
       level: input.level, x: input.x, z: input.z, skills: readSkills(input.skills), weapon: readWeapon(input.weapon), ...aim } };
   }
+  // The cutlass (TOWER-DEFENSE.md §12): the musket shot's fields and the striker's skills (Brawler, §14).
+  if (input.type === 'captain_strike') return { type: ROOM_EVENTS.captain_strike,
+    payload: { ...base, targetId: input.targetId, level: input.level, x: input.x, z: input.z, skills: readSkills(input.skills) } };
   return null;
 }
 
@@ -60,6 +66,11 @@ export function readMessage(type, payload, waveId) {
     if (payload.skills !== undefined && !isSkillList(payload.skills)) return null;
     return { by, seq, tick, input: { type: 'repair', wallId: payload.wallId, skills: readSkills(payload.skills) } };
   }
+  if (type === ROOM_EVENTS.rebuild) {
+    if (typeof payload.wallId !== 'string' || !ID.test(payload.wallId)) return null;
+    if (payload.skills !== undefined && !isSkillList(payload.skills)) return null;
+    return { by, seq, tick, input: { type: 'rebuild', wallId: payload.wallId, skills: readSkills(payload.skills) } };
+  }
   if (type === ROOM_EVENTS.lamps_lit) return { by, seq, tick, input: { type: 'lamps_lit' } };
   if (type === ROOM_EVENTS.captain_shot) {
     const { targetId = null, level, x, z, skills = [], weapon = DEFAULT_WEAPON, ax, az } = payload;
@@ -70,6 +81,13 @@ export function readMessage(type, payload, waveId) {
     // The shooter is the sender: a message cannot fire somebody else's gun.
     const aim = ax !== undefined ? { ax, az } : {};
     return { by, seq, tick, input: { type: 'captain_shot', by, targetId, level, x, z, skills: readSkills(skills), weapon, ...aim } };
+  }
+  if (type === ROOM_EVENTS.captain_strike) {
+    const { targetId, level, x, z, skills = [] } = payload;
+    if (typeof targetId !== 'string' || !ID.test(targetId) || !Number.isInteger(level) || level < 1 || level > 5) return null;
+    if (![x, z].every(isAim) || !isSkillList(skills)) return null;
+    // The striker is the sender: a message cannot swing somebody else's cutlass.
+    return { by, seq, tick, input: { type: 'captain_strike', by, targetId, level, x, z, skills: readSkills(skills) } };
   }
   return null;
 }

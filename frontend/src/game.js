@@ -239,13 +239,16 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     const zone = active&&!outsideBlocked() ? findZone(controller.player.position, world.current?.zones ?? []) : null;
     touch.update(zone,active&&!outsideBlocked());
     classDemo?.update(delta,{blocked:!active||outsideBlocked(),zoneActive:!!zone});
-    if(input.consume('KeyE')&&zone)world.interact(zone);
+    // During a wave E belongs to the wave's own prompt (fire, repair, rebuild: TOWER-DEFENSE.md §12) when it has one,
+    // so a wall's build card does not open instead of the rebuild.
+    const waveAction=waves?.island.wave?.action??waves?.point?.controller.wave?.action??null;
+    if(input.consume('KeyE')&&zone&&!waveAction)world.interact(zone);
     fpsFrames++;
     if (performance.now() - fpsStart >= 500) {
       fps = Math.round(fpsFrames * 1000 / (performance.now() - fpsStart)); fpsFrames = 0; fpsStart = performance.now();
     }
     const info = graphics.renderer.info.render;
-    hud.update(zone, { fps, calls: info.calls, triangles: info.triangles, night,interactionLabel:panelLabel(zone),speed,blocked:!active||outsideBlocked()||!!waves?.island.wave||!!waves?.point?.controller.wave }); input.endFrame();
+    hud.update(waveAction?null:zone, { fps, calls: info.calls, triangles: info.triangles, night,interactionLabel:waveAction?undefined:panelLabel(zone),speed,blocked:!active||outsideBlocked()||!!waves?.island.wave||!!waves?.point?.controller.wave }); input.endFrame();
   }, () => {
     const draw=shell.mode!=='title';
     if(draw)graphics.renderer.render(scene,view.camera);

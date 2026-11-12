@@ -160,6 +160,42 @@
       "kinds": [
         "house"
       ]
+    },
+    {
+      "id": "wall_7",
+      "kinds": [
+        "wall"
+      ]
+    },
+    {
+      "id": "wall_8",
+      "kinds": [
+        "wall"
+      ]
+    },
+    {
+      "id": "wall_9",
+      "kinds": [
+        "wall"
+      ]
+    },
+    {
+      "id": "wall_10",
+      "kinds": [
+        "wall"
+      ]
+    },
+    {
+      "id": "wall_11",
+      "kinds": [
+        "wall"
+      ]
+    },
+    {
+      "id": "wall_12",
+      "kinds": [
+        "wall"
+      ]
     }
   ],
   "piratePointSpots": [
@@ -388,7 +424,7 @@
   },
   "waves": {
     "countdownSeconds": 5,
-    "minimumSeconds": 15,
+    "minimumSeconds": 10,
     "maximumSeconds": 900,
     "highestWave": 100,
     "bossEvery": 5,

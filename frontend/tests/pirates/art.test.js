@@ -6,7 +6,7 @@ import { pixelArtIds, pixelById } from '../../src/pixel/catalog.js';
 
 describe('pirate art', () => {
   it('registers every sprite as a library asset with matching PNG headers on the 16 px grid', () => {
-    expect(pirateArtIds).toHaveLength(53);
+    expect(pirateArtIds).toHaveLength(57);
     for (const id of pirateArtIds) {
       const [width, height, anchor] = pirateDimensions[id];
       expect(pixelById[id]).toMatchObject({ width, height, usage: 'library' });

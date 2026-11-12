@@ -1,7 +1,9 @@
-// Man a cannon, patch a wall (lane P4), as plain rules: what the player standing at (x, z) can do now,
-// and which input a key press or a tap on a ship turns into. No DOM here.
+// Man a cannon, patch or rebuild a wall (lane P4, TOWER-DEFENSE.md §12), as plain rules: what the player
+// standing at (x, z) can do now, and which input a key press or a tap on a ship or a boarder turns into.
+// No DOM here.
 export const REACH = 2.6;          // world units from a cannon or wall to man or repair it
 export const TAP_RADIUS = 2.4;     // world units around a ship's middle that count as tapping it
+export const BOARDER_TAP = 1.3;    // world units around a boarder's middle that count as tapping it
 const SHIP_MIDDLE = { sloop: 1.6, brig: 2.2, flagship: 3.2 }; // drawn units above the waterline
 
 const near = (list, player, reach = REACH) => {
@@ -15,8 +17,9 @@ const near = (list, player, reach = REACH) => {
 
 /**
  * What the player can do: {kind: 'fire', cannonId, targetId|null} next to a cannon, {kind: 'repair',
- * wallId, hp} next to a damaged wall, else null. defenses: [{id, kind, x, z}]; state: wave.state().
- * repairReach: how far you reach a wall (captain-stats.js: Long reach adds 2 units, §14).
+ * wallId, hp} next to a damaged wall, {kind: 'rebuild', wallId, ready} next to a broken one, else null.
+ * defenses: [{id, kind, x, z}]; state: wave.state().
+ * repairReach: how far you reach a wall to repair or rebuild it (captain-stats.js: Long reach adds 2 units, §14).
  */
 export function actionAt(player, defenses, state, { repairReach = REACH } = {}) {
   if (!player || !state || state.phase !== 'running') return null;
@@ -32,6 +35,7 @@ export function actionAt(player, defenses, state, { repairReach = REACH } = {}) 
   }
   if (wall) {
     const live = walls.get(wall.id);
+    if (live.hp <= 0) return { kind: 'rebuild', wallId: wall.id, hp: 0, maxHp: live.maxHp, ready: live.rebuildReady !== false, x: wall.x, z: wall.z };
     return { kind: 'repair', wallId: wall.id, hp: live.hp, maxHp: live.maxHp, repairing: live.repairing, x: wall.x, z: wall.z };
   }
   return null;
@@ -51,6 +55,7 @@ export function nearestShip(cannon, state) {
 export function inputFor(action) {
   if (action?.kind === 'fire' && action.targetId) return { type: 'fire', cannonId: action.cannonId, targetId: action.targetId };
   if (action?.kind === 'repair' && !action.repairing) return { type: 'repair', wallId: action.wallId };
+  if (action?.kind === 'rebuild' && action.ready) return { type: 'rebuild', wallId: action.wallId };
   return null;
 }
 
@@ -68,6 +73,16 @@ export function shipAt(point, state) {
   return best;
 }
 
+/** A tap at the logical point (x, z) on land: the boarder drawn there (a figure about 1.5 units tall), or null. */
+export function boarderAt(point, state) {
+  let best = null, bestDistance = BOARDER_TAP;
+  for (const boarder of state?.boarders ?? []) {
+    const d = Math.hypot(boarder.x - point.x, (boarder.z - .9 / .72 - point.z) * .72);
+    if (d <= bestDistance) { best = boarder; bestDistance = d; }
+  }
+  return best;
+}
+
 /** The input for a tap on a ship while manning a cannon, or null. */
 export function tapInput(action, ship, state) {
   if (action?.kind !== 'fire' || !ship) return null;
@@ -75,9 +90,10 @@ export function tapInput(action, ship, state) {
   return { type: 'fire', cannonId: action.cannonId, targetId: ship.id };
 }
 
-/** The prompt's words: "E · Fire", "E · Repair". */
+/** The prompt's words: "E · Fire", "E · Repair", "E · Rebuild". */
 export function promptText(action) {
   if (!action) return '';
   if (action.kind === 'fire') return action.targetId ? 'Fire' : 'No ship in sight';
+  if (action.kind === 'rebuild') return action.ready ? 'Rebuild' : 'Rebuilt a moment ago';
   return action.repairing ? 'Repairing…' : 'Repair';
 }

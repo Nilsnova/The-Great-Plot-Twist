@@ -31,6 +31,9 @@ export const DEFENSES = Object.freeze([
   { id: 'wall_1', kind: 'wall', x: 20, z: -1 }, { id: 'wall_2', kind: 'wall', x: 15.5, z: 11 },
   { id: 'wall_3', kind: 'wall', x: 12, z: -15.5 }, { id: 'wall_4', kind: 'wall', x: 19.5, z: 5 },
 ].map(item => Object.freeze(item)));
+// Where Pirate Point's boarders walk (TOWER-DEFENSE.md §12): the lamps' yard between the bell and the
+// lighthouse. Its walls all stand on the beaches, so the inner ring there is only this close.
+export const HEART = Object.freeze({ x: 7, z: -5, ring: 6 });
 export const BELL_SPOT = Object.freeze({ id: 'pirate_bell', x: 3, z: -3, radius: 2 });
 export const LAMP_SPOTS = Object.freeze([
   Object.freeze({ id: 'point_lamp_1', index: 0, x: 4.5, z: -8, radius: 1.6 }),
@@ -100,7 +103,7 @@ export function createPiratePoint(ctx) {
     // The towers and walls players built at Pirate Point (§5, GET /api/pirate-point) with their levels; the
     // fixed defenses only while nobody has built anything there yet.
     getDefenses: () => { const built = ctx.getDefenses?.(); return built?.length ? built : DEFENSES.map(item => ({ ...item })); }, place: PLACE, listen: false, accept: info => info.flagship === true,
-    simOptions: { coast: COAST, lanes: LANES }, beamFrom: BEAM_FROM, playCutscene, captainLevel: ctx.captainLevel ?? (() => 1),
+    simOptions: { coast: COAST, lanes: LANES, heart: HEART }, beamFrom: BEAM_FROM, playCutscene, captainLevel: ctx.captainLevel ?? (() => 1),
     captainSkills: ctx.captainSkills ?? (() => []), captainWeapon: ctx.captainWeapon ?? (() => 'musket'),
     finishWave: async body => { const answer = await api.finishWave(body); if (answer?.loot) notify(`Pirate Point loot: 🪙 ${answer.loot}`); return answer; },
     ...ctx.controllerOptions });

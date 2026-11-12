@@ -42,7 +42,7 @@ logger = logging.getLogger(__name__)
 
 # A new code collides with an existing one about once in 28.6 million; five tries are plenty.
 CODE_TRIES = 5
-# One player has at most 20 building rows (4 home islet plots and 16 island spots).
+# One player has at most 26 building rows (4 home islet plots and 22 island spots).
 MAX_BUILDING_ROWS = 50
 PROGRESS_COLUMNS = (
     "wave_best,next_wave,crew_gunner,crew_carpenter,crew_lookout,captain_level,won_wave_best,"

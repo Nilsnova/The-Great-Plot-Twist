@@ -94,9 +94,10 @@ describe('the sim resolves every weapon', () => {
       expect(turn).toBeLessThanOrEqual(25 * Math.PI / 180 + 1e-6);
     }
     expect(new Set(hitsBy(events, 'a').map(item => item.shipId))).toEqual(new Set(event.targets.map(item => item.id)));
-    // Aimed the other way (out to the island), nothing is hit, but the shot is fired and reloads.
+    // Aimed the other way (in to the island), no ship is hit, but the shot is fired and reloads. (Since
+    // boarding, §12, a boarder ashore in that cone may be hit: the spray hits pirates on foot too.)
     const away = settle(sim) && sim.step(.05, [shot('b', null, from, { weapon: 'blunderbuss', ax: -ship.x, az: -ship.z })]);
-    expect(fired(away)[0].targets).toEqual([]);
+    expect(fired(away)[0].targets.filter(item => !item.boarder)).toEqual([]);
   });
   it('long rifle: goes through to the next ship behind the first on the same line', () => {
     const sim = anchored(3, 8), ships = sim.state().ships;

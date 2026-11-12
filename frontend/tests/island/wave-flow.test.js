@@ -63,7 +63,7 @@ describe('the bell and the wave', () => {
       const test = setup(); flow = test.flow;
       const answer = await flow.ring();
       const early = await finishWave({waveId: answer.data.waveId, survived: true});
-      expect(early).toMatchObject({ok: false, code: 'wave_too_early', retryAfterSeconds: 25});
+      expect(early).toMatchObject({ok: false, code: 'wave_too_early', retryAfterSeconds: 20});
       await vi.advanceTimersByTimeAsync(25000);
       expect(test.events.some(event => event.type === WAVE_FINISHED)).toBe(false);
       expect(await finishWave({waveId: answer.data.waveId, survived: true})).toMatchObject({ok: true});

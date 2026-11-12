@@ -71,9 +71,11 @@ export const EXTRA_EVENTS = ['lamp', 'duel'];
 // drawn, like the class harbor), so the wave's broadcasts reach every defender. Only these broadcast
 // events pass, each checked field by field (readWaveMessage); a malformed one is dropped.
 export const PIRATE_POINT_PLACE = 'pirate_point';
-// captain_shot is the captain's musket (TOWER-DEFENSE.md §10); island_changed says "somebody built or
-// upgraded here, read the island again" (co-op builds, §6), and carries no wave.
-export const WAVE_EVENTS = ['wave_start', 'cannon_shot', 'wall_repair', 'lamps_lit', 'lamp', 'captain_shot', 'island_changed'];
+// captain_shot is the captain's musket (TOWER-DEFENSE.md §10), captain_strike the cutlass and wall_rebuild
+// a broken wall put back up (§12); island_changed says "somebody built or upgraded here, read the island
+// again" (co-op builds, §6), and carries no wave.
+export const WAVE_EVENTS = ['wave_start', 'cannon_shot', 'wall_repair', 'lamps_lit', 'lamp', 'captain_shot', 'island_changed',
+  'wall_rebuild', 'captain_strike'];
 export const WAVE_GAP_MS = 200; // we send at most one wave message this often (5 a second)
 export const MIN_WAVE_GAP_MS = 150; // and accept one per captain and kind this often
 const ISLAND_ROOM_PLACE = /^isle_[abcdefghjkmnpqrstuvwxyz23456789]{5}$/;
@@ -328,6 +330,10 @@ const hasKeysWith = (data, keys, optional) => keys.every(key => Object.hasOwn(da
 // A captain's skills (TOWER-DEFENSE.md §14) and weapon (§15), checked like the level: known ids only.
 const isSkills = value => value === undefined || isSkillList(value);
 const isGun = value => value === undefined || isWeapon(value);
+// The cutlass (§12): the musket shot's fields without the weapon or an aim point, plus the striker's skills (§14).
+const isCaptainBlow = data => hasKeysWith(data, ['by', 'seq', 't', 'waveId', 'targetId', 'level', 'x', 'z'], ['skills'])
+  && WAVE_ITEM.test(String(data.targetId)) && Number.isInteger(data.level) && data.level >= 1 && data.level <= 5
+  && [data.x, data.z].every(isCoord) && isSkills(data.skills);
 const WAVE_DATA = {
   wave_start: data => hasKeys(data, ['waveId', 'seed', 'startsAt']) && Number.isSafeInteger(data.seed) && data.seed >= 0
     && typeof data.startsAt === 'string' && data.startsAt.length <= 40 && Number.isFinite(Date.parse(data.startsAt)),
@@ -342,6 +348,9 @@ const WAVE_DATA = {
     && Number.isInteger(data.level) && data.level >= 1 && data.level <= 5 && [data.x, data.z].every(isCoord)
     && Object.hasOwn(data, 'ax') === Object.hasOwn(data, 'az') && (!Object.hasOwn(data, 'ax') || [data.ax, data.az].every(isCoord))
     && isSkills(data.skills) && isGun(data.weapon),
+  captain_strike: data => isCaptainBlow(data),
+  // A rebuild carries the rebuilder's skills (Master shipwright: 60% instead of 40%).
+  wall_rebuild: data => hasKeysWith(data, ['by', 'seq', 't', 'waveId', 'wallId'], ['skills']) && WAVE_ITEM.test(String(data.wallId)) && isSkills(data.skills),
   island_changed: data => hasKeys(data, ['spot']) && typeof data.spot === 'string' && WAVE_ITEM.test(data.spot),
 };
 const NO_WAVE = ['island_changed'];

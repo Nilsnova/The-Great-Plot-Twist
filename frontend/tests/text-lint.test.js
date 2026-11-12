@@ -35,7 +35,7 @@ describe('G24 player-facing text',()=>{
     const result = await lintRepository();
     expect(result.records).toBeGreaterThan(0); expect(result.files).toBeGreaterThan(0);
     expect(result.diagnostics.filter(issue=>!issue.reportOnly)).toEqual([]);
-  });
+  },30000); // the whole repository: about 2 s of work, longer on a busy machine
   it('gates the live festival, sports and host copy while retaining protected story boundaries',()=>{
     for (const file of ['frontend/src/screens/festival/panel.js','frontend/src/screens/sports/panel.js','frontend/src/host/panels.js'])
       expect(reportOnly(file)).toBe(false);

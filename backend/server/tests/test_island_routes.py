@@ -28,6 +28,7 @@ SPOT_IDS = [
     "wall_1", "wall_2", "wall_3", "wall_4", "wall_5", "wall_6",
     "cannon_1", "cannon_2", "cannon_3", "cannon_4", "cannon_5", "cannon_6", "cannon_7",
     "tower_1", "house_1", "house_2",
+    "wall_7", "wall_8", "wall_9", "wall_10", "wall_11", "wall_12",
 ]  # fmt: skip
 INSUFFICIENT = httpx.Response(400, json={"code": "P0001", "message": "insufficient_funds"})
 REPEATED = httpx.Response(409, json={"code": "23505", "message": "already_applied"})
@@ -94,7 +95,7 @@ def test_the_island_is_opened_with_a_fresh_code_and_the_starting_coins():
 
     (call,) = world.database.calls("island_open")
     assert call["p_player_id"] == PLAYER_ID
-    assert call["p_starting_coins"] == 200
+    assert call["p_starting_coins"] == 200  # islands.json startingCoins since 11 Nov
     assert len(call["p_code"]) == 5
 
 
@@ -116,7 +117,7 @@ def test_built_spots_show_as_built_and_old_islet_rows_are_left_out():
     spots = world.island().json()["spots"]
 
     assert [spot["id"] for spot in spots if spot["built"]] == ["cannon_1"]
-    assert len(spots) == 16
+    assert len(spots) == 22
 
 
 def test_a_player_without_a_profile_gets_404():

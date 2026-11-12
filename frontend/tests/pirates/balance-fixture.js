@@ -12,21 +12,24 @@ const TOWER_BEARINGS = [45, 135, -45, -135, 0, 90, 180];
 export const walls = (n, level = 1) => WALL_BEARINGS.slice(0, n).map((b, i) => spot(`wall_${i + 1}`, 'wall', b, .86, level));
 export const towers = (list) => list.map(([kind, level], i) => spot(`tower_s${i + 1}`, kind, TOWER_BEARINGS[i], i < 4 ? .75 : .6, level));
 export const watchtower = (level = 1) => ({ id: 'tower_1', kind: 'watchtower', level, x: 0, z: -14 });
+// The inner ring around the heart (src/island/spots.js wall_7…wall_12): east, south-east, south-west, west, north-west, north-east.
+const RING = [[8.5, 2], [4.5, 9], [-4, 9.5], [-9.5, -1], [-4, -5.5], [4, -5.5]];
+export const ring = (n = 6, level = 1) => RING.slice(0, n).map(([x, z], i) => ({ id: `wall_${i + 7}`, kind: 'wall', level, x, z }));
 export const houses = () => [{ id: 'house_1', kind: 'house', level: 1, x: 7, z: -6 }, { id: 'house_2', kind: 'house', level: 1, x: -8, z: -6 }];
 
 export const ISLANDS = {
   // One level-1 cannon on the first corner.
   first: { defenses: towers([['cannon', 1]]) },
-  // Three level-2 cannons and two walls.
-  boss5: { defenses: [...towers([['cannon', 2], ['cannon', 2], ['cannon', 2]]), ...walls(2)] },
+  // Three level-2 cannons, two shore walls and the inner ring (level 1) against the boarders.
+  boss5: { defenses: [...towers([['cannon', 2], ['cannon', 2], ['cannon', 2]]), ...walls(2), ...ring(6)] },
   // Three level-1 cannons and two walls: too little for wave 10.
   small: { defenses: [...towers([['cannon', 1], ['cannon', 1], ['cannon', 1]]), ...walls(2)] },
   // Five upgraded towers with a mortar, four level-2 walls and a watchtower.
   mid: { defenses: [...towers([['cannon', 2], ['cannon', 2], ['cannon', 2], ['cannon', 2], ['mortar', 2]]), ...walls(4, 2), watchtower(1)] },
-  // All 16 spots, mostly level 3, two gunners and two carpenters.
+  // All 22 spots (the inner ring too), mostly level 3, two gunners and two carpenters.
   full: {
     defenses: [...towers([['cannon', 3], ['cannon', 3], ['cannon', 3], ['cannon', 3], ['mortar', 3], ['mortar', 3], ['cannon', 2]]),
-      ...walls(6, 3), watchtower(2), ...houses()],
+      ...walls(6, 3), ...ring(6, 3), watchtower(2), ...houses()],
     crew: { gunner: 2, carpenter: 2, lookout: 0 },
   },
 };

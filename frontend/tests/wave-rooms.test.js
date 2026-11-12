@@ -24,8 +24,9 @@ describe('the wave rooms', () => {
     expect(chooseRoom({place: 'isle_k7q2m', crewmateRooms: [3]})).toBe(1);
     expect(shownLimit('pirate_point')).toBe(40);
   });
-  it('pass the five wave events with exactly their fields and drop anything else', () => {
-    expect(WAVE_EVENTS).toEqual(['wave_start', 'cannon_shot', 'wall_repair', 'lamps_lit', 'lamp', 'captain_shot', 'island_changed']);
+  it('pass the wave events with exactly their fields and drop anything else', () => {
+    expect(WAVE_EVENTS).toEqual(['wave_start', 'cannon_shot', 'wall_repair', 'lamps_lit', 'lamp', 'captain_shot', 'island_changed',
+      'wall_rebuild', 'captain_strike']);
     expect(readWaveMessage('cannon_shot', msg(shot))).toEqual({id: ID, event: 'cannon_shot', seq: 4, data: shot});
     expect(readWaveMessage('wall_repair', msg({by: 'p-abc', seq: 1, t: 3, waveId: 'w1', wallId: 'wall_2'}))).not.toBe(null);
     expect(readWaveMessage('lamps_lit', msg({by: 'p-abc', seq: 9, t: 40, waveId: 'w1'}))).not.toBe(null);
@@ -35,6 +36,12 @@ describe('the wave rooms', () => {
     const musket = {by: 'p-abc', seq: 5, t: 20.15, waveId: 'fake-wave-1', targetId: 'ship_3', level: 2, x: -9.5, z: 11.25};
     expect(readWaveMessage('captain_shot', msg(musket))).toEqual({id: ID, event: 'captain_shot', seq: 4, data: musket});
     expect(readWaveMessage('island_changed', msg({spot: 'wall_2'}))).toEqual({id: ID, event: 'island_changed', seq: 4, data: {spot: 'wall_2'}});
+    // Boarding (TOWER-DEFENSE.md §12): the cutlass has the musket's shape, a rebuild the repair's.
+    const blade = {...musket, targetId: 'boarder_7'};
+    expect(readWaveMessage('captain_strike', msg(blade))).toEqual({id: ID, event: 'captain_strike', seq: 4, data: blade});
+    expect(readWaveMessage('wall_rebuild', msg({by: 'p-abc', seq: 2, t: 4, waveId: 'w1', wallId: 'wall_9'}))).not.toBe(null);
+    for (const bad of [{...blade, level: 0}, {...blade, targetId: 'a b'}, {...blade, extra: 1}]) expect(readWaveMessage('captain_strike', msg(bad))).toBe(null);
+    expect(readWaveMessage('wall_rebuild', msg({by: 'p-abc', seq: 2, t: 4, waveId: 'w1', wallId: '<b>'}))).toBe(null);
     for (const [event, payload] of [
       ['captain_shot', msg({...musket, level: 6})], ['captain_shot', msg({...musket, x: 'far'})], ['captain_shot', msg({...musket, z: 900})],
       ['island_changed', msg({spot: 'wall 2'})], ['island_changed', msg({spot: 'wall_2', extra: 1})],
@@ -47,7 +54,8 @@ describe('the wave rooms', () => {
   });
   it('pass every input the wave controller sends, exactly as sync.js writes it (the live room must not drop one)', () => {
     const inputs = [{type: 'fire', cannonId: 'cannon_2', targetId: 'ship_1'}, {type: 'repair', wallId: 'wall_1'}, {type: 'lamps_lit'},
-      {type: 'captain_shot', by: 'p-abc', targetId: 'ship_4', level: 3, x: 12.5, z: -3.25}];
+      {type: 'captain_shot', by: 'p-abc', targetId: 'ship_4', level: 3, x: 12.5, z: -3.25},
+      {type: 'captain_strike', by: 'p-abc', targetId: 'boarder_4', level: 3, x: 2.5, z: 3.25}, {type: 'rebuild', wallId: 'wall_9'}];
     for (const input of inputs) {
       const message = toMessage(input, {by: 'p-abc', seq: 2, tick: 104, waveId: 'fake-wave-3'});
       expect(Object.values(ROOM_EVENTS)).toContain(message.type);
