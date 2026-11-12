@@ -1,7 +1,8 @@
 // The lobby of a game (docs/GAME-V3.md §2) as plain rules: who may press Start or Pause, and what the
 // lobby card says. No DOM, no network: game-room.js keeps the room state, ui.js draws the card.
 //   canControl({me, hostId, hostAwayMs})  the host, or any member once the host has been away for 60 s
-//   lobbyModel({...})                      the card: code, link, members with who is online, Start
+//   lobbyModel({...})                      the card: code, link, members with who is online and their colour, Start
+//   captainColours(members)                each member's captain colour 0-9 by join order (host first)
 import {displayIslandCode, visitUrl} from './codes.js';
 
 export const MAX_PLAYERS = 10; // the host plus up to 9 friends (the server's 409 game_full)
@@ -17,6 +18,17 @@ export function canControl({me = null, hostId = null, hostAwayMs = 0} = {}) {
 export const pausedLine = name => `Paused by ${typeof name === 'string' && name.trim() ? name.trim() : 'a captain'}`;
 export const playersLine = count => `${count} of ${MAX_PLAYERS} players`;
 
+// Each member's captain colour (GAME-V3.md §2 and §7): an index 0-9 by join order, the host first (the order
+// of GET /api/games/{code}), so 10 players never share one. Map id -> index; src/art/people.js has the ten.
+export const CAPTAIN_COLOURS = 10;
+export function captainColours(members = []) {
+  const list = Array.isArray(members) ? members.filter(member => member && typeof member.id === 'string') : [];
+  const ordered = [...list.filter(member => member.role === 'host'), ...list.filter(member => member.role !== 'host')];
+  const colours = new Map();
+  for (const member of ordered) if (!colours.has(member.id) && colours.size < CAPTAIN_COLOURS) colours.set(member.id, colours.size);
+  return colours;
+}
+
 // members: [{id, name, role, you}] from GET /api/games/{code}; online: a Set of player ids in the room.
 // started: Start was pressed (the card then says the game is on). problem: a plain message or ''.
 export function lobbyModel({code = null, base, members = [], online = new Set(), me = null, hostId = null,
@@ -24,8 +36,9 @@ export function lobbyModel({code = null, base, members = [], online = new Set(),
   const shown = displayIslandCode(code);
   const host = members.find(member => member.role === 'host') ?? null;
   const mine = !!me && me === hostId;
+  const colours = captainColours(members);
   const rows = members.map(member => ({id: member.id, name: member.name || 'A captain', role: member.role,
-    you: member.id === me, online: member.id === me || online.has(member.id),
+    you: member.id === me, online: member.id === me || online.has(member.id), colour: colours.get(member.id) ?? 0,
     tag: member.role === 'host' ? 'Host' : ''}));
   const here = rows.filter(row => row.online).length;
   const control = canControl({me, hostId, hostAwayMs});

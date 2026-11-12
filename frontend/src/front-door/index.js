@@ -112,7 +112,10 @@ export function createFrontDoor({container, focus, storage = safeStorage(), sess
       if (!current()) return false;
       // First Play: lore, then the goal card over your island, then the island arrival cutscene
       // (docs/PITCH.md, the first 3 minutes). game.js plays the arrival itself on a later Play.
-      await runtime.begin(false, seen ? HARBOR_START : {...HARBOR_START, arrival: 'later'});
+      // lobby: the game's lobby opens after this, and its Start tells the narrator (game_started), so
+      // game.js does not start the narrator itself.
+      const start = seen ? HARBOR_START : {...HARBOR_START, arrival: 'later'};
+      await runtime.begin(false, chosen ? {...start, lobby: true} : start);
       if (!current()) return false;
       if (!seen) {
         await showCard();

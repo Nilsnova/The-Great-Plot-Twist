@@ -20,11 +20,13 @@
 import * as THREE from 'three';
 import { crewArt, pirateDimensions, pirateFrames, pirateLevels } from '../pixel/pirate-catalog.js';
 import { pixelGlsl, toScreen } from '../world/pixel-glsl.js';
+import { CHARACTER_SCALE } from './character-scale.js';
 
 const UNIT = 16, Y = .72;
-// Characters on foot (boarders, the cutlass swing, the musket pose) are drawn this much larger in a wave, so
-// they read at the zoomed-out battle camera (GAME-V3.md §7 polish; 1 is the atlas box).
-export const CHARACTER_SCALE = 1.4;
+// Characters on foot (boarders, the cutlass swing, the musket pose) are drawn larger in a wave, so they read
+// at the zoomed-out battle camera (GAME-V3.md §7 polish; 1 is the atlas box): scene.userData.characterScale
+// (game.js, from the camera's zoom: character-scale.js), else CHARACTER_SCALE.
+export { CHARACTER_SCALE };
 const WHITE = 'white';
 export const ATLAS_IDS = [...pirateFrames.sloop, ...pirateFrames.brig, ...pirateFrames.flagship, ...pirateFrames.warship,
   ...pirateFrames.splash, ...pirateFrames.wall, ...pirateFrames.cannon, ...pirateFrames.mortar,
@@ -55,6 +57,13 @@ export const GUN_LOOKS = Object.freeze({
   fire_bombs: Object.freeze({ r: 1, g: .55, b: .2, width: .1, length: 1, flash: .7, puff: 1 }),
 });
 const lookOf = weapon => GUN_LOOKS[weapon] ?? GUN_LOOKS.musket;
+// A damaged hull darkens (down to 62% at no hp left, a burning one a little more), so a ship under fire
+// stays a strong, readable shape at the battle zoom instead of a pale one. Pure.
+export function damageTint(base = {}, share = 1) {
+  const left = Math.max(0, Math.min(1, Number.isFinite(share) ? share : 1));
+  const k = left >= .66 ? 1 : 1 - .38 * (1 - left / .66) - (left < 1 / 3 ? .06 : 0);
+  return { r: (base.r ?? 1) * k, g: (base.g ?? 1) * k, b: (base.b ?? 1) * k };
+}
 const BOMB_BURST = { r: 1, g: .5, b: .2 };
 
 /** Shelf-packs the sprites (and a small white block for bars and the beam) into one atlas. Pure. */
@@ -207,6 +216,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       v0: 1 - (r.y + r.h - .01) / atlas.height, v1: 1 - (r.y + .01) / atlas.height, w: r.w / UNIT, h: r.h / UNIT, anchor: r.anchor / UNIT };
   }
   const tintOf = r => (r?.tint ? { r: r.tint.r, g: r.tint.g, b: r.tint.b } : {});
+  const K = () => { const k = Number(scene?.userData?.characterScale); return Number.isFinite(k) && k >= 1 && k <= 3 ? k : CHARACTER_SCALE; };
   const material = new THREE.ShaderMaterial({ vertexShader: spriteVertex, fragmentShader: spriteFragment,
     uniforms: { uMap: { value: atlas.texture } }, transparent: true, premultipliedAlpha: true, depthTest: false, depthWrite: false, toneMapped: false });
   owned.push(material);
@@ -413,18 +423,28 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     const size = SHIP_SIZE[ship.kind] ?? SHIP_SIZE.sloop, frame = frameOf(ship.kind, meta.phase), r = rect[frame];
     if (!r) return;
     const layer = ship.z < 0 ? layers.far : layers.near, x = ship.x, y = drawnY(ship.z);
-    const fadeIn = Math.min(1, (clock - meta.bornAt) / .6), flashing = clock < meta.flashUntil ? (ship.boss ? .35 : .6) : 0; // a hit shows, the art stays readable under fire
+    // A hit shows as a short warm flash, kept light so a ship under steady fire never turns white.
+    const fadeIn = Math.min(1, (clock - meta.bornAt) / .6), flashing = clock < meta.flashUntil ? (ship.boss ? .2 : .3) : 0;
+    const share = ship.maxHp > 0 ? Math.max(0, Math.min(1, ship.hp / ship.maxHp)) : 1, burning = ship.hp > 0 && share < 1 / 3;
     // A wake behind a sailing ship: two pale strokes on the water.
     if (ship.state === 'sailing' && !low() && !still()) {
       const back = -meta.facing * size.w * .45, wob = Math.floor(clock * 6 + meta.phase) % 2;
       layer.push(rect[WHITE], x + back, y - .05, size.w * .28, .06, .5, 0, { a: .45 * fadeIn });
       layer.push(rect[WHITE], x + back * 1.35 - wob * .1, y + .08, size.w * .18, .06, .5, 0, { a: .3 * fadeIn });
     }
-    layer.push(r, x, y, r.w, r.h, .5, r.anchor, { flip: meta.facing < 0, a: fadeIn, flashing, ...tintOf(r) });
-    // A burning ship below a third of its hull: the fire art flickers on deck.
-    if (ship.hp > 0 && ship.hp < ship.maxHp / 3) {
-      const flame = rect[pirateFrames.fire[(still() ? 0 : Math.floor(clock * 8 + meta.phase)) % 3]];
-      layers.air.push(flame, x + meta.facing * size.w * .12, y + size.h * .35, flame.w, flame.h, .5, flame.anchor, { a: fadeIn });
+    layer.push(r, x, y, r.w, r.h, .5, r.anchor, { flip: meta.facing < 0, a: fadeIn, flashing, ...damageTint(tintOf(r), share) });
+    // A burning ship below a third of its hull: dark smoke rising and the fire on deck, drawn over the hull
+    // and big enough to read at the battle zoom (bigger ships burn in two places).
+    if (burning) {
+      const step = still() ? 0 : Math.floor(clock * 8 + meta.phase), big = size.w > 5;
+      const spots = big ? [-.16, .14] : [.12];
+      spots.forEach((at, i) => {
+        const fx = x + meta.facing * size.w * at, fy = y + size.h * (i ? .42 : .34);
+        const smoke = rect[pirateFrames.smoke[(step + i) % 3]];
+        if (smoke && !low()) layers.air.push(smoke, fx - meta.facing * .3, fy + 1.1 + (still() ? 0 : (clock * .8 + i * .5) % 1 * .6), smoke.w * 1.1, smoke.h * 1.1, .5, smoke.anchor * 1.1, { r: .32, g: .28, b: .3, a: .55 * fadeIn });
+        const flame = rect[pirateFrames.fire[(step + i) % 3]];
+        if (flame) layers.air.push(flame, fx, fy, flame.w * 1.35, flame.h * 1.35, .5, flame.anchor * 1.35, { a: fadeIn });
+      });
     }
     if (ship.hp < ship.maxHp || ship.boss) {
       const top = y + size.h - r.anchor + .15, w = Math.min(2.4, size.w * .5), share = Math.max(0, ship.hp / ship.maxHp);
@@ -452,9 +472,9 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     const cartoon = hit ? BOARDER_ART.hit : hacking ? BOARDER_ART.hack[step] : still() ? BOARDER_ART.still : BOARDER_ART.walk[step];
     const r = rect[cartoon] ?? rect[hacking ? (step ? frames[2] : frames[0]) : frames[step]];
     if (!r) return;
-    layer.push(r, x, y, r.w * CHARACTER_SCALE, r.h * CHARACTER_SCALE, .5, r.anchor * CHARACTER_SCALE, { flip: meta.facing < 0, flashing: hit ? (rect[cartoon] ? .35 : .7) : 0 });
+    layer.push(r, x, y, r.w * K(), r.h * K(), .5, r.anchor * K(), { flip: meta.facing < 0, flashing: hit ? (rect[cartoon] ? .35 : .7) : 0 });
     if (boarder.hp < boarder.maxHp) {
-      const top = y + (r.h - r.anchor) * CHARACTER_SCALE - .35, w = .9, share = Math.max(0, boarder.hp / boarder.maxHp);
+      const top = y + (r.h - r.anchor) * K() - .35, w = .9, share = Math.max(0, boarder.hp / boarder.maxHp);
       layer.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .25, 0, 0, { ...DARK, a: .8 });
       layer.push(rect[WHITE], x - w / 2, top, w * share, .125, 0, 0, { ...(share > .5 ? GOLD : RED), a: 1 });
     }
@@ -462,13 +482,13 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   // A fallen boarder: the sprite sinks and fades under a puff of smoke.
   function drawFallen(item) {
     const p = Math.min(1, (clock - item.at) / FALL_SECONDS), layer = bands[bandOf(item.z)], y = drawnY(item.z);
-    const r = rect[BOARDER_ART.hit] ?? rect[FRAMES.boarder[0]], k = CHARACTER_SCALE;
+    const r = rect[BOARDER_ART.hit] ?? rect[FRAMES.boarder[0]], k = K();
     if (r) layer.push(r, item.x, y, r.w * k, r.h * k * (1 - p * .5), .5, r.anchor * k, { flip: item.facing < 0, a: 1 - p, flashing: .5 * (1 - p) });
     const puff = rect[pirateFrames.smoke[still() ? 0 : Math.min(2, Math.floor(p * 3))]];
     if (puff) layer.push(puff, item.x, y - .1, puff.w * .6, puff.h * .6, .5, puff.anchor * .6, { a: 1 - p * p });
   }
   function drawStrike(item) {
-    const r = rect['captain-cutlass'], k = CHARACTER_SCALE;
+    const r = rect['captain-cutlass'], k = K();
     if (r) bands[bandOf(item.z)].push(r, item.x, drawnY(item.z), r.w * k, r.h * k, .5, r.anchor * k, { flip: item.dir < 0 });
   }
 
@@ -562,7 +582,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   function drawPose(tracer) {
     const age = clock - tracer.at;
     if (age >= POSE_SECONDS) return;
-    const r = rect[pirateFrames.captain[age < MUSKET.fire ? 1 : 0]], k = CHARACTER_SCALE;
+    const r = rect[pirateFrames.captain[age < MUSKET.fire ? 1 : 0]], k = K();
     layers.air.push(r, tracer.x, drawnY(tracer.z), r.w * k, r.h * k, .5, r.anchor * k, { flip: tracer.toX < tracer.x });
   }
   function drawCaptain() {

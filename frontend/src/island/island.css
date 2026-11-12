@@ -86,23 +86,23 @@
 .island-branch-icon{font-size:20px;line-height:1.2}
 .island-branch-nodes{list-style:none;margin:0;padding:0;display:grid;gap:14px}
 .island-tier{position:relative}
-.island-tier+.island-tier::before{content:'';position:absolute;left:50%;top:-14px;width:4px;height:14px;margin-left:-2px;background:var(--u-line)}
+.island-tier+.island-tier::before{content:'';position:absolute;left:50%;top:-14px;width:4px;height:14px;margin-left:-2px;border-radius:2px;background:var(--u-line)}
 .island-tier.is-linked::before{background:var(--u-gold)}
 .island-skill{width:100%;min-height:58px;display:grid;justify-items:center;align-content:center;gap:3px;padding:6px 4px;position:relative;
-  font:700 13px/1.2 var(--u-font);color:var(--u-ink);text-align:center;cursor:pointer;background:var(--u-card);border:2px solid var(--u-line);box-shadow:0 3px var(--u-deep)}
+  font:700 13px/1.2 var(--u-font);color:var(--u-ink);text-align:center;cursor:pointer;background:linear-gradient(#24575f,var(--u-card)) var(--u-card);border:2px solid var(--u-line);border-radius:var(--u-radius-xs,10px);box-shadow:var(--u-bevel-quiet,0 3px var(--u-deep))}
 .island-skill:hover{background:var(--u-raise)}
 .island-skill:focus-visible{outline:3px solid var(--u-gold);outline-offset:2px}
 .island-skill.is-learned{background:#3b5a2c;border-color:#9fd26a}
-.island-skill.is-ready{border-color:var(--u-gold);box-shadow:0 3px var(--u-deep),0 0 0 2px #f3d58c55}
+.island-skill.is-ready{border-color:var(--u-gold);box-shadow:var(--u-bevel-quiet,0 3px var(--u-deep)),0 0 0 2px #f3d58c55}
 .island-skill.is-locked{background:var(--u-deep);color:var(--u-mute)}
 .island-skill.is-picked{outline:3px solid var(--u-gold);outline-offset:-1px}
 .island-skill-name{overflow-wrap:anywhere}
 .island-skill-cost{display:flex;gap:3px}
-.island-skill-dot{width:7px;height:7px;background:var(--u-gold);border:1px solid var(--u-deep)}
+.island-skill-dot{width:7px;height:7px;border-radius:50%;background:var(--u-gold);border:1px solid var(--u-deep)}
 .island-skill.is-locked .island-skill-dot{background:var(--u-line)}
 .island-skill-mark{position:absolute;top:2px;right:4px;font-size:11px;line-height:1}
 .island-skill-mark[hidden]{display:none}
-.island-skill-detail{display:grid;gap:6px;padding:var(--u-2) var(--u-3);background:var(--u-deep);border-left:4px solid var(--u-gold)}
+.island-skill-detail{display:grid;gap:6px;padding:var(--u-2) var(--u-3);background:var(--u-deep);border-left:4px solid var(--u-gold);border-radius:var(--u-radius-xs,10px)}
 .island-skill-detail-head{display:flex;justify-content:space-between;gap:var(--u-2);align-items:baseline}
 .island-skill-detail-head strong{font:800 var(--u-lg)/1.2 var(--u-font);color:var(--u-gold)}
 .island-skill-detail-cost{color:var(--u-mute);font-size:15px;white-space:nowrap}
@@ -113,13 +113,14 @@
 @media(max-width:400px){.island-card-captain.kit-modal{padding:0 14px 16px}.island-tree{gap:4px}.island-skill{font-size:13px;padding:6px 2px}.island-card.island-card-captain.kit-modal .kit-modal-body h3.island-branch-head{font-size:14px}}
 /* The game's lobby (docs/GAME-V3.md §2): the code, the link and QR, the players with who is online, Start. */
 .island-card-lobby.kit-modal{width:min(480px,calc(100vw - 32px))}
-.island-lobby-code{justify-self:center;padding:var(--u-2) var(--u-4);font:800 30px/1.2 var(--u-font);letter-spacing:2px;color:var(--u-pink);background:var(--u-parch);border:2px solid var(--u-brown);text-align:center}
+.island-lobby-code{justify-self:center;border-radius:var(--u-radius-sm,14px);box-shadow:var(--u-lift,none);padding:var(--u-2) var(--u-4);font:800 30px/1.2 var(--u-font);letter-spacing:2px;color:var(--u-pink);background:var(--u-parch);border:2px solid var(--u-brown);text-align:center}
 .island-lobby-qr{width:min(150px,40vw)}
 .island-lobby-count{color:var(--u-mute);font-size:var(--u-sm);text-align:center}
 .island-lobby-players{list-style:none;margin:0;padding:0;display:grid;gap:4px;max-height:min(260px,32vh);overflow:auto}
-.island-lobby-player{display:flex;align-items:center;gap:var(--u-2);padding:6px var(--u-3);background:var(--u-card);border:2px solid var(--u-line);min-width:0}
+.island-lobby-player{display:flex;align-items:center;gap:var(--u-2);padding:6px var(--u-3);background:linear-gradient(#24575f,var(--u-card)) var(--u-card);border:2px solid var(--u-line);border-radius:var(--u-radius-xs,10px);min-width:0}
 .island-lobby-dot{flex:none;width:12px;height:12px;border-radius:50%;background:var(--u-deep);border:2px solid var(--u-line)}
 .island-lobby-player.is-online .island-lobby-dot{background:#7fd08a;border-color:#2f6b3a}
+.island-lobby-colour{flex:none;width:24px;height:24px;border-radius:50%;background:radial-gradient(circle at 50% 38%,var(--band) 0 24%,var(--coat) 26%);border:2px solid var(--hat);box-shadow:0 0 0 2px #2b1d1a,0 2px 4px #04161b55}
 .island-lobby-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700;color:var(--u-ink)}
 .island-lobby-state{flex:none;color:var(--u-mute);font-size:16px}
 .island-card-body>.island-lobby-start{justify-self:stretch;min-height:56px;font-size:var(--u-lg)}

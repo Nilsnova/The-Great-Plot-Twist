@@ -16,8 +16,11 @@ function screenPoint(x,z,camera,canvas,container){
   const world=projectPoint(x,z),point=new THREE.Vector3(world.x,world.y,0).project(camera),rect=canvas.getBoundingClientRect(),box=container.getBoundingClientRect?.()??{left:0,top:0};
   return {x:rect.left+(point.x+1)*rect.width/2-box.left,y:rect.top+(1-point.y)*rect.height/2-box.top};
 }
-export function createOtherCaptains(scene,container,art,reducedMotion=false){
+// colourOf(id): a captain's lobby colour 0-9 (GAME-V3.md §7), or null; scale(): how big captains draw (1.4 in a wave).
+export function createOtherCaptains(scene,container,art,reducedMotion=false,{colourOf=()=>null,scale=()=>1}={}){
   const root=new THREE.Group();root.name='other-captains';scene.add(root);
+  const readScale=()=>{try{const k=Number(scale());return Number.isFinite(k)&&k>0?k:1;}catch{return 1;}};
+  const withColour=peer=>{let own=null;try{own=colourOf(peer?.id);}catch{own=null;}return Number.isInteger(own)&&own>=0&&own<10?{...peer,colour:own+1}:peer;};
   const records=new Map();let input={status:'off',place:null,others:[],hiddenCount:0,sampledAt:0},clock=0,stats={drawn:0,hidden:0,ids:[]};let disposed=false,ingested=0,ripples=0;
   function releaseRenderable(record){
     if(!record.group)return;
@@ -79,7 +82,7 @@ export function createOtherCaptains(scene,container,art,reducedMotion=false){
     const {selected,hidden}=selectNearby([...records.values()],{place,player:{x:player?.x??0,y:player?.y??0},now:clock,filter,blocked,max});
     const chosen=new Set(selected.map(record=>record.id));
     const motionOff=typeof reducedMotion==='function'?reducedMotion():reducedMotion;
-    const assets=new Map(selected.map(record=>[record.id,resolveActorAsset(record.peer,{facing:record.peer.facing,moving:!motionOff&&record.peer.moving,frame:Math.floor(clock/180)%2+1,hasAsset:id=>Boolean(art[id])})]));
+    const assets=new Map(selected.map(record=>[record.id,resolveActorAsset(withColour(record.peer),{facing:record.peer.facing,moving:!motionOff&&record.peer.moving,frame:Math.floor(clock/180)%2+1,hasAsset:id=>Boolean(art[id])})]));
     for(const record of [...records.values()]){
       if(record.leavingAt!==null&&clock-record.leavingAt>=PRESENCE_LIMITS.fadeMs){removeRecord(record);continue;}
       if(chosen.has(record.id))attachRenderable(record,assets.get(record.id));else releaseRenderable(record);
@@ -89,7 +92,7 @@ export function createOtherCaptains(scene,container,art,reducedMotion=false){
       const point=positionAt(record,clock),placePoint=projectPoint(point.x,point.y);record.group.position.set(placePoint.x,placePoint.y,0);record.body.userData.logical=point;
       if(!record.announced){record.announced=true;if(!record.quiet&&clock-record.joinedAt<1500)arrive(placePoint,motionOff);}
       const bodyAsset=assets.get(record.id);record.asset=bodyAsset;record.body.userData.asset=bodyAsset;const fadeIn=clamp((clock-record.joinedAt)/260,0,1),fadeOut=record.leavingAt===null?1:clamp(1-(clock-record.leavingAt)/PRESENCE_LIMITS.fadeMs,0,1),alpha=fadeIn*fadeOut;
-      setMaterial(record,record.body,materialFor(art,bodyAsset),'body',alpha);record.body.scale.x=record.peer.facing==='left'?-1:1;record.body.renderOrder=100+record.peer.y+.15;
+      setMaterial(record,record.body,materialFor(art,bodyAsset),'body',alpha);{const k=readScale();record.body.scale.set((record.peer.facing==='left'?-1:1)*k,k,1);}record.body.renderOrder=100+record.peer.y+.15;
       if(record.peer.emote&&art[`emote-${record.peer.emote}`]){
         if(record.emoteId!==record.peer.emote){if(record.emoteMesh){record.group.remove(record.emoteMesh);record.emoteMesh.geometry.dispose();record.ownedEmoteMaterial?.dispose();record.ownedEmoteMaterial=null;}
           record.emoteId=record.peer.emote;record.emoteMesh=makeMesh(`emote-${record.emoteId}`,materialFor(art,`emote-${record.emoteId}`),`emote-${record.emoteId}`);record.emoteMesh.renderOrder=942;record.group.add(record.emoteMesh);record.emoteAt=clock;}

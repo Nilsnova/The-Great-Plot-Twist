@@ -3,7 +3,7 @@
 .goal-card-body{display:grid;gap:18px}
 .goal-card .goal-lead{margin:0;font:700 23px/1.4 var(--u-serif);color:var(--u-ink)}
 .goal-card .goal-controls{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0}
-.goal-card .goal-control{padding:12px 14px;background:var(--u-card);border:2px solid #3d6a6b;box-shadow:0 3px var(--u-deep)}
+.goal-card .goal-control{padding:12px 14px;background:var(--u-card);border:2px solid #3d6a6b;border-radius:var(--u-radius-sm,14px);box-shadow:var(--u-bevel-quiet,0 3px var(--u-deep))}
 .goal-card dt{margin:0 0 4px;font:700 16px/1.3 var(--u-font);letter-spacing:1.5px;text-transform:uppercase;color:var(--u-gold)}
 .goal-card dd{margin:0;font:17px/1.45 var(--u-font);color:var(--u-ink)}
 .goal-card-body .kit-button{justify-self:end;min-width:180px;min-height:52px;font-size:19px}

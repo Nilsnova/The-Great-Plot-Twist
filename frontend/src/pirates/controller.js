@@ -9,6 +9,8 @@
 // "Next wave" button and the "Auto next wave" switch (kept in localStorage); the button, or the end of the
 // break with the switch on, calls startNextWave() (the island's start route), whose wave_started_server
 // starts the next wave. A lost wave ends the run. The HUD keeps a running "Loot this run".
+// For the narrator it emits boarders_ashore {wave, count} when the first boarders land in a wave and
+// heart_changed {hp, max} when the heart's ♥ crosses below 30% (HEART_WARN), once each per wave.
 // The game's Pause (GAME-V3.md §2): holdBreak() says whether the room paused the break ({paused, line, label,
 // canToggle} or null); while paused the break stays open, Auto next and "Next wave" wait, and the card shows
 // "Paused by <name>"; toggleHold() is the card's Pause / Resume button.
@@ -68,6 +70,8 @@ export function bladeTarget(player, state) {
 }
 const pirateById = (state, id) => state?.boarders?.find(item => item.id === id) ?? state?.ships?.find(item => item.id === id) ?? null;
 let atlasPromise = null, atlasKey = null;
+// The heart's share below which the narrator hears heart_changed (its HEART_LOW).
+export const HEART_WARN = 0.3;
 
 // The wider view during a wave: cannons reach about 28 units, ships appear about 40 units out, so the
 // camera shows about 34 units either side of the player (half zoom on a 16:9 screen, 0.4 on a phone).
@@ -347,6 +351,16 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     for (const event of events) {
       emit(event);
       if (event.type === 'wave_started') current.lanes = event.lanes ?? [];
+      // For the narrator (GAME-V3.md §6): the first boarders ashore in this wave, and the heart crossing
+      // below 30% (once each per wave; narrator/index.js decides what it says).
+      if (event.type === 'boarder_landed' && !current.ashoreTold) {
+        current.ashoreTold = true;
+        emit({ type: 'boarders_ashore', wave: current.info.wave, count: Math.max(1, current.sim.state().boarders?.length ?? 1) });
+      }
+      if (event.type === 'island_damaged' && !current.heartTold && Number.isFinite(event.hp)) {
+        const max = current.state?.maxIslandHp ?? current.sim.state().maxIslandHp;
+        if (max > 0 && event.hp / max < HEART_WARN) { current.heartTold = true; emit({ type: 'heart_changed', hp: event.hp, max }); }
+      }
       if (event.type === 'ship_sunk' && event.kind === 'flagship') { current.flagshipSunk = true; current.lampsRelit = event.by === 'lamps'; }
     }
     if (current.shown) current.renderer?.events(fresh);

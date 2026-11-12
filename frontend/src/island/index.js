@@ -27,7 +27,7 @@ import {ISLAND_BUILT, ISLAND_INVITE_OPENED, ISLAND_UPGRADED, CREW_HIRED, WAVE_FI
 import {readUnlocks, newUnlocks, CREW, BUILDINGS} from './td-rules.js';
 import {WAVE_STARTED} from './wave-hooks.js';
 import {addMenuExtras} from '../shell/menu-extras.js';
-import {GAME_STARTED, lobbyModel} from './lobby.js';
+import {GAME_STARTED, captainColours, lobbyModel} from './lobby.js';
 import {resolvePeer} from '../net/live-extras.js';
 
 export const ARRIVAL_KEY = 'plot_twist_island_arrival_v1';
@@ -204,6 +204,16 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     return lobbyModel({code, members, online: state?.online ?? new Set(), me, hostId,
       hostAwayMs: state?.hostAwayMs ?? 0, started: state?.code === code && state.started === true, problem: lobbyProblem});
   }
+  // The captain colours of the game on screen (by join order, 0-9) and your own (0 outside a game).
+  function colours() {
+    const state = game?.state ?? null, code = currentCode();
+    const answered = islandCode(lobbyAnswer?.game?.code ?? '') === code ? lobbyAnswer : null;
+    const members = state?.code === code ? state.members : answered?.members ?? [];
+    const me = state?.me ?? answered?.members?.find(member => member.you)?.id ?? null;
+    return {map: captainColours(members), me};
+  }
+  const colourOf = id => (typeof id === 'string' ? colours().map.get(id) ?? null : null);
+  const captainColour = () => { const {map, me} = colours(); return (me && map.get(me)) ?? 0; };
   function startGame() {
     if (!game?.start()) { refreshCard(); return; }
     if (ui.open === 'lobby') { ui.close(); openSpot = null; }
@@ -567,7 +577,10 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     },
     load, loadPoint, playArrival, visit, sailHome, pick, build, upgrade, hire, upgradeCaptain, learnSkill, buyWeapon, equipWeapon, setPresence,
     // Your captain for the wave (src/pirates/game-wiring.js): level, learnt skills (§14), equipped weapon (§15).
-    captainLoadout: () => ({level: own?.captain?.level ?? 1, skills: readSkills(own?.skills?.known ?? []), weapon: readWeapon(own?.weapons?.equipped)}),
+    captainLoadout: () => ({level: own?.captain?.level ?? 1, skills: readSkills(own?.skills?.known ?? []), weapon: readWeapon(own?.weapons?.equipped),
+      colour: captainColour()}),
+    // Captain colours (GAME-V3.md §7): each member's 0-9 by join order, and your own (src/island/lobby.js).
+    colourOf, captainColour,
     openInvite, openCrew, openCaptain, openCaptains, openLobby, enterGame, leaveGame,
     // The game's room state (src/island/game-room.js), handed in by the wave wiring.
     attachGame(room) {

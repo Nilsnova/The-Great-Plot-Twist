@@ -16,6 +16,7 @@ You open the game and **create a game** (a room) or **join** one with its code. 
 - **Pause / leave / continue:** between waves the host (or any member when the host is away) can **Pause** (no auto next wave, the break stays open until Resume). Leaving a running wave counts you out of that wave. Any member can open the game from **Continue** and ring the next wave, alone or with others. Progress belongs to the island: buildings, wave reached, unlocks, research.
 - **One island only:** no sea chart; the Harbor (market calls, football board) and the other services are buildings on the island that unlock by wave (section 4). Pirate Point and the separate islands leave the game (the three lamps can return later as a boss-wave mechanic on the island).
 - **Coins:** each player's own wallet (as today). Everyone builds and upgrades on the island with their own coins; loot is paid to each participant of a won wave.
+- Membership is the rule on a game's island: build, upgrade, the bell, `POST /api/waves/join` of its waves and `GET /api/island/visit/{code}` answer 403 `not_member` to a non-member (the host always in); a guest refused with 409 `game_full` is not admitted by the guest gate.
 - Live rooms: the island room `live:place:isle_<code>:1` carries up to 10 players (raise MAX_PLAYERS and every filter that assumes 4).
 
 ### 2.1 How it is built (lane R, `feat/v3-rooms`)
@@ -82,6 +83,7 @@ New tower kinds later: harpoon (slows), fire tower (damage over time), for waves
 | `player_fell` / `player_revived` | `{playerId, self?, by?}` | H | a captain falls / is revived |
 | `captains_all_fallen` | `{}` | H | every captain has fallen |
 
+  Since the v3 integration (rooms + art): `game_started` comes from the lobby's Start (`{first, code}`; `first: false` is a welcome back; with a lobby game.js no longer starts the narrator itself), `boarders_ashore` `{wave, count}` and `heart_changed` `{hp, max}` (once per wave, when the ♥ crosses below 30%) from the wave controller (`src/pirates/controller.js`).
   Emitted today and used: `wave_started_server` / `wave_controller_started` `{waveId, wave, boss?, where}` and `wave_finished` `{waveId, survived, wave?}` (both lanes emit it; deduplicated by waveId).
 
 ## 7. Art: clean cartoon 2D (lane A)
@@ -89,6 +91,8 @@ New tower kinds later: harpoon (slows), fire tower (damage over time), for waves
 - Replace the pixel art with **clean cartoon sprites**: smooth shapes, bold dark outlines, soft two-tone shading, warm saturated colours, in the spirit of mobile strategy games (original designs only, nothing copied from any existing game).
 - Drawn as vector art in code (SVG or Canvas 2D paths) and rasterised at runtime to textures at the device's pixel density, so they stay crisp at any size and the download stays small. No image downloads, no new packages.
 - Same frame names and anchors as the current atlas where possible, so the renderers keep working; new frames for new things are added in the same module.
+- **Captain colours:** each member of a game gets a colour index 0–9 by join order, the host first (`captainColours` in `src/island/lobby.js`), shown as a swatch in the lobby; other captains wear `captain-<index+1>`, your own captain (and your musket and cutlass poses in waves) your own index, so 10 players never share a colour.
+- **In waves** captains and boarders draw 1.4× (up to 1.8× at a phone's battle zoom, `src/pirates/character-scale.js`); a damaged hull darkens and a burning one carries its fire and smoke on top, so ships stay readable.
 - The camera keeps its angle; the island, water, buildings, towers, walls, ships, boarders, captains (with a few colour variants so 10 players can be told apart), effects (shots, smoke, splashes, fire) and the HUD frame all move to the new style. The HUD kit drops the pixel fonts and borders for clean rounded panels.
 
 ## 8. Fixes from the play test

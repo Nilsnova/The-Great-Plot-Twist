@@ -6,9 +6,31 @@ import {createModal} from '../ui/kit/modal.js';
 import {createButton} from '../ui/kit/button.js';
 import {node, uniqueId} from '../ui/kit/dom.js';
 import {TUTORIAL_PAGES, TUTORIAL_TITLE, pageView} from './pages.js';
+import {framesFor, hasCartoon} from '../art/registry.js';
+import {paint} from '../art/paint.js';
 
 const SWIPE_PX = 50;
 const spriteUrl = file => `${import.meta.env.BASE_URL}pixel/${file}`;
+// The clean cartoon drawing of a sprite (GAME-V3.md §7, src/art/) when one exists: a canvas in the sprite's
+// box, painted at the screen's density once the drawing is loaded; else null (the pixel PNG stays).
+const canPaint = () => typeof document !== 'undefined' && !/jsdom/i.test(globalThis.navigator?.userAgent ?? '');
+function cartoonSprite(sprite) {
+  const name = sprite.file.replace(/\.png$/, '');
+  if (!canPaint() || !hasCartoon(name)) return null;
+  const w = sprite.w * sprite.scale, h = sprite.h * sprite.scale, ratio = Math.min(3, globalThis.devicePixelRatio || 1);
+  const element = node('canvas', 'tutorial-sprite'); element.classList.add('is-cartoon');
+  element.width = Math.ceil(w * ratio); element.height = Math.ceil(h * ratio); element.dataset.art = name;
+  element.style.setProperty('--w', String(w)); element.style.setProperty('--h', String(h)); element.setAttribute('aria-hidden', 'true');
+  void framesFor([name]).then(frames => {
+    const frame = frames[name], context = element.getContext('2d');
+    if (!frame || !context) return;
+    // Fit the drawing's own box into the sprite's box, feet on the bottom edge.
+    const fit = Math.min(w / frame[0], h / frame[1]), density = fit * ratio;
+    const image = paint(frame[3], [frame[0], frame[1]], density, {outline: frame[4]?.outline ?? .9});
+    context.drawImage(image, Math.round((element.width - image.width) / 2), element.height - image.height);
+  }).catch(() => {});
+  return element;
+}
 
 // done resolves once: 'finished' (the last page's button), 'skipped' (Skip, or Escape in mode
 // 'first'), 'closed' (Close, Escape or the close button in mode 'menu') or 'disposed'.
@@ -36,7 +58,9 @@ export function createTutorialCard({pages = TUTORIAL_PAGES, mode = 'menu', start
   function draw() {
     const current = view(), {page} = current;
     art.replaceChildren(...page.art.map(sprite => {
-      const image = node('img', 'tutorial-sprite');
+      const cartoon = cartoonSprite(sprite);
+      if (cartoon) return cartoon;
+      const image = node('img', 'tutorial-sprite'); image.classList.add('is-pixel');
       image.src = spriteUrl(sprite.file);image.alt = '';image.decoding = 'async';image.draggable = false;
       image.width = sprite.w * sprite.scale;image.height = sprite.h * sprite.scale;
       image.style.setProperty('--w', String(sprite.w * sprite.scale));image.style.setProperty('--h', String(sprite.h * sprite.scale));

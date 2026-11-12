@@ -8,6 +8,7 @@ import {createModal} from '../ui/kit/modal.js';
 import {createTabs} from '../ui/kit/tabs.js';
 import {node} from '../ui/kit/dom.js';
 import {drawQr} from '../lib/qr/index.js';
+import {CAPTAIN_PALETTES} from '../art/people.js';
 import {toasts as gameToasts} from '../ui/toasts.js';
 
 function button(label, onClick, quiet = false) {
@@ -294,9 +295,13 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
       for (const row of model.rows) {
         const item = node('li', `island-lobby-player${row.online ? ' is-online' : ''}`); item.dataset.player = row.id;
         const dot = node('span', 'island-lobby-dot'); dot.setAttribute('aria-hidden', 'true');
+        // The captain's colour (coat and hat band, src/art/people.js), the same on the island and in waves.
+        const pal = CAPTAIN_PALETTES[row.colour] ?? CAPTAIN_PALETTES[0];
+        const swatch = node('span', 'island-lobby-colour'); swatch.setAttribute('aria-hidden', 'true'); item.dataset.colour = String(row.colour);
+        swatch.style.setProperty('--coat', pal.coat); swatch.style.setProperty('--band', pal.band); swatch.style.setProperty('--hat', pal.hat);
         const name = node('span', 'island-lobby-name', `${row.name}${row.you ? ' (you)' : ''}`);
         const state = node('span', 'island-lobby-state', [row.tag, row.online ? 'online' : 'away'].filter(Boolean).join(' · '));
-        item.append(dot, name, state); list.append(item);
+        item.append(dot, swatch, name, state); list.append(item);
       }
       const go = button(model.start.label, () => start()); go.dataset.focus = 'start'; go.classList.add('island-lobby-start');
       go.hidden = !model.start.show; go.disabled = model.start.disabled;

@@ -20,6 +20,7 @@ import {escapePriority} from './shell/escape.js';
 import {createShortcutsHost} from './shell/shortcuts-host.js';
 import {createTutorialHost} from './tutorial/host.js';
 import {createWorldExperience} from './world/experience.js';
+import {characterScale as characterScaleFor} from './pirates/character-scale.js';
 import {createIsletState} from './world/islet/state.js';
 import {sendIntent} from './adapter/intent.js';
 import {attachIsletPanel} from './screens/islet/host.js';
@@ -65,7 +66,9 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   // sea chart is closed (travelOpen below, read when the card opens).
   const tutorial=createTutorialHost(container,{onClose:()=>graphics.renderer.domElement.focus({preventScroll:true}),one:()=>!travelOpen()});
   const scene = new THREE.Scene();
-  const art = await loadArt(pixelArtIds.filter(id => id.startsWith('explorer')));
+  // Your captain: the explorer frames and the ten captain colours (GAME-V3.md §7; painted on first use).
+  const art = await loadArt([...pixelArtIds.filter(id => id.startsWith('explorer')),
+    ...Array.from({length: 10}, (_, i) => ['', '-back', '-side'].flatMap(view => ['', '-walk-1', '-walk-2'].map(step => `captain-${i + 1}${view}${step}`))).flat()]);
   const graphics = createRenderer(container), input = createInput(graphics.renderer.domElement);
   const water = createWater(scene), sky = createSky(scene), weather = createWeather(scene), lightPools = createLightPools(scene);
   const pixelFx = createPixelFx(scene); scene.userData.lightPools = lightPools; scene.userData.pixelFx = pixelFx;
@@ -110,7 +113,11 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   });
   experience=createWorldExperience({scene,container,art,world,player:controller.player,camera:view.camera,canvas:graphics.renderer.domElement,reducedMotion,preferences:getPreferences,
     send:(name,...args)=>sendIntent(adapter,name,...args),
+    colourOf:id=>island?.colourOf?.(id)??null,characterScale:()=>characterScale,
     isBlocked:outsideBlocked,presencePlace:place=>island?.presencePlace(place)??(place==='lighthouse_isle'&&(island||waves?.point)?'pirate_point':null)??classDemo?.presencePlace(place)??place});
+  // Captains and boarders draw larger during a wave (1.4x, up to 1.8x on a phone: pirates/character-scale.js),
+  // so they read at the zoomed-out battle camera; back to 1 when the wave's drawing stops.
+  let characterScale=1,inBattle=false;const stopScale=[on('wave_controller_started',()=>{inBattle=true;}),on('wave_controller_stopped',()=>{inBattle=false;})];
   // The class goals (class demo) show in the quest strip except on your island, where the first-3-minutes
   // goals of src/ui/first-quests.js show (BUILD-PLAN 3.6). A class-code player keeps the class goals elsewhere.
   let classQuests=null;
@@ -157,7 +164,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   const stopArrivals = on('arrived', event => {hud.arrive(event.place);showQuests();emit({type:PLACE_ARRIVED,id:event.place});});
   try { await world.goTo('saltreach_harbor'); }
   catch (error) {
-    disposed=true;container.removeEventListener('close',panelClosed,true);stopView();stopListening(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
+    disposed=true;container.removeEventListener('close',panelClosed,true);stopView();stopListening();for(const stopOne of stopScale)stopOne?.(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
     createLifetime(scene, art)(); graphics.renderer.dispose();graphics.renderer.domElement.remove(); throw error;
   }
   // ?perf=1 shows the frame-rate panel (the old highlights tour left with the mystery, 10 Nov).
@@ -245,6 +252,8 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     audio.update(delta,{weather:state,weatherAnswer,isletBuilt:isletState.getBuilt(),speed,night,active:active&&!isAppBlocked?.()&&!world.busy&&!(marketUi?.active||sportsUi.active)&&!chart.open,place:world.current?.id});
     water.update(reducedMotion()?0:time, state); sailing.update(delta);
     world.update(delta, { player: controller.player.position, time:reducedMotion()?0:time, night, weather: state,weatherAnswer });
+    characterScale=inBattle?characterScaleFor(view.camera.zoom):1;scene.userData.characterScale=characterScale;
+    character.setColour(island?.game?island.captainColour():null);character.setScale(characterScale);
     view.update(delta, controller.player.position);experience.update(delta,{speed});
     const zone = active&&!outsideBlocked() ? findZone(controller.player.position, world.current?.zones ?? []) : null;
     touch.update(zone,active&&!outsideBlocked());
@@ -269,7 +278,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     camera: view.camera, view, player: controller.player, settings, quality:setUserQuality, setWeather, emit, on, world, chart, sailing, shell, audio, adapter, get marketUi(){return marketUi;},sportsUi, get marketLoad(){return marketLoad;},mapTouch, experience,isletState,get classDemo(){return classDemo;},get waves(){return waves;} };
   function dispose() {
     if(disposed)return;disposed=true;narrator.dispose();container.removeEventListener('close',panelClosed,true);classDemo?.dispose();classDemo=null;waves?.dispose();waves=null;island?.dispose();island=null;void pirates?.then(harness=>harness?.dispose());
-    harbor?.dispose();mapTouch?.dispose();touch.dispose();gamepad.dispose();marketUi?.dispose();sportsUi.dispose();stopLiveWeather();stopPreferences();stopMotion();stop();stopView();stopListening(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
+    harbor?.dispose();mapTouch?.dispose();touch.dispose();gamepad.dispose();marketUi?.dispose();sportsUi.dispose();stopLiveWeather();stopPreferences();stopMotion();stop();stopView();stopListening();for(const stopOne of stopScale)stopOne?.(); stopArrivals(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
     window.removeEventListener('resize', resize); createLifetime(scene, art)();
     setMenuTravel(null);disposeDiagnostics();graphics.renderer.dispose();graphics.renderer.domElement.remove(); delete window.__island;
   }
@@ -327,7 +336,8 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
       if(destination==='home_islet'&&continuation?.arrival!=='later')await island?.playArrival();
       if(disposed||token!==beginRequest||shell.blocked)return;
       hud.start();
-      if(destination==='home_islet')void narrator.begin();
+      // With a game's lobby (GAME-V3.md §2) the narrator waits for its Start (game_started); else it begins here.
+      if(destination==='home_islet'&&continuation?.lobby!==true)void narrator.begin();
       // Lane P: ?pirates=demo plays waves with the fake API (src/pirates/dev-harness.js), its own lazy chunk.
       if(new URLSearchParams(location.search).get('pirates')==='demo')pirates??=import('./pirates/dev-harness.js').then(m=>disposed?null:m.startPirateDemo({scene,camera:view.camera,canvas:graphics.renderer.domElement,container,player:controller.player,world,input,audio,reducedMotion,quality:()=>settings.quality,isBlocked:()=>!active||outsideBlocked(),on,emit,travel})).catch(error=>{console.error(error);return null;});
       if(continuation?.demo!==false||classDemoQuery())void loadClassDemo();

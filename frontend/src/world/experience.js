@@ -12,7 +12,7 @@ export function createWorldExperience(ctx){
     ids.push('lantern',...['wave','cheer','point','lantern','shrug'].map(id=>`emote-${id}`));
     pending=Promise.all([import('./others/index.js'),import('../screens/presence/index.js'),loadArt(ids),import('../ui/coin-counter.js')]).then(([actors,ui,art,counter])=>{
       if(disposed){releaseArt(art);return;}
-      ownedArt=art;localBubble=placeArt(ctx.scene,art,'emote-wave',0,0);localBubble.name='local-captain-emote';localBubble.visible=false;localBubble.renderOrder=942;others=actors.createOtherCaptains(ctx.scene,ctx.container,mergeArt(ctx.art,art),ctx.reducedMotion);
+      ownedArt=art;localBubble=placeArt(ctx.scene,art,'emote-wave',0,0);localBubble.name='local-captain-emote';localBubble.visible=false;localBubble.renderOrder=942;others=actors.createOtherCaptains(ctx.scene,ctx.container,mergeArt(ctx.art,art),ctx.reducedMotion,{colourOf:id=>ctx.colourOf?.(id)??null,scale:()=>ctx.characterScale?.()??1});
       coins=counter.createCoinCounter({reducedMotion:ctx.reducedMotion});
       ctx.container.querySelector('.captain-status')?.append(coins.element); // the play HUD shows 🪙 itself
       hud=ui.createPresenceHud({send:ctx.send});

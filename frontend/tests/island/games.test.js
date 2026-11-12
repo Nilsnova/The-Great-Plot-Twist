@@ -4,7 +4,9 @@
 import {describe, expect, it} from 'vitest';
 import {createIslandApi} from '../../src/island/api.js';
 import {createFakeIslandTransport, createSharedFakeStore, MAX_MEMBERS} from '../../src/pirates/fake-api.js';
-import {GAME_STARTED, HOST_AWAY_MS, MAX_PLAYERS, canControl, lobbyModel, pausedLine} from '../../src/island/lobby.js';
+import {GAME_STARTED, HOST_AWAY_MS, MAX_PLAYERS, canControl, captainColours, lobbyModel, pausedLine} from '../../src/island/lobby.js';
+import {CAPTAIN_PALETTES} from '../../src/art/people.js';
+import {captainVariant} from '../../src/world/others/logic.js';
 import {createGameRoom} from '../../src/island/game-room.js';
 import {readWaveMessage, WAVE_EVENTS} from '../../src/net/live-rules.js';
 import {gamesCopy, gameLine, readGameCode} from '../../src/front-door/logic.js';
@@ -192,5 +194,24 @@ describe('ten players in one game room', () => {
     expect(h.rooms.get('p9').state.paused).toBe(true);
     h.rooms.get('me').togglePause(); h.advance(10);
     for (const id of h.ids) expect(h.rooms.get(id).state.paused).toBe(false);
+  });
+});
+
+describe('captain colours (GAME-V3.md §7)', () => {
+  it('gives ten players ten different colours by join order, the host first, and the lobby shows them', () => {
+    const members = [
+      ...Array.from({length: 9}, (_, i) => ({id: `p${i + 1}`, name: `Crew ${i + 1}`, role: 'member', you: i === 4})),
+      {id: 'host', name: 'Nils', role: 'host', you: false},
+    ];
+    const colours = captainColours(members);
+    expect(colours.get('host')).toBe(0);
+    expect([...colours.values()].sort((a, b) => a - b)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    expect(colours.get('p1')).toBe(1); expect(colours.get('p9')).toBe(9);
+    expect(new Set([...colours.values()].map(index => CAPTAIN_PALETTES[index].coat)).size).toBe(10);
+    const model = lobbyModel({code: 'K7Q2M', members, me: 'p5', hostId: 'host'});
+    expect(model.rows.map(row => row.colour)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 0]);
+    // The others' sprites: captain-(index + 1), the same colour as the lobby row.
+    expect(captainVariant({id: 'p3', colour: colours.get('p3') + 1})).toBe(4);
+    expect(captainColours([{id: 'a', role: 'host'}, {id: 'a', role: 'member'}, null]).size).toBe(1);
   });
 });

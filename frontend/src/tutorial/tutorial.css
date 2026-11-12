@@ -2,17 +2,19 @@
 .tutorial-card{width:min(620px,calc(100vw - 40px))}
 .tutorial-body{display:grid;gap:16px}
 .tutorial-page{display:grid;gap:10px;min-height:285px;align-content:start;touch-action:pan-y;user-select:none;-webkit-user-select:none}
-.tutorial-art{display:flex;align-items:flex-end;justify-content:center;gap:18px;height:140px;padding:6px 10px 10px;background:linear-gradient(#1f5560,#173f47 70%,#2e4a33 70%,#2e4a33);border:2px solid #3d6a6b;box-shadow:0 3px var(--u-deep);overflow:hidden}
-.tutorial-sprite{display:block;flex:none;width:calc(var(--w) * 1px);height:calc(var(--h) * 1px);image-rendering:pixelated;pointer-events:none}
+.tutorial-art{display:flex;align-items:flex-end;justify-content:center;gap:18px;height:140px;padding:6px 10px 10px;background:radial-gradient(ellipse 70% 32% at 50% 100%,#e9cf8e 0 60%,transparent 62%),linear-gradient(#7cc4d4,#4f9fb2 64%,#3f8aa0 64%,#3f8aa0);border:2px solid #3d6a6b;border-radius:var(--u-radius-sm,14px);box-shadow:inset 0 -6px 14px #04161b33,var(--u-bevel-quiet,0 3px var(--u-deep));overflow:hidden}
+.tutorial-sprite{display:block;flex:none;width:calc(var(--w) * 1px);height:calc(var(--h) * 1px);pointer-events:none}
+/* A sprite without a cartoon drawing yet keeps its pixel PNG, kept square. */
+.tutorial-sprite.is-pixel{image-rendering:pixelated}
 .tutorial-title{margin:6px 0 0;font:700 24px/1.25 var(--u-serif);color:var(--u-gold)}
 .tutorial-text{margin:0;font:19px/1.5 var(--u-font);color:var(--u-ink)}
 .tutorial-keys{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0}
 .tutorial-keys[hidden]{display:none}
-.tutorial-key{padding:8px 12px;background:var(--u-card);border:2px solid #3d6a6b}
+.tutorial-key{padding:8px 12px;background:var(--u-card);border:2px solid #3d6a6b;border-radius:var(--u-radius-xs,10px)}
 .tutorial-key dt{margin:0;font:700 16px/1.3 var(--u-font);color:var(--u-gold)}
 .tutorial-key dd{margin:0;font:17px/1.4 var(--u-font);color:var(--u-ink)}
 .tutorial-dots{display:flex;justify-content:center;gap:8px}
-.tutorial-dot{width:10px;height:10px;background:var(--u-deep);border:2px solid var(--u-line)}
+.tutorial-dot{width:12px;height:12px;border-radius:50%;background:var(--u-deep);border:2px solid var(--u-line)}
 .tutorial-dot.is-current{background:var(--u-gold);border-color:var(--u-gold)}
 .tutorial-nav{display:flex;align-items:center;gap:10px}
 .tutorial-nav .kit-button{min-height:48px;min-width:96px}

@@ -86,7 +86,7 @@ it('the skill tree: points from won waves, learn, tier order, no points; the wea
   expect(result.bought.toast).toBe('Pistols bought and equipped! You have 🪙 40.');
   expect(result.bought.coins).toBe(40);
   expect(result.bought.rows.slice(0, 2)).toEqual(['musket:Equip:false', 'pistols:Equipped:true']);
-  expect(result.bought.loadout).toEqual({level: 1, skills: ['steady_aim'], weapon: 'pistols'});
+  expect(result.bought.loadout).toEqual({level: 1, skills: ['steady_aim'], weapon: 'pistols', colour: 0});
   expect(result.back.toast).toBe('Musket equipped. Your captain shoots with it now.');
   expect(result.back.loadout.weapon).toBe('musket');
   expect(result.learned).toEqual(['steady_aim']);

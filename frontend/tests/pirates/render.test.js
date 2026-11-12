@@ -102,3 +102,23 @@ describe('pirate wave renderer', () => {
     renderer.dispose();
   });
 });
+
+describe('ships under fire stay readable (GAME-V3.md §7)', () => {
+  it('darkens a damaged hull instead of washing it out, more when it burns, and keeps a healthy one as drawn', async () => {
+    const { damageTint, CHARACTER_SCALE } = await import('../../src/pirates/render.js');
+    expect(damageTint({}, 1)).toEqual({ r: 1, g: 1, b: 1 });
+    expect(damageTint({}, .7)).toEqual({ r: 1, g: 1, b: 1 });
+    const hurt = damageTint({}, .5).r, burning = damageTint({}, .2).r, gone = damageTint({}, 0).r;
+    expect(hurt).toBeLessThan(1); expect(burning).toBeLessThan(hurt); expect(gone).toBeGreaterThanOrEqual(.55);
+    expect(damageTint({ r: .5, g: 1, b: 1 }, 0).r).toBeCloseTo(.5 * gone);
+    expect(CHARACTER_SCALE).toBeGreaterThanOrEqual(1.3);
+  });
+  it('grows captains and boarders with the battle zoom: 1.4x on a 1280 x 800 screen, more on a phone, at most 1.8x', async () => {
+    const { characterScale, MAX_CHARACTER_SCALE } = await import('../../src/pirates/character-scale.js');
+    expect(characterScale(.52)).toBeCloseTo(1.44, 1);
+    expect(characterScale(1)).toBe(1.4);
+    expect(characterScale(.4)).toBeGreaterThan(1.6);
+    expect(characterScale(.1)).toBe(MAX_CHARACTER_SCALE);
+    expect(characterScale(Number.NaN)).toBe(1.4);
+  });
+});

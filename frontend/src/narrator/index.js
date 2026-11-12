@@ -17,7 +17,7 @@
 //   wave_finished {waveId, survived, wave?}             (pirates and island lanes, deduplicated by waveId)
 //       a win plays what that wave unlocks (GAME-V3 section 4), a milestone, or a "wave won" line.
 //   --- to be emitted by the other lanes ---
-//   game_started {code, resumed?, wave?}                (rooms lane R) the host pressed Start: the opening
+//   game_started {code, first?, resumed?, wave?}        (rooms lane R) the host pressed Start: the opening
 //       the first time on this island, else welcome back. Replaces narrator.begin().
 //   campaign_unlocked {wave, ids?}                      (campaign lane P) what winning `wave` opened;
 //       plays the wave_unlock:<wave> lines (each once, so the wave_finished fallback never repeats them).
@@ -182,7 +182,8 @@ export function createNarrator({container = globalThis.document?.body, on, audio
   }
 
   stops.push(
-    on('game_started', event => arrive(event?.code ?? getGame?.()?.code ?? null, {resumed: event?.resumed === true, wave: Number(event?.wave) || 0})),
+    // The lobby's Start (src/island/game-room.js) sends {first, code}: first false is a game started before.
+    on('game_started', event => arrive(event?.code ?? getGame?.()?.code ?? null, {resumed: event?.resumed === true || event?.first === false, wave: Number(event?.wave) || 0})),
     on('wave_started_server', waveStarted),
     on('wave_controller_started', waveStarted),
     on('wave_finished', waveFinished),
