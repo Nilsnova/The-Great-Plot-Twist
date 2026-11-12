@@ -148,6 +148,14 @@
 .island-stall,.island-research-row{display:flex;align-items:center;justify-content:space-between;gap:var(--u-3);padding:var(--u-2) var(--u-3);background:var(--u-card);border:2px solid var(--u-line);border-radius:var(--u-radius-xs)}
 .island-stall.is-locked,.island-research-row.is-locked{border-style:dashed}
 .island-research-row.is-done{border-color:var(--u-gold)}
+/* A research row: the title and its price on one full line, the skills (and why the button is off) below,
+   the button on the right of those lines; on a phone the button goes under them. */
+.island-research-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:2px var(--u-3)}
+.island-research-row .island-research-text{display:contents}
+.island-research-row .island-research-head{grid-column:1/-1;white-space:nowrap}
+.island-research-row .island-research-head strong{overflow:hidden;text-overflow:ellipsis}
+.island-research-row .island-research-skills,.island-research-row .island-research-reason{grid-column:1}
+.island-research-row .kit-button{grid-column:2;grid-row:2/span 2;align-self:center}
 .island-stall-text,.island-research-text{display:grid;gap:2px;min-width:0}
 .island-stall-text p,.island-research-text p{margin:0}
 .island-stall-line,.island-research-skills{color:var(--u-mute);font-size:15px}
@@ -160,5 +168,6 @@
 .island-wreck-progress{margin:0;color:var(--u-ink);font-weight:700}
 .island-wreck-done{margin:0;padding:var(--u-2) var(--u-3);background:var(--u-raise);border-left:4px solid var(--u-gold);font-weight:800;color:var(--u-gold)}
 .island-wreck-gifts{display:flex;flex-wrap:wrap;gap:var(--u-2)}
-@media(max-width:520px){.island-stall,.island-research-row{flex-direction:column;align-items:stretch}.island-spec-list{grid-template-columns:1fr}}
+@media(max-width:520px){.island-stall,.island-research-row{flex-direction:column;align-items:stretch}.island-spec-list{grid-template-columns:1fr}
+  .island-research-row{grid-template-columns:minmax(0,1fr)}.island-research-row .kit-button{grid-column:1;grid-row:auto;margin-top:var(--u-2)}}
 @media(prefers-reduced-motion:reduce){.island-wreck-fill{transition:none}}
