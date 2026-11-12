@@ -11,9 +11,11 @@ requests at the same moment; it also refuses a level above the maximum or above 
 level the server passes. The loot is worked out in the database too (wave_finish); loot_cap()
 below is the same rule in Python, for the tests and the documentation.
 
-Unlocks (docs/TOWER-DEFENSE.md section 9): a player's unlock wave is the best wave they won,
-on their own island or in any Pirate Point wave they fought in. A kind at a level is unlocked
-once that wave reaches both the kind's unlockWave and the level's levelUnlockWaves entry.
+Unlocks (docs/GAME-V3.md section 4, the campaign table of campaign.json): what may be BUILT on
+an island (a kind, a level, the inner wall ring, the Tech hub's research, the wreck) follows the
+best wave won on THAT island, the game's progress, whoever pays. What belongs to the player (the
+captain's levels, the crew, the weapon shop and Pirate Point) follows the player's own unlock
+wave as before: the best wave they won, on their own island or in any wave they fought in.
 
 Used by: service.py, pirate_point.py and the tests.
 """
@@ -21,7 +23,18 @@ Used by: service.py, pirate_point.py and the tests.
 from dataclasses import dataclass
 
 from server.errors import ApiError
-from server.island.catalogue import Crew, IslandCatalogue, Kind, Loot, Skill, Spot, Weapon, Weather
+from server.island.catalogue import (
+    RESEARCH_SPECS,
+    Crew,
+    IslandCatalogue,
+    Kind,
+    Loot,
+    Research,
+    Skill,
+    Spot,
+    Weapon,
+    Weather,
+)
 
 # The weather state the waves use when the real weather cannot be read.
 CALM = "calm"
@@ -39,6 +52,7 @@ class Built:
 
     kind: str
     level: int
+    spec: str | None = None  # the tower skill it picked at the Tech hub (GAME-V3 section 5)
 
 
 @dataclass(frozen=True)
@@ -52,6 +66,7 @@ class SpotView:
     level: int  # 0 while empty
     cost: int  # the level-1 price of `kind`, also once it is built
     upgrade_cost: int | None  # the price of the next level, None while empty or at the top
+    spec: str | None = None  # the tower skill it picked (GAME-V3 section 5), None for none
 
 
 def kind_named(catalogue: IslandCatalogue, kind: str) -> Kind | None:
@@ -81,7 +96,8 @@ def spot_view(catalogue: IslandCatalogue, spot: Spot, built: Built | None) -> Sp
         )
     kind = kind_of(catalogue, built.kind)
     upgrade = kind.prices[built.level] if built.level < kind.max_level else None
-    return SpotView(spot.id, kind.kind, spot.kinds, True, built.level, kind.coins, upgrade)
+    spec = built.spec if built.spec in RESEARCH_SPECS.get(kind.kind, ()) else None
+    return SpotView(spot.id, kind.kind, spot.kinds, True, built.level, kind.coins, upgrade, spec)
 
 
 def plan_spots(
@@ -113,12 +129,12 @@ def find_spot(
 
 
 def locked(wave: int) -> ApiError:
-    return ApiError(409, "locked", f"Unlocks after wave {wave}.")
+    return ApiError(409, "locked", f"Opens after wave {wave}.")
 
 
 def unlock_wave_of(catalogue: IslandCatalogue, kind: Kind, level: int) -> int:
-    """The best won wave a player needs for `kind` at `level`."""
-    return max(kind.unlock_wave, catalogue.level_unlock_waves[level - 1])
+    """The best won wave `kind` at `level` needs (campaign.json)."""
+    return kind.level_waves[level - 1] if kind.level_waves else 0
 
 
 def unlocked_level(catalogue: IslandCatalogue, kind: Kind, wave: int) -> int:
@@ -157,6 +173,29 @@ def check_unlocked(catalogue: IslandCatalogue, kind: Kind, level: int, wave: int
         raise locked(needed)
 
 
+def check_open(catalogue: IslandCatalogue, item: str, wave: int) -> None:
+    """409 locked ("Opens after wave N.") while the campaign has not opened `item` on the island."""
+    needed = catalogue.campaign.wave_of(item)
+    if needed is None or needed > wave:
+        raise locked(needed if needed is not None else catalogue.waves.highest_wave)
+
+
+def campaign_table(
+    catalogue: IslandCatalogue, wave: int
+) -> tuple[list[str], dict[str, int], list[str]]:
+    """The campaign of an island whose best won wave is `wave`: (open ids, locked ids with the wave
+    they open after, ids that come later and are not built yet)."""
+    opened, closed, later = [], {}, []
+    for item, needed, coming in catalogue.campaign.ids():
+        if coming:
+            later.append(item)
+        elif needed <= wave:
+            opened.append(item)
+        else:
+            closed[item] = needed
+    return opened, closed, later
+
+
 # --- build, upgrade, hire, captain ---
 
 
@@ -186,6 +225,9 @@ def check_build(
         raise spot_taken(catalogue, built[spot.id].kind)
     entry = kind_of(catalogue, kind)
     check_unlocked(catalogue, entry, 1, wave)
+    # A spot of a later step (the inner wall ring after wave 5).
+    if spots is None and catalogue.campaign.spot_wave(spot.id) > wave:
+        raise locked(catalogue.campaign.spot_wave(spot.id))
     return spot, entry.coins
 
 
@@ -327,6 +369,81 @@ def weapon_not_owned(entry: Weapon) -> ApiError:
     return ApiError(409, "not_owned", f"Buy the {entry.name.lower()} first.")
 
 
+# --- the Tech hub (docs/GAME-V3.md section 5) and the wreck (section 4) ---
+
+
+def research_named(catalogue: IslandCatalogue, branch: str) -> Research:
+    for entry in catalogue.research:
+        if entry.branch == branch:
+            return entry
+    raise ApiError(400, "bad_research", "There is no such research.")
+
+
+def check_research(
+    catalogue: IslandCatalogue, branch: str, researched: tuple[str, ...], wave: int
+) -> Research:
+    """400 bad_research, 409 locked (the Tech hub opens after wave 8), 409 known."""
+    entry = research_named(catalogue, branch)
+    check_open(catalogue, "tech_hub", wave)
+    if entry.branch in researched:
+        raise research_known(entry)
+    return entry
+
+
+def research_known(entry: Research) -> ApiError:
+    return ApiError(409, "known", f"{entry.name} are researched on this island already.")
+
+
+def branch_of_spec(spec: str) -> str | None:
+    for branch, specs in RESEARCH_SPECS.items():
+        if spec in specs:
+            return branch
+    return None
+
+
+def check_specialise(
+    catalogue: IslandCatalogue,
+    spot_id: str,
+    spec: str,
+    built: dict[str, Built],
+    researched: tuple[str, ...],
+) -> tuple[Spot, str]:
+    """A tower picks one skill of its kind (409 not_built, 400 bad_spec, 422 wrong_kind,
+    409 not_researched). Returns the spot and the branch (the tower's kind)."""
+    spot = find_spot(catalogue, spot_id)
+    standing = built.get(spot.id)
+    if standing is None or standing.kind not in spot.kinds:
+        raise ApiError(409, "not_built", "Build something on this spot first.")
+    branch = branch_of_spec(spec)
+    if branch is None:
+        raise ApiError(400, "bad_spec", "There is no such tower skill.")
+    if branch != standing.kind:
+        name = kind_of(catalogue, standing.kind).name.lower()
+        raise BuildRefused(422, "wrong_kind", f"A {name} cannot learn that skill.")
+    if branch not in researched:
+        raise not_researched(research_named(catalogue, branch))
+    return spot, branch
+
+
+def not_researched(entry: Research) -> ApiError:
+    return ApiError(409, "not_researched", f"Research {entry.name.lower()} at the Tech hub first.")
+
+
+def check_wreck_gift(catalogue: IslandCatalogue, amount: int, paid: int, wave: int) -> int:
+    """400 bad_gift, 409 locked (after wave 6), 409 repaired. Returns what this gift pays (never
+    more than the repair still needs)."""
+    if amount not in catalogue.wreck.gifts:
+        raise ApiError(400, "bad_gift", "Pick one of the amounts shown.")
+    check_open(catalogue, "wreck", wave)
+    if paid >= catalogue.wreck.goal:
+        raise wreck_repaired()
+    return min(amount, catalogue.wreck.goal - paid)
+
+
+def wreck_repaired() -> ApiError:
+    return ApiError(409, "repaired", "The wreck is repaired. Sailing opens later.")
+
+
 def spot_taken(catalogue: IslandCatalogue, kind: str) -> BuildRefused:
     entry = kind_named(catalogue, kind)
     name = entry.name if entry else "Something"
@@ -347,15 +464,27 @@ def next_wave(catalogue: IslandCatalogue, wave_best: int, stored_next: int | Non
     return min(max(wave, 1), catalogue.waves.highest_wave)
 
 
+def loot_rates(loot: Loot, wave: int) -> tuple[int, int, int]:
+    """(base, per wave, Pirate Point base) for wave_finish, whose loot is base + per_wave x wave.
+    From lateFrom on, a wave adds latePerWave instead of perWave: the same line, its base raised by
+    (perWave - latePerWave) x lateFrom, so the loot never jumps and the database needs no change."""
+    if not loot.late_from or wave <= loot.late_from or loot.late_per_wave >= loot.per_wave:
+        return loot.base, loot.per_wave, loot.pirate_point_base
+    lift = (loot.per_wave - loot.late_per_wave) * loot.late_from
+    return loot.base + lift, loot.late_per_wave, loot.pirate_point_base + lift
+
+
 def loot_cap(
     loot: Loot, wave: int, house_levels: int, pirate_point: bool = False, boss: bool = False
 ) -> int:
-    """The loot for surviving wave `wave`: 10 + 5 x wave + 5 x house levels on an island, and
-    20 + 5 x wave on Pirate Point (which has no houses); a boss wave pays twice that."""
+    """The loot for surviving wave `wave`: 25 + 10 x wave + 10 x house levels on an island, and
+    40 + 10 x wave on Pirate Point (which has no houses), 4 a wave instead of 10 past wave 30; a
+    boss wave pays twice that."""
+    base, per_wave, point_base = loot_rates(loot, wave)
     if pirate_point:
-        amount = loot.pirate_point_base + loot.per_wave * wave
+        amount = point_base + per_wave * wave
     else:
-        amount = loot.base + loot.per_wave * wave + loot.per_house * house_levels
+        amount = base + per_wave * wave + loot.per_house * house_levels
     return amount * loot.boss_multiplier if boss else amount
 
 

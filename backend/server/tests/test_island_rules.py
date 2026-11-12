@@ -51,7 +51,7 @@ def test_the_prices_and_the_starting_coins_are_the_economy_table():
         "house": (50, 100),
     }
     assert {m.crew: (m.coins, m.max, m.unlock_wave) for m in catalogue.crew} == {
-        "gunner": (40, 2, 5),
+        "gunner": (40, 2, 3),
         "carpenter": (30, 2, 5),
         "lookout": (25, 1, 8),
     }
@@ -97,19 +97,46 @@ def test_the_next_wave_is_the_stored_restart_or_the_best_plus_one(best, stored, 
     assert rules.next_wave(load_island(), best, stored) == next_wave
 
 
-def test_the_unlocks_follow_the_table_of_section_nine():
+def test_the_unlocks_follow_the_campaign_table_of_game_v3_section_four():
     catalogue = load_island()
     table = dict(rules.unlock_table(catalogue))
 
     assert {item for item, wave in table.items() if wave == 0} == {
         "wall:1", "cannon:1", "captain:1",
     }  # fmt: skip
-    assert (table["captain:2"], table["captain:3"]) == (1, 1)
-    assert (table["wall:2"], table["cannon:2"], table["house:1"], table["house:2"]) == (2, 2, 2, 2)
-    assert (table["mortar:1"], table["mortar:2"], table["watchtower:1"]) == (3, 3, 3)
-    assert (table["crew:gunner"], table["crew:carpenter"], table["wall:3"]) == (5, 5, 5)
+    assert (table["captain:2"], table["captain:3"], table["house:1"]) == (1, 1, 1)
+    assert (table["wall:2"], table["cannon:2"], table["house:2"]) == (2, 2, 2)
+    assert (table["mortar:1"], table["mortar:2"], table["watchtower:1"]) == (2, 2, 3)
+    assert (table["crew:gunner"], table["crew:carpenter"], table["wall:3"]) == (3, 5, 5)
     assert (table["mortar:3"], table["crew:lookout"]) == (5, 8)
     assert (table["captain:4"], table["captain:5"]) == (8, 8)
+    campaign = catalogue.campaign
+    assert [campaign.wave_of(item) for item in ("harbor", "market_calls", "ring_walls")] == [
+        4,
+        4,
+        5,
+    ]
+    assert [campaign.wave_of(item) for item in ("wreck", "football_board", "tech_hub")] == [6, 7, 8]
+    assert [campaign.wave_of(f"tier_{n}") for n in (12, 15, 20, 30, 50)] == [12, 15, 20, 30, 50]
+    assert campaign.spot_wave("wall_7") == 5 and campaign.spot_wave("wall_1") == 0
+
+
+def test_the_inner_wall_ring_opens_after_wave_five():
+    catalogue = load_island()
+
+    with pytest.raises(ApiError) as early:
+        rules.check_build(catalogue, "wall_9", "wall", {}, 4)
+    assert (early.value.code, early.value.message) == ("locked", "Opens after wave 5.")
+    assert rules.check_build(catalogue, "wall_9", "wall", {}, 5)[1] == 10
+    assert rules.check_build(catalogue, "wall_1", "wall", {}, 0)[1] == 10
+
+
+def test_the_campaign_table_says_what_is_open_locked_and_later():
+    opened, locked, later = rules.campaign_table(load_island(), 4)
+
+    assert {"harbor", "market_calls", "watchtower:1", "mortar:1"} <= set(opened)
+    assert locked["ring_walls"] == 5 and locked["tech_hub"] == 8 and "harbor" not in locked
+    assert later == ["ship"]
 
 
 def test_a_locked_kind_level_crew_or_captain_level_is_refused_with_its_wave():
@@ -117,7 +144,7 @@ def test_a_locked_kind_level_crew_or_captain_level_is_refused_with_its_wave():
     wall = {"wall_1": rules.Built("wall", 2)}
 
     with pytest.raises(ApiError) as mortar:
-        rules.check_build(catalogue, "cannon_1", "mortar", {}, 2)
+        rules.check_build(catalogue, "cannon_1", "mortar", {}, 1)
     with pytest.raises(ApiError) as level:
         rules.check_upgrade(catalogue, "wall_1", wall, 4)
     with pytest.raises(ApiError) as crew:
@@ -125,9 +152,9 @@ def test_a_locked_kind_level_crew_or_captain_level_is_refused_with_its_wave():
     with pytest.raises(ApiError) as captain:
         rules.check_captain(catalogue, 1, 0)
 
-    assert (mortar.value.code, mortar.value.message) == ("locked", "Unlocks after wave 3.")
+    assert (mortar.value.code, mortar.value.message) == ("locked", "Opens after wave 2.")
     assert [e.value.message for e in (level, crew, captain)] == [
-        "Unlocks after wave 5.", "Unlocks after wave 8.", "Unlocks after wave 1.",
+        "Opens after wave 5.", "Opens after wave 8.", "Opens after wave 1.",
     ]  # fmt: skip
 
 
@@ -383,3 +410,17 @@ def test_pirate_point_pays_its_own_base_and_no_houses():
 
     assert loot.pirate_point_base == 40  # 40 + 10 per wave since the faster pace of 11 Nov
     assert rules.loot_cap(loot, 1, 2, pirate_point=True) == 50
+
+
+@pytest.mark.parametrize(("wave", "loot"), [(30, 325), (31, 329), (40, 365), (100, 605)])
+def test_the_loot_grows_four_a_wave_past_wave_thirty(wave, loot):
+    # GAME-V3 section 4: 100 waves, and the coins stay worth something (the prices do not grow).
+    catalogue = load_island()
+
+    assert rules.loot_cap(catalogue.loot, wave, 0) == loot
+    base, per_wave, point_base = rules.loot_rates(catalogue.loot, wave)
+    assert base + per_wave * wave == loot  # the line wave_finish draws, with plain arguments
+    assert (
+        rules.loot_cap(catalogue.loot, wave, 0, pirate_point=True) == point_base + per_wave * wave
+    )
+    assert rules.loot_rates(catalogue.loot, 12) == (25, 10, 40)

@@ -34,6 +34,10 @@ POST /api/market/calls  {"asset": "harbor-trust", "direction": "up", "stake": 10
       409 insufficient_funds  not enough coins for the stake
       409 market_closed       the asset has no live price right now
       409 too_many_calls      3 calls are open already
+      409 harbor_closed       the island game is on and no game the player is in has won wave
+                              4 yet (docs/GAME-V3.md section 4: the Harbor's market stall
+                              opens after wave 4). A player with no island game at all (the
+                              class demo) is not held back.
       422 bad_stake           the stake is not 5, 10 or 25
       422 validation_error    a missing or extra field, a bad direction or actionUid
       429 too_many_requests   more than 20 calls a minute
@@ -52,10 +56,14 @@ from fastapi import APIRouter, Request, Response
 from pydantic import BaseModel, ConfigDict, Field, StrictInt
 
 from server.auth import PlayerDep
+from server.errors import ApiError
+from server.flags import is_enabled
+from server.island import service as island_service
 from server.market import calls
 from server.market.calls_store import CallRow
 from server.market.exchange import MarketDep
 from server.routes.market import MarketOnDep
+from server.settings import SettingsDep
 from server.supabase_admin import AdminDep
 from server.weather.mapping import format_utc_time
 
@@ -105,6 +113,26 @@ class CallsResponse(BaseModel):
 
 class NewCallResponse(CallOut):
     balance: int
+
+
+# GAME-V3 section 4: without a campaign table at hand the stall opens after this wave.
+HARBOR_WAVE = 4
+
+
+async def check_harbor_open(request: Request, settings, admin, player_id: str) -> None:
+    """409 harbor_closed while no game the player is in has won the wave that opens the market
+    calls (campaign.json, market_calls). Only while the island game is on."""
+    if not is_enabled("islands", settings.flags):
+        return
+    catalogue = getattr(request.app.state, "island", None)
+    needed = (catalogue.campaign.wave_of("market_calls") if catalogue else None) or HARBOR_WAVE
+    best = await island_service.harbor_wave(admin, player_id)
+    if best is not None and best < needed:
+        raise ApiError(
+            409,
+            "harbor_closed",
+            f"The Harbor opens after wave {needed}. Win wave {needed} in your game first.",
+        )
 
 
 def time_or_none(moment: datetime | None) -> str | None:
@@ -165,8 +193,10 @@ async def post_call(
     admin: AdminDep,
     request: Request,
     response: Response,
+    settings: SettingsDep,
 ) -> NewCallResponse:
     request.app.state.call_budget.spend(player.id)
+    await check_harbor_open(request, settings, admin, player.id)
     row, balance = await calls.open_call(
         admin, market, player.id, body.asset, body.direction, body.stake, body.actionUid
     )

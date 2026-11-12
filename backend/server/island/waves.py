@@ -32,7 +32,7 @@ from server.game.islet_store import player_not_set_up
 from server.island import games, store
 from server.island.catalogue import IslandCatalogue, Weather
 from server.island.codes import read_code
-from server.island.rules import is_boss, weather_for
+from server.island.rules import is_boss, loot_rates, weather_for
 from server.island.service import no_such_island
 from server.island.store import Refusal, WaveRow
 from server.supabase_admin import SupabaseAdmin, SupabaseRejected
@@ -200,17 +200,24 @@ async def finish(
     survived: bool,
     ships_sunk: int,
 ) -> WaveFinish:
-    """End this player's part of a wave. A repeat answers the stored result and pays nothing."""
+    """End this player's part of a wave. A repeat answers the stored result and pays nothing.
+    Past wave lateFrom the loot grows more slowly (rules.loot_rates): the wave's number is read
+    first, so the rates go to wave_finish as plain arguments."""
     loot = catalogue.loot
+    base, per_wave, point_base = loot.base, loot.per_wave, loot.pirate_point_base
+    if loot.late_from:
+        where = await store.read_wave_place(admin, str(wave_id))
+        if where is not None and where.wave is not None:
+            base, per_wave, point_base = loot_rates(loot, where.wave)
     arguments = {
         "p_player_id": player_id,
         "p_wave_id": str(wave_id),
         "p_survived": survived,
         "p_ships_sunk": ships_sunk,
-        "p_loot_base": loot.base,
-        "p_loot_per_wave": loot.per_wave,
+        "p_loot_base": base,
+        "p_loot_per_wave": per_wave,
         "p_loot_per_house": loot.per_house,
-        "p_point_loot_base": loot.pirate_point_base,
+        "p_point_loot_base": point_base,
         "p_boss_every": catalogue.waves.boss_every,
         "p_boss_multiplier": loot.boss_multiplier,
         "p_restart_back": catalogue.waves.restart_back,
