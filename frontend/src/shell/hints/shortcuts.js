@@ -5,9 +5,9 @@ import {node} from '../../ui/kit/dom.js';
 import {createModal} from '../../ui/kit/modal.js';
 
 const shortcuts=[
-  ['Walk','WASD or arrow keys'],['Fire your musket','F (hold for more shots)'],['Interact','E'],['Open the sea chart','M'],['Zoom','Mouse wheel'],
+  ['Walk','WASD or arrow keys'],['Fire your musket','F (hold for more shots)'],['Interact','Walk up close, then E (hold E to help a fallen teammate up)'],['Open the sea chart','M'],['Zoom','Mouse wheel'],
   ['Dialogue choices','1 to 9 · arrows to browse · Enter to confirm'],['Close or pause','Escape: close a view, skip a cinematic, then pause'],
-  ['Touch','Tap the map to walk or drag the stick · Inspect nearby · Chart · Menu'],['Gamepad','Left stick or D-pad · A interact · Y chart · Menu pause'],
+  ['Touch','Tap the map to walk or drag the stick · Use button when something is close · Menu'],['Gamepad','Left stick or D-pad · A interact (same as E) · Y chart · Menu pause'],
 ];
 
 export function createShortcutsOverlay(){

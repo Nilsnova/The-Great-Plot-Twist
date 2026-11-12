@@ -31,6 +31,8 @@
 @keyframes hud-arrive{0%{opacity:0;transform:translate(-50%,-10px)}12%,82%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
 .hud-play .interact{position:absolute;bottom:96px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:12px;max-width:calc(100vw - 40px);padding:8px 16px 8px 8px;background:var(--u-sea);border:0}
 .hud-play .interact kbd{display:grid;place-items:center;min-width:34px;height:34px;padding:0 6px;font:800 18px/1 var(--u-font);color:#2b1d06;background:var(--u-gold);border:2px solid var(--u-deep)}
+.hud.hud-play .interact.floating{bottom:auto;transform:translate(-50%,-100%);pointer-events:none;white-space:nowrap}
+.hud-play .interact-nudge{position:absolute;transform:translate(-50%,-100%);padding:7px 14px;font:700 16px/1.3 var(--u-font);color:var(--u-text,#fff0c5);background:var(--u-sea);box-shadow:var(--u-frame);border-radius:var(--u-radius-sm);pointer-events:none;white-space:nowrap}
 .hud-play .interact strong{font:600 17px/1.35 var(--u-font)}
 .hud-play .presence-hud{display:none}
 

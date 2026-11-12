@@ -3,7 +3,7 @@
 // through the room, the controller (positions, the pin, holding E, the narrator events), the HUD words, the
 // fake server's revive route, and the balance numbers of the doc (waves 1-3 are hard to lose this way).
 import { readFileSync } from 'node:fs';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { CONFIG, createWave, curveFor, revivePrice } from '../../src/pirates/sim.js';
 import { INPUT_LEAD_TICKS, ROOM_EVENTS, readMessage, toMessage } from '../../src/pirates/sync.js';
 import { HEARD_EVERY_MS, LOST_FALLEN, createWaveController } from '../../src/pirates/controller.js';
@@ -401,5 +401,53 @@ describe('captain health: the second helper of one fall', () => {
     expect(reviveCaptain).toHaveBeenCalledTimes(1);
     expect(h.shown.prompt.at(-1)[0]).toBe('Already up: a teammate helped them first.');
     expect(h.sent.some(item => item.type === 'captain_revive')).toBe(false);
+  });
+});
+
+// Press E to open a card (src/world/reach.js): a quick tap of E next to a fallen teammate starts no payment, and
+// the revive still works by holding E from the same spot.
+describe('captain health: E taps and holds (lane T19)', () => {
+  afterEach(() => vi.unstubAllGlobals());
+  it('a tap of E near a fallen teammate never pays or sends a revive; holding E still does', async () => {
+    const win = new EventTarget();
+    vi.stubGlobal('window', win); vi.stubGlobal('HTMLElement', class {});
+    const key = (type, extra = {}) => win.dispatchEvent(Object.assign(new Event(type), { code: 'KeyE', ...extra }));
+    const h = harness();
+    h.controller.start(INFO);
+    await h.advance(1100);
+    const benAt = { x: 40, z: 0 };
+    let seq = 1;
+    for (let i = 0; i < 6000 && !h.controller.state.party?.find(item => item.id === 'p-ben')?.down; i++) {
+      const boarder = h.controller.state.boarders[0];
+      if (boarder) { benAt.x = boarder.x; benAt.z = boarder.z; }
+      if (i % 10 === 0) h.hear('captain_move', { by: 'p-ben', seq: seq++, t: (h.controller.wave.ticks + 8) * .05, x: benAt.x, z: benAt.z });
+      h.player.x = -18; h.player.z = -10;
+      await h.advance(50);
+    }
+    const ben = h.controller.state.party.find(item => item.id === 'p-ben');
+    h.player.x = ben.x + 1; h.player.z = ben.z;
+    await h.advance(100);
+    expect(h.controller.wave.action).toMatchObject({ kind: 'revive' }); // the teammate is in reach: E is theirs
+    // Taps (what a press of E near a building is): down and up inside 0.3 s, three times.
+    for (let i = 0; i < 3; i++) { key('keydown'); await h.advance(300); key('keyup'); await h.advance(100); }
+    expect(h.reviveCaptain).not.toHaveBeenCalled();
+    expect(h.controller.revive).toBe(null);
+    expect(h.sent.some(item => item.type === 'captain_revive')).toBe(false);
+    // A real hold (with the browser's key repeat) still helps them up.
+    key('keydown'); for (let t = 0; t < 2300; t += 100) { await h.advance(100); key('keydown', { repeat: true }); }
+    expect(h.reviveCaptain).toHaveBeenCalledTimes(1);
+    key('keyup');
+  });
+  it('a tap of E that opens a card (an overlay is up) does not start a revive hold', async () => {
+    const win = new EventTarget();
+    vi.stubGlobal('window', win); vi.stubGlobal('HTMLElement', class {});
+    const h = harness();
+    h.controller.start(INFO);
+    await h.advance(1100);
+    win.dispatchEvent(Object.assign(new Event('keydown'), { code: 'KeyE' }));
+    await h.advance(2500); // no fallen teammate anywhere: nothing to pay for
+    expect(h.reviveCaptain).not.toHaveBeenCalled();
+    expect(h.controller.revive).toBe(null);
+    win.dispatchEvent(Object.assign(new Event('keyup'), { code: 'KeyE' }));
   });
 });
