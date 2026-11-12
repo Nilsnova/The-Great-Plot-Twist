@@ -25,8 +25,10 @@ export const coinText = n => (Number.isSafeInteger(n) ? formatCoins(n) : '🪙 ?
 // A visitor (§6, 11 Nov) builds and upgrades on the friend's island with their own coins: the same
 // card, with "You pay · it stays on <owner>'s island" and no crew button.
 // One primary button at most (the build or the upgrade); `soon` is the small "Coming soon" line.
+// GAME-V3.md §4.2: a built building on an island (not Pirate Point) has a secondary "Tear down" in
+// `demolish` {label, disabled, reason}; battle: a wave runs on screen, so it waits for the break.
 export function buildCardModel({spotId, kind, slot = null, spot = null, coins = null, visitor = false, ownerName = '',
-  busy = false, message = '', unlocks = null, prices = null, point = false, campaign = null} = {}) {
+  busy = false, message = '', unlocks = null, prices = null, point = false, campaign = null, battle = false} = {}) {
   const place = slot ?? (kind === 'cannon' || kind === 'mortar' ? 'tower' : kind ?? 'wall');
   const built = spot?.built === true, standing = built ? spot.kind : null;
   const level = built ? (Number.isSafeInteger(spot.level) && spot.level > 0 ? spot.level : 1) : 0;
@@ -39,7 +41,8 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
     mode: 'info', built, kind: shown, level, maxLevel: shown ? maxLevel(shown) : 0, pips: [], stats: '', choices: [], cost: '',
     button: '', disabled: true, reason: '', upgrade: null, soon: '', message, busy, skills: null, locked: false,
     coins: coins === null ? '' : `You have ${coinText(coins)}`,
-    owner: point ? 'Paid by you · belongs to Pirate Point' : visitor ? `You pay · it stays on ${ownerName ? `${ownerName}'s` : 'this'} island` : '', hire: false};
+    owner: point ? 'Paid by you · belongs to Pirate Point' : visitor ? `You pay · it stays on ${ownerName ? `${ownerName}'s` : 'this'} island` : '', hire: false,
+    demolish: null};
   if (shown && level > 0) {
     model.pips = Array.from({length: model.maxLevel}, (_, index) => index < level);
     model.stats = statLine(shown, level);
@@ -79,10 +82,12 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
     else model.disabled = false;
     return model;
   }
-  // Built: its tower skill (GAME-V3.md §5), then the next level, if any.
+  // Built: its tower skill (GAME-V3.md §5), then the next level, if any; and a way to tear it down (§4.2).
   if (!point && campaign && BRANCH_BY_ID[shown]) model.skills = skillsOf(shown, spot, campaign, busy);
   // GAME-V3.md "Houses": a house keeps its loot and, from level 2, picks a role (free, changeable between waves).
   if (!point && shown === 'house') model.skills = rolesOf(spot, level, busy);
+  if (!point) model.demolish = {label: busy === 'demolish' ? 'Checking…' : 'Tear down', disabled: battle || !!busy,
+    reason: battle ? 'You can tear it down between waves.' : ''};
   const next = level + 1;
   if (level >= model.maxLevel) { model.reason = shown === 'house' ? '' : 'Highest level reached.'; return model; }
   if (allowed(shown) < next) { model.soon = `Level ${next}: ${opensText(lockedWave(unlocks, {kind: shown, level: next}) ?? '?')}.`; return model; }
@@ -317,4 +322,30 @@ export function wreckModel({campaign = null, coins = null, busy = null, message 
     return gift;
   });
   return model;
+}
+
+// GAME-V3.md §4.2: the confirmation before a tear-down. quote: the server's {kind, name, level, refunds:
+// [{id, name, coins, you}]} (null while it loads); busy: the tear-down is on its way. The safe button
+// ("Keep it") is the one that takes the focus.
+export function demolishModel({quote = null, busy = false, message = ''} = {}) {
+  const name = quote?.name ?? BUILDINGS[quote?.kind]?.name ?? 'building';
+  const title = quote ? `Tear down this ${name}?` : 'Tear down?';
+  const model = {title, question: '', lines: [], refunds: [], button: busy ? 'Tearing down…' : 'Tear down', disabled: !quote || busy,
+    keep: 'Keep it', message, after: 'The spot is empty again. You can build anything there that is open now.'};
+  if (!quote) { model.question = message ? '' : 'Working out who gets coins back…'; return model; }
+  const mine = quote.refunds.find(item => item.you), others = quote.refunds.filter(item => !item.you && item.coins > 0);
+  model.question = `Tear down this ${name} (level ${quote.level})?`;
+  model.refunds = quote.refunds.map(item => ({id: item.id, name: item.you ? 'You' : item.name, coins: coinText(item.coins), you: item.you}));
+  model.lines = [mine && mine.coins > 0 ? `You get back ${coinText(mine.coins)}.` : 'You paid nothing for it, so you get nothing back.',
+    ...others.map(item => `${item.name} gets back ${coinText(item.coins)}.`)];
+  model.note = 'Everyone gets back half of what they paid for it.';
+  return model;
+}
+// The toast for a payer whose refund arrived because a teammate tore the building down (the room's
+// island_changed carries {who, kind, level, refunds: [{id, coins}]}); null when there is nothing for `me`.
+export function refundToast({demolished, me, whoName = ''} = {}) {
+  const mine = demolished?.refunds?.find(item => item?.id === me);
+  if (!mine || !Number.isSafeInteger(mine.coins) || mine.coins <= 0 || demolished.who === me) return null;
+  const name = BUILDINGS[demolished.kind]?.name ?? 'building';
+  return `${whoName || 'A teammate'} tore down the ${name}. You got back ${coinText(mine.coins)}.`;
 }

@@ -18,6 +18,8 @@
 //   await api.learnSkill({skill, actionUid});    // POST /api/island/skill        (§14)
 //   await api.buyWeapon({weapon, actionUid});    // POST /api/island/weapon/buy   (§15)
 //   await api.equipWeapon({weapon});             // POST /api/island/weapon/equip
+//   await api.demolishQuote({spot, code?});      // GET  /api/island/demolish     (GAME-V3.md §4.2: half back to each payer)
+//   await api.demolish({spot, actionUid, code?}); // POST /api/island/demolish    (between waves, any member; not the heart)
 //   await api.piratePoint();                     // GET  /api/pirate-point        (§5)
 //   await api.pointBuild({spot, kind, actionUid}) / api.pointUpgrade({spot, actionUid})
 //   await api.inviteJoin({code, actionUid});     // POST /api/island/invite/join  (§6, an alias of joinGame)
@@ -270,6 +272,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     if (unlocking && place.waveBest !== undefined && spotWave(spot) > place.waveBest) refuse(409, 'locked', lockedMessage(spotWave(spot)));
     if (player.coins < price) refuse(409, 'insufficient_funds', `A ${name.toLowerCase()} costs ${price} coins. You need more coins.`);
     player.coins -= price; place.built.add(spot); place.levels.set(spot, 1); place.kinds.set(spot, kind); once(player, `build:${actionUid}`);
+    paidFor(place, spot, 1, price);
   }
   function upgradeOn(place, ids, { spot, actionUid }, unlocks) {
     if (typeof spot !== 'string' || !uid(actionUid)) invalid('Send the spot and an action id.');
@@ -282,6 +285,37 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     if (unlocks && (unlocks.levels[kind] ?? 0) < level + 1) refuse(409, 'locked', lockedMessage(unlockWave({ kind, level: level + 1 })));
     if (player.coins < prices[level]) refuse(409, 'insufficient_funds', `Level ${level + 1} costs ${prices[level]} coins. You need more coins.`);
     player.coins -= prices[level]; place.levels.set(spot, level + 1); once(player, `upgrade:${actionUid}`);
+    paidFor(place, spot, level + 1, prices[level]);
+  }
+  // GAME-V3.md §4.2 (building_payments on the server): who paid for each level of the building on a spot.
+  function paidFor(place, spot, level, coins) {
+    if (!(place.payments instanceof Map)) place.payments = new Map();
+    const rows = level === 1 ? [] : place.payments.get(spot) ?? [];
+    place.payments.set(spot, [...rows, { level, payer: playerId, coins }]);
+  }
+  // Half of what each payer paid for the building on `spot`, rounded down; a level nobody has a row for
+  // (built before the payment rows, as the friends' islands here) counts as the host's at its price.
+  function refundsOf(island, spot) {
+    const kind = island.kinds?.get(spot) ?? kindOfSpot(spot), level = island.levels?.get(spot) ?? 1, prices = BUILDINGS[kind].price;
+    const rows = (island.payments instanceof Map ? island.payments.get(spot) : null) ?? [], paid = new Map();
+    for (let step = 1; step <= level; step++) {
+      const row = rows.find(item => item.level === step), who = row ? row.payer : island.owner;
+      paid.set(who, (paid.get(who) ?? 0) + (row ? row.coins : prices[step - 1]));
+    }
+    return [...paid].map(([id, coins]) => ({ id, paid: coins, coins: Math.floor(coins / 2) })).filter(item => item.paid > 0)
+      .sort((a, b) => b.paid - a.paid || (a.id < b.id ? -1 : 1));
+  }
+  const PROTECTED = new Set(['cabin', 'heart', 'island_cabin', 'island_bell', 'island_harbor', 'island_techhub', 'island_wreck']);
+  function demolishable(island, spot) {
+    if (PROTECTED.has(spot)) refuse(409, 'protected', 'The heart of the island stays. Only walls, towers and houses come down.');
+    if (!ISLAND_RULES.spots.includes(spot)) refuse(404, 'no_such_spot', 'There is no such build spot here.');
+    if (!island.built.has(spot)) refuse(409, 'not_built', 'Nothing stands on this spot now.');
+    for (const run of world.waves.values()) {
+      if (run.place === island.code && running(run)) refuse(409, 'wave_running', 'A wave is under way. Tear it down between waves.');
+    }
+    const kind = island.kinds?.get(spot) ?? kindOfSpot(spot);
+    return { spot, kind, name: ISLAND_RULES.kinds[kind][0], level: island.levels?.get(spot) ?? 1,
+      refunds: refundsOf(island, spot).map(item => ({ id: item.id, name: nameOf(item.id), coins: item.coins, you: item.id === playerId })) };
   }
   const placeOf = where => {
     if (where === 'pirate_point') return { key: 'pirate_point', island: null };
@@ -415,6 +449,27 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       if (player.coins < gift) refuse(409, 'insufficient_funds', `That costs ${gift} coins. You need more coins.`);
       player.coins -= gift; island.wreck = paid + gift; player.actions.set(`wreck:${actionUid}`, true);
       return island === mine ? view() : visitedView(island);
+    },
+    // GAME-V3.md §4.2: what a tear-down gives back, and the tear-down (any member, between waves only).
+    async demolishQuote({ spot, code } = {}) {
+      if (typeof spot !== 'string') invalid('Send the spot.');
+      const mine = world.islands.get(me().code), island = code === undefined || code === null ? mine : visited(code);
+      return { ...demolishable(island, canonicalSpot(spot)), repeat: false };
+    },
+    async demolish({ spot, actionUid, code } = {}) {
+      if (typeof spot !== 'string' || !uid(actionUid)) invalid('Send the spot and an action id.');
+      const mine = world.islands.get(me().code), island = code === undefined || code === null ? mine : visited(code), player = me();
+      const answer = () => (island === mine ? view() : visitedView(island));
+      const done = player.actions.get(`demolish:${actionUid}`);
+      if (done) return { ...answer(), demolished: { ...done, repeat: true } };
+      spot = canonicalSpot(spot);
+      const quote = demolishable(island, spot);
+      for (const refund of quote.refunds) { const payer = world.players.get(refund.id); if (payer) payer.coins += refund.coins; }
+      island.built.delete(spot); island.levels?.delete(spot); island.kinds?.delete(spot);
+      if (island.specs instanceof Map) island.specs.delete(spot);
+      if (island.payments instanceof Map) island.payments.delete(spot);
+      player.actions.set(`demolish:${actionUid}`, quote);
+      return { ...answer(), demolished: { ...quote, refunds: quote.refunds.map(item => ({ ...item, you: item.id === playerId })), repeat: false } };
     },
     async piratePoint() { me(); return pointView(); },
     async pointBuild(body = {}) { buildOn(world.point, ISLAND_RULES.pointSpots, body, allowed(world.islands.get(me().code))); return pointView(); },
@@ -601,6 +656,8 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
         if (route === 'POST /api/island/research') return reply(200, await api.research(body));
         if (route === 'POST /api/island/tower-skill') return reply(200, await api.specialise(body));
         if (route === 'POST /api/island/wreck') return reply(200, await api.repairWreck(body));
+        if (route === 'GET /api/island/demolish') return reply(200, await api.demolishQuote({ spot: searchParams.get('spot'), code: searchParams.get('code') }));
+        if (route === 'POST /api/island/demolish') return reply(200, await api.demolish(body));
         if (route === 'POST /api/island/invite/join') return reply(200, await api.inviteJoin(body));
         if (route === 'POST /api/games') return reply(200, await api.createGame(body));
         if (route === 'POST /api/games/join') return reply(200, await api.joinGame(body));
@@ -642,10 +699,11 @@ const BODY_KEYS = Object.freeze({ '/api/island/build': ['spot', 'kind', 'actionU
   '/api/island/invite/join': ['code', 'actionUid'], '/api/pirate-point/build': ['spot', 'kind', 'actionUid'], '/api/pirate-point/upgrade': ['spot', 'actionUid'],
   '/api/waves/join': ['waveId'], '/api/waves/finish': ['waveId', 'survived', 'shipsSunk'], '/api/waves/revive': ['waveId', 'fallen', 'downAt', 'actionUid'],
   '/api/games': [], '/api/games/join': ['code', 'actionUid'], '/api/games/leave': ['code'],
-  '/api/island/research': ['branch', 'actionUid'], '/api/island/tower-skill': ['spot', 'spec'], '/api/island/wreck': ['amount', 'actionUid'] });
+  '/api/island/research': ['branch', 'actionUid'], '/api/island/tower-skill': ['spot', 'spec'], '/api/island/wreck': ['amount', 'actionUid'],
+  '/api/island/demolish': ['spot', 'actionUid'] });
 // Keys a body may also carry: `code` builds, upgrades, researches, picks a skill or mends the wreck on a game's island.
 const OPTIONAL_KEYS = Object.freeze({ '/api/island/build': ['code'], '/api/island/upgrade': ['code'], '/api/games': ['actionUid'],
-  '/api/island/research': ['code'], '/api/island/tower-skill': ['code'], '/api/island/wreck': ['code'] });
+  '/api/island/research': ['code'], '/api/island/tower-skill': ['code'], '/api/island/wreck': ['code'], '/api/island/demolish': ['code'] });
 const ACTION_UID = /^[A-Za-z0-9_-]{8,64}$/;
 const exactKeys = (body, keys, optional = []) => !!body && typeof body === 'object' && !Array.isArray(body)
   && Object.keys(body).filter(key => !optional.includes(key)).sort().join() === [...keys].sort().join();
@@ -744,6 +802,11 @@ export function createFakeIslandTransport({ coins = ISLAND_RULES.startingCoins, 
       if (method === 'POST' && pathname === '/api/island/research') return ok(await api.research(body));
       if (method === 'POST' && pathname === '/api/island/tower-skill') return ok(await api.specialise(body));
       if (method === 'POST' && pathname === '/api/island/wreck') return ok(await api.repairWreck(body));
+      if (method === 'GET' && pathname === '/api/island/demolish') {
+        const asked = new URLSearchParams(query);
+        return ok(await api.demolishQuote({ spot: asked.get('spot') ?? '', code: asked.get('code') }));
+      }
+      if (method === 'POST' && pathname === '/api/island/demolish') return ok(await api.demolish(body));
       if (method === 'POST' && pathname === '/api/island/invite/join') return ok(await api.inviteJoin(body));
       if (method === 'POST' && pathname === '/api/games') return ok(await api.createGame(body));
       if (method === 'POST' && pathname === '/api/games/join') return ok(await api.joinGame(body));

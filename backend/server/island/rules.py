@@ -259,6 +259,45 @@ def check_upgrade(
     return spot, kind, unlocked_level(catalogue, kind, wave)
 
 
+# --- tearing a building down (docs/GAME-V3.md section 4.2) ---
+
+# What is never torn down: the heart of the island (the cabin), the harbor bell and the campaign's
+# buildings. None of them has a building row; the database refuses every plot that is not an
+# island build spot as well (the home islet's buildings, the signal station among them).
+PROTECTED = frozenset(
+    {
+        CABIN,
+        "heart",
+        "island_cabin",
+        "island_bell",
+        "island_harbor",
+        "island_techhub",
+        "island_wreck",
+    }
+)
+
+
+def protected() -> ApiError:
+    return ApiError(
+        409, "protected", "The heart of the island stays. Only walls, towers and houses come down."
+    )
+
+
+def check_demolish(catalogue: IslandCatalogue, spot_id: str) -> Spot:
+    """The spot of a tear-down: 409 protected (the heart, the bell, the Harbor, the Tech hub, the
+    wreck), 404 no_such_spot. Whether something stands there, whether a wave runs and who paid
+    for it are the database's to say (island_demolish), so a repeated click is answered there."""
+    if spot_id in PROTECTED:
+        raise protected()
+    return find_spot(catalogue, spot_id)
+
+
+def price_table(catalogue: IslandCatalogue) -> dict[str, list[int]]:
+    """Every kind's price list, the catalogue the database refunds a level without a payment row
+    at (paid by the host: the host's own builds and everything from before the payment rows)."""
+    return {kind.kind: list(kind.prices) for kind in catalogue.kinds}
+
+
 def max_level(name: str) -> ApiError:
     return ApiError(409, "max_level", f"{name} is at its highest level.")
 

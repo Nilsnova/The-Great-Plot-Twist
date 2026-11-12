@@ -12,7 +12,8 @@
 //   - landing on an island where a wave runs joins it (once per landing), so a friend who comes late
 //     fights too; a "Next wave" that finds the other captain's wave running joins it (island ringBell);
 //   - co-op builds: every build or upgrade sends island_changed into the room (Pirate Point's for its
-//     spots), and every other defender reads that island again within about a second;
+//     spots), and every other defender reads that island again within about a second; a tear-down
+//     (GAME-V3.md §4.2) adds who got coins back ({who, kind, level, refunds}), for their toast;
 //   - the island's own wall and cannon sprites step aside between wave_controller_started and _stopped;
 //   - Pirate Point: the island client (or, in a rehearsal without a server, the in-memory fake) as api;
 //   - the game (GAME-V3.md §2, src/island/game-room.js) rides on the same island room: the lobby's Start,
@@ -158,7 +159,9 @@ export function wireWaves(ctx) {
     // Co-op builds (TOWER-DEFENSE.md §6): ours go to the room, a friend's make us read the island again.
     stops.push(on(SPOTS_CHANGED, event => {
       if (typeof event?.spot !== 'string') return;
-      const tell = () => { if (event.place === 'point') pirates.point?.room?.send?.('island_changed', {spot: event.spot}); else islandRoom.send('island_changed', {spot: event.spot}); };
+      // A tear-down (GAME-V3.md §4.2) also says who got coins back, for their toast.
+      const note = event.demolished ? {spot: event.spot, demolished: event.demolished} : {spot: event.spot};
+      const tell = () => { if (event.place === 'point') pirates.point?.room?.send?.('island_changed', {spot: event.spot}); else islandRoom.send('island_changed', note); };
       tell(); after(tell, CHANGED_AGAIN_MS); relevel();
     }));
     // Back on this tab after a while: the room may have missed something.
@@ -167,7 +170,11 @@ export function wireWaves(ctx) {
       const visible = () => { if (!disposed && document.visibilityState === 'visible' && world.current?.id === ISLAND_PLACE) void readIsland(); };
       document.addEventListener('visibilitychange', visible); stops.push(() => document.removeEventListener('visibilitychange', visible));
     }
-    stops.push(islandRoom.on('island_changed', () => { if (!disposed) changed(); }));
+    stops.push(islandRoom.on('island_changed', payload => {
+      if (disposed) return;
+      changed();
+      if (payload?.demolished) { try { island.heardDemolish?.(payload.demolished); } catch { /* A toast cannot stop the wave. */ } }
+    }));
     landed = world.current?.id === ISLAND_PLACE;
     if (pirates.point?.room?.on) stops.push(pirates.point.room.on('island_changed', () => { if (!disposed) void Promise.resolve(island.loadPoint()).then(relevel).catch(() => {}); }));
     stops.push(on('wave_controller_started', event => { if (event?.flagship === true) island.setPointBattle(true); else island.setBattle(true); }));

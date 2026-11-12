@@ -20,6 +20,8 @@ are in supabase/migrations/20261110010000_islands_and_waves.sql:
                                                (20261112030000_captain_skills.sql)
     wave_revive(...)                           a teammate helps a fallen captain up and pays
                                                (20261112050000_captain_revive.sql)
+    island_demolish_quote, island_demolish     tear a building down between waves, half of what
+                                               each payer paid back (20261112080000_demolish.sql)
 
 A build goes through islet_build() of the home islet (islet_store.py) with a timber price of 0.
 
@@ -471,3 +473,52 @@ async def finish_wave(admin: SupabaseAdmin, arguments: dict[str, Any]) -> Finish
     """Run wave_finish. Errors (all ApiErrors): 502 database_error, 503 the outcome is unknown."""
     reply = await admin.call_function("wave_finish", arguments)
     return refusal_or_none(reply) or read_model(FinishedRow, reply)
+
+
+# --- tearing a building down (20261112080000_demolish.sql) ---
+
+
+class RefundRow(BaseModel):
+    playerId: StrictStr
+    paid: StrictInt
+    coins: StrictInt
+
+
+class DemolishRow(BaseModel):
+    """The answer of island_demolish (status done) or island_demolish_quote (status quote)."""
+
+    status: Literal["done", "quote"]
+    plot: StrictStr
+    kind: StrictStr
+    level: StrictInt
+    refunds: list[RefundRow]
+    repeat: StrictBool = False
+
+
+@dataclass(frozen=True)
+class Refund:
+    player_id: str
+    coins: int
+
+
+@dataclass(frozen=True)
+class Demolished:
+    """A tear-down that went through (or was a repeat), or its quote."""
+
+    plot: str
+    kind: str
+    level: int
+    refunds: tuple[Refund, ...]
+    repeat: bool
+
+
+async def run_demolish(
+    admin: SupabaseAdmin, name: str, arguments: dict[str, Any]
+) -> Demolished | Refusal:
+    """Run island_demolish or island_demolish_quote. A refusal changed nothing."""
+    reply = await admin.call_function(name, arguments)
+    if isinstance(reply, dict) and reply.get("status") == "refused":
+        return Refusal(read_model(PaidRefusedRow, reply).reason)
+    row = read_model(DemolishRow, reply)
+    refunds = tuple(Refund(item.playerId, item.coins) for item in row.refunds)
+    return Demolished(row.plot, row.kind, row.level, refunds, row.repeat)

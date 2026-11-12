@@ -176,3 +176,18 @@
 @media(max-width:520px){.island-stall,.island-research-row{flex-direction:column;align-items:stretch}.island-spec-list{grid-template-columns:1fr}
   .island-research-row{grid-template-columns:minmax(0,1fr)}.island-research-row .kit-button{grid-column:1;grid-row:auto;margin-top:var(--u-2)}}
 @media(prefers-reduced-motion:reduce){.island-wreck-fill{transition:none}}
+/* GAME-V3.md §4.2: Tear down is secondary and red-outlined; the confirmation's red button is the only filled red. */
+.island-card-body>.island-teardown{justify-self:start;min-width:0;min-height:40px;padding:7px 14px;font-size:15px;color:#ffd6c8;
+  background:transparent;border:2px solid #e2664c;box-shadow:none}
+.island-card-body>.island-teardown:hover:not(:disabled){background:#e2664c22;color:#fff1ea}
+.island-teardown-why{margin:-6px 0 0;color:var(--u-mute);font-size:14px}
+.island-card-demolish.kit-modal{width:min(460px,calc(100vw - 32px))}
+.island-demolish-question{font-weight:800;color:var(--u-ink)}
+.island-refunds{list-style:none;margin:0;padding:var(--u-2) var(--u-3);display:grid;gap:4px;background:var(--u-deep);border-left:4px solid var(--u-gold)}
+.island-refund{font:700 var(--u-md)/1.35 var(--u-font);color:var(--u-gold)}
+.island-demolish-note,.island-demolish-after{margin:0;color:var(--u-mute);font-size:15px}
+.island-demolish-actions{display:flex;flex-wrap:wrap;gap:var(--u-2);justify-content:flex-end}
+.island-demolish-actions .kit-button{min-width:0;flex:1 1 140px}
+.island-teardown-confirm{color:#fff6ef;background:linear-gradient(#ef7a5d,#c94a33) #d4553e;border-color:#5a1a10;box-shadow:inset 0 -3px #9e3424,inset 0 2px #ffb39e}
+.island-teardown-confirm:hover:not(:disabled){background:linear-gradient(#f48c71,#d4553e) #e2664c}
+

@@ -9,7 +9,9 @@
 //   upgrades it on the owner's island and the owner's map and open card follow. Tower skills (GAME-V3.md §5):
 //   after wave 8 the owner researches cannon skills at the Tech hub and picks Heavy shot for a cannon; the
 //   friend's island answer and card show the same skill within 2 s, then the friend picks Rapid on the owner's
-//   island and the owner's follows (the wave's sim reads the skill from the island). Wave 3 with a second cannon
+//   island and the owner's follows (the wave's sim reads the skill from the island). Tear down (GAME-V3.md §4.2): the
+//   owner tears down the wall both paid for; his confirmation shows both refunds, the friend sees the empty spot, his
+//   toast and his coins. Wave 3 with a second cannon
 //   and the inner wall ring: the owner rings the bell; both run the same wave (the same ships at the same
 //   tick, and the same boarders ashore: TOWER-DEFENSE.md §12); both captains fire their musket and each
 //   shot reaches the other page; an upgrade in the wave's break shows on both; the host pauses the break
@@ -465,6 +467,34 @@ try {
   results.push(`house role: the friend's Workshop on house_1 on the owner's island and card after ${workshop.took} ms`);
   await island(host, async i => { await i.specialise('house_1', 'barracks'); });
   await seesSpec(ben, 'house_1', 'barracks', "the owner's house role again");
+  // 2d Tear down (GAME-V3.md §4.2): wall_2 was built by the friend (🪙 10), raised by the owner (🪙 20) and by the
+  // friend (🪙 40). The owner tears it down from its card: the confirmation shows both refunds, the friend's island
+  // shows the empty spot and his toast within 2 s, and his coins are 🪙 25 more. Then the owner builds it up again.
+  const benCoins = () => ben.page.evaluate(() => window.__island.island.island?.coins ?? null);
+  const benBefore = await benCoins();
+  await host.page.evaluate(async () => {
+    const game = window.__island.island; game.pick('wall_2'); await new Promise(resolve => setTimeout(resolve, 80));
+    document.querySelector('.island-card[open] .island-teardown').click();
+  });
+  await host.page.waitForFunction(() => document.querySelectorAll('.island-card-demolish[open] .island-refund').length === 2, null, {timeout: 5000, polling: 100});
+  const confirmation = await host.page.evaluate(() => ({question: document.querySelector('.island-card-demolish[open] .island-demolish-question').textContent,
+    lines: [...document.querySelectorAll('.island-card-demolish[open] .island-refund')].map(item => item.textContent),
+    focus: document.activeElement?.dataset?.focus ?? ''}));
+  assert.deepEqual(confirmation, {question: 'Tear down this Wall (level 3)?', lines: ['You get back 🪙 10.', 'Ben gets back 🪙 25.'], focus: 'keep'});
+  await sized('02e-teardown-confirm', [host]);
+  await host.page.locator('.island-card-demolish[open] [data-focus="confirm"]').click();
+  const tornAt = Date.now();
+  await ben.page.waitForFunction(() => window.__island.island.visiting?.spots?.find(spot => spot.id === 'wall_2')?.built === false, null, {timeout: 2000, polling: 50});
+  const emptyAfter = Date.now() - tornAt;
+  await ben.page.waitForFunction(() => /^Nils tore down the Wall\. You got back 🪙 25\.$/.test(window.__island.island.ui.toastText), null, {timeout: 3000, polling: 50});
+  const benToast = await ben.page.evaluate(() => window.__island.island.ui.toastText);
+  await ben.page.waitForFunction(before => window.__island.island.island?.coins === before + 25, benBefore, {timeout: 3000, polling: 100});
+  assert.deepEqual(await mapOf(ben, 'wall_2'), {level: 0, pips: 0}, "the friend's map shows no wall on wall_2");
+  assert.deepEqual(await mapOf(host, 'wall_2'), {level: 0, pips: 0}, "the owner's map shows no wall on wall_2");
+  results.push(`tear down: the owner's confirmation "${confirmation.question}" ${confirmation.lines.join(' ')}; the friend's island showed the empty spot after ${emptyAfter} ms, his toast "${benToast}", his coins ${benBefore} → ${benBefore + 25}`);
+  await sized('02f-teardown-after', [host, ben]);
+  await island(host, async i => { await i.build('wall_2', 'wall'); await i.upgrade('wall_2'); await i.upgrade('wall_2'); });
+  await shows(ben, 'wall_2', 3, 'the wall built up again');
   // 3 Wave 3 (more ships, so both muskets find a target) with one more cannon and the inner wall ring
   // (TOWER-DEFENSE.md §12: two cannons let boarders come ashore, the ring holds them); the owner rings.
   await island(host, async i => { i.dev.setWaveBest(2); i.dev.setCoins(400); await i.load(); await i.build('cannon_2', 'cannon'); });

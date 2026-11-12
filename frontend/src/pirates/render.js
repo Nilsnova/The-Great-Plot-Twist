@@ -843,6 +843,10 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     // touched; it fights with the defenses it started with.
     setDefenses(list) {
       if (disposed) return;
+      // A building torn down in the break (GAME-V3.md §4.2) takes its post with it.
+      for (const post of posts.filter(entry => !(list ?? []).some(item => item.id === entry.id))) {
+        post.layer.mesh.visible = false; posts.splice(posts.indexOf(post), 1);
+      }
       for (const item of list ?? []) {
         if (!hasPost(item)) continue;
         const post = posts.find(entry => entry.id === item.id);
