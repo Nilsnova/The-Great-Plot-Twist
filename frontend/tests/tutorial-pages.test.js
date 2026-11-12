@@ -8,8 +8,8 @@ const sentences=text=>text.join(' ').split(/(?<=[.!?])\s+/).filter(Boolean);
 const png=file=>{const data=readFileSync(fileURLToPath(new URL(`../public/pixel/${file}`,import.meta.url)));return {w:data.readUInt32BE(16),h:data.readUInt32BE(20)};};
 
 describe('How to play pages',()=>{
-  it('has 8 to 10 pages with one idea each: a unique id and title, 1 to 3 short sentences',()=>{
-    expect(TUTORIAL_PAGES.length).toBeGreaterThanOrEqual(8);expect(TUTORIAL_PAGES.length).toBeLessThanOrEqual(10);
+  it('has 8 to 11 pages with one idea each: a unique id and title, 1 to 3 short sentences',()=>{
+    expect(TUTORIAL_PAGES.length).toBeGreaterThanOrEqual(8);expect(TUTORIAL_PAGES.length).toBeLessThanOrEqual(11);
     expect(new Set(TUTORIAL_PAGES.map(page=>page.id)).size).toBe(TUTORIAL_PAGES.length);
     expect(new Set(TUTORIAL_PAGES.map(page=>page.title)).size).toBe(TUTORIAL_PAGES.length);
     for(const page of TUTORIAL_PAGES){
@@ -20,16 +20,20 @@ describe('How to play pages',()=>{
     }
   });
   it('covers the game in the agreed order and keeps every word in one frozen module',()=>{
-    expect(TUTORIAL_PAGES.map(page=>page.id)).toEqual(['island','build','bell','captain','ashore','crew','unlocks','friend','places','controls']);
+    expect(TUTORIAL_PAGES.map(page=>page.id)).toEqual(['island','build','bell','captain','ashore','health','crew','unlocks','friend','places','controls']);
     expect(Object.isFrozen(TUTORIAL_PAGES)).toBe(true);expect(TUTORIAL_PAGES.every(page=>Object.isFrozen(page)&&Object.isFrozen(page.text))).toBe(true);
     const all=TUTORIAL_PAGES.map(page=>[page.title,...page.text,...(page.keys??[]).flat()].join(' ')).join(' ');
     for(const fact of ['16 build spots','press E','level 3','Every 5th wave','Next wave','Press F','hold F','musket button','on foot','Marksman, Brawler or Shipwright',
-      'Menu › Captain','Create a game','Up to 10','after 5 minutes','three lamps','flagship','joystick','Sea chart','Zoom'])expect(all).toContain(fact);
+      'Menu › Captain and skills','Create a game','Up to 10','after 5 minutes','three lamps','flagship','joystick','Sea chart','Zoom',
+      // GAME-V3.md: one island per game, free aim, captain health and helping up, the Tech hub.
+      'one island','Click a spot','too many hits you fall','holds E for 2 seconds','stand up at the break','every captain falls','Tech hub'])expect(all).toContain(fact);
+    // No sprint any more (one fast speed).
+    expect(all).not.toMatch(/Shift|sprint|run\b/i);
     expect(TUTORIAL_TITLE).toBe('How to play');expect(TUTORIAL_KEY).toBe('plot_twist_tutorial_v1');
   });
   it('lists the controls as keys on the last page',()=>{
     const controls=TUTORIAL_PAGES.at(-1);
-    expect(controls.keys.map(([key])=>key)).toEqual(['WASD or arrows','E','F','M','Mouse wheel']);
+    expect(controls.keys.map(([key])=>key)).toEqual(['WASD or arrows','E','F','Click','M','Mouse wheel']);
   });
   it('reuses existing sprites at their real size and whole-number scales that fit a 320 px card',()=>{
     for(const page of TUTORIAL_PAGES){
@@ -53,8 +57,8 @@ describe('How to play pages',()=>{
     expect(clampPage(-3,10)).toBe(0);expect(clampPage(42,10)).toBe(9);expect(clampPage(4,10)).toBe(4);
     expect(clampPage(Number.NaN,10)).toBe(0);expect(clampPage(2,0)).toBe(0);expect(clampPage('2',10)).toBe(0);
     const pages=TUTORIAL_PAGES;
-    expect(pageView(pages,0)).toMatchObject({index:0,count:10,first:true,last:false,next:'Next',leave:'Close',status:'Page 1 of 10'});
-    expect(pageView(pages,9)).toMatchObject({index:9,first:false,last:true,next:'Done',leave:'Close',status:'Page 10 of 10'});
+    expect(pageView(pages,0)).toMatchObject({index:0,count:11,first:true,last:false,next:'Next',leave:'Close',status:'Page 1 of 11'});
+    expect(pageView(pages,10)).toMatchObject({index:10,first:false,last:true,next:'Done',leave:'Close',status:'Page 11 of 11'});
     expect(pageView(pages,99).page.id).toBe('controls');
     const first=firstRunPages();
     expect(pageView(first,0,'first')).toMatchObject({next:'Next',leave:'Skip',status:'Page 1 of 4'});

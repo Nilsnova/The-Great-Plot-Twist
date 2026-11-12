@@ -23,8 +23,8 @@ it('pages with Next and Back, moves the dots, turns with arrow keys and a swipe,
       window.card=createTutorialCard({mode:'menu'});window.card.open(document.body);
       window.card.done.then(reason=>{window.reason=reason;});
     });
-    expect(await state(page)).toMatchObject({open:true,page:'island',title:'Your island and coins',current:0,dots:10,
-      buttons:['Close','Back (off)','Next'],status:'Page 1 of 10: Your island and coins',focus:'Next'});
+    expect(await state(page)).toMatchObject({open:true,page:'island',title:'Your island and coins',current:0,dots:11,
+      buttons:['Close','Back (off)','Next'],status:'Page 1 of 11: Your island and coins',focus:'Next'});
     expect(await page.locator('.tutorial-card h2').textContent()).toBe('How to play');
     await page.getByRole('button',{name:'Next',exact:true}).click();
     expect(await state(page)).toMatchObject({page:'build',current:1,buttons:['Close','Back','Next']});
@@ -43,8 +43,8 @@ it('pages with Next and Back, moves the dots, turns with arrow keys and a swipe,
     expect(await state(page)).toMatchObject({page:'build'});
     // The last page: no Next past it; its button says Done. The controls page lists the keys.
     for(let i=0;i<12;i++)await page.keyboard.press('ArrowRight');
-    expect(await state(page)).toMatchObject({page:'controls',current:9,buttons:['Close','Back','Done']});
-    expect(await page.locator('.tutorial-keys dt').allTextContents()).toEqual(['WASD or arrows','E','F','M','Mouse wheel']);
+    expect(await state(page)).toMatchObject({page:'controls',current:10,buttons:['Close','Back','Done']});
+    expect(await page.locator('.tutorial-keys dt').allTextContents()).toEqual(['WASD or arrows','E','F','Click','M','Mouse wheel']);
     await page.keyboard.press('Escape');
     expect(await page.evaluate(()=>window.reason)).toBe('closed');
     expect(await page.evaluate(()=>window.card.isOpen)).toBe(false);
@@ -57,7 +57,7 @@ it('fits 320, 390 and 1280 px wide screens with 44 px tap targets and no sideway
     await page.evaluate(async()=>{const {createTutorialCard}=await window.g20Import('/src/tutorial/card.js');window.card=createTutorialCard({mode:'menu'});window.card.open(document.body);});
     for(const [width,height] of [[320,568],[390,844],[1280,800]]){
       await page.setViewportSize({width,height});
-      for(let i=0;i<10;i++){
+      for(let i=0;i<11;i++){
         const result=await page.evaluate(()=>{
           const card=document.querySelector('.tutorial-card'),rect=card.getBoundingClientRect();
           const small=[...card.querySelectorAll('button')].map(button=>button.getBoundingClientRect()).filter(box=>box.width<44||box.height<44).length;
@@ -68,7 +68,7 @@ it('fits 320, 390 and 1280 px wide screens with 44 px tap targets and no sideway
         expect(result,`${width} ${result.page}`).toMatchObject({inside:true,small:0,sideways:false,sprites:true});
         await page.evaluate(()=>window.card.next());
       }
-      await page.evaluate(()=>{for(let i=0;i<10;i++)window.card.back();});
+      await page.evaluate(()=>{for(let i=0;i<11;i++)window.card.back();});
     }
   });
 });

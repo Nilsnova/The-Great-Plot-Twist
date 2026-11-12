@@ -26,12 +26,12 @@
 
     <aside class="kit-panel build-note" aria-labelledby="build-title">
       <h2 class="kit-heading" id="build-title">Before you set sail</h2>
-      <p>Press <strong>Play</strong> for a short intro and a walk around Saltreach Harbor, or <strong>Join</strong> with the class code from the projector. Sign in from <strong>Settings</strong> to play online with your own captain.</p>
+      <p>Press <strong>Play</strong> for a short intro, then <strong>Create a game</strong>, <strong>Join a game</strong> with its code, or <strong>Continue</strong> a game you are in. In class, <strong>Join</strong> with the class code from the projector. Sign in from <strong>Settings</strong> to play online with your own captain.</p>
       <p>Screens marked <strong>Local rehearsal</strong> are practice examples, not live multiplayer.</p>
     </aside>
 
     <nav class="contents" aria-label="Guide topics">
-      <a href="#start">Getting started</a><a href="#islet">Your islet</a>
+      <a href="#start">Getting started</a><a href="#islet">Your island</a>
       <a href="#exchange">Exchange risks</a><a href="#predictions">Match board</a>
       <a href="#duels">Duels</a><a href="#weather">Weather</a>
       <a href="#controls">Controls</a><a href="#accessibility">Settings &amp; access</a>
@@ -41,7 +41,7 @@
     <form id="help-search" class="help-search" role="search" hidden>
       <label for="topic-search">Find a topic</label>
       <div class="search-row">
-        <input id="topic-search" type="search" placeholder="Try controls, islet or coins" maxlength="100" autocomplete="off" aria-controls="guide">
+        <input id="topic-search" type="search" placeholder="Try controls, island or coins" maxlength="100" autocomplete="off" aria-controls="guide">
         <button class="kit-button kit-quiet" id="clear-search" type="button">Clear</button>
       </div>
       <p id="search-status" role="status" aria-live="polite" aria-atomic="true"></p>
@@ -55,9 +55,9 @@
         <p class="eyebrow">01 · YOUR FIRST VISIT</p>
         <h2 class="kit-heading" id="start-title">Getting started</h2>
         <ol>
-          <li><strong>Play</strong> shows a short intro once, then a card with your goal and the controls, and you stand in Saltreach Harbor. <strong>Replay the intro</strong> in Settings shows it again.</li>
-          <li>In the harbor the goal strip lists three things to do: wave to a captain, try a friendly duel and open the Keeper's Lock. Then light the three lamps together with two other captains.</li>
-          <li>Open the <strong>Sea chart</strong> to sail to your Home islet and the other places of the Saltreach Isles.</li>
+          <li><strong>Play</strong> shows a short intro once and the first pages of <strong>How to play</strong>, then the games card: <strong>Create a game</strong>, <strong>Join a game</strong> (a code like ISLE-K7Q2M, or a friend's link) or <strong>Continue</strong>. <strong>Replay the intro</strong> in Settings shows it again.</li>
+          <li>Every game is one island for 1 to 10 players. The lobby shows the code, the link and who is online; the host presses <strong>Start</strong>. Your island, its buildings and the wave reached are saved, so anyone in the game can continue it later.</li>
+          <li>With the class code you land in Saltreach Harbor instead: the goal strip lists three things to do (wave to a captain, try a friendly duel, open the Keeper's Lock), then light the three lamps together with two other captains. There the <strong>Sea chart</strong> sails to the other places of the Saltreach Isles.</li>
         </ol>
         <p><strong>Account</strong> in Settings offers sign-in with GitHub or an email code. You can explore without signing in; online play, coins and buildings need a signed-in captain. In class, the code from the projector lets you play as a guest.</p>
       </section>
@@ -65,21 +65,23 @@
 
 
       <section class="kit-panel help-topic" id="islet" aria-labelledby="islet-title">
-        <h2 class="kit-heading" id="islet-title">Sailing &amp; your islet</h2>
-        <p>Open <strong>Sea chart</strong>, choose an available destination and let the passage finish. Visit your Home islet and inspect the cabin, workshop, windmill and greenhouse plots.</p>
+        <h2 class="kit-heading" id="islet-title">Your island and the waves</h2>
+        <p>Tap a build spot, or walk up to it and press <strong>E</strong>, to build walls, cannons and mortars with your own coins. Everyone in the game builds on the same island. Ring the harbor bell to call a wave of pirate ships; every 5th wave brings a boss.</p>
+        <p>Each wave you win can open more: houses, mortars, the watchtower and crew, then the <strong>Harbor</strong> after wave 4 (its market stall; the football board after wave 7) and the <strong>Tech hub</strong> after wave 8, where research gives your towers skills.</p>
+        <p>Pirates who come ashore go for the heart of the island and for captains nearby. After too many hits you fall: a teammate next to you holds <strong>E</strong> for 2 seconds to help you up, and pays a few coins. If nobody does, you stand up at the break. If every captain falls, the wave is lost.</p>
         <p>Building screens show requirements and play-coin cost before confirmation. An offline or unconfirmed captain cannot make a saved purchase. Wait for the success message and updated building state.</p>
       </section>
 
       <section class="kit-panel help-topic" id="exchange" aria-labelledby="exchange-title">
         <h2 class="kit-heading" id="exchange-title">Exchange: understand the risk</h2>
-        <p>The market hall offers <strong>Prices</strong> and <strong>Your positions</strong>. A <strong>Long</strong> position follows rising prices; a <strong>Short</strong> follows falling prices. Both use <strong>10× leverage</strong>. Small moves against you can consume the stake quickly, and a position <strong>closes at zero</strong>.</p>
+        <p>The market stall at the Harbor (a building on your island after wave 4) offers <strong>Prices</strong> and <strong>Your positions</strong>. A <strong>Long</strong> position follows rising prices; a <strong>Short</strong> follows falling prices. Both use <strong>10× leverage</strong>. Small moves against you can consume the stake quickly, and a position <strong>closes at zero</strong>.</p>
         <p>Read the price source, freshness and market hours. <strong>Closed</strong>, stale or unavailable prices pause trading for that company. A connected account is required to trade. Review direction, stake and fees before confirming.</p>
         <p><strong>Play money only.</strong> Coins have no cash value. Do not deposit real money or pay for a game balance. If a trade is unconfirmed, use <strong>Check again</strong> or <strong>Send again</strong> for that same trade and inspect <strong>Your positions</strong>.</p>
       </section>
 
       <section class="kit-panel help-topic" id="predictions" aria-labelledby="predictions-title">
         <h2 class="kit-heading" id="predictions-title">Match board</h2>
-        <p>The match board in the Harbor shows real football fixtures, source freshness and pool rules. Pick a side and a play-coin stake of 5, 10 or 25 before confirming. A closed or unavailable board explains its status; a displayed score can be delayed. You need a signed-in account to place a stake.</p>
+        <p>The match board at the Harbor (after wave 7) shows real football fixtures, source freshness and pool rules. Pick a side and a play-coin stake of 5, 10 or 25 before confirming. A closed or unavailable board explains its status; a displayed score can be delayed. You need a signed-in account to place a stake.</p>
       </section>
 
       <section class="kit-panel help-topic" id="duels" aria-labelledby="duels-title">
@@ -96,15 +98,17 @@
         <h2 class="kit-heading" id="controls-title">Controls</h2>
         <h3>Keyboard &amp; mouse</h3>
         <dl class="control-list">
-          <dt>WASD / arrows</dt><dd>Walk. Hold Shift to run.</dd>
-          <dt>E</dt><dd>Interact near a prompt.</dd>
-          <dt>M / Sea chart</dt><dd>Open the chart.</dd>
+          <dt>WASD / arrows</dt><dd>Walk.</dd>
+          <dt>E</dt><dd>Interact near a prompt: build, repair, or hold it to help a fallen teammate up.</dd>
+          <dt>F</dt><dd>Fire your musket at the nearest ship or pirate; hold it to keep firing. Up close it swings your cutlass.</dd>
+          <dt>Click</dt><dd>Aim your musket at a spot and fire there.</dd>
+          <dt>M / Sea chart</dt><dd>Open the chart, where sailing is open (the class harbor).</dd>
           <dt>Mouse wheel</dt><dd>Zoom over the world.</dd>
           <dt>Escape</dt><dd>Close a view or pause.</dd>
           <dt>Menus</dt><dd>Tab / Shift+Tab to move focus; Enter or Space activates buttons.</dd>
         </dl>
         <h3>Touch</h3>
-        <p>Tap a clear spot on the map to walk, or drag the movement stick. Use <strong>Inspect</strong> near an object, <strong>Chart</strong> to travel and <strong>Menu</strong> to pause. There are no separate touch run or zoom buttons.</p>
+        <p>Tap a clear spot on the map to walk, or drag the movement stick. Use <strong>Inspect</strong> near an object and <strong>Menu</strong> to pause. In a wave, tap where to fire or use the musket button, and hold the prompt to help a teammate up. There are no separate touch run or zoom buttons.</p>
         <h3>Standard gamepad</h3>
         <p>Left stick or D-pad walks; A interacts, Y opens the chart, Menu pauses. Supported menus use D-pad and A; B or Menu closes. Left/right adjusts supported selects and sliders. There are no separate run or zoom buttons.</p>
         <p>Keyboard and touch remain available if your browser cannot use the pad. Click or tap the world to restore movement focus. This help page uses ordinary links and controls, not the game's gamepad mapping.</p>
