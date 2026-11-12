@@ -65,6 +65,29 @@
 
     {"id": "final_battle", "trigger": "wave_start:100", "priority": 2, "voice": "narrator", "text": "This is it. Redtide himself sails at the head of the whole fleet. Hold the island one last time, and the light will burn again."},
     {"id": "victory_1", "trigger": "victory", "priority": 2, "voice": "narrator", "text": "The flagship sinks, and the fleet scatters into the night. Captain Redtide is beaten."},
-    {"id": "victory_2", "trigger": "victory", "priority": 2, "voice": "narrator", "text": "On the hill, the great lamp flickers, then blazes. The light of the Saltreach Isles burns again. Well fought, captains."}
+    {"id": "victory_2", "trigger": "victory", "priority": 2, "voice": "narrator", "text": "On the hill, the great lamp flickers, then blazes. The light of the Saltreach Isles burns again. Well fought, captains."},
+
+    {"id": "event_fog_bank", "trigger": "wave_event:fog_bank", "priority": 2, "voice": "narrator", "text": "A fog bank rolls in. Redtide's ships will be on you before you see them, so keep near the watchtower."},
+    {"id": "event_storm", "trigger": "wave_event:storm", "priority": 2, "voice": "narrator", "text": "A storm! The wind throws your cannonballs wide, and Redtide's sails run fast before it."},
+    {"id": "event_night_raid", "trigger": "wave_event:night_raid", "priority": 2, "voice": "narrator", "text": "Redtide strikes at night. Watch for the lanterns on the water, and keep the fires burning."},
+    {"id": "event_fire_ships", "trigger": "wave_event:fire_ships", "priority": 2, "voice": "narrator", "text": "Fire ships! Redtide sends burning hulks at your walls. Sink them before they reach the shore."},
+    {"id": "event_pincer", "trigger": "wave_event:pincer", "priority": 2, "voice": "narrator", "text": "They come from two sides at once. Split your guns, captains."},
+    {"id": "event_armada", "trigger": "wave_event:armada", "priority": 2, "voice": "narrator", "text": "A whole armada of little cutters. Fast but thin, so keep every gun firing."},
+    {"id": "event_siege_barge", "trigger": "wave_event:siege_barge", "priority": 2, "voice": "narrator", "text": "A siege barge, far out of musket range. Its mortar is aimed at your towers."},
+    {"id": "event_treasure_galleon", "trigger": "wave_event:treasure_galleon", "priority": 2, "voice": "narrator", "text": "Look, a treasure galleon! She will not fight. Sink her before she gets away, and her gold is yours."},
+    {"id": "event_smugglers", "trigger": "wave_event:smugglers", "priority": 2, "voice": "narrator", "text": "Smugglers are rowing for the north beach, where nobody is watching. Turn some guns around."},
+    {"id": "event_kraken", "trigger": "wave_event:kraken", "priority": 2, "voice": "narrator", "text": "Something huge moves under the waves. The kraken! Shoot the tentacles before they smash your walls."},
+    {"id": "finisher_haul_start", "trigger": "finisher_start:haul", "priority": 2, "voice": "narrator", "text": "She is breaking! Grab the chain, all hands, and haul her in!"},
+    {"id": "finisher_haul_won", "trigger": "finisher_won:haul", "priority": 3, "voice": "narrator", "text": "Pull! The chain holds, and down she goes."},
+    {"id": "finisher_haul_failed", "trigger": "finisher_failed:haul", "priority": 3, "voice": "narrator", "text": "The chain slips and she pulls free. Back to the guns!"},
+    {"id": "finisher_cannon_start", "trigger": "finisher_start:cannon", "priority": 2, "voice": "narrator", "text": "Load the great cannon! Wait for the weak spot, then fire."},
+    {"id": "finisher_cannon_won", "trigger": "finisher_won:cannon", "priority": 3, "voice": "narrator", "text": "Right through the hull! She is going down."},
+    {"id": "finisher_cannon_failed", "trigger": "finisher_failed:cannon", "priority": 3, "voice": "narrator", "text": "Missed! She is still in the water. Keep firing."},
+    {"id": "finisher_duel_start", "trigger": "finisher_start:duel", "priority": 2, "voice": "narrator", "text": "Board her! Cutlasses out, captains, and follow the calls."},
+    {"id": "finisher_duel_won", "trigger": "finisher_won:duel", "priority": 3, "voice": "narrator", "text": "Her crew jumps overboard, and the ship goes down."},
+    {"id": "finisher_duel_failed", "trigger": "finisher_failed:duel", "priority": 3, "voice": "narrator", "text": "Driven back! Her crew holds the deck. Hit her again."},
+    {"id": "finisher_redtide_start", "trigger": "finisher_start:redtide", "priority": 2, "voice": "narrator", "text": "Redtide's own ship is breaking. Chain, cannon and cutlass: bring her down!"},
+    {"id": "finisher_redtide_won", "trigger": "finisher_won:redtide", "priority": 3, "voice": "narrator", "text": "Redtide's flagship goes under. The old pirate swims off, shouting."},
+    {"id": "finisher_redtide_failed", "trigger": "finisher_failed:redtide", "priority": 3, "voice": "narrator", "text": "Redtide laughs and breaks free. One more push, captains!"}
   ]
 }

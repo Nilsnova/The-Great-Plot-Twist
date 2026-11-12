@@ -1,0 +1,40 @@
+/* A boss finisher (scene.js): over the island and the wave's HUD, under nothing. Cartoon style: bold dark
+   outlines, flat warm colours, the parchment of the game's cards. */
+.finisher{position:absolute;inset:0;z-index:30;pointer-events:none;--finisher-x:50%;--finisher-y:40%;--finisher-ink:#1f2622;font:600 16px/1.35 var(--u-font, system-ui, sans-serif)}
+.finisher-dim{position:absolute;inset:0;backdrop-filter:grayscale(.8) brightness(.62) contrast(1.05);-webkit-backdrop-filter:grayscale(.8) brightness(.62);
+  -webkit-mask-image:radial-gradient(circle at var(--finisher-x) var(--finisher-y),transparent 0,transparent 15vmin,#000 26vmin);
+  mask-image:radial-gradient(circle at var(--finisher-x) var(--finisher-y),transparent 0,transparent 15vmin,#000 26vmin);animation:finisher-fade .5s ease-out both}
+.finisher-bar{position:absolute;left:0;right:0;height:11vh;min-height:56px;background:#0d1216;box-shadow:0 0 0 2px #000}
+.finisher-top{top:0;animation:finisher-down .45s ease-out both}.finisher-bottom{bottom:0;display:flex;align-items:center;justify-content:center;padding:0 16px;animation:finisher-up .45s ease-out both}
+.finisher-caption{margin:0;max-width:760px;color:#f3ead2;text-align:center;font:600 17px/1.35 var(--u-font, system-ui, sans-serif)}
+.finisher-card{position:absolute;left:50%;top:34%;transform:translate(-50%,-50%) rotate(-3deg);display:grid;gap:4px;justify-items:center;padding:18px 34px 16px;background:#f3e3b8;
+  color:var(--finisher-ink);border-radius:18px;box-shadow:0 0 0 5px var(--finisher-ink),0 10px 0 5px rgba(0,0,0,.35);animation:finisher-pop .5s cubic-bezier(.2,1.6,.4,1) both}
+.finisher-card[hidden],.finisher-panel[hidden],.finisher-result[hidden],.finisher-watch[hidden],.finisher-controls [hidden],.finisher-controls[hidden]{display:none}
+.finisher-card-title{font:900 clamp(34px,7vw,64px)/1 var(--u-serif, Georgia, serif);color:#b23a2e;text-shadow:3px 3px 0 #ffd24a;letter-spacing:.5px}
+.finisher-card-kind{font:700 18px/1.2 var(--u-font, system-ui, sans-serif)}
+.finisher-panel{position:absolute;left:50%;bottom:calc(max(11vh,56px) + 10px);transform:translateX(-50%);width:min(560px,calc(100vw - 24px));box-sizing:border-box;display:grid;gap:6px;
+  padding:10px 12px 12px;background:#f3e3b8;color:var(--finisher-ink);border-radius:16px;box-shadow:0 0 0 4px var(--finisher-ink);pointer-events:auto}
+.finisher-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px}.finisher-task-title{font:800 20px/1.2 var(--u-serif, Georgia, serif);color:#7a2c22}
+.finisher-clock{font:800 18px/1 var(--u-font, system-ui, sans-serif);font-variant-numeric:tabular-nums}
+.finisher-how{margin:0;font-size:14px}
+.finisher-stage{width:100%;height:auto;aspect-ratio:640/300;border-radius:10px;box-shadow:0 0 0 3px var(--finisher-ink);touch-action:none;cursor:crosshair}
+.finisher-meter{position:relative;height:22px;border-radius:11px;background:#5a4a3a;box-shadow:0 0 0 3px var(--finisher-ink);overflow:hidden}
+.finisher-meter-fill{position:absolute;inset:0 auto 0 0;background:#e0b04a;transition:width .2s}.finisher-meter.is-done .finisher-meter-fill{background:#7fc35a}
+.finisher-meter-text{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font:800 13px/1 var(--u-font, system-ui, sans-serif);text-shadow:0 1px 0 #000}
+.finisher-crew{display:flex;flex-wrap:wrap;gap:4px 8px;margin:0;padding:0;list-style:none;font-size:13px}.finisher-crew li{padding:1px 8px;border-radius:9px;background:#e6d3a0}.finisher-crew .is-me{background:#ffd24a;font-weight:800}
+.finisher-controls{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.finisher-controls .kit-button{min-height:48px;min-width:64px;font:800 18px/1 var(--u-font, system-ui, sans-serif);touch-action:none}
+.finisher-hold{flex:1 1 auto}.finisher-fire{flex:1 1 auto}
+.finisher-pad{display:grid;grid-template-columns:repeat(4,64px);gap:8px}
+.finisher-watch{margin:0;font-weight:700;text-align:center}
+.finisher-result{position:absolute;left:50%;top:30%;transform:translate(-50%,-50%) rotate(2deg);display:grid;justify-items:center;gap:4px;padding:14px 30px;background:#f3e3b8;color:var(--finisher-ink);
+  border-radius:18px;box-shadow:0 0 0 5px var(--finisher-ink);animation:finisher-pop .45s cubic-bezier(.2,1.6,.4,1) both}
+.finisher-result-title{font:900 clamp(32px,6vw,56px)/1 var(--u-serif, Georgia, serif);color:#2f6fa8}
+.finisher[data-phase=failed] .finisher-result-title{color:#b23a2e}
+@media(pointer:fine){.finisher-hold,.finisher-left,.finisher-right,.finisher-fire,.finisher-pad{opacity:.92}}
+@media(max-width:760px){.finisher-panel{padding:8px 8px 10px}.finisher-task-title{font-size:17px}.finisher-how{font-size:13px}.finisher-caption{font-size:15px}.finisher-pad{grid-template-columns:repeat(4,1fr);width:100%}
+  .finisher-card{padding:14px 20px}}
+@keyframes finisher-down{from{transform:translateY(-100%)}}@keyframes finisher-up{from{transform:translateY(100%)}}@keyframes finisher-fade{from{opacity:0}}
+@keyframes finisher-pop{from{opacity:0;transform:translate(-50%,-50%) scale(.6) rotate(-8deg)}}
+@media(prefers-reduced-motion:reduce){.finisher *,.finisher-dim{animation:none!important;transition:none!important}}
+html[data-reduced-motion=true] .finisher *{animation:none!important;transition:none!important}

@@ -378,7 +378,7 @@ export function createWave(options = {}) {
   const happening = createEventRules(withFlagship ? null : options?.event, { seed: options?.seed, wave: waveNumber, curve, coastPoint,
     coast: readCoast(options?.coast), heart, defenses, stopRadius: C.stopRadius, spawnRadius: C.spawnRadius, firstSpawn: C.fleet.firstSpawn });
   const finisher = createFinisher({ wave: waveNumber, seed: options?.seed, enabled: options?.finishers === true && !withFlagship,
-    gapMs: typeof options?.gapMs === 'function' ? options.gapMs : null });
+    gapMs: typeof options?.gapMs === 'function' ? options.gapMs : null, trigger: options?.finisherTrigger }); // trigger: the demo harness only
   const watchtowers = defenses.filter(item => item.kind === 'watchtower').map(item => C.levels.watchtower[item.level - 1]);
   const towerBonus = Math.max(0, ...watchtowers.map(item => item.range)), boost = Math.max(1, ...watchtowers.map(item => item.boost ?? 1));
   const S = C.specs, spotters = defenses.filter(item => item.kind === 'watchtower' && item.spec === 'spotter');

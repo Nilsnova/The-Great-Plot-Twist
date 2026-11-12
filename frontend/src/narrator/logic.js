@@ -8,6 +8,7 @@
 //   victory             wave 100 won (once)                   wave_won / wave_lost  any other result (variant)
 //   boarders_ashore     the first boarders of a game (once)   player_fell / player_revived (variant)
 //   all_fallen          every captain is down (variant)       heart_low          the heart below 30% (variant)
+//   wave_event:ID       a wave event's first time (once)      finisher_start|won|failed:KIND  a boss finisher
 // A line may list `covers` (other triggers it also answers): wave_5 is also the first boss.
 
 import {STEPS} from '../campaign/index.js';
@@ -38,6 +39,12 @@ export const RULES = Object.freeze({
   heart_low: {once: false, priority: HIGH, ttl: 6000},
   wave_lost: {once: false, priority: NORMAL, ttl: 6000},
   wave_won: {once: false, priority: LOW, ttl: 6000},
+  // v3 waves: a wave event's first appearance (wave_event:<id>, once per game) and a boss finisher's start and
+  // outcome (finisher_start:<kind>, finisher_won:<kind>, finisher_failed:<kind>), every time, short-lived.
+  wave_event: {once: true, priority: HIGH, ttl: 15000},
+  finisher_start: {once: false, priority: HIGH, ttl: 4000},
+  finisher_won: {once: false, priority: HIGH, ttl: 5000},
+  finisher_failed: {once: false, priority: HIGH, ttl: 5000},
 });
 const VARIANTS = new Set(['game_welcome_back', 'player_fell', 'player_revived', 'all_fallen', 'heart_low', 'wave_lost', 'wave_won']);
 const LINE_ID = /^[a-z0-9_]{1,48}$/;

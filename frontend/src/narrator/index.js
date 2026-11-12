@@ -25,6 +25,8 @@
 //   heart_changed {hp, max}                             (boarding lane C) the island's heart; below 30% warns.
 //   player_fell {playerId, self?} / player_revived {playerId, by?, self?}  (health lane H)
 //   captains_all_fallen {}                              (health lane H) every captain is down.
+//   wave_event_announced {event, wave}                  (v3 waves) a wave's event: its line the first time in this game.
+//   finisher_moment {kind, phase: start|won|failed}     (v3 waves) a boss finisher starts or ends.
 import data from './lines.json';
 import {createNarratorCard} from './card.js';
 import {getPreferences, onPreferences as watchPreferences} from '../settings/preferences.js';
@@ -194,6 +196,11 @@ export function createNarrator({container = globalThis.document?.body, on, audio
     on('player_fell', event => say('player_fell', {seed: event?.self ? 1 : 0})),
     on('player_revived', event => say('player_revived', {seed: event?.self ? 0 : 1})),
     on('captains_all_fallen', () => say('all_fallen')),
+    // v3 waves (src/pirates/controller.js): a wave's event, the first time it comes in this game, and a boss finisher.
+    on('wave_event_announced', event => { if (typeof event?.event === 'string') say(`wave_event:${event.event}`, {seed: Number(event.wave) || 0}); }),
+    on('finisher_moment', event => {
+      if (typeof event?.kind === 'string' && ['start', 'won', 'failed'].includes(event?.phase)) say(`finisher_${event.phase}:${event.kind}`);
+    }),
     on('heart_changed', event => {
       const hp = Number(event?.hp), max = Number(event?.max);
       if (!(max > 0) || !(hp >= 0) || hp / max >= HEART_LOW || heartWarned) return;

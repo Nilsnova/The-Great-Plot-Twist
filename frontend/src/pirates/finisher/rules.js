@@ -124,6 +124,8 @@ export function scoreOf(task, by, samples, { salt = 0, easy = false, length } = 
  */
 export function createFinisher(ctx = {}) {
   const wave = ctx.wave ?? 1, enabled = ctx.enabled === true;
+  // The share of the hull below which a finisher starts (the demo harness may raise it to stage one).
+  const trigger = Number.isFinite(ctx.trigger) && ctx.trigger > 0 && ctx.trigger < 1 ? ctx.trigger : FINISHER.trigger;
   let sim = null, pending = null, run = null, regularUsed = false;
   const bonuses = [];
   const round2 = value => Math.round(value * 100) / 100;
@@ -169,7 +171,7 @@ export function createFinisher(ctx = {}) {
     watch(ship) {
       if (!enabled || !sim || run || !isFinisherBoss(ship) || ship.finisherTried) return false;
       if (pending === ship) return true;
-      if (pending || ship.hp >= ship.maxHp * FINISHER.trigger) return false;
+      if (pending || ship.hp >= ship.maxHp * trigger) return false;
       if (ship.kind !== 'redtide' && regularUsed) return false;
       if (!participants(sim.now()).length) return false; // nobody to do it: the boss sinks as before
       pending = ship;

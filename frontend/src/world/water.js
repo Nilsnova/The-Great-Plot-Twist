@@ -17,6 +17,9 @@ const coastTexture = new THREE.DataTexture(new Uint8Array(FIELD_W * FIELD_H).fil
 // and shallow contours.
 coastTexture.magFilter = THREE.LinearFilter; coastTexture.minFilter = THREE.LinearFilter;
 coastTexture.generateMipmaps = false; coastTexture.needsUpdate = true;
+// v3 waves: how fast the sea's clock runs (1 normal; a boss finisher's slow motion sets it lower).
+let seaPace = 1, seaClock = null, lastTime = null;
+export function setSeaPace(value) { seaPace = Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : 1; }
 export const seaUniforms = {
   uSeaTime: { value: 0 }, uWind: { value: .2 }, uRain: { value: 0 }, uDetail: { value: 1 },
   uCoast: { value: coastTexture }, uCoastOn: { value: 0 },
@@ -160,7 +163,10 @@ export function createWater(scene) {
       coastTexture.needsUpdate = true;
     },
     update(time, weather) {
-      seaUniforms.uSeaTime.value = time; seaUniforms.uWind.value = weather.wind ?? .2;
+      // The sea's own clock: real time × seaPace (a boss finisher slows the water, src/pirates/finisher/scene.js).
+      const step = Number.isFinite(lastTime) && time >= lastTime ? time - lastTime : 0;
+      lastTime = time; seaClock = time === 0 ? 0 : (seaClock === null ? time : seaClock + step * seaPace);
+      seaUniforms.uSeaTime.value = seaClock; seaUniforms.uWind.value = weather.wind ?? .2;
       seaUniforms.uRain.value = weather.rain ?? 0;
     },
     dispose() { mesh.removeFromParent(); mesh.geometry.dispose(); material.dispose(); },

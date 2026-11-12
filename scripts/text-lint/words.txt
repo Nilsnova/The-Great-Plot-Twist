@@ -51,6 +51,7 @@ ago
 agreed
 ai
 aim
+aimed
 alarm
 albatross
 align
@@ -161,6 +162,8 @@ balance
 balances
 balldontlie
 bank
+bar
+barge
 barnacle
 barrel
 basket
@@ -218,6 +221,8 @@ blazes
 blind
 blinking
 blocks
+blow
+blows
 blue
 blunderbuss
 board
@@ -229,6 +234,7 @@ boats
 body
 bold
 bombs
+bonus
 border
 boss
 bosun
@@ -242,6 +248,8 @@ brass
 brave
 brawler
 break
+breaking
+breaks
 breath
 briefly
 bright
@@ -299,6 +307,7 @@ cancel
 canceled
 cancelled
 cannon
+cannonballs
 cannons
 cannot
 captain
@@ -510,7 +519,9 @@ culture
 current
 cut
 cutlass
+cutlasses
 cutscene
+cutters
 cycle
 d
 daily
@@ -535,6 +546,7 @@ december
 decided
 decides
 deciding
+deck
 deckhand
 decline
 declined
@@ -615,6 +627,7 @@ driftwood
 drink
 drinks
 drive
+driven
 drops
 dublin
 duel
@@ -629,6 +642,7 @@ earlier
 earn
 earned
 earns
+easier
 east
 edge
 edit
@@ -771,6 +785,8 @@ finds
 finest
 finish
 finished
+finisher
+finishers
 finishes
 finishing
 finnhub
@@ -848,6 +864,7 @@ functions
 further
 g
 gain
+galleon
 gallery
 game
 game's
@@ -885,14 +902,17 @@ go
 goal
 goals
 goes
+going
 gold
 golden
 gone
 good
 got
+grab
 graphics
 gray
 great
+green
 greenhouse
 grey
 greyfathom
@@ -918,6 +938,7 @@ gull's
 gulls
 gun
 gunner
+guns
 h
 hack
 had
@@ -938,6 +959,7 @@ harbormaster's
 hard
 hardy
 has
+haul
 have
 having
 he
@@ -1007,6 +1029,8 @@ hr
 https
 hub
 hud
+huge
+hulks
 hull
 human
 hurt
@@ -1109,6 +1133,7 @@ journeys
 joystick
 js
 json
+jumps
 just
 k
 keel
@@ -1138,6 +1163,7 @@ know
 known
 knows
 ko
+kraken
 l
 labelled
 labels
@@ -1152,10 +1178,12 @@ lanterns
 laptops
 large
 last
+late
 later
 latest
 laughed
 laughing
+laughs
 lay
 layer
 lazy
@@ -1236,6 +1264,7 @@ login
 logins
 logs
 long
+longboats
 longer
 look
 looked
@@ -1324,6 +1353,7 @@ minus
 minute
 minutes
 mirror
+missed
 missing
 mist
 misty
@@ -1380,6 +1410,7 @@ nearest
 nearly
 need
 needed
+needle
 needs
 neither
 nested
@@ -1482,6 +1513,7 @@ outs
 outshines
 outside
 over
+overboard
 overcast
 overflow
 override
@@ -1570,6 +1602,7 @@ picture
 pictures
 pier
 pin
+pincer
 pinnable
 pinned
 pinning
@@ -1685,12 +1718,14 @@ published
 publishes
 puffin
 pull
+pulls
 punxsutawney
 purchase
 purchases
 purge
 purpose
 purse
+push
 put
 px
 q
@@ -1717,6 +1752,7 @@ raiders
 rain
 raise
 raises
+ram
 ran
 random
 range
@@ -1861,11 +1897,13 @@ rifle
 right
 ring
 rings
+rise
 rises
 rising
 risk
 risks
 rival
+rolls
 room
 rope
 rose
@@ -1876,6 +1914,7 @@ route
 route's
 routes
 row
+rowing
 rows
 rudder
 ruin
@@ -2010,6 +2049,7 @@ shipped
 ships
 shipwright
 shoal
+shoot
 shoots
 shop
 shore
@@ -2034,6 +2074,7 @@ sht
 shut
 side
 sides
+siege
 sight
 sign
 signal
@@ -2042,6 +2083,7 @@ signed
 signing
 signs
 signup
+silenced
 silver
 simulated
 simulation
@@ -2078,6 +2120,7 @@ slower
 slows
 small
 smaller
+smash
 smells
 smile
 smoke
@@ -2121,6 +2164,7 @@ spends
 spent
 spiked
 spiral
+split
 spoiler
 spoken
 sport
@@ -2191,6 +2235,7 @@ streamed
 strength
 strict
 strike
+strikes
 strip
 strong
 stronger
@@ -2226,11 +2271,13 @@ suspect
 suspects
 suspended
 swaps
+swarm
 sweep
 sweeps
 swft
 swift
 swiftwater
+swims
 swings
 switch
 switched
@@ -2267,6 +2314,7 @@ telling
 temporarily
 temporary
 ten
+tentacles
 tern
 tesla
 test
@@ -2298,8 +2346,8 @@ those
 three
 through
 throw
-thrown
 throwing
+thrown
 throws
 thumping
 thumps
@@ -2362,6 +2410,7 @@ trapped
 travel
 traveling
 travelling
+treasure
 tree
 triangles
 tricks
@@ -2430,6 +2479,7 @@ useful
 user
 uses
 using
+usually
 utc
 v
 vale
@@ -2501,6 +2551,7 @@ wave
 waves
 way
 we
+weak
 weapon
 weapons
 weather
@@ -2527,6 +2578,7 @@ whoever
 whole
 whose
 why
+wide
 width
 will
 win
