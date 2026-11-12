@@ -26,7 +26,7 @@ How a paid action is made, in one place:
 Used by: routes/island.py, waves.py, pirate_point.py and app.py (which keeps the catalogue).
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Annotated
 
 from fastapi import Depends, Request
@@ -37,7 +37,7 @@ from server.game.building_catalogue import Cost
 from server.island import games, rules, store
 from server.island.catalogue import IslandCatalogue
 from server.island.codes import read_code, shown
-from server.island.rules import Built, SpotView
+from server.island.rules import Built, ResearchTier, SpotView
 from server.island.store import Island, Paid, Progress, Refusal
 from server.supabase_admin import AlreadyApplied, InsufficientFunds, SupabaseAdmin, SupabaseRejected
 from server.wallet import validate_transaction
@@ -70,9 +70,11 @@ class CampaignView:
     opened: tuple[str, ...]
     locked: dict[str, int]  # id -> the wave it opens after
     later: tuple[str, ...]  # named in the table, not built yet (the ship)
-    research: tuple[str, ...]  # the Tech hub's researched branches
+    research: tuple[str, ...]  # the Tech hub's researched branches (tier 1 or more)
     wreck_paid: int  # coins paid into the wreck so far
     wreck_goal: int
+    # branch -> its tier and the choices of tiers 2 and 3 (docs/GAME-V3.md section 5.1)
+    tiers: dict[str, ResearchTier] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -147,17 +149,26 @@ def unlocks_of(catalogue: IslandCatalogue, wave: int, island_wave: int | None = 
 
 
 def campaign_of(
-    catalogue: IslandCatalogue, wave: int, research: tuple[str, ...] = (), wreck_paid: int = 0
+    catalogue: IslandCatalogue,
+    wave: int,
+    research: dict[str, ResearchTier] | tuple[str, ...] = (),
+    wreck_paid: int = 0,
 ) -> CampaignView:
     opened, locked, later = rules.campaign_table(catalogue, wave)
+    tiers = (
+        dict(research)
+        if isinstance(research, dict)
+        else {branch: ResearchTier() for branch in research}
+    )
     return CampaignView(
         wave,
         tuple(opened),
         locked,
         tuple(later),
-        tuple(research),
+        tuple(tiers),
         min(wreck_paid, catalogue.wreck.goal),
         catalogue.wreck.goal,
+        tiers,
     )
 
 
@@ -168,7 +179,7 @@ def view_of(
     built: dict[str, Built],
     progress: Progress,
     personal: Progress | None = None,
-    research: tuple[str, ...] = (),
+    research: dict[str, ResearchTier] | tuple[str, ...] = (),
 ) -> IslandView:
     """The island of `progress` (its spots, best and next wave, campaign) with the personal part
     (coins, crew, captain, unlocks) of `personal`: the same player on their own island, the
@@ -555,31 +566,58 @@ async def research(
     branch: str,
     action_uid: str,
     code: str | None = None,
+    tier: int = 1,
+    choice: str | None = None,
+    change: bool = False,
 ) -> IslandView:
-    """One research branch at the Tech hub of the island (your own, or with `code` the game you
-    are in), paid by the player with coins (ledger ref research:<actionUid>, reason
-    tech_research). Every tower of that kind on the island may then pick one of its skills.
-    400 bad_research, 404 no_such_island, 403 not_member, 409 locked (after wave 8), 409 known,
-    409 insufficient_funds. A repeated actionUid charges nothing."""
+    """One research step at the Tech hub of the island (your own, or with `code` the game you are
+    in), paid by the player with coins (ledger ref research:<actionUid>, reason tech_research):
+    tier 1 of a branch (every tower of that kind may then pick one of its skills), or one of the
+    two options of tier 2 or 3 (docs/GAME-V3.md section 5.1); `change` switches from the option
+    chosen before, at the tier's price again. 400 bad_research, 404 no_such_island, 403 not_member,
+    409 locked (tier 1 after wave 8, 2 after 15, 3 after 25), 409 top_tier, 409 needs_tier,
+    409 known, 409 closed, 409 insufficient_funds. A repeated actionUid charges nothing."""
     entry = rules.research_named(catalogue, branch)
     island, payer = await target_island(admin, catalogue, player_id, code)
     ref = f"{RESEARCH_PREFIX}{action_uid}"
     if not await store.ledger_has(admin, player_id, "tech_research", ref):
         progress = await store.read_progress(admin, island.owner)
         done = await store.read_research(admin, island.owner)
-        rules.check_research(catalogue, entry.branch, done, progress.wave_best)
+        entry, price = rules.check_research(
+            catalogue, entry.branch, done, progress.wave_best, tier, choice, change
+        )
         arguments = {
             "p_player_id": player_id,
             "p_island_owner": island.owner,
             "p_branch": entry.branch,
             "p_action_uid": action_uid,
-            "p_price": entry.coins,
-            "p_unlock_wave": catalogue.campaign.wave_of("tech_hub") or 0,
+            "p_price": price,
+            "p_unlock_wave": catalogue.campaign.wave_of(rules.RESEARCH_TIER_ITEMS[tier - 1]) or 0,
+            "p_tier": tier,
+            "p_choice": choice,
+            "p_change": change,
         }
         outcome = await store.run_paid(admin, "island_research", arguments)
         if isinstance(outcome, Refusal):
-            raise campaign_refusal(outcome, catalogue, "tech_hub", entry.name)
+            raise research_refusal(outcome, catalogue, entry, tier, choice)
     return await look_open(admin, catalogue, island, payer)
+
+
+def research_refusal(
+    refusal: Refusal, catalogue: IslandCatalogue, entry, tier: int, choice: str | None
+) -> ApiError:
+    """The error for a research step that island_research() refused (it checks again under lock)."""
+    if refusal.reason == "known" and tier > 1 and choice is not None:
+        return rules.option_known(entry, choice)
+    if refusal.reason == "closed":
+        return ApiError(
+            409, "closed", "Closed: your crew chose the other option. Change it to switch."
+        )
+    if refusal.reason == "needs_tier":
+        return rules.needs_tier(entry, tier)
+    if refusal.reason == "top_tier":
+        return ApiError(409, "top_tier", f"{entry.name} have {rules.RESEARCH_TOP_TIER} tiers.")
+    return campaign_refusal(refusal, catalogue, rules.RESEARCH_TIER_ITEMS[tier - 1], entry.name)
 
 
 async def specialise(
@@ -612,6 +650,8 @@ async def specialise(
             raise ApiError(409, "not_built", "Build something on this spot first.")
         if refusal.reason == "wrong_kind":
             raise rules.BuildRefused(422, "wrong_kind", "Something else stands on this spot.")
+        if refusal.reason == "not_researched" and spec in rules.RESEARCH_CAPSTONES[branch]:
+            raise rules.capstone_not_chosen(rules.research_named(catalogue, branch), spec)
         raise campaign_refusal(refusal, catalogue, "tech_hub", name)
     return await look_open(admin, catalogue, island, payer)
 

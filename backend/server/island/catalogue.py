@@ -69,6 +69,25 @@ RESEARCH_SPECS = {
     "wall": ("stone", "spiked", "quick_mend"),
     "watchtower": ("spotter", "signal_fire"),
 }
+# The research tiers (docs/GAME-V3.md section 5.1): tier 2 and tier 3 are a choice of two per kind.
+# Tier 2 is a bonus for every tower of that kind; tier 3 a capstone skill a tower of that kind may
+# then pick.
+# 20261112100000_research_tiers.sql and frontend/src/campaign/tech.js list the same ids.
+RESEARCH_TOP_TIER = 3
+RESEARCH_BONUSES = {
+    "cannon": ("gun_drill", "long_guns"),
+    "mortar": ("shell_drill", "heavy_shells"),
+    "wall": ("mason_drill", "thick_walls"),
+    "watchtower": ("lookout_drill", "high_tower"),
+}
+RESEARCH_CAPSTONES = {
+    "cannon": ("broadside", "grapeshot"),
+    "mortar": ("shockwave", "inferno"),
+    "wall": ("bastion", "thorns"),
+    "watchtower": ("eagle_eye", "war_drums"),
+}
+# The campaign id each tier opens with (campaign.json).
+RESEARCH_TIER_ITEMS = ("tech_hub", "research_2", "research_3")
 # The campaign's own ids: the island's services and the tiers (everything that is not a level,
 # a crew member or a captain level). docs/GAME-V3.md section 4.
 SERVICE_IDS = (
@@ -84,6 +103,8 @@ SERVICE_IDS = (
     "tier_20",
     "tier_30",
     "tier_50",
+    "research_2",
+    "research_3",
 )
 
 
@@ -203,8 +224,35 @@ class Research:
 
     branch: str  # cannon, mortar, wall or watchtower: the tower kind it is for
     name: str
-    coins: int  # paid once per island, by any member
+    prices: tuple[
+        int, ...
+    ]  # tier 1, 2 and 3 (a change of a tier-2 or tier-3 choice costs that tier again)
     specs: tuple[tuple[str, str], ...]  # (spec id, name): what a tower of that kind may pick
+    tier2: tuple[
+        tuple[str, str], ...
+    ] = ()  # (id, name): the two bonuses of tier 2 (the island picks one)
+    tier3: tuple[
+        tuple[str, str], ...
+    ] = ()  # (spec id, name): the two capstones of tier 3 (the island picks one)
+
+    @property
+    def coins(self) -> int:
+        """The price of tier 1."""
+        return self.prices[0]
+
+    def price_of(self, tier: int) -> int:
+        return self.prices[tier - 1]
+
+    def options_of(self, tier: int) -> tuple[str, ...]:
+        """The ids of the two options of tier 2 or 3 (empty for tier 1)."""
+        pairs = self.tier2 if tier == 2 else self.tier3 if tier == 3 else ()
+        return tuple(item for item, _ in pairs)
+
+    def option_name(self, option: str) -> str:
+        for item, name in (*self.tier2, *self.tier3):
+            if item == option:
+                return name
+        return option
 
 
 @dataclass(frozen=True)
@@ -500,6 +548,17 @@ def read_weather(data: dict) -> tuple[Weather, ...]:
     return lines
 
 
+def read_options(item: dict, name: str, key: str, where: str) -> tuple[tuple[str, str], ...]:
+    options = item.get(name)
+    if (
+        not isinstance(options, list)
+        or len(options) != 2
+        or not all(isinstance(o, dict) for o in options)
+    ):
+        raise IslandFileError(f"{where}: '{name}' must be a list of two options.")
+    return tuple((read_id(o, key, where), read_text(o, "name", where, 40)) for o in options)
+
+
 def read_research(data: dict) -> tuple[Research, ...]:
     entry = read_object(data, "research")
     branches = []
@@ -508,19 +567,30 @@ def read_research(data: dict) -> tuple[Research, ...]:
         specs = item.get("specs")
         if not isinstance(specs, list) or not 1 <= len(specs) <= 3:
             raise IslandFileError(f"{where}: 'specs' must be a list of 1 to 3 skills.")
+        prices = read_whole_list(item, "coins", where, 1, RESEARCH_TOP_TIER)
+        if len(prices) != RESEARCH_TOP_TIER or list(prices) != sorted(prices):
+            raise IslandFileError(f"{where}: 'coins' must be three rising prices, one per tier.")
         branch = Research(
             branch=read_id(item, "branch", where),
             name=read_text(item, "name", where, 40),
-            coins=read_whole(item, "coins", where, 1, MAX_DELTA),
+            prices=prices,
             specs=tuple(
                 (read_id(spec, "spec", where), read_text(spec, "name", where, 40))
                 for spec in specs
                 if isinstance(spec, dict)
             ),
+            tier2=read_options(item, "tier2", "id", where),
+            tier3=read_options(item, "tier3", "spec", where),
         )
         if tuple(spec for spec, _ in branch.specs) != RESEARCH_SPECS.get(branch.branch):
             raise IslandFileError(
                 f"{where}: the skills of '{branch.branch}' must be the known ones."
+            )
+        if branch.options_of(2) != RESEARCH_BONUSES.get(branch.branch) or branch.options_of(
+            3
+        ) != RESEARCH_CAPSTONES.get(branch.branch):
+            raise IslandFileError(
+                f"{where}: the tier options of '{branch.branch}' must be the known ones."
             )
         branches.append(branch)
     if tuple(branch.branch for branch in branches) != tuple(RESEARCH_SPECS):

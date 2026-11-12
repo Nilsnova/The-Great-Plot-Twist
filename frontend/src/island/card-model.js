@@ -4,8 +4,8 @@ import {BUILDINGS, CREW, CREW_IDS, CAPTAIN, CAPTAIN_MAX, SLOT_KINDS, maxLevel, p
 import {displayIslandCode, visitUrl} from './codes.js';
 import {formatCoinDelta, formatCoins} from '../lib/coins.js';
 import {BRANCHES, SKILLS, SKILL_BY_ID, WEAPONS, WEAPON_BY_ID, pointsEarned, pointsSpent, readSkills, readWeapon, skillNeeds} from '../pirates/captain-ids.js';
-import {opensText, spotWave, waveOf, isOpen} from '../campaign/index.js';
-import {BRANCH_BY_ID, SPECS, readSpec} from '../campaign/tech.js';
+import {opensText, spotWave, waveOf, isOpen, tierItem, tierWave} from '../campaign/index.js';
+import {BRANCH_BY_ID, SPECS, TOP_TIER, isCapstone, optionLine, optionName, optionsOf, readSpec, readTier} from '../campaign/tech.js';
 
 // Coins always read "🪙 120" through formatCoins (BUILD-PLAN 3.2); an unknown amount reads "🪙 ?".
 export const coinText = n => (Number.isSafeInteger(n) ? formatCoins(n) : '🪙 ?');
@@ -101,9 +101,11 @@ function skillsOf(kind, spot, campaign, busy) {
   const title = current ? `Skill: ${SPECS[current].name}` : 'Tower skill';
   if (!isOpen(campaign, 'tech_hub')) return {title, line: `Tower skills: ${opensText(waveOf('tech_hub'))}.`, choices: [], current};
   if (!campaign.research.done.has(kind)) return {title, line: `Research ${branch.name.toLowerCase()} at the Tech hub first.`, choices: [], current};
+  // Tier 3 (GAME-V3.md §5.1): the capstone the island chose is one more pick.
+  const capstone = campaign.research.tiers?.[kind]?.tier3 ?? null;
   return {title, line: current ? 'Pick another one for the next wave if you like.' : 'Pick one skill for this tower. It costs nothing.', current,
-    choices: branch.specs.map(id => ({id, name: SPECS[id].name, line: SPECS[id].line, active: id === current,
-      disabled: id === current || busy === `spec:${id}`, busy: busy === `spec:${id}`}))};
+    choices: [...branch.specs, ...(capstone ? [capstone] : [])].map(id => ({id, name: SPECS[id].name, line: SPECS[id].line, active: id === current,
+      capstone: isCapstone(id), disabled: id === current || busy === `spec:${id}`, busy: busy === `spec:${id}`}))};
 }
 
 // The crew panel (§3): one row per crew member that is unlocked; the locked ones in `soon`.
@@ -263,24 +265,71 @@ export function harborModel({campaign = null} = {}) {
       stall('match', 'football_board', 'Match board', 'Pick who wins a real football match.')] : []};
 }
 
-// The Tech hub (after wave 8): one row per tower kind, researched once for the whole island by any member.
+// The Tech hub (GAME-V3.md §5, §5.1): one branch per tower kind, three tiers each, paid by any member for the
+// whole island. Tier 1 unlocks the kind's skills; tiers 2 and 3 are forks of two options (the island picks one,
+// the other is closed; a change costs the tier's price again). Tier 2 opens after wave 15, tier 3 after 25.
+// A branch with research done is folded into one row ("Cannon skills · tier 2 of 3 ✓"); `next` names the
+// first step the crew can take now, so it stands out.
+//   branches: [{branch, name, tier, summary, folded, tiers: [{tier, state, fork, reason, nodes: [{id, name,
+//     line, state, note, button: {label, aria, disabled, reason, action: {branch, tier, choice, change}} | null}]}]}]
+//   tier state: done · next · locked;  node state: done · chosen · closed · open · locked
 export function techModel({campaign = null, coins = null, busy = null, message = ''} = {}) {
   const open = isOpen(campaign, 'tech_hub');
   const sent = new Map((campaign?.research?.branches ?? []).map(item => [item?.branch, item]));
+  const busyKey = action => `${action.branch}:${action.tier}:${action.choice ?? ''}`;
+  let next = null;
   const branches = Object.values(BRANCH_BY_ID).map(branch => {
-    const price = Number.isSafeInteger(sent.get(branch.branch)?.price) ? sent.get(branch.branch).price : branch.price;
-    const done = !!campaign?.research?.done?.has(branch.branch);
-    const row = {branch: branch.branch, name: branch.name, done, price: coinText(price), skills: branch.specs.map(id => SPECS[id].name),
-      button: done ? 'Researched' : busy === branch.branch ? 'Researching…' : `Research · ${coinText(price)}`, disabled: true, reason: ''};
-    if (done) { row.reason = `Every ${BUILDINGS[branch.branch].name.toLowerCase()} here can pick a skill.`; return row; }
-    if (!open) { row.reason = lockedLine('tech_hub'); return row; }
-    if (busy) return row;
-    if (coins === null) row.reason = 'Your coins are still loading.';
-    else if (coins < price) row.reason = `Not enough 🪙: you need ${coinText(price - coins)} more.`;
-    else row.disabled = false;
-    return row;
+    const prices = branch.prices.map((price, index) => (Number.isSafeInteger(sent.get(branch.branch)?.prices?.[index]) ? sent.get(branch.branch).prices[index]
+      : index === 0 && Number.isSafeInteger(sent.get(branch.branch)?.price) ? sent.get(branch.branch).price : price));
+    const state = campaign?.research?.tiers?.[branch.branch] ?? readTier(branch.branch, campaign?.research?.done?.has(branch.branch) ? {tier: 1} : null);
+    const kind = BUILDINGS[branch.branch].name.toLowerCase();
+    // Why a step cannot be taken now ('' when it can), and the button that takes it.
+    const why = (tier, price) => {
+      if (!open) return lockedLine('tech_hub');
+      if (!isOpen(campaign, tierItem(tier))) return `${opensText(tierWave(tier))}.`;
+      if (state.tier < tier - 1) return `Research tier ${tier - 1} first.`;
+      if (busy) return '';
+      if (coins === null) return 'Your coins are still loading.';
+      if (coins < price) return `Not enough 🪙: you need ${coinText(price - coins)} more.`;
+      return '';
+    };
+    const act = (action, label, aria) => {
+      const price = prices[action.tier - 1], reason = why(action.tier, price), mine = busy === busyKey(action);
+      return {label: mine ? 'Researching…' : `${label} · ${coinText(price)}`, aria: `${label} ${aria}, ${coinText(price)}`,
+        disabled: !!reason || !!busy, reason, action};
+    };
+    const tierState = tier => (state.tier >= tier ? 'done' : state.tier === tier - 1 && open && isOpen(campaign, tierItem(tier)) ? 'next' : 'locked');
+    const lockText = tier => (!open ? lockedLine('tech_hub') : !isOpen(campaign, tierItem(tier)) ? `${opensText(tierWave(tier))}.` : `Research tier ${tier - 1} first.`);
+    const tiers = [];
+    // Tier 1: the kind's skills.
+    const first = tierState(1);
+    tiers.push({tier: 1, state: first, fork: false, reason: first === 'locked' ? lockText(1) : '',
+      nodes: [{id: `${branch.branch}-1`, name: 'Tower skills', line: branch.specs.map(id => SPECS[id].name).join(' · '),
+        state: first === 'done' ? 'done' : first === 'next' ? 'open' : 'locked',
+        note: first === 'done' ? `Every ${kind} here can pick one of them.` : '',
+        button: first === 'next' ? act({branch: branch.branch, tier: 1, choice: null, change: false}, 'Research', branch.name) : null}]});
+    // Tiers 2 and 3: a fork of two options.
+    for (const tier of [2, 3]) {
+      const picked = tier === 2 ? state.tier2 : state.tier3, status = tierState(tier);
+      tiers.push({tier, state: status, fork: true, reason: status === 'locked' ? lockText(tier) : '',
+        nodes: optionsOf(branch.branch, tier).map(id => {
+          const name = optionName(id), base = {id, name, line: optionLine(id)};
+          if (picked === id) return {...base, state: 'chosen', note: tier === 3 ? `Every ${kind} here can pick ${name}.` : 'Your crew chose this.', button: null};
+          if (picked) return {...base, state: 'closed', note: `Closed: your crew chose ${optionName(picked)}.`,
+            button: act({branch: branch.branch, tier, choice: id, change: true}, 'Change to it', name)};
+          if (status === 'next') return {...base, state: 'open', note: '', button: act({branch: branch.branch, tier, choice: id, change: false}, 'Pick', name)};
+          return {...base, state: 'locked', note: '', button: null};
+        })});
+    }
+    const step = tiers.find(item => item.state === 'next');
+    if (step && !next) next = {branch: branch.branch, tier: step.tier,
+      text: step.tier === 1 ? `Next: research ${branch.name.toLowerCase()} for ${coinText(prices[0])}.`
+        : `Next: ${branch.name.toLowerCase()}, tier ${step.tier}. Pick one of two for ${coinText(prices[step.tier - 1])}.`};
+    return {branch: branch.branch, name: branch.name, tier: state.tier, folded: state.tier >= 1,
+      summary: state.tier >= 1 ? `${branch.name} · tier ${state.tier} of ${TOP_TIER} ✓` : branch.name,
+      prices: prices.map(coinText), tiers, next: !!step};
   });
-  return {title: 'Tech hub', open, line: open ? 'Research a tower kind once. Then every tower of that kind on the island can pick a skill.'
+  return {title: 'Tech hub', open, next, line: open ? 'Research a tower kind for the whole island. Tiers 2 and 3 are a choice: decide together.'
     : lockedLine('tech_hub'), branches, message, coins: coins === null ? '' : `You have ${coinText(coins)}`};
 }
 

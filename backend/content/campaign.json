@@ -70,15 +70,21 @@
     },
     {
       "wave": 15,
-      "opens": ["mortar:4", "watchtower:4", "tier_15"],
+      "opens": ["mortar:4", "watchtower:4", "tier_15", "research_2"],
       "title": "New: Level 4 mortars, and bigger warships!",
-      "line": "Mortars and the watchtower go to level 4. The boss warships are tougher from now on."
+      "line": "Mortars and the watchtower go to level 4. Tier 2 opens at the Tech hub. The boss warships are tougher now."
     },
     {
       "wave": 20,
       "opens": ["cannon:5", "mortar:5", "wall:5", "watchtower:5", "tier_20"],
       "title": "New: Level 5, and brutes!",
       "line": "Every tower and wall goes to level 5. Big brutes come ashore: they hack walls faster and take more hits."
+    },
+    {
+      "wave": 25,
+      "opens": ["research_3"],
+      "title": "New: Tier 3 at the Tech hub!",
+      "line": "Pick one of two big skills per tower kind at the Tech hub. Then every tower of that kind can learn it."
     },
     {
       "wave": 30,

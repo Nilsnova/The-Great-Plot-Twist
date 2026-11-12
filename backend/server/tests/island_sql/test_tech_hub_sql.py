@@ -52,10 +52,11 @@ def best(database, player, wave):
 
 
 def research(database, player, branch, uid, price=60, wave=8, owner=OWNER):
+    # Tier 1 of the research tiers of 20261112100000_research_tiers.sql (test_research_tiers_sql.py).
     as_server(database)
     return call(
         database,
-        "select public.island_research(%s, %s, %s, %s, %s, %s)",
+        "select public.island_research(%s, %s, %s, %s, %s, %s, 1, null, false)",
         player,
         owner,
         branch,
@@ -220,14 +221,16 @@ def test_no_browser_role_may_run_the_functions_or_read_the_research(database):
         select has_table_privilege('authenticated', 'public.island_research', 'select'),
                has_table_privilege('anon', 'public.island_research', 'select'),
                has_function_privilege('authenticated',
-                 'public.island_research(uuid, uuid, text, text, integer, integer)', 'execute'),
+                 'public.island_research(uuid, uuid, text, text, integer, integer, '
+                 'integer, text, boolean)', 'execute'),
                has_function_privilege('anon',
                  'public.island_specialise(uuid, uuid, text, text, text)', 'execute'),
                has_function_privilege('authenticated',
                  'public.island_wreck_repair(uuid, uuid, integer, text, integer, integer)',
                  'execute'),
                has_function_privilege('service_role',
-                 'public.island_research(uuid, uuid, text, text, integer, integer)', 'execute')
+                 'public.island_research(uuid, uuid, text, text, integer, integer, '
+                 'integer, text, boolean)', 'execute')
         """
     ).fetchone()
     assert rights == (False, False, False, False, False, True)

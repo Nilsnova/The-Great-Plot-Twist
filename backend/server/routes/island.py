@@ -31,9 +31,14 @@ GET /api/island
         "campaign": {"wave": 4, "open": ["wall:1", ..., "harbor", "market_calls"],
                      "locked": {"ring_walls": 5, "wreck": 6, "tech_hub": 8, ...},
                      "later": ["ship"],
-                     "research": {"done": ["cannon"], "branches": [{"branch": "cannon",
-                                  "name": "Cannon skills", "price": 180, "specs": [{"id": "rapid",
-                                  "name": "Rapid"}, ...]}, ...]},
+                     "research": {"done": ["cannon"], "tiers": {"cannon": {"tier": 2,
+                                  "tier2": "long_guns", "tier3": null}, ...},
+                                  "tierWaves": [8, 15, 25], "branches": [{"branch": "cannon",
+                                  "name": "Cannon skills", "price": 180, "prices": [180, 360, 630],
+                                  "specs": [{"id": "rapid", "name": "Rapid"}, ...],
+                                  "tier2": [{"id": "gun_drill", "name": "Gun drill"}, ...],
+                                  "tier3": [{"id": "broadside", "name": "Broadside"}, ...]},
+                                  ...]},
                      "wreck": {"paid": 125, "goal": 500, "gifts": [25, 100]}}}
     The first call makes the player's island with a new code and, for a brand-new player whose
     wallet never moved, pays the starting coins (once). The 22 spots come in the order of
@@ -85,12 +90,16 @@ POST /api/island/hire  {"crew": "gunner" | "carpenter" | "lookout", "actionUid":
     -> the island. One crew member, kept (ledger ref crew:<actionUid>). Always your own island.
     Errors: 409 crew_full, 409 locked, 409 insufficient_funds
 
-POST /api/island/research  {"branch": "cannon", "actionUid": "...", "code"?: "ISLE-K7Q2M"}
-    -> the island. The Tech hub (GAME-V3 section 5): one research branch for the whole island
-    (yours, or with "code" the game you are a member of), paid once with the caller's coins
-    (ledger ref research:<actionUid>, reason tech_research). Opens after wave 8.
+POST /api/island/research  {"branch": "cannon", "actionUid": "...", "tier"?: 1 | 2 | 3,
+                            "choice"?: "long_guns", "change"?: true, "code"?: "ISLE-K7Q2M"}
+    -> the island. The Tech hub (GAME-V3 sections 5 and 5.1): one research step for the whole
+    island (yours, or with "code" the game you are a member of), paid with the caller's coins
+    (ledger ref research:<actionUid>, reason tech_research). Tier 1 (no "choice") opens after
+    wave 8; tiers 2 and 3 (after waves 15 and 25) need "choice", one of the tier's two options:
+    once the crew chose one, the other is closed, and "change": true switches to it at the tier's
+    price again (a tier-3 switch takes the old capstone off the towers that picked it).
     Errors: 400 bad_research, 403 not_member, 404 no_such_island, 409 locked, 409 known,
-            409 insufficient_funds
+            409 closed, 409 needs_tier, 409 top_tier, 409 insufficient_funds
 
 POST /api/island/tower-skill  {"spot": "cannon_1", "spec": "rapid", "code"?: "ISLE-K7Q2M"}
     -> the island. The tower on the spot picks one skill of its researched branch (no coins;
@@ -156,9 +165,9 @@ from pydantic import BaseModel, ConfigDict, Field
 from server.auth import Player, PlayerDep
 from server.errors import ApiError
 from server.flags import is_enabled
-from server.island import service
+from server.island import rules, service
 from server.island.catalogue import IslandCatalogue
-from server.island.rules import SpotView
+from server.island.rules import ResearchTier, SpotView
 from server.island.service import CampaignView, IslandCatalogueDep, IslandView
 from server.settings import SettingsDep
 from server.supabase_admin import AdminDep
@@ -260,12 +269,23 @@ class SpecOut(BaseModel):
 class BranchOut(BaseModel):
     branch: str
     name: str
-    price: int
+    price: int  # tier 1
+    prices: list[int]  # tier 1, 2 and 3
     specs: list[SpecOut]
+    tier2: list[SpecOut]
+    tier3: list[SpecOut]
+
+
+class TierOut(BaseModel):
+    tier: int
+    tier2: str | None
+    tier3: str | None
 
 
 class ResearchOut(BaseModel):
     done: list[str]
+    tiers: dict[str, TierOut]  # every branch: tier 0 to 3 and the choices of tiers 2 and 3
+    tierWaves: list[int]  # the won wave each tier needs
     branches: list[BranchOut]
 
 
@@ -372,6 +392,10 @@ class ResearchRequest(BaseModel):
     branch: str = Field(min_length=1, max_length=40)
     actionUid: str = Field(pattern=ACTION_UID_PATTERN)
     code: str | None = Field(default=None, max_length=CODE_MAX_LENGTH)
+    # GAME-V3 section 5.1: the tier (above 3: 409 top_tier) and, for tiers 2 and 3, the option.
+    tier: int = Field(default=1, ge=1, le=10)
+    choice: str | None = Field(default=None, min_length=1, max_length=40)
+    change: bool = False
 
 
 class SpecialiseRequest(BaseModel):
@@ -406,6 +430,16 @@ def spots_out(spots: tuple[SpotView, ...]) -> list[SpotOut]:
     ]
 
 
+def tier_out(tier: ResearchTier | None) -> TierOut:
+    if tier is None:
+        return TierOut(tier=0, tier2=None, tier3=None)
+    return TierOut(
+        tier=tier.tier,
+        tier2=tier.choice_2 if tier.tier >= 2 else None,
+        tier3=tier.choice_3 if tier.tier >= 3 else None,
+    )
+
+
 def campaign_out(view: CampaignView, catalogue: IslandCatalogue) -> CampaignOut:
     return CampaignOut(
         wave=view.wave,
@@ -414,12 +448,19 @@ def campaign_out(view: CampaignView, catalogue: IslandCatalogue) -> CampaignOut:
         later=list(view.later),
         research=ResearchOut(
             done=list(view.research),
+            tiers={
+                entry.branch: tier_out(view.tiers.get(entry.branch)) for entry in catalogue.research
+            },
+            tierWaves=[catalogue.campaign.wave_of(item) or 0 for item in rules.RESEARCH_TIER_ITEMS],
             branches=[
                 BranchOut(
                     branch=entry.branch,
                     name=entry.name,
                     price=entry.coins,
+                    prices=list(entry.prices),
                     specs=[SpecOut(id=spec, name=name) for spec, name in entry.specs],
+                    tier2=[SpecOut(id=item, name=name) for item, name in entry.tier2],
+                    tier3=[SpecOut(id=item, name=name) for item, name in entry.tier3],
                 )
                 for entry in catalogue.research
             ],
@@ -597,7 +638,15 @@ async def post_research(
 ) -> IslandResponse:
     request.app.state.island_build_budget.spend(player.id)
     view = await service.research(
-        admin, catalogue, player.id, body.branch, body.actionUid, body.code
+        admin,
+        catalogue,
+        player.id,
+        body.branch,
+        body.actionUid,
+        body.code,
+        body.tier,
+        body.choice,
+        body.change,
     )
     return island_out(view, catalogue)
 

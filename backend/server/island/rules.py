@@ -24,7 +24,10 @@ from dataclasses import dataclass
 
 from server.errors import ApiError
 from server.island.catalogue import (
+    RESEARCH_CAPSTONES,
     RESEARCH_SPECS,
+    RESEARCH_TIER_ITEMS,
+    RESEARCH_TOP_TIER,
     Crew,
     IslandCatalogue,
     Kind,
@@ -53,6 +56,24 @@ class Built:
     kind: str
     level: int
     spec: str | None = None  # the tower skill it picked at the Tech hub (GAME-V3 section 5)
+
+
+@dataclass(frozen=True)
+class ResearchTier:
+    """One research branch on an island (docs/GAME-V3.md section 5.1): the tier reached (1 to 3)
+    and the option the crew chose at tier 2 and at tier 3 (None until then)."""
+
+    tier: int = 1
+    choice_2: str | None = None
+    choice_3: str | None = None
+
+    def choice(self, tier: int) -> str | None:
+        return self.choice_2 if tier == 2 else self.choice_3 if tier == 3 else None
+
+
+def tower_specs(kind: str) -> tuple[str, ...]:
+    """Every skill a tower of `kind` may carry: tier 1's and the two capstones of tier 3."""
+    return RESEARCH_SPECS.get(kind, ()) + RESEARCH_CAPSTONES.get(kind, ())
 
 
 @dataclass(frozen=True)
@@ -96,7 +117,7 @@ def spot_view(catalogue: IslandCatalogue, spot: Spot, built: Built | None) -> Sp
         )
     kind = kind_of(catalogue, built.kind)
     upgrade = kind.prices[built.level] if built.level < kind.max_level else None
-    spec = built.spec if built.spec in RESEARCH_SPECS.get(kind.kind, ()) else None
+    spec = built.spec if built.spec in tower_specs(kind.kind) else None
     return SpotView(spot.id, kind.kind, spot.kinds, True, built.level, kind.coins, upgrade, spec)
 
 
@@ -380,23 +401,62 @@ def research_named(catalogue: IslandCatalogue, branch: str) -> Research:
 
 
 def check_research(
-    catalogue: IslandCatalogue, branch: str, researched: tuple[str, ...], wave: int
-) -> Research:
-    """400 bad_research, 409 locked (the Tech hub opens after wave 8), 409 known."""
+    catalogue: IslandCatalogue,
+    branch: str,
+    done: dict[str, ResearchTier],
+    wave: int,
+    tier: int = 1,
+    choice: str | None = None,
+    change: bool = False,
+) -> tuple[Research, int]:
+    """One research step (docs/GAME-V3.md section 5.1): tier 1 of a branch, or one of the two
+    options of tier 2 or 3, `change` to switch from the option chosen before (at the tier's price
+    again). 400 bad_research, 409 top_tier, 409 locked (tier 1 after wave 8, tier 2 after 15,
+    tier 3 after 25), 409 needs_tier, 409 known, 409 closed. Returns the branch and the price."""
     entry = research_named(catalogue, branch)
-    check_open(catalogue, "tech_hub", wave)
-    if entry.branch in researched:
-        raise research_known(entry)
-    return entry
+    if tier > RESEARCH_TOP_TIER:
+        raise ApiError(409, "top_tier", f"{entry.name} have {RESEARCH_TOP_TIER} tiers.")
+    if tier < 1 or (choice is not None if tier == 1 else choice not in entry.options_of(tier)):
+        raise ApiError(400, "bad_research", "There is no such research.")
+    check_open(catalogue, RESEARCH_TIER_ITEMS[tier - 1], wave)
+    now = done.get(entry.branch)
+    if tier == 1:
+        if now is not None:
+            raise research_known(entry)
+        return entry, entry.price_of(1)
+    if now is None or now.tier < tier - 1:
+        raise needs_tier(entry, tier)
+    chosen = now.choice(tier) if now.tier >= tier else None
+    if chosen == choice:
+        raise option_known(entry, choice)
+    if chosen is not None and not change:
+        raise option_closed(entry, chosen)
+    return entry, entry.price_of(tier)
 
 
 def research_known(entry: Research) -> ApiError:
     return ApiError(409, "known", f"{entry.name} are researched on this island already.")
 
 
+def needs_tier(entry: Research, tier: int) -> ApiError:
+    return ApiError(409, "needs_tier", f"Research tier {tier - 1} of {entry.name.lower()} first.")
+
+
+def option_known(entry: Research, option: str) -> ApiError:
+    return ApiError(409, "known", f"Your crew chose {entry.option_name(option)} already.")
+
+
+def option_closed(entry: Research, chosen: str) -> ApiError:
+    return ApiError(
+        409,
+        "closed",
+        f"Closed: your crew chose {entry.option_name(chosen)}. Change it to switch.",
+    )
+
+
 def branch_of_spec(spec: str) -> str | None:
-    for branch, specs in RESEARCH_SPECS.items():
-        if spec in specs:
+    for branch in RESEARCH_SPECS:
+        if spec in tower_specs(branch):
             return branch
     return None
 
@@ -406,10 +466,11 @@ def check_specialise(
     spot_id: str,
     spec: str,
     built: dict[str, Built],
-    researched: tuple[str, ...],
+    researched: dict[str, ResearchTier],
 ) -> tuple[Spot, str]:
     """A tower picks one skill of its kind (409 not_built, 400 bad_spec, 422 wrong_kind,
-    409 not_researched). Returns the spot and the branch (the tower's kind)."""
+    409 not_researched; a capstone only once its island chose it at tier 3). Returns the spot and
+    the branch (the tower's kind)."""
     spot = find_spot(catalogue, spot_id)
     standing = built.get(spot.id)
     if standing is None or standing.kind not in spot.kinds:
@@ -422,11 +483,19 @@ def check_specialise(
         raise BuildRefused(422, "wrong_kind", f"A {name} cannot learn that skill.")
     if branch not in researched:
         raise not_researched(research_named(catalogue, branch))
+    if spec in RESEARCH_CAPSTONES[branch] and researched[branch].choice_3 != spec:
+        raise capstone_not_chosen(research_named(catalogue, branch), spec)
     return spot, branch
 
 
 def not_researched(entry: Research) -> ApiError:
     return ApiError(409, "not_researched", f"Research {entry.name.lower()} at the Tech hub first.")
+
+
+def capstone_not_chosen(entry: Research, spec: str) -> ApiError:
+    return ApiError(
+        409, "not_researched", f"Pick {entry.option_name(spec)} at tier 3 of the Tech hub first."
+    )
 
 
 def check_wreck_gift(catalogue: IslandCatalogue, amount: int, paid: int, wave: int) -> int:

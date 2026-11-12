@@ -42,7 +42,7 @@ import {makeActionUid} from '../screens/islet/action-uid.js';
 import {islandCode, displayIslandCode} from './codes.js';
 import {localSpotId} from './spots.js';
 import {SKILL_BY_ID, WEAPON_BY_ID} from '../pirates/captain-ids.js';
-import {BRANCH_BY_ID, SPECS} from '../campaign/tech.js';
+import {BRANCH_BY_ID, SPECS, optionsOf} from '../campaign/tech.js';
 
 export const PATHS = Object.freeze({
   island: '/api/island', build: '/api/island/build', visit: code => `/api/island/visit/${code}`,
@@ -207,12 +207,15 @@ export function createIslandApi({transport, makeUid = makeActionUid} = {}) {
       if (!Object.hasOwn(WEAPON_BY_ID, weapon ?? '')) return refuse(400, 'bad_weapon', MESSAGES.badWeapon);
       return askSpots(() => transport.post(PATHS.weaponEquip, {weapon}), isIsland);
     },
-    // GAME-V3.md §5: research a tower kind at the Tech hub of the island (yours, or the game of `code`).
-    research({branch, code = null} = {}) {
+    // GAME-V3.md §5, §5.1: one research step at the Tech hub of the island (yours, or the game of `code`):
+    // tier 1 of a branch, or one option of tier 2 or 3 (`change`: switch from the option the crew chose before).
+    research({branch, tier = 1, choice = null, change = false, code = null} = {}) {
       const where = code ? displayIslandCode(code) : '';
       if (!Object.hasOwn(BRANCH_BY_ID, branch ?? '')) return refuse(400, 'bad_research', MESSAGES.badResearch);
+      if (![1, 2, 3].includes(tier) || (tier === 1 ? choice !== null : !optionsOf(branch, tier).includes(choice))) return refuse(400, 'bad_research', MESSAGES.badResearch);
       if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
-      return writeSpots(`research:${where}:${branch}`, actionUid => transport.post(PATHS.research, {branch, actionUid, ...(where ? {code: where} : {})}),
+      const body = {branch, ...(tier > 1 ? {tier, choice, ...(change ? {change: true} : {})} : {}), ...(where ? {code: where} : {})};
+      return writeSpots(`research:${where}:${branch}:${tier}:${choice ?? ''}:${change ? 'change' : 'pick'}`, actionUid => transport.post(PATHS.research, {...body, actionUid}),
         where ? hasSpots : isIsland);
     },
     // A tower picks one skill of its researched kind (no coins, the same every time: no click id).
