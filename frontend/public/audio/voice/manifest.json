@@ -329,6 +329,98 @@
     "narrator-victory_2": {
       "file": "narrator-victory_2.mp3",
       "seconds": 7.68
+    },
+    "narrator-house_role": {
+      "file": "narrator-house_role.mp3",
+      "seconds": 7.03
+    },
+    "narrator-event_fog_bank": {
+      "file": "narrator-event_fog_bank.mp3",
+      "seconds": 6.01
+    },
+    "narrator-event_storm": {
+      "file": "narrator-event_storm.mp3",
+      "seconds": 6.24
+    },
+    "narrator-event_night_raid": {
+      "file": "narrator-event_night_raid.mp3",
+      "seconds": 5.3
+    },
+    "narrator-event_fire_ships": {
+      "file": "narrator-event_fire_ships.mp3",
+      "seconds": 5.88
+    },
+    "narrator-event_pincer": {
+      "file": "narrator-event_pincer.mp3",
+      "seconds": 3.74
+    },
+    "narrator-event_armada": {
+      "file": "narrator-event_armada.mp3",
+      "seconds": 5.46
+    },
+    "narrator-event_siege_barge": {
+      "file": "narrator-event_siege_barge.mp3",
+      "seconds": 5.17
+    },
+    "narrator-event_treasure_galleon": {
+      "file": "narrator-event_treasure_galleon.mp3",
+      "seconds": 6.53
+    },
+    "narrator-event_smugglers": {
+      "file": "narrator-event_smugglers.mp3",
+      "seconds": 5.28
+    },
+    "narrator-event_kraken": {
+      "file": "narrator-event_kraken.mp3",
+      "seconds": 6.19
+    },
+    "narrator-finisher_haul_start": {
+      "file": "narrator-finisher_haul_start.mp3",
+      "seconds": 3.63
+    },
+    "narrator-finisher_haul_won": {
+      "file": "narrator-finisher_haul_won.mp3",
+      "seconds": 2.72
+    },
+    "narrator-finisher_haul_failed": {
+      "file": "narrator-finisher_haul_failed.mp3",
+      "seconds": 3.6
+    },
+    "narrator-finisher_cannon_start": {
+      "file": "narrator-finisher_cannon_start.mp3",
+      "seconds": 3.87
+    },
+    "narrator-finisher_cannon_won": {
+      "file": "narrator-finisher_cannon_won.mp3",
+      "seconds": 2.61
+    },
+    "narrator-finisher_cannon_failed": {
+      "file": "narrator-finisher_cannon_failed.mp3",
+      "seconds": 3.08
+    },
+    "narrator-finisher_duel_start": {
+      "file": "narrator-finisher_duel_start.mp3",
+      "seconds": 3.37
+    },
+    "narrator-finisher_duel_won": {
+      "file": "narrator-finisher_duel_won.mp3",
+      "seconds": 3.27
+    },
+    "narrator-finisher_duel_failed": {
+      "file": "narrator-finisher_duel_failed.mp3",
+      "seconds": 3.21
+    },
+    "narrator-finisher_redtide_start": {
+      "file": "narrator-finisher_redtide_start.mp3",
+      "seconds": 4.62
+    },
+    "narrator-finisher_redtide_won": {
+      "file": "narrator-finisher_redtide_won.mp3",
+      "seconds": 4.62
+    },
+    "narrator-finisher_redtide_failed": {
+      "file": "narrator-finisher_redtide_failed.mp3",
+      "seconds": 3.6
     }
   }
 }
