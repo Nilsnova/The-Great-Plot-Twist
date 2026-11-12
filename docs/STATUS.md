@@ -14,6 +14,12 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
+**12 Nov, T19 / Johannes:** [draft PR #7](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/7) makes
+building clicks use E's existing reach and preserves priority for wave/revive actions. Frontend:
+**2,753 tests passed**; build, budgets and text lint pass; accessibility **33 screens / no failures**;
+demo **33 checks / no errors**. [Before/after evidence](evidence/T19/README.md). No login/API changes;
+physical phones, live multiplayer and human review remain separate checks.
+
 **Plan to the deadline:** [FINAL-ROADMAP.md](FINAL-ROADMAP.md) ranks the remaining work by grade value; members pick tasks there with the [agent prompt](contribute/AGENT-PROMPT.md). **Open to-dos:** the account setup and demo-day list is [OPEN-TODOS.md](OPEN-TODOS.md) (account setup, pre-demo checks, follow-ups, the Moodle deadline). No task there is assigned to a person.
 
 **Current release, 9 Nov 2026 (G29, the class demo):** main `c7f8c95` is live. The title has Play, Join and Settings; a short voiced intro (ElevenLabs) leads to the harbor in two clicks; one class harbor holds up to 40 captains; a quest strip (wave, duel, Keeper's Lock), a two-tap friendly duel, the Keeper's Lock with the player's real weather and the three-lamps finale; a projector QR (J); wow graphics (animated title, pixel sea, dusk and night light, rain and fog); a host-console Class demo panel. All gates passed; the live smoke check has 0 failures. The flag `demo` is on. Guests stay locked out until anonymous sign-ins are allowed in Supabase (OPEN-TODOS.md, 1a). Being built: the class-code gate and email sign-in.
@@ -188,6 +194,10 @@ Nobody has decided these yet. Until they are decided, the plan in [ROADMAP.md](.
 6. **Pick a package.** Take your lane's next package below, or one from "Start today" in ROADMAP.md. Open an issue with the goal, acceptance checks, scope, responsible teammate and likely files. Create your branch from `main` (`git switch main`, `git pull`, then for example `git switch -c feat/l1-live-weather`). Paste the agent brief below and open a draft pull request early.
 
 ## Next steps per lane
+
+**T19 / Johannes:** inspect [PR #7](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/7) with the
+[lane walkthrough](WALKTHROUGH.md#johannes-nearby-building-interactions-t19), then ask a different human
+teammate to review the current diff; Nils (`Nilsnova`) is the suggested reviewer. No automatic merge.
 
 Each lane has its next two packages, each with a brief. Fill in the `<...>` parts and paste the brief to your coding agent. The briefs follow the template in [ENGINEERING.md](ENGINEERING.md), section 8, and end with the handover format from [AGENTS.md](../AGENTS.md). What each package ships, provides and must pass is in [ROADMAP.md](../ROADMAP.md).
 
@@ -498,6 +508,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+- **2026-11-12, Johannes Franz Lang with Codex:** T19 nearby building input on `feat/t19-nearby-interactions` ([PR #7](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/7)); 2,753 frontend tests, build/budget/text checks, 33 accessibility screens and 33 demo checks pass. Nine new cases, before/after desktop/phone evidence, walkthrough and test map included. Login, APIs and movement unchanged; no files deleted; human review pending.
 
 - **2026-11-08.** Codex for Nils: integrated reviewed G9 overflow 1–3, collision-aware phone tap-to-walk, idle onboarding, truthful Friends entry, inline case guidance and visual polish across inspection, story and support screens on `integrate/overflow-1-3`. Final clean frontend **3,719/252**, mobile **36**, accessibility **61**, caption **51**, CSP seven pages/zero violations; budgets, recorded native journeys and fault checks pass. [Release evidence](handoff/player-experience-visual-pass.md). Main/deployment verification follows; no backend/SQL/env/provider/workflow changes.
 

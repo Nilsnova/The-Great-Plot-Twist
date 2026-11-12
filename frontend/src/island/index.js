@@ -679,7 +679,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     decorate(place, art, cleanups, adapters = {}) {
       world?.dispose();
       const deco = decorateIsland(place, {art, reducedMotion, canvas: adapters.canvas, camera: adapters.camera,
-        isActive: adapters.isActive, onPick: pick});
+        player: adapters.player, isActive: adapters.isActive, onPick: pick, onTooFar: () => ui.toast('Walk closer')});
       world = deco; applyWorld();
       const original = place.update;
       place.update = (dt, frame) => { original(dt, frame); deco.update(dt, frame?.time ?? 0); };
@@ -688,7 +688,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     // Pirate Point's shared build spots on lighthouse_isle (factory.js); its bell and lamps stay lane P's.
     decoratePoint(place, adapters = {}) {
       pointWorld?.dispose();
-      const deco = decorateIsland(place, {reducedMotion, canvas: adapters.canvas, camera: adapters.camera, isActive: adapters.isActive, onPick: pick,
+      const deco = decorateIsland(place, {reducedMotion, canvas: adapters.canvas, camera: adapters.camera, player: adapters.player,
+        isActive: adapters.isActive, onPick: pick, onTooFar: () => ui.toast('Walk closer'),
         layout: {spots: PP_SPOTS, zones: pointZones, bell: false, cabin: false, name: 'pirate-point-spots'}});
       pointWorld = deco; applyWorld();
       const original = place.update, dispose = place.dispose;

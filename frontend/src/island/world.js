@@ -4,6 +4,7 @@
 // asset, no data: URL); the level art (walls, cannons, mortars by level) replaces the stand-ins once loaded. Everything is added under place.group, so the place's own
 // lifetime (resources.js) releases every texture, material and geometry when the player leaves.
 import * as THREE from 'three';
+import {findZone} from '../world/zones.js';
 import {artSizes, loadArt, placeArt, projectPoint} from '../world/art.js';
 import {pixelSizes} from '../pixel/catalog.js';
 import {SPOTS as ISLAND_SPOTS, CABIN, BELL, CAMPAIGN_BUILDINGS, islandZones} from './spots.js';
@@ -97,7 +98,7 @@ export function campaignArt(building, campaign) {
 // A spot the campaign opens later (the inner wall ring after wave 5) shows a lock badge instead of the build badge.
 export const spotLocked = (spot, campaign) => !!campaign && spotWave(spot.id) > (campaign.wave ?? 0);
 
-// ctx: {art (the place's loaded art, with 'cabin'), reducedMotion, canvas, camera, isActive, onPick(id),
+// ctx: {art (the place's loaded art, with 'cabin'), reducedMotion, canvas, camera, player, isActive, onPick(id), onTooFar(),
 // loadArt (tests), and for Pirate Point: layout {spots, zones(), bell: false, cabin: false}}.
 // Returns {apply({spots, visitor, battle, unlocks}), update(dt, time), pickAt(x, z), dispose()}.
 // A marker shows on an empty spot only when something may be built there (unlocks, TOWER-DEFENSE.md §9).
@@ -244,7 +245,14 @@ export function decorateIsland(place, ctx = {}) {
       const point = new THREE.Vector3((event.clientX - rect.left) / rect.width * 2 - 1,
         1 - (event.clientY - rect.top) / rect.height * 2, 0).unproject(ctx.camera);
       const picked = pickAt(point.x, -point.y / .72);
-      if (picked) ctx.onPick?.(picked);
+      if (!picked) return;
+      // Use the clicked building's zone, not a different nearby building's reach.
+      const zone = place.zones.find(item => item.id === picked);
+      if (!ctx.player?.position || !zone || findZone(ctx.player.position, [zone]) !== picked) {
+        ctx.onTooFar?.();
+        return;
+      }
+      ctx.onPick?.(picked);
     };
     ctx.canvas.addEventListener('pointerdown', start); ctx.canvas.addEventListener('pointerup', click);
     cleanups.push(() => { ctx.canvas.removeEventListener('pointerdown', start); ctx.canvas.removeEventListener('pointerup', click); });
