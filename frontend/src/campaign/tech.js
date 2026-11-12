@@ -11,9 +11,9 @@ const freeze = Object.freeze;
 export const TOP_TIER = 3;
 export const BRANCHES = freeze([
   freeze({branch: 'cannon', name: 'Cannon skills', price: 180, prices: freeze([180, 360, 630]), specs: freeze(['rapid', 'heavy', 'chain']),
-    tier2: freeze(['gun_drill', 'long_guns']), tier3: freeze(['broadside', 'grapeshot'])}),
+    tier2: freeze(['rapid_2', 'long_guns']), tier3: freeze(['broadside', 'grapeshot'])}),
   freeze({branch: 'mortar', name: 'Mortar skills', price: 220, prices: freeze([220, 440, 770]), specs: freeze(['cluster', 'fire_pot', 'long_range']),
-    tier2: freeze(['shell_drill', 'heavy_shells']), tier3: freeze(['shockwave', 'inferno'])}),
+    tier2: freeze(['quick_fuse', 'heavy_shells']), tier3: freeze(['shockwave', 'inferno'])}),
   freeze({branch: 'wall', name: 'Wall skills', price: 120, prices: freeze([120, 240, 420]), specs: freeze(['stone', 'spiked', 'quick_mend']),
     tier2: freeze(['mason_drill', 'thick_walls']), tier3: freeze(['bastion', 'thorns'])}),
   freeze({branch: 'watchtower', name: 'Watchtower skills', price: 160, prices: freeze([160, 320, 560]), specs: freeze(['spotter', 'signal_fire']),
@@ -34,25 +34,25 @@ export const SPECS = freeze({
   spotter: freeze({branch: 'watchtower', name: 'Spotter', line: 'Towers near it do 15% more damage.'}),
   signal_fire: freeze({branch: 'watchtower', name: 'Signal fire', line: 'Ships show 5 s earlier.'}),
   // Tier 3, the capstones (one per island and kind).
-  broadside: freeze({branch: 'cannon', name: 'Broadside', line: 'Every 4th shot fires two balls.', capstone: true}),
+  broadside: freeze({branch: 'cannon', name: 'Broadside', line: 'Hits 20% harder, and every 4th shot fires two balls.', capstone: true}),
   grapeshot: freeze({branch: 'cannon', name: 'Grapeshot', line: 'A shot at a boarder hits every boarder near it.', capstone: true}),
   shockwave: freeze({branch: 'mortar', name: 'Shockwave', line: 'Blasts throw boarders back towards the sea.', capstone: true}),
   inferno: freeze({branch: 'mortar', name: 'Inferno', line: 'Every shell sets a wide patch of ground on fire.', capstone: true}),
   bastion: freeze({branch: 'wall', name: 'Bastion', line: '50% more strength, and it mends itself slowly.', capstone: true}),
   thorns: freeze({branch: 'wall', name: 'Thorns', line: 'Boarders who hack it get badly hurt.', capstone: true}),
-  eagle_eye: freeze({branch: 'watchtower', name: 'Eagle eye', line: 'Towers near it reach 25% further.', capstone: true}),
-  war_drums: freeze({branch: 'watchtower', name: 'War drums', line: 'Towers near it fire 15% faster.', capstone: true}),
+  eagle_eye: freeze({branch: 'watchtower', name: 'Eagle eye', line: 'Towers near it reach 20% further.', capstone: true}),
+  war_drums: freeze({branch: 'watchtower', name: 'War drums', line: 'Towers near it reload 10% faster.', capstone: true}),
 });
 // Tier 2: a bonus for every tower of the kind (the island picks one of the two).
 export const BONUSES = freeze({
-  gun_drill: freeze({branch: 'cannon', name: 'Gun drill', line: 'Cannon skills get stronger: Rapid 40%, Heavy shot 80%, Chain shot 50%.'}),
-  long_guns: freeze({branch: 'cannon', name: 'Long guns', line: 'Every cannon reaches 20% further.'}),
-  shell_drill: freeze({branch: 'mortar', name: 'Shell drill', line: 'Mortar skills get stronger: bigger blasts, longer fires, 16 more range.'}),
-  heavy_shells: freeze({branch: 'mortar', name: 'Heavy shells', line: 'Every mortar blast is 25% wider.'}),
-  mason_drill: freeze({branch: 'wall', name: 'Mason drill', line: 'Wall skills get stronger: Stone ×2.5, sharper spikes, faster mending.'}),
-  thick_walls: freeze({branch: 'wall', name: 'Thick walls', line: 'Every wall has 25% more strength.'}),
-  lookout_drill: freeze({branch: 'watchtower', name: 'Lookout drill', line: 'Spotter gives 25% more damage, Signal fire 8 s.'}),
-  high_tower: freeze({branch: 'watchtower', name: 'High tower', line: 'The watchtower lends every tower 50% more range.'}),
+  rapid_2: freeze({branch: 'cannon', name: 'Rapid II', line: 'Every cannon reloads 10% faster, a Rapid one about 37% in all.'}),
+  long_guns: freeze({branch: 'cannon', name: 'Long guns', line: 'Every cannon reaches 15% further.'}),
+  quick_fuse: freeze({branch: 'mortar', name: 'Quick fuse', line: 'Every mortar reloads 12% faster.'}),
+  heavy_shells: freeze({branch: 'mortar', name: 'Heavy shells', line: 'Every mortar blast is 20% wider.'}),
+  mason_drill: freeze({branch: 'wall', name: 'Mason drill', line: 'Repairs on every wall go 50% faster.'}),
+  thick_walls: freeze({branch: 'wall', name: 'Thick walls', line: 'Every wall has 15% more strength.'}),
+  lookout_drill: freeze({branch: 'watchtower', name: 'Lookout drill', line: 'Spotter gives 25% more damage, Signal fire warns 8 s early.'}),
+  high_tower: freeze({branch: 'watchtower', name: 'High tower', line: 'The watchtower lends every tower 30% more range.'}),
 });
 export const SPEC_IDS = freeze(Object.keys(SPECS));
 export const BONUS_IDS = freeze(Object.keys(BONUSES));

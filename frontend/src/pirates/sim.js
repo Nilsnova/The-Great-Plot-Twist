@@ -176,27 +176,28 @@ export const CONFIG = freeze({
     spotter: { damage: 1.15, radius: 22 },       // watchtower: +15% damage to the towers within radius
     signal_fire: { warn: 5 },                    // watchtower: ships show 5 s earlier
     // Tier 3, the capstones (GAME-V3.md §5.1): the island picks one of two per kind, then a tower may pick it.
-    broadside: { every: 4 },                     // cannon: every 4th shot fires a second ball at the same target
+    broadside: { every: 4, damage: 1.2 },        // cannon: damage +20%, and every 4th shot fires a second ball at the same target
     grapeshot: { radius: 3, share: .6, accuracy: .85 }, // cannon: a hit on a boarder hurts every boarder within radius (share of the damage); aims better at boarders
     shockwave: { push: 3 },                      // mortar: every boarder a blast hits is thrown this far back, away from the heart
-    inferno: { seconds: 5, radius: 4, share: .45, every: .5 }, // mortar: every shell sets the ground on fire (wider and hotter than Fire pot)
-    bastion: { hp: 1.5, mend: .02 },             // wall: hp ×1.5, and a standing wall mends 2% of its hp a second
-    thorns: { damage: 15 },                      // wall: a hacking boarder takes this (× the hp curve) at every hack
-    eagle_eye: { range: 1.25, radius: 22 },      // watchtower: range ×1.25 for the towers within radius
-    war_drums: { reload: .87, radius: 22 },      // watchtower: reload ×0.87 (about 15% more shots) for the towers within radius
+    inferno: { seconds: 5, radius: 4, share: .4, every: .5 }, // mortar: every shell sets the ground on fire (wider and hotter than Fire pot)
+    bastion: { hp: 1.5, mend: .005 },            // wall: hp ×1.5, and a standing wall mends 0.5% of its hp a second
+    thorns: { damage: 12 },                      // wall: a hacking boarder takes this (× the hp curve) at every hack
+    eagle_eye: { range: 1.2, radius: 22 },       // watchtower: range ×1.2 for the towers within radius
+    war_drums: { reload: .9, radius: 22 },       // watchtower: reload ×0.9 (about 11% more shots) for the towers within radius
   },
   // Tier 2 of the Tech hub (GAME-V3.md §5.1): the island picks one of two bonuses per kind (defense.bonus, read
-  // from the island's research on every screen). A drill replaces the numbers of that kind's tier-1 skills; the
-  // other bonus works on every tower of the kind, whatever skill it picked.
+  // from the island's research on every screen). A bonus multiplies a number of every tower of the kind, on top
+  // of its own skill (reload, range, radius, hp, repair); a drill (lookout_drill) replaces the numbers of the
+  // kind's tier-1 skills instead.
   research: {
-    gun_drill: { rapid: { reload: .6 }, heavy: { damage: 1.8, reload: 1.25 }, chain: { slow: .5, seconds: 3 } },
-    long_guns: { range: 1.2 },                   // every cannon: range ×1.2
-    shell_drill: { cluster: { blasts: 3, damage: .65, radius: 2.8, spread: 2.4 }, fire_pot: { seconds: 5, radius: 3, share: .4, every: .5 }, long_range: { range: 16 } },
-    heavy_shells: { radius: 1.25 },              // every mortar: blast radius ×1.25
-    mason_drill: { stone: { hp: 2.5 }, spiked: { damage: 8 }, quick_mend: { repair: 2.5 } },
-    thick_walls: { hp: 1.25 },                   // every wall: hp ×1.25
+    rapid_2: { reload: .9 },                     // every cannon: reload ×0.9 (a Rapid one ×0.7 × 0.9, about −37%)
+    long_guns: { range: 1.15 },                   // every cannon: range ×1.15
+    quick_fuse: { reload: .88 },                 // every mortar: reload ×0.88
+    heavy_shells: { radius: 1.2 },               // every mortar: blast radius ×1.2
+    mason_drill: { repair: 1.5 },                // every wall: repairs ×1.5 (a player's and the carpenter's)
+    thick_walls: { hp: 1.15 },                   // every wall: hp ×1.15
     lookout_drill: { spotter: { damage: 1.25, radius: 22 }, signal_fire: { warn: 8 } },
-    high_tower: { range: 1.5 },                  // the watchtower's range bonus ×1.5
+    high_tower: { range: 1.3 },                  // the watchtower's range bonus ×1.3
   },
 });
 
@@ -418,7 +419,7 @@ export function createWave(options = {}) {
     // A spotter watchtower in reach adds its share of damage (GAME-V3.md §5); the skill's own numbers on top.
     const spotted = reach(spotters, item)?.skill.damage ?? 1, drums = reach(drummers, item)?.skill.reload ?? 1;
     const radius = item.kind === 'mortar' ? round2(C.mortar.radius * bonusOf(item, 'radius', C)) : undefined;
-    return { ...item, skill: spec, damage: round2(stats.damage * (spec.damage ?? 1) * spotted * boost), baseReload: round2(stats.reload * C.pace.reload * (spec.reload ?? 1) * drums),
+    return { ...item, skill: spec, damage: round2(stats.damage * (spec.damage ?? 1) * spotted * boost), baseReload: round2(stats.reload * C.pace.reload * (spec.reload ?? 1) * bonusOf(item, 'reload', C) * drums),
       range, sight: range * fogShare, manned: false, reload: item.kind === 'mortar' ? C.mortar.firstReload : 0, lastShot: -Infinity, shots: 0,
       ...(radius !== undefined ? { radius } : {}) };
   });
@@ -430,7 +431,7 @@ export function createWave(options = {}) {
   const sight = Math.max(C.cannon.range + towerBonus, ...cannons.map(item => item.range)) * fogShare;
   const walls = defenses.filter(item => item.kind === 'wall').map(item => {
     const skill = skillOf(item, C), hp = round2(C.levels.wall[item.level - 1].hp * (skill.hp ?? 1) * bonusOf(item, 'hp', C));
-    return { ...item, skill, hp, maxHp: hp, repairLeft: 0, repaired: 0, crew: false, rebuildAt: -Infinity, rebuilding: 0,
+    return { ...item, skill, repairBoost: round2((skill.repair ?? 1) * bonusOf(item, 'repair', C)), hp, maxHp: hp, repairLeft: 0, repaired: 0, crew: false, rebuildAt: -Infinity, rebuilding: 0,
       inner: distance(item.x, item.z, heart.x, heart.z) <= heart.ring, bearing: Math.atan2(item.z - heart.z, item.x - heart.x) };
   });
   const cannonById = new Map(cannons.map(item => [item.id, item]));
@@ -759,7 +760,7 @@ export function createWave(options = {}) {
       if (wall.repairLeft <= 0) wall.repaired = 0;
       wall.repairLeft = C.wall.repairSeconds;
       // The repairer's own skills (Quick fix, Master shipwright) set how fast this repair goes.
-      wall.repairRate = round2(C.wall.repairRate * captainStats(1, input.skills).repairMultiplier * (wall.skill.repair ?? 1));
+      wall.repairRate = round2(C.wall.repairRate * captainStats(1, input.skills).repairMultiplier * wall.repairBoost);
     } else if (input.type === 'rebuild') {
       const wall = typeof input.wallId === 'string' ? wallById.get(input.wallId) : undefined;
       if (!wall || wall.hp > 0 || ticks * C.tick - wall.rebuildAt < C.wall.rebuildCooldown - 1e-9) return;
@@ -1064,7 +1065,7 @@ export function createWave(options = {}) {
         if (shell.spec === 'shockwave') for (const boarder of crowdHits.filter(item => item.hp > 0)) {
           const away = Math.atan2(boarder.z - heart.z, boarder.x - heart.x), push = shell.skill.push;
           boarder.x = round2(boarder.x + Math.cos(away) * push); boarder.z = round2(boarder.z + Math.sin(away) * push);
-          if (boarder.state !== 'walking') { boarder.state = 'walking'; boarder.wallId = null; }
+          if (boarder.state !== 'walking') { boarder.state = 'walking'; boarder.wallId = null; boarder.foe = null; }
           boarder.goal = null;
           events.push({ type: 'boarder_pushed', t: now(), boarderId: boarder.id, towerId: shell.towerId, x: boarder.x, z: boarder.z });
         }
@@ -1119,7 +1120,7 @@ export function createWave(options = {}) {
           if (wall.rebuilding + 1e-9 >= C.crew.carpenter.rebuild) rebuild(wall, 'carpenter', events);
           continue;
         }
-        wall.hp = round2(Math.min(wall.maxHp, wall.hp + C.crew.carpenter.rate * (wall.skill.repair ?? 1) * C.tick));
+        wall.hp = round2(Math.min(wall.maxHp, wall.hp + C.crew.carpenter.rate * wall.repairBoost * C.tick));
         if (wall.hp >= wall.maxHp) events.push({ type: 'wall_repaired', t: now(), wallId: wall.id, hp: wall.hp, by: 'carpenter', x: wall.x, z: wall.z });
       }
     }
@@ -1155,10 +1156,10 @@ export function createWave(options = {}) {
           x: round2(hero.x), z: round2(hero.z), hp: hero.hp, maxHp: hero.maxHp, down: hero.down, downAt: hero.downAt,
           colour: hero.colour, present: presentAt(hero, t) })),
         wrecks: wrecks.map(item => ({ ...item })),
-        walls: walls.map(wall => ({ id: wall.id, level: wall.level, ...(wall.spec ? { spec: wall.spec } : {}), hp: wall.hp, maxHp: wall.maxHp, repairing: wall.repairLeft > 0, crew: wall.crew,
+        walls: walls.map(wall => ({ id: wall.id, level: wall.level, ...(wall.spec ? { spec: wall.spec } : {}), ...(wall.bonus ? { bonus: wall.bonus } : {}), hp: wall.hp, maxHp: wall.maxHp, repairing: wall.repairLeft > 0, crew: wall.crew,
           broken: wall.hp <= 0, inner: wall.inner, rebuildReady: wall.hp <= 0 && t - wall.rebuildAt >= C.wall.rebuildCooldown - 1e-9 })),
         cannons: cannons.map(cannon => ({ id: cannon.id, x: cannon.x, z: cannon.z, reload: round2(cannon.reload), range: round2(cannon.sight) })),
-        towers: towers.map(tower => ({ id: tower.id, kind: tower.kind, level: tower.level, ...(tower.spec ? { spec: tower.spec } : {}), x: tower.x, z: tower.z, manned: tower.manned,
+        towers: towers.map(tower => ({ id: tower.id, kind: tower.kind, level: tower.level, ...(tower.spec ? { spec: tower.spec } : {}), ...(tower.bonus ? { bonus: tower.bonus } : {}), x: tower.x, z: tower.z, manned: tower.manned,
           reload: round2(tower.reload), range: round2(tower.sight) })),
         balls: balls.map(ball => ({ ...ball })),
         shells: shells.map(shell => ({ ...shell })),

@@ -65,6 +65,18 @@ export const islandAt = level => ({
 // Research done, a skill on every building: Heavy shot, Cluster, Stone shore walls and a Spiked ring, Spotter.
 export const researched = island => ({ ...island, defenses: island.defenses.map(item => ({ ...item,
   spec: { cannon: 'heavy', mortar: 'cluster', watchtower: 'spotter' }[item.kind] ?? (item.kind === 'wall' ? (/_(?:[7-9]|1[0-2])$/.test(item.id) ? 'spiked' : 'stone') : undefined) })) });
+// Tiers 2 and 3 of the Tech hub (GAME-V3.md §5.1) on top of `researched`: a tier-2 bonus for every building of a
+// kind (Rapid II, Quick fuse, Thick walls, High tower) and a tier-3 capstone on some of them (two cannons with
+// Broadside, one mortar with Shockwave, the shore walls with Bastion, the watchtower with War drums); the
+// others keep their tier-1 skill.
+export const TIERED = Object.freeze({ cannon: 'rapid_2', mortar: 'quick_fuse', wall: 'thick_walls', watchtower: 'high_tower' });
+export const tiered = island => ({ ...island, defenses: researched(island).defenses.map(item => {
+  if (!TIERED[item.kind]) return item;
+  const shore = item.kind === 'wall' && !/_(?:[7-9]|1[0-2])$/.test(item.id);
+  const spec = item.kind === 'cannon' && /s[12]$/.test(item.id) ? 'broadside' : item.kind === 'mortar' && /s5$/.test(item.id) ? 'shockwave'
+    : shore ? 'bastion' : item.kind === 'watchtower' ? 'war_drums' : item.spec;
+  return { ...item, bonus: TIERED[item.kind], spec };
+}) });
 // Every captain skill (18 points: won wave 36 or more), level-5 muskets, half with the long rifle, half with fire bombs.
 export const ALL_SKILLS = ['steady_aim', 'long_barrel', 'quick_hands', 'cutlass', 'sweep', 'second_wind', 'quick_fix', 'long_reach', 'master_shipwright'];
 // Where the captains stand, in order: by the six ring walls (east, south-east, south-west, west, north-west,
