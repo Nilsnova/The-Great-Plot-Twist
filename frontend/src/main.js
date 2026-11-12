@@ -11,8 +11,8 @@ import {createCaptions} from './audio/captions.js';
 import {on,emit} from './core/events.js';
 import {node} from './ui/kit/dom.js';
 
-const container=document.querySelector('#game'),backdrop=node('img','title-backdrop');
-backdrop.src=`${import.meta.env.BASE_URL}places/title.webp`;backdrop.onerror=()=>{backdrop.onerror=null;backdrop.src=`${import.meta.env.BASE_URL}places/title.png`;};backdrop.alt='';container.append(backdrop);
+// The title's first frame is plain sky colours (src/ui/shell.css); the cartoon scene drawn in code fades in over them.
+const container=document.querySelector('#game'),backdrop=node('div','title-backdrop');backdrop.setAttribute('aria-hidden','true');container.append(backdrop);
 const captions=createCaptions(container),audio=createLazyAudio({container,on,caption:captions.show});
 let stopMotion=null;
 const adapter=await createClientAdapter();
@@ -23,7 +23,7 @@ let background=null;
 const loadWorld=()=>import('./shell/world-loader.js');
 const afterPaint=new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
 afterPaint.then(loadWorld).then(module=>module.loadAfterPaintModule()).then(module=>{if(disposed)return;background=module.startAfterPaint({container,adapter,send,runtime:()=>runtime,shell:()=>shell,isLoading:()=>loading});}).catch(()=>null);
-// The animated pixel title (G29 C4) loads after the first paint; the painted backdrop stays underneath.
+// The animated cartoon title (src/title/) loads after the first paint; the sky colours stay underneath.
 const titleScene=afterPaint.then(()=>import('./title/animated-title.js')).then(m=>m.startAnimatedTitle({container,backdrop})).catch(()=>null);
 const accountHost=createLazyAccountHost({container,adapter,focus});
 function openAccount(){return accountHost.open();}

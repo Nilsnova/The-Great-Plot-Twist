@@ -1,11 +1,18 @@
 // Safe title, credits and pause content. Used by the game shell, with no story spoilers.
 import {node} from '../ui/kit/dom.js';
 import {createButton} from '../ui/kit/button.js';
-export function pixelLogo() {
-  const canvas=node('canvas','shell-logo');canvas.width=64;canvas.height=64;
-  canvas.setAttribute('aria-label','Original pixel lighthouse emblem');canvas.setAttribute('role','img');
-  const c=canvas.getContext('2d');
-  for(const [color,x,y,w,h] of [['#203e38',0,0,64,64],['#f3d58c',6,12,20,4],['#f3d58c',38,12,20,4],['#b8cda7',27,25,10,25],['#e9deb6',29,25,6,25],['#405f50',24,50,16,4],['#b9684b',24,20,16,5],['#e9deb6',26,8,12,12],['#f3d58c',28,11,8,7],['#b9684b',24,5,16,3],['#78997c',8,56,48,3]]) {c.fillStyle=color;c.fillRect(x,y,w,h);}
+// The title emblem: a small cartoon lighthouse (bold outline, red bands, a lit lamp) drawn with vector
+// paths at the screen's density, like the game's art (GAME-V3.md §7).
+export function titleEmblem() {
+  const canvas=node('canvas','shell-logo'),ratio=Math.min(3,globalThis.devicePixelRatio||1);canvas.width=canvas.height=Math.round(64*ratio);
+  canvas.setAttribute('aria-label','A small lighthouse');canvas.setAttribute('role','img');
+  const c=canvas.getContext('2d');if(!c)return canvas;c.scale(ratio,ratio);c.lineJoin='round';c.lineWidth=2.4;c.strokeStyle='#2b1d1a';
+  const shape=(fill,d)=>{const p=new Path2D(d);c.fillStyle=fill;c.fill(p);c.stroke(p);};
+  shape('#2c7f8c','M4 36a28 28 0 0 1 56 0v20a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z');
+  shape('#6dbb47','M6 52q26-12 52 0v4a4 4 0 0 1-4 4H10a4 4 0 0 1-4-4z');
+  shape('#f6f0e2','M25 52l3-30h8l3 30z');
+  c.fillStyle='#d64a3b';c.fillRect(25.6,44,12.8,4);c.fillRect(26.6,33,10.8,4);c.stroke(new Path2D('M25 52l3-30h8l3 30z'));
+  shape('#ffd560','M26 13h12v9H26z');shape('#3d4250','M23 21h18v3H23z');shape('#d64a3b','M24 13l8-8 8 8z');
   return canvas;
 }
 export function menuButton(label,onClick,quiet=false) {
