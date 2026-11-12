@@ -27,8 +27,8 @@ export const FINISHER = Object.freeze({
   marks: 24,            // at most this many samples in one message
   scaleMost: .2,        // ten captains need 20% less each than one alone
   tasks: Object.freeze({
-    haul: Object.freeze({ samples: 100, share: .5, width: 14, easyWidth: 21 }),             // half the time in the zone
-    cannon: Object.freeze({ samples: 100, hits: 9, width: 7, easyWidth: 11, cooldown: 3 }), // 9 hits on the weak spot
+    haul: Object.freeze({ samples: 100, share: .6, width: 12, easyWidth: 18 }),             // 60% of the time in the zone
+    cannon: Object.freeze({ samples: 100, hits: 7, width: 8, easyWidth: 12, cooldown: 5 }), // 7 hits on the weak spot, a 0.5 s reload
     duel: Object.freeze({ samples: 99, share: .55, prompt: 9, easyPrompt: 13 }),             // 55% of the prompts, net of mistakes
   }),
   redtideSamples: 80,   // each of Redtide's three tasks
@@ -65,7 +65,7 @@ export function zoneAt(s, salt = 0) {
 /** Aim: the weak spot's place along the hull (0-100). */
 export function spotAt(s, salt = 0) {
   const p = wobble(salt, 1) * Math.PI * 2;
-  return 50 + 34 * Math.sin(s / 11 + p) + 8 * Math.sin(s / 4.1 + p * 3);
+  return 50 + 34 * Math.sin(s / 14 + p) + 6 * Math.sin(s / 5 + p * 3);
 }
 /** Duel: the arrow of prompt k for one captain (0 up, 1 right, 2 down, 3 left). */
 export function promptAt(by, k, salt = 0) {
@@ -147,15 +147,17 @@ export function createFinisher(ctx = {}) {
   function progress(current) {
     return current.plan.tasks.map(({ task, from, to }) => {
       let total = 0;
+      const mine = {};
       for (const by of current.players) {
         const all = current.marks.get(by);
         if (!all) continue;
         const local = new Map();
         for (const [s, value] of all) if (s >= from && s < to) local.set(s - from, value);
-        total += scoreOf(task, by, local, { salt: current.salt, easy: current.easy.get(by) === true, length: to - from });
+        const score = scoreOf(task, by, local, { salt: current.salt, easy: current.easy.get(by) === true, length: to - from });
+        mine[by] = score; total += score;
       }
       const goal = goalOf(task, current.players, { redtide: current.kind === 'redtide', easy: current.easy });
-      return { task, from, to, score: Math.max(0, total), goal, cleared: Math.max(0, total) >= goal };
+      return { task, from, to, score: Math.max(0, total), goal, cleared: Math.max(0, total) >= goal, players: mine };
     });
   }
 
@@ -224,7 +226,7 @@ export function createFinisher(ctx = {}) {
       const current = run.plan.tasks.findIndex(item => sample < item.to);
       return { active: true, kind: run.kind, phase: run.phase, outcome: run.outcome, shipId: run.ship.id, shipKind: run.ship.kind,
         x: round2(run.ship.x), z: round2(run.ship.z), ticks: run.ticks, sample, salt: run.salt, players: [...run.players],
-        task: current < 0 ? run.plan.tasks.length - 1 : current, tasks: run.cache.tasks.map(item => ({ ...item })),
+        task: current < 0 ? run.plan.tasks.length - 1 : current, tasks: run.cache.tasks.map(item => ({ ...item, players: { ...item.players } })),
         taskEnd: run.plan.end, decide: run.plan.decide, outroEnd: run.outroEnd,
         easy: Object.fromEntries(run.easy), heard: [...run.marks.keys()].sort() };
     },

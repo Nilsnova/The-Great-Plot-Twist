@@ -376,8 +376,8 @@ export function createWave(options = {}) {
   const curve = curveFor(waveNumber);
   // v3 waves: the wave's event (none without options.event, never with the flagship) and the boss finisher.
   const happening = createEventRules(withFlagship ? null : options?.event, { seed: options?.seed, wave: waveNumber, curve, coastPoint,
-    coast: readCoast(options?.coast), heart, stopRadius: C.stopRadius, spawnRadius: C.spawnRadius, firstSpawn: C.fleet.firstSpawn });
-  const finisher = createFinisher({ wave: waveNumber, seed: options?.seed, enabled: options?.finishers === true,
+    coast: readCoast(options?.coast), heart, defenses, stopRadius: C.stopRadius, spawnRadius: C.spawnRadius, firstSpawn: C.fleet.firstSpawn });
+  const finisher = createFinisher({ wave: waveNumber, seed: options?.seed, enabled: options?.finishers === true && !withFlagship,
     gapMs: typeof options?.gapMs === 'function' ? options.gapMs : null });
   const watchtowers = defenses.filter(item => item.kind === 'watchtower').map(item => C.levels.watchtower[item.level - 1]);
   const towerBonus = Math.max(0, ...watchtowers.map(item => item.range)), boost = Math.max(1, ...watchtowers.map(item => item.boost ?? 1));
@@ -444,7 +444,7 @@ export function createWave(options = {}) {
     const a = entry.lane.a + (random() * 2 - 1) * (entry.spread ?? C.laneSpread) * Math.PI / 180;
     const stopR = C.stopRadius + (random() * 2 - 1) * C.stopJitter;
     entry.a = a; entry.from = coastPoint(a, C.spawnRadius, coast);
-    entry.to = coastPoint(a, entry.stop ?? (['flagship', 'warship', 'dreadnought', 'redtide'].includes(entry.kind) ? C.stopRadius + .1 : stopR), coast);
+    entry.to = entry.toward ?? coastPoint(a, entry.stop ?? (['flagship', 'warship', 'dreadnought', 'redtide'].includes(entry.kind) ? C.stopRadius + .1 : stopR), coast);
   }
 
   let ticks = 0, rest = 0, nextSpawn = 0, nextWarn = 0, nextShipId = 1, sunk = 0, islandHp = maxHp, done = false;
@@ -483,6 +483,22 @@ export function createWave(options = {}) {
     boarders.splice(boarders.indexOf(boarder), 1); killed++;
     events.push({ type: 'boarder_killed', t: now(), boarderId: boarder.id, by, x: round2(boarder.x), z: round2(boarder.z), ...extra });
   }
+  // v3 waves: what the wave's event and the finisher may do to the battle (wave-events.js, finisher/rules.js).
+  function hitWall(wall, amount, events, extra = {}) {
+    const damage = Math.min(wall.hp, round2(amount));
+    wall.hp = round2(Math.max(0, wall.hp - damage));
+    if (wall.hp === 0) { wall.repairLeft = 0; wall.rebuilding = 0; }
+    events.push({ type: 'wall_damaged', t: now(), wallId: wall.id, damage, hp: wall.hp, broken: wall.hp === 0, x: wall.x, z: wall.z, ...extra });
+  }
+  function hurtIsland(amount, events, extra = {}) {
+    const damage = Math.min(islandHp, round2(amount));
+    islandHp = round2(islandHp - damage);
+    events.push({ type: 'island_damaged', t: now(), damage, hp: islandHp, x: heart.x, z: heart.z, ...extra });
+    if (islandHp <= 0) end('island_lost', events);
+  }
+  const removeShip = ship => { const at = ships.indexOf(ship); if (at >= 0) ships.splice(at, 1); };
+  happening.bind({ ships, walls, towers, tick: C.tick, now: () => now(), newShipId: () => `ship_${nextShipId++}`, remove: removeShip, hitWall, hurtIsland });
+  finisher.bind({ party, ships, presentAt: (hero, t) => presentAt(hero, t), damageShip, now: () => now() });
   const damageTarget = (target, amount, by, events, extra) => (target.boarder
     ? damageBoarder(target, amount, by, events, extra) : damageShip(target, amount, by, events, extra));
   const findTarget = id => (typeof id !== 'string' ? undefined
@@ -1093,7 +1109,7 @@ export function createWave(options = {}) {
       }
     }
     finisher.begin(events); // v3 waves: a boss held for its finisher: the next ticks run the finisher
-    if (nextSpawn >= plan.length && ships.length === 0 && boarders.length === 0) end('all_sunk', events);
+    if (nextSpawn >= plan.length && ships.length === 0 && boarders.length === 0 && !happening.busy() && !finisher.pending) end('all_sunk', events);
     else if (t + 1e-9 >= C.maxTime) end('timeout', events);
   }
 
