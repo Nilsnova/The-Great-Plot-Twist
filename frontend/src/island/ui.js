@@ -184,27 +184,28 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
       for (const row of model.branches) {
         const box = node('details', `island-research-branch${row.next ? ' is-next' : ''}${row.folded ? ' is-done' : ''}`); box.dataset.branch = row.branch;
         box.open = techOpen.has(row.branch) ? techOpen.get(row.branch) : !row.folded;
-        box.addEventListener('toggle', () => techOpen.set(row.branch, box.open));
         const summary = node('summary', 'island-research-summary'); summary.dataset.focus = `branch-${row.branch}`;
+        // Only the player's own fold or unfold is kept (a click, or Enter / Space on the line), not a redraw.
+        summary.addEventListener('click', () => techOpen.set(row.branch, !box.open));
         summary.append(node('strong', 'island-research-name', row.summary));
         if (row.next) summary.append(node('span', 'island-research-flag', 'Next step'));
-        const path = node('ol', 'island-rstep-path');
+        const path = node('ol', 'island-research-step-path');
         for (const tier of row.tiers) {
-          const step = node('li', `island-rstep is-${tier.state}${tier.fork ? ' is-fork' : ''}`); step.dataset.tier = String(tier.tier);
-          const head = node('p', 'island-rstep-head');
-          const dot = node('span', 'island-rstep-dot', tier.state === 'done' ? '✓' : tier.state === 'locked' ? '🔒' : String(tier.tier)); dot.setAttribute('aria-hidden', 'true');
-          head.append(dot, node('strong', '', `Tier ${tier.tier}`), node('span', 'island-rstep-state',
+          const step = node('li', `island-research-step is-${tier.state}${tier.fork ? ' is-fork' : ''}`); step.dataset.tier = String(tier.tier);
+          const head = node('p', 'island-research-step-head');
+          const dot = node('span', 'island-research-step-dot', tier.state === 'done' ? '✓' : tier.state === 'locked' ? '🔒' : String(tier.tier)); dot.setAttribute('aria-hidden', 'true');
+          head.append(dot, node('strong', '', `Tier ${tier.tier}`), node('span', 'island-research-step-state',
             tier.state === 'done' ? 'Done' : tier.state === 'next' ? (tier.fork ? 'Next: pick one of two' : 'Next') : tier.reason));
-          const nodes = node('div', 'island-rstep-nodes');
+          const nodes = node('div', 'island-research-options');
           if (tier.fork) { nodes.setAttribute('role', 'group'); nodes.setAttribute('aria-label', `${row.name}, tier ${tier.tier}: one of two`); }
           for (const option of tier.nodes) {
-            const card = node('div', `island-rstep-node is-${option.state}`); card.dataset.option = option.id;
-            card.append(node('strong', 'island-rstep-name', option.name), node('span', 'island-rstep-line', option.line));
-            if (option.note) card.append(node('span', 'island-rstep-note', option.note));
+            const card = node('div', `island-research-option is-${option.state}`); card.dataset.option = option.id;
+            card.append(node('strong', 'island-research-step-name', option.name), node('span', 'island-research-step-line', option.line));
+            if (option.note) card.append(node('span', 'island-research-step-note', option.note));
             if (option.button) {
               const go = button(option.button.label, () => handlers.research?.(option.button.action), option.button.action.change);
               go.dataset.focus = `research-${option.id}`; go.disabled = option.button.disabled; go.setAttribute('aria-label', option.button.aria);
-              if (option.button.reason) { const why = line('island-rstep-reason', option.button.reason); why.id = `island-reason-${option.id}`; go.setAttribute('aria-describedby', why.id); card.append(why); }
+              if (option.button.reason) { const why = line('island-research-step-reason', option.button.reason); why.id = `island-reason-${option.id}`; go.setAttribute('aria-describedby', why.id); card.append(why); }
               card.append(go);
               if (!go.disabled && box.open && !option.button.action.change) focusable ??= go;
             }

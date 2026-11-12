@@ -171,30 +171,30 @@
 .island-research-summary:focus-visible{outline:3px solid var(--u-gold);outline-offset:2px}
 .island-research-name{flex:1;min-width:0}
 .island-research-flag{flex:none;padding:2px 8px;background:var(--u-gold);color:var(--u-deep);font:800 13px/1.3 var(--u-font);border-radius:999px}
-.island-rstep-path{list-style:none;margin:0;padding:0 var(--u-3) var(--u-3);display:grid;gap:var(--u-3)}
-.island-rstep{position:relative;display:grid;gap:6px;padding-left:34px}
-.island-rstep::before{content:'';position:absolute;left:12px;top:26px;bottom:calc(-1 * var(--u-3));width:4px;border-radius:2px;background:var(--u-line)}
-.island-rstep:last-child::before{display:none}
-.island-rstep.is-done::before{background:var(--u-gold)}
-.island-rstep-head{display:flex;align-items:center;gap:var(--u-2);margin:0}
-.island-rstep-dot{position:absolute;left:0;top:0;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;font:800 14px/1 var(--u-font);background:var(--u-deep);color:var(--u-mute);border:3px solid var(--u-line);box-sizing:border-box}
-.island-rstep.is-done .island-rstep-dot{background:var(--u-gold);border-color:var(--u-brass);color:var(--u-deep)}
-.island-rstep.is-next .island-rstep-dot{background:var(--u-parch);border-color:var(--u-gold);color:var(--u-pink)}
-.island-rstep-state{color:var(--u-mute);font-size:14px}
-.island-rstep.is-next .island-rstep-state{color:var(--u-gold);font-weight:800}
-.island-rstep-nodes{display:grid;gap:var(--u-2)}
-.island-rstep.is-fork .island-rstep-nodes{grid-template-columns:repeat(2,minmax(0,1fr))}
-.island-rstep-node{display:grid;align-content:start;gap:4px;min-width:0;padding:8px 10px;background:var(--u-deep);border:2px solid var(--u-line);border-radius:var(--u-radius-xs);font-size:15px;line-height:1.3}
-.island-rstep-node.is-open{border-color:var(--u-brass);background:var(--u-raise)}
-.island-rstep-node:is(.is-done,.is-chosen){border-color:var(--u-gold);background:var(--u-raise);box-shadow:0 0 0 2px #f3c35c55}
-.island-rstep-node.is-closed{opacity:.62;filter:grayscale(.7)}
-.island-rstep-node.is-locked{border-style:dashed;opacity:.8}
-.island-rstep-name{color:var(--u-ink)}
-.island-rstep-node:is(.is-done,.is-chosen) .island-rstep-name{color:var(--u-gold)}
-.island-rstep-line{color:var(--u-mute);font-size:14px}
-.island-rstep-note{color:var(--u-ink);font-size:14px;font-weight:700}
-.island-rstep-reason{margin:0;color:var(--u-rust);font-size:13px}
-.island-rstep-node .kit-button{min-width:0;min-height:44px;padding:6px 10px;font-size:15px;white-space:normal}
+.island-research-step-path{list-style:none;margin:0;padding:0 var(--u-3) var(--u-3);display:grid;gap:var(--u-3)}
+.island-research-step{position:relative;display:grid;gap:6px;padding-left:34px}
+.island-research-step::before{content:'';position:absolute;left:12px;top:26px;bottom:calc(-1 * var(--u-3));width:4px;border-radius:2px;background:var(--u-line)}
+.island-research-step:last-child::before{display:none}
+.island-research-step.is-done::before{background:var(--u-gold)}
+.island-research-step-head{display:flex;align-items:center;gap:var(--u-2);margin:0}
+.island-research-step-dot{position:absolute;left:0;top:0;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;font:800 14px/1 var(--u-font);background:var(--u-deep);color:var(--u-mute);border:3px solid var(--u-line);box-sizing:border-box}
+.island-research-step.is-done .island-research-step-dot{background:var(--u-gold);border-color:var(--u-brass);color:var(--u-deep)}
+.island-research-step.is-next .island-research-step-dot{background:var(--u-parch);border-color:var(--u-gold);color:var(--u-pink)}
+.island-research-step-state{color:var(--u-mute);font-size:14px}
+.island-research-step.is-next .island-research-step-state{color:var(--u-gold);font-weight:800}
+.island-research-options{display:grid;gap:var(--u-2)}
+.island-research-step.is-fork .island-research-options{grid-template-columns:repeat(2,minmax(0,1fr))}
+.island-research-option{display:grid;align-content:start;gap:4px;min-width:0;padding:8px 10px;background:var(--u-deep);border:2px solid var(--u-line);border-radius:var(--u-radius-xs);font-size:15px;line-height:1.3}
+.island-research-option.is-open{border-color:var(--u-brass);background:var(--u-raise)}
+.island-research-option:is(.is-done,.is-chosen){border-color:var(--u-gold);background:var(--u-raise);box-shadow:0 0 0 2px #f3c35c55}
+.island-research-option.is-closed{opacity:.62;filter:grayscale(.7)}
+.island-research-option.is-locked{border-style:dashed;opacity:.8}
+.island-research-step-name{color:var(--u-ink)}
+.island-research-option:is(.is-done,.is-chosen) .island-research-step-name{color:var(--u-gold)}
+.island-research-step-line{color:var(--u-mute);font-size:14px}
+.island-research-step-note{color:var(--u-ink);font-size:14px;font-weight:700}
+.island-research-step-reason{margin:0;color:var(--u-rust);font-size:13px}
+.island-research-option .kit-button{min-width:0;min-height:44px;padding:6px 10px;font-size:15px;white-space:normal}
 .island-wreck-bar{height:18px;background:var(--u-deep);border:2px solid var(--u-line);border-radius:999px;overflow:hidden}
 .island-wreck-fill{display:block;height:100%;background:var(--u-gold);border-radius:999px;transition:width .3s}
 .island-wreck-progress{margin:0;color:var(--u-ink);font-weight:700}
@@ -212,5 +212,9 @@
   .kit-modal.island-card.island-card-docked[open]{position:fixed;inset:auto 0 0 0;margin:0;width:100%;max-width:none;max-height:60dvh;overflow:auto;overscroll-behavior:contain;
     border-radius:var(--u-radius) var(--u-radius) 0 0;padding:0 14px max(16px,env(safe-area-inset-bottom))}
 }
-html:has(.island-card-docked[open]) :is(.quest-strip,.pirate-hud>.pirate-musket){visibility:hidden}
+/* The goals panel folds away while a docked card is open; the musket button moves out from under the card:
+   to the left of the side panel on a desktop, just above the bottom sheet on a phone. */
+html:has(.island-card-docked[open]) .quest-strip{visibility:hidden}
+@media(min-width:901px){html:has(.island-card-docked[open]) .pirate-hud>.pirate-musket{right:calc(min(380px,100vw - 32px) + 32px)}}
+@media(max-width:900px){html:has(.island-card-docked[open]) .pirate-hud>.pirate-musket{bottom:calc(60dvh + 12px)}}
 @media(prefers-reduced-motion:reduce){.island-wreck-fill{transition:none}}

@@ -36,7 +36,7 @@ export const SPECS = freeze({
   // Tier 3, the capstones (one per island and kind).
   broadside: freeze({branch: 'cannon', name: 'Broadside', line: 'Hits 20% harder, and every 4th shot fires two balls.', capstone: true}),
   grapeshot: freeze({branch: 'cannon', name: 'Grapeshot', line: 'A shot at a boarder hits every boarder near it.', capstone: true}),
-  shockwave: freeze({branch: 'mortar', name: 'Shockwave', line: 'Blasts throw boarders back towards the sea.', capstone: true}),
+  shockwave: freeze({branch: 'mortar', name: 'Shockwave', line: 'Blasts throw boarders back toward the sea.', capstone: true}),
   inferno: freeze({branch: 'mortar', name: 'Inferno', line: 'Every shell sets a wide patch of ground on fire.', capstone: true}),
   bastion: freeze({branch: 'wall', name: 'Bastion', line: '50% more strength, and it mends itself slowly.', capstone: true}),
   thorns: freeze({branch: 'wall', name: 'Thorns', line: 'Boarders who hack it get badly hurt.', capstone: true}),

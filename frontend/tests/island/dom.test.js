@@ -313,3 +313,52 @@ it('the sea chart shows only Your island, The Harbor and Pirate Point', async ()
   expect(result.hidden.sort()).toEqual(['smugglers_cove', 'the_teeth', 'wreck_point']);
   expect(result.all).toBe(6);
 });
+
+it('docks the island cards at the side, folds a researched Tech hub branch and walks its tiers (GAME-V3.md §5.1)', async () => {
+  const result = await evaluate(async () => {
+    const {createIsland} = await window.g20Import('/src/island/index.js');
+    const {createFakeIslandTransport} = await window.g20Import('/src/pirates/fake-api.js');
+    const {on, emit} = await window.g20Import('/src/core/events.js');
+    const transport = createFakeIslandTransport();
+    const island = createIsland({container: document.body, emit, on, mode: 'fake', transport, storage: null, menu: () => () => {}});
+    transport.dev.setWaveBest(16); transport.dev.setCoins(2000); await island.load();
+    const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+    const card = () => document.querySelector('.island-card[open]');
+    const branch = id => card().querySelector(`.island-research-branch[data-branch="${id}"]`);
+    island.openTechHub(); await wait(30);
+    const docked = card().classList.contains('island-card-docked');
+    const box = card().getBoundingClientRect();
+    const first = {open: branch('cannon').open, focus: document.activeElement?.dataset.focus ?? null};
+    branch('cannon').querySelector('[data-option="cannon-1"] .kit-button').click(); await wait(40);
+    const folded = {open: branch('cannon').open, summary: branch('cannon').querySelector('.island-research-name').textContent,
+      flag: branch('cannon').querySelector('.island-research-flag')?.textContent ?? ''};
+    branch('cannon').querySelector('.island-research-summary').click(); await wait(20);
+    branch('cannon').querySelector('[data-option="long_guns"] .kit-button').click(); await wait(40);
+    const fork = [...branch('cannon').querySelectorAll('.island-research-step[data-tier="2"] .island-research-option')].map(node => [node.dataset.option, node.className.replace(/island-research-option\s*/, ''),
+      node.querySelector('.island-research-step-note')?.textContent ?? '']);
+    const tier3 = branch('cannon').querySelector('.island-research-step[data-tier="3"] .island-research-step-state').textContent;
+    const group = branch('cannon').querySelector('.island-research-step[data-tier="2"] .island-research-options').getAttribute('aria-label');
+    document.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape', bubbles: true}));
+    card()?.dispatchEvent(new Event('cancel'));
+    await wait(30);
+    const closed = !card();
+    island.pick('cannon_1'); await wait(20);
+    const build = card().classList.contains('island-card-docked');
+    island.ui.close();
+    island.openCrew?.(); await wait(20);
+    const crew = card() ? card().classList.contains('island-card-docked') : null;
+    island.ui.close();
+    return {docked, width: Math.round(box.width), right: Math.round(window.innerWidth - box.right), first, folded, fork, tier3, group, closed, build, crew,
+      tiers: island.campaign.research.tiers.cannon};
+  });
+  expect(result.docked).toBe(true);
+  expect(result.build).toBe(true);
+  expect(result.crew).toBe(false); // the menus stay centred
+  expect(result.first.open).toBe(true);
+  expect(result.folded).toEqual({open: false, summary: 'Cannon skills · tier 1 of 3 ✓', flag: 'Next step'});
+  expect(result.fork).toEqual([['rapid_2', 'is-closed', 'Closed: your crew chose Long guns.'], ['long_guns', 'is-chosen', 'Your crew chose this.']]);
+  expect(result.tier3).toBe('Opens after wave 25.');
+  expect(result.group).toBe('Cannon skills, tier 2: one of two');
+  expect(result.closed).toBe(true);
+  expect(result.tiers).toEqual({tier: 2, tier2: 'long_guns', tier3: null});
+});
