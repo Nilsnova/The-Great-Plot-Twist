@@ -207,7 +207,7 @@ async function musketPose(host, ben) {
     for (let attempt = 0; attempt < 4 && !(own && figure); attempt++) {
       const spot = await host.page.evaluate(() => { const ships = window.__island.waves.island.wave?.state?.ships ?? [];
         if (!ships.length) return null; const ship = ships.reduce((a, b) => (Math.hypot(a.x, a.z) < Math.hypot(b.x, b.z) ? a : b)), d = Math.hypot(ship.x, ship.z);
-        return {x: ship.x * 14 / d, z: ship.z * 14 / d, bx: ship.x * 10 / d, bz: ship.z * 10 / d}; });
+        return {id: ship.id, x: ship.x * 14 / d, z: ship.z * 14 / d, bx: ship.x * 10 / d, bz: ship.z * 10 / d}; });
       if (!spot) break;
       await stand(host, spot); await stand(ben, {x: spot.bx, z: spot.bz});
       // ?islands=fake has no live presence, so the friend's page draws no figure for the owner (a shooter
@@ -218,7 +218,8 @@ async function musketPose(host, ben) {
         [spot.x, spot.z, host.playerId]);
       await host.page.waitForTimeout(1500); // the friend's page hears where the owner stands
       let fired = false;
-      for (let i = 0; i < 20 && !fired; i++) { fired = await host.page.evaluate(() => window.__island.waves.island.shoot()); if (!fired) await host.page.waitForTimeout(300); }
+      // At the ship by its id: the gun, never the cutlass (with no id a boarder in reach gets the blade).
+      for (let i = 0; i < 20 && !fired; i++) { fired = await host.page.evaluate(id => window.__island.waves.island.shoot(id), spot.id); if (!fired) await host.page.waitForTimeout(300); }
       if (!fired) continue;
       const [mine, theirs] = await Promise.all([poseSeen(host.page, false), poseSeen(ben.page, true)]);
       if (mine && !own) {
@@ -508,6 +509,7 @@ try {
     results.push(`musket pose: the owner's own body posed at ${seen.own.join(', ') || 'no size'}, his figure on the friend's page at ${seen.figure.join(', ') || 'no size'}`);
     if (probe) results.push(`musket pose probe on the friend's page: ${JSON.stringify(probe)}`);
     assert.equal(seen.own.length, 2, "the owner's own character takes the musket pose when he fires (both sizes)");
+    assert.ok([...seen.own, ...seen.figure].every(item => /musket-[12]$/.test(item)), `the poses are the musket's: ${[...seen.own, ...seen.figure]}`);
     assert.ok(seen.figure.length >= 1, "the owner's figure on the friend's page takes the musket pose");
   }
   for (const captain of [ben, ana, max]) {
