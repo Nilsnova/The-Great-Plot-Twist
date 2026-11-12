@@ -133,8 +133,15 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
 
   // A friend's game: join it first (once per page), so building and the bell are allowed (GAME-V3.md §2).
   // A full game or an unknown code ends the visit: the player lands on their own island instead.
-  async function joinFirst(code) {
-    if (joined.has(code)) return true;
+  // One join per code at a time: the landing (load) and a wave already running there (joinRunningWave)
+  // share it, so the wave is joined only once the game is (the server wants a member: 403 not_member).
+  const joining = new Map();
+  function joinFirst(code) {
+    if (joined.has(code)) return Promise.resolve(true);
+    if (!joining.has(code)) joining.set(code, joinGameOnce(code).finally(() => joining.delete(code)));
+    return joining.get(code);
+  }
+  async function joinGameOnce(code) {
     const answer = await api.joinGame(code);
     if (answer.ok) { joined.add(code); return true; }
     if (['game_full', 'no_such_game', 'no_such_island'].includes(answer.code)) {
@@ -603,6 +610,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     get api() { return api; },
     roomPlace: () => islandRoom(visiting?.code ?? visitCode ?? own?.code ?? '') || null,
     async joinRunningWave() {
+      if (disposed || !target()) return null;
+      if (visitCode && !(await joinFirst(visitCode))) return null; // a friend's wave: join the game first
       if (disposed || !target()) return null;
       await flow.look(where());
       return flow.current && !flow.current.joined ? flow.join(where()) : null;

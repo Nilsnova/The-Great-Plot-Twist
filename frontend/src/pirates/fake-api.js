@@ -569,9 +569,14 @@ export function createSharedFakeStore(name, { storage = globalThis.localStorage,
   return {
     load() { try { const text = storage?.getItem(key); return text ? unpack(text) : null; } catch { return null; } },
     save(world) { try { storage?.setItem(key, pack(world)); } catch { /* A full storage: this tab only. */ } },
-    lock: task => (locks?.request ? locks.request(key, task) : task()),
+    // The next tab pulls only after our write reached it: localStorage reaches other tabs' processes a
+    // moment later, so the lock is held SETTLE_MS longer (two pages pressing Next wave at once would
+    // otherwise both make "the" next wave from a stale copy, test:mp).
+    lock: task => (locks?.request ? locks.request(key, async () => { try { return await task(); } finally { await settle(); } }) : task()),
   };
 }
+const SHARED_SETTLE_MS = 60;
+const settle = () => new Promise(resolve => setTimeout(resolve, SHARED_SETTLE_MS));
 /** The answers' version for a page: 2 (the tower defense extras) in the browser, 1 without a page (the older tests). */
 export const fakeVersionFor = search => (typeof search !== 'string' ? 1 : new URLSearchParams(search).get('td') === '1' ? 1 : 2);
 const fromPage = fakePlayerFor(globalThis.location?.search ?? '');
