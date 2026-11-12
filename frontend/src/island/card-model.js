@@ -6,7 +6,7 @@ import {formatCoinDelta, formatCoins} from '../lib/coins.js';
 import {BRANCHES, ROLES, ROLE_BY_ID, ROLE_LEVEL, SKILLS, SKILL_BY_ID, WEAPONS, WEAPON_BY_ID, isRole, pointsEarned, pointsSpent, readSkills, readWeapon, respecPrice} from '../pirates/captain-ids.js';
 import {opensText, spotWave, waveOf, isOpen} from '../campaign/index.js';
 import {BRANCH_BY_ID, SPECS, readSpec} from '../campaign/tech.js';
-import {ROLES, ROLE_IDS, ROLE_LEVEL, readRole} from '../campaign/houses.js';
+import {ROLES as HOUSE_ROLES, ROLE_IDS, ROLE_LEVEL as HOUSE_ROLE_LEVEL, readRole} from '../campaign/houses.js';
 
 // Coins always read "🪙 120" through formatCoins (BUILD-PLAN 3.2); an unknown amount reads "🪙 ?".
 export const coinText = n => (Number.isSafeInteger(n) ? formatCoins(n) : '🪙 ?');
@@ -117,11 +117,11 @@ function skillsOf(kind, spot, campaign, busy) {
 // The roles of a built house (GAME-V3.md "Houses"): below level 2 one line says what comes; from level 2 the
 // three roles with one plain line each, the active one marked. In the shape of skillsOf (the same card box).
 function rolesOf(spot, level, busy) {
-  const current = level >= ROLE_LEVEL ? readRole('house', spot?.spec) : null;
-  const title = current ? `Role: ${ROLES[current].name}` : 'House role';
-  if (level < ROLE_LEVEL) return {title, line: `Level ${ROLE_LEVEL}: choose ${ROLE_IDS.map(id => ROLES[id].name).join(', ').replace(/, (?=[^,]*$)/, ' or ')}.`, choices: [], current, role: true};
+  const current = level >= HOUSE_ROLE_LEVEL ? readRole('house', spot?.spec) : null;
+  const title = current ? `Role: ${HOUSE_ROLES[current].name}` : 'House role';
+  if (level < HOUSE_ROLE_LEVEL) return {title, line: `Level ${HOUSE_ROLE_LEVEL}: choose ${ROLE_IDS.map(id => HOUSE_ROLES[id].name).join(', ').replace(/, (?=[^,]*$)/, ' or ')}.`, choices: [], current, role: true};
   return {title, line: current ? 'Pick another one for the next wave if you like.' : 'Pick one role for this house. It costs nothing.', current, role: true,
-    choices: ROLE_IDS.map(id => ({id, name: ROLES[id].name, line: ROLES[id].line, active: id === current,
+    choices: ROLE_IDS.map(id => ({id, name: HOUSE_ROLES[id].name, line: HOUSE_ROLES[id].line, active: id === current,
       disabled: id === current || busy === `spec:${id}`, busy: busy === `spec:${id}`}))};
 }
 

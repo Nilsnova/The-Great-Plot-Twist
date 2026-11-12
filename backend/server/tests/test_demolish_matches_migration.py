@@ -81,7 +81,7 @@ def test_no_later_migration_changes_the_build_or_upgrade_functions_again():
 
 
 def test_the_refund_reason_is_an_earning_in_both_places():
-    assert ("building_refund", EARN) == WALLET_REASONS[-1]
+    assert ("building_refund", EARN) in WALLET_REASONS
     assert "('building_refund', 'earn'," in DEMOLISH.read_text()
 
 

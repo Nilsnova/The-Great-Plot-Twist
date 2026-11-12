@@ -51,7 +51,7 @@ import { BUILDINGS, CREW, CAPTAIN, readUnlocks, unlockWave, SLOT_KINDS } from '.
 import { ROLES, ROLE_BY_ID, ROLE_LEVEL, SKILLS, SKILL_BY_ID, WEAPONS, WEAPON_BY_ID, isRole, respecPrice, pointsEarned, pointsSpent, readSkills, readWeapon, skillNeeds } from './captain-ids.js';
 import { STEPS as CAMPAIGN_STEPS, spotWave, waveOf } from '../campaign/index.js';
 import { BRANCHES, BRANCH_BY_ID, SPECS, readSpec } from '../campaign/tech.js';
-import { ROLES, ROLE_LEVEL } from '../campaign/houses.js';
+import { ROLES as HOUSE_ROLES, ROLE_LEVEL as HOUSE_ROLE_LEVEL } from '../campaign/houses.js';
 
 export const ISLAND_RULES = Object.freeze({
   startingCoins: 100,
@@ -447,9 +447,9 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       if (!ISLAND_RULES.spots.includes(spot)) refuse(404, 'no_such_spot', 'There is no such build spot here.');
       if (!island.built.has(spot)) refuse(409, 'not_built', 'Build something on this spot first.');
       const info = SPECS[spec], kind = island.kinds?.get(spot) ?? kindOfSpot(spot);
-      if (Object.hasOwn(ROLES, spec)) {
+      if (Object.hasOwn(HOUSE_ROLES, spec)) {
         if (kind !== 'house') refuse(422, 'wrong_kind', `A ${ISLAND_RULES.kinds[kind][0].toLowerCase()} cannot take a house role.`);
-        if ((island.levels?.get(spot) ?? 1) < ROLE_LEVEL) refuse(409, 'house_level', 'Raise this house to level 2 first.');
+        if ((island.levels?.get(spot) ?? 1) < HOUSE_ROLE_LEVEL) refuse(409, 'house_level', 'Raise this house to level 2 first.');
         if (!(island.specs instanceof Map)) island.specs = new Map();
         island.specs.set(spot, spec);
         return island === mine ? view() : visitedView(island);

@@ -96,6 +96,7 @@ def test_the_wallet_reasons_are_the_agreed_pairs_in_the_agreed_order():
         ("wreck_repair", "spend"),
         # 20261112080000_demolish.sql: half back when a member of the game tears a building down.
         ("building_refund", "earn"),
+        ("captain_respec", "spend"),
     )
 
 
@@ -145,6 +146,7 @@ def test_list_reason_names_gives_the_names_in_the_agreed_order():
         "tech_research",
         "wreck_repair",
         "building_refund",
+        "captain_respec",
     ]
 
 
