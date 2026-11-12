@@ -23,6 +23,7 @@ import {createRoomProxy} from './room.js';
 import {finishWave as finishIslandWave, registerWaveRenderer} from '../island/wave-hooks.js';
 import {defenses as spotDefenses} from '../island/spots.js';
 import {figurePositions, hiddenFigures, matchFigures} from './figures.js';
+import {figurePoses} from './poses.js';
 
 const ISLAND_PLACE = 'home_islet';
 export const SPOTS_CHANGED = 'island_spots_changed'; // src/island/index.js
@@ -64,6 +65,7 @@ export function wireWaves(ctx) {
   let landed = false, changedSoon = false;
   const islandRoom = createRoomProxy();
   let realRoom = null, roomTopic = null, disposed = false;
+  let figureMatches = new Map(); // sim captain id -> presence figure, from the last figures() (poses())
   const stopRenderer = island ? registerWaveRenderer({name: 'pirates'}) : () => {};
   const finishWave = async body => throwRefusal(await finishIslandWave(body));
   const api = island ? pointApiFrom(island.api) : ctx.fakeApi ?? null;
@@ -186,10 +188,19 @@ export function wireWaves(ctx) {
       for (const controller of controllers) if (controller && !controller.wave) controller.setFigures?.(null);
       const controller = controllers.find(item => item?.wave && !item.wave.finished);
       const party = controller?.state?.party;
+      figureMatches = new Map();
       if (!controller || !Array.isArray(party) || !party.length) return null;
-      const matches = matchFigures({party, figures: list, mine: controller.playerId});
+      const matches = figureMatches = matchFigures({party, figures: list, mine: controller.playerId});
       controller.setFigures?.(figurePositions(matches));
       return hiddenFigures(matches, party);
+    },
+    // A shot or a blow poses the body that made it (src/pirates/poses.js): {own, figures} with your pose
+    // ({kind, flip, age} or null) and Map(presence figure id -> pose) by the matches of figures() above;
+    // a shooter with no figure has no pose (no second body). null outside a wave.
+    poses() {
+      const controller = [pirates.island, pirates.point?.controller].find(item => item?.wave && !item.wave.finished);
+      if (!controller?.pose) return null;
+      return {own: controller.pose(controller.playerId), figures: figurePoses({get: by => controller.pose(by)}, figureMatches)};
     },
     dispose() {
       if (disposed) return; disposed = true;

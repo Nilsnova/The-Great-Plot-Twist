@@ -53,6 +53,7 @@ import { createPixelFx } from './world/fx.js';
 import { createWeather, presets, setWeather } from './world/weather.js';
 import { findZone } from './world/zones.js';
 import { createCharacter } from './player/character.js';
+import { POSE_IDS } from './pirates/poses.js';
 import { createController } from './player/controller.js';
 import { createCamera } from './player/camera.js';
 import { createHud } from './ui/hud.js';
@@ -68,7 +69,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   const scene = new THREE.Scene();
   // Your captain: the explorer frames and the ten captain colours (GAME-V3.md §7; painted on first use).
   const art = await loadArt([...pixelArtIds.filter(id => id.startsWith('explorer')),
-    ...Array.from({length: 10}, (_, i) => ['', '-back', '-side'].flatMap(view => ['', '-walk-1', '-walk-2'].map(step => `captain-${i + 1}${view}${step}`))).flat()]);
+    ...Array.from({length: 10}, (_, i) => ['', '-back', '-side'].flatMap(view => ['', '-walk-1', '-walk-2'].map(step => `captain-${i + 1}${view}${step}`))).flat(), ...POSE_IDS]);
   const graphics = createRenderer(container), input = createInput(graphics.renderer.domElement);
   const water = createWater(scene), sky = createSky(scene), weather = createWeather(scene), lightPools = createLightPools(scene);
   const pixelFx = createPixelFx(scene); scene.userData.lightPools = lightPools; scene.userData.pixelFx = pixelFx;
@@ -254,6 +255,8 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     mapTouch.update(delta);
     // Captain health (GAME-V3.md §3): a fallen captain cannot walk, and lies as the wave draws them.
     const captainDown=!!(waves?.island.captainDown||waves?.point?.controller.captainDown);controller.player.visible=!captainDown;
+    // A shot or a cutlass blow poses your own body (and a teammate's figure), never a second captain (pirates/poses.js).
+    const poses=waves?.poses?.()??null;character.pose(poses?.own??null);
     const speed=captainDown?controller.update(delta,false):controller.update(delta, active && !outsideBlocked());
     const state = weather.update(reducedMotion()?0:delta, controller.player.position, settings.quality);
     const night = sky.update(settings.hour, state, reducedMotion()?0:time); lightPools.update(reducedMotion()?0:time, night); pixelFx.update(delta);
@@ -264,7 +267,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     character.setColour(island?.game?island.captainColour():null);character.setScale(characterScale);
     view.update(delta, controller.player.position);
     // A captain down in the wave lies in the wave's drawing: their standing presence figure hides (pirates/figures.js).
-    experience.update(delta,{speed,hide:waves?.figures?.(experience.figures())??null});
+    experience.update(delta,{speed,hide:waves?.figures?.(experience.figures())??null,poses:poses?.figures??null});
     const zone = active&&!outsideBlocked()&&!captainDown ? findZone(controller.player.position, world.current?.zones ?? []) : null;
     touch.update(zone,active&&!outsideBlocked());
     classDemo?.update(delta,{blocked:!active||outsideBlocked(),zoneActive:!!zone});

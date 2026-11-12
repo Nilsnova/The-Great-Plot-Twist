@@ -2,7 +2,8 @@
 import './labels.css';
 import * as THREE from 'three';
 import {artSizes,projectPoint} from '../art.js';
-import {PRESENCE_LIMITS,placePresenceLabels,resolveActorAsset,samplePosition,selectNearby,shouldSnapSample} from './logic.js';
+import {PRESENCE_LIMITS,captainVariant,placePresenceLabels,resolveActorAsset,samplePosition,selectNearby,shouldSnapSample} from './logic.js';
+import {poseFrame} from '../../pirates/poses.js';
 const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
 const materialFor=(art,id)=>art[id]??art.explorer;
 function makeMesh(name,material,asset){
@@ -24,9 +25,9 @@ export function createOtherCaptains(scene,container,art,reducedMotion=false,{col
   const records=new Map();let input={status:'off',place:null,others:[],hiddenCount:0,sampledAt:0},clock=0,stats={drawn:0,hidden:0,ids:[]};let disposed=false,ingested=0,ripples=0;
   function releaseRenderable(record){
     if(!record.group)return;
-    root.remove(record.group);record.body.geometry.dispose();record.emoteMesh?.geometry.dispose();
+    root.remove(record.group);record.body.geometry.dispose();record.emoteMesh?.geometry.dispose();record.poseMesh?.geometry.dispose();
     record.ownedMaterial?.dispose();record.ownedEmoteMaterial?.dispose();record.label.remove();
-    Object.assign(record,{group:null,body:null,emoteMesh:null,label:null,ownedMaterial:null,ownedEmoteMaterial:null,emoteId:null});
+    Object.assign(record,{group:null,body:null,emoteMesh:null,poseMesh:null,label:null,ownedMaterial:null,ownedEmoteMaterial:null,emoteId:null});
   }
   function removeRecord(record){
     releaseRenderable(record);records.delete(record.id);
@@ -48,7 +49,7 @@ export function createOtherCaptains(scene,container,art,reducedMotion=false,{col
     body.userData.peerId=record.id;root.add(group);
   }
   function createRecord(peer,time){
-    const record={id:peer.id,group:null,body:null,emoteMesh:null,label:null,asset:null,peer:{...peer},from:{x:peer.x,y:peer.y},to:{x:peer.x,y:peer.y},fromAt:time,toAt:time,
+    const record={id:peer.id,group:null,body:null,emoteMesh:null,poseMesh:null,label:null,asset:null,peer:{...peer},from:{x:peer.x,y:peer.y},to:{x:peer.x,y:peer.y},fromAt:time,toAt:time,
       place:peer.place,receivedAt:time,joinedAt:time,leavingAt:null,ownedMaterial:null,ownedEmoteMaterial:null,emoteId:null,quiet:ingested===0,announced:false,emoteAt:0};
     records.set(peer.id,record);return record;
   }
@@ -79,7 +80,9 @@ export function createOtherCaptains(scene,container,art,reducedMotion=false,{col
   // max: how many captains are drawn (40 in the class harbor); emoteScale: bigger emote bubbles there.
   // hide: ids not to draw now (a captain who has fallen in the wave lies in the wave's own drawing,
   // src/pirates/figures.js); they stay chosen, so figures() still knows where they are.
-  function update(dt,{place,player,camera,canvas,now,filter='everyone',blocked=false,max=PRESENCE_LIMITS.visible,emoteScale=1,hide=null}={}){
+  // poses: Map(id -> {kind, flip, age}): a captain who fires or strikes shows the pose in their own colour
+  // on this figure (src/pirates/poses.js), facing the shot, instead of a second captain where they fired.
+  function update(dt,{place,player,camera,canvas,now,filter='everyone',blocked=false,max=PRESENCE_LIMITS.visible,emoteScale=1,hide=null,poses=null}={}){
     if(disposed)return stats;clock=Number.isFinite(now)?now:clock+Math.max(0,dt||0)*1000;
     const {selected,hidden}=selectNearby([...records.values()],{place,player:{x:player?.x??0,y:player?.y??0},now:clock,filter,blocked,max});
     const chosen=new Set(selected.map(record=>record.id));
@@ -96,6 +99,12 @@ export function createOtherCaptains(scene,container,art,reducedMotion=false,{col
       if(!record.announced){record.announced=true;if(!record.quiet&&clock-record.joinedAt<1500)arrive(placePoint,motionOff);}
       const bodyAsset=assets.get(record.id);record.asset=bodyAsset;record.body.userData.asset=bodyAsset;const fadeIn=clamp((clock-record.joinedAt)/260,0,1),fadeOut=record.leavingAt===null?1:clamp(1-(clock-record.leavingAt)/PRESENCE_LIMITS.fadeMs,0,1),alpha=fadeIn*fadeOut;
       setMaterial(record,record.body,materialFor(art,bodyAsset),'body',alpha);{const k=readScale();record.body.scale.set((record.peer.facing==='left'?-1:1)*k,k,1);}record.body.renderOrder=100+record.peer.y+.15;
+      {const pose=typeof poses?.get==='function'?poses.get(record.id):null,posed=pose?poseFrame(pose,captainVariant(withColour(record.peer))-1):null;
+        if(posed&&art[posed]){
+          if(!record.poseMesh){record.poseMesh=makeMesh(posed,art[posed],posed);record.poseMesh.name='captain-pose';record.group.add(record.poseMesh);}
+          const k=readScale();record.poseMesh.material=art[posed];record.poseMesh.userData.pose=posed;record.poseMesh.scale.set((pose.flip?-1:1)*k,k,1);
+          record.poseMesh.renderOrder=record.body.renderOrder;record.poseMesh.visible=true;record.body.visible=false;
+        }else{if(record.poseMesh)record.poseMesh.visible=false;record.body.visible=true;}}
       if(record.peer.emote&&art[`emote-${record.peer.emote}`]){
         if(record.emoteId!==record.peer.emote){if(record.emoteMesh){record.group.remove(record.emoteMesh);record.emoteMesh.geometry.dispose();record.ownedEmoteMaterial?.dispose();record.ownedEmoteMaterial=null;}
           record.emoteId=record.peer.emote;record.emoteMesh=makeMesh(`emote-${record.emoteId}`,materialFor(art,`emote-${record.emoteId}`),`emote-${record.emoteId}`);record.emoteMesh.renderOrder=942;record.group.add(record.emoteMesh);record.emoteAt=clock;}

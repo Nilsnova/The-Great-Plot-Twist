@@ -186,6 +186,61 @@ async function compare(a, b, waveId) {
   return {checked, same, worst, sameBoarders, worstBoarders, withBoarders, landed};
 }
 
+// The musket fires from the captain's own body (owner, 12 Nov): the owner's character and, on the friend's
+// page, the owner's figure switch to the musket pose; no second captain is drawn where the shot was fired.
+// poseSeen answers where the pose mesh is on screen ({x, y} in px), or null when none showed within 3 s.
+const poseSeen = (page, figure) => page.waitForFunction(figure => { let at = null;
+  const g = window.__island, {innerWidth: w, innerHeight: h} = window;
+  g.scene.traverse(item => { if (at || item.name !== 'captain-pose' || !item.visible || (item.parent?.parent?.name === 'other-captains') !== figure) return;
+    const p = item.getWorldPosition(item.position.clone()).project(g.camera); at = {x: (p.x + 1) / 2 * w, y: (1 - p.y) / 2 * h, frame: item.userData.pose}; });
+  return at; }, figure, {timeout: 3000, polling: 16}).then(handle => handle.jsonValue(), () => null);
+// A close crop around the pose (the screenshots' "zoomed in" view), as wide as a third of the page.
+const zoomClip = (page, at) => { const {width, height} = page.viewportSize(), w = Math.round(width / 3), h = Math.round(w * .7);
+  return {x: Math.max(0, Math.min(width - w, at.x - w / 2)), y: Math.max(0, Math.min(height - h, at.y - h * .65)), width: w, height: h}; };
+async function musketPose(host, ben) {
+  const sizes = [[1280, 800], [390, 844]], seen = {own: [], figure: []};
+  let probe = null;
+  for (const [width, height] of sizes) {
+    await host.page.setViewportSize({width, height}); await ben.page.setViewportSize({width, height});
+    const size = `${width}x${height}`;
+    let own = false, figure = false;
+    for (let attempt = 0; attempt < 4 && !(own && figure); attempt++) {
+      const spot = await host.page.evaluate(() => { const ships = window.__island.waves.island.wave?.state?.ships ?? [];
+        if (!ships.length) return null; const ship = ships.reduce((a, b) => (Math.hypot(a.x, a.z) < Math.hypot(b.x, b.z) ? a : b)), d = Math.hypot(ship.x, ship.z);
+        return {id: ship.id, x: ship.x * 14 / d, z: ship.z * 14 / d, bx: ship.x * 10 / d, bz: ship.z * 10 / d}; });
+      if (!spot) break;
+      await stand(host, spot); await stand(ben, {x: spot.bx, z: spot.bz});
+      // ?islands=fake has no live presence, so the friend's page draws no figure for the owner (a shooter
+      // without a figure shows only the flash, tracer and puff). Stand one in for it where the owner is,
+      // under his member id (his lobby colour), through the presence's own simulate().
+      await ben.page.evaluate(([x, z, id]) => { const g = window.__island, place = g.island.presencePlace('home_islet');
+        g.experience.simulate({status: 'live', place, others: [{id, name: 'Nils', x, y: z, facing: 'front', moving: false, place}], hiddenCount: 0, sampledAt: Date.now()}); },
+        [spot.x, spot.z, host.playerId]);
+      await host.page.waitForTimeout(1500); // the friend's page hears where the owner stands
+      let fired = false;
+      // At the ship by its id: the gun, never the cutlass (with no id a boarder in reach gets the blade).
+      for (let i = 0; i < 20 && !fired; i++) { fired = await host.page.evaluate(id => window.__island.waves.island.shoot(id), spot.id); if (!fired) await host.page.waitForTimeout(300); }
+      if (!fired) continue;
+      const [mine, theirs] = await Promise.all([poseSeen(host.page, false), poseSeen(ben.page, true)]);
+      if (mine && !own) {
+        await host.page.screenshot({path: `${out}/05b-musket-pose-own-zoom-${size}.png`, clip: zoomClip(host.page, mine)});
+        await host.page.screenshot({path: `${out}/05b-musket-pose-own-${size}.png`});
+        seen.own.push(`${size} ${mine.frame}`); own = true;
+      }
+      if (theirs && !figure) {
+        await ben.page.screenshot({path: `${out}/05b-musket-pose-teammate-zoom-${size}.png`, clip: zoomClip(ben.page, theirs)});
+        await ben.page.screenshot({path: `${out}/05b-musket-pose-teammate-${size}.png`});
+        seen.figure.push(`${size} ${theirs.frame}`); figure = true;
+      }
+      if (!theirs) probe = await ben.page.evaluate(() => { const g = window.__island, w = g.waves;
+        return {figures: g.experience.figures(), party: (w.island.state?.party ?? []).map(h => ({id: h.id, colour: h.colour, present: h.present, x: h.x, z: h.z})), mine: w.island.playerId}; });
+      await host.page.waitForTimeout(700); // the pose is over before the next shot
+    }
+  }
+  await ben.page.evaluate(() => window.__island.experience.simulate(null));
+  for (const captain of [host, ben]) await captain.page.setViewportSize({width: 960, height: 600});
+  return {seen, probe};
+}
 const results = [];
 const captainShots = [];
 // Where nobody fights: north of the heart, away from the three sea lanes (east, south, west).
@@ -449,6 +504,14 @@ try {
   assert.deepEqual([...members].sort(), ['Ana', 'Ben', 'Max', 'Nils'], 'all four are members of the game');
   await host.page.waitForTimeout(3000);
   await shot('05-four-captains-mid-wave');
+  {
+    const {seen, probe} = await musketPose(host, ben);
+    results.push(`musket pose: the owner's own body posed at ${seen.own.join(', ') || 'no size'}, his figure on the friend's page at ${seen.figure.join(', ') || 'no size'}`);
+    if (probe) results.push(`musket pose probe on the friend's page: ${JSON.stringify(probe)}`);
+    assert.equal(seen.own.length, 2, "the owner's own character takes the musket pose when he fires (both sizes)");
+    assert.ok([...seen.own, ...seen.figure].every(item => /musket-[12]$/.test(item)), `the poses are the musket's: ${[...seen.own, ...seen.figure]}`);
+    assert.ok(seen.figure.length >= 1, "the owner's figure on the friend's page takes the musket pose");
+  }
   for (const captain of [ben, ana, max]) {
     const sync = await compare(host, captain, second.waveId);
     results.push(`wave 2 sync owner/${captain.name}: ${sync.same}/${sync.checked} same ships, ${sync.sameBoarders}/${sync.checked} same boarders, worst count gap ${sync.worst} / ${sync.worstBoarders}`);

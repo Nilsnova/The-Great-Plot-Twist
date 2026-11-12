@@ -389,9 +389,10 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         const dir = event.toX < event.x ? -1 : 1;
         if (weapon === 'fire_bombs') {
           // A bomb on a low arc, then its burst (captain_blast); the pose throws it.
-          shells.add(item => Object.assign(item, { x: event.x + dir * .6, z: event.z, toX: event.toX, toZ: event.toZ, from: event.t, to: event.impactAt, bomb: true, radius: event.radius ?? 3 }));
-          tracers.add(item => Object.assign(item, { x: event.x, z: event.z, toX: event.toX, toZ: event.toZ, at: clock, flight: 0, weapon, pose: true, line: false }));
-          effects()?.bloom(event.x + dir * MUSKET.muzzleX, y + MUSKET.muzzleY, { radius: .6, life: MUSKET.fire, colour: '#ffb35a' });
+          const hand = muzzleOf(event, dir), from = shooterAt(event);
+          shells.add(item => Object.assign(item, { x: from.x + dir * .6 * K(), z: from.z, toX: event.toX, toZ: event.toZ, from: event.t, to: event.impactAt, bomb: true, radius: event.radius ?? 3 }));
+          tracers.add(item => Object.assign(item, { x: event.x, z: event.z, by: event.by ?? null, toX: event.toX, toZ: event.toZ, at: clock, flight: 0, weapon, pose: true, line: false }));
+          effects()?.bloom(hand.x, hand.y, { radius: .6, life: MUSKET.fire, colour: '#ffb35a' });
           break;
         }
         // One streak per ship hit (the blunderbuss sprays up to three, the rifle goes through to a second).
@@ -403,14 +404,15 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         }
         if (!shots.length) shots = [{ toX: event.toX, toZ: event.toZ, impactAt: event.impactAt }];
         if (weapon === 'long_rifle' && shots.length > 1) shots = [shots[shots.length - 1]]; // one line through both ships
-        shots.forEach((shot, index) => tracers.add(item => Object.assign(item, { x: event.x, z: event.z, toX: shot.toX, toZ: shot.toZ, at: clock,
+        shots.forEach((shot, index) => tracers.add(item => Object.assign(item, { x: event.x, z: event.z, by: event.by ?? null, toX: shot.toX, toZ: shot.toZ, at: clock,
           flight: flightTo(shot.impactAt), weapon, pose: index === 0, line: true })));
-        effects()?.bloom(event.x + dir * MUSKET.muzzleX, y + MUSKET.muzzleY, { radius: .8 * look.flash, life: MUSKET.fire, colour: weapon === 'long_rifle' ? '#e6f6ff' : '#fff0b0' });
+        const hand = muzzleOf(event, dir);
+        effects()?.bloom(hand.x, hand.y, { radius: .8 * look.flash, life: MUSKET.fire, colour: weapon === 'long_rifle' ? '#e6f6ff' : '#fff0b0' });
         if (weapon === 'blunderbuss' && !low() && !still()) {
           // The cone puff: grey smoke rolling out of the wide muzzle.
           const heading = Number.isFinite(event.heading) ? event.heading : Math.atan2(event.toZ - event.z, event.toX - event.x);
           const angle = Math.atan2(-Math.sin(heading) * Y, Math.cos(heading)); // the cone's direction on screen
-          spark(event.x + dir * MUSKET.muzzleX, y + MUSKET.muzzleY, { count: 18, speed: [1.2, 3.2], angle, spread: (event.cone ?? 50) * Math.PI / 180,
+          spark(hand.x, hand.y, { count: 18, speed: [1.2, 3.2], angle, spread: (event.cone ?? 50) * Math.PI / 180,
             gravity: -.6, life: [.4, .8], colour: '#d9d6c8', size: [1, 3] });
         }
         break;
@@ -437,9 +439,10 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         break;
       }
       case 'captain_struck': {
-        const dir = event.toX < event.x ? -1 : 1;
-        strikes.add(item => Object.assign(item, { x: event.x, z: event.z, dir, at: clock }));
-        effects()?.ring(event.x + dir * 1.4, y + .9, { radius: .9, life: .25, colour: '#e8eee8' });
+        // The blow: a ring at the blade. The body that swings it is the captain's own (src/pirates/poses.js).
+        const dir = event.toX < event.x ? -1 : 1, from = shooterAt(event);
+        strikes.add(item => Object.assign(item, { x: from.x, z: from.z, dir, at: clock }));
+        effects()?.ring(from.x + dir * 1.4, drawnY(from.z) + .9, { radius: .9, life: .25, colour: '#e8eee8' });
         break;
       }
       case 'wall_rebuilt': {
@@ -523,10 +526,6 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     const puff = rect[pirateFrames.smoke[still() ? 0 : Math.min(2, Math.floor(p * 3))]];
     if (puff) layer.push(puff, item.x, y - .1, puff.w * .6, puff.h * .6, .5, puff.anchor * .6, { a: 1 - p * p });
   }
-  function drawStrike(item) {
-    const r = rect['captain-cutlass'], k = K();
-    if (r) bands[bandOf(item.z)].push(r, item.x, drawnY(item.z), r.w * k, r.h * k, .5, r.anchor * k, { flip: item.dir < 0 });
-  }
 
   function drawBall(ball) {
     const span = Math.max(.05, ball.to - ball.from), p = Math.min(1, Math.max(0, (simNow - ball.from) / span));
@@ -585,13 +584,25 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       layers.air.push(flame, burst.x + Math.cos(a) * spread, y + Math.sin(a) * spread * Y, flame.w * .7, flame.h * .7, .5, flame.anchor * .7, { a: 1 - p });
     }
   }
-  // The shot: the firing pose with its flash, a short tracer from the muzzle to the ship, a puff on the hit.
+  // Where the shooter stands now: your captain, a teammate's presence figure, else where the shot was fired.
+  // The muzzle (flash and tracer) follows the hand of the body that fires.
+  function shooterAt(tracer) {
+    if (tracer.by != null && captain && tracer.by === captain.id) return captain;
+    const figure = tracer.by != null ? figures?.get?.(tracer.by) : null;
+    return figure && Number.isFinite(figure.x) && Number.isFinite(figure.z) ? figure : tracer;
+  }
+  // The muzzle in the shooter's hand now (the pose art at the character's scale): flash, tracer, blooms, spray.
+  function muzzleOf(item, dir) {
+    const from = shooterAt(item), k = K();
+    return { x: from.x + dir * MUSKET.muzzleX * k, y: drawnY(from.z) + MUSKET.muzzleY * k };
+  }
+  // The shot: the flash at the muzzle, a short tracer from the muzzle to the ship, a puff on the hit. No body:
+  // the captain who fires is their own character or figure in its pose (src/pirates/poses.js), never a second one.
   function drawTracer(tracer) {
-    if (tracer.pose !== false) drawPose(tracer);
     if (tracer.line === false) return;
     const look = lookOf(tracer.weapon);
     const age = clock - tracer.at, dir = tracer.toX < tracer.x ? -1 : 1;
-    const mx = tracer.x + dir * MUSKET.muzzleX, my = drawnY(tracer.z) + MUSKET.muzzleY;
+    const { x: mx, y: my } = muzzleOf(tracer, dir);
     const tx = tracer.toX, ty = drawnY(tracer.toZ) + .7, dx = tx - mx, dy = ty - my, length = Math.hypot(dx, dy) || 1;
     const flash = rect['fx-musket-flash'];
     if (flash && age < MUSKET.fire && tracer.pose !== false) {
@@ -613,13 +624,6 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       const p = (age - tracer.flight) / MUSKET.puff, puff = rect[pirateFrames.smoke[still() ? 0 : Math.min(2, Math.floor(p * 3))]];
       if (puff) layers.air.push(puff, tx, ty - .3, puff.w * look.puff, puff.h * look.puff, .5, puff.anchor * look.puff, { a: 1 - p * p });
     }
-  }
-  // The musket pose: the captain-musket art at the shooter, firing (frame 2) for MUSKET.fire, then aiming.
-  function drawPose(tracer) {
-    const age = clock - tracer.at;
-    if (age >= POSE_SECONDS) return;
-    const r = rect[pirateFrames.captain[age < MUSKET.fire ? 1 : 0]], k = K();
-    layers.air.push(r, tracer.x, drawnY(tracer.z), r.w * k, r.h * k, .5, r.anchor * k, { flip: tracer.toX < tracer.x });
   }
   function drawCaptain() {
     // The reload ring around your own captain: 12 brass dots fill up until the musket is ready again.
@@ -702,7 +706,6 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       for (const ship of state.ships) drawShip(ship, shipMeta(ship.id, ship.kind, ship.x));
       for (const boarder of state.boarders ?? []) drawBoarder(boarder);
       for (const item of fallen.items) drawFallen(item);
-      for (const item of strikes.items) drawStrike(item);
       for (const sinker of sinkers.items) {
         const age = clock - sinker.at, p = Math.min(1, age / SINK_SECONDS), r = rect[(FRAMES[sinker.kind] ?? FRAMES.sloop)[0]];
         if (!r) continue;
