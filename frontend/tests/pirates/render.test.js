@@ -136,6 +136,20 @@ describe('pirate wave renderer', () => {
     expect(xs[1]).toBeGreaterThan(10); expect(xs[1]).toBeLessThan(13); // Ben's, beside his figure at x 10
     renderer.dispose();
   });
+  it("puts the muzzle bloom and the cutlass ring at the shooter's body now, else where the sim had them", () => {
+    const calls = [], fx = { bloom: (x, y) => calls.push(['bloom', x]), ring: (x, y) => calls.push(['ring', x]) };
+    const scene = new THREE.Scene(), pack = packAtlas(), renderer = createWaveRenderer({ scene, atlas: { texture: new THREE.Texture(), ...pack }, fx: () => fx });
+    const state = { ships: [], walls: [], towers: [], fog: 0, sight: 28 };
+    renderer.update({ state, simTime: 1, dt: .01, captain: { id: 'me', x: 3, z: 0, share: 1 }, figures: new Map([['ben', { x: 10, z: 5 }]]) });
+    renderer.events([{ type: 'captain_fired', t: 1, impactAt: 1.3, by: 'me', x: 0, z: 0, toX: 8, toZ: -2 },
+      { type: 'captain_struck', t: 1, by: 'ben', x: 0, z: 5, toX: 1, toZ: 5 },
+      { type: 'captain_struck', t: 1, by: 'nobody', x: -4, z: 5, toX: -5, toZ: 5 }]);
+    const [bloom, benRing, loneRing] = calls;
+    expect(bloom[0]).toBe('bloom'); expect(bloom[1]).toBeGreaterThan(3); expect(bloom[1]).toBeLessThan(6);
+    expect(benRing).toEqual(['ring', 10 + 1.4]);
+    expect(loneRing).toEqual(['ring', -4 - 1.4]); // no figure: the ring where the sim had the blow, and no body
+    renderer.dispose();
+  });
 });
 
 describe('ships under fire stay readable (GAME-V3.md §7)', () => {

@@ -389,9 +389,10 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         const dir = event.toX < event.x ? -1 : 1;
         if (weapon === 'fire_bombs') {
           // A bomb on a low arc, then its burst (captain_blast); the pose throws it.
-          shells.add(item => Object.assign(item, { x: event.x + dir * .6, z: event.z, toX: event.toX, toZ: event.toZ, from: event.t, to: event.impactAt, bomb: true, radius: event.radius ?? 3 }));
+          const hand = muzzleOf(event, dir), from = shooterAt(event);
+          shells.add(item => Object.assign(item, { x: from.x + dir * .6 * K(), z: from.z, toX: event.toX, toZ: event.toZ, from: event.t, to: event.impactAt, bomb: true, radius: event.radius ?? 3 }));
           tracers.add(item => Object.assign(item, { x: event.x, z: event.z, by: event.by ?? null, toX: event.toX, toZ: event.toZ, at: clock, flight: 0, weapon, pose: true, line: false }));
-          effects()?.bloom(event.x + dir * MUSKET.muzzleX, y + MUSKET.muzzleY, { radius: .6, life: MUSKET.fire, colour: '#ffb35a' });
+          effects()?.bloom(hand.x, hand.y, { radius: .6, life: MUSKET.fire, colour: '#ffb35a' });
           break;
         }
         // One streak per ship hit (the blunderbuss sprays up to three, the rifle goes through to a second).
@@ -405,12 +406,13 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         if (weapon === 'long_rifle' && shots.length > 1) shots = [shots[shots.length - 1]]; // one line through both ships
         shots.forEach((shot, index) => tracers.add(item => Object.assign(item, { x: event.x, z: event.z, by: event.by ?? null, toX: shot.toX, toZ: shot.toZ, at: clock,
           flight: flightTo(shot.impactAt), weapon, pose: index === 0, line: true })));
-        effects()?.bloom(event.x + dir * MUSKET.muzzleX, y + MUSKET.muzzleY, { radius: .8 * look.flash, life: MUSKET.fire, colour: weapon === 'long_rifle' ? '#e6f6ff' : '#fff0b0' });
+        const hand = muzzleOf(event, dir);
+        effects()?.bloom(hand.x, hand.y, { radius: .8 * look.flash, life: MUSKET.fire, colour: weapon === 'long_rifle' ? '#e6f6ff' : '#fff0b0' });
         if (weapon === 'blunderbuss' && !low() && !still()) {
           // The cone puff: grey smoke rolling out of the wide muzzle.
           const heading = Number.isFinite(event.heading) ? event.heading : Math.atan2(event.toZ - event.z, event.toX - event.x);
           const angle = Math.atan2(-Math.sin(heading) * Y, Math.cos(heading)); // the cone's direction on screen
-          spark(event.x + dir * MUSKET.muzzleX, y + MUSKET.muzzleY, { count: 18, speed: [1.2, 3.2], angle, spread: (event.cone ?? 50) * Math.PI / 180,
+          spark(hand.x, hand.y, { count: 18, speed: [1.2, 3.2], angle, spread: (event.cone ?? 50) * Math.PI / 180,
             gravity: -.6, life: [.4, .8], colour: '#d9d6c8', size: [1, 3] });
         }
         break;
@@ -438,9 +440,9 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       }
       case 'captain_struck': {
         // The blow: a ring at the blade. The body that swings it is the captain's own (src/pirates/poses.js).
-        const dir = event.toX < event.x ? -1 : 1;
-        strikes.add(item => Object.assign(item, { x: event.x, z: event.z, dir, at: clock }));
-        effects()?.ring(event.x + dir * 1.4, y + .9, { radius: .9, life: .25, colour: '#e8eee8' });
+        const dir = event.toX < event.x ? -1 : 1, from = shooterAt(event);
+        strikes.add(item => Object.assign(item, { x: from.x, z: from.z, dir, at: clock }));
+        effects()?.ring(from.x + dir * 1.4, drawnY(from.z) + .9, { radius: .9, life: .25, colour: '#e8eee8' });
         break;
       }
       case 'wall_rebuilt': {
@@ -589,13 +591,18 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     const figure = tracer.by != null ? figures?.get?.(tracer.by) : null;
     return figure && Number.isFinite(figure.x) && Number.isFinite(figure.z) ? figure : tracer;
   }
+  // The muzzle in the shooter's hand now (the pose art at the character's scale): flash, tracer, blooms, spray.
+  function muzzleOf(item, dir) {
+    const from = shooterAt(item), k = K();
+    return { x: from.x + dir * MUSKET.muzzleX * k, y: drawnY(from.z) + MUSKET.muzzleY * k };
+  }
   // The shot: the flash at the muzzle, a short tracer from the muzzle to the ship, a puff on the hit. No body:
   // the captain who fires is their own character or figure in its pose (src/pirates/poses.js), never a second one.
   function drawTracer(tracer) {
     if (tracer.line === false) return;
-    const look = lookOf(tracer.weapon), from = shooterAt(tracer);
+    const look = lookOf(tracer.weapon);
     const age = clock - tracer.at, dir = tracer.toX < tracer.x ? -1 : 1;
-    const k = K(), mx = from.x + dir * MUSKET.muzzleX * k, my = drawnY(from.z) + MUSKET.muzzleY * k;
+    const { x: mx, y: my } = muzzleOf(tracer, dir);
     const tx = tracer.toX, ty = drawnY(tracer.toZ) + .7, dx = tx - mx, dy = ty - my, length = Math.hypot(dx, dy) || 1;
     const flash = rect['fx-musket-flash'];
     if (flash && age < MUSKET.fire && tracer.pose !== false) {
