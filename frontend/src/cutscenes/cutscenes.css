@@ -1,4 +1,4 @@
-/* Cutscene player: full-screen letterboxed stage, layered pixel art and readable subtitles. Lazy. */
+/* Cutscene player: full-screen stage, cartoon panels drawn in code and readable subtitles. Lazy. */
 .cutscene{position:fixed;inset:0;width:100vw;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:#04141a;color:#fff0c8;overflow:hidden;z-index:60}
 .cutscene::backdrop{background:#04141a}
 .cutscene-heading{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);margin:0}
@@ -9,6 +9,8 @@
 .shot-sky-night{background:radial-gradient(ellipse at 50% 30%,#1b3550,#081a26 70%)}
 .shot-sky-harbor{background:linear-gradient(#173246,#2c5160 60%,#3c6a5c)}
 .shot-sky-dawn{background:linear-gradient(#3d5a7a,#d99a72 60%,#f3d58c)}
+.shot-sky-day{background:linear-gradient(#3f9fdc,#a6dcf2 48%,#4cb6cf 48%,#16698f)}
+.cutscene-panel{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
 .shot-backdrop{inset:-4% -6%;width:112%;height:108%;object-fit:cover;image-rendering:auto}
 .shot-sky-dusk .shot-backdrop{filter:brightness(.62) saturate(.8)}
 .shot-fog{width:min(120vw,1400px);bottom:6%;left:-10%;opacity:.55}.shot-fog-front{bottom:-4%;left:0;opacity:.75}
@@ -25,6 +27,6 @@
 .cutscene-subtitle{position:absolute;left:50%;bottom:max(24px,4dvh);transform:translateX(-50%);width:min(860px,calc(100vw - 32px));margin:0;padding:14px 20px;background:#04141ae0;border:2px solid #a7b58c;border-radius:8px;font-size:clamp(18px,2.4vw,24px);line-height:1.45;text-align:center;pointer-events:none}
 .cutscene-large .cutscene-subtitle{font-size:clamp(22px,3.2vw,32px)}
 .cutscene-skip{position:absolute;top:16px;right:16px;min-width:88px;min-height:44px;font-size:18px}
-.cutscene-hint{position:absolute;top:22px;left:16px;margin:0;font-size:16px;color:#d9ddba;pointer-events:none}
+.cutscene-hint{position:absolute;top:18px;left:16px;margin:0;padding:6px 12px;border-radius:999px;background:#04141ad0;font-size:16px;color:#e8ecd0;pointer-events:none}
 @media(max-width:600px){.cutscene-hint{display:none}.shot-portrait{left:4%}.shot-captain-a{left:6%}.shot-captain-b{right:6%}}
 .cutscene[data-reduced-motion=true] .cutscene-layer{will-change:auto}

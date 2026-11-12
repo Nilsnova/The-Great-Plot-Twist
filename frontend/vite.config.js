@@ -21,12 +21,14 @@ export const previewSecurityHeaders=buildSecurityHeaders(
 );
 import {noticesFile,thirdPartyNoticesPlugin} from './scripts/third-party-notices.js';
 import {buildInfoPlugin} from './scripts/build-info.js';
+import {publicCopyPlugin} from './scripts/unshipped-art.js';
 export default defineConfig({
  define:{__BUILD_STAMP__:JSON.stringify(buildStamp)},
- plugins:[createBuildIdentityPlugin(buildStamp),thirdPartyNoticesPlugin(),buildInfoPlugin()],
+ plugins:[createBuildIdentityPlugin(buildStamp),thirdPartyNoticesPlugin(),buildInfoPlugin(),publicCopyPlugin()],
  base:'./',server:{proxy:{'/api':'http://127.0.0.1:8000'}},
  preview:{proxy:{'/api':'http://127.0.0.1:8000'},headers:previewSecurityHeaders},
- build:{modulePreload:{polyfill:false},license:{fileName:noticesFile},manifest:!process.env.VERCEL,rolldownOptions:{input:{
+ // public/ is copied by publicCopyPlugin, which leaves out the pictures no screen shows (scripts/unshipped-art.js).
+ build:{copyPublicDir:false,modulePreload:{polyfill:false},license:{fileName:noticesFile},manifest:!process.env.VERCEL,rolldownOptions:{input:{
   game:resolve(import.meta.dirname,'index.html'),workshop:resolve(import.meta.dirname,'asset-library.html'),uiKit:resolve(import.meta.dirname,'ui-kit.html'),
   host:resolve(import.meta.dirname,'host.html'),
   ...(process.env.CASE_LAB==='1'?{caseLab:resolve(import.meta.dirname,'case-lab.html')}:{}),

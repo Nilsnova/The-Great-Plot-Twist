@@ -2,7 +2,7 @@
 import {createModal} from '../ui/kit/modal.js';
 import {node} from '../ui/kit/dom.js';
 import {shellTransition} from './logic.js';
-import {menuButton,pixelLogo} from './screens.js';
+import {menuButton,titleEmblem} from './screens.js';
 export function createShell(ctx) {
   let mode='title',returnTo='title',disposed=false,request=0;
   const modal=createModal({title:'The Great Plot Twist',onClose(){if(mode==='playing'&&!ctx.hasOverlay())ctx.focus();},onCancel(){if(mode==='pause')play();else if(mode!=='title')back();}});
@@ -16,7 +16,7 @@ export function createShell(ctx) {
     modal.element.dataset.mode=mode;
     const body=node('div','shell-body'),nav=node('nav','shell-menu');nav.setAttribute('aria-label','Game menu');
     if(mode==='title') {
-      modal.setTitle('The Great Plot Twist');body.append(pixelLogo(),node('p','shell-kicker','BUILD · TRADE · DEFEND'),node('p','shell-copy','Build your island, trade at the harbor and hold the coast against the pirates.'));
+      modal.setTitle('The Great Plot Twist');body.append(titleEmblem(),node('p','shell-kicker','BUILD · TRADE · DEFEND'),node('p','shell-copy','Build your island, trade at the harbor and hold the coast against the pirates.'));
       const go=menuButton('Play',()=>{play();ctx.onStart?.();});go.id='play';nav.append(go,menuButton('Join',()=>page('join'),true));
       const more=menuButton('Settings',()=>page('settings'),true);more.classList.add('shell-more');body.append(nav,more);
     } else {
