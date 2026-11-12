@@ -2,6 +2,7 @@
 import {readFile,readdir} from 'node:fs/promises';
 import {join} from 'node:path';
 import {gzipSync} from 'node:zlib';
+import {unshipped} from './unshipped-art.js';
 
 const root='dist',manifest=JSON.parse(await readFile(join(root,'.vite/manifest.json'),'utf8'));
 const initial=new Set(),seen=new Set();
@@ -20,9 +21,9 @@ async function files(dir) {
   }
   return paths.sort();
 }
-const chunks=[],images=[],audio=[];
+const chunks=[],images=[],audio=[],all=[];
 for(const path of await files('')) {
-  const data=await readFile(join(root,path)),record={file:path,bytes:data.length};
+  const data=await readFile(join(root,path)),record={file:path,bytes:data.length};all.push(record);
   if(/\.(js|css)$/.test(path))chunks.push({...record,gzipBytes:gzipSync(data).length,initial:initial.has(path)});
   if(/\.(png|webp|jpg|jpeg|svg|gif)$/i.test(path)) {
     if(path.endsWith('.png'))Object.assign(record,{width:data.readUInt32BE(16),height:data.readUInt32BE(20)});
@@ -33,12 +34,14 @@ for(const path of await files('')) {
 const sum=records=>records.reduce((total,item)=>total+item.bytes,0);
 const coldJs=chunks.filter(c=>c.initial&&c.file.endsWith('.js'));
 const coldCss=chunks.filter(c=>c.initial&&c.file.endsWith('.css'));
-const limits={titleJavaScript:21080,titleCss:12000,titleImage:350000};
+// The title draws its scene in code (T21): it downloads no picture, and the pictures no screen shows stay out of dist.
+const limits={titleJavaScript:21080,titleCss:12000,titleImage:0};
 const titleImage=images.find(file=>file.file==='places/title.webp')?.bytes??null;
+const leftOver=all.filter(item=>unshipped(item.file)).map(item=>item.file);
 const report={limits,initial:{javaScript:sum(coldJs),javaScriptGzip:coldJs.reduce((s,c)=>s+c.gzipBytes,0),
   css:sum(coldCss),cssGzip:coldCss.reduce((s,c)=>s+c.gzipBytes,0),titleImage},
-  totals:{javaScript:sum(chunks.filter(c=>c.file.endsWith('.js'))),images:sum(images),audio:sum(audio)},
+  totals:{javaScript:sum(chunks.filter(c=>c.file.endsWith('.js'))),images:sum(images),audio:sum(audio),files:all.length,bytes:sum(all)},unshippedInDist:leftOver,
   chunks,images,audio};
 console.log(JSON.stringify(report,null,2));
 if(process.argv.includes('--check')&&(report.initial.javaScript>limits.titleJavaScript||
-  report.initial.css>=limits.titleCss||titleImage===null||titleImage>=limits.titleImage))process.exitCode=1;
+  report.initial.css>=limits.titleCss||titleImage!==null||leftOver.length))process.exitCode=1;
