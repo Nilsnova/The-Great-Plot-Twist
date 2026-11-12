@@ -1,0 +1,18 @@
+{
+  "about": "Wave events (docs/GAME-V3.md section 4.2): one per wave from firstWave on, chosen from the wave's seed and number (src/pirates/wave-events.js eventFor, backend/server/island/wave_events.py event_for: the same steps). A seed-free sequence by wave number picks a base event that is never the one before it; with share 'surprise' of the seed's dice the wave takes another unlocked event instead (never the base nor the wave before's base), so the same event rarely comes twice in a row. 'from' is the first wave an event can come; 'weight' its weight in every weighted pick. The browser keeps a copy in frontend/src/pirates/wave-events.json, and tests keep the two equal and check 'samples' ([wave, seed, event]) in both languages.",
+  "firstWave": 3,
+  "surprise": 0.35,
+  "events": [
+    {"id": "fog_bank", "from": 3, "weight": 10},
+    {"id": "storm", "from": 3, "weight": 10},
+    {"id": "night_raid", "from": 4, "weight": 9},
+    {"id": "pincer", "from": 5, "weight": 8},
+    {"id": "fire_ships", "from": 6, "weight": 8},
+    {"id": "armada", "from": 7, "weight": 7},
+    {"id": "siege_barge", "from": 8, "weight": 7},
+    {"id": "treasure_galleon", "from": 9, "weight": 6},
+    {"id": "smugglers", "from": 11, "weight": 6},
+    {"id": "kraken", "from": 20, "weight": 5}
+  ],
+  "samples": []
+}
