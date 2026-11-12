@@ -47,7 +47,9 @@ export function createHud(container, actions, {on = defaultOn, storage = local()
   const chapter = node('p', 'chapter');chapter.classList.add('kit-sr-only');chapter.setAttribute('role', 'status');chapter.setAttribute('aria-atomic', 'true');
   const prompt = node('div', 'interact'), promptLabel = node('strong');
   prompt.setAttribute('role', 'status');prompt.hidden = true;prompt.append(node('kbd', '', 'E'), promptLabel);
-  overlay.append(purse, right, banner, chapter, prompt);
+  // "Walk closer": a click on something out of reach says so next to it for a moment (src/world/reach.js).
+  const nudge = node('div', 'interact-nudge');nudge.setAttribute('role', 'status');nudge.hidden = true;
+  overlay.append(purse, right, banner, chapter, prompt, nudge);
   container.append(overlay);
 
   let tickFrame = 0;
@@ -167,6 +169,17 @@ export function createHud(container, actions, {on = defaultOn, storage = local()
       overlay.classList.toggle('night', stats.night > 0.4);
       prompt.hidden = !zone;prompt.dataset.zone = zone || '';
       if (zone) promptLabel.textContent = stats.interactionLabel ?? names[zone] ?? '';
+      // Over the building when its screen point is known (promptAt: fractions of the screen), else at the bottom.
+      const at = zone ? stats.promptAt : null;
+      prompt.classList.toggle('floating', !!at);
+      prompt.style.left = at ? `${Math.max(8, Math.min(92, at.x * 100))}%` : '';prompt.style.top = at ? `${Math.max(10, Math.min(92, at.y * 100))}%` : '';
+      if (zone) prompt.setAttribute('aria-label', `E · ${promptLabel.textContent}`); else prompt.removeAttribute('aria-label');
+      const hint = stats.hint;
+      nudge.hidden = !hint;
+      if (hint) {
+        nudge.textContent = hint.text;
+        nudge.style.left = hint.at ? `${Math.max(8, Math.min(92, hint.at.x * 100))}%` : '50%';nudge.style.top = hint.at ? `${Math.max(10, Math.min(92, hint.at.y * 100))}%` : '40%';
+      }
       if (idle.step(delta, {moving: (stats.speed ?? 0) > 0.05, blocked: stats.blocked === true || !overlay.classList.contains('exploring')})) {
         const item = strip.current;
         if (item && !item.done && hintsEnabled()) toast({text: `Need a hand? ${item.hint}`, ms: 7000});

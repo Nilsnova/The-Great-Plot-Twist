@@ -33,7 +33,7 @@ import {BRANCH_BY_ID, SPECS} from '../campaign/tech.js';
 import {SKILL_BY_ID, WEAPON_BY_ID, WEAPONS, readSkills, readWeapon} from '../pirates/captain-ids.js';
 import {displayIslandCode, islandCode, islandRoom, storeVisit, readVisit, forgetVisit} from './codes.js';
 import {ISLAND_BUILT, ISLAND_INVITE_OPENED, ISLAND_UPGRADED, CREW_HIRED, WAVE_FINISHED} from '../ui/quest-events.js';
-import {readUnlocks, CREW, BUILDINGS} from './td-rules.js';
+import {readUnlocks, CREW, BUILDINGS, maxLevel} from './td-rules.js';
 import {WAVE_STARTED} from './wave-hooks.js';
 import {addMenuExtras} from '../shell/menu-extras.js';
 import {GAME_STARTED, captainColours, lobbyModel} from './lobby.js';
@@ -687,7 +687,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     decorate(place, art, cleanups, adapters = {}) {
       world?.dispose();
       const deco = decorateIsland(place, {art, reducedMotion, canvas: adapters.canvas, camera: adapters.camera,
-        isActive: adapters.isActive, onPick: pick});
+        isActive: adapters.isActive, onPick: pick, player: adapters.player, onFar: adapters.onFar});
       world = deco; applyWorld();
       const original = place.update;
       place.update = (dt, frame) => { original(dt, frame); deco.update(dt, frame?.time ?? 0); };
@@ -696,7 +696,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     // Pirate Point's shared build spots on lighthouse_isle (factory.js); its bell and lamps stay lane P's.
     decoratePoint(place, adapters = {}) {
       pointWorld?.dispose();
-      const deco = decorateIsland(place, {reducedMotion, canvas: adapters.canvas, camera: adapters.camera, isActive: adapters.isActive, onPick: pick,
+      const deco = decorateIsland(place, {reducedMotion, canvas: adapters.canvas, camera: adapters.camera, isActive: adapters.isActive, onPick: pick, player: adapters.player, onFar: adapters.onFar,
         layout: {spots: PP_SPOTS, zones: pointZones, bell: false, cabin: false, name: 'pirate-point-spots'}});
       pointWorld = deco; applyWorld();
       const original = place.update, dispose = place.dispose;
@@ -716,8 +716,17 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       const pointSpot = isPointSpot(zone), spot = pointSpot ? ppSpotById(zone) : spotById(zone);
       if (!spot) return undefined;
       const answer = (pointSpot ? point : target())?.spots.find(item => item.id === zone);
-      if (answer?.built) return `${KINDS[answer.kind]?.name ?? slotName(spot.slot)} · level ${answer.level ?? 1}`;
-      return spot.slot === 'tower' ? 'Build a tower' : `Build a ${KINDS[spot.kind].name.toLowerCase()} · ${coinText(KINDS[spot.kind].cost)}`;
+      if (answer?.built) {
+        const name = KINDS[answer.kind]?.name ?? slotName(spot.slot);
+        return (answer.level ?? 1) >= maxLevel(answer.kind) ? `${name} · top level` : `Upgrade ${name}`;
+      }
+      return 'Build here';
+    },
+    // Where the floating prompt hangs: the spot's world point and how far above it the building is drawn.
+    anchor(zone) {
+      const thing = spotById(zone) ?? ppSpotById(zone) ?? (zone === BELL.id ? BELL : zone === CABIN.id ? CABIN : campaignBuilding(zone));
+      if (!thing) return null;
+      return {x: thing.x, z: thing.z, lift: thing.kind === 'watchtower' ? 4.6 : thing.h ? Math.min(4.6, thing.h * .7) : 2.6};
     },
     presencePlace(place) {
       if (place !== ISLAND_PLACE) return null;

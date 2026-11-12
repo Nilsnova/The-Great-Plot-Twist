@@ -30,7 +30,7 @@ A game holds 1 to 10 players. Once you join, you stay a member until you leave. 
 
 ## Build
 
-Walk to a glowing spot and press **E**, or tap it. The card shows the price and your coins. Press **Build**.
+Walk up to a glowing spot (about 3 to 4 steps). A prompt shows over it: press **E**, or the **Use** button on a phone. The card shows the price and your coins. Press **Build**.
 
 | Building | Level 1 | What it does |
 |---|---|---|
@@ -58,7 +58,7 @@ Levels 4 and 5 have their own look: gold trim and the island's banner. A locked 
 
 ## Ring the bell
 
-The **harbor bell** stands near the south beach. Press **E** next to it, or tap it, and choose **Ring the bell**.
+The **harbor bell** stands near the south beach. Walk up to it and press **E** (or **Use**), and choose **Ring the bell**.
 
 - A short countdown starts. Then the ships sail in.
 - Towers fire on their own.
@@ -140,7 +140,7 @@ What you may build follows the best wave won on that island, whoever pays. Your 
 
 ## The Harbor
 
-The Harbor is a building on the east beach. Walk to it and press **E**, or tap it.
+The Harbor is a building on the east beach. Walk up to it and press **E** (or **Use**).
 
 - **Market stall** (after wave 4): will a real price go up or down in 5 minutes? Stake 🪙 5, 10 or 25. Right pays twice your stake. The same price gives it back.
 - **Match board** (after wave 7): pick the winner of a real football match with 🪙 5, 10 or 25.
@@ -155,12 +155,14 @@ The Harbor is a building on the east beach. Walk to it and press **E**, or tap i
 | Action | Keyboard and mouse | Touch | Standard gamepad |
 |---|---|---|---|
 | Walk | WASD or arrow keys | Drag the movement stick, or tap a clear spot | Left stick or D-pad |
-| Use (build, ring, repair, help up) | E near a prompt; hold E to help up | The Use button, or tap the thing; hold the prompt to help up | A |
+| Use (build, ring, repair, help up) | E when the prompt shows over a building; hold E to help up | The Use button; hold the prompt to help up | A |
 | Fire | Click to aim and fire, or F for the nearest target | Tap where to fire, or the musket button | No separate aim |
 | Cutlass | F next to a pirate on foot | The musket button next to a pirate | No separate button |
 | Close a card / pause | Escape | Close button / Menu | B in a menu; Menu closes or pauses |
 | Zoom | Mouse wheel over the world | No separate zoom button | No separate zoom button |
 | Menus | Tab / Shift+Tab; Enter or Space on buttons | Tap the labeled control | D-pad to focus, A to activate |
+
+Cards open only when you stand close. A click or tap on a building from far away shows "Walk closer" next to it. During a wave a fallen teammate next to you always comes first: E helps them up, and it never opens a building.
 
 There is one walking speed. Click or tap the game after closing another view if movement has lost focus.
 

@@ -52,6 +52,7 @@ import { createLightPools } from './world/light-pools.js';
 import { createPixelFx } from './world/fx.js';
 import { createWeather, presets, setWeather } from './world/weather.js';
 import { findZone } from './world/zones.js';
+import { HINT_MS, WALK_CLOSER, eDecision } from './world/reach.js';
 import { createCharacter } from './player/character.js';
 import { createController } from './player/controller.js';
 import { createCamera } from './player/camera.js';
@@ -81,7 +82,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   const narrator=createNarrator({container,on,audio,getGame:()=>{const visit=island?.visiting,own=island?.island;return visit?{code:visit.code,waveBest:0}:own?{code:own.code,waveBest:own.waveBest??0}:null;}});
   let mapTouch=null;
   let classDemo=null,classDemoLoad=null,island=null,islandLoad=null,islandsMode=null,pirates=null,waves=null,wavesLoad=null;
-  let harbor=null, active = false, disposed=false, hud, chart, perf, marketUi=null, marketLoad=null, experience,beginRequest=0, fpsFrames = 0, fpsStart = performance.now(), fps = 0,weatherAnswer=null;
+  let harbor=null, farHint=null, active = false, disposed=false, hud, chart, perf, marketUi=null, marketLoad=null, experience,beginRequest=0, fpsFrames = 0, fpsStart = performance.now(), fps = 0,weatherAnswer=null;
   const externalOverlay=()=>!!(harbor?.active||island?.active||classDemo?.active||shortcuts.active||tutorial.active||shell?.blocked||isAppBlocked?.()||marketUi?.active||sportsUi.active||chart?.open||sailing.active||stopPlots?.active);
   const worldBlocked=()=>!!(harbor?.active||island?.active||classDemo?.active||shortcuts.active||tutorial.active||shell?.blocked||isAppBlocked?.()||marketUi?.active||sportsUi.active);
   function resetControls(){mapTouch?.cancel();input.reset();}
@@ -92,7 +93,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   const sailing = createSailing(container, reducedMotion, () => settings.quality === 'low');
   const world = createWorld({ emit, isBlocked:worldBlocked, disposeVisuals(){harbor?.dispose();mapTouch?.dispose();perf?.dispose();experience?.dispose();marketUi?.dispose();sportsUi.dispose();shortcuts.dispose();tutorial.dispose();isletState.dispose();stopIslet?.();stopActualIslet?.();}, transition: (id, options) => sailing.start(id, options),
     cancelTransition: sailing.end, finishTransition() { sailing.end(); graphics.renderer.domElement.focus(); }, createPlace: id => createPlace({ id, isletState, island, reducedMotion, canvas: graphics.renderer.domElement, camera: view.camera,
-      isActive: () => active && !outsideBlocked() }), attach(place) { scene.add(place.group); water.setCoast(place.group); lightPools.setPlace(place.group); controller.setPlace(place); view.setPlace(place.id, controller.player.position); } });
+      isActive: () => active && !outsideBlocked(), player: () => controller.player.position, onFar: id => { farHint = { id, until: performance.now() + HINT_MS }; } }), attach(place) { scene.add(place.group); water.setCoast(place.group); lightPools.setPlace(place.group); controller.setPlace(place); view.setPlace(place.id, controller.player.position); } });
   async function travel(id, options) {
     mapTouch?.cancel();
     try { await world.goTo(id, options); }
@@ -227,6 +228,9 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     return wavesLoad;
   }
   const projected=new THREE.Vector3(),canvas=graphics.renderer.domElement;
+  // Where a world point hangs on screen, as fractions of the canvas (the floating E prompt and the "Walk closer" hint).
+  function screenAt(id){const a=island?.anchor?.(id);if(!a)return null;projected.set(a.x,-a.z*.72+a.lift,0).project(view.camera);
+    return Math.abs(projected.x)<=1.2&&Math.abs(projected.y)<=1.2?{x:(projected.x+1)/2,y:(1-projected.y)/2}:null;}
   canvas.setAttribute('aria-label','Island exploration. Tap a clear path or drag the movement stick to walk. Arrow keys and WASD also move.');
   mapTouch=createMapTouch({canvas,input,container,position:()=>controller.player.position,place:()=>world.current?.id,enabled:()=>active&&!disposed&&!outsideBlocked(),
     canStand:(x,z)=>canStand(x,z,world.current?.colliders??[],world.current?.groundHeight),
@@ -266,18 +270,21 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     // A captain down in the wave lies in the wave's drawing: their standing presence figure hides (pirates/figures.js).
     experience.update(delta,{speed,hide:waves?.figures?.(experience.figures())??null});
     const zone = active&&!outsideBlocked()&&!captainDown ? findZone(controller.player.position, world.current?.zones ?? []) : null;
-    touch.update(zone,active&&!outsideBlocked());
-    classDemo?.update(delta,{blocked:!active||outsideBlocked(),zoneActive:!!zone});
-    // During a wave E belongs to the wave's own prompt (fire, repair, rebuild: TOWER-DEFENSE.md §12) when it has one,
-    // so a wall's build card does not open instead of the rebuild.
+    // During a wave E belongs to the wave's own prompt (fire, repair, rebuild, help up: TOWER-DEFENSE.md §12, GAME-V3.md §3) when it
+    // has one, so a building's card never opens instead, and the phone's Use button hides while the wave owns E.
     const waveAction=waves?.island.wave?.action??waves?.point?.controller.wave?.action??null;
-    if(input.consume('KeyE')&&zone&&!waveAction)world.interact(zone);
+    touch.update(zone&&!waveAction?zone:null,active&&!outsideBlocked(),zone&&!waveAction?panelLabel(zone):'');
+    classDemo?.update(delta,{blocked:!active||outsideBlocked(),zoneActive:!!zone});
+    const reviving=!!(waves?.island.revive||waves?.point?.controller.revive);
+    if(input.consume('KeyE')&&eDecision({zone,waveAction,reviving})==='open')world.interact(zone);
+    if(farHint&&performance.now()>farHint.until)farHint=null;
     fpsFrames++;
     if (performance.now() - fpsStart >= 500) {
       fps = Math.round(fpsFrames * 1000 / (performance.now() - fpsStart)); fpsFrames = 0; fpsStart = performance.now();
     }
     const info = graphics.renderer.info.render;
-    hud.update(waveAction?null:zone, { fps, calls: info.calls, triangles: info.triangles, night,interactionLabel:waveAction?undefined:panelLabel(zone),speed,blocked:!active||outsideBlocked()||!!waves?.island.wave||!!waves?.point?.controller.wave }); input.endFrame();
+    hud.update(waveAction?null:zone, { fps, calls: info.calls, triangles: info.triangles, night,interactionLabel:waveAction?undefined:panelLabel(zone),promptAt:zone&&!waveAction?screenAt(zone):null,
+      hint:farHint?{text:WALK_CLOSER,at:screenAt(farHint.id)}:null,speed,blocked:!active||outsideBlocked()||!!waves?.island.wave||!!waves?.point?.controller.wave }); input.endFrame();
   }, () => {
     const draw=shell.mode!=='title';
     if(draw)graphics.renderer.render(scene,view.camera);

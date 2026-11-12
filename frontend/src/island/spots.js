@@ -70,7 +70,11 @@ export const CAMPAIGN_BUILDINGS = Object.freeze([
 ]);
 export const campaignBuilding = id => CAMPAIGN_BUILDINGS.find(item => item.id === id) ?? null;
 export const SPOT_IDS = Object.freeze(SPOTS.map(item => item.id));
-const ZONE_Y = 1.03, SPOT_RADIUS = 2.2, ROUND_RADIUS = 1.8;
+// Walk-up range (owner, 12 Nov: open a card only when you stand close). Each zone's centre sits one step in
+// front of the building (so it is always on land); with these radii you reach it from about 3.5 units
+// from the building's foot. The campaign buildings are wider, so their reach is a little longer.
+export const REACH = 2.6, BIG_REACH = 3.2;
+const ZONE_Y = 1.03, SPOT_RADIUS = REACH, ROUND_RADIUS = 2.2;
 
 export const spotById = id => SPOTS.find(item => item.id === localSpotId(id)) ?? null;
 export const isSpotId = id => SPOT_IDS.includes(localSpotId(id));
@@ -89,7 +93,7 @@ export function islandZones({visitor = false} = {}) {
   return [
     ...SPOTS.map(item => { const [x, z] = landward(item); return zone(item.id, slotName(item.slot), x, z, SPOT_RADIUS); }),
     zone(BELL.id, 'Harbor bell', BELL.x, BELL.z + .8, ROUND_RADIUS),
-    ...CAMPAIGN_BUILDINGS.map(item => { const [x, z] = landward(item, 1.6); return zone(item.id, item.name, x, z + .6, SPOT_RADIUS); }),
+    ...CAMPAIGN_BUILDINGS.map(item => { const [x, z] = landward(item, 1.6); return zone(item.id, item.name, x, z + .6, BIG_REACH); }),
     ...(visitor ? [] : [zone(CABIN.id, 'Your cabin', CABIN.x + 2.5, CABIN.z + 1.2, ROUND_RADIUS)]),
   ];
 }
