@@ -115,8 +115,10 @@ PAID_FUNCTIONS = (
     "island_weapon_buy",
     "island_research",
     "island_wreck_repair",
+    "island_respec",
 )
 PAID_DONE = {"status": "done", "level": 2, "balance": 70, "repeat": False}
+ROLE_PICKED = {"status": "done", "role": "medic", "repeat": False}
 LEARNED = {"status": "done", "skills": ["steady_aim"], "points": 1, "repeat": False}
 REVIVED = {"status": "done", "price": 35, "balance": 65, "repeat": False}
 EQUIPPED = {"status": "done", "weapon": "musket"}
@@ -191,7 +193,10 @@ class FakeIslandDatabase:
             "weapons_owned": ["musket"],
             "weapon_equipped": "musket",
             "wreck_paid": 0,
+            "captain_role": None,
         }
+        # The captain roles of the lobby members ({player id: role}).
+        self.captain_roles: dict[str, str] = {}
         # The Tech hub's research rows of every island ({"branch": "cannon"}), one list for all.
         self.research: list[dict] = []
         self.ledger_refs: set[tuple[str, str]] = set()
@@ -248,6 +253,9 @@ class FakeIslandDatabase:
         handlers["POST /rpc/island_learn_skill"] = lambda request: self.answer(
             self.paid_replies.get("island_learn_skill", LEARNED)
         )
+        handlers["POST /rpc/island_pick_role"] = lambda request: self.answer(
+            self.paid_replies.get("island_pick_role", ROLE_PICKED)
+        )
         handlers["POST /rpc/island_weapon_equip"] = lambda request: self.answer(
             self.paid_replies.get("island_weapon_equip", EQUIPPED)
         )
@@ -292,6 +300,10 @@ class FakeIslandDatabase:
         return httpx.Response(200, json=[{"id": 1}] if key in self.ledger_refs else [])
 
     def read_island(self, request: httpx.Request) -> httpx.Response:
+        if request.url.params.get("player_id", "").startswith("in."):
+            ids = request.url.params["player_id"].removeprefix("in.(").removesuffix(")").split(",")
+            rows = [{"player_id": who, "captain_role": self.captain_roles.get(who)} for who in ids]
+            return httpx.Response(200, json=rows)
         if "player_id" in request.url.params:
             return httpx.Response(200, json=[self.progress])
         code = request.url.params["code"].removeprefix("eq.")

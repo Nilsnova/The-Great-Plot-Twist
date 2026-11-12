@@ -296,8 +296,30 @@
     ]
   },
   "captainSkills": {
-    "about": "The captain's skill tree (docs/TOWER-DEFENSE.md section 14): one skill point per wavesPerPoint won waves (won_wave_best), no coins. Tier n of a branch costs n points and needs tier n - 1 of the same branch. The ids repeat frontend/src/pirates/captain-ids.js and the check rules of supabase/migrations/20261112030000_captain_skills.sql.",
+    "about": "The captain's skill tree (docs/TOWER-DEFENSE.md section 14, docs/GAME-V3.md section 'Captain tree and roles'): one skill point per wavesPerPoint won waves (won_wave_best), no coins. Five tiers a branch. needs lists the skills of the tier above (any one of them opens the skill). Tiers 2 and 4 are forks: a skill with excludes closes for the captain that picks its twin. Tier 5 is a capstone that needs a role (role). A role is picked once at captain level roleLevel and decides the capstone; a respec (coins: coinsPerLevel x captain level) clears the skills and the role. Engineers pay engineerDiscountPercent less for buildings and upgrades. The ids repeat frontend/src/pirates/captain-ids.js and the check rules of supabase/migrations/20261112120000_captain_tree.sql (a test keeps them equal).",
     "wavesPerPoint": 2,
+    "roleLevel": 3,
+    "roles": [
+      {
+        "role": "medic",
+        "name": "Medic",
+        "branch": "brawler"
+      },
+      {
+        "role": "engineer",
+        "name": "Engineer",
+        "branch": "shipwright"
+      },
+      {
+        "role": "gunner",
+        "name": "Gunner",
+        "branch": "marksman"
+      }
+    ],
+    "respec": {
+      "coinsPerLevel": 100
+    },
+    "engineerDiscountPercent": 10,
     "tree": [
       {
         "skill": "steady_aim",
@@ -305,7 +327,9 @@
         "branch": "marksman",
         "tier": 1,
         "cost": 1,
-        "needs": null
+        "needs": [],
+        "excludes": null,
+        "role": null
       },
       {
         "skill": "long_barrel",
@@ -313,7 +337,23 @@
         "branch": "marksman",
         "tier": 2,
         "cost": 2,
-        "needs": "steady_aim"
+        "needs": [
+          "steady_aim"
+        ],
+        "excludes": "hot_shot",
+        "role": null
+      },
+      {
+        "skill": "hot_shot",
+        "name": "Hot shot",
+        "branch": "marksman",
+        "tier": 2,
+        "cost": 2,
+        "needs": [
+          "steady_aim"
+        ],
+        "excludes": "long_barrel",
+        "role": null
       },
       {
         "skill": "quick_hands",
@@ -321,7 +361,49 @@
         "branch": "marksman",
         "tier": 3,
         "cost": 3,
-        "needs": "long_barrel"
+        "needs": [
+          "long_barrel",
+          "hot_shot"
+        ],
+        "excludes": null,
+        "role": null
+      },
+      {
+        "skill": "far_sight",
+        "name": "Far sight",
+        "branch": "marksman",
+        "tier": 4,
+        "cost": 3,
+        "needs": [
+          "quick_hands"
+        ],
+        "excludes": "heavy_shot",
+        "role": null
+      },
+      {
+        "skill": "heavy_shot",
+        "name": "Heavy shot",
+        "branch": "marksman",
+        "tier": 4,
+        "cost": 3,
+        "needs": [
+          "quick_hands"
+        ],
+        "excludes": "far_sight",
+        "role": null
+      },
+      {
+        "skill": "dead_eye",
+        "name": "Dead eye",
+        "branch": "marksman",
+        "tier": 5,
+        "cost": 4,
+        "needs": [
+          "far_sight",
+          "heavy_shot"
+        ],
+        "excludes": null,
+        "role": "gunner"
       },
       {
         "skill": "cutlass",
@@ -329,7 +411,9 @@
         "branch": "brawler",
         "tier": 1,
         "cost": 1,
-        "needs": null
+        "needs": [],
+        "excludes": null,
+        "role": null
       },
       {
         "skill": "sweep",
@@ -337,7 +421,23 @@
         "branch": "brawler",
         "tier": 2,
         "cost": 2,
-        "needs": "cutlass"
+        "needs": [
+          "cutlass"
+        ],
+        "excludes": "heavy_blade",
+        "role": null
+      },
+      {
+        "skill": "heavy_blade",
+        "name": "Heavy blade",
+        "branch": "brawler",
+        "tier": 2,
+        "cost": 2,
+        "needs": [
+          "cutlass"
+        ],
+        "excludes": "sweep",
+        "role": null
       },
       {
         "skill": "second_wind",
@@ -345,7 +445,49 @@
         "branch": "brawler",
         "tier": 3,
         "cost": 3,
-        "needs": "sweep"
+        "needs": [
+          "sweep",
+          "heavy_blade"
+        ],
+        "excludes": null,
+        "role": null
+      },
+      {
+        "skill": "snap_shot",
+        "name": "Snap shot",
+        "branch": "brawler",
+        "tier": 4,
+        "cost": 3,
+        "needs": [
+          "second_wind"
+        ],
+        "excludes": "bruiser",
+        "role": null
+      },
+      {
+        "skill": "bruiser",
+        "name": "Bruiser",
+        "branch": "brawler",
+        "tier": 4,
+        "cost": 3,
+        "needs": [
+          "second_wind"
+        ],
+        "excludes": "snap_shot",
+        "role": null
+      },
+      {
+        "skill": "field_surgeon",
+        "name": "Field surgeon",
+        "branch": "brawler",
+        "tier": 5,
+        "cost": 4,
+        "needs": [
+          "snap_shot",
+          "bruiser"
+        ],
+        "excludes": null,
+        "role": "medic"
       },
       {
         "skill": "quick_fix",
@@ -353,7 +495,9 @@
         "branch": "shipwright",
         "tier": 1,
         "cost": 1,
-        "needs": null
+        "needs": [],
+        "excludes": null,
+        "role": null
       },
       {
         "skill": "long_reach",
@@ -361,7 +505,23 @@
         "branch": "shipwright",
         "tier": 2,
         "cost": 2,
-        "needs": "quick_fix"
+        "needs": [
+          "quick_fix"
+        ],
+        "excludes": "sturdy_planks",
+        "role": null
+      },
+      {
+        "skill": "sturdy_planks",
+        "name": "Sturdy planks",
+        "branch": "shipwright",
+        "tier": 2,
+        "cost": 2,
+        "needs": [
+          "quick_fix"
+        ],
+        "excludes": "long_reach",
+        "role": null
       },
       {
         "skill": "master_shipwright",
@@ -369,7 +529,49 @@
         "branch": "shipwright",
         "tier": 3,
         "cost": 3,
-        "needs": "long_reach"
+        "needs": [
+          "long_reach",
+          "sturdy_planks"
+        ],
+        "excludes": null,
+        "role": null
+      },
+      {
+        "skill": "swift_hammer",
+        "name": "Swift hammer",
+        "branch": "shipwright",
+        "tier": 4,
+        "cost": 3,
+        "needs": [
+          "master_shipwright"
+        ],
+        "excludes": "wide_arc",
+        "role": null
+      },
+      {
+        "skill": "wide_arc",
+        "name": "Wide arc",
+        "branch": "shipwright",
+        "tier": 4,
+        "cost": 3,
+        "needs": [
+          "master_shipwright"
+        ],
+        "excludes": "swift_hammer",
+        "role": null
+      },
+      {
+        "skill": "grand_engineer",
+        "name": "Grand engineer",
+        "branch": "shipwright",
+        "tier": 5,
+        "cost": 4,
+        "needs": [
+          "swift_hammer",
+          "wide_arc"
+        ],
+        "excludes": null,
+        "role": "engineer"
       }
     ]
   },

@@ -302,8 +302,9 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
     footer(body, model, act);
     return act && !act.disabled ? act : null;
   }
-  // The skill tree (§14): skill points on top, three columns (a branch each, tiers top to bottom, a line
-  // between tiers), a tap shows the skill's one line and its Learn button below.
+  // The skill tree (§14, docs/GAME-V3.md "Captain tree and roles"): skill points, the role card, then each branch
+  // as a vertical path of five tiers. A fork tier shows both options side by side; after the choice the other is
+  // greyed and closed. A tap shows the skill's one line and its Learn button below.
   function skillsPart(model, on) {
     const part = node('div', 'island-skills');
     const points = node('p', 'island-points', model.pointsText);
@@ -312,20 +313,26 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
       const column = node('section', `island-branch island-branch-${branch.id}`);
       const head = node('h3', 'island-branch-head');
       const icon = node('span', 'island-branch-icon', branch.icon); icon.setAttribute('aria-hidden', 'true');
-      head.append(icon, node('span', 'island-branch-name', branch.name));
+      head.append(icon, node('span', 'island-branch-name', branch.name), node('span', 'island-branch-role', `${branch.roleName} capstone`));
       const list = node('ol', 'island-branch-nodes');
-      branch.nodes.forEach((skill, index) => {
-        const item = node('li', `island-tier${index && branch.nodes[index - 1].state === 'learned' ? ' is-linked' : ''}`);
-        const choice = node('button', `island-skill is-${skill.state}${skill.id === model.picked ? ' is-picked' : ''}`); choice.type = 'button';
-        choice.dataset.focus = `skill-${skill.id}`; choice.dataset.skill = skill.id;
-        choice.setAttribute('aria-pressed', String(skill.id === model.picked)); choice.setAttribute('aria-label', skill.label);
-        const dots = node('span', 'island-skill-cost'); dots.setAttribute('aria-hidden', 'true');
-        for (let i = 0; i < skill.cost; i++) dots.append(node('span', 'island-skill-dot'));
-        const mark = node('span', 'island-skill-mark', skill.state === 'learned' ? '✓' : skill.state === 'locked' ? '🔒' : '');
-        mark.setAttribute('aria-hidden', 'true'); mark.hidden = skill.state === 'ready';
-        choice.append(node('span', 'island-skill-name', skill.name), dots, mark);
-        choice.addEventListener('click', () => on.pick?.(skill.id));
-        item.append(choice); list.append(item);
+      branch.tiers.forEach((tier, index) => {
+        const linked = index > 0 && branch.tiers[index - 1].nodes.some(item => item.state === 'learned');
+        const item = node('li', `island-tier${tier.fork ? ' is-fork' : ''}${linked ? ' is-linked' : ''}`); item.dataset.tier = String(tier.tier);
+        if (tier.fork) item.setAttribute('aria-label', `Tier ${tier.tier}: choose one of two`);
+        for (const skill of tier.nodes) {
+          const choice = node('button', `island-skill is-${skill.state}${skill.capstone ? ' is-capstone' : ''}${skill.id === model.picked ? ' is-picked' : ''}`); choice.type = 'button';
+          choice.dataset.focus = `skill-${skill.id}`; choice.dataset.skill = skill.id;
+          choice.setAttribute('aria-pressed', String(skill.id === model.picked)); choice.setAttribute('aria-label', skill.label);
+          const dots = node('span', 'island-skill-cost'); dots.setAttribute('aria-hidden', 'true');
+          for (let i = 0; i < skill.cost; i++) dots.append(node('span', 'island-skill-dot'));
+          const mark = node('span', 'island-skill-mark', skill.state === 'learned' ? '✓' : skill.state === 'locked' ? '🔒' : skill.state === 'closed' ? '✕' : '');
+          mark.setAttribute('aria-hidden', 'true'); mark.hidden = skill.state === 'ready';
+          choice.append(node('span', 'island-skill-name', skill.name), dots, mark);
+          choice.addEventListener('click', () => on.pick?.(skill.id));
+          item.append(choice);
+        }
+        if (tier.fork) item.append(node('span', 'island-fork-or', 'or'));
+        list.append(item);
       });
       column.append(head, list); tree.append(column);
     }
@@ -335,8 +342,35 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
     const reason = line('island-reason', pick.state === 'ready' ? '' : pick.reason);
     if (reason.textContent) { reason.id = 'island-reason-skill'; learn.setAttribute('aria-describedby', reason.id); }
     detail.append(head, line('island-skill-line', pick.line), reason, learn);
-    part.append(points, tree, detail, line('island-purpose island-skills-how', model.line), line('island-message', model.message, 'alert'));
+    const respec = model.respec, again = node('div', 'island-respec');
+    const reset = button(respec.button, () => on.respec?.()); reset.dataset.focus = 'respec'; reset.disabled = respec.disabled;
+    const why = line('island-reason', respec.reason);
+    if (why.textContent) { why.id = 'island-reason-respec'; reset.setAttribute('aria-describedby', why.id); }
+    again.append(line('island-purpose', respec.line), reset, why);
+    if (respec.ask) { const cancel = button('Keep my skills', () => on.respecCancel?.(), true); cancel.dataset.focus = 'respec-cancel'; again.append(cancel); }
+    part.append(points, rolePart(model.role, on), tree, detail, line('island-purpose island-skills-how', model.line), again, line('island-message', model.message, 'alert'));
     return part;
+  }
+  // The role choice: a clear card with the three roles, side by side; a tap shows the role's line and its button.
+  function rolePart(model, on) {
+    const card = node('section', `island-role${model.current ? ' has-role' : ''}`); card.setAttribute('aria-label', 'Captain role');
+    const head = node('h3', 'island-role-title');
+    if (model.icon) { const mark = node('span', 'island-role-icon', model.icon); mark.setAttribute('aria-hidden', 'true'); head.append(mark); }
+    head.append(node('span', '', model.title));
+    const row = node('div', 'island-role-choices'); row.setAttribute('role', 'group'); row.setAttribute('aria-label', 'Roles');
+    for (const choice of model.choices) {
+      const pickRole = node('button', `island-role-choice is-${choice.state}${choice.id === model.picked ? ' is-picked' : ''}`); pickRole.type = 'button';
+      pickRole.dataset.role = choice.id; pickRole.dataset.focus = `role-${choice.id}`; pickRole.setAttribute('aria-pressed', String(choice.id === model.picked));
+      pickRole.setAttribute('aria-label', choice.label);
+      const icon = node('span', 'island-role-choice-icon', choice.icon); icon.setAttribute('aria-hidden', 'true');
+      pickRole.append(icon, node('span', 'island-role-choice-name', choice.name), node('span', 'island-role-choice-branch', choice.branchName));
+      pickRole.addEventListener('click', () => on.pickRole?.(choice.id));
+      row.append(pickRole);
+    }
+    const shown = model.detail, act = button(shown.button, () => on.role?.(shown.id)); act.dataset.focus = 'role'; act.disabled = shown.disabled;
+    card.append(head, line('island-role-lead', model.lead), row, line('island-role-line', shown.line),
+      line('island-role-capstone', `Opens the ${shown.capstone} capstone.`), act);
+    return card;
   }
   // The weapon shop (§15): buy once, equip one.
   function weaponsPart(model, on) {
@@ -430,7 +464,13 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
         swatch.style.setProperty('--coat', pal.coat); swatch.style.setProperty('--band', pal.band); swatch.style.setProperty('--hat', pal.hat);
         const name = node('span', 'island-lobby-name', `${row.name}${row.you ? ' (you)' : ''}`);
         const state = node('span', 'island-lobby-state', [row.tag, row.online ? 'online' : 'away'].filter(Boolean).join(' · '));
-        item.append(dot, swatch, name, state); list.append(item);
+        item.append(dot, swatch, name);
+        // The captain's role icon (Medic, Engineer, Gunner), so the crew sees who does what.
+        if (row.captainRole) {
+          const mark = node('span', 'island-lobby-role', row.roleIcon); mark.setAttribute('role', 'img'); mark.setAttribute('aria-label', `${row.roleName}`);
+          mark.title = row.roleName; item.dataset.captainRole = row.captainRole; item.append(mark);
+        }
+        item.append(state); list.append(item);
       }
       const go = button(model.start.label, () => start()); go.dataset.focus = 'start'; go.classList.add('island-lobby-start');
       go.hidden = !model.start.show; go.disabled = model.start.disabled;

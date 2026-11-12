@@ -4,13 +4,14 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { CONFIG, createWave } from '../../src/pirates/sim.js';
-import { BRANCHES, SKILLS, SKILL_IDS, WEAPONS, WEAPON_IDS, captainStats, isSkillList, pointsEarned, pointsSpent, readSkills, skillNeeds } from '../../src/pirates/captain-stats.js';
+import { BRANCHES, ROLES, ROLE_IDS, SKILLS, SKILL_IDS, WEAPONS, WEAPON_IDS, captainStats, isSkillList, pointsEarned, pointsSpent, readSkills, skillNeeds } from '../../src/pirates/captain-stats.js';
 import { readMessage, toMessage } from '../../src/pirates/sync.js';
 import { readWaveMessage } from '../../src/net/live-rules.js';
 import { actionAt, REACH } from '../../src/pirates/interact.js';
 
 const island = JSON.parse(readFileSync(new URL('../../../backend/content/islands.json', import.meta.url), 'utf8'));
 const migration = readFileSync(new URL('../../../supabase/migrations/20261112030000_captain_skills.sql', import.meta.url), 'utf8');
+const treeMigration = readFileSync(new URL('../../../supabase/migrations/20261112120000_captain_tree.sql', import.meta.url), 'utf8');
 
 describe('captainStats', () => {
   it('is the musket level table without skills, and every skill does what its line says', () => {
@@ -20,12 +21,13 @@ describe('captainStats', () => {
     expect(captainStats(1, ['steady_aim']).damage).toBe(7.5);
     expect(captainStats(1, ['long_barrel']).range).toBe(17);
     expect(captainStats(1, ['quick_hands']).reload).toBe(.9);
-    const none = captainStats(1), all = captainStats(1, SKILL_IDS);
+    const none = captainStats(1), all = captainStats(1, SKILL_IDS.filter(id => !SKILLS.find(skill => skill.id === id).excludes));
     expect([none.strikeMultiplier, none.strikeReloadMultiplier, none.sweep, none.repairMultiplier, none.repairReach, none.rebuildShare]).toEqual([1, 1, false, 1, REACH, .4]);
-    expect([all.strikeMultiplier, all.strikeReloadMultiplier, all.sweep, all.sweepRadius, all.sweepShare]).toEqual([1.5, .7, true, 2, .5]);
+    expect([all.strikeReloadMultiplier, captainStats(1, ['sweep']).sweep, all.sweepRadius, all.sweepShare]).toEqual([.7, true, 2, .5]);
+    expect(captainStats(1, ['cutlass']).strikeMultiplier).toBe(1.5);
     expect(captainStats(1, ['quick_fix']).repairMultiplier).toBe(1.5);
     expect(captainStats(1, ['quick_fix', 'long_reach']).repairReach).toBe(REACH + 2);
-    expect([all.repairMultiplier, all.rebuildShare]).toEqual([2, .6]);
+    expect(captainStats(1, ['quick_fix', 'long_reach', 'master_shipwright'])).toMatchObject({ repairMultiplier: 2, rebuildShare: .6 });
     // Junk falls back: level 1, no skills, the musket.
     expect(captainStats('x', ['nope', 7], 'cannon')).toMatchObject({ level: 1, damage: 6, weapon: 'musket' });
   });
@@ -40,23 +42,60 @@ describe('captainStats', () => {
       expect(captainStats(level, SKILL_IDS, weapon).reload).toBeGreaterThanOrEqual(.3);
     }
   });
-  it('builds the tree: three branches, tiers in order, tier n costs n, one point per two won waves', () => {
+  it('builds the tree: three branches of five tiers, forks on tiers 2 and 4, a role capstone, one point per two won waves', () => {
     expect(BRANCHES.map(branch => SKILLS.filter(skill => skill.branch === branch.id).map(skill => `${skill.tier}:${skill.cost}`)))
-      .toEqual([['1:1', '2:2', '3:3'], ['1:1', '2:2', '3:3'], ['1:1', '2:2', '3:3']]);
-    expect(skillNeeds('steady_aim')).toBe(null);
-    expect(skillNeeds('master_shipwright')).toBe('long_reach');
+      .toEqual(BRANCHES.map(() => ['1:1', '2:2', '2:2', '3:3', '4:3', '4:3', '5:4']));
+    expect(skillNeeds('steady_aim')).toEqual([]);
+    expect(skillNeeds('master_shipwright')).toEqual(['long_reach', 'sturdy_planks']);
     expect([0, 1, 2, 5, 9].map(pointsEarned)).toEqual([0, 0, 1, 2, 4]);
     expect(pointsSpent(['steady_aim', 'long_barrel', 'bogus'])).toBe(3);
     expect(readSkills(['sweep', 'steady_aim', 'sweep', 'x'])).toEqual(['steady_aim', 'sweep']);
     expect([isSkillList(['sweep']), isSkillList(['sweep', 'sweep']), isSkillList(['nope']), isSkillList('sweep')]).toEqual([true, false, false, false]);
   });
+  it('forks exclude their twin both ways, a capstone needs its branch role, roles ride in the skills list', () => {
+    for (const skill of SKILLS.filter(item => item.excludes)) {
+      const twin = SKILLS.find(item => item.id === skill.excludes);
+      expect([twin.excludes, twin.tier, twin.branch]).toEqual([skill.id, skill.tier, skill.branch]);
+    }
+    expect(SKILLS.filter(skill => skill.role).map(skill => [skill.tier, skill.role, ROLES.find(role => role.id === skill.role).branch === skill.branch]))
+      .toEqual([[5, 'gunner', true], [5, 'medic', true], [5, 'engineer', true]]);
+    expect(readSkills(['medic', 'gunner', 'steady_aim'])).toEqual(['steady_aim', 'medic']);
+    expect([isSkillList(['steady_aim', 'medic']), isSkillList(['medic', 'gunner'])]).toEqual([true, false]);
+  });
+  it('roles change the numbers: Medic help-up 1.2 s and 75% hp, Engineer +25% wall hp, Gunner +20% damage and faster reload', () => {
+    const plain = captainStats(1), medic = captainStats(1, ['medic']), engineer = captainStats(1, ['engineer']), gunner = captainStats(1, ['gunner']);
+    expect([plain.reviveHold, plain.reviveShare, plain.wallHpMultiplier]).toEqual([2, .5, 1]);
+    expect([medic.reviveHold, medic.reviveShare]).toEqual([1.2, .75]);
+    expect(captainStats(1, ['medic', 'field_surgeon']).reviveShare).toBe(1);
+    expect(engineer.wallHpMultiplier).toBe(1.25);
+    expect(gunner.damage).toBeCloseTo(plain.damage * 1.2, 5);
+    expect(gunner.reload).toBeLessThan(plain.reload);
+    expect(captainStats(1, ['engineer', 'grand_engineer']).rebuildShare).toBe(.8);
+  });
+  it('the sim: an engineer\'s repair and rebuild give the wall +25% hp, a medic\'s help-up gives more hp back', () => {
+    const wallAfter = (skills, type) => {
+      const sim = createWave({ seed: 2, wave: 4, defenses: [{ id: 'wall_1', kind: 'wall', x: -18.5, z: -4 }], island: { hp: 5000 } });
+      for (let i = 0; i < 6000 && sim.state().walls[0].hp >= (type === 'rebuild' ? 1 : 40); i++) sim.step(.05);
+      sim.step(.05, [{ type, wallId: 'wall_1', skills }]);
+      return sim.state().walls[0];
+    };
+    expect(wallAfter(['engineer'], 'repair').maxHp).toBe(wallAfter([], 'repair').maxHp * 1.25);
+    expect(wallAfter(['medic'], 'repair').maxHp).toBe(wallAfter([], 'repair').maxHp);
+  });
   it('matches the server: islands.json and the check rules of the migration list the same skills and weapons', () => {
     expect(island.captainSkills.wavesPerPoint).toBe(2);
-    expect(island.captainSkills.tree.map(item => [item.skill, item.branch, item.tier, item.cost, item.needs ?? null]))
+    expect(island.captainSkills.tree.map(item => [item.skill, item.branch, item.tier, item.cost, item.needs]))
       .toEqual(SKILLS.map(skill => [skill.id, skill.branch, skill.tier, skill.cost, skillNeeds(skill.id)]));
+    expect(island.captainSkills.tree.map(item => [item.excludes ?? null, item.role ?? null])).toEqual(SKILLS.map(skill => [skill.excludes, skill.role]));
+    expect(island.captainSkills.roles.map(item => [item.role, item.name, item.branch])).toEqual(ROLES.map(role => [role.id, role.name, role.branch]));
+    expect(island.captainSkills.roleLevel).toBe(3);
+    expect(island.captainSkills.respec.coinsPerLevel).toBe(100);
+    expect(island.captainSkills.engineerDiscountPercent).toBe(10);
+    expect(ROLE_IDS).toEqual(['medic', 'engineer', 'gunner']);
     expect(island.weapons.map(item => [item.weapon, item.name, item.coins, item.unlockWave]))
       .toEqual(WEAPONS.map(weapon => [weapon.id, weapon.name, weapon.price, weapon.unlockWave]));
-    for (const id of [...SKILL_IDS, ...WEAPON_IDS]) expect(migration).toContain(`'${id}'`);
+    for (const id of WEAPON_IDS) expect(migration).toContain(`'${id}'`);
+    for (const id of [...SKILL_IDS, ...ROLE_IDS]) expect(treeMigration).toContain(`'${id}'`);
   });
 });
 

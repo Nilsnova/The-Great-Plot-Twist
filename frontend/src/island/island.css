@@ -83,13 +83,18 @@
 .island-card-captain .island-card-body,.island-captain-tabs,.island-captain-tabs .kit-tabpanel{min-width:0;grid-template-columns:minmax(0,1fr)}
 .island-captain-musket>.kit-button{justify-self:start;min-width:160px}
 .island-points{font:800 var(--u-lg)/1.2 var(--u-font);color:var(--u-gold)}
-.island-tree{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;min-width:0}
+.island-tree{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--u-4);min-width:0}
 .island-branch{display:grid;gap:6px;align-content:start;min-width:0}
-.island-branch-head{margin:0;display:flex;flex-direction:column;align-items:center;gap:0;text-align:center;min-width:0}
+.island-branch-head{margin:0;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:2px var(--u-2);text-align:center;min-width:0}
+.island-branch-role{flex-basis:100%;color:var(--u-mute);font:700 13px/1.2 var(--u-font)}
 /* Beats the modal's h3 size (src/ui/open-panels.css), keeps its serif and gold. */
 .island-card.island-card-captain.kit-modal .kit-modal-body h3.island-branch-head{font-size:16px;line-height:1.2;overflow-wrap:anywhere}
 .island-branch-icon{font-size:20px;line-height:1.2}
-.island-branch-nodes{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+.island-branch-nodes{list-style:none;margin:0 auto;padding:0;display:grid;gap:14px;width:min(100%,360px)}
+/* A fork tier: both options side by side before the choice; the twin you did not take is greyed after it. */
+.island-tier.is-fork{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;position:relative}
+.island-fork-or{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);padding:0 5px;border-radius:8px;background:var(--u-deep);color:var(--u-mute);font:800 12px/1.4 var(--u-font);pointer-events:none}
+.island-tier.is-fork::before{left:25%}
 .island-tier{position:relative}
 .island-tier+.island-tier::before{content:'';position:absolute;left:50%;top:-14px;width:4px;height:14px;margin-left:-2px;border-radius:2px;background:var(--u-line)}
 .island-tier.is-linked::before{background:var(--u-gold)}
@@ -100,6 +105,9 @@
 .island-skill.is-learned{background:#3b5a2c;border-color:#9fd26a}
 .island-skill.is-ready{border-color:var(--u-gold);box-shadow:var(--u-bevel-quiet,0 3px var(--u-deep)),0 0 0 2px #f3d58c55}
 .island-skill.is-locked{background:var(--u-deep);color:var(--u-mute)}
+.island-skill.is-closed{background:var(--u-deep);color:var(--u-mute);border-style:dashed;opacity:.55}
+.island-skill.is-closed .island-skill-name{text-decoration:line-through}
+.island-skill.is-capstone{border-color:var(--u-pink,var(--u-gold))}
 .island-skill.is-picked{outline:3px solid var(--u-gold);outline-offset:-1px}
 .island-skill-name{overflow-wrap:anywhere}
 .island-skill-cost{display:flex;gap:3px}
@@ -115,6 +123,24 @@
 .island-skill-detail>.kit-button{justify-self:start;min-width:140px}
 .island-skills-how{color:var(--u-mute);font-size:15px}
 .island-weapon.is-equipped{border-color:var(--u-gold)}
+/* The role card (docs/GAME-V3.md "Captain tree and roles"): three roles side by side, one line, one button. */
+.island-role{display:grid;gap:var(--u-2);padding:var(--u-3);background:linear-gradient(#24575f,var(--u-card)) var(--u-card);border:2px solid var(--u-gold);border-radius:var(--u-radius-sm,14px);box-shadow:var(--u-bevel-quiet,0 3px var(--u-deep))}
+.island-role-title{margin:0;display:flex;align-items:center;gap:var(--u-2);font:800 var(--u-lg)/1.2 var(--u-font);color:var(--u-gold)}
+.island-role-icon{font-size:24px;line-height:1}
+.island-role-lead,.island-role-line,.island-role-capstone{margin:0;color:var(--u-ink);font-size:15px}
+.island-role-capstone{color:var(--u-mute)}
+.island-role-choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.island-role-choice{min-height:72px;display:grid;justify-items:center;align-content:center;gap:2px;padding:6px 4px;font:700 14px/1.2 var(--u-font);color:var(--u-ink);text-align:center;cursor:pointer;background:var(--u-card);border:2px solid var(--u-line);border-radius:var(--u-radius-xs,10px);box-shadow:var(--u-bevel-quiet,0 3px var(--u-deep))}
+.island-role-choice:focus-visible{outline:3px solid var(--u-gold);outline-offset:2px}
+.island-role-choice-icon{font-size:26px;line-height:1.1}
+.island-role-choice-branch{color:var(--u-mute);font-size:12px}
+.island-role-choice.is-ready{border-color:var(--u-gold)}
+.island-role-choice.is-picked{outline:3px solid var(--u-gold);outline-offset:-1px}
+.island-role-choice.is-locked,.island-role-choice.is-closed{background:var(--u-deep);color:var(--u-mute)}
+.island-role-choice.is-closed:not(.is-picked){opacity:.55}
+.island-role-choice.is-picked.is-picked{background:#3b5a2c;border-color:#9fd26a;color:var(--u-ink)}
+.island-role>.kit-button{justify-self:start;min-width:160px}
+.island-respec{display:grid;gap:6px;justify-items:start;padding-top:var(--u-2);border-top:2px solid var(--u-line)}
 @media(max-width:400px){.island-card-captain.kit-modal{padding:0 14px 16px}.island-tree{gap:4px}.island-skill{font-size:13px;padding:6px 2px}.island-card.island-card-captain.kit-modal .kit-modal-body h3.island-branch-head{font-size:14px}}
 /* The game's lobby (docs/GAME-V3.md §2): the code, the link and QR, the players with who is online, Start. */
 .island-card-lobby.kit-modal{width:min(480px,calc(100vw - 32px))}
@@ -126,6 +152,7 @@
 .island-lobby-dot{flex:none;width:12px;height:12px;border-radius:50%;background:var(--u-deep);border:2px solid var(--u-line)}
 .island-lobby-player.is-online .island-lobby-dot{background:#7fd08a;border-color:#2f6b3a}
 .island-lobby-colour{flex:none;width:24px;height:24px;border-radius:50%;background:radial-gradient(circle at 50% 38%,var(--band) 0 24%,var(--coat) 26%);border:2px solid var(--hat);box-shadow:0 0 0 2px #2b1d1a,0 2px 4px #04161b55}
+.island-lobby-role{flex:none;font-size:20px;line-height:1}
 .island-lobby-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700;color:var(--u-ink)}
 .island-lobby-state{flex:none;color:var(--u-mute);font-size:16px}
 .island-card-body>.island-lobby-start{justify-self:stretch;min-height:56px;font-size:var(--u-lg)}

@@ -15,6 +15,7 @@
 //   await api.hire({crew: 'gunner'});                 // POST /api/island/hire
 //   await api.upgradeCaptain();                       // POST /api/island/captain     (§10)
 //   await api.learnSkill({skill: 'steady_aim'});      // POST /api/island/skill       (§14)
+//   await api.pickRole({role: 'medic'}); await api.respec(); // POST /api/island/role, /respec
 //   await api.buyWeapon({weapon: 'pistols'});         // POST /api/island/weapon/buy  (§15)
 //   await api.equipWeapon({weapon: 'pistols'});       // POST /api/island/weapon/equip
 //   await api.demolishQuote({spot, code?});            // GET  /api/island/demolish   (GAME-V3.md §4.2: who gets what back)
@@ -43,7 +44,7 @@
 import {makeActionUid} from '../screens/islet/action-uid.js';
 import {islandCode, displayIslandCode} from './codes.js';
 import {localSpotId} from './spots.js';
-import {SKILL_BY_ID, WEAPON_BY_ID} from '../pirates/captain-ids.js';
+import {SKILL_BY_ID, WEAPON_BY_ID, isRole} from '../pirates/captain-ids.js';
 import {BRANCH_BY_ID, SPECS} from '../campaign/tech.js';
 import {isRole} from '../campaign/houses.js';
 
@@ -52,7 +53,7 @@ export const PATHS = Object.freeze({
   start: '/api/waves/start', join: '/api/waves/join', finish: '/api/waves/finish', revive: '/api/waves/revive',
   current: where => `/api/waves/current?where=${encodeURIComponent(where)}`,
   upgrade: '/api/island/upgrade', hire: '/api/island/hire', captain: '/api/island/captain', inviteJoin: '/api/island/invite/join',
-  skill: '/api/island/skill', weaponBuy: '/api/island/weapon/buy', weaponEquip: '/api/island/weapon/equip',
+  skill: '/api/island/skill', role: '/api/island/role', respec: '/api/island/respec', weaponBuy: '/api/island/weapon/buy', weaponEquip: '/api/island/weapon/equip',
   point: '/api/pirate-point', pointBuild: '/api/pirate-point/build', pointUpgrade: '/api/pirate-point/upgrade',
   games: '/api/games', gameJoin: '/api/games/join', gameLeave: '/api/games/leave', game: code => `/api/games/${code}`,
   research: '/api/island/research', specialise: '/api/island/tower-skill', wreck: '/api/island/wreck',
@@ -69,6 +70,7 @@ export const MESSAGES = Object.freeze({
   badWave: 'There is no such wave.',
   badCrew: 'Choose a gunner, a carpenter or a lookout.',
   badSkill: 'There is no such skill.',
+  badRole: 'There is no such role.',
   badWeapon: 'There is no such weapon.',
   badResearch: 'There is no such research.',
   badSpec: 'There is no such tower skill.',
@@ -106,7 +108,8 @@ export function isGame(game) {
 export const isCreated = data => !!data && isGame(data.game) && typeof data.created === 'boolean';
 export const isJoined = data => !!data && data.admitted === true && isGame(data.game);
 export const isGames = data => !!data && Array.isArray(data.games) && data.games.every(isGame);
-const isMember = member => !!member && isText(member.id) && typeof member.name === 'string' && (member.role === 'host' || member.role === 'member');
+const isMember = member => !!member && isText(member.id) && typeof member.name === 'string' && (member.role === 'host' || member.role === 'member')
+  && (member.captainRole == null || isRole(member.captainRole));
 export const isLobby = data => !!data && isGame(data.game) && Array.isArray(data.members) && data.members.length > 0 && data.members.every(isMember);
 export const isLeft = data => !!data && typeof data.left === 'boolean';
 export function isWave(data) {
@@ -208,6 +211,15 @@ export function createIslandApi({transport, makeUid = makeActionUid} = {}) {
     learnSkill({skill} = {}) {
       if (!Object.hasOwn(SKILL_BY_ID, skill ?? '')) return refuse(400, 'bad_skill', MESSAGES.badSkill);
       return writeSpots(`skill:${skill}`, actionUid => transport.post(PATHS.skill, {skill, actionUid}), isIsland);
+    },
+    // The role choice (medic, engineer or gunner) at captain level 3, once; a respec (coins, scaled by your captain
+    // level) clears every skill and the role (GAME-V3.md, Captain tree and roles).
+    pickRole({role} = {}) {
+      if (!isRole(role)) return refuse(400, 'bad_role', MESSAGES.badRole);
+      return askSpots(() => transport.post(PATHS.role, {role}), isIsland);
+    },
+    respec() {
+      return writeSpots('respec', actionUid => transport.post(PATHS.respec, {actionUid}), isIsland);
     },
     // §15: buy a weapon once with coins, then equip it (equipping again changes nothing, so no click id).
     buyWeapon({weapon} = {}) {

@@ -375,8 +375,9 @@ const WAVE_DATA = {
   captain_move: data => hasKeysWith(data, ['by', 'seq', 't', 'waveId', 'x', 'z'], ['colour', 'away']) && [data.x, data.z].every(isCoord)
     && (!Object.hasOwn(data, 'colour') || (Number.isInteger(data.colour) && data.colour >= 0 && data.colour <= 9))
     && (!Object.hasOwn(data, 'away') || data.away === true),
-  captain_revive: data => hasKeys(data, ['by', 'seq', 't', 'waveId', 'targetId', 'x', 'z']) && typeof data.targetId === 'string'
-    && WAVE_BY.test(data.targetId) && data.targetId !== data.by && [data.x, data.z].every(isCoord),
+  // The reviver's skills and role (a medic gives more hp back) ride along, like on a repair.
+  captain_revive: data => hasKeysWith(data, ['by', 'seq', 't', 'waveId', 'targetId', 'x', 'z'], ['skills']) && typeof data.targetId === 'string'
+    && WAVE_BY.test(data.targetId) && data.targetId !== data.by && [data.x, data.z].every(isCoord) && isSkills(data.skills),
 };
 const NO_WAVE = ['island_changed', 'game_hello', 'game_state'];
 // A tear-down's note on island_changed (GAME-V3.md §4.2): who did it, what came down and who got how many

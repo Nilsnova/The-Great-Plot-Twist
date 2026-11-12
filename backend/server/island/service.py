@@ -6,6 +6,7 @@
     hire()     one crew member (section 3)
     captain()  one captain level up (section 10)
     learn_skill()  one skill of the captain's skill tree, paid with skill points (section 14)
+    pick_role(), respec()  the captain's role and the paid reset (GAME-V3, Captain tree and roles)
     buy_weapon(), equip_weapon()  the weapon shop (section 15)
     research()    the Tech hub: one research branch for the island, paid by any member (GAME-V3 5)
     specialise()  one tower picks a skill of its researched branch (GAME-V3 section 5), or a
@@ -51,6 +52,7 @@ UPGRADE_PREFIX = "upgrade:"
 CREW_PREFIX = "crew:"
 CAPTAIN_PREFIX = "captain:"
 SKILL_PREFIX = "skill:"
+RESPEC_PREFIX = "respec:"
 WEAPON_PREFIX = "weapon:"
 RESEARCH_PREFIX = "research:"
 WRECK_PREFIX = "wreck:"
@@ -86,6 +88,9 @@ class SkillsView:
     points: int  # left to spend
     spent: int
     known: tuple[str, ...]  # in the order learnt
+    role: str | None = None  # medic, engineer or gunner (captain tree)
+    role_level: int = 3  # the captain level that opens the role choice
+    respec_price: int = 0  # the coins a respec costs now (coinsPerLevel x captain level)
 
 
 @dataclass(frozen=True)
@@ -184,7 +189,7 @@ def view_of(
         wave_best=progress.wave_best,
         flags=island.flags,
         next_wave=rules.next_wave(catalogue, progress.wave_best, progress.next_wave),
-        spots=rules.plan_spots(catalogue, built),
+        spots=rules.plan_spots(catalogue, built, role=mine.role),
         crew=mine.crew,
         captain_level=mine.captain_level,
         captain_next_price=rules.captain_next_price(catalogue, mine.captain_level),
@@ -197,7 +202,14 @@ def view_of(
 
 def skills_of(catalogue: IslandCatalogue, progress: Progress) -> SkillsView:
     points, spent = rules.skill_points(catalogue, progress.won_wave_best, progress.skills)
-    return SkillsView(points, spent, progress.skills)
+    return SkillsView(
+        points,
+        spent,
+        progress.skills,
+        progress.role,
+        catalogue.skills.role_level,
+        rules.respec_price(catalogue, progress.captain_level),
+    )
 
 
 def weapons_of(catalogue: IslandCatalogue, progress: Progress) -> WeaponsView:
@@ -319,6 +331,7 @@ async def build(
     progress = await store.read_progress(admin, player_id)
     # GAME-V3 section 4: the island's own best won wave decides what may be built on it.
     spot, price = rules.check_build(catalogue, spot_id, kind, built, progress.wave_best)
+    price = rules.engineer_price(catalogue, price, progress.role)  # an engineer pays less
     validate_transaction(-price, "building_purchase", ref)
     arguments = islet_store.build_arguments(
         player_id, spot.id, kind, Cost(price, NO_TIMBER), NO_TIMBER, ref
@@ -352,6 +365,9 @@ async def build_with_friend(
         built = await store.read_built_spots(admin, island.owner)
         progress = await store.read_progress(admin, island.owner)
         spot, price = rules.check_build(catalogue, spot_id, kind, built, progress.wave_best)
+        price = rules.engineer_price(
+            catalogue, price, (await store.read_progress(admin, payer)).role
+        )
         arguments = {
             "p_player_id": payer,
             "p_island_owner": island.owner,
@@ -385,12 +401,17 @@ async def upgrade(
         built = await store.read_built_spots(admin, island.owner)
         progress = await store.read_progress(admin, island.owner)
         spot, kind, reachable = rules.check_upgrade(catalogue, spot_id, built, progress.wave_best)
+        role = (
+            progress.role
+            if island.owner == player_id
+            else (await store.read_progress(admin, player_id)).role
+        )
         arguments = {
             "p_player_id": player_id,
             "p_island_owner": island.owner,
             "p_plot": spot.id,
             "p_action_uid": action_uid,
-            "p_prices": list(kind.prices),
+            "p_prices": [rules.engineer_price(catalogue, price, role) for price in kind.prices],
             "p_unlocked_level": reachable,
         }
         await paid(admin, "island_upgrade", arguments, f"The next {kind.name.lower()} level")
@@ -448,20 +469,29 @@ async def learn_skill(
     admin: SupabaseAdmin, catalogue: IslandCatalogue, player_id: str, skill: str, action_uid: str
 ) -> IslandView:
     """One skill (section 14), paid with skill points: one per two won waves (won_wave_best),
-    minus the points spent. 400 bad_skill, 409 known, 409 locked ("Learn X first"), 409 no_points.
+    minus the points spent. 400 bad_skill, 409 known, 409 closed (the fork twin was chosen), 409
+    locked ("Learn X first"), 409 wrong_role (a capstone of another role), 409 no_points.
     A repeated actionUid learns nothing and answers the island as it is now."""
     island = await store.open_island(admin, player_id, catalogue.starting_coins)
     entry = rules.skill_named(catalogue, skill)
     if await store.skill_learnt(admin, player_id, f"{SKILL_PREFIX}{action_uid}"):
         return await look_open(admin, catalogue, island)
     progress = await store.read_progress(admin, player_id)
-    rules.check_skill(catalogue, entry.skill, progress.skills, progress.won_wave_best)
+    rules.check_skill(
+        catalogue, entry.skill, progress.skills, progress.won_wave_best, progress.role
+    )
     arguments = {
         "p_player_id": player_id,
         "p_skill": entry.skill,
         "p_action_uid": action_uid,
         "p_tree": [
-            {"skill": item.skill, "needs": item.needs, "cost": item.cost}
+            {
+                "skill": item.skill,
+                "needs": list(item.needs),
+                "excludes": item.excludes,
+                "role": item.role,
+                "cost": item.cost,
+            }
             for item in catalogue.skills.tree
         ],
         "p_waves_per_point": catalogue.skills.waves_per_point,
@@ -479,13 +509,66 @@ def skill_refusal(
     entry = rules.skill_named(catalogue, skill)
     if refusal.reason == "known":
         return ApiError(409, "known", f"You know {entry.name} already.")
-    if refusal.reason == "locked" and entry.needs is not None:
+    if refusal.reason == "closed" and entry.excludes is not None:
+        return rules.skill_closed(catalogue, entry)
+    if refusal.reason == "locked" and entry.needs:
         return rules.skill_locked(catalogue, entry.needs)
+    if refusal.reason == "wrong_role" and entry.role is not None:
+        return rules.skill_wrong_role(catalogue, entry, progress.role)
     if refusal.reason == "no_points":
         return rules.no_points()
     if refusal.reason == "bad_skill":
         return ApiError(400, "bad_skill", "There is no such skill.")
     return SupabaseRejected()
+
+
+async def pick_role(
+    admin: SupabaseAdmin, catalogue: IslandCatalogue, player_id: str, role: str
+) -> IslandView:
+    """The role choice (medic, engineer or gunner) at the captain level the file names. 400
+    bad_role, 409 locked, 409 role_known (respec first). The same role again changes nothing."""
+    island = await store.open_island(admin, player_id, catalogue.starting_coins)
+    entry = rules.role_named(catalogue, role)
+    progress = await store.read_progress(admin, player_id)
+    if progress.role != entry.role:
+        rules.check_role(catalogue, entry.role, progress.captain_level, progress.role)
+        arguments = {
+            "p_player_id": player_id,
+            "p_role": entry.role,
+            "p_min_level": catalogue.skills.role_level,
+        }
+        outcome = await store.pick_role(admin, arguments)
+        if isinstance(outcome, Refusal):
+            if outcome.reason == "role_known":
+                raise ApiError(409, "role_known", "You have a role already. Respec to change it.")
+            if outcome.reason == "locked":
+                level = catalogue.skills.role_level
+                raise ApiError(409, "locked", f"Reach captain level {level} first.")
+            raise SupabaseRejected()
+    return await look_open(admin, catalogue, island)
+
+
+async def respec(
+    admin: SupabaseAdmin, catalogue: IslandCatalogue, player_id: str, action_uid: str
+) -> IslandView:
+    """Forget every skill and the role, paid in coins (coinsPerLevel x captain level, wallet
+    reason captain_respec, ref respec:<actionUid>). 409 nothing_to_reset, 409 insufficient_funds.
+    A repeated actionUid charges nothing."""
+    ref = f"{RESPEC_PREFIX}{action_uid}"
+    island = await store.open_island(admin, player_id, catalogue.starting_coins)
+    if not await store.ledger_has(admin, player_id, "captain_respec", ref):
+        progress = await store.read_progress(admin, player_id)
+        if not progress.skills and progress.role is None:
+            raise ApiError(409, "nothing_to_reset", "You have no skills or role to reset.")
+        price = rules.respec_price(catalogue, progress.captain_level)
+        validate_transaction(-price, "captain_respec", ref)
+        arguments = {"p_player_id": player_id, "p_action_uid": action_uid, "p_price": price}
+        outcome = await store.run_paid(admin, "island_respec", arguments)
+        if isinstance(outcome, Refusal):
+            if outcome.reason == "nothing_to_reset":
+                raise ApiError(409, "nothing_to_reset", "You have no skills or role to reset.")
+            raise paid_refusal(outcome, "A respec")
+    return await look_open(admin, catalogue, island)
 
 
 async def buy_weapon(

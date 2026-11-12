@@ -178,7 +178,7 @@ describe('captain health: the messages', () => {
     expect(readMessage(away.type, away.payload, 'w1').input).toEqual(move('p-ann', 1, 1, { away: true }));
     const revive = toMessage({ type: 'captain_revive', by: 'p-ann', targetId: 'p-ben', x: 1, z: 2 }, base);
     expect(readMessage(revive.type, revive.payload, 'w1')).toEqual({ by: 'p-ann', seq: 3, tick: 40,
-      input: { type: 'captain_revive', by: 'p-ann', targetId: 'p-ben', x: 1, z: 2 } });
+      input: { type: 'captain_revive', by: 'p-ann', targetId: 'p-ben', x: 1, z: 2, skills: [] } });
     for (const bad of [{ ...moved.payload, colour: 12 }, { ...moved.payload, away: 'yes' }, { ...moved.payload, x: Infinity }]) {
       expect(readMessage(moved.type, bad, 'w1')).toBe(null);
     }

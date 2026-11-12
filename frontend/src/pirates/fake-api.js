@@ -16,6 +16,7 @@
 //   await api.hire({crew, actionUid});           // POST /api/island/hire
 //   await api.captain({actionUid});              // POST /api/island/captain      (§10)
 //   await api.learnSkill({skill, actionUid});    // POST /api/island/skill        (§14)
+//   await api.pickRole({role}); await api.respec({actionUid}); // POST /api/island/role, /respec (GAME-V3.md, Captain tree and roles)
 //   await api.buyWeapon({weapon, actionUid});    // POST /api/island/weapon/buy   (§15)
 //   await api.equipWeapon({weapon});             // POST /api/island/weapon/equip
 //   await api.demolishQuote({spot, code?});      // GET  /api/island/demolish     (GAME-V3.md §4.2: half back to each payer)
@@ -47,7 +48,7 @@
 // ISLE-FR3ND (Captain Gull) to visit.
 import { createRandom, hasTavern, revivePrice } from './sim.js';
 import { BUILDINGS, CREW, CAPTAIN, readUnlocks, unlockWave, SLOT_KINDS } from '../island/td-rules.js';
-import { SKILLS, SKILL_BY_ID, WEAPONS, WEAPON_BY_ID, pointsEarned, pointsSpent, readSkills, readWeapon, skillNeeds } from './captain-ids.js';
+import { ROLES, ROLE_BY_ID, ROLE_LEVEL, SKILLS, SKILL_BY_ID, WEAPONS, WEAPON_BY_ID, isRole, respecPrice, pointsEarned, pointsSpent, readSkills, readWeapon, skillNeeds } from './captain-ids.js';
 import { STEPS as CAMPAIGN_STEPS, spotWave, waveOf } from '../campaign/index.js';
 import { BRANCHES, BRANCH_BY_ID, SPECS, readSpec } from '../campaign/tech.js';
 import { ROLES, ROLE_LEVEL } from '../campaign/houses.js';
@@ -235,10 +236,15 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
   };
   // §14: skill points from the best wave you won anywhere (won_wave_best on the server), one per two waves.
   const wonOf = (player, island) => Math.max(player.wonBest ?? 0, island.waveBest ?? 0, player.pointBest ?? 0);
-  const SKILL_TREE = SKILLS.map(skill => ({ id: skill.id, branch: skill.branch, tier: skill.tier, cost: skill.cost, needs: skillNeeds(skill.id) }));
+  const SKILL_TREE = SKILLS.map(skill => ({ id: skill.id, name: skill.name, branch: skill.branch, tier: skill.tier, cost: skill.cost,
+    needs: [...skillNeeds(skill.id)], excludes: skill.excludes, role: skill.role }));
+  const ROLE_LIST = ROLES.map(role => ({ id: role.id, name: role.name, branch: role.branch }));
+  // docs/GAME-V3.md "Captain tree and roles": the skills never hold the role (it has its own field).
+  const learnt = island => readSkills(island.skills ?? []).filter(id => !isRole(id));
   const skillsOf = (player, island) => {
-    const known = readSkills(island.skills ?? []), spent = pointsSpent(known);
-    return { points: Math.max(0, pointsEarned(wonOf(player, island)) - spent), spent, known, tree: SKILL_TREE };
+    const known = learnt(island), spent = pointsSpent(known);
+    return { points: Math.max(0, pointsEarned(wonOf(player, island)) - spent), spent, known, tree: SKILL_TREE,
+      role: island.role ?? null, roleLevel: ROLE_LEVEL, roles: ROLE_LIST, respecPrice: respecPrice(island.captain ?? 1) };
   };
   // §15: the weapons you own, the one you carry and the shop (price, the wave it unlocks after).
   const SHOP = WEAPONS.map(weapon => ({ id: weapon.id, name: weapon.name, price: weapon.price, unlockWave: weapon.unlockWave }));
@@ -370,13 +376,32 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     async learnSkill({ skill, actionUid } = {}) {
       if (!uid(actionUid)) invalid('Send the skill and an action id.');
       if (!Object.hasOwn(SKILL_BY_ID, skill ?? '')) refuse(400, 'bad_skill', 'There is no such skill.');
-      const player = me(), island = world.islands.get(player.code), known = readSkills(island.skills ?? []);
+      const player = me(), island = world.islands.get(player.code), known = learnt(island), entry = SKILL_BY_ID[skill];
       if (player.actions.has(`skill:${actionUid}`)) return view();
-      if (known.includes(skill)) refuse(409, 'known', `You know ${SKILL_BY_ID[skill].name} already.`);
-      const needs = skillNeeds(skill);
-      if (needs && !known.includes(needs)) refuse(409, 'locked', `Learn ${SKILL_BY_ID[needs].name} first.`);
-      if (skillsOf(player, island).points < SKILL_BY_ID[skill].cost) refuse(409, 'no_points', 'Win new waves to earn skill points.');
+      if (known.includes(skill)) refuse(409, 'known', `You know ${entry.name} already.`);
+      if (entry.excludes && known.includes(entry.excludes)) refuse(409, 'closed', `You chose ${SKILL_BY_ID[entry.excludes].name}, so ${entry.name} is closed. Respec to change.`);
+      if (entry.needs.length && !entry.needs.some(id => known.includes(id))) refuse(409, 'locked', `Learn ${entry.needs.map(id => SKILL_BY_ID[id].name).join(' or ')} first.`);
+      if (entry.role && island.role !== entry.role) refuse(409, 'wrong_role', island.role ? `Only a ${ROLE_BY_ID[entry.role].name} can learn ${entry.name}.` : `Pick the ${ROLE_BY_ID[entry.role].name} role first.`);
+      if (skillsOf(player, island).points < entry.cost) refuse(409, 'no_points', 'Win new waves to earn skill points.');
       island.skills = readSkills([...known, skill]); player.actions.set(`skill:${actionUid}`, true);
+      return view();
+    },
+    async pickRole({ role } = {}) {
+      if (!isRole(role)) refuse(400, 'bad_role', 'There is no such role.');
+      const island = world.islands.get(me().code);
+      if (island.role === role) return view();
+      if (island.role) refuse(409, 'role_known', 'You have a role already. Respec to change it.');
+      if ((island.captain ?? 1) < ROLE_LEVEL) refuse(409, 'locked', `Reach captain level ${ROLE_LEVEL} first.`);
+      island.role = role;
+      return view();
+    },
+    async respec({ actionUid } = {}) {
+      if (!uid(actionUid)) invalid('Send an action id.');
+      const player = me(), island = world.islands.get(player.code), price = respecPrice(island.captain ?? 1);
+      if (player.actions.has(`respec:${actionUid}`)) return view();
+      if (!learnt(island).length && !island.role) refuse(409, 'nothing_to_reset', 'You have no skills or role to reset.');
+      if (player.coins < price) refuse(409, 'insufficient_funds', `A respec costs ${price} coins. You need more coins.`);
+      player.coins -= price; island.skills = []; island.role = null; player.actions.set(`respec:${actionUid}`, true);
       return view();
     },
     async buyWeapon({ weapon, actionUid } = {}) {
@@ -507,8 +532,9 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       const island = gameByCode(code);
       mustBeMember(island);
       const rows = [...membersOf(island.code)].filter(([id, row]) => id !== island.owner && !row.left).sort((a, b) => a[1].joined - b[1].joined);
-      const members = [{ id: island.owner, name: island.ownerName, role: 'host', you: island.owner === playerId },
-        ...rows.map(([id]) => ({ id, name: nameOf(id), role: 'member', you: id === playerId }))];
+      const roleOfPlayer = id => world.roles?.get(id) ?? [...world.islands.values()].find(item => item.owner === id)?.role ?? null;
+      const members = [{ id: island.owner, name: island.ownerName, role: 'host', you: island.owner === playerId, captainRole: roleOfPlayer(island.owner) },
+        ...rows.map(([id]) => ({ id, name: nameOf(id), role: 'member', you: id === playerId, captainRole: roleOfPlayer(id) }))];
       return { game: gameView(island, island.owner === playerId ? 'host' : 'member'), members };
     },
     async leaveGame({ code } = {}) {
@@ -651,6 +677,8 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
         if (route === 'POST /api/island/hire') return reply(200, await api.hire(body));
         if (route === 'POST /api/island/captain') return reply(200, await api.captain(body));
         if (route === 'POST /api/island/skill') return reply(200, await api.learnSkill(body));
+        if (route === 'POST /api/island/role') return reply(200, await api.pickRole(body));
+        if (route === 'POST /api/island/respec') return reply(200, await api.respec(body));
         if (route === 'POST /api/island/weapon/buy') return reply(200, await api.buyWeapon(body));
         if (route === 'POST /api/island/weapon/equip') return reply(200, await api.equipWeapon(body));
         if (route === 'POST /api/island/research') return reply(200, await api.research(body));
@@ -797,6 +825,8 @@ export function createFakeIslandTransport({ coins = ISLAND_RULES.startingCoins, 
       if (method === 'POST' && pathname === '/api/island/hire') return ok(await api.hire(body));
       if (method === 'POST' && pathname === '/api/island/captain') return ok(await api.captain(body));
       if (method === 'POST' && pathname === '/api/island/skill') return ok(await api.learnSkill(body));
+      if (method === 'POST' && pathname === '/api/island/role') return ok(await api.pickRole(body));
+      if (method === 'POST' && pathname === '/api/island/respec') return ok(await api.respec(body));
       if (method === 'POST' && pathname === '/api/island/weapon/buy') return ok(await api.buyWeapon(body));
       if (method === 'POST' && pathname === '/api/island/weapon/equip') return ok(await api.equipWeapon(body));
       if (method === 'POST' && pathname === '/api/island/research') return ok(await api.research(body));
@@ -862,6 +892,16 @@ export function createFakeIslandTransport({ coins = ISLAND_RULES.startingCoins, 
       },
       read: () => ({ coins: me().coins, built: [...world.islands.get(me().code).built], waves: world.waves.size, playerId }),
       // The best won wave on your island (the unlocks of §9 follow it).
+      // The captain's level (1-5), to test what opens at level 3 (the role choice).
+      // A crew mate in your game with a captain role (for screenshots): joins the game of your island.
+      addCrew(id, name, role = null) {
+        world.players.set(id, { coins: 0, ownerName: name, actions: new Map(), code: null });
+        (world.roles ??= new Map()).set(id, isRole(role) ? role : null);
+        const code = world.players.get(playerId).code;
+        if (!(world.members.get(code) instanceof Map)) world.members.set(code, new Map());
+        world.members.get(code).set(id, { role: 'member', joined: world.players.size, opened: 0, left: null });
+      },
+      setCaptain(level) { world.islands.get(me().code).captain = Math.min(5, Math.max(1, level)); },
       setWaveBest(value) {
         if (!Number.isSafeInteger(value) || value < 0) throw new TypeError('waveBest must be a whole number from 0 up.');
         const island = world.islands.get(me().code); island.waveBest = value; island.nextWave = Math.min(TD_RULES.highestWave, value + 1);

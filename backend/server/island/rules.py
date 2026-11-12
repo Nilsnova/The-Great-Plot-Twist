@@ -32,6 +32,7 @@ from server.island.catalogue import (
     Kind,
     Loot,
     Research,
+    Role,
     Skill,
     Spot,
     Weapon,
@@ -91,13 +92,17 @@ def price_of(catalogue: IslandCatalogue, kind: str) -> int:
     return kind_of(catalogue, kind).coins
 
 
-def spot_view(catalogue: IslandCatalogue, spot: Spot, built: Built | None) -> SpotView:
+def spot_view(
+    catalogue: IslandCatalogue, spot: Spot, built: Built | None, role: str | None = None
+) -> SpotView:
+    """One spot. `role` is the viewer's captain role: an engineer sees the lower prices."""
     if built is None:
-        return SpotView(
-            spot.id, spot.kind, spot.kinds, False, 0, price_of(catalogue, spot.kind), None
-        )
+        price = engineer_price(catalogue, price_of(catalogue, spot.kind), role)
+        return SpotView(spot.id, spot.kind, spot.kinds, False, 0, price, None)
     kind = kind_of(catalogue, built.kind)
     upgrade = kind.prices[built.level] if built.level < kind.max_level else None
+    if upgrade is not None:
+        upgrade = engineer_price(catalogue, upgrade, role)
     # A tower's skill (GAME-V3 section 5), or a house's role from level 2 (GAME-V3 "Houses").
     allowed = (
         (HOUSE_ROLES if built.level >= HOUSE_ROLE_LEVEL else ())
@@ -105,11 +110,15 @@ def spot_view(catalogue: IslandCatalogue, spot: Spot, built: Built | None) -> Sp
         else RESEARCH_SPECS.get(kind.kind, ())
     )
     spec = built.spec if built.spec in allowed else None
-    return SpotView(spot.id, kind.kind, spot.kinds, True, built.level, kind.coins, upgrade, spec)
+    cost = engineer_price(catalogue, kind.coins, role)
+    return SpotView(spot.id, kind.kind, spot.kinds, True, built.level, cost, upgrade, spec)
 
 
 def plan_spots(
-    catalogue: IslandCatalogue, built: dict[str, Built], spots: tuple[Spot, ...] | None = None
+    catalogue: IslandCatalogue,
+    built: dict[str, Built],
+    spots: tuple[Spot, ...] | None = None,
+    role: str | None = None,
 ) -> tuple[SpotView, ...]:
     """Every build spot (the island's, or `spots`), in the order of the file. Other rows are
     ignored, and so is a row whose kind does not belong on its spot."""
@@ -118,7 +127,7 @@ def plan_spots(
         standing = built.get(spot.id)
         if standing is not None and standing.kind not in spot.kinds:
             standing = None
-        views.append(spot_view(catalogue, spot, standing))
+        views.append(spot_view(catalogue, spot, standing, role))
     return tuple(views)
 
 
@@ -359,22 +368,77 @@ def skill_named(catalogue: IslandCatalogue, skill: str) -> Skill:
 
 
 def check_skill(
-    catalogue: IslandCatalogue, skill: str, known: tuple[str, ...], won_wave: int
+    catalogue: IslandCatalogue,
+    skill: str,
+    known: tuple[str, ...],
+    won_wave: int,
+    role: str | None = None,
 ) -> Skill:
-    """400 bad_skill, 409 known, 409 locked (the tier above first), 409 no_points.
-    The database checks the order and the points again under its lock."""
+    """400 bad_skill, 409 known, 409 closed (its fork twin was picked), 409 wrong_role (a capstone
+    of another role), 409 locked (the tier above first), 409 no_points.
+    The database checks the same again under its lock."""
     entry = skill_named(catalogue, skill)
     if entry.skill in known:
         raise ApiError(409, "known", f"You know {entry.name} already.")
-    if entry.needs is not None and entry.needs not in known:
+    if entry.excludes is not None and entry.excludes in known:
+        raise skill_closed(catalogue, entry)
+    if entry.needs and not any(name in known for name in entry.needs):
         raise skill_locked(catalogue, entry.needs)
+    if entry.role is not None and entry.role != role:
+        raise skill_wrong_role(catalogue, entry, role)
     if skill_points(catalogue, won_wave, known)[0] < entry.cost:
         raise no_points()
     return entry
 
 
-def skill_locked(catalogue: IslandCatalogue, needs: str) -> ApiError:
-    return ApiError(409, "locked", f"Learn {skill_named(catalogue, needs).name} first.")
+def skill_locked(catalogue: IslandCatalogue, needs: tuple[str, ...]) -> ApiError:
+    names = " or ".join(skill_named(catalogue, name).name for name in needs)
+    return ApiError(409, "locked", f"Learn {names} first.")
+
+
+def skill_closed(catalogue: IslandCatalogue, entry: Skill) -> ApiError:
+    twin = skill_named(catalogue, entry.excludes or entry.skill).name
+    return ApiError(
+        409, "closed", f"You chose {twin}, so {entry.name} is closed. Respec to change."
+    )
+
+
+def role_named(catalogue: IslandCatalogue, role: str) -> Role:
+    for entry in catalogue.skills.roles:
+        if entry.role == role:
+            return entry
+    raise ApiError(400, "bad_role", "There is no such role.")
+
+
+def skill_wrong_role(catalogue: IslandCatalogue, entry: Skill, role: str | None) -> ApiError:
+    name = role_named(catalogue, entry.role or "").name
+    if role is None:
+        return ApiError(409, "wrong_role", f"Pick the {name} role first.")
+    return ApiError(409, "wrong_role", f"Only a {name} can learn {entry.name}.")
+
+
+def check_role(
+    catalogue: IslandCatalogue, role: str, captain_level: int, current: str | None
+) -> Role:
+    """400 bad_role, 409 role_known (respec to change), 409 locked (captain level)."""
+    entry = role_named(catalogue, role)
+    if current is not None:
+        raise ApiError(409, "role_known", "You have a role already. Respec to change it.")
+    if captain_level < catalogue.skills.role_level:
+        raise ApiError(409, "locked", f"Reach captain level {catalogue.skills.role_level} first.")
+    return entry
+
+
+def respec_price(catalogue: IslandCatalogue, captain_level: int) -> int:
+    """The coins a respec costs: coinsPerLevel for every captain level."""
+    return catalogue.skills.respec_per_level * max(1, captain_level)
+
+
+def engineer_price(catalogue: IslandCatalogue, price: int, role: str | None) -> int:
+    """An engineer pays engineerDiscountPercent less (rounded to whole coins, never below 1)."""
+    if role != "engineer" or price <= 0:
+        return price
+    return max(1, (price * (100 - catalogue.skills.engineer_discount) + 50) // 100)
 
 
 def no_points() -> ApiError:

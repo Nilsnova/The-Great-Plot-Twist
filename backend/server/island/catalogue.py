@@ -47,17 +47,32 @@ MAX_CAPTAIN_LEVEL = 5
 CREW_KINDS = ("gunner", "carpenter", "lookout")
 # The skills and weapons the database knows (the check rules of 20261112030000_captain_skills.sql),
 # in the order of the tree and the shop. frontend/src/pirates/captain-ids.js lists the same.
+# 20261112120000_captain_tree.sql widened them to five tiers a branch with forks and capstones.
 SKILL_IDS = (
     "steady_aim",
     "long_barrel",
+    "hot_shot",
     "quick_hands",
+    "far_sight",
+    "heavy_shot",
+    "dead_eye",
     "cutlass",
     "sweep",
+    "heavy_blade",
     "second_wind",
+    "snap_shot",
+    "bruiser",
+    "field_surgeon",
     "quick_fix",
     "long_reach",
+    "sturdy_planks",
     "master_shipwright",
+    "swift_hammer",
+    "wide_arc",
+    "grand_engineer",
 )
+# The captain roles (docs/GAME-V3.md, Captain tree and roles): one per captain, picked at roleLevel.
+ROLE_IDS = ("medic", "engineer", "gunner")
 WEAPON_IDS = ("musket", "pistols", "blunderbuss", "long_rifle", "fire_bombs")
 STARTING_WEAPON = "musket"
 # The Tech hub (docs/GAME-V3.md section 5): the four research branches and the skill a tower of that
@@ -151,15 +166,28 @@ class Skill:
     skill: str  # steady_aim
     name: str  # Steady aim
     branch: str  # marksman, brawler or shipwright
-    tier: int  # 1 to 3
+    tier: int  # 1 to 5
     cost: int  # skill points
-    needs: str | None  # the skill of the tier above in the same branch, or None for tier 1
+    needs: tuple[str, ...]  # the skills of the tier above in the same branch (any one opens it)
+    excludes: str | None = None  # the twin of a fork: learning one closes the other
+    role: str | None = None  # a capstone: only this role may learn it
+
+
+@dataclass(frozen=True)
+class Role:
+    role: str  # medic
+    name: str  # Medic
+    branch: str  # the branch whose capstone this role opens
 
 
 @dataclass(frozen=True)
 class SkillTree:
     waves_per_point: int  # one skill point per this many won waves
     tree: tuple[Skill, ...]  # in the order of SKILL_IDS
+    roles: tuple[Role, ...] = ()  # in the order of ROLE_IDS
+    role_level: int = 3  # the captain level that opens the role choice
+    respec_per_level: int = 100  # a respec costs this many coins x the captain level
+    engineer_discount: int = 10  # percent off buildings and upgrades for an engineer
 
 
 @dataclass(frozen=True)
@@ -410,31 +438,72 @@ def read_skills(data: dict) -> SkillTree:
     for index, item in enumerate(read_list(entry, "tree", len(SKILL_IDS))):
         where = f"captainSkills.tree[{index}]"
         needs = item.get("needs")
+        if not isinstance(needs, list):
+            raise IslandFileError(f"{where}: 'needs' must be a list (empty for tier 1).")
+        excludes, role = item.get("excludes"), item.get("role")
         tree.append(
             Skill(
                 skill=read_id(item, "skill", where),
                 name=read_text(item, "name", where, 40),
                 branch=read_id(item, "branch", where),
-                tier=read_whole(item, "tier", where, 1, 3),
+                tier=read_whole(item, "tier", where, 1, 5),
                 cost=read_whole(item, "cost", where, 1, 10),
-                needs=None if needs is None else read_id(item, "needs", where),
+                needs=tuple(read_id({"needs": value}, "needs", where) for value in needs),
+                excludes=None if excludes is None else read_id(item, "excludes", where),
+                role=None if role is None else read_id(item, "role", where),
             )
         )
     if tuple(skill.skill for skill in tree) != SKILL_IDS:
         raise IslandFileError(f"captainSkills.tree must list {', '.join(SKILL_IDS)} in this order.")
-    by_id = {skill.skill: skill for skill in tree}
-    for skill in tree:
-        above = by_id.get(skill.needs) if skill.needs else None
-        if (skill.tier == 1) != (skill.needs is None) or (
-            above is not None and (above.branch != skill.branch or above.tier != skill.tier - 1)
-        ):
-            raise IslandFileError(
-                f"captainSkills: '{skill.skill}' must need the tier above it in its branch."
-            )
+    roles = tuple(
+        Role(
+            role=read_id(item, "role", f"captainSkills.roles[{index}]"),
+            name=read_text(item, "name", f"captainSkills.roles[{index}]", 40),
+            branch=read_id(item, "branch", f"captainSkills.roles[{index}]"),
+        )
+        for index, item in enumerate(read_list(entry, "roles", len(ROLE_IDS)))
+    )
+    if tuple(role.role for role in roles) != ROLE_IDS:
+        raise IslandFileError(f"captainSkills.roles must list {', '.join(ROLE_IDS)} in this order.")
+    check_tree(tree, roles)
+    respec = read_object(entry, "respec")
     return SkillTree(
         waves_per_point=read_whole(entry, "wavesPerPoint", "captainSkills", 1, 100),
         tree=tuple(tree),
+        roles=roles,
+        role_level=read_whole(entry, "roleLevel", "captainSkills", 2, MAX_CAPTAIN_LEVEL),
+        respec_per_level=read_whole(respec, "coinsPerLevel", "captainSkills.respec", 1, 100000),
+        engineer_discount=read_whole(entry, "engineerDiscountPercent", "captainSkills", 1, 50),
     )
+
+
+def check_tree(tree: list[Skill], roles: tuple[Role, ...]) -> None:
+    """The shape of the tree: a tier 1 needs nothing, every other skill needs the skills of the
+    tier above in its branch, a fork is a pair of tier 2 or 4 skills that exclude each other, and
+    a capstone (tier 5) needs the role of its branch."""
+    by_id = {skill.skill: skill for skill in tree}
+    for skill in tree:
+        where = f"captainSkills: '{skill.skill}'"
+        above = [by_id.get(name) for name in skill.needs]
+        if (skill.tier == 1) != (not skill.needs) or any(
+            item is None or item.branch != skill.branch or item.tier != skill.tier - 1
+            for item in above
+        ):
+            raise IslandFileError(f"{where} must need the tier above it in its branch.")
+        if skill.excludes is not None:
+            twin = by_id.get(skill.excludes)
+            if (
+                skill.tier not in (2, 4)
+                or twin is None
+                or twin.excludes != skill.skill
+                or (twin.branch, twin.tier) != (skill.branch, skill.tier)
+            ):
+                raise IslandFileError(f"{where} must exclude its twin on tier 2 or 4.")
+        wanted = next((role.role for role in roles if role.branch == skill.branch), None)
+        if (skill.role is not None) != (skill.tier == 5) or (
+            skill.role is not None and skill.role != wanted
+        ):
+            raise IslandFileError(f"{where}: only the tier 5 capstone has the role of its branch.")
 
 
 def read_weapons(data: dict) -> tuple[Weapon, ...]:
