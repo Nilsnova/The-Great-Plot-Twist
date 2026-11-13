@@ -80,17 +80,17 @@ it('builds from the card: cannon or mortar, upgrade, max level, short of coins, 
     return {fresh, built, lockedUpgrade, upgrade, upgraded, choice, mortar, max, short, shortUpgrade, bell, banner, closedAfterRing, invite, label, room, seen, captain, entries};
   });
   // GAME-V3.md §4: the locked mortar stays on the card, off, "Opens after wave 2."
-  expect(result.fresh).toMatchObject({title: 'Tower spot', choices: ['cannon:false', 'mortar:true'], soon: '', button: ''});
+  expect(result.fresh).toMatchObject({title: 'Tower spot', choices: ['cannon:false', 'mortar:true', 'harpoon:true'], soon: '', button: ''});
   // The HUD hears the island's balance: 100 from GET /api/island, then 70 after the cannon.
   expect(result.built).toEqual({closed: true, toast: 'Cannon built! You have 🪙 70.', coins: 70, reported: [100, 70]});
   expect(result.lockedUpgrade).toMatchObject({title: 'Cannon', pips: 'Level 1 of 5', button: '', soon: 'Level 2: Opens after wave 2.', hire: true});
   expect(result.upgrade).toMatchObject({title: 'Cannon', next: 'Level 2 · 🪙 60', stats: 'Damage 10 → 16 · Range 28 → 31', button: 'Upgrade', disabled: false, reason: ''});
   expect(result.upgraded).toMatchObject({pips: 'Level 2 of 5', toast: 'Cannon is now level 2! You have 🪙 140.', soon: 'Level 3: Opens after wave 5.'});
-  expect(result.choice).toMatchObject({title: 'Tower spot', choices: ['cannon:false', 'mortar:false'], soon: ''});
+  expect(result.choice).toMatchObject({title: 'Tower spot', choices: ['cannon:false', 'mortar:false', 'harpoon:true'], soon: ''});
   expect(result.mortar).toMatchObject({kind: 'mortar', level: 1, built: true});
   // Level 3 after wave 5; level 4 opens after wave 12 (the tower tiers, GAME-V3.md §4.1).
   expect(result.max).toMatchObject({pips: 'Level 3 of 5', button: '', soon: 'Level 4: Opens after wave 12.'});
-  expect(result.short).toMatchObject({choices: ['cannon:true', 'mortar:true']});
+  expect(result.short).toMatchObject({choices: ['cannon:true', 'mortar:true', 'harpoon:true']});
   expect(result.shortUpgrade).toMatchObject({title: 'Mortar', next: 'Level 2 · 🪙 120', disabled: true, reason: 'Not enough 🪙: you need 🪙 110 more.'});
   expect(result.bell).toMatchObject({title: 'Harbor bell', button: 'Ring the bell', disabled: false});
   // The countdown runs on the wall clock: right after the ring it shows 10 s, or less on a busy machine.

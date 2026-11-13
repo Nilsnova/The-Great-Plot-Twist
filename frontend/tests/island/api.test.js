@@ -30,7 +30,7 @@ describe('island api: accepted answers', () => {
     expect(answer.data.spots.map(spot => spot.id)).toEqual(['wall_1', 'wall_2', 'wall_3', 'wall_4', 'wall_5', 'wall_6',
       'cannon_1', 'cannon_2', 'cannon_3', 'cannon_4', 'cannon_5', 'cannon_6', 'cannon_7', 'tower_1', 'house_1', 'house_2',
       'wall_7', 'wall_8', 'wall_9', 'wall_10', 'wall_11', 'wall_12']);
-    expect(answer.data.spots.find(spot => spot.id === 'cannon_1')).toEqual({id: 'cannon_1', kind: 'cannon', kinds: ['cannon', 'mortar'], built: false, level: 0, cost: 30,
+    expect(answer.data.spots.find(spot => spot.id === 'cannon_1')).toEqual({id: 'cannon_1', kind: 'cannon', kinds: ['cannon', 'mortar', 'harpoon'], built: false, level: 0, cost: 30,
       upgradeCost: null, spec: null});
     expect(answer.data.prices).toMatchObject({kinds: {wall: [10, 20, 40, 80, 160], mortar: [60, 120, 240, 480, 960]}, crew: {gunner: {price: 40, max: 2}}, captain: [0, 20, 40, 80, 160]});
     expect(answer.data.crew).toEqual({gunner: 0, carpenter: 0, lookout: 0});

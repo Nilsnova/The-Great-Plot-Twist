@@ -17,7 +17,7 @@ describe('island spots', () => {
     expect(SPOTS.filter(spot => spot.edge === 'ring').map(spot => spot.id)).toEqual(['wall_7', 'wall_8', 'wall_9', 'wall_10', 'wall_11', 'wall_12']);
     expect(SPOTS.filter(spot => spot.slot === 'tower')).toHaveLength(7);
     expect(SPOTS.map(spot => [spot.id, spot.kind])).toEqual(FAKE_SPOTS.map(spot => [spot.id, spot.kind]));
-    expect(Object.fromEntries(Object.entries(KINDS).map(([kind, info]) => [kind, info.cost]))).toEqual({wall: 10, cannon: 30, mortar: 60, watchtower: 40, house: 50});
+    expect(Object.fromEntries(Object.entries(KINDS).map(([kind, info]) => [kind, info.cost]))).toEqual({wall: 10, cannon: 30, mortar: 60, harpoon: 40, watchtower: 40, house: 50});
     // The backend's ids are the table's own; only old draft names go through the alias table.
     for (const id of SPOT_IDS) expect(localSpotId(id)).toBe(id);
     expect(Object.values(SPOT_ALIASES).every(id => SPOT_IDS.includes(id))).toBe(true);

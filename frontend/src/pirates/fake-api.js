@@ -56,8 +56,8 @@ import { ROLES as HOUSE_ROLES, ROLE_LEVEL as HOUSE_ROLE_LEVEL } from '../campaig
 
 export const ISLAND_RULES = Object.freeze({
   startingCoins: 100,
-  kinds: Object.freeze({ wall: ['Wall', 10], cannon: ['Cannon', 30], mortar: ['Mortar', 60], watchtower: ['Watchtower', 40], house: ['House', 50] }),
-  // TOWER-DEFENSE.md §2: 22 spots; cannon_1…cannon_7 take a cannon or a mortar; wall_7…wall_12 are the inner ring (§12).
+  kinds: Object.freeze({ wall: ['Wall', 10], cannon: ['Cannon', 30], mortar: ['Mortar', 60], harpoon: ['Harpoon tower', 40], watchtower: ['Watchtower', 40], house: ['House', 50] }),
+  // TOWER-DEFENSE.md §2: 22 spots; cannon_1…cannon_7 take a cannon, a mortar or (after wave 12) a harpoon tower, Pirate Point's tower spots the first two; wall_7…wall_12 are the inner ring (§12).
   spots: Object.freeze(['wall_1', 'wall_2', 'wall_3', 'wall_4', 'wall_5', 'wall_6', 'cannon_1', 'cannon_2', 'cannon_3', 'cannon_4',
     'cannon_5', 'cannon_6', 'cannon_7', 'tower_1', 'house_1', 'house_2', 'wall_7', 'wall_8', 'wall_9', 'wall_10', 'wall_11', 'wall_12']),
   pointSpots: Object.freeze(['pp_wall_1', 'pp_wall_2', 'pp_wall_3', 'pp_wall_4', 'pp_tower_1', 'pp_tower_2', 'pp_tower_3', 'pp_tower_4', 'pp_tower_5', 'pp_tower_6']),
@@ -83,8 +83,9 @@ const isBoss = run => !run.flagship && run.wave % TD_RULES.bossEvery === 0;
 // tower_sN (the contract's name) and cannon_N (the island's) are one spot.
 const canonicalSpot = spot => (typeof spot === 'string' ? spot.replace(/^tower_s([1-7])$/, 'cannon_$1') : spot);
 const kindOfSpot = spot => (/^(pp_)?wall_/.test(spot) ? 'wall' : /^(cannon_|pp_tower_)/.test(spot) ? 'cannon' : spot === 'tower_1' ? 'watchtower' : 'house');
-// The slot of a spot: a tower spot accepts a cannon or a mortar (§2).
+// The slot of a spot: a tower spot accepts a cannon or a mortar (§2), on the island also a harpoon tower (GAME-V3.md §5).
 const slotOfSpot = spot => (kindOfSpot(spot) === 'cannon' ? 'tower' : kindOfSpot(spot));
+const kindsOfSpot = spot => SLOT_KINDS[slotOfSpot(spot)].filter(kind => kind !== 'harpoon' || !/^pp_/.test(spot));
 // The price lists of GET /api/island (indexed by level - 1; the captain's level 1 is free).
 const PRICES = Object.freeze({ kinds: Object.fromEntries(Object.entries(BUILDINGS).map(([kind, info]) => [kind, [...info.price]])),
   crew: Object.fromEntries(Object.entries(CREW).map(([id, info]) => [id, { price: info.price, max: info.max }])), captain: [...CAPTAIN.price] });
@@ -102,7 +103,7 @@ export function unlocksAt(wave) {
 function spotView(island, id) {
   const level = island.levels?.get(id) ?? (island.built.has(id) ? 1 : 0), kind = island.kinds?.get(id) ?? kindOfSpot(id);
   const prices = BUILDINGS[kind].price;
-  return { id, kind, kinds: [...SLOT_KINDS[slotOfSpot(id)]], built: level > 0, level, cost: prices[0], upgradeCost: level > 0 ? prices[level] ?? null : null,
+  return { id, kind, kinds: [...kindsOfSpot(id)], built: level > 0, level, cost: prices[0], upgradeCost: level > 0 ? prices[level] ?? null : null,
     spec: level > 0 ? readSpec(kind, island.specs?.get(id)) : null };
 }
 const lockedMessage = wave => `Opens after wave ${wave}.`;
@@ -279,8 +280,8 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     if (player.actions.has(`build:${actionUid}`)) return;
     if (spot === 'cabin') refuse(409, 'spot_taken', 'Your cabin already stands there.');
     if (!ids.includes(spot)) refuse(404, 'no_such_spot', 'There is no such build spot here.');
-    const slot = slotOfSpot(spot), allowed = SLOT_KINDS[slot];
-    if (!allowed.includes(kind)) refuse(422, 'wrong_kind', slot === 'tower' ? 'Only a cannon or a mortar can stand on this spot.'
+    const slot = slotOfSpot(spot), allowed = kindsOfSpot(spot);
+    if (!allowed.includes(kind)) refuse(422, 'wrong_kind', slot === 'tower' ? `Only ${allowed.includes('harpoon') ? 'a cannon, a mortar or a harpoon tower' : 'a cannon or a mortar'} can stand on this spot.`
       : `Only a ${ISLAND_RULES.kinds[allowed[0]][0].toLowerCase()} can stand on this spot.`);
     const [name, price] = ISLAND_RULES.kinds[kind];
     if (place.built.has(spot)) refuse(409, 'spot_taken', `${ISLAND_RULES.kinds[place.kinds.get(spot) ?? kindOfSpot(spot)][0]} already stands on this spot.`);
