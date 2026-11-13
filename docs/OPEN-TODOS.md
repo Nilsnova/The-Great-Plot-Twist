@@ -57,6 +57,7 @@ The game is built and live; nobody waits for anyone. You extend it.
 - [ ] **Walkthrough sheet** ([FINAL-ROADMAP A1](FINAL-ROADMAP.md#a-repository-walkthrough-criterion-6-20)): each member writes the page about their own lane (what, where, why, limits, how it could change) in `docs/WALKTHROUGH.md`; one member adds the database/server page with the project owner.
 - [ ] **Mock walkthrough** (A2): each member answers 6 random questions aloud, without notes, about **any** part, including the three course questions: where the data is stored, what the tests cover and miss, what happens when an external API is down.
 - [ ] **Invalid input** (D1): one test per rejected input in your lane (empty, too long, wrong type, repeated click).
+- [x] **D1 current-demo sweep, Johannes:** 67 added cases across class joins, locks/place search, duels, islands and waves; existing email and repeat coverage audited. Evidence and limits in [PR #5](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/5). Other members still add tests for their own changes.
 - [ ] **Test map** (E1): add your lane's row to `docs/TEST-MAP.md`: which tests cover it and what they do not.
 - [ ] **README line** (F1, by Fri 20 Nov): add your own name and student number to the README members table yourself.
 

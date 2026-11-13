@@ -14,6 +14,11 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
+**11 Nov, D1 contribution (Johannes):** [draft PR #5](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/5)
+adds 67 invalid-input/boundary cases using the existing fakes. Backend: **15,894 passed, 257 skipped**;
+Ruff: **All checks passed!** The skips concern optional SQL tools and opt-in database checks.
+Explain-back and human review are pending; no live-database evidence is claimed.
+
 **Plan to the deadline:** [FINAL-ROADMAP.md](FINAL-ROADMAP.md) ranks the remaining work by grade value; members pick tasks there with the [agent prompt](contribute/AGENT-PROMPT.md). **Open to-dos:** the account setup and demo-day list is [OPEN-TODOS.md](OPEN-TODOS.md) (account setup, pre-demo checks, follow-ups, the Moodle deadline). No task there is assigned to a person.
 
 **Current release, 9 Nov 2026 (G29, the class demo):** main `c7f8c95` is live. The title has Play, Join and Settings; a short voiced intro (ElevenLabs) leads to the harbor in two clicks; one class harbor holds up to 40 captains; a quest strip (wave, duel, Keeper's Lock), a two-tap friendly duel, the Keeper's Lock with the player's real weather and the three-lamps finale; a projector QR (J); wow graphics (animated title, pixel sea, dusk and night light, rain and fog); a host-console Class demo panel. All gates passed; the live smoke check has 0 failures. The flag `demo` is on. Guests stay locked out until anonymous sign-ins are allowed in Supabase (OPEN-TODOS.md, 1a). Being built: the class-code gate and email sign-in.
@@ -188,6 +193,9 @@ Nobody has decided these yet. Until they are decided, the plan in [ROADMAP.md](.
 6. **Pick a package.** Take your lane's next package below, or one from "Start today" in ROADMAP.md. Open an issue with the goal, acceptance checks, scope, responsible teammate and likely files. Create your branch from `main` (`git switch main`, `git pull`, then for example `git switch -c feat/l1-live-weather`). Paste the agent brief below and open a draft pull request early.
 
 ## Next steps per lane
+
+**D1 / Johannes:** explain the request, response and no-write assertions in [PR #5](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/5),
+answer the three walkthrough questions, then ask Nils (`Nilsnova`) for independent human review.
 
 Each lane has its next two packages, each with a brief. Fill in the `<...>` parts and paste the brief to your coding agent. The briefs follow the template in [ENGINEERING.md](ENGINEERING.md), section 8, and end with the handover format from [AGENTS.md](../AGENTS.md). What each package ships, provides and must pass is in [ROADMAP.md](../ROADMAP.md).
 
@@ -498,6 +506,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+- **2026-11-11, Johannes Franz Lang with Codex:** D1 adds 67 cases in five existing route-test files on `test/d1-invalid-inputs` ([PR #5](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/5)). Backend 15,894 passed / 257 skipped; Ruff clean; a temporary 65-character action-ID bug was caught and restored. Production code is unchanged; explain-back and human review remain.
 
 - **2026-11-08.** Codex for Nils: integrated reviewed G9 overflow 1–3, collision-aware phone tap-to-walk, idle onboarding, truthful Friends entry, inline case guidance and visual polish across inspection, story and support screens on `integrate/overflow-1-3`. Final clean frontend **3,719/252**, mobile **36**, accessibility **61**, caption **51**, CSP seven pages/zero violations; budgets, recorded native journeys and fault checks pass. [Release evidence](handoff/player-experience-visual-pass.md). Main/deployment verification follows; no backend/SQL/env/provider/workflow changes.
 

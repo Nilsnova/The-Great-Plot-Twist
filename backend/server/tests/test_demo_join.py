@@ -178,7 +178,15 @@ def test_joining_needs_a_login():
 @pytest.mark.parametrize(
     "body",
     [
+        {},
+        {"actionUid": UID},
+        {"code": None, "actionUid": UID},
+        {"code": True, "actionUid": UID},
+        {"code": [], "actionUid": UID},
         {"code": CODE},
+        {"code": CODE, "actionUid": None},
+        {"code": CODE, "actionUid": 123},
+        {"code": CODE, "actionUid": ""},
         {"code": CODE, "actionUid": "nope"},
         {"code": "K" * 33, "actionUid": UID},
         {"code": 12345, "actionUid": UID},
@@ -189,7 +197,7 @@ def test_a_bad_body_is_refused_before_the_database(body):
     client, database, _ = client_with_code()
 
     assert_error(client.post(URL, headers=GUEST, json=body), 422, "validation_error")
-    assert database.calls("demo_class_code_read") == []
+    assert database.requests == []
 
 
 def test_a_guest_whose_login_vanished_gets_404():

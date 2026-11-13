@@ -71,9 +71,11 @@ Value: ★★★ moves a 20% criterion, ★★ a 10% criterion or a clear risk, 
 
 ### D. It works, including invalid input (criterion 1, 20%)
 
+D1 current-demo sweep done in [#5](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/5) by Johannes Franz Lang (`frcola`); explain-back and human review pending. [Scope and limits](../specs/D1-invalid-inputs.md).
+
 | ID | Value | Size | Task | Done when |
 |---|---|---|---|---|
-| D1 | ★★★ | M | **Invalid-input sweep** on the demo workflows: empty, too long, wrong type and repeated requests for join code, email, lock answer, place search, duel challenge. Each must be rejected cleanly by the server with the house error shape | One test per case (backend), all green |
+| D1 | ★★★ | M | **Invalid-input sweep** on the demo workflows: empty, too long, wrong type and repeated requests for join code, email, lock answer, place search, duel challenge. Each must be rejected cleanly by the server with the house error shape | Done for the agreed current-demo scope in [#5](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/5). Valid repeats retain their route-specific behavior; email is checked at the Supabase client boundary. SQL/live checks are not claimed. |
 | D2 | ★★★ | S | **Demo-day dry run** with the checklist in [OPEN-TODOS.md](OPEN-TODOS.md), section 2, on the real projector setup if possible; note every surprise | A dated note in the PR or OPEN-TODOS; problems become issues |
 | D3 | ★★ | S | **API-down drill**: show what the player sees when weather, stock, crypto or sports providers fail (the fallbacks exist); add a short section to A1 | Screenshots and the A1 section |
 | D4 | ★★ | S | **Host-console probes** for the new tables (`demo_class_code`, `demo_guests`) and the sports desk. Needs a small migration; write it, do not apply it (the project owner applies migrations) | Migration file + tests; the PR asks for review and application |
