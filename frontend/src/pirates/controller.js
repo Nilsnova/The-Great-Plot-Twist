@@ -344,7 +344,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     const shot = [{ type: 'captain_fired', t, by: playerId, level: stats.level, weapon: stats.weapon, mode: stats.mode,
       x: player.x, z: player.z, toX, toZ, impactAt: t + reach / stats.shotSpeed, miss: true, targets: [] }];
     wave.renderer?.events(shot); poses.note(shot);
-    cue('pirate-cannon-manual');
+    cue('pirate-musket');
     return true;
   }
   // The cutlass: one blow at a boarder within reach, synced as captain_strike with your skills (Brawler:
@@ -508,6 +508,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       if (event.type === 'wave_event') emit({ type: 'wave_event_announced', event: event.event, wave: event.wave });
       else if (event.type === 'finisher_started') { emit({ type: 'finisher_moment', kind: event.kind, phase: 'start' }); cue('pirate-bell'); }
       else if (event.type === 'finisher_won') { emit({ type: 'finisher_moment', kind: event.kind, phase: 'won' }); cue('pirate-victory'); }
+      else if (event.type === 'ship_spawned' && event.boss) cue('pirate-horn');
       else if (event.type === 'finisher_failed') { emit({ type: 'finisher_moment', kind: event.kind, phase: 'failed' }); cue('pirate-wall'); }
     }
     // Captain health for the narrator (GAME-V3.md §6): only what happens now, not a late joiner's catching up.
@@ -520,9 +521,9 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       if (event.type === 'cannon_fired') {
         cue(event.manual ? 'pirate-cannon-manual' : 'pirate-cannon');
         if (!event.hit) current.splashesAt.push(event.impactAt);
-      } else if (event.type === 'mortar_fired') cue('pirate-cannon');
-      else if (event.type === 'mortar_impact') { cue(event.hits ? 'pirate-hit' : 'pirate-splash'); kick(.08); }
-      else if (event.type === 'captain_fired') cue('pirate-cannon-manual');
+      } else if (event.type === 'mortar_fired') cue('pirate-mortar');
+      else if (event.type === 'mortar_impact') { cue('pirate-mortar-impact'); cue(event.hits ? 'pirate-hit' : 'pirate-splash'); kick(.08); }
+      else if (event.type === 'captain_fired') cue('pirate-musket');
       else if (event.type === 'captain_blast') { cue(event.hits ? 'pirate-hit' : 'pirate-splash'); kick(.06); } else if (event.type === 'ship_hit' && !event.blocked) cue('pirate-hit');
       else if (event.type === 'captain_struck' || event.type === 'boarder_killed') cue('pirate-hit');
       else if (event.type === 'ship_sunk') { cue('pirate-sunk'); if (event.kind === 'flagship') kick(.5); }

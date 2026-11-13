@@ -293,9 +293,11 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     if(draw)graphics.renderer.render(scene,view.camera);
     graphics.sampleFrame(performance.now(),{active:draw&&active&&!outsideBlocked()});
   });
+  let soundcheck=null;
   // Local dev inspection only; Vite removes this branch in the production build.
   if (import.meta.env.DEV) window.__island = { get island(){return island;}, scene, renderer: graphics.renderer,
-    camera: view.camera, view, player: controller.player, settings, quality:setUserQuality, setWeather, emit, on, world, chart, sailing, shell, audio, adapter, get marketUi(){return marketUi;},sportsUi, get marketLoad(){return marketLoad;},mapTouch, experience,isletState,get classDemo(){return classDemo;},get waves(){return waves;} };
+    camera: view.camera, view, player: controller.player, settings, quality:setUserQuality, setWeather, emit, on, world, chart, sailing, shell, audio, adapter, get marketUi(){return marketUi;},sportsUi, get marketLoad(){return marketLoad;},mapTouch, experience,isletState,get classDemo(){return classDemo;},get waves(){return waves;}, soundcheck:()=>soundcheck??=import('./audio/soundcheck.js').then(m=>m.mountSoundcheck({audio})) };
+  if (import.meta.env.DEV && new URLSearchParams(location.search).get('soundcheck')==='1') window.__island.soundcheck();
   function dispose() {
     if(disposed)return;disposed=true;narrator.dispose();container.removeEventListener('close',panelClosed,true);classDemo?.dispose();classDemo=null;waves?.dispose();waves=null;island?.dispose();island=null;void pirates?.then(harness=>harness?.dispose());
     harbor?.dispose();mapTouch?.dispose();touch.dispose();gamepad.dispose();marketUi?.dispose();sportsUi.dispose();stopLiveWeather();stopPreferences();stopMotion();stop();stopView();stopListening();for(const stopOne of stopScale)stopOne?.(); stopArrivals(); stopVisitNamed(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();

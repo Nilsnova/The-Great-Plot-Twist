@@ -6,6 +6,7 @@ import {createAmbience} from './ambience.js';
 import {createMusic} from './music.js';
 import {createFestivalSound} from './festival.js';
 import {createPirateSound} from './pirates.js';
+import {createBattleSounds} from './battle-sounds.js';
 // Keep audio behind a real user gesture and centralize listeners for complete cleanup.
 export function createAudio({container,on,caption}) {
   let context, master, musicBus, effectsBus, voiceBus, duck;
@@ -57,7 +58,8 @@ export function createAudio({container,on,caption}) {
       ambience = createAmbience(context, effectsBus);
       music = createMusic(context, musicBus, synth);
       festivalSound=createFestivalSound(context,musicBus,effectsBus,caption);
-      pirateSound=createPirateSound({synth,effects:effectsBus,music:musicBus,caption,now:()=>context.currentTime});
+      pirateSound=createPirateSound({synth,effects:effectsBus,music:musicBus,caption,now:()=>context.currentTime,battle:createBattleSounds(context),
+        isMuted:bus=>mixVolumes(getPreferences())[bus]===0});
 
       // The station hum is a persistent oscillator whose gain changes with place state.
       hum = context.createOscillator();
@@ -215,6 +217,7 @@ export function createAudio({container,on,caption}) {
       stopHarborCues.forEach(stop => stop());
       for (const voice of [...voices]) voice.stop();
       festivalSound?.dispose();
+      pirateSound?.dispose();
       music?.dispose();
       ambience?.dispose();
       synth?.dispose();
