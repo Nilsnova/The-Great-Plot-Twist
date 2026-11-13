@@ -1095,6 +1095,36 @@ These checks do not prove deployed multiplayer or physical-phone performance.
 See [the test map](TEST-MAP.md#t5--ianno-hollensteiner--island-milestones) and
 [handover](handoff/T5-island-decoration.md).
 
+## 30. Weekly island leaderboard — Ianno Hollensteiner (T7)
+
+**What and where.** Menu → Weekly leaderboard opens the read-only card in
+[island/ui.js](../frontend/src/island/ui.js). The controller in
+[island/index.js](../frontend/src/island/index.js) loads it through
+[island/api.js](../frontend/src/island/api.js). The signed-in
+[route](../backend/server/routes/island.py) calls
+[leaderboard.weekly](../backend/server/island/leaderboard.py).
+
+**How and why.** Completed waves already live in Supabase `wave_runs`. The server
+filters successful island waves from this Monday 00:00 UTC to next Monday, reads
+highest waves first, and keeps the first result for each island. Ten islands means
+ten rows; three means three. Shared multiplayer results count once. A wave-45 win
+followed by a restart at wave 1 still scores 45. Equal scores share rank and medal.
+Only rank, the host's public captain name and wave reach the card; no invite codes,
+private IDs or coins. The wooden board and parchment reuse the game's existing UI.
+
+**Limits and change.** [Tests and evidence](handoff/T7-weekly-leaderboard.md) use
+fakes, not live Supabase. The scan is bounded at 2,000 runs and returns a clear error
+if it cannot finish. Concurrent deletion can shift offset pages. Solo and multiplayer
+are not separated; ties at the cutoff use a stable internal order. Names may match.
+A database aggregate/index could replace pagination after measuring real load.
+
+**Walkthrough questions.** Data: existing Supabase rows, with no new writes. Tests:
+weekly boundaries, repeated islands, restart preservation, ties, paging, the login
+and flag gates, rendering, retries and cleanup; see [the test map](TEST-MAP.md#t7--ianno-hollensteiner--weekly-island-leaderboard).
+An unavailable database produces an error and Try again; offline rehearsal explicitly
+requires an online game rather than claiming fake global scores. The browser cannot
+award a score or reward through this read-only endpoint.
+
 ## The three course questions
 
 ### Q1. Where is the data stored?

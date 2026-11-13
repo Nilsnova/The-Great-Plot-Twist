@@ -14,6 +14,8 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
+**13 Nov, T7 / Ianno:** [draft PR #13](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/13) implements the weekly island leaderboard. Highest win per island this UTC week, up to ten rows, shared islands counted once; Harbor noticeboard and medal badges. [Evidence and limits](handoff/T7-weekly-leaderboard.md). Explain-back and independent human review pending; no live database/deployment verification claimed.
+
 **13 Nov, T5 / Ianno:** [PR #10](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/10) adds a number-only rank shield above/right of the cabin, a wave-25 statue and trees at 100%, 110% or 120% size for zero, one or two houses. Original island-style drawings; existing progress only. Verification is recorded in [the T5 handover](handoff/T5-island-decoration.md); introductory explain-back completed; approval by Nils (`Nilsnova`) or Johannes Franz Lang (`frcola`) is required before merge.
 
 **13 Nov, T26 / Ianno:** island Harbor weather entry implemented in [PR #8](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/8). Reuses the existing card; [local evidence and limits](handoff/T26-weather-board.md). Explain-back and human review pending.
@@ -197,6 +199,8 @@ Nobody has decided these yet. Until they are decided, the plan in [ROADMAP.md](.
 6. **Pick a package.** Take your lane's next package below, or one from "Start today" in ROADMAP.md. Open an issue with the goal, acceptance checks, scope, responsible teammate and likely files. Create your branch from `main` (`git switch main`, `git pull`, then for example `git switch -c feat/l1-live-weather`). Paste the agent brief below and open a draft pull request early.
 
 ## Next steps per lane
+
+**T7 / Ianno:** complete explain-back on the query, multiplayer grouping and failure limits; ask Nils (`Nilsnova`) or Johannes (`frcola`) to review PR #13. Keep draft until explain-back is complete; do not merge without a current independent human approval.
 
 **T5 / Ianno:** introductory explain-back completed with clarifications. Nils (`Nilsnova`) or Johannes Franz Lang (`frcola`) must independently review and approve the current diff before merge.
 
@@ -514,6 +518,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+- **2026-11-13, T7 / Ianno with Codex:** weekly island leaderboard implemented on `feat/t7-weekly-leaderboard`, [PR #13](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/13). D037 records weekly island scoring; [handover](handoff/T7-weekly-leaderboard.md) records checks, sample-data screenshots and remaining explain-back/live verification.
 
 - **13 Nov 2026, T5 explain-back:** Ianno discussed number/rank updates, the highest-wave record after a loss, and releasing old textures. Clarifications were supplied for the first and third answers. Ianno requests approval by Nils or Johannes Franz Lang before this PR is merged.
 

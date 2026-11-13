@@ -433,6 +433,32 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
       return done;
     });
   }
+  function leaderboardCard({data = null, loading = false, message = ''}, retry) {
+    open('leaderboard', 'Weekly leaderboard', body => {
+      body.append(line('island-purpose', 'Resets each Monday at 00:00 UTC.'));
+      if (data) {
+        const headings = node('div', 'island-leaderboard-labels'); headings.setAttribute('aria-hidden', 'true');
+        headings.append(node('span', '', 'Island'), node('span', '', 'Wave')); body.append(headings);
+        const list = node('ol', 'island-leaderboard'); list.setAttribute('aria-label', 'Island results');
+        for (const row of data.entries) {
+          const item = node('li', `island-leaderboard-row${row.rank <= 3 ? ` is-rank-${row.rank}` : ''}`);
+          const rank = node('span', 'island-leaderboard-rank', String(row.rank));
+          rank.setAttribute('aria-label', `Rank ${row.rank}`);
+          const name = node('strong', 'island-leaderboard-name', row.name);
+          name.setAttribute('aria-label', `${row.name}'s island`);
+          const wave = node('span', 'island-leaderboard-wave', String(row.wave));
+          wave.setAttribute('aria-label', `Wave ${row.wave}`);
+          item.append(rank, name, wave);
+          list.append(item);
+        }
+        body.append(list, line('island-purpose', data.entries.length ? '' : 'No waves won this week.'));
+      }
+      body.append(line('island-purpose', loading ? 'Loading…' : '', 'status'), line('island-message', message, 'alert'));
+      const refresh = button(message ? 'Try again' : 'Refresh', retry, true); refresh.disabled = loading; refresh.dataset.focus = 'refresh';
+      body.append(refresh);
+      return null; // Start at the close button so a long phone list opens at its beginning.
+    });
+  }
   function bellCard(model, onAction) {
     open('bell', model.title, body => {
       const line = node('p', 'island-purpose', model.line);
@@ -514,7 +540,7 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
     });
   }
   return {
-    buildCard, bellCard, inviteCard, lobbyCard, crewCard, captainCard, captainsCard, harborCard, techCard, wreckCard, demolishCard, close, copyLink,
+    leaderboardCard, buildCard, bellCard, inviteCard, lobbyCard, crewCard, captainCard, captainsCard, harborCard, techCard, wreckCard, demolishCard, close, copyLink,
     // Re-draw the open card from fresh models (the island controller calls this on every change).
     get open() { return kind; },
     get active() { return !!modal; },

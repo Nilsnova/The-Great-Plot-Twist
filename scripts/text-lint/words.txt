@@ -2706,3 +2706,6 @@ wide
 cheaper
 harder
 helps
+leaderboard
+rank
+weekly

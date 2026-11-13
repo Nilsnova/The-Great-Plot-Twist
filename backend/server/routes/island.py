@@ -196,7 +196,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from server.auth import Player, PlayerDep
 from server.errors import ApiError
 from server.flags import is_enabled
-from server.island import rules, service
+from server.island import leaderboard, rules, service
 from server.island.catalogue import IslandCatalogue
 from server.island.rules import ResearchTier, SpotView
 from server.island.service import CampaignView, DemolishView, IslandCatalogueDep, IslandView
@@ -642,6 +642,11 @@ async def get_island(
     player: IslandPlayerDep, catalogue: IslandCatalogueDep, admin: AdminDep
 ) -> IslandResponse:
     return island_out(await service.look(admin, catalogue, player.id), catalogue)
+
+
+@router.get("/island/leaderboard")
+async def get_leaderboard(player: IslandPlayerDep, admin: AdminDep) -> leaderboard.Leaderboard:
+    return await leaderboard.weekly(admin)
 
 
 @router.post("/island/build")
