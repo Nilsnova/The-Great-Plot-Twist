@@ -468,7 +468,16 @@ These frames are **to be written by the lane's members** (what, where, why, limi
 ### Lane H: Harbor and coins
 - **Where it lives:** [frontend/src/harbor/](../frontend/src/harbor/) (the market stall, the match board, the weather board, the overview), [frontend/src/lib/coins.js](../frontend/src/lib/coins.js), the server parts in part 6 and [D034](DECISIONS.md).
 - **Known facts:** whole coins; stakes of 5, 10 or 25; the market stall is "Up or down in 5 minutes?" with 2 × stake for a right call ([D034](DECISIONS.md)); no prediction market ([D035](DECISIONS.md)).
-- **Known issue:** `tests/harbor/cards.test.js` "lists the three stalls…" fails ([OPEN-TODOS.md](OPEN-TODOS.md), section 7).
+- **T26 verification:** the existing Harbor card tests passed locally; see [the recorded evidence](handoff/T26-weather-board.md).
+
+### T26: opening weather from the island Harbor (Ianno Hollensteiner)
+
+- **What and where:** after wave 4, [harborModel](../frontend/src/island/card-model.js) lists Weather board alongside the market and match boards. [game.js](../frontend/src/game.js) routes that selection to the existing [Harbor host](../frontend/src/harbor/host.js). The island closes its card before opening the weather dialog.
+- **Why:** reuse the [weather card](../frontend/src/harbor/overview.js) and the reading already fetched by [net/weather.js](../frontend/src/net/weather.js), rather than add a second request or another weather screen. [island.css](../frontend/src/island/island.css) stacks stall text and buttons in the narrow docked Harbor.
+- **Data and authority:** [weather-model.js](../frontend/src/harbor/weather-model.js) formats the latest reading, storm/fog effects, stale notice and calm fallback. This change only opens a display; it does not start waves or decide their weather. The server still supplies wave conditions. No new storage or database write is added.
+- **Limits:** the card reads weather when opened; it does not refresh while open. Its latest reading can differ from conditions fixed for a running wave. Local fakes do not prove a live provider, physical phone or deployed account works.
+- **How it could change:** subscribe the open card to weather updates if players need it; keep one fetcher and one weather renderer.
+- **Tests:** [weather-board.test.js](../frontend/tests/island/weather-board.test.js) checks the unlock, one dialog, focus, Escape, cleanup and storm/stale/missing readings; [check-island-weather.js](../frontend/scripts/check-island-weather.js) exercises the running game's wiring at both required sizes. See [T26 evidence](handoff/T26-weather-board.md).
 
 ### Lane U: Look and feel
 - **Where it lives:** [frontend/src/ui/](../frontend/src/ui/), [frontend/src/ui/kit/](../frontend/src/ui/kit/), [frontend/src/front-door/](../frontend/src/front-door/).

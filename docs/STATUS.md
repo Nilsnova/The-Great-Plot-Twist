@@ -14,6 +14,8 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
+**13 Nov, T26 / Ianno:** island Harbor weather entry implemented in [PR #8](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/8). Reuses the existing card; [local evidence and limits](handoff/T26-weather-board.md). Explain-back and human review pending.
+
 **11 Nov, D1 contribution (Johannes):** [draft PR #5](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/5)
 adds 67 invalid-input/boundary cases using the existing fakes. Backend: **15,894 passed, 257 skipped**;
 Ruff: **All checks passed!** The skips concern optional SQL tools and opt-in database checks.
@@ -193,6 +195,8 @@ Nobody has decided these yet. Until they are decided, the plan in [ROADMAP.md](.
 6. **Pick a package.** Take your lane's next package below, or one from "Start today" in ROADMAP.md. Open an issue with the goal, acceptance checks, scope, responsible teammate and likely files. Create your branch from `main` (`git switch main`, `git pull`, then for example `git switch -c feat/l1-live-weather`). Paste the agent brief below and open a draft pull request early.
 
 ## Next steps per lane
+
+**T26 / Ianno:** review the small weather-entry diff, answer the explain-back questions, then ask Johannes (`frcola`) for independent human review.
 
 **D1 / Johannes:** explain the request, response and no-write assertions in [PR #5](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/5),
 answer the three walkthrough questions, then ask Nils (`Nilsnova`) for independent human review.
@@ -506,6 +510,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+- **2026-11-13.** Codex for Ianno: T26 island Harbor weather access, regression tests and desktop/phone screenshots in PR #8; see [evidence](handoff/T26-weather-board.md). Human explain-back/review pending.
 
 - **2026-11-11, Johannes Franz Lang with Codex:** D1 adds 67 cases in five existing route-test files on `test/d1-invalid-inputs` ([PR #5](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/5)). Backend 15,894 passed / 257 skipped; Ruff clean; a temporary 65-character action-ID bug was caught and restored. Production code is unchanged; explain-back and human review remain.
 
