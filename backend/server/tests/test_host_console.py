@@ -26,6 +26,12 @@ SUMMARY = {
     "schemaObjects": {"profiles": True, "exchange_positions": True},
     "lastKeepaliveAt": None,
 }
+GAME = {
+    "islands": {"total": 9, "createdToday": 2},
+    "games": {"withMembers": 3, "maxMembers": 6},
+    "waves": {"runningNow": 1, "finishedToday": 5, "bestWave": 14},
+    "demo": {"codeActive": True, "guestsToday": 21},
+}
 CREW = {
     "id": CREW_ID,
     "code": "K7QF2M",
@@ -90,6 +96,28 @@ def test_overview_has_aggregates_readiness_and_explicit_unknowns():
     assert body["build"]["version"]
     assert response.headers["cache-control"] == "private, no-store"
     assert seen[0].url.path.endswith("/host_console_overview")
+
+
+def test_overview_passes_the_game_counts_and_drops_anything_else():
+    extra = {
+        "islands": {**GAME["islands"], "code": "K7Q2M"},
+        **{k: GAME[k] for k in list(GAME)[1:]},
+    }
+    client, _ = client_for(lambda _: httpx.Response(200, json={**SUMMARY, "game": extra}))
+    body = client.get("/api/host/overview", headers=HOST_HEADER).json()
+    assert body["game"] == GAME
+
+
+def test_overview_without_the_game_key_still_works_before_the_migration():
+    client, _ = client_for()
+    body = client.get("/api/host/overview", headers=HOST_HEADER).json()
+    assert body["game"] is None
+
+
+def test_overview_refuses_a_game_key_it_cannot_read():
+    bad = {**GAME, "waves": {"runningNow": -1, "finishedToday": 0, "bestWave": 0}}
+    client, _ = client_for(lambda _: httpx.Response(200, json={**SUMMARY, "game": bad}))
+    assert client.get("/api/host/overview", headers=HOST_HEADER).status_code == 502
 
 
 def test_recent_crews_show_only_captain_names_and_safe_fields():
