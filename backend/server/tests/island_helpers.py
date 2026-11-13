@@ -115,7 +115,7 @@ PAID_FUNCTIONS = (
     "island_weapon_buy",
     "island_research",
     "island_wreck_repair",
-    "island_respec",
+    "island_respec_at_level",
 )
 PAID_DONE = {"status": "done", "level": 2, "balance": 70, "repeat": False}
 ROLE_PICKED = {"status": "done", "role": "medic", "repeat": False}

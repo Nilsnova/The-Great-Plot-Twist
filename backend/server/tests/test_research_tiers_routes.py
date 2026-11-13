@@ -96,13 +96,31 @@ def test_tiers_go_one_at_a_time_never_above_three_and_only_with_an_option_of_the
 
 @pytest.mark.parametrize(
     "reason,status",
-    [("closed", 409), ("needs_tier", 409), ("top_tier", 409), ("known", 409)],
+    [
+        ("closed", 409),
+        ("needs_tier", 409),
+        ("top_tier", 409),
+        ("known", 409),
+        ("wave_running", 409),
+    ],
 )
 def test_the_database_has_the_last_word_on_the_tiers(reason, status):
     world = world_at(20)
     researched(world, cannon=(1, None, None))
     world.database.paid_replies["island_research"] = {"status": "refused", "reason": reason}
     assert_error(research(world, tier=2, choice="rapid_2"), status, reason)
+
+
+def test_research_during_a_wave_is_a_plain_409_wave_running():
+    world = world_at(20)
+    researched(world, cannon=(1, None, None))
+    world.database.paid_replies["island_research"] = {
+        "status": "refused",
+        "reason": "wave_running",
+    }
+    response = research(world, tier=2, choice="rapid_2")
+    assert_error(response, 409, "wave_running")
+    assert "between waves" in response.json()["error"]["message"].lower()
 
 
 def test_the_island_shows_every_branch_tier_and_the_options_with_their_prices():

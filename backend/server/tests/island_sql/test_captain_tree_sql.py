@@ -11,6 +11,7 @@ import pytest
 psycopg = pytest.importorskip("psycopg")
 
 from server.tests.island_sql.test_captain_skills_sql import learn, row, won  # noqa: E402
+from server.tests.island_sql.test_demolish_sql import coins  # noqa: E402
 from server.tests.island_sql.test_islands_and_waves_sql import (  # noqa: E402
     OWNER,
     add_players,
@@ -36,9 +37,10 @@ def pick(database, role, level=3):
     return call(database, "select public.island_pick_role(%s, %s, %s)", OWNER, role, level)
 
 
-def respec(database, uid, price=10):
+def respec(database, uid, per_level=10):
+    """A respec at p_per_level coins per captain level (20261113010000_..._guards.sql)."""
     as_server(database)
-    return call(database, "select public.island_respec(%s, %s, %s)", OWNER, uid, price)
+    return call(database, "select public.island_respec_at_level(%s, %s, %s)", OWNER, uid, per_level)
 
 
 def start(database):
@@ -96,13 +98,16 @@ def test_a_respec_costs_coins_clears_skills_and_role_and_repeats_safely(database
     set_island(database, captain_level=3)
     learn(database, OWNER, "steady_aim", "click-0002")
     pick(database, "gunner")
-    assert respec(database, "click-0003", 5000)["reason"] == "insufficient_funds"
+    # Captain level 3: 100 coins a level is 300 coins.
+    poor = respec(database, "click-0003", 5000)
+    assert (poor["reason"], poor["price"]) == ("insufficient_funds", 15000)
+    coins(database, OWNER, 900)
     start_balance = balance(database, OWNER)
     done = respec(database, "click-0004", 100)
-    assert (done["status"], done["repeat"], done["balance"]) == ("done", False, start_balance - 100)
+    assert (done["status"], done["repeat"], done["balance"]) == ("done", False, start_balance - 300)
     assert respec(database, "click-0004", 100)["repeat"] is True
-    assert balance(database, OWNER) == start_balance - 100
-    assert ledger(database, OWNER, "captain_respec") == [(-100, "respec:click-0004")]
+    assert balance(database, OWNER) == start_balance - 300
+    assert ledger(database, OWNER, "captain_respec") == [(-300, "respec:click-0004")]
     as_owner(database)
     cleared = database.execute(
         "select captain_skills, captain_role from public.islands where player_id = %s", (OWNER,)
@@ -113,7 +118,7 @@ def test_a_respec_costs_coins_clears_skills_and_role_and_repeats_safely(database
 
 def test_no_browser_role_may_run_the_new_functions(database):
     pick_sig = "public.island_pick_role(uuid, text, integer)"
-    respec_sig = "public.island_respec(uuid, text, integer)"
+    respec_sig = "public.island_respec_at_level(uuid, text, integer)"
     rights = database.execute(
         "select has_function_privilege('authenticated', %s, 'execute'),"
         " has_function_privilege('anon', %s, 'execute'),"

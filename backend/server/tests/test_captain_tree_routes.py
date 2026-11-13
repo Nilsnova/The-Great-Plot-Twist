@@ -104,21 +104,31 @@ def test_the_island_shows_role_roles_and_the_respec_price():
 def test_a_respec_costs_coins_scaled_by_level_and_is_checked_on_the_server():
     world = world_at(8, captain_level=4, captain_skills=["steady_aim"])
     assert world.post("/api/island/respec", actionUid="click-0009").status_code == 200
-    (call,) = world.database.calls("island_respec")
-    assert (call["p_price"], call["p_action_uid"]) == (400, "click-0009")
+    (call,) = world.database.calls("island_respec_at_level")
+    # The server sends the price PER LEVEL; the database multiplies by the level under lock.
+    assert (call["p_per_level"], call["p_action_uid"]) == (100, "click-0009")
+    assert "p_price" not in call
     nothing = world_at(8)
     assert_error(
         nothing.post("/api/island/respec", actionUid="click-0009"), 409, "nothing_to_reset"
     )
     poor = world_at(8, captain_skills=["steady_aim"])
-    poor.database.paid_replies["island_respec"] = {
+    poor.database.paid_replies["island_respec_at_level"] = {
         "status": "refused", "reason": "insufficient_funds", "price": 100,
     }  # fmt: skip
     assert_error(poor.post("/api/island/respec", actionUid="click-0009"), 409, "insufficient_funds")
+    running = world_at(8, captain_skills=["steady_aim"])
+    running.database.paid_replies["island_respec_at_level"] = {
+        "status": "refused",
+        "reason": "wave_running",
+    }
+    response = running.post("/api/island/respec", actionUid="click-0009")
+    assert_error(response, 409, "wave_running")
+    assert "between waves" in response.json()["error"]["message"].lower()
     repeat = world_at(8, captain_skills=["steady_aim"])
     repeat.database.ledger_refs.add(("captain_respec", "respec:click-0009"))
     assert repeat.post("/api/island/respec", actionUid="click-0009").status_code == 200
-    assert repeat.database.calls("island_respec") == []
+    assert repeat.database.calls("island_respec_at_level") == []
 
 
 def test_an_engineer_pays_ten_percent_less_to_upgrade_and_sees_it_on_the_spots():

@@ -176,7 +176,7 @@ export function captainModel({captain = null, coins = null, unlocks = null, busy
 //               | 'closed' (its fork twin was chosen; greyed until a respec); node.reason says which.
 export const skillPointsText = points => `Skill points: ${Number.isSafeInteger(points) ? points : '?'}`;
 export function skillsModel({skills = null, wonWave = 0, picked = null, busy = null, message = '', coins = null, captainLevel = 1,
-  pickedRole = null, busyRole = null, respecAsk = false, busyRespec = false} = {}) {
+  pickedRole = null, busyRole = null, respecAsk = false, busyRespec = false, battle = false} = {}) {
   const role = isRole(skills?.role) ? skills.role : null;
   const known = readSkills(skills?.known ?? []).filter(id => SKILL_BY_ID[id]);
   const points = Number.isSafeInteger(skills?.points) ? skills.points : Math.max(0, pointsEarned(wonWave) - pointsSpent(known));
@@ -224,6 +224,7 @@ export function skillsModel({skills = null, wonWave = 0, picked = null, busy = n
   const respec = {price, priceText: coinText(price), line: 'Forget every skill and your role, get your points back and choose again.',
     button: busyRespec ? 'Resetting…' : respecAsk ? `Yes, reset for ${coinText(price)}` : `Respec · ${coinText(price)}`, ask: respecAsk && !nothing, disabled: busyRespec, reason: ''};
   if (nothing) { respec.disabled = true; respec.reason = 'Nothing to reset yet.'; }
+  else if (battle) { respec.disabled = true; respec.reason = 'Between waves only.'; } // the server refuses wave_running too
   else if (coins === null) respec.reason = 'Your coins are still loading.';
   else if (coins < price) { respec.disabled = true; respec.reason = `Not enough 🪙: you need ${coinText(price - coins)} more.`; }
   return {title: 'Skills', points, pointsText: skillPointsText(points), line: 'Win new waves to earn skill points: one for every two waves.',
@@ -325,7 +326,7 @@ export function harborModel({campaign = null} = {}) {
 //   branches: [{branch, name, tier, summary, folded, tiers: [{tier, state, fork, reason, nodes: [{id, name,
 //     line, state, note, button: {label, aria, disabled, reason, action: {branch, tier, choice, change}} | null}]}]}]
 //   tier state: done · next · locked;  node state: done · chosen · closed · open · locked
-export function techModel({campaign = null, coins = null, busy = null, message = ''} = {}) {
+export function techModel({campaign = null, coins = null, busy = null, message = '', battle = false} = {}) {
   const open = isOpen(campaign, 'tech_hub');
   const sent = new Map((campaign?.research?.branches ?? []).map(item => [item?.branch, item]));
   const busyKey = action => `${action.branch}:${action.tier}:${action.choice ?? ''}`;
@@ -340,6 +341,7 @@ export function techModel({campaign = null, coins = null, busy = null, message =
       if (!open) return lockedLine('tech_hub');
       if (!isOpen(campaign, tierItem(tier))) return `${opensText(tierWave(tier))}.`;
       if (state.tier < tier - 1) return `Research tier ${tier - 1} first.`;
+      if (battle) return 'Between waves only.'; // a tier-3 change would strip a capstone mid-wave; the server refuses too
       if (busy) return '';
       if (coins === null) return 'Your coins are still loading.';
       if (coins < price) return `Not enough 🪙: you need ${coinText(price - coins)} more.`;
