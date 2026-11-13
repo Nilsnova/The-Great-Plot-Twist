@@ -322,14 +322,19 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     return [...paid].map(([id, coins]) => ({ id, paid: coins, coins: Math.floor(coins / 2) })).filter(item => item.paid > 0)
       .sort((a, b) => b.paid - a.paid || (a.id < b.id ? -1 : 1));
   }
+  // No tear-down, research step or respec while a wave runs on the island (the server's wave_running).
+  function waveGuard(island, message) {
+    for (const run of world.waves.values()) {
+      if (run.place === island.code && running(run)) refuse(409, 'wave_running', message);
+    }
+  }
+  const BETWEEN_WAVES = 'A wave is under way. Research and respec between waves.';
   const PROTECTED = new Set(['cabin', 'heart', 'island_cabin', 'island_bell', 'island_harbor', 'island_techhub', 'island_wreck']);
   function demolishable(island, spot) {
     if (PROTECTED.has(spot)) refuse(409, 'protected', 'The heart of the island stays. Only walls, towers and houses come down.');
     if (!ISLAND_RULES.spots.includes(spot)) refuse(404, 'no_such_spot', 'There is no such build spot here.');
     if (!island.built.has(spot)) refuse(409, 'not_built', 'Nothing stands on this spot now.');
-    for (const run of world.waves.values()) {
-      if (run.place === island.code && running(run)) refuse(409, 'wave_running', 'A wave is under way. Tear it down between waves.');
-    }
+    waveGuard(island, 'A wave is under way. Tear it down between waves.');
     const kind = island.kinds?.get(spot) ?? kindOfSpot(spot);
     return { spot, kind, name: ISLAND_RULES.kinds[kind][0], level: island.levels?.get(spot) ?? 1,
       refunds: refundsOf(island, spot).map(item => ({ id: item.id, name: nameOf(item.id), coins: item.coins, you: item.id === playerId })) };
@@ -411,6 +416,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       const player = me(), island = world.islands.get(player.code), price = respecPrice(island.captain ?? 1);
       if (player.actions.has(`respec:${actionUid}`)) return view();
       if (!learnt(island).length && !island.role) refuse(409, 'nothing_to_reset', 'You have no skills or role to reset.');
+      waveGuard(island, BETWEEN_WAVES);
       if (player.coins < price) refuse(409, 'insufficient_funds', `A respec costs ${price} coins. You need more coins.`);
       player.coins -= price; island.skills = []; island.role = null; player.actions.set(`respec:${actionUid}`, true);
       return view();
@@ -447,6 +453,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       if (tier > TOP_TIER) refuse(409, 'top_tier', `${entry.name} have ${TOP_TIER} tiers.`);
       if (tier === 1 ? choice !== null : !optionsOf(branch, tier).includes(choice)) refuse(400, 'bad_research', 'Pick one of the two options.');
       if (player.actions.has(`research:${actionUid}`)) return island === mine ? view() : visitedView(island);
+      waveGuard(island, BETWEEN_WAVES);
       const item = tier === 1 ? 'tech_hub' : `research_${tier}`;
       if (unlocking && island.waveBest < waveOf(item)) refuse(409, 'locked', lockedMessage(waveOf(item)));
       island.research = island.research ?? [];
