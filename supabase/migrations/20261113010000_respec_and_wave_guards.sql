@@ -5,7 +5,7 @@
 --   Two small repairs to the Tech hub and the captain tree, found in the review
 --   of the 12 Nov releases (open todos T23 and T24).
 --
---   T23  island_respec() charged a price the Python server worked out BEFORE
+--   T23  island_respec() (20261112120000) charged a price the Python server worked out BEFORE
 --        any lock (coinsPerLevel x captain level, read earlier). A captain
 --        upgrade at the same moment could make the player pay the old price.
 --        The function now takes the price PER LEVEL (p_per_level, coins per
@@ -19,10 +19,13 @@
 --        and a respec clears the captain's skills (a wave that is running
 --        reads those too). The test is the one island_demolish() uses.
 --
---     island_respec()    dropped (the argument p_price becomes p_per_level, and
---                        Postgres will not rename an argument in place) and
---                        made again; the price is computed under the lock; new
---                        refusal wave_running.
+--     island_respec_at_level()  NEW, replaces island_respec(): the price is
+--                        computed under the lock from p_per_level; new refusal
+--                        wave_running. The old island_respec() is dropped at
+--                        the end of section 1 (20261112120000 is applied and
+--                        is never edited; a new name lets every migration be
+--                        replayed, since 120000 makes island_respec() again and
+--                        this file drops it again).
 --     island_research()  recreated with ONE addition: the wave_running refusal.
 --                        Nothing else changed (checked with a diff against
 --                        20261112100000_research_tiers.sql).
@@ -53,21 +56,23 @@
 --   20261112120000_captain_tree.sql (island_respec, captain_role).
 --
 -- SAFE TO RUN TWICE
---   island_respec() is dropped "if exists" before it is made (the signature keeps its
---   types, so a second run drops and makes the same function);
+--   island_respec_at_level() uses "create or replace"; island_respec() is dropped
+--   "if exists" (a replay of 20261112120000 makes it again, this file drops it);
 --   island_research() uses "create or replace" (its signature is unchanged);
 --   revokes, grants and comments repeat.
 --
 -- HOW THE FILE IS ORGANISED
---   1. island_respec(): the price per level, worked out under the lock, and no
---      respec during a wave
+--   1. island_respec_at_level(): the price per level, worked out under the lock,
+--      and no respec during a wave; the old island_respec() is dropped
 --   2. island_research(): no research step during a wave
 --
 -- HOW TO VERIFY (read-only queries, after applying)
 --   a. select pg_get_function_identity_arguments(p.oid) from pg_proc p
 --       join pg_namespace n on n.oid = p.pronamespace
---      where n.nspname = 'public' and p.proname = 'island_respec';
+--      where n.nspname = 'public' and p.proname = 'island_respec_at_level';
 --      -- one row: p_player_id uuid, p_action_uid text, p_per_level integer
+--      select count(*) from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+--       where n.nspname = 'public' and p.proname = 'island_respec';           -- 0
 --   b. select count(*) from pg_proc p join pg_namespace n on n.oid = p.pronamespace
 --       where n.nspname = 'public' and p.proname = 'island_research';       -- 1
 --   c. Only the server may run the functions (browser and visitor false):
@@ -76,16 +81,16 @@
 --             has_function_privilege('anon', p.oid, 'execute') as visitor,
 --             has_function_privilege('service_role', p.oid, 'execute') as server
 --        from pg_proc p join pg_namespace n on n.oid = p.pronamespace
---       where n.nspname = 'public' and p.proname in ('island_respec', 'island_research');
+--       where n.nspname = 'public' and p.proname in ('island_respec_at_level', 'island_research');
 --   d. Both bodies carry the wave test:
 --      select p.proname, position('wave_running' in pg_get_functiondef(p.oid)) > 0
 --        from pg_proc p join pg_namespace n on n.oid = p.pronamespace
---       where n.nspname = 'public' and p.proname in ('island_respec', 'island_research');
+--       where n.nspname = 'public' and p.proname in ('island_respec_at_level', 'island_research');
 -- =============================================================================
 
 
 -- -----------------------------------------------------------------------------
--- 1. island_respec(): the price per level, worked out under the lock
+-- 1. island_respec_at_level(): the price per level, worked out under the lock
 -- -----------------------------------------------------------------------------
 --   p_player_id   the player (a respec is always of the player's own captain)
 --   p_action_uid  the click id (ledger ref respec:<uid>)
@@ -96,10 +101,10 @@
 -- player_not_set_up | no_island | wave_running | nothing_to_reset |
 -- insufficient_funds}.
 
--- The argument is renamed: the old function goes first (a second run drops this one).
-drop function if exists public.island_respec(uuid, text, integer);
+-- A new name: 20261112120000 is applied and stays as it is, so the argument is not
+-- renamed in place. The old island_respec() is dropped below.
 
-create function public.island_respec(
+create or replace function public.island_respec_at_level(
   p_player_id   uuid,
   p_action_uid  text,
   p_per_level   integer
@@ -168,16 +173,22 @@ begin
 end;
 $$;
 
-revoke all on function public.island_respec(uuid, text, integer)
+revoke all on function public.island_respec_at_level(uuid, text, integer)
   from public, anon, authenticated, service_role;
-grant execute on function public.island_respec(uuid, text, integer)
+grant execute on function public.island_respec_at_level(uuid, text, integer)
   to service_role;
 
-comment on function public.island_respec(uuid, text, integer) is
+comment on function public.island_respec_at_level(uuid, text, integer) is
   'Clears the captain''s skills and role for p_per_level x the captain level coins (wallet reason captain_respec, ref respec:<uid>); the level is read under the island lock, so an upgrade at the same moment cannot be undercharged or overcharged. The skill points come back because they are computed from won_wave_best minus the skills learnt. Locks the wallet, then the island. A repeated actionUid answers {status: done, repeat: true}. Refuses player_not_set_up, no_island, wave_running (a wave runs on the island), nothing_to_reset and insufficient_funds (with the price), with nothing changed. Only service_role may run it.';
 
 
 -- -----------------------------------------------------------------------------
+
+-- The old function (price computed by the caller, no wave test) is gone. A replay
+-- of 20261112120000 makes it again; this drop removes it again.
+drop function if exists public.island_respec(uuid, text, integer);
+
+
 -- 2. island_research(): no research step while a wave runs
 -- -----------------------------------------------------------------------------
 -- The same function as 20261112100000_research_tiers.sql with ONE addition: after

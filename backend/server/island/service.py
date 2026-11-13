@@ -577,7 +577,7 @@ async def respec(
         per_level = catalogue.skills.respec_per_level
         validate_transaction(-per_level, "captain_respec", ref)
         arguments = {"p_player_id": player_id, "p_action_uid": action_uid, "p_per_level": per_level}
-        outcome = await store.run_paid(admin, "island_respec", arguments)
+        outcome = await store.run_paid(admin, "island_respec_at_level", arguments)
         if isinstance(outcome, Refusal):
             if outcome.reason == "nothing_to_reset":
                 raise ApiError(409, "nothing_to_reset", "You have no skills or role to reset.")

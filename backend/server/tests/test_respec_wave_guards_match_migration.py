@@ -6,6 +6,7 @@ These are text checks of the migration files; the real behaviour is in
 island_sql/test_respec_and_wave_guards_sql.py.
 """
 
+import hashlib
 import re
 from pathlib import Path
 
@@ -33,13 +34,16 @@ def latest_definition(name: str) -> tuple[str, str]:
 
 def test_the_latest_definitions_are_in_the_guards_migration():
     assert latest_definition("island_research")[0] == GUARDS.name
-    assert latest_definition("island_respec")[0] == GUARDS.name
+    assert latest_definition("island_respec_at_level")[0] == GUARDS.name
 
 
 def test_both_use_the_wave_test_of_island_demolish():
     demolish = WAVE_TEST.search(DEMOLISH.read_text())
     assert demolish and demolish.group(1) == "p_island_owner"
-    for name, owner in (("island_research", "p_island_owner"), ("island_respec", "p_player_id")):
+    for name, owner in (
+        ("island_research", "p_island_owner"),
+        ("island_respec_at_level", "p_player_id"),
+    ):
         _, body = latest_definition(name)
         found = WAVE_TEST.search(body)
         assert found and found.group(1) == owner, name
@@ -62,22 +66,27 @@ def test_research_keeps_everything_else_of_research_tiers():
 
 
 def test_respec_is_priced_per_level_under_the_island_lock():
-    _, body = latest_definition("island_respec")
+    _, body = latest_definition("island_respec_at_level")
     assert "p_per_level   integer" in body and "p_price" not in body
     assert body.index("for update;", body.index("from public.islands")) < body.index(
         "p_per_level * v_island.captain_level"
     )
-    # The old signature's argument name goes first, and the captain-tree migration may be replayed.
-    assert (
-        "drop function if exists public.island_respec(uuid, text, integer);" in GUARDS.read_text()
+
+
+def test_the_old_respec_is_dropped_and_the_applied_migration_is_untouched():
+    drop = "drop function if exists public.island_respec(uuid, text, integer);"
+    text = GUARDS.read_text()
+    assert text.index(drop) > text.index(
+        "create or replace function public.island_respec_at_level("
     )
-    assert "drop function if exists public.island_respec(uuid, text, integer);" in TREE.read_text()
+    # 20261112120000 is in production and never edited: the bytes stay as recorded there.
+    assert hashlib.md5(TREE.read_bytes()).hexdigest() == "d0a8ef6c6e621c95e8e13b5cdb6522a3"  # noqa: S324
 
 
 def test_only_the_server_may_run_them():
     text = GUARDS.read_text()
     for signature in (
-        "public.island_respec(uuid, text, integer)",
+        "public.island_respec_at_level(uuid, text, integer)",
         "public.island_research(uuid, uuid, text, text, integer, integer, integer, text, boolean)",
     ):
         assert (

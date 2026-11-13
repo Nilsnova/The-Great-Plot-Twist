@@ -40,7 +40,7 @@ def pick(database, role, level=3):
 def respec(database, uid, per_level=10):
     """A respec at p_per_level coins per captain level (20261113010000_..._guards.sql)."""
     as_server(database)
-    return call(database, "select public.island_respec(%s, %s, %s)", OWNER, uid, per_level)
+    return call(database, "select public.island_respec_at_level(%s, %s, %s)", OWNER, uid, per_level)
 
 
 def start(database):
@@ -118,7 +118,7 @@ def test_a_respec_costs_coins_clears_skills_and_role_and_repeats_safely(database
 
 def test_no_browser_role_may_run_the_new_functions(database):
     pick_sig = "public.island_pick_role(uuid, text, integer)"
-    respec_sig = "public.island_respec(uuid, text, integer)"
+    respec_sig = "public.island_respec_at_level(uuid, text, integer)"
     rights = database.execute(
         "select has_function_privilege('authenticated', %s, 'execute'),"
         " has_function_privilege('anon', %s, 'execute'),"
