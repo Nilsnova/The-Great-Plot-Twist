@@ -1055,6 +1055,46 @@ A CI job that runs the SQL suites; a check that the live md5 equals the file; a 
 2. **How do you stop a double click from charging twice?** Each click has an action uid. The ledger refuses a repeat of the same player, reason and ref, and the function answers the first result.
 3. **How do you know the live database matches the repository?** Each applied file is checked by the md5 of its stored text against the repository file. We do not edit an applied file; a fix is a new file.
 
+## 29. Island milestones — Ianno Hollensteiner (T5)
+
+**What and where.** The island shows a number-only rank shield above and right of
+the cabin, a captain statue after wave 25, and trees at 100%, 110% or 120% size for
+zero, one or two built houses. [decorations.js](../frontend/src/island/decorations.js)
+reads the viewed island’s existing campaign wave and spots.
+[world.js](../frontend/src/island/world.js) calls it whenever island state changes
+and disposes it when the scene ends; Pirate Point does not use these decorations.
+
+**Why this way.** The server already saves the best wave and buildings. The browser
+only turns those values into drawings; a loss or a lower next-wave number does not
+change the record. On a visit, the existing island controller supplies the visited
+island’s campaign. No extra request, saved value, reward or collision rule is needed.
+[The existing controller](../frontend/src/island/index.js) selects that state.
+
+**The drawing.** [milestones.js](../frontend/src/art/milestones.js) uses the same
+Canvas paint kit as the island. `waveRank` chooses unranked at 0, wood at 1–9, then
+bronze, silver, gold, crystal, master, champion, titan, legend and mythic at successive
+ten-wave milestones, with a crowned shield at 100. The shield shows only the number.
+The artwork is original; rank changes add trim, wings, gems, a halo and a crown.
+Ianno chose this progression and the cabin-side location. Codex drafted the code.
+
+**Limits and how it could change.** These are cosmetic milestones, not proof that a
+player earned progress. Tree collision stays the same, and tree size follows built
+house count rather than time or house level; removing a house shrinks the trees.
+The record texture is replaced only when the wave changes; its old texture is
+released. Scene cleanup releases both drawings and restores the original tree scales.
+A future design could use different ornaments without changing saved progress.
+
+**Tests.** [Rule tests](../frontend/tests/island/decorations.test.js) cover every rank
+boundary, wave 24/25, invalid records, house removal and duplicate house ids.
+[Browser component test](../frontend/tests/island/decorations-dom.test.js) exercises
+recorded win events (21 → 22 → 29 → 30), Canvas/Three.js updates, another island’s
+lower progress, unchanged-art reuse, fixed
+collision and cleanup. [Game capture](../frontend/scripts/check-island-decorations.mjs)
+checks the real local game wiring and captures both viewport sizes with a fake API.
+These checks do not prove deployed multiplayer or physical-phone performance.
+See [the test map](TEST-MAP.md#t5--ianno-hollensteiner--island-milestones) and
+[handover](handoff/T5-island-decoration.md).
+
 ## The three course questions
 
 ### Q1. Where is the data stored?

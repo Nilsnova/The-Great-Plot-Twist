@@ -14,6 +14,8 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
+**13 Nov, T5 / Ianno:** [PR #10](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/10) adds a number-only rank shield above/right of the cabin, a wave-25 statue and trees at 100%, 110% or 120% size for zero, one or two houses. Original island-style drawings; existing progress only. Verification is recorded in [the T5 handover](handoff/T5-island-decoration.md); introductory explain-back completed; approval by Nils (`Nilsnova`) or Johannes Franz Lang (`frcola`) is required before merge.
+
 **13 Nov, T26 / Ianno:** island Harbor weather entry implemented in [PR #8](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/8). Reuses the existing card; [local evidence and limits](handoff/T26-weather-board.md). Explain-back and human review pending.
 
 **11 Nov, D1 contribution (Johannes):** [draft PR #5](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/5)
@@ -195,6 +197,8 @@ Nobody has decided these yet. Until they are decided, the plan in [ROADMAP.md](.
 6. **Pick a package.** Take your lane's next package below, or one from "Start today" in ROADMAP.md. Open an issue with the goal, acceptance checks, scope, responsible teammate and likely files. Create your branch from `main` (`git switch main`, `git pull`, then for example `git switch -c feat/l1-live-weather`). Paste the agent brief below and open a draft pull request early.
 
 ## Next steps per lane
+
+**T5 / Ianno:** introductory explain-back completed with clarifications. Nils (`Nilsnova`) or Johannes Franz Lang (`frcola`) must independently review and approve the current diff before merge.
 
 **T26 / Ianno:** review the small weather-entry diff, answer the explain-back questions, then ask Johannes (`frcola`) for independent human review.
 
@@ -510,6 +514,12 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+- **13 Nov 2026, T5 explain-back:** Ianno discussed number/rank updates, the highest-wave record after a loss, and releasing old textures. Clarifications were supplied for the first and third answers. Ianno requests approval by Nils or Johannes Franz Lang before this PR is merged.
+
+- **13 Nov 2026, T5 follow-up for Ianno:** kept the existing tree size with zero houses, then grew trees to 110% and 120% with one and two houses; corrected the earlier shrinking baseline and recaptured the house progression. [Evidence](handoff/T5-island-decoration.md).
+
+- **13 Nov 2026, Codex for Ianno Hollensteiner:** implemented T5 on `feat/t5-island-decoration`, [PR #10](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/10), following Ianno’s revised rank-shield design and placement. [Evidence and limits](handoff/T5-island-decoration.md). Explain-back and human review pending.
 
 - **2026-11-13.** Codex for Ianno: T26 island Harbor weather access, regression tests and desktop/phone screenshots in PR #8; see [evidence](handoff/T26-weather-board.md). Human explain-back/review pending.
 

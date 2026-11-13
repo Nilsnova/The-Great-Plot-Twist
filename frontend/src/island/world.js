@@ -15,6 +15,7 @@ import {HARPOON_ART, TIER_ART, crewArt, pipRow, pirateLevels} from '../pixel/pir
 import {islandFrame} from '../art/registry.js';
 import {frameCanvas, smoothTexture, spriteMaterial} from '../art/textures.js';
 import {clickVerdict} from '../world/reach.js';
+import {decorateProgress} from './decorations.js';
 
 const UNIT = 16;
 // The first id the catalog knows wins; none known means the drawn sprite stays.
@@ -142,6 +143,7 @@ export function decorateIsland(place, ctx = {}) {
   const layout = ctx.layout ?? {spots: ISLAND_SPOTS, zones: islandZones, bell: true, cabin: true};
   const SPOTS = layout.spots;
   const root = new THREE.Group(); root.name = layout.name ?? 'island'; place.group.add(root);
+  const progress = layout.zones === islandZones ? decorateProgress(place) : null;
   const baseZones = [...(place.zones ?? [])];
   const reduced = () => (typeof ctx.reducedMotion === 'function' ? ctx.reducedMotion() : !!ctx.reducedMotion);
   const textures = Object.fromEntries(Object.entries(DRAWN).map(([kind, name]) => [kind, drawn(name)]));
@@ -234,6 +236,7 @@ export function decorateIsland(place, ctx = {}) {
     if (disposed) return;
     state = {spots, visitor, battle, unlocks, crew, campaign};
     const known = spots.length > 0;
+    progress?.apply(campaign, spots, known);
     for (const [id, meshes] of campaignMeshes) {
       const frame = known ? campaignArt(CAMPAIGN_BUILDINGS.find(item => item.id === id), campaign) : null;
       for (const [name, mesh] of Object.entries(meshes)) mesh.visible = name === frame;
@@ -326,6 +329,7 @@ export function decorateIsland(place, ctx = {}) {
     get root() { return root; },
     dispose() {
       if (disposed) return; disposed = true; cleanups.splice(0).forEach(stop => stop());
+      progress?.dispose();
       for (const id of [...shown.keys()]) clear(id);
       for (const item of lockTextures.values()) item.texture.dispose(); // the padlocks a spot no longer shows
       if (art) Object.values(art).forEach(material => { material.map?.dispose(); material.dispose(); });
