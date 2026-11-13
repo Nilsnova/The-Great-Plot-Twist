@@ -31,8 +31,8 @@ The game is built and live; nobody waits for anyone. You extend it.
 | T6 | **Harbor idea**: one more simple stall on real data (e.g. "Will it rain in Lisbon tomorrow?" on the weather API), same card style | `frontend/src/harbor/`, backend weather | M |
 | T7 | **Leaderboard**: best waves of all islands this week (read-only route + a small card) | backend `island/`, `frontend/src/island/` | M |
 | T8 | **Walkthrough page for the part you touched** (what, where, why, limits, how it could change) | `docs/WALKTHROUGH.md` | S |
-| T9 | **Invalid-input tests** for one route you understand (empty, too long, wrong type, repeated click). **Claimed by Johannes** for the D1 sweep (branch `test/d1-invalid-inputs`, not merged yet); pick a different route if you take T9 too | `backend/server/tests/` | S |
-| T10 | **Your README line**: your name and student number (by Fri 20 Nov) | `README.md` | XS |
+| T9 | ✅ **Johannes's D1 sweep merged (Fri 13 Nov, PR #5).** **Invalid-input tests** for one route you understand (empty, too long, wrong type, repeated click); other members can still add tests for their own routes | `backend/server/tests/` | S |
+| T10 | **Your README line**: your name and student number (by Fri 20 Nov). Nils's line is in | `README.md` | XS |
 | T11 | ✅ **Done (Thu 12 Nov): released.** **Review and release the small fixes** on branch `fix/v3-small` (5 finished commits: the friend's arrival banner says "Nils's game", the phone game chip no longer covers the goals, level 4–5 stars, firing towers keep their level look, a compact "Wave won" card off the island's middle, HOW-TO-PLAY rewritten). Run all checks, look at it in the game, open a PR. The last commit (wip) is T12 | branch `fix/v3-small` | S |
 | T12 | ✅ **Done (Fri 13 Nov): live.** **No extra captain when shooting**: today each musket shot draws a second captain sprite where you fired (`drawPose` in `frontend/src/pirates/render.js`). Make your own character (`src/player/character.js`) and teammates' figures (`src/world/others/`, matched like `src/pirates/figures.js`) play the firing pose instead; same for the cutlass. Started (wip commit on `fix/v3-small`) | `render.js`, `player/character.js` | M |
 | T13 | ✅ **Done (Fri 13 Nov): live.** **Tear down a building**: any member, between waves; each payer gets back 50% of what they paid (build + upgrades); legacy buildings refund the host; confirmation shows each refund; every screen sees the empty spot. Needs migration `20261112080000_demolish.sql` (the owner applies it) and a new build-spot marker that reads "build here". Started on `feat/v3-demolish` (wip) | island cards, `backend/server/island/`, migration | L |
@@ -70,18 +70,9 @@ Guests can only play with the current class code from the projector QR, so this 
 2. **Authentication** > **Rate Limits** > **anonymous sign-ins per hour**: **100** > **Save** (a whole class shares one Wi-Fi address).
 3. Check: open the live site on a phone with the current class link (host console > Class demo) and press Play.
 
-### 4b. Email sign-in with a 6-digit code (15 minutes)
+### 4b. Email sign-in: not needed
 
-Supabase's built-in mailer only reaches the project team, so email login needs a mail service. Sign-in options: GitHub, email and guests (Google was dropped).
-1. **brevo.com**: free account > **Senders, Domains & Dedicated IPs** > **Senders** > **Add a sender**: name "The Great Plot Twist", an address the team controls; confirm it.
-2. Brevo > **SMTP & API** > **SMTP** > **Generate a new SMTP key**.
-3. Supabase > **Authentication** > **Emails** > **SMTP Settings** > **Enable custom SMTP**: sender = the Brevo sender, name "The Great Plot Twist", host `smtp-relay.brevo.com`, port `587`, username = the Brevo SMTP login, password = the SMTP key > **Save**.
-4. Supabase > **Authentication** > **Emails** > **Templates**: put `{{ .Token }}` into **three** templates and save each:
-   - **Magic Link**: subject `Your Great Plot Twist sign-in code`, body `<p>Your sign-in code is <strong>{{ .Token }}</strong>. It works for 1 hour.</p>`
-   - **Confirm signup**: same subject and body.
-   - **Change Email Address**: subject `Confirm your email for The Great Plot Twist`, body `<p>Your confirmation code is <strong>{{ .Token }}</strong>. It works for 1 hour.</p>`
-5. Supabase > **Authentication** > **Sign In / Providers** > **Email**: enabled; **Confirm email** on; **Email OTP length** 6; **Email OTP expiration** 3600 s or less; Google off. **Rate Limits** > emails per hour: **100**.
-6. Tell the project owner "email is on": the game's email option is switched on (Vercel `AUTH_PROVIDERS=github,email`) after one test code arrived. Players should check their spam folder.
+The owner decided on Fri 13 Nov: players sign in with GitHub or as a guest; email sign-in is not set up.
 
 ### 4c. ✅ Done (Wed 11 Nov): the Finnhub key is re-entered; live stock prices verified
 
@@ -116,7 +107,6 @@ The fortune teller was removed from the game on 11 Nov at the owner's request (n
 
 ## 8. Small follow-ups (good first tasks if your lane waits)
 
-- [ ] **Wind on flags** in the harbor (`frontend/src/world/wind.js`): only tree crowns move today.
 - [ ] **Staggered arrivals** in rehearsal `?demo=1&captains=40`, so the arrival ripple plays (`frontend/src/class-demo/rehearsal.js`).
 - [ ] **Busy-laptop timing check**: the presenter-tour check "one key skips each step quickly" fails under heavy load; measure in frames, not milliseconds.
 - [ ] **Host-console probes** for the new tables (`islands`, `wave_runs`, `demo_class_code`, `demo_guests`): write the migration that redefines `host_console_overview()`; the project owner applies it.
