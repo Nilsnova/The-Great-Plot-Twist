@@ -26,7 +26,7 @@ The game is built and live; nobody waits for anyone. You extend it.
 | T1 | **A new tower**: a harpoon tower (slows ships) or a fire tower (damage over time), planned for waves 12+ in [GAME-V3.md](GAME-V3.md) §5: stats in the simulation, a cartoon drawing, a build-card line, a campaign unlock, tests | `frontend/src/pirates/sim.js`, `frontend/src/art/`, `backend/content/campaign.json` | M |
 | T2 | **A new pirate type** (raiders, brutes, ironclads and dreadnoughts exist; e.g. a ship that targets towers): drawing, stats, appears from wave N, tests | same as T1 | M |
 | T3 | **Balance pass**: play waves 1–15 (and 30+ if you get there) with friends, write down what felt too easy or too hard, tune the numbers in the simulation's CONFIG, keep the balance and late-game tests green | `frontend/src/pirates/sim.js` | S–M |
-| T4 | **Sounds**: better cannon, mortar, musket, warship horn and victory sounds with the procedural audio | `frontend/src/audio/pirates.js` | S |
+| T4 | **Done (owner's agents), waiting for release.** **Sounds**: better cannon, mortar, musket, warship horn and victory sounds with the procedural audio | `frontend/src/audio/pirates.js` | S |
 | T5 | **Island decoration**: flags that show your best wave, a statue at wave 25, trees that grow with houses | `frontend/src/island/`, art | M |
 | T6 | **Harbor idea**: one more simple stall on real data (e.g. "Will it rain in Lisbon tomorrow?" on the weather API), same card style | `frontend/src/harbor/`, backend weather | M |
 | T7 | **Leaderboard**: best waves of all islands this week (read-only route + a small card) | backend `island/`, `frontend/src/island/` | M |
