@@ -1,6 +1,6 @@
 // What the island's small cards say, as pure functions (no DOM): the build and upgrade card of a spot,
 // the crew and captain panels, the harbor bell, Play with a friend and the loot toast. The server decides; these only describe its last answer.
-import {BUILDINGS, CREW, CREW_IDS, CAPTAIN, CAPTAIN_MAX, SLOT_KINDS, maxLevel, priceFor, statLine, captainLine, lockedWave} from './td-rules.js';
+import {BUILDINGS, CREW, CREW_IDS, CAPTAIN, CAPTAIN_MAX, SLOT_KINDS, POINT_TOWER_KINDS, maxLevel, priceFor, statLine, captainLine, lockedWave} from './td-rules.js';
 import {displayIslandCode, visitUrl} from './codes.js';
 import {formatCoinDelta, formatCoins} from '../lib/coins.js';
 import {BRANCHES, ROLES, ROLE_BY_ID, ROLE_LEVEL, SKILLS, SKILL_BY_ID, WEAPONS, WEAPON_BY_ID, isRole, pointsEarned, pointsSpent, readSkills, readWeapon, respecPrice, skillNeeds} from '../pirates/captain-ids.js';
@@ -29,7 +29,7 @@ export const coinText = n => (Number.isSafeInteger(n) ? formatCoins(n) : '🪙 ?
 // `demolish` {label, disabled, reason}; battle: a wave runs on screen, so it waits for the break.
 export function buildCardModel({spotId, kind, slot = null, spot = null, coins = null, visitor = false, ownerName = '',
   busy = false, message = '', unlocks = null, prices = null, point = false, campaign = null, battle = false} = {}) {
-  const place = slot ?? (kind === 'cannon' || kind === 'mortar' ? 'tower' : kind ?? 'wall');
+  const place = slot ?? (kind === 'cannon' || kind === 'mortar' || kind === 'harpoon' ? 'tower' : kind ?? 'wall');
   const built = spot?.built === true, standing = built ? spot.kind : null;
   const level = built ? (Number.isSafeInteger(spot.level) && spot.level > 0 ? spot.level : 1) : 0;
   const shown = standing ?? (place === 'tower' ? null : SLOT_KINDS[place]?.[0] ?? kind);
@@ -37,7 +37,7 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
   const allowed = k => (unlocks ? unlocks.levels[k] ?? 0 : maxLevel(k));
   const enough = price => coins !== null && Number.isSafeInteger(price) && coins >= price;
   const short = price => `Not enough 🪙: you need ${coinText(price - coins)} more.`;
-  const model = {spotId, slot: place, title: info?.name ?? 'Tower spot', purpose: info?.line ?? 'Build a cannon or a mortar here.',
+  const model = {spotId, slot: place, title: info?.name ?? 'Tower spot', purpose: info?.line ?? (point ? 'Build a cannon or a mortar here.' : 'Build a cannon, a mortar or a harpoon tower here.'),
     mode: 'info', built, kind: shown, level, maxLevel: shown ? maxLevel(shown) : 0, pips: [], stats: '', choices: [], cost: '',
     button: '', disabled: true, reason: '', upgrade: null, soon: '', message, busy, skills: null, locked: false,
     coins: coins === null ? '' : `You have ${coinText(coins)}`,
@@ -58,7 +58,7 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
   }
   if (!built && place === 'tower') {
     model.mode = 'choose'; model.title = 'Tower spot'; model.purpose = 'Choose what to build. You cannot change it later.';
-    for (const choice of SLOT_KINDS.tower) {
+    for (const choice of point ? POINT_TOWER_KINDS : SLOT_KINDS.tower) {
       const price = priceFor(choice, 0, prices);
       if (allowed(choice) < 1) {
         model.choices.push({kind: choice, name: BUILDINGS[choice].name, line: BUILDINGS[choice].line, price: coinText(price),

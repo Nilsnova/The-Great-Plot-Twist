@@ -15,6 +15,9 @@ export const BUILDINGS = Object.freeze({
     stats: [{damage: 10, range: 28}, {damage: 16, range: 31}, {damage: 24, range: 34}, {damage: 30, range: 36}, {damage: 38, range: 38}]}),
   mortar: Object.freeze({name: 'Mortar', line: 'Hits every ship near the impact. Cannot hit close ships.', price: [60, 120, 240, 480, 960],
     stats: [{damage: 14, range: 36}, {damage: 22, range: 40}, {damage: 32, range: 44}, {damage: 42, range: 46}, {damage: 54, range: 48}]}),
+  // The harpoon tower (GAME-V3.md §5, T1): opens after wave 12. Its stats are CONFIG.levels.harpoon (slow in percent).
+  harpoon: Object.freeze({name: 'Harpoon tower', line: 'Slows one ship at a time with a rope harpoon.', price: [40, 80, 160, 320, 640],
+    stats: [{damage: 2, range: 30, slow: 25}, {damage: 3, range: 32, slow: 30}, {damage: 4, range: 34, slow: 35}, {damage: 5, range: 36, slow: 40}, {damage: 7, range: 38, slow: 45}]}),
   // From level 3 the watchtower also adds damage to every cannon and mortar (boost, in percent).
   watchtower: Object.freeze({name: 'Watchtower', line: 'Gives all your towers more range, from level 3 more damage too.', price: [40, 80, 160, 320, 640],
     stats: [{range: 8, boost: 0}, {range: 12, boost: 0}, {range: 14, boost: 5}, {range: 16, boost: 10}, {range: 18, boost: 15}]}),
@@ -23,8 +26,11 @@ export const BUILDINGS = Object.freeze({
     stats: [{loot: 5}, {loot: 10}, {loot: 15}]}),
 });
 export const maxLevel = kind => BUILDINGS[kind]?.price.length ?? 1;
-// The kinds a spot of each slot accepts (§2): a tower spot takes a cannon or a mortar, chosen once.
-export const SLOT_KINDS = Object.freeze({wall: ['wall'], tower: ['cannon', 'mortar'], watchtower: ['watchtower'], house: ['house']});
+// The kinds a spot of each slot accepts (§2): a tower spot takes a cannon, a mortar or (after wave 12) a harpoon tower,
+// chosen once. Pirate Point's tower spots take the first two only (POINT_TOWER_KINDS).
+export const SLOT_KINDS = Object.freeze({wall: ['wall'], tower: ['cannon', 'mortar', 'harpoon'], watchtower: ['watchtower'], house: ['house']});
+
+export const POINT_TOWER_KINDS = Object.freeze(['cannon', 'mortar']);
 
 // §3
 export const CREW = Object.freeze({
@@ -62,11 +68,11 @@ export const UNLOCK_NEWS = Object.freeze(Object.fromEntries(CAMPAIGN_STEPS.filte
 export {opensText};
 
 // The unlocks for a won wave, as one plain object:
-//   {wonWave, levels: {wall, cannon, mortar, watchtower, house}, captain, crew: {gunner, carpenter, lookout}, next}
+//   {wonWave, levels: {wall, cannon, mortar, harpoon, watchtower, house}, captain, crew: {gunner, carpenter, lookout}, next}
 // levels[kind] 0 = locked; crew[id] true = may hire; next = {wave, title} of the next step or null.
 export function unlocksFor(wonWave = 0) {
   const won = Number.isSafeInteger(wonWave) && wonWave > 0 ? wonWave : 0;
-  const levels = {wall: 0, cannon: 0, mortar: 0, watchtower: 0, house: 0}, crew = {gunner: false, carpenter: false, lookout: false};
+  const levels = {wall: 0, cannon: 0, mortar: 0, harpoon: 0, watchtower: 0, house: 0}, crew = {gunner: false, carpenter: false, lookout: false};
   let captain = 1, next = null;
   for (const step of UNLOCK_STEPS) {
     if (step.wave > won) { next ??= {wave: step.wave, title: UNLOCK_NEWS[step.wave]?.title ?? ''}; continue; }
@@ -96,7 +102,7 @@ export function readUnlocks(island) {
   const base = unlocksFor(won);
   const locked = sent?.locked && typeof sent.locked === 'object' ? {...sent.locked} : {};
   if (!Array.isArray(sent?.unlocked)) return {...base, locked};
-  const levels = {wall: 0, cannon: 0, mortar: 0, watchtower: 0, house: 0}, crew = {gunner: false, carpenter: false, lookout: false};
+  const levels = {wall: 0, cannon: 0, mortar: 0, harpoon: 0, watchtower: 0, house: 0}, crew = {gunner: false, carpenter: false, lookout: false};
   let captain = 1;
   for (const id of sent.unlocked) {
     if (typeof id !== 'string') continue;
@@ -132,11 +138,11 @@ export function priceFor(kind, level, prices = null) {
   return BUILDINGS[kind]?.price[level] ?? null;
 }
 // "Damage 10 → 16 · Range 28 → 31" or "Hp 60 → 120": what an upgrade gives.
-const STAT_NAMES = {damage: 'Damage', range: 'Range', hp: 'Strength', loot: 'Loot', boost: 'Tower damage'};
+const STAT_NAMES = {damage: 'Damage', range: 'Range', hp: 'Strength', loot: 'Loot', boost: 'Tower damage', slow: 'Slows'};
 export function statLine(kind, level, nextLevel = null) {
   const now = BUILDINGS[kind]?.stats[level - 1], then = nextLevel ? BUILDINGS[kind]?.stats[nextLevel - 1] : null;
   if (!now) return '';
-  const plus = kind === 'watchtower' ? '+' : '', unit = key => (kind === 'house' ? ' 🪙' : key === 'boost' ? '%' : '');
+  const plus = kind === 'watchtower' ? '+' : '', unit = key => (kind === 'house' ? ' 🪙' : key === 'boost' || key === 'slow' ? '%' : '');
   // A watchtower's damage boost shows once it has one (level 3), or when the next level brings it.
   const keys = Object.keys(now).filter(key => key !== 'boost' || now.boost > 0 || (then?.boost ?? 0) > 0);
   return keys.map(key => `${STAT_NAMES[key]} ${plus}${now[key]}${unit(key)}${then ? ` → ${plus}${then[key]}${unit(key)}` : ''}`).join(' · ');

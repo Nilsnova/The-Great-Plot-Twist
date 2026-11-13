@@ -111,7 +111,13 @@ export const CONFIG = freeze({
     wall: [{ hp: 60 }, { hp: 120 }, { hp: 200 }, { hp: 300 }, { hp: 420 }],
     watchtower: [{ range: 8, boost: 1 }, { range: 12, boost: 1 }, { range: 14, boost: 1.05 }, { range: 16, boost: 1.1 }, { range: 18, boost: 1.15 }],
     house: [{}, {}, {}], // level 3 (after wave 5): more loot, and a Barracks sends two tougher militia (CONFIG.houses)
+    // The harpoon tower (GAME-V3.md §5, T1): a support tower. It hits one sailing ship for little damage and slows it
+    // (`slow` of its speed for `seconds`; a new hit refreshes, never stacks). It never aims at boarders or anchored ships.
+    harpoon: [{ damage: 2, range: 30, reload: 2.6, slow: .25, seconds: 2.5 }, { damage: 3, range: 32, reload: 2.4, slow: .3, seconds: 2.5 },
+      { damage: 4, range: 34, reload: 2.2, slow: .35, seconds: 3 }, { damage: 5, range: 36, reload: 2.0, slow: .4, seconds: 3.5 },
+      { damage: 7, range: 38, reload: 1.8, slow: .45, seconds: 4 }],
   },
+  harpoon: { speed: 32, firstReload: .6 }, // the harpoon's flight (units a second); the first throw comes soon after the wave starts
   mortar: { radius: 4, minRange: 8, flight: 1.3, flightPerUnit: 0.025, scatter: 1.2, firstReload: 1 },
   crew: {
     gunner: { max: 2, reload: 0.75 },        // reload × 0.75 on the strongest towers, aims at the ship closest to the shore
@@ -225,7 +231,7 @@ export const CONFIG = freeze({
   },
 });
 
-const KINDS = new Set(['wall', 'cannon', 'mortar', 'watchtower', 'house']);
+const KINDS = new Set(['wall', 'cannon', 'mortar', 'harpoon', 'watchtower', 'house']);
 const finite = value => typeof value === 'number' && Number.isFinite(value);
 const clamp = (value, low, high) => Math.min(high, Math.max(low, value));
 const round2 = value => Math.round(value * 100) / 100;
@@ -453,7 +459,7 @@ export function createWave(options = {}) {
   const warnLead = (crew.lookout ? C.crew.lookout.warn : 0) + signal;
   const coast = readCoast(options?.coast), laneList = readLanes(options?.lanes);
   // Cannons and mortars, in id order; the gunners man the strongest (damage per second, then level).
-  const towers = defenses.filter(item => item.kind === 'cannon' || item.kind === 'mortar').map(item => {
+  const towers = defenses.filter(item => item.kind === 'cannon' || item.kind === 'mortar' || item.kind === 'harpoon').map(item => {
     const stats = C.levels[item.kind][item.level - 1], spec = skillOf(item, C);
     // Long guns (tier 2) and Eagle eye (a watchtower's capstone in reach) stretch the range; Long range adds to it.
     const eagle = reach(eagles, item)?.skill.range ?? 1;
@@ -462,11 +468,11 @@ export function createWave(options = {}) {
     const spotted = reach(spotters, item)?.skill.damage ?? 1, drums = reach(drummers, item)?.skill.reload ?? 1;
     const radius = item.kind === 'mortar' ? round2(C.mortar.radius * bonusOf(item, 'radius', C)) : undefined;
     return { ...item, skill: spec, damage: round2(stats.damage * (spec.damage ?? 1) * spotted * boost), baseReload: round2(stats.reload * C.pace.reload * (spec.reload ?? 1) * bonusOf(item, 'reload', C) * drums),
-      range, sight: range * fogShare * happening.sightOf(item, defenses), manned: false, reload: item.kind === 'mortar' ? C.mortar.firstReload : 0, lastShot: -Infinity, shots: 0,
-      ...(radius !== undefined ? { radius } : {}) };
+      range, sight: range * fogShare * happening.sightOf(item, defenses), manned: false, reload: item.kind === 'mortar' ? C.mortar.firstReload : item.kind === 'harpoon' ? C.harpoon.firstReload : 0, lastShot: -Infinity, shots: 0,
+      ...(radius !== undefined ? { radius } : {}), ...(item.kind === 'harpoon' ? { slow: { slow: stats.slow, seconds: stats.seconds } } : {}) };
   });
   const strength = tower => tower.damage / tower.baseReload * (tower.kind === 'mortar' ? 1.5 : 1);
-  [...towers].sort((a, b) => strength(b) - strength(a) || b.level - a.level || (a.id < b.id ? -1 : 1))
+  towers.filter(item => item.kind !== 'harpoon').sort((a, b) => strength(b) - strength(a) || b.level - a.level || (a.id < b.id ? -1 : 1))
     .slice(0, crew.gunner).forEach(tower => { tower.manned = true; tower.baseReload = round2(tower.baseReload * C.crew.gunner.reload); });
   const cannons = towers.filter(item => item.kind === 'cannon'), mortars = towers.filter(item => item.kind === 'mortar');
   // The sight the island shows (fog edge, the manual-fire reach): the level-1 cannon's, or the best cannon's.
@@ -632,6 +638,17 @@ export function createWave(options = {}) {
       x: mortar.x, z: mortar.z, toX, toZ, impactAt, radius });
   }
 
+  const roped = ship => balls.some(ball => ball.harpoon && ball.targetId === ship.id); // a harpoon is already on its way
+  const slowedUntil = ship => ship.slowUntil ?? -Infinity;
+  // The harpoon tower throws (T1): always a hit (a rope, no dice, so the random stream is untouched), a quick flat flight.
+  function throwHarpoon(tower, target, events) {
+    const flight = distance(tower.x, tower.z, target.x, target.z) / C.harpoon.speed, aim = ahead(target, flight);
+    const impactAt = round2(ticks * C.tick + flight);
+    balls.push({ cannonId: tower.id, targetId: target.id, ...targetKey(target), hit: true, damage: tower.damage, manual: false, impactAt, harpoon: tower.slow });
+    tower.reload = tower.baseReload; tower.lastShot = ticks * C.tick; tower.shots++;
+    events.push({ type: 'harpoon_thrown', t: now(), towerId: tower.id, targetId: target.id, damage: tower.damage, level: tower.level,
+      x: tower.x, z: tower.z, toX: round2(aim.x), toZ: round2(aim.z), impactAt });
+  }
   const pending = target => balls.reduce((sum, ball) => sum + (ball.targetId === target.id && ball.hit ? ball.damage : 0), 0);
   // v3 waves: at night a lit target (near the heart, a fire, or burning) is seen at the full range.
   const sees = (tower, target, d) => d <= tower.sight || (happening.lit(target, fires) && d <= tower.range * fogShare);
@@ -904,6 +921,17 @@ export function createWave(options = {}) {
           ? (item.boarder ? -2e4 + toHeart(item) : (item.state === 'attacking' ? 0 : 1) * 1e4 + item.left) - score * .01
           : -score * 1e4 + d;
         if (rank < best) { target = item; best = rank; }
+      }
+      return target;
+    }
+    if (tower.kind === 'harpoon') {
+      // A harpoon only wants a ship that is still sailing (an anchored one is not going anywhere) and has no harpoon on
+      // its way: one that is not slowed yet first, then the one nearest its anchorage.
+      for (const ship of ships) {
+        const d = distance(tower.x, tower.z, ship.x, ship.z);
+        if (ship.state !== 'sailing' || !sees(tower, ship, d) || armoured(ship) || roped(ship)) continue;
+        const rank = (slowedUntil(ship) > now() + 1e-9 ? 1e4 : 0) + ship.left;
+        if (rank < best) { target = ship; best = rank; }
       }
       return target;
     }
@@ -1207,6 +1235,12 @@ export function createWave(options = {}) {
         damageTarget(target, ball.damage, ball.cannonId, events, ball.captain ? { manual: true, captain: true } : { manual: ball.manual });
         // Chain shot (GAME-V3.md §5): a ship that floats on is slowed for a few seconds.
         if (ball.chain && !target.boarder && target.hp > 0) { target.slowUntil = round2(t + ball.chain.seconds); target.slowBy = ball.chain.slow; events.push({ type: 'ship_slowed', t: now(), shipId: target.id, until: target.slowUntil }); }
+        // A harpoon (T1): the ship floats on slowed; a new hit refreshes the time (and never weakens a stronger slow).
+        if (ball.harpoon && !target.boarder && target.hp > 0) {
+          const active = slowedUntil(target) > t + 1e-9;
+          target.slowUntil = round2(t + ball.harpoon.seconds); target.slowBy = Math.max(active ? target.slowBy ?? 0 : 0, ball.harpoon.slow);
+          events.push({ type: 'ship_slowed', t: now(), shipId: target.id, until: target.slowUntil, slow: target.slowBy, harpoon: true });
+        }
         // Grapeshot (tier 3): the shot shreds the boarders around the one it hit.
         if (ball.grape) for (const other of boarders.filter(item => item !== target && distance(item.x, item.z, target.x, target.z) <= ball.grape.radius)) {
           damageBoarder(other, round2(ball.damage * ball.grape.share), ball.cannonId, events, { grape: true });
@@ -1265,6 +1299,7 @@ export function createWave(options = {}) {
       if (tower.reload > 1e-9) continue;
       const target = aimTower(tower);
       if (target && tower.kind === 'mortar') lob(tower, target, events);
+      else if (target && tower.kind === 'harpoon') throwHarpoon(tower, target, events);
       else if (target) fire(tower, target, false, events);
     }
     for (const wall of walls) {
@@ -1329,7 +1364,7 @@ export function createWave(options = {}) {
         time: now(), wave: waveNumber, boss, warships: bosses, phase: started === true ? (done ? 'ended' : 'running') : 'countdown',
         ships: ships.map(ship => ({ id: ship.id, kind: ship.kind, lane: ship.lane, x: round2(ship.x), z: round2(ship.z),
           hp: ship.hp, maxHp: ship.maxHp, state: ship.state, crew: ship.crew, ...(ship.boss ? { boss: true } : {}),
-          ...(ship.kind === 'flagship' ? { exposed: lampsLit } : {}) })),
+          ...(ship.kind === 'flagship' ? { exposed: lampsLit } : {}), ...(slowedUntil(ship) > t + 1e-9 ? { slowed: true } : {}) })),
         boarders: boarders.map(item => ({ id: item.id, ...(item.brute ? { brute: true } : {}), x: round2(item.x), z: round2(item.z), hp: item.hp, maxHp: item.maxHp,
           state: item.state, wallId: item.wallId, facing: item.facing, foe: item.foe ?? null })),
         // Captain health (GAME-V3.md §3), by id: present is false for a captain who is away or not heard lately.

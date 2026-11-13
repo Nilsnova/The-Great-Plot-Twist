@@ -12,17 +12,18 @@ export const KINDS = Object.freeze({
   wall: Object.freeze({name: 'Wall', purpose: 'Stops boarders until they break it.', cost: 10}),
   cannon: Object.freeze({name: 'Cannon', purpose: 'Fires at one ship at a time.', cost: 30}),
   mortar: Object.freeze({name: 'Mortar', purpose: 'Hits every ship near the impact.', cost: 60}),
+  harpoon: Object.freeze({name: 'Harpoon tower', purpose: 'Slows one ship at a time with a rope harpoon.', cost: 40}),
   watchtower: Object.freeze({name: 'Watchtower', purpose: 'Gives all your towers more range.', cost: 40}),
   house: Object.freeze({name: 'House', purpose: 'Adds 🪙 5 loot for every wave you win.', cost: 50}),
 });
 // THE spot table (docs/TOWER-DEFENSE.md §2, 22 spots): [id, slot, x, z, edge]. slot is what may stand
-// there: wall, tower (a cannon or a mortar, chosen at the first build), watchtower or house. The
+// there: wall, tower (a cannon, a mortar or a harpoon tower, chosen at the first build), watchtower or house. The
 // server's ids are the first column (the backend's ids as built, 11 Nov); if the backend renames a
 // spot, change it here (or add the old name to SPOT_ALIASES) and nothing else.
 //   walls   six along the shore (west, north twice, east, south twice), and the inner ring wall_7…wall_12
 //           around the island's heart (§12; the sim's CONFIG.boarding.heart, 0,2), on the paths the
 //           boarders take: east, the south cross path twice, west (north of the cabin), the north cross path twice
-//   towers  cannon_1…cannon_7 (a cannon or a mortar): the four corners, west, east and the south beach
+//   towers  cannon_1…cannon_7 (a cannon, a mortar or a harpoon tower): the four corners, west, east and the south beach
 //   tower   the watchtower on the hill at the north end of the main path
 //   houses  inland, at the ends of the north cross path
 export const SPOT_TABLE = Object.freeze([

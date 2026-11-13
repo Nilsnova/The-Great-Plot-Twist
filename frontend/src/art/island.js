@@ -247,6 +247,63 @@ function mortar(level, firing = false) {
     if (firing) for (const [x, y, r] of [[cx + 6, base - 24, 4.6], [cx + 10, base - 27, 3.4], [cx + 2, base - 27, 3]]) part(c, ellipse(x, y, r), '#f4efe6', {line: '#8c8a92', width: .9, shade: '#cfcad6'});
   };
 }
+// The harpoon tower (GAME-V3.md §5, T1) by level, facing right: a wooden frame on a bench with a big crossbow
+// (a stock, a bow of two curved limbs, a taut string) loaded with a barbed harpoon on a rope that runs back to a
+// rope coil beside it (1); iron bands and brass rivets on a stone pad (2); brass-tipped limbs on a round bastion
+// (3); gold trim, a gilded bow tip and the island's banner (4); a wholly gilded crossbow and the starred banner
+// (5). Firing: the harpoon is gone, the limbs spring forward and the rope trails out over the sea.
+const ROPE = '#dcbb78', ROPE_DARK = '#9c7a44';
+function ropeCoil(c, x, y, s = 1) {
+  for (let i = 0; i < 3; i++) part(c, ellipse(x, y - i * 2.2 * s, 5.4 * s, 2.5 * s), ROPE, {width: .9, depth: .7, shade: ROPE_DARK});
+  stroke(c, ellipse(x, y - 4.4 * s, 3.4 * s, 1.4 * s), ROPE_DARK, .8);
+  part(c, ellipse(x, y - 4.6 * s, 1.5 * s, .7 * s), '#5a3b22', {line: false, shade: false});
+}
+function harpoonTower(level, firing = false) {
+  return (c, {w, h}) => {
+    const g = h - 5, cx = 24; shadow(c, cx, g, 19, 3.8);
+    if (level >= 2) part(c, rect(3, g - 6, 42, 7, 3), level >= 3 ? STONE_LIGHT : STONE, {depth: 2, width: 1.2, gloss: rect(6, g - 5.4, 28, 1.2, .6)});
+    if (level >= 3) for (let x = 8; x < 44; x += 8) stroke(c, line([[x, g - 5], [x, g + 1]]), mix(STONE, INK, .4), .8);
+    if (level >= 4) stroke(c, line([[4.5, g - 6], [43.5, g - 6]]), GOLD, 1.3);
+    const base = level >= 2 ? g - 6 : g, gilded = level >= 5, trim = level >= 4 ? GOLD : BRASS;
+    // The coil sits by the bench, the rope's other end runs up to the harpoon.
+    ropeCoil(c, 10, base - 1);
+    // A wooden bench and a two-post frame (crossed by a brace) that carry the crossbow.
+    part(c, rect(11, base - 4, 27, 4, 1.4), WOOD_DARK, {depth: 1, width: 1.1});
+    for (const x of [16, 28]) part(c, poly([[x - 3, base - 4], [x - 1.2, base - 10], [x + 1.6, base - 10], [x + 3.4, base - 4]], .8), WOOD, {depth: 1.2, width: 1.1, gloss: rect(x - 1, base - 9, .9, 4, .4), light: WOOD_LIGHT});
+    stroke(c, line([[16, base - 5], [28, base - 9.5]]), INK, 2.6); stroke(c, line([[16, base - 5], [28, base - 9.5]]), WOOD_DARK, 1.3);
+    if (level >= 2) for (const x of [16, 28]) part(c, rect(x - 3, base - 9, 6.4, 1.9, .6), level >= 5 ? GOLD : IRON, {width: .7, shade: false});
+    // The crossbow, tilted a little to the sky, turning on the top of the frame.
+    c.save(); c.translate(21, base - 10.2); c.scale(.78, .78); c.rotate(-.16);
+    part(c, rect(-9, -2.2, 31, 4.4, 1.6), gilded ? GOLD : WOOD_LIGHT, gilded ? {depth: 1.4, width: 1.2, shade: GOLD_DARK, light: '#fff1b8'}
+      : {depth: 1.4, width: 1.2, gloss: rect(-7, -1.6, 18, 1, .4), light: '#e0a868'});
+    // The bow: two limbs curving forward from the stock's front end; the string runs to the stock's middle.
+    const spring = firing ? 3 : 0, tip = [[17 + spring, -9], [17 + spring, 9]];
+    for (const [px, py] of tip) {
+      const limb = line([[12, py < 0 ? -1.6 : 1.6]]); limb.quadraticCurveTo(14.5, py * .8, px, py);
+      c.save(); c.lineCap = 'round'; c.strokeStyle = INK; c.lineWidth = 4.6; c.stroke(limb); c.strokeStyle = gilded ? GOLD : WOOD; c.lineWidth = 2.8; c.stroke(limb); c.restore();
+      part(c, ellipse(px, py, 1.7), level >= 3 ? trim : '#c9a06a', {width: .8, shade: false});
+    }
+    part(c, rect(10, -3, 3.8, 6, 1), level >= 2 ? (gilded ? IRON : BRASS) : WOOD_DARK, {width: .8, shade: false});
+    const pull = firing ? 18 : 5;
+    stroke(c, line([[tip[0][0], tip[0][1]], [pull, 0], [tip[1][0], tip[1][1]]]), '#f4ecd6', 1);
+    if (!firing) {
+      // The harpoon on the stock: a long shaft with a barbed head, and the rope tied to its tail.
+      stroke(c, line([[-4, -3.6], [22, -3.6]]), INK, 3); stroke(c, line([[-4, -3.6], [22, -3.6]]), '#e8d3a3', 1.7);
+      part(c, poly([[21, -3.6], [17.4, -7.6], [18.8, -3.6], [17.4, 0.4]], .5), gilded || level >= 4 ? GOLD : IRON, {width: .9, shade: false});
+      part(c, poly([[21, -3.6], [28, -3.6], [21, -5.4]], .4), gilded || level >= 4 ? GOLD : '#9aa3b2', {width: .9, shade: false});
+    }
+    c.restore();
+    // The rope from the harpoon's tail, over the bench, to the coil (or trailing out to sea when it has flown).
+    if (firing) {
+      const rope = new Path2D(); rope.moveTo(34, base - 15); rope.quadraticCurveTo(41, base - 12, 47, base - 16);
+      c.save(); c.lineCap = 'round'; c.strokeStyle = INK; c.lineWidth = 3; c.stroke(rope); c.strokeStyle = ROPE; c.lineWidth = 1.5; c.stroke(rope); c.restore();
+      part(c, ellipse(36, base - 17, 3.4, 2.6), '#fff3c4', {line: '#f29e38', width: .9, shade: false});
+    }
+    const slack = new Path2D(); slack.moveTo(15, base - 11.5); slack.quadraticCurveTo(9, base - 11, 10, base - 8);
+    c.save(); c.lineCap = 'round'; c.strokeStyle = INK; c.lineWidth = 3; c.stroke(slack); c.strokeStyle = ROPE; c.lineWidth = 1.5; c.stroke(slack); c.restore();
+    if (level >= 4) banner(c, 4.5, base - 1, level >= 5 ? 19 : 17, level, .8);
+  };
+}
 // The watchtower; at levels 4 and 5 (GAME-V3.md §4.1) a gold-trimmed roof and the island's banner instead of
 // the pennant, at 5 a gold railing and the starred royal banner.
 function watchtower(level) { return (c, size) => watchtowerAt(c, size, level); }
@@ -438,6 +495,10 @@ export function islandFrames() {
     'island-mortar-l4': [48, 32, 5, mortar(4)], 'island-mortar-l5': [48, 32, 5, mortar(5)],
     'island-mortar-fire': [48, 32, 5, mortar(1, true)], 'island-mortar-fire-l2': [48, 32, 5, mortar(2, true)], 'island-mortar-fire-l3': [48, 32, 5, mortar(3, true)],
     'island-mortar-fire-l4': [48, 32, 5, mortar(4, true)], 'island-mortar-fire-l5': [48, 32, 5, mortar(5, true)],
+    'island-harpoon': [48, 32, 5, harpoonTower(1)], 'island-harpoon-l2': [48, 32, 5, harpoonTower(2)], 'island-harpoon-l3': [48, 32, 5, harpoonTower(3)],
+    'island-harpoon-l4': [48, 32, 5, harpoonTower(4)], 'island-harpoon-l5': [48, 32, 5, harpoonTower(5)],
+    'island-harpoon-fire': [48, 32, 5, harpoonTower(1, true)], 'island-harpoon-fire-l2': [48, 32, 5, harpoonTower(2, true)], 'island-harpoon-fire-l3': [48, 32, 5, harpoonTower(3, true)],
+    'island-harpoon-fire-l4': [48, 32, 5, harpoonTower(4, true)], 'island-harpoon-fire-l5': [48, 32, 5, harpoonTower(5, true)],
     'build-spot': [32, 32, 10, buildSpot(false)], 'build-spot-glow': [32, 32, 10, buildSpot(true)], 'fx-level-pip': [16, 16, 8, levelPip], 'fx-level-pip-gold': [16, 16, 8, tierPip],
     'island-bell': [24, 40, 0, bell], 'build-ring': [48, 24, 0, buildRing],
   };

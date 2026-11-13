@@ -211,7 +211,7 @@ describe('the v2 fake API', () => {
     const api = createFakeIslandApi({ version: 2 });
     const island = await api.island();
     expect(island.spots).toHaveLength(22);
-    expect(island.spots.find(item => item.id === 'cannon_5')).toMatchObject({ kinds: ['cannon', 'mortar'], level: 0, built: false });
+    expect(island.spots.find(item => item.id === 'cannon_5')).toMatchObject({ kinds: ['cannon', 'mortar', 'harpoon'], level: 0, built: false });
     expect(island).toMatchObject({ crew: { gunner: 0, carpenter: 0, lookout: 0 }, nextWave: 1, captain: { level: 1, nextPrice: 20 },
       prices: { kinds: { mortar: [60, 120, 240, 480, 960], cannon: [30, 60, 120, 240, 480] }, crew: { gunner: { price: 40, max: 2 } } } }); // the backend's shape (routes/island.py)
     const code = async promise => { try { await promise; } catch (error) { return error.code; } return 'ok'; };

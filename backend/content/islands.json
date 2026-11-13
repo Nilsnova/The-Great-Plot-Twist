@@ -37,6 +37,17 @@
       ]
     },
     {
+      "kind": "harpoon",
+      "name": "Harpoon tower",
+      "prices": [
+        40,
+        80,
+        160,
+        320,
+        640
+      ]
+    },
+    {
       "kind": "watchtower",
       "name": "Watchtower",
       "prices": [
@@ -98,49 +109,56 @@
       "id": "cannon_1",
       "kinds": [
         "cannon",
-        "mortar"
+        "mortar",
+        "harpoon"
       ]
     },
     {
       "id": "cannon_2",
       "kinds": [
         "cannon",
-        "mortar"
+        "mortar",
+        "harpoon"
       ]
     },
     {
       "id": "cannon_3",
       "kinds": [
         "cannon",
-        "mortar"
+        "mortar",
+        "harpoon"
       ]
     },
     {
       "id": "cannon_4",
       "kinds": [
         "cannon",
-        "mortar"
+        "mortar",
+        "harpoon"
       ]
     },
     {
       "id": "cannon_5",
       "kinds": [
         "cannon",
-        "mortar"
+        "mortar",
+        "harpoon"
       ]
     },
     {
       "id": "cannon_6",
       "kinds": [
         "cannon",
-        "mortar"
+        "mortar",
+        "harpoon"
       ]
     },
     {
       "id": "cannon_7",
       "kinds": [
         "cannon",
-        "mortar"
+        "mortar",
+        "harpoon"
       ]
     },
     {

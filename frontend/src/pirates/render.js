@@ -21,7 +21,7 @@
 // fallen captain lies in their lobby colour (captain-down-1…10, src/art/people.js) inside a pulsing red ring
 // on the ground, and the ring fills with gold dots while you hold E to help them up.
 import * as THREE from 'three';
-import { FIRE_ART, TIER_ART, crewArt, fireArt, levelArt, pipRow, pirateDimensions, pirateFrames, pirateLevels } from '../pixel/pirate-catalog.js';
+import { FIRE_ART, HARPOON_ART, TIER_ART, crewArt, fireArt, levelArt, pipRow, pirateDimensions, pirateFrames, pirateLevels } from '../pixel/pirate-catalog.js';
 import { pixelGlsl, toScreen } from '../world/pixel-glsl.js';
 import { CHARACTER_SCALE } from './character-scale.js';
 
@@ -97,6 +97,8 @@ export const PIXEL_ONLY_IDS = [...pirateFrames.boarder];
 export const TIER_IDS = [...Object.values(TIER_ART).flat(), 'fx-level-pip-gold'];
 // The firing frames of levels 2 to 5 (FIRE_ART): cartoon-only like the tiers.
 export const FIRE_LEVEL_IDS = Object.values(FIRE_ART).flatMap(list => list.slice(1));
+// The harpoon tower, its harpoon and the rope marks of a slowed ship (GAME-V3.md §5): cartoon-only as well.
+export const HARPOON_IDS = [...HARPOON_ART.levels, ...HARPOON_ART.fire, HARPOON_ART.bolt, HARPOON_ART.ripples, HARPOON_ART.rope];
 /**
  * The frame of a cannon or mortar post: its level's art, or while it fires its level's firing frame (so a
  * level-3 cannon does not flick to level 1's plain barrel, nor a level-5 one lose its gold). has(id) says
@@ -104,6 +106,10 @@ export const FIRE_LEVEL_IDS = Object.values(FIRE_ART).flatMap(list => list.slice
  * shot to level 1's firing frame. Pure.
  */
 export function towerFrame(kind, level, firing = false, has = () => true) {
+  if (kind === 'harpoon') { // cartoon-only: a pixel atlas has no harpoon, so a cannon stands in
+    const n = Math.max(1, Math.min(5, Number.isInteger(level) ? level : 1)), id = (firing ? HARPOON_ART.fire : HARPOON_ART.levels)[n - 1];
+    return has(id) ? id : towerFrame('cannon', level, firing, has);
+  }
   const k = kind === 'mortar' ? 'mortar' : 'cannon', n = Math.max(1, Math.min(5, Number.isInteger(level) ? level : 1));
   if (firing) { const id = fireArt(k, n); return has(id) ? id : pirateFrames[k][1]; }
   const id = levelArt(k, n);
@@ -119,7 +125,7 @@ export async function loadAtlas({ quality = 'high', colour = 0 } = {}) {
   const { cartoonAtlas, smoothTexture } = await import('../art/textures.js');
   const { setPoseColour } = await import('../art/people.js');
   setPoseColour(colour); // your captain's musket and cutlass poses in your lobby colour
-  const ids = [...new Set([...ATLAS_IDS.filter(id => !PIXEL_ONLY_IDS.includes(id)), ...CARTOON_EXTRA_IDS, ...TIER_IDS, ...FIRE_LEVEL_IDS])];
+  const ids = [...new Set([...ATLAS_IDS.filter(id => !PIXEL_ONLY_IDS.includes(id)), ...CARTOON_EXTRA_IDS, ...TIER_IDS, ...FIRE_LEVEL_IDS, ...HARPOON_IDS])];
   const atlas = await cartoonAtlas(ids, { quality, extra: [[WHITE, 8, 8]] });
   const white = atlas.rects[WHITE], context = atlas.image.getContext('2d');
   context.fillStyle = '#fff'; context.fillRect(white.x * atlas.density, white.y * atlas.density, white.w * atlas.density, white.h * atlas.density);
@@ -272,7 +278,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   });
   // A one-layer post per wall, cannon and mortar (the sprite, its level pips and its crew figure); the
   // watchtower gets one only for the lookout.
-  const hasPost = item => item.kind === 'wall' || item.kind === 'cannon' || item.kind === 'mortar' || item.kind === 'watchtower';
+  const hasPost = item => item.kind === 'wall' || item.kind === 'cannon' || item.kind === 'mortar' || item.kind === 'harpoon' || item.kind === 'watchtower';
   const levelOf = item => (Number.isInteger(item.level) ? Math.max(1, Math.min(5, item.level)) : 1);
   // A level's art, or level 3's when the atlas has no tier frame (the pixel atlas).
   const levelFrame = (kind, level) => { const id = levelArt(kind, level); return rect[id] ? id : pirateLevels[kind][Math.min(3, level) - 1]; };
@@ -382,6 +388,25 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         break;
       }
       case 'wall_repaired': effects()?.bloom(x, y + 1, { radius: 1.4, life: .6, colour: '#bfe6a8' }); break;
+      case 'harpoon_thrown': {
+        // The harpoon tower (GAME-V3.md §5): a flat, quick flight of the harpoon with its rope behind it.
+        balls.add(item => Object.assign(item, { x: event.x, z: event.z, toX: event.toX, toZ: event.toZ, from: event.t, to: event.impactAt,
+          hit: true, enemy: false, splashed: false, manual: false, harpoon: true }));
+        const flip = event.toX < event.x;
+        fire.set(event.towerId, { until: clock + FIRE_SECONDS * 1.3, flip });
+        const post = posts.find(item => item.id === event.towerId); if (post) post.flip = flip;
+        effects()?.bloom(event.x + (flip ? -1.4 : 1.4), y + 1.4, { radius: .8, life: .3, colour: '#f4ecd6' });
+        break;
+      }
+      case 'ship_slowed': {
+        // A harpoon caught the ship (Chain shot slows too, with no rope): a ring on the water and a few drops.
+        const meta = ships.get(event.shipId), ship = latest?.ships?.find(item => item.id === event.shipId);
+        if (!ship) break;
+        if (meta) meta.caughtAt = clock;
+        effects()?.ring(ship.x, drawnY(ship.z) + .1, { radius: 2.2, life: .5, colour: '#bfeaf6' });
+        spark(ship.x, drawnY(ship.z) + .8, { count: 8, speed: [.6, 2], angle: Math.PI / 2, spread: 2, gravity: 6, life: [.3, .7], colour: '#dff6ff', size: [1, 2] });
+        break;
+      }
       case 'mortar_fired': {
         shells.add(item => Object.assign(item, { x: event.x, z: event.z, toX: event.toX, toZ: event.toZ, from: event.t, to: event.impactAt, bomb: false, radius: event.radius ?? 4 }));
         fire.set(event.towerId, { until: clock + FIRE_SECONDS * 1.6, flip: event.toX < event.x });
@@ -513,7 +538,18 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       layer.push(rect[WHITE], x + back, y - .05, size.w * .28, .06, .5, 0, { a: .45 * fadeIn });
       layer.push(rect[WHITE], x + back * 1.35 - wob * .1, y + .08, size.w * .18, .06, .5, 0, { a: .3 * fadeIn });
     }
+    // A ship a harpoon (or Chain shot) holds back (GAME-V3.md §5): foam rings on the water around the hull, swelling
+    // a little, and a small coil of rope over it. Cartoon-only: a pixel atlas has neither frame.
+    const slowedRipples = ship.slowed ? rect[HARPOON_ART.ripples] : null;
+    if (slowedRipples) {
+      const swell = still() ? 1 : 1 + Math.sin(clock * 4 + meta.phase) * .06, wide = Math.max(size.w * 1.05, 3) * swell;
+      layer.push(slowedRipples, x, y - .02, wide, wide * slowedRipples.h / slowedRipples.w, .5, slowedRipples.anchor * wide / slowedRipples.w, { a: .85 * fadeIn });
+    }
     layer.push(drawn, x, y, r.w, r.h, .5, r.anchor, { flip: meta.facing < 0, a: fadeIn, flashing, ...damageTint(variant?.tint ?? tintOf(drawn), share) });
+    if (ship.slowed && rect[HARPOON_ART.rope]) {
+      const mark = rect[HARPOON_ART.rope], bob = still() ? 0 : Math.sin(clock * 3 + meta.phase) * .06;
+      layers.air.push(mark, x - Math.min(1.5, size.w * .3), y + size.h - r.anchor + .55 + bob, mark.w * .85, mark.h * .85, .5, mark.anchor * .85, { a: fadeIn });
+    }
     // A burning ship below a third of its hull: dark smoke rising and the fire on deck, drawn over the hull
     // and big enough to read at the battle zoom (bigger ships burn in two places).
     if (burning) {
@@ -595,7 +631,24 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     if (puff) layer.push(puff, item.x, y - .1, puff.w * .6, puff.h * .6, .5, puff.anchor * .6, { a: 1 - p * p });
   }
 
+  // A harpoon in flight: the barbed head turned along its path, a sagging rope from the tower to it, a shadow on the water.
+  function drawHarpoon(ball) {
+    const span = Math.max(.05, ball.to - ball.from), p = Math.min(1, Math.max(0, (simNow - ball.from) / span)), r = rect[HARPOON_ART.bolt];
+    const lift = q => 1.3 + 1.4 * 4 * q * (1 - q);
+    const x = ball.x + (ball.toX - ball.x) * p, z = ball.z + (ball.toZ - ball.z) * p, y = drawnY(z) + lift(p);
+    if (!still()) for (let k = 1; k <= 7; k++) {
+      const q = p * k / 8, qx = ball.x + (ball.toX - ball.x) * q, qz = ball.z + (ball.toZ - ball.z) * q;
+      layers.air.push(rect[WHITE], qx, drawnY(qz) + lift(q) - .35 * Math.sin(Math.PI * k / 8) * p, .2, .2, .5, .1, { r: .86, g: .73, b: .47, a: .9 });
+    }
+    if (r) {
+      const dx = ball.toX - ball.x, dy = drawnY(ball.toZ) - drawnY(ball.z) + 1.4 * 4 * (1 - 2 * p) * .35; // along the path, a little nose-up early and nose-down late
+      layers.air.push(r, x, y, r.w, r.h, .5, r.anchor, { angle: Math.atan2(dy, dx || .001) });
+    }
+    if (!still()) layers.air.push(rect[WHITE], x, drawnY(z) - .05, .3, .1, .5, 0, { ...DARK, a: .3 });
+  }
+
   function drawBall(ball) {
+    if (ball.harpoon) { drawHarpoon(ball); return; }
     const span = Math.max(.05, ball.to - ball.from), p = Math.min(1, Math.max(0, (simNow - ball.from) / span));
     const x = ball.x + (ball.toX - ball.x) * p, z = ball.z + (ball.toZ - ball.z) * p;
     const distance = Math.hypot(ball.toX - ball.x, ball.toZ - ball.z);

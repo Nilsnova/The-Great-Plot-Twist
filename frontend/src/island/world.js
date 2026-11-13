@@ -11,7 +11,7 @@ import {isOpen, spotWave, waveOf} from '../campaign/index.js';
 import {LOCK_WAVES} from '../art/campaign.js';
 import {SLOT_KINDS} from './td-rules.js';
 import {ROLE_IDS, activeRole, roleRadius} from '../campaign/houses.js';
-import {TIER_ART, crewArt, pipRow, pirateLevels} from '../pixel/pirate-catalog.js';
+import {HARPOON_ART, TIER_ART, crewArt, pipRow, pirateLevels} from '../pixel/pirate-catalog.js';
 import {islandFrame} from '../art/registry.js';
 import {frameCanvas, smoothTexture, spriteMaterial} from '../art/textures.js';
 import {clickVerdict} from '../world/reach.js';
@@ -29,7 +29,7 @@ export const catalogArt = (kind, sizes = pixelSizes) => (ART_CANDIDATES[kind] ??
 // the level). Levels 4 and 5 (GAME-V3.md §4.1) have their own drawings, gold trim and the island's banner,
 // and gold stars on a teal disc as pips (PIP_TIER_ART).
 const tiered = kind => [...pirateLevels[kind], ...TIER_ART[kind]];
-export const LEVEL_ART = Object.freeze({wall: tiered('wall'), cannon: tiered('cannon'), mortar: tiered('mortar'),
+export const LEVEL_ART = Object.freeze({wall: tiered('wall'), cannon: tiered('cannon'), mortar: tiered('mortar'), harpoon: HARPOON_ART.levels,
   watchtower: ['island-watchtower', 'island-watchtower', 'island-watchtower', 'island-watchtower-l4', 'island-watchtower-l5'], house: ['island-house']});
 export const PIP_ART = 'fx-level-pip';
 export const PIP_TIER_ART = 'fx-level-pip-gold';
@@ -48,7 +48,7 @@ export function buildingArt(kind, level = 1, spec = null) {
 // How many level pips stand above a building: towers always show theirs, the rest from level 2.
 export const pipCount = (kind, level = 1) => {
   const n = Number.isSafeInteger(level) && level > 0 ? Math.min(5, level) : 1;
-  return kind === 'cannon' || kind === 'mortar' || n > 1 ? n : 0;
+  return kind === 'cannon' || kind === 'mortar' || kind === 'harpoon' || n > 1 ? n : 0;
 };
 // Where the hired crew stand outside a wave (TOWER-DEFENSE.md §3): gunners beside the strongest towers
 // (level, then id order, as the wave mans them), carpenters beside the walls, the lookout at the
@@ -77,7 +77,7 @@ export function crewPlaces(spots = [], crew = {}, {bell = null} = {}) {
 
 // The drawn stand-ins (until the level art has loaded), the bell, the build ring and the kind badges:
 // clean cartoon frames (src/art/island.js) painted once into smooth textures.
-const DRAWN = {wall: 'island-wall', cannon: 'island-cannon', mortar: 'island-mortar', watchtower: 'island-watchtower', house: 'island-house', bell: 'island-bell'};
+const DRAWN = {wall: 'island-wall', cannon: 'island-cannon', mortar: 'island-mortar', harpoon: 'island-harpoon', watchtower: 'island-watchtower', house: 'island-house', bell: 'island-bell'};
 function drawn(name) {
   const [width, height, anchor] = islandFrame(name);
   return {texture: smoothTexture(frameCanvas(name)), size: [width, height], anchor};
@@ -243,10 +243,10 @@ export function decorateIsland(place, ctx = {}) {
       // Locked things stay on the map (GAME-V3.md §4): a spot the campaign opens later, or whose kind is not
       // open yet, shows a lock badge instead of the glowing ring.
       const open = (!unlocks || kindsOf(spot).some(kind => (unlocks.levels?.[kind] ?? 0) >= 1)) && !spotLocked(spot, campaign);
-      const hidden = battle && ['wall', 'cannon', 'mortar'].includes(answer?.kind ?? spot.kind);
+      const hidden = battle && ['wall', 'cannon', 'mortar', 'harpoon'].includes(answer?.kind ?? spot.kind);
       for (const kind of kindsOf(spot)) {
         buildings.get(`${spot.id}:${kind}`).visible = !art && built && (answer.kind === kind || (kindsOf(spot).length === 1))
-          && !(battle && ['wall', 'cannon', 'mortar'].includes(kind));
+          && !(battle && ['wall', 'cannon', 'mortar', 'harpoon'].includes(kind));
       }
       if (art) showSpot(spot, answer, hidden);
       const marker = markers.get(spot.id);
