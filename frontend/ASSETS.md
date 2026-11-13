@@ -418,5 +418,6 @@ Original code-drawn rank shields and captain statue: [src/art/milestones.js](src
 using the existing [paint kit](src/art/paint.js). Design direction and placement:
 Ianno Hollensteiner; code drafted with Codex. No third-party images or fonts added.
 The number-only shield has twelve ranks from unranked to crowned, selected from
-the existing best wave. Existing oak, pine and birch art is reused at three sizes.
+the existing best wave. Existing oak, pine and birch art is reused at 100%, 110% and 120% of its original size
+for zero, one and two built houses; the starting island keeps its existing tree size.
 [Scope and ladder](../specs/T5-island-decoration.md); [preview](../docs/evidence/t5/ranks.png).

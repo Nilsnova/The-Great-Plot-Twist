@@ -8,7 +8,7 @@ export function decorationState(campaign = null, spots = []) {
   const wave = Number.isSafeInteger(campaign?.wave) && campaign.wave >= 0 ? campaign.wave : 0;
   const houses = new Set(spots.filter(spot => spot?.built === true && spot.kind === 'house'
     && ['house_1', 'house_2'].includes(spot.id)).map(spot => spot.id));
-  return {wave, statue: wave >= 25, treeScale: [.6, .8, 1][houses.size]};
+  return {wave, statue: wave >= 25, treeScale: [1, 1.1, 1.2][houses.size]};
 }
 
 function milestone(root, name, width, height, x, z) {

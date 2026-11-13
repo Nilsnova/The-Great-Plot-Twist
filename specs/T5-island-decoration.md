@@ -15,7 +15,8 @@
 
 Show the highest beaten wave on a number-only league shield beside the cabin,
 reveal a statue after wave 25, and
-grow decorative trees through three sizes for zero, one, or two built houses.
+grow decorative trees at 100%, 110% or 120% of their original size for zero, one,
+or two built houses. The starting island keeps its existing full-size trees.
 The shield follows the island being viewed, including a friend's island.
 Losses keep the recorded best wave. Removing a house reduces the tree size.
 These decorations change appearance only: no combat, money, collision or API rules.

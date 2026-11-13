@@ -31,7 +31,21 @@ try {
  }
  console.log(`T5 ${phase}: captured 1280×720 and 375×812 at best wave 25.`);
  if(phase==='after'){
-  await page.goto(env.url+'/asset-library.html');
+  for(const houses of [1,2]){
+   const scale=await page.evaluate(async houses=>{
+    const i=window.__island.island;i.dev.setCoins(500);await i.load();
+    await i.build(`house_${houses}`,'house');i.ui.close();
+    return window.__island.world.current.group.children.find(o=>o.userData.asset==='oak').scale.x;
+   },houses);
+   assert.equal(scale,houses===1?1.1:1.2);
+   for(const [width,height] of [[1280,720],[375,812]]){
+    await page.setViewportSize({width,height});await settle(page);
+    await page.screenshot({path:`../docs/evidence/t5/after-${houses}-house-${width}.png`});
+   }
+  }
+  console.log('T5 house builds: tree scale 1.1 with one house, 1.2 with two houses.');
+  await page.route('**/t5-rank-preview',route=>route.fulfill({contentType:'text/html',body:'<!doctype html><body></body>'}));
+  await page.goto(env.url+'/t5-rank-preview');
   await page.evaluate(async()=>{
    const {paint}=await import('/src/art/paint.js');
    const {drawWaveBadge,waveRank}=await import('/src/art/milestones.js');

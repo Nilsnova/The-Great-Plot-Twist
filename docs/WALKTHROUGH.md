@@ -1058,7 +1058,7 @@ A CI job that runs the SQL suites; a check that the live md5 equals the file; a 
 ## 29. Island milestones — Ianno Hollensteiner (T5)
 
 **What and where.** The island shows a number-only rank shield above and right of
-the cabin, a captain statue after wave 25, and trees at 60%, 80% or 100% size for
+the cabin, a captain statue after wave 25, and trees at 100%, 110% or 120% size for
 zero, one or two built houses. [decorations.js](../frontend/src/island/decorations.js)
 reads the viewed island’s existing campaign wave and spots.
 [world.js](../frontend/src/island/world.js) calls it whenever island state changes

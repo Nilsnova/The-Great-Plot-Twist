@@ -57,7 +57,7 @@ it('updates the viewed island, reuses unchanged art and releases its own resourc
     return {first, reused, replaced, milestone, fresh, hidden, freed, restored: tree.scale.x,
       children: place.group.children.length, colliders: place.colliders};
   });
-  expect(result).toEqual({first: {wave: 24, statue: false, tree: 1.6}, reused: true, replaced: 1,
-    milestone: {wave: 25, statue: true, tree: 2}, fresh: {wave: 1, statue: false, tree: 1.2},
+  expect(result).toEqual({first: {wave: 24, statue: false, tree: 2.2}, reused: true, replaced: 1,
+    milestone: {wave: 25, statue: true, tree: 2.4}, fresh: {wave: 1, statue: false, tree: 2},
     hidden: true, freed: 7, restored: 2, children: 1, colliders: [{x: 1, z: 2, radius: .48}]});
 });

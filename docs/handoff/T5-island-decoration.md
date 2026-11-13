@@ -17,8 +17,8 @@ The old rectangular artwork and obsolete after screenshots are replaced, not shi
 as another design. The [spec](../../specs/T5-island-decoration.md) records the approved ladder.
 The number follows each newly survived highest wave; the artwork changes at ten-wave
 milestones. A lost attempt or replay of a lower wave does not increase the record.
-A statue appears after wave 25; existing trees have three sizes for zero, one or two
-built houses. No public API, database, money, combat, collision or dependency changes.
+A statue appears after wave 25; existing trees keep their original size with zero houses, then grow to 110% and
+120% with one and two houses. Removing houses returns them toward the original size. No public API, database, money, combat, collision or dependency changes.
 
 ## Evidence
 
@@ -26,6 +26,14 @@ built houses. No public API, database, money, combat, collision or dependency ch
 |---|---|---|
 | 1280 × 720 | [Before](../evidence/t5/before-1280.png) | [After](../evidence/t5/after-1280.png) |
 | 375 × 812 | [Before](../evidence/t5/before-375.png) | [After](../evidence/t5/after-375.png) |
+
+[One house, desktop](../evidence/t5/after-1-house-1280.png) ·
+[Two houses, desktop](../evidence/t5/after-2-house-1280.png) ·
+[One house, phone](../evidence/t5/after-1-house-375.png) ·
+[Two houses, phone](../evidence/t5/after-2-house-375.png).
+The zero-house after screenshots above keep the same tree size as the before images.
+All three house counts were captured on the same local island; the desktop images
+show the trees, while the phone view also checks the surrounding UI after building.
 
 [All twelve rank designs](../evidence/t5/ranks.png). The labels on this developer
 preview identify the ranks; the in-game shield shows only its number.
@@ -43,19 +51,21 @@ no package was added and the lockfile is unchanged.
 | Command | Exact result / evidence |
 |---|---|
 | `npm install` | `added 47 packages in 687ms` |
-| `npm test` (revised rank artwork) | `Test Files 236 passed (236)`; `Tests 2970 passed (2970)`; exit 0 |
-| `npm test -- tests/island/decorations.test.js tests/island/decorations-dom.test.js` (after adding the final win-event regression) | `Test Files 2 passed (2)`; `Tests 8 passed (8)`; exit 0 |
+| `npm test` (final rank artwork and tree correction) | `Test Files 236 passed (236)`; `Tests 2971 passed (2971)`; exit 0 |
 | `npm run build` | `Spoiler guard: 225 text files, 12 protected lines, no suspect elimination data.`; exit 0 |
 | `node scripts/report-budget.js --check` | exit 0; initial JavaScript 18,174 / 21,080 bytes; CSS 8,550 / 12,000 bytes |
 | `node scripts/text-lint/index.mjs` (repository root) | `Text lint: 3744 candidate strings in 411 source files; 0 errors, 8 report-only findings.`; the report-only findings are in unchanged files |
-| `node scripts/check-island-decorations.mjs` | `T5 after: captured 1280×720 and 375×812 at best wave 25.`; exit 0; also writes the rank preview |
+| `node scripts/check-island-decorations.mjs` | `T5 after: captured 1280×720 and 375×812 at best wave 25.`; exit 0; also writes the rank preview and all house stages at both viewports. `T5 house builds: tree scale 1.1 with one house, 1.2 with two houses.` |
 | `npm run test:a11y` | `"screens": 33`, `"failures": []`, `"errors": []`; exit 0 |
-| `SHOTS_DIR=/private/tmp/t5-demo-shots npm run test:demo` | 33 checks; `"errors": []`, `"external": []`; exit 0 |
+| `SHOTS_DIR=/private/tmp/t5-trees-demo-shots npm run test:demo` | 33 checks; `"errors": []`, `"external": []`; exit 0 |
 | `git diff --check` (repository root) | exit 0, no output |
+
+Tree correction tests first: four tests failed against the old 60% / 80% / 100% rule
+before it was replaced. The current expected rule keeps the original size and grows it.
 
 Tests-first evidence: the first rule-test run failed because `decorations.js` did
 not exist. The later rank test failed with `TypeError: waveRank is not a function`
-before the rank selector was added. The final focused tests cover every ten-wave
+before the rank selector was added. The T5 tests cover every ten-wave
 boundary, recorded win-event refreshes, statue 24/25, house growth/removal, invalid
 records, another island’s lower progress, texture reuse and exactly-once cleanup.
 
@@ -63,9 +73,8 @@ The first baseline run lacked browser/loopback permissions; a subsequent baselin
 run lacked CHROME_PATH. Neither is claimed as a passing baseline. The corrected full
 suite above passed with Chrome configured. The demo script initially tried to write
 to another teammate’s home directory; its existing SHOTS_DIR option fixed the run.
-An extra proposed actual-house-build capture was declined and is not claimed. The
-submitted script verifies the badge/statue in the full game; tree sizing is exercised
-in rule and browser component tests. Generated accessibility captures were moved
+The submitted game journey verifies actual local house builds at 100%, 110% and
+120% as well as the badge/statue. Generated accessibility captures were moved
 outside the checkout and original tracked captures restored, keeping this PR focused.
 
 ## Explain-back draft — Ianno must review and put this in his own words
