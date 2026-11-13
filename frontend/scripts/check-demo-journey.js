@@ -83,7 +83,7 @@ try{
   await page.unroute('**/api/lock**');
   const writes=[];page.on('request',request=>{if(new URL(request.url()).pathname.startsWith('/api/')&&request.method()!=='GET')writes.push(request.url());});
   await page.evaluate(()=>{localStorage.clear();sessionStorage.clear();});
-  await frontDoor(env.url+'/?demo=1');
+  await frontDoor(env.url+'/?demo=1&stagger=0');
   await page.waitForFunction(()=>window.__island.classDemo.debug.others.length>=10,null,{timeout:15000});
   await page.waitForTimeout(1200);await shot('21-rehearsal-harbor');
   check(await page.evaluate(()=>window.__island.experience.stats.drawn>=10),'Simulated captains are drawn in the harbor');
@@ -153,7 +153,7 @@ try{
     report.perf={};
     for(const captains of [0,8,40]){
       await page.evaluate(()=>{localStorage.clear();sessionStorage.clear();});
-      await frontDoor(`${env.url}/?demo=1&perf=1&captains=${captains}`);
+      await frontDoor(`${env.url}/?demo=1&perf=1&stagger=0&captains=${captains}`);
       await page.waitForTimeout(2500);
       const numbers=await measure(page,180);
       const panel=await page.evaluate(()=>Object.fromEntries([...document.querySelectorAll('.performance-panel dt')].map(term=>[term.textContent,term.nextElementSibling?.textContent])));
@@ -161,6 +161,12 @@ try{
         p95Frame:panel['95th percentile frame']??null,drawn:await page.evaluate(()=>window.__island.experience.stats.drawn)};
       await shot(`3${captains===0?0:captains===8?1:2}-perf-${captains}-captains`);
     }
+    // Without stagger=0 the 40 captains step ashore one by one over 25 s (the arrival effect plays for each).
+    await page.evaluate(()=>{localStorage.clear();sessionStorage.clear();});
+    await frontDoor(`${env.url}/?demo=1&perf=1&captains=40`);
+    const early=await page.evaluate(()=>window.__island.classDemo.debug.others.length);
+    await page.waitForFunction(()=>window.__island.classDemo.debug.others.length===40,null,{timeout:60000});
+    check(early<40,'Forty simulated captains arrive one by one over about 25 s, and all 40 are there at the end');
   }
   report.errors=env.errors.filter(message=>!message.includes('503'));report.external=env.external;
   check(report.errors.length===0&&env.external.length===0,'No JavaScript errors and no outside requests');

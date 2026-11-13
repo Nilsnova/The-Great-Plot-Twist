@@ -51,7 +51,7 @@ export function createClassDemo(ctx) {
   const rehearsalTools = rehearsal ? import('./rehearsal.js').then(module => {
     if (disposed) return null;
     const asked = new URLSearchParams(globalThis.location?.search ?? '').get('captains'), count = asked === null || !Number.isFinite(Number(asked)) ? 14 : Number(asked);
-    captains = module.createRehearsalCaptains({count, canStand: ctx.canStand});
+    captains = module.createRehearsalCaptains({count, canStand: ctx.canStand, stagger: new URLSearchParams(globalThis.location?.search ?? '').get('stagger') !== '0'});
     return {duels: module.createRehearsalDuels(), lock: module.createRehearsalLock(), captains,
       pointCaptains: () => module.createRehearsalCaptains({count, canStand: ctx.canStand, area: module.POINT_AREA})};
   }) : null;
@@ -154,7 +154,7 @@ export function createClassDemo(ctx) {
   async function wave() {
     if (rehearsal) {
       localEmote = {id: 'wave', until: Date.now() + 1800};
-      if (captains?.bots.length) { tick('wave'); setTimeout(() => captains?.wave(Date.now()), 900); }
+      if (captains?.here().length) { tick('wave'); setTimeout(() => captains?.wave(Date.now()), 900); }
       return;
     }
     const result = await ctx.send?.('setEmote', 'wave');
@@ -269,12 +269,13 @@ export function createClassDemo(ctx) {
         if (now >= simulateAt) {
           simulateAt = now + 200;
           ctx.simulate?.({...captains.presence(now, CLASS_HARBOR_PLACE), localEmote: localEmote?.until > now ? localEmote : null, canEmote: true});
-          if (!lastCount || lastCount !== captains.bots.length + 1) { lastCount = captains.bots.length + 1; projector?.setCount(lastCount); }
+          const here = captains.here().length + 1;
+          if (!lastCount || lastCount !== here) { lastCount = here; projector?.setCount(lastCount); }
         }
         arrivedAt ??= now;
-        if (!rehearsalInvited && now > arrivedAt + 25000 && captains.bots[1]) {
+        if (!rehearsalInvited && now > arrivedAt + 25000 && captains.here()[1]) {
           rehearsalInvited = true;
-          void rehearsalTools.then(async tools => { const overlay = await ensureDuel(); overlay?.invited(tools.duels.invite(captains.bots[1].name)); });
+          void rehearsalTools.then(async tools => { const overlay = await ensureDuel(); overlay?.invited(tools.duels.invite(captains.here()[1].name)); });
         }
       } else if (rehearsal && place === POINT_PLACE && ctx.pointBattle?.() === true) {
         // ?demo=1 at Pirate Point: during a battle the simulated captains defend it with you.
