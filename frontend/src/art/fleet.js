@@ -189,6 +189,30 @@ function flagTrophy(c, {h}) {
   part(c, flag, '#2b2430', {width: 1.1, shade: false}); part(c, ellipse(17, 12.6, 2.6, 2.4), '#f4ece0', {line: false, shade: false});
   part(c, ellipse(7.2, 5.4, 1.6), GOLD, {width: .7, shade: false});
 }
+// The harpoon in flight (GAME-V3.md §5, T1), pointing right: a barbed iron head on a pale shaft with a bit of rope
+// behind it. The wave renderer turns it along its flight.
+function harpoonBolt(c, {w, h}) {
+  const cy = h / 2;
+  const rope = new Path2D(); rope.moveTo(1, cy); rope.quadraticCurveTo(4, cy + 2.6, 8, cy + .4);
+  c.save(); c.lineCap = 'round'; c.strokeStyle = INK; c.lineWidth = 2.6; c.stroke(rope); c.strokeStyle = '#dcbb78'; c.lineWidth = 1.3; c.stroke(rope); c.restore();
+  stroke(c, line([[7, cy], [w - 9, cy]]), INK, 3); stroke(c, line([[7, cy], [w - 9, cy]]), '#efe0b8', 1.6);
+  part(c, poly([[w - 9, cy], [w - 12.6, cy - 4.4], [w - 11.2, cy], [w - 12.6, cy + 4.4]], .5), '#9aa3b2', {width: .9, shade: false});
+  part(c, poly([[w - 9.4, cy - 2], [w - 1.6, cy], [w - 9.4, cy + 2]], .4), '#c3cad6', {width: .9, shade: false});
+}
+// A ship the harpoon has caught: rings of foam on the water around the hull (drawn under it)...
+function slowRipples(c, {w, h}) {
+  const cx = w / 2, cy = h / 2 + 1;
+  stroke(c, ellipse(cx, cy, w * .46, h * .38), '#8fd3ea', 1.5, .9);
+  stroke(c, ellipse(cx, cy, w * .34, h * .27), '#e9f8ff', 1.3, .95);
+  for (const [x, y] of [[cx - w * .3, cy - 1], [cx + w * .3, cy + 1]]) part(c, ellipse(x, y, 1.6, 1), '#e9f8ff', {line: false, shade: false});
+}
+// ...and a small coil of rope over it, so a slowed ship reads at a glance.
+function ropeMark(c, {w, h}) {
+  const cx = w / 2, cy = h / 2 + 1;
+  for (let i = 0; i < 2; i++) part(c, ellipse(cx, cy + 1.6 - i * 2.6, 5.4, 2.6), '#dcbb78', {width: .9, depth: .6, shade: '#9c7a44'});
+  stroke(c, ellipse(cx, cy - 1.2, 3.2, 1.3), '#9c7a44', .8);
+  part(c, ellipse(cx, cy - 1.4, 1.4, .7), '#5a3b22', {line: false, shade: false});
+}
 const NONE = {outline: 0};
 /** Every fleet frame: name -> [width, height, anchor, draw, options]. */
 export function fleetFrames() {
@@ -203,6 +227,7 @@ export function fleetFrames() {
   Object.assign(frames, {
     'pirate-cannonball': [16, 16, 8, ball(false)], 'fx-mortar-shell': [16, 16, 8, ball(true)], 'fx-musket-flash': [16, 16, 8, musketFlash, NONE],
     'pirate-wreck': [64, 48, 8, wreck], 'pirate-flag-trophy': [32, 48, 4, flagTrophy],
+    'fx-harpoon': [32, 12, 6, harpoonBolt, NONE], 'fx-slow-ripples': [64, 20, 10, slowRipples, NONE], 'fx-rope-mark': [16, 16, 8, ropeMark, NONE],
   });
   return frames;
 }

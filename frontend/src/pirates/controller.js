@@ -521,6 +521,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
         cue(event.manual ? 'pirate-cannon-manual' : 'pirate-cannon');
         if (!event.hit) current.splashesAt.push(event.impactAt);
       } else if (event.type === 'mortar_fired') cue('pirate-cannon');
+      else if (event.type === 'harpoon_thrown') cue('pirate-splash'); // a rope whoosh: the existing splash cue, no new sound
       else if (event.type === 'mortar_impact') { cue(event.hits ? 'pirate-hit' : 'pirate-splash'); kick(.08); }
       else if (event.type === 'captain_fired') cue('pirate-cannon-manual');
       else if (event.type === 'captain_blast') { cue(event.hits ? 'pirate-hit' : 'pirate-splash'); kick(.06); } else if (event.type === 'ship_hit' && !event.blocked) cue('pirate-hit');

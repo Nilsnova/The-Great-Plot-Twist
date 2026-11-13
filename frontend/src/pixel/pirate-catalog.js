@@ -83,5 +83,12 @@ export function pipRow(level, { step = .7 } = {}) {
   return { art: tier ? 'fx-level-pip-gold' : 'fx-level-pip', scale: tier ? PIP_TIER.scale : 1,
     offsets: Array.from({ length: n }, (_, i) => Math.round((i - (n - 1) / 2) * gap * 1e4) / 1e4) };
 }
+// The harpoon tower (GAME-V3.md §5, T1): cartoon-only, every level and its firing frame (src/art/island.js). A pixel atlas
+// (tests) has no frame for it and draws a cannon instead.
+export const HARPOON_ART = {
+  levels: ['island-harpoon', 'island-harpoon-l2', 'island-harpoon-l3', 'island-harpoon-l4', 'island-harpoon-l5'],
+  fire: ['island-harpoon-fire', 'island-harpoon-fire-l2', 'island-harpoon-fire-l3', 'island-harpoon-fire-l4', 'island-harpoon-fire-l5'],
+  bolt: 'fx-harpoon', ripples: 'fx-slow-ripples', rope: 'fx-rope-mark',
+};
 export const crewArt = { gunner: 'crew-gunner', carpenter: 'crew-carpenter', lookout: 'crew-lookout' };
 export const pirateArtIds = Object.keys(pirateDimensions);
