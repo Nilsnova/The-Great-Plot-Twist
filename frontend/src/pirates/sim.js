@@ -53,7 +53,15 @@ export const CONFIG = freeze({
     ironclad: { hp: 150, speed: 1.35, damage: 8, interval: 2, crew: 4 },     // wave 30+: iron-plated brigs
     dreadnought: { hp: 400, speed: 1.2, damage: 14, interval: 2, crew: 9 },  // wave 50+: the boss warships (no extra boss hp)
     redtide: { hp: 1200, speed: 1.0, damage: 18, interval: 2, crew: 12 },    // wave 100: Captain Redtide's own ship (1200 × the hp curve)
+    // wave 16+: a small, fast, fragile boat that jams towers from afar (CONFIG.gunboat); no damage, no crew. interval = seconds between shots.
+    gunboat: { hp: 20, speed: 3.2, damage: 0, interval: 4.5, crew: 0 },
   },
+  // The gunboat (docs/GAME-V3.md §4.1): it sails in to `range` of the nearest tower, or if it can to just
+  // outside the reach of the nearest cannon (`margin`), and anchors there. Every `interval` seconds
+  // (CONFIG.ships.gunboat; the first shot `aim` seconds after it anchors) it fires at the nearest tower that is not jammed already and jams it for `jam`
+  // seconds: the tower does not reload or fire, then works again. A hit does no hp damage (towers have none).
+  // A gunboat that no gun reaches does not hold the wave up: the pirates sail off after maxTime like any other.
+  gunboat: { range: 42, margin: 1.5, jam: 3, step: .5, outRadius: 1.2, aim: .8 },
   // Boarding (TOWER-DEFENSE.md §12): an anchored ship lets its crew climb out one by one; they walk inland
   // to the island's heart, hack every standing wall in their way, and a boarder who reaches the heart
   // hurts the island and is gone. Ships at anchor shell the walls in reach; with none in reach they only
@@ -96,6 +104,7 @@ export const CONFIG = freeze({
     bossHp: [[15, 1.25], [30, 1.5]],            // the boss warships are tougher from these waves on
     brutes: { from: 20, share: .2, grow: .005, max: .35, hp: 2.2, speed: .8, hack: 1.6, heart: 1.5 },
     ironclads: { from: 30, share: .2, grow: .01, max: .6 },
+    gunboats: { from: 16, share: .05, grow: .004, max: .08 }, // a share of the escorts, sailing on top of the fleet (at least one)
     dreadnoughtsFrom: 50,                       // the boss warships are dreadnoughts from here on
     final: 100,                                 // the final battle: Redtide's own ship with the bosses
   },
@@ -344,12 +353,13 @@ export function tierFor(wave) {
   const T = CONFIG.tiers;
   const bossHp = T.bossHp.reduce((value, [from, k]) => (wave >= from ? k : value), 1);
   return { raiders: tierShare(T.raiders, wave), ironclads: tierShare(T.ironclads, wave), brutes: tierShare(T.brutes, wave),
-    boss: wave >= T.dreadnoughtsFrom ? 'dreadnought' : 'warship', bossHp, final: wave >= T.final };
+    gunboats: tierShare(T.gunboats, wave), boss: wave >= T.dreadnoughtsFrom ? 'dreadnought' : 'warship', bossHp, final: wave >= T.final };
 }
 /**
  * The ships of a wave before the dice (the plan of createWave shuffles them): {count, kinds (the escorts and
  * regular warships), bosses, tier}. The campaign's tiers: some sloops sail as raiders (12+), some brigs as
- * ironclads (30+), with the same list length, so the dice of the waves before a tier are untouched.
+ * ironclads (30+), with the same list length, so the dice of the waves before a tier are untouched. Gunboats (16+) are
+ * added to the list, so the boarders of a wave do not change.
  */
 export function fleetOf(wave, { shipFactor = 1, boss = wave % CONFIG.boss.every === 0 } = {}) {
   const C = CONFIG, count = clamp(Math.round(fleetSize(wave) * shipFactor), 1, C.fleet.max);
@@ -361,6 +371,9 @@ export function fleetOf(wave, { shipFactor = 1, boss = wave % CONFIG.boss.every 
   const raiders = Math.round(sloops * tier.raiders), ironclads = Math.round(brigsIn * tier.ironclads);
   const kinds = [...Array(sloops - raiders).fill('sloop'), ...Array(raiders).fill('raider'),
     ...Array(brigsIn - ironclads).fill('brig'), ...Array(ironclads).fill('ironclad'), ...Array(Math.min(regular, count)).fill('warship')];
+  // Gunboats (16+) sail on top of the fleet, so the boarders of a wave stay what they were (a gunboat has no crew):
+  // a small share of the escorts, at least one.
+  if (tier.gunboats > 0) kinds.push(...Array(Math.max(1, Math.round(escorts * tier.gunboats))).fill('gunboat'));
   return { count, kinds, bosses, tier };
 }
 /**
@@ -487,6 +500,24 @@ export function createWave(options = {}) {
   const cannonById = new Map(cannons.map(item => [item.id, item]));
   const wallById = new Map(walls.map(item => [item.id, item]));
 
+  // Where a gunboat anchors (CONFIG.gunboat): the first point of its course where the nearest tower is as
+  // far off as it can shoot (`range`), or, if it can, just outside the reach of the nearest cannon, but never
+  // farther out than `outRadius` coast radii, so it anchors on screen and in reach of the captains. No dice.
+  const jammed = (tower, t) => tower.jammedUntil !== undefined && tower.jammedUntil > t + 1e-9;
+  function gunboatStand(from, to, a) {
+    const G = C.gunboat, span = distance(from.x, from.z, to.x, to.z), steps = Math.max(1, Math.ceil(span / G.step));
+    const nearest = (list, x, z) => list.reduce((best, item) => (!best || distance(item.x, item.z, x, z) < distance(best.x, best.z, x, z) ? item : best), null);
+    if (!towers.length) return to;
+    const out = coastPoint(a, G.outRadius, coast), first = Math.max(1, Math.ceil(distance(from.x, from.z, out.x, out.z) / span * steps));
+    for (let i = first; i < steps; i++) {
+      const x = from.x + (to.x - from.x) * i / steps, z = from.z + (to.z - from.z) * i / steps;
+      const cannon = nearest(cannons, x, z), reach = Math.min(G.range - 1, cannon ? cannon.range + G.margin : G.range - 1);
+      const tower = nearest(towers, x, z);
+      if (distance(tower.x, tower.z, x, z) <= reach) return { x: round2(x), z: round2(z) };
+    }
+    return to;
+  }
+
   // The fleet is planned up front, so the random sequence never depends on frame timing.
   const lanes = laneList.map(lane => {
     const a = lane.bearing * Math.PI / 180, stop = coastPoint(a, C.stopRadius, coast);
@@ -497,7 +528,10 @@ export function createWave(options = {}) {
   if (towers.length) lanes.sort((a, b) => a.cover - b.cover); // the first waves come where the guns are
   const laneCount = clamp(C.fleet.lanesPerWave * waveNumber, 1, lanes.length);
   const { count, kinds: fleetKinds, bosses, tier } = fleetOf(waveNumber, { shipFactor, boss });
-  const kinds = shuffle(happening.kinds([...fleetKinds]), random); // v3 waves: fire ships, the armada
+  // Gunboats come after the first ships, with the fleet already close: the others are shuffled as ever (v3 waves: fire ships, the armada), then
+  // the boats are set in at the 7th, 12th, 17th place and so on. A wave without gunboats is dealt exactly as before.
+  const kinds = shuffle(happening.kinds(fleetKinds.filter(kind => kind !== 'gunboat')), random);
+  fleetKinds.filter(kind => kind === 'gunboat').forEach((kind, i) => kinds.splice(Math.min(kinds.length, 6 + i * 5), 0, kind));
   const gap = happening.gap(Math.min(Math.max(C.fleet.minGap, C.fleet.gap - C.fleet.gapPerWave * (waveNumber - 1)),
     C.fleet.window / (happening.id ? kinds.length : count)));
   const plan = kinds.map((kind, index) => ({ kind, lane: lanes[index % laneCount], at: C.fleet.firstSpawn + index * gap }));
@@ -522,6 +556,7 @@ export function createWave(options = {}) {
     const stopR = C.stopRadius + (random() * 2 - 1) * C.stopJitter;
     entry.a = a; entry.from = coastPoint(a, C.spawnRadius, coast);
     entry.to = entry.toward ?? coastPoint(a, entry.stop ?? (['flagship', 'warship', 'dreadnought', 'redtide'].includes(entry.kind) ? C.stopRadius + .1 : stopR), coast);
+    if (entry.kind === 'gunboat') entry.to = gunboatStand(entry.from, entry.to, entry.a); // after the dice above, so no other ship's dice move
   }
 
   let ticks = 0, rest = 0, nextSpawn = 0, nextWarn = 0, nextShipId = 1, sunk = 0, islandHp = maxHp, done = false;
@@ -555,6 +590,25 @@ export function createWave(options = {}) {
     events.push({ type: 'ship_sunk', t: now(), shipId: ship.id, kind: ship.kind, by, boss: ship.boss, x: round2(ship.x), z: round2(ship.z),
       ...(ship.crew > 0 ? { crewLost: ship.crew } : {}), ...(extra.finisher ? { finisher: true } : {}) });
     happening.onSunk(ship, events);
+  }
+  // A gunboat at anchor: every `interval` it jams the nearest tower in range that is not jammed yet (else the
+  // nearest one, which only starts its jam again). Towers have no hp, so nothing is damaged.
+  function gunboatFire(ship, t, events) {
+    if ((ship.attackIn -= C.tick) > 1e-9) return;
+    ship.attackIn += statsOf(ship.kind).interval;
+    const G = C.gunboat;
+    let free = null, freeD = Infinity, any = null, anyD = Infinity;
+    for (const tower of towers) {
+      const d = distance(tower.x, tower.z, ship.x, ship.z);
+      if (d > G.range + 1e-9) continue;
+      if (d < anyD) { any = tower; anyD = d; }
+      if (!jammed(tower, t) && d < freeD) { free = tower; freeD = d; }
+    }
+    const target = free ?? any;
+    if (!target) return;
+    target.jammedUntil = round2(t + G.jam);
+    events.push({ type: 'gunboat_fired', t: now(), shipId: ship.id, targetId: target.id, x: round2(ship.x), z: round2(ship.z), toX: target.x, toZ: target.z });
+    events.push({ type: 'tower_jammed', t: now(), towerId: target.id, shipId: ship.id, until: target.jammedUntil, x: target.x, z: target.z });
   }
   function damageBoarder(boarder, amount, by, events, extra = {}) {
     const damage = Math.min(boarder.hp, round2(amount));
@@ -856,7 +910,7 @@ export function createWave(options = {}) {
     if (input.type === 'fire') {
       const cannon = typeof input.cannonId === 'string' ? cannonById.get(input.cannonId) : undefined;
       const target = findTarget(input.targetId);
-      if (!cannon || !target || !visible(cannon, target)) return;
+      if (!cannon || !target || !visible(cannon, target) || jammed(cannon, ticks * C.tick)) return; // a jammed cannon cannot be fired by hand either
       if (ticks * C.tick - cannon.lastShot < C.cannon.manualCooldown) return;
       fire(cannon, target, true, events);
     } else if (input.type === 'repair') {
@@ -1149,9 +1203,11 @@ export function createWave(options = {}) {
         if (ship.left <= 1e-9) {
           ship.x = ship.to.x; ship.z = ship.to.z; ship.left = 0; ship.state = 'attacking'; ship.attackIn = stats.interval / 2;
           ship.unloadIn = B.interval / 2;
+          if (ship.kind === 'gunboat') ship.attackIn = C.gunboat.aim; // it opens fire a moment after it anchors
           events.push({ type: 'ship_anchored', t: now(), shipId: ship.id, kind: ship.kind, crew: ship.crew, x: round2(ship.x), z: round2(ship.z) });
         }
       } else {
+        if (ship.kind === 'gunboat') { gunboatFire(ship, t, events); continue; } // jams a tower instead of shelling walls
         // Boarding: one boarder every `interval` until the crew is out.
         if (ship.crew > 0 && (ship.unloadIn -= C.tick) <= 1e-9) { ship.unloadIn += B.interval; ship.crew--; landBoarder(ship, events); }
         if ((ship.attackIn -= C.tick) <= 1e-9) {
@@ -1260,7 +1316,7 @@ export function createWave(options = {}) {
       for (const boarder of boarders.filter(item => distance(item.x, item.z, fire.x, fire.z) <= fire.radius)) damageBoarder(boarder, fire.damage, fire.towerId, events, { area: true, fire: true });
     }
     for (const tower of towers) {
-      if (happening.silenced(tower, t)) continue; // v3 waves: shelled by the siege barge
+      if (happening.silenced(tower, t) || jammed(tower, t)) continue; // v3 waves: shelled by the siege barge; jammed by a gunboat
       tower.reload = Math.max(0, tower.reload - C.tick);
       if (tower.reload > 1e-9) continue;
       const target = aimTower(tower);
@@ -1345,7 +1401,7 @@ export function createWave(options = {}) {
           broken: wall.hp <= 0, inner: wall.inner, rebuildReady: wall.hp <= 0 && t - wall.rebuildAt >= wall.cooldown - 1e-9,
           ...(wall.workshop ? { workshop: wall.workshop } : {}) })),
         cannons: cannons.map(cannon => ({ id: cannon.id, x: cannon.x, z: cannon.z, reload: round2(cannon.reload), range: round2(cannon.sight) })),
-        towers: towers.map(tower => ({ id: tower.id, kind: tower.kind, level: tower.level, ...(tower.spec ? { spec: tower.spec } : {}), ...(tower.bonus ? { bonus: tower.bonus } : {}), x: tower.x, z: tower.z, manned: tower.manned,
+        towers: towers.map(tower => ({ id: tower.id, kind: tower.kind, level: tower.level, ...(tower.spec ? { spec: tower.spec } : {}), ...(tower.bonus ? { bonus: tower.bonus } : {}), x: tower.x, z: tower.z, manned: tower.manned, ...(jammed(tower, t) ? { jammed: tower.jammedUntil } : {}),
           reload: round2(tower.reload), range: round2(tower.sight) })),
         balls: balls.map(ball => ({ ...ball })),
         shells: shells.map(shell => ({ ...shell })),
