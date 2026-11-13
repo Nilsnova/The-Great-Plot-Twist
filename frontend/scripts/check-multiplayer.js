@@ -653,14 +653,10 @@ try {
   for (const captain of pages) await captain.page.waitForFunction(() => !window.__island.waves.island.wave || window.__island.waves.island.wave.done, null, {timeout: 60000});
   await island(host, async i => i.ringBell());
   const boss = await until(host, state => state?.wave === 5 && state.ships > 0, 'the boss wave 5', 60000);
-  // Straight after wave 2's end the friends' pages may still be closing it: if one has not joined the boss wave on its
-  // own within 10 s, it joins the running wave the way a late friend does (joinRunningWave).
-  for (const captain of pages) {
-    const joined = await captain.page.waitForFunction(id => window.__island.waves.island.wave?.info?.waveId === id || window.__island.waves.island.state?.waveId === id,
-      boss.waveId, {timeout: 10000, polling: 200}).then(() => true).catch(() => false);
-    if (!joined) { results.push(`boss wave: ${captain.name} joined the running wave by hand`); await island(captain, async i => i.joinRunningWave()); }
-    await until(captain, state => state?.waveId === boss.waveId, `${captain.name} in the boss wave`, 30000);
-  }
+  // Every friend joins the host's boss wave on their own (the room's wave_start), never by hand: Ben, who pressed
+  // "Next wave" together with the host in step 5, too (T22: that race once left his join marked in progress).
+  for (const captain of pages) await until(captain, state => state?.waveId === boss.waveId, `${captain.name} joining the boss wave on their own`, 30000);
+  results.push(`boss wave ${boss.wave} (${boss.waveId}): all ${pages.length} captains joined on their own`);
   for (const captain of pages) {
     await stand(captain, SAFE);
     await captain.page.evaluate(async () => {

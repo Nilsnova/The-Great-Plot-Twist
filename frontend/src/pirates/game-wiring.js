@@ -107,9 +107,12 @@ export function wireWaves(ctx) {
   // may be busy with our own ring for a moment: try again a few times.
   // One join attempt at a time: the repeated wave_start of every defender (and the retries) would
   // otherwise ask the server again and again (wave reads have a budget of 30 a minute).
+  // A retry owns the flag: when it finds its wave already joined (our own "Next wave" ring joined it while
+  // the bell was busy), it lets go of the flag, or every later wave_start would be dropped for good.
   let joining = false;
   function joinRunning(waveId = null, tries = JOIN_TRIES, retry = false) {
-    if (disposed || (waveId && pirates.island.wave?.info.waveId === waveId) || (joining && !retry)) return;
+    if (disposed || (joining && !retry)) return;
+    if (waveId && pirates.island.wave?.info.waveId === waveId) { if (retry) joining = false; return; }
     joining = true;
     Promise.resolve().then(() => island.joinRunningWave()).then(answer => {
       if (answer?.code === 'busy' && tries > 1 && !disposed) { after(() => joinRunning(waveId, tries - 1, true), JOIN_RETRY_MS); return; }
