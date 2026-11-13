@@ -421,6 +421,10 @@
     "narrator-finisher_redtide_failed": {
       "file": "narrator-finisher_redtide_failed.mp3",
       "seconds": 3.6
+    },
+    "narrator-unlock_gunboat": {
+      "file": "narrator-unlock_gunboat.mp3",
+      "seconds": 11.49
     }
   }
 }
