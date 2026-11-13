@@ -7,7 +7,9 @@
 Responsible teammate: Ianno Hollensteiner (`Iannomh123456`). Codex drafted the code,
 tests and notes. Branch: `feat/t5-island-decoration`; [PR #10](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/10),
 [issue #11](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/11).
-Explain-back and independent human review are pending; suggested reviewer: Johannes (`frcola`).
+Introductory explain-back completed on 13 Nov, with clarifications noted below.
+Ianno requires approval of this PR by **Nils Lenke (`Nilsnova`) or Johannes Franz Lang
+(`frcola`) before merge**. Independent human review is still pending.
 
 ## Result and revised scope
 
@@ -77,21 +79,19 @@ The submitted game journey verifies actual local house builds at 100%, 110% and
 120% as well as the badge/statue. Generated accessibility captures were moved
 outside the checkout and original tracked captures restored, keeping this PR focused.
 
-## Explain-back draft — Ianno must review and put this in his own words
+## Explain-back discussion — 13 Nov 2026
 
-“My change makes island progress visible. It reads the best wave and buildings the
-game already loads. The number changes after each new best wave; a small rank table
-chooses the new shield design every ten waves. I chose a number-only shield beside
-the cabin that fits the island artwork. The statue and tree sizes use simple thresholds.
-These drawings give no rewards and do not decide whether a win is legitimate. Codex
-drafted the implementation; I need to understand the state update, drawing and cleanup.
-We could change the ornaments later without changing the saved progress.”
+Ianno completed the introductory quiz about number/rank updates, the best-wave
+record after a loss, and texture cleanup. The discussion clarified two details:
 
-## Explain-back questions before ready for review
+- The number changes after each new highest wave; the design changes only at the
+  ten-wave boundary (silver at 29, gold at 30).
+- A loss leaves the highest-wave record unchanged.
+- Replacing the image releases graphics memory on every number update, not only
+  rank changes. A visited island may show a lower rank drawn from its own record.
 
-1. Trace wins at 29 and 30: which value changes the number, and which code changes the design?
-2. Why does losing or replaying an earlier wave leave the shield unchanged, and whose record appears during a visit?
-3. What happens to tree size when a house is removed, and why do we dispose the old badge texture?
+Independent human review remains pending. The reviewer can ask further questions
+about house removal, the rank selector, state updates and cleanup with the source open.
 
 ## Limits and next step
 
@@ -101,5 +101,6 @@ Canvas artwork is cosmetic and has no new interactive control; this automated
 accessibility audit does not measure the drawn shield’s contrast. Visually reviewed
 screenshots and the local component tests complement it.
 
-Ianno answers the three questions and reviews the full diff, then the PR can be marked
-ready for a different human teammate to review. No merge is authorized by this handover.
+The introductory explain-back is complete, so the PR can be marked ready for human
+review. At Ianno’s request, **Nils or Johannes Franz Lang must approve the current
+change before merge**. No merge is authorized by this handover.

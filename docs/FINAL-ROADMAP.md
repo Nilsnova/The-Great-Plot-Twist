@@ -96,7 +96,7 @@ D1 current-demo sweep done in [#5](https://github.com/Nilsnova/The-Great-Plot-Tw
 | F2 | ★★★ | S | **Moodle submission** of the repository link by one member, with a named backup | Submitted by Sun 22 Nov; screenshot of the confirmation |
 | F3 | ★★★ | S | **Presentation roles**: who drives the projector, who holds the two phones, who explains which part; two full rehearsals | Rehearsed twice by Sun 22 Nov |
 
-T5 follow-up: island milestones implemented in [PR #10](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/10) by Ianno Hollensteiner: number-only rank shield, wave-25 statue and house-linked trees. [Spec](../specs/T5-island-decoration.md); explain-back and human review pending. This does not complete A1 or any playtest task.
+T5 follow-up: island milestones implemented in [PR #10](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/10) by Ianno Hollensteiner: number-only rank shield, wave-25 statue and house-linked trees. [Spec](../specs/T5-island-decoration.md); explain-back completed; approval by Nils or Johannes Franz Lang pending. This does not complete A1 or any playtest task.
 
 ## How to pick and claim a task
 

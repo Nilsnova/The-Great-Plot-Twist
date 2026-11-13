@@ -4,12 +4,12 @@
 >
 > **Who uses it:** players and teammates reviewing Ianno's contribution.
 
-- **Status:** implemented; explain-back and human review pending
+- **Status:** implemented; introductory explain-back completed; human review pending
 - **Branch:** `feat/t5-island-decoration`
 - **Issue and PR:** [#11](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/11), [#10](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/10)
 - **Responsible teammate:** Ianno Hollensteiner (`Iannomh123456`)
 - **Agent assistance:** Codex drafts code and evidence; Ianno explains and reviews it.
-- **Reviewer:** another human teammate; Johannes suggested.
+- **Required reviewer for this PR:** Nils Lenke (`Nilsnova`) or Johannes Franz Lang (`frcola`), as requested by Ianno. One of them must approve the current change before merge.
 
 ## Goal and scope
 
@@ -62,8 +62,9 @@ original drawing code under `frontend/src/art/`, focused frontend tests,
 - Frontend install, tests, build, budget, text lint, accessibility and demo checks;
   record actual results and any limits in the PR.
 - Keep code changes below about 400 lines; no new dependencies or services.
-- Ianno rehearses the explain-back before the PR becomes ready; another human
-  must approve the current change before merge.
+- Ianno completed the introductory explain-back on 13 Nov, with clarifications
+  about number/rank changes and texture cleanup; this is not independent code review.
+- Nils or Johannes Franz Lang must approve the current change before merge.
 
 ## Contracts and limits
 
