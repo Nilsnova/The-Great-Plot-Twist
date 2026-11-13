@@ -37,6 +37,13 @@ export const ATLAS_IDS = [...pirateFrames.sloop, ...pirateFrames.brig, ...pirate
   ...pirateFrames.captain, ...pirateFrames.smoke, ...pirateFrames.fire, ...pirateFrames.explosion, ...pirateFrames.boarder,
   'captain-cutlass', 'fx-musket-flash', 'fx-mortar-shell', 'fx-level-pip', 'pirate-cannonball', 'pirate-wreck'];
 export const WARSHIP_FRAMES = pirateFrames.warship;
+// The gunboat (GAME-V3.md §4.1), cartoon only like the tiers: its own small hull (three bobbing frames), its muzzle
+// flash and the two-frame "jammed" mark over a tower (src/art/fleet.js). A pixel atlas (tests) sails it as a plain
+// sloop and draws no marks.
+export const GUNBOAT_FRAMES = ['pirate-gunboat-1', 'pirate-gunboat-2', 'pirate-gunboat-3'];
+export const JAM_FRAMES = ['fx-jam-1', 'fx-jam-2'];
+export const GUNBOAT_IDS = [...GUNBOAT_FRAMES, 'fx-gunboat-flash', ...JAM_FRAMES];
+const GUNBOAT_BOX = [56, 44]; // the hull's box in the cartoon atlas (src/art/fleet.js)
 const EXPLOSION_FRAMES = pirateFrames.explosion;
 const LAYER_ORDER = { far: 76, near: 124, air: 940, fog: 900 };
 const CAPACITY = { far: 96, near: 96, air: 320 };
@@ -119,7 +126,7 @@ export async function loadAtlas({ quality = 'high', colour = 0 } = {}) {
   const { cartoonAtlas, smoothTexture } = await import('../art/textures.js');
   const { setPoseColour } = await import('../art/people.js');
   setPoseColour(colour); // your captain's musket and cutlass poses in your lobby colour
-  const ids = [...new Set([...ATLAS_IDS.filter(id => !PIXEL_ONLY_IDS.includes(id)), ...CARTOON_EXTRA_IDS, ...TIER_IDS, ...FIRE_LEVEL_IDS])];
+  const ids = [...new Set([...ATLAS_IDS.filter(id => !PIXEL_ONLY_IDS.includes(id)), ...CARTOON_EXTRA_IDS, ...TIER_IDS, ...FIRE_LEVEL_IDS, ...GUNBOAT_IDS])];
   const atlas = await cartoonAtlas(ids, { quality, extra: [[WHITE, 8, 8]] });
   const white = atlas.rects[WHITE], context = atlas.image.getContext('2d');
   context.fillStyle = '#fff'; context.fillRect(white.x * atlas.density, white.y * atlas.density, white.w * atlas.density, white.h * atlas.density);
@@ -221,7 +228,8 @@ const SHIP_SIZE = Object.fromEntries(['sloop', 'brig', 'flagship'].map(kind => {
   const [w, h] = pirateDimensions[pirateFrames[kind][0]]; return [kind, { w: w / UNIT, h: h / UNIT }];
 }));
 { const [w, h] = pirateDimensions[pirateFrames.warship[0]]; SHIP_SIZE.warship = { w: w / UNIT, h: h / UNIT }; }
-const FRAMES = pirateFrames;
+const FRAMES = { ...pirateFrames, gunboat: GUNBOAT_FRAMES };
+SHIP_SIZE.gunboat = { w: GUNBOAT_BOX[0] / UNIT, h: GUNBOAT_BOX[1] / UNIT };
 // The campaign's pirate types (docs/GAME-V3.md §4, src/pirates/sim.js CONFIG.tiers): each sails as one of the
 // fleet's drawings with its own colour and size, so a new tier reads at a glance. Pure data.
 export const SHIP_VARIANTS = Object.freeze({
@@ -237,6 +245,8 @@ export const SHIP_VARIANTS = Object.freeze({
   barge: Object.freeze({ frames: 'brig', tint: Object.freeze({ r: .66, g: .66, b: .62 }), scale: 1.3 }),
   galleon: Object.freeze({ frames: 'warship', tint: Object.freeze({ r: 1, g: .86, b: .45 }), scale: 1.1 }),
   longboat: Object.freeze({ frames: 'sloop', tint: Object.freeze({ r: .55, g: .5, b: .44 }), scale: .6 }),
+  // The gunboat (CONFIG.ships.gunboat): its own hull; without it in the atlas (the pixel one) a small dark sloop.
+  gunboat: Object.freeze({ frames: 'gunboat', tint: Object.freeze({ r: 1, g: 1, b: 1 }), scale: 1 }),
   tentacle: Object.freeze({ frames: 'sloop', hidden: true, scale: 1 }),
 });
 export const BRUTE_LOOK = Object.freeze({ tint: Object.freeze({ r: 1, g: .7, b: .58 }), scale: 1.3 });
@@ -292,7 +302,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   root.add(fog);
 
   const ships = new Map(); // id -> {facing, phase, flashUntil, bornAt}
-  const sinkers = pool(), wrecks = pool(), balls = pool(), splashes = pool(), shells = pool(), bursts = pool(), tracers = pool(), warnings = pool();
+  const sinkers = pool(), wrecks = pool(), balls = pool(), splashes = pool(), shells = pool(), bursts = pool(), tracers = pool(), warnings = pool(), jamShots = pool();
   const fallen = pool(), strikes = pool(), crew = new Map(); // boarders: id -> {phase, flashUntil}
   const guards = new Map(); // the Barracks' militia: id -> {phase, flashUntil, strikeUntil, facing}
   let captain = null, revive = null, figures = null;
@@ -316,7 +326,8 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     return meta;
   }
   const frameOf = (kind, phase) => {
-    const frames = FRAMES[kind] ?? FRAMES.sloop;
+    let frames = FRAMES[kind] ?? FRAMES.sloop;
+    if (!rect[frames[0]]) frames = FRAMES.sloop; // a pixel atlas has no gunboat hull
     if (still()) return frames[0];
     const step = Math.floor(clock * 3.2 + phase) % 4; return frames[step === 3 ? 1 : step];
   };
@@ -439,6 +450,21 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         effects()?.ring(x, y, { radius: event.radius ?? 3, life: .55, colour: '#ff8a3a' });
         effects()?.bloom(x, y + .5, { radius: 2.2, life: .5, colour: '#ff7a2a' });
         spark(x, y + .4, { count: 26, speed: [1.2, 4.2], angle: Math.PI / 2, spread: 2.6, gravity: 5, life: [.5, 1.1], colour: '#ff9a3a', size: [1, 2] });
+        break;
+      }
+      // The gunboat (GAME-V3.md §4.1): a flash at its deck gun and a thin line to the tower it jams; the tower
+      // gets sparks and a ring, and its "jammed" mark follows the sim's state (drawn with the posts).
+      case 'gunboat_fired': {
+        const facing = Math.abs(event.toX - event.x) > .5 ? (event.toX < event.x ? -1 : 1) : (ships.get(event.shipId)?.facing ?? 1), boat = ships.get(event.shipId);
+        if (boat) boat.facing = facing; // it swings its gun round to the tower it jams
+        jamShots.add(item => Object.assign(item, { x: event.x + facing * 1.25, y: drawnY(event.z) + 1.3, toX: event.toX, toY: drawnY(event.toZ) + 1, at: clock, facing }));
+        if (!low() && !still()) spark(event.x + facing * 1.9, drawnY(event.z) + 1.4, { count: 7, speed: [.3, 1.2], angle: Math.PI / 2, spread: 1.6, gravity: -.8, life: [.5, 1], colour: '#d9d6c8', size: [1, 2] });
+        break;
+      }
+      case 'tower_jammed': {
+        const ty = drawnY(event.z) + 1.2;
+        effects()?.ring(event.x, ty, { radius: 1.8, life: .45, colour: '#ffe27a' });
+        spark(event.x, ty, { count: 14, speed: [1, 3.4], angle: Math.PI / 2, spread: 2.6, gravity: 6, life: [.35, .8], colour: '#ffd35a', size: [1, 2] });
         break;
       }
       case 'ship_warning': warnings.add(item => Object.assign(item, { x: event.x, z: event.z, at: clock, boss: event.boss })); break;
@@ -742,6 +768,24 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       drawHealthBar(figure ? figure.x : x, figure ? figure.z : z, hero.hp, hero.maxHp);
     }
   }
+  function drawJamShot(item) {
+    const age = clock - item.at, flash = rect['fx-gunboat-flash'];
+    if (flash && age < .22) {
+      const grow = still() ? 1 : .8 + Math.min(.4, age * 3);
+      layers.air.push(flash, item.x + item.facing * flash.w * .42 * grow, item.y, flash.w * grow, flash.h * grow, .5, flash.h * grow / 2, { flip: item.facing < 0, a: age < .12 ? 1 : .6 });
+    }
+    if (age < .28) {
+      const dx = item.toX - item.x, dy = item.toY - item.y, length = Math.hypot(dx, dy) || 1, angle = Math.atan2(dy, dx) - Math.PI / 2, fade = still() ? 1 : 1 - age / .28;
+      layers.air.push(rect[WHITE], item.x, item.y, .2, length, .5, 0, { ...GOLD, angle, a: .35 * fade });
+      layers.air.push(rect[WHITE], item.x, item.y, .07, length, .5, 0, { r: 1, g: .97, b: .85, angle, a: .9 * fade });
+    }
+  }
+  // A tower a gunboat has jammed (GAME-V3.md §4.1): a broken gear with sparks over it, in the air layer so no tree
+  // hides it, until the jam is over.
+  function drawJamMark(tower) {
+    const mark = rect[JAM_FRAMES[still() ? 0 : Math.floor(clock * 5) % 2]];
+    if (mark) layers.air.push(mark, tower.x, drawnY(tower.z) + 2.7 + (still() ? 0 : Math.sin(clock * 6) * .07), mark.w * 1.2, mark.h * 1.2, .5, mark.anchor * 1.2, { a: .97 });
+  }
   function drawWarning(item) {
     const age = clock - item.at, blink = still() ? 1 : (Math.floor(age * 4) % 2 ? .4 : 1);
     const p = coastEdge(item), colourOf = item.boss ? RED : GOLD;
@@ -805,6 +849,8 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       for (const patch of state.fires ?? []) drawBurning(patch);
       for (const tracer of tracers.items) drawTracer(tracer);
       for (const item of warnings.items) drawWarning(item);
+      for (const item of jamShots.items) drawJamShot(item);
+      for (const tower of state.towers ?? []) if (tower.jammed !== undefined) drawJamMark(tower);
       drawCaptain();
       drawParty(state);
       // The lamps' beam: from the lighthouse lamp to an exposed flagship.
@@ -868,6 +914,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       bursts.sweep(item => clock - item.at < BURST_SECONDS);
       tracers.sweep(item => clock - item.at < musketLife(item));
       warnings.sweep(item => clock - item.at < 3.2);
+      jamShots.sweep(item => clock - item.at < .3);
       fallen.sweep(item => clock - item.at < FALL_SECONDS);
       strikes.sweep(item => clock - item.at < STRIKE_SECONDS);
       balls.sweep(ball => { if (simNow < ball.to) return true; land(ball); return false; });
@@ -912,7 +959,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       root.removeFromParent(); root.clear();
       for (const item of owned) item.dispose();
       owned.length = 0; ships.clear(); fire.clear(); wallFlash.clear(); crew.clear();
-      for (const list of [sinkers, wrecks, balls, splashes, shells, bursts, tracers, warnings, fallen, strikes]) list.clear();
+      for (const list of [sinkers, wrecks, balls, splashes, shells, bursts, tracers, warnings, jamShots, fallen, strikes]) list.clear();
     },
   };
 }
