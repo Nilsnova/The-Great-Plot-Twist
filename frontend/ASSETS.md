@@ -411,3 +411,12 @@ Shared GLSL helpers (hash, value noise, Bayer dithering, banding) live in `src/w
 | `fx-musket-flash` | 16 × 16 | Small muzzle flash |
 | `fx-mortar-shell` | 16 × 16 | Mortar shell with a burning fuse |
 | `fx-level-pip` | 16 × 16 | Small brass pip for a building's level |
+
+## T5 island milestones (13 Nov 2026)
+
+Original code-drawn rank shields and captain statue: [src/art/milestones.js](src/art/milestones.js),
+using the existing [paint kit](src/art/paint.js). Design direction and placement:
+Ianno Hollensteiner; code drafted with Codex. No third-party images or fonts added.
+The number-only shield has twelve ranks from unranked to crowned, selected from
+the existing best wave. Existing oak, pine and birch art is reused at three sizes.
+[Scope and ladder](../specs/T5-island-decoration.md); [preview](../docs/evidence/t5/ranks.png).
