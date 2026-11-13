@@ -108,6 +108,6 @@ The fortune teller was removed from the game on 11 Nov at the owner's request (n
 
 ## 8. Small follow-ups (good first tasks if your lane waits)
 
-- [ ] **Staggered arrivals** in rehearsal `?demo=1&captains=40`, so the arrival ripple plays (`frontend/src/class-demo/rehearsal.js`).
-- [ ] **Busy-laptop timing check**: the presenter-tour check "one key skips each step quickly" fails under heavy load; measure in frames, not milliseconds.
+- [x] ✅ **Staggered arrivals** in rehearsal `?demo=1&captains=40`, so the arrival ripple plays (`frontend/src/class-demo/rehearsal.js`). Done (owner's agents): the captains step ashore one by one over about 25 s (`&stagger=0` brings them all at once).
+- [x] ✅ **Busy-laptop timing check**: the presenter-tour check "one key skips each step quickly" fails under heavy load; measure in frames, not milliseconds. Done (owner's agents): nothing left to fix; the check left with the highlights tour in g30 (10 Nov), and no millisecond key check remains.
 - [x] **Host-console probes** for the new tables (`islands`, `wave_runs`, `demo_class_code`, `demo_guests`): done by the owner's agents, `20261113030000_host_console_v3.sql` redefines `host_console_overview()` (one new `game` key, counts only). Waiting for the project owner to apply it.
