@@ -308,14 +308,15 @@ export function secondsUntil(startsAt, now = Date.now(), {fresh = false, countdo
 // "Opens after wave N" (so players see what is coming), and no button.
 const lockedLine = id => `${opensText(waveOf(id))}.`;
 
-// The Harbor (after wave 4): the market stall now, the football match board after wave 7.
+// The Harbor (after wave 4): market and weather now, the football match board after wave 7.
 export function harborModel({campaign = null} = {}) {
   const open = isOpen(campaign, 'harbor');
   const stall = (id, item, name, line) => ({id, name, line, open: isOpen(campaign, item),
     button: `Open the ${name.toLowerCase()}`, reason: isOpen(campaign, item) ? '' : lockedLine(item)});
-  return {title: 'The Harbor', open, line: open ? 'The market stall and the match board stand here.' : lockedLine('harbor'),
+  return {title: 'The Harbor', open, line: open ? 'The market stall, match board and weather board stand here.' : lockedLine('harbor'),
     stalls: open ? [stall('market', 'market_calls', 'Market stall', 'Up or down in 5 minutes? Put a few coins on a real price.'),
-      stall('match', 'football_board', 'Match board', 'Pick who wins a real football match.')] : []};
+      stall('match', 'football_board', 'Match board', 'Pick who wins a real football match.'),
+      stall('weather', 'harbor', 'Weather board', 'The real weather right now, and what it does to the pirate ships.')] : []};
 }
 
 // The Tech hub (GAME-V3.md §5, §5.1): one branch per tower kind, three tiers each, paid by any member for the

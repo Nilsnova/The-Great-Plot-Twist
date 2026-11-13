@@ -110,3 +110,5 @@ D1 current-demo sweep done in [#5](https://github.com/Nilsnova/The-Great-Plot-Tw
 ## Out of scope until the deadline
 
 New big features, new external services, new paid accounts, story or culprit changes, changes to the live database without the project owner, and anything that touches keys. If an idea is bigger than M, write it in [contribute/IDEAS.md](contribute/IDEAS.md) for "how it could change" in the walkthrough instead.
+
+T26 UI follow-up: island Harbor weather access implemented in [PR #8](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/8), with [evidence](handoff/T26-weather-board.md); explain-back and human review pending. This does not complete A1 or the broader UI audits.

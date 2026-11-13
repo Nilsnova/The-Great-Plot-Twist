@@ -169,7 +169,7 @@ describe('the campaign buildings (GAME-V3.md §4, §5)', () => {
   it('the Harbor: locked before wave 4, the market stall then, the match board after wave 7', () => {
     expect(harborModel({campaign: atWave(3)})).toMatchObject({open: false, line: 'Opens after wave 4.', stalls: []});
     const four = harborModel({campaign: atWave(4)});
-    expect(four.stalls.map(stall => [stall.id, stall.open, stall.reason])).toEqual([['market', true, ''], ['match', false, 'Opens after wave 7.']]);
+    expect(four.stalls.map(stall => [stall.id, stall.open, stall.reason])).toEqual([['market', true, ''], ['match', false, 'Opens after wave 7.'], ['weather', true, '']]);
     expect(harborModel({campaign: atWave(7)}).stalls.every(stall => stall.open)).toBe(true);
   });
   it('the Tech hub: locked before wave 8, then one branch per tower kind, tier 1 paid with coins', () => {

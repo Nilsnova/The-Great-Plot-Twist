@@ -204,7 +204,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
         getTransport:()=>findPanelServices(session)?.request,resetInput:resetControls,reducedMotion,preferences:getPreferences,
         focus:()=>graphics.renderer.domElement.focus({preventScroll:true}),onCoins:(value,options)=>{hud.setCoinSource('island');hud.setCoins(value,options);},onCaptain:level=>hud.setCaptainLevel(level),
         // The Harbor building (GAME-V3.md §4) opens the same stalls as the old Harbor overview.
-        openHarborStall:id=>void(id==='market'?openMarket():id==='match'?sportsUi.open().catch(()=>{}):null),
+        openHarborStall:id=>void(id==='weather'?harbor.openWeather():id==='market'?openMarket():id==='match'?sportsUi.open().catch(()=>{}):null),
         // The visit chip: the old "Visiting … · Sail home" only where travel applies (src/island/one-island.js).
         travel:()=>travelOpen()});
       if(adapter)island.setPresence(adapter.read()?.presence);
