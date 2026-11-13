@@ -952,6 +952,8 @@ gull
 gull's
 gulls
 gun
+gunboat
+gunboats
 gunner
 guns
 h
@@ -1140,6 +1142,8 @@ its
 itself
 j
 jail
+jam
+jammed
 javascript
 jetty
 job
