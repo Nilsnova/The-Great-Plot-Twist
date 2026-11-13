@@ -97,9 +97,10 @@ POST /api/island/research  {"branch": "cannon", "actionUid": "...", "tier"?: 1 |
     (ledger ref research:<actionUid>, reason tech_research). Tier 1 (no "choice") opens after
     wave 8; tiers 2 and 3 (after waves 15 and 25) need "choice", one of the tier's two options:
     once the crew chose one, the other is closed, and "change": true switches to it at the tier's
-    price again (a tier-3 switch takes the old capstone off the towers that picked it).
+    price again (a tier-3 switch takes the old capstone off the towers that picked it). Between
+    waves only.
     Errors: 400 bad_research, 403 not_member, 404 no_such_island, 409 locked, 409 known,
-            409 closed, 409 needs_tier, 409 top_tier, 409 insufficient_funds
+            409 closed, 409 needs_tier, 409 top_tier, 409 wave_running, 409 insufficient_funds
 
 POST /api/island/tower-skill  {"spot": "cannon_1", "spec": "rapid", "code"?: "ISLE-K7Q2M"}
     -> the island. The tower on the spot picks one skill of its researched branch (no coins;
@@ -150,8 +151,8 @@ POST /api/island/role  {"role": "medic"}
     Errors: 400 bad_role, 409 locked, 409 role_known (respec first)
 POST /api/island/respec  {"actionUid": "..."}
     -> the island. Forgets every skill and the role for 100 coins x captain level (wallet
-    reason captain_respec, ref respec:<actionUid>). Errors: 409 nothing_to_reset,
-    409 insufficient_funds
+    reason captain_respec, ref respec:<actionUid>), between waves only. Errors:
+    409 nothing_to_reset, 409 wave_running, 409 insufficient_funds
 
 POST /api/island/weapon/buy  {"weapon": "pistols", "actionUid": "..."}
     -> the island. One weapon, bought once with coins and equipped at once (ledger ref

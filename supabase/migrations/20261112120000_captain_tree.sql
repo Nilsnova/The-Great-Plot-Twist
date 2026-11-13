@@ -325,6 +325,11 @@ comment on function public.island_pick_role(uuid, text, integer) is
 -- Returns {status: done, balance, repeat} or {status: refused, reason:
 -- player_not_set_up | no_island | nothing_to_reset | insufficient_funds}.
 
+-- Added 13 Nov with 20261113010000_respec_and_wave_guards.sql, which renames the
+-- argument p_price to p_per_level: a run of every migration again must not fail on
+-- "cannot change name of input parameter". A no-op on a database that has none.
+drop function if exists public.island_respec(uuid, text, integer);
+
 create or replace function public.island_respec(
   p_player_id   uuid,
   p_action_uid  text,

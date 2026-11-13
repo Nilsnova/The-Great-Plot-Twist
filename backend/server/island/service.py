@@ -563,21 +563,26 @@ async def respec(
     admin: SupabaseAdmin, catalogue: IslandCatalogue, player_id: str, action_uid: str
 ) -> IslandView:
     """Forget every skill and the role, paid in coins (coinsPerLevel x captain level, wallet
-    reason captain_respec, ref respec:<actionUid>). 409 nothing_to_reset, 409 insufficient_funds.
-    A repeated actionUid charges nothing."""
+    reason captain_respec, ref respec:<actionUid>). 409 nothing_to_reset, 409 wave_running (no
+    respec while a wave runs on your island), 409 insufficient_funds. The database works out the
+    price under the island lock (per level x the captain level it finds there), so an upgrade at
+    the same moment cannot change what is charged against what is shown. A repeated actionUid
+    charges nothing."""
     ref = f"{RESPEC_PREFIX}{action_uid}"
     island = await store.open_island(admin, player_id, catalogue.starting_coins)
     if not await store.ledger_has(admin, player_id, "captain_respec", ref):
         progress = await store.read_progress(admin, player_id)
         if not progress.skills and progress.role is None:
             raise ApiError(409, "nothing_to_reset", "You have no skills or role to reset.")
-        price = rules.respec_price(catalogue, progress.captain_level)
-        validate_transaction(-price, "captain_respec", ref)
-        arguments = {"p_player_id": player_id, "p_action_uid": action_uid, "p_price": price}
+        per_level = catalogue.skills.respec_per_level
+        validate_transaction(-per_level, "captain_respec", ref)
+        arguments = {"p_player_id": player_id, "p_action_uid": action_uid, "p_per_level": per_level}
         outcome = await store.run_paid(admin, "island_respec", arguments)
         if isinstance(outcome, Refusal):
             if outcome.reason == "nothing_to_reset":
                 raise ApiError(409, "nothing_to_reset", "You have no skills or role to reset.")
+            if outcome.reason == "wave_running":
+                raise wave_running_between_waves()
             raise paid_refusal(outcome, "A respec")
     return await look_open(admin, catalogue, island)
 
@@ -663,7 +668,8 @@ async def research(
     two options of tier 2 or 3 (docs/GAME-V3.md section 5.1); `change` switches from the option
     chosen before, at the tier's price again. 400 bad_research, 404 no_such_island, 403 not_member,
     409 locked (tier 1 after wave 8, 2 after 15, 3 after 25), 409 top_tier, 409 needs_tier,
-    409 known, 409 closed, 409 insufficient_funds. A repeated actionUid charges nothing."""
+    409 known, 409 closed, 409 wave_running (between waves only), 409 insufficient_funds. A
+    repeated actionUid charges nothing."""
     entry = rules.research_named(catalogue, branch)
     island, payer = await target_island(admin, catalogue, player_id, code)
     ref = f"{RESEARCH_PREFIX}{action_uid}"
@@ -694,6 +700,8 @@ def research_refusal(
     refusal: Refusal, catalogue: IslandCatalogue, entry, tier: int, choice: str | None
 ) -> ApiError:
     """The error for a research step that island_research() refused (it checks again under lock)."""
+    if refusal.reason == "wave_running":
+        return wave_running_between_waves()
     if refusal.reason == "known" and tier > 1 and choice is not None:
         return rules.option_known(entry, choice)
     if refusal.reason == "closed":
@@ -800,6 +808,11 @@ class DemolishView:
     level: int
     refunds: tuple[RefundView, ...]
     repeat: bool
+
+
+def wave_running_between_waves() -> ApiError:
+    """The 409 for research and a respec during a wave (a tear-down has its own wording)."""
+    return ApiError(409, "wave_running", "A wave is under way. Research and respec between waves.")
 
 
 def demolish_refusal(refusal: Refusal) -> ApiError:
