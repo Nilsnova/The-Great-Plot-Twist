@@ -23,7 +23,7 @@ The game is built and live; nobody waits for anyone. You extend it.
 
 | ID | Task | Where | Size |
 |---|---|---|---|
-| T1 | **A new tower**: a harpoon tower (slows ships) or a fire tower (damage over time), planned for waves 12+ in [GAME-V3.md](GAME-V3.md) §5: stats in the simulation, a cartoon drawing, a build-card line, a campaign unlock, tests | `frontend/src/pirates/sim.js`, `frontend/src/art/`, `backend/content/campaign.json` | M |
+| T1 | ✅ **Done (owner's agents), waiting for release** (the harpoon tower, branch `feat/v3-t1-harpoon`; the fire tower is not built). **A new tower**: a harpoon tower (slows ships) or a fire tower (damage over time), planned for waves 12+ in [GAME-V3.md](GAME-V3.md) §5: stats in the simulation, a cartoon drawing, a build-card line, a campaign unlock, tests | `frontend/src/pirates/sim.js`, `frontend/src/art/`, `backend/content/campaign.json` | M |
 | T2 | **A new pirate type** (raiders, brutes, ironclads and dreadnoughts exist; e.g. a ship that targets towers): drawing, stats, appears from wave N, tests | same as T1 | M |
 | T3 | **Balance pass**: play waves 1–15 (and 30+ if you get there) with friends, write down what felt too easy or too hard, tune the numbers in the simulation's CONFIG, keep the balance and late-game tests green | `frontend/src/pirates/sim.js` | S–M |
 | T4 | **Sounds**: better cannon, mortar, musket, warship horn and victory sounds with the procedural audio | `frontend/src/audio/pirates.js` | S |
