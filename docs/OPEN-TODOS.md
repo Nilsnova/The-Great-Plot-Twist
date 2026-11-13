@@ -110,4 +110,4 @@ The fortune teller was removed from the game on 11 Nov at the owner's request (n
 
 - [ ] **Staggered arrivals** in rehearsal `?demo=1&captains=40`, so the arrival ripple plays (`frontend/src/class-demo/rehearsal.js`).
 - [ ] **Busy-laptop timing check**: the presenter-tour check "one key skips each step quickly" fails under heavy load; measure in frames, not milliseconds.
-- [ ] **Host-console probes** for the new tables (`islands`, `wave_runs`, `demo_class_code`, `demo_guests`): write the migration that redefines `host_console_overview()`; the project owner applies it.
+- [x] **Host-console probes** for the new tables (`islands`, `wave_runs`, `demo_class_code`, `demo_guests`): done by the owner's agents, `20261113030000_host_console_v3.sql` redefines `host_console_overview()` (one new `game` key, counts only). Waiting for the project owner to apply it.
