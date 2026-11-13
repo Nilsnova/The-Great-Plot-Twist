@@ -135,4 +135,5 @@ def test_the_server_sends_every_kinds_price_list():
     table = price_table(load_island())
     assert table["cannon"] == [30, 60, 120, 240, 480]
     assert table["house"] == [50, 100, 200]
-    assert set(table) == {"wall", "cannon", "mortar", "watchtower", "house"}
+    assert set(table) == {"wall", "cannon", "mortar", "harpoon", "watchtower", "house"}
+    assert table["harpoon"] == [40, 80, 160, 320, 640]

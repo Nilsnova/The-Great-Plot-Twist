@@ -64,19 +64,19 @@
     },
     {
       "wave": 12,
-      "opens": ["cannon:4", "wall:4", "watchtower:3", "tier_12"],
-      "title": "New: Level 4, and raiders!",
-      "line": "Cannons and walls go to level 4, the watchtower to level 3. Fast red-sailed raiders sail in from now on."
+      "opens": ["cannon:4", "wall:4", "watchtower:3", "harpoon:1", "harpoon:2", "harpoon:3", "tier_12"],
+      "title": "New: Level 4, raiders and the harpoon tower!",
+      "line": "Cannons and walls go to level 4, the watchtower to level 3. Fast red-sailed raiders sail in from now on. The harpoon tower slows ships: build it on a tower spot."
     },
     {
       "wave": 15,
-      "opens": ["mortar:4", "watchtower:4", "tier_15", "research_2"],
+      "opens": ["mortar:4", "harpoon:4", "watchtower:4", "tier_15", "research_2"],
       "title": "New: Level 4 mortars, and bigger warships!",
-      "line": "Mortars and the watchtower go to level 4. Tier 2 opens at the Tech hub. The boss warships are tougher now."
+      "line": "Mortars, harpoon towers and the watchtower go to level 4. Tier 2 opens at the Tech hub. The boss warships are tougher now."
     },
     {
       "wave": 20,
-      "opens": ["cannon:5", "mortar:5", "wall:5", "watchtower:5", "tier_20"],
+      "opens": ["cannon:5", "mortar:5", "harpoon:5", "wall:5", "watchtower:5", "tier_20"],
       "title": "New: Level 5, and brutes!",
       "line": "Every tower and wall goes to level 5. Big brutes come ashore: they hack walls faster and take more hits."
     },

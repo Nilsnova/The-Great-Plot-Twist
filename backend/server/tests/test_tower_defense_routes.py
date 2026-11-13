@@ -48,7 +48,7 @@ def test_the_island_shows_levels_crew_captain_prices_unlocks_and_the_next_wave()
 
     spot = next(spot for spot in body["spots"] if spot["id"] == "cannon_1")
     assert spot == {
-        "id": "cannon_1", "kind": "mortar", "kinds": ["cannon", "mortar"], "built": True,
+        "id": "cannon_1", "kind": "mortar", "kinds": ["cannon", "mortar", "harpoon"], "built": True,
         "level": 2, "cost": 60, "upgradeCost": 240, "spec": None,
     }  # fmt: skip
     assert (body["waveBest"], body["nextWave"]) == (3, 2)
@@ -110,6 +110,72 @@ def test_a_wall_on_a_tower_spot_is_the_wrong_kind():
 
 
 # --- POST /api/island/upgrade ---
+
+
+# --- the harpoon tower (docs/GAME-V3.md section 5): the support tower of wave 12 ---
+
+
+def test_a_harpoon_tower_opens_after_wave_twelve_on_the_tower_spots_only():
+    early = world_at(11)
+    locked = early.build(spot="cannon_5", kind="harpoon")
+    assert_error(locked, 409, "locked")
+    assert locked.json()["error"]["message"] == "Opens after wave 12."
+    assert early.database.calls("islet_build") == []
+    body = early.island().json()
+    assert body["unlocks"]["locked"]["harpoon:1"] == 12
+    assert body["unlocks"]["locked"]["harpoon:4"] == 15
+    assert body["unlocks"]["locked"]["harpoon:5"] == 20
+    assert body["prices"]["kinds"]["harpoon"] == [40, 80, 160, 320, 640]
+
+    later = world_at(12)
+    later.database.build_reply = {"status": "done", "balance": 60, "timber": 0, "level": 1}
+    assert later.build(spot="cannon_5", kind="harpoon").status_code == 200
+    (call,) = later.database.calls("islet_build")
+    assert (call["p_plot"], call["p_building_type"], call["p_coins"]) == ("cannon_5", "harpoon", 40)
+    # Only a tower spot takes it (a 422 before the database is asked).
+    for spot in ("wall_1", "tower_1", "house_1"):
+        refused = later.build(spot=spot, kind="harpoon", actionUid="click-0002")
+        assert_error(refused, 422, "wrong_kind")
+    shown = next(spot for spot in later.island().json()["spots"] if spot["id"] == "cannon_5")
+    assert shown["kinds"] == ["cannon", "mortar", "harpoon"]
+
+
+def test_a_tower_spot_says_what_can_stand_on_it_in_plain_words():
+    refused = world_at(12).build(spot="cannon_1", kind="wall")
+    assert (
+        refused.json()["error"]["message"]
+        == "Only a cannon, a mortar or a harpoon tower can stand on this spot."
+    )
+
+
+def test_a_harpoon_climbs_with_its_own_prices_and_the_tower_waves():
+    def island(wave, level):
+        world = world_at(wave)
+        world.database.buildings[PLAYER_ID] = [
+            {"plot": "cannon_1", "building_type": "harpoon", "level": level}
+        ]
+        return world
+
+    world = island(12, 2)
+    assert world.post("/api/island/upgrade", spot="cannon_1").status_code == 200
+    (call,) = world.database.calls("island_upgrade")
+    assert (call["p_prices"], call["p_unlocked_level"]) == ([40, 80, 160, 320, 640], 3)
+    locked = island(12, 3).post("/api/island/upgrade", spot="cannon_1")
+    assert_error(locked, 409, "locked")
+    assert locked.json()["error"]["message"] == "Opens after wave 15."
+    four = island(15, 3)
+    assert four.post("/api/island/upgrade", spot="cannon_1").status_code == 200
+    locked = island(15, 4).post("/api/island/upgrade", spot="cannon_1")
+    assert locked.json()["error"]["message"] == "Opens after wave 20."
+    five = island(20, 4)
+    assert five.post("/api/island/upgrade", spot="cannon_1").status_code == 200
+    assert_error(island(20, 5).post("/api/island/upgrade", spot="cannon_1"), 409, "max_level")
+
+
+def test_pirate_point_towers_stay_cannon_or_mortar():
+    refused = world_at(30).post("/api/pirate-point/build", spot="pp_tower_1", kind="harpoon")
+    assert_error(refused, 422, "wrong_kind")
+    assert refused.json()["error"]["message"] == "Only a cannon or a mortar can stand on this spot."
 
 
 def test_an_upgrade_sends_the_price_list_and_the_unlocked_level():

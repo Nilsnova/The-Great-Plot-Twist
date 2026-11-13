@@ -257,8 +257,9 @@ def check_build(
     """
     spot = find_spot(catalogue, spot_id, spots)
     if kind not in spot.kinds:
-        names = " or a ".join(kind_of(catalogue, name).name.lower() for name in spot.kinds)
-        raise BuildRefused(422, "wrong_kind", f"Only a {names} can stand on this spot.")
+        names = [f"a {kind_of(catalogue, name).name.lower()}" for name in spot.kinds]
+        listed = names[0] if len(names) == 1 else f"{', '.join(names[:-1])} or {names[-1]}"
+        raise BuildRefused(422, "wrong_kind", f"Only {listed} can stand on this spot.")
     if spot.id in built:
         raise spot_taken(catalogue, built[spot.id].kind)
     entry = kind_of(catalogue, kind)
