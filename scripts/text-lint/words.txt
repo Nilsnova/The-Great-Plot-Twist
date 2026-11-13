@@ -1033,6 +1033,7 @@ home
 honest
 hook
 horizon
+horn
 host
 hosting
 hot
@@ -2178,6 +2179,7 @@ songs
 soon
 sorting
 sound
+sounds
 source
 space
 spaces
