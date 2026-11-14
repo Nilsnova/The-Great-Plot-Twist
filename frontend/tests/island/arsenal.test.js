@@ -175,6 +175,10 @@ describe('the arsenal api and controller', () => {
     arsenal.handlers.take(copy);
     await new Promise(resolve => setTimeout(resolve, 20));
     expect(cards.at(-1).message).toBe('Another captain took that weapon just now.');
+    await arsenal.refresh(); // the winner's island_changed reaches this page and the arsenal is read again
+    expect(cards.at(-1).message).toBe('Another captain took that weapon just now.');
+    arsenal.open();
+    expect(cards.at(-1).message).toBe('');
   });
   it('the weapon you carry follows the server; nothing while the flag is off', async () => {
     const transport = createFakeIslandTransport({coins: 1000, unlocking: false});

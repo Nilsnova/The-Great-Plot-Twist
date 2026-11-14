@@ -17,6 +17,9 @@ const nameOf = (data, id) => { const copy = data.copies.find(item => item.id ===
 export function createArsenal({api, ui, emit = () => {}, enabled = () => false, code = () => null, place = () => 'own',
   level = () => 1, onCoins = () => {}} = {}) {
   let answer = null, answeredFor = null, busy = null, message = '', loading = false, ticket = 0;
+  // loadFailed: the message is the arsenal's own read failing (a later good read clears it). A refused move's
+  // reason stays until the card opens again or the next move, also through a crewmate's change (island_changed).
+  let loadFailed = false;
   const key = () => code() ?? 'own';
   const current = () => (answer && answeredFor === key() ? answer : null);
   const model = () => arsenalModel({answer: current(), level: level(), busy, message, loading: loading && !current()});
@@ -41,13 +44,14 @@ export function createArsenal({api, ui, emit = () => {}, enabled = () => false, 
     const result = await api.state(code());
     if (mine !== ticket) return result;
     loading = false;
-    if (result.ok && asked === key()) { take(result.data); if (!busy) message = ''; } else if (!result.ok && !current()) message = result.message;
+    if (result.ok && asked === key()) { take(result.data); if (loadFailed) { message = ''; loadFailed = false; } }
+    else if (!result.ok && !current()) { message = result.message; loadFailed = true; }
     redraw();
     return result;
   }
   async function move(kind, send, success) {
     if (busy || !enabled()) return;
-    busy = kind; message = ''; redraw();
+    busy = kind; message = ''; loadFailed = false; redraw();
     const before = answer, result = await send();
     busy = null;
     if (result.ok) {
@@ -57,14 +61,13 @@ export function createArsenal({api, ui, emit = () => {}, enabled = () => false, 
       ui.toast(text, 'success');
     } else {
       answer = before;
-      // The refusal's message goes on the card after the arsenal is read again (refresh clears old messages).
       if (REFRESH_ON.has(result.code)) await refresh();
-      message = result.message;
+      message = result.message; loadFailed = false;
     }
     redraw();
   }
   return {
-    open() { message = ''; ui.arsenalCard(model(), handlers); void refresh(); },
+    open() { message = ''; loadFailed = false; ui.arsenalCard(model(), handlers); void refresh(); },
     refresh, redraw,
     weapon() {
       if (!enabled()) return null;
