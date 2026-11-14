@@ -25,4 +25,4 @@ results and limits in the PR. Add walkthrough and test-map entries.
 `backend/server/routes/island.py`, `backend/server/island/`,
 `frontend/src/island/`, related tests and API/task/handover documentation.
 
-Implementation and local checks are recorded in [the handover](../docs/handoff/T7-weekly-leaderboard.md). Explain-back and independent human review remain pending.
+Implementation and local checks are recorded in [the handover](../docs/handoff/T7-weekly-leaderboard.md). Introductory explain-back completed after clarification on 14 Nov; independent human review by Franz (`frcola`) remains pending.

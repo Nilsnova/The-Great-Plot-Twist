@@ -14,7 +14,7 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
-**13 Nov, T7 / Ianno:** [draft PR #13](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/13) implements the weekly island leaderboard. Highest win per island this UTC week, up to ten rows, shared islands counted once; Harbor noticeboard and medal badges. [Evidence and limits](handoff/T7-weekly-leaderboard.md). Explain-back and independent human review pending; no live database/deployment verification claimed.
+**14 Nov, T7 / Ianno:** [PR #13](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/13) implements the weekly island leaderboard. Highest win per island this UTC week, up to ten rows, shared islands counted once; Harbor noticeboard and medal badges. [Evidence and limits](handoff/T7-weekly-leaderboard.md). Introductory explain-back completed after clarification; Franz (`frcola`) is the requested reviewer. Independent human approval and live database/deployment verification remain pending.
 
 **13 Nov, T5 / Ianno:** [PR #10](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/10) adds a number-only rank shield above/right of the cabin, a wave-25 statue and trees at 100%, 110% or 120% size for zero, one or two houses. Original island-style drawings; existing progress only. Verification is recorded in [the T5 handover](handoff/T5-island-decoration.md); introductory explain-back completed; approval by Nils (`Nilsnova`) or Johannes Franz Lang (`frcola`) is required before merge.
 
@@ -200,7 +200,7 @@ Nobody has decided these yet. Until they are decided, the plan in [ROADMAP.md](.
 
 ## Next steps per lane
 
-**T7 / Ianno:** complete explain-back on the query, multiplayer grouping and failure limits; ask Nils (`Nilsnova`) or Johannes (`frcola`) to review PR #13. Keep draft until explain-back is complete; do not merge without a current independent human approval.
+**T7 / Ianno:** introductory explain-back completed after clarification. Franz (`frcola`) is assigned to review PR #13; independent human approval and live verification remain pending. Do not merge without a current independent human approval.
 
 **T5 / Ianno:** introductory explain-back completed with clarifications. Nils (`Nilsnova`) or Johannes Franz Lang (`frcola`) must independently review and approve the current diff before merge.
 
@@ -518,6 +518,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+- **2026-11-14, T7 explain-back:** Ianno explained weekly high scores and island grouping, then corrected the outage answer after clarification: Try again because results could not be retrieved. Desktop/phone-sized Chrome coverage versus unverified live queries and physical phones was clarified. PR #13 proceeds to human review by Franz (`frcola`); no merge.
 
 - **2026-11-13, T7 / Ianno with Codex:** weekly island leaderboard implemented on `feat/t7-weekly-leaderboard`, [PR #13](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/13). D037 records weekly island scoring; [handover](handoff/T7-weekly-leaderboard.md) records checks, sample-data screenshots and remaining explain-back/live verification.
 

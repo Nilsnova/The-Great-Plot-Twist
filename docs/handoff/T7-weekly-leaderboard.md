@@ -90,8 +90,13 @@ real players, live Supabase queries or a deployment.
 - How it could change: “We could aggregate in the database if real load needs it,
   or add separate solo rankings after agreeing the rules.”
 
-This is an agent-assisted draft, not evidence that Ianno completed the explain-back.
-Do not mark ready until he answers the questions and confirms the explanation.
+The paragraph above was drafted by Codex. Introductory explain-back completed on
+14 Nov after clarification: Ianno explained the weekly high score and per-island
+ranking. His first outage answer was corrected: show an error with Try again,
+not empty results; desktop and phone-sized Chrome layouts were tested, while live
+queries, real accounts and physical phones were not. He then explained “try again,
+because problems retrieving.” Solo and multiplayer sharing one ranking was also
+clarified. This records the discussion, not mastery of every implementation line.
 
 ## Remaining / reviewer
 
@@ -102,4 +107,4 @@ has not been proven by the fake-database tests?
 
 Suggested reviewer: Johannes Franz Lang (`frcola`, island/API test experience), or
 Nils (`Nilsnova`). A different human approves the current change; no agent merge.
-Keep PR #13 draft pending Ianno's explain-back, then mark ready for human review.
+PR #13 may now be marked ready for Franz (`frcola`); independent human review and live verification remain pending.
