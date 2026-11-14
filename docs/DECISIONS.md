@@ -699,6 +699,13 @@ per call. See [INTERFACES.md](INTERFACES.md#class-demo-guest-play-the-class-code
 **Superseded in part by D030:** the demo window is replaced by the class code; the guest kit, the
 Keeper's Lock and the clean-up stay as decided here.
 
+## D047 · Fast-track merging for the T29–T47 sprint · 2026-11-14
+
+- **Status:** accepted by Nils (`Nilsnova`) for this sprint only. Teammates may overturn it in the issue or chat.
+- **Decision and reason:** to get Ianno's defense and shared-island roadmap onto `main` quickly, the T29–T47 lane PRs (#21–#28) are merged as soon as their checks pass, **without waiting for a prior peer approval**. This is a temporary exception to CONTRIBUTING §4 and AGENTS.md. Merge gate: `npm test`, `npm run build`, `npm run test:mp`, the GitHub sign-in checks (`check-online-auth`, `check-online-signin-gate`) and backend `pytest`/`ruff` pass. A feature that needs a new database table ships behind a new feature flag that is off by default, so the live site and existing APIs keep working. Applying a migration and switching a flag on are separate, announced steps.
+- **Alternatives and trade-offs:** waiting for a peer approval on each PR is safer and keeps everyone able to explain the code, but it would delay the sprint. In exchange, review moves to after the merge: every teammate should read the merged PRs and the specs (with explain-back sections) before the walkthrough, and anything can be reverted with a normal PR.
+- **Agreed by / issue or PR / impact:** Nils, 14 Nov; issues #21–#28. The design decisions D039–D046 inside the lanes stay *proposed* until the team agrees on them.
+
 ## Next entry
 
 - **ID / date / title:**

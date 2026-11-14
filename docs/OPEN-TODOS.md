@@ -123,6 +123,8 @@ Proposed by Ianno Hollensteiner (`Iannomh123456`). All tasks below are **Propose
 
 Size estimates are provisional: S (under 2 hours), M (half a day), L (a day); split larger tasks into small PRs. Design choices are part of each collaborator’s assignment, subject to the shared-decision workflow. Submit and rehearse first; large additions are later backlog unless explicitly rescheduled.
 
+**Claimed 14 Nov by Nils (agent-assisted), fast-tracked ([D047](DECISIONS.md)):** T29–T32 and T47 → #21; T34/T35 → #22; T36 → #23; T40/T41/T44 → #24; T37/T42 → #25; T38/T39 → #26; T46 → #27; T45 → #28; T33 is a stretch goal in #21. T43 starts after T33/T34 are merged. Each row is updated as its lane merges. Lanes merge on green checks, and peer review follows the merge.
+
 Where a task asks the collaborator to decide, document the decision under the existing rules in [CONTRIBUTING.md](../CONTRIBUTING.md) and [ENGINEERING.md](ENGINEERING.md#where-contracts-live).
 
 | ID | Size | Task | Depends on | Done when |
