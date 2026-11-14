@@ -75,6 +75,7 @@ def test_config_lists_all_flags_in_the_agreed_order():
         "wall_recovery",
         "placement",
         "defenses_v2",
+        "arsenal",
     ]
 
 

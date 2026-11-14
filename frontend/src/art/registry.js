@@ -6,9 +6,10 @@ import {islandFrames} from './island.js';
 import {campaignFrames} from './campaign.js';
 import {extraFrames} from './extras.js';
 import {defensesV2Frames} from './defenses-v2.js'; // T43: drawn only once the culverin is wired in
+import {arsenalFrames} from './arsenal.js';
 
 let local = null;
-const island = () => (local ??= {...peopleFrames(), ...islandFrames(), ...campaignFrames(), ...extraFrames(), ...defensesV2Frames()});
+const island = () => (local ??= {...peopleFrames(), ...islandFrames(), ...campaignFrames(), ...extraFrames(), ...defensesV2Frames(), ...arsenalFrames()});
 let fleet = null;
 const FLEET = /^(pirate-|fx-)/;
 /** True when a cartoon drawing exists for the frame name (fleet names are known by their prefix). */

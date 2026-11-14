@@ -28,6 +28,7 @@ FLAGS = (
     "wall_recovery",
     "placement",
     "defenses_v2",
+    "arsenal",
 )
 VARIABLES = {
     "APP_ENV": " PrEvIeW ",

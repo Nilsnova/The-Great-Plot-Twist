@@ -211,7 +211,10 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
         // D039 (proposed): lasting wall damage and the paid Repair/Rebuild, only while the server's flag is on.
         // In fake mode (?islands=fake) the fake server's own flags decide (?fakeflags=wall_recovery, fake-api.js).
         wallRecovery:()=>{if(fakeTransport)return fakeTransport.flags.wall_recovery===true;
-          const services=findPanelServices(session);return services?.isReady()?services.getFlags()?.wall_recovery===true:false;}});
+          const services=findPanelServices(session);return services?.isReady()?services.getFlags()?.wall_recovery===true:false;},
+        // The arsenal (T41, D042): the server's flag "arsenal"; in the dev fake ?fakeflags=arsenal (or ?arsenal=1).
+        arsenalOn:()=>fakeTransport?(fakeTransport.flags.arsenal===true||new URLSearchParams(location.search).get('arsenal')==='1')
+          :findPanelServices(session)?.getFlags?.()?.arsenal===true});
       if(adapter)island.setPresence(adapter.read()?.presence);
       void ensureWaves();
       return island;

@@ -11,11 +11,12 @@ import {drawQr} from '../lib/qr/index.js';
 import {CAPTAIN_PALETTES} from '../art/people.js';
 import {toasts as gameToasts} from '../ui/toasts.js';
 import {crewLabel, progressLines} from './progression.js';
+import {drawArsenal} from './arsenal-ui.js';
 
 // The cards of the island's buildings: a spot's build or upgrade card (houses too), the Tech hub, the wreck
 // and the Harbor. They dock at the right side on a desktop and come up as a bottom sheet on a phone
 // (island.css), so the island stays in view; the menus (crew, captain, lobby, invite) stay centred.
-export const DOCKED = new Set(['build', 'tech', 'wreck', 'harbor']);
+export const DOCKED = new Set(['build', 'tech', 'wreck', 'harbor', 'arsenal']);
 
 function button(label, onClick, quiet = false) {
   const element = node('button', `kit-button${quiet ? ' kit-quiet' : ''}`, label); element.type = 'button';
@@ -288,6 +289,10 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
       body.append(line('island-reason', reason), line('island-message', model.message, 'alert'), line('island-coins', model.coins));
       return focusable;
     });
+  }
+  // The arsenal (T41, D042): handlers {take(copyId), giveBack(), buy(typeId)}; drawn by arsenal-ui.js.
+  function arsenalCard(model, handlers = {}) {
+    open('arsenal', model.title, body => drawArsenal(body, model, handlers, {button, line}));
   }
   function crewCard(model, onHire) {
     open('crew', model.title, body => {
@@ -582,7 +587,7 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
     });
   }
   return {
-    leaderboardCard, buildCard, bellCard, inviteCard, lobbyCard, crewCard, captainCard, captainsCard, harborCard, techCard, wreckCard, demolishCard, close, copyLink,
+    leaderboardCard, buildCard, bellCard, inviteCard, lobbyCard, crewCard, captainCard, captainsCard, harborCard, techCard, wreckCard, arsenalCard, demolishCard, close, copyLink,
     // Re-draw the open card from fresh models (the island controller calls this on every change).
     get open() { return kind; },
     get active() { return !!modal; },
