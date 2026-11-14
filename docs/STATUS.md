@@ -27,6 +27,8 @@ adds only exact-angle musket aiming, upright directional body views and body/gun
 
 **13 Nov, T26 / Ianno:** island Harbor weather entry implemented in [PR #8](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/8). Reuses the existing card; [local evidence and limits](handoff/T26-weather-board.md). Explain-back and human review pending.
 
+
+**14 Nov, planning proposal (Ianno Hollensteiner):** [Defense and shared-island expansion](BUILD-PLAN.md#6-defense-and-shared-island-expansion) adds T29–T47. No gameplay implementation or live change is claimed. Planning branch: `docs/t29-t47-defense-roadmap`; existing uncommitted work is preserved.
 **11 Nov, D1 contribution (Johannes):** [draft PR #5](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/5)
 adds 67 invalid-input/boundary cases using the existing fakes. Backend: **15,894 passed, 257 skipped**;
 Ruff: **All checks passed!** The skips concern optional SQL tools and opt-in database checks.
@@ -219,6 +221,8 @@ Nobody has decided these yet. Until they are decided, the plan in [ROADMAP.md](.
 
 **T26 / Ianno:** review the small weather-entry diff, answer the explain-back questions, then ask Johannes (`frcola`) for independent human review.
 
+
+**Expansion next:** claim one task from the [new board](OPEN-TODOS.md#9-defense-and-shared-island-expansion-proposal-14-nov), starting with T29/T30 or independent T37/T42 design. Coordinate shared files before writing code; existing lane and submission priorities remain.
 **D1 / Johannes:** explain the request, response and no-write assertions in [PR #5](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/5),
 answer the three walkthrough questions, then ask Nils (`Nilsnova`) for independent human review.
 
@@ -549,6 +553,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 - **13 Nov 2026, Codex for Ianno Hollensteiner:** implemented T5 on `feat/t5-island-decoration`, [PR #10](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/10), following Ianno’s revised rank-shield design and placement. [Evidence and limits](handoff/T5-island-decoration.md). Explain-back and human review pending.
 
 - **2026-11-13.** Codex for Ianno: T26 island Harbor weather access, regression tests and desktop/phone screenshots in PR #8; see [evidence](handoff/T26-weather-board.md). Human explain-back/review pending.
+
+- **14 Nov 2026 · Ianno Hollensteiner, with coding-agent assistance:** prepared additive roadmap/tasks T29–T47 for review; no implementation or release. Independent human review and explain-back are pending; no merge or release is claimed.
 
 - **2026-11-11, Johannes Franz Lang with Codex:** D1 adds 67 cases in five existing route-test files on `test/d1-invalid-inputs` ([PR #5](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/5)). Backend 15,894 passed / 257 skipped; Ruff clean; a temporary 65-character action-ID bug was caught and restored. Production code is unchanged; explain-back and human review remain.
 

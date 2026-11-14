@@ -634,3 +634,7 @@ Not before submission, or only if everything above is green:
 - **Review pairs rotate weekly:** G with S and A with L in week 1, then G with A and S with L.
 - **Status page:** every agent adds a log line to [docs/STATUS.md](docs/STATUS.md) and updates "Right now" and "Next steps" when it finishes a task.
 - **Explain-back drills on Thu 19 and Sat 21,** using the course's six question types. Everyone explains one file from every other lane.
+
+## Expansion proposal · 14 Nov 2026
+
+Ianno Hollensteiner proposed an additive [defense and shared-island roadmap](docs/BUILD-PLAN.md#6-defense-and-shared-island-expansion): tasks T29–T47 cover recovery/upgrades, destructible defenses, enemy targeting, walls/layout, rescue, minigames, arsenal, multiplayer policy and extensions of existing score/Harbor tasks. The phase order, dependencies, claim workflow and acceptance checks are there. Existing plans and task IDs remain intact. This proposal does not change the submission dates or authorize implementation/release of unresolved gameplay choices.
