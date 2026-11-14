@@ -1242,6 +1242,34 @@ explain and review it. See [the test map](TEST-MAP.md#t28--ianno-hollensteiner--
 and [screenshots, exact checks and checkpoint links](evidence/T28/README.md).
 Local browser evidence does not establish live Supabase or physical-phone behavior.
 
+## B2 — Harbor choices and game menus — Johannes Franz Lang
+
+**What and where.** [harbor.css](../frontend/src/harbor/harbor.css) adds one
+property inside the existing <=480px rule: match-side choices get a 100% flex
+basis. Each team/Draw choice uses a row; 5/10/25 coin choices retain their compact
+row. The desktop layout, labels, selection callbacks and server rules stay as before.
+
+**Why.** With the complete game styles, long club names stayed inside the old
+three-column buttons only by splitting “Nottingham” and “Manchester” mid-word.
+Full-width choices make those words readable without smaller type or changed data.
+The taller stack relies on the existing scrollable card.
+
+**Proof and reuse.** [phone-layout.test.js](../frontend/tests/harbor/phone-layout.test.js)
+uses the existing browser harness and [controlled fixtures](../frontend/tests/harbor/phone-fixtures.js).
+The fixture loads the main/world sheets in their real order and reuses existing
+fakeCalls/fakeSports, campaign model, cards and shell. DOM Ranges report a word's
+line rectangles; multiple rectangles mean it was broken across lines. That assertion
+fails on both phone sizes before the CSS change and passes afterward. The other
+checks cover ten views at three sizes, focus/Escape, selection before/after explicit
+confirmation, local settings and all help pages on both phones.
+
+**Limits and change.** These are real browser components with fake data/callbacks,
+not live purchases, provider accuracy or authentication. Radio target measurements
+use their clickable labels. Physical phones/keyboard, VoiceOver, Safari and actual
+link/clipboard use remain separate checks. [Evidence and reproduction](evidence/B2-harbor-menus/README.md).
+If picker content changes, repeat the word/target/scroll checks before altering
+shared choice styles; keep side choices separate from coin choices.
+
 ## Where older docs differ from the code
 
 Read the code when these disagree. Noted on 11 Nov; not yet fixed.

@@ -45,5 +45,11 @@
 .harbor-pirates{font-size:20px;font-weight:bold}
 .harbor-weather-icon{display:inline-block;width:1.4em;text-align:center}
 @media(max-width:600px){.kit-modal.harbor-card{width:calc(100vw - 16px);padding:0 14px 16px}.kit-modal.harbor-card .kit-modal-header{margin:0 -14px 16px;padding:8px 8px 8px 14px}}
-@media(max-width:480px){.harbor-item,.harbor-stall{padding:10px}.harbor-choices .harbor-choice{flex:1 1 30%;min-width:0}.harbor-confirm{justify-self:stretch}}
+@media(max-width:480px){
+  .harbor-item,.harbor-stall{padding:10px}
+  .harbor-choices .harbor-choice{flex:1 1 30%;min-width:0}
+  /* Full-width team choices keep club names readable; coin choices stay together. */
+  .harbor-match .harbor-sides .harbor-choice{flex-basis:100%}
+  .harbor-confirm{justify-self:stretch}
+}
 @media(prefers-reduced-motion:reduce){.harbor-card *{transition:none!important;animation:none!important}}
