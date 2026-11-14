@@ -4,7 +4,7 @@
 >
 > **Who uses it:** every captain on an island (and its crewmates); the co-op permission lane (T37) and the absence lane (T42), which replace the policy assumptions recorded here.
 
-- **Status:** in review (implementation done on the branch; the migration is written, NOT applied)
+- **Status:** in review (implementation done on the branch; merged in PR #51; the migration is applied live (14 Nov 2026) and the flag `arsenal` has been on since that evening, release check PR #53)
 - **Branch:** `feat/t40-t41-arsenal`
 - **Issue and pull request:** opened by the coordinator for Nils (`Nilsnova`); plan by Ianno (`Iannomh123456`), [BUILD-PLAN section 6](../docs/BUILD-PLAN.md#6-defense-and-shared-island-expansion), [OPEN-TODOS section 9](../docs/OPEN-TODOS.md#9-defense-and-shared-island-expansion-proposal-14-nov)
 - **Decision:** [D042](../docs/DECISIONS.md#d042--shared-island-arsenal-20-stored-copies-and-the-weapon-table--2026-11-14) (proposed)
@@ -62,8 +62,8 @@ Weapons were a personal list (`islands.weapons_owned`): bought once, equipped by
 - [x] `cd backend && CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql`: the 23 arsenal invariant checks and every other island SQL check pass.
 - [x] `cd backend && uv run ruff check .`: no problems. SQL parse check (ENGINEERING 4.2 step 9) passes.
 - [x] `cd frontend && npm test && npm run build`: pass.
-- [ ] A teammate applies the migration (supabase/README.md, "The arsenal migration"), then switches `FEATURE_FLAGS` to include `arsenal`, then runs `select public.arsenal_convert_personal_weapons();` once (as `service_role`; safe to repeat), so every player's old weapons are copies at once instead of on the first look at their arsenal.
-- [ ] Two-browser check on a real project: two captains, one copy, one gets it; full-rack return refused.
+- [x] Done live on 14 Nov 2026: the migration was applied (supabase/README.md, "The arsenal migration"), `arsenal` was added to `FEATURE_FLAGS`, and `select public.arsenal_convert_personal_weapons();` was run once (1 copy converted, 0 islands left with personal weapons).
+- [x] Two-browser release check: `npm run test:arsenal` (PR #53, fake server with the migration's rules); not repeated against the real project.
 - [ ] No secrets, private data or generated caches are in the diff.
 - [ ] A different human teammate has reviewed and approved the current change.
 

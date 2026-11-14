@@ -96,7 +96,7 @@ Values (D039, proposed): timer **600 s**; rebuild price **30 %** of the catalogu
 - [x] `CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql/test_wall_recovery_sql.py`: 11 passed on a disposable local PostgreSQL.
 - [x] `cd backend && uv run ruff check .`: no problems.
 - [x] `cd frontend && npm test && npm run build`: pass.
-- [ ] The migration is applied by a teammate, then the flag `wall_recovery` is switched on for a preview and played with two browsers (not done here).
+- [x] The migration was applied live on 14 Nov 2026 and the flag `wall_recovery` switched on in production that evening, after the finish guard of PR #52 and `npm run test:walls` (the two-browser play-through was not done by this lane).
 - [ ] Desktop and phone screenshots of the Repair/Rebuild card (not done here).
 - [ ] No secrets, private data or generated caches are in the diff.
 - [ ] A different human teammate has reviewed and approved the current change.
