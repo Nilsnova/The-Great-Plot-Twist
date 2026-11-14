@@ -58,6 +58,12 @@ GET /api/island
     research and the wreck's repair. A spot with a tower skill carries "spec" (null for none).
     The building levels of "unlocks" follow the island's best won wave too; crew and captain
     levels follow the player's own unlock wave.
+    Flexible placement (T36, D041): every spot also carries "x" and "z", where it stands on the
+    island's build grid (an old save: its fixed spot), and the answer carries "layout":
+    {"version": 1 | 2, "grid": 0.5, "movable": true | false}. Version 1 is the fixed spots,
+    2 means a spot was moved; "movable" is false while the layout cannot be read. Moving is
+    POST /api/island/move (routes/island_layout.py). GET /api/island/visit/{code} carries the
+    same "x", "z" and "layout".
     Errors: 401, 403 demo_closed (a guest who was not admitted), 404 feature_off,
             404 player_not_set_up, 502 database_error, 503 island_unavailable, database_unavailable
 
@@ -200,6 +206,7 @@ from server.errors import ApiError
 from server.flags import is_enabled
 from server.island import leaderboard, rules, service, wall_repair
 from server.island.catalogue import IslandCatalogue
+from server.island.layout import LayoutInfo
 from server.island.rules import ResearchTier, SpotView
 from server.island.service import CampaignView, DemolishView, IslandCatalogueDep, IslandView
 from server.settings import SettingsDep
@@ -235,6 +242,17 @@ class SpotOut(BaseModel):
     cost: int
     upgradeCost: int | None
     spec: str | None = None
+    # T36: where the spot stands on the build grid (island units); null at Pirate Point.
+    x: float | None = None
+    z: float | None = None
+
+
+class LayoutOut(BaseModel):
+    """T36: the layout model (1 = the fixed spots of an old save, 2 = moved on the grid)."""
+
+    version: int
+    grid: float
+    movable: bool
 
 
 class CrewOut(BaseModel):
@@ -365,6 +383,7 @@ class IslandResponse(BaseModel):
     skills: SkillsOut
     weapons: WeaponsOut
     campaign: CampaignOut
+    layout: LayoutOut | None = None
 
 
 class VisitResponse(BaseModel):
@@ -374,6 +393,7 @@ class VisitResponse(BaseModel):
     spots: list[SpotOut]
     crew: CrewOut
     campaign: CampaignOut
+    layout: LayoutOut | None = None
 
 
 class BuildRequest(BaseModel):
@@ -527,9 +547,15 @@ def spots_out(spots: tuple[SpotView, ...]) -> list[SpotOut]:
             cost=spot.cost,
             upgradeCost=spot.upgrade_cost,
             spec=spot.spec,
+            x=spot.x,
+            z=spot.z,
         )
         for spot in spots
     ]
+
+
+def layout_out(info: LayoutInfo) -> LayoutOut:
+    return LayoutOut(version=info.version, grid=info.grid, movable=info.movable)
 
 
 def tier_out(tier: ResearchTier | None) -> TierOut:
@@ -636,6 +662,7 @@ def island_out(view: IslandView, catalogue: IslandCatalogue) -> IslandResponse:
             ],
         ),
         campaign=campaign_out(view.campaign, catalogue),
+        layout=layout_out(view.layout),
     )
 
 
@@ -875,4 +902,5 @@ async def get_visit(
         spots=spots_out(view.spots),
         crew=CrewOut(**view.crew),
         campaign=campaign_out(view.campaign, catalogue),
+        layout=layout_out(view.layout),
     )

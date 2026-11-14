@@ -15,6 +15,7 @@
 //   enterGame({code, role}) / openLobby()       the games of GAME-V3.md §2: which game Play opens, its lobby
 //   attachGame(room)                           the game's room state (game-room.js, from the wave wiring)
 //   openHarbor(id) / openTechHub() / openWreck()  the campaign's buildings (GAME-V3.md §4, §5)
+//   startMove(spotId) / moving                 T36 Move mode: a spot to another square of the build grid
 // Events it emits on the game's bus: island_built {kind, spot}, island_upgraded {kind, spot, level},
 // campaign_unlocked {wave, ids, code} (a won wave opened something on the island on screen, once per
 // island and wave on this page; the narrator plays its lines), tower_specialised {spot, spec},
@@ -24,8 +25,10 @@ import {createIslandApi} from './api.js';
 import {createWaveFlow} from './wave-flow.js';
 import {createIslandUi} from './ui.js';
 import {decorateIsland} from './world.js';
+import {createMoveMode} from './move-mode.js';
+import {createMoveBar} from './move-bar.js';
 import {SPOTS, KINDS, BELL, CABIN, ISLAND_PLACE, POINT_PLACE, PP_SPOTS, isIslandZone, isPointSpot, spotById, ppSpotById, pointZones, defenses, slotName,
-  campaignBuilding} from './spots.js';
+  campaignBuilding, placedSpot} from './spots.js';
 import {buildCardModel, bellModel, inviteModel, crewModel, captainModel, captainsModel, skillsModel, weaponsModel, coinText,
   harborModel, techModel, wreckModel, demolishModel, refundToast} from './card-model.js';
 import {campaignOf, openedBetween, opensText, waveOf} from '../campaign/index.js';
@@ -146,6 +149,12 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const live = {get: path => (getTransport()?.get?.(path) ?? notReady()), post: (path, body) => (getTransport()?.post?.(path, body) ?? notReady())};
   const api = createIslandApi({transport: transport ?? live});
   const ui = createIslandUi({container, focus, resetInput});
+  // T36, flexible placement: Move mode (move-mode.js) with its bar (move-bar.js) and the preview on the island.
+  const moving = createMoveMode({api, render: model => moveBar.render(model), preview: cell => world?.preview(cell),
+    spots: () => target()?.spots ?? [], code: () => (visiting ? visiting.code : null), onMoved: (answer, spotId) => void moved(answer, spotId)});
+  const moveBar = createMoveBar({container, handlers: {nudge: (dx, dz) => moving.nudge(dx, dz), place: () => void moving.confirm(), cancel: () => moving.cancel()}});
+  const moveKeys = event => { if (moving.active && !ui.active) moving.handleKey(event); };
+  globalThis.addEventListener?.('keydown', moveKeys, true);
   const placeholder = mode === 'fake' || new URLSearchParams(search).get('wavedebug') === '1';
   const target = () => visiting ?? own;
   const where = () => (visiting ? displayIslandCode(visiting.code) : 'own');
@@ -179,7 +188,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const stopPoint = on('arrived', event => { if (event.place === POINT_PLACE) void loadPoint(); });
   // Leaving the island closes its card and ends a visit (the next landing is your own island).
   const stopTravel = on('travel', event => {
-    ui.close(); flow.reset(); openSpot = null;
+    ui.close(); flow.reset(); openSpot = null; moving.cancel();
     if (visiting && event.to !== ISLAND_PLACE) endVisit();
   });
 
@@ -344,7 +353,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     const island = target(), spot = island?.spots.find(item => item.id === spotId) ?? null;
     const model = buildCardModel({spotId, slot: spotById(spotId)?.slot, spot, coins: own?.coins ?? null,
       visitor: !!visiting, ownerName: visiting?.ownerName, busy: busySpot === spotId ? busyKind : false, message: cardMessage || (!island ? ownMessage : ''),
-      unlocks: own ? islandUnlocks() : null, prices: own?.prices ?? null, campaign: campaign(), battle: battle && !waveOver});
+      unlocks: own ? islandUnlocks() : null, prices: own?.prices ?? null, campaign: campaign(), battle: battle && !waveOver,
+      movable: island?.layout?.movable === true});
     // D039: a damaged or destroyed wall shows Repair or Rebuild instead of Upgrade (flag wall_recovery).
     const shown = wallsFor !== null && wallsFor === island?.code ? walls.get(spotId) ?? null : null;
     return withWallRecovery(model, {wall: shown, coins: own?.coins ?? null,
@@ -365,7 +375,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     respec: () => void respecCaptain(), respecCancel: () => { respecAsk = false; refreshCard(); },
     buy: id => void buyWeapon(id), equip: id => void equipWeapon(id)};
   const handlers = {build: (spotId, kind) => void build(spotId, kind), upgrade: spotId => void upgrade(spotId), repair: spotId => void repairWall(spotId), hire: () => openCrew(),
-    specialise: (spotId, spec) => void specialise(spotId, spec), demolish: spotId => void askDemolish(spotId)};
+    specialise: (spotId, spec) => void specialise(spotId, spec), demolish: spotId => void askDemolish(spotId), move: spotId => startMove(spotId)};
   const demolishHandlers = {confirm: () => void confirmDemolish(), keep: () => { const spot = demolishSpot; demolishSpot = null; if (spot) openBuild(spot); }};
   const demolishCardModel = () => demolishModel({quote: demolishQuote, busy: busyDemolish, message: cardMessage});
   // The campaign's buildings (GAME-V3.md §4, §5): the Harbor, the Tech hub and the wreck.
@@ -624,9 +634,23 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     refreshCard();
   }
   // The reach of the open house card's role, for the ring on the ground (world.js), or null.
+  // T36: Move closes the card and lets the player pick the new square (between waves only; the server checks).
+  function startMove(spotId) {
+    if (disposed || isPointSpot(spotId) || (battle && !waveOver) || target()?.layout?.movable !== true) return false;
+    ui.close(); openSpot = null;
+    return moving.start(spotId);
+  }
+  async function moved(answer, spotId) {
+    const place = visiting ? 'visit' : 'own';
+    await took(answer, place);
+    if (disposed) return;
+    emit({type: SPOTS_CHANGED, place, spot: spotId});
+    refreshCard();
+    ui.toast(`Moved${onWhere(place)}. Your defenders fight from the new spot.`, 'success');
+  }
   function houseRange() {
     if (ui.open !== 'build' || !openSpot) return null;
-    const where = spotById(openSpot), role = activeRole((target()?.spots ?? []).find(item => item.id === openSpot));
+    const where = placedSpot(openSpot, target()?.spots), role = activeRole((target()?.spots ?? []).find(item => item.id === openSpot));
     return where && role ? {x: where.x, z: where.z, radius: roleRadius(role), role} : null;
   }
   // GAME-V3.md §5.1: one research step: tier 1 of a branch, or one of the two options of tier 2 or 3 (change:
@@ -844,7 +868,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     decorate(place, art, cleanups, adapters = {}) {
       world?.dispose();
       const deco = decorateIsland(place, {art, reducedMotion, canvas: adapters.canvas, camera: adapters.camera,
-        isActive: adapters.isActive, onPick: pick, range: houseRange, player: adapters.player, onFar: adapters.onFar});
+        isActive: adapters.isActive, onPick: pick, range: houseRange, player: adapters.player, onFar: adapters.onFar,
+        placing: () => moving.active, onGround: (x, z) => moving.tap(x, z)});
       world = deco; applyWorld();
       const original = place.update;
       place.update = (dt, frame) => { original(dt, frame); deco.update(dt, frame?.time ?? 0); };
@@ -881,7 +906,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     },
     // Where the floating prompt hangs: the spot's world point and how far above it the building is drawn.
     anchor(zone) {
-      const thing = spotById(zone) ?? ppSpotById(zone) ?? (zone === BELL.id ? BELL : zone === CABIN.id ? CABIN : campaignBuilding(zone));
+      const thing = placedSpot(zone, target()?.spots) ?? ppSpotById(zone) ?? (zone === BELL.id ? BELL : zone === CABIN.id ? CABIN : campaignBuilding(zone));
       if (!thing) return null;
       return {x: thing.x, z: thing.z, lift: thing.kind === 'watchtower' ? 4.6 : thing.h ? Math.min(4.6, thing.h * .7) : 2.6};
     },
@@ -933,7 +958,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       if (!disposed && answer.ok) tookCoins(answer.data.coins);
       return answer;
     },
-    setBattle(value) { battle = value === true; if (battle) waveOver = false; applyWorld(); refreshCardIfBuild(); if (['captain', 'tech'].includes(ui.open)) refreshCard(); },
+    setBattle(value) { battle = value === true; if (battle) { waveOver = false; moving.cancel(); } applyWorld(); refreshCardIfBuild(); if (['captain', 'tech'].includes(ui.open)) refreshCard(); },
     // A Pirate Point battle: its built walls, cannons and mortars are drawn by the wave renderer meanwhile.
     setPointBattle(value) { pointBattle = value === true; applyWorld(); },
     // The bell again, for the wave's break ("Next wave", TOWER-DEFENSE.md §1): the start route where the
@@ -954,14 +979,18 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     get dev() { return transport?.dev ?? null; },
     get ui() { return ui; },
     get active() { return ui.active || !!cutscene; },
+    startMove,
+    get moving() { return moving.state; },
+    get moveMode() { return moving; },
     handleEscape() {
       if (cutscene) { cutscene.skip(); return true; }
+      if (moving.active && !ui.active) { moving.cancel(); return true; }
       return ui.close();
     },
     dispose() {
       if (disposed) return; disposed = true;
       stopFinished(); stopStarted(); stopArrived(); stopPoint(); stopInteract(); stopTravel(); stopMenu?.(); stopStartedGame(); stopGame(); clearTimeout(syncSoon);
-      flow.dispose(); ui.dispose(); cutscene?.dispose?.(); world?.dispose(); world = null; pointWorld?.dispose(); pointWorld = null;
+      flow.dispose(); ui.dispose(); moveBar.dispose(); globalThis.removeEventListener?.('keydown', moveKeys, true); cutscene?.dispose?.(); world?.dispose(); world = null; pointWorld?.dispose(); pointWorld = null;
     },
     spots: SPOTS,
   };
