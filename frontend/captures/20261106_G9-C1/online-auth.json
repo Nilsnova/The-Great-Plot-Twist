@@ -29,6 +29,11 @@
       "authorized": false
     },
     {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false
+    },
+    {
       "path": "/auth/v1/authorize",
       "method": "GET"
     },
@@ -52,6 +57,30 @@
       "authorized": true
     },
     {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true
+    },
+    {
+      "path": "/rest/v1/wallet_transactions",
+      "method": "GET"
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false
+    },
+    {
       "path": "/api/config",
       "method": "GET",
       "authorized": false
@@ -65,6 +94,20 @@
       "path": "/api/me/name",
       "method": "POST",
       "authorized": true
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true
+    },
+    {
+      "path": "/rest/v1/wallet_transactions",
+      "method": "GET"
     },
     {
       "path": "/auth/v1/logout",
@@ -76,6 +119,11 @@
       "authorized": false
     },
     {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false
+    },
+    {
       "path": "/auth/v1/authorize",
       "method": "GET"
     },
@@ -99,6 +147,30 @@
       "authorized": true
     },
     {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false
+    },
+    {
+      "path": "/rest/v1/wallet_transactions",
+      "method": "GET"
+    },
+    {
+      "path": "/api/config",
+      "method": "GET",
+      "authorized": false
+    },
+    {
       "path": "/api/config",
       "method": "GET",
       "authorized": false
@@ -112,6 +184,20 @@
       "path": "/api/me/name",
       "method": "POST",
       "authorized": true
+    },
+    {
+      "path": "/api/save",
+      "method": "GET",
+      "authorized": true
+    },
+    {
+      "path": "/api/crews/me",
+      "method": "GET",
+      "authorized": true
+    },
+    {
+      "path": "/rest/v1/wallet_transactions",
+      "method": "GET"
     },
     {
       "path": "/auth/v1/logout",
