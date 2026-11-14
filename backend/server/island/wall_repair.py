@@ -24,7 +24,7 @@ from pydantic import AwareDatetime, BaseModel, StrictInt, StrictStr
 
 from server.errors import ApiError
 from server.game import islet_store
-from server.island import service, store, wall_health
+from server.island import permissions, service, store, wall_health
 from server.island.catalogue import IslandCatalogue
 from server.island.rules import find_spot
 from server.island.store import Island, Refusal, read_model
@@ -84,8 +84,8 @@ async def look(
     at: datetime,
     code: str | None = None,
 ) -> WallsView:
-    """The walls of the player's own island, or of the island with `code` (anyone who can visit
-    it may look). The prices are the caller's (an engineer pays less)."""
+    """The walls of the player's own island, or of the island with `code` (whoever may visit
+    it may look, D043). The prices are the caller's (an engineer pays less)."""
     island = await island_of(admin, catalogue, player_id, code)
     return await view_of(admin, catalogue, island, player_id, at)
 
@@ -95,7 +95,10 @@ async def island_of(
 ) -> Island:
     if code is None:
         return await store.open_island(admin, player_id, catalogue.starting_coins)
-    return await service.find_by_code(admin, code)
+    island = await service.find_by_code(admin, code)
+    if island.owner != player_id:  # D043: who may look at a game's island, as for a visit
+        await permissions.require_action(admin, island.owner, player_id, permissions.ISLAND_VISIT)
+    return island
 
 
 async def view_of(
@@ -142,7 +145,8 @@ async def restore(
     and level stay. 404 no_such_spot, 404 no_such_island, 403 not_member, 409 not_built, 422
     wrong_kind, 409 intact, 409 wave_running, 409 insufficient_funds. A repeated actionUid
     charges nothing and answers the walls as they are now."""
-    island, _ = await service.target_island(admin, catalogue, player_id, code)
+    # D043 (T37): repair and rebuild have the same row (members, paid by the clicker).
+    island, _ = await service.target_island(admin, catalogue, player_id, code, permissions.REPAIR)
     spot = find_spot(catalogue, spot_id)
     wall = (await read_walls(admin, island.owner)).get(spot.id)
     role = (await store.read_progress(admin, player_id)).role

@@ -818,6 +818,7 @@ and [message contract](INTERFACES.md#t28-boss-minigame-preparation).
 **Open questions for review (current behaviour kept until agreed):** (1) should a member only tear down what they paid for in full, with the host able to tear down anything? Today any member may (owner decision of 12 Nov, GAME-V3 §4.2); other payers get half back. (2) Should a host be able to remove a member, or hand the game over? Not possible today. (3) The host's personal unlocks follow their island's best wave even when members won it without them (D036); changing this would re-lock existing players. (4) Late joiners earn the full loot of a survived wave; a minimum time in the wave would need a migration.
 
 **Limits:** the Python check and the database check are separate reads; the database's lock is the final word. Mapping tests use the fake database; the SQL rules are covered by their own migration tests. Presence-based rules (quorum, auto-pause) are not possible without a server-side presence design.
+
 ## D039 · Wall recovery: damage stays after a wave · 2026-11-14
 
 **Status:** proposed; agreed by: pending team review. Implemented behind the new flag `wall_recovery` (off by default) on branch `feat/t29-t32-wall-recovery` for tasks T29–T32 and T47 ([spec](../specs/T29-T32-wall-recovery.md)). Migration `20261114100000_wall_recovery.sql`, not applied. Responsible teammate: Nils.
