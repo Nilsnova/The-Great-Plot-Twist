@@ -20,6 +20,7 @@
 //   await api.equipWeapon({weapon: 'pistols'});       // POST /api/island/weapon/equip
 //   await api.demolishQuote({spot, code?});            // GET  /api/island/demolish   (GAME-V3.md §4.2: who gets what back)
 //   await api.demolish({spot, code?});                 // POST /api/island/demolish   (between waves; half back to each payer)
+//   await api.move({spot, x, z, code?});               // POST /api/island/move       (T36: a spot to a cell of the build grid, free)
 //   await api.piratePoint();                          // GET  /api/pirate-point       (§5)
 //   await api.pointBuild({spot, kind}) / api.pointUpgrade({spot})   // POST /api/pirate-point/build|upgrade
 //   await api.joinInvite('ISLE-K7Q2M');               // POST /api/island/invite/join (§6)
@@ -57,7 +58,7 @@ export const PATHS = Object.freeze({
   point: '/api/pirate-point', pointBuild: '/api/pirate-point/build', pointUpgrade: '/api/pirate-point/upgrade',
   games: '/api/games', gameJoin: '/api/games/join', gameLeave: '/api/games/leave', game: code => `/api/games/${code}`,
   research: '/api/island/research', specialise: '/api/island/tower-skill', wreck: '/api/island/wreck',
-  demolish: '/api/island/demolish',
+  demolish: '/api/island/demolish', move: '/api/island/move',
   demolishQuote: (spot, code) => `/api/island/demolish?spot=${encodeURIComponent(spot)}${code ? `&code=${encodeURIComponent(code)}` : ''}`,
 });
 export const CREW_IDS = Object.freeze(['gunner', 'carpenter', 'lookout']);
@@ -75,6 +76,7 @@ export const MESSAGES = Object.freeze({
   badResearch: 'There is no such research.',
   badSpec: 'There is no such tower skill.',
   badGift: 'Pick one of the amounts shown.',
+  badCell: 'Pick a square of the build grid.',
 });
 const isCount = value => Number.isSafeInteger(value) && value >= 0;
 const isText = value => typeof value === 'string' && value.length > 0 && value.length <= 200;
@@ -275,6 +277,14 @@ export function createIslandApi({transport, makeUid = makeActionUid} = {}) {
       if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
       return writeSpots(`demolish:${where}:${spot}`, actionUid => transport.post(PATHS.demolish, {spot: sent(spot), actionUid, ...(where ? {code: where} : {})}),
         isDemolished);
+    },
+    // T36: move a spot (built or empty) to a cell of the build grid, between waves, free. Moving it to where it
+    // stands is harmless, so a repeat needs no click id. code: the game's island, without it your own.
+    move({spot, x, z, code = null} = {}) {
+      const where = code ? displayIslandCode(code) : '';
+      if (![x, z].every(value => Number.isFinite(value) && Number.isInteger(value * 2))) return refuse(422, 'off_grid', MESSAGES.badCell);
+      if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
+      return askSpots(() => transport.post(PATHS.move, {spot: sent(spot), x, z, ...(where ? {code: where} : {})}), where ? hasSpots : isIsland);
     },
     piratePoint: () => askSpots(() => transport.get(PATHS.point), isPoint),
     pointBuild({spot, kind} = {}) {

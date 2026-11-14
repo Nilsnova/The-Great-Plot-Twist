@@ -27,6 +27,7 @@ FLAG_NAMES = (
     "festival",
     "demo",
     "islands",
+    "placement",  # T36 flexible placement: needs migration 20261114110000_island_layout.sql
 )
 
 

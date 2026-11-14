@@ -359,6 +359,9 @@ class IslandCatalogue:
     campaign: Campaign
     research: tuple[Research, ...] = ()
     wreck: Wreck = Wreck(500, (25, 100))
+    # T36: the feature flag "placement" (set by create_app, not by the file). While it is off the
+    # island layout table is never read and no spot moves: every answer shows the fixed spots.
+    placement: bool = False
 
 
 def read_whole(entry: dict, name: str, where: str, lowest: int, highest: int) -> int:

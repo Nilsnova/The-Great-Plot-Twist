@@ -689,6 +689,14 @@ Every route needs a signed-in player (GitHub, email, or a guest admitted with th
 
 Errors have the house shape `{"error": {"code": "...", "message": "..."}}`; the message is a plain sentence. `503 database_unavailable` on a build or a finish means the outcome is unknown: read the island again, or repeat the same request (both are safe to repeat). `503 island_unavailable` means `islands.json` could not be read; the rest of the API works.
 
+**Flexible placement (T36, [D041](DECISIONS.md#d041--flexible-building-placement-on-a-build-grid-t36--2026-11-14), PROPOSED; flag `placement`, migration `20261114110000_island_layout.sql`, spec [T36](../specs/T36-flexible-placement.md)).** The route's home is the comment at the top of `backend/server/routes/island_layout.py`; the rules are `backend/server/island/layout.py` (repeated for the preview in `frontend/src/island/placement.js`), the grid and fixed spots `backend/content/island_layout.json`.
+
+| Route or field | What it does |
+|---|---|
+| every spot of `GET /api/island`, `GET /api/island/visit/{code}` and every island answer | also `x`, `z`: where the spot stands, in island units on a grid of 0.5 (an old save: its fixed spot; Pirate Point's spots: `null`). The browser's wave simulation reads these through `spots.js` `defenses()`, in the `{id, kind, level, x, z}` shape `src/pirates/sim.js` always read. |
+| `layout` of the same answers | `{version: 1 \| 2, grid: 0.5, movable}`: 1 = the fixed spots (an old save, nothing stored), 2 = a spot was moved; `movable` is true only with the flag `placement` on and the layout table readable. |
+| `POST /api/island/move` `{spot, x, z, code?}` | One of the 22 island spots (built or empty, with whatever stands on it) to one grid cell, free, between waves; on your own island or (with `code`) a game you are a member of. Answers the island. Safe to repeat (no click id). `404 feature_off`, `404 no_such_spot`, `422 off_grid`, `409 not_on_land`, `409 place_taken` (footprint 2 x 2 walls/towers, 3 x 3 watchtower/houses; overlaps the heart, cabin, bell, Harbor, Tech hub, wreck or another spot; touching is fine), `409 blocks_route` (towers, houses and the watchtower may not cut every way from the heart to the beach; walls never count), `409 wave_running`, `409 busy`, `403 not_member`, `404 no_such_island`, `503 layout_unavailable`, `429 too_many_requests` (the build budget). After a move the browser emits `island_spots_changed`, so the room re-reads the island as after a build. |
+
 The live room of an island is `live:place:isle_<the 5 symbols in lowercase>:1` (for `ISLE-K7Q2M`: `live:place:isle_k7q2m:1`), Pirate Point's is `live:place:pirate_point:1`; both fit the existing place-room policies (BUILD-PLAN 3.6).
 
 ### The prediction desk (package L5)
@@ -1317,6 +1325,7 @@ A flag is off unless the setting `FEATURE_FLAGS` names it (comma separated). The
 | `bulletin` | the bulletin, tonight chip and Chapter 2 hook screens; `GET /api/bulletin` | G9/R6; default off; off returns 404 before data reads |
 | `festival` | the 48-hour festival after the first Relighting; private claims and friendly ring | G13; applying its migration never starts the clock |
 | `demo` | guest play for the class demo: a Supabase anonymous user may use the API after presenting the current class code (`POST /api/demo/join`) | G29 C0, D030; off by default; needs migrations 20261109010000 and 20261109020000 applied first |
+| `placement` | T36 flexible placement: the island layout is read (`island_layout`), answers say `layout.movable: true` and `POST /api/island/move` works; the browser shows the Move button only then ([D041](DECISIONS.md#d041--flexible-building-placement-on-a-build-grid-t36--2026-11-14), PROPOSED). Off: every answer shows the fixed spots, the table is never asked, the move route answers `404 feature_off` | T36; off by default; needs migration `20261114110000_island_layout.sql` applied first |
 | `islands` | your island, building, visits by code and the pirate waves: `/api/island`, `/api/island/build`, `/api/island/visit/{code}`, `/api/waves/start`, `/api/waves/finish`; since D036 also `/api/island/upgrade`, `/hire`, `/captain`, `/invite/join` and `/api/pirate-point` (+ `/build`, `/upgrade`), which need migration `20261111030000` | lane 0 (D032); off by default; needs migration 20261110010000 applied first |
 
 The separately guarded [disposable local API](LOCAL-TEST-SERVER.md) provides a fixture-only

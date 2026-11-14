@@ -561,6 +561,7 @@ declined
 deduction
 deductions
 defend
+defenders
 defense
 degree
 degrees
@@ -1129,6 +1130,7 @@ iron
 ironclads
 is
 island
+island's
 islands
 isle
 isles
@@ -2185,6 +2187,7 @@ sorting
 sound
 sounds
 source
+south
 space
 spaces
 spam
@@ -2210,6 +2213,7 @@ spotter
 spray
 sprite
 sprites
+square
 src
 staircase
 stairs
@@ -2605,6 +2609,7 @@ welcome
 well
 went
 were
+west
 whale
 what
 wheel
