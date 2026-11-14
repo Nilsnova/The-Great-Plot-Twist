@@ -729,6 +729,8 @@ Keeper's Lock and the clean-up stay as decided here.
 
 **Alternatives and trade-offs:** persistent damage like D039 (more state, a paid card; later); ships shelling towers (would make towers fall without boarders; not chosen). Open: the hp numbers (T3 playtest); whether research or Workshops should help towers.
 
+**Proposed note 14 Nov (balance check, [T33-T35 balance](../specs/T33-T35-balance.md)):** boarders attack a tower within **1.5** (`TARGET_PROFILES.boarder.towerReach`, was 2.5). Alone, `tower_health` played the same as no rules in every measured wave (1–60, fixed spots and a closed ring), because boarders on today's fixed routes never pass that close to a tower. With pathing at 2.5, boarders left the killing ground to hack towers (ring wave 60: 36 % against 63 %); at 1.5 the figure is 45 %. The hp numbers are unchanged; doubling them did not help.
+
 ## Next entry
 
 - **ID / date / title:**
@@ -824,6 +826,8 @@ and [message contract](INTERFACES.md#t28-boss-minigame-preparation).
 **Alternatives and trade-offs:** per-boarder A* (more work per boarder, same routes); always breaching (no gaps, today's spirit, but T36 walls would mean nothing); always detouring (walls never hacked). Lone short walls are walked round, so today's isolated spots lose value under the new rule: before T36, either keep the legacy routes (option A) or join the ring spots into a closed ring (option B); a balance decision with T3. The wiring needs a wave option `pathing` so a mixed-version room never mixes rules. See [the spec](../specs/T34-T35-targeting-pathing.md).
 
 **Update 14 Nov (wiring):** wired behind the flag and wave rule `pathing` (off). Option A while it is off (today's routes); with it on, walls are their T36 footprints (D041), so placed walls can form rings. Balance of lone walls to be checked with T3 before switching on.
+
+**Proposed note 14 Nov (balance check, [T33-T35 balance](../specs/T33-T35-balance.md)):** without a change, pathing walked round every lone wall (0 wall hacks at waves 5 and 10) and lost wave 60 on the fixed spots (40 % against 100 %). Proposed: a boarder within **3** of a standing wall that lies across its straight way to the heart hacks it (`WALL_ENGAGE`, `WALL_LANE` 0.25 in `boarder-paths.js`), as on the fixed routes; walls beside the way and gaps in joined walls work as before. With that, every fixed-spot wave matches no rules. Still open: on a closed ring round the heart, wave 60 loses about 12 points (51 % against 63 %, 80 seeds), because boarders funnel through one breach. The team can accept that or change a wall rule (`sim.js`).
 
 ## D046 · Highscore scope and statue stages · 2026-11-14
 

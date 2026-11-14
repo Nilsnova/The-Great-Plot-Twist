@@ -10,7 +10,7 @@ const EPSILON = 1e-9; // distances closer than this count as equal
 // (CONFIG.health: reach 3, leash 5, crowd 3); towers count only once they have hp (T33).
 // `brute` is the proposed siege type: walls and towers first, a captain only right next to it.
 export const TARGET_PROFILES = Object.freeze({
-  boarder: Object.freeze({ order: Object.freeze(['captain', 'wall', 'tower', 'heart']), captainReach: 3, towerReach: 2.5, leash: 5, crowd: 3 }),
+  boarder: Object.freeze({ order: Object.freeze(['captain', 'wall', 'tower', 'heart']), captainReach: 3, towerReach: 1.5, leash: 5, crowd: 3 }),
   brute: Object.freeze({ order: Object.freeze(['wall', 'tower', 'captain', 'heart']), captainReach: 1.5, towerReach: 4, leash: 3, crowd: 3 }),
 });
 

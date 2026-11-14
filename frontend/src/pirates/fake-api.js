@@ -417,15 +417,20 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     }
   }
   const running = run => !run.finishedAt && nowMs() <= run.startsAtMs + ISLAND_RULES.waves.maximumSeconds * 1000;
+  // The wave's sim rules (backend/server/island/wave_rules.py): the rule flags on now, in SIM_RULES order; the
+  // first answer with any of them on keeps its set for the wave, every later one serves the kept set. While
+  // every rule flag is off nothing is kept and the answer has no rules (the server's known limit included).
+  // world.liveFlags (dev.setFlag) switches a flag for every tab of a shared world, like a redeploy.
+  const flagOn = name => (world.liveFlags && Object.hasOwn(world.liveFlags, name) ? world.liveFlags[name] : flags?.[name]) === true;
   const rulesOf = run => {
-    if (!wantedRules.length) return null;
-    if (!Array.isArray(run.rules)) run.rules = [...wantedRules]; // kept by the wave's first answer with a rule on
-    const rules = SIM_RULES.filter(name => run.rules.includes(name));
-    return rules.length ? rules : null;
+    const wanted = SIM_RULES.filter(flagOn);
+    if (!wanted.length) return null;
+    if (!Array.isArray(run.rules)) run.rules = wanted;
+    return run.rules.length ? [...run.rules] : null;
   };
   const shape = run => {
     const walls = waveWalls(run); // D039: only while the flag is on, as the server
-    const rules = rulesOf(run); // the wave's sim rules (wave_rules.py), left out while none is on
+    const rules = rulesOf(run);
     return { waveId: run.waveId, wave: run.wave, seed: run.seed, startsAt: iso(run.startsAtMs),
       weather: { ...run.weather }, flagship: run.flagship, ...(v2 ? { boss: isBoss(run) } : {}), ...(walls ? { walls } : {}),
       ...(rules ? { rules } : {}) };
@@ -1123,6 +1128,11 @@ export function createFakeIslandTransport({ coins = ISLAND_RULES.startingCoins, 
       advanceClock(ms) {
         if (!Number.isSafeInteger(ms) || ms < 0) throw new TypeError('ms must be a whole number from 0 up.');
         world.clockShiftMs = (world.clockShiftMs ?? 0) + ms;
+      },
+      // A feature flag switched on or off on the fake server (a redeploy with other flags), for every tab of a shared world.
+      setFlag(name, on) {
+        if (typeof name !== 'string' || !FLAG_NAME.test(name)) throw new TypeError('setFlag needs a flag name.');
+        world.liveFlags = { ...(world.liveFlags ?? {}), [name]: on === true };
       },
       reset() { reset(); failures.length = 0; },
     }),

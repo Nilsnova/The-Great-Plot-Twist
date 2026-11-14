@@ -4,7 +4,7 @@
 // option the fixed routes stay (D040 option A).
 import { describe, expect, it } from 'vitest';
 import { createWave } from '../../src/pirates/sim.js';
-import { WALL_FOOTPRINT, createBoarderPaths, footprintPoints, isOnLand } from '../../src/pirates/boarder-paths.js';
+import { WALL_ENGAGE, WALL_FOOTPRINT, createBoarderPaths, footprintPoints, isOnLand } from '../../src/pirates/boarder-paths.js';
 import { cellOf, standingWallAt } from '../../src/pirates/path-grid.js';
 import { FOOTPRINTS } from '../../src/island/placement.js';
 import { surfaces } from '../../src/world/places/surfaces.js';
@@ -41,7 +41,7 @@ describe('the island grid for boarders', () => {
     expect(isOnLand(COAST.rx * 1.3, 0, COAST)).toBe(false);
   });
 
-  it('breaks through one wall of a closed ring, and walks round a lone wall', () => {
+  it('breaks through one wall of a closed ring, hacks a lone wall across its way and walks past one beside it', () => {
     const ringWalls = closedRing().map(item => ({ ...item, hp: 60, maxHp: 60 }));
     const paths = createBoarderPaths({ coast: COAST, heart: HEART, walls: ringWalls, pace: { hackPerSecond: 2.5, speed: 2.8 } });
     paths.refresh();
@@ -53,8 +53,23 @@ describe('the island grid for boarders', () => {
       boarder.x = way.x; boarder.z = way.z;
     }
     expect(breaches.size).toBe(1);
-    const lone = [{ id: 'wall_1', x: 10, z: 2, hp: 60, maxHp: 60 }];
-    const round = createBoarderPaths({ coast: COAST, heart: HEART, walls: lone, pace: { hackPerSecond: 2.5, speed: 2.8 } });
+    // The balance retune (WALL_ENGAGE, specs/T33-T35-balance.md): a lone wall across the straight way to the
+    // heart is hacked, as on the fixed routes; one beside the way is walked past.
+    const across = [{ id: 'wall_1', x: 10, z: 2, hp: 60, maxHp: 60 }];
+    const blocked = createBoarderPaths({ coast: COAST, heart: HEART, walls: across, pace: { hackPerSecond: 2.5, speed: 2.8 } });
+    blocked.refresh();
+    const hacker = { x: 15, z: 2 };
+    let hacked = null;
+    for (let i = 0; i < 200 && !hacked; i++) {
+      const way = blocked.next(hacker);
+      if (way.kind === 'wall') hacked = way.wallId;
+      if (way.kind !== 'step') break;
+      hacker.x = way.x; hacker.z = way.z;
+    }
+    expect(hacked).toBe('wall_1');
+    expect(Math.abs(hacker.x - 10) - 1).toBeLessThanOrEqual(WALL_ENGAGE + 1e-9);
+    const beside = [{ id: 'wall_1', x: 10, z: 7, hp: 60, maxHp: 60 }];
+    const round = createBoarderPaths({ coast: COAST, heart: HEART, walls: beside, pace: { hackPerSecond: 2.5, speed: 2.8 } });
     round.refresh();
     const walker = { x: 15, z: 2 };
     for (let i = 0; i < 200; i++) {
