@@ -72,7 +72,9 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   onCoins = () => {}, onCaptain = () => {}, menu = addMenuExtras, now, setTimer, clearTimer, openHarborStall = () => {},
   travel = () => travelAllowed({islandsMode: mode}),
   // D039 (proposed): whether /api/config says the flag wall_recovery is on (lasting wall damage, Repair/Rebuild).
-  wallRecovery = () => false, arsenalOn = () => false} = {}) {
+  wallRecovery = () => false, arsenalOn = () => false,
+  // T43 (D048 proposed): whether /api/config says the flag defenses_v2 is on (a tower spot then offers the culverin).
+  defensesV2On = () => false} = {}) {
   let disposed = false, own = null, ownMessage = '', visiting = null, visitCode = readVisit(visitStorage), busySpot = null, cardMessage = '';
   let world = null, cutscene = null, openSpot = null, loadTicket = 0, battle = false;
   let pointBattle = false;
@@ -365,7 +367,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     const model = buildCardModel({spotId, slot: spotById(spotId)?.slot, spot, coins: own?.coins ?? null,
       visitor: !!visiting, ownerName: visiting?.ownerName, busy: busySpot === spotId ? busyKind : false, message: cardMessage || (!island ? ownMessage : ''),
       unlocks: own ? islandUnlocks() : null, prices: own?.prices ?? null, campaign: campaign(), battle: battle && !waveOver,
-      movable: island?.layout?.movable === true});
+      movable: island?.layout?.movable === true, flags: {defenses_v2: defensesV2On() === true}});
     // D039: a damaged or destroyed wall shows Repair or Rebuild instead of Upgrade (flag wall_recovery).
     const shown = wallsFor !== null && wallsFor === island?.code ? walls.get(spotId) ?? null : null;
     return withWallRecovery(model, {wall: shown, coins: own?.coins ?? null,

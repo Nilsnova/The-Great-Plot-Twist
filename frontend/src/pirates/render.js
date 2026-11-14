@@ -21,7 +21,7 @@
 // fallen captain lies in their lobby colour (captain-down-1…10, src/art/people.js) inside a pulsing red ring
 // on the ground, and the ring fills with gold dots while you hold E to help them up.
 import * as THREE from 'three';
-import { FIRE_ART, HARPOON_ART, TIER_ART, crewArt, fireArt, levelArt, pipRow, pirateDimensions, pirateFrames, pirateLevels } from '../pixel/pirate-catalog.js';
+import { CULVERIN_ART, FIRE_ART, HARPOON_ART, TIER_ART, crewArt, fireArt, levelArt, pipRow, pirateDimensions, pirateFrames, pirateLevels } from '../pixel/pirate-catalog.js';
 // T33 (D049, proposed): the damaged and broken tower drawings, used only while the wave has tower health.
 import { TOWER_KINDS, towerStateFrame } from '../art/tower-states.js';
 import { towerLook } from './tower-health.js';
@@ -114,6 +114,11 @@ export const HARPOON_IDS = [...HARPOON_ART.levels, ...HARPOON_ART.fire, HARPOON_
 // of a wave with tower health (loadAtlas towerStates), so the atlas of every other wave stays as it was.
 export const TOWER_STATE_IDS = TOWER_KINDS.flatMap(kind => [1, 2, 3, 4, 5].flatMap(level =>
   ['damaged', 'broken'].map(state => towerStateFrame(kind, level, state))));
+// The culverin (T43, D048 proposed): every level idle and firing and its shot, cartoon only, and only in the atlas of a
+// wave that fights with one (loadAtlas culverins), its damaged and broken drawings only with tower health as well.
+// A pixel atlas has none and draws a cannon instead.
+export const CULVERIN_IDS = [...CULVERIN_ART.levels, ...CULVERIN_ART.fire, CULVERIN_ART.shot];
+export const CULVERIN_STATE_IDS = [...CULVERIN_ART.damaged, ...CULVERIN_ART.broken];
 /**
  * The frame of a cannon or mortar post: its level's art, or while it fires its level's firing frame (so a
  * level-3 cannon does not flick to level 1's plain barrel, nor a level-5 one lose its gold). has(id) says
@@ -127,6 +132,10 @@ export function towerFrame(kind, level, firing = false, has = () => true, state 
     const id = towerStateFrame(kind, level, state);
     if (has(id)) return id;
     if (state === 'broken') firing = false;
+  }
+  if (kind === 'culverin') { // cartoon-only, like the harpoon: a pixel atlas has no culverin, so a cannon stands in
+    const n = Math.max(1, Math.min(5, Number.isInteger(level) ? level : 1)), id = (firing ? CULVERIN_ART.fire : CULVERIN_ART.levels)[n - 1];
+    return has(id) ? id : towerFrame('cannon', level, firing, has);
   }
   if (kind === 'harpoon') { // cartoon-only: a pixel atlas has no harpoon, so a cannon stands in
     const n = Math.max(1, Math.min(5, Number.isInteger(level) ? level : 1)), id = (firing ? HARPOON_ART.fire : HARPOON_ART.levels)[n - 1];
@@ -143,12 +152,12 @@ const BOARDER_ART = Object.freeze({ walk: ['boarder-walk-1', 'boarder-walk-2'], 
  * only; cached by the caller): linear filtering with mipmaps, premultiplied alpha, at the screen's
  * density within the atlas budget. rects, width and height stay in logical px (16 per world unit).
  */
-export async function loadAtlas({ quality = 'high', colour = 0, towerStates = false } = {}) {
+export async function loadAtlas({ quality = 'high', colour = 0, towerStates = false, culverins = false } = {}) {
   const { cartoonAtlas, smoothTexture } = await import('../art/textures.js');
   const { setPoseColour } = await import('../art/people.js');
   setPoseColour(colour); // your captain's musket and cutlass poses in your lobby colour
   const ids = [...new Set([...ATLAS_IDS.filter(id => !PIXEL_ONLY_IDS.includes(id)), ...CARTOON_EXTRA_IDS, ...TIER_IDS, ...FIRE_LEVEL_IDS, ...HARPOON_IDS, ...GUNBOAT_IDS,
-    ...(towerStates ? TOWER_STATE_IDS : [])])];
+    ...(towerStates ? TOWER_STATE_IDS : []), ...(culverins ? CULVERIN_IDS : []), ...(culverins && towerStates ? CULVERIN_STATE_IDS : [])])];
   const atlas = await cartoonAtlas(ids, { quality, extra: [[WHITE, 8, 8]] });
   const white = atlas.rects[WHITE], context = atlas.image.getContext('2d');
   context.fillStyle = '#fff'; context.fillRect(white.x * atlas.density, white.y * atlas.density, white.w * atlas.density, white.h * atlas.density);
@@ -304,7 +313,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   });
   // A one-layer post per wall, cannon and mortar (the sprite, its level pips and its crew figure); the
   // watchtower gets one only for the lookout.
-  const hasPost = item => item.kind === 'wall' || item.kind === 'cannon' || item.kind === 'mortar' || item.kind === 'harpoon' || item.kind === 'watchtower';
+  const hasPost = item => ['wall', 'cannon', 'mortar', 'harpoon', 'culverin', 'watchtower'].includes(item.kind);
   const levelOf = item => (Number.isInteger(item.level) ? Math.max(1, Math.min(5, item.level)) : 1);
   // A level's art, or level 3's when the atlas has no tier frame (the pixel atlas).
   const levelFrame = (kind, level) => { const id = levelArt(kind, level); return rect[id] ? id : pirateLevels[kind][Math.min(3, level) - 1]; };
@@ -430,6 +439,19 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         fire.set(event.towerId, { until: clock + FIRE_SECONDS * 1.3, flip });
         const post = posts.find(item => item.id === event.towerId); if (post) post.flip = flip;
         effects()?.bloom(event.x + (flip ? -1.4 : 1.4), y + 1.4, { radius: .8, life: .3, colour: '#f4ecd6' });
+        break;
+      }
+      case 'culverin_fired': {
+        // The culverin (T43): a fast, flat, heavy shot from the long barrel, a long muzzle flash and a ring of smoke.
+        balls.add(item => Object.assign(item, { x: event.x, z: event.z, toX: event.toX, toZ: event.toZ, from: event.t, to: event.impactAt,
+          hit: true, enemy: false, splashed: false, manual: false, culverin: true }));
+        const flip = event.toX < event.x;
+        fire.set(event.towerId, { until: clock + FIRE_SECONDS * 1.4, flip });
+        const post = posts.find(item => item.id === event.towerId); if (post) post.flip = flip;
+        const mx = event.x + (flip ? -1.8 : 1.8), my = drawnY(event.z) + 1.1;
+        if (!low() && !still()) spark(mx, my, { count: 12, speed: [.4, 1.4], angle: Math.PI / 2, spread: 1.8, gravity: -.8, life: [.6, 1.2], colour: '#d9d6c8', size: [1, 2] });
+        effects()?.bloom(mx, my, { radius: 1.4, life: .45, colour: '#ffcf6a' });
+        effects()?.ring(mx, my, { radius: 1.6, life: .6, colour: '#e8e4d8' });
         break;
       }
       case 'ship_slowed': {
@@ -696,8 +718,23 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     if (!still()) layers.air.push(rect[WHITE], x, drawnY(z) - .05, .3, .1, .5, 0, { ...DARK, a: .3 });
   }
 
+  // A culverin's shot (T43): a low, fast arc, the long ball turned along its path, a pale streak behind it.
+  function drawCulverinBall(ball) {
+    const span = Math.max(.05, ball.to - ball.from), p = Math.min(1, Math.max(0, (simNow - ball.from) / span)), r = rect[CULVERIN_ART.shot];
+    const lift = q => 1.1 + .8 * 4 * q * (1 - q);
+    const x = ball.x + (ball.toX - ball.x) * p, z = ball.z + (ball.toZ - ball.z) * p, y = drawnY(z) + lift(p);
+    if (!still() && p > .05) for (const back of [.05, .1, .16]) {
+      const q = Math.max(0, p - back), tz = ball.z + (ball.toZ - ball.z) * q;
+      layers.air.push(rect[WHITE], ball.x + (ball.toX - ball.x) * q, drawnY(tz) + lift(q), .22, .22, .5, .11, { r: .95, g: .92, b: .82, a: .6 - back * 2.5 });
+    }
+    if (r) layers.air.push(r, x, y, r.w, r.h, .5, r.anchor, { angle: Math.atan2(drawnY(ball.toZ) - drawnY(ball.z), (ball.toX - ball.x) || .001) });
+    else layers.air.push(rect['pirate-cannonball'], x, y, rect['pirate-cannonball'].w, rect['pirate-cannonball'].h, .5, .55 * rect['pirate-cannonball'].h);
+    if (!still()) layers.air.push(rect[WHITE], x, drawnY(z) - .05, .3, .1, .5, 0, { ...DARK, a: .35 });
+  }
+
   function drawBall(ball) {
     if (ball.harpoon) { drawHarpoon(ball); return; }
+    if (ball.culverin) { drawCulverinBall(ball); return; }
     const span = Math.max(.05, ball.to - ball.from), p = Math.min(1, Math.max(0, (simNow - ball.from) / span));
     const x = ball.x + (ball.toX - ball.x) * p, z = ball.z + (ball.toZ - ball.z) * p;
     const distance = Math.hypot(ball.toX - ball.x, ball.toZ - ball.z);

@@ -12,7 +12,7 @@ import {isOpen, spotWave, waveOf} from '../campaign/index.js';
 import {LOCK_WAVES} from '../art/campaign.js';
 import {SLOT_KINDS} from './td-rules.js';
 import {ROLE_IDS, activeRole, roleRadius} from '../campaign/houses.js';
-import {HARPOON_ART, TIER_ART, crewArt, pipRow, pirateLevels} from '../pixel/pirate-catalog.js';
+import {CULVERIN_ART, HARPOON_ART, TIER_ART, crewArt, pipRow, pirateLevels} from '../pixel/pirate-catalog.js';
 import {islandFrame} from '../art/registry.js';
 import {frameCanvas, smoothTexture, spriteMaterial} from '../art/textures.js';
 import {clickVerdict} from '../world/reach.js';
@@ -32,6 +32,7 @@ export const catalogArt = (kind, sizes = pixelSizes) => (ART_CANDIDATES[kind] ??
 // and gold stars on a teal disc as pips (PIP_TIER_ART).
 const tiered = kind => [...pirateLevels[kind], ...TIER_ART[kind]];
 export const LEVEL_ART = Object.freeze({wall: tiered('wall'), cannon: tiered('cannon'), mortar: tiered('mortar'), harpoon: HARPOON_ART.levels,
+  culverin: CULVERIN_ART.levels, // T43 (D048 proposed): only an island answer with the flag defenses_v2 on has one
   watchtower: ['island-watchtower', 'island-watchtower', 'island-watchtower', 'island-watchtower-l4', 'island-watchtower-l5'], house: ['island-house']});
 export const PIP_ART = 'fx-level-pip';
 export const PIP_TIER_ART = 'fx-level-pip-gold';
@@ -47,10 +48,14 @@ export function buildingArt(kind, level = 1, spec = null) {
   if (role) return ROLE_ART[role];
   return list[Math.min(list.length, n) - 1];
 }
+// The kinds that stand on a tower spot and that the wave's renderer draws during a battle (so the island hides
+// them then), with the culverin (T43): the server sends one only while the flag defenses_v2 is on.
+const TOWERS = Object.freeze([...SLOT_KINDS.tower, 'culverin']);
+const BATTLE_KINDS = Object.freeze(['wall', ...TOWERS]);
 // How many level pips stand above a building: towers always show theirs, the rest from level 2.
 export const pipCount = (kind, level = 1) => {
   const n = Number.isSafeInteger(level) && level > 0 ? Math.min(5, level) : 1;
-  return kind === 'cannon' || kind === 'mortar' || kind === 'harpoon' || n > 1 ? n : 0;
+  return TOWERS.includes(kind) || n > 1 ? n : 0;
 };
 // Where the hired crew stand outside a wave (TOWER-DEFENSE.md §3): gunners beside the strongest towers
 // (level, then id order, as the wave mans them), carpenters beside the walls, the lookout at the
@@ -79,7 +84,7 @@ export function crewPlaces(spots = [], crew = {}, {bell = null} = {}) {
 
 // The drawn stand-ins (until the level art has loaded), the bell, the build ring and the kind badges:
 // clean cartoon frames (src/art/island.js) painted once into smooth textures.
-const DRAWN = {wall: 'island-wall', cannon: 'island-cannon', mortar: 'island-mortar', harpoon: 'island-harpoon', watchtower: 'island-watchtower', house: 'island-house', bell: 'island-bell'};
+const DRAWN = {wall: 'island-wall', cannon: 'island-cannon', mortar: 'island-mortar', harpoon: 'island-harpoon', culverin: 'island-culverin', watchtower: 'island-watchtower', house: 'island-house', bell: 'island-bell'};
 function drawn(name) {
   const [width, height, anchor] = islandFrame(name);
   return {texture: smoothTexture(frameCanvas(name)), size: [width, height], anchor};
@@ -173,7 +178,7 @@ export function decorateIsland(place, ctx = {}) {
   };
   const markers = new Map(), buildings = new Map(); // buildings: 'spot:kind' -> mesh (a tower spot has a cannon and a mortar)
   const slotOf = spot => spot.slot ?? (spot.kind === 'cannon' ? 'tower' : spot.kind);
-  const kindsOf = spot => SLOT_KINDS[slotOf(spot)] ?? [spot.kind];
+  const kindsOf = spot => (slotOf(spot) === 'tower' ? TOWERS : SLOT_KINDS[slotOf(spot)] ?? [spot.kind]);
   for (const spot of SPOTS) {
     const ring = sprite(root, ringTexture, spot.x, spot.z, `island-marker:${spot.id}`);
     ring.position.y -= .75; ring.renderOrder = 99; // on the ground, under the player
@@ -281,10 +286,10 @@ export function decorateIsland(place, ctx = {}) {
       // Locked things stay on the map (GAME-V3.md §4): a spot the campaign opens later, or whose kind is not
       // open yet, shows a lock badge instead of the glowing ring.
       const open = (!unlocks || kindsOf(spot).some(kind => (unlocks.levels?.[kind] ?? 0) >= 1)) && !spotLocked(spot, campaign);
-      const hidden = battle && ['wall', 'cannon', 'mortar', 'harpoon'].includes(answer?.kind ?? spot.kind);
+      const hidden = battle && BATTLE_KINDS.includes(answer?.kind ?? spot.kind);
       for (const kind of kindsOf(spot)) {
         buildings.get(`${spot.id}:${kind}`).visible = !art && built && (answer.kind === kind || (kindsOf(spot).length === 1))
-          && !(battle && ['wall', 'cannon', 'mortar', 'harpoon'].includes(kind));
+          && !(battle && BATTLE_KINDS.includes(kind));
       }
       if (art) showSpot(spot, answer, hidden);
       marker.visible = !built && known && !battle && open; // a visitor builds too, with their own coins

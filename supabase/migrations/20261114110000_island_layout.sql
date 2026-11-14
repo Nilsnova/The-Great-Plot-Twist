@@ -35,9 +35,9 @@
 --
 -- RUN IT
 --   After every earlier migration, once. Safe to run twice (if not exists, create or
---   replace, and the revokes, grants and comments repeat). NOT applied live by the
---   branch that adds it: a teammate applies it under the team's migration policy.
---   Until then the server reads no layout (the fixed spots) and the browser shows no
+--   replace, and the revokes, grants and comments repeat). Applied live on
+--   14 Nov 2026 (comment updated afterwards; the SQL is unchanged). On a database
+--   without it the server reads no layout (the fixed spots) and the browser shows no
 --   Move button (the island answer says layout.movable false).
 --
 -- CHECKS AFTER APPLYING (SQL editor)

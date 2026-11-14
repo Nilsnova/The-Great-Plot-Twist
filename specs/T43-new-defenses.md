@@ -4,8 +4,8 @@
 >
 > **Who uses it:** the defense lane (T33 tower health, T34 targets, T36 placement) and whoever wires the culverin into `frontend/src/pirates/sim.js` in the integration step.
 
-- **Status:** in progress (prep stage). Decision [D048](../docs/DECISIONS.md) is *proposed*, pending team review.
-- **Branch:** `feat/t43-new-defenses`
+- **Status:** in progress. Prep stage merged; the integration step (the wiring note below, as built) is on branch `feat/t43-culverin-wiring`. Decision [D048](../docs/DECISIONS.md) is *proposed*, pending team review. The flag stays off.
+- **Branch:** `feat/t43-new-defenses` (prep), `feat/t43-culverin-wiring` (integration)
 - **Issue and pull request:** none yet (the lane is fast-tracked under D047; no PR opened by this branch).
 
 ## Why
@@ -87,6 +87,15 @@ All in `frontend/src/pirates/sim.js` unless named. Import `DEFENSES_V2` from `./
 11. **Flags on top (merged since this spec was started):** `wall_recovery` (T29–T32) and `placement` (T36) are independent of `defenses_v2`: the sim reads towers from `defenses(spots, …)` whatever their position, and recovery of towers follows T33's hp once the culverin has `hpShare`.
 12. Outside sim.js: `render.js` (`towerFrame`, the fire frame on `culverin_fired`, the shot `fx-culverin-ball` from `CULVERIN_ART`), `src/pixel/pirate-catalog.js` (export `CULVERIN_ART` like `HARPOON_ART`), `src/island/world.js` (`LEVEL_ART.culverin`, `DRAWN.culverin = 'island-culverin'`, the two battle-hide lists), `src/island/td-rules.js` / `card-model.js` (`BUILDINGS.culverin` from `CULVERIN_CARD`, `levels.culverin` in `unlocksFor`/`readUnlocks`, tower choices from `towerKinds({flags, point})`), `src/pirates/fake-api.js` (the kind and its prices), `controller.js` (a sound cue), and the migration for the plot rule.
 13. **Checks to add then:** a deterministic same-seed replay with a culverin; gunboats sunk before their first shot at waves 16/20/30 with one culverin in place of one cannon (should rise clearly above GAME-V3's 0/8 for the level-3 island); "two culverins instead of two cannons cannot win a wave the cannons win at wave 12" (it is not a straight upgrade); the late-game table unchanged when no culverin is built.
+
+## Integration as built (14 Nov, `feat/t43-culverin-wiring`)
+
+- **One more wave rule.** `defenses_v2` joins `SIM_RULES` (`backend/server/island/wave_rules.py`) and `RULE_OPTIONS` (`frontend/src/pirates/wave-rules.js`, option `defensesV2`). A culverin fights only in a wave whose kept rules hold it; without it `readDefenses()` in sim.js drops every culverin (as a sim that does not know the kind would) and the controller leaves it out of the renderer too. So a joiner after a flag flip, or a client whose island answer is older, fights the same island as the bell-ringer. The server never sends a culverin while the flag is off: `plan_spots()` ignores a row whose kind its spot does not take (`test_flag_off_hides_a_culverin_row_already_in_the_database`).
+- **sim.js**: items 1 to 10 of the note, as written. The culverin's ball carries `culverin: true` and its hit is the usual `ship_hit` with `culverin: true`. Tie-break by the number of the ship id.
+- **Health (T33):** `TOWER_HEALTH.hp.culverin` is `round(cannon hp × 0.7)`: 56, 91, 140, 203, 280.
+- **Outside the sim:** `BUILDINGS.culverin` in `td-rules.js` (and `CULVERIN_CARD` is that entry), `unlockWave()` falls back to a kind's `levelWaves`, the build card's choices are `towerKinds({flags, point})` (`createIsland({defensesV2On})`, from `/api/config` in `game.js`), `world.js` (`LEVEL_ART`, `DRAWN`, pips, the battle-hide lists), `render.js` (`towerFrame`, `culverin_fired`, the shot, `CULVERIN_IDS` in the atlas only for a wave with a culverin), `pirate-catalog.js` re-exports `CULVERIN_ART`, the cue `pirate-culverin`, and the fake (`?fakeflags=defenses_v2`: kinds, prices, unlocks, and `rules: ["defenses_v2"]` on its waves).
+- **Migration** `supabase/migrations/20261114140000_culverin.sql` (not applied): the harpoon migration's spot rule plus `('cannon_1'…'cannon_7', 'culverin')`, and `wave_rules_known_names` widened to `defenses_v2`. Apply it before switching the flag on.
+- **Checks** (`frontend/tests/pirates/culverin.test.js`): eight same-seed scenarios (waves 1 to 100, with events, finishers, every rule) fingerprinted with the sim of `origin/main` before the wiring stay bit for bit the same, also with a culverin in the defenses but no rule; a same-seed replay with culverins is identical; the culverin never draws a die. Measured (8 seeds, gunboats sunk before their first shot / sent, each island as built, then with its first cannon replaced by a culverin of the same level). Small island (three level-1 cannons): wave 16: 0/8 → 8/8, wave 20: 0/8 → 8/8, wave 30: 0/16 → 8/16; on the mid island 8/8 → 8/8, 4/8 → 8/8, 1/16 → 8/16. It is not a straight upgrade: at wave 12 two culverins in place of two cannons never win a seed the cannons lose (small 0 and 0, boss-5 1 and 0, mid 8 and 8, full 8 and 8 wins of 8), and the mid island holds wave 16 4/8 with its cannons but 0/8 with one culverin instead (fewer balls for the boarders). The late-game table (`late-game.test.js`) is untouched: no culverin is built there.
 
 ## Done when (acceptance checks)
 

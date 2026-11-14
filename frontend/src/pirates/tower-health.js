@@ -2,7 +2,7 @@
 // deterministic, no DOM or Three.js: used by sim.js only when the wave carries the rule "tower_health"
 // (the server's flag, on every client of the wave alike), and by render.js / interact.js to read a tower.
 //
-// A cannon, mortar or harpoon tower gets hp by its level. Boarders on foot hack a tower in their reach
+// A cannon, mortar, harpoon tower or culverin gets hp by its level. Boarders on foot hack a tower in their reach
 // (the T34 target order: captain, wall in the way, tower, heart). At 0 hp the tower is broken: it stops
 // firing, cannot be fired by hand and is no longer jammed by gunboats. In the wave a captain repairs a
 // damaged tower for free with E (like a wall: +10 hp a second for 3 s) and rebuilds a broken one at 40 %
@@ -12,13 +12,17 @@
 //   towerMaxHp(kind, level)        the hp of a tower of that kind and level (0 for kinds without health)
 //   towerLook(tower)               'intact', 'damaged' or 'broken' from its hp (intact without hp)
 //   createTowerHealth({enabled, towers, now, tick})  the rules for one wave (inert while not enabled)
+import { DEFENSES_V2 } from './defenses-v2.js';
 
+const CANNON_HP = Object.freeze([80, 130, 200, 290, 400]);
 export const TOWER_HEALTH = Object.freeze({
-  // hp by level (index 0 = level 1); a harpoon is a light support tower, a cannon the sturdiest.
+  // hp by level (index 0 = level 1); a harpoon is a light support tower, a cannon the sturdiest. The culverin
+  // (T43, D048 proposed) is a glass cannon: hpShare (70%) of a same-level cannon's hp, rounded.
   hp: Object.freeze({
-    cannon: Object.freeze([80, 130, 200, 290, 400]),
+    cannon: CANNON_HP,
     mortar: Object.freeze([70, 115, 180, 260, 360]),
     harpoon: Object.freeze([60, 100, 155, 230, 320]),
+    culverin: Object.freeze(CANNON_HP.map(hp => Math.round(hp * DEFENSES_V2.culverin.hpShare))),
   }),
   damagedShare: .5,      // at or below this share of its hp a tower shows its damaged drawing
   repairRate: 10,        // hp a second while an E repair runs (the repairer's skills scale it)
