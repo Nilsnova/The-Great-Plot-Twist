@@ -1,15 +1,15 @@
 # Sprint T29–T47 walkthrough guide (for the catch-up review)
 
-> **What this is:** a plain-words reading guide to everything that merged into `main` on 14 Nov 2026 in the T29–T47 sprint. Each section says what a player sees, where the code is, which lines to read first, which tests prove it, and three practice questions with short model answers.
+> **What this is:** a plain-words reading guide to everything that merged into `main` on 14 Nov 2026 in the T29–T47 sprint (PRs #33 to #53). Each section says what a player sees, where the code is, which lines to read first, which tests prove it, and three practice questions with short model answers.
 >
 > **Who it is for:** the four teammates. [D047](DECISIONS.md) merged these lanes **without a prior peer review**, so review happens now, after the merge. In the code walkthrough every teammate must be able to explain every line, so read the code with this guide beside it.
 >
-> **What it is not:** it does not invent anything. Every quoted line is copied from `main` at the time of writing (`origin/main` at `28693ce`, the merge of PR #44). If a file changed since, trust the file and fix this guide.
+> **What it is not:** it does not invent anything. Every quoted line is copied from `main` at the time of writing: sections 1 to 7 and 12 at `28693ce` (the merge of PR #44), sections 8 to 11 at `d606ec7` (the merge of PR #53). Where a later PR changed what an early section says, the early section carries an "Update" note. If a file changed since, trust the file and fix this guide.
 
 ## How to use it
 
-1. Read section 0 (what landed and what is on) and the flags section (section 9).
-2. Take your sections from the [suggested split](#10-suggested-split-for-the-four-teammates). Read the files **in the order listed**, then the quoted function in the real file.
+1. Read section 0 (what landed and what is on) and the flags section (section 13).
+2. Take your sections from the [suggested split](#14-suggested-split-for-the-four-teammates). Read the files **in the order listed**, then the quoted function in the real file.
 3. Run the tests named in the section (commands are in [ENGINEERING.md, section 3](ENGINEERING.md#3-commands)). A test that fails on your machine is a finding, not a mistake to hide.
 4. Do the three practice questions out loud, source closed, then open it and check yourself. Do not memorize the model answers: they are short on purpose, and an examiner will ask a follow-up.
 
@@ -28,39 +28,52 @@ Replace them with the course's real wording once someone has the course sheet.
 
 ## 0. What landed, in one table
 
-Merged on 14 Nov (merge commits on `origin/main`, newest first). Decision numbers D039–D046 are all still **proposed**: the team has not agreed them yet (D047 only agreed the merge order).
+Merged on 14 Nov (merge commits on `origin/main`, newest first). Decision numbers D039–D049 are all still **proposed**: the team has not agreed them yet (D047 only agreed the merge order).
 
 | PR | Merge | Tasks | What | Decision | Flag | Section |
 |---|---|---|---|---|---|---|
+| #53 | `d606ec7` | T40/T41 (check) | Two-captain release check for the arsenal; two card fixes | none | `arsenal` | 9, 12 |
+| #52 | `35145fd` | T33, T34/T35, T38, T29–T32 | Integration: wave rules, tower health, pathing and the rescue hook in `sim.js`; wall-recovery guard | D049 (new), D040, D044 | `tower_health`, `pathing`, `rescue`, `wall_recovery` | 10 |
+| #51 | `ce21d2d` | T40, T41, T44 | Shared island arsenal: 20 stored copies, buy/take/swap/return | D042 | `arsenal` | 9 |
+| #50 | `723df50` | T43 (prep) | Culverin data, art, catalogue and flag | D048 | `defenses_v2` | 11 |
+| #49 | `4b5267a` | T36 (check) | Two-captain release check for placement | none | `placement` | 12 |
+| #48 | `4aa6f83` | T29–T32 (check) | Two-captain release check for wall recovery | none | `wall_recovery` | 12 |
+| #47 | `8238f25` | T45 (fix) | Leaderboard reads batched; statue drawing guard | D046 | none | 8 |
+| #46 | `a1c2ac0` | (docs) | The first version of this guide | none | none | all |
+| #45 | `8c3d345` | T45 | Leaderboard tabs (week, all time), crew label, "This island" panel, four statue stages | D046 | none | 8 |
 | #44 | `28693ce` | T36 | Move buildings on a half-unit grid | D041 | `placement` | 4 |
 | #43 | `20d2350` | T29–T32, T47 | Wall damage stays after a wave; paid Repair/Rebuild | D039 | `wall_recovery` | 1 |
-| #42 | `9533879` | (test fix) | Multiplayer check made reliable | none | none | 8 |
+| #42 | `9533879` | (test fix) | Multiplayer check made reliable | none | none | 12 |
 | #41 | `581682f` | T46 | One words-only forecast line on the Harbor weather board | D045 | none | 7 |
 | #40 | `966e264` | T38, T39 | Last-chance rescue minigame; minigame difficulty by wave | D044 | `rescue` | 6 |
-| #37 | `908d376` | (test fix) | One command for the GitHub sign-in checks | none | none | 8 |
-| #36 | `e6c5d9b` | (test fix) | Pixel-art check knows the game starts in the harbor | none | none | 8 |
+| #37 | `908d376` | (test fix) | One command for the GitHub sign-in checks | none | none | 12 |
+| #36 | `e6c5d9b` | (test fix) | Pixel-art check knows the game starts in the harbor | none | none | 12 |
 | #35 | `91e94ba` | T37, T42 | Co-op permissions matrix in one Python module | D043 | none | 5 |
 | #34 | `40f94d5` | T33 (art only) | Damaged and broken tower drawings | none | none | 2 |
 | #33 | `4eed652` | T34, T35 | Enemy targeting and wall pathing as pure modules | D040 | none | 3 |
 
 Also merged that day but not part of the T29–T47 code: #20 (the roadmap, T29–T47 in [BUILD-PLAN.md section 6](BUILD-PLAN.md#6-defense-and-shared-island-expansion)), #29 (sprint notes in STATUS/DECISIONS/OPEN-TODOS), #19 (T28 minigame introduction), #17 (T27 shooting direction), #13 (T7 leaderboard).
 
-**Not merged yet (so not in this guide):** the arsenal (T40, T41, T44; claim issue #24) and highscore/statue polish (T45; issue #28). T43 starts only after T33 and T34 land. Do not look for them in `main`.
+**Merged after the first version of this guide:** highscore/statue polish (T45, #45 and #47, section 8), the arsenal (T40, T41, T44, #51 and #53, section 9), the integration of the sim (#52, section 10) and the culverin's data and art (T43 prep, #50, section 11). **Not built yet:** the culverin in the fight (sim, card and render wiring, and a migration), lasting tower damage between waves, towers as path obstacles; see [OPEN-TODOS.md, known follow-ups](OPEN-TODOS.md#known-follow-ups-from-the-sprint-14-nov).
 
 **What actually changes for a player today.** Read this twice, because several lanes are deliberately *not connected yet*:
 
-| Lane | Is the player able to see it? |
+| Lane | Is the player able to see it? (state on the evening of 14 Nov, as verified by the coordinator) |
 |---|---|
-| T29–T32/T47 wall recovery | Only with flag `wall_recovery` on. Code is wired into routes and the island card. |
-| T33 tower art | **No.** The drawings exist and are registered as frames, but nothing in the game asks for them. |
-| T34/T35 targeting and pathing | **No.** The modules are only used by their tests. `sim.js` does not import them (checked with a search of `frontend/src`). |
-| T36 placement | Only with flag `placement` on (and its migration applied). |
-| T37/T42 co-op policy | Yes, no flag: it only moves existing rules into one module and rewords one error message. |
-| T38 rescue | **No**, even with flag `rescue` on: the small hook in `sim.js` is still open (`grep rescue frontend/src/pirates/sim.js` finds nothing). The server side is ready. |
-| T39 difficulty curves | Present in the minigame code; the numbers are the old ones up to wave 10, so waves 1–10 play as before. |
-| T46 weather forecast line | Yes, no flag: it appears when the weather answer has a usable `tonight.state`. |
+| T29–T32/T47 wall recovery | **Yes: live.** Flag `wall_recovery` on in production (about 20:28 UTC), migration applied. |
+| T33 tower art | Only through the rule `tower_health` (flag off in production): then the damaged and broken drawings are used. |
+| T33 tower health | **No.** Merged in #52, flag `tower_health` off while its release check runs. |
+| T34/T35 targeting and pathing | **No.** Wired into `sim.js` in #52 behind the flag `pathing`, off in production (the old fixed routes stay). |
+| T36 placement | **Yes: live.** Flag `placement` on (about 19:45 UTC), migration applied. |
+| T37/T42 co-op policy | **Yes: live**, no flag: it moves existing rules into one module and rewords one error message. |
+| T38 rescue | **No.** The `sim.js` hook is in (#52); flag `rescue` off in production, its release check is open. |
+| T39 difficulty curves | **Yes: live**, no flag. The numbers are the old ones up to wave 10, so waves 1 to 10 play as before. |
+| T40/T41/T44 arsenal | **Yes: live.** Flag `arsenal` on (about 20:48 UTC), migration applied, old weapons converted once. |
+| T43 culverin | **No.** Data and art merged (#50); flag `defenses_v2` off; the sim wiring is in progress. |
+| T45 leaderboard and statue | **Yes: live**, no flag. |
+| T46 weather forecast line | **Yes: live**, no flag: it appears when the weather answer has a usable `tonight.state`. |
 
-**Not verified by this guide:** the live site. The repository cannot tell which flags are on in production (that lives in the `FEATURE_FLAGS` setting on Vercel), and the live site could not be reached from the environment this guide was written in. Check it yourself (section 9, "How to check").
+**Not verified by this guide:** the live site. The repository cannot tell which flags are on in production (that lives in the `FEATURE_FLAGS` setting on Vercel); the table above records what the coordinator verified live on 14 Nov 2026, and this guide did not re-check it. Check it yourself (section 13, "How to check").
 
 ---
 
@@ -68,7 +81,7 @@ Also merged that day but not part of the T29–T47 code: #20 (the roadmap, T29�
 
 **For the player.** Today a wave ends and every wall is whole again. With this feature a wall keeps the damage the last wave left (shown as a percent). Between waves the wall card offers **Repair** (damaged) or **Rebuild** (destroyed) for coins, and you cannot upgrade a damaged wall first. If you do nothing, the wall mends by itself 10 minutes after that wave (by the server's clock, offline time counts).
 
-**Flag.** `wall_recovery`, **off by default in the code** (`FLAG_NAMES` in `backend/server/flags.py`; `FEATURE_FLAGS` is empty in `.env.example`). It also needs `islands` on and the migration applied (section 9). With it off, the new routes answer `404 feature_off` and everything behaves as before.
+**Flag.** `wall_recovery`, **off by default in the code** (`FLAG_NAMES` in `backend/server/flags.py`; `FEATURE_FLAGS` is empty in `.env.example`). It also needs `islands` on and the migration applied (section 13). With it off, the new routes answer `404 feature_off` and everything behaves as before.
 
 **Decision.** [D039](DECISIONS.md#d039--wall-recovery-damage-stays-after-a-wave--2026-11-14), proposed. Spec: [specs/T29-T32-wall-recovery.md](../specs/T29-T32-wall-recovery.md). Contract: [INTERFACES.md](INTERFACES.md) (search "wall_recovery").
 
@@ -141,9 +154,9 @@ Before that point the function locks the payer's wallet row (`for update`), answ
 
 ## 2. Tower damage art (T33, art only)
 
-**For the player.** Nothing yet. These are the drawings of a cannon, mortar and harpoon tower that is damaged (leaning, cracked, smoking) or broken (rubble). A later task will show them when towers get health.
+**For the player.** These are the drawings of a cannon, mortar and harpoon tower that is damaged (leaning, cracked, smoking) or broken (rubble). **Update (#52):** a wave that carries the rule `tower_health` now shows them (section 10); that flag is still off in production, so players see nothing yet.
 
-**Flag / decision.** None. No decision number: it adds no rule. Spec: [specs/T33-tower-damage-art.md](../specs/T33-tower-damage-art.md). T33 itself (tower health) is **not** built; D040 only says how enemies will treat towers that have hp.
+**Flag / decision.** None. No decision number: it adds no rule. Spec: [specs/T33-tower-damage-art.md](../specs/T33-tower-damage-art.md). Tower health itself was built later, in #52 (section 10, D049); D040 says how enemies treat towers that have hp.
 
 **Files, in order.**
 
@@ -185,15 +198,15 @@ export function drawTower(kind, level = 1, state = 'intact', firing = false) {
 2. *Test.* How does the test know a broken tower "never shows a shot"?
    *Model answer:* it draws the broken tower with `firing` true and false and checks that both produce the same drawing calls on a recording stand-in for the canvas (`tower-damage-art.test.js`, "a broken tower never shows a shot").
 3. *What if.* Why is nothing visible in the game yet, and what must the next person do?
-   *Model answer:* no code asks for the new frames. The spec's wiring note says to add the ids to the atlas list, give `towerFrame` a `state` argument that falls back to the intact frame when a frame is missing, and derive the state from tower hp, which does not exist until T33.
+   *Model answer:* (when this PR merged) no code asked for the new frames; since #52 a wave with `tower_health` does. The spec's wiring note said to add the ids to the atlas list, give `towerFrame` a `state` argument that falls back to the intact frame when a frame is missing, and derive the state from tower hp, which does not exist until T33.
 
 ---
 
 ## 3. Enemy targeting and wall pathing (T34, T35)
 
-**For the player.** Nothing yet: these are tested, self-contained rule modules that `sim.js` does not use. When they are connected, boarders will choose who to attack by a priority list and will walk round a wall through a gap when that is quicker than hacking through it.
+**For the player.** Nothing yet in production. **Update (#52):** `sim.js` now uses these modules when the wave carries the rule `pathing` (section 10); the flag is off, so players still see the old fixed routes. When it is on, boarders will choose who to attack by a priority list and will walk round a wall through a gap when that is quicker than hacking through it.
 
-**Flag / decision.** No flag (not wired). [D040](DECISIONS.md#d040--enemy-targets-and-wall-pathing-t34t35--2026-11-14), proposed. Spec: [specs/T34-T35-targeting-pathing.md](../specs/T34-T35-targeting-pathing.md). Open balance question in D040: lone short walls get walked round, so today's isolated wall spots lose value until T36 or a ring layout.
+**Flag / decision.** In #33 these were modules with no flag; since #52 they sit behind the flag `pathing` (off in production). [D040](DECISIONS.md#d040--enemy-targets-and-wall-pathing-t34t35--2026-11-14), proposed. Spec: [specs/T34-T35-targeting-pathing.md](../specs/T34-T35-targeting-pathing.md). Open balance question in D040: lone short walls get walked round, so today's isolated wall spots lose value until T36 or a ring layout.
 
 **Files, in order.**
 
@@ -396,7 +409,7 @@ Before this change, `service.py` called `games.require_member(...)`; now it call
 
 **For the player.** (T39, visible in minigames.) Every wave minigame (boss haul, cannon, duel, Redtide's tasks) keeps today's numbers up to wave 10 and then gets steadily a little harder up to wave 100, never beyond. (T38, **not visible yet**.) When the heart falls or every captain is down, from wave 4, the captains still on the island would play a 10-second co-op "haul the treasure to safety". The wave is lost either way. If they win, the next bell rings the best wave minus 1 instead of minus 2.
 
-**Flag.** `rescue`, **off by default**, no migration, needs `islands`. Even with it on nothing appears until the hook in `sim.js` ships (the spec describes the ~10 lines; the flag's own comment in `flags.py` says "off until the sim hook ships"). The difficulty curves (T39) have no flag.
+**Flag.** `rescue`, **off by default and still off in production**, no migration for the rescue itself, needs `islands`. When #40 merged the `sim.js` hook was missing; **update (#52):** the hook is in (section 10, walk-through D) and the wave's `rules` list switches it on, which needs the `wave_rules` migration (applied live). The difficulty curves (T39) have no flag and are live.
 
 **Decision.** [D044](DECISIONS.md#d044--last-chance-rescue-and-minigame-difficulty-by-wave--2026-11-14), proposed. Spec: [specs/T38-T39-minigames-rescue.md](../specs/T38-T39-minigames-rescue.md). Screenshots: `docs/evidence/T38-T39/`.
 
@@ -446,7 +459,7 @@ Each number is `[early, late]`. `pressure` is 0 up to wave 10, 1 from wave 100, 
 
 **Tests that prove it.** `backend/server/tests/test_wave_rescue.py` (counts only waves 4 to 100; never for a won wave, Pirate Point or no claim; fallback one less and never wave 0; browser and server agree on the first rescued wave; ordinary loss still falls back two; flag off changes nothing; loot and best-wave arguments never move; a non-boolean `rescued` is refused). `frontend/tests/pirates/finisher-difficulty.test.js` (0 up to wave 10, 1 from 100, curves monotone, early numbers equal today's, a lagging captain can still win at the late waves, a captain idle for 38% wins at wave 10 and loses at wave 100), `rescue.test.js` (rules, once per wave, determinism, disconnects), `rescue-finish.test.js` (`rescued: true` is sent only for a won rescue).
 
-**Limits.** The sim hook is missing, so the rescue cannot appear. Mixed client versions in one wave would disagree on boss difficulty above wave 10. Human playtest of the late-wave numbers is pending (T3).
+**Limits.** (Update: the sim hook was added in #52; a two-browser run with the flag on is still open.) Mixed client versions in one wave would disagree on boss difficulty above wave 10. Human playtest of the late-wave numbers is pending (T3).
 
 **Practice questions.**
 
@@ -496,15 +509,391 @@ The line is built only when `state` is a string **and** one of the four known st
 
 ---
 
-## 8. Test and check repairs (PRs #36, #37, #42)
+## 8. Leaderboard and captain statue (T45)
 
-These three PRs change **checks, not the game**, so that the merge gate in D047 can pass. Read them to understand what the gate really tests.
+**For the player.** Menu, then **Leaderboard**, has two tabs: **This week** (the T7 board, Monday 00:00 UTC to the next Monday) and **All time** (it never resets). Each row shows the island's highest *won* island wave, its captain name and a crew label: `Solo` or `Crew of N`. A **This island** panel adds your best wave, your shield rank, your statue stage and the next milestones ("Next: Gold shield at wave 30 · Silver statue at wave 50"). On the home island the captain statue grows in four stages: bronze at wave 25 (the T5 statue), silver with a raised cutlass at 50, gold with a red pennant at 75 and crowned at 100. It is cosmetic only: no coins, no combat effect, no new save data.
+
+**Flag and state.** No flag, no migration (it reads `wave_runs` and `wave_participants`, which already exist). **Live** since the merge of [#45](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/45) (`8c3d345`); [#47](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/47) (`8238f25`) then cut the database reads per board and made the statue drawing tolerate odd stage numbers.
+
+**Decision.** [D046](DECISIONS.md#d046--highscore-scope-and-statue-stages--2026-11-14), proposed. Spec: [specs/T45-highscore-statue.md](../specs/T45-highscore-statue.md). It lists a re-check to do once the reset rules of T38/D044 are agreed. No altar exists in the code, so the spec extends the statue and adds none. Screenshots: `docs/evidence/t45/`.
+
+**Files, in order.**
+
+1. `specs/T45-highscore-statue.md` (the decision table: metric, ties, scope, solo versus crew).
+2. `backend/server/island/leaderboard.py` (`weekly`, `all_time`, `best_runs`, `ranked`, `crew_sizes`).
+3. `backend/server/routes/island.py` (the `scope` query parameter on the existing route; the default is this week, `all` is the second board, anything else is refused).
+4. `frontend/src/art/milestones.js` (`STATUE_STAGES`, `statueStage`, `drawWaveStatue`).
+5. `frontend/src/island/progression.js` (the card's plain text and the crew label), then `ui.js` and `index.js` for the tabs.
+6. The tests (below).
+
+**Walk-through A: the ranking is built from run history only** (`leaderboard.py`).
+
+```py
+runs = await best_runs(admin, {"finished_at": f"lte.{now.isoformat()}"})
+```
+
+```py
+            "place": "eq.island",
+            "survived": "eq.true",
+            "expired": "eq.false",
+            **window,
+            "order": "wave.desc,finished_at.asc,id.asc",
+```
+
+`best_runs` asks only for finished, winning, non-expired island runs, highest wave first, and for equal waves the **earliest finish** first (D046: whoever reached the wave first is listed first). The "this week" board adds a time window to the same query; "all time" adds only a cutoff at the moment of the request, so a finish that lands while the pages are read cannot shift them. The function keeps the first run it sees per island (`best.setdefault(run.island_owner, run)`) and stops at ten islands. Because it reads `wave_runs`, never `islands.wave_best`, a reset, a rescue or a later lower win cannot lower anyone's score.
+
+```py
+    for position, run in enumerate(runs, 1):
+        if run.wave != previous:
+            rank = position
+```
+
+This is a competition rank: waves 30, 30, 25 become ranks 1, 1, 3. The crew label comes from one read of `wave_participants` for all ten runs:
+
+```py
+    return {wave_id: min(MAX_CREW, max(1, n)) for wave_id, n in counts.items()}
+```
+
+An old run with no participant rows counts as solo (never 0), and the count is capped at 10: a room holds at most ten captains, but `wave_participants` also keeps people who joined and left, and the browser refuses a row above ten (one bad row would hide the whole board). #47's change: before, each of the ten rows made its own name read and its own crew read (about 21 requests per board); now `ranked` makes one `profiles` read (`id=in.(...)`) and one `wave_participants` read (`wave_id=in.(...)`) after the runs page, about three in all.
+
+**Walk-through B: statue stages and plain text** (`milestones.js`, `progression.js`).
+
+```js
+export function statueStage(wave) {
+  const best = Number.isSafeInteger(wave) ? wave : 0;
+  const reached = STATUE_STAGES.filter(stage => best >= stage.wave);
+  if (!reached.length) return {index: 0, wave: 0, name: 'none', metal: null};
+  return {index: reached.length, ...reached[reached.length - 1]};
+}
+```
+
+Anything that is not a safe integer counts as wave 0, so a bad value shows no statue instead of throwing. In #47 the drawing function got the same care: `index = Number.isInteger(index) ? Math.min(4, Math.max(1, index)) : 1;`, so a stray `2.5` or `NaN` draws stage one.
+
+```js
+export function crewLabel(crew) {
+  if (!Number.isInteger(crew) || crew < 1 || crew > MAX_CREW) return '';
+  return crew === 1 ? 'Solo' : `Crew of ${crew}`;
+}
+```
+
+An unknown count shows nothing rather than a wrong label. The label only tells solo and crews apart: there is **one shared ranking**, with no adjustment for crew size (a D046 choice).
+
+**Tests that prove it.**
+
+- `backend/server/tests/test_island_leaderboard.py`: `test_all_time_reads_the_whole_run_history_and_never_resets`, `test_a_later_reset_or_lower_wave_cannot_lower_an_all_time_score`, `test_equal_waves_are_listed_by_who_reached_them_first`, `test_crew_counts_the_captains_of_the_scoring_run_only`, `test_a_run_without_recorded_captains_still_counts_one`, `test_crew_is_capped_at_ten`, `test_a_board_costs_one_runs_page_plus_two_batched_reads` (the #47 claim, as a test), `test_route_scope_chooses_the_board_and_refuses_unknown_scopes`.
+- `frontend/tests/island/progression.test.js` (stage boundaries 24/25/49/50/74/75/99/100, summaries and lines), `frontend/tests/island/leaderboard.test.js` (scope checks, tabs, crew label, the "This island" panel, the remembered tab) and `frontend/tests/island/decorations.test.js` (the statue draws for any index without throwing).
+
+**Limits.** The all-time scan is bounded (`MAX_PAGES` 20 pages of `PAGE_SIZE` 100, so 2,000 runs) and answers `503 leaderboard_unavailable` rather than a partial board; with many repeated wins at top waves it may later need a database aggregate. The crew count includes captains who joined the run and then dropped out. Your own position outside the top ten is not shown. The tests use fake database reads, not a live one.
+
+**Practice questions.**
+
+1. *Explain.* Why does the ranking read `wave_runs` and not the island's `wave_best` column?
+   *Model answer:* run history only grows, so a reset, a rescue or a later lower win cannot lower a score. `wave_best` is a current state that a reset rule might change (the D044 re-check in the spec).
+2. *Trace.* Islands A, B and C won waves 30, 30 and 25. A finished wave 30 at 10:00, B at 09:00. What does the board show?
+   *Model answer:* B (rank 1), A (rank 1), C (rank 3). The order inside the tie is earliest finish first; the rank number is shared, and the next rank skips to 3.
+3. *Bug.* `wave_participants` has 14 rows for one run. What does the card show and why?
+   *Model answer:* `Crew of 10`. `crew_sizes` caps the count at `MAX_CREW`, because a larger number would make the browser refuse that row and hide the whole board.
+
+---
+
+## 9. The island arsenal (T40, T41, T44)
+
+**For the player.** A new building, the **Arsenal**, stands on every island (between the watchtower hill and the west house). Walk up and press E (or tap). The crew keeps its weapons there: up to **20 stored copies**. Every captain always has the standard **musket**. You can **Buy** a weapon type (pistols, blunderbuss, long rifle, fire bombs) with your own coins: it goes into your hands if they are empty, else onto the rack. **Take** a stored copy to carry it, **Swap** if you already carry one, **Return** to put it back. A copy is never in two places: it is on the rack or in exactly one captain's hands. The card shows "Stored: n of 20", every copy with its number and holder, and each type's damage, range and reload at your captain level. Nothing moves during a wave.
+
+**Flag and state.** Flag `arsenal`; migration `20261114120000_arsenal.sql`. **Live:** the migration was applied on 14 Nov, `arsenal_convert_personal_weapons()` was run once (1 copy converted, 0 islands left with personal weapons) and the flag has been on in production since about 20:48 UTC, after the release check in [#53](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/53) (`d606ec7`). The feature merged in [#51](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/51) (`ce21d2d`). With the flag on, the old weapon shop answers `409 use_arsenal`; with it off the old shop works as before.
+
+**Decision.** [D042](DECISIONS.md#d042--shared-island-arsenal-20-stored-copies-and-the-weapon-table--2026-11-14), proposed; it also holds the weapon table for T44 (the existing five types, no new mechanic). Spec: [specs/T40-T41-arsenal.md](../specs/T40-T41-arsenal.md). Who may do what comes from the co-op matrix of D043 (section 5). Screenshots: `docs/evidence/t41/`.
+
+**Files, in order.**
+
+1. `specs/T40-T41-arsenal.md` (the policy table: full rack, leaving captains, waves, conversion).
+2. `supabase/migrations/20261114120000_arsenal.sql` (tables, capacity trigger, `arsenal_*` functions).
+3. `backend/server/island/arsenal_rules.py`, `arsenal_policy.py`, `arsenal.py`, `routes/arsenal.py`.
+4. `frontend/src/island/arsenal-model.js` (what the card shows), `arsenal.js` (the controller), `arsenal-api.js`, `arsenal-ui.js`.
+5. `frontend/src/island/arsenal-fake.js` (the same rules in memory, for tests and `?islands=fake`).
+6. `frontend/scripts/check-arsenal-mp.js` (the #53 release check).
+
+**Walk-through A: the database makes the invariant impossible to break** (`20261114120000_arsenal.sql`).
+
+```sql
+create unique index if not exists arsenal_copies_one_per_holder
+  on public.arsenal_copies (island_owner, holder) where holder is not null;
+```
+
+A copy has one `holder` column: `null` means stored on the rack, otherwise it is the captain who carries it. One column means a copy cannot be "stored and carried" at once, and this index means a captain carries at most one copy per island. The 20-slot limit has two locks. Each move function locks the island row and counts; and a deferred constraint trigger checks again at commit:
+
+```sql
+  if (select count(*) from public.arsenal_copies
+       where island_owner = new.island_owner and holder is null) > public.arsenal_capacity() then
+    raise exception 'arsenal_over_capacity' using errcode = 'check_violation';
+```
+
+"Deferred" lets a swap pass through 21 inside one step, because the check happens at commit. A return into a full rack is refused, not squeezed in:
+
+```sql
+  if v_stored >= public.arsenal_capacity() then
+    return jsonb_build_object('status', 'refused', 'reason', 'arsenal_full');
+  end if;
+```
+
+The copy then stays in the captain's hands, so nothing is ever discarded. Every move also begins by looking for its own `action_uid` in `arsenal_moves`: a repeat answers `repeat` and changes nothing, and the same id used for another action is refused `action_used`.
+
+**Walk-through B: rules before the database, card after** (Python and JavaScript).
+
+```py
+    entry = weapon_named(catalogue, weapon)
+    if entry.weapon == STANDARD_WEAPON:
+        raise ApiError(
+            409, "standard_weapon", "The musket is standard issue: every captain carries one."
+        )
+```
+
+The musket is never a copy and never costs a slot; `check_buy` then refuses a locked type (`409 locked`). The database repeats every rule under the lock, so these checks only give a clear message before anything is written. On the card, `arsenal-model.js` turns the server's answer into buttons and reasons:
+
+```js
+  const back = mine ? {label: busy === 'return' ? 'Returning…' : 'Return to the rack', disabled: !!closed || full || busy !== null,
+    reason: closed || (full ? `The rack is full (${capacity} of ${capacity}): swap instead, or wait for a free slot.` : '')} : null;
+```
+
+The model only says which buttons are on and why; the server decides every move. The weapon you shoot with comes from the controller, and the island uses it ahead of the old equipped weapon:
+
+```js
+    weapon() {
+      if (!enabled()) return null;
+      return readWeapon(current()?.carried);
+    },
+```
+
+```js
+weapon: arsenal.weapon() ?? readWeapon(own?.weapons?.equipped),
+```
+
+With the flag off `weapon()` is `null` and the old equipped weapon is used. The arsenal is read again on landing, before each wave and after a crewmate's move (the room's `island_changed`), so a stale tab picks up a released copy at the next wave's preparation.
+
+**What #53 added.** `npm run test:arsenal` (`check-arsenal-mp.js`) runs two captains on one island against the shared fake server with the flag on, and one context with the flag off: a double-click buy charges once, two captains taking one copy (one gets it, the other is refused `taken`), a full rack of 20 refusing the return, every move refused `wave_running` during a wave, and a reload keeping each captain's copy. The PR also fixed two things. First, the fake server still sold weapons with the flag on; now it answers `409 use_arsenal` like the real route. Second, a refused move's reason was wiped by the refresh that follows it. The controller now keeps a flag `loadFailed` and sets the message **after** the refresh:
+
+```js
+      answer = before;
+      if (REFRESH_ON.has(result.code)) await refresh();
+      message = result.message; loadFailed = false;
+```
+
+A later good read clears only a message that came from a failed read (`if (loadFailed) {...}`), so a crewmate's change can no longer erase "Another captain took that weapon just now."
+
+**Tests that prove it.**
+
+- `backend/server/tests/island_sql/test_arsenal_sql.py` (opt-in; a skip is not a pass): `test_slot_19_and_20_fill_and_the_21st_stored_copy_is_refused_without_charging`, `test_the_database_itself_refuses_a_21st_stored_copy`, `test_a_swap_needs_no_free_slot_and_keeps_the_rack_full`, `test_a_return_into_a_full_rack_is_refused_and_the_copy_stays_in_hand`, `test_two_captains_claiming_one_copy_at_once_get_it_once`, `test_the_same_buy_sent_twice_at_once_charges_once`, `test_applying_the_migration_converts_nobody_and_the_first_look_converts`.
+- `backend/server/tests/test_arsenal_routes.py`: the flag-off 404s, the old shop pointing to the arsenal while the flag is on, refusals before the database, `test_the_capacity_and_the_policy_match_the_migration`.
+- `frontend/tests/island/arsenal.test.js` (19/20/21 slots, full return, two captains, same-type copies, click ids, "a refused move keeps its reason on the card after the arsenal is read again"), `arsenal-dom.test.js`, and the browser check `npm run test:arsenal`.
+
+**Limits.** Combat is still simulated in the browsers, so a modified client could send another weapon id in a shot message; honest clients read their copy from the server before each wave. A member who stays in the game but never returns a copy keeps it (recall belongs to T37/T42). A captain who left the game keeps the copy until the arsenal is next used, then it goes back on the rack while there is room. The browser check uses the fake server, not the real routes or Postgres; those are covered by the route tests and the opt-in SQL tests.
+
+**Practice questions.**
+
+1. *Explain.* Why is the capacity check a *deferred* trigger and also a count under the island lock?
+   *Model answer:* the lock plus count refuses a 21st copy early with a clear reason; the trigger is the last guard at commit, so even a bug in a function cannot leave 21 stored. It is deferred so that a swap (one copy goes back as another comes out) may pass through 21 inside one step.
+2. *Trace.* The rack holds 20 stored copies and you carry one. You press Return while a crewmate presses Swap on a stored copy.
+   *Model answer:* both functions lock the island row, so they run one after the other. A swap sends the crewmate's old copy back as it takes the new one, so the rack still holds 20 afterwards. Your Return is refused `arsenal_full` in either order, and the copy stays in your hands: nothing is lost or doubled.
+3. *Defend.* Why does a full rack refuse a return instead of putting the copy in a 21st slot?
+   *Model answer:* "at most 20 stored" stays exact and nothing is ever discarded. The cost is that a captain may have to swap or wait; a swap is always allowed because it keeps the count at 20.
+
+---
+
+## 10. Integration: wave rules, tower health, pathing, rescue hook, wall guard (#52)
+
+[#52](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/52) (`35145fd`) connects lanes that were only modules, art or server code until then. This section walks its five parts.
+
+**For the player.** With every new flag off, nothing changes. With the flags on (one wave rule each): towers have hit points, boarders hack towers and can break them, boarders walk round or through the real walls instead of fixed routes, and a lost wave first offers the 10-second rescue haul. Separately, a wave that ends can no longer heal walls for free.
+
+**Flags and state.** Wall guard: part of `wall_recovery`, **live** (that flag has been on since about 20:28 UTC, after this guard and `npm run test:walls`). The three wave rules `tower_health` (T33, D049), `pathing` (T34/T35, D040) and `rescue` (T38, D044) are **merged, flag off** in production; their release checks are in progress. The migration `20261114130500_wave_rules.sql` is applied live. Specs: [T33-tower-health.md](../specs/T33-tower-health.md), [T34-T35-targeting-pathing.md](../specs/T34-T35-targeting-pathing.md#wiring-as-built-14-nov), [T38-T39-minigames-rescue.md](../specs/T38-T39-minigames-rescue.md). Decisions: [D049](DECISIONS.md#d049--tower-health-inside-a-wave-t33--2026-11-14) (new, proposed), D040, D044.
+
+**Files, in order.**
+
+1. `backend/server/island/wave_rules.py` and `supabase/migrations/20261114130500_wave_rules.sql` (how a wave's rules are fixed), `routes/waves.py` (the `rules` key on the wave answers).
+2. `frontend/src/pirates/wave-rules.js` (answer to options), `controller.js` (passes them to the sim).
+3. `frontend/src/pirates/tower-health.js`, then its use in `sim.js`.
+4. `frontend/src/pirates/boarder-paths.js` (the grid), then `pathTarget` and `paths` in `sim.js`.
+5. `frontend/src/pirates/finisher/rescue.js` and the rescue lines in `sim.js`.
+6. `backend/server/island/wall_health.py` (`cap_to_start`) and `wall_repair.py` (`record`, `record_after_finish`).
+
+**Walk-through A: one rule set per wave, the same for every client** (`wave_rules.py`).
+
+```py
+SIM_RULES = ("tower_health", "pathing", "rescue")
+```
+
+```py
+def wanted_rules(settings: Settings) -> list[str]:
+    """The rules of SIM_RULES whose flag is on now, in that order."""
+    return [name for name in SIM_RULES if is_enabled(name, settings.flags)]
+```
+
+The first answer for a wave (start, join or current) keeps the rule set in the table `wave_rules`, and every later answer serves the kept set. So a friend who joins after a flag was switched plays the bell-ringer's rules, and every client simulates the same wave. The `rules` key is left out of the answer while every rule flag is off. Keeping rules must never break a wave:
+
+```py
+    except ApiError as error:
+        # The wave itself is fine (started or joined): never fail it for its rules. Without the
+        # migration, or with the database down, it plays with no rules, as before this feature.
+        logger.warning("Wave rules not kept; the wave plays without them: %s", type(error).__name__)
+        return None
+```
+
+In the browser, `wave-rules.js` maps the names to `createWave()` options and ignores anything unknown:
+
+```js
+export const RULE_OPTIONS = Object.freeze({
+  tower_health: 'towerHealth', // T33 (D049, proposed): towers have hp, break and are repaired in the wave
+  pathing: 'pathing',          // T34/T35 (D040, proposed): boarders walk round or through the real walls
+  rescue: 'rescue',            // T38 (D044, proposed): a lost wave first offers the last-chance rescue
+});
+```
+
+In `controller.js` the spread `...(info.rules ?? {}), ...simOptions` puts the server's rules first and the demo harness's own options last. The client never reads its own `/api/config` for these.
+
+**Walk-through B: tower health** (`tower-health.js`, used by `sim.js` only when the wave has `towerHealth`).
+
+```js
+export function towerLook(tower) {
+  if (!tower || !Number.isFinite(tower.hp) || !(tower.maxHp > 0)) return 'intact';
+  if (tower.hp <= 0) return 'broken';
+  return tower.hp / tower.maxHp <= TOWER_HEALTH.damagedShare ? 'damaged' : 'intact';
+}
+```
+
+This is where the drawings of section 2 are finally used: broken at 0 hp, damaged at or below half. Cannons, mortars and harpoons get hp by level (cannon 80 to 400, mortar 70 to 360, harpoon 60 to 320). Boarders hack a tower in reach after a captain and the wall in their way (the order of section 3). The blow that breaks a tower:
+
+```js
+    if (!has(tower) || tower.hp <= 0) return false;
+    const taken = Math.min(tower.hp, round2(damage));
+```
+
+A broken tower takes no more blows, so `tower_broken` is sent once. A broken tower stops firing (`canFire`), cannot be fired by hand and is no longer jammed by gunboats. In the wave, E repairs a damaged tower (+10 hp a second for 3 s) or rebuilds a broken one at 40% (60% with Master shipwright, 5 s cooldown), free, like walls. **Every new wave starts every tower whole**: lasting damage is a follow-up (D049), unlike walls.
+
+**Walk-through C: pathing** (`boarder-paths.js`, `sim.js`). With the rule on, only the landing and the heart stay of the old fixed route:
+
+```js
+    if (paths) route.splice(1, route.length - 2);
+```
+
+The grid finds the way between: each wall covers the cells of its 2-by-2 T36 footprint, a boarder takes a gap when walking round is quicker than hacking, else it breaks through the cheapest wall. `pathTarget` returns a wall to hack, a tower in reach, a step to walk, the heart, or `none` (no way: it waits). `paths.refresh()` runs once a tick, and the distance field is rebuilt only when the layout's key changes, which happens when a wall's hp changes. Without the option `paths` is `null` and today's fixed routes stay (D040 option A); the dice above that line are drawn alike either way, so the seed's random stream is untouched.
+
+**Walk-through D: the rescue hook** (`sim.js`). Two small spots connect section 6's module. When a wave would end lost, the rescue gets the first word:
+
+```js
+    if (rescue.offer(reason, events)) return; // island_lost / captains_fallen: the last chance first
+```
+
+and while it runs the battle stands still and the rescue decides when the wave really ends (still lost):
+
+```js
+    if (rescue.active) { if (!rescue.tick(events)) end(rescue.reason, events); return; }
+```
+
+`rescue.result()` adds `rescued: true` to the finish only after a won haul; the server ignores it unless the flag `rescue` is on.
+
+**Walk-through E: the wall-recovery guard** (`wall_health.py`).
+
+```py
+    capped = {}
+    for plot, health in sorted(reported.items()):
+        if plot in start:
+            capped[plot] = min(start[plot], health)
+    return capped
+```
+
+The finish reports each wall's percent from the browser's simulation, which the server cannot check. `cap_to_start` keeps only walls the wave started with, and never above their starting health, so a finish can damage but never heal or invent a wall. A free E repair inside the wave helps that wave only; lasting recovery is the paid card or the 10-minute timer. The second change is in `routes/waves.py`: the wall record now runs through `record_after_finish`, which logs a database problem and swallows it, because the coins are already paid by then and the player must get the answer of the paid finish, not a 5xx.
+
+**Tests that prove it.**
+
+- `backend/server/tests/test_wave_rules.py`: flags off means no rules and nothing kept; the order of rules; `test_a_joiner_after_a_flag_flip_gets_the_rules_the_wave_started_with`; `test_a_failing_rule_store_never_breaks_the_wave_it_plays_without_rules`. `island_sql/test_wave_rules_sql.py`: the first call keeps the rules, a later one changes nothing, unknown names refused, players cannot run it (opt-in).
+- `backend/server/tests/test_wall_recovery.py`: `test_cap_to_start_keeps_damage_and_never_heals_or_invents_a_wall`, `test_an_unreadable_wall_record_reply_is_logged_not_an_error`.
+- `frontend/tests/pirates/wave-rules.test.js`, `tower-health.test.js` (hp by level, one `tower_broken`, E repair and rebuild, same seed same wave, off means exactly as before), `pathing-wiring.test.js` (the wall footprint, a closed ring versus a lone wall, replay, option A unchanged), `rescue-sim.test.js` (a lost wave waits for the rescue; never on Pirate Point or below wave 4).
+- Browser check: `npm run test:walls` (`check-wall-recovery-mp.js`); its scenario P is the "a finish cannot heal a wall" check. Its header comment still calls P pending; the fake server (`fake-api.js`, `recordWalls`) now follows the cap.
+
+**Limits.** Switching the last rule flag off while a wave runs gives later joiners of that wave no rules (switch rules off between waves). Mixed client versions in one wave can disagree, so reload every client after a flag changes. Tower hp numbers and the pathing balance need the T3 playtest before the flags go on; D049 is a proposal. Towers are not path obstacles (follow-up). The two-browser run with `rescue` on is still open.
+
+**Practice questions.**
+
+1. *Trace.* The bell-ringer starts wave 12 with `pathing` on. Nils then switches `pathing` off in Vercel and redeploys. A friend joins wave 12. Which rules does the friend play?
+   *Model answer:* the kept set. The first answer stored `["pathing"]` in `wave_rules`, and join serves the kept set, so both play with pathing. A wave started after the switch has no `pathing`.
+2. *What if.* The migration `20261114130500_wave_rules.sql` was not applied and `tower_health` is on.
+   *Model answer:* `wave_rules_keep` fails, `rules_for_wave` logs a warning and returns `None`, so the wave starts and plays with no rules. It never answers a 5xx. (It is applied live, so this is the case for a fresh database.)
+3. *Defend.* Why cap a wall at the health it started the wave with, instead of trusting the browser's number?
+   *Model answer:* the server cannot replay the battle, so a modified client could report 100 for every wall and heal for free. The cap means a finish can only damage. A client can still report lower numbers, which is bounded: first finish only, participants only, play money, 10-minute timer.
+
+---
+
+## 11. Culverin data and art (T43, #50)
+
+**For the player.** Nothing yet. The culverin is a long gun for the seven island tower spots (damage 30 to 96, range 44 to 52, reload 4.0 to 2.8 s): it never shoots boarders or ships closer than 12, and goes for gunboats and siege barges first, then the ship with the most hp left. Its data, drawings and server catalogue are merged; the fight code is not.
+
+**Flag and state.** Flag `defenses_v2`, **merged, off** in production. [#50](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/50) (`723df50`) is the prep stage; the sim wiring, the card/render wiring and a migration are still to do (the sim wiring is in progress). **Do not switch the flag on before the wiring and the migration are merged and applied:** `islet_buildings` only accepts the plot/kind pairs of the harpoon migration, so the database would refuse a built culverin, and the migration for it is not written yet (`20261114130500_wave_rules.sql` is not it).
+
+**Decision.** [D048](DECISIONS.md#d048--t43-the-culverin-is-the-first-new-defense-behind-the-flag-defenses_v2--2026-11-14), proposed. Spec: [specs/T43-new-defenses.md](../specs/T43-new-defenses.md) (it compares four candidates and has the "sim wiring note" for the next person). Evidence: `docs/evidence/t43/culverin-sheet.png`.
+
+**Files, in order.**
+
+1. `specs/T43-new-defenses.md`.
+2. `backend/content/defenses_v2.json` (prices, level waves, spots, card line).
+3. `backend/server/island/catalogue.py` (`read_defenses_v2`, `catalogue_for_flags`) and the call in `backend/server/app.py`.
+4. `frontend/src/pirates/defenses-v2.js` (the stats the sim will read), `frontend/src/island/defenses-v2.js` (the card data), `frontend/src/art/defenses-v2.js` (the drawings).
+5. `backend/server/tests/test_defenses_v2.py` and `frontend/tests/pirates/defenses-v2.test.js`.
+
+**Walk-through.**
+
+```py
+    if not flags.get(DEFENSES_V2_FLAG, False):
+        return catalogue
+```
+
+With the flag off `catalogue_for_flags` returns **the same object**, and the file is not even read, so `GET /api/island` is exactly what it was and `POST /api/island/build {kind: "culverin"}` is `422 wrong_kind`. With the flag on, the culverin is merged into the kinds, the seven tower spots and the campaign steps, so the existing price and unlock rules treat it like the harpoon tower. A broken file with the flag on is logged and the island keeps running without it. `app.py` applies it once at start-up:
+
+```py
+        island_catalogue = catalogue_for_flags(island_catalogue, settings.flags)
+```
+
+The numbers live in two places on purpose, and a test keeps them equal (the server checks prices and unlocks from the JSON file, the sim will read the stats):
+
+```js
+      Object.freeze({damage: 30, range: 44, reload: 4.0}),
+```
+
+```js
+    minRange: 12,      // ships closer than this are the cannons' job
+    boarders: false,   // never aims at boarders
+    gunner: false,     // gunners stay on cannons and mortars
+    hpShare: 0.7,      // T33: 70% of a same-level cannon's hp; destroyed, it stops firing until rebuilt (T30–T32)
+```
+
+The comment at the top of that file says it plainly: "Nothing imports this into src/pirates/sim.js yet". Its damage per second stays below a cannon's of the same level, so it does not replace cannons; its reach (44 to 52) beats the mortar's and covers where a gunboat or a barge anchors. It stands on the existing tower spots (`cannon_1` to `cannon_7`), so it does not wait for T36.
+
+**Tests that prove it.** `backend/server/tests/test_defenses_v2.py` (`test_with_the_flag_off_the_catalogue_is_unchanged`, `test_with_the_flag_off_a_broken_file_is_never_read`, `test_with_the_flag_on_the_culverin_joins_the_tower_spots_and_the_campaign`, `test_a_broken_file_is_refused_with_a_clear_message`, `test_flag_off_island_answer_and_build_are_as_before`, `test_flag_on_island_answer_lists_and_locks_the_culverin`), `test_flags.py` (`test_flag_names_are_exactly_the_agreed_list` lists `defenses_v2`) and `frontend/tests/pirates/defenses-v2.test.js` (five rising levels; "a long reach, not a better cannon": less damage a second, more range than any tower; the prices, waves and line shared with `backend/content/defenses_v2.json`; the card is on only when the server says exactly `true`; every level registered idle, firing, damaged and broken). One test there, "is not part of the running game yet: the sim does not know the kind", is meant to be changed by whoever wires the sim.
+
+**Limits.** No sim wiring (so no culverin can fire), no migration yet for building one, no research branch, no balance numbers from play. The numbers are a proposal (D048).
+
+**Practice questions.**
+
+1. *Explain.* Why does `catalogue_for_flags` return the same object when the flag is off, instead of a copy without the culverin?
+   *Model answer:* it proves "off means exactly as before": the live game gets the very object it had, the file is never read, and nothing can leak into an answer by accident.
+2. *What if.* Someone switches `defenses_v2` on today.
+   *Model answer:* the island answer would offer a culverin and the server would accept a build, but the database rule on `islet_buildings` only knows the old pairs, so the insert would fail; and nothing in `sim.js` would fire it. That is why the flag stays off until the wiring and the migration are merged and applied.
+3. *Defend.* Why a culverin and not the fire brazier, the swivel-gun nest or the tar pit?
+   *Model answer:* it answers the enemies the current towers handle badly by design (gunboats and barges anchor outside tower reach), has a clear counter (close ships and boarders), needs the least new sim code (one tower kind with its own target rule, like the harpoon) and does not wait for T36. The brazier overlaps fire effects, the nest overlaps cannons, and the tar pit needs the T35/T36 contracts.
+
+---
+
+## 12. Test and check repairs (PRs #36, #37, #42, #48, #49, #53)
+
+These PRs change **checks, not the game** (the last three add a two-captain release check per flag), so that the merge gate in D047 and the flag switches can be backed by a run. Read them to understand what the gate really tests.
 
 | PR | File | What changed and why |
 |---|---|---|
 | #36 | `frontend/scripts/check-pixel.js` | The game opens in Saltreach Harbor (D031), so the harbor layout assets and `harbour-office-glow` are allowed at start in the "requests only active pixel artwork" check. Anything outside the Lighthouse kit plus that layout still fails. |
 | #37 | `frontend/scripts/check-online-signin.js` (new), `check-online-signin-gate.js`, `package.json`, `docs/TEST-MAP.md` | A new `npm run test:signin` runs `check-online-auth` and then `check-online-signin-gate`. The two files only **export** functions, so `node scripts/check-online-auth.js` alone checks nothing and exits 0; always use the npm script. The gate check now waits for `GET /api/me` instead of a stale wallet-ledger read and expects the current sign-in wording. |
 | #42 | `frontend/scripts/check-multiplayer.js`, `frontend/src/pirates/fake-api.js` | `npm run test:mp` was unreliable: the island arrival cutscene can close by itself before a click lands, and the fake server's dev helpers could be overwritten by another tab's request. Helpers now run under the same lock as requests. |
+| #48 | `frontend/scripts/check-wall-recovery-mp.js` (new), `fake-api.js`, `package.json` | `npm run test:walls`: two captains on one island against the shared fake server with `wall_recovery` on. Damage kept after a wave, Repair/Rebuild instead of Upgrade, a double click charges once, no repair while a wave runs, the 10-minute timer. |
+| #49 | `frontend/scripts/check-placement-mp.js` (new), `package.json` | `npm run test:placement`: two pages, a wall and a cannon moved from the card, the other page follows within 2 s, sea and overlap refused, Move off during a wave, a reload keeps the layout. |
+| #53 | `frontend/scripts/check-arsenal-mp.js` (new), `src/island/arsenal.js`, `src/pirates/fake-api.js` | `npm run test:arsenal` (section 9), plus the two fixes it found. |
 
 **Walk-through (the #37 runner).**
 
@@ -531,7 +920,7 @@ It runs the checks in order, stops at the first failure and returns a non-zero e
 
 ---
 
-## 9. How the flags and migrations fit together
+## 13. How the flags and migrations fit together
 
 **One-page picture.**
 
@@ -540,7 +929,7 @@ Vercel setting FEATURE_FLAGS="islands,wall_recovery,..."   (a comma list; owner 
         |
         v  read once at server start
 backend/server/settings.py        flags=parse_flags(env.get("FEATURE_FLAGS", ""))
-backend/server/flags.py           FLAG_NAMES = (... "rescue", "wall_recovery", "placement")
+backend/server/flags.py           FLAG_NAMES = (... "rescue", "wall_recovery", "placement", "defenses_v2", "arsenal", "tower_health", "pathing")
         |                         a name not in FLAG_NAMES stops the server at start (typo protection)
         |                         every flag is False unless listed
         +--> feature routes:      is_enabled("wall_recovery", settings.flags)  ->  else 404 feature_off
@@ -556,18 +945,20 @@ backend/server/flags.py           FLAG_NAMES = (... "rescue", "wall_recovery", "
 - **The server decides, the browser asks.** `GET /api/config` (`backend/server/routes/config.py`) returns `flags` from the server's settings. The browser never decides a flag itself.
 - **Off means "exactly as before."** Each lane's tests include a "flag off" case: wall routes `404`, `placement` off shows fixed spots and never reads the layout table, `rescued` is ignored.
 - **A typo cannot hide.** `parse_flags` raises `UnknownFlagError` for any unknown name, so `FEATURE_FLAGS=wall_recover` stops the server at start instead of silently doing nothing. That is also why a new flag name must be added to `FLAG_NAMES` and to the list in `.env.example` and the flag table in `INTERFACES.md` (the recipe is [ENGINEERING.md, section 4.5](ENGINEERING.md#45-add-a-feature-flag)); `test_flags.py`, `test_health_and_config.py` and `correctness/test_settings_contract.py` each list the names.
-- **Migrations and flags are two separate, announced steps** (D047): (1) apply the SQL file to Supabase; (2) switch the flag on in Vercel and redeploy. A flag that needs a table must never be on before its migration is applied, or the routes read columns that do not exist. The code protects itself in one place: with `placement` on but the table missing, the island still works and answers `layout.movable: false` and the move route answers `503 layout_unavailable`. For `wall_recovery` we found no equivalent fallback in the code we read, so its flag is the guard.
-- **Reversible.** Both migrations are additive (`add column if not exists`, `create table if not exists`, `create or replace function`), and the comment block at the top of each file lists the exact statements to undo it.
+- **Migrations and flags are two separate, announced steps** (D047): (1) apply the SQL file to Supabase; (2) switch the flag on in Vercel and redeploy. A flag that needs a table must never be on before its migration is applied, or the routes read columns that do not exist. The code protects itself in one place: with `placement` on but the table missing, the island still works and answers `layout.movable: false` and the move route answers `503 layout_unavailable`. For `wall_recovery` we found no equivalent fallback in the code we read, so its flag is the guard. A second, softer fallback exists for the wave rules: if `wave_rules_keep()` fails (for example before its migration), the wave answer simply carries no `rules` and the wave plays as before (section 10). The arsenal has no such fallback: with `arsenal` on and no tables, its routes fail, so the flag is the guard there too.
+- **Reversible.** All four migrations are additive (`add column if not exists`, `create table if not exists`, `create or replace function`), and the comment block at the top of each file lists the exact statements to undo it.
 
-**The three T29–T47 flags and their migrations.**
+**The T29–T47 flags and their migrations.**
 
-| Flag | Needs | Migration file | Adds |
-|---|---|---|---|
-| `wall_recovery` | `islands` on, migration applied first | `supabase/migrations/20261114100000_wall_recovery.sql` | columns `islet_buildings.wall_health` (0–100, default 100) and `wall_damaged_at`; table `island_wall_records` (one row per island wave, no browser access); functions `island_walls_record()` and `island_wall_restore()` (service role only) |
-| `placement` | `islands` on, migration applied first | `supabase/migrations/20261114110000_island_layout.sql` | table `island_layout` (one row per moved spot, half-unit cells, known plots only) and function `island_move()` (island lock, compare-and-swap, refuses during a wave) |
-| `rescue` | `islands` on; **no** migration; the `sim.js` hook is also needed before anything shows | none | nothing (reuses `wave_finish()`'s `p_restart_back`) |
+| Flag | Needs | Migration file | Adds | Production, 14 Nov evening |
+|---|---|---|---|---|
+| `wall_recovery` | `islands` on, migration applied first | `supabase/migrations/20261114100000_wall_recovery.sql` | columns `islet_buildings.wall_health` (0–100, default 100) and `wall_damaged_at`; table `island_wall_records` (one row per island wave, no browser access); functions `island_walls_record()` and `island_wall_restore()` (service role only) | applied; flag **on** (about 20:28 UTC) |
+| `placement` | `islands` on, migration applied first | `supabase/migrations/20261114110000_island_layout.sql` | table `island_layout` (one row per moved spot, half-unit cells, known plots only) and function `island_move()` (island lock, compare-and-swap, refuses during a wave) | applied; flag **on** (about 19:45 UTC) |
+| `arsenal` | `islands` on, migration applied first | `supabase/migrations/20261114120000_arsenal.sql` | tables `arsenal_copies` and `arsenal_moves`, a commit-time capacity trigger, the `arsenal_*` functions and `arsenal_convert_personal_weapons()` (section 9) | applied; conversion run once; flag **on** (about 20:48 UTC) |
+| `tower_health`, `pathing`, `rescue` | `islands` on; migration applied first (they travel as `rules` on the wave answers) | `supabase/migrations/20261114130500_wave_rules.sql` | table `wave_rules` (one row per wave, no browser access) and `wave_rules_keep()` (section 10). `rescue` also uses the existing `wave_finish()`'s `p_restart_back` | applied; the three flags are **off** (release checks in progress) |
+| `defenses_v2` | **not ready to switch on** | none yet (a migration for `islet_buildings` is still to be written) | nothing yet; the catalogue gains the culverin (section 11) | flag **off** |
 
-**Applied live (as stated by the responsible human; not checkable from the repository).** The two migrations `20261114100000` and `20261114110000` were applied to the live Supabase project on 14 Nov. Text in the repository ([D039](DECISIONS.md) and [D041](DECISIONS.md) status lines, `supabase/README.md` and the specs) still says "written, not applied", because those files were written before the apply and nobody updated them yet. So: **do not trust the repo for "is it applied"; check the database** (the list of applied migrations in Supabase, or ask Nils), and treat the repo text as stale. An applied migration plus a flag that is still off is the safe, intended state: nothing changes for players until the flag step is announced.
+**Applied live (verified by the coordinator on 14 Nov 2026; not checkable from the repository).** The four migrations `20261114100000`, `20261114110000`, `20261114120000` and `20261114130500` are applied to the live Supabase project and registered in `schema_migrations`. The repository text that used to say "written, not applied" (D039, D041, D042, `supabase/README.md`, INTERFACES and the specs) was updated in the final docs pass to say "applied live 14 Nov 2026". Still, **do not trust the repo for "is it applied"; check the database** (the list of applied migrations in Supabase, or ask Nils). An applied migration plus a flag that is still off is the safe, intended state: nothing changes for players until the flag step is announced.
 
 **How to check what is on.**
 
@@ -575,7 +966,7 @@ backend/server/flags.py           FLAG_NAMES = (... "rescue", "wall_recovery", "
 2. Locally: `cd backend && uv run --env-file ../.env uvicorn main:app --reload --port 8000`, then `http://127.0.0.1:8000/api/config` ([ENGINEERING.md, section 3](ENGINEERING.md#3-commands)). With an empty `FEATURE_FLAGS` every flag is `false`.
 3. To try a feature locally, put the name in your own `.env` (`FEATURE_FLAGS=islands,wall_recovery`); never write real keys in the repository.
 
-The state of each T29–T47 flag **on Vercel** is not recorded anywhere in the repository. At the time of writing nothing here proves any of them is on; the code default for all of them is off.
+The state of each flag **on Vercel** is not recorded in the repository (the code default for all of them is off). The coordinator verified the live `FEATURE_FLAGS` on 14 Nov 2026: on are `live_presence`, `market`, `arena`, `sign_in`, `demo`, `sports`, `islands`, `placement`, `wall_recovery` and `arsenal`; off are `rescue`, `defenses_v2`, `tower_health` and `pathing`. A flag is switched on only after its release check (`npm run test:placement`, `test:walls`, `test:arsenal`, section 12) and, for rule flags, after every client of a running wave is reloaded. Re-check `GET /api/config` yourself.
 
 **Practice questions.**
 
@@ -588,19 +979,21 @@ The state of each T29–T47 flag **on Vercel** is not recorded anywhere in the r
 
 ---
 
-## 10. Suggested split for the four teammates
+## 14. Suggested split for the four teammates
 
-The README members table currently has only Nils Lenke filled in (the other three rows are placeholders until Fri 20 Nov), so the split uses **Teammate A to D**; put real names in when the table is complete. Nils's agents wrote this code under D047, so Nils should **explain** rather than be the independent reviewer, and each reviewer should be someone who did not write that section. Each section takes roughly 45 to 60 minutes (read, run tests, do the questions); the pairs below are about equal, and each teammate gets one backend-heavy and one lighter section.
+The README members table currently has only Nils Lenke filled in (the other three rows are placeholders until Fri 20 Nov), so the split uses **Teammate A to D**; put real names in when the table is complete. Nils's agents wrote this code under D047, so Nils should **explain** rather than be the independent reviewer, and each reviewer should be someone who did not write that section. Each section takes roughly 45 to 60 minutes (read, run tests, do the questions); sections 9 and 10 take longer. Each teammate gets at least one backend-heavy and one lighter section.
 
 | Reviewer | Primary sections | Why this mix | Second reader (swap for the drill on Thu 19 / Sat 21) |
 |---|---|---|---|
-| Teammate A | 1 Wall recovery, 8 Check repairs | Money, SQL and a lock: the most Python and SQL, plus a short browser-check section | Teammate C |
-| Teammate B | 4 Flexible placement, 2 Tower art | Grid rules in Python and JavaScript, plus the one visual section | Teammate D |
-| Teammate C | 3 Targeting and pathing, 7 Harbor weather | Pure JavaScript algorithms (no database), plus the shortest section | Teammate A |
-| Teammate D | 5 Co-op permissions, 6 Rescue and difficulty | A small, readable Python module, plus server settlement and curves | Teammate B |
-| Everyone | 0 and 9 (the table and the flags) | Every explain-back about a feature starts with "which flag, and is it on?" | n/a |
+| Teammate A | 1 Wall recovery, 8 Leaderboard and statue, 12 Check repairs | Money, SQL and a lock; a read-only ranking; and the check runners that back every flag switch | Teammate C |
+| Teammate B | 4 Flexible placement, 2 Tower art, 9 Arsenal | Grid rules, the one visual section, and the largest database lane (capacity trigger, swap, retries) | Teammate D |
+| Teammate C | 3 Targeting and pathing, 7 Harbor weather, 10 Integration | The pure algorithms and then their wiring into `sim.js`, wave rules and the wall guard, plus the shortest section | Teammate A |
+| Teammate D | 5 Co-op permissions, 6 Rescue and difficulty, 11 Culverin | A small readable Python module, server settlement and curves, and the data-only lane | Teammate B |
+| Everyone | 0 and 13 (the table and the flags) | Every explain-back about a feature starts with "which flag, and is it on?" | n/a |
 
-**What to hand back.** For each section: the commands you ran with the real result lines (or "skipped: reason"), anything you could not explain, and any disagreement with a proposed decision (D039–D045 are open to comments in the issue or chat; D047 lets the team overturn the fast-track). Follow the report format of [CONTRIBUTING.md](../CONTRIBUTING.md): changed, verified, not verified, remaining.
+Sections 9 and 10 are the longest; give them extra time. The pairs are roughly equal otherwise.
+
+**What to hand back.** For each section: the commands you ran with the real result lines (or "skipped: reason"), anything you could not explain, and any disagreement with a proposed decision (D039–D049 are open to comments in the issue or chat; D047 lets the team overturn the fast-track). Follow the report format of [CONTRIBUTING.md](../CONTRIBUTING.md): changed, verified, not verified, remaining.
 
 ## Appendix: the commands
 
@@ -614,5 +1007,8 @@ From [ENGINEERING.md, section 3](ENGINEERING.md#3-commands) (repository root fir
 | Client build | `cd frontend && npm run build` |
 | Multiplayer browser check | `cd frontend && npm run test:mp` |
 | GitHub sign-in checks | `cd frontend && npm run test:signin` |
+| Wall recovery, two captains | `cd frontend && npm run test:walls` |
+| Placement, two captains | `cd frontend && npm run test:placement` |
+| Arsenal, two captains | `cd frontend && npm run test:arsenal` |
 
 One test file only (examples): `cd backend && uv run pytest server/tests/test_wall_recovery.py` and `cd frontend && npx vitest run tests/pirates/targeting.test.js` (`npm test` runs `vitest run`).

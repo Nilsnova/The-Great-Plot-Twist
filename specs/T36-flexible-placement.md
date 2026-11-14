@@ -4,7 +4,7 @@
 >
 > **Who uses it:** every island player (owner and game members); the wave simulation, which now fights the island where its buildings stand; T35 (walls, gaps and rerouting) and T41 (the arsenal's footprint), which build on this layout.
 
-- **Status:** in review (code done; decision D041 proposed; migration written, **not applied**)
+- **Status:** in review (code done; decision D041 proposed; migration applied live 14 Nov 2026; flag `placement` on in production)
 - **Branch:** `feat/t36-flexible-placement`
 - **Issue and pull request:** T36 of [OPEN-TODOS §9](../docs/OPEN-TODOS.md#9-defense-and-shared-island-expansion-proposal-14-nov); PR opened by the coordinator
 
@@ -33,7 +33,7 @@ The model (decision [D041](../docs/DECISIONS.md#d041--flexible-building-placemen
 - `backend/server/island/layout.py` (rules), `layout_store.py` (database), `placement.py` (the move flow) (new)
 - `backend/server/routes/island_layout.py`: `POST /api/island/move` (new); `routes/island.py`: `x`, `z`, `layout` in answers
 - `backend/server/island/service.py`, `rules.py`, `catalogue.py`, `app.py`, `flags.py`: small additive changes (positions in answers, the flag)
-- `supabase/migrations/20261114110000_island_layout.sql`: `island_layout`, `island_move()` (new, not applied)
+- `supabase/migrations/20261114110000_island_layout.sql`: `island_layout`, `island_move()` (new; applied live 14 Nov 2026)
 - `frontend/src/island/placement.js`, `move-mode.js`, `move-bar.js`, `move-preview.js` (new); `spots.js`, `world.js`, `card-model.js`, `ui.js`, `api.js`, `index.js`, `island.css`, `src/pirates/fake-api.js` (wiring)
 - `frontend/scripts/capture-placement.js`: the screenshots below
 
@@ -69,7 +69,7 @@ Captured with `node scripts/capture-placement.js ../specs/T36-flexible-placement
 - [x] Illegal and overlapping squares refused on the server before the database is asked (`test_an_illegal_move_is_refused_before_the_database_is_asked`).
 - [x] The flag off changes nothing: no layout read, `404 feature_off` on move, no Move button.
 - [ ] Opt-in SQL checks (`CASE_PG_SCRATCH=1 … pytest -q server/tests/island_sql/test_island_layout_sql.py`) on a machine where pgserver can start PostgreSQL (not as root).
-- [ ] Migration applied by a teammate, then the flag `placement` switched on; two browsers see the same layout after a move.
+- [x] Migration applied live 14 Nov 2026, then the flag `placement` switched on in production (release check PR #49: two browsers see the same layout after a move).
 - [ ] No secrets, private data or generated caches are in the diff.
 - [ ] A different human teammate has reviewed and approved the current change (D047 allows merge first, review after).
 
