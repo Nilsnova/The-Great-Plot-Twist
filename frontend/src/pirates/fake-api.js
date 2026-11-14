@@ -214,9 +214,10 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
   // flags: the server's feature flags this fake follows (wall_recovery, D039; the wave rules below); all off by default.
   const wallsOn = flags?.wall_recovery === true;
   const culverinOn = flags?.defenses_v2 === true; // T43: the culverin, and the wave rule defenses_v2 on every wave answer
-  // The wave rules (backend/server/island/wave_rules.py): the rule flags on now, in SIM_RULES order. The first
-  // answer for a wave keeps its set (wave_rules_keep()); with every rule flag off the answers carry no rules.
-  const wantedRules = SIM_RULES.filter(name => flags?.[name] === true);
+  // The wave rules (backend/server/island/wave_rules.py): the rule flags on at the wave's first answer, in SIM_RULES
+  // order. That answer keeps its set (wave_rules_keep()), an empty set too, and every later answer serves it whatever
+  // the flags say then (a test may change `flags` mid-wave); an empty set leaves `rules` out.
+  const wantedRules = () => SIM_RULES.filter(name => flags?.[name] === true);
   // T38 (routes/waves.py): the server honours `rescued` only while the flag rescue is on.
   const rescueOn = flags?.rescue === true;
   let weatherKind = weather;
@@ -418,15 +419,14 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
   }
   const running = run => !run.finishedAt && nowMs() <= run.startsAtMs + ISLAND_RULES.waves.maximumSeconds * 1000;
   // The wave's sim rules (backend/server/island/wave_rules.py): the rule flags on now, in SIM_RULES order; the
-  // first answer with any of them on keeps its set for the wave, every later one serves the kept set. While
-  // every rule flag is off nothing is kept and the answer has no rules (the server's known limit included).
+  // first answer keeps its set for the wave (an empty set too), every later one serves the kept set.
   // world.liveFlags (dev.setFlag) switches a flag for every tab of a shared world, like a redeploy.
   const flagOn = name => (world.liveFlags && Object.hasOwn(world.liveFlags, name) ? world.liveFlags[name] : flags?.[name]) === true;
   const rulesOf = run => {
-    const wanted = SIM_RULES.filter(flagOn);
-    if (!wanted.length) return null;
-    if (!Array.isArray(run.rules)) run.rules = wanted;
-    return run.rules.length ? [...run.rules] : null;
+    // Kept by the wave's first answer, even when empty (the server's wave_rules_keep), whatever the flags say later.
+    if (!Array.isArray(run.rules)) run.rules = SIM_RULES.filter(flagOn);
+    const rules = SIM_RULES.filter(name => run.rules.includes(name));
+    return rules.length ? rules : null;
   };
   const shape = run => {
     const walls = waveWalls(run); // D039: only while the flag is on, as the server

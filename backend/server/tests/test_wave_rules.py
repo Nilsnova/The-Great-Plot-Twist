@@ -19,10 +19,45 @@ def world_with(flags: str) -> World:
     return World(settings=replace(ISLAND_SETTINGS, flags=parse_flags(flags)))
 
 
-def test_with_every_rule_flag_off_the_wave_answers_have_no_rules_and_nothing_is_kept():
+def test_with_every_rule_flag_off_the_wave_answers_have_no_rules_but_keep_the_empty_set():
     world = world_with("islands")
+    world.database.join_reply = {**STARTED, "status": "joined"}
+    world.database.current_reply = {**STARTED, "status": "running"}
+
+    started, joined, current = world.start().json(), world.join().json(), world.current().json()
+
+    assert "rules" not in started and "rules" not in joined and "rules" not in current
+    assert world.database.wave_rules == {STARTED["waveId"]: []}
+    assert len(world.database.calls("wave_rules_keep")) == 3  # one small call per answer
+
+
+def test_with_every_rule_flag_off_the_answer_is_the_same_as_when_keeping_fails():
+    # Keeping failing is the old path (no rules looked at): the answers must match exactly.
+    kept, failing = world_with("islands"), world_with("islands")
+    failing.database.wave_rules_reply = httpx.Response(500, json={"message": "down"})
+    assert kept.start().json() == failing.start().json()
+
+
+def test_a_rule_flag_switched_on_mid_wave_gives_later_joiners_no_rules():
+    world = world_with("islands")
+    world.database.join_reply = {**STARTED, "status": "joined"}
+    world.database.current_reply = {**STARTED, "status": "running"}
     assert "rules" not in world.start().json()
-    assert world.database.calls("wave_rules_keep") == []  # the table may not exist yet
+
+    flip(world, "islands,tower_health,pathing")  # mid-wave: rule flags on
+
+    assert "rules" not in world.join().json()  # the starter plays none, so does the joiner
+    assert "rules" not in world.current().json()
+
+
+def test_every_rule_flag_switched_off_mid_wave_keeps_the_starters_rules():
+    world = world_with("islands,rescue")
+    world.database.join_reply = {**STARTED, "status": "joined"}
+    assert world.start().json()["rules"] == ["rescue"]
+
+    flip(world, "islands")
+
+    assert world.join().json()["rules"] == ["rescue"]
 
 
 @pytest.mark.parametrize("rule", SIM_RULES)
@@ -73,8 +108,9 @@ def test_the_first_answer_keeps_the_rules_even_when_it_is_a_join():
     assert world.start().json()["rules"] == ["pathing"]  # the same wave id: its kept set
 
 
-def test_a_failing_rule_store_never_breaks_the_wave_it_plays_without_rules():
-    world = world_with("islands,rescue")
+@pytest.mark.parametrize("flags", ["islands,rescue", "islands"])
+def test_a_failing_rule_store_never_breaks_the_wave_it_plays_without_rules(flags: str):
+    world = world_with(flags)
     world.database.wave_rules_reply = httpx.Response(404, json={"message": "no such function"})
 
     answer = world.start()

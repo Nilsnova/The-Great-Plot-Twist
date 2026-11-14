@@ -1710,10 +1710,12 @@ network latency/loss/late-join limitations still apply.
 
 `POST /api/waves/start|join` and `GET /api/waves/current` carry an optional `rules`: the simulation rules of
 that wave, each switched on by the flag of the same name, in a fixed order (`SIM_RULES` in
-`backend/server/island/wave_rules.py`). Left out while none is on. The first answer for a wave keeps its set
-(table `wave_rules`, `wave_rules_keep()`, migration `20261114130500_wave_rules.sql`, needed before any rule
-flag goes on); every later answer for that wave serves the kept set, so a joiner after a flag flip plays the
-bell-ringer's rules. Known limit: switching the last rule flag off mid-wave gives later joiners no rules. Every client reads them from the wave answer
+`backend/server/island/wave_rules.py`). The first answer for a wave keeps its set, an empty set too
+(table `wave_rules`, `wave_rules_keep()`, migration `20261114130500_wave_rules.sql`; one small call on every
+start, join and current answer, also while every rule flag is off); every later answer for that wave serves
+the kept set whatever the flags say now, so a joiner after a flag flip (on or off) plays the bell-ringer's
+rules. Left out when the kept set is empty (or keeping failed: logged, never a 5xx). A wave with no row yet
+(started before this) keeps the flags of its next answer. Every client reads them from the wave answer
 (`frontend/src/pirates/wave-rules.js`), never from its own `/api/config`, so a whole wave plays one rule set;
 the island passes them on in `wave_started_server` (`rules`). Names: `tower_health` (T33, [spec](../specs/T33-tower-health.md)), `pathing` (T34/T35 boarder routes over the walls' footprints, [spec](../specs/T34-T35-targeting-pathing.md#wiring-as-built-14-nov)), `rescue` (T38: the sim offers the last-chance rescue; the same flag also lets the server honour `rescued`), `defenses_v2` (T43, [spec](../specs/T43-new-defenses.md): the island's culverins fight; without it every client's sim and renderer leave a culverin out; the name needs migration `20261114140000_culverin.sql`).
 With `defenses_v2` a new sim event `culverin_fired {t, towerId, targetId, damage, level, x, z, toX, toZ, impactAt}` (its hit is the usual
