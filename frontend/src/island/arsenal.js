@@ -56,8 +56,10 @@ export function createArsenal({api, ui, emit = () => {}, enabled = () => false, 
       emit({type: 'arsenal_changed', carried: readWeapon(result.data.carried)});
       ui.toast(text, 'success');
     } else {
-      message = result.message; answer = before;
+      answer = before;
+      // The refusal's message goes on the card after the arsenal is read again (refresh clears old messages).
       if (REFRESH_ON.has(result.code)) await refresh();
+      message = result.message;
     }
     redraw();
   }
