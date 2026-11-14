@@ -824,3 +824,22 @@ or splits best from current/unlocked wave, they must read the never-lowered best
 [the T45 spec](../specs/T45-highscore-statue.md#re-check-once-t38s-reset-contract-proposed-d044-is-accepted) and the
 [API contract](INTERFACES.md#weekly-island-leaderboard-t7).
 
+
+## D043 · Co-op permissions, spending and absent members · 2026-11-14
+
+**Status:** proposed (T37 and T42 of [OPEN-TODOS §9](OPEN-TODOS.md#9-defense-and-shared-island-expansion-proposal-14-nov)); branch `feat/t37-t42-coop-policy`, responsible teammate Nils, plan by Ianno. Issue [#25](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/25), fast-tracked under D047. **Agreed by:** pending team review.
+
+**Decision:** Keep today's co-op rules and write them down as one matrix ([the spec](../specs/T37-T42-coop-policy.md)), enforced in one Python module, `backend/server/island/permissions.py`, with the database functions checking again under their locks.
+
+- **Roles:** host (the island's owner), member (active `island_members` row), outsider (never joined or left). Online is not a role: the server never knows presence.
+- **Every shared island action is open to the host and every member, with no vote or approval:** look by code, ring the bell, join a wave, help a captain up, build, upgrade, research, tower skills and house roles, the wreck, tear-down, and the reserved actions persistent repair/rebuild (T31/T32) and arsenal buy/withdraw/return (T40). Outsiders get `403 not_member` with a sentence that names the action. The lobby's Start and Pause stay browser pacing: host, or any member after the host has been away 60 s.
+- **Funding is personal; there is no shared wallet.** The clicker pays from their own wallet (`payer_of` answers the clicker or nobody); a tear-down refunds each payer half of what they paid. Arsenal stock is bought by the buyer personally and belongs to the island; withdrawing and returning are free.
+- **Absent members (T42):** a wave may start without the full crew or the host; members join until the first finish (or 900 s); a participant who drops reconnects to the same wave and finishes once; a participant who leaves the game mid-wave still finishes their own fight but cannot rejoin or revive; a wave nobody finishes expires after 900 s with no loot and no change to the best or next wave. Wave strength does not depend on crew size; a boss finisher's goal uses the standing participants captured when it starts (D038). Loot goes only to participants who finish, each to themselves; membership alone earns nothing, and there are no offline rewards.
+
+**Changed:** only the wording of the `403 not_member` message (it now names the action); the code and status are unchanged. No route, table or migration changes.
+
+**Why:** crews are small friends' groups that play at different times; requiring the host or a vote would block play, and every spend already has a per-click ledger ref and a database lock. One module gives later lanes (arsenal, recovery, rescue) a single helper and keeps the "no shared wallet" rule explicit.
+
+**Open questions for review (current behaviour kept until agreed):** (1) should a member only tear down what they paid for in full, with the host able to tear down anything? Today any member may (owner decision of 12 Nov, GAME-V3 §4.2); other payers get half back. (2) Should a host be able to remove a member, or hand the game over? Not possible today. (3) The host's personal unlocks follow their island's best wave even when members won it without them (D036); changing this would re-lock existing players. (4) Late joiners earn the full loot of a survived wave; a minimum time in the wave would need a migration.
+
+**Limits:** the Python check and the database check are separate reads; the database's lock is the final word. Mapping tests use the fake database; the SQL rules are covered by their own migration tests. Presence-based rules (quorum, auto-pause) are not possible without a server-side presence design.
