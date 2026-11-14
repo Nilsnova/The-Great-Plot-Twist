@@ -9,6 +9,10 @@ import { spawn } from 'node:child_process';
 import { mkdir, writeFile } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 import { pixelArt, pixelArtIds } from '../src/pixel/catalog.js';
+import { layouts } from '../src/world/places/layouts.js';
+// The game opens in Saltreach Harbor (D031), not the Lighthouse: the harbor layout and its window-glow layer are
+// staged 'library' art that is active at start. Anything outside the Lighthouse kit plus that layout still fails.
+const startArtIds = [...pixelArtIds, ...layouts.saltreach_harbor.map(item => item.asset), 'harbour-office-glow'];
 
 const visibleArt = pixelArt.filter(item => item.visibility !== 'finale');
 const production = process.env.ART_PRODUCTION === '1', url = 'http://127.0.0.1:5176';
@@ -69,7 +73,7 @@ try {
   page.on('request', request => { const match = request.url().match(/\/pixel\/(?:hd\/)?([^/?]+\.png)(?:[?#]|$)/); if (match) requested.add(match[1]); });
   await page.goto(url);await startFromTitle(page);
   await page.waitForTimeout(1100);
-  check([...requested].every(file => file === 'ground.png' || pixelArtIds.includes(file.replace('.png', ''))), 'Game requests only active pixel artwork');
+  check([...requested].every(file => file === 'ground.png' || startArtIds.includes(file.replace('.png', ''))), 'Game requests only active pixel artwork');
   const display = await page.evaluate(() => {
     const canvas = document.querySelector('canvas[tabindex="0"]'); return { imageRendering: getComputedStyle(canvas).imageRendering,
       width: canvas.width, height: canvas.height, cssWidth: parseInt(canvas.style.width), cssHeight: parseInt(canvas.style.height) };

@@ -5,7 +5,7 @@
 
 How a move is made:
   1. The island is found as for a build (service.target_island): your own, or a game's island
-     you are a member of (403 not_member otherwise).
+     whose permissions.py row MOVE allows you (host or member; 403 not_member otherwise).
   2. The island's stored cells are read. Moving the spot to where it stands already changes
      nothing and answers the island: a repeat is safe without a click id.
   3. layout.py checks the rules (grid, land, overlaps, a way from the heart to the beach).
@@ -17,7 +17,7 @@ Used by: routes/island_layout.py.
 """
 
 from server.errors import ApiError
-from server.island import layout, layout_store, service
+from server.island import layout, layout_store, permissions, service
 from server.island.catalogue import IslandCatalogue
 from server.island.service import IslandView
 from server.island.store import Island, Refusal
@@ -74,7 +74,9 @@ async def move(
     """
     if not catalogue.placement:
         raise ApiError(404, "feature_off", "Moving buildings is not open yet.")
-    island, payer = await service.target_island(admin, catalogue, player_id, code)
+    island, payer = await service.target_island(
+        admin, catalogue, player_id, code, permissions.MOVE
+    )
     refusal = None
     for _ in range(TRIES):
         refusal = await try_move(admin, island, player_id, spot_id, (x, z))
