@@ -6,7 +6,7 @@
 
 - **Status:** draft, design and modules in review; not wired into the game yet
 - **Branch:** `feat/t34-t35-targeting-pathing`
-- **Issue and pull request:** to be opened by the responsible teammate
+- **Issue and pull request:** [#22](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/22); pull request to be opened by the responsible teammate
 - **Decision:** [D040](../docs/DECISIONS.md#d040--enemy-targets-and-wall-pathing-t34t35--2026-11-14) (proposed)
 
 ## Why
