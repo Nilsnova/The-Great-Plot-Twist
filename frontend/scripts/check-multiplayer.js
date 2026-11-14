@@ -62,7 +62,11 @@ async function openCaptain(name, playerId, visit = null, {create = false, join =
     for (let i = 0; i < 5 && await join.isVisible().catch(() => false); i++) { await join.click().catch(() => {}); await page.waitForTimeout(1500); }
   }
   else await page.locator('#play').click();
-  for (let i = 0; i < 12; i++) {
+  // Done when the lobby is open, or (a visit link, whose lobby may close by itself) when the player stands on
+  // the island with no card open. Create and Join always end in the lobby, after the arrival cutscene.
+  const landed = () => page.evaluate(lobby => !!document.querySelector('.island-card-lobby[open]') || (!lobby
+    && window.__island?.world.current?.id === 'home_islet' && !!window.__island.island?.island && !document.querySelector('dialog[open]')), !!(create || join));
+  for (let i = 0; i < 20; i++) {
     await page.waitForFunction(() => document.querySelector('dialog.cutscene[open],.tutorial-card[open],.goal-card[open],.games-card[open],.island-card-lobby[open]')
       || (window.__island?.world.current?.id === 'home_islet' && window.__island.island?.island && !document.querySelector('dialog[open]')), null, {timeout: 60000, polling: 100});
     if (await page.locator('.games-card[open]').count()) {
@@ -73,8 +77,11 @@ async function openCaptain(name, playerId, visit = null, {create = false, join =
       else await page.locator('.games-card[open]').getByRole('button', {name: 'Create a game', exact: true}).click();
     }
     else if (await page.locator('.goal-card[open]').count()) await page.locator('.goal-card[open]').getByRole('button', {name: 'Got it', exact: true}).click();
-    else if (await page.locator('dialog.cutscene[open],.tutorial-card[open]').count()) await page.getByRole('button', {name: 'Skip', exact: true}).click();
-    else break;
+    // The island arrival (6.4 s) ends by itself: on a slow machine it can close before the click lands, as it
+    // would for a player who waits. The next round looks at what is open then.
+    else if (await page.locator('dialog.cutscene[open],.tutorial-card[open]').count()) await page.getByRole('button', {name: 'Skip', exact: true}).click({timeout: 5000}).catch(() => {});
+    else if (await landed()) break;
+    // Otherwise one card has just closed and the next (goal card, arrival, lobby) is not open yet: look again.
     await page.waitForTimeout(300);
   }
   // A visit link or a joined code: wait until the host's island has answered (the join's visit read).
