@@ -27,6 +27,9 @@ FLAG_NAMES = (
     "festival",
     "demo",
     "islands",
+    # D039 (proposed): wall damage stays after a wave, paid Repair/Rebuild between waves.
+    # Needs supabase/migrations/20261114100000_wall_recovery.sql applied first.
+    "wall_recovery",
 )
 
 
