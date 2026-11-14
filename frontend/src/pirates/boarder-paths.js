@@ -20,6 +20,12 @@ import { createFieldCache, lineIsClear, nextStep } from './pathing.js';
 export const WALL_FOOTPRINT = 2; // units: T36's wall square (FOOTPRINTS.wall in src/island/placement.js)
 const INSET = .25;               // points this far inside the square's edges, so only cells it covers count
 const MARGIN = 1.15;             // the grid reaches this many coast radii out, past every beach
+// Balance retune (specs/T33-T35-balance.md): a boarder that comes this close (units, to the edge of the
+// footprint) to a standing wall across its straight way to the heart (so not a neighbour of the gap it walks
+// through) stops and hacks it, as the fixed routes do, instead of walking round. Without it today's lone wall spots are walked round and the walls lose their
+// value (the T35 finding). 0 switches it off (pure detour/breach).
+export const WALL_ENGAGE = 3;
+export const WALL_LANE = .25;    // ... and a wall counts as across the way when the straight line passes this close to its footprint
 
 /** True when x, z lies inside the coast (radius 1 of coastPoint in sim.js, the same edge formula). */
 export function isOnLand(x, z, coast) {
@@ -66,9 +72,31 @@ export function createBoarderPaths({ coast, heart, walls, pace }) {
     }
     return best;
   }
+  // The standing wall in the boarder's way within WALL_ENGAGE of it (nearest edge; ties: the lower id).
+  const toHeart = point => { const dx = point.x - heart.x, dz = point.z - heart.z; return Math.sqrt(dx * dx + dz * dz); }; // plain sums: the same bits in every browser
+  const sorted = [...walls].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  function engaged(boarder) {
+    if (!(WALL_ENGAGE > 0)) return null;
+    const half = WALL_FOOTPRINT / 2, own = toHeart(boarder);
+    if (!(own > 1e-9)) return null;
+    const ux = (heart.x - boarder.x) / own, uz = (heart.z - boarder.z) / own;
+    let best = null, near = WALL_ENGAGE + 1e-9;
+    for (const wall of sorted) {
+      if (!(wall.hp > 0)) continue;
+      // Only a wall ahead, across the straight way to the heart (not a neighbour of the gap it walks through).
+      const wx = wall.x - boarder.x, wz = wall.z - boarder.z, along = wx * ux + wz * uz, side = Math.abs(wx * uz - wz * ux);
+      if (!(along > 1e-9) || along > own + 1e-9 || side > half + WALL_LANE + 1e-9) continue;
+      const dx = Math.max(Math.abs(boarder.x - wall.x) - half, 0), dz = Math.max(Math.abs(boarder.z - wall.z) - half, 0);
+      const d = Math.sqrt(dx * dx + dz * dz);
+      if (d < near - 1e-9) { best = wall; near = d; }
+    }
+    return best;
+  }
   function next(boarder) {
     const index = cellOf(grid, boarder.x, boarder.z);
     if (index >= 0 && index === field.goalIndex) return { kind: 'heart' };
+    const wall = engaged(boarder);
+    if (wall) return { kind: 'wall', wallId: wall.id };
     if (index < 0 || field.cost[index] === Infinity) {
       const land = index >= 0 ? backToLand(index) : -1;
       return land >= 0 ? { kind: 'step', ...centreOf(grid, land) } : { kind: 'none' };
