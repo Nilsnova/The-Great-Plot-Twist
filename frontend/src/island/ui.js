@@ -10,11 +10,13 @@ import {node} from '../ui/kit/dom.js';
 import {drawQr} from '../lib/qr/index.js';
 import {CAPTAIN_PALETTES} from '../art/people.js';
 import {toasts as gameToasts} from '../ui/toasts.js';
+import {crewLabel, progressLines} from './progression.js';
+import {drawArsenal} from './arsenal-ui.js';
 
 // The cards of the island's buildings: a spot's build or upgrade card (houses too), the Tech hub, the wreck
 // and the Harbor. They dock at the right side on a desktop and come up as a bottom sheet on a phone
 // (island.css), so the island stays in view; the menus (crew, captain, lobby, invite) stay centred.
-export const DOCKED = new Set(['build', 'tech', 'wreck', 'harbor']);
+export const DOCKED = new Set(['build', 'tech', 'wreck', 'harbor', 'arsenal']);
 
 function button(label, onClick, quiet = false) {
   const element = node('button', `kit-button${quiet ? ' kit-quiet' : ''}`, label); element.type = 'button';
@@ -80,7 +82,7 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
     body.append(reason, line('island-soon', model.soon), line('island-message', model.message, 'alert'), line('island-coins', model.coins));
   }
 
-  // handlers: {build(spotId, kind), upgrade(spotId), hire(), specialise(spotId, spec), demolish(spotId)}
+  // handlers: {build(spotId, kind), upgrade(spotId), repair(spotId), hire(), specialise(spotId, spec), demolish(spotId), move(spotId)}
   function buildCard(model, handlers) {
     const on = typeof handlers === 'function' ? {build: handlers} : handlers ?? {};
     open('build', model.title, body => {
@@ -111,6 +113,12 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
         next.append(node('strong', 'island-next-label', model.upgrade.label), node('span', 'island-next-stats', model.upgrade.stats));
         act = button(model.button, () => on.upgrade?.(model.spotId)); act.dataset.focus = 'upgrade'; act.disabled = model.disabled;
         body.append(next, act);
+      } else if (model.mode === 'repair') {
+        // D039 (wall-recovery.js): a damaged or destroyed wall, its health and its Repair or Rebuild.
+        const next = node('div', 'island-next');
+        next.append(node('strong', 'island-next-label', model.upgrade.label), node('span', 'island-next-stats', model.upgrade.stats));
+        act = button(model.button, () => on.repair?.(model.spotId)); act.dataset.focus = 'repair'; act.disabled = model.disabled;
+        body.append(next, act);
       }
       if (act && !act.disabled) focusable = act;
       footer(body, model, act);
@@ -137,6 +145,16 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
       if (model.hire && on.hire) {
         const hire = button('Hire crew', () => on.hire(), true); hire.classList.add('island-hire'); hire.dataset.focus = 'hire';
         body.append(hire); focusable ??= hire;
+      }
+      // T36: Move, secondary: the card closes and the move bar (move-bar.js) takes over.
+      if (model.move && on.move) {
+        const shift = button(model.move.label, () => on.move(model.spotId), true); shift.classList.add('island-move');
+        shift.dataset.focus = 'move'; shift.disabled = model.move.disabled;
+        body.append(shift);
+        if (model.move.reason) {
+          const why = line('island-move-why', model.move.reason); why.id = `island-move-why-${model.spotId}`;
+          shift.setAttribute('aria-describedby', why.id); body.append(why);
+        }
       }
       // GAME-V3.md §4.2: Tear down, secondary and red-outlined, never the focus the card opens with.
       if (model.demolish && on.demolish) {
@@ -271,6 +289,10 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
       body.append(line('island-reason', reason), line('island-message', model.message, 'alert'), line('island-coins', model.coins));
       return focusable;
     });
+  }
+  // The arsenal (T41, D042): handlers {take(copyId), giveBack(), buy(typeId)}; drawn by arsenal-ui.js.
+  function arsenalCard(model, handlers = {}) {
+    open('arsenal', model.title, body => drawArsenal(body, model, handlers, {button, line}));
   }
   function crewCard(model, onHire) {
     open('crew', model.title, body => {
@@ -433,9 +455,30 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
       return done;
     });
   }
-  function leaderboardCard({data = null, loading = false, message = ''}, retry) {
-    open('leaderboard', 'Weekly leaderboard', body => {
-      body.append(line('island-purpose', 'Resets each Monday at 00:00 UTC.'));
+  // T45: "This island" milestones (from progression.js), shown above the ranking when known.
+  function progressPanel(progress) {
+    const panel = node('section', 'island-progress'); panel.setAttribute('aria-label', 'This island');
+    const text = progressLines(progress);
+    panel.append(node('p', 'island-progress-title', 'This island'), node('strong', 'island-progress-best', text.headline),
+      line('island-purpose', text.detail), line('island-purpose', text.next));
+    return panel;
+  }
+  // The two boards. aria-pressed tells a screen reader which one is shown.
+  function scopeTabs(scope, choose) {
+    const tabs = node('div', 'island-leaderboard-tabs'); tabs.setAttribute('role', 'group'); tabs.setAttribute('aria-label', 'Leaderboard period');
+    for (const [value, label] of [['week', 'This week'], ['all', 'All time']]) {
+      const tab = button(label, () => { if (value !== scope) choose(value); }, value !== scope);
+      tab.setAttribute('aria-pressed', String(value === scope)); tabs.append(tab);
+    }
+    return tabs;
+  }
+  // actions: {retry, choose(scope)}; a plain function is the T7 retry alone.
+  function leaderboardCard({data = null, loading = false, message = '', scope = 'week', progress = null}, actions) {
+    const {retry, choose = () => {}} = typeof actions === 'function' ? {retry: actions} : actions;
+    open('leaderboard', 'Leaderboard', body => {
+      if (progress) body.append(progressPanel(progress));
+      body.append(scopeTabs(scope, choose));
+      body.append(line('island-purpose', scope === 'all' ? 'Best wave ever won on each island. Never resets.' : 'Resets each Monday at 00:00 UTC.'));
       if (data) {
         const headings = node('div', 'island-leaderboard-labels'); headings.setAttribute('aria-hidden', 'true');
         headings.append(node('span', '', 'Island'), node('span', '', 'Wave')); body.append(headings);
@@ -448,10 +491,14 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
           name.setAttribute('aria-label', `${row.name}'s island`);
           const wave = node('span', 'island-leaderboard-wave', String(row.wave));
           wave.setAttribute('aria-label', `Wave ${row.wave}`);
-          item.append(rank, name, wave);
+          const who = node('span', 'island-leaderboard-who'); who.append(name);
+          const crew = crewLabel(row.crew); // Solo / Crew of 3; one shared ranking either way
+          if (crew) who.append(node('span', 'island-leaderboard-crew', crew));
+          item.append(rank, who, wave);
           list.append(item);
         }
-        body.append(list, line('island-purpose', data.entries.length ? '' : 'No waves won this week.'));
+        const empty = scope === 'all' ? 'No waves won yet.' : 'No waves won this week.';
+        body.append(list, line('island-purpose', data.entries.length ? 'Equal waves share a rank; the first to reach it is listed first.' : empty));
       }
       body.append(line('island-purpose', loading ? 'Loading…' : '', 'status'), line('island-message', message, 'alert'));
       const refresh = button(message ? 'Try again' : 'Refresh', retry, true); refresh.disabled = loading; refresh.dataset.focus = 'refresh';
@@ -540,7 +587,7 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
     });
   }
   return {
-    leaderboardCard, buildCard, bellCard, inviteCard, lobbyCard, crewCard, captainCard, captainsCard, harborCard, techCard, wreckCard, demolishCard, close, copyLink,
+    leaderboardCard, buildCard, bellCard, inviteCard, lobbyCard, crewCard, captainCard, captainsCard, harborCard, techCard, wreckCard, arsenalCard, demolishCard, close, copyLink,
     // Re-draw the open card from fresh models (the island controller calls this on every change).
     get open() { return kind; },
     get active() { return !!modal; },

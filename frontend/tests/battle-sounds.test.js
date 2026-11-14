@@ -27,7 +27,7 @@ const buses = () => ({ effects: { kind: 'bus', connect() {}, disconnect() {} }, 
 
 describe('battle sounds', () => {
   it('has every cue of the brief', () => {
-    for (const name of ['pirate-cannon', 'pirate-mortar', 'pirate-mortar-impact', 'pirate-musket', 'pirate-horn', 'pirate-victory', 'pirate-harpoon', 'pirate-gunboat'])
+    for (const name of ['pirate-cannon', 'pirate-mortar', 'pirate-mortar-impact', 'pirate-musket', 'pirate-horn', 'pirate-victory', 'pirate-harpoon', 'pirate-gunboat', 'pirate-culverin'])
       expect(BATTLE_CUES).toContain(name);
   });
   it.each(BATTLE_CUES)('%s builds a graph, schedules a stop for every source and frees every node when it ends', name => {

@@ -91,6 +91,9 @@ class SpotView:
     cost: int  # the level-1 price of `kind`, also once it is built
     upgrade_cost: int | None  # the price of the next level, None while empty or at the top
     spec: str | None = None  # the tower skill it picked (GAME-V3 section 5), None for none
+    # Where the spot stands on the build grid (T36, layout.py); None for Pirate Point's fixed spots.
+    x: float | None = None
+    z: float | None = None
 
 
 def kind_named(catalogue: IslandCatalogue, kind: str) -> Kind | None:

@@ -200,13 +200,24 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     if(islandsMode==='off'||disposed)return islandsMode;
     islandLoad??=Promise.all([import('./island/index.js'),islandsMode==='fake'&&import.meta.env.DEV?import('./pirates/fake-api.js'):null]).then(([module,fake])=>{
       if(disposed)return null;
-      island=module.createIsland({container,emit,on,mode:islandsMode,transport:fake?fake.createFakeIslandTransport():null,
+      const fakeTransport=fake?fake.createFakeIslandTransport():null;
+      island=module.createIsland({container,emit,on,mode:islandsMode,transport:fakeTransport,
         getTransport:()=>findPanelServices(session)?.request,resetInput:resetControls,reducedMotion,preferences:getPreferences,
         focus:()=>graphics.renderer.domElement.focus({preventScroll:true}),onCoins:(value,options)=>{hud.setCoinSource('island');hud.setCoins(value,options);},onCaptain:level=>hud.setCaptainLevel(level),
         // The Harbor building (GAME-V3.md §4) opens the same stalls as the old Harbor overview.
         openHarborStall:id=>void(id==='weather'?harbor.openWeather():id==='market'?openMarket():id==='match'?sportsUi.open().catch(()=>{}):null),
         // The visit chip: the old "Visiting … · Sail home" only where travel applies (src/island/one-island.js).
-        travel:()=>travelOpen()});
+        travel:()=>travelOpen(),
+        // D039 (proposed): lasting wall damage and the paid Repair/Rebuild, only while the server's flag is on.
+        // In fake mode (?islands=fake) the fake server's own flags decide (?fakeflags=wall_recovery, fake-api.js).
+        wallRecovery:()=>{if(fakeTransport)return fakeTransport.flags.wall_recovery===true;
+          const services=findPanelServices(session);return services?.isReady()?services.getFlags()?.wall_recovery===true:false;},
+        // The arsenal (T41, D042): the server's flag "arsenal"; in the dev fake ?fakeflags=arsenal (or ?arsenal=1).
+        arsenalOn:()=>fakeTransport?(fakeTransport.flags.arsenal===true||new URLSearchParams(location.search).get('arsenal')==='1')
+          :findPanelServices(session)?.getFlags?.()?.arsenal===true,
+        // T43 (D048 proposed): the culverin on the tower spots, only while the server's flag defenses_v2 is on
+        // (in the dev fake ?fakeflags=defenses_v2).
+        defensesV2On:()=>fakeTransport?fakeTransport.flags.defenses_v2===true:findPanelServices(session)?.getFlags?.()?.defenses_v2===true});
       if(adapter)island.setPresence(adapter.read()?.presence);
       void ensureWaves();
       return island;

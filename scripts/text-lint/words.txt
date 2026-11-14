@@ -561,6 +561,7 @@ declined
 deduction
 deductions
 defend
+defenders
 defense
 degree
 degrees
@@ -581,6 +582,7 @@ descriptions
 design
 desk
 destination
+destroyed
 detail
 details
 device
@@ -987,6 +989,7 @@ head
 headers
 heading
 heal
+health
 heap
 hear
 heard
@@ -1129,6 +1132,7 @@ iron
 ironclads
 is
 island
+island's
 islands
 isle
 isles
@@ -2185,6 +2189,7 @@ sorting
 sound
 sounds
 source
+south
 space
 spaces
 spam
@@ -2210,6 +2215,7 @@ spotter
 spray
 sprite
 sprites
+square
 src
 staircase
 stairs
@@ -2605,6 +2611,7 @@ welcome
 well
 went
 were
+west
 whale
 what
 wheel
@@ -2709,9 +2716,25 @@ helps
 leaderboard
 rank
 weekly
-
 # T28: American English; checked against /usr/share/dict/words.
 zone
 lower
 introduction
 scored
+bronze
+crowned
+statue
+shield
+period
+safety
+hauls
+chance
+usual
+culverin
+hunts
+barges
+arsenal
+carried
+slot
+swap
+swapped
