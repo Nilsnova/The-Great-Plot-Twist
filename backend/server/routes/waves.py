@@ -55,8 +55,10 @@ POST /api/waves/finish  {"waveId": "6f1c...", "survived": true, "shipsSunk": 7,
     walls (optional, decision D039, proposed; ignored while the flag wall_recovery is off):
     every wall's health in percent (0 to 100) when the finishing player's simulation ended the
     wave. The first finish of an island wave keeps them (island_walls_record()); later
-    finishes, Pirate Point waves and spots without a wall change nothing. A wall below 100
-    starts the next wave damaged and mends by itself 10 minutes later.
+    finishes, Pirate Point waves and spots without a wall change nothing. The server caps each
+    wall at the health it started the wave with (a finish can only damage, never heal), and a
+    failure to keep them is logged, never an error: the paid finish still answers 200. A wall
+    below 100 starts the next wave damaged and mends by itself 10 minutes later.
     Every participant finishes their own part, once. A survived wave n pays this player
     10 + 5 x n + 5 x (house levels on that island), on Pirate Point 20 + 5 x n, twice that on a
     boss wave; a lost wave pays 0. A
@@ -293,9 +295,10 @@ async def post_finish(
         sorted(set(body.bonuses or [])),
         rescued=body.rescued and is_enabled("rescue", settings.flags),
     )
-    # D039: the first finish of an island wave keeps its walls' health for the next wave.
+    # D039: the first finish of an island wave keeps its walls' health for the next wave. The
+    # finish above is already paid, so this is best effort: a failure is logged, never a 5xx.
     if is_enabled("wall_recovery", settings.flags):
-        await wall_repair.record(admin, player.id, body.waveId, body.walls)
+        await wall_repair.record_after_finish(admin, player.id, body.waveId, body.walls)
     return FinishResponse(
         loot=finished.loot,
         coins=finished.coins,

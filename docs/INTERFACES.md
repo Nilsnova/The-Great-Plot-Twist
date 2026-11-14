@@ -1699,6 +1699,9 @@ network latency/loss/late-join limitations still apply.
 - `POST /api/waves/start|join`, `GET /api/waves/current`: optional `walls: {wall_N: percent}` (left
   out while the flag is off and on Pirate Point); every client starts its walls from it.
 - `POST /api/waves/finish`: optional `walls: {wall_N: 0..100}` (at most 24); the first finish of an
-  island wave keeps them. Ignored while the flag is off.
+  island wave keeps them, each capped at the health that wall started the wave with (a finish can only
+  damage a wall, never heal or add one; an in-wave E repair helps only in that wave). Recording is best
+  effort: a database failure is logged and the already-paid finish still answers 200. Ignored while the
+  flag is off.
 - `POST /api/island/upgrade`: `409 needs_repair` for a damaged or destroyed wall.
 - `wave_started_server` on the game's bus may carry the same `walls` object.

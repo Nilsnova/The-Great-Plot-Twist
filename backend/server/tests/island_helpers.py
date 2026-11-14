@@ -213,7 +213,11 @@ class FakeIslandDatabase:
         self.point_best: list[dict] = []
         # Where each wave runs (GET wave_runs?id=): WAVE_ID is on PLAYER's island by default.
         self.wave_places: dict[str, dict] = {
-            WAVE_ID: {"place": "island", "island_owner": PLAYER_ID}
+            WAVE_ID: {
+                "place": "island",
+                "island_owner": PLAYER_ID,
+                "starts_at": STARTED["startsAt"],
+            }
         }
         self.games = FakeGames(self)
         self.requests: list[httpx.Request] = []

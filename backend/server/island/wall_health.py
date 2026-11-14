@@ -83,6 +83,19 @@ def wave_walls(walls: dict[str, WallState], at: datetime) -> dict[str, int]:
     return {plot: effective_health(wall, at) for plot, wall in sorted(walls.items())}
 
 
+def cap_to_start(reported: dict[str, int], start: dict[str, int]) -> dict[str, int]:
+    """The walls a finish may record: only walls the wave started with, and never above the
+    health they started with. A wave can only damage a wall that lasts; a free E repair inside
+    the wave helps in that wave but is not kept, and nobody can heal (or invent) a wall for free
+    by sending a higher number. Lower numbers are kept as sent: the browser's word, like
+    survived."""
+    capped = {}
+    for plot, health in sorted(reported.items()):
+        if plot in start:
+            capped[plot] = min(start[plot], health)
+    return capped
+
+
 def needs_repair() -> ApiError:
     return ApiError(409, "needs_repair", "Repair this wall before you upgrade it.")
 

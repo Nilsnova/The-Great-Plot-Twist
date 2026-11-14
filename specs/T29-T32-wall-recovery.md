@@ -68,6 +68,21 @@ Values (D039, proposed): timer **600 s**; rebuild price **30 %** of the catalogu
 - `backend/server/island/wall_health.py` (pure rules), `wall_repair.py` (database flow), `routes/wall_recovery.py` (`GET /api/island/walls`, `POST /api/island/repair`); small guarded hooks in `routes/island.py` (upgrade) and `routes/waves.py` (snapshot, record); flag `wall_recovery` in `flags.py`.
 - `frontend/src/pirates/wall-health.js`; `sim.js` reads a wall's `health`; `controller.js` applies the snapshot and reports the walls at the finish; `island/wall-recovery.js` card; `ui.js`, `index.js`, `api.js`, `wave-flow.js`, `game.js` wiring.
 
+## Follow-ups from the review of PR #43 (before `wall_recovery` goes on)
+
+- **No free healing.** The server caps every reported wall at the health it started the wave with
+  (`wall_health.cap_to_start`, in Python before `island_walls_record()`; no new migration). The start
+  health is worked out again from `wave_runs.starts_at` exactly as `walls_for_wave()` does; the rows cannot
+  have changed since (restores are refused while the wave runs, and only this wave's first finish writes
+  them). Consequence: a free in-wave E repair or rebuild helps in that wave but is not kept; lasting
+  recovery is the paid card or the 10-minute timer. Spots without a wall on that island are dropped.
+- **Residual risk (accepted, documented):** a participant's client may still report *lower* numbers and
+  so leave walls damaged ("grief"). It is bounded: only the first finish counts, only participants of the
+  wave, every wall mends by itself after 10 minutes, and repairs cost play money only.
+- **Best effort after payment.** `wall_repair.record_after_finish` catches and logs any database error of
+  the wall record; the paid finish still answers 200. Tests: `test_wall_recovery.py`
+  (`…cannot_heal…`, `…may_lower…`, `…never_breaks_an_already_paid_finish`).
+
 ## Out of scope
 
 - Tower health (T33): towers still have no hp; gunboat jam and barge silence unchanged.

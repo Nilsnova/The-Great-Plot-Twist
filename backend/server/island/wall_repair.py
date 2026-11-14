@@ -3,7 +3,9 @@
     look()             every built wall of an island: health, timer and Repair/Rebuild price
     restore()          Repair a damaged wall or Rebuild a destroyed one between waves, paid once
     check_upgrade()    refuse an upgrade of a damaged wall (409 needs_repair)
-    record()           the wall health at the end of a wave, kept by its first finish
+    record()           the wall health at the end of a wave, kept by its first finish,
+                       never above the health the wave started with
+    record_after_finish()  record(), best effort after a paid finish (never an error)
     walls_for_wave()   the wall health a wave starts with, the same for every client of it
 
 Everything here runs only while the feature flag "wall_recovery" is on (the routes check it),
@@ -16,6 +18,7 @@ wave runs on the island, so two clicks at once pay once and never heal above ful
 Used by: routes/wall_recovery.py, routes/island.py (upgrade) and routes/waves.py.
 """
 
+import logging
 from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
@@ -33,6 +36,7 @@ from server.island.waves import WaveStart
 from server.supabase_admin import SupabaseAdmin, SupabaseRejected
 
 MAX_WALL_ROWS = 50
+logger = logging.getLogger(__name__)
 
 
 class WallRow(BaseModel):
@@ -181,19 +185,63 @@ async def check_upgrade(
     wall_health.check_upgradable((await read_walls(admin, island.owner)).get(spot_id), at)
 
 
+class WaveStartRow(BaseModel):
+    """Where a wave runs and when it started (wave_runs), for the walls it started with."""
+
+    place: StrictStr
+    island_owner: StrictStr | None = None
+    starts_at: AwareDatetime
+
+
+async def start_health(admin: SupabaseAdmin, wave_id: UUID) -> tuple[str, dict[str, int]] | None:
+    """(island owner, {wall spot: health percent}) an island wave started with, worked out at
+    its startsAt exactly as walls_for_wave() does; None on Pirate Point or for an unknown wave.
+    The rows have not changed since then: a paid restore is refused while the wave runs and
+    only this wave's first finish writes them."""
+    query = {"select": "place,island_owner,starts_at", "id": f"eq.{wave_id}", "limit": "1"}
+    rows = await admin.select_rows("wave_runs", query)
+    if not rows:
+        return None
+    run = read_model(WaveStartRow, rows[0])
+    if run.place != "island" or run.island_owner is None:
+        return None
+    walls = await read_walls(admin, run.island_owner)
+    return run.island_owner, wall_health.wave_walls(walls, run.starts_at)
+
+
 async def record(
     admin: SupabaseAdmin, player_id: str, wave_id: UUID, walls: dict[str, int] | None
 ) -> None:
     """Keep the wall health a finishing player's simulation ended the wave with. Only the first
     finish of an island wave counts (island_walls_record() keeps one record per wave); Pirate
     Point and a finish without walls are left alone. The browser's numbers cannot be proven,
-    like its `survived`: they are bounded to 0..100 and to the walls that stand on that island."""
+    like its `survived`, so they are bounded: 0..100, only walls that stand on that island, and
+    never above the health each wall started the wave with (cap_to_start), so a finish can
+    never heal a wall for free."""
     if not walls:
         return
-    arguments = {"p_player_id": player_id, "p_wave_id": str(wave_id), "p_walls": walls}
+    started = await start_health(admin, wave_id)
+    if started is None:
+        return
+    capped = wall_health.cap_to_start(walls, started[1])
+    if not capped:
+        return
+    arguments = {"p_player_id": player_id, "p_wave_id": str(wave_id), "p_walls": capped}
     reply = await admin.call_function("island_walls_record", arguments)
     if not isinstance(reply, dict) or reply.get("status") not in ("recorded", "repeat", "skipped"):
         raise store.unreadable()
+
+
+async def record_after_finish(
+    admin: SupabaseAdmin, player_id: str, wave_id: UUID, walls: dict[str, int] | None
+) -> None:
+    """record() after a finish that is already settled (coins paid): best effort. A database
+    problem here is logged and swallowed, so the player still gets the answer of their paid
+    finish instead of an error; the walls then simply keep their state from before the wave."""
+    try:
+        await record(admin, player_id, wave_id, walls)
+    except ApiError as error:
+        logger.warning("Wall health of a finished wave not recorded: %s", type(error).__name__)
 
 
 async def walls_for_wave(admin: SupabaseAdmin, wave: WaveStart) -> dict[str, int] | None:
