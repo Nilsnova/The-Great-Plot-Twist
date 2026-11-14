@@ -509,6 +509,8 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     async buyWeapon({ weapon, actionUid } = {}) {
       if (!uid(actionUid)) invalid('Send the weapon and an action id.');
       if (!Object.hasOwn(WEAPON_BY_ID, weapon ?? '')) refuse(400, 'bad_weapon', 'There is no such weapon.');
+      // D042, as backend/server/routes/island.py: with the flag "arsenal" on, weapons are bought at the arsenal.
+      if (flags?.arsenal === true) refuse(409, 'use_arsenal', 'Weapons are in the arsenal now. Walk to the arsenal.');
       const player = me(), island = world.islands.get(player.code), info = WEAPON_BY_ID[weapon];
       if (player.actions.has(`weapon:${actionUid}`)) return view();
       if (weaponsOf(island).owned.includes(weapon)) refuse(409, 'owned', `You own the ${info.name.toLowerCase()} already.`);
