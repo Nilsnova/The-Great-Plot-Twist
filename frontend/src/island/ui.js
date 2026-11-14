@@ -80,7 +80,7 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
     body.append(reason, line('island-soon', model.soon), line('island-message', model.message, 'alert'), line('island-coins', model.coins));
   }
 
-  // handlers: {build(spotId, kind), upgrade(spotId), hire(), specialise(spotId, spec), demolish(spotId)}
+  // handlers: {build(spotId, kind), upgrade(spotId), repair(spotId), hire(), specialise(spotId, spec), demolish(spotId)}
   function buildCard(model, handlers) {
     const on = typeof handlers === 'function' ? {build: handlers} : handlers ?? {};
     open('build', model.title, body => {
@@ -110,6 +110,12 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
         const next = node('div', 'island-next');
         next.append(node('strong', 'island-next-label', model.upgrade.label), node('span', 'island-next-stats', model.upgrade.stats));
         act = button(model.button, () => on.upgrade?.(model.spotId)); act.dataset.focus = 'upgrade'; act.disabled = model.disabled;
+        body.append(next, act);
+      } else if (model.mode === 'repair') {
+        // D039 (wall-recovery.js): a damaged or destroyed wall, its health and its Repair or Rebuild.
+        const next = node('div', 'island-next');
+        next.append(node('strong', 'island-next-label', model.upgrade.label), node('span', 'island-next-stats', model.upgrade.stats));
+        act = button(model.button, () => on.repair?.(model.spotId)); act.dataset.focus = 'repair'; act.disabled = model.disabled;
         body.append(next, act);
       }
       if (act && !act.disabled) focusable = act;

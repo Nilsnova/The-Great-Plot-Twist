@@ -49,6 +49,8 @@ import { actionAt, boarderAt, inputFor, promptText, shipAt, tapInput } from './i
 import { EVENT_TEXT, eventFor } from './wave-events.js';
 import { createFinisherRecorder } from './finisher/input.js';
 import { getPreferences } from '../settings/preferences.js';
+// D039 (proposed): the walls start with the server's health and the finish reports it (wall-health.js).
+import { healthReport, readWalls, withHealth } from './wall-health.js';
 
 const MAX_TICKS_PER_FRAME = 600;      // a friend joining late catches up 30 s of wave per frame
 const SHOWN_LATE_SECONDS = 1;         // events older than this (catching up) are not drawn or heard
@@ -120,7 +122,7 @@ export function readWaveInfo(info) {
   const wave = Number.isInteger(info.wave) && info.wave > 0 ? info.wave : 1;
   const weather = info.weather && typeof info.weather === 'object' ? info.weather : {};
   return { waveId: info.waveId, wave, seed: Number(info.seed), startsAtMs, weather, flagship: info.flagship === true,
-    boss: typeof info.boss === 'boolean' ? info.boss : undefined,
+    boss: typeof info.boss === 'boolean' ? info.boss : undefined, walls: readWalls(info.walls),
     serverTimeMs: Number.isFinite(parseTime(info.serverTime)) ? parseTime(info.serverTime) : null };
 }
 
@@ -226,7 +228,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     // A wave that starts in the break of a won one continues the run (and its loot).
     if (!wave?.pause) runLoot = 0;
     if (wave) stop();
-    const defenses = getDefenses() ?? [];
+    // D039: with the flag wall_recovery on the server sends each wall's health after its last wave.
+    const defenses = withHealth(getDefenses() ?? [], info.walls);
     const offset = info.serverTimeMs !== null ? info.serverTimeMs - now() : serverOffset();
     // v3 waves: the event from the wave's seed and number (the server repeats it for the galleon's bonus), and
     // the boss finishers with the room's wave gap (their grace time). simOptions may name an event (the demo).
@@ -700,7 +703,9 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     current.finishing = true;
     // v3 waves: the bonuses the sim saw (the galleon sunk, a finisher won); the server pays them only where the wave allows.
     const body = { waveId: current.info.waveId, survived: current.result.survived, shipsSunk: current.result.shipsSunk,
-      ...(current.result.bonuses?.length ? { bonuses: [...current.result.bonuses] } : {}) };
+      ...(current.result.bonuses?.length ? { bonuses: [...current.result.bonuses] } : {}),
+      // D039: only a wave that came with walls (the flag on) reports them back, every wall's percent.
+      ...(current.info.walls ? { walls: healthReport(current.sim.state().walls) } : {}) };
     const attempt = async () => {
       try {
         current.answer = (await finishWave(body)) ?? null;

@@ -58,6 +58,8 @@ export const PATHS = Object.freeze({
   games: '/api/games', gameJoin: '/api/games/join', gameLeave: '/api/games/leave', game: code => `/api/games/${code}`,
   research: '/api/island/research', specialise: '/api/island/tower-skill', wreck: '/api/island/wreck',
   demolish: '/api/island/demolish',
+  // D039 (flag wall_recovery): the walls' health and the paid Repair/Rebuild.
+  walls: code => `/api/island/walls${code ? `?code=${encodeURIComponent(code)}` : ''}`, repair: '/api/island/repair',
   demolishQuote: (spot, code) => `/api/island/demolish?spot=${encodeURIComponent(spot)}${code ? `&code=${encodeURIComponent(code)}` : ''}`,
 });
 export const CREW_IDS = Object.freeze(['gunner', 'carpenter', 'lookout']);
@@ -112,6 +114,19 @@ const isMember = member => !!member && isText(member.id) && typeof member.name =
   && (member.captainRole == null || isRole(member.captainRole));
 export const isLobby = data => !!data && isGame(data.game) && Array.isArray(data.members) && data.members.length > 0 && data.members.every(isMember);
 export const isLeft = data => !!data && typeof data.left === 'boolean';
+// D039: GET /api/island/walls: {coins, walls: [{spot, level, health, recoversAt, repairCost}]}.
+const isWall = wall => !!wall && isText(wall.spot) && Number.isSafeInteger(wall.level) && Number.isInteger(wall.health)
+  && wall.health >= 0 && wall.health <= 100 && (wall.recoversAt === null || typeof wall.recoversAt === 'string')
+  && (wall.repairCost === null || isCount(wall.repairCost));
+export const isWalls = data => !!data && isCount(data.coins) && Array.isArray(data.walls) && data.walls.length <= 50 && data.walls.every(isWall);
+const localWalls = answer => (answer.ok ? {...answer, data: {...answer.data, walls: answer.data.walls.map(wall => ({...wall, spot: localSpotId(wall.spot)}))}} : answer);
+// The walls part of a finish: wall_N -> a whole percent 0..100; null when there is nothing to send.
+export function wallHealthBody(walls) {
+  if (!walls || typeof walls !== 'object') return null;
+  const out = {};
+  for (const [id, value] of Object.entries(walls)) if (/^wall_[0-9]{1,2}$/.test(id) && Number.isInteger(value) && value >= 0 && value <= 100) out[id] = value;
+  return Object.keys(out).length ? out : null;
+}
 export function isWave(data) {
   return !!data && isText(data.waveId) && Number.isSafeInteger(data.wave) && data.wave >= 1 && isCount(data.seed)
     && typeof data.startsAt === 'string' && Number.isFinite(Date.parse(data.startsAt))
@@ -276,6 +291,18 @@ export function createIslandApi({transport, makeUid = makeActionUid} = {}) {
       return writeSpots(`demolish:${where}:${spot}`, actionUid => transport.post(PATHS.demolish, {spot: sent(spot), actionUid, ...(where ? {code: where} : {})}),
         isDemolished);
     },
+    // D039 (flag wall_recovery): every built wall's health, timer and Repair price; a Repair or Rebuild.
+    walls({code = null} = {}) {
+      const where = code ? displayIslandCode(code) : '';
+      if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
+      return ask(() => transport.get(PATHS.walls(where)), isWalls).then(localWalls);
+    },
+    repairWall({spot, code = null} = {}) {
+      const where = code ? displayIslandCode(code) : '';
+      if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
+      return write(`repair:${where}:${spot}`, actionUid => transport.post(PATHS.repair, {spot: sent(spot), actionUid, ...(where ? {code: where} : {})}), isWalls)
+        .then(localWalls);
+    },
     piratePoint: () => askSpots(() => transport.get(PATHS.point), isPoint),
     pointBuild({spot, kind} = {}) {
       return writeSpots(`point-build:${spot}`, actionUid => transport.post(PATHS.pointBuild, {spot, kind, actionUid}), isPoint);
@@ -326,11 +353,14 @@ export function createIslandApi({transport, makeUid = makeActionUid} = {}) {
       if (!target) return refuse(422, 'validation_error', MESSAGES.badCode);
       return ask(() => transport.get(PATHS.current(target)), data => data === null || isWave(data));
     },
-    finishWave({waveId, survived, shipsSunk = 0, bonuses} = {}) {
+    finishWave({waveId, survived, shipsSunk = 0, bonuses, walls} = {}) {
       if (!isText(waveId)) return refuse(404, 'no_such_wave', MESSAGES.badWave);
       // v3 waves: the galleon sunk, a finisher won (known kinds only, each once; the server checks the wave).
       const asked = Array.isArray(bonuses) ? [...new Set(bonuses.filter(kind => kind === 'galleon' || kind === 'finisher'))] : [];
-      const body = {waveId, survived: survived === true, shipsSunk: isCount(shipsSunk) ? Math.min(shipsSunk, 1000) : 0, ...(asked.length ? {bonuses: asked} : {})};
+      // D039: each wall's health in percent (wall_N: 0..100), only when the wave came with walls.
+      const health = wallHealthBody(walls);
+      const body = {waveId, survived: survived === true, shipsSunk: isCount(shipsSunk) ? Math.min(shipsSunk, 1000) : 0, ...(asked.length ? {bonuses: asked} : {}),
+        ...(health ? {walls: health} : {})};
       return ask(() => transport.post(PATHS.finish, body), isFinish);
     },
     // A fallen teammate stood up (captain health): you pay 20 + 5 × wave; fallen is their id in the wave's sim,

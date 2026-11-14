@@ -13,6 +13,8 @@ import { ROLE_RADIUS } from '../campaign/houses.js';
 // v3 waves (GAME-V3.md §4.2, §4.3): the wave's event and the boss finisher, each in its own module.
 import { createEventRules } from './wave-events.js';
 import { createFinisher } from './finisher/rules.js';
+// D039 (proposed): a wall starts the wave with the health its last wave left it (wall-health.js).
+import { readHealth, startHp } from './wall-health.js';
 
 const freeze = value => {
   for (const inner of Object.values(value)) if (inner && typeof inner === 'object') freeze(inner);
@@ -278,7 +280,8 @@ function readDefenses(list) {
     const levels = CONFIG.levels[item.kind].length, level = Number.isInteger(item.level) ? clamp(item.level, 1, levels) : 1;
     const spec = readSpec(item.kind, item.spec); // a skill of another kind is no skill
     const bonus = readBonus(item.kind, item.bonus); // the island's tier-2 pick for this kind (GAME-V3.md §5.1)
-    seen.add(item.id); out.push({ id: item.id, kind: item.kind, level, x: item.x, z: item.z, ...(spec ? { spec } : {}), ...(bonus ? { bonus } : {}) });
+    const health = item.kind === 'wall' ? readHealth(item.health) : 100; // D039: 0..100, whole without one
+    seen.add(item.id); out.push({ id: item.id, kind: item.kind, level, x: item.x, z: item.z, ...(spec ? { spec } : {}), ...(bonus ? { bonus } : {}), ...(health < 100 ? { health } : {}) });
   }
   return out.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
 }
@@ -424,9 +427,10 @@ function shuffle(list, random) {
 }
 
 /**
- * createWave({seed, wave, weather: {ships, fog}, island: {hp}, defenses: [{id, kind, level, x, z}],
+ * createWave({seed, wave, weather: {ships, fog}, island: {hp}, defenses: [{id, kind, level, x, z, health?}],
  *   crew: {gunner, carpenter, lookout}, boss, flagship, countdown, coast, lanes}).
- * level (1-5) and crew are optional: an old caller without them gets level 1 and no crew. boss is
+ * level (1-5) and crew are optional: an old caller without them gets level 1 and no crew. A wall's health
+ * (0-100, D039) is the percent its last wave left it; without one it starts whole. boss is
  * optional too: without it every 5th wave is a boss wave (TOWER-DEFENSE.md §1), never with the flagship.
  * Inputs to step(): {type: 'fire', cannonId, targetId}, {type: 'repair', wallId, skills},
  * {type: 'rebuild', wallId, skills}, {type: 'lamps_lit'},
@@ -498,7 +502,8 @@ export function createWave(options = {}) {
     const skill = skillOf(item, C), hp = round2(C.levels.wall[item.level - 1].hp * (skill.hp ?? 1) * bonusOf(item, 'hp', C));
     // Workshops in reach: faster repairs, a shorter rebuild, and a broken wall that mends by itself.
     const shops = housesNear(workshops, item, W.radius), sooner = 1 - Math.min(W.maxFaster, W.faster * shops);
-    return { ...item, skill, repairBoost: round2((skill.repair ?? 1) * bonusOf(item, 'repair', C)), hp, maxHp: hp, repairLeft: 0, repaired: 0, crew: false, rebuildAt: -Infinity, rebuilding: 0,
+    // D039: the wall's hp starts at the share its last wave left it (0: broken, to be rebuilt); maxHp is its level's.
+    return { ...item, skill, repairBoost: round2((skill.repair ?? 1) * bonusOf(item, 'repair', C)), hp: startHp(hp, item.health), maxHp: hp, repairLeft: 0, repaired: 0, crew: false, rebuildAt: -Infinity, rebuilding: 0,
       inner: distance(item.x, item.z, heart.x, heart.z) <= heart.ring, bearing: Math.atan2(item.z - heart.z, item.x - heart.x),
       workshop: shops, boost: round2(1 + Math.min(W.maxRepair, W.repair * shops)), sooner: round2(sooner),
       cooldown: round2(C.wall.rebuildCooldown * sooner), mendAfter: shops ? Math.max(W.minMend, W.mend / shops) : Infinity, mending: 0 };
