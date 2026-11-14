@@ -54,7 +54,9 @@ const FINGERPRINTS = {
   'full island, wave 20, every rule': '369ba1aebc13198b',
   'full island, wave 30': 'd96b3242025cb4ae',
   'level-5 researched, wave 50': '296f42fcc60b2744',
-  'level-5 tiered, wave 100, every rule': 'cf224757d0a6b0ef',
+  // Re-made after the T33-T35 balance retune (boarder-paths.js WALL_ENGAGE, targeting.js towerReach 1.5) with the
+  // pre-culverin sim.js (4010f7f) plus the retuned modules: the culverin still changes nothing here.
+  'level-5 tiered, wave 100, every rule': '2c9a1694538f3b45',
 };
 
 describe('a wave without a culverin plays exactly as before', () => {

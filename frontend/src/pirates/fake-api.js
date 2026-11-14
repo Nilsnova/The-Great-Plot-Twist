@@ -418,14 +418,19 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     }
   }
   const running = run => !run.finishedAt && nowMs() <= run.startsAtMs + ISLAND_RULES.waves.maximumSeconds * 1000;
+  // The wave's sim rules (backend/server/island/wave_rules.py): the rule flags on now, in SIM_RULES order; the
+  // first answer keeps its set for the wave (an empty set too), every later one serves the kept set.
+  // world.liveFlags (dev.setFlag) switches a flag for every tab of a shared world, like a redeploy.
+  const flagOn = name => (world.liveFlags && Object.hasOwn(world.liveFlags, name) ? world.liveFlags[name] : flags?.[name]) === true;
   const rulesOf = run => {
-    if (!Array.isArray(run.rules)) run.rules = wantedRules(); // kept by the wave's first answer, even when empty
+    // Kept by the wave's first answer, even when empty (the server's wave_rules_keep), whatever the flags say later.
+    if (!Array.isArray(run.rules)) run.rules = SIM_RULES.filter(flagOn);
     const rules = SIM_RULES.filter(name => run.rules.includes(name));
     return rules.length ? rules : null;
   };
   const shape = run => {
     const walls = waveWalls(run); // D039: only while the flag is on, as the server
-    const rules = rulesOf(run); // the wave's sim rules (wave_rules.py), left out while none is on
+    const rules = rulesOf(run);
     return { waveId: run.waveId, wave: run.wave, seed: run.seed, startsAt: iso(run.startsAtMs),
       weather: { ...run.weather }, flagship: run.flagship, ...(v2 ? { boss: isBoss(run) } : {}), ...(walls ? { walls } : {}),
       ...(rules ? { rules } : {}) };
@@ -972,7 +977,8 @@ const settle = () => new Promise(resolve => setTimeout(resolve, SHARED_SETTLE_MS
 /** The answers' version for a page: 2 (the tower defense extras) in the browser, 1 without a page (the older tests). */
 export const fakeVersionFor = search => (typeof search !== 'string' ? 1 : new URLSearchParams(search).get('td') === '1' ? 1 : 2);
 // ?fakeflags=wall_recovery: the feature flags the fake server has on (its /api/config); none by default.
-const FLAG_NAME = /^[a-z_]{1,32}$/;
+// The server's flag names: lower case, digits and _ (defenses_v2 has a digit).
+const FLAG_NAME = /^[a-z][a-z0-9_]{0,31}$/;
 export function fakeFlagsFor(search = '') {
   const listed = new URLSearchParams(typeof search === 'string' ? search : '').get('fakeflags') ?? '';
   return Object.freeze(Object.fromEntries(listed.split(',').filter(name => FLAG_NAME.test(name)).map(name => [name, true])));
@@ -1123,6 +1129,11 @@ export function createFakeIslandTransport({ coins = ISLAND_RULES.startingCoins, 
       advanceClock(ms) {
         if (!Number.isSafeInteger(ms) || ms < 0) throw new TypeError('ms must be a whole number from 0 up.');
         world.clockShiftMs = (world.clockShiftMs ?? 0) + ms;
+      },
+      // A feature flag switched on or off on the fake server (a redeploy with other flags), for every tab of a shared world.
+      setFlag(name, on) {
+        if (typeof name !== 'string' || !FLAG_NAME.test(name)) throw new TypeError('setFlag needs a flag name.');
+        world.liveFlags = { ...(world.liveFlags ?? {}), [name]: on === true };
       },
       reset() { reset(); failures.length = 0; },
     }),

@@ -1,6 +1,6 @@
 // The in-memory island and wave API (BUILD-PLAN 3.4): prices, refusals, loot and timing.
 import { describe, expect, it } from 'vitest';
-import { createFakeIslandApi, createFakeWorld, islandRoom, lootFor, readIslandCode, wantsFakeIslands } from '../../src/pirates/fake-api.js';
+import { createFakeIslandApi, createFakeWorld, fakeFlagsFor, islandRoom, lootFor, readIslandCode, wantsFakeIslands } from '../../src/pirates/fake-api.js';
 
 const clock = (start = Date.UTC(2026, 10, 11, 12, 0, 0, 400)) => {
   let now = start;
@@ -174,5 +174,13 @@ describe('fake island API', () => {
     expect((await api.fetch('/api/island/visit/ISLE-K7Q2M')).status).toBe(200);
     expect((await api.fetch('/api/island/visit/ISLE-22222')).status).toBe(404);
     expect((await api.fetch('/api/nowhere')).status).toBe(404);
+  });
+});
+
+describe('?fakeflags', () => {
+  it('reads every flag name the server knows, defenses_v2 too, and ignores anything else', () => {
+    expect(fakeFlagsFor('?fakeflags=defenses_v2,wall_recovery,tower_health')).toEqual({ defenses_v2: true, wall_recovery: true, tower_health: true });
+    expect(fakeFlagsFor('?fakeflags=Arsenal,2x,a-b,,arsenal')).toEqual({ arsenal: true });
+    expect(fakeFlagsFor('')).toEqual({});
   });
 });
