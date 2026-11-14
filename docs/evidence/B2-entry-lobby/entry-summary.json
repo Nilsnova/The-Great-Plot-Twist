@@ -1,0 +1,54 @@
+{
+  "viewports": [
+    {
+      "width": 375,
+      "height": 812,
+      "screens": [
+        "title",
+        "title-join",
+        "intro",
+        "tutorial",
+        "games",
+        "goal",
+        "lobby"
+      ],
+      "allBounded": true,
+      "horizontalOverflow": false,
+      "smallButtons": []
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "screens": [
+        "title",
+        "title-join",
+        "intro",
+        "tutorial",
+        "games",
+        "goal",
+        "lobby"
+      ],
+      "allBounded": true,
+      "horizontalOverflow": false,
+      "smallButtons": []
+    },
+    {
+      "width": 1280,
+      "height": 720,
+      "screens": [
+        "title",
+        "title-join",
+        "intro",
+        "tutorial",
+        "games",
+        "goal",
+        "lobby"
+      ],
+      "allBounded": true,
+      "horizontalOverflow": false,
+      "smallButtons": []
+    }
+  ],
+  "errors": [],
+  "external": []
+}

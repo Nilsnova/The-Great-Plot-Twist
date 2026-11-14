@@ -1,0 +1,34 @@
+[
+  {
+    "width": 375,
+    "height": 812,
+    "before": {
+      "names": 10,
+      "clipped": 10,
+      "hostWidth": 89,
+      "hostContentWidth": 268
+    },
+    "after": {
+      "names": 10,
+      "clipped": 0,
+      "hostWidth": 187,
+      "hostContentWidth": 187
+    }
+  },
+  {
+    "width": 390,
+    "height": 844,
+    "before": {
+      "names": 10,
+      "clipped": 10,
+      "hostWidth": 104,
+      "hostContentWidth": 268
+    },
+    "after": {
+      "names": 10,
+      "clipped": 0,
+      "hostWidth": 202,
+      "hostContentWidth": 202
+    }
+  }
+]

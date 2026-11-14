@@ -14,6 +14,8 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
+**14 Nov, B2 entry/lobby / Johannes:** [draft PR #61](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/61) fixes visually truncated captain names in full phone lobbies: a small mobile grid lets names wrap and puts status below. Seven focused cases, plus a repeatable 21-panel title-to-lobby fake-game audit at 375x812, 390x844 and 1280x720. Full frontend: 260 files / 3,209 tests; build/budget/text lint, accessibility 33 screens and demo 33 checks pass on the branch from main `4d83dcd`. [Before/after, entry audit and limits](evidence/B2-entry-lobby/README.md). Login/APIs unchanged; independent of #58. Draft; author/human review, physical phone/keyboard and remaining B2 game views are open.
+
 **14 Nov, end of the T29–T47 sprint (Nils, agent-assisted): state tonight.** Merged this sprint: PRs #20, #29, #33–#37, #40–#53. **Applied live and registered in `schema_migrations`:** `20261114100000_wall_recovery`, `20261114110000_island_layout`, `20261114120000_arsenal`, `20261114130500_wave_rules`; the arsenal conversion `arsenal_convert_personal_weapons()` was run once (1 copy converted, 0 islands left with personal weapons). **Production `FEATURE_FLAGS` on:** `live_presence`, `market`, `arena`, `sign_in`, `demo`, `sports`, `islands`, `placement` (~19:45 UTC, after the release check [PR #49](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/49)), `wall_recovery` (~20:28 UTC, after the finish guard of #52 and `test:walls`) and `arsenal` (~20:48 UTC, after [PR #53](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/53)). **Off, release checks in progress:** `rescue`, `defenses_v2`, `tower_health`, `pathing`. Live for players: wall recovery, flexible placement, the arsenal, the co-op policy, the minigame curves, the Harbor forecast line, the all-time leaderboard and statue stages. Merged but off: tower health, targeting/pathing in the sim, the rescue hook, the culverin's data and art (its sim wiring is in progress). All of it is still **proposed** in the decision log (D039–D049): the fast-track D047 agreed the merge order only, and the peer review comes after. Known follow-ups are in [OPEN-TODOS section 9](OPEN-TODOS.md#known-follow-ups-from-the-sprint-14-nov); the reading guide for the review is [SPRINT-T29-T47-GUIDE.md](SPRINT-T29-T47-GUIDE.md) (now with the leaderboard/statue, arsenal, integration and culverin sections). The live state was checked by the coordinator on 14 Nov; this repository cannot prove it, so check `GET /api/config` and the migration list before relying on it.
 
 **14 Nov, T29–T47 review guide (docs only):** [SPRINT-T29-T47-GUIDE.md](SPRINT-T29-T47-GUIDE.md) is a beginner walkthrough of everything merged in the sprint (PRs #33–#44): per feature the player view, flag, files, code walk, tests and three explain-back questions, plus how flags and migrations fit together and a suggested review split. Read it before the walkthrough; D047 merged these lanes without prior review.
@@ -214,6 +216,8 @@ Nobody has decided these yet. Until they are decided, the plan in [ROADMAP.md](.
 6. **Pick a package.** Take your lane's next package below, or one from "Start today" in ROADMAP.md. Open an issue with the goal, acceptance checks, scope, responsible teammate and likely files. Create your branch from `main` (`git switch main`, `git pull`, then for example `git switch -c feat/l1-live-weather`). Paste the agent brief below and open a draft pull request early.
 
 ## Next steps per lane
+
+**Johannes / B2:** review draft #61 and test entry/full lobby on a physical phone (including keyboard and a second-device invite). Remaining game views and draft #58 are separate. Keep draft; reconcile current main and handovers before a later merge; independent human approval and Johannes explicit OK required.
 
 **T28 / Ianno:** introductory explain-back completed after clarification; ask Johannes (`frcola`) for independent review of PR #19. No merge before a different human approves.
 
@@ -541,6 +545,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+- **14 Nov — Johannes / B2:** full lobby names clipped 10/10 before → 0/10 after at both phone sizes; draft #61 adds seven regressions and a 21-panel entry audit. Final 3,209 frontend tests and applicable UI gates pass; real phones/rooms remain unverified.
 
 - **2026-11-14, sprint final pass (docs only), branch `docs/sprint-final-pass`.** Claude, for Nils: recorded that the four sprint migrations are applied live and which flags are on in production; replaced the stale "not applied" wording (D039, D041, D042, D049, supabase/README.md, INTERFACES.md, the T29/T33/T36/T40 specs); set every T29–T47 row in OPEN-TODOS section 9 to its real state with PR numbers and listed the known follow-ups; added the T45, arsenal, integration and culverin sections to the sprint guide. No code, flag or database change.
 
