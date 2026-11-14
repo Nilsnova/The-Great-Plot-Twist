@@ -28,8 +28,8 @@ try {
   await page.keyboard.press('Escape');
   await page.getByRole('button',{name:'Resume',exact:true}).waitFor();
   await page.screenshot({path:`${dir}/${phase}-${width}-menu.png`});
-  if(phase==='before') { assert.equal(await page.getByRole('button',{name:'Weekly leaderboard',exact:true}).count(),0); await page.getByRole('button',{name:'Resume',exact:true}).click(); continue; }
-  await page.getByRole('button',{name:'Weekly leaderboard',exact:true}).click();
+  if(phase==='before') { assert.equal(await page.getByRole('button',{name:'Leaderboard',exact:true}).count(),0); await page.getByRole('button',{name:'Resume',exact:true}).click(); continue; }
+  await page.getByRole('button',{name:'Leaderboard',exact:true}).click();
   await page.locator('.island-card-leaderboard[open]').waitFor();
   await page.getByRole('button',{name:'Try again',exact:true}).waitFor();
   await page.screenshot({path:`${dir}/after-${width}-offline.png`});
