@@ -144,6 +144,12 @@ describe('the culverin outside the sim', () => {
     const early = buildCardModel({spotId: 'cannon_5', slot: 'tower', spot, coins: 5000, flags: on, unlocks: readUnlocks({waveBest: 3})});
     expect(early.choices[3]).toMatchObject({kind: 'culverin', disabled: true, locked: true});
     expect(early.choices[3].reason).toContain('15');
+    // A visitor's card reads the friend's island by its best won wave alone (index.js islandUnlocks): the culverin
+    // opens there with that island's waves too, as the server allows it.
+    const visit = wave => buildCardModel({spotId: 'cannon_5', slot: 'tower', spot, coins: 5000, flags: on, visitor: true, unlocks: readUnlocks({waveBest: wave})});
+    expect(visit(14).choices[3]).toMatchObject({kind: 'culverin', disabled: true, reason: 'Opens after wave 15.'});
+    expect(visit(15).choices[3]).toMatchObject({kind: 'culverin', disabled: false, reason: ''});
+    expect([15, 20, 30].map(wave => readUnlocks({waveBest: wave}).levels.culverin)).toEqual([3, 4, 5]);
     // Pirate Point never offers it.
     const point = buildCardModel({spotId: 'pp_tower_1', slot: 'tower', spot: {...spot, id: 'pp_tower_1'}, coins: 5000, flags: on, point: true});
     expect(point.choices.map(choice => choice.kind)).toEqual(['cannon', 'mortar']);
