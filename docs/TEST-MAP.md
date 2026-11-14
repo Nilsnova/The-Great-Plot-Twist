@@ -156,6 +156,12 @@ The rows that start with "v3" were written on Fri 13 Nov 2026 at `6c9ffb3`. Coun
 |---|---|---|---|
 | Opens the existing weather board from the island Harbor after wave 4; reuses the existing fetcher and card | [model test](../frontend/tests/island/card-model.test.js), [DOM test](../frontend/tests/island/weather-board.test.js): `cd frontend && npm test -- --run tests/island/card-model.test.js tests/island/weather-board.test.js`; [game journey](../frontend/scripts/check-island-weather.js): `cd frontend && node scripts/check-island-weather.js` | Wave 3/4 boundary, storm/fog/stale/missing weather, one dialog, focus/reset, Escape, cleanup; real game wiring and viewport containment at 1280 × 720 and 375 × 812 with recorded APIs | Real Open-Meteo outages, physical touch devices, deployed sign-in; changes while the weather card remains open |
 
+### T46 · Nils · Harbor weather follow-through
+
+| What I built / why | Where and command | Covers | Misses |
+|---|---|---|---|
+| The weather board says when an old reading was taken, never promises a fresh one for a recorded reading, says where a wave takes its weather from, and shows the forecast for tonight as words only (D045, no stake) | [model tests](../frontend/tests/harbor/models.test.js), [card test](../frontend/tests/harbor/cards.test.js): `cd frontend && npx vitest run tests/harbor tests/island/weather-board.test.js`; [game journey](../frontend/scripts/check-island-weather.js): `node scripts/check-island-weather.js after` and `… after live` | stale vs recorded wording, bad times, live/cache show no notice, the wave-place line on and offline, known/null/unknown/missing forecast; real game wiring at 1280 × 720 and 375 × 812 | Which place a wave really used (the wave answer has no place), real Open-Meteo outages, physical phones |
+
 ### T5 · Ianno Hollensteiner · Island milestones
 
 | What I built / why | Where and command | Covers | Misses |
