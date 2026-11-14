@@ -2722,6 +2722,11 @@ zone
 lower
 introduction
 scored
+bronze
+crowned
+statue
+shield
+period
 safety
 hauls
 chance

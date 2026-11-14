@@ -1,4 +1,5 @@
-// Original T5 league shields and captain statue, using the island's cartoon paint kit.
+// Original T5 league shields and the captain statue (its stages from T45), using the island's cartoon paint kit.
+// Used by: island/decorations.js (the island scene) and island/progression.js (the Leaderboard card).
 import {ellipse, part, poly, rect, shadow} from './paint.js';
 
 // Name, trim and shield face. Colors reuse the island's wood, stone, brass and captain palette.
@@ -50,16 +51,38 @@ export function drawWaveBadge(c, wave) {
   c.font = `bold ${wave >= 100 ? 20 : 26}px sans-serif`; c.fillText(String(wave), 32, 38);
 }
 
-export function drawWaveStatue(c) {
-  const bronze = '#ad945b';
+// T45: the captain statue grows with the island's best won wave. Cosmetic only (decision D046).
+// Stage 1 is the T5 bronze statue unchanged; each later stage adds one ornament and a new metal.
+export const STATUE_STAGES = [
+  {wave: 25, name: 'bronze', metal: '#ad945b'},
+  {wave: 50, name: 'silver', metal: '#b9bec4'},
+  {wave: 75, name: 'gold', metal: '#e0b340'},
+  {wave: 100, name: 'crowned', metal: '#f2c14e'},
+];
+export function statueStage(wave) {
+  const best = Number.isSafeInteger(wave) ? wave : 0;
+  const reached = STATUE_STAGES.filter(stage => best >= stage.wave);
+  if (!reached.length) return {index: 0, wave: 0, name: 'none', metal: null};
+  return {index: reached.length, ...reached[reached.length - 1]};
+}
+
+export function drawWaveStatue(c, index = 1) {
+  const stage = STATUE_STAGES[Math.min(4, Math.max(1, index)) - 1];
+  const metal = stage.metal;
   shadow(c, 24, 61, 20, 4);
   part(c, rect(5, 51, 38, 10, 2), '#a9a39a');
   part(c, rect(10, 44, 28, 9, 1), '#cfc8bb');
-  part(c, rect(16, 31, 7, 14, 1), bronze);
-  part(c, rect(25, 31, 7, 14, 1), bronze);
-  part(c, poly([[15, 20], [33, 20], [37, 34], [11, 34]], 2), bronze);
-  part(c, ellipse(24, 17, 8, 9), bronze);
-  part(c, poly([[10, 12], [17, 4], [24, 8], [31, 4], [38, 12]], 1), bronze);
+  if (index >= 3) { // gold and crowned: a red pennant on a pole beside the plinth
+    part(c, rect(1, 6, 2, 46, 1), '#7a4a2a');
+    part(c, poly([[3, 7], [13, 10], [3, 15]], 1), '#963e36');
+  }
+  part(c, rect(16, 31, 7, 14, 1), metal);
+  part(c, rect(25, 31, 7, 14, 1), metal);
+  part(c, poly([[15, 20], [33, 20], [37, 34], [11, 34]], 2), metal);
+  if (index >= 2) part(c, poly([[34, 22], [44, 3], [46, 4], [37, 24]], .6), '#e8eef2'); // raised cutlass
+  part(c, ellipse(24, 17, 8, 9), metal);
+  if (index >= 4) part(c, poly([[15, 11], [14, 2], [19, 6], [24, 0], [29, 6], [34, 2], [33, 11]], 1), '#ffcf3f'); // crown
+  else part(c, poly([[10, 12], [17, 4], [24, 8], [31, 4], [38, 12]], 1), metal); // tricorn hat
   c.fillStyle = '#2b1d1a'; c.textAlign = 'center';
-  c.font = 'bold 8px sans-serif'; c.fillText('25', 24, 59);
+  c.font = 'bold 8px sans-serif'; c.fillText(String(stage.wave), 24, 59);
 }
