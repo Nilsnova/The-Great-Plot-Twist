@@ -74,6 +74,7 @@ def test_config_lists_all_flags_in_the_agreed_order():
         "rescue",
         "wall_recovery",
         "placement",
+        "defenses_v2",
         "tower_health",
         "pathing",
     ]

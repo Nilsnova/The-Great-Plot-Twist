@@ -32,6 +32,9 @@ FLAG_NAMES = (
     # Needs supabase/migrations/20261114100000_wall_recovery.sql applied first.
     "wall_recovery",
     "placement",  # T36 flexible placement: needs migration 20261114110000_island_layout.sql
+    # T43 (D048, proposed): the second wave of defenses, starting with the culverin. Keep it off
+    # until its sim wiring and its migration are merged (specs/T43-new-defenses.md).
+    "defenses_v2",
     # T33 (D049, proposed): towers have hp, break and are repaired in a wave (a wave rule).
     "tower_health",
     # T34/T35 (D040, proposed): boarders walk round or through the real walls (a wave rule).

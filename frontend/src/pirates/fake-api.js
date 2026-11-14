@@ -687,7 +687,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       mustBeMember(island); // GAME-V3.md §2: join the game first (the owner always gets in)
       // The crew and the captain too, so host and visitors run the same wave (§8).
       return { code: `ISLE-${island.code}`, ownerName: island.ownerName, waveBest: island.waveBest, spots: spots(island),
-        crew: { ...island.crew }, captain: { level: island.captain ?? 1 }, campaign: campaignAt(island) };
+        crew: { ...island.crew }, captain: { level: island.captain ?? 1 }, campaign: campaignAt(island), layout: layoutOf(island) };
     },
 
     async startWave({ where, actionUid } = {}) {

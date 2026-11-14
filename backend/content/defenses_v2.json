@@ -1,0 +1,14 @@
+{
+  "about": "The second wave of defenses (T43, decision D048 proposed; specs/T43-new-defenses.md). Read only while the feature flag defenses_v2 is on: then catalogue.py adds each kind below to the island's kinds, to the tower spots it names and to the campaign steps of its levelWaves (each wave must already be a step of campaign.json). With the flag off nothing here reaches the game. prices: build (level 1) and each upgrade, like islands.json. levelWaves: the island's best won wave each level needs. line: the build card line. news: what the narrator says when it opens. The stats the sim fights with are in frontend/src/pirates/defenses-v2.js; a frontend test keeps prices, waves and line equal to the browser's copy in frontend/src/island/defenses-v2.js.",
+  "kinds": [
+    {
+      "kind": "culverin",
+      "name": "Culverin",
+      "line": "A long gun: hits far ships hard but slowly. Hunts gunboats and siege barges first.",
+      "news": "The culverin opens: a long gun for a tower spot. It reaches the gunboats and siege barges that shoot your towers from far out.",
+      "prices": [80, 160, 320, 640, 1280],
+      "levelWaves": [15, 15, 15, 20, 30],
+      "spots": ["cannon_1", "cannon_2", "cannon_3", "cannon_4", "cannon_5", "cannon_6", "cannon_7"]
+    }
+  ]
+}
