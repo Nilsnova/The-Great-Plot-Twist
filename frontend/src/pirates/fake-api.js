@@ -905,11 +905,13 @@ export function createFakeIslandTransport({ coins = ISLAND_RULES.startingCoins, 
     return fail(failure.status, failure.code, failure.message);
   }
   const me = () => world.players.get(playerId);
-  // The dev helpers change the world too: in a shared world they read it first and write it after.
-  const synced = helpers => (shared ? Object.fromEntries(Object.entries(helpers).map(([name, helper]) => [name, (...args) => {
-    pull(); const answer = helper(...args); shared.save(world);
-    return answer instanceof Promise ? answer.finally(() => shared.save(world)) : answer;
-  }])) : helpers);
+  // The dev helpers change the world too: in a shared world they read it first and write it after, under the
+  // same lock as the requests. Outside it another tab's request could save its older copy over the change
+  // (test:mp: setCaptain(3) lost, so the role pick was refused). They answer a promise then; a request made
+  // right after (load()) waits for them, as the lock serves in order. read() only reads, at once.
+  const synced = helpers => (shared ? Object.fromEntries(Object.entries(helpers).map(([name, helper]) => [name, name === 'read'
+    ? (...args) => { pull(); return helper(...args); }
+    : (...args) => shared.lock(async () => { pull(); try { return await helper(...args); } finally { shared.save(world); } })])) : helpers);
   return {
     get: path => request('GET', path),
     post: (path, body) => request('POST', path, body),
