@@ -27,6 +27,7 @@ def test_flag_names_are_exactly_the_agreed_list():
         "demo",
         "islands",
         "rescue",
+        "wall_recovery",
     )
 
 

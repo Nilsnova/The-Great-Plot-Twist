@@ -40,6 +40,7 @@ import {addMenuExtras} from '../shell/menu-extras.js';
 import {GAME_STARTED, captainColours, lobbyModel} from './lobby.js';
 import {resolvePeer} from '../net/live-extras.js';
 import {travelAllowed, visitChip, visitName} from './one-island.js';
+import {withWallRecovery} from './wall-recovery.js';
 
 export const ARRIVAL_KEY = 'plot_twist_island_arrival_v1';
 // A build or upgrade went through: {place: 'own' | 'visit' | 'point', spot}. The wave wiring tells the
@@ -62,7 +63,9 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   search = globalThis.location?.search ?? '', focus = () => {}, resetInput = () => {}, reducedMotion = () => false,
   preferences = () => ({}), storage = safeLocal(), visitStorage = undefined, loadCutscenes = () => import('../cutscenes/player.js'),
   onCoins = () => {}, onCaptain = () => {}, menu = addMenuExtras, now, setTimer, clearTimer, openHarborStall = () => {},
-  travel = () => travelAllowed({islandsMode: mode})} = {}) {
+  travel = () => travelAllowed({islandsMode: mode}),
+  // D039 (proposed): whether /api/config says the flag wall_recovery is on (lasting wall damage, Repair/Rebuild).
+  wallRecovery = () => false} = {}) {
   let disposed = false, own = null, ownMessage = '', visiting = null, visitCode = readVisit(visitStorage), busySpot = null, cardMessage = '';
   let world = null, cutscene = null, openSpot = null, loadTicket = 0, battle = false;
   let pointBattle = false;
@@ -72,6 +75,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   let busyKind = null, point = null, pointWorld = null, pointMessage = '', busyCrew = null, busyCaptain = false, here = new Map(), presenceReady = false;
   // The Captain and skills card: the open tab, the skill shown below the tree, a learn, buy or equip under way.
   let captainTab = 'captain', pickedSkill = null, busySkill = null, busyWeapon = null;
+  // D039: the walls of the island on screen (spot -> {health, recoversAt, repairCost}), read when a wall card opens.
+  let walls = new Map(), wallsFor = null; // wallsFor: the island code they belong to
   let pickedRole = null, busyRole = false, respecAsk = false, busyRespec = false;
   // The games (GAME-V3.md §2): the room state from the wave wiring, the codes joined this page, the lobby.
   let game = null, gameCode = null, lobbyAnswer = null, lobbyProblem = '', lobbyBusy = false, lobbyRead = 0, stopGame = () => {};
@@ -337,9 +342,13 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     }
     // On a friend's island you build with your own coins (and your own unlocks); it stays theirs.
     const island = target(), spot = island?.spots.find(item => item.id === spotId) ?? null;
-    return buildCardModel({spotId, slot: spotById(spotId)?.slot, spot, coins: own?.coins ?? null,
+    const model = buildCardModel({spotId, slot: spotById(spotId)?.slot, spot, coins: own?.coins ?? null,
       visitor: !!visiting, ownerName: visiting?.ownerName, busy: busySpot === spotId ? busyKind : false, message: cardMessage || (!island ? ownMessage : ''),
       unlocks: own ? islandUnlocks() : null, prices: own?.prices ?? null, campaign: campaign(), battle: battle && !waveOver});
+    // D039: a damaged or destroyed wall shows Repair or Rebuild instead of Upgrade (flag wall_recovery).
+    const shown = wallsFor !== null && wallsFor === island?.code ? walls.get(spotId) ?? null : null;
+    return withWallRecovery(model, {wall: shown, coins: own?.coins ?? null,
+      busy: busySpot === spotId ? busyKind : false, battle: battle && !waveOver});
   }
   const crew = () => crewModel({crew: own?.crew ?? {}, coins: own?.coins ?? null, unlocks: own ? unlocks() : null, busy: busyCrew, message: cardMessage || (!own ? ownMessage : ''), prices: own?.prices});
   const captain = () => {
@@ -355,7 +364,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     pickRole: id => { pickedRole = id; cardMessage = ''; refreshCard(); }, role: id => void takeRole(id),
     respec: () => void respecCaptain(), respecCancel: () => { respecAsk = false; refreshCard(); },
     buy: id => void buyWeapon(id), equip: id => void equipWeapon(id)};
-  const handlers = {build: (spotId, kind) => void build(spotId, kind), upgrade: spotId => void upgrade(spotId), hire: () => openCrew(),
+  const handlers = {build: (spotId, kind) => void build(spotId, kind), upgrade: spotId => void upgrade(spotId), repair: spotId => void repairWall(spotId), hire: () => openCrew(),
     specialise: (spotId, spec) => void specialise(spotId, spec), demolish: spotId => void askDemolish(spotId)};
   const demolishHandlers = {confirm: () => void confirmDemolish(), keep: () => { const spot = demolishSpot; demolishSpot = null; if (spot) openBuild(spot); }};
   const demolishCardModel = () => demolishModel({quote: demolishQuote, busy: busyDemolish, message: cardMessage});
@@ -392,7 +401,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   function openHarbor() { openSpot = null; cardMessage = ''; ui.harborCard(harbor(), harborHandlers); }
   function openTechHub() { openSpot = null; cardMessage = ''; ui.techCard(tech(), techHandlers); void freshOwn(); }
   function openWreck() { openSpot = null; cardMessage = ''; ui.wreckCard(wreck(), wreckHandlers); void freshOwn(); }
-  function openBuild(spotId) { openSpot = spotId; cardMessage = ''; ui.buildCard(buildModel(spotId), handlers); }
+  function openBuild(spotId) { openSpot = spotId; cardMessage = ''; ui.buildCard(buildModel(spotId), handlers); if (spotById(spotId)?.slot === 'wall') void readWalls(); }
   async function freshOwn() {
     if (own) return null;
     const current = reading('own'), answer = await api.getIsland();
@@ -489,6 +498,32 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       if (ui.open === 'build' && openSpot === spotId) { ui.close(); openSpot = null; }
       ui.toast(`${BUILDINGS[choice].name} built${onWhere(place)}! You have ${coinText(own?.coins)}.`, 'success');
     } else await refused(answer, place);
+    refreshCard();
+  }
+  // D039 (flag wall_recovery): the walls' health of the island on screen; nothing at all while the flag is off.
+  async function readWalls() {
+    if (!wallRecovery() || isPointSpot(openSpot ?? '')) return;
+    const answer = await api.walls({code: visiting ? visiting.code : null});
+    if (disposed || !answer.ok) return;
+    walls = new Map(answer.data.walls.map(wall => [wall.spot, wall])); wallsFor = target()?.code ?? null;
+    refreshCardIfBuild();
+  }
+  async function repairWall(spotId) {
+    const place = placeOf(spotId);
+    if (busySpot || place === 'point') return;
+    busySpot = spotId; busyKind = 'repair'; cardMessage = ''; refreshCard();
+    const answer = await api.repairWall({spot: spotId, ...(place === 'visit' ? {code: visiting.code} : {})});
+    if (disposed) return;
+    busySpot = null; busyKind = null;
+    if (answer.ok) {
+      walls = new Map(answer.data.walls.map(wall => [wall.spot, wall])); wallsFor = target()?.code ?? null;
+      tookCoins(answer.data.coins);
+      emit({type: SPOTS_CHANGED, place, spot: spotId});
+      ui.toast(`Wall repaired${onWhere(place)}! You have ${coinText(answer.data.coins)}.`, 'success');
+    } else {
+      cardMessage = answer.message;
+      if (['intact', 'insufficient_funds', 'not_built'].includes(answer.code)) await readWalls();
+    }
     refreshCard();
   }
   async function upgrade(spotId) {
