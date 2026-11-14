@@ -1,7 +1,7 @@
 // T5: visual milestones read the viewed island, never a wave attempt or captain's wallet.
-import {expect, it} from 'vitest';
+import {expect, it, vi} from 'vitest';
 import {decorationState} from '../../src/island/decorations.js';
-import {waveRank} from '../../src/art/milestones.js';
+import {drawWaveStatue, waveRank} from '../../src/art/milestones.js';
 
 const house = id => ({id, kind: 'house', built: true});
 it('shows the best beaten wave, and unlocks the statue exactly at 25', () => {
@@ -40,4 +40,11 @@ it('changes the badge rank at every ten-wave milestone, with a separate unranked
     expect(waveRank(wave + 1).name).toBe(ranks[wave / 10 + 1]);
   }
   for (const wave of [-1, '25', NaN, Infinity]) expect(waveRank(wave).name).toBe('unranked');
+});
+
+it('draws the statue for any index: odd values fall back to stage one, never throw', () => {
+  vi.stubGlobal('Path2D', class { constructor() { return new Proxy(this, {get: (target, key) => (key in target ? target[key] : () => {})}); } });
+  const canvas = () => new Proxy({shadows: null}, {get: (target, key) => (key in target ? target[key] : () => {}), set: (target, key, value) => { target[key] = value; return true; }});
+  for (const index of [NaN, 2.5, undefined, -3, 0, 9, '2', 1, 4]) expect(() => drawWaveStatue(canvas(), index)).not.toThrow();
+  vi.unstubAllGlobals();
 });
