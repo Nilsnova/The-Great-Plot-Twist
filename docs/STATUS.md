@@ -14,6 +14,9 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
+**14 Nov, T28 / Ianno:** [Boss minigame introduction and optional first-time practice](../specs/T28-minigame-introduction.md) is in progress on `docs/t28-minigame-introduction`, from updated main `50cab125`. Scope: each player, island and task kind, in solo and multiplayer. No passing implementation checks or completed task are claimed yet.
+
+
 **14 Nov, T27 (Ianno):** [PR #17](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/17)
 adds only exact-angle musket aiming, upright directional body views and body/gun overlap. Frontend tests (2,980), build, budget, text lint, accessibility (33 screens), demo (33 checks), two-page angle graphics and four-page fake-room multiplayer pass. The eight-direction montage is in WALKTHROUGH part 30. Coached explain-back discussed; independent rehearsal and human review are pending.
 
@@ -204,6 +207,8 @@ Nobody has decided these yet. Until they are decided, the plan in [ROADMAP.md](.
 6. **Pick a package.** Take your lane's next package below, or one from "Start today" in ROADMAP.md. Open an issue with the goal, acceptance checks, scope, responsible teammate and likely files. Create your branch from `main` (`git switch main`, `git pull`, then for example `git switch -c feat/l1-live-weather`). Paste the agent brief below and open a draft pull request early.
 
 ## Next steps per lane
+
+**T28 / Ianno:** implement isolated practice and the shared readiness phase, verify two clients and phone controls, then complete explain-back and request independent human review.
 
 **Captain visuals:** T27 covers shooting direction in single-player and multiplayer ([OPEN-TODOS §2](OPEN-TODOS.md#2-open-tasks-you-can-pick-small-independent-updated-thu-12-nov)). Implementation is in [PR #17](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/17); checks passed and Ianno reviewed the eight-direction montage; ask Johannes (`frcola`) to review. Three explain-back questions were discussed with coaching; rehearse independently before the walkthrough.
 
@@ -527,6 +532,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+- **2026-11-14, T28 started.** Ianno, assisted by Codex, specified first-time boss practice per player/island/minigame and authorized implementation on a fresh branch from updated main. Checks and review pending.
 
 - **2026-11-14, T27, Ianno with Codex:** exact-angle shooting visuals and body/gun overlap implemented in draft PR #17; checks passed; screenshot montage, walkthrough and test-map updated; coached explain-back discussed; independent human review pending.
 
