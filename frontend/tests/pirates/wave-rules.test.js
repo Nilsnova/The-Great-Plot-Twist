@@ -11,11 +11,11 @@ const INFO = { waveId: 'w-r', wave: 1, seed: 77, startsAt: new Date(START + 1000
 const p = coastPoint(Math.PI / 4, .75);
 const DEFENSES = [{ id: 'cannon_2', kind: 'cannon', level: 1, x: p.x, z: p.z }];
 
-function controllerWith(renderers) {
+function controllerWith(renderers, defenses = DEFENSES) {
   const clock = { now: START }, listeners = new Map();
   const bus = { on(type, fn) { if (!listeners.has(type)) listeners.set(type, new Set()); listeners.get(type).add(fn); return () => listeners.get(type).delete(fn); },
     emit(event) { for (const fn of [...(listeners.get(event.type) ?? [])]) fn(event); } };
-  const controller = createWaveController({ bus, getDefenses: () => DEFENSES, now: () => clock.now, world: { scene: {}, container: {} },
+  const controller = createWaveController({ bus, getDefenses: () => defenses, now: () => clock.now, world: { scene: {}, container: {} },
     finishWave: vi.fn(async () => ({ loot: 0 })), playCutscene: async () => {},
     createRenderer: options => { renderers.push(options); return { events() {}, update() {}, setVisible() {}, dispose() {} }; },
     createHud: () => ({ countdown() {}, bar() {}, prompt() {}, banner() {}, setVisible() {}, dispose() {} }),
@@ -50,5 +50,20 @@ describe('the wave rules', () => {
     expect(without.controller.state.towers[0].hp).toBeUndefined();
     expect(on[0].towerStates).toBe(true);
     expect(off[0].towerStates).toBe(false);
+  });
+
+  it('a culverin fights and is drawn only in a wave with defenses_v2 (T43); without it the wave plays without it', () => {
+    const q = coastPoint(Math.PI * 3 / 4, .75), island = [...DEFENSES, { id: 'cannon_3', kind: 'culverin', level: 2, x: q.x, z: q.z }];
+    const on = [], off = [];
+    const withRule = controllerWith(on, island), without = controllerWith(off, island);
+    withRule.bus.emit({ type: 'wave_started_server', ...INFO, rules: ['defenses_v2'] });
+    without.bus.emit({ type: 'wave_started_server', ...INFO });
+    withRule.advance(1000); without.advance(1000);
+    expect(withRule.controller.state.towers.map(tower => tower.kind)).toEqual(['cannon', 'culverin']);
+    expect(without.controller.state.towers.map(tower => tower.kind)).toEqual(['cannon']);
+    expect(on[0]).toMatchObject({ culverins: true });
+    expect(on[0].defenses.map(item => item.kind)).toContain('culverin');
+    expect(off[0]).toMatchObject({ culverins: false });
+    expect(off[0].defenses.map(item => item.kind)).not.toContain('culverin');
   });
 });

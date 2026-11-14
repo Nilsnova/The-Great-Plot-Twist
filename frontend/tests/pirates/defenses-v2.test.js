@@ -130,3 +130,59 @@ describe('the culverin drawings', () => {
     expect(pictures.size).toBe(Object.keys(frames).length);
   });
 });
+
+// The integration step (specs/T43-new-defenses.md "Sim wiring note", item 12): the card, the island, the wave's
+// renderer and the dev fake know the culverin, and each shows it only where the flag (or the wave's rule) says so.
+describe('the culverin outside the sim', () => {
+  it('is a build choice of an island tower spot while the flag is on, locked until its wave', () => {
+    const spot = {id: 'cannon_5', kind: 'cannon', kinds: ['cannon', 'mortar', 'harpoon', 'culverin'], built: false, level: 0, cost: 30};
+    const on = {defenses_v2: true};
+    const open = buildCardModel({spotId: 'cannon_5', slot: 'tower', spot, coins: 5000, flags: on,
+      unlocks: readUnlocks({unlocks: {wave: 30, unlocked: ['culverin:1', 'cannon:1', 'mortar:1', 'harpoon:1'], locked: {}}})});
+    expect(open.choices.map(choice => choice.kind)).toEqual(['cannon', 'mortar', 'harpoon', 'culverin']);
+    expect(open.choices[3]).toMatchObject({name: 'Culverin', line: CULVERIN_CARD.line, price: '🪙 80', disabled: false});
+    const early = buildCardModel({spotId: 'cannon_5', slot: 'tower', spot, coins: 5000, flags: on, unlocks: readUnlocks({waveBest: 3})});
+    expect(early.choices[3]).toMatchObject({kind: 'culverin', disabled: true, locked: true});
+    expect(early.choices[3].reason).toContain('15');
+    // Pirate Point never offers it.
+    const point = buildCardModel({spotId: 'pp_tower_1', slot: 'tower', spot: {...spot, id: 'pp_tower_1'}, coins: 5000, flags: on, point: true});
+    expect(point.choices.map(choice => choice.kind)).toEqual(['cannon', 'mortar']);
+    // A built culverin shows its level, its stats and the next one.
+    const built = buildCardModel({spotId: 'cannon_5', slot: 'tower', spot: {...spot, kind: 'culverin', built: true, level: 1, upgradeCost: 160}, coins: 5000, flags: on,
+      unlocks: readUnlocks({unlocks: {wave: 30, unlocked: ['culverin:1', 'culverin:2'], locked: {}}})});
+    expect(built).toMatchObject({mode: 'upgrade', title: 'Culverin', maxLevel: 5});
+    expect(built.upgrade.stats).toBe('Damage 30 → 42 · Range 44 → 46');
+  });
+  it('has its own frames on the wave screen (a cannon stands in on a pixel atlas)', async () => {
+    const {CULVERIN_IDS, towerFrame} = await import('../../src/pirates/render.js');
+    const all = () => true, none = id => !id.includes('culverin');
+    expect(towerFrame('culverin', 3, false, all)).toBe('island-culverin-l3');
+    expect(towerFrame('culverin', 1, true, all)).toBe('island-culverin-fire');
+    expect(towerFrame('culverin', 2, false, all, 'damaged')).toBe('island-culverin-l2-damaged');
+    expect(towerFrame('culverin', 5, false, all, 'broken')).toBe('island-culverin-l5-broken');
+    expect(towerFrame('culverin', 2, false, none)).toBe(towerFrame('cannon', 2, false, none));
+    expect(CULVERIN_IDS).toEqual([...CULVERIN_ART.levels, ...CULVERIN_ART.fire, CULVERIN_ART.shot]);
+  });
+  it('stands on the island with its level art and pips, hidden in a battle like every tower', async () => {
+    const {LEVEL_ART, buildingArt, pipCount} = await import('../../src/island/world.js');
+    expect(LEVEL_ART.culverin).toEqual(CULVERIN_ART.levels);
+    expect(buildingArt('culverin', 4)).toBe('island-culverin-l4');
+    expect(pipCount('culverin', 1)).toBe(1);
+  });
+  it('is in the dev fake only with ?fakeflags=defenses_v2, and its waves then carry the rule', async () => {
+    const {createFakeIslandApi} = await import('../../src/pirates/fake-api.js');
+    const off = createFakeIslandApi(), on = createFakeIslandApi({flags: {defenses_v2: true}});
+    const before = await off.island();
+    expect(before.spots.find(item => item.id === 'cannon_1').kinds).toEqual(['cannon', 'mortar', 'harpoon']);
+    expect(before.prices.kinds).not.toHaveProperty('culverin');
+    expect(before.unlocks.unlocked.some(id => id.startsWith('culverin'))).toBe(false);
+    await expect(off.build({spot: 'cannon_1', kind: 'culverin', actionUid: 'c-off'})).rejects.toMatchObject({status: 422});
+    expect((await off.startWave({where: 'own', actionUid: 'w-off'})).rules).toBeUndefined();
+    const answer = await on.island();
+    expect(answer.spots.find(item => item.id === 'cannon_1').kinds).toEqual(['cannon', 'mortar', 'harpoon', 'culverin']);
+    expect(answer.prices.kinds.culverin).toEqual(CULVERIN_CARD.price);
+    const built = await on.build({spot: 'cannon_1', kind: 'culverin', actionUid: 'c-on'});
+    expect(built.spots.find(item => item.id === 'cannon_1')).toMatchObject({kind: 'culverin', built: true, level: 1});
+    expect((await on.startWave({where: 'own', actionUid: 'w-on'})).rules).toEqual(['defenses_v2']);
+  });
+});

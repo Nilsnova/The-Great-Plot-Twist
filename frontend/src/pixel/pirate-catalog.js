@@ -90,5 +90,7 @@ export const HARPOON_ART = {
   fire: ['island-harpoon-fire', 'island-harpoon-fire-l2', 'island-harpoon-fire-l3', 'island-harpoon-fire-l4', 'island-harpoon-fire-l5'],
   bolt: 'fx-harpoon', ripples: 'fx-slow-ripples', rope: 'fx-rope-mark',
 };
+// The culverin (T43, D048 proposed): cartoon-only like the harpoon tower; its frame names live with its drawings.
+export { CULVERIN_ART } from '../art/defenses-v2.js';
 export const crewArt = { gunner: 'crew-gunner', carpenter: 'crew-carpenter', lookout: 'crew-lookout' };
 export const pirateArtIds = Object.keys(pirateDimensions);
