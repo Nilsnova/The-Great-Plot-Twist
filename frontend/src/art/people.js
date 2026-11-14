@@ -55,8 +55,8 @@ function hat(c, pal, x, y, view) {
   part(c, brim, mix(pal.hat, INK, .12), {depth: 1.1, gloss: rect(x - 5, y + 3.4, 4, .8, .4)});
   part(c, ellipse(x, y + 4.4, 1.2, 1), pal.band, {width: .6, shade: false});
 }
-function captainBody(c, pal, view, step) {
-  const cx = 12, back = view === '-back', side = view === '-side';
+function captainBody(c, pal, view, step, armed = false) {
+  const cx = 12, back = view.startsWith('-back'), side = view === '-side', diagonal = view.endsWith('-diagonal');
   shadow(c, cx, 29.2, 6.6, 1.9);
   // Legs: a walk frame lifts one boot (front and back) or swings them apart (side).
   const lift = step === '-walk-1' ? 1 : step === '-walk-2' ? 2 : 0;
@@ -84,31 +84,54 @@ function captainBody(c, pal, view, step) {
     c.restore();
   };
   const swing = step === '-walk-1' ? .35 : step === '-walk-2' ? -.35 : 0;
-  if (side) arm(cx + .4, 16.4, swing);
-  else { arm(cx - 5.4, 16.2, .16 + swing * .4); arm(cx + 5.4, 16.2, -.16 - swing * .4); }
+  if (!armed) {
+    if (side) arm(cx + .4, 16.4, swing);
+    else { arm(cx - 5.4, 16.2, .16 + swing * .4); arm(cx + 5.4, 16.2, -.16 - swing * .4); }
+  }
   // The head: big and round, hair peeking out under the hat.
-  const hx = side ? cx + 1 : cx, hy = 10.6;
+  const hx = side ? cx + 1 : diagonal ? cx + 2 : cx, hy = 10.6;
   part(c, ellipse(hx, hy + .4, 5.5, 5.1), back ? '#7a4a2e' : SKIN, {depth: 1.6, shade: back ? undefined : SKIN_DARK});
   if (!back) {
     if (side) part(c, poly([[hx - 5.4, hy - 1.6], [hx - 1, hy - 2.6], [hx - 2.4, hy + 2.2], [hx - 5.2, hy + 3.4]], 1.4), '#7a4a2e', {depth: .8});
     else for (const s of [-1, 1]) part(c, poly([[hx + s * 5.6, hy - 1.4], [hx + s * 3, hy - 2.4], [hx + s * 3.6, hy + 1.4], [hx + s * 5.4, hy + 2.6]], 1.2), '#7a4a2e', {depth: .6});
-    face(c, hx + (side ? 1 : 0), hy + .4, {side});
+    face(c, hx + (side || diagonal ? 1 : 0), hy + .4, {side});
   }
   hat(c, pal, hx, hy - 7, view);
 }
 function captain(pal, view, step) { return c => captainBody(c, pal, view, step); }
 // The musket pose, facing right: the captain stands at the middle of a 48 px box, the long gun level.
-function musketPose(pal, firing) {
+export function musketPose(pal, firing, angle = null) {
   return c => {
-    c.save(); c.translate(12, 0); captainBody(c, pal, '-side', ''); c.restore();
-    const kick = firing ? -1 : 0;
+    // Keep the body upright; only the musket turns continuously toward the target.
+    const tilt = Math.abs(angle ?? 0), back = angle < 0;
+    const view = tilt < Math.PI / 8 ? '-side' : tilt > 3 * Math.PI / 8
+      ? (back ? '-back' : '') : (back ? '-back-diagonal' : '-front-diagonal');
+    const body = () => { c.save(); c.translate(12, 0); captainBody(c, pal, view, '', true); c.restore(); };
+    // Facing away: the captain occludes the musket. Facing toward us: the gun is in front.
+    if (angle === null || angle >= 0) body();
+    const turn = angle ?? 0, reach = angle === null ? 1 : .6, kick = firing ? -1 : 0;
+    const shoulder = 24 + (angle !== null && angle < 0 ? 8 * Math.abs(Math.sin(angle)) : 0);
+    // Only these two sleeves/hands belong to the firing pose; the body's idle arms are omitted.
+    for (const [from, x, y] of [[19, 26, 19.6], [29, 31.4, 19]]) {
+      const dx = (x + kick - 24) * reach, dy = y - 18;
+      const to = [shoulder + Math.cos(turn) * dx - Math.sin(turn) * dy,
+        18 + Math.sin(turn) * dx + Math.cos(turn) * dy];
+      const sleeve = [[from, 16.2], to];
+      stroke(c, sleeve, INK, 4.6); stroke(c, sleeve, pal.coat, 3.1);
+    }
+    c.save();
+    if (angle !== null) {
+      // Raise the grip toward the visible shoulder as the captain turns away.
+      c.translate(shoulder, 18); c.rotate(angle); c.scale(.6, 1); c.translate(-24, -18);
+    }
     c.save(); c.translate(kick, 0);
     part(c, poly([[20, 17.2], [26, 16], [29, 18.6], [21.5, 20.6]], 1), '#8a5a36', {depth: .8});
     part(c, rect(25, 15.6, 18.5, 1.9, .9), '#3b3f4a', {depth: .6, gloss: rect(27, 15.9, 14, .5, .25)});
     part(c, rect(28, 17.2, 7, 1.6, .6), '#8a5a36', {depth: .5, width: .8});
     part(c, ellipse(26, 19.6, 1.6), SKIN, {depth: .6});
     part(c, ellipse(31.4, 19, 1.5), SKIN, {depth: .6});
-    c.restore();
+    c.restore(); c.restore();
+    if (angle !== null && angle < 0) body();
   };
 }
 // The cutlass swing (TOWER-DEFENSE.md §12), facing right in the musket's 48 px box: the blade out in

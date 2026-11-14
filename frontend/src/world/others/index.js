@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import {artSizes,projectPoint} from '../art.js';
 import {PRESENCE_LIMITS,captainVariant,placePresenceLabels,resolveActorAsset,samplePosition,selectNearby,shouldSnapSample} from './logic.js';
 import {poseFrame} from '../../pirates/poses.js';
+import {createShotArt} from '../../pirates/shot-art.js';
 const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
 const materialFor=(art,id)=>art[id]??art.explorer;
 function makeMesh(name,material,asset){
@@ -25,7 +26,7 @@ export function createOtherCaptains(scene,container,art,reducedMotion=false,{col
   const records=new Map();let input={status:'off',place:null,others:[],hiddenCount:0,sampledAt:0},clock=0,stats={drawn:0,hidden:0,ids:[]};let disposed=false,ingested=0,ripples=0;
   function releaseRenderable(record){
     if(!record.group)return;
-    root.remove(record.group);record.body.geometry.dispose();record.emoteMesh?.geometry.dispose();record.poseMesh?.geometry.dispose();
+    root.remove(record.group);record.body.geometry.dispose();record.emoteMesh?.geometry.dispose();record.poseMesh?.geometry.dispose();record.shotArt?.dispose();record.shotArt=null;
     record.ownedMaterial?.dispose();record.ownedEmoteMaterial?.dispose();record.label.remove();
     Object.assign(record,{group:null,body:null,emoteMesh:null,poseMesh:null,label:null,ownedMaterial:null,ownedEmoteMaterial:null,emoteId:null});
   }
@@ -101,8 +102,8 @@ export function createOtherCaptains(scene,container,art,reducedMotion=false,{col
       setMaterial(record,record.body,materialFor(art,bodyAsset),'body',alpha);{const k=readScale();record.body.scale.set((record.peer.facing==='left'?-1:1)*k,k,1);}record.body.renderOrder=100+record.peer.y+.15;
       {const pose=typeof poses?.get==='function'?poses.get(record.id):null,posed=pose?poseFrame(pose,captainVariant(withColour(record.peer))-1):null;
         if(posed&&art[posed]){
-          if(!record.poseMesh){record.poseMesh=makeMesh(posed,art[posed],posed);record.poseMesh.name='captain-pose';record.group.add(record.poseMesh);}
-          const k=readScale();record.poseMesh.material=art[posed];record.poseMesh.userData.pose=posed;record.poseMesh.scale.set((pose.flip?-1:1)*k,k,1);
+          if(!record.poseMesh){record.poseMesh=makeMesh(posed,art[posed],posed);record.poseMesh.name='captain-pose';record.group.add(record.poseMesh);record.shotArt=createShotArt();}
+          const k=readScale();record.poseMesh.material=record.shotArt.material(pose,captainVariant(withColour(record.peer))-1)??art[posed];record.poseMesh.userData.pose=posed;record.poseMesh.scale.set((pose.flip?-1:1)*k,k,1);
           record.poseMesh.renderOrder=record.body.renderOrder;record.poseMesh.visible=true;record.body.visible=false;
         }else{if(record.poseMesh)record.poseMesh.visible=false;record.body.visible=true;}}
       if(record.peer.emote&&art[`emote-${record.peer.emote}`]){

@@ -14,7 +14,11 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
+**14 Nov, T27 (Ianno):** [PR #17](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/17)
+adds only exact-angle musket aiming, upright directional body views and body/gun overlap. Frontend tests (2,980), build, budget, text lint, accessibility (33 screens), demo (33 checks), two-page angle graphics and four-page fake-room multiplayer pass. The eight-direction montage is in WALKTHROUGH part 30. Coached explain-back discussed; independent rehearsal and human review are pending.
+
 **14 Nov, T7 / Ianno:** [PR #13](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/13) implements the weekly island leaderboard. Highest win per island this UTC week, up to ten rows, shared islands counted once; Harbor noticeboard and medal badges. [Evidence and limits](handoff/T7-weekly-leaderboard.md). Introductory explain-back completed after clarification; Franz (`frcola`) is the requested reviewer. Independent human approval and live database/deployment verification remain pending.
+
 **14 Nov, T27 / Ianno:** proposed a [captain shooting-direction task](OPEN-TODOS.md#2-open-tasks-you-can-pick-small-independent-updated-thu-12-nov). Planning only; implementation has not started.
 
 **13 Nov, T5 / Ianno:** [PR #10](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/10) adds a number-only rank shield above/right of the cabin, a wave-25 statue and trees at 100%, 110% or 120% size for zero, one or two houses. Original island-style drawings; existing progress only. Verification is recorded in [the T5 handover](handoff/T5-island-decoration.md); introductory explain-back completed; approval by Nils (`Nilsnova`) or Johannes Franz Lang (`frcola`) is required before merge.
@@ -200,6 +204,8 @@ Nobody has decided these yet. Until they are decided, the plan in [ROADMAP.md](.
 6. **Pick a package.** Take your lane's next package below, or one from "Start today" in ROADMAP.md. Open an issue with the goal, acceptance checks, scope, responsible teammate and likely files. Create your branch from `main` (`git switch main`, `git pull`, then for example `git switch -c feat/l1-live-weather`). Paste the agent brief below and open a draft pull request early.
 
 ## Next steps per lane
+
+**Captain visuals:** T27 covers shooting direction in single-player and multiplayer ([OPEN-TODOS §2](OPEN-TODOS.md#2-open-tasks-you-can-pick-small-independent-updated-thu-12-nov)). Implementation is in [PR #17](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/17); checks passed and Ianno reviewed the eight-direction montage; ask Johannes (`frcola`) to review. Three explain-back questions were discussed with coaching; rehearse independently before the walkthrough.
 
 **T7 / Ianno:** introductory explain-back completed after clarification. Franz (`frcola`) is assigned to review PR #13; independent human approval and live verification remain pending. Do not merge without a current independent human approval.
 
@@ -521,6 +527,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+- **2026-11-14, T27, Ianno with Codex:** exact-angle shooting visuals and body/gun overlap implemented in draft PR #17; checks passed; screenshot montage, walkthrough and test-map updated; coached explain-back discussed; independent human review pending.
 
 - **2026-11-14, T7 explain-back:** Ianno explained weekly high scores and island grouping, then corrected the outage answer after clarification: Try again because results could not be retrieved. Desktop/phone-sized Chrome coverage versus unverified live queries and physical phones was clarified. PR #13 proceeds to human review by Franz (`frcola`); no merge.
 

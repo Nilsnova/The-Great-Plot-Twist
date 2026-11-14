@@ -421,3 +421,14 @@ The number-only shield has twelve ranks from unranked to crowned, selected from
 the existing best wave. Existing oak, pine and birch art is reused at 100%, 110% and 120% of its original size
 for zero, one and two built houses; the starting island keeps its existing tree size.
 [Scope and ladder](../specs/T5-island-decoration.md); [preview](../docs/evidence/t5/ranks.png).
+
+## T27 captain shooting views
+
+Ianno Hollensteiner, with Codex, extended the original musket painter in
+[src/art/people.js](src/art/people.js): an upright front/back/side/diagonal
+captain body, a gun rotated toward the exact projected target angle, and
+body-over-gun ordering for shots away from the camera. The firing body omits
+its resting arms and uses two sleeves/hands connected to the grip. Existing palettes,
+48 × 32 box and feet anchor are reused; the aiming gun is shorter so it fits
+while rotating. One reusable texture is painted per visible firing captain
+by [shot-art.js](src/pirates/shot-art.js). No downloaded art or new license.

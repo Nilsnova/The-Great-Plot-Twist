@@ -24,17 +24,31 @@ describe('the pose of a shot or a blow', () => {
     expect(poseFrame(null, 0)).toBeNull();
   });
   it('faces the shot, and only shots and blows pose', () => {
-    expect(poseOf(shot('me', 0, 8))).toEqual({ kind: 'musket', flip: false });
-    expect(poseOf(shot('me', 0, -8))).toEqual({ kind: 'musket', flip: true });
+    expect(poseOf(shot('me', 0, 8))).toEqual({ kind: 'musket', flip: false, angle: Math.atan2(-1.44, 8) });
+    expect(poseOf(shot('me', 0, -8))).toEqual({ kind: 'musket', flip: true, angle: Math.atan2(-1.44, 8) });
     expect(poseOf({ type: 'captain_struck', by: 'me', x: 2, z: 0, toX: 1, toZ: 0 })).toEqual({ kind: 'cutlass', flip: true });
     expect(poseOf({ type: 'cannon_fired', x: 0, toX: 1 })).toBeNull();
     expect(poseOf({ type: 'captain_fired', x: 0, toX: 1 })).toBeNull(); // no shooter
+  });
+  it.each([[8, 0], [-8, 0], [0, -8], [0, 8], [8, -8], [-8, 8], [2, -7], [-7, -2]])(
+    'aims precisely at (%s, %s), including between cardinal directions', (dx, dz) => {
+      const poses = createPoses({now: () => 0});
+      poses.note([{...shot('me'), x: 3, z: 4, toX: 3 + dx, toZ: 4 + dz}]);
+      const pose = poses.get('me');
+      // Mirroring the local barrel vector must match the target's projected screen vector.
+      const length = Math.hypot(dx, dz * .72);
+      expect(Math.cos(pose.angle) * (pose.flip ? -1 : 1)).toBeCloseTo(dx / length);
+      expect(Math.sin(pose.angle)).toBeCloseTo(dz * .72 / length);
+    });
+  it('rejects missing, nonfinite and zero-length directions', () => {
+    for (const extra of [{z: undefined}, {toZ: NaN}, {toX: Infinity}, {toX: 0, toZ: 0}])
+      expect(poseOf({...shot('me'), ...extra})).toBeNull();
   });
   it('keeps one pose per captain while it lasts', () => {
     let clock = 10;
     const poses = createPoses({ now: () => clock });
     poses.note([shot('me'), { type: 'ship_sunk' }]);
-    expect(poses.get('me')).toEqual({ kind: 'musket', flip: false, age: 0 });
+    expect(poses.get('me')).toEqual({ kind: 'musket', flip: false, angle: Math.atan2(-1.44, 8), age: 0 });
     clock += .3; expect(poses.get('me').age).toBeCloseTo(.3);
     clock += .3; expect(poses.get('me')).toBeNull();
     poses.note([shot('ben')]); poses.clear(); expect(poses.get('ben')).toBeNull();

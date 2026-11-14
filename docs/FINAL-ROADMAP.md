@@ -39,6 +39,11 @@ The order of the tasks below follows this table: the walkthrough and the UX carr
 
 Value: ★★★ moves a 20% criterion, ★★ a 10% criterion or a clear risk, ★ nice to have. Size: S (under 2 hours), M (half a day), L (a day).
 
+- [x] **T27: exact-angle captain shooting direction**, including diagonals, body/gun overlap
+  and corrected grip hands, implemented in [PR #17](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/17).
+  Ianno’s walkthrough part 30, test-map entry and reviewed eight-direction screenshot are included;
+  checks passed; independent rehearsal and human review remain pending.
+
 ### A. Repository walkthrough (criterion 6, 20%)
 
 | ID | Value | Size | Task | Done when |
