@@ -442,6 +442,19 @@ its resting arms and uses two sleeves/hands connected to the grip. Existing pale
 while rotating. One reusable texture is painted per visible firing captain
 by [shot-art.js](src/pirates/shot-art.js). No downloaded art or new license.
 
+## T43 culverin (14 Nov 2026, behind the flag `defenses_v2`)
+
+Original code-drawn cartoon art in [src/art/defenses-v2.js](src/art/defenses-v2.js), painted with the
+existing [paint kit](src/art/paint.js) in the style of the cannon and the harpoon tower of
+[src/art/island.js](src/art/island.js) (same 48 × 32 box and anchor 5, facing right, the tier gold and banner
+colours of levels 4 and 5). Twenty-one frames: `island-culverin`, `-l2`…`-l5` (a long slim barrel on a low sledge
+with a breech wedge; stone pad and iron bands; brass bands and a stack of shot; gold muzzle ring and teal banner;
+gilded barrel and the starred royal banner), the matching `island-culverin-fire…` frames (recoil, long flash,
+smoke ring), the T33 damage states `island-culverin[-l2…-l5]-damaged` and `-broken` (built with T33's `drawDamaged`/`drawBroken` from `src/art/tower-states.js`, the broken heap carrying the culverin's own long barrel) and `fx-culverin-ball` (16 × 8). Registered in [src/art/registry.js](src/art/registry.js); nothing
+draws them until the culverin is wired in ([spec](../specs/T43-new-defenses.md)). Contact sheet next to the
+cannon and harpoon: [docs/evidence/t43/culverin-sheet.png](../docs/evidence/t43/culverin-sheet.png). Drawn for
+Nils (`Nilsnova`) with a coding agent; no downloaded art, font or reference image, no new license.
+
 ## T33 tower damage art (cartoon, code-drawn)
 
 Thirty original, code-authored frames in `src/art/tower-states.js` and `src/art/island.js` (vector drawings in the island cartoon kit; no outside art, fonts or licences): `island-{cannon,mortar,harpoon}[-l2..-l5]-damaged` (leaning, cracked, scorched, smoking) and `-broken` (rubble and the kind wrecked weapon). Each is 48 x 32, anchor 5, the intact tower box. Cartoon-only and not requested by the game yet; see `specs/T33-tower-damage-art.md`. Contact sheet: `docs/evidence/T33/tower-states-contact-sheet.png`.

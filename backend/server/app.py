@@ -33,7 +33,7 @@ from server.game.case_service import CaseService, case_or_none
 from server.game.station_lookup import IsletStations, NoStations
 from server.game.world_state import DatabaseWorldStage, relit_check
 from server.host_console_cache import HostConsoleHeaders
-from server.island.catalogue import IslandCatalogue, island_or_none
+from server.island.catalogue import IslandCatalogue, catalogue_for_flags, island_or_none
 from server.lock.limits import PlayerBudget
 from server.lock.places import PlaceSearch
 from server.lock.weather import PlaceWeather
@@ -191,6 +191,8 @@ def create_app(
         # T36: the catalogue carries the "placement" flag to every island answer.
         placement_on = is_enabled("placement", settings.flags)
         island_catalogue = replace(island_catalogue, placement=placement_on)
+        # T43 (D048 proposed): the flag defenses_v2 adds the culverin; off, nothing changes.
+        island_catalogue = catalogue_for_flags(island_catalogue, settings.flags)
 
     if case_service is None:
         stations = IsletStations(islet_catalogue) if islet_catalogue is not None else NoStations()
