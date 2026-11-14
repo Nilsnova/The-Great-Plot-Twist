@@ -5,7 +5,7 @@ import {waveRank} from '../../src/art/milestones.js';
 
 const house = id => ({id, kind: 'house', built: true});
 it('shows the best beaten wave, and unlocks the statue exactly at 25', () => {
-  expect(decorationState()).toEqual({wave: 0, statue: false, treeScale: 1});
+  expect(decorationState()).toEqual({wave: 0, statue: false, statueStage: 0, treeScale: 1});
   expect(decorationState({wave: 24})).toMatchObject({wave: 24, statue: false});
   expect(decorationState({wave: 25})).toMatchObject({wave: 25, statue: true});
   expect(decorationState({wave: 100})).toMatchObject({wave: 100, statue: true});
@@ -21,7 +21,7 @@ it('uses three tree sizes, and shrinks again after a house is removed', () => {
 });
 it('resets from a developed island to a new island without keeping another island’s milestones', () => {
   decorationState({wave: 30}, [house('house_1'), house('house_2')]);
-  expect(decorationState({wave: 1}, [])).toEqual({wave: 1, statue: false, treeScale: 1});
+  expect(decorationState({wave: 1}, [])).toEqual({wave: 1, statue: false, statueStage: 0, treeScale: 1});
 });
 it('treats missing or malformed records as zero and ignores duplicate house ids', () => {
   for (const wave of [-1, 1.5, '25', NaN, Infinity]) expect(decorationState({wave}).wave).toBe(0);

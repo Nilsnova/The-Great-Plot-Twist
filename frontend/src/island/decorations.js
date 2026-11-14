@@ -1,14 +1,16 @@
-// T5: reads existing island progress and draws cosmetic milestones. Used by world.js.
+// T5: reads existing island progress and draws cosmetic milestones; T45 adds the statue stages.
+// Used by world.js.
 import * as THREE from 'three';
 import {paint} from '../art/paint.js';
-import {drawWaveBadge, drawWaveStatue, waveRank} from '../art/milestones.js';
+import {drawWaveBadge, drawWaveStatue, statueStage, waveRank} from '../art/milestones.js';
 import {screenDensity, smoothTexture, spriteMaterial} from '../art/textures.js';
 
 export function decorationState(campaign = null, spots = []) {
   const wave = Number.isSafeInteger(campaign?.wave) && campaign.wave >= 0 ? campaign.wave : 0;
   const houses = new Set(spots.filter(spot => spot?.built === true && spot.kind === 'house'
     && ['house_1', 'house_2'].includes(spot.id)).map(spot => spot.id));
-  return {wave, statue: wave >= 25, treeScale: [1, 1.1, 1.2][houses.size]};
+  const stage = statueStage(wave).index;
+  return {wave, statue: stage >= 1, statueStage: stage, treeScale: [1, 1.1, 1.2][houses.size]};
 }
 
 function milestone(root, name, width, height, x, z) {
@@ -40,9 +42,12 @@ export function decorateProgress(place) {
       flag.userData.wave = lastWave = next.wave;
       flag.userData.rank = waveRank(next.wave).name;
     }
-    if (next.statue && !statue.material.map) {
-      statue.material.map = smoothTexture(paint(drawWaveStatue, [48, 64], screenDensity()));
+    // Redraw only when the stage changes (25, 50, 75, 100), never every wave.
+    if (next.statue && statue.userData.stage !== next.statueStage) {
+      statue.material.map?.dispose();
+      statue.material.map = smoothTexture(paint(c => drawWaveStatue(c, next.statueStage), [48, 64], screenDensity()));
       statue.material.needsUpdate = true;
+      statue.userData.stage = next.statueStage;
     }
     for (const {mesh, scale} of trees) mesh.scale.copy(scale).multiplyScalar(next.treeScale);
   }

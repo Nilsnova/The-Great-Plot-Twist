@@ -1098,7 +1098,7 @@ See [the test map](TEST-MAP.md#t5--ianno-hollensteiner--island-milestones) and
 
 ## 30. Weekly island leaderboard — Ianno Hollensteiner (T7)
 
-**What and where.** Menu → Weekly leaderboard opens the read-only card in
+**What and where.** Menu → Leaderboard (named "Weekly leaderboard" before T45) opens the read-only card in
 [island/ui.js](../frontend/src/island/ui.js). The controller in
 [island/index.js](../frontend/src/island/index.js) loads it through
 [island/api.js](../frontend/src/island/api.js). The signed-in

@@ -422,6 +422,15 @@ the existing best wave. Existing oak, pine and birch art is reused at 100%, 110%
 for zero, one and two built houses; the starting island keeps its existing tree size.
 [Scope and ladder](../specs/T5-island-decoration.md); [preview](../docs/evidence/t5/ranks.png).
 
+## T45 statue stages (14 Nov 2026)
+
+The T5 captain statue in [src/art/milestones.js](src/art/milestones.js) gains three more
+original code-drawn stages with the same paint kit: silver with a raised cutlass (wave 50),
+gold with a red pennant (wave 75) and crowned (wave 100); wave 25 stays the T5 bronze
+statue. Drawn for the T45 lane (plan by Ianno Hollensteiner, authorized by Nils) with a
+coding agent. No third-party images or fonts added. Cosmetic only (D046).
+[Spec](../specs/T45-highscore-statue.md); [preview](../docs/evidence/t45/statue-stages.png).
+
 ## T27 captain shooting views
 
 Ianno Hollensteiner, with Codex, extended the original musket painter in

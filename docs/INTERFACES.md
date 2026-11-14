@@ -1634,6 +1634,17 @@ page, at most 20 pages; insufficient coverage returns `503 leaderboard_unavailab
 never a partial ranking. Public host names are read only for the final islands.
 Fake/offline games show an online-required message instead of invented global data.
 
+**T45 addition ([D046](DECISIONS.md#d046--highscore-scope-and-statue-stages--2026-11-14)).**
+Optional query `scope=week` (default) or `scope=all`; any other value answers `422`.
+Response: `{scope, weekStart, weekEnd, entries: [{rank, name, wave, crew}]}`; for
+`scope=all` both week fields are `null` and the window is every finish up to the
+request (never resets). Equal waves still share rank; display order among them is
+earliest `finished_at` first (replacing the owner-ID order above). `crew` (1–10) is the
+number of `wave_participants` of the scoring run, a count only (`1` = solo; an empty
+answer shows `1`). Scores come only from winning `wave_runs`, never from
+`islands.wave_best`, so restarts/resets cannot lower them. The client accepts a T7
+answer without `scope`/`crew` as a weekly board. No new tables, flags or writes.
+
 ### T28 boss minigame preparation
 
 [D038](DECISIONS.md#d038--personal-boss-practice-before-the-shared-attempt--2026-11-14)

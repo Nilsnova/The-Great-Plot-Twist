@@ -856,7 +856,7 @@ export function createFakeIslandTransport({ coins = ISLAND_RULES.startingCoins, 
       }
     }
     try {
-      if (method === 'GET' && pathname === '/api/island/leaderboard') return fail(503, 'offline', 'Weekly results need an online game. Return to the title and sign in to play online.');
+      if (method === 'GET' && pathname === '/api/island/leaderboard') return fail(503, 'offline', 'Leaderboard results need an online game. Return to the title and sign in to play online.');
       if (method === 'GET' && pathname === '/api/island') return ok(await api.island());
       if (method === 'GET' && pathname.startsWith('/api/island/visit/')) return ok(await api.visit(decodeURIComponent(pathname.slice(18))));
       if (method === 'GET' && pathname === '/api/waves/current') return ok(await api.currentWave(new URLSearchParams(query).get('where') ?? ''));

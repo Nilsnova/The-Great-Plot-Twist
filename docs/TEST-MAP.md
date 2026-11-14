@@ -178,6 +178,12 @@ and [recorded results](../specs/T27-shooting-direction.md).
 |---|---|---|---|
 | Read-only top ten island teams this UTC week; highest successful wave survives a restart; wooden scoreboard with medal badges | [Backend](../backend/server/tests/test_island_leaderboard.py): `cd backend && uv run pytest -q server/tests/test_island_leaderboard.py`; [browser/API](../frontend/tests/island/leaderboard.test.js): `cd frontend && npm test -- --run tests/island/leaderboard.test.js`; [game evidence](../frontend/scripts/check-island-leaderboard.mjs): `cd frontend && node scripts/check-island-leaderboard.mjs after` | Weekly/year boundaries and query filters, duplicate/shared islands, highest win after restart, ties, top-ten pagination and scan refusal, malformed rows, login/flag/no-store; loading/error/retry/empty states, exact three rows, medals and stale response after closing; 1280 × 720 and 375 × 812, long names and 44 px controls | Live PostgREST filtering/pagination and performance, concurrent deletion during reads, real accounts and physical phones, screen-reader behavior and fairness between crew sizes; fixture screenshots show sample captains |
 
+### T45 · Highscore and statue stages (D046, proposed)
+
+| What I built / why | Where and command | Covers | Misses |
+|---|---|---|---|
+| Weekly and all-time boards, earliest-first ties, solo/crew label, "This island" milestones, cosmetic statue stages at 25/50/75/100 | [Backend](../backend/server/tests/test_island_leaderboard.py): `cd backend && uv run pytest -q server/tests/test_island_leaderboard.py`; [rules](../frontend/tests/island/progression.test.js) and [card](../frontend/tests/island/leaderboard.test.js): `cd frontend && npm test -- --run tests/island/progression.test.js tests/island/leaderboard.test.js`; [game evidence](../frontend/scripts/check-t45-progression.mjs): `cd frontend && node scripts/check-t45-progression.mjs` | All-time window and filters, lower later wins and resets cannot lower a score, tie order, crew counts and empty-crew fallback, scope 422; stage boundaries 24/25/49/50/74/75/99/100, milestone text, T7-shaped answers, tab switching/remembering; statue stages on the island and card at 1280 × 720 and 375 × 812 with contrast and 44 px checks | Live Supabase data, the 2,000-run bound under real load, physical phones, T38/D044 reset interaction (see the spec's re-check list) |
+
 ## T28 — Ianno Hollensteiner — Boss minigame practice
 
 | Part and why | Existing and new checks | Covers | Misses |

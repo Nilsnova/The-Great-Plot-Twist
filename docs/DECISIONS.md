@@ -799,3 +799,28 @@ and [message contract](INTERFACES.md#t28-boss-minigame-preparation).
 **Why:** fixed routes cannot use gaps, react to rebuilt walls or handle flexible placement, and towers with hp (T33) need a target rule. A distance field is simple to explain, provably loop-free and measured at about 1 ms per tick for 300 boarders.
 
 **Alternatives and trade-offs:** per-boarder A* (more work per boarder, same routes); always breaching (no gaps, today's spirit, but T36 walls would mean nothing); always detouring (walls never hacked). Lone short walls are walked round, so today's isolated spots lose value under the new rule: before T36, either keep the legacy routes (option A) or join the ring spots into a closed ring (option B); a balance decision with T3. The wiring needs a wave option `pathing` so a mixed-version room never mixes rules. See [the spec](../specs/T34-T35-targeting-pathing.md).
+
+## D046 · Highscore scope and statue stages · 2026-11-14
+
+**Status:** PROPOSED for T45 on `feat/t45-highscore-statue`; agreed by: pending team review. Builds on D037 (T7) and the T5 milestones.
+
+**Decision:** The score is an island's highest successful island wave, read only from finished winning `wave_runs`
+(never from `islands.wave_best` or the current wave), so restarts, rescues and resets cannot lower it. Two boards:
+this UTC week (D037, unchanged window) and all time (never resets), both top ten. Equal waves share a competition
+rank (1, 1, 3) and are listed by who finished that wave first. Solo and crews share one ranking without adjustment;
+each row shows `Solo` or `Crew of N`, the captains who joined the scoring run (a count only). The existing T5 captain
+statue is the statue meant by T45; no altar exists and none is added. It gains cosmetic stages from the island's best
+won wave: 25 bronze (unchanged), 50 silver (raised cutlass), 75 gold (pennant), 100 crowned. The Leaderboard card shows
+"This island": best wave, shield rank, statue stage and the next milestones. No rewards, colliders, gameplay effects,
+tables, migrations or feature flags.
+
+**Why:** Run history is append-only, so a score never depends on how a later reset rewrites progress. One ranking keeps
+the board small and avoids judging crew sizes; the label still makes the comparison visible. The statue already
+existed, so extending it keeps the art style and avoids a new landmark that could clash with T38's central building.
+
+**Limits and follow-up:** The all-time scan has T7's 2,000-run bound and answers 503 rather than a partial board; a
+database aggregate may be needed later. Statue and shield read `campaign.wave`; if T38/D044 lowers `wave_best` on reset
+or splits best from current/unlocked wave, they must read the never-lowered best value. See the re-check list in
+[the T45 spec](../specs/T45-highscore-statue.md#re-check-once-t38s-reset-contract-proposed-d044-is-accepted) and the
+[API contract](INTERFACES.md#weekly-island-leaderboard-t7).
+

@@ -645,7 +645,15 @@ async def get_island(
 
 
 @router.get("/island/leaderboard")
-async def get_leaderboard(player: IslandPlayerDep, admin: AdminDep) -> leaderboard.Leaderboard:
+async def get_leaderboard(
+    player: IslandPlayerDep, admin: AdminDep, scope: leaderboard.Scope = "week"
+) -> leaderboard.Leaderboard:
+    """Top ten islands this UTC week (`scope=week`, the default) or ever (`scope=all`).
+
+    Read-only (T7, T45, decision D046); any other scope is a 422 validation error.
+    """
+    if scope == "all":
+        return await leaderboard.all_time(admin)
     return await leaderboard.weekly(admin)
 
 

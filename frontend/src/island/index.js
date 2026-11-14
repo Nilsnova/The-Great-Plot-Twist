@@ -40,6 +40,7 @@ import {addMenuExtras} from '../shell/menu-extras.js';
 import {GAME_STARTED, captainColours, lobbyModel} from './lobby.js';
 import {resolvePeer} from '../net/live-extras.js';
 import {travelAllowed, visitChip, visitName} from './one-island.js';
+import {progressSummary} from './progression.js';
 
 export const ARRIVAL_KEY = 'plot_twist_island_arrival_v1';
 // A build or upgrade went through: {place: 'own' | 'visit' | 'point', spot}. The wave wiring tells the
@@ -404,14 +405,18 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     openSpot = null; cardMessage = ''; if (['captain', 'skills', 'weapons'].includes(tab)) captainTab = tab;
     ui.captainCard(captain(), captainHandlers); void freshOwn();
   }
-  let leaderboardRequest = 0;
-  async function openLeaderboard() {
+  // T7/T45: the Leaderboard card. It remembers the chosen tab (this week or all time) while the game runs.
+  let leaderboardRequest = 0, leaderboardScope = 'week';
+  async function openLeaderboard(scope = leaderboardScope) {
     const request = ++leaderboardRequest;
-    openSpot = null;
-    ui.leaderboardCard({loading: true}, () => void openLeaderboard());
-    const answer = await api.leaderboard();
+    openSpot = null; leaderboardScope = scope;
+    const shown = campaign(); // the island on screen, as its statue and shield show it
+    const base = {scope, progress: shown ? progressSummary(shown.wave) : null};
+    const actions = {retry: () => void openLeaderboard(), choose: next => void openLeaderboard(next)};
+    ui.leaderboardCard({...base, loading: true}, actions);
+    const answer = await api.leaderboard(scope);
     if (disposed || request !== leaderboardRequest || ui.open !== 'leaderboard') return;
-    ui.leaderboardCard(answer.ok ? {data: answer.data} : {message: answer.message}, () => void openLeaderboard());
+    ui.leaderboardCard(answer.ok ? {...base, data: answer.data} : {...base, message: answer.message}, actions);
   }
   function openCaptains() { openSpot = null; cardMessage = ''; ui.captainsCard(captainsModel([...here.values()])); }
   async function openBell() {
@@ -745,7 +750,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const stopMenu = menu(() => [
     {label: 'Players and invite', onSelect: () => openLobby()},
     ...(visiting || visitCode ? [{label: 'Leave this game', onSelect: () => void leaveGame()}] : []),
-    {label: 'Weekly leaderboard', onSelect: () => void openLeaderboard()},
+    {label: 'Leaderboard', onSelect: () => void openLeaderboard()},
     {label: 'Crew', onSelect: () => openCrew()},
     {label: 'Captain and skills', onSelect: () => openCaptain()},
     ...(here.size ? [{label: `Captains here (${here.size})`, onSelect: () => openCaptains()}] : []),

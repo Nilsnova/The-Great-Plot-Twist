@@ -80,6 +80,17 @@ const isCount = value => Number.isSafeInteger(value) && value >= 0;
 const isText = value => typeof value === 'string' && value.length > 0 && value.length <= 200;
 
 // --- answer shapes -------------------------------------------------------------------------------
+const isDate = value => typeof value === 'string' && Number.isFinite(Date.parse(value));
+// T7/T45 ranking row. `crew` (captains of the scoring run, at most 10) may be missing from a T7 server.
+const isRankRow = row => !!row && isText(row.name) && Number.isInteger(row.rank) && row.rank >= 1 && row.rank <= 10 &&
+  Number.isInteger(row.wave) && row.wave >= 1 && row.wave <= 1000 &&
+  (row.crew === undefined || (Number.isInteger(row.crew) && row.crew >= 1 && row.crew <= 10));
+// A weekly board has its week (and may omit `scope`, as T7 did); the all-time board has none.
+function isLeaderboard(data, scope) {
+  if (!data || !Array.isArray(data.entries) || data.entries.length > 10 || !data.entries.every(isRankRow)) return false;
+  if (scope === 'all') return data.scope === 'all' && data.weekStart === null && data.weekEnd === null;
+  return (data.scope === undefined || data.scope === 'week') && isDate(data.weekStart) && isDate(data.weekEnd);
+}
 export function isSpot(spot) {
   return !!spot && isText(spot.id) && isText(spot.kind) && typeof spot.built === 'boolean' && isCount(spot.cost);
 }
@@ -186,12 +197,9 @@ export function createIslandApi({transport, makeUid = makeActionUid} = {}) {
   const refuse = (status, code, message) => Promise.resolve({ok: false, status, code, message});
 
   return {
-    leaderboard: () => ask(() => transport.get(PATHS.leaderboard), data =>
-      !!data && typeof data.weekStart === 'string' && Number.isFinite(Date.parse(data.weekStart)) &&
-      typeof data.weekEnd === 'string' && Number.isFinite(Date.parse(data.weekEnd)) &&
-      Array.isArray(data.entries) && data.entries.length <= 10 && data.entries.every(row =>
-        !!row && isText(row.name) && Number.isInteger(row.rank) && row.rank >= 1 && row.rank <= 10 &&
-        Number.isInteger(row.wave) && row.wave >= 1 && row.wave <= 1000)),
+    // scope 'week' (T7) or 'all' (T45, all time). The answer must be the board that was asked for.
+    leaderboard: (scope = 'week') => ask(() => transport.get(scope === 'all' ? `${PATHS.leaderboard}?scope=all` : PATHS.leaderboard),
+      data => isLeaderboard(data, scope)),
     getIsland: () => askSpots(() => transport.get(PATHS.island), isIsland),
     // code: a friend's island (ISLE-XXXXX) to build on with your own coins; without it your own island.
     build({spot, kind, code = null} = {}) {
