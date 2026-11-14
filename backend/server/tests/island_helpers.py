@@ -26,6 +26,9 @@ FakeIslandDatabase answers exactly the calls the island and wave routes make, an
                                              recorded)
   * POST rpc/island_demolish, island_demolish_quote
                                              paid_replies[name] (default: DEMOLISHED, QUOTED)
+  * GET island_layout, POST rpc/island_move  the moved spots of T36 (layout_rows; layout_reply
+                                             None: the table is missing, a 404) and the move
+                                             (move_replies, one per try; default done)
   * GET pirate_point_buildings, GET wave_runs  Pirate Point's buildings and best wave, and where a
                                              wave runs (wave_places, by id)
   * POST rpc/game_join, game_leave, game_list, game_members, GET island_members
@@ -216,6 +219,11 @@ class FakeIslandDatabase:
             WAVE_ID: {"place": "island", "island_owner": PLAYER_ID}
         }
         self.games = FakeGames(self)
+        # T36: the island_layout rows of every island ({"plot", "x_half", "z_half"}), one list;
+        # layout_missing pretends the migration is not applied (the database answers 404).
+        self.layout_rows: list[dict] = []
+        self.layout_missing = False
+        self.move_replies: list[dict] = []
         self.requests: list[httpx.Request] = []
 
     def __call__(self, request: httpx.Request) -> httpx.Response:
@@ -251,6 +259,8 @@ class FakeIslandDatabase:
             "POST /rpc/game_members": self.games.members,
             "GET /island_members": self.games.read_membership,
             "GET /island_research": lambda _: httpx.Response(200, json=self.research),
+            "GET /island_layout": self.read_layout,
+            "POST /rpc/island_move": self.move,
             "POST /rpc/island_specialise": lambda _: self.answer(
                 self.paid_replies.get("island_specialise", SPECIALISED)
             ),
@@ -328,6 +338,21 @@ class FakeIslandDatabase:
             return httpx.Response(200, json=self.point_best)
         row = self.wave_places.get(wave_id.removeprefix("eq."))
         return httpx.Response(200, json=[row] if row else [])
+
+    def read_layout(self, request: httpx.Request) -> httpx.Response:
+        if self.layout_missing:
+            return httpx.Response(404, json={"code": "PGRST205", "message": "no such table"})
+        return httpx.Response(200, json=self.layout_rows)
+
+    def move(self, request: httpx.Request) -> httpx.Response:
+        """island_move(): the next queued reply, else done (and the row is stored)."""
+        if self.move_replies:
+            return httpx.Response(200, json=self.move_replies.pop(0))
+        body = json.loads(request.content)
+        row = {"plot": body["p_plot"], "x_half": body["p_x_half"], "z_half": body["p_z_half"]}
+        self.layout_rows = [item for item in self.layout_rows if item["plot"] != row["plot"]]
+        self.layout_rows.append(row)
+        return httpx.Response(200, json={"status": "done"})
 
     def read_name(self, request: httpx.Request) -> httpx.Response:
         player = request.url.params["id"].removeprefix("eq.")

@@ -31,6 +31,7 @@ FLAG_NAMES = (
     # D039 (proposed): wall damage stays after a wave, paid Repair/Rebuild between waves.
     # Needs supabase/migrations/20261114100000_wall_recovery.sql applied first.
     "wall_recovery",
+    "placement",  # T36 flexible placement: needs migration 20261114110000_island_layout.sql
 )
 
 

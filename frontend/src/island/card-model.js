@@ -28,7 +28,7 @@ export const coinText = n => (Number.isSafeInteger(n) ? formatCoins(n) : '🪙 ?
 // GAME-V3.md §4.2: a built building on an island (not Pirate Point) has a secondary "Tear down" in
 // `demolish` {label, disabled, reason}; battle: a wave runs on screen, so it waits for the break.
 export function buildCardModel({spotId, kind, slot = null, spot = null, coins = null, visitor = false, ownerName = '',
-  busy = false, message = '', unlocks = null, prices = null, point = false, campaign = null, battle = false} = {}) {
+  busy = false, message = '', unlocks = null, prices = null, point = false, campaign = null, battle = false, movable = false} = {}) {
   const place = slot ?? (kind === 'cannon' || kind === 'mortar' || kind === 'harpoon' ? 'tower' : kind ?? 'wall');
   const built = spot?.built === true, standing = built ? spot.kind : null;
   const level = built ? (Number.isSafeInteger(spot.level) && spot.level > 0 ? spot.level : 1) : 0;
@@ -42,7 +42,7 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
     button: '', disabled: true, reason: '', upgrade: null, soon: '', message, busy, skills: null, locked: false,
     coins: coins === null ? '' : `You have ${coinText(coins)}`,
     owner: point ? 'Paid by you · belongs to Pirate Point' : visitor ? `You pay · it stays on ${ownerName ? `${ownerName}'s` : 'this'} island` : '', hire: false,
-    demolish: null};
+    demolish: null, move: null};
   if (shown && level > 0) {
     model.pips = Array.from({length: model.maxLevel}, (_, index) => index < level);
     model.stats = statLine(shown, level);
@@ -56,6 +56,8 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
     model.purpose = spotNeeds === waveOf('ring_walls') ? 'The inner ring of walls around the heart.' : model.purpose;
     return model;
   }
+  // T36: any spot of your island (built or empty) may move to another cell of the build grid, between waves.
+  if (!point && movable) model.move = {label: 'Move', disabled: battle || !!busy, reason: battle ? 'You can move it between waves.' : ''};
   if (!built && place === 'tower') {
     model.mode = 'choose'; model.title = 'Tower spot'; model.purpose = 'Choose what to build. You cannot change it later.';
     for (const choice of point ? POINT_TOWER_KINDS : SLOT_KINDS.tower) {
