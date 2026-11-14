@@ -811,7 +811,7 @@ and [message contract](INTERFACES.md#t28-boss-minigame-preparation).
 
 ## D040 · Enemy targets and wall pathing (T34/T35) · 2026-11-14
 
-**Status:** proposed. Agreed by: pending team review. Design and pure modules on branch `feat/t34-t35-targeting-pathing`; not wired into `sim.js` yet. Work authorized by Nils (`Nilsnova`); roadmap by Ianno (`Iannomh123456`).
+**Status:** proposed. Agreed by: pending team review. On 14 Nov 2026 Nils (`Nilsnova`) accepted the closed-ring gap (a closed wall ring at wave 60 is 12 to 18 points harder with pathing), and the flag `pathing` has been live in production since about 22:00 UTC. Modules merged in PR #33, wired into `sim.js` in PR #52, retuned in PR #59. Work authorized by Nils (`Nilsnova`); roadmap by Ianno (`Iannomh123456`).
 
 **Decision (proposed):**
 
