@@ -13,6 +13,8 @@ export const KINDS = Object.freeze({
   cannon: Object.freeze({name: 'Cannon', purpose: 'Fires at one ship at a time.', cost: 30}),
   mortar: Object.freeze({name: 'Mortar', purpose: 'Hits every ship near the impact.', cost: 60}),
   harpoon: Object.freeze({name: 'Harpoon tower', purpose: 'Slows one ship at a time with a rope harpoon.', cost: 40}),
+  // T43 (D048 proposed): only an island answer with the flag defenses_v2 on holds one.
+  culverin: Object.freeze({name: 'Culverin', purpose: 'Hits far ships hard but slowly.', cost: 80}),
   watchtower: Object.freeze({name: 'Watchtower', purpose: 'Gives all your towers more range.', cost: 40}),
   house: Object.freeze({name: 'House', purpose: 'Adds 🪙 5 loot for every wave you win.', cost: 50}),
 });

@@ -214,7 +214,10 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
           const services=findPanelServices(session);return services?.isReady()?services.getFlags()?.wall_recovery===true:false;},
         // The arsenal (T41, D042): the server's flag "arsenal"; in the dev fake ?fakeflags=arsenal (or ?arsenal=1).
         arsenalOn:()=>fakeTransport?(fakeTransport.flags.arsenal===true||new URLSearchParams(location.search).get('arsenal')==='1')
-          :findPanelServices(session)?.getFlags?.()?.arsenal===true});
+          :findPanelServices(session)?.getFlags?.()?.arsenal===true,
+        // T43 (D048 proposed): the culverin on the tower spots, only while the server's flag defenses_v2 is on
+        // (in the dev fake ?fakeflags=defenses_v2).
+        defensesV2On:()=>fakeTransport?fakeTransport.flags.defenses_v2===true:findPanelServices(session)?.getFlags?.()?.defenses_v2===true});
       if(adapter)island.setPresence(adapter.read()?.presence);
       void ensureWaves();
       return island;
