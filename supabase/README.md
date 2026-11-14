@@ -309,7 +309,7 @@ Manual checks after applying: the three checks in the header comment of the migr
 
 ## The arsenal migration
 
-`migrations/20261114120000_arsenal.sql` (T40/T41, decision D042) is the database part of the island arsenal ([INTERFACES.md](../docs/INTERFACES.md#shared-island-arsenal-t40t41)). Apply it after every earlier file, then switch the flag `arsenal` on; while the flag is off nothing reads it and the old weapon shop keeps working. **Applying it changes no existing row**: a player's old personal weapons (`islands.weapons_owned`) become copies the first time their island's arsenal is opened with the flag on (`arsenal_convert_island()`, called by `arsenal_state()`); `select public.arsenal_convert_personal_weapons();` does it for everyone at once (optional, as `service_role`, safe to repeat). It adds no wallet reason: a copy is bought with the existing `weapon_purchase` (spend), ref `arsenal:<actionUid>`.
+`migrations/20261114120000_arsenal.sql` (T40/T41, decision D042) is the database part of the island arsenal ([INTERFACES.md](../docs/INTERFACES.md#shared-island-arsenal-t40t41)). Apply it after every earlier file, then switch the flag `arsenal` on; while the flag is off nothing reads it and the old weapon shop keeps working. **Applying it changes no existing row**: a player's old personal weapons (`islands.weapons_owned`) become copies the first time their island's arsenal is opened with the flag on (`arsenal_convert_island()`, called by `arsenal_state()`); **When the flag is switched on, run `select public.arsenal_convert_personal_weapons();` once** (as `service_role`, safe to repeat): it converts everyone at once; the lazy conversion stays as a safety net. It adds no wallet reason: a copy is bought with the existing `weapon_purchase` (spend), ref `arsenal:<actionUid>`.
 
 | Name | What it is | Who changes it |
 |---|---|---|
@@ -322,6 +322,10 @@ Manual checks after applying: the three checks in the header comment of the migr
 
 Opt-in SQL checks (20-slot cap, exclusive possession, repeats, concurrent claims and returns on committed data, full-rack return, departed captains, conversion): `CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql/test_arsenal_sql.py` from `backend/`. The read-only checks after applying are in the migration's header (a to e).
 
+Who may do what (the same two locks as [the matrix below](#who-may-do-what)):
+
+| Table or function | Action | Visitor (`anon`) | Signed-in player (`authenticated`) | Server (`service_role`) |
+|---|---|---|---|---|
 | `arsenal_copies` | read / insert / update | no access | no access | yes (through the functions) |
 | `arsenal_copies` | delete | no access | no access | no access (deleted with its island or its holder's account, by cascade) |
 | `arsenal_moves` | read / insert | no access | no access | yes (through the functions) |

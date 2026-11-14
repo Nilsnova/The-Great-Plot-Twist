@@ -47,7 +47,7 @@ Weapons were a personal list (`islands.weapons_owned`): bought once, equipped by
 | Island transfer | Copies belong to their island. On another island you carry that island's copy or the musket. One copy per captain per island. |
 | Defeat | Changes nothing in the arsenal (T38 may change). |
 | Account deletion | The copy that account carried is deleted with it (D022); every other path keeps every copy. |
-| Old personal weapons | Converted lazily, the first time the owner's island arsenal is opened with the flag on: equipped one carried, others stored. Nothing is converted at migration time, so the old shop keeps working while the flag is off. |
+| Old personal weapons | Converted lazily, the first time the owner's island arsenal is opened with the flag on: equipped one carried, others stored. Nothing is converted at migration time, so the old shop keeps working while the flag is off. **When the flag is switched on, run `select public.arsenal_convert_personal_weapons();` once** (repeat-safe); the lazy conversion stays as a safety net. |
 
 ## Out of scope
 
@@ -62,7 +62,7 @@ Weapons were a personal list (`islands.weapons_owned`): bought once, equipped by
 - [x] `cd backend && CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql`: the 23 arsenal invariant checks and every other island SQL check pass.
 - [x] `cd backend && uv run ruff check .`: no problems. SQL parse check (ENGINEERING 4.2 step 9) passes.
 - [x] `cd frontend && npm test && npm run build`: pass.
-- [ ] A teammate applies the migration (supabase/README.md, "The arsenal migration"), then switches `FEATURE_FLAGS` to include `arsenal`.
+- [ ] A teammate applies the migration (supabase/README.md, "The arsenal migration"), then switches `FEATURE_FLAGS` to include `arsenal`, then runs `select public.arsenal_convert_personal_weapons();` once (as `service_role`; safe to repeat), so every player's old weapons are copies at once instead of on the first look at their arsenal.
 - [ ] Two-browser check on a real project: two captains, one copy, one gets it; full-rack return refused.
 - [ ] No secrets, private data or generated caches are in the diff.
 - [ ] A different human teammate has reviewed and approved the current change.

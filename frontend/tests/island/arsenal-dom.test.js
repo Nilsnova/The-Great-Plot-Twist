@@ -68,3 +68,32 @@ it('with the flag off there is no arsenal: E does nothing there and the old weap
   });
   expect(result).toEqual({opened: false, tabs: ['Captain', 'Skills', 'Weapons'], weapon: 'musket'});
 });
+
+it('draws nothing of the arsenal while the flag is off, and paints it once when it turns on', async () => {
+  const result = await evaluate(async () => {
+    const THREE = await window.g20Import('/node_modules/three/build/three.module.js');
+    const {createIsland} = await window.g20Import('/src/island/index.js');
+    const {createFakeIslandTransport} = await window.g20Import('/src/pirates/fake-api.js');
+    const {on, emit} = await window.g20Import('/src/core/events.js');
+    let flag = false;
+    const island = createIsland({container: document.body, mode: 'fake', transport: createFakeIslandTransport(), on, emit, storage: null,
+      menu: () => () => {}, arsenalOn: () => flag});
+    const cleanups = [], place = {group: new THREE.Group(), colliders: [], zones: [], update() {}};
+    await island.load(); island.decorate(place, {}, cleanups);
+    const count = () => { let n = 0; place.group.traverse(item => { if (item.name === 'island-arsenal') n++; }); return n; };
+    const zone = () => place.zones.some(item => item.id === 'island_arsenal');
+    try {
+      await island.refreshDefended();
+      const off = {meshes: count(), zone: zone()};
+      flag = true; await island.refreshDefended();
+      const first = {meshes: count(), zone: zone(), visible: place.group.getObjectByName('island-arsenal').visible};
+      await island.refreshDefended(); await island.refreshDefended();
+      const again = count();
+      flag = false; await island.refreshDefended();
+      const hidden = {meshes: count(), zone: zone(), visible: place.group.getObjectByName('island-arsenal').visible};
+      return {off, first, again, hidden};
+    } finally { cleanups.forEach(stop => stop()); island.dispose(); }
+  });
+  expect(result).toEqual({off: {meshes: 0, zone: false}, first: {meshes: 1, zone: true, visible: true}, again: 1,
+    hidden: {meshes: 1, zone: false, visible: false}});
+});

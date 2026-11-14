@@ -204,9 +204,13 @@ export function decorateIsland(place, ctx = {}) {
     }
     campaignMeshes.set(building.id, meshes);
   }
-  // The arsenal (T41): drawn once, shown while the flag "arsenal" is on (apply's `arsenal`).
-  const arsenalMesh = layout.bell === false ? null : sprite(root, drawn(ARSENAL.art), ARSENAL.x, ARSENAL.z, 'island-arsenal');
-  if (arsenalMesh) arsenalMesh.visible = false;
+  // The arsenal (T41): painted only the first time apply() is told the flag "arsenal" is on, so with the flag off
+  // nothing of it is drawn or kept (home island only, like the bell).
+  let arsenalMesh = null;
+  const showArsenal = on => {
+    if (on && !arsenalMesh && layout.bell !== false) arsenalMesh = sprite(root, drawn(ARSENAL.art), ARSENAL.x, ARSENAL.z, 'island-arsenal');
+    return arsenalMesh;
+  };
   if (layout.cabin !== false && ctx.art?.cabin) placeArt(root, ctx.art, 'cabin', CABIN.x, CABIN.z).name = 'island-cabin';
   // The reach of a house's role while its card is open (GAME-V3.md "Houses"): a soft disc with a bright rim on
   // the ground, in the role's colour. ctx.range() says which ({x, z, radius, role} or null), read every frame.
@@ -262,7 +266,8 @@ export function decorateIsland(place, ctx = {}) {
     if (disposed) return;
     state = {spots, visitor, battle, unlocks, crew, campaign, arsenal: arsenal === true};
     const known = spots.length > 0;
-    if (arsenalMesh) arsenalMesh.visible = known && state.arsenal;
+    const shownArsenal = showArsenal(known && state.arsenal);
+    if (shownArsenal) shownArsenal.visible = known && state.arsenal;
     progress?.apply(campaign, spots, known);
     for (const [id, meshes] of campaignMeshes) {
       const frame = known ? campaignArt(CAMPAIGN_BUILDINGS.find(item => item.id === id), campaign) : null;

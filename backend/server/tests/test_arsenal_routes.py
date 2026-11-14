@@ -248,6 +248,9 @@ def test_the_capacity_and_the_policy_match_the_migration():
     # D043: the host and every member may use the arsenal; only a buy is paid, by the buyer.
     for action in MATRIX_ACTION.values():
         assert permissions.ACTIONS[action].roles == permissions.HOST_AND_MEMBERS
+    # Every move (not the look) is between waves only, as the SQL functions refuse wave_running.
+    for action in ("buy", "take", "return"):
+        assert permissions.ACTIONS[MATRIX_ACTION[action]].between_waves is True
     assert permissions.payer_of(MATRIX_ACTION["buy"], "me") == "me"
     assert permissions.payer_of(MATRIX_ACTION["take"], "me") is None
 
