@@ -70,7 +70,7 @@ The enemy goes for the first kind in its order that has a valid candidate. Kinds
 
 ## Measured performance
 
-`tests/pirates/pathing-performance.test.js`: 300 boarders at once on the home_islet coast grid (48 × 48 cells), six shore walls plus a closed level-5 ring, twelve moving captains, hacking, breaks and rebuilds, for a full 150 s wave (3000 ticks). On the dev container (14 Nov): about **1 ms per tick** for targeting plus pathing together (0.9–1.6 ms over runs), **56 field builds** in the whole wave, no boarder inside a standing wall and none stuck. The test prints its own figure (`[T35 perf]`) and fails above 25 ms per tick. A late catch-up of `CONFIG.maxStep` (600 ticks) would take roughly 0.6–1 s at this load; the wiring PR should measure it on a phone.
+`tests/pirates/pathing-performance.test.js`: 300 boarders at once on the home_islet coast grid (48 × 48 cells), six shore walls plus a closed level-5 ring, twelve moving captains, hacking, breaks and rebuilds, for a full 150 s wave (3000 ticks). On the dev container (14 Nov): about **1 ms per tick** for targeting plus pathing together (0.9–1.6 ms over runs) while the machine was quiet, and **4.7 ms per tick** while it was shared with other test runs (load average 41); **56 field builds** in the whole wave, no boarder inside a standing wall and none stuck. The test prints its figure (`[T35 perf]`; run it with `npx vitest run tests/pirates/pathing-performance.test.js --silent=false` to see it), fails above 25 ms per tick and allows itself 120 s. A late catch-up of `CONFIG.maxStep` (600 ticks) would take roughly 0.6–1 s at this load; the wiring PR should measure it on a phone.
 
 ## Finding: today's isolated wall spots
 

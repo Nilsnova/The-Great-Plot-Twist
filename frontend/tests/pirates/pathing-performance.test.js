@@ -95,5 +95,5 @@ describe('late-wave performance of targeting and pathing', () => {
     expect(result.rebuilt).toBeGreaterThan(0);  // walls broke and were rebuilt during the wave
     expect(result.builds).toBeLessThan(TICKS / 10); // the field is rebuilt on wall changes, not every tick
     expect(perTick).toBeLessThan(25); // generous for slow test machines; the measured figure is printed above
-  });
+  }, 120_000); // a whole wave of 300 boarders takes a few seconds; shared CI machines can be much slower
 });
