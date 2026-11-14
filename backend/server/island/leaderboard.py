@@ -117,6 +117,9 @@ async def ranked(admin: SupabaseAdmin, runs: list[WaveRow]) -> list[Entry]:
     return entries
 
 
+MAX_CREW = 10  # the most captains a game room holds (game_full)
+
+
 async def crew_size(admin: SupabaseAdmin, wave_id: UUID) -> int:
     """How many captains joined the scoring run. Only the count leaves the server."""
     rows = await admin.select_rows(
@@ -125,4 +128,7 @@ async def crew_size(admin: SupabaseAdmin, wave_id: UUID) -> int:
     captains = [read_model(CaptainRow, raw) for raw in rows]
     # The bell-ringer is always a participant (migration 20261110020000 backfilled old
     # runs), so an empty answer would be a gap in old data: show it as solo, never 0.
-    return max(1, len(captains))
+    # A room holds at most MAX_CREW captains, but wave_participants also keeps people who
+    # joined and left, so cap the count: the browser refuses a row above MAX_CREW, and one
+    # such row would hide the whole board.
+    return min(MAX_CREW, max(1, len(captains)))

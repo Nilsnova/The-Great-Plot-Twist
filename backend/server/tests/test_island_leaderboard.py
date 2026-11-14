@@ -193,3 +193,18 @@ def test_route_scope_chooses_the_board_and_refuses_unknown_scopes(monkeypatch):
     assert world.client.get("/api/island/leaderboard?scope=week", headers=PLAYER).status_code == 200
     weekly.assert_awaited_once()
     assert world.client.get("/api/island/leaderboard?scope=ever", headers=PLAYER).status_code == 422
+
+
+def test_crew_size_is_capped_at_ten(monkeypatch):
+    """A run whose participant list outgrew a full room (joined and left) shows at most 10."""
+    import asyncio
+    from uuid import uuid4
+
+    from server.island import leaderboard
+
+    class Admin:
+        async def select_rows(self, table, params):
+            return [{"player_id": str(uuid4())} for _ in range(13)]
+
+    monkeypatch.setattr(leaderboard, "read_model", lambda model, raw: raw)
+    assert asyncio.run(leaderboard.crew_size(Admin(), uuid4())) == leaderboard.MAX_CREW == 10
