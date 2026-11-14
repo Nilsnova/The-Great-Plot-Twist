@@ -21,6 +21,9 @@ FakeIslandDatabase answers exactly the calls the island and wave routes make, an
   * POST rpc/island_specialise               paid_replies[name] (default: SPECIALISED)
   * POST rpc/island_learn_skill, island_weapon_equip
                                              paid_replies[name] (default: LEARNED, EQUIPPED)
+  * GET islet_buildings?building_type=eq.wall  the walls with their health (walls, D039)
+  * POST rpc/island_wall_restore, island_walls_record  paid_replies[name] (default: done,
+                                             recorded)
   * POST rpc/island_demolish, island_demolish_quote
                                              paid_replies[name] (default: DEMOLISHED, QUOTED)
   * GET pirate_point_buildings, GET wave_runs  Pirate Point's buildings and best wave, and where a
@@ -116,6 +119,7 @@ PAID_FUNCTIONS = (
     "island_research",
     "island_wreck_repair",
     "island_respec_at_level",
+    "island_wall_restore",
 )
 PAID_DONE = {"status": "done", "level": 2, "balance": 70, "repeat": False}
 ROLE_PICKED = {"status": "done", "role": "medic", "repeat": False}
@@ -167,6 +171,9 @@ class FakeIslandDatabase:
         self.has_wallet = True
         self.open_replies: list[dict] = []
         self.buildings: dict[str, list[dict]] = {}
+        # D039: the walls of each island with their health ({owner: [{plot, level, wall_health,
+        # wall_damaged_at}]}), read with building_type=eq.wall.
+        self.walls: dict[str, list[dict]] = {}
         self.known_refs: set[str] = set()
         self.islands: dict[str, dict] = {}
         self.names: dict[str, str] = {}
@@ -259,6 +266,9 @@ class FakeIslandDatabase:
         handlers["POST /rpc/island_weapon_equip"] = lambda request: self.answer(
             self.paid_replies.get("island_weapon_equip", EQUIPPED)
         )
+        handlers["POST /rpc/island_walls_record"] = lambda request: self.answer(
+            self.paid_replies.get("island_walls_record", {"status": "recorded"})
+        )
         handlers["POST /rpc/island_demolish"] = lambda request: self.answer(
             self.paid_replies.get("island_demolish", DEMOLISHED)
         )
@@ -285,6 +295,8 @@ class FakeIslandDatabase:
             known = ref.removeprefix("eq.") in self.known_refs
             return httpx.Response(200, json=[{"plot": "wall_1"}] if known else [])
         owner = request.url.params["player_id"].removeprefix("eq.")
+        if request.url.params.get("building_type") == "eq.wall":
+            return httpx.Response(200, json=self.walls.get(owner, []))
         rows = [{"level": 1, **row} for row in self.buildings.get(owner, [])]
         return httpx.Response(200, json=rows)
 

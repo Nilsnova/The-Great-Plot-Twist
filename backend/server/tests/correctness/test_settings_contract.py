@@ -25,6 +25,7 @@ FLAGS = (
     "demo",
     "islands",
     "rescue",
+    "wall_recovery",
     "defenses_v2",
 )
 VARIABLES = {

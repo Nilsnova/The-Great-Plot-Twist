@@ -84,7 +84,8 @@ POST /api/island/upgrade  {"spot": "cannon_1", "actionUid": "...", "code"?: "ISL
     -> the island. One level up (ledger ref upgrade:<actionUid>); the kind stays. "code" works
     as for a build (co-op on a friend's island).
     Errors: 404 no_such_island (a code that names no island), 404 no_such_spot, 409 not_built,
-            409 max_level, 409 locked, 409 insufficient_funds
+            409 max_level, 409 locked, 409 insufficient_funds, and with the flag wall_recovery
+            on 409 needs_repair (a damaged or destroyed wall: repair it first, D039)
 
 POST /api/island/hire  {"crew": "gunner" | "carpenter" | "lookout", "actionUid": "..."}
     -> the island. One crew member, kept (ledger ref crew:<actionUid>). Always your own island.
@@ -194,9 +195,10 @@ from fastapi import APIRouter, Depends, Path, Query, Request, Response
 from pydantic import BaseModel, ConfigDict, Field
 
 from server.auth import Player, PlayerDep
+from server.clock import ClockDep
 from server.errors import ApiError
 from server.flags import is_enabled
-from server.island import leaderboard, rules, service
+from server.island import leaderboard, rules, service, wall_repair
 from server.island.catalogue import IslandCatalogue
 from server.island.rules import ResearchTier, SpotView
 from server.island.service import CampaignView, DemolishView, IslandCatalogueDep, IslandView
@@ -670,9 +672,14 @@ async def post_upgrade(
     player: IslandPlayerDep,
     catalogue: IslandCatalogueDep,
     admin: AdminDep,
+    settings: SettingsDep,
+    now: ClockDep,
     request: Request,
 ) -> IslandResponse:
     request.app.state.island_build_budget.spend(player.id)
+    if is_enabled("wall_recovery", settings.flags):
+        # T47 (D039): a damaged or destroyed wall is repaired first; an upgrade never heals it.
+        await wall_repair.check_upgrade(admin, catalogue, player.id, body.spot, now(), body.code)
     view = await service.upgrade(admin, catalogue, player.id, body.spot, body.actionUid, body.code)
     return island_out(view, catalogue)
 

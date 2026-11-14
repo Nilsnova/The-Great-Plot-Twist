@@ -206,7 +206,9 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
         // The Harbor building (GAME-V3.md §4) opens the same stalls as the old Harbor overview.
         openHarborStall:id=>void(id==='weather'?harbor.openWeather():id==='market'?openMarket():id==='match'?sportsUi.open().catch(()=>{}):null),
         // The visit chip: the old "Visiting … · Sail home" only where travel applies (src/island/one-island.js).
-        travel:()=>travelOpen()});
+        travel:()=>travelOpen(),
+        // D039 (proposed): lasting wall damage and the paid Repair/Rebuild, only while the server's flag is on.
+        wallRecovery:()=>{const services=findPanelServices(session);return services?.isReady()?services.getFlags()?.wall_recovery===true:false;}});
       if(adapter)island.setPresence(adapter.read()?.presence);
       void ensureWaves();
       return island;
