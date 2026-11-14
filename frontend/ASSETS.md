@@ -445,3 +445,7 @@ smoke ring) and `fx-culverin-ball` (16 × 8). Registered in [src/art/registry.js
 draws them until the culverin is wired in ([spec](../specs/T43-new-defenses.md)). Contact sheet next to the
 cannon and harpoon: [docs/evidence/t43/culverin-sheet.png](../docs/evidence/t43/culverin-sheet.png). Drawn for
 Nils (`Nilsnova`) with a coding agent; no downloaded art, font or reference image, no new license.
+
+## T33 tower damage art (cartoon, code-drawn)
+
+Thirty original, code-authored frames in `src/art/tower-states.js` and `src/art/island.js` (vector drawings in the island cartoon kit; no outside art, fonts or licences): `island-{cannon,mortar,harpoon}[-l2..-l5]-damaged` (leaning, cracked, scorched, smoking) and `-broken` (rubble and the kind wrecked weapon). Each is 48 x 32, anchor 5, the intact tower box. Cartoon-only and not requested by the game yet; see `specs/T33-tower-damage-art.md`. Contact sheet: `docs/evidence/T33/tower-states-contact-sheet.png`.
