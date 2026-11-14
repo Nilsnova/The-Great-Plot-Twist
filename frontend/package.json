@@ -20,6 +20,12 @@
     "test:weather:wiring": "node scripts/check-weather-wiring.js",
     "test:demo": "node scripts/check-demo-journey.js",
     "test:mp": "node scripts/check-multiplayer.js",
+    "test:placement": "node scripts/check-placement-mp.js",
+    "test:walls": "node scripts/check-wall-recovery-mp.js",
+    "test:rescue": "node scripts/check-rescue-mp.js",
+    "test:arsenal": "node scripts/check-arsenal-mp.js",
+    "test:culverin": "node scripts/check-culverin-mp.js",
+    "test:rules": "node scripts/check-rules-mp.js",
     "capture:wow": "node scripts/capture-wow.js",
     "capture:integrated": "node scripts/capture-integrated.js",
     "test:loading": "npm run build && node scripts/check-loading.js",
@@ -45,7 +51,8 @@
     "test:input": "vitest run --maxWorkers=1 tests/g20-input.test.js tests/map-touch.test.js tests/tap-path.test.js",
     "test:mobile": "node scripts/check-mobile-walking.js",
     "test:panels": "node scripts/check-open-panels.js",
-    "test:settings:visuals": "node scripts/check-settings-visuals.js"
+    "test:settings:visuals": "node scripts/check-settings-visuals.js",
+    "test:signin": "node scripts/check-online-signin.js"
   },
   "engines": {
     "node": "^22.12.0 || ^24.0.0 || >=26.0.0"

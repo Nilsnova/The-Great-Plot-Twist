@@ -69,8 +69,10 @@ The **harbor bell** stands near the south beach. Walk up to it and press **E** (
 - The wave bar at the top shows the wave, the ships left and the ♥ of the island.
 - **The weather is real.** A storm brings more ships. Fog hides them longer.
 - **Every 5th wave is a boss wave** with a warship. A boss wave pays double loot.
+- **Boss minigames get harder slowly after wave 10**: the target moves a little faster, the window is a little narrower and a little more must go right, up to a fixed limit at wave 100. Waves 5 and 10 play as before. The crew always shares one goal, and one captain alone can still win.
 - **Loot** for a won wave *n*: 🪙 25 + 10 × *n*, plus 🪙 10 for each house. From wave 30 it grows more slowly. A lost wave pays nothing.
 - A lost wave ends the run. You keep your buildings and coins. The next bell starts at your best wave minus 2.
+- *Planned, not in the game yet (T38, flag `rescue`):* when the island falls from wave 4 on, the captains still on it, fallen ones too, get a 10-second **last chance**: hold to haul the treasure chest to safety. Saved, the next bell starts at your best wave minus 1 instead of minus 2. Your best wave never goes down.
 
 ## The break, Pause and Continue
 
@@ -97,6 +99,7 @@ Ships that reach the shore let **boarders** climb out. They walk to the heart of
 
 - A standing wall stops them until they break it.
 - Press **E** at a damaged wall to repair it, and at a broken one to rebuild it.
+- When wall repairs are switched on (being tested): a wall keeps its damage into the next wave. Between waves its card offers **Repair** or **Rebuild** for a few coins instead of Upgrade, or it mends by itself 10 minutes later. Upgrade it once it is whole.
 - Your gun and your cutlass beat them.
 
 ## The heart of the island
@@ -141,6 +144,18 @@ New things open when your game first **wins** a wave. A toast and the narrator s
 | 99 | The final battle is next: wave 100 |
 
 What you may build follows the best wave won on that island, whoever pays. Your captain, crew and weapons follow your own best wave.
+
+## The arsenal (once the team switches it on)
+
+The arsenal is a stone armory north-west of the island's heart, between the watchtower hill and the west house. Walk up to it and press **E** (or tap it, or **Use**). Your crew shares its weapons: up to 20 stored on the rack, and every captain carries at most one.
+
+- **Take** a stored weapon to carry it. If you carry one already, **Swap** puts yours back and takes the other in one step (this works even on a full rack).
+- **Return to the rack** gives your weapon back for a crewmate. A full rack (20 of 20) cannot take it: swap instead; you keep it, nothing is lost.
+- **Buy** a new copy with your own coins. It goes into your hands, or onto the rack if you already carry one. Each weapon opens after the wave shown on the card.
+- Every captain always has the **musket**. The card shows each weapon's damage, range and reload for your captain level, and who carries each copy.
+- Between waves only. A weapon stays with you when you reload or lose the connection.
+
+While the arsenal is on, weapons are bought there instead of in Menu › Captain and skills.
 
 ## The Harbor
 

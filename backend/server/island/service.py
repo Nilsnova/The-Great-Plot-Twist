@@ -16,6 +16,8 @@
                   they paid back (GAME-V3 section 4.2)
     harbor_wave() the best wave of the games a player is in: the Harbor opens after wave 4
     visit()    another player's island, found by its code
+    (moving a spot on the build grid, T36, is placement.py; every answer here carries the spots'
+    positions from layout.py and layout_store.py)
     invite()   the friend invite: an anonymous guest with a valid island code is admitted
 
 How a paid action is made, in one place:
@@ -38,9 +40,10 @@ from fastapi import Depends, Request
 from server.errors import ApiError
 from server.game import islet_store
 from server.game.building_catalogue import Cost
-from server.island import games, rules, store
+from server.island import games, layout, layout_store, permissions, rules, store
 from server.island.catalogue import IslandCatalogue
 from server.island.codes import read_code, shown
+from server.island.layout import LayoutInfo, Position
 from server.island.rules import Built, ResearchTier, SpotView
 from server.island.store import Demolished, Island, Paid, Progress, Refusal
 from server.supabase_admin import AlreadyApplied, InsufficientFunds, SupabaseAdmin, SupabaseRejected
@@ -59,6 +62,8 @@ WRECK_PREFIX = "wreck:"
 DEMOLISH_PREFIX = "demolish:"
 # The island has no timber any more (BUILD-PLAN 3.2): coins only.
 NO_TIMBER = 0
+# An answer made without reading the layout: the fixed spots, no moving (T36).
+FIXED_LAYOUT = LayoutInfo(version=1, grid=0.5, movable=False)
 
 
 @dataclass(frozen=True)
@@ -120,6 +125,7 @@ class IslandView:
     skills: SkillsView
     weapons: WeaponsView
     campaign: CampaignView
+    layout: LayoutInfo = FIXED_LAYOUT  # T36: the grid layout's version and whether moving works
 
 
 @dataclass(frozen=True)
@@ -132,6 +138,7 @@ class VisitView:
     spots: tuple[SpotView, ...]
     crew: dict[str, int]  # the owner's crew: every visitor simulates the same defenses
     campaign: CampaignView
+    layout: LayoutInfo = FIXED_LAYOUT
 
 
 @dataclass(frozen=True)
@@ -189,18 +196,21 @@ def view_of(
     progress: Progress,
     personal: Progress | None = None,
     research: dict[str, ResearchTier] | tuple[str, ...] = (),
+    stored: dict[str, Position] | None = None,
 ) -> IslandView:
     """The island of `progress` (its spots, best and next wave, campaign) with the personal part
     (coins, crew, captain, unlocks) of `personal`: the same player on their own island, the
-    visitor after a co-op build or upgrade on a friend's island."""
+    visitor after a co-op build or upgrade on a friend's island. `stored`: the island's moved
+    spots (layout_store.read_layout); None shows the fixed spots and no moving."""
     mine = progress if personal is None else personal
+    grid = layout.island_layout()
     return IslandView(
         code=shown(island.code),
         coins=coins,
         wave_best=progress.wave_best,
         flags=island.flags,
         next_wave=rules.next_wave(catalogue, progress.wave_best, progress.next_wave),
-        spots=rules.plan_spots(catalogue, built, role=mine.role),
+        spots=layout.place_spots(grid, rules.plan_spots(catalogue, built, role=mine.role), stored),
         crew=mine.crew,
         captain_level=mine.captain_level,
         captain_next_price=rules.captain_next_price(catalogue, mine.captain_level),
@@ -208,6 +218,7 @@ def view_of(
         skills=skills_of(catalogue, mine),
         weapons=weapons_of(catalogue, mine),
         campaign=campaign_of(catalogue, progress.wave_best, research, progress.wreck_paid),
+        layout=layout.info_of(grid, stored),
     )
 
 
@@ -233,6 +244,16 @@ def weapons_of(catalogue: IslandCatalogue, progress: Progress) -> WeaponsView:
     return WeaponsView(owned, equipped)
 
 
+async def read_stored(
+    admin: SupabaseAdmin, catalogue: IslandCatalogue, owner: str
+) -> dict[str, Position] | None:
+    """The island's moved spots (T36), or None (the fixed spots, no moving) while the flag
+    "placement" is off: then the layout table is never asked."""
+    if not catalogue.placement:
+        return None
+    return await layout_store.read_layout(admin, owner)
+
+
 async def look(admin: SupabaseAdmin, catalogue: IslandCatalogue, player_id: str) -> IslandView:
     """The player's own island. The first look makes it (and pays the starting coins once)."""
     island = await store.open_island(admin, player_id, catalogue.starting_coins)
@@ -249,23 +270,28 @@ async def look_open(
     progress = await store.read_progress(admin, island.owner)
     personal = None if payer is None else await store.read_progress(admin, payer)
     research = await store.read_research(admin, island.owner)
-    return view_of(catalogue, island, coins, built, progress, personal, research)
+    stored = await read_stored(admin, catalogue, island.owner)
+    return view_of(catalogue, island, coins, built, progress, personal, research, stored)
 
 
 async def target_island(
-    admin: SupabaseAdmin, catalogue: IslandCatalogue, player_id: str, code: str | None
+    admin: SupabaseAdmin,
+    catalogue: IslandCatalogue,
+    player_id: str,
+    code: str | None,
+    action: str = permissions.BUILD,
 ) -> tuple[Island, str | None]:
     """The island a build or upgrade is for, and the visiting payer (None on your own island).
     The payer's own island is opened first, so a brand-new visitor holds their starting coins.
-    On somebody else's island the payer must be a member of that game (403 not_member)."""
+    On somebody else's island permissions.py must allow `action` (403 not_member, T37)."""
     own = await store.open_island(admin, player_id, catalogue.starting_coins)
     if code is None:
         return own, None
     island = await find_by_code(admin, code)
     if island.owner == player_id:
         return own, None
-    # GAME-V3 section 2: only a member of the game builds or upgrades on its island.
-    await games.require_member(admin, island, player_id)
+    # GAME-V3 section 2 and D043: only a member of the game acts on its island.
+    await permissions.require_action(admin, island.owner, player_id, action)
     return island, player_id
 
 
@@ -358,7 +384,8 @@ async def build(
         raise refusal_error(outcome, catalogue, kind)
     built[spot.id] = Built(kind, 1)
     research = await store.read_research(admin, island.owner)
-    return view_of(catalogue, island, outcome.balance, built, progress, None, research)
+    stored = await read_stored(admin, catalogue, island.owner)
+    return view_of(catalogue, island, outcome.balance, built, progress, None, research, stored)
 
 
 async def build_with_friend(
@@ -407,7 +434,7 @@ async def upgrade(
     not_built, 409 max_level, 409 locked, 409 insufficient_funds. A repeated actionUid charges
     nothing."""
     ref = f"{UPGRADE_PREFIX}{action_uid}"
-    island, payer = await target_island(admin, catalogue, player_id, code)
+    island, payer = await target_island(admin, catalogue, player_id, code, permissions.UPGRADE)
     if not await store.ledger_has(admin, player_id, "building_purchase", ref):
         built = await store.read_built_spots(admin, island.owner)
         progress = await store.read_progress(admin, island.owner)
@@ -671,7 +698,7 @@ async def research(
     409 known, 409 closed, 409 wave_running (between waves only), 409 insufficient_funds. A
     repeated actionUid charges nothing."""
     entry = rules.research_named(catalogue, branch)
-    island, payer = await target_island(admin, catalogue, player_id, code)
+    island, payer = await target_island(admin, catalogue, player_id, code, permissions.RESEARCH)
     ref = f"{RESEARCH_PREFIX}{action_uid}"
     if not await store.ledger_has(admin, player_id, "tech_research", ref):
         progress = await store.read_progress(admin, island.owner)
@@ -728,7 +755,7 @@ async def specialise(
     workshop) the same way, with no research (docs/GAME-V3.md "Houses"). 400 bad_spec, 404
     no_such_spot, 404 no_such_island, 403 not_member, 409 not_built, 422 wrong_kind, 409
     not_researched, 409 house_level. Safe to repeat."""
-    island, payer = await target_island(admin, catalogue, player_id, code)
+    island, payer = await target_island(admin, catalogue, player_id, code, permissions.TOWER_SKILL)
     built = await store.read_built_spots(admin, island.owner)
     done = await store.read_research(admin, island.owner)
     spot, branch = rules.check_specialise(catalogue, spot_id, spec, built, done)
@@ -769,7 +796,7 @@ async def repair_wreck(
     wreck:<actionUid>, reason wreck_repair. Never more than the repair still needs. 400 bad_gift,
     404 no_such_island, 403 not_member, 409 locked (after wave 6), 409 repaired, 409
     insufficient_funds. A repeated actionUid charges nothing."""
-    island, payer = await target_island(admin, catalogue, player_id, code)
+    island, payer = await target_island(admin, catalogue, player_id, code, permissions.WRECK)
     ref = f"{WRECK_PREFIX}{action_uid}"
     if not await store.ledger_has(admin, player_id, "wreck_repair", ref):
         progress = await store.read_progress(admin, island.owner)
@@ -865,7 +892,7 @@ async def demolish_quote(
     database (island_demolish_quote): for the confirmation card. Changes nothing. 409 protected,
     404 no_such_spot, 404 no_such_island, 403 not_member, 409 not_built, 409 wave_running."""
     spot = rules.check_demolish(catalogue, spot_id)
-    island, _payer = await target_island(admin, catalogue, player_id, code)
+    island, _payer = await target_island(admin, catalogue, player_id, code, permissions.DEMOLISH)
     arguments = {
         "p_player_id": player_id,
         "p_island_owner": island.owner,
@@ -893,7 +920,7 @@ async def demolish(
     refunds. 409 protected, 404 no_such_spot, 404 no_such_island, 403 not_member, 409 not_built,
     409 wave_running, 409 busy."""
     spot = rules.check_demolish(catalogue, spot_id)
-    island, payer = await target_island(admin, catalogue, player_id, code)
+    island, payer = await target_island(admin, catalogue, player_id, code, permissions.DEMOLISH)
     arguments = {
         "p_player_id": player_id,
         "p_island_owner": island.owner,
@@ -934,15 +961,23 @@ async def visit(
     404 no_such_island, 403 not_member: a code alone shows nothing, joining the game comes first
     (POST /api/games/join or /api/island/invite/join)."""
     island = await find_by_code(admin, typed_code)
-    await games.require_member(admin, island, player_id)
+    await permissions.require_action(admin, island.owner, player_id, permissions.ISLAND_VISIT)
     owner_name = await store.read_display_name(admin, island.owner)
     built = await store.read_built_spots(admin, island.owner)
-    spots = rules.plan_spots(catalogue, built)
+    stored = await read_stored(admin, catalogue, island.owner)
+    grid = layout.island_layout()
+    spots = layout.place_spots(grid, rules.plan_spots(catalogue, built), stored)
     progress = await store.read_progress(admin, island.owner)
     research = await store.read_research(admin, island.owner)
     campaign = campaign_of(catalogue, progress.wave_best, research, progress.wreck_paid)
     return VisitView(
-        shown(island.code), owner_name, island.wave_best, spots, progress.crew, campaign
+        shown(island.code),
+        owner_name,
+        island.wave_best,
+        spots,
+        progress.crew,
+        campaign,
+        layout.info_of(grid, stored),
     )
 
 

@@ -600,6 +600,18 @@ The numbers of the island game (docs/BUILD-PLAN.md sections 3.2 to 3.4, decision
 | `waves` | `{countdownSeconds, minimumSeconds, maximumSeconds, highestWave}`: 10 s from the bell to the ships, no finish earlier than 15 s after that, a wave is over after 900 s, at most wave 50. |
 | `weather` | One entry per weather state (`storm`, `fog`, `rain`, `calm`): `{kind, label, ships, fog}`. `ships` 0.5 to 3, `fog` 0 to 1. Storm 1.5 / 0, fog 1.0 / 0.4, the others 1.0 / 0. |
 
+## island_layout.json: where the island's build spots stand (T36)
+
+Server only, read by `backend/server/island/layout.py` (D041, PROPOSED). `version` is the layout model (2, the grid); `grid` the cell size in island units (0.5); `island` the coastline shape of `home_islet` (the same `rx`, `rz`, `seed` as `frontend/src/world/places/surfaces.js`); `heart` where the boarders walk to; `footprints` the square side per slot (wall 2, tower 2, watchtower 3, house 3); `spots` the 22 fixed spots `[id, slot, x, z]` in the order of `islands.json` (every one a grid cell: an old save, with nothing stored, stands exactly here); `keepOut` the things that always stand (`{id, name, x, z, w, d}`: the heart, the cabin, the bell, the Harbor, the Tech hub, the wreck). The loader refuses a slot without a footprint, a spot listed twice and a spot off the grid. The browser repeats these numbers in `frontend/src/island/spots.js` and `placement.js`; `frontend/tests/island/placement.test.js` fails when they drift. Moving a fixed spot here moves every old save's building, so change it only with the team.
+## defenses_v2.json: new defenses behind the flag `defenses_v2`
+
+New tower kinds that are not in the live game yet (T43, decision D048 proposed, [the spec](../../specs/T43-new-defenses.md)). Server only. `backend/server/island/catalogue.py` reads it **only while the feature flag `defenses_v2` is on** (`catalogue_for_flags`, applied once at start-up in `app.py`); then each kind joins `kinds`, the tower spots it names and the campaign steps of its levels, so `GET /api/island`, build and upgrade treat it like any kind of `islands.json`. A broken file with the flag on is logged and the island runs without it. With the flag off nothing here reaches the game.
+
+| Field | What it holds |
+|---|---|
+| `about` | What the file is for. |
+| `kinds` | `[{kind, name, line, news, prices, levelWaves, spots}]`: an id that is not already a kind of `islands.json`; the build card line and the narrator's line; 1 to 5 prices (build, then each upgrade); one won wave per level, in order, each one already a step of `campaign.json`; the island tower spots (spots that take a cannon) it may stand on. Today: the culverin. `backend/server/tests/test_defenses_v2.py` checks the file, `frontend/tests/pirates/defenses-v2.test.js` keeps the browser's copy (`src/island/defenses-v2.js`) equal. |
+
 ## buildings.json: the buildings of a home islet
 
 `buildings.json` holds what the home islet (package L2) is made of: its five spots, which building each spot holds, what a level 1 building costs and how much timber every player starts with. It is **server only**. It is not on the list `PUBLIC_CONTENT`, so the browser never downloads it (decision D016). The browser gets everything it needs through `GET /api/islet`, which shows each spot with its price and whether the player can build it ([INTERFACES.md](../../docs/INTERFACES.md#your-home-islet-package-l2)). Keys are camelCase, like `market/companies.json`. Coins are play money only.

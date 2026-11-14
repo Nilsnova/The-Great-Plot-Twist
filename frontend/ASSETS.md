@@ -422,6 +422,15 @@ the existing best wave. Existing oak, pine and birch art is reused at 100%, 110%
 for zero, one and two built houses; the starting island keeps its existing tree size.
 [Scope and ladder](../specs/T5-island-decoration.md); [preview](../docs/evidence/t5/ranks.png).
 
+## T45 statue stages (14 Nov 2026)
+
+The T5 captain statue in [src/art/milestones.js](src/art/milestones.js) gains three more
+original code-drawn stages with the same paint kit: silver with a raised cutlass (wave 50),
+gold with a red pennant (wave 75) and crowned (wave 100); wave 25 stays the T5 bronze
+statue. Drawn for the T45 lane (plan by Ianno Hollensteiner, authorized by Nils) with a
+coding agent. No third-party images or fonts added. Cosmetic only (D046).
+[Spec](../specs/T45-highscore-statue.md); [preview](../docs/evidence/t45/statue-stages.png).
+
 ## T27 captain shooting views
 
 Ianno Hollensteiner, with Codex, extended the original musket painter in
@@ -432,3 +441,31 @@ its resting arms and uses two sleeves/hands connected to the grip. Existing pale
 48 × 32 box and feet anchor are reused; the aiming gun is shorter so it fits
 while rotating. One reusable texture is painted per visible firing captain
 by [shot-art.js](src/pirates/shot-art.js). No downloaded art or new license.
+
+## T43 culverin (14 Nov 2026, behind the flag `defenses_v2`)
+
+Original code-drawn cartoon art in [src/art/defenses-v2.js](src/art/defenses-v2.js), painted with the
+existing [paint kit](src/art/paint.js) in the style of the cannon and the harpoon tower of
+[src/art/island.js](src/art/island.js) (same 48 × 32 box and anchor 5, facing right, the tier gold and banner
+colours of levels 4 and 5). Twenty-one frames: `island-culverin`, `-l2`…`-l5` (a long slim barrel on a low sledge
+with a breech wedge; stone pad and iron bands; brass bands and a stack of shot; gold muzzle ring and teal banner;
+gilded barrel and the starred royal banner), the matching `island-culverin-fire…` frames (recoil, long flash,
+smoke ring), the T33 damage states `island-culverin[-l2…-l5]-damaged` and `-broken` (built with T33's `drawDamaged`/`drawBroken` from `src/art/tower-states.js`, the broken heap carrying the culverin's own long barrel) and `fx-culverin-ball` (16 × 8). Registered in [src/art/registry.js](src/art/registry.js); nothing
+draws them until the culverin is wired in ([spec](../specs/T43-new-defenses.md)). Contact sheet next to the
+cannon and harpoon: [docs/evidence/t43/culverin-sheet.png](../docs/evidence/t43/culverin-sheet.png). Drawn for
+Nils (`Nilsnova`) with a coding agent; no downloaded art, font or reference image, no new license.
+
+## T33 tower damage art (cartoon, code-drawn)
+
+Thirty original, code-authored frames in `src/art/tower-states.js` and `src/art/island.js` (vector drawings in the island cartoon kit; no outside art, fonts or licences): `island-{cannon,mortar,harpoon}[-l2..-l5]-damaged` (leaning, cracked, scorched, smoking) and `-broken` (rubble and the kind wrecked weapon). Each is 48 x 32, anchor 5, the intact tower box. Cartoon-only and not requested by the game yet; see `specs/T33-tower-damage-art.md`. Contact sheet: `docs/evidence/T33/tower-states-contact-sheet.png`.
+
+## T41 island arsenal (14 Nov 2026)
+
+Original code-drawn arsenal building: [src/art/arsenal.js](src/art/arsenal.js), registered in
+[src/art/registry.js](src/art/registry.js) and painted with the existing [paint kit](src/art/paint.js)
+in the cartoon style of the Tech hub and the Harbor (src/art/campaign.js). Responsible: Nils
+(`Nilsnova`); drafted with a coding agent. No third-party image, font or license.
+
+| Frame | Size | What it shows |
+|---|---|---|
+| `island-arsenal` | 80 × 80 (anchor 8) | Stone armory with a slate roof and ridge cap, an iron-banded timber door under a brass crossed-muskets shield, a weapon rack with three guns, a red-banded powder barrel and a red pennant |

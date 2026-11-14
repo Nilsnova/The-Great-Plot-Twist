@@ -144,6 +144,13 @@ describe('unreachable goals and no endless loops', () => {
     expect(result.field.cost[cellOf(moat, EAST.x, EAST.z)]).toBe(Infinity);
   });
 
+  it('returns null instead of failing when every neighbour of a cell is cut off (a stale field)', () => {
+    const layout = buildLayout(GRID, [], PACE), here = cellOf(GRID, EAST.x, EAST.z);
+    const stale = { cost: new Float64Array(GRID.cols * GRID.rows).fill(Infinity), goalIndex: cellOf(GRID, HEART.x, HEART.z), key: layout.key };
+    stale.cost[here] = 50; // this cell still has a cost, but none of its neighbours has one
+    expect(nextStep(GRID, layout, stale, here)).toBeNull();
+  });
+
   it('finds nothing when the goal itself is in the water', () => {
     const sea = createGrid({ minX: -12, minZ: -12, maxX: 12, maxZ: 12, isWalkable: x => x > 3 });
     const field = buildField(sea, buildLayout(sea, [], PACE), HEART);
