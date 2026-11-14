@@ -20,14 +20,21 @@ try {
     await page.reload();
     await page.locator('.shell-screen[open]').waitFor();
     await page.locator('#play').click();
-    for (let i = 0; i < 3; i++) {
-      await page.waitForFunction(() => document.querySelector('dialog.cutscene[open],.tutorial-card[open],.goal-card[open]'), null, {timeout: 30000});
-      if (await page.locator('.goal-card[open]').count()) break;
-      await page.getByRole('button', {name: 'Skip', exact: true}).click();
-      await page.waitForTimeout(300);
+    // The Play card (Create a game), the lobby (Look around first), the intro cutscenes and the goal card, in whatever order they come.
+    const ready = () => page.evaluate(() => window.__island?.world.current?.id === 'home_islet' && !!window.__island.island?.island && !document.querySelector('dialog[open]'));
+    // Done when the island stays free of cards for a few checks in a row (the lobby can open late).
+    for (let i = 0, calm = 0; i < 240 && calm < 4; i++) {
+      if (await ready()) { calm++; await page.waitForTimeout(750); continue; }
+      calm = 0;
+      // The top-most open dialog is the last one in the page; a DOM click does not wait for animations.
+      const open = page.locator('dialog[open]').last();
+      for (const name of ['Create a game', 'Look around first', 'Skip', 'Got it']) {
+        const found = open.getByRole('button', {name, exact: true});
+        if (await found.count()) { await found.first().evaluate(node => node.click()).catch(() => {}); break; }
+      }
+      await page.waitForTimeout(750);
     }
-    await page.locator('.goal-card[open]').getByRole('button', {name: 'Got it', exact: true}).click();
-    await page.waitForFunction(() => window.__island?.world.current?.id === 'home_islet' && window.__island.island && !document.querySelector('dialog[open]'));
+    assert.ok(await ready(), 'The island is ready with no card open');
     await page.evaluate(() => { window.__island.settings.hour = 11; });
     // A cannon on cannon_1 (the fake's starting coins pay for it).
     await page.evaluate(() => window.__island.island.build('cannon_1', 'cannon'));
@@ -40,7 +47,7 @@ try {
     await page.locator('.island-move-bar:not([hidden])').waitFor();
     // A real click on the island picks a square (world.js onGround while Move mode is on).
     const before = await moving();
-    const box = await page.locator('canvas').first().boundingBox();
+    const box = await page.evaluate(() => { const rect = window.__island.renderer.domElement.getBoundingClientRect(); return {x: rect.left, y: rect.top, width: rect.width, height: rect.height}; });
     await page.mouse.click(box.x + box.width * .6, box.y + box.height * .45);
     const after = await moving();
     assert.ok(after && (after.x !== before.x || after.z !== before.z), 'A click on the island picks a square');
@@ -56,6 +63,7 @@ try {
     await page.locator('.island-move-place').click();
     await page.waitForFunction(() => window.__island.island.island?.spots.find(spot => spot.id === 'cannon_1').x === -8);
     await page.locator('.island-move-bar').waitFor({state: 'hidden'});
+    await stand(-4, -8); // a step aside, so the walk-up prompt does not cover the cannon
     await shot(`placed-${width}`);
     // The wave fights the cannon where it stands now.
     const defense = await page.evaluate(() => window.__island.island.defenses().find(item => item.id === 'cannon_1'));
