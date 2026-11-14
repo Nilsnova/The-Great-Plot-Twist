@@ -170,3 +170,9 @@ The rows that start with "v3" were written on Fri 13 Nov 2026 at `6c9ffb3`. Coun
 
 [Walkthrough part 30](WALKTHROUGH.md#30-captain-shooting-direction--ianno-hollensteiner-t27)
 and [recorded results](../specs/T27-shooting-direction.md).
+
+### T7 · Ianno Hollensteiner · Weekly island leaderboard
+
+| What I built / why | Where and command | Covers | Misses |
+|---|---|---|---|
+| Read-only top ten island teams this UTC week; highest successful wave survives a restart; wooden scoreboard with medal badges | [Backend](../backend/server/tests/test_island_leaderboard.py): `cd backend && uv run pytest -q server/tests/test_island_leaderboard.py`; [browser/API](../frontend/tests/island/leaderboard.test.js): `cd frontend && npm test -- --run tests/island/leaderboard.test.js`; [game evidence](../frontend/scripts/check-island-leaderboard.mjs): `cd frontend && node scripts/check-island-leaderboard.mjs after` | Weekly/year boundaries and query filters, duplicate/shared islands, highest win after restart, ties, top-ten pagination and scan refusal, malformed rows, login/flag/no-store; loading/error/retry/empty states, exact three rows, medals and stale response after closing; 1280 × 720 and 375 × 812, long names and 44 px controls | Live PostgREST filtering/pagination and performance, concurrent deletion during reads, real accounts and physical phones, screen-reader behavior and fairness between crew sizes; fixture screenshots show sample captains |

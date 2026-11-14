@@ -261,3 +261,48 @@ html:has(.island-card-docked[open]) .quest-strip{visibility:hidden}
 .island-teardown-confirm{color:#fff6ef;background:linear-gradient(#ef7a5d,#c94a33) #d4553e;border-color:#5a1a10;box-shadow:inset 0 -3px #9e3424,inset 0 2px #ffb39e}
 .island-teardown-confirm:hover:not(:disabled){background:linear-gradient(#f48c71,#d4553e) #e2664c}
 
+
+/* One parchment scoreboard inside a wooden frame, scoped to this card. */
+.island-card.island-card-leaderboard.kit-modal {
+  --u-ink: #392b1c; --u-sea: #6c492b; --u-card: #e7cb91;
+  background: #f3dfae; color: #392b1c; border: 5px solid #6c492b;
+  border-radius: 12px; padding: 0 14px 14px;
+  box-shadow: 0 0 0 2px #34251b, inset 0 0 0 2px #c89f5a, 0 12px 30px #20170f80;
+}
+.island-card-leaderboard .kit-modal-header {
+  background: #f8e8bf; border-radius: 6px 6px 0 0; border-bottom: 2px solid #b58b4d;
+  margin: 0 -14px 12px; padding: 10px 10px 10px 14px; box-shadow: none;
+}
+.island-card-leaderboard .kit-modal-header .kit-icon-button {
+  background: #ecd09a; color: #392b1c; border-color: #76532c; box-shadow: 0 2px 0 #a07840;
+}
+.island-card-leaderboard .kit-modal-body { background: transparent; color: #392b1c; }
+.island-card-leaderboard .island-card-body { gap: 10px; }
+.island-card-leaderboard .island-purpose { color: #574027; font-size: 14px; }
+.island-card-leaderboard .island-message { background: #ecd09a; color: #782c20; }
+.island-card-leaderboard .kit-quiet {
+  background: #ecd09a; color: #392b1c; border-color: #76532c; box-shadow: 0 2px 0 #a07840;
+}
+.island-card-leaderboard .kit-button:hover:not(:disabled) { background: #ffecc1; color: #392b1c; }
+.island-card-leaderboard .kit-button:focus-visible { outline-color: #6c492b; }
+.island-leaderboard-labels {
+  display: flex; justify-content: space-between; padding: 0 14px 0 50px;
+  font-weight: 700; font-size: 14px; color: #67492b;
+}
+.island-leaderboard { list-style: none; padding: 0; margin: 0; display: grid; gap: 0; }
+.island-leaderboard-row {
+  display: grid; grid-template-columns: 32px minmax(0, 1fr) 40px; align-items: center;
+  gap: 9px; padding: 8px; border-bottom: 1px solid #c9ab75;
+}
+.island-leaderboard-row:nth-child(odd) { background: #ead09b; }
+.island-leaderboard-rank {
+  display: grid; place-items: center; width: 28px; height: 28px; font-weight: 800; font-size: 16px;
+}
+.island-leaderboard-name { overflow-wrap: anywhere; line-height: 1.2; font-size: 16px; }
+.island-leaderboard-wave { text-align: center; font-weight: 800; font-size: 19px; color: #47301d; }
+.island-leaderboard-row:is(.is-rank-1, .is-rank-2, .is-rank-3) .island-leaderboard-rank {
+  border: 2px solid #6b4a21; border-radius: 50%; box-shadow: inset 0 0 0 2px #fff3ca, 0 2px 0 #a57538;
+}
+.island-leaderboard-row.is-rank-1 .island-leaderboard-rank { background: #f3c34f; }
+.island-leaderboard-row.is-rank-2 .island-leaderboard-rank { background: #c9d1d5; }
+.island-leaderboard-row.is-rank-3 .island-leaderboard-rank { background: #d39a65; }

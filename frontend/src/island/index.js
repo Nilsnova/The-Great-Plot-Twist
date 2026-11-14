@@ -404,6 +404,15 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     openSpot = null; cardMessage = ''; if (['captain', 'skills', 'weapons'].includes(tab)) captainTab = tab;
     ui.captainCard(captain(), captainHandlers); void freshOwn();
   }
+  let leaderboardRequest = 0;
+  async function openLeaderboard() {
+    const request = ++leaderboardRequest;
+    openSpot = null;
+    ui.leaderboardCard({loading: true}, () => void openLeaderboard());
+    const answer = await api.leaderboard();
+    if (disposed || request !== leaderboardRequest || ui.open !== 'leaderboard') return;
+    ui.leaderboardCard(answer.ok ? {data: answer.data} : {message: answer.message}, () => void openLeaderboard());
+  }
   function openCaptains() { openSpot = null; cardMessage = ''; ui.captainsCard(captainsModel([...here.values()])); }
   async function openBell() {
     openSpot = null; cardMessage = ''; ui.bellCard(bell(), bellAction);
@@ -736,6 +745,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const stopMenu = menu(() => [
     {label: 'Players and invite', onSelect: () => openLobby()},
     ...(visiting || visitCode ? [{label: 'Leave this game', onSelect: () => void leaveGame()}] : []),
+    {label: 'Weekly leaderboard', onSelect: () => void openLeaderboard()},
     {label: 'Crew', onSelect: () => openCrew()},
     {label: 'Captain and skills', onSelect: () => openCaptain()},
     ...(here.size ? [{label: `Captains here (${here.size})`, onSelect: () => openCaptains()}] : []),
@@ -850,7 +860,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       colour: captainColour()}),
     // Captain colours (GAME-V3.md §7): each member's 0-9 by join order, and your own (src/island/lobby.js).
     colourOf, captainColour,
-    openInvite, openCrew, openCaptain, openCaptains, openLobby, enterGame, leaveGame, openHarbor, openTechHub, openWreck,
+    openLeaderboard, openInvite, openCrew, openCaptain, openCaptains, openLobby, enterGame, leaveGame, openHarbor, openTechHub, openWreck,
     specialise, research, giveWreck, askDemolish, confirmDemolish, heardDemolish,
     // The campaign of the island on screen (GAME-V3.md §4): {wave, open, locked, later, research, wreck}.
     get campaign() { return campaign(); },

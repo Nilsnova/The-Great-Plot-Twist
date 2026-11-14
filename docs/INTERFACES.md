@@ -1616,3 +1616,20 @@ These are retained for context; current route contracts above and their linked s
 4. **The keep-alive caller.** Decided by Nils on 5 Nov 2026: a scheduled GitHub Actions workflow (`.github/workflows/keepalive.yml`) calls `GET /api/keepalive` once a day with the repository secret `CRON_SECRET` ([SETUP.md](SETUP.md), "Keep it awake until the demo"). Vercel Cron stays out, because a `crons` entry in `vercel.json` breaks our deploys while we use Services.
 5. **Browser contracts after the final look.** G1 confirms that the event bus, the four story trigger ids and `setWeather` stay as written in section 3 when D005 is recorded.
 6. **The default weather place.** Torshavn in the Faroe Islands is the proposal (real fog and storms that suit the story), Lisbon the option (`38.72`, `-9.14`). It is only the default of three settings, so changing it needs no code change. Without a decision the Faroe Islands stay.
+
+## Weekly island leaderboard (T7)
+
+`GET /api/island/leaderboard` requires the existing island login/guest gate and
+`islands` flag; `Cache-Control: private, no-store`. Response:
+`{weekStart, weekEnd, entries: [{rank, name, wave}]}` (UTC ISO dates).
+`name` is the island host's public captain name, never an invitation code or ID.
+The server reads successful, nonexpired `wave_runs` for `place=island`, finished
+from Monday 00:00 inclusive to next Monday exclusive, up to the request's cutoff.
+It returns each island's highest win that week, regardless of restarts/current wave.
+Shared islands count once. At most ten entries; fewer qualifying islands produce
+fewer rows. Equal waves share competition ranks (1, 1, 3); stable internal owner-ID
+order breaks display ties at the ten-island cutoff. Crew size does not adjust scores.
+No rewards or database writes. The scan reads highest waves first, 100 rows per
+page, at most 20 pages; insufficient coverage returns `503 leaderboard_unavailable`,
+never a partial ranking. Public host names are read only for the final islands.
+Fake/offline games show an online-required message instead of invented global data.
