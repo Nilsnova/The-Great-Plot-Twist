@@ -81,6 +81,8 @@ export const ISLAND_RULES = Object.freeze({
 });
 export const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 // The run of TOWER-DEFENSE.md §1: waves to 100, a boss every 5th, a lost run restarts 2 waves back.
+// The simulation rules of the wave answers, in their fixed order (SIM_RULES in backend/server/island/wave_rules.py).
+export const SIM_RULES = Object.freeze(['tower_health', 'pathing', 'rescue']);
 export const TD_RULES = Object.freeze({ highestWave: 100, bossEvery: 5, restartBack: 2,
   spots: Object.freeze(['wall_1', 'wall_2', 'wall_3', 'wall_4', 'wall_5', 'wall_6', 'cannon_1', 'cannon_2', 'cannon_3', 'cannon_4',
     'cannon_5', 'cannon_6', 'cannon_7', 'tower_1', 'house_1', 'house_2', 'wall_7', 'wall_8', 'wall_9', 'wall_10', 'wall_11', 'wall_12']),
@@ -201,8 +203,13 @@ export function createFakeWorld({ seed = 7, neighbours = true, friends = [DEFAUL
 export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me', ownerName = 'You',
   now = () => Date.now(), weather = 'calm', code: wantedCode = null, version = 1, unlocking = version === 2, flags = {} } = {}) {
   // unlocking: the server's §9 locks (409 locked). Off by default here; the game's transport and version 2 turn it on.
-  // flags: the server's feature flags this fake follows (only wall_recovery, D039); all off by default.
+  // flags: the server's feature flags this fake follows (wall_recovery, D039; the wave rules below); all off by default.
   const wallsOn = flags?.wall_recovery === true;
+  // The wave rules (backend/server/island/wave_rules.py): the rule flags on now, in SIM_RULES order. The first
+  // answer for a wave keeps its set (wave_rules_keep()); with every rule flag off the answers carry no rules.
+  const wantedRules = SIM_RULES.filter(name => flags?.[name] === true);
+  // T38 (routes/waves.py): the server honours `rescued` only while the flag rescue is on.
+  const rescueOn = flags?.rescue === true;
   let weatherKind = weather;
   const v2 = version === 2; // the answers' tower defense extras (boss, nextWave on finish), as the real server sends them
   const me = () => {
@@ -401,10 +408,18 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     }
   }
   const running = run => !run.finishedAt && nowMs() <= run.startsAtMs + ISLAND_RULES.waves.maximumSeconds * 1000;
+  const rulesOf = run => {
+    if (!wantedRules.length) return null;
+    if (!Array.isArray(run.rules)) run.rules = [...wantedRules]; // kept by the wave's first answer with a rule on
+    const rules = SIM_RULES.filter(name => run.rules.includes(name));
+    return rules.length ? rules : null;
+  };
   const shape = run => {
     const walls = waveWalls(run); // D039: only while the flag is on, as the server
+    const rules = rulesOf(run); // the wave's sim rules (wave_rules.py), left out while none is on
     return { waveId: run.waveId, wave: run.wave, seed: run.seed, startsAt: iso(run.startsAtMs),
-      weather: { ...run.weather }, flagship: run.flagship, ...(v2 ? { boss: isBoss(run) } : {}), ...(walls ? { walls } : {}) };
+      weather: { ...run.weather }, flagship: run.flagship, ...(v2 ? { boss: isBoss(run) } : {}), ...(walls ? { walls } : {}),
+      ...(rules ? { rules } : {}) };
   };
   const uid = value => typeof value === 'string' && value.length > 0 && value.length <= 64;
   // The shared island arsenal (T40, D042): copies of an island, stored (20 at most) or carried by one captain.
@@ -771,8 +786,8 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       if (run.island && !run.nextSet) {
         run.nextSet = true;
         // §1: carry on after a win; after a loss the next bell restarts at best − 2 (at least 1).
-        // T38 (rescue.py): a won rescue on a lost wave from wave 4 to 100 falls back one wave less.
-        const back = TD_RULES.restartBack - (!survived && !late && rescued === true && rescueAllowed(run.wave) ? 1 : 0);
+        // T38 (rescue.py): a won rescue on a lost wave from wave 4 to 100 falls back one wave less (flag rescue on).
+        const back = TD_RULES.restartBack - (rescueOn && !survived && !late && rescued === true && rescueAllowed(run.wave) ? 1 : 0);
         run.island.nextWave = survived && !late ? Math.min(run.wave + 1, TD_RULES.highestWave)
           : Math.max(1, run.island.waveBest - back);
       }
@@ -1087,6 +1102,11 @@ export function createFakeIslandTransport({ coins = ISLAND_RULES.startingCoins, 
         if (!Number.isSafeInteger(value) || value < 0) throw new TypeError('waveBest must be a whole number from 0 up.');
         const island = world.islands.get(me().code); island.waveBest = value; island.nextWave = Math.min(TD_RULES.highestWave, value + 1);
         me().wonBest = Math.max(me().wonBest ?? 0, value); // you won those waves yourself: skill points follow (§14)
+      },
+      // Pirate Point's best wave (the next bell there rings best + 1), to test a late flagship wave (T38: no rescue there).
+      setPointBest(value) {
+        if (!Number.isSafeInteger(value) || value < 0) throw new TypeError('pointBest must be a whole number from 0 up.');
+        world.pointBest = Math.min(TD_RULES.highestWave - 1, value);
       },
       // D039: the fake server's clock moves on by `ms` (the 10-minute wall timer); in a shared world for every tab.
       advanceClock(ms) {

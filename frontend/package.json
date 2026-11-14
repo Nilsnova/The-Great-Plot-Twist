@@ -22,6 +22,7 @@
     "test:mp": "node scripts/check-multiplayer.js",
     "test:placement": "node scripts/check-placement-mp.js",
     "test:walls": "node scripts/check-wall-recovery-mp.js",
+    "test:rescue": "node scripts/check-rescue-mp.js",
     "capture:wow": "node scripts/capture-wow.js",
     "capture:integrated": "node scripts/capture-integrated.js",
     "test:loading": "npm run build && node scripts/check-loading.js",

@@ -128,7 +128,7 @@ T45 can show "best" without worrying about rescues. T33/T36: no new building, so
 `createWave` from there (`frontend/src/pirates/wave-rules.js`), so all clients of a wave agree even if one
 read an older `/api/config`. Tests: `frontend/tests/pirates/rescue-sim.test.js` (off: ends at once; on: waits,
 the battle freezes, failed → lost and not rescued, won → `rescued: true`; never on Pirate Point or below wave 4).
-A two-browser `test:mp` run with the flag on is still open.
+Two-browser release check with the flag on: `cd frontend && npm run test:rescue` (`scripts/check-rescue-mp.js`, fake server).
 
 ### The original sketch
 
