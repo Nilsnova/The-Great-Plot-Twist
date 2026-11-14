@@ -289,6 +289,16 @@ It also adds three wallet reasons (`pirate_loot` earn, `starting_coins` earn, `f
 
 `migrations/20261110020000_wave_crews.sql` (lane 0, task 0.4) builds on the islands and waves migration without editing it. It adds `wave_participants` (one row per player in a wave, with their own result and loot; RLS on, no policy, no browser grant), the column `wave_runs.flag_counted`, and the functions `wave_join()` (join a running wave, safe to repeat) and `wave_current()` (the running wave of an island or Pirate Point, or null). It replaces `wave_start()` (same arguments; the bell-ringer becomes the first participant) and drops the 7-argument `wave_finish()` for an 8-argument one (`p_point_loot_base`): every participant finishes for themselves, ledger ref `wave:<id>:<player>`; the first finish closes the wave run; the best wave and one flag count once (`flag_counted`). It backfills every existing wave with its bell-ringer as participant. Until the new server code is deployed, `POST /api/waves/finish` of an older server fails; the flag `islands` stays off until then.
 
+## The island layout migration (T36)
+
+`migrations/20261114110000_island_layout.sql` (T36 flexible placement, D041 PROPOSED) is **written but not applied** by its branch; apply it, then switch on the flag `placement`. It adds `island_layout` (one row per moved build spot of an island: `plot`, the cell in half units `x_half`/`z_half`, `layout_version` 2, `moved_by`, `moved_at`; a spot without a row stands on its fixed spot, which is how old saves keep working; RLS on, no policy, no browser grant; the server reads, inserts and updates, never deletes; rows go with their island by cascade) and `island_move()` (locks the island row like `wave_start()`, refuses `wave_running` like `island_demolish()`, then a compare-and-swap: the rows now must equal the rows the server checked, else `busy`; no coins). Opt-in SQL checks: `backend/server/tests/island_sql/test_island_layout_sql.py`.
+
+| `island_layout` | read / insert / update | no access | no access | yes (insert and update through `island_move()`) |
+| `island_layout` | delete | no access | no access | no access (deleted with its island, by cascade) |
+| `island_move()` | run | no access | no access | yes |
+
+Manual checks after applying: the three checks in the header comment of the migration (RLS on and no `authenticated` select; only `service_role` may run `island_move()`; the check rule refuses the plot `cabin`).
+
 ## The market calls migration
 
 `migrations/20261111010000_market_calls.sql` (lane 0, D034) adds `market_calls` (one row per up-or-down call; RLS on, no policy, no browser grant; the server reads, inserts and updates, never deletes), `market_call_open()` (locks the wallet, repeat-safe per actionUid, at most 3 open calls, stake through `apply_wallet_transaction()`), `market_call_settle()` (decides once: won 2 × stake, lost 0, refunded for the same price or no price 24 hours after `settle_at`) and the reasons `market_call_stake` and `market_call_payout`. Opt-in SQL checks: `backend/server/tests/market_calls_sql/`.

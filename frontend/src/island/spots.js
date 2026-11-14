@@ -92,11 +92,20 @@ function landward({x, z}, step = 1) {
   const length = Math.hypot(x, z) || 1;
   return [x - x / length * step, z - z / length * step];
 }
+// Where a spot stands now (T36, flexible placement): the answer's x/z once it was moved on the build
+// grid, else its fixed spot of the table above. spots: the island answer's spots (or none).
+export function placedSpot(id, spots = []) {
+  const where = spotById(id);
+  if (!where) return null;
+  const sent = Array.isArray(spots) ? spots.find(item => item?.id === where.id) : null;
+  return Number.isFinite(sent?.x) && Number.isFinite(sent?.z) ? {...where, x: sent.x, z: sent.z} : where;
+}
 // The interaction zones of the island, in the shape of registry.js: walk up and press E (or tap Inspect).
-export function islandZones({visitor = false, arsenal = false} = {}) {
+// spots: the answer's spots, so a moved building is reached where it stands now.
+export function islandZones({visitor = false, spots = [], arsenal = false} = {}) {
   const zone = (id, name, x, z, radius) => ({id, name, x, z, y: ZONE_Y, radius});
   return [
-    ...SPOTS.map(item => { const [x, z] = landward(item); return zone(item.id, slotName(item.slot), x, z, SPOT_RADIUS); }),
+    ...SPOTS.map(item => { const [x, z] = landward(placedSpot(item.id, spots)); return zone(item.id, slotName(item.slot), x, z, SPOT_RADIUS); }),
     zone(BELL.id, 'Harbor bell', BELL.x, BELL.z + .8, ROUND_RADIUS),
     ...CAMPAIGN_BUILDINGS.map(item => { const [x, z] = landward(item, 1.6); return zone(item.id, item.name, x, z + .6, BIG_REACH); }),
     ...(visitor ? [] : [zone(CABIN.id, 'Your cabin', CABIN.x + 2.5, CABIN.z + 1.2, ROUND_RADIUS)]),
@@ -110,13 +119,16 @@ export function pointZones() {
 }
 export const slotName = slot => (slot === 'tower' ? 'Tower spot' : KINDS[DEFAULT_KIND[slot]]?.name ?? 'Build spot');
 
-// The defences of an island answer, with their place, for the wave simulation (BUILD-PLAN 3.5):
+// The defences of an island answer, with their place, for the wave simulation (BUILD-PLAN 3.5). The place
+// is the answer's x/z when the server sent one (T36: a spot moved on the build grid), else the fixed spot:
+// the sim (src/pirates/sim.js) reads x and z as before, so it fights the island where it stands.
 // [{id, kind, level, x, z, spec?, bonus?}] of the built spots only (TOWER-DEFENSE.md §8); spec is the tower
 // skill it picked at the Tech hub (GAME-V3.md §5), bonus the island's tier-2 pick for its kind (§5.1, from
 // `tiers`: campaignOf(answer).research.tiers). The sim reads both, so every screen fights the same island.
 export function defenses(spots = [], tiers = null) {
   return spots.filter(item => item?.built === true && (spotById(item.id) || ppSpotById(item.id)))
-    .map(item => { const where = spotById(item.id) ?? ppSpotById(item.id), spec = readSpec(item.kind, item.spec);
+    .map(item => { const fixed = spotById(item.id) ?? ppSpotById(item.id), spec = readSpec(item.kind, item.spec);
+      const where = Number.isFinite(item.x) && Number.isFinite(item.z) ? {x: item.x, z: item.z} : fixed;
       const bonus = readBonus(item.kind, tiers?.[item.kind]?.tier2);
       // A capstone counts only while its island's tier-3 pick is that capstone.
       const kept = spec && isCapstone(spec) && tiers?.[item.kind]?.tier3 !== spec ? null : spec;

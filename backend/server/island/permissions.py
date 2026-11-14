@@ -55,6 +55,8 @@ REBUILD = "structure_rebuild"
 ARSENAL_BUY = "arsenal_buy"
 ARSENAL_WITHDRAW = "arsenal_withdraw"
 ARSENAL_RETURN = "arsenal_return"
+# T36 (D041, flexible placement): move a build spot on the island's grid.
+MOVE = "island_move"
 
 
 @dataclass(frozen=True)
@@ -91,6 +93,7 @@ ACTIONS: dict[str, Rule] = {
     ARSENAL_BUY: Rule("buy weapons for this arsenal", PERSONAL),
     ARSENAL_WITHDRAW: Rule("take weapons from this arsenal", FREE),
     ARSENAL_RETURN: Rule("return weapons to this arsenal", FREE),
+    MOVE: Rule("move buildings here", FREE, between_waves=True),
 }
 
 

@@ -34,6 +34,7 @@ Weapons were a personal list (`islands.weapons_owned`): bought once, equipped by
 
 | Question | Decision |
 |---|---|
+| Placement (T36) | The arsenal is a fixed building: its 5 × 3 footprint is a `keepOut` box in `backend/content/island_layout.json` and `frontend/src/island/placement.js`, so Move mode never puts a wall or tower on it (also while the flag is off). |
 | Unlock / build cost / damage | Stands from the start, free, never damaged (waves do not target it; T30/T33 may change this). Each type keeps its own unlock wave. |
 | Standard weapon / new entrants | The musket is standard issue: every captain who carries no copy shoots with it. It is never a copy and takes no slot. A new member starts with the musket. |
 | Who may | The host and every active member, as D043's matrix says (`permissions.py`); `arsenal_may()` in SQL repeats it. |

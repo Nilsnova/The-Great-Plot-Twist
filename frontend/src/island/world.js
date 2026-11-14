@@ -6,7 +6,8 @@
 import * as THREE from 'three';
 import {artSizes, loadArt, placeArt, projectPoint} from '../world/art.js';
 import {pixelSizes} from '../pixel/catalog.js';
-import {SPOTS as ISLAND_SPOTS, CABIN, BELL, CAMPAIGN_BUILDINGS, ARSENAL, islandZones} from './spots.js';
+import {SPOTS as ISLAND_SPOTS, CABIN, BELL, CAMPAIGN_BUILDINGS, ARSENAL, islandZones, placedSpot} from './spots.js';
+import {makeFootprint} from './move-preview.js';
 import {isOpen, spotWave, waveOf} from '../campaign/index.js';
 import {LOCK_WAVES} from '../art/campaign.js';
 import {SLOT_KINDS} from './td-rules.js';
@@ -93,6 +94,17 @@ function sprite(group, {texture, size: [width, height], anchor = 0}, x, z, name)
   return mesh;
 }
 
+// Moves a sprite made by sprite() to another ground point (T36: a building moved on the build grid),
+// keeping its lift above the ground and its draw order relative to its foot.
+export function moveSprite(mesh, x, z) {
+  const ground = mesh.userData.ground;
+  if (!ground || (ground.x === x && ground.z === z)) return;
+  const from = projectPoint(ground.x, ground.z), to = projectPoint(x, z);
+  mesh.position.x += to.x - from.x; mesh.position.y += to.y - from.y; mesh.renderOrder += z - ground.z;
+  if (Number.isFinite(mesh.userData.baseY)) mesh.userData.baseY += to.y - from.y;
+  mesh.userData.ground = {x, z};
+}
+
 // A house role's reach on the ground (GAME-V3.md "Houses"): one unit disc and one unit rim, scaled to the radius
 // and squashed like the ground (projectPoint's 0.72), under everything that stands. Pure Three.js, no art.
 export const ROLE_COLOURS = Object.freeze({barracks: 0xe2463b, tavern: 0x3fa04d, workshop: 0xf2c14e});
@@ -134,6 +146,9 @@ export function lockWave(kinds, unlocks) {
   return waves.length ? Math.min(...waves) : null;
 }
 
+// T36 (flexible placement): every spot stands where the answer's x/z say (placedSpot), and while a building is
+// moved ctx.placing() is true: a tap on the ground then calls ctx.onGround(x, z) instead of picking, and
+// preview({spotId, x, z, size, ok}) draws that building and its footprint at the cell under consideration.
 // ctx: {art (the place's loaded art, with 'cabin'), reducedMotion, canvas, camera, isActive, onPick(id), player() (its
 // position: a click out of reach calls onFar(id, {hint, zone}) instead of onPick),
 // loadArt (tests), and for Pirate Point: layout {spots, zones(), bell: false, cabin: false}}.
@@ -198,6 +213,13 @@ export function decorateIsland(place, ctx = {}) {
   const rangeRing = makeRangeRing(root);
   const baseColliders = [...place.colliders];
   let state = {spots: [], visitor: false, battle: false, unlocks: null, crew: null, campaign: null, arsenal: false}, disposed = false;
+  let preview = null;
+  const footprint = makeFootprint(root);
+  // Where a spot stands now: the cell of a move under way, the answer's x/z, else its fixed spot (Pirate Point's stay).
+  const whereOf = spot => {
+    if (preview?.spotId === spot.id) return {x: preview.x, z: preview.z};
+    return layout.zones === islandZones ? placedSpot(spot.id, state.spots) ?? spot : spot;
+  };
   // The real art once it has loaded (null until then: the drawn sprites stand in), and what each spot shows.
   let art = null;
   const shown = new Map(); // spot id (or 'crew') -> {key, meshes}
@@ -209,23 +231,24 @@ export function decorateIsland(place, ctx = {}) {
     const built = answer?.built === true, kind = built ? (kindsOf(spot).includes(answer.kind) ? answer.kind : kindsOf(spot)[0]) : null;
     const level = Number.isSafeInteger(answer?.level) && answer.level > 0 ? answer.level : 1;
     const id = kind ? buildingArt(kind, level, answer?.spec) : null, pips = kind ? pipCount(kind, level) : 0;
-    const key = !id || hidden ? '' : `${id}:${pips}`;
+    const where = whereOf(spot), key = !id || hidden ? '' : `${id}:${pips}@${where.x},${where.z}`;
     if (shown.get(spot.id)?.key === key) return;
     clear(spot.id);
     if (!key) return;
-    const mesh = put(id, spot.x, spot.z); mesh.name = `island-${kind}:${spot.id}`; mesh.userData.level = level;
+    const mesh = put(id, where.x, where.z); mesh.name = `island-${kind}:${spot.id}`; mesh.userData.level = level;
     mesh.userData.role = activeRole({kind, level, spec: answer?.spec}); mesh.userData.art = id;
     const meshes = [mesh], [, height, anchor] = artSizes[id], top = height * (1 - anchor) + .15;
     // One row (pipRow): 4 and 5 smaller and spaced wider than a disc, so the gold stars never overlap.
     const row = pipCount(kind, level) ? pipRow(level, {step: .6}) : {offsets: []}, pipWidth = artSizes[PIP_ART][0];
     row.offsets.forEach((offset, i) => {
-      const pip = put(pipArt(level), spot.x + offset * pipWidth, spot.z, top, .01, row.scale); pip.name = `island-pip:${spot.id}:${i + 1}`; meshes.push(pip);
+      const pip = put(pipArt(level), where.x + offset * pipWidth, where.z, top, .01, row.scale); pip.name = `island-pip:${spot.id}:${i + 1}`; meshes.push(pip);
     });
     shown.set(spot.id, {key, meshes});
   }
   function showCrew(spots, crew, hidden) {
     const places = hidden || !crew ? [] : crewPlaces(spots.map(item => {
-      const where = SPOTS.find(spot => spot.id === item.id); return where ? {...item, x: where.x, z: where.z} : null;
+      const spot = SPOTS.find(entry => entry.id === item.id), where = spot ? whereOf(spot) : null;
+      return where ? {...item, x: where.x, z: where.z} : null;
     }).filter(Boolean), crew, {bell: layout.bell === false ? null : BELL});
     const key = places.map(item => `${item.kind}@${item.x},${item.z}`).join('|');
     if (shown.get('crew')?.key === key) return;
@@ -246,7 +269,10 @@ export function decorateIsland(place, ctx = {}) {
       for (const [name, mesh] of Object.entries(meshes)) mesh.visible = name === frame;
     }
     for (const spot of SPOTS) {
-      const answer = spots.find(item => item.id === spot.id), built = answer?.built === true;
+      const answer = spots.find(item => item.id === spot.id), built = answer?.built === true, where = whereOf(spot);
+      const marker = markers.get(spot.id);
+      for (const mesh of [marker.ring, marker.badge, marker.lock, marker.lockRing]) moveSprite(mesh, where.x, where.z);
+      for (const kind of kindsOf(spot)) moveSprite(buildings.get(`${spot.id}:${kind}`), where.x, where.z);
       // Locked things stay on the map (GAME-V3.md §4): a spot the campaign opens later, or whose kind is not
       // open yet, shows a lock badge instead of the glowing ring.
       const open = (!unlocks || kindsOf(spot).some(kind => (unlocks.levels?.[kind] ?? 0) >= 1)) && !spotLocked(spot, campaign);
@@ -256,7 +282,6 @@ export function decorateIsland(place, ctx = {}) {
           && !(battle && ['wall', 'cannon', 'mortar', 'harpoon'].includes(kind));
       }
       if (art) showSpot(spot, answer, hidden);
-      const marker = markers.get(spot.id);
       marker.visible = !built && known && !battle && open; // a visitor builds too, with their own coins
       marker.locked = !built && known && !battle && !open;
       // The wave the padlock shows: the campaign step of the spot, else the first wave its kind opens after.
@@ -266,7 +291,7 @@ export function decorateIsland(place, ctx = {}) {
     // The wave's renderer draws the crew during a battle; outside one they stand by their posts.
     if (art) showCrew(spots, crew, battle);
     if (layout.zones === islandZones) {
-      place.zones = islandZones({visitor, arsenal: state.arsenal});
+      place.zones = islandZones({visitor, spots, arsenal: state.arsenal});
       place.colliders.splice(0, place.colliders.length, ...baseColliders,
         {x: CABIN.x, z: CABIN.z - 1.8, width: 4.8, depth: 3.6, island: true});
     } else place.zones = [...baseZones, ...(known ? layout.zones() : [])];
@@ -285,7 +310,7 @@ export function decorateIsland(place, ctx = {}) {
 
   // The nearest pickable thing to a ground point (a tap), or null.
   function pickAt(x, z) {
-    const candidates = [...SPOTS.map(spot => ({id: spot.id, x: spot.x, z: spot.z, w: 2.4, h: spot.kind === 'watchtower' ? 5 : 3})),
+    const candidates = [...SPOTS.map(spot => ({id: spot.id, ...whereOf(spot), w: 2.4, h: spot.kind === 'watchtower' ? 5 : 3})),
       ...(bell ? [{id: BELL.id, x: BELL.x, z: BELL.z, w: 1.6, h: 3.4}] : []),
       ...(arsenalMesh?.visible ? [{id: ARSENAL.id, x: ARSENAL.x, z: ARSENAL.z, w: ARSENAL.w / 2, h: ARSENAL.h}] : []),
       ...(campaignMeshes.size ? CAMPAIGN_BUILDINGS.map(item => ({id: item.id, x: item.x, z: item.z, w: item.w, h: item.h})) : []),
@@ -308,6 +333,8 @@ export function decorateIsland(place, ctx = {}) {
       const rect = ctx.canvas.getBoundingClientRect();
       const point = new THREE.Vector3((event.clientX - rect.left) / rect.width * 2 - 1,
         1 - (event.clientY - rect.top) / rect.height * 2, 0).unproject(ctx.camera);
+      // Moving a building (T36): the tap chooses a cell of the ground instead of a building.
+      if (ctx.placing?.()) { ctx.onGround?.(point.x, -point.y / .72); return; }
       const picked = pickAt(point.x, -point.y / .72);
       if (!picked) return;
       // Walk up first: a click on something out of reach only says so (ctx.player is the player's position).
@@ -320,6 +347,14 @@ export function decorateIsland(place, ctx = {}) {
   let ringing = 0;
   return {
     apply, pickAt,
+    // T36: the cell a building is moved to ({spotId, x, z, size, ok}), or null when the move ends.
+    preview(next) {
+      if (disposed) return;
+      preview = next && Number.isFinite(next.x) && Number.isFinite(next.z) ? {...next} : null;
+      footprint.show(preview);
+      apply(state);
+    },
+    get previewing() { return preview ? {...preview} : null; },
     ring() { ringing = 1.2; },
     update(dt, time = 0) {
       if (disposed) return;

@@ -26,6 +26,7 @@ FLAGS = (
     "islands",
     "rescue",
     "wall_recovery",
+    "placement",
     "arsenal",
 )
 VARIABLES = {
