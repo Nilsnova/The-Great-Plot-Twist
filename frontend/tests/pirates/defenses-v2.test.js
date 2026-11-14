@@ -1,7 +1,7 @@
 // The second wave of defenses (T43, decision D048 proposed; specs/T43-new-defenses.md): the culverin's stats as
 // data the sim can read, the cards and the server's file in step, the feature flag defenses_v2 hiding it while it
 // is off, and its cartoon drawings (registered, in the cannon's box, one picture per level and per firing frame).
-// sim.js is not touched by T43's prep stage, so nothing here runs a wave with a culverin yet.
+// The culverin in the battle itself (sim.js, behind the wave rule defenses_v2) is tests/pirates/culverin.test.js.
 import {readFileSync} from 'node:fs';
 import {afterAll, beforeAll, describe, expect, it} from 'vitest';
 import {CONFIG} from '../../src/pirates/sim.js';
@@ -45,8 +45,8 @@ describe('the culverin as data', () => {
     // Level 3 sinks a wave-30 gunboat (hp 20 x the curve: 1 + 0.07 x 26) in one shot.
     expect(C.levels[2].damage).toBeGreaterThanOrEqual(CONFIG.ships.gunboat.hp * (1 + 0.07 * 26));
   });
-  it('is not part of the running game yet: the sim does not know the kind', () => {
-    expect(Object.hasOwn(CONFIG.levels, 'culverin')).toBe(false);
+  it('is the table the sim fights with (wired in by T43\'s integration step; tests/pirates/culverin.test.js)', () => {
+    expect(CONFIG.levels.culverin).toEqual(C.levels.map(({damage, range, reload}) => ({damage, range, reload})));
   });
 });
 

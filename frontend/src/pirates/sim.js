@@ -23,6 +23,8 @@ import { createTowerHealth } from './tower-health.js';
 import { TARGET_PROFILES, nearestWithin } from './targeting.js';
 // T35 (D040, proposed): routes over the real wall layout, only with the wave option pathing (the rule "pathing").
 import { createBoarderPaths } from './boarder-paths.js';
+// T43 (D048, proposed): the culverin, a long gun, only with the wave option defensesV2 (the rule "defenses_v2").
+import { DEFENSES_V2 } from './defenses-v2.js';
 
 const freeze = value => {
   for (const inner of Object.values(value)) if (inner && typeof inner === 'object') freeze(inner);
@@ -135,8 +137,13 @@ export const CONFIG = freeze({
     harpoon: [{ damage: 2, range: 30, reload: 2.6, slow: .25, seconds: 2.5 }, { damage: 3, range: 32, reload: 2.4, slow: .3, seconds: 2.5 },
       { damage: 4, range: 34, reload: 2.2, slow: .35, seconds: 3 }, { damage: 5, range: 36, reload: 2.0, slow: .4, seconds: 3.5 },
       { damage: 7, range: 38, reload: 1.8, slow: .45, seconds: 4 }],
+    // The culverin (T43, D048 proposed; src/pirates/defenses-v2.js): a long gun. Very long reach, slow, hard single shots
+    // at ships only, never closer than CONFIG.culverin.minRange. One table for the cards and the sim.
+    culverin: DEFENSES_V2.culverin.levels.map(({ damage, range, reload }) => ({ damage, range, reload })),
   },
   harpoon: { speed: 32, firstReload: .6 }, // the harpoon's flight (units a second); the first throw comes soon after the wave starts
+  // The culverin's shot: its flight (units a second, always a hit), the first shot of a wave and the closest ship it takes.
+  culverin: { minRange: DEFENSES_V2.culverin.minRange, shotSpeed: DEFENSES_V2.culverin.shotSpeed, firstReload: DEFENSES_V2.culverin.firstReload },
   mortar: { radius: 4, minRange: 8, flight: 1.3, flightPerUnit: 0.025, scatter: 1.2, firstReload: 1 },
   crew: {
     gunner: { max: 2, reload: 0.75 },        // reload × 0.75 on the strongest towers, aims at the ship closest to the shore
@@ -250,7 +257,7 @@ export const CONFIG = freeze({
   },
 });
 
-const KINDS = new Set(['wall', 'cannon', 'mortar', 'harpoon', 'watchtower', 'house']);
+const KINDS = new Set(['wall', 'cannon', 'mortar', 'harpoon', 'culverin', 'watchtower', 'house']);
 const finite = value => typeof value === 'number' && Number.isFinite(value);
 const clamp = (value, low, high) => Math.min(high, Math.max(low, value));
 const round2 = value => Math.round(value * 100) / 100;
@@ -280,11 +287,14 @@ export function coastPoint(a, radius = 1, coast = CONFIG.coast) {
   return { x: coast.rx * edge * radius * Math.cos(a), z: coast.rz * edge * radius * Math.sin(a) };
 }
 
-function readDefenses(list) {
+// culverin: false (the default) drops every culverin, as a sim that does not know the kind would (T43: only a wave
+// whose rules say "defenses_v2" fights with one, so every client of a wave fights the same island).
+function readDefenses(list, { culverin = false } = {}) {
   const seen = new Set(), out = [];
   for (const item of Array.isArray(list) ? list : []) {
     if (!item || typeof item !== 'object' || typeof item.id !== 'string' || !item.id || seen.has(item.id)) continue;
     if (!KINDS.has(item.kind) || !finite(item.x) || !finite(item.z)) continue;
+    if (item.kind === 'culverin' && !culverin) continue;
     const levels = CONFIG.levels[item.kind].length, level = Number.isInteger(item.level) ? clamp(item.level, 1, levels) : 1;
     const spec = readSpec(item.kind, item.spec); // a skill of another kind is no skill
     const bonus = readBonus(item.kind, item.bonus); // the island's tier-2 pick for this kind (GAME-V3.md §5.1)
@@ -458,6 +468,9 @@ function shuffle(list, random) {
  * pathing: true (T34/T35, D040; the wave's rule "pathing") walks boarders over a grid of the island past the walls'
  * footprints (boarder-paths.js): a gap when it is quicker, else through the cheapest wall; no captain or tower
  * through a standing wall. Without it the fixed routes of landBoarder stay (D040 option A).
+ * defensesV2: true (T43, D048; the wave's rule "defenses_v2") lets culverins in `defenses` fight: a long gun on a
+ * tower spot that shoots gunboats and siege barges first, then the ship with the most hp. Without it a culverin
+ * in `defenses` is ignored, and a wave without a culverin plays exactly as before either way.
  */
 export function createWave(options = {}) {
   const C = CONFIG, B = C.boarding, random = createRandom(options?.seed);
@@ -471,7 +484,7 @@ export function createWave(options = {}) {
   const countdown = finite(options?.countdown) ? clamp(options.countdown, 0, 60) : 0;
   const withFlagship = options?.flagship === true;
   const boss = typeof options?.boss === 'boolean' ? options.boss : !withFlagship && waveNumber % C.boss.every === 0;
-  const defenses = readDefenses(options?.defenses), crew = readCrew(options?.crew);
+  const defenses = readDefenses(options?.defenses, { culverin: options?.defensesV2 === true }), crew = readCrew(options?.crew);
   const curve = curveFor(waveNumber);
   // v3 waves: the wave's event (none without options.event, never with the flagship) and the boss finisher.
   const happening = createEventRules(withFlagship ? null : options?.event, { seed: options?.seed, wave: waveNumber, curve, coastPoint,
@@ -492,21 +505,26 @@ export function createWave(options = {}) {
   if (crew.lookout && fog > 0) fogShare = Math.min(1, fogShare * C.crew.lookout.sight);
   const warnLead = (crew.lookout ? C.crew.lookout.warn : 0) + signal;
   const coast = readCoast(options?.coast), laneList = readLanes(options?.lanes);
-  // Cannons and mortars, in id order; the gunners man the strongest (damage per second, then level).
-  const towers = defenses.filter(item => item.kind === 'cannon' || item.kind === 'mortar' || item.kind === 'harpoon').map(item => {
+  // Cannons, mortars, harpoons and culverins, in id order; the gunners man the strongest (damage per second, then level).
+  const isTower = kind => kind === 'cannon' || kind === 'mortar' || kind === 'harpoon' || kind === 'culverin';
+  const towers = defenses.filter(item => isTower(item.kind)).map(item => {
     const stats = C.levels[item.kind][item.level - 1], spec = skillOf(item, C);
     // Long guns (tier 2) and Eagle eye (a watchtower's capstone in reach) stretch the range; Long range adds to it.
     const eagle = reach(eagles, item)?.skill.range ?? 1;
-    const range = round2(((item.kind === 'cannon' ? stats.range * bonusOf(item, 'range', C) : stats.range) + towerBonus) * eagle + (spec.range ?? 0));
+    // T43: a watchtower's range bonus does not reach a culverin (it would cover the whole sea); Eagle eye does.
+    const range = item.kind === 'culverin' ? round2(stats.range * eagle + (spec.range ?? 0))
+      : round2(((item.kind === 'cannon' ? stats.range * bonusOf(item, 'range', C) : stats.range) + towerBonus) * eagle + (spec.range ?? 0));
     // A spotter watchtower in reach adds its share of damage (GAME-V3.md §5); the skill's own numbers on top.
     const spotted = reach(spotters, item)?.skill.damage ?? 1, drums = reach(drummers, item)?.skill.reload ?? 1;
     const radius = item.kind === 'mortar' ? round2(C.mortar.radius * bonusOf(item, 'radius', C)) : undefined;
     return { ...item, skill: spec, damage: round2(stats.damage * (spec.damage ?? 1) * spotted * boost), baseReload: round2(stats.reload * C.pace.reload * (spec.reload ?? 1) * bonusOf(item, 'reload', C) * drums),
-      range, sight: range * fogShare * happening.sightOf(item, defenses), manned: false, reload: item.kind === 'mortar' ? C.mortar.firstReload : item.kind === 'harpoon' ? C.harpoon.firstReload : 0, lastShot: -Infinity, shots: 0,
+      range, sight: range * fogShare * happening.sightOf(item, defenses), manned: false, reload: item.kind === 'mortar' ? C.mortar.firstReload : item.kind === 'harpoon' ? C.harpoon.firstReload
+        : item.kind === 'culverin' ? C.culverin.firstReload : 0, lastShot: -Infinity, shots: 0,
       ...(radius !== undefined ? { radius } : {}), ...(item.kind === 'harpoon' ? { slow: { slow: stats.slow, seconds: stats.seconds } } : {}) };
   });
   const strength = tower => tower.damage / tower.baseReload * (tower.kind === 'mortar' ? 1.5 : 1);
-  towers.filter(item => item.kind !== 'harpoon').sort((a, b) => strength(b) - strength(a) || b.level - a.level || (a.id < b.id ? -1 : 1))
+  // Gunners stay on cannons and mortars (not on a harpoon tower or a culverin).
+  towers.filter(item => item.kind !== 'harpoon' && item.kind !== 'culverin').sort((a, b) => strength(b) - strength(a) || b.level - a.level || (a.id < b.id ? -1 : 1))
     .slice(0, crew.gunner).forEach(tower => { tower.manned = true; tower.baseReload = round2(tower.baseReload * C.crew.gunner.reload); });
   const cannons = towers.filter(item => item.kind === 'cannon'), mortars = towers.filter(item => item.kind === 'mortar');
   // The sight the island shows (fog edge, the manual-fire reach): the level-1 cannon's, or the best cannon's.
@@ -731,6 +749,16 @@ export function createWave(options = {}) {
     balls.push({ cannonId: tower.id, targetId: target.id, ...targetKey(target), hit: true, damage: tower.damage, manual: false, impactAt, harpoon: tower.slow });
     tower.reload = tower.baseReload; tower.lastShot = ticks * C.tick; tower.shots++;
     events.push({ type: 'harpoon_thrown', t: now(), towerId: tower.id, targetId: target.id, damage: tower.damage, level: tower.level,
+      x: tower.x, z: tower.z, toX: round2(aim.x), toZ: round2(aim.z), impactAt });
+  }
+  // The culverin fires (T43): like the harpoon, always a hit (no dice, so the random stream is untouched), a fast flat
+  // flight aimed ahead of the ship. The ball lands through the same impact code as a cannon's (ship_hit, ship_sunk).
+  function fireCulverin(tower, target, events) {
+    const flight = distance(tower.x, tower.z, target.x, target.z) / C.culverin.shotSpeed, aim = ahead(target, flight);
+    const impactAt = round2(ticks * C.tick + flight);
+    balls.push({ cannonId: tower.id, targetId: target.id, ...targetKey(target), hit: true, damage: tower.damage, manual: false, impactAt, culverin: true });
+    tower.reload = tower.baseReload; tower.lastShot = ticks * C.tick; tower.shots++;
+    events.push({ type: 'culverin_fired', t: now(), towerId: tower.id, targetId: target.id, damage: tower.damage, level: tower.level,
       x: tower.x, z: tower.z, toX: round2(aim.x), toZ: round2(aim.z), impactAt });
   }
   const pending = target => balls.reduce((sum, ball) => sum + (ball.targetId === target.id && ball.hit ? ball.damage : 0), 0);
@@ -1041,6 +1069,19 @@ export function createWave(options = {}) {
         if (ship.state !== 'sailing' || !sees(tower, ship, d) || armoured(ship) || roped(ship)) continue;
         const rank = (slowedUntil(ship) > now() + 1e-9 ? 1e4 : 0) + ship.left;
         if (rank < best) { target = ship; best = rank; }
+      }
+      return target;
+    }
+    if (tower.kind === 'culverin') {
+      // A culverin only wants ships (never boarders), not closer than its minimum range, and not one already doomed by
+      // the balls on their way: a ship that attacks towers first (the gunboat, the siege barge), then the one with the
+      // most hp left; a tie goes to the lower ship id.
+      const priority = DEFENSES_V2.culverin.priority, order = ship => Number(String(ship.id).replace(/\D/g, '')) || 0;
+      for (const ship of ships) {
+        const d = distance(tower.x, tower.z, ship.x, ship.z);
+        if (!sees(tower, ship, d) || d < C.culverin.minRange || armoured(ship) || pending(ship) >= ship.hp) continue;
+        const rank = (priority.includes(ship.kind) ? -1e6 : 0) - ship.hp;
+        if (rank < best || (rank === best && order(ship) < order(target))) { target = ship; best = rank; }
       }
       return target;
     }
@@ -1397,7 +1438,8 @@ export function createWave(options = {}) {
       balls.splice(i, 1);
       const target = findTarget(ball.targetId);
       if (ball.hit && target) {
-        damageTarget(target, ball.damage, ball.cannonId, events, ball.captain ? { manual: true, captain: true } : { manual: ball.manual });
+        damageTarget(target, ball.damage, ball.cannonId, events, ball.captain ? { manual: true, captain: true }
+          : { manual: ball.manual, ...(ball.culverin ? { culverin: true } : {}) });
         // Chain shot (GAME-V3.md §5): a ship that floats on is slowed for a few seconds.
         if (ball.chain && !target.boarder && target.hp > 0) { target.slowUntil = round2(t + ball.chain.seconds); target.slowBy = ball.chain.slow; events.push({ type: 'ship_slowed', t: now(), shipId: target.id, until: target.slowUntil }); }
         // A harpoon (T1): the ship floats on slowed; a new hit refreshes the time (and never weakens a stronger slow).
@@ -1466,6 +1508,7 @@ export function createWave(options = {}) {
       const target = aimTower(tower);
       if (target && tower.kind === 'mortar') lob(tower, target, events);
       else if (target && tower.kind === 'harpoon') throwHarpoon(tower, target, events);
+      else if (target && tower.kind === 'culverin') fireCulverin(tower, target, events);
       else if (target) fire(tower, target, false, events);
     }
     for (const wall of walls) {
