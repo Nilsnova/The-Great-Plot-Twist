@@ -1,10 +1,10 @@
 # Sprint T29–T47 walkthrough guide (for the catch-up review)
 
-> **What this is:** a plain-words reading guide to everything that merged into `main` on 14 Nov 2026 in the T29–T47 sprint (PRs #33 to #53). Each section says what a player sees, where the code is, which lines to read first, which tests prove it, and three practice questions with short model answers.
+> **What this is:** a plain-words reading guide to everything that merged into `main` on 14 Nov 2026 in the T29–T47 sprint (PRs #33 to #53, plus the late-evening PRs #54 to #63 in sections 10, 11 and 15). Each section says what a player sees, where the code is, which lines to read first, which tests prove it, and three practice questions with short model answers.
 >
 > **Who it is for:** the four teammates. [D047](DECISIONS.md) merged these lanes **without a prior peer review**, so review happens now, after the merge. In the code walkthrough every teammate must be able to explain every line, so read the code with this guide beside it.
 >
-> **What it is not:** it does not invent anything. Every quoted line is copied from `main` at the time of writing: sections 1 to 7 and 12 at `28693ce` (the merge of PR #44), sections 8 to 11 at `d606ec7` (the merge of PR #53). Where a later PR changed what an early section says, the early section carries an "Update" note. If a file changed since, trust the file and fix this guide.
+> **What it is not:** it does not invent anything. Every quoted line is copied from `main` at the time of writing: sections 1 to 7 and 12 at `28693ce` (the merge of PR #44), sections 8 to 11 at `d606ec7` (the merge of PR #53), section 15 at `86b01d9` (the merge of PR #63); the notes marked "Update" in sections 10, 11 and 13 were written against `86b01d9` too. Where a later PR changed what an early section says, the early section carries an "Update" note. If a file changed since, trust the file and fix this guide.
 
 ## How to use it
 
@@ -32,6 +32,12 @@ Merged on 14 Nov (merge commits on `origin/main`, newest first). Decision number
 
 | PR | Merge | Tasks | What | Decision | Flag | Section |
 |---|---|---|---|---|---|---|
+| #63 | `86b01d9` | T33–T35, T38, T43 (fix) | A wave keeps the rule set of its first answer, even when it is empty (a flag switched on mid-wave no longer changes a running wave) | D049, D040, D044 | all four wave rules | 15 |
+| #62 | `880714f` | T43 (check) | Two-captain release check for the culverin (`test:culverin`); a visitor's card unlocks the culverin by the friend's waves | D048 | `defenses_v2` | 11, 15 |
+| #59 | `6c1146f` | T33–T35 (check) | Balance playtest of the real sim, retune of pathing (`WALL_ENGAGE` 3, boarder `towerReach` 1.5), two-browser check of the rules (`test:rules`) | D049, D040 | `tower_health`, `pathing` | 15 |
+| #56 | `4d83dcd` | T43 | The culverin in the fight: sim, card and render wiring, migration `20261114140000`, the wave rule `defenses_v2` | D048 | `defenses_v2` | 11 |
+| #55 | `4010f7f` | (docs) | Sprint final pass: applied migrations, flag state, guide sections 8 to 11 | none | none | all |
+| #54 | `9bc543f` | T38 (check) | Two-captain release check for the rescue (`test:rescue`) | D044 | `rescue` | 6, 10 |
 | #53 | `d606ec7` | T40/T41 (check) | Two-captain release check for the arsenal; two card fixes | none | `arsenal` | 9, 12 |
 | #52 | `35145fd` | T33, T34/T35, T38, T29–T32 | Integration: wave rules, tower health, pathing and the rescue hook in `sim.js`; wall-recovery guard | D049 (new), D040, D044 | `tower_health`, `pathing`, `rescue`, `wall_recovery` | 10 |
 | #51 | `ce21d2d` | T40, T41, T44 | Shared island arsenal: 20 stored copies, buy/take/swap/return | D042 | `arsenal` | 9 |
@@ -54,26 +60,26 @@ Merged on 14 Nov (merge commits on `origin/main`, newest first). Decision number
 
 Also merged that day but not part of the T29–T47 code: #20 (the roadmap, T29–T47 in [BUILD-PLAN.md section 6](BUILD-PLAN.md#6-defense-and-shared-island-expansion)), #29 (sprint notes in STATUS/DECISIONS/OPEN-TODOS), #19 (T28 minigame introduction), #17 (T27 shooting direction), #13 (T7 leaderboard).
 
-**Merged after the first version of this guide:** highscore/statue polish (T45, #45 and #47, section 8), the arsenal (T40, T41, T44, #51 and #53, section 9), the integration of the sim (#52, section 10) and the culverin's data and art (T43 prep, #50, section 11). **Not built yet:** the culverin in the fight (sim, card and render wiring, and a migration), lasting tower damage between waves, towers as path obstacles; see [OPEN-TODOS.md, known follow-ups](OPEN-TODOS.md#known-follow-ups-from-the-sprint-14-nov).
+**Merged after the first version of this guide:** highscore/statue polish (T45, #45 and #47, section 8), the arsenal (T40, T41, T44, #51 and #53, section 9), the integration of the sim (#52, section 10) and the culverin's data and art (T43 prep, #50, section 11). Since then (late evening): the rescue release check (#54), the culverin in the fight (#56, #62), the balance harness and pathing retune (#59, section 15) and the wave-rules keep-once fix (#63, section 15). **Not built yet:** lasting tower damage between waves, towers as path obstacles; **built but off:** pathing (a team decision is open); see [OPEN-TODOS.md, known follow-ups](OPEN-TODOS.md#known-follow-ups-from-the-sprint-14-nov).
 
 **What actually changes for a player today.** Read this twice, because several lanes are deliberately *not connected yet*:
 
 | Lane | Is the player able to see it? (state on the evening of 14 Nov, as verified by the coordinator) |
 |---|---|
 | T29–T32/T47 wall recovery | **Yes: live.** Flag `wall_recovery` on in production (about 20:28 UTC), migration applied. |
-| T33 tower art | Only through the rule `tower_health` (flag off in production): then the damaged and broken drawings are used. |
-| T33 tower health | **No.** Merged in #52, flag `tower_health` off while its release check runs. |
-| T34/T35 targeting and pathing | **No.** Wired into `sim.js` in #52 behind the flag `pathing`, off in production (the old fixed routes stay). |
+| T33 tower art | **Yes, through the rule `tower_health`** (on since about 21:53 UTC): then the damaged and broken drawings are used, but towers rarely get hurt yet (next row). |
+| T33 tower health | **Yes: live, but nearly invisible.** Flag `tower_health` on since about 21:53 UTC, after the balance check of #59. On today's routes it plays like no rules: boarders rarely reach a tower. |
+| T34/T35 targeting and pathing | **Yes: live since about 22:00 UTC.** Wired into `sim.js` in #52 and retuned in #59. A closed wall ring at wave 60 is 12 to 18 points harder with it; Nils accepted that gap on 14 Nov and switched `pathing` on (section 15). |
 | T36 placement | **Yes: live.** Flag `placement` on (about 19:45 UTC), migration applied. |
 | T37/T42 co-op policy | **Yes: live**, no flag: it moves existing rules into one module and rewords one error message. |
-| T38 rescue | **No.** The `sim.js` hook is in (#52); flag `rescue` off in production, its release check is open. |
+| T38 rescue | **Yes: live.** The `sim.js` hook is in (#52); flag `rescue` on since about 21:05 UTC, after the release check #54 (`npm run test:rescue`). |
 | T39 difficulty curves | **Yes: live**, no flag. The numbers are the old ones up to wave 10, so waves 1 to 10 play as before. |
 | T40/T41/T44 arsenal | **Yes: live.** Flag `arsenal` on (about 20:48 UTC), migration applied, old weapons converted once. |
-| T43 culverin | **No.** Data and art merged (#50); flag `defenses_v2` off; the sim wiring is in progress. |
+| T43 culverin | **Yes: live.** Data and art (#50), fight, card and render wiring and migration (#56), release check (#62). Flag `defenses_v2` on since about 21:53 UTC. |
 | T45 leaderboard and statue | **Yes: live**, no flag. |
 | T46 weather forecast line | **Yes: live**, no flag: it appears when the weather answer has a usable `tonight.state`. |
 
-**Not verified by this guide:** the live site. The repository cannot tell which flags are on in production (that lives in the `FEATURE_FLAGS` setting on Vercel); the table above records what the coordinator verified live on 14 Nov 2026, and this guide did not re-check it. Check it yourself (section 13, "How to check").
+**Not verified by this guide:** the live site. The repository cannot tell which flags are on in production (that lives in the `FEATURE_FLAGS` setting on Vercel); the table above records what the coordinator verified live on 14 Nov 2026 (about 21:55 UTC), and this guide did not re-check it. Check it yourself (section 13, "How to check").
 
 ---
 
@@ -204,9 +210,9 @@ export function drawTower(kind, level = 1, state = 'intact', firing = false) {
 
 ## 3. Enemy targeting and wall pathing (T34, T35)
 
-**For the player.** Nothing yet in production. **Update (#52):** `sim.js` now uses these modules when the wave carries the rule `pathing` (section 10); the flag is off, so players still see the old fixed routes. When it is on, boarders will choose who to attack by a priority list and will walk round a wall through a gap when that is quicker than hacking through it.
+**For the player.** Nothing yet in production. **Update (#52):** `sim.js` now uses these modules when the wave carries the rule `pathing` (section 10); the flag has been on in production since about 22:00 UTC on 14 Nov, so players see the new routes. When it is on, boarders will choose who to attack by a priority list and will walk round a wall through a gap when that is quicker than hacking through it.
 
-**Flag / decision.** In #33 these were modules with no flag; since #52 they sit behind the flag `pathing` (off in production). [D040](DECISIONS.md#d040--enemy-targets-and-wall-pathing-t34t35--2026-11-14), proposed. Spec: [specs/T34-T35-targeting-pathing.md](../specs/T34-T35-targeting-pathing.md). Open balance question in D040: lone short walls get walked round, so today's isolated wall spots lose value until T36 or a ring layout.
+**Flag / decision.** In #33 these were modules with no flag; since #52 they sit behind the flag `pathing` (on in production since about 22:00 UTC, 14 Nov). [D040](DECISIONS.md#d040--enemy-targets-and-wall-pathing-t34t35--2026-11-14), proposed. Spec: [specs/T34-T35-targeting-pathing.md](../specs/T34-T35-targeting-pathing.md). Open balance question in D040: lone short walls get walked round, so today's isolated wall spots lose value until T36 or a ring layout.
 
 **Files, in order.**
 
@@ -705,7 +711,7 @@ A later good read clears only a message that came from a failed read (`if (loadF
 
 **For the player.** With every new flag off, nothing changes. With the flags on (one wave rule each): towers have hit points, boarders hack towers and can break them, boarders walk round or through the real walls instead of fixed routes, and a lost wave first offers the 10-second rescue haul. Separately, a wave that ends can no longer heal walls for free.
 
-**Flags and state.** Wall guard: part of `wall_recovery`, **live** (that flag has been on since about 20:28 UTC, after this guard and `npm run test:walls`). The three wave rules `tower_health` (T33, D049), `pathing` (T34/T35, D040) and `rescue` (T38, D044) are **merged, flag off** in production; their release checks are in progress. The migration `20261114130500_wave_rules.sql` is applied live. Specs: [T33-tower-health.md](../specs/T33-tower-health.md), [T34-T35-targeting-pathing.md](../specs/T34-T35-targeting-pathing.md#wiring-as-built-14-nov), [T38-T39-minigames-rescue.md](../specs/T38-T39-minigames-rescue.md). Decisions: [D049](DECISIONS.md#d049--tower-health-inside-a-wave-t33--2026-11-14) (new, proposed), D040, D044.
+**Flags and state.** Wall guard: part of `wall_recovery`, **live** (that flag has been on since about 20:28 UTC, after this guard and `npm run test:walls`). The wave rules `tower_health` (T33, D049) and `rescue` (T38, D044) are **live** (on since about 21:53 and 21:05 UTC); `pathing` (T34/T35, D040) is **merged, off** pending a team decision (section 15). The migration `20261114130500_wave_rules.sql` is applied live. **Update (#63):** since [PR #63](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/63) every wave answer calls `wave_rules_keep` and keeps the set even when it is empty, so the migration is needed whatever the flags say, and the walk-through below describes the version before #63 where it differs; section 15 has the current one. Specs: [T33-tower-health.md](../specs/T33-tower-health.md), [T34-T35-targeting-pathing.md](../specs/T34-T35-targeting-pathing.md#wiring-as-built-14-nov), [T38-T39-minigames-rescue.md](../specs/T38-T39-minigames-rescue.md). Decisions: [D049](DECISIONS.md#d049--tower-health-inside-a-wave-t33--2026-11-14) (new, proposed), D040, D044.
 
 **Files, in order.**
 
@@ -719,7 +725,7 @@ A later good read clears only a message that came from a failed read (`if (loadF
 **Walk-through A: one rule set per wave, the same for every client** (`wave_rules.py`).
 
 ```py
-SIM_RULES = ("tower_health", "pathing", "rescue")
+SIM_RULES = ("tower_health", "pathing", "rescue", "defenses_v2")
 ```
 
 ```py
@@ -728,12 +734,12 @@ def wanted_rules(settings: Settings) -> list[str]:
     return [name for name in SIM_RULES if is_enabled(name, settings.flags)]
 ```
 
-The first answer for a wave (start, join or current) keeps the rule set in the table `wave_rules`, and every later answer serves the kept set. So a friend who joins after a flag was switched plays the bell-ringer's rules, and every client simulates the same wave. The `rules` key is left out of the answer while every rule flag is off. Keeping rules must never break a wave:
+The first answer for a wave (start, join or current) keeps the rule set in the table `wave_rules`, and every later answer serves the kept set. So a friend who joins after a flag was switched plays the bell-ringer's rules, and every client simulates the same wave. The `rules` key is left out of the answer while the kept set is empty (before #63 nothing was kept at all while every rule flag was off). Keeping rules must never break a wave:
 
 ```py
     except ApiError as error:
-        # The wave itself is fine (started or joined): never fail it for its rules. Without the
-        # migration, or with the database down, it plays with no rules, as before this feature.
+        # The wave itself is fine (started or joined): never fail it for its rules. With the
+        # database down, it plays with no rules, as before this feature.
         logger.warning("Wave rules not kept; the wave plays without them: %s", type(error).__name__)
         return None
 ```
@@ -805,25 +811,27 @@ The finish reports each wall's percent from the browser's simulation, which the 
 
 **Tests that prove it.**
 
-- `backend/server/tests/test_wave_rules.py`: flags off means no rules and nothing kept; the order of rules; `test_a_joiner_after_a_flag_flip_gets_the_rules_the_wave_started_with`; `test_a_failing_rule_store_never_breaks_the_wave_it_plays_without_rules`. `island_sql/test_wave_rules_sql.py`: the first call keeps the rules, a later one changes nothing, unknown names refused, players cannot run it (opt-in).
+- `backend/server/tests/test_wave_rules.py`: the order of rules; (since #63) an empty set is kept too and a flag switched on mid-wave changes nothing for later joiners; `test_a_joiner_after_a_flag_flip_gets_the_rules_the_wave_started_with`; `test_a_failing_rule_store_never_breaks_the_wave_it_plays_without_rules`. `island_sql/test_wave_rules_sql.py`: the first call keeps the rules, a later one changes nothing, unknown names refused, players cannot run it (opt-in).
 - `backend/server/tests/test_wall_recovery.py`: `test_cap_to_start_keeps_damage_and_never_heals_or_invents_a_wall`, `test_an_unreadable_wall_record_reply_is_logged_not_an_error`.
 - `frontend/tests/pirates/wave-rules.test.js`, `tower-health.test.js` (hp by level, one `tower_broken`, E repair and rebuild, same seed same wave, off means exactly as before), `pathing-wiring.test.js` (the wall footprint, a closed ring versus a lone wall, replay, option A unchanged), `rescue-sim.test.js` (a lost wave waits for the rescue; never on Pirate Point or below wave 4).
 - Browser check: `npm run test:walls` (`check-wall-recovery-mp.js`); its scenario P is the "a finish cannot heal a wall" check. Its header comment still calls P pending; the fake server (`fake-api.js`, `recordWalls`) now follows the cap.
 
-**Limits.** Switching the last rule flag off while a wave runs gives later joiners of that wave no rules (switch rules off between waves). Mixed client versions in one wave can disagree, so reload every client after a flag changes. Tower hp numbers and the pathing balance need the T3 playtest before the flags go on; D049 is a proposal. Towers are not path obstacles (follow-up). The two-browser run with `rescue` on is still open.
+**Limits.** (Update: since #63 a wave keeps its first answer's set, empty or not, so neither switching the last flag off nor the first flag on changes a running wave; a wave started before #63 was deployed keeps the flags of its next answer.) Mixed client versions in one wave can disagree, so reload every client after a flag changes. Tower hp numbers and the pathing balance need the T3 playtest before the flags go on; D049 is a proposal (the balance check of section 15 is done for `tower_health` and `pathing`). Towers are not path obstacles (follow-up). The two-browser run with `rescue` on is done (#54).
 
 **Practice questions.**
 
 1. *Trace.* The bell-ringer starts wave 12 with `pathing` on. Nils then switches `pathing` off in Vercel and redeploys. A friend joins wave 12. Which rules does the friend play?
    *Model answer:* the kept set. The first answer stored `["pathing"]` in `wave_rules`, and join serves the kept set, so both play with pathing. A wave started after the switch has no `pathing`.
-2. *What if.* The migration `20261114130500_wave_rules.sql` was not applied and `tower_health` is on.
-   *Model answer:* `wave_rules_keep` fails, `rules_for_wave` logs a warning and returns `None`, so the wave starts and plays with no rules. It never answers a 5xx. (It is applied live, so this is the case for a fresh database.)
+2. *What if.* The migration `20261114130500_wave_rules.sql` was not applied (a fresh database).
+   *Model answer:* `wave_rules_keep` fails, `rules_for_wave` logs a warning and returns `None`, so the wave starts and plays with no rules. It never answers a 5xx. Since #63 this happens on every wave answer, whatever the flags say, not only when a rule flag is on. (It is applied live.)
 3. *Defend.* Why cap a wall at the health it started the wave with, instead of trusting the browser's number?
    *Model answer:* the server cannot replay the battle, so a modified client could report 100 for every wall and heal for free. The cap means a finish can only damage. A client can still report lower numbers, which is bounded: first finish only, participants only, play money, 10-minute timer.
 
 ---
 
 ## 11. Culverin data and art (T43, #50)
+
+> **Update (14 Nov, late evening).** The culverin is now **in the fight and live.** [#56](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/56) (`4d83dcd`) wired it into the sim, the card and the renderer, added the migration `20261114140000_culverin.sql` (applied live) and the wave rule `defenses_v2`; [#62](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/62) (`880714f`) added `npm run test:culverin` and fixed a visitor's card, which always showed the culverin locked. The flag `defenses_v2` has been on in production since about 21:53 UTC. The text below describes the stage of #50 (data and art only); where it says "not wired", "off" or "no migration", read it as history. Do not switch the flag off while culverins are built: the server then hides them (OPEN-TODOS follow-ups).
 
 **For the player.** Nothing yet. The culverin is a long gun for the seven island tower spots (damage 30 to 96, range 44 to 52, reload 4.0 to 2.8 s): it never shoots boarders or ships closer than 12, and goes for gunboats and siege barges first, then the ship with the most hp left. Its data, drawings and server catalogue are merged; the fight code is not.
 
@@ -945,8 +953,8 @@ backend/server/flags.py           FLAG_NAMES = (... "rescue", "wall_recovery", "
 - **The server decides, the browser asks.** `GET /api/config` (`backend/server/routes/config.py`) returns `flags` from the server's settings. The browser never decides a flag itself.
 - **Off means "exactly as before."** Each lane's tests include a "flag off" case: wall routes `404`, `placement` off shows fixed spots and never reads the layout table, `rescued` is ignored.
 - **A typo cannot hide.** `parse_flags` raises `UnknownFlagError` for any unknown name, so `FEATURE_FLAGS=wall_recover` stops the server at start instead of silently doing nothing. That is also why a new flag name must be added to `FLAG_NAMES` and to the list in `.env.example` and the flag table in `INTERFACES.md` (the recipe is [ENGINEERING.md, section 4.5](ENGINEERING.md#45-add-a-feature-flag)); `test_flags.py`, `test_health_and_config.py` and `correctness/test_settings_contract.py` each list the names.
-- **Migrations and flags are two separate, announced steps** (D047): (1) apply the SQL file to Supabase; (2) switch the flag on in Vercel and redeploy. A flag that needs a table must never be on before its migration is applied, or the routes read columns that do not exist. The code protects itself in one place: with `placement` on but the table missing, the island still works and answers `layout.movable: false` and the move route answers `503 layout_unavailable`. For `wall_recovery` we found no equivalent fallback in the code we read, so its flag is the guard. A second, softer fallback exists for the wave rules: if `wave_rules_keep()` fails (for example before its migration), the wave answer simply carries no `rules` and the wave plays as before (section 10). The arsenal has no such fallback: with `arsenal` on and no tables, its routes fail, so the flag is the guard there too.
-- **Reversible.** All four migrations are additive (`add column if not exists`, `create table if not exists`, `create or replace function`), and the comment block at the top of each file lists the exact statements to undo it.
+- **Migrations and flags are two separate, announced steps** (D047): (1) apply the SQL file to Supabase; (2) switch the flag on in Vercel and redeploy. A flag that needs a table must never be on before its migration is applied, or the routes read columns that do not exist. The code protects itself in one place: with `placement` on but the table missing, the island still works and answers `layout.movable: false` and the move route answers `503 layout_unavailable`. For `wall_recovery` we found no equivalent fallback in the code we read, so its flag is the guard. A second, softer fallback exists for the wave rules: if `wave_rules_keep()` fails, the wave answer simply carries no `rules` and the wave plays as before (section 10). Since #63 that function is called on every wave answer, even with every rule flag off, so the wave-rules migration is no longer "only needed once a rule flag is on"; it is applied live. The arsenal has no such fallback: with `arsenal` on and no tables, its routes fail, so the flag is the guard there too.
+- **Reversible.** All five migrations are additive in effect (`add column if not exists`, `create table if not exists`, `create or replace function`; the culverin one replaces two check rules and keeps every pair they allowed), and the comment block at the top of each file lists the exact statements to undo it.
 
 **The T29–T47 flags and their migrations.**
 
@@ -955,10 +963,10 @@ backend/server/flags.py           FLAG_NAMES = (... "rescue", "wall_recovery", "
 | `wall_recovery` | `islands` on, migration applied first | `supabase/migrations/20261114100000_wall_recovery.sql` | columns `islet_buildings.wall_health` (0–100, default 100) and `wall_damaged_at`; table `island_wall_records` (one row per island wave, no browser access); functions `island_walls_record()` and `island_wall_restore()` (service role only) | applied; flag **on** (about 20:28 UTC) |
 | `placement` | `islands` on, migration applied first | `supabase/migrations/20261114110000_island_layout.sql` | table `island_layout` (one row per moved spot, half-unit cells, known plots only) and function `island_move()` (island lock, compare-and-swap, refuses during a wave) | applied; flag **on** (about 19:45 UTC) |
 | `arsenal` | `islands` on, migration applied first | `supabase/migrations/20261114120000_arsenal.sql` | tables `arsenal_copies` and `arsenal_moves`, a commit-time capacity trigger, the `arsenal_*` functions and `arsenal_convert_personal_weapons()` (section 9) | applied; conversion run once; flag **on** (about 20:48 UTC) |
-| `tower_health`, `pathing`, `rescue` | `islands` on; migration applied first (they travel as `rules` on the wave answers) | `supabase/migrations/20261114130500_wave_rules.sql` | table `wave_rules` (one row per wave, no browser access) and `wave_rules_keep()` (section 10). `rescue` also uses the existing `wave_finish()`'s `p_restart_back` | applied; the three flags are **off** (release checks in progress) |
-| `defenses_v2` | **not ready to switch on** | none yet (a migration for `islet_buildings` is still to be written) | nothing yet; the catalogue gains the culverin (section 11) | flag **off** |
+| `tower_health`, `pathing`, `rescue` (and `defenses_v2`, below) | `islands` on; migration applied first (they travel as `rules` on the wave answers; since #63 the migration is needed for every wave answer) | `supabase/migrations/20261114130500_wave_rules.sql` | table `wave_rules` (one row per wave, no browser access) and `wave_rules_keep()` (sections 10 and 15). `rescue` also uses the existing `wave_finish()`'s `p_restart_back` | applied; `tower_health` **on** (about 21:53 UTC), `rescue` **on** (about 21:05 UTC), `pathing` **off** (team decision open) |
+| `defenses_v2` | `islands` on, migration applied first (the culverin rows and the wave rule) | `supabase/migrations/20261114140000_culverin.sql` | replaces two check rules, nothing else: `islet_buildings_plot_fits_building` also allows `(cannon_1..cannon_7, culverin)` and `wave_rules_known_names` also allows `defenses_v2`; the catalogue gains the culverin (section 11) | applied; flag **on** (about 21:53 UTC) |
 
-**Applied live (verified by the coordinator on 14 Nov 2026; not checkable from the repository).** The four migrations `20261114100000`, `20261114110000`, `20261114120000` and `20261114130500` are applied to the live Supabase project and registered in `schema_migrations`. The repository text that used to say "written, not applied" (D039, D041, D042, `supabase/README.md`, INTERFACES and the specs) was updated in the final docs pass to say "applied live 14 Nov 2026". Still, **do not trust the repo for "is it applied"; check the database** (the list of applied migrations in Supabase, or ask Nils). An applied migration plus a flag that is still off is the safe, intended state: nothing changes for players until the flag step is announced.
+**Applied live (verified by the coordinator on 14 Nov 2026, about 21:55 UTC; not checkable from the repository).** The five migrations `20261114100000`, `20261114110000`, `20261114120000`, `20261114130500` and `20261114140000` are applied to the live Supabase project and registered in `schema_migrations`. The repository text that used to say "written, not applied" (D039, D041, D042, `supabase/README.md`, INTERFACES and the specs) was updated in the final docs pass to say "applied live 14 Nov 2026". Still, **do not trust the repo for "is it applied"; check the database** (the list of applied migrations in Supabase, or ask Nils). An applied migration plus a flag that is still off is the safe, intended state: nothing changes for players until the flag step is announced.
 
 **How to check what is on.**
 
@@ -966,7 +974,7 @@ backend/server/flags.py           FLAG_NAMES = (... "rescue", "wall_recovery", "
 2. Locally: `cd backend && uv run --env-file ../.env uvicorn main:app --reload --port 8000`, then `http://127.0.0.1:8000/api/config` ([ENGINEERING.md, section 3](ENGINEERING.md#3-commands)). With an empty `FEATURE_FLAGS` every flag is `false`.
 3. To try a feature locally, put the name in your own `.env` (`FEATURE_FLAGS=islands,wall_recovery`); never write real keys in the repository.
 
-The state of each flag **on Vercel** is not recorded in the repository (the code default for all of them is off). The coordinator verified the live `FEATURE_FLAGS` on 14 Nov 2026: on are `live_presence`, `market`, `arena`, `sign_in`, `demo`, `sports`, `islands`, `placement`, `wall_recovery` and `arsenal`; off are `rescue`, `defenses_v2`, `tower_health` and `pathing`. A flag is switched on only after its release check (`npm run test:placement`, `test:walls`, `test:arsenal`, section 12) and, for rule flags, after every client of a running wave is reloaded. Re-check `GET /api/config` yourself.
+The state of each flag **on Vercel** is not recorded in the repository (the code default for all of them is off). The coordinator verified the live `FEATURE_FLAGS` on 14 Nov 2026 (about 22:01 UTC): on are `live_presence`, `market`, `arena`, `sign_in`, `demo`, `sports`, `islands`, `placement` (about 19:45), `wall_recovery` (about 20:28), `arsenal` (about 20:48), `rescue` (about 21:05), `defenses_v2` (about 21:53), `tower_health` (about 21:53) and `pathing` (about 22:00, after Nils accepted the closed-ring gap). A flag is switched on only after its release check (`npm run test:placement`, `test:walls`, `test:arsenal`, `test:rescue`, `test:culverin`, `test:rules` and `balance-rules.mjs`, sections 12 and 15) and a player with an old tab should reload afterwards (since #63 a running wave keeps its rules either way). Re-check `GET /api/config` yourself.
 
 **Practice questions.**
 
@@ -987,13 +995,75 @@ The README members table currently has only Nils Lenke filled in (the other thre
 |---|---|---|---|
 | Teammate A | 1 Wall recovery, 8 Leaderboard and statue, 12 Check repairs | Money, SQL and a lock; a read-only ranking; and the check runners that back every flag switch | Teammate C |
 | Teammate B | 4 Flexible placement, 2 Tower art, 9 Arsenal | Grid rules, the one visual section, and the largest database lane (capacity trigger, swap, retries) | Teammate D |
-| Teammate C | 3 Targeting and pathing, 7 Harbor weather, 10 Integration | The pure algorithms and then their wiring into `sim.js`, wave rules and the wall guard, plus the shortest section | Teammate A |
+| Teammate C | 3 Targeting and pathing, 7 Harbor weather, 10 Integration, 15 Balance and wave rules | The pure algorithms and then their wiring into `sim.js`, wave rules and the wall guard, plus the shortest section | Teammate A |
 | Teammate D | 5 Co-op permissions, 6 Rescue and difficulty, 11 Culverin | A small readable Python module, server settlement and curves, and the data-only lane | Teammate B |
 | Everyone | 0 and 13 (the table and the flags) | Every explain-back about a feature starts with "which flag, and is it on?" | n/a |
 
 Sections 9 and 10 are the longest; give them extra time. The pairs are roughly equal otherwise.
 
 **What to hand back.** For each section: the commands you ran with the real result lines (or "skipped: reason"), anything you could not explain, and any disagreement with a proposed decision (D039–D049 are open to comments in the issue or chat; D047 lets the team overturn the fast-track). Follow the report format of [CONTRIBUTING.md](../CONTRIBUTING.md): changed, verified, not verified, remaining.
+
+## 15. Balance harness, pathing retune and wave rules kept once (#59, #62, #63)
+
+These three PRs came after the section 10 walk-through. #59 asks "is the game still fair with the new rules on?", #62 checks the culverin with two captains, and #63 fixes the one bug the release checks found in how a wave's rules are fixed.
+
+**For the player.** Nothing new to click. `tower_health` is on in production but plays like no rules, because boarders rarely reach a tower. `pathing` is on since about 22:00 UTC (Nils accepted the closed-ring gap). The only visible difference is that a wave no longer changes its rules under you when Nils switches a flag.
+
+**Flags and state (about 21:55 UTC, 14 Nov).** `tower_health` and `defenses_v2` on since about 21:53 UTC, `rescue` on since about 21:05, `pathing` **on** since about 22:00 (after Nils accepted the closed-ring gap). The migrations `20261114130500_wave_rules.sql` and `20261114140000_culverin.sql` are applied. Specs: [specs/T33-T35-balance.md](../specs/T33-T35-balance.md), [specs/T43-new-defenses.md](../specs/T43-new-defenses.md). Decisions: D040, D049 and D048, all proposed.
+
+**Files, in order.**
+
+1. `specs/T33-T35-balance.md` (the acceptance rules and the before/after table).
+2. `frontend/scripts/balance-rules.mjs` (the headless playtest).
+3. `frontend/src/pirates/boarder-paths.js` (`WALL_ENGAGE`, `WALL_LANE`) and `frontend/src/pirates/targeting.js` (`towerReach`).
+4. `frontend/scripts/check-rules-mp.js` (`npm run test:rules`, two tabs on the fake server), then `frontend/scripts/check-culverin-mp.js` (`npm run test:culverin`).
+5. `backend/server/island/wave_rules.py`, `backend/server/tests/test_wave_rules.py`, and the header of `supabase/migrations/20261114130500_wave_rules.sql`.
+
+**Walk-through A: the balance harness (#59).** `balance-rules.mjs` imports the real `createWave` from `sim.js` and plays whole waves without a browser: waves 1 to 60, N seeds, four rule sets (none, tower_health, pathing, both), on two layouts (the fixed spots, and a closed square ring of 12 walls round the heart from wave 15). A scripted crew stands near the heart, strikes and shoots, and one captain walks to the most hurt wall or tower and presses E. A rule set passes when its win rate stays within 10 points of `none`, no wave becomes unwinnable or trivial, and boarders still hack walls (at least a third as many hacks as `none`). The script exits 1 when something fails. Run it yourself (commands in the appendix):
+
+```
+cd frontend && node scripts/balance-rules.mjs --seeds 20 --waves 60 --layouts ring
+```
+
+Result on 14 Nov: before the retune 13 failures; after it, every fixed-spot wave and every ring wave but one matches `none`. The one left is the closed ring at wave 60: with 80 seeds `none` wins 63 %, `tower_health` 63 %, `pathing` 51 % and both 45 %. That is why `pathing` stays off (the spec lists the two ways out: accept it, or make the breach costlier in `sim.js` or the wall rules).
+
+**Walk-through B: the retune (#59).** Two constants, no change in `sim.js`:
+
+```js
+export const WALL_ENGAGE = 3;
+export const WALL_LANE = .25;
+```
+
+A boarder within `WALL_ENGAGE` of a standing wall that lies across its straight way to the heart (the line passes within `WALL_LANE` of the footprint) hacks it instead of walking round. Before, lone walls were walked round, so pathing made walls useless (0 wall hacks at wave 10). In `targeting.js` the boarder's `towerReach` went from 2.5 to 1.5, so boarders walking the grid past a tower no longer peel off to hack it and leave the killing ground. The rule is deterministic (walls by id, plain sums), so every browser picks the same wall.
+
+**Walk-through C: wave rules kept once, also when empty (#63).** The bug: `rules_for_wave` returned early while every rule flag was off, so a wave that started with no rules kept nothing; if a flag was switched on during that wave, the next join or current answer kept the new set, and a late joiner played tower health while the bell-ringer did not. That is exactly the moment of a release. The fix is to drop the early return:
+
+```py
+    arguments = {"p_wave_id": str(wave.wave_id), "p_rules": wanted_rules(settings)}
+    try:
+        kept = read_model(KeptRules, await admin.call_function("wave_rules_keep", arguments))
+```
+
+Now every start, join and current answer calls `wave_rules_keep`. The first call stores whatever the flags say, including the empty list; later calls read that row (`on conflict (wave_id) do nothing`, then `select`). An empty set still leaves the `rules` key out of the answer, so clients behave as before. The price is one small database call per answer. A wave that has no row yet (started before the table was deployed) keeps the flags of its next answer. If the call fails the answer has no rules and a warning is logged, never a 5xx.
+
+The header comment of the SQL file still says the function is used "only while at least one of those flags is on". That sentence is **superseded by #63**; a comment-only note in the file and in `supabase/README.md` says so, and the applied statements are unchanged.
+
+**Walk-through D: the two-captain culverin check (#62).** `npm run test:culverin` runs six scenarios with two tabs on the fake server (card and unlock, build paid once, upgrade, a wave 20 where both sims agree tick for tick on every `culverin_fired` and `ship_hit`, levels after waves, tear down), a headless harness over waves 16, 20 and 30, a `tower_health` run and a flag-off run. It found one real bug that #62 fixed in `td-rules.js`: a visitor's card read a friend's island by its best won wave through the campaign table, which does not hold the culverin, so a member always saw it locked while the server allowed it.
+
+**Tests that prove it.** `node scripts/balance-rules.mjs` (the acceptance), `npm run test:rules` (scenario 4 is the late joiner after a flag flip; scenario K is the mid-wave switch-on: its title still says "known server limit", but it now asserts the fixed behaviour, that the late joiner gets no rules), `npm run test:culverin`, `backend/server/tests/test_wave_rules.py` (`test_with_every_rule_flag_off_the_wave_answers_have_no_rules_but_keep_the_empty_set`, `test_a_rule_flag_switched_on_mid_wave_gives_later_joiners_no_rules`, `test_a_joiner_after_a_flag_flip_gets_the_rules_the_wave_started_with`), `frontend/tests/pirates/pathing-wiring.test.js` (a lone wall across the way is hacked, one beside it is not; a closed ring still breaches exactly one wall) and `frontend/tests/pirates/defenses-v2.test.js` (the visitor card at waves 14 and 15).
+
+**Limits.** The playtest is a scripted crew in a headless sim, not human play: wave 60 on the ring ends with the heart near 5 hp, so 20 seeds are noisy (hence 80). Waves 8, 15 and 30 land almost no boarders on the test islands, so the rules cannot change them. Whether human players find `tower_health` any different is not measured. The culverin check uses the fake server, not Postgres.
+
+**Practice questions.**
+
+1. *Trace.* Wave 20 starts with every rule flag off. Halfway through, Nils switches `tower_health` on. A friend joins. Which rules does the friend play, and what did it do before #63?
+   *Model answer:* none. The first answer kept the empty set in `wave_rules`, and the join serves the kept set, so both play without tower health and the next wave picks up the flag. Before #63 nothing was kept while all flags were off, so the friend's join kept `["tower_health"]` and their sim drifted from the bell-ringer's.
+2. *Defend.* The retune changes `WALL_ENGAGE` and `towerReach` instead of `sim.js`, and `pathing` still stays off. Defend both choices.
+   *Model answer:* the constants live in the new modules, so the fixed-seed determinism tests of `sim.js` stay untouched and the change is easy to review and undo. `pathing` stays off because the same playtest still shows the closed ring 12 to 18 points harder at wave 60, which fails the acceptance of 10 points; a flag that is off costs nothing, and the fix needs a `sim.js` or wall-rule decision that belongs to the team (D040 is only proposed).
+3. *Test.* How would you show that the playtest's verdict does not depend on one lucky seed?
+   *Model answer:* run it with more seeds and compare. The ring at wave 60 is the example: 20 seeds gave none 60 %, pathing 50 % and both 45 %; 80 seeds gave 63 %, 51 % and 45 %, because the heart ends near 5 hp and a few seeds swing the result. The seeds are fixed (seed times 7919), so the same command gives the same numbers on any machine; a different `--seeds` value is the independent check.
+
+---
 
 ## Appendix: the commands
 
@@ -1010,5 +1080,9 @@ From [ENGINEERING.md, section 3](ENGINEERING.md#3-commands) (repository root fir
 | Wall recovery, two captains | `cd frontend && npm run test:walls` |
 | Placement, two captains | `cd frontend && npm run test:placement` |
 | Arsenal, two captains | `cd frontend && npm run test:arsenal` |
+| Rescue, two captains | `cd frontend && npm run test:rescue` |
+| Culverin, two captains | `cd frontend && npm run test:culverin` |
+| Wave rules, two tabs | `cd frontend && npm run test:rules` |
+| Balance playtest (headless sim) | `cd frontend && node scripts/balance-rules.mjs --seeds 20` |
 
 One test file only (examples): `cd backend && uv run pytest server/tests/test_wall_recovery.py` and `cd frontend && npx vitest run tests/pirates/targeting.test.js` (`npm test` runs `vitest run`).

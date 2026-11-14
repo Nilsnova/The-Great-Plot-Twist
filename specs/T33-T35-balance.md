@@ -107,6 +107,8 @@ The fake server (`src/pirates/fake-api.js`) now serves wave `rules` the way `bac
 
 ## Bug: switching a rule flag on while a wave runs
 
+**Fixed by PR #63 (14 Nov 2026):** a wave keeps the rule set of its first answer, even when it is empty; the text below is the history of the bug.
+
 `rules_for_wave()` returns early while every rule flag is off, so a wave that starts with all of them off keeps nothing. If a flag is switched on while that wave runs, the next join or current answer keeps and serves the new rules. A late joiner then plays tower health and pathing while the bell-ringer does not, and their sims drift for that wave. The module documents the reverse case (the last flag switched off mid-wave) as a known limit, but this case is the release moment itself. Scenario K of `check-rules-mp.js` shows it (the fake mirrors the server). Proposed fix: while no rule flag is on, still answer the kept set when the wave has one, and once the migration is applied keep an empty set on a wave's first answer. Until then, switch the flags on only while no wave runs, or accept one drifting wave per running room.
 
 ## Done when
