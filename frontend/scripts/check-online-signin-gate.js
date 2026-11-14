@@ -17,8 +17,10 @@ export async function checkOnlineSignInGate(){
     :route.fulfill({json:{id:env.fixtureUserId,captainName:'Recorded Captain',coins:0,crews:[],
       kit:'stranger',place:'lighthouse_isle'}}));
   try{
+    // Signing in loads the account from GET /api/me. The old wait on the wallet_transactions ledger read
+    // went stale: nothing reads the ledger any more (coins come with /api/me), so no /rest/v1 request is made.
     await Promise.all([signInFromTitle(env),page.waitForResponse(response=>
-      new URL(response.url()).pathname==='/rest/v1/wallet_transactions')]);
+      new URL(response.url()).pathname==='/api/me'&&response.request().method()==='GET')]);
     await settle(page);
     await openAccountControls(page);
     await page.locator('.account-modal[open] .account-screen').waitFor();
@@ -29,12 +31,16 @@ export async function checkOnlineSignInGate(){
     enabled=false;
     const config=page.waitForResponse(response=>new URL(response.url()).pathname==='/api/config');
     await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await config;
-    await page.getByText('Sign-in opens later. Your progress on this device is kept.',{exact:true}).first().waitFor();
+    await page.getByText('Sign-in opens later. You can keep playing on this device.',{exact:true}).first().waitFor();
     await returnToTitle(page);
-    const resume=page.locator('#play');
-    await resume.waitFor();
-    denied=true;await resume.click();
+    // Play no longer reads the account (it opens the front door), so the refused account read comes from
+    // reopening the game with sign-in on: the restored session asks GET /api/me, which answers 401. The flag
+    // then goes off again while the failure is showing, which is the live change this check is about.
+    enabled=true;denied=true;await page.reload();
     const modal=page.locator('.account-modal[open]');await modal.waitFor();
+    enabled=false;
+    const flagOff=page.waitForResponse(response=>new URL(response.url()).pathname==='/api/config');
+    await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await flagOff;
     const external=modal.locator('.account-screen > .server-call');
     await external.waitFor({state:'visible'});
     assert.equal(await external.getAttribute('data-state'),'expired','The actual shared Account failure is expired');
@@ -48,7 +54,7 @@ export async function checkOnlineSignInGate(){
     check(true,'The account notice stays above the title and its report action remains reachable');
     await page.keyboard.press('Escape');
     await page.locator('.shell-screen[open][data-mode="title"]').waitFor();
-    check(true,'A refused Continue returns to the title after its account notice closes');
+    check(true,'A refused account read returns to the title after its account notice closes');
     check(env.pageErrors.length===0,'The flag-change and expiry path has no uncaught browser errors');
     check(!env.checks.socketOpened,'The flag-change check opens no Realtime socket');
     check(env.external.every(value=>new URL(value).origin==='https://placeholder.supabase.co'),
