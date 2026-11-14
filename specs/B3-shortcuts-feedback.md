@@ -16,3 +16,11 @@ This branch starts independently from main; it does not include the help PR #31.
 Before/after captures at 1280x720 and 375x812, real Chromium pending/retry/cancel/dispose
 regressions, applicable frontend checks and an audit handover. Keep draft for author
 review; never merge without Johannes's explicit OK.
+
+## Delivered
+
+Implemented in draft [#32](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/32).
+Seven new browser cases and the full 2,997-test frontend run pass, as do build, budgets,
+text lint, accessibility (33 screens) and demo (33 checks).
+[Audit and limits](../docs/B3-FEEDBACK-AUDIT.md); [captures](../docs/evidence/B3-shortcuts/README.md).
+Author review, explain-back and independent human review remain; no merge performed.

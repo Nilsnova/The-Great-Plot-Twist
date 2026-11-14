@@ -21,6 +21,8 @@ The game is built and live; nobody waits for anyone. You extend it.
 
 ## 2. Open tasks you can pick (small, independent; updated Thu 12 Nov)
 
+**B3 current-v3 feedback pass:** Johannes, implemented in drafts [#31](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/31) / [#32](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/32); [audit and limits](B3-FEEDBACK-AUDIT.md). Author and human review pending; not merged.
+
 
 **14 Nov addition:** the new tasks T29–T47 are listed in [section 9](#9-defense-and-shared-island-expansion-proposal-14-nov); read their [delivery plan](BUILD-PLAN.md#6-defense-and-shared-island-expansion) and the prerequisites in each task row. Existing tasks below remain available under their current status.
 | ID | Task | Where | Size |
