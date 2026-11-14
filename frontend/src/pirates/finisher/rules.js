@@ -17,6 +17,7 @@
 // The goal grows with the captains present at the start (standing and in the wave), a little less than
 // in proportion, so one captain alone can win every finisher; a fallen captain or one not in the wave watches.
 export const FINISHER = Object.freeze({
+  prepareTicks: 1200,   // at most 60 seconds to read and practice, including disconnected captains
   trigger: .25,         // a boss below this share of its hull starts a finisher
   regain: .15,          // a failed finisher: the boss breaks free with this share of its hull back
   tick: 2,              // sim ticks per sample (100 ms)
@@ -185,7 +186,7 @@ export function createFinisher(ctx = {}) {
       if (ship.kind !== 'redtide') regularUsed = true;
       const players = participants(sim.now()), kind = finisherKind(ship, wave);
       run = { ship, kind, players, salt: salted(ship), plan: timeline(kind, players), ticks: 0, marks: new Map(), easy: new Map(),
-        phase: 'intro', outcome: null, outroEnd: null, cache: null, version: 0 };
+        phase: ctx.preparation ? 'prepare' : 'intro', ready: new Set(), prepareTicks: 0, outcome: null, outroEnd: null, cache: null, version: 0 };
       events.push({ type: 'finisher_started', t: sim.now(), kind, shipId: ship.id, shipKind: ship.kind, players: [...players],
         x: round2(ship.x), z: round2(ship.z), goals: progress(run).map(item => item.goal) });
     },
@@ -193,6 +194,11 @@ export function createFinisher(ctx = {}) {
       if (!run || run.outcome) return;
       const by = input?.by;
       if (typeof by !== 'string' || !run.players.includes(by)) return; // a watcher's input does nothing
+      if (input.type === 'finisher_ready') {
+        if (run.phase === 'prepare' && input.shipId === run.ship.id) run.ready.add(by);
+        return;
+      }
+      if (run.phase === 'prepare') return; // Practice samples never enter the scored attempt.
       if (!Number.isInteger(input.from) || !Array.isArray(input.marks) || input.marks.length < 1 || input.marks.length > FINISHER.marks) return;
       if (!run.easy.has(by)) run.easy.set(by, input.easy === true);
       let mine = run.marks.get(by);
@@ -209,6 +215,11 @@ export function createFinisher(ctx = {}) {
     // One tick of the finisher (the battle stands still meanwhile). Returns true while it runs.
     tick(events) {
       if (!run) return false;
+      if (run.phase === 'prepare') {
+        run.prepareTicks++;
+        if (run.players.every(by => run.ready.has(by)) || run.prepareTicks >= FINISHER.prepareTicks) run.phase = 'intro';
+        return true;
+      }
       run.ticks++;
       const sample = Math.floor(run.ticks / FINISHER.tick), { plan } = run;
       if (run.phase === 'intro' && sample >= FINISHER.intro) run.phase = 'task';
@@ -229,6 +240,7 @@ export function createFinisher(ctx = {}) {
       return { active: true, kind: run.kind, phase: run.phase, outcome: run.outcome, shipId: run.ship.id, shipKind: run.ship.kind,
         x: round2(run.ship.x), z: round2(run.ship.z), ticks: run.ticks, sample, salt: run.salt, players: [...run.players],
         task: current < 0 ? run.plan.tasks.length - 1 : current, tasks: run.cache.tasks.map(item => ({ ...item, players: { ...item.players } })),
+        ready: [...run.ready].sort(), prepareLeft: Math.max(0, (FINISHER.prepareTicks - run.prepareTicks) / 20),
         taskEnd: run.plan.end, decide: run.plan.decide, outroEnd: run.outroEnd,
         easy: Object.fromEntries(run.easy), heard: [...run.marks.keys()].sort() };
     },

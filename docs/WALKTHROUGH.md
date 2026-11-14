@@ -1200,6 +1200,42 @@ shot events rather than proving live Supabase delivery. See
 [the results and screenshots](../specs/T27-shooting-direction.md) and
 [the test map](TEST-MAP.md#t27--ianno-hollensteiner--captain-shooting-direction).
 
+## 31. Learn boss minigames with optional practice — Ianno Hollensteiner (T28)
+
+**What and where.** [The introduction](../frontend/src/pirates/finisher/introduction.js)
+explains the chain, cannon and arrow duel before a first scored encounter. It
+reuses [the existing scene](../frontend/src/pirates/finisher/scene.js) and
+[scoring rules](../frontend/src/pirates/finisher/rules.js). Practice and Skip
+practice are separate choices; Redtide queues only unfamiliar task kinds.
+
+**One example.** A player first meets the chain on island A. The
+[guidance memory](../frontend/src/pirates/finisher/practice.js) looks up that
+player/island/task combination. Practice writes into a private Map through the
+same scene controls. Finish or Skip marks just that combination seen. The
+[controller](../frontend/src/pirates/controller.js) sends readiness, then uses
+its real recorder only after preparation. Practice cannot pay loot: no practice
+samples or finish requests leave this component. A different player or island
+gets its own first-time introduction.
+
+**Why this way.** Reusing the scene avoids two versions of the controls. The
+[simulation](../frontend/src/pirates/finisher/rules.js) keeps scored samples at
+zero while participants prepare, with a visible 60-second limit for inactive
+captains. [The new message](INTERFACES.md#t28-boss-minigame-preparation) uses the
+existing room schedule. The real result remains the crew's shared result;
+only guidance and practice are personal ([D038](DECISIONS.md#d038--personal-boss-practice-before-the-shared-attempt--2026-11-14)).
+
+**Limits and future changes.** The local flag is a convenience, not trusted
+progress. [Identity wiring](../frontend/src/pirates/game-wiring.js) uses a token
+claim only to scope this flag; server authentication and money rules are unchanged.
+Another device, cleared storage or blocked storage can repeat the introduction.
+The existing room's late/lost-message limitations remain; an authoritative
+network barrier or account-wide guidance would need a separate design.
+
+**Evidence and authorship.** Codex drafted this for Ianno, who still needs to test,
+explain and review it. See [the test map](TEST-MAP.md#t28--ianno-hollensteiner--boss-minigame-practice)
+and [screenshots, exact checks and checkpoint links](evidence/T28/README.md).
+Local browser evidence does not establish live Supabase or physical-phone behavior.
+
 ## Where older docs differ from the code
 
 Read the code when these disagree. Noted on 11 Nov; not yet fixed.

@@ -78,7 +78,7 @@ export const PIRATE_POINT_PLACE = 'pirate_point';
 // captain_move (where a captain stands, so the boarders find them) and captain_revive (a fallen teammate
 // stood up) are captain health (GAME-V3.md §3).
 export const WAVE_EVENTS = ['wave_start', 'cannon_shot', 'wall_repair', 'lamps_lit', 'lamp', 'captain_shot', 'island_changed',
-  'wall_rebuild', 'captain_strike', 'game_hello', 'game_state', 'captain_move', 'captain_revive', 'finisher_input'];
+  'wall_rebuild', 'captain_strike', 'game_hello', 'game_state', 'captain_move', 'captain_revive', 'finisher_ready', 'finisher_input'];
 // finisher_input (v3 waves, src/pirates/finisher/): one window of a captain's samples in a boss finisher, at most
 // one a captain every max(500 ms, 2 × waveGapMs) like the other wave messages.
 export const WAVE_GAP_MS = 200; // we send at most one wave message this often (5 a second) in a small room
@@ -381,6 +381,8 @@ const WAVE_DATA = {
   captain_revive: data => hasKeysWith(data, ['by', 'seq', 't', 'waveId', 'targetId', 'x', 'z'], ['skills']) && typeof data.targetId === 'string'
     && WAVE_BY.test(data.targetId) && data.targetId !== data.by && [data.x, data.z].every(isCoord) && isSkills(data.skills),
   // A boss finisher's samples: from 0-3000, 1-24 marks of whole numbers -1 to 100, easy: true optional.
+  finisher_ready: data => hasKeys(data, ['by', 'seq', 't', 'waveId', 'shipId'])
+    && typeof data.shipId === 'string' && WAVE_ITEM.test(data.shipId),
   finisher_input: data => hasKeysWith(data, ['by', 'seq', 't', 'waveId', 'from', 'marks'], ['easy'])
     && Number.isInteger(data.from) && data.from >= 0 && data.from <= 3000 && Array.isArray(data.marks) && data.marks.length >= 1
     && data.marks.length <= 24 && data.marks.every(value => Number.isInteger(value) && value >= -1 && value <= 100)

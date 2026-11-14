@@ -150,8 +150,8 @@ const defaultHud = async options => (await import('./hud.js')).createWaveHud(opt
 const defaultEventArt = async options => (typeof document === 'undefined' ? null : (await import('./wave-events-art.js')).createEventArt(options));
 const defaultFinisherScene = async options => {
   if (typeof document === 'undefined') return null; // no page (a headless test): the sim alone
-  const [module, water] = await Promise.all([import('./finisher/scene.js'), import('../world/water.js').catch(() => null)]);
-  const scene = module.createFinisherScene(options);
+  const [module, water] = await Promise.all([import('./finisher/introduction.js'), import('../world/water.js').catch(() => null)]);
+  const scene = module.createFinisherIntroduction(options);
   if (!options.reducedMotion?.()) water?.setSeaPace?.(.25);
   const dispose = scene.dispose;
   scene.dispose = () => { water?.setSeaPace?.(1); dispose(); };
@@ -172,7 +172,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   getCrew = () => null, captainLevel = () => 1, captainSkills = () => [], captainWeapon = () => 'musket', captainColour = () => 0,
   startNextWave = null, breakSeconds = BREAK_SECONDS,
   loadAuto = readAuto, saveAuto = writeAuto, holdBreak = null, toggleHold = null, reviveCaptain = null,
-  createEventArt = defaultEventArt, createFinisherScene = defaultFinisherScene, easyFinishers = readEasy } = {}) {
+  createEventArt = defaultEventArt, createFinisherScene = defaultFinisherScene, easyFinishers = readEasy, practiceIdentity = () => null } = {}) {
   // The captains' poses (src/pirates/poses.js): your character and the teammates' figures fire in their own body.
   const poses = createPoses({ now: () => now() / 1000 });
   let wave = null, disposed = false, pressed = false, shootPressed = false, shootHeld = false, down = null, shake = 0;
@@ -232,7 +232,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     // the boss finishers with the room's wave gap (their grace time). simOptions may name an event (the demo).
     const event = info.flagship ? null : eventFor(info.wave, info.seed);
     const sim = createWave({ seed: info.seed, wave: info.wave, weather: info.weather, flagship: info.flagship, defenses, countdown: 0,
-      crew: getCrew() ?? undefined, ...(info.boss !== undefined ? { boss: info.boss } : {}), event, finishers: true, gapMs: waveGapMs, ...simOptions });
+      crew: getCrew() ?? undefined, ...(info.boss !== undefined ? { boss: info.boss } : {}), event, finishers: true, finisherPreparation: true, gapMs: waveGapMs, ...simOptions });
     const first = sim.state();
     const current = wave = { info, sim, defenses, offset, ticks: 0, seq: 0, schedule: createInputSchedule(), done: false, finished: false,
       pause: null, boss: first.boss ? bossText(first.warships) : '', captainAt: -Infinity, bladeAt: -Infinity,
@@ -630,7 +630,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       const players = f.players.length;
       const entry = current.finisher = { key, scene: null, recorder: createFinisherRecorder({ players, gapMs: waveGapMs(players) }) };
       if (world.container) {
-        Promise.resolve(createFinisherScene({ container: world.container, me: playerId, easy: () => !!easyFinishers(), reducedMotion, recorder: entry.recorder }))
+        Promise.resolve(createFinisherScene({ container: world.container, me: playerId, easy: () => !!easyFinishers(), reducedMotion, recorder: entry.recorder,
+          practiceIdentity: practiceIdentity(), onReady: () => { entry.ready = true; } }))
           .then(scene => { if (disposed || current.finisher !== entry || current.finished) scene?.dispose(); else entry.scene = scene; })
           .catch(error => console.error(error));
       }
@@ -639,6 +640,10 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     if (entry.scene) {
       entry.scene.element && (entry.scene.element.hidden = !current.shown);
       entry.scene.update({ finisher: f, dt, boss: world.project?.(f.x, f.z, 1.5) ?? null });
+    }
+    if (f.phase === 'prepare' && f.players.includes(playerId) && (entry.ready || !world.container)
+      && !f.ready.includes(playerId) && now() - (entry.readyAt ?? -Infinity) >= 1000) {
+      entry.readyAt = now(); submit({type: 'finisher_ready', by: playerId, shipId: f.shipId});
     }
     if (!f.players.includes(playerId) || f.outcome || !(f.phase === 'task' || f.phase === 'grace')) return;
     const easy = !!easyFinishers();

@@ -1633,3 +1633,22 @@ No rewards or database writes. The scan reads highest waves first, 100 rows per
 page, at most 20 pages; insufficient coverage returns `503 leaderboard_unavailable`,
 never a partial ranking. Public host names are read only for the final islands.
 Fake/offline games show an online-required message instead of invented global data.
+
+### T28 boss minigame preparation
+
+[D038](DECISIONS.md#d038--personal-boss-practice-before-the-shared-attempt--2026-11-14)
+and [T28](../specs/T28-minigame-introduction.md) add `finisher_ready` to the existing
+wave-room event list. Its data is exactly `{by, seq, t, waveId, shipId}`: the usual
+sender, sequence, scheduled wave time and wave id, plus the current boss ship id
+(the same 1–32-character ASCII letter/digit/underscore/hyphen rule as other ship ids).
+The simulation accepts readiness only from a standing participant captured at the
+finisher's start, for its current boss, while `phase` is `prepare`. Repeats are
+idempotent; spectators, other bosses and scored input during preparation do nothing.
+
+With `finisherPreparation: true` (the game controller), the scene gets `phase:
+"prepare"`, `ready: [participant ids]` and `prepareLeft` in seconds. Scored `sample`
+stays zero until everyone is ready or 1,200 simulation ticks (60 seconds) pass;
+the normal intro and scored timeline then start from zero. The controller uses
+the existing scheduled-input transport, not a new authority or database rule.
+Practice samples remain local and never enter `finisher_input`. The existing
+network latency/loss/late-join limitations still apply.

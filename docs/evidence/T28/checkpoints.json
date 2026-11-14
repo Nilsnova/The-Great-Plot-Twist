@@ -1,0 +1,25 @@
+{
+  "results": [
+    {
+      "kind": "haul",
+      "first": "Learn: Haul the chain",
+      "scoredStarted": true
+    },
+    {
+      "kind": "cannon",
+      "first": "Learn: Aim the great cannon",
+      "scoredStarted": true
+    },
+    {
+      "kind": "duel",
+      "first": "Learn: Board and duel",
+      "scoredStarted": true
+    },
+    {
+      "kind": "redtide",
+      "first": "Learn: Haul the chain",
+      "scoredStarted": true
+    }
+  ],
+  "errors": []
+}

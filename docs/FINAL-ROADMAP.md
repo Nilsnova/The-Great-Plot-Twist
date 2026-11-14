@@ -122,4 +122,4 @@ New big features, new external services, new paid accounts, story or culprit cha
 
 T26 UI follow-up: island Harbor weather access implemented in [PR #8](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/8), with [evidence](handoff/T26-weather-board.md); explain-back and human review pending. This does not complete A1 or the broader UI audits.
 
-T28 UX follow-up: [Learn boss minigames with optional first-time practice](../specs/T28-minigame-introduction.md), owned by Ianno. Per player, island and minigame, including multiplayer; implementation and review pending. This does not complete the broader UX audits.
+T28 UX follow-up: [Learn boss minigames with optional first-time practice](../specs/T28-minigame-introduction.md), owned by Ianno. Per player, island and minigame, including multiplayer; implementation done in [#19](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/19), with [evidence](evidence/T28/README.md). Ianno practiced all checkpoints; introductory explain-back completed after clarification; independent human review remains pending. This does not complete the broader UX audits.

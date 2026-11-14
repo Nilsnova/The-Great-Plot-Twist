@@ -176,3 +176,12 @@ and [recorded results](../specs/T27-shooting-direction.md).
 | What I built / why | Where and command | Covers | Misses |
 |---|---|---|---|
 | Read-only top ten island teams this UTC week; highest successful wave survives a restart; wooden scoreboard with medal badges | [Backend](../backend/server/tests/test_island_leaderboard.py): `cd backend && uv run pytest -q server/tests/test_island_leaderboard.py`; [browser/API](../frontend/tests/island/leaderboard.test.js): `cd frontend && npm test -- --run tests/island/leaderboard.test.js`; [game evidence](../frontend/scripts/check-island-leaderboard.mjs): `cd frontend && node scripts/check-island-leaderboard.mjs after` | Weekly/year boundaries and query filters, duplicate/shared islands, highest win after restart, ties, top-ten pagination and scan refusal, malformed rows, login/flag/no-store; loading/error/retry/empty states, exact three rows, medals and stale response after closing; 1280 × 720 and 375 × 812, long names and 44 px controls | Live PostgREST filtering/pagination and performance, concurrent deletion during reads, real accounts and physical phones, screen-reader behavior and fairness between crew sizes; fixture screenshots show sample captains |
+
+## T28 — Ianno Hollensteiner — Boss minigame practice
+
+| Part and why | Existing and new checks | Covers | Misses |
+|---|---|---|---|
+| Personal first-time explanations and practice using the existing finisher scene | [Memory/barrier tests](../frontend/tests/pirates/finisher-practice.test.js), [real DOM and two pages](../frontend/tests/finisher-introduction.test.js), [controller](../frontend/tests/pirates/wave-events-controller.test.js), [room validation](../frontend/tests/wave-rooms.test.js); `cd frontend && npm test`; `npm run test:mp -- <folder>` | Player/island/task separation, blocked storage, skip and later encounters, keyboard/touch input and focus reset, private practice samples, spectator/old-boss/duplicate readiness, wait limit, real BroadcastChannel exchange between two pages; the multiplayer script additionally checks one practicing captain and three skipping | Real Supabase sender/delivery, packet loss and late joins beyond existing room assumptions, physical phones, projector and screen readers |
+
+[Walkthrough part 31](WALKTHROUGH.md#31-learn-boss-minigames-with-optional-practice--ianno-hollensteiner-t28)
+and [results, screenshots and manual checkpoints](evidence/T28/README.md).
