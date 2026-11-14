@@ -522,6 +522,8 @@ The three actors, and the database role behind each:
 | `islands` | insert | no access | no access | yes (through `island_open()`) |
 | `islands` | update | no access | no access | yes (through `wave_finish()`) |
 | `islands` | delete | no access | no access | no access (deleted with its player, by cascade) |
+| `wave_rules` | read, insert | no access | no access | yes (through `wave_rules_keep()`; 20261114130500_wave_rules.sql) |
+| `wave_rules` | update, delete | no access | no access | no access (deleted with its wave, by cascade) |
 | `wave_runs` | read | no access | no access | yes |
 | `wave_runs` | insert | no access | no access | yes (through `wave_start()`) |
 | `wave_runs` | update | no access | no access | yes (through `wave_start()` and `wave_finish()`) |
@@ -3193,3 +3195,5 @@ guest, for tables and Realtime rooms (the test stub adds Supabase's `auth.jwt()`
 | island_wall_restore | service_role only | A paid Repair or Rebuild between waves: coins and health in one step, never above whole |
 
 Manual checks after applying: `select count(*) from public.islet_buildings where wall_health <> 100;` is 0; as `authenticated`, `select * from public.island_wall_records` is refused. The opt-in SQL checks: `CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql/test_wall_recovery_sql.py`.
+
+`migrations/20261114130500_wave_rules.sql` (T33, T34/T35, T38 wave rules) is additive: the table `wave_rules` (one row per wave: the simulation rule names it plays with; RLS on, no policy, `select, insert` for `service_role` only) and `wave_rules_keep()`, which keeps a wave's rules at its first start/join/current answer and answers the kept set every time. The server calls it only while one of the flags `tower_health`, `pathing` or `rescue` is on, so apply this file before switching any of them on.

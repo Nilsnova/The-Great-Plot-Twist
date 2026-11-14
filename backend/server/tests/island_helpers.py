@@ -243,6 +243,9 @@ class FakeIslandDatabase:
                 "starts_at": STARTED["startsAt"],
             }
         }
+        # The rule set each wave keeps (wave_rules_keep(), 20261114130500_wave_rules.sql).
+        self.wave_rules: dict[str, list[str]] = {}
+        self.wave_rules_reply: httpx.Response | None = None  # set to make wave_rules_keep fail
         self.games = FakeGames(self)
         # T36: the island_layout rows of every island ({"plot", "x_half", "z_half"}), one list;
         # layout_missing pretends the migration is not applied (the database answers 404).
@@ -301,6 +304,7 @@ class FakeIslandDatabase:
         handlers["POST /rpc/island_weapon_equip"] = lambda request: self.answer(
             self.paid_replies.get("island_weapon_equip", EQUIPPED)
         )
+        handlers["POST /rpc/wave_rules_keep"] = self.keep_wave_rules
         handlers["POST /rpc/island_walls_record"] = lambda request: self.answer(
             self.paid_replies.get("island_walls_record", {"status": "recorded"})
         )
@@ -362,6 +366,14 @@ class FakeIslandDatabase:
         code = request.url.params["code"].removeprefix("eq.")
         row = self.islands.get(code)
         return httpx.Response(200, json=[row] if row else [])
+
+    def keep_wave_rules(self, request: httpx.Request) -> httpx.Response:
+        """wave_rules_keep(): the first call for a wave keeps its rules; every call answers them."""
+        if self.wave_rules_reply is not None:
+            return self.wave_rules_reply
+        body = json.loads(request.content)
+        kept = self.wave_rules.setdefault(body["p_wave_id"], body["p_rules"])
+        return httpx.Response(200, json={"rules": kept})
 
     def read_wave_runs(self, request: httpx.Request) -> httpx.Response:
         wave_id = request.url.params.get("id")

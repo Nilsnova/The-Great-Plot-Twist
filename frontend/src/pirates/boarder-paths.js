@@ -10,7 +10,8 @@
 //   isOnLand(x, z, coast)                       inside the coastline of surfaces.js (the sim's coastPoint)
 //   footprintPoints(wall)                       the world points that mark a wall's cells on the 1-unit grid
 //   createBoarderPaths({coast, heart, walls, pace})
-//     .refresh()        once a tick: the layout from the walls' hp now (the field is rebuilt only on a change)
+//     .refresh()        once a tick: the layout from the walls' hp now (skipped while no hp changed; the
+//                       distance field is rebuilt only when the layout's key changes)
 //     .next(boarder)    {kind: 'wall', wallId} | {kind: 'step', x, z} | {kind: 'heart'} | {kind: 'none'}
 //     .canReach(a, b)   a straight walk from a to b crosses no water and no standing wall
 import { buildLayout, cellOf, centreOf, createGrid } from './path-grid.js';
@@ -44,9 +45,13 @@ export function createBoarderPaths({ coast, heart, walls, pace }) {
   const reach = Math.ceil(Math.max(coast.rx, coast.rz) * MARGIN);
   const grid = createGrid({ minX: -reach, minZ: -reach, maxX: reach, maxZ: reach, isWalkable: (x, z) => isOnLand(x, z, coast) });
   const cache = createFieldCache(grid), shapes = walls.map(wall => ({ wall, cells: footprintPoints(wall) }));
-  let layout = buildLayout(grid, [], pace), field = cache.fieldFor(layout, heart);
+  let layout = buildLayout(grid, [], pace), field = cache.fieldFor(layout, heart), seen = null;
 
   function refresh() {
+    // Most ticks no wall's hp changed: then the layout of the last tick still holds.
+    const hps = walls.map(wall => `${wall.hp}/${wall.maxHp}`).join(',');
+    if (hps === seen) return;
+    seen = hps;
     layout = buildLayout(grid, shapes.map(({ wall, cells }) => ({ id: wall.id, hp: wall.hp, maxHp: wall.maxHp, cells })), pace);
     field = cache.fieldFor(layout, heart);
   }

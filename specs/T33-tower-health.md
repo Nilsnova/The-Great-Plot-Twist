@@ -7,7 +7,7 @@
 - **Status:** implemented on branch `feat/integration-sim`; decision [D049](../docs/DECISIONS.md) **proposed**, pending team review
 - **Flag:** `tower_health` (server, off by default). Off: no `rules` on the wave answers, towers have no hp, every wave plays exactly as before.
 - **Art:** [T33 tower damage art](T33-tower-damage-art.md) (`src/art/tower-states.js`, merged in #34).
-- **Migration:** none.
+- **Migration:** `20261114130500_wave_rules.sql` (additive: keeps each wave's rule set; shared with `pathing` and `rescue`).
 
 ## Rules (D049, proposed)
 
@@ -23,7 +23,7 @@
 | Carpenter, Workshop, engineer boost | walls only, unchanged (follow-up). |
 | Between waves | **Out of scope:** every wave starts every tower whole. Lasting tower damage (like D039 walls: a stored percent, paid Repair/Rebuild, a timer) is a follow-up. |
 | Messages | no new room message: the existing `repair` / `rebuild` inputs carry the tower's id in `wallId`; sim.js repairs the wall with that id, else (with tower health) the tower. |
-| Determinism | The rule comes from the server's wave answer (`rules: ["tower_health"]` on start, join and current), never from a client's `/api/config`, so every client of a wave plays the same rule. Mixed client versions in one wave can disagree: reload every client after switching the flag. |
+| Determinism | The rule comes from the server's wave answer (`rules: ["tower_health"]` on start, join and current), never from a client's `/api/config`, so every client of a wave plays the same rule. The first answer keeps the wave's set (`wave_rules`, migration `20261114130500_wave_rules.sql`, apply it before switching the flag on), so a joiner after a flag flip gets the same rules. Mixed client versions in one wave can disagree: reload every client after switching the flag. |
 
 ## What
 

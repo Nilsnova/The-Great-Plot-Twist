@@ -33,9 +33,11 @@ POST /api/waves/start  {"where": "own" | "ISLE-K7Q2M" | "pirate_point", "actionU
     "rules" (only while at least one is on, else the key is left out): the simulation rules
     this wave plays with, from the feature flags of the same names, in this order:
     "tower_health" (T33, D049 proposed), "pathing" (T34/T35, D040 proposed), "rescue" (T38,
-    D044 proposed: the game offers the last-chance rescue). Every client
-    of a wave reads them from the wave answer, never from its own /api/config, so the whole
-    wave plays one rule set.
+    D044 proposed: the game offers the last-chance rescue). The first answer for a wave keeps
+    its rule set (island/wave_rules.py, table wave_rules, migration 20261114130500), and join
+    and current answer that kept set even after a flag was switched. Every client of a wave
+    reads them from the wave answer, never from its own /api/config, so the whole wave plays
+    one rule set.
     Errors: 404 no_such_island, 409 wave_running (one wave per island at a time)
 
 POST /api/waves/join  {"waveId": "6f1c..."}
@@ -108,7 +110,7 @@ from fastapi import APIRouter, Query, Request
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt
 
 from server.flags import is_enabled
-from server.island import wall_repair, waves
+from server.island import wall_repair, wave_rules, waves
 from server.island.service import IslandCatalogueDep
 from server.island.wave_weather import wave_weather
 from server.island.waves import WaveStart
@@ -130,9 +132,6 @@ MAX_SHIPS_SUNK = 1000
 WALL_SPOT = Annotated[str, Field(pattern=r"^wall_[0-9]{1,2}$")]
 WALL_HEALTH = Annotated[StrictInt, Field(ge=0, le=100)]
 MAX_WALLS = 24
-# The simulation rules a wave can carry (the "rules" of the wave answer), each switched on by the
-# feature flag of the same name. The browser's sim turns each one into an option of createWave().
-SIM_RULES = ("tower_health", "pathing", "rescue")
 
 
 class StartRequest(BaseModel):
@@ -217,14 +216,8 @@ async def start_walls(
     return await wall_repair.walls_for_wave(admin, wave)
 
 
-def wave_rules(settings: Settings) -> list[str] | None:
-    """The simulation rules of SIM_RULES whose flag is on, in that order; None while none is."""
-    rules = [name for name in SIM_RULES if is_enabled(name, settings.flags)]
-    return rules or None
-
-
 def wave_out(
-    wave: WaveStart, settings: Settings, walls: dict[str, int] | None = None
+    wave: WaveStart, walls: dict[str, int] | None = None, rules: list[str] | None = None
 ) -> WaveResponse:
     return WaveResponse(
         waveId=wave.wave_id,
@@ -240,7 +233,7 @@ def wave_out(
         flagship=wave.flagship,
         boss=wave.boss,
         walls=walls,
-        rules=wave_rules(settings),
+        rules=rules,
     )
 
 
@@ -262,7 +255,8 @@ async def post_start(
         catalogue, source, state_rules, request.app.state.lock_weather, area
     )
     started = await waves.start(admin, catalogue, weather, player.id, body.where, body.actionUid)
-    return wave_out(started, settings, await start_walls(admin, settings, started))
+    walls = await start_walls(admin, settings, started)
+    return wave_out(started, walls, await wave_rules.rules_for_wave(admin, settings, started))
 
 
 @router.post("/waves/join", response_model_exclude_none=True)
@@ -276,7 +270,8 @@ async def post_join(
 ) -> WaveResponse:
     request.app.state.wave_budget.spend(player.id)
     joined = await waves.join(admin, catalogue, player.id, body.waveId)
-    return wave_out(joined, settings, await start_walls(admin, settings, joined))
+    walls = await start_walls(admin, settings, joined)
+    return wave_out(joined, walls, await wave_rules.rules_for_wave(admin, settings, joined))
 
 
 @router.get("/waves/current", response_model_exclude_none=True)
@@ -292,7 +287,8 @@ async def get_current(
     running = await waves.current(admin, catalogue, player.id, where)
     if running is None:
         return None
-    return wave_out(running, settings, await start_walls(admin, settings, running))
+    walls = await start_walls(admin, settings, running)
+    return wave_out(running, walls, await wave_rules.rules_for_wave(admin, settings, running))
 
 
 @router.post("/waves/finish")
