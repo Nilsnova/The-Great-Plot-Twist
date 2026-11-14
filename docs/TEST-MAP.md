@@ -90,6 +90,8 @@ Size: 193 test files in [frontend/tests/](../frontend/tests/), about 1,830 `it`/
 | `test:production` | `check-production.js` | The production build end to end with an offline API stub |
 | `test:demo` | `check-demo-journey.js` | The class-demo journey with recorded API answers |
 | `test:mp` | `check-multiplayer.js` | Two, then four pages on one island against the shared fake server (`?islands=fake`) and a BroadcastChannel room with the live room's rules: a co-op build shows on the owner's page, identical ships every second, musket shots cross pages, loot for each, one shared Next wave, a mid-wave join. **Not** the real Supabase Realtime, real accounts or the network; Pirate Point with four players and the lamps is not in it yet |
+| `test:placement` | `check-placement-mp.js` | T36 flexible placement on two pages of one island (shared fake server, BroadcastChannel room): host and member move a wall and a cannon from the card and the other page's answer and map follow within 2 s; sea, overlap and a closed heart route are refused on the bar and by the fake server with the server's codes; in a wave Move is off and a move is refused `wave_running`; both pages' sims fight the moved squares; a reload keeps them; with `wall_recovery` on too, a damaged or destroyed wall's card keeps Repair/Rebuild and Move. **Not** the real `POST /api/island/move` or Postgres (`island_sql/test_island_layout_sql.py` covers `island_move()`), real Realtime, phones |
+| `test:arsenal` | `check-arsenal-mp.js` | Release check of the flag `arsenal` (T40/T41, D042) on two pages of one island (shared fake server with `?fakeflags=arsenal`, BroadcastChannel room): the building drawn and opened by walking up and pressing E; a buy paid once on a double click and a same-click-id retry, into empty hands, else onto the rack; a member's take and swap, both cards showing who carries what (the other card within 2 s); two captains taking one copy at once (one gets it, the other `taken`); a full rack (20 of 20) refusing the return with the copy kept in hand; no Weapons tab and the old weapon buy `409 use_arsenal`; every move `wave_running` in a wave; both sims fire each captain's carried weapon; a reload keeps it; with the flag off no building and the old shop as before. **Not** the real `/api/island/arsenal` routes or Postgres (`test_arsenal_routes.py`, `island_sql/test_arsenal_sql.py`), real Realtime, phones |
 | `test:browser`, `test:world`, `test:readability` | `check-browser.js`, `check-world.js`, `check-readability.js` | The world loads, places, text contrast |
 | `test:mobile`, `test:panels` | `check-mobile-walking.js`, `check-open-panels.js` | Touch walking at phone size; every panel a player can open (account, settings, the Harbor cards, the old islet panel, the island cards) fits at four sizes |
 | `test:market` | `check-market-hall.js` | The Harbor market stall ("Up or down in 5 minutes?", `/api/market/calls`) in the production build with recorded answers: anonymous, the flag off, a 🪙 10 call on Up with its countdown, the request body, the HUD wallet |
@@ -158,6 +160,12 @@ The rows that start with "v3" were written on Fri 13 Nov 2026 at `6c9ffb3`. Coun
 |---|---|---|---|
 | Opens the existing weather board from the island Harbor after wave 4; reuses the existing fetcher and card | [model test](../frontend/tests/island/card-model.test.js), [DOM test](../frontend/tests/island/weather-board.test.js): `cd frontend && npm test -- --run tests/island/card-model.test.js tests/island/weather-board.test.js`; [game journey](../frontend/scripts/check-island-weather.js): `cd frontend && node scripts/check-island-weather.js` | Wave 3/4 boundary, storm/fog/stale/missing weather, one dialog, focus/reset, Escape, cleanup; real game wiring and viewport containment at 1280 × 720 and 375 × 812 with recorded APIs | Real Open-Meteo outages, physical touch devices, deployed sign-in; changes while the weather card remains open |
 
+### T46 · Nils · Harbor weather follow-through
+
+| What I built / why | Where and command | Covers | Misses |
+|---|---|---|---|
+| The weather board says when an old reading was taken, never promises a fresh one for a recorded reading, says where a wave takes its weather from, and shows the forecast for tonight as words only (D045, no stake) | [model tests](../frontend/tests/harbor/models.test.js), [card test](../frontend/tests/harbor/cards.test.js): `cd frontend && npx vitest run tests/harbor tests/island/weather-board.test.js`; [game journey](../frontend/scripts/check-island-weather.js): `node scripts/check-island-weather.js after` and `… after live` | stale vs recorded wording, bad times, live/cache show no notice, the wave-place line on and offline, known/null/unknown/missing forecast; real game wiring at 1280 × 720 and 375 × 812 | Which place a wave really used (the wave answer has no place), real Open-Meteo outages, physical phones |
+
 ### T5 · Ianno Hollensteiner · Island milestones
 
 | What I built / why | Where and command | Covers | Misses |
@@ -179,6 +187,12 @@ and [recorded results](../specs/T27-shooting-direction.md).
 |---|---|---|---|
 | Read-only top ten island teams this UTC week; highest successful wave survives a restart; wooden scoreboard with medal badges | [Backend](../backend/server/tests/test_island_leaderboard.py): `cd backend && uv run pytest -q server/tests/test_island_leaderboard.py`; [browser/API](../frontend/tests/island/leaderboard.test.js): `cd frontend && npm test -- --run tests/island/leaderboard.test.js`; [game evidence](../frontend/scripts/check-island-leaderboard.mjs): `cd frontend && node scripts/check-island-leaderboard.mjs after` | Weekly/year boundaries and query filters, duplicate/shared islands, highest win after restart, ties, top-ten pagination and scan refusal, malformed rows, login/flag/no-store; loading/error/retry/empty states, exact three rows, medals and stale response after closing; 1280 × 720 and 375 × 812, long names and 44 px controls | Live PostgREST filtering/pagination and performance, concurrent deletion during reads, real accounts and physical phones, screen-reader behavior and fairness between crew sizes; fixture screenshots show sample captains |
 
+### T45 · Highscore and statue stages (D046, proposed)
+
+| What I built / why | Where and command | Covers | Misses |
+|---|---|---|---|
+| Weekly and all-time boards, earliest-first ties, solo/crew label, "This island" milestones, cosmetic statue stages at 25/50/75/100 | [Backend](../backend/server/tests/test_island_leaderboard.py): `cd backend && uv run pytest -q server/tests/test_island_leaderboard.py`; [rules](../frontend/tests/island/progression.test.js) and [card](../frontend/tests/island/leaderboard.test.js): `cd frontend && npm test -- --run tests/island/progression.test.js tests/island/leaderboard.test.js`; [game evidence](../frontend/scripts/check-t45-progression.mjs): `cd frontend && node scripts/check-t45-progression.mjs` | All-time window and filters, lower later wins and resets cannot lower a score, tie order, crew counts and empty-crew fallback, scope 422; stage boundaries 24/25/49/50/74/75/99/100, milestone text, T7-shaped answers, tab switching/remembering; statue stages on the island and card at 1280 × 720 and 375 × 812 with contrast and 44 px checks | Live Supabase data, the 2,000-run bound under real load, physical phones, T38/D044 reset interaction (see the spec's re-check list) |
+
 ## T28 — Ianno Hollensteiner — Boss minigame practice
 
 | Part and why | Existing and new checks | Covers | Misses |
@@ -187,6 +201,13 @@ and [recorded results](../specs/T27-shooting-direction.md).
 
 [Walkthrough part 31](WALKTHROUGH.md#31-learn-boss-minigames-with-optional-practice--ianno-hollensteiner-t28)
 and [results, screenshots and manual checkpoints](evidence/T28/README.md).
+
+## T38 + T39 — Minigame difficulty and last-chance rescue
+
+| Part and why | Existing and new checks | Covers | Misses |
+|---|---|---|---|
+| Wave-based speed/timing/error-budget curves and one frozen snapshot per run ([spec](../specs/T38-T39-minigames-rescue.md)) | [Curves and playability](../frontend/tests/pirates/finisher-difficulty.test.js), [finisher](../frontend/tests/pirates/finisher.test.js); `cd frontend && npm test` | Boundary waves 1–100, today's numbers up to wave 10, monotonic and bounded, rounding waves, unknown task refused, frozen snapshot and late joiner, lagging bot wins in crews 1/2/4/10 on both settings, Redtide two of three at wave 100, wrong input fails, smaller late error budget | Human playtests (T3), mixed client versions in one wave |
+| Last-chance rescue rules, scene and settlement (D044, flag `rescue`) | [Rescue rules](../frontend/tests/pirates/rescue.test.js), [finish pass-through and fake server](../frontend/tests/pirates/rescue-finish.test.js), [server](../backend/server/tests/test_wave_rescue.py): `cd backend && uv run pytest -q server/tests/test_wave_rescue.py` | Triggers and reasons, wave 4–100, fallen versus away captains, no captain, once per wave, win/fail/timeout, preparation limit and watchers, disconnects with a frozen goal, chunk/order determinism, `rescued` only true, flag off, Pirate Point/early/won waves ignored, loot arguments unchanged, JS/Python parity | The `sim.js` hook and a two-browser run (not built here), real `wave_finish()` SQL with `p_restart_back = 1` against Postgres, human playtest |
 
 ## B3 — Johannes Franz Lang — Repeatable feedback fixtures
 

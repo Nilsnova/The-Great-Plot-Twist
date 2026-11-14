@@ -1,6 +1,7 @@
 // What the island's small cards say, as pure functions (no DOM): the build and upgrade card of a spot,
 // the crew and captain panels, the harbor bell, Play with a friend and the loot toast. The server decides; these only describe its last answer.
-import {BUILDINGS, CREW, CREW_IDS, CAPTAIN, CAPTAIN_MAX, SLOT_KINDS, POINT_TOWER_KINDS, maxLevel, priceFor, statLine, captainLine, lockedWave} from './td-rules.js';
+import {BUILDINGS, CREW, CREW_IDS, CAPTAIN, CAPTAIN_MAX, SLOT_KINDS, maxLevel, priceFor, statLine, captainLine, lockedWave} from './td-rules.js';
+import {towerKinds} from './defenses-v2.js';
 import {displayIslandCode, visitUrl} from './codes.js';
 import {formatCoinDelta, formatCoins} from '../lib/coins.js';
 import {BRANCHES, ROLES, ROLE_BY_ID, ROLE_LEVEL, SKILLS, SKILL_BY_ID, WEAPONS, WEAPON_BY_ID, isRole, pointsEarned, pointsSpent, readSkills, readWeapon, respecPrice, skillNeeds} from '../pirates/captain-ids.js';
@@ -27,9 +28,11 @@ export const coinText = n => (Number.isSafeInteger(n) ? formatCoins(n) : '🪙 ?
 // One primary button at most (the build or the upgrade); `soon` is the small "Coming soon" line.
 // GAME-V3.md §4.2: a built building on an island (not Pirate Point) has a secondary "Tear down" in
 // `demolish` {label, disabled, reason}; battle: a wave runs on screen, so it waits for the break.
+// flags: the server's feature flags (GET /api/config); an empty tower spot offers towerKinds({flags, point}), so the
+// culverin (T43) only while defenses_v2 is on.
 export function buildCardModel({spotId, kind, slot = null, spot = null, coins = null, visitor = false, ownerName = '',
-  busy = false, message = '', unlocks = null, prices = null, point = false, campaign = null, battle = false} = {}) {
-  const place = slot ?? (kind === 'cannon' || kind === 'mortar' || kind === 'harpoon' ? 'tower' : kind ?? 'wall');
+  busy = false, message = '', unlocks = null, prices = null, point = false, campaign = null, battle = false, movable = false, flags = null} = {}) {
+  const place = slot ?? (kind === 'cannon' || kind === 'mortar' || kind === 'harpoon' || kind === 'culverin' ? 'tower' : kind ?? 'wall');
   const built = spot?.built === true, standing = built ? spot.kind : null;
   const level = built ? (Number.isSafeInteger(spot.level) && spot.level > 0 ? spot.level : 1) : 0;
   const shown = standing ?? (place === 'tower' ? null : SLOT_KINDS[place]?.[0] ?? kind);
@@ -42,7 +45,7 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
     button: '', disabled: true, reason: '', upgrade: null, soon: '', message, busy, skills: null, locked: false,
     coins: coins === null ? '' : `You have ${coinText(coins)}`,
     owner: point ? 'Paid by you · belongs to Pirate Point' : visitor ? `You pay · it stays on ${ownerName ? `${ownerName}'s` : 'this'} island` : '', hire: false,
-    demolish: null};
+    demolish: null, move: null};
   if (shown && level > 0) {
     model.pips = Array.from({length: model.maxLevel}, (_, index) => index < level);
     model.stats = statLine(shown, level);
@@ -56,9 +59,11 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
     model.purpose = spotNeeds === waveOf('ring_walls') ? 'The inner ring of walls around the heart.' : model.purpose;
     return model;
   }
+  // T36: any spot of your island (built or empty) may move to another cell of the build grid, between waves.
+  if (!point && movable) model.move = {label: 'Move', disabled: battle || !!busy, reason: battle ? 'You can move it between waves.' : ''};
   if (!built && place === 'tower') {
     model.mode = 'choose'; model.title = 'Tower spot'; model.purpose = 'Choose what to build. You cannot change it later.';
-    for (const choice of point ? POINT_TOWER_KINDS : SLOT_KINDS.tower) {
+    for (const choice of towerKinds({flags, point})) {
       const price = priceFor(choice, 0, prices);
       if (allowed(choice) < 1) {
         model.choices.push({kind: choice, name: BUILDINGS[choice].name, line: BUILDINGS[choice].line, price: coinText(price),

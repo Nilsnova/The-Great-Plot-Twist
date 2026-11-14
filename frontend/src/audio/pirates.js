@@ -3,10 +3,10 @@
 // a whole battery firing at once stays one clean thump instead of a wall of noise.
 import { BATTLE_CUES } from './battle-sounds.js';
 const GAP = { 'pirate-cannon': .07, 'pirate-cannon-manual': .05, 'pirate-splash': .09, 'pirate-hit': .06, 'pirate-wall': .12,
-  'pirate-mortar': .12, 'pirate-mortar-impact': .12, 'pirate-musket': .04, 'pirate-gunboat': .06, 'pirate-harpoon': .08, 'pirate-horn': 1 };
+  'pirate-mortar': .12, 'pirate-mortar-impact': .12, 'pirate-musket': .04, 'pirate-gunboat': .06, 'pirate-harpoon': .08, 'pirate-culverin': .12, 'pirate-horn': 1 };
 export const PIRATE_CUES = ['pirate-cannon', 'pirate-cannon-manual', 'pirate-splash', 'pirate-hit', 'pirate-wall',
   'pirate-sunk', 'pirate-bell', 'pirate-victory', 'pirate-defeat', 'pirate-tick',
-  'pirate-mortar', 'pirate-mortar-impact', 'pirate-musket', 'pirate-horn', 'pirate-harpoon', 'pirate-gunboat'];
+  'pirate-mortar', 'pirate-mortar-impact', 'pirate-musket', 'pirate-horn', 'pirate-harpoon', 'pirate-gunboat', 'pirate-culverin'];
 const CAPTIONS = {
   'pirate-bell': 'The pirate bell rings',
   'pirate-victory': 'Victory: the island holds',

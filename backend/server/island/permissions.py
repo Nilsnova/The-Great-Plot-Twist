@@ -55,6 +55,8 @@ REBUILD = "structure_rebuild"
 ARSENAL_BUY = "arsenal_buy"
 ARSENAL_WITHDRAW = "arsenal_withdraw"
 ARSENAL_RETURN = "arsenal_return"
+# T36 (D041, flexible placement): move a build spot on the island's grid.
+MOVE = "island_move"
 
 
 @dataclass(frozen=True)
@@ -88,9 +90,11 @@ ACTIONS: dict[str, Rule] = {
     WAVE_REVIVE: Rule("help a captain up here", PERSONAL),
     REPAIR: Rule("repair buildings here", PERSONAL),
     REBUILD: Rule("rebuild buildings here", PERSONAL),
-    ARSENAL_BUY: Rule("buy weapons for this arsenal", PERSONAL),
-    ARSENAL_WITHDRAW: Rule("take weapons from this arsenal", FREE),
-    ARSENAL_RETURN: Rule("return weapons to this arsenal", FREE),
+    # D042: the arsenal functions refuse every move while a wave runs (wave_running).
+    ARSENAL_BUY: Rule("buy weapons for this arsenal", PERSONAL, between_waves=True),
+    ARSENAL_WITHDRAW: Rule("take weapons from this arsenal", FREE, between_waves=True),
+    ARSENAL_RETURN: Rule("return weapons to this arsenal", FREE, between_waves=True),
+    MOVE: Rule("move buildings here", FREE, between_waves=True),
 }
 
 

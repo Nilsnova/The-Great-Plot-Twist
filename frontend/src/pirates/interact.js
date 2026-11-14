@@ -18,11 +18,15 @@ const near = (list, player, reach = REACH) => {
 /**
  * What the player can do: {kind: 'fire', cannonId, targetId|null} next to a cannon, {kind: 'repair',
  * wallId, hp} next to a damaged wall, {kind: 'rebuild', wallId, ready} next to a broken one, else null.
+ * With tower health (T33) the same repair / rebuild with tower: true for a damaged or broken tower.
  * defenses: [{id, kind, x, z}]; state: wave.state().
  * repairReach: how far you reach a wall to repair or rebuild it (captain-stats.js: Long reach adds 2 units, §14).
  */
 export function actionAt(player, defenses, state, { repairReach = REACH } = {}) {
   if (!player || !state || state.phase !== 'running') return null;
+  // T33 (tower health on): a damaged or broken tower in reach is mended first, before a cannon is manned.
+  const tower = towerToMend(player, defenses, state, Number.isFinite(repairReach) && repairReach > 0 ? repairReach : REACH);
+  if (tower) return tower;
   const cannon = near(defenses.filter(item => item.kind === 'cannon'), player);
   const walls = new Map((state.walls ?? []).map(wall => [wall.id, wall]));
   const damaged = defenses.filter(item => item.kind === 'wall' && walls.has(item.id) && walls.get(item.id).hp < walls.get(item.id).maxHp);
@@ -39,6 +43,19 @@ export function actionAt(player, defenses, state, { repairReach = REACH } = {}) 
     return { kind: 'repair', wallId: wall.id, hp: live.hp, maxHp: live.maxHp, repairing: live.repairing, x: wall.x, z: wall.z };
   }
   return null;
+}
+
+/**
+ * T33: the repair or rebuild of the nearest tower in reach that is below its hp (only towers with hp in the
+ * state, so nothing changes without tower health). The input names the tower in wallId, as sim.js reads it.
+ */
+function towerToMend(player, defenses, state, reach) {
+  const live = new Map((state.towers ?? []).filter(item => item.maxHp > 0 && item.hp < item.maxHp).map(item => [item.id, item]));
+  const post = near(defenses.filter(item => live.has(item.id)), player, reach);
+  if (!post) return null;
+  const tower = live.get(post.id), base = { wallId: tower.id, tower: true, maxHp: tower.maxHp, x: post.x, z: post.z };
+  if (tower.hp <= 0) return { kind: 'rebuild', ...base, hp: 0, ready: tower.rebuildReady !== false };
+  return { kind: 'repair', ...base, hp: tower.hp, repairing: tower.repairing };
 }
 
 /** The nearest ship this cannon can see (within the sim's sight), or null. */

@@ -97,6 +97,12 @@ describe('equal-distance ties and input order', () => {
     expect(pickTarget(enemy(), world({ towers, heart: null }))).toMatchObject({ kind: 'tower', id: 'cannon_2' });
   });
 
+  it('nearestWithin counts an item at exactly the reach, as sim.js does, and nothing beyond it', () => {
+    expect(nearestWithin({ x: 0, z: 0 }, [{ id: 'edge', x: 3, z: 0 }], 3, () => true)?.id).toBe('edge');
+    expect(nearestWithin({ x: 0, z: 0 }, [{ id: 'far', x: 3.001, z: 0 }], 3, () => true)).toBeNull();
+    expect(nearestWithin({ x: 0, z: 0 }, [{ id: 'b', x: 0, z: 2 }, { id: 'a', x: 2, z: 0 }], 2, () => true)?.id).toBe('a');
+  });
+
   it('nearestWithin treats distances closer than a billionth as equal', () => {
     const list = [{ id: 'b', x: 1, z: 0 }, { id: 'a', x: 1 + 1e-12, z: 0 }];
     expect(nearestWithin({ x: 0, z: 0 }, list, 5, () => true).id).toBe('a');

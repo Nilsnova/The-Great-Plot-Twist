@@ -480,6 +480,12 @@ These frames are **to be written by the lane's members** (what, where, why, limi
 - **How it could change:** subscribe the open card to weather updates if players need it; keep one fetcher and one weather renderer.
 - **Tests:** [weather-board.test.js](../frontend/tests/island/weather-board.test.js) checks the unlock, one dialog, focus, Escape, cleanup and storm/stale/missing readings; [check-island-weather.js](../frontend/scripts/check-island-weather.js) exercises the running game's wiring at both required sizes. See [T26 evidence](handoff/T26-weather-board.md).
 
+### T46: what the weather board tells players (follow-through)
+
+- **What and where:** [weather-model.js](../frontend/src/harbor/weather-model.js) now says when a `stale` or recorded `fallback` reading was taken (UTC) and no longer promises a fresh reading for a recorded one; it says that a wave takes the weather where its bell is rung when the server can tell ([wave_weather.py](../backend/server/island/wave_weather.py)), otherwise the board's weather; and it shows the forecast for tonight from `tonight.state` of `GET /api/weather` as words only.
+- **Why:** the T26 card read as a promise about the next wave and called a recorded reading "the last weather we heard". No coins ride on the forecast: no weather stake, per [D035](DECISIONS.md) and the proposed [D045](DECISIONS.md).
+- **Tests:** [models.test.js](../frontend/tests/harbor/models.test.js), [cards.test.js](../frontend/tests/harbor/cards.test.js); `node scripts/check-island-weather.js after [live]` captures [evidence](evidence/t46/). See the [spec](../specs/T46-harbor-weather.md).
+
 ### Lane U: Look and feel
 - **Where it lives:** [frontend/src/ui/](../frontend/src/ui/), [frontend/src/ui/kit/](../frontend/src/ui/kit/), [frontend/src/front-door/](../frontend/src/front-door/).
 - **Known facts:** cold CSS under 12 kB (part 1); one Join field takes `ISLE-…` and `HARBOR-…` codes.
@@ -1098,7 +1104,7 @@ See [the test map](TEST-MAP.md#t5--ianno-hollensteiner--island-milestones) and
 
 ## 30. Weekly island leaderboard — Ianno Hollensteiner (T7)
 
-**What and where.** Menu → Weekly leaderboard opens the read-only card in
+**What and where.** Menu → Leaderboard (named "Weekly leaderboard" before T45) opens the read-only card in
 [island/ui.js](../frontend/src/island/ui.js). The controller in
 [island/index.js](../frontend/src/island/index.js) loads it through
 [island/api.js](../frontend/src/island/api.js). The signed-in

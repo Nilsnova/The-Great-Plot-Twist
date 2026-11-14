@@ -4,6 +4,7 @@
 // every price and refusal; an island answer's `prices`, `level`, `crew`, `captain` and `unlocks` win over
 // these tables whenever they are present. No DOM here.
 import {STEPS as CAMPAIGN_STEPS, opensText} from '../campaign/index.js';
+import {DEFENSES_V2} from '../pirates/defenses-v2.js';
 
 // §2: per kind, per level (index 0 = level 1). price[n] is the price of building (n = 0) or of the
 // upgrade to level n + 1. Levels 4 and 5 (GAME-V3.md §4.1) open after waves 12, 15 and 20. The prices are
@@ -18,6 +19,12 @@ export const BUILDINGS = Object.freeze({
   // The harpoon tower (GAME-V3.md §5, T1): opens after wave 12. Its stats are CONFIG.levels.harpoon (slow in percent).
   harpoon: Object.freeze({name: 'Harpoon tower', line: 'Slows one ship at a time with a rope harpoon.', price: [40, 80, 160, 320, 640],
     stats: [{damage: 2, range: 30, slow: 25}, {damage: 3, range: 32, slow: 30}, {damage: 4, range: 34, slow: 35}, {damage: 5, range: 36, slow: 40}, {damage: 7, range: 38, slow: 45}]}),
+  // The culverin (T43, decision D048 proposed): a long gun, offered only while the flag defenses_v2 is on
+  // (towerKinds() in ./defenses-v2.js). Prices, levelWaves and the line repeat backend/content/defenses_v2.json, which
+  // the server merges into the island only with the flag; the stats are the sim's (src/pirates/defenses-v2.js).
+  culverin: Object.freeze({name: 'Culverin', line: 'A long gun: hits far ships hard but slowly. Hunts gunboats and siege barges first.',
+    price: Object.freeze([80, 160, 320, 640, 1280]), levelWaves: Object.freeze([15, 15, 15, 20, 30]),
+    stats: Object.freeze(DEFENSES_V2.culverin.levels.map(({damage, range}) => Object.freeze({damage, range})))}),
   // From level 3 the watchtower also adds damage to every cannon and mortar (boost, in percent).
   watchtower: Object.freeze({name: 'Watchtower', line: 'Gives all your towers more range, from level 3 more damage too.', price: [40, 80, 160, 320, 640],
     stats: [{range: 8, boost: 0}, {range: 12, boost: 0}, {range: 14, boost: 5}, {range: 16, boost: 10}, {range: 18, boost: 15}]}),
@@ -68,11 +75,13 @@ export const UNLOCK_NEWS = Object.freeze(Object.fromEntries(CAMPAIGN_STEPS.filte
 export {opensText};
 
 // The unlocks for a won wave, as one plain object:
-//   {wonWave, levels: {wall, cannon, mortar, harpoon, watchtower, house}, captain, crew: {gunner, carpenter, lookout}, next}
+//   {wonWave, levels: {wall, cannon, mortar, harpoon, culverin, watchtower, house}, captain, crew: {gunner, carpenter, lookout}, next}
+// (a kind outside the campaign table, the culverin, opens by its own levelWaves, as unlockWave() reads them: a
+// visitor's card reads a friend's island through this table, and the server allows what that island has won)
 // levels[kind] 0 = locked; crew[id] true = may hire; next = {wave, title} of the next step or null.
 export function unlocksFor(wonWave = 0) {
   const won = Number.isSafeInteger(wonWave) && wonWave > 0 ? wonWave : 0;
-  const levels = {wall: 0, cannon: 0, mortar: 0, harpoon: 0, watchtower: 0, house: 0}, crew = {gunner: false, carpenter: false, lookout: false};
+  const levels = {wall: 0, cannon: 0, mortar: 0, harpoon: 0, culverin: 0, watchtower: 0, house: 0}, crew = {gunner: false, carpenter: false, lookout: false};
   let captain = 1, next = null;
   for (const step of UNLOCK_STEPS) {
     if (step.wave > won) { next ??= {wave: step.wave, title: UNLOCK_NEWS[step.wave]?.title ?? ''}; continue; }
@@ -80,16 +89,18 @@ export function unlocksFor(wonWave = 0) {
     if (step.captain) captain = step.captain;
     for (const id of step.crew) crew[id] = true;
   }
+  for (const [kind, info] of Object.entries(BUILDINGS)) if (info.levelWaves) levels[kind] = info.levelWaves.filter(wave => wave <= won).length;
   return {wonWave: won, levels, captain, crew, next};
 }
-// The wave after which a kind's level (or a crew member) first appears, or null.
+// The wave after which a kind's level (or a crew member) first appears, or null. A kind outside the campaign
+// table (the culverin) answers its own levelWaves.
 export function unlockWave({kind = null, level = 1, crew = null, captain = null} = {}) {
   for (const step of UNLOCK_STEPS) {
     if (kind && (step.levels?.[kind] ?? 0) >= level) return step.wave;
     if (crew && step.crew.includes(crew)) return step.wave;
     if (captain && (step.captain ?? 0) >= captain) return step.wave;
   }
-  return null;
+  return (kind && BUILDINGS[kind]?.levelWaves?.[level - 1]) ?? null;
 }
 
 // The island answer's unlocks (the backend's shape, TOWER-DEFENSE.md §9, GAME-V3.md §4):
@@ -102,7 +113,7 @@ export function readUnlocks(island) {
   const base = unlocksFor(won);
   const locked = sent?.locked && typeof sent.locked === 'object' ? {...sent.locked} : {};
   if (!Array.isArray(sent?.unlocked)) return {...base, locked};
-  const levels = {wall: 0, cannon: 0, mortar: 0, harpoon: 0, watchtower: 0, house: 0}, crew = {gunner: false, carpenter: false, lookout: false};
+  const levels = {wall: 0, cannon: 0, mortar: 0, harpoon: 0, culverin: 0, watchtower: 0, house: 0}, crew = {gunner: false, carpenter: false, lookout: false};
   let captain = 1;
   for (const id of sent.unlocked) {
     if (typeof id !== 'string') continue;

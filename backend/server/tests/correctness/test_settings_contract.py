@@ -24,6 +24,13 @@ FLAGS = (
     "festival",
     "demo",
     "islands",
+    "rescue",
+    "wall_recovery",
+    "placement",
+    "defenses_v2",
+    "arsenal",
+    "tower_health",
+    "pathing",
 )
 VARIABLES = {
     "APP_ENV": " PrEvIeW ",
