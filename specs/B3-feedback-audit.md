@@ -10,7 +10,7 @@ paths are not reintroduced. No merge without Johannes's explicit approval.
 
 ## Delivery
 
-- [ ] PR 1: How to play loading, failure, retry and cancellation (`fix/b3-help-feedback`).
+- [x] PR 1 (draft #31): How to play loading, failure, retry and cancellation (`fix/b3-help-feedback`).
 - [ ] PR 2: Shortcuts failure recovery on keyboard/phone and notice cleanup (separate branch).
 - [ ] Current-game audit table, screenshots, checks, walkthrough and test map.
 
@@ -19,6 +19,10 @@ paths are not reintroduced. No merge without Johannes's explicit approval.
 Real Chromium fixtures exercise the normal path, failed loads, retry, duplicate open,
 cancellation and disposal. UI evidence uses 1280x720 and 375x812. Run frontend tests,
 build, budget, house text lint, accessibility and demo checks; document exact results and limits.
+
+## References
+
+Issue [#30](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/30); help draft [#31](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/31).
 
 ## Risks
 

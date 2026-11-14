@@ -1252,3 +1252,23 @@ Read the code when these disagree. Noted on 11 Nov; not yet fixed.
   - Part 14 describes integer pixel scaling and a snapped camera; the cartoon art replaced them with smooth full-resolution rendering ([part 27](#27-the-cartoon-art-drawn-in-code)).
   - Part 3 and part 10 say 53 tables; a regex over the migrations finds 59, all with row-level security.
   - Part 8 lists unlocks by the player's best wave; in v3 what may be built follows the island's best wave ([part 19](#19-the-campaign-unlocks-the-harbor-gate-and-the-wreck)).
+
+## B3. Help loading and recovery — Johannes Franz Lang
+
+The menu's How to play action calls [tutorial/host.js](../frontend/src/tutorial/host.js).
+The host shows the shared native modal while its existing lazy import is pending.
+A successful load replaces that feedback with the real tutorial card; a failed load
+keeps a plain message, Try again and Back to game. No request or server contract changes.
+
+The `loading` guard prevents parallel clicks from starting duplicate imports. The
+`request` number identifies each attempt: close/dispose increments it, so a late
+success or failure cannot reopen a cancelled view. Closing pending/failed feedback
+calls the existing focus callback; normal card closure still uses its done promise.
+The modal provides keyboard focus and Escape; retry stays inside the same feedback view.
+
+[Browser tests](../frontend/tests/ui/help-loading.test.js) cover success, failure/retry,
+double open, late success/failure, disposal, Escape/back, focus and phone target sizes.
+The pre-fix regression run failed four of five initial cases. Tests inject the loader
+result while exercising real DOM/modal/card code; they do not prove live network behavior.
+[Before/after](evidence/B3-help/README.md). Codex drafted the change for Johannes;
+shared modal/tutorial machinery is existing team code. This is part 1 of B3.

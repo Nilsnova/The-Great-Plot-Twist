@@ -1,0 +1,5 @@
+/* Help loading and failure use the same native modal and touch targets as other cards. */
+.tutorial-load-feedback{max-width:540px}
+.tutorial-load-feedback .kit-modal-body>div{display:grid;gap:12px}
+.tutorial-load-feedback p{margin:0}
+.tutorial-load-feedback [hidden]{display:none!important}

@@ -185,3 +185,9 @@ and [recorded results](../specs/T27-shooting-direction.md).
 
 [Walkthrough part 31](WALKTHROUGH.md#31-learn-boss-minigames-with-optional-practice--ianno-hollensteiner-t28)
 and [results, screenshots and manual checkpoints](evidence/T28/README.md).
+
+### B3 help recovery — Johannes Franz Lang
+
+| Built / why | Where / run | Covers | Misses |
+|---|---|---|---|
+| Visible loading and recoverable How to play failure | [help tests](../frontend/tests/ui/help-loading.test.js), existing [tutorial tests](../frontend/tests/ui/tutorial.test.js); `cd frontend && npm test -- tests/ui/help-loading.test.js tests/ui/tutorial.test.js` | Real Chromium modal/card, retry, duplicate requests, cancellation, stale success/failure, disposal, focus, Escape/back and 1280x720 / 375x812 fit | Real browser import caching/network outages, physical phones and screen readers; API/login unchanged |
