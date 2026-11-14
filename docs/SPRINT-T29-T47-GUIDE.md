@@ -69,7 +69,7 @@ Also merged that day but not part of the T29–T47 code: #20 (the roadmap, T29�
 | T29–T32/T47 wall recovery | **Yes: live.** Flag `wall_recovery` on in production (about 20:28 UTC), migration applied. |
 | T33 tower art | **Yes, through the rule `tower_health`** (on since about 21:53 UTC): then the damaged and broken drawings are used, but towers rarely get hurt yet (next row). |
 | T33 tower health | **Yes: live, but nearly invisible.** Flag `tower_health` on since about 21:53 UTC, after the balance check of #59. On today's routes it plays like no rules: boarders rarely reach a tower. |
-| T34/T35 targeting and pathing | **No.** Wired into `sim.js` in #52 and retuned in #59, flag `pathing` **off** in production (the old fixed routes stay). A closed wall ring at wave 60 is 12 to 18 points harder with it; a team decision or a `sim.js` change is open (section 15). |
+| T34/T35 targeting and pathing | **Yes: live since about 22:00 UTC.** Wired into `sim.js` in #52 and retuned in #59. A closed wall ring at wave 60 is 12 to 18 points harder with it; Nils accepted that gap on 14 Nov and switched `pathing` on (section 15). |
 | T36 placement | **Yes: live.** Flag `placement` on (about 19:45 UTC), migration applied. |
 | T37/T42 co-op policy | **Yes: live**, no flag: it moves existing rules into one module and rewords one error message. |
 | T38 rescue | **Yes: live.** The `sim.js` hook is in (#52); flag `rescue` on since about 21:05 UTC, after the release check #54 (`npm run test:rescue`). |
@@ -210,9 +210,9 @@ export function drawTower(kind, level = 1, state = 'intact', firing = false) {
 
 ## 3. Enemy targeting and wall pathing (T34, T35)
 
-**For the player.** Nothing yet in production. **Update (#52):** `sim.js` now uses these modules when the wave carries the rule `pathing` (section 10); the flag is off, so players still see the old fixed routes. When it is on, boarders will choose who to attack by a priority list and will walk round a wall through a gap when that is quicker than hacking through it.
+**For the player.** Nothing yet in production. **Update (#52):** `sim.js` now uses these modules when the wave carries the rule `pathing` (section 10); the flag has been on in production since about 22:00 UTC on 14 Nov, so players see the new routes. When it is on, boarders will choose who to attack by a priority list and will walk round a wall through a gap when that is quicker than hacking through it.
 
-**Flag / decision.** In #33 these were modules with no flag; since #52 they sit behind the flag `pathing` (off in production). [D040](DECISIONS.md#d040--enemy-targets-and-wall-pathing-t34t35--2026-11-14), proposed. Spec: [specs/T34-T35-targeting-pathing.md](../specs/T34-T35-targeting-pathing.md). Open balance question in D040: lone short walls get walked round, so today's isolated wall spots lose value until T36 or a ring layout.
+**Flag / decision.** In #33 these were modules with no flag; since #52 they sit behind the flag `pathing` (on in production since about 22:00 UTC, 14 Nov). [D040](DECISIONS.md#d040--enemy-targets-and-wall-pathing-t34t35--2026-11-14), proposed. Spec: [specs/T34-T35-targeting-pathing.md](../specs/T34-T35-targeting-pathing.md). Open balance question in D040: lone short walls get walked round, so today's isolated wall spots lose value until T36 or a ring layout.
 
 **Files, in order.**
 
@@ -974,7 +974,7 @@ backend/server/flags.py           FLAG_NAMES = (... "rescue", "wall_recovery", "
 2. Locally: `cd backend && uv run --env-file ../.env uvicorn main:app --reload --port 8000`, then `http://127.0.0.1:8000/api/config` ([ENGINEERING.md, section 3](ENGINEERING.md#3-commands)). With an empty `FEATURE_FLAGS` every flag is `false`.
 3. To try a feature locally, put the name in your own `.env` (`FEATURE_FLAGS=islands,wall_recovery`); never write real keys in the repository.
 
-The state of each flag **on Vercel** is not recorded in the repository (the code default for all of them is off). The coordinator verified the live `FEATURE_FLAGS` on 14 Nov 2026 (about 21:55 UTC): on are `live_presence`, `market`, `arena`, `sign_in`, `demo`, `sports`, `islands`, `placement` (about 19:45), `wall_recovery` (about 20:28), `arsenal` (about 20:48), `rescue` (about 21:05), `defenses_v2` (about 21:53) and `tower_health` (about 21:53); off is `pathing`. A flag is switched on only after its release check (`npm run test:placement`, `test:walls`, `test:arsenal`, `test:rescue`, `test:culverin`, `test:rules` and `balance-rules.mjs`, sections 12 and 15) and a player with an old tab should reload afterwards (since #63 a running wave keeps its rules either way). Re-check `GET /api/config` yourself.
+The state of each flag **on Vercel** is not recorded in the repository (the code default for all of them is off). The coordinator verified the live `FEATURE_FLAGS` on 14 Nov 2026 (about 22:01 UTC): on are `live_presence`, `market`, `arena`, `sign_in`, `demo`, `sports`, `islands`, `placement` (about 19:45), `wall_recovery` (about 20:28), `arsenal` (about 20:48), `rescue` (about 21:05), `defenses_v2` (about 21:53), `tower_health` (about 21:53) and `pathing` (about 22:00, after Nils accepted the closed-ring gap). A flag is switched on only after its release check (`npm run test:placement`, `test:walls`, `test:arsenal`, `test:rescue`, `test:culverin`, `test:rules` and `balance-rules.mjs`, sections 12 and 15) and a player with an old tab should reload afterwards (since #63 a running wave keeps its rules either way). Re-check `GET /api/config` yourself.
 
 **Practice questions.**
 
@@ -1007,9 +1007,9 @@ Sections 9 and 10 are the longest; give them extra time. The pairs are roughly e
 
 These three PRs came after the section 10 walk-through. #59 asks "is the game still fair with the new rules on?", #62 checks the culverin with two captains, and #63 fixes the one bug the release checks found in how a wave's rules are fixed.
 
-**For the player.** Nothing new to click. `tower_health` is on in production but plays like no rules, because boarders rarely reach a tower. `pathing` is still off. The only visible difference is that a wave no longer changes its rules under you when Nils switches a flag.
+**For the player.** Nothing new to click. `tower_health` is on in production but plays like no rules, because boarders rarely reach a tower. `pathing` is on since about 22:00 UTC (Nils accepted the closed-ring gap). The only visible difference is that a wave no longer changes its rules under you when Nils switches a flag.
 
-**Flags and state (about 21:55 UTC, 14 Nov).** `tower_health` and `defenses_v2` on since about 21:53 UTC, `rescue` on since about 21:05, `pathing` **off**. The migrations `20261114130500_wave_rules.sql` and `20261114140000_culverin.sql` are applied. Specs: [specs/T33-T35-balance.md](../specs/T33-T35-balance.md), [specs/T43-new-defenses.md](../specs/T43-new-defenses.md). Decisions: D040, D049 and D048, all proposed.
+**Flags and state (about 21:55 UTC, 14 Nov).** `tower_health` and `defenses_v2` on since about 21:53 UTC, `rescue` on since about 21:05, `pathing` **on** since about 22:00 (after Nils accepted the closed-ring gap). The migrations `20261114130500_wave_rules.sql` and `20261114140000_culverin.sql` are applied. Specs: [specs/T33-T35-balance.md](../specs/T33-T35-balance.md), [specs/T43-new-defenses.md](../specs/T43-new-defenses.md). Decisions: D040, D049 and D048, all proposed.
 
 **Files, in order.**
 
