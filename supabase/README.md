@@ -479,6 +479,9 @@ The three actors, and the database role behind each:
 | `islet_buildings` | insert | no access | no access | yes [6] (through `islet_build()`) |
 | `islet_buildings` | update | no access | no access | no access (a building is never changed in this version) |
 | `islet_buildings` | delete | no access | no access | no access (deleted with its player, by cascade) |
+| `island_wall_records` | read | no access | no access | yes (20261114100000_wall_recovery.sql, D039) |
+| `island_wall_records` | insert | no access | no access | yes (through `island_walls_record()`) |
+| `island_wall_records` | update, delete | no access | no access | no access (deleted with its wave or island, by cascade) |
 | `islands` | read | no access | no access | yes |
 | `islands` | insert | no access | no access | yes (through `island_open()`) |
 | `islands` | update | no access | no access | yes (through `wave_finish()`) |
@@ -3143,3 +3146,14 @@ an older policy file on its own would restore its unguarded policy: apply the ch
 The scratch tests in `server/tests/demo_sql/test_class_code_sql.py` act as `authenticated` with a
 non-anonymous token, an anonymous token without admission, a token without the claim and an admitted
 guest, for tables and Realtime rooms (the test stub adds Supabase's `auth.jwt()`).
+
+## The wall recovery migration
+
+`migrations/20261114100000_wall_recovery.sql` (tasks T29–T32 and T47, decision D039, proposed) adds `islet_buildings.wall_health` (0–100, default 100: every existing wall is whole) and `wall_damaged_at`, the table `island_wall_records` (one row per recorded island wave) and two functions. The server uses them only while the flag `wall_recovery` is on, so applying the file changes nothing that players see until the flag is switched on; switch the flag on only after the file is applied. The table has RLS, no browser policies and grants only `select, insert` to `service_role` (matrix rows above).
+
+| Function | Who may execute | Purpose |
+|---|---|---|
+| island_walls_record | service_role only | Keep the walls' health at the first finish of an island wave, once per wave |
+| island_wall_restore | service_role only | A paid Repair or Rebuild between waves: coins and health in one step, never above whole |
+
+Manual checks after applying: `select count(*) from public.islet_buildings where wall_health <> 100;` is 0; as `authenticated`, `select * from public.island_wall_records` is refused. The opt-in SQL checks: `CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql/test_wall_recovery_sql.py`.
