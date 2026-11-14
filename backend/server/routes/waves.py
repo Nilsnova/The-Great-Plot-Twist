@@ -26,6 +26,10 @@ POST /api/waves/start  {"where": "own" | "ISLE-K7Q2M" | "pirate_point", "actionU
     was rung (Vercel's city-level geo headers, never stored), else of the default place, else
     calm: storm gives ships 1.5, fog gives fog 0.4, anything else 1.0 and 0. The weather never
     stops a wave. A repeated actionUid answers the same wave with its stored weather.
+    "walls" (decision D039, proposed; only while the flag wall_recovery is on, else the key is
+    left out): {wall spot: health percent} the wave's walls start with, worked out by the
+    server at "startsAt" (join and current answer the same); left out on Pirate Point. Every
+    client of the wave feeds these to its simulation.
     Errors: 404 no_such_island, 409 wave_running (one wave per island at a time)
 
 POST /api/waves/join  {"waveId": "6f1c..."}
@@ -38,7 +42,7 @@ GET /api/waves/current?where=own | ISLE-K7Q2M | pirate_point
     -> the running wave there, or null. Errors: 404 no_such_island
 
 POST /api/waves/finish  {"waveId": "6f1c...", "survived": true, "shipsSunk": 7,
-                         "bonuses": ["galleon"]}
+                         "bonuses": ["galleon"], "walls": {"wall_1": 40, "wall_2": 0}}
     -> {"loot": 15, "coins": 115, "waveBest": 1, "flags": 1, "boss": false}
     bonuses (optional, v3 waves, docs/GAME-V3.md 4.2 and 4.3): "galleon" (the treasure galleon was
     sunk) and "finisher" (a boss finisher was won) add 20 + 4 x n and 15 + 3 x n to the base of a
@@ -48,6 +52,11 @@ POST /api/waves/finish  {"waveId": "6f1c...", "survived": true, "shipsSunk": 7,
     on, a lost island wave from wave 4 to 100 then falls back to the best wave minus 1 instead of
     minus 2 (island/rescue.py); anywhere else it is ignored, never refused. Loot, best wave and
     flags never change because of it; the first finish that closes the wave decides, once.
+    walls (optional, decision D039, proposed; ignored while the flag wall_recovery is off):
+    every wall's health in percent (0 to 100) when the finishing player's simulation ended the
+    wave. The first finish of an island wave keeps them (island_walls_record()); later
+    finishes, Pirate Point waves and spots without a wall change nothing. A wall below 100
+    starts the next wave damaged and mends by itself 10 minutes later.
     Every participant finishes their own part, once. A survived wave n pays this player
     10 + 5 x n + 5 x (house levels on that island), on Pirate Point 20 + 5 x n, twice that on a
     boss wave; a lost wave pays 0. A
@@ -91,15 +100,15 @@ from fastapi import APIRouter, Query, Request
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt
 
 from server.flags import is_enabled
-from server.island import waves
+from server.island import wall_repair, waves
 from server.island.service import IslandCatalogueDep
 from server.island.wave_weather import wave_weather
 from server.island.waves import WaveStart
 from server.lock.place import place_from_headers
 from server.routes.island import ACTION_UID_PATTERN, IslandPlayerDep
 from server.routes.weather import WeatherRulesDep, WeatherSourceDep
-from server.settings import SettingsDep
-from server.supabase_admin import AdminDep
+from server.settings import Settings, SettingsDep
+from server.supabase_admin import AdminDep, SupabaseAdmin
 from server.weather.mapping import format_utc_time
 
 router = APIRouter()
@@ -109,6 +118,10 @@ WHERE_PATTERN = r"^[A-Za-z0-9_ -]{1,32}$"
 # A captain's id in the wave's simulation (frontend/src/pirates/sync.js BY).
 CAPTAIN_PATTERN = r"^[A-Za-z0-9_.:-]{1,64}$"
 MAX_SHIPS_SUNK = 1000
+# D039: a wall spot of the island (wall_1 .. wall_99) and its health in percent at a wave's end.
+WALL_SPOT = Annotated[str, Field(pattern=r"^wall_[0-9]{1,2}$")]
+WALL_HEALTH = Annotated[StrictInt, Field(ge=0, le=100)]
+MAX_WALLS = 24
 
 
 class StartRequest(BaseModel):
@@ -134,6 +147,8 @@ class FinishRequest(BaseModel):
     bonuses: list[Literal["galleon", "finisher"]] | None = Field(default=None, max_length=2)
     # T38: a won last-chance rescue on a lost wave (counts only with the flag "rescue", rescue.py).
     rescued: StrictBool = False
+    # D039: the health of every wall when this player's simulation ended the wave (percent).
+    walls: dict[WALL_SPOT, WALL_HEALTH] | None = Field(default=None, max_length=MAX_WALLS)
 
 
 class ReviveRequest(BaseModel):
@@ -167,6 +182,8 @@ class WaveResponse(BaseModel):
     weather: WeatherOut
     flagship: bool
     boss: bool
+    # D039: {wall spot: health percent} the wave's walls start with; null on Pirate Point.
+    walls: dict[str, int] | None = None
 
 
 class FinishResponse(BaseModel):
@@ -177,7 +194,17 @@ class FinishResponse(BaseModel):
     boss: bool
 
 
-def wave_out(wave: WaveStart) -> WaveResponse:
+async def start_walls(
+    admin: SupabaseAdmin, settings: Settings, wave: WaveStart
+) -> dict[str, int] | None:
+    """D039: the walls a wave starts with, only while the flag wall_recovery is on (it needs
+    the 20261114100000_wall_recovery.sql migration). Off: no "walls" in the answer at all."""
+    if not is_enabled("wall_recovery", settings.flags):
+        return None
+    return await wall_repair.walls_for_wave(admin, wave)
+
+
+def wave_out(wave: WaveStart, walls: dict[str, int] | None = None) -> WaveResponse:
     return WaveResponse(
         waveId=wave.wave_id,
         wave=wave.wave,
@@ -191,15 +218,17 @@ def wave_out(wave: WaveStart) -> WaveResponse:
         ),
         flagship=wave.flagship,
         boss=wave.boss,
+        walls=walls,
     )
 
 
-@router.post("/waves/start")
+@router.post("/waves/start", response_model_exclude_none=True)
 async def post_start(
     body: StartRequest,
     player: IslandPlayerDep,
     catalogue: IslandCatalogueDep,
     admin: AdminDep,
+    settings: SettingsDep,
     source: WeatherSourceDep,
     state_rules: WeatherRulesDep,
     request: Request,
@@ -211,32 +240,37 @@ async def post_start(
         catalogue, source, state_rules, request.app.state.lock_weather, area
     )
     started = await waves.start(admin, catalogue, weather, player.id, body.where, body.actionUid)
-    return wave_out(started)
+    return wave_out(started, await start_walls(admin, settings, started))
 
 
-@router.post("/waves/join")
+@router.post("/waves/join", response_model_exclude_none=True)
 async def post_join(
     body: JoinRequest,
     player: IslandPlayerDep,
     catalogue: IslandCatalogueDep,
     admin: AdminDep,
+    settings: SettingsDep,
     request: Request,
 ) -> WaveResponse:
     request.app.state.wave_budget.spend(player.id)
-    return wave_out(await waves.join(admin, catalogue, player.id, body.waveId))
+    joined = await waves.join(admin, catalogue, player.id, body.waveId)
+    return wave_out(joined, await start_walls(admin, settings, joined))
 
 
-@router.get("/waves/current")
+@router.get("/waves/current", response_model_exclude_none=True)
 async def get_current(
     where: Annotated[str, Query(pattern=WHERE_PATTERN)],
     player: IslandPlayerDep,
     catalogue: IslandCatalogueDep,
     admin: AdminDep,
+    settings: SettingsDep,
     request: Request,
 ) -> WaveResponse | None:
     request.app.state.wave_read_budget.spend(player.id)
     running = await waves.current(admin, catalogue, player.id, where)
-    return None if running is None else wave_out(running)
+    if running is None:
+        return None
+    return wave_out(running, await start_walls(admin, settings, running))
 
 
 @router.post("/waves/finish")
@@ -245,8 +279,8 @@ async def post_finish(
     player: IslandPlayerDep,
     catalogue: IslandCatalogueDep,
     admin: AdminDep,
-    request: Request,
     settings: SettingsDep,
+    request: Request,
 ) -> FinishResponse:
     request.app.state.wave_budget.spend(player.id)
     finished = await waves.finish(
@@ -259,6 +293,9 @@ async def post_finish(
         sorted(set(body.bonuses or [])),
         rescued=body.rescued and is_enabled("rescue", settings.flags),
     )
+    # D039: the first finish of an island wave keeps its walls' health for the next wave.
+    if is_enabled("wall_recovery", settings.flags):
+        await wall_repair.record(admin, player.id, body.waveId, body.walls)
     return FinishResponse(
         loot=finished.loot,
         coins=finished.coins,
