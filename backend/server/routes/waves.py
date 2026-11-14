@@ -30,15 +30,15 @@ POST /api/waves/start  {"where": "own" | "ISLE-K7Q2M" | "pirate_point", "actionU
     left out): {wall spot: health percent} the wave's walls start with, worked out by the
     server at "startsAt" (join and current answer the same); left out on Pirate Point. Every
     client of the wave feeds these to its simulation.
-    "rules" (only while at least one is on, else the key is left out): the simulation rules
-    this wave plays with, from the feature flags of the same names, in this order:
+    "rules" (only when the wave's kept set is not empty, else the key is left out): the
+    simulation rules this wave plays with, from the feature flags of the same names, in order:
     "tower_health" (T33, D049 proposed), "pathing" (T34/T35, D040 proposed), "rescue" (T38,
     D044 proposed: the game offers the last-chance rescue), "defenses_v2" (T43, D048 proposed:
     the island's culverins fight; without it every client's simulation ignores a culverin).
     The first answer for a wave keeps its rule set (island/wave_rules.py, table wave_rules,
-    migration 20261114130500), and join and current answer that kept set even after a flag
-    was switched. Every client of a wave reads them from the wave answer, never from its own
-    /api/config, so the whole wave plays one rule set.
+    migration 20261114130500), an empty set too, and join and current answer that kept set
+    even after a flag was switched on or off. Every client of a wave reads them from the wave
+    answer, never from its own /api/config, so the whole wave plays one rule set.
     Errors: 404 no_such_island, 409 wave_running (one wave per island at a time)
 
 POST /api/waves/join  {"waveId": "6f1c..."}
@@ -195,7 +195,7 @@ class WaveResponse(BaseModel):
     boss: bool
     # D039: {wall spot: health percent} the wave's walls start with; null on Pirate Point.
     walls: dict[str, int] | None = None
-    # The simulation rules switched on for this wave (SIM_RULES); null while none is on.
+    # The simulation rules this wave keeps (SIM_RULES); null when it keeps none.
     rules: list[str] | None = None
 
 

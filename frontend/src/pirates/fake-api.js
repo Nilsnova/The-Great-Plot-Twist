@@ -214,9 +214,10 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
   // flags: the server's feature flags this fake follows (wall_recovery, D039; the wave rules below); all off by default.
   const wallsOn = flags?.wall_recovery === true;
   const culverinOn = flags?.defenses_v2 === true; // T43: the culverin, and the wave rule defenses_v2 on every wave answer
-  // The wave rules (backend/server/island/wave_rules.py): the rule flags on now, in SIM_RULES order. The first
-  // answer for a wave keeps its set (wave_rules_keep()); with every rule flag off the answers carry no rules.
-  const wantedRules = SIM_RULES.filter(name => flags?.[name] === true);
+  // The wave rules (backend/server/island/wave_rules.py): the rule flags on at the wave's first answer, in SIM_RULES
+  // order. That answer keeps its set (wave_rules_keep()), an empty set too, and every later answer serves it whatever
+  // the flags say then (a test may change `flags` mid-wave); an empty set leaves `rules` out.
+  const wantedRules = () => SIM_RULES.filter(name => flags?.[name] === true);
   // T38 (routes/waves.py): the server honours `rescued` only while the flag rescue is on.
   const rescueOn = flags?.rescue === true;
   let weatherKind = weather;
@@ -418,8 +419,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
   }
   const running = run => !run.finishedAt && nowMs() <= run.startsAtMs + ISLAND_RULES.waves.maximumSeconds * 1000;
   const rulesOf = run => {
-    if (!wantedRules.length) return null;
-    if (!Array.isArray(run.rules)) run.rules = [...wantedRules]; // kept by the wave's first answer with a rule on
+    if (!Array.isArray(run.rules)) run.rules = wantedRules(); // kept by the wave's first answer, even when empty
     const rules = SIM_RULES.filter(name => run.rules.includes(name));
     return rules.length ? rules : null;
   };
