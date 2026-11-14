@@ -193,3 +193,10 @@ and [recorded results](../specs/T27-shooting-direction.md).
 
 [Walkthrough part 31](WALKTHROUGH.md#31-learn-boss-minigames-with-optional-practice--ianno-hollensteiner-t28)
 and [results, screenshots and manual checkpoints](evidence/T28/README.md).
+
+## T38 + T39 — Minigame difficulty and last-chance rescue
+
+| Part and why | Existing and new checks | Covers | Misses |
+|---|---|---|---|
+| Wave-based speed/timing/error-budget curves and one frozen snapshot per run ([spec](../specs/T38-T39-minigames-rescue.md)) | [Curves and playability](../frontend/tests/pirates/finisher-difficulty.test.js), [finisher](../frontend/tests/pirates/finisher.test.js); `cd frontend && npm test` | Boundary waves 1–100, today's numbers up to wave 10, monotonic and bounded, rounding waves, unknown task refused, frozen snapshot and late joiner, lagging bot wins in crews 1/2/4/10 on both settings, Redtide two of three at wave 100, wrong input fails, smaller late error budget | Human playtests (T3), mixed client versions in one wave |
+| Last-chance rescue rules, scene and settlement (D044, flag `rescue`) | [Rescue rules](../frontend/tests/pirates/rescue.test.js), [finish pass-through and fake server](../frontend/tests/pirates/rescue-finish.test.js), [server](../backend/server/tests/test_wave_rescue.py): `cd backend && uv run pytest -q server/tests/test_wave_rescue.py` | Triggers and reasons, wave 4–100, fallen versus away captains, no captain, once per wave, win/fail/timeout, preparation limit and watchers, disconnects with a frozen goal, chunk/order determinism, `rescued` only true, flag off, Pirate Point/early/won waves ignored, loot arguments unchanged, JS/Python parity | The `sim.js` hook and a two-browser run (not built here), real `wave_finish()` SQL with `p_restart_back = 1` against Postgres, human playtest |
