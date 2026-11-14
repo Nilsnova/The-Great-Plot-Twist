@@ -1324,6 +1324,7 @@ A flag is off unless the setting `FEATURE_FLAGS` names it (comma separated). The
 | `festival` | the 48-hour festival after the first Relighting; private claims and friendly ring | G13; applying its migration never starts the clock |
 | `demo` | guest play for the class demo: a Supabase anonymous user may use the API after presenting the current class code (`POST /api/demo/join`) | G29 C0, D030; off by default; needs migrations 20261109010000 and 20261109020000 applied first |
 | `islands` | your island, building, visits by code and the pirate waves: `/api/island`, `/api/island/build`, `/api/island/visit/{code}`, `/api/waves/start`, `/api/waves/finish`; since D036 also `/api/island/upgrade`, `/hire`, `/captain`, `/invite/join` and `/api/pirate-point` (+ `/build`, `/upgrade`), which need migration `20261111030000` | lane 0 (D032); off by default; needs migration 20261110010000 applied first |
+| `wall_recovery` | wall damage that stays after a wave (D039, proposed): `GET /api/island/walls`, `POST /api/island/repair`, `walls` on the wave routes, `409 needs_repair` on upgrade. Off: exactly the old behavior, the new columns are never read | T29–T32/T47; off by default; needs migration 20261114100000 applied first, and `islands` on |
 
 The separately guarded [disposable local API](LOCAL-TEST-SERVER.md) provides a fixture-only
 sign-in endpoint for automation. It does not enable `sign_in` or change the normal app's auth
@@ -1658,3 +1659,23 @@ the normal intro and scored timeline then start from zero. The controller uses
 the existing scheduled-input transport, not a new authority or database rule.
 Practice samples remain local and never enter `finisher_input`. The existing
 network latency/loss/late-join limitations still apply.
+
+### Wall recovery (T29–T32, T47)
+
+[D039](DECISIONS.md#d039--wall-recovery-damage-stays-after-a-wave--2026-11-14) (proposed) and
+[the spec](../specs/T29-T32-wall-recovery.md); only while the flag `wall_recovery` is on
+(404 `feature_off` otherwise). Route contracts: `backend/server/routes/wall_recovery.py` and
+`backend/server/routes/waves.py`; tables and functions: migration `20261114100000_wall_recovery.sql`.
+
+- `GET /api/island/walls?code=` → `{coins, walls: [{spot, level, health, recoversAt, repairCost}]}`;
+  health in percent (0 destroyed, 100 whole), `recoversAt` UTC or null, `repairCost` the caller's
+  price or null while whole.
+- `POST /api/island/repair {spot, actionUid, code?}` → the same shape after the repair or rebuild.
+  Errors `409 intact`, `409 wave_running`, `409 insufficient_funds`, `409 not_built`, `422 wrong_kind`,
+  `403 not_member`, `404 no_such_spot`. Ledger reason `building_purchase`, ref `wallfix:<actionUid>`.
+- `POST /api/waves/start|join`, `GET /api/waves/current`: optional `walls: {wall_N: percent}` (left
+  out while the flag is off and on Pirate Point); every client starts its walls from it.
+- `POST /api/waves/finish`: optional `walls: {wall_N: 0..100}` (at most 24); the first finish of an
+  island wave keeps them. Ignored while the flag is off.
+- `POST /api/island/upgrade`: `409 needs_repair` for a damaged or destroyed wall.
+- `wave_started_server` on the game's bus may carry the same `walls` object.

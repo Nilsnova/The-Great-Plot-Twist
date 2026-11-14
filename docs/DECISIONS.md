@@ -818,3 +818,20 @@ and [message contract](INTERFACES.md#t28-boss-minigame-preparation).
 **Open questions for review (current behaviour kept until agreed):** (1) should a member only tear down what they paid for in full, with the host able to tear down anything? Today any member may (owner decision of 12 Nov, GAME-V3 §4.2); other payers get half back. (2) Should a host be able to remove a member, or hand the game over? Not possible today. (3) The host's personal unlocks follow their island's best wave even when members won it without them (D036); changing this would re-lock existing players. (4) Late joiners earn the full loot of a survived wave; a minimum time in the wave would need a migration.
 
 **Limits:** the Python check and the database check are separate reads; the database's lock is the final word. Mapping tests use the fake database; the SQL rules are covered by their own migration tests. Presence-based rules (quorum, auto-pause) are not possible without a server-side presence design.
+## D039 · Wall recovery: damage stays after a wave · 2026-11-14
+
+**Status:** proposed; agreed by: pending team review. Implemented behind the new flag `wall_recovery` (off by default) on branch `feat/t29-t32-wall-recovery` for tasks T29–T32 and T47 ([spec](../specs/T29-T32-wall-recovery.md)). Migration `20261114100000_wall_recovery.sql`, not applied. Responsible teammate: Nils.
+
+**Decision (values chosen by the implementer, open for review):**
+
+- A wall keeps the health its last recorded wave left it, as a percent (`islet_buildings.wall_health`, 0–100, default 100 so old saves are whole). Kind and level never change through damage; a destroyed wall is rebuilt at its level.
+- The **first finish** of an island wave (won or lost) reports every wall's percent from its deterministic simulation; the server keeps it once per wave. An expired wave records nothing. The next wave's walls come from the server (`walls` on start/join/current, computed at `startsAt`), so every client and a late joiner start the same walls.
+- In a wave everything stays as before: free E repair to full, free E rebuild to 40 % (60 % Master shipwright), carpenter, Workshop, engineer boost.
+- Between waves the wall card offers **Repair** (damaged) or **Rebuild** (destroyed), paid once by the clicker on the server: rebuild price = 30 % of the catalogue prices of the wall's levels, rounded up (3, 9, 21, 45, 93 coins); repair = the missing share of it, rounded up, at least 1; engineers get their usual 10 % discount. Refused while a wave runs, and refused `intact` for a whole wall, so double clicks pay once. Ledger reason `building_purchase`, ref `wallfix:<uid>`.
+- **Timed recovery:** a damaged or destroyed wall counts as whole 10 minutes (600 s) after the wave that left it so, by server time; offline time counts. A later wave that ends with it still damaged restarts the 10 minutes.
+- **Upgrades** of a damaged or destroyed wall are refused (`409 needs_repair`), and the card shows Repair/Rebuild instead of Upgrade. An intact wall upgrades at full health. Health is a share, so even a racing upgrade never heals.
+- Towers (T33) and Pirate Point walls are unchanged.
+
+**Why:** BUILD-PLAN §6 requires damage to persist past the wave end, no upgrade bypass, and money decided by the server. Percent plus one timestamp is the smallest state that survives reloads, offline time and upgrades; a server snapshot keeps multiplayer deterministic. The browser's reported health cannot be proven, like `survived`; it is bounded (0–100, walls on that island, first finish only) and only affects play-money costs.
+
+**Alternatives and trade-offs:** free repairs only (no economy cost, weaker persistence); partial timed regeneration (more state to sync); refusing in-wave E repairs above the stored health (confusing). Open questions for the team: a dedicated wallet reason `wall_repair` instead of `building_purchase`; who may repair on a shared island (T37); whether 10 minutes and 30 % feel right in a playtest (T3). Mixed client versions in one wave can disagree on wall health: all captains should reload after the flag is switched on.

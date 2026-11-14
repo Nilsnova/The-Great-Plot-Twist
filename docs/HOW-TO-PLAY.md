@@ -97,6 +97,7 @@ Ships that reach the shore let **boarders** climb out. They walk to the heart of
 
 - A standing wall stops them until they break it.
 - Press **E** at a damaged wall to repair it, and at a broken one to rebuild it.
+- When wall repairs are switched on (being tested): a wall keeps its damage into the next wave. Between waves its card offers **Repair** or **Rebuild** for a few coins instead of Upgrade, or it mends by itself 10 minutes later. Upgrade it once it is whole.
 - Your gun and your cutlass beat them.
 
 ## The heart of the island
