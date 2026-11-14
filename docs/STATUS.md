@@ -14,8 +14,6 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
-**14 Nov, T27 planning (Ianno Hollensteiner):** added a shooting-direction follow-up in [OPEN-TODOS §2](OPEN-TODOS.md#2-open-tasks-you-can-pick-small-independent-updated-thu-12-nov). Documentation only; implementation is deferred and remains open.
-
 **13 Nov, T5 / Ianno:** [PR #10](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/10) adds a number-only rank shield above/right of the cabin, a wave-25 statue and trees at 100%, 110% or 120% size for zero, one or two houses. Original island-style drawings; existing progress only. Verification is recorded in [the T5 handover](handoff/T5-island-decoration.md); introductory explain-back completed; approval by Nils (`Nilsnova`) or Johannes Franz Lang (`frcola`) is required before merge.
 
 **13 Nov, T26 / Ianno:** island Harbor weather entry implemented in [PR #8](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/8). Reuses the existing card; [local evidence and limits](handoff/T26-weather-board.md). Explain-back and human review pending.
@@ -199,8 +197,6 @@ Nobody has decided these yet. Until they are decided, the plan in [ROADMAP.md](.
 6. **Pick a package.** Take your lane's next package below, or one from "Start today" in ROADMAP.md. Open an issue with the goal, acceptance checks, scope, responsible teammate and likely files. Create your branch from `main` (`git switch main`, `git pull`, then for example `git switch -c feat/l1-live-weather`). Paste the agent brief below and open a draft pull request early.
 
 ## Next steps per lane
-
-**Captain visuals follow-up:** T27 is an open, deferred task for directional shooting poses in single-player and multiplayer; see [OPEN-TODOS §2](OPEN-TODOS.md#2-open-tasks-you-can-pick-small-independent-updated-thu-12-nov). No implementation is claimed by the planning branch.
 
 **T5 / Ianno:** introductory explain-back completed with clarifications. Nils (`Nilsnova`) or Johannes Franz Lang (`frcola`) must independently review and approve the current diff before merge.
 
@@ -518,8 +514,6 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
-
-- **2026-11-14, T27 planning.** Ianno Hollensteiner, assisted by Codex, recorded directional captain shooting poses as an open task. No game code changed; implementation will be a separate task branch.
 
 - **13 Nov 2026, T5 explain-back:** Ianno discussed number/rank updates, the highest-wave record after a loss, and releasing old textures. Clarifications were supplied for the first and third answers. Ianno requests approval by Nils or Johannes Franz Lang before this PR is merged.
 
