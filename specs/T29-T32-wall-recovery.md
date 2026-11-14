@@ -6,7 +6,7 @@
 
 - **Status:** in progress (implemented on the branch; [D039](../docs/DECISIONS.md#d039--wall-recovery-damage-stays-after-a-wave--2026-11-14) is **proposed**, pending team review)
 - **Branch:** `feat/t29-t32-wall-recovery`
-- **Issue and pull request:** to be opened by the responsible teammate
+- **Issue and pull request:** [issue #21](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/21); pull request to be opened
 
 ## Why
 
