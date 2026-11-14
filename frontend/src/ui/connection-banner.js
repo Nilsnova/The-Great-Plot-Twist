@@ -18,13 +18,21 @@ export function createConnectionBanner({send, inline = false} = {}) {
   report.dataset.focus = 'connection-report';
   actions.append(retry, report);
   element.append(message, actions);
-  let disposed = false, pending = false, state = 'idle',lastMessage=null;
+  let disposed = false, pending = false, state = 'idle',lastMessage=null, revision=0;
   const retryable = () => ['offline', 'error', 'online'].includes(state);
   retry.onclick = async () => {
     if (disposed || pending || !retryable()) return;
-    pending = true; retry.setAttribute('aria-disabled','true');
+    const attempt = revision;
+    pending = true; retry.setAttribute('aria-disabled','true'); retry.textContent = 'Retrying…';
     try { await send?.('continueGame'); }
-    finally { pending = false; if (!disposed) retry.setAttribute('aria-disabled',String(!retryable())); }
+    catch {
+      // An old retry must not replace a newer adapter view or revive a removed banner.
+      if (!disposed && attempt === revision) message.textContent = 'Connection retry did not work. Check your internet and try again.';
+    }
+    finally {
+      pending = false;
+      if (!disposed) { retry.textContent = 'Retry connection'; retry.setAttribute('aria-disabled',String(!retryable())); }
+    }
   };
   return {
     element,
@@ -32,7 +40,7 @@ export function createConnectionBanner({send, inline = false} = {}) {
       const connection = view?.account?.connection;
       const nextState=connection?.state??'idle',nextMessage=connection?.message??'';
       if(nextState===state&&nextMessage===lastMessage)return;
-      state=nextState;lastMessage=nextMessage;
+      revision++; state=nextState;lastMessage=nextMessage;
       if((state==='idle'||!connection?.message)&&element.contains(document.activeElement)){
         const scope=element.closest('dialog')??element.parentElement;
         const target=[...(scope?.querySelectorAll('button,a[href],canvas[tabindex]')??[])].find(control=>
