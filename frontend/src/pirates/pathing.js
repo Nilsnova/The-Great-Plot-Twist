@@ -73,7 +73,8 @@ export function nextStep(grid, layout, field, index) {
   let best = null, bestCost = Infinity;
   for (const next of neighbours(grid, layout, index)) {
     const total = next.step + (next.index === field.goalIndex ? 0 : enterCost(layout, next.index)) + field.cost[next.index];
-    if (total < bestCost || (total === bestCost && next.index < best.index)) { best = next; bestCost = total; }
+    // best can still be null while every total so far was Infinity, so check it before comparing indexes.
+    if (total < bestCost || (best !== null && total === bestCost && next.index < best.index)) { best = next; bestCost = total; }
   }
   if (!best || bestCost === Infinity) return null;
   return { index: best.index, wallId: standingWallAt(layout, best.index)?.id ?? null };

@@ -38,7 +38,7 @@ export function centreOf(grid, index) {
 
 // Every cell a straight line from a to b passes through, in order, without repeats.
 export function cellsOnLine(grid, a, b) {
-  const length = Math.hypot(b.x - a.x, b.z - a.z);
+  const dx = b.x - a.x, dz = b.z - a.z, length = Math.sqrt(dx * dx + dz * dz); // not Math.hypot: same bits everywhere
   const samples = Math.max(1, Math.ceil(length / grid.cell * SAMPLES_PER_CELL));
   const out = [];
   for (let i = 0; i <= samples; i++) {
@@ -106,7 +106,7 @@ export function standingWallAt(layout, index) {
  * flexible placement replaces this with walls that list their own cells.
  */
 export function spotAsSegment(wall, heart, span) {
-  const dx = wall.x - heart.x, dz = wall.z - heart.z, length = Math.hypot(dx, dz) || 1;
+  const dx = wall.x - heart.x, dz = wall.z - heart.z, length = Math.sqrt(dx * dx + dz * dz) || 1;
   const across = { x: -dz / length * span / 2, z: dx / length * span / 2 };
   return { ...wall, from: { x: wall.x - across.x, z: wall.z - across.z }, to: { x: wall.x + across.x, z: wall.z + across.z } };
 }
