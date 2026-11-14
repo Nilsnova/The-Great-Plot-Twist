@@ -16,7 +16,8 @@ Used by: app.py (loads it once at start-up), rules.py, service.py and the tests.
 import json
 import logging
 import re
-from dataclasses import dataclass
+from collections.abc import Mapping
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 from server.wallet import MAX_DELTA
@@ -29,6 +30,9 @@ CONTENT_FILE = Path(__file__).resolve().parents[2] / "content" / "islands.json"
 # keeps a copy in frontend/src/campaign/campaign.json; frontend/tests/campaign/campaign.test.js
 # keeps the two equal.
 CAMPAIGN_FILE = CONTENT_FILE.with_name("campaign.json")
+# The second wave of defenses (T43, D048 proposed): read only while the flag defenses_v2 is on.
+DEFENSES_V2_FILE = CONTENT_FILE.with_name("defenses_v2.json")
+DEFENSES_V2_FLAG = "defenses_v2"
 
 ID_PATTERN = re.compile(r"[a-z][a-z0-9_]{1,39}")
 # The weather states of weather/states.py. Each one needs its line in the file.
@@ -815,3 +819,110 @@ def island_or_none() -> IslandCatalogue | None:
     except IslandFileError as error:
         logger.error("The island cannot start: %s", error)
         return None
+
+
+# --- the second wave of defenses (T43, decision D048 proposed) ---
+#
+# defenses_v2.json holds new tower kinds that are not part of the live game yet. While the flag
+# defenses_v2 is off the file is never read and the catalogue stays exactly as loaded above. While
+# it is on, catalogue_for_flags() returns a copy with each new kind added to the kinds, to the tower
+# spots it names and to the campaign steps of its levels, so every rule, price and unlock of the
+# existing code (rules.py, service.py) treats it like the harpoon tower. specs/T43-new-defenses.md.
+
+
+@dataclass(frozen=True)
+class FlaggedKind:
+    kind: Kind  # with its level_waves
+    line: str  # the build card line
+    news: str  # what the narrator says when it opens
+    spots: tuple[str, ...]  # the island tower spots it may stand on
+
+
+def read_defenses_v2(
+    catalogue: IslandCatalogue, path: Path = DEFENSES_V2_FILE
+) -> tuple[FlaggedKind, ...]:
+    """Read and check defenses_v2.json against the loaded catalogue. Raises IslandFileError."""
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as error:
+        raise IslandFileError(f"Cannot read {path.name}: {type(error).__name__}.") from error
+    if not isinstance(data, dict):
+        raise IslandFileError(f"{path.name} must hold one JSON object.")
+    read_text(data, "about", path.name, 2000)
+    known = {kind.kind for kind in catalogue.kinds}
+    # A tower spot is an island spot that takes a cannon (Pirate Point's spots are not offered).
+    towers = {spot.id for spot in catalogue.spots if "cannon" in spot.kinds}
+    steps = {step.wave for step in catalogue.campaign.steps}
+    found = []
+    for index, entry in enumerate(read_list(data, "kinds", 4)):
+        where = f"defenses_v2.kinds[{index}]"
+        name = read_id(entry, "kind", where)
+        if name in known:
+            raise IslandFileError(f"{where}: '{name}' is already a kind of islands.json.")
+        prices = read_whole_list(entry, "prices", where, 1, MAX_LEVEL)
+        waves = read_whole_list(entry, "levelWaves", where, 0, MAX_LEVEL)
+        if len(waves) != len(prices):
+            raise IslandFileError(f"{where}: 'levelWaves' must have one wave per level.")
+        if list(waves) != sorted(waves):
+            raise IslandFileError(f"{where}: the levels must open in order.")
+        missing = [wave for wave in waves if wave not in steps]
+        if missing:
+            raise IslandFileError(f"{where}: wave {missing[0]} is not a campaign step.")
+        spots = entry.get("spots")
+        if (
+            not isinstance(spots, list)
+            or not spots
+            or not all(isinstance(spot, str) and spot in towers for spot in spots)
+            or len(set(spots)) != len(spots)
+        ):
+            raise IslandFileError(f"{where}: 'spots' must name island tower spots, once each.")
+        found.append(
+            FlaggedKind(
+                kind=Kind(name, read_text(entry, "name", where, 40), prices, waves),
+                line=read_text(entry, "line", where, 120),
+                news=read_text(entry, "news", where, 200),
+                spots=tuple(spots),
+            )
+        )
+        known.add(name)
+    return tuple(found)
+
+
+def with_defenses_v2(catalogue: IslandCatalogue, extra: tuple[FlaggedKind, ...]) -> IslandCatalogue:
+    """A copy of the catalogue with the flagged kinds added. The original is not changed."""
+    kinds = catalogue.kinds + tuple(item.kind for item in extra)
+    spots = tuple(
+        Spot(spot.id, spot.kinds + tuple(i.kind.kind for i in extra if spot.id in i.spots))
+        for spot in catalogue.spots
+    )
+    steps = tuple(
+        CampaignStep(
+            step.wave,
+            step.opens
+            + tuple(
+                f"{item.kind.kind}:{level}"
+                for item in extra
+                for level, wave in enumerate(item.kind.level_waves, start=1)
+                if wave == step.wave
+            ),
+            step.later,
+        )
+        for step in catalogue.campaign.steps
+    )
+    campaign = Campaign(steps, catalogue.campaign.spots)
+    return replace(catalogue, kinds=kinds, spots=spots, campaign=campaign)
+
+
+def catalogue_for_flags(
+    catalogue: IslandCatalogue, flags: Mapping[str, bool], path: Path = DEFENSES_V2_FILE
+) -> IslandCatalogue:
+    """The catalogue the server runs with. Flag defenses_v2 off: the same object, untouched (the
+    file is not even read). On: the copy of with_defenses_v2(). A broken file with the flag on
+    is logged and the island keeps running without the new kinds."""
+    if not flags.get(DEFENSES_V2_FLAG, False):
+        return catalogue
+    try:
+        return with_defenses_v2(catalogue, read_defenses_v2(catalogue, path))
+    except IslandFileError as error:
+        logger.error("The %s defenses cannot start: %s", DEFENSES_V2_FLAG, error)
+        return catalogue

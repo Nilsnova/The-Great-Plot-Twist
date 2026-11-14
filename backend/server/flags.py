@@ -27,6 +27,9 @@ FLAG_NAMES = (
     "festival",
     "demo",
     "islands",
+    # T43 (D048, proposed): the second wave of defenses, starting with the culverin. Keep it off
+    # until its sim wiring and its migration are merged (specs/T43-new-defenses.md).
+    "defenses_v2",
 )
 
 

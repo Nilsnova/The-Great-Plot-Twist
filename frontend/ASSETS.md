@@ -432,3 +432,16 @@ its resting arms and uses two sleeves/hands connected to the grip. Existing pale
 48 × 32 box and feet anchor are reused; the aiming gun is shorter so it fits
 while rotating. One reusable texture is painted per visible firing captain
 by [shot-art.js](src/pirates/shot-art.js). No downloaded art or new license.
+
+## T43 culverin (14 Nov 2026, behind the flag `defenses_v2`)
+
+Original code-drawn cartoon art in [src/art/defenses-v2.js](src/art/defenses-v2.js), painted with the
+existing [paint kit](src/art/paint.js) in the style of the cannon and the harpoon tower of
+[src/art/island.js](src/art/island.js) (same 48 × 32 box and anchor 5, facing right, the tier gold and banner
+colours of levels 4 and 5). Eleven frames: `island-culverin`, `-l2`…`-l5` (a long slim barrel on a low sledge
+with a breech wedge; stone pad and iron bands; brass bands and a stack of shot; gold muzzle ring and teal banner;
+gilded barrel and the starred royal banner), the matching `island-culverin-fire…` frames (recoil, long flash,
+smoke ring) and `fx-culverin-ball` (16 × 8). Registered in [src/art/registry.js](src/art/registry.js); nothing
+draws them until the culverin is wired in ([spec](../specs/T43-new-defenses.md)). Contact sheet next to the
+cannon and harpoon: [docs/evidence/t43/culverin-sheet.png](../docs/evidence/t43/culverin-sheet.png). Drawn for
+Nils (`Nilsnova`) with a coding agent; no downloaded art, font or reference image, no new license.
