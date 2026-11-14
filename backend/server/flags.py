@@ -27,6 +27,7 @@ FLAG_NAMES = (
     "festival",
     "demo",
     "islands",
+    "rescue",  # T38 last-chance rescue (D044): off until the sim hook ships
     # T43 (D048, proposed): the second wave of defenses, starting with the culverin. Keep it off
     # until its sim wiring and its migration are merged (specs/T43-new-defenses.md).
     "defenses_v2",

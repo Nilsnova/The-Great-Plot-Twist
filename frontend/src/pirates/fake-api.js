@@ -47,6 +47,7 @@
 // read, reset). It is the one fake behind ?islands=fake: your island ISLE-K7Q2M and a friend's island
 // ISLE-FR3ND (Captain Gull) to visit.
 import { bonusLoot, eventFor } from './wave-events.js';
+import { rescueAllowed } from './finisher/rescue.js'; // T38: which lost waves a rescue can soften
 import { createRandom, hasTavern, revivePrice } from './sim.js';
 import { BUILDINGS, CREW, CAPTAIN, readUnlocks, unlockWave, SLOT_KINDS } from '../island/td-rules.js';
 import { ROLES, ROLE_BY_ID, ROLE_LEVEL, SKILLS, SKILL_BY_ID, WEAPONS, WEAPON_BY_ID, isRole, respecPrice, pointsEarned, pointsSpent, readSkills, readWeapon, skillNeeds } from './captain-ids.js';
@@ -628,9 +629,10 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       return null;
     },
 
-    async finishWave({ waveId, survived, shipsSunk, bonuses } = {}) {
+    async finishWave({ waveId, survived, shipsSunk, bonuses, rescued } = {}) {
       if (typeof waveId !== 'string' || typeof survived !== 'boolean' || !Number.isInteger(shipsSunk) || shipsSunk < 0 || shipsSunk > 1000
-        || (bonuses !== undefined && !(Array.isArray(bonuses) && bonuses.length <= 2 && bonuses.every(kind => kind === 'galleon' || kind === 'finisher')))) {
+        || (bonuses !== undefined && !(Array.isArray(bonuses) && bonuses.length <= 2 && bonuses.every(kind => kind === 'galleon' || kind === 'finisher')))
+        || (rescued !== undefined && typeof rescued !== 'boolean')) {
         invalid('Send the wave, whether the island held and the ships sunk (0 to 1000).');
       }
       const player = me(), run = world.waves.get(waveId);
@@ -659,8 +661,10 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       if (run.island && !run.nextSet) {
         run.nextSet = true;
         // §1: carry on after a win; after a loss the next bell restarts at best − 2 (at least 1).
+        // T38 (rescue.py): a won rescue on a lost wave from wave 4 to 100 falls back one wave less.
+        const back = TD_RULES.restartBack - (!survived && !late && rescued === true && rescueAllowed(run.wave) ? 1 : 0);
         run.island.nextWave = survived && !late ? Math.min(run.wave + 1, TD_RULES.highestWave)
-          : Math.max(1, run.island.waveBest - TD_RULES.restartBack);
+          : Math.max(1, run.island.waveBest - back);
       }
       if (survived && !late && !run.counted) {
         run.counted = true;
@@ -769,7 +773,7 @@ const BODY_KEYS = Object.freeze({ '/api/island/build': ['spot', 'kind', 'actionU
   '/api/island/research': ['branch', 'actionUid'], '/api/island/tower-skill': ['spot', 'spec'], '/api/island/wreck': ['amount', 'actionUid'],
   '/api/island/demolish': ['spot', 'actionUid'] });
 // Keys a body may also carry: `code` builds, upgrades, researches, picks a skill or mends the wreck on a game's island.
-const OPTIONAL_KEYS = Object.freeze({ '/api/waves/finish': ['bonuses'], '/api/island/build': ['code'], '/api/island/upgrade': ['code'], '/api/games': ['actionUid'],
+const OPTIONAL_KEYS = Object.freeze({ '/api/waves/finish': ['bonuses', 'rescued'], '/api/island/build': ['code'], '/api/island/upgrade': ['code'], '/api/games': ['actionUid'],
   '/api/island/research': ['code', 'tier', 'choice', 'change'], '/api/island/tower-skill': ['code'], '/api/island/wreck': ['code'], '/api/island/demolish': ['code'] });
 const ACTION_UID = /^[A-Za-z0-9_-]{8,64}$/;
 const exactKeys = (body, keys, optional = []) => !!body && typeof body === 'object' && !Array.isArray(body)
