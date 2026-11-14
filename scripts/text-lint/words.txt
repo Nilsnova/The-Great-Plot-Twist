@@ -2709,9 +2709,13 @@ helps
 leaderboard
 rank
 weekly
-
 # T28: American English; checked against /usr/share/dict/words.
 zone
 lower
 introduction
 scored
+arsenal
+carried
+slot
+swap
+swapped
