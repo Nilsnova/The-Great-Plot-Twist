@@ -977,7 +977,8 @@ const settle = () => new Promise(resolve => setTimeout(resolve, SHARED_SETTLE_MS
 /** The answers' version for a page: 2 (the tower defense extras) in the browser, 1 without a page (the older tests). */
 export const fakeVersionFor = search => (typeof search !== 'string' ? 1 : new URLSearchParams(search).get('td') === '1' ? 1 : 2);
 // ?fakeflags=wall_recovery: the feature flags the fake server has on (its /api/config); none by default.
-const FLAG_NAME = /^[a-z_]{1,32}$/;
+// The server's flag names: lower case, digits and _ (defenses_v2 has a digit).
+const FLAG_NAME = /^[a-z][a-z0-9_]{0,31}$/;
 export function fakeFlagsFor(search = '') {
   const listed = new URLSearchParams(typeof search === 'string' ? search : '').get('fakeflags') ?? '';
   return Object.freeze(Object.fromEntries(listed.split(',').filter(name => FLAG_NAME.test(name)).map(name => [name, true])));
