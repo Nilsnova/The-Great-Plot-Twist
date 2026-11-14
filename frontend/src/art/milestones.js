@@ -67,7 +67,8 @@ export function statueStage(wave) {
 }
 
 export function drawWaveStatue(c, index = 1) {
-  const stage = STATUE_STAGES[Math.min(4, Math.max(1, index)) - 1];
+  index = Number.isInteger(index) ? Math.min(4, Math.max(1, index)) : 1; // a stray 2.5 or NaN draws stage 1, never throws
+  const stage = STATUE_STAGES[index - 1];
   const metal = stage.metal;
   shadow(c, 24, 61, 20, 4);
   part(c, rect(5, 51, 38, 10, 2), '#a9a39a');
