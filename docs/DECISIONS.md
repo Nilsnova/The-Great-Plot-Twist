@@ -850,3 +850,15 @@ and [message contract](INTERFACES.md#t28-boss-minigame-preparation).
 **Why:** BUILD-PLAN §6 requires damage to persist past the wave end, no upgrade bypass, and money decided by the server. Percent plus one timestamp is the smallest state that survives reloads, offline time and upgrades; a server snapshot keeps multiplayer deterministic. The browser's reported health cannot be proven, like `survived`; it is bounded (0–100, walls on that island, first finish only) and only affects play-money costs.
 
 **Alternatives and trade-offs:** free repairs only (no economy cost, weaker persistence); partial timed regeneration (more state to sync); refusing in-wave E repairs above the stored health (confusing). Open questions for the team: a dedicated wallet reason `wall_repair` instead of `building_purchase`; who may repair on a shared island (T37); whether 10 minutes and 30 % feel right in a playtest (T3). Mixed client versions in one wave can disagree on wall health: all captains should reload after the flag is switched on.
+
+## D045 · T6 weather idea as a words-only forecast, no weather stall stake · 2026-11-14
+
+**Status:** PROPOSED by Nils (`Nilsnova`) for T46 on branch `feat/t46-harbor-weather` ([issue #27](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/27)). Agreed by: pending team review.
+
+**Decision:** The T6 idea ("one more simple stall on real data, e.g. *Will it rain in Lisbon tomorrow?*") is not built as a stall with a stake: a coin stake on a real-world weather question is a prediction market, which D035 rules out. Its real-data part becomes one words-only line on the existing weather board: "Forecast for tonight here: fog. Only to read: no coins are at stake.", from the `tonight.state` that `GET /api/weather` already sends. The line shows only when that state is storm, fog, rain or calm (the recorded fallback and demo mode have none). The "weather board / trade" request is read as the weather board plus the existing Harbor stake stalls, not as weather trading.
+
+**Why:** It keeps the T6 intent (more real data in the Harbor) with no new stall to duplicate the weather board, no coins, no API, table or flag. T6 stays open for a different stall only with its own reviewed non-betting mechanic.
+
+**Alternatives and trade-offs:** A "rain tomorrow?" yes/no stake (rejected, D035). A separate forecast stall (rejected: it would duplicate the weather board). The forecast covers the night at the board's default place; a wave can still use the bell-ringer's local weather, which the board now says.
+
+**Impact:** `frontend/src/harbor/weather-model.js`, `overview.js`; [spec](../specs/T46-harbor-weather.md).
