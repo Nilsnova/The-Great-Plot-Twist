@@ -7,11 +7,12 @@ Each rule is switched on by the feature flag of the same name. The first wave an
 wave serves the kept set. So a friend who joins after a flag was switched still plays the
 bell-ringer's rules, and every client of a wave simulates the same wave.
 
-While every rule flag is off nothing is kept or read (the table may not exist yet) and the wave
-answers carry no rules, exactly as before. If keeping fails (the migration is not applied yet,
-the database is down) the answer has no rules and the error is logged, never a 5xx. Known
-limit: switching the LAST rule flag off while a wave runs gives later joiners of that wave no
-rules; switch it off between waves.
+The set is kept even when it is empty (every rule flag off): a wave that started with no rules
+plays none for every later joiner, even if a rule flag is switched on while it runs, and a wave
+that started with rules keeps them even if every flag is switched off. One small database call
+per answer (wave_rules_keep). An empty kept set leaves the "rules" key out, exactly as before. A
+wave with no row yet (started before this was deployed) keeps the flags of its next answer. If
+keeping fails (the database is down) the answer has no rules and the error is logged, never a 5xx.
 
 Used by: routes/waves.py.
 """
@@ -49,17 +50,15 @@ def wanted_rules(settings: Settings) -> list[str]:
 async def rules_for_wave(
     admin: SupabaseAdmin, settings: Settings, wave: WaveStart
 ) -> list[str] | None:
-    """The rules of this wave: kept by its first answer, the same for every later one. None while
-    every rule flag is off, or when the wave keeps no rule (the key is then left out)."""
-    wanted = wanted_rules(settings)
-    if not wanted:
-        return None
-    arguments = {"p_wave_id": str(wave.wave_id), "p_rules": wanted}
+    """The rules of this wave: kept by its first answer (an empty set too), the same for every
+    later one whatever the flags say now. None when the wave keeps no rule (the key is then left
+    out) or when keeping fails."""
+    arguments = {"p_wave_id": str(wave.wave_id), "p_rules": wanted_rules(settings)}
     try:
         kept = read_model(KeptRules, await admin.call_function("wave_rules_keep", arguments))
     except ApiError as error:
-        # The wave itself is fine (started or joined): never fail it for its rules. Without the
-        # migration, or with the database down, it plays with no rules, as before this feature.
+        # The wave itself is fine (started or joined): never fail it for its rules. With the
+        # database down it plays with no rules, as before this feature.
         logger.warning("Wave rules not kept; the wave plays without them: %s", type(error).__name__)
         return None
     rules = [name for name in SIM_RULES if name in kept.rules]
