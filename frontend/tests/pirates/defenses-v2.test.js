@@ -108,9 +108,10 @@ describe('the culverin drawings', () => {
   beforeAll(() => { saved = globalThis.Path2D; globalThis.Path2D = FakePath; });
   afterAll(() => { globalThis.Path2D = saved; });
 
-  it('are registered for every level, idle and firing, in the cannon\'s box', () => {
-    const names = [...CULVERIN_ART.levels, ...CULVERIN_ART.fire];
-    expect(names).toHaveLength(10);
+  it('are registered for every level, idle, firing, damaged and broken (T33 names), in the cannon\'s box', () => {
+    const names = [...CULVERIN_ART.levels, ...CULVERIN_ART.fire, ...CULVERIN_ART.damaged, ...CULVERIN_ART.broken];
+    expect(names).toHaveLength(20);
+    expect([CULVERIN_ART.damaged[1], CULVERIN_ART.broken[0]]).toEqual(['island-culverin-l2-damaged', 'island-culverin-broken']);
     for (const name of names) {
       expect(hasCartoon(name), name).toBe(true);
       expect(islandFrame(name).slice(0, 3), name).toEqual(islandFrame('island-cannon').slice(0, 3));

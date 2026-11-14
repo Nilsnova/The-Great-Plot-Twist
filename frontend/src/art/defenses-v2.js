@@ -9,7 +9,10 @@
 // stack of shot by the muzzle end. 4: a gold muzzle ring, a gold edge on the pad and the island's teal banner. 5: a wholly gilded
 // barrel with iron bands and the royal-blue banner with a gold star. Firing: the barrel kicks back, a long
 // flash leaves the muzzle and a ring of smoke rolls out.
+// Damage states (T33's approach, ./tower-states.js): `-damaged` is the intact drawing leaning, cracked, scorched
+// and smoking (drawDamaged); `-broken` is T33's rubble heap with the culverin's long barrel lying across it.
 import {INK, ellipse, line, mix, part, poly, rect, shadow, stroke} from './paint.js';
+import {drawBroken, drawDamaged, towerStateFrame} from './tower-states.js';
 
 const WOOD = '#a8693a', WOOD_LIGHT = '#c98a4e', WOOD_DARK = '#7a4a2a', STONE = '#a9a39a', STONE_LIGHT = '#cfc8bb';
 const IRON = '#3e4250', BRASS = '#f2c14e', GOLD = '#ffcf3f', GOLD_DARK = '#c98a2a';
@@ -79,13 +82,32 @@ function culverinBall(c, {h}) {
   part(c, ellipse(11.5, y, 2.6), IRON, {width: .9, depth: .6, gloss: ellipse(10.8, y - .9, .8)});
 }
 
-/** Every culverin frame: [width, height, anchor, draw], the names of the harpoon tower's pattern. */
+// Broken: T33's rubble (drawBroken; its fallback wreckage is a snapped barrel), then the culverin's own long,
+// slim barrel lying across the heap, muzzle down, gilded at level 5. Nothing is aimed or flashing.
+function culverinBroken(level) {
+  return (c, size) => {
+    drawBroken('culverin', level, c, size);
+    const g = size.h - 5, cx = size.w / 2, gilded = level >= 5;
+    c.save(); c.translate(cx - 15, g - 11); c.rotate(.32);
+    part(c, rect(0, -2.4, 26, 4.8, 2), gilded ? GOLD : IRON, gilded ? {depth: 1.2, width: 1.1, shade: GOLD_DARK, light: '#fff1b8', gloss: rect(2, -1.8, 16, .9, .4)}
+      : {depth: 1.2, width: 1.1, light: '#7b8296', gloss: rect(2, -1.8, 16, .9, .4)});
+    if (level >= 2) for (const x of [5, 15]) part(c, rect(x, -2.7, 2, 5.4, .6), gilded ? IRON : level >= 3 ? BRASS : IRON, {width: .6, shade: false});
+    if (level === 4) part(c, rect(23, -2.6, 3, 5.2, .6), GOLD, {width: .6, shade: GOLD_DARK}); // the gold muzzle ring
+    part(c, ellipse(26, 0, .9, 1.9), '#14161c', {width: .6, shade: false});
+    c.restore();
+  };
+}
+
+/** Every culverin frame: [width, height, anchor, draw], the names of the harpoon tower's pattern (and T33's
+ *  towerStateFrame names for the damaged and broken states). */
 export function defensesV2Frames() {
   const frames = {'fx-culverin-ball': [16, 8, 4, culverinBall]};
   for (let level = 1; level <= 5; level++) {
     const tail = level === 1 ? '' : `-l${level}`;
     frames[`island-culverin${tail}`] = [48, 32, 5, culverin(level)];
     frames[`island-culverin-fire${tail}`] = [48, 32, 5, culverin(level, true)];
+    frames[towerStateFrame('culverin', level, 'damaged')] = [48, 32, 5, (c, size) => drawDamaged(culverin(level), c, size)];
+    frames[towerStateFrame('culverin', level, 'broken')] = [48, 32, 5, culverinBroken(level)];
   }
   return frames;
 }
@@ -95,4 +117,6 @@ export const CULVERIN_ART = Object.freeze({
   levels: Object.freeze(['island-culverin', 'island-culverin-l2', 'island-culverin-l3', 'island-culverin-l4', 'island-culverin-l5']),
   fire: Object.freeze(['island-culverin-fire', 'island-culverin-fire-l2', 'island-culverin-fire-l3', 'island-culverin-fire-l4', 'island-culverin-fire-l5']),
   shot: 'fx-culverin-ball',
+  damaged: Object.freeze([1, 2, 3, 4, 5].map(level => towerStateFrame('culverin', level, 'damaged'))),
+  broken: Object.freeze([1, 2, 3, 4, 5].map(level => towerStateFrame('culverin', level, 'broken'))),
 });
