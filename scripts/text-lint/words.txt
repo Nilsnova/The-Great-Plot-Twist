@@ -581,6 +581,7 @@ descriptions
 design
 desk
 destination
+destroyed
 detail
 details
 device
@@ -987,6 +988,7 @@ head
 headers
 heading
 heal
+health
 heap
 hear
 heard
