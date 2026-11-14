@@ -85,6 +85,20 @@ describe('the fake arsenal keeps the rules of the database', () => {
 // A second captain on the same fake world.
 const createFakeIslandApiFor = (transport, playerId) => createFakeIslandApi({world: transport.world, playerId, unlocking: true});
 
+describe('the old weapon shop and the flag', () => {
+  it('answers 409 use_arsenal while the flag is on, as the server, and still sells while it is off', async () => {
+    const on = createFakeIslandTransport({coins: 1000, unlocking: true, flags: {arsenal: true}});
+    on.dev.setWaveBest(10);
+    const coins = (await on.api.island()).coins;
+    const refused = await refusal(on.api.buyWeapon({weapon: 'pistols', actionUid: uid()}));
+    expect([refused.status, refused.code]).toEqual([409, 'use_arsenal']);
+    expect((await on.api.island()).coins).toBe(coins);
+    const off = createFakeIslandTransport({coins: 1000, unlocking: true});
+    off.dev.setWaveBest(10);
+    expect((await off.api.buyWeapon({weapon: 'pistols', actionUid: uid()})).weapons.equipped).toBe('pistols');
+  });
+});
+
 describe('the arsenal card', () => {
   const answer = (overrides = {}) => ({code: 'ISLE-K7Q2M', capacity: 20, stored: 1, mine: 'a', carried: 'pistols', waveRunning: false,
     coins: 100, unlockWave: 4, copies: [{id: 'a', no: 1, weapon: 'pistols', holder: 'me', holderName: 'You', away: false, you: true},
