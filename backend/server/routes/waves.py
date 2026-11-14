@@ -44,6 +44,10 @@ POST /api/waves/finish  {"waveId": "6f1c...", "survived": true, "shipsSunk": 7,
     sunk) and "finisher" (a boss finisher was won) add 20 + 4 x n and 15 + 3 x n to the base of a
     won wave n (content/wave_events.json), only on an island wave whose seed brings the galleon or
     on a boss wave; any other bonus is dropped, never refused.
+    rescued (optional, T38/D044, default false): a won last-chance rescue. With the flag "rescue"
+    on, a lost island wave from wave 4 to 100 then falls back to the best wave minus 1 instead of
+    minus 2 (island/rescue.py); anywhere else it is ignored, never refused. Loot, best wave and
+    flags never change because of it; the first finish that closes the wave decides, once.
     Every participant finishes their own part, once. A survived wave n pays this player
     10 + 5 x n + 5 x (house levels on that island), on Pirate Point 20 + 5 x n, twice that on a
     boss wave; a lost wave pays 0. A
@@ -86,6 +90,7 @@ from uuid import UUID
 from fastapi import APIRouter, Query, Request
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt
 
+from server.flags import is_enabled
 from server.island import waves
 from server.island.service import IslandCatalogueDep
 from server.island.wave_weather import wave_weather
@@ -93,6 +98,7 @@ from server.island.waves import WaveStart
 from server.lock.place import place_from_headers
 from server.routes.island import ACTION_UID_PATTERN, IslandPlayerDep
 from server.routes.weather import WeatherRulesDep, WeatherSourceDep
+from server.settings import SettingsDep
 from server.supabase_admin import AdminDep
 from server.weather.mapping import format_utc_time
 
@@ -126,6 +132,8 @@ class FinishRequest(BaseModel):
     shipsSunk: StrictInt = Field(ge=0, le=MAX_SHIPS_SUNK)
     # v3 waves: the treasure galleon sunk, a boss finisher won (paid only where the wave allows it).
     bonuses: list[Literal["galleon", "finisher"]] | None = Field(default=None, max_length=2)
+    # T38: a won last-chance rescue on a lost wave (counts only with the flag "rescue", rescue.py).
+    rescued: StrictBool = False
 
 
 class ReviveRequest(BaseModel):
@@ -238,6 +246,7 @@ async def post_finish(
     catalogue: IslandCatalogueDep,
     admin: AdminDep,
     request: Request,
+    settings: SettingsDep,
 ) -> FinishResponse:
     request.app.state.wave_budget.spend(player.id)
     finished = await waves.finish(
@@ -248,6 +257,7 @@ async def post_finish(
         body.survived,
         body.shipsSunk,
         sorted(set(body.bonuses or [])),
+        rescued=body.rescued and is_enabled("rescue", settings.flags),
     )
     return FinishResponse(
         loot=finished.loot,

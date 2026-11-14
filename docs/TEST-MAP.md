@@ -158,6 +158,12 @@ The rows that start with "v3" were written on Fri 13 Nov 2026 at `6c9ffb3`. Coun
 |---|---|---|---|
 | Opens the existing weather board from the island Harbor after wave 4; reuses the existing fetcher and card | [model test](../frontend/tests/island/card-model.test.js), [DOM test](../frontend/tests/island/weather-board.test.js): `cd frontend && npm test -- --run tests/island/card-model.test.js tests/island/weather-board.test.js`; [game journey](../frontend/scripts/check-island-weather.js): `cd frontend && node scripts/check-island-weather.js` | Wave 3/4 boundary, storm/fog/stale/missing weather, one dialog, focus/reset, Escape, cleanup; real game wiring and viewport containment at 1280 × 720 and 375 × 812 with recorded APIs | Real Open-Meteo outages, physical touch devices, deployed sign-in; changes while the weather card remains open |
 
+### T46 · Nils · Harbor weather follow-through
+
+| What I built / why | Where and command | Covers | Misses |
+|---|---|---|---|
+| The weather board says when an old reading was taken, never promises a fresh one for a recorded reading, says where a wave takes its weather from, and shows the forecast for tonight as words only (D045, no stake) | [model tests](../frontend/tests/harbor/models.test.js), [card test](../frontend/tests/harbor/cards.test.js): `cd frontend && npx vitest run tests/harbor tests/island/weather-board.test.js`; [game journey](../frontend/scripts/check-island-weather.js): `node scripts/check-island-weather.js after` and `… after live` | stale vs recorded wording, bad times, live/cache show no notice, the wave-place line on and offline, known/null/unknown/missing forecast; real game wiring at 1280 × 720 and 375 × 812 | Which place a wave really used (the wave answer has no place), real Open-Meteo outages, physical phones |
+
 ### T5 · Ianno Hollensteiner · Island milestones
 
 | What I built / why | Where and command | Covers | Misses |
@@ -187,3 +193,10 @@ and [recorded results](../specs/T27-shooting-direction.md).
 
 [Walkthrough part 31](WALKTHROUGH.md#31-learn-boss-minigames-with-optional-practice--ianno-hollensteiner-t28)
 and [results, screenshots and manual checkpoints](evidence/T28/README.md).
+
+## T38 + T39 — Minigame difficulty and last-chance rescue
+
+| Part and why | Existing and new checks | Covers | Misses |
+|---|---|---|---|
+| Wave-based speed/timing/error-budget curves and one frozen snapshot per run ([spec](../specs/T38-T39-minigames-rescue.md)) | [Curves and playability](../frontend/tests/pirates/finisher-difficulty.test.js), [finisher](../frontend/tests/pirates/finisher.test.js); `cd frontend && npm test` | Boundary waves 1–100, today's numbers up to wave 10, monotonic and bounded, rounding waves, unknown task refused, frozen snapshot and late joiner, lagging bot wins in crews 1/2/4/10 on both settings, Redtide two of three at wave 100, wrong input fails, smaller late error budget | Human playtests (T3), mixed client versions in one wave |
+| Last-chance rescue rules, scene and settlement (D044, flag `rescue`) | [Rescue rules](../frontend/tests/pirates/rescue.test.js), [finish pass-through and fake server](../frontend/tests/pirates/rescue-finish.test.js), [server](../backend/server/tests/test_wave_rescue.py): `cd backend && uv run pytest -q server/tests/test_wave_rescue.py` | Triggers and reasons, wave 4–100, fallen versus away captains, no captain, once per wave, win/fail/timeout, preparation limit and watchers, disconnects with a frozen goal, chunk/order determinism, `rescued` only true, flag off, Pirate Point/early/won waves ignored, loot arguments unchanged, JS/Python parity | The `sim.js` hook and a two-browser run (not built here), real `wave_finish()` SQL with `p_restart_back = 1` against Postgres, human playtest |
