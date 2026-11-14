@@ -235,7 +235,8 @@ describe('harbor overview and weather board', () => {
       const {fx, tick, text} = await window.harborKit();
       const {createHarbor} = await window.g20Import('/src/harbor/host.js');
       const opened = [], menus = [];
-      let answer = fx.weatherAnswer('storm');
+      let answer = fx.weatherAnswer('storm', {tonight: {date: '2026-11-11', startsAt: '2026-11-11T18:00:00Z',
+        endsAt: '2026-11-12T06:00:00Z', isNow: false, state: 'fog', isFogNight: true, fogNightKind: 'real'}});
       const harbor = createHarbor({container: document.body, getWeather: () => answer, openStall: id => opened.push(id), menu: provider => { menus.push(provider); return () => {}; }});
       // The overview module loads on first use: wait for the card itself, not a fixed time (a busy
       // machine took longer than 80 ms, so the stalls were not there yet and the match button was null).
@@ -260,5 +261,10 @@ describe('harbor overview and weather board', () => {
     expect(result.storm).toContain('Storm: 50% more pirate ships');
     expect(result.storm).toContain('Open-Meteo');
     expect(result.offline).toContain('Calm: a quiet sea');
+    // T46: tonight's forecast (words only, D045) and where a wave takes its weather from.
+    expect(result.storm).toContain("Forecast for tonight here: fog. Only to read: no coins are at stake.");
+    expect(result.storm).toContain('A wave uses the weather where its bell is rung');
+    expect(result.offline).not.toContain('Forecast for tonight');
+    expect(result.offline).toContain('A wave uses the weather where its bell is rung');
   });
 });

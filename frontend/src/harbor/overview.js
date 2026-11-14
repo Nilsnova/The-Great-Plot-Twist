@@ -38,6 +38,9 @@ export function createWeatherCard({container, resetInput, focusGame, getWeather}
     const pirates = el('p', 'harbor-pirates'); pirates.append(icon, ' ', view.pirates);
     item.append(el('p', 'harbor-weather-now', view.line), pirates);
     if (view.old) item.append(el('p', 'harbor-quiet', view.old));
+    // T46: where a wave takes its weather from, and tonight's forecast as words only (D045).
+    if (view.tonight) item.append(el('p', 'harbor-weather-tonight', view.tonight));
+    item.append(el('p', 'harbor-quiet', view.waves));
     const credit = el('p', 'harbor-footnote');
     const source = el('a', '', view.credit.text), licence = el('a', '', view.credit.licenceText);
     for (const [link, href] of [[source, view.credit.href], [licence, view.credit.licenceHref]]) {
