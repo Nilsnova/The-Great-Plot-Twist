@@ -69,8 +69,10 @@ The **harbor bell** stands near the south beach. Walk up to it and press **E** (
 - The wave bar at the top shows the wave, the ships left and the ♥ of the island.
 - **The weather is real.** A storm brings more ships. Fog hides them longer.
 - **Every 5th wave is a boss wave** with a warship. A boss wave pays double loot.
+- **Boss minigames get harder slowly after wave 10**: the target moves a little faster, the window is a little narrower and a little more must go right, up to a fixed limit at wave 100. Waves 5 and 10 play as before. The crew always shares one goal, and one captain alone can still win.
 - **Loot** for a won wave *n*: 🪙 25 + 10 × *n*, plus 🪙 10 for each house. From wave 30 it grows more slowly. A lost wave pays nothing.
 - A lost wave ends the run. You keep your buildings and coins. The next bell starts at your best wave minus 2.
+- *Planned, not in the game yet (T38, flag `rescue`):* when the island falls from wave 4 on, the captains still on it, fallen ones too, get a 10-second **last chance**: hold to haul the treasure chest to safety. Saved, the next bell starts at your best wave minus 1 instead of minus 2. Your best wave never goes down.
 
 ## The break, Pause and Continue
 

@@ -16,6 +16,10 @@
 // and Captain Redtide's ship at wave 100 all three in a row (two of the three cleared wins).
 // The goal grows with the captains present at the start (standing and in the wave), a little less than
 // in proportion, so one captain alone can win every finisher; a fallen captain or one not in the wave watches.
+// T39: the zone's and the spot's speed, the windows and the error budget follow the wave (difficulty.js); the
+// numbers below are the early ones, and every finisher freezes its own snapshot when it starts.
+import { difficultyFor, difficultySnapshot } from './difficulty.js';
+
 export const FINISHER = Object.freeze({
   prepareTicks: 1200,   // at most 60 seconds to read and practice, including disconnected captains
   trigger: .25,         // a boss below this share of its hull starts a finisher
@@ -31,6 +35,7 @@ export const FINISHER = Object.freeze({
     haul: Object.freeze({ samples: 100, share: .6, width: 12, easyWidth: 18 }),             // 60% of the time in the zone
     cannon: Object.freeze({ samples: 100, hits: 7, width: 8, easyWidth: 12, cooldown: 5 }), // 7 hits on the weak spot, a 0.5 s reload
     duel: Object.freeze({ samples: 99, share: .55, prompt: 9, easyPrompt: 13 }),             // 55% of the prompts, net of mistakes
+    rescue: Object.freeze({ samples: 100 }),  // T38: the last-chance rescue (rescue.js), scored like the haul
   }),
   redtideSamples: 80,   // each of Redtide's three tasks
   redtideNeeds: 2,      // tasks of three to clear
@@ -46,6 +51,8 @@ export function finisherKind(ship, wave) {
   return 'haul';
 }
 export const tasksOf = kind => (kind === 'redtide' ? ['haul', 'cannon', 'duel'] : [kind]);
+/** The tasks played by holding (the needle): every sample counts, also without a press. */
+export const holdsNeedle = task => task === 'haul' || task === 'rescue';
 const lengthOf = (task, redtide) => (redtide ? FINISHER.redtideSamples : FINISHER.tasks[task].samples);
 /** Each captain's share of the work: ten captains need 20% less each than one alone. */
 export const crewScale = n => 1 - FINISHER.scaleMost * (Math.max(1, Math.min(10, n)) - 1) / 9;
@@ -58,15 +65,16 @@ export const windowMsFor = (players, gapMs) => Math.max(FINISHER.windowMs, 2 * (
 
 // The moving targets, pure functions of the sample (s, from the start of the task) and the salt.
 const wobble = (salt, k) => ((salt >>> (k * 5)) & 31) / 31;
-/** Haul: the green zone's centre on the gauge (0-100). */
-export function zoneAt(s, salt = 0) {
-  const p = wobble(salt, 0) * Math.PI * 2;
-  return 50 + 28 * Math.sin(s / 16 + p) + 10 * Math.sin(s / 6.3 + p * 2);
+// speed (T39) runs the same path faster: 1.3 means the zone is where it would be 30% later.
+/** Haul (and the rescue): the green zone's centre on the gauge (0-100). */
+export function zoneAt(s, salt = 0, speed = 1) {
+  const p = wobble(salt, 0) * Math.PI * 2, x = s * speed;
+  return 50 + 28 * Math.sin(x / 16 + p) + 10 * Math.sin(x / 6.3 + p * 2);
 }
 /** Aim: the weak spot's place along the hull (0-100). */
-export function spotAt(s, salt = 0) {
-  const p = wobble(salt, 1) * Math.PI * 2;
-  return 50 + 34 * Math.sin(s / 14 + p) + 6 * Math.sin(s / 5 + p * 3);
+export function spotAt(s, salt = 0, speed = 1) {
+  const p = wobble(salt, 1) * Math.PI * 2, x = s * speed;
+  return 50 + 34 * Math.sin(x / 14 + p) + 6 * Math.sin(x / 5 + p * 3);
 }
 /** Duel: the arrow of prompt k for one captain (0 up, 1 right, 2 down, 3 left). */
 export function promptAt(by, k, salt = 0) {
@@ -74,38 +82,42 @@ export function promptAt(by, k, salt = 0) {
   for (const char of `${by}#${k}`) hash = Math.imul(hash ^ char.codePointAt(0), 16777619) >>> 0;
   return (hash >>> 7) % 4;
 }
-export const promptLength = easy => (easy ? FINISHER.tasks.duel.easyPrompt : FINISHER.tasks.duel.prompt);
+/** Samples one duel arrow waits: from the duel's difficulty (T39), else the early numbers. */
+export const promptLength = (easy, difficulty = difficultyFor('duel')) => (easy ? difficulty.easyPrompt : difficulty.prompt);
 export const ARROWS = Object.freeze(['up', 'right', 'down', 'left']);
 
-/** One task's goal for these captains: {by: easy?} decides the duel's prompts. */
-export function goalOf(task, players, { redtide = false, easy = new Map() } = {}) {
+/**
+ * One task's goal for these captains: {by: easy?} decides the duel's prompts; difficulty is the task's numbers
+ * at the wave (difficulty.js; without it the early numbers).
+ */
+export function goalOf(task, players, { redtide = false, easy = new Map(), difficulty = difficultyFor(task) } = {}) {
   const n = Math.max(1, players.length), scale = crewScale(n), T = lengthOf(task, redtide), K = FINISHER.tasks[task];
-  if (task === 'haul') return Math.max(1, Math.ceil(T * K.share * n * scale));
-  if (task === 'cannon') return Math.max(1, Math.ceil(K.hits * (T / K.samples) * n * scale));
-  const prompts = players.reduce((sum, by) => sum + Math.floor(T / promptLength(easy.get(by) === true)), 0);
-  return Math.max(1, Math.ceil(prompts * K.share * scale));
+  if (holdsNeedle(task)) return Math.max(1, Math.ceil(T * difficulty.share * n * scale));
+  if (task === 'cannon') return Math.max(1, Math.ceil(difficulty.hits * (T / K.samples) * n * scale));
+  const prompts = players.reduce((sum, by) => sum + Math.floor(T / promptLength(easy.get(by) === true, difficulty)), 0);
+  return Math.max(1, Math.ceil(prompts * difficulty.share * scale));
 }
 
 /** One captain's score in one task from their samples (Map sample -> value, s from the start of the task). */
-export function scoreOf(task, by, samples, { salt = 0, easy = false, length } = {}) {
-  const K = FINISHER.tasks[task], T = length ?? K.samples;
+export function scoreOf(task, by, samples, { salt = 0, easy = false, length, difficulty = difficultyFor(task) } = {}) {
+  const K = FINISHER.tasks[task], T = length ?? K.samples, d = difficulty;
   const sorted = [...samples].filter(([s]) => s >= 0 && s < T).sort((a, b) => a[0] - b[0]);
-  if (task === 'haul') {
-    const width = easy ? K.easyWidth : K.width;
-    return sorted.reduce((sum, [s, value]) => sum + (value >= 0 && Math.abs(value - zoneAt(s, salt)) <= width ? 1 : 0), 0);
+  if (holdsNeedle(task)) {
+    const width = easy ? d.easyWidth : d.width;
+    return sorted.reduce((sum, [s, value]) => sum + (value >= 0 && Math.abs(value - zoneAt(s, salt, d.speed)) <= width ? 1 : 0), 0);
   }
   if (task === 'cannon') {
-    const width = easy ? K.easyWidth : K.width;
+    const width = easy ? d.easyWidth : d.width;
     let hits = 0, last = -Infinity;
     for (const [s, value] of sorted) {
       if (value < 0 || s - last < K.cooldown) continue; // the great cannon reloads between shots
       last = s;
-      if (Math.abs(value - spotAt(s, salt)) <= width) hits++;
+      if (Math.abs(value - spotAt(s, salt, d.speed)) <= width) hits++;
     }
     return hits;
   }
   // The duel: the first arrow pressed in a prompt's time counts; the right one +1, a wrong one -1.
-  const L = promptLength(easy), decided = new Set();
+  const L = promptLength(easy, d), decided = new Set();
   let score = 0;
   for (const [s, value] of sorted) {
     if (value < 0 || value > 3) continue;
@@ -156,10 +168,10 @@ export function createFinisher(ctx = {}) {
         if (!all) continue;
         const local = new Map();
         for (const [s, value] of all) if (s >= from && s < to) local.set(s - from, value);
-        const score = scoreOf(task, by, local, { salt: current.salt, easy: current.easy.get(by) === true, length: to - from });
+        const score = scoreOf(task, by, local, { salt: current.salt, easy: current.easy.get(by) === true, length: to - from, difficulty: current.difficulty[task] });
         mine[by] = score; total += score;
       }
-      const goal = goalOf(task, current.players, { redtide: current.kind === 'redtide', easy: current.easy });
+      const goal = goalOf(task, current.players, { redtide: current.kind === 'redtide', easy: current.easy, difficulty: current.difficulty[task] });
       return { task, from, to, score: Math.max(0, total), goal, cleared: Math.max(0, total) >= goal, players: mine };
     });
   }
@@ -185,7 +197,9 @@ export function createFinisher(ctx = {}) {
       ship.finisherTried = true;
       if (ship.kind !== 'redtide') regularUsed = true;
       const players = participants(sim.now()), kind = finisherKind(ship, wave);
+      // T39: the wave's difficulty, frozen now for every client (difficulty.js).
       run = { ship, kind, players, salt: salted(ship), plan: timeline(kind, players), ticks: 0, marks: new Map(), easy: new Map(),
+        difficulty: difficultySnapshot(tasksOf(kind), wave),
         phase: ctx.preparation ? 'prepare' : 'intro', ready: new Set(), prepareTicks: 0, outcome: null, outroEnd: null, cache: null, version: 0 };
       events.push({ type: 'finisher_started', t: sim.now(), kind, shipId: ship.id, shipKind: ship.kind, players: [...players],
         x: round2(ship.x), z: round2(ship.z), goals: progress(run).map(item => item.goal) });
@@ -242,7 +256,7 @@ export function createFinisher(ctx = {}) {
         task: current < 0 ? run.plan.tasks.length - 1 : current, tasks: run.cache.tasks.map(item => ({ ...item, players: { ...item.players } })),
         ready: [...run.ready].sort(), prepareLeft: Math.max(0, (FINISHER.prepareTicks - run.prepareTicks) / 20),
         taskEnd: run.plan.end, decide: run.plan.decide, outroEnd: run.outroEnd,
-        easy: Object.fromEntries(run.easy), heard: [...run.marks.keys()].sort() };
+        easy: Object.fromEntries(run.easy), heard: [...run.marks.keys()].sort(), difficulty: run.difficulty };
     },
     bonuses: () => [...bonuses],
   };

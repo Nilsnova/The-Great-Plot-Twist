@@ -30,7 +30,7 @@ from uuid import UUID
 
 from server.errors import ApiError
 from server.game.islet_store import player_not_set_up
-from server.island import games, store, wave_events
+from server.island import games, rescue, store, wave_events
 from server.island.catalogue import IslandCatalogue, Weather
 from server.island.codes import read_code
 from server.island.rules import is_boss, loot_rates, weather_for
@@ -208,15 +208,19 @@ async def finish(
     survived: bool,
     ships_sunk: int,
     bonuses: list[str] | None = None,
+    rescued: bool = False,
 ) -> WaveFinish:
     """End this player's part of a wave. A repeat answers the stored result and pays nothing.
     Past wave lateFrom the loot grows more slowly (rules.loot_rates): the wave's number is read
     first, so the rates go to wave_finish as plain arguments. v3 waves: `bonuses` (the treasure
     galleon sunk, a boss finisher won) raise the base, but only those the wave's place, number and
-    seed allow (wave_events.allowed_bonuses); the boss multiplier applies after, like all loot."""
+    seed allow (wave_events.allowed_bonuses); the boss multiplier applies after, like all loot.
+    T38: `rescued` (a won last-chance rescue, passed only with the flag `rescue` on) makes a lost
+    island wave from wave 4 fall back one wave below the best instead of two (rescue.py)."""
     loot = catalogue.loot
     base, per_wave, point_base = loot.base, loot.per_wave, loot.pirate_point_base
-    if loot.late_from or bonuses:
+    back = catalogue.waves.restart_back
+    if loot.late_from or bonuses or rescued:
         where = await store.read_wave_place(admin, str(wave_id))
         if where is not None and where.wave is not None:
             if loot.late_from:
@@ -229,6 +233,8 @@ async def finish(
                 boss_every=catalogue.waves.boss_every,
             )
             base += wave_events.bonus_base(allowed, where.wave)
+            counts = rescue.rescue_counts(rescued, survived, where.place, where.wave)
+            back = rescue.restart_back(back, counts)
     arguments = {
         "p_player_id": player_id,
         "p_wave_id": str(wave_id),
@@ -240,7 +246,7 @@ async def finish(
         "p_point_loot_base": point_base,
         "p_boss_every": catalogue.waves.boss_every,
         "p_boss_multiplier": loot.boss_multiplier,
-        "p_restart_back": catalogue.waves.restart_back,
+        "p_restart_back": back,
     }
     reply = await store.finish_wave(admin, arguments)
     if isinstance(reply, Refusal):
