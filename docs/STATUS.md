@@ -14,6 +14,8 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
+**14 Nov, B3 / Johannes:** [draft PR #39](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/39) makes the existing feedback audit reproducible: eight component cases at two sizes, recovery/disabled-action/callback assertions, screenshots and JSON report. `16 cases passed; browser errors: 0; external requests: 0`; full frontend 243 files / 3,036 tests, build/budget/text lint passed on main `908d376`. [Command/evidence/limits](evidence/B3-repeatable/README.md); [next proposals](handoff/B3-next-proposals.md). Test tools only, independent of #31/#32/#38; author and human review pending, no merge.
+
 **14 Nov, T29–T47 / Nils (agent-assisted): fast-track sprint.** Ianno's roadmap ([PR #20](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/20)) is merged. Nils's agents work on T29–T47 in eight lanes. Each lane has its own claim issue and branch: wall recovery #21, targeting/pathing #22, flexible placement #23, arsenal #24, co-op policy #25, minigames/rescue #26, Harbor/weather #27, highscore/statue #28. **Nils decided ([D047](DECISIONS.md)) to merge these lanes to `main` as soon as each one is green, without waiting for peer approval first.** Review happens after the merge, so please look at the merged PRs and comment or reopen anything you disagree with. Merge gate: `npm test`, `npm run build`, `npm run test:mp`, the GitHub sign-in checks and backend `pytest`/`ruff` all pass. Any feature that needs a new table ships behind a new feature flag that is off by default, so the live game keeps working until the migration is applied and the flag is switched on (each one a separate, announced step). The proposed design decisions are D039–D046 and are open for team comments.
 
 **14 Nov, T28 / Ianno:** [Boss minigame introduction and optional first-time practice](../specs/T28-minigame-introduction.md) is implemented in [PR #19](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/19), from main `50cab125`. Per player/island/task; shared real result. Frontend: 2,989 tests, build/budget/text lint, 33 accessibility screens, 33 demo checks and the four-page practice/skip barrier pass. [Evidence and checkpoints](evidence/T28/README.md). Ianno reports having practiced all tasks; introductory explain-back completed after clarification; independent human review remains pending.
@@ -210,6 +212,8 @@ Nobody has decided these yet. Until they are decided, the plan in [ROADMAP.md](.
 6. **Pick a package.** Take your lane's next package below, or one from "Start today" in ROADMAP.md. Open an issue with the goal, acceptance checks, scope, responsible teammate and likely files. Create your branch from `main` (`git switch main`, `git pull`, then for example `git switch -c feat/l1-live-weather`). Paste the agent brief below and open a draft pull request early.
 
 ## Next steps per lane
+
+**Johannes / B3:** review draft #39 and the independent fixes #31/#32/#38. Next proposed scope: B2 phone pass, then B5 measured loading; optional practice needs coordination with Ianno/Nils first. These proposals are not claims.
 
 **T28 / Ianno:** introductory explain-back completed after clarification; ask Johannes (`frcola`) for independent review of PR #19. No merge before a different human approves.
 
@@ -537,6 +541,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+- **14 Nov — Johannes / B3:** repeatable eight-case/two-size feedback audit in draft #39; deliberate enabled-build countercheck fails, normal 16-case run and 3,036 frontend tests pass; local test tools/docs only.
 
 - **2026-11-14, T29–T47 fast-track started.** Nils approved and merged PR #20; eight agent lanes opened issues #21–#28. Per D047, green lanes merge without a prior peer approval, behind off-by-default flags where a migration is needed; teammates review after the merge.
 

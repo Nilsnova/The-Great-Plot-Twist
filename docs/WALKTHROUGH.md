@@ -1236,6 +1236,27 @@ explain and review it. See [the test map](TEST-MAP.md#t28--ianno-hollensteiner--
 and [screenshots, exact checks and checkpoint links](evidence/T28/README.md).
 Local browser evidence does not establish live Supabase or physical-phone behavior.
 
+## B3 — Repeatable feedback checks — Johannes Franz Lang
+
+**What and where.** [check-feedback.mjs](../frontend/scripts/check-feedback.mjs)
+opens the existing local browser helper, loops through eight cases at desktop and
+phone sizes, asserts their behavior and saves pictures plus a report in a temporary
+folder. [feedback-fixtures.js](../frontend/scripts/feedback-fixtures.js) supplies
+controlled failures to the real cards. [qa/feedback.html](../frontend/qa/feedback.html)
+is served directly by Vite for the test; it is not a production build entry.
+
+**Why this split.** The fixture describes the inputs; the runner checks outputs.
+Join call counts detect an unwanted request for bad input. Build call counts and
+native disabled buttons check that rejected clicks do nothing. A second Create
+attempt uses the existing fake transport and real API wrapper, proving recovery
+without creating a live game. A valid cannon remains usable beside a locked mortar.
+
+**Limits and change.** These are isolated components, not a connected game or
+server-money proof. Browser dimensions are not a physical-phone test. New cases
+can extend the list and fixture; do not change login/APIs to make a test pass.
+[Command, case table and negative control](evidence/B3-repeatable/README.md).
+[Next proposals](handoff/B3-next-proposals.md) are for review, not new claims.
+
 ## Where older docs differ from the code
 
 Read the code when these disagree. Noted on 11 Nov; not yet fixed.

@@ -1,0 +1,102 @@
+{
+  "checked": [
+    {
+      "name": "join-code",
+      "width": 1280,
+      "height": 720,
+      "screenshot": "join-code-1280x720.png"
+    },
+    {
+      "name": "join-code",
+      "width": 375,
+      "height": 812,
+      "screenshot": "join-code-375x812.png"
+    },
+    {
+      "name": "join-full",
+      "width": 1280,
+      "height": 720,
+      "screenshot": "join-full-1280x720.png"
+    },
+    {
+      "name": "join-full",
+      "width": 375,
+      "height": 812,
+      "screenshot": "join-full-375x812.png"
+    },
+    {
+      "name": "create-offline",
+      "width": 1280,
+      "height": 720,
+      "screenshot": "create-offline-1280x720.png"
+    },
+    {
+      "name": "create-offline",
+      "width": 375,
+      "height": 812,
+      "screenshot": "create-offline-375x812.png"
+    },
+    {
+      "name": "build-coins",
+      "width": 1280,
+      "height": 720,
+      "screenshot": "build-coins-1280x720.png"
+    },
+    {
+      "name": "build-coins",
+      "width": 375,
+      "height": 812,
+      "screenshot": "build-coins-375x812.png"
+    },
+    {
+      "name": "build-locked",
+      "width": 1280,
+      "height": 720,
+      "screenshot": "build-locked-1280x720.png"
+    },
+    {
+      "name": "build-locked",
+      "width": 375,
+      "height": 812,
+      "screenshot": "build-locked-375x812.png"
+    },
+    {
+      "name": "build-busy",
+      "width": 1280,
+      "height": 720,
+      "screenshot": "build-busy-1280x720.png"
+    },
+    {
+      "name": "build-busy",
+      "width": 375,
+      "height": 812,
+      "screenshot": "build-busy-375x812.png"
+    },
+    {
+      "name": "leaderboard-offline",
+      "width": 1280,
+      "height": 720,
+      "screenshot": "leaderboard-offline-1280x720.png"
+    },
+    {
+      "name": "leaderboard-offline",
+      "width": 375,
+      "height": 812,
+      "screenshot": "leaderboard-offline-375x812.png"
+    },
+    {
+      "name": "connection-offline",
+      "width": 1280,
+      "height": 720,
+      "screenshot": "connection-offline-1280x720.png"
+    },
+    {
+      "name": "connection-offline",
+      "width": 375,
+      "height": 812,
+      "screenshot": "connection-offline-375x812.png"
+    }
+  ],
+  "errors": [],
+  "external": []
+}
