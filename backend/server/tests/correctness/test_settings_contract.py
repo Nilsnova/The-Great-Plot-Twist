@@ -24,6 +24,7 @@ FLAGS = (
     "festival",
     "demo",
     "islands",
+    "rescue",
     "wall_recovery",
 )
 VARIABLES = {

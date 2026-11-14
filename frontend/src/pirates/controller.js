@@ -704,6 +704,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     // v3 waves: the bonuses the sim saw (the galleon sunk, a finisher won); the server pays them only where the wave allows.
     const body = { waveId: current.info.waveId, survived: current.result.survived, shipsSunk: current.result.shipsSunk,
       ...(current.result.bonuses?.length ? { bonuses: [...current.result.bonuses] } : {}),
+      ...(current.result.rescued === true ? { rescued: true } : {}), // T38: a won last-chance rescue (rescue.js)
       // D039: only a wave that came with walls (the flag on) reports them back, every wall's percent.
       ...(current.info.walls ? { walls: healthReport(current.sim.state().walls) } : {}) };
     const attempt = async () => {

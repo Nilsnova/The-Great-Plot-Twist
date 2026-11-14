@@ -48,6 +48,10 @@ POST /api/waves/finish  {"waveId": "6f1c...", "survived": true, "shipsSunk": 7,
     sunk) and "finisher" (a boss finisher was won) add 20 + 4 x n and 15 + 3 x n to the base of a
     won wave n (content/wave_events.json), only on an island wave whose seed brings the galleon or
     on a boss wave; any other bonus is dropped, never refused.
+    rescued (optional, T38/D044, default false): a won last-chance rescue. With the flag "rescue"
+    on, a lost island wave from wave 4 to 100 then falls back to the best wave minus 1 instead of
+    minus 2 (island/rescue.py); anywhere else it is ignored, never refused. Loot, best wave and
+    flags never change because of it; the first finish that closes the wave decides, once.
     walls (optional, decision D039, proposed; ignored while the flag wall_recovery is off):
     every wall's health in percent (0 to 100) when the finishing player's simulation ended the
     wave. The first finish of an island wave keeps them (island_walls_record()); later
@@ -141,6 +145,8 @@ class FinishRequest(BaseModel):
     shipsSunk: StrictInt = Field(ge=0, le=MAX_SHIPS_SUNK)
     # v3 waves: the treasure galleon sunk, a boss finisher won (paid only where the wave allows it).
     bonuses: list[Literal["galleon", "finisher"]] | None = Field(default=None, max_length=2)
+    # T38: a won last-chance rescue on a lost wave (counts only with the flag "rescue", rescue.py).
+    rescued: StrictBool = False
     # D039: the health of every wall when this player's simulation ended the wave (percent).
     walls: dict[WALL_SPOT, WALL_HEALTH] | None = Field(default=None, max_length=MAX_WALLS)
 
@@ -285,6 +291,7 @@ async def post_finish(
         body.survived,
         body.shipsSunk,
         sorted(set(body.bonuses or [])),
+        rescued=body.rescued and is_enabled("rescue", settings.flags),
     )
     # D039: the first finish of an island wave keeps its walls' health for the next wave.
     if is_enabled("wall_recovery", settings.flags):

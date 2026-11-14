@@ -819,6 +819,20 @@ and [message contract](INTERFACES.md#t28-boss-minigame-preparation).
 
 **Limits:** the Python check and the database check are separate reads; the database's lock is the final word. Mapping tests use the fake database; the SQL rules are covered by their own migration tests. Presence-based rules (quorum, auto-pause) are not possible without a server-side presence design.
 
+## D044 · Last-chance rescue and minigame difficulty by wave · 2026-11-14
+
+**Status:** PROPOSED (agreed by: pending team review). T38/T39 of [BUILD-PLAN §6](BUILD-PLAN.md#6-defense-and-shared-island-expansion), planned by Ianno (`Iannomh123456`), implemented for Nils (`Nilsnova`) on branch `feat/t38-t39-minigames-rescue`. See [the spec](../specs/T38-T39-minigames-rescue.md).
+
+**Decision (T39):** every wave minigame (boss haul, cannon, duel, Redtide's three tasks, T28 practice and the new rescue) takes its speed, timing window and error budget from the wave: today's numbers up to wave 10, a straight line to fixed late numbers at wave 100, never beyond (`frontend/src/pirates/finisher/difficulty.js`). A run freezes one snapshot of those numbers at its start, from the server-given wave number, so every client agrees and late joiners change nothing. Crew-size scaling stays as it was. Lantern duels, Harbor stalls, market calls, the weather board, wave events and the Pirate Point lamps are not minigames for this rule; their settlement is unchanged.
+
+**Decision (T38):** when the existing heart falls or every present captain is down, once per island wave from wave 4 (not Pirate Point), the captains still on the island, fallen ones too, play a 10-second co-op haul ("Haul the treasure to safety"), built on the boss-finisher machinery and messages. The wave stays lost either way. Success: the next bell rings best wave − 1; failure or no rescue: best wave − 2 as today; never below wave 1 (wave 0 means "nothing won yet" and is never rung). Coins, buildings, crew, captain, weapons and research are kept; `wave_best`, `won_wave_best` and flags are never lowered. Settlement: the finish carries `rescued: true`; the server ignores it unless the flag `rescue` is on and the wave allows it, and passes `p_restart_back = 1` to the existing `wave_finish()`, whose first closing finish applies the restart rule exactly once. No migration. No captain present: no rescue.
+
+**Why:** bounded curves make late bosses harder without touching the early waves players already learned (T28 evidence stays valid). A rescue that only softens the fallback adds a comeback moment without new money, building or permission rules (T30/T37/T42 stay independent) and without a new database state. Reusing the existing heart avoids a dependency on T33/T36.
+
+**Alternatives and trade-offs:** a rescue that saves the wave and continues the battle (needs deeper sim changes and new reward rules); a new central building as trigger (needs placement and health first); a fallback measured from the lost wave instead of the best (needs the server to read `wave_best` or an SQL change; with the chosen rule a rescued loss of a replay wave can land one wave above it, never above best − 1). The rescue claim is as unprovable as `survived`; at worst it saves a cheater one wave of fallback, never loot.
+
+**Impact:** route field `rescued` and flag `rescue` ([INTERFACES](INTERFACES.md#t38-last-chance-rescue-and-t39-difficulty)); the rescue needs a ~10-line hook in `sim.js` (spec) before it can appear; mixed client versions in one wave would disagree on boss difficulty above wave 10. Consistent with D043: no new island action in `permissions.py`, nothing paid, settled only by a participant's own finish (`403 not_in_wave` otherwise).
+
 ## D039 · Wall recovery: damage stays after a wave · 2026-11-14
 
 **Status:** proposed; agreed by: pending team review. Implemented behind the new flag `wall_recovery` (off by default) on branch `feat/t29-t32-wall-recovery` for tasks T29–T32 and T47 ([spec](../specs/T29-T32-wall-recovery.md)). Migration `20261114100000_wall_recovery.sql`, not applied. Responsible teammate: Nils.

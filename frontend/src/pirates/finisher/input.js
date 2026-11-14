@@ -6,7 +6,7 @@
 //   - a window goes out once `windowMs` passed since the last (max(500 ms, 2 × the room's wave gap), so ten
 //     players stay in the room's budget) or when the task's samples are all past, at most 24 samples each;
 //   - a window of a press task with nothing pressed in it is not sent (it would change nothing).
-import { FINISHER, windowMsFor } from './rules.js';
+import { FINISHER, holdsNeedle, windowMsFor } from './rules.js';
 
 export function createFinisherRecorder({ players = 1, gapMs = 200 } = {}) {
   const values = new Map();
@@ -36,7 +36,7 @@ export function createFinisherRecorder({ players = 1, gapMs = 200 } = {}) {
         sent = to;
         for (let s = from; s < to; s++) values.delete(s);
         const task = tasks.find(item => from >= item.from && from < item.to)?.task ?? null;
-        if (marks.some(value => value >= 0) || task === 'haul') out.push({ from, marks });
+        if (marks.some(value => value >= 0) || holdsNeedle(task)) out.push({ from, marks }); // the needle (haul, rescue) counts every sample
       }
       if (out.length) sentAt = nowMs;
       return out;

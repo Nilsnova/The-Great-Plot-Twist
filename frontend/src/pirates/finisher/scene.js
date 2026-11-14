@@ -5,27 +5,43 @@
 //   haul    hold the mouse button, Space or the Haul button: the needle rises; let go: it sinks. Keep it in the zone.
 //   cannon  move the mouse (or ← → / A D) along the hull; click, F, Space or Fire shoots the great cannon.
 //   duel    press the arrow shown (arrow keys, W A S D, or the four buttons) before the next one comes.
+//   rescue  T38, the last chance when the island falls: the haul's needle, hauling the treasure chest to safety.
+// T39: the widths, the speed and the duel's prompt come from the run's frozen difficulty (f.difficulty).
 // The controller (src/pirates/controller.js) feeds update() every frame and sends the recorder's windows.
 //   const scene = createFinisherScene({container, me, easy, reducedMotion, recorder});
 //   scene.update({finisher, dt, boss: {x, y} | null}); scene.dispose()
 import './finisher.css';
 import lines from '../../narrator/lines.json';
-import { ARROWS, FINISHER, promptAt, promptLength, spotAt, zoneAt } from './rules.js';
+import { ARROWS, FINISHER, holdsNeedle, promptAt, promptLength, spotAt, zoneAt } from './rules.js';
+import { difficultyFor } from './difficulty.js';
 
 export const FINISHER_TITLE = 'Bring her down!';
 export const TASK_TEXT = Object.freeze({
   haul: { title: 'Haul the chain', how: 'Hold to pull the needle up, let go to let it sink. Keep it in the green.', touch: 'Hold to haul' },
   cannon: { title: 'Aim the great cannon', how: 'Move along the hull and fire when the sight is on the glowing weak spot.', touch: 'Fire' },
   duel: { title: 'Board and duel', how: 'Press the arrow shown before the next one comes.', touch: '' },
+  rescue: { title: 'Haul the treasure to safety', how: 'Everyone hauls, fallen captains too. Hold to pull the needle up, let go to let it sink. Keep it in the green.', touch: 'Hold to haul' },
 });
-export const KIND_TITLE = Object.freeze({ haul: 'Haul the chain', cannon: 'Aim the great cannon', duel: 'Board and duel', redtide: 'Chain, cannon and cutlass' });
+export const KIND_TITLE = Object.freeze({ haul: 'Haul the chain', cannon: 'Aim the great cannon', duel: 'Board and duel', redtide: 'Chain, cannon and cutlass', rescue: 'Haul the treasure to safety' });
+export const CARD_TITLE = Object.freeze({ rescue: 'Last chance!' });
 export const RESULT_TEXT = Object.freeze({ won: { title: 'Sunk!', line: 'Bonus loot for the crew.' }, failed: { title: 'She broke free!', line: 'The boss gets 15% of her hull back.' } });
+// T38: the wave is lost either way; the rescue decides how far the next bell falls back (specs/T38-T39).
+export const RESCUE_TEXT = Object.freeze({
+  start: 'The island has fallen! Haul the treasure to safety together.',
+  won: { title: 'Treasure saved!', line: 'The wave is lost, but the next bell rings only one wave below your best.' },
+  failed: { title: 'The treasure is lost!', line: 'The next bell rings two waves below your best, as usual.' },
+});
 const ARROW_GLYPH = { up: '↑', right: '→', down: '↓', left: '←' };
 const KEYS = { ArrowUp: 0, KeyW: 0, ArrowRight: 1, KeyD: 1, ArrowDown: 2, KeyS: 2, ArrowLeft: 3, KeyA: 3 };
 const OUTLINE = '#1f2622';
 const lineText = id => lines.lines.find(line => line.id === id)?.text ?? '';
 /** The caption of a moment: the narrator's line for the start, the win and the failure. */
-export const captionFor = (kind, phase) => lineText(`finisher_${kind}_${phase === 'won' || phase === 'failed' ? phase : 'start'}`);
+export const captionFor = (kind, phase) => {
+  const moment = phase === 'won' || phase === 'failed' ? phase : 'start';
+  if (kind === 'rescue') return moment === 'start' ? RESCUE_TEXT.start : RESCUE_TEXT[moment].line;
+  return lineText(`finisher_${kind}_${moment}`);
+};
+const resultText = (kind, outcome) => (kind === 'rescue' ? RESCUE_TEXT : RESULT_TEXT)[outcome];
 
 const el = (tag, className, text) => { const node = document.createElement(tag); if (className) node.className = className; if (text !== undefined) node.textContent = text; return node; };
 const button = (className, text, label) => { const node = el('button', `kit-button ${className}`, text); node.type = 'button'; if (label) node.setAttribute('aria-label', label); return node; };
@@ -65,18 +81,21 @@ export function createFinisherScene({ container, me = null, easy = () => false, 
   const playing = () => !!current && current.players.includes(me) && current.phase === 'task' && !current.outcome;
   const task = () => current?.tasks?.[current.task] ?? null;
   const localSample = () => (task() ? current.sample - task().from : -1);
+  // T39: this task's numbers at this wave, frozen when the run started (the early numbers for an old state).
+  const numbers = (name = task()?.task) => current?.difficulty?.[name] ?? difficultyFor(name ?? 'haul');
   const inTask = () => { const t = task(); return !!t && current.sample >= t.from && current.sample < t.to; };
 
   function shoot() {
     if (!playing() || task()?.task !== 'cannon' || !inTask()) return;
     if (current.sample - lastShot < FINISHER.tasks.cannon.cooldown) return;
     lastShot = current.sample; recorder?.press(current.sample, Math.round(aim));
-    const hit = Math.abs(aim - spotAt(localSample(), current.salt)) <= (easy() ? FINISHER.tasks.cannon.easyWidth : FINISHER.tasks.cannon.width);
+    const d = numbers('cannon');
+    const hit = Math.abs(aim - spotAt(localSample(), current.salt, d.speed)) <= (easy() ? d.easyWidth : d.width);
     flashAt = clock; flashGood = hit;
   }
   function arrow(index) {
     if (!playing() || task()?.task !== 'duel' || !inTask()) return;
-    const L = promptLength(easy()), k = Math.floor(localSample() / L);
+    const L = promptLength(easy(), numbers('duel')), k = Math.floor(localSample() / L);
     if (pressedPrompt.has(k)) return;
     pressedPrompt.set(k, index); recorder?.press(current.sample, index);
     flashAt = clock; flashGood = index === promptAt(me, k, current.salt);
@@ -100,7 +119,7 @@ export function createFinisherScene({ container, me = null, easy = () => false, 
   const keydown = event => {
     if (!current || event.target instanceof HTMLElement && event.target.closest('input, select, textarea')) return;
     const kind = task()?.task;
-    if (event.code === 'Space') { event.preventDefault(); if (kind === 'haul') holdOn(); else if (kind === 'cannon' && !event.repeat) shoot(); }
+    if (event.code === 'Space') { event.preventDefault(); if (holdsNeedle(kind)) holdOn(); else if (kind === 'cannon' && !event.repeat) shoot(); }
     else if (event.code === 'KeyF' && kind === 'cannon' && !event.repeat) { event.preventDefault(); shoot(); }
     else if (kind === 'cannon' && (event.code === 'ArrowLeft' || event.code === 'KeyA')) { event.preventDefault(); aimKeys = -1; }
     else if (kind === 'cannon' && (event.code === 'ArrowRight' || event.code === 'KeyD')) { event.preventDefault(); aimKeys = 1; }
@@ -121,9 +140,9 @@ export function createFinisherScene({ container, me = null, easy = () => false, 
     ctx.strokeStyle = 'rgba(214,240,236,.35)'; ctx.lineWidth = 3;
     for (let i = 0; i < 6; i++) { const y = 60 + i * 42, shift = reducedMotion() ? 0 : (clock * 12 * .3 + i * 37) % 80; ctx.beginPath(); for (let x = -80 + shift; x < 700; x += 80) { ctx.moveTo(x, y); ctx.quadraticCurveTo(x + 20, y - 8, x + 40, y); } ctx.stroke(); }
   }
-  function drawHaul(s, f) {
+  function drawHaul(s, f, rescue = false) {
     sea();
-    const width = easy() ? FINISHER.tasks.haul.easyWidth : FINISHER.tasks.haul.width, zone = zoneAt(s, f.salt);
+    const d = numbers(rescue ? 'rescue' : 'haul'), width = easy() ? d.easyWidth : d.width, zone = zoneAt(s, f.salt, d.speed);
     // The chain from the winch (bottom left) to the boss's bow (top right): links tighten as you haul.
     const pull = holding && playing() ? 1 : 0;
     ctx.lineWidth = 7; ctx.strokeStyle = OUTLINE;
@@ -135,9 +154,12 @@ export function createFinisherScene({ container, me = null, easy = () => false, 
       ctx.strokeStyle = i % 2 ? '#a7aeb0' : '#cfd6d6'; ctx.lineWidth = 4; ctx.beginPath(); ctx.ellipse(0, 0, 15, 8, 0, 0, Math.PI * 2); ctx.stroke();
       ctx.restore();
     }
-    // The boss's bow.
-    ctx.fillStyle = OUTLINE; ctx.beginPath(); ctx.moveTo(470, 110); ctx.lineTo(640, 40); ctx.lineTo(640, 170); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#7a3b2e'; ctx.beginPath(); ctx.moveTo(482, 108); ctx.lineTo(640, 48); ctx.lineTo(640, 162); ctx.closePath(); ctx.fill();
+    if (rescue) drawChest(f); // T38: the island's treasure chest on the cliff, pulled up the chain
+    else {
+      // The boss's bow.
+      ctx.fillStyle = OUTLINE; ctx.beginPath(); ctx.moveTo(470, 110); ctx.lineTo(640, 40); ctx.lineTo(640, 170); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#7a3b2e'; ctx.beginPath(); ctx.moveTo(482, 108); ctx.lineTo(640, 48); ctx.lineTo(640, 162); ctx.closePath(); ctx.fill();
+    }
     // The winch.
     ctx.fillStyle = OUTLINE; ctx.beginPath(); ctx.arc(130, 238, 44, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#8a5a32'; ctx.beginPath(); ctx.arc(130, 238, 38, 0, Math.PI * 2); ctx.fill();
@@ -153,9 +175,19 @@ export function createFinisherScene({ container, me = null, easy = () => false, 
     ctx.fillStyle = OUTLINE; ctx.fillRect(gx - 12, y(needle) - 5, gw + 24, 10);
     ctx.fillStyle = inside ? '#ffd24a' : '#e8473a'; ctx.fillRect(gx - 9, y(needle) - 3, gw + 18, 6);
   }
+  // T38: a cliff with the treasure chest; the chest climbs with the crew's progress (score / goal).
+  function drawChest(f) {
+    const t = f.tasks?.[f.task], share = t ? Math.max(0, Math.min(1, t.score / Math.max(1, t.goal))) : 0;
+    ctx.fillStyle = OUTLINE; ctx.beginPath(); ctx.moveTo(470, 300); ctx.lineTo(520, 60); ctx.lineTo(640, 40); ctx.lineTo(640, 300); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#8b7a5a'; ctx.beginPath(); ctx.moveTo(480, 300); ctx.lineTo(527, 68); ctx.lineTo(640, 50); ctx.lineTo(640, 300); ctx.closePath(); ctx.fill();
+    const y = 220 - share * 150, x = 540 + share * 20;
+    round(x - 4, y - 4, 72, 52, 10); ctx.fillStyle = OUTLINE; ctx.fill();
+    round(x, y, 64, 44, 8); ctx.fillStyle = '#b07a3a'; ctx.fill();
+    ctx.fillStyle = '#ffd24a'; ctx.fillRect(x, y + 14, 64, 6); ctx.fillRect(x + 28, y + 10, 8, 16);
+  }
   function drawCannon(s, f) {
     sea();
-    const width = easy() ? FINISHER.tasks.cannon.easyWidth : FINISHER.tasks.cannon.width, spot = spotAt(s, f.salt);
+    const d = numbers('cannon'), width = easy() ? d.easyWidth : d.width, spot = spotAt(s, f.salt, d.speed);
     const hx = value => 64 + value / 100 * 512;
     // The hull: planks with an outline, gun ports, the glowing weak spot.
     round(40, 40, 560, 150, 26); ctx.fillStyle = OUTLINE; ctx.fill();
@@ -183,7 +215,7 @@ export function createFinisherScene({ container, me = null, easy = () => false, 
     // The deck: planks, two cartoon duellists, the arrow to press with its timer ring.
     ctx.fillStyle = '#6b4226'; ctx.fillRect(0, 0, 640, 300);
     ctx.strokeStyle = '#4e2f1a'; ctx.lineWidth = 3; for (let k = 0; k < 9; k++) { ctx.beginPath(); ctx.moveTo(0, k * 36); ctx.lineTo(640, k * 36); ctx.stroke(); }
-    const L = promptLength(easy()), k = Math.floor(s / L), dir = promptAt(me ?? '', k, f.salt), share = (s % L) / L;
+    const L = promptLength(easy(), numbers('duel')), k = Math.floor(s / L), dir = promptAt(me ?? '', k, f.salt), share = (s % L) / L;
     const figure = (x, colour, flip) => {
       ctx.save(); ctx.translate(x, 210); ctx.scale(flip ? -1 : 1, 1);
       ctx.fillStyle = OUTLINE; ctx.beginPath(); ctx.ellipse(0, 0, 34, 52, 0, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(0, -70, 28, 0, Math.PI * 2); ctx.fill();
@@ -208,18 +240,20 @@ export function createFinisherScene({ container, me = null, easy = () => false, 
     root.dataset.task = t;
     card.hidden = f.phase !== 'intro';
     cardKind.textContent = KIND_TITLE[f.kind] ?? '';
+    cardTitle.textContent = CARD_TITLE[f.kind] ?? FINISHER_TITLE;
+    root.setAttribute('aria-label', f.kind === 'rescue' ? 'Last-chance rescue' : 'Boss finisher');
     panel.hidden = !(f.phase === 'task' || f.phase === 'grace');
     result.hidden = !f.outcome;
-    if (f.outcome) { resultTitle.textContent = RESULT_TEXT[f.outcome].title; resultLine.textContent = RESULT_TEXT[f.outcome].line; }
+    if (f.outcome) { resultTitle.textContent = resultText(f.kind, f.outcome).title; resultLine.textContent = resultText(f.kind, f.outcome).line; }
     const text = TASK_TEXT[t];
     const step = f.kind === 'redtide' ? ` · ${f.task + 1} of 3` : '';
     taskTitle.textContent = `${text.title}${step}`; how.textContent = text.how;
-    for (const node of [hold]) node.hidden = t !== 'haul';
+    for (const node of [hold]) node.hidden = !holdsNeedle(t);
     for (const node of [left, right, fire]) node.hidden = t !== 'cannon';
     arrowPad.hidden = t !== 'duel';
     const watcher = !f.players.includes(me);
     watch.hidden = !watcher; controls.hidden = watcher;
-    if (watcher) watch.textContent = 'You are watching: the captains in the fight do this together.';
+    if (watcher) watch.textContent = f.kind === 'rescue' ? 'You are watching: the captains on the island haul together.' : 'You are watching: the captains in the fight do this together.';
     const words = captionFor(f.kind, f.outcome ?? 'start');
     if (words !== lastCaption) { lastCaption = words; caption.textContent = words; }
   }
@@ -244,7 +278,7 @@ export function createFinisherScene({ container, me = null, easy = () => false, 
   return {
     element: root,
     resetInput() {holding = false; needle = 0; velocity = 0; aim = 50; aimKeys = 0; lastShot = -Infinity; pressedPrompt = new Map(); current = null;},
-    focusControls() { (task()?.task === 'haul' ? hold : task()?.task === 'cannon' ? fire : arrows[0]).focus(); },
+    focusControls() { (holdsNeedle(task()?.task) ? hold : task()?.task === 'cannon' ? fire : arrows[0]).focus(); },
     update({ finisher: f, dt = 0, boss = null } = {}) {
       if (disposed || !f) return;
       clock += Math.max(0, Math.min(.1, dt || 0));
@@ -261,8 +295,8 @@ export function createFinisherScene({ container, me = null, easy = () => false, 
         velocity += (want - velocity) * Math.min(1, dt * 7); needle = Math.max(0, Math.min(100, needle + velocity * dt));
         if (needle <= 0 && velocity < 0) velocity = 0;
         aim = Math.max(0, Math.min(100, aim + aimKeys * 70 * dt));
-        if (t?.task === 'haul' && playing()) recorder?.fill(f.sample, Math.round(needle));
-        if (t?.task === 'haul') drawHaul(s, f); else if (t?.task === 'cannon') drawCannon(s, f); else drawDuel(s, f);
+        if (holdsNeedle(t?.task) && playing()) recorder?.fill(f.sample, Math.round(needle));
+        if (holdsNeedle(t?.task)) drawHaul(s, f, t.task === 'rescue'); else if (t?.task === 'cannon') drawCannon(s, f); else drawDuel(s, f);
         progress(f);
       }
     },

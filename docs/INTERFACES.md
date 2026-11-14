@@ -1324,6 +1324,7 @@ A flag is off unless the setting `FEATURE_FLAGS` names it (comma separated). The
 | `festival` | the 48-hour festival after the first Relighting; private claims and friendly ring | G13; applying its migration never starts the clock |
 | `demo` | guest play for the class demo: a Supabase anonymous user may use the API after presenting the current class code (`POST /api/demo/join`) | G29 C0, D030; off by default; needs migrations 20261109010000 and 20261109020000 applied first |
 | `islands` | your island, building, visits by code and the pirate waves: `/api/island`, `/api/island/build`, `/api/island/visit/{code}`, `/api/waves/start`, `/api/waves/finish`; since D036 also `/api/island/upgrade`, `/hire`, `/captain`, `/invite/join` and `/api/pirate-point` (+ `/build`, `/upgrade`), which need migration `20261111030000` | lane 0 (D032); off by default; needs migration 20261110010000 applied first |
+| `rescue` | T38 last-chance rescue: the server honours `rescued` on `POST /api/waves/finish`, and the game offers the rescue (once the sim hook ships) | T38/T39, D044 proposed; off by default; no migration; needs `islands` |
 | `wall_recovery` | wall damage that stays after a wave (D039, proposed): `GET /api/island/walls`, `POST /api/island/repair`, `walls` on the wave routes, `409 needs_repair` on upgrade. Off: exactly the old behavior, the new columns are never read | T29–T32/T47; off by default; needs migration 20261114100000 applied first, and `islands` on |
 
 The separately guarded [disposable local API](LOCAL-TEST-SERVER.md) provides a fixture-only
@@ -1659,6 +1660,28 @@ the normal intro and scored timeline then start from zero. The controller uses
 the existing scheduled-input transport, not a new authority or database rule.
 Practice samples remain local and never enter `finisher_input`. The existing
 network latency/loss/late-join limitations still apply.
+
+### T38 last-chance rescue and T39 difficulty
+
+[D044](DECISIONS.md#d044--last-chance-rescue-and-minigame-difficulty-by-wave--2026-11-14) (proposed) and
+[the spec](../specs/T38-T39-minigames-rescue.md).
+
+- **`POST /api/waves/finish`** takes an optional `rescued` (strict boolean, default `false`; any other value is
+  `422 validation_error`). It counts only with the flag `rescue` on, for `survived: false` on an island wave from
+  4 to 100; then the server sends `p_restart_back = 1` instead of the catalogue's 2 to the existing 11-argument
+  `wave_finish()` (no migration). Anywhere else it is ignored, never refused. Loot, `waveBest`, `flags` and the
+  answer shape are unchanged. `wave_finish()` applies the restart rule only at the first finish that closes the
+  run, so a rescue settles once; a later survived finish still sets the next wave to the wave + 1.
+  The browser sends `rescued: true` only after a won rescue (`island/api.js`, `controller.js`).
+- **Wave room:** no new message. The rescue uses `finisher_input` and `finisher_ready` unchanged, with the ship
+  id `rescue` in `finisher_ready`.
+- **Sim state and events (after the sim hook):** `state().finisher` carries a finisher-shaped rescue
+  (`kind: "rescue"`, `shipId: "rescue"`, `reason`, one task `rescue`, `x`/`z` at the heart); events
+  `rescue_started {t, reason, players, goal, x, z}`, `rescue_won` / `rescue_failed {t, reason, score, goal}`,
+  `rescue_ended {t, outcome, reason}`; `result().rescued: true` after a won rescue.
+- **Difficulty snapshot:** every finisher and rescue state carries `difficulty: {task: {speed?, width?,
+  easyWidth?, share?, hits?, prompt?, easyPrompt?}}`, frozen at the run's start from the wave number
+  (`finisher/difficulty.js`). Clients of one wave must run the same version.
 
 ### Wall recovery (T29–T32, T47)
 

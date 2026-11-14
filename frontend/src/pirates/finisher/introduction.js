@@ -1,16 +1,21 @@
 // First-time practice uses the real scene with a private recorder. The controller receives only readiness.
 import {createFinisherScene, TASK_TEXT} from './scene.js';
 import {createPracticeMemory} from './practice.js';
-import {FINISHER, goalOf, scoreOf} from './rules.js';
+import {goalOf, scoreOf} from './rules.js';
+import {difficultyFor} from './difficulty.js';
 
+// The solo goal in words, from this run's numbers (T39: they grow with the wave; difficulty.js).
+const seconds = share => Math.round(share * 100) / 10;
 const GOALS = {
-  haul: 'Keep the needle in the green zone for 6 of the 10 seconds.',
-  cannon: 'Hit the glowing weak spot 7 times in 10 seconds. The cannon reloads after each shot.',
-  duel: 'Match at least 55% of the arrows in time. A wrong arrow costs one correct answer.',
+  haul: d => `Keep the needle in the green zone for ${seconds(d.share)} of the 10 seconds.`,
+  cannon: d => `Hit the glowing weak spot ${d.hits} times in 10 seconds. The cannon reloads after each shot.`,
+  duel: d => `Match at least ${Math.round(d.share * 100)}% of the arrows in time. A wrong arrow costs one correct answer.`,
+  rescue: d => `Keep the needle in the green zone for ${seconds(d.share)} of the 10 seconds to save the treasure.`,
 };
 const KEYS = {haul: 'Hold Space or the Haul button; release to lower the needle.',
   cannon: 'Aim with the pointer or Left/Right. Click, press F or Space, or tap Fire.',
-  duel: 'Use arrow keys, WASD, or the four arrow buttons.'};
+  duel: 'Use arrow keys, WASD, or the four arrow buttons.',
+  rescue: 'Hold Space or the Haul button; release to lower the needle.'};
 
 export function createFinisherIntroduction(options) {
   const memory = createPracticeMemory(options.practiceIdentity ?? {}), marks = new Map();
@@ -58,7 +63,7 @@ export function createFinisherIntroduction(options) {
       }
       guide.hidden = false; scene.element.dataset.learning = mode;
       title.textContent = task ? `${mode === 'practice' ? 'Practice: ' : 'Learn: '}${TASK_TEXT[task].title}` : 'Waiting for the crew';
-      text.textContent = mode === 'practice' ? 'Practice only. Try the controls below, then choose Finish practice or wait for the next step.' : task ? `${GOALS[task]} ${KEYS[task]} This is the solo goal; the crew shares the real target. Practice does not count toward the battle.` : 'The scored attempt starts when the crew is ready.';
+      text.textContent = mode === 'practice' ? 'Practice only. Try the controls below, then choose Finish practice or wait for the next step.' : task ? `${GOALS[task](f.difficulty?.[task] ?? difficultyFor(task))} ${KEYS[task]} This is the solo goal; the crew shares the real target. Practice does not count toward the battle.` : 'The scored attempt starts when the crew is ready.';
       const message = `Automatic start in ${Math.ceil(f.prepareLeft)} s. ${f.ready.length} of ${f.players.length} ready.`;
       if (status.textContent !== message) status.textContent = message;
       actions.hidden = !playing || mode === 'ready';
@@ -67,9 +72,11 @@ export function createFinisherIntroduction(options) {
       if (mode !== 'practice') {scene.update({finisher: f, dt, boss}); return;}
       elapsed += Math.max(0, Math.min(.1, dt));
       const sample = Math.min(99, Math.floor(elapsed * 10)), salt = f.salt;
-      const score = scoreOf(task, options.me, marks, {salt, easy: options.easy?.() === true});
-      const goal = goalOf(task, [options.me], {easy: new Map([[options.me, options.easy?.() === true]])});
-      scene.update({finisher: {...f, phase: 'task', kind: task, task: 0, sample, players: [options.me],
+      // T39: practice uses the same numbers as the scored attempt (the run's frozen difficulty).
+      const difficulty = f.difficulty?.[task];
+      const score = scoreOf(task, options.me, marks, {salt, easy: options.easy?.() === true, difficulty});
+      const goal = goalOf(task, [options.me], {easy: new Map([[options.me, options.easy?.() === true]]), difficulty});
+      scene.update({finisher: {...f, phase: 'task', kind: f.kind === 'rescue' ? 'rescue' : task, task: 0, sample, players: [options.me],
         tasks: [{task, from: 0, to: 100, score, goal, cleared: score >= goal, players: {[options.me]: score}}]}, dt, boss});
       if (focusPractice) {scene.focusControls(); focusPractice = false;}
       if (elapsed >= 10) next();
