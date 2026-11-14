@@ -783,3 +783,19 @@ The existing wave-room limits on late/lost messages and late joins remain; local
 browser evidence is not proof of real Supabase delivery. A fully authoritative
 network barrier would need a separate design. See [the spec](../specs/T28-minigame-introduction.md)
 and [message contract](INTERFACES.md#t28-boss-minigame-preparation).
+
+## D040 · Enemy targets and wall pathing (T34/T35) · 2026-11-14
+
+**Status:** proposed. Agreed by: pending team review. Design and pure modules on branch `feat/t34-t35-targeting-pathing`; not wired into `sim.js` yet. Work authorized by Nils (`Nilsnova`); roadmap by Ianno (`Iannomh123456`).
+
+**Decision (proposed):**
+
+- **Targets by enemy type.** A boarder goes for a captain or militia in reach (3), then the wall in its way, then a tower with hp (after T33) within 2.5, then the heart; reach, leash (5) and crowd (3) stay today's `CONFIG.health` numbers. A proposed `brute` profile (walls, towers, then a captain only within 1.5) stays off until the team accepts it. Ships and gunboats keep their current targets.
+- **Switching and ties.** Keep the current target while valid; switch only when it is no longer valid or a kind earlier in the order turns up. Equal distances (within 1e-9) go to the lower id; input order never matters. No target through a standing wall.
+- **Breach versus detour by one cost.** Boarders walk a 1-unit grid. Walking costs its distance; entering a standing wall costs the time to hack it (hp in quarter steps) as walking distance. The cheaper way wins, so gaps are used when quicker and closed rings are breached. Whole-number costs and index tie-breaks give the same route in every browser.
+- **Recompute only on wall changes.** One shared distance field to the heart, rebuilt when a wall is placed, moved, removed, broken, rebuilt or passes a quarter of its hp. Every step lowers the remaining cost, so no loops; a boarder inside a wall rebuilt around it steps out; a goal cut off by water is unreachable and the boarder waits.
+- **Walls as a generic list** (`cells`, a `from`/`to` segment, or a point), so T36 placement fits without spot ids.
+
+**Why:** fixed routes cannot use gaps, react to rebuilt walls or handle flexible placement, and towers with hp (T33) need a target rule. A distance field is simple to explain, provably loop-free and measured at about 1 ms per tick for 300 boarders.
+
+**Alternatives and trade-offs:** per-boarder A* (more work per boarder, same routes); always breaching (no gaps, today's spirit, but T36 walls would mean nothing); always detouring (walls never hacked). Lone short walls are walked round, so today's isolated spots lose value under the new rule: before T36, either keep the legacy routes (option A) or join the ring spots into a closed ring (option B); a balance decision with T3. The wiring needs a wave option `pathing` so a mixed-version room never mixes rules. See [the spec](../specs/T34-T35-targeting-pathing.md).
