@@ -44,10 +44,15 @@ class Database:
     async def select_rows(self, table, query):
         self.calls.append((table, query))
         if table == "profiles":
-            return [{"display_name": "Captain " + str(UUID(query["id"][3:]).int)}]
+            ids = query["id"].removeprefix("in.(").removesuffix(")").split(",")
+            return [{"id": i, "display_name": "Captain " + str(UUID(i).int)} for i in ids]
         if table == "wave_participants":
-            count = self.crews.get(query["wave_id"][3:], 1)
-            return [{"player_id": str(UUID(int=n + 1))} for n in range(count)]
+            ids = query["wave_id"].removeprefix("in.(").removesuffix(")").split(",")
+            return [
+                {"wave_id": i, "player_id": str(UUID(int=n + 1))}
+                for i in ids
+                for n in range(self.crews.get(i, 1))
+            ]
         return next(self.pages)
 
 
@@ -154,8 +159,39 @@ def test_crew_counts_the_captains_of_the_scoring_run_only():
     result = run(admin)
     assert [(e.name, e.crew) for e in result.entries] == [("Captain 1", 3), ("Captain 2", 1)]
     asked = [q["wave_id"] for t, q in admin.calls if t == "wave_participants"]
-    assert asked == [f"eq.{run_id(1, 30)}", f"eq.{run_id(2, 28)}"]
-    assert [q["select"] for t, q in admin.calls if t == "wave_participants"] == ["player_id"] * 2
+    assert asked == [f"in.({run_id(1, 30)},{run_id(2, 28)})"]
+    assert [q["select"] for t, q in admin.calls if t == "wave_participants"] == [
+        "wave_id,player_id"
+    ]
+
+
+def test_a_board_costs_one_runs_page_plus_two_batched_reads():
+    """Ten rows used to cost 1 + 10 + 10 reads; now the extras are one names and one crews read."""
+    owners = range(1, 11)
+    admin = Database([[row(i, 100 - i) for i in owners]])
+    result = run(admin)
+    assert [t for t, _ in admin.calls] == ["wave_runs", "profiles", "wave_participants"]
+    assert [(e.rank, e.name, e.wave, e.crew) for e in result.entries] == [
+        (i, f"Captain {i}", 100 - i, 1) for i in owners
+    ]
+    assert admin.calls[1][1]["id"] == "in.(" + ",".join(str(UUID(int=i)) for i in owners) + ")"
+
+
+def test_an_empty_board_reads_nothing_more():
+    admin = Database([[]])
+    assert run(admin).entries == []
+    assert [t for t, _ in admin.calls] == ["wave_runs"]
+
+
+def test_a_missing_profile_fails_closed():
+    class NoProfiles(Database):
+        async def select_rows(self, table, query):
+            if table == "profiles":
+                return []
+            return await super().select_rows(table, query)
+
+    with pytest.raises(ApiError):
+        run(NoProfiles([[row(1, 30)]]))
 
 
 def test_a_run_without_recorded_captains_still_counts_one():
@@ -195,16 +231,7 @@ def test_route_scope_chooses_the_board_and_refuses_unknown_scopes(monkeypatch):
     assert world.client.get("/api/island/leaderboard?scope=ever", headers=PLAYER).status_code == 422
 
 
-def test_crew_size_is_capped_at_ten(monkeypatch):
+def test_crew_is_capped_at_ten():
     """A run whose participant list outgrew a full room (joined and left) shows at most 10."""
-    import asyncio
-    from uuid import uuid4
-
-    from server.island import leaderboard
-
-    class Admin:
-        async def select_rows(self, table, params):
-            return [{"player_id": str(uuid4())} for _ in range(13)]
-
-    monkeypatch.setattr(leaderboard, "read_model", lambda model, raw: raw)
-    assert asyncio.run(leaderboard.crew_size(Admin(), uuid4())) == leaderboard.MAX_CREW == 10
+    admin = Database([[row(1, 30)]], {run_id(1, 30): 13})
+    assert run(admin).entries[0].crew == leaderboard.MAX_CREW == 10
