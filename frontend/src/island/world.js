@@ -6,7 +6,7 @@
 import * as THREE from 'three';
 import {artSizes, loadArt, placeArt, projectPoint} from '../world/art.js';
 import {pixelSizes} from '../pixel/catalog.js';
-import {SPOTS as ISLAND_SPOTS, CABIN, BELL, CAMPAIGN_BUILDINGS, islandZones} from './spots.js';
+import {SPOTS as ISLAND_SPOTS, CABIN, BELL, CAMPAIGN_BUILDINGS, ARSENAL, islandZones} from './spots.js';
 import {isOpen, spotWave, waveOf} from '../campaign/index.js';
 import {LOCK_WAVES} from '../art/campaign.js';
 import {SLOT_KINDS} from './td-rules.js';
@@ -189,12 +189,15 @@ export function decorateIsland(place, ctx = {}) {
     }
     campaignMeshes.set(building.id, meshes);
   }
+  // The arsenal (T41): drawn once, shown while the flag "arsenal" is on (apply's `arsenal`).
+  const arsenalMesh = layout.bell === false ? null : sprite(root, drawn(ARSENAL.art), ARSENAL.x, ARSENAL.z, 'island-arsenal');
+  if (arsenalMesh) arsenalMesh.visible = false;
   if (layout.cabin !== false && ctx.art?.cabin) placeArt(root, ctx.art, 'cabin', CABIN.x, CABIN.z).name = 'island-cabin';
   // The reach of a house's role while its card is open (GAME-V3.md "Houses"): a soft disc with a bright rim on
   // the ground, in the role's colour. ctx.range() says which ({x, z, radius, role} or null), read every frame.
   const rangeRing = makeRangeRing(root);
   const baseColliders = [...place.colliders];
-  let state = {spots: [], visitor: false, battle: false, unlocks: null, crew: null, campaign: null}, disposed = false;
+  let state = {spots: [], visitor: false, battle: false, unlocks: null, crew: null, campaign: null, arsenal: false}, disposed = false;
   // The real art once it has loaded (null until then: the drawn sprites stand in), and what each spot shows.
   let art = null;
   const shown = new Map(); // spot id (or 'crew') -> {key, meshes}
@@ -232,10 +235,11 @@ export function decorateIsland(place, ctx = {}) {
 
   // battle: a wave is on screen; its renderer (src/pirates/render.js) draws the walls and cannons with
   // their damage, so the island's own wall and cannon sprites step aside until it ends.
-  function apply({spots = [], visitor = false, battle = false, unlocks = null, crew = null, campaign = null} = {}) {
+  function apply({spots = [], visitor = false, battle = false, unlocks = null, crew = null, campaign = null, arsenal = false} = {}) {
     if (disposed) return;
-    state = {spots, visitor, battle, unlocks, crew, campaign};
+    state = {spots, visitor, battle, unlocks, crew, campaign, arsenal: arsenal === true};
     const known = spots.length > 0;
+    if (arsenalMesh) arsenalMesh.visible = known && state.arsenal;
     progress?.apply(campaign, spots, known);
     for (const [id, meshes] of campaignMeshes) {
       const frame = known ? campaignArt(CAMPAIGN_BUILDINGS.find(item => item.id === id), campaign) : null;
@@ -262,7 +266,7 @@ export function decorateIsland(place, ctx = {}) {
     // The wave's renderer draws the crew during a battle; outside one they stand by their posts.
     if (art) showCrew(spots, crew, battle);
     if (layout.zones === islandZones) {
-      place.zones = islandZones({visitor});
+      place.zones = islandZones({visitor, arsenal: state.arsenal});
       place.colliders.splice(0, place.colliders.length, ...baseColliders,
         {x: CABIN.x, z: CABIN.z - 1.8, width: 4.8, depth: 3.6, island: true});
     } else place.zones = [...baseZones, ...(known ? layout.zones() : [])];
@@ -283,6 +287,7 @@ export function decorateIsland(place, ctx = {}) {
   function pickAt(x, z) {
     const candidates = [...SPOTS.map(spot => ({id: spot.id, x: spot.x, z: spot.z, w: 2.4, h: spot.kind === 'watchtower' ? 5 : 3})),
       ...(bell ? [{id: BELL.id, x: BELL.x, z: BELL.z, w: 1.6, h: 3.4}] : []),
+      ...(arsenalMesh?.visible ? [{id: ARSENAL.id, x: ARSENAL.x, z: ARSENAL.z, w: ARSENAL.w / 2, h: ARSENAL.h}] : []),
       ...(campaignMeshes.size ? CAMPAIGN_BUILDINGS.map(item => ({id: item.id, x: item.x, z: item.z, w: item.w, h: item.h})) : []),
       ...(state.visitor || layout.cabin === false ? [] : [{id: CABIN.id, x: CABIN.x, z: CABIN.z, w: 3, h: 6}])];
     let best = null, bestScore = Infinity;

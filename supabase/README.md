@@ -20,6 +20,7 @@ The browser only reads from this database. Every write comes from our Python ser
 | [migrations/20261106110000_lantern_duels.sql](migrations/20261106110000_lantern_duels.sql) | The third migration, for Lantern Duels (package A7): two wallet reasons, two tables and three functions. Run it after the second. See [The Lantern Duels migration](#the-lantern-duels-migration). |
 | [migrations/20261109010000_demo_window.sql](migrations/20261109010000_demo_window.sql) | The class demo (G29 C0, D029): the host's demo window for guest play and the answers of the Keeper's Lock. Three tables and three functions, no wallet reason. Run it after the whole 20261106 chain, before the flag `demo` goes on. See [Class demo migration](#class-demo-migration-20261109010000). |
 | [migrations/20261109020000_class_code.sql](migrations/20261109020000_class_code.sql) | The class code (G29, D030): the current class code, its audit and the admitted guests (three tables, five functions), and the guest condition `(not jwt_is_anonymous() or is_admitted_guest())` on every browser policy (16 tables and the five Realtime policies). Run it after every earlier file. See [Class code migration](#class-code-migration-20261109020000). |
+| [migrations/20261114120000_arsenal.sql](migrations/20261114120000_arsenal.sql) | The shared island arsenal (T40/T41, D042): two tables (`arsenal_copies`, `arsenal_moves`), a commit-time capacity trigger and the `arsenal_*` functions. Changes no existing row when applied. Apply it before the flag `arsenal` goes on. See [The arsenal migration](#the-arsenal-migration). |
 
 ## G10 follow-up migration (140000)
 
@@ -295,6 +296,27 @@ It also adds three wallet reasons (`pirate_loot` earn, `starting_coins` earn, `f
 | `market_calls` | read / insert / update | no access | no access | yes (through the two functions) |
 | `market_calls` | delete | no access | no access | no access (deleted with its player, by cascade) |
 | `market_call_open()`, `market_call_settle()` | run | no access | no access | yes |
+
+## The arsenal migration
+
+`migrations/20261114120000_arsenal.sql` (T40/T41, decision D042) is the database part of the island arsenal ([INTERFACES.md](../docs/INTERFACES.md#shared-island-arsenal-t40t41)). Apply it after every earlier file, then switch the flag `arsenal` on; while the flag is off nothing reads it and the old weapon shop keeps working. **Applying it changes no existing row**: a player's old personal weapons (`islands.weapons_owned`) become copies the first time their island's arsenal is opened with the flag on (`arsenal_convert_island()`, called by `arsenal_state()`); `select public.arsenal_convert_personal_weapons();` does it for everyone at once (optional, as `service_role`, safe to repeat). It adds no wallet reason: a copy is bought with the existing `weapon_purchase` (spend), ref `arsenal:<actionUid>`.
+
+| Name | What it is | Who changes it |
+|---|---|---|
+| `arsenal_copies` | One row per weapon copy of an island: rack number, type (never the musket), `holder` (null = stored, else the one captain who carries it), who bought it. Unique `(island_owner, holder)` where carried: one copy per captain per island. A deferred constraint trigger refuses more than 20 stored copies per island at commit. RLS on, no policy, no browser grant. | Only the `arsenal_*` functions. |
+| `arsenal_moves` | One row per arsenal click (buy, take, return), primary key `(player_id, action_uid)`: a repeat changes nothing. RLS on, no policy, no browser grant. | Only the `arsenal_*` functions. |
+| `arsenal_may()` | The permission rule (any active member of the island's game, the host included). T37 replaces it. | Read by the functions. |
+| `arsenal_state()` | Locks the island row, converts the owner's old weapons, puts copies of departed captains back while there is room, answers the arsenal. | Run by the server only. |
+| `arsenal_buy()` | Locks the wallet, then the island; repeat-safe; refuses `not_member`, `wave_running`, `locked`, `arsenal_full`, `insufficient_funds`; pays through `apply_wallet_transaction()`. | Run by the server only. |
+| `arsenal_take()`, `arsenal_return()` | Withdraw or atomic swap; return (refused `arsenal_full` on a full rack, the copy stays carried). Lock the island row; repeat-safe. | Run by the server only. |
+
+Opt-in SQL checks (20-slot cap, exclusive possession, repeats, concurrent claims and returns on committed data, full-rack return, departed captains, conversion): `CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql/test_arsenal_sql.py` from `backend/`. The read-only checks after applying are in the migration's header (a to e).
+
+| `arsenal_copies` | read / insert / update | no access | no access | yes (through the functions) |
+| `arsenal_copies` | delete | no access | no access | no access (deleted with its island or its holder's account, by cascade) |
+| `arsenal_moves` | read / insert | no access | no access | yes (through the functions) |
+| `arsenal_moves` | update / delete | no access | no access | no access |
+| `arsenal_state()`, `arsenal_buy()`, `arsenal_take()`, `arsenal_return()`, `arsenal_convert_*()` and their helpers | run | no access | no access | yes |
 
 ## Apply the migration
 

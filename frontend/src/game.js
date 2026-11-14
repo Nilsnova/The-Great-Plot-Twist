@@ -206,7 +206,9 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
         // The Harbor building (GAME-V3.md §4) opens the same stalls as the old Harbor overview.
         openHarborStall:id=>void(id==='weather'?harbor.openWeather():id==='market'?openMarket():id==='match'?sportsUi.open().catch(()=>{}):null),
         // The visit chip: the old "Visiting … · Sail home" only where travel applies (src/island/one-island.js).
-        travel:()=>travelOpen()});
+        travel:()=>travelOpen(),
+        // The arsenal (T41, D042): the server's flag "arsenal"; in the dev fake only with ?arsenal=1.
+        arsenalOn:()=>islandsMode==='fake'?new URLSearchParams(location.search).get('arsenal')==='1':findPanelServices(session)?.getFlags?.()?.arsenal===true});
       if(adapter)island.setPresence(adapter.read()?.presence);
       void ensureWaves();
       return island;

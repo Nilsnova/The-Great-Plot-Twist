@@ -306,3 +306,9 @@ html:has(.island-card-docked[open]) .quest-strip{visibility:hidden}
 .island-leaderboard-row.is-rank-1 .island-leaderboard-rank { background: #f3c34f; }
 .island-leaderboard-row.is-rank-2 .island-leaderboard-rank { background: #c9d1d5; }
 .island-leaderboard-row.is-rank-3 .island-leaderboard-rank { background: #d39a65; }
+/* The arsenal card (T41, D042): what you carry, the rack (stored n of 20) and the crew's shop. */
+.island-arsenal-carry,.island-arsenal-rack,.island-arsenal-shop{display:grid;gap:var(--u-2);min-width:0}
+.island-arsenal-name{font-size:1.05em}
+.island-arsenal-stats{margin:0;font-variant-numeric:tabular-nums;opacity:.85}
+.island-arsenal-type.is-locked{opacity:.7}
+.island-arsenal-copy .island-crew-text,.island-arsenal-type .island-crew-text{min-width:0}

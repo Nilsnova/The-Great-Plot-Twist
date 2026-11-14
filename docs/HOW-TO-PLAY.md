@@ -142,6 +142,18 @@ New things open when your game first **wins** a wave. A toast and the narrator s
 
 What you may build follows the best wave won on that island, whoever pays. Your captain, crew and weapons follow your own best wave.
 
+## The arsenal (once the team switches it on)
+
+The arsenal is a stone armory north-west of the island's heart, between the watchtower hill and the west house. Walk up to it and press **E** (or tap it, or **Use**). Your crew shares its weapons: up to 20 stored on the rack, and every captain carries at most one.
+
+- **Take** a stored weapon to carry it. If you carry one already, **Swap** puts yours back and takes the other in one step (this works even on a full rack).
+- **Return to the rack** gives your weapon back for a crewmate. A full rack (20 of 20) cannot take it: swap instead; you keep it, nothing is lost.
+- **Buy** a new copy with your own coins. It goes into your hands, or onto the rack if you already carry one. Each weapon opens after the wave shown on the card.
+- Every captain always has the **musket**. The card shows each weapon's damage, range and reload for your captain level, and who carries each copy.
+- Between waves only. A weapon stays with you when you reload or lose the connection.
+
+While the arsenal is on, weapons are bought there instead of in Menu › Captain and skills.
+
 ## The Harbor
 
 The Harbor is a building on the east beach. Walk up to it and press **E** (or **Use**).

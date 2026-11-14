@@ -432,3 +432,14 @@ its resting arms and uses two sleeves/hands connected to the grip. Existing pale
 48 × 32 box and feet anchor are reused; the aiming gun is shorter so it fits
 while rotating. One reusable texture is painted per visible firing captain
 by [shot-art.js](src/pirates/shot-art.js). No downloaded art or new license.
+
+## T41 island arsenal (14 Nov 2026)
+
+Original code-drawn arsenal building: [src/art/arsenal.js](src/art/arsenal.js), registered in
+[src/art/registry.js](src/art/registry.js) and painted with the existing [paint kit](src/art/paint.js)
+in the cartoon style of the Tech hub and the Harbor (src/art/campaign.js). Responsible: Nils
+(`Nilsnova`); drafted with a coding agent. No third-party image, font or license.
+
+| Frame | Size | What it shows |
+|---|---|---|
+| `island-arsenal` | 80 × 80 (anchor 8) | Stone armory with a slate roof and ridge cap, an iron-banded timber door under a brass crossed-muskets shield, a weapon rack with three guns, a red-banded powder barrel and a red pennant |

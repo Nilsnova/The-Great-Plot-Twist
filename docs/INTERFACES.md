@@ -1652,3 +1652,27 @@ the normal intro and scored timeline then start from zero. The controller uses
 the existing scheduled-input transport, not a new authority or database rule.
 Practice samples remain local and never enter `finisher_input`. The existing
 network latency/loss/late-join limitations still apply.
+
+## Shared island arsenal (T40/T41)
+
+[D042](DECISIONS.md#d042--shared-island-arsenal-20-stored-copies-and-the-weapon-table--2026-11-14) and
+[the spec](../specs/T40-T41-arsenal.md). The source of truth is the comment at the top of
+`backend/server/routes/arsenal.py`; the database part is `supabase/migrations/20261114120000_arsenal.sql`
+([supabase/README.md](../supabase/README.md#the-arsenal-migration)).
+
+- **Flag:** `arsenal` (new in `FLAG_NAMES`, off by default) on top of `islands`. Off: every arsenal route answers
+  `404 feature_off`, the browser draws no arsenal and the old weapon shop (`POST /api/island/weapon/buy|equip`)
+  works as before. On: `POST /api/island/weapon/buy` answers `409 use_arsenal`.
+- **Routes:** `GET /api/island/arsenal?code=` → `{code, capacity: 20, stored, mine, carried, waveRunning, coins,
+  unlockWave, copies: [{id, no, weapon, name, holder, holderName, away, you}], types: [{id, name, price, unlockWave,
+  unlocked}]}`; `POST /api/island/arsenal/buy {weapon, actionUid, code?}`, `/take {copy, actionUid, code?}`,
+  `/return {actionUid, code?}` answer the same shape. Errors: `400 bad_weapon`, `403 not_member`, `404
+  no_such_island | no_such_copy`, `409 standard_weapon | locked | arsenal_full | insufficient_funds | taken |
+  nothing_held | wave_running | action_used`. A repeated `actionUid` changes nothing; a 5xx means "unknown,
+  repeat with the same id" (`frontend/src/island/arsenal-api.js` keeps it).
+- **Money:** wallet reason `weapon_purchase` (existing), ref `arsenal:<actionUid>`, paid by the buyer only.
+- **Browser:** zone and building id `island_arsenal` (`frontend/src/island/spots.js`), art `island-arsenal`.
+  After a move the client emits `island_spots_changed {place, spot: 'island_arsenal'}`, so the room's existing
+  `island_changed` makes crewmates read the island and the arsenal again; locally also `arsenal_changed
+  {carried}`. `createIsland({arsenalOn})` gets the flag from `/api/config` (`game.js`); the wave's
+  `captainLoadout().weapon` is the carried copy's type on the island on screen, else the musket.

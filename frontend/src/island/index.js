@@ -15,6 +15,7 @@
 //   enterGame({code, role}) / openLobby()       the games of GAME-V3.md §2: which game Play opens, its lobby
 //   attachGame(room)                           the game's room state (game-room.js, from the wave wiring)
 //   openHarbor(id) / openTechHub() / openWreck()  the campaign's buildings (GAME-V3.md §4, §5)
+//   arsenal                                    the shared weapon rack (T41, D042, flag "arsenal": arsenalOn()), arsenal.js
 // Events it emits on the game's bus: island_built {kind, spot}, island_upgraded {kind, spot, level},
 // campaign_unlocked {wave, ids, code} (a won wave opened something on the island on screen, once per
 // island and wave on this page; the narrator plays its lines), tower_specialised {spot, spec},
@@ -24,8 +25,10 @@ import {createIslandApi} from './api.js';
 import {createWaveFlow} from './wave-flow.js';
 import {createIslandUi} from './ui.js';
 import {decorateIsland} from './world.js';
+import {createArsenal} from './arsenal.js';
+import {createArsenalApi} from './arsenal-api.js';
 import {SPOTS, KINDS, BELL, CABIN, ISLAND_PLACE, POINT_PLACE, PP_SPOTS, isIslandZone, isPointSpot, spotById, ppSpotById, pointZones, defenses, slotName,
-  campaignBuilding} from './spots.js';
+  campaignBuilding, ARSENAL} from './spots.js';
 import {buildCardModel, bellModel, inviteModel, crewModel, captainModel, captainsModel, skillsModel, weaponsModel, coinText,
   harborModel, techModel, wreckModel, demolishModel, refundToast} from './card-model.js';
 import {campaignOf, openedBetween, opensText, waveOf} from '../campaign/index.js';
@@ -62,7 +65,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   search = globalThis.location?.search ?? '', focus = () => {}, resetInput = () => {}, reducedMotion = () => false,
   preferences = () => ({}), storage = safeLocal(), visitStorage = undefined, loadCutscenes = () => import('../cutscenes/player.js'),
   onCoins = () => {}, onCaptain = () => {}, menu = addMenuExtras, now, setTimer, clearTimer, openHarborStall = () => {},
-  travel = () => travelAllowed({islandsMode: mode})} = {}) {
+  travel = () => travelAllowed({islandsMode: mode}), arsenalOn = () => false} = {}) {
   let disposed = false, own = null, ownMessage = '', visiting = null, visitCode = readVisit(visitStorage), busySpot = null, cardMessage = '';
   let world = null, cutscene = null, openSpot = null, loadTicket = 0, battle = false;
   let pointBattle = false;
@@ -111,7 +114,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     if (!before || !next) return;
     // A won wave may bring a skill point (§14) or a weapon in the shop (§15).
     const from = readUnlocks(before).wonWave, to = readUnlocks(next).wonWave;
-    for (const weapon of WEAPONS) if (weapon.unlockWave > from && weapon.unlockWave <= to) ui.toast(`New in the weapon shop: ${weapon.name}!`, 'success');
+    const shop = arsenalOn() === true ? 'the arsenal' : 'the weapon shop';
+    for (const weapon of WEAPONS) if (weapon.unlockWave > from && weapon.unlockWave <= to) ui.toast(`New in ${shop}: ${weapon.name}!`, 'success');
     const gained = (next.skills?.points ?? 0) - (before.skills?.points ?? 0);
     if (gained > 0 && (next.skills?.spent ?? 0) === (before.skills?.spent ?? 0)) {
       ui.toast(gained === 1 ? 'New skill point!' : `${gained} new skill points!`, 'success', firstTime('skill_point') ? 'Spend it in Menu › Captain and skills.' : '');
@@ -141,6 +145,10 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const live = {get: path => (getTransport()?.get?.(path) ?? notReady()), post: (path, body) => (getTransport()?.post?.(path, body) ?? notReady())};
   const api = createIslandApi({transport: transport ?? live});
   const ui = createIslandUi({container, focus, resetInput});
+  // The arsenal (T41, D042): only while the server's flag "arsenal" is on; off, the old weapon shop stays.
+  const arsenal = createArsenal({api: createArsenalApi({transport: transport ?? live}), ui, emit, enabled: () => arsenalOn() === true,
+    code: () => (visiting ? displayIslandCode(visiting.code) : visitCode ? displayIslandCode(visitCode) : null),
+    place: () => (visiting ? 'visit' : 'own'), level: () => own?.captain?.level ?? 1, onCoins: coins => tookCoins(coins)});
   const placeholder = mode === 'fake' || new URLSearchParams(search).get('wavedebug') === '1';
   const target = () => visiting ?? own;
   const where = () => (visiting ? displayIslandCode(visiting.code) : 'own');
@@ -179,7 +187,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   });
 
   function applyWorld() {
-    world?.apply({spots: target()?.spots ?? [], visitor: !!visiting, battle, unlocks: islandUnlocks(), crew: target()?.crew ?? null, campaign: campaign()});
+    world?.apply({spots: target()?.spots ?? [], visitor: !!visiting, battle, unlocks: islandUnlocks(), crew: target()?.crew ?? null, campaign: campaign(),
+      arsenal: arsenalOn() === true});
     pointWorld?.apply({spots: point?.spots ?? [], visitor: false, battle: pointBattle, unlocks: unlocks()});
   }
   function endVisit() { visiting = null; visitCode = null; forgetVisit(visitStorage); ui.visit(null); }
@@ -244,6 +253,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     }
     applyWorld(); refreshCard();
     void syncGame();
+    void arsenal.refresh();
     if (target()) await flow.look(where());
     return {ok: true};
   }
@@ -348,7 +358,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       captain: captainModel({captain: own?.captain ?? null, coins: own?.coins ?? null, unlocks: own ? unlocks() : null, busy: busyCaptain, message: captainTab === 'captain' ? message : ''}),
       skills: skillsModel({skills: own?.skills ?? null, wonWave, picked: pickedSkill, busy: busySkill, message: captainTab === 'skills' ? message : '',
         coins: own?.coins ?? null, captainLevel: own?.captain?.level ?? 1, pickedRole, busyRole, respecAsk, busyRespec, battle: battle && !waveOver}),
-      weapons: weaponsModel({weapons: own?.weapons ?? null, coins: own?.coins ?? null, wonWave, busy: busyWeapon, message: captainTab === 'weapons' ? message : ''})};
+      // With the arsenal on (D042) weapons live there: the Weapons tab goes away.
+      weapons: arsenalOn() === true ? null : weaponsModel({weapons: own?.weapons ?? null, coins: own?.coins ?? null, wonWave, busy: busyWeapon, message: captainTab === 'weapons' ? message : ''})};
   };
   const captainHandlers = {upgrade: () => void upgradeCaptain(), tab: id => { captainTab = id; },
     pick: id => { pickedSkill = id; cardMessage = ''; refreshCard(); }, learn: id => void learnSkill(id),
@@ -386,6 +397,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     else if (ui.open === 'tech') ui.techCard(tech(), techHandlers);
     else if (ui.open === 'wreck') ui.wreckCard(wreck(), wreckHandlers);
     else if (ui.open === 'demolish') ui.demolishCard(demolishCardModel(), demolishHandlers);
+    else if (ui.open === 'arsenal') arsenal.redraw();
   }
   // The Tear down button follows the wave on screen (off while it runs, on again in its break).
   function refreshCardIfBuild() { if (ui.open === 'build' && openSpot) refreshCard(); }
@@ -436,6 +448,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     else if (id === 'island_harbor') openHarbor();
     else if (id === 'island_techhub') openTechHub();
     else if (id === 'island_wreck') openWreck();
+    else if (id === ARSENAL.id && arsenalOn() === true) { openSpot = null; arsenal.open(); }
     else if (spotById(id) || isPointSpot(id)) openBuild(id);
   }
 
@@ -454,6 +467,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   async function refreshDefended() {
     if (disposed) return;
     if (visiting) await reloadVisit(); else if (own) await reloadOwn(); else return;
+    await arsenal.refresh(); // the weapon you carry is read again before every wave
     refreshCard();
   }
   async function took(answer, place) {
@@ -830,6 +844,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     label(zone) {
       if (zone === BELL.id) return flow.current && !flow.current.joined ? 'Join the defense' : 'Ring the harbor bell';
       if (zone === CABIN.id) return 'Players and invite';
+      if (zone === ARSENAL.id) return 'Open the arsenal';
       const building = campaignBuilding(zone);
       if (building) {
         const shown = campaign();
@@ -846,7 +861,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     },
     // Where the floating prompt hangs: the spot's world point and how far above it the building is drawn.
     anchor(zone) {
-      const thing = spotById(zone) ?? ppSpotById(zone) ?? (zone === BELL.id ? BELL : zone === CABIN.id ? CABIN : campaignBuilding(zone));
+      const thing = spotById(zone) ?? ppSpotById(zone) ?? (zone === BELL.id ? BELL : zone === CABIN.id ? CABIN : zone === ARSENAL.id ? ARSENAL : campaignBuilding(zone));
       if (!thing) return null;
       return {x: thing.x, z: thing.z, lift: thing.kind === 'watchtower' ? 4.6 : thing.h ? Math.min(4.6, thing.h * .7) : 2.6};
     },
@@ -856,8 +871,10 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     },
     load, loadPoint, playArrival, visit, sailHome, pick, build, upgrade, hire, upgradeCaptain, learnSkill, takeRole, respecCaptain, buyWeapon, equipWeapon, setPresence,
     // Your captain for the wave (src/pirates/game-wiring.js): level, learnt skills (§14), equipped weapon (§15).
-    captainLoadout: () => ({level: own?.captain?.level ?? 1, skills: readSkills([...(own?.skills?.known ?? []), ...(isRole(own?.skills?.role) ? [own.skills.role] : [])]), weapon: readWeapon(own?.weapons?.equipped),
+    captainLoadout: () => ({level: own?.captain?.level ?? 1, skills: readSkills([...(own?.skills?.known ?? []), ...(isRole(own?.skills?.role) ? [own.skills.role] : [])]), weapon: arsenal.weapon() ?? readWeapon(own?.weapons?.equipped),
       colour: captainColour()}),
+    // The arsenal of the island on screen (T41): open(), refresh(), weapon(), answer.
+    arsenal,
     // Captain colours (GAME-V3.md §7): each member's 0-9 by join order, and your own (src/island/lobby.js).
     colourOf, captainColour,
     openLeaderboard, openInvite, openCrew, openCaptain, openCaptains, openLobby, enterGame, leaveGame, openHarbor, openTechHub, openWreck,
