@@ -746,3 +746,33 @@ establish the full result. Concurrent deletion can shift pages; there is no SQL
 snapshot, live database proof or anti-cheat upgrade in this task. Revisit a database
 aggregate/index if measured usage outgrows this bounded query. See the
 [API contract](INTERFACES.md#weekly-island-leaderboard-t7).
+
+## D038 · Personal boss practice before the shared attempt · 2026-11-14
+
+**Status:** requested by Ianno in [T28 / issue #18](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/18); implemented in [PR #19](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/19); independent human review pending.
+
+**Decision:** Explain Haul the chain, Aim the great cannon and Board and duel, with
+optional practice or skip on first use per player, island and task. This applies
+equally in solo and multiplayer, including Redtide's tasks. The actual multiplayer
+attempt still has one shared crew target; Ianno explicitly confirmed that only
+the introduction and practice are personal. Reuse the current cartoon stage,
+parchment cards, buttons and scoring rules, with a private practice recorder.
+
+**Why:** New players should learn the controls before their input affects the crew.
+A per-browser guidance flag is sufficient; it is not authenticated progress and
+must never award coins or other rewards. Scope it with the player's account id,
+the defended island code and task kind. Another device or cleared storage repeats
+the introduction; blocked storage must not stop play.
+
+**Shared start:** standing participants send `finisher_ready` for the current boss
+through the existing wave schedule. The scored clock waits for all participants,
+up to 60 seconds with a visible automatic-start warning, so inactive/disconnected
+captains cannot hold the wave forever. Finishing/skipping marks guidance seen;
+an interrupted or timed-out introduction does not. Reset practice input before
+scoring. Experienced players announce readiness automatically.
+
+**Limits and alternatives:** no account-wide database storage or new service.
+The existing wave-room limits on late/lost messages and late joins remain; local
+browser evidence is not proof of real Supabase delivery. A fully authoritative
+network barrier would need a separate design. See [the spec](../specs/T28-minigame-introduction.md)
+and [message contract](INTERFACES.md#t28-boss-minigame-preparation).

@@ -20,7 +20,7 @@ export const INPUT_LEAD_TICKS = 4;
 export const MAX_WAVE_SECONDS = 900;
 export const ROOM_EVENTS = Object.freeze({ fire: 'cannon_shot', repair: 'wall_repair', lamps_lit: 'lamps_lit', captain_shot: 'captain_shot',
   rebuild: 'wall_rebuild', captain_strike: 'captain_strike', captain_move: 'captain_move', captain_revive: 'captain_revive',
-  finisher_input: 'finisher_input' }); // v3 waves: a boss finisher's samples (finisher/rules.js)
+  finisher_ready: 'finisher_ready', finisher_input: 'finisher_input' }); // v3 waves: a boss finisher's samples (finisher/rules.js)
 export const MAX_PLAYERS = 10; // GAME-V3.md §2: up to ten players defend one island together (was 4)
 const ID = /^[a-z0-9_-]{1,32}$/i;
 const BY = /^[A-Za-z0-9_.:-]{1,64}$/;
@@ -61,6 +61,7 @@ export function toMessage(input, { by, seq, tick, waveId }) {
   }
   if (input.type === 'captain_revive') return { type: ROOM_EVENTS.captain_revive, payload: { ...base, targetId: input.targetId, x: input.x, z: input.z, skills: readSkills(input.skills) } };
   // A boss finisher: one window of the sender's samples, and whether they play with Easier finishers.
+  if (input.type === 'finisher_ready') return {type: ROOM_EVENTS.finisher_ready, payload: {...base, shipId: input.shipId}};
   if (input.type === 'finisher_input') {
     if (!isFinisherMarks(input.from, input.marks)) return null;
     return { type: ROOM_EVENTS.finisher_input, payload: { ...base, from: input.from, marks: [...input.marks], ...(input.easy === true ? { easy: true } : {}) } };
@@ -119,6 +120,10 @@ export function readMessage(type, payload, waveId) {
     if (typeof targetId !== 'string' || !BY.test(targetId) || targetId === by || ![x, z].every(isAim) || !isSkillList(skills)) return null;
     // The reviver is the sender (who paid for it on the server); their role sets how much hp the captain gets back.
     return { by, seq, tick, input: { type: 'captain_revive', by, targetId, x, z, skills: readSkills(skills) } };
+  }
+  if (type === ROOM_EVENTS.finisher_ready) {
+    if (typeof payload.shipId !== 'string' || !ID.test(payload.shipId)) return null;
+    return {by, seq, tick, input: {type: 'finisher_ready', by, shipId: payload.shipId}};
   }
   if (type === ROOM_EVENTS.finisher_input) {
     const { from, marks, easy } = payload;

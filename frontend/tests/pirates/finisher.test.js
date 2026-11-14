@@ -3,7 +3,7 @@
 // that scales with the captains present, a failure that gives the boss 15% back, and the success that sinks it.
 import { describe, expect, it } from 'vitest';
 import { CONFIG, createWave } from '../../src/pirates/sim.js';
-import { FINISHER, createFinisher, crewScale, finisherKind, goalOf, promptAt, spotAt, zoneAt } from '../../src/pirates/finisher/rules.js';
+import { FINISHER, createFinisher, crewScale, finisherKind, goalOf, promptAt, scoreOf, spotAt, zoneAt } from '../../src/pirates/finisher/rules.js';
 import { ISLANDS } from './balance-fixture.js';
 
 const SAFE = { x: 0, z: -12 }; // north of the heart, away from the sea lanes
@@ -126,6 +126,21 @@ describe('the outcome', () => {
     for (const wave of [5, 15, 30]) {
       const island = wave >= 30 ? { ...ISLANDS.full, island: { hp: 10000 } } : ISLANDS.full;
       expect(of(bossWave({ wave, island, bots: { a: 'slow' }, stopAtEnd: true }).events, 'finisher_won').length, `wave ${wave}`).toBe(1);
+    }
+  });
+
+  it('Redtide remains beatable after losing the cannon task, with delayed input and crews of 1 to 10', () => {
+    for (const count of [1, 2, 4, 10]) for (const easy of [false, true]) for (const salt of [0, 3, 42]) {
+      const players = Array.from({length: count}, (_, i) => `captain-${i}`);
+      for (const task of ['haul', 'duel']) {
+        const score = players.reduce((total, by) => {
+          const samples = new Map(Array.from({length: FINISHER.redtideSamples}, (_, s) =>
+            [s, BOTS.slow[task](s, salt, by, lengthOf(easy))]));
+          return total + scoreOf(task, by, samples, {salt, easy, length: FINISHER.redtideSamples});
+        }, 0);
+        const goal = goalOf(task, players, {redtide: true, easy: new Map(players.map(by => [by, easy]))});
+        expect(score, `${task}, crew ${count}, easy ${easy}, salt ${salt}`).toBeGreaterThanOrEqual(goal);
+      }
     }
   });
 

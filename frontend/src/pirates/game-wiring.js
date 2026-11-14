@@ -18,6 +18,7 @@
 //   - Pirate Point: the island client (or, in a rehearsal without a server, the in-memory fake) as api;
 //   - the game (GAME-V3.md §2, src/island/game-room.js) rides on the same island room: the lobby's Start,
 //     who is online, and the room-wide Pause that holds the break open (the break card's Pause button).
+import {practicePlayer} from './finisher/practice.js';
 import {mountPirates} from './index.js';
 import {createGameRoom} from '../island/game-room.js';
 import {createRoomProxy} from './room.js';
@@ -79,6 +80,7 @@ export function wireWaves(ctx) {
   const game = island ? createGameRoom({room: islandRoom, emit: ctx.emit ?? (() => {}), later, every, onChange: () => island.refreshLobby?.()}) : null;
   if (game) island.attachGame?.(game);
   const pirates = mountPirates({...ctx, getDefenses: () => withLevels(island?.defenses() ?? [], defended()), finishWave, api, openRoom, notify,
+    practiceIdentity: () => ({player: practicePlayer(ctx.getPracticeToken?.()) ?? ctx.practicePlayer ?? null, island: island?.gameCode ?? roomTopic}),
     islandRoom, islandPlace: ISLAND_PLACE,
     getCrew: () => defended()?.crew ?? null,
     getPointDefenses: () => (island?.point ? spotDefenses(island.point.spots ?? []) : null),

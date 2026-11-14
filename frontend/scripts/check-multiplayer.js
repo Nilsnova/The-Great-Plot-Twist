@@ -675,6 +675,19 @@ try {
   const finisherOf = captain => captain.page.evaluate(() => { const f = window.__island.waves.island.state?.finisher;
     return f ? {kind: f.kind, phase: f.phase, players: f.players, heard: f.heard, outcome: f.outcome, scores: f.tasks.map(t => t.players)} : null; });
   const ids = await Promise.all(pages.map(captain => captain.page.evaluate(() => window.__island.waves.island.playerId)));
+  // T28: three captains skip; the fourth practices privately while every scored clock waits.
+  for (const captain of pages) await captain.page.waitForFunction(() => window.__island.waves.island.state?.finisher?.phase === 'prepare', null, {timeout: 200000, polling: 100});
+  for (const captain of pages.slice(1)) await captain.page.getByRole('button', {name: 'Skip practice', exact: true}).click();
+  await pages[0].page.getByRole('button', {name: 'Practice', exact: true}).click();
+  await pages[0].page.waitForTimeout(1000);
+  for (const captain of pages) {
+    const state = await captain.page.evaluate(() => window.__island.waves.island.state.finisher);
+    assert.equal(state.phase, 'prepare', 'the crew waits for the practicing captain');
+    assert.equal(state.sample, 0, 'practice does not consume scored time');
+    assert.equal(state.tasks[0].score, 0, 'practice does not enter the shared score');
+  }
+  results.push('T28: three captains skipped; one practiced; all four scored clocks and scores stayed zero');
+  await pages[0].page.getByRole('button', {name: 'Finish practice', exact: true}).click();
   for (const captain of pages) await captain.page.waitForFunction(() => window.__island.waves.island.state?.finisher?.phase === 'task', null, {timeout: 200000, polling: 200});
   await host.page.waitForTimeout(4000);
   await shot('07-finisher-haul-mid-task');

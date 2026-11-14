@@ -459,7 +459,7 @@ export function createWave(options = {}) {
   const happening = createEventRules(withFlagship ? null : options?.event, { seed: options?.seed, wave: waveNumber, curve, coastPoint,
     coast: readCoast(options?.coast), heart, defenses, stopRadius: C.stopRadius, spawnRadius: C.spawnRadius, firstSpawn: C.fleet.firstSpawn });
   const finisher = createFinisher({ wave: waveNumber, seed: options?.seed, enabled: options?.finishers === true && !withFlagship,
-    gapMs: typeof options?.gapMs === 'function' ? options.gapMs : null, trigger: options?.finisherTrigger }); // trigger: the demo harness only
+    preparation: options?.finisherPreparation === true, gapMs: typeof options?.gapMs === 'function' ? options.gapMs : null, trigger: options?.finisherTrigger }); // trigger: the demo harness only
   const lookouts = defenses.filter(item => item.kind === 'watchtower'), watchtowers = lookouts.map(item => C.levels.watchtower[item.level - 1]);
   // High tower (tier 2): the watchtower lends more range.
   const towerBonus = Math.max(0, ...lookouts.map((item, i) => round2(watchtowers[i].range * bonusOf(item, 'range', C)))), boost = Math.max(1, ...watchtowers.map(item => item.boost ?? 1));
@@ -922,7 +922,7 @@ export function createWave(options = {}) {
   function applyInput(input, events) {
     if (!input || typeof input !== 'object' || typeof input.type !== 'string') return;
     // v3 waves: while a finisher runs the battle stands still: only positions and the finisher's own input count.
-    if (input.type === 'finisher_input') { finisher.input(input); return; }
+    if (input.type === 'finisher_input' || input.type === 'finisher_ready') { finisher.input(input); return; }
     if (finisher.active && input.type !== 'captain_move') return;
     if (input.type === 'fire') {
       const cannon = typeof input.cannonId === 'string' ? cannonById.get(input.cannonId) : undefined;

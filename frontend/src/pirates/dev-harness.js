@@ -56,11 +56,12 @@ export function startPirateDemo(ctx) {
   const rooms = new Map(), islandRoom = createLocalRoom('live:place:isle_demo:1');
   const toast = document.createElement('p'); toast.className = 'demo-toast'; toast.hidden = true; toast.setAttribute('role', 'status');
   ctx.container.append(toast);
-  let toastTimer = 0, lastWave = null;
+  let toastTimer = 0, lastWave = null, checkpoint = null, disposed = false;
   const notify = text => { toast.textContent = text; toast.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { toast.hidden = true; }, 3500); };
   const pirates = mountPirates({ ...ctx, api, getDefenses: () => defenses, rehearsal: query.get('lamps') !== 'real', host: true, notify,
     finishWave: async body => { const answer = await api.finishWave(body); notify(answer.loot ? `Loot: 🪙 ${answer.loot}` : 'No loot this time.'); return answer; },
     openRoom: topic => { const room = createLocalRoom(topic); if (room) rooms.set(topic, room); return room; },
+    practiceIdentity: () => ({player: query.get('practicePlayer') || 'local-demo', island: query.get('practiceIsland') || 'demo-island'}),
     islandRoom, islandSimOptions: { ...(hardy > 0 ? { island: { hp: hardy } } : {}), ...(isEventId(query.get('event')) ? { event: query.get('event') } : {}),
       ...(Number(query.get('trigger')) > 0 && Number(query.get('trigger')) < 1 ? { finisherTrigger: Number(query.get('trigger')) } : {}) },
     getCrew: () => crew, captainLevel: () => captain, startNextWave: () => ringIsland({ next: true }) });
@@ -97,10 +98,16 @@ export function startPirateDemo(ctx) {
     const first = defenses.find(item => item.kind === 'cannon') ?? { x: 0, z: 12 };
     if (query.get('place') === 'point') await sail('lighthouse_isle', 4, -2);
     else await sail('home_islet', first.x - 1.6, first.z + .8);
+    const kind = query.get('practice');
+    if (['haul', 'cannon', 'duel', 'redtide'].includes(kind)) {
+      const module = await import('./finisher/checkpoint.js');
+      if (!disposed) checkpoint = module.startFinisherCheckpoint({container: ctx.container, kind, reducedMotion: ctx.reducedMotion,
+        player: query.get('practicePlayer') || 'local-demo', island: query.get('practiceIsland') || 'demo-island'});
+    }
   })();
   const harness = {
     api, defenses, pirates, ready, ringIsland, sail, notify,
-    dispose() { window.removeEventListener('keydown', keydown); clearTimeout(toastTimer); toast.remove(); hint.remove(); pirates.dispose(); islandRoom?.close(); for (const room of rooms.values()) room.close(); },
+    dispose() { disposed = true; checkpoint?.dispose(); window.removeEventListener('keydown', keydown); clearTimeout(toastTimer); toast.remove(); hint.remove(); pirates.dispose(); islandRoom?.close(); for (const room of rooms.values()) room.close(); },
   };
   if (import.meta.env.DEV) window.__pirates = harness;
   return harness;

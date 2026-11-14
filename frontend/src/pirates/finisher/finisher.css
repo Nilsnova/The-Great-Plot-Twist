@@ -42,3 +42,16 @@
 html[data-reduced-motion=true] .finisher *{animation:none!important;transition:none!important}
 /* The scene's own caption bar says the narrator's line (always): the narrator's card steps aside meanwhile. */
 html:has(.finisher:not([hidden])) .narrator-card{display:none}
+
+/* T28 reuses the finisher's parchment card, buttons and live drawings. */
+.finisher-introduction{top:max(12vh,64px);bottom:auto;left:50%;right:auto;transform:translateX(-50%);width:min(540px,calc(100vw - 24px));gap:10px}
+.finisher[data-learning] .finisher-card{display:none}
+.finisher[data-learning=explain] .finisher-panel:not(.finisher-introduction),.finisher[data-learning=ready] .finisher-panel:not(.finisher-introduction){display:none}
+.finisher-introduction [hidden]{display:none}
+.finisher-introduction .kit-button{min-height:48px}
+@media(max-width:600px){.finisher-introduction{top:max(9vh,48px);padding:10px}.finisher-introduction .finisher-how{font-size:14px;line-height:1.35}.finisher-introduction .finisher-controls{justify-content:space-between}}
+
+@media(min-width:601px){.finisher[data-learning=practice] .finisher-introduction{left:24px;transform:none;width:340px}}
+
+.finisher:has(.finisher-introduction){z-index:50}
+body:has(.finisher-introduction) .u-toast[data-tone=info]{display:none}

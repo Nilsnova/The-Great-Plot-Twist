@@ -26,7 +26,13 @@ describe('the wave rooms', () => {
   });
   it('pass the wave events with exactly their fields and drop anything else', () => {
     expect(WAVE_EVENTS).toEqual(['wave_start', 'cannon_shot', 'wall_repair', 'lamps_lit', 'lamp', 'captain_shot', 'island_changed',
-      'wall_rebuild', 'captain_strike', 'game_hello', 'game_state', 'captain_move', 'captain_revive', 'finisher_input']);
+      'wall_rebuild', 'captain_strike', 'game_hello', 'game_state', 'captain_move', 'captain_revive', 'finisher_ready', 'finisher_input']);
+    const ready = {...shot, shipId: 'boss_1'};
+    delete ready.cannonId; delete ready.targetId;
+    expect(readWaveMessage('finisher_ready', msg(ready))).not.toBe(null);
+    for (const bad of [{...ready, shipId: '<boss>'}, {...ready, shipId: 1}, {...ready, extra: true}]) {
+      expect(readWaveMessage('finisher_ready', msg(bad))).toBe(null);
+    }
     // The game's lobby and pause (GAME-V3.md §2): no wave, only these fields.
     expect(readWaveMessage('game_hello', msg({who: 'ben'}))).toEqual({id: ID, event: 'game_hello', seq: 4, data: {who: 'ben'}});
     expect(readWaveMessage('game_state', msg({who: 'ben', started: true, paused: false, first: true}))).not.toBe(null);

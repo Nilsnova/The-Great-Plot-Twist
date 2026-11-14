@@ -222,7 +222,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
       island?null:import('./pirates/fake-api.js')]).then(([module,rooms,local,fake])=>{
       if(disposed)return null;
       waves=module.wireWaves({scene,camera:view.camera,canvas:graphics.renderer.domElement,container,player:controller.player,world,input,audio,reducedMotion,
-        quality:()=>settings.quality,isBlocked:()=>!active||outsideBlocked(),on,emit,island,fakeApi:fake?fake.createFakeIslandApi():null,
+        getPracticeToken:session.getToken,quality:()=>settings.quality,isBlocked:()=>!active||outsideBlocked(),on,emit,island,fakeApi:fake?fake.createFakeIslandApi():null,
         rehearsal:!island,host:!island,openRoom:local?topic=>local.createLocalRoom(topic):topic=>rooms.openRoom(topic),notify:text=>hud.message(text)});
       return waves;
     }).catch(error=>{console.error(error);wavesLoad=null;return null;});

@@ -14,6 +14,8 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
+**14 Nov, T28 / Ianno:** [Boss minigame introduction and optional first-time practice](../specs/T28-minigame-introduction.md) is implemented in [PR #19](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/19), from main `50cab125`. Per player/island/task; shared real result. Frontend: 2,989 tests, build/budget/text lint, 33 accessibility screens, 33 demo checks and the four-page practice/skip barrier pass. [Evidence and checkpoints](evidence/T28/README.md). Ianno reports having practiced all tasks; introductory explain-back completed after clarification; independent human review remains pending.
+
 **14 Nov, T27 (Ianno):** [PR #17](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/17)
 adds only exact-angle musket aiming, upright directional body views and body/gun overlap. Frontend tests (2,980), build, budget, text lint, accessibility (33 screens), demo (33 checks), two-page angle graphics and four-page fake-room multiplayer pass. The eight-direction montage is in WALKTHROUGH part 30. Coached explain-back discussed; independent rehearsal and human review are pending.
 
@@ -204,6 +206,8 @@ Nobody has decided these yet. Until they are decided, the plan in [ROADMAP.md](.
 6. **Pick a package.** Take your lane's next package below, or one from "Start today" in ROADMAP.md. Open an issue with the goal, acceptance checks, scope, responsible teammate and likely files. Create your branch from `main` (`git switch main`, `git pull`, then for example `git switch -c feat/l1-live-weather`). Paste the agent brief below and open a draft pull request early.
 
 ## Next steps per lane
+
+**T28 / Ianno:** introductory explain-back completed after clarification; ask Johannes (`frcola`) for independent review of PR #19. No merge before a different human approves.
 
 **Captain visuals:** T27 covers shooting direction in single-player and multiplayer ([OPEN-TODOS §2](OPEN-TODOS.md#2-open-tasks-you-can-pick-small-independent-updated-thu-12-nov)). Implementation is in [PR #17](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/17); checks passed and Ianno reviewed the eight-direction montage; ask Johannes (`frcola`) to review. Three explain-back questions were discussed with coaching; rehearse independently before the walkthrough.
 
@@ -527,6 +531,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+- **2026-11-14, T28 implemented.** Ianno, assisted by Codex, implemented first-time practice per player/island/minigame on updated main. Full frontend suite and four-page shared-start proof pass; [evidence](evidence/T28/README.md). Introductory explain-back completed after clarification; independent human review pending.
 
 - **2026-11-14, T27, Ianno with Codex:** exact-angle shooting visuals and body/gun overlap implemented in draft PR #17; checks passed; screenshot montage, walkthrough and test-map updated; coached explain-back discussed; independent human review pending.
 

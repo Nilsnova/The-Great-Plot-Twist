@@ -243,6 +243,8 @@ export function createFinisherScene({ container, me = null, easy = () => false, 
 
   return {
     element: root,
+    resetInput() {holding = false; needle = 0; velocity = 0; aim = 50; aimKeys = 0; lastShot = -Infinity; pressedPrompt = new Map(); current = null;},
+    focusControls() { (task()?.task === 'haul' ? hold : task()?.task === 'cannon' ? fire : arrows[0]).focus(); },
     update({ finisher: f, dt = 0, boss = null } = {}) {
       if (disposed || !f) return;
       clock += Math.max(0, Math.min(.1, dt || 0));

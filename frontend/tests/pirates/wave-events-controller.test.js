@@ -24,6 +24,7 @@ function harness({ play = true, info = INFO } = {}) {
     createEventArt: options => { const art = { options, updates: 0, events() {}, update() { art.updates++; }, setVisible() {}, dispose: vi.fn() }; arts.push(art); return art; },
     // A scene that plays the haul perfectly through the recorder (like a player keeping the needle in the zone).
     createFinisherScene: options => {
+      options.onReady(); // This fixture skips practice; readiness is still sent through the real controller.
       const scene = { options, updates: 0, element: {}, dispose: vi.fn(), update({ finisher: f }) {
         scene.updates++;
         const task = f.tasks[f.task];
@@ -73,6 +74,7 @@ describe('a boss finisher in the controller', () => {
     expect(h.scenes).toHaveLength(1);
     expect(h.scenes[0].updates).toBeGreaterThan(100);
     expect(h.scenes[0].dispose).toHaveBeenCalled();
+    expect(h.sent.some(item => item.type === 'finisher_ready')).toBe(true);
     const inputs = h.sent.filter(item => item.type === 'finisher_input');
     expect(inputs.length).toBeGreaterThan(5);
     for (const item of inputs) {
