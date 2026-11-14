@@ -49,7 +49,7 @@ import {BRANCH_BY_ID, SPECS, optionsOf} from '../campaign/tech.js';
 import {isRole as isHouseRole} from '../campaign/houses.js';
 
 export const PATHS = Object.freeze({
-  island: '/api/island', build: '/api/island/build', visit: code => `/api/island/visit/${code}`,
+  leaderboard: '/api/island/leaderboard', island: '/api/island', build: '/api/island/build', visit: code => `/api/island/visit/${code}`,
   start: '/api/waves/start', join: '/api/waves/join', finish: '/api/waves/finish', revive: '/api/waves/revive',
   current: where => `/api/waves/current?where=${encodeURIComponent(where)}`,
   upgrade: '/api/island/upgrade', hire: '/api/island/hire', captain: '/api/island/captain', inviteJoin: '/api/island/invite/join',
@@ -186,6 +186,12 @@ export function createIslandApi({transport, makeUid = makeActionUid} = {}) {
   const refuse = (status, code, message) => Promise.resolve({ok: false, status, code, message});
 
   return {
+    leaderboard: () => ask(() => transport.get(PATHS.leaderboard), data =>
+      !!data && typeof data.weekStart === 'string' && Number.isFinite(Date.parse(data.weekStart)) &&
+      typeof data.weekEnd === 'string' && Number.isFinite(Date.parse(data.weekEnd)) &&
+      Array.isArray(data.entries) && data.entries.length <= 10 && data.entries.every(row =>
+        !!row && isText(row.name) && Number.isInteger(row.rank) && row.rank >= 1 && row.rank <= 10 &&
+        Number.isInteger(row.wave) && row.wave >= 1 && row.wave <= 1000)),
     getIsland: () => askSpots(() => transport.get(PATHS.island), isIsland),
     // code: a friend's island (ISLE-XXXXX) to build on with your own coins; without it your own island.
     build({spot, kind, code = null} = {}) {

@@ -728,3 +728,21 @@ actual image while short passages and optional secondary controls make the next 
 The detailed title has a reviewed 350 kB transfer ceiling; cold JavaScript/CSS budgets stay unchanged.
 Rendering has explicit quality/DPR/pixel caps and the old textures remain fallback assets. See the
 [execution plan](UX-SIMPLIFICATION.md) and the component evidence in `docs/handoff/`.
+
+## D037 · Weekly island leaderboard · 2026-11-13
+
+**Status:** scope approved by Ianno Hollensteiner; implementation in [PR #13](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/13), independent human review pending.
+
+**Decision:** rank the global top ten islands by their highest successful wave
+finished this UTC week (Monday 00:00). A multiplayer island appears once; restarts
+do not lower its score. Equal waves share rank, fewer islands mean fewer rows.
+Show a Harbor noticeboard with gold/silver/bronze rank badges, short reset text,
+and public host names; never return invite codes or private account fields.
+
+**Why and limits:** reuse existing wave records and the island login gate for a
+small read-only feature with no migration or rewards. Solo and multiplayer share
+one ranking. At most 2,000 sorted runs per request; fail visibly if that cannot
+establish the full result. Concurrent deletion can shift pages; there is no SQL
+snapshot, live database proof or anti-cheat upgrade in this task. Revisit a database
+aggregate/index if measured usage outgrows this bounded query. See the
+[API contract](INTERFACES.md#weekly-island-leaderboard-t7).

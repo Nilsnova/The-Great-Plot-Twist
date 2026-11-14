@@ -98,6 +98,8 @@ D1 current-demo sweep done in [#5](https://github.com/Nilsnova/The-Great-Plot-Tw
 
 T5 follow-up: island milestones implemented in [PR #10](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/10) by Ianno Hollensteiner: number-only rank shield, wave-25 statue and house-linked trees. [Spec](../specs/T5-island-decoration.md); explain-back completed; approval by Nils or Johannes Franz Lang pending. This does not complete A1 or any playtest task.
 
+T7 from OPEN-TODOS: weekly island leaderboard implemented in [PR #13](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/13) by Ianno; introductory explain-back completed after clarification; human review by Franz (`frcola`) pending. This completes only T7's walkthrough/test-map entries, not A1 or E1 as a whole.
+
 ## How to pick and claim a task
 
 1. Take the **highest-value open task** you can finish in time. Prefer ★★★, and prefer A and B.
