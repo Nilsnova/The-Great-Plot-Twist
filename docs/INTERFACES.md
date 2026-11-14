@@ -691,6 +691,12 @@ Errors have the house shape `{"error": {"code": "...", "message": "..."}}`; the 
 
 The live room of an island is `live:place:isle_<the 5 symbols in lowercase>:1` (for `ISLE-K7Q2M`: `live:place:isle_k7q2m:1`), Pirate Point's is `live:place:pirate_point:1`; both fit the existing place-room policies (BUILD-PLAN 3.6).
 
+### Co-op permissions (T37 and T42)
+
+Proposed decision [D043](DECISIONS.md#d043--co-op-permissions-spending-and-absent-members--2026-11-14); the matrices are in [the spec](../specs/T37-T42-coop-policy.md). `backend/server/island/permissions.py` holds the role/action matrix (`ACTIONS`) and the one helper for routes and other lanes: `await require_action(admin, island_owner, player_id, action)` answers `Permit(role, payer)` (`role` `host` or `member`; `payer` the caller for a personal action, `None` when no coins move) or raises `403 not_member`. Action names: `island_visit`, `island_build`, `island_upgrade`, `island_research`, `island_tower_skill`, `island_wreck`, `island_demolish`, `wave_start`, `wave_join`, `wave_revive`, and reserved for later lanes `structure_repair`, `structure_rebuild` (T31/T32), `arsenal_buy`, `arsenal_withdraw`, `arsenal_return` (T40). Every action is open to the host and active members, none to outsiders or members who left; nothing is paid from a shared or the host's wallet.
+
+The `403 not_member` refusal of `POST /api/island/build`, `/upgrade`, `/research`, `/tower-skill`, `/wreck`, `GET` and `POST /api/island/demolish`, `GET /api/island/visit/{code}`, `POST /api/waves/start`, `/join` and `/revive` keeps its code and status; its message now names the action, for example `"Join this game first to ring the bell here: open its link or type its code."`. No route, table or migration changes.
+
 ### The prediction desk (package L5)
 
 > **Removed from the game on 11 Nov at the owner's request ([D035](DECISIONS.md)).** The browser no longer calls these routes and the flag `predictions` is switched off at release; the backend code below stays for a later cleanup.

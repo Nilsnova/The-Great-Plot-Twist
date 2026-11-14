@@ -30,7 +30,7 @@ from uuid import UUID
 
 from server.errors import ApiError
 from server.game.islet_store import player_not_set_up
-from server.island import games, rescue, store, wave_events
+from server.island import games, permissions, rescue, store, wave_events
 from server.island.catalogue import IslandCatalogue, Weather
 from server.island.codes import read_code
 from server.island.rules import is_boss, loot_rates, weather_for
@@ -92,7 +92,7 @@ async def find_place(
     if island is None:
         raise no_such_island()
     if members_only:
-        await games.require_member(admin, island, player_id)
+        await permissions.require_action(admin, island.owner, player_id, permissions.WAVE_START)
     return "island", island.owner
 
 
@@ -159,7 +159,9 @@ async def join(
     if where is None:
         raise no_such_wave()
     if where.place == "island" and where.island_owner is not None:
-        await games.require_member_of(admin, where.island_owner, player_id)
+        await permissions.require_action(
+            admin, where.island_owner, player_id, permissions.WAVE_JOIN
+        )
     await store.open_island(admin, player_id, catalogue.starting_coins)
     reply = await store.join_wave(admin, player_id, str(wave_id))
     if isinstance(reply, Refusal):
@@ -296,7 +298,9 @@ async def revive(
     if where is None:
         raise no_such_wave()
     if where.place == "island" and where.island_owner is not None:
-        await games.require_member_of(admin, where.island_owner, player_id)
+        await permissions.require_action(
+            admin, where.island_owner, player_id, permissions.WAVE_REVIVE
+        )
     arguments = {
         "p_player_id": player_id,
         "p_wave_id": str(wave_id),

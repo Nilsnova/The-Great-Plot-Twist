@@ -10,7 +10,7 @@
 - **Responsible teammate:** Nils (`Nilsnova`), who authorized this work; plan author Ianno (`Iannomh123456`), BUILD-PLAN §6 / OPEN-TODOS §9
 - **Coding agent used:** yes; Nils stays responsible for its output.
 - **Reviewer (a different human teammate):** to be named in the PR
-- **Depends on:** T28 (merged machinery). T30/T37/T42 are not blockers for this scope: the rescue changes no building, wallet or permission state (see "Interactions").
+- **Depends on:** T28 (merged machinery); aligned with D043 (T37/T42, merged): no new permission action, see "Interactions". T30 is not a blocker: the rescue changes no building or wallet state.
 - **Feature flag:** `rescue` (server, off by default). With it off, the server ignores `rescued` and the game plays exactly as today.
 - **Migration:** none. The rescue only changes the existing `p_restart_back` argument of `wave_finish()`.
 
@@ -106,8 +106,18 @@ best − 1. Clamping it to the lost wave would need the server to read `wave_bes
 
 ### Interactions with other tasks
 
-T30/T31 (recovery) and T37 (permissions) are untouched: the rescue neither repairs nor charges. T42 (absent
-members): presence uses the sim's existing `presentAt`; if T42 changes who counts as present, the rescue follows.
+T30/T31 (recovery) are untouched: the rescue neither repairs nor charges.
+
+**Aligned with D043 (T37/T42, `island/permissions.py`).** The rescue adds **no new island action** to the
+role/action matrix and moves no coins (it would be `FREE`): it is part of a wave the caller already joined
+(`WAVE_JOIN`, host or member) and is settled only through that participant's own `POST /api/waves/finish`, which
+the database refuses with `403 not_in_wave` for anyone who is not in the wave. So outsiders cannot play or settle
+it, there is no shared wallet, and membership alone earns nothing. Absent members (D043): the rescue's players are
+the captains present in the sim when it starts, like a boss finisher's standing participants (D038); its goal is
+frozen then; a participant who dropped may reconnect and keep hauling until the grace time; a participant who left
+the game mid-wave still finishes their own fight, and if their finish is the first to close the run, their
+(deterministic, shared) rescue outcome is the one that settles; a wave nobody finishes expires after 900 s and,
+as today, changes neither the best nor the next wave, rescued or not. No offline effect.
 T45 can show "best" without worrying about rescues. T33/T36: no new building, so nothing to place or damage.
 
 ## The sim hook still needed (owner of `sim.js`)

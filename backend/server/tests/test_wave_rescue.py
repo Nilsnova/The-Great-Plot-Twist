@@ -148,3 +148,15 @@ def test_a_rescued_value_that_is_not_true_or_false_is_refused(rescued):
 
     assert_error(world.finish(survived=False, rescued=rescued), 422, "validation_error")
     assert world.database.calls("wave_finish") == []
+
+
+def test_a_rescue_is_no_new_island_action_and_an_outsider_cannot_settle_one():
+    # D043: the rescue is part of a joined wave and costs nothing, so permissions.py has no row
+    # for it; the database refuses a finish from anyone not in the wave (403 not_in_wave).
+    from server.island import permissions
+
+    assert not any("rescue" in action for action in permissions.ACTIONS)
+    world = rescue_world()
+    world.database.finish_reply = {"status": "refused", "reason": "not_in_wave"}
+
+    assert_error(world.finish(survived=False, rescued=True), 403, "not_in_wave")
