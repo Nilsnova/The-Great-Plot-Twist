@@ -11,8 +11,8 @@ paths are not reintroduced. No merge without Johannes's explicit approval.
 ## Delivery
 
 - [x] PR 1 (draft #31): How to play loading, failure, retry and cancellation (`fix/b3-help-feedback`).
-- [ ] PR 2: Shortcuts failure recovery on keyboard/phone and notice cleanup (separate branch).
-- [ ] Current-game audit table, screenshots, checks, walkthrough and test map.
+- PR 2: Shortcuts recovery tracked independently in [draft #32](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/32).
+- Current-game audit table and handover tracked independently in #32; this spec records the first PR.
 
 ## Checks
 

@@ -14,7 +14,7 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
-**14 Nov, B3 help / Johannes:** draft [#31](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/31) makes How to play loading/failure recoverable. Frontend 2,997 tests passed; build/budget/text lint pass; a11y 33 screens with no failures; demo 33 checks with no errors. [Component captures](evidence/B3-help/README.md). Shortcuts/audit handover remain in the separate B3 follow-up; login/APIs unchanged.
+**14 Nov, B3 help / Johannes:** draft [#31](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/31) makes How to play loading/failure recoverable. Frontend 2,997 tests passed; build/budget/text lint pass; a11y 33 screens with no failures; demo 33 checks with no errors. [Component captures](evidence/B3-help/README.md). Shortcuts/audit handover are tracked separately in #32; login/APIs unchanged.
 
 **14 Nov, T29–T47 / Nils (agent-assisted): fast-track sprint.** Ianno's roadmap ([PR #20](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/20)) is merged. Nils's agents work on T29–T47 in eight lanes. Each lane has its own claim issue and branch: wall recovery #21, targeting/pathing #22, flexible placement #23, arsenal #24, co-op policy #25, minigames/rescue #26, Harbor/weather #27, highscore/statue #28. **Nils decided ([D047](DECISIONS.md)) to merge these lanes to `main` as soon as each one is green, without waiting for peer approval first.** Review happens after the merge, so please look at the merged PRs and comment or reopen anything you disagree with. Merge gate: `npm test`, `npm run build`, `npm run test:mp`, the GitHub sign-in checks and backend `pytest`/`ruff` all pass. Any feature that needs a new table ships behind a new feature flag that is off by default, so the live game keeps working until the migration is applied and the flag is switched on (each one a separate, announced step). The proposed design decisions are D039–D046 and are open for team comments.
 
@@ -213,7 +213,7 @@ Nobody has decided these yet. Until they are decided, the plan in [ROADMAP.md](.
 
 ## Next steps per lane
 
-**B3 / Johannes:** review help PR #31, complete the independent shortcuts PR and audit handover; author explain-back and independent human review remain. No merge without Johannes explicit OK.
+**B3 / Johannes:** review help PR #31, review the independent shortcuts PR #32 and its audit handover; author explain-back and independent human review remain. No merge without Johannes explicit OK.
 
 **T28 / Ianno:** introductory explain-back completed after clarification; ask Johannes (`frcola`) for independent review of PR #19. No merge before a different human approves.
 
