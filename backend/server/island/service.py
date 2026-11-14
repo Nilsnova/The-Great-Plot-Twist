@@ -38,7 +38,7 @@ from fastapi import Depends, Request
 from server.errors import ApiError
 from server.game import islet_store
 from server.game.building_catalogue import Cost
-from server.island import games, rules, store
+from server.island import games, permissions, rules, store
 from server.island.catalogue import IslandCatalogue
 from server.island.codes import read_code, shown
 from server.island.rules import Built, ResearchTier, SpotView
@@ -253,19 +253,23 @@ async def look_open(
 
 
 async def target_island(
-    admin: SupabaseAdmin, catalogue: IslandCatalogue, player_id: str, code: str | None
+    admin: SupabaseAdmin,
+    catalogue: IslandCatalogue,
+    player_id: str,
+    code: str | None,
+    action: str = permissions.BUILD,
 ) -> tuple[Island, str | None]:
     """The island a build or upgrade is for, and the visiting payer (None on your own island).
     The payer's own island is opened first, so a brand-new visitor holds their starting coins.
-    On somebody else's island the payer must be a member of that game (403 not_member)."""
+    On somebody else's island permissions.py must allow `action` (403 not_member, T37)."""
     own = await store.open_island(admin, player_id, catalogue.starting_coins)
     if code is None:
         return own, None
     island = await find_by_code(admin, code)
     if island.owner == player_id:
         return own, None
-    # GAME-V3 section 2: only a member of the game builds or upgrades on its island.
-    await games.require_member(admin, island, player_id)
+    # GAME-V3 section 2 and D043: only a member of the game acts on its island.
+    await permissions.require_action(admin, island.owner, player_id, action)
     return island, player_id
 
 
@@ -407,7 +411,7 @@ async def upgrade(
     not_built, 409 max_level, 409 locked, 409 insufficient_funds. A repeated actionUid charges
     nothing."""
     ref = f"{UPGRADE_PREFIX}{action_uid}"
-    island, payer = await target_island(admin, catalogue, player_id, code)
+    island, payer = await target_island(admin, catalogue, player_id, code, permissions.UPGRADE)
     if not await store.ledger_has(admin, player_id, "building_purchase", ref):
         built = await store.read_built_spots(admin, island.owner)
         progress = await store.read_progress(admin, island.owner)
@@ -671,7 +675,7 @@ async def research(
     409 known, 409 closed, 409 wave_running (between waves only), 409 insufficient_funds. A
     repeated actionUid charges nothing."""
     entry = rules.research_named(catalogue, branch)
-    island, payer = await target_island(admin, catalogue, player_id, code)
+    island, payer = await target_island(admin, catalogue, player_id, code, permissions.RESEARCH)
     ref = f"{RESEARCH_PREFIX}{action_uid}"
     if not await store.ledger_has(admin, player_id, "tech_research", ref):
         progress = await store.read_progress(admin, island.owner)
@@ -728,7 +732,7 @@ async def specialise(
     workshop) the same way, with no research (docs/GAME-V3.md "Houses"). 400 bad_spec, 404
     no_such_spot, 404 no_such_island, 403 not_member, 409 not_built, 422 wrong_kind, 409
     not_researched, 409 house_level. Safe to repeat."""
-    island, payer = await target_island(admin, catalogue, player_id, code)
+    island, payer = await target_island(admin, catalogue, player_id, code, permissions.TOWER_SKILL)
     built = await store.read_built_spots(admin, island.owner)
     done = await store.read_research(admin, island.owner)
     spot, branch = rules.check_specialise(catalogue, spot_id, spec, built, done)
@@ -769,7 +773,7 @@ async def repair_wreck(
     wreck:<actionUid>, reason wreck_repair. Never more than the repair still needs. 400 bad_gift,
     404 no_such_island, 403 not_member, 409 locked (after wave 6), 409 repaired, 409
     insufficient_funds. A repeated actionUid charges nothing."""
-    island, payer = await target_island(admin, catalogue, player_id, code)
+    island, payer = await target_island(admin, catalogue, player_id, code, permissions.WRECK)
     ref = f"{WRECK_PREFIX}{action_uid}"
     if not await store.ledger_has(admin, player_id, "wreck_repair", ref):
         progress = await store.read_progress(admin, island.owner)
@@ -865,7 +869,7 @@ async def demolish_quote(
     database (island_demolish_quote): for the confirmation card. Changes nothing. 409 protected,
     404 no_such_spot, 404 no_such_island, 403 not_member, 409 not_built, 409 wave_running."""
     spot = rules.check_demolish(catalogue, spot_id)
-    island, _payer = await target_island(admin, catalogue, player_id, code)
+    island, _payer = await target_island(admin, catalogue, player_id, code, permissions.DEMOLISH)
     arguments = {
         "p_player_id": player_id,
         "p_island_owner": island.owner,
@@ -893,7 +897,7 @@ async def demolish(
     refunds. 409 protected, 404 no_such_spot, 404 no_such_island, 403 not_member, 409 not_built,
     409 wave_running, 409 busy."""
     spot = rules.check_demolish(catalogue, spot_id)
-    island, payer = await target_island(admin, catalogue, player_id, code)
+    island, payer = await target_island(admin, catalogue, player_id, code, permissions.DEMOLISH)
     arguments = {
         "p_player_id": player_id,
         "p_island_owner": island.owner,
@@ -934,7 +938,7 @@ async def visit(
     404 no_such_island, 403 not_member: a code alone shows nothing, joining the game comes first
     (POST /api/games/join or /api/island/invite/join)."""
     island = await find_by_code(admin, typed_code)
-    await games.require_member(admin, island, player_id)
+    await permissions.require_action(admin, island.owner, player_id, permissions.ISLAND_VISIT)
     owner_name = await store.read_display_name(admin, island.owner)
     built = await store.read_built_spots(admin, island.owner)
     spots = rules.plan_spots(catalogue, built)
