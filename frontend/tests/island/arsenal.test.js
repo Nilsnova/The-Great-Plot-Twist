@@ -85,6 +85,20 @@ describe('the fake arsenal keeps the rules of the database', () => {
 // A second captain on the same fake world.
 const createFakeIslandApiFor = (transport, playerId) => createFakeIslandApi({world: transport.world, playerId, unlocking: true});
 
+describe('the old weapon shop and the flag', () => {
+  it('answers 409 use_arsenal while the flag is on, as the server, and still sells while it is off', async () => {
+    const on = createFakeIslandTransport({coins: 1000, unlocking: true, flags: {arsenal: true}});
+    on.dev.setWaveBest(10);
+    const coins = (await on.api.island()).coins;
+    const refused = await refusal(on.api.buyWeapon({weapon: 'pistols', actionUid: uid()}));
+    expect([refused.status, refused.code]).toEqual([409, 'use_arsenal']);
+    expect((await on.api.island()).coins).toBe(coins);
+    const off = createFakeIslandTransport({coins: 1000, unlocking: true});
+    off.dev.setWaveBest(10);
+    expect((await off.api.buyWeapon({weapon: 'pistols', actionUid: uid()})).weapons.equipped).toBe('pistols');
+  });
+});
+
 describe('the arsenal card', () => {
   const answer = (overrides = {}) => ({code: 'ISLE-K7Q2M', capacity: 20, stored: 1, mine: 'a', carried: 'pistols', waveRunning: false,
     coins: 100, unlockWave: 4, copies: [{id: 'a', no: 1, weapon: 'pistols', holder: 'me', holderName: 'You', away: false, you: true},
@@ -144,6 +158,27 @@ describe('the arsenal api and controller', () => {
     await api.giveBack();
     expect(sent.map(item => item[1])).toEqual(['uid-00001', 'uid-00001', 'uid-00001', 'uid-00002']);
     expect(ARSENAL_PATHS.state('ISLE-K7Q2M')).toBe('/api/island/arsenal?code=ISLE-K7Q2M');
+  });
+  it('a refused move keeps its reason on the card after the arsenal is read again', async () => {
+    const {transport, api} = world();
+    await api.arsenalBuy({weapon: 'pistols', actionUid: uid()}); // stored copy #1 goes into your hands
+    await api.arsenalReturn({actionUid: uid()});
+    const copy = (await api.arsenal()).copies[0].id;
+    const cards = [];
+    const ui = {open: 'arsenal', arsenalCard: model => cards.push(model), toast: () => {}};
+    let taken = false;
+    const real = createArsenalApi({transport});
+    const arsenalApi = {...real, take: async args => (taken ? {ok: false, status: 409, code: 'taken', message: 'Another captain took that weapon just now.'} : real.take(args))};
+    const arsenal = createArsenal({api: arsenalApi, ui, enabled: () => true});
+    await arsenal.refresh();
+    taken = true;
+    arsenal.handlers.take(copy);
+    await new Promise(resolve => setTimeout(resolve, 20));
+    expect(cards.at(-1).message).toBe('Another captain took that weapon just now.');
+    await arsenal.refresh(); // the winner's island_changed reaches this page and the arsenal is read again
+    expect(cards.at(-1).message).toBe('Another captain took that weapon just now.');
+    arsenal.open();
+    expect(cards.at(-1).message).toBe('');
   });
   it('the weapon you carry follows the server; nothing while the flag is off', async () => {
     const transport = createFakeIslandTransport({coins: 1000, unlocking: false});
