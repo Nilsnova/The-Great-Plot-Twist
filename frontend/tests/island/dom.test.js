@@ -80,17 +80,17 @@ it('builds from the card: cannon or mortar, upgrade, max level, short of coins, 
     return {fresh, built, lockedUpgrade, upgrade, upgraded, choice, mortar, max, short, shortUpgrade, bell, banner, closedAfterRing, invite, label, room, seen, captain, entries};
   });
   // GAME-V3.md §4: the locked mortar stays on the card, off, "Opens after wave 2."
-  expect(result.fresh).toMatchObject({title: 'Tower spot', choices: ['cannon:false', 'mortar:true'], soon: '', button: ''});
+  expect(result.fresh).toMatchObject({title: 'Tower spot', choices: ['cannon:false', 'mortar:true', 'harpoon:true'], soon: '', button: ''});
   // The HUD hears the island's balance: 100 from GET /api/island, then 70 after the cannon.
   expect(result.built).toEqual({closed: true, toast: 'Cannon built! You have 🪙 70.', coins: 70, reported: [100, 70]});
   expect(result.lockedUpgrade).toMatchObject({title: 'Cannon', pips: 'Level 1 of 5', button: '', soon: 'Level 2: Opens after wave 2.', hire: true});
   expect(result.upgrade).toMatchObject({title: 'Cannon', next: 'Level 2 · 🪙 60', stats: 'Damage 10 → 16 · Range 28 → 31', button: 'Upgrade', disabled: false, reason: ''});
   expect(result.upgraded).toMatchObject({pips: 'Level 2 of 5', toast: 'Cannon is now level 2! You have 🪙 140.', soon: 'Level 3: Opens after wave 5.'});
-  expect(result.choice).toMatchObject({title: 'Tower spot', choices: ['cannon:false', 'mortar:false'], soon: ''});
+  expect(result.choice).toMatchObject({title: 'Tower spot', choices: ['cannon:false', 'mortar:false', 'harpoon:true'], soon: ''});
   expect(result.mortar).toMatchObject({kind: 'mortar', level: 1, built: true});
   // Level 3 after wave 5; level 4 opens after wave 12 (the tower tiers, GAME-V3.md §4.1).
   expect(result.max).toMatchObject({pips: 'Level 3 of 5', button: '', soon: 'Level 4: Opens after wave 12.'});
-  expect(result.short).toMatchObject({choices: ['cannon:true', 'mortar:true']});
+  expect(result.short).toMatchObject({choices: ['cannon:true', 'mortar:true', 'harpoon:true']});
   expect(result.shortUpgrade).toMatchObject({title: 'Mortar', next: 'Level 2 · 🪙 120', disabled: true, reason: 'Not enough 🪙: you need 🪙 110 more.'});
   expect(result.bell).toMatchObject({title: 'Harbor bell', button: 'Ring the bell', disabled: false});
   // The countdown runs on the wall clock: right after the ring it shows 10 s, or less on a busy machine.
@@ -102,11 +102,11 @@ it('builds from the card: cannon or mortar, upgrade, max level, short of coins, 
     link: 'https://the-great-plot-twist.vercel.app/?game=ISLE-K7Q2M', images: 0});
   expect(result.invite.line).toContain('They tap Join, and you defend your island together.');
   expect(result.invite.qr).toBeGreaterThan(100);
-  expect(result.label).toEqual({spot: 'Build a tower', built: 'Cannon · level 3', wall: 'Build a wall · 🪙 10', bell: 'Ring the harbor bell', cabin: 'Players and invite', other: undefined});
+  expect(result.label).toEqual({spot: 'Build here', built: 'Upgrade Cannon', wall: 'Build here', bell: 'Ring the harbor bell', cabin: 'Players and invite', other: undefined});
   expect(result.room).toBe('isle_k7q2m');
   expect(result.seen).toEqual(['island_built', 'island_upgraded', 'island_built', 'island_upgraded', 'wave_started_server', 'island_invite_opened']);
   expect(result.captain[0]).toBe(1);
-  expect(result.entries).toEqual(['Players and invite', 'Crew', 'Captain and skills']);
+  expect(result.entries).toEqual(['Players and invite', 'Leaderboard', 'Crew', 'Captain and skills']);
 });
 
 it('the crew and captain panels: locked, hire, full, short of coins; a friend arriving gets a toast', async () => {
@@ -217,8 +217,14 @@ it("visits a friend's island by code: their buildings, building there with your 
     const {on, emit} = await window.g20Import('/src/core/events.js');
     const transport = createFakeIslandTransport();
     const island = createIsland({container: document.body, emit, on, mode: 'fake', transport, storage: null});
+    const named = [];
+    const stopNamed = on('island_visit_named', event => named.push(event.name));
+    const before = island.placeName('home_islet');
     island.visit('isle-fr3nd');
+    const early = island.placeName('home_islet');
     await island.load();
+    stopNamed();
+    const banner = {before, early, loaded: island.placeName('home_islet'), named, harbor: island.placeName('saltreach_harbor')};
     const chip = document.querySelector('.island-visit');
     const visit = {text: chip.textContent, button: chip.querySelector('button').textContent, label: chip.querySelector('button').getAttribute('aria-label')};
     // GAME-V3.md §2, one island: the chip is the game and opens its lobby (no "Sail home").
@@ -247,10 +253,13 @@ it("visits a friend's island by code: their buildings, building there with your 
     const lobbyRows = [...document.querySelectorAll('.island-lobby-name')].map(node => node.textContent);
     island.ui.close();
     await island.sailHome();
-    const home = {room: island.presencePlace('home_islet'), visitHidden: document.querySelector('.island-visit').hidden, code: island.island.code};
+    const home = {room: island.presencePlace('home_islet'), visitHidden: document.querySelector('.island-visit').hidden, code: island.island.code,
+      name: island.placeName('home_islet')};
     island.dispose();
-    return {visit, built, wallCard, paid, room, cabin, noInvite, lobbyRows, home};
+    return {visit, banner, built, wallCard, paid, room, cabin, noInvite, lobbyRows, home};
   });
+  // The arrival banner names the friend's game (the chip's words), not "Your island"; your own island keeps the registry's.
+  expect(result.banner).toEqual({before: null, early: "A friend's game", loaded: "Captain Gull's game", named: ["Captain Gull's game"], harbor: null});
   expect(result.visit).toEqual({text: "Captain Gull's game · ISLE-FR3ND" + 'Players', button: 'Players', label: 'Players and invite', lobby: true});
   // The friend's island has won wave 2: level 2 is open there (its own campaign decides, GAME-V3.md §4).
   expect(result.built).toEqual({owner: "You pay · it stays on Captain Gull's island", pips: 'Level 1 of 5', soon: '', hire: false});
@@ -259,7 +268,7 @@ it("visits a friend's island by code: their buildings, building there with your 
   expect(result.room).toBe('isle_fr3nd');
   expect(result.noInvite).toBe(true);
   expect(result.lobbyRows[0]).toBe('Captain Gull');
-  expect(result.home).toEqual({room: 'isle_k7q2m', visitHidden: true, code: 'ISLE-K7Q2M'});
+  expect(result.home).toEqual({room: 'isle_k7q2m', visitHidden: true, code: 'ISLE-K7Q2M', name: null});
 });
 
 it("with travel (one island off) the old visit chip stays: Visiting the friend's island, Sail home", async () => {
@@ -303,4 +312,53 @@ it('the sea chart shows only Your island, The Harbor and Pirate Point', async ()
   expect(result.shown).toEqual(['Pirate Point', 'The Harbor', 'Your island']);
   expect(result.hidden.sort()).toEqual(['smugglers_cove', 'the_teeth', 'wreck_point']);
   expect(result.all).toBe(6);
+});
+
+it('docks the island cards at the side, folds a researched Tech hub branch and walks its tiers (GAME-V3.md §5.1)', async () => {
+  const result = await evaluate(async () => {
+    const {createIsland} = await window.g20Import('/src/island/index.js');
+    const {createFakeIslandTransport} = await window.g20Import('/src/pirates/fake-api.js');
+    const {on, emit} = await window.g20Import('/src/core/events.js');
+    const transport = createFakeIslandTransport();
+    const island = createIsland({container: document.body, emit, on, mode: 'fake', transport, storage: null, menu: () => () => {}});
+    transport.dev.setWaveBest(16); transport.dev.setCoins(2000); await island.load();
+    const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+    const card = () => document.querySelector('.island-card[open]');
+    const branch = id => card().querySelector(`.island-research-branch[data-branch="${id}"]`);
+    island.openTechHub(); await wait(30);
+    const docked = card().classList.contains('island-card-docked');
+    const box = card().getBoundingClientRect();
+    const first = {open: branch('cannon').open, focus: document.activeElement?.dataset.focus ?? null};
+    branch('cannon').querySelector('[data-option="cannon-1"] .kit-button').click(); await wait(40);
+    const folded = {open: branch('cannon').open, summary: branch('cannon').querySelector('.island-research-name').textContent,
+      flag: branch('cannon').querySelector('.island-research-flag')?.textContent ?? ''};
+    branch('cannon').querySelector('.island-research-summary').click(); await wait(20);
+    branch('cannon').querySelector('[data-option="long_guns"] .kit-button').click(); await wait(40);
+    const fork = [...branch('cannon').querySelectorAll('.island-research-step[data-tier="2"] .island-research-option')].map(node => [node.dataset.option, node.className.replace(/island-research-option\s*/, ''),
+      node.querySelector('.island-research-step-note')?.textContent ?? '']);
+    const tier3 = branch('cannon').querySelector('.island-research-step[data-tier="3"] .island-research-step-state').textContent;
+    const group = branch('cannon').querySelector('.island-research-step[data-tier="2"] .island-research-options').getAttribute('aria-label');
+    document.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape', bubbles: true}));
+    card()?.dispatchEvent(new Event('cancel'));
+    await wait(30);
+    const closed = !card();
+    island.pick('cannon_1'); await wait(20);
+    const build = card().classList.contains('island-card-docked');
+    island.ui.close();
+    island.openCrew?.(); await wait(20);
+    const crew = card() ? card().classList.contains('island-card-docked') : null;
+    island.ui.close();
+    return {docked, width: Math.round(box.width), right: Math.round(window.innerWidth - box.right), first, folded, fork, tier3, group, closed, build, crew,
+      tiers: island.campaign.research.tiers.cannon};
+  });
+  expect(result.docked).toBe(true);
+  expect(result.build).toBe(true);
+  expect(result.crew).toBe(false); // the menus stay centred
+  expect(result.first.open).toBe(true);
+  expect(result.folded).toEqual({open: false, summary: 'Cannon skills · tier 1 of 3 ✓', flag: 'Next step'});
+  expect(result.fork).toEqual([['rapid_2', 'is-closed', 'Closed: your crew chose Long guns.'], ['long_guns', 'is-chosen', 'Your crew chose this.']]);
+  expect(result.tier3).toBe('Opens after wave 25.');
+  expect(result.group).toBe('Cannon skills, tier 2: one of two');
+  expect(result.closed).toBe(true);
+  expect(result.tiers).toEqual({tier: 2, tier2: 'long_guns', tier3: null});
 });

@@ -5,7 +5,6 @@
 .tutorial-art{display:flex;align-items:flex-end;justify-content:center;gap:18px;height:140px;padding:6px 10px 10px;background:radial-gradient(ellipse 70% 32% at 50% 100%,#e9cf8e 0 60%,transparent 62%),linear-gradient(#7cc4d4,#4f9fb2 64%,#3f8aa0 64%,#3f8aa0);border:2px solid #3d6a6b;border-radius:var(--u-radius-sm,14px);box-shadow:inset 0 -6px 14px #04161b33,var(--u-bevel-quiet,0 3px var(--u-deep));overflow:hidden}
 .tutorial-sprite{display:block;flex:none;width:calc(var(--w) * 1px);height:calc(var(--h) * 1px);pointer-events:none}
 /* A sprite without a cartoon drawing yet keeps its pixel PNG, kept square. */
-.tutorial-sprite.is-pixel{image-rendering:pixelated}
 .tutorial-title{margin:6px 0 0;font:700 24px/1.25 var(--u-serif);color:var(--u-gold)}
 .tutorial-text{margin:0;font:19px/1.5 var(--u-font);color:var(--u-ink)}
 .tutorial-keys{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0}

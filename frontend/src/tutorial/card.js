@@ -10,17 +10,16 @@ import {framesFor, hasCartoon} from '../art/registry.js';
 import {paint} from '../art/paint.js';
 
 const SWIPE_PX = 50;
-const spriteUrl = file => `${import.meta.env.BASE_URL}pixel/${file}`;
-// The clean cartoon drawing of a sprite (GAME-V3.md §7, src/art/) when one exists: a canvas in the sprite's
-// box, painted at the screen's density once the drawing is loaded; else null (the pixel PNG stays).
+// The clean cartoon drawing of a sprite (GAME-V3.md §7, src/art/): a canvas in the sprite's box, painted at
+// the screen's density once the drawing is loaded. Every page names a drawing that exists
+// (tests/tutorial-pages.test.js), so no pixel PNG is ever fetched; a missing one leaves the box empty.
 const canPaint = () => typeof document !== 'undefined' && !/jsdom/i.test(globalThis.navigator?.userAgent ?? '');
 function cartoonSprite(sprite) {
-  const name = sprite.file.replace(/\.png$/, '');
-  if (!canPaint() || !hasCartoon(name)) return null;
-  const w = sprite.w * sprite.scale, h = sprite.h * sprite.scale, ratio = Math.min(3, globalThis.devicePixelRatio || 1);
+  const name = sprite.name, w = sprite.w * sprite.scale, h = sprite.h * sprite.scale, ratio = Math.min(3, globalThis.devicePixelRatio || 1);
   const element = node('canvas', 'tutorial-sprite'); element.classList.add('is-cartoon');
   element.width = Math.ceil(w * ratio); element.height = Math.ceil(h * ratio); element.dataset.art = name;
   element.style.setProperty('--w', String(w)); element.style.setProperty('--h', String(h)); element.setAttribute('aria-hidden', 'true');
+  if (!canPaint() || !hasCartoon(name)) return element;
   void framesFor([name]).then(frames => {
     const frame = frames[name], context = element.getContext('2d');
     if (!frame || !context) return;
@@ -57,15 +56,7 @@ export function createTutorialCard({pages = TUTORIAL_PAGES, mode = 'menu', start
   const view = () => pageView(pages, index, mode);
   function draw() {
     const current = view(), {page} = current;
-    art.replaceChildren(...page.art.map(sprite => {
-      const cartoon = cartoonSprite(sprite);
-      if (cartoon) return cartoon;
-      const image = node('img', 'tutorial-sprite'); image.classList.add('is-pixel');
-      image.src = spriteUrl(sprite.file);image.alt = '';image.decoding = 'async';image.draggable = false;
-      image.width = sprite.w * sprite.scale;image.height = sprite.h * sprite.scale;
-      image.style.setProperty('--w', String(sprite.w * sprite.scale));image.style.setProperty('--h', String(sprite.h * sprite.scale));
-      return image;
-    }));
+    art.replaceChildren(...page.art.map(cartoonSprite));
     art.setAttribute('aria-label', page.alt);
     heading.textContent = page.title;text.textContent = page.text.join(' ');
     keys.replaceChildren();keys.hidden = !page.keys;

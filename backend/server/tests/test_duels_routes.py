@@ -339,6 +339,8 @@ def test_a_name_of_null_makes_an_open_challenge_too():
 
     assert response.status_code == 200
     assert response.json()["duel"]["isOpen"] is True
+    assert response.json()["duel"]["opponentName"] is None
+    assert world.database.calls("duel_create")[0]["p_opponent_name"] is None
 
 
 def test_a_friendly_challenge_holds_no_coins_and_touches_no_ledger():
@@ -484,6 +486,17 @@ def test_a_choice_or_a_sequence_that_breaks_the_rules_is_a_422_and_reaches_no_fu
 @pytest.mark.parametrize(
     "changes",
     [
+        {"signals": []},
+        {"signals": None},
+        {"signals": [1] * 5},
+        {"rounds": None},
+        {"rounds": True},
+        {"stake": None},
+        {"opponentName": ""},
+        {"opponentName": {"name": None}},
+        {"opponentName": []},
+        {"actionUid": ""},
+        {"actionUid": None},
         {"playerId": ALICE},
         {"signals": ["flash", "shade", "shade", "mirror", "sparkle"]},
         {"signals": ["flash", "shade"]},

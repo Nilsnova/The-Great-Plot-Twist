@@ -17,6 +17,6 @@ export function createTouchControls(container,input,actions) {
   stick.onkeydown=event=>{const vectors={ArrowUp:{x:0,y:1},ArrowDown:{x:0,y:-1},ArrowLeft:{x:-1,y:0},ArrowRight:{x:1,y:0}};if(vectors[event.key]){event.preventDefault();actions.onManualMove?.();input.setVirtual('touch',vectors[event.key]);}};stick.onkeyup=release;stick.onblur=release;
   interact.onclick=()=>input.press('KeyE');
   const blur=()=>release();window.addEventListener('blur',blur);
-  return {get active(){return pointer!==null;},update(zone,active){const show=active&&(matchMedia('(pointer:coarse)').matches||navigator.maxTouchPoints>0);if(!show&&!element.hidden)release();element.hidden=!show;interact.disabled=!zone;interact.hidden=!zone;interact.textContent='Use';},
+  return {get active(){return pointer!==null;},update(zone,active,label=''){const show=active&&(matchMedia('(pointer:coarse)').matches||navigator.maxTouchPoints>0);if(!show&&!element.hidden)release();element.hidden=!show;interact.disabled=!zone;interact.hidden=!zone;interact.textContent='Use';if(zone&&label)interact.setAttribute('aria-label',`Use: ${label}`);else interact.removeAttribute('aria-label');},
     dispose(){window.removeEventListener('blur',blur);release();element.remove();}};
 }

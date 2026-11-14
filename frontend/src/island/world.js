@@ -4,15 +4,19 @@
 // asset, no data: URL); the level art (walls, cannons, mortars by level) replaces the stand-ins once loaded. Everything is added under place.group, so the place's own
 // lifetime (resources.js) releases every texture, material and geometry when the player leaves.
 import * as THREE from 'three';
-import {findZone} from '../world/zones.js';
 import {artSizes, loadArt, placeArt, projectPoint} from '../world/art.js';
 import {pixelSizes} from '../pixel/catalog.js';
-import {SPOTS as ISLAND_SPOTS, CABIN, BELL, CAMPAIGN_BUILDINGS, islandZones} from './spots.js';
+import {SPOTS as ISLAND_SPOTS, CABIN, BELL, CAMPAIGN_BUILDINGS, ARSENAL, islandZones, placedSpot} from './spots.js';
+import {makeFootprint} from './move-preview.js';
 import {isOpen, spotWave, waveOf} from '../campaign/index.js';
+import {LOCK_WAVES} from '../art/campaign.js';
 import {SLOT_KINDS} from './td-rules.js';
-import {TIER_ART, crewArt, pirateLevels} from '../pixel/pirate-catalog.js';
+import {ROLE_IDS, activeRole, roleRadius} from '../campaign/houses.js';
+import {CULVERIN_ART, HARPOON_ART, TIER_ART, crewArt, pipRow, pirateLevels} from '../pixel/pirate-catalog.js';
 import {islandFrame} from '../art/registry.js';
 import {frameCanvas, smoothTexture, spriteMaterial} from '../art/textures.js';
+import {clickVerdict, WALK_CLOSER} from '../world/reach.js';
+import {decorateProgress} from './decorations.js';
 
 const UNIT = 16;
 // The first id the catalog knows wins; none known means the drawn sprite stays.
@@ -27,21 +31,31 @@ export const catalogArt = (kind, sizes = pixelSizes) => (ART_CANDIDATES[kind] ??
 // the level). Levels 4 and 5 (GAME-V3.md §4.1) have their own drawings, gold trim and the island's banner,
 // and gold stars on a teal disc as pips (PIP_TIER_ART).
 const tiered = kind => [...pirateLevels[kind], ...TIER_ART[kind]];
-export const LEVEL_ART = Object.freeze({wall: tiered('wall'), cannon: tiered('cannon'), mortar: tiered('mortar'),
+export const LEVEL_ART = Object.freeze({wall: tiered('wall'), cannon: tiered('cannon'), mortar: tiered('mortar'), harpoon: HARPOON_ART.levels,
+  culverin: CULVERIN_ART.levels, // T43 (D048 proposed): only an island answer with the flag defenses_v2 on has one
   watchtower: ['island-watchtower', 'island-watchtower', 'island-watchtower', 'island-watchtower-l4', 'island-watchtower-l5'], house: ['island-house']});
 export const PIP_ART = 'fx-level-pip';
 export const PIP_TIER_ART = 'fx-level-pip-gold';
 export const pipArt = level => (level >= 4 ? PIP_TIER_ART : PIP_ART);
-export function buildingArt(kind, level = 1) {
+// A house with a role (level 2 and up, GAME-V3.md "Houses") wears its own look: the Barracks' crossed swords
+// and flag, the Tavern's hanging mug, the Workshop's gear and hammer (src/art/island.js).
+export const ROLE_ART = Object.freeze(Object.fromEntries(ROLE_IDS.map(id => [id, `island-house-${id}`])));
+export function buildingArt(kind, level = 1, spec = null) {
   const list = LEVEL_ART[kind];
   if (!list) return null;
   const n = Number.isSafeInteger(level) && level > 0 ? level : 1;
+  const role = activeRole({kind, level: n, spec});
+  if (role) return ROLE_ART[role];
   return list[Math.min(list.length, n) - 1];
 }
+// The kinds that stand on a tower spot and that the wave's renderer draws during a battle (so the island hides
+// them then), with the culverin (T43): the server sends one only while the flag defenses_v2 is on.
+const TOWERS = Object.freeze([...SLOT_KINDS.tower, 'culverin']);
+const BATTLE_KINDS = Object.freeze(['wall', ...TOWERS]);
 // How many level pips stand above a building: towers always show theirs, the rest from level 2.
 export const pipCount = (kind, level = 1) => {
   const n = Number.isSafeInteger(level) && level > 0 ? Math.min(5, level) : 1;
-  return kind === 'cannon' || kind === 'mortar' || n > 1 ? n : 0;
+  return TOWERS.includes(kind) || n > 1 ? n : 0;
 };
 // Where the hired crew stand outside a wave (TOWER-DEFENSE.md §3): gunners beside the strongest towers
 // (level, then id order, as the wave mans them), carpenters beside the walls, the lookout at the
@@ -70,7 +84,7 @@ export function crewPlaces(spots = [], crew = {}, {bell = null} = {}) {
 
 // The drawn stand-ins (until the level art has loaded), the bell, the build ring and the kind badges:
 // clean cartoon frames (src/art/island.js) painted once into smooth textures.
-const DRAWN = {wall: 'island-wall', cannon: 'island-cannon', mortar: 'island-mortar', watchtower: 'island-watchtower', house: 'island-house', bell: 'island-bell'};
+const DRAWN = {wall: 'island-wall', cannon: 'island-cannon', mortar: 'island-mortar', harpoon: 'island-harpoon', culverin: 'island-culverin', watchtower: 'island-watchtower', house: 'island-house', bell: 'island-bell'};
 function drawn(name) {
   const [width, height, anchor] = islandFrame(name);
   return {texture: smoothTexture(frameCanvas(name)), size: [width, height], anchor};
@@ -85,6 +99,40 @@ function sprite(group, {texture, size: [width, height], anchor = 0}, x, z, name)
   return mesh;
 }
 
+// Moves a sprite made by sprite() to another ground point (T36: a building moved on the build grid),
+// keeping its lift above the ground and its draw order relative to its foot.
+export function moveSprite(mesh, x, z) {
+  const ground = mesh.userData.ground;
+  if (!ground || (ground.x === x && ground.z === z)) return;
+  const from = projectPoint(ground.x, ground.z), to = projectPoint(x, z);
+  mesh.position.x += to.x - from.x; mesh.position.y += to.y - from.y; mesh.renderOrder += z - ground.z;
+  if (Number.isFinite(mesh.userData.baseY)) mesh.userData.baseY += to.y - from.y;
+  mesh.userData.ground = {x, z};
+}
+
+// A house role's reach on the ground (GAME-V3.md "Houses"): one unit disc and one unit rim, scaled to the radius
+// and squashed like the ground (projectPoint's 0.72), under everything that stands. Pure Three.js, no art.
+export const ROLE_COLOURS = Object.freeze({barracks: 0xe2463b, tavern: 0x3fa04d, workshop: 0xf2c14e});
+export function makeRangeRing(root) {
+  const disc = new THREE.Mesh(new THREE.CircleGeometry(1, 64), new THREE.MeshBasicMaterial({transparent: true, opacity: .14, depthTest: false, depthWrite: false}));
+  const rim = new THREE.Mesh(new THREE.RingGeometry(.975, 1, 96), new THREE.MeshBasicMaterial({transparent: true, opacity: .85, depthTest: false, depthWrite: false}));
+  for (const [mesh, order] of [[disc, 97], [rim, 98]]) { mesh.renderOrder = order; mesh.frustumCulled = false; mesh.visible = false; root.add(mesh); }
+  disc.name = 'island-range'; rim.name = 'island-range-rim';
+  let shown = null;
+  return {
+    show(range, time = 0) {
+      const on = !!range && Number.isFinite(range.radius) && range.radius > 0;
+      disc.visible = rim.visible = on;
+      if (!on) { shown = null; return; }
+      const point = projectPoint(range.x, range.z), colour = ROLE_COLOURS[range.role] ?? 0xffffff;
+      for (const mesh of [disc, rim]) { mesh.position.set(point.x, point.y, 0); mesh.scale.set(range.radius, range.radius * .72, 1); mesh.material.color.setHex(colour); }
+      disc.material.opacity = .12 + .04 * Math.sin(time * 2.4);
+      disc.userData = {range: {...range}}; shown = range;
+    },
+    get shown() { return shown; },
+  };
+}
+
 // The campaign (GAME-V3.md §4): which frame a campaign building shows. A building that is not open yet is a
 // building site whose sign shows the wave it opens after; the wreck shows mended once her repair is paid.
 export function campaignArt(building, campaign) {
@@ -97,8 +145,17 @@ export function campaignArt(building, campaign) {
 }
 // A spot the campaign opens later (the inner wall ring after wave 5) shows a lock badge instead of the build badge.
 export const spotLocked = (spot, campaign) => !!campaign && spotWave(spot.id) > (campaign.wave ?? 0);
+// The first wave any of the spot's kinds opens after (the house after 1, the watchtower after 3), or null.
+export function lockWave(kinds, unlocks) {
+  const waves = kinds.map(kind => unlocks?.locked?.[`${kind}:1`] ?? waveOf(`${kind}:1`)).filter(Number.isSafeInteger);
+  return waves.length ? Math.min(...waves) : null;
+}
 
-// ctx: {art (the place's loaded art, with 'cabin'), reducedMotion, canvas, camera, player, isActive, onPick(id), onTooFar(),
+// T36 (flexible placement): every spot stands where the answer's x/z say (placedSpot), and while a building is
+// moved ctx.placing() is true: a tap on the ground then calls ctx.onGround(x, z) instead of picking, and
+// preview({spotId, x, z, size, ok}) draws that building and its footprint at the cell under consideration.
+// ctx: {art (the place's loaded art, with 'cabin'), reducedMotion, canvas, camera, isActive, onPick(id), player() (its
+// position: a click out of reach calls onFar(id, {hint, zone}) instead of onPick),
 // loadArt (tests), and for Pirate Point: layout {spots, zones(), bell: false, cabin: false}}.
 // Returns {apply({spots, visitor, battle, unlocks}), update(dt, time), pickAt(x, z), dispose()}.
 // A marker shows on an empty spot only when something may be built there (unlocks, TOWER-DEFENSE.md §9).
@@ -106,22 +163,33 @@ export function decorateIsland(place, ctx = {}) {
   const layout = ctx.layout ?? {spots: ISLAND_SPOTS, zones: islandZones, bell: true, cabin: true};
   const SPOTS = layout.spots;
   const root = new THREE.Group(); root.name = layout.name ?? 'island'; place.group.add(root);
+  const progress = layout.zones === islandZones ? decorateProgress(place) : null;
   const baseZones = [...(place.zones ?? [])];
   const reduced = () => (typeof ctx.reducedMotion === 'function' ? ctx.reducedMotion() : !!ctx.reducedMotion);
   const textures = Object.fromEntries(Object.entries(DRAWN).map(([kind, name]) => [kind, drawn(name)]));
-  const ringTexture = drawn('build-ring');
-  const badgeTextures = Object.fromEntries(['wall', 'tower', 'watchtower', 'house', 'locked'].map(kind => [kind, drawn(`build-badge-${kind}`)]));
+  // The marker (src/art/island.js): a gold ring on the ground and a gold "+" badge; a spot that opens later a
+  // slate ring and a padlock badge with the wave it opens after (src/art/campaign.js).
+  const ringTexture = drawn('build-ring'), lockRingTexture = drawn('build-ring-locked'), badgeTexture = drawn('build-badge');
+  const lockTextures = new Map();
+  const lockTexture = wave => {
+    const name = LOCK_WAVES.includes(wave) ? `build-badge-locked-${wave}` : 'build-badge-locked';
+    if (!lockTextures.has(name)) lockTextures.set(name, drawn(name));
+    return lockTextures.get(name);
+  };
   const markers = new Map(), buildings = new Map(); // buildings: 'spot:kind' -> mesh (a tower spot has a cannon and a mortar)
   const slotOf = spot => spot.slot ?? (spot.kind === 'cannon' ? 'tower' : spot.kind);
-  const kindsOf = spot => SLOT_KINDS[slotOf(spot)] ?? [spot.kind];
+  const kindsOf = spot => (slotOf(spot) === 'tower' ? TOWERS : SLOT_KINDS[slotOf(spot)] ?? [spot.kind]);
   for (const spot of SPOTS) {
     const ring = sprite(root, ringTexture, spot.x, spot.z, `island-marker:${spot.id}`);
     ring.position.y -= .75; ring.renderOrder = 99; // on the ground, under the player
-    const badge = sprite(root, badgeTextures[slotOf(spot) === 'tower' ? 'tower' : spot.kind], spot.x, spot.z, `island-badge:${spot.id}`);
+    const badge = sprite(root, badgeTexture, spot.x, spot.z, `island-badge:${spot.id}`);
     badge.position.y += .6; badge.userData.baseY = badge.position.y;
-    const lock = sprite(root, badgeTextures.locked, spot.x, spot.z, `island-lock:${spot.id}`);
+    const lockRing = sprite(root, lockRingTexture, spot.x, spot.z, `island-lock-ring:${spot.id}`);
+    lockRing.position.y -= .75; lockRing.renderOrder = 99; lockRing.visible = false;
+    const lock = sprite(root, lockTexture(null), spot.x, spot.z, `island-lock:${spot.id}`);
     lock.position.y += .6; lock.visible = false;
-    markers.set(spot.id, {ring, badge, lock, set visible(value) { ring.visible = value; badge.visible = value; }});
+    markers.set(spot.id, {ring, badge, lock, lockRing, wave: null, set visible(value) { ring.visible = value; badge.visible = value; },
+      set locked(value) { lock.visible = value; lockRing.visible = value; }});
     for (const kind of kindsOf(spot)) {
       const building = sprite(root, textures[kind], spot.x, spot.z, `island-${kind}:${spot.id}`);
       building.visible = false; buildings.set(`${spot.id}:${kind}`, building);
@@ -141,34 +209,55 @@ export function decorateIsland(place, ctx = {}) {
     }
     campaignMeshes.set(building.id, meshes);
   }
+  // The arsenal (T41): painted only the first time apply() is told the flag "arsenal" is on, so with the flag off
+  // nothing of it is drawn or kept (home island only, like the bell).
+  let arsenalMesh = null;
+  const showArsenal = on => {
+    if (on && !arsenalMesh && layout.bell !== false) arsenalMesh = sprite(root, drawn(ARSENAL.art), ARSENAL.x, ARSENAL.z, 'island-arsenal');
+    return arsenalMesh;
+  };
   if (layout.cabin !== false && ctx.art?.cabin) placeArt(root, ctx.art, 'cabin', CABIN.x, CABIN.z).name = 'island-cabin';
+  // The reach of a house's role while its card is open (GAME-V3.md "Houses"): a soft disc with a bright rim on
+  // the ground, in the role's colour. ctx.range() says which ({x, z, radius, role} or null), read every frame.
+  const rangeRing = makeRangeRing(root);
   const baseColliders = [...place.colliders];
-  let state = {spots: [], visitor: false, battle: false, unlocks: null, crew: null, campaign: null}, disposed = false;
+  let state = {spots: [], visitor: false, battle: false, unlocks: null, crew: null, campaign: null, arsenal: false}, disposed = false;
+  let preview = null;
+  const footprint = makeFootprint(root);
+  // Where a spot stands now: the cell of a move under way, the answer's x/z, else its fixed spot (Pirate Point's stay).
+  const whereOf = spot => {
+    if (preview?.spotId === spot.id) return {x: preview.x, z: preview.z};
+    return layout.zones === islandZones ? placedSpot(spot.id, state.spots) ?? spot : spot;
+  };
   // The real art once it has loaded (null until then: the drawn sprites stand in), and what each spot shows.
   let art = null;
   const shown = new Map(); // spot id (or 'crew') -> {key, meshes}
   const clear = id => { const item = shown.get(id); if (!item) return; for (const mesh of item.meshes) { root.remove(mesh); mesh.geometry.dispose(); } shown.delete(id); };
-  const put = (id, x, z, lift = 0, order = 0) => {
-    const mesh = placeArt(root, art, id, x, z); mesh.position.y += lift; mesh.renderOrder += order; return mesh;
+  const put = (id, x, z, lift = 0, order = 0, scale = 1) => {
+    const mesh = placeArt(root, art, id, x, z, scale); mesh.position.y += lift; mesh.renderOrder += order; return mesh;
   };
   function showSpot(spot, answer, hidden) {
     const built = answer?.built === true, kind = built ? (kindsOf(spot).includes(answer.kind) ? answer.kind : kindsOf(spot)[0]) : null;
     const level = Number.isSafeInteger(answer?.level) && answer.level > 0 ? answer.level : 1;
-    const id = kind ? buildingArt(kind, level) : null, pips = kind ? pipCount(kind, level) : 0;
-    const key = !id || hidden ? '' : `${id}:${pips}`;
+    const id = kind ? buildingArt(kind, level, answer?.spec) : null, pips = kind ? pipCount(kind, level) : 0;
+    const where = whereOf(spot), key = !id || hidden ? '' : `${id}:${pips}@${where.x},${where.z}`;
     if (shown.get(spot.id)?.key === key) return;
     clear(spot.id);
     if (!key) return;
-    const mesh = put(id, spot.x, spot.z); mesh.name = `island-${kind}:${spot.id}`; mesh.userData.level = level;
+    const mesh = put(id, where.x, where.z); mesh.name = `island-${kind}:${spot.id}`; mesh.userData.level = level;
+    mesh.userData.role = activeRole({kind, level, spec: answer?.spec}); mesh.userData.art = id;
     const meshes = [mesh], [, height, anchor] = artSizes[id], top = height * (1 - anchor) + .15;
-    for (let i = 0; i < pips; i++) {
-      const pip = put(pipArt(level), spot.x + (i - (pips - 1) / 2) * .6, spot.z, top, .01); pip.name = `island-pip:${spot.id}:${i + 1}`; meshes.push(pip);
-    }
+    // One row (pipRow): 4 and 5 smaller and spaced wider than a disc, so the gold stars never overlap.
+    const row = pipCount(kind, level) ? pipRow(level, {step: .6}) : {offsets: []}, pipWidth = artSizes[PIP_ART][0];
+    row.offsets.forEach((offset, i) => {
+      const pip = put(pipArt(level), where.x + offset * pipWidth, where.z, top, .01, row.scale); pip.name = `island-pip:${spot.id}:${i + 1}`; meshes.push(pip);
+    });
     shown.set(spot.id, {key, meshes});
   }
   function showCrew(spots, crew, hidden) {
     const places = hidden || !crew ? [] : crewPlaces(spots.map(item => {
-      const where = SPOTS.find(spot => spot.id === item.id); return where ? {...item, x: where.x, z: where.z} : null;
+      const spot = SPOTS.find(entry => entry.id === item.id), where = spot ? whereOf(spot) : null;
+      return where ? {...item, x: where.x, z: where.z} : null;
     }).filter(Boolean), crew, {bell: layout.bell === false ? null : BELL});
     const key = places.map(item => `${item.kind}@${item.x},${item.z}`).join('|');
     if (shown.get('crew')?.key === key) return;
@@ -178,32 +267,41 @@ export function decorateIsland(place, ctx = {}) {
 
   // battle: a wave is on screen; its renderer (src/pirates/render.js) draws the walls and cannons with
   // their damage, so the island's own wall and cannon sprites step aside until it ends.
-  function apply({spots = [], visitor = false, battle = false, unlocks = null, crew = null, campaign = null} = {}) {
+  function apply({spots = [], visitor = false, battle = false, unlocks = null, crew = null, campaign = null, arsenal = false} = {}) {
     if (disposed) return;
-    state = {spots, visitor, battle, unlocks, crew, campaign};
+    state = {spots, visitor, battle, unlocks, crew, campaign, arsenal: arsenal === true};
     const known = spots.length > 0;
+    const shownArsenal = showArsenal(known && state.arsenal);
+    if (shownArsenal) shownArsenal.visible = known && state.arsenal;
+    progress?.apply(campaign, spots, known);
     for (const [id, meshes] of campaignMeshes) {
       const frame = known ? campaignArt(CAMPAIGN_BUILDINGS.find(item => item.id === id), campaign) : null;
       for (const [name, mesh] of Object.entries(meshes)) mesh.visible = name === frame;
     }
     for (const spot of SPOTS) {
-      const answer = spots.find(item => item.id === spot.id), built = answer?.built === true;
+      const answer = spots.find(item => item.id === spot.id), built = answer?.built === true, where = whereOf(spot);
+      const marker = markers.get(spot.id);
+      for (const mesh of [marker.ring, marker.badge, marker.lock, marker.lockRing]) moveSprite(mesh, where.x, where.z);
+      for (const kind of kindsOf(spot)) moveSprite(buildings.get(`${spot.id}:${kind}`), where.x, where.z);
       // Locked things stay on the map (GAME-V3.md §4): a spot the campaign opens later, or whose kind is not
       // open yet, shows a lock badge instead of the glowing ring.
       const open = (!unlocks || kindsOf(spot).some(kind => (unlocks.levels?.[kind] ?? 0) >= 1)) && !spotLocked(spot, campaign);
-      const hidden = battle && ['wall', 'cannon', 'mortar'].includes(answer?.kind ?? spot.kind);
+      const hidden = battle && BATTLE_KINDS.includes(answer?.kind ?? spot.kind);
       for (const kind of kindsOf(spot)) {
         buildings.get(`${spot.id}:${kind}`).visible = !art && built && (answer.kind === kind || (kindsOf(spot).length === 1))
-          && !(battle && ['wall', 'cannon', 'mortar'].includes(kind));
+          && !(battle && BATTLE_KINDS.includes(kind));
       }
       if (art) showSpot(spot, answer, hidden);
-      markers.get(spot.id).visible = !built && known && !battle && open; // a visitor builds too, with their own coins
-      markers.get(spot.id).lock.visible = !built && known && !battle && !open;
+      marker.visible = !built && known && !battle && open; // a visitor builds too, with their own coins
+      marker.locked = !built && known && !battle && !open;
+      // The wave the padlock shows: the campaign step of the spot, else the first wave its kind opens after.
+      const wave = open ? null : spotLocked(spot, campaign) ? spotWave(spot.id) : lockWave(kindsOf(spot), unlocks);
+      if (marker.wave !== wave) { marker.wave = wave; marker.lock.material.map = lockTexture(wave).texture; marker.lock.material.needsUpdate = true; }
     }
     // The wave's renderer draws the crew during a battle; outside one they stand by their posts.
     if (art) showCrew(spots, crew, battle);
     if (layout.zones === islandZones) {
-      place.zones = islandZones({visitor});
+      place.zones = islandZones({visitor, spots, arsenal: state.arsenal});
       place.colliders.splice(0, place.colliders.length, ...baseColliders,
         {x: CABIN.x, z: CABIN.z - 1.8, width: 4.8, depth: 3.6, island: true});
     } else place.zones = [...baseZones, ...(known ? layout.zones() : [])];
@@ -211,7 +309,7 @@ export function decorateIsland(place, ctx = {}) {
   apply(state);
 
   // The real art (every level, the pips and the crew) replaces the drawn sprites once it has loaded.
-  const wanted = [...new Set([...SPOTS.flatMap(kindsOf).flatMap(kind => LEVEL_ART[kind] ?? []), PIP_ART, PIP_TIER_ART, ...Object.values(crewArt)])]
+  const wanted = [...new Set([...SPOTS.flatMap(kindsOf).flatMap(kind => LEVEL_ART[kind] ?? []), ...Object.values(ROLE_ART), PIP_ART, PIP_TIER_ART, ...Object.values(crewArt)])]
     .filter(id => Object.hasOwn(artSizes, id));
   (ctx.loadArt ?? loadArt)(wanted).then(loaded => {
     if (disposed) { Object.values(loaded).forEach(material => { material.map?.dispose(); material.dispose(); }); return; }
@@ -222,8 +320,9 @@ export function decorateIsland(place, ctx = {}) {
 
   // The nearest pickable thing to a ground point (a tap), or null.
   function pickAt(x, z) {
-    const candidates = [...SPOTS.map(spot => ({id: spot.id, x: spot.x, z: spot.z, w: 2.4, h: spot.kind === 'watchtower' ? 5 : 3})),
+    const candidates = [...SPOTS.map(spot => ({id: spot.id, ...whereOf(spot), w: 2.4, h: spot.kind === 'watchtower' ? 5 : 3})),
       ...(bell ? [{id: BELL.id, x: BELL.x, z: BELL.z, w: 1.6, h: 3.4}] : []),
+      ...(arsenalMesh?.visible ? [{id: ARSENAL.id, x: ARSENAL.x, z: ARSENAL.z, w: ARSENAL.w / 2, h: ARSENAL.h}] : []),
       ...(campaignMeshes.size ? CAMPAIGN_BUILDINGS.map(item => ({id: item.id, x: item.x, z: item.z, w: item.w, h: item.h})) : []),
       ...(state.visitor || layout.cabin === false ? [] : [{id: CABIN.id, x: CABIN.x, z: CABIN.z, w: 3, h: 6}])];
     let best = null, bestScore = Infinity;
@@ -244,15 +343,15 @@ export function decorateIsland(place, ctx = {}) {
       const rect = ctx.canvas.getBoundingClientRect();
       const point = new THREE.Vector3((event.clientX - rect.left) / rect.width * 2 - 1,
         1 - (event.clientY - rect.top) / rect.height * 2, 0).unproject(ctx.camera);
+      // Moving a building (T36): the tap chooses a cell of the ground instead of a building.
+      if (ctx.placing?.()) { ctx.onGround?.(point.x, -point.y / .72); return; }
       const picked = pickAt(point.x, -point.y / .72);
       if (!picked) return;
-      // Use the clicked building's zone, not a different nearby building's reach.
-      const zone = place.zones.find(item => item.id === picked);
-      if (!ctx.player?.position || !zone || findZone(ctx.player.position, [zone]) !== picked) {
-        ctx.onTooFar?.();
-        return;
-      }
-      ctx.onPick?.(picked);
+      // Walk up first: a click on something out of reach only says so (ctx.player is the player's position).
+      const position = ctx.player?.(), verdict = clickVerdict(position, place.zones, picked);
+      // An installed position adapter must have a position before it can open a building.
+      if (ctx.player && !position) { ctx.onFar?.(picked, {...verdict, open: false, hint: WALK_CLOSER}); return; }
+      if (verdict.open) ctx.onPick?.(picked); else ctx.onFar?.(picked, verdict);
     };
     ctx.canvas.addEventListener('pointerdown', start); ctx.canvas.addEventListener('pointerup', click);
     cleanups.push(() => { ctx.canvas.removeEventListener('pointerdown', start); ctx.canvas.removeEventListener('pointerup', click); });
@@ -260,9 +359,18 @@ export function decorateIsland(place, ctx = {}) {
   let ringing = 0;
   return {
     apply, pickAt,
+    // T36: the cell a building is moved to ({spotId, x, z, size, ok}), or null when the move ends.
+    preview(next) {
+      if (disposed) return;
+      preview = next && Number.isFinite(next.x) && Number.isFinite(next.z) ? {...next} : null;
+      footprint.show(preview);
+      apply(state);
+    },
+    get previewing() { return preview ? {...preview} : null; },
     ring() { ringing = 1.2; },
     update(dt, time = 0) {
       if (disposed) return;
+      rangeRing.show(ctx.range?.() ?? null, reduced() ? 0 : time);
       const still = reduced();
       const glow = still ? 1 : .7 + .3 * Math.sin(time * 3.2), bob = still ? 0 : Math.sin(time * 2.4) * 2.4 / UNIT;
       for (const marker of markers.values()) { marker.ring.material.opacity = glow; marker.badge.position.y = marker.badge.userData.baseY + bob; }
@@ -273,7 +381,9 @@ export function decorateIsland(place, ctx = {}) {
     get root() { return root; },
     dispose() {
       if (disposed) return; disposed = true; cleanups.splice(0).forEach(stop => stop());
+      progress?.dispose();
       for (const id of [...shown.keys()]) clear(id);
+      for (const item of lockTextures.values()) item.texture.dispose(); // the padlocks a spot no longer shows
       if (art) Object.values(art).forEach(material => { material.map?.dispose(); material.dispose(); });
     },
   };

@@ -160,3 +160,98 @@ The walkthrough, test-map, invalid-input, pinning and submission tasks in [FINAL
 - Stay in your lane's folders; if you must touch a shared file (`game.js`, `registry.js`, the HUD), keep the change tiny and say so in the PR title.
 - No new packages, services or accounts; no database migrations outside lane 0; no keys in code.
 - Every PR: tests for the new logic, screenshots for UI, the explain-back section, and green `npm test` / `npm run build` (and `uv run pytest -q` if you touched the backend).
+
+## 6. Defense and shared-island expansion
+
+**Planning contribution:** Ianno Hollensteiner (`Iannomh123456`), 14 Nov 2026, with coding-agent assistance; branch `docs/t29-t47-defense-roadmap`. This extends BUILD-PLAN and OPEN-TODOS rather than introducing a second roadmap. No gameplay implementation or release is claimed.
+
+Use existing English docs, task tables, building cards, rendering/art generators, plain JavaScript/Python and server/API conventions. No framework or service change is implied. The rules below are implementation requirements from Ianno; collaborators choose the remaining details within the existing structure and shared-decision workflow.
+
+- **Recovery:** attack damage/destruction persists until active repair/rebuild or an agreed recovery timer completes. A wave ending must not grant instant recovery. Collaborators choose costs, durations, interruptions and offline timing; preserve kind/level and prevent upgrades from bypassing recovery.
+- **Physical arsenal:** a building in the island world, with location, graphics and ordinary walk-near/E/touch interaction to be designed and implemented. At most 20 weapon copies may be stored there. Each copy is stored or held by one captain, never both; multiple copies of one type may exist. Collaborators must resolve full-storage returns and disconnects without loss/duplication. Weapon types have distinct characteristics and prices.
+- **Flexible construction:** implement more flexible wall/defense placement. The collaborator chooses the exact model after examining existing structure, saves, interaction and pathfinding. Keep the game’s art style; a cosmetic-only pass over unchanged fixed spots is insufficient.
+
+### 1. Current baseline and scope
+
+The local code and documents were inspected on 14 Nov; this is not a fresh live-site verification. Recheck current `main` when claiming a task. Some existing task rows contain both completed status and older implementation notes; confirm the code and release evidence instead of treating those notes as new work.
+
+| System | Current baseline | Expansion |
+|---|---|---|
+| Walls | Damage and destruction during a wave; free repair and rebuild; reset to full health next wave | Persistent damage/destruction until active repair/rebuild or an agreed timed recovery completes |
+| Towers | No hit points; gunboats and siege barges can temporarily disable them | Damage, destruction and recovery for defenses |
+| Boarders | Nearby captains first, otherwise a fixed wall-to-heart route; broken walls skipped | Clear priorities, gaps, rerouting and rebuilt obstacles |
+| Building | Fixed spots; upgrades preserve the building kind | Implement more flexible placement with an agreed grid/placement model and old-save compatibility |
+| Defeat | Heart destroyed or all captains down; buildings/coins kept; restart at best wave minus two, minimum one | Last-chance minigame and an explicit reset policy |
+| Captains | Shooting, cutlass, purchasable personal weapons, skills and roles already exist | Physical arsenal building; at most 20 stored weapon copies, with exclusive possession and distinct weapon stats/prices |
+| Multiplayer | Personal coins, shared island buildings; members can continue without everybody online | Explicit permissions, absence, rewards and disconnect rules |
+| Existing follow-ups | T5/T7/T26, shooting-direction T27 and minigame introduction T28 are merged; T3 balance and T6 Harbor idea remain follow-ups | Build on merged features; coordinate remaining work rather than reimplement it |
+
+The reported upgrade/rebuild bug is an investigation, not a reproduced defect. Existing repair/rebuild inputs and wall state are in `frontend/src/pirates/sim.js`; target selection is `pickBoarderTarget`. Do not assume that persistent building level and current combat health are the same state.
+
+### 2. Delivery order
+
+The existing submission, rehearsal and Thu 19 Nov feature-freeze commitments remain in force. This roadmap records the whole requested scope, not a promise to ship it all before submission. Small verified fixes may fit the current sprint; large gameplay changes are a later milestone unless the team explicitly reschedules them.
+
+| Phase | Goal | Tasks | Exit check |
+|---|---|---|---|
+| 1. Understand and agree | Reproduce the action problem; settle lifecycle, permissions and reset rules | T29, T30, T37, T42 | Reproduction evidence and reviewed decisions/contracts; no unresolved shared rule silently selected in code |
+| 2. Make recovery coherent | Implement the agreed repair, rebuild and upgrade behavior and defense damage | T31–T33, T47 | Lifecycle tests, safe charging and two-browser agreement |
+| 3. Make attacks coherent | Target selection, wall paths and flexible placement | T34–T36 | Deterministic targets/routes; existing saves remain usable |
+| 4. Add shared progression | Rescue, minigame scaling and arsenal | T38–T41 | Solo and multiplayer outcomes agree, retries do not duplicate rewards or weapons |
+| 5. Expand and polish | New defenses/captain options, score/landmark, Harbor and final balance | T43–T46; existing T3/T5/T6/T7/T26 | Playtest evidence, documentation and existing regression checks |
+
+The phases describe delivery milestones, not a ban on earlier design work: T34 target design must be agreed before T33 implementation; T35/T36 agree their path/placement contract before either implementation. Use each task’s dependency column for the actual start conditions.
+
+### 3. How teammates claim work
+
+[OPEN-TODOS section 2](OPEN-TODOS.md#2-open-tasks-you-can-pick-small-independent-updated-thu-12-nov) links to the detailed task board in section 9. Read the full acceptance criteria and prerequisites before proposing an implementation. Use the responsible teammate’s own identity. Follow that human’s explicit approval requirements for coding and publication.
+
+No expansion implementation task is assigned by this PR. Ianno owns this planning contribution; each implementing teammate is responsible for their own issue, branch, code and explain-back. After the responsible human approves remote publication, claim ONE task with an issue and draft PR, recording your real name, branch, likely files, dependencies and reviewer. Do not imply that a proposed feature is already approved or implemented.
+
+Use one writing agent per branch/worktree. Before starting, check open issues/PRs and the current working tree. Branch from current `main` after the plan is reviewed. In the issue use: `Task: Txx; responsible teammate: ...; branch: ...; reviewer: ...; files: ...; depends on: ...; decisions: ...; checks: ...`.
+
+| Lane | Can begin independently | Shared files to coordinate |
+|---|---|---|
+| Recovery and defense | T29 reproduction and T30 design | `src/pirates/sim.js`, island cards, backend island service, migrations |
+| Enemies and layout | T34/T36 design and fixtures; implementation waits for contracts | `sim.js`, island positions, save/layout format, renderer |
+| Co-op and arsenal | T37/T42 policy design; T40 inventory contract after policy agreement | island service/routes, wallet, migrations, room/sync messages |
+| Experience and progression | T39 audit, T44 proposals, T45/T46 scoped design | finisher UI, campaign data, captain stats, Harbor cards |
+
+Different lanes can research, write separate specs and prepare fixtures together. They must not concurrently edit `sim.js`, the same migration, shared content or the same interface definition. Agree a file owner in the issues, merge a small prerequisite PR, then update dependent branches. Lane labels are areas of work, not exclusive authority; coordinate migration work under the existing build-plan rules.
+
+### Repository integration points
+
+These are existing entry points to inspect, not instructions to put every new feature in a large shared file. Extract a small focused module only where it helps explain the change. Keep persistent authority separate from deterministic combat.
+
+| Concern | Existing integration points | Contract to agree before code |
+|---|---|---|
+| Combat damage, targets, recovery | `frontend/src/pirates/sim.js`, `controller.js`, `interact.js`, `sync.js`, `render.js` | Health/state transitions, deterministic inputs and persisted wave-end health/timers |
+| Building interaction and placement | `frontend/src/island/spots.js`, `world.js`, `card-model.js`, `ui.js`, `api.js` | Existing building-card/use flow, legal coordinates/footprints, layout version and old-save conversion |
+| Coins, weapons, permissions, progression | `backend/server/island/service.py`, `store.py`, `rules.py`, `catalogue.py`, `games.py`, `waves.py` | Authorized atomic transitions, retry keys, inventory location/holder, persistent recovery and concurrent spending |
+| Captain effects and weapon data | `frontend/src/pirates/captain-stats.js`, `backend/content/islands.json` | One authoritative weapon catalogue, existing stat scaling, copy identity separate from type |
+| Minigames | `frontend/src/pirates/finisher/` and existing wave flow | Reuse suitable inputs/UI; server-owned outcome/reward/reset rules and reconnect behavior |
+| Database and shared interfaces | `supabase/migrations/`, `docs/INTERFACES.md`, relevant route models and specs | Migrations written/reviewed under current policy; no live application as part of these tasks |
+
+Recheck these paths on the latest main. Art must extend the existing art pipeline and register; the arsenal is not a separate screen-only shop. Server-owned timestamps and inventory must survive reloads, while sync inputs keep the battle consistent. New recovery/layout state needs explicit compatibility defaults for old saves and explicit handling of a mixed client-version session. If the current save schema cannot represent the feature, include the schema/API change in the spec rather than quietly relying on localStorage.
+
+### 4. Task board
+
+[OPEN-TODOS section 9](OPEN-TODOS.md#9-defense-and-shared-island-expansion-proposal-14-nov) is the single detailed board for T29–T47: scope, dependencies and acceptance checks. Existing IDs and statuses remain unchanged. T5/T7/T26/T27/T28 have merged implementation; related expansion work builds on that baseline. T3/T6 remain follow-ups. The link in OPEN-TODOS section 2 makes the detailed board discoverable from the existing task list.
+
+### 5. Decisions and contracts before implementation
+
+Collaborators should investigate open choices, compare practical options, recommend a solution and drive it to a recorded decision as part of their task. They need not send every routine detail back to the requester. Changes affecting shared gameplay, money, persistence or interfaces must follow [CONTRIBUTING.md](../CONTRIBUTING.md): discuss in the issue, obtain team agreement and record the outcome in [DECISIONS.md](DECISIONS.md). Until agreement, keep current behavior and continue independent work. This plan does not preselect the unanswered choices.
+
+Use `specs/_TEMPLATE.md` for each claimed package. Record API/event/table/flag changes in their canonical locations and [INTERFACES.md](INTERFACES.md) in the same PR. Agree authority for transient combat health versus server-owned purchases, inventory and progression. Network sync must preserve deterministic combat without trusting a client to charge coins, grant weapons or settle a reset. Reserve decision numbers and migration timestamps from current `origin/main`; this proposal assigns neither.
+
+### 6. Verification and handover
+
+Documentation-only changes require the documented link/content check ([ENGINEERING.md](ENGINEERING.md), section 3). Implementation PRs run the applicable documented checks, report exact results and state skipped checks:
+
+- Frontend: `cd frontend && npm test && npm run build && npm run test:mp`.
+- Backend: `cd backend && uv run pytest -q` and `uv run ruff check .` from `backend/` when Python changes.
+- Database: the SQL parse and migration checks in ENGINEERING section 4.2; application is a separate coordinated action under current team policy.
+- UI: desktop and phone evidence using the existing cards/art, including disabled, loading and rejected actions.
+- Gameplay: meaningful regressions for changed behavior, same-seed replay, early/mid/late balance, solo and multiple active crew sizes; multi-client disagreement, concurrent purchases and reconnect cases where relevant. Existing T3 remains the real-player balance follow-up.
+
+A task finishes with its issue/PR updated, spec and relevant HOW-TO-PLAY/tutorial/WALKTHROUGH/TEST-MAP entries accurate, exact checks and remaining limitations recorded, and a different human reviewer. Link dependencies by task ID and PR; do not mark work live from a local pass. Each contributor keeps their own Git authorship and explains their own changes.

@@ -30,7 +30,7 @@ from uuid import UUID
 
 from server.errors import ApiError
 from server.game.islet_store import player_not_set_up
-from server.island import games, store
+from server.island import games, permissions, rescue, store, wave_events
 from server.island.catalogue import IslandCatalogue, Weather
 from server.island.codes import read_code
 from server.island.rules import is_boss, loot_rates, weather_for
@@ -92,7 +92,7 @@ async def find_place(
     if island is None:
         raise no_such_island()
     if members_only:
-        await games.require_member(admin, island, player_id)
+        await permissions.require_action(admin, island.owner, player_id, permissions.WAVE_START)
     return "island", island.owner
 
 
@@ -159,7 +159,9 @@ async def join(
     if where is None:
         raise no_such_wave()
     if where.place == "island" and where.island_owner is not None:
-        await games.require_member_of(admin, where.island_owner, player_id)
+        await permissions.require_action(
+            admin, where.island_owner, player_id, permissions.WAVE_JOIN
+        )
     await store.open_island(admin, player_id, catalogue.starting_coins)
     reply = await store.join_wave(admin, player_id, str(wave_id))
     if isinstance(reply, Refusal):
@@ -207,16 +209,34 @@ async def finish(
     wave_id: UUID,
     survived: bool,
     ships_sunk: int,
+    bonuses: list[str] | None = None,
+    rescued: bool = False,
 ) -> WaveFinish:
     """End this player's part of a wave. A repeat answers the stored result and pays nothing.
     Past wave lateFrom the loot grows more slowly (rules.loot_rates): the wave's number is read
-    first, so the rates go to wave_finish as plain arguments."""
+    first, so the rates go to wave_finish as plain arguments. v3 waves: `bonuses` (the treasure
+    galleon sunk, a boss finisher won) raise the base, but only those the wave's place, number and
+    seed allow (wave_events.allowed_bonuses); the boss multiplier applies after, like all loot.
+    T38: `rescued` (a won last-chance rescue, passed only with the flag `rescue` on) makes a lost
+    island wave from wave 4 fall back one wave below the best instead of two (rescue.py)."""
     loot = catalogue.loot
     base, per_wave, point_base = loot.base, loot.per_wave, loot.pirate_point_base
-    if loot.late_from:
+    back = catalogue.waves.restart_back
+    if loot.late_from or bonuses or rescued:
         where = await store.read_wave_place(admin, str(wave_id))
         if where is not None and where.wave is not None:
-            base, per_wave, point_base = loot_rates(loot, where.wave)
+            if loot.late_from:
+                base, per_wave, point_base = loot_rates(loot, where.wave)
+            allowed = wave_events.allowed_bonuses(
+                bonuses,
+                place=where.place,
+                wave=where.wave,
+                seed=where.seed,
+                boss_every=catalogue.waves.boss_every,
+            )
+            base += wave_events.bonus_base(allowed, where.wave)
+            counts = rescue.rescue_counts(rescued, survived, where.place, where.wave)
+            back = rescue.restart_back(back, counts)
     arguments = {
         "p_player_id": player_id,
         "p_wave_id": str(wave_id),
@@ -228,7 +248,7 @@ async def finish(
         "p_point_loot_base": point_base,
         "p_boss_every": catalogue.waves.boss_every,
         "p_boss_multiplier": loot.boss_multiplier,
-        "p_restart_back": catalogue.waves.restart_back,
+        "p_restart_back": back,
     }
     reply = await store.finish_wave(admin, arguments)
     if isinstance(reply, Refusal):
@@ -267,16 +287,20 @@ async def revive(
 ) -> WaveRevive:
     """Captain health (docs/GAME-V3.md section 3): the signed-in player helped a fallen captain
     up in this wave and pays catalogue.revive.base + per_wave x the wave number (the database
-    reads the wave number itself). Only a member of the game (on an island; the owner always)
-    who is in the wave and has not finished it, while it runs. A repeated actionUid pays nothing
-    more and answers the same price. The fall and the standing up are the browsers' (the wave's
-    simulation); fallen and down_at (the tick of the fall, the same in every browser) name one
-    fall, which is paid for once: a second helper of it is refused already_up."""
+    reads the wave number itself), tavern_percent less on an island with a Tavern (the database
+    checks the island's buildings: wave_revive() of 20261112090000_house_roles.sql). Only a
+    member of the game (on an island; the owner always) who is in the wave and has not finished
+    it, while it runs. A repeated actionUid pays nothing more and answers the same price. The
+    fall and the standing up are the browsers' (the wave's simulation); fallen and down_at (the
+    tick of the fall, the same in every browser) name one fall, which is paid for once: a second
+    helper of it is refused already_up."""
     where = await store.read_wave_place(admin, str(wave_id))
     if where is None:
         raise no_such_wave()
     if where.place == "island" and where.island_owner is not None:
-        await games.require_member_of(admin, where.island_owner, player_id)
+        await permissions.require_action(
+            admin, where.island_owner, player_id, permissions.WAVE_REVIVE
+        )
     arguments = {
         "p_player_id": player_id,
         "p_wave_id": str(wave_id),

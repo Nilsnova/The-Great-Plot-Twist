@@ -21,7 +21,10 @@
 // fallen captain lies in their lobby colour (captain-down-1…10, src/art/people.js) inside a pulsing red ring
 // on the ground, and the ring fills with gold dots while you hold E to help them up.
 import * as THREE from 'three';
-import { TIER_ART, crewArt, levelArt, pirateDimensions, pirateFrames, pirateLevels } from '../pixel/pirate-catalog.js';
+import { CULVERIN_ART, FIRE_ART, HARPOON_ART, TIER_ART, crewArt, fireArt, levelArt, pipRow, pirateDimensions, pirateFrames, pirateLevels } from '../pixel/pirate-catalog.js';
+// T33 (D049, proposed): the damaged and broken tower drawings, used only while the wave has tower health.
+import { TOWER_KINDS, towerStateFrame } from '../art/tower-states.js';
+import { towerLook } from './tower-health.js';
 import { pixelGlsl, toScreen } from '../world/pixel-glsl.js';
 import { CHARACTER_SCALE } from './character-scale.js';
 
@@ -37,10 +40,18 @@ export const ATLAS_IDS = [...pirateFrames.sloop, ...pirateFrames.brig, ...pirate
   ...pirateFrames.captain, ...pirateFrames.smoke, ...pirateFrames.fire, ...pirateFrames.explosion, ...pirateFrames.boarder,
   'captain-cutlass', 'fx-musket-flash', 'fx-mortar-shell', 'fx-level-pip', 'pirate-cannonball', 'pirate-wreck'];
 export const WARSHIP_FRAMES = pirateFrames.warship;
+// The gunboat (GAME-V3.md §4.1), cartoon only like the tiers: its own small hull (three bobbing frames), its muzzle
+// flash and the two-frame "jammed" mark over a tower (src/art/fleet.js). A pixel atlas (tests) sails it as a plain
+// sloop and draws no marks.
+export const GUNBOAT_FRAMES = ['pirate-gunboat-1', 'pirate-gunboat-2', 'pirate-gunboat-3'];
+export const JAM_FRAMES = ['fx-jam-1', 'fx-jam-2'];
+export const GUNBOAT_IDS = [...GUNBOAT_FRAMES, 'fx-gunboat-flash', ...JAM_FRAMES];
+const GUNBOAT_BOX = [56, 44]; // the hull's box in the cartoon atlas (src/art/fleet.js)
 const EXPLOSION_FRAMES = pirateFrames.explosion;
 const LAYER_ORDER = { far: 76, near: 124, air: 940, fog: 900 };
 const CAPACITY = { far: 96, near: 96, air: 320 };
 const SINK_SECONDS = 1.8, WRECK_SECONDS = 9, SPLASH_SECONDS = .5, FLASH_SECONDS = .12, FIRE_SECONDS = .22;
+const TOWER_BAR_LIFT = 2.7;          // T33: drawn units above the ground for a tower's hp bar (a tower is taller than a captain)
 const BURST_SECONDS = .6, POSE_SECONDS = .6, POST_CAPACITY = 8;
 // Boarders on land: one sprite layer per 2-unit band of z (renderOrder 100 + z like the island's art), so
 // they pass in front of and behind walls, buildings and the player; a band is drawn only while it has one.
@@ -88,22 +99,65 @@ export function packAtlas(ids = ATLAS_IDS, dimensions = pirateDimensions, width 
 // replace the pixel boarders (PIXEL_ONLY_IDS) in the cartoon atlas. drawBoarder() takes the cartoon frame
 // when the atlas has it, else the pixel one (pixel packAtlas, tests).
 export const DOWN_IDS = Array.from({ length: 10 }, (_, i) => `captain-down-${i + 1}`);
-export const CARTOON_EXTRA_IDS = ['boarder', 'boarder-walk-1', 'boarder-walk-2', 'boarder-hit', 'boarder-hack', ...DOWN_IDS];
+// The Barracks' militia (GAME-V3.md "Houses"), cartoon only: a pixel atlas (tests) simply does not draw them.
+export const MILITIA_IDS = ['militia', 'militia-walk-1', 'militia-walk-2', 'militia-strike', 'militia-hit'];
+export const CARTOON_EXTRA_IDS = ['boarder', 'boarder-walk-1', 'boarder-walk-2', 'boarder-hit', 'boarder-hack', ...DOWN_IDS, ...MILITIA_IDS];
 export const PIXEL_ONLY_IDS = [...pirateFrames.boarder];
 // Levels 4 and 5 of walls, cannons and mortars and their gold pips (GAME-V3.md §4.1): cartoon-only, so a pixel
 // atlas (tests) draws a tier building with its level-3 art and plain pips.
 export const TIER_IDS = [...Object.values(TIER_ART).flat(), 'fx-level-pip-gold'];
+// The firing frames of levels 2 to 5 (FIRE_ART): cartoon-only like the tiers.
+export const FIRE_LEVEL_IDS = Object.values(FIRE_ART).flatMap(list => list.slice(1));
+// The harpoon tower, its harpoon and the rope marks of a slowed ship (GAME-V3.md §5): cartoon-only as well.
+export const HARPOON_IDS = [...HARPOON_ART.levels, ...HARPOON_ART.fire, HARPOON_ART.bolt, HARPOON_ART.ripples, HARPOON_ART.rope];
+// T33: every kind, level 1-5, damaged and broken (src/art/tower-states.js), cartoon only, and only in the atlas
+// of a wave with tower health (loadAtlas towerStates), so the atlas of every other wave stays as it was.
+export const TOWER_STATE_IDS = TOWER_KINDS.flatMap(kind => [1, 2, 3, 4, 5].flatMap(level =>
+  ['damaged', 'broken'].map(state => towerStateFrame(kind, level, state))));
+// The culverin (T43, D048 proposed): every level idle and firing and its shot, cartoon only, and only in the atlas of a
+// wave that fights with one (loadAtlas culverins), its damaged and broken drawings only with tower health as well.
+// A pixel atlas has none and draws a cannon instead.
+export const CULVERIN_IDS = [...CULVERIN_ART.levels, ...CULVERIN_ART.fire, CULVERIN_ART.shot];
+export const CULVERIN_STATE_IDS = [...CULVERIN_ART.damaged, ...CULVERIN_ART.broken];
+/**
+ * The frame of a cannon or mortar post: its level's art, or while it fires its level's firing frame (so a
+ * level-3 cannon does not flick to level 1's plain barrel, nor a level-5 one lose its gold). has(id) says
+ * whether the atlas holds a frame; without one (the pixel atlas) a tier falls back to level 3's art and a
+ * shot to level 1's firing frame. Pure.
+ * state (T33): 'damaged' or 'broken' takes that drawing when the atlas has it (a broken tower never shows a
+ * shot), else the intact frame; 'intact' (the default) is exactly the frame of before.
+ */
+export function towerFrame(kind, level, firing = false, has = () => true, state = 'intact') {
+  if (state === 'damaged' || state === 'broken') {
+    const id = towerStateFrame(kind, level, state);
+    if (has(id)) return id;
+    if (state === 'broken') firing = false;
+  }
+  if (kind === 'culverin') { // cartoon-only, like the harpoon: a pixel atlas has no culverin, so a cannon stands in
+    const n = Math.max(1, Math.min(5, Number.isInteger(level) ? level : 1)), id = (firing ? CULVERIN_ART.fire : CULVERIN_ART.levels)[n - 1];
+    return has(id) ? id : towerFrame('cannon', level, firing, has);
+  }
+  if (kind === 'harpoon') { // cartoon-only: a pixel atlas has no harpoon, so a cannon stands in
+    const n = Math.max(1, Math.min(5, Number.isInteger(level) ? level : 1)), id = (firing ? HARPOON_ART.fire : HARPOON_ART.levels)[n - 1];
+    return has(id) ? id : towerFrame('cannon', level, firing, has);
+  }
+  const k = kind === 'mortar' ? 'mortar' : 'cannon', n = Math.max(1, Math.min(5, Number.isInteger(level) ? level : 1));
+  if (firing) { const id = fireArt(k, n); return has(id) ? id : pirateFrames[k][1]; }
+  const id = levelArt(k, n);
+  return has(id) ? id : pirateLevels[k][Math.min(3, n) - 1];
+}
 const BOARDER_ART = Object.freeze({ walk: ['boarder-walk-1', 'boarder-walk-2'], hack: ['boarder', 'boarder-hack'], hit: 'boarder-hit', still: 'boarder' });
 /**
  * Paints every atlas sprite in the clean cartoon style (src/art/) into one smooth texture (browser
  * only; cached by the caller): linear filtering with mipmaps, premultiplied alpha, at the screen's
  * density within the atlas budget. rects, width and height stay in logical px (16 per world unit).
  */
-export async function loadAtlas({ quality = 'high', colour = 0 } = {}) {
+export async function loadAtlas({ quality = 'high', colour = 0, towerStates = false, culverins = false } = {}) {
   const { cartoonAtlas, smoothTexture } = await import('../art/textures.js');
   const { setPoseColour } = await import('../art/people.js');
   setPoseColour(colour); // your captain's musket and cutlass poses in your lobby colour
-  const ids = [...new Set([...ATLAS_IDS.filter(id => !PIXEL_ONLY_IDS.includes(id)), ...CARTOON_EXTRA_IDS, ...TIER_IDS])];
+  const ids = [...new Set([...ATLAS_IDS.filter(id => !PIXEL_ONLY_IDS.includes(id)), ...CARTOON_EXTRA_IDS, ...TIER_IDS, ...FIRE_LEVEL_IDS, ...HARPOON_IDS, ...GUNBOAT_IDS,
+    ...(towerStates ? TOWER_STATE_IDS : []), ...(culverins ? CULVERIN_IDS : []), ...(culverins && towerStates ? CULVERIN_STATE_IDS : [])])];
   const atlas = await cartoonAtlas(ids, { quality, extra: [[WHITE, 8, 8]] });
   const white = atlas.rects[WHITE], context = atlas.image.getContext('2d');
   context.fillStyle = '#fff'; context.fillRect(white.x * atlas.density, white.y * atlas.density, white.w * atlas.density, white.h * atlas.density);
@@ -200,12 +254,13 @@ function pool() {
 
 const colour = hex => { const c = new THREE.Color(hex); return { r: c.r, g: c.g, b: c.b }; };
 const GOLD = colour('#ffd77a'), RED = colour('#d8553f'), GREEN = colour('#9fd26a'), DARK = colour('#1f2622'), BEAM = colour('#ffe9a8');
-const BRASS = colour('#e0b04a');
+const BRASS = colour('#e0b04a'), TEAL = colour('#4fc3c9');
 const SHIP_SIZE = Object.fromEntries(['sloop', 'brig', 'flagship'].map(kind => {
   const [w, h] = pirateDimensions[pirateFrames[kind][0]]; return [kind, { w: w / UNIT, h: h / UNIT }];
 }));
 { const [w, h] = pirateDimensions[pirateFrames.warship[0]]; SHIP_SIZE.warship = { w: w / UNIT, h: h / UNIT }; }
-const FRAMES = pirateFrames;
+const FRAMES = { ...pirateFrames, gunboat: GUNBOAT_FRAMES };
+SHIP_SIZE.gunboat = { w: GUNBOAT_BOX[0] / UNIT, h: GUNBOAT_BOX[1] / UNIT };
 // The campaign's pirate types (docs/GAME-V3.md §4, src/pirates/sim.js CONFIG.tiers): each sails as one of the
 // fleet's drawings with its own colour and size, so a new tier reads at a glance. Pure data.
 export const SHIP_VARIANTS = Object.freeze({
@@ -213,6 +268,17 @@ export const SHIP_VARIANTS = Object.freeze({
   ironclad: Object.freeze({ frames: 'brig', tint: Object.freeze({ r: .6, g: .67, b: .8 }), scale: 1.1 }),
   dreadnought: Object.freeze({ frames: 'warship', tint: Object.freeze({ r: .56, g: .5, b: .62 }), scale: 1.25 }),
   redtide: Object.freeze({ frames: 'warship', tint: Object.freeze({ r: 1, g: .42, b: .4 }), scale: 1.5 }),
+  // v3 waves (wave-events.js): the event ships. Fire ships are charred hulls (their flames: wave-events-art.js),
+  // the armada's cutters small teal sloops, the barge a broad grey hull, the galleon a gold warship, the
+  // smugglers' longboats tiny dark boats; the kraken's tentacles are drawn by wave-events-art.js alone.
+  fireship: Object.freeze({ frames: 'sloop', tint: Object.freeze({ r: .5, g: .36, b: .3 }), scale: 1 }),
+  cutter: Object.freeze({ frames: 'sloop', tint: Object.freeze({ r: .62, g: .92, b: .9 }), scale: .72 }),
+  barge: Object.freeze({ frames: 'brig', tint: Object.freeze({ r: .66, g: .66, b: .62 }), scale: 1.3 }),
+  galleon: Object.freeze({ frames: 'warship', tint: Object.freeze({ r: 1, g: .86, b: .45 }), scale: 1.1 }),
+  longboat: Object.freeze({ frames: 'sloop', tint: Object.freeze({ r: .55, g: .5, b: .44 }), scale: .6 }),
+  // The gunboat (CONFIG.ships.gunboat): its own hull; without it in the atlas (the pixel one) a small dark sloop.
+  gunboat: Object.freeze({ frames: 'gunboat', tint: Object.freeze({ r: 1, g: 1, b: 1 }), scale: 1 }),
+  tentacle: Object.freeze({ frames: 'sloop', hidden: true, scale: 1 }),
 });
 export const BRUTE_LOOK = Object.freeze({ tint: Object.freeze({ r: 1, g: .7, b: .58 }), scale: 1.3 });
 
@@ -247,7 +313,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   });
   // A one-layer post per wall, cannon and mortar (the sprite, its level pips and its crew figure); the
   // watchtower gets one only for the lookout.
-  const hasPost = item => item.kind === 'wall' || item.kind === 'cannon' || item.kind === 'mortar' || item.kind === 'watchtower';
+  const hasPost = item => ['wall', 'cannon', 'mortar', 'harpoon', 'culverin', 'watchtower'].includes(item.kind);
   const levelOf = item => (Number.isInteger(item.level) ? Math.max(1, Math.min(5, item.level)) : 1);
   // A level's art, or level 3's when the atlas has no tier frame (the pixel atlas).
   const levelFrame = (kind, level) => { const id = levelArt(kind, level); return rect[id] ? id : pirateLevels[kind][Math.min(3, level) - 1]; };
@@ -267,8 +333,9 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   root.add(fog);
 
   const ships = new Map(); // id -> {facing, phase, flashUntil, bornAt}
-  const sinkers = pool(), wrecks = pool(), balls = pool(), splashes = pool(), shells = pool(), bursts = pool(), tracers = pool(), warnings = pool();
+  const sinkers = pool(), wrecks = pool(), balls = pool(), splashes = pool(), shells = pool(), bursts = pool(), tracers = pool(), warnings = pool(), jamShots = pool();
   const fallen = pool(), strikes = pool(), crew = new Map(); // boarders: id -> {phase, flashUntil}
+  const guards = new Map(); // the Barracks' militia: id -> {phase, flashUntil, strikeUntil, facing}
   let captain = null, revive = null, figures = null;
   const fire = new Map(), wallFlash = new Map();
   let clock = 0, simNow = 0, latest = null, visible = true, disposed = false;
@@ -290,13 +357,18 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     return meta;
   }
   const frameOf = (kind, phase) => {
-    const frames = FRAMES[kind] ?? FRAMES.sloop;
+    let frames = FRAMES[kind] ?? FRAMES.sloop;
+    if (!rect[frames[0]]) frames = FRAMES.sloop; // a pixel atlas has no gunboat hull
     if (still()) return frames[0];
     const step = Math.floor(clock * 3.2 + phase) % 4; return frames[step === 3 ? 1 : step];
   };
 
   function onEvent(event) {
     const x = event.x, y = drawnY(event.z ?? 0);
+    // v3 waves: the siege barge's shells fly like a mortar's; a fire ship bursts like a fire bomb.
+    if (event.type === 'barge_fired') { onEvent({ ...event, type: 'mortar_fired', towerId: event.shipId }); return; }
+    if (event.type === 'barge_impact') { onEvent({ ...event, type: 'mortar_impact' }); return; }
+    if (event.type === 'fireship_burst') { onEvent({ ...event, type: 'captain_blast' }); return; }
     switch (event.type) {
       case 'ship_spawned': shipMeta(event.shipId, event.kind, event.x, event.toX); break;
       case 'cannon_fired': {
@@ -326,7 +398,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       }
       case 'ship_sunk': {
         const meta = ships.get(event.shipId) ?? shipMeta(event.shipId, event.kind, event.x);
-        sinkers.add(item => Object.assign(item, { kind: event.kind, x: event.x, z: event.z, facing: meta.facing, at: clock }));
+        if (!SHIP_VARIANTS[event.kind]?.hidden) sinkers.add(item => Object.assign(item, { kind: SHIP_VARIANTS[event.kind]?.frames ?? event.kind, x: event.x, z: event.z, facing: meta.facing, at: clock })); // v3 waves: a variant sinks as its own hull
         wrecks.add(item => Object.assign(item, { x: event.x, z: event.z, facing: meta.facing, at: clock + SINK_SECONDS * .6, big: event.kind !== 'sloop' }));
         ships.delete(event.shipId);
         splashes.add(item => Object.assign(item, { x: event.x, z: event.z, at: clock, big: true }));
@@ -334,6 +406,13 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         spark(x, y + .6, { count: event.kind === 'flagship' ? 70 : 26, speed: [1, 4.5], angle: Math.PI / 2, spread: 2, gravity: 6, life: [.6, 1.4], colour: '#cfe9e2' });
         break;
       }
+      case 'tower_damaged': // T33: a boarder's blow at a tower: the post flashes and a little dust flies
+        wallFlash.set(event.towerId, clock + FLASH_SECONDS);
+        spark(x, y + .7, { count: 6, speed: [.5, 1.8], angle: Math.PI / 2, spread: 2, gravity: 5, life: [.3, .6], colour: '#b8b2a0', size: [1, 2] });
+        break;
+      case 'tower_broken': // T33: once per break (the sim sends it once), a puff of smoke
+        effects()?.bloom(x, y + 1, { radius: 2.2, life: .6, colour: '#8c8a92' });
+        break;
       case 'wall_damaged': case 'island_damaged': {
         // The pirates' shot: a short flat arc from the ship to what it hit (drawn only).
         if (event.boarderId) {
@@ -352,6 +431,38 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         break;
       }
       case 'wall_repaired': effects()?.bloom(x, y + 1, { radius: 1.4, life: .6, colour: '#bfe6a8' }); break;
+      case 'harpoon_thrown': {
+        // The harpoon tower (GAME-V3.md §5): a flat, quick flight of the harpoon with its rope behind it.
+        balls.add(item => Object.assign(item, { x: event.x, z: event.z, toX: event.toX, toZ: event.toZ, from: event.t, to: event.impactAt,
+          hit: true, enemy: false, splashed: false, manual: false, harpoon: true }));
+        const flip = event.toX < event.x;
+        fire.set(event.towerId, { until: clock + FIRE_SECONDS * 1.3, flip });
+        const post = posts.find(item => item.id === event.towerId); if (post) post.flip = flip;
+        effects()?.bloom(event.x + (flip ? -1.4 : 1.4), y + 1.4, { radius: .8, life: .3, colour: '#f4ecd6' });
+        break;
+      }
+      case 'culverin_fired': {
+        // The culverin (T43): a fast, flat, heavy shot from the long barrel, a long muzzle flash and a ring of smoke.
+        balls.add(item => Object.assign(item, { x: event.x, z: event.z, toX: event.toX, toZ: event.toZ, from: event.t, to: event.impactAt,
+          hit: true, enemy: false, splashed: false, manual: false, culverin: true }));
+        const flip = event.toX < event.x;
+        fire.set(event.towerId, { until: clock + FIRE_SECONDS * 1.4, flip });
+        const post = posts.find(item => item.id === event.towerId); if (post) post.flip = flip;
+        const mx = event.x + (flip ? -1.8 : 1.8), my = drawnY(event.z) + 1.1;
+        if (!low() && !still()) spark(mx, my, { count: 12, speed: [.4, 1.4], angle: Math.PI / 2, spread: 1.8, gravity: -.8, life: [.6, 1.2], colour: '#d9d6c8', size: [1, 2] });
+        effects()?.bloom(mx, my, { radius: 1.4, life: .45, colour: '#ffcf6a' });
+        effects()?.ring(mx, my, { radius: 1.6, life: .6, colour: '#e8e4d8' });
+        break;
+      }
+      case 'ship_slowed': {
+        // A harpoon caught the ship (Chain shot slows too, with no rope): a ring on the water and a few drops.
+        const meta = ships.get(event.shipId), ship = latest?.ships?.find(item => item.id === event.shipId);
+        if (!ship) break;
+        if (meta) meta.caughtAt = clock;
+        effects()?.ring(ship.x, drawnY(ship.z) + .1, { radius: 2.2, life: .5, colour: '#bfeaf6' });
+        spark(ship.x, drawnY(ship.z) + .8, { count: 8, speed: [.6, 2], angle: Math.PI / 2, spread: 2, gravity: 6, life: [.3, .7], colour: '#dff6ff', size: [1, 2] });
+        break;
+      }
       case 'mortar_fired': {
         shells.add(item => Object.assign(item, { x: event.x, z: event.z, toX: event.toX, toZ: event.toZ, from: event.t, to: event.impactAt, bomb: false, radius: event.radius ?? 4 }));
         fire.set(event.towerId, { until: clock + FIRE_SECONDS * 1.6, flip: event.toX < event.x });
@@ -375,9 +486,10 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         const dir = event.toX < event.x ? -1 : 1;
         if (weapon === 'fire_bombs') {
           // A bomb on a low arc, then its burst (captain_blast); the pose throws it.
-          shells.add(item => Object.assign(item, { x: event.x + dir * .6, z: event.z, toX: event.toX, toZ: event.toZ, from: event.t, to: event.impactAt, bomb: true, radius: event.radius ?? 3 }));
-          tracers.add(item => Object.assign(item, { x: event.x, z: event.z, toX: event.toX, toZ: event.toZ, at: clock, flight: 0, weapon, pose: true, line: false }));
-          effects()?.bloom(event.x + dir * MUSKET.muzzleX, y + MUSKET.muzzleY, { radius: .6, life: MUSKET.fire, colour: '#ffb35a' });
+          const hand = muzzleOf(event, dir), from = shooterAt(event);
+          shells.add(item => Object.assign(item, { x: from.x + dir * .6 * K(), z: from.z, toX: event.toX, toZ: event.toZ, from: event.t, to: event.impactAt, bomb: true, radius: event.radius ?? 3 }));
+          tracers.add(item => Object.assign(item, { x: event.x, z: event.z, by: event.by ?? null, toX: event.toX, toZ: event.toZ, at: clock, flight: 0, weapon, pose: true, line: false }));
+          effects()?.bloom(hand.x, hand.y, { radius: .6, life: MUSKET.fire, colour: '#ffb35a' });
           break;
         }
         // One streak per ship hit (the blunderbuss sprays up to three, the rifle goes through to a second).
@@ -389,14 +501,15 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         }
         if (!shots.length) shots = [{ toX: event.toX, toZ: event.toZ, impactAt: event.impactAt }];
         if (weapon === 'long_rifle' && shots.length > 1) shots = [shots[shots.length - 1]]; // one line through both ships
-        shots.forEach((shot, index) => tracers.add(item => Object.assign(item, { x: event.x, z: event.z, toX: shot.toX, toZ: shot.toZ, at: clock,
+        shots.forEach((shot, index) => tracers.add(item => Object.assign(item, { x: event.x, z: event.z, by: event.by ?? null, toX: shot.toX, toZ: shot.toZ, at: clock,
           flight: flightTo(shot.impactAt), weapon, pose: index === 0, line: true })));
-        effects()?.bloom(event.x + dir * MUSKET.muzzleX, y + MUSKET.muzzleY, { radius: .8 * look.flash, life: MUSKET.fire, colour: weapon === 'long_rifle' ? '#e6f6ff' : '#fff0b0' });
+        const hand = muzzleOf(event, dir);
+        effects()?.bloom(hand.x, hand.y, { radius: .8 * look.flash, life: MUSKET.fire, colour: weapon === 'long_rifle' ? '#e6f6ff' : '#fff0b0' });
         if (weapon === 'blunderbuss' && !low() && !still()) {
           // The cone puff: grey smoke rolling out of the wide muzzle.
           const heading = Number.isFinite(event.heading) ? event.heading : Math.atan2(event.toZ - event.z, event.toX - event.x);
           const angle = Math.atan2(-Math.sin(heading) * Y, Math.cos(heading)); // the cone's direction on screen
-          spark(event.x + dir * MUSKET.muzzleX, y + MUSKET.muzzleY, { count: 18, speed: [1.2, 3.2], angle, spread: (event.cone ?? 50) * Math.PI / 180,
+          spark(hand.x, hand.y, { count: 18, speed: [1.2, 3.2], angle, spread: (event.cone ?? 50) * Math.PI / 180,
             gravity: -.6, life: [.4, .8], colour: '#d9d6c8', size: [1, 3] });
         }
         break;
@@ -407,6 +520,21 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         effects()?.ring(x, y, { radius: event.radius ?? 3, life: .55, colour: '#ff8a3a' });
         effects()?.bloom(x, y + .5, { radius: 2.2, life: .5, colour: '#ff7a2a' });
         spark(x, y + .4, { count: 26, speed: [1.2, 4.2], angle: Math.PI / 2, spread: 2.6, gravity: 5, life: [.5, 1.1], colour: '#ff9a3a', size: [1, 2] });
+        break;
+      }
+      // The gunboat (GAME-V3.md §4.1): a flash at its deck gun and a thin line to the tower it jams; the tower
+      // gets sparks and a ring, and its "jammed" mark follows the sim's state (drawn with the posts).
+      case 'gunboat_fired': {
+        const facing = Math.abs(event.toX - event.x) > .5 ? (event.toX < event.x ? -1 : 1) : (ships.get(event.shipId)?.facing ?? 1), boat = ships.get(event.shipId);
+        if (boat) boat.facing = facing; // it swings its gun round to the tower it jams
+        jamShots.add(item => Object.assign(item, { x: event.x + facing * 1.25, y: drawnY(event.z) + 1.3, toX: event.toX, toY: drawnY(event.toZ) + 1, at: clock, facing }));
+        if (!low() && !still()) spark(event.x + facing * 1.9, drawnY(event.z) + 1.4, { count: 7, speed: [.3, 1.2], angle: Math.PI / 2, spread: 1.6, gravity: -.8, life: [.5, 1], colour: '#d9d6c8', size: [1, 2] });
+        break;
+      }
+      case 'tower_jammed': {
+        const ty = drawnY(event.z) + 1.2;
+        effects()?.ring(event.x, ty, { radius: 1.8, life: .45, colour: '#ffe27a' });
+        spark(event.x, ty, { count: 14, speed: [1, 3.4], angle: Math.PI / 2, spread: 2.6, gravity: 6, life: [.35, .8], colour: '#ffd35a', size: [1, 2] });
         break;
       }
       case 'ship_warning': warnings.add(item => Object.assign(item, { x: event.x, z: event.z, at: clock, boss: event.boss })); break;
@@ -423,9 +551,37 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         break;
       }
       case 'captain_struck': {
-        const dir = event.toX < event.x ? -1 : 1;
-        strikes.add(item => Object.assign(item, { x: event.x, z: event.z, dir, at: clock }));
-        effects()?.ring(event.x + dir * 1.4, y + .9, { radius: .9, life: .25, colour: '#e8eee8' });
+        // The blow: a ring at the blade. The body that swings it is the captain's own (src/pirates/poses.js).
+        const dir = event.toX < event.x ? -1 : 1, from = shooterAt(event);
+        strikes.add(item => Object.assign(item, { x: from.x, z: from.z, dir, at: clock }));
+        effects()?.ring(from.x + dir * 1.4, drawnY(from.z) + .9, { radius: .9, life: .25, colour: '#e8eee8' });
+        break;
+      }
+      // The house roles (GAME-V3.md "Houses"): a militia's spear thrust, a militia hurt or down, a Tavern's healing.
+      case 'militia_struck': militiaMeta(event.militiaId).strikeUntil = clock + STRIKE_SECONDS; break;
+      case 'militia_hit': militiaMeta(event.militiaId).flashUntil = clock + FLASH_SECONDS; break;
+      case 'militia_fell': {
+        fallen.add(item => Object.assign(item, { x: event.x, z: event.z, at: clock, facing: guards.get(event.militiaId)?.facing ?? 1, militia: true }));
+        guards.delete(event.militiaId);
+        break;
+      }
+      case 'captain_healed': {
+        effects()?.bloom(x, y + 1.2, { radius: .8, life: .45, colour: '#9fe08a' });
+        spark(x, y + 1.6, { count: 4, speed: [.4, 1], angle: Math.PI / 2, spread: .8, gravity: -1.5, life: [.5, .9], colour: '#b8f0a0', size: [1, 2] });
+        break;
+      }
+      // The Tech hub's mortar skills (GAME-V3.md §5, §5.1): a Fire pot or Inferno lights the ground (Inferno wider
+      // and redder); Shockwave throws a boarder back with a pale ring where it lands.
+      case 'fire_lit': {
+        const radius = event.radius ?? 3, hot = event.inferno === true;
+        effects()?.ring(x, y, { radius, life: .9, colour: hot ? '#ff5a2a' : '#ff9a3a' });
+        effects()?.bloom(x, y + .4, { radius: radius * .7, life: .8, colour: hot ? '#ff4a1a' : '#ff8a3a' });
+        spark(x, y + .3, { count: hot ? 34 : 18, speed: [.6, 2.4], angle: Math.PI / 2, spread: 1.6, gravity: -2, life: [.6, 1.4], colour: hot ? '#ff6a2a' : '#ffb35a', size: [1, 3] });
+        break;
+      }
+      case 'boarder_pushed': {
+        effects()?.ring(x, y + .3, { radius: 1.4, life: .4, colour: '#e8f4ff' });
+        spark(x, y + .5, { count: 8, speed: [1, 3], angle: Math.PI / 2, spread: 2.6, gravity: 6, life: [.3, .6], colour: '#d9d6c8', size: [1, 2] });
         break;
       }
       case 'wall_rebuilt': {
@@ -439,6 +595,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
 
   function drawShip(ship, meta) {
     const variant = SHIP_VARIANTS[ship.kind] ?? null, kind = variant?.frames ?? ship.kind, k = variant?.scale ?? 1;
+    if (variant?.hidden) return; // v3 waves: drawn by wave-events-art.js
     const base = SHIP_SIZE[kind] ?? SHIP_SIZE.sloop, size = { w: base.w * k, h: base.h * k }, frame = frameOf(kind, meta.phase), drawn = rect[frame];
     if (!drawn) return;
     const r = k === 1 ? drawn : { ...drawn, w: drawn.w * k, h: drawn.h * k, anchor: drawn.anchor * k };
@@ -452,7 +609,18 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       layer.push(rect[WHITE], x + back, y - .05, size.w * .28, .06, .5, 0, { a: .45 * fadeIn });
       layer.push(rect[WHITE], x + back * 1.35 - wob * .1, y + .08, size.w * .18, .06, .5, 0, { a: .3 * fadeIn });
     }
+    // A ship a harpoon (or Chain shot) holds back (GAME-V3.md §5): foam rings on the water around the hull, swelling
+    // a little, and a small coil of rope over it. Cartoon-only: a pixel atlas has neither frame.
+    const slowedRipples = ship.slowed ? rect[HARPOON_ART.ripples] : null;
+    if (slowedRipples) {
+      const swell = still() ? 1 : 1 + Math.sin(clock * 4 + meta.phase) * .06, wide = Math.max(size.w * 1.05, 3) * swell;
+      layer.push(slowedRipples, x, y - .02, wide, wide * slowedRipples.h / slowedRipples.w, .5, slowedRipples.anchor * wide / slowedRipples.w, { a: .85 * fadeIn });
+    }
     layer.push(drawn, x, y, r.w, r.h, .5, r.anchor, { flip: meta.facing < 0, a: fadeIn, flashing, ...damageTint(variant?.tint ?? tintOf(drawn), share) });
+    if (ship.slowed && rect[HARPOON_ART.rope]) {
+      const mark = rect[HARPOON_ART.rope], bob = still() ? 0 : Math.sin(clock * 3 + meta.phase) * .06;
+      layers.air.push(mark, x - Math.min(1.5, size.w * .3), y + size.h - r.anchor + .55 + bob, mark.w * .85, mark.h * .85, .5, mark.anchor * .85, { a: fadeIn });
+    }
     // A burning ship below a third of its hull: dark smoke rising and the fire on deck, drawn over the hull
     // and big enough to read at the battle zoom (bigger ships burn in two places).
     if (burning) {
@@ -501,20 +669,72 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       layer.push(rect[WHITE], x - w / 2, top, w * share, .125, 0, 0, { ...(share > .5 ? GOLD : RED), a: 1 });
     }
   }
-  // A fallen boarder: the sprite sinks and fades under a puff of smoke.
+  function militiaMeta(id) {
+    let meta = guards.get(id);
+    if (!meta) {
+      let hash = 0; for (const char of id) hash = (hash * 31 + char.charCodeAt(0)) | 0;
+      meta = { phase: (hash >>> 0) % 983 / 983 * 2, flashUntil: -1, strikeUntil: -1, facing: 1 };
+      guards.set(id, meta);
+    }
+    return meta;
+  }
+  // A Barracks militia (GAME-V3.md "Houses"): walking (two frames), the spear thrust, a hit flash, a teal hp bar.
+  function drawMilitia(unit) {
+    const meta = militiaMeta(unit.id), layer = bands[bandOf(unit.z)], x = unit.x, y = drawnY(unit.z);
+    meta.facing = unit.facing ?? meta.facing;
+    const hit = clock < meta.flashUntil, striking = clock < meta.strikeUntil, step = still() ? 0 : Math.floor(clock * 5 + meta.phase) % 2;
+    const id = hit ? 'militia-hit' : striking ? 'militia-strike' : unit.state === 'walking' && !still() ? MILITIA_IDS[1 + step] : 'militia';
+    const r = rect[id];
+    if (!r) return;
+    layer.push(r, x, y, r.w * K(), r.h * K(), .5, r.anchor * K(), { flip: meta.facing < 0, flashing: hit ? .35 : 0 });
+    if (unit.hp < unit.maxHp) {
+      const top = y + (r.h - r.anchor) * K() - .35, w = .9, share = Math.max(0, unit.hp / unit.maxHp);
+      layer.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .25, 0, 0, { ...DARK, a: .8 });
+      layer.push(rect[WHITE], x - w / 2, top, w * share, .125, 0, 0, { ...(share > .5 ? TEAL : share > .25 ? GOLD : RED), a: 1 });
+    }
+  }
+  // A fallen boarder (or militia): the sprite sinks and fades under a puff of smoke.
   function drawFallen(item) {
     const p = Math.min(1, (clock - item.at) / FALL_SECONDS), layer = bands[bandOf(item.z)], y = drawnY(item.z);
-    const r = rect[BOARDER_ART.hit] ?? rect[FRAMES.boarder[0]], k = K();
+    const r = (item.militia ? rect['militia-hit'] : null) ?? rect[BOARDER_ART.hit] ?? rect[FRAMES.boarder[0]], k = K();
     if (r) layer.push(r, item.x, y, r.w * k, r.h * k * (1 - p * .5), .5, r.anchor * k, { flip: item.facing < 0, a: 1 - p, flashing: .5 * (1 - p) });
     const puff = rect[pirateFrames.smoke[still() ? 0 : Math.min(2, Math.floor(p * 3))]];
     if (puff) layer.push(puff, item.x, y - .1, puff.w * .6, puff.h * .6, .5, puff.anchor * .6, { a: 1 - p * p });
   }
-  function drawStrike(item) {
-    const r = rect['captain-cutlass'], k = K();
-    if (r) bands[bandOf(item.z)].push(r, item.x, drawnY(item.z), r.w * k, r.h * k, .5, r.anchor * k, { flip: item.dir < 0 });
+
+  // A harpoon in flight: the barbed head turned along its path, a sagging rope from the tower to it, a shadow on the water.
+  function drawHarpoon(ball) {
+    const span = Math.max(.05, ball.to - ball.from), p = Math.min(1, Math.max(0, (simNow - ball.from) / span)), r = rect[HARPOON_ART.bolt];
+    const lift = q => 1.3 + 1.4 * 4 * q * (1 - q);
+    const x = ball.x + (ball.toX - ball.x) * p, z = ball.z + (ball.toZ - ball.z) * p, y = drawnY(z) + lift(p);
+    if (!still()) for (let k = 1; k <= 7; k++) {
+      const q = p * k / 8, qx = ball.x + (ball.toX - ball.x) * q, qz = ball.z + (ball.toZ - ball.z) * q;
+      layers.air.push(rect[WHITE], qx, drawnY(qz) + lift(q) - .35 * Math.sin(Math.PI * k / 8) * p, .2, .2, .5, .1, { r: .86, g: .73, b: .47, a: .9 });
+    }
+    if (r) {
+      const dx = ball.toX - ball.x, dy = drawnY(ball.toZ) - drawnY(ball.z) + 1.4 * 4 * (1 - 2 * p) * .35; // along the path, a little nose-up early and nose-down late
+      layers.air.push(r, x, y, r.w, r.h, .5, r.anchor, { angle: Math.atan2(dy, dx || .001) });
+    }
+    if (!still()) layers.air.push(rect[WHITE], x, drawnY(z) - .05, .3, .1, .5, 0, { ...DARK, a: .3 });
+  }
+
+  // A culverin's shot (T43): a low, fast arc, the long ball turned along its path, a pale streak behind it.
+  function drawCulverinBall(ball) {
+    const span = Math.max(.05, ball.to - ball.from), p = Math.min(1, Math.max(0, (simNow - ball.from) / span)), r = rect[CULVERIN_ART.shot];
+    const lift = q => 1.1 + .8 * 4 * q * (1 - q);
+    const x = ball.x + (ball.toX - ball.x) * p, z = ball.z + (ball.toZ - ball.z) * p, y = drawnY(z) + lift(p);
+    if (!still() && p > .05) for (const back of [.05, .1, .16]) {
+      const q = Math.max(0, p - back), tz = ball.z + (ball.toZ - ball.z) * q;
+      layers.air.push(rect[WHITE], ball.x + (ball.toX - ball.x) * q, drawnY(tz) + lift(q), .22, .22, .5, .11, { r: .95, g: .92, b: .82, a: .6 - back * 2.5 });
+    }
+    if (r) layers.air.push(r, x, y, r.w, r.h, .5, r.anchor, { angle: Math.atan2(drawnY(ball.toZ) - drawnY(ball.z), (ball.toX - ball.x) || .001) });
+    else layers.air.push(rect['pirate-cannonball'], x, y, rect['pirate-cannonball'].w, rect['pirate-cannonball'].h, .5, .55 * rect['pirate-cannonball'].h);
+    if (!still()) layers.air.push(rect[WHITE], x, drawnY(z) - .05, .3, .1, .5, 0, { ...DARK, a: .35 });
   }
 
   function drawBall(ball) {
+    if (ball.harpoon) { drawHarpoon(ball); return; }
+    if (ball.culverin) { drawCulverinBall(ball); return; }
     const span = Math.max(.05, ball.to - ball.from), p = Math.min(1, Math.max(0, (simNow - ball.from) / span));
     const x = ball.x + (ball.toX - ball.x) * p, z = ball.z + (ball.toZ - ball.z) * p;
     const distance = Math.hypot(ball.toX - ball.x, ball.toZ - ball.z);
@@ -571,13 +791,37 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       layers.air.push(flame, burst.x + Math.cos(a) * spread, y + Math.sin(a) * spread * Y, flame.w * .7, flame.h * .7, .5, flame.anchor * .7, { a: 1 - p });
     }
   }
+  // Burning ground (a Fire pot, or the wider Inferno of tier 3, GAME-V3.md §5.1): flames from the fire art in a
+  // ring as wide as the patch, flickering while it burns (still with reduced motion).
+  function drawBurning(patch) {
+    const y = drawnY(patch.z), count = Math.max(3, Math.round(patch.radius * 1.6)), tick = still() ? 0 : Math.floor(clock * 8);
+    for (let i = 0; i < count; i++) {
+      const flame = rect[pirateFrames.fire[(i + tick) % 3]];
+      if (!flame) continue;
+      const a = i / count * Math.PI * 2 + patch.x, spread = patch.radius * (i % 2 ? .45 : .8);
+      layers.air.push(flame, patch.x + Math.cos(a) * spread, y + Math.sin(a) * spread * Y, flame.w * .6, flame.h * .6, .5, flame.anchor * .6, { a: .85 });
+    }
+  }
   // The shot: the firing pose with its flash, a short tracer from the muzzle to the ship, a puff on the hit.
+  // Where the shooter stands now: your captain, a teammate's presence figure, else where the shot was fired.
+  // The muzzle (flash and tracer) follows the hand of the body that fires.
+  function shooterAt(tracer) {
+    if (tracer.by != null && captain && tracer.by === captain.id) return captain;
+    const figure = tracer.by != null ? figures?.get?.(tracer.by) : null;
+    return figure && Number.isFinite(figure.x) && Number.isFinite(figure.z) ? figure : tracer;
+  }
+  // The muzzle in the shooter's hand now (the pose art at the character's scale): flash, tracer, blooms, spray.
+  function muzzleOf(item, dir) {
+    const from = shooterAt(item), k = K();
+    return { x: from.x + dir * MUSKET.muzzleX * k, y: drawnY(from.z) + MUSKET.muzzleY * k };
+  }
+  // The shot: the flash at the muzzle, a short tracer from the muzzle to the ship, a puff on the hit. No body:
+  // the captain who fires is their own character or figure in its pose (src/pirates/poses.js), never a second one.
   function drawTracer(tracer) {
-    if (tracer.pose !== false) drawPose(tracer);
     if (tracer.line === false) return;
     const look = lookOf(tracer.weapon);
     const age = clock - tracer.at, dir = tracer.toX < tracer.x ? -1 : 1;
-    const mx = tracer.x + dir * MUSKET.muzzleX, my = drawnY(tracer.z) + MUSKET.muzzleY;
+    const { x: mx, y: my } = muzzleOf(tracer, dir);
     const tx = tracer.toX, ty = drawnY(tracer.toZ) + .7, dx = tx - mx, dy = ty - my, length = Math.hypot(dx, dy) || 1;
     const flash = rect['fx-musket-flash'];
     if (flash && age < MUSKET.fire && tracer.pose !== false) {
@@ -600,13 +844,6 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       if (puff) layers.air.push(puff, tx, ty - .3, puff.w * look.puff, puff.h * look.puff, .5, puff.anchor * look.puff, { a: 1 - p * p });
     }
   }
-  // The musket pose: the captain-musket art at the shooter, firing (frame 2) for MUSKET.fire, then aiming.
-  function drawPose(tracer) {
-    const age = clock - tracer.at;
-    if (age >= POSE_SECONDS) return;
-    const r = rect[pirateFrames.captain[age < MUSKET.fire ? 1 : 0]], k = K();
-    layers.air.push(r, tracer.x, drawnY(tracer.z), r.w * k, r.h * k, .5, r.anchor * k, { flip: tracer.toX < tracer.x });
-  }
   function drawCaptain() {
     // The reload ring around your own captain: 12 brass dots fill up until the musket is ready again.
     if (!captain || captain.share >= 1) return;
@@ -618,8 +855,9 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   }
   // Captain health: a captain's hp bar (over the head, drawn units above where they stand), a fallen
   // captain in their colour with the red ring, and your revive's gold dots filling around them.
-  function drawHealthBar(x, z, hp, maxHp) {
-    const share = Math.max(0, Math.min(1, hp / (maxHp || 1))), w = 1.3, top = drawnY(z) + 2.05 * K();
+  // lift: drawn units above the ground (a captain's head; a tower's bar sits higher).
+  function drawHealthBar(x, z, hp, maxHp, lift = 2.05) {
+    const share = Math.max(0, Math.min(1, hp / (maxHp || 1))), w = 1.3, top = drawnY(z) + lift * K();
     layers.air.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .3125, 0, 0, { ...DARK, a: .8 });
     layers.air.push(rect[WHITE], x - w / 2, top, w * share, .1875, 0, 0, { ...(share > .5 ? GREEN : share > .25 ? GOLD : RED), a: 1 });
   }
@@ -644,6 +882,24 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       drawHealthBar(figure ? figure.x : x, figure ? figure.z : z, hero.hp, hero.maxHp);
     }
   }
+  function drawJamShot(item) {
+    const age = clock - item.at, flash = rect['fx-gunboat-flash'];
+    if (flash && age < .22) {
+      const grow = still() ? 1 : .8 + Math.min(.4, age * 3);
+      layers.air.push(flash, item.x + item.facing * flash.w * .42 * grow, item.y, flash.w * grow, flash.h * grow, .5, flash.h * grow / 2, { flip: item.facing < 0, a: age < .12 ? 1 : .6 });
+    }
+    if (age < .28) {
+      const dx = item.toX - item.x, dy = item.toY - item.y, length = Math.hypot(dx, dy) || 1, angle = Math.atan2(dy, dx) - Math.PI / 2, fade = still() ? 1 : 1 - age / .28;
+      layers.air.push(rect[WHITE], item.x, item.y, .2, length, .5, 0, { ...GOLD, angle, a: .35 * fade });
+      layers.air.push(rect[WHITE], item.x, item.y, .07, length, .5, 0, { r: 1, g: .97, b: .85, angle, a: .9 * fade });
+    }
+  }
+  // A tower a gunboat has jammed (GAME-V3.md §4.1): a broken gear with sparks over it, in the air layer so no tree
+  // hides it, until the jam is over.
+  function drawJamMark(tower) {
+    const mark = rect[JAM_FRAMES[still() ? 0 : Math.floor(clock * 5) % 2]];
+    if (mark) layers.air.push(mark, tower.x, drawnY(tower.z) + 2.7 + (still() ? 0 : Math.sin(clock * 6) * .07), mark.w * 1.2, mark.h * 1.2, .5, mark.anchor * 1.2, { a: .97 });
+  }
   function drawWarning(item) {
     const age = clock - item.at, blink = still() ? 1 : (Math.floor(age * 4) % 2 ? .4 : 1);
     const p = coastEdge(item), colourOf = item.boss ? RED : GOLD;
@@ -657,10 +913,11 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     const r = rect[crewArt[kind]], bob = busy && !still() ? Math.abs(Math.sin(clock * 8)) * .08 : 0;
     layer.push(r, x, y + bob, r.w, r.h, .5, r.anchor);
   }
-  // Level pips: 1 to 3 brass pips (fx-level-pip) above a tower or wall; 4 and 5 gold stars on teal (fx-level-pip-gold).
+  // Level pips (pipRow): 1 to 3 brass pips (fx-level-pip) above a tower or wall; 4 and 5 smaller gold stars on
+  // teal (fx-level-pip-gold), spaced so they never overlap. The pixel atlas has no gold pip: plain ones, as small.
   function drawPips(layer, x, top, level) {
-    const r = (level >= 4 && rect['fx-level-pip-gold']) || rect['fx-level-pip'];
-    for (let i = 0; i < level; i++) layer.push(r, x + (i - (level - 1) / 2) * r.w * .7, top, r.w, r.h, .5, r.anchor);
+    const row = pipRow(level), r = rect[row.art] ?? rect['fx-level-pip'], w = r.w * row.scale, h = r.h * row.scale;
+    for (const offset of row.offsets) layer.push(r, x + offset * r.w, top, w, h, .5, r.anchor * row.scale);
   }
 
   function land(ball) {
@@ -686,8 +943,8 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       }
       for (const ship of state.ships) drawShip(ship, shipMeta(ship.id, ship.kind, ship.x));
       for (const boarder of state.boarders ?? []) drawBoarder(boarder);
+      for (const unit of state.militia ?? []) drawMilitia(unit);
       for (const item of fallen.items) drawFallen(item);
-      for (const item of strikes.items) drawStrike(item);
       for (const sinker of sinkers.items) {
         const age = clock - sinker.at, p = Math.min(1, age / SINK_SECONDS), r = rect[(FRAMES[sinker.kind] ?? FRAMES.sloop)[0]];
         if (!r) continue;
@@ -703,10 +960,15 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       for (const ball of balls.items) drawBall(ball);
       for (const shell of shells.items) drawShell(shell);
       for (const burst of bursts.items) drawBurst(burst);
+      for (const patch of state.fires ?? []) drawBurning(patch);
       for (const tracer of tracers.items) drawTracer(tracer);
       for (const item of warnings.items) drawWarning(item);
+      for (const item of jamShots.items) drawJamShot(item);
+      for (const tower of state.towers ?? []) if (tower.jammed !== undefined) drawJamMark(tower);
       drawCaptain();
       drawParty(state);
+      // T33: a bar over every tower with hp that has taken damage (none while the wave has no tower health).
+      for (const tower of state.towers ?? []) if (tower.maxHp > 0 && tower.hp > 0 && tower.hp < tower.maxHp) drawHealthBar(tower.x, tower.z, tower.hp, tower.maxHp, TOWER_BAR_LIFT);
       // The lamps' beam: from the lighthouse lamp to an exposed flagship.
       const flagship = state.lampsLit && beamFrom ? state.ships.find(ship => ship.kind === 'flagship') : null;
       if (flagship) {
@@ -728,15 +990,15 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       } else if (visible) {
         let id;
         const level = post.level, suffix = level > 1 ? `-l${level}` : '';
-        let smoking = false;
+        let smoking = false, look = 'intact';
         if (post.kind === 'wall') {
           const wall = walls.get(post.id), share = wall ? wall.hp / wall.maxHp : 1;
           id = share > .6 ? levelFrame('wall', level) : share > 0 ? pirateFrames.wall[1] : pirateFrames.wall[2];
           smoking = share <= .6;
         } else {
-          // Each kind and level has its own art; firing shows the kind's firing frame (a mortar stays a mortar).
-          const firing = (fire.get(post.id)?.until ?? -1) > clock, kind = post.kind === 'mortar' ? 'mortar' : 'cannon';
-          id = firing ? pirateFrames[kind][1] : levelFrame(kind, level);
+          // Each kind and level has its own art; firing shows that level's firing frame (a mortar stays a mortar).
+          look = towerLook(towers.get(post.id)); // T33: intact unless the wave has tower health
+          id = towerFrame(post.kind, level, (fire.get(post.id)?.until ?? -1) > clock, frame => !!rect[frame], look);
         }
         const r = rect[id], flashing = (wallFlash.get(post.id) ?? -1) > clock ? .7 : 0;
         const repairing = post.kind === 'wall' && (walls.get(post.id)?.repairing || walls.get(post.id)?.crew);
@@ -747,7 +1009,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
           const puff = rect[pirateFrames.smoke[(still() ? 0 : Math.floor(clock * 5)) % 3]];
           post.layer.push(puff, x, y + r.h - r.anchor, puff.w, puff.h, .5, puff.anchor, { a: .85 });
         }
-        if (level > 1 || post.kind !== 'wall') drawPips(post.layer, x, y + (r.h - r.anchor) * grow + .2, level);
+        if ((level > 1 || post.kind !== 'wall') && look !== 'broken') drawPips(post.layer, x, y + (r.h - r.anchor) * grow + .2, level);
         if (post.kind === 'wall' && walls.get(post.id)?.crew) drawCrew(post.layer, 'carpenter', x + (x > 0 ? -1.3 : 1.3), y - .3, true);
         if (post.kind !== 'wall' && towers.get(post.id)?.manned) drawCrew(post.layer, 'gunner', x + (post.flip ? 1.2 : -1.2), y - .15, (fire.get(post.id)?.until ?? -1) > clock);
       }
@@ -769,6 +1031,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       bursts.sweep(item => clock - item.at < BURST_SECONDS);
       tracers.sweep(item => clock - item.at < musketLife(item));
       warnings.sweep(item => clock - item.at < 3.2);
+      jamShots.sweep(item => clock - item.at < .3);
       fallen.sweep(item => clock - item.at < FALL_SECONDS);
       strikes.sweep(item => clock - item.at < STRIKE_SECONDS);
       balls.sweep(ball => { if (simNow < ball.to) return true; land(ball); return false; });
@@ -785,6 +1048,10 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     // touched; it fights with the defenses it started with.
     setDefenses(list) {
       if (disposed) return;
+      // A building torn down in the break (GAME-V3.md §4.2) takes its post with it.
+      for (const post of posts.filter(entry => !(list ?? []).some(item => item.id === entry.id))) {
+        post.layer.mesh.visible = false; posts.splice(posts.indexOf(post), 1);
+      }
       for (const item of list ?? []) {
         if (!hasPost(item)) continue;
         const post = posts.find(entry => entry.id === item.id);
@@ -809,7 +1076,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       root.removeFromParent(); root.clear();
       for (const item of owned) item.dispose();
       owned.length = 0; ships.clear(); fire.clear(); wallFlash.clear(); crew.clear();
-      for (const list of [sinkers, wrecks, balls, splashes, shells, bursts, tracers, warnings, fallen, strikes]) list.clear();
+      for (const list of [sinkers, wrecks, balls, splashes, shells, bursts, tracers, warnings, jamShots, fallen, strikes]) list.clear();
     },
   };
 }

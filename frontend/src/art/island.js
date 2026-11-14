@@ -3,6 +3,7 @@
 // watchtower, houses). Seen from the game's three-quarter camera: a front face and a lighter top.
 // Original designs. Boxes and anchors are the old atlas's, so every renderer keeps its numbers.
 import {INK, ellipse, line, mix, part, poly, radial, rect, shadow, stroke} from './paint.js';
+import {TOWER_KINDS, drawBroken, drawDamaged, towerState} from './tower-states.js';
 
 const WOOD = '#a8693a', WOOD_LIGHT = '#c98a4e', WOOD_DARK = '#7a4a2a', STONE = '#a9a39a', STONE_LIGHT = '#cfc8bb';
 const IRON = '#3e4250', BRASS = '#f2c14e', ROOF = '#d4553e', LEAF = '#5cb84a', LEAF_DARK = '#3d8f3c', PINE = '#2f8f5a';
@@ -247,6 +248,63 @@ function mortar(level, firing = false) {
     if (firing) for (const [x, y, r] of [[cx + 6, base - 24, 4.6], [cx + 10, base - 27, 3.4], [cx + 2, base - 27, 3]]) part(c, ellipse(x, y, r), '#f4efe6', {line: '#8c8a92', width: .9, shade: '#cfcad6'});
   };
 }
+// The harpoon tower (GAME-V3.md §5, T1) by level, facing right: a wooden frame on a bench with a big crossbow
+// (a stock, a bow of two curved limbs, a taut string) loaded with a barbed harpoon on a rope that runs back to a
+// rope coil beside it (1); iron bands and brass rivets on a stone pad (2); brass-tipped limbs on a round bastion
+// (3); gold trim, a gilded bow tip and the island's banner (4); a wholly gilded crossbow and the starred banner
+// (5). Firing: the harpoon is gone, the limbs spring forward and the rope trails out over the sea.
+const ROPE = '#dcbb78', ROPE_DARK = '#9c7a44';
+function ropeCoil(c, x, y, s = 1) {
+  for (let i = 0; i < 3; i++) part(c, ellipse(x, y - i * 2.2 * s, 5.4 * s, 2.5 * s), ROPE, {width: .9, depth: .7, shade: ROPE_DARK});
+  stroke(c, ellipse(x, y - 4.4 * s, 3.4 * s, 1.4 * s), ROPE_DARK, .8);
+  part(c, ellipse(x, y - 4.6 * s, 1.5 * s, .7 * s), '#5a3b22', {line: false, shade: false});
+}
+function harpoonTower(level, firing = false) {
+  return (c, {w, h}) => {
+    const g = h - 5, cx = 24; shadow(c, cx, g, 19, 3.8);
+    if (level >= 2) part(c, rect(3, g - 6, 42, 7, 3), level >= 3 ? STONE_LIGHT : STONE, {depth: 2, width: 1.2, gloss: rect(6, g - 5.4, 28, 1.2, .6)});
+    if (level >= 3) for (let x = 8; x < 44; x += 8) stroke(c, line([[x, g - 5], [x, g + 1]]), mix(STONE, INK, .4), .8);
+    if (level >= 4) stroke(c, line([[4.5, g - 6], [43.5, g - 6]]), GOLD, 1.3);
+    const base = level >= 2 ? g - 6 : g, gilded = level >= 5, trim = level >= 4 ? GOLD : BRASS;
+    // The coil sits by the bench, the rope's other end runs up to the harpoon.
+    ropeCoil(c, 10, base - 1);
+    // A wooden bench and a two-post frame (crossed by a brace) that carry the crossbow.
+    part(c, rect(11, base - 4, 27, 4, 1.4), WOOD_DARK, {depth: 1, width: 1.1});
+    for (const x of [16, 28]) part(c, poly([[x - 3, base - 4], [x - 1.2, base - 10], [x + 1.6, base - 10], [x + 3.4, base - 4]], .8), WOOD, {depth: 1.2, width: 1.1, gloss: rect(x - 1, base - 9, .9, 4, .4), light: WOOD_LIGHT});
+    stroke(c, line([[16, base - 5], [28, base - 9.5]]), INK, 2.6); stroke(c, line([[16, base - 5], [28, base - 9.5]]), WOOD_DARK, 1.3);
+    if (level >= 2) for (const x of [16, 28]) part(c, rect(x - 3, base - 9, 6.4, 1.9, .6), level >= 5 ? GOLD : IRON, {width: .7, shade: false});
+    // The crossbow, tilted a little to the sky, turning on the top of the frame.
+    c.save(); c.translate(21, base - 10.2); c.scale(.78, .78); c.rotate(-.16);
+    part(c, rect(-9, -2.2, 31, 4.4, 1.6), gilded ? GOLD : WOOD_LIGHT, gilded ? {depth: 1.4, width: 1.2, shade: GOLD_DARK, light: '#fff1b8'}
+      : {depth: 1.4, width: 1.2, gloss: rect(-7, -1.6, 18, 1, .4), light: '#e0a868'});
+    // The bow: two limbs curving forward from the stock's front end; the string runs to the stock's middle.
+    const spring = firing ? 3 : 0, tip = [[17 + spring, -9], [17 + spring, 9]];
+    for (const [px, py] of tip) {
+      const limb = line([[12, py < 0 ? -1.6 : 1.6]]); limb.quadraticCurveTo(14.5, py * .8, px, py);
+      c.save(); c.lineCap = 'round'; c.strokeStyle = INK; c.lineWidth = 4.6; c.stroke(limb); c.strokeStyle = gilded ? GOLD : WOOD; c.lineWidth = 2.8; c.stroke(limb); c.restore();
+      part(c, ellipse(px, py, 1.7), level >= 3 ? trim : '#c9a06a', {width: .8, shade: false});
+    }
+    part(c, rect(10, -3, 3.8, 6, 1), level >= 2 ? (gilded ? IRON : BRASS) : WOOD_DARK, {width: .8, shade: false});
+    const pull = firing ? 18 : 5;
+    stroke(c, line([[tip[0][0], tip[0][1]], [pull, 0], [tip[1][0], tip[1][1]]]), '#f4ecd6', 1);
+    if (!firing) {
+      // The harpoon on the stock: a long shaft with a barbed head, and the rope tied to its tail.
+      stroke(c, line([[-4, -3.6], [22, -3.6]]), INK, 3); stroke(c, line([[-4, -3.6], [22, -3.6]]), '#e8d3a3', 1.7);
+      part(c, poly([[21, -3.6], [17.4, -7.6], [18.8, -3.6], [17.4, 0.4]], .5), gilded || level >= 4 ? GOLD : IRON, {width: .9, shade: false});
+      part(c, poly([[21, -3.6], [28, -3.6], [21, -5.4]], .4), gilded || level >= 4 ? GOLD : '#9aa3b2', {width: .9, shade: false});
+    }
+    c.restore();
+    // The rope from the harpoon's tail, over the bench, to the coil (or trailing out to sea when it has flown).
+    if (firing) {
+      const rope = new Path2D(); rope.moveTo(34, base - 15); rope.quadraticCurveTo(41, base - 12, 47, base - 16);
+      c.save(); c.lineCap = 'round'; c.strokeStyle = INK; c.lineWidth = 3; c.stroke(rope); c.strokeStyle = ROPE; c.lineWidth = 1.5; c.stroke(rope); c.restore();
+      part(c, ellipse(36, base - 17, 3.4, 2.6), '#fff3c4', {line: '#f29e38', width: .9, shade: false});
+    }
+    const slack = new Path2D(); slack.moveTo(15, base - 11.5); slack.quadraticCurveTo(9, base - 11, 10, base - 8);
+    c.save(); c.lineCap = 'round'; c.strokeStyle = INK; c.lineWidth = 3; c.stroke(slack); c.strokeStyle = ROPE; c.lineWidth = 1.5; c.stroke(slack); c.restore();
+    if (level >= 4) banner(c, 4.5, base - 1, level >= 5 ? 19 : 17, level, .8);
+  };
+}
 // The watchtower; at levels 4 and 5 (GAME-V3.md §4.1) a gold-trimmed roof and the island's banner instead of
 // the pennant, at 5 a gold railing and the starred royal banner.
 function watchtower(level) { return (c, size) => watchtowerAt(c, size, level); }
@@ -271,15 +329,84 @@ function watchtowerAt(c, {w, h}, level) {
   part(c, rect(cx - .8, g - 122, 1.8, 12, .6), WOOD_DARK, {width: .8});
   part(c, poly([[cx + 1, g - 122], [cx + 13, g - 119], [cx + 1, g - 115]], .8), BRASS, {depth: .8, width: 1});
 }
-function house(c, {w, h}) {
-  const g = h - 8, cx = w / 2; shadow(c, cx, g, 27, 5);
-  part(c, rect(cx - 22, g - 26, 44, 26, 2), '#f2dfb6', {depth: 3, width: 1.3, gloss: rect(cx - 19, g - 24, 3, 20, 1), light: '#fff1d0'});
-  for (let y = g - 21; y < g; y += 5) stroke(c, line([[cx - 21, y], [cx + 21, y]]), '#d9bf8e', .8);
-  part(c, rect(cx - 5, g - 17, 10, 17, 4.5), WOOD, {depth: 1.4, width: 1.2}); part(c, ellipse(cx + 2.6, g - 8, .9), BRASS, {line: false, shade: false});
-  for (const x of [cx - 16, cx + 9]) { part(c, rect(x, g - 20, 8, 8, 1.6), '#7fd0e0', {depth: 1, width: 1.1, gloss: rect(x + 1.4, g - 18.6, 2, 2.6, .6)}); stroke(c, line([[x + 4, g - 20], [x + 4, g - 12]]), INK, .8); }
-  part(c, rect(cx + 9, g - 46, 6, 14, 1), '#9e958a', {depth: 1, width: 1.1});
-  part(c, poly([[cx - 27, g - 24], [cx - 12, g - 44], [cx + 12, g - 44], [cx + 27, g - 24]], [2.4, 3, 3, 2.4]), ROOF, {depth: 3.4, dx: -1, width: 1.4, gloss: poly([[cx - 20, g - 27], [cx - 10, g - 41], [cx - 4, g - 41], [cx - 14, g - 27]], 1), light: '#ef7e62'});
-  c.save(); c.clip(poly([[cx - 27, g - 24], [cx - 12, g - 44], [cx + 12, g - 44], [cx + 27, g - 24]], [2.4, 3, 3, 2.4])); for (let y = g - 30; y > g - 44; y -= 6) stroke(c, line([[cx - 30, y], [cx + 30, y]]), mix(ROOF, INK, .35), .8); c.restore();
+// The house, and its three roles from level 2 (GAME-V3.md "Houses"): the Barracks (stone walls, a teal roof with
+// crossed swords on a shield and the island's flag on the ridge), the Tavern (warm lit windows, a hanging sign with
+// a frothy mug and a barrel by the door) and the Workshop (plank walls, a slate roof, a gear sign with a hammer on
+// a post and a saw by the wall). A role house is drawn in a wider box (80 x 72) so its sign has room.
+const HOUSE_LOOKS = {
+  plain: {wall: '#f2dfb6', light: '#fff1d0', seam: '#d9bf8e', roof: ROOF, roofLight: '#ef7e62', window: '#7fd0e0'},
+  barracks: {wall: '#d8d0c2', light: '#ece6da', seam: '#b5ab9b', roof: '#2c7f8c', roofLight: '#4fb0bc', window: '#7fd0e0'},
+  tavern: {wall: '#f2dfb6', light: '#fff1d0', seam: '#d9bf8e', roof: '#c8423b', roofLight: '#ef7e62', window: '#ffd36a'},
+  workshop: {wall: WOOD_LIGHT, light: '#ddb07a', seam: WOOD, roof: '#6b7280', roofLight: '#9aa3b0', window: '#7fd0e0'},
+};
+function gear(c, x, y, r) {
+  const teeth = [];
+  for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2, out = i % 2 ? r * .74 : r; teeth.push([x + Math.cos(a) * out, y + Math.sin(a) * out]); }
+  part(c, poly(teeth, .5), '#b8bec8', {depth: 1, width: 1, gloss: ellipse(x - r * .35, y - r * .4, r * .3, r * .18), light: '#e6eaf0'});
+  part(c, ellipse(x, y, r * .34), '#5a6270', {width: .8, shade: false});
+}
+function house(role = null) {
+  const look = HOUSE_LOOKS[role] ?? HOUSE_LOOKS.plain;
+  return (c, {w, h}) => {
+    const g = h - 8, cx = w / 2; shadow(c, cx, g, role ? 31 : 27, 5);
+    if (role === 'workshop') { // a saw leaning on the left wall
+      part(c, poly([[cx - 27, g], [cx - 23, g - 15], [cx - 20, g - 14], [cx - 23, g]], .5), '#cfd5dc', {depth: .6, width: .9});
+      part(c, rect(cx - 25, g - 19, 5, 5, 1.2), WOOD_DARK, {width: .9});
+    }
+    part(c, rect(cx - 22, g - 26, 44, 26, 2), look.wall, {depth: 3, width: 1.3, gloss: rect(cx - 19, g - 24, 3, 20, 1), light: look.light});
+    if (role === 'barracks') {
+      for (let y = g - 21, row = 0; y < g; y += 5, row++) {
+        stroke(c, line([[cx - 21, y], [cx + 21, y]]), look.seam, .8);
+        for (let x = cx - 18 + (row % 2) * 4; x < cx + 20; x += 8) stroke(c, line([[x, y], [x, y + 5]]), look.seam, .7);
+      }
+    } else if (role === 'workshop') {
+      for (let x = cx - 16; x < cx + 22; x += 6) stroke(c, line([[x, g - 25], [x, g]]), look.seam, .8);
+    } else for (let y = g - 21; y < g; y += 5) stroke(c, line([[cx - 21, y], [cx + 21, y]]), look.seam, .8);
+    part(c, rect(cx - 5, g - 17, 10, 17, 4.5), role === 'barracks' ? WOOD_DARK : WOOD, {depth: 1.4, width: 1.2}); part(c, ellipse(cx + 2.6, g - 8, .9), BRASS, {line: false, shade: false});
+    if (role === 'barracks') for (const y of [g - 12, g - 5]) part(c, rect(cx - 5, y, 10, 1.4, .4), IRON, {line: false, shade: false});
+    for (const x of [cx - 16, cx + 9]) {
+      part(c, rect(x, g - 20, 8, 8, 1.6), look.window, {depth: 1, width: 1.1, gloss: rect(x + 1.4, g - 18.6, 2, 2.6, .6)}); stroke(c, line([[x + 4, g - 20], [x + 4, g - 12]]), INK, .8);
+      if (role === 'tavern') { c.save(); c.globalAlpha = .35; c.fillStyle = radial(c, x + 4, g - 16, 7, [[0, '#ffe8a0'], [1, '#ffe8a000']]); c.fill(ellipse(x + 4, g - 16, 7, 6)); c.restore(); }
+    }
+    part(c, rect(cx + 9, g - 46, 6, 14, 1), '#9e958a', {depth: 1, width: 1.1});
+    const roof = poly([[cx - 27, g - 24], [cx - 12, g - 44], [cx + 12, g - 44], [cx + 27, g - 24]], [2.4, 3, 3, 2.4]);
+    part(c, roof, look.roof, {depth: 3.4, dx: -1, width: 1.4, gloss: poly([[cx - 20, g - 27], [cx - 10, g - 41], [cx - 4, g - 41], [cx - 14, g - 27]], 1), light: look.roofLight});
+    c.save(); c.clip(roof); for (let y = g - 30; y > g - 44; y -= 6) stroke(c, line([[cx - 30, y], [cx + 30, y]]), mix(look.roof, INK, .35), .8); c.restore();
+    if (role === 'barracks') {
+      // The island's flag on the ridge, and a shield with two crossed cutlasses on the roof.
+      banner(c, cx - 7, g - 43, 14, 4, .9);
+      part(c, poly([[cx - 6, g - 39], [cx + 6, g - 39], [cx + 6, g - 33], [cx, g - 27.5], [cx - 6, g - 33]], 1.2), BANNER[4], {depth: 1, width: 1.1, light: mix(BANNER[4], '#ffffff', .35)});
+      stroke(c, poly([[cx - 4.6, g - 37.8], [cx + 4.6, g - 37.8], [cx + 4.6, g - 33.4], [cx, g - 29.2], [cx - 4.6, g - 33.4]], 1), GOLD, .8);
+      for (const s of [-1, 1]) {
+        c.save(); c.translate(cx, g - 33.6); c.rotate(s * .78);
+        part(c, rect(-.7, -7.4, 1.4, 10, .5), '#dfe6ea', {depth: .4, width: .8});
+        part(c, rect(-2.2, 2.2, 4.4, 1.1, .4), GOLD, {width: .7, shade: false});
+        part(c, rect(-.7, 3.2, 1.4, 2.4, .5), WOOD_DARK, {width: .7, shade: false});
+        c.restore();
+      }
+    } else if (role === 'tavern') {
+      // A barrel by the door and, on an iron bracket at the left, a swinging sign with a frothy mug.
+      part(c, rect(cx + 23, g - 9, 8, 9, 2.6), WOOD, {depth: 1.2, width: 1.1});
+      for (const y of [g - 7, g - 2.4]) stroke(c, line([[cx + 23.4, y], [cx + 30.6, y]]), IRON, .9);
+      stroke(c, line([[cx - 22, g - 30], [cx - 35, g - 30]]), IRON, 1.6);
+      stroke(c, line([[cx - 22, g - 26], [cx - 26, g - 30]]), IRON, 1.1);
+      for (const x of [cx - 33.5, cx - 25.5]) stroke(c, line([[x, g - 30], [x, g - 27]]), IRON, .8);
+      part(c, rect(cx - 36, g - 27.5, 13, 12, 1.6), WOOD_LIGHT, {depth: 1.2, width: 1.1, light: '#ddb07a'});
+      part(c, rect(cx - 32.6, g - 23.5, 5.6, 6.4, 1), GOLD, {depth: .8, width: .9, light: '#ffe79a'});
+      stroke(c, ellipse(cx - 26, g - 20.4, 1.7, 2.2), INK, .9);
+      part(c, ellipse(cx - 29.8, g - 24.2, 3.6, 1.8), '#fff8ec', {width: .8, shade: false});
+      for (const x of [cx - 31.6, cx - 28.6]) part(c, ellipse(x, g - 25.4, 1.3, 1.1), '#fff8ec', {width: .7, shade: false});
+    } else if (role === 'workshop') {
+      // A post at the right with a big gear sign and a hammer across it.
+      part(c, rect(cx + 27, g - 24, 2.6, 24, .8), WOOD_DARK, {depth: .8, width: 1});
+      gear(c, cx + 28.3, g - 30, 6.4);
+      c.save(); c.translate(cx + 28.3, g - 30); c.rotate(-.7);
+      part(c, rect(-.7, -2, 1.4, 11, .5), WOOD, {depth: .4, width: .8});
+      part(c, rect(-3.6, -3.6, 7.2, 3, .8), IRON, {depth: .6, width: .9, gloss: rect(-3, -3.2, 3, .6, .3)});
+      c.restore();
+      gear(c, cx - 9, g - 34, 3.2);
+    }
+  };
 }
 function cabin(c, {w, h}) {
   const g = h - 12, cx = w / 2; shadow(c, cx, g, 40, 7);
@@ -303,26 +430,30 @@ function bell(c, {w, h}) {
   part(c, rect(cx - 8.4, g - 18.4, 16.8, 2.6, 1.2), '#e09a2a', {width: 1, shade: false});
   part(c, ellipse(cx, g - 15, 1.6), '#6b4a14', {width: .8, shade: false});
 }
-// "You can build here": a glowing gold ring on the ground (48 x 24) and a floating badge (20 x 24).
-function buildRing(c, {w, h}) {
-  c.save(); c.fillStyle = radial(c, w / 2, h / 2, w / 2, [[0, '#ffe8a033'], [.7, '#ffd36a55'], [1, '#ffd36a00']]); c.fill(ellipse(w / 2, h / 2, w / 2 - .5, h / 2 - .5)); c.restore();
-  c.save(); c.setLineDash([3.2, 2.2]); c.lineDashOffset = 0; stroke(c, ellipse(w / 2, h / 2, w / 2 - 4, h / 2 - 3.2), '#fff4c8', 2); c.restore();
-  stroke(c, ellipse(w / 2, h / 2, w / 2 - 7, h / 2 - 5.4), '#f2c14e', 1.2, .8);
+// "You can build here" (owner, 12 Nov: the old pin with white blocks looked odd): a warm gold ring lying on
+// the ground (48 x 24) and, floating above it, a round gold badge with a bold cream "+" (24 x 24), both with
+// the bold ink edge and two-tone shading of the rest of the island. One badge for every kind of spot: the
+// prompt and the card say what goes there. The ring pulses (world.js), so it draws its own outline.
+const PLUS_GOLD = '#f6a93b', PLUS_GOLD_DARK = '#d27a22', PLUS_CREAM = '#fff6e0';
+function groundRing(c, {w, h}, {band, light, glow, dash = null}) {
+  const cx = w / 2, cy = h / 2, outer = [w / 2 - 2, h / 2 - 2], inner = [w / 2 - 8.5, h / 2 - 5.6];
+  c.save(); c.fillStyle = radial(c, cx, cy, w / 2, [[0, glow], [1, '#00000000']]); c.fill(ellipse(cx, cy, outer[0], outer[1])); c.restore();
+  const ring = new Path2D(); ring.addPath(ellipse(cx, cy, outer[0], outer[1])); ring.addPath(ellipse(cx, cy, inner[0], inner[1]));
+  c.save(); c.fillStyle = band; c.fill(ring, 'evenodd');
+  // The lit upper rim: the same band nudged up, a lighter tone, clipped to the band.
+  c.clip(ring, 'evenodd'); c.translate(0, -1.4); c.fillStyle = light; c.fill(ring, 'evenodd'); c.restore();
+  c.save(); if (dash) c.setLineDash(dash);
+  stroke(c, ellipse(cx, cy, outer[0], outer[1]), INK, 1.5); stroke(c, ellipse(cx, cy, inner[0], inner[1]), INK, 1.2); c.restore();
 }
-const GLYPH = {
-  wall: c => { for (const [x, y] of [[5, 9], [11, 9], [8, 13.5]]) part(c, rect(x - 2.6, y - 2, 5.2, 4, .8), '#fff6dc', {line: false, shade: false}); },
-  tower: c => { part(c, rect(4.4, 8, 10, 3.4, 1.6), '#fff6dc', {line: false, shade: false}); part(c, ellipse(6.4, 13, 2.2), '#fff6dc', {line: false, shade: false}); part(c, ellipse(12.4, 13, 2.2), '#fff6dc', {line: false, shade: false}); },
-  watchtower: c => { part(c, poly([[5, 9], [10, 4.5], [15, 9]], .6), '#fff6dc', {line: false, shade: false}); part(c, rect(6.2, 9, 7.6, 6.4, .8), '#fff6dc', {line: false, shade: false}); },
-  house: c => { part(c, poly([[4.6, 10], [10, 5], [15.4, 10]], .6), '#fff6dc', {line: false, shade: false}); part(c, rect(6, 10, 8, 5.6, .8), '#fff6dc', {line: false, shade: false}); },
-};
-GLYPH.cannon = GLYPH.tower;
-function badge(kind) {
-  return (c, {w}) => {
-    part(c, poly([[w / 2 - 3, 18], [w / 2, 22.4], [w / 2 + 3, 18]], .8), '#c98a2a', {width: 1.1, shade: false});
-    part(c, ellipse(w / 2, 10.2, 8.4), '#2c7f8c', {depth: 1.6, width: 1.3, gloss: ellipse(w / 2 - 3, 6.4, 3, 1.4), light: '#4fb0bc'});
-    stroke(c, ellipse(w / 2, 10.2, 7), '#f2c14e', 1.2);
-    GLYPH[kind]?.(c);
-  };
+function buildRing(c, size) { groundRing(c, size, {band: '#d9902e', light: '#ffd36a', glow: '#ffe8a055'}); }
+function plusBadge(c, {w}) {
+  const cx = w / 2, cy = 12;
+  part(c, ellipse(cx, cy, 10.6), PLUS_CREAM, {width: 1.6, depth: 1.2, shade: '#e9cf9a'});
+  part(c, ellipse(cx, cy, 8.2), PLUS_GOLD, {depth: 2, width: 1.1, shade: PLUS_GOLD_DARK, gloss: ellipse(cx - 3.2, cy - 4, 2.8, 1.4), light: '#ffd889'});
+  // A bold "+": stroke both bars, then fill them over the inner half, so the crossing has no seam.
+  const bars = [rect(cx - 5.6, cy - 1.8, 11.2, 3.6, 1.5), rect(cx - 1.8, cy - 5.6, 3.6, 11.2, 1.5)];
+  c.save(); c.lineWidth = 1.6; c.lineJoin = 'round'; c.strokeStyle = INK; for (const bar of bars) c.stroke(bar); c.restore();
+  c.save(); c.fillStyle = PLUS_CREAM; for (const bar of bars) c.fill(bar); c.restore();
 }
 function levelPip(c, {w, h}) {
   const cx = w / 2, cy = h / 2, star = [];
@@ -345,28 +476,54 @@ function buildSpot(glow) {
   };
 }
 
+const TOWER_DRAW = {cannon, mortar, harpoon: harpoonTower};
+/**
+ * The drawing of a tower: (kind, level 1-5, state, firing) -> draw(c, {w, h}) for a 48 x 32 frame.
+ * state is "intact" (the default, exactly the drawing the game uses today), "damaged" (leaning, cracked,
+ * scorched, smoking; may still fire) or "broken" (rubble; never shows a shot). Unknown kinds read as a
+ * cannon and unknown states as intact. Pure.
+ */
+export function drawTower(kind, level = 1, state = 'intact', firing = false) {
+  const known = Object.hasOwn(TOWER_DRAW, kind) ? kind : 'cannon', n = Math.max(1, Math.min(5, Number.isInteger(level) ? level : 1)), s = towerState(state);
+  if (s === 'broken') return (c, size) => drawBroken(known, n, c, size);
+  const intact = TOWER_DRAW[known](n, firing);
+  return s === 'damaged' ? (c, size) => drawDamaged(intact, c, size) : intact;
+}
 /** Every island frame: name -> [width, height, anchor, draw]. */
 export function islandFrames() {
   const frames = {
     oak: [80, 104, 8, oak], pine: [80, 112, 8, pine], birch: [80, 104, 8, palm(false)], 'birch-tall': [80, 104, 8, palm(true)],
     rock: [48, 36, 4, rock], shrub: [40, 32, 4, shrub], flowers: [24, 24, 3, flowers], 'grass-tuft': [32, 32, 4, grassTuft],
     bench: [48, 32, 3, bench], barrel: [24, 32, 3, barrel], lantern: [16, 24, 2, lantern], crate: [24, 24, 3, crate], sign: [32, 40, 3, sign],
-    cabin: [96, 96, 12, cabin], 'island-house': [64, 64, 8, house], 'island-watchtower': [64, 128, 8, watchtower(1)],
+    cabin: [96, 96, 12, cabin], 'island-house': [64, 64, 8, house()], 'island-watchtower': [64, 128, 8, watchtower(1)],
+    'island-house-barracks': [80, 72, 8, house('barracks')], 'island-house-tavern': [80, 72, 8, house('tavern')], 'island-house-workshop': [80, 72, 8, house('workshop')],
     'island-watchtower-l4': [64, 128, 8, watchtower(4)], 'island-watchtower-l5': [64, 128, 8, watchtower(5)],
     'island-wall': [48, 48, 6, wall(1)], 'island-wall-l2': [48, 48, 6, wall(2)], 'island-wall-l3': [48, 48, 6, wall(3)],
     'island-wall-l4': [48, 48, 6, wall(4)], 'island-wall-l5': [48, 48, 6, wall(5)],
     'island-wall-damaged': [48, 48, 6, wallDamaged], 'island-wall-broken': [48, 48, 6, wallBroken],
     'island-cannon': [48, 32, 5, cannon(1)], 'island-cannon-l2': [48, 32, 5, cannon(2)], 'island-cannon-l3': [48, 32, 5, cannon(3)],
     'island-cannon-l4': [48, 32, 5, cannon(4)], 'island-cannon-l5': [48, 32, 5, cannon(5)],
-    'island-cannon-fire': [48, 32, 5, cannon(1, true)],
+    'island-cannon-fire': [48, 32, 5, cannon(1, true)], 'island-cannon-fire-l2': [48, 32, 5, cannon(2, true)], 'island-cannon-fire-l3': [48, 32, 5, cannon(3, true)],
+    'island-cannon-fire-l4': [48, 32, 5, cannon(4, true)], 'island-cannon-fire-l5': [48, 32, 5, cannon(5, true)],
     'island-mortar': [48, 32, 5, mortar(1)], 'island-mortar-l2': [48, 32, 5, mortar(2)], 'island-mortar-l3': [48, 32, 5, mortar(3)],
     'island-mortar-l4': [48, 32, 5, mortar(4)], 'island-mortar-l5': [48, 32, 5, mortar(5)],
-    'island-mortar-fire': [48, 32, 5, mortar(1, true)],
+    'island-mortar-fire': [48, 32, 5, mortar(1, true)], 'island-mortar-fire-l2': [48, 32, 5, mortar(2, true)], 'island-mortar-fire-l3': [48, 32, 5, mortar(3, true)],
+    'island-mortar-fire-l4': [48, 32, 5, mortar(4, true)], 'island-mortar-fire-l5': [48, 32, 5, mortar(5, true)],
+    'island-harpoon': [48, 32, 5, harpoonTower(1)], 'island-harpoon-l2': [48, 32, 5, harpoonTower(2)], 'island-harpoon-l3': [48, 32, 5, harpoonTower(3)],
+    'island-harpoon-l4': [48, 32, 5, harpoonTower(4)], 'island-harpoon-l5': [48, 32, 5, harpoonTower(5)],
+    'island-harpoon-fire': [48, 32, 5, harpoonTower(1, true)], 'island-harpoon-fire-l2': [48, 32, 5, harpoonTower(2, true)], 'island-harpoon-fire-l3': [48, 32, 5, harpoonTower(3, true)],
+    'island-harpoon-fire-l4': [48, 32, 5, harpoonTower(4, true)], 'island-harpoon-fire-l5': [48, 32, 5, harpoonTower(5, true)],
     'build-spot': [32, 32, 10, buildSpot(false)], 'build-spot-glow': [32, 32, 10, buildSpot(true)], 'fx-level-pip': [16, 16, 8, levelPip], 'fx-level-pip-gold': [16, 16, 8, tierPip],
     'island-bell': [24, 40, 0, bell], 'build-ring': [48, 24, 0, buildRing],
   };
-  for (const kind of ['wall', 'tower', 'cannon', 'watchtower', 'house']) frames[`build-badge-${kind}`] = [20, 24, 0, badge(kind)];
+  // T33 art prep: the damaged and broken towers of every kind and level (the game does not request them yet).
+  for (const kind of TOWER_KINDS) for (let n = 1; n <= 5; n++) for (const state of ['damaged', 'broken'])
+    frames[`island-${kind}${n > 1 ? `-l${n}` : ''}-${state}`] = [48, 32, 5, drawTower(kind, n, state)];
+  frames['build-badge'] = [24, 24, 0, plusBadge];
+  // The old per-kind names stay (every kind shows the same "+" now).
+  for (const kind of ['wall', 'tower', 'cannon', 'watchtower', 'house']) frames[`build-badge-${kind}`] = [24, 24, 0, plusBadge];
   return frames;
 }
-// The ring and the badges glow on their own: no ink silhouette around them.
-export const NO_OUTLINE = new Set(['build-ring', 'build-spot-glow']);
+export {groundRing};
+// The rings glow on their own and draw their own ink edge: no silhouette around them.
+export const NO_OUTLINE = new Set(['build-ring', 'build-ring-locked', 'build-spot-glow']);

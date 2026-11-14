@@ -73,32 +73,81 @@ describe('pirate wave renderer', () => {
     renderer.dispose();
   });
 
-  it('holds the musket pose and flash ~250 ms, runs a tracer to the ship and puffs on the hit', () => {
+  it('flashes ~250 ms at the muzzle, runs a tracer to the ship and puffs on the hit, with no second captain drawn', () => {
     const scene = new THREE.Scene(), pack = packAtlas(), renderer = createWaveRenderer({ scene, atlas: { texture: new THREE.Texture(), ...pack }, fx: () => null });
     const air = renderer.root.children.find(item => item.name === 'pirates:air');
-    const drawn = () => {
-      const uv = air.geometry.getAttribute('iUv').array, out = [];
-      for (let i = 0; i < air.geometry.instanceCount; i++) {
+    const everything = () => renderer.root.children.filter(item => item.isMesh);
+    const drawnIn = mesh => {
+      const uv = mesh.geometry.getAttribute('iUv')?.array, out = [];
+      if (!uv) return out;
+      for (let i = 0; i < mesh.geometry.instanceCount; i++) {
         const u = Math.min(uv[i * 4], uv[i * 4 + 2]);
         const hit = Object.entries(pack.rects).find(([, r]) => Math.abs((r.x + .01) / pack.width - u) < 1e-6 && Math.abs(r.x + r.w - .01 - Math.max(uv[i * 4], uv[i * 4 + 2]) * pack.width) < 1e-3);
         out.push(hit?.[0]);
       }
       return out;
     };
+    const drawn = () => drawnIn(air);
+    const anyBody = () => everything().flatMap(drawnIn).filter(id => /^captain-(musket|cutlass)/.test(id ?? ''));
     expect(MUSKET.fire).toBeGreaterThanOrEqual(.25);
     const state = { ships: [], walls: [], towers: [], fog: 0, sight: 28 };
     renderer.events([{ type: 'captain_fired', t: 1, impactAt: 1.3, by: 'me', targetId: 's', x: 0, z: 0, toX: 8, toZ: -2 }]);
     renderer.update({ state, simTime: 1, dt: .01 });
-    expect(drawn()).toEqual(expect.arrayContaining(['captain-musket-2', 'fx-musket-flash', 'white']));
+    expect(drawn()).toEqual(expect.arrayContaining(['fx-musket-flash', 'white']));
+    // The body that fires is the player's own character (src/pirates/poses.js): no captain sprite is pushed.
+    expect(anyBody()).toEqual([]);
     const step = seconds => { for (let i = 0; i < Math.round(seconds / .01); i++) renderer.update({ state, simTime: 1, dt: .01 }); };
     step(.2); // 210 ms: still firing, the tracer on its way
-    expect(drawn()).toEqual(expect.arrayContaining(['captain-musket-2', 'fx-musket-flash', 'white']));
-    step(.12); // 330 ms: past the fire time and the flight: aiming, the puff on the ship
+    expect(drawn()).toEqual(expect.arrayContaining(['fx-musket-flash', 'white']));
+    expect(anyBody()).toEqual([]);
+    step(.12); // 330 ms: past the fire time and the flight: the puff on the ship
     const later = drawn();
-    expect(later).toContain('captain-musket-1'); expect(later).not.toContain('fx-musket-flash');
+    expect(later).not.toContain('fx-musket-flash');
     expect(later.some(id => /^fx-smoke-/.test(id))).toBe(true);
     for (let i = 0; i < 10; i++) renderer.update({ state, simTime: 2, dt: .1 });
     expect(renderer.stats().tracers).toBe(0);
+    // A cutlass blow: its ring only, no captain-cutlass body.
+    renderer.events([{ type: 'captain_struck', t: 2, by: 'me', targetId: 'b', x: 0, z: 0, toX: 1, toZ: 0 }]);
+    renderer.update({ state, simTime: 2, dt: .01 });
+    expect(anyBody()).toEqual([]);
+    renderer.dispose();
+  });
+  it('starts the flash and tracer from where the shooter stands now, not where the shot was fired', () => {
+    const scene = new THREE.Scene(), pack = packAtlas(), renderer = createWaveRenderer({ scene, atlas: { texture: new THREE.Texture(), ...pack }, fx: () => null });
+    const air = renderer.root.children.find(item => item.name === 'pirates:air');
+    const flashX = () => {
+      const uv = air.geometry.getAttribute('iUv').array, pos = air.geometry.getAttribute('iPos').array, r = pack.rects['fx-musket-flash'];
+      for (let i = 0; i < air.geometry.instanceCount; i++) if (Math.abs(Math.min(uv[i * 4], uv[i * 4 + 2]) - (r.x + .01) / pack.width) < 1e-6) return pos[i * 4];
+      return null;
+    };
+    const state = { ships: [], walls: [], towers: [], fog: 0, sight: 28 };
+    renderer.events([{ type: 'captain_fired', t: 1, impactAt: 1.3, by: 'me', targetId: 's', x: 0, z: 0, toX: 8, toZ: -2 },
+      { type: 'captain_fired', t: 1, impactAt: 1.3, by: 'ben', targetId: 's', x: 0, z: 5, toX: 8, toZ: -2 }]);
+    // You walked 3 units on; Ben's figure stands at x 10.
+    renderer.update({ state, simTime: 1, dt: .01, captain: { id: 'me', x: 3, z: 0, share: 1 }, figures: new Map([['ben', { x: 10, z: 5 }]]) });
+    const xs = (() => {
+      const uv = air.geometry.getAttribute('iUv').array, pos = air.geometry.getAttribute('iPos').array, r = pack.rects['fx-musket-flash'], out = [];
+      for (let i = 0; i < air.geometry.instanceCount; i++) if (Math.abs(Math.min(uv[i * 4], uv[i * 4 + 2]) - (r.x + .01) / pack.width) < 1e-6) out.push(pos[i * 4]);
+      return out.sort((a, b) => a - b);
+    })();
+    expect(flashX()).not.toBeNull();
+    expect(xs).toHaveLength(2);
+    expect(xs[0]).toBeGreaterThan(3); expect(xs[0]).toBeLessThan(6);   // your muzzle, beside you at x 3
+    expect(xs[1]).toBeGreaterThan(10); expect(xs[1]).toBeLessThan(13); // Ben's, beside his figure at x 10
+    renderer.dispose();
+  });
+  it("puts the muzzle bloom and the cutlass ring at the shooter's body now, else where the sim had them", () => {
+    const calls = [], fx = { bloom: (x, y) => calls.push(['bloom', x]), ring: (x, y) => calls.push(['ring', x]) };
+    const scene = new THREE.Scene(), pack = packAtlas(), renderer = createWaveRenderer({ scene, atlas: { texture: new THREE.Texture(), ...pack }, fx: () => fx });
+    const state = { ships: [], walls: [], towers: [], fog: 0, sight: 28 };
+    renderer.update({ state, simTime: 1, dt: .01, captain: { id: 'me', x: 3, z: 0, share: 1 }, figures: new Map([['ben', { x: 10, z: 5 }]]) });
+    renderer.events([{ type: 'captain_fired', t: 1, impactAt: 1.3, by: 'me', x: 0, z: 0, toX: 8, toZ: -2 },
+      { type: 'captain_struck', t: 1, by: 'ben', x: 0, z: 5, toX: 1, toZ: 5 },
+      { type: 'captain_struck', t: 1, by: 'nobody', x: -4, z: 5, toX: -5, toZ: 5 }]);
+    const [bloom, benRing, loneRing] = calls;
+    expect(bloom[0]).toBe('bloom'); expect(bloom[1]).toBeGreaterThan(3); expect(bloom[1]).toBeLessThan(6);
+    expect(benRing).toEqual(['ring', 10 + 1.4]);
+    expect(loneRing).toEqual(['ring', -4 - 1.4]); // no figure: the ring where the sim had the blow, and no body
     renderer.dispose();
   });
 });

@@ -1,0 +1,65 @@
+"""The simulation rules a wave plays with (T33 tower_health, T34/T35 pathing, T38 rescue, T43
+defenses_v2).
+
+Each rule is switched on by the feature flag of the same name. The first wave answer for a wave
+(start, join or current) keeps the rule set the flags say at that moment, in the table wave_rules
+(supabase/migrations/20261114130500_wave_rules.sql, wave_rules_keep()); every later answer for that
+wave serves the kept set. So a friend who joins after a flag was switched still plays the
+bell-ringer's rules, and every client of a wave simulates the same wave.
+
+The set is kept even when it is empty (every rule flag off): a wave that started with no rules
+plays none for every later joiner, even if a rule flag is switched on while it runs, and a wave
+that started with rules keeps them even if every flag is switched off. One small database call
+per answer (wave_rules_keep). An empty kept set leaves the "rules" key out, exactly as before. A
+wave with no row yet (started before this was deployed) keeps the flags of its next answer. If
+keeping fails (the database is down) the answer has no rules and the error is logged, never a 5xx.
+
+Used by: routes/waves.py.
+"""
+
+import logging
+
+from pydantic import BaseModel
+
+from server.errors import ApiError
+from server.flags import is_enabled
+from server.island.store import read_model
+from server.island.waves import WaveStart
+from server.settings import Settings
+from server.supabase_admin import SupabaseAdmin
+
+# The rules in their fixed order (the "rules" of the wave answers). The browser's sim turns each
+# one into an option of createWave() (frontend/src/pirates/wave-rules.js). The migrations' check
+# constraint lists the same names (20261114130500_wave_rules.sql, widened for defenses_v2 by
+# 20261114140000_culverin.sql). defenses_v2 (T43): the culverins of the island fight in this wave;
+# without it every client's sim ignores a culverin, so a whole wave fights the same island even
+# if the flag (and so the island answer) changed while it ran.
+SIM_RULES = ("tower_health", "pathing", "rescue", "defenses_v2")
+logger = logging.getLogger(__name__)
+
+
+class KeptRules(BaseModel):
+    rules: list[str]
+
+
+def wanted_rules(settings: Settings) -> list[str]:
+    """The rules of SIM_RULES whose flag is on now, in that order."""
+    return [name for name in SIM_RULES if is_enabled(name, settings.flags)]
+
+
+async def rules_for_wave(
+    admin: SupabaseAdmin, settings: Settings, wave: WaveStart
+) -> list[str] | None:
+    """The rules of this wave: kept by its first answer (an empty set too), the same for every
+    later one whatever the flags say now. None when the wave keeps no rule (the key is then left
+    out) or when keeping fails."""
+    arguments = {"p_wave_id": str(wave.wave_id), "p_rules": wanted_rules(settings)}
+    try:
+        kept = read_model(KeptRules, await admin.call_function("wave_rules_keep", arguments))
+    except ApiError as error:
+        # The wave itself is fine (started or joined): never fail it for its rules. With the
+        # database down it plays with no rules, as before this feature.
+        logger.warning("Wave rules not kept; the wave plays without them: %s", type(error).__name__)
+        return None
+    rules = [name for name in SIM_RULES if name in kept.rules]
+    return rules or None

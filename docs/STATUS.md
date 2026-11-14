@@ -14,11 +14,40 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
+
 **12 Nov, T19 / Johannes:** [draft PR #7](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/7) makes
 building clicks use E's existing reach and preserves priority for wave/revive actions. Frontend:
 **2,753 tests passed**; build, budgets and text lint pass; accessibility **33 screens / no failures**;
 demo **33 checks / no errors**. [Before/after evidence](evidence/T19/README.md). No login/API changes;
 physical phones, live multiplayer and human review remain separate checks.
+
+**14 Nov, ~22:05 UTC: `pathing` is live.** Nils accepted the closed-ring gap (D040: at wave 60 a closed wall ring is 12 to 18 points harder with pathing), so `pathing` was added to production `FEATURE_FLAGS` and redeployed. Checked after the redeploy: `/api/config` shows all new flags on (`islands`, `rescue`, `wall_recovery`, `placement`, `defenses_v2`, `arsenal`, `tower_health`, `pathing`), `/api/health` answers 200, and Vercel shows no runtime errors in the last hour. Every T29–T47 feature is now live; what the paragraph below says about `pathing` being off is superseded. Players should reload old tabs.
+
+**14 Nov, late evening, T29–T47 sprint (Nils, agent-assisted): state tonight, ~21:55 UTC.** Merged this sprint: PRs #20, #29, #33–#37, #40–#53 and, since the last docs pass, #54, #56, #59, #62 and #63. **Applied live and registered in `schema_migrations`:** `20261114100000_wall_recovery`, `20261114110000_island_layout`, `20261114120000_arsenal`, `20261114130500_wave_rules` and `20261114140000_culverin` (the plot rule for the culverin and the wave-rule names, including `defenses_v2`); the arsenal conversion `arsenal_convert_personal_weapons()` was run once (1 copy converted, 0 islands left with personal weapons). **Production `FEATURE_FLAGS` on:** `live_presence`, `market`, `arena`, `sign_in`, `demo`, `sports`, `islands`, `placement` (~19:45 UTC, after the release check [PR #49](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/49)), `wall_recovery` (~20:28, after the finish guard of #52 and `test:walls`), `arsenal` (~20:48, after [PR #53](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/53)), `rescue` (~21:05, after the release check [PR #54](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/54)), `defenses_v2`, the culverin (~21:53, after the wiring of [PR #56](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/56) and the release check [PR #62](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/62)) and `tower_health` (~21:53, after the balance check of [PR #59](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/59)). **Off:** `pathing`. **Why `pathing` stays off:** at wave 60 a closed wall ring is 12 to 18 points harder than with no rules (80 seeds: 51 % with pathing and 45 % with both rules, against 63 % with none); the retune of #59 (`WALL_ENGAGE` 3, boarder `towerReach` 1.5) fixed every other case. Fixing the ring needs a `sim.js` change or a team decision, see [specs/T33-T35-balance.md](../specs/T33-T35-balance.md). `tower_health` is on, but on today's routes it plays like no rules (boarders rarely reach a tower); its balance check passed. [PR #63](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/63) fixed the flag-on-mid-wave bug: a wave keeps the rule set of its first answer even when that set is empty. Live for players: wall recovery, flexible placement, the arsenal, the co-op policy, the minigame curves, the last-chance rescue, the culverin, tower health (nearly invisible so far), the Harbor forecast line, the all-time leaderboard and statue stages. Merged but off: targeting/pathing in the sim. **Care points:** a player with an old tab should reload after a flag flips; do not switch `defenses_v2` off while culverins are built without a plan (the server then hides them). All of it is still **proposed** in the decision log (D039–D049): the fast-track D047 agreed the merge order only, and the peer review comes after. Known follow-ups are in [OPEN-TODOS section 9](OPEN-TODOS.md#known-follow-ups-from-the-sprint-14-nov); the reading guide for the review is [SPRINT-T29-T47-GUIDE.md](SPRINT-T29-T47-GUIDE.md) (section 15 is new: balance harness, retune, wave rules kept once). The live state was checked by the coordinator on 14 Nov; this repository cannot prove it, so check `GET /api/config` and the migration list before relying on it.
+
+**14 Nov, T29–T47 review guide (docs only):** [SPRINT-T29-T47-GUIDE.md](SPRINT-T29-T47-GUIDE.md) is a beginner walkthrough of everything merged in the sprint (PRs #33–#44): per feature the player view, flag, files, code walk, tests and three explain-back questions, plus how flags and migrations fit together and a suggested review split. Read it before the walkthrough; D047 merged these lanes without prior review.
+
+**14 Nov, T29–T47 / Nils (agent-assisted): fast-track sprint.** Ianno's roadmap ([PR #20](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/20)) is merged. Nils's agents work on T29–T47 in eight lanes. Each lane has its own claim issue and branch: wall recovery #21, targeting/pathing #22, flexible placement #23, arsenal #24, co-op policy #25, minigames/rescue #26, Harbor/weather #27, highscore/statue #28. **Nils decided ([D047](DECISIONS.md)) to merge these lanes to `main` as soon as each one is green, without waiting for peer approval first.** Review happens after the merge, so please look at the merged PRs and comment or reopen anything you disagree with. Merge gate: `npm test`, `npm run build`, `npm run test:mp`, the GitHub sign-in checks and backend `pytest`/`ruff` all pass. Any feature that needs a new table ships behind a new feature flag that is off by default, so the live game keeps working until the migration is applied and the flag is switched on (each one a separate, announced step). The proposed design decisions are D039–D046 and are open for team comments.
+
+**14 Nov, T28 / Ianno:** [Boss minigame introduction and optional first-time practice](../specs/T28-minigame-introduction.md) is implemented in [PR #19](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/19), from main `50cab125`. Per player/island/task; shared real result. Frontend: 2,989 tests, build/budget/text lint, 33 accessibility screens, 33 demo checks and the four-page practice/skip barrier pass. [Evidence and checkpoints](evidence/T28/README.md). Ianno reports having practiced all tasks; introductory explain-back completed after clarification; independent human review remains pending.
+
+**14 Nov, T27 (Ianno):** [PR #17](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/17)
+adds only exact-angle musket aiming, upright directional body views and body/gun overlap. Frontend tests (2,980), build, budget, text lint, accessibility (33 screens), demo (33 checks), two-page angle graphics and four-page fake-room multiplayer pass. The eight-direction montage is in WALKTHROUGH part 30. Coached explain-back discussed; independent rehearsal and human review are pending.
+
+**14 Nov, T7 / Ianno:** [PR #13](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/13) implements the weekly island leaderboard. Highest win per island this UTC week, up to ten rows, shared islands counted once; Harbor noticeboard and medal badges. [Evidence and limits](handoff/T7-weekly-leaderboard.md). Introductory explain-back completed after clarification; Franz (`frcola`) is the requested reviewer. Independent human approval and live database/deployment verification remain pending.
+
+**14 Nov, T27 / Ianno:** proposed a [captain shooting-direction task](OPEN-TODOS.md#2-open-tasks-you-can-pick-small-independent-updated-thu-12-nov). Planning only; implementation has not started.
+
+**13 Nov, T5 / Ianno:** [PR #10](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/10) adds a number-only rank shield above/right of the cabin, a wave-25 statue and trees at 100%, 110% or 120% size for zero, one or two houses. Original island-style drawings; existing progress only. Verification is recorded in [the T5 handover](handoff/T5-island-decoration.md); introductory explain-back completed; approval by Nils (`Nilsnova`) or Johannes Franz Lang (`frcola`) is required before merge.
+
+**13 Nov, T26 / Ianno:** island Harbor weather entry implemented in [PR #8](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/8). Reuses the existing card; [local evidence and limits](handoff/T26-weather-board.md). Explain-back and human review pending.
+
+
+**14 Nov, planning proposal (Ianno Hollensteiner):** [Defense and shared-island expansion](BUILD-PLAN.md#6-defense-and-shared-island-expansion) adds T29–T47. No gameplay implementation or live change is claimed. Planning branch: `docs/t29-t47-defense-roadmap`; existing uncommitted work is preserved.
+**11 Nov, D1 contribution (Johannes):** [draft PR #5](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/5)
+adds 67 invalid-input/boundary cases using the existing fakes. Backend: **15,894 passed, 257 skipped**;
+Ruff: **All checks passed!** The skips concern optional SQL tools and opt-in database checks.
+Explain-back and human review are pending; no live-database evidence is claimed.
 
 **Plan to the deadline:** [FINAL-ROADMAP.md](FINAL-ROADMAP.md) ranks the remaining work by grade value; members pick tasks there with the [agent prompt](contribute/AGENT-PROMPT.md). **Open to-dos:** the account setup and demo-day list is [OPEN-TODOS.md](OPEN-TODOS.md) (account setup, pre-demo checks, follow-ups, the Moodle deadline). No task there is assigned to a person.
 
@@ -195,9 +224,27 @@ Nobody has decided these yet. Until they are decided, the plan in [ROADMAP.md](.
 
 ## Next steps per lane
 
+
 **T19 / Johannes:** inspect [PR #7](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/7) with the
 [lane walkthrough](WALKTHROUGH.md#johannes-nearby-building-interactions-t19), then ask a different human
 teammate to review the current diff; Nils (`Nilsnova`) is the suggested reviewer. No automatic merge.
+
+**T28 / Ianno:** introductory explain-back completed after clarification; ask Johannes (`frcola`) for independent review of PR #19. No merge before a different human approves.
+
+**Captain visuals:** T27 covers shooting direction in single-player and multiplayer ([OPEN-TODOS §2](OPEN-TODOS.md#2-open-tasks-you-can-pick-small-independent-updated-thu-12-nov)). Implementation is in [PR #17](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/17); checks passed and Ianno reviewed the eight-direction montage; ask Johannes (`frcola`) to review. Three explain-back questions were discussed with coaching; rehearse independently before the walkthrough.
+
+**T7 / Ianno:** introductory explain-back completed after clarification. Franz (`frcola`) is assigned to review PR #13; independent human approval and live verification remain pending. Do not merge without a current independent human approval.
+
+**Captain visuals:** T27 covers shooting direction in single-player and multiplayer ([OPEN-TODOS §2](OPEN-TODOS.md#2-open-tasks-you-can-pick-small-independent-updated-thu-12-nov)). Implementation stays open for a later branch.
+
+**T5 / Ianno:** introductory explain-back completed with clarifications. Nils (`Nilsnova`) or Johannes Franz Lang (`frcola`) must independently review and approve the current diff before merge.
+
+**T26 / Ianno:** review the small weather-entry diff, answer the explain-back questions, then ask Johannes (`frcola`) for independent human review.
+
+
+**Expansion next:** claim one task from the [new board](OPEN-TODOS.md#9-defense-and-shared-island-expansion-proposal-14-nov), starting with T29/T30 or independent T37/T42 design. Coordinate shared files before writing code; existing lane and submission priorities remain.
+**D1 / Johannes:** explain the request, response and no-write assertions in [PR #5](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/5),
+answer the three walkthrough questions, then ask Nils (`Nilsnova`) for independent human review.
 
 Each lane has its next two packages, each with a brief. Fill in the `<...>` parts and paste the brief to your coding agent. The briefs follow the template in [ENGINEERING.md](ENGINEERING.md), section 8, and end with the handover format from [AGENTS.md](../AGENTS.md). What each package ships, provides and must pass is in [ROADMAP.md](../ROADMAP.md).
 
@@ -509,7 +556,42 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 
 ## Log
 
+- **14 Nov 2026 · Johannes / PR #7 conflict resolution:** integrated main `53a59d4` on `feat/t19-nearby-interactions`; retained teammate content and reran client checks. Exact results and limits: [task handover](../specs/T19-nearby-interactions.md#main-integration-and-conflict-resolution-14-nov-2026). Updated branch awaits independent review; no main merge.
+
+
+- **2026-11-14, ~22:05 UTC, pathing decision (docs only), branch `docs/pathing-decision`.** Claude, for Nils: Nils accepted the closed-ring balance gap; `pathing` switched on in production and checked (`/api/config`, `/api/health`, no runtime errors). Updated D040, OPEN-TODOS, INTERFACES and the sprint guide.
+- **2026-11-14, live-state pass (docs only), branch `docs/sprint-live-state`.** Claude, for Nils: recorded the late-evening production state (flags `rescue`, `defenses_v2` and `tower_health` on; `pathing` off; migration `20261114140000_culverin` and the four earlier ones applied), PRs #54, #56, #59, #62 and #63; set the OPEN-TODOS section 9 statuses (T33, T38 and T43 live; T34/T35 merged, pathing off pending a team decision) and the follow-up table; updated the sprint guide (sections 0 and 13, notes in 10 and 11, new section 15 with three explain-back questions); marked the outdated sentence in the `wave_rules` migration header and `supabase/README.md` as superseded by #63. No code, flag or database change.
+- **2026-11-14, sprint final pass (docs only), branch `docs/sprint-final-pass`.** Claude, for Nils: recorded that the four sprint migrations are applied live and which flags are on in production; replaced the stale "not applied" wording (D039, D041, D042, D049, supabase/README.md, INTERFACES.md, the T29/T33/T36/T40 specs); set every T29–T47 row in OPEN-TODOS section 9 to its real state with PR numbers and listed the known follow-ups; added the T45, arsenal, integration and culverin sections to the sprint guide. No code, flag or database change.
+
+- **2026-11-14, sim integration (T29–T32 follow-ups, T33, T34/T35, T38), branch `feat/integration-sim`.** Nils (agent-assisted). Wall recovery: a finish can no longer heal walls (capped at the wave-start health) and a failed wall record never breaks a paid finish. New off-by-default flags `tower_health` (T33, D049 proposed: tower hp in a wave) and `pathing` (T34/T35 routes over the walls' T36 footprints; option A while off); the existing `rescue` flag now also switches the T38 sim hook on. All three travel to every client as `rules` on the wave answers, so a wave never mixes rules. Each wave keeps its rule set at its first answer (additive migration `20261114130500_wave_rules.sql`, not applied: apply it before switching any rule flag on). Before switching any of them on: reload all clients, playtest balance (T3).
+
+- **2026-11-14, T29–T47 review guide.** Claude, for Nils: added [SPRINT-T29-T47-GUIDE.md](SPRINT-T29-T47-GUIDE.md), a beginner walkthrough of the sprint merges (#33–#44) with code walks, tests, explain-back questions, the flag/migration picture and a suggested split for the four teammates. Docs only; checked links and content as ENGINEERING.md section 3 asks. Open: the live state of the flags on Vercel is not recorded in the repo.
+
+- **2026-11-14, T29–T47 fast-track started.** Nils approved and merged PR #20; eight agent lanes opened issues #21–#28. Per D047, green lanes merge without a prior peer approval, behind off-by-default flags where a migration is needed; teammates review after the merge.
+
+- **2026-11-14, T28 implemented.** Ianno, assisted by Codex, implemented first-time practice per player/island/minigame on updated main. Full frontend suite and four-page shared-start proof pass; [evidence](evidence/T28/README.md). Introductory explain-back completed after clarification; independent human review pending.
+
+- **2026-11-14, T27, Ianno with Codex:** exact-angle shooting visuals and body/gun overlap implemented in draft PR #17; checks passed; screenshot montage, walkthrough and test-map updated; coached explain-back discussed; independent human review pending.
+
+- **2026-11-14, T7 explain-back:** Ianno explained weekly high scores and island grouping, then corrected the outage answer after clarification: Try again because results could not be retrieved. Desktop/phone-sized Chrome coverage versus unverified live queries and physical phones was clarified. PR #13 proceeds to human review by Franz (`frcola`); no merge.
+
+- **2026-11-13, T7 / Ianno with Codex:** weekly island leaderboard implemented on `feat/t7-weekly-leaderboard`, [PR #13](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/13). D037 records weekly island scoring; [handover](handoff/T7-weekly-leaderboard.md) records checks, sample-data screenshots and remaining explain-back/live verification.
+
+- **2026-11-14, T27 planning.** Ianno Hollensteiner, assisted by Codex, proposed captain shooting direction as an open task. Documentation only; no animation work started.
+
+- **13 Nov 2026, T5 explain-back:** Ianno discussed number/rank updates, the highest-wave record after a loss, and releasing old textures. Clarifications were supplied for the first and third answers. Ianno requests approval by Nils or Johannes Franz Lang before this PR is merged.
+
+- **13 Nov 2026, T5 follow-up for Ianno:** kept the existing tree size with zero houses, then grew trees to 110% and 120% with one and two houses; corrected the earlier shrinking baseline and recaptured the house progression. [Evidence](handoff/T5-island-decoration.md).
+
+- **13 Nov 2026, Codex for Ianno Hollensteiner:** implemented T5 on `feat/t5-island-decoration`, [PR #10](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/10), following Ianno’s revised rank-shield design and placement. [Evidence and limits](handoff/T5-island-decoration.md). Explain-back and human review pending.
+
+- **2026-11-13.** Codex for Ianno: T26 island Harbor weather access, regression tests and desktop/phone screenshots in PR #8; see [evidence](handoff/T26-weather-board.md). Human explain-back/review pending.
+
+- **14 Nov 2026 · Ianno Hollensteiner, with coding-agent assistance:** prepared additive roadmap/tasks T29–T47 for review; no implementation or release. Independent human review and explain-back are pending; no merge or release is claimed.
+
 - **2026-11-12, Johannes Franz Lang with Codex:** T19 nearby building input on `feat/t19-nearby-interactions` ([PR #7](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/7)); 2,753 frontend tests, build/budget/text checks, 33 accessibility screens and 33 demo checks pass. Nine new cases, before/after desktop/phone evidence, walkthrough and test map included. Login, APIs and movement unchanged; no files deleted; human review pending.
+
+- **2026-11-11, Johannes Franz Lang with Codex:** D1 adds 67 cases in five existing route-test files on `test/d1-invalid-inputs` ([PR #5](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/5)). Backend 15,894 passed / 257 skipped; Ruff clean; a temporary 65-character action-ID bug was caught and restored. Production code is unchanged; explain-back and human review remain.
 
 - **2026-11-08.** Codex for Nils: integrated reviewed G9 overflow 1–3, collision-aware phone tap-to-walk, idle onboarding, truthful Friends entry, inline case guidance and visual polish across inspection, story and support screens on `integrate/overflow-1-3`. Final clean frontend **3,719/252**, mobile **36**, accessibility **61**, caption **51**, CSP seven pages/zero violations; budgets, recorded native journeys and fault checks pass. [Release evidence](handoff/player-experience-visual-pass.md). Main/deployment verification follows; no backend/SQL/env/provider/workflow changes.
 

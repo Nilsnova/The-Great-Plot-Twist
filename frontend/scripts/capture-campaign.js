@@ -68,7 +68,7 @@ try {
   await page.waitForTimeout(600); await closeCards();
   await stand(6, -9);
   await island(async i => { i.openTechHub(); await i.research('cannon'); i.openTechHub(); });
-  await page.locator('.island-card-tech[open] .island-research-row.is-done').waitFor();
+  await page.locator('.island-card-tech[open] .island-research-branch.is-done').waitFor();
   await shot('03-tech-hub-research');
   await closeCards();
   // 4 A tower's skill choice on its upgrade card.

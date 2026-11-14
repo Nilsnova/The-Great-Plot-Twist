@@ -65,7 +65,7 @@ def test_a_new_player_sees_the_code_the_coins_and_sixteen_empty_spots():
     body = response.json()
     assert list(body) == [
         "code", "coins", "waveBest", "nextWave", "flags", "spots",
-        "crew", "captain", "prices", "unlocks", "skills", "weapons", "campaign",
+        "crew", "captain", "prices", "unlocks", "skills", "weapons", "campaign", "layout",
     ]  # fmt: skip
     assert (body["code"], body["coins"], body["waveBest"], body["flags"]) == (
         "ISLE-K7Q2M",
@@ -77,6 +77,7 @@ def test_a_new_player_sees_the_code_the_coins_and_sixteen_empty_spots():
     assert body["spots"][0] == {
         "id": "wall_1", "kind": "wall", "kinds": ["wall"], "built": False,
         "level": 0, "cost": 10, "upgradeCost": None, "spec": None,
+        "x": -18.5, "z": -4.0,
     }  # fmt: skip
     assert body["nextWave"] == 1
 
@@ -248,6 +249,18 @@ def test_an_unknown_spot_is_refused():
 @pytest.mark.parametrize(
     "body",
     [
+        {"spot": ""},
+        {"spot": None},
+        {"spot": 1},
+        {"spot": "x" * 41},
+        {"kind": ""},
+        {"kind": None},
+        {"kind": []},
+        {"kind": "x" * 41},
+        {"actionUid": ""},
+        {"actionUid": None},
+        {"actionUid": 1},
+        {"actionUid": "x" * 65},
         {"actionUid": "short"},
         {"actionUid": "bad uid with spaces"},
         {"spot": "Cannon_1"},
@@ -259,7 +272,7 @@ def test_a_build_that_does_not_fit_is_refused(body):
     world = World()
 
     assert_error(world.build(**body), 422, "validation_error")
-    assert world.database.calls("islet_build") == []
+    assert world.database.requests == []
 
 
 def test_a_database_that_is_down_says_the_outcome_is_unknown():
@@ -304,7 +317,7 @@ def test_a_friend_visits_an_island_by_its_code(code):
 
     assert response.status_code == 200
     body = response.json()
-    assert list(body) == ["code", "ownerName", "waveBest", "spots", "crew", "campaign"]
+    assert list(body) == ["code", "ownerName", "waveBest", "spots", "crew", "campaign", "layout"]
     assert (body["code"], body["ownerName"], body["waveBest"]) == ("ISLE-K7Q2M", "Captain Gull", 3)
     assert [spot["id"] for spot in body["spots"] if spot["built"]] == ["wall_2"]
 
@@ -337,6 +350,13 @@ def test_a_visit_needs_a_member_of_that_game_and_the_owner_always_gets_in():
     # A member who left is out again.
     world.database.games.rows[FRIEND_ID][PLAYER_ID]["left"] = 99
     assert_error(world.visit("ISLE-K7Q2M"), 403, "not_member")
+
+
+def test_an_oversized_visit_code_is_refused_before_any_lookup() -> None:
+    world = World()
+
+    assert_error(world.visit("x" * 33), 422, "validation_error")
+    assert world.database.requests == []
 
 
 def test_a_visit_does_not_open_an_island():

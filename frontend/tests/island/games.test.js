@@ -55,7 +55,7 @@ describe('the games routes of the fake (the server rules of 20261112040000_game_
     const tab = world(), host = tab('me', 'Nils'), ben = tab('ben', 'Ben'), ana = tab('ana', 'Ana');
     await host.createGame(); await ben.joinGame('ISLE-K7Q2M');
     const lobby = (await ben.lobby('ISLE-K7Q2M')).data;
-    expect(lobby.members).toEqual([{id: 'me', name: 'Nils', role: 'host', you: false}, {id: 'ben', name: 'Ben', role: 'member', you: true}]);
+    expect(lobby.members).toEqual([{id: 'me', name: 'Nils', role: 'host', you: false, captainRole: null}, {id: 'ben', name: 'Ben', role: 'member', you: true, captainRole: null}]);
     expect(await ana.lobby('ISLE-K7Q2M')).toMatchObject({ok: false, status: 403, code: 'not_member'});
     expect(await ana.lobby('ISLE-ZZZZZ')).toMatchObject({ok: false, status: 404, code: 'no_such_game'});
   });

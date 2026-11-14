@@ -37,6 +37,7 @@ export function createSettingsView(view) {
   toggle('First-time hints','hintsEnabled');
   toggle('Narrator','narrator');
   toggle('Narrator captions','captions');
+  toggle('Easier finishers','easyFinishers');
   choice('Quality','quality',[['high','High'],['low','Low']]);
   for(const key of ['master','music','effects','voice']) {
     const input=node('input');input.type='range';input.min='0';input.max='100';input.step='1';input.value=String(Math.round(values[key]*100));input.dataset.preference=key;

@@ -62,5 +62,35 @@ export const levelArt = (kind, level) => {
   const n = Math.max(1, Math.min(5, Number.isInteger(level) ? level : 1));
   return n <= 3 ? pirateLevels[kind]?.[n - 1] ?? null : TIER_ART[kind]?.[n - 4] ?? null;
 };
+// The firing frame of a cannon or mortar at each level (index 0 = level 1), so a shot keeps the tower's own
+// look, the gold of levels 4 and 5 included. Level 1's is pirateFrames' own (pixel and cartoon); 2 to 5 are
+// cartoon-only (src/art/island.js), so a pixel atlas falls back to level 1's.
+export const FIRE_ART = {
+  cannon: ['island-cannon-fire', 'island-cannon-fire-l2', 'island-cannon-fire-l3', 'island-cannon-fire-l4', 'island-cannon-fire-l5'],
+  mortar: ['island-mortar-fire', 'island-mortar-fire-l2', 'island-mortar-fire-l3', 'island-mortar-fire-l4', 'island-mortar-fire-l5'],
+};
+export const fireArt = (kind, level) => {
+  const n = Math.max(1, Math.min(5, Number.isInteger(level) ? level : 1));
+  return FIRE_ART[kind]?.[n - 1] ?? null;
+};
+// Level pips in one row above a building (the island and the wave renderer). Levels 1 to 3: brass stars
+// (fx-level-pip) at full size, `step` apart. Levels 4 and 5: gold stars on a teal disc (fx-level-pip-gold),
+// at PIP_TIER.scale and PIP_TIER.step apart, which is wider than a disc, so four or five never overlap and
+// the row of five stays about as wide as the building. scale and offsets are in pip widths. Pure.
+export const PIP_TIER = Object.freeze({ scale: .64, step: .72 });
+export function pipRow(level, { step = .7 } = {}) {
+  const n = Math.max(1, Math.min(5, Number.isInteger(level) ? level : 1)), tier = n >= 4, gap = tier ? PIP_TIER.step : step;
+  return { art: tier ? 'fx-level-pip-gold' : 'fx-level-pip', scale: tier ? PIP_TIER.scale : 1,
+    offsets: Array.from({ length: n }, (_, i) => Math.round((i - (n - 1) / 2) * gap * 1e4) / 1e4) };
+}
+// The harpoon tower (GAME-V3.md §5, T1): cartoon-only, every level and its firing frame (src/art/island.js). A pixel atlas
+// (tests) has no frame for it and draws a cannon instead.
+export const HARPOON_ART = {
+  levels: ['island-harpoon', 'island-harpoon-l2', 'island-harpoon-l3', 'island-harpoon-l4', 'island-harpoon-l5'],
+  fire: ['island-harpoon-fire', 'island-harpoon-fire-l2', 'island-harpoon-fire-l3', 'island-harpoon-fire-l4', 'island-harpoon-fire-l5'],
+  bolt: 'fx-harpoon', ripples: 'fx-slow-ripples', rope: 'fx-rope-mark',
+};
+// The culverin (T43, D048 proposed): cartoon-only like the harpoon tower; its frame names live with its drawings.
+export { CULVERIN_ART } from '../art/defenses-v2.js';
 export const crewArt = { gunner: 'crew-gunner', carpenter: 'crew-carpenter', lookout: 'crew-lookout' };
 export const pirateArtIds = Object.keys(pirateDimensions);

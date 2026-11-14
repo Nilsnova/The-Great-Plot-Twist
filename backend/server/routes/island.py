@@ -31,9 +31,14 @@ GET /api/island
         "campaign": {"wave": 4, "open": ["wall:1", ..., "harbor", "market_calls"],
                      "locked": {"ring_walls": 5, "wreck": 6, "tech_hub": 8, ...},
                      "later": ["ship"],
-                     "research": {"done": ["cannon"], "branches": [{"branch": "cannon",
-                                  "name": "Cannon skills", "price": 180, "specs": [{"id": "rapid",
-                                  "name": "Rapid"}, ...]}, ...]},
+                     "research": {"done": ["cannon"], "tiers": {"cannon": {"tier": 2,
+                                  "tier2": "long_guns", "tier3": null}, ...},
+                                  "tierWaves": [8, 15, 25], "branches": [{"branch": "cannon",
+                                  "name": "Cannon skills", "price": 180, "prices": [180, 360, 630],
+                                  "specs": [{"id": "rapid", "name": "Rapid"}, ...],
+                                  "tier2": [{"id": "rapid_2", "name": "Rapid II"}, ...],
+                                  "tier3": [{"id": "broadside", "name": "Broadside"}, ...]},
+                                  ...]},
                      "wreck": {"paid": 125, "goal": 500, "gifts": [25, 100]}}}
     The first call makes the player's island with a new code and, for a brand-new player whose
     wallet never moved, pays the starting coins (once). The 22 spots come in the order of
@@ -53,6 +58,12 @@ GET /api/island
     research and the wreck's repair. A spot with a tower skill carries "spec" (null for none).
     The building levels of "unlocks" follow the island's best won wave too; crew and captain
     levels follow the player's own unlock wave.
+    Flexible placement (T36, D041): every spot also carries "x" and "z", where it stands on the
+    island's build grid (an old save: its fixed spot), and the answer carries "layout":
+    {"version": 1 | 2, "grid": 0.5, "movable": true | false}. Version 1 is the fixed spots,
+    2 means a spot was moved; "movable" is false while the layout cannot be read. Moving is
+    POST /api/island/move (routes/island_layout.py). GET /api/island/visit/{code} carries the
+    same "x", "z" and "layout".
     Errors: 401, 403 demo_closed (a guest who was not admitted), 404 feature_off,
             404 player_not_set_up, 502 database_error, 503 island_unavailable, database_unavailable
 
@@ -79,30 +90,58 @@ POST /api/island/upgrade  {"spot": "cannon_1", "actionUid": "...", "code"?: "ISL
     -> the island. One level up (ledger ref upgrade:<actionUid>); the kind stays. "code" works
     as for a build (co-op on a friend's island).
     Errors: 404 no_such_island (a code that names no island), 404 no_such_spot, 409 not_built,
-            409 max_level, 409 locked, 409 insufficient_funds
+            409 max_level, 409 locked, 409 insufficient_funds, and with the flag wall_recovery
+            on 409 needs_repair (a damaged or destroyed wall: repair it first, D039)
 
 POST /api/island/hire  {"crew": "gunner" | "carpenter" | "lookout", "actionUid": "..."}
     -> the island. One crew member, kept (ledger ref crew:<actionUid>). Always your own island.
     Errors: 409 crew_full, 409 locked, 409 insufficient_funds
 
-POST /api/island/research  {"branch": "cannon", "actionUid": "...", "code"?: "ISLE-K7Q2M"}
-    -> the island. The Tech hub (GAME-V3 section 5): one research branch for the whole island
-    (yours, or with "code" the game you are a member of), paid once with the caller's coins
-    (ledger ref research:<actionUid>, reason tech_research). Opens after wave 8.
+POST /api/island/research  {"branch": "cannon", "actionUid": "...", "tier"?: 1 | 2 | 3,
+                            "choice"?: "long_guns", "change"?: true, "code"?: "ISLE-K7Q2M"}
+    -> the island. The Tech hub (GAME-V3 sections 5 and 5.1): one research step for the whole
+    island (yours, or with "code" the game you are a member of), paid with the caller's coins
+    (ledger ref research:<actionUid>, reason tech_research). Tier 1 (no "choice") opens after
+    wave 8; tiers 2 and 3 (after waves 15 and 25) need "choice", one of the tier's two options:
+    once the crew chose one, the other is closed, and "change": true switches to it at the tier's
+    price again (a tier-3 switch takes the old capstone off the towers that picked it). Between
+    waves only.
     Errors: 400 bad_research, 403 not_member, 404 no_such_island, 409 locked, 409 known,
-            409 insufficient_funds
+            409 closed, 409 needs_tier, 409 top_tier, 409 wave_running, 409 insufficient_funds
 
 POST /api/island/tower-skill  {"spot": "cannon_1", "spec": "rapid", "code"?: "ISLE-K7Q2M"}
     -> the island. The tower on the spot picks one skill of its researched branch (no coins;
-    picking another one changes it, for the next wave). Safe to repeat.
+    picking another one changes it, for the next wave). Safe to repeat. A house of level 2 or
+    more picks a role the same way: "spec" barracks, tavern or workshop, with no research
+    (docs/GAME-V3.md "Houses"); the spot then carries it as "spec".
     Errors: 400 bad_spec, 403 not_member, 404 no_such_spot, 404 no_such_island, 409 not_built,
-            409 not_researched, 422 wrong_kind
+            409 not_researched, 409 house_level ("Raise this house to level 2 first."),
+            422 wrong_kind
 
 POST /api/island/wreck  {"amount": 25, "actionUid": "...", "code"?: "ISLE-K7Q2M"}
     -> the island. Coins into the island's wreck (GAME-V3 section 4, after wave 6; ledger ref
     wreck:<actionUid>, reason wreck_repair), never more than the repair still needs.
     Errors: 400 bad_gift, 403 not_member, 404 no_such_island, 409 locked, 409 repaired,
             409 insufficient_funds
+
+GET /api/island/demolish?spot=cannon_1&code=ISLE-K7Q2M   (code optional: your own island)
+    -> {"spot": "cannon_1", "kind": "cannon", "name": "Cannon", "level": 3,
+        "refunds": [{"id": "...", "name": "Ana", "coins": 75, "you": false}, ...], "repeat": false}
+    What tearing the building down would give back (GAME-V3 section 4.2), worked out by the
+    database, for the confirmation card: each payer half of what they paid for it, rounded down,
+    the biggest payer first; a level nobody has a payment row for counts as the host's. Changes
+    nothing.
+    Errors: 409 protected (the heart of the island, the bell, the Harbor, the Tech hub, the
+            wreck), 404 no_such_spot, 404 no_such_island, 403 not_member, 409 not_built, 409
+            wave_running
+
+POST /api/island/demolish  {"spot": "cannon_1", "actionUid": "...", "code"?: "ISLE-K7Q2M"}
+    -> the island (as GET /api/island, with your coins) plus "demolished": the quote's shape,
+    the refunds as paid. Any member of the game, between waves only: the building comes down,
+    every payer gets half of what they paid back (ledger ref demolish:<actionUid>, reason
+    building_refund), the spot is empty again and its tower skill goes with it. A repeated
+    actionUid pays nothing and answers the same refunds ("repeat": true).
+    Errors: the quote's, and 409 busy (a payment arrived at the same moment: try again)
 
 POST /api/island/captain  {"actionUid": "..."}
     -> the island. The captain one level up (ledger ref captain:<actionUid>). Always your own.
@@ -112,13 +151,22 @@ POST /api/island/skill  {"skill": "steady_aim", "actionUid": "..."}
     -> the island. One skill of the captain's skill tree, paid with skill points (no coins).
     A repeated actionUid learns nothing (captain_skill_learns ref skill:<actionUid>).
     Errors: 400 bad_skill, 409 known, 409 locked ("Learn Steady aim first."),
-            409 no_points ("Win new waves to earn skill points.")
+            409 closed (the other skill of its fork was chosen), 409 wrong_role (a capstone
+            of another role), 409 no_points ("Win new waves to earn skill points.")
+POST /api/island/role  {"role": "medic"}
+    -> the island. The captain's role (medic, engineer or gunner), once, from captain level 3.
+    Errors: 400 bad_role, 409 locked, 409 role_known (respec first)
+POST /api/island/respec  {"actionUid": "..."}
+    -> the island. Forgets every skill and the role for 100 coins x captain level (wallet
+    reason captain_respec, ref respec:<actionUid>), between waves only. Errors:
+    409 nothing_to_reset, 409 wave_running, 409 insufficient_funds
 
 POST /api/island/weapon/buy  {"weapon": "pistols", "actionUid": "..."}
     -> the island. One weapon, bought once with coins and equipped at once (ledger ref
     weapon:<actionUid>, reason weapon_purchase).
     Errors: 400 bad_weapon, 409 owned, 409 locked ("Opens after wave N."),
-            409 insufficient_funds
+            409 insufficient_funds, 409 use_arsenal (while the flag "arsenal" is on: weapons
+            are island copies then, bought at the arsenal, routes/arsenal.py, D042)
 
 POST /api/island/weapon/equip  {"weapon": "musket"}
     -> the island. The captain carries this weapon from now on. Safe to repeat.
@@ -150,16 +198,18 @@ Used by: the island scene and the friends panel of the game client.
 
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, Path, Request, Response
+from fastapi import APIRouter, Depends, Path, Query, Request, Response
 from pydantic import BaseModel, ConfigDict, Field
 
 from server.auth import Player, PlayerDep
+from server.clock import ClockDep
 from server.errors import ApiError
 from server.flags import is_enabled
-from server.island import service
+from server.island import leaderboard, rules, service, wall_repair
 from server.island.catalogue import IslandCatalogue
-from server.island.rules import SpotView
-from server.island.service import CampaignView, IslandCatalogueDep, IslandView
+from server.island.layout import LayoutInfo
+from server.island.rules import ResearchTier, SpotView
+from server.island.service import CampaignView, DemolishView, IslandCatalogueDep, IslandView
 from server.settings import SettingsDep
 from server.supabase_admin import AdminDep
 
@@ -193,6 +243,17 @@ class SpotOut(BaseModel):
     cost: int
     upgradeCost: int | None
     spec: str | None = None
+    # T36: where the spot stands on the build grid (island units); null at Pirate Point.
+    x: float | None = None
+    z: float | None = None
+
+
+class LayoutOut(BaseModel):
+    """T36: the layout model (1 = the fixed spots of an old save, 2 = moved on the grid)."""
+
+    version: int
+    grid: float
+    movable: bool
 
 
 class CrewOut(BaseModel):
@@ -229,7 +290,15 @@ class SkillOut(BaseModel):
     branch: str
     tier: int
     cost: int
-    needs: str | None
+    needs: list[str]
+    excludes: str | None
+    role: str | None
+
+
+class RoleOut(BaseModel):
+    id: str
+    name: str
+    branch: str
 
 
 class SkillsOut(BaseModel):
@@ -237,6 +306,10 @@ class SkillsOut(BaseModel):
     spent: int
     known: list[str]
     tree: list[SkillOut]
+    role: str | None
+    roleLevel: int
+    roles: list[RoleOut]
+    respecPrice: int
 
 
 class WeaponOut(BaseModel):
@@ -260,12 +333,23 @@ class SpecOut(BaseModel):
 class BranchOut(BaseModel):
     branch: str
     name: str
-    price: int
+    price: int  # tier 1
+    prices: list[int]  # tier 1, 2 and 3
     specs: list[SpecOut]
+    tier2: list[SpecOut]
+    tier3: list[SpecOut]
+
+
+class TierOut(BaseModel):
+    tier: int
+    tier2: str | None
+    tier3: str | None
 
 
 class ResearchOut(BaseModel):
     done: list[str]
+    tiers: dict[str, TierOut]  # every branch: tier 0 to 3 and the choices of tiers 2 and 3
+    tierWaves: list[int]  # the won wave each tier needs
     branches: list[BranchOut]
 
 
@@ -300,6 +384,7 @@ class IslandResponse(BaseModel):
     skills: SkillsOut
     weapons: WeaponsOut
     campaign: CampaignOut
+    layout: LayoutOut | None = None
 
 
 class VisitResponse(BaseModel):
@@ -309,6 +394,7 @@ class VisitResponse(BaseModel):
     spots: list[SpotOut]
     crew: CrewOut
     campaign: CampaignOut
+    layout: LayoutOut | None = None
 
 
 class BuildRequest(BaseModel):
@@ -352,6 +438,19 @@ class SkillRequest(BaseModel):
     actionUid: str = Field(pattern=ACTION_UID_PATTERN)
 
 
+class RoleRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    # Any short text: an unknown role is a 400 bad_role (rules.py), not a 422.
+    role: str = Field(min_length=1, max_length=40)
+
+
+class RespecRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    actionUid: str = Field(pattern=ACTION_UID_PATTERN)
+
+
 class WeaponBuyRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -372,6 +471,10 @@ class ResearchRequest(BaseModel):
     branch: str = Field(min_length=1, max_length=40)
     actionUid: str = Field(pattern=ACTION_UID_PATTERN)
     code: str | None = Field(default=None, max_length=CODE_MAX_LENGTH)
+    # GAME-V3 section 5.1: the tier (above 3: 409 top_tier) and, for tiers 2 and 3, the option.
+    tier: int = Field(default=1, ge=1, le=10)
+    choice: str | None = Field(default=None, min_length=1, max_length=40)
+    change: bool = False
 
 
 class SpecialiseRequest(BaseModel):
@@ -390,6 +493,50 @@ class WreckRequest(BaseModel):
     code: str | None = Field(default=None, max_length=CODE_MAX_LENGTH)
 
 
+class DemolishRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    spot: str = Field(pattern=ID_PATTERN)
+    actionUid: str = Field(pattern=ACTION_UID_PATTERN)
+    code: str | None = Field(default=None, max_length=CODE_MAX_LENGTH)
+
+
+class RefundOut(BaseModel):
+    id: str
+    name: str
+    coins: int
+    you: bool
+
+
+class DemolishOut(BaseModel):
+    spot: str
+    kind: str
+    name: str
+    level: int
+    refunds: list[RefundOut]
+    repeat: bool
+
+
+class DemolishResponse(IslandResponse):
+    demolished: DemolishOut
+
+
+def demolish_out(view: DemolishView, player_id: str) -> DemolishOut:
+    return DemolishOut(
+        spot=view.spot,
+        kind=view.kind,
+        name=view.name,
+        level=view.level,
+        refunds=[
+            RefundOut(
+                id=item.player_id, name=item.name, coins=item.coins, you=item.player_id == player_id
+            )
+            for item in view.refunds
+        ],
+        repeat=view.repeat,
+    )
+
+
 def spots_out(spots: tuple[SpotView, ...]) -> list[SpotOut]:
     return [
         SpotOut(
@@ -401,9 +548,25 @@ def spots_out(spots: tuple[SpotView, ...]) -> list[SpotOut]:
             cost=spot.cost,
             upgradeCost=spot.upgrade_cost,
             spec=spot.spec,
+            x=spot.x,
+            z=spot.z,
         )
         for spot in spots
     ]
+
+
+def layout_out(info: LayoutInfo) -> LayoutOut:
+    return LayoutOut(version=info.version, grid=info.grid, movable=info.movable)
+
+
+def tier_out(tier: ResearchTier | None) -> TierOut:
+    if tier is None:
+        return TierOut(tier=0, tier2=None, tier3=None)
+    return TierOut(
+        tier=tier.tier,
+        tier2=tier.choice_2 if tier.tier >= 2 else None,
+        tier3=tier.choice_3 if tier.tier >= 3 else None,
+    )
 
 
 def campaign_out(view: CampaignView, catalogue: IslandCatalogue) -> CampaignOut:
@@ -414,12 +577,19 @@ def campaign_out(view: CampaignView, catalogue: IslandCatalogue) -> CampaignOut:
         later=list(view.later),
         research=ResearchOut(
             done=list(view.research),
+            tiers={
+                entry.branch: tier_out(view.tiers.get(entry.branch)) for entry in catalogue.research
+            },
+            tierWaves=[catalogue.campaign.wave_of(item) or 0 for item in rules.RESEARCH_TIER_ITEMS],
             branches=[
                 BranchOut(
                     branch=entry.branch,
                     name=entry.name,
                     price=entry.coins,
+                    prices=list(entry.prices),
                     specs=[SpecOut(id=spec, name=name) for spec, name in entry.specs],
+                    tier2=[SpecOut(id=item, name=name) for item, name in entry.tier2],
+                    tier3=[SpecOut(id=item, name=name) for item, name in entry.tier3],
                 )
                 for entry in catalogue.research
             ],
@@ -465,10 +635,19 @@ def island_out(view: IslandView, catalogue: IslandCatalogue) -> IslandResponse:
                     branch=skill.branch,
                     tier=skill.tier,
                     cost=skill.cost,
-                    needs=skill.needs,
+                    needs=list(skill.needs),
+                    excludes=skill.excludes,
+                    role=skill.role,
                 )
                 for skill in catalogue.skills.tree
             ],
+            role=view.skills.role,
+            roleLevel=view.skills.role_level,
+            roles=[
+                RoleOut(id=role.role, name=role.name, branch=role.branch)
+                for role in catalogue.skills.roles
+            ],
+            respecPrice=view.skills.respec_price,
         ),
         weapons=WeaponsOut(
             owned=list(view.weapons.owned),
@@ -484,6 +663,7 @@ def island_out(view: IslandView, catalogue: IslandCatalogue) -> IslandResponse:
             ],
         ),
         campaign=campaign_out(view.campaign, catalogue),
+        layout=layout_out(view.layout),
     )
 
 
@@ -492,6 +672,19 @@ async def get_island(
     player: IslandPlayerDep, catalogue: IslandCatalogueDep, admin: AdminDep
 ) -> IslandResponse:
     return island_out(await service.look(admin, catalogue, player.id), catalogue)
+
+
+@router.get("/island/leaderboard")
+async def get_leaderboard(
+    player: IslandPlayerDep, admin: AdminDep, scope: leaderboard.Scope = "week"
+) -> leaderboard.Leaderboard:
+    """Top ten islands this UTC week (`scope=week`, the default) or ever (`scope=all`).
+
+    Read-only (T7, T45, decision D046); any other scope is a 422 validation error.
+    """
+    if scope == "all":
+        return await leaderboard.all_time(admin)
+    return await leaderboard.weekly(admin)
 
 
 @router.post("/island/build")
@@ -515,9 +708,14 @@ async def post_upgrade(
     player: IslandPlayerDep,
     catalogue: IslandCatalogueDep,
     admin: AdminDep,
+    settings: SettingsDep,
+    now: ClockDep,
     request: Request,
 ) -> IslandResponse:
     request.app.state.island_build_budget.spend(player.id)
+    if is_enabled("wall_recovery", settings.flags):
+        # T47 (D039): a damaged or destroyed wall is repaired first; an upgrade never heals it.
+        await wall_repair.check_upgrade(admin, catalogue, player.id, body.spot, now(), body.code)
     view = await service.upgrade(admin, catalogue, player.id, body.spot, body.actionUid, body.code)
     return island_out(view, catalogue)
 
@@ -561,15 +759,45 @@ async def post_skill(
     return island_out(view, catalogue)
 
 
-@router.post("/island/weapon/buy")
-async def post_weapon_buy(
-    body: WeaponBuyRequest,
+@router.post("/island/role")
+async def post_role(
+    body: RoleRequest,
     player: IslandPlayerDep,
     catalogue: IslandCatalogueDep,
     admin: AdminDep,
     request: Request,
 ) -> IslandResponse:
     request.app.state.island_build_budget.spend(player.id)
+    view = await service.pick_role(admin, catalogue, player.id, body.role)
+    return island_out(view, catalogue)
+
+
+@router.post("/island/respec")
+async def post_respec(
+    body: RespecRequest,
+    player: IslandPlayerDep,
+    catalogue: IslandCatalogueDep,
+    admin: AdminDep,
+    request: Request,
+) -> IslandResponse:
+    request.app.state.island_build_budget.spend(player.id)
+    view = await service.respec(admin, catalogue, player.id, body.actionUid)
+    return island_out(view, catalogue)
+
+
+@router.post("/island/weapon/buy")
+async def post_weapon_buy(
+    body: WeaponBuyRequest,
+    player: IslandPlayerDep,
+    settings: SettingsDep,
+    catalogue: IslandCatalogueDep,
+    admin: AdminDep,
+    request: Request,
+) -> IslandResponse:
+    request.app.state.island_build_budget.spend(player.id)
+    if is_enabled("arsenal", settings.flags):
+        # D042: with the arsenal on, weapons are island copies bought at the arsenal building.
+        raise ApiError(409, "use_arsenal", "Weapons are in the arsenal now. Walk to the arsenal.")
     view = await service.buy_weapon(admin, catalogue, player.id, body.weapon, body.actionUid)
     return island_out(view, catalogue)
 
@@ -597,7 +825,15 @@ async def post_research(
 ) -> IslandResponse:
     request.app.state.island_build_budget.spend(player.id)
     view = await service.research(
-        admin, catalogue, player.id, body.branch, body.actionUid, body.code
+        admin,
+        catalogue,
+        player.id,
+        body.branch,
+        body.actionUid,
+        body.code,
+        body.tier,
+        body.choice,
+        body.change,
     )
     return island_out(view, catalogue)
 
@@ -630,6 +866,37 @@ async def post_wreck(
     return island_out(view, catalogue)
 
 
+@router.get("/island/demolish")
+async def get_demolish(
+    spot: Annotated[str, Query(pattern=ID_PATTERN)],
+    player: IslandPlayerDep,
+    catalogue: IslandCatalogueDep,
+    admin: AdminDep,
+    request: Request,
+    code: Annotated[str | None, Query(max_length=CODE_MAX_LENGTH)] = None,
+) -> DemolishOut:
+    request.app.state.island_build_budget.spend(player.id)
+    view = await service.demolish_quote(admin, catalogue, player.id, spot, code)
+    return demolish_out(view, player.id)
+
+
+@router.post("/island/demolish")
+async def post_demolish(
+    body: DemolishRequest,
+    player: IslandPlayerDep,
+    catalogue: IslandCatalogueDep,
+    admin: AdminDep,
+    request: Request,
+) -> DemolishResponse:
+    request.app.state.island_build_budget.spend(player.id)
+    island, done = await service.demolish(
+        admin, catalogue, player.id, body.spot, body.actionUid, body.code
+    )
+    return DemolishResponse(
+        **island_out(island, catalogue).model_dump(), demolished=demolish_out(done, player.id)
+    )
+
+
 @router.get("/island/visit/{code}")
 async def get_visit(
     code: Annotated[str, Path(max_length=CODE_MAX_LENGTH)],
@@ -648,4 +915,5 @@ async def get_visit(
         spots=spots_out(view.spots),
         crew=CrewOut(**view.crew),
         campaign=campaign_out(view.campaign, catalogue),
+        layout=layout_out(view.layout),
     )

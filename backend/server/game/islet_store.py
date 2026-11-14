@@ -12,8 +12,9 @@ first build) and islet_buildings (one row per building that stands).
 
 The finale (packages S3 and L3) asks one question of this file: does this player have a signal
 station? Use players_with_signal_station for a crew, or has_signal_station_built for one player.
-A signal station is never removed or downgraded (no role can update or delete a building), so the
-answer can only change from "no" to "yes". A check made before the finale's own transaction stays
+A signal station is never removed or downgraded (island_demolish() of 20261112080000_demolish.sql
+tears down only island build spots and refuses every home islet plot), so the answer can only
+change from "no" to "yes". A check made before the finale's own transaction stays
 true. In SQL the same fact is:
     exists (select 1 from public.islet_buildings
              where player_id = <player> and building_type = 'signal_station')

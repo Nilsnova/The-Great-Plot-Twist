@@ -158,6 +158,32 @@ describe('weather board', () => {
     expect(weatherView(null)).toMatchObject({state: 'calm', pirates: 'Calm: a quiet sea', line: 'The weather is not in yet. Until it is, the sea counts as calm.'});
     expect(weatherView({summary: 'Odd', state: 'hail'}).state).toBe('calm');
   });
+  // T46: the source, the fallback and where a wave takes its weather from, said plainly.
+  it('says when an old reading was taken, and never promises a fresh one for a recorded reading', () => {
+    expect(weatherView(weatherAnswer('fog', {source: 'stale'})).old)
+      .toBe('This is the last weather we heard, from 2026-11-11 11:50 UTC. A fresh reading comes soon.');
+    expect(weatherView(weatherAnswer('calm', {source: 'fallback', fetchedAt: '2026-11-03T09:05:00Z'})).old)
+      .toBe('This is a recorded reading from 2026-11-03 09:05 UTC, not today\'s weather. It counts until a live one comes in.');
+    expect(weatherView(weatherAnswer('rain', {source: 'fallback', fetchedAt: 'not a time'})).old)
+      .toBe('This is a recorded reading, not today\'s weather. It counts until a live one comes in.');
+    for (const source of ['live', 'cache']) expect(weatherView(weatherAnswer('rain', {source})).old).toBeNull();
+  });
+  it('tells that a wave takes the weather where its bell is rung (wave_weather.py)', () => {
+    const waves = 'A wave uses the weather where its bell is rung when the server can tell, otherwise this one.';
+    expect(weatherView(weatherAnswer('storm')).waves).toBe(waves);
+    expect(weatherView(null).waves).toBe(waves);
+  });
+  it('shows tonight\'s forecast as words only, with no stake (D045, never a betting market: D035)', () => {
+    const night = state => ({date: '2026-11-11', startsAt: '2026-11-11T18:00:00Z', endsAt: '2026-11-12T06:00:00Z', isNow: false,
+      state, isFogNight: false, fogNightKind: null});
+    expect(weatherView(weatherAnswer('calm', {tonight: night('fog')})).tonight).toBe('Forecast for tonight here: fog. Only to read: no coins are at stake.');
+    expect(weatherView(weatherAnswer('calm', {tonight: night('storm')})).tonight).toMatch(/^Forecast for tonight here: a storm\./);
+    expect(weatherView(weatherAnswer('calm', {tonight: night(null)})).tonight).toBeNull();
+    expect(weatherView(weatherAnswer('calm', {tonight: night('hail')})).tonight).toBeNull();
+    expect(weatherView(weatherAnswer('calm', {tonight: null})).tonight).toBeNull();
+    expect(weatherView(weatherAnswer('calm')).tonight).toBeNull();
+    expect(weatherView(null).tonight).toBeNull();
+  });
 });
 
 describe('words', () => {

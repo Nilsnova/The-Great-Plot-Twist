@@ -19,7 +19,7 @@ try {
   const cssFiles=new Set([...seen].flatMap(key=>manifest[key].css??[]));report.initialCss=0;
   for(const file of cssFiles)report.initialCss+=(await readFile('dist/'+file)).length;
   check(report.initialCss<12000,'Cold title CSS is below 12 kB; world styles stay deferred');
-  const titleImage=await readFile('dist/places/title.webp');report.titleImageBytes=titleImage.length;check(titleImage.length<=350000,'Detailed original title WebP stays below its reviewed 350 kB image budget');
+  report.titleImage=await readFile('dist/places/title.webp').then(()=>true,()=>false);check(!report.titleImage,'The title downloads no picture: its cartoon scene is drawn in code (T21)');
   report.lazyEntries=Object.entries(manifest).filter(([,chunk])=>chunk.isDynamicEntry).map(([key,chunk])=>({key,file:chunk.file}));
   for(const entry of ['src/game.js','src/world/cinematics/controller.js','src/world/places/settlement.js','src/world/places/home.js','src/ui/kit-gallery.js','src/ui/cinematic-demo.js','src/screens/board.js','src/screens/finale.js','src/screens/reveal.js','src/world/places/gulls-rest.js','src/world/festival.js'])check(report.lazyEntries.some(chunk=>chunk.key===entry),`${entry} is a separate dynamic entry`);
   const realChunk=manifest['src/online/adapter/index.js'];
@@ -46,7 +46,7 @@ try {
     function luminance(color){const channels=color.match(/[\d.]+/g).slice(0,3).map(Number).map(value=>{value/=255;return value<=0.04045?value/12.92:((value+0.055)/1.055)**2.4;});return channels[0]*0.2126+channels[1]*0.7152+channels[2]*0.0722;}
     const style=getComputedStyle(button),a=luminance(style.color),b=luminance(style.backgroundColor);return (Math.max(a,b)+0.05)/(Math.min(a,b)+0.05);
   });check(report.contrast>=4.5,'Primary pixel buttons exceed WCAG AA normal-text contrast');await page.screenshot({path:capture('Title.png')});
-  await page.setViewportSize({width:375,height:667});check(await page.locator('.shell-logo').evaluate(canvas=>Number.isInteger(canvas.getBoundingClientRect().width/canvas.width)),'Phone title emblem uses an integer pixel scale');await page.setViewportSize({width:1440,height:900});
+  await page.setViewportSize({width:375,height:667});check(await page.locator('.shell-logo').evaluate(canvas=>canvas.width>=canvas.getBoundingClientRect().width),'Phone title emblem is drawn at the screen density');await page.setViewportSize({width:1440,height:900});
   await startFromTitle(page);check(await page.evaluate(()=>typeof window.__island)==='undefined','The loaded production world exposes no dev inspection object');
   await openSettingsFromMenu(page);await page.locator('[data-preference=quality] input[value=low]').check();await page.screenshot({path:capture('Settings.png')});
   check(env.errors.length===0&&env.external.length===0,'Production title and world have no browser errors or external asset requests');console.log(JSON.stringify(report,null,2));

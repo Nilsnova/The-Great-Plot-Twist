@@ -100,6 +100,10 @@ WALLET_REASONS = (
     # Added by supabase/migrations/20261112060000_tech_hub.sql (the Tech hub and the wreck).
     ("tech_research", SPEND),
     ("wreck_repair", SPEND),
+    # Added by supabase/migrations/20261112080000_demolish.sql (a building torn down: half back).
+    ("building_refund", EARN),
+    # Added by supabase/migrations/20261112120000_captain_tree.sql (a captain's respec).
+    ("captain_respec", SPEND),
 )
 
 

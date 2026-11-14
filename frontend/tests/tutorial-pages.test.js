@@ -1,11 +1,11 @@
 // How to play (docs/TOWER-DEFENSE.md §13): the page data and the paging rules, without a DOM.
 import {describe,expect,it} from 'vitest';
-import {readFileSync} from 'node:fs';
-import {fileURLToPath} from 'node:url';
-import {TUTORIAL_PAGES,TUTORIAL_KEY,FIRST_RUN_PAGES,TUTORIAL_TITLE,firstRunPages,clampPage,pageView,wantsFirstRun} from '../src/tutorial/pages.js';
+import {ONE_ISLAND_PAGES,TUTORIAL_PAGES,TUTORIAL_KEY,FIRST_RUN_PAGES,TUTORIAL_TITLE,firstRunPages,clampPage,pageView,wantsFirstRun} from '../src/tutorial/pages.js';
 
 const sentences=text=>text.join(' ').split(/(?<=[.!?])\s+/).filter(Boolean);
-const png=file=>{const data=readFileSync(fileURLToPath(new URL(`../public/pixel/${file}`,import.meta.url)));return {w:data.readUInt32BE(16),h:data.readUInt32BE(20)};};
+// The cartoon drawings (src/art/): every sprite on a page is one of them, in its own box (GAME-V3.md §7).
+const drawings=async()=>({...(await import('../src/art/people.js')).peopleFrames(),...(await import('../src/art/island.js')).islandFrames(),
+  ...(await import('../src/art/campaign.js')).campaignFrames(),...(await import('../src/art/extras.js')).extraFrames(),...(await import('../src/art/fleet.js')).fleetFrames()});
 
 describe('How to play pages',()=>{
   it('has 8 to 11 pages with one idea each: a unique id and title, 1 to 3 short sentences',()=>{
@@ -35,14 +35,16 @@ describe('How to play pages',()=>{
     const controls=TUTORIAL_PAGES.at(-1);
     expect(controls.keys.map(([key])=>key)).toEqual(['WASD or arrows','E','F','Click','M','Mouse wheel']);
   });
-  it('reuses existing sprites at their real size and whole-number scales that fit a 320 px card',()=>{
-    for(const page of TUTORIAL_PAGES){
+  it('reuses the cartoon drawings in their own boxes, at scales that fit a 320 px card',async()=>{
+    const frames=await drawings();
+    for(const page of [...TUTORIAL_PAGES,...ONE_ISLAND_PAGES]){
       expect(page.art.length,page.id).toBeGreaterThanOrEqual(1);
       let width=0;
       for(const sprite of page.art){
-        expect(png(sprite.file),sprite.file).toEqual({w:sprite.w,h:sprite.h});
-        expect(Number.isInteger(sprite.scale)&&sprite.scale>=1).toBe(true);
-        expect(sprite.h*sprite.scale,sprite.file).toBeLessThanOrEqual(128);
+        expect(frames[sprite.name],sprite.name).toBeTruthy();
+        expect([frames[sprite.name][0],frames[sprite.name][1]],sprite.name).toEqual([sprite.w,sprite.h]);
+        expect(sprite.scale>=1&&Number.isInteger(sprite.scale*4),sprite.name).toBe(true);
+        expect(sprite.h*sprite.scale,sprite.name).toBeLessThanOrEqual(128);
         width+=sprite.w*sprite.scale;
       }
       // Phones draw the art at 75 %: it must fit the 320 px card's inner width with the gaps.

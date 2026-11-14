@@ -6,8 +6,8 @@ const evaluate = browserHarness();
 it.each([
   ['far away', 6, 0, true, false, true],
   ['at the building', 0, 0, true, true, false],
-  ['just inside reach', 2.199, 0, true, true, false],
-  ['just outside reach', 2.201, 0, true, false, true],
+  ['just inside reach', 'inside', 0, true, true, false],
+  ['just outside reach', 'outside', 0, true, false, true],
   ['at a different height', 0, 2.5, true, false, true],
   ['behind an overlay', 0, 0, false, false, false],
   ['without a player position', null, 0, true, false, true],
@@ -22,11 +22,12 @@ it.each([
     camera.position.z = 10; camera.updateMatrixWorld();
     const spot = SPOTS.find(item => item.id === 'cannon_3');
     const zone = islandZones().find(item => item.id === spot.id);
-    const player = offset === null ? null : {position: {x: zone.x + offset, y: zone.y + height, z: zone.z}};
+    const distance = offset === 'inside' ? zone.radius - .001 : offset === 'outside' ? zone.radius + .001 : offset;
+    const player = offset === null ? null : {x: zone.x + distance, y: zone.y + height, z: zone.z};
     const picked = [], warnings = [];
     const place = {group: new THREE.Group(), colliders: [], zones: []};
-    const drawing = decorateIsland(place, {canvas, camera, player, reducedMotion: true,
-      isActive: () => active, onPick: id => picked.push(id), onTooFar: () => warnings.push('far')});
+    const drawing = decorateIsland(place, {canvas, camera, player: () => player, reducedMotion: true,
+      isActive: () => active, onPick: id => picked.push(id), onFar: (_id, verdict) => warnings.push(verdict.hint)});
     const point = new THREE.Vector3(spot.x, -spot.z * .72, 0).project(camera);
     const box = canvas.getBoundingClientRect();
     const pointer = {button: 0, pointerId: 1, bubbles: true,
@@ -38,5 +39,5 @@ it.each([
     return {picked, warnings};
   }, {offset, height, active});
   expect(result.picked).toEqual(opens ? ['cannon_3'] : []);
-  expect(result.warnings).toEqual(warns ? ['far'] : []);
+  expect(result.warnings).toEqual(warns ? ['Walk closer'] : []);
 });

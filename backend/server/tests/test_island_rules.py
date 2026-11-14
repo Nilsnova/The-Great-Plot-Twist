@@ -15,7 +15,13 @@ import pytest
 from server.errors import ApiError
 from server.game.building_catalogue import load_buildings
 from server.island import codes, rules
-from server.island.catalogue import CONTENT_FILE, IslandFileError, load_island
+from server.island.catalogue import (
+    CONTENT_FILE,
+    IslandFileError,
+    catalogue_for_flags,
+    load_island,
+)
+from server.island.wave_rules import SIM_RULES
 from server.island.waves import SEED_LIMIT
 from server.tests.helpers import REPO_ROOT
 from server.wallet import find_direction
@@ -24,6 +30,9 @@ MIGRATION = REPO_ROOT / "supabase" / "migrations" / "20261110010000_islands_and_
 CREWS = REPO_ROOT / "supabase" / "migrations" / "20261110020000_wave_crews.sql"
 TOWER_DEFENSE = REPO_ROOT / "supabase" / "migrations" / "20261111030000_tower_defense.sql"
 INNER_WALLS = REPO_ROOT / "supabase" / "migrations" / "20261112020000_inner_walls.sql"
+HARPOON = REPO_ROOT / "supabase" / "migrations" / "20261113020000_harpoon_tower.sql"
+CULVERIN = REPO_ROOT / "supabase" / "migrations" / "20261114140000_culverin.sql"
+WAVE_RULES = REPO_ROOT / "supabase" / "migrations" / "20261114130500_wave_rules.sql"
 # The md5 of 20261110010000 as applied live (a checksum, not a secret).
 APPLIED_MD5 = "79278156e4925b2d39076722c11d2f00"  # pragma: allowlist secret
 
@@ -47,13 +56,22 @@ def test_the_prices_and_the_starting_coins_are_the_economy_table():
         "wall": (10, 20, 40, 80, 160),
         "cannon": (30, 60, 120, 240, 480),
         "mortar": (60, 120, 240, 480, 960),
+        "harpoon": (
+            40,
+            80,
+            160,
+            320,
+            640,
+        ),  # the support tower of wave 12 (docs/GAME-V3.md section 5)
         "watchtower": (40, 80, 160, 320, 640),
-        "house": (50, 100),
+        "house": (50, 100, 200),  # level 3: the house roles (docs/GAME-V3.md "Houses")
     }
     # Levels 4 and 5 (docs/GAME-V3.md 4.1): 4 after wave 12 (the mortar 15), 5 after wave 20.
     waves = {kind.kind: kind.level_waves for kind in catalogue.kinds}
     assert waves["cannon"] == waves["wall"] == (0, 2, 5, 12, 20)
     assert waves["mortar"] == (2, 2, 5, 15, 20)
+    # The harpoon tower: levels 1 to 3 after wave 12, level 4 after wave 15, level 5 after wave 20.
+    assert waves["harpoon"] == (12, 12, 12, 15, 20)
     assert waves["watchtower"] == (3, 3, 12, 15, 20)
     assert {m.crew: (m.coins, m.max, m.unlock_wave) for m in catalogue.crew} == {
         "gunner": (40, 2, 3),
@@ -68,7 +86,7 @@ def test_the_prices_and_the_starting_coins_are_the_economy_table():
 def test_the_spots_are_the_spots_of_the_contract():
     catalogue = load_island()
     spots = [(spot.id, spot.kinds) for spot in catalogue.spots]
-    tower = ("cannon", "mortar")
+    tower = ("cannon", "mortar", "harpoon")
 
     assert spots == (
         [(f"wall_{n}", ("wall",)) for n in range(1, 7)]
@@ -78,7 +96,7 @@ def test_the_spots_are_the_spots_of_the_contract():
     )
     assert [(spot.id, spot.kinds) for spot in catalogue.pirate_point_spots] == (
         [(f"pp_wall_{n}", ("wall",)) for n in range(1, 5)]
-        + [(f"pp_tower_{n}", tower) for n in range(1, 7)]
+        + [(f"pp_tower_{n}", ("cannon", "mortar")) for n in range(1, 7)]  # no harpoon at the Point
     )
 
 
@@ -111,6 +129,7 @@ def test_the_unlocks_follow_the_campaign_table_of_game_v3_section_four():
     }  # fmt: skip
     assert (table["captain:2"], table["captain:3"], table["house:1"]) == (1, 1, 1)
     assert (table["wall:2"], table["cannon:2"], table["house:2"]) == (2, 2, 2)
+    assert table["house:3"] == 5
     assert (table["mortar:1"], table["mortar:2"], table["watchtower:1"]) == (2, 2, 3)
     assert (table["crew:gunner"], table["crew:carpenter"], table["wall:3"]) == (3, 5, 5)
     assert (table["mortar:3"], table["crew:lookout"]) == (5, 8)
@@ -167,7 +186,7 @@ def test_upgrade_hire_and_captain_refuse_the_top_and_a_full_crew():
     catalogue = load_island()
 
     with pytest.raises(ApiError, match="highest level") as top:
-        rules.check_upgrade(catalogue, "house_1", {"house_1": rules.Built("house", 2)}, 99)
+        rules.check_upgrade(catalogue, "house_1", {"house_1": rules.Built("house", 3)}, 99)
     with pytest.raises(ApiError) as empty:
         rules.check_upgrade(catalogue, "wall_1", {}, 99)
     with pytest.raises(ApiError) as full:
@@ -279,7 +298,10 @@ def test_the_spots_are_planned_in_file_order_with_their_state():
         480,
     )
     assert (plans["cannon_3"].level, plans["cannon_3"].upgrade_cost) == (5, None)
-    assert (plans["cannon_2"].kind, plans["cannon_2"].kinds) == ("cannon", ("cannon", "mortar"))
+    assert (plans["cannon_2"].kind, plans["cannon_2"].kinds) == (
+        "cannon",
+        ("cannon", "mortar", "harpoon"),
+    )
 
 
 # --- Python and the migration agree ---
@@ -305,16 +327,55 @@ def check_pairs(text: str, constraint: str) -> set[tuple[str, str]]:
 
 
 def test_the_check_rule_allows_the_old_pairs_and_every_island_spot():
-    # The newest rule (20261112020000, the inner ring of TOWER-DEFENSE section 12) is the file's.
-    pairs = check_pairs(INNER_WALLS.read_text(), "islet_buildings_plot_fits_building")
+    # The newest rule (20261114140000, the culverin of T43) is the file's with the flag
+    # defenses_v2 on (the catalogue then has the culverin on the tower spots); the harpoon
+    # tower's rule (20261113020000) is the file's with the flag off.
+    pairs = check_pairs(CULVERIN.read_text(), "islet_buildings_plot_fits_building")
+    harpoon = check_pairs(HARPOON.read_text(), "islet_buildings_plot_fits_building")
+    inner = check_pairs(INNER_WALLS.read_text(), "islet_buildings_plot_fits_building")
 
     old = {(s.plot, s.building_type) for s in load_buildings().spots if not s.stands_from_start}
     new = {(spot.id, kind) for spot in load_island().spots for kind in spot.kinds}
+    flagged = catalogue_for_flags(load_island(), {"defenses_v2": True})
+    flagged_new = {(spot.id, kind) for spot in flagged.spots for kind in spot.kinds}
     first = check_pairs(migration_text(), "islet_buildings_plot_fits_building")
     before = check_pairs(TOWER_DEFENSE.read_text(), "islet_buildings_plot_fits_building")
-    assert pairs == old | new
-    assert first <= before <= pairs  # every pair an existing row may use stays allowed
-    assert pairs - before == {(f"wall_{n}", "wall") for n in range(7, 13)}
+    assert pairs == old | flagged_new
+    assert harpoon == old | new
+    assert first <= before <= inner <= harpoon <= pairs  # every pair a row may use stays allowed
+    assert inner - before == {(f"wall_{n}", "wall") for n in range(7, 13)}
+    assert harpoon - inner == {(f"cannon_{n}", "harpoon") for n in range(1, 8)}
+    assert pairs - harpoon == {(f"cannon_{n}", "culverin") for n in range(1, 8)}
+
+
+def test_the_culverin_migration_changes_only_the_spot_rule_and_the_rule_names():
+    text = CULVERIN.read_text()
+    verbs = r"^(alter|create|drop|insert|update|delete|grant|comment)"
+    statements = [line for line in text.splitlines() if re.match(verbs, line)]
+    assert statements == [
+        "alter table public.islet_buildings",
+        "alter table public.islet_buildings",
+        "comment on constraint islet_buildings_plot_fits_building on public.islet_buildings is",
+        "alter table public.wave_rules drop constraint if exists wave_rules_known_names;",
+        "alter table public.wave_rules",
+        "comment on table public.wave_rules is",
+    ]
+    code = re.sub(r"--.*", "", text)
+    # The skill rule (building_type, spec) and the Point rule stay: a culverin has no skill.
+    assert "islet_buildings_spec_fits_kind" not in code
+    assert "pirate_point_buildings" not in code
+
+
+def rule_names(text: str) -> list[str]:
+    check = re.search(r"constraint wave_rules_known_names\s+check \(rules <@ array\[(.*?)\]", text)
+    return re.findall(r"'([a-z0-9_]+)'", check.group(1))
+
+
+def test_the_wave_rule_names_in_the_database_are_the_servers():
+    first = rule_names(WAVE_RULES.read_text())
+    assert rule_names(CULVERIN.read_text()) == list(SIM_RULES)
+    assert set(first) <= set(SIM_RULES)  # every name a kept wave may hold stays allowed
+    assert set(SIM_RULES) - set(first) == {"defenses_v2"}
 
 
 def test_the_inner_wall_migration_changes_only_the_spot_rule():
@@ -326,6 +387,20 @@ def test_the_inner_wall_migration_changes_only_the_spot_rule():
         "alter table public.islet_buildings",
         "comment on constraint islet_buildings_plot_fits_building on public.islet_buildings is",
     ]
+
+
+def test_the_harpoon_migration_changes_only_the_spot_rule():
+    text = HARPOON.read_text()
+    verbs = r"^(alter|create|drop|insert|update|delete|grant|comment)"
+    statements = [line for line in text.splitlines() if re.match(verbs, line)]
+    assert statements == [
+        "alter table public.islet_buildings",
+        "alter table public.islet_buildings",
+        "comment on constraint islet_buildings_plot_fits_building on public.islet_buildings is",
+    ]
+    # The skill rule (building_type, spec) and the Point rule stay: a harpoon has no skill yet.
+    assert "islet_buildings_spec_fits_kind" not in re.sub(r"--.*", "", text)
+    assert "pirate_point_buildings" not in re.sub(r"--.*", "", text)
 
 
 def test_the_pirate_point_check_rule_is_the_spots_of_the_file():

@@ -1,6 +1,9 @@
-// Reusable cutscene player: timed shots of local art with gentle parallax and fades, subtitles that
-// are always shown, a music bed and optional voice lines. Skip with the button, Escape or a tap.
-// Loaded lazily (import('./cutscenes/player.js')); the cold title never contains it.
+// Reusable cutscene player: timed shots with gentle parallax and fades, subtitles that are always
+// shown, a music bed and optional voice lines. Skip with the button, Escape or a tap. A shot is a
+// cartoon panel drawn in code (shot.panel names a scene of src/art/scenery.js, painted on a canvas by
+// src/art/stage.js, GAME-V3.md §7); custom players may still pass image layers. Until a panel is ready
+// the shot shows its plain sky colours. Loaded lazily (import('./cutscenes/player.js')); the cold
+// title never contains it.
 import './cutscenes.css';
 import scriptData from './scripts.json';
 import {scenes as sceneMap} from './scenes.js';
@@ -8,6 +11,8 @@ import {findScript, normalizeManifest, buildTimeline, lineAt, shotOpacity, shotP
 import {createCutsceneAudio} from './audio.js';
 
 const MANIFEST_WAIT_MS = 800;
+const PANEL_WAIT_MS = 1500;
+const loadPanelModules = () => Promise.all([import('../art/scenery.js'), import('../art/stage.js')]);
 const base = () => import.meta.env?.BASE_URL ?? './';
 
 export async function loadVoiceManifest({fetchImpl = globalThis.fetch?.bind(globalThis), timeout = MANIFEST_WAIT_MS} = {}) {
@@ -30,7 +35,7 @@ function element(tag, className, text) {
 
 export function playCutscene({container = document.body, id, data = scriptData, scenes = sceneMap,
   preferences = () => ({}), reducedMotion = () => false, loadManifest = loadVoiceManifest,
-  createAudio = createCutsceneAudio, now = () => performance.now(),
+  createAudio = createCutsceneAudio, now = () => performance.now(), loadPanels = loadPanelModules,
   raf = callback => requestAnimationFrame(callback), caf = handle => cancelAnimationFrame(handle)} = {}) {
   const script = findScript(data, id);
   let settle;
@@ -66,10 +71,33 @@ export function playCutscene({container = document.body, id, data = scriptData, 
       image.dataset.depth = String(layer.depth ?? 0);
       node.append(image);
     }
+    if (shot.panel) { const canvas = element('canvas', 'cutscene-panel'); node.dataset.panel = typeof shot.panel === 'string' ? shot.panel : shot.panel.name ?? 'custom'; node.append(canvas); }
     node.style.opacity = '0';
     stage.append(node);
     return node;
   });
+
+  // Cartoon panels: the scenes load with the voice manifest; a shot's canvas is painted a moment before
+  // it shows and released once it has passed, so only one or two panels hold memory at a time.
+  let panelScenes = [], createStage = null;
+  const stages = shots.map(() => null);
+  const panelsReady = shots.some(shot => shot.panel) ? Promise.resolve().then(() => loadPanels()).then(([scenery, stageModule]) => {
+    createStage = stageModule.createStage;
+    return Promise.all(shots.map(shot => {
+      if (!shot.panel) return null;
+      const options = typeof shot.panel === 'string' ? scenery.PANELS[shot.panel] : shot.panel;
+      return options ? scenery.createScene({...options, still: reduced}).catch(() => null) : null;
+    }));
+  }).then(list => { panelScenes = list; }).catch(() => {}) : Promise.resolve();
+  const size = () => ({width: dialog.clientWidth || globalThis.innerWidth || 1280, height: dialog.clientHeight || globalThis.innerHeight || 720});
+  function ensureStage(index) {
+    if (stages[index] || !panelScenes[index] || !createStage) return stages[index];
+    const canvas = shotNodes[index].querySelector('.cutscene-panel'), {width, height} = size();
+    try { stages[index] = createStage(canvas, panelScenes[index]); stages[index].resize(width, height); } catch { stages[index] = null; }
+    return stages[index];
+  }
+  function releaseStage(index) { stages[index]?.dispose(); stages[index] = null; }
+  function resize() { const {width, height} = size(); for (const item of stages) item?.resize(width, height); render(elapsed()); }
 
   let frame = null, started = null, pausedAt = null, pausedTotal = 0, finished = false, shownLine = -1;
   const audio = createAudio({preferences, base: base()});
@@ -80,8 +108,13 @@ export function playCutscene({container = document.body, id, data = scriptData, 
       const node = shotNodes[index], opacity = shotOpacity(shot, time, {reduced, total: timeline.total});
       node.style.opacity = String(opacity);
       node.hidden = opacity === 0;
+      if (shots[index].panel) {
+        if (time >= shot.end && index < timeline.shots.length - 1) releaseStage(index);
+        else if (time >= shot.start - 1) ensureStage(index);
+      }
       if (opacity === 0) continue;
       const progress = shotProgress(shot, time, {reduced});
+      stages[index]?.render(reduced ? 0 : time - shot.start, reduced ? 0 : (progress - .5) * 2);
       for (const image of node.children) {
         const depth = Number(image.dataset.depth) || 0;
         image.style.transform = depth && !reduced ? `translate3d(${(-depth * (progress - .5)).toFixed(1)}px,0,0)` : '';
@@ -111,6 +144,8 @@ export function playCutscene({container = document.body, id, data = scriptData, 
     frame = null;
     audio.stop(status === 'completed' ? .8 : .3);
     document.removeEventListener('visibilitychange', visibility);
+    globalThis.removeEventListener?.('resize', resize);
+    stages.forEach((_, index) => releaseStage(index));
     dialog.removeEventListener('cancel', cancel);
     dialog.removeEventListener('keydown', trap);
     stage.removeEventListener('click', skipFromTap);
@@ -127,6 +162,7 @@ export function playCutscene({container = document.body, id, data = scriptData, 
   dialog.addEventListener('cancel', cancel);
   dialog.addEventListener('keydown', trap);
   document.addEventListener('visibilitychange', visibility);
+  globalThis.addEventListener?.('resize', resize);
 
   container.append(dialog);
   try { dialog.showModal(); } catch { dialog.setAttribute('open', ''); }
@@ -135,7 +171,9 @@ export function playCutscene({container = document.body, id, data = scriptData, 
   shownLine = 0;
   render(0);
 
-  void Promise.resolve().then(() => loadManifest()).catch(() => ({})).then(voices => {
+  void panelsReady.then(() => { if (!finished && started === null) render(0); });
+  const panelWait = new Promise(resolve => setTimeout(resolve, PANEL_WAIT_MS));
+  void Promise.all([Promise.resolve().then(() => loadManifest()).catch(() => ({})), Promise.race([panelsReady, panelWait])]).then(([voices]) => {
     if (finished) return;
     timeline = buildTimeline(script, voices ?? {}, shots);
     started = now();

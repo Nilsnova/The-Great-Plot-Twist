@@ -40,6 +40,40 @@ class WalletMovement(BaseModel):
     net: StrictInt
 
 
+class _Count(BaseModel):
+    """Counts only. Extra keys from a newer function are ignored, never passed on."""
+
+
+class GameIslands(_Count):
+    total: StrictInt = Field(ge=0)
+    createdToday: StrictInt = Field(ge=0)
+
+
+class GameGames(_Count):
+    withMembers: StrictInt = Field(ge=0)
+    maxMembers: StrictInt = Field(ge=0)
+
+
+class GameWaves(_Count):
+    runningNow: StrictInt = Field(ge=0)
+    finishedToday: StrictInt = Field(ge=0)
+    bestWave: StrictInt = Field(ge=0)
+
+
+class GameDemo(_Count):
+    codeActive: bool
+    guestsToday: StrictInt = Field(ge=0)
+
+
+class GameOverview(BaseModel):
+    """The "game" key of host_console_overview() (20261113030000). Counts, no names or ids."""
+
+    islands: GameIslands
+    games: GameGames
+    waves: GameWaves
+    demo: GameDemo
+
+
 class OverviewRows(BaseModel):
     players: StrictInt = Field(ge=0)
     crews: dict[str, StrictInt] | None
@@ -48,6 +82,8 @@ class OverviewRows(BaseModel):
     day: str
     schemaObjects: dict[str, bool]
     lastKeepaliveAt: datetime | None
+    # Absent until the owner applies 20261113030000_host_console_v3.sql.
+    game: GameOverview | None = None
 
 
 class HostSeat(BaseModel):

@@ -689,7 +689,21 @@ Every route needs a signed-in player (GitHub, email, or a guest admitted with th
 
 Errors have the house shape `{"error": {"code": "...", "message": "..."}}`; the message is a plain sentence. `503 database_unavailable` on a build or a finish means the outcome is unknown: read the island again, or repeat the same request (both are safe to repeat). `503 island_unavailable` means `islands.json` could not be read; the rest of the API works.
 
+**Flexible placement (T36, [D041](DECISIONS.md#d041--flexible-building-placement-on-a-build-grid-t36--2026-11-14), PROPOSED; flag `placement`, migration `20261114110000_island_layout.sql`, spec [T36](../specs/T36-flexible-placement.md)).** The route's home is the comment at the top of `backend/server/routes/island_layout.py`; the rules are `backend/server/island/layout.py` (repeated for the preview in `frontend/src/island/placement.js`), the grid and fixed spots `backend/content/island_layout.json`.
+
+| Route or field | What it does |
+|---|---|
+| every spot of `GET /api/island`, `GET /api/island/visit/{code}` and every island answer | also `x`, `z`: where the spot stands, in island units on a grid of 0.5 (an old save: its fixed spot; Pirate Point's spots: `null`). The browser's wave simulation reads these through `spots.js` `defenses()`, in the `{id, kind, level, x, z}` shape `src/pirates/sim.js` always read. |
+| `layout` of the same answers | `{version: 1 \| 2, grid: 0.5, movable}`: 1 = the fixed spots (an old save, nothing stored), 2 = a spot was moved; `movable` is true only with the flag `placement` on and the layout table readable. |
+| `POST /api/island/move` `{spot, x, z, code?}` | One of the 22 island spots (built or empty, with whatever stands on it) to one grid cell, free, between waves; on your own island or (with `code`) a game you are a member of. Answers the island. Safe to repeat (no click id). `404 feature_off`, `404 no_such_spot`, `422 off_grid`, `409 not_on_land`, `409 place_taken` (footprint 2 x 2 walls/towers, 3 x 3 watchtower/houses; overlaps the heart, cabin, bell, Harbor, Tech hub, wreck or another spot; touching is fine), `409 blocks_route` (towers, houses and the watchtower may not cut every way from the heart to the beach; walls never count), `409 wave_running`, `409 busy`, `403 not_member`, `404 no_such_island`, `503 layout_unavailable`, `429 too_many_requests` (the build budget). After a move the browser emits `island_spots_changed`, so the room re-reads the island as after a build. |
+
 The live room of an island is `live:place:isle_<the 5 symbols in lowercase>:1` (for `ISLE-K7Q2M`: `live:place:isle_k7q2m:1`), Pirate Point's is `live:place:pirate_point:1`; both fit the existing place-room policies (BUILD-PLAN 3.6).
+
+### Co-op permissions (T37 and T42)
+
+Proposed decision [D043](DECISIONS.md#d043--co-op-permissions-spending-and-absent-members--2026-11-14); the matrices are in [the spec](../specs/T37-T42-coop-policy.md). `backend/server/island/permissions.py` holds the role/action matrix (`ACTIONS`) and the one helper for routes and other lanes: `await require_action(admin, island_owner, player_id, action)` answers `Permit(role, payer)` (`role` `host` or `member`; `payer` the caller for a personal action, `None` when no coins move) or raises `403 not_member`. Action names: `island_visit`, `island_build`, `island_upgrade`, `island_research`, `island_tower_skill`, `island_wreck`, `island_demolish`, `wave_start`, `wave_join`, `wave_revive`, and reserved for later lanes `structure_repair`, `structure_rebuild` (T31/T32), `arsenal_buy`, `arsenal_withdraw`, `arsenal_return` (T40). T36 adds `island_move` (free, between waves; `POST /api/island/move`). Every action is open to the host and active members, none to outsiders or members who left; nothing is paid from a shared or the host's wallet.
+
+The `403 not_member` refusal of `POST /api/island/build`, `/upgrade`, `/research`, `/tower-skill`, `/wreck`, `GET` and `POST /api/island/demolish`, `GET /api/island/visit/{code}`, `POST /api/waves/start`, `/join` and `/revive` keeps its code and status; its message now names the action, for example `"Join this game first to ring the bell here: open its link or type its code."`. No route, table or migration changes.
 
 ### The prediction desk (package L5)
 
@@ -1317,7 +1331,13 @@ A flag is off unless the setting `FEATURE_FLAGS` names it (comma separated). The
 | `bulletin` | the bulletin, tonight chip and Chapter 2 hook screens; `GET /api/bulletin` | G9/R6; default off; off returns 404 before data reads |
 | `festival` | the 48-hour festival after the first Relighting; private claims and friendly ring | G13; applying its migration never starts the clock |
 | `demo` | guest play for the class demo: a Supabase anonymous user may use the API after presenting the current class code (`POST /api/demo/join`) | G29 C0, D030; off by default; needs migrations 20261109010000 and 20261109020000 applied first |
+| `placement` | T36 flexible placement: the island layout is read (`island_layout`), answers say `layout.movable: true` and `POST /api/island/move` works; the browser shows the Move button only then ([D041](DECISIONS.md#d041--flexible-building-placement-on-a-build-grid-t36--2026-11-14), PROPOSED). Off: every answer shows the fixed spots, the table is never asked, the move route answers `404 feature_off` | T36; off by default in code; needs migration `20261114110000_island_layout.sql` applied first (applied live 14 Nov 2026; flag on in production) |
 | `islands` | your island, building, visits by code and the pirate waves: `/api/island`, `/api/island/build`, `/api/island/visit/{code}`, `/api/waves/start`, `/api/waves/finish`; since D036 also `/api/island/upgrade`, `/hire`, `/captain`, `/invite/join` and `/api/pirate-point` (+ `/build`, `/upgrade`), which need migration `20261111030000` | lane 0 (D032); off by default; needs migration 20261110010000 applied first |
+| `rescue` | T38 last-chance rescue: the server honours `rescued` on `POST /api/waves/finish`, and lists `"rescue"` in the wave answers' `rules`, so every client's sim offers the rescue (apply `20261114130500_wave_rules.sql` first, done live 14 Nov 2026; without it the waves play with no rules and a warning is logged) | T38/T39, D044 proposed; off by default in code; **on in production since ~21:05 UTC, 14 Nov 2026**; no migration of its own (it uses `wave_rules` above); needs `islands` |
+| `pathing` | T34/T35 boarder routes (D040, proposed): the wave answers carry `"pathing"` in `rules`; boarders take gaps or break through closed rings of walls on their T36 footprints. Off: today's fixed routes (option A) | T34/T35; off by default (**on in production since 14 Nov 2026, ~22:00 UTC**: Nils accepted the closed-ring gap at wave 60, specs/T33-T35-balance.md); needs migration `20261114130500_wave_rules.sql` applied first (done live 14 Nov 2026), and `islands` |
+| `tower_health` | T33 tower hp inside a wave (D049, proposed): the wave answers carry `rules: ["tower_health"]`, and every client of that wave gives cannons, mortars and harpoons hp. Off: no `rules`, towers as before | T33; off by default in code (**on in production since ~21:53 UTC, 14 Nov 2026**); needs migration `20261114130500_wave_rules.sql` applied first (done live 14 Nov 2026), and `islands` |
+| `wall_recovery` | wall damage that stays after a wave (D039, proposed): `GET /api/island/walls`, `POST /api/island/repair`, `walls` on the wave routes, `409 needs_repair` on upgrade. Off: exactly the old behavior, the new columns are never read | T29–T32/T47; off by default in code; needs migration 20261114100000 applied first (applied live 14 Nov 2026; flag on in production), and `islands` on |
+| `defenses_v2` | new tower kinds beyond cannon, mortar and harpoon, first the culverin (T43, D048 proposed): `backend/content/defenses_v2.json` is merged into the island catalogue, so `GET /api/island` lists the kind on the tower spots, in `prices` and in `unlocks`, and `POST /api/island/build`/`upgrade` accept it; it is also a wave rule: the wave answers carry `"defenses_v2"` in `rules`, and only then does every client's sim let the culverins fight (event `culverin_fired`). Off: the file is not read, every island answer is as before, and a sim ignores any culverin | T43; off by default in code (**on in production since ~21:53 UTC, 14 Nov 2026**). Both migrations `20261114130500_wave_rules.sql` and `20261114140000_culverin.sql` were applied live 14 Nov 2026 |
 
 The separately guarded [disposable local API](LOCAL-TEST-SERVER.md) provides a fixture-only
 sign-in endpoint for automation. It does not enable `sign_in` or change the normal app's auth
@@ -1616,3 +1636,137 @@ These are retained for context; current route contracts above and their linked s
 4. **The keep-alive caller.** Decided by Nils on 5 Nov 2026: a scheduled GitHub Actions workflow (`.github/workflows/keepalive.yml`) calls `GET /api/keepalive` once a day with the repository secret `CRON_SECRET` ([SETUP.md](SETUP.md), "Keep it awake until the demo"). Vercel Cron stays out, because a `crons` entry in `vercel.json` breaks our deploys while we use Services.
 5. **Browser contracts after the final look.** G1 confirms that the event bus, the four story trigger ids and `setWeather` stay as written in section 3 when D005 is recorded.
 6. **The default weather place.** Torshavn in the Faroe Islands is the proposal (real fog and storms that suit the story), Lisbon the option (`38.72`, `-9.14`). It is only the default of three settings, so changing it needs no code change. Without a decision the Faroe Islands stay.
+
+## Weekly island leaderboard (T7)
+
+`GET /api/island/leaderboard` requires the existing island login/guest gate and
+`islands` flag; `Cache-Control: private, no-store`. Response:
+`{weekStart, weekEnd, entries: [{rank, name, wave}]}` (UTC ISO dates).
+`name` is the island host's public captain name, never an invitation code or ID.
+The server reads successful, nonexpired `wave_runs` for `place=island`, finished
+from Monday 00:00 inclusive to next Monday exclusive, up to the request's cutoff.
+It returns each island's highest win that week, regardless of restarts/current wave.
+Shared islands count once. At most ten entries; fewer qualifying islands produce
+fewer rows. Equal waves share competition ranks (1, 1, 3); stable internal owner-ID
+order breaks display ties at the ten-island cutoff. Crew size does not adjust scores.
+No rewards or database writes. The scan reads highest waves first, 100 rows per
+page, at most 20 pages; insufficient coverage returns `503 leaderboard_unavailable`,
+never a partial ranking. Public host names are read only for the final islands.
+Fake/offline games show an online-required message instead of invented global data.
+
+**T45 addition ([D046](DECISIONS.md#d046--highscore-scope-and-statue-stages--2026-11-14)).**
+Optional query `scope=week` (default) or `scope=all`; any other value answers `422`.
+Response: `{scope, weekStart, weekEnd, entries: [{rank, name, wave, crew}]}`; for
+`scope=all` both week fields are `null` and the window is every finish up to the
+request (never resets). Equal waves still share rank; display order among them is
+earliest `finished_at` first (replacing the owner-ID order above). `crew` (1–10) is the
+number of `wave_participants` of the scoring run, a count only (`1` = solo; an empty
+answer shows `1`). Scores come only from winning `wave_runs`, never from
+`islands.wave_best`, so restarts/resets cannot lower them. The client accepts a T7
+answer without `scope`/`crew` as a weekly board. No new tables, flags or writes.
+
+### T28 boss minigame preparation
+
+[D038](DECISIONS.md#d038--personal-boss-practice-before-the-shared-attempt--2026-11-14)
+and [T28](../specs/T28-minigame-introduction.md) add `finisher_ready` to the existing
+wave-room event list. Its data is exactly `{by, seq, t, waveId, shipId}`: the usual
+sender, sequence, scheduled wave time and wave id, plus the current boss ship id
+(the same 1–32-character ASCII letter/digit/underscore/hyphen rule as other ship ids).
+The simulation accepts readiness only from a standing participant captured at the
+finisher's start, for its current boss, while `phase` is `prepare`. Repeats are
+idempotent; spectators, other bosses and scored input during preparation do nothing.
+
+With `finisherPreparation: true` (the game controller), the scene gets `phase:
+"prepare"`, `ready: [participant ids]` and `prepareLeft` in seconds. Scored `sample`
+stays zero until everyone is ready or 1,200 simulation ticks (60 seconds) pass;
+the normal intro and scored timeline then start from zero. The controller uses
+the existing scheduled-input transport, not a new authority or database rule.
+Practice samples remain local and never enter `finisher_input`. The existing
+network latency/loss/late-join limitations still apply.
+
+### T38 last-chance rescue and T39 difficulty
+
+[D044](DECISIONS.md#d044--last-chance-rescue-and-minigame-difficulty-by-wave--2026-11-14) (proposed) and
+[the spec](../specs/T38-T39-minigames-rescue.md).
+
+- **`POST /api/waves/finish`** takes an optional `rescued` (strict boolean, default `false`; any other value is
+  `422 validation_error`). It counts only with the flag `rescue` on, for `survived: false` on an island wave from
+  4 to 100; then the server sends `p_restart_back = 1` instead of the catalogue's 2 to the existing 11-argument
+  `wave_finish()` (no migration). Anywhere else it is ignored, never refused. Loot, `waveBest`, `flags` and the
+  answer shape are unchanged. `wave_finish()` applies the restart rule only at the first finish that closes the
+  run, so a rescue settles once; a later survived finish still sets the next wave to the wave + 1.
+  The browser sends `rescued: true` only after a won rescue (`island/api.js`, `controller.js`).
+- **Wave room:** no new message. The rescue uses `finisher_input` and `finisher_ready` unchanged, with the ship
+  id `rescue` in `finisher_ready`.
+- **Sim state and events (after the sim hook):** `state().finisher` carries a finisher-shaped rescue
+  (`kind: "rescue"`, `shipId: "rescue"`, `reason`, one task `rescue`, `x`/`z` at the heart); events
+  `rescue_started {t, reason, players, goal, x, z}`, `rescue_won` / `rescue_failed {t, reason, score, goal}`,
+  `rescue_ended {t, outcome, reason}`; `result().rescued: true` after a won rescue.
+- **Difficulty snapshot:** every finisher and rescue state carries `difficulty: {task: {speed?, width?,
+  easyWidth?, share?, hits?, prompt?, easyPrompt?}}`, frozen at the run's start from the wave number
+  (`finisher/difficulty.js`). Clients of one wave must run the same version.
+
+### Wave rules (T33, T34/T35, T38)
+
+`POST /api/waves/start|join` and `GET /api/waves/current` carry an optional `rules`: the simulation rules of
+that wave, each switched on by the flag of the same name, in a fixed order (`SIM_RULES` in
+`backend/server/island/wave_rules.py`). The first answer for a wave keeps its set, an empty set too
+(table `wave_rules`, `wave_rules_keep()`, migration `20261114130500_wave_rules.sql`, applied live; the keep-once behaviour is PR #63; one small call on every
+start, join and current answer, also while every rule flag is off); every later answer for that wave serves
+the kept set whatever the flags say now, so a joiner after a flag flip (on or off) plays the bell-ringer's
+rules. Left out when the kept set is empty (or keeping failed: logged, never a 5xx). A wave with no row yet
+(started before this) keeps the flags of its next answer. Every client reads them from the wave answer
+(`frontend/src/pirates/wave-rules.js`), never from its own `/api/config`, so a whole wave plays one rule set;
+the island passes them on in `wave_started_server` (`rules`). Names: `tower_health` (T33, [spec](../specs/T33-tower-health.md)), `pathing` (T34/T35 boarder routes over the walls' footprints, [spec](../specs/T34-T35-targeting-pathing.md#wiring-as-built-14-nov)), `rescue` (T38: the sim offers the last-chance rescue; the same flag also lets the server honour `rescued`), `defenses_v2` (T43, [spec](../specs/T43-new-defenses.md): the island's culverins fight; without it every client's sim and renderer leave a culverin out; the server also hides a culverin row while the flag is off; the name needs migration `20261114140000_culverin.sql`).
+With `defenses_v2` a new sim event `culverin_fired {t, towerId, targetId, damage, level, x, z, toX, toZ, impactAt}` (its hit is the usual
+`ship_hit`, with `culverin: true`); `state().towers[]` may hold `kind: "culverin"`.
+With `tower_health` the room's `repair` / `rebuild` messages may name a tower in `wallId`; new sim events
+`tower_damaged {towerId, by, damage, hp, maxHp, broken}`, `tower_broken`, `tower_repaired`, `tower_rebuilt`;
+`state().towers[]` gains `hp, maxHp, broken, repairing, rebuildReady`.
+
+### Wall recovery (T29–T32, T47)
+
+[D039](DECISIONS.md#d039--wall-recovery-damage-stays-after-a-wave--2026-11-14) (proposed) and
+[the spec](../specs/T29-T32-wall-recovery.md); only while the flag `wall_recovery` is on
+(404 `feature_off` otherwise). Route contracts: `backend/server/routes/wall_recovery.py` and
+`backend/server/routes/waves.py`; tables and functions: migration `20261114100000_wall_recovery.sql`.
+
+- `GET /api/island/walls?code=` → `{coins, walls: [{spot, level, health, recoversAt, repairCost}]}`;
+  health in percent (0 destroyed, 100 whole), `recoversAt` UTC or null, `repairCost` the caller's
+  price or null while whole.
+- `POST /api/island/repair {spot, actionUid, code?}` → the same shape after the repair or rebuild.
+  Errors `409 intact`, `409 wave_running`, `409 insufficient_funds`, `409 not_built`, `422 wrong_kind`,
+  `403 not_member`, `404 no_such_spot`. Ledger reason `building_purchase`, ref `wallfix:<actionUid>`.
+- `POST /api/waves/start|join`, `GET /api/waves/current`: optional `walls: {wall_N: percent}` (left
+  out while the flag is off and on Pirate Point); every client starts its walls from it.
+- `POST /api/waves/finish`: optional `walls: {wall_N: 0..100}` (at most 24); the first finish of an
+  island wave keeps them, each capped at the health that wall started the wave with (a finish can only
+  damage a wall, never heal or add one; an in-wave E repair helps only in that wave). Recording is best
+  effort: a database failure is logged and the already-paid finish still answers 200. Ignored while the
+  flag is off.
+- `POST /api/island/upgrade`: `409 needs_repair` for a damaged or destroyed wall.
+- `wave_started_server` on the game's bus may carry the same `walls` object.
+
+## Shared island arsenal (T40/T41)
+
+[D042](DECISIONS.md#d042--shared-island-arsenal-20-stored-copies-and-the-weapon-table--2026-11-14) and
+[the spec](../specs/T40-T41-arsenal.md). The source of truth is the comment at the top of
+`backend/server/routes/arsenal.py`; the database part is `supabase/migrations/20261114120000_arsenal.sql`
+([supabase/README.md](../supabase/README.md#the-arsenal-migration)).
+
+- **Flag:** `arsenal` (new in `FLAG_NAMES`, off by default in code; on in production since 14 Nov 2026, after the migration was applied live) on top of `islands`. Off: every arsenal route answers
+  `404 feature_off`, the browser draws no arsenal and the old weapon shop (`POST /api/island/weapon/buy|equip`)
+  works as before. On: `POST /api/island/weapon/buy` answers `409 use_arsenal`.
+- **Routes:** `GET /api/island/arsenal?code=` → `{code, capacity: 20, stored, mine, carried, waveRunning, coins,
+  unlockWave, copies: [{id, no, weapon, name, holder, holderName, away, you}], types: [{id, name, price, unlockWave,
+  unlocked}]}`; `POST /api/island/arsenal/buy {weapon, actionUid, code?}`, `/take {copy, actionUid, code?}`,
+  `/return {actionUid, code?}` answer the same shape. Errors: `400 bad_weapon`, `403 not_member`, `404
+  no_such_island | no_such_copy`, `409 standard_weapon | locked | arsenal_full | insufficient_funds | taken |
+  nothing_held | wave_running | action_used`. A repeated `actionUid` changes nothing; a 5xx means "unknown,
+  repeat with the same id" (`frontend/src/island/arsenal-api.js` keeps it).
+- **Money:** wallet reason `weapon_purchase` (existing), ref `arsenal:<actionUid>`, paid by the buyer only.
+- **Browser:** zone and building id `island_arsenal` (`frontend/src/island/spots.js`), art `island-arsenal`.
+  After a move the client emits `island_spots_changed {place, spot: 'island_arsenal'}`, so the room's existing
+  `island_changed` makes crewmates read the island and the arsenal again; locally also `arsenal_changed
+  {carried}`. `createIsland({arsenalOn})` gets the flag from `/api/config` (`game.js`); the wave's
+  `captainLoadout().weapon` is the carried copy's type on the island on screen, else the musket.

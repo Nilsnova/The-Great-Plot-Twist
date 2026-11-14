@@ -78,7 +78,9 @@ export const PIRATE_POINT_PLACE = 'pirate_point';
 // captain_move (where a captain stands, so the boarders find them) and captain_revive (a fallen teammate
 // stood up) are captain health (GAME-V3.md §3).
 export const WAVE_EVENTS = ['wave_start', 'cannon_shot', 'wall_repair', 'lamps_lit', 'lamp', 'captain_shot', 'island_changed',
-  'wall_rebuild', 'captain_strike', 'game_hello', 'game_state', 'captain_move', 'captain_revive'];
+  'wall_rebuild', 'captain_strike', 'game_hello', 'game_state', 'captain_move', 'captain_revive', 'finisher_ready', 'finisher_input'];
+// finisher_input (v3 waves, src/pirates/finisher/): one window of a captain's samples in a boss finisher, at most
+// one a captain every max(500 ms, 2 × waveGapMs) like the other wave messages.
 export const WAVE_GAP_MS = 200; // we send at most one wave message this often (5 a second) in a small room
 export const MIN_WAVE_GAP_MS = 150; // and accept one per captain and kind this often
 // Up to 10 players on one island (GAME-V3.md §2). Every message in a wave room is delivered to every other
@@ -366,7 +368,8 @@ const WAVE_DATA = {
   captain_strike: data => isCaptainBlow(data),
   // A rebuild carries the rebuilder's skills (Master shipwright: 60% instead of 40%).
   wall_rebuild: data => hasKeysWith(data, ['by', 'seq', 't', 'waveId', 'wallId'], ['skills']) && WAVE_ITEM.test(String(data.wallId)) && isSkills(data.skills),
-  island_changed: data => hasKeys(data, ['spot']) && typeof data.spot === 'string' && WAVE_ITEM.test(data.spot),
+  island_changed: data => hasKeysWith(data, ['spot'], ['demolished']) && typeof data.spot === 'string' && WAVE_ITEM.test(data.spot)
+    && (!Object.hasOwn(data, 'demolished') || isDemolishedNote(data.demolished)),
   game_hello: data => hasKeys(data, ['who']) && typeof data.who === 'string' && WAVE_BY.test(data.who),
   game_state: data => hasKeys(data, ['who', 'started', 'paused', 'first']) && typeof data.who === 'string' && WAVE_BY.test(data.who)
     && typeof data.started === 'boolean' && typeof data.paused === 'boolean' && typeof data.first === 'boolean',
@@ -374,10 +377,26 @@ const WAVE_DATA = {
   captain_move: data => hasKeysWith(data, ['by', 'seq', 't', 'waveId', 'x', 'z'], ['colour', 'away']) && [data.x, data.z].every(isCoord)
     && (!Object.hasOwn(data, 'colour') || (Number.isInteger(data.colour) && data.colour >= 0 && data.colour <= 9))
     && (!Object.hasOwn(data, 'away') || data.away === true),
-  captain_revive: data => hasKeys(data, ['by', 'seq', 't', 'waveId', 'targetId', 'x', 'z']) && typeof data.targetId === 'string'
-    && WAVE_BY.test(data.targetId) && data.targetId !== data.by && [data.x, data.z].every(isCoord),
+  // The reviver's skills and role (a medic gives more hp back) ride along, like on a repair.
+  captain_revive: data => hasKeysWith(data, ['by', 'seq', 't', 'waveId', 'targetId', 'x', 'z'], ['skills']) && typeof data.targetId === 'string'
+    && WAVE_BY.test(data.targetId) && data.targetId !== data.by && [data.x, data.z].every(isCoord) && isSkills(data.skills),
+  // A boss finisher's samples: from 0-3000, 1-24 marks of whole numbers -1 to 100, easy: true optional.
+  finisher_ready: data => hasKeys(data, ['by', 'seq', 't', 'waveId', 'shipId'])
+    && typeof data.shipId === 'string' && WAVE_ITEM.test(data.shipId),
+  finisher_input: data => hasKeysWith(data, ['by', 'seq', 't', 'waveId', 'from', 'marks'], ['easy'])
+    && Number.isInteger(data.from) && data.from >= 0 && data.from <= 3000 && Array.isArray(data.marks) && data.marks.length >= 1
+    && data.marks.length <= 24 && data.marks.every(value => Number.isInteger(value) && value >= -1 && value <= 100)
+    && (!Object.hasOwn(data, 'easy') || data.easy === true),
 };
 const NO_WAVE = ['island_changed', 'game_hello', 'game_state'];
+// A tear-down's note on island_changed (GAME-V3.md §4.2): who did it, what came down and who got how many
+// coins back (at most 6: a building has 5 levels, plus the host). Only a toast reads it; coins are the server's.
+function isDemolishedNote(note) {
+  return isRecord(note) && hasKeysWith(note, ['kind', 'level', 'refunds'], ['who']) && typeof note.kind === 'string' && WAVE_ITEM.test(note.kind)
+    && Number.isInteger(note.level) && note.level >= 1 && note.level <= 5 && (!Object.hasOwn(note, 'who') || (typeof note.who === 'string' && WAVE_BY.test(note.who)))
+    && Array.isArray(note.refunds) && note.refunds.length <= 6 && note.refunds.every(item => isRecord(item) && hasKeys(item, ['id', 'coins'])
+      && typeof item.id === 'string' && WAVE_BY.test(item.id) && Number.isSafeInteger(item.coins) && item.coins >= 0 && item.coins <= 1000000);
+}
 export function readWaveMessage(event, payload) {
   if (!WAVE_EVENTS.includes(event) || !isRecord(payload) || payload.v !== PROTOCOL_VERSION) return null;
   if (!isPlayerId(payload.id) || !isSequence(payload.seq)) return null;

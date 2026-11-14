@@ -30,18 +30,17 @@ describe('cutscene scripts',()=>{
       expect(line.text).not.toMatch(/culprit|guilty|masked|schooner|false light|accus|confess|kidnap|murder/i);
     }
   });
-  it('builds a scene for every script, only from existing local art and never from the removed mystery art',()=>{
+  it('builds a scene for every script from cartoon panels drawn in code, with no image files (T21)',async()=>{
+    const {PANELS}=await import('../src/art/scenery.js');
     for(const script of data.scripts)expect(scenes[script.id],script.id).toBeDefined();
     for(const [id,shots] of Object.entries(scenes)){
       const script=findScript(data,id);expect(script).not.toBeNull();
+      expect(shots[0].from,id).toBe(0);
       for(const shot of shots){
         expect(shot.from).toBeLessThanOrEqual(shot.to);expect(shot.to).toBeLessThan(script.lines.length);
-        for(const layer of shot.layers){
-          expect(layer.art).toMatch(/^(places|pixel)\/[a-z0-9-]+\.(png|webp)$/);
-          expect(existsSync(publicFile(layer.art)),layer.art).toBe(true);
-          // Since the mystery left the game (D031) the dark schooner is the pirate ship; the case portraits stay out.
-          expect(layer.art).not.toMatch(/ghost-schooner|masked|false-light|character-elena/);
-        }
+        expect(PANELS[shot.panel],`${id} ${shot.panel}`).toBeDefined();
+        expect(shot.layers,id).toBeUndefined();
+        expect(['dusk','night','dawn','day','harbor'],id).toContain(shot.sky);
       }
     }
   });

@@ -24,12 +24,18 @@ from dataclasses import dataclass
 
 from server.errors import ApiError
 from server.island.catalogue import (
+    HOUSE_ROLE_LEVEL,
+    HOUSE_ROLES,
+    RESEARCH_CAPSTONES,
     RESEARCH_SPECS,
+    RESEARCH_TIER_ITEMS,
+    RESEARCH_TOP_TIER,
     Crew,
     IslandCatalogue,
     Kind,
     Loot,
     Research,
+    Role,
     Skill,
     Spot,
     Weapon,
@@ -56,6 +62,24 @@ class Built:
 
 
 @dataclass(frozen=True)
+class ResearchTier:
+    """One research branch on an island (docs/GAME-V3.md section 5.1): the tier reached (1 to 3)
+    and the option the crew chose at tier 2 and at tier 3 (None until then)."""
+
+    tier: int = 1
+    choice_2: str | None = None
+    choice_3: str | None = None
+
+    def choice(self, tier: int) -> str | None:
+        return self.choice_2 if tier == 2 else self.choice_3 if tier == 3 else None
+
+
+def tower_specs(kind: str) -> tuple[str, ...]:
+    """Every skill a tower of `kind` may carry: tier 1's and the two capstones of tier 3."""
+    return RESEARCH_SPECS.get(kind, ()) + RESEARCH_CAPSTONES.get(kind, ())
+
+
+@dataclass(frozen=True)
 class SpotView:
     """One build spot as the API shows it."""
 
@@ -67,6 +91,9 @@ class SpotView:
     cost: int  # the level-1 price of `kind`, also once it is built
     upgrade_cost: int | None  # the price of the next level, None while empty or at the top
     spec: str | None = None  # the tower skill it picked (GAME-V3 section 5), None for none
+    # Where the spot stands on the build grid (T36, layout.py); None for Pirate Point's fixed spots.
+    x: float | None = None
+    z: float | None = None
 
 
 def kind_named(catalogue: IslandCatalogue, kind: str) -> Kind | None:
@@ -89,19 +116,33 @@ def price_of(catalogue: IslandCatalogue, kind: str) -> int:
     return kind_of(catalogue, kind).coins
 
 
-def spot_view(catalogue: IslandCatalogue, spot: Spot, built: Built | None) -> SpotView:
+def spot_view(
+    catalogue: IslandCatalogue, spot: Spot, built: Built | None, role: str | None = None
+) -> SpotView:
+    """One spot. `role` is the viewer's captain role: an engineer sees the lower prices."""
     if built is None:
-        return SpotView(
-            spot.id, spot.kind, spot.kinds, False, 0, price_of(catalogue, spot.kind), None
-        )
+        price = engineer_price(catalogue, price_of(catalogue, spot.kind), role)
+        return SpotView(spot.id, spot.kind, spot.kinds, False, 0, price, None)
     kind = kind_of(catalogue, built.kind)
     upgrade = kind.prices[built.level] if built.level < kind.max_level else None
-    spec = built.spec if built.spec in RESEARCH_SPECS.get(kind.kind, ()) else None
-    return SpotView(spot.id, kind.kind, spot.kinds, True, built.level, kind.coins, upgrade, spec)
+    if upgrade is not None:
+        upgrade = engineer_price(catalogue, upgrade, role)
+    # A tower's skill (GAME-V3 section 5), or a house's role from level 2 (GAME-V3 "Houses").
+    allowed = (
+        (HOUSE_ROLES if built.level >= HOUSE_ROLE_LEVEL else ())
+        if kind.kind == "house"
+        else tower_specs(kind.kind)
+    )
+    spec = built.spec if built.spec in allowed else None
+    cost = engineer_price(catalogue, kind.coins, role)
+    return SpotView(spot.id, kind.kind, spot.kinds, True, built.level, cost, upgrade, spec)
 
 
 def plan_spots(
-    catalogue: IslandCatalogue, built: dict[str, Built], spots: tuple[Spot, ...] | None = None
+    catalogue: IslandCatalogue,
+    built: dict[str, Built],
+    spots: tuple[Spot, ...] | None = None,
+    role: str | None = None,
 ) -> tuple[SpotView, ...]:
     """Every build spot (the island's, or `spots`), in the order of the file. Other rows are
     ignored, and so is a row whose kind does not belong on its spot."""
@@ -110,7 +151,7 @@ def plan_spots(
         standing = built.get(spot.id)
         if standing is not None and standing.kind not in spot.kinds:
             standing = None
-        views.append(spot_view(catalogue, spot, standing))
+        views.append(spot_view(catalogue, spot, standing, role))
     return tuple(views)
 
 
@@ -219,8 +260,9 @@ def check_build(
     """
     spot = find_spot(catalogue, spot_id, spots)
     if kind not in spot.kinds:
-        names = " or a ".join(kind_of(catalogue, name).name.lower() for name in spot.kinds)
-        raise BuildRefused(422, "wrong_kind", f"Only a {names} can stand on this spot.")
+        names = [f"a {kind_of(catalogue, name).name.lower()}" for name in spot.kinds]
+        listed = names[0] if len(names) == 1 else f"{', '.join(names[:-1])} or {names[-1]}"
+        raise BuildRefused(422, "wrong_kind", f"Only {listed} can stand on this spot.")
     if spot.id in built:
         raise spot_taken(catalogue, built[spot.id].kind)
     entry = kind_of(catalogue, kind)
@@ -249,6 +291,45 @@ def check_upgrade(
         raise max_level(kind.name)
     check_unlocked(catalogue, kind, standing.level + 1, wave)
     return spot, kind, unlocked_level(catalogue, kind, wave)
+
+
+# --- tearing a building down (docs/GAME-V3.md section 4.2) ---
+
+# What is never torn down: the heart of the island (the cabin), the harbor bell and the campaign's
+# buildings. None of them has a building row; the database refuses every plot that is not an
+# island build spot as well (the home islet's buildings, the signal station among them).
+PROTECTED = frozenset(
+    {
+        CABIN,
+        "heart",
+        "island_cabin",
+        "island_bell",
+        "island_harbor",
+        "island_techhub",
+        "island_wreck",
+    }
+)
+
+
+def protected() -> ApiError:
+    return ApiError(
+        409, "protected", "The heart of the island stays. Only walls, towers and houses come down."
+    )
+
+
+def check_demolish(catalogue: IslandCatalogue, spot_id: str) -> Spot:
+    """The spot of a tear-down: 409 protected (the heart, the bell, the Harbor, the Tech hub, the
+    wreck), 404 no_such_spot. Whether something stands there, whether a wave runs and who paid
+    for it are the database's to say (island_demolish), so a repeated click is answered there."""
+    if spot_id in PROTECTED:
+        raise protected()
+    return find_spot(catalogue, spot_id)
+
+
+def price_table(catalogue: IslandCatalogue) -> dict[str, list[int]]:
+    """Every kind's price list, the catalogue the database refunds a level without a payment row
+    at (paid by the host: the host's own builds and everything from before the payment rows)."""
+    return {kind.kind: list(kind.prices) for kind in catalogue.kinds}
 
 
 def max_level(name: str) -> ApiError:
@@ -312,22 +393,77 @@ def skill_named(catalogue: IslandCatalogue, skill: str) -> Skill:
 
 
 def check_skill(
-    catalogue: IslandCatalogue, skill: str, known: tuple[str, ...], won_wave: int
+    catalogue: IslandCatalogue,
+    skill: str,
+    known: tuple[str, ...],
+    won_wave: int,
+    role: str | None = None,
 ) -> Skill:
-    """400 bad_skill, 409 known, 409 locked (the tier above first), 409 no_points.
-    The database checks the order and the points again under its lock."""
+    """400 bad_skill, 409 known, 409 closed (its fork twin was picked), 409 wrong_role (a capstone
+    of another role), 409 locked (the tier above first), 409 no_points.
+    The database checks the same again under its lock."""
     entry = skill_named(catalogue, skill)
     if entry.skill in known:
         raise ApiError(409, "known", f"You know {entry.name} already.")
-    if entry.needs is not None and entry.needs not in known:
+    if entry.excludes is not None and entry.excludes in known:
+        raise skill_closed(catalogue, entry)
+    if entry.needs and not any(name in known for name in entry.needs):
         raise skill_locked(catalogue, entry.needs)
+    if entry.role is not None and entry.role != role:
+        raise skill_wrong_role(catalogue, entry, role)
     if skill_points(catalogue, won_wave, known)[0] < entry.cost:
         raise no_points()
     return entry
 
 
-def skill_locked(catalogue: IslandCatalogue, needs: str) -> ApiError:
-    return ApiError(409, "locked", f"Learn {skill_named(catalogue, needs).name} first.")
+def skill_locked(catalogue: IslandCatalogue, needs: tuple[str, ...]) -> ApiError:
+    names = " or ".join(skill_named(catalogue, name).name for name in needs)
+    return ApiError(409, "locked", f"Learn {names} first.")
+
+
+def skill_closed(catalogue: IslandCatalogue, entry: Skill) -> ApiError:
+    twin = skill_named(catalogue, entry.excludes or entry.skill).name
+    return ApiError(
+        409, "closed", f"You chose {twin}, so {entry.name} is closed. Respec to change."
+    )
+
+
+def role_named(catalogue: IslandCatalogue, role: str) -> Role:
+    for entry in catalogue.skills.roles:
+        if entry.role == role:
+            return entry
+    raise ApiError(400, "bad_role", "There is no such role.")
+
+
+def skill_wrong_role(catalogue: IslandCatalogue, entry: Skill, role: str | None) -> ApiError:
+    name = role_named(catalogue, entry.role or "").name
+    if role is None:
+        return ApiError(409, "wrong_role", f"Pick the {name} role first.")
+    return ApiError(409, "wrong_role", f"Only a {name} can learn {entry.name}.")
+
+
+def check_role(
+    catalogue: IslandCatalogue, role: str, captain_level: int, current: str | None
+) -> Role:
+    """400 bad_role, 409 role_known (respec to change), 409 locked (captain level)."""
+    entry = role_named(catalogue, role)
+    if current is not None:
+        raise ApiError(409, "role_known", "You have a role already. Respec to change it.")
+    if captain_level < catalogue.skills.role_level:
+        raise ApiError(409, "locked", f"Reach captain level {catalogue.skills.role_level} first.")
+    return entry
+
+
+def respec_price(catalogue: IslandCatalogue, captain_level: int) -> int:
+    """The coins a respec costs: coinsPerLevel for every captain level."""
+    return catalogue.skills.respec_per_level * max(1, captain_level)
+
+
+def engineer_price(catalogue: IslandCatalogue, price: int, role: str | None) -> int:
+    """An engineer pays engineerDiscountPercent less (rounded to whole coins, never below 1)."""
+    if role != "engineer" or price <= 0:
+        return price
+    return max(1, (price * (100 - catalogue.skills.engineer_discount) + 50) // 100)
 
 
 def no_points() -> ApiError:
@@ -380,23 +516,62 @@ def research_named(catalogue: IslandCatalogue, branch: str) -> Research:
 
 
 def check_research(
-    catalogue: IslandCatalogue, branch: str, researched: tuple[str, ...], wave: int
-) -> Research:
-    """400 bad_research, 409 locked (the Tech hub opens after wave 8), 409 known."""
+    catalogue: IslandCatalogue,
+    branch: str,
+    done: dict[str, ResearchTier],
+    wave: int,
+    tier: int = 1,
+    choice: str | None = None,
+    change: bool = False,
+) -> tuple[Research, int]:
+    """One research step (docs/GAME-V3.md section 5.1): tier 1 of a branch, or one of the two
+    options of tier 2 or 3, `change` to switch from the option chosen before (at the tier's price
+    again). 400 bad_research, 409 top_tier, 409 locked (tier 1 after wave 8, tier 2 after 15,
+    tier 3 after 25), 409 needs_tier, 409 known, 409 closed. Returns the branch and the price."""
     entry = research_named(catalogue, branch)
-    check_open(catalogue, "tech_hub", wave)
-    if entry.branch in researched:
-        raise research_known(entry)
-    return entry
+    if tier > RESEARCH_TOP_TIER:
+        raise ApiError(409, "top_tier", f"{entry.name} have {RESEARCH_TOP_TIER} tiers.")
+    if tier < 1 or (choice is not None if tier == 1 else choice not in entry.options_of(tier)):
+        raise ApiError(400, "bad_research", "There is no such research.")
+    check_open(catalogue, RESEARCH_TIER_ITEMS[tier - 1], wave)
+    now = done.get(entry.branch)
+    if tier == 1:
+        if now is not None:
+            raise research_known(entry)
+        return entry, entry.price_of(1)
+    if now is None or now.tier < tier - 1:
+        raise needs_tier(entry, tier)
+    chosen = now.choice(tier) if now.tier >= tier else None
+    if chosen == choice:
+        raise option_known(entry, choice)
+    if chosen is not None and not change:
+        raise option_closed(entry, chosen)
+    return entry, entry.price_of(tier)
 
 
 def research_known(entry: Research) -> ApiError:
     return ApiError(409, "known", f"{entry.name} are researched on this island already.")
 
 
+def needs_tier(entry: Research, tier: int) -> ApiError:
+    return ApiError(409, "needs_tier", f"Research tier {tier - 1} of {entry.name.lower()} first.")
+
+
+def option_known(entry: Research, option: str) -> ApiError:
+    return ApiError(409, "known", f"Your crew chose {entry.option_name(option)} already.")
+
+
+def option_closed(entry: Research, chosen: str) -> ApiError:
+    return ApiError(
+        409,
+        "closed",
+        f"Closed: your crew chose {entry.option_name(chosen)}. Change it to switch.",
+    )
+
+
 def branch_of_spec(spec: str) -> str | None:
-    for branch, specs in RESEARCH_SPECS.items():
-        if spec in specs:
+    for branch in RESEARCH_SPECS:
+        if spec in tower_specs(branch):
             return branch
     return None
 
@@ -406,14 +581,24 @@ def check_specialise(
     spot_id: str,
     spec: str,
     built: dict[str, Built],
-    researched: tuple[str, ...],
+    researched: dict[str, ResearchTier],
 ) -> tuple[Spot, str]:
     """A tower picks one skill of its kind (409 not_built, 400 bad_spec, 422 wrong_kind,
-    409 not_researched). Returns the spot and the branch (the tower's kind)."""
+    409 not_researched; a capstone only once its island chose it at tier 3). A house of level 2 or
+    more picks a role the same way, with no research (docs/GAME-V3.md "Houses"; 422 wrong_kind on
+    another building, 409 house_level below level 2). Returns the spot and the branch (the
+    building's kind)."""
     spot = find_spot(catalogue, spot_id)
     standing = built.get(spot.id)
     if standing is None or standing.kind not in spot.kinds:
         raise ApiError(409, "not_built", "Build something on this spot first.")
+    if spec in HOUSE_ROLES:
+        if standing.kind != "house":
+            name = kind_of(catalogue, standing.kind).name.lower()
+            raise BuildRefused(422, "wrong_kind", f"A {name} cannot take a house role.")
+        if standing.level < HOUSE_ROLE_LEVEL:
+            raise house_level()
+        return spot, "house"
     branch = branch_of_spec(spec)
     if branch is None:
         raise ApiError(400, "bad_spec", "There is no such tower skill.")
@@ -422,11 +607,23 @@ def check_specialise(
         raise BuildRefused(422, "wrong_kind", f"A {name} cannot learn that skill.")
     if branch not in researched:
         raise not_researched(research_named(catalogue, branch))
+    if spec in RESEARCH_CAPSTONES[branch] and researched[branch].choice_3 != spec:
+        raise capstone_not_chosen(research_named(catalogue, branch), spec)
     return spot, branch
+
+
+def house_level() -> ApiError:
+    return ApiError(409, "house_level", f"Raise this house to level {HOUSE_ROLE_LEVEL} first.")
 
 
 def not_researched(entry: Research) -> ApiError:
     return ApiError(409, "not_researched", f"Research {entry.name.lower()} at the Tech hub first.")
+
+
+def capstone_not_chosen(entry: Research, spec: str) -> ApiError:
+    return ApiError(
+        409, "not_researched", f"Pick {entry.option_name(spec)} at tier 3 of the Tech hub first."
+    )
 
 
 def check_wreck_gift(catalogue: IslandCatalogue, amount: int, paid: int, wave: int) -> int:

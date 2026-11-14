@@ -9,7 +9,9 @@
 //   upgrades it on the owner's island and the owner's map and open card follow. Tower skills (GAME-V3.md §5):
 //   after wave 8 the owner researches cannon skills at the Tech hub and picks Heavy shot for a cannon; the
 //   friend's island answer and card show the same skill within 2 s, then the friend picks Rapid on the owner's
-//   island and the owner's follows (the wave's sim reads the skill from the island). Wave 3 with a second cannon
+//   island and the owner's follows (the wave's sim reads the skill from the island). Tear down (GAME-V3.md §4.2): the
+//   owner tears down the wall both paid for; his confirmation shows both refunds, the friend sees the empty spot, his
+//   toast and his coins. Wave 3 with a second cannon
 //   and the inner wall ring: the owner rings the bell; both run the same wave (the same ships at the same
 //   tick, and the same boarders ashore: TOWER-DEFENSE.md §12); both captains fire their musket and each
 //   shot reaches the other page; an upgrade in the wave's break shows on both; the host pauses the break
@@ -18,8 +20,11 @@
 //   closes by itself (the game is on) and they join the wave. Captain health (GAME-V3.md §3): in the first
 //   wave the friend stands on the boarders until he falls, the owner walks up and holds E for 2 s (a short
 //   hold first, let go: nothing is paid), pays 20 + 5 × wave and helps him up; both pages see the same
-//   fall and the same revive at the same tick (screenshots at 1280 × 800 and 390 × 844). Ten players in one room are covered by the
-//   unit tests (tests/island/games.test.js, tests/pirates/ten-players.test.js).
+//   fall and the same revive at the same tick; the owner has picked the Medic role (captain tree): the friend's lobby shows
+//   the 🩹 icon on Nils, the hold needs only 1.2 s and the friend stands up with 75% hp on both pages (screenshots at 1280 × 800 and 390 × 844). Ten players in one room are covered by the
+//   unit tests (tests/island/games.test.js, tests/pirates/ten-players.test.js). v3 waves: wave 3's event (fog bank or
+//   storm) is the same on both pages; the wave-5 boss finisher on four pages: every page hears every captain's
+//   samples and decides the same scores and outcome.
 //   node scripts/check-multiplayer.js [folder]        (npm run test:mp)
 import assert from 'node:assert/strict';
 import {mkdir} from 'node:fs/promises';
@@ -31,7 +36,7 @@ const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
 const out = process.argv[2] ?? `/Users/nilslenke/Developer/fri6-integration/td-shots/mp/check-${stamp}`;
 await mkdir(out, {recursive: true});
 const WORLD = `mp${Date.now().toString(36)}`;
-const env = await openWorldBrowser(), context = env.page.context();
+const env = await openWorldBrowser({hmr: false}), context = env.page.context();
 const pages = [];
 const log = (...args) => console.log(...args);
 
@@ -57,7 +62,11 @@ async function openCaptain(name, playerId, visit = null, {create = false, join =
     for (let i = 0; i < 5 && await join.isVisible().catch(() => false); i++) { await join.click().catch(() => {}); await page.waitForTimeout(1500); }
   }
   else await page.locator('#play').click();
-  for (let i = 0; i < 12; i++) {
+  // Done when the lobby is open, or (a visit link, whose lobby may close by itself) when the player stands on
+  // the island with no card open. Create and Join always end in the lobby, after the arrival cutscene.
+  const landed = () => page.evaluate(lobby => !!document.querySelector('.island-card-lobby[open]') || (!lobby
+    && window.__island?.world.current?.id === 'home_islet' && !!window.__island.island?.island && !document.querySelector('dialog[open]')), !!(create || join));
+  for (let i = 0; i < 20; i++) {
     await page.waitForFunction(() => document.querySelector('dialog.cutscene[open],.tutorial-card[open],.goal-card[open],.games-card[open],.island-card-lobby[open]')
       || (window.__island?.world.current?.id === 'home_islet' && window.__island.island?.island && !document.querySelector('dialog[open]')), null, {timeout: 60000, polling: 100});
     if (await page.locator('.games-card[open]').count()) {
@@ -68,8 +77,11 @@ async function openCaptain(name, playerId, visit = null, {create = false, join =
       else await page.locator('.games-card[open]').getByRole('button', {name: 'Create a game', exact: true}).click();
     }
     else if (await page.locator('.goal-card[open]').count()) await page.locator('.goal-card[open]').getByRole('button', {name: 'Got it', exact: true}).click();
-    else if (await page.locator('dialog.cutscene[open],.tutorial-card[open]').count()) await page.getByRole('button', {name: 'Skip', exact: true}).click();
-    else break;
+    // The island arrival (6.4 s) ends by itself: on a slow machine it can close before the click lands, as it
+    // would for a player who waits. The next round looks at what is open then.
+    else if (await page.locator('dialog.cutscene[open],.tutorial-card[open]').count()) await page.getByRole('button', {name: 'Skip', exact: true}).click({timeout: 5000}).catch(() => {});
+    else if (await landed()) break;
+    // Otherwise one card has just closed and the next (goal card, arrival, lobby) is not open yet: look again.
     await page.waitForTimeout(300);
   }
   // A visit link or a joined code: wait until the host's island has answered (the join's visit read).
@@ -77,9 +89,13 @@ async function openCaptain(name, playerId, visit = null, {create = false, join =
   // What every page heard: the sim's musket shots, the loot answers, and a ship list per frame.
   await page.evaluate(() => {
     const g = window.__island; g.settings.hour = 12;
-    window.__mp = {shots: [], loot: [], samples: [], heard: [], started: [], fell: [], revived: []};
+    window.__mp = {shots: [], loot: [], samples: [], heard: [], started: [], fell: [], revived: [], events: [], finishers: []};
+    // v3 waves: the event each wave brought, and every finisher's outcome as this page's sim decided it.
+    g.on('wave_event', event => window.__mp.events.push({wave: event.wave, event: event.event}));
+    g.on('finisher_won', event => window.__mp.finishers.push({type: event.type, kind: event.kind, scores: event.scores, goals: event.goals}));
+    g.on('finisher_failed', event => window.__mp.finishers.push({type: event.type, kind: event.kind, scores: event.scores, goals: event.goals, hp: event.hp}));
     g.on('captain_fell', event => window.__mp.fell.push({captainId: event.captainId, t: event.t}));
-    g.on('captain_revived', event => window.__mp.revived.push({captainId: event.captainId, by: event.by, t: event.t}));
+    g.on('captain_revived', event => window.__mp.revived.push({captainId: event.captainId, by: event.by, t: event.t, hp: event.hp}));
     g.on('game_started', event => window.__mp.started.push(event));
     // What crossed the island room from the other tabs (the raw BroadcastChannel of pirates/room.js).
     const channel = new BroadcastChannel('tgpt:live:place:isle_k7q2m:1');
@@ -92,7 +108,10 @@ async function openCaptain(name, playerId, visit = null, {create = false, join =
         const last = window.__mp.samples.at(-1);
         if (!last || last.ticks !== wave.ticks) window.__mp.samples.push({waveId: wave.info.waveId, ticks: wave.ticks,
           ships: wave.state.ships.map(ship => ship.id).sort().join(','), hp: Math.round(wave.state.ships.reduce((sum, ship) => sum + ship.hp, 0)),
-          boarders: (wave.state.boarders ?? []).map(item => item.id).sort().join(','), landed: wave.state.boardersLanded ?? 0});
+          boarders: (wave.state.boarders ?? []).map(item => item.id).sort().join(','), landed: wave.state.boardersLanded ?? 0,
+          // A Barracks' militia (GAME-V3.md "Houses"): where each stands, its hp and what it does.
+          militia: (wave.state.militia ?? []).map(item => `${item.id}@${item.x},${item.z}:${item.hp}:${item.state}`).join('|'),
+          event: wave.state.event ? JSON.stringify(wave.state.event) : null});
         if (window.__mp.samples.length > 6000) window.__mp.samples.splice(0, 3000);
       }
       requestAnimationFrame(sample);
@@ -183,9 +202,74 @@ async function compare(a, b, waveId) {
     worstBoarders = Math.max(worstBoarders, Math.abs(size(other.boarders) - size(sample.boarders)));
   }
   const landed = Math.max(0, ...left.map(item => item.landed));
-  return {checked, same, worst, sameBoarders, worstBoarders, withBoarders, landed};
+  // The militia at exactly the same tick (they move every tick, so ±1 would differ).
+  let militiaChecked = 0, sameMilitia = 0, fighting = 0;
+  const exact = new Map(right.map(item => [item.ticks, item]));
+  for (const sample of left.filter(item => item.militia)) {
+    const other = exact.get(sample.ticks);
+    if (!other) continue;
+    militiaChecked++;
+    if (other.militia === sample.militia) sameMilitia++;
+    if (sample.militia.includes(':fighting')) fighting++;
+  }
+  return {checked, same, worst, sameBoarders, worstBoarders, withBoarders, landed, militiaChecked, sameMilitia, fighting};
 }
 
+// The musket fires from the captain's own body (owner, 12 Nov): the owner's character and, on the friend's
+// page, the owner's figure switch to the musket pose; no second captain is drawn where the shot was fired.
+// poseSeen answers where the pose mesh is on screen ({x, y} in px), or null when none showed within 3 s.
+const poseSeen = (page, figure) => page.waitForFunction(figure => { let at = null;
+  const g = window.__island, {innerWidth: w, innerHeight: h} = window;
+  g.scene.traverse(item => { if (at || item.name !== 'captain-pose' || !item.visible || (item.parent?.parent?.name === 'other-captains') !== figure) return;
+    const p = item.getWorldPosition(item.position.clone()).project(g.camera); at = {x: (p.x + 1) / 2 * w, y: (1 - p.y) / 2 * h, frame: item.userData.pose}; });
+  return at; }, figure, {timeout: 3000, polling: 16}).then(handle => handle.jsonValue(), () => null);
+// A close crop around the pose (the screenshots' "zoomed in" view), as wide as a third of the page.
+const zoomClip = (page, at) => { const {width, height} = page.viewportSize(), w = Math.round(width / 3), h = Math.round(w * .7);
+  return {x: Math.max(0, Math.min(width - w, at.x - w / 2)), y: Math.max(0, Math.min(height - h, at.y - h * .65)), width: w, height: h}; };
+async function musketPose(host, ben) {
+  const sizes = [[1280, 720], [375, 812]], seen = {own: [], figure: []};
+  let probe = null;
+  for (const [width, height] of sizes) {
+    await host.page.setViewportSize({width, height}); await ben.page.setViewportSize({width, height});
+    const size = `${width}x${height}`;
+    let own = false, figure = false;
+    for (let attempt = 0; attempt < 4 && !(own && figure); attempt++) {
+      const spot = await host.page.evaluate(() => { const ships = window.__island.waves.island.wave?.state?.ships ?? [];
+        if (!ships.length) return null; const ship = ships.reduce((a, b) => (Math.hypot(a.x, a.z) < Math.hypot(b.x, b.z) ? a : b)), d = Math.hypot(ship.x, ship.z);
+        return {id: ship.id, x: ship.x * 14 / d, z: ship.z * 14 / d, bx: ship.x * 10 / d, bz: ship.z * 10 / d}; });
+      if (!spot) break;
+      await stand(host, spot); await stand(ben, {x: spot.bx, z: spot.bz});
+      // ?islands=fake has no live presence, so the friend's page draws no figure for the owner (a shooter
+      // without a figure shows only the flash, tracer and puff). Stand one in for it where the owner is,
+      // under his member id (his lobby colour), through the presence's own simulate().
+      await ben.page.evaluate(([x, z, id]) => { const g = window.__island, place = g.island.presencePlace('home_islet');
+        g.experience.simulate({status: 'live', place, others: [{id, name: 'Nils', x, y: z, facing: 'front', moving: false, place}], hiddenCount: 0, sampledAt: Date.now()}); },
+        [spot.x, spot.z, host.playerId]);
+      await host.page.waitForTimeout(1500); // the friend's page hears where the owner stands
+      let fired = false;
+      // At the ship by its id: the gun, never the cutlass (with no id a boarder in reach gets the blade).
+      for (let i = 0; i < 20 && !fired; i++) { fired = await host.page.evaluate(id => window.__island.waves.island.shoot(id), spot.id); if (!fired) await host.page.waitForTimeout(300); }
+      if (!fired) continue;
+      const [mine, theirs] = await Promise.all([poseSeen(host.page, false), poseSeen(ben.page, true)]);
+      if (mine && !own) {
+        await host.page.screenshot({path: `${out}/05b-musket-pose-own-zoom-${size}.png`, clip: zoomClip(host.page, mine)});
+        await host.page.screenshot({path: `${out}/05b-musket-pose-own-${size}.png`});
+        seen.own.push(`${size} ${mine.frame}`); own = true;
+      }
+      if (theirs && !figure) {
+        await ben.page.screenshot({path: `${out}/05b-musket-pose-teammate-zoom-${size}.png`, clip: zoomClip(ben.page, theirs)});
+        await ben.page.screenshot({path: `${out}/05b-musket-pose-teammate-${size}.png`});
+        seen.figure.push(`${size} ${theirs.frame}`); figure = true;
+      }
+      if (!theirs) probe = await ben.page.evaluate(() => { const g = window.__island, w = g.waves;
+        return {figures: g.experience.figures(), party: (w.island.state?.party ?? []).map(h => ({id: h.id, colour: h.colour, present: h.present, x: h.x, z: h.z})), mine: w.island.playerId}; });
+      await host.page.waitForTimeout(700); // the pose is over before the next shot
+    }
+  }
+  await ben.page.evaluate(() => window.__island.experience.simulate(null));
+  for (const captain of [host, ben]) await captain.page.setViewportSize({width: 960, height: 600});
+  return {seen, probe};
+}
 const results = [];
 const captainShots = [];
 // Where nobody fights: north of the heart, away from the three sea lanes (east, south, west).
@@ -258,22 +342,33 @@ async function captainHealth(host, ben, wave) {
     await stand(host, {x: benHere.x + 1.2, z: benHere.z});
     await host.page.evaluate(() => document.activeElement?.blur?.()); // E goes to the game, not a button
     await quiet(host);
-    await host.page.keyboard.down('KeyE'); await host.page.waitForTimeout(1100); await settle(host.page);
+    // Wait on the game's own progress, not on wall-clock time: on a busy machine frames stall, so a fixed wait
+    // read 0 (nothing drawn yet) or overshot into a finished revive. Let go as soon as the ring is a third full.
+    await host.page.keyboard.down('KeyE');
+    const share = await host.page.waitForFunction(() => { const s = window.__island.waves.island.revive?.share ?? 0;
+      return s >= .3 ? s : false; }, null, {timeout: 20000, polling: 30}).then(handle => handle.jsonValue()).catch(() => 0);
+    await host.page.keyboard.up('KeyE');
     await host.page.screenshot({path: `${out}/09-revive-in-progress-${label}-${host.playerId}.png`});
-    const share = (await myCaptain(host)).revive?.share ?? 0;
-    await host.page.keyboard.up('KeyE'); await host.page.waitForTimeout(300);
-    assert.ok(share > .3 && share < 1, `the hold fills (${share})`);
+    await host.page.waitForTimeout(300);
+    assert.ok(share >= .3 && share < 1, `the hold fills (${share})`);
   }
   await host.page.setViewportSize({width: 960, height: 600}); await host.page.waitForTimeout(250);
   assert.equal(await coins(), before, 'a hold that lets go pays nothing');
   await stand(host, {x: benHere.x + 1.2, z: benHere.z});
   await host.page.evaluate(() => document.activeElement?.blur?.());
-  await host.page.keyboard.down('KeyE'); await host.page.waitForTimeout(2700); await host.page.keyboard.up('KeyE');
+  // Hold until the revive lands (sim time), however slow the machine is.
+  await host.page.keyboard.down('KeyE');
+  await host.page.waitForFunction(id => window.__mp.revived.some(item => item.captainId === id), benId, {timeout: 30000, polling: 100});
+  await host.page.keyboard.up('KeyE');
   for (const captain of [host, ben]) await captain.page.waitForFunction(id => window.__mp.revived.some(item => item.captainId === id), benId, {timeout: 8000, polling: 100});
   const [hostRevived, benRevived] = await Promise.all([host, ben].map(captain => captain.page.evaluate(id => window.__mp.revived.find(item => item.captainId === id), benId)));
   const paid = before - await coins();
   lines.push(`captain health: the owner helped him up for 🪙 ${paid} at sim time ${hostRevived.t} s (the friend's page ${benRevived.t} s), by ${hostRevived.by === hostId ? 'the owner' : hostRevived.by}`);
   assert.equal(benRevived.t, hostRevived.t, 'both pages saw the revive at the same tick');
+  const maxHp = (await myCaptain(host)).party.find(hero => hero.id === benId).maxHp;
+  assert.equal(hostRevived.hp, Math.round(maxHp * .75), 'a Medic\'s help-up gives back 75% hp');
+  assert.equal(benRevived.hp, hostRevived.hp, 'both pages agree on the hp');
+  lines.push(`captain tree: the Medic helped him up after a 1.6 s hold, hp ${hostRevived.hp} of ${maxHp} on both pages`);
   assert.equal(paid, 20 + 5 * wave.wave, 'the helper paid 20 + 5 × wave');
   assert.equal((await myCaptain(ben)).down, false, 'the friend is back on his feet');
   await shot('10-revived');
@@ -302,6 +397,17 @@ try {
   assert.equal(lobbies.host.start, false, 'the host may start');
   assert.equal(lobbies.ben.start, true, 'a friend waits for the host');
   await shot('01-lobby-two-captains');
+  // 2a Captain tree (docs/GAME-V3.md, Captain tree and roles): the host reaches captain level 3 and picks Medic; the
+  // friend's lobby shows the role icon next to Nils. The faster help-up (1.2 s) is proved in the revive below.
+  await island(host, async i => { i.dev.setCaptain(3); await i.load(); const answer = await i.takeRole('medic'); return answer; });
+  assert.equal(await island(host, i => i.captainLoadout().skills.includes('medic')), true, 'the medic role is in the host\'s loadout');
+  await ben.page.evaluate(() => window.__island.island.openLobby());
+  await ben.page.waitForFunction(() => document.querySelector('.island-card-lobby[open] .island-lobby-player[data-captain-role="medic"] .island-lobby-role'), null, {timeout: 15000, polling: 200});
+  const medicRow = await ben.page.evaluate(() => { const row = document.querySelector('.island-card-lobby[open] .island-lobby-player[data-captain-role="medic"]');
+    return {name: row.querySelector('.island-lobby-name').textContent, icon: row.querySelector('.island-lobby-role').textContent, label: row.querySelector('.island-lobby-role').getAttribute('aria-label')}; });
+  assert.deepEqual(medicRow, {name: 'Nils (you)'.replace(' (you)', ''), icon: '🩹', label: 'Medic'}, 'the friend sees the Medic icon on Nils');
+  results.push(`captain tree: the friend's lobby shows ${medicRow.icon} ${medicRow.label} on ${medicRow.name}`);
+  await shot('01b-lobby-role-icons');
   // 3 Start: every lobby closes and game_started fires on every page.
   await host.page.locator('.island-card-lobby[open] .island-lobby-start').click();
   for (const captain of pages) {
@@ -373,6 +479,71 @@ try {
   await island(ben, async i => { await i.specialise('cannon_1', 'rapid'); });
   const rapid = await seesSpec(host, 'cannon_1', 'rapid', "the friend's cannon skill");
   results.push(`tower skill: the friend's Rapid on the owner's cannon_1 on the owner's island and card after ${rapid.took} ms`);
+  // 2d Research tiers (GAME-V3.md §5.1): the owner picks tier 2 of the cannons (Long guns), the friend picks the tier-3
+  // capstone (Grapeshot) on the owner's island and gives cannon_1 that skill; both pages then hold the same research
+  // and hand the wave the same defenses (checked again in the running wave's sim below).
+  await island(host, async i => { i.dev.setWaveBest(26); i.dev.setCoins(3000); await i.load(); });
+  await island(ben, async i => { i.dev.setCoins(3000); await i.load(); });
+  const researchOn = captain => captain.page.evaluate(() => ({tiers: window.__island.island.campaign.research.tiers.cannon,
+    cannons: window.__island.island.defenses().filter(item => item.kind === 'cannon')}));
+  await island(host, async i => { await i.research({branch: 'cannon', tier: 2, choice: 'long_guns'}); });
+  const tierAt = Date.now();
+  await ben.page.waitForFunction(() => window.__island.island.campaign.research.tiers.cannon.tier2 === 'long_guns', null, {timeout: 5000, polling: 100});
+  results.push(`research tier 2: the owner's Long guns on the friend's island after ${Date.now() - tierAt} ms`);
+  await island(ben, async i => { await i.research({branch: 'cannon', tier: 3, choice: 'grapeshot'}); await i.specialise('cannon_1', 'grapeshot'); });
+  await seesSpec(host, 'cannon_1', 'grapeshot', "the friend's capstone");
+  const [hostResearch, benResearch] = [await researchOn(host), await researchOn(ben)];
+  assert.deepEqual(hostResearch, benResearch, 'both pages hold the same research and hand the wave the same cannons');
+  assert.deepEqual(hostResearch.tiers, {tier: 3, tier2: 'long_guns', tier3: 'grapeshot'}, 'tier 3 of the cannons, chosen on the friend\'s page');
+  assert.ok(hostResearch.cannons.some(item => item.id === 'cannon_1' && item.spec === 'grapeshot' && item.bonus === 'long_guns'), 'cannon_1 fights with Grapeshot and Long guns');
+  results.push('research tier 3: the friend\'s Grapeshot and cannon_1\'s pick are the same research and defenses on both pages');
+  await shot('02e-research-tiers');
+  // 2e House roles (GAME-V3.md "Houses"): below level 2 the card says what comes; at level 2 the owner picks the
+  // Barracks on house_1 and the friend sees it on the map and the card; it fights in wave 3 below.
+  await island(host, async i => { await i.build('house_1', 'house'); });
+  const lowCard = await host.page.evaluate(async () => {
+    const game = window.__island.island; game.pick('house_1'); await new Promise(resolve => setTimeout(resolve, 80));
+    const line = document.querySelector('.island-card[open] .island-skills-line')?.textContent ?? ''; game.ui.close(); return line;
+  });
+  assert.equal(lowCard, 'Level 2: choose Barracks, Tavern or Workshop.', 'a level-1 house says what comes at level 2');
+  await island(host, async i => { await i.upgrade('house_1'); await i.specialise('house_1', 'barracks'); });
+  const barracks = await seesSpec(ben, 'house_1', 'barracks', "the owner's house role");
+  const looks = await ben.page.evaluate(() => { let art = ''; window.__island.scene.traverse(object => { if (object.name === 'island-house:house_1') art = object.userData.art; }); return art; });
+  assert.equal(looks, 'island-house-barracks', "the friend's map shows the Barracks look");
+  results.push(`house role: the owner's Barracks on house_1 on the friend's island, card ("${barracks.title}") and map (${looks}) after ${barracks.took} ms`);
+  await island(ben, async i => { await i.specialise('house_1', 'workshop'); });
+  const workshop = await seesSpec(host, 'house_1', 'workshop', "the friend's house role");
+  results.push(`house role: the friend's Workshop on house_1 on the owner's island and card after ${workshop.took} ms`);
+  await island(host, async i => { await i.specialise('house_1', 'barracks'); });
+  await seesSpec(ben, 'house_1', 'barracks', "the owner's house role again");
+  // 2d Tear down (GAME-V3.md §4.2): wall_2 was built by the friend (🪙 10), raised by the owner (🪙 20) and by the
+  // friend (🪙 40). The owner tears it down from its card: the confirmation shows both refunds, the friend's island
+  // shows the empty spot and his toast within 2 s, and his coins are 🪙 25 more. Then the owner builds it up again.
+  const benCoins = () => ben.page.evaluate(() => window.__island.island.island?.coins ?? null);
+  const benBefore = await benCoins();
+  await host.page.evaluate(async () => {
+    const game = window.__island.island; game.pick('wall_2'); await new Promise(resolve => setTimeout(resolve, 80));
+    document.querySelector('.island-card[open] .island-teardown').click();
+  });
+  await host.page.waitForFunction(() => document.querySelectorAll('.island-card-demolish[open] .island-refund').length === 2, null, {timeout: 5000, polling: 100});
+  const confirmation = await host.page.evaluate(() => ({question: document.querySelector('.island-card-demolish[open] .island-demolish-question').textContent,
+    lines: [...document.querySelectorAll('.island-card-demolish[open] .island-refund')].map(item => item.textContent),
+    focus: document.activeElement?.dataset?.focus ?? ''}));
+  assert.deepEqual(confirmation, {question: 'Tear down this Wall (level 3)?', lines: ['You get back 🪙 10.', 'Ben gets back 🪙 25.'], focus: 'keep'});
+  await sized('02e-teardown-confirm', [host]);
+  await host.page.locator('.island-card-demolish[open] [data-focus="confirm"]').click();
+  const tornAt = Date.now();
+  await ben.page.waitForFunction(() => window.__island.island.visiting?.spots?.find(spot => spot.id === 'wall_2')?.built === false, null, {timeout: 2000, polling: 50});
+  const emptyAfter = Date.now() - tornAt;
+  await ben.page.waitForFunction(() => /^Nils tore down the Wall\. You got back 🪙 25\.$/.test(window.__island.island.ui.toastText), null, {timeout: 3000, polling: 50});
+  const benToast = await ben.page.evaluate(() => window.__island.island.ui.toastText);
+  await ben.page.waitForFunction(before => window.__island.island.island?.coins === before + 25, benBefore, {timeout: 3000, polling: 100});
+  assert.deepEqual(await mapOf(ben, 'wall_2'), {level: 0, pips: 0}, "the friend's map shows no wall on wall_2");
+  assert.deepEqual(await mapOf(host, 'wall_2'), {level: 0, pips: 0}, "the owner's map shows no wall on wall_2");
+  results.push(`tear down: the owner's confirmation "${confirmation.question}" ${confirmation.lines.join(' ')}; the friend's island showed the empty spot after ${emptyAfter} ms, his toast "${benToast}", his coins ${benBefore} → ${benBefore + 25}`);
+  await sized('02f-teardown-after', [host, ben]);
+  await island(host, async i => { await i.build('wall_2', 'wall'); await i.upgrade('wall_2'); await i.upgrade('wall_2'); });
+  await shows(ben, 'wall_2', 3, 'the wall built up again');
   // 3 Wave 3 (more ships, so both muskets find a target) with one more cannon and the inner wall ring
   // (TOWER-DEFENSE.md §12: two cannons let boarders come ashore, the ring holds them); the owner rings.
   await island(host, async i => { i.dev.setWaveBest(2); i.dev.setCoins(400); await i.load(); await i.build('cannon_2', 'cannon'); });
@@ -381,6 +552,12 @@ try {
   const first = await until(host, state => state?.ships > 0, 'the first ships', 60000);
   const benWave = await until(ben, state => state?.waveId === first.waveId && state.ships > 0, 'the friend in the same wave', 30000);
   results.push(`wave ${first.wave} (${first.waveId}) on both pages: ${first.ships} / ${benWave.ships} ships`);
+  // The tiers act the same in both sims: the same towers with the same skill, bonus and reach.
+  const simTowers = captain => captain.page.evaluate(() => window.__island.waves.island.wave.state.towers.map(item => ({id: item.id, spec: item.spec ?? null, bonus: item.bonus ?? null, range: item.range})));
+  const [hostTowers, benTowers] = [await simTowers(host), await simTowers(ben)];
+  assert.deepEqual(hostTowers, benTowers, 'both sims fight with the same towers');
+  assert.ok(hostTowers.some(item => item.id === 'cannon_1' && item.spec === 'grapeshot' && item.bonus === 'long_guns'), 'the wave\'s cannon_1 has Grapeshot and Long guns');
+  results.push(`research in the wave: ${hostTowers.length} towers alike in both sims, cannon_1 ${JSON.stringify(hostTowers.find(item => item.id === 'cannon_1'))}`);
   // 4 Both captains fire; each shot reaches the other page.
   const hostShot = await musket(host), benShot = await musket(ben);
   assert.ok(hostShot && benShot, 'both captains could fire');
@@ -429,6 +606,19 @@ try {
   assert.ok(sync1.checked >= 5 && sync1.same / sync1.checked >= .9 && sync1.worst <= 1, 'the two pages ran the same wave');
   assert.ok(sync1.landed > 0 && sync1.withBoarders > 0, 'boarders came ashore in the synced wave');
   assert.ok(sync1.sameBoarders / sync1.checked >= .9 && sync1.worstBoarders <= 1, 'the two pages saw the same boarders');
+  results.push(`wave 1 militia owner/friend: ${sync1.sameMilitia}/${sync1.militiaChecked} samples at the same tick identical (place, hp, state), ${sync1.fighting} fighting`);
+  assert.ok(sync1.militiaChecked >= 5 && sync1.sameMilitia === sync1.militiaChecked, "the Barracks' militia did the same on both pages");
+  // Whether a militia meets a boarder depends on where this wave's boarders land; the fight itself is covered by
+  // tests/pirates/houses.test.js. Here only the sync is required: both pages show the militia the same.
+  if (!sync1.fighting) results.push("wave 1 militia: no boarder came near the Barracks in this wave's samples");
+  // v3 waves (GAME-V3.md §4.2): wave 3 always brings an event (fog bank or storm); both pages ran the same one,
+  // with the same event state, and the samples above (the same ships at the same tick) are of that event wave.
+  const eventsSeen = await Promise.all([host, ben].map(captain => captain.page.evaluate(wave => window.__mp.events.filter(item => item.wave === wave), first.wave)));
+  const eventState = await Promise.all([host, ben].map(captain => captain.page.evaluate(id => window.__mp.samples.find(item => item.waveId === id && item.event)?.event ?? null, first.waveId)));
+  results.push(`wave ${first.wave} event: owner ${JSON.stringify(eventsSeen[0])}, friend ${JSON.stringify(eventsSeen[1])}`);
+  assert.equal(eventsSeen[0].length, 1, 'the event wave announced its event once');
+  assert.deepEqual(eventsSeen[1], eventsSeen[0], 'both pages ran the same event');
+  assert.ok(eventState[0] && eventState[0] === eventState[1], 'both pages hold the same event state');
   const second = await until(host, state => state && state.waveId !== first.waveId && !state.pause, 'wave 2 on the owner\'s page', 30000);
   await until(ben, state => state?.waveId === second.waveId, 'the friend in the owner\'s wave 2 (both pressed Next wave)', 30000);
   results.push(`both pressed Next wave: one wave ${second.wave} (${second.waveId}) on both pages`);
@@ -449,6 +639,14 @@ try {
   assert.deepEqual([...members].sort(), ['Ana', 'Ben', 'Max', 'Nils'], 'all four are members of the game');
   await host.page.waitForTimeout(3000);
   await shot('05-four-captains-mid-wave');
+  {
+    const {seen, probe} = await musketPose(host, ben);
+    results.push(`musket pose: the owner's own body posed at ${seen.own.join(', ') || 'no size'}, his figure on the friend's page at ${seen.figure.join(', ') || 'no size'}`);
+    if (probe) results.push(`musket pose probe on the friend's page: ${JSON.stringify(probe)}`);
+    assert.equal(seen.own.length, 2, "the owner's own character takes the musket pose when he fires (both sizes)");
+    assert.ok([...seen.own, ...seen.figure].every(item => /musket-[12](?:-(?:front|back))?$/.test(item)), `the poses are the musket's: ${[...seen.own, ...seen.figure]}`);
+    assert.ok(seen.figure.length >= 1, "the owner's figure on the friend's page takes the musket pose");
+  }
   for (const captain of [ben, ana, max]) {
     const sync = await compare(host, captain, second.waveId);
     results.push(`wave 2 sync owner/${captain.name}: ${sync.same}/${sync.checked} same ships, ${sync.sameBoarders}/${sync.checked} same boarders, worst count gap ${sync.worst} / ${sync.worstBoarders}`);
@@ -456,6 +654,64 @@ try {
   }
   for (const captain of pages) await until(captain, state => !state || state.pause || state.done, 'the end of wave 2', 240000);
   await shot('06-wave2-end');
+  // 7 v3 waves (GAME-V3.md §4.3): the wave-5 boss finisher on four pages. Every captain plays the haul through real
+  // key events; every page must hear every captain's samples and decide the same scores and the same outcome.
+  await island(host, async i => { i.dev.setWaveBest(4); i.dev.setCoins(900); await i.load(); });
+  for (const captain of pages) await captain.page.waitForFunction(() => !window.__island.waves.island.wave || window.__island.waves.island.wave.done, null, {timeout: 60000});
+  await island(host, async i => i.ringBell());
+  const boss = await until(host, state => state?.wave === 5 && state.ships > 0, 'the boss wave 5', 60000);
+  // Every friend joins the host's boss wave on their own (the room's wave_start), never by hand: Ben, who pressed
+  // "Next wave" together with the host in step 5, too (T22: that race once left his join marked in progress).
+  for (const captain of pages) await until(captain, state => state?.waveId === boss.waveId, `${captain.name} joining the boss wave on their own`, 30000);
+  results.push(`boss wave ${boss.wave} (${boss.waveId}): all ${pages.length} captains joined on their own`);
+  for (const captain of pages) {
+    await stand(captain, SAFE);
+    await captain.page.evaluate(async () => {
+      const rules = await import('/src/pirates/finisher/rules.js');
+      let held = false;
+      const step = () => {
+        requestAnimationFrame(step);
+        const c = window.__island.waves.island, f = c.state?.finisher, scene = c.wave?.finisher?.scene;
+        if (!f || !scene || f.phase !== 'task' || f.tasks[f.task].task !== 'haul') return;
+        const want = scene.needle < rules.zoneAt(f.sample - f.tasks[f.task].from + 2, f.salt);
+        if (want !== held) { held = want; window.dispatchEvent(new KeyboardEvent(want ? 'keydown' : 'keyup', {code: 'Space', bubbles: true})); }
+      };
+      step();
+    });
+  }
+  const finisherOf = captain => captain.page.evaluate(() => { const f = window.__island.waves.island.state?.finisher;
+    return f ? {kind: f.kind, phase: f.phase, players: f.players, heard: f.heard, outcome: f.outcome, scores: f.tasks.map(t => t.players)} : null; });
+  const ids = await Promise.all(pages.map(captain => captain.page.evaluate(() => window.__island.waves.island.playerId)));
+  // T28: three captains skip; the fourth practices privately while every scored clock waits.
+  for (const captain of pages) await captain.page.waitForFunction(() => window.__island.waves.island.state?.finisher?.phase === 'prepare', null, {timeout: 200000, polling: 100});
+  for (const captain of pages.slice(1)) await captain.page.getByRole('button', {name: 'Skip practice', exact: true}).click();
+  await pages[0].page.getByRole('button', {name: 'Practice', exact: true}).click();
+  await pages[0].page.waitForTimeout(1000);
+  for (const captain of pages) {
+    const state = await captain.page.evaluate(() => window.__island.waves.island.state.finisher);
+    assert.equal(state.phase, 'prepare', 'the crew waits for the practicing captain');
+    assert.equal(state.sample, 0, 'practice does not consume scored time');
+    assert.equal(state.tasks[0].score, 0, 'practice does not enter the shared score');
+  }
+  results.push('T28: three captains skipped; one practiced; all four scored clocks and scores stayed zero');
+  await pages[0].page.getByRole('button', {name: 'Finish practice', exact: true}).click();
+  for (const captain of pages) await captain.page.waitForFunction(() => window.__island.waves.island.state?.finisher?.phase === 'task', null, {timeout: 200000, polling: 200});
+  await host.page.waitForTimeout(4000);
+  await shot('07-finisher-haul-mid-task');
+  const midway = await Promise.all(pages.map(finisherOf));
+  results.push(`finisher: ${midway[0].kind} for ${midway[0].players.join(', ')}; heard so far ${midway.map(item => item.heard.length).join(' / ')}`);
+  for (const item of midway) assert.deepEqual([...item.players].sort(), [...ids].sort(), 'every captain in the wave is in the finisher');
+  for (const captain of pages) await captain.page.waitForFunction(() => window.__mp.finishers.length > 0, null, {timeout: 60000, polling: 100});
+  const outcomes = await Promise.all(pages.map(captain => captain.page.evaluate(() => window.__mp.finishers[0])));
+  results.push(`finisher outcome on the four pages: ${outcomes.map(item => `${item.type} ${item.scores}/${item.goals}`).join(' · ')}`);
+  for (const item of outcomes.slice(1)) assert.deepEqual(item, outcomes[0], 'every page decided the same finisher');
+  const heard = await Promise.all(pages.map(finisherOf));
+  for (const [index, item] of heard.entries()) {
+    if (!item) continue; // the outro may be over on a fast page
+    assert.deepEqual([...item.heard].sort(), [...ids].sort(), `${pages[index].name}'s page heard every captain's samples`);
+    for (const id of ids) assert.ok((item.scores[0][id] ?? 0) > 0, `${pages[index].name}'s page counts ${id}'s input`);
+  }
+  await shot('07-finisher-outcome');
   await Promise.all(captainShots);
   const audio = env.errors.filter(text => /AudioContext|audio device/i.test(text));
   const errors = env.errors.filter(text => !/Failed to load resource/.test(text) && !audio.includes(text));

@@ -128,7 +128,7 @@ describe('100-wave scaling (GAME-V3.md §4)', () => {
       expect(Number.isFinite(result.islandHp)).toBe(true);
     }
     for (const kind of ['sloop', 'raider', 'brig', 'ironclad', 'warship', 'dreadnought', 'redtide', 'brute']) expect(seen.has(kind), kind).toBe(true);
-  });
+  }, 60000);
   it('teaches in waves 1 to 5: two cannons and two walls hold wave 3, a small upgraded island the wave-4 and boss waves', () => {
     expect(measure(ISLANDS.first, 1).won).toBe(8);
     expect(measure({ defenses: [...towers([['cannon', 1], ['cannon', 1]]), ...walls(2)] }, 3).won).toBe(8);

@@ -22,7 +22,7 @@ Each member fills in their own line (by Fri 20 Nov).
 
 | Member | Student number |
 |---|---|
-| `<name>` | `<student number>` |
+| Nils Lenke | 81651 |
 | `<name>` | `<student number>` |
 | `<name>` | `<student number>` |
 | `<name>` | `<student number>` |

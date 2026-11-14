@@ -30,7 +30,16 @@ from server.tests.island_sql.test_islands_and_waves_sql import (  # noqa: E402
 
 CATALOGUE = load_island()
 TREE = json.dumps(
-    [{"skill": s.skill, "needs": s.needs, "cost": s.cost} for s in CATALOGUE.skills.tree]
+    [
+        {
+            "skill": s.skill,
+            "needs": list(s.needs),
+            "excludes": s.excludes,
+            "role": s.role,
+            "cost": s.cost,
+        }
+        for s in CATALOGUE.skills.tree
+    ]
 )
 
 

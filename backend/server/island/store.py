@@ -20,6 +20,8 @@ are in supabase/migrations/20261110010000_islands_and_waves.sql:
                                                (20261112030000_captain_skills.sql)
     wave_revive(...)                           a teammate helps a fallen captain up and pays
                                                (20261112050000_captain_revive.sql)
+    island_demolish_quote, island_demolish     tear a building down between waves, half of what
+                                               each payer paid back (20261112080000_demolish.sql)
 
 A build goes through islet_build() of the home islet (islet_store.py) with a timber price of 0.
 
@@ -37,7 +39,7 @@ from pydantic import AwareDatetime, BaseModel, StrictBool, StrictInt, StrictStr,
 from server.errors import ApiError
 from server.game.islet_store import player_not_set_up
 from server.island.codes import CODE_FORMAT, new_code
-from server.island.rules import Built
+from server.island.rules import Built, ResearchTier
 from server.supabase_admin import SupabaseAdmin, SupabaseRejected
 
 logger = logging.getLogger(__name__)
@@ -48,7 +50,7 @@ CODE_TRIES = 5
 MAX_BUILDING_ROWS = 50
 PROGRESS_COLUMNS = (
     "wave_best,next_wave,crew_gunner,crew_carpenter,crew_lookout,captain_level,won_wave_best,"
-    "captain_skills,weapons_owned,weapon_equipped,wreck_paid"
+    "captain_skills,weapons_owned,weapon_equipped,wreck_paid,captain_role"
 )
 # The Tech hub's research of an island (20261112060000_tech_hub.sql): at most one row per branch.
 MAX_RESEARCH_ROWS = 10
@@ -79,6 +81,10 @@ class BuildingRow(BaseModel):
 
 class ResearchRow(BaseModel):
     branch: StrictStr
+    # 20261112100000_research_tiers.sql: the tier reached and the choices of tiers 2 and 3.
+    tier: StrictInt = 1
+    choice_2: StrictStr | None = None
+    choice_3: StrictStr | None = None
 
 
 class PointBuildingRow(BaseModel):
@@ -99,6 +105,7 @@ class ProgressRow(BaseModel):
     weapons_owned: list[StrictStr]
     weapon_equipped: StrictStr
     wreck_paid: StrictInt = 0
+    captain_role: StrictStr | None = None
 
 
 class LearnedRow(BaseModel):
@@ -107,6 +114,14 @@ class LearnedRow(BaseModel):
     status: Literal["done"]
     skills: list[StrictStr]
     points: StrictInt
+    repeat: StrictBool
+
+
+class RoleRow(BaseModel):
+    """The answer of island_pick_role."""
+
+    status: Literal["done"]
+    role: StrictStr
     repeat: StrictBool
 
 
@@ -196,6 +211,7 @@ class Progress:
     weapons_owned: tuple[str, ...] = ("musket",)
     weapon_equipped: str = "musket"
     wreck_paid: int = 0  # the coins paid into this island's wreck so far (GAME-V3 section 4)
+    role: str | None = None  # the captain's role: medic, engineer or gunner (captain tree)
 
     @property
     def unlock_wave(self) -> int:
@@ -299,16 +315,21 @@ async def read_built_spots(admin: SupabaseAdmin, player_id: str) -> dict[str, Bu
     return built
 
 
-async def read_research(admin: SupabaseAdmin, owner: str) -> tuple[str, ...]:
-    """The research branches done on the island of `owner` (island_research), in branch order."""
+async def read_research(admin: SupabaseAdmin, owner: str) -> dict[str, ResearchTier]:
+    """The research done on the island of `owner` (island_research): branch -> its tier and the
+    choices of tiers 2 and 3 (docs/GAME-V3.md section 5.1), in branch order."""
     query = {
-        "select": "branch",
+        "select": "branch,tier,choice_2,choice_3",
         "island_owner": f"eq.{owner}",
         "order": "branch.asc",
         "limit": str(MAX_RESEARCH_ROWS),
     }
     rows = await admin.select_rows("island_research", query)
-    return tuple(read_model(ResearchRow, row).branch for row in rows)
+    done = {}
+    for row in rows:
+        checked = read_model(ResearchRow, row)
+        done[checked.branch] = ResearchTier(checked.tier, checked.choice_2, checked.choice_3)
+    return done
 
 
 async def read_progress(admin: SupabaseAdmin, player_id: str) -> Progress:
@@ -329,6 +350,7 @@ async def read_progress(admin: SupabaseAdmin, player_id: str) -> Progress:
         tuple(row.weapons_owned),
         row.weapon_equipped,
         row.wreck_paid,
+        row.captain_role,
     )
 
 
@@ -366,6 +388,14 @@ async def learn_skill(admin: SupabaseAdmin, arguments: dict[str, Any]) -> Learne
     if isinstance(reply, dict) and reply.get("status") == "refused":
         return Refusal(read_model(PaidRefusedRow, reply).reason)
     return read_model(LearnedRow, reply)
+
+
+async def pick_role(admin: SupabaseAdmin, arguments: dict[str, Any]) -> RoleRow | Refusal:
+    """Run island_pick_role. A refusal changed nothing."""
+    reply = await admin.call_function("island_pick_role", arguments)
+    if isinstance(reply, dict) and reply.get("status") == "refused":
+        return Refusal(read_model(PaidRefusedRow, reply).reason)
+    return read_model(RoleRow, reply)
 
 
 async def equip_weapon(admin: SupabaseAdmin, player_id: str, weapon: str) -> EquippedRow | Refusal:
@@ -428,11 +458,12 @@ class WavePlaceRow(BaseModel):
     place: Literal["island", "pirate_point"]
     island_owner: StrictStr | None = None
     wave: StrictInt | None = None
+    seed: StrictInt | None = None  # v3 waves: the wave's event follows from it (wave_events.py)
 
 
 async def read_wave_place(admin: SupabaseAdmin, wave_id: str) -> WavePlaceRow | None:
-    """Where a wave runs (an island and its owner, or Pirate Point), or None for no such wave."""
-    query = {"select": "place,island_owner,wave", "id": f"eq.{wave_id}", "limit": "1"}
+    """Where a wave runs (an island and its owner, or Pirate Point), its number and seed."""
+    query = {"select": "place,island_owner,wave,seed", "id": f"eq.{wave_id}", "limit": "1"}
     rows = await admin.select_rows("wave_runs", query)
     return read_model(WavePlaceRow, rows[0]) if rows else None
 
@@ -471,3 +502,52 @@ async def finish_wave(admin: SupabaseAdmin, arguments: dict[str, Any]) -> Finish
     """Run wave_finish. Errors (all ApiErrors): 502 database_error, 503 the outcome is unknown."""
     reply = await admin.call_function("wave_finish", arguments)
     return refusal_or_none(reply) or read_model(FinishedRow, reply)
+
+
+# --- tearing a building down (20261112080000_demolish.sql) ---
+
+
+class RefundRow(BaseModel):
+    playerId: StrictStr
+    paid: StrictInt
+    coins: StrictInt
+
+
+class DemolishRow(BaseModel):
+    """The answer of island_demolish (status done) or island_demolish_quote (status quote)."""
+
+    status: Literal["done", "quote"]
+    plot: StrictStr
+    kind: StrictStr
+    level: StrictInt
+    refunds: list[RefundRow]
+    repeat: StrictBool = False
+
+
+@dataclass(frozen=True)
+class Refund:
+    player_id: str
+    coins: int
+
+
+@dataclass(frozen=True)
+class Demolished:
+    """A tear-down that went through (or was a repeat), or its quote."""
+
+    plot: str
+    kind: str
+    level: int
+    refunds: tuple[Refund, ...]
+    repeat: bool
+
+
+async def run_demolish(
+    admin: SupabaseAdmin, name: str, arguments: dict[str, Any]
+) -> Demolished | Refusal:
+    """Run island_demolish or island_demolish_quote. A refusal changed nothing."""
+    reply = await admin.call_function(name, arguments)
+    if isinstance(reply, dict) and reply.get("status") == "refused":
+        return Refusal(read_model(PaidRefusedRow, reply).reason)
+    row = read_model(DemolishRow, reply)
+    refunds = tuple(Refund(item.playerId, item.coins) for item in row.refunds)
+    return Demolished(row.plot, row.kind, row.level, refunds, row.repeat)

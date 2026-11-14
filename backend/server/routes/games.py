@@ -134,6 +134,7 @@ class MemberOut(BaseModel):
     name: str
     role: str
     you: bool
+    captainRole: str | None = None
 
 
 class LobbyResponse(BaseModel):
@@ -274,7 +275,9 @@ async def get_lobby(
     return LobbyResponse(
         game=game_out(lobby.game),
         members=[
-            MemberOut(id=m.id, name=m.name, role=m.role, you=m.id == player.id)
+            MemberOut(
+                id=m.id, name=m.name, role=m.role, you=m.id == player.id, captainRole=m.captain_role
+            )
             for m in lobby.members
         ],
     )

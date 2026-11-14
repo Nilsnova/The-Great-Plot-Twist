@@ -163,6 +163,26 @@ describe('the island room for every defender', () => {
     expect(h.island.joinRunningWave).toHaveBeenCalledTimes(2);
     h.waves.dispose();
   });
+  // check-multiplayer step 7 (T22): both captains press "Next wave"; the host's wave_start finds the friend's bell
+  // busy with his own ring, which then joins the same wave. The retry found that wave on screen and returned with
+  // the join still marked in progress, so the friend never joined the host's next wave on his own.
+  it('joins the next wave after a retry found its wave already joined by our own "Next wave"', async () => {
+    const h = wiringHarness();
+    h.state.own = { code: 'ISLE-K7Q2M', spots: [] }; h.tick();
+    await micro();
+    h.island.joinRunningWave.mockClear();
+    h.island.joinRunningWave.mockResolvedValueOnce({ ok: false, code: 'busy' });
+    h.rooms[0].hear('wave_start', { waveId: 'w-2', seed: 1, startsAt: '2026-11-11T10:00:10Z' });
+    await micro();
+    h.emit({ type: 'wave_started_server', ...info('w-2', 2) }); // our own ring joined w-2 meanwhile
+    expect(h.waves.island.wave?.info.waveId).toBe('w-2');
+    await h.flush(); // the retry: w-2 is on screen already, nothing to ask
+    expect(h.island.joinRunningWave).toHaveBeenCalledTimes(1);
+    h.rooms[0].hear('wave_start', { waveId: 'w-5', seed: 1, startsAt: '2026-11-11T10:00:10Z' }); // the host's next wave
+    await micro();
+    expect(h.island.joinRunningWave).toHaveBeenCalledTimes(2);
+    h.waves.dispose();
+  });
   it('asks the server once while a join is in progress, however many wave_start arrive', async () => {
     const h = wiringHarness();
     h.state.own = { code: 'ISLE-K7Q2M', spots: [] }; h.tick();

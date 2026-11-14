@@ -4,8 +4,8 @@
 import {readFileSync} from 'node:fs';
 import {describe, expect, it} from 'vitest';
 import copy from '../../src/campaign/campaign.json';
-import {STEPS, campaignOf, isOpen, openedBetween, opensText, spotWave, waveOf} from '../../src/campaign/index.js';
-import {BRANCHES, SPECS, readSpec} from '../../src/campaign/tech.js';
+import {STEPS, campaignOf, isOpen, openedBetween, opensText, spotWave, tierWave, waveOf} from '../../src/campaign/index.js';
+import {BONUSES, BRANCHES, SPECS, isCapstone, readBonus, readSpec, readTier} from '../../src/campaign/tech.js';
 import {UNLOCK_STEPS, unlockWave} from '../../src/island/td-rules.js';
 
 const read = path => JSON.parse(readFileSync(new URL(path, import.meta.url), 'utf8'));
@@ -56,19 +56,55 @@ describe('the campaign table', () => {
 });
 
 describe('the Tech hub', () => {
-  it('has the research of islands.json: branches, prices and skills in order', () => {
-    const sent = islands.research.branches.map(item => ({branch: item.branch, name: item.name, price: item.coins,
-      specs: item.specs.map(spec => spec.spec)}));
-    expect(BRANCHES.map(item => ({...item, specs: [...item.specs]}))).toEqual(sent);
-    for (const item of islands.research.branches) for (const spec of item.specs) expect(SPECS[spec.spec]).toMatchObject({branch: item.branch, name: spec.name});
+  it('has the research of islands.json: branches, prices per tier, skills and the options of tiers 2 and 3 in order', () => {
+    const sent = islands.research.branches.map(item => ({branch: item.branch, name: item.name, price: item.coins[0], prices: item.coins,
+      specs: item.specs.map(spec => spec.spec), tier2: item.tier2.map(option => option.id), tier3: item.tier3.map(option => option.spec)}));
+    expect(BRANCHES.map(item => ({...item, prices: [...item.prices], specs: [...item.specs], tier2: [...item.tier2], tier3: [...item.tier3]}))).toEqual(sent);
+    for (const item of islands.research.branches) {
+      for (const spec of [...item.specs, ...item.tier3]) expect(SPECS[spec.spec]).toMatchObject({branch: item.branch, name: spec.name});
+      for (const option of item.tier2) expect(BONUSES[option.id]).toMatchObject({branch: item.branch, name: option.name});
+    }
   });
-  it('lets a building carry only a skill of its own kind', () => {
+  it('prices tier 2 at about twice and tier 3 at about 3.5 times tier 1', () => {
+    for (const {prices: [one, two, three]} of BRANCHES) {
+      expect(two / one).toBeCloseTo(2, 1);
+      expect(three / one).toBeCloseTo(3.5, 1);
+    }
+  });
+  it('opens tier 1 after wave 8, tier 2 after 15 and tier 3 after 25, the same waves as the server table', () => {
+    expect([1, 2, 3].map(tierWave)).toEqual([8, 15, 25]);
+    for (const [id, wave] of [['tech_hub', 8], ['research_2', 15], ['research_3', 25]]) {
+      expect(server.steps.find(step => step.opens.includes(id))?.wave).toBe(wave);
+    }
+  });
+  it('lets a building carry only a skill of its own kind, and a tier-2 bonus only of its kind', () => {
     expect(readSpec('cannon', 'rapid')).toBe('rapid');
+    expect(readSpec('cannon', 'broadside')).toBe('broadside');
+    expect(isCapstone('broadside')).toBe(true);
+    expect(isCapstone('rapid')).toBe(false);
     expect(readSpec('wall', 'rapid')).toBe(null);
     expect(readSpec('cannon', 'laser')).toBe(null);
+    expect(readBonus('cannon', 'rapid_2')).toBe('rapid_2');
+    expect(readBonus('mortar', 'rapid_2')).toBe(null);
   });
-  it('names the same skills as the check rule of the migration', () => {
-    const sql = readFileSync(new URL('../../../supabase/migrations/20261112060000_tech_hub.sql', import.meta.url), 'utf8');
-    for (const [id, spec] of Object.entries(SPECS)) expect(sql).toContain(`('${spec.branch}', '${id}')`);
+  it('reads the tier of a branch and keeps only the choices of its own kind and the tiers reached', () => {
+    expect(readTier('cannon', null)).toEqual({tier: 0, tier2: null, tier3: null});
+    expect(readTier('cannon', {tier: 3, tier2: 'long_guns', tier3: 'grapeshot'})).toEqual({tier: 3, tier2: 'long_guns', tier3: 'grapeshot'});
+    expect(readTier('cannon', {tier: 2, tier2: 'heavy_shells', tier3: 'grapeshot'})).toEqual({tier: 2, tier2: null, tier3: null});
+    expect(readTier('wall', {tier: 9})).toMatchObject({tier: 3});
+    const sent = campaignOf({waveBest: 30, campaign: {wave: 30, research: {done: ['cannon', 'wall'], tiers: {cannon: {tier: 2, tier2: 'rapid_2', tier3: null}}}}});
+    expect(sent.research.tiers.cannon).toEqual({tier: 2, tier2: 'rapid_2', tier3: null});
+    expect(sent.research.tiers.wall).toEqual({tier: 1, tier2: null, tier3: null}); // an older server: done is tier 1
+    expect(sent.research.tiers.mortar.tier).toBe(0);
+  });
+  it('names the same skills as the check rules of the migrations, and the options of the research tiers', () => {
+    const hub = readFileSync(new URL('../../../supabase/migrations/20261112060000_tech_hub.sql', import.meta.url), 'utf8');
+    const tiers = readFileSync(new URL('../../../supabase/migrations/20261112100000_research_tiers.sql', import.meta.url), 'utf8');
+    for (const [id, spec] of Object.entries(SPECS)) expect(spec.capstone ? tiers : hub).toContain(`('${spec.branch}', '${id}')`);
+    for (const [id, spec] of Object.entries(SPECS)) expect(tiers).toContain(`('${spec.branch}', '${id}')`); // the rule again, in full
+    for (const item of BRANCHES) {
+      for (const id of item.tier2) expect(tiers).toContain(`('${item.branch}', 2, '${id}')`);
+      for (const id of item.tier3) expect(tiers).toContain(`('${item.branch}', 3, '${id}')`);
+    }
   });
 });

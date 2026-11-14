@@ -1,0 +1,69 @@
+
+> the-great-plot-twist@0.1.0 test:mp
+> node scripts/check-multiplayer.js /private/tmp/t28-multiplayer-shots
+
+Nils is on the island (me)
+Ben is on the island (ben)
+screenshots 01-lobby-two-captains
+screenshots 01b-lobby-role-icons
+screenshots 01-two-captains
+screenshots 02-coop-wall
+screenshots 02b-owner-upgrade
+screenshots 02c-friend-upgrade
+screenshots 02d-tower-skill
+screenshots 02e-research-tiers
+screenshots 03-wave1-muskets
+screenshots 10-revived
+screenshots 04-break-upgrade
+screenshots 04-paused-break
+Ana is on the island (ana)
+Max is on the island (max)
+screenshots 05-four-captains-mid-wave
+screenshots 06-wave2-end
+screenshots 07-finisher-haul-mid-task
+screenshots 07-finisher-outcome
+
+RESULTS
+  lobbies: host Nils (you):online, Ben:online (Start on); friend Nils:online, Ben (you):online (Start off)
+  captain tree: the friend's lobby shows 🩹 Medic on Nils
+  Start: both lobbies closed, game_started true (first) on both pages
+  co-op wall on the owner's island after 507 ms
+  owner upgrade to level 2 on the friend's map and card after 189 ms
+  friend upgrade to level 3 on the owner's map and open card after 590 ms
+  tower skill: the owner's Heavy shot on cannon_1 on the friend's island and card after 497 ms ("Skill: Heavy shot")
+  tower skill: the friend's Rapid on the owner's cannon_1 on the owner's island and card after 599 ms
+  research tier 2: the owner's Long guns on the friend's island after 509 ms
+  research tier 3: the friend's Grapeshot and cannon_1's pick are the same research and defenses on both pages
+  house role: the owner's Barracks on house_1 on the friend's island, card ("Role: Barracks") and map (island-house-barracks) after 394 ms
+  house role: the friend's Workshop on house_1 on the owner's island and card after 188 ms
+  tear down: the owner's confirmation "Tear down this Wall (level 3)?" You get back 🪙 10. Ben gets back 🪙 25.; the friend's island showed the empty spot after 564 ms, his toast "Nils tore down the Wall. You got back 🪙 25.", his coins 2370 → 2395
+  wave 3 (fake-wave-1) on both pages: 1 / 1 ships
+  research in the wave: 2 towers alike in both sims, cannon_1 {"id":"cannon_1","spec":"grapeshot","bonus":"long_guns","range":32.2}
+  musket shots through the room: 2 reached the owner, 2 reached the friend
+  musket shots: owner's sim 2 from 2 captains, friend's sim 2 from 2 (first by p-v11uy8q6)
+  captain health: the friend fell at sim time 32.15 s on his page, 32.15 s on the owner's
+  captain health: the owner helped him up for 🪙 35 at sim time 37.9 s (the friend's page 37.9 s), by the owner
+  captain tree: the Medic helped him up after a 1.6 s hold, hp 75 of 100 on both pages
+  upgrade in the break: cannon_2 is level 2 / 2 in the wave's drawing on both pages
+  Pause: the friend's break said "Paused by Nils" and stayed open past its 8 seconds
+  wave 1 loot: Nils 35, Ben 35
+  wave 1 sync owner/friend: 300/300 samples with the same ships at the same tick, worst count gap 0
+  wave 1 boarders owner/friend: 300/300 samples with the same boarders ashore (34 with boarders, 5 landed), worst count gap 0
+  wave 1 militia owner/friend: 2999/2999 samples at the same tick identical (place, hp, state), 0 fighting
+  wave 1 militia: no boarder came near the Barracks in this wave's samples
+  wave 3 event: owner [{"wave":3,"event":"storm"}], friend [{"wave":3,"event":"storm"}]
+  both pressed Next wave: one wave 4 (fake-wave-2) on both pages
+  Ana joined wave 4 mid-wave at tick 84
+  Max joined wave 4 mid-wave at tick 84
+  late friends: their lobbies closed by themselves (the room said the game is on)
+  members: Nils, Ben, Ana, Max
+  musket pose: the owner's own body posed at 1280x720 captain-1-musket-2, 375x812 captain-1-musket-2, his figure on the friend's page at 1280x720 captain-1-musket-2, 375x812 captain-1-musket-2
+  wave 2 sync owner/Ben: 58/58 same ships, 58/58 same boarders, worst count gap 0 / 0
+  wave 2 sync owner/Ana: 50/50 same ships, 50/50 same boarders, worst count gap 0 / 0
+  wave 2 sync owner/Max: 50/50 same ships, 50/50 same boarders, worst count gap 0 / 0
+  boss wave 5 (fake-wave-3): all 4 captains joined on their own
+  T28: three captains skipped; one practiced; all four scored clocks and scores stayed zero
+  finisher: haul for p-2jrbl5xk, p-3t7ccogg, p-5wb8gtxh, p-v11uy8q6; heard so far 4 / 4 / 4 / 4
+  finisher outcome on the four pages: finisher_won 384/224 · finisher_won 384/224 · finisher_won 384/224 · finisher_won 384/224
+
+check-multiplayer: OK (4 pages), screenshots in /private/tmp/t28-multiplayer-shots

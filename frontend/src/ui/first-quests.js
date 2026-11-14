@@ -15,7 +15,7 @@ export const IDLE_HINT_MS = 20000;
 // with island goals while "one island" is on (docs/GAME-V3.md §2, src/island/one-island.js), at the same
 // places in the list, so a saved count of done goals means the same thing in both lists.
 export const TRAVEL_QUESTS = Object.freeze([
-  {id: 'cannon', label: 'Build a cannon', hint: 'Walk to a glowing spot on your island and press E (or tap it) to build a cannon for 30 🪙.',
+  {id: 'cannon', label: 'Build a cannon', hint: 'Walk to a glowing spot on your island and press E (or the Use button) to build a cannon for 30 🪙.',
     event: QUEST_EVENTS.ISLAND_BUILT, matches: event => event.kind === 'cannon'},
   {id: 'wave', label: 'Ring the bell and win a wave', hint: 'Ring the bell by your cabin. Your cannon fires on its own; stay close to help.',
     event: QUEST_EVENTS.WAVE_FINISHED, matches: event => event.survived === true},

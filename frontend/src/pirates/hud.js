@@ -1,7 +1,7 @@
 // The wave's words on screen: a slim wave bar at the top (wave N · ships left · ♥ island · loot this run),
 // the musket button (bottom right: hold it or F to keep firing, its frame fills while it reloads), the
 // 10-second countdown, the boss warning, the "E · Fire" / "E · Repair" prompt next to a cannon or wall,
-// the end banner and the break between waves (a big "Next wave" button and the "Auto next wave" switch).
+// the end banner and the break between waves (a compact card: "Next wave", Pause and the "Auto next wave" switch).
 // Captain health (GAME-V3.md §3): your hp under the wave bar, the slim "You have fallen" strip with its timer
 // (inside the bar, so the fight stays in view),
 // a timer over every fallen captain, and the prompt held down (E or a finger) to help a teammate up.
@@ -62,6 +62,11 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
   const banner = node('div', 'pirate-banner'); banner.setAttribute('role', 'status'); banner.hidden = true;
   const loot = node('span', 'pirate-bar-loot'); loot.hidden = true;
   const extra = node('span', 'pirate-bar-extra'); bar.append(extra, down); extra.append(health, loot);
+  // v3 waves: the wave's event under the wave's numbers (wave-events.js): its title and line while the wave
+  // starts, then the title alone as a small chip for the rest of the wave.
+  const event = node('div', 'pirate-event'); event.hidden = true;
+  const eventIcon = node('span', 'pirate-event-icon'), eventTitle = node('strong', 'pirate-event-title'), eventLine = node('span', 'pirate-event-line');
+  eventIcon.setAttribute('aria-hidden', 'true'); event.append(eventIcon, eventTitle, eventLine); bar.append(event);
   // The captain's musket (§10): a big button, held to keep firing at the nearest ship in range (or F).
   const musket = node('button', 'kit-button pirate-musket'); musket.type = 'button'; musket.hidden = true;
   const musketLabel = node('span', 'pirate-musket-label', musketText(true)), musketMeter = node('span', 'pirate-musket-meter');
@@ -91,12 +96,17 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
   // The game's room-wide Pause (GAME-V3.md §2): the host (or anyone when the host is away) holds the break.
   const hold = node('button', 'kit-button kit-quiet pirate-hold'); hold.type = 'button'; hold.hidden = true;
   hold.addEventListener('click', event => { event.preventDefault(); if (!hold.disabled) onHold(); });
-  pause.append(close, pauseTitle, pauseLine, next, hold, autoLabel);
+  // A compact card (owner, 12 Nov): the title and loot line beside the × (its own corner, never over the
+  // title), Next wave and Pause side by side, the Auto switch as a small line below. pirates.css places it
+  // under the Menu on a wide screen (the goals' slot, empty during a wave) and under the wave bar on a phone.
+  const pauseHead = node('div', 'pirate-break-head'), pauseText = node('div', 'pirate-break-text'), pauseActions = node('div', 'pirate-break-actions');
+  pauseText.append(pauseTitle, pauseLine); pauseHead.append(pauseText, close); pauseActions.append(next, hold);
+  pause.append(pauseHead, pauseActions, autoLabel);
   // The island takes damage: a short red flash on the screen's edge (not with reduced motion).
   const edge = node('div', 'pirate-hurt-edge'); edge.setAttribute('aria-hidden', 'true');
   layer.append(edge, marks, bar, countdown, warning, prompt, musket, banner, pause, mini); container.append(layer);
   let lastBar = '', lastCount = '', lastPrompt = '', lastLoot = '', lastPause = '', lastMusket = '', hurtUntil = 0, hp = null;
-  let lastHealth = '', lastDown = '', ownHp = null;
+  let lastHealth = '', lastDown = '', ownHp = null, lastEvent = '';
 
   return {
     element: layer,
@@ -191,6 +201,16 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
       lastLoot = text; loot.hidden = !text; loot.textContent = text;
     },
     boss(text) { warning.hidden = !text; warning.textContent = text || ''; },
+    // The wave's event: {id, icon, title, line, open} (open: the line shows too) or null to hide it.
+    event(info) {
+      const key = info ? `${info.id}|${info.open === true}` : '';
+      if (key === lastEvent) return;
+      lastEvent = key; event.hidden = !info;
+      if (!info) return;
+      event.dataset.event = info.id; event.classList.toggle('is-open', info.open === true);
+      eventIcon.textContent = info.icon ?? ''; eventTitle.textContent = info.title; eventLine.textContent = info.open ? info.line : '';
+      eventLine.hidden = !info.open;
+    },
     // The break: {title, line, seconds, auto, ready, paused, hold: {label, enabled} | null} or null to hide it.
     pause(info) {
       if (!info) { pause.hidden = true; mini.hidden = true; pauseClosed = false; lastPause = ''; document.documentElement.style.removeProperty('--pirate-break-bottom'); return; }

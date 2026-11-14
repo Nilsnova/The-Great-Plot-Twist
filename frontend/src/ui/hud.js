@@ -47,7 +47,9 @@ export function createHud(container, actions, {on = defaultOn, storage = local()
   const chapter = node('p', 'chapter');chapter.classList.add('kit-sr-only');chapter.setAttribute('role', 'status');chapter.setAttribute('aria-atomic', 'true');
   const prompt = node('div', 'interact'), promptLabel = node('strong');
   prompt.setAttribute('role', 'status');prompt.hidden = true;prompt.append(node('kbd', '', 'E'), promptLabel);
-  overlay.append(purse, right, banner, chapter, prompt);
+  // "Walk closer": a click on something out of reach says so next to it for a moment (src/world/reach.js).
+  const nudge = node('div', 'interact-nudge');nudge.setAttribute('role', 'status');nudge.hidden = true;
+  overlay.append(purse, right, banner, chapter, prompt, nudge);
   container.append(overlay);
 
   let tickFrame = 0;
@@ -93,7 +95,7 @@ export function createHud(container, actions, {on = defaultOn, storage = local()
 
   // ---- what moved into the pause menu ----
   const clock = () => { const hour = Math.floor(settings.hour), minute = Math.floor((settings.hour % 1) * 60); return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`; };
-  stops.push(addMenuStatus(() => `${places[place]?.name ?? ''} · ${weatherLabel(getWeather())} · ${clock()}`));
+  stops.push(addMenuStatus(() => `${placeName(place)} · ${weatherLabel(getWeather())} · ${clock()}`));
   stops.push(addMenuExtras(() => [
     actions.chart && (!actions.travel || travel()) && {label: 'Sea chart', onSelect: () => actions.chart()},
     actions.controls && {label: 'Controls', onSelect: () => actions.controls()},
@@ -105,8 +107,14 @@ export function createHud(container, actions, {on = defaultOn, storage = local()
     clearTimeout(bannerTimer);bannerName.textContent = text;banner.hidden = false;
     bannerTimer = setTimeout(() => { banner.hidden = true; }, ARRIVAL_MS);
   }
+  // The place's name: actions.placeName(id) names a friend's game ("Nils's game", src/island/one-island.js),
+  // else the registry's ("Your island").
+  function placeName(id) {
+    try { const named = actions.placeName?.(id); if (typeof named === 'string' && named) return named; } catch { /* the registry's */ }
+    return places[id]?.name ?? '';
+  }
   function arrive(id) {
-    place = id;const name = places[id]?.name ?? '';chapter.textContent = name;
+    place = id;const name = placeName(id);chapter.textContent = name;
     if (overlay.classList.contains('exploring')) showBanner(name);
   }
   arrive(place);
@@ -143,11 +151,17 @@ export function createHud(container, actions, {on = defaultOn, storage = local()
     closeQuickPanels() { return strip.closeHint(); },
     start() {
       overlay.classList.add('exploring');actions.start();
-      showBanner(places[place]?.name ?? '');
+      showBanner(placeName(place));
       actions.focus();
     },
     dispose() { if (disposed) return; disposed = true; cancelAnimationFrame(tickFrame); clearTimeout(bannerTimer); stops.forEach(stop => stop()); strip.dispose(); overlay.remove(); },
     arrive,
+    // The place on screen got its name late (a friend's game learned its host): the place status and a
+    // banner still showing follow; no new banner.
+    renamePlace() {
+      const name = placeName(place);chapter.textContent = name;
+      if (!banner.hidden) bannerName.textContent = name;
+    },
     message(text, options = {}) { toast({text, ...options}); },
     notify() { /* The E prompt already names the hotspot; no extra toast. */ },
     update(zone, stats = {}) {
@@ -155,6 +169,17 @@ export function createHud(container, actions, {on = defaultOn, storage = local()
       overlay.classList.toggle('night', stats.night > 0.4);
       prompt.hidden = !zone;prompt.dataset.zone = zone || '';
       if (zone) promptLabel.textContent = stats.interactionLabel ?? names[zone] ?? '';
+      // Over the building when its screen point is known (promptAt: fractions of the screen), else at the bottom.
+      const at = zone ? stats.promptAt : null;
+      prompt.classList.toggle('floating', !!at);
+      prompt.style.left = at ? `${Math.max(8, Math.min(92, at.x * 100))}%` : '';prompt.style.top = at ? `${Math.max(10, Math.min(92, at.y * 100))}%` : '';
+      if (zone) prompt.setAttribute('aria-label', `E · ${promptLabel.textContent}`); else prompt.removeAttribute('aria-label');
+      const hint = stats.hint;
+      nudge.hidden = !hint;
+      if (hint) {
+        nudge.textContent = hint.text;
+        nudge.style.left = hint.at ? `${Math.max(8, Math.min(92, hint.at.x * 100))}%` : '50%';nudge.style.top = hint.at ? `${Math.max(10, Math.min(92, hint.at.y * 100))}%` : '40%';
+      }
       if (idle.step(delta, {moving: (stats.speed ?? 0) > 0.05, blocked: stats.blocked === true || !overlay.classList.contains('exploring')})) {
         const item = strip.current;
         if (item && !item.done && hintsEnabled()) toast({text: `Need a hand? ${item.hint}`, ms: 7000});

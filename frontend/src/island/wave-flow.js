@@ -49,7 +49,9 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
     stopTimers();
     current = {wave, where, joined: true, finished: false, startAt: now()};
     emit({type: WAVE_STARTED, waveId: wave.waveId, wave: wave.wave, seed: wave.seed, startsAt: wave.startsAt,
-      weather: wave.weather, flagship: wave.flagship, ...(typeof wave.boss === 'boolean' ? {boss: wave.boss} : {}), where, defenses: defensesOf()});
+      weather: wave.weather, flagship: wave.flagship, ...(typeof wave.boss === 'boolean' ? {boss: wave.boss} : {}), where, defenses: defensesOf(),
+      ...(wave.walls ? {walls: wave.walls} : {}), // D039: each wall's health from the server (flag wall_recovery)
+      ...(Array.isArray(wave.rules) ? {rules: wave.rules} : {})}); // the wave's sim rules (tower_health, …) from the server
     countdown(wave, fresh);
     changed();
   }
@@ -97,11 +99,13 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
   }
   // retry: the placeholder tries again itself after 409 wave_too_early; the wave renderer (finishWave in
   // wave-hooks.js) gets the refusal back and decides when to try again.
-  async function finish({waveId, survived, shipsSunk = 0} = {}, {retry = true} = {}) {
-    const answer = await api.finishWave({waveId, survived, shipsSunk});
+  // bonuses (v3 waves): the treasure galleon sunk, a boss finisher won; the server pays only what the wave allows.
+  // walls (D039): each wall's health at the end, only when the wave came with walls.
+  async function finish({waveId, survived, shipsSunk = 0, bonuses, rescued, walls} = {}, {retry = true} = {}) {
+    const answer = await api.finishWave({waveId, survived, shipsSunk, bonuses, rescued, walls});
     if (disposed) return answer;
     if (!answer.ok && answer.code === 'wave_too_early') {
-      if (retry) later(() => { void finish({waveId, survived, shipsSunk}); }, (answer.retryAfterSeconds ?? 2) * 1000);
+      if (retry) later(() => { void finish({waveId, survived, shipsSunk, bonuses, rescued, walls}); }, (answer.retryAfterSeconds ?? 2) * 1000);
       return answer;
     }
     if (!answer.ok) { notify(answer.message, 'error'); return answer; }

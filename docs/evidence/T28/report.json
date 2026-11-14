@@ -1,0 +1,44 @@
+{
+  "report": [
+    {
+      "width": 1280,
+      "height": 720,
+      "guide": {
+        "x": 370,
+        "y": 86.390625,
+        "right": 910,
+        "bottom": 285.953125
+      },
+      "text": "Learn: Haul the chain\n\nKeep the needle in the green zone for 6 of the 10 seconds. Hold Space or the Haul button; release to lower the needle. This is the solo goal; the crew shares the real target. Practice does not count toward the battle.\n\nAutomatic start in 60 s. 0 of 1 ready.\n\nPractice\nSkip practice"
+    },
+    {
+      "width": 375,
+      "height": 812,
+      "guide": {
+        "x": 12,
+        "y": 73.078125,
+        "right": 363,
+        "bottom": 304.8125
+      },
+      "text": "Learn: Haul the chain\n\nKeep the needle in the green zone for 6 of the 10 seconds. Hold Space or the Haul button; release to lower the needle. This is the solo goal; the crew shares the real target. Practice does not count toward the battle.\n\nAutomatic start in 60 s. 0 of 1 ready.\n\nPractice\nSkip practice"
+    },
+    {
+      "width": 1280,
+      "height": 720,
+      "overlap": false,
+      "phase": "prepare",
+      "score": 0
+    },
+    {
+      "width": 375,
+      "height": 812,
+      "overlap": false,
+      "phase": "prepare",
+      "score": 0
+    },
+    {
+      "scoredStarted": true
+    }
+  ],
+  "errors": []
+}

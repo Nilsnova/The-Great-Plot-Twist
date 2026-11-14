@@ -50,5 +50,6 @@ export const pixelArtIds = pixelArt.filter(item => item.usage === 'island').map(
 export const pixelSizes = Object.fromEntries(pixelArt.map(item => [item.id, item.size]));
 export const snapPixel = value => Math.round(value * PIXELS_PER_UNIT) / PIXELS_PER_UNIT;
 
-// Original illustrated title, intentionally outside the world sprite preload.
+// The old painted title (no screen shows it since T21: the title is drawn in code, src/title/; the file stays
+// in public/ and the build leaves it out, scripts/unshipped-art.js).
 export const titleBackdrop={file:'places/title.webp',width:1672,height:941,source:'scripts/hires_art/PROVENANCE.md'};

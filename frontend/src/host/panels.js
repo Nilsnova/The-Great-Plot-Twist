@@ -12,6 +12,25 @@ export function tablePanel(title,columns,rows,note='') {
   if(note)panel.body.append(node('p','host-note',note));
   return panel.element;
 }
+// The "Game" counts of the v3 tables. Absent (null) until the owner applies 20261113030000_host_console_v3.sql.
+const count=value=>Number.isInteger(value)&&value>=0?String(value):'Unknown';
+export function gameLines(game) {
+  if(!game)return null;
+  return [['Islands',count(game.islands?.total)],['Islands opened today (UTC)',count(game.islands?.createdToday)],
+    ['Games with friends aboard',count(game.games?.withMembers)],['Most players in one game',count(game.games?.maxMembers)],
+    ['Waves running now',count(game.waves?.runningNow)],['Waves finished today (UTC)',count(game.waves?.finishedToday)],
+    ['Best wave reached',count(game.waves?.bestWave)],
+    ['Class code active',typeof game.demo?.codeActive==='boolean'?(game.demo.codeActive?'Yes':'No'):'Unknown'],
+    ['Class guests admitted today (UTC)',count(game.demo?.guestsToday)]];
+}
+export function gamePanel(game) {
+  const lines=gameLines(game);if(!lines)return null;
+  const panel=createPanel({title:'Game'});panel.element.dataset.panel='game';
+  const list=node('dl','host-counts');
+  for(const [label,value] of lines)list.append(node('dt','',label),node('dd','',value));
+  panel.body.append(list,node('p','host-note','Counts only: no names, ids or codes. Today means midnight to midnight UTC.'));
+  return panel.element;
+}
 export function overviewPanels(data) {
   const result=[],summary=createPanel({title:'Game overview'});
   const list=node('dl','host-counts');
@@ -24,6 +43,7 @@ export function overviewPanels(data) {
   summary.body.append(list,node('p','host-note',`Build ${data.build.version} · ${data.build.commit}`),
     node('p','host-note',`Weather: ${data.weather.source} · ${data.weather.origin} · ${data.weather.fetchedAt??'unknown time'}`));
   result.push(summary.element);
+  const game=gamePanel(data.game);if(game)result.push(game);
   result.push(tablePanel(`Wallet movements · ${data.day} UTC`,[
     {key:'reason',label:'Reason'},{key:'count',label:'Moves'},{key:'earned',label:'Earned'},
     {key:'spent',label:'Spent'},{key:'net',label:'Net'},

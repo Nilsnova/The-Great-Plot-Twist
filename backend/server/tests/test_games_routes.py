@@ -317,6 +317,7 @@ def test_the_lobby_lists_the_host_first_then_the_members_by_joining():
     world = game_world()
     join(world, headers=crew(2))
     join(world, headers=FRIEND)
+    world.database.captain_roles[crew_id(2)] = "medic"
 
     response = world.client.get("/api/games/isle-k7q2m", headers=FRIEND)
 
@@ -325,9 +326,27 @@ def test_the_lobby_lists_the_host_first_then_the_members_by_joining():
     assert body["game"]["role"] == "member"
     assert body["game"]["members"] == 3
     assert body["members"] == [
-        {"id": PLAYER_ID, "name": "Captain Gull", "role": "host", "you": False},
-        {"id": crew_id(2), "name": "Crew 2", "role": "member", "you": False},
-        {"id": FRIEND_ID, "name": "Captain Wren", "role": "member", "you": True},
+        {
+            "id": PLAYER_ID,
+            "name": "Captain Gull",
+            "role": "host",
+            "you": False,
+            "captainRole": None,
+        },
+        {
+            "id": crew_id(2),
+            "name": "Crew 2",
+            "role": "member",
+            "you": False,
+            "captainRole": "medic",
+        },
+        {
+            "id": FRIEND_ID,
+            "name": "Captain Wren",
+            "role": "member",
+            "you": True,
+            "captainRole": None,
+        },
     ]
     host = world.client.get("/api/games/ISLE-K7Q2M", headers=PLAYER).json()
     assert host["game"]["role"] == "host"

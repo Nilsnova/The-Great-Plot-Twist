@@ -37,9 +37,15 @@ The order of the tasks below follows this table: the walkthrough and the UX carr
 
 ## Task board
 
-Value: ★★★ moves a 20% criterion, ★★ a 10% criterion or a clear risk, ★ nice to have. Size: S (under 2 hours), M (half a day), L (a day).
 
 **V3 follow-up T19:** nearby building interactions implemented in [PR #7](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/7), with [visual evidence](evidence/T19/README.md) and Johannes's lane notes in [WALKTHROUGH.md](WALKTHROUGH.md). Human review is pending; the task row is in [OPEN-TODOS.md](OPEN-TODOS.md).
+
+Value: ★★★ moves a 20% criterion, ★★ a 10% criterion or a clear risk, ★ nice to have. Size: S (under 2 hours), M (half a day), L (a day).
+
+- [x] **T27: exact-angle captain shooting direction**, including diagonals, body/gun overlap
+  and corrected grip hands, implemented in [PR #17](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/17).
+  Ianno’s walkthrough part 30, test-map entry and reviewed eight-direction screenshot are included;
+  checks passed; independent rehearsal and human review remain pending.
 
 ### A. Repository walkthrough (criterion 6, 20%)
 
@@ -73,9 +79,11 @@ Value: ★★★ moves a 20% criterion, ★★ a 10% criterion or a clear risk, 
 
 ### D. It works, including invalid input (criterion 1, 20%)
 
+D1 current-demo sweep done in [#5](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/5) by Johannes Franz Lang (`frcola`); explain-back and human review pending. [Scope and limits](../specs/D1-invalid-inputs.md).
+
 | ID | Value | Size | Task | Done when |
 |---|---|---|---|---|
-| D1 | ★★★ | M | **Invalid-input sweep** on the demo workflows: empty, too long, wrong type and repeated requests for join code, email, lock answer, place search, duel challenge. Each must be rejected cleanly by the server with the house error shape | One test per case (backend), all green |
+| D1 | ★★★ | M | **Invalid-input sweep** on the demo workflows: empty, too long, wrong type and repeated requests for join code, email, lock answer, place search, duel challenge. Each must be rejected cleanly by the server with the house error shape | Done for the agreed current-demo scope in [#5](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/5). Valid repeats retain their route-specific behavior; email is checked at the Supabase client boundary. SQL/live checks are not claimed. |
 | D2 | ★★★ | S | **Demo-day dry run** with the checklist in [OPEN-TODOS.md](OPEN-TODOS.md), section 2, on the real projector setup if possible; note every surprise | A dated note in the PR or OPEN-TODOS; problems become issues |
 | D3 | ★★ | S | **API-down drill**: show what the player sees when weather, stock, crypto or sports providers fail (the fallbacks exist); add a short section to A1 | Screenshots and the A1 section |
 | D4 | ★★ | S | **Host-console probes** for the new tables (`demo_class_code`, `demo_guests`) and the sports desk. Needs a small migration; write it, do not apply it (the project owner applies migrations) | Migration file + tests; the PR asks for review and application |
@@ -96,6 +104,10 @@ Value: ★★★ moves a 20% criterion, ★★ a 10% criterion or a clear risk, 
 | F2 | ★★★ | S | **Moodle submission** of the repository link by one member, with a named backup | Submitted by Sun 22 Nov; screenshot of the confirmation |
 | F3 | ★★★ | S | **Presentation roles**: who drives the projector, who holds the two phones, who explains which part; two full rehearsals | Rehearsed twice by Sun 22 Nov |
 
+T5 follow-up: island milestones implemented in [PR #10](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/10) by Ianno Hollensteiner: number-only rank shield, wave-25 statue and house-linked trees. [Spec](../specs/T5-island-decoration.md); explain-back completed; approval by Nils or Johannes Franz Lang pending. This does not complete A1 or any playtest task.
+
+T7 from OPEN-TODOS: weekly island leaderboard implemented in [PR #13](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/13) by Ianno; introductory explain-back completed after clarification; human review by Franz (`frcola`) pending. This completes only T7's walkthrough/test-map entries, not A1 or E1 as a whole.
+
 ## How to pick and claim a task
 
 1. Take the **highest-value open task** you can finish in time. Prefer ★★★, and prefer A and B.
@@ -110,3 +122,13 @@ Value: ★★★ moves a 20% criterion, ★★ a 10% criterion or a clear risk, 
 ## Out of scope until the deadline
 
 New big features, new external services, new paid accounts, story or culprit changes, changes to the live database without the project owner, and anything that touches keys. If an idea is bigger than M, write it in [contribute/IDEAS.md](contribute/IDEAS.md) for "how it could change" in the walkthrough instead.
+
+T26 UI follow-up: island Harbor weather access implemented in [PR #8](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/8), with [evidence](handoff/T26-weather-board.md); explain-back and human review pending. This does not complete A1 or the broader UI audits.
+
+T28 UX follow-up: [Learn boss minigames with optional first-time practice](../specs/T28-minigame-introduction.md), owned by Ianno. Per player, island and minigame, including multiplayer; implementation done in [#19](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/19), with [evidence](evidence/T28/README.md). Ianno practiced all checkpoints; introductory explain-back completed after clarification; independent human review remains pending. This does not complete the broader UX audits.
+
+## Expansion backlog · 14 Nov 2026
+
+The requested [defense and shared-island expansion](BUILD-PLAN.md#6-defense-and-shared-island-expansion) adds T29–T47, proposed by Ianno Hollensteiner. It preserves this grading/submission plan and the feature freeze. Start with investigation and reviewed contracts; schedule large implementation packages after the deadline unless the team explicitly revises the schedule. Existing T3/T5/T6/T7/T26 are extended, not replaced. Claiming, human review and merge rules above still apply.
+
+Planning handover (14 Nov): roadmap/task expansion drafted by Ianno Hollensteiner; documentation checks completed. Implementation tasks remain proposed, not done. Peer review and explain-back are pending.

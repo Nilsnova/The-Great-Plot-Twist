@@ -1,6 +1,6 @@
 // The in-memory island and wave API (BUILD-PLAN 3.4): prices, refusals, loot and timing.
 import { describe, expect, it } from 'vitest';
-import { createFakeIslandApi, createFakeWorld, islandRoom, lootFor, readIslandCode, wantsFakeIslands } from '../../src/pirates/fake-api.js';
+import { createFakeIslandApi, createFakeWorld, fakeFlagsFor, islandRoom, lootFor, readIslandCode, wantsFakeIslands } from '../../src/pirates/fake-api.js';
 
 const clock = (start = Date.UTC(2026, 10, 11, 12, 0, 0, 400)) => {
   let now = start;
@@ -125,6 +125,40 @@ describe('fake island API', () => {
     expect((await api.island()).waveBest).toBe(0);
   });
 
+  it('researches the Tech hub tiers like the server: one tier a call, the other option closed, a change paid again', async () => {
+    const world = createFakeWorld(), api = createFakeIslandApi({ world, version: 2 });
+    await api.island();
+    const me = world.players.get('me'), island = world.islands.get(me.code);
+    island.waveBest = 14; me.coins = 5000;
+    const step = (actionUid, extra) => api.research({ branch: 'cannon', actionUid, ...extra });
+    expect((await refusal(step('tier-step-0001', { tier: 2, choice: 'long_guns' }))).code).toBe('locked');
+    await step('tier-step-0002');
+    expect(me.coins).toBe(5000 - 180);
+    expect((await refusal(step('tier-step-0003', { tier: 2, choice: 'long_guns' }))).message).toBe('Opens after wave 15.');
+    island.waveBest = 26;
+    expect((await refusal(api.research({ branch: 'mortar', actionUid: 'tier-step-0013', tier: 2, choice: 'quick_fuse' }))).code).toBe('needs_tier');
+    const two = await step('tier-step-0004', { tier: 2, choice: 'long_guns' });
+    expect(two.campaign.research.tiers.cannon).toEqual({ tier: 2, tier2: 'long_guns', tier3: null });
+    expect(me.coins).toBe(5000 - 180 - 360);
+    expect((await step('tier-step-0004', { tier: 2, choice: 'long_guns' })).coins).toBe(me.coins); // a repeat charges nothing
+    const closed = await refusal(step('tier-step-0005', { tier: 2, choice: 'rapid_2' }));
+    expect([closed.status, closed.code, closed.message]).toEqual([409, 'closed', 'Closed: your crew chose Long guns.']);
+    expect((await refusal(step('tier-step-0006', { tier: 2, choice: 'long_guns' }))).code).toBe('known');
+    expect((await refusal(step('tier-step-0007', { tier: 4 }))).code).toBe('top_tier');
+    expect((await refusal(step('tier-step-0008', { tier: 2, choice: 'heavy_shells' }))).code).toBe('bad_research');
+    await step('tier-step-0009', { tier: 2, choice: 'rapid_2', change: true });
+    expect(me.coins).toBe(5000 - 180 - 360 - 360);
+    // Tier 3: a tower may pick the chosen capstone; a change takes it off the towers again.
+    await api.build({ spot: 'cannon_1', kind: 'cannon', actionUid: 'tier-step-0010' });
+    expect((await refusal(api.specialise({ spot: 'cannon_1', spec: 'broadside' }))).message).toBe('Pick Broadside at tier 3 of the Tech hub first.');
+    await step('tier-step-0011', { tier: 3, choice: 'broadside' });
+    const picked = await api.specialise({ spot: 'cannon_1', spec: 'broadside' });
+    expect(picked.spots.find(spot => spot.id === 'cannon_1').spec).toBe('broadside');
+    const switched = await step('tier-step-0012', { tier: 3, choice: 'grapeshot', change: true });
+    expect(switched.spots.find(spot => spot.id === 'cannon_1').spec).toBe(null);
+    expect(switched.campaign.research).toMatchObject({ tierWaves: [8, 15, 25], tiers: { cannon: { tier: 3, tier2: 'rapid_2', tier3: 'grapeshot' } } });
+    expect(switched.campaign.research.branches[0].prices).toEqual([180, 360, 630]);
+  });
   it('answers fetch() with the real JSON and error shape', async () => {
     const time = clock(), api = createFakeIslandApi({ now: time.now });
     const island = await (await api.fetch('/api/island')).json();
@@ -140,5 +174,13 @@ describe('fake island API', () => {
     expect((await api.fetch('/api/island/visit/ISLE-K7Q2M')).status).toBe(200);
     expect((await api.fetch('/api/island/visit/ISLE-22222')).status).toBe(404);
     expect((await api.fetch('/api/nowhere')).status).toBe(404);
+  });
+});
+
+describe('?fakeflags', () => {
+  it('reads every flag name the server knows, defenses_v2 too, and ignores anything else', () => {
+    expect(fakeFlagsFor('?fakeflags=defenses_v2,wall_recovery,tower_health')).toEqual({ defenses_v2: true, wall_recovery: true, tower_health: true });
+    expect(fakeFlagsFor('?fakeflags=Arsenal,2x,a-b,,arsenal')).toEqual({ arsenal: true });
+    expect(fakeFlagsFor('')).toEqual({});
   });
 });

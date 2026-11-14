@@ -15,21 +15,38 @@ const AREA = {minX: -10, maxX: 11, minZ: 12, maxZ: 20};
 export const POINT_AREA = Object.freeze({minX: 0, maxX: 15, minZ: -12, maxZ: 10});
 const SPEED = 2.2;
 
-export function createRehearsalCaptains({count = 14, canStand = () => true, random = Math.random, area = AREA} = {}) {
+// When each simulated captain steps ashore, in seconds after the presenter reaches the harbor, like
+// phones joining one by one. The gaps are seeded (the same list every time) and uneven (0.4x to 1.6x of
+// the average), the first captain comes within about a second and the last arrives at `span`. The
+// world's arrival effect keeps to 6 a second, so a crowd at once would play almost none of it.
+export const ARRIVAL_SPAN_SECONDS = 25;
+export function arrivalSchedule(count, {seed = 1, span = Math.min(ARRIVAL_SPAN_SECONDS, 2 + count * 0.6)} = {}) {
+  let state = seed >>> 0;
+  const next = () => { state = (state + 0x6D2B79F5) >>> 0; let t = state; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  const gaps = Array.from({length: Math.max(0, count)}, () => 0.4 + 1.2 * next()), total = gaps.reduce((sum, gap) => sum + gap, 0);
+  let at = 0;
+  return gaps.map(gap => { at += gap / total * span; return Math.round(at * 1000) / 1000; });
+}
+
+export function createRehearsalCaptains({count = 14, canStand = () => true, random = Math.random, area = AREA, stagger = true} = {}) {
   const pick = (min, max) => min + random() * (max - min);
   function spot() {
     for (let i = 0; i < 20; i++) { const x = pick(area.minX, area.maxX), z = pick(area.minZ, area.maxZ); if (canStand(x, z)) return {x, z}; }
     return {x: (area.minX + area.maxX) / 2, z: (area.minZ + area.maxZ) / 2};
   }
-  const bots = Array.from({length: Math.max(0, Math.min(40, count))}, (_, index) => {
+  const total = Math.max(0, Math.min(40, count)), schedule = stagger ? arrivalSchedule(total) : new Array(total).fill(0);
+  let clock = 0;
+  const bots = Array.from({length: total}, (_, index) => {
     const start = spot(), kit = KITS[index % KITS.length];
     return {id: `rehearsal-captain-${index + 1}`, name: nameOf(index),
       kit: {id: kit.id, name: kit.name}, archetype: kit.archetype, x: start.x, z: start.z, target: spot(), wait: pick(0, 3),
-      facing: 'front', moving: false, emote: null, emoteUntil: 0};
+      facing: 'front', moving: false, emote: null, emoteUntil: 0, arriveAt: schedule[index]};
   });
+  const here = () => bots.filter(bot => bot.arriveAt <= clock);
   // A simulated captain stops and waits while the presenter stands next to it, like a person would.
   function step(delta, now, player = null) {
-    for (const bot of bots) {
+    clock += delta;
+    for (const bot of here()) {
       if (player && Math.hypot(bot.x - player.x, bot.z - player.z) < 3) { bot.moving = false; bot.wait = Math.max(bot.wait, 1); continue; }
       if (bot.wait > 0) { bot.wait -= delta; bot.moving = false; continue; }
       const dx = bot.target.x - bot.x, dz = bot.target.z - bot.z, distance = Math.hypot(dx, dz);
@@ -44,10 +61,10 @@ export function createRehearsalCaptains({count = 14, canStand = () => true, rand
   // The same shape as the online adapter's presence view.
   function presence(now, place) {
     return {status: 'live', place, hiddenCount: 0, sampledAt: now,
-      others: bots.map(bot => ({id: bot.id, name: bot.name, kit: bot.kit, archetype: bot.archetype, place, x: bot.x, y: bot.z,
+      others: here().map(bot => ({id: bot.id, name: bot.name, kit: bot.kit, archetype: bot.archetype, place, x: bot.x, y: bot.z,
         facing: bot.facing, moving: bot.moving, emote: bot.emoteUntil > now ? bot.emote : null, isCrew: false, at: now}))};
   }
-  return {bots, step, presence, wave(now) { const bot = bots[0]; if (bot) { bot.emote = 'wave'; bot.emoteUntil = now + 1800; } }};
+  return {bots, here, step, presence, wave(now) { const bot = here()[0]; if (bot) { bot.emote = 'wave'; bot.emoteUntil = now + 1800; } }};
 }
 
 // A finished duel from one side, in the server's detail shape.

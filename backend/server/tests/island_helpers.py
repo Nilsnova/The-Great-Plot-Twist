@@ -21,8 +21,18 @@ FakeIslandDatabase answers exactly the calls the island and wave routes make, an
   * POST rpc/island_specialise               paid_replies[name] (default: SPECIALISED)
   * POST rpc/island_learn_skill, island_weapon_equip
                                              paid_replies[name] (default: LEARNED, EQUIPPED)
+  * GET islet_buildings?building_type=eq.wall  the walls with their health (walls, D039)
+  * POST rpc/island_wall_restore, island_walls_record  paid_replies[name] (default: done,
+                                             recorded)
+  * POST rpc/island_demolish, island_demolish_quote
+                                             paid_replies[name] (default: DEMOLISHED, QUOTED)
+  * GET island_layout, POST rpc/island_move  the moved spots of T36 (layout_rows; layout_reply
+                                             None: the table is missing, a 404) and the move
+                                             (move_replies, one per try; default done)
   * GET pirate_point_buildings, GET wave_runs  Pirate Point's buildings and best wave, and where a
                                              wave runs (wave_places, by id)
+  * POST rpc/arsenal_state, arsenal_buy, arsenal_take, arsenal_return
+                                             arsenal_replies[name] (default: ARSENAL_DONE)
   * POST rpc/game_join, game_leave, game_list, game_members, GET island_members
                                              the games of GAME-V3 section 2 (FakeGames below:
                                              the SQL rules of 20261112040000_game_rooms.sql,
@@ -113,12 +123,45 @@ PAID_FUNCTIONS = (
     "island_weapon_buy",
     "island_research",
     "island_wreck_repair",
+    "island_respec_at_level",
+    "island_wall_restore",
 )
 PAID_DONE = {"status": "done", "level": 2, "balance": 70, "repeat": False}
+ROLE_PICKED = {"status": "done", "role": "medic", "repeat": False}
 LEARNED = {"status": "done", "skills": ["steady_aim"], "points": 1, "repeat": False}
 REVIVED = {"status": "done", "price": 35, "balance": 65, "repeat": False}
 EQUIPPED = {"status": "done", "weapon": "musket"}
+ARSENAL_FUNCTIONS = ("arsenal_state", "arsenal_buy", "arsenal_take", "arsenal_return")
+COPY_ID = "0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d"
+ARSENAL_DONE = {
+    "status": "done",
+    "repeat": False,
+    "balance": 40,
+    "arsenal": {
+        "capacity": 20,
+        "stored": 0,
+        "mine": COPY_ID,
+        "waveRunning": False,
+        "copies": [
+            {"id": COPY_ID, "no": 1, "weapon": "pistols", "holder": PLAYER_ID,
+             "holderName": "Captain Gull", "away": False},
+        ],
+    },
+}  # fmt: skip
 SPECIALISED = {"status": "done", "plot": "cannon_1", "spec": "rapid"}
+# A level-3 cannon that FRIEND built and PLAYER upgraded (20261112080000_demolish.sql).
+DEMOLISH_REFUNDS = [
+    {"playerId": FRIEND_ID, "paid": 150, "coins": 75},
+    {"playerId": PLAYER_ID, "paid": 60, "coins": 30},
+]
+DEMOLISHED = {
+    "status": "done", "plot": "cannon_1", "kind": "cannon", "level": 3,
+    "refunds": DEMOLISH_REFUNDS, "repeat": False,
+}  # fmt: skip
+QUOTED = {
+    "status": "quote", "plot": "cannon_1", "kind": "cannon", "level": 3,
+    "refunds": DEMOLISH_REFUNDS,
+}  # fmt: skip
 
 
 def opened(code: str = "K7Q2M", wave_best: int = 0, flags: int = 0) -> dict:
@@ -150,6 +193,9 @@ class FakeIslandDatabase:
         self.has_wallet = True
         self.open_replies: list[dict] = []
         self.buildings: dict[str, list[dict]] = {}
+        # D039: the walls of each island with their health ({owner: [{plot, level, wall_health,
+        # wall_damaged_at}]}), read with building_type=eq.wall.
+        self.walls: dict[str, list[dict]] = {}
         self.known_refs: set[str] = set()
         self.islands: dict[str, dict] = {}
         self.names: dict[str, str] = {}
@@ -176,19 +222,36 @@ class FakeIslandDatabase:
             "weapons_owned": ["musket"],
             "weapon_equipped": "musket",
             "wreck_paid": 0,
+            "captain_role": None,
         }
+        # The captain roles of the lobby members ({player id: role}).
+        self.captain_roles: dict[str, str] = {}
         # The Tech hub's research rows of every island ({"branch": "cannon"}), one list for all.
         self.research: list[dict] = []
         self.ledger_refs: set[tuple[str, str]] = set()
         self.skill_refs: set[str] = set()
         self.paid_replies: dict[str, dict | httpx.Response] = {}
+        # The island arsenal (T40): the answer of each arsenal_* function.
+        self.arsenal_replies: dict[str, dict | httpx.Response] = {}
         self.point_buildings: list[dict] = []
         self.point_best: list[dict] = []
         # Where each wave runs (GET wave_runs?id=): WAVE_ID is on PLAYER's island by default.
         self.wave_places: dict[str, dict] = {
-            WAVE_ID: {"place": "island", "island_owner": PLAYER_ID}
+            WAVE_ID: {
+                "place": "island",
+                "island_owner": PLAYER_ID,
+                "starts_at": STARTED["startsAt"],
+            }
         }
+        # The rule set each wave keeps (wave_rules_keep(), 20261114130500_wave_rules.sql).
+        self.wave_rules: dict[str, list[str]] = {}
+        self.wave_rules_reply: httpx.Response | None = None  # set to make wave_rules_keep fail
         self.games = FakeGames(self)
+        # T36: the island_layout rows of every island ({"plot", "x_half", "z_half"}), one list;
+        # layout_missing pretends the migration is not applied (the database answers 404).
+        self.layout_rows: list[dict] = []
+        self.layout_missing = False
+        self.move_replies: list[dict] = []
         self.requests: list[httpx.Request] = []
 
     def __call__(self, request: httpx.Request) -> httpx.Response:
@@ -224,6 +287,8 @@ class FakeIslandDatabase:
             "POST /rpc/game_members": self.games.members,
             "GET /island_members": self.games.read_membership,
             "GET /island_research": lambda _: httpx.Response(200, json=self.research),
+            "GET /island_layout": self.read_layout,
+            "POST /rpc/island_move": self.move,
             "POST /rpc/island_specialise": lambda _: self.answer(
                 self.paid_replies.get("island_specialise", SPECIALISED)
             ),
@@ -233,10 +298,29 @@ class FakeIslandDatabase:
         handlers["POST /rpc/island_learn_skill"] = lambda request: self.answer(
             self.paid_replies.get("island_learn_skill", LEARNED)
         )
+        handlers["POST /rpc/island_pick_role"] = lambda request: self.answer(
+            self.paid_replies.get("island_pick_role", ROLE_PICKED)
+        )
         handlers["POST /rpc/island_weapon_equip"] = lambda request: self.answer(
             self.paid_replies.get("island_weapon_equip", EQUIPPED)
         )
+        handlers["POST /rpc/wave_rules_keep"] = self.keep_wave_rules
+        handlers["POST /rpc/island_walls_record"] = lambda request: self.answer(
+            self.paid_replies.get("island_walls_record", {"status": "recorded"})
+        )
+        handlers["POST /rpc/island_demolish"] = lambda request: self.answer(
+            self.paid_replies.get("island_demolish", DEMOLISHED)
+        )
+        handlers["POST /rpc/island_demolish_quote"] = lambda request: self.answer(
+            self.paid_replies.get("island_demolish_quote", QUOTED)
+        )
+        for name in ARSENAL_FUNCTIONS:
+            handlers[f"POST /rpc/{name}"] = self.arsenal
         return handlers[route](request)
+
+    def arsenal(self, request: httpx.Request) -> httpx.Response:
+        name = request.url.path.rsplit("/", 1)[-1]
+        return self.answer(self.arsenal_replies.get(name, ARSENAL_DONE))
 
     @staticmethod
     def answer(reply: dict | httpx.Response) -> httpx.Response:
@@ -256,6 +340,8 @@ class FakeIslandDatabase:
             known = ref.removeprefix("eq.") in self.known_refs
             return httpx.Response(200, json=[{"plot": "wall_1"}] if known else [])
         owner = request.url.params["player_id"].removeprefix("eq.")
+        if request.url.params.get("building_type") == "eq.wall":
+            return httpx.Response(200, json=self.walls.get(owner, []))
         rows = [{"level": 1, **row} for row in self.buildings.get(owner, [])]
         return httpx.Response(200, json=rows)
 
@@ -271,11 +357,23 @@ class FakeIslandDatabase:
         return httpx.Response(200, json=[{"id": 1}] if key in self.ledger_refs else [])
 
     def read_island(self, request: httpx.Request) -> httpx.Response:
+        if request.url.params.get("player_id", "").startswith("in."):
+            ids = request.url.params["player_id"].removeprefix("in.(").removesuffix(")").split(",")
+            rows = [{"player_id": who, "captain_role": self.captain_roles.get(who)} for who in ids]
+            return httpx.Response(200, json=rows)
         if "player_id" in request.url.params:
             return httpx.Response(200, json=[self.progress])
         code = request.url.params["code"].removeprefix("eq.")
         row = self.islands.get(code)
         return httpx.Response(200, json=[row] if row else [])
+
+    def keep_wave_rules(self, request: httpx.Request) -> httpx.Response:
+        """wave_rules_keep(): the first call for a wave keeps its rules; every call answers them."""
+        if self.wave_rules_reply is not None:
+            return self.wave_rules_reply
+        body = json.loads(request.content)
+        kept = self.wave_rules.setdefault(body["p_wave_id"], body["p_rules"])
+        return httpx.Response(200, json={"rules": kept})
 
     def read_wave_runs(self, request: httpx.Request) -> httpx.Response:
         wave_id = request.url.params.get("id")
@@ -283,6 +381,21 @@ class FakeIslandDatabase:
             return httpx.Response(200, json=self.point_best)
         row = self.wave_places.get(wave_id.removeprefix("eq."))
         return httpx.Response(200, json=[row] if row else [])
+
+    def read_layout(self, request: httpx.Request) -> httpx.Response:
+        if self.layout_missing:
+            return httpx.Response(404, json={"code": "PGRST205", "message": "no such table"})
+        return httpx.Response(200, json=self.layout_rows)
+
+    def move(self, request: httpx.Request) -> httpx.Response:
+        """island_move(): the next queued reply, else done (and the row is stored)."""
+        if self.move_replies:
+            return httpx.Response(200, json=self.move_replies.pop(0))
+        body = json.loads(request.content)
+        row = {"plot": body["p_plot"], "x_half": body["p_x_half"], "z_half": body["p_z_half"]}
+        self.layout_rows = [item for item in self.layout_rows if item["plot"] != row["plot"]]
+        self.layout_rows.append(row)
+        return httpx.Response(200, json={"status": "done"})
 
     def read_name(self, request: httpx.Request) -> httpx.Response:
         player = request.url.params["id"].removeprefix("eq.")

@@ -36,7 +36,7 @@ it.each([false, true])('nearby E/Use works and a reported revive blocks building
   await evaluate.withPage(async (page, base) => {
     await openGame(page, base, phone);
     await page.waitForFunction(() => !document.querySelector('.touch-actions button')?.hidden);
-    if (phone) await page.locator('.touch-actions').getByRole('button', {name: 'Use', exact: true}).click();
+    if (phone) await page.locator('.touch-actions').getByRole('button', {name: /^Use:/}).click();
     else await page.keyboard.press('KeyE');
     await page.locator('.island-card-build[open]').waitFor();
     expect(await page.locator('.island-card-build[open]').count()).toBe(1);

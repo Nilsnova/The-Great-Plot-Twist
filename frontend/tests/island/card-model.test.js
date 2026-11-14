@@ -17,11 +17,36 @@ describe('build card (TOWER-DEFENSE.md §2, §9)', () => {
     // A locked kind stays on the card (GAME-V3.md §4): off, with the wave it opens after.
     expect(start.choices).toEqual([{kind: 'cannon', name: 'Cannon', line: 'Fires at one ship at a time.', price: '🪙 30', disabled: false, reason: '', busy: false},
       {kind: 'mortar', name: 'Mortar', line: 'Hits every ship near the impact. Cannot hit close ships.', price: '🪙 60', disabled: true, locked: true,
-        reason: 'Opens after wave 2.', busy: false}]);
+        reason: 'Opens after wave 2.', busy: false},
+      {kind: 'harpoon', name: 'Harpoon tower', line: 'Slows one ship at a time with a rope harpoon.', price: '🪙 40', disabled: true, locked: true,
+        reason: 'Opens after wave 12.', busy: false}]);
     const later = buildCardModel({spotId: 'cannon_1', slot: 'tower', spot: tower(), coins: 40, unlocks: wave3});
     expect(later.choices.map(choice => [choice.kind, choice.price, choice.disabled, choice.reason])).toEqual([
-      ['cannon', '🪙 30', false, ''], ['mortar', '🪙 60', true, 'Not enough 🪙: you need 🪙 20 more.']]);
+      ['cannon', '🪙 30', false, ''], ['mortar', '🪙 60', true, 'Not enough 🪙: you need 🪙 20 more.'],
+      ['harpoon', '🪙 40', true, 'Opens after wave 12.']]);
     expect(later.soon).toBe('');
+  });
+  it('the harpoon tower: locked until wave 12, then a plain line, its price and its levels (T1)', () => {
+    const open = unlocksFor(12), campaign = campaignOf({waveBest: 12});
+    const card = buildCardModel({spotId: 'cannon_1', slot: 'tower', spot: tower(), coins: 100, unlocks: open, campaign});
+    expect(card.choices.find(choice => choice.kind === 'harpoon'))
+      .toEqual({kind: 'harpoon', name: 'Harpoon tower', line: 'Slows one ship at a time with a rope harpoon.', price: '🪙 40', disabled: false, reason: '', busy: false});
+    expect(buildCardModel({spotId: 'cannon_1', slot: 'tower', spot: tower(), coins: 10, unlocks: open}).choices.find(choice => choice.kind === 'harpoon'))
+      .toMatchObject({disabled: true, reason: 'Not enough 🪙: you need 🪙 30 more.'});
+    // Built: its levels 1 to 3 are open at 12, level 4 after 15, level 5 after 20.
+    const built = (level, wave) => buildCardModel({spotId: 'cannon_1', slot: 'tower', spot: {...tower(true, 'harpoon', level), upgradeCost: [80, 160, 320, 640][level - 1]}, coins: 1000, unlocks: unlocksFor(wave)});
+    expect(built(1, 12)).toMatchObject({kind: 'harpoon', title: 'Harpoon tower', maxLevel: 5, mode: 'upgrade', stats: 'Damage 2 · Range 30 · Slows 25%',
+      upgrade: {label: 'Level 2 · 🪙 80', stats: 'Damage 2 → 3 · Range 30 → 32 · Slows 25% → 30%'}});
+    expect(built(3, 12)).toMatchObject({mode: 'info', soon: 'Level 4: Opens after wave 15.'});
+    expect(built(4, 15)).toMatchObject({mode: 'info', soon: 'Level 5: Opens after wave 20.'});
+    expect(built(5, 20)).toMatchObject({mode: 'info', reason: 'Highest level reached.', stats: 'Damage 7 · Range 38 · Slows 45%'});
+    expect(lockedWave(unlocksFor(0), {kind: 'harpoon'})).toBe(12);
+  });
+  it('Pirate Point tower spots offer a cannon or a mortar only', () => {
+    const point = buildCardModel({spotId: 'pp_tower_1', slot: 'tower', spot: {id: 'pp_tower_1', kind: 'cannon', built: false, level: 0, cost: 30}, coins: 100,
+      unlocks: unlocksFor(30), point: true});
+    expect(point.choices.map(choice => choice.kind)).toEqual(['cannon', 'mortar']);
+    expect(point.purpose).toBe('Choose what to build. You cannot change it later.');
   });
   it('an empty wall spot builds with one button; short of coins says why', () => {
     expect(buildCardModel({spotId: 'wall_1', slot: 'wall', spot: wall(), coins: 100, unlocks: fresh}))
@@ -74,7 +99,7 @@ describe('build card (TOWER-DEFENSE.md §2, §9)', () => {
   it("on a friend's island: the same card, you pay, it stays theirs, no crew", () => {
     const empty = buildCardModel({spotId: 'cannon_1', slot: 'tower', spot: tower(), coins: 100, unlocks: fresh, visitor: true, ownerName: 'Captain Gull'});
     expect(empty).toMatchObject({mode: 'choose', owner: "You pay · it stays on Captain Gull's island", coins: 'You have 🪙 100'});
-    expect(empty.choices.map(choice => [choice.kind, choice.disabled])).toEqual([['cannon', false], ['mortar', true]]);
+    expect(empty.choices.map(choice => [choice.kind, choice.disabled])).toEqual([['cannon', false], ['mortar', true], ['harpoon', true]]);
     expect(buildCardModel({spotId: 'cannon_1', slot: 'tower', spot: tower(true), coins: 100, unlocks: wave3, visitor: true, ownerName: 'Captain Gull'}))
       .toMatchObject({mode: 'upgrade', upgrade: {label: 'Level 2 · 🪙 60'}, hire: false, owner: "You pay · it stays on Captain Gull's island"});
     expect(buildCardModel({spotId: 'cannon_1', slot: 'tower', visitor: true}).reason).toBe('The island is still loading.');
@@ -117,11 +142,11 @@ describe('unlocks (GAME-V3.md §4, the campaign table)', () => {
     expect(unlocksFor(1)).toMatchObject({levels: {house: 1, mortar: 0}, captain: 3});
     expect(unlocksFor(2)).toMatchObject({levels: {wall: 2, cannon: 2, house: 2, mortar: 2}, captain: 3});
     expect(wave3).toMatchObject({levels: {watchtower: 2}, crew: {gunner: true, carpenter: false}});
-    expect(wave5).toMatchObject({levels: {wall: 3, cannon: 3, mortar: 3, watchtower: 2, house: 2}, crew: {gunner: true, carpenter: true, lookout: false}, next: {wave: 8}});
+    expect(wave5).toMatchObject({levels: {wall: 3, cannon: 3, mortar: 3, watchtower: 2, house: 3}, crew: {gunner: true, carpenter: true, lookout: false}, next: {wave: 8}});
     expect(unlocksFor(8)).toMatchObject({captain: 5, crew: {lookout: true}, next: {wave: 12}});
-    expect(unlocksFor(12)).toMatchObject({levels: {wall: 4, cannon: 4, mortar: 3, watchtower: 3, house: 2}, next: {wave: 15}});
+    expect(unlocksFor(12)).toMatchObject({levels: {wall: 4, cannon: 4, mortar: 3, watchtower: 3, house: 3}, next: {wave: 15}});
     expect(unlocksFor(15)).toMatchObject({levels: {mortar: 4, watchtower: 4}, next: {wave: 20}});
-    expect(unlocksFor(20)).toMatchObject({levels: {wall: 5, cannon: 5, mortar: 5, watchtower: 5, house: 2}, next: null});
+    expect(unlocksFor(20)).toMatchObject({levels: {wall: 5, cannon: 5, mortar: 5, watchtower: 5, house: 3}, next: null});
   });
   it('reads the server unlocks first and names what a won wave brings', () => {
     // The backend's shape: ids "<kind>:<level>", "crew:<crew>", "captain:<level>" with the wave the rest needs.
@@ -144,18 +169,47 @@ describe('the campaign buildings (GAME-V3.md §4, §5)', () => {
   it('the Harbor: locked before wave 4, the market stall then, the match board after wave 7', () => {
     expect(harborModel({campaign: atWave(3)})).toMatchObject({open: false, line: 'Opens after wave 4.', stalls: []});
     const four = harborModel({campaign: atWave(4)});
-    expect(four.stalls.map(stall => [stall.id, stall.open, stall.reason])).toEqual([['market', true, ''], ['match', false, 'Opens after wave 7.']]);
+    expect(four.stalls.map(stall => [stall.id, stall.open, stall.reason])).toEqual([['market', true, ''], ['match', false, 'Opens after wave 7.'], ['weather', true, '']]);
     expect(harborModel({campaign: atWave(7)}).stalls.every(stall => stall.open)).toBe(true);
   });
-  it('the Tech hub: locked before wave 8, then one research row per tower kind, paid with coins', () => {
+  it('the Tech hub: locked before wave 8, then one branch per tower kind, tier 1 paid with coins', () => {
     const early = techModel({campaign: atWave(7), coins: 999});
-    expect(early).toMatchObject({open: false, line: 'Opens after wave 8.'});
-    expect(early.branches.every(row => row.disabled && row.reason === 'Opens after wave 8.')).toBe(true);
+    expect(early).toMatchObject({open: false, line: 'Opens after wave 8.', next: null});
+    expect(early.branches.every(row => row.tiers.every(tier => tier.state === 'locked' && tier.nodes.every(node => node.button === null)))).toBe(true);
     const hub = techModel({campaign: atWave(8, {research: {done: ['cannon']}}), coins: 150});
-    expect(hub.branches.map(row => [row.branch, row.button, row.disabled])).toEqual([
-      ['cannon', 'Researched', true], ['mortar', 'Research · 🪙 220', true], ['wall', 'Research · 🪙 120', false], ['watchtower', 'Research · 🪙 160', true]]);
-    expect(hub.branches[0]).toMatchObject({done: true, skills: ['Rapid', 'Heavy shot', 'Chain shot'], reason: 'Every cannon here can pick a skill.'});
-    expect(hub.branches[1].reason).toBe('Not enough 🪙: you need 🪙 70 more.');
+    expect(hub.branches.map(row => [row.branch, row.summary, row.folded])).toEqual([
+      ['cannon', 'Cannon skills · tier 1 of 3 ✓', true], ['mortar', 'Mortar skills', false], ['wall', 'Wall skills', false], ['watchtower', 'Watchtower skills', false]]);
+    const first = row => row.tiers[0].nodes[0];
+    expect(first(hub.branches[0])).toMatchObject({state: 'done', button: null, note: 'Every cannon here can pick one of them.', line: 'Rapid · Heavy shot · Chain shot'});
+    expect(hub.branches.slice(1).map(row => [first(row).button.label, first(row).button.disabled])).toEqual([
+      ['Research · 🪙 220', true], ['Research · 🪙 120', false], ['Research · 🪙 160', true]]);
+    expect(first(hub.branches[1]).button.reason).toBe('Not enough 🪙: you need 🪙 70 more.');
+    // Tier 2 of the cannon: locked until wave 15, both options shown with their line.
+    expect(hub.branches[0].tiers[1]).toMatchObject({tier: 2, fork: true, state: 'locked', reason: 'Opens after wave 15.'});
+    expect(hub.branches[0].tiers[1].nodes.map(node => [node.name, node.state, !!node.line])).toEqual([['Rapid II', 'locked', true], ['Long guns', 'locked', true]]);
+    expect(hub.next).toMatchObject({branch: 'mortar', tier: 1});
+  });
+  it('the Tech hub tiers: a fork of two, the chosen one lit, the other closed, a change at the tier price again', () => {
+    const tiers = {cannon: {tier: 2, tier2: 'long_guns', tier3: null}, mortar: {tier: 1, tier2: null, tier3: null}};
+    const hub = techModel({campaign: atWave(16, {research: {done: ['cannon', 'mortar'], tiers}}), coins: 500});
+    const [cannon, mortar] = hub.branches;
+    expect(cannon.summary).toBe('Cannon skills · tier 2 of 3 ✓');
+    expect(cannon.tiers.map(tier => tier.state)).toEqual(['done', 'done', 'locked']);
+    const [rapid, long] = cannon.tiers[1].nodes;
+    expect(long).toMatchObject({state: 'chosen', button: null});
+    expect(rapid).toMatchObject({state: 'closed', note: 'Closed: your crew chose Long guns.'});
+    expect(rapid.button).toMatchObject({label: 'Change to it · 🪙 360', disabled: false, action: {branch: 'cannon', tier: 2, choice: 'rapid_2', change: true}});
+    expect(cannon.tiers[2]).toMatchObject({state: 'locked', reason: 'Opens after wave 25.'});
+    // The mortar's tier 2 is the next step: both options open, side by side.
+    expect(mortar.tiers[1].state).toBe('next');
+    expect(mortar.tiers[1].nodes.map(node => [node.id, node.state, node.button.label])).toEqual([
+      ['quick_fuse', 'open', 'Pick · 🪙 440'], ['heavy_shells', 'open', 'Pick · 🪙 440']]);
+    expect(hub.next).toMatchObject({branch: 'mortar', tier: 2});
+    // Tier 3 after wave 25: a capstone the crew chose; a tower of that kind may pick it.
+    const late = techModel({campaign: atWave(25, {research: {done: ['cannon'], tiers: {cannon: {tier: 3, tier2: 'rapid_2', tier3: 'grapeshot'}}}}), coins: 0});
+    expect(late.branches[0].summary).toBe('Cannon skills · tier 3 of 3 ✓');
+    expect(late.branches[0].tiers[2].nodes.map(node => [node.id, node.state])).toEqual([['broadside', 'closed'], ['grapeshot', 'chosen']]);
+    expect(late.branches[0].tiers[2].nodes[0].button).toMatchObject({disabled: true, reason: 'Not enough 🪙: you need 🪙 630 more.'});
   });
   it('a built tower shows its skills: locked, research first, then a free pick', () => {
     const built = {...tower(true), level: 2};
@@ -167,6 +221,11 @@ describe('the campaign buildings (GAME-V3.md §4, §5)', () => {
       campaign: atWave(8, {research: {done: ['cannon']}})}).skills;
     expect(pick).toMatchObject({title: 'Skill: Heavy shot', current: 'heavy'});
     expect(pick.choices.map(choice => [choice.id, choice.active, choice.disabled])).toEqual([['rapid', false, false], ['heavy', true, true], ['chain', false, false]]);
+    // Tier 3: the capstone the island chose is one more pick; the other capstone is not offered.
+    const capstone = buildCardModel({spotId: 'cannon_1', slot: 'tower', spot: {...built, spec: 'grapeshot'}, coins: 100, unlocks: unlocksFor(25),
+      campaign: atWave(25, {research: {done: ['cannon'], tiers: {cannon: {tier: 3, tier2: 'rapid_2', tier3: 'grapeshot'}}}})}).skills;
+    expect(capstone.choices.map(choice => [choice.id, choice.capstone, choice.active])).toEqual([
+      ['rapid', false, false], ['heavy', false, false], ['chain', false, false], ['grapeshot', true, true]]);
     // Pirate Point's shared towers have no skills.
     expect(buildCardModel({spotId: 'pp_tower_1', slot: 'tower', spot: built, point: true, campaign: atWave(8, {research: {done: ['cannon']}})}).skills).toBe(null);
   });

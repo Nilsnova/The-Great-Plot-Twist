@@ -16,7 +16,8 @@ Used by: app.py (loads it once at start-up), rules.py, service.py and the tests.
 import json
 import logging
 import re
-from dataclasses import dataclass
+from collections.abc import Mapping
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 from server.wallet import MAX_DELTA
@@ -29,6 +30,9 @@ CONTENT_FILE = Path(__file__).resolve().parents[2] / "content" / "islands.json"
 # keeps a copy in frontend/src/campaign/campaign.json; frontend/tests/campaign/campaign.test.js
 # keeps the two equal.
 CAMPAIGN_FILE = CONTENT_FILE.with_name("campaign.json")
+# The second wave of defenses (T43, D048 proposed): read only while the flag defenses_v2 is on.
+DEFENSES_V2_FILE = CONTENT_FILE.with_name("defenses_v2.json")
+DEFENSES_V2_FLAG = "defenses_v2"
 
 ID_PATTERN = re.compile(r"[a-z][a-z0-9_]{1,39}")
 # The weather states of weather/states.py. Each one needs its line in the file.
@@ -47,17 +51,32 @@ MAX_CAPTAIN_LEVEL = 5
 CREW_KINDS = ("gunner", "carpenter", "lookout")
 # The skills and weapons the database knows (the check rules of 20261112030000_captain_skills.sql),
 # in the order of the tree and the shop. frontend/src/pirates/captain-ids.js lists the same.
+# 20261112120000_captain_tree.sql widened them to five tiers a branch with forks and capstones.
 SKILL_IDS = (
     "steady_aim",
     "long_barrel",
+    "hot_shot",
     "quick_hands",
+    "far_sight",
+    "heavy_shot",
+    "dead_eye",
     "cutlass",
     "sweep",
+    "heavy_blade",
     "second_wind",
+    "snap_shot",
+    "bruiser",
+    "field_surgeon",
     "quick_fix",
     "long_reach",
+    "sturdy_planks",
     "master_shipwright",
+    "swift_hammer",
+    "wide_arc",
+    "grand_engineer",
 )
+# The captain roles (docs/GAME-V3.md, Captain tree and roles): one per captain, picked at roleLevel.
+ROLE_IDS = ("medic", "engineer", "gunner")
 WEAPON_IDS = ("musket", "pistols", "blunderbuss", "long_rifle", "fire_bombs")
 STARTING_WEAPON = "musket"
 # The Tech hub (docs/GAME-V3.md section 5): the four research branches and the skill a tower of that
@@ -69,6 +88,30 @@ RESEARCH_SPECS = {
     "wall": ("stone", "spiked", "quick_mend"),
     "watchtower": ("spotter", "signal_fire"),
 }
+# The research tiers (docs/GAME-V3.md section 5.1): tier 2 and tier 3 are a choice of two per kind.
+# Tier 2 is a bonus for every tower of that kind; tier 3 a capstone skill a tower of that kind may
+# then pick.
+# 20261112100000_research_tiers.sql and frontend/src/campaign/tech.js list the same ids.
+RESEARCH_TOP_TIER = 3
+RESEARCH_BONUSES = {
+    "cannon": ("rapid_2", "long_guns"),
+    "mortar": ("quick_fuse", "heavy_shells"),
+    "wall": ("mason_drill", "thick_walls"),
+    "watchtower": ("lookout_drill", "high_tower"),
+}
+RESEARCH_CAPSTONES = {
+    "cannon": ("broadside", "grapeshot"),
+    "mortar": ("shockwave", "inferno"),
+    "wall": ("bastion", "thorns"),
+    "watchtower": ("eagle_eye", "war_drums"),
+}
+# The campaign id each tier opens with (campaign.json).
+RESEARCH_TIER_ITEMS = ("tech_hub", "research_2", "research_3")
+# The house roles (docs/GAME-V3.md "Houses"): from level 2 a house picks one of these, free, with no
+# research; it is stored like a tower skill (islet_buildings.spec). The check rule of
+# 20261112090000_house_roles.sql and frontend/src/campaign/houses.js list the same ids.
+HOUSE_ROLES = ("barracks", "tavern", "workshop")
+HOUSE_ROLE_LEVEL = 2
 # The campaign's own ids: the island's services and the tiers (everything that is not a level,
 # a crew member or a captain level). docs/GAME-V3.md section 4.
 SERVICE_IDS = (
@@ -84,6 +127,8 @@ SERVICE_IDS = (
     "tier_20",
     "tier_30",
     "tier_50",
+    "research_2",
+    "research_3",
 )
 
 
@@ -146,15 +191,28 @@ class Skill:
     skill: str  # steady_aim
     name: str  # Steady aim
     branch: str  # marksman, brawler or shipwright
-    tier: int  # 1 to 3
+    tier: int  # 1 to 5
     cost: int  # skill points
-    needs: str | None  # the skill of the tier above in the same branch, or None for tier 1
+    needs: tuple[str, ...]  # the skills of the tier above in the same branch (any one opens it)
+    excludes: str | None = None  # the twin of a fork: learning one closes the other
+    role: str | None = None  # a capstone: only this role may learn it
+
+
+@dataclass(frozen=True)
+class Role:
+    role: str  # medic
+    name: str  # Medic
+    branch: str  # the branch whose capstone this role opens
 
 
 @dataclass(frozen=True)
 class SkillTree:
     waves_per_point: int  # one skill point per this many won waves
     tree: tuple[Skill, ...]  # in the order of SKILL_IDS
+    roles: tuple[Role, ...] = ()  # in the order of ROLE_IDS
+    role_level: int = 3  # the captain level that opens the role choice
+    respec_per_level: int = 100  # a respec costs this many coins x the captain level
+    engineer_discount: int = 10  # percent off buildings and upgrades for an engineer
 
 
 @dataclass(frozen=True)
@@ -182,9 +240,13 @@ class Loot:
 class Revive:
     base: int  # helping a fallen captain up during wave n costs the helper base + per_wave * n
     per_wave: int
+    # on an island with a Tavern (a house role) it costs this many percent less, rounded down;
+    # wave_revive() of 20261112090000_house_roles.sql takes it off (a test keeps the two equal)
+    tavern_percent: int = 25
 
-    def price(self, wave: int) -> int:
-        return self.base + self.per_wave * wave
+    def price(self, wave: int, tavern: bool = False) -> int:
+        price = self.base + self.per_wave * wave
+        return price * (100 - self.tavern_percent) // 100 if tavern else price
 
 
 @dataclass(frozen=True)
@@ -203,8 +265,35 @@ class Research:
 
     branch: str  # cannon, mortar, wall or watchtower: the tower kind it is for
     name: str
-    coins: int  # paid once per island, by any member
+    prices: tuple[
+        int, ...
+    ]  # tier 1, 2 and 3 (a change of a tier-2 or tier-3 choice costs that tier again)
     specs: tuple[tuple[str, str], ...]  # (spec id, name): what a tower of that kind may pick
+    tier2: tuple[
+        tuple[str, str], ...
+    ] = ()  # (id, name): the two bonuses of tier 2 (the island picks one)
+    tier3: tuple[
+        tuple[str, str], ...
+    ] = ()  # (spec id, name): the two capstones of tier 3 (the island picks one)
+
+    @property
+    def coins(self) -> int:
+        """The price of tier 1."""
+        return self.prices[0]
+
+    def price_of(self, tier: int) -> int:
+        return self.prices[tier - 1]
+
+    def options_of(self, tier: int) -> tuple[str, ...]:
+        """The ids of the two options of tier 2 or 3 (empty for tier 1)."""
+        pairs = self.tier2 if tier == 2 else self.tier3 if tier == 3 else ()
+        return tuple(item for item, _ in pairs)
+
+    def option_name(self, option: str) -> str:
+        for item, name in (*self.tier2, *self.tier3):
+            if item == option:
+                return name
+        return option
 
 
 @dataclass(frozen=True)
@@ -274,6 +363,9 @@ class IslandCatalogue:
     campaign: Campaign
     research: tuple[Research, ...] = ()
     wreck: Wreck = Wreck(500, (25, 100))
+    # T36: the feature flag "placement" (set by create_app, not by the file). While it is off the
+    # island layout table is never read and no spot moves: every answer shows the fixed spots.
+    placement: bool = False
 
 
 def read_whole(entry: dict, name: str, where: str, lowest: int, highest: int) -> int:
@@ -401,31 +493,72 @@ def read_skills(data: dict) -> SkillTree:
     for index, item in enumerate(read_list(entry, "tree", len(SKILL_IDS))):
         where = f"captainSkills.tree[{index}]"
         needs = item.get("needs")
+        if not isinstance(needs, list):
+            raise IslandFileError(f"{where}: 'needs' must be a list (empty for tier 1).")
+        excludes, role = item.get("excludes"), item.get("role")
         tree.append(
             Skill(
                 skill=read_id(item, "skill", where),
                 name=read_text(item, "name", where, 40),
                 branch=read_id(item, "branch", where),
-                tier=read_whole(item, "tier", where, 1, 3),
+                tier=read_whole(item, "tier", where, 1, 5),
                 cost=read_whole(item, "cost", where, 1, 10),
-                needs=None if needs is None else read_id(item, "needs", where),
+                needs=tuple(read_id({"needs": value}, "needs", where) for value in needs),
+                excludes=None if excludes is None else read_id(item, "excludes", where),
+                role=None if role is None else read_id(item, "role", where),
             )
         )
     if tuple(skill.skill for skill in tree) != SKILL_IDS:
         raise IslandFileError(f"captainSkills.tree must list {', '.join(SKILL_IDS)} in this order.")
-    by_id = {skill.skill: skill for skill in tree}
-    for skill in tree:
-        above = by_id.get(skill.needs) if skill.needs else None
-        if (skill.tier == 1) != (skill.needs is None) or (
-            above is not None and (above.branch != skill.branch or above.tier != skill.tier - 1)
-        ):
-            raise IslandFileError(
-                f"captainSkills: '{skill.skill}' must need the tier above it in its branch."
-            )
+    roles = tuple(
+        Role(
+            role=read_id(item, "role", f"captainSkills.roles[{index}]"),
+            name=read_text(item, "name", f"captainSkills.roles[{index}]", 40),
+            branch=read_id(item, "branch", f"captainSkills.roles[{index}]"),
+        )
+        for index, item in enumerate(read_list(entry, "roles", len(ROLE_IDS)))
+    )
+    if tuple(role.role for role in roles) != ROLE_IDS:
+        raise IslandFileError(f"captainSkills.roles must list {', '.join(ROLE_IDS)} in this order.")
+    check_tree(tree, roles)
+    respec = read_object(entry, "respec")
     return SkillTree(
         waves_per_point=read_whole(entry, "wavesPerPoint", "captainSkills", 1, 100),
         tree=tuple(tree),
+        roles=roles,
+        role_level=read_whole(entry, "roleLevel", "captainSkills", 2, MAX_CAPTAIN_LEVEL),
+        respec_per_level=read_whole(respec, "coinsPerLevel", "captainSkills.respec", 1, 100000),
+        engineer_discount=read_whole(entry, "engineerDiscountPercent", "captainSkills", 1, 50),
     )
+
+
+def check_tree(tree: list[Skill], roles: tuple[Role, ...]) -> None:
+    """The shape of the tree: a tier 1 needs nothing, every other skill needs the skills of the
+    tier above in its branch, a fork is a pair of tier 2 or 4 skills that exclude each other, and
+    a capstone (tier 5) needs the role of its branch."""
+    by_id = {skill.skill: skill for skill in tree}
+    for skill in tree:
+        where = f"captainSkills: '{skill.skill}'"
+        above = [by_id.get(name) for name in skill.needs]
+        if (skill.tier == 1) != (not skill.needs) or any(
+            item is None or item.branch != skill.branch or item.tier != skill.tier - 1
+            for item in above
+        ):
+            raise IslandFileError(f"{where} must need the tier above it in its branch.")
+        if skill.excludes is not None:
+            twin = by_id.get(skill.excludes)
+            if (
+                skill.tier not in (2, 4)
+                or twin is None
+                or twin.excludes != skill.skill
+                or (twin.branch, twin.tier) != (skill.branch, skill.tier)
+            ):
+                raise IslandFileError(f"{where} must exclude its twin on tier 2 or 4.")
+        wanted = next((role.role for role in roles if role.branch == skill.branch), None)
+        if (skill.role is not None) != (skill.tier == 5) or (
+            skill.role is not None and skill.role != wanted
+        ):
+            raise IslandFileError(f"{where}: only the tier 5 capstone has the role of its branch.")
 
 
 def read_weapons(data: dict) -> tuple[Weapon, ...]:
@@ -465,6 +598,7 @@ def read_revive(data: dict) -> Revive:
     return Revive(
         base=read_whole(entry, "base", "revive", 1, 1000),
         per_wave=read_whole(entry, "perWave", "revive", 0, 1000),
+        tavern_percent=read_whole(entry, "tavernPercent", "revive", 0, 100),
     )
 
 
@@ -500,6 +634,17 @@ def read_weather(data: dict) -> tuple[Weather, ...]:
     return lines
 
 
+def read_options(item: dict, name: str, key: str, where: str) -> tuple[tuple[str, str], ...]:
+    options = item.get(name)
+    if (
+        not isinstance(options, list)
+        or len(options) != 2
+        or not all(isinstance(o, dict) for o in options)
+    ):
+        raise IslandFileError(f"{where}: '{name}' must be a list of two options.")
+    return tuple((read_id(o, key, where), read_text(o, "name", where, 40)) for o in options)
+
+
 def read_research(data: dict) -> tuple[Research, ...]:
     entry = read_object(data, "research")
     branches = []
@@ -508,19 +653,30 @@ def read_research(data: dict) -> tuple[Research, ...]:
         specs = item.get("specs")
         if not isinstance(specs, list) or not 1 <= len(specs) <= 3:
             raise IslandFileError(f"{where}: 'specs' must be a list of 1 to 3 skills.")
+        prices = read_whole_list(item, "coins", where, 1, RESEARCH_TOP_TIER)
+        if len(prices) != RESEARCH_TOP_TIER or list(prices) != sorted(prices):
+            raise IslandFileError(f"{where}: 'coins' must be three rising prices, one per tier.")
         branch = Research(
             branch=read_id(item, "branch", where),
             name=read_text(item, "name", where, 40),
-            coins=read_whole(item, "coins", where, 1, MAX_DELTA),
+            prices=prices,
             specs=tuple(
                 (read_id(spec, "spec", where), read_text(spec, "name", where, 40))
                 for spec in specs
                 if isinstance(spec, dict)
             ),
+            tier2=read_options(item, "tier2", "id", where),
+            tier3=read_options(item, "tier3", "spec", where),
         )
         if tuple(spec for spec, _ in branch.specs) != RESEARCH_SPECS.get(branch.branch):
             raise IslandFileError(
                 f"{where}: the skills of '{branch.branch}' must be the known ones."
+            )
+        if branch.options_of(2) != RESEARCH_BONUSES.get(branch.branch) or branch.options_of(
+            3
+        ) != RESEARCH_CAPSTONES.get(branch.branch):
+            raise IslandFileError(
+                f"{where}: the tier options of '{branch.branch}' must be the known ones."
             )
         branches.append(branch)
     if tuple(branch.branch for branch in branches) != tuple(RESEARCH_SPECS):
@@ -666,3 +822,110 @@ def island_or_none() -> IslandCatalogue | None:
     except IslandFileError as error:
         logger.error("The island cannot start: %s", error)
         return None
+
+
+# --- the second wave of defenses (T43, decision D048 proposed) ---
+#
+# defenses_v2.json holds new tower kinds that are not part of the live game yet. While the flag
+# defenses_v2 is off the file is never read and the catalogue stays exactly as loaded above. While
+# it is on, catalogue_for_flags() returns a copy with each new kind added to the kinds, to the tower
+# spots it names and to the campaign steps of its levels, so every rule, price and unlock of the
+# existing code (rules.py, service.py) treats it like the harpoon tower. specs/T43-new-defenses.md.
+
+
+@dataclass(frozen=True)
+class FlaggedKind:
+    kind: Kind  # with its level_waves
+    line: str  # the build card line
+    news: str  # what the narrator says when it opens
+    spots: tuple[str, ...]  # the island tower spots it may stand on
+
+
+def read_defenses_v2(
+    catalogue: IslandCatalogue, path: Path = DEFENSES_V2_FILE
+) -> tuple[FlaggedKind, ...]:
+    """Read and check defenses_v2.json against the loaded catalogue. Raises IslandFileError."""
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as error:
+        raise IslandFileError(f"Cannot read {path.name}: {type(error).__name__}.") from error
+    if not isinstance(data, dict):
+        raise IslandFileError(f"{path.name} must hold one JSON object.")
+    read_text(data, "about", path.name, 2000)
+    known = {kind.kind for kind in catalogue.kinds}
+    # A tower spot is an island spot that takes a cannon (Pirate Point's spots are not offered).
+    towers = {spot.id for spot in catalogue.spots if "cannon" in spot.kinds}
+    steps = {step.wave for step in catalogue.campaign.steps}
+    found = []
+    for index, entry in enumerate(read_list(data, "kinds", 4)):
+        where = f"defenses_v2.kinds[{index}]"
+        name = read_id(entry, "kind", where)
+        if name in known:
+            raise IslandFileError(f"{where}: '{name}' is already a kind of islands.json.")
+        prices = read_whole_list(entry, "prices", where, 1, MAX_LEVEL)
+        waves = read_whole_list(entry, "levelWaves", where, 0, MAX_LEVEL)
+        if len(waves) != len(prices):
+            raise IslandFileError(f"{where}: 'levelWaves' must have one wave per level.")
+        if list(waves) != sorted(waves):
+            raise IslandFileError(f"{where}: the levels must open in order.")
+        missing = [wave for wave in waves if wave not in steps]
+        if missing:
+            raise IslandFileError(f"{where}: wave {missing[0]} is not a campaign step.")
+        spots = entry.get("spots")
+        if (
+            not isinstance(spots, list)
+            or not spots
+            or not all(isinstance(spot, str) and spot in towers for spot in spots)
+            or len(set(spots)) != len(spots)
+        ):
+            raise IslandFileError(f"{where}: 'spots' must name island tower spots, once each.")
+        found.append(
+            FlaggedKind(
+                kind=Kind(name, read_text(entry, "name", where, 40), prices, waves),
+                line=read_text(entry, "line", where, 120),
+                news=read_text(entry, "news", where, 200),
+                spots=tuple(spots),
+            )
+        )
+        known.add(name)
+    return tuple(found)
+
+
+def with_defenses_v2(catalogue: IslandCatalogue, extra: tuple[FlaggedKind, ...]) -> IslandCatalogue:
+    """A copy of the catalogue with the flagged kinds added. The original is not changed."""
+    kinds = catalogue.kinds + tuple(item.kind for item in extra)
+    spots = tuple(
+        Spot(spot.id, spot.kinds + tuple(i.kind.kind for i in extra if spot.id in i.spots))
+        for spot in catalogue.spots
+    )
+    steps = tuple(
+        CampaignStep(
+            step.wave,
+            step.opens
+            + tuple(
+                f"{item.kind.kind}:{level}"
+                for item in extra
+                for level, wave in enumerate(item.kind.level_waves, start=1)
+                if wave == step.wave
+            ),
+            step.later,
+        )
+        for step in catalogue.campaign.steps
+    )
+    campaign = Campaign(steps, catalogue.campaign.spots)
+    return replace(catalogue, kinds=kinds, spots=spots, campaign=campaign)
+
+
+def catalogue_for_flags(
+    catalogue: IslandCatalogue, flags: Mapping[str, bool], path: Path = DEFENSES_V2_FILE
+) -> IslandCatalogue:
+    """The catalogue the server runs with. Flag defenses_v2 off: the same object, untouched (the
+    file is not even read). On: the copy of with_defenses_v2(). A broken file with the flag on
+    is logged and the island keeps running without the new kinds."""
+    if not flags.get(DEFENSES_V2_FLAG, False):
+        return catalogue
+    try:
+        return with_defenses_v2(catalogue, read_defenses_v2(catalogue, path))
+    except IslandFileError as error:
+        logger.error("The %s defenses cannot start: %s", DEFENSES_V2_FLAG, error)
+        return catalogue

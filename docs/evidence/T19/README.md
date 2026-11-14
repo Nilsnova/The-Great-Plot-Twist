@@ -1,5 +1,8 @@
 # T19 interaction evidence
 
+These original feature captures predate the 14 Nov main sync. They remain historical evidence;
+new integration checks are recorded in [the task handover](../../../specs/T19-nearby-interactions.md#main-integration-and-conflict-resolution-14-nov-2026).
+
 These captures use the local in-memory game (`?islands=fake`), not a live account or database.
 The captain stands near the bell and clicks the more distant `cannon_3` build spot. The target
 and player positions are the same before and after; camera framing follows the viewport.
