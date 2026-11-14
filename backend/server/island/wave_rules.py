@@ -1,4 +1,5 @@
-"""The simulation rules a wave plays with (T33 tower_health, T34/T35 pathing, T38 rescue).
+"""The simulation rules a wave plays with (T33 tower_health, T34/T35 pathing, T38 rescue, T43
+defenses_v2).
 
 Each rule is switched on by the feature flag of the same name. The first wave answer for a wave
 (start, join or current) keeps the rule set the flags say at that moment, in the table wave_rules
@@ -27,9 +28,12 @@ from server.settings import Settings
 from server.supabase_admin import SupabaseAdmin
 
 # The rules in their fixed order (the "rules" of the wave answers). The browser's sim turns each
-# one into an option of createWave() (frontend/src/pirates/wave-rules.js). The migration's check
-# constraint lists the same names.
-SIM_RULES = ("tower_health", "pathing", "rescue")
+# one into an option of createWave() (frontend/src/pirates/wave-rules.js). The migrations' check
+# constraint lists the same names (20261114130500_wave_rules.sql, widened for defenses_v2 by
+# 20261114140000_culverin.sql). defenses_v2 (T43): the culverins of the island fight in this wave;
+# without it every client's sim ignores a culverin, so a whole wave fights the same island even
+# if the flag (and so the island answer) changed while it ran.
+SIM_RULES = ("tower_health", "pathing", "rescue", "defenses_v2")
 logger = logging.getLogger(__name__)
 
 

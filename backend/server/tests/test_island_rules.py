@@ -15,7 +15,13 @@ import pytest
 from server.errors import ApiError
 from server.game.building_catalogue import load_buildings
 from server.island import codes, rules
-from server.island.catalogue import CONTENT_FILE, IslandFileError, load_island
+from server.island.catalogue import (
+    CONTENT_FILE,
+    IslandFileError,
+    catalogue_for_flags,
+    load_island,
+)
+from server.island.wave_rules import SIM_RULES
 from server.island.waves import SEED_LIMIT
 from server.tests.helpers import REPO_ROOT
 from server.wallet import find_direction
@@ -25,6 +31,8 @@ CREWS = REPO_ROOT / "supabase" / "migrations" / "20261110020000_wave_crews.sql"
 TOWER_DEFENSE = REPO_ROOT / "supabase" / "migrations" / "20261111030000_tower_defense.sql"
 INNER_WALLS = REPO_ROOT / "supabase" / "migrations" / "20261112020000_inner_walls.sql"
 HARPOON = REPO_ROOT / "supabase" / "migrations" / "20261113020000_harpoon_tower.sql"
+CULVERIN = REPO_ROOT / "supabase" / "migrations" / "20261114140000_culverin.sql"
+WAVE_RULES = REPO_ROOT / "supabase" / "migrations" / "20261114130500_wave_rules.sql"
 # The md5 of 20261110010000 as applied live (a checksum, not a secret).
 APPLIED_MD5 = "79278156e4925b2d39076722c11d2f00"  # pragma: allowlist secret
 
@@ -319,19 +327,55 @@ def check_pairs(text: str, constraint: str) -> set[tuple[str, str]]:
 
 
 def test_the_check_rule_allows_the_old_pairs_and_every_island_spot():
-    # The newest rule (20261113020000, the harpoon tower of GAME-V3 section 5) is the file's.
-    pairs = check_pairs(HARPOON.read_text(), "islet_buildings_plot_fits_building")
+    # The newest rule (20261114140000, the culverin of T43) is the file's with the flag
+    # defenses_v2 on (the catalogue then has the culverin on the tower spots); the harpoon
+    # tower's rule (20261113020000) is the file's with the flag off.
+    pairs = check_pairs(CULVERIN.read_text(), "islet_buildings_plot_fits_building")
+    harpoon = check_pairs(HARPOON.read_text(), "islet_buildings_plot_fits_building")
     inner = check_pairs(INNER_WALLS.read_text(), "islet_buildings_plot_fits_building")
 
     old = {(s.plot, s.building_type) for s in load_buildings().spots if not s.stands_from_start}
     new = {(spot.id, kind) for spot in load_island().spots for kind in spot.kinds}
+    flagged = catalogue_for_flags(load_island(), {"defenses_v2": True})
+    flagged_new = {(spot.id, kind) for spot in flagged.spots for kind in spot.kinds}
     first = check_pairs(migration_text(), "islet_buildings_plot_fits_building")
     before = check_pairs(TOWER_DEFENSE.read_text(), "islet_buildings_plot_fits_building")
-    assert pairs == old | new
-    assert first <= before <= pairs  # every pair an existing row may use stays allowed
+    assert pairs == old | flagged_new
+    assert harpoon == old | new
+    assert first <= before <= inner <= harpoon <= pairs  # every pair a row may use stays allowed
     assert inner - before == {(f"wall_{n}", "wall") for n in range(7, 13)}
-    assert inner <= pairs  # every pair an existing row may use stays allowed
-    assert pairs - inner == {(f"cannon_{n}", "harpoon") for n in range(1, 8)}
+    assert harpoon - inner == {(f"cannon_{n}", "harpoon") for n in range(1, 8)}
+    assert pairs - harpoon == {(f"cannon_{n}", "culverin") for n in range(1, 8)}
+
+
+def test_the_culverin_migration_changes_only_the_spot_rule_and_the_rule_names():
+    text = CULVERIN.read_text()
+    verbs = r"^(alter|create|drop|insert|update|delete|grant|comment)"
+    statements = [line for line in text.splitlines() if re.match(verbs, line)]
+    assert statements == [
+        "alter table public.islet_buildings",
+        "alter table public.islet_buildings",
+        "comment on constraint islet_buildings_plot_fits_building on public.islet_buildings is",
+        "alter table public.wave_rules drop constraint if exists wave_rules_known_names;",
+        "alter table public.wave_rules",
+        "comment on table public.wave_rules is",
+    ]
+    code = re.sub(r"--.*", "", text)
+    # The skill rule (building_type, spec) and the Point rule stay: a culverin has no skill.
+    assert "islet_buildings_spec_fits_kind" not in code
+    assert "pirate_point_buildings" not in code
+
+
+def rule_names(text: str) -> list[str]:
+    check = re.search(r"constraint wave_rules_known_names\s+check \(rules <@ array\[(.*?)\]", text)
+    return re.findall(r"'([a-z0-9_]+)'", check.group(1))
+
+
+def test_the_wave_rule_names_in_the_database_are_the_servers():
+    first = rule_names(WAVE_RULES.read_text())
+    assert rule_names(CULVERIN.read_text()) == list(SIM_RULES)
+    assert set(first) <= set(SIM_RULES)  # every name a kept wave may hold stays allowed
+    assert set(SIM_RULES) - set(first) == {"defenses_v2"}
 
 
 def test_the_inner_wall_migration_changes_only_the_spot_rule():
