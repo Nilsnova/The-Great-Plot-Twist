@@ -32,8 +32,9 @@ POST /api/waves/start  {"where": "own" | "ISLE-K7Q2M" | "pirate_point", "actionU
     client of the wave feeds these to its simulation.
     "rules" (only while at least one is on, else the key is left out): the simulation rules
     this wave plays with, from the feature flags of the same names, in this order:
-    "tower_health" (T33, D049 proposed). Every client of a wave reads them from the wave
-    answer, never from its own /api/config, so the whole wave plays one rule set.
+    "tower_health" (T33, D049 proposed), "pathing" (T34/T35, D040 proposed). Every client
+    of a wave reads them from the wave answer, never from its own /api/config, so the whole
+    wave plays one rule set.
     Errors: 404 no_such_island, 409 wave_running (one wave per island at a time)
 
 POST /api/waves/join  {"waveId": "6f1c..."}
@@ -130,7 +131,7 @@ WALL_HEALTH = Annotated[StrictInt, Field(ge=0, le=100)]
 MAX_WALLS = 24
 # The simulation rules a wave can carry (the "rules" of the wave answer), each switched on by the
 # feature flag of the same name. The browser's sim turns each one into an option of createWave().
-SIM_RULES = ("tower_health",)
+SIM_RULES = ("tower_health", "pathing")
 
 
 class StartRequest(BaseModel):

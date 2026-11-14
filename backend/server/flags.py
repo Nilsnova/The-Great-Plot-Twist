@@ -34,6 +34,8 @@ FLAG_NAMES = (
     "placement",  # T36 flexible placement: needs migration 20261114110000_island_layout.sql
     # T33 (D049, proposed): towers have hp, break and are repaired in a wave (a wave rule).
     "tower_health",
+    # T34/T35 (D040, proposed): boarders walk round or through the real walls (a wave rule).
+    "pathing",
 )
 
 

@@ -817,6 +817,8 @@ and [message contract](INTERFACES.md#t28-boss-minigame-preparation).
 
 **Alternatives and trade-offs:** per-boarder A* (more work per boarder, same routes); always breaching (no gaps, today's spirit, but T36 walls would mean nothing); always detouring (walls never hacked). Lone short walls are walked round, so today's isolated spots lose value under the new rule: before T36, either keep the legacy routes (option A) or join the ring spots into a closed ring (option B); a balance decision with T3. The wiring needs a wave option `pathing` so a mixed-version room never mixes rules. See [the spec](../specs/T34-T35-targeting-pathing.md).
 
+**Update 14 Nov (wiring):** wired behind the flag and wave rule `pathing` (off). Option A while it is off (today's routes); with it on, walls are their T36 footprints (D041), so placed walls can form rings. Balance of lone walls to be checked with T3 before switching on.
+
 ## D043 · Co-op permissions, spending and absent members · 2026-11-14
 
 **Status:** proposed (T37 and T42 of [OPEN-TODOS §9](OPEN-TODOS.md#9-defense-and-shared-island-expansion-proposal-14-nov)); branch `feat/t37-t42-coop-policy`, responsible teammate Nils, plan by Ianno. Issue [#25](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/25), fast-tracked under D047. **Agreed by:** pending team review.

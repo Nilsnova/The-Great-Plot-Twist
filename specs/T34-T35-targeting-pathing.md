@@ -4,7 +4,7 @@
 >
 > **Who uses it:** the enemies-and-layout lane, the recovery lane (T30–T33, which owns `sim.js` right now), the placement lane (T36) and the reviewer.
 
-- **Status:** draft, design and modules in review; not wired into the game yet
+- **Status:** modules merged (#33); **wired into `sim.js` on branch `feat/integration-sim` behind the flag/wave rule `pathing` (off by default)**, see [Wiring as built](#wiring-as-built-14-nov)
 - **Branch:** `feat/t34-t35-targeting-pathing`
 - **Issue and pull request:** [#22](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/22); pull request to be opened by the responsible teammate
 - **Decision:** [D040](../docs/DECISIONS.md#d040--enemy-targets-and-wall-pathing-t34t35--2026-11-14) (proposed)
@@ -88,6 +88,14 @@ To do in one small follow-up PR **after the recovery lane's sim.js changes merge
 6. `legPoint` and the walking branch of `moveBoarder`: walk to the next cell's centre instead of the next route leg; stand at the wall cell's edge (`B.contact`) to hack. The hacking and fighting branches compare target ids as today.
 7. `toHeart`, events, `state()`, `result()`, rendering and sync: unchanged (boarders still have `x`, `z`, `state`).
 8. Tests: rerun `tests/pirates/` (boarding, balance and late-game tests will move with option B), add a same-seed replay test with `pathing: true`, and run `npm run test:mp`.
+
+## Wiring as built (14 Nov)
+
+- **Flag and wave rule `pathing`.** The server lists `"pathing"` in the wave answers' `rules` while the flag is on; every client of the wave passes `pathing: true` to `createWave` (`wave-rules.js`), so a room never mixes rules. Off (the default): today's fixed routes, unchanged events (D040 **option A**, tested in `pathing-wiring.test.js`).
+- **Walls from the island layout.** With T36 merged, walls stand where the island answer places them; `boarder-paths.js` marks each wall's **2 x 2 footprint** (T36 `FOOTPRINTS.wall`, tested equal) on the 1-unit grid (cells the square covers by more than a quarter unit). Walls placed edge to edge form lines and closed rings, so the detour/breach rule means something; a lone wall is walked round (the balance finding above; acceptable while the flag is off, retune with T3 before switching on). Option B (joining ring spots) is not built: T36 placement replaces it.
+- **In sim.js:** a boarder wades to its landing as before (the same dice), then each tick asks `paths.next()`: the next cell centre, the standing wall to hack (from where it stands, next to it), the heart, or wait when no way exists. Captain and tower targets need a clear straight way (`lineIsClear`). The layout is rebuilt each tick from the walls' hp; the distance field only when its key changes. Towers and houses stay walkable (follow-up: non-walkable footprints).
+- **Review follow-ups done first:** `nearestWithin` counts `<= reach`; `nextStep` guards a null best; `Math.sqrt` instead of `Math.hypot`.
+- **Tests:** `tests/pirates/pathing-wiring.test.js` (footprint, closed ring breached once, lone wall walked round, off = unchanged, **same-seed replay with pathing on**, boarders never walk inside a standing wall).
 
 ## Out of scope
 

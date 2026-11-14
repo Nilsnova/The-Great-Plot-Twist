@@ -19,6 +19,8 @@ import { readHealth, startHp } from './wall-health.js';
 import { createTowerHealth } from './tower-health.js';
 // T34 (D040, proposed): what a boarder goes for, here: a tower in reach (with tower health).
 import { TARGET_PROFILES, nearestWithin } from './targeting.js';
+// T35 (D040, proposed): routes over the real wall layout, only with the wave option pathing (the rule "pathing").
+import { createBoarderPaths } from './boarder-paths.js';
 
 const freeze = value => {
   for (const inner of Object.values(value)) if (inner && typeof inner === 'object') freeze(inner);
@@ -451,6 +453,9 @@ function shuffle(list, random) {
  * towerHealth: true (T33, D049; the wave's rule "tower_health" from the server, the same on every client) gives
  * cannons, mortars and harpoons hp (tower-health.js): boarders hack a tower in their reach, a broken one stops
  * firing, and repair / rebuild inputs whose wallId names a tower repair or rebuild it.
+ * pathing: true (T34/T35, D040; the wave's rule "pathing") walks boarders over a grid of the island past the walls'
+ * footprints (boarder-paths.js): a gap when it is quicker, else through the cheapest wall; no captain or tower
+ * through a standing wall. Without it the fixed routes of landBoarder stay (D040 option A).
  */
 export function createWave(options = {}) {
   const C = CONFIG, B = C.boarding, random = createRandom(options?.seed);
@@ -520,6 +525,9 @@ export function createWave(options = {}) {
   const towerHealth = createTowerHealth({ enabled: options?.towerHealth === true, towers, now: () => now(), tick: C.tick });
   const towerById = new Map(towers.map(item => [item.id, item]));
   const wallById = new Map(walls.map(item => [item.id, item]));
+  // T35: the routes over the walls (null without the option: today's fixed routes). No dice.
+  const paths = options?.pathing === true ? createBoarderPaths({ coast: readCoast(options?.coast), heart, walls,
+    pace: { hackPerSecond: B.hack * curve.damage / B.hackEvery, speed: B.speed * curve.speed } }) : null;
 
   // Where a gunboat anchors (CONFIG.gunboat): the first point of its course where the nearest tower is as
   // far off as it can shoot (`range`), or, if it can, just outside the reach of the nearest cannon, but never
@@ -901,6 +909,7 @@ export function createWave(options = {}) {
     const consider = hero => {
       if (!fit(hero) || crowdOn(hero) >= H.crowd) return;
       const d = distance(boarder.x, boarder.z, hero.x, hero.z);
+      if (paths && d < near + 1e-9 && !paths.canReach(boarder, hero)) return; // T35: never through a standing wall
       if (d < near - 1e-9 || (best && Math.abs(d - near) <= 1e-9 && hero.id < best.id)) { best = hero; near = d; }
     };
     for (const hero of party.values()) consider(hero);
@@ -922,7 +931,8 @@ export function createWave(options = {}) {
       if (held && towerHealth.isTarget(held) && distance(boarder.x, boarder.z, held.x, held.z) <= TP.leash + 1e-9) return held;
       boarder.towerFoe = null; boarder.goal = null;
     }
-    const found = nearestWithin(boarder, towers, TP.towerReach, tower => towerHealth.isTarget(tower) && crowdOnTower(tower) < TP.crowd);
+    const found = nearestWithin(boarder, towers, TP.towerReach, tower => towerHealth.isTarget(tower) && crowdOnTower(tower) < TP.crowd
+      && (!paths || paths.canReach(boarder, tower)));
     if (found) { boarder.towerFoe = found.id; boarder.goal = null; }
     return found;
   }
@@ -1063,6 +1073,8 @@ export function createWave(options = {}) {
     }
     route.push(ring ? { wall: ring } : { x: heart.x + Math.cos(heading) * B.meadow, z: heart.z + Math.sin(heading) * B.meadow });
     route.push({ x: heart.x, z: heart.z, heart: true });
+    // T35: with pathing only the landing and the heart stay; the grid finds the way between (the dice above are drawn alike).
+    if (paths) route.splice(1, route.length - 2);
     // Brutes (wave 20+): every n-th boarder is a big one, by its number, so every screen agrees.
     const T = C.tiers.brutes, every = tier.brutes > 0 ? Math.max(1, Math.round(1 / tier.brutes)) : 0;
     const brute = every > 0 && nextBoarderId % every === 0;
@@ -1095,6 +1107,7 @@ export function createWave(options = {}) {
   function pickBoarderTarget(boarder) {
     const foe = foeOf(boarder);
     if (foe) { boarder.towerFoe = null; return { kind: 'captain', hero: foe }; }
+    if (paths && boarder.leg > 0) return pathTarget(boarder);
     while (boarder.leg < boarder.route.length - 1) {
       const leg = boarder.route[boarder.leg];
       if (leg.wall && leg.wall.hp > 0) { boarder.towerFoe = null; return { kind: 'wall', wall: leg.wall, leg }; }
@@ -1105,6 +1118,17 @@ export function createWave(options = {}) {
     if (tower) return { kind: 'tower', tower };
     if (boarder.leg < boarder.route.length - 1) return { kind: 'point', leg: boarder.route[boarder.leg] };
     return { kind: 'heart', leg: boarder.route[boarder.route.length - 1] };
+  }
+  // T35 (pathing): ashore, the next step of the grid route: {kind: 'wall', wall} (hack it from here), a tower
+  // in reach, {kind: 'step', point} (walk to the next cell), {kind: 'heart', leg} or {kind: 'none'} (no way: wait).
+  function pathTarget(boarder) {
+    const way = paths.next(boarder), wall = way.kind === 'wall' ? wallById.get(way.wallId) : null;
+    if (wall && wall.hp > 0) { boarder.towerFoe = null; return { kind: 'wall', wall, leg: null }; }
+    const tower = towerFoeOf(boarder);
+    if (tower) return { kind: 'tower', tower };
+    if (way.kind === 'heart' || toHeart(boarder) <= B.heartRadius) return { kind: 'heart', leg: boarder.route[boarder.route.length - 1] };
+    if (way.kind === 'step') return { kind: 'step', point: { x: way.x, z: way.z } };
+    return { kind: 'none' };
   }
   // One tick of a boarder: hack the wall it stands at, or walk towards its target. True at the heart.
   function moveBoarder(boarder, events) {
@@ -1162,6 +1186,21 @@ export function createWave(options = {}) {
         const step = Math.min(budget, d - B.contact * .9);
         boarder.vx = dx / d * boarder.speed; boarder.vz = dz / d * boarder.speed;
         boarder.x += dx / d * step; boarder.z += dz / d * step; budget -= step;
+        if (step <= 1e-9) break;
+        continue;
+      }
+      if (target.kind === 'none') { boarder.vx = boarder.vz = 0; break; } // T35: no way to the heart: it waits
+      if (target.kind === 'wall' && !target.leg) {
+        // T35: the next cell is a standing wall: hack it from where the boarder stands, next to it.
+        boarder.state = 'hacking'; boarder.wallId = target.wall.id; boarder.towerId = null; boarder.hackIn = B.hackEvery / 2; boarder.vx = boarder.vz = 0; return false;
+      }
+      if (target.kind === 'step') {
+        // T35: walk to the middle of the next cell; the next pick gives the cell after it.
+        const dx = target.point.x - boarder.x, dz = target.point.z - boarder.z, d = Math.sqrt(dx * dx + dz * dz);
+        if (Math.abs(dx) > .05) boarder.facing = dx < 0 ? -1 : 1;
+        const step = Math.min(budget, d);
+        if (d > 1e-9) { boarder.vx = dx / d * boarder.speed; boarder.vz = dz / d * boarder.speed; boarder.x += dx / d * step; boarder.z += dz / d * step; }
+        budget -= step;
         if (step <= 1e-9) break;
         continue;
       }
@@ -1328,6 +1367,7 @@ export function createWave(options = {}) {
     }
     happening.tick(t, events); // v3 waves: the kraken rises, the barge's shells land
     if (done) return;
+    if (paths) paths.refresh(); // T35: the layout from the walls' hp now; the field is rebuilt only when it changed
     for (const boarder of [...boarders]) {
       if (!moveBoarder(boarder, events)) continue;
       // At the heart: the island is hurt and the boarder is gone.

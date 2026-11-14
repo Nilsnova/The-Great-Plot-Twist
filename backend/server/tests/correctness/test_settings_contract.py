@@ -28,6 +28,7 @@ FLAGS = (
     "wall_recovery",
     "placement",
     "tower_health",
+    "pathing",
 )
 VARIABLES = {
     "APP_ENV": " PrEvIeW ",
