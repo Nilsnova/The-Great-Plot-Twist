@@ -51,6 +51,10 @@ new tables, rewards or gameplay rules.
 >    must read the never-lowered best value. Otherwise a reset would visibly shrink the statue.
 > 3. **Wave zero:** a reset to "wave zero" must keep the best record; `progressSummary(0)` currently means "no win yet".
 > 4. **Crew counts** use `wave_participants`; a rescue minigame participant who never joined the wave must not change them.
+>
+> **Status on 14 Nov:** D044 as proposed (merged with T38) fits all four points: the rescued wave stays lost
+> (`survived=false`), only the next bell's wave changes, `wave_best`/`won_wave_best` are never lowered, wave 0 is
+> never rung, and no runs are rewritten. Re-check only if D044 changes before it is accepted.
 
 ## Files changed
 

@@ -24,6 +24,7 @@ FLAGS = (
     "festival",
     "demo",
     "islands",
+    "rescue",
 )
 VARIABLES = {
     "APP_ENV": " PrEvIeW ",
