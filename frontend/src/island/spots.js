@@ -69,6 +69,10 @@ export const CAMPAIGN_BUILDINGS = Object.freeze([
   Object.freeze({id: 'island_techhub', item: 'tech_hub', name: 'Tech hub', x: 8.5, z: -12.5, art: 'island-techhub', w: 4.4, h: 5.4}),
   Object.freeze({id: 'island_wreck', item: 'wreck', name: 'The wreck', x: -16.5, z: 5, art: 'island-wreck', mended: 'island-wreck-mended', w: 5.2, h: 3.6}),
 ]);
+// The arsenal (T41, D042): the crew's shared weapon rack, free ground north-west of the heart between the
+// watchtower hill and the west house (no build spot, path or tree there). It stands from the start, costs
+// nothing to build and takes no damage (the waves never target it); shown only while the flag "arsenal" is on.
+export const ARSENAL = Object.freeze({id: 'island_arsenal', name: 'Arsenal', x: -5.5, z: -11.5, art: 'island-arsenal', w: 5, h: 5});
 export const campaignBuilding = id => CAMPAIGN_BUILDINGS.find(item => item.id === id) ?? null;
 export const SPOT_IDS = Object.freeze(SPOTS.map(item => item.id));
 // Walk-up range (owner, 12 Nov: open a card only when you stand close). Each zone's centre sits one step in
@@ -79,7 +83,7 @@ const ZONE_Y = 1.03, SPOT_RADIUS = REACH, ROUND_RADIUS = 2.2;
 
 export const spotById = id => SPOTS.find(item => item.id === localSpotId(id)) ?? null;
 export const isSpotId = id => SPOT_IDS.includes(localSpotId(id));
-export const isIslandZone = id => isSpotId(id) || id === BELL.id || id === CABIN.id || isPointSpot(id) || !!campaignBuilding(id);
+export const isIslandZone = id => isSpotId(id) || id === BELL.id || id === ARSENAL.id || id === CABIN.id || isPointSpot(id) || !!campaignBuilding(id);
 // On the island's land (beach included), never in the sea.
 export const onIsland = (x, z) => surfaceClass(ISLAND_PLACE, x, z) > 0;
 
@@ -98,13 +102,14 @@ export function placedSpot(id, spots = []) {
 }
 // The interaction zones of the island, in the shape of registry.js: walk up and press E (or tap Inspect).
 // spots: the answer's spots, so a moved building is reached where it stands now.
-export function islandZones({visitor = false, spots = []} = {}) {
+export function islandZones({visitor = false, spots = [], arsenal = false} = {}) {
   const zone = (id, name, x, z, radius) => ({id, name, x, z, y: ZONE_Y, radius});
   return [
     ...SPOTS.map(item => { const [x, z] = landward(placedSpot(item.id, spots)); return zone(item.id, slotName(item.slot), x, z, SPOT_RADIUS); }),
     zone(BELL.id, 'Harbor bell', BELL.x, BELL.z + .8, ROUND_RADIUS),
     ...CAMPAIGN_BUILDINGS.map(item => { const [x, z] = landward(item, 1.6); return zone(item.id, item.name, x, z + .6, BIG_REACH); }),
     ...(visitor ? [] : [zone(CABIN.id, 'Your cabin', CABIN.x + 2.5, CABIN.z + 1.2, ROUND_RADIUS)]),
+    ...(arsenal ? [zone(ARSENAL.id, ARSENAL.name, ...landward(ARSENAL, 1.6), BIG_REACH)].map(item => ({...item, z: item.z + .6})) : []),
   ];
 }
 

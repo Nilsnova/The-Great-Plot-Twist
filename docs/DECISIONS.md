@@ -913,3 +913,25 @@ or splits best from current/unlocked wave, they must read the never-lowered best
 **Alternatives and trade-offs:** A "rain tomorrow?" yes/no stake (rejected, D035). A separate forecast stall (rejected: it would duplicate the weather board). The forecast covers the night at the board's default place; a wave can still use the bell-ringer's local weather, which the board now says.
 
 **Impact:** `frontend/src/harbor/weather-model.js`, `overview.js`; [spec](../specs/T46-harbor-weather.md).
+
+## D042 · Shared island arsenal: 20 stored copies and the weapon table · 2026-11-14
+
+**Status:** proposed for T40/T41/T44 on branch `feat/t40-t41-arsenal` (responsible: Nils, `Nilsnova`; plan: Ianno, `Iannomh123456`); independent human review pending. Migration `20261114120000_arsenal.sql` written, not applied. Behind the new flag `arsenal` (off by default: the old personal weapon shop is unchanged while it is off).
+
+**Decision:** weapons become **copies owned by an island**, kept in an arsenal building on the island (walk up, E or tap, like the Tech hub; free, there from the start, never damaged). Each copy has its own id and rack number; copies of one type share the type's stats. A copy is **stored** on the rack or **carried by exactly one captain** (one database column); a captain carries at most one copy per island; at most **20 copies are stored**, carried copies take no slot. Buy, take (withdraw, or an atomic swap that needs no free slot) and return are single database functions under the island lock, safe to repeat (`arsenal_moves`, ledger ref `arsenal:<actionUid>`, reason `weapon_purchase`). A return into a full rack is refused and the copy stays in the captain's hands; a disconnect changes nothing; a captain who left the game keeps the copy until the arsenal is next used, when it goes back on the rack while there is room. No arsenal move during a wave. The musket is standard issue for every captain (and every new member), never a copy. Old personal weapons convert lazily to copies of the owner's own island the first time that arsenal is opened with the flag on (the equipped one carried). Full rules: [the spec](../specs/T40-T41-arsenal.md).
+
+**Permissions (D043):** the host and every active member may look, buy, take and return; the buyer pays from their own coins (no shared wallet). Python asks T37's `permissions.require_action` (`arsenal_buy`, `arsenal_withdraw`, `arsenal_return`, via `arsenal_policy.py`); the database repeats the rule under the lock in `arsenal_may()`.
+
+**Weapon table (T44):** the existing five types, already distinct in mechanics, numbers and price. Numbers at captain level 1 (base damage 6, range 14, reload 1.2 s; the multipliers scale every level, `frontend/src/pirates/captain-ids.js`, prices and unlocks `backend/content/islands.json`):
+
+| Type | Price | Opens after wave | How it shoots | Damage | Range | Reload | Damage per second | Best against |
+|---|---|---|---|---|---|---|---|---|
+| Musket (standard) | free | 0 | one ship | 6 | 14 | 1.2 s | 5.0 | everything, steady |
+| Pistols | 60 | 2 | one ship | 3 | 10 | 0.48 s | 6.3 | close, fast single targets |
+| Blunderbuss | 120 | 4 | cone 50°, up to 3 ships | 4.8 each | 9 | 1.92 s | 2.5 per ship (7.5 on 3) | groups at short range |
+| Long rifle | 200 | 6 | pierces to a second ship within 8 units | 10.8 | 22 | 2.16 s | 5.0 per ship (10 on 2) | long range, lined-up ships |
+| Fire bombs | 300 | 10 | thrown, bursts in radius 3 | 9 each | 14 | 2.88 s | 3.1 per ship | packed fleets |
+
+**Why:** one holder column and one rack limit give the invariant to the database itself, so neither a retry nor two simultaneous clicks nor a bug in Python can duplicate or lose a copy. Refusing a full-rack return (instead of an overflow slot) keeps "at most 20 stored" exact while never discarding anything; the swap keeps a full rack usable. No new weapon mechanic was added: the five types already differ, and a new mode needs `sim.js` (another lane's file).
+
+**Alternatives and trade-offs:** a total cap of 20 copies (returns could never fail, but carried copies would effectively use slots, which the plan forbids); auto-return on disconnect (would take a weapon from a captain whose tab just reloaded); a shared island wallet (not introduced by implication, T37). Limits: combat stays client-simulated, so the weapon in a room message is trusted as today; moves are refused during waves and the loadout is re-read before each wave. Deleting an account deletes the copy it carried.

@@ -58,6 +58,7 @@ import { STEPS as CAMPAIGN_STEPS, spotWave, waveOf } from '../campaign/index.js'
 import { BRANCHES, BRANCH_BY_ID, SPECS, TOP_TIER, isCapstone, optionName, optionsOf, readSpec } from '../campaign/tech.js';
 import { ROLES as HOUSE_ROLES, ROLE_LEVEL as HOUSE_ROLE_LEVEL } from '../campaign/houses.js';
 import { GRID as LAYOUT_GRID, checkMove, positionsOf } from '../island/placement.js';
+import { createFakeArsenal } from '../island/arsenal-fake.js';
 
 export const ISLAND_RULES = Object.freeze({
   startingCoins: 100,
@@ -406,8 +407,19 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       weather: { ...run.weather }, flagship: run.flagship, ...(v2 ? { boss: isBoss(run) } : {}), ...(walls ? { walls } : {}) };
   };
   const uid = value => typeof value === 'string' && value.length > 0 && value.length <= 64;
+  // The shared island arsenal (T40, D042): copies of an island, stored (20 at most) or carried by one captain.
+  const arsenal = createFakeArsenal({ world, playerId, ownCode: () => me().code,
+    islandOf: code => (code === me().code ? world.islands.get(code) : gameByCode(code, 'no_such_island')),
+    isMember: (island, id) => isMember(island, id), nameOf,
+    unlockWave: () => { const player = me(); return unlocking ? wonOf(player, world.islands.get(player.code)) : 99; },
+    coins: () => me().coins, pay: price => { me().coins -= price; },
+    waveRunning: island => [...world.waves.values()].some(run => run.place === island.code && running(run)), refuse });
 
   const api = {
+    arsenal: async ({ code = null } = {}) => arsenal.state(code ? readIslandCode(code) : null),
+    arsenalBuy: async ({ weapon, actionUid, code = null } = {}) => arsenal.buy({ weapon, actionUid, code: code ? readIslandCode(code) : null }),
+    arsenalTake: async ({ copy, actionUid, code = null } = {}) => arsenal.take({ copy, actionUid, code: code ? readIslandCode(code) : null }),
+    arsenalReturn: async ({ actionUid, code = null } = {}) => arsenal.giveBack({ actionUid, code: code ? readIslandCode(code) : null }),
     get playerId() { return playerId; },
     setWeather(kind) { weatherKind = Object.hasOwn(ISLAND_RULES.weather, kind) ? kind : 'calm'; },
     async island() { return view(); },
@@ -823,6 +835,10 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
         if (route === 'POST /api/island/respec') return reply(200, await api.respec(body));
         if (route === 'POST /api/island/weapon/buy') return reply(200, await api.buyWeapon(body));
         if (route === 'POST /api/island/weapon/equip') return reply(200, await api.equipWeapon(body));
+        if (route === 'GET /api/island/arsenal') return reply(200, await api.arsenal({ code: searchParams.get('code') }));
+        if (route === 'POST /api/island/arsenal/buy') return reply(200, await api.arsenalBuy(body));
+        if (route === 'POST /api/island/arsenal/take') return reply(200, await api.arsenalTake(body));
+        if (route === 'POST /api/island/arsenal/return') return reply(200, await api.arsenalReturn(body));
         if (route === 'POST /api/island/research') return reply(200, await api.research(body));
         if (route === 'POST /api/island/tower-skill') return reply(200, await api.specialise(body));
         if (route === 'POST /api/island/wreck') return reply(200, await api.repairWreck(body));
@@ -873,10 +889,12 @@ const BODY_KEYS = Object.freeze({ '/api/island/build': ['spot', 'kind', 'actionU
   '/api/waves/join': ['waveId'], '/api/waves/finish': ['waveId', 'survived', 'shipsSunk'], '/api/waves/revive': ['waveId', 'fallen', 'downAt', 'actionUid'],
   '/api/games': [], '/api/games/join': ['code', 'actionUid'], '/api/games/leave': ['code'],
   '/api/island/research': ['branch', 'actionUid'], '/api/island/tower-skill': ['spot', 'spec'], '/api/island/wreck': ['amount', 'actionUid'],
-  '/api/island/demolish': ['spot', 'actionUid'], '/api/island/move': ['spot', 'x', 'z'], '/api/island/repair': ['spot', 'actionUid'] });
+  '/api/island/demolish': ['spot', 'actionUid'], '/api/island/move': ['spot', 'x', 'z'], '/api/island/repair': ['spot', 'actionUid'],
+  '/api/island/arsenal/buy': ['weapon', 'actionUid'], '/api/island/arsenal/take': ['copy', 'actionUid'], '/api/island/arsenal/return': ['actionUid'] });
 // Keys a body may also carry: `code` builds, upgrades, researches, picks a skill or mends the wreck on a game's island.
 const OPTIONAL_KEYS = Object.freeze({ '/api/waves/finish': ['bonuses', 'rescued', 'walls'], '/api/island/repair': ['code'], '/api/island/build': ['code'], '/api/island/upgrade': ['code'], '/api/games': ['actionUid'],
-  '/api/island/research': ['code', 'tier', 'choice', 'change'], '/api/island/tower-skill': ['code'], '/api/island/wreck': ['code'], '/api/island/demolish': ['code'], '/api/island/move': ['code'] });
+  '/api/island/research': ['code', 'tier', 'choice', 'change'], '/api/island/tower-skill': ['code'], '/api/island/wreck': ['code'], '/api/island/demolish': ['code'], '/api/island/move': ['code'],
+  '/api/island/arsenal/buy': ['code'], '/api/island/arsenal/take': ['code'], '/api/island/arsenal/return': ['code'] });
 const ACTION_UID = /^[A-Za-z0-9_-]{8,64}$/;
 const exactKeys = (body, keys, optional = []) => !!body && typeof body === 'object' && !Array.isArray(body)
   && Object.keys(body).filter(key => !optional.includes(key)).sort().join() === [...keys].sort().join();
@@ -981,6 +999,10 @@ export function createFakeIslandTransport({ coins = ISLAND_RULES.startingCoins, 
       if (method === 'POST' && pathname === '/api/island/respec') return ok(await api.respec(body));
       if (method === 'POST' && pathname === '/api/island/weapon/buy') return ok(await api.buyWeapon(body));
       if (method === 'POST' && pathname === '/api/island/weapon/equip') return ok(await api.equipWeapon(body));
+      if (method === 'GET' && pathname === '/api/island/arsenal') return ok(await api.arsenal({ code: new URLSearchParams(query).get('code') }));
+      if (method === 'POST' && pathname === '/api/island/arsenal/buy') return ok(await api.arsenalBuy(body));
+      if (method === 'POST' && pathname === '/api/island/arsenal/take') return ok(await api.arsenalTake(body));
+      if (method === 'POST' && pathname === '/api/island/arsenal/return') return ok(await api.arsenalReturn(body));
       if (method === 'POST' && pathname === '/api/island/research') return ok(await api.research(body));
       if (method === 'POST' && pathname === '/api/island/tower-skill') return ok(await api.specialise(body));
       if (method === 'POST' && pathname === '/api/island/wreck') return ok(await api.repairWreck(body));

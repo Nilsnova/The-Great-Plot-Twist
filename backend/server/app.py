@@ -41,6 +41,7 @@ from server.market.exchange import MarketService, market_or_none
 from server.predictions.desk import PredictionDesk, desk_or_none
 from server.request_policy import RequestPolicy
 from server.routes import (
+    arsenal,
     auth_exchange,
     board,
     bulletin,
@@ -303,6 +304,7 @@ def create_app(
     app.include_router(islet.router, prefix="/api")
     app.include_router(island.router, prefix="/api")
     app.include_router(island_layout.router, prefix="/api")
+    app.include_router(arsenal.router, prefix="/api")
     app.include_router(games.router, prefix="/api")
     app.include_router(waves.router, prefix="/api")
     app.include_router(wall_recovery.router, prefix="/api")

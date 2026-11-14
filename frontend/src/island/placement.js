@@ -13,7 +13,7 @@ export const GRID = 0.5;
 export const MAX_UNITS = 30;
 export const HEART = Object.freeze({x: 0, z: 2});
 export const FOOTPRINTS = Object.freeze({wall: 2, tower: 2, watchtower: 3, house: 3});
-// What stands for good and covers w by d units around (x, z): the heart, the cabin, the bell, the campaign buildings.
+// What stands for good and covers w by d units around (x, z): the heart, the cabin, the bell, the campaign buildings, the arsenal.
 export const KEEP_OUT = Object.freeze([
   {id: 'heart', name: "the island's heart", x: 0, z: 2, w: 4, d: 4},
   {id: 'island_cabin', name: 'your cabin', x: -8, z: 4.2, w: 4.8, d: 3.6},
@@ -21,6 +21,8 @@ export const KEEP_OUT = Object.freeze([
   {id: 'island_harbor', name: 'the Harbor', x: 13, z: 7.5, w: 4.4, d: 3},
   {id: 'island_techhub', name: 'the Tech hub', x: 8.5, z: -12.5, w: 4.4, d: 3},
   {id: 'island_wreck', name: 'the wreck', x: -16.5, z: 5, w: 5.2, d: 3},
+  // The arsenal (T41, D042): its ground stays free even while the flag "arsenal" is off.
+  {id: 'island_arsenal', name: 'the arsenal', x: -5.5, z: -11.5, w: 5, d: 3},
 ].map(item => Object.freeze(item)));
 const SEA = 0, BEACH = 1;
 

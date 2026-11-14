@@ -31,6 +31,8 @@ FakeIslandDatabase answers exactly the calls the island and wave routes make, an
                                              (move_replies, one per try; default done)
   * GET pirate_point_buildings, GET wave_runs  Pirate Point's buildings and best wave, and where a
                                              wave runs (wave_places, by id)
+  * POST rpc/arsenal_state, arsenal_buy, arsenal_take, arsenal_return
+                                             arsenal_replies[name] (default: ARSENAL_DONE)
   * POST rpc/game_join, game_leave, game_list, game_members, GET island_members
                                              the games of GAME-V3 section 2 (FakeGames below:
                                              the SQL rules of 20261112040000_game_rooms.sql,
@@ -129,6 +131,23 @@ ROLE_PICKED = {"status": "done", "role": "medic", "repeat": False}
 LEARNED = {"status": "done", "skills": ["steady_aim"], "points": 1, "repeat": False}
 REVIVED = {"status": "done", "price": 35, "balance": 65, "repeat": False}
 EQUIPPED = {"status": "done", "weapon": "musket"}
+ARSENAL_FUNCTIONS = ("arsenal_state", "arsenal_buy", "arsenal_take", "arsenal_return")
+COPY_ID = "0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d"
+ARSENAL_DONE = {
+    "status": "done",
+    "repeat": False,
+    "balance": 40,
+    "arsenal": {
+        "capacity": 20,
+        "stored": 0,
+        "mine": COPY_ID,
+        "waveRunning": False,
+        "copies": [
+            {"id": COPY_ID, "no": 1, "weapon": "pistols", "holder": PLAYER_ID,
+             "holderName": "Captain Gull", "away": False},
+        ],
+    },
+}  # fmt: skip
 SPECIALISED = {"status": "done", "plot": "cannon_1", "spec": "rapid"}
 # A level-3 cannon that FRIEND built and PLAYER upgraded (20261112080000_demolish.sql).
 DEMOLISH_REFUNDS = [
@@ -212,6 +231,8 @@ class FakeIslandDatabase:
         self.ledger_refs: set[tuple[str, str]] = set()
         self.skill_refs: set[str] = set()
         self.paid_replies: dict[str, dict | httpx.Response] = {}
+        # The island arsenal (T40): the answer of each arsenal_* function.
+        self.arsenal_replies: dict[str, dict | httpx.Response] = {}
         self.point_buildings: list[dict] = []
         self.point_best: list[dict] = []
         # Where each wave runs (GET wave_runs?id=): WAVE_ID is on PLAYER's island by default.
@@ -289,7 +310,13 @@ class FakeIslandDatabase:
         handlers["POST /rpc/island_demolish_quote"] = lambda request: self.answer(
             self.paid_replies.get("island_demolish_quote", QUOTED)
         )
+        for name in ARSENAL_FUNCTIONS:
+            handlers[f"POST /rpc/{name}"] = self.arsenal
         return handlers[route](request)
+
+    def arsenal(self, request: httpx.Request) -> httpx.Response:
+        name = request.url.path.rsplit("/", 1)[-1]
+        return self.answer(self.arsenal_replies.get(name, ARSENAL_DONE))
 
     @staticmethod
     def answer(reply: dict | httpx.Response) -> httpx.Response:
