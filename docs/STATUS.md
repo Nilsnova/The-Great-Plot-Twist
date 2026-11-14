@@ -538,6 +538,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 
 ## Log
 
+- **2026-11-14, sim integration (T29–T32 follow-ups, T33, T34/T35, T38), branch `feat/integration-sim`.** Nils (agent-assisted). Wall recovery: a finish can no longer heal walls (capped at the wave-start health) and a failed wall record never breaks a paid finish. New off-by-default flags `tower_health` (T33, D049 proposed: tower hp in a wave) and `pathing` (T34/T35 routes over the walls' T36 footprints; option A while off); the existing `rescue` flag now also switches the T38 sim hook on. All three travel to every client as `rules` on the wave answers, so a wave never mixes rules. No migration. Before switching any of them on: reload all clients, playtest balance (T3).
+
 - **2026-11-14, T29–T47 fast-track started.** Nils approved and merged PR #20; eight agent lanes opened issues #21–#28. Per D047, green lanes merge without a prior peer approval, behind off-by-default flags where a migration is needed; teammates review after the merge.
 
 - **2026-11-14, T28 implemented.** Ianno, assisted by Codex, implemented first-time practice per player/island/minigame on updated main. Full frontend suite and four-page shared-start proof pass; [evidence](evidence/T28/README.md). Introductory explain-back completed after clarification; independent human review pending.

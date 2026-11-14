@@ -120,7 +120,17 @@ the game mid-wave still finishes their own fight, and if their finish is the fir
 as today, changes neither the best nor the next wave, rescued or not. No offline effect.
 T45 can show "best" without worrying about rescues. T33/T36: no new building, so nothing to place or damage.
 
-## The sim hook still needed (owner of `sim.js`)
+## The sim hook (built 14 Nov on branch `feat/integration-sim`)
+
+**Done** as sketched below, with one change for determinism: the controller does **not** read
+`config.flags.rescue` on its own. The server lists `"rescue"` in the wave answers' `rules` while the flag is on
+(`backend/server/routes/waves.py` `SIM_RULES`), and every client of the wave passes `rescue: true` to
+`createWave` from there (`frontend/src/pirates/wave-rules.js`), so all clients of a wave agree even if one
+read an older `/api/config`. Tests: `frontend/tests/pirates/rescue-sim.test.js` (off: ends at once; on: waits,
+the battle freezes, failed → lost and not rescued, won → `rescued: true`; never on Pirate Point or below wave 4).
+A two-browser `test:mp` run with the flag on is still open.
+
+### The original sketch
 
 Without it the rescue never starts and nothing changes in the game. About ten lines in `createWave`:
 

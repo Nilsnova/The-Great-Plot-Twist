@@ -26,16 +26,17 @@ function controllerWith(renderers) {
 
 describe('the wave rules', () => {
   it('turns known names into true options and ignores everything else', () => {
-    expect(readRules(['tower_health', 'nonsense'])).toEqual({ towerHealth: true, pathing: false });
-    expect(readRules(undefined)).toEqual({ towerHealth: false, pathing: false });
-    expect(readRules(['pathing'])).toEqual({ towerHealth: false, pathing: true });
-    expect(readRules('tower_health')).toEqual({ towerHealth: false, pathing: false });
+    expect(readRules(['tower_health', 'nonsense'])).toEqual({ towerHealth: true, pathing: false, rescue: false });
+    expect(readRules(undefined)).toEqual({ towerHealth: false, pathing: false, rescue: false });
+    expect(readRules(['pathing'])).toEqual({ towerHealth: false, pathing: true, rescue: false });
+    expect(readRules('tower_health')).toEqual({ towerHealth: false, pathing: false, rescue: false });
+    expect(readRules(['rescue']).rescue).toBe(true);
     expect(Object.values(RULE_OPTIONS)).toContain('towerHealth');
   });
 
   it('reads the rules of a wave answer', () => {
-    expect(readWaveInfo({ ...INFO, rules: ['tower_health'] }).rules).toEqual({ towerHealth: true, pathing: false });
-    expect(readWaveInfo(INFO).rules).toEqual({ towerHealth: false, pathing: false });
+    expect(readWaveInfo({ ...INFO, rules: ['tower_health'] }).rules).toEqual({ towerHealth: true, pathing: false, rescue: false });
+    expect(readWaveInfo(INFO).rules).toEqual({ towerHealth: false, pathing: false, rescue: false });
   });
 
   it('a wave with tower_health gives its towers hp and paints the tower states; without it nothing changes', () => {

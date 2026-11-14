@@ -13,6 +13,8 @@ import { ROLE_RADIUS } from '../campaign/houses.js';
 // v3 waves (GAME-V3.md §4.2, §4.3): the wave's event and the boss finisher, each in its own module.
 import { createEventRules } from './wave-events.js';
 import { createFinisher } from './finisher/rules.js';
+// T38 (D044, proposed): the last-chance rescue after a lost wave, only with the wave option rescue (the rule "rescue").
+import { createRescue } from './finisher/rescue.js';
 // D039 (proposed): a wall starts the wave with the health its last wave left it (wall-health.js).
 import { readHealth, startHp } from './wall-health.js';
 // T33 (D049, proposed): towers with hp, only with the wave option towerHealth (the server's rule "tower_health").
@@ -476,6 +478,9 @@ export function createWave(options = {}) {
     coast: readCoast(options?.coast), heart, defenses, stopRadius: C.stopRadius, spawnRadius: C.spawnRadius, firstSpawn: C.fleet.firstSpawn });
   const finisher = createFinisher({ wave: waveNumber, seed: options?.seed, enabled: options?.finishers === true && !withFlagship,
     preparation: options?.finisherPreparation === true, gapMs: typeof options?.gapMs === 'function' ? options.gapMs : null, trigger: options?.finisherTrigger }); // trigger: the demo harness only
+  // T38: a lost wave from wave 4 (not Pirate Point) first offers the captains still on the island one co-op haul.
+  const rescue = createRescue({ wave: waveNumber, seed: options?.seed, enabled: options?.rescue === true && !withFlagship,
+    preparation: options?.finisherPreparation === true, gapMs: typeof options?.gapMs === 'function' ? options.gapMs : null });
   const lookouts = defenses.filter(item => item.kind === 'watchtower'), watchtowers = lookouts.map(item => C.levels.watchtower[item.level - 1]);
   // High tower (tier 2): the watchtower lends more range.
   const towerBonus = Math.max(0, ...lookouts.map((item, i) => round2(watchtowers[i].range * bonusOf(item, 'range', C)))), boost = Math.max(1, ...watchtowers.map(item => item.boost ?? 1));
@@ -664,6 +669,7 @@ export function createWave(options = {}) {
   const removeShip = ship => { const at = ships.indexOf(ship); if (at >= 0) ships.splice(at, 1); };
   happening.bind({ ships, walls, towers, tick: C.tick, now: () => now(), newShipId: () => `ship_${nextShipId++}`, remove: removeShip, hitWall, hurtIsland });
   finisher.bind({ party, ships, presentAt: (hero, t) => presentAt(hero, t), damageShip, now: () => now() });
+  rescue.bind({ party, presentAt: (hero, t) => presentAt(hero, t), now: () => now(), heart });
   const damageTarget = (target, amount, by, events, extra) => (target.boarder
     ? damageBoarder(target, amount, by, events, extra) : damageShip(target, amount, by, events, extra));
   const findTarget = id => (typeof id !== 'string' ? undefined
@@ -964,8 +970,8 @@ export function createWave(options = {}) {
   function applyInput(input, events) {
     if (!input || typeof input !== 'object' || typeof input.type !== 'string') return;
     // v3 waves: while a finisher runs the battle stands still: only positions and the finisher's own input count.
-    if (input.type === 'finisher_input' || input.type === 'finisher_ready') { finisher.input(input); return; }
-    if (finisher.active && input.type !== 'captain_move') return;
+    if (input.type === 'finisher_input' || input.type === 'finisher_ready') { finisher.input(input); rescue.input(input); return; }
+    if ((finisher.active || rescue.active) && input.type !== 'captain_move') return;
     if (input.type === 'fire') {
       const cannon = typeof input.cannonId === 'string' ? cannonById.get(input.cannonId) : undefined;
       const target = findTarget(input.targetId);
@@ -1002,6 +1008,9 @@ export function createWave(options = {}) {
   }
 
   function end(reason, events) {
+    // T38: while the rescue runs it decides; once it is over end() comes again and the wave ends (still lost).
+    if (rescue.active) return;
+    if (rescue.offer(reason, events)) return; // island_lost / captains_fallen: the last chance first
     done = true; endReason = reason;
     events.push({ type: 'wave_ended', t: now(), reason, ...result() });
   }
@@ -1295,6 +1304,8 @@ export function createWave(options = {}) {
     for (const input of queued) applyInput(input, events);
     queued = [];
     if (done) return;
+    // T38: a running rescue freezes the battle too; when it is over the lost wave ends.
+    if (rescue.active) { if (!rescue.tick(events)) end(rescue.reason, events); return; }
     // v3 waves: a running finisher freezes the battle (its own clock runs; the battle's ticks stand still).
     if (finisher.tick(events)) return;
     ticks++;
@@ -1502,7 +1513,7 @@ export function createWave(options = {}) {
   function result() {
     const survived = islandHp > 0 && !(endReason === 'timeout' && flagshipAfloat()) && endReason !== null && endReason !== 'captains_fallen';
     const bonuses = [...happening.bonuses(), ...finisher.bonuses()]; // v3 waves: the galleon, a won finisher (server-checked)
-    return { survived, shipsSunk: sunk, boardersKilled: killed, islandHp, time: now(), ...(bonuses.length ? { bonuses } : {}) };
+    return { survived, shipsSunk: sunk, boardersKilled: killed, islandHp, time: now(), ...(bonuses.length ? { bonuses } : {}), ...rescue.result() };
   }
 
   return {
@@ -1547,7 +1558,7 @@ export function createWave(options = {}) {
         islandHp, maxIslandHp: maxHp, sunk, shipsLeft: plan.length + happening.extra - sunk - happening.gone, total: plan.length, lampsLit, fog, sight: round2(sight),
         boardersLeft: boarders.length, boardersKilled: killed, boardersLanded: landed,
         // v3 waves: the event's state (wind, lanes, the barge's shells…) and the finisher's, both null without one.
-        event: happening.id ? happening.state(t) : null, finisher: finisher.state(),
+        event: happening.id ? happening.state(t) : null, finisher: finisher.state() ?? rescue.state(),
       };
     },
     get done() { return done; },

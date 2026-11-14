@@ -4,12 +4,13 @@
 // whatever its own /api/config says. A wave without "rules" (every flag off, an older server) plays
 // exactly as before. No DOM, no Three.js. Used by controller.js.
 //
-//   readRules(list)   {towerHealth, pathing}: true only for the names the list holds
+//   readRules(list)   {towerHealth, pathing, rescue}: true only for the names the list holds
 
 // The name on the wave answer -> the option of createWave().
 export const RULE_OPTIONS = Object.freeze({
   tower_health: 'towerHealth', // T33 (D049, proposed): towers have hp, break and are repaired in the wave
   pathing: 'pathing',          // T34/T35 (D040, proposed): boarders walk round or through the real walls
+  rescue: 'rescue',            // T38 (D044, proposed): a lost wave first offers the last-chance rescue
 });
 
 /** The wave's rules as createWave() options, each true or false; anything that is not a known name is ignored. */
