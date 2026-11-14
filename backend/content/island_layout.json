@@ -1,0 +1,27 @@
+{
+  "about": "Where the 22 build spots of your island stand, on the build grid of T36 (docs/DECISIONS.md D041). Server only. The browser repeats these numbers in frontend/src/island/spots.js and placement.js; frontend/tests/island/placement.test.js keeps them equal.",
+  "version": 2,
+  "grid": 0.5,
+  "island": {"rx": 20, "rz": 22, "seed": 3},
+  "heart": {"x": 0, "z": 2},
+  "footprints": {"wall": 2, "tower": 2, "watchtower": 3, "house": 3},
+  "spots": [
+    ["wall_1", "wall", -18.5, -4], ["wall_2", "wall", 4, -19.5], ["wall_3", "wall", 18.5, -3],
+    ["wall_4", "wall", -6, 18.5], ["wall_5", "wall", 12, 18], ["wall_6", "wall", -5, -19.5],
+    ["cannon_1", "tower", -12.5, -14.5], ["cannon_2", "tower", 13, -15], ["cannon_3", "tower", 15.5, 14],
+    ["cannon_4", "tower", -15.5, 14.5], ["cannon_5", "tower", -15, -6], ["cannon_6", "tower", 14.5, -3],
+    ["cannon_7", "tower", 4.5, 16.5],
+    ["tower_1", "watchtower", 0, -14],
+    ["house_1", "house", 7, -6], ["house_2", "house", -8, -6],
+    ["wall_7", "wall", 8.5, 2], ["wall_8", "wall", 4.5, 9], ["wall_9", "wall", -4, 9.5],
+    ["wall_10", "wall", -9.5, -1], ["wall_11", "wall", -4, -5.5], ["wall_12", "wall", 4, -5.5]
+  ],
+  "keepOut": [
+    {"id": "heart", "name": "the island's heart", "x": 0, "z": 2, "w": 4, "d": 4},
+    {"id": "island_cabin", "name": "your cabin", "x": -8, "z": 4.2, "w": 4.8, "d": 3.6},
+    {"id": "island_bell", "name": "the harbor bell", "x": 8.5, "z": 12, "w": 2, "d": 2},
+    {"id": "island_harbor", "name": "the Harbor", "x": 13, "z": 7.5, "w": 4.4, "d": 3},
+    {"id": "island_techhub", "name": "the Tech hub", "x": 8.5, "z": -12.5, "w": 4.4, "d": 3},
+    {"id": "island_wreck", "name": "the wreck", "x": -16.5, "z": 5, "w": 5.2, "d": 3}
+  ]
+}

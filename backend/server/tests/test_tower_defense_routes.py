@@ -50,6 +50,7 @@ def test_the_island_shows_levels_crew_captain_prices_unlocks_and_the_next_wave()
     assert spot == {
         "id": "cannon_1", "kind": "mortar", "kinds": ["cannon", "mortar", "harpoon"], "built": True,
         "level": 2, "cost": 60, "upgradeCost": 240, "spec": None,
+        "x": -12.5, "z": -14.5,
     }  # fmt: skip
     assert (body["waveBest"], body["nextWave"]) == (3, 2)
     assert body["crew"] == {"gunner": 1, "carpenter": 0, "lookout": 0}
@@ -697,7 +698,7 @@ def test_a_visit_shows_the_levels_kinds_and_crew_so_every_visitor_simulates_the_
     assert invite(world).status_code == 200
     body = world.visit("ISLE-K7Q2M", headers=GUEST).json()
 
-    assert list(body) == ["code", "ownerName", "waveBest", "spots", "crew", "campaign"]
+    assert list(body) == ["code", "ownerName", "waveBest", "spots", "crew", "campaign", "layout"]
     spot = next(spot for spot in body["spots"] if spot["id"] == "cannon_3")
     assert (spot["kind"], spot["level"], spot["built"]) == ("mortar", 2, True)
     assert body["crew"] == {"gunner": 1, "carpenter": 0, "lookout": 1}

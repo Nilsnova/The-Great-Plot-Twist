@@ -124,6 +124,7 @@ FUNDING = {
     permissions.ARSENAL_BUY: permissions.PERSONAL,
     permissions.ARSENAL_WITHDRAW: permissions.FREE,
     permissions.ARSENAL_RETURN: permissions.FREE,
+    permissions.MOVE: permissions.FREE,
 }
 
 
@@ -131,9 +132,9 @@ def test_the_funding_column_matches_the_spec_matrix():
     assert {action: rule.funding for action, rule in permissions.ACTIONS.items()} == FUNDING
 
 
-def test_only_research_and_tear_down_are_between_waves_only():
+def test_only_research_tear_down_and_moving_are_between_waves_only():
     between = {action for action, rule in permissions.ACTIONS.items() if rule.between_waves}
-    assert between == {permissions.RESEARCH, permissions.DEMOLISH}
+    assert between == {permissions.RESEARCH, permissions.DEMOLISH, permissions.MOVE}
 
 
 def test_nobody_but_the_clicker_ever_pays_there_is_no_shared_wallet():

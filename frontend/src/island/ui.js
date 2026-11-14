@@ -80,7 +80,7 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
     body.append(reason, line('island-soon', model.soon), line('island-message', model.message, 'alert'), line('island-coins', model.coins));
   }
 
-  // handlers: {build(spotId, kind), upgrade(spotId), repair(spotId), hire(), specialise(spotId, spec), demolish(spotId)}
+  // handlers: {build(spotId, kind), upgrade(spotId), repair(spotId), hire(), specialise(spotId, spec), demolish(spotId), move(spotId)}
   function buildCard(model, handlers) {
     const on = typeof handlers === 'function' ? {build: handlers} : handlers ?? {};
     open('build', model.title, body => {
@@ -143,6 +143,16 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
       if (model.hire && on.hire) {
         const hire = button('Hire crew', () => on.hire(), true); hire.classList.add('island-hire'); hire.dataset.focus = 'hire';
         body.append(hire); focusable ??= hire;
+      }
+      // T36: Move, secondary: the card closes and the move bar (move-bar.js) takes over.
+      if (model.move && on.move) {
+        const shift = button(model.move.label, () => on.move(model.spotId), true); shift.classList.add('island-move');
+        shift.dataset.focus = 'move'; shift.disabled = model.move.disabled;
+        body.append(shift);
+        if (model.move.reason) {
+          const why = line('island-move-why', model.move.reason); why.id = `island-move-why-${model.spotId}`;
+          shift.setAttribute('aria-describedby', why.id); body.append(why);
+        }
       }
       // GAME-V3.md §4.2: Tear down, secondary and red-outlined, never the focus the card opens with.
       if (model.demolish && on.demolish) {

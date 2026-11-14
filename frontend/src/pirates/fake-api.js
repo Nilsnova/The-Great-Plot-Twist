@@ -21,6 +21,7 @@
 //   await api.equipWeapon({weapon});             // POST /api/island/weapon/equip
 //   await api.demolishQuote({spot, code?});      // GET  /api/island/demolish     (GAME-V3.md §4.2: half back to each payer)
 //   await api.demolish({spot, actionUid, code?}); // POST /api/island/demolish    (between waves, any member; not the heart)
+//   await api.move({spot, x, z, code?});           // POST /api/island/move        (T36: a spot to a grid cell, between waves, free)
 //   await api.piratePoint();                     // GET  /api/pirate-point        (§5)
 //   await api.pointBuild({spot, kind, actionUid}) / api.pointUpgrade({spot, actionUid})
 //   await api.inviteJoin({code, actionUid});     // POST /api/island/invite/join  (§6, an alias of joinGame)
@@ -54,6 +55,7 @@ import { ROLES, ROLE_BY_ID, ROLE_LEVEL, SKILLS, SKILL_BY_ID, WEAPONS, WEAPON_BY_
 import { STEPS as CAMPAIGN_STEPS, spotWave, waveOf } from '../campaign/index.js';
 import { BRANCHES, BRANCH_BY_ID, SPECS, TOP_TIER, isCapstone, optionName, optionsOf, readSpec } from '../campaign/tech.js';
 import { ROLES as HOUSE_ROLES, ROLE_LEVEL as HOUSE_ROLE_LEVEL } from '../campaign/houses.js';
+import { GRID as LAYOUT_GRID, checkMove, positionsOf } from '../island/placement.js';
 
 export const ISLAND_RULES = Object.freeze({
   startingCoins: 100,
@@ -105,8 +107,12 @@ function spotView(island, id) {
   const level = island.levels?.get(id) ?? (island.built.has(id) ? 1 : 0), kind = island.kinds?.get(id) ?? kindOfSpot(id);
   const prices = BUILDINGS[kind].price;
   return { id, kind, kinds: [...kindsOfSpot(id)], built: level > 0, level, cost: prices[0], upgradeCost: level > 0 ? prices[level] ?? null : null,
-    spec: level > 0 ? readSpec(kind, island.specs?.get(id)) : null };
+    spec: level > 0 ? readSpec(kind, island.specs?.get(id)) : null,
+    // T36: a spot moved on the build grid carries its cell (the real server sends every spot's place).
+    ...(island.positions?.has(id) ? { x: island.positions.get(id).x, z: island.positions.get(id).z } : {}) };
 }
+// T36: the answer's layout ({version 1: the fixed spots, 2: something moved; the fake can always move}).
+const layoutOf = island => ({ version: island.positions?.size ? 2 : 1, grid: LAYOUT_GRID, movable: true });
 const lockedMessage = wave => `Opens after wave ${wave}.`;
 // The Tech hub's research of one branch on an island (GAME-V3.md §5.1): {tier 0-3, tier2, tier3}. island.research
 // lists the branches at tier 1 or more; island.tiers holds {branch: {tier, tier2, tier3}} once a branch went higher.
@@ -245,7 +251,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     return { code: `ISLE-${island.code}`, coins: player.coins, waveBest: island.waveBest, flags: island.flags, spots: spots(island),
       crew: { ...island.crew }, prices: PRICES, nextWave: island.nextWave ?? island.waveBest + 1,
       captain: { level: captain, nextPrice: CAPTAIN.price[captain] ?? null }, unlocks: answerUnlocks(island),
-      skills: skillsOf(player, island), weapons: weaponsOf(island), campaign: campaignAt(island) };
+      skills: skillsOf(player, island), weapons: weaponsOf(island), campaign: campaignAt(island), layout: layoutOf(island) };
   };
   // §14: skill points from the best wave you won anywhere (won_wave_best on the server), one per two waves.
   const wonOf = (player, island) => Math.max(player.wonBest ?? 0, island.waveBest ?? 0, player.pointBest ?? 0);
@@ -272,7 +278,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     return island;
   };
   const visitedView = island => ({ code: `ISLE-${island.code}`, ownerName: island.ownerName, waveBest: island.waveBest, spots: spots(island), coins: me().coins,
-    campaign: campaignAt(island) });
+    campaign: campaignAt(island), layout: layoutOf(island) });
   // Building and upgrading, shared by your island and Pirate Point (§5: same prices, same refusals).
   const once = (player, key, answer) => { if (player.actions.has(key)) return true; player.actions.set(key, true); return answer; };
   function buildOn(place, ids, { spot, kind, actionUid }, unlocks) {
@@ -532,6 +538,21 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       player.actions.set(`demolish:${actionUid}`, quote);
       return { ...answer(), demolished: { ...quote, refunds: quote.refunds.map(item => ({ ...item, you: item.id === playerId })), repeat: false } };
     },
+    // T36 (backend/server/island/placement.py): the same rules as the server (src/island/placement.js), between waves.
+    async move({ spot, x, z, code } = {}) {
+      if (typeof spot !== 'string' || typeof x !== 'number' || typeof z !== 'number') invalid('Send the spot, x and z.');
+      const mine = world.islands.get(me().code), island = code === undefined || code === null ? mine : visited(code);
+      spot = canonicalSpot(spot);
+      if (!(island.positions instanceof Map)) island.positions = new Map();
+      const placed = positionsOf(spots(island)), here = placed[spot];
+      if (!here || here.x !== x || here.z !== z) {
+        const verdict = checkMove(spot, x, z, placed);
+        if (!verdict.ok) refuse(verdict.code === 'no_such_spot' ? 404 : verdict.code === 'off_grid' ? 422 : 409, verdict.code, verdict.message);
+        waveGuard(island, 'A wave is under way. Move buildings between waves.');
+        island.positions.set(spot, { x, z });
+      }
+      return island === mine ? view() : visitedView(island);
+    },
     async piratePoint() { me(); return pointView(); },
     async pointBuild(body = {}) { buildOn(world.point, ISLAND_RULES.pointSpots, body, allowed(world.islands.get(me().code))); return pointView(); },
     async pointUpgrade(body = {}) { upgradeOn(world.point, ISLAND_RULES.pointSpots, body, allowed(world.islands.get(me().code))); return pointView(); },
@@ -729,6 +750,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
         if (route === 'POST /api/island/wreck') return reply(200, await api.repairWreck(body));
         if (route === 'GET /api/island/demolish') return reply(200, await api.demolishQuote({ spot: searchParams.get('spot'), code: searchParams.get('code') }));
         if (route === 'POST /api/island/demolish') return reply(200, await api.demolish(body));
+        if (route === 'POST /api/island/move') return reply(200, await api.move(body));
         if (route === 'POST /api/island/invite/join') return reply(200, await api.inviteJoin(body));
         if (route === 'POST /api/games') return reply(200, await api.createGame(body));
         if (route === 'POST /api/games/join') return reply(200, await api.joinGame(body));
@@ -771,10 +793,10 @@ const BODY_KEYS = Object.freeze({ '/api/island/build': ['spot', 'kind', 'actionU
   '/api/waves/join': ['waveId'], '/api/waves/finish': ['waveId', 'survived', 'shipsSunk'], '/api/waves/revive': ['waveId', 'fallen', 'downAt', 'actionUid'],
   '/api/games': [], '/api/games/join': ['code', 'actionUid'], '/api/games/leave': ['code'],
   '/api/island/research': ['branch', 'actionUid'], '/api/island/tower-skill': ['spot', 'spec'], '/api/island/wreck': ['amount', 'actionUid'],
-  '/api/island/demolish': ['spot', 'actionUid'] });
+  '/api/island/demolish': ['spot', 'actionUid'], '/api/island/move': ['spot', 'x', 'z'] });
 // Keys a body may also carry: `code` builds, upgrades, researches, picks a skill or mends the wreck on a game's island.
 const OPTIONAL_KEYS = Object.freeze({ '/api/waves/finish': ['bonuses', 'rescued'], '/api/island/build': ['code'], '/api/island/upgrade': ['code'], '/api/games': ['actionUid'],
-  '/api/island/research': ['code', 'tier', 'choice', 'change'], '/api/island/tower-skill': ['code'], '/api/island/wreck': ['code'], '/api/island/demolish': ['code'] });
+  '/api/island/research': ['code', 'tier', 'choice', 'change'], '/api/island/tower-skill': ['code'], '/api/island/wreck': ['code'], '/api/island/demolish': ['code'], '/api/island/move': ['code'] });
 const ACTION_UID = /^[A-Za-z0-9_-]{8,64}$/;
 const exactKeys = (body, keys, optional = []) => !!body && typeof body === 'object' && !Array.isArray(body)
   && Object.keys(body).filter(key => !optional.includes(key)).sort().join() === [...keys].sort().join();
@@ -881,6 +903,7 @@ export function createFakeIslandTransport({ coins = ISLAND_RULES.startingCoins, 
         return ok(await api.demolishQuote({ spot: asked.get('spot') ?? '', code: asked.get('code') }));
       }
       if (method === 'POST' && pathname === '/api/island/demolish') return ok(await api.demolish(body));
+      if (method === 'POST' && pathname === '/api/island/move') return ok(await api.move(body));
       if (method === 'POST' && pathname === '/api/island/invite/join') return ok(await api.inviteJoin(body));
       if (method === 'POST' && pathname === '/api/games') return ok(await api.createGame(body));
       if (method === 'POST' && pathname === '/api/games/join') return ok(await api.joinGame(body));
