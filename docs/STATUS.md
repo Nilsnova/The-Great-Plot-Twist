@@ -14,7 +14,7 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
-**14 Nov, B3 help / Johannes:** draft [#31](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/31) makes How to play loading/failure recoverable. Frontend 2,997 tests passed; build/budget/text lint pass; a11y 33 screens with no failures; demo 33 checks with no errors. [Component captures](evidence/B3-help/README.md). Shortcuts/audit handover are tracked separately in #32; login/APIs unchanged.
+**14 Nov, B3 help / Johannes:** draft [#31](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/31) makes How to play loading/failure recoverable. Frontend 3,036 tests passed; build/budget/text lint pass; a11y 33 screens with no failures; demo 33 checks with no errors. [Component captures](evidence/B3-help/README.md). Shortcuts/audit handover are tracked separately in #32; login/APIs unchanged.
 
 **14 Nov, T29–T47 / Nils (agent-assisted): fast-track sprint.** Ianno's roadmap ([PR #20](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/20)) is merged. Nils's agents work on T29–T47 in eight lanes. Each lane has its own claim issue and branch: wall recovery #21, targeting/pathing #22, flexible placement #23, arsenal #24, co-op policy #25, minigames/rescue #26, Harbor/weather #27, highscore/statue #28. **Nils decided ([D047](DECISIONS.md)) to merge these lanes to `main` as soon as each one is green, without waiting for peer approval first.** Review happens after the merge, so please look at the merged PRs and comment or reopen anything you disagree with. Merge gate: `npm test`, `npm run build`, `npm run test:mp`, the GitHub sign-in checks and backend `pytest`/`ruff` all pass. Any feature that needs a new table ships behind a new feature flag that is off by default, so the live game keeps working until the migration is applied and the flag is switched on (each one a separate, announced step). The proposed design decisions are D039–D046 and are open for team comments.
 
@@ -542,7 +542,7 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 
 ## Log
 
-- **14 Nov 2026, Johannes with Codex, B3 part 1:** help loading, visible failure/retry/cancel and stale-response guards in draft #31; 2,997 frontend tests and applicable UI checks pass. No API/login changes.
+- **14 Nov 2026, Johannes with Codex, B3 part 1:** help loading, visible failure/retry/cancel and stale-response guards in draft #31; 3,036 frontend tests and applicable UI checks pass. No API/login changes.
 
 - **2026-11-14, T29–T47 fast-track started.** Nils approved and merged PR #20; eight agent lanes opened issues #21–#28. Per D047, green lanes merge without a prior peer approval, behind off-by-default flags where a migration is needed; teammates review after the merge.
 
