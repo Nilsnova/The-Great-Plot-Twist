@@ -158,7 +158,8 @@ POST /api/island/weapon/buy  {"weapon": "pistols", "actionUid": "..."}
     -> the island. One weapon, bought once with coins and equipped at once (ledger ref
     weapon:<actionUid>, reason weapon_purchase).
     Errors: 400 bad_weapon, 409 owned, 409 locked ("Opens after wave N."),
-            409 insufficient_funds
+            409 insufficient_funds, 409 use_arsenal (while the flag "arsenal" is on: weapons
+            are island copies then, bought at the arsenal, routes/arsenal.py, D042)
 
 POST /api/island/weapon/equip  {"weapon": "musket"}
     -> the island. The captain carries this weapon from now on. Safe to repeat.
@@ -746,11 +747,15 @@ async def post_respec(
 async def post_weapon_buy(
     body: WeaponBuyRequest,
     player: IslandPlayerDep,
+    settings: SettingsDep,
     catalogue: IslandCatalogueDep,
     admin: AdminDep,
     request: Request,
 ) -> IslandResponse:
     request.app.state.island_build_budget.spend(player.id)
+    if is_enabled("arsenal", settings.flags):
+        # D042: with the arsenal on, weapons are island copies bought at the arsenal building.
+        raise ApiError(409, "use_arsenal", "Weapons are in the arsenal now. Walk to the arsenal.")
     view = await service.buy_weapon(admin, catalogue, player.id, body.weapon, body.actionUid)
     return island_out(view, catalogue)
 

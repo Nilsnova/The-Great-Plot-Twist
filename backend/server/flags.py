@@ -27,6 +27,8 @@ FLAG_NAMES = (
     "festival",
     "demo",
     "islands",
+    # T40/T41 (D042): the shared island arsenal. Off: the old personal weapon shop, as before.
+    "arsenal",
 )
 
 
