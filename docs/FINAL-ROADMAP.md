@@ -123,3 +123,9 @@ New big features, new external services, new paid accounts, story or culprit cha
 T26 UI follow-up: island Harbor weather access implemented in [PR #8](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/8), with [evidence](handoff/T26-weather-board.md); explain-back and human review pending. This does not complete A1 or the broader UI audits.
 
 T28 UX follow-up: [Learn boss minigames with optional first-time practice](../specs/T28-minigame-introduction.md), owned by Ianno. Per player, island and minigame, including multiplayer; implementation done in [#19](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/19), with [evidence](evidence/T28/README.md). Ianno practiced all checkpoints; introductory explain-back completed after clarification; independent human review remains pending. This does not complete the broader UX audits.
+
+## Expansion backlog · 14 Nov 2026
+
+The requested [defense and shared-island expansion](BUILD-PLAN.md#6-defense-and-shared-island-expansion) adds T29–T47, proposed by Ianno Hollensteiner. It preserves this grading/submission plan and the feature freeze. Start with investigation and reviewed contracts; schedule large implementation packages after the deadline unless the team explicitly revises the schedule. Existing T3/T5/T6/T7/T26 are extended, not replaced. Claiming, human review and merge rules above still apply.
+
+Planning handover (14 Nov): roadmap/task expansion drafted by Ianno Hollensteiner; documentation checks completed. Implementation tasks remain proposed, not done. Peer review and explain-back are pending.
