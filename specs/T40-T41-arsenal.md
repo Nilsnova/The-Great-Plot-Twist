@@ -21,7 +21,7 @@ Weapons were a personal list (`islands.weapons_owned`): bought once, equipped by
   - `arsenal_take`: a withdraw with empty hands, or a **swap** (the carried copy goes back first, in the same step, so a full rack still allows it).
   - `arsenal_return`: the carried copy back on the rack; **a full rack refuses** (`arsenal_full`) and the copy stays in the captain's hands.
   - `arsenal_state`: the arsenal now. It also returns copies of captains who **left** the game to the rack while there is room, and converts the island owner's old personal weapons.
-- **Permission helper:** `arsenal_may()` in SQL and `backend/server/island/arsenal_policy.py`: any active member (host included) may look, buy, take and return. T37 replaces these two places.
+- **Permission helper:** `backend/server/island/arsenal_policy.py` maps look/buy/take/return onto T37's merged `permissions.require_action` (`island_visit`, `arsenal_buy`, `arsenal_withdraw`, `arsenal_return`; D043: host and members, the buyer pays). The database repeats the rule under the lock in `arsenal_may()`; change both together.
 - **Server:** `backend/server/island/arsenal.py` (service), `arsenal_rules.py` (rack size, refusals), `arsenal_store.py` (database answers), `backend/server/routes/arsenal.py` (`GET /api/island/arsenal`, `POST /api/island/arsenal/buy|take|return`), flag `arsenal` in `backend/server/flags.py`.
 - **Building:** `frontend/src/island/spots.js` (`ARSENAL`, at x −5.5, z −11.5, between the watchtower hill and the west house), original art `frontend/src/art/arsenal.js` (`island-arsenal`, registered in `src/art/registry.js`), drawn by `world.js`, walk-near / E / tap like the Tech hub (its own zone, "Walk closer" from `clickVerdict`).
 - **Card:** `arsenal-model.js` (pure), `arsenal-ui.js` (DOM), `arsenal.js` (controller), `arsenal-api.js` (calls with held click ids); docked like the Tech hub. Shows what you carry, "Stored: n of 20", every copy with its number and holder ("left the game" too), Take/Swap/Return, each type's damage, range and reload at your captain level, price, unlock and the full / locked / wave-running / short-of-coins reasons.
@@ -36,7 +36,7 @@ Weapons were a personal list (`islands.weapons_owned`): bought once, equipped by
 |---|---|
 | Unlock / build cost / damage | Stands from the start, free, never damaged (waves do not target it; T30/T33 may change this). Each type keeps its own unlock wave. |
 | Standard weapon / new entrants | The musket is standard issue: every captain who carries no copy shoots with it. It is never a copy and takes no slot. A new member starts with the musket. |
-| Who may | Any active member of the island's game (T37 replaces `arsenal_may` / `arsenal_policy.py`). |
+| Who may | The host and every active member, as D043's matrix says (`permissions.py`); `arsenal_may()` in SQL repeats it. |
 | Who pays | The buyer, from their own coins. No shared wallet. |
 | Where a bought copy goes | Into the buyer's hands if empty, else onto the rack; with a full rack and full hands the buy is refused before charging. |
 | Full rack | Return refused (copy stays in hand); swap allowed; buy into empty hands allowed. |

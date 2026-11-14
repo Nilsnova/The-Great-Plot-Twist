@@ -14,7 +14,8 @@ from dataclasses import replace
 from pathlib import Path
 
 from server.flags import parse_flags
-from server.island.arsenal_policy import ACTIONS, WHO_MAY
+from server.island import permissions
+from server.island.arsenal_policy import ACTIONS, MATRIX_ACTION
 from server.island.arsenal_rules import CAPACITY
 from server.tests.helpers import assert_error
 from server.tests.island_helpers import (
@@ -244,7 +245,11 @@ def test_the_capacity_and_the_policy_match_the_migration():
     )
     actions = re.search(r"p_action in \(([^)]*)\)", sql)[1]
     assert tuple(re.findall(r"'([a-z]+)'", actions)) == ACTIONS
-    assert set(WHO_MAY.values()) == {"member"}
+    # D043: the host and every member may use the arsenal; only a buy is paid, by the buyer.
+    for action in MATRIX_ACTION.values():
+        assert permissions.ACTIONS[action].roles == permissions.HOST_AND_MEMBERS
+    assert permissions.payer_of(MATRIX_ACTION["buy"], "me") == "me"
+    assert permissions.payer_of(MATRIX_ACTION["take"], "me") is None
 
 
 def test_the_migration_converts_nothing_when_applied():

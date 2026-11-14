@@ -14,6 +14,8 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
+**14 Nov, T29–T47 / Nils (agent-assisted): fast-track sprint.** Ianno's roadmap ([PR #20](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/20)) is merged. Nils's agents work on T29–T47 in eight lanes. Each lane has its own claim issue and branch: wall recovery #21, targeting/pathing #22, flexible placement #23, arsenal #24, co-op policy #25, minigames/rescue #26, Harbor/weather #27, highscore/statue #28. **Nils decided ([D047](DECISIONS.md)) to merge these lanes to `main` as soon as each one is green, without waiting for peer approval first.** Review happens after the merge, so please look at the merged PRs and comment or reopen anything you disagree with. Merge gate: `npm test`, `npm run build`, `npm run test:mp`, the GitHub sign-in checks and backend `pytest`/`ruff` all pass. Any feature that needs a new table ships behind a new feature flag that is off by default, so the live game keeps working until the migration is applied and the flag is switched on (each one a separate, announced step). The proposed design decisions are D039–D046 and are open for team comments.
+
 **14 Nov, T28 / Ianno:** [Boss minigame introduction and optional first-time practice](../specs/T28-minigame-introduction.md) is implemented in [PR #19](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/19), from main `50cab125`. Per player/island/task; shared real result. Frontend: 2,989 tests, build/budget/text lint, 33 accessibility screens, 33 demo checks and the four-page practice/skip barrier pass. [Evidence and checkpoints](evidence/T28/README.md). Ianno reports having practiced all tasks; introductory explain-back completed after clarification; independent human review remains pending.
 
 **14 Nov, T27 (Ianno):** [PR #17](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/17)
@@ -535,6 +537,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+- **2026-11-14, T29–T47 fast-track started.** Nils approved and merged PR #20; eight agent lanes opened issues #21–#28. Per D047, green lanes merge without a prior peer approval, behind off-by-default flags where a migration is needed; teammates review after the merge.
 
 - **2026-11-14, T28 implemented.** Ianno, assisted by Codex, implemented first-time practice per player/island/minigame on updated main. Full frontend suite and four-page shared-start proof pass; [evidence](evidence/T28/README.md). Introductory explain-back completed after clarification; independent human review pending.
 

@@ -1,35 +1,38 @@
-"""Who may use an island's arsenal (T40, D042): ONE place for the rule, so task T37 can replace it.
+"""Who may use an island's arsenal (T40, D042): the arsenal's four actions mapped onto the co-op
+permission matrix of T37 (permissions.py, D043), which is the one place the rule lives in Python.
 
-The policy today (an assumption until T37's permission matrix is agreed):
+    arsenal action   permissions.py action   who may            who pays
+    look             island_visit            host and members   nobody
+    buy              arsenal_buy             host and members   the buyer (no shared wallet)
+    take             arsenal_withdraw        host and members   nobody (withdraw, or a swap)
+    return           arsenal_return          host and members   nobody
 
-    action   who may            who pays
-    look     any active member  nobody
-    buy      any active member  the buyer, from their own coins (there is no shared wallet)
-    take     any active member  nobody (withdraw, or swap for the copy you carry)
-    return   any active member  nobody
-
-The host (the island's owner) is always a member. The same rule is written once more in SQL,
-arsenal_may() in supabase/migrations/20261114120000_arsenal.sql, which the database checks under
-the island lock (a member who left a moment ago is refused there). Change both together.
+The database checks the same rule again under the island lock: arsenal_may() in
+supabase/migrations/20261114120000_arsenal.sql (a member who left a moment ago is refused there).
+If D043's matrix changes for these actions, change arsenal_may() with it.
 
 Used by: arsenal.py.
 """
 
-from server.island import games
+from server.island import permissions
 from server.island.store import Island
 from server.supabase_admin import SupabaseAdmin
 
 ACTIONS = ("look", "buy", "take", "return")
-# action -> who may: "member" means any active member of the island's game, the host included.
-WHO_MAY = {action: "member" for action in ACTIONS}
+# arsenal action -> the permissions.py action it is checked as.
+MATRIX_ACTION = {
+    "look": permissions.ISLAND_VISIT,
+    "buy": permissions.ARSENAL_BUY,
+    "take": permissions.ARSENAL_WITHDRAW,
+    "return": permissions.ARSENAL_RETURN,
+}
 
 
 async def require_permission(
     admin: SupabaseAdmin, island: Island, player_id: str, action: str
-) -> None:
-    """Refuse (403 not_member) unless the player may do `action` at this island's arsenal."""
-    if action not in WHO_MAY:
+) -> permissions.Permit:
+    """403 not_member unless the player may do `action` at this island's arsenal; else the
+    Permit (their role, and who pays: the player for a buy, nobody otherwise)."""
+    if action not in MATRIX_ACTION:
         raise ValueError(f"Unknown arsenal action '{action}'.")
-    if island.owner == player_id:
-        return
-    await games.require_member(admin, island, player_id)
+    return await permissions.require_action(admin, island.owner, player_id, MATRIX_ACTION[action])

@@ -3,6 +3,7 @@
 // watchtower, houses). Seen from the game's three-quarter camera: a front face and a lighter top.
 // Original designs. Boxes and anchors are the old atlas's, so every renderer keeps its numbers.
 import {INK, ellipse, line, mix, part, poly, radial, rect, shadow, stroke} from './paint.js';
+import {TOWER_KINDS, drawBroken, drawDamaged, towerState} from './tower-states.js';
 
 const WOOD = '#a8693a', WOOD_LIGHT = '#c98a4e', WOOD_DARK = '#7a4a2a', STONE = '#a9a39a', STONE_LIGHT = '#cfc8bb';
 const IRON = '#3e4250', BRASS = '#f2c14e', ROOF = '#d4553e', LEAF = '#5cb84a', LEAF_DARK = '#3d8f3c', PINE = '#2f8f5a';
@@ -475,6 +476,19 @@ function buildSpot(glow) {
   };
 }
 
+const TOWER_DRAW = {cannon, mortar, harpoon: harpoonTower};
+/**
+ * The drawing of a tower: (kind, level 1-5, state, firing) -> draw(c, {w, h}) for a 48 x 32 frame.
+ * state is "intact" (the default, exactly the drawing the game uses today), "damaged" (leaning, cracked,
+ * scorched, smoking; may still fire) or "broken" (rubble; never shows a shot). Unknown kinds read as a
+ * cannon and unknown states as intact. Pure.
+ */
+export function drawTower(kind, level = 1, state = 'intact', firing = false) {
+  const known = Object.hasOwn(TOWER_DRAW, kind) ? kind : 'cannon', n = Math.max(1, Math.min(5, Number.isInteger(level) ? level : 1)), s = towerState(state);
+  if (s === 'broken') return (c, size) => drawBroken(known, n, c, size);
+  const intact = TOWER_DRAW[known](n, firing);
+  return s === 'damaged' ? (c, size) => drawDamaged(intact, c, size) : intact;
+}
 /** Every island frame: name -> [width, height, anchor, draw]. */
 export function islandFrames() {
   const frames = {
@@ -502,6 +516,9 @@ export function islandFrames() {
     'build-spot': [32, 32, 10, buildSpot(false)], 'build-spot-glow': [32, 32, 10, buildSpot(true)], 'fx-level-pip': [16, 16, 8, levelPip], 'fx-level-pip-gold': [16, 16, 8, tierPip],
     'island-bell': [24, 40, 0, bell], 'build-ring': [48, 24, 0, buildRing],
   };
+  // T33 art prep: the damaged and broken towers of every kind and level (the game does not request them yet).
+  for (const kind of TOWER_KINDS) for (let n = 1; n <= 5; n++) for (const state of ['damaged', 'broken'])
+    frames[`island-${kind}${n > 1 ? `-l${n}` : ''}-${state}`] = [48, 32, 5, drawTower(kind, n, state)];
   frames['build-badge'] = [24, 24, 0, plusBadge];
   // The old per-kind names stay (every kind shows the same "+" now).
   for (const kind of ['wall', 'tower', 'cannon', 'watchtower', 'house']) frames[`build-badge-${kind}`] = [24, 24, 0, plusBadge];
