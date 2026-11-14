@@ -26,6 +26,7 @@ FLAGS = (
     "islands",
     "rescue",
     "wall_recovery",
+    "tower_health",
 )
 VARIABLES = {
     "APP_ENV": " PrEvIeW ",

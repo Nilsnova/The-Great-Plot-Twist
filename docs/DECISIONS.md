@@ -706,6 +706,16 @@ Keeper's Lock and the clean-up stay as decided here.
 - **Alternatives and trade-offs:** waiting for a peer approval on each PR is safer and keeps everyone able to explain the code, but it would delay the sprint. In exchange, review moves to after the merge: every teammate should read the merged PRs and the specs (with explain-back sections) before the walkthrough, and anything can be reverted with a normal PR.
 - **Agreed by / issue or PR / impact:** Nils, 14 Nov; issues #21–#28. The design decisions D039–D046 inside the lanes stay *proposed* until the team agrees on them.
 
+## D049 · Tower health inside a wave (T33) · 2026-11-14
+
+**Status:** proposed; agreed by: pending team review. Behind the new flag `tower_health` (off by default), branch `feat/integration-sim`, responsible teammate Nils (`Nilsnova`). See [the spec](../specs/T33-tower-health.md).
+
+**Decision (values chosen by the implementer, open for review):** cannons, mortars and harpoons get hp by level (cannon 80–400, mortar 70–360, harpoon 60–320). Boarders attack a standing tower within 2.5 after a captain and the wall in their way (the T34 order, D040); at hp 0 a tower is broken: no shots, no manual fire, not jammed, one break event. Inside the wave E repairs a damaged tower (+10 hp/s for 3 s) or rebuilds a broken one at 40 % (60 % Master shipwright, 5 s cooldown), free, like walls. Every wave starts every tower whole: lasting tower damage is a follow-up. The rule travels as `rules: ["tower_health"]` on the wave answers, so every client of a wave plays the same rule (not each client's `/api/config`).
+
+**Why:** BUILD-PLAN §6 asks for towers that can be destroyed and stop firing, with damaged/broken art (already drawn, #34). In-wave only keeps it small: no migration, no money.
+
+**Alternatives and trade-offs:** persistent damage like D039 (more state, a paid card; later); ships shelling towers (would make towers fall without boarders; not chosen). Open: the hp numbers (T3 playtest); whether research or Workshops should help towers.
+
 ## Next entry
 
 - **ID / date / title:**

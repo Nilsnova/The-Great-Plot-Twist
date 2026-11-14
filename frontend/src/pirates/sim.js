@@ -15,6 +15,10 @@ import { createEventRules } from './wave-events.js';
 import { createFinisher } from './finisher/rules.js';
 // D039 (proposed): a wall starts the wave with the health its last wave left it (wall-health.js).
 import { readHealth, startHp } from './wall-health.js';
+// T33 (D049, proposed): towers with hp, only with the wave option towerHealth (the server's rule "tower_health").
+import { createTowerHealth } from './tower-health.js';
+// T34 (D040, proposed): what a boarder goes for, here: a tower in reach (with tower health).
+import { TARGET_PROFILES, nearestWithin } from './targeting.js';
 
 const freeze = value => {
   for (const inner of Object.values(value)) if (inner && typeof inner === 'object') freeze(inner);
@@ -444,6 +448,9 @@ function shuffle(list, random) {
  * v3 waves: event (an id of wave-events.js, eventFor(wave, seed) in the controller) brings the wave's event;
  * finishers: true lets a boss below a quarter of its hull start a finisher (finisher/rules.js), whose input is
  * {type: 'finisher_input', by, from, marks, easy?}; gapMs(players) is the room's wave gap (its grace time).
+ * towerHealth: true (T33, D049; the wave's rule "tower_health" from the server, the same on every client) gives
+ * cannons, mortars and harpoons hp (tower-health.js): boarders hack a tower in their reach, a broken one stops
+ * firing, and repair / rebuild inputs whose wallId names a tower repair or rebuild it.
  */
 export function createWave(options = {}) {
   const C = CONFIG, B = C.boarding, random = createRandom(options?.seed);
@@ -509,6 +516,9 @@ export function createWave(options = {}) {
       cooldown: round2(C.wall.rebuildCooldown * sooner), mendAfter: shops ? Math.max(W.minMend, W.mend / shops) : Infinity, mending: 0 };
   });
   const cannonById = new Map(cannons.map(item => [item.id, item]));
+  // T33: tower hp (inert unless the wave carries the rule): no dice, so the fleet's random stream is untouched.
+  const towerHealth = createTowerHealth({ enabled: options?.towerHealth === true, towers, now: () => now(), tick: C.tick });
+  const towerById = new Map(towers.map(item => [item.id, item]));
   const wallById = new Map(walls.map(item => [item.id, item]));
 
   // Where a gunboat anchors (CONFIG.gunboat): the first point of its course where the nearest tower is as
@@ -610,6 +620,7 @@ export function createWave(options = {}) {
     const G = C.gunboat;
     let free = null, freeD = Infinity, any = null, anyD = Infinity;
     for (const tower of towers) {
+      if (!towerHealth.canFire(tower)) continue; // T33: a broken tower is not worth jamming
       const d = distance(tower.x, tower.z, ship.x, ship.z);
       if (d > G.range + 1e-9) continue;
       if (d < anyD) { any = tower; anyD = d; }
@@ -899,6 +910,22 @@ export function createWave(options = {}) {
   }
   // How many boarders are on this captain already: at most H.crowd at once, the rest walk on.
   const crowdOn = hero => { let n = 0; for (const other of boarders) if (other.foe === hero.id) n++; return n; };
+  // T33 + T34: the tower a boarder goes for (only with tower health): the one it is on while that one still
+  // stands within the leash, else the nearest standing tower within reach that has fewer than `crowd`
+  // boarders on it (ties: the lower id; targeting.js). TARGET_PROFILES.boarder holds reach, leash and crowd.
+  const TP = TARGET_PROFILES.boarder;
+  const crowdOnTower = tower => { let n = 0; for (const other of boarders) if (other.towerFoe === tower.id) n++; return n; };
+  function towerFoeOf(boarder) {
+    if (!towerHealth.enabled) return null;
+    if (boarder.towerFoe) {
+      const held = towerById.get(boarder.towerFoe);
+      if (held && towerHealth.isTarget(held) && distance(boarder.x, boarder.z, held.x, held.z) <= TP.leash + 1e-9) return held;
+      boarder.towerFoe = null; boarder.goal = null;
+    }
+    const found = nearestWithin(boarder, towers, TP.towerReach, tower => towerHealth.isTarget(tower) && crowdOnTower(tower) < TP.crowd);
+    if (found) { boarder.towerFoe = found.id; boarder.goal = null; }
+    return found;
+  }
   // Every captain in the wave has fallen (at least one is in it): the island cannot hold.
   function allFallen(t) {
     let present = 0;
@@ -933,10 +960,13 @@ export function createWave(options = {}) {
       const cannon = typeof input.cannonId === 'string' ? cannonById.get(input.cannonId) : undefined;
       const target = findTarget(input.targetId);
       if (!cannon || !target || !visible(cannon, target) || jammed(cannon, ticks * C.tick)) return; // a jammed cannon cannot be fired by hand either
+      if (!towerHealth.canFire(cannon)) return; // T33: nor a broken one
       if (ticks * C.tick - cannon.lastShot < C.cannon.manualCooldown) return;
       fire(cannon, target, true, events);
     } else if (input.type === 'repair') {
       const wall = typeof input.wallId === 'string' ? wallById.get(input.wallId) : undefined;
+      // T33: with tower health the same message repairs a tower (wallId names it).
+      if (!wall && towerHealth.enabled) { towerHealth.repair(towerById.get(input.wallId), captainStats(1, input.skills)); return; }
       if (!wall || wall.hp <= 0 || wall.hp >= wall.maxHp) return; // a broken wall is rebuilt, not repaired
       if (wall.repairLeft <= 0) wall.repaired = 0;
       wall.repairLeft = C.wall.repairSeconds;
@@ -946,6 +976,7 @@ export function createWave(options = {}) {
       boostWall(wall, stats); // an engineer's repair raises the wall's strength by 25% (once)
     } else if (input.type === 'rebuild') {
       const wall = typeof input.wallId === 'string' ? wallById.get(input.wallId) : undefined;
+      if (!wall && towerHealth.enabled) { towerHealth.rebuild(towerById.get(input.wallId), captainStats(1, input.skills), ticks * C.tick, events); return; }
       if (!wall || wall.hp > 0 || ticks * C.tick - wall.rebuildAt < wall.cooldown - 1e-9) return;
       // The rebuilder's own skills: Master shipwright brings the wall back at 60% instead of 40%.
       const stats = captainStats(1, input.skills);
@@ -1059,23 +1090,32 @@ export function createWave(options = {}) {
   // {kind: 'point', leg} (walk there) or {kind: 'heart', leg} (walk there and hurt the island).
   // attackCaptain (lane H, GAME-V3.md §3): first of all {kind: 'captain', hero}, the nearest standing
   // captain within reach (foeOf, from the positions of captain_move), whom moveBoarder strikes.
+  // T33 (tower health only): after the wall in its way, {kind: 'tower', tower}, a standing tower within reach
+  // (towerFoeOf), before the next point or the heart: the T34 order captain, wall, tower, heart.
   function pickBoarderTarget(boarder) {
     const foe = foeOf(boarder);
-    if (foe) return { kind: 'captain', hero: foe };
+    if (foe) { boarder.towerFoe = null; return { kind: 'captain', hero: foe }; }
     while (boarder.leg < boarder.route.length - 1) {
       const leg = boarder.route[boarder.leg];
-      if (!(leg.wall && leg.wall.hp <= 0)) return leg.wall ? { kind: 'wall', wall: leg.wall, leg } : { kind: 'point', leg };
+      if (leg.wall && leg.wall.hp > 0) { boarder.towerFoe = null; return { kind: 'wall', wall: leg.wall, leg }; }
+      if (!leg.wall) break;
       boarder.leg++; boarder.goal = null;
     }
+    const tower = towerFoeOf(boarder);
+    if (tower) return { kind: 'tower', tower };
+    if (boarder.leg < boarder.route.length - 1) return { kind: 'point', leg: boarder.route[boarder.leg] };
     return { kind: 'heart', leg: boarder.route[boarder.route.length - 1] };
   }
   // One tick of a boarder: hack the wall it stands at, or walk towards its target. True at the heart.
   function moveBoarder(boarder, events) {
     if (boarder.state === 'hacking') {
       const target = pickBoarderTarget(boarder);
-      if (target.kind !== 'wall' || target.wall.id !== boarder.wallId) { boarder.state = 'walking'; boarder.wallId = null; boarder.goal = null; return false; }
+      const onIt = target.kind === 'wall' ? target.wall.id === boarder.wallId : target.kind === 'tower' && target.tower.id === boarder.towerId;
+      if (!onIt) { boarder.state = 'walking'; boarder.wallId = null; boarder.towerId = null; boarder.goal = null; return false; }
       if ((boarder.hackIn -= C.tick) > 1e-9) return false;
       boarder.hackIn += B.hackEvery;
+      // T33: a blow at a tower; the one that breaks it lets every boarder on it walk on (towerFoeOf).
+      if (target.kind === 'tower') { towerHealth.hit(target.tower, boarder.hack, boarder.id, events); return false; }
       const wall = target.wall, damage = Math.min(wall.hp, boarder.hack);
       wall.hp = round2(Math.max(0, wall.hp - damage));
       if (wall.hp === 0) { wall.repairLeft = 0; wall.rebuilding = 0; }
@@ -1107,6 +1147,19 @@ export function createWave(options = {}) {
           boarder.state = 'fighting'; boarder.wallId = null; boarder.hitIn = H.every / 2; boarder.vx = boarder.vz = 0; return false;
         }
         const step = Math.min(budget, d - H.contact * .9);
+        boarder.vx = dx / d * boarder.speed; boarder.vz = dz / d * boarder.speed;
+        boarder.x += dx / d * step; boarder.z += dz / d * step; budget -= step;
+        if (step <= 1e-9) break;
+        continue;
+      }
+      if (target.kind === 'tower') {
+        // T33: after a tower: walk up to it and start hacking from `contact`, as at a wall.
+        const tower = target.tower, dx = tower.x - boarder.x, dz = tower.z - boarder.z, d = Math.sqrt(dx * dx + dz * dz);
+        if (Math.abs(dx) > .05) boarder.facing = dx < 0 ? -1 : 1;
+        if (d <= B.contact + 1e-9) {
+          boarder.state = 'hacking'; boarder.towerId = tower.id; boarder.wallId = null; boarder.hackIn = B.hackEvery / 2; boarder.vx = boarder.vz = 0; return false;
+        }
+        const step = Math.min(budget, d - B.contact * .9);
         boarder.vx = dx / d * boarder.speed; boarder.vz = dz / d * boarder.speed;
         boarder.x += dx / d * step; boarder.z += dz / d * step; budget -= step;
         if (step <= 1e-9) break;
@@ -1355,6 +1408,7 @@ export function createWave(options = {}) {
       for (const boarder of boarders.filter(item => distance(item.x, item.z, fire.x, fire.z) <= fire.radius)) damageBoarder(boarder, fire.damage, fire.towerId, events, { area: true, fire: true });
     }
     for (const tower of towers) {
+      if (!towerHealth.canFire(tower)) continue; // T33: a broken tower does not reload or fire (no ghost shots)
       if (happening.silenced(tower, t) || jammed(tower, t)) continue; // v3 waves: shelled by the siege barge; jammed by a gunboat
       tower.reload = Math.max(0, tower.reload - C.tick);
       if (tower.reload > 1e-9) continue;
@@ -1382,6 +1436,7 @@ export function createWave(options = {}) {
         wall.repaired = 0;
       }
     }
+    towerHealth.tick(t, events); // T33: the towers' E repairs in progress
     if (crew.carpenter) {
       // Each carpenter takes the most damaged wall nobody else is on (a broken one first); two share a lone
       // one. A standing wall gains `rate` hp a second; a broken one comes back at the rebuild share after
@@ -1427,7 +1482,7 @@ export function createWave(options = {}) {
           hp: ship.hp, maxHp: ship.maxHp, state: ship.state, crew: ship.crew, ...(ship.boss ? { boss: true } : {}),
           ...(ship.kind === 'flagship' ? { exposed: lampsLit } : {}), ...(slowedUntil(ship) > t + 1e-9 ? { slowed: true } : {}) })),
         boarders: boarders.map(item => ({ id: item.id, ...(item.brute ? { brute: true } : {}), x: round2(item.x), z: round2(item.z), hp: item.hp, maxHp: item.maxHp,
-          state: item.state, wallId: item.wallId, facing: item.facing, foe: item.foe ?? null })),
+          state: item.state, wallId: item.wallId, facing: item.facing, foe: item.foe ?? null, ...(item.towerId ? { towerId: item.towerId } : {}) })),
         // Captain health (GAME-V3.md §3), by id: present is false for a captain who is away or not heard lately.
         party: [...party.values()].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)).map(hero => ({ id: hero.id,
           x: round2(hero.x), z: round2(hero.z), hp: hero.hp, maxHp: hero.maxHp, down: hero.down, downAt: hero.downAt,
@@ -1442,7 +1497,7 @@ export function createWave(options = {}) {
           ...(wall.workshop ? { workshop: wall.workshop } : {}) })),
         cannons: cannons.map(cannon => ({ id: cannon.id, x: cannon.x, z: cannon.z, reload: round2(cannon.reload), range: round2(cannon.sight) })),
         towers: towers.map(tower => ({ id: tower.id, kind: tower.kind, level: tower.level, ...(tower.spec ? { spec: tower.spec } : {}), ...(tower.bonus ? { bonus: tower.bonus } : {}), x: tower.x, z: tower.z, manned: tower.manned, ...(jammed(tower, t) ? { jammed: tower.jammedUntil } : {}),
-          reload: round2(tower.reload), range: round2(tower.sight) })),
+          reload: round2(tower.reload), range: round2(tower.sight), ...towerHealth.stateOf(tower, t) })),
         balls: balls.map(ball => ({ ...ball })),
         shells: shells.map(shell => ({ ...shell })),
         fires: fires.map(fire => ({ x: fire.x, z: fire.z, radius: fire.radius, until: fire.until })),

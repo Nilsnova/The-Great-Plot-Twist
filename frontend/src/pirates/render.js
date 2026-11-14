@@ -22,6 +22,9 @@
 // on the ground, and the ring fills with gold dots while you hold E to help them up.
 import * as THREE from 'three';
 import { FIRE_ART, HARPOON_ART, TIER_ART, crewArt, fireArt, levelArt, pipRow, pirateDimensions, pirateFrames, pirateLevels } from '../pixel/pirate-catalog.js';
+// T33 (D049, proposed): the damaged and broken tower drawings, used only while the wave has tower health.
+import { TOWER_KINDS, towerStateFrame } from '../art/tower-states.js';
+import { towerLook } from './tower-health.js';
 import { pixelGlsl, toScreen } from '../world/pixel-glsl.js';
 import { CHARACTER_SCALE } from './character-scale.js';
 
@@ -48,6 +51,7 @@ const EXPLOSION_FRAMES = pirateFrames.explosion;
 const LAYER_ORDER = { far: 76, near: 124, air: 940, fog: 900 };
 const CAPACITY = { far: 96, near: 96, air: 320 };
 const SINK_SECONDS = 1.8, WRECK_SECONDS = 9, SPLASH_SECONDS = .5, FLASH_SECONDS = .12, FIRE_SECONDS = .22;
+const TOWER_BAR_LIFT = 2.7;          // T33: drawn units above the ground for a tower's hp bar (a tower is taller than a captain)
 const BURST_SECONDS = .6, POSE_SECONDS = .6, POST_CAPACITY = 8;
 // Boarders on land: one sprite layer per 2-unit band of z (renderOrder 100 + z like the island's art), so
 // they pass in front of and behind walls, buildings and the player; a band is drawn only while it has one.
@@ -106,13 +110,24 @@ export const TIER_IDS = [...Object.values(TIER_ART).flat(), 'fx-level-pip-gold']
 export const FIRE_LEVEL_IDS = Object.values(FIRE_ART).flatMap(list => list.slice(1));
 // The harpoon tower, its harpoon and the rope marks of a slowed ship (GAME-V3.md §5): cartoon-only as well.
 export const HARPOON_IDS = [...HARPOON_ART.levels, ...HARPOON_ART.fire, HARPOON_ART.bolt, HARPOON_ART.ripples, HARPOON_ART.rope];
+// T33: every kind, level 1-5, damaged and broken (src/art/tower-states.js), cartoon only, and only in the atlas
+// of a wave with tower health (loadAtlas towerStates), so the atlas of every other wave stays as it was.
+export const TOWER_STATE_IDS = TOWER_KINDS.flatMap(kind => [1, 2, 3, 4, 5].flatMap(level =>
+  ['damaged', 'broken'].map(state => towerStateFrame(kind, level, state))));
 /**
  * The frame of a cannon or mortar post: its level's art, or while it fires its level's firing frame (so a
  * level-3 cannon does not flick to level 1's plain barrel, nor a level-5 one lose its gold). has(id) says
  * whether the atlas holds a frame; without one (the pixel atlas) a tier falls back to level 3's art and a
  * shot to level 1's firing frame. Pure.
+ * state (T33): 'damaged' or 'broken' takes that drawing when the atlas has it (a broken tower never shows a
+ * shot), else the intact frame; 'intact' (the default) is exactly the frame of before.
  */
-export function towerFrame(kind, level, firing = false, has = () => true) {
+export function towerFrame(kind, level, firing = false, has = () => true, state = 'intact') {
+  if (state === 'damaged' || state === 'broken') {
+    const id = towerStateFrame(kind, level, state);
+    if (has(id)) return id;
+    if (state === 'broken') firing = false;
+  }
   if (kind === 'harpoon') { // cartoon-only: a pixel atlas has no harpoon, so a cannon stands in
     const n = Math.max(1, Math.min(5, Number.isInteger(level) ? level : 1)), id = (firing ? HARPOON_ART.fire : HARPOON_ART.levels)[n - 1];
     return has(id) ? id : towerFrame('cannon', level, firing, has);
@@ -128,11 +143,12 @@ const BOARDER_ART = Object.freeze({ walk: ['boarder-walk-1', 'boarder-walk-2'], 
  * only; cached by the caller): linear filtering with mipmaps, premultiplied alpha, at the screen's
  * density within the atlas budget. rects, width and height stay in logical px (16 per world unit).
  */
-export async function loadAtlas({ quality = 'high', colour = 0 } = {}) {
+export async function loadAtlas({ quality = 'high', colour = 0, towerStates = false } = {}) {
   const { cartoonAtlas, smoothTexture } = await import('../art/textures.js');
   const { setPoseColour } = await import('../art/people.js');
   setPoseColour(colour); // your captain's musket and cutlass poses in your lobby colour
-  const ids = [...new Set([...ATLAS_IDS.filter(id => !PIXEL_ONLY_IDS.includes(id)), ...CARTOON_EXTRA_IDS, ...TIER_IDS, ...FIRE_LEVEL_IDS, ...HARPOON_IDS, ...GUNBOAT_IDS])];
+  const ids = [...new Set([...ATLAS_IDS.filter(id => !PIXEL_ONLY_IDS.includes(id)), ...CARTOON_EXTRA_IDS, ...TIER_IDS, ...FIRE_LEVEL_IDS, ...HARPOON_IDS, ...GUNBOAT_IDS,
+    ...(towerStates ? TOWER_STATE_IDS : [])])];
   const atlas = await cartoonAtlas(ids, { quality, extra: [[WHITE, 8, 8]] });
   const white = atlas.rects[WHITE], context = atlas.image.getContext('2d');
   context.fillStyle = '#fff'; context.fillRect(white.x * atlas.density, white.y * atlas.density, white.w * atlas.density, white.h * atlas.density);
@@ -381,6 +397,13 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         spark(x, y + .6, { count: event.kind === 'flagship' ? 70 : 26, speed: [1, 4.5], angle: Math.PI / 2, spread: 2, gravity: 6, life: [.6, 1.4], colour: '#cfe9e2' });
         break;
       }
+      case 'tower_damaged': // T33: a boarder's blow at a tower: the post flashes and a little dust flies
+        wallFlash.set(event.towerId, clock + FLASH_SECONDS);
+        spark(x, y + .7, { count: 6, speed: [.5, 1.8], angle: Math.PI / 2, spread: 2, gravity: 5, life: [.3, .6], colour: '#b8b2a0', size: [1, 2] });
+        break;
+      case 'tower_broken': // T33: once per break (the sim sends it once), a puff of smoke
+        effects()?.bloom(x, y + 1, { radius: 2.2, life: .6, colour: '#8c8a92' });
+        break;
       case 'wall_damaged': case 'island_damaged': {
         // The pirates' shot: a short flat arc from the ship to what it hit (drawn only).
         if (event.boarderId) {
@@ -795,8 +818,9 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   }
   // Captain health: a captain's hp bar (over the head, drawn units above where they stand), a fallen
   // captain in their colour with the red ring, and your revive's gold dots filling around them.
-  function drawHealthBar(x, z, hp, maxHp) {
-    const share = Math.max(0, Math.min(1, hp / (maxHp || 1))), w = 1.3, top = drawnY(z) + 2.05 * K();
+  // lift: drawn units above the ground (a captain's head; a tower's bar sits higher).
+  function drawHealthBar(x, z, hp, maxHp, lift = 2.05) {
+    const share = Math.max(0, Math.min(1, hp / (maxHp || 1))), w = 1.3, top = drawnY(z) + lift * K();
     layers.air.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .3125, 0, 0, { ...DARK, a: .8 });
     layers.air.push(rect[WHITE], x - w / 2, top, w * share, .1875, 0, 0, { ...(share > .5 ? GREEN : share > .25 ? GOLD : RED), a: 1 });
   }
@@ -906,6 +930,8 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       for (const tower of state.towers ?? []) if (tower.jammed !== undefined) drawJamMark(tower);
       drawCaptain();
       drawParty(state);
+      // T33: a bar over every tower with hp that has taken damage (none while the wave has no tower health).
+      for (const tower of state.towers ?? []) if (tower.maxHp > 0 && tower.hp > 0 && tower.hp < tower.maxHp) drawHealthBar(tower.x, tower.z, tower.hp, tower.maxHp, TOWER_BAR_LIFT);
       // The lamps' beam: from the lighthouse lamp to an exposed flagship.
       const flagship = state.lampsLit && beamFrom ? state.ships.find(ship => ship.kind === 'flagship') : null;
       if (flagship) {
@@ -927,14 +953,15 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       } else if (visible) {
         let id;
         const level = post.level, suffix = level > 1 ? `-l${level}` : '';
-        let smoking = false;
+        let smoking = false, look = 'intact';
         if (post.kind === 'wall') {
           const wall = walls.get(post.id), share = wall ? wall.hp / wall.maxHp : 1;
           id = share > .6 ? levelFrame('wall', level) : share > 0 ? pirateFrames.wall[1] : pirateFrames.wall[2];
           smoking = share <= .6;
         } else {
           // Each kind and level has its own art; firing shows that level's firing frame (a mortar stays a mortar).
-          id = towerFrame(post.kind, level, (fire.get(post.id)?.until ?? -1) > clock, frame => !!rect[frame]);
+          look = towerLook(towers.get(post.id)); // T33: intact unless the wave has tower health
+          id = towerFrame(post.kind, level, (fire.get(post.id)?.until ?? -1) > clock, frame => !!rect[frame], look);
         }
         const r = rect[id], flashing = (wallFlash.get(post.id) ?? -1) > clock ? .7 : 0;
         const repairing = post.kind === 'wall' && (walls.get(post.id)?.repairing || walls.get(post.id)?.crew);
@@ -945,7 +972,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
           const puff = rect[pirateFrames.smoke[(still() ? 0 : Math.floor(clock * 5)) % 3]];
           post.layer.push(puff, x, y + r.h - r.anchor, puff.w, puff.h, .5, puff.anchor, { a: .85 });
         }
-        if (level > 1 || post.kind !== 'wall') drawPips(post.layer, x, y + (r.h - r.anchor) * grow + .2, level);
+        if ((level > 1 || post.kind !== 'wall') && look !== 'broken') drawPips(post.layer, x, y + (r.h - r.anchor) * grow + .2, level);
         if (post.kind === 'wall' && walls.get(post.id)?.crew) drawCrew(post.layer, 'carpenter', x + (x > 0 ? -1.3 : 1.3), y - .3, true);
         if (post.kind !== 'wall' && towers.get(post.id)?.manned) drawCrew(post.layer, 'gunner', x + (post.flip ? 1.2 : -1.2), y - .15, (fire.get(post.id)?.until ?? -1) > clock);
       }

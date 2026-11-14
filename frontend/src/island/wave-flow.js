@@ -50,7 +50,8 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
     current = {wave, where, joined: true, finished: false, startAt: now()};
     emit({type: WAVE_STARTED, waveId: wave.waveId, wave: wave.wave, seed: wave.seed, startsAt: wave.startsAt,
       weather: wave.weather, flagship: wave.flagship, ...(typeof wave.boss === 'boolean' ? {boss: wave.boss} : {}), where, defenses: defensesOf(),
-      ...(wave.walls ? {walls: wave.walls} : {})}); // D039: each wall's health from the server (flag wall_recovery)
+      ...(wave.walls ? {walls: wave.walls} : {}), // D039: each wall's health from the server (flag wall_recovery)
+      ...(Array.isArray(wave.rules) ? {rules: wave.rules} : {})}); // the wave's sim rules (tower_health, …) from the server
     countdown(wave, fresh);
     changed();
   }

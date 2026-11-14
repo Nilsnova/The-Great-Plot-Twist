@@ -1325,6 +1325,7 @@ A flag is off unless the setting `FEATURE_FLAGS` names it (comma separated). The
 | `demo` | guest play for the class demo: a Supabase anonymous user may use the API after presenting the current class code (`POST /api/demo/join`) | G29 C0, D030; off by default; needs migrations 20261109010000 and 20261109020000 applied first |
 | `islands` | your island, building, visits by code and the pirate waves: `/api/island`, `/api/island/build`, `/api/island/visit/{code}`, `/api/waves/start`, `/api/waves/finish`; since D036 also `/api/island/upgrade`, `/hire`, `/captain`, `/invite/join` and `/api/pirate-point` (+ `/build`, `/upgrade`), which need migration `20261111030000` | lane 0 (D032); off by default; needs migration 20261110010000 applied first |
 | `rescue` | T38 last-chance rescue: the server honours `rescued` on `POST /api/waves/finish`, and the game offers the rescue (once the sim hook ships) | T38/T39, D044 proposed; off by default; no migration; needs `islands` |
+| `tower_health` | T33 tower hp inside a wave (D049, proposed): the wave answers carry `rules: ["tower_health"]`, and every client of that wave gives cannons, mortars and harpoons hp. Off: no `rules`, towers as before | T33; off by default; no migration; needs `islands` |
 | `wall_recovery` | wall damage that stays after a wave (D039, proposed): `GET /api/island/walls`, `POST /api/island/repair`, `walls` on the wave routes, `409 needs_repair` on upgrade. Off: exactly the old behavior, the new columns are never read | T29–T32/T47; off by default; needs migration 20261114100000 applied first, and `islands` on |
 
 The separately guarded [disposable local API](LOCAL-TEST-SERVER.md) provides a fixture-only
@@ -1682,6 +1683,17 @@ network latency/loss/late-join limitations still apply.
 - **Difficulty snapshot:** every finisher and rescue state carries `difficulty: {task: {speed?, width?,
   easyWidth?, share?, hits?, prompt?, easyPrompt?}}`, frozen at the run's start from the wave number
   (`finisher/difficulty.js`). Clients of one wave must run the same version.
+
+### Wave rules (T33, T34/T35, T38)
+
+`POST /api/waves/start|join` and `GET /api/waves/current` carry an optional `rules`: the simulation rules of
+that wave, each switched on by the flag of the same name, in a fixed order (`SIM_RULES` in
+`backend/server/routes/waves.py`). Left out while none is on. Every client reads them from the wave answer
+(`frontend/src/pirates/wave-rules.js`), never from its own `/api/config`, so a whole wave plays one rule set;
+the island passes them on in `wave_started_server` (`rules`). Names: `tower_health` (T33, [spec](../specs/T33-tower-health.md)).
+With `tower_health` the room's `repair` / `rebuild` messages may name a tower in `wallId`; new sim events
+`tower_damaged {towerId, by, damage, hp, maxHp, broken}`, `tower_broken`, `tower_repaired`, `tower_rebuilt`;
+`state().towers[]` gains `hp, maxHp, broken, repairing, rebuildReady`.
 
 ### Wall recovery (T29–T32, T47)
 
