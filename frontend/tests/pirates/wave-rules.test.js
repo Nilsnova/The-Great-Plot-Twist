@@ -1,0 +1,53 @@
+// The wave's simulation rules from the server ("rules" on the wave answers): wave-rules.js reads them,
+// the controller hands them to createWave(), so every client of a wave plays the same rules whatever
+// its own /api/config says. Without "rules" a wave plays exactly as before.
+import { describe, expect, it, vi } from 'vitest';
+import { coastPoint } from '../../src/pirates/sim.js';
+import { createWaveController, readWaveInfo } from '../../src/pirates/controller.js';
+import { RULE_OPTIONS, readRules } from '../../src/pirates/wave-rules.js';
+
+const START = Date.UTC(2026, 10, 14, 12, 0, 0);
+const INFO = { waveId: 'w-r', wave: 1, seed: 77, startsAt: new Date(START + 1000).toISOString(), weather: { kind: 'calm', ships: 1, fog: 0 }, flagship: false };
+const p = coastPoint(Math.PI / 4, .75);
+const DEFENSES = [{ id: 'cannon_2', kind: 'cannon', level: 1, x: p.x, z: p.z }];
+
+function controllerWith(renderers) {
+  const clock = { now: START }, listeners = new Map();
+  const bus = { on(type, fn) { if (!listeners.has(type)) listeners.set(type, new Set()); listeners.get(type).add(fn); return () => listeners.get(type).delete(fn); },
+    emit(event) { for (const fn of [...(listeners.get(event.type) ?? [])]) fn(event); } };
+  const controller = createWaveController({ bus, getDefenses: () => DEFENSES, now: () => clock.now, world: { scene: {}, container: {} },
+    finishWave: vi.fn(async () => ({ loot: 0 })), playCutscene: async () => {},
+    createRenderer: options => { renderers.push(options); return { events() {}, update() {}, setVisible() {}, dispose() {} }; },
+    createHud: () => ({ countdown() {}, bar() {}, prompt() {}, banner() {}, setVisible() {}, dispose() {} }),
+    setTimer: () => ({}), clearTimer: () => {} });
+  const advance = ms => { for (let t = 0; t < ms; t += 100) { clock.now += 100; controller.update(.1); } };
+  return { bus, controller, advance };
+}
+
+describe('the wave rules', () => {
+  it('turns known names into true options and ignores everything else', () => {
+    expect(readRules(['tower_health', 'nonsense'])).toEqual({ towerHealth: true, pathing: false, rescue: false });
+    expect(readRules(undefined)).toEqual({ towerHealth: false, pathing: false, rescue: false });
+    expect(readRules(['pathing'])).toEqual({ towerHealth: false, pathing: true, rescue: false });
+    expect(readRules('tower_health')).toEqual({ towerHealth: false, pathing: false, rescue: false });
+    expect(readRules(['rescue']).rescue).toBe(true);
+    expect(Object.values(RULE_OPTIONS)).toContain('towerHealth');
+  });
+
+  it('reads the rules of a wave answer', () => {
+    expect(readWaveInfo({ ...INFO, rules: ['tower_health'] }).rules).toEqual({ towerHealth: true, pathing: false, rescue: false });
+    expect(readWaveInfo(INFO).rules).toEqual({ towerHealth: false, pathing: false, rescue: false });
+  });
+
+  it('a wave with tower_health gives its towers hp and paints the tower states; without it nothing changes', () => {
+    const on = [], off = [];
+    const withRule = controllerWith(on), without = controllerWith(off);
+    withRule.bus.emit({ type: 'wave_started_server', ...INFO, rules: ['tower_health'] });
+    without.bus.emit({ type: 'wave_started_server', ...INFO });
+    withRule.advance(2000); without.advance(2000);
+    expect(withRule.controller.state.towers[0]).toMatchObject({ hp: 80, maxHp: 80 });
+    expect(without.controller.state.towers[0].hp).toBeUndefined();
+    expect(on[0].towerStates).toBe(true);
+    expect(off[0].towerStates).toBe(false);
+  });
+});

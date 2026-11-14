@@ -9,6 +9,7 @@ SQL side of the same rules is in island_sql/test_wall_recovery_sql.py.
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
+import httpx
 import pytest
 
 from server.flags import parse_flags
@@ -199,11 +200,74 @@ def test_a_wave_starts_with_the_walls_of_its_island_at_startsat():
 
 def test_a_finish_hands_its_walls_to_the_database():
     world = World(settings=ON)
+    world.database.walls[PLAYER_ID] = [wall_row(100, None), wall_row(100, None, plot="wall_2")]
 
     assert world.finish(walls={"wall_1": 40, "wall_2": 0}).status_code == 200
     assert world.database.calls("island_walls_record") == [
         {"p_player_id": PLAYER_ID, "p_wave_id": WAVE_ID, "p_walls": {"wall_1": 40, "wall_2": 0}}
     ]
+
+
+# The fake wave starts at 2026-11-10 12:00:10; a wall damaged 5 s before it is still damaged then.
+JUST_BEFORE_START = "2026-11-10T12:00:05+00:00"
+
+
+def started_damaged(health: int, plot: str = "wall_1") -> dict:
+    return {"plot": plot, "level": 1, "wall_health": health, "wall_damaged_at": JUST_BEFORE_START}
+
+
+def test_cap_to_start_keeps_damage_and_never_heals_or_invents_a_wall():
+    start = {"wall_1": 40, "wall_2": 100}
+    reported = {"wall_1": 100, "wall_2": 30, "wall_3": 0}
+    assert wall_health.cap_to_start(reported, start) == {"wall_1": 40, "wall_2": 30}
+
+
+def test_a_finish_cannot_heal_a_wall_above_the_health_it_started_with():
+    world = World(settings=ON)
+    world.database.walls[PLAYER_ID] = [started_damaged(40), started_damaged(0, plot="wall_2")]
+
+    assert world.finish(walls={"wall_1": 100, "wall_2": 100}).status_code == 200
+
+    # The wave started with wall_1 at 40 and wall_2 destroyed: that is all a finish may keep.
+    [recorded] = world.database.calls("island_walls_record")
+    assert recorded["p_walls"] == {"wall_1": 40, "wall_2": 0}
+
+
+def test_a_finish_may_lower_a_wall_and_walls_that_are_not_built_are_dropped():
+    world = World(settings=ON)
+    world.database.walls[PLAYER_ID] = [started_damaged(40)]
+
+    assert world.finish(walls={"wall_1": 10, "wall_7": 0}).status_code == 200
+
+    [recorded] = world.database.calls("island_walls_record")
+    assert recorded["p_walls"] == {"wall_1": 10}
+
+
+def test_a_finish_on_an_island_with_no_walls_records_nothing():
+    world = World(settings=ON)
+
+    assert world.finish(walls={"wall_1": 0}).status_code == 200
+    assert world.database.calls("island_walls_record") == []
+
+
+def test_a_failing_wall_record_never_breaks_an_already_paid_finish():
+    world = World(settings=ON)
+    world.database.walls[PLAYER_ID] = [wall_row(100, None)]
+    world.database.paid_replies["island_walls_record"] = httpx.Response(503, json={})
+
+    answer = world.finish(walls={"wall_1": 40})
+
+    assert answer.status_code == 200
+    assert answer.json()["loot"] == 15
+    assert len(world.database.calls("wave_finish")) == 1
+
+
+def test_an_unreadable_wall_record_reply_is_logged_not_an_error():
+    world = World(settings=ON)
+    world.database.walls[PLAYER_ID] = [wall_row(100, None)]
+    world.database.paid_replies["island_walls_record"] = {"status": "nonsense"}
+
+    assert world.finish(walls={"wall_1": 40}).status_code == 200
 
 
 @pytest.mark.parametrize("walls", [{"wall_1": 101}, {"wall_1": -1}, {"cannon_1": 0}])

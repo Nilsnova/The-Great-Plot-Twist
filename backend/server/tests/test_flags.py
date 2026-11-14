@@ -31,6 +31,8 @@ def test_flag_names_are_exactly_the_agreed_list():
         "placement",
         "defenses_v2",
         "arsenal",
+        "tower_health",
+        "pathing",
     )
 
 

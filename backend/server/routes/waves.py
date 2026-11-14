@@ -30,6 +30,14 @@ POST /api/waves/start  {"where": "own" | "ISLE-K7Q2M" | "pirate_point", "actionU
     left out): {wall spot: health percent} the wave's walls start with, worked out by the
     server at "startsAt" (join and current answer the same); left out on Pirate Point. Every
     client of the wave feeds these to its simulation.
+    "rules" (only while at least one is on, else the key is left out): the simulation rules
+    this wave plays with, from the feature flags of the same names, in this order:
+    "tower_health" (T33, D049 proposed), "pathing" (T34/T35, D040 proposed), "rescue" (T38,
+    D044 proposed: the game offers the last-chance rescue). The first answer for a wave keeps
+    its rule set (island/wave_rules.py, table wave_rules, migration 20261114130500), and join
+    and current answer that kept set even after a flag was switched. Every client of a wave
+    reads them from the wave answer, never from its own /api/config, so the whole wave plays
+    one rule set.
     Errors: 404 no_such_island, 409 wave_running (one wave per island at a time)
 
 POST /api/waves/join  {"waveId": "6f1c..."}
@@ -55,8 +63,10 @@ POST /api/waves/finish  {"waveId": "6f1c...", "survived": true, "shipsSunk": 7,
     walls (optional, decision D039, proposed; ignored while the flag wall_recovery is off):
     every wall's health in percent (0 to 100) when the finishing player's simulation ended the
     wave. The first finish of an island wave keeps them (island_walls_record()); later
-    finishes, Pirate Point waves and spots without a wall change nothing. A wall below 100
-    starts the next wave damaged and mends by itself 10 minutes later.
+    finishes, Pirate Point waves and spots without a wall change nothing. The server caps each
+    wall at the health it started the wave with (a finish can only damage, never heal), and a
+    failure to keep them is logged, never an error: the paid finish still answers 200. A wall
+    below 100 starts the next wave damaged and mends by itself 10 minutes later.
     Every participant finishes their own part, once. A survived wave n pays this player
     10 + 5 x n + 5 x (house levels on that island), on Pirate Point 20 + 5 x n, twice that on a
     boss wave; a lost wave pays 0. A
@@ -100,7 +110,7 @@ from fastapi import APIRouter, Query, Request
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt
 
 from server.flags import is_enabled
-from server.island import wall_repair, waves
+from server.island import wall_repair, wave_rules, waves
 from server.island.service import IslandCatalogueDep
 from server.island.wave_weather import wave_weather
 from server.island.waves import WaveStart
@@ -184,6 +194,8 @@ class WaveResponse(BaseModel):
     boss: bool
     # D039: {wall spot: health percent} the wave's walls start with; null on Pirate Point.
     walls: dict[str, int] | None = None
+    # The simulation rules switched on for this wave (SIM_RULES); null while none is on.
+    rules: list[str] | None = None
 
 
 class FinishResponse(BaseModel):
@@ -204,7 +216,9 @@ async def start_walls(
     return await wall_repair.walls_for_wave(admin, wave)
 
 
-def wave_out(wave: WaveStart, walls: dict[str, int] | None = None) -> WaveResponse:
+def wave_out(
+    wave: WaveStart, walls: dict[str, int] | None = None, rules: list[str] | None = None
+) -> WaveResponse:
     return WaveResponse(
         waveId=wave.wave_id,
         wave=wave.wave,
@@ -219,6 +233,7 @@ def wave_out(wave: WaveStart, walls: dict[str, int] | None = None) -> WaveRespon
         flagship=wave.flagship,
         boss=wave.boss,
         walls=walls,
+        rules=rules,
     )
 
 
@@ -240,7 +255,8 @@ async def post_start(
         catalogue, source, state_rules, request.app.state.lock_weather, area
     )
     started = await waves.start(admin, catalogue, weather, player.id, body.where, body.actionUid)
-    return wave_out(started, await start_walls(admin, settings, started))
+    walls = await start_walls(admin, settings, started)
+    return wave_out(started, walls, await wave_rules.rules_for_wave(admin, settings, started))
 
 
 @router.post("/waves/join", response_model_exclude_none=True)
@@ -254,7 +270,8 @@ async def post_join(
 ) -> WaveResponse:
     request.app.state.wave_budget.spend(player.id)
     joined = await waves.join(admin, catalogue, player.id, body.waveId)
-    return wave_out(joined, await start_walls(admin, settings, joined))
+    walls = await start_walls(admin, settings, joined)
+    return wave_out(joined, walls, await wave_rules.rules_for_wave(admin, settings, joined))
 
 
 @router.get("/waves/current", response_model_exclude_none=True)
@@ -270,7 +287,8 @@ async def get_current(
     running = await waves.current(admin, catalogue, player.id, where)
     if running is None:
         return None
-    return wave_out(running, await start_walls(admin, settings, running))
+    walls = await start_walls(admin, settings, running)
+    return wave_out(running, walls, await wave_rules.rules_for_wave(admin, settings, running))
 
 
 @router.post("/waves/finish")
@@ -293,9 +311,10 @@ async def post_finish(
         sorted(set(body.bonuses or [])),
         rescued=body.rescued and is_enabled("rescue", settings.flags),
     )
-    # D039: the first finish of an island wave keeps its walls' health for the next wave.
+    # D039: the first finish of an island wave keeps its walls' health for the next wave. The
+    # finish above is already paid, so this is best effort: a failure is logged, never a 5xx.
     if is_enabled("wall_recovery", settings.flags):
-        await wall_repair.record(admin, player.id, body.waveId, body.walls)
+        await wall_repair.record_after_finish(admin, player.id, body.waveId, body.walls)
     return FinishResponse(
         loot=finished.loot,
         coins=finished.coins,

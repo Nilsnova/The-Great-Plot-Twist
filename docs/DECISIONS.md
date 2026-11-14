@@ -719,6 +719,16 @@ Keeper's Lock and the clean-up stay as decided here.
 - **Alternatives and trade-offs:** a fire brazier (damage over time; overlaps Fire pot, Inferno and fire bombs), a swivel-gun nest against boarders (overlaps cannons, which already shoot boarders first, Grapeshot and the cutlass; the recommended second addition after T34) and a tar-pit trap (needs the path and placement contracts of T35/T36). Comparison and numbers: [specs/T43-new-defenses.md](../specs/T43-new-defenses.md). The flag costs one merge step per kind, but keeps the live game unchanged while T33/T34/T36 are in flight.
 - **Agreed by / issue or PR / impact:** pending team review; responsible teammate Nils (`Nilsnova`). Before the flag is switched on: the sim wiring of the spec, a migration that lets `islet_buildings` store `(cannon_n, culverin)` (T36 kept the plot rule, so it is the harpoon migration's rule plus seven pairs), and the card/world/render wiring.
 
+## D049 · Tower health inside a wave (T33) · 2026-11-14
+
+**Status:** proposed; agreed by: pending team review. Behind the new flag `tower_health` (off by default), branch `feat/integration-sim`, responsible teammate Nils (`Nilsnova`). See [the spec](../specs/T33-tower-health.md).
+
+**Decision (values chosen by the implementer, open for review):** cannons, mortars and harpoons get hp by level (cannon 80–400, mortar 70–360, harpoon 60–320). Boarders attack a standing tower within 2.5 after a captain and the wall in their way (the T34 order, D040); at hp 0 a tower is broken: no shots, no manual fire, not jammed, one break event. Inside the wave E repairs a damaged tower (+10 hp/s for 3 s) or rebuilds a broken one at 40 % (60 % Master shipwright, 5 s cooldown), free, like walls. Every wave starts every tower whole: lasting tower damage is a follow-up. The rule travels as `rules: ["tower_health"]` on the wave answers, so every client of a wave plays the same rule (not each client's `/api/config`).
+
+**Why:** BUILD-PLAN §6 asks for towers that can be destroyed and stop firing, with damaged/broken art (already drawn, #34). In-wave only keeps it small: no migration, no money.
+
+**Alternatives and trade-offs:** persistent damage like D039 (more state, a paid card; later); ships shelling towers (would make towers fall without boarders; not chosen). Open: the hp numbers (T3 playtest); whether research or Workshops should help towers.
+
 ## Next entry
 
 - **ID / date / title:**
@@ -813,6 +823,8 @@ and [message contract](INTERFACES.md#t28-boss-minigame-preparation).
 
 **Alternatives and trade-offs:** per-boarder A* (more work per boarder, same routes); always breaching (no gaps, today's spirit, but T36 walls would mean nothing); always detouring (walls never hacked). Lone short walls are walked round, so today's isolated spots lose value under the new rule: before T36, either keep the legacy routes (option A) or join the ring spots into a closed ring (option B); a balance decision with T3. The wiring needs a wave option `pathing` so a mixed-version room never mixes rules. See [the spec](../specs/T34-T35-targeting-pathing.md).
 
+**Update 14 Nov (wiring):** wired behind the flag and wave rule `pathing` (off). Option A while it is off (today's routes); with it on, walls are their T36 footprints (D041), so placed walls can form rings. Balance of lone walls to be checked with T3 before switching on.
+
 ## D046 · Highscore scope and statue stages · 2026-11-14
 
 **Status:** PROPOSED for T45 on `feat/t45-highscore-statue`; agreed by: pending team review. Builds on D037 (T7) and the T5 milestones.
@@ -884,6 +896,8 @@ or splits best from current/unlocked wave, they must read the never-lowered best
 - **Timed recovery:** a damaged or destroyed wall counts as whole 10 minutes (600 s) after the wave that left it so, by server time; offline time counts. A later wave that ends with it still damaged restarts the 10 minutes.
 - **Upgrades** of a damaged or destroyed wall are refused (`409 needs_repair`), and the card shows Repair/Rebuild instead of Upgrade. An intact wall upgrades at full health. Health is a share, so even a racing upgrade never heals.
 - Towers (T33) and Pirate Point walls are unchanged.
+- **Update 14 Nov (review of PR #43):** the server records each wall as `min(health at wave start, reported health)` (`wall_health.cap_to_start`, in Python, no new migration), so a finish can only damage a wall, never heal or add one. Consequence, intended and conservative: a wall repaired or rebuilt for free with E during the wave is recorded at most at its start health; lasting recovery is the paid card or the 10-minute timer. A client reporting lower numbers can still leave walls damaged (bounded: first finish only, participants only, 10-minute timer, play money). Recording after a paid finish is best effort (logged, never a 5xx).
+- **Known, low impact (review follow-up):** the start health is read in Python before `island_walls_record()` runs; between that read and the record nothing else writes those rows during the wave (restores are refused, only the first finish records), but two finishes at the same moment both read, and the second gets `repeat` — so only a record that is already the first counts. A paid restore right after the wave closes and before the first finish's record lands could be overwritten by that record (its walls capped at the old start health). Rare and bounded (play money, 10-minute timer); not fixed here.
 
 **Why:** BUILD-PLAN §6 requires damage to persist past the wave end, no upgrade bypass, and money decided by the server. Percent plus one timestamp is the smallest state that survives reloads, offline time and upgrades; a server snapshot keeps multiplayer deterministic. The browser's reported health cannot be proven, like `survived`; it is bounded (0–100, walls on that island, first finish only) and only affects play-money costs.
 

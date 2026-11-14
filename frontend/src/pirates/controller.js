@@ -51,6 +51,8 @@ import { createFinisherRecorder } from './finisher/input.js';
 import { getPreferences } from '../settings/preferences.js';
 // D039 (proposed): the walls start with the server's health and the finish reports it (wall-health.js).
 import { healthReport, readWalls, withHealth } from './wall-health.js';
+// The wave's simulation rules from the server (tower health, …), the same on every client of the wave.
+import { readRules } from './wave-rules.js';
 
 const MAX_TICKS_PER_FRAME = 600;      // a friend joining late catches up 30 s of wave per frame
 const SHOWN_LATE_SECONDS = 1;         // events older than this (catching up) are not drawn or heard
@@ -122,7 +124,7 @@ export function readWaveInfo(info) {
   const wave = Number.isInteger(info.wave) && info.wave > 0 ? info.wave : 1;
   const weather = info.weather && typeof info.weather === 'object' ? info.weather : {};
   return { waveId: info.waveId, wave, seed: Number(info.seed), startsAtMs, weather, flagship: info.flagship === true,
-    boss: typeof info.boss === 'boolean' ? info.boss : undefined, walls: readWalls(info.walls),
+    boss: typeof info.boss === 'boolean' ? info.boss : undefined, walls: readWalls(info.walls), rules: readRules(info.rules),
     serverTimeMs: Number.isFinite(parseTime(info.serverTime)) ? parseTime(info.serverTime) : null };
 }
 
@@ -142,9 +144,11 @@ const defaultCutscene = (world, reducedMotion) => async id => {
 const defaultRenderer = async options => {
   const module = await import('./render.js');
   // One atlas at a time, painted again when your lobby colour (the musket and cutlass poses) changes.
-  const key = `${options.quality?.() === 'low' ? 'low' : 'high'}:${options.colour ?? 0}`;
+  // T33: a wave with tower health also paints the damaged and broken towers (another atlas, another key).
+  const key = `${options.quality?.() === 'low' ? 'low' : 'high'}:${options.colour ?? 0}${options.towerStates ? ':towers' : ''}`;
   if (atlasKey !== key) { atlasPromise = null; atlasKey = key; }
-  atlasPromise ??= module.loadAtlas({ quality: key.split(':')[0], colour: options.colour ?? 0 }).catch(error => { atlasPromise = null; throw error; });
+  atlasPromise ??= module.loadAtlas({ quality: key.split(':')[0], colour: options.colour ?? 0, towerStates: options.towerStates === true })
+    .catch(error => { atlasPromise = null; throw error; });
   return module.createWaveRenderer({ ...options, atlas: await atlasPromise });
 };
 const defaultHud = async options => (await import('./hud.js')).createWaveHud(options);
@@ -235,7 +239,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     // the boss finishers with the room's wave gap (their grace time). simOptions may name an event (the demo).
     const event = info.flagship ? null : eventFor(info.wave, info.seed);
     const sim = createWave({ seed: info.seed, wave: info.wave, weather: info.weather, flagship: info.flagship, defenses, countdown: 0,
-      crew: getCrew() ?? undefined, ...(info.boss !== undefined ? { boss: info.boss } : {}), event, finishers: true, finisherPreparation: true, gapMs: waveGapMs, ...simOptions });
+      crew: getCrew() ?? undefined, ...(info.boss !== undefined ? { boss: info.boss } : {}), event, finishers: true, finisherPreparation: true, gapMs: waveGapMs,
+      ...(info.rules ?? {}), ...simOptions }); // the server's rules for this wave (wave-rules.js); simOptions last (the demo harness)
     const first = sim.state();
     const current = wave = { info, sim, defenses, offset, ticks: 0, seq: 0, schedule: createInputSchedule(), done: false, finished: false,
       pause: null, boss: first.boss ? bossText(first.warships) : '', captainAt: -Infinity, bladeAt: -Infinity,
@@ -247,7 +252,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       eventId: first.event?.id ?? null, eventArt: null, finisher: null };
     emit({ type: 'wave_controller_started', waveId: info.waveId, wave: info.wave, flagship: info.flagship });
     if (world.scene) {
-      Promise.resolve(createRenderer({ scene: world.scene, defenses, reducedMotion, quality, beamFrom, colour: read(captainColour, 0) })).then(renderer => {
+      Promise.resolve(createRenderer({ scene: world.scene, defenses, reducedMotion, quality, beamFrom, colour: read(captainColour, 0),
+        towerStates: info.rules?.towerHealth === true })).then(renderer => {
         if (disposed || wave !== current || current.finished) renderer?.dispose(); else current.renderer = renderer;
       }).catch(error => console.error(error));
     }

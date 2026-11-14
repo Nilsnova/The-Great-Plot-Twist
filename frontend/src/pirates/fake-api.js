@@ -387,14 +387,17 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
   // The walls a wave starts with, worked out at its startsAt (the same for every client); none on Pirate Point.
   const waveWalls = run => (wallsOn && run.island
     ? Object.fromEntries(builtWalls(run.island).sort().map(id => [id, healthAt(run.island, id, run.startsAtMs)])) : null);
-  // island_walls_record() as it is on origin/main (14 Nov): the first finish of the wave keeps the walls as that
-  // client sent them. When the server's record changes (reported walls may only go down), change it here too.
+  // The server's wall record (wall_repair.record, D039): the first finish of the wave keeps the walls, each capped
+  // at the health it started the wave with (wall_health.cap_to_start), so a finish can only damage a wall.
   function recordWalls(run, walls) {
     if (!wallsOn || !run.island || !walls || run.wallsRecorded) return;
+    const start = waveWalls(run) ?? {}; // read before anything changes: each wall's health at the wave's start
     run.wallsRecorded = true;
     if (!(run.island.walls instanceof Map)) run.island.walls = new Map();
-    for (const [spot, health] of Object.entries(walls)) {
-      if (run.island.built.has(spot) && kindOfSpot(spot) === 'wall') run.island.walls.set(spot, { health, damagedAt: health < 100 ? nowMs() : null });
+    for (const [spot, reported] of Object.entries(walls)) {
+      if (!run.island.built.has(spot) || kindOfSpot(spot) !== 'wall' || !(spot in start)) continue;
+      const health = Math.min(start[spot], reported);
+      run.island.walls.set(spot, { health, damagedAt: health < 100 ? nowMs() : null });
     }
   }
   const running = run => !run.finishedAt && nowMs() <= run.startsAtMs + ISLAND_RULES.waves.maximumSeconds * 1000;
