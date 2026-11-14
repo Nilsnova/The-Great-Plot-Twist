@@ -432,3 +432,7 @@ its resting arms and uses two sleeves/hands connected to the grip. Existing pale
 48 × 32 box and feet anchor are reused; the aiming gun is shorter so it fits
 while rotating. One reusable texture is painted per visible firing captain
 by [shot-art.js](src/pirates/shot-art.js). No downloaded art or new license.
+
+## T33 tower damage art (cartoon, code-drawn)
+
+Thirty original, code-authored frames in `src/art/tower-states.js` and `src/art/island.js` (vector drawings in the island cartoon kit; no outside art, fonts or licences): `island-{cannon,mortar,harpoon}[-l2..-l5]-damaged` (leaning, cracked, scorched, smoking) and `-broken` (rubble and the kind wrecked weapon). Each is 48 x 32, anchor 5, the intact tower box. Cartoon-only and not requested by the game yet; see `specs/T33-tower-damage-art.md`. Contact sheet: `docs/evidence/T33/tower-states-contact-sheet.png`.
