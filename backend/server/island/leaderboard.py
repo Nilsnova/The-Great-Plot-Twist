@@ -13,7 +13,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, StrictInt
 
 from server.errors import ApiError
-from server.island.store import read_display_name, read_model
+from server.island.store import NameRow, read_model, unreadable
 from server.supabase_admin import SupabaseAdmin
 
 PAGE_SIZE = 100
@@ -30,7 +30,12 @@ class WaveRow(BaseModel):
 
 
 class CaptainRow(BaseModel):
+    wave_id: UUID
     player_id: UUID
+
+
+class NameOwnerRow(NameRow):
+    id: UUID
 
 
 class Entry(BaseModel):
@@ -104,31 +109,57 @@ async def best_runs(admin: SupabaseAdmin, window: dict[str, str]) -> list[WaveRo
 
 
 async def ranked(admin: SupabaseAdmin, runs: list[WaveRow]) -> list[Entry]:
-    """Competition ranks (1, 1, 3): equal waves share a rank number."""
+    """Competition ranks (1, 1, 3): equal waves share a rank number.
+
+    Two batched reads for the whole board (names, then crews), not two per row.
+    """
+    if not runs:
+        return []
+    names = await read_names(admin, [run.island_owner for run in runs])
+    crews = await crew_sizes(admin, [run.id for run in runs])
     entries = []
     previous, rank = None, 0
     for position, run in enumerate(runs, 1):
         if run.wave != previous:
             rank = position
-        name = await read_display_name(admin, str(run.island_owner))
-        crew = await crew_size(admin, run.id)
-        entries.append(Entry(rank=rank, name=name, wave=run.wave, crew=crew))
+        entries.append(
+            Entry(rank=rank, name=names[run.island_owner], wave=run.wave, crew=crews[run.id])
+        )
         previous = run.wave
     return entries
+
+
+async def read_names(admin: SupabaseAdmin, owners: list[UUID]) -> dict[UUID, str]:
+    """The captain names of some islands in one read: profiles with id=in.(...)."""
+    wanted = sorted({str(owner) for owner in owners})
+    query = {
+        "select": "id,display_name",
+        "id": f"in.({','.join(wanted)})",
+        "limit": str(len(wanted)),
+    }
+    rows = await admin.select_rows("profiles", query)
+    names = {row.id: row.display_name for row in (read_model(NameOwnerRow, raw) for raw in rows)}
+    if any(owner not in names for owner in owners):
+        raise unreadable()  # the island row exists, so the profile must exist (cascade)
+    return names
 
 
 MAX_CREW = 10  # the most captains a game room holds (game_full)
 
 
-async def crew_size(admin: SupabaseAdmin, wave_id: UUID) -> int:
-    """How many captains joined the scoring run. Only the count leaves the server."""
-    rows = await admin.select_rows(
-        "wave_participants", {"select": "player_id", "wave_id": f"eq.{wave_id}"}
-    )
-    captains = [read_model(CaptainRow, raw) for raw in rows]
+async def crew_sizes(admin: SupabaseAdmin, wave_ids: list[UUID]) -> dict[UUID, int]:
+    """How many captains joined each scoring run, in one read. Only the counts leave the server."""
+    wanted = [str(wave_id) for wave_id in wave_ids]
+    query = {"select": "wave_id,player_id", "wave_id": f"in.({','.join(wanted)})"}
+    rows = await admin.select_rows("wave_participants", query)
+    counts: dict[UUID, int] = dict.fromkeys(wave_ids, 0)
+    for raw in rows:
+        captain = read_model(CaptainRow, raw)
+        if captain.wave_id in counts:
+            counts[captain.wave_id] += 1
     # The bell-ringer is always a participant (migration 20261110020000 backfilled old
     # runs), so an empty answer would be a gap in old data: show it as solo, never 0.
     # A room holds at most MAX_CREW captains, but wave_participants also keeps people who
     # joined and left, so cap the count: the browser refuses a row above MAX_CREW, and one
     # such row would hide the whole board.
-    return min(MAX_CREW, max(1, len(captains)))
+    return {wave_id: min(MAX_CREW, max(1, n)) for wave_id, n in counts.items()}
