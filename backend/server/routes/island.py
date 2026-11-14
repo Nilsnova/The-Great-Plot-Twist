@@ -58,6 +58,12 @@ GET /api/island
     research and the wreck's repair. A spot with a tower skill carries "spec" (null for none).
     The building levels of "unlocks" follow the island's best won wave too; crew and captain
     levels follow the player's own unlock wave.
+    Flexible placement (T36, D041): every spot also carries "x" and "z", where it stands on the
+    island's build grid (an old save: its fixed spot), and the answer carries "layout":
+    {"version": 1 | 2, "grid": 0.5, "movable": true | false}. Version 1 is the fixed spots,
+    2 means a spot was moved; "movable" is false while the layout cannot be read. Moving is
+    POST /api/island/move (routes/island_layout.py). GET /api/island/visit/{code} carries the
+    same "x", "z" and "layout".
     Errors: 401, 403 demo_closed (a guest who was not admitted), 404 feature_off,
             404 player_not_set_up, 502 database_error, 503 island_unavailable, database_unavailable
 
@@ -84,7 +90,8 @@ POST /api/island/upgrade  {"spot": "cannon_1", "actionUid": "...", "code"?: "ISL
     -> the island. One level up (ledger ref upgrade:<actionUid>); the kind stays. "code" works
     as for a build (co-op on a friend's island).
     Errors: 404 no_such_island (a code that names no island), 404 no_such_spot, 409 not_built,
-            409 max_level, 409 locked, 409 insufficient_funds
+            409 max_level, 409 locked, 409 insufficient_funds, and with the flag wall_recovery
+            on 409 needs_repair (a damaged or destroyed wall: repair it first, D039)
 
 POST /api/island/hire  {"crew": "gunner" | "carpenter" | "lookout", "actionUid": "..."}
     -> the island. One crew member, kept (ledger ref crew:<actionUid>). Always your own island.
@@ -158,7 +165,8 @@ POST /api/island/weapon/buy  {"weapon": "pistols", "actionUid": "..."}
     -> the island. One weapon, bought once with coins and equipped at once (ledger ref
     weapon:<actionUid>, reason weapon_purchase).
     Errors: 400 bad_weapon, 409 owned, 409 locked ("Opens after wave N."),
-            409 insufficient_funds
+            409 insufficient_funds, 409 use_arsenal (while the flag "arsenal" is on: weapons
+            are island copies then, bought at the arsenal, routes/arsenal.py, D042)
 
 POST /api/island/weapon/equip  {"weapon": "musket"}
     -> the island. The captain carries this weapon from now on. Safe to repeat.
@@ -194,10 +202,12 @@ from fastapi import APIRouter, Depends, Path, Query, Request, Response
 from pydantic import BaseModel, ConfigDict, Field
 
 from server.auth import Player, PlayerDep
+from server.clock import ClockDep
 from server.errors import ApiError
 from server.flags import is_enabled
-from server.island import leaderboard, rules, service
+from server.island import leaderboard, rules, service, wall_repair
 from server.island.catalogue import IslandCatalogue
+from server.island.layout import LayoutInfo
 from server.island.rules import ResearchTier, SpotView
 from server.island.service import CampaignView, DemolishView, IslandCatalogueDep, IslandView
 from server.settings import SettingsDep
@@ -233,6 +243,17 @@ class SpotOut(BaseModel):
     cost: int
     upgradeCost: int | None
     spec: str | None = None
+    # T36: where the spot stands on the build grid (island units); null at Pirate Point.
+    x: float | None = None
+    z: float | None = None
+
+
+class LayoutOut(BaseModel):
+    """T36: the layout model (1 = the fixed spots of an old save, 2 = moved on the grid)."""
+
+    version: int
+    grid: float
+    movable: bool
 
 
 class CrewOut(BaseModel):
@@ -363,6 +384,7 @@ class IslandResponse(BaseModel):
     skills: SkillsOut
     weapons: WeaponsOut
     campaign: CampaignOut
+    layout: LayoutOut | None = None
 
 
 class VisitResponse(BaseModel):
@@ -372,6 +394,7 @@ class VisitResponse(BaseModel):
     spots: list[SpotOut]
     crew: CrewOut
     campaign: CampaignOut
+    layout: LayoutOut | None = None
 
 
 class BuildRequest(BaseModel):
@@ -525,9 +548,15 @@ def spots_out(spots: tuple[SpotView, ...]) -> list[SpotOut]:
             cost=spot.cost,
             upgradeCost=spot.upgrade_cost,
             spec=spot.spec,
+            x=spot.x,
+            z=spot.z,
         )
         for spot in spots
     ]
+
+
+def layout_out(info: LayoutInfo) -> LayoutOut:
+    return LayoutOut(version=info.version, grid=info.grid, movable=info.movable)
 
 
 def tier_out(tier: ResearchTier | None) -> TierOut:
@@ -634,6 +663,7 @@ def island_out(view: IslandView, catalogue: IslandCatalogue) -> IslandResponse:
             ],
         ),
         campaign=campaign_out(view.campaign, catalogue),
+        layout=layout_out(view.layout),
     )
 
 
@@ -645,7 +675,15 @@ async def get_island(
 
 
 @router.get("/island/leaderboard")
-async def get_leaderboard(player: IslandPlayerDep, admin: AdminDep) -> leaderboard.Leaderboard:
+async def get_leaderboard(
+    player: IslandPlayerDep, admin: AdminDep, scope: leaderboard.Scope = "week"
+) -> leaderboard.Leaderboard:
+    """Top ten islands this UTC week (`scope=week`, the default) or ever (`scope=all`).
+
+    Read-only (T7, T45, decision D046); any other scope is a 422 validation error.
+    """
+    if scope == "all":
+        return await leaderboard.all_time(admin)
     return await leaderboard.weekly(admin)
 
 
@@ -670,9 +708,14 @@ async def post_upgrade(
     player: IslandPlayerDep,
     catalogue: IslandCatalogueDep,
     admin: AdminDep,
+    settings: SettingsDep,
+    now: ClockDep,
     request: Request,
 ) -> IslandResponse:
     request.app.state.island_build_budget.spend(player.id)
+    if is_enabled("wall_recovery", settings.flags):
+        # T47 (D039): a damaged or destroyed wall is repaired first; an upgrade never heals it.
+        await wall_repair.check_upgrade(admin, catalogue, player.id, body.spot, now(), body.code)
     view = await service.upgrade(admin, catalogue, player.id, body.spot, body.actionUid, body.code)
     return island_out(view, catalogue)
 
@@ -746,11 +789,15 @@ async def post_respec(
 async def post_weapon_buy(
     body: WeaponBuyRequest,
     player: IslandPlayerDep,
+    settings: SettingsDep,
     catalogue: IslandCatalogueDep,
     admin: AdminDep,
     request: Request,
 ) -> IslandResponse:
     request.app.state.island_build_budget.spend(player.id)
+    if is_enabled("arsenal", settings.flags):
+        # D042: with the arsenal on, weapons are island copies bought at the arsenal building.
+        raise ApiError(409, "use_arsenal", "Weapons are in the arsenal now. Walk to the arsenal.")
     view = await service.buy_weapon(admin, catalogue, player.id, body.weapon, body.actionUid)
     return island_out(view, catalogue)
 
@@ -868,4 +915,5 @@ async def get_visit(
         spots=spots_out(view.spots),
         crew=CrewOut(**view.crew),
         campaign=campaign_out(view.campaign, catalogue),
+        layout=layout_out(view.layout),
     )

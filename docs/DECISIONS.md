@@ -706,6 +706,31 @@ Keeper's Lock and the clean-up stay as decided here.
 - **Alternatives and trade-offs:** waiting for a peer approval on each PR is safer and keeps everyone able to explain the code, but it would delay the sprint. In exchange, review moves to after the merge: every teammate should read the merged PRs and the specs (with explain-back sections) before the walkthrough, and anything can be reverted with a normal PR.
 - **Agreed by / issue or PR / impact:** Nils, 14 Nov; issues #21–#28. The design decisions D039–D046 inside the lanes stay *proposed* until the team agrees on them.
 
+## D041 · Flexible building placement on a build grid (T36) · 2026-11-14
+
+- **Status:** PROPOSED (T36, issue #23, branch `feat/t36-flexible-placement`; spec [T36](../specs/T36-flexible-placement.md)). Behind the new flag `placement`, off by default; migration `20261114110000_island_layout.sql` applied live 14 Nov 2026; flag `placement` on in production since that evening (release check [PR #49](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/49)).
+- **Decision and reason:** the 22 island build spots become **movable slots on a half-unit grid**. A spot keeps its id, its slot and what stands on it (level, tower skill, payments); only its position changes, stored per island in `island_layout`. Footprints are squares: 2 x 2 for walls and towers, 3 x 3 for the watchtower and houses; touching edges are allowed so walls form lines. A square is legal when it is on the grid, on land, clear of the heart, cabin, bell, Harbor, Tech hub, wreck and every other spot, and when towers, houses and the watchtower still leave a way from the heart to the beach (walls never count, because boarders hack through them). Moving is free, between waves only, for whoever may build on the island (owner or game member). The server decides (`backend/server/island/layout.py`); the database refuses during a wave and guards two moves at once with a compare-and-swap. Old saves need no conversion: a spot with no row stands on its fixed spot, already a grid cell (`layout.version` 1; 2 once something moved). The wave simulation is unchanged: `spots.js` `defenses()` passes the stored `x`/`z` in the shape `sim.js` already reads, so every client fights the same layout from the same server answer.
+- **Alternatives and trade-offs:** (a) free placement of new building ids from a shop, as Clash of Clans does: most flexible, but every row, ledger ref, refund and tower skill is keyed by the 22 spot ids, so it would need a migration of all existing data; (b) a fixed set of alternative spots per slot: simple, but still "fixed spots" and not what T36 asks; (c) a coarser 1-unit grid: simpler numbers, but the fixed spots at .5 would have to move and old saves would shift. Movable slots on a 0.5 grid keep every existing row valid. Limits: walls are not rotated (one 2 x 2 square); Pirate Point's spots stay fixed; a mixed session with a client from before this change draws and simulates moved buildings at their old spots until it reloads; a move that lands within milliseconds of a wave start is read by joiners only after that wave.
+- **Agreed by / issue or PR / impact:** proposed by the T36 lane for Nils (`Nilsnova`), plan by Ianno (`Iannomh123456`); merge under D047. Impact: T35 reroutes over this grid; T41 adds the arsenal as one more slot and footprint; T37 may narrow who may move.
+## D048 · T43: the culverin is the first new defense, behind the flag `defenses_v2` · 2026-11-14
+
+- **Status:** proposed (prep stage on branch `feat/t43-new-defenses`). Live since 14 Nov 2026 ~21:53 UTC (flag on); still proposed for team review. (Older text below describes the prep stage: the sim wiring, PR #56, and the migration `20261114140000_culverin.sql`, applied live, have since landed.)
+- **Decision and reason:** the first defense beyond cannon, mortar and harpoon is the **culverin**, a long gun for the seven island tower spots: damage 30/42/58/76/96, range 44–52, reload 4.0–2.8 s, never shoots ships closer than 12 or boarders, and shoots gunboats and siege barges first, then the ship with the most hp left. Prices 🪙 80/160/320/640/1280; levels 1–3 open after wave 15, level 4 after 20, level 5 after 30; not at Pirate Point. It answers the enemies the current towers handle badly by design (the gunboat and the siege barge anchor outside their reach and attack towers; with T33 that becomes real damage) and the heavy hulls from wave 30, while its damage per second stays below a cannon's, so it is a role, not an upgrade. A watchtower's damage boost applies, its range bonus does not; gunners do not man it. Health follows T30–T33 for towers at 70% of a same-level cannon's hp; destroyed, it stops firing and keeps kind and level until repaired or rebuilt. No level 6 for any kind: research already adds about one tower level from wave 50, and the curve is tuned to levels 4–5. The new kinds live in `backend/content/defenses_v2.json`, merged into the island catalogue only while the new flag `defenses_v2` is on (off by default; the browser hides the culverin unless `/api/config` reports it).
+- **Alternatives and trade-offs:** a fire brazier (damage over time; overlaps Fire pot, Inferno and fire bombs), a swivel-gun nest against boarders (overlaps cannons, which already shoot boarders first, Grapeshot and the cutlass; the recommended second addition after T34) and a tar-pit trap (needs the path and placement contracts of T35/T36). Comparison and numbers: [specs/T43-new-defenses.md](../specs/T43-new-defenses.md). The flag costs one merge step per kind, but keeps the live game unchanged while T33/T34/T36 are in flight.
+- **Agreed by / issue or PR / impact:** pending team review; responsible teammate Nils (`Nilsnova`). Before the flag is switched on: the sim wiring of the spec, a migration that lets `islet_buildings` store `(cannon_n, culverin)` (T36 kept the plot rule, so it is the harpoon migration's rule plus seven pairs), and the card/world/render wiring. Integration (branch `feat/t43-culverin-wiring`): all three are written; `defenses_v2` is also a wave rule (`SIM_RULES`), so every client of a wave agrees whether its culverins fight, and the migration `20261114140000_culverin.sql` (not applied yet) adds the seven pairs and the rule name.
+
+## D049 · Tower health inside a wave (T33) · 2026-11-14
+
+**Status:** proposed; agreed by: pending team review. Live since 14 Nov 2026 ~21:53 UTC (flag on); still proposed for team review. (Older wording below that says the flag is off was written before the switch.) Behind the new flag `tower_health` (off by default; still off in production while its release check runs), merged in PR #52 (`feat/integration-sim`), responsible teammate Nils (`Nilsnova`). Its wave-rules migration `20261114130500_wave_rules.sql` is applied live (14 Nov 2026). See [the spec](../specs/T33-tower-health.md).
+
+**Decision (values chosen by the implementer, open for review):** cannons, mortars and harpoons get hp by level (cannon 80–400, mortar 70–360, harpoon 60–320). Boarders attack a standing tower within 2.5 after a captain and the wall in their way (the T34 order, D040); at hp 0 a tower is broken: no shots, no manual fire, not jammed, one break event. Inside the wave E repairs a damaged tower (+10 hp/s for 3 s) or rebuilds a broken one at 40 % (60 % Master shipwright, 5 s cooldown), free, like walls. Every wave starts every tower whole: lasting tower damage is a follow-up. The rule travels as `rules: ["tower_health"]` on the wave answers, so every client of a wave plays the same rule (not each client's `/api/config`).
+
+**Why:** BUILD-PLAN §6 asks for towers that can be destroyed and stop firing, with damaged/broken art (already drawn, #34). In-wave only keeps it small: no migration, no money.
+
+**Alternatives and trade-offs:** persistent damage like D039 (more state, a paid card; later); ships shelling towers (would make towers fall without boarders; not chosen). Open: the hp numbers (T3 playtest); whether research or Workshops should help towers.
+
+**Proposed note 14 Nov (balance check, [T33-T35 balance](../specs/T33-T35-balance.md)):** boarders attack a tower within **1.5** (`TARGET_PROFILES.boarder.towerReach`, was 2.5). Alone, `tower_health` played the same as no rules in every measured wave (1–60, fixed spots and a closed ring), because boarders on today's fixed routes never pass that close to a tower. With pathing at 2.5, boarders left the killing ground to hack towers (ring wave 60: 36 % against 63 %); at 1.5 the figure is 45 %. The hp numbers are unchanged; doubling them did not help.
+
 ## Next entry
 
 - **ID / date / title:**
@@ -786,7 +811,7 @@ and [message contract](INTERFACES.md#t28-boss-minigame-preparation).
 
 ## D040 · Enemy targets and wall pathing (T34/T35) · 2026-11-14
 
-**Status:** proposed. Agreed by: pending team review. Design and pure modules on branch `feat/t34-t35-targeting-pathing`; not wired into `sim.js` yet. Work authorized by Nils (`Nilsnova`); roadmap by Ianno (`Iannomh123456`).
+**Status:** proposed. Agreed by: pending team review. On 14 Nov 2026 Nils (`Nilsnova`) accepted the closed-ring gap (a closed wall ring at wave 60 is 12 to 18 points harder with pathing), and the flag `pathing` has been live in production since about 22:00 UTC. Modules merged in PR #33, wired into `sim.js` in PR #52, retuned in PR #59. Work authorized by Nils (`Nilsnova`); roadmap by Ianno (`Iannomh123456`).
 
 **Decision (proposed):**
 
@@ -799,3 +824,119 @@ and [message contract](INTERFACES.md#t28-boss-minigame-preparation).
 **Why:** fixed routes cannot use gaps, react to rebuilt walls or handle flexible placement, and towers with hp (T33) need a target rule. A distance field is simple to explain, provably loop-free and measured at about 1 ms per tick for 300 boarders.
 
 **Alternatives and trade-offs:** per-boarder A* (more work per boarder, same routes); always breaching (no gaps, today's spirit, but T36 walls would mean nothing); always detouring (walls never hacked). Lone short walls are walked round, so today's isolated spots lose value under the new rule: before T36, either keep the legacy routes (option A) or join the ring spots into a closed ring (option B); a balance decision with T3. The wiring needs a wave option `pathing` so a mixed-version room never mixes rules. See [the spec](../specs/T34-T35-targeting-pathing.md).
+
+**Update 14 Nov (wiring):** wired behind the flag and wave rule `pathing` (off). Option A while it is off (today's routes); with it on, walls are their T36 footprints (D041), so placed walls can form rings. Balance of lone walls to be checked with T3 before switching on.
+
+**Proposed note 14 Nov (balance check, [T33-T35 balance](../specs/T33-T35-balance.md)):** without a change, pathing walked round every lone wall (0 wall hacks at waves 5 and 10) and lost wave 60 on the fixed spots (40 % against 100 %). Proposed: a boarder within **3** of a standing wall that lies across its straight way to the heart hacks it (`WALL_ENGAGE`, `WALL_LANE` 0.25 in `boarder-paths.js`), as on the fixed routes; walls beside the way and gaps in joined walls work as before. With that, every fixed-spot wave matches no rules. Still open: on a closed ring round the heart, wave 60 loses about 12 points (51 % against 63 %, 80 seeds), because boarders funnel through one breach. The team can accept that or change a wall rule (`sim.js`).
+
+## D046 · Highscore scope and statue stages · 2026-11-14
+
+**Status:** PROPOSED for T45 on `feat/t45-highscore-statue`; agreed by: pending team review. Builds on D037 (T7) and the T5 milestones.
+
+**Decision:** The score is an island's highest successful island wave, read only from finished winning `wave_runs`
+(never from `islands.wave_best` or the current wave), so restarts, rescues and resets cannot lower it. Two boards:
+this UTC week (D037, unchanged window) and all time (never resets), both top ten. Equal waves share a competition
+rank (1, 1, 3) and are listed by who finished that wave first. Solo and crews share one ranking without adjustment;
+each row shows `Solo` or `Crew of N`, the captains who joined the scoring run (a count only). The existing T5 captain
+statue is the statue meant by T45; no altar exists and none is added. It gains cosmetic stages from the island's best
+won wave: 25 bronze (unchanged), 50 silver (raised cutlass), 75 gold (pennant), 100 crowned. The Leaderboard card shows
+"This island": best wave, shield rank, statue stage and the next milestones. No rewards, colliders, gameplay effects,
+tables, migrations or feature flags.
+
+**Why:** Run history is append-only, so a score never depends on how a later reset rewrites progress. One ranking keeps
+the board small and avoids judging crew sizes; the label still makes the comparison visible. The statue already
+existed, so extending it keeps the art style and avoids a new landmark that could clash with T38's central building.
+
+**Limits and follow-up:** The all-time scan has T7's 2,000-run bound and answers 503 rather than a partial board; a
+database aggregate may be needed later. Statue and shield read `campaign.wave`; if T38/D044 lowers `wave_best` on reset
+or splits best from current/unlocked wave, they must read the never-lowered best value. See the re-check list in
+[the T45 spec](../specs/T45-highscore-statue.md#re-check-once-t38s-reset-contract-proposed-d044-is-accepted) and the
+[API contract](INTERFACES.md#weekly-island-leaderboard-t7).
+
+
+## D043 · Co-op permissions, spending and absent members · 2026-11-14
+
+**Status:** proposed (T37 and T42 of [OPEN-TODOS §9](OPEN-TODOS.md#9-defense-and-shared-island-expansion-proposal-14-nov)); branch `feat/t37-t42-coop-policy`, responsible teammate Nils, plan by Ianno. Issue [#25](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/25), fast-tracked under D047. **Agreed by:** pending team review.
+
+**Decision:** Keep today's co-op rules and write them down as one matrix ([the spec](../specs/T37-T42-coop-policy.md)), enforced in one Python module, `backend/server/island/permissions.py`, with the database functions checking again under their locks.
+
+- **Roles:** host (the island's owner), member (active `island_members` row), outsider (never joined or left). Online is not a role: the server never knows presence.
+- **Every shared island action is open to the host and every member, with no vote or approval:** look by code, ring the bell, join a wave, help a captain up, build, upgrade, research, tower skills and house roles, the wreck, tear-down, and the reserved actions persistent repair/rebuild (T31/T32) and arsenal buy/withdraw/return (T40). Outsiders get `403 not_member` with a sentence that names the action. The lobby's Start and Pause stay browser pacing: host, or any member after the host has been away 60 s.
+- **Funding is personal; there is no shared wallet.** The clicker pays from their own wallet (`payer_of` answers the clicker or nobody); a tear-down refunds each payer half of what they paid. Arsenal stock is bought by the buyer personally and belongs to the island; withdrawing and returning are free.
+- **Absent members (T42):** a wave may start without the full crew or the host; members join until the first finish (or 900 s); a participant who drops reconnects to the same wave and finishes once; a participant who leaves the game mid-wave still finishes their own fight but cannot rejoin or revive; a wave nobody finishes expires after 900 s with no loot and no change to the best or next wave. Wave strength does not depend on crew size; a boss finisher's goal uses the standing participants captured when it starts (D038). Loot goes only to participants who finish, each to themselves; membership alone earns nothing, and there are no offline rewards.
+
+**Changed:** only the wording of the `403 not_member` message (it now names the action); the code and status are unchanged. No route, table or migration changes.
+
+**Why:** crews are small friends' groups that play at different times; requiring the host or a vote would block play, and every spend already has a per-click ledger ref and a database lock. One module gives later lanes (arsenal, recovery, rescue) a single helper and keeps the "no shared wallet" rule explicit.
+
+**Open questions for review (current behaviour kept until agreed):** (1) should a member only tear down what they paid for in full, with the host able to tear down anything? Today any member may (owner decision of 12 Nov, GAME-V3 §4.2); other payers get half back. (2) Should a host be able to remove a member, or hand the game over? Not possible today. (3) The host's personal unlocks follow their island's best wave even when members won it without them (D036); changing this would re-lock existing players. (4) Late joiners earn the full loot of a survived wave; a minimum time in the wave would need a migration.
+
+**Limits:** the Python check and the database check are separate reads; the database's lock is the final word. Mapping tests use the fake database; the SQL rules are covered by their own migration tests. Presence-based rules (quorum, auto-pause) are not possible without a server-side presence design.
+
+## D044 · Last-chance rescue and minigame difficulty by wave · 2026-11-14
+
+**Status:** PROPOSED (agreed by: pending team review). T38/T39 of [BUILD-PLAN §6](BUILD-PLAN.md#6-defense-and-shared-island-expansion), planned by Ianno (`Iannomh123456`), implemented for Nils (`Nilsnova`) on branch `feat/t38-t39-minigames-rescue`. See [the spec](../specs/T38-T39-minigames-rescue.md).
+
+**Decision (T39):** every wave minigame (boss haul, cannon, duel, Redtide's three tasks, T28 practice and the new rescue) takes its speed, timing window and error budget from the wave: today's numbers up to wave 10, a straight line to fixed late numbers at wave 100, never beyond (`frontend/src/pirates/finisher/difficulty.js`). A run freezes one snapshot of those numbers at its start, from the server-given wave number, so every client agrees and late joiners change nothing. Crew-size scaling stays as it was. Lantern duels, Harbor stalls, market calls, the weather board, wave events and the Pirate Point lamps are not minigames for this rule; their settlement is unchanged.
+
+**Decision (T38):** when the existing heart falls or every present captain is down, once per island wave from wave 4 (not Pirate Point), the captains still on the island, fallen ones too, play a 10-second co-op haul ("Haul the treasure to safety"), built on the boss-finisher machinery and messages. The wave stays lost either way. Success: the next bell rings best wave − 1; failure or no rescue: best wave − 2 as today; never below wave 1 (wave 0 means "nothing won yet" and is never rung). Coins, buildings, crew, captain, weapons and research are kept; `wave_best`, `won_wave_best` and flags are never lowered. Settlement: the finish carries `rescued: true`; the server ignores it unless the flag `rescue` is on and the wave allows it, and passes `p_restart_back = 1` to the existing `wave_finish()`, whose first closing finish applies the restart rule exactly once. No migration. No captain present: no rescue.
+
+**Why:** bounded curves make late bosses harder without touching the early waves players already learned (T28 evidence stays valid). A rescue that only softens the fallback adds a comeback moment without new money, building or permission rules (T30/T37/T42 stay independent) and without a new database state. Reusing the existing heart avoids a dependency on T33/T36.
+
+**Alternatives and trade-offs:** a rescue that saves the wave and continues the battle (needs deeper sim changes and new reward rules); a new central building as trigger (needs placement and health first); a fallback measured from the lost wave instead of the best (needs the server to read `wave_best` or an SQL change; with the chosen rule a rescued loss of a replay wave can land one wave above it, never above best − 1). The rescue claim is as unprovable as `survived`; at worst it saves a cheater one wave of fallback, never loot.
+
+**Impact:** route field `rescued` and flag `rescue` ([INTERFACES](INTERFACES.md#t38-last-chance-rescue-and-t39-difficulty)); the rescue needs a ~10-line hook in `sim.js` (spec) before it can appear; mixed client versions in one wave would disagree on boss difficulty above wave 10. Consistent with D043: no new island action in `permissions.py`, nothing paid, settled only by a participant's own finish (`403 not_in_wave` otherwise).
+
+## D039 · Wall recovery: damage stays after a wave · 2026-11-14
+
+**Status:** proposed; agreed by: pending team review. Implemented behind the new flag `wall_recovery` (off by default) on branch `feat/t29-t32-wall-recovery` for tasks T29–T32 and T47 ([spec](../specs/T29-T32-wall-recovery.md)). Migration `20261114100000_wall_recovery.sql` applied live 14 Nov 2026; flag `wall_recovery` on in production since that evening (after the guard of PR #52 and `npm run test:walls`). Responsible teammate: Nils.
+
+**Decision (values chosen by the implementer, open for review):**
+
+- A wall keeps the health its last recorded wave left it, as a percent (`islet_buildings.wall_health`, 0–100, default 100 so old saves are whole). Kind and level never change through damage; a destroyed wall is rebuilt at its level.
+- The **first finish** of an island wave (won or lost) reports every wall's percent from its deterministic simulation; the server keeps it once per wave. An expired wave records nothing. The next wave's walls come from the server (`walls` on start/join/current, computed at `startsAt`), so every client and a late joiner start the same walls.
+- In a wave everything stays as before: free E repair to full, free E rebuild to 40 % (60 % Master shipwright), carpenter, Workshop, engineer boost.
+- Between waves the wall card offers **Repair** (damaged) or **Rebuild** (destroyed), paid once by the clicker on the server: rebuild price = 30 % of the catalogue prices of the wall's levels, rounded up (3, 9, 21, 45, 93 coins); repair = the missing share of it, rounded up, at least 1; engineers get their usual 10 % discount. Refused while a wave runs, and refused `intact` for a whole wall, so double clicks pay once. Ledger reason `building_purchase`, ref `wallfix:<uid>`.
+- **Timed recovery:** a damaged or destroyed wall counts as whole 10 minutes (600 s) after the wave that left it so, by server time; offline time counts. A later wave that ends with it still damaged restarts the 10 minutes.
+- **Upgrades** of a damaged or destroyed wall are refused (`409 needs_repair`), and the card shows Repair/Rebuild instead of Upgrade. An intact wall upgrades at full health. Health is a share, so even a racing upgrade never heals.
+- Towers (T33) and Pirate Point walls are unchanged.
+- **Update 14 Nov (review of PR #43):** the server records each wall as `min(health at wave start, reported health)` (`wall_health.cap_to_start`, in Python, no new migration), so a finish can only damage a wall, never heal or add one. Consequence, intended and conservative: a wall repaired or rebuilt for free with E during the wave is recorded at most at its start health; lasting recovery is the paid card or the 10-minute timer. A client reporting lower numbers can still leave walls damaged (bounded: first finish only, participants only, 10-minute timer, play money). Recording after a paid finish is best effort (logged, never a 5xx).
+- **Known, low impact (review follow-up):** the start health is read in Python before `island_walls_record()` runs; between that read and the record nothing else writes those rows during the wave (restores are refused, only the first finish records), but two finishes at the same moment both read, and the second gets `repeat` — so only a record that is already the first counts. A paid restore right after the wave closes and before the first finish's record lands could be overwritten by that record (its walls capped at the old start health). Rare and bounded (play money, 10-minute timer); not fixed here.
+
+**Why:** BUILD-PLAN §6 requires damage to persist past the wave end, no upgrade bypass, and money decided by the server. Percent plus one timestamp is the smallest state that survives reloads, offline time and upgrades; a server snapshot keeps multiplayer deterministic. The browser's reported health cannot be proven, like `survived`; it is bounded (0–100, walls on that island, first finish only) and only affects play-money costs.
+
+**Alternatives and trade-offs:** free repairs only (no economy cost, weaker persistence); partial timed regeneration (more state to sync); refusing in-wave E repairs above the stored health (confusing). Open questions for the team: a dedicated wallet reason `wall_repair` instead of `building_purchase`; who may repair on a shared island (T37); whether 10 minutes and 30 % feel right in a playtest (T3). Mixed client versions in one wave can disagree on wall health: all captains should reload after the flag is switched on.
+
+## D045 · T6 weather idea as a words-only forecast, no weather stall stake · 2026-11-14
+
+**Status:** PROPOSED by Nils (`Nilsnova`) for T46 on branch `feat/t46-harbor-weather` ([issue #27](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/27)). Agreed by: pending team review.
+
+**Decision:** The T6 idea ("one more simple stall on real data, e.g. *Will it rain in Lisbon tomorrow?*") is not built as a stall with a stake: a coin stake on a real-world weather question is a prediction market, which D035 rules out. Its real-data part becomes one words-only line on the existing weather board: "Forecast for tonight here: fog. Only to read: no coins are at stake.", from the `tonight.state` that `GET /api/weather` already sends. The line shows only when that state is storm, fog, rain or calm (the recorded fallback and demo mode have none). The "weather board / trade" request is read as the weather board plus the existing Harbor stake stalls, not as weather trading.
+
+**Why:** It keeps the T6 intent (more real data in the Harbor) with no new stall to duplicate the weather board, no coins, no API, table or flag. T6 stays open for a different stall only with its own reviewed non-betting mechanic.
+
+**Alternatives and trade-offs:** A "rain tomorrow?" yes/no stake (rejected, D035). A separate forecast stall (rejected: it would duplicate the weather board). The forecast covers the night at the board's default place; a wave can still use the bell-ringer's local weather, which the board now says.
+
+**Impact:** `frontend/src/harbor/weather-model.js`, `overview.js`; [spec](../specs/T46-harbor-weather.md).
+
+## D042 · Shared island arsenal: 20 stored copies and the weapon table · 2026-11-14
+
+**Status:** proposed for T40/T41/T44 on branch `feat/t40-t41-arsenal` (responsible: Nils, `Nilsnova`; plan: Ianno, `Iannomh123456`); independent human review pending. Migration `20261114120000_arsenal.sql` applied live 14 Nov 2026, and `arsenal_convert_personal_weapons()` was run once (1 copy converted, 0 islands left with personal weapons); flag `arsenal` on in production since that evening (release check PR #53). Behind the flag `arsenal` (off by default in code: the old personal weapon shop is unchanged while it is off).
+
+**Decision:** weapons become **copies owned by an island**, kept in an arsenal building on the island (walk up, E or tap, like the Tech hub; free, there from the start, never damaged). Each copy has its own id and rack number; copies of one type share the type's stats. A copy is **stored** on the rack or **carried by exactly one captain** (one database column); a captain carries at most one copy per island; at most **20 copies are stored**, carried copies take no slot. Buy, take (withdraw, or an atomic swap that needs no free slot) and return are single database functions under the island lock, safe to repeat (`arsenal_moves`, ledger ref `arsenal:<actionUid>`, reason `weapon_purchase`). A return into a full rack is refused and the copy stays in the captain's hands; a disconnect changes nothing; a captain who left the game keeps the copy until the arsenal is next used, when it goes back on the rack while there is room. No arsenal move during a wave. The musket is standard issue for every captain (and every new member), never a copy. Old personal weapons convert lazily to copies of the owner's own island the first time that arsenal is opened with the flag on (the equipped one carried). Full rules: [the spec](../specs/T40-T41-arsenal.md).
+
+**Permissions (D043):** the host and every active member may look, buy, take and return; the buyer pays from their own coins (no shared wallet). Python asks T37's `permissions.require_action` (`arsenal_buy`, `arsenal_withdraw`, `arsenal_return`, via `arsenal_policy.py`); the database repeats the rule under the lock in `arsenal_may()`.
+
+**Weapon table (T44):** the existing five types, already distinct in mechanics, numbers and price. Numbers at captain level 1 (base damage 6, range 14, reload 1.2 s; the multipliers scale every level, `frontend/src/pirates/captain-ids.js`, prices and unlocks `backend/content/islands.json`):
+
+| Type | Price | Opens after wave | How it shoots | Damage | Range | Reload | Damage per second | Best against |
+|---|---|---|---|---|---|---|---|---|
+| Musket (standard) | free | 0 | one ship | 6 | 14 | 1.2 s | 5.0 | everything, steady |
+| Pistols | 60 | 2 | one ship | 3 | 10 | 0.48 s | 6.3 | close, fast single targets |
+| Blunderbuss | 120 | 4 | cone 50°, up to 3 ships | 4.8 each | 9 | 1.92 s | 2.5 per ship (7.5 on 3) | groups at short range |
+| Long rifle | 200 | 6 | pierces to a second ship within 8 units | 10.8 | 22 | 2.16 s | 5.0 per ship (10 on 2) | long range, lined-up ships |
+| Fire bombs | 300 | 10 | thrown, bursts in radius 3 | 9 each | 14 | 2.88 s | 3.1 per ship | packed fleets |
+
+**Why:** one holder column and one rack limit give the invariant to the database itself, so neither a retry nor two simultaneous clicks nor a bug in Python can duplicate or lose a copy. Refusing a full-rack return (instead of an overflow slot) keeps "at most 20 stored" exact while never discarding anything; the swap keeps a full rack usable. No new weapon mechanic was added: the five types already differ, and a new mode needs `sim.js` (another lane's file).
+
+**Alternatives and trade-offs:** a total cap of 20 copies (returns could never fail, but carried copies would effectively use slots, which the plan forbids); auto-return on disconnect (would take a weapon from a captain whose tab just reloaded); a shared island wallet (not introduced by implication, T37). Limits: combat stays client-simulated, so the weapon in a room message is trusted as today; moves are refused during waves and the loadout is re-read before each wave. Deleting an account deletes the copy it carried.

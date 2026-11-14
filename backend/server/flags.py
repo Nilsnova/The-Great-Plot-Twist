@@ -27,6 +27,20 @@ FLAG_NAMES = (
     "festival",
     "demo",
     "islands",
+    "rescue",  # T38 last-chance rescue (D044): the finish honours rescued; a wave rule for the sim
+    # D039 (proposed): wall damage stays after a wave, paid Repair/Rebuild between waves.
+    # Needs supabase/migrations/20261114100000_wall_recovery.sql applied first.
+    "wall_recovery",
+    "placement",  # T36 flexible placement: needs migration 20261114110000_island_layout.sql
+    # T43 (D048, proposed): the second wave of defenses, starting with the culverin. Keep it off
+    # until its sim wiring and its migration are merged (specs/T43-new-defenses.md).
+    "defenses_v2",
+    # T40/T41 (D042): the shared island arsenal. Off: the old personal weapon shop, as before.
+    "arsenal",
+    # T33 (D049, proposed): towers have hp, break and are repaired in a wave (a wave rule).
+    "tower_health",
+    # T34/T35 (D040, proposed): boarders walk round or through the real walls (a wave rule).
+    "pathing",
 )
 
 

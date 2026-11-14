@@ -71,6 +71,12 @@ const RECIPES = {
     kit.noise({ type: 'bandpass', f: [[0, 1400], [.16, 3600]], q: 1.4, dur: .18, vol: .05, at: .03, attack: .02 });
     kit.osc({ type: 'sine', f: [[0, 95], [.09, 58]], dur: .1, vol: .08, attack: .002 });
   } },
+  // The culverin (T43): a long gun's deep, rolling boom, lower and longer than the cannon, with a sharp crack on top.
+  'pirate-culverin': { bus: 'effects', gain: 1, build: kit => {
+    kit.osc({ type: 'sine', f: [[0, 120], [.3, 42]], dur: .6, vol: .16, attack: .002 });
+    kit.noise({ type: 'bandpass', f: 2400, q: .8, dur: .06, vol: .09, attack: .001 });
+    kit.noise({ type: 'lowpass', f: [[0, 1200], [.7, 180]], q: .5, dur: .8, vol: .06, at: .03, attack: .02 });
+  } },
   // A gunboat's gun: lighter and snappier than the cannon, a flat pop-bang with a ping.
   'pirate-gunboat': { bus: 'effects', gain: 1, build: kit => {
     kit.osc({ type: 'sine', f: [[0, 200], [.14, 72]], dur: .3, vol: .12, attack: .002 });

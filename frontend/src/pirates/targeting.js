@@ -10,7 +10,7 @@ const EPSILON = 1e-9; // distances closer than this count as equal
 // (CONFIG.health: reach 3, leash 5, crowd 3); towers count only once they have hp (T33).
 // `brute` is the proposed siege type: walls and towers first, a captain only right next to it.
 export const TARGET_PROFILES = Object.freeze({
-  boarder: Object.freeze({ order: Object.freeze(['captain', 'wall', 'tower', 'heart']), captainReach: 3, towerReach: 2.5, leash: 5, crowd: 3 }),
+  boarder: Object.freeze({ order: Object.freeze(['captain', 'wall', 'tower', 'heart']), captainReach: 3, towerReach: 1.5, leash: 5, crowd: 3 }),
   brute: Object.freeze({ order: Object.freeze(['wall', 'tower', 'captain', 'heart']), captainReach: 1.5, towerReach: 4, leash: 3, crowd: 3 }),
 });
 
@@ -19,7 +19,8 @@ export function profileFor(enemy, { brutes = false } = {}) {
   return brutes && enemy.brute ? TARGET_PROFILES.brute : TARGET_PROFILES.boarder;
 }
 
-const distance = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
+// Math.sqrt of the squares, not Math.hypot: the same plain sum as sim.js, so every browser gets the same bits.
+const distance = (a, b) => { const dx = a.x - b.x, dz = a.z - b.z; return Math.sqrt(dx * dx + dz * dz); };
 const byId = (a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 
 // A captain or militia who can be fought: standing, present, with hp. A tower: it has hp (T33) above 0.
@@ -27,15 +28,17 @@ const isFightable = hero => hero && !hero.down && !hero.away && hero.hp > 0;
 const isStandingTower = tower => tower && Number.isFinite(tower.hp) && tower.hp > 0;
 
 /**
- * The nearest item of `list` within `reach` of the enemy that passes `fits`; equal distances go to the
- * lower id. Sorting by id first and keeping only strictly nearer items makes the input order irrelevant.
- * The distance is checked before `fits`, so the dearer checks (a clear way there) run only for near items.
+ * The nearest item of `list` within `reach` of the enemy (a distance of exactly `reach` counts, as in
+ * sim.js) that passes `fits`; equal distances go to the lower id. Sorting by id first and keeping only
+ * strictly nearer items makes the input order irrelevant. The distance is checked before `fits`, so the
+ * dearer checks (a clear way there) run only for near items.
  */
 export function nearestWithin(enemy, list, reach, fits) {
-  let best = null, bestDistance = reach + EPSILON;
+  let best = null, bestDistance = Infinity;
   for (const item of [...list].sort(byId)) {
     const d = distance(enemy, item);
-    if (d < bestDistance - EPSILON && fits(item)) { best = item; bestDistance = d; }
+    if (d > reach + EPSILON || d >= bestDistance - EPSILON) continue; // too far, or not nearer than the best
+    if (fits(item)) { best = item; bestDistance = d; }
   }
   return best;
 }

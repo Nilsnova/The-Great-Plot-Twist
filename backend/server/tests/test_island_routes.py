@@ -65,7 +65,7 @@ def test_a_new_player_sees_the_code_the_coins_and_sixteen_empty_spots():
     body = response.json()
     assert list(body) == [
         "code", "coins", "waveBest", "nextWave", "flags", "spots",
-        "crew", "captain", "prices", "unlocks", "skills", "weapons", "campaign",
+        "crew", "captain", "prices", "unlocks", "skills", "weapons", "campaign", "layout",
     ]  # fmt: skip
     assert (body["code"], body["coins"], body["waveBest"], body["flags"]) == (
         "ISLE-K7Q2M",
@@ -77,6 +77,7 @@ def test_a_new_player_sees_the_code_the_coins_and_sixteen_empty_spots():
     assert body["spots"][0] == {
         "id": "wall_1", "kind": "wall", "kinds": ["wall"], "built": False,
         "level": 0, "cost": 10, "upgradeCost": None, "spec": None,
+        "x": -18.5, "z": -4.0,
     }  # fmt: skip
     assert body["nextWave"] == 1
 
@@ -316,7 +317,7 @@ def test_a_friend_visits_an_island_by_its_code(code):
 
     assert response.status_code == 200
     body = response.json()
-    assert list(body) == ["code", "ownerName", "waveBest", "spots", "crew", "campaign"]
+    assert list(body) == ["code", "ownerName", "waveBest", "spots", "crew", "campaign", "layout"]
     assert (body["code"], body["ownerName"], body["waveBest"]) == ("ISLE-K7Q2M", "Captain Gull", 3)
     assert [spot["id"] for spot in body["spots"] if spot["built"]] == ["wall_2"]
 

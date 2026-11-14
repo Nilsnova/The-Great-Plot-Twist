@@ -20,6 +20,7 @@
 //   await api.equipWeapon({weapon: 'pistols'});       // POST /api/island/weapon/equip
 //   await api.demolishQuote({spot, code?});            // GET  /api/island/demolish   (GAME-V3.md §4.2: who gets what back)
 //   await api.demolish({spot, code?});                 // POST /api/island/demolish   (between waves; half back to each payer)
+//   await api.move({spot, x, z, code?});               // POST /api/island/move       (T36: a spot to a cell of the build grid, free)
 //   await api.piratePoint();                          // GET  /api/pirate-point       (§5)
 //   await api.pointBuild({spot, kind}) / api.pointUpgrade({spot})   // POST /api/pirate-point/build|upgrade
 //   await api.joinInvite('ISLE-K7Q2M');               // POST /api/island/invite/join (§6)
@@ -57,7 +58,9 @@ export const PATHS = Object.freeze({
   point: '/api/pirate-point', pointBuild: '/api/pirate-point/build', pointUpgrade: '/api/pirate-point/upgrade',
   games: '/api/games', gameJoin: '/api/games/join', gameLeave: '/api/games/leave', game: code => `/api/games/${code}`,
   research: '/api/island/research', specialise: '/api/island/tower-skill', wreck: '/api/island/wreck',
-  demolish: '/api/island/demolish',
+  demolish: '/api/island/demolish', move: '/api/island/move',
+  // D039 (flag wall_recovery): the walls' health and the paid Repair/Rebuild.
+  walls: code => `/api/island/walls${code ? `?code=${encodeURIComponent(code)}` : ''}`, repair: '/api/island/repair',
   demolishQuote: (spot, code) => `/api/island/demolish?spot=${encodeURIComponent(spot)}${code ? `&code=${encodeURIComponent(code)}` : ''}`,
 });
 export const CREW_IDS = Object.freeze(['gunner', 'carpenter', 'lookout']);
@@ -75,11 +78,23 @@ export const MESSAGES = Object.freeze({
   badResearch: 'There is no such research.',
   badSpec: 'There is no such tower skill.',
   badGift: 'Pick one of the amounts shown.',
+  badCell: 'Pick a square of the build grid.',
 });
 const isCount = value => Number.isSafeInteger(value) && value >= 0;
 const isText = value => typeof value === 'string' && value.length > 0 && value.length <= 200;
 
 // --- answer shapes -------------------------------------------------------------------------------
+const isDate = value => typeof value === 'string' && Number.isFinite(Date.parse(value));
+// T7/T45 ranking row. `crew` (captains of the scoring run, at most 10) may be missing from a T7 server.
+const isRankRow = row => !!row && isText(row.name) && Number.isInteger(row.rank) && row.rank >= 1 && row.rank <= 10 &&
+  Number.isInteger(row.wave) && row.wave >= 1 && row.wave <= 1000 &&
+  (row.crew === undefined || (Number.isInteger(row.crew) && row.crew >= 1 && row.crew <= 10));
+// A weekly board has its week (and may omit `scope`, as T7 did); the all-time board has none.
+function isLeaderboard(data, scope) {
+  if (!data || !Array.isArray(data.entries) || data.entries.length > 10 || !data.entries.every(isRankRow)) return false;
+  if (scope === 'all') return data.scope === 'all' && data.weekStart === null && data.weekEnd === null;
+  return (data.scope === undefined || data.scope === 'week') && isDate(data.weekStart) && isDate(data.weekEnd);
+}
 export function isSpot(spot) {
   return !!spot && isText(spot.id) && isText(spot.kind) && typeof spot.built === 'boolean' && isCount(spot.cost);
 }
@@ -112,6 +127,19 @@ const isMember = member => !!member && isText(member.id) && typeof member.name =
   && (member.captainRole == null || isRole(member.captainRole));
 export const isLobby = data => !!data && isGame(data.game) && Array.isArray(data.members) && data.members.length > 0 && data.members.every(isMember);
 export const isLeft = data => !!data && typeof data.left === 'boolean';
+// D039: GET /api/island/walls: {coins, walls: [{spot, level, health, recoversAt, repairCost}]}.
+const isWall = wall => !!wall && isText(wall.spot) && Number.isSafeInteger(wall.level) && Number.isInteger(wall.health)
+  && wall.health >= 0 && wall.health <= 100 && (wall.recoversAt === null || typeof wall.recoversAt === 'string')
+  && (wall.repairCost === null || isCount(wall.repairCost));
+export const isWalls = data => !!data && isCount(data.coins) && Array.isArray(data.walls) && data.walls.length <= 50 && data.walls.every(isWall);
+const localWalls = answer => (answer.ok ? {...answer, data: {...answer.data, walls: answer.data.walls.map(wall => ({...wall, spot: localSpotId(wall.spot)}))}} : answer);
+// The walls part of a finish: wall_N -> a whole percent 0..100; null when there is nothing to send.
+export function wallHealthBody(walls) {
+  if (!walls || typeof walls !== 'object') return null;
+  const out = {};
+  for (const [id, value] of Object.entries(walls)) if (/^wall_[0-9]{1,2}$/.test(id) && Number.isInteger(value) && value >= 0 && value <= 100) out[id] = value;
+  return Object.keys(out).length ? out : null;
+}
 export function isWave(data) {
   return !!data && isText(data.waveId) && Number.isSafeInteger(data.wave) && data.wave >= 1 && isCount(data.seed)
     && typeof data.startsAt === 'string' && Number.isFinite(Date.parse(data.startsAt))
@@ -186,12 +214,9 @@ export function createIslandApi({transport, makeUid = makeActionUid} = {}) {
   const refuse = (status, code, message) => Promise.resolve({ok: false, status, code, message});
 
   return {
-    leaderboard: () => ask(() => transport.get(PATHS.leaderboard), data =>
-      !!data && typeof data.weekStart === 'string' && Number.isFinite(Date.parse(data.weekStart)) &&
-      typeof data.weekEnd === 'string' && Number.isFinite(Date.parse(data.weekEnd)) &&
-      Array.isArray(data.entries) && data.entries.length <= 10 && data.entries.every(row =>
-        !!row && isText(row.name) && Number.isInteger(row.rank) && row.rank >= 1 && row.rank <= 10 &&
-        Number.isInteger(row.wave) && row.wave >= 1 && row.wave <= 1000)),
+    // scope 'week' (T7) or 'all' (T45, all time). The answer must be the board that was asked for.
+    leaderboard: (scope = 'week') => ask(() => transport.get(scope === 'all' ? `${PATHS.leaderboard}?scope=all` : PATHS.leaderboard),
+      data => isLeaderboard(data, scope)),
     getIsland: () => askSpots(() => transport.get(PATHS.island), isIsland),
     // code: a friend's island (ISLE-XXXXX) to build on with your own coins; without it your own island.
     build({spot, kind, code = null} = {}) {
@@ -276,6 +301,26 @@ export function createIslandApi({transport, makeUid = makeActionUid} = {}) {
       return writeSpots(`demolish:${where}:${spot}`, actionUid => transport.post(PATHS.demolish, {spot: sent(spot), actionUid, ...(where ? {code: where} : {})}),
         isDemolished);
     },
+    // T36: move a spot (built or empty) to a cell of the build grid, between waves, free. Moving it to where it
+    // stands is harmless, so a repeat needs no click id. code: the game's island, without it your own.
+    move({spot, x, z, code = null} = {}) {
+      const where = code ? displayIslandCode(code) : '';
+      if (![x, z].every(value => Number.isFinite(value) && Number.isInteger(value * 2))) return refuse(422, 'off_grid', MESSAGES.badCell);
+      if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
+      return askSpots(() => transport.post(PATHS.move, {spot: sent(spot), x, z, ...(where ? {code: where} : {})}), where ? hasSpots : isIsland);
+    },
+    // D039 (flag wall_recovery): every built wall's health, timer and Repair price; a Repair or Rebuild.
+    walls({code = null} = {}) {
+      const where = code ? displayIslandCode(code) : '';
+      if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
+      return ask(() => transport.get(PATHS.walls(where)), isWalls).then(localWalls);
+    },
+    repairWall({spot, code = null} = {}) {
+      const where = code ? displayIslandCode(code) : '';
+      if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
+      return write(`repair:${where}:${spot}`, actionUid => transport.post(PATHS.repair, {spot: sent(spot), actionUid, ...(where ? {code: where} : {})}), isWalls)
+        .then(localWalls);
+    },
     piratePoint: () => askSpots(() => transport.get(PATHS.point), isPoint),
     pointBuild({spot, kind} = {}) {
       return writeSpots(`point-build:${spot}`, actionUid => transport.post(PATHS.pointBuild, {spot, kind, actionUid}), isPoint);
@@ -326,11 +371,15 @@ export function createIslandApi({transport, makeUid = makeActionUid} = {}) {
       if (!target) return refuse(422, 'validation_error', MESSAGES.badCode);
       return ask(() => transport.get(PATHS.current(target)), data => data === null || isWave(data));
     },
-    finishWave({waveId, survived, shipsSunk = 0, bonuses} = {}) {
+    finishWave({waveId, survived, shipsSunk = 0, bonuses, rescued, walls} = {}) {
       if (!isText(waveId)) return refuse(404, 'no_such_wave', MESSAGES.badWave);
       // v3 waves: the galleon sunk, a finisher won (known kinds only, each once; the server checks the wave).
       const asked = Array.isArray(bonuses) ? [...new Set(bonuses.filter(kind => kind === 'galleon' || kind === 'finisher'))] : [];
-      const body = {waveId, survived: survived === true, shipsSunk: isCount(shipsSunk) ? Math.min(shipsSunk, 1000) : 0, ...(asked.length ? {bonuses: asked} : {})};
+      // D039: each wall's health in percent (wall_N: 0..100), only when the wave came with walls.
+      const health = wallHealthBody(walls);
+      // T38: a won last-chance rescue is sent only as rescued: true (the server decides what it changes).
+      const body = {waveId, survived: survived === true, shipsSunk: isCount(shipsSunk) ? Math.min(shipsSunk, 1000) : 0, ...(asked.length ? {bonuses: asked} : {}),
+        ...(rescued === true ? {rescued: true} : {}), ...(health ? {walls: health} : {})};
       return ask(() => transport.post(PATHS.finish, body), isFinish);
     },
     // A fallen teammate stood up (captain health): you pay 20 + 5 × wave; fallen is their id in the wave's sim,

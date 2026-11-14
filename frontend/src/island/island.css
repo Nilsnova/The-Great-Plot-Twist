@@ -299,6 +299,22 @@ html:has(.island-card-docked[open]) .quest-strip{visibility:hidden}
   display: grid; place-items: center; width: 28px; height: 28px; font-weight: 800; font-size: 16px;
 }
 .island-leaderboard-name { overflow-wrap: anywhere; line-height: 1.2; font-size: 16px; }
+/* T45: name with its crew label underneath, the period tabs and the "This island" panel. */
+.island-leaderboard-who { display: grid; gap: 2px; min-width: 0; }
+.island-leaderboard-crew { font-size: 13px; color: #574027; }
+.island-leaderboard-tabs { display: flex; gap: 8px; }
+.island-leaderboard-tabs .kit-button { flex: 1 1 0; min-width: 0; }
+.island-card-leaderboard .island-leaderboard-tabs [aria-pressed="true"] {
+  background: #6c492b; color: #fff3ca; border-color: #34251b; box-shadow: 0 2px 0 #34251b;
+}
+.island-card-leaderboard .island-leaderboard-tabs [aria-pressed="true"]:hover:not(:disabled) { background: #7d5835; color: #fff3ca; }
+.island-progress {
+  display: grid; gap: 2px; padding: 8px 10px; background: #ead09b;
+  border: 2px solid #b58b4d; border-radius: 8px;
+}
+.island-progress-title { margin: 0; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: #67492b; }
+.island-progress-best { font-size: 18px; color: #392b1c; }
+.island-progress .island-purpose { margin: 0; }
 .island-leaderboard-wave { text-align: center; font-weight: 800; font-size: 19px; color: #47301d; }
 .island-leaderboard-row:is(.is-rank-1, .is-rank-2, .is-rank-3) .island-leaderboard-rank {
   border: 2px solid #6b4a21; border-radius: 50%; box-shadow: inset 0 0 0 2px #fff3ca, 0 2px 0 #a57538;
@@ -306,3 +322,27 @@ html:has(.island-card-docked[open]) .quest-strip{visibility:hidden}
 .island-leaderboard-row.is-rank-1 .island-leaderboard-rank { background: #f3c34f; }
 .island-leaderboard-row.is-rank-2 .island-leaderboard-rank { background: #c9d1d5; }
 .island-leaderboard-row.is-rank-3 .island-leaderboard-rank { background: #d39a65; }
+
+/* T36, Move mode (src/island/move-bar.js): a parchment strip at the bottom, the island in view above it. */
+.island-card-body>.island-move{justify-self:start;min-width:0;min-height:40px;padding:7px 14px;font-size:15px}
+.island-move-why{margin:-6px 0 0;color:var(--u-mute);font-size:14px}
+.island-move-bar{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:35;box-sizing:border-box;width:min(560px,calc(100vw - 32px));
+  display:grid;grid-template-columns:1fr auto;gap:4px var(--u-3);padding:12px 14px;background:var(--u-parch);color:#392b1c;
+  border:3px solid #6c492b;border-radius:var(--u-radius-sm);box-shadow:var(--u-frame);font:16px/1.35 var(--u-font)}
+.island-move-bar[hidden]{display:none}
+.island-move-title{grid-column:1/-1;font:700 20px/1.2 var(--u-serif);color:#8a3b2a}
+.island-move-line{grid-column:1/-1;margin:0;font-size:14px;color:#5a4630}
+.island-move-status{grid-column:1/-1;margin:0;font-weight:700;color:#2f7a3b}
+.island-move-bar.is-refused .island-move-status{color:#b3321f}
+.island-move-pad{display:flex;gap:6px;align-items:center}
+.island-move-arrow{min-width:44px;min-height:44px;padding:4px;font-size:20px}
+.island-move-actions{display:flex;gap:var(--u-2);align-items:center;justify-content:flex-end}
+.island-move-actions .kit-button{min-height:44px}
+@media(max-width:560px){.island-move-bar{grid-template-columns:1fr;bottom:10px;width:calc(100vw - 24px)}.island-move-actions{justify-content:stretch}.island-move-actions .kit-button{flex:1}}
+
+/* The arsenal card (T41, D042): what you carry, the rack (stored n of 20) and the crew's shop. */
+.island-arsenal-carry,.island-arsenal-rack,.island-arsenal-shop{display:grid;gap:var(--u-2);min-width:0}
+.island-arsenal-name{font-size:1.05em}
+.island-arsenal-stats{margin:0;font-variant-numeric:tabular-nums;opacity:.85}
+.island-arsenal-type.is-locked{opacity:.7}
+.island-arsenal-copy .island-crew-text,.island-arsenal-type .island-crew-text{min-width:0}

@@ -49,6 +49,10 @@ import { actionAt, boarderAt, inputFor, promptText, shipAt, tapInput } from './i
 import { EVENT_TEXT, eventFor } from './wave-events.js';
 import { createFinisherRecorder } from './finisher/input.js';
 import { getPreferences } from '../settings/preferences.js';
+// D039 (proposed): the walls start with the server's health and the finish reports it (wall-health.js).
+import { healthReport, readWalls, withHealth } from './wall-health.js';
+// The wave's simulation rules from the server (tower health, …), the same on every client of the wave.
+import { readRules } from './wave-rules.js';
 
 const MAX_TICKS_PER_FRAME = 600;      // a friend joining late catches up 30 s of wave per frame
 const SHOWN_LATE_SECONDS = 1;         // events older than this (catching up) are not drawn or heard
@@ -120,7 +124,7 @@ export function readWaveInfo(info) {
   const wave = Number.isInteger(info.wave) && info.wave > 0 ? info.wave : 1;
   const weather = info.weather && typeof info.weather === 'object' ? info.weather : {};
   return { waveId: info.waveId, wave, seed: Number(info.seed), startsAtMs, weather, flagship: info.flagship === true,
-    boss: typeof info.boss === 'boolean' ? info.boss : undefined,
+    boss: typeof info.boss === 'boolean' ? info.boss : undefined, walls: readWalls(info.walls), rules: readRules(info.rules),
     serverTimeMs: Number.isFinite(parseTime(info.serverTime)) ? parseTime(info.serverTime) : null };
 }
 
@@ -140,9 +144,13 @@ const defaultCutscene = (world, reducedMotion) => async id => {
 const defaultRenderer = async options => {
   const module = await import('./render.js');
   // One atlas at a time, painted again when your lobby colour (the musket and cutlass poses) changes.
-  const key = `${options.quality?.() === 'low' ? 'low' : 'high'}:${options.colour ?? 0}`;
+  // T33: a wave with tower health also paints the damaged and broken towers (another atlas, another key).
+  // T43: a wave that fights with a culverin also paints the culverin (another atlas, another key).
+  const key = `${options.quality?.() === 'low' ? 'low' : 'high'}:${options.colour ?? 0}${options.towerStates ? ':towers' : ''}${options.culverins ? ':culverins' : ''}`;
   if (atlasKey !== key) { atlasPromise = null; atlasKey = key; }
-  atlasPromise ??= module.loadAtlas({ quality: key.split(':')[0], colour: options.colour ?? 0 }).catch(error => { atlasPromise = null; throw error; });
+  atlasPromise ??= module.loadAtlas({ quality: key.split(':')[0], colour: options.colour ?? 0, towerStates: options.towerStates === true,
+    culverins: options.culverins === true })
+    .catch(error => { atlasPromise = null; throw error; });
   return module.createWaveRenderer({ ...options, atlas: await atlasPromise });
 };
 const defaultHud = async options => (await import('./hud.js')).createWaveHud(options);
@@ -226,13 +234,17 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     // A wave that starts in the break of a won one continues the run (and its loot).
     if (!wave?.pause) runLoot = 0;
     if (wave) stop();
-    const defenses = getDefenses() ?? [];
+    // D039: with the flag wall_recovery on the server sends each wall's health after its last wave.
+    // T43: a culverin fights only in a wave whose rules say defenses_v2 (every client of the wave alike); without
+    // the rule it is left out here too, so the screen does not show a gun that never fires.
+    const defenses = withHealth(getDefenses() ?? [], info.walls).filter(item => item?.kind !== 'culverin' || info.rules?.defensesV2 === true);
     const offset = info.serverTimeMs !== null ? info.serverTimeMs - now() : serverOffset();
     // v3 waves: the event from the wave's seed and number (the server repeats it for the galleon's bonus), and
     // the boss finishers with the room's wave gap (their grace time). simOptions may name an event (the demo).
     const event = info.flagship ? null : eventFor(info.wave, info.seed);
     const sim = createWave({ seed: info.seed, wave: info.wave, weather: info.weather, flagship: info.flagship, defenses, countdown: 0,
-      crew: getCrew() ?? undefined, ...(info.boss !== undefined ? { boss: info.boss } : {}), event, finishers: true, finisherPreparation: true, gapMs: waveGapMs, ...simOptions });
+      crew: getCrew() ?? undefined, ...(info.boss !== undefined ? { boss: info.boss } : {}), event, finishers: true, finisherPreparation: true, gapMs: waveGapMs,
+      ...(info.rules ?? {}), ...simOptions }); // the server's rules for this wave (wave-rules.js); simOptions last (the demo harness)
     const first = sim.state();
     const current = wave = { info, sim, defenses, offset, ticks: 0, seq: 0, schedule: createInputSchedule(), done: false, finished: false,
       pause: null, boss: first.boss ? bossText(first.warships) : '', captainAt: -Infinity, bladeAt: -Infinity,
@@ -244,7 +256,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       eventId: first.event?.id ?? null, eventArt: null, finisher: null };
     emit({ type: 'wave_controller_started', waveId: info.waveId, wave: info.wave, flagship: info.flagship });
     if (world.scene) {
-      Promise.resolve(createRenderer({ scene: world.scene, defenses, reducedMotion, quality, beamFrom, colour: read(captainColour, 0) })).then(renderer => {
+      Promise.resolve(createRenderer({ scene: world.scene, defenses, reducedMotion, quality, beamFrom, colour: read(captainColour, 0),
+        towerStates: info.rules?.towerHealth === true, culverins: defenses.some(item => item.kind === 'culverin') })).then(renderer => {
         if (disposed || wave !== current || current.finished) renderer?.dispose(); else current.renderer = renderer;
       }).catch(error => console.error(error));
     }
@@ -523,6 +536,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
         if (!event.hit) current.splashesAt.push(event.impactAt);
       } else if (event.type === 'mortar_fired') cue('pirate-mortar');
       else if (event.type === 'harpoon_thrown') cue('pirate-harpoon'); // T4's harpoon twang
+      else if (event.type === 'culverin_fired') { cue('pirate-culverin'); kick(.05); } // T43: the long gun's deep boom
       else if (event.type === 'mortar_impact') { cue('pirate-mortar-impact'); cue(event.hits ? 'pirate-hit' : 'pirate-splash'); kick(.08); }
       else if (event.type === 'captain_fired') cue('pirate-musket');
       else if (event.type === 'captain_blast') { cue(event.hits ? 'pirate-hit' : 'pirate-splash'); kick(.06); } else if (event.type === 'ship_hit' && !event.blocked) cue('pirate-hit');
@@ -700,7 +714,10 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     current.finishing = true;
     // v3 waves: the bonuses the sim saw (the galleon sunk, a finisher won); the server pays them only where the wave allows.
     const body = { waveId: current.info.waveId, survived: current.result.survived, shipsSunk: current.result.shipsSunk,
-      ...(current.result.bonuses?.length ? { bonuses: [...current.result.bonuses] } : {}) };
+      ...(current.result.bonuses?.length ? { bonuses: [...current.result.bonuses] } : {}),
+      ...(current.result.rescued === true ? { rescued: true } : {}), // T38: a won last-chance rescue (rescue.js)
+      // D039: only a wave that came with walls (the flag on) reports them back, every wall's percent.
+      ...(current.info.walls ? { walls: healthReport(current.sim.state().walls) } : {}) };
     const attempt = async () => {
       try {
         current.answer = (await finishWave(body)) ?? null;

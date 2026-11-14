@@ -21,6 +21,9 @@
 //   await api.equipWeapon({weapon});             // POST /api/island/weapon/equip
 //   await api.demolishQuote({spot, code?});      // GET  /api/island/demolish     (GAME-V3.md §4.2: half back to each payer)
 //   await api.demolish({spot, actionUid, code?}); // POST /api/island/demolish    (between waves, any member; not the heart)
+//   await api.move({spot, x, z, code?});           // POST /api/island/move        (T36: a spot to a grid cell, between waves, free)
+//   await api.walls({code?});                    // GET  /api/island/walls        (D039, flag wall_recovery: health, timer, Repair price)
+//   await api.repairWall({spot, actionUid, code?}); // POST /api/island/repair    (D039: Repair/Rebuild between waves, paid once)
 //   await api.piratePoint();                     // GET  /api/pirate-point        (§5)
 //   await api.pointBuild({spot, kind, actionUid}) / api.pointUpgrade({spot, actionUid})
 //   await api.inviteJoin({code, actionUid});     // POST /api/island/invite/join  (§6, an alias of joinGame)
@@ -47,16 +50,19 @@
 // read, reset). It is the one fake behind ?islands=fake: your island ISLE-K7Q2M and a friend's island
 // ISLE-FR3ND (Captain Gull) to visit.
 import { bonusLoot, eventFor } from './wave-events.js';
+import { rescueAllowed } from './finisher/rescue.js'; // T38: which lost waves a rescue can soften
 import { createRandom, hasTavern, revivePrice } from './sim.js';
 import { BUILDINGS, CREW, CAPTAIN, readUnlocks, unlockWave, SLOT_KINDS } from '../island/td-rules.js';
 import { ROLES, ROLE_BY_ID, ROLE_LEVEL, SKILLS, SKILL_BY_ID, WEAPONS, WEAPON_BY_ID, isRole, respecPrice, pointsEarned, pointsSpent, readSkills, readWeapon, skillNeeds } from './captain-ids.js';
 import { STEPS as CAMPAIGN_STEPS, spotWave, waveOf } from '../campaign/index.js';
 import { BRANCHES, BRANCH_BY_ID, SPECS, TOP_TIER, isCapstone, optionName, optionsOf, readSpec } from '../campaign/tech.js';
 import { ROLES as HOUSE_ROLES, ROLE_LEVEL as HOUSE_ROLE_LEVEL } from '../campaign/houses.js';
+import { GRID as LAYOUT_GRID, checkMove, positionsOf } from '../island/placement.js';
+import { createFakeArsenal } from '../island/arsenal-fake.js';
 
 export const ISLAND_RULES = Object.freeze({
   startingCoins: 100,
-  kinds: Object.freeze({ wall: ['Wall', 10], cannon: ['Cannon', 30], mortar: ['Mortar', 60], harpoon: ['Harpoon tower', 40], watchtower: ['Watchtower', 40], house: ['House', 50] }),
+  kinds: Object.freeze({ wall: ['Wall', 10], cannon: ['Cannon', 30], mortar: ['Mortar', 60], harpoon: ['Harpoon tower', 40], culverin: ['Culverin', 80], watchtower: ['Watchtower', 40], house: ['House', 50] }),
   // TOWER-DEFENSE.md §2: 22 spots; cannon_1…cannon_7 take a cannon, a mortar or (after wave 12) a harpoon tower, Pirate Point's tower spots the first two; wall_7…wall_12 are the inner ring (§12).
   spots: Object.freeze(['wall_1', 'wall_2', 'wall_3', 'wall_4', 'wall_5', 'wall_6', 'cannon_1', 'cannon_2', 'cannon_3', 'cannon_4',
     'cannon_5', 'cannon_6', 'cannon_7', 'tower_1', 'house_1', 'house_2', 'wall_7', 'wall_8', 'wall_9', 'wall_10', 'wall_11', 'wall_12']),
@@ -75,6 +81,8 @@ export const ISLAND_RULES = Object.freeze({
 });
 export const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 // The run of TOWER-DEFENSE.md §1: waves to 100, a boss every 5th, a lost run restarts 2 waves back.
+// The simulation rules of the wave answers, in their fixed order (SIM_RULES in backend/server/island/wave_rules.py).
+export const SIM_RULES = Object.freeze(['tower_health', 'pathing', 'rescue', 'defenses_v2']);
 export const TD_RULES = Object.freeze({ highestWave: 100, bossEvery: 5, restartBack: 2,
   spots: Object.freeze(['wall_1', 'wall_2', 'wall_3', 'wall_4', 'wall_5', 'wall_6', 'cannon_1', 'cannon_2', 'cannon_3', 'cannon_4',
     'cannon_5', 'cannon_6', 'cannon_7', 'tower_1', 'house_1', 'house_2', 'wall_7', 'wall_8', 'wall_9', 'wall_10', 'wall_11', 'wall_12']),
@@ -85,27 +93,39 @@ const canonicalSpot = spot => (typeof spot === 'string' ? spot.replace(/^tower_s
 const kindOfSpot = spot => (/^(pp_)?wall_/.test(spot) ? 'wall' : /^(cannon_|pp_tower_)/.test(spot) ? 'cannon' : spot === 'tower_1' ? 'watchtower' : 'house');
 // The slot of a spot: a tower spot accepts a cannon or a mortar (§2), on the island also a harpoon tower (GAME-V3.md §5).
 const slotOfSpot = spot => (kindOfSpot(spot) === 'cannon' ? 'tower' : kindOfSpot(spot));
-const kindsOfSpot = spot => SLOT_KINDS[slotOfSpot(spot)].filter(kind => kind !== 'harpoon' || !/^pp_/.test(spot));
+// T43 (D048 proposed): the culverin joins the island's tower spots, prices and unlocks only while the fake's flag
+// defenses_v2 is on (?fakeflags=defenses_v2), as the real server's catalogue_for_flags(); off, every answer is as before.
+const V2_KINDS = Object.freeze(['culverin']);
+const kindsOfSpot = (spot, culverin = false) => [...SLOT_KINDS[slotOfSpot(spot)].filter(kind => kind !== 'harpoon' || !/^pp_/.test(spot)),
+  ...(culverin && slotOfSpot(spot) === 'tower' && !/^pp_/.test(spot) ? V2_KINDS : [])];
+const KINDS_V1 = Object.entries(BUILDINGS).filter(([kind]) => !V2_KINDS.includes(kind));
 // The price lists of GET /api/island (indexed by level - 1; the captain's level 1 is free).
-const PRICES = Object.freeze({ kinds: Object.fromEntries(Object.entries(BUILDINGS).map(([kind, info]) => [kind, [...info.price]])),
+const pricesOf = kinds => Object.freeze({ kinds: Object.fromEntries(kinds.map(([kind, info]) => [kind, [...info.price]])),
   crew: Object.fromEntries(Object.entries(CREW).map(([id, info]) => [id, { price: info.price, max: info.max }])), captain: [...CAPTAIN.price] });
+const PRICES = pricesOf(KINDS_V1), PRICES_V2 = pricesOf(Object.entries(BUILDINGS));
 // Every unlock id with the wave it needs (§9): "<kind>:<level>", "crew:<crew>", "captain:<level>".
-const UNLOCK_IDS = Object.freeze([
-  ...Object.entries(BUILDINGS).flatMap(([kind, info]) => info.price.map((_, index) => [`${kind}:${index + 1}`, unlockWave({ kind, level: index + 1 })])),
+const unlockIds = kinds => Object.freeze([
+  ...kinds.flatMap(([kind, info]) => info.price.map((_, index) => [`${kind}:${index + 1}`, unlockWave({ kind, level: index + 1 })])),
   ...Object.keys(CREW).map(id => [`crew:${id}`, unlockWave({ crew: id })]),
   ...CAPTAIN.price.map((_, index) => [`captain:${index + 1}`, index === 0 ? 0 : unlockWave({ captain: index + 1 })]),
 ]);
-export function unlocksAt(wave) {
-  return { wave, unlocked: UNLOCK_IDS.filter(([, needed]) => needed <= wave).map(([id]) => id),
-    locked: Object.fromEntries(UNLOCK_IDS.filter(([, needed]) => needed > wave)) };
+const UNLOCK_IDS = unlockIds(KINDS_V1), UNLOCK_IDS_V2 = unlockIds(Object.entries(BUILDINGS));
+export function unlocksAt(wave, { culverin = false } = {}) {
+  const ids = culverin ? UNLOCK_IDS_V2 : UNLOCK_IDS;
+  return { wave, unlocked: ids.filter(([, needed]) => needed <= wave).map(([id]) => id),
+    locked: Object.fromEntries(ids.filter(([, needed]) => needed > wave)) };
 }
 // A spot as GET /api/island answers it (§7): kind is the building that stands (or the default), level 0 = empty.
-function spotView(island, id) {
+function spotView(island, id, culverin = false) {
   const level = island.levels?.get(id) ?? (island.built.has(id) ? 1 : 0), kind = island.kinds?.get(id) ?? kindOfSpot(id);
   const prices = BUILDINGS[kind].price;
-  return { id, kind, kinds: [...kindsOfSpot(id)], built: level > 0, level, cost: prices[0], upgradeCost: level > 0 ? prices[level] ?? null : null,
-    spec: level > 0 ? readSpec(kind, island.specs?.get(id)) : null };
+  return { id, kind, kinds: [...kindsOfSpot(id, culverin)], built: level > 0, level, cost: prices[0], upgradeCost: level > 0 ? prices[level] ?? null : null,
+    spec: level > 0 ? readSpec(kind, island.specs?.get(id)) : null,
+    // T36: a spot moved on the build grid carries its cell (the real server sends every spot's place).
+    ...(island.positions?.has(id) ? { x: island.positions.get(id).x, z: island.positions.get(id).z } : {}) };
 }
+// T36: the answer's layout ({version 1: the fixed spots, 2: something moved; the fake can always move}).
+const layoutOf = island => ({ version: island.positions?.size ? 2 : 1, grid: LAYOUT_GRID, movable: true });
 const lockedMessage = wave => `Opens after wave ${wave}.`;
 // The Tech hub's research of one branch on an island (GAME-V3.md §5.1): {tier 0-3, tier2, tier3}. island.research
 // lists the branches at tier 1 or more; island.tiers holds {branch: {tier, tier2, tier3}} once a branch went higher.
@@ -153,6 +173,13 @@ export function lootFor(wave, houses, piratePoint = false) {
   const waves = perWave * Math.min(wave, lateFrom) + latePerWave * Math.max(0, wave - lateFrom);
   return piratePoint ? piratePointBase + waves : base + waves + perHouse * houses;
 }
+// D039 (wall_health.py): the price of a whole rebuild (30% of the wall's levels, rounded up: 3, 9, 21, 45, 93) and of a
+// Repair (the missing share of it, rounded up, at least 1); the finish's walls body ({wall_N: 0..100}, at most 50).
+const WALL_RECOVERY_MS = 600 * 1000;
+const rebuildPrice = level => Math.max(1, Math.ceil(BUILDINGS.wall.price.slice(0, Math.max(1, level)).reduce((sum, price) => sum + price, 0) * 30 / 100));
+const restorePrice = (full, health) => Math.max(1, Math.ceil(full * (100 - Math.max(0, Math.min(100, health))) / 100));
+const isWallReport = walls => !!walls && typeof walls === 'object' && !Array.isArray(walls) && Object.keys(walls).length <= 50
+  && Object.entries(walls).every(([id, value]) => /^wall_[0-9]{1,2}$/.test(id) && Number.isInteger(value) && value >= 0 && value <= 100);
 const iso = ms => new Date(Math.floor(ms / 1000) * 1000).toISOString().replace('.000Z', 'Z');
 
 export const DEFAULT_FRIEND = Object.freeze({ code: 'K7Q2M', ownerName: 'Captain Wren', waveBest: 2, built: Object.freeze(['wall_1', 'cannon_1', 'cannon_2']) });
@@ -182,8 +209,17 @@ export function createFakeWorld({ seed = 7, neighbours = true, friends = [DEFAUL
 }
 
 export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me', ownerName = 'You',
-  now = () => Date.now(), weather = 'calm', code: wantedCode = null, version = 1, unlocking = version === 2 } = {}) {
+  now = () => Date.now(), weather = 'calm', code: wantedCode = null, version = 1, unlocking = version === 2, flags = {} } = {}) {
   // unlocking: the server's §9 locks (409 locked). Off by default here; the game's transport and version 2 turn it on.
+  // flags: the server's feature flags this fake follows (wall_recovery, D039; the wave rules below); all off by default.
+  const wallsOn = flags?.wall_recovery === true;
+  const culverinOn = flags?.defenses_v2 === true; // T43: the culverin, and the wave rule defenses_v2 on every wave answer
+  // The wave rules (backend/server/island/wave_rules.py): the rule flags on at the wave's first answer, in SIM_RULES
+  // order. That answer keeps its set (wave_rules_keep()), an empty set too, and every later answer serves it whatever
+  // the flags say then (a test may change `flags` mid-wave); an empty set leaves `rules` out.
+  const wantedRules = () => SIM_RULES.filter(name => flags?.[name] === true);
+  // T38 (routes/waves.py): the server honours `rescued` only while the flag rescue is on.
+  const rescueOn = flags?.rescue === true;
   let weatherKind = weather;
   const v2 = version === 2; // the answers' tower defense extras (boss, nextWave on finish), as the real server sends them
   const me = () => {
@@ -199,7 +235,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     }
     return player;
   };
-  const spots = island => ISLAND_RULES.spots.map(id => spotView(island, id));
+  const spots = island => ISLAND_RULES.spots.map(id => spotView(island, id, culverinOn));
   // --- the games (GAME-V3.md §2): the SQL rules of game_join and game_leave, in memory ---
   const membersOf = code => {
     if (!(world.members instanceof Map)) world.members = new Map();
@@ -229,12 +265,12 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     return island;
   };
   // The answer's unlocks (the backend's shape); the checks below read them back through readUnlocks.
-  const unlocksOf = island => unlocksAt(unlocking ? Math.max(island.waveBest, island.owner === playerId ? me().pointBest ?? 0 : 0) : 99);
+  const unlocksOf = island => unlocksAt(unlocking ? Math.max(island.waveBest, island.owner === playerId ? me().pointBest ?? 0 : 0) : 99, { culverin: culverinOn });
   const allowed = island => readUnlocks({ unlocks: unlocksOf(island) });
   // GAME-V3.md §4: what may be built on an island follows that island's own best won wave, whoever pays.
-  const islandAllowed = island => readUnlocks({ unlocks: unlocksAt(unlocking ? island.waveBest : 99) });
+  const islandAllowed = island => readUnlocks({ unlocks: unlocksAt(unlocking ? island.waveBest : 99, { culverin: culverinOn }) });
   const answerUnlocks = island => {
-    const mine = unlocksOf(island), there = unlocksAt(unlocking ? island.waveBest : 99);
+    const mine = unlocksOf(island), there = unlocksAt(unlocking ? island.waveBest : 99, { culverin: culverinOn });
     const personal = id => id.startsWith('crew:') || id.startsWith('captain:');
     return { wave: mine.wave, unlocked: [...mine.unlocked.filter(personal), ...there.unlocked.filter(id => !personal(id))],
       locked: Object.fromEntries([...Object.entries(mine.locked).filter(([id]) => personal(id)), ...Object.entries(there.locked).filter(([id]) => !personal(id))]) };
@@ -242,9 +278,9 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
   const view = () => {
     const player = me(), island = world.islands.get(player.code), captain = island.captain ?? 1;
     return { code: `ISLE-${island.code}`, coins: player.coins, waveBest: island.waveBest, flags: island.flags, spots: spots(island),
-      crew: { ...island.crew }, prices: PRICES, nextWave: island.nextWave ?? island.waveBest + 1,
+      crew: { ...island.crew }, prices: culverinOn ? PRICES_V2 : PRICES, nextWave: island.nextWave ?? island.waveBest + 1,
       captain: { level: captain, nextPrice: CAPTAIN.price[captain] ?? null }, unlocks: answerUnlocks(island),
-      skills: skillsOf(player, island), weapons: weaponsOf(island), campaign: campaignAt(island) };
+      skills: skillsOf(player, island), weapons: weaponsOf(island), campaign: campaignAt(island), layout: layoutOf(island) };
   };
   // §14: skill points from the best wave you won anywhere (won_wave_best on the server), one per two waves.
   const wonOf = (player, island) => Math.max(player.wonBest ?? 0, island.waveBest ?? 0, player.pointBest ?? 0);
@@ -271,7 +307,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     return island;
   };
   const visitedView = island => ({ code: `ISLE-${island.code}`, ownerName: island.ownerName, waveBest: island.waveBest, spots: spots(island), coins: me().coins,
-    campaign: campaignAt(island) });
+    campaign: campaignAt(island), layout: layoutOf(island) });
   // Building and upgrading, shared by your island and Pirate Point (§5: same prices, same refusals).
   const once = (player, key, answer) => { if (player.actions.has(key)) return true; player.actions.set(key, true); return answer; };
   function buildOn(place, ids, { spot, kind, actionUid }, unlocks) {
@@ -280,7 +316,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     if (player.actions.has(`build:${actionUid}`)) return;
     if (spot === 'cabin') refuse(409, 'spot_taken', 'Your cabin already stands there.');
     if (!ids.includes(spot)) refuse(404, 'no_such_spot', 'There is no such build spot here.');
-    const slot = slotOfSpot(spot), allowed = kindsOfSpot(spot);
+    const slot = slotOfSpot(spot), allowed = kindsOfSpot(spot, culverinOn && ids === ISLAND_RULES.spots);
     if (!allowed.includes(kind)) refuse(422, 'wrong_kind', slot === 'tower' ? `Only ${allowed.includes('harpoon') ? 'a cannon, a mortar or a harpoon tower' : 'a cannon or a mortar'} can stand on this spot.`
       : `Only a ${ISLAND_RULES.kinds[allowed[0]][0].toLowerCase()} can stand on this spot.`);
     const [name, price] = ISLAND_RULES.kinds[kind];
@@ -347,13 +383,72 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     if (!island) refuse(404, 'no_such_island', 'There is no island with that code.');
     return { key: code, island, member: isMember(island) };
   };
-  const nowMs = () => { const value = now(); return value instanceof Date ? value.getTime() : Number(value); };
+  // world.clockShiftMs: the dev helper advanceClock() moves the fake server's clock (every tab of a shared world).
+  const nowMs = () => { const value = now(); return (value instanceof Date ? value.getTime() : Number(value)) + (world.clockShiftMs ?? 0); };
+  // D039 (flag wall_recovery; backend/server/island/wall_health.py, wall_repair.py): a wall's health after its last
+  // recorded wave (island.walls: spot -> {health 0-100, damagedAt ms}); no row is a whole wall. It counts as whole
+  // 10 minutes after the wave that left it damaged; Repair/Rebuild costs 30% of its levels' prices x the missing share.
+  const builtWalls = island => ISLAND_RULES.spots.filter(id => kindOfSpot(id) === 'wall' && island.built.has(id));
+  const healthAt = (island, spot, at) => {
+    const wall = island.walls instanceof Map ? island.walls.get(spot) : null;
+    if (!wall || wall.health >= 100) return 100;
+    if (wall.damagedAt !== null && wall.damagedAt + WALL_RECOVERY_MS <= at) return 100;
+    return Math.max(0, wall.health);
+  };
+  const wallsView = island => ({ coins: me().coins, walls: builtWalls(island).map(spot => {
+    const level = island.levels?.get(spot) ?? 1, health = healthAt(island, spot, nowMs());
+    const damagedAt = island.walls instanceof Map ? island.walls.get(spot)?.damagedAt ?? null : null;
+    return { spot, level, health, recoversAt: health < 100 && damagedAt !== null ? iso(damagedAt + WALL_RECOVERY_MS) : null,
+      repairCost: health < 100 ? restorePrice(rebuildPrice(level), health) : null };
+  }) });
+  // The walls a wave starts with, worked out at its startsAt (the same for every client); none on Pirate Point.
+  const waveWalls = run => (wallsOn && run.island
+    ? Object.fromEntries(builtWalls(run.island).sort().map(id => [id, healthAt(run.island, id, run.startsAtMs)])) : null);
+  // The server's wall record (wall_repair.record, D039): the first finish of the wave keeps the walls, each capped
+  // at the health it started the wave with (wall_health.cap_to_start), so a finish can only damage a wall.
+  function recordWalls(run, walls) {
+    if (!wallsOn || !run.island || !walls || run.wallsRecorded) return;
+    const start = waveWalls(run) ?? {}; // read before anything changes: each wall's health at the wave's start
+    run.wallsRecorded = true;
+    if (!(run.island.walls instanceof Map)) run.island.walls = new Map();
+    for (const [spot, reported] of Object.entries(walls)) {
+      if (!run.island.built.has(spot) || kindOfSpot(spot) !== 'wall' || !(spot in start)) continue;
+      const health = Math.min(start[spot], reported);
+      run.island.walls.set(spot, { health, damagedAt: health < 100 ? nowMs() : null });
+    }
+  }
   const running = run => !run.finishedAt && nowMs() <= run.startsAtMs + ISLAND_RULES.waves.maximumSeconds * 1000;
-  const shape = run => ({ waveId: run.waveId, wave: run.wave, seed: run.seed, startsAt: iso(run.startsAtMs),
-    weather: { ...run.weather }, flagship: run.flagship, ...(v2 ? { boss: isBoss(run) } : {}) });
+  // The wave's sim rules (backend/server/island/wave_rules.py): the rule flags on now, in SIM_RULES order; the
+  // first answer keeps its set for the wave (an empty set too), every later one serves the kept set.
+  // world.liveFlags (dev.setFlag) switches a flag for every tab of a shared world, like a redeploy.
+  const flagOn = name => (world.liveFlags && Object.hasOwn(world.liveFlags, name) ? world.liveFlags[name] : flags?.[name]) === true;
+  const rulesOf = run => {
+    // Kept by the wave's first answer, even when empty (the server's wave_rules_keep), whatever the flags say later.
+    if (!Array.isArray(run.rules)) run.rules = SIM_RULES.filter(flagOn);
+    const rules = SIM_RULES.filter(name => run.rules.includes(name));
+    return rules.length ? rules : null;
+  };
+  const shape = run => {
+    const walls = waveWalls(run); // D039: only while the flag is on, as the server
+    const rules = rulesOf(run);
+    return { waveId: run.waveId, wave: run.wave, seed: run.seed, startsAt: iso(run.startsAtMs),
+      weather: { ...run.weather }, flagship: run.flagship, ...(v2 ? { boss: isBoss(run) } : {}), ...(walls ? { walls } : {}),
+      ...(rules ? { rules } : {}) };
+  };
   const uid = value => typeof value === 'string' && value.length > 0 && value.length <= 64;
+  // The shared island arsenal (T40, D042): copies of an island, stored (20 at most) or carried by one captain.
+  const arsenal = createFakeArsenal({ world, playerId, ownCode: () => me().code,
+    islandOf: code => (code === me().code ? world.islands.get(code) : gameByCode(code, 'no_such_island')),
+    isMember: (island, id) => isMember(island, id), nameOf,
+    unlockWave: () => { const player = me(); return unlocking ? wonOf(player, world.islands.get(player.code)) : 99; },
+    coins: () => me().coins, pay: price => { me().coins -= price; },
+    waveRunning: island => [...world.waves.values()].some(run => run.place === island.code && running(run)), refuse });
 
   const api = {
+    arsenal: async ({ code = null } = {}) => arsenal.state(code ? readIslandCode(code) : null),
+    arsenalBuy: async ({ weapon, actionUid, code = null } = {}) => arsenal.buy({ weapon, actionUid, code: code ? readIslandCode(code) : null }),
+    arsenalTake: async ({ copy, actionUid, code = null } = {}) => arsenal.take({ copy, actionUid, code: code ? readIslandCode(code) : null }),
+    arsenalReturn: async ({ actionUid, code = null } = {}) => arsenal.giveBack({ actionUid, code: code ? readIslandCode(code) : null }),
     get playerId() { return playerId; },
     setWeather(kind) { weatherKind = Object.hasOwn(ISLAND_RULES.weather, kind) ? kind : 'calm'; },
     async island() { return view(); },
@@ -367,6 +462,9 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     async upgrade({ code, ...body } = {}) {
       body.spot = canonicalSpot(body.spot);
       const mine = world.islands.get(me().code), island = code === undefined ? mine : visited(code);
+      // D039 (T47): a damaged or destroyed wall is repaired first; an upgrade never heals it.
+      if (wallsOn && island.built.has(body.spot) && kindOfSpot(body.spot) === 'wall' && !me().actions.has(`upgrade:${body.actionUid}`)
+        && healthAt(island, body.spot, nowMs()) < 100) refuse(409, 'needs_repair', 'Repair this wall before you upgrade it.');
       upgradeOn(island, ISLAND_RULES.spots, body, islandAllowed(island));
       return island === mine ? view() : visitedView(island);
     },
@@ -425,6 +523,8 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     async buyWeapon({ weapon, actionUid } = {}) {
       if (!uid(actionUid)) invalid('Send the weapon and an action id.');
       if (!Object.hasOwn(WEAPON_BY_ID, weapon ?? '')) refuse(400, 'bad_weapon', 'There is no such weapon.');
+      // D042, as backend/server/routes/island.py: with the flag "arsenal" on, weapons are bought at the arsenal.
+      if (flags?.arsenal === true) refuse(409, 'use_arsenal', 'Weapons are in the arsenal now. Walk to the arsenal.');
       const player = me(), island = world.islands.get(player.code), info = WEAPON_BY_ID[weapon];
       if (player.actions.has(`weapon:${actionUid}`)) return view();
       if (weaponsOf(island).owned.includes(weapon)) refuse(409, 'owned', `You own the ${info.name.toLowerCase()} already.`);
@@ -526,10 +626,52 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       const quote = demolishable(island, spot);
       for (const refund of quote.refunds) { const payer = world.players.get(refund.id); if (payer) payer.coins += refund.coins; }
       island.built.delete(spot); island.levels?.delete(spot); island.kinds?.delete(spot);
+      if (island.walls instanceof Map) island.walls.delete(spot); // D039: a new wall here starts whole
       if (island.specs instanceof Map) island.specs.delete(spot);
       if (island.payments instanceof Map) island.payments.delete(spot);
       player.actions.set(`demolish:${actionUid}`, quote);
       return { ...answer(), demolished: { ...quote, refunds: quote.refunds.map(item => ({ ...item, you: item.id === playerId })), repeat: false } };
+    },
+    // T36 (backend/server/island/placement.py): the same rules as the server (src/island/placement.js), between waves.
+    async move({ spot, x, z, code } = {}) {
+      if (typeof spot !== 'string' || typeof x !== 'number' || typeof z !== 'number') invalid('Send the spot, x and z.');
+      const mine = world.islands.get(me().code), island = code === undefined || code === null ? mine : visited(code);
+      spot = canonicalSpot(spot);
+      if (!(island.positions instanceof Map)) island.positions = new Map();
+      const placed = positionsOf(spots(island)), here = placed[spot];
+      if (!here || here.x !== x || here.z !== z) {
+        const verdict = checkMove(spot, x, z, placed);
+        if (!verdict.ok) refuse(verdict.code === 'no_such_spot' ? 404 : verdict.code === 'off_grid' ? 422 : 409, verdict.code, verdict.message);
+        waveGuard(island, 'A wave is under way. Move buildings between waves.');
+        island.positions.set(spot, { x, z });
+      }
+      return island === mine ? view() : visitedView(island);
+    },
+    // D039 (flag wall_recovery, routes/wall_recovery.py): the walls of your island, or of a game's island with `code`.
+    async walls({ code } = {}) {
+      if (!wallsOn) refuse(404, 'feature_off', 'Wall repairs are not open yet.');
+      const mine = world.islands.get(me().code), island = code === undefined || code === null ? mine : visited(code);
+      return wallsView(island);
+    },
+    // Repair (damaged) or Rebuild (destroyed) at its kind and level, between waves, paid by the caller; a repeated
+    // actionUid charges nothing and answers the walls as they are; a whole wall is refused intact (island_wall_restore()).
+    async repairWall({ spot, actionUid, code } = {}) {
+      if (typeof spot !== 'string' || !uid(actionUid)) invalid('Send the spot and an action id.');
+      if (!wallsOn) refuse(404, 'feature_off', 'Wall repairs are not open yet.');
+      const player = me(), mine = world.islands.get(player.code), island = code === undefined || code === null ? mine : visited(code);
+      if (player.actions.has(`repair:${actionUid}`)) return wallsView(island);
+      spot = canonicalSpot(spot);
+      if (!ISLAND_RULES.spots.includes(spot)) refuse(404, 'no_such_spot', 'There is no such build spot here.');
+      if (kindOfSpot(spot) !== 'wall') refuse(422, 'wrong_kind', 'Only walls are repaired here.');
+      if (!island.built.has(spot)) refuse(409, 'not_built', 'Build a wall on this spot first.');
+      waveGuard(island, 'Repair it between waves, or press E at it now.');
+      const health = healthAt(island, spot, nowMs());
+      if (health >= 100) refuse(409, 'intact', 'This wall is whole already.');
+      const price = restorePrice(rebuildPrice(island.levels?.get(spot) ?? 1), health);
+      if (player.coins < price) refuse(409, 'insufficient_funds', `The repair costs ${price} coins. You need more coins.`);
+      if (!(island.walls instanceof Map)) island.walls = new Map();
+      player.coins -= price; island.walls.set(spot, { health: 100, damagedAt: null }); player.actions.set(`repair:${actionUid}`, price);
+      return wallsView(island);
     },
     async piratePoint() { me(); return pointView(); },
     async pointBuild(body = {}) { buildOn(world.point, ISLAND_RULES.pointSpots, body, allowed(world.islands.get(me().code))); return pointView(); },
@@ -588,7 +730,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       mustBeMember(island); // GAME-V3.md §2: join the game first (the owner always gets in)
       // The crew and the captain too, so host and visitors run the same wave (§8).
       return { code: `ISLE-${island.code}`, ownerName: island.ownerName, waveBest: island.waveBest, spots: spots(island),
-        crew: { ...island.crew }, captain: { level: island.captain ?? 1 }, campaign: campaignAt(island) };
+        crew: { ...island.crew }, captain: { level: island.captain ?? 1 }, campaign: campaignAt(island), layout: layoutOf(island) };
     },
 
     async startWave({ where, actionUid } = {}) {
@@ -628,9 +770,10 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       return null;
     },
 
-    async finishWave({ waveId, survived, shipsSunk, bonuses } = {}) {
+    async finishWave({ waveId, survived, shipsSunk, bonuses, rescued, walls } = {}) {
       if (typeof waveId !== 'string' || typeof survived !== 'boolean' || !Number.isInteger(shipsSunk) || shipsSunk < 0 || shipsSunk > 1000
-        || (bonuses !== undefined && !(Array.isArray(bonuses) && bonuses.length <= 2 && bonuses.every(kind => kind === 'galleon' || kind === 'finisher')))) {
+        || (bonuses !== undefined && !(Array.isArray(bonuses) && bonuses.length <= 2 && bonuses.every(kind => kind === 'galleon' || kind === 'finisher')))
+        || (rescued !== undefined && typeof rescued !== 'boolean') || (walls !== undefined && walls !== null && !isWallReport(walls))) {
         invalid('Send the wave, whether the island held and the ships sunk (0 to 1000).');
       }
       const player = me(), run = world.waves.get(waveId);
@@ -639,7 +782,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       const placeBest = () => (run.island ? { waveBest: run.island.waveBest, flags: run.island.flags } : { waveBest: world.pointBest, flags: world.pointFlags });
       const stored = run.results.get(playerId);
       const runInfo = () => (v2 && run.island ? { nextWave: run.island.nextWave, boss: isBoss(run) } : {});
-      if (stored !== undefined) return { loot: stored, coins: player.coins, ...placeBest(), ...runInfo() };
+      if (stored !== undefined) { recordWalls(run, walls); return { loot: stored, coins: player.coins, ...placeBest(), ...runInfo() }; }
       const elapsed = (nowMs() - run.startsAtMs) / 1000;
       if (elapsed < ISLAND_RULES.waves.minimumSeconds) {
         const wait = Math.max(1, Math.ceil(ISLAND_RULES.waves.minimumSeconds - elapsed));
@@ -659,8 +802,10 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       if (run.island && !run.nextSet) {
         run.nextSet = true;
         // §1: carry on after a win; after a loss the next bell restarts at best − 2 (at least 1).
+        // T38 (rescue.py): a won rescue on a lost wave from wave 4 to 100 falls back one wave less (flag rescue on).
+        const back = TD_RULES.restartBack - (rescueOn && !survived && !late && rescued === true && rescueAllowed(run.wave) ? 1 : 0);
         run.island.nextWave = survived && !late ? Math.min(run.wave + 1, TD_RULES.highestWave)
-          : Math.max(1, run.island.waveBest - TD_RULES.restartBack);
+          : Math.max(1, run.island.waveBest - back);
       }
       if (survived && !late && !run.counted) {
         run.counted = true;
@@ -668,6 +813,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
         else { world.pointBest = Math.max(world.pointBest, run.wave); world.pointFlags++; }
       }
       player.coins += loot; run.results.set(playerId, loot);
+      recordWalls(run, walls); // D039: the first finish of the wave keeps its walls (won or lost)
       return { loot, coins: player.coins, ...placeBest(), ...runInfo() };
     },
 
@@ -720,11 +866,18 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
         if (route === 'POST /api/island/respec') return reply(200, await api.respec(body));
         if (route === 'POST /api/island/weapon/buy') return reply(200, await api.buyWeapon(body));
         if (route === 'POST /api/island/weapon/equip') return reply(200, await api.equipWeapon(body));
+        if (route === 'GET /api/island/arsenal') return reply(200, await api.arsenal({ code: searchParams.get('code') }));
+        if (route === 'POST /api/island/arsenal/buy') return reply(200, await api.arsenalBuy(body));
+        if (route === 'POST /api/island/arsenal/take') return reply(200, await api.arsenalTake(body));
+        if (route === 'POST /api/island/arsenal/return') return reply(200, await api.arsenalReturn(body));
         if (route === 'POST /api/island/research') return reply(200, await api.research(body));
         if (route === 'POST /api/island/tower-skill') return reply(200, await api.specialise(body));
         if (route === 'POST /api/island/wreck') return reply(200, await api.repairWreck(body));
         if (route === 'GET /api/island/demolish') return reply(200, await api.demolishQuote({ spot: searchParams.get('spot'), code: searchParams.get('code') }));
         if (route === 'POST /api/island/demolish') return reply(200, await api.demolish(body));
+        if (route === 'POST /api/island/move') return reply(200, await api.move(body));
+        if (route === 'GET /api/island/walls') return reply(200, await api.walls({ code: searchParams.get('code') }));
+        if (route === 'POST /api/island/repair') return reply(200, await api.repairWall(body));
         if (route === 'POST /api/island/invite/join') return reply(200, await api.inviteJoin(body));
         if (route === 'POST /api/games') return reply(200, await api.createGame(body));
         if (route === 'POST /api/games/join') return reply(200, await api.joinGame(body));
@@ -767,10 +920,12 @@ const BODY_KEYS = Object.freeze({ '/api/island/build': ['spot', 'kind', 'actionU
   '/api/waves/join': ['waveId'], '/api/waves/finish': ['waveId', 'survived', 'shipsSunk'], '/api/waves/revive': ['waveId', 'fallen', 'downAt', 'actionUid'],
   '/api/games': [], '/api/games/join': ['code', 'actionUid'], '/api/games/leave': ['code'],
   '/api/island/research': ['branch', 'actionUid'], '/api/island/tower-skill': ['spot', 'spec'], '/api/island/wreck': ['amount', 'actionUid'],
-  '/api/island/demolish': ['spot', 'actionUid'] });
+  '/api/island/demolish': ['spot', 'actionUid'], '/api/island/move': ['spot', 'x', 'z'], '/api/island/repair': ['spot', 'actionUid'],
+  '/api/island/arsenal/buy': ['weapon', 'actionUid'], '/api/island/arsenal/take': ['copy', 'actionUid'], '/api/island/arsenal/return': ['actionUid'] });
 // Keys a body may also carry: `code` builds, upgrades, researches, picks a skill or mends the wreck on a game's island.
-const OPTIONAL_KEYS = Object.freeze({ '/api/waves/finish': ['bonuses'], '/api/island/build': ['code'], '/api/island/upgrade': ['code'], '/api/games': ['actionUid'],
-  '/api/island/research': ['code', 'tier', 'choice', 'change'], '/api/island/tower-skill': ['code'], '/api/island/wreck': ['code'], '/api/island/demolish': ['code'] });
+const OPTIONAL_KEYS = Object.freeze({ '/api/waves/finish': ['bonuses', 'rescued', 'walls'], '/api/island/repair': ['code'], '/api/island/build': ['code'], '/api/island/upgrade': ['code'], '/api/games': ['actionUid'],
+  '/api/island/research': ['code', 'tier', 'choice', 'change'], '/api/island/tower-skill': ['code'], '/api/island/wreck': ['code'], '/api/island/demolish': ['code'], '/api/island/move': ['code'],
+  '/api/island/arsenal/buy': ['code'], '/api/island/arsenal/take': ['code'], '/api/island/arsenal/return': ['code'] });
 const ACTION_UID = /^[A-Za-z0-9_-]{8,64}$/;
 const exactKeys = (body, keys, optional = []) => !!body && typeof body === 'object' && !Array.isArray(body)
   && Object.keys(body).filter(key => !optional.includes(key)).sort().join() === [...keys].sort().join();
@@ -821,10 +976,17 @@ const SHARED_SETTLE_MS = 60;
 const settle = () => new Promise(resolve => setTimeout(resolve, SHARED_SETTLE_MS));
 /** The answers' version for a page: 2 (the tower defense extras) in the browser, 1 without a page (the older tests). */
 export const fakeVersionFor = search => (typeof search !== 'string' ? 1 : new URLSearchParams(search).get('td') === '1' ? 1 : 2);
+// ?fakeflags=wall_recovery: the feature flags the fake server has on (its /api/config); none by default.
+// The server's flag names: lower case, digits and _ (defenses_v2 has a digit).
+const FLAG_NAME = /^[a-z][a-z0-9_]{0,31}$/;
+export function fakeFlagsFor(search = '') {
+  const listed = new URLSearchParams(typeof search === 'string' ? search : '').get('fakeflags') ?? '';
+  return Object.freeze(Object.fromEntries(listed.split(',').filter(name => FLAG_NAME.test(name)).map(name => [name, true])));
+}
 const fromPage = fakePlayerFor(globalThis.location?.search ?? '');
 export function createFakeIslandTransport({ coins = ISLAND_RULES.startingCoins, now = () => Date.now(), weather = 'calm',
   code = FAKE_OWN_CODE, ownerName = fromPage.ownerName ?? 'You', friends = [FAKE_FRIEND], seed = 7, unlocking = true,
-  version = fakeVersionFor(globalThis.location?.search), playerId = fromPage.playerId,
+  version = fakeVersionFor(globalThis.location?.search), playerId = fromPage.playerId, flags = fakeFlagsFor(globalThis.location?.search),
   shared = fromPage.shared ? createSharedFakeStore(fromPage.shared) : null } = {}) {
   let world, api, others = 0;
   const failures = [];
@@ -833,7 +995,7 @@ export function createFakeIslandTransport({ coins = ISLAND_RULES.startingCoins, 
   function reset() {
     world = createFakeWorld({ seed, friends });
     pull();
-    api = createFakeIslandApi({ world, playerId, ownerName, now, weather, code: playerId === 'me' ? code : null, unlocking, version });
+    api = createFakeIslandApi({ world, playerId, ownerName, now, weather, code: playerId === 'me' ? code : null, unlocking, version, flags });
     if (!world.players.has(playerId)) {
       world.players.set(playerId, { coins: 0, ownerName, actions: new Map(), code: null });
       void api.island(); world.players.get(playerId).coins = coins;
@@ -856,7 +1018,7 @@ export function createFakeIslandTransport({ coins = ISLAND_RULES.startingCoins, 
       }
     }
     try {
-      if (method === 'GET' && pathname === '/api/island/leaderboard') return fail(503, 'offline', 'Weekly results need an online game. Return to the title and sign in to play online.');
+      if (method === 'GET' && pathname === '/api/island/leaderboard') return fail(503, 'offline', 'Leaderboard results need an online game. Return to the title and sign in to play online.');
       if (method === 'GET' && pathname === '/api/island') return ok(await api.island());
       if (method === 'GET' && pathname.startsWith('/api/island/visit/')) return ok(await api.visit(decodeURIComponent(pathname.slice(18))));
       if (method === 'GET' && pathname === '/api/waves/current') return ok(await api.currentWave(new URLSearchParams(query).get('where') ?? ''));
@@ -869,6 +1031,10 @@ export function createFakeIslandTransport({ coins = ISLAND_RULES.startingCoins, 
       if (method === 'POST' && pathname === '/api/island/respec') return ok(await api.respec(body));
       if (method === 'POST' && pathname === '/api/island/weapon/buy') return ok(await api.buyWeapon(body));
       if (method === 'POST' && pathname === '/api/island/weapon/equip') return ok(await api.equipWeapon(body));
+      if (method === 'GET' && pathname === '/api/island/arsenal') return ok(await api.arsenal({ code: new URLSearchParams(query).get('code') }));
+      if (method === 'POST' && pathname === '/api/island/arsenal/buy') return ok(await api.arsenalBuy(body));
+      if (method === 'POST' && pathname === '/api/island/arsenal/take') return ok(await api.arsenalTake(body));
+      if (method === 'POST' && pathname === '/api/island/arsenal/return') return ok(await api.arsenalReturn(body));
       if (method === 'POST' && pathname === '/api/island/research') return ok(await api.research(body));
       if (method === 'POST' && pathname === '/api/island/tower-skill') return ok(await api.specialise(body));
       if (method === 'POST' && pathname === '/api/island/wreck') return ok(await api.repairWreck(body));
@@ -877,6 +1043,9 @@ export function createFakeIslandTransport({ coins = ISLAND_RULES.startingCoins, 
         return ok(await api.demolishQuote({ spot: asked.get('spot') ?? '', code: asked.get('code') }));
       }
       if (method === 'POST' && pathname === '/api/island/demolish') return ok(await api.demolish(body));
+      if (method === 'POST' && pathname === '/api/island/move') return ok(await api.move(body));
+      if (method === 'GET' && pathname === '/api/island/walls') return ok(await api.walls({ code: new URLSearchParams(query).get('code') }));
+      if (method === 'POST' && pathname === '/api/island/repair') return ok(await api.repairWall(body));
       if (method === 'POST' && pathname === '/api/island/invite/join') return ok(await api.inviteJoin(body));
       if (method === 'POST' && pathname === '/api/games') return ok(await api.createGame(body));
       if (method === 'POST' && pathname === '/api/games/join') return ok(await api.joinGame(body));
@@ -905,22 +1074,26 @@ export function createFakeIslandTransport({ coins = ISLAND_RULES.startingCoins, 
     return fail(failure.status, failure.code, failure.message);
   }
   const me = () => world.players.get(playerId);
-  // The dev helpers change the world too: in a shared world they read it first and write it after.
-  const synced = helpers => (shared ? Object.fromEntries(Object.entries(helpers).map(([name, helper]) => [name, (...args) => {
-    pull(); const answer = helper(...args); shared.save(world);
-    return answer instanceof Promise ? answer.finally(() => shared.save(world)) : answer;
-  }])) : helpers);
+  // The dev helpers change the world too: in a shared world they read it first and write it after, under the
+  // same lock as the requests. Outside it another tab's request could save its older copy over the change
+  // (test:mp: setCaptain(3) lost, so the role pick was refused). They answer a promise then; a request made
+  // right after (load()) waits for them, as the lock serves in order. read() only reads, at once.
+  const synced = helpers => (shared ? Object.fromEntries(Object.entries(helpers).map(([name, helper]) => [name, name === 'read'
+    ? (...args) => { pull(); return helper(...args); }
+    : (...args) => shared.lock(async () => { pull(); try { return await helper(...args); } finally { shared.save(world); } })])) : helpers);
   return {
     get: path => request('GET', path),
     post: (path, body) => request('POST', path, body),
     get api() { return api; },
     get world() { return world; },
+    // The flags this fake server has on (game.js reads wall_recovery from here in fake mode).
+    get flags() { return { ...flags }; },
     dev: synced({
       setCoins(value) { if (!Number.isSafeInteger(value) || value < 0) throw new TypeError('coins must be a whole number from 0 up.'); me().coins = value; },
       setWeather(kind) { api.setWeather(kind); },
       // Another captain rings the bell somewhere (a friend's island, so a visitor can join it).
       async startWaveAt(where) {
-        const other = createFakeIslandApi({ world, playerId: `captain_${++others}`, ownerName: 'Another captain', now, weather });
+        const other = createFakeIslandApi({ world, playerId: `captain_${++others}`, ownerName: 'Another captain', now, weather, flags });
         try {
           if (where !== 'pirate_point') await other.joinGame({ code: where, actionUid: `other-${others}-join` });
           return await other.startWave({ where, actionUid: `other-${others}-captain` });
@@ -946,6 +1119,21 @@ export function createFakeIslandTransport({ coins = ISLAND_RULES.startingCoins, 
         if (!Number.isSafeInteger(value) || value < 0) throw new TypeError('waveBest must be a whole number from 0 up.');
         const island = world.islands.get(me().code); island.waveBest = value; island.nextWave = Math.min(TD_RULES.highestWave, value + 1);
         me().wonBest = Math.max(me().wonBest ?? 0, value); // you won those waves yourself: skill points follow (§14)
+      },
+      // Pirate Point's best wave (the next bell there rings best + 1), to test a late flagship wave (T38: no rescue there).
+      setPointBest(value) {
+        if (!Number.isSafeInteger(value) || value < 0) throw new TypeError('pointBest must be a whole number from 0 up.');
+        world.pointBest = Math.min(TD_RULES.highestWave - 1, value);
+      },
+      // D039: the fake server's clock moves on by `ms` (the 10-minute wall timer); in a shared world for every tab.
+      advanceClock(ms) {
+        if (!Number.isSafeInteger(ms) || ms < 0) throw new TypeError('ms must be a whole number from 0 up.');
+        world.clockShiftMs = (world.clockShiftMs ?? 0) + ms;
+      },
+      // A feature flag switched on or off on the fake server (a redeploy with other flags), for every tab of a shared world.
+      setFlag(name, on) {
+        if (typeof name !== 'string' || !FLAG_NAME.test(name)) throw new TypeError('setFlag needs a flag name.');
+        world.liveFlags = { ...(world.liveFlags ?? {}), [name]: on === true };
       },
       reset() { reset(); failures.length = 0; },
     }),

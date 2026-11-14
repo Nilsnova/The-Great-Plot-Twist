@@ -20,6 +20,7 @@ The browser only reads from this database. Every write comes from our Python ser
 | [migrations/20261106110000_lantern_duels.sql](migrations/20261106110000_lantern_duels.sql) | The third migration, for Lantern Duels (package A7): two wallet reasons, two tables and three functions. Run it after the second. See [The Lantern Duels migration](#the-lantern-duels-migration). |
 | [migrations/20261109010000_demo_window.sql](migrations/20261109010000_demo_window.sql) | The class demo (G29 C0, D029): the host's demo window for guest play and the answers of the Keeper's Lock. Three tables and three functions, no wallet reason. Run it after the whole 20261106 chain, before the flag `demo` goes on. See [Class demo migration](#class-demo-migration-20261109010000). |
 | [migrations/20261109020000_class_code.sql](migrations/20261109020000_class_code.sql) | The class code (G29, D030): the current class code, its audit and the admitted guests (three tables, five functions), and the guest condition `(not jwt_is_anonymous() or is_admitted_guest())` on every browser policy (16 tables and the five Realtime policies). Run it after every earlier file. See [Class code migration](#class-code-migration-20261109020000). |
+| [migrations/20261114120000_arsenal.sql](migrations/20261114120000_arsenal.sql) | The shared island arsenal (T40/T41, D042): two tables (`arsenal_copies`, `arsenal_moves`), a commit-time capacity trigger and the `arsenal_*` functions. Changes no existing row when applied. **Applied live 14 Nov 2026**; flag `arsenal` on since the same evening. See [The arsenal migration](#the-arsenal-migration). |
 
 ## G10 follow-up migration (140000)
 
@@ -288,6 +289,16 @@ It also adds three wallet reasons (`pirate_loot` earn, `starting_coins` earn, `f
 
 `migrations/20261110020000_wave_crews.sql` (lane 0, task 0.4) builds on the islands and waves migration without editing it. It adds `wave_participants` (one row per player in a wave, with their own result and loot; RLS on, no policy, no browser grant), the column `wave_runs.flag_counted`, and the functions `wave_join()` (join a running wave, safe to repeat) and `wave_current()` (the running wave of an island or Pirate Point, or null). It replaces `wave_start()` (same arguments; the bell-ringer becomes the first participant) and drops the 7-argument `wave_finish()` for an 8-argument one (`p_point_loot_base`): every participant finishes for themselves, ledger ref `wave:<id>:<player>`; the first finish closes the wave run; the best wave and one flag count once (`flag_counted`). It backfills every existing wave with its bell-ringer as participant. Until the new server code is deployed, `POST /api/waves/finish` of an older server fails; the flag `islands` stays off until then.
 
+## The island layout migration (T36)
+
+`migrations/20261114110000_island_layout.sql` (T36 flexible placement, D041 PROPOSED) was **applied live on 14 Nov 2026** (registered in `schema_migrations`); the flag `placement` has been on in production since the same evening. A fresh database needs it applied before the flag goes on. It adds `island_layout` (one row per moved build spot of an island: `plot`, the cell in half units `x_half`/`z_half`, `layout_version` 2, `moved_by`, `moved_at`; a spot without a row stands on its fixed spot, which is how old saves keep working; RLS on, no policy, no browser grant; the server reads, inserts and updates, never deletes; rows go with their island by cascade) and `island_move()` (locks the island row like `wave_start()`, refuses `wave_running` like `island_demolish()`, then a compare-and-swap: the rows now must equal the rows the server checked, else `busy`; no coins). Opt-in SQL checks: `backend/server/tests/island_sql/test_island_layout_sql.py`.
+
+| `island_layout` | read / insert / update | no access | no access | yes (insert and update through `island_move()`) |
+| `island_layout` | delete | no access | no access | no access (deleted with its island, by cascade) |
+| `island_move()` | run | no access | no access | yes |
+
+Manual checks after applying: the three checks in the header comment of the migration (RLS on and no `authenticated` select; only `service_role` may run `island_move()`; the check rule refuses the plot `cabin`).
+
 ## The market calls migration
 
 `migrations/20261111010000_market_calls.sql` (lane 0, D034) adds `market_calls` (one row per up-or-down call; RLS on, no policy, no browser grant; the server reads, inserts and updates, never deletes), `market_call_open()` (locks the wallet, repeat-safe per actionUid, at most 3 open calls, stake through `apply_wallet_transaction()`), `market_call_settle()` (decides once: won 2 × stake, lost 0, refunded for the same price or no price 24 hours after `settle_at`) and the reasons `market_call_stake` and `market_call_payout`. Opt-in SQL checks: `backend/server/tests/market_calls_sql/`.
@@ -295,6 +306,31 @@ It also adds three wallet reasons (`pirate_loot` earn, `starting_coins` earn, `f
 | `market_calls` | read / insert / update | no access | no access | yes (through the two functions) |
 | `market_calls` | delete | no access | no access | no access (deleted with its player, by cascade) |
 | `market_call_open()`, `market_call_settle()` | run | no access | no access | yes |
+
+## The arsenal migration
+
+`migrations/20261114120000_arsenal.sql` (T40/T41, decision D042) is the database part of the island arsenal ([INTERFACES.md](../docs/INTERFACES.md#shared-island-arsenal-t40t41)). It was **applied live on 14 Nov 2026** and the flag `arsenal` was then switched on (the same evening, after the release check [PR #53](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/53)). On a fresh database apply it after every earlier file, then switch the flag on; while the flag is off nothing reads it and the old weapon shop keeps working. **Applying it changes no existing row**: a player's old personal weapons (`islands.weapons_owned`) become copies the first time their island's arsenal is opened with the flag on (`arsenal_convert_island()`, called by `arsenal_state()`); **When the flag is switched on, run `select public.arsenal_convert_personal_weapons();` once** (as `service_role`, safe to repeat): it converts everyone at once; the lazy conversion stays as a safety net. Done live on 14 Nov 2026: the call converted 1 copy and left 0 islands with personal weapons. It adds no wallet reason: a copy is bought with the existing `weapon_purchase` (spend), ref `arsenal:<actionUid>`.
+
+| Name | What it is | Who changes it |
+|---|---|---|
+| `arsenal_copies` | One row per weapon copy of an island: rack number, type (never the musket), `holder` (null = stored, else the one captain who carries it), who bought it. Unique `(island_owner, holder)` where carried: one copy per captain per island. A deferred constraint trigger refuses more than 20 stored copies per island at commit. RLS on, no policy, no browser grant. | Only the `arsenal_*` functions. |
+| `arsenal_moves` | One row per arsenal click (buy, take, return), primary key `(player_id, action_uid)`: a repeat changes nothing. RLS on, no policy, no browser grant. | Only the `arsenal_*` functions. |
+| `arsenal_may()` | The permission rule (any active member of the island's game, the host included). T37 replaces it. | Read by the functions. |
+| `arsenal_state()` | Locks the island row, converts the owner's old weapons, puts copies of departed captains back while there is room, answers the arsenal. | Run by the server only. |
+| `arsenal_buy()` | Locks the wallet, then the island; repeat-safe; refuses `not_member`, `wave_running`, `locked`, `arsenal_full`, `insufficient_funds`; pays through `apply_wallet_transaction()`. | Run by the server only. |
+| `arsenal_take()`, `arsenal_return()` | Withdraw or atomic swap; return (refused `arsenal_full` on a full rack, the copy stays carried). Lock the island row; repeat-safe. | Run by the server only. |
+
+Opt-in SQL checks (20-slot cap, exclusive possession, repeats, concurrent claims and returns on committed data, full-rack return, departed captains, conversion): `CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql/test_arsenal_sql.py` from `backend/`. The read-only checks after applying are in the migration's header (a to e).
+
+Who may do what (the same two locks as [the matrix below](#who-may-do-what)):
+
+| Table or function | Action | Visitor (`anon`) | Signed-in player (`authenticated`) | Server (`service_role`) |
+|---|---|---|---|---|
+| `arsenal_copies` | read / insert / update | no access | no access | yes (through the functions) |
+| `arsenal_copies` | delete | no access | no access | no access (deleted with its island or its holder's account, by cascade) |
+| `arsenal_moves` | read / insert | no access | no access | yes (through the functions) |
+| `arsenal_moves` | update / delete | no access | no access | no access |
+| `arsenal_state()`, `arsenal_buy()`, `arsenal_take()`, `arsenal_return()`, `arsenal_convert_*()` and their helpers | run | no access | no access | yes |
 
 ## Apply the migration
 
@@ -479,10 +515,15 @@ The three actors, and the database role behind each:
 | `islet_buildings` | insert | no access | no access | yes [6] (through `islet_build()`) |
 | `islet_buildings` | update | no access | no access | no access (a building is never changed in this version) |
 | `islet_buildings` | delete | no access | no access | no access (deleted with its player, by cascade) |
+| `island_wall_records` | read | no access | no access | yes (20261114100000_wall_recovery.sql, D039) |
+| `island_wall_records` | insert | no access | no access | yes (through `island_walls_record()`) |
+| `island_wall_records` | update, delete | no access | no access | no access (deleted with its wave or island, by cascade) |
 | `islands` | read | no access | no access | yes |
 | `islands` | insert | no access | no access | yes (through `island_open()`) |
 | `islands` | update | no access | no access | yes (through `wave_finish()`) |
 | `islands` | delete | no access | no access | no access (deleted with its player, by cascade) |
+| `wave_rules` | read, insert | no access | no access | yes (through `wave_rules_keep()`; 20261114130500_wave_rules.sql) |
+| `wave_rules` | update, delete | no access | no access | no access (deleted with its wave, by cascade) |
 | `wave_runs` | read | no access | no access | yes |
 | `wave_runs` | insert | no access | no access | yes (through `wave_start()`) |
 | `wave_runs` | update | no access | no access | yes (through `wave_start()` and `wave_finish()`) |
@@ -3143,3 +3184,18 @@ an older policy file on its own would restore its unguarded policy: apply the ch
 The scratch tests in `server/tests/demo_sql/test_class_code_sql.py` act as `authenticated` with a
 non-anonymous token, an anonymous token without admission, a token without the claim and an admitted
 guest, for tables and Realtime rooms (the test stub adds Supabase's `auth.jwt()`).
+
+## The wall recovery migration
+
+`migrations/20261114100000_wall_recovery.sql` (tasks T29–T32 and T47, decision D039, proposed) adds `islet_buildings.wall_health` (0–100, default 100: every existing wall is whole) and `wall_damaged_at`, the table `island_wall_records` (one row per recorded island wave) and two functions. The server uses them only while the flag `wall_recovery` is on, so applying the file changes nothing that players see until the flag is switched on; switch the flag on only after the file is applied. **Applied live on 14 Nov 2026**; the flag `wall_recovery` has been on since the evening of the same day (after the guard of [PR #52](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/52) and `npm run test:walls`). The table has RLS, no browser policies and grants only `select, insert` to `service_role` (matrix rows above).
+
+| Function | Who may execute | Purpose |
+|---|---|---|
+| island_walls_record | service_role only | Keep the walls' health at the first finish of an island wave, once per wave |
+| island_wall_restore | service_role only | A paid Repair or Rebuild between waves: coins and health in one step, never above whole |
+
+Manual checks after applying: `select count(*) from public.islet_buildings where wall_health <> 100;` is 0; as `authenticated`, `select * from public.island_wall_records` is refused. The opt-in SQL checks: `CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql/test_wall_recovery_sql.py`.
+
+`migrations/20261114130500_wave_rules.sql` (T33, T34/T35, T38 wave rules) is additive: the table `wave_rules` (one row per wave: the simulation rule names it plays with; RLS on, no policy, `select, insert` for `service_role` only) and `wave_rules_keep()`, which keeps a wave's rules at its first start/join/current answer and answers the kept set every time. ~~The server calls it only while one of the flags `tower_health`, `pathing` or `rescue` is on, so apply this file before switching any of them on.~~ **Superseded by [PR #63](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/63) (14 Nov 2026):** the server now calls `wave_rules_keep()` on every wave start, join and current answer, even while every rule flag is off, and keeps the empty set too, so a wave keeps the rules of its first answer whatever the flags say later; apply this file before the code that contains #63 runs, whatever the flags are. `rescue` and `tower_health` have been on live since about 21:05 and 21:53 UTC on 14 Nov; `pathing` is off. **Applied live on 14 Nov 2026** (registered in `schema_migrations`); the flags `rescue` and `tower_health` were switched on later that evening; `pathing` is still off.
+
+`migrations/20261114140000_culverin.sql` (T43 culverin, decision D048, proposed) replaces two check rules and nothing else: `islet_buildings_plot_fits_building` keeps every pair of `20261113020000_harpoon_tower.sql` and adds `('cannon_1', 'culverin')` … `('cannon_7', 'culverin')`, and `wave_rules_known_names` also allows the rule name `defenses_v2`. No row changes. Apply it before switching the flag `defenses_v2` on (without it the database refuses a culverin build and a wave kept with `defenses_v2`). Manual check: `select conname, pg_get_constraintdef(oid) from pg_constraint where conname in ('islet_buildings_plot_fits_building', 'wave_rules_known_names');`. The opt-in SQL checks: `CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql/test_culverin_sql.py`. Applied live 14 Nov 2026.

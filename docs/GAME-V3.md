@@ -139,7 +139,7 @@ Each tower kind gets a small skill tree beyond its levels (1–3, and 4–5 sinc
 - **Mortar:** Cluster (3 smaller blasts) · Fire pot (burning ground for 4 s) · Long range (+12 range).
 - **Wall:** Stone (hp ×2) · Spiked (boarders take damage while hacking) · Quick mend (repairs ×2).
 - **Watchtower:** Spotter (+15% damage to towers in range) · Signal fire (ships show 5 s earlier).
-New tower kinds later: fire tower (damage over time), for waves 12+. The harpoon tower (slows) is in the game, see "The harpoon tower" below.
+New tower kinds later: fire tower (damage over time), for waves 12+. The harpoon tower (slows) is in the game, see "The harpoon tower" below. The culverin (a long gun that hunts gunboats and siege barges, T43) is proposed behind the flag `defenses_v2` and not in the game yet: [specs/T43-new-defenses.md](../specs/T43-new-defenses.md), [D048](DECISIONS.md).
 
 ### 5.1 How it is built (lane P, `feat/v3-campaign`)
 
