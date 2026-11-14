@@ -1,6 +1,6 @@
 # B3 current-game feedback audit
 
-Johannes Franz Lang (@frcola), with Codex assistance. Main baseline: `430b7b6`.
+Johannes Franz Lang (@frcola), with Codex assistance. Updated main baseline: `4eed652`. UI fixture captures use the unchanged feedback components from `430b7b6`; the main update adds unrelated pure targeting/pathing modules.
 Parent [issue #30](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/30).
 
 ## Agreed scope and interpretation
@@ -53,8 +53,8 @@ Disabled-action rows are preventive feedback, not a claim that a rejected reques
 
 ## Evidence totals
 
-Help PR: 2,997 frontend tests, build/budget/text lint, 33 accessibility screens and
-33 demo checks passed. Shortcuts PR: the same 2,997-test count on its independent
+Help PR: 3,036 frontend tests, build/budget/text lint, 33 accessibility screens and
+33 demo checks passed. Shortcuts PR: the same 3,036-test count on its independent
 branch, plus its native failed-module request/retry tests, and the same applicable gates.
 Exact commands/results are in the two PR descriptions. No existing test was removed,
 skipped or weakened. Shortcuts red proof selected only its new native-load regression;
