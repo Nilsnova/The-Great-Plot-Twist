@@ -161,3 +161,12 @@ The rows that start with "v3" were written on Fri 13 Nov 2026 at `6c9ffb3`. Coun
 | What I built / why | Where and command | Covers | Misses |
 |---|---|---|---|
 | Number-only rank shield beside the cabin, statue at wave 25 and tree sizes of 100% / 110% / 120%; makes saved island progress visible | [Rule tests](../frontend/tests/island/decorations.test.js) and [browser component test](../frontend/tests/island/decorations-dom.test.js): `cd frontend && npm test -- tests/island/decorations.test.js tests/island/decorations-dom.test.js`; [game capture](../frontend/scripts/check-island-decorations.mjs): `cd frontend && node scripts/check-island-decorations.mjs` | Recorded win events update 21 → 22 → 29 → 30; each ten-wave rank boundary, 24/25 statue boundary, invalid records, house removal/duplicates, actual local house builds grow trees from 100% to 110% to 120%, lower progress on another island, art reuse, cleanup and unchanged colliders; full local game wiring and 1280 × 720 / 375 × 812 screenshots with a fake API | Live Supabase progress and real visits, physical phones, actual competitive play balance; ornaments are drawn on Canvas rather than exposed as interactive controls |
+
+## T27 — Ianno Hollensteiner — Captain shooting direction
+
+| What I built / where / why | Checks | What they cover | What they miss |
+|---|---|---|---|
+| Exact-angle musket aiming and upright directional bodies: `pirates/poses.js`, `pirates/shot-art.js`, `art/people.js`; shared by `player/character.js` and `world/others/index.js` | `cd frontend && npm test -- tests/pirates/poses.test.js`; `node scripts/check-shooting-direction.js`; `npm run test:mp` | Projected aim at cardinal, diagonal and intermediate angles; malformed/zero directions; color and expiry; real local/remote renderers at 1280 × 720 and 375 × 812; one body, idle restoration, texture reuse/disposal; multiplayer uses the fake room | Live Supabase, physical phones, a continuously turning 3D body; direction fixture injects controlled events; body/gun overlap is also visually reviewed |
+
+[Walkthrough part 30](WALKTHROUGH.md#30-captain-shooting-direction--ianno-hollensteiner-t27)
+and [recorded results](../specs/T27-shooting-direction.md).

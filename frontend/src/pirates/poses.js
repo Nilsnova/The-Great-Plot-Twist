@@ -20,7 +20,13 @@ const finite = value => Number.isFinite(value);
 // A wave event -> the pose it starts ({kind, flip}), or null.
 export function poseOf(event) {
   if (!event || event.by == null) return null;
-  if (event.type === 'captain_fired' && finite(event.x) && finite(event.toX)) return {kind: 'musket', flip: event.toX < event.x};
+  if (event.type === 'captain_fired') {
+    if (![event.x, event.z, event.toX, event.toZ].every(finite)) return null;
+    const dx = event.toX - event.x, dz = event.toZ - event.z;
+    if (dx === 0 && dz === 0) return null;
+    // Screen depth is compressed by .72 (world/art.js). The sprite mirrors left shots.
+    return {kind: 'musket', flip: dx < 0, angle: Math.atan2(dz * .72, Math.abs(dx))};
+  }
   if (event.type === 'captain_struck' && finite(event.x) && finite(event.toX)) return {kind: 'cutlass', flip: event.toX < event.x};
   return null;
 }
@@ -33,7 +39,7 @@ export function poseFrame(pose, colour) {
   return `captain-${n}-musket-${pose.age < spec.fire ? 2 : 1}`;
 }
 
-// now(): seconds. One pose per captain (the latest wins); get(by) answers {kind, flip, age} while it lasts.
+// now(): seconds. One pose per captain (the latest wins); get(by) answers {kind, flip, angle, age} while it lasts.
 export function createPoses({now = () => performance.now() / 1000} = {}) {
   const started = new Map();
   return {
@@ -48,7 +54,8 @@ export function createPoses({now = () => performance.now() / 1000} = {}) {
       if (!pose) return null;
       const age = now() - pose.at;
       if (age >= POSES[pose.kind].seconds) { started.delete(by); return null; }
-      return {kind: pose.kind, flip: pose.flip, age};
+      const {at, ...drawing} = pose;
+      return {...drawing, age};
     },
     clear() { started.clear(); },
   };

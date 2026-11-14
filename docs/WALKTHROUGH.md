@@ -88,6 +88,7 @@ flowchart LR
 | The voice, lines, captions | [26. The narrator](#26-the-narrator-lines-the-voice-pipeline-and-captions) |
 | The cartoon art | [27. Cartoon art](#27-the-cartoon-art-drawn-in-code) |
 | Money functions, security invoker, migrations, md5, RLS | [28. Database and server in v3](#28-the-database-and-the-server-in-v3) |
+| Captain shooting angles, arms and body/gun overlap | [30. Shooting direction](#30-captain-shooting-direction--ianno-hollensteiner-t27) |
 | Tests | [Q2](#q2-what-do-the-tests-cover-and-what-do-they-not-cover) and [TEST-MAP.md](TEST-MAP.md) |
 
 ## 1. The browser game
@@ -1126,6 +1127,48 @@ The game keeps working. Every provider sits behind one server adapter with a cac
 16. **How do you add a new feature safely?** Behind a feature flag (off by default), with a server route, tests first and, for data, a new migration with RLS ([ENGINEERING.md](ENGINEERING.md), recipes 4.1, 4.2, 4.5). A new tower: `islands.json`, `CONFIG` in `sim.js`, a sprite and a balance test (part 11).
 17. **Why is the mystery code still there?** It was removed from the browser on 10 Nov; deleting the server part and tables is a later cleanup, and the `case` flag keeps it off ([D031](DECISIONS.md)).
 18. **What would you do with 3 more weeks?** Add CI for every PR, remove the case code, replay the wave simulation on the server to check `survived`, give previews their own database, and test with 40 real phones ([FINAL-ROADMAP.md](FINAL-ROADMAP.md), [contribute/IDEAS.md](contribute/IDEAS.md)).
+
+## 30. Captain shooting direction — Ianno Hollensteiner (T27)
+
+![Eight reviewed shooting directions](../frontend/captures/T27/after/eight-directions-preview.png)
+
+**What and where.** [poses.js](../frontend/src/pirates/poses.js) subtracts a shot’s
+start coordinates from its target. `atan2(dz * .72, abs(dx))` gives the musket’s
+angle on screen; `.72` matches [the world projection](../frontend/src/world/art.js).
+A shot to the left mirrors the drawing. This supports arbitrary angles, not only
+four or eight directions. Missing, nonfinite or zero-length directions start no pose.
+
+**Why this way.** [people.js](../frontend/src/art/people.js) reuses the existing
+captain body, palette and gun. The body stays upright and selects a front, back,
+side or diagonal view; the musket rotates by the exact projected angle. When aiming
+away from the camera, the body is painted over the gun; when aiming toward us, the
+gun is in front. The resting arms are omitted, leaving two sleeves and grip
+hands. A downward shot holds the grip centrally; shots away shift toward the shoulder.
+[shot-art.js](../frontend/src/pirates/shot-art.js) repaints only when the angle,
+color or firing phase changes. It reuses one texture/material per captain, at a
+fixed density so viewport changes do not change the GPU allocation’s dimensions.
+
+**Local and multiplayer.** [character.js](../frontend/src/player/character.js) and
+[the teammate renderer](../frontend/src/world/others/index.js) use the same shot
+painter and pose. The existing timer restores walking or idle after firing, and
+only one body is visible. Teammate cleanup and [game cleanup](../frontend/src/game.js)
+release the new material and texture. No new room payload or saved value is needed.
+
+**Limits and how it could change.** The gun aims continuously, but the upright body
+changes between directional drawings; this is not a 3D character. The existing
+48 × 32 box and feet anchor stay fixed, so the gun is shortened in the aiming
+pose to fit its rotation. Cutlass art, hit rules, damage and movement are unchanged.
+A future body animation could smooth turns without changing the shot direction.
+
+**Evidence and authorship.** Codex drafted the change for Ianno, who must review
+and explain it. [Pose tests](../frontend/tests/pirates/poses.test.js) check the
+projected barrel vector for cardinal, diagonal and intermediate targets, invalid
+coordinates, color and expiry. [The browser fixture](../frontend/scripts/check-shooting-direction.js)
+checks both renderers on two pages at both required sizes, one visible body,
+return to idle, distinct rendered views, texture reuse and cleanup. It injects
+shot events rather than proving live Supabase delivery. See
+[the results and screenshots](../specs/T27-shooting-direction.md) and
+[the test map](TEST-MAP.md#t27--ianno-hollensteiner--captain-shooting-direction).
 
 ## Where older docs differ from the code
 

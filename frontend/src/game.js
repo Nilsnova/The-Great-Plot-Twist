@@ -302,7 +302,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     if(disposed)return;disposed=true;narrator.dispose();container.removeEventListener('close',panelClosed,true);classDemo?.dispose();classDemo=null;waves?.dispose();waves=null;island?.dispose();island=null;void pirates?.then(harness=>harness?.dispose());
     harbor?.dispose();mapTouch?.dispose();touch.dispose();gamepad.dispose();marketUi?.dispose();sportsUi.dispose();stopLiveWeather();stopPreferences();stopMotion();stop();stopView();stopListening();for(const stopOne of stopScale)stopOne?.(); stopArrivals(); stopVisitNamed(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
     window.removeEventListener('resize', resize); createLifetime(scene, art)();
-    setMenuTravel(null);disposeDiagnostics();graphics.renderer.dispose();graphics.renderer.domElement.remove(); delete window.__island;
+    setMenuTravel(null);disposeDiagnostics();character.dispose();graphics.renderer.dispose();graphics.renderer.domElement.remove(); delete window.__island;
   }
   if (import.meta.hot) import.meta.hot.dispose(dispose);
   graphics.renderer.domElement.addEventListener('webglcontextlost', event => {

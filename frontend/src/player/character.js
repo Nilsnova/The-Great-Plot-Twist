@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { placeArt, projectPoint } from '../world/art.js';
 import { WALK_SPEED } from './controller.js';
 import { poseFrame } from '../pirates/poses.js';
+import { createShotArt } from '../pirates/shot-art.js';
 
 export function createCharacter(art, { reducedMotion = false } = {}) {
   const group = new THREE.Object3D();
@@ -11,6 +12,7 @@ export function createCharacter(art, { reducedMotion = false } = {}) {
   // A shot or a blow (src/pirates/poses.js): this body shows the musket or cutlass frame in its own colour,
   // facing the shot, on its own 48 px mesh (the walking frames are 24 px), then walks on.
   let pose = null, poseMesh = null;
+  const shotArt = createShotArt();
   const colourIndex = () => (body.startsWith('captain-') ? Number(body.slice(8)) - 1 : 0);
   // Your captain's colour (GAME-V3.md §7): the lobby's index 0-9 picks captain-1 … captain-10 (null: the explorer).
   const named = view => (view ? `${body}-${view}` : body);
@@ -24,8 +26,9 @@ export function createCharacter(art, { reducedMotion = false } = {}) {
     // How big your captain draws (1.4 during a wave, so it reads at the battle camera).
     setScale(value) { scale = Number.isFinite(value) && value > 0 ? value : 1; },
     // {kind: 'musket' | 'cutlass', flip, age} while a pose lasts (the wave controller's), null to walk.
-    pose(next) { pose = next && typeof next === 'object' ? { kind: next.kind, flip: next.flip === true, age: next.age } : null; },
+    pose(next) { pose = next && typeof next === 'object' ? { kind: next.kind, flip: next.flip === true, angle: next.angle, age: next.age } : null; },
     get poseMesh() { return poseMesh; },
+    dispose() { shotArt.dispose(); },
     face(dx, dz) {
       if (Math.abs(dz) > Math.abs(dx)) { facing = dz < 0 ? named('back') : body; flip = 1; }
       else if (Math.abs(dx) > 0.001) { facing = art[named('side')] ? named('side') : body; flip = dx < 0 ? -1 : 1; }
@@ -49,7 +52,7 @@ export function createCharacter(art, { reducedMotion = false } = {}) {
       if (posed && art[posed]) {
         if (!poseMesh) { poseMesh = placeArt(holder, art, posed, 0, 0); poseMesh.name = 'captain-pose'; }
         if (sprite.parent && poseMesh.parent !== sprite.parent) sprite.parent.add(poseMesh);
-        poseMesh.material = art[posed]; poseMesh.userData.pose = posed;
+        poseMesh.material = shotArt.material(pose, colourIndex()) ?? art[posed]; poseMesh.userData.pose = posed;
         poseMesh.position.set(point.x, point.y, 0); poseMesh.scale.set((pose.flip ? -1 : 1) * scale, scale, 1);
         poseMesh.renderOrder = sprite.renderOrder; poseMesh.visible = true; sprite.visible = false;
       } else {

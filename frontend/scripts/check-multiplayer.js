@@ -36,7 +36,7 @@ const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
 const out = process.argv[2] ?? `/Users/nilslenke/Developer/fri6-integration/td-shots/mp/check-${stamp}`;
 await mkdir(out, {recursive: true});
 const WORLD = `mp${Date.now().toString(36)}`;
-const env = await openWorldBrowser(), context = env.page.context();
+const env = await openWorldBrowser({hmr: false}), context = env.page.context();
 const pages = [];
 const log = (...args) => console.log(...args);
 
@@ -220,7 +220,7 @@ const poseSeen = (page, figure) => page.waitForFunction(figure => { let at = nul
 const zoomClip = (page, at) => { const {width, height} = page.viewportSize(), w = Math.round(width / 3), h = Math.round(w * .7);
   return {x: Math.max(0, Math.min(width - w, at.x - w / 2)), y: Math.max(0, Math.min(height - h, at.y - h * .65)), width: w, height: h}; };
 async function musketPose(host, ben) {
-  const sizes = [[1280, 800], [390, 844]], seen = {own: [], figure: []};
+  const sizes = [[1280, 720], [375, 812]], seen = {own: [], figure: []};
   let probe = null;
   for (const [width, height] of sizes) {
     await host.page.setViewportSize({width, height}); await ben.page.setViewportSize({width, height});
@@ -637,7 +637,7 @@ try {
     results.push(`musket pose: the owner's own body posed at ${seen.own.join(', ') || 'no size'}, his figure on the friend's page at ${seen.figure.join(', ') || 'no size'}`);
     if (probe) results.push(`musket pose probe on the friend's page: ${JSON.stringify(probe)}`);
     assert.equal(seen.own.length, 2, "the owner's own character takes the musket pose when he fires (both sizes)");
-    assert.ok([...seen.own, ...seen.figure].every(item => /musket-[12]$/.test(item)), `the poses are the musket's: ${[...seen.own, ...seen.figure]}`);
+    assert.ok([...seen.own, ...seen.figure].every(item => /musket-[12](?:-(?:front|back))?$/.test(item)), `the poses are the musket's: ${[...seen.own, ...seen.figure]}`);
     assert.ok(seen.figure.length >= 1, "the owner's figure on the friend's page takes the musket pose");
   }
   for (const captain of [ben, ana, max]) {
