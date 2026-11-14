@@ -27,6 +27,7 @@ FLAG_NAMES = (
     "festival",
     "demo",
     "islands",
+    "rescue",  # T38 last-chance rescue (D044): off until the sim hook ships
 )
 
 

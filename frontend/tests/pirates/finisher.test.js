@@ -175,14 +175,17 @@ describe('the outcome', () => {
     finisher.begin(events);
     expect(events[0]).toMatchObject({ type: 'finisher_started', kind: 'redtide', players: ['a', 'b'] });
     expect(finisher.state().tasks.map(item => item.task)).toEqual(['haul', 'cannon', 'duel']);
-    // Both play the haul and the duel well and miss with the great cannon.
-    const mixed = { haul: BOTS.good.haul, cannon: BOTS.bad.cannon, duel: BOTS.good.duel };
+    // Both play the haul and the duel well and miss with the great cannon. T39: at wave 100 the zone runs
+    // faster and the arrows come quicker, so the bots read the finisher's frozen difficulty.
+    const d = finisher.state().difficulty;
+    expect(d.haul.speed).toBeGreaterThan(1);
+    const mixed = { haul: (s, salt) => Math.round(zoneAt(s, salt, d.haul.speed)), cannon: BOTS.bad.cannon, duel: BOTS.good.duel };
     const sent = { a: 0, b: 0 };
     while (finisher.tick(events)) {
       const f = finisher.state();
       for (const by of ['a', 'b']) while (!f.outcome && sent[by] + 10 <= f.sample) {
         const from = sent[by], marks = [];
-        for (let s = from; s < from + 10; s++) { const task = f.tasks.find(item => s >= item.from && s < item.to); marks.push(task ? mixed[task.task](s - task.from, f.salt, by, 9) : -1); }
+        for (let s = from; s < from + 10; s++) { const task = f.tasks.find(item => s >= item.from && s < item.to); marks.push(task ? mixed[task.task](s - task.from, f.salt, by, d.duel.prompt) : -1); }
         finisher.input({ type: 'finisher_input', by, from, marks }); sent[by] += 10;
       }
     }

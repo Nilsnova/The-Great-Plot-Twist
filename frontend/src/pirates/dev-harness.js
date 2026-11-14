@@ -99,7 +99,7 @@ export function startPirateDemo(ctx) {
     if (query.get('place') === 'point') await sail('lighthouse_isle', 4, -2);
     else await sail('home_islet', first.x - 1.6, first.z + .8);
     const kind = query.get('practice');
-    if (['haul', 'cannon', 'duel', 'redtide'].includes(kind)) {
+    if (['haul', 'cannon', 'duel', 'redtide', 'rescue'].includes(kind)) {
       const module = await import('./finisher/checkpoint.js');
       if (!disposed) checkpoint = module.startFinisherCheckpoint({container: ctx.container, kind, reducedMotion: ctx.reducedMotion,
         player: query.get('practicePlayer') || 'local-demo', island: query.get('practiceIsland') || 'demo-island'});
