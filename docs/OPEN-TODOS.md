@@ -58,6 +58,8 @@ The game is built and live; nobody waits for anyone. You extend it.
 
 **T11–T21 are taken by the project owner's agents again (from Thu 12 Nov, ~07:30): do not pick them.** T4–T10 are yours. Migrations are applied only by the project owner. T1, T2, T17 and T18 all change `frontend/src/pirates/sim.js`: claim one at a time, or agree in the group chat who goes first.
 
+- [x] **B3 connection-retry slice, Johannes:** implemented in draft [PR #38](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/38); six regression cases and [evidence](evidence/B3-connection/README.md). Full B3 and human review remain open; no login/API changes.
+
 ## 3. Every member, before the freeze (walkthrough = 20% of the grade)
 
 - [ ] **Walkthrough sheet** ([FINAL-ROADMAP A1](FINAL-ROADMAP.md#a-repository-walkthrough-criterion-6-20)): each member writes the page about their own lane (what, where, why, limits, how it could change) in `docs/WALKTHROUGH.md`; one member adds the database/server page with the project owner.
