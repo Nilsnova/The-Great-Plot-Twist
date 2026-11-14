@@ -70,6 +70,7 @@ from server.routes import (
     predictions,
     save,
     sports,
+    wall_recovery,
     waves,
     weather,
     world,
@@ -296,6 +297,7 @@ def create_app(
     app.include_router(arsenal.router, prefix="/api")
     app.include_router(games.router, prefix="/api")
     app.include_router(waves.router, prefix="/api")
+    app.include_router(wall_recovery.router, prefix="/api")
     app.include_router(pirate_point.router, prefix="/api")
     app.include_router(predictions.router, prefix="/api")
     app.include_router(duels.router, prefix="/api")

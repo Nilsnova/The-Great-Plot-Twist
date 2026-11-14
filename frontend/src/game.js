@@ -207,6 +207,9 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
         openHarborStall:id=>void(id==='weather'?harbor.openWeather():id==='market'?openMarket():id==='match'?sportsUi.open().catch(()=>{}):null),
         // The visit chip: the old "Visiting … · Sail home" only where travel applies (src/island/one-island.js).
         travel:()=>travelOpen(),
+        // D039 (proposed): lasting wall damage and the paid Repair/Rebuild, only while the server's flag is on.
+        wallRecovery:()=>{const services=findPanelServices(session);return services?.isReady()?services.getFlags()?.wall_recovery===true:false;},
+
         // The arsenal (T41, D042): the server's flag "arsenal"; in the dev fake only with ?arsenal=1.
         arsenalOn:()=>islandsMode==='fake'?new URLSearchParams(location.search).get('arsenal')==='1':findPanelServices(session)?.getFlags?.()?.arsenal===true});
       if(adapter)island.setPresence(adapter.read()?.presence);
