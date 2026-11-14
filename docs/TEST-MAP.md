@@ -172,6 +172,12 @@ The rows that start with "v3" were written on Fri 13 Nov 2026 at `6c9ffb3`. Coun
 [Walkthrough part 30](WALKTHROUGH.md#30-captain-shooting-direction--ianno-hollensteiner-t27)
 and [recorded results](../specs/T27-shooting-direction.md).
 
+### B3 shortcuts recovery — Johannes Franz Lang
+
+| Built / why | Where / run | Covers | Misses |
+|---|---|---|---|
+| Touch-usable shortcuts loading/error recovery | [browser tests](../frontend/tests/ui/shortcuts-loading.test.js); `cd frontend && npm test -- tests/ui/shortcuts-loading.test.js` | Real blocked module request/retry, duplicate pending open, cached reopen, late success/failure, disposal, keyboard retry, Back/Escape, focus and both viewports | Real prolonged outages, physical phones and screen readers; no API/login changes |
+
 ### T7 · Ianno Hollensteiner · Weekly island leaderboard
 
 | What I built / why | Where and command | Covers | Misses |

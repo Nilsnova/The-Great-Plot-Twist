@@ -129,3 +129,5 @@ T28 UX follow-up: [Learn boss minigames with optional first-time practice](../sp
 The requested [defense and shared-island expansion](BUILD-PLAN.md#6-defense-and-shared-island-expansion) adds T29–T47, proposed by Ianno Hollensteiner. It preserves this grading/submission plan and the feature freeze. Start with investigation and reviewed contracts; schedule large implementation packages after the deadline unless the team explicitly revises the schedule. Existing T3/T5/T6/T7/T26 are extended, not replaced. Claiming, human review and merge rules above still apply.
 
 Planning handover (14 Nov): roadmap/task expansion drafted by Ianno Hollensteiner; documentation checks completed. Implementation tasks remain proposed, not done. Peer review and explain-back are pending.
+
+- [x] **B3 current-v3 feedback pass:** implemented by Johannes in drafts [#31](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/31) and [#32](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/32). [Audit, screenshots and limits](B3-FEEDBACK-AUDIT.md). This scoped pass does not claim the historical mystery/email workflows or live provider/multiplayer proof. Human review remains.
