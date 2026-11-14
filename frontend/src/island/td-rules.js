@@ -76,7 +76,8 @@ export {opensText};
 
 // The unlocks for a won wave, as one plain object:
 //   {wonWave, levels: {wall, cannon, mortar, harpoon, culverin, watchtower, house}, captain, crew: {gunner, carpenter, lookout}, next}
-// (the culverin opens only through the server's unlocks: the browser's campaign table does not hold it)
+// (a kind outside the campaign table, the culverin, opens by its own levelWaves, as unlockWave() reads them: a
+// visitor's card reads a friend's island through this table, and the server allows what that island has won)
 // levels[kind] 0 = locked; crew[id] true = may hire; next = {wave, title} of the next step or null.
 export function unlocksFor(wonWave = 0) {
   const won = Number.isSafeInteger(wonWave) && wonWave > 0 ? wonWave : 0;
@@ -88,6 +89,7 @@ export function unlocksFor(wonWave = 0) {
     if (step.captain) captain = step.captain;
     for (const id of step.crew) crew[id] = true;
   }
+  for (const [kind, info] of Object.entries(BUILDINGS)) if (info.levelWaves) levels[kind] = info.levelWaves.filter(wave => wave <= won).length;
   return {wonWave: won, levels, captain, crew, next};
 }
 // The wave after which a kind's level (or a crew member) first appears, or null. A kind outside the campaign

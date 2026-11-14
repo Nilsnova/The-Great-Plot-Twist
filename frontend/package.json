@@ -24,6 +24,8 @@
     "test:walls": "node scripts/check-wall-recovery-mp.js",
     "test:rescue": "node scripts/check-rescue-mp.js",
     "test:arsenal": "node scripts/check-arsenal-mp.js",
+    "test:culverin": "node scripts/check-culverin-mp.js",
+    "test:rules": "node scripts/check-rules-mp.js",
     "capture:wow": "node scripts/capture-wow.js",
     "capture:integrated": "node scripts/capture-integrated.js",
     "test:loading": "npm run build && node scripts/check-loading.js",

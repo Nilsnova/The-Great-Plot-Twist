@@ -44,6 +44,17 @@ describe('the finish with a rescue', () => {
     expect(wave.rules).toEqual(['rescue']);
     expect((await world.api.currentWave('own')).rules).toEqual(['rescue']);
   });
+  it('the fake keeps a wave\'s first rule set even when it is empty, whatever the flags say later', async () => {
+    const flags = {}, time = clock(), world = createFakeIslandTransport({ now: time.now, version: 2, flags });
+    const wave = await world.api.startWave({ where: 'own', actionUid: 'startempty1' });
+    expect(wave.rules).toBeUndefined();
+    flags.tower_health = true; // switched on mid-wave: the starter plays none, so must every later answer
+    expect((await world.api.currentWave('own')).rules).toBeUndefined();
+    const onFlags = { rescue: true }, other = createFakeIslandTransport({ now: time.now, version: 2, flags: onFlags });
+    await other.api.startWave({ where: 'own', actionUid: 'startkept01' });
+    delete onFlags.rescue; // every rule flag off mid-wave: the wave keeps the starter's rules
+    expect((await other.api.currentWave('own')).rules).toEqual(['rescue']);
+  });
   it('the fake server ignores a rescue below wave 4 (both rules ring wave 1 there)', async () => {
     const time = clock(), transport = createFakeIslandTransport({ now: time.now, version: 2, flags: { rescue: true } }), api = transport.api;
     const wave = await api.startWave({ where: 'own', actionUid: 'startearly1' });

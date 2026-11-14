@@ -2,6 +2,11 @@
 -- The simulation rules of each wave (T33 tower_health, T34/T35 pathing, T38 rescue).
 -- Used by: backend/server/island/wave_rules.py (POST /api/waves/start, /join and
 -- GET /api/waves/current), only while at least one of those flags is on.
+-- SUPERSEDED (comment added after PR #63; no statement below changed): the sentence above is
+-- outdated. Since PR #63 the server calls wave_rules_keep() on every start, join and current
+-- answer, even while every rule flag is off, and keeps the empty set too, so this migration is
+-- needed whatever the flags say. Also, the check rule below was widened for defenses_v2 by
+-- 20261114140000_culverin.sql.
 --
 -- WHY
 --   The server's flags decide which sim rules a wave plays with, and every
