@@ -65,7 +65,7 @@ The game is built and live; nobody waits for anyone. You extend it.
 - [ ] **Invalid input** (D1): one test per rejected input in your lane (empty, too long, wrong type, repeated click).
 - [x] **D1 current-demo sweep, Johannes:** 67 added cases across class joins, locks/place search, duels, islands and waves; existing email and repeat coverage audited. Evidence and limits in [PR #5](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/5). Other members still add tests for their own changes.
 - [ ] **Test map** (E1): add your lane's row to `docs/TEST-MAP.md`: which tests cover it and what they do not.
-- [ ] **README line** (F1, by Fri 20 Nov): add your own name and student number to the README members table yourself.
+- [x] **README line** (F1, by Fri 20 Nov): add your own name and student number to the README members table yourself. *Done 15 Nov: Nils added all four rows from the numbers each member posted in the team chat; each member should check their own row.*
 
 ## 4. Account setup (needs dashboard access; the project owner or a member with access)
 
