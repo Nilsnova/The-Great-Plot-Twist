@@ -14,7 +14,7 @@ try{
  await page.getByRole('button',{name:'Sign in with GitHub',exact:true}).click();await page.waitForFunction(()=>window.__plotTwist.adapter.read().account.state==='signed_in');
  await page.evaluate(()=>{const adapter=window.__plotTwist.adapter,dispose=adapter.dispose;window.__disposeCount=0;adapter.dispose=()=>{window.__disposeCount++;dispose();};});
  await page.route(terrainRoute,route=>route.fulfill({status:503,body:''}));await playFromTitle(page);
- await page.getByText('The coast could not load. Check the connection and WebGL 2, then try again.',{exact:true}).waitFor();
+ await page.getByText('The coast could not load. Reload the page; if it still fails, check the connection and WebGL 2.',{exact:true}).waitFor();
  check(await page.evaluate(()=>window.__disposeCount===0),'A failed world load keeps the caller-owned account adapter alive');
  check(await page.evaluate(async()=>{const result=await window.__plotTwist.adapter.setEmote('wave');return result.accepted;}),'The same adapter still accepts intents after the failure');
  report.expectedLoadDiagnostics=[...env.errors];const priorErrors=env.errors.length;
