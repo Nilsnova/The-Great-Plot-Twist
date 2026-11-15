@@ -14,6 +14,8 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
+**15 Nov, T33 persistent tower damage / Ianno:** [draft PR #85](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/85) contains design only; no implementation is authorized. Design revision is pending the user’s answer on when automatic repair runs, after the request to pair automatic repair with paid immediate recovery; all eligible HP-bearing defenses remain walls plus cannon/mortar/harpoon/culverin, with watchtower and houses excluded by current scope. Ianno’s scope review is still required.
+
 
 **14 Nov, B2 / Johannes:** [draft PR #58](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/58) removes four 40px island-button overrides: Hire crew, Move, Tear down and Players now use the existing 44px kit minimum. Four browser cases and real fake-game before/after captures at 375x812, 390x844 and 1280x720; [measurements/limits](evidence/B2-phone-targets/README.md). Full frontend: 260 files / 3,206 tests; build/budget/text lint, accessibility 33 screens and demo 33 checks pass on main `4d83dcd`. Login/APIs unchanged; draft, author and human review pending. Full B2 and physical-device checks remain open.
 **14 Nov, B2 entry/lobby / Johannes:** [draft PR #61](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/61) fixes visually truncated captain names in full phone lobbies: a small mobile grid lets names wrap and puts status below. Seven focused cases, plus a repeatable 21-panel title-to-lobby fake-game audit at 375x812, 390x844 and 1280x720. Full frontend: 260 files / 3,209 tests; build/budget/text lint, accessibility 33 screens and demo 33 checks pass on the branch from main `4d83dcd`. [Before/after, entry audit and limits](evidence/B2-entry-lobby/README.md). Login/APIs unchanged; independent of #58. Draft; author/human review, physical phone/keyboard and remaining B2 game views are open.
@@ -271,6 +273,7 @@ teammate to review the current diff; Nils (`Nilsnova`) is the suggested reviewer
 
 
 **Expansion next:** claim one task from the [new board](OPEN-TODOS.md#9-defense-and-shared-island-expansion-proposal-14-nov), starting with T29/T30 or independent T37/T42 design. Coordinate shared files before writing code; existing lane and submission priorities remain.
+**T33 / Ianno:** finish design-only PR #85 after the user chooses tower automatic recovery mode (full after 600 seconds, matching walls, or gradual); do not begin implementation before final design approval. Human review remains pending.
 **D1 / Johannes:** explain the request, response and no-write assertions in [PR #5](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/5),
 answer the three walkthrough questions, then ask Nils (`Nilsnova`) for independent human review.
 
@@ -584,6 +587,7 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 
 ## Log
 
+- **2026-11-15, T33 persistent tower damage, branch `docs/t33-persistent-tower-damage-design`.** Codex for Ianno opened draft [PR #85](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/85), adding a proposed design spec only. Source links and `git diff --check` pass. User confirmed automatic recovery between waves, paid instant repair between waves and no new passive healing during battle. Tower automatic mode (full after 600 seconds or gradual) remains undecided, so final design approval and human review are pending. No production code, migration, live change or implementation authorization.
 - **2026-11-15, no overlaps, branch `fix/overlaps`.** Claude, for Nils: an overlap audit (`npm run test:overlaps`) and its fixes: toasts under the wave bar and under an open card's header, the first-wave hint inside the wave bar, a shorter bar on short screens, battle guide badges that no longer sit on each other (axe beside the wall bar, skull off a shore wall, shared route cells drawn once, thinner routes on phones). No game rules changed; no PR yet.
 - **2026-11-15, battle clarity (D053), branch `feat/battle-clarity`.** Claude, for Nils after playtesting: landings, routes and the heart drawn on the island (faint between waves), wall hp bars, the cutlass as a sweep (reload 0.75 s), an icon goal HUD with a first-wave hint, and walls that block until broken (pathing). No migration; no PR yet.
 - **15 Nov 2026 · Claude, for Nils / D050:** bigger Harbor stakes on `feat/bigger-stakes`: one stake picker (− / + in 5 % steps, 10 % / 25 % / 50 % / All in, "Win 🪙 X") at the match board and the market stall, match board 1 to 10,000 a bet and 25,000 a day at double or nothing, market calls 5 to 10,000; migration `20261115120000_bigger_stakes.sql` not applied anywhere yet; no PR or merge.
