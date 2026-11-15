@@ -58,7 +58,8 @@ export function arsenalModel({answer = null, level = 1, busy = null, message = '
   const title = 'Arsenal';
   if (!readArsenal(answer)) {
     return {title, lead: loading ? 'Opening the arsenal…' : 'The arsenal could not be opened.', stock: '', full: false,
-      carry: null, back: null, rack: [], shop: [], message, coins: ''};
+      carry: null, back: null, rack: [], shop: [], message, coins: '',
+      retry: {label: loading ? 'Opening…' : 'Try again', disabled: loading}};
   }
   const capacity = answer.capacity || CAPACITY, mine = answer.copies.find(copy => copy.you) ?? null;
   const full = answer.stored >= capacity, carries = !!mine;

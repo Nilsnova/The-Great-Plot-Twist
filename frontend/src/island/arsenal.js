@@ -25,7 +25,8 @@ export function createArsenal({api, ui, emit = () => {}, enabled = () => false, 
   const model = () => arsenalModel({answer: current(), level: level(), busy, message, loading: loading && !current()});
   const handlers = {take: id => void move(id, () => api.take({copy: id, code: code()}), took(id)),
     giveBack: () => void move('return', () => api.giveBack({code: code()}), data => `${nameOf(answer ?? data, current()?.mine)} is back on the rack. You carry the musket.`),
-    buy: id => void move(`buy:${id}`, () => api.buy({weapon: id, code: code()}), bought(id))};
+    buy: id => void move(`buy:${id}`, () => api.buy({weapon: id, code: code()}), bought(id)),
+    retry: () => { if (!loading) { message = ''; loadFailed = false; void refresh(); } }};
   function took(id) {
     return data => (data.mine === id && answer?.mine && answer.mine !== id ? `Swapped: you carry ${nameOf(data, id)} now.` : `You carry ${nameOf(data, id)} now.`);
   }
@@ -67,7 +68,7 @@ export function createArsenal({api, ui, emit = () => {}, enabled = () => false, 
     redraw();
   }
   return {
-    open() { message = ''; loadFailed = false; ui.arsenalCard(model(), handlers); void refresh(); },
+    open() { message = ''; loadFailed = false; loading = true; ui.arsenalCard(model(), handlers); void refresh(); },
     refresh, redraw,
     weapon() {
       if (!enabled()) return null;
