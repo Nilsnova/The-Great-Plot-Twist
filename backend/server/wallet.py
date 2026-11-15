@@ -14,8 +14,8 @@ single step. This file does two things:
 Every reason has a direction. "earn" adds coins (a positive amount), "spend" takes coins away
 (a negative amount) and "either" may go both ways (admin_adjust, fresh_start and island_reset).
 The list of reasons lives in the database table wallet_reasons. WALLET_REASONS below is its copy
-in Python, and a test fails if the two differ. The database checks the direction too, so even a bug here
-cannot hand out coins.
+in Python, and a test fails if the two differ. The database checks the direction too, so even a
+bug here cannot hand out coins.
 
 To add a reason, in one pull request: write a migration with one INSERT into wallet_reasons and
 add the same (reason, direction) pair at the END of WALLET_REASONS. Never rename a reason or
