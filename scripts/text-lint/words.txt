@@ -438,6 +438,7 @@ command
 commander
 companies
 company
+compare
 compass
 complete
 completed

@@ -165,7 +165,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   // The arsenal (T41, D042): only while the server's flag "arsenal" is on; off, the old weapon shop stays.
   const arsenal = createArsenal({api: createArsenalApi({transport: transport ?? live}), ui, emit, enabled: () => arsenalOn() === true,
     code: () => (visiting ? displayIslandCode(visiting.code) : visitCode ? displayIslandCode(visitCode) : null),
-    place: () => (visiting ? 'visit' : 'own'), level: () => own?.captain?.level ?? 1, onCoins: coins => tookCoins(coins)});
+    place: () => (visiting ? 'visit' : 'own'), level: () => own?.captain?.level ?? 1,
+    skills: () => readSkills([...(own?.skills?.known ?? []), ...(isRole(own?.skills?.role) ? [own.skills.role] : [])]), onCoins: coins => tookCoins(coins)});
   const placeholder = mode === 'fake' || new URLSearchParams(search).get('wavedebug') === '1';
   const target = () => visiting ?? own;
   const where = () => (visiting ? displayIslandCode(visiting.code) : 'own');

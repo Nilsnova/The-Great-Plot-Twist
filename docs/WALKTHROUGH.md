@@ -1183,6 +1183,18 @@ The UI kit and shortcuts overlay are existing team code; Codex drafted the host 
 for Johannes. A fixed error message plus explicit retry is simpler than automatic
 retries or another networking layer. Live networks/physical phones remain unverified.
 
+## Johannes: Comparing arsenal weapons (U)
+
+**What:** Rack and shop options can be expanded to compare per-hit damage, range, reload time and firing mode with the weapon you carry. The displayed stats and comparisons use your level, learned skills and role, including reload floors.
+
+**Where/how:** index.js supplies the existing learned skills/role to the arsenal controller. arsenal-model.js calls the same captainStats calculator for both weapons and formats rounded differences. arsenal-ui.js draws native details/summary and a definition list; ui.js preserves open comparisons/focus by stable copy/shop keys on redraw. Source: [island/arsenal-model.js](../frontend/src/island/arsenal-model.js), [island/arsenal-ui.js](../frontend/src/island/arsenal-ui.js), [island/arsenal.js](../frontend/src/island/arsenal.js), [island/index.js](../frontend/src/island/index.js), [island/ui.js](../frontend/src/island/ui.js), [island/island.css](../frontend/src/island/island.css).
+
+**Why:** Reuse the real combat calculator, not a parallel formula or a universal weapon score: cone, pierce and area shots are not comparable by per-hit damage alone. Details remain optional so the card stays compact. No comparison opens or sends a transaction.
+
+**Tests:** [weapon-comparison.test.js](../frontend/tests/island/weapon-comparison.test.js), [weapon-comparison-dom.test.js](../frontend/tests/island/weapon-comparison-dom.test.js). 10 new cases: all five types, exact deltas, same type, invalid ids, learned skills/role/level, minimum reload and rounding, immutable server answer, native comparison at desktop/phone widths, actual fake-server learned skill, retained disclosure after refresh and no write from comparison.
+
+**Limits / possible change:** Per-hit numbers do not predict fleet outcomes, aim, pierce alignment or total area damage. Real provider/login/database behavior, physical phones and a screen-reader session are not covered. The UI word compare was checked in the macOS word dictionary before adding it to the house list. Broader server snapshots or navigation state would need a separately reviewed contract. [Evidence](evidence/U-weapon-comparison/README.md); [PR #96](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/96). Codex drafted/verified the implementation; Johannes's own review and independent human review remain pending.
+
 ## The three course questions
 
 ### Q1. Where is the data stored?

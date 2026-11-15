@@ -406,3 +406,9 @@ html:has(.island-card-docked[open]) .quest-strip{visibility:hidden}
 .island-arsenal-stats{margin:0;font-variant-numeric:tabular-nums;opacity:.85}
 .island-arsenal-type.is-locked{opacity:.7}
 .island-arsenal-copy .island-crew-text,.island-arsenal-type .island-crew-text{min-width:0}
+
+/* Optional comparisons remain readable without turning the rack into another menu. */
+.island-weapon-compare{margin-top:8px;font-size:.9em}
+.island-weapon-compare>summary{min-height:44px;align-content:center;cursor:pointer;font-weight:700}
+.island-weapon-compare dl{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:6px;margin:8px 0}
+.island-weapon-compare dd{margin:0;overflow-wrap:anywhere}

@@ -262,7 +262,12 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
   }
   // The arsenal (T41, D042): handlers {take(copyId), giveBack(), buy(typeId)}; drawn by arsenal-ui.js.
   function arsenalCard(model, handlers = {}) {
-    open('arsenal', model.title, body => drawArsenal(body, model, handlers, {button, line}));
+    const opened = new Set(kind === 'arsenal' ? [...modal.element.querySelectorAll('[data-compare][open]')].map(node => node.dataset.compare) : []);
+    open('arsenal', model.title, body => {
+      const target = drawArsenal(body, model, handlers, {button, line});
+      for (const detail of body.querySelectorAll('[data-compare]')) detail.open = opened.has(detail.dataset.compare);
+      return target;
+    });
   }
   function crewCard(model, onHire) {
     open('crew', model.title, body => {
