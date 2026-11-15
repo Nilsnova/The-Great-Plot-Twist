@@ -1164,6 +1164,25 @@ real Supabase remain separate checks; see [the test-map row](TEST-MAP.md#8-lane-
 A future click-to-walk feature could walk to the target before offering Use; that would be a
 separate change. Browser reach is guidance, not a server-side anti-cheat guarantee.
 
+## B3. Shortcuts loading and recovery — Johannes Franz Lang
+
+[shortcuts-host.js](../frontend/src/shell/shortcuts-host.js) owns the existing ? shortcut
+and lazy overlay. It now shows the shared native modal during loading and failure,
+with Try again and Back to game controls usable on phones. Successful import replaces
+feedback with the real shortcuts. The completed overlay is cached for later opens.
+
+`requested` rejects duplicate pending opens. `request` identifies an open attempt;
+close increments it so old completion cannot reopen the view. Disposal also removes
+the global key listener and the cached overlay. A failed promise is cleared so a later
+attempt can load again. Messages never expose the raw exception.
+
+[Seven browser cases](../frontend/tests/ui/shortcuts-loading.test.js) cover a real failed
+module request and successful retry, pending deduplication, cached reopen, late results,
+keyboard retry, Back/Escape, focus, disposal and both viewport sizes. [Audit](B3-FEEDBACK-AUDIT.md).
+The UI kit and shortcuts overlay are existing team code; Codex drafted the host change
+for Johannes. A fixed error message plus explicit retry is simpler than automatic
+retries or another networking layer. Live networks/physical phones remain unverified.
+
 ## The three course questions
 
 ### Q1. Where is the data stored?
