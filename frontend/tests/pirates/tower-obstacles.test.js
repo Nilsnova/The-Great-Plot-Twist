@@ -1,3 +1,4 @@
+// T35 tower footprint and route-shape helpers, sourced from T36 placement geometry.
 import {describe, expect, it} from 'vitest';
 import {FOOTPRINTS} from '../../src/island/placement.js';
 import {TOWER_FOOTPRINT, towerApproachPoint, towerEdgeDistance, towerObstacles} from '../../src/pirates/tower-obstacles.js';
