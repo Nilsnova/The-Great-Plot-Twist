@@ -214,11 +214,14 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
       for (const stall of model.stalls) {
         const item = node('li', `island-stall${stall.open ? '' : ' is-locked'}`); item.dataset.stall = stall.id;
         const text = node('div', 'island-stall-text');
-        text.append(node('strong', '', stall.name), node('p', 'island-stall-line', stall.line));
+        const name = node('strong', 'island-stall-name', stall.name);
+        if (stall.icon) { const icon = node('span', 'island-stall-icon', stall.icon); icon.setAttribute('aria-hidden', 'true'); name.prepend(icon); }
+        text.append(name, node('p', 'island-stall-line', stall.line));
         if (stall.reason) text.append(node('p', 'island-stall-reason', stall.reason));
         item.append(text);
         if (stall.open) {
           const go = button(stall.button, () => handlers.open?.(stall.id)); go.dataset.focus = `stall-${stall.id}`;
+          if (stall.label) go.setAttribute('aria-label', stall.label);
           item.append(go); focusable ??= go;
         }
         list.append(item);

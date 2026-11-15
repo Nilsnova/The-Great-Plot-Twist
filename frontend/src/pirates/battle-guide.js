@@ -24,7 +24,8 @@ export const GUIDE = Object.freeze({
   routeLimit: 400,     // at most this many steps per route (a route never visits a cell twice)
   heartReach: CONFIG.boarding.heartRadius,
   dotEvery: 1,         // one dot per grid cell (1 unit)
-  previewAlpha: .45,   // between waves: the routes and landings are a faint preview
+  previewAlpha: .38,   // between waves: the routes and landings are a faint preview (dots only, no chevrons)
+  chevronEvery: 6,     // in a wave: one chevron every this many cells (more on a phone), small dots between
   barShow: 1,          // a wall bar shows below this share of hp (or while the wall is hacked)
 });
 
@@ -255,6 +256,7 @@ const BAR = { good: RGB('#7ed957'), low: RGB('#ffd34d'), bad: RGB('#ff4a36') };
  * routes are worked out again only when routeKey() changes (a wall placed, broken, rebuilt or past a quarter of hp).
  */
 // sparse(): a phone-sized screen (overlap audit, 15 Nov): half the dots and fewer chevrons, so the routes stay readable.
+// Between waves the preview always draws half the dots and no chevrons.
 const phoneSized = () => typeof window !== 'undefined' && Math.min(window.innerWidth, window.innerHeight) <= 500;
 export function createBattleGuide({ scene, reducedMotion = () => false, characterScale = () => 1, sparse = phoneSized }) {
   const owned = [], root = new THREE.Group(); root.name = 'battle-guide'; scene.add(root);
@@ -277,24 +279,27 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
   function drawRoute(route, alpha, live) {
     const dots = routeDots(route.points);
     const total = dots.length ? dots[dots.length - 1].along : 0;
-    const every = thin ? 4 : 3;
+    // Calm (owner, 15 Nov: "limit the visual overload"): a chevron only every GUIDE.chevronEvery cells in a wave
+    // (none in the preview), small soft dots, and every other dot left out between waves and on a phone.
+    const every = thin ? GUIDE.chevronEvery + 2 : GUIDE.chevronEvery, sparseDots = thin || !live;
     dots.forEach((dot, i) => {
       if (i < 2) return; // under the landing ring
       const cell = `${Math.round(dot.x * 2)},${Math.round(dot.z * 2)}`;
       if (cells.has(cell)) return;
       cells.add(cell);
-      if (thin && i % every !== 0 && i % 2) return;
+      const chevron = live && i % every === 0 && total - dot.along > 2;
+      if (sparseDots && !chevron && i % 2) return;
       // A light runs along the route from the beach to the heart, so the way reads at a glance.
       const glow = still() || !live ? 0 : Math.max(0, Math.cos((dot.along - clock * 3.2) * .7)) ** 2;
       const y = drawnY(dot.z);
-      if (i % every === 0 && total - dot.along > 2) {
+      if (chevron) {
         const angle = Math.atan2(-dot.dz * Y, dot.dx);
-        ground.push(SHAPE.chevron, dot.x, y, 1.05 * k, 1.05 * k, { ...DARK, a: alpha * .75 }, { angle });
-        ground.push(SHAPE.chevron, dot.x, y, .8 * k, .8 * k, { r: 1, g: .3 + glow * .55, b: .2 + glow * .4, a: alpha }, { angle });
+        ground.push(SHAPE.chevron, dot.x, y, .95 * k, .95 * k, { ...DARK, a: alpha * .6 }, { angle });
+        ground.push(SHAPE.chevron, dot.x, y, .72 * k, .72 * k, { r: 1, g: .3 + glow * .55, b: .2 + glow * .4, a: alpha }, { angle });
       } else {
-        const d = (.36 + glow * .1) * k;
-        ground.push(SHAPE.disc, dot.x, y, d + .16 * k, (d + .16 * k) * Y, { ...DARK, a: alpha * .7 });
-        ground.push(SHAPE.disc, dot.x, y, d, d * Y, { r: 1, g: .3 + glow * .55, b: .2 + glow * .4, a: alpha });
+        const d = (.26 + glow * .08) * k;
+        ground.push(SHAPE.disc, dot.x, y, d + .1 * k, (d + .1 * k) * Y, { ...DARK, a: alpha * .45 });
+        ground.push(SHAPE.disc, dot.x, y, d, d * Y, { r: 1, g: .3 + glow * .55, b: .2 + glow * .4, a: alpha * .85 });
       }
     });
     // The axe sits beside the wall's hp bar (same row, to its right), never on top of it.

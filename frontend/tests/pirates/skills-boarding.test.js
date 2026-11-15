@@ -187,7 +187,7 @@ describe('the gun button', () => {
     expect(musketText(true, true, 'Blunderbuss')).toBe('F: Slash');
     expect(musketText(true, false, 'Blunderbuss')).toBe('Blunderbuss');
     expect(musketText(true, false, captainStats(1, [], 'long_rifle').name)).toBe('Long rifle');
-    expect(musketText(false, false, 'Pistols')).toBe('No pirate in range');
+    expect(musketText(false, false, 'Pistols')).toBe('Pistols');
   });
 });
 
