@@ -166,7 +166,7 @@ it('shows a friendly hint after 20 s standing still, and the place name for 2 s 
   });
 });
 
-it('offers the sea chart, controls, How to play and a place · weather · time line in the pause menu',async()=>{
+it('offers the sea chart, controls, How to play and a place, weather, time line in the pause menu',async()=>{
   await evaluate.withPage(async page=>{
     await mount(page);
     const result=await page.evaluate(async()=>{
@@ -175,7 +175,7 @@ it('offers the sea chart, controls, How to play and a place · weather · time l
       return {labels:extras.map(extra=>extra.label),calls:window.calls,status:menuStatus()};
     });
     expect(result.labels).toEqual(['Sea chart','Controls','How to play']);expect(result.calls).toEqual(['start','chart','controls','tutorial']);
-    expect(result.status).toMatch(/^Saltreach Harbor · (Fair skies|Overcast|Sea mist|Rain at sea) · \d\d:\d\d$/);
+    expect(result.status).toMatch(/^Saltreach Harbor, (Fair skies|Overcast|Sea mist|Rain at sea), \d\d:\d\d$/);
   });
 });
 
