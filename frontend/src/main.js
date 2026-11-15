@@ -20,7 +20,15 @@ async function ensureMotion(){if(!stopMotion)stopMotion=(await import('./setting
 let runtime=null,pending=null,disposed=false,loading=false,playRequest=0,shell,lastAccount='',noticedAccount='',door=null;
 const focus=()=>container.querySelector('canvas[tabindex="0"]')?.focus();
 let background=null;
-const loadWorld=()=>import('./shell/world-loader.js');
+// After a new deploy the old game files are gone, so a tab opened before it cannot load the world
+// or the settings ("Importing a module script failed"). Reload once to fetch the new build; at most once a minute.
+function reloadForNewBuild(error){
+  if(!/dynamically imported module|importing a module script failed|unable to preload css/i.test(String(error?.message||error||'')))return false;
+  try{const key='plot-twist-new-build-reload',last=Number(sessionStorage.getItem(key))||0;if(Date.now()-last<60000)return false;sessionStorage.setItem(key,String(Date.now()));}catch{return false;}
+  location.reload();return true;
+}
+window.addEventListener('vite:preloadError',event=>{if(reloadForNewBuild(event.payload))event.preventDefault();});
+const loadWorld=()=>import('./shell/world-loader.js').catch(error=>{reloadForNewBuild(error);throw error;});
 const afterPaint=new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
 afterPaint.then(loadWorld).then(module=>module.loadAfterPaintModule()).then(module=>{if(disposed)return;background=module.startAfterPaint({container,adapter,send,runtime:()=>runtime,shell:()=>shell,isLoading:()=>loading});}).catch(()=>null);
 // The animated cartoon title (src/title/) loads after the first paint; the sky colours stay underneath.
@@ -43,7 +51,7 @@ async function loadGame(){
   try{
     runtime=await pending;if(disposed){runtime.dispose();return null;}
     runtime.setMode(shell.mode);backdrop.hidden=shell.mode!=='title';return runtime;
-  }catch(error){console.error(error);pending=null;shell.show('title');shell.notice('The coast could not load. Check the connection and WebGL 2, then try again.');return null;}
+  }catch(error){console.error(error);pending=null;if(reloadForNewBuild(error))return null;shell.show('title');shell.notice('The coast could not load. Reload the page; if it still fails, check the connection and WebGL 2.');return null;}
   finally{loading=false;status.remove();}
 }
 // Play lands the player in Saltreach Harbor (the front door's HARBOR_START, inlined for the title budget).
@@ -64,7 +72,7 @@ function onEscape(){
 }
 shell=createShell({container,readAccount:()=>adapter.read().account,adapter,send,
   resetInput(){},focus,openAccount,onEscape,
-  demo:new URLSearchParams(location.search).get('demo')==='1',settingsView:async()=>{await ensureMotion();const loader=await loadWorld();return (await loader.loadSettingsModule()).createSettingsView(adapter.read());},
+  demo:new URLSearchParams(location.search).get('demo')==='1',settingsView:async()=>{try{await ensureMotion();const loader=await loadWorld();return (await loader.loadSettingsModule()).createSettingsView(adapter.read());}catch(error){reloadForNewBuild(error);throw error;}},
   hasOverlay:()=>loading||!!door?.active||accountHost.active||!!runtime?.hasOverlay(),
   onState(mode){if(mode==='title'){playRequest++;door?.cancel();}audio.setScreen(mode);runtime?.setMode(mode);backdrop.hidden=mode!=='title'&&!!runtime;},
   onPlay:play,onStart:()=>routes().then(m=>m.start(flow)),onReplay:()=>routes().then(m=>m.start(flow,true)),
