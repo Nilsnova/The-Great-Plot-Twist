@@ -57,6 +57,26 @@ Use D039 price and paid-repair rules for old-policy walls. Under the new policy,
 | Battle-time repair | Player E repair/rebuild is disabled during new-policy waves; forged local or room repair/rebuild inputs must be ignored or rejected by server and clients. Existing wall-only automatic Carpenter/Workshop effects continue during battle with current behavior; their surviving walls become whole at wave end under the shared rule. |
 | Destroyed recovery | Whole between waves after 600 seconds since first finish recorded destruction OR one subsequent island wave completes, whichever comes first. Never recovers mid-wave; if due during battle, defer until boundary. Offline time counts. A zero-to-zero finish without rebuild keeps the marker so the one-wave rule can recover it. |
 
+### Captain repair skills and Engineer role: compatibility decision
+
+Blocking player repair/rebuild during a new-policy battle removes the current combat use of these personal Shipwright effects. The current source is [captain-stats.js](../frontend/src/pirates/captain-stats.js), [captain-ids.js](../frontend/src/pirates/captain-ids.js), [sim.js](../frontend/src/pirates/sim.js) and [GAME-V3 captain tree and roles](../docs/GAME-V3.md#53-captain-tree-and-roles).
+
+| Current choice | Exact current effect | Effect under the confirmed new-policy battle rule |
+|---|---|---|
+| Quick Fix | Player wall/tower repair rate ×1.5. | No battle E repair to accelerate. |
+| Master Shipwright | Player wall/tower repair rate ×2; rebuild share 60% instead of 40%. | No battle E action to accelerate or rebuild. |
+| Swift Hammer | Player repair rate ×1.25; with Master Shipwright the combined multiplier is ×2.5. | No battle E repair to accelerate. |
+| Sturdy Planks | Player wall rebuild share 55%. | No player battle rebuild to improve. |
+| Grand Engineer | Engineer-only player wall rebuild share 80%. | No player battle rebuild to improve. |
+| Long Reach / Wide Arc | Player wall/tower repair interaction range +2 units. | No battle repair target interaction to extend. |
+| Engineer role | Player-repaired/rebuilt wall max hp +25% once per wall per wave. | No player wall E action to apply the boost. Its 10% island building/upgrade discount remains active; proposed paid rebuild pricing can keep the existing engineer discount. |
+
+Tower E repair uses the same Quick Fix/Master Shipwright/Swift Hammer multipliers and Sturdy Planks/Master/Grand Engineer rebuild shares in [tower-health.js](../frontend/src/pirates/tower-health.js). No automatic tower repair crew currently exists. The Shipwright tree unlock path is: Quick Fix tier 1; the mutually exclusive tier 2 choices Long Reach or Sturdy Planks; Master Shipwright tier 3 requires either tier 2 choice; the mutually exclusive tier 4 choices Swift Hammer or Wide Arc; Grand Engineer is the Engineer-only tier 5 capstone. The Engineer role unlocks at captain level 3. Under the new policy, player E action effects become unavailable in battle, but these skills still cost/occupy the same skill points.
+
+Island wall Quick Mend and research Mason Drill are separate wall modifiers; both still benefit automatic Carpenter repairs. Bastion’s passive wall mend and existing Workshop/Carpenter repair/rebuild also remain unchanged under the confirmed behavior. Captain repair skills are not currently applied to Carpenter/Workshop: those effects use the wall’s skill/research repair boost and house Workshop multiplier, not captainStats.
+
+The user has not chosen how to preserve value from the now-inert personal combat effects. The preferred option to evaluate is to redesign the affected Shipwright effects as support for automatic wall crew work, while preserving the current player-owned bonus and stacking rules in the crew calculation; this changes shared-island benefit and currently captain stats do not affect crew. Alternatives are moving suitable rate/share effects to paid between-wave price or timing benefits (an economy redesign), or retiring/refunding/retuning affected choices and the Engineer wall-health combat bonus. No mapping or stacking has been approved; each option needs a concrete effect and balance plan before coding. Do not silently select an option. Engineer's building discount and wall research/skill/Workshop effects listed above remain separate and active.
+
 Price examples must be calculated from the catalogue by kind and level in implementation tests; do not hard-code estimates in the UI. This design deliberately proposes no new wallet reason. If the team chooses a dedicated reason, add it through the normal wallet-reason coordination first.
 
 ## Paid recovery and concurrency safeguards
@@ -127,4 +147,4 @@ No implementation tests are run for this design-only change.
 
 This design cannot verify client-reported ending health; a malicious participant could report zero on the first finish. Positive ending hp becomes whole under the confirmed policy, so the relevant failure is bounded destroyed status. One record per wave, timed or subsequent-wave recovery and play money limit its effect. The new wall policy changes D039 only when the new policy version is active; old waves keep their frozen D039 contract.
 
-The core recovery behavior is confirmed by the user. One edge awaits resolution: if an existing destroyed wall is automatically rebuilt by Workshop during its one subsequent wave, then destroyed again before the wave ends, should the new destruction restart recovery or should the original deadline heal it at that boundary? Automatic wall crew behavior otherwise stays unchanged; player E repair/rebuild is disabled during new-policy battles.
+The core recovery behavior is confirmed by the user. Two compatibility decisions remain before implementation: how to preserve value from Captain Shipwright repair skills and the Engineer wall-health combat bonus, and if a destroyed wall is automatically rebuilt by Workshop during its one subsequent wave then destroyed again before that wave ends, whether the new destruction restarts recovery or the original deadline heals it at that boundary. Automatic wall crew behavior otherwise stays unchanged; player E repair/rebuild is disabled during new-policy battles.
