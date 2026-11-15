@@ -2,7 +2,7 @@
 
 For the teammate who made a contribution, before review and the course explain-back. Use your own PR and actual code, not a memorized answer written by an agent. Start with [QUICKSTART.md](QUICKSTART.md); choose a small change from [IDEAS.md](IDEAS.md) or bring your own.
 
-The [roadmap](../../ROADMAP.md#weekly-rhythm) schedules drills on **Thursday 19 and Saturday 21 November 2026**, including a file outside your usual lane. G11 owns the lane pages and forty drill cards; after that package is integrated, use `docs/lanes/` and `docs/drills/` as the shared question bank. Those paths are not yet on the audited main. This page helps you prepare **your new change** rather than duplicating that pack. The course's six official question types are not defined in the audited sources; the six prompts below are practice prompts, not a claimed course rubric.
+The team drills explain-back on **Thursday 19 and Saturday 21 November 2026**, including a file outside your usual lane. Use the [walkthrough](../WALKTHROUGH.md) as the shared question bank. This page helps you prepare **your new change** rather than duplicating that pack. The course's six official question types are not defined in the audited sources; the six prompts below are practice prompts, not a claimed course rubric.
 
 ## Prepare a one-page map · about 15 minutes
 

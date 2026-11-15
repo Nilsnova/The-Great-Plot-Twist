@@ -45,7 +45,6 @@ try {
   await page.evaluate(() => window.__island.island.openCaptain('skills'));
   await page.locator('.island-card-captain[open] .island-tree').waitFor();
   await shot('01-skill-tree-forks', '.island-card-captain[open]');
-  await page.locator('.island-card-captain[open] .island-branch-marksman').scrollIntoViewIfNeeded();
   await shot('01b-skill-tree-marksman-path', '.island-card-captain[open] .island-branch-marksman');
   await page.locator('.island-card-captain[open] .island-role').scrollIntoViewIfNeeded();
   await page.locator('.island-card-captain[open] .island-role-choice[data-role="engineer"]').click();

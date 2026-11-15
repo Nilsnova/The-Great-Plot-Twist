@@ -119,7 +119,7 @@ function skillsOf(kind, spot, campaign, busy, coins = null, prices = null) {
   if (!campaign.research.done.has(kind)) return {title, line: `Research ${branch.name.toLowerCase()} at the Tech hub first.`, choices: [], current};
   // Tier 3 (GAME-V3.md §5.1): the capstone the island chose is one more pick.
   const capstone = campaign.research.tiers?.[kind]?.tier3 ?? null;
-  return {title, line: current ? 'Switch for the next wave if you like. You pay the new skill.' : 'Pick one skill for this tower. You pay with your own coins.', current,
+  return {title, line: current ? 'Switch for the next wave.' : 'Pick one skill.', current,
     choices: [...branch.specs, ...(capstone ? [capstone] : [])].map(id => skillChoice(kind, id, current, busy, coins, prices))};
 }
 
@@ -127,10 +127,11 @@ function skillsOf(kind, spot, campaign, busy, coins = null, prices = null) {
 function skillChoice(kind, id, current, busy, coins, prices) {
   const active = id === current, price = skillPrice(kind, id, prices), busyHere = busy === `spec:${id}`;
   let reason = '';
-  if (!active && coins === null) reason = 'Your coins are still loading.';
-  else if (!active && coins < price) reason = `Not enough 🪙: you need ${coinText(price - coins)} more.`;
+  if (!active && coins === null) reason = 'Coins loading';
+  else if (!active && coins < price) reason = `Need ${coinText(price - coins)}`; // what is still missing
   return {id, name: SPECS[id].name, line: SPECS[id].line, active, capstone: isCapstone(id), price: active ? '' : coinText(price), cost: active ? 0 : price,
-    reason, disabled: active || busyHere || reason !== '', busy: busyHere};
+    reason, disabled: active || busyHere || reason !== '', busy: busyHere,
+    label: `${SPECS[id].name}, ${active ? 'your skill' : `${coinText(price)}${reason ? `, ${reason}` : ''}`}`};
 }
 
 // The roles of a built house (GAME-V3.md "Houses"): below level 2 one line says what comes; from level 2 the
@@ -209,14 +210,16 @@ export function skillsModel({skills = null, wonWave = 0, picked = null, busy = n
     const cost = `${skill.cost} ${skill.cost === 1 ? 'point' : 'points'}`;
     const word = {learned: 'learned', ready: 'can learn', locked: 'locked', closed: 'closed'}[state];
     return {id: skill.id, name: skill.name, tier: skill.tier, cost: skill.cost, costText: cost, line: skill.line, state, reason,
-      fork: !!skill.excludes, capstone: !!skill.role, role: skill.role,
+      fork: !!skill.excludes, capstone: !!skill.role, role: skill.role, needs: skill.needs,
       label: `${skill.name}, tier ${skill.tier}${skill.excludes ? `, choose this or ${nameOf(skill.excludes)}` : ''}${skill.role ? `, ${ROLE_BY_ID[skill.role].name} only` : ''}, ${cost}, ${word}`};
   };
   const branches = BRANCHES.map(branch => {
     const nodes = SKILLS.filter(skill => skill.branch === branch.id).map(nodeOf);
     const tiers = [1, 2, 3, 4, 5].map(tier => ({tier, fork: nodes.filter(node => node.tier === tier).length > 1, nodes: nodes.filter(node => node.tier === tier)}));
     const owner = ROLES.find(item => item.branch === branch.id);
-    return {...branch, tiers, nodes, role: owner.id, roleName: owner.name};
+    // The tile the branch opens on (the phone shows one branch at a time): one you can learn, else a locked one, else its root.
+    const start = (nodes.find(node => node.state === 'ready') ?? nodes.find(node => node.state === 'locked') ?? nodes[0]).id;
+    return {...branch, tiers, nodes, start, role: owner.id, roleName: owner.name};
   });
   const nodes = branches.flatMap(branch => branch.nodes);
   const chosen = nodes.find(item => item.id === picked) ?? nodes.find(item => item.state === 'ready') ?? nodes.find(item => item.state === 'locked') ?? nodes[0];
@@ -397,7 +400,7 @@ export function techModel({campaign = null, coins = null, busy = null, message =
     if (step && !next) next = {branch: branch.branch, tier: step.tier,
       text: step.tier === 1 ? `Next: research ${branch.name.toLowerCase()} for ${coinText(prices[0])}.`
         : `Next: ${branch.name.toLowerCase()}, tier ${step.tier}. Pick one of two for ${coinText(prices[step.tier - 1])}.`};
-    return {branch: branch.branch, name: branch.name, tier: state.tier, folded: state.tier >= 1,
+    return {branch: branch.branch, name: branch.name, short: BUILDINGS[branch.branch].name, tier: state.tier, folded: state.tier >= 1,
       summary: state.tier >= 1 ? `${branch.name} · tier ${state.tier} of ${TOP_TIER} ✓` : branch.name,
       prices: prices.map(coinText), tiers, next: !!step};
   });

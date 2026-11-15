@@ -234,16 +234,16 @@ describe('the campaign buildings (GAME-V3.md §4, §5)', () => {
     const card = coins => buildCardModel({spotId: 'cannon_1', slot: 'tower', spot: built, coins, unlocks: unlocksFor(25),
       campaign: atWave(25, {research: {done: ['cannon'], tiers: {cannon: {tier: 3, tier2: 'rapid_2', tier3: 'grapeshot'}}}})}).skills;
     const rich = card(1000);
-    expect(rich.line).toBe('Switch for the next wave if you like. You pay the new skill.');
+    expect(rich.line).toBe('Switch for the next wave.');
     expect(rich.choices.map(choice => [choice.id, choice.price, choice.disabled, choice.reason])).toEqual([
       ['rapid', '', true, ''], ['heavy', '🪙 150', false, ''], ['chain', '🪙 150', false, ''], ['grapeshot', '🪙 600', false, '']]);
     const poor = card(200).choices.find(choice => choice.id === 'grapeshot');
-    expect(poor).toMatchObject({disabled: true, reason: 'Not enough 🪙: you need 🪙 400 more.'});
-    expect(card(null).choices[1]).toMatchObject({disabled: true, reason: 'Your coins are still loading.'});
+    expect(poor).toMatchObject({disabled: true, reason: 'Need 🪙 400'});
+    expect(card(null).choices[1]).toMatchObject({disabled: true, reason: 'Coins loading'});
     // The island answer's prices win over the browser's copy.
     const sent = buildCardModel({spotId: 'wall_1', slot: 'wall', spot: {id: 'wall_1', kind: 'wall', built: true, level: 1}, coins: 1000, unlocks: unlocksFor(8),
       prices: {towerSkills: {wall: {skill: 55, capstone: 200}}}, campaign: atWave(8, {research: {done: ['wall']}})}).skills;
-    expect(sent.line).toBe('Pick one skill for this tower. You pay with your own coins.');
+    expect(sent.line).toBe('Pick one skill.');
     expect(sent.choices.map(choice => choice.price)).toEqual(['🪙 55', '🪙 55', '🪙 55']);
   });
   it('a house role stays free: no price on its choices', () => {

@@ -2967,7 +2967,7 @@ This creates a disposable local PostgreSQL cluster, bootstraps only test auth ro
   ```
 - If something here is unclear, open an issue before changing the rules for money.
 
-**Live checkpoint, 6 Nov 2026:** group 3 files 090000, 100000 and 110000 are applied and MD5-verified under their repository versions. Final counts: 18 public tables, 1 view, 16 public policies, 5 realtime policies, 17 wallet reasons, 24 project functions excluding rls_auto_enable, 4 sequences and 5 public triggers. See [release proofs](../docs/handoff/group3-release.md).
+**Live checkpoint, 6 Nov 2026:** group 3 files 090000, 100000 and 110000 are applied and MD5-verified under their repository versions. Final counts: 18 public tables, 1 view, 16 public policies, 5 realtime policies, 17 wallet reasons, 24 project functions excluding rls_auto_enable, 4 sequences and 5 public triggers. See release proofs.
 
 ## Case Phase 1 migration
 
