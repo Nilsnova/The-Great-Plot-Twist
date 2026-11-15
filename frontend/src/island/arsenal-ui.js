@@ -24,12 +24,26 @@ function carryPart(model, handlers, {button, line}) {
 function rackPart(model, handlers, {button, line}) {
   const box = node('section', 'island-arsenal-rack'); box.setAttribute('aria-label', 'The rack');
   box.append(node('h3', 'island-skills-title', model.stock));
-  if (!model.rack.length) box.append(line('island-crew-line', 'No weapons yet. Buy the first one below.'));
-  const list = node('ul', 'island-crew'); let focusable = null;
-  for (const row of model.rack) {
+  const filters = node('div', 'island-arsenal-filters'); filters.setAttribute('role', 'group'); filters.setAttribute('aria-label', 'Show weapons');
+  for (const choice of model.filters) {
+    const go = button(`${choice.label} (${choice.count})`, () => handlers.filter?.(choice.id), true);
+    go.setAttribute('aria-pressed', String(choice.selected)); go.dataset.focus = `arsenal-filter-${choice.id}`; filters.append(go);
+  }
+  box.append(filters);
+  if (!model.rack.length) {
+    box.append(line('island-crew-line', model.empty, 'status'));
+    if (model.filter !== 'all') box.append(button('Show all', () => handlers.filter?.('all'), true));
+  }
+  const list = node('ul', 'island-crew'); let focusable = null, lastType = null;
+  for (const row of model.groups.flatMap(group => group.rows)) {
+    if (row.weapon !== lastType) {
+      const group = model.groups.find(item => item.id === row.weapon), heading = node('li', 'island-arsenal-group');
+      heading.append(node('h4', '', `${group.name} (${group.rows.length})`), line('island-arsenal-stats', row.stats));
+      list.append(heading); lastType = row.weapon;
+    }
     const item = node('li', 'island-crew-row island-arsenal-copy'); item.dataset.copy = row.id; item.dataset.weapon = row.weapon;
     const text = node('div', 'island-crew-text');
-    text.append(node('strong', '', row.label), node('p', 'island-arsenal-stats', row.stats));
+    text.append(node('strong', '', row.label));
     if (row.holder) text.append(node('p', 'island-crew-reason', row.holder));
     item.append(text);
     if (row.button) {

@@ -70,6 +70,8 @@ Value: ★★★ moves a 20% criterion, ★★ a 10% criterion or a clear risk, 
 
 B3 current-game audit claimed by Johannes in [#30](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/30). Help loading/retry implemented in draft [#31](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/31); shortcuts and the audit handover are tracked separately in #32. This does not mark the whole B3 row done.
 
+Approved U addition: Local inventory filters and grouped rack rows, implemented in draft [PR #98](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/98) with [evidence](evidence/U-arsenal-filters/README.md). This completes only the approved addition; author and independent human review remain.
+
 ### C. Simplify the code base (helps criteria 5 and 6)
 
 | ID | Value | Size | Task | Done when |
