@@ -85,7 +85,7 @@ Size: 193 test files in [frontend/tests/](../frontend/tests/), about 1,830 `it`/
 | npm script (`cd frontend && npm run ...`) | Script | Checks |
 |---|---|---|
 | `build` | `check-spoilers.js` | No protected story text in the built files |
-| `test:loading` | `check-loading.js` | Title budgets: JS at most 21,080 bytes, CSS under 12 kB, title image at most 350 kB |
+| `test:loading` | `check-loading.js` | Title budgets: JS at most 21,080 bytes, CSS under 12 kB, no title picture (drawn in code); the game, cutscene, class-demo, island, destination and gallery code are separate on-demand chunks the cold title does not request; Play reaches the production harbor without errors |
 | `test:csp`, `test:csp:inventory` | `check-csp.js`, `check-csp-inventory.js` | The built site under the production CSP; no forbidden inline code |
 | `test:production` | `check-production.js` | The production build end to end with an offline API stub |
 | `test:demo` | `check-demo-journey.js` | The class-demo journey with recorded API answers |

@@ -21,7 +21,10 @@ try {
   check(report.initialCss<12000,'Cold title CSS is below 12 kB; world styles stay deferred');
   report.titleImage=await readFile('dist/places/title.webp').then(()=>true,()=>false);check(!report.titleImage,'The title downloads no picture: its cartoon scene is drawn in code (T21)');
   report.lazyEntries=Object.entries(manifest).filter(([,chunk])=>chunk.isDynamicEntry).map(([key,chunk])=>({key,file:chunk.file}));
-  for(const entry of ['src/game.js','src/world/cinematics/controller.js','src/world/places/settlement.js','src/world/places/home.js','src/ui/kit-gallery.js','src/ui/cinematic-demo.js','src/screens/board.js','src/screens/finale.js','src/screens/reveal.js','src/world/places/gulls-rest.js','src/world/festival.js'])check(report.lazyEntries.some(chunk=>chunk.key===entry),`${entry} is a separate dynamic entry`);
+  // Heavy modules the title must not download. Each one must be its own chunk that loads on demand.
+  // The case modules (cinematics, board, finale, reveal, Gull's Rest, festival) left the game in D031.
+  const heavyEntries=['src/game.js','src/cutscenes/player.js','src/class-demo/index.js','src/island/index.js','src/world/places/settlement.js','src/world/places/home.js','src/ui/kit-gallery.js'];
+  for(const entry of heavyEntries)check(report.lazyEntries.some(chunk=>chunk.key===entry),`${entry} is a separate dynamic entry`);
   const realChunk=manifest['src/online/adapter/index.js'];
   check(realChunk?.isDynamicEntry,'Real adapter is a separate dynamic entry');
   await page.addInitScript(()=>{
@@ -40,7 +43,10 @@ try {
   await page.waitForFunction(file=>performance.getEntriesByType('resource').some(r=>r.name.endsWith(file)),realChunk.file);
   const realStart=await page.evaluate(file=>performance.getEntriesByType('resource').find(r=>r.name.endsWith(file)).startTime,realChunk.file);
   check(realStart>=report.titleFrame.at,'Real adapter loading starts after the first title frame');
-  const loaded=await page.evaluate(()=>performance.getEntriesByType('resource').map(entry=>entry.name));check(!loaded.some(url=>url.includes('controller-')||url.includes('settlement-')||url.includes('cinematic-demo-')||url.includes('kit-gallery-')),'Cold title requests no finale, destination, demo or gallery chunk');
+  const loaded=await page.evaluate(()=>performance.getEntriesByType('resource').map(entry=>entry.name));
+  // Compare exact chunk file names from the manifest, so a similarly named chunk cannot match by accident.
+  const heavyFiles=heavyEntries.map(entry=>manifest[entry].file);report.titleHeavyChunks=heavyFiles.filter(file=>loaded.some(url=>url.endsWith(file)));
+  check(report.titleHeavyChunks.length===0,'Cold title requests no game, cutscene, class-demo, island, destination or gallery chunk');
   check(await page.locator('canvas[tabindex]').count()===0,'Cold production title allocates no WebGL renderer');
   report.contrast=await page.locator('#play').evaluate(button=>{
     function luminance(color){const channels=color.match(/[\d.]+/g).slice(0,3).map(Number).map(value=>{value/=255;return value<=0.04045?value/12.92:((value+0.055)/1.055)**2.4;});return channels[0]*0.2126+channels[1]*0.7152+channels[2]*0.0722;}
