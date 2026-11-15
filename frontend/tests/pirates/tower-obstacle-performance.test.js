@@ -2,7 +2,6 @@
 import {describe, expect, it} from 'vitest';
 import {coastPoint, CONFIG, createRandom} from '../../src/pirates/sim.js';
 import {createBoarderPaths} from '../../src/pirates/boarder-paths.js';
-import {cellOf} from '../../src/pirates/path-grid.js';
 
 const BOARDERS = 300, TICKS = 3000, TICK = CONFIG.tick, LANDING = .8, REBUILD_EVERY = 80;
 const B = CONFIG.boarding, PACE = {hackPerSecond: B.hack * 1.5, speed: B.speed * 1.3};
@@ -10,7 +9,7 @@ const HEART = {x: B.heart.x, z: B.heart.z};
 
 function runTowerWave() {
   const coast = CONFIG.coast, ring = [[-2, -2], [0, -2], [2, -2], [2, 0], [2, 2], [0, 2], [-2, 2], [-2, 0]];
-  const towers = ring.map(([x, z], i) => ({id: `cannon_${i + 1}`, kind: 'cannon', x, z, hp: 24, maxHp: 60}));
+  const towers = ring.map(([x, z], i) => ({id: `cannon_${i + 1}`, kind: 'cannon', x: HEART.x + x, z: HEART.z + z, hp: 24, maxHp: 60}));
   const paths = createBoarderPaths({coast, heart: HEART, walls: [], towers, towerBlocking: true, pace: PACE});
   const random = createRandom('tower-late-wave');
   const landing = () => { const point = coastPoint(random() * 2 * Math.PI, LANDING, coast); return {x: point.x, z: point.z}; };
@@ -40,7 +39,7 @@ function runTowerWave() {
       Object.assign(boarder, {x: boarder.x + dx / distance * move, z: boarder.z + dz / distance * move});
       counts.moved++;
     }
-    counts.stuck += choices.filter(choice => choice.next.kind === 'none' && cellOf(paths.grid, choice.boarder.x, choice.boarder.z) !== paths.layout.goalIndex).length;
+    counts.stuck += choices.filter(choice => choice.next.kind === 'none').length;
   }
   const ms = performance.now() - started;
   return {...counts, ms, builds: paths.builds, standing: towers.filter(tower => tower.hp > 0).length};
