@@ -41,6 +41,7 @@ FLAG_NAMES = (
     "tower_health",
     # T34/T35 (D040, proposed): boarders walk round or through the real walls (a wave rule).
     "pathing",
+    "tower_obstacles",  # T35 damageable combat towers block boarders; requires placement/pathing/tower_health
 )
 
 

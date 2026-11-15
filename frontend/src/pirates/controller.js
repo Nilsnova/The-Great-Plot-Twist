@@ -214,7 +214,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
 
   // The battle guide (guide: true, the island's controller only): landings, routes, the heart and the walls' bars;
   // faintly between waves on this island, in full during a wave. Drawing only: it reads the state, never the sim.
-  let guide = null, guideLoading = false, lastWave = 0;
+  let guide = null, guideLoading = false, lastWave = 0, lastTowerObstacles = false;
   function updateGuide(dt) {
     if (!guideOn || !world.scene || disposed) return;
     if (!guide) {
@@ -231,10 +231,13 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     if (!show) { guide.update(null); return; }
     if (running) {
       guide.update({ mode: 'wave', lanes: current.lanes?.length ? current.lanes : null, defenses: current.defenses, stateWalls: current.state.walls,
+        stateTowers: current.state.towers, towerObstacles: current.info.rules?.towerObstacles === true,
         boarders: current.state.boarders, heart: current.state.heart, wave: current.info.wave, dt });
     } else {
       const defenses = read(getDefenses, []) ?? [];
-      guide.update({ mode: 'preview', lanes: null, defenses, stateWalls: null, boarders: [], heart: null, wave: (current?.info.wave ?? lastWave) + 1, dt });
+      guide.update({ mode: 'preview', lanes: null, defenses, stateWalls: null, stateTowers: null,
+        towerObstacles: current?.info.rules?.towerObstacles ?? lastTowerObstacles, boarders: [], heart: null,
+        wave: (current?.info.wave ?? lastWave) + 1, dt });
     }
   }
 
@@ -265,6 +268,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     if (disposed) return null;
     const info = raw?.startsAtMs !== undefined ? raw : readWaveInfo(raw);
     if (!info) return null;
+    lastTowerObstacles = info.rules?.towerObstacles === true;
     if (wave?.info.waveId === info.waveId) return wave;
     // A friend rang the next wave while ours still runs here (a ship that sinks a moment later on this
     // client): play ours to its end at once, so our part is finished and paid, then start the new one.

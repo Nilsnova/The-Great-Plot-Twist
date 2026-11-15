@@ -79,6 +79,29 @@ describe('the island grid for boarders', () => {
       walker.x = way.x; walker.z = way.z;
     }
   });
+
+  it('treats a closed ring of cheap standing towers as a breakable route obstacle', () => {
+    const towers = [];
+    for (let x = -6; x <= 6; x += 2) for (let z = -4; z <= 8; z += 2) {
+      if (Math.abs(x) === 6 || z === -4 || z === 8) {
+        towers.push({id: `cannon_${String(towers.length + 1).padStart(2, '0')}`, kind: 'cannon', x, z, hp: 1, maxHp: 1});
+      }
+    }
+    const paths = createBoarderPaths({coast: COAST, heart: HEART, walls: [], towers, towerBlocking: true,
+      pace: {hackPerSecond: 2.5, speed: 2.8}});
+    paths.refresh();
+    const boarder = {x: 15, z: 2};
+    let target = null;
+    for (let i = 0; i < 200 && !target; i++) {
+      const way = paths.next(boarder);
+      if (way.kind === 'tower') target = way.towerId;
+      if (way.kind !== 'step') break;
+      boarder.x = way.x; boarder.z = way.z;
+    }
+    expect(target).not.toBeNull();
+    expect(target).toMatch(/^cannon_/);
+  });
+
 });
 
 describe('a wave with pathing', () => {

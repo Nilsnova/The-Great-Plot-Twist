@@ -26,18 +26,18 @@ function controllerWith(renderers, defenses = DEFENSES) {
 
 describe('the wave rules', () => {
   it('turns known names into true options and ignores everything else', () => {
-    expect(readRules(['tower_health', 'nonsense'])).toEqual({ towerHealth: true, pathing: false, rescue: false, defensesV2: false });
-    expect(readRules(undefined)).toEqual({ towerHealth: false, pathing: false, rescue: false, defensesV2: false });
-    expect(readRules(['pathing'])).toEqual({ towerHealth: false, pathing: true, rescue: false, defensesV2: false });
-    expect(readRules('tower_health')).toEqual({ towerHealth: false, pathing: false, rescue: false, defensesV2: false });
+    expect(readRules(['tower_health', 'nonsense'])).toEqual({ towerHealth: true, pathing: false, towerObstacles: false, rescue: false, defensesV2: false });
+    expect(readRules(undefined)).toEqual({ towerHealth: false, pathing: false, towerObstacles: false, rescue: false, defensesV2: false });
+    expect(readRules(['pathing'])).toEqual({ towerHealth: false, pathing: true, towerObstacles: false, rescue: false, defensesV2: false });
+    expect(readRules('tower_health')).toEqual({ towerHealth: false, pathing: false, towerObstacles: false, rescue: false, defensesV2: false });
     expect(readRules(['rescue']).rescue).toBe(true);
     expect(readRules(['defenses_v2']).defensesV2).toBe(true); // T43: the culverins fight only with this rule
     expect(Object.values(RULE_OPTIONS)).toContain('towerHealth');
   });
 
   it('reads the rules of a wave answer', () => {
-    expect(readWaveInfo({ ...INFO, rules: ['tower_health'] }).rules).toEqual({ towerHealth: true, pathing: false, rescue: false, defensesV2: false });
-    expect(readWaveInfo(INFO).rules).toEqual({ towerHealth: false, pathing: false, rescue: false, defensesV2: false });
+    expect(readWaveInfo({ ...INFO, rules: ['tower_health'] }).rules).toEqual({ towerHealth: true, pathing: false, towerObstacles: false, rescue: false, defensesV2: false });
+    expect(readWaveInfo(INFO).rules).toEqual({ towerHealth: false, pathing: false, towerObstacles: false, rescue: false, defensesV2: false });
   });
 
   it('a wave with tower_health gives its towers hp and paints the tower states; without it nothing changes', () => {

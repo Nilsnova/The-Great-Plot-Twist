@@ -33,6 +33,7 @@ INNER_WALLS = REPO_ROOT / "supabase" / "migrations" / "20261112020000_inner_wall
 HARPOON = REPO_ROOT / "supabase" / "migrations" / "20261113020000_harpoon_tower.sql"
 CULVERIN = REPO_ROOT / "supabase" / "migrations" / "20261114140000_culverin.sql"
 WAVE_RULES = REPO_ROOT / "supabase" / "migrations" / "20261114130500_wave_rules.sql"
+TOWER_OBSTACLES = REPO_ROOT / "supabase" / "migrations" / "20261115160000_tower_obstacles.sql"
 # The md5 of 20261110010000 as applied live (a checksum, not a secret).
 APPLIED_MD5 = "79278156e4925b2d39076722c11d2f00"  # pragma: allowlist secret
 
@@ -374,9 +375,9 @@ def rule_names(text: str) -> list[str]:
 
 def test_the_wave_rule_names_in_the_database_are_the_servers():
     first = rule_names(WAVE_RULES.read_text())
-    assert rule_names(CULVERIN.read_text()) == list(SIM_RULES)
+    assert rule_names(TOWER_OBSTACLES.read_text()) == list(SIM_RULES)
     assert set(first) <= set(SIM_RULES)  # every name a kept wave may hold stays allowed
-    assert set(SIM_RULES) - set(first) == {"defenses_v2"}
+    assert set(SIM_RULES) - set(first) == {"tower_obstacles", "defenses_v2"}
 
 
 def test_the_inner_wall_migration_changes_only_the_spot_rule():
