@@ -32,7 +32,7 @@ TOWER_DEFENSE = REPO_ROOT / "supabase" / "migrations" / "20261111030000_tower_de
 INNER_WALLS = REPO_ROOT / "supabase" / "migrations" / "20261112020000_inner_walls.sql"
 HARPOON = REPO_ROOT / "supabase" / "migrations" / "20261113020000_harpoon_tower.sql"
 CULVERIN = REPO_ROOT / "supabase" / "migrations" / "20261114140000_culverin.sql"
-TREES = REPO_ROOT / "supabase" / "migrations" / "20261116020000_tower_trees.sql"
+SWIVEL_RULE = REPO_ROOT / "supabase" / "migrations" / "20261116020100_swivel_spot_rule.sql"
 WAVE_RULES = REPO_ROOT / "supabase" / "migrations" / "20261114130500_wave_rules.sql"
 # The md5 of 20261110010000 as applied live (a checksum, not a secret).
 APPLIED_MD5 = "79278156e4925b2d39076722c11d2f00"  # pragma: allowlist secret
@@ -332,11 +332,11 @@ def check_pairs(text: str, constraint: str) -> set[tuple[str, str]]:
 
 
 def test_the_check_rule_allows_the_old_pairs_and_every_island_spot():
-    # The newest rule (20261116020000, the swivel-gun nest of D055) is the file's with the flag
+    # The newest rule (20261116020100, the swivel-gun nest of D055) is the file's with the flag
     # defenses_v2 on (the catalogue then has the culverin on the tower spots too); the
     # culverin's rule (20261114140000) added the culverin, the harpoon tower's (20261113020000)
     # the harpoon.
-    newest = check_pairs(TREES.read_text(), "islet_buildings_plot_fits_building")
+    newest = check_pairs(SWIVEL_RULE.read_text(), "islet_buildings_plot_fits_building")
     pairs = check_pairs(CULVERIN.read_text(), "islet_buildings_plot_fits_building")
     harpoon = check_pairs(HARPOON.read_text(), "islet_buildings_plot_fits_building")
     inner = check_pairs(INNER_WALLS.read_text(), "islet_buildings_plot_fits_building")

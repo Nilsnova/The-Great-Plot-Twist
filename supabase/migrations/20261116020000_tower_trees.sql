@@ -23,25 +23,16 @@
 --                           towertree:<uid>) and set in the SAME step, under the
 --                           island lock.
 --
---   2. The swivel-gun nest, a short-range anti-boarder tower for the seven
---      island tower spots (cannon_1..cannon_7), next to the cannon, the mortar,
---      the harpoon tower and the culverin:
+--   2. The swivel-gun nest's spot rule is NOT in this file: widening the check
+--      rule islet_buildings_plot_fits_building has to replace the old rule, which
+--      a live migration of this sprint may not do. It is the follow-up file
+--      20261116020100_swivel_spot_rule.sql (apply it after this one; until then
+--      the database refuses a swivel build with a check violation and the server
+--      answers 502, nothing charged).
 --
---        islet_buildings    the check rule islet_buildings_plot_fits_building
---                           (plot, building_type) also allows the 7 pairs
---                           (cannon_1..cannon_7, swivel). Every pair of
---                           20261114140000_culverin.sql stays allowed, so no row
---                           needs to change. The swivel has no skills, so
---                           islet_buildings_spec_fits_kind stays as it is (spec
---                           null). island_build(), island_upgrade() and
---                           island_demolish() take the kind as an argument and
---                           read prices from the server: no change.
---
---   Nothing is dropped except that one check rule, which is replaced by a wider
---   one in the SAME statement (a check rule cannot be widened any other way; the
---   table is never without it). No table, column, row or function is dropped.
---   island_specialise(), island_upgrade() and every other function stay as they
---   are: a tree is a new function beside them, not a new signature of an old one.
+--   This file only adds: one insert, two new columns, two new
+--   check rules and one new function. island_specialise(), island_upgrade() and
+--   every other function stay as they are: a tree is a new function beside them.
 --
 -- WHO USES IT
 --   Only the Python server, with the secret key (service_role): the route
@@ -70,7 +61,7 @@
 --      level-5 tower of a kind with a tree, 0 to 3 a path, one path past tier 1.
 --
 -- WHAT IT NEEDS
---   20261114140000_culverin.sql (the spot rule it widens), 20261115130000_
+--   20261115130000_
 --   tower_skill_price.sql (the order of the locks it copies) and everything
 --   before them (wallet_reasons, apply_wallet_transaction, islands,
 --   island_members, islet_buildings).
@@ -84,14 +75,13 @@
 --
 -- SAFE TO RUN TWICE
 --   The reason uses "on conflict do nothing", the columns "add column if not
---   exists", the new check rules are added only when they are missing, the spot
---   rule is replaced in one statement, the function uses "create or replace",
+--   exists", the new check rules are added only when they are missing, the function uses "create or replace",
 --   and revokes, grants and comments repeat.
 --
--- ROLLBACK (by hand, only while no row is a swivel and every tree is empty)
---   Run the spot rule section of 20261114140000_culverin.sql again. The columns,
---   their rules, the reason and island_tower_tree() can stay (unused by an older
---   server); a reason and its ledger rows are never removed.
+-- ROLLBACK (by hand)
+--   Nothing to undo for an older server: the columns, their rules, the reason and
+--   island_tower_tree() can stay unused; a reason and its ledger rows are never
+--   removed.
 --
 -- HOW TO VERIFY (read-only queries, after applying)
 --   a. select reason, direction from public.wallet_reasons where reason = 'tower_tree';
@@ -101,9 +91,8 @@
 --         and column_name in ('tree_a', 'tree_b');
 --      -- two rows, smallint, default 0
 --   c. select conname, pg_get_constraintdef(oid) from pg_constraint
---       where conname in ('islet_buildings_plot_fits_building',
---                         'islet_buildings_tree_range', 'islet_buildings_tree_fits_kind');
---      -- the spot list holds ('cannon_1', 'swivel') ... ('cannon_7', 'swivel')
+--       where conname in ('islet_buildings_tree_range', 'islet_buildings_tree_fits_kind');
+--      -- two rows
 --   d. Only the server may run the new function (browser and visitor false):
 --      select has_function_privilege('authenticated', p.oid, 'execute') as browser,
 --             has_function_privilege('anon', p.oid, 'execute') as visitor,
@@ -166,80 +155,7 @@ comment on constraint islet_buildings_tree_fits_kind on public.islet_buildings i
 
 
 -- -----------------------------------------------------------------------------
--- 3. The swivel-gun nest on the seven tower spots
--- -----------------------------------------------------------------------------
--- The pairs repeat backend/content/buildings.json (the four home islet pairs),
--- backend/content/islands.json (spots, now with the swivel) and
--- backend/content/defenses_v2.json (the culverin's spots); a test keeps them
--- equal (backend/server/tests/test_island_rules.py). One statement: the old rule
--- goes and the wider one comes in the same step.
-
-alter table public.islet_buildings
-  drop constraint if exists islet_buildings_plot_fits_building,
-  add constraint islet_buildings_plot_fits_building
-    check ((plot, building_type) in (
-      ('plot_2', 'workshop'),
-      ('plot_3', 'windmill'),
-      ('plot_4', 'greenhouse'),
-      ('islet_signal_station', 'signal_station'),
-      ('wall_1', 'wall'),
-      ('wall_2', 'wall'),
-      ('wall_3', 'wall'),
-      ('wall_4', 'wall'),
-      ('wall_5', 'wall'),
-      ('wall_6', 'wall'),
-      ('wall_7', 'wall'),
-      ('wall_8', 'wall'),
-      ('wall_9', 'wall'),
-      ('wall_10', 'wall'),
-      ('wall_11', 'wall'),
-      ('wall_12', 'wall'),
-      ('cannon_1', 'cannon'),
-      ('cannon_1', 'mortar'),
-      ('cannon_1', 'harpoon'),
-      ('cannon_1', 'culverin'),
-      ('cannon_1', 'swivel'),
-      ('cannon_2', 'cannon'),
-      ('cannon_2', 'mortar'),
-      ('cannon_2', 'harpoon'),
-      ('cannon_2', 'culverin'),
-      ('cannon_2', 'swivel'),
-      ('cannon_3', 'cannon'),
-      ('cannon_3', 'mortar'),
-      ('cannon_3', 'harpoon'),
-      ('cannon_3', 'culverin'),
-      ('cannon_3', 'swivel'),
-      ('cannon_4', 'cannon'),
-      ('cannon_4', 'mortar'),
-      ('cannon_4', 'harpoon'),
-      ('cannon_4', 'culverin'),
-      ('cannon_4', 'swivel'),
-      ('cannon_5', 'cannon'),
-      ('cannon_5', 'mortar'),
-      ('cannon_5', 'harpoon'),
-      ('cannon_5', 'culverin'),
-      ('cannon_5', 'swivel'),
-      ('cannon_6', 'cannon'),
-      ('cannon_6', 'mortar'),
-      ('cannon_6', 'harpoon'),
-      ('cannon_6', 'culverin'),
-      ('cannon_6', 'swivel'),
-      ('cannon_7', 'cannon'),
-      ('cannon_7', 'mortar'),
-      ('cannon_7', 'harpoon'),
-      ('cannon_7', 'culverin'),
-      ('cannon_7', 'swivel'),
-      ('tower_1', 'watchtower'),
-      ('house_1', 'house'),
-      ('house_2', 'house')
-    ));
-
-comment on constraint islet_buildings_plot_fits_building on public.islet_buildings is
-  'Each spot holds only its own kinds: the four home islet pairs (buildings.json) and the 22 island spots (islands.json: wall_1..12 wall, the shore walls 1..6 and the inner ring 7..12; cannon_1..7 cannon, mortar, harpoon or swivel, and with defenses_v2.json the culverin; tower_1 watchtower, house_1..2 house). The cabin has no row.';
-
-
--- -----------------------------------------------------------------------------
--- 4. island_tower_tree(): one paid tier of a tower's tree
+-- 3. island_tower_tree(): one paid tier of a tower's tree
 -- -----------------------------------------------------------------------------
 --   p_player_id     the payer (the host or an active member)
 --   p_island_owner  the island (the game's host)
