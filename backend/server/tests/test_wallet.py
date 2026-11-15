@@ -99,6 +99,8 @@ def test_the_wallet_reasons_are_the_agreed_pairs_in_the_agreed_order():
         ("captain_respec", "spend"),
         # 20261115130000_tower_skill_price.sql: a tower's skill, paid by the clicker (D051).
         ("tower_skill", "spend"),
+        # 20261116010000_island_reset.sql: Start fresh, the wallet back to the starting coins (D054).
+        ("island_reset", "either"),
     )
 
 
@@ -150,6 +152,7 @@ def test_list_reason_names_gives_the_names_in_the_agreed_order():
         "building_refund",
         "captain_respec",
         "tower_skill",
+        "island_reset",
     ]
 
 

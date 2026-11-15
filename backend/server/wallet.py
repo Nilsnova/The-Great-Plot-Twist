@@ -12,9 +12,9 @@ single step. This file does two things:
   2. apply_transaction validates, asks the database to do it and returns the new balance.
 
 Every reason has a direction. "earn" adds coins (a positive amount), "spend" takes coins away
-(a negative amount) and "either" may go both ways (admin_adjust, fresh_start and island_reset). The list of
-reasons lives in the database table wallet_reasons. WALLET_REASONS below is its copy in Python,
-and a test fails if the two differ. The database checks the direction too, so even a bug here
+(a negative amount) and "either" may go both ways (admin_adjust, fresh_start and island_reset).
+The list of reasons lives in the database table wallet_reasons. WALLET_REASONS below is its copy
+in Python, and a test fails if the two differ. The database checks the direction too, so even a bug here
 cannot hand out coins.
 
 To add a reason, in one pull request: write a migration with one INSERT into wallet_reasons and

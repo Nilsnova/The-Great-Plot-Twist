@@ -291,7 +291,7 @@ Purpose: Accepted building levels and timber/play-coin costs. Readers: Owner thr
 
 ### public.islands
 
-Purpose: Each player's own island for the island game: its code, so friends can visit and defend it, and its progress. Readers: Server only (no browser policy); `GET /api/island` shows the owner, and `GET /api/island/visit/{code}` shows anyone signed in who knows the code the captain name, best wave and buildings. Lifetime: Removed with the player account; the fresh-start admin script resets the best wave and flags but keeps the code.
+Purpose: Each player's own island for the island game: its code, so friends can visit and defend it, and its progress. Readers: Server only (no browser policy); `GET /api/island` shows the owner, and `GET /api/island/visit/{code}` shows anyone signed in who knows the code the captain name, best wave and buildings. Lifetime: Removed with the player account; the fresh-start admin script resets the best wave and flags but keeps the code. The owner's own Start fresh (D054, `island_reset_own()`) sets every progress column back to its default (best wave, flags, next wave, crew, captain level, skills, role, weapons, wreck) and keeps the code.
 
 | Column | What it holds and why |
 |---|---|
@@ -324,7 +324,7 @@ Purpose: The shared buildings of Pirate Point (migration 20261111030000): anyone
 
 ### public.wave_runs
 
-Purpose: Every pirate wave a player started, on an island or on Pirate Point, so the server can hand out one shared seed, allow one running wave per island, check the timing and pay capped loot once. Readers: Server only (no browser policy); the player sees their own wave through the wave routes. Lifetime: Removed with the player who started it, or with the island it was fought on; the fresh-start admin script removes every row.
+Purpose: Every pirate wave a player started, on an island or on Pirate Point, so the server can hand out one shared seed, allow one running wave per island, check the timing and pay capped loot once. Readers: Server only (no browser policy); the player sees their own wave through the wave routes. Lifetime: Removed with the player who started it, or with the island it was fought on; the fresh-start admin script removes every row; an owner's Start fresh (D054) removes every run fought on their island, and with it its participants, revives, wall record and wave rules, so the island's old scores leave the leaderboard.
 
 | Column | What it holds and why |
 |---|---|
@@ -363,6 +363,18 @@ Purpose: Every player in a pirate wave (the bell-ringer and everyone who joined)
 | `ships_sunk` | Ships sunk, as this player's browser reported it. |
 | `survived` | Whether the island held, as this player's browser reported it. |
 | `wave_id` | The wave. |
+
+### public.island_resets
+
+Purpose: One row per Start fresh (D054, migration 20261116010000): a player reset their own island. It makes a repeated click safe (also when the wallet held the starting coins already, so no ledger row was written) and records what was removed. Readers: Server only (no browser grant or policy; written only by `island_reset_own()`). Lifetime: Removed with the player account. A reset also removes, for the player's own island only, its buildings on the 22 spots (`islet_buildings`, `building_payments`, `building_demolitions`), `island_layout`, `island_research`, `arsenal_copies`, `arsenal_moves`, every `wave_runs` row fought there (with `wave_participants`, `captain_revives`, `island_wall_records`, `wave_rules`), the other players' `island_members` rows of its game and the player's `captain_skill_learns`; the wallet goes to the starting coins through a ledger row (reason `island_reset`).
+
+| Column | What it holds and why |
+|---|---|
+| `action_uid` | The browser's click id (ledger ref `reset:<uid>`), scoped to the player; detects a repeat. |
+| `coins_before` | The wallet balance just before the reset, so the change can be explained. |
+| `player_id` | The player who reset their own island. |
+| `removed` | How many rows of each kind the reset removed (counts only, no other players' ids). |
+| `reset_at` | When the reset ran. |
 
 ### public.board_pins
 

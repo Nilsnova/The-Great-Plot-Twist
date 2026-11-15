@@ -86,9 +86,7 @@ CLEARED = (
 
 def reset(database, player, uid, start_coins=START_COINS):
     as_server(database)
-    return call(
-        database, "select public.island_reset_own(%s, %s, %s)", player, uid, start_coins
-    )
+    return call(database, "select public.island_reset_own(%s, %s, %s)", player, uid, start_coins)
 
 
 def progress(database, player):
@@ -127,10 +125,13 @@ def play(database, owner, code):
     coins(database, owner, 900, f"test-coins-{code}")
     as_server(database)
     call(database, "select public.game_join(%s, %s, 10)", FRIEND, owner)
-    assert coop_build(database, owner, owner, "wall_1", "wall", f"wall-{code}-01")["status"] == "done"
-    assert coop_build(database, FRIEND, owner, "cannon_1", "cannon", f"cann-{code}-01", 30)[
-        "status"
-    ] == "done"
+    assert (
+        coop_build(database, owner, owner, "wall_1", "wall", f"wall-{code}-01")["status"] == "done"
+    )
+    assert (
+        coop_build(database, FRIEND, owner, "cannon_1", "cannon", f"cann-{code}-01", 30)["status"]
+        == "done"
+    )
     wave = start(database, owner, f"bell-{code}-01", owner=owner)
     move_start(database, wave["waveId"], 20)
     assert finish(database, owner, wave["waveId"])["survived"] is True
@@ -164,7 +165,8 @@ def play(database, owner, code):
         (owner, owner, f"research:resr-{code}-01"),
     )
     database.execute(
-        "insert into public.captain_skill_learns (player_id, ref, skill) values (%s, %s, 'steady_aim')",
+        "insert into public.captain_skill_learns (player_id, ref, skill)"
+        " values (%s, %s, 'steady_aim')",
         (owner, f"skill:skil-{code}-01"),
     )
     assignments = ", ".join(f"{column} = %s" for column in PLAYED)
@@ -222,7 +224,11 @@ def test_only_the_own_island_is_touched(world):
 
 def test_the_home_islet_buildings_of_the_case_game_stay(world):
     as_server(world)
-    call(world, "select public.islet_build(%s, 'plot_2', 'workshop', 10, 0, 0, 'islet:wkshop-01')", OWNER)
+    call(
+        world,
+        "select public.islet_build(%s, 'plot_2', 'workshop', 10, 0, 0, 'islet:wkshop-01')",
+        OWNER,
+    )
 
     reset(world, OWNER, "reset-0001")
 

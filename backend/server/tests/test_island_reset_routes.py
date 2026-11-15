@@ -55,7 +55,9 @@ def test_the_confirm_word_is_required_exactly():
 
     for body in ({"confirm": "reset"}, {"confirm": ""}, {"confirm": True}):
         assert_error(reset(world, **body), 422, "validation_error")
-    missing = world.client.post("/api/island/reset", json={"actionUid": "reset-0001"}, headers=PLAYER)
+    missing = world.client.post(
+        "/api/island/reset", json={"actionUid": "reset-0001"}, headers=PLAYER
+    )
     assert_error(missing, 422, "validation_error")
     assert_error(reset(world, actionUid="no"), 422, "validation_error")
     assert_error(reset(world, code="ISLE-ZZ234"), 422, "validation_error")  # never another island
