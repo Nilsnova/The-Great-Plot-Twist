@@ -50,11 +50,11 @@ describe('stake picker numbers (D050)', () => {
     expect(firstStake(10000, stakeRange({rules: MARKET_RULES, coins: 10000}))).toBe(1000);
   });
   it('write every amount in coins, never in dollars', () => {
-    expect(MATCH.win(500)).toBe('Win: 🪙 500 (double your stake)');
-    expect(MARKET.win(20000)).toBe('Win: 🪙 20,000');
+    expect(STAKE.win(500)).toBe('Win 🪙 500');
+    expect(STAKE.win(20000)).toBe('Win 🪙 20,000');
     expect(STAKE.moreLabel(50)).toBe('More by 50 coins');
-    expect(STAKE.notEnough(5)).toBe('You need at least 🪙 5 to stake.');
-    expect([MATCH.win(1), MARKET.win(1), STAKE.notEnough(1), MATCH.confirm(10, 'Draw')].join(' ')).not.toContain('$');
+    expect(STAKE.notEnough(5)).toBe('Need 🪙 5');
+    expect([STAKE.win(1), STAKE.notEnough(1), MATCH.confirm(10, 'Draw')].join(' ')).not.toContain('$');
   });
 });
 
@@ -74,13 +74,13 @@ describe('market stall', () => {
     expect(view).toMatchObject({state: 'open', balance: 100, full: false});
     expect(view.assets[0]).toMatchObject({id: 'harbor-trust', name: 'Bitcoin', price: '$74,339', reason: null, canStake: true,
       range: {min: 5, max: 100, ok: true}, coins: 100, calls: []});
-    expect(view.assets[0].win(25)).toBe('Win: 🪙 50');
+    expect(view.assets[0].win(25)).toBe('Win 🪙 50');
     const rich = callsView({answer: board({balance: 50000, rules: {minStake: 5, maxStake: 10000, payoutMultiplier: 2}}), now: NOW});
     expect(rich.assets[0].range).toEqual({min: 5, max: 10000, ok: true});
   });
   it('says so when the player has fewer coins than the smallest call', () => {
     const view = callsView({answer: board({balance: 3}), now: NOW});
-    expect(view.assets[0]).toMatchObject({canStake: false, reason: 'You need at least 🪙 5 to stake.'});
+    expect(view.assets[0]).toMatchObject({canStake: false, reason: 'Need 🪙 5'});
   });
   it('words why a closed asset takes no call, from the server reason', () => {
     const view = callsView({answer: board(), now: NOW});
@@ -151,15 +151,15 @@ describe('match board', () => {
     expect(view.matches[0]).toMatchObject({name: 'Harbor Athletic v Island United', when: 'Primeira Liga · Sat 20:00', canStake: true,
       range: {min: 1, max: 1000, ok: true}, coins: 1000});
     expect(view.matches[0].picks.map(pick => pick.label)).toEqual(['Harbor Athletic', 'Draw', 'Island United']);
-    expect(view.matches[0].win(250)).toBe('Win: 🪙 500 (double your stake)');
-    expect(view.matches[0].win(10000)).toBe('Win: 🪙 20,000 (double your stake)');
+    expect(view.matches[0].win(250)).toBe('Win 🪙 500');
+    expect(view.matches[0].win(10000)).toBe('Win 🪙 20,000');
   });
   it('caps the range by the coins left today and says when the day is used up', () => {
     const view = mine => matchView({board: sportsBoard(), mine: {stakes: [], ...mine}, signedIn: true, now: NOW}).matches[0];
     expect(view({coins: 40000, coinsLeftToday: 25000}).range.max).toBe(10000);
     expect(view({coins: 40000, coinsLeftToday: 700}).range.max).toBe(700);
-    expect(view({coins: 400, coinsLeftToday: 0})).toMatchObject({canStake: false, reason: 'You reached today\'s limit here. Come back tomorrow.'});
-    expect(view({coins: 0, coinsLeftToday: 25000})).toMatchObject({canStake: false, reason: 'You need at least 🪙 1 to stake.'});
+    expect(view({coins: 400, coinsLeftToday: 0})).toMatchObject({canStake: false, reason: 'Daily limit reached'});
+    expect(view({coins: 0, coinsLeftToday: 25000})).toMatchObject({canStake: false, reason: 'Need 🪙 1'});
   });
   it('has a friendly empty state', () => {
     expect(matchView({board: sportsBoard([]), now: NOW})).toMatchObject({state: 'empty', line: 'No matches this week. Leagues pause for internationals.'});

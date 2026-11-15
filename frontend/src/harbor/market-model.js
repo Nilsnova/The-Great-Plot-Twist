@@ -62,7 +62,7 @@ export function callsView({answer = null, failure = null, history = new Map(), n
       : !full && !range.ok ? STAKE.notEnough(range.min) : null;
     return {id: asset.id, name: String(asset.name ?? asset.id), price: price ?? MARKET.noPrice,
       history: list(history.get(asset.id)), reason,
-      canStake: open && !full && range.ok, range, coins: balance ?? 0, win: stake => MARKET.win(winFor(stake, multiplier)),
+      canStake: open && !full && range.ok, range, coins: balance ?? 0, win: stake => STAKE.win(winFor(stake, multiplier)),
       calls: [...own.filter(call => call.status === 'open'), ...decided].map(call => callView(call, now))};
   });
   return {state: 'open', line: null, balance, full, assets};

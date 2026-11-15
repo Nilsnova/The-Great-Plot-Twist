@@ -56,7 +56,7 @@ export function signInLine(onSignIn) {
 // no side is preselected and the confirm button stays off until one is chosen. The amount starts at
 // 10 % of the coins; "−" and "+" move it by 5 % of the coins (stakes.js), the quick buttons jump to
 // 10 %, 25 %, 50 % or "All in". Every amount stays inside `range` ({min, max} from stakeRange).
-// `sides` is [{id, label}]; `win(stake)` is the line under the amount ("Win: 🪙 500 ...").
+// `sides` is [{id, label}]; `win(stake)` is the one line under the amount ("Win 🪙 500").
 // `selection` ({side, stake}) belongs to the caller, so a refresh that redraws the card keeps the picks.
 // `itemName` (the asset or match) ends every button's accessible name, so a card with several items
 // never has two buttons with the same name ("Up, Bitcoin", "More by 50 coins, Bitcoin").

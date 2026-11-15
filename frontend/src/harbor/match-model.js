@@ -24,8 +24,8 @@ export function canPick(fixture, now) {
     && fixture.pool?.status === 'open' && now < Date.parse(fixture.closesAt);
 }
 
-// "Win: 🪙 500 (double your stake)": the payout of a right pick (stake back plus the same again).
-export const matchWin = (stake, multiplier = PAYOUT_MULTIPLIER) => MATCH.win(winFor(stake, multiplier));
+// "Win 🪙 500": the payout of a right pick, twice the stake (the stake back plus the same again).
+export const matchWin = (stake, multiplier = PAYOUT_MULTIPLIER) => STAKE.win(winFor(stake, multiplier));
 
 // The amounts the player may stake now: the board's limits, their coins and what is left today.
 export function matchRange(board, mine) {

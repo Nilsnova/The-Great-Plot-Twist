@@ -101,7 +101,7 @@ for(const width of [1280,375]){
     check(await bitcoin.locator('[data-side][aria-pressed="true"]').count()===0&&await bitcoin.locator('.harbor-confirm').isDisabled(),
       'No side is preselected, so one stray tap never places a call');
     check(JSON.stringify(await bitcoin.locator('[data-share]').allTextContents())==='["10 %","25 %","50 %","All in"]'
-      &&await bitcoin.locator('.harbor-amount-value').textContent()==='🪙 100'&&await bitcoin.locator('.harbor-win').textContent()==='Win: 🪙 200',
+      &&await bitcoin.locator('.harbor-amount-value').textContent()==='🪙 100'&&await bitcoin.locator('.harbor-win').textContent()==='Win 🪙 200',
       'The stake picker starts at 10 % of the coins (🪙 100) and says the win (D050)');
     await bitcoin.getByRole('button',{name:'Up, Bitcoin',exact:true}).click();
     await bitcoin.getByRole('button',{name:'10 %, Bitcoin',exact:true}).click();

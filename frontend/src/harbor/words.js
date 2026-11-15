@@ -19,7 +19,9 @@ export const STAKE = {
   moreLabel: step => `More by ${coinsSpoken(step)}`,
   quick: percent => (percent >= 100 ? 'All in' : `${percent} %`),
   quickGroup: 'Quick amounts',
-  notEnough: min => `You need at least ${formatCoins(min)} to stake.`,
+  notEnough: min => `Need ${formatCoins(min)}`,
+  // One short line under the amount, the same at both stalls (owner: no explanatory sentences).
+  win: payout => `Win ${formatCoins(payout)}`,
 };
 
 export const TITLES = {
@@ -43,7 +45,6 @@ export const MARKET = {
   question: 'Up or down in 5 minutes?',
   up: 'Up', down: 'Down',
   sideGroup: name => `Up or down for ${name}`,
-  win: payout => `Win: ${formatCoins(payout)}`,
   choose: 'Pick up or down',
   confirm: (stake, side) => `Place ${formatCoins(stake)} on ${side}`,
   placed: (stake, side) => `Your ${formatCoins(stake)} is on ${side}.`,
@@ -76,12 +77,10 @@ export const MATCH = {
   draw: 'Draw',
   picksClosed: 'Picks for this match are closed.',
   yourPick: (pick, stake) => `Your pick: ${pick}, ${formatCoins(stake)}`,
-  // A right pick pays twice the stake; a wrong one loses it; a called-off match refunds it (D050).
-  win: payout => `Win: ${formatCoins(payout)} (double your stake)`,
   choose: 'Pick a side',
   confirm: (stake, side) => `Place ${formatCoins(stake)} on ${side}`,
   placed: (stake, side) => `Your ${formatCoins(stake)} is on ${side}.`,
-  dayUsed: 'You reached today\'s limit here. Come back tomorrow.',
+  dayUsed: 'Daily limit reached',
 };
 
 export const MY_STAKES = {

@@ -8,7 +8,7 @@ const date = value => text(value) && Number.isFinite(Date.parse(value));
 // A stake's id is the database row number (a JSON number); older answers may send it as text.
 const ref = value => (Number.isSafeInteger(value) && value > 0) || text(value);
 const picks = new Set(['home', 'draw', 'away']);
-// A right pick pays exactly twice the stake (D050): the cards say "double your stake", so any other
+// A right pick pays exactly twice the stake (D050): the cards say "Win" with twice the stake, so any other
 // multiplier is an answer this client cannot show honestly.
 const rules = value => count(value?.minStake) && value.minStake > 0 && count(value.maxStake)
   && value.maxStake >= value.minStake && count(value.dailyCap) && value.payoutMultiplier === 2

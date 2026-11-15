@@ -52,7 +52,7 @@ describe('market stall card', () => {
     expect(result.sent).toEqual([[{asset: 'harbor-trust', direction: 'up', stake: 10}, 'uid-1-abcdefgh'],
       [{asset: 'harbor-trust', direction: 'down', stake: 5}, 'uid-2-abcdefgh'], [{asset: 'harbor-trust', direction: 'up', stake: 100}, 'uid-3-abcdefgh']]);
     expect(result.labels).toEqual(['Place 🪙 10 on Up, Bitcoin', 'Place 🪙 5 on Down, Bitcoin', 'Place 🪙 100 on Up, Bitcoin']);
-    expect(result.wins).toEqual(['Win: 🪙 20', 'Win: 🪙 10', 'Win: 🪙 200']);
+    expect(result.wins).toEqual(['Win 🪙 20', 'Win 🪙 10', 'Win 🪙 200']);
     expect(result.names.slice(0, 3)).toEqual(['Up or down in 5 minutes?', 'Up, Bitcoin', 'You said Up with 🪙 10.Decided in 5 min']);
     expect(result.events).toEqual([{kind: 'market', stake: 10}, {kind: 'market', stake: 5}, {kind: 'market', stake: 100}]);
   });
@@ -88,7 +88,7 @@ describe('market stall card', () => {
     expect(result.names).toEqual(['Bitcoin', 'Ether', 'Gold', 'Apple', 'NVIDIA']);
     expect(result.amount).toBe('🪙 10');
     expect(result.quick).toEqual(['10 %', '25 %', '50 %', 'All in']);
-    expect(result.win).toBe('Win: 🪙 20');
+    expect(result.win).toBe('Win 🪙 20');
     expect(result.pressed).toBe(0);
     expect(result.confirmDisabled).toBe(true);
     expect(result.text).toContain('Bitcoin$74,339');
@@ -212,7 +212,7 @@ describe('match board card', () => {
       return {sent, hints, events, last};
     });
     expect(result.sent).toEqual([{pick: 'home', amount: 100}, {pick: 'draw', amount: 150}, {pick: 'away', amount: 1000}]);
-    expect(result.hints).toEqual(['Win: 🪙 200 (double your stake)', 'Win: 🪙 300 (double your stake)', 'Win: 🪙 2,000 (double your stake)']);
+    expect(result.hints).toEqual(['Win 🪙 200', 'Win 🪙 300', 'Win 🪙 2,000']);
     expect(result.events).toEqual([{kind: 'match', stake: 100}, {kind: 'match', stake: 150}, {kind: 'match', stake: 1000}]);
     expect(result.last).toContain('My stakes');
     expect(result.last).toContain('🪙 1,000 on Island United (Harbor Athletic v Island United): waiting for the result');
@@ -257,7 +257,7 @@ describe('match board card', () => {
     expect(result.bottom).toBe('🪙 1');
     expect(result.lessDisabled).toBe('true');
     expect(result.focusKept).toBe(true);
-    expect(result.win).toBe('Win: 🪙 2 (double your stake)');
+    expect(result.win).toBe('Win 🪙 2');
   });
 
   it('has friendly empty, closed and signed-out states', async () => {
