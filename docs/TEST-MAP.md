@@ -245,3 +245,11 @@ and [results, screenshots and manual checkpoints](evidence/T28/README.md).
 | Visible pending and recoverable callback failure; prevent stale feedback | [Banner](../frontend/src/ui/connection-banner.js), [six browser cases](../frontend/tests/ui/connection-retry.test.js); `cd frontend && npm test -- --run tests/ui/connection-retry.test.js` | Failure and second success, one pending intent, button label/reset, identical frames retain feedback, newer online/idle/cycled views, dispose | Real adapter/provider outages, server/database writes, physical phones, screen readers and combined drafts #31/#32 |
 
 [Results](../specs/B3-connection-retry.md) and [1280x720 / 375x812 screenshots](evidence/B3-connection/README.md).
+
+## B3 — Johannes Franz Lang — Repeatable feedback fixtures
+
+| What I built / why | Where and command | Covers | Misses |
+|---|---|---|---|
+| Durable assertions and screenshots for eight existing feedback states | [Runner](../frontend/scripts/check-feedback.mjs), [fixture](../frontend/scripts/feedback-fixtures.js); `cd frontend && node scripts/check-feedback.mjs` | Each case at 1280x720/375x812; messages, repeated join counts, zero invalid builds, successful Create retry, valid cannon, callback intent, no horizontal overflow/errors/external traffic; deliberate enabled-button countercheck fails | Live API/server/database rules, rewards, real accounts/outages, multiplayer, physical keyboard/phone, screen readers, complete journey and unmerged B3 fixes |
+
+[Case table and limitations](evidence/B3-repeatable/README.md), [results](../specs/B3-feedback-check.md).

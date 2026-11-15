@@ -66,6 +66,7 @@ The game is built and live; nobody waits for anyone. You extend it.
 **B3 current-game feedback audit:** Johannes (@frcola), [issue #30](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/30); help recovery in draft [#31](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/31), shortcuts next. Login/APIs unchanged.
 
 - [x] **B3 connection-retry slice, Johannes:** implemented in draft [PR #38](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/38); six regression cases and [evidence](evidence/B3-connection/README.md). Full B3 and human review remain open; no login/API changes.
+- [x] **B3 repeatable audit, Johannes:** implemented in draft [PR #39](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/39); eight existing component cases at two sizes, [command and limits](evidence/B3-repeatable/README.md). Human review and broader B3 remain open.
 
 ## 3. Every member, before the freeze (walkthrough = 20% of the grade)
 
