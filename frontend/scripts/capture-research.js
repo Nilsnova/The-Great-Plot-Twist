@@ -1,7 +1,7 @@
-// The research tiers and the docked island cards (GAME-V3.md §5.1, lane T15+T16) in the integrated game with the
+// The research tree and the docked island cards (GAME-V3.md §5.1, lane T15+T16) in the integrated game with the
 // fake server (?islands=fake), one size per run:
-//   node scripts/capture-research.js <folder> 1280x800      (and again with 390x844 for the phone's bottom sheet)
-// The docked Tech hub with the island in view, its tree with done / next / locked / closed nodes, a docked building
+//   node scripts/capture-research.js <folder> 1280x800      (and again with 390x844 for the phone)
+// The Tech hub as a big tree card (skill-tree.js) with done / next / locked / closed tiles, a docked building
 // card, and a capstone in action (Inferno mortars and Broadside cannons in a wave).
 import assert from 'node:assert/strict';
 import {mkdir} from 'node:fs/promises';
@@ -43,23 +43,19 @@ try {
     await i.research({branch: 'cannon'}); await i.research({branch: 'cannon', tier: 2, choice: 'long_guns'});
     await i.research({branch: 'mortar'}); await i.research({branch: 'wall'}); });
   await closeCards();
-  // 1 The docked Tech hub, the island in view beside it (a phone: the bottom sheet).
+  // 1 The Tech hub: a big centred tree card (no longer docked; Nils's playtest, 15 Nov).
   await stand(6, -9);
   await island(i => i.openTechHub());
   await page.locator('.island-card-tech[open]').waitFor();
   const hub = await docked();
-  assert.ok(hub.docked, 'the Tech hub docks');
-  if (width > 900) assert.ok(hub.left > width / 2 && hub.width <= 400, `a side panel: ${JSON.stringify(hub)}`);
-  else assert.ok(hub.top >= height * .39 && hub.width === width, `a bottom sheet: ${JSON.stringify(hub)}`);
-  await shot('01-docked-tech-hub');
-  // 2 The tree: open the cannon branch (done, chosen and closed nodes, tier 3 locked) and the mortar's (tier 2 next).
-  await page.locator('.island-card-tech[open] .island-research-branch[data-branch="cannon"] > summary').click();
-  await page.locator('.island-card-tech[open] .island-research-branch[data-branch="mortar"] > summary').click();
-  const states = await page.evaluate(() => [...document.querySelectorAll('.island-card-tech[open] .island-research-option')].map(node => node.className.match(/is-(\w+)/)[1]));
+  assert.ok(!hub.docked && hub.width >= Math.min(1000, width - 24), `a big tree card: ${JSON.stringify(hub)}`);
+  await shot('01-tech-hub-tree');
+  // 2 The tree: done, chosen, closed, open and locked tiles (the data-state of each tile).
+  const states = await page.evaluate(() => [...document.querySelectorAll('.island-card-tech[open] .island-research-option')].map(node => node.dataset.state));
   for (const state of ['done', 'chosen', 'closed', 'open', 'locked']) assert.ok(states.includes(state), `a ${state} node`);
-  await page.locator('.island-card-tech[open] .island-research-branch[data-branch="cannon"]').scrollIntoViewIfNeeded();
-  await shot('02-tree-done-next-locked-closed');
-  await page.locator('.island-card-tech[open] .island-research-branch[data-branch="mortar"] .island-research-step[data-tier="2"]').scrollIntoViewIfNeeded();
+  await page.locator('.island-card-tech[open] .island-research-option[data-option="rapid_2"]').click();
+  await shot('02-tree-closed-twin-picked');
+  await page.locator('.island-card-tech[open] .island-research-option[data-option="quick_fuse"]').click();
   await shot('02b-tree-next-fork');
   await closeCards();
   // 3 A docked building card: the cannon's upgrade card with its skills.
