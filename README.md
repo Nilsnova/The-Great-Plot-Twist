@@ -18,14 +18,12 @@ cd frontend && npm install && npm test && npm run build && npm run test:mp
 
 ## Members
 
-Each member fills in their own line (by Fri 20 Nov).
-
 | Member | Student number |
 |---|---|
-| Nils Lenke | 81651 |
-| `<name>` | `<student number>` |
-| `<name>` | `<student number>` |
-| `<name>` | `<student number>` |
+| Nils Christoph Lenke | 81651 |
+| Ianno Miranda Hollensteiner | 81858 |
+| Johannes Franz Lang | 83476 |
+| Nicolas Radomski | 80028 |
 
 ## Start here
 
