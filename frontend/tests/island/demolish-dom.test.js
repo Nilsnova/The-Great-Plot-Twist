@@ -66,7 +66,7 @@ it('Tear down: secondary, never the first focus, a confirmation with the refunds
   expect(result.escaped).toMatchObject({built: true});
   expect(result.escaped.open).not.toBe('demolish');
   expect(result.after.open).toBe(null);
-  expect(result.after.toast).toBe('Cannon torn down. You got back 🪙 45. You have 🪙 455.');
+  expect(result.after.toast).toBe('Cannon torn down · +🪙 45');
   expect(result.after.spot).toMatchObject({built: false});
   expect(result.after.changed.at(-1)).toMatchObject({spot: 'cannon_1', demolished: {kind: 'cannon', level: 2}});
   expect(result.empty).toMatchObject({title: 'Tower spot', choices: ['cannon', 'mortar', 'harpoon'], tear: false});
