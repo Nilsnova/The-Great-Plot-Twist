@@ -31,6 +31,7 @@ The tables of [TOWER-DEFENSE.md](TOWER-DEFENSE.md) sections 2 to 4, 9 and 10, al
 | Watchtower | 40 / 80 / 160 / 320 / 640 | 3 / 3 / 12 / 15 / 20 | the same |
 | House (+5 loot per level) | 50 / 100 | 2 / 2 | the same |
 | Gunner / carpenter / lookout | 40 / 30 / 25 each, at most 2 / 2 / 1 | 5 / 5 / 8 | `island_hire()` (`crew_hire`, ref `crew:<uid>`) |
+| Guard (D052: fights boarders near the heart) | 60 each, at most 3 (180 for all three) | 6 | `island_hire()` (`crew_hire`, ref `crew:<uid>`), migration `20261115140000_guard_crew.sql` |
 | Captain level 2 / 3 / 4 / 5 | 20 / 40 / 80 / 160 | 1 / 1 / 8 / 8 | `island_captain()` (`captain_upgrade`, ref `captain:<uid>`) |
 | Pirate Point spots | the same prices, paid by whoever clicks | the clicker's unlocks | `pp_build()` / `pp_upgrade()` (`building_purchase`, ref `pp:<uid>`) |
 | Helping a fallen captain up in wave *n* ([GAME-V3.md](GAME-V3.md) §3) | 20 + 5 × *n*, paid by the helper | — | `wave_revive()` (`captain_revive`, ref `revive:<uid>`), migration `20261112050000_captain_revive.sql` |

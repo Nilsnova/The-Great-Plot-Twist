@@ -77,6 +77,7 @@ def test_the_prices_and_the_starting_coins_are_the_economy_table():
         "gunner": (40, 2, 3),
         "carpenter": (30, 2, 5),
         "lookout": (25, 1, 8),
+        "guard": (60, 3, 6),  # D052: fights boarders near the heart
     }
     assert catalogue.captain.prices == (0, 20, 40, 80, 160)
     assert (catalogue.waves.highest_wave, catalogue.waves.boss_every) == (100, 5)

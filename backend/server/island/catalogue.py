@@ -47,8 +47,9 @@ MIN_SHIPS, MAX_SHIPS = 0.5, 3.0
 # since 20261112070000_tower_tiers.sql, docs/GAME-V3.md section 4.1).
 MAX_LEVEL = 5
 MAX_CAPTAIN_LEVEL = 5
-# The crew of docs/TOWER-DEFENSE.md section 3. The database knows exactly these three.
-CREW_KINDS = ("gunner", "carpenter", "lookout")
+# The crew of docs/TOWER-DEFENSE.md section 3. The database knows exactly these four
+# (the guard since 20261115140000_guard_crew.sql, decision D052).
+CREW_KINDS = ("gunner", "carpenter", "lookout", "guard")
 # The skills and weapons the database knows (the check rules of 20261112030000_captain_skills.sql),
 # in the order of the tree and the shop. frontend/src/pirates/captain-ids.js lists the same.
 # 20261112120000_captain_tree.sql widened them to five tiers a branch with forks and capstones.
@@ -171,7 +172,7 @@ class Spot:
 
 @dataclass(frozen=True)
 class Crew:
-    crew: str  # gunner, carpenter or lookout
+    crew: str  # gunner, carpenter, lookout or guard
     name: str
     coins: int  # the price of one
     max: int  # at most this many per island

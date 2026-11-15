@@ -216,6 +216,7 @@ class FakeIslandDatabase:
             "crew_gunner": 0,
             "crew_carpenter": 0,
             "crew_lookout": 0,
+            "crew_guard": 0,
             "captain_level": 1,
             "won_wave_best": 0,
             "captain_skills": [],

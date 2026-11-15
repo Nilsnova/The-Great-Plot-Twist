@@ -3,7 +3,10 @@
 // waves 1 to 60 and several seeds, with each rule set (none, tower_health, pathing, both). Prints one table
 // per layout and checks the acceptance of specs/T33-T35-balance.md.
 //
-//   node scripts/balance-rules.mjs [--seeds 10] [--waves 1,3,5] [--json out.json]
+//   node scripts/balance-rules.mjs [--seeds 10] [--waves 1,3,5] [--json out.json] [--guards 3] [--captains 2]
+//
+// --guards N hires N guards (D052) on every island; --captains N plays with N captains instead of the band's crew
+// (a small class). Both are off by default, so the default tables stay what they were.
 //
 // The crew: N captains (more and stronger as the campaign goes on) stand near the heart, strike a boarder
 // next to them, else shoot the nearest ship or boarder in range. One of them is the carpenter: they walk
@@ -29,6 +32,7 @@ const WAVES = arg('waves', '1,3,5,8,10,15,20,30,45,60').split(',').map(Number);
 const JSON_OUT = arg('json', null);
 const LAYOUTS = arg('layouts', 'spots,ring').split(',');
 const ONLY = arg('rules', null)?.split(',');
+const GUARDS = Number(arg('guards', 0)), CAPTAINS = Number(arg('captains', 0));
 
 export const RULE_SETS = {
   none: {},
@@ -69,8 +73,10 @@ const E_REACH = 2;      // a captain presses E this close to a wall or tower
 const DUTY = Number(process.env.DUTY ?? 14);        // the carpenter looks after walls and towers this close to the heart
 
 /** One wave with the scripted crew. Returns the result and what happened. */
-export function playWave({ wave, seed, rules, layout = 'spots' }) {
-  const p = progressAt(wave), island = layout === 'ring' ? asRing(p.island) : p.island;
+export function playWave({ wave, seed, rules, layout = 'spots', guards = GUARDS, captains = CAPTAINS }) {
+  const band = progressAt(wave), p = captains > 0 ? { ...band, captains } : band;
+  const laid = layout === 'ring' ? asRing(p.island) : p.island;
+  const island = guards > 0 ? { ...laid, crew: { ...laid.crew, guard: guards } } : laid;
   const sim = createWave({ seed, wave, ...island, ...rules });
   const posts = Array.from({ length: p.captains }, (_, i) => {
     const a = (i / p.captains) * Math.PI * 2 + .4, r = layout === 'ring' ? .9 : 2.5;
@@ -128,10 +134,10 @@ function wallPos(island, id) {
   return map.get(id) ?? { x: 99, z: 99 };
 }
 
-export function measureConfig({ wave, rules, layout, seeds = SEEDS }) {
+export function measureConfig({ wave, rules, layout, seeds = SEEDS, guards = GUARDS, captains = CAPTAINS }) {
   const sum = { won: 0, hp: 0, time: 0, towersBroken: 0, wallsBroken: 0, wallHacks: 0, towerHacks: 0, towerRebuilds: 0, heartHits: 0, landed: 0 };
   for (let s = 1; s <= seeds; s++) {
-    const r = playWave({ wave, seed: s * 7919, rules, layout });
+    const r = playWave({ wave, seed: s * 7919, rules, layout, guards, captains });
     if (r.survived) sum.won++;
     sum.hp += r.islandHp; sum.time += r.time;
     for (const key of ['towersBroken', 'wallsBroken', 'wallHacks', 'towerHacks', 'towerRebuilds', 'heartHits', 'landed']) sum[key] += r[key];
@@ -165,7 +171,7 @@ export function check(table) {
 if (import.meta.url === `file://${process.argv[1]}`) {
   const table = {}, started = Date.now();
   for (const layout of LAYOUTS) {
-    console.log(`\n## layout ${layout} (${SEEDS} seeds)\n`);
+    console.log(`\n## layout ${layout} (${SEEDS} seeds${GUARDS ? `, ${GUARDS} guards` : ''}${CAPTAINS ? `, ${CAPTAINS} captains` : ''})\n`);
     console.log('| wave | band | rules | win % | heart hp | time s | towers broken | tower rebuilds | walls breached | wall hacks | boarders landed |');
     console.log('|---:|---|---|---:|---:|---:|---:|---:|---:|---:|---:|');
     for (const wave of WAVES) {

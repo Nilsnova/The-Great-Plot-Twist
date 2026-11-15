@@ -114,14 +114,15 @@ describe('build card (TOWER-DEFENSE.md §2, §9)', () => {
 describe('crew and captain panels (§3, §10)', () => {
   it('names the locked crew with the wave each opens after', () => {
     expect(crewModel({crew: {}, coins: 100, unlocks: fresh})).toMatchObject({rows: [], lead: 'Crew members join after you win wave 3.',
-      soon: 'Gunner: Opens after wave 3 · Carpenter: Opens after wave 5 · Lookout: Opens after wave 8'});
+      soon: 'Gunner: Opens after wave 3 · Carpenter: Opens after wave 5 · Lookout: Opens after wave 8 · Guard: Opens after wave 6'});
   });
   it('hires, is full at the maximum and says when coins are short', () => {
     const model = crewModel({crew: {gunner: 2, carpenter: 0}, coins: 25, unlocks: unlocksFor(8)});
     expect(model.rows.map(row => [row.id, row.owned, row.button, row.disabled, row.reason])).toEqual([
       ['gunner', '2 of 2', 'Full', true, 'You have 2, the most you can hire.'],
       ['carpenter', '0 of 2', 'Hire', true, 'Not enough 🪙: you need 🪙 5 more.'],
-      ['lookout', '0 of 1', 'Hire', false, '']]);
+      ['lookout', '0 of 1', 'Hire', false, ''],
+      ['guard', '0 of 3', 'Hire', true, 'Not enough 🪙: you need 🪙 35 more.']]); // D052
     expect(model.rows[2]).toMatchObject({price: '🪙 25', line: 'Sees further in fog; ships show 3 s earlier.'});
     expect(crewModel({crew: {}, coins: 100, unlocks: wave5, busy: 'gunner'}).rows[0]).toMatchObject({button: 'Hiring…', disabled: true});
   });
@@ -142,7 +143,8 @@ describe('unlocks (GAME-V3.md §4, the campaign table)', () => {
     expect(unlocksFor(1)).toMatchObject({levels: {house: 1, mortar: 0}, captain: 3});
     expect(unlocksFor(2)).toMatchObject({levels: {wall: 2, cannon: 2, house: 2, mortar: 2}, captain: 3});
     expect(wave3).toMatchObject({levels: {watchtower: 2}, crew: {gunner: true, carpenter: false}});
-    expect(wave5).toMatchObject({levels: {wall: 3, cannon: 3, mortar: 3, watchtower: 2, house: 3}, crew: {gunner: true, carpenter: true, lookout: false}, next: {wave: 8}});
+    expect(wave5).toMatchObject({levels: {wall: 3, cannon: 3, mortar: 3, watchtower: 2, house: 3}, crew: {gunner: true, carpenter: true, lookout: false, guard: false}, next: {wave: 6}});
+    expect(unlocksFor(6)).toMatchObject({crew: {guard: true, lookout: false}, next: {wave: 8}}); // D052
     expect(unlocksFor(8)).toMatchObject({captain: 5, crew: {lookout: true}, next: {wave: 12}});
     expect(unlocksFor(12)).toMatchObject({levels: {wall: 4, cannon: 4, mortar: 3, watchtower: 3, house: 3}, next: {wave: 15}});
     expect(unlocksFor(15)).toMatchObject({levels: {mortar: 4, watchtower: 4}, next: {wave: 20}});

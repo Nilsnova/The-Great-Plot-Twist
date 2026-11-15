@@ -18,8 +18,10 @@
 // (captainLevel(), captainSkills() and captainWeapon(): your own level, skills §14 and weapon §15, whose
 // numbers come from captain-stats.js), sent to the room like a cannon shot. A click anywhere else aims
 // there (free aim): the ship or boarder in range nearest the aim point, a spray or a bomb towards it.
-// Boarders (§12) are targets too, and with one within cutlass reach F (or the button) swings the cutlass
-// instead (its damage and reload scaled by the Brawler skills), synced the same way.
+// Boarders (§12) are targets too, and with one within cutlass reach F (or the button, or a tap on any boarder)
+// swings the cutlass at the nearest one instead (its damage and reload scaled by the Brawler skills), synced the
+// same way. Close quarters (D052): a boarder in reach and no attack of yours for AUTO_BLADE.after seconds, and your
+// captain swings by themself, slower (AUTO_BLADE.reload); it is a normal captain_strike input, so every sim agrees.
 // Captain health (GAME-V3.md §3): while the wave runs and you are on its island, your position goes to the
 // room as captain_move (every MOVE_EVERY_MS or 2 × the room's wave gap when you moved, at least every
 // HEARD_EVERY_MS), so every sim lets the same boarders go for you. At 0 hp you fall: you cannot move, shoot
@@ -93,6 +95,9 @@ export function bladeTarget(player, state) {
   }
   return best;
 }
+// The automatic cutlass (D052): after this many seconds without an attack of yours, a boarder in cutlass reach
+// gets a blow every `reload` seconds (the hand-swung cutlass reloads in CONFIG.captain.cutlass.reload, 0.5 s).
+export const AUTO_BLADE = Object.freeze({ after: 1, reload: 1.5 });
 const pirateById = (state, id) => state?.boarders?.find(item => item.id === id) ?? state?.ships?.find(item => item.id === id) ?? null;
 let atlasPromise = null, atlasKey = null;
 // The heart's share below which the narrator hears heart_changed (its HEART_LOW).
@@ -247,7 +252,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       ...(info.rules ?? {}), ...simOptions }); // the server's rules for this wave (wave-rules.js); simOptions last (the demo harness)
     const first = sim.state();
     const current = wave = { info, sim, defenses, offset, ticks: 0, seq: 0, schedule: createInputSchedule(), done: false, finished: false,
-      pause: null, boss: first.boss ? bossText(first.warships) : '', captainAt: -Infinity, bladeAt: -Infinity,
+      pause: null, boss: first.boss ? bossText(first.warships) : '', captainAt: -Infinity, bladeAt: -Infinity, handAt: -Infinity,
       result: null, renderer: null, hud: null, shown: false, lampsSent: false, lampsRelit: false, flagshipSunk: false,
       splashesAt: [], lastCount: null, state: sim.state(), action: null, lanes: [], lean: { x: 0, z: 0 },
       // Captain health: the last position sent, your fall (pin: where you lie on this screen), a revive you hold.
@@ -311,8 +316,12 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     if (!wave || wave.done || !player || !here() || isDown(wave) || finishing(wave)) return false;
     const stats = myStats(), state = wave.state;
     const named = targetId ? pirateById(state, targetId) : null;
-    const close = named?.id?.startsWith('boarder_') && Math.hypot(named.x - player.x, named.z - player.z) <= CONFIG.captain.cutlass.reach
-      ? named : !targetId ? bladeTarget(player, state) : null;
+    wave.handAt = wave.ticks * TICK_SECONDS; // an attack of yours: the automatic cutlass waits (D052)
+    // Close quarters: the named boarder in reach, else (F, or a tap on a boarder further away) the nearest boarder
+    // in reach. A musket at point blank is no use with a pirate in your face.
+    const isBoarder = named?.id?.startsWith('boarder_');
+    const close = isBoarder && Math.hypot(named.x - player.x, named.z - player.z) <= CONFIG.captain.cutlass.reach
+      ? named : !targetId || isBoarder ? bladeTarget(player, state) : null;
     if (close) return strike(close);
     const target = targetId ? named : captainTarget(player, state, myLevel(), stats.range);
     if (!target || Math.hypot(target.x - player.x, target.z - player.z) > stats.range) return false;
@@ -338,6 +347,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     const player = world.player?.position;
     if (!wave || wave.done || !point || !player || !here() || wave.state.phase !== 'running' || isDown(wave) || finishing(wave)) return false;
     const stats = myStats();
+    wave.handAt = wave.ticks * TICK_SECONDS; // an attack of yours: the automatic cutlass waits (D052)
     if (stats.mode === 'cone' || stats.mode === 'area') return fireAt(stats, player, target ?? null, target ?? point);
     const inRange = item => Math.hypot(item.x - player.x, item.z - player.z) <= stats.range;
     let hit = target && inRange(target) ? target : null;
@@ -363,14 +373,21 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   // The cutlass: one blow at a boarder within reach, synced as captain_strike with your skills (Brawler:
   // the sim scales damage and reload and sweeps with them; the reload here matches it).
   const bladeReload = () => CONFIG.captain.cutlass.reload * myStats().strikeReloadMultiplier;
-  function strike(boarder) {
+  function strike(boarder, reload = bladeReload()) {
     const player = world.player?.position, t = wave.ticks * TICK_SECONDS;
-    if (t - wave.bladeAt < bladeReload() - 1e-9) return false;
+    if (t - wave.bladeAt < reload - 1e-9) return false;
     const input = { type: 'captain_strike', by: playerId, targetId: boarder.id, level: myLevel(), skills: mySkills(),
       x: Math.round(player.x * 100) / 100, z: Math.round(player.z * 100) / 100 };
     if (!submit(input)) return false;
     wave.bladeAt = t + INPUT_LEAD_TICKS * TICK_SECONDS;
     return true;
+  }
+  // Close quarters (D052): with a boarder in cutlass reach and no attack of yours for AUTO_BLADE.after seconds, your
+  // captain swings by themself every AUTO_BLADE.reload seconds (slower than your own F). The same captain_strike.
+  function autoStrike(current, player) {
+    const t = current.ticks * TICK_SECONDS, target = bladeTarget(player, current.state);
+    if (!target || t - (current.handAt ?? -Infinity) < AUTO_BLADE.after - 1e-9) return false;
+    return strike(target, Math.max(bladeReload(), AUTO_BLADE.reload));
   }
   function captainShare(current) {
     const reload = myStats().reload, t = current.ticks * TICK_SECONDS;
@@ -618,6 +635,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     else current.hud?.prompt(promptText(current.action), !!inputFor(current.action));
     if (pressed) { pressed = false; act(); }
     if (shootPressed || shootHeld) { shootPressed = false; if (!blocked()) shoot(); }
+    else if (running && !fallen && !blocked() && !finishing(current)) autoStrike(current, player);
     // The button: "Cutlass" with a boarder in strike reach, else the equipped weapon's name (none while fallen).
     const blade = running && !!bladeTarget(player, current.state);
     current.hud?.musket?.(running && !fallen && !finishing(current) ? { share: blade ? bladeShare(current) : captainShare(current),

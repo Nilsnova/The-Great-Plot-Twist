@@ -49,7 +49,7 @@ CODE_TRIES = 5
 # One player has at most 26 building rows (4 home islet plots and 22 island spots).
 MAX_BUILDING_ROWS = 50
 PROGRESS_COLUMNS = (
-    "wave_best,next_wave,crew_gunner,crew_carpenter,crew_lookout,captain_level,won_wave_best,"
+    "wave_best,next_wave,crew_gunner,crew_carpenter,crew_lookout,crew_guard,captain_level,won_wave_best,"
     "captain_skills,weapons_owned,weapon_equipped,wreck_paid,captain_role"
 )
 # The Tech hub's research of an island (20261112060000_tech_hub.sql): at most one row per branch.
@@ -99,6 +99,7 @@ class ProgressRow(BaseModel):
     crew_gunner: StrictInt
     crew_carpenter: StrictInt
     crew_lookout: StrictInt
+    crew_guard: StrictInt  # 20261115140000_guard_crew.sql (D052)
     captain_level: StrictInt
     won_wave_best: StrictInt
     captain_skills: list[StrictStr]
@@ -204,7 +205,7 @@ class Progress:
 
     wave_best: int
     next_wave: int | None  # None: the next bell rings wave_best + 1
-    crew: dict[str, int]  # {"gunner": 0, "carpenter": 0, "lookout": 0}
+    crew: dict[str, int]  # {"gunner": 0, "carpenter": 0, "lookout": 0, "guard": 0}
     captain_level: int
     won_wave_best: int
     skills: tuple[str, ...] = ()  # the captain's learnt skills, in the order learnt
@@ -339,7 +340,12 @@ async def read_progress(admin: SupabaseAdmin, player_id: str) -> Progress:
     if not rows:
         raise unreadable()
     row = read_model(ProgressRow, rows[0])
-    crew = {"gunner": row.crew_gunner, "carpenter": row.crew_carpenter, "lookout": row.crew_lookout}
+    crew = {
+        "gunner": row.crew_gunner,
+        "carpenter": row.crew_carpenter,
+        "lookout": row.crew_lookout,
+        "guard": row.crew_guard,
+    }
     return Progress(
         row.wave_best,
         row.next_wave,
