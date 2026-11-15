@@ -13,9 +13,21 @@
 --     2. clears every cloud save (saves.data becomes {}; the row stays),
 --     3. removes every building from islet_buildings except cabins (the cabin
 --        stands from the start and has no row anyway),
---     4. sets the best wave and the flags of every island to 0, and
---     5. removes every wave run (so Pirate Point starts again at wave 1 too);
---        their participants (wave_participants, 20261110020000) go with them.
+--     4. sets the best wave and the flags of every island to 0,
+--     5. removes every moved build spot (island_layout, 20261114110000): the
+--        spots stand on their fixed places again, like the buildings that go,
+--     6. removes every arsenal copy and every arsenal click (arsenal_moves and
+--        arsenal_copies, 20261114120000), the clicks first because they point
+--        at the copies; a captain who carried a copy has the musket again, and
+--     7. removes every wave run (so Pirate Point starts again at wave 1 too),
+--        after the two tables that point at a wave: its wall record
+--        (island_wall_records, 20261114100000) and its kept sim rules
+--        (wave_rules, 20261114130500). Both would go with the wave by
+--        cascade anyway; they are deleted first so the counts show them. The
+--        participants (wave_participants, 20261110020000) go with the wave.
+--
+--   The walls' health columns (wall_health, wall_damaged_at, 20261114100000)
+--   need nothing: every wall is a building of step 3 and goes with it.
 --
 -- THIS IS NOT A MIGRATION
 --   It lives outside supabase/migrations/ on purpose: it is run by hand, once,
@@ -31,10 +43,12 @@
 --   are skipped, and the rest finds nothing left to clear.
 --
 -- WHAT IT NEEDS
---   Every migration up to 20261110010000_islands_and_waves.sql (the wallet
---   reason fresh_start, the tables islands and wave_runs). Run it as the
---   database owner (the Supabase SQL editor), because no game role may delete
---   buildings or wave runs.
+--   Every migration up to 20261114130500_wave_rules.sql (the wallet reason
+--   fresh_start, the tables islands and wave_runs of 20261110010000, and the
+--   tables island_wall_records, island_layout, arsenal_copies, arsenal_moves
+--   and wave_rules of the 14 Nov sprint). Run it as the database owner (the
+--   Supabase SQL editor), because no game role may delete buildings, layout
+--   rows, arsenal copies or wave runs.
 -- =============================================================================
 
 begin;
@@ -52,6 +66,11 @@ declare
   v_saves          integer := 0;
   v_buildings      integer := 0;
   v_islands        integer := 0;
+  v_layout         integer := 0;
+  v_arsenal_moves  integer := 0;
+  v_arsenal_copies integer := 0;
+  v_wall_records   integer := 0;
+  v_wave_rules     integer := 0;
   v_waves          integer := 0;
   v_counts         text;
 begin
@@ -85,14 +104,31 @@ begin
   update public.islands set wave_best = 0, flags = 0 where wave_best <> 0 or flags <> 0;
   get diagnostics v_islands = row_count;
 
-  -- 5. Every wave run.
+  -- 5. Every moved build spot (back to the fixed spots).
+  delete from public.island_layout;
+  get diagnostics v_layout = row_count;
+
+  -- 6. The whole arsenal: the clicks first (they point at the copies), then the copies.
+  delete from public.arsenal_moves;
+  get diagnostics v_arsenal_moves = row_count;
+  delete from public.arsenal_copies;
+  get diagnostics v_arsenal_copies = row_count;
+
+  -- 7. Every wave run, after the two tables that point at a wave.
+  delete from public.island_wall_records;
+  get diagnostics v_wall_records = row_count;
+  delete from public.wave_rules;
+  get diagnostics v_wave_rules = row_count;
   delete from public.wave_runs;
   get diagnostics v_waves = row_count;
 
   v_counts := format(
     'wallets set to %s: %s, wallets left as they were: %s, saves cleared: %s, '
-    'buildings removed: %s, islands reset: %s, wave runs removed: %s',
-    c_starting_coins, v_wallets_set, v_wallets_kept, v_saves, v_buildings, v_islands, v_waves
+    'buildings removed: %s, islands reset: %s, layout rows removed: %s, '
+    'arsenal clicks removed: %s, arsenal copies removed: %s, wall records removed: %s, '
+    'wave rules removed: %s, wave runs removed: %s',
+    c_starting_coins, v_wallets_set, v_wallets_kept, v_saves, v_buildings, v_islands,
+    v_layout, v_arsenal_moves, v_arsenal_copies, v_wall_records, v_wave_rules, v_waves
   );
 
   if c_apply then

@@ -448,6 +448,34 @@ def seed_progress(database):
         "update public.saves set data = %s where player_id = %s",
         (json.dumps({"quest": 3}), OWNER),
     )
+    # One row in each table of the 14 Nov sprint, written straight as the database owner.
+    database.execute(
+        "insert into public.island_layout (island_owner, plot, x_half, z_half)"
+        " values (%s, 'wall_1', 4, 6)",
+        (OWNER,),
+    )
+    database.execute(
+        "insert into public.island_wall_records (wave_id, island_owner, recorded_by)"
+        " values (%s, %s, %s)",
+        (wave["waveId"], OWNER, OWNER),
+    )
+    database.execute(
+        "insert into public.wave_rules (wave_id, rules) values (%s, '{pathing}')",
+        (wave["waveId"],),
+    )
+    copy = call(
+        database,
+        "insert into public.arsenal_copies (island_owner, copy_no, weapon, holder, bought_by,"
+        " source) values (%s, 1, 'pistols', %s, %s, 'bought') returning id",
+        OWNER,
+        OWNER,
+        OWNER,
+    )
+    database.execute(
+        "insert into public.arsenal_moves (player_id, action_uid, island_owner, kind, copy_id)"
+        " values (%s, 'arsenal-0001', %s, 'buy', %s)",
+        (OWNER, OWNER, copy),
+    )
 
 
 def test_the_fresh_start_dry_run_reports_the_counts_and_changes_nothing(database):
@@ -460,6 +488,10 @@ def test_the_fresh_start_dry_run_reports_the_counts_and_changes_nothing(database
 
     assert "wallets set to 100: 2" in str(stopped.value)
     assert "buildings removed: 1" in str(stopped.value)
+    assert (
+        "layout rows removed: 1, arsenal clicks removed: 1, arsenal copies removed: 1, "
+        "wall records removed: 1, wave rules removed: 1, wave runs removed: 1"
+    ) in str(stopped.value)
     assert balance(database, VETERAN) == 1000
 
 
@@ -479,3 +511,11 @@ def test_the_fresh_start_sets_every_wallet_to_100_and_clears_the_progress(databa
         "       (select count(*) from public.islands)"
     ).fetchone()
     assert left == (0, 0, 0, 0, 2)
+    sprint = database.execute(
+        "select (select count(*) from public.island_layout),"
+        "       (select count(*) from public.arsenal_moves),"
+        "       (select count(*) from public.arsenal_copies),"
+        "       (select count(*) from public.island_wall_records),"
+        "       (select count(*) from public.wave_rules)"
+    ).fetchone()
+    assert sprint == (0, 0, 0, 0, 0)
