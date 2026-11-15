@@ -104,6 +104,8 @@ WALLET_REASONS = (
     ("building_refund", EARN),
     # Added by supabase/migrations/20261112120000_captain_tree.sql (a captain's respec).
     ("captain_respec", SPEND),
+    # Added by supabase/migrations/20261115130000_tower_skill_price.sql (D051: a tower's skill).
+    ("tower_skill", SPEND),
 )
 
 

@@ -55,7 +55,7 @@ import { createRandom, hasTavern, revivePrice } from './sim.js';
 import { BUILDINGS, CREW, CAPTAIN, readUnlocks, unlockWave, SLOT_KINDS } from '../island/td-rules.js';
 import { ROLES, ROLE_BY_ID, ROLE_LEVEL, SKILLS, SKILL_BY_ID, WEAPONS, WEAPON_BY_ID, isRole, respecPrice, pointsEarned, pointsSpent, readSkills, readWeapon, skillNeeds } from './captain-ids.js';
 import { STEPS as CAMPAIGN_STEPS, spotWave, waveOf } from '../campaign/index.js';
-import { BRANCHES, BRANCH_BY_ID, SPECS, TOP_TIER, isCapstone, optionName, optionsOf, readSpec } from '../campaign/tech.js';
+import { BRANCHES, BRANCH_BY_ID, SPECS, TOP_TIER, isCapstone, optionName, optionsOf, readSpec, skillPrice } from '../campaign/tech.js';
 import { ROLES as HOUSE_ROLES, ROLE_LEVEL as HOUSE_ROLE_LEVEL } from '../campaign/houses.js';
 import { GRID as LAYOUT_GRID, checkMove, positionsOf } from '../island/placement.js';
 import { createFakeArsenal } from '../island/arsenal-fake.js';
@@ -101,7 +101,9 @@ const kindsOfSpot = (spot, culverin = false) => [...SLOT_KINDS[slotOfSpot(spot)]
 const KINDS_V1 = Object.entries(BUILDINGS).filter(([kind]) => !V2_KINDS.includes(kind));
 // The price lists of GET /api/island (indexed by level - 1; the captain's level 1 is free).
 const pricesOf = kinds => Object.freeze({ kinds: Object.fromEntries(kinds.map(([kind, info]) => [kind, [...info.price]])),
-  crew: Object.fromEntries(Object.entries(CREW).map(([id, info]) => [id, { price: info.price, max: info.max }])), captain: [...CAPTAIN.price] });
+  crew: Object.fromEntries(Object.entries(CREW).map(([id, info]) => [id, { price: info.price, max: info.max }])), captain: [...CAPTAIN.price],
+  // D051: what one tower's skill costs, per research branch (islands.json skillCoins).
+  towerSkills: Object.fromEntries(BRANCHES.map(item => [item.branch, { ...item.skillCoins }])) });
 const PRICES = pricesOf(KINDS_V1), PRICES_V2 = pricesOf(Object.entries(BUILDINGS));
 // Every unlock id with the wave it needs (§9): "<kind>:<level>", "crew:<crew>", "captain:<level>".
 const unlockIds = kinds => Object.freeze([
@@ -572,11 +574,12 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       }
       return island === mine ? view() : visitedView(island);
     },
-    // A tower picks one skill of its researched kind (free; picking again changes it). A house of level 2 or
-    // more picks a role the same way (GAME-V3.md "Houses"), with no research.
-    async specialise({ spot, spec, code } = {}) {
-      if (typeof spot !== 'string' || typeof spec !== 'string') invalid('Send the spot and the skill.');
-      const mine = world.islands.get(me().code), island = code === undefined ? mine : visited(code);
+    // A tower picks one skill of its researched kind, paid once with the clicker's coins (D051: skillPrice; a
+    // repeated actionUid pays nothing, the skill it has already is free). A house of level 2 or more picks a role
+    // the same way (GAME-V3.md "Houses"), free and with no research.
+    async specialise({ spot, spec, code, actionUid } = {}) {
+      if (typeof spot !== 'string' || typeof spec !== 'string' || (actionUid !== undefined && !uid(actionUid))) invalid('Send the spot and the skill.');
+      const mine = world.islands.get(me().code), island = code === undefined ? mine : visited(code), player = me();
       spot = canonicalSpot(spot);
       if (!ISLAND_RULES.spots.includes(spot)) refuse(404, 'no_such_spot', 'There is no such build spot here.');
       if (!island.built.has(spot)) refuse(409, 'not_built', 'Build something on this spot first.');
@@ -593,8 +596,15 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       if (!(island.research ?? []).includes(kind)) refuse(409, 'not_researched', `Research ${BRANCH_BY_ID[kind].name.toLowerCase()} at the Tech hub first.`);
       if (isCapstone(spec) && researchOf(island, kind).tier3 !== spec) refuse(409, 'not_researched', `Pick ${SPECS[spec].name} at tier 3 of the Tech hub first.`);
       if (!(island.specs instanceof Map)) island.specs = new Map();
+      const done = () => (island === mine ? view() : visitedView(island));
+      if (island.specs.get(spot) === spec) return done(); // the skill it has already: free
+      if (actionUid === undefined) refuse(409, 'reload', 'Tower skills cost coins now. Reload the page to see the prices.');
+      if (player.actions.has(`towerskill:${actionUid}`)) return done();
+      const price = skillPrice(kind, spec);
+      if (player.coins < price) refuse(409, 'insufficient_funds', `${info.name} costs ${price} coins. You need more coins.`);
+      player.coins -= price; player.actions.set(`towerskill:${actionUid}`, true);
       island.specs.set(spot, spec);
-      return island === mine ? view() : visitedView(island);
+      return done();
     },
     // GAME-V3.md §4: coins into the island's wreck, never past the goal.
     async repairWreck({ amount, actionUid, code } = {}) {
@@ -924,7 +934,7 @@ const BODY_KEYS = Object.freeze({ '/api/island/build': ['spot', 'kind', 'actionU
   '/api/island/arsenal/buy': ['weapon', 'actionUid'], '/api/island/arsenal/take': ['copy', 'actionUid'], '/api/island/arsenal/return': ['actionUid'] });
 // Keys a body may also carry: `code` builds, upgrades, researches, picks a skill or mends the wreck on a game's island.
 const OPTIONAL_KEYS = Object.freeze({ '/api/waves/finish': ['bonuses', 'rescued', 'walls'], '/api/island/repair': ['code'], '/api/island/build': ['code'], '/api/island/upgrade': ['code'], '/api/games': ['actionUid'],
-  '/api/island/research': ['code', 'tier', 'choice', 'change'], '/api/island/tower-skill': ['code'], '/api/island/wreck': ['code'], '/api/island/demolish': ['code'], '/api/island/move': ['code'],
+  '/api/island/research': ['code', 'tier', 'choice', 'change'], '/api/island/tower-skill': ['code', 'actionUid'], '/api/island/wreck': ['code'], '/api/island/demolish': ['code'], '/api/island/move': ['code'],
   '/api/island/arsenal/buy': ['code'], '/api/island/arsenal/take': ['code'], '/api/island/arsenal/return': ['code'] });
 const ACTION_UID = /^[A-Za-z0-9_-]{8,64}$/;
 const exactKeys = (body, keys, optional = []) => !!body && typeof body === 'object' && !Array.isArray(body)

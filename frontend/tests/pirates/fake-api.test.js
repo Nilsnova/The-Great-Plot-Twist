@@ -152,12 +152,38 @@ describe('fake island API', () => {
     await api.build({ spot: 'cannon_1', kind: 'cannon', actionUid: 'tier-step-0010' });
     expect((await refusal(api.specialise({ spot: 'cannon_1', spec: 'broadside' }))).message).toBe('Pick Broadside at tier 3 of the Tech hub first.');
     await step('tier-step-0011', { tier: 3, choice: 'broadside' });
-    const picked = await api.specialise({ spot: 'cannon_1', spec: 'broadside' });
+    const before = me.coins, picked = await api.specialise({ spot: 'cannon_1', spec: 'broadside', actionUid: 'tier-step-0014' });
     expect(picked.spots.find(spot => spot.id === 'cannon_1').spec).toBe('broadside');
+    expect(me.coins).toBe(before - 600); // D051: a cannon's capstone costs 600
     const switched = await step('tier-step-0012', { tier: 3, choice: 'grapeshot', change: true });
     expect(switched.spots.find(spot => spot.id === 'cannon_1').spec).toBe(null);
     expect(switched.campaign.research).toMatchObject({ tierWaves: [8, 15, 25], tiers: { cannon: { tier: 3, tier2: 'rapid_2', tier3: 'grapeshot' } } });
     expect(switched.campaign.research.branches[0].prices).toEqual([180, 360, 630]);
+  });
+  it('charges a tower skill once per click like the server (D051); the skill it has and a house role are free', async () => {
+    const world = createFakeWorld(), api = createFakeIslandApi({ world, version: 2 });
+    await api.island();
+    const me = world.players.get('me'), island = world.islands.get(me.code);
+    island.waveBest = 9; me.coins = 1000;
+    await api.research({ branch: 'cannon', actionUid: 'skill-test-0001' });
+    await api.build({ spot: 'cannon_1', kind: 'cannon', actionUid: 'skill-test-0002' });
+    const start = me.coins;
+    expect((await api.island()).prices.towerSkills.cannon).toEqual({ skill: 150, capstone: 600 });
+    const pick = actionUid => api.specialise({ spot: 'cannon_1', spec: 'heavy', actionUid });
+    await pick('skill-test-0003');
+    expect(me.coins).toBe(start - 150);
+    await pick('skill-test-0003'); // the same click again
+    await pick('skill-test-0004'); // the skill the tower has already
+    expect(me.coins).toBe(start - 150);
+    const old = await refusal(api.specialise({ spot: 'cannon_1', spec: 'chain' }));
+    expect([old.status, old.code]).toEqual([409, 'reload']);
+    me.coins = 100;
+    const poor = await refusal(api.specialise({ spot: 'cannon_1', spec: 'chain', actionUid: 'skill-test-0005' }));
+    expect([poor.code, poor.message]).toEqual(['insufficient_funds', 'Chain shot costs 150 coins. You need more coins.']);
+    island.built.add('house_1'); island.kinds = new Map([...(island.kinds ?? []), ['house_1', 'house']]); island.levels = new Map([...(island.levels ?? []), ['house_1', 2]]);
+    const role = await api.specialise({ spot: 'house_1', spec: 'tavern' });
+    expect(role.spots.find(spot => spot.id === 'house_1').spec).toBe('tavern');
+    expect(me.coins).toBe(100);
   });
   it('answers fetch() with the real JSON and error shape', async () => {
     const time = clock(), api = createFakeIslandApi({ now: time.now });

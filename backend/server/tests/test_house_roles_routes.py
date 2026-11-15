@@ -60,6 +60,8 @@ def test_a_house_of_level_two_picks_a_role_with_no_research():
         "p_plot": "house_1",
         "p_branch": "house",
         "p_spec": "barracks",
+        "p_action_uid": None,  # D051: a house role stays free, so no click id is needed
+        "p_price": 0,
     }
 
 

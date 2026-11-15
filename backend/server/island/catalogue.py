@@ -275,11 +275,22 @@ class Research:
     tier3: tuple[
         tuple[str, str], ...
     ] = ()  # (spec id, name): the two capstones of tier 3 (the island picks one)
+    # D051: what one tower of this kind pays to pick (or switch to) a skill: a tier-1 skill, or
+    # the tier-3 capstone. Paid by the player who clicks (islands.json skillCoins).
+    skill_coins: int = 0
+    capstone_coins: int = 0
 
     @property
     def coins(self) -> int:
         """The price of tier 1."""
         return self.prices[0]
+
+    def pick_price(self, spec: str) -> int:
+        """What a tower pays to pick `spec`: the capstone price for a tier-3 capstone, else the
+        price of a tier-1 skill."""
+        if spec in self.options_of(3):
+            return self.capstone_coins
+        return self.skill_coins
 
     def price_of(self, tier: int) -> int:
         return self.prices[tier - 1]
@@ -656,6 +667,12 @@ def read_research(data: dict) -> tuple[Research, ...]:
         prices = read_whole_list(item, "coins", where, 1, RESEARCH_TOP_TIER)
         if len(prices) != RESEARCH_TOP_TIER or list(prices) != sorted(prices):
             raise IslandFileError(f"{where}: 'coins' must be three rising prices, one per tier.")
+        # D051: the price of one tower's pick, a tier-1 skill and the (dearer) capstone.
+        picks = read_object(item, "skillCoins")
+        skill_coins = read_whole(picks, "skill", f"{where}.skillCoins", 1, MAX_DELTA)
+        capstone_coins = read_whole(picks, "capstone", f"{where}.skillCoins", 1, MAX_DELTA)
+        if capstone_coins < skill_coins:
+            raise IslandFileError(f"{where}: a capstone must cost at least as much as a skill.")
         branch = Research(
             branch=read_id(item, "branch", where),
             name=read_text(item, "name", where, 40),
@@ -667,6 +684,8 @@ def read_research(data: dict) -> tuple[Research, ...]:
             ),
             tier2=read_options(item, "tier2", "id", where),
             tier3=read_options(item, "tier3", "spec", where),
+            skill_coins=skill_coins,
+            capstone_coins=capstone_coins,
         )
         if tuple(spec for spec, _ in branch.specs) != RESEARCH_SPECS.get(branch.branch):
             raise IslandFileError(

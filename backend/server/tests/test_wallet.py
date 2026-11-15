@@ -97,6 +97,8 @@ def test_the_wallet_reasons_are_the_agreed_pairs_in_the_agreed_order():
         # 20261112080000_demolish.sql: half back when a member of the game tears a building down.
         ("building_refund", "earn"),
         ("captain_respec", "spend"),
+        # 20261115130000_tower_skill_price.sql: a tower's skill, paid by the clicker (D051).
+        ("tower_skill", "spend"),
     )
 
 
@@ -147,6 +149,7 @@ def test_list_reason_names_gives_the_names_in_the_agreed_order():
         "wreck_repair",
         "building_refund",
         "captain_respec",
+        "tower_skill",
     ]
 
 

@@ -134,6 +134,9 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
             option.dataset.focus = `spec-${choice.id}`; option.dataset.spec = choice.id; option.disabled = choice.disabled;
             option.setAttribute('aria-pressed', String(choice.active));
             option.append(node('strong', '', choice.busy ? 'Picking…' : choice.name), node('span', 'island-spec-line', choice.line));
+            // D051: a tower skill's price (none on the active one or a house role), and why it cannot be paid.
+            if (choice.price) option.append(node('span', 'island-choice-price', choice.price));
+            if (choice.reason) option.append(node('span', 'island-choice-reason', choice.reason));
             if (choice.active) option.append(node('span', 'island-spec-mark', '✓'));
             option.addEventListener('click', () => on.specialise?.(model.spotId, choice.id));
             list.append(option);
