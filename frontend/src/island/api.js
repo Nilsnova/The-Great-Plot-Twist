@@ -63,7 +63,7 @@ export const PATHS = Object.freeze({
   walls: code => `/api/island/walls${code ? `?code=${encodeURIComponent(code)}` : ''}`, repair: '/api/island/repair',
   demolishQuote: (spot, code) => `/api/island/demolish?spot=${encodeURIComponent(spot)}${code ? `&code=${encodeURIComponent(code)}` : ''}`,
 });
-export const CREW_IDS = Object.freeze(['gunner', 'carpenter', 'lookout']);
+export const CREW_IDS = Object.freeze(['gunner', 'carpenter', 'lookout', 'guard']);
 export const MESSAGES = Object.freeze({
   network: 'No connection to the server. Check your internet and try again.',
   unreadable: 'The answer could not be read. Try again.',
@@ -71,7 +71,7 @@ export const MESSAGES = Object.freeze({
   badCode: 'Island codes look like ISLE-K7Q2M. Check the code and try again.',
   badGameCode: 'Game codes look like ISLE-K7Q2M or K7Q2M. Check the code and try again.',
   badWave: 'There is no such wave.',
-  badCrew: 'Choose a gunner, a carpenter or a lookout.',
+  badCrew: 'Choose a gunner, a carpenter, a lookout or a guard.',
   badSkill: 'There is no such skill.',
   badRole: 'There is no such role.',
   badWeapon: 'There is no such weapon.',

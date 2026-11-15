@@ -149,6 +149,12 @@ export const CONFIG = freeze({
     gunner: { max: 2, reload: 0.75 },        // reload × 0.75 on the strongest towers, aims at the ship closest to the shore
     carpenter: { max: 2, rate: 6, rebuild: 8 }, // hp per second on the most damaged walls; a broken wall takes 8 s to rebuild
     lookout: { max: 1, sight: 1.2, warn: 3 }, // sight × 1.2 in fog; ships are announced 3 s before they appear
+    // Guards (D052): hired defenders with a cutlass who fight boarders near the heart, like a Barracks militia.
+    // Each stands at one of three posts `post` units around the heart (fixed bearings `bearings`, degrees), goes
+    // for the boarder nearest their post within `guard`, lets go past `leash` and walks back with none in reach.
+    // hp grows with the wave's damage curve (so a guard lasts about as long as a captain under the same blows) and
+    // the blow with the hp curve (like the militia's); boarders fight a guard like a captain and can kill it. A fallen guard is back at the next wave (a hire is kept, like every crew member).
+    guard: { max: 3, hp: 30, damage: 3, every: 1, reach: 1.1, guard: 4, leash: 6, speed: 2.8, post: 2.4, bearings: [-90, 30, 150] },
   },
   // Every player's musket (TOWER-DEFENSE.md §10), measured from the shooter's position at send time, and
   // the cutlass (§12) for a boarder within reach. The base numbers live here; captainStats() in
@@ -345,8 +351,10 @@ const angleGap = (a, b) => Math.abs(((a - b) % (2 * Math.PI) + 3 * Math.PI) % (2
 const count01 = (value, max) => (Number.isInteger(value) ? clamp(value, 0, max) : 0);
 function readCrew(crew) {
   const C = CONFIG.crew;
+  // Guards (D052) only appear in the crew when hired, so a wave without guards keeps its exact old state.
+  const guard = count01(crew?.guard, C.guard.max);
   return { gunner: count01(crew?.gunner, C.gunner.max), carpenter: count01(crew?.carpenter, C.carpenter.max),
-    lookout: count01(crew?.lookout, C.lookout.max) };
+    lookout: count01(crew?.lookout, C.lookout.max), ...(guard ? { guard } : {}) };
 }
 /** The warships of a wave: 1 on every 5th wave, 2 on every 10th, plus regular ones late in the game. */
 export function warshipsFor(wave, boss = wave % CONFIG.boss.every === 0) {
@@ -446,7 +454,7 @@ function shuffle(list, random) {
 
 /**
  * createWave({seed, wave, weather: {ships, fog}, island: {hp}, defenses: [{id, kind, level, x, z, health?}],
- *   crew: {gunner, carpenter, lookout}, boss, flagship, countdown, coast, lanes}).
+ *   crew: {gunner, carpenter, lookout, guard?}, boss, flagship, countdown, coast, lanes}).
  * level (1-5) and crew are optional: an old caller without them gets level 1 and no crew. A wall's health
  * (0-100, D039) is the percent its last wave left it; without one it starts whole. boss is
  * optional too: without it every 5th wave is a boss wave (TOWER-DEFENSE.md §1), never with the flagship.
@@ -912,7 +920,7 @@ export function createWave(options = {}) {
     events.push({ type: 'militia_hit', t: now(), militiaId: unit.id, boarderId: boarder.id, damage, hp: unit.hp, x: round2(unit.x), z: round2(unit.z) });
     if (unit.hp > 0) return;
     militia.splice(militia.indexOf(unit), 1); militiaById.delete(unit.id); militiaFell++;
-    events.push({ type: 'militia_fell', t: now(), militiaId: unit.id, houseId: unit.houseId, x: round2(unit.x), z: round2(unit.z) });
+    events.push({ type: 'militia_fell', t: now(), militiaId: unit.id, houseId: unit.houseId, ...(unit.guard ? { guard: true } : {}), x: round2(unit.x), z: round2(unit.z) });
     for (const other of boarders) if (other.foe === unit.id) { other.foe = null; other.goal = null; if (other.state === 'fighting') other.state = 'walking'; }
   }
   // A boarder's blow at a captain; at 0 hp the captain falls and every boarder on them walks on.
@@ -1273,8 +1281,9 @@ export function createWave(options = {}) {
   // One tick of a Barracks militia (CONFIG.houses.barracks): keep to its boarder while that one stays within
   // the leash of the door, else take the boarder nearest the door within guard (ties: the one that landed
   // first), walk up and strike every `every` seconds; with none, walk home. No dice, so every screen agrees.
+  // A hired guard (CONFIG.crew.guard, D052) is the same fighter with its own numbers and its post by the heart.
   function moveMilitia(unit, events) {
-    const G = HO.barracks, fromDoor = item => distance(item.x, item.z, unit.homeX, unit.homeZ);
+    const G = unit.guard ? C.crew.guard : HO.barracks, fromDoor = item => distance(item.x, item.z, unit.homeX, unit.homeZ);
     let foe = unit.foe ? boarders.find(item => item.id === unit.foe) ?? null : null;
     if (foe && fromDoor(foe) > G.leash + 1e-9) foe = null;
     if (!foe) {
@@ -1340,6 +1349,19 @@ export function createWave(options = {}) {
           state: 'walking', foe: null, hitIn: G.every / 2, facing: 1, level: house.level };
         militia.push(unit); militiaById.set(id, unit);
         events.push({ type: 'militia_out', t: 0, militiaId: id, houseId: house.id, hp, x: round2(unit.x), z: round2(unit.z) });
+      }
+      // The hired guards (CONFIG.crew.guard, D052) stand at their posts around the heart from the first tick. The
+      // count is the island's crew from the server at the wave start, so every screen has the same guards.
+      const GU = C.crew.guard;
+      for (let k = 0; k < (crew.guard ?? 0); k++) {
+        const a = GU.bearings[k] * Math.PI / 180, x = round2(heart.x + Math.cos(a) * GU.post), z = round2(heart.z + Math.sin(a) * GU.post);
+        // hp grows with the wave's damage curve (the blows it takes, so it lasts about as long as a captain), its blow
+        // with the hp curve (the boarders it fights), like a Barracks militia's blow.
+        const id = `guard_${k + 1}`, hp = Math.round(GU.hp * curve.damage);
+        const unit = { id, militia: true, guard: true, houseId: null, homeX: x, homeZ: z, x, z, hp, maxHp: hp,
+          damage: round2(GU.damage * curve.hp), state: 'idle', foe: null, hitIn: GU.every / 2, facing: 1, level: 1 };
+        militia.push(unit); militiaById.set(id, unit);
+        events.push({ type: 'militia_out', t: 0, militiaId: id, houseId: null, guard: true, hp, x, z });
       }
     }
     for (const input of queued) applyInput(input, events);
@@ -1582,7 +1604,7 @@ export function createWave(options = {}) {
           x: round2(hero.x), z: round2(hero.z), hp: hero.hp, maxHp: hero.maxHp, down: hero.down, downAt: hero.downAt,
           colour: hero.colour, present: presentAt(hero, t) })),
         // The house roles (GAME-V3.md "Houses"): the Barracks' militia in the wave, and the houses that act.
-        militia: militia.map(unit => ({ id: unit.id, houseId: unit.houseId, x: unit.x, z: unit.z, hp: unit.hp, maxHp: unit.maxHp,
+        militia: militia.map(unit => ({ id: unit.id, houseId: unit.houseId, ...(unit.guard ? { guard: true } : {}), x: unit.x, z: unit.z, hp: unit.hp, maxHp: unit.maxHp,
           state: unit.state, foe: unit.foe, facing: unit.facing, level: unit.level })),
         militiaFell, houses: roles.map(item => ({ ...item })),
         wrecks: wrecks.map(item => ({ ...item })),

@@ -53,7 +53,7 @@ def test_the_island_shows_levels_crew_captain_prices_unlocks_and_the_next_wave()
         "x": -12.5, "z": -14.5,
     }  # fmt: skip
     assert (body["waveBest"], body["nextWave"]) == (3, 2)
-    assert body["crew"] == {"gunner": 1, "carpenter": 0, "lookout": 0}
+    assert body["crew"] == {"gunner": 1, "carpenter": 0, "lookout": 0, "guard": 0}
     assert body["captain"] == {"level": 2, "nextPrice": 40}
     assert body["prices"]["kinds"]["mortar"] == [60, 120, 240, 480, 960]
     assert body["prices"]["crew"]["lookout"] == {"price": 25, "max": 1}
@@ -335,6 +335,30 @@ def test_hiring_refuses_a_full_crew_locked_crew_and_too_few_coins():
     raced = world_at(9)
     raced.database.paid_replies["island_hire"] = {"status": "refused", "reason": "crew_full"}
     assert_error(raced.post("/api/island/hire", crew="lookout"), 409, "crew_full")
+
+
+def test_a_guard_is_hired_after_wave_six_for_sixty_coins_three_at_most():
+    """D052: guards fight boarders near the heart; price and maximum come from islands.json."""
+    world = world_at(6)
+    assert world.post("/api/island/hire", crew="guard").status_code == 200
+    (call,) = world.database.calls("island_hire")
+    assert (call["p_crew"], call["p_price"], call["p_max"]) == ("guard", 60, 3)
+    assert world.island().json()["prices"]["crew"]["guard"] == {"price": 60, "max": 3}
+
+
+def test_hiring_a_guard_refuses_too_early_a_full_crew_and_too_few_coins():
+    assert_error(world_at(5).post("/api/island/hire", crew="guard"), 409, "locked")
+    full = world_at(9, crew_guard=3)
+    assert_error(full.post("/api/island/hire", crew="guard"), 409, "crew_full")
+    assert full.database.calls("island_hire") == []
+    poor = world_at(9)
+    poor.database.paid_replies["island_hire"] = {**REFUSED, "price": 60}
+    assert_error(poor.post("/api/island/hire", crew="guard"), 409, "insufficient_funds")
+
+
+def test_the_island_shows_the_hired_guards_for_the_wave():
+    world = world_at(9, crew_guard=2)
+    assert world.island().json()["crew"]["guard"] == 2
 
 
 def test_an_unknown_crew_is_a_validation_error():
@@ -701,5 +725,5 @@ def test_a_visit_shows_the_levels_kinds_and_crew_so_every_visitor_simulates_the_
     assert list(body) == ["code", "ownerName", "waveBest", "spots", "crew", "campaign", "layout"]
     spot = next(spot for spot in body["spots"] if spot["id"] == "cannon_3")
     assert (spot["kind"], spot["level"], spot["built"]) == ("mortar", 2, True)
-    assert body["crew"] == {"gunner": 1, "carpenter": 0, "lookout": 1}
+    assert body["crew"] == {"gunner": 1, "carpenter": 0, "lookout": 1, "guard": 0}
     assert set(spot) == set(world.island().json()["spots"][0])

@@ -302,6 +302,12 @@
       "name": "Lookout",
       "coins": 25,
       "max": 1
+    },
+    {
+      "crew": "guard",
+      "name": "Guard",
+      "coins": 60,
+      "max": 3
     }
   ],
   "captain": {

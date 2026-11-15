@@ -16,7 +16,7 @@ GET /api/island
     -> {"code": "ISLE-K7Q2M", "coins": 100, "waveBest": 0, "nextWave": 1, "flags": 0,
         "spots": [{"id": "wall_1", "kind": "wall", "kinds": ["wall"], "built": false,
                    "level": 0, "cost": 10, "upgradeCost": null}, ...],
-        "crew": {"gunner": 0, "carpenter": 0, "lookout": 0},
+        "crew": {"gunner": 0, "carpenter": 0, "lookout": 0, "guard": 0},
         "captain": {"level": 1, "nextPrice": 20},
         "prices": {"kinds": {"wall": [10, 20, 40], ...}, "crew": {"gunner": {"price": 40,
                    "max": 2}, ...}, "captain": [0, 20, 40, 80, 160],
@@ -94,7 +94,7 @@ POST /api/island/upgrade  {"spot": "cannon_1", "actionUid": "...", "code"?: "ISL
             409 max_level, 409 locked, 409 insufficient_funds, and with the flag wall_recovery
             on 409 needs_repair (a damaged or destroyed wall: repair it first, D039)
 
-POST /api/island/hire  {"crew": "gunner" | "carpenter" | "lookout", "actionUid": "..."}
+POST /api/island/hire  {"crew": "gunner" | "carpenter" | "lookout" | "guard", "actionUid": "..."}
     -> the island. One crew member, kept (ledger ref crew:<actionUid>). Always your own island.
     Errors: 409 crew_full, 409 locked, 409 insufficient_funds
 
@@ -184,7 +184,7 @@ POST /api/island/weapon/equip  {"weapon": "musket"}
 
 GET /api/island/visit/{code}
     -> {"code": "ISLE-K7Q2M", "ownerName": "Captain Gull", "waveBest": 3, "spots": [...],
-        "crew": {"gunner": 1, "carpenter": 0, "lookout": 0}, "campaign": {...}}
+        "crew": {"gunner": 1, "carpenter": 0, "lookout": 0, "guard": 0}, "campaign": {...}}
     The spots in the shape of GET /api/island (kind, kinds, level, ...) and the owner's crew, so
     every visitor's wave simulation uses the same defenses as the owner's. An admitted guest
     (also one admitted through the friend invite) may read it.
@@ -267,6 +267,7 @@ class CrewOut(BaseModel):
     gunner: int
     carpenter: int
     lookout: int
+    guard: int  # D052: guards fight boarders near the heart
 
 
 class CaptainOut(BaseModel):
@@ -433,7 +434,7 @@ class UpgradeRequest(BaseModel):
 class HireRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    crew: Literal["gunner", "carpenter", "lookout"]
+    crew: Literal["gunner", "carpenter", "lookout", "guard"]
     actionUid: str = Field(pattern=ACTION_UID_PATTERN)
 
 

@@ -201,7 +201,7 @@ export function createFakeWorld({ seed = 7, neighbours = true, friends = [DEFAUL
     const owner = index === 0 ? 'friend' : `friend_${index + 1}`;
     world.islands.set(friend.code, { code: friend.code, owner, ownerName: friend.ownerName, waveBest: friend.waveBest ?? 0,
       flags: friend.waveBest ?? 0, built: new Set(friend.built ?? []), levels: new Map((friend.built ?? []).map(id => [id, 1])), kinds: new Map(),
-      crew: { gunner: 0, carpenter: 0, lookout: 0 }, captain: 1, nextWave: (friend.waveBest ?? 0) + 1 });
+      crew: { gunner: 0, carpenter: 0, lookout: 0, guard: 0 }, captain: 1, nextWave: (friend.waveBest ?? 0) + 1 });
     world.players.set(owner, { coins: 40, ownerName: friend.ownerName, actions: new Map(), code: friend.code });
     // The friend hosts the game, and your captain ("me") is in it already.
     world.members.set(friend.code, new Map([[owner, { role: 'host', joined: 0, opened: 0, left: null }],
@@ -232,7 +232,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       if (code && world.islands.has(code)) code = null;
       while (!code || world.islands.has(code)) code = Array.from({ length: 5 }, () => CODE_ALPHABET[Math.floor(world.random() * CODE_ALPHABET.length)]).join('');
       world.islands.set(code, { code, owner: playerId, ownerName: player.ownerName, waveBest: 0, flags: 0, built: new Set(),
-        levels: new Map(), kinds: new Map(), crew: { gunner: 0, carpenter: 0, lookout: 0 }, captain: 1, nextWave: 1 });
+        levels: new Map(), kinds: new Map(), crew: { gunner: 0, carpenter: 0, lookout: 0, guard: 0 }, captain: 1, nextWave: 1 });
       player.code = code; player.coins = ISLAND_RULES.startingCoins; // a brand-new captain is paid once
     }
     return player;
@@ -471,7 +471,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       return island === mine ? view() : visitedView(island);
     },
     async hire({ crew, actionUid } = {}) {
-      if (!Object.hasOwn(CREW, crew ?? '') || !uid(actionUid)) invalid('Send gunner, carpenter or lookout and an action id.');
+      if (!Object.hasOwn(CREW, crew ?? '') || !uid(actionUid)) invalid('Send gunner, carpenter, lookout or guard and an action id.');
       const player = me(), island = world.islands.get(player.code), info = CREW[crew];
       if (player.actions.has(`hire:${actionUid}`)) return view();
       if (!allowed(island).crew[crew]) refuse(409, 'locked', lockedMessage(unlockWave({ crew })));

@@ -6,7 +6,7 @@
 // URL extras: &spots=cannon_2,wall_1 (defenses), &weather=storm|fog|rain|calm, &wave=N (force a wave
 // number), &hp=N (a sturdier island, for the perf reading with 20+ ships), &lamps=real (no rehearsal help).
 // Tower defense v2: &spots=cannon_2:3,mortar_1:2 (id:level), &full=1 (the whole island at level 3),
-// &crew=gunner2,carpenter2,lookout, &captain=1..5, &auto=1 (auto next wave). v3 waves: &event=fog_bank (any id of
+// &crew=gunner2,carpenter2,lookout,guard3, &captain=1..5, &auto=1 (auto next wave). v3 waves: &event=fog_bank (any id of
 // wave-events.js: that event instead of the seed's), &trigger=0.98 (a boss finisher starts below this share of its hull). F fires your musket; after a
 // won wave the break offers Next wave (the fake's start route again, the next wave number).
 import { coastPoint } from './sim.js';
@@ -28,11 +28,11 @@ export const DEMO_SPOTS = [
 ];
 const FULL = ['cannon_1:3', 'cannon_2:3', 'cannon_3:3', 'cannon_4:3', 'cannon_5:2', 'mortar_1:3', 'mortar_2:3',
   'wall_1:3', 'wall_2:3', 'wall_3:3', 'wall_4:3', 'wall_5:3', 'wall_6:3', 'tower_1:2'];
-/** "gunner2,carpenter2,lookout" → {gunner: 2, carpenter: 2, lookout: 1}. */
+/** "gunner2,carpenter2,lookout,guard3" → {gunner: 2, carpenter: 2, lookout: 1, guard: 3}. */
 export function readCrewParam(text = '') {
-  const crew = { gunner: 0, carpenter: 0, lookout: 0 };
+  const crew = { gunner: 0, carpenter: 0, lookout: 0, guard: 0 };
   for (const token of String(text).split(',')) {
-    const match = /^(gunner|carpenter|lookout)(\d?)$/.exec(token.trim());
+    const match = /^(gunner|carpenter|lookout|guard)(\d?)$/.exec(token.trim());
     if (match) crew[match[1]] = Number(match[2] || 1);
   }
   return crew;
