@@ -122,7 +122,7 @@ describe('crew and captain panels (§3, §10)', () => {
       ['gunner', '2 of 2', 'Full', true, 'You have 2, the most you can hire.'],
       ['carpenter', '0 of 2', 'Hire', true, 'Not enough 🪙: you need 🪙 5 more.'],
       ['lookout', '0 of 1', 'Hire', false, ''],
-      ['guard', '0 of 3', 'Hire', true, 'Not enough 🪙: you need 🪙 35 more.']]); // D052
+      ['guard', '0/3', 'Hire', true, '']]); // D052: a compact tile, no sentence
     expect(model.rows[2]).toMatchObject({price: '🪙 25', line: 'Sees further in fog; ships show 3 s earlier.'});
     expect(crewModel({crew: {}, coins: 100, unlocks: wave5, busy: 'gunner'}).rows[0]).toMatchObject({button: 'Hiring…', disabled: true});
   });

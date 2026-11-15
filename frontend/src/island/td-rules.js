@@ -44,8 +44,9 @@ export const CREW = Object.freeze({
   gunner: Object.freeze({name: 'Gunner', line: 'Mans your strongest tower: it reloads 25% faster.', price: 40, max: 2}),
   carpenter: Object.freeze({name: 'Carpenter', line: 'Repairs your most damaged wall during a wave.', price: 30, max: 2}),
   lookout: Object.freeze({name: 'Lookout', line: 'Sees further in fog; ships show 3 s earlier.', price: 25, max: 1}),
-  // D052: a guard with a cutlass fights boarders near the heart in every wave (sim.js CONFIG.crew.guard).
-  guard: Object.freeze({name: 'Guard', line: 'Fights boarders near the heart with a cutlass during every wave.', price: 60, max: 3}),
+  // D052: a guard with a cutlass fights boarders near the heart in every wave (sim.js CONFIG.crew.guard). A compact
+  // tile (Nils: less text): an icon, the price badge and a count, no line.
+  guard: Object.freeze({name: 'Guard', icon: '🗡️', line: '', price: 60, max: 3}),
 });
 export const CREW_IDS = Object.freeze(Object.keys(CREW));
 

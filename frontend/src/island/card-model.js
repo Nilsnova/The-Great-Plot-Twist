@@ -141,9 +141,10 @@ export function crewModel({crew = {}, coins = null, unlocks = null, busy = null,
     const price = Number.isSafeInteger(sent?.price) ? sent.price : info.price;
     if (unlocks && !unlocks.crew[id]) { soon.push(`${info.name}: ${opensText(lockedWave(unlocks, {crew: id}) ?? '?')}`); continue; }
     const full = owned >= info.max;
-    const row = {id, name: info.name, line: info.line, price: coinText(price), owned: `${owned} of ${info.max}`,
-      button: busy === id ? 'Hiring…' : full ? 'Full' : 'Hire', disabled: true, reason: ''};
-    if (full) row.reason = info.max === 1 ? 'You have one.' : `You have ${info.max}, the most you can hire.`;
+    const row = {id, name: info.name, line: info.line, price: coinText(price), owned: info.icon ? `${owned}/${info.max}` : `${owned} of ${info.max}`,
+      button: busy === id ? 'Hiring…' : full ? 'Full' : 'Hire', disabled: true, reason: '', ...(info.icon ? {icon: info.icon} : {})};
+    if (info.icon) row.disabled = full || !!busy || coins === null || coins < price; // a compact tile (D052): no sentences
+    else if (full) row.reason = info.max === 1 ? 'You have one.' : `You have ${info.max}, the most you can hire.`;
     else if (busy) row.reason = '';
     else if (coins === null) row.reason = 'Your coins are still loading.';
     else if (coins < price) row.reason = `Not enough 🪙: you need ${coinText(price - coins)} more.`;

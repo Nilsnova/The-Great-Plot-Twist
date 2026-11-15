@@ -301,7 +301,8 @@ async function captainHealth(host, ben, wave) {
     await captain.page.waitForFunction(ids => { const party = window.__island.waves.island.state?.party ?? [];
       return ids.every(id => party.some(hero => hero.id === id && hero.present)); }, [hostId, benId], {timeout: 15000, polling: 200});
   }
-  // The friend stands on the nearest boarder until he falls.
+  // The friend stands on the nearest boarder until he falls (his automatic cutlass off, D052, or he fights back).
+  await ben.page.evaluate(() => { window.__island.waves.island.autoBlade = false; });
   let snapped = false;
   const end = Date.now() + 120000;
   while (Date.now() < end) {

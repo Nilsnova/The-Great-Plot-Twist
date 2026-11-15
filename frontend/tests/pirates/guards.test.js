@@ -53,7 +53,7 @@ describe('guards: the data', () => {
     expect(locked.rows.map(row => row.id)).not.toContain('guard');
     expect(locked.soon).toContain('Guard');
     const open = crewModel({ crew: { guard: 1 }, coins: 100, unlocks: readUnlocks({ unlocks: { wave: 6 } }) });
-    expect(open.rows.find(row => row.id === 'guard')).toMatchObject({ name: 'Guard', owned: '1 of 3', button: 'Hire', disabled: false });
+    expect(open.rows.find(row => row.id === 'guard')).toMatchObject({ name: 'Guard', icon: '🗡️', price: '🪙 60', owned: '1/3', line: '', reason: '', button: 'Hire', disabled: false });
     const poor = crewModel({ crew: {}, coins: 20, unlocks: readUnlocks({ unlocks: { wave: 6 } }) });
     expect(poor.rows.find(row => row.id === 'guard').disabled).toBe(true);
     expect(readCrewParam('guard3,gunner')).toEqual({ gunner: 1, carpenter: 0, lookout: 0, guard: 3 });

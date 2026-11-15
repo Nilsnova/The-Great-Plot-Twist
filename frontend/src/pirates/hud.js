@@ -15,9 +15,9 @@ export const waveBarText = ({ wave, shipsLeft, islandHp, maxIslandHp, boardersLe
 
 export const runLootText = loot => `Loot this run: 🪙 ${Math.max(0, Math.round(loot) || 0)}`;
 
-// The button: "Cutlass" with a boarder within strike reach (§12), else the equipped weapon's name (§15),
+// The button: "F: Slash" (the cutlass, D052) with a boarder within strike reach (§12), else the equipped weapon's name (§15),
 // or that no pirate is in range.
-export const musketText = (ready, blade = false, name = 'Musket') => (blade ? 'Cutlass' : ready ? name : 'No pirate in range');
+export const musketText = (ready, blade = false, name = 'Musket') => (blade ? 'F: Slash' : ready ? name : 'No pirate in range');
 
 // Your captain's hp under the wave bar, and the timer over a fallen captain (seconds as m:ss).
 export const healthText = ({ hp, maxHp }) => `Captain ${Math.max(0, Math.ceil(hp))} / ${maxHp}`;

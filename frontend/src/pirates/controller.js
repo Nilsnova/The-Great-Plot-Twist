@@ -384,6 +384,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   }
   // Close quarters (D052): with a boarder in cutlass reach and no attack of yours for AUTO_BLADE.after seconds, your
   // captain swings by themself every AUTO_BLADE.reload seconds (slower than your own F). The same captain_strike.
+  let autoBlade = true; // the browser checks turn it off to let a captain fall on purpose (controller.autoBlade)
   function autoStrike(current, player) {
     const t = current.ticks * TICK_SECONDS, target = bladeTarget(player, current.state);
     if (!target || t - (current.handAt ?? -Infinity) < AUTO_BLADE.after - 1e-9) return false;
@@ -635,8 +636,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     else current.hud?.prompt(promptText(current.action), !!inputFor(current.action));
     if (pressed) { pressed = false; act(); }
     if (shootPressed || shootHeld) { shootPressed = false; if (!blocked()) shoot(); }
-    else if (running && !fallen && !blocked() && !finishing(current)) autoStrike(current, player);
-    // The button: "Cutlass" with a boarder in strike reach, else the equipped weapon's name (none while fallen).
+    else if (autoBlade && running && !fallen && !blocked() && !finishing(current)) autoStrike(current, player);
+    // The button: "F: Slash" (the cutlass) with a boarder in strike reach, else the equipped weapon's name (none while fallen).
     const blade = running && !!bladeTarget(player, current.state);
     current.hud?.musket?.(running && !fallen && !finishing(current) ? { share: blade ? bladeShare(current) : captainShare(current),
       ready: blade || !!captainTarget(player, current.state, myLevel(), stats.range), blade, label: stats.name } : null);
@@ -773,6 +774,9 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     // whether you are down (no walking, shooting or building), and the revive you hold ({targetId, share}).
     get captain() { return meIn(wave); },
     get captainDown() { return isDown(wave); },
+    // D052: the automatic cutlass (on by default). scripts/check-multiplayer.js turns it off for a captain who must fall.
+    get autoBlade() { return autoBlade; },
+    set autoBlade(on) { autoBlade = on !== false; },
     get revive() { return wave?.revive ? { targetId: wave.revive.targetId, share: wave.revive.share, paying: wave.revive.paying } : null; },
     get playerId() { return playerId; },
     // The pose of a captain of the wave on screen ({kind, flip, age} from poses.js, or null): your own by

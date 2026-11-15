@@ -137,7 +137,7 @@ describe('the cutlass', () => {
     expect(bladeTarget({ x: 0, z: 0 }, state)?.id).toBe('boarder_1');
     expect(bladeTarget({ x: -3, z: 0 }, state)).toBe(null);
     expect(captainTarget({ x: -3, z: 0 }, state, 1)?.id).toBe('boarder_1'); // the musket takes the nearest, ship or boarder
-    expect(musketText(true, true)).toBe('Cutlass'); expect(musketText(true)).toBe('Musket'); expect(musketText(false)).toBe('No pirate in range');
+    expect(musketText(true, true)).toBe('F: Slash'); expect(musketText(true)).toBe('Musket'); expect(musketText(false)).toBe('No pirate in range');
     expect(boarderAt({ x: 4, z: -1.2 }, state)?.id).toBe('boarder_2');
     expect(waveBarText({ wave: 3, shipsLeft: 2, islandHp: 80, maxIslandHp: 100, boardersLeft: 4 })).toBe('Wave 3 · 2 ships left · 4 ashore · ♥ 80');
     expect(waveBarText({ wave: 3, shipsLeft: 1, islandHp: 80, maxIslandHp: 100 })).toBe('Wave 3 · 1 ship left · ♥ 80');

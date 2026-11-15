@@ -59,6 +59,8 @@
 .island-crew-text p{margin:0}
 .island-crew-head{display:flex;gap:var(--u-2);align-items:baseline}
 .island-crew-owned{color:var(--u-mute);font-size:15px}
+.island-crew-icon{font-size:22px;line-height:1}
+.island-crew-price{margin-left:auto;padding:0 var(--u-2);border:2px solid var(--u-gold);border-radius:999px;color:var(--u-gold);font-weight:800}
 .island-crew-line{color:var(--u-mute);font-size:15px}
 .island-crew-reason{color:var(--u-rust);font-size:14px}
 .island-crew-row .kit-button{flex:none;min-width:0;white-space:nowrap}
