@@ -83,6 +83,24 @@ describe('the narrator on the bus', () => {
     narrator.dispose();
   });
 
+  it('keeps the small talk for after a running wave: a fallen captain speaks only between waves', async () => {
+    const lines = [...LINES, {id: 'fell_1', trigger: 'player_fell', text: 'A captain fell.'}];
+    const events = bus();
+    const narrator = createNarrator({on: events.on, lines, storage: store, getGame: () => game, preferences: () => prefs,
+      onPreferences: () => () => {}, fetchImpl: null, createCard: () => (card = fakeCard())});
+    events.emit({type: 'wave_started_server', waveId: 'w2', wave: 2, where: 'own'});
+    events.emit({type: 'player_fell', playerId: 'a'});
+    events.emit({type: 'boarders_ashore'});
+    await flush(20000);
+    expect(card.shown).toEqual(['boarders_ashore']);
+    events.emit({type: 'wave_finished', waveId: 'w2', survived: false, wave: 2});
+    await flush(10000);
+    events.emit({type: 'player_fell', playerId: 'a'});
+    await flush(0);
+    expect(narrator.speaking).toBe('fell_1');
+    narrator.dispose();
+  });
+
   it('waits for the island code, and treats a saved island with waves as a returning crew', async () => {
     game = null;
     const {narrator} = make();

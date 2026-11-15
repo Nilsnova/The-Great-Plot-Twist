@@ -91,7 +91,7 @@ html:has(.pirate-hud:not([hidden]) .pirate-bar:not([hidden])) .quest-strip{displ
    fallen captains, and the prompt held down to help a teammate up. */
 .pirate-health{display:flex;align-items:center;gap:6px;font:600 15px/1.2 var(--u-font)}
 .pirate-health-text{white-space:nowrap}
-.pirate-health-meter{display:block;width:72px;height:7px;background:var(--u-deep);border:1px solid var(--u-line)}
+.pirate-health-meter{display:block;width:96px;height:7px;background:var(--u-deep);border:1px solid var(--u-line)}
 .pirate-health-fill{display:block;height:100%;width:100%;background:#9fd26a;transition:width .2s steps(4)}
 .pirate-health-fill[data-level=low]{background:#f3c35c}.pirate-health-fill[data-level=bad]{background:#d8553f}
 .pirate-health.pirate-flash{animation:pirate-health-hit .35s steps(3) both}

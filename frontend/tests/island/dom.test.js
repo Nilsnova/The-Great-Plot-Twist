@@ -82,10 +82,10 @@ it('builds from the card: cannon or mortar, upgrade, max level, short of coins, 
   // GAME-V3.md §4: the locked mortar stays on the card, off, "Opens after wave 2."
   expect(result.fresh).toMatchObject({title: 'Tower spot', choices: ['cannon:false', 'mortar:true', 'harpoon:true'], soon: '', button: ''});
   // The HUD hears the island's balance: 100 from GET /api/island, then 70 after the cannon.
-  expect(result.built).toEqual({closed: true, toast: 'Cannon built! You have 🪙 70.', coins: 70, reported: [100, 70]});
+  expect(result.built).toEqual({closed: true, toast: 'Cannon built · 🪙 70', coins: 70, reported: [100, 70]});
   expect(result.lockedUpgrade).toMatchObject({title: 'Cannon', pips: 'Level 1 of 5', button: '', soon: 'Level 2: Opens after wave 2.', hire: true});
   expect(result.upgrade).toMatchObject({title: 'Cannon', next: 'Level 2 · 🪙 60', stats: 'Damage 10 → 16 · Range 28 → 31', button: 'Upgrade', disabled: false, reason: ''});
-  expect(result.upgraded).toMatchObject({pips: 'Level 2 of 5', toast: 'Cannon is now level 2! You have 🪙 140.', soon: 'Level 3: Opens after wave 5.'});
+  expect(result.upgraded).toMatchObject({pips: 'Level 2 of 5', toast: 'Cannon level 2 · 🪙 140', soon: 'Level 3: Opens after wave 5.'});
   expect(result.choice).toMatchObject({title: 'Tower spot', choices: ['cannon:false', 'mortar:false', 'harpoon:true'], soon: ''});
   expect(result.mortar).toMatchObject({kind: 'mortar', level: 1, built: true});
   // Level 3 after wave 5; level 4 opens after wave 12 (the tower tiers, GAME-V3.md §4.1).
@@ -152,7 +152,7 @@ it('the crew and captain panels: locked, hire, full, short of coins; a friend ar
   expect(result.open.map(row => `${row.id}:${row.owned}:${row.button}:${row.disabled}`)).toEqual(['gunner:0 of 2:Hire · 🪙 40:false', 'carpenter:0 of 2:Hire · 🪙 30:false']);
   expect(result.full[0]).toMatchObject({id: 'gunner', owned: '2 of 2', button: 'Full', disabled: true, reason: 'You have 2, the most you can hire.'});
   expect(result.full[1]).toMatchObject({id: 'carpenter', disabled: true, reason: 'Not enough 🪙: you need 🪙 10 more.'});
-  expect(result.toast).toBe('Gunner hired! You have 🪙 20.');
+  expect(result.toast).toBe('Gunner hired · 🪙 20');
   expect(result.captain).toEqual({stats: 'Musket · Damage 6 · Range 14', hint: 'Tap a ship to fire your musket (F).', next: 'Level 2 · 🪙 20', disabled: false, reason: ''});
   expect(result.arrived).toBe('Captain Brine joined your island');
   expect(result.tags).toEqual(['Captain Brine']);
@@ -182,7 +182,7 @@ it('Pirate Point: the same build and upgrade card, paid by you, belongs to Pirat
     return {choose, toast, coins, upgrade, spot};
   });
   expect(result.choose).toEqual({title: 'Tower spot', owner: 'Paid by you · belongs to Pirate Point', choices: ['cannon', 'mortar']});
-  expect(result.toast).toBe('Mortar built for Pirate Point! You have 🪙 40.');
+  expect(result.toast).toBe('Mortar built for Pirate Point · 🪙 40');
   expect(result.coins).toBe(40);
   expect(result.upgrade).toEqual({next: 'Level 2 · 🪙 120', hire: false});
   expect(result.spot).toMatchObject({kind: 'mortar', level: 1, built: true});
@@ -264,7 +264,7 @@ it("visits a friend's island by code: their buildings, building there with your 
   // The friend's island has won wave 2: level 2 is open there (its own campaign decides, GAME-V3.md §4).
   expect(result.built).toEqual({owner: "You pay · it stays on Captain Gull's island", pips: 'Level 1 of 5', soon: '', hire: false});
   expect(result.wallCard).toEqual({owner: "You pay · it stays on Captain Gull's island", button: 'Build · 🪙 10'});
-  expect(result.paid).toEqual({toast: "Wall built on Captain Gull's island! You have 🪙 90.", coins: 90, theirs: true, mine: false});
+  expect(result.paid).toEqual({toast: "Wall built on Captain Gull's island · 🪙 90", coins: 90, theirs: true, mine: false});
   expect(result.room).toBe('isle_fr3nd');
   expect(result.noInvite).toBe(true);
   expect(result.lobbyRows[0]).toBe('Captain Gull');

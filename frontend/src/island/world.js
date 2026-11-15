@@ -89,6 +89,8 @@ function drawn(name) {
   const [width, height, anchor] = islandFrame(name);
   return {texture: smoothTexture(frameCanvas(name)), size: [width, height], anchor};
 }
+// How near (world units) the captain stands for a build marker to glow at full strength; farther ones fade to MARKER_FAR.
+export const MARKER_NEAR = 9, MARKER_FAR = .4;
 function sprite(group, {texture, size: [width, height], anchor = 0}, x, z, name) {
   const material = spriteMaterial(texture);
   const geometry = new THREE.PlaneGeometry(width / UNIT, height / UNIT); geometry.translate(0, (height / 2 - anchor) / UNIT, 0);
@@ -284,6 +286,7 @@ export function decorateIsland(place, ctx = {}) {
       const answer = spots.find(item => item.id === spot.id), built = answer?.built === true, where = whereOf(spot);
       const marker = markers.get(spot.id);
       for (const mesh of [marker.ring, marker.badge, marker.lock, marker.lockRing]) moveSprite(mesh, where.x, where.z);
+      marker.x = where.x; marker.z = where.z;
       for (const kind of kindsOf(spot)) moveSprite(buildings.get(`${spot.id}:${kind}`), where.x, where.z);
       // Locked things stay on the map (GAME-V3.md §4): a spot the campaign opens later, or whose kind is not
       // open yet, shows a lock badge instead of the glowing ring.
@@ -377,7 +380,17 @@ export function decorateIsland(place, ctx = {}) {
       rangeRing.show(ctx.range?.() ?? null, reduced() ? 0 : time);
       const still = reduced();
       const glow = still ? 1 : .7 + .3 * Math.sin(time * 3.2), bob = still ? 0 : Math.sin(time * 2.4) * 2.4 / UNIT;
-      for (const marker of markers.values()) { marker.ring.material.opacity = glow; marker.badge.position.y = marker.badge.userData.baseY + bob; }
+      // Calm markers (owner, 15 Nov: "limit the visual overload"): only the spots near the captain glow and bob;
+      // the others stay on the map as faint, still rings and badges, so a dozen gold "+" never shout at once.
+      const at = ctx.player?.() ?? null;
+      for (const marker of markers.values()) {
+        const near = !at || !Number.isFinite(marker.x) || Math.hypot(at.x - marker.x, at.z - marker.z) <= MARKER_NEAR;
+        const target = near ? 1 : MARKER_FAR;
+        marker.fade = still || marker.fade === undefined ? target : marker.fade + (target - marker.fade) * Math.min(1, dt * 6);
+        marker.ring.material.opacity = (near ? glow : 1) * marker.fade;
+        for (const mesh of [marker.badge, marker.lock, marker.lockRing]) mesh.material.opacity = marker.fade;
+        marker.badge.position.y = marker.badge.userData.baseY + (near ? bob : 0);
+      }
       if (!bell) return;
       if (ringing > 0 && !still) { ringing = Math.max(0, ringing - dt); bell.rotation.z = Math.sin(ringing * 18) * .12 * ringing; }
       else bell.rotation.z = 0;
