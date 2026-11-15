@@ -87,8 +87,8 @@ export function captainTarget(player, state, level = 1, range = captainStats(lev
   return best;
 }
 /** The nearest boarder within cutlass reach of (x, z), or null: close quarters (TOWER-DEFENSE.md §12). */
-export function bladeTarget(player, state) {
-  let best = null, bestDistance = CONFIG.captain.cutlass.reach;
+export function bladeTarget(player, state, reach = CONFIG.captain.cutlass.reach) {
+  let best = null, bestDistance = reach;
   for (const boarder of state?.boarders ?? []) {
     const d = Math.hypot(boarder.x - player.x, boarder.z - player.z);
     if (d <= bestDistance) { best = boarder; bestDistance = d; }
@@ -349,8 +349,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     // Close quarters: the named boarder in reach, else (F, or a tap on a boarder further away) the nearest boarder
     // in reach. A musket at point blank is no use with a pirate in your face.
     const isBoarder = named?.id?.startsWith('boarder_');
-    const close = isBoarder && Math.hypot(named.x - player.x, named.z - player.z) <= CONFIG.captain.cutlass.reach
-      ? named : !targetId || isBoarder ? bladeTarget(player, state) : null;
+    const close = isBoarder && Math.hypot(named.x - player.x, named.z - player.z) <= stats.sweepRadius
+      ? named : !targetId || isBoarder ? bladeTarget(player, state, myStats().sweepRadius) : null;
     if (close) return strike(close);
     const target = targetId ? named : captainTarget(player, state, myLevel(), stats.range);
     if (!target || Math.hypot(target.x - player.x, target.z - player.z) > stats.range) return false;
@@ -415,7 +415,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   // captain swings by themself every AUTO_BLADE.reload seconds (slower than your own F). The same captain_strike.
   let autoBlade = true; // the browser checks turn it off to let a captain fall on purpose (controller.autoBlade)
   function autoStrike(current, player) {
-    const t = current.ticks * TICK_SECONDS, target = bladeTarget(player, current.state);
+    const t = current.ticks * TICK_SECONDS, target = bladeTarget(player, current.state, myStats().sweepRadius);
     if (!target || t - (current.handAt ?? -Infinity) < AUTO_BLADE.after - 1e-9) return false;
     return strike(target, Math.max(bladeReload(), AUTO_BLADE.reload));
   }
@@ -587,7 +587,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       else if (event.type === 'mortar_impact') { cue('pirate-mortar-impact'); cue(event.hits ? 'pirate-hit' : 'pirate-splash'); kick(.08); }
       else if (event.type === 'captain_fired') cue('pirate-musket');
       else if (event.type === 'captain_blast') { cue(event.hits ? 'pirate-hit' : 'pirate-splash'); kick(.06); } else if (event.type === 'ship_hit' && !event.blocked) cue('pirate-hit');
-      else if (event.type === 'captain_struck' || event.type === 'boarder_killed') cue('pirate-hit');
+      else if (event.type === 'captain_struck') cue('pirate-slash'); // melee: a blade's whoosh, not the musket's crack
+      else if (event.type === 'boarder_killed') cue('pirate-hit');
       else if (event.type === 'ship_sunk') { cue('pirate-sunk'); if (event.kind === 'flagship') kick(.5); }
       else if (event.type === 'wall_damaged') cue('pirate-wall');
       else if (event.type === 'island_damaged') { cue('pirate-wall'); kick(.18); }
@@ -669,7 +670,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     if (shootPressed || shootHeld) { shootPressed = false; if (!blocked()) shoot(); }
     else if (autoBlade && running && !fallen && !blocked() && !finishing(current)) autoStrike(current, player);
     // The button: "F: Slash" (the cutlass) with a boarder in strike reach, else the equipped weapon's name (none while fallen).
-    const blade = running && !!bladeTarget(player, current.state);
+    const blade = running && !!bladeTarget(player, current.state, stats.sweepRadius);
     current.hud?.musket?.(running && !fallen && !finishing(current) ? { share: blade ? bladeShare(current) : captainShare(current),
       ready: blade || !!captainTarget(player, current.state, myLevel(), stats.range), blade, label: stats.name } : null);
     current.hud?.health?.(me && !current.done && current.shown ? { hp: me.hp, maxHp: me.maxHp, down: me.down } : null);

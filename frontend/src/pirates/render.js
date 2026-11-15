@@ -551,10 +551,12 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         break;
       }
       case 'captain_struck': {
-        // The blow: a ring at the blade. The body that swings it is the captain's own (src/pirates/poses.js).
-        const dir = event.toX < event.x ? -1 : 1, from = shooterAt(event);
-        strikes.add(item => Object.assign(item, { x: from.x, z: from.z, dir, at: clock }));
-        effects()?.ring(from.x + dir * 1.4, drawnY(from.z) + .9, { radius: .9, life: .25, colour: '#e8eee8' });
+        // The sweep (melee, 15 Nov): a white blade arc swings once round the captain at the swing's radius, every
+        // boarder inside is hit. Unlike the musket's gold tracer (ranged) it is a circle on the ground at your feet.
+        // The body that swings it is the captain's own (src/pirates/poses.js).
+        const dir = event.toX < event.x ? -1 : 1, from = shooterAt(event), radius = Number.isFinite(event.radius) ? event.radius : 2.2;
+        strikes.add(item => Object.assign(item, { x: from.x, z: from.z, dir, at: clock, radius }));
+        effects()?.ring(from.x, drawnY(from.z) + .3, { radius, life: .3, colour: '#f4f8ff' });
         break;
       }
       // The house roles (GAME-V3.md "Houses"): a militia's spear thrust, a militia hurt or down, a Tavern's healing.
@@ -844,6 +846,19 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       if (puff) layers.air.push(puff, tx, ty - .3, puff.w * look.puff, puff.h * look.puff, .5, puff.anchor * look.puff, { a: 1 - p * p });
     }
   }
+  // The cutlass sweep: a bright arc that runs once round the captain (in the swing's direction) and fades, on the
+  // ground ellipse at the swing's radius, so melee reads as "everyone in this circle", never as a shot.
+  function drawSweep(item) {
+    const p = Math.max(0, Math.min(1, (clock - item.at) / STRIKE_SECONDS)), cy = drawnY(item.z) + .3, r = item.radius;
+    const head = still() ? Math.PI * 2 : p * Math.PI * 2, fade = still() ? .8 : 1 - p * .6;
+    for (let i = 0; i < 24; i++) {
+      const a = i / 24 * Math.PI * 2;
+      if (a > head) break;
+      const lit = 1 - Math.min(1, (head - a) / (Math.PI * 1.2)), angle = item.dir * a - Math.PI / 2;
+      const x = item.x + Math.cos(angle) * r, y = cy + Math.sin(angle) * r * Y;
+      layers.air.push(rect[WHITE], x, y, .34 + lit * .2, .34 + lit * .2, .5, .17 + lit * .1, { r: .95, g: .98, b: 1, a: (.25 + lit * .75) * fade });
+    }
+  }
   function drawCaptain() {
     // The reload ring around your own captain: 12 brass dots fill up until the musket is ready again.
     if (!captain || captain.share >= 1) return;
@@ -965,6 +980,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       for (const item of warnings.items) drawWarning(item);
       for (const item of jamShots.items) drawJamShot(item);
       for (const tower of state.towers ?? []) if (tower.jammed !== undefined) drawJamMark(tower);
+      for (const item of strikes.items) drawSweep(item);
       drawCaptain();
       drawParty(state);
       // T33: a bar over every tower with hp that has taken damage (none while the wave has no tower health).

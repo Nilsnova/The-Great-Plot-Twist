@@ -164,9 +164,9 @@ export const CONFIG = freeze({
       { damage: 18, range: 18, reload: 0.75 }, { damage: 24, range: 20, reload: 0.6 }],
     shotSpeed: 45,
     cutlass: {
-      reach: 2.2,             // the controller strikes a boarder this close instead of firing
+      reach: 2.2,             // the swing's radius round the captain: every boarder this close is hit (a sweep, 15 Nov)
       slack: .8,              // the sim accepts a little more: the boarder walks on during the input's lead
-      reload: .5,
+      reload: .75,
       levels: [{ damage: 14 }, { damage: 18 }, { damage: 24 }, { damage: 30 }, { damage: 38 }],
     },
   },
@@ -843,38 +843,33 @@ export function createWave(options = {}) {
     events.push({ ...base, t: now(), targetId: named.id, toX: last.toX, toZ: last.toZ, impactAt: last.impactAt, targets,
       ...(named.boarder ? { boarder: true } : {}) });
   }
-  // The cutlass (§12, §14 Brawler): an instant blow at a boarder within reach of where the captain stood
-  // (the named one, else the nearest), with its own short reload. The striker's skills scale it
-  // (captain-stats.js): damage × strikeMultiplier (Cutlass), reload × strikeReloadMultiplier (Second
-  // wind), and with Sweep every other boarder within sweepRadius of the struck one takes sweepShare.
+  // The cutlass (§12, §14 Brawler; a sweep since the battle-clarity change, D052 update 15 Nov): an instant swing
+  // round where the captain stood that hits EVERY boarder within the swing's radius (sweepRadius, plus the input's
+  // slack: boarders walk on during its lead), all at full damage, with its own short reload. The named boarder
+  // (else the nearest) is the one the swing faces. The striker's skills scale it (captain-stats.js): damage ×
+  // strikeMultiplier (Cutlass), reload × strikeReloadMultiplier (Second wind), radius + 1 with Sweep. No dice.
   function captainStrike(input, events) {
     const by = captainBy(input);
     if (!by || !finite(input.x) || !finite(input.z) || !standing(by, input)) return;
     const level = captainLevel(input), stats = captainStats(level, readSkills(input.skills));
-    const blade = C.captain.cutlass, reach = blade.reach + blade.slack, t = ticks * C.tick;
+    const blade = C.captain.cutlass, reach = stats.sweepRadius + blade.slack, t = ticks * C.tick;
     const reload = round2(blade.reload * stats.strikeReloadMultiplier);
     if (t - (blades.get(by) ?? -Infinity) < reload - 1e-9) return;
-    let target = findTarget(input.targetId);
-    if (!target?.boarder || distance(input.x, input.z, target.x, target.z) > reach) {
-      target = null;
-      let best = reach;
-      for (const boarder of boarders) {
-        const d = distance(input.x, input.z, boarder.x, boarder.z);
-        if (d <= best) { target = boarder; best = d; }
-      }
+    // Everyone in the circle, chosen before a blow lands (a boarder killed first never shifts the rest); in landing order.
+    const hit = boarders.filter(boarder => distance(input.x, input.z, boarder.x, boarder.z) <= reach + 1e-9);
+    if (!hit.length) return;
+    let target = hit.find(boarder => boarder.id === input.targetId) ?? null;
+    if (!target) {
+      let best = Infinity;
+      for (const boarder of hit) { const d = distance(input.x, input.z, boarder.x, boarder.z); if (d < best - 1e-9) { target = boarder; best = d; } }
     }
-    if (!target) return;
     blades.set(by, t);
     const damage = round2(blade.levels[level - 1].damage * stats.strikeMultiplier);
-    // The sweep's victims are chosen before the blow lands, so a boarder the blow kills still anchors it.
-    const swept = stats.sweep
-      ? boarders.filter(item => item !== target && distance(item.x, item.z, target.x, target.z) <= stats.sweepRadius + 1e-9) : [];
-    events.push({ type: 'captain_struck', t: now(), by, targetId: target.id, level, damage, reload,
-      x: round2(input.x), z: round2(input.z), toX: round2(target.x), toZ: round2(target.z),
-      ...(stats.sweep ? { swept: swept.map(item => item.id) } : {}) });
+    const swept = hit.filter(item => item !== target);
+    events.push({ type: 'captain_struck', t: now(), by, targetId: target.id, level, damage, reload, radius: stats.sweepRadius,
+      x: round2(input.x), z: round2(input.z), toX: round2(target.x), toZ: round2(target.z), swept: swept.map(item => item.id) });
     damageBoarder(target, damage, `captain:${by}`, events, { captain: true, blade: true });
-    const share = round2(damage * stats.sweepShare);
-    for (const item of swept) damageBoarder(item, share, `captain:${by}`, events, { captain: true, blade: true, sweep: true });
+    for (const item of swept) damageBoarder(item, damage, `captain:${by}`, events, { captain: true, blade: true, sweep: true });
   }
 
   // Captain health (GAME-V3.md §3). A captain is in the wave from their first captain_move; a shot or a

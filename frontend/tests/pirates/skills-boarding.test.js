@@ -61,36 +61,39 @@ describe('the cutlass with the Brawler skills', () => {
     expect(blows(third.wave.step(.05, [strike('ben', third.boarder, ['cutlass'], 3)]))[0].damage).toBe(36);
   });
 
-  it('Second wind: the strike reloads 30% faster (0.35 s instead of 0.5 s)', () => {
+  it('Second wind: the strike reloads 30% faster (0.52 s instead of 0.75 s)', () => {
     const swingAgain = skills => {
       const { wave, boarder } = oneBoarder();
       const first = blows(wave.step(.05, [strike('anna', boarder, skills)]));
-      for (let i = 0; i < 7; i++) wave.step(.05); // 0.35 s later
+      for (let i = 0; i < 11; i++) wave.step(.05); // 0.6 s later
       const next = wave.state().boarders[0];
       return { first: first[0], again: next ? blows(wave.step(.05, [strike('anna', next, skills)])) : [] };
     };
     const plain = swingAgain([]), quick = swingAgain(['second_wind']); // no Cutlass: the first blow must not kill (20 hp)
     expect(plain.first.reload).toBe(CONFIG.captain.cutlass.reload);
     expect(plain.again).toHaveLength(0); // still reloading
-    expect(quick.first.reload).toBe(.35);
+    expect(quick.first.reload).toBe(.52);
     expect(quick.again).toHaveLength(1);
   });
 
-  it('Sweep: every other boarder within 2 units of the struck one takes half the damage', () => {
-    const { wave, target, near } = crowd();
-    const events = wave.step(.05, [strike('anna', target, ['cutlass', 'sweep'])]);
+  it('every swing sweeps: each boarder within its radius of the captain takes the full blow (Sweep: 1 unit wider)', () => {
+    const { wave, target } = crowd();
+    const before = wave.state().boarders, reachOf = skills => captainStats(1, skills).sweepRadius + CONFIG.captain.cutlass.slack;
+    const input = strike('anna', target, ['cutlass', 'sweep']);
+    const inside = before.filter(item => Math.hypot(item.x - input.x, item.z - input.z) <= reachOf(['sweep']) + 1e-9);
+    const events = wave.step(.05, [input]);
     const [blow] = blows(events);
-    expect(blow.targetId).toBe(target.id);
-    expect(new Set(blow.swept)).toEqual(new Set(near.map(item => item.id)));
+    expect(blow).toMatchObject({ targetId: target.id, radius: 3.2 });
+    expect(new Set([blow.targetId, ...blow.swept])).toEqual(new Set(inside.map(item => item.id)));
     const hits = boarderHits(events, 'anna');
-    expect(hits.find(event => event.boarderId === target.id)).toMatchObject({ damage: Math.min(21, target.hp), blade: true });
-    const swept = hits.filter(event => event.sweep);
-    expect(swept.map(event => event.boarderId).sort()).toEqual(near.map(item => item.id).sort());
-    for (const event of swept) expect(event.damage).toBe(Math.min(10.5, near.find(item => item.id === event.boarderId).hp));
-    // Without Sweep only the struck boarder is hurt.
-    const plain = crowd(), plainEvents = plain.wave.step(.05, [strike('anna', plain.target, ['cutlass'])]);
-    expect(boarderHits(plainEvents, 'anna').map(event => event.boarderId)).toEqual([plain.target.id]);
-    expect(blows(plainEvents)[0].swept).toBeUndefined();
+    expect(hits.map(event => event.boarderId).sort()).toEqual(inside.map(item => item.id).sort());
+    for (const event of hits) expect(event.damage).toBe(Math.min(21, inside.find(item => item.id === event.boarderId).hp));
+    // Without Sweep the circle is the plain 2.2 (+ the input's slack).
+    const plain = crowd(), plainInput = strike('anna', plain.target, ['cutlass']);
+    const plainInside = plain.wave.state().boarders.filter(item => Math.hypot(item.x - plainInput.x, item.z - plainInput.z) <= reachOf([]) + 1e-9);
+    const plainEvents = plain.wave.step(.05, [plainInput]);
+    expect(boarderHits(plainEvents, 'anna').map(event => event.boarderId).sort()).toEqual(plainInside.map(item => item.id).sort());
+    expect(blows(plainEvents)[0].radius).toBe(2.2);
   });
 });
 

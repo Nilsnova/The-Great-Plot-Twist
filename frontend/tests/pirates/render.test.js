@@ -146,8 +146,8 @@ describe('pirate wave renderer', () => {
       { type: 'captain_struck', t: 1, by: 'nobody', x: -4, z: 5, toX: -5, toZ: 5 }]);
     const [bloom, benRing, loneRing] = calls;
     expect(bloom[0]).toBe('bloom'); expect(bloom[1]).toBeGreaterThan(3); expect(bloom[1]).toBeLessThan(6);
-    expect(benRing).toEqual(['ring', 10 + 1.4]);
-    expect(loneRing).toEqual(['ring', -4 - 1.4]); // no figure: the ring where the sim had the blow, and no body
+    expect(benRing).toEqual(['ring', 10]);
+    expect(loneRing).toEqual(['ring', -4]); // no figure: the sweep ring round where the sim had the captain, and no body
     renderer.dispose();
   });
 });
