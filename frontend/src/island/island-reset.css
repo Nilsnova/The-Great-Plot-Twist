@@ -1,0 +1,21 @@
+/* D054, Start fresh: the danger button in Settings › Account and its confirm dialog (island-reset.js). */
+.island-reset-open,.island-reset-go{display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  color:#fff7ea;border-color:#4d1208;background:linear-gradient(#d4553a,#a8321f) #b83c26;text-shadow:0 1px #4d1208}
+.island-reset-open:hover:not(:disabled),.island-reset-go:hover:not(:disabled){background:linear-gradient(#e06246,#b63a25) #c44630}
+.island-reset-open{margin-top:12px}
+.island-reset-mark{font-size:18px;line-height:1}
+.island-reset-modal{max-width:min(420px,calc(100vw - 24px))}
+.island-reset{display:grid;justify-items:center;gap:12px;text-align:center;padding:4px 0 2px}
+.island-reset-warning{display:grid;place-items:center;width:84px;height:84px;border-radius:50%;
+  font:700 48px/1 var(--u-font);color:#fff3d6;background:radial-gradient(circle at 50% 38%,#e0613f,#9c2b18);
+  border:3px solid #4d1208;box-shadow:0 3px 0 #4d1208,inset 0 2px #f39a7b}
+.island-reset-line{margin:0;font:700 19px/1.4 var(--u-font);max-width:30ch}
+.island-reset-type{display:block;margin-top:2px}
+.island-reset-hint{font:16px/1.3 var(--u-font);opacity:.85}
+.island-reset-input{box-sizing:border-box;width:min(220px,100%);min-height:44px;padding:8px 12px;text-align:center;
+  font:700 20px/1 var(--u-font);letter-spacing:.18em;text-transform:uppercase;border:2px solid #4a3010;border-radius:var(--u-radius-xs)}
+.island-reset-input:focus-visible{outline:3px solid var(--u-gold);outline-offset:2px}
+.island-reset-error{margin:0;color:#ffd0c2;font:16px/1.4 var(--u-font)}
+.island-reset-error[hidden]{display:none}
+.island-reset-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;width:100%}
+.island-reset-actions .kit-button{flex:1 1 140px}

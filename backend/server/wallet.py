@@ -12,7 +12,7 @@ single step. This file does two things:
   2. apply_transaction validates, asks the database to do it and returns the new balance.
 
 Every reason has a direction. "earn" adds coins (a positive amount), "spend" takes coins away
-(a negative amount) and "either" may go both ways (admin_adjust and fresh_start). The list of
+(a negative amount) and "either" may go both ways (admin_adjust, fresh_start and island_reset). The list of
 reasons lives in the database table wallet_reasons. WALLET_REASONS below is its copy in Python,
 and a test fails if the two differ. The database checks the direction too, so even a bug here
 cannot hand out coins.
@@ -106,6 +106,9 @@ WALLET_REASONS = (
     ("captain_respec", SPEND),
     # Added by supabase/migrations/20261115130000_tower_skill_price.sql (D051: a tower's skill).
     ("tower_skill", SPEND),
+    # Added by supabase/migrations/20261116010000_island_reset.sql (D054: a player resets their
+    # own island; the wallet goes back to the starting coins, up or down).
+    ("island_reset", EITHER),
 )
 
 

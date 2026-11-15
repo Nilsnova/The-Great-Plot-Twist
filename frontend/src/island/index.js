@@ -43,6 +43,8 @@ import {ISLAND_BUILT, ISLAND_INVITE_OPENED, ISLAND_UPGRADED, CREW_HIRED, WAVE_FI
 import {readUnlocks, CREW, BUILDINGS, maxLevel} from './td-rules.js';
 import {WAVE_STARTED} from './wave-hooks.js';
 import {addMenuExtras} from '../shell/menu-extras.js';
+import {addAccountExtras} from '../shell/account-extras.js';
+import {createIslandReset} from './island-reset.js';
 import {GAME_STARTED, captainColours, lobbyModel} from './lobby.js';
 import {resolvePeer} from '../net/live-extras.js';
 import {travelAllowed, visitChip, visitName} from './one-island.js';
@@ -69,7 +71,7 @@ const safeLocal = () => { try { return globalThis.localStorage ?? null; } catch 
 export function createIsland({container, emit, on, mode = 'live', getTransport = () => null, transport = null,
   search = globalThis.location?.search ?? '', focus = () => {}, resetInput = () => {}, reducedMotion = () => false,
   preferences = () => ({}), storage = safeLocal(), visitStorage = undefined, loadCutscenes = () => import('../cutscenes/player.js'),
-  onCoins = () => {}, onCaptain = () => {}, menu = addMenuExtras, now, setTimer, clearTimer, openHarborStall = () => {},
+  onCoins = () => {}, onCaptain = () => {}, menu = addMenuExtras, accountExtras = addAccountExtras, now, setTimer, clearTimer, openHarborStall = () => {},
   travel = () => travelAllowed({islandsMode: mode}),
   // D039 (proposed): whether /api/config says the flag wall_recovery is on (lasting wall damage, Repair/Rebuild).
   wallRecovery = () => false, arsenalOn = () => false,
@@ -830,6 +832,19 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     {label: 'Captain and skills', onSelect: () => openCaptain()},
     ...(here.size ? [{label: `Captains here (${here.size})`, onSelect: () => openCaptains()}] : []),
   ]);
+  // D054, Start fresh (island-reset.js): in Settings › Account while your island is loaded and you are signed in
+  // (not a class-demo guest; the dev fake always). After the reset: the fresh island, the game again, a toast.
+  const fresh = createIslandReset({reset: () => api.resetIsland(), onDone: (data, {play} = {}) => {
+    if (disposed) return;
+    wrote('own'); campaignSeen.delete(islandCode(data?.code ?? '')); setOwn(data); ui.close(); applyWorld(); refreshCard();
+    try { play?.(); } catch { /* The menu closes by itself then. */ }
+    ui.toast('Fresh start! Your island is new again.', 'success');
+  }});
+  const stopAccount = accountExtras(({view, play} = {}) => {
+    const account = view?.account ?? {};
+    const signedIn = mode === 'fake' || (account.state === 'signed_in' && account.guest !== true);
+    return signedIn && own ? fresh.offer(play) : null;
+  });
   async function bellAction(action) {
     cardMessage = '';
     const answer = action === 'join' ? await flow.join(where()) : action === 'ring' ? await flow.ring(where()) : null;
@@ -1013,7 +1028,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     },
     dispose() {
       if (disposed) return; disposed = true;
-      stopFinished(); stopStarted(); stopArrived(); stopPoint(); stopInteract(); stopTravel(); stopMenu?.(); stopStartedGame(); stopGame(); clearTimeout(syncSoon);
+      stopFinished(); stopStarted(); stopArrived(); stopPoint(); stopInteract(); stopTravel(); stopMenu?.(); stopAccount?.(); fresh.dispose(); stopStartedGame(); stopGame(); clearTimeout(syncSoon);
       flow.dispose(); ui.dispose(); moveBar.dispose(); globalThis.removeEventListener?.('keydown', moveKeys, true); cutscene?.dispose?.(); world?.dispose(); world = null; pointWorld?.dispose(); pointWorld = null;
     },
     spots: SPOTS,

@@ -16,6 +16,7 @@
 //   await api.upgradeCaptain();                       // POST /api/island/captain     (§10)
 //   await api.learnSkill({skill: 'steady_aim'});      // POST /api/island/skill       (§14)
 //   await api.pickRole({role: 'medic'}); await api.respec(); // POST /api/island/role, /respec
+//   await api.resetIsland();                          // POST /api/island/reset     (D054: Start fresh)
 //   await api.buyWeapon({weapon: 'pistols'});         // POST /api/island/weapon/buy  (§15)
 //   await api.equipWeapon({weapon: 'pistols'});       // POST /api/island/weapon/equip
 //   await api.demolishQuote({spot, code?});            // GET  /api/island/demolish   (GAME-V3.md §4.2: who gets what back)
@@ -59,6 +60,8 @@ export const PATHS = Object.freeze({
   games: '/api/games', gameJoin: '/api/games/join', gameLeave: '/api/games/leave', game: code => `/api/games/${code}`,
   research: '/api/island/research', specialise: '/api/island/tower-skill', wreck: '/api/island/wreck',
   demolish: '/api/island/demolish', move: '/api/island/move',
+  // D054: Start fresh, your own island back to the start.
+  reset: '/api/island/reset',
   // D039 (flag wall_recovery): the walls' health and the paid Repair/Rebuild.
   walls: code => `/api/island/walls${code ? `?code=${encodeURIComponent(code)}` : ''}`, repair: '/api/island/repair',
   demolishQuote: (spot, code) => `/api/island/demolish?spot=${encodeURIComponent(spot)}${code ? `&code=${encodeURIComponent(code)}` : ''}`,
@@ -251,6 +254,11 @@ export function createIslandApi({transport, makeUid = makeActionUid} = {}) {
     },
     respec() {
       return writeSpots('respec', actionUid => transport.post(PATHS.respec, {actionUid}), isIsland);
+    },
+    // D054: Start fresh. Your own island, coins and progress back to the start (never another island). The
+    // click id is kept after an unknown outcome, so a retry never resets twice.
+    resetIsland() {
+      return writeSpots('reset', actionUid => transport.post(PATHS.reset, {confirm: 'RESET', actionUid}), isIsland);
     },
     // §15: buy a weapon once with coins, then equip it (equipping again changes nothing, so no click id).
     buyWeapon({weapon} = {}) {

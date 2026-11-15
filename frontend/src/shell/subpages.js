@@ -1,6 +1,7 @@
 // Compose menus only when opened, keeping pause/settings/report code out of the cold title.
 import {node} from '../ui/kit/dom.js';
 import {menuButton} from './screens.js';
+import {accountExtras} from './account-extras.js';
 // Account and sign-in live in Settings. The summary follows account changes while shown.
 async function accountSummary(ctx,section){
   try{
@@ -34,6 +35,8 @@ export async function fillSubpage({mode,body,nav,ctx,isCurrent,play,page,show,ba
     const account=node('section','shell-section');account.append(node('h3','','Account'));
     if(ctx.adapter)await accountSummary(ctx,account);
     else if(ctx.openAccount)account.append(menuButton('Account',ctx.openAccount,true));
+    // What a running part of the game adds here (the island's Start fresh, D054).
+    account.append(...accountExtras({view:ctx.adapter?.read?.()??{},play}));
     if(!isCurrent())return;
     const links=node('div','shell-links');links.append(menuButton('Credits',()=>show('credits'),true));
     body.replaceChildren(account,story,...(settings?[settings]:[]),links);

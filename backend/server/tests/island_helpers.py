@@ -310,6 +310,12 @@ class FakeIslandDatabase:
             self.paid_replies.get("island_weapon_equip", EQUIPPED)
         )
         handlers["POST /rpc/wave_rules_keep"] = self.keep_wave_rules
+        # D054: island_reset_own() (20261116010000_island_reset.sql).
+        handlers["POST /rpc/island_reset_own"] = lambda request: self.answer(
+            self.paid_replies.get(
+                "island_reset_own", {"status": "done", "balance": 100, "repeat": False}
+            )
+        )
         handlers["POST /rpc/island_walls_record"] = lambda request: self.answer(
             self.paid_replies.get("island_walls_record", {"status": "recorded"})
         )

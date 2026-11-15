@@ -17,6 +17,7 @@
 //   await api.captain({actionUid});              // POST /api/island/captain      (§10)
 //   await api.learnSkill({skill, actionUid});    // POST /api/island/skill        (§14)
 //   await api.pickRole({role}); await api.respec({actionUid}); // POST /api/island/role, /respec (GAME-V3.md, Captain tree and roles)
+//   await api.resetIsland({confirm: 'RESET', actionUid}); // POST /api/island/reset (D054: Start fresh, your own island)
 //   await api.buyWeapon({weapon, actionUid});    // POST /api/island/weapon/buy   (§15)
 //   await api.equipWeapon({weapon});             // POST /api/island/weapon/equip
 //   await api.demolishQuote({spot, code?});      // GET  /api/island/demolish     (GAME-V3.md §4.2: half back to each payer)
@@ -522,6 +523,24 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       player.coins -= price; island.skills = []; island.role = null; player.actions.set(`respec:${actionUid}`, true);
       return view();
     },
+    // D054: Start fresh. Your own island back to the start and your coins to the starting coins (island_reset_own()):
+    // buildings, moved spots, research, the arsenal, crew, captain, the island's waves and the other members go;
+    // the code stays. A repeated click changes nothing; never while a wave runs on the island.
+    async resetIsland({ confirm, actionUid } = {}) {
+      if (confirm !== 'RESET' || !uid(actionUid)) invalid('Type RESET and send an action id.');
+      const player = me(), island = world.islands.get(player.code);
+      if (player.actions.has(`reset:${actionUid}`)) return view();
+      waveGuard(island, 'A wave is under way. Start fresh between waves.');
+      world.islands.set(island.code, { code: island.code, owner: playerId, ownerName: island.ownerName, waveBest: 0, flags: 0, built: new Set(),
+        levels: new Map(), kinds: new Map(), crew: { gunner: 0, carpenter: 0, lookout: 0, guard: 0 }, captain: 1, nextWave: 1 });
+      for (const [id, run] of world.waves) if (run.place === island.code) world.waves.delete(id);
+      if (world.arsenals) delete world.arsenals[island.code];
+      const rows = membersOf(island.code);
+      for (const id of [...rows.keys()]) if (id !== playerId) rows.delete(id);
+      player.coins = ISLAND_RULES.startingCoins; player.wonBest = 0; player.pointBest = 0;
+      player.actions.set(`reset:${actionUid}`, true);
+      return view();
+    },
     async buyWeapon({ weapon, actionUid } = {}) {
       if (!uid(actionUid)) invalid('Send the weapon and an action id.');
       if (!Object.hasOwn(WEAPON_BY_ID, weapon ?? '')) refuse(400, 'bad_weapon', 'There is no such weapon.');
@@ -874,6 +893,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
         if (route === 'POST /api/island/skill') return reply(200, await api.learnSkill(body));
         if (route === 'POST /api/island/role') return reply(200, await api.pickRole(body));
         if (route === 'POST /api/island/respec') return reply(200, await api.respec(body));
+        if (route === 'POST /api/island/reset') return reply(200, await api.resetIsland(body));
         if (route === 'POST /api/island/weapon/buy') return reply(200, await api.buyWeapon(body));
         if (route === 'POST /api/island/weapon/equip') return reply(200, await api.equipWeapon(body));
         if (route === 'GET /api/island/arsenal') return reply(200, await api.arsenal({ code: searchParams.get('code') }));
@@ -924,7 +944,7 @@ const FAILURES = Object.freeze({
   server: { applies: false, status: 503, code: 'database_unavailable', message: 'The database could not be reached. Try again in a moment.' },
 });
 const BODY_KEYS = Object.freeze({ '/api/island/build': ['spot', 'kind', 'actionUid'], '/api/waves/start': ['where', 'actionUid'],
-  '/api/island/upgrade': ['spot', 'actionUid'], '/api/island/hire': ['crew', 'actionUid'], '/api/island/captain': ['actionUid'],
+  '/api/island/upgrade': ['spot', 'actionUid'], '/api/island/hire': ['crew', 'actionUid'], '/api/island/captain': ['actionUid'], '/api/island/reset': ['confirm', 'actionUid'],
   '/api/island/skill': ['skill', 'actionUid'], '/api/island/weapon/buy': ['weapon', 'actionUid'], '/api/island/weapon/equip': ['weapon'],
   '/api/island/invite/join': ['code', 'actionUid'], '/api/pirate-point/build': ['spot', 'kind', 'actionUid'], '/api/pirate-point/upgrade': ['spot', 'actionUid'],
   '/api/waves/join': ['waveId'], '/api/waves/finish': ['waveId', 'survived', 'shipsSunk'], '/api/waves/revive': ['waveId', 'fallen', 'downAt', 'actionUid'],
@@ -1039,6 +1059,7 @@ export function createFakeIslandTransport({ coins = ISLAND_RULES.startingCoins, 
       if (method === 'POST' && pathname === '/api/island/skill') return ok(await api.learnSkill(body));
       if (method === 'POST' && pathname === '/api/island/role') return ok(await api.pickRole(body));
       if (method === 'POST' && pathname === '/api/island/respec') return ok(await api.respec(body));
+      if (method === 'POST' && pathname === '/api/island/reset') return ok(await api.resetIsland(body));
       if (method === 'POST' && pathname === '/api/island/weapon/buy') return ok(await api.buyWeapon(body));
       if (method === 'POST' && pathname === '/api/island/weapon/equip') return ok(await api.equipWeapon(body));
       if (method === 'GET' && pathname === '/api/island/arsenal') return ok(await api.arsenal({ code: new URLSearchParams(query).get('code') }));

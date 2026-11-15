@@ -63,6 +63,7 @@ from server.routes import (
     intro,
     island,
     island_layout,
+    island_reset,
     islet,
     keepalive,
     lock,
@@ -304,6 +305,7 @@ def create_app(
     app.include_router(islet.router, prefix="/api")
     app.include_router(island.router, prefix="/api")
     app.include_router(island_layout.router, prefix="/api")
+    app.include_router(island_reset.router, prefix="/api")
     app.include_router(arsenal.router, prefix="/api")
     app.include_router(games.router, prefix="/api")
     app.include_router(waves.router, prefix="/api")
