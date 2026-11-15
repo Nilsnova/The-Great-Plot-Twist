@@ -14,3 +14,5 @@ html[data-reduced-motion=true] .u-toast{animation:none}
    × stay in view (overlap audit, 15 Nov); toasts.js measures the header. !important: the wave and break rules
    (pirates.css) would otherwise keep them under the HUD behind the card. */
 html:has(dialog:modal) :is(.u-toasts,.u-toasts[popover]){inset:var(--toast-card-top,88px) var(--toast-card-right,12px) auto var(--toast-card-left,12px)!important}
+/* Short screens (a phone on its side): compact toasts (an error keeps its next step), so they clear the narrator card at the bottom. */
+@media(max-height:500px){.u-toast{padding:6px 12px 6px 6px;gap:8px}.u-toast-icon{width:22px;height:22px;font-size:14px}.u-toast-text{font-size:14px;line-height:1.35}.u-toast:not([data-tone=error]) .u-toast-next{display:none}}

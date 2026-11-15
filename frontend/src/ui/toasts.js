@@ -39,13 +39,13 @@ function placeOverCard(element) {
   let card = null;
   try { card = typeof document === 'undefined' ? null : document.querySelector('dialog[open]:modal'); } catch { /* no :modal (test DOMs) */ }
   const head = card?.querySelector(':scope > .kit-modal-header')?.getBoundingClientRect(), box = card?.getBoundingClientRect();
-  if (!head || !box || typeof innerWidth !== 'number') { for (const key of ['top', 'left', 'right']) element.style.removeProperty(`--toast-card-${key}`); return null; }
+  if (!head || !box || typeof innerWidth !== 'number') { for (const name of ['--toast-card-top', '--toast-card-left', '--toast-card-right']) element.style.removeProperty(name); return null; }
   element.style.setProperty('--toast-card-top', `${Math.round(head.bottom) + 8}px`);
   element.style.setProperty('--toast-card-left', `${Math.max(12, Math.round(box.left) + 12)}px`);
   element.style.setProperty('--toast-card-right', `${Math.max(12, Math.round(innerWidth - box.right) + 12)}px`);
   return card;
 }
-// While toasts show: a card that opens, closes or changes size (it is centred, so its header moves) moves them too.
+// While toasts show: a card that opens, closes, changes size or moves with the window (it is centred) moves them too.
 // Only the dialogs' open attribute and the open card's size are watched.
 function watchCards(element) {
   if (typeof MutationObserver !== 'function' || typeof document === 'undefined') return null;
@@ -54,8 +54,9 @@ function watchCards(element) {
   const place = () => { const card = placeOverCard(element); if (card !== watched) { sizes?.disconnect(); watched = card; if (card) sizes?.observe(card); } };
   const opens = new MutationObserver(place);
   opens.observe(document.body, {subtree: true, attributes: true, attributeFilter: ['open']});
+  globalThis.addEventListener?.('resize', place); // a centred card moves with the window
   place();
-  return {disconnect() { opens.disconnect(); sizes?.disconnect(); }};
+  return {disconnect() { opens.disconnect(); sizes?.disconnect(); globalThis.removeEventListener?.('resize', place); }};
 }
 
 export function createToasts({parent = document.body, limit = TOAST_LIMIT} = {}) {

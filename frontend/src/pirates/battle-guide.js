@@ -235,7 +235,7 @@ function paintIcons() {
 }
 
 /** Where a landing's skull badge stands: on the landing, or SKULL_SHIFT seaward (away from the heart) when a wall stands within SKULL_CLEAR of it. */
-export const SKULL_CLEAR = 3, SKULL_SHIFT = 2;
+export const SKULL_CLEAR = 3, SKULL_SHIFT = 2.6;
 export function skullAt(landing, heart = CONFIG.boarding.heart, walls = [], scale = 1) {
   if (!walls.some(wall => Math.hypot(wall.x - landing.x, wall.z - landing.z) < SKULL_CLEAR)) return [landing.x, landing.z];
   const dx = landing.x - heart.x, dz = landing.z - heart.z, d = Math.hypot(dx, dz) || 1;
