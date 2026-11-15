@@ -151,7 +151,7 @@ const simOf = captain => captain.page.evaluate(() => { const w = window.__island
     towers: w.state.towers.map(item => ({id: item.id, x: item.x, z: item.z}))}; });
 
 const WALL = 'wall_1', CANNON = 'cannon_1';
-const WALL_AT = {x: -13, z: 1}, CANNON_AT = {x: -8, z: -10}, FRIEND_AT = {x: -10, z: -10.5};
+const WALL_AT = {x: -13, z: 1}, CANNON_AT = {x: -11, z: -8}, FRIEND_AT = {x: -10, z: -10.5};
 try {
   // 1 The host creates a game, the friend joins it with the code, the host presses Start.
   const host = await openCaptain('Nils', 'me', {create: true});
@@ -200,7 +200,7 @@ try {
     refusals.push(`${spot}→${at.x},${at.z} ${answer.status} ${answer.code} "${answer.message}"`);
   }
   await refused(host, WALL, {x: 28, z: 0}, 'not_on_land', 'Buildings stand on land, not in the sea.');
-  await refused(ben, WALL, FRIEND_AT, 'place_taken', 'Another building stands there.');
+  await refused(ben, WALL, {x: -9.5, z: -1}, 'place_taken', 'Another building stands there.'); // wall_10's spot, on the west lane
   // A ring of empty tower and house spots round the heart with one gap (each step is legal), then the cannon in the gap.
   const RING = [['cannon_2', -1, -1], ['cannon_3', 1, -1], ['cannon_4', 3, -1], ['cannon_5', -3, 5], ['cannon_6', -1, 5], ['cannon_7', 1, 5], ['house_1', 4.5, 2], ['house_2', -4, 2]];
   for (const [spot, x, z] of RING) { const answer = await apiMove(host, spot, {x, z}); assert.equal(answer.ok, true, `ring step ${spot}: ${answer.message}`); }
@@ -297,7 +297,7 @@ try {
     island.setBattle(false); await wait(30);
     // Move the damaged wall: the card's Move, a free square, Place here; the card still offers Repair afterwards.
     card().querySelector('.island-move').click(); await wait(30);
-    island.moveMode.tap(-16, -8); await island.moveMode.confirm();
+    island.moveMode.tap(-14, -1); await island.moveMode.confirm();
     const moved = island.island.spots.find(spot => spot.id === 'wall_1');
     island.pick('wall_1'); await wait(60);
     const afterMove = read();
@@ -312,11 +312,11 @@ try {
   assert.deepEqual(recovery.damaged, {main: 'Repair · 🪙 4', mainOff: false, label: 'Damaged · health 40%', reason: '', move: 'Move', moveOff: false, moveWhy: ''}, 'a damaged wall shows Repair and Move');
   assert.deepEqual(recovery.inWave, {main: 'Repair · 🪙 4', mainOff: true, label: 'Damaged · health 40%',
     reason: 'You can repair it between waves. During a wave, press E at the wall.', move: 'Move', moveOff: true, moveWhy: 'You can move it between waves.'}, 'in a wave Repair and Move wait for the break');
-  assert.deepEqual(recovery.moved, {x: -16, z: -8}, 'the damaged wall moved');
+  assert.deepEqual(recovery.moved, {x: -14, z: -1}, 'the damaged wall moved');
   assert.deepEqual(recovery.afterMove, recovery.damaged, 'the moved wall keeps its Repair and Move');
   assert.deepEqual({main: recovery.destroyed.main, label: recovery.destroyed.label, move: recovery.destroyed.move, moveOff: recovery.destroyed.moveOff}, {main: 'Rebuild · 🪙 4', label: 'Destroyed', move: 'Move', moveOff: false}, 'a destroyed wall shows Rebuild and Move');
   assert.deepEqual({main: recovery.repaired.main, mainOff: recovery.repaired.mainOff, move: recovery.repaired.move, moveOff: recovery.repaired.moveOff}, {main: 'Upgrade', mainOff: false, move: 'Move', moveOff: false}, 'after Repair the card offers Upgrade and Move again');
-  results.push(`wall recovery + placement: damaged "${recovery.damaged.main}" + Move; in a wave both off ("${recovery.inWave.moveWhy}"); moved to -16,-8 and kept Repair; destroyed "${recovery.destroyed.main}" + Move; repaired: "${recovery.repaired.main}" + Move`);
+  results.push(`wall recovery + placement: damaged "${recovery.damaged.main}" + Move; in a wave both off ("${recovery.inWave.moveWhy}"); moved to -14,-1 and kept Repair; destroyed "${recovery.destroyed.main}" + Move; repaired: "${recovery.repaired.main}" + Move`);
   await card.close();
   const errors = env.errors.filter(text => !/Failed to load resource/.test(text));
   assert.deepEqual(errors, [], 'No browser errors');

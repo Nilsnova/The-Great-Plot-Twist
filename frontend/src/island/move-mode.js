@@ -22,7 +22,7 @@ export function moveTitle(spotId, spots = []) {
 // The bar's model: {title, line, status, ok, busy, placeLabel} for move-bar.js.
 export function moveModel({spotId, spots, verdict, busy, message}) {
   const ok = verdict.ok && !busy;
-  const line = spotById(spotId)?.slot === 'wall' ? 'Walls go on a pirate path: tap the glowing lanes.' : 'Tap the island where it should stand, or use the arrows.';
+  const line = spotById(spotId)?.slot === 'wall' ? 'Walls go on a pirate path: tap a glowing square.' : 'Tap the island where it should stand, or use the arrows.';
   return {title: moveTitle(spotId, spots), line,
     status: message || (verdict.ok ? 'This square is free.' : verdict.message), ok, refused: !verdict.ok || !!message,
     busy, placeLabel: busy ? 'Placing…' : 'Place here'};
