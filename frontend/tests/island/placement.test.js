@@ -24,7 +24,7 @@ describe('the build grid is the server\'s', () => {
 describe('an old save', () => {
   it('stands on its fixed spots, each one a grid cell, and the fixed layout passes every rule', () => {
     const placed = positionsOf([]);
-    expect(placed.wall_1).toEqual({x: -18.5, z: -4});
+    expect(placed.wall_1).toEqual({x: -18.5, z: -1});
     for (const [id, , x, z] of SPOT_TABLE) {
       expect(Number.isInteger(x / GRID) && Number.isInteger(z / GRID)).toBe(true);
       expect(checkMove(id, x, z, placed)).toEqual({ok: true});
@@ -60,7 +60,7 @@ describe('a move', () => {
 describe('the island answer\'s positions', () => {
   const spots = [{id: 'cannon_1', kind: 'cannon', built: true, level: 2, x: -10, z: -10.5}, {id: 'wall_1', kind: 'wall', built: true, level: 1}];
   it('reach the wave simulation through defenses(), the fixed spot without x/z', () => {
-    expect(defenses(spots)).toEqual([{id: 'cannon_1', kind: 'cannon', level: 2, x: -10, z: -10.5}, {id: 'wall_1', kind: 'wall', level: 1, x: -18.5, z: -4}]);
+    expect(defenses(spots)).toEqual([{id: 'cannon_1', kind: 'cannon', level: 2, x: -10, z: -10.5}, {id: 'wall_1', kind: 'wall', level: 1, x: -18.5, z: -1}]);
   });
   it('move the walk-up zone and the spot with the building', () => {
     expect(placedSpot('cannon_1', spots)).toMatchObject({id: 'cannon_1', x: -10, z: -10.5});

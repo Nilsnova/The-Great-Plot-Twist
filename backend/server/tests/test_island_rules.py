@@ -161,7 +161,8 @@ def test_the_campaign_table_says_what_is_open_locked_and_later():
 
     assert {"harbor", "market_calls", "watchtower:1", "mortar:1"} <= set(opened)
     assert locked["ring_walls"] == 5 and locked["tech_hub"] == 8 and "harbor" not in locked
-    assert later == ["ship"]
+    # D057: the ship opens after wave 30; no step comes later any more.
+    assert later == [] and locked["ship"] == 30
 
 
 def test_a_locked_kind_level_crew_or_captain_level_is_refused_with_its_wave():

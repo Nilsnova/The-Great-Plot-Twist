@@ -140,7 +140,8 @@ New things open when your game first **wins** a wave. A toast and the narrator s
 | 12 | Level 4 for cannons and walls, watchtower level 3, fast raiders |
 | 15 | Level 4 for mortars, watchtower level 4, tougher bosses |
 | 20 | Level 5 for all four, brutes ashore |
-| 30, 50 | Iron-plated ships, then dreadnoughts |
+| 30 | Iron-plated ships, and **your own ship**: the repaired wreck sails and has her own games |
+| 50 | Dreadnoughts |
 | 99 | The final battle is next: wave 100 |
 
 What you may build follows the best wave won on that island, whoever pays. Your captain, crew and weapons follow your own best wave.
@@ -164,10 +165,14 @@ The Harbor is a building on the east beach. Walk up to it and press **E** (or **
 - **Market stall** (after wave 4): will a real price go up or down in 5 minutes? Stake 🪙 5 to 10,000 with − and + or 10 %, 25 %, 50 % or All in of your coins. Right pays twice your stake. The same price gives it back.
 - **Match board** (after wave 7): pick the winner of a real football match with 🪙 1 to 10,000 (at most 🪙 25,000 a day). A right pick pays twice your stake; a wrong one loses it; a called-off match gives it back.
 
-## The Tech hub and the wreck
+## The Tech hub, the wreck and your ship
 
-- **Tech hub** (after wave 8): research a skill tree once for a kind of tower, and every tower of that kind on the island can use it. Then each tower picks one skill on its upgrade card, for free.
-- **The wreck** (after wave 6): any player pays 🪙 25 or 🪙 100 into her repair, up to 🪙 500. Sailing out comes later.
+- **Tech hub** (after wave 8): research a skill tree once for a kind of tower, and every tower of that kind on the island can use it. Then each tower picks one skill on its upgrade card.
+- **The wreck** (after wave 6): any player pays 🪙 25 or 🪙 100 into her repair, up to 🪙 500.
+- **Your ship** (after wave 30, once the wreck is repaired): walk to her on the west beach and press **E**. Between waves, pick one of her games. A round lasts 20 seconds and ends with 0 to 3 stars:
+  - **💥 Broadside duel:** enemy ships sail across. Fire when one is inside the gold band: in its middle is a bullseye (+2), inside it a hit (+1), a miss costs 1. The guns reload after every shot. **Space**, **F**, a click or tap on the sea, or **Fire**.
+  - **🪙 Treasure dash:** steer your boat left and right to grab coins (+1) and dodge cannonballs (−2; a red arrow shows where one lands). **← →** or **A D**, drag on the sea, or hold **◀ ▶**.
+  - Each game pays coins **once per won wave**: ★ × (6 + wave ÷ 5), so ★★★ is 🪙 36 at wave 30 and 🪙 78 at wave 100. After that you can keep playing for fun until your crew wins the next wave. Every player is paid into their own wallet. Settings › **Easier finishers** widens the gold band and the catch.
 
 ## Controls
 

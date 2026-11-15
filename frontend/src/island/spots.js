@@ -22,23 +22,25 @@ export const KINDS = Object.freeze({
 // there: wall, tower (a cannon, a mortar or a harpoon tower, chosen at the first build), watchtower or house. The
 // server's ids are the first column (the backend's ids as built, 11 Nov); if the backend renames a
 // spot, change it here (or add the old name to SPOT_ALIASES) and nothing else.
-//   walls   six along the shore (west, north twice, east, south twice), and the inner ring wall_7…wall_12
-//           around the island's heart (§12; the sim's CONFIG.boarding.heart, 0,2), on the paths the
-//           boarders take: east, the south cross path twice, west (north of the cabin), the north cross path twice
+//   walls   D056 (every wall stands on a pirate path, src/island/wall-lanes.js): two side by side across each
+//           sea lane's beach route (west wall_1 + wall_6, east wall_3 + wall_2, south wall_4 + wall_5), and the
+//           inner ring wall_7…wall_12 nearer the island's heart (§12; the sim's CONFIG.boarding.heart, 0,2), again
+//           two across each lane (east wall_7 + wall_12, south wall_8 + wall_9, west wall_10 + wall_11). Before
+//           16 Nov wall_2, wall_4, wall_5, wall_6, wall_8, wall_9, wall_11 and wall_12 stood where no pirate walked.
 //   towers  cannon_1…cannon_7 (a cannon, a mortar or a harpoon tower): the four corners, west, east and the south beach
 //   tower   the watchtower on the hill at the north end of the main path
 //   houses  inland, at the ends of the north cross path
 export const SPOT_TABLE = Object.freeze([
-  ['wall_1', 'wall', -18.5, -4, 'shore'], ['wall_2', 'wall', 4, -19.5, 'shore'],
-  ['wall_3', 'wall', 18.5, -3, 'shore'], ['wall_4', 'wall', -6, 18.5, 'shore'],
-  ['wall_5', 'wall', 12, 18, 'shore'], ['wall_6', 'wall', -5, -19.5, 'shore'],
+  ['wall_1', 'wall', -18.5, -1, 'shore'], ['wall_2', 'wall', 19, 1, 'shore'],
+  ['wall_3', 'wall', 19, -1, 'shore'], ['wall_4', 'wall', -1, 17, 'shore'],
+  ['wall_5', 'wall', 1, 17, 'shore'], ['wall_6', 'wall', -18.5, -3, 'shore'],
   ['cannon_1', 'tower', -12.5, -14.5, 'corner'], ['cannon_2', 'tower', 13, -15, 'corner'],
   ['cannon_3', 'tower', 15.5, 14, 'corner'], ['cannon_4', 'tower', -15.5, 14.5, 'corner'],
   ['cannon_5', 'tower', -15, -6, 'side'], ['cannon_6', 'tower', 14.5, -3, 'side'], ['cannon_7', 'tower', 4.5, 16.5, 'side'],
   ['tower_1', 'watchtower', 0, -14, 'hill'],
   ['house_1', 'house', 7, -6, 'inland'], ['house_2', 'house', -8, -6, 'inland'],
-  ['wall_7', 'wall', 8.5, 2, 'ring'], ['wall_8', 'wall', 4.5, 9, 'ring'], ['wall_9', 'wall', -4, 9.5, 'ring'],
-  ['wall_10', 'wall', -9.5, -1, 'ring'], ['wall_11', 'wall', -4, -5.5, 'ring'], ['wall_12', 'wall', 4, -5.5, 'ring'],
+  ['wall_7', 'wall', 8.5, 2, 'ring'], ['wall_8', 'wall', 0.5, 9.5, 'ring'], ['wall_9', 'wall', -1.5, 9.5, 'ring'],
+  ['wall_10', 'wall', -9.5, -1, 'ring'], ['wall_11', 'wall', -9.5, 1, 'ring'], ['wall_12', 'wall', 8.5, 0, 'ring'],
 ].map(row => Object.freeze(row)));
 // Other names an answer may use for the same spots (old drafts of §2). The backend's ids need none.
 export const SPOT_ALIASES = Object.freeze(Object.fromEntries([1, 2, 3, 4, 5, 6, 7].map(n => [`tower_s${n}`, `cannon_${n}`])));

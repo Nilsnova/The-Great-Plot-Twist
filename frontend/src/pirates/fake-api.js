@@ -59,6 +59,7 @@ import { BRANCHES, BRANCH_BY_ID, SPECS, TOP_TIER, isCapstone, optionName, option
 import { ROLES as HOUSE_ROLES, ROLE_LEVEL as HOUSE_ROLE_LEVEL } from '../campaign/houses.js';
 import { GRID as LAYOUT_GRID, checkMove, positionsOf } from '../island/placement.js';
 import { createFakeArsenal } from '../island/arsenal-fake.js';
+import { BOAT as BOAT_RULES, coinsFor as boatCoins } from './boat/rules.js';
 
 export const ISLAND_RULES = Object.freeze({
   startingCoins: 100,
@@ -614,11 +615,32 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       if (player.actions.has(`wreck:${actionUid}`)) return island === mine ? view() : visitedView(island);
       if (unlocking && island.waveBest < waveOf('wreck')) refuse(409, 'locked', lockedMessage(waveOf('wreck')));
       const paid = island.wreck ?? 0, goal = ISLAND_RULES.wreck.goal;
-      if (paid >= goal) refuse(409, 'repaired', 'The wreck is repaired. Sailing opens later.');
+      if (paid >= goal) refuse(409, 'repaired', 'The wreck is repaired. She sails after wave 30.');
       const gift = Math.min(amount, goal - paid);
       if (player.coins < gift) refuse(409, 'insufficient_funds', `That costs ${gift} coins. You need more coins.`);
       player.coins -= gift; island.wreck = paid + gift; player.actions.set(`wreck:${actionUid}`, true);
       return island === mine ? view() : visitedView(island);
+    },
+    // D057: the island's own boat after wave 30 (the server's boat.py, word for word): whether she sails, and one
+    // round's coins, paid once per game, player, island and best won wave.
+    async boatStatus({ code } = {}) {
+      const island = code === undefined || code === null ? world.islands.get(me().code) : visited(code), player = me();
+      const wave = island.waveBest, left = ISLAND_RULES.wreck.goal - Math.min(island.wreck ?? 0, ISLAND_RULES.wreck.goal);
+      const reason = wave < waveOf('ship') ? 'locked' : left > 0 ? 'not_repaired' : null;
+      return { open: reason === null, reason, message: reason === 'locked' ? lockedMessage(waveOf('ship')) : reason ? `Finish the wreck's repair first: ${left} coins to go.` : null,
+        wave, unlockWave: waveOf('ship'), wreck: { paid: ISLAND_RULES.wreck.goal - left, goal: ISLAND_RULES.wreck.goal },
+        games: BOAT_RULES.games.map(id => ({ id, paid: player.actions.has(`boat:${island.code}:${wave}:${id}`), best: boatCoins(BOAT_RULES.stars, wave) })) };
+    },
+    async boatReward({ game, stars, code } = {}) {
+      if (!BOAT_RULES.games.includes(game)) refuse(400, 'bad_game', 'There is no such boat game.');
+      if (!Number.isSafeInteger(stars) || stars < 0 || stars > BOAT_RULES.stars) refuse(422, 'bad_stars', 'Stars are a whole number from 0 to 3.');
+      const state = await api.boatStatus({ code }), island = code === undefined || code === null ? world.islands.get(me().code) : visited(code), player = me();
+      if (!state.open) refuse(409, state.reason, state.message);
+      const ref = `boat:${island.code}:${state.wave}:${game}`, coins = boatCoins(stars, state.wave);
+      const already = player.actions.has(ref);
+      if (already || coins <= 0) return { game, stars, coins: 0, paid: false, already, balance: null, wave: state.wave };
+      player.actions.set(ref, true); player.coins += coins;
+      return { game, stars, coins, paid: true, already: false, balance: player.coins, wave: state.wave };
     },
     // GAME-V3.md §4.2: what a tear-down gives back, and the tear-down (any member, between waves only).
     async demolishQuote({ spot, code } = {}) {
@@ -883,6 +905,8 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
         if (route === 'POST /api/island/research') return reply(200, await api.research(body));
         if (route === 'POST /api/island/tower-skill') return reply(200, await api.specialise(body));
         if (route === 'POST /api/island/wreck') return reply(200, await api.repairWreck(body));
+        if (route === 'GET /api/island/boat') return reply(200, await api.boatStatus({ code: searchParams.get('code') }));
+        if (route === 'POST /api/island/boat') return reply(200, await api.boatReward(body));
         if (route === 'GET /api/island/demolish') return reply(200, await api.demolishQuote({ spot: searchParams.get('spot'), code: searchParams.get('code') }));
         if (route === 'POST /api/island/demolish') return reply(200, await api.demolish(body));
         if (route === 'POST /api/island/move') return reply(200, await api.move(body));
@@ -1048,6 +1072,8 @@ export function createFakeIslandTransport({ coins = ISLAND_RULES.startingCoins, 
       if (method === 'POST' && pathname === '/api/island/research') return ok(await api.research(body));
       if (method === 'POST' && pathname === '/api/island/tower-skill') return ok(await api.specialise(body));
       if (method === 'POST' && pathname === '/api/island/wreck') return ok(await api.repairWreck(body));
+      if (method === 'GET' && pathname === '/api/island/boat') return ok(await api.boatStatus({ code: new URLSearchParams(query).get('code') }));
+      if (method === 'POST' && pathname === '/api/island/boat') return ok(await api.boatReward(body));
       if (method === 'GET' && pathname === '/api/island/demolish') {
         const asked = new URLSearchParams(query);
         return ok(await api.demolishQuote({ spot: asked.get('spot') ?? '', code: asked.get('code') }));
