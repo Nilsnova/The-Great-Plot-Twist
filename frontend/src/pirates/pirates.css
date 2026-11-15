@@ -55,6 +55,8 @@ html:has(.pirate-hud:not([hidden]) .pirate-break:not([hidden])) .quest-strip{dis
 /* Phones: the break docks under the wave bar, full width, where the toasts begin, and while it shows the
    toasts move below it (hud.js sets --pirate-break-bottom), so loot, unlock toasts and captions never cover it. */
 @media(max-width:760px){.pirate-break{left:12px;right:12px;top:172px;width:auto}}
+/* While a wave runs the toasts line up under the wave bar's measured bottom (hud.js); the break's rule below wins on phones. */
+html:has(.pirate-hud:not([hidden]) .pirate-bar:not([hidden])) :is(.u-toasts,.u-toasts[popover]){inset:var(--pirate-bar-bottom,150px) 12px auto}
 @media(max-width:900px){html:has(.pirate-hud:not([hidden]) .pirate-break:not([hidden])) :is(.u-toasts,.u-toasts[popover]){inset:var(--pirate-break-bottom,420px) 12px auto}}
 @media(max-width:760px){.pirate-bar{top:72px;min-width:0;width:calc(100vw - 24px)}.pirate-banner{top:42%}.pirate-countdown-number{font-size:64px}.pirate-countdown-words{font-size:18px}.pirate-prompt,.pirate-bell-prompt{bottom:250px}.pirate-banner strong{font-size:26px}}
 @media(prefers-reduced-motion:reduce){.pirate-hurt-edge.pirate-flash{animation:none}.pirate-pop .pirate-countdown-number{animation:none}.pirate-bar-fill{transition:none}}
@@ -78,7 +80,7 @@ html:has(.pirate-hud:not([hidden]) .pirate-break:not([hidden])) .quest-strip{dis
 .pirate-point-layer .lamp-status{bottom:232px}.pirate-point-prompt{bottom:294px}}
 /* While a wave runs: no goals panel, the toasts under the wave bar, the visiting chip out of the way. */
 html:has(.pirate-hud:not([hidden]) .pirate-bar:not([hidden])) .quest-strip{display:none}
-@media(min-width:901px){html:has(.pirate-hud:not([hidden]) .pirate-bar:not([hidden])) :is(.u-toasts,.u-toasts[popover]){inset:150px 340px auto}}
+@media(min-width:901px){html:has(.pirate-hud:not([hidden]) .pirate-bar:not([hidden])) :is(.u-toasts,.u-toasts[popover]){inset:var(--pirate-bar-bottom,150px) 340px auto}}
 @media(max-width:760px){html:has(.pirate-hud:not([hidden]) .pirate-bar:not([hidden])) .island-visit{display:none}}
 .pirate-break-close{flex:none;display:grid;place-items:center;width:44px;height:44px;padding:0;border:0;background:none;color:var(--u-brown);font:700 26px/1 var(--u-font);cursor:pointer}
 .pirate-break-close:hover,.pirate-break-close:focus-visible{color:var(--u-pink)}
@@ -129,8 +131,13 @@ html:has(.pirate-hud:not([hidden]) .pirate-bar:not([hidden])) .quest-strip{displ
 .pirate-chips{display:flex;justify-content:center;gap:14px;font:700 16px/1.2 var(--u-font)}
 .pirate-chip{display:inline-flex;align-items:center;gap:4px}.pirate-chip-icon{font-size:17px}
 .pirate-chip-ashore{color:#ff9a86}
-.pirate-goal-hint{position:absolute;left:50%;top:30%;transform:translateX(-50%);display:flex;align-items:center;gap:14px;padding:14px 22px;background:var(--u-parch);color:var(--u-brown);box-shadow:var(--u-frame);border-radius:var(--u-radius-sm);cursor:pointer}
+/* The first-wave hint: a parchment row inside the wave bar, under the goal row (hud.js). */
+.pirate-goal-hint{display:flex;align-items:center;justify-content:center;gap:14px;margin:4px -6px 0;padding:8px 16px;pointer-events:auto;background:var(--u-parch);color:var(--u-brown);box-shadow:var(--u-frame);border-radius:var(--u-radius-sm);cursor:pointer}
 .pirate-goal-hint-step{display:flex;flex-direction:column;align-items:center;gap:2px}
 .pirate-goal-hint-icon{font-size:44px;line-height:1}.pirate-goal-hint-word{font:700 16px/1.2 var(--u-font)}
 .pirate-goal-hint-arrow{font:700 30px/1 var(--u-font);color:var(--u-pink)}
-@media(max-width:760px){.pirate-goal-hint{top:36%;gap:8px;padding:10px 14px}.pirate-goal-hint-icon{font-size:34px}.pirate-goal-hint-arrow{font-size:22px}}
+.pirate-goal-hint[hidden]{display:none}
+@media(max-width:760px),(max-height:500px){.pirate-goal-hint{gap:8px;padding:6px 12px}.pirate-goal-hint-icon{font-size:28px}.pirate-goal-hint-arrow{font-size:20px}.pirate-goal-hint-word{font-size:14px}}
+@media(max-height:500px){.pirate-goal-hint-step{flex-direction:row;gap:6px}.pirate-goal-hint-icon{font-size:22px}}
+/* Short screens (a phone on its side): the event's line stays in the narrator card, so the bar stays short (overlap audit). */
+@media(max-height:500px){.pirate-event-line{display:none}.pirate-event.is-open{padding:4px 8px}}

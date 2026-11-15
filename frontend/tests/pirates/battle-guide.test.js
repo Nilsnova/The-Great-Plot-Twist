@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { CONFIG, coastPoint, createWave } from '../../src/pirates/sim.js';
 import { isOnLand } from '../../src/pirates/boarder-paths.js';
 import { attackedWalls, bearingOf, createBattleGuide, guideRoute, guideRoutes, guideWalls, landingAt, laneLandings, routeDots,
-  routeKey, waveLandings, wallBar } from '../../src/pirates/battle-guide.js';
+  routeKey, waveLandings, wallBar, skullAt, AXE_SIDE, SKULL_SHIFT } from '../../src/pirates/battle-guide.js';
 import { ISLANDS } from './balance-fixture.js';
 
 const HEART = CONFIG.boarding.heart;
@@ -168,5 +168,17 @@ describe('drawing', () => {
     expect(withMarks - guide.stats().air).toBe(2 + 1); // the bar (two boxes) and the rubble badge
     expect(JSON.stringify({ defenses, stateWalls, boarders })).toBe(frozen);
     guide.dispose();
+  });
+  // The overlap audit (15 Nov): badges never sit on each other.
+  it('keeps the axe beside a wall bar, the skull off a shore wall, and draws a shared cell or axe once', () => {
+    expect(AXE_SIDE - 1.4 / 2).toBeGreaterThan((1.6 + .14) / 2); // the axe's left edge clears the bar's right edge
+    const landing = { x: 10, z: 0 };
+    expect(skullAt(landing, { x: 0, z: 0 }, [])).toEqual([10, 0]);
+    expect(skullAt(landing, { x: 0, z: 0 }, [{ x: 9, z: 1 }])).toEqual([10 + SKULL_SHIFT, 0]);
+    const dense = createBattleGuide({ scene: scene() }), sparse = createBattleGuide({ scene: scene(), sparse: () => true });
+    const view = { mode: 'preview', defenses: ISLANDS.full.defenses, wave: 4, dt: .016 };
+    dense.update(view); sparse.update(view);
+    expect(sparse.stats().ground).toBeLessThan(dense.stats().ground * .8);
+    dense.dispose(); sparse.dispose();
   });
 });
