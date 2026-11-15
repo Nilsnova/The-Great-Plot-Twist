@@ -56,7 +56,10 @@ const FINGERPRINTS = {
   'level-5 researched, wave 50': '296f42fcc60b2744',
   // Re-made after the T33-T35 balance retune (boarder-paths.js WALL_ENGAGE, targeting.js towerReach 1.5) with the
   // pre-culverin sim.js (4010f7f) plus the retuned modules: the culverin still changes nothing here.
-  'level-5 tiered, wave 100, every rule': '2c9a1694538f3b45',
+  // Re-made again for the battle-clarity wall rule (15 Nov, D053: with pathing a boarder never steps into a standing
+  // wall and walks up to the wall it hacks; was 2c9a1694538f3b45). Only this scenario changes: it is the one with
+  // pathing where boarders reach walls; the culverin still changes nothing (the test below).
+  'level-5 tiered, wave 100, every rule': '1a5360cf3ed6d044',
 };
 
 describe('a wave without a culverin plays exactly as before', () => {
