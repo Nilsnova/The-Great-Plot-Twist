@@ -250,6 +250,7 @@ bought
 box
 boy
 branch
+branches
 brass
 brave
 brawler
@@ -1232,6 +1233,7 @@ ledger
 left
 legacy
 legal
+legend
 lends
 lenke
 lens
@@ -1464,6 +1466,8 @@ ninety
 no
 noble
 nobody
+node
+nodes
 noise
 non
 none
