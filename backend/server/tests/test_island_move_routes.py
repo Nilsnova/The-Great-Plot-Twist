@@ -13,6 +13,7 @@ from dataclasses import replace
 import pytest
 
 from server.flags import parse_flags
+from server.island import layout
 from server.tests.island_helpers import ISLAND_SETTINGS, PLAYER_ID, World
 
 PLACEMENT = replace(ISLAND_SETTINGS, flags=parse_flags("islands,placement"))
@@ -55,7 +56,7 @@ def layout_reads(world: World) -> int:
 def test_with_the_flag_off_the_island_shows_the_fixed_spots_and_never_asks_the_layout():
     world = World()  # islands on, placement off
     answer = world.island().json()
-    assert spot(answer, "wall_1") | {"x": -18.5, "z": -4.0} == spot(answer, "wall_1")
+    assert spot(answer, "wall_1") | {"x": -16.5, "z": -1.0} == spot(answer, "wall_1")
     assert answer["layout"] == {"version": 1, "grid": 0.5, "movable": False}
     assert layout_reads(world) == 0
 
@@ -140,6 +141,22 @@ def test_an_illegal_move_is_refused_before_the_database_is_asked(world, x, z, st
     assert response.status_code == status
     assert response.json()["error"]["code"] == code
     assert move_calls(world) == []
+
+
+def test_a_wall_moved_off_every_pirate_path_is_409_off_path(world):
+    response = move(world, spot="wall_1", x=-4, z=-5.5)
+    assert response.status_code == 409
+    assert response.json()["error"] == {"code": "off_path", "message": "Walls go on a pirate path."}
+    assert move_calls(world) == []
+
+
+def test_a_wall_stored_off_every_path_shows_on_the_nearest_lane_cell(world):
+    # D056: a wall moved before the rule (the old north spot of wall_11) stands on a lane now.
+    world.database.layout_rows = [{"plot": "wall_11", "x_half": -8, "z_half": -11}]
+    answer = world.island().json()
+    where = (spot(answer, "wall_11")["x"], spot(answer, "wall_11")["z"])
+    assert where != (-4.0, -5.5)
+    assert layout.on_wall_lane(layout.island_layout(), *where)
 
 
 def test_an_unknown_spot_is_404(world):

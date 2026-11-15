@@ -6,8 +6,10 @@
 //   positionsOf(spots)                  where each spot stands: the answer's x/z, else its fixed spot
 //   checkMove(spotId, x, z, positions)  {ok: true} or {ok: false, code, message} (the server's codes)
 //   routeOpen(positions)                a way from the heart to the beach (towers, houses block)
+//   onWallLane(x, z)                    a wall centred here stands on a pirate path (D056, wall-lanes.js)
 import {SPOTS, spotById, ISLAND_PLACE} from './spots.js';
 import {surfaceClass} from '../world/places/surfaces.js';
+import {WALL_LANE_ROWS} from './wall-lanes.js';
 
 export const GRID = 0.5;
 export const MAX_UNITS = 30;
@@ -45,10 +47,21 @@ const boxOf = (spotId, where) => ({x: where.x, z: where.z, w: footprintOf(spotId
 export const overlaps = (a, b) => Math.abs(a.x - b.x) < (a.w + b.w) / 2 && Math.abs(a.z - b.z) < (a.d + b.d) / 2;
 const refuse = (code, message) => ({ok: false, code, message});
 
+// D056: a wall stands only where it stops boarders on their way to the heart (the rows of wall-lanes.js).
+const LANES = new Map(WALL_LANE_ROWS.map(([z, ...runs]) => [z, runs]));
+export function onWallLane(x, z) {
+  const runs = LANES.get(z + 0);
+  if (!runs) return false;
+  for (let i = 0; i < runs.length; i += 2) if (x >= runs[i] && x <= runs[i + 1]) return true;
+  return false;
+}
+export const OFF_PATH = 'Walls go on a pirate path.';
+
 export function checkMove(spotId, x, z, positions = positionsOf()) {
   if (!spotById(spotId)) return refuse('no_such_spot', 'There is no such build spot.');
   if (!onGrid(x) || !onGrid(z)) return refuse('off_grid', 'Pick a square of the build grid.');
   if (land(x, z) === SEA) return refuse('not_on_land', 'Buildings stand on land, not in the sea.');
+  if (spotById(spotId).slot === 'wall' && !onWallLane(x, z)) return refuse('off_path', OFF_PATH);
   const moved = boxOf(spotId, {x, z});
   const fixed = KEEP_OUT.find(item => overlaps(moved, item));
   if (fixed) return refuse('place_taken', `That is too close to ${fixed.name}.`);

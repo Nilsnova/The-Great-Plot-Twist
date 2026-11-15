@@ -9,7 +9,8 @@
 //   - the walls: a small hp bar over every wall that is hurt or being hacked (green, yellow, red), and a broken
 //     wall's gap outlined in red with a rubble badge.
 // Between waves (no wave, or the break after a won one) the same landings and routes show faintly, so players
-// can put walls and towers where the pirates will walk.
+// can put walls and towers where the pirates will walk, over the wall lanes (D056, island/wall-lanes.js): a faint
+// gold band where a wall stops the pirates, the only ground a wall may stand on.
 //
 // The pure part (tested in tests/pirates/battle-guide.test.js) works out landings and routes; the drawing part
 // is one instanced quad mesh on the ground and one in the air, like render.js's layers. Nothing is allocated per
@@ -18,6 +19,7 @@ import * as THREE from 'three';
 import { CONFIG, coastPoint, curveFor, skillOf } from './sim.js';
 import { createBoarderPaths, WALL_FOOTPRINT } from './boarder-paths.js';
 import { toScreen } from '../world/pixel-glsl.js';
+import { WALL_LANE_ROWS } from '../island/wall-lanes.js';
 
 const Y = .72; // drawn y per world z (the island's tilt)
 export const GUIDE = Object.freeze({
@@ -25,6 +27,7 @@ export const GUIDE = Object.freeze({
   heartReach: CONFIG.boarding.heartRadius,
   dotEvery: 1,         // one dot per grid cell (1 unit)
   previewAlpha: .45,   // between waves: the routes and landings are a faint preview
+  laneAlpha: .16,      // between waves: the wall lanes (D056) under the routes
   barShow: 1,          // a wall bar shows below this share of hp (or while the wall is hacked)
 });
 
@@ -244,14 +247,14 @@ export function skullAt(landing, heart = CONFIG.boarding.heart, walls = [], scal
 // How far right of a wall's centre its axe badge sits: half the hp bar (.8 + .07 frame) plus half the badge (.7) and a gap.
 export const AXE_SIDE = 1.75;
 const RGB = hex => { const c = new THREE.Color(hex); return { r: c.r, g: c.g, b: c.b }; };
-const RED = RGB('#ff4a36'), DARK = RGB('#1f2622'), GOLD = RGB('#ffd34d'), WHITE = { r: 1, g: 1, b: 1 };
+const LANE = RGB('#ffe08a'), RED = RGB('#ff4a36'), DARK = RGB('#1f2622'), GOLD = RGB('#ffd34d'), WHITE = { r: 1, g: 1, b: 1 };
 const BAR = { good: RGB('#7ed957'), low: RGB('#ffd34d'), bad: RGB('#ff4a36') };
 
 /**
  * createBattleGuide({scene, reducedMotion, characterScale}) → {update(view), dispose()}.
  * view: null (hide), or {mode: 'preview'|'wave', lanes (the wave_started lanes, or null: every sea lane), defenses
  * (where the walls stand), stateWalls (the sim's walls in a wave, else null), boarders, heart: {x, z}, wave, dt}.
- * preview draws faintly and without wall marks; wave draws everything. The
+ * preview draws faintly, over the wall lanes, without wall marks (view.wallLanes: false leaves the lanes out); wave draws everything. The
  * routes are worked out again only when routeKey() changes (a wall placed, broken, rebuilt or past a quarter of hp).
  */
 // sparse(): a phone-sized screen (overlap audit, 15 Nov): half the dots and fewer chevrons, so the routes stay readable.
@@ -264,7 +267,7 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
     transparent: true, premultipliedAlpha: true, depthTest: false, depthWrite: false, toneMapped: false });
   owned.push(material, icons ?? blank);
   // On the ground (over the terrain, under every building and character) and in the air (badges and bars).
-  const ground = createInstances('ground', 1400, material, 9, owned), air = createInstances('air', 160, material, 936, owned);
+  const ground = createInstances('ground', 1600, material, 9, owned), air = createInstances('air', 160, material, 936, owned);
   root.add(ground.mesh, air.mesh);
   let clock = 0, disposed = false, key = null, routes = [];
   const still = () => !!reducedMotion();
@@ -313,6 +316,16 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
     const [sx, sz] = skullAt(landing, heart, walls, k);
     air.push(SHAPE.icon, sx, drawnY(sz) + 1.5 * k, 1.8 * k, 1.8 * k, { ...WHITE, a: Math.min(1, alpha + .3) }, { icon: 'skull' });
   }
+  // D056: one box per run of a wall lane row (every half unit from x0 to x1 on row z, one grid cell round each).
+  let laneBoxes = 0;
+  function drawLanes() {
+    laneBoxes = 0;
+    for (const [z, ...runs] of WALL_LANE_ROWS) for (let i = 0; i < runs.length; i += 2) {
+      const w = runs[i + 1] - runs[i] + .5;
+      ground.push(SHAPE.box, (runs[i] + runs[i + 1]) / 2, drawnY(z), w, .5 * Y, { ...LANE, a: GUIDE.laneAlpha });
+      laneBoxes++;
+    }
+  }
   function drawHeart(heart, live) {
     const pulse = still() ? 1 : 1 + (live ? .08 : .04) * Math.sin(clock * 3), y = drawnY(heart.z), r = 4 * k * pulse;
     ground.push(SHAPE.ring, heart.x, y, r + .3 * k, (r + .3 * k) * Y, { ...DARK, a: .55 });
@@ -353,6 +366,7 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
         const walls = guideWalls(view.defenses ?? [], view.stateWalls ?? null), attacked = attackedWalls(view.boarders);
         const heart = view.heart ?? CONFIG.boarding.heart, next = `${heart.x},${heart.z}|${routeKey(landings, walls, view.wave ?? 1)}`;
         if (next !== key) { key = next; routes = guideRoutes({ landings, heart, walls, wave: view.wave ?? 1 }); }
+        if (!live && view.wallLanes !== false) drawLanes(); else laneBoxes = 0;
         for (const route of routes) drawRoute(route, alpha, live);
         for (const route of routes) drawLanding(route.landing, alpha, live, heart, walls);
         drawHeart(heart, live);
@@ -361,7 +375,7 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
       ground.end(); air.end();
     },
     setVisible(value) { root.visible = value !== false; },
-    stats() { return { ground: ground.count, air: air.count, routes: routes.map(route => ({ id: route.id, points: route.points.length, breaches: route.breaches.map(item => item.wallId), reachable: route.reachable })) }; },
+    stats() { return { ground: ground.count, air: air.count, lanes: laneBoxes, routes: routes.map(route => ({ id: route.id, points: route.points.length, breaches: route.breaches.map(item => item.wallId), reachable: route.reachable })) }; },
     dispose() {
       if (disposed) return; disposed = true;
       root.removeFromParent(); root.clear();

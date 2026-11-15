@@ -42,7 +42,7 @@ def test_the_slot_of_every_spot_matches_the_kinds_islands_json_allows():
 
 def test_an_old_save_with_no_stored_positions_stands_on_the_fixed_spots():
     placed = layout.positions_of(RULES, {})
-    assert placed["wall_1"] == (-18.5, -4)
+    assert placed["wall_1"] == (-16.5, -1)
     assert placed["tower_1"] == (0, -14)
     assert len(placed) == 22
 
@@ -103,8 +103,9 @@ def test_a_place_in_the_sea_is_refused():
 
 def test_a_place_on_the_heart_or_a_fixed_building_is_refused():
     assert refused_code("wall_1", 0, 2) == "place_taken"
-    assert refused_code("wall_1", -8, 4.5) == "place_taken"  # the cabin
-    assert refused_code("wall_1", 8.5, 12) == "place_taken"  # the bell
+    assert refused_code("cannon_1", -8, 4.5) == "place_taken"  # the cabin
+    assert refused_code("cannon_1", 8.5, 12) == "place_taken"  # the bell
+    assert refused_code("wall_1", -2.5, 3) == "place_taken"  # the heart, on a lane
 
 
 def test_a_place_that_overlaps_another_spot_is_refused():
@@ -157,3 +158,55 @@ def test_walls_never_block_the_route_because_boarders_break_them():
 def test_the_rules_check_the_footprint_of_the_slot():
     assert layout.footprint_of(RULES, "house_1") == 3
     assert layout.footprint_of(RULES, "wall_1") == 2
+
+
+# --- D056: every wall stands on a pirate path ---
+
+
+def test_every_fixed_wall_stands_on_a_wall_lane():
+    for spot in RULES.spots:
+        if spot.slot == "wall":
+            assert layout.on_wall_lane(RULES, spot.x, spot.z), spot.spot
+
+
+def test_a_wall_off_every_pirate_path_is_refused_but_a_tower_may_stand_there():
+    # (-4, -5.5) and (4, -19.5): the old north spots of wall_11 and wall_2, where no pirate walks.
+    assert refused_code("wall_1", -4, -5.5) == "off_path"
+    assert refused_code("wall_2", 4, -19.5) == "off_path"
+    layout.check_move(RULES, layout.positions_of(RULES, {}), "cannon_1", -4, -9)
+
+
+def test_a_wall_on_a_lane_cell_is_allowed_and_the_lane_rows_hold_half_units():
+    placed = layout.positions_of(RULES, {})
+    layout.check_move(RULES, placed, "wall_1", -12, 0.5)  # across the west route
+    assert layout.on_wall_lane(RULES, 0, 14) and not layout.on_wall_lane(RULES, 6, 14)
+    assert all(z * 2 == int(z * 2) for z in RULES.wall_lanes)
+
+
+def test_a_moved_wall_off_every_path_stands_on_the_nearest_free_lane_cell():
+    placed = layout.positions_of(RULES, {"wall_11": (-4, -5.5)})
+    where = placed["wall_11"]
+    assert where != (-4, -5.5)
+    assert layout.on_wall_lane(RULES, *where)
+    # The same stored rows give the same island every time.
+    assert layout.positions_of(RULES, {"wall_11": (-4, -5.5)}) == placed
+    for spot in RULES.spots:
+        layout.check_move(RULES, placed, spot.spot, *placed[spot.spot])
+
+
+def test_a_wall_whose_fixed_spot_a_moved_tower_now_covers_steps_aside():
+    placed = layout.positions_of(RULES, {"cannon_1": (16.5, 1)})
+    assert placed["cannon_1"] == (16.5, 1)
+    assert placed["wall_2"] != (16.5, 1)
+    for spot in RULES.spots:
+        layout.check_move(RULES, placed, spot.spot, *placed[spot.spot])
+
+
+def test_a_moved_wall_keeps_its_cell_and_the_unmoved_wall_there_steps_aside():
+    placed = layout.positions_of(RULES, {"wall_1": (16.5, 1)})
+    assert placed["wall_1"] == (16.5, 1)
+    assert placed["wall_2"] != (16.5, 1) and layout.on_wall_lane(RULES, *placed["wall_2"])
+
+
+def test_a_wall_on_a_lane_where_it_was_stored_stays_there():
+    assert layout.positions_of(RULES, {"wall_1": (-12, 0.5)})["wall_1"] == (-12, 0.5)
