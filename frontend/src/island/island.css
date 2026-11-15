@@ -421,3 +421,6 @@ html:has(.island-card-docked[open]) .quest-strip{visibility:hidden}
 .island-card-harbor .island-stall .kit-button{min-width:88px}
 /* The crew card: a little more air between the rows. */
 .island-crew{gap:var(--u-3)}
+.island-card-crew.kit-modal{width:min(460px,calc(100vw - 32px))}
+/* The Hire button already shows the price (and says it to screen readers): no second price badge on the tile. */
+.island-card-crew .island-crew-price{display:none}

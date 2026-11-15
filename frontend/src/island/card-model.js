@@ -336,7 +336,7 @@ export function harborModel({campaign = null} = {}) {
   const stall = (id, item, name, line, icon) => ({id, name, line, icon, open: isOpen(campaign, item),
     button: 'Open', label: `Open the ${name.toLowerCase()}`, reason: isOpen(campaign, item) ? '' : lockedLine(item)});
   return {title: 'The Harbor', open, line: open ? '' : lockedLine('harbor'),
-    stalls: open ? [stall('market', 'market_calls', 'Market stall', 'Up or down in 5 minutes? Bet a few coins.', '📈'),
+    stalls: open ? [stall('market', 'market_calls', 'Market stall', 'Up or down in 5 minutes? Put a few coins on it.', '📈'),
       stall('match', 'football_board', 'Match board', 'Pick who wins a real match.', '⚽'),
       stall('weather', 'harbor', 'Weather board', 'Live weather, and what it does to the pirates.', '⛅')] : []};
 }
