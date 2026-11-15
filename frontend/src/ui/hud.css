@@ -8,7 +8,9 @@
 .hud-play .hud-menu:hover{background:var(--u-raise)}.hud-play .hud-menu:focus-visible{outline:3px solid var(--u-gold);outline-offset:6px}
 .hud-menu-icon{width:18px;height:3px;background:currentColor;box-shadow:0 -6px currentColor,0 6px currentColor}
 
-/* The quest strip */
+/* The quest strip: only the current goal shows (owner, 15 Nov: "limit the visual overload"); the title's
+   "1 of 10" says how many there are, and a tap on the goal shows its hint. */
+.quest-strip li:not(:has([data-current=true])){display:none}
 .hud-play .quest-strip{width:100%;box-sizing:border-box;padding:10px 12px 12px;background:#123238f0;pointer-events:auto}
 .quest-strip h2{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 0 8px;font:700 18px/1.2 var(--u-serif);color:var(--u-gold)}
 .quest-strip .quest-progress{font:600 16px/1 var(--u-font);color:var(--u-mute);margin-left:auto}
@@ -39,17 +41,15 @@
 /* The pause menu's status line (place · weather · time), moved here from the HUD. */
 .shell-status{margin:0;padding:10px 14px;text-align:center;font:600 16px/1.4 var(--u-font);color:var(--u-mute);background:var(--u-deep);border:2px solid #3d6a6b}
 
-/* Phones and narrow windows: coins and Menu share the top row; the strip shows the current goal only. */
+/* Phones and narrow windows: coins and Menu share the top row. */
 @media(max-width:900px){
   .hud-play .hud-coins{top:12px;left:12px;font-size:20px;padding:6px 12px}
   .hud-play .hud-right{top:12px;right:12px;left:12px;width:auto;gap:12px}
   .hud-play .quest-strip{padding:8px 10px 10px}
   .quest-strip h2{font-size:16px;margin-bottom:6px}
-  .quest-strip li:not(:has([data-current=true])){display:none}
   .hud-play .interact{bottom:84px;max-width:calc(100vw - 24px)}
   .hud-arrival{top:30%}.hud-arrival strong{font-size:26px}
 }
-@media(max-height:500px){.hud-play .quest-strip li:not(:has([data-current=true])){display:none}}
 @media(prefers-reduced-motion:reduce){.hud-arrival{animation:none}}
 html[data-reduced-motion=true] .hud-arrival{animation:none}
 .hud-play .hud-captain{margin-left:12px;padding-left:12px;border-left:2px solid var(--u-line);color:var(--u-ink);font-size:18px}

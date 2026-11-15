@@ -176,9 +176,13 @@ describe('drawing', () => {
     expect(skullAt(landing, { x: 0, z: 0 }, [])).toEqual([10, 0]);
     expect(skullAt(landing, { x: 0, z: 0 }, [{ x: 9, z: 1 }])).toEqual([10 + SKULL_SHIFT, 0]);
     const dense = createBattleGuide({ scene: scene() }), sparse = createBattleGuide({ scene: scene(), sparse: () => true });
-    const view = { mode: 'preview', defenses: ISLANDS.full.defenses, wave: 4, dt: .016 };
+    // In a wave a phone draws fewer dots; between waves (the preview) every screen draws the sparse dots.
+    const view = { mode: 'wave', lanes: null, defenses: ISLANDS.full.defenses, heart: HEART, wave: 4, dt: .016 };
     dense.update(view); sparse.update(view);
     expect(sparse.stats().ground).toBeLessThan(dense.stats().ground * .8);
+    const preview = { mode: 'preview', defenses: ISLANDS.full.defenses, wave: 4, dt: .016 };
+    dense.update(preview); sparse.update(preview);
+    expect(sparse.stats().ground).toBe(dense.stats().ground);
     dense.dispose(); sparse.dispose();
   });
 });

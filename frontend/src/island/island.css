@@ -425,3 +425,21 @@ html:has(.island-card-docked[open]) .quest-strip{visibility:hidden}
 .island-arsenal-stats{margin:0;font-variant-numeric:tabular-nums;opacity:.85}
 .island-arsenal-type.is-locked{opacity:.7}
 .island-arsenal-copy .island-crew-text,.island-arsenal-type .island-crew-text{min-width:0}
+/* Calm cards (owner, 15 Nov: "things are too close together"): more room inside the cards, and the building
+   card's secondary actions (Hire crew, Move, Tear down) side by side in one quiet row under its main action. */
+.island-card .island-card-body{gap:var(--u-4)}
+.island-card-build .island-card-body{grid-template-columns:auto auto minmax(0,1fr);column-gap:var(--u-2)}
+.island-card-build .island-card-body>*{grid-column:1/-1}
+.island-card-build .island-card-body>:is(.island-hire,.island-move,.island-teardown){grid-column:auto;justify-self:start;margin-top:var(--u-2)}
+.island-card-build .island-card-body>:is(.island-move-why,.island-teardown-why){margin:0}
+.island-card-build .island-card-body>.kit-button:not(.kit-quiet){min-width:200px;min-height:52px;font-size:18px}
+/* The Harbor: an icon and one short line per stall, a short Open button at its side. */
+.island-card-harbor .island-stall{flex-direction:row;align-items:center;padding:var(--u-3)}
+.island-stall-name{display:flex;align-items:center;gap:var(--u-2)}
+.island-stall-icon{font-size:22px;line-height:1}
+.island-card-harbor .island-stall .kit-button{min-width:88px}
+/* The crew card: a little more air between the rows. */
+.island-crew{gap:var(--u-3)}
+.island-card-crew.kit-modal{width:min(460px,calc(100vw - 32px))}
+/* The Hire button already shows the price (and says it to screen readers): no second price badge on the tile. */
+.island-card-crew .island-crew-price{display:none}
