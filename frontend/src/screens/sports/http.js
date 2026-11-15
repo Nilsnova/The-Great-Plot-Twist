@@ -5,6 +5,8 @@ const id = value => typeof value === 'string' && /^(fd|bdl)-[1-9][0-9]{0,14}$/.t
 const count = value => Number.isSafeInteger(value) && value >= 0;
 const text = value => typeof value === 'string' && value.length > 0;
 const date = value => text(value) && Number.isFinite(Date.parse(value));
+// A stake's id is the database row number (a JSON number); older answers may send it as text.
+const ref = value => (Number.isSafeInteger(value) && value > 0) || text(value);
 const picks = new Set(['home', 'draw', 'away']);
 const rules = value => count(value?.minStake) && value.minStake > 0 && count(value.maxStake)
   && value.maxStake >= value.minStake && count(value.dailyCap) && count(value.poolCutPercent)
@@ -19,7 +21,7 @@ const fixture = value => id(value?.id) && text(value.home) && text(value.away)
   && count(value.pool.total) && value.pool.sides !== null && typeof value.pool.sides === 'object'
   && !Array.isArray(value.pool.sides) && Object.entries(value.pool.sides).every(([pick, side]) =>
     value.picks.includes(pick) && count(side?.coins) && count(side.players));
-const stake = value => text(value?.id) && id(value.fixtureId) && picks.has(value.pick)
+const stake = value => ref(value?.id) && id(value.fixtureId) && picks.has(value.pick)
   && count(value.amount) && value.amount > 0 && (count(value.payout) || (value.payout === null && value.status === 'open'))
   && text(value.home) && text(value.away) && ['open', 'settled'].includes(value.status);
 const SHAPES = {
@@ -29,7 +31,7 @@ const SHAPES = {
     && Array.isArray(value.stakes) && value.stakes.every(stake) && rules(value.rules)
     && typeof value.checksUnavailable === 'boolean',
   stake: value => value?.accepted === true && typeof value.repeat === 'boolean'
-    && text(value.id) && id(value.fixtureId) && picks.has(value.pick) && count(value.amount)
+    && ref(value.id) && id(value.fixtureId) && picks.has(value.pick) && count(value.amount)
     && count(value.coins),
   settle: value => value?.settled === true && typeof value.repeat === 'boolean'
     && id(value.fixtureId) && text(value.settlement) && count(value.paidCoins) && count(value.cutCoins),
