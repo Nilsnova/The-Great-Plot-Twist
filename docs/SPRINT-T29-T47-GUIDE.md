@@ -28,7 +28,7 @@ Replace them with the course's real wording once someone has the course sheet.
 
 ## 0. What landed, in one table
 
-Merged on 14 Nov (merge commits on `origin/main`, newest first). Decision numbers D039–D049 are all still **proposed**: the team has not agreed them yet (D047 only agreed the merge order).
+Merged on 14 Nov (merge commits on `origin/main`, newest first). Decision numbers D039–D049 were **accepted by Nils on 15 Nov 2026** after review (the text after this sentence was written before that): the team has not agreed them yet (D047 only agreed the merge order).
 
 | PR | Merge | Tasks | What | Decision | Flag | Section |
 |---|---|---|---|---|---|---|
