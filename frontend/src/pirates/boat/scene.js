@@ -10,12 +10,14 @@
 import './boat.css';
 import { BOAT, GAME_TEXT, boatDifficulty, boatSalt, coinsFor, enemyX, fallOf, itemsOf, passAt, passesOf, scoreOf, shotAt, starsOf } from './rules.js';
 
-export { GAME_TEXT };
+export { GAME_TEXT, starText };
 const OUTLINE = '#1f2622';
 const SEA_TOP = '#2c5d73', SEA_DEEP = '#173a4d', FOAM = 'rgba(214,240,236,.35)';
 const el = (tag, className, text) => { const node = document.createElement(tag); if (className) node.className = className; if (text !== undefined) node.textContent = text; return node; };
 const button = (className, text, label) => { const node = el('button', `kit-button ${className}`, text); node.type = 'button'; if (label) node.setAttribute('aria-label', label); return node; };
 const starText = n => '★'.repeat(n) + '☆'.repeat(BOAT.stars - n);
+// Three stars, the won ones lit (the meter's marks and the result card).
+const starRow = (node, n) => { node.replaceChildren(...[...Array(BOAT.stars)].map((_, i) => el('i', i < n ? 'is-lit' : '', '★'))); node.setAttribute('aria-label', `${n} of ${BOAT.stars} stars`); };
 
 export function createBoatGame({ container, game = 'broadside', wave = 30, code = '', easy = () => false, reducedMotion = () => false,
   onFinish = async () => null, onClose = () => {}, autoplay = true, frame = globalThis.requestAnimationFrame?.bind(globalThis),
@@ -37,9 +39,10 @@ export function createBoatGame({ container, game = 'broadside', wave = 30, code 
   const stage = el('canvas', 'boat-stage'); stage.setAttribute('aria-hidden', 'true');
   const countdown = el('div', 'boat-count'); countdown.setAttribute('aria-live', 'polite');
   stageBox.append(stage, countdown);
-  const meter = el('div', 'boat-meter'), fill = el('span', 'boat-meter-fill'), stars = el('span', 'boat-meter-stars', starText(0));
-  meter.append(fill, stars); meter.setAttribute('role', 'progressbar'); meter.setAttribute('aria-label', 'Stars'); meter.setAttribute('aria-valuemin', '0'); meter.setAttribute('aria-valuemax', String(BOAT.stars));
-  for (const need of BOAT[game].stars) { const mark = el('i', 'boat-meter-mark'); mark.style.left = `${need * 100}%`; meter.append(mark); }
+  const meter = el('div', 'boat-meter'), fill = el('span', 'boat-meter-fill');
+  meter.append(fill); meter.setAttribute('role', 'progressbar'); meter.setAttribute('aria-label', 'Stars'); meter.setAttribute('aria-valuemin', '0'); meter.setAttribute('aria-valuemax', String(BOAT.stars));
+  // A star sits on each mark of the meter and lights up when the score passes it.
+  const marks = BOAT[game].stars.map(need => { const mark = el('i', 'boat-meter-mark', '★'); mark.style.left = `${need * 100}%`; meter.append(mark); return mark; });
   const hint = el('p', 'boat-hint', text.hint);
   const controls = el('div', 'boat-controls');
   const fire = button('boat-fire', '💥 Fire', 'Fire the broadside'), left = button('boat-left', '◀', 'Steer left'), right = button('boat-right', '▶', 'Steer right');
@@ -91,7 +94,7 @@ export function createBoatGame({ container, game = 'broadside', wave = 30, code 
     const share = Math.max(0, Math.min(1, live.score / Math.max(1, live.max)));
     fill.style.width = `${Math.round(share * 100)}%`;
     const now = starsOf(game, live);
-    stars.textContent = starText(now); meter.setAttribute('aria-valuenow', String(now));
+    marks.forEach((mark, i) => mark.classList.toggle('is-lit', i < now)); meter.setAttribute('aria-valuenow', String(now));
   }
 
   const stagePoint = event => { const rect = stage.getBoundingClientRect(); return rect.width ? Math.max(0, Math.min(100, (event.clientX - rect.left) / rect.width * 100)) : 50; };
@@ -169,7 +172,7 @@ export function createBoatGame({ container, game = 'broadside', wave = 30, code 
   const bandX = value => W * .08 + value / 100 * W * .84;
   function drawBroadside() {
     sea(false);
-    const width = easy() ? difficulty.easyWidth : difficulty.width, laneY = H * .36, now = t * 10;
+    const width = easy() ? difficulty.easyWidth : difficulty.width, laneY = H * .47, now = t * 10;
     // The gold band from your guns up across the enemy lane: fire when a ship is inside it.
     const half = width / 100 * W * .84, inner = half * BOAT.broadside.bull, cx = W / 2;
     const glow = still() ? .9 : .78 + Math.sin(clock * 5) * .12;
@@ -178,7 +181,7 @@ export function createBoatGame({ container, game = 'broadside', wave = 30, code 
     ctx.strokeStyle = 'rgba(255,226,140,.9)'; ctx.lineWidth = 3; ctx.setLineDash([10, 8]);
     ctx.beginPath(); ctx.moveTo(cx - half, 0); ctx.lineTo(cx - half, H * .78); ctx.moveTo(cx + half, 0); ctx.lineTo(cx + half, H * .78); ctx.stroke(); ctx.setLineDash([]);
     // The enemy ships on their lane (the one on the sea now, or the next one waiting at the edge).
-    const size = Math.min(W * .24, H * .42);
+    const size = Math.min(W * .2, H * .32);
     for (const pass of passes) {
       const sunk = effects.find(item => item.kind === 'sunk' && item.k === pass.k);
       const colours = pass.kind === 'cutter' ? { hull: '#7a3b2e', stripe: '#b23a2e', sail: '#d9574a', flag: '#1f2622', masts: 1 } : { hull: '#5b3a24', stripe: '#2b2b2b', sail: '#efe2bd', flag: '#1f2622', masts: 2 };
@@ -258,7 +261,7 @@ export function createBoatGame({ container, game = 'broadside', wave = 30, code 
   const dashX = value => W * .06 + value / 100 * W * .88;
   function drawDash() {
     sea(true);
-    const now = t * 10, boatY = H * .84, size = Math.min(W, H) * .13, reach = easy() ? difficulty.easyCatch : difficulty.catch;
+    const now = t * 10, boatY = H * .83, size = Math.min(W, H) * .17, reach = easy() ? difficulty.easyCatch : difficulty.catch;
     // Buoys down both sides, red and green, sliding past: you sail a channel.
     for (let i = 0; i < 6; i++) {
       const y = ((i * H / 4 + (still() ? 0 : clock * 46)) % (H * 1.5)) - H * .2;
@@ -275,10 +278,10 @@ export function createBoatGame({ container, game = 'broadside', wave = 30, code 
       const ahead = item.at - now;
       if (ahead > fall || ahead < -2 || got.has(item.id)) continue;
       const y = boatY - ahead / fall * (boatY + size), x = dashX(item.x);
-      if (item.kind === 'coin') coin(x, y, size * .26, clock * 4 + item.id);
+      if (item.kind === 'coin') coin(x, y, size * .24, clock * 4 + item.id);
       else {
         // A red marker on your row shows where a cannonball will land.
-        if (ahead < fall * .6 && ahead > 0) { ctx.fillStyle = `rgba(232,71,58,${.35 + .4 * (1 - ahead / (fall * .6))})`; ctx.beginPath(); ctx.moveTo(x - 12, boatY + size * .95); ctx.lineTo(x + 12, boatY + size * .95); ctx.lineTo(x, boatY + size * .7); ctx.closePath(); ctx.fill(); }
+        if (ahead < fall * .6 && ahead > 0) { ctx.fillStyle = `rgba(232,71,58,${.35 + .4 * (1 - ahead / (fall * .6))})`; ctx.beginPath(); ctx.moveTo(x - 16, boatY + size * .98); ctx.lineTo(x + 16, boatY + size * .98); ctx.lineTo(x, boatY + size * .66); ctx.closePath(); ctx.fill(); }
         ball(x, y, size * .3);
       }
     }
@@ -294,16 +297,16 @@ export function createBoatGame({ container, game = 'broadside', wave = 30, code 
     const big = `900 ${Math.round(Math.min(W, H) * .11)}px system-ui, sans-serif`;
     const label = (txt, x, y, colour = '#fff4d6') => { ctx.font = big; ctx.lineWidth = 7; ctx.strokeStyle = OUTLINE; ctx.strokeText(txt, x, y); ctx.fillStyle = colour; ctx.fillText(txt, x, y); };
     if (game === 'broadside') {
-      const y = H * .36, x = W / 2 + (k - .5) * W * .5;
+      const y = H * .4, x = W / 2 + (k - .5) * W * .5;
       ctx.strokeStyle = '#fff4d6'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(W * .15, y + H * .14); ctx.lineTo(W * .4, y + H * .14); ctx.lineTo(W * .36, y + H * .1); ctx.moveTo(W * .4, y + H * .14); ctx.lineTo(W * .36, y + H * .18); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(W * .85, y + H * .14); ctx.lineTo(W * .6, y + H * .14); ctx.lineTo(W * .64, y + H * .1); ctx.moveTo(W * .6, y + H * .14); ctx.lineTo(W * .64, y + H * .18); ctx.stroke();
       label('🎯', W / 2, y + H * .14);
-      label('⇧ 💥', W / 2, H * .62, '#ffd24a');
-      ctx.globalAlpha = .55; sideShip(x, y - H * .02, Math.min(W * .2, H * .34), 1, { hull: '#5b3a24', stripe: '#2b2b2b', sail: '#efe2bd', flag: '#1f2622', masts: 2 }); ctx.globalAlpha = 1;
+      label('⇧ 💥', W / 2, H * .7, '#ffd24a');
+      ctx.globalAlpha = .55; sideShip(x, y + H * .07, Math.min(W * .2, H * .32), 1, { hull: '#5b3a24', stripe: '#2b2b2b', sail: '#efe2bd', flag: '#1f2622', masts: 2 }); ctx.globalAlpha = 1;
     } else {
-      const y = H * .84, size = Math.min(W, H) * .13;
+      const y = H * .83, size = Math.min(W, H) * .17;
       label('◀', W / 2 - size * 1.9 - k * 8, y); label('▶', W / 2 + size * 1.9 + k * 8, y);
-      label('🪙 ✓', W * .3, H * .3, '#ffd24a'); label('💣 ✗', W * .7, H * .3, '#ff8a7a');
+      label('🪙 ✓', W * .28, H * .5, '#ffd24a'); label('💣 ✗', W * .72, H * .5, '#ff8a7a');
     }
   }
 
@@ -317,7 +320,7 @@ export function createBoatGame({ container, game = 'broadside', wave = 30, code 
     const final = scoreOf(game, samples, { salt, easy: easy(), difficulty });
     const n = starsOf(game, final);
     outcome = { game, stars: n, score: final.score, max: final.max, wave };
-    resultStars.textContent = starText(n);
+    starRow(resultStars, n);
     resultScore.textContent = game === 'dash' ? `🪙 ${final.coins} · 💣 ${final.hits}` : `💥 ${final.hits} / ${final.ships} · ★ ${final.bulls}`;
     resultLine.textContent = '…';
     again.focus?.();
