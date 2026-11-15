@@ -57,7 +57,7 @@ Captured with `node scripts/capture-placement.js ../specs/T36-flexible-placement
 - Defense health, repair and recovery: T30–T33. A move keeps level and tower skill and never repairs anything.
 - Who may move in a game (votes, host only): T37. Today: anyone who may build.
 - The arsenal's footprint: T41 adds one slot and one footprint entry.
-- `scripts/admin/fresh_start.sql` does not clear `island_layout` (positions survive a fresh start; buildings do not). Decide with the next fresh start.
+- ~~`scripts/admin/fresh_start.sql` does not clear `island_layout`.~~ Since branch `fix/fresh-start-new-tables` (15 Nov) it does: a fresh start removes the moved spots with the buildings, so every spot stands on its fixed place again.
 - Rotated walls (a 2 × 1 wall) and wall art that joins neighbours visually: a later art pass.
 
 ## Done when (acceptance checks)
