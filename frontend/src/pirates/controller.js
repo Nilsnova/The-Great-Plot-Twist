@@ -73,6 +73,10 @@ export const bossText = warships => (warships >= 2 ? '⚠ Boss wave: two warship
 export const BREAK_SECONDS = 8;       // the break after a won wave (TOWER-DEFENSE.md §1; faster pace, owner 11 Nov)
 const BOSS_WARNING_SECONDS = 6;       // the boss warning stays this long after the wave starts
 export const AUTO_KEY = 'tgpt:pirates:auto-next';
+export const HINT_KEY = 'tgpt:pirates:goal-hint';   // the first-wave hint (🏝️ → 🧱 → ❤️) shows once per device
+export const HINT_SECONDS = 9;
+const readHint = () => { try { return globalThis.localStorage?.getItem(HINT_KEY) === '1'; } catch { return false; } };
+const writeHint = () => { try { globalThis.localStorage?.setItem(HINT_KEY, '1'); } catch { /* private mode: shown again next visit */ } };
 export const LOST_TITLE = 'The pirates broke through';
 export const LOST_LINE = 'Rebuild and ring the bell again.';
 const readAuto = () => { try { return globalThis.localStorage?.getItem(AUTO_KEY) === '1'; } catch { return false; } };
@@ -649,6 +653,9 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     if (seconds !== current.lastCount) { current.lastCount = seconds; if (seconds > 0 && seconds <= 3) cue('pirate-tick'); }
     current.hud?.countdown(current.done ? 0 : Math.min(seconds, 99));
     current.hud?.boss?.(current.boss && !current.done && elapsed < BOSS_WARNING_SECONDS ? current.boss : '');
+    // The first-wave hint (guide on): the three pictures for HINT_SECONDS of the first wave this device plays.
+    if (guideOn && current.hud && current.hintShown === undefined) { current.hintShown = !readHint(); if (current.hintShown) writeHint(); }
+    current.hud?.goalHint?.(current.hintShown === true && !current.done && elapsed > -3 && elapsed < HINT_SECONDS);
     current.hud?.loot?.(startNextWave || runLoot > 0 ? runLoot : null);
     if (current.pause) updatePause(current);
     current.hud?.bar(current.done && !current.finished ? current.state : current.state.phase === 'countdown' ? countdownBar(current) : current.state);

@@ -13,6 +13,16 @@ import { node } from '../ui/kit/dom.js';
 export const waveBarText = ({ wave, shipsLeft, islandHp, maxIslandHp, boardersLeft = 0 }) =>
   `Wave ${wave} · ${shipsLeft} ${shipsLeft === 1 ? 'ship' : 'ships'} left${boardersLeft > 0 ? ` · ${boardersLeft} ashore` : ''} · ♥ ${Math.round(islandHp / maxIslandHp * 100)}`;
 
+// The goal at a glance (owner's playtest 15 Nov: "less text, more visuals"): the bar draws as icons. ❤️ the heart's
+// share with its bar, then small chips: the wave, ⛵ ships left and ☠️ boarders ashore (only while there are any).
+// waveBarText stays the bar's spoken label.
+export function goalChips({ wave, shipsLeft, islandHp, maxIslandHp, boardersLeft = 0 }) {
+  return { heart: Math.max(0, Math.round(islandHp / maxIslandHp * 100)),
+    chips: [['🌊', `${wave}`, 'wave'], ['⛵', `${shipsLeft}`, 'ships'], ...(boardersLeft > 0 ? [['☠️', `${boardersLeft}`, 'ashore']] : [])] };
+}
+// The first-wave hint: three pictures, one word each: pirates land here → walls and towers block → protect the heart.
+export const GOAL_HINT = Object.freeze([['🏝️', 'Land'], ['🧱', 'Block'], ['❤️', 'Protect']]);
+
 export const runLootText = loot => `Loot this run: 🪙 ${Math.max(0, Math.round(loot) || 0)}`;
 
 // The button: "F: Slash" (the cutlass, D052) with a boarder within strike reach (§12), else the equipped weapon's name (§15),
@@ -30,7 +40,19 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
   const layer = node('div', 'pirate-hud');
   const bar = node('div', 'pirate-bar'); bar.setAttribute('role', 'status');
   const label = node('span', 'pirate-bar-text'), meter = node('span', 'pirate-bar-meter'), fill = node('span', 'pirate-bar-fill');
-  meter.append(fill); meter.setAttribute('aria-hidden', 'true'); bar.append(label, meter); bar.hidden = true;
+  // The goal row: ❤️, the heart's bar and its number; under it the chips (wave, ships, boarders ashore).
+  const goal = node('span', 'pirate-goal'), heartIcon = node('span', 'pirate-goal-heart', '❤️'), heartValue = node('strong', 'pirate-goal-value');
+  const chips = node('span', 'pirate-chips');
+  meter.append(fill); meter.setAttribute('aria-hidden', 'true'); goal.append(heartIcon, meter, heartValue); goal.setAttribute('aria-hidden', 'true');
+  chips.setAttribute('aria-hidden', 'true'); label.className = 'pirate-bar-text pirate-quiet';
+  bar.append(label, goal, chips); bar.hidden = true;
+  // The first-wave hint (GOAL_HINT): three big pictures with arrows, gone after a few seconds or a tap.
+  const hint = node('div', 'pirate-goal-hint'); hint.hidden = true; hint.setAttribute('role', 'note');
+  GOAL_HINT.forEach(([icon, word], i) => {
+    if (i) hint.append(node('span', 'pirate-goal-hint-arrow', '→'));
+    const step = node('span', 'pirate-goal-hint-step'); step.append(node('span', 'pirate-goal-hint-icon', icon), node('span', 'pirate-goal-hint-word', word)); hint.append(step);
+  });
+  hint.addEventListener('click', () => { hint.hidden = true; });
   const countdown = node('div', 'pirate-countdown'); countdown.setAttribute('aria-live', 'polite'); countdown.hidden = true;
   const countWords = node('span', 'pirate-countdown-words'), countNumber = node('strong', 'pirate-countdown-number');
   countdown.append(countWords, countNumber);
@@ -104,7 +126,7 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
   pause.append(pauseHead, pauseActions, autoLabel);
   // The island takes damage: a short red flash on the screen's edge (not with reduced motion).
   const edge = node('div', 'pirate-hurt-edge'); edge.setAttribute('aria-hidden', 'true');
-  layer.append(edge, marks, bar, countdown, warning, prompt, musket, banner, pause, mini); container.append(layer);
+  layer.append(edge, marks, bar, countdown, warning, prompt, musket, banner, pause, mini, hint); container.append(layer);
   let lastBar = '', lastCount = '', lastPrompt = '', lastLoot = '', lastPause = '', lastMusket = '', hurtUntil = 0, hp = null;
   let lastHealth = '', lastDown = '', ownHp = null, lastEvent = '';
 
@@ -130,7 +152,10 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
       hp = state.islandHp;
       bar.classList.toggle('pirate-hurt', performance.now() < hurtUntil);
       if (text === lastBar) return;
-      lastBar = text; label.textContent = text;
+      lastBar = text; label.textContent = text; bar.setAttribute('aria-label', text);
+      const look = goalChips(state);
+      heartValue.textContent = String(look.heart);
+      chips.replaceChildren(...look.chips.map(([icon, value, kind]) => { const chip = node('span', `pirate-chip pirate-chip-${kind}`); chip.append(node('span', 'pirate-chip-icon', icon), node('strong', '', value)); return chip; }));
       const share = Math.max(0, state.islandHp / state.maxIslandHp);
       fill.style.width = `${Math.round(share * 100)}%`;
       fill.dataset.level = share > .5 ? 'good' : share > .25 ? 'low' : 'bad';
@@ -200,6 +225,8 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
       if (text === lastLoot) return;
       lastLoot = text; loot.hidden = !text; loot.textContent = text;
     },
+    // The first-wave hint: true shows the three pictures, false hides them.
+    goalHint(show) { hint.hidden = show !== true; },
     boss(text) { warning.hidden = !text; warning.textContent = text || ''; },
     // The wave's event: {id, icon, title, line, open} (open: the line shows too) or null to hide it.
     event(info) {
