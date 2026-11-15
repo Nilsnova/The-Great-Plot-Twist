@@ -4,6 +4,27 @@ Used by the presenter and the three other members. This is the 5-minute class de
 
 Rewritten on Wed 11 Nov 2026 from `main` at `e9cbf5d`. It has not been run in front of a class yet: rehearse it twice on the deployed site ([OPEN-TODOS.md](OPEN-TODOS.md), section 5).
 
+## Chosen plan (15 Nov): 5 minutes on the live site
+
+Nils decided on 15 Nov: a **hard 5-minute live demo** on https://the-great-plot-twist.vercel.app/. It shows little, but quickly and reliably. The class-wide Pirate Point demo below stays as a backup only.
+
+| Time | Who | Do | Say (one line) |
+|---|---|---|---|
+| 0:00–0:30 | Driver | Title screen, then **Settings → Account → Sign in with GitHub** (already authorized, so one click) | "Real accounts with GitHub login; progress is saved on our server." |
+| 0:30–1:15 | Driver | Own island: move a wall on the build grid, then take a weapon from the arsenal | "Buildings move on a grid; weapons belong to the whole island, 20 slots." |
+| 1:15–1:30 | Phone A | Opens the island link (**Menu → Play with a friend** on the laptop) and presses **Join** | "A friend joins live; every device runs the same battle." |
+| 1:30–3:30 | Driver + Phone A | Ring the bell on a boss wave (wave 15 or 20). Point at boarders using gaps or breaking through walls, the culverin firing, a tower breaking, E to repair. Play the boss minigame. | "Enemies pick targets and route around or through walls; towers can break and be repaired." |
+| 3:30–4:20 | Driver | **Menu → Harbor**: market calls, football board, weather forecast | "Real prices, real football and real weather, with play money only." |
+| 4:20–5:00 | Narrator | **Leaderboard**: weekly and all-time boards, the statue stage | "That's The Great Plot Twist: build, trade, defend, together." |
+
+**Prep (the day before and 10 minutes before):**
+1. A presentation account whose next wave is a boss (best wave 14 or 19), with walls, cannons and a culverin built.
+2. Phone A signed in and in the same Wi-Fi; a test join done once.
+3. Laptop: one fresh tab of the live site (reload it; never use a tab from before a deploy). Open the Supabase dashboard once so the project is awake.
+4. **No deploys on presentation day.** If a tab still shows "The coast could not load", reload the page.
+5. Backup tab: `/?demo=1&captains=40`, which runs on the laptop alone if the network fails.
+6. Rehearse twice with a stopwatch; cut the Harbor if a run goes over 4:20.
+
 ## Four roles
 
 | Role | Who | Does |
