@@ -262,3 +262,11 @@ and [results, screenshots and manual checkpoints](evidence/T28/README.md).
 | Narrow match-side choices use full rows so club words remain intact | [CSS](../frontend/src/harbor/harbor.css), [36 browser cases](../frontend/tests/harbor/phone-layout.test.js), [fixtures](../frontend/tests/harbor/phone-fixtures.js); `cd frontend && npm test -- --run tests/harbor/phone-layout.test.js` | Ten views x 375x812/390x844/1280x720: bounds, panel overflow, 44px effective targets, no clipped choice text or fragmented club words, Tab/focus and Escape destination; Harbor stand IDs, one controlled confirmation/10 coins with no earlier spend, compact coin rows, pause-to-Harbor, local preference save and all help pages at both phone sizes | Actual sports/provider accuracy, server settlement/login/room authority, account view, real phones/keyboards/VoiceOver/Safari, actual external-link/clipboard use and game cards outside this pass |
 
 [Evidence, exact scope and commands](evidence/B2-harbor-menus/README.md), [results](../specs/B2-harbor-menus.md).
+
+## #74 — Nicolas Radomski — Fresh start resets the old personal weapons
+
+| What I built / why | Where and command | Covers | Misses |
+|---|---|---|---|
+| The admin script [fresh_start.sql](../scripts/admin/fresh_start.sql) now also gives every island back only the musket (`weapons_owned`, `weapon_equipped`) and counts those islands; after a fresh start nobody should still own bought weapons | The two fresh-start tests in [test_islands_and_waves_sql.py](../backend/server/tests/island_sql/test_islands_and_waves_sql.py); from `backend/`: `CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql` | One island that owns and carries pistols: the dry run reports `island weapons reset: 1` and leaves the pistols; the real run, run twice, leaves `{musket}` and `musket` on every island | The live Supabase project (the script is never run there by a test); islands with many weapons at once; the shared arsenal, which step 6 of the script already clears |
+
+[Walkthrough part](WALKTHROUGH.md#74--fresh-start-resets-the-old-personal-weapons--nicolas-radomski).

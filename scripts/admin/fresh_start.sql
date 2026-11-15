@@ -13,7 +13,10 @@
 --     2. clears every cloud save (saves.data becomes {}; the row stays),
 --     3. removes every building from islet_buildings except cabins (the cabin
 --        stands from the start and has no row anyway),
---     4. sets the best wave and the flags of every island to 0,
+--     4. sets the best wave and the flags of every island to 0, and gives every
+--        island back only the musket: the old personal weapons (weapons_owned
+--        and weapon_equipped, 20261112030000; legacy since the shared arsenal,
+--        D042) become '{musket}' and 'musket',
 --     5. removes every moved build spot (island_layout, 20261114110000): the
 --        spots stand on their fixed places again, like the buildings that go,
 --     6. removes every arsenal copy and every arsenal click (arsenal_moves and
@@ -66,6 +69,7 @@ declare
   v_saves          integer := 0;
   v_buildings      integer := 0;
   v_islands        integer := 0;
+  v_weapons        integer := 0;
   v_layout         integer := 0;
   v_arsenal_moves  integer := 0;
   v_arsenal_copies integer := 0;
@@ -103,6 +107,11 @@ begin
   -- 4. Every island back to no best wave and no flags.
   update public.islands set wave_best = 0, flags = 0 where wave_best <> 0 or flags <> 0;
   get diagnostics v_islands = row_count;
+  -- ... and only the musket again (both columns in one update, so the check rule
+  -- "the carried weapon is one you own" holds).
+  update public.islands set weapons_owned = '{musket}', weapon_equipped = 'musket'
+   where weapons_owned <> '{musket}' or weapon_equipped <> 'musket';
+  get diagnostics v_weapons = row_count;
 
   -- 5. Every moved build spot (back to the fixed spots).
   delete from public.island_layout;
@@ -124,11 +133,12 @@ begin
 
   v_counts := format(
     'wallets set to %s: %s, wallets left as they were: %s, saves cleared: %s, '
-    'buildings removed: %s, islands reset: %s, layout rows removed: %s, '
+    'buildings removed: %s, islands reset: %s, island weapons reset: %s, '
+    'layout rows removed: %s, '
     'arsenal clicks removed: %s, arsenal copies removed: %s, wall records removed: %s, '
     'wave rules removed: %s, wave runs removed: %s',
     c_starting_coins, v_wallets_set, v_wallets_kept, v_saves, v_buildings, v_islands,
-    v_layout, v_arsenal_moves, v_arsenal_copies, v_wall_records, v_wave_rules, v_waves
+    v_weapons, v_layout, v_arsenal_moves, v_arsenal_copies, v_wall_records, v_wave_rules, v_waves
   );
 
   if c_apply then
