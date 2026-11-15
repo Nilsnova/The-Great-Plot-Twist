@@ -15,7 +15,7 @@ import {ROLE_IDS, activeRole, roleRadius} from '../campaign/houses.js';
 import {CULVERIN_ART, HARPOON_ART, TIER_ART, crewArt, pipRow, pirateLevels} from '../pixel/pirate-catalog.js';
 import {islandFrame} from '../art/registry.js';
 import {frameCanvas, smoothTexture, spriteMaterial} from '../art/textures.js';
-import {clickVerdict} from '../world/reach.js';
+import {clickVerdict, WALK_CLOSER} from '../world/reach.js';
 import {decorateProgress} from './decorations.js';
 
 const UNIT = 16;
@@ -348,7 +348,9 @@ export function decorateIsland(place, ctx = {}) {
       const picked = pickAt(point.x, -point.y / .72);
       if (!picked) return;
       // Walk up first: a click on something out of reach only says so (ctx.player is the player's position).
-      const verdict = clickVerdict(ctx.player?.(), place.zones, picked);
+      const position = ctx.player?.(), verdict = clickVerdict(position, place.zones, picked);
+      // An installed position adapter must have a position before it can open a building.
+      if (ctx.player && !position) { ctx.onFar?.(picked, {...verdict, open: false, hint: WALK_CLOSER}); return; }
       if (verdict.open) ctx.onPick?.(picked); else ctx.onFar?.(picked, verdict);
     };
     ctx.canvas.addEventListener('pointerdown', start); ctx.canvas.addEventListener('pointerup', click);

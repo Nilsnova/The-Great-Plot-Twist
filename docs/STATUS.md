@@ -19,6 +19,11 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 **14 Nov, B2 entry/lobby / Johannes:** [draft PR #61](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/61) fixes visually truncated captain names in full phone lobbies: a small mobile grid lets names wrap and puts status below. Seven focused cases, plus a repeatable 21-panel title-to-lobby fake-game audit at 375x812, 390x844 and 1280x720. Full frontend: 260 files / 3,209 tests; build/budget/text lint, accessibility 33 screens and demo 33 checks pass on the branch from main `4d83dcd`. [Before/after, entry audit and limits](evidence/B2-entry-lobby/README.md). Login/APIs unchanged; independent of #58. Draft; author/human review, physical phone/keyboard and remaining B2 game views are open.
 
 **15 Nov, morning (Nils, agent-assisted).** Nils reviewed and **accepted D039–D049** (teammates may still comment). Merged: README members table (#68), `fresh_start.sql` clears the sprint tables (#69), `check-loading.js` brought up to date after D031 (#70), and Johannes's B2 phone fixes #58 and #61 with a small phone-width fix for the game-choice dialog (#71). Moodle submission of the repository link: by Mon 23 Nov 23:59 (plan: Sun 22 Nov).
+**12 Nov, T19 / Johannes:** [draft PR #7](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/7) makes
+building clicks use E's existing reach and preserves priority for wave/revive actions. Frontend:
+**2,753 tests passed**; build, budgets and text lint pass; accessibility **33 screens / no failures**;
+demo **33 checks / no errors**. [Before/after evidence](evidence/T19/README.md). No login/API changes;
+physical phones, live multiplayer and human review remain separate checks.
 
 **14 Nov, ~22:05 UTC: `pathing` is live.** Nils accepted the closed-ring gap (D040: at wave 60 a closed wall ring is 12 to 18 points harder with pathing), so `pathing` was added to production `FEATURE_FLAGS` and redeployed. Checked after the redeploy: `/api/config` shows all new flags on (`islands`, `rescue`, `wall_recovery`, `placement`, `defenses_v2`, `arsenal`, `tower_health`, `pathing`), `/api/health` answers 200, and Vercel shows no runtime errors in the last hour. Every T29–T47 feature is now live; what the paragraph below says about `pathing` being off is superseded. Players should reload old tabs.
 
@@ -226,6 +231,9 @@ Nobody has decided these yet. Until they are decided, the plan in [ROADMAP.md](.
 
 **Johannes / B2:** review draft #58 and check touch/keyboard on a physical phone. Continue the remaining current-v3 phone journey separately; this PR only fixes four island targets. Preserve all teammate handovers and recheck current main before a later merge. No merge without Johannes explicit OK and independent human approval.
 **Johannes / B2:** review draft #61 and test entry/full lobby on a physical phone (including keyboard and a second-device invite). Remaining game views and draft #58 are separate. Keep draft; reconcile current main and handovers before a later merge; independent human approval and Johannes explicit OK required.
+**T19 / Johannes:** inspect [PR #7](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/7) with the
+[lane walkthrough](WALKTHROUGH.md#johannes-nearby-building-interactions-t19), then ask a different human
+teammate to review the current diff; Nils (`Nilsnova`) is the suggested reviewer. No automatic merge.
 
 **T28 / Ianno:** introductory explain-back completed after clarification; ask Johannes (`frcola`) for independent review of PR #19. No merge before a different human approves.
 
@@ -563,6 +571,9 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 
 
 - **2026-11-15, decisions accepted (docs only), branch `docs/accept-d039-d049`.** Claude, for Nils: recorded Nils's acceptance of D039–D049 in DECISIONS, STATUS and the sprint guide.
+- **14 Nov 2026 · Johannes / PR #7 conflict resolution:** integrated main `53a59d4` on `feat/t19-nearby-interactions`; retained teammate content and reran client checks. Exact results and limits: [task handover](../specs/T19-nearby-interactions.md#main-integration-and-conflict-resolution-14-nov-2026). Updated branch awaits independent review; no main merge.
+
+
 - **2026-11-14, ~22:05 UTC, pathing decision (docs only), branch `docs/pathing-decision`.** Claude, for Nils: Nils accepted the closed-ring balance gap; `pathing` switched on in production and checked (`/api/config`, `/api/health`, no runtime errors). Updated D040, OPEN-TODOS, INTERFACES and the sprint guide.
 - **2026-11-14, live-state pass (docs only), branch `docs/sprint-live-state`.** Claude, for Nils: recorded the late-evening production state (flags `rescue`, `defenses_v2` and `tower_health` on; `pathing` off; migration `20261114140000_culverin` and the four earlier ones applied), PRs #54, #56, #59, #62 and #63; set the OPEN-TODOS section 9 statuses (T33, T38 and T43 live; T34/T35 merged, pathing off pending a team decision) and the follow-up table; updated the sprint guide (sections 0 and 13, notes in 10 and 11, new section 15 with three explain-back questions); marked the outdated sentence in the `wave_rules` migration header and `supabase/README.md` as superseded by #63. No code, flag or database change.
 - **2026-11-14, sprint final pass (docs only), branch `docs/sprint-final-pass`.** Claude, for Nils: recorded that the four sprint migrations are applied live and which flags are on in production; replaced the stale "not applied" wording (D039, D041, D042, D049, supabase/README.md, INTERFACES.md, the T29/T33/T36/T40 specs); set every T29–T47 row in OPEN-TODOS section 9 to its real state with PR numbers and listed the known follow-ups; added the T45, arsenal, integration and culverin sections to the sprint guide. No code, flag or database change.
@@ -592,6 +603,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 - **2026-11-13.** Codex for Ianno: T26 island Harbor weather access, regression tests and desktop/phone screenshots in PR #8; see [evidence](handoff/T26-weather-board.md). Human explain-back/review pending.
 
 - **14 Nov 2026 · Ianno Hollensteiner, with coding-agent assistance:** prepared additive roadmap/tasks T29–T47 for review; no implementation or release. Independent human review and explain-back are pending; no merge or release is claimed.
+
+- **2026-11-12, Johannes Franz Lang with Codex:** T19 nearby building input on `feat/t19-nearby-interactions` ([PR #7](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/7)); 2,753 frontend tests, build/budget/text checks, 33 accessibility screens and 33 demo checks pass. Nine new cases, before/after desktop/phone evidence, walkthrough and test map included. Login, APIs and movement unchanged; no files deleted; human review pending.
 
 - **2026-11-11, Johannes Franz Lang with Codex:** D1 adds 67 cases in five existing route-test files on `test/d1-invalid-inputs` ([PR #5](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/5)). Backend 15,894 passed / 257 skipped; Ruff clean; a temporary 65-character action-ID bug was caught and restored. Production code is unchanged; explain-back and human review remain.
 

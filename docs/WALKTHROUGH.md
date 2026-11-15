@@ -1132,6 +1132,38 @@ An unavailable database produces an error and Try again; offline rehearsal expli
 requires an online game rather than claiming fake global scores. The browser cannot
 award a score or reward through this read-only endpoint.
 
+## Johannes: nearby building interactions (T19)
+
+**What I built.** Building clicks now follow the same reach rule as E. A distant click shows
+"Walk closer" instead of opening a card. E and the phone Use button still work nearby. When the
+wave reports a combat/revive action, its own action button takes priority; a fallen local captain
+cannot click a building ([game.js](../frontend/src/game.js), [island/world.js](../frontend/src/island/world.js)).
+
+**Where and how.** A native pointer release identifies the clicked building in
+[island/world.js](../frontend/src/island/world.js). Main's [clickVerdict](../frontend/src/world/reach.js) finds the clicked building's zone and uses
+the existing [inZone](../frontend/src/world/zones.js) rule (also used by E's findZone) with the current position getter. Only an
+in-range result reaches the existing card callback. [island/index.js](../frontend/src/island/index.js)
+supplies main's player-position getter and onFar hint callback. The conflict resolution retains
+main's flexible placement, poses and eDecision/revive routing; this task keeps the fallen/action click guards. [game.js](../frontend/src/game.js) supplies
+the active/down/action state and gives the wave's button priority over generic Use.
+
+**Why this way.** Reusing [the existing zones](../frontend/src/island/spots.js) avoids inventing
+a second distance. A nearby bell must not grant permission to click a distant cannon: the check
+uses only the clicked target's zone. The existing [revival controller](../frontend/src/pirates/controller.js)
+keeps its hold timing, price and server call. This change does not rewrite login, APIs or movement.
+
+**Tests and limits.** [Pointer tests](../frontend/tests/island/nearby-interactions.test.js) cover the
+center, just inside/outside reach, height, missing position and blocked input with real browser
+events. [Full-game tests](../frontend/tests/island/nearby-game.test.js) use the local fake server
+and native E/phone Use. Their fallen/revive states are explicit UI fixtures; they do not prove a
+live multiplayer revival or SQL payment. Existing [health tests](../frontend/tests/pirates/health.test.js)
+cover the real controller's hold/cancel/payment flow with fake services. Physical devices and
+real Supabase remain separate checks; see [the test-map row](TEST-MAP.md#8-lane-rows-to-be-filled-by-the-lanes-members).
+
+**How it could change.** New buildings can reuse this rule by supplying a normal interaction zone.
+A future click-to-walk feature could walk to the target before offering Use; that would be a
+separate change. Browser reach is guidance, not a server-side anti-cheat guarantee.
+
 ## The three course questions
 
 ### Q1. Where is the data stored?

@@ -37,6 +37,9 @@ The order of the tasks below follows this table: the walkthrough and the UX carr
 
 ## Task board
 
+
+**V3 follow-up T19:** nearby building interactions implemented in [PR #7](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/7), with [visual evidence](evidence/T19/README.md) and Johannes's lane notes in [WALKTHROUGH.md](WALKTHROUGH.md). Human review is pending; the task row is in [OPEN-TODOS.md](OPEN-TODOS.md).
+
 Value: ★★★ moves a 20% criterion, ★★ a 10% criterion or a clear risk, ★ nice to have. Size: S (under 2 hours), M (half a day), L (a day).
 
 - [x] **T27: exact-angle captain shooting direction**, including diagonals, body/gun overlap
