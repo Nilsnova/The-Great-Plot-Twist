@@ -159,6 +159,8 @@ const defaultRenderer = async options => {
   return module.createWaveRenderer({ ...options, atlas: await atlasPromise });
 };
 const defaultHud = async options => (await import('./hud.js')).createWaveHud(options);
+// The battle guide (battle-guide.js): where pirates land, the way they walk, the heart and the walls' bars. Drawing only.
+const defaultGuide = async options => (await import('./battle-guide.js')).createBattleGuide(options);
 // v3 waves: the event's drawing and the finisher's scene load with their first wave; the finisher slows the sea.
 const defaultEventArt = async options => (typeof document === 'undefined' ? null : (await import('./wave-events-art.js')).createEventArt(options));
 const defaultFinisherScene = async options => {
@@ -185,7 +187,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   getCrew = () => null, captainLevel = () => 1, captainSkills = () => [], captainWeapon = () => 'musket', captainColour = () => 0,
   startNextWave = null, breakSeconds = BREAK_SECONDS,
   loadAuto = readAuto, saveAuto = writeAuto, holdBreak = null, toggleHold = null, reviveCaptain = null,
-  createEventArt = defaultEventArt, createFinisherScene = defaultFinisherScene, easyFinishers = readEasy, practiceIdentity = () => null } = {}) {
+  createEventArt = defaultEventArt, createFinisherScene = defaultFinisherScene, easyFinishers = readEasy, practiceIdentity = () => null,
+  guide: guideOn = false, createGuide = defaultGuide } = {}) {
   // The captains' poses (src/pirates/poses.js): your character and the teammates' figures fire in their own body.
   const poses = createPoses({ now: () => now() / 1000 });
   let wave = null, disposed = false, pressed = false, shootPressed = false, shootHeld = false, down = null, shake = 0;
@@ -204,6 +207,32 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   const cue = name => { if (wave?.shown) sound?.cue?.(name); };
   const here = () => !place || (world.place?.() ?? place) === place;
   const blocked = () => !!world.isBlocked?.();
+
+  // The battle guide (guide: true, the island's controller only): landings, routes, the heart and the walls' bars;
+  // faintly between waves on this island, in full during a wave. Drawing only: it reads the state, never the sim.
+  let guide = null, guideLoading = false, lastWave = 0;
+  function updateGuide(dt) {
+    if (!guideOn || !world.scene || disposed) return;
+    if (!guide) {
+      if (!guideLoading) {
+        guideLoading = true;
+        Promise.resolve(createGuide({ scene: world.scene, reducedMotion, characterScale: () => world.scene?.userData?.characterScale ?? 1 }))
+          .then(made => { if (disposed) made?.dispose(); else guide = made; }).catch(error => console.error(error));
+      }
+      return;
+    }
+    const current = wave, running = current && !current.done && !current.pause;
+    const show = here() && (!current || current.pause || running);
+    guide.setVisible?.(show);
+    if (!show) { guide.update(null); return; }
+    if (running) {
+      guide.update({ mode: 'wave', lanes: current.lanes?.length ? current.lanes : null, defenses: current.defenses, stateWalls: current.state.walls,
+        boarders: current.state.boarders, heart: current.state.heart, wave: current.info.wave, dt });
+    } else {
+      const defenses = read(getDefenses, []) ?? [];
+      guide.update({ mode: 'preview', lanes: null, defenses, stateWalls: null, boarders: [], heart: null, wave: (current?.info.wave ?? lastWave) + 1, dt });
+    }
+  }
 
   if (listen && bus?.on) stops.push(bus.on('wave_started_server', event => { const info = readWaveInfo(event); if (info && accept(info)) start(info); }));
   if (room?.on) for (const type of Object.values(ROOM_EVENTS)) {
@@ -569,8 +598,10 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   function kick(amount) { if (!reducedMotion() && wave?.shown) shake = Math.max(shake, amount); }
 
   function update(dt = 0) {
+    updateGuide(dt);
     if (disposed || !wave) return;
     const current = wave;
+    lastWave = current.info.wave;
     current.shown = here();
     current.renderer?.setVisible(current.shown);
     current.hud?.setVisible(current.shown);
@@ -804,7 +835,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     },
     dispose() {
       if (disposed) return;
-      stop(); disposed = true;
+      stop(); disposed = true; guide?.dispose(); guide = null;
       for (const id of timers) clearTimer(id);
       timers.clear(); stops.splice(0).forEach(stopListening => stopListening());
       if (typeof window !== 'undefined') { window.removeEventListener('keydown', keydown); window.removeEventListener('keyup', keyup); window.removeEventListener('blur', letGo); }

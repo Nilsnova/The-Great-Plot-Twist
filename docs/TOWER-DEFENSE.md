@@ -171,3 +171,13 @@ Weapons are bought **once** with coins and then equipped, one at a time. The equ
 - **Deterministic.** The synced `captain_shot` carries the weapon id and, for a spray or a bomb, the aim point `ax, az`; the sim resolves cone, pierce and area hits itself, on ships and boarders alike (§12; the "ships" in the table above means ships or boarders) (events `captain_fired` with `weapon` and `targets`, and `captain_blast` when a bomb bursts). A free-aim click with a one-ship gun hits the ship or boarder in range nearest the aim point (within 8 units), else it is a miss shown only on your screen.
 - **Server.** `islands.weapons_owned text[] default '{musket}'` and `weapon_equipped text default 'musket'` (checks: known ids, the musket always owned, the equipped one owned); `island_weapon_buy()` pays through the wallet ledger (reason `weapon_purchase`, ref `weapon:<actionUid>`, locks the wallet then the island, like the captain upgrade) and equips the weapon; `island_weapon_equip()`. Prices and unlock waves live in `backend/content/islands.json` (`weapons`); the lock compares with the same best won wave as §9.
 - **Interface.** Menu › Captain and skills › Weapons: one row per weapon with its line and Buy · 🪙 N / Equip / Equipped / Locked. The musket button shows the equipped weapon's name. Each weapon looks its own: the musket's gold tracer, the pistols' thin white streak, the blunderbuss's three orange streaks and a smoke puff, the rifle's pale line through both ships, the bomb's burning arc and its fiery blast. A toast "New in the weapon shop: Pistols!" when a won wave unlocks one.
+
+## 16. Battle clarity (added 15 Nov, owner: "it's not clear where the pirates land or where they will go")
+
+Less text, more shapes (`src/pirates/battle-guide.js`, drawing only, never fed back into the sim):
+
+- **Landing:** a red ring with a 💀 badge on the beach of every sea lane of the wave (all three lanes between waves).
+- **Route:** red dots and chevrons from each landing to the heart, the route the boarders' own grid takes (`boarder-paths.js`, rule `pathing`); a light runs along it in a wave. An 🪓 badge marks each wall the route has to hack; a lone wall the route walks round shows as the detour.
+- **Goal:** a gold ring and a ❤️ badge on the heart.
+- **Walls:** a small bar (green, yellow, red) over every wall that is hurt or being hacked; a broken wall's gap is outlined in red dashes with a rubble badge.
+- **Between waves** the landings, routes and heart show faintly, so walls and towers go where the pirates will walk. The routes are worked out again only when a wall is placed, broken, rebuilt or passes a quarter of its hp.
