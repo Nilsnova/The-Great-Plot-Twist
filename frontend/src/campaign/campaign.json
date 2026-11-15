@@ -39,9 +39,9 @@
     },
     {
       "wave": 6,
-      "opens": ["wreck"],
-      "title": "A wreck washed ashore!",
-      "line": "Everyone can pay coins into her repair, a little after every wave."
+      "opens": ["wreck", "crew:guard"],
+      "title": "A wreck washed ashore, and guards for hire!",
+      "line": "Everyone can pay coins into her repair, a little after every wave. Hire guards in Menu › Crew: they fight boarders at the heart."
     },
     {
       "wave": 7,

@@ -106,13 +106,13 @@ export async function openMarketFixture(){
   allPrivateAuthorized&&=authorized;
   if(!authorized)return{status:401,code:'unauthorized'};
   if(flag!==true)return{status:404,code:'feature_off'};
-  if(method==='GET')return{data:{assets:callAssets(),calls:listedCalls(),balance:coins}};
+  if(method==='GET')return{data:{assets:callAssets(),calls:listedCalls(),balance:coins,rules:{minStake:5,maxStake:10000,payoutMultiplier:2}}};
   const allowed=method==='POST'&&uidValid&&bodyKeys.join()==='actionUid,asset,direction,stake'&&['up','down'].includes(body.direction);
   allCallBodiesExpected&&=allowed;
   if(!allowed)return{status:422,code:'validation_error'};
   callPosts++;
   if(callReceipts.has(body.actionUid)){callRepeats++;return{data:{...copy(callReceipts.get(body.actionUid)),balance:coins}};}
-  if(![5,10,25].includes(body.stake))return{status:422,code:'bad_stake'};
+  if(!Number.isSafeInteger(body.stake)||body.stake<5||body.stake>10000)return{status:422,code:'bad_stake'}; // D050: 5 to 10,000
   const asset=callAssets().find(row=>row.id===body.asset);
   if(!asset)return{status:404,code:'no_such_asset'};
   if(!asset.open)return{status:409,code:'market_closed'};

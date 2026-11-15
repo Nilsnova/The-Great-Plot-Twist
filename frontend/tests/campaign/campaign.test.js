@@ -34,7 +34,8 @@ describe('the campaign table', () => {
     expect(unlockWave({kind: 'wall', level: 3})).toBe(5);
     expect(unlockWave({crew: 'gunner'})).toBe(3);
     expect(unlockWave({captain: 4})).toBe(8);
-    expect(UNLOCK_STEPS.map(step => step.wave)).toEqual([0, 1, 2, 3, 5, 8, 12, 15, 20]);
+    expect(UNLOCK_STEPS.map(step => step.wave)).toEqual([0, 1, 2, 3, 5, 6, 8, 12, 15, 20]); // 6: the guard (D052)
+    expect(unlockWave({crew: 'guard'})).toBe(6);
     // The tower tiers (GAME-V3.md §4.1): level 4 after wave 12 (the mortar and the watchtower's 4 after 15), level 5 after 20.
     expect([['cannon', 4], ['wall', 4], ['watchtower', 3], ['mortar', 4], ['watchtower', 4], ['cannon', 5], ['mortar', 5], ['wall', 5], ['watchtower', 5]]
       .map(([kind, level]) => unlockWave({kind, level}))).toEqual([12, 12, 12, 15, 15, 20, 20, 20, 20]);
@@ -58,8 +59,10 @@ describe('the campaign table', () => {
 describe('the Tech hub', () => {
   it('has the research of islands.json: branches, prices per tier, skills and the options of tiers 2 and 3 in order', () => {
     const sent = islands.research.branches.map(item => ({branch: item.branch, name: item.name, price: item.coins[0], prices: item.coins,
-      specs: item.specs.map(spec => spec.spec), tier2: item.tier2.map(option => option.id), tier3: item.tier3.map(option => option.spec)}));
-    expect(BRANCHES.map(item => ({...item, prices: [...item.prices], specs: [...item.specs], tier2: [...item.tier2], tier3: [...item.tier3]}))).toEqual(sent);
+      specs: item.specs.map(spec => spec.spec), tier2: item.tier2.map(option => option.id), tier3: item.tier3.map(option => option.spec),
+      skillCoins: item.skillCoins}));
+    expect(BRANCHES.map(item => ({...item, prices: [...item.prices], specs: [...item.specs], tier2: [...item.tier2], tier3: [...item.tier3],
+      skillCoins: {...item.skillCoins}}))).toEqual(sent);
     for (const item of islands.research.branches) {
       for (const spec of [...item.specs, ...item.tier3]) expect(SPECS[spec.spec]).toMatchObject({branch: item.branch, name: spec.name});
       for (const option of item.tier2) expect(BONUSES[option.id]).toMatchObject({branch: item.branch, name: option.name});

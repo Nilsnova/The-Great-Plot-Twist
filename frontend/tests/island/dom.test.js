@@ -148,7 +148,7 @@ it('the crew and captain panels: locked, hire, full, short of coins; a friend ar
   });
   expect(result.locked.lead).toBe('Crew members join after you win wave 3.');
   expect(result.locked.rows).toEqual([]);
-  expect(result.locked.soon).toBe('Gunner: Opens after wave 3 · Carpenter: Opens after wave 5 · Lookout: Opens after wave 8');
+  expect(result.locked.soon).toBe('Gunner: Opens after wave 3 · Carpenter: Opens after wave 5 · Lookout: Opens after wave 8 · Guard: Opens after wave 6');
   expect(result.open.map(row => `${row.id}:${row.owned}:${row.button}:${row.disabled}`)).toEqual(['gunner:0 of 2:Hire · 🪙 40:false', 'carpenter:0 of 2:Hire · 🪙 30:false']);
   expect(result.full[0]).toMatchObject({id: 'gunner', owned: '2 of 2', button: 'Full', disabled: true, reason: 'You have 2, the most you can hire.'});
   expect(result.full[1]).toMatchObject({id: 'carpenter', disabled: true, reason: 'Not enough 🪙: you need 🪙 10 more.'});

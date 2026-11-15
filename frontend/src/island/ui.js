@@ -137,6 +137,10 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
             option.setAttribute('aria-pressed', String(choice.active));
             const icon = node('span', 'island-spec-icon', iconOf(choice.id)); icon.setAttribute('aria-hidden', 'true');
             option.append(icon, node('strong', '', choice.busy ? 'Picking…' : choice.name), node('span', 'island-spec-line', choice.line));
+            // D051: a tower skill's price badge (none on the active one or a house role) and a short "Need 🪙 40".
+            if (choice.price) option.append(node('span', 'island-spec-cost', choice.price));
+            if (choice.reason) option.append(node('span', 'island-spec-why', choice.reason));
+            if (choice.label) option.setAttribute('aria-label', choice.label);
             if (choice.active) option.append(node('span', 'island-spec-mark', '✓'));
             option.addEventListener('click', () => on.specialise?.(model.spotId, choice.id));
             list.append(option);
@@ -269,7 +273,9 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
         const item = node('li', 'island-crew-row'); item.dataset.crew = row.id;
         const text = node('div', 'island-crew-text');
         const head = node('p', 'island-crew-head'); head.append(node('strong', '', row.name), node('span', 'island-crew-owned', row.owned));
-        text.append(head, node('p', 'island-crew-line', row.line));
+        if (row.icon) head.prepend(node('span', 'island-crew-icon', row.icon)), head.append(node('span', 'island-crew-price', row.price)); // D052: a compact tile
+        text.append(head);
+        if (row.line) text.append(node('p', 'island-crew-line', row.line));
         if (row.reason) text.append(node('p', 'island-crew-reason', row.reason));
         const hire = button(`${row.button}${row.button === 'Hire' ? ` · ${row.price}` : ''}`, () => onHire(row.id)); hire.dataset.focus = `hire-${row.id}`;
         hire.disabled = row.disabled; hire.setAttribute('aria-label', `${row.button} ${row.name}, ${row.price}`);

@@ -6,7 +6,7 @@ import {displayIslandCode, visitUrl} from './codes.js';
 import {formatCoinDelta, formatCoins} from '../lib/coins.js';
 import {BRANCHES, ROLES, ROLE_BY_ID, ROLE_LEVEL, SKILLS, SKILL_BY_ID, WEAPONS, WEAPON_BY_ID, isRole, pointsEarned, pointsSpent, readSkills, readWeapon, respecPrice, skillNeeds} from '../pirates/captain-ids.js';
 import {opensText, spotWave, waveOf, isOpen, tierItem, tierWave} from '../campaign/index.js';
-import {BRANCH_BY_ID, SPECS, TOP_TIER, isCapstone, optionLine, optionName, optionsOf, readSpec, readTier} from '../campaign/tech.js';
+import {BRANCH_BY_ID, SPECS, TOP_TIER, isCapstone, optionLine, optionName, optionsOf, readSpec, readTier, skillPrice} from '../campaign/tech.js';
 import {ROLES as HOUSE_ROLES, ROLE_IDS, ROLE_LEVEL as HOUSE_ROLE_LEVEL, readRole} from '../campaign/houses.js';
 
 // Coins always read "🪙 120" through formatCoins (BUILD-PLAN 3.2); an unknown amount reads "🪙 ?".
@@ -22,7 +22,8 @@ export const coinText = n => (Number.isSafeInteger(n) ? formatCoins(n) : '🪙 ?
 // Locked things stay on the card, marked "Opens after wave N" (GAME-V3.md §4): a locked tower choice is a
 // disabled choice with that reason, a locked spot (the inner wall ring) or level says it in `soon`.
 // campaign: campaignOf(island) of the island on screen (src/campaign/); with it a built tower shows its
-// skills (GAME-V3.md §5): `skills` {line, choices: [{id, name, line, active, disabled}]} or null.
+// skills (GAME-V3.md §5): `skills` {line, choices: [{id, name, line, active, price, reason, disabled}]} or null (D051:
+// `price` "🪙 150" on every skill but the active one, `reason` when the player cannot pay it).
 // A visitor (§6, 11 Nov) builds and upgrades on the friend's island with their own coins: the same
 // card, with "You pay · it stays on <owner>'s island" and no crew button.
 // One primary button at most (the build or the upgrade); `soon` is the small "Coming soon" line.
@@ -88,7 +89,7 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
     return model;
   }
   // Built: its tower skill (GAME-V3.md §5), then the next level, if any; and a way to tear it down (§4.2).
-  if (!point && campaign && BRANCH_BY_ID[shown]) model.skills = skillsOf(shown, spot, campaign, busy);
+  if (!point && campaign && BRANCH_BY_ID[shown]) model.skills = skillsOf(shown, spot, campaign, busy, coins, prices);
   // GAME-V3.md "Houses": a house keeps its loot and, from level 2, picks a role (free, changeable between waves).
   if (!point && shown === 'house') model.skills = rolesOf(spot, level, busy);
   if (!point) model.demolish = {label: busy === 'demolish' ? 'Checking…' : 'Tear down', disabled: battle || !!busy,
@@ -108,17 +109,29 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
 }
 
 // The tower skills of a built building (GAME-V3.md §5): the Tech hub opens after wave 8, its branch must be
-// researched on this island, then one skill is picked (free, changeable between waves).
-function skillsOf(kind, spot, campaign, busy) {
+// researched on this island, then one skill is picked (changeable between waves). D051: each pick costs coins,
+// paid once by the player who clicks (skillPrice: islands.json skillCoins, the capstone dearer); the skill the
+// tower has already is free. A choice carries its price ("🪙 150") and, when it cannot be paid, a short reason.
+function skillsOf(kind, spot, campaign, busy, coins = null, prices = null) {
   const branch = BRANCH_BY_ID[kind], current = readSpec(kind, spot?.spec);
   const title = current ? `Skill: ${SPECS[current].name}` : 'Tower skill';
   if (!isOpen(campaign, 'tech_hub')) return {title, line: `Tower skills: ${opensText(waveOf('tech_hub'))}.`, choices: [], current};
   if (!campaign.research.done.has(kind)) return {title, line: `Research ${branch.name.toLowerCase()} at the Tech hub first.`, choices: [], current};
   // Tier 3 (GAME-V3.md §5.1): the capstone the island chose is one more pick.
   const capstone = campaign.research.tiers?.[kind]?.tier3 ?? null;
-  return {title, line: current ? 'Pick another one for the next wave if you like.' : 'Pick one skill for this tower. It costs nothing.', current,
-    choices: [...branch.specs, ...(capstone ? [capstone] : [])].map(id => ({id, name: SPECS[id].name, line: SPECS[id].line, active: id === current,
-      capstone: isCapstone(id), disabled: id === current || busy === `spec:${id}`, busy: busy === `spec:${id}`}))};
+  return {title, line: current ? 'Switch for the next wave.' : 'Pick one skill.', current,
+    choices: [...branch.specs, ...(capstone ? [capstone] : [])].map(id => skillChoice(kind, id, current, busy, coins, prices))};
+}
+
+// One tower skill on the card: its price, and whether this player can pay it now.
+function skillChoice(kind, id, current, busy, coins, prices) {
+  const active = id === current, price = skillPrice(kind, id, prices), busyHere = busy === `spec:${id}`;
+  let reason = '';
+  if (!active && coins === null) reason = 'Coins loading';
+  else if (!active && coins < price) reason = `Need ${coinText(price - coins)}`; // what is still missing
+  return {id, name: SPECS[id].name, line: SPECS[id].line, active, capstone: isCapstone(id), price: active ? '' : coinText(price), cost: active ? 0 : price,
+    reason, disabled: active || busyHere || reason !== '', busy: busyHere,
+    label: `${SPECS[id].name}, ${active ? 'your skill' : `${coinText(price)}${reason ? `, ${reason}` : ''}`}`};
 }
 
 // The roles of a built house (GAME-V3.md "Houses"): below level 2 one line says what comes; from level 2 the
@@ -141,9 +154,10 @@ export function crewModel({crew = {}, coins = null, unlocks = null, busy = null,
     const price = Number.isSafeInteger(sent?.price) ? sent.price : info.price;
     if (unlocks && !unlocks.crew[id]) { soon.push(`${info.name}: ${opensText(lockedWave(unlocks, {crew: id}) ?? '?')}`); continue; }
     const full = owned >= info.max;
-    const row = {id, name: info.name, line: info.line, price: coinText(price), owned: `${owned} of ${info.max}`,
-      button: busy === id ? 'Hiring…' : full ? 'Full' : 'Hire', disabled: true, reason: ''};
-    if (full) row.reason = info.max === 1 ? 'You have one.' : `You have ${info.max}, the most you can hire.`;
+    const row = {id, name: info.name, line: info.line, price: coinText(price), owned: info.icon ? `${owned}/${info.max}` : `${owned} of ${info.max}`,
+      button: busy === id ? 'Hiring…' : full ? 'Full' : 'Hire', disabled: true, reason: '', ...(info.icon ? {icon: info.icon} : {})};
+    if (info.icon) row.disabled = full || !!busy || coins === null || coins < price; // a compact tile (D052): no sentences
+    else if (full) row.reason = info.max === 1 ? 'You have one.' : `You have ${info.max}, the most you can hire.`;
     else if (busy) row.reason = '';
     else if (coins === null) row.reason = 'Your coins are still loading.';
     else if (coins < price) row.reason = `Not enough 🪙: you need ${coinText(price - coins)} more.`;

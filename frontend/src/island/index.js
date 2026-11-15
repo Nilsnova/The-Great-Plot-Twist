@@ -651,7 +651,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
         emit({type: TOWER_SPECIALISED, spot: spotId, spec});
         ui.toast(`${SPECS[spec].name}: this tower fights with it from the next wave.`, 'success');
       }
-    } else { cardMessage = answer.message; if (['not_researched', 'not_built', 'wrong_kind', 'house_level'].includes(answer.code)) await refreshDefended(); }
+    } else { cardMessage = answer.message; if (['not_researched', 'not_built', 'wrong_kind', 'house_level', 'insufficient_funds'].includes(answer.code)) await refreshDefended(); }
     refreshCard();
   }
   // The reach of the open house card's role, for the ring on the ground (world.js), or null.

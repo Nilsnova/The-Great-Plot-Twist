@@ -146,7 +146,13 @@ def test_a_player_without_a_wallet_is_not_set_up(database):
 
 @pytest.mark.parametrize(
     "change",
-    [{"stake": 7}, {"asset": "swiftwater-ferries"}, {"direction": "sideways"}, {"uid": "short"}],
+    [
+        {"stake": 4},
+        {"stake": 10_001},
+        {"asset": "swiftwater-ferries"},
+        {"direction": "sideways"},
+        {"uid": "short"},
+    ],
 )
 def test_the_table_rules_refuse_what_the_stall_does_not_offer(database, change):
     player_with(database, PLAYER, 100)
@@ -175,6 +181,19 @@ def test_a_due_call_is_won_lost_or_refunded(database, direction, price, outcome,
     assert settled["status"] == "settled" and settled["repeat"] is False
     assert (settled["call"]["outcome"], settled["call"]["payout"]) == (outcome, payout)
     assert settled["balance"] == coins == balance(database)
+
+
+def test_a_10000_call_is_taken_and_a_right_one_pays_20000(database):
+    # D050 (20261115120000_bigger_stakes.sql): any whole stake from 5 to 10,000.
+    player_with(database, PLAYER, 10_000)
+    made = open_call(database, stake=10_000)
+    assert made["balance"] == 0 and made["call"]["stake"] == 10_000
+    make_due(database, made["call"]["id"])
+
+    settled = settle(database, made["call"]["id"], "101")
+
+    assert (settled["call"]["outcome"], settled["call"]["payout"]) == ("won", 20_000)
+    assert settled["balance"] == 20_000 == balance(database)
 
 
 def test_a_call_is_settled_once(database):

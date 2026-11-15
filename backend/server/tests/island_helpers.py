@@ -148,7 +148,11 @@ ARSENAL_DONE = {
         ],
     },
 }  # fmt: skip
-SPECIALISED = {"status": "done", "plot": "cannon_1", "spec": "rapid"}
+# D051: island_specialise() is a paid function now (price 0 for a house role).
+SPECIALISED = {
+    "status": "done", "plot": "cannon_1", "spec": "rapid", "price": 150, "balance": 50,
+    "repeat": False,
+}  # fmt: skip
 # A level-3 cannon that FRIEND built and PLAYER upgraded (20261112080000_demolish.sql).
 DEMOLISH_REFUNDS = [
     {"playerId": FRIEND_ID, "paid": 150, "coins": 75},
@@ -216,6 +220,7 @@ class FakeIslandDatabase:
             "crew_gunner": 0,
             "crew_carpenter": 0,
             "crew_lookout": 0,
+            "crew_guard": 0,
             "captain_level": 1,
             "won_wave_best": 0,
             "captain_skills": [],

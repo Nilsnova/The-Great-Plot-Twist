@@ -15,7 +15,7 @@ GET /api/market/calls
                    "openPrice": 76159.21, "openedAt": "2026-11-11T12:00:00Z",
                    "settleAt": "2026-11-11T13:00:00Z", "status": "open",
                    "settlePrice": null, "payout": null}, ...],
-        "balance": 90}
+        "balance": 90, "rules": {"minStake": 5, "maxStake": 10000, "payoutMultiplier": 2}}
     The five assets in this order: harbor-trust (Bitcoin), tidewright-works (Ether),
     greyfathom-salvage (Gold), apple, nvidia. "open" is true while a call can be made (a live
     price now); "closedReason" says why not (for example "weekend", "source_off", "demo",
@@ -24,7 +24,8 @@ GET /api/market/calls
     Before answering, every open call past settleAt is decided with the price the server reads
     now (the first price at or after settleAt, not the exact price at that second; for a stock
     outside New York hours, the last close). A call with no such price within 24 hours after
-    settleAt is refunded.
+    settleAt is refunded. "rules" are the stake limits of one call (D050): 5 to 10,000 whole
+    coins; a right call pays payoutMultiplier (2) x the stake.
 
 POST /api/market/calls  {"asset": "harbor-trust", "direction": "up", "stake": 10,
                          "actionUid": "k3j9x2m4q8w1z7a0"}
@@ -38,7 +39,7 @@ POST /api/market/calls  {"asset": "harbor-trust", "direction": "up", "stake": 10
                               4 yet (docs/GAME-V3.md section 4: the Harbor's market stall
                               opens after wave 4). A player with no island game at all (the
                               class demo) is not held back.
-      422 bad_stake           the stake is not 5, 10 or 25
+      422 bad_stake           the stake is not a whole number from 5 to 10,000
       422 validation_error    a missing or extra field, a bad direction or actionUid
       429 too_many_requests   more than 20 calls a minute
 
@@ -105,10 +106,22 @@ class CallOut(BaseModel):
     payout: int | None
 
 
+class CallRules(BaseModel):
+    minStake: int
+    maxStake: int
+    payoutMultiplier: int
+
+
+RULES = CallRules(
+    minStake=calls.MIN_STAKE, maxStake=calls.MAX_STAKE, payoutMultiplier=calls.PAYOUT_MULTIPLIER
+)
+
+
 class CallsResponse(BaseModel):
     assets: list[AssetOut]
     calls: list[CallOut]
     balance: int
+    rules: CallRules
 
 
 class NewCallResponse(CallOut):
@@ -181,6 +194,7 @@ async def get_calls(
         assets=[asset_out(asset) for asset in view.assets],
         calls=[CallOut(**call_fields(row)) for row in view.calls],
         balance=view.balance,
+        rules=RULES,
     )
 
 

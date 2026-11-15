@@ -59,6 +59,8 @@
 .island-crew-text p{margin:0}
 .island-crew-head{display:flex;gap:var(--u-2);align-items:baseline}
 .island-crew-owned{color:var(--u-mute);font-size:15px}
+.island-crew-icon{font-size:22px;line-height:1}
+.island-crew-price{margin-left:auto;padding:0 var(--u-2);border:2px solid var(--u-gold);border-radius:999px;color:var(--u-gold);font-weight:800}
 .island-crew-line{color:var(--u-mute);font-size:15px}
 .island-crew-reason{color:var(--u-rust);font-size:14px}
 .island-crew-row .kit-button{flex:none;min-width:0;white-space:nowrap}
@@ -268,6 +270,10 @@
 .island-spec-icon{grid-row:span 2;display:grid;place-items:center;width:40px;height:40px;border-radius:50%;font-size:20px;line-height:1;background:var(--u-deep);border:2px solid var(--u-line)}
 .island-spec.is-active .island-spec-icon{background:radial-gradient(circle at 35% 30%,#fff3c4,var(--u-gold) 48%,#c8902f);border-color:#fff0bf}
 .island-spec-mark{position:absolute;top:6px;right:10px;color:var(--u-gold);font-weight:800}
+/* D051: a tower skill's price badge and, when it cannot be paid, a short reason. */
+.island-spec-cost{position:absolute;top:6px;right:8px;padding:0 6px;white-space:nowrap;font-size:14px;font-weight:800;background:var(--u-parch);color:var(--u-pink);border:2px solid var(--u-brown);border-radius:10px}
+.island-spec-why{grid-column:2;color:var(--u-rust);font-size:14px;font-weight:700}
+.island-spec:disabled:not(.is-active){opacity:.6}
 .island-stalls{list-style:none;margin:0;padding:0;display:grid;gap:var(--u-2)}
 .island-stall{display:flex;align-items:center;justify-content:space-between;gap:var(--u-3);padding:var(--u-2) var(--u-3);background:var(--u-card);border:2px solid var(--u-line);border-radius:var(--u-radius-xs)}
 .island-card-harbor .island-stall{flex-direction:column;align-items:stretch}

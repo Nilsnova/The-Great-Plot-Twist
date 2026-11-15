@@ -47,8 +47,9 @@ MIN_SHIPS, MAX_SHIPS = 0.5, 3.0
 # since 20261112070000_tower_tiers.sql, docs/GAME-V3.md section 4.1).
 MAX_LEVEL = 5
 MAX_CAPTAIN_LEVEL = 5
-# The crew of docs/TOWER-DEFENSE.md section 3. The database knows exactly these three.
-CREW_KINDS = ("gunner", "carpenter", "lookout")
+# The crew of docs/TOWER-DEFENSE.md section 3. The database knows exactly these four
+# (the guard since 20261115140000_guard_crew.sql, decision D052).
+CREW_KINDS = ("gunner", "carpenter", "lookout", "guard")
 # The skills and weapons the database knows (the check rules of 20261112030000_captain_skills.sql),
 # in the order of the tree and the shop. frontend/src/pirates/captain-ids.js lists the same.
 # 20261112120000_captain_tree.sql widened them to five tiers a branch with forks and capstones.
@@ -171,7 +172,7 @@ class Spot:
 
 @dataclass(frozen=True)
 class Crew:
-    crew: str  # gunner, carpenter or lookout
+    crew: str  # gunner, carpenter, lookout or guard
     name: str
     coins: int  # the price of one
     max: int  # at most this many per island
@@ -275,11 +276,22 @@ class Research:
     tier3: tuple[
         tuple[str, str], ...
     ] = ()  # (spec id, name): the two capstones of tier 3 (the island picks one)
+    # D051: what one tower of this kind pays to pick (or switch to) a skill: a tier-1 skill, or
+    # the tier-3 capstone. Paid by the player who clicks (islands.json skillCoins).
+    skill_coins: int = 0
+    capstone_coins: int = 0
 
     @property
     def coins(self) -> int:
         """The price of tier 1."""
         return self.prices[0]
+
+    def pick_price(self, spec: str) -> int:
+        """What a tower pays to pick `spec`: the capstone price for a tier-3 capstone, else the
+        price of a tier-1 skill."""
+        if spec in self.options_of(3):
+            return self.capstone_coins
+        return self.skill_coins
 
     def price_of(self, tier: int) -> int:
         return self.prices[tier - 1]
@@ -656,6 +668,12 @@ def read_research(data: dict) -> tuple[Research, ...]:
         prices = read_whole_list(item, "coins", where, 1, RESEARCH_TOP_TIER)
         if len(prices) != RESEARCH_TOP_TIER or list(prices) != sorted(prices):
             raise IslandFileError(f"{where}: 'coins' must be three rising prices, one per tier.")
+        # D051: the price of one tower's pick, a tier-1 skill and the (dearer) capstone.
+        picks = read_object(item, "skillCoins")
+        skill_coins = read_whole(picks, "skill", f"{where}.skillCoins", 1, MAX_DELTA)
+        capstone_coins = read_whole(picks, "capstone", f"{where}.skillCoins", 1, MAX_DELTA)
+        if capstone_coins < skill_coins:
+            raise IslandFileError(f"{where}: a capstone must cost at least as much as a skill.")
         branch = Research(
             branch=read_id(item, "branch", where),
             name=read_text(item, "name", where, 40),
@@ -667,6 +685,8 @@ def read_research(data: dict) -> tuple[Research, ...]:
             ),
             tier2=read_options(item, "tier2", "id", where),
             tier3=read_options(item, "tier3", "spec", where),
+            skill_coins=skill_coins,
+            capstone_coins=capstone_coins,
         )
         if tuple(spec for spec, _ in branch.specs) != RESEARCH_SPECS.get(branch.branch):
             raise IslandFileError(

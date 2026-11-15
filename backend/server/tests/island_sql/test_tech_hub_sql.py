@@ -11,6 +11,7 @@ applied twice. Run from backend/:
 Each test is one transaction, rolled back at the end.
 """
 
+from itertools import count
 from uuid import UUID
 
 import pytest
@@ -66,16 +67,29 @@ def research(database, player, branch, uid, price=60, wave=8, owner=OWNER):
     )
 
 
-def specialise(database, player, plot, branch, spec, owner=OWNER):
+CLICKS = count(1)
+
+
+def specialise(database, player, plot, branch, spec, owner=OWNER, uid=None, price=None):
+    """The 7-argument island_specialise() of 20261115130000_tower_skill_price.sql (D051). A tower
+    skill pays `price` (default 1 coin, so the older tests keep their balances in mind) with a new
+    click id each call unless `uid` is given; a house role is free (price 0, no click id)."""
+    house = branch == "house"
+    if price is None:
+        price = 0 if house else 1
+    if uid is None and not house:
+        uid = f"pick-{next(CLICKS):04d}"
     as_server(database)
     return call(
         database,
-        "select public.island_specialise(%s, %s, %s, %s, %s)",
+        "select public.island_specialise(%s, %s, %s, %s, %s, %s, %s)",
         player,
         owner,
         plot,
         branch,
         spec,
+        uid,
+        price,
     )
 
 
@@ -164,7 +178,11 @@ def test_a_tower_picks_only_a_skill_of_its_kind_and_only_after_research(database
     done = specialise(database, MEMBER, "cannon_1", "cannon", "heavy")
     assert (done["status"], done["spec"]) == ("done", "heavy")
     assert spec_of(database, "cannon_1") == "heavy"
-    assert specialise(database, OWNER, "cannon_1", "cannon", "chain")["spec"] == "chain"
+    # The owner spent all 100 coins on the buildings and the research: since D051 a pick costs.
+    assert specialise(database, OWNER, "cannon_1", "cannon", "chain")["reason"] == (
+        "insufficient_funds"
+    )
+    assert specialise(database, MEMBER, "cannon_1", "cannon", "chain")["spec"] == "chain"
     assert spec_of(database, "cannon_1") == "chain"
     with pytest.raises(psycopg.errors.RaiseException, match="bad_specialise"):
         specialise(database, OWNER, "cannon_1", "cannon", "stone")
@@ -224,7 +242,8 @@ def test_no_browser_role_may_run_the_functions_or_read_the_research(database):
                  'public.island_research(uuid, uuid, text, text, integer, integer, '
                  'integer, text, boolean)', 'execute'),
                has_function_privilege('anon',
-                 'public.island_specialise(uuid, uuid, text, text, text)', 'execute'),
+                 'public.island_specialise(uuid, uuid, text, text, text, text, integer)',
+                 'execute'),
                has_function_privilege('authenticated',
                  'public.island_wreck_repair(uuid, uuid, integer, text, integer, integer)',
                  'execute'),

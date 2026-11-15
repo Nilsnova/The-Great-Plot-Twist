@@ -9,23 +9,32 @@ from uuid import uuid4
 
 import pytest
 
-from server.predictions.pools import Stake, plan_settlement
+from server.predictions.pools import Stake
+from server.sports.rules import DAILY_STAKE_CAP, MAX_STAKE, plan_payouts
 
 pytestmark = pytest.mark.skipif(
     os.environ.get("CASE_PG_SCRATCH") != "1", reason="opt-in disposable PostgreSQL checks"
 )
 ROOT = Path(__file__).resolve().parents[4]
 MIGRATION = ROOT / "supabase/migrations/20261106180000_sports_desk.sql"
+# D050: bigger limits and double-or-nothing settlement; the last definition is live.
+BIGGER = ROOT / "supabase/migrations/20261115120000_bigger_stakes.sql"
 
 
-def seed(database, count=1):
+def reapply(database):
+    """Run the sports file and the file that replaces its functions again, in chain order."""
+    database.execute(MIGRATION.read_text())
+    database.execute(BIGGER.read_text())
+
+
+def seed(database, count=1, coins=1000):
     database.execute("reset role")
     players = [uuid4() for _ in range(count)]
     for player in players:
         database.execute("insert into auth.users(id) values (%s)", (player,))
         database.execute(
-            "select public.apply_wallet_transaction(%s, 1000, 'kit_grant', 'sports-fixture')",
-            (player,),
+            "select public.apply_wallet_transaction(%s, %s, 'kit_grant', 'sports-fixture')",
+            (player, coins),
         )
     database.execute("set local role service_role")
     return players
@@ -55,8 +64,8 @@ def stake(database, fixture, player, *, pick="home", amount=50, uid=None, **chan
         "away": "Test away",
         "kickoff": kickoff,
         "closes_at": kickoff - timedelta(hours=1),
-        "max_stake": 50,
-        "daily_cap": 200,
+        "max_stake": MAX_STAKE,
+        "daily_cap": DAILY_STAKE_CAP,
         "day_start": day,
     } | changes
     placeholders = ",".join("%s" for _ in params)
@@ -81,7 +90,7 @@ def settlement_arguments(database, fixture, *, outcome="home", status="finished"
         "where fixture_id = %s order by id",
         (fixture,),
     ).fetchall()
-    plan = plan_settlement([Stake(row[0], str(row[1]), row[2], row[3]) for row in rows], outcome, 5)
+    plan = plan_payouts([Stake(row[0], str(row[1]), row[2], row[3]) for row in rows], outcome)
     scores = {"home": (2, 1), "away": (1, 2), "draw": (1, 1), "void": (None, None)}[outcome]
     return [
         fixture,
@@ -95,7 +104,6 @@ def settlement_arguments(database, fixture, *, outcome="home", status="finished"
             {"row_id": item.row_id, "player_id": item.player_id, "coins": item.coins}
             for item in plan.payouts
         ],
-        5,
     ]
 
 
@@ -106,7 +114,7 @@ def settle(database, fixture, *, outcome="home", status="finished", arguments=No
     copied = [*arguments]
     copied[8] = Jsonb(copied[8])
     return database.execute(
-        "select public.sports_settle_fixture(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+        "select public.sports_settle_fixture(%s,%s,%s,%s,%s,%s,%s,%s,%s)",
         copied,
     ).fetchone()[0]
 
@@ -116,8 +124,8 @@ def test_full_chain_and_sports_file_reapply_without_creating_games_or_money(data
         database.execute(f"select count(*) from public.{table}").fetchone()[0]
         for table in ("fixtures", "sports_stakes", "wallet_transactions")
     )
-    database.execute(MIGRATION.read_text())
-    database.execute(MIGRATION.read_text())
+    reapply(database)
+    reapply(database)
     assert (
         tuple(
             database.execute(f"select count(*) from public.{table}").fetchone()[0]
@@ -154,9 +162,10 @@ def test_stake_is_atomic_once_per_fixture_and_durable_uid(database):
     "changes",
     [
         {"amount": 0},
-        {"amount": 51},
-        {"max_stake": 51},
-        {"daily_cap": 201},
+        {"amount": 10_001, "max_stake": 10_001},
+        {"max_stake": 10_001},
+        {"daily_cap": 25_001},
+        {"amount": 51, "max_stake": 50},
         {"provider": "untrusted"},
         {"sport": "basketball"},
         {"stake_id": "short"},
@@ -166,12 +175,35 @@ def test_stake_is_atomic_once_per_fixture_and_durable_uid(database):
 def test_invalid_stakes_cannot_move_money(database, changes):
     import psycopg
 
-    (player,) = seed(database)
+    (player,) = seed(database, coins=20_000)
     with pytest.raises(psycopg.errors.RaiseException), database.transaction():
         stake(database, fixture_id(), player, **changes)
     assert database.execute(
         "select balance from public.wallets where player_id = %s", (player,)
-    ).fetchone() == (1000,)
+    ).fetchone() == (20_000,)
+
+
+def test_a_stake_of_10000_is_accepted_and_one_more_coin_is_refused(database):
+    import psycopg
+
+    (player,) = seed(database, coins=20_000)
+    assert stake(database, fixture_id(), player, amount=10_000)["coins"] == 10_000
+    with pytest.raises(psycopg.errors.CheckViolation), database.transaction():
+        database.execute("reset role")
+        database.execute(
+            "update public.sports_stakes set amount = 10001 where player_id = %s", (player,)
+        )
+
+
+def test_the_daily_cap_of_25000_counts_every_match_of_the_lisbon_day(database):
+    (player,) = seed(database, coins=30_000)
+    for amount in (10_000, 10_000, 5_000):
+        assert stake(database, fixture_id(), player, amount=amount)["status"] == "done"
+    refused = stake(database, fixture_id(), player, amount=1)
+    assert refused == {"status": "refused", "reason": "daily_cap", "coinsLeft": 0}
+    assert database.execute(
+        "select balance from public.wallets where player_id = %s", (player,)
+    ).fetchone() == (5_000,)
 
 
 def test_cutoff_is_one_hour_and_can_never_reopen(database):
@@ -184,19 +216,20 @@ def test_cutoff_is_one_hour_and_can_never_reopen(database):
     assert stake(database, fixture, second)["reason"] == "fixture_closed"
 
 
+# Three stakes of 50 each. D050: a right pick gets 2 x 50, a wrong pick 0, a void match refunds.
 @pytest.mark.parametrize(
-    "outcome,picks,status,expected",
+    "outcome,picks,status,expected,paid",
     [
-        ("home", ("home", "away", "draw"), "finished", "winners"),
-        ("away", ("home", "draw", "home"), "finished", "refund_no_winners"),
-        ("draw", ("draw", "draw", "draw"), "finished", "refund_one_sided"),
-        ("void", ("home", "away", "draw"), "postponed", "refund_void"),
-        ("void", ("home", "away", "draw"), "cancelled", "refund_void"),
-        ("void", ("home", "away", "draw"), "suspended", "refund_void"),
+        ("home", ("home", "away", "draw"), "finished", "winners", 100),
+        ("away", ("home", "draw", "home"), "finished", "winners", 0),
+        ("draw", ("draw", "draw", "draw"), "finished", "winners", 300),
+        ("void", ("home", "away", "draw"), "postponed", "refund_void", 150),
+        ("void", ("home", "away", "draw"), "cancelled", "refund_void", 150),
+        ("void", ("home", "away", "draw"), "suspended", "refund_void", 150),
     ],
 )
-def test_verified_result_pays_shared_pool_plan_once_and_conserves_money(
-    database, outcome, picks, status, expected
+def test_verified_result_pays_double_or_nothing_once(
+    database, outcome, picks, status, expected, paid
 ):
     players = seed(database, len(picks))
     fixture = fixture_id()
@@ -206,7 +239,7 @@ def test_verified_result_pays_shared_pool_plan_once_and_conserves_money(
         past(database, fixture)
     result = settle(database, fixture, outcome=outcome, status=status)
     assert result["status"] == "done" and result["settlement"] == expected
-    assert result["paidCoins"] + result["cutCoins"] == 150
+    assert result["paidCoins"] == paid and result["cutCoins"] == 0
     assert settle(database, fixture, outcome=outcome, status=status)["status"] == "repeat"
     assert (
         database.execute(
@@ -220,11 +253,30 @@ def test_verified_result_pays_shared_pool_plan_once_and_conserves_money(
             "select sum(delta) from public.wallet_transactions where ref = %s",
             (f"sports:pool:{fixture}",),
         ).fetchone()[0]
-        == result["paidCoins"]
+        == (result["paidCoins"] or None)
     )
+    for player, pick in zip(players, picks, strict=True):
+        won = outcome == "void" or pick == outcome
+        assert database.execute(
+            "select balance from public.wallets where player_id = %s", (player,)
+        ).fetchone() == (950 + (50 if outcome == "void" else 100 if won else 0),)
 
 
-def test_remainders_match_the_exact_shared_plan_and_tampering_rolls_back(database):
+def test_a_10000_win_pays_20000_and_a_loss_pays_nothing(database):
+    winner, loser = seed(database, 2, coins=10_000)
+    fixture = fixture_id()
+    stake(database, fixture, winner, amount=10_000)
+    stake(database, fixture, loser, pick="away", amount=10_000)
+    past(database, fixture)
+    assert settle(database, fixture)["paidCoins"] == 20_000
+    balances = database.execute(
+        "select player_id, balance from public.wallets where player_id in (%s, %s)",
+        (winner, loser),
+    ).fetchall()
+    assert dict(balances) == {winner: 20_000, loser: 0}
+
+
+def test_double_or_nothing_plan_is_exact_and_tampering_rolls_back(database):
     import psycopg
 
     players = seed(database, 4)
@@ -244,7 +296,7 @@ def test_remainders_match_the_exact_shared_plan_and_tampering_rolls_back(databas
         "select status from public.fixtures where fixture_id = %s", (fixture,)
     ).fetchone() == ("open",)
     result = settle(database, fixture, arguments=arguments)
-    assert result["paidCoins"] == 45 and result["cutCoins"] == 2
+    assert result["paidCoins"] == 12 and result["cutCoins"] == 0  # 2 x (1 + 2 + 3)
 
 
 @pytest.mark.parametrize(
@@ -353,15 +405,15 @@ def test_two_fixture_locks_cannot_race_past_the_daily_cap(scratch_server):
     import psycopg
 
     with psycopg.connect(scratch_server.get_uri()) as setup:
-        (player,) = seed(setup)
-        for _ in range(3):
-            stake(setup, fixture_id(), player)
+        (player,) = seed(setup, coins=30_000)
+        for _ in range(2):
+            stake(setup, fixture_id(), player, amount=10_000)
     first, second = fixture_id(), fixture_id()
     answers = run_parallel(
         scratch_server,
         [
-            lambda db: stake(db, first, player),
-            lambda db: stake(db, second, player),
+            lambda db: stake(db, first, player, amount=5_000),
+            lambda db: stake(db, second, player, amount=5_000),
         ],
     )
     assert sorted(answer["status"] for answer in answers) == ["done", "refused"]
@@ -372,11 +424,11 @@ def test_two_fixture_locks_cannot_race_past_the_daily_cap(scratch_server):
         assert database.execute(
             "select sum(amount) from public.sports_stakes where player_id = %s",
             (player,),
-        ).fetchone() == (200,)
+        ).fetchone() == (25_000,)
         assert database.execute(
             "select balance from public.wallets where player_id = %s",
             (player,),
-        ).fetchone() == (800,)
+        ).fetchone() == (5_000,)
         database.execute("delete from auth.users where id = %s", (player,))
 
 
@@ -402,7 +454,7 @@ def test_two_settlements_pay_the_same_fixture_once(scratch_server):
         assert database.execute(
             "select count(*), sum(delta) from public.wallet_transactions where ref = %s",
             (f"sports:pool:{fixture}",),
-        ).fetchone() == (1, 98)
+        ).fetchone() == (1, 100)
         for player in players:
             database.execute("delete from auth.users where id = %s", (player,))
 
@@ -538,7 +590,7 @@ def test_reapplying_repairs_rls_and_grants_without_new_browser_rights(database):
     database.execute("alter table public.fixtures disable row level security")
     database.execute("grant all on public.fixtures, public.sports_stakes to anon")
     database.execute("revoke update on public.fixtures from service_role")
-    database.execute(MIGRATION.read_text())
+    reapply(database)
     assert database.execute(
         "select relrowsecurity from pg_class where oid = 'public.fixtures'::regclass"
     ).fetchone() == (True,)
@@ -556,6 +608,18 @@ def test_reapplying_repairs_rls_and_grants_without_new_browser_rights(database):
 
 def test_sports_migration_parses_as_postgres_without_browser_policies():
     pglast = pytest.importorskip("pglast")
-    sql = MIGRATION.read_text()
-    assert pglast.parse_sql(sql)
-    assert "create policy" not in sql.lower()
+    for path in (MIGRATION, BIGGER):
+        sql = path.read_text()
+        assert pglast.parse_sql(sql)
+        assert "create policy" not in sql.lower()
+
+
+def test_only_the_nine_argument_settlement_exists_after_the_chain(database):
+    assert database.execute(
+        "select array_agg(pg_get_function_identity_arguments(oid)) from pg_proc "
+        "where proname = 'sports_settle_fixture'"
+    ).fetchone()[0] == [
+        "p_fixture_id text, p_outcome text, p_provider text, p_provider_match_id bigint, "
+        "p_home_score integer, p_away_score integer, p_result_status text, "
+        "p_expected_stakes bigint[], p_payouts jsonb"
+    ]

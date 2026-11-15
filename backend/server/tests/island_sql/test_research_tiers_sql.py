@@ -251,7 +251,8 @@ def test_only_the_server_may_run_the_new_function_and_the_old_one_is_gone(databa
                  'public.island_research(uuid, uuid, text, text, integer, integer, '
                  'integer, text, boolean)', 'execute'),
                has_function_privilege('service_role',
-                 'public.island_specialise(uuid, uuid, text, text, text)', 'execute'),
+                 'public.island_specialise(uuid, uuid, text, text, text, text, integer)',
+                 'execute'),
                (select count(*) from pg_proc p join pg_namespace n on n.oid = p.pronamespace
                  where n.nspname = 'public' and p.proname = 'island_research')
         """

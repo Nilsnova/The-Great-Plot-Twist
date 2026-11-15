@@ -44,6 +44,9 @@ export const CREW = Object.freeze({
   gunner: Object.freeze({name: 'Gunner', line: 'Mans your strongest tower: it reloads 25% faster.', price: 40, max: 2}),
   carpenter: Object.freeze({name: 'Carpenter', line: 'Repairs your most damaged wall during a wave.', price: 30, max: 2}),
   lookout: Object.freeze({name: 'Lookout', line: 'Sees further in fog; ships show 3 s earlier.', price: 25, max: 1}),
+  // D052: a guard with a cutlass fights boarders near the heart in every wave (sim.js CONFIG.crew.guard). A compact
+  // tile (Nils: less text): an icon, the price badge and a count, no line.
+  guard: Object.freeze({name: 'Guard', icon: '🗡️', line: '', price: 60, max: 3}),
 });
 export const CREW_IDS = Object.freeze(Object.keys(CREW));
 
@@ -75,13 +78,13 @@ export const UNLOCK_NEWS = Object.freeze(Object.fromEntries(CAMPAIGN_STEPS.filte
 export {opensText};
 
 // The unlocks for a won wave, as one plain object:
-//   {wonWave, levels: {wall, cannon, mortar, harpoon, culverin, watchtower, house}, captain, crew: {gunner, carpenter, lookout}, next}
+//   {wonWave, levels: {wall, cannon, mortar, harpoon, culverin, watchtower, house}, captain, crew: {gunner, carpenter, lookout, guard}, next}
 // (a kind outside the campaign table, the culverin, opens by its own levelWaves, as unlockWave() reads them: a
 // visitor's card reads a friend's island through this table, and the server allows what that island has won)
 // levels[kind] 0 = locked; crew[id] true = may hire; next = {wave, title} of the next step or null.
 export function unlocksFor(wonWave = 0) {
   const won = Number.isSafeInteger(wonWave) && wonWave > 0 ? wonWave : 0;
-  const levels = {wall: 0, cannon: 0, mortar: 0, harpoon: 0, culverin: 0, watchtower: 0, house: 0}, crew = {gunner: false, carpenter: false, lookout: false};
+  const levels = {wall: 0, cannon: 0, mortar: 0, harpoon: 0, culverin: 0, watchtower: 0, house: 0}, crew = {gunner: false, carpenter: false, lookout: false, guard: false};
   let captain = 1, next = null;
   for (const step of UNLOCK_STEPS) {
     if (step.wave > won) { next ??= {wave: step.wave, title: UNLOCK_NEWS[step.wave]?.title ?? ''}; continue; }
@@ -113,7 +116,7 @@ export function readUnlocks(island) {
   const base = unlocksFor(won);
   const locked = sent?.locked && typeof sent.locked === 'object' ? {...sent.locked} : {};
   if (!Array.isArray(sent?.unlocked)) return {...base, locked};
-  const levels = {wall: 0, cannon: 0, mortar: 0, harpoon: 0, culverin: 0, watchtower: 0, house: 0}, crew = {gunner: false, carpenter: false, lookout: false};
+  const levels = {wall: 0, cannon: 0, mortar: 0, harpoon: 0, culverin: 0, watchtower: 0, house: 0}, crew = {gunner: false, carpenter: false, lookout: false, guard: false};
   let captain = 1;
   for (const id of sent.unlocked) {
     if (typeof id !== 'string') continue;

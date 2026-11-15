@@ -9,8 +9,8 @@
     pick_role(), respec()  the captain's role and the paid reset (GAME-V3, Captain tree and roles)
     buy_weapon(), equip_weapon()  the weapon shop (section 15)
     research()    the Tech hub: one research branch for the island, paid by any member (GAME-V3 5)
-    specialise()  one tower picks a skill of its researched branch (GAME-V3 section 5), or a
-                  house of level 2 a role (GAME-V3 "Houses")
+    specialise()  one tower picks a skill of its researched branch, paid in coins by the clicker
+                  (GAME-V3 section 5, D051), or a house of level 2 a role, free (GAME-V3 "Houses")
     repair_wreck()  coins into the island's wreck (GAME-V3 section 4)
     demolish(), demolish_quote()  tear a building down between waves; each payer gets half of what
                   they paid back (GAME-V3 section 4.2)
@@ -60,6 +60,7 @@ WEAPON_PREFIX = "weapon:"
 RESEARCH_PREFIX = "research:"
 WRECK_PREFIX = "wreck:"
 DEMOLISH_PREFIX = "demolish:"
+TOWER_SKILL_PREFIX = "towerskill:"
 # The island has no timber any more (BUILD-PLAN 3.2): coins only.
 NO_TIMBER = 0
 # An answer made without reading the layout: the fixed spots, no moving (T36).
@@ -749,39 +750,68 @@ async def specialise(
     spot_id: str,
     spec: str,
     code: str | None = None,
+    action_uid: str | None = None,
 ) -> IslandView:
-    """A tower on the island picks one skill of its researched branch (no coins; picking again
-    changes it, for the next wave). A house of level 2 or more picks a role (barracks, tavern,
-    workshop) the same way, with no research (docs/GAME-V3.md "Houses"). 400 bad_spec, 404
-    no_such_spot, 404 no_such_island, 403 not_member, 409 not_built, 422 wrong_kind, 409
-    not_researched, 409 house_level. Safe to repeat."""
+    """A tower on the island picks one skill of its researched branch, paid once by the player who
+    clicks (D051: islands.json skillCoins, ledger ref towerskill:<actionUid>, reason tower_skill;
+    picking another one later costs that one's price, for the next wave). Picking the skill the
+    tower has already is free and changes nothing. A house of level 2 or more picks a role
+    (barracks, tavern, workshop) the same way, free and with no research (docs/GAME-V3.md
+    "Houses"). 400 bad_spec, 404 no_such_spot, 404 no_such_island, 403 not_member, 409 not_built,
+    422 wrong_kind, 409 not_researched, 409 house_level, 409 insufficient_funds, 409 reload (a
+    paid pick without an actionUid: a tab from before the prices). A repeated actionUid charges
+    nothing."""
     island, payer = await target_island(admin, catalogue, player_id, code, permissions.TOWER_SKILL)
     built = await store.read_built_spots(admin, island.owner)
     done = await store.read_research(admin, island.owner)
     spot, branch = rules.check_specialise(catalogue, spot_id, spec, built, done)
+    price = rules.tower_skill_price(catalogue, branch, spec)
+    if price > 0 and built[spot.id].spec == spec:
+        # The skill it has already: nothing to pay, nothing to change (safe to repeat).
+        return await look_open(admin, catalogue, island, payer)
+    if price > 0 and action_uid is None:
+        # An old tab that does not know the prices yet: never charge a click without its id.
+        raise ApiError(
+            409, "reload", "Tower skills cost coins now. Reload the page to see the prices."
+        )
+    if price > 0 and await store.ledger_has(
+        admin, player_id, "tower_skill", f"{TOWER_SKILL_PREFIX}{action_uid}"
+    ):
+        return await look_open(admin, catalogue, island, payer)
     arguments = {
         "p_player_id": player_id,
         "p_island_owner": island.owner,
         "p_plot": spot.id,
         "p_branch": branch,
         "p_spec": spec,
+        "p_action_uid": action_uid if price > 0 else None,
+        "p_price": price,
     }
-    reply = await admin.call_function("island_specialise", arguments)
-    refusal = store.refusal_or_none(reply)
-    if refusal is not None:
-        if refusal.reason == "not_built":
-            raise ApiError(409, "not_built", "Build something on this spot first.")
-        if refusal.reason == "wrong_kind":
-            raise rules.BuildRefused(422, "wrong_kind", "Something else stands on this spot.")
-        if refusal.reason == "house_level":
-            raise rules.house_level()
-        if branch == "house":
-            raise campaign_refusal(refusal, catalogue, "tech_hub", "House roles")
-        if refusal.reason == "not_researched" and spec in rules.RESEARCH_CAPSTONES[branch]:
-            raise rules.capstone_not_chosen(rules.research_named(catalogue, branch), spec)
-        name = rules.research_named(catalogue, branch).name
-        raise campaign_refusal(refusal, catalogue, "tech_hub", name)
+    outcome = await store.run_paid(admin, "island_specialise", arguments)
+    if isinstance(outcome, Refusal):
+        raise specialise_refusal(outcome, catalogue, branch, spec)
     return await look_open(admin, catalogue, island, payer)
+
+
+def specialise_refusal(
+    refusal: Refusal, catalogue: IslandCatalogue, branch: str, spec: str
+) -> ApiError:
+    """The error for a tower skill or house role that island_specialise() refused (it checks
+    again under lock). Nothing changed."""
+    if refusal.reason == "not_built":
+        return ApiError(409, "not_built", "Build something on this spot first.")
+    if refusal.reason == "wrong_kind":
+        return rules.BuildRefused(422, "wrong_kind", "Something else stands on this spot.")
+    if refusal.reason == "house_level":
+        return rules.house_level()
+    if branch == "house":
+        return campaign_refusal(refusal, catalogue, "tech_hub", "House roles")
+    entry = rules.research_named(catalogue, branch)
+    if refusal.reason == "not_researched" and spec in rules.RESEARCH_CAPSTONES[branch]:
+        return rules.capstone_not_chosen(entry, spec)
+    if refusal.reason == "insufficient_funds":
+        return not_enough_coins(rules.spec_name(entry, spec), refusal.price)
+    return campaign_refusal(refusal, catalogue, "tech_hub", entry.name)
 
 
 async def repair_wreck(

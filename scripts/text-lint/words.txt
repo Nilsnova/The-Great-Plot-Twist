@@ -2147,6 +2147,7 @@ skippable
 skips
 sky
 slam
+slash
 slice
 slider
 sliders
@@ -2742,3 +2743,5 @@ carried
 slot
 swap
 swapped
+guard
+guards

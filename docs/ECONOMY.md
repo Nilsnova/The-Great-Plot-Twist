@@ -16,8 +16,27 @@ puts every coin on one small scale. The numbers live in `backend/content/islands
 | Starting coins | 100 | `island_open()`: once, only to a wallet that never moved (`starting_coins`); guests: the guest kit pays 100; existing players: `scripts/admin/fresh_start.sql` (`fresh_start`) |
 | Wall / cannon / watchtower / house | 10 / 30 / 40 / 50 | `islet_build()` with the price from `islands.json`, coins only (`building_purchase`) |
 | Loot for surviving wave *n* | 10 + 5 × *n* + 5 per house on that island; Pirate Point 20 + 5 × *n* | `wave_finish()`: computed in the database for each participant, once per player and wave; a lost or late finish pays 0 (`pirate_loot`) |
-| Market stall call (up or down in 5 minutes) | stake 5, 10 or 25; right 2 × stake, wrong 0, same price or no price in 24 h: stake back; at most 3 open | `market_call_open()` / `market_call_settle()` (D034); no fee, so a fair call has an expected value of about 0 |
-| Other Harbor stakes, duel stake | 5, 10 or 25; 0 or 10 | lane H |
+| Market stall call (up or down in 5 minutes) | stake 5 to 10,000 (D050; 5, 10 or 25 before 15 Nov); right 2 × stake, wrong 0, same price or no price in 24 h: stake back; at most 3 open | `market_call_open()` / `market_call_settle()` (D034); the check rule `market_calls_stake_allowed`; no fee, so a fair call has an expected value of about 0 |
+| Match board pick (D050) | stake 1 to 10,000 per match, at most 25,000 per Lisbon day; right pick 2 × stake, wrong 0, postponed/cancelled/suspended: stake back; no pool, no cut | `sports_place_stake()` / `sports_settle_fixture()` (migration `20261115120000_bigger_stakes.sql`), numbers in `backend/server/sports/rules.py` |
+| Duel stake | 0 or 10 | lane H |
+
+### Bigger Harbor stakes (15 Nov 2026, D050)
+
+The owner asked for stakes that stay relevant at 1,000 or 10,000 coins. Both Harbor stalls use one
+picker: − and + in steps of 5 % of the player's coins (rounded down to a friendly size, at least
+5), and 10 %, 25 %, 50 % and All in, always inside the stall's limits, the coins and (match board)
+the coins left today. Every amount shows as play coins (🪙), never in dollars.
+
+What it does to the coin flow:
+
+- **Market calls** stay a coin flip at 2 ×: an expected value of about 0, but a bigger spread. With 3
+  open calls of up to 10,000 each, a player can risk 30,000 coins at once. No daily cap.
+- **The match board** moved from a pool (coins only change hands, minus a 5 % cut) to fixed even
+  odds (the game pays every right pick 2 ×). A random pick of three loses a third of its stake on
+  average; a pick on a strong favorite (one that wins more than half its games) wins coins on average.
+  The daily cap bounds what one player can win to 25,000 coins a Lisbon day; one bet per match.
+- Island prices (D032, D036, at most a few hundred coins a building) are small next to these stakes,
+  so a lucky or well-informed player can build much faster. Accepted for the class game (D050).
 
 ### Tower defense v2 (11 Nov 2026, D036)
 
@@ -31,6 +50,7 @@ The tables of [TOWER-DEFENSE.md](TOWER-DEFENSE.md) sections 2 to 4, 9 and 10, al
 | Watchtower | 40 / 80 / 160 / 320 / 640 | 3 / 3 / 12 / 15 / 20 | the same |
 | House (+5 loot per level) | 50 / 100 | 2 / 2 | the same |
 | Gunner / carpenter / lookout | 40 / 30 / 25 each, at most 2 / 2 / 1 | 5 / 5 / 8 | `island_hire()` (`crew_hire`, ref `crew:<uid>`) |
+| Guard (D052: fights boarders near the heart) | 60 each, at most 3 (180 for all three) | 6 | `island_hire()` (`crew_hire`, ref `crew:<uid>`), migration `20261115140000_guard_crew.sql` |
 | Captain level 2 / 3 / 4 / 5 | 20 / 40 / 80 / 160 | 1 / 1 / 8 / 8 | `island_captain()` (`captain_upgrade`, ref `captain:<uid>`) |
 | Pirate Point spots | the same prices, paid by whoever clicks | the clicker's unlocks | `pp_build()` / `pp_upgrade()` (`building_purchase`, ref `pp:<uid>`) |
 | Helping a fallen captain up in wave *n* ([GAME-V3.md](GAME-V3.md) §3) | 20 + 5 × *n*, paid by the helper | — | `wave_revive()` (`captain_revive`, ref `revive:<uid>`), migration `20261112050000_captain_revive.sql` |
@@ -55,6 +75,27 @@ houses, 10.8 at wave 50 with both houses. A client that always reports "survived
 wave per cycle, so it needs at least about 20 minutes to reach wave 50; that is the known
 residual risk until the class battle (task 0.4) adds server-side checks. The pre-redesign Exchange, prediction and case numbers below are kept
 as the record of G12; the Exchange and the case leave the game with the redesign.
+
+### Tower skills (15 Nov 2026, D051)
+
+Research at the Tech hub is paid once per island and tier (`tech_research`, ref `research:<uid>`):
+cannon 180 / 360 / 630, mortar 220 / 440 / 770, wall 120 / 240 / 420, watchtower 160 / 320 / 560.
+Since D051 each tower's **pick of a skill** costs coins too, paid by the player who clicks
+(`island_specialise()`, reason `tower_skill`, ref `towerskill:<uid>`; prices in `islands.json`
+`research.branches[].skillCoins`, sent as `prices.towerSkills`):
+
+| Tower kind | Tier-1 skill | Tier-3 capstone |
+|---|---|---|
+| Cannon | 150 | 600 |
+| Mortar | 120 | 480 |
+| Watchtower | 80 | 320 |
+| Wall | 40 | 160 |
+
+Switching to another skill pays that skill's price again; picking the skill a tower has already is
+free; a repeated click is charged once; house roles stay free; a tear-down refunds nothing of it.
+For scale: at wave 8 (Tech hub) a won wave pays about 105 coins, at wave 25 (capstones) about 275
+(`islands.json` loot 25 + 10 × wave, plus the houses), so a cannon skill is about one and a half
+waves of loot and a capstone about two.
 
 ## Current scope and source contracts
 

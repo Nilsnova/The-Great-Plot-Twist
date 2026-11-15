@@ -28,7 +28,8 @@ pytestmark = pytest.mark.skipif(
 @pytest.mark.parametrize(
     "status,score,expected",
     [
-        ("FINISHED", {"home": 2, "away": 0}, (1029, 980, 990)),
+        # Home won: the 30 on home comes back doubled (D050); the other picks lose their stakes.
+        ("FINISHED", {"home": 2, "away": 0}, (1030, 980, 990)),
         ("POSTPONED", {"home": None, "away": None}, (1000, 1000, 1000)),
     ],
 )
@@ -118,7 +119,7 @@ def test_actual_sports_api_stakes_and_verified_results_pay_exactly_once(status, 
                 "select sum(amount), sum(payout) from public.sports_stakes"
             ).fetchone() == (
                 60,
-                59 if status == "FINISHED" else 60,
+                60,  # finished: 2 x 30 to the right pick; postponed: every stake back
             )
         assert all(request.url.host == "api.football-data.org" for request in seen)
     assert database.uri is None

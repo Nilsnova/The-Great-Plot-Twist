@@ -649,8 +649,8 @@ The simple Harbor market of [PITCH.md](PITCH.md): "Will Bitcoin be higher in 5 m
 
 | Route | Answer |
 |---|---|
-| `GET /api/market/calls` | `{assets: [{id, name, price, priceAt, open, closedReason}], calls: [{id, asset, direction, stake, openPrice, openedAt, settleAt, status, settlePrice, payout}], balance}`. Assets in this order: `harbor-trust` (Bitcoin), `tidewright-works` (Ether), `greyfathom-salvage` (Gold), `apple`, `nvidia`. `open` is true while the feed holds a live price (market open, fresh price, not the demo recording); otherwise `closedReason` says why (`demo`, `source_off`, `quote_old`, a calendar reason such as `weekend`, ...). `price`, `priceAt` are `null` without a price. `calls` lists the open calls (oldest first), then the 10 newest decided ones; `status` is `open`, `won`, `lost` or `refunded`; `settlePrice` and `payout` are `null` while open. |
-| `POST /api/market/calls` `{asset, direction: "up" or "down", stake: 5, 10 or 25, actionUid}` | The new call in the shape of a `calls` entry plus `balance` (coins after the stake). `settleAt` is `openedAt` + 1 hour. A repeated `actionUid` answers the same call and charges nothing. `404 no_such_asset`, `409 insufficient_funds`, `409 market_closed` (no live price now), `409 too_many_calls` (3 open), `422 bad_stake`, `422 validation_error`. |
+| `GET /api/market/calls` | `{assets: [{id, name, price, priceAt, open, closedReason}], calls: [{id, asset, direction, stake, openPrice, openedAt, settleAt, status, settlePrice, payout}], balance, rules: {minStake: 5, maxStake: 10000, payoutMultiplier: 2}}` (`rules` since D050). Assets in this order: `harbor-trust` (Bitcoin), `tidewright-works` (Ether), `greyfathom-salvage` (Gold), `apple`, `nvidia`. `open` is true while the feed holds a live price (market open, fresh price, not the demo recording); otherwise `closedReason` says why (`demo`, `source_off`, `quote_old`, a calendar reason such as `weekend`, ...). `price`, `priceAt` are `null` without a price. `calls` lists the open calls (oldest first), then the 10 newest decided ones; `status` is `open`, `won`, `lost` or `refunded`; `settlePrice` and `payout` are `null` while open. |
+| `POST /api/market/calls` `{asset, direction: "up" or "down", stake: a whole number from 5 to 10,000 (D050), actionUid}` | The new call in the shape of a `calls` entry plus `balance` (coins after the stake). `settleAt` is `openedAt` + 5 minutes. A repeated `actionUid` answers the same call and charges nothing. `404 no_such_asset`, `409 insufficient_funds`, `409 market_closed` (no live price now), `409 too_many_calls` (3 open), `422 bad_stake`, `422 validation_error`. |
 
 **Lazy settlement, and its limit.** Nothing runs in the background. A call is decided when its player next reads `GET /api/market/calls` at or after `settleAt`, with the first price the server reads at or after `settleAt` (fetched at or after it and quoted after the opening), not the exact price at that second; for a stock outside New York hours that is the last close. Higher (up) or lower (down) than `openPrice`: `won`, payout 2 × stake. The other way: `lost`, 0. The same price: `refunded`. No such price within 24 hours after `settleAt` (for example the stock source is down): `refunded`. Each call is decided once (ledger ref `call:<id>`, reasons `market_call_stake` and `market_call_payout`).
 
@@ -674,12 +674,12 @@ Every route needs a signed-in player (GitHub, email, or a guest admitted with th
 
 | Route | Answer |
 |---|---|
-| `GET /api/island` (v2) | `{code, coins, waveBest, nextWave, flags, spots: [{id, kind, kinds, built, level, cost, upgradeCost}], crew: {gunner, carpenter, lookout}, captain: {level, nextPrice}, prices: {kinds: {wall: [10, 20, 40], cannon: [30, 60, 120], mortar: [60, 120, 240], watchtower: [40, 80], house: [50, 100]}, crew: {gunner: {price: 40, max: 2}, carpenter: {price: 30, max: 2}, lookout: {price: 25, max: 1}}, captain: [0, 20, 40, 80, 160]}, unlocks: {wave, unlocked: ["wall:1", ...], locked: {"mortar:1": 3, ...}}}`. 22 spots: `wall_1`..`wall_6` (wall), `cannon_1`..`cannon_7` (cannon or mortar), `tower_1` (watchtower), `house_1`, `house_2` (house), then the inner ring `wall_7`..`wall_12` (wall; TOWER-DEFENSE.md §12). `kind` is what stands there, or the first of `kinds` while empty; `level` is 0 while empty; `cost` is the level-1 price of `kind`; `upgradeCost` the next level's price or `null`. Price lists are indexed by level − 1 (the first entry is the build; the captain's level 1 is free). `unlocks.wave` is the best wave the player won (their island's best, or any wave they fought in and won: any island or Pirate Point); ids are `<kind>:<level>`, `crew:<crew>`, `captain:<level>`. `nextWave` is the wave the next bell on this island rings. |
+| `GET /api/island` (v2) | `{code, coins, waveBest, nextWave, flags, spots: [{id, kind, kinds, built, level, cost, upgradeCost}], crew: {gunner, carpenter, lookout, guard}, captain: {level, nextPrice}, prices: {kinds: {wall: [10, 20, 40], cannon: [30, 60, 120], mortar: [60, 120, 240], watchtower: [40, 80], house: [50, 100]}, crew: {gunner: {price: 40, max: 2}, carpenter: {price: 30, max: 2}, lookout: {price: 25, max: 1}}, captain: [0, 20, 40, 80, 160]}, unlocks: {wave, unlocked: ["wall:1", ...], locked: {"mortar:1": 3, ...}}}`. 22 spots: `wall_1`..`wall_6` (wall), `cannon_1`..`cannon_7` (cannon or mortar), `tower_1` (watchtower), `house_1`, `house_2` (house), then the inner ring `wall_7`..`wall_12` (wall; TOWER-DEFENSE.md §12). `kind` is what stands there, or the first of `kinds` while empty; `level` is 0 while empty; `cost` is the level-1 price of `kind`; `upgradeCost` the next level's price or `null`. Price lists are indexed by level − 1 (the first entry is the build; the captain's level 1 is free). `unlocks.wave` is the best wave the player won (their island's best, or any wave they fought in and won: any island or Pirate Point); ids are `<kind>:<level>`, `crew:<crew>`, `captain:<level>`. `nextWave` is the wave the next bell on this island rings. |
 | `POST /api/island/build` (v2) `{spot, kind, actionUid, code?}` | `kind` may be `cannon` or `mortar` on a `cannon_*` spot. Besides the refusals above: `409 locked` ("Unlocks after wave N"). Co-op: with `code` (`ISLE-…`) the building goes up on that island, paid by the caller with their own coins and unlocks (`island_build()`, reason `building_purchase`, ref `island:<actionUid>` in the caller's wallet; the row belongs to the island's owner); the answer is that island (`code`, `spots`, `waveBest`, `nextWave`, `flags`) with the caller's own `coins`, `crew`, `captain` and `unlocks`. `404 no_such_island`. Your own code, or none, is your own island. |
 | `POST /api/island/upgrade` `{spot, actionUid, code?}` | The island. One level up, the kind stays (`island_upgrade()`, reason `building_purchase`, ref `upgrade:<actionUid>`, paid by the caller). `code` as for a build. `409 not_built`, `409 max_level`, `409 locked`, `409 insufficient_funds`, `404 no_such_spot`, `404 no_such_island`. |
-| `POST /api/island/hire` `{crew: "gunner" \| "carpenter" \| "lookout", actionUid}` | The island. One crew member, kept (`island_hire()`, reason `crew_hire`, ref `crew:<actionUid>`). `409 crew_full`, `409 locked`, `409 insufficient_funds`. |
+| `POST /api/island/hire` `{crew: "gunner" \| "carpenter" \| "lookout" \| "guard", actionUid}` | The island. One crew member, kept (`island_hire()`, reason `crew_hire`, ref `crew:<actionUid>`). `409 crew_full`, `409 locked`, `409 insufficient_funds`. |
 | `POST /api/island/captain` `{actionUid}` | The island. The captain one level up (`island_captain()`, reason `captain_upgrade`, ref `captain:<actionUid>`). `409 max_level`, `409 locked`, `409 insufficient_funds`. |
-| `GET /api/island/visit/{code}` (v2) | `{code, ownerName, waveBest, spots, crew}`: the spots in the shape of `GET /api/island` (`kind`, `kinds`, `level`, ...) and the owner's `crew` `{gunner, carpenter, lookout}`, so every visitor's wave simulation uses the same defenses. Readable by an admitted guest, also one admitted through the friend invite. |
+| `GET /api/island/visit/{code}` (v2) | `{code, ownerName, waveBest, spots, crew}`: the spots in the shape of `GET /api/island` (`kind`, `kinds`, `level`, ...) and the owner's `crew` `{gunner, carpenter, lookout, guard}` (`guard` since D052, migration `20261115140000_guard_crew.sql`: column `islands.crew_guard`, `island_hire()` accepts `guard`), so every visitor's wave simulation uses the same defenses. Readable by an admitted guest, also one admitted through the friend invite. |
 | `GET /api/pirate-point` | `{spots: [{id, kind, kinds, built, level, cost, upgradeCost}], waveBest, coins}`: `pp_wall_1`..`pp_wall_4` (wall), `pp_tower_1`..`pp_tower_6` (cannon or mortar); `waveBest` is Pirate Point's best won wave, `coins` the asking player's. Budget 30 a minute (shared with visits). |
 | `POST /api/pirate-point/build` `{spot, kind, actionUid}` and `/upgrade` `{spot, kind?, actionUid}` | The Pirate Point state. The clicker pays with their own coins (`pp_build()` / `pp_upgrade()`, reason `building_purchase`, ref `pp:<actionUid>`); the building belongs to Pirate Point and stays. The clicker's own unlocks count. `404 no_such_spot`, `409 spot_taken`, `409 not_built`, `409 max_level`, `409 locked`, `409 insufficient_funds`, `422 wrong_kind`. |
 | `POST /api/island/invite/join` `{code, actionUid}` | `{admitted: true, island: {code: "ISLE-…", ownerName}}`. An anonymous guest who presents a valid island code is recorded in `demo_guests` (`demo_guest_admit()`, the class code's admission) and passes the guest gate from then on; no class code is needed and any number of friends may join one island. A GitHub or email player is not recorded. Checks the login itself (not the guest gate). Only the typed code is looked up. `401`, `403 demo_closed` (a guest while the flag `demo` is off), `404 feature_off`, `404 no_such_island`, `429 too_many_requests` (10 tries in 10 minutes per player and per address, per instance), `422 validation_error`. |
@@ -904,7 +904,7 @@ These events run on the same bus. Emit the quest events with the names exported 
 | `wave_started_server` | `{waveId, wave, seed, startsAt, weather, flagship, where, defenses}` | `src/island/wave-flow.js`, after the bell rang (`POST /api/waves/start`) or the player joined (`POST /api/waves/join`) | the wave on screen (lane P, `onWaveStarted` in `wave-hooks.js`) |
 | `wave_finished` | `{survived, waveId, loot, coins, waveBest, flags}` | `src/island/wave-flow.js`, after `POST /api/waves/finish` answered (the renderer calls `finishWave`; in fake mode a placeholder finishes the wave 20 s after the countdown) | the quest strip: goal 2 "Ring the bell and win a wave" (`survived: true`); the island (its balance and best wave) |
 | `place_arrived` | `{id}`: a place id from `src/world/places/registry.js` | `src/game.js`, on every `arrived` (the HUD also counts `arrived {place}` itself) | the quest strip: goal 3 "Sail to the Harbor" (`id: 'saltreach_harbor'`) |
-| `harbor_stake_placed` | `{kind, stake}`: `kind` is `'market'` or `'match'`, `stake` 5, 10 or 25 | `src/harbor/market-card.js` and `match-card.js`, once the server accepted the stake | the quest strip: goal 4 "Place a 🪙 stake" |
+| `harbor_stake_placed` | `{kind, stake}`: `kind` is `'market'` or `'match'`, `stake` the accepted whole amount (5 to 10,000 at the market stall, 1 to 10,000 at the match board, D050) | `src/harbor/market-card.js` and `match-card.js`, once the server accepted the stake | the quest strip: goal 4 "Place a 🪙 stake" |
 | `island_invite_opened` | `{code}`: `ISLE-…` or `null` while loading | `src/island/index.js`, when "Invite a friend" opens at the cabin | the quest strip: goal 5 "Invite a friend" |
 
 On your own island the strip always shows these five goals; a player who joined by class code (`HARBOR-…`) sees the class demo's goals everywhere else. With `islands` on (or `?islands=fake` in a dev build) the HUD's 🪙 counter shows the island's `coins` (`GET /api/island` and every build and wave answer), not the wallet's.
@@ -1008,7 +1008,7 @@ The market calls migration, `supabase/migrations/20261111010000_market_calls.sql
 
 | Table | One row per | A signed-in player may | The server may | Owner |
 |---|---|---|---|---|
-| `market_calls` | up-or-down call: player, asset (one of five market company ids), direction, stake (5, 10, 25), `open_price`, `opened_at`, `settle_at` (+1 hour), and once decided `settled_at`, `settle_price`, `outcome` (`won`, `lost`, `refunded`), `payout`; one per player and `action_uid` | nothing (no policy, no grant) | read, add (through `market_call_open()`), change (through `market_call_settle()`); never delete | lane 0 |
+| `market_calls` | up-or-down call: player, asset (one of five market company ids), direction, stake (5 to 10,000 since `20261115120000_bigger_stakes.sql`, D050; 5, 10, 25 before), `open_price`, `opened_at`, `settle_at` (+1 hour), and once decided `settled_at`, `settle_price`, `outcome` (`won`, `lost`, `refunded`), `payout`; one per player and `action_uid` | nothing (no policy, no grant) | read, add (through `market_call_open()`), change (through `market_call_settle()`); never delete | lane 0 |
 
 `market_call_open()` locks the wallet, answers a repeated actionUid with the same call, refuses a fourth open call and takes the stake. `market_call_settle()` locks the wallet and the call and decides it once (refuses `not_due` before `settle_at` and `no_price` for a missing price before the 24-hour wait is over). Both are for the server only and not `SECURITY DEFINER`.
 
@@ -1541,9 +1541,9 @@ The later case and live-extra contracts below supersede their earlier route rese
 | `GET /api/host/overview` | Verified configured host | Private aggregates, readiness probes and safe build/source status |
 | `GET /api/host/crews` | Verified configured host | Newest 50 crews; captain names, no login details or case solution |
 | `POST /api/host/crews/{id}/close` | Host; `{actionUid}` UUID | Close only the host's forming test crew with no other human; no coin or seat deletion |
-| `GET /api/sports` | `sports` flag; anonymous; no query | Provider fixtures and public pools; successful responses cache for 30 seconds |
+| `GET /api/sports` | `sports` flag; anonymous; no query | Provider fixtures, public stake totals and `rules: {minStake: 1, maxStake: 10000, dailyCap: 25000, payoutMultiplier: 2, pickLeadMinutes: 60}` (D050; `poolCutPercent` is gone and the client refuses any other multiplier); successful responses cache for 30 seconds |
 | `GET /api/sports/mine` | `sports` flag and login | Own stakes, balances and provider-verified terminal-result checks |
-| `POST /api/sports/stake` | Login; `{fixtureId, pick, amount, stakeId}` | Whole stake 1-50, Lisbon daily cap 200; same intent ID survives uncertain retries |
+| `POST /api/sports/stake` | Login; `{fixtureId, pick, amount, stakeId}` | Whole stake 1-10,000, Lisbon daily cap 25,000 (D050); same intent ID survives uncertain retries |
 | `POST /api/sports/settle` | Login and own stake; `{fixtureId}` | Fresh provider verification; the client never sends a score, outcome or payout |
 
 Festival timing uses the first shared Relighting timestamp and ends exactly 172800 elapsed seconds
@@ -1566,8 +1566,12 @@ Champions League"); the DTO is unchanged. A pick settles on the 90-minute score:
 whose 90-minute score is missing or does not fit is left off the board and never settles (D033).
 
 Sports uses provider IDs (`fd-...` or `bdl-...`), separate fixtures/stakes, and the existing prediction
-wallet reasons with `sports:` references. Winning pools take 5% of the losing side; void/no-winner/
-one-sided pools refund. Historical recordings are read-only. Missing keys, bad/old/partial provider
+wallet reasons with `sports:` references. Since D050 (migration `20261115120000_bigger_stakes.sql`)
+a finished match pays every right pick 2 × its stake and a wrong pick nothing (settlement `winners`,
+`cutCoins` 0, `paidCoins` the coins paid, also when nobody or everybody picked right); a postponed,
+cancelled or suspended match refunds every stake (`refund_void`). Fixtures settled before keep their
+pool settlement (`refund_no_winners`, `refund_one_sided` or a 5 % cut). `sports_settle_fixture()` takes
+9 arguments (no `p_cut_percent`). Historical recordings are read-only. Missing keys, bad/old/partial provider
 data and incomplete payout snapshots fail closed. Player routes and handled errors are private
 and uncached. Source credit belongs in Settings, then Credits. The detailed DTO, provider setup
 and errors are in [G15's contract](handoff/g15-checkpoint-2.md).
@@ -1770,3 +1774,27 @@ With `tower_health` the room's `repair` / `rebuild` messages may name a tower in
   `island_changed` makes crewmates read the island and the arsenal again; locally also `arsenal_changed
   {carried}`. `createIsland({arsenalOn})` gets the flag from `/api/config` (`game.js`); the wave's
   `captainLoadout().weapon` is the carried copy's type on the island on screen, else the musket.
+
+## Tower skill prices (D051)
+
+[D051](DECISIONS.md#d051--tower-skills-cost-coins--2026-11-15). The source of truth is the comment at the top of
+`backend/server/routes/island.py`; the database part is `supabase/migrations/20261115130000_tower_skill_price.sql`
+(not applied yet; apply it together with the server of the same change).
+
+- **Route change:** `POST /api/island/tower-skill {spot, spec, actionUid, code?}`. A tower's pick (or switch) of
+  a skill is paid once by the caller from their own coins: `prices.towerSkills[kind].skill` for a tier-1 skill,
+  `.capstone` for the tier-3 capstone. Picking the skill the tower has already is free and needs no
+  `actionUid`; a repeated `actionUid` pays nothing and answers the island as it is now; a house role stays free
+  and `actionUid` may be left out. New errors: `409 insufficient_funds` ("Heavy shot costs 150 coins. You need
+  more coins."), `409 reload` (a paid pick without `actionUid`: a tab from before the prices; nothing is
+  charged, "Tower skills cost coins now. Reload the page to see the prices."). The other errors stay.
+- **Island answer:** `prices.towerSkills` `{cannon: {skill: 150, capstone: 600}, mortar: {skill: 120,
+  capstone: 480}, wall: {skill: 40, capstone: 160}, watchtower: {skill: 80, capstone: 320}}` (from
+  `islands.json` `research.branches[].skillCoins`; `frontend/src/campaign/tech.js` `skillPrice()` reads it and
+  falls back to its own copy).
+- **Money:** wallet reason `tower_skill` (new, spend), ref `towerskill:<actionUid>`. Co-op action
+  `island_tower_skill` is now `personal` (the clicker pays, D043).
+- **Database:** `island_specialise(p_player_id, p_island_owner, p_plot, p_branch, p_spec, p_action_uid,
+  p_price)` replaces the 5-argument function; it locks the payer's wallet, then the island, then the building,
+  and answers `{status: done, plot, spec, price, balance, repeat}` or a refusal (`insufficient_funds` with
+  `price`).

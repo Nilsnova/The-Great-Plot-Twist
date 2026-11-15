@@ -33,7 +33,7 @@ describe('island api: accepted answers', () => {
     expect(answer.data.spots.find(spot => spot.id === 'cannon_1')).toEqual({id: 'cannon_1', kind: 'cannon', kinds: ['cannon', 'mortar', 'harpoon'], built: false, level: 0, cost: 30,
       upgradeCost: null, spec: null});
     expect(answer.data.prices).toMatchObject({kinds: {wall: [10, 20, 40, 80, 160], mortar: [60, 120, 240, 480, 960]}, crew: {gunner: {price: 40, max: 2}}, captain: [0, 20, 40, 80, 160]});
-    expect(answer.data.crew).toEqual({gunner: 0, carpenter: 0, lookout: 0});
+    expect(answer.data.crew).toEqual({gunner: 0, carpenter: 0, lookout: 0, guard: 0});
     expect(answer.data.captain).toEqual({level: 1, nextPrice: 20});
     expect(answer.data.unlocks).toMatchObject({wave: 0, unlocked: ['captain:1', 'wall:1', 'cannon:1'], locked: {'mortar:1': 2, 'crew:gunner': 3, 'captain:2': 1}});
     // The campaign of the island (GAME-V3.md §4): what is open, what opens after which wave, the Tech hub and the wreck.

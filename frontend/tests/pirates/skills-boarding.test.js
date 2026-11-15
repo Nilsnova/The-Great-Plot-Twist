@@ -181,7 +181,7 @@ describe('the room carries the striker\'s and rebuilder\'s skills', () => {
 
 describe('the gun button', () => {
   it('says Cutlass with a boarder in strike reach, else the equipped weapon\'s name', () => {
-    expect(musketText(true, true, 'Blunderbuss')).toBe('Cutlass');
+    expect(musketText(true, true, 'Blunderbuss')).toBe('F: Slash');
     expect(musketText(true, false, 'Blunderbuss')).toBe('Blunderbuss');
     expect(musketText(true, false, captainStats(1, [], 'long_rifle').name)).toBe('Long rifle');
     expect(musketText(false, false, 'Pistols')).toBe('No pirate in range');

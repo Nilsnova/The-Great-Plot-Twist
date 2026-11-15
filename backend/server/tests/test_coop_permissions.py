@@ -68,7 +68,8 @@ ROUTES = [
     (permissions.RESEARCH, "POST", "/api/island/research",
      {"branch": "wall", "actionUid": "click-0001", "code": CODE}, "island_research"),
     (permissions.TOWER_SKILL, "POST", "/api/island/tower-skill",
-     {"spot": "cannon_1", "spec": "rapid", "code": CODE}, "island_specialise"),
+     {"spot": "cannon_1", "spec": "rapid", "actionUid": "click-0001", "code": CODE},
+     "island_specialise"),
     (permissions.WRECK, "POST", "/api/island/wreck",
      {"amount": 25, "actionUid": "click-0001", "code": CODE}, "island_wreck_repair"),
     (permissions.DEMOLISH, "GET", "/api/island/demolish",
@@ -113,7 +114,7 @@ FUNDING = {
     permissions.BUILD: permissions.PERSONAL,
     permissions.UPGRADE: permissions.PERSONAL,
     permissions.RESEARCH: permissions.PERSONAL,
-    permissions.TOWER_SKILL: permissions.FREE,
+    permissions.TOWER_SKILL: permissions.PERSONAL,  # D051: tower skills cost coins
     permissions.WRECK: permissions.PERSONAL,
     permissions.DEMOLISH: permissions.REFUND_TO_PAYERS,
     permissions.WAVE_START: permissions.FREE,

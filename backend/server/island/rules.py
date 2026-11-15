@@ -612,6 +612,22 @@ def check_specialise(
     return spot, branch
 
 
+def tower_skill_price(catalogue: IslandCatalogue, branch: str, spec: str) -> int:
+    """D051: the coins one pick of `spec` costs on a tower of `branch` (islands.json skillCoins:
+    a tier-1 skill or the dearer tier-3 capstone). A house role costs nothing."""
+    if branch == "house":
+        return 0
+    return research_named(catalogue, branch).pick_price(spec)
+
+
+def spec_name(entry: Research, spec: str) -> str:
+    """The name of a tower skill ("Heavy shot"), a tier-1 skill or a capstone."""
+    for item, name in (*entry.specs, *entry.tier3):
+        if item == spec:
+            return name
+    return spec
+
+
 def house_level() -> ApiError:
     return ApiError(409, "house_level", f"Raise this house to level {HOUSE_ROLE_LEVEL} first.")
 

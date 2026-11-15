@@ -301,7 +301,8 @@ async function captainHealth(host, ben, wave) {
     await captain.page.waitForFunction(ids => { const party = window.__island.waves.island.state?.party ?? [];
       return ids.every(id => party.some(hero => hero.id === id && hero.present)); }, [hostId, benId], {timeout: 15000, polling: 200});
   }
-  // The friend stands on the nearest boarder until he falls.
+  // The friend stands on the nearest boarder until he falls (his automatic cutlass off, D052, or he fights back).
+  await ben.page.evaluate(() => { window.__island.waves.island.autoBlade = false; });
   let snapped = false;
   const end = Date.now() + 120000;
   while (Date.now() < end) {
@@ -469,7 +470,8 @@ try {
     return {took, title: card.title};
   }
   await island(host, async i => { i.dev.setWaveBest(8); i.dev.setCoins(900); await i.load(); });
-  await island(ben, async i => { await i.load(); });
+  // D051: a tower skill costs coins (a cannon skill 150), so the friend brings some.
+  await island(ben, async i => { i.dev.setCoins(400); await i.load(); });
   await island(host, async i => { await i.research('cannon'); });
   assert.deepEqual(await host.page.evaluate(() => [...window.__island.island.campaign.research.done]), ['cannon'], 'the owner researched cannon skills');
   await island(host, async i => { await i.specialise('cannon_1', 'heavy'); });

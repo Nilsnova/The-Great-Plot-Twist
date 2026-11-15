@@ -1,4 +1,6 @@
-"""Sports pools: verified live results decide atomic play-money stakes and payouts.
+"""Match board: verified live results decide atomic play-money stakes and payouts.
+
+A right pick pays 2 x the stake, a wrong pick 0, a void match refunds (rules.py, D050).
 
 Opening My Stakes refreshes completed games. No background job, client outcome or recorded
 result authorizes payment. The SQL function recomputes every settlement independently.
@@ -8,15 +10,18 @@ import httpx
 
 from server.clock import Clock, utc_now
 from server.errors import ApiError
-from server.predictions.pools import Stake, plan_settlement
-from server.predictions.stake_rules import (
-    DAILY_STAKE_CAP,
-    MAX_STAKE,
-    POOL_CUT_PERCENT,
-    desk_day_start,
-)
+from server.predictions.pools import Stake
+from server.predictions.stake_rules import desk_day_start
 from server.settings import Settings
-from server.sports.rules import outcome, picking_open, validate_pick
+from server.sports.rules import (
+    MAX_STAKE,
+    MIN_STAKE,
+    coins_left_today,
+    outcome,
+    picking_open,
+    plan_payouts,
+    validate_pick,
+)
 from server.sports.source import SportsSource, unavailable
 from server.sports.store import SportsStore, unreadable
 from server.sports.views import PLAY_MONEY, RULES, fixture_view, my_stake_view
@@ -94,8 +99,10 @@ class SportsService:
         amount: int,
         stake_id: str,
     ) -> dict:
-        if type(amount) is not int or not 1 <= amount <= MAX_STAKE:
-            raise ApiError(422, "invalid_amount", f"Stake 1 to {MAX_STAKE} whole play coins.")
+        if type(amount) is not int or not MIN_STAKE <= amount <= MAX_STAKE:
+            raise ApiError(
+                422, "invalid_amount", f"Stake {MIN_STAKE} to {MAX_STAKE:,} whole play coins."
+            )
         store = SportsStore(admin)
         previous = await store.stake_for_uid(player_id, stake_id)
         if previous is not None:
@@ -175,10 +182,9 @@ class SportsService:
         result = outcome(match)
         if result is None or (match.status == "finished" and self.clock() < match.kickoff):
             raise ApiError(409, "result_pending", "A verified final result is not available yet.")
-        plan = plan_settlement(
+        plan = plan_payouts(
             [Stake(stake.id, stake.player_id, stake.pick, stake.amount) for stake in stakes],
             result,
-            POOL_CUT_PERCENT,
         )
         reply = await store.settle(fixture, match, result, stakes, plan)
         refusal(reply)
@@ -221,7 +227,7 @@ class SportsService:
         return {
             "coins": await store.balance(player_id),
             "stakedToday": today,
-            "coinsLeftToday": max(0, DAILY_STAKE_CAP - today),
+            "coinsLeftToday": coins_left_today(today),
             "stakes": [my_stake_view(stake, fixtures[stake.fixture_id]) for stake in stakes],
             "checksUnavailable": checks_unavailable,
             "rules": RULES,
