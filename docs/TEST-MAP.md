@@ -253,3 +253,11 @@ and [results, screenshots and manual checkpoints](evidence/T28/README.md).
 | Durable assertions and screenshots for eight existing feedback states | [Runner](../frontend/scripts/check-feedback.mjs), [fixture](../frontend/scripts/feedback-fixtures.js); `cd frontend && node scripts/check-feedback.mjs` | Each case at 1280x720/375x812; messages, repeated join counts, zero invalid builds, successful Create retry, valid cannon, callback intent, no horizontal overflow/errors/external traffic; deliberate enabled-button countercheck fails | Live API/server/database rules, rewards, real accounts/outages, multiplayer, physical keyboard/phone, screen readers, complete journey and unmerged B3 fixes |
 
 [Case table and limitations](evidence/B3-repeatable/README.md), [results](../specs/B3-feedback-check.md).
+
+## B2 — Johannes Franz Lang — Harbor and menus
+
+| What I built / why | Where and command | Covers | Misses |
+|---|---|---|---|
+| Narrow match-side choices use full rows so club words remain intact | [CSS](../frontend/src/harbor/harbor.css), [36 browser cases](../frontend/tests/harbor/phone-layout.test.js), [fixtures](../frontend/tests/harbor/phone-fixtures.js); `cd frontend && npm test -- --run tests/harbor/phone-layout.test.js` | Ten views x 375x812/390x844/1280x720: bounds, panel overflow, 44px effective targets, no clipped choice text or fragmented club words, Tab/focus and Escape destination; Harbor stand IDs, one controlled confirmation/10 coins with no earlier spend, compact coin rows, pause-to-Harbor, local preference save and all help pages at both phone sizes | Actual sports/provider accuracy, server settlement/login/room authority, account view, real phones/keyboards/VoiceOver/Safari, actual external-link/clipboard use and game cards outside this pass |
+
+[Evidence, exact scope and commands](evidence/B2-harbor-menus/README.md), [results](../specs/B2-harbor-menus.md).

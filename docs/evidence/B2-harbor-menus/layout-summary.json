@@ -1,0 +1,71 @@
+[
+  {
+    "width": 375,
+    "height": 812,
+    "checkedViews": [
+      "credits",
+      "harbor",
+      "help",
+      "market",
+      "match",
+      "pause",
+      "settings",
+      "shortcuts",
+      "weather",
+      "weather-fallback"
+    ],
+    "allPanelsBounded": true,
+    "smallTargets": [],
+    "horizontalOverflow": false,
+    "matchWordsSplitBefore": [
+      "Nottingham",
+      "Manchester"
+    ],
+    "matchWordsSplitAfter": []
+  },
+  {
+    "width": 390,
+    "height": 844,
+    "checkedViews": [
+      "credits",
+      "harbor",
+      "help",
+      "market",
+      "match",
+      "pause",
+      "settings",
+      "shortcuts",
+      "weather",
+      "weather-fallback"
+    ],
+    "allPanelsBounded": true,
+    "smallTargets": [],
+    "horizontalOverflow": false,
+    "matchWordsSplitBefore": [
+      "Nottingham",
+      "Manchester"
+    ],
+    "matchWordsSplitAfter": []
+  },
+  {
+    "width": 1280,
+    "height": 720,
+    "checkedViews": [
+      "credits",
+      "harbor",
+      "help",
+      "market",
+      "match",
+      "pause",
+      "settings",
+      "shortcuts",
+      "weather",
+      "weather-fallback"
+    ],
+    "allPanelsBounded": true,
+    "smallTargets": [],
+    "horizontalOverflow": false,
+    "matchWordsSplitBefore": [],
+    "matchWordsSplitAfter": []
+  }
+]
