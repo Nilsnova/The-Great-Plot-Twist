@@ -34,7 +34,7 @@ describe('the campaign table', () => {
     expect(unlockWave({kind: 'wall', level: 3})).toBe(5);
     expect(unlockWave({crew: 'gunner'})).toBe(3);
     expect(unlockWave({captain: 4})).toBe(8);
-    expect(UNLOCK_STEPS.map(step => step.wave)).toEqual([0, 1, 2, 3, 5, 6, 8, 12, 15, 20]); // 6: the guard (D052)
+    expect(UNLOCK_STEPS.map(step => step.wave)).toEqual([0, 1, 2, 3, 5, 6, 8, 9, 12, 15, 20]); // 6: the guard (D052), 9: the swivel nest (D055)
     expect(unlockWave({crew: 'guard'})).toBe(6);
     // The tower tiers (GAME-V3.md §4.1): level 4 after wave 12 (the mortar and the watchtower's 4 after 15), level 5 after 20.
     expect([['cannon', 4], ['wall', 4], ['watchtower', 3], ['mortar', 4], ['watchtower', 4], ['cannon', 5], ['mortar', 5], ['wall', 5], ['watchtower', 5]]

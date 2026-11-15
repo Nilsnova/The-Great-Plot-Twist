@@ -12,7 +12,7 @@ import {isOpen, spotWave, waveOf} from '../campaign/index.js';
 import {LOCK_WAVES} from '../art/campaign.js';
 import {SLOT_KINDS} from './td-rules.js';
 import {ROLE_IDS, activeRole, roleRadius} from '../campaign/houses.js';
-import {CULVERIN_ART, HARPOON_ART, TIER_ART, crewArt, pipRow, pirateLevels} from '../pixel/pirate-catalog.js';
+import {CULVERIN_ART, HARPOON_ART, SWIVEL_ART, TIER_ART, crewArt, pipRow, pirateLevels} from '../pixel/pirate-catalog.js';
 import {islandFrame} from '../art/registry.js';
 import {frameCanvas, smoothTexture, spriteMaterial} from '../art/textures.js';
 import {clickVerdict, WALK_CLOSER} from '../world/reach.js';
@@ -33,6 +33,7 @@ export const catalogArt = (kind, sizes = pixelSizes) => (ART_CANDIDATES[kind] ??
 const tiered = kind => [...pirateLevels[kind], ...TIER_ART[kind]];
 export const LEVEL_ART = Object.freeze({wall: tiered('wall'), cannon: tiered('cannon'), mortar: tiered('mortar'), harpoon: HARPOON_ART.levels,
   culverin: CULVERIN_ART.levels, // T43 (D048 proposed): only an island answer with the flag defenses_v2 on has one
+  swivel: SWIVEL_ART.levels, // D055: the swivel-gun nest
   watchtower: ['island-watchtower', 'island-watchtower', 'island-watchtower', 'island-watchtower-l4', 'island-watchtower-l5'], house: ['island-house']});
 export const PIP_ART = 'fx-level-pip';
 export const PIP_TIER_ART = 'fx-level-pip-gold';
@@ -84,7 +85,7 @@ export function crewPlaces(spots = [], crew = {}, {bell = null} = {}) {
 
 // The drawn stand-ins (until the level art has loaded), the bell, the build ring and the kind badges:
 // clean cartoon frames (src/art/island.js) painted once into smooth textures.
-const DRAWN = {wall: 'island-wall', cannon: 'island-cannon', mortar: 'island-mortar', harpoon: 'island-harpoon', culverin: 'island-culverin', watchtower: 'island-watchtower', house: 'island-house', bell: 'island-bell'};
+const DRAWN = {wall: 'island-wall', cannon: 'island-cannon', mortar: 'island-mortar', harpoon: 'island-harpoon', culverin: 'island-culverin', swivel: 'island-swivel', watchtower: 'island-watchtower', house: 'island-house', bell: 'island-bell'};
 function drawn(name) {
   const [width, height, anchor] = islandFrame(name);
   return {texture: smoothTexture(frameCanvas(name)), size: [width, height], anchor};

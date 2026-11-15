@@ -99,6 +99,8 @@ def test_the_wallet_reasons_are_the_agreed_pairs_in_the_agreed_order():
         ("captain_respec", "spend"),
         # 20261115130000_tower_skill_price.sql: a tower's skill, paid by the clicker (D051).
         ("tower_skill", "spend"),
+        # 20261116020000_tower_trees.sql: a tier of a tower's upgrade tree (D055).
+        ("tower_tree", "spend"),
     )
 
 
@@ -150,6 +152,7 @@ def test_list_reason_names_gives_the_names_in_the_agreed_order():
         "building_refund",
         "captain_respec",
         "tower_skill",
+        "tower_tree",
     ]
 
 

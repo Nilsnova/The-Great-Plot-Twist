@@ -76,8 +76,8 @@ describe('the flag defenses_v2 hides the culverin while it is off', () => {
   });
   it('offers the tower spot exactly what it offered before, unless the flag is on', () => {
     expect(towerKinds()).toBe(SLOT_KINDS.tower);
-    expect(towerKinds({flags: {islands: true}})).toEqual(['cannon', 'mortar', 'harpoon']);
-    expect(towerKinds({flags: {defenses_v2: true}})).toEqual(['cannon', 'mortar', 'harpoon', 'culverin']);
+    expect(towerKinds({flags: {islands: true}})).toEqual(['cannon', 'mortar', 'harpoon', 'swivel']);
+    expect(towerKinds({flags: {defenses_v2: true}})).toEqual(['cannon', 'mortar', 'harpoon', 'swivel', 'culverin']);
     // Pirate Point never gets it.
     expect(towerKinds({flags: {defenses_v2: true}, point: true})).toBe(POINT_TOWER_KINDS);
   });
@@ -86,7 +86,7 @@ describe('the flag defenses_v2 hides the culverin while it is off', () => {
     const unlocks = readUnlocks({unlocks: {wave: 30, unlocked: ['culverin:1', 'cannon:1', 'mortar:1', 'harpoon:1'], locked: {}}});
     const card = buildCardModel({spotId: 'cannon_5', slot: 'tower', spot, coins: 5000, unlocks});
     expect(card.mode).toBe('choose');
-    expect(card.choices.map(choice => choice.kind)).toEqual(['cannon', 'mortar', 'harpoon']);
+    expect(card.choices.map(choice => choice.kind)).toEqual(['cannon', 'mortar', 'harpoon', 'swivel']);
   });
 });
 
@@ -139,16 +139,16 @@ describe('the culverin outside the sim', () => {
     const on = {defenses_v2: true};
     const open = buildCardModel({spotId: 'cannon_5', slot: 'tower', spot, coins: 5000, flags: on,
       unlocks: readUnlocks({unlocks: {wave: 30, unlocked: ['culverin:1', 'cannon:1', 'mortar:1', 'harpoon:1'], locked: {}}})});
-    expect(open.choices.map(choice => choice.kind)).toEqual(['cannon', 'mortar', 'harpoon', 'culverin']);
-    expect(open.choices[3]).toMatchObject({name: 'Culverin', line: CULVERIN_CARD.line, price: '🪙 80', disabled: false});
+    expect(open.choices.map(choice => choice.kind)).toEqual(['cannon', 'mortar', 'harpoon', 'swivel', 'culverin']);
+    expect(open.choices[4]).toMatchObject({name: 'Culverin', line: CULVERIN_CARD.line, price: '🪙 80', disabled: false});
     const early = buildCardModel({spotId: 'cannon_5', slot: 'tower', spot, coins: 5000, flags: on, unlocks: readUnlocks({waveBest: 3})});
-    expect(early.choices[3]).toMatchObject({kind: 'culverin', disabled: true, locked: true});
-    expect(early.choices[3].reason).toContain('15');
+    expect(early.choices[4]).toMatchObject({kind: 'culverin', disabled: true, locked: true});
+    expect(early.choices[4].reason).toContain('15');
     // A visitor's card reads the friend's island by its best won wave alone (index.js islandUnlocks): the culverin
     // opens there with that island's waves too, as the server allows it.
     const visit = wave => buildCardModel({spotId: 'cannon_5', slot: 'tower', spot, coins: 5000, flags: on, visitor: true, unlocks: readUnlocks({waveBest: wave})});
-    expect(visit(14).choices[3]).toMatchObject({kind: 'culverin', disabled: true, reason: 'Opens after wave 15.'});
-    expect(visit(15).choices[3]).toMatchObject({kind: 'culverin', disabled: false, reason: ''});
+    expect(visit(14).choices[4]).toMatchObject({kind: 'culverin', disabled: true, reason: 'Opens after wave 15.'});
+    expect(visit(15).choices[4]).toMatchObject({kind: 'culverin', disabled: false, reason: ''});
     expect([15, 20, 30].map(wave => readUnlocks({waveBest: wave}).levels.culverin)).toEqual([3, 4, 5]);
     // Pirate Point never offers it.
     const point = buildCardModel({spotId: 'pp_tower_1', slot: 'tower', spot: {...spot, id: 'pp_tower_1'}, coins: 5000, flags: on, point: true});
@@ -179,13 +179,13 @@ describe('the culverin outside the sim', () => {
     const {createFakeIslandApi} = await import('../../src/pirates/fake-api.js');
     const off = createFakeIslandApi(), on = createFakeIslandApi({flags: {defenses_v2: true}});
     const before = await off.island();
-    expect(before.spots.find(item => item.id === 'cannon_1').kinds).toEqual(['cannon', 'mortar', 'harpoon']);
+    expect(before.spots.find(item => item.id === 'cannon_1').kinds).toEqual(['cannon', 'mortar', 'harpoon', 'swivel']);
     expect(before.prices.kinds).not.toHaveProperty('culverin');
     expect(before.unlocks.unlocked.some(id => id.startsWith('culverin'))).toBe(false);
     await expect(off.build({spot: 'cannon_1', kind: 'culverin', actionUid: 'c-off'})).rejects.toMatchObject({status: 422});
     expect((await off.startWave({where: 'own', actionUid: 'w-off'})).rules).toBeUndefined();
     const answer = await on.island();
-    expect(answer.spots.find(item => item.id === 'cannon_1').kinds).toEqual(['cannon', 'mortar', 'harpoon', 'culverin']);
+    expect(answer.spots.find(item => item.id === 'cannon_1').kinds).toEqual(['cannon', 'mortar', 'harpoon', 'swivel', 'culverin']);
     expect(answer.prices.kinds.culverin).toEqual(CULVERIN_CARD.price);
     const built = await on.build({spot: 'cannon_1', kind: 'culverin', actionUid: 'c-on'});
     expect(built.spots.find(item => item.id === 'cannon_1')).toMatchObject({kind: 'culverin', built: true, level: 1});

@@ -12,7 +12,7 @@ import {CAPTAIN_PALETTES} from '../art/people.js';
 import {toasts as gameToasts} from '../ui/toasts.js';
 import {crewLabel, progressLines} from './progression.js';
 import {drawArsenal} from './arsenal-ui.js';
-import {drawSkills, drawTech, iconOf} from './skill-tree.js';
+import {drawSkills, drawTech, drawTowerTree, iconOf} from './skill-tree.js';
 
 // The cards of the island's buildings: a spot's build or upgrade card (houses too), the wreck, the Harbor and
 // the arsenal. They dock at the right side on a desktop and come up as a bottom sheet on a phone
@@ -84,16 +84,32 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
     body.append(reason, line('island-soon', model.soon), line('island-message', model.message, 'alert'), line('island-coins', model.coins));
   }
 
-  // handlers: {build(spotId, kind), upgrade(spotId), repair(spotId), hire(), specialise(spotId, spec), demolish(spotId), move(spotId)}
+  // handlers: {build(spotId, kind), upgrade(spotId), repair(spotId), hire(), specialise(spotId, spec), demolish(spotId), move(spotId),
+  //   treeSelect(spotId, id), tree(spotId, path, tier)}
+  // D055: a tower with an upgrade tree (model.tree) gets a bigger, centred card like the captain's, with the tree
+  // (skill-tree.js) in place of the plain Upgrade: the trunk tile upgrades the level, the path tiles buy the tree.
   function buildCard(model, handlers) {
     const on = typeof handlers === 'function' ? {build: handlers} : handlers ?? {};
     open('build', model.title, body => {
       let focusable = null;
-      body.append(line('island-purpose', model.purpose));
-      if (model.pips.length) { const row = node('div', 'island-level'); row.append(pips(model.pips), line('island-stats', model.stats)); body.append(row); }
+      const treeCard = !!model.tree;
+      modal.element.classList.toggle('island-card-docked', !treeCard);
+      modal.element.classList.toggle('island-card-wide', treeCard);
+      modal.element.classList.toggle('island-card-tree', treeCard);
+      if (!treeCard) body.append(line('island-purpose', model.purpose));
+      if (model.pips.length && !treeCard) { const row = node('div', 'island-level'); row.append(pips(model.pips), line('island-stats', model.stats)); body.append(row); }
       if (model.owner) body.append(line('island-owner', model.owner));
       let act = null;
-      if (model.mode === 'choose') {
+      if (treeCard) {
+        const drawn = drawTowerTree(model.tree, {select: id => on.treeSelect?.(model.spotId, id),
+          buy: action => (action.type === 'upgrade' ? on.upgrade?.(model.spotId) : on.tree?.(model.spotId, action.path, action.tier))}, {button, line});
+        // The level pips stay at the top of the tree (read out as "Level 2 of 5"); the trunk's Upgrade keeps its focus name.
+        if (model.pips.length) drawn.part.querySelector('.island-tree-top')?.prepend(pips(model.pips));
+        if (model.tree.detail.action?.type === 'upgrade') drawn.act.dataset.focus = 'upgrade';
+        body.append(drawn.part);
+        act = drawn.act;
+        if (act.disabled) focusable = drawn.part.querySelector('.island-node.is-picked');
+      } else if (model.mode === 'choose') {
         const list = node('div', 'island-choices');
         for (const choice of model.choices) {
           const option = node('button', 'island-choice'); option.type = 'button'; option.dataset.focus = `choice-${choice.kind}`; option.dataset.kind = choice.kind;
@@ -123,7 +139,7 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
         body.append(next, act);
       }
       if (act && !act.disabled) focusable = act;
-      footer(body, model, act);
+      footer(body, treeCard ? {...model, reason: '', soon: ''} : model, treeCard ? null : act);
       if (model.locked) body.classList.add('is-locked');
       // GAME-V3.md §5: the tower's skill, chosen once its kind is researched at the Tech hub; a house's role the same way.
       if (model.skills) {

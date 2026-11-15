@@ -57,7 +57,7 @@ export const PATHS = Object.freeze({
   skill: '/api/island/skill', role: '/api/island/role', respec: '/api/island/respec', weaponBuy: '/api/island/weapon/buy', weaponEquip: '/api/island/weapon/equip',
   point: '/api/pirate-point', pointBuild: '/api/pirate-point/build', pointUpgrade: '/api/pirate-point/upgrade',
   games: '/api/games', gameJoin: '/api/games/join', gameLeave: '/api/games/leave', game: code => `/api/games/${code}`,
-  research: '/api/island/research', specialise: '/api/island/tower-skill', wreck: '/api/island/wreck',
+  research: '/api/island/research', specialise: '/api/island/tower-skill', towerTree: '/api/island/tower-tree', wreck: '/api/island/wreck',
   demolish: '/api/island/demolish', move: '/api/island/move',
   // D039 (flag wall_recovery): the walls' health and the paid Repair/Rebuild.
   walls: code => `/api/island/walls${code ? `?code=${encodeURIComponent(code)}` : ''}`, repair: '/api/island/repair',
@@ -77,6 +77,7 @@ export const MESSAGES = Object.freeze({
   badWeapon: 'There is no such weapon.',
   badResearch: 'There is no such research.',
   badSpec: 'There is no such tower skill.',
+  badTree: 'There is no such step in a tower tree.',
   badGift: 'Pick one of the amounts shown.',
   badCell: 'Pick a square of the build grid.',
 });
@@ -279,6 +280,15 @@ export function createIslandApi({transport, makeUid = makeActionUid} = {}) {
       if (!Object.hasOwn(SPECS, spec ?? '') && !isHouseRole(spec)) return refuse(400, 'bad_spec', MESSAGES.badSpec);
       if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
       return writeSpots(`spec:${where}:${spot}:${spec}`, actionUid => transport.post(PATHS.specialise, {spot: sent(spot), spec, actionUid, ...(where ? {code: where} : {})}),
+        where ? hasSpots : isIsland);
+    },
+    // D055: one tier of a level-5 tower's upgrade tree (path a or b, tier 1 to 3), paid with the clicker's coins, so
+    // it carries a click id: a retry after an unknown outcome reuses it and is never charged twice.
+    towerTree({spot, path, tier, code = null} = {}) {
+      const where = code ? displayIslandCode(code) : '';
+      if (!['a', 'b'].includes(path) || ![1, 2, 3].includes(tier)) return refuse(400, 'bad_tree', MESSAGES.badTree);
+      if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
+      return writeSpots(`tree:${where}:${spot}:${path}:${tier}`, actionUid => transport.post(PATHS.towerTree, {spot: sent(spot), path, tier, actionUid, ...(where ? {code: where} : {})}),
         where ? hasSpots : isIsland);
     },
     // GAME-V3.md §4: coins into the island's wreck (one of the gifts the answer lists).

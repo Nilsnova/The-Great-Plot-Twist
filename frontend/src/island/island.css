@@ -130,7 +130,11 @@
 .island-branch-lines path.is-on{stroke:var(--u-gold);opacity:1}
 .island-branch-nodes{position:relative;list-style:none;margin:0;padding:0;display:grid;grid-template-rows:repeat(5,var(--row))}
 .island-branch-nodes.has-3{grid-template-rows:repeat(3,var(--row))}
+.island-branch-nodes.has-4{grid-template-rows:repeat(4,var(--row))}
 .island-branch-nodes>[data-tier="1"]{grid-row:-2}
+.island-branch-nodes.has-4>[data-tier="2"]{grid-row:3}
+.island-branch-nodes.has-4>[data-tier="3"]{grid-row:2}
+.island-branch-nodes.has-4>[data-tier="4"]{grid-row:1}
 .island-branch-nodes.has-5>[data-tier="2"]{grid-row:4}
 .island-branch-nodes.has-5>[data-tier="3"]{grid-row:3}
 .island-branch-nodes.has-3>[data-tier="2"]{grid-row:2}
@@ -227,6 +231,21 @@
   .island-skill-detail{padding:10px var(--u-3) var(--u-3);gap:8px}
   .island-skill-detail .island-node-icon{width:48px;height:48px;font-size:24px}
   .island-skill-line{font-size:16px}
+}
+/* D055: a tower's card with its upgrade tree (skill-tree.js drawTowerTree): centred and bigger, like the captain's;
+   the tree left (the level as the trunk, two paths of three tiers), the detail panel right; the skills and the
+   secondary buttons below. Under 900 px one column, the panel sticks to the bottom. */
+.kit-modal.island-card.island-card-wide.island-card-tree{width:min(780px,94vw)}
+.island-card-tree .island-card-body{display:grid;gap:var(--u-3);min-width:0}
+.island-tower-tree{--disc:58px;--row:96px;grid-template-columns:minmax(0,1fr) minmax(240px,280px)}
+.island-tower-tree-plot{padding:var(--u-3) var(--u-4) var(--u-2)}
+.island-tower-tree .island-branch{max-width:360px;width:100%;justify-self:center}
+.island-card-tree .island-skills-pick{margin-top:0}
+.island-card-tree .island-card-body>:is(.island-move,.island-teardown,.island-hire){justify-self:start}
+@media(max-width:900px){.island-tower-tree{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:640px){
+  .island-tower-tree{--disc:54px;--row:88px;--label:120px}
+  .island-card-tree .island-card-body>:is(.island-move,.island-teardown,.island-hire){justify-self:stretch}
 }
 /* The game's lobby (docs/GAME-V3.md §2): the code, the link and QR, the players with who is online, Start. */
 .island-card-lobby.kit-modal{width:min(480px,calc(100vw - 32px))}

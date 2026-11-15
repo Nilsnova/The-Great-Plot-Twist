@@ -8,6 +8,7 @@ import {BRANCHES, ROLES, ROLE_BY_ID, ROLE_LEVEL, SKILLS, SKILL_BY_ID, WEAPONS, W
 import {opensText, spotWave, waveOf, isOpen, tierItem, tierWave} from '../campaign/index.js';
 import {BRANCH_BY_ID, SPECS, TOP_TIER, isCapstone, optionLine, optionName, optionsOf, readSpec, readTier, skillPrice} from '../campaign/tech.js';
 import {ROLES as HOUSE_ROLES, ROLE_IDS, ROLE_LEVEL as HOUSE_ROLE_LEVEL, readRole} from '../campaign/houses.js';
+import {towerTreeModel} from './tree-model.js';
 
 // Coins always read "🪙 120" through formatCoins (BUILD-PLAN 3.2); an unknown amount reads "🪙 ?".
 export const coinText = n => (Number.isSafeInteger(n) ? formatCoins(n) : '🪙 ?');
@@ -31,9 +32,13 @@ export const coinText = n => (Number.isSafeInteger(n) ? formatCoins(n) : '🪙 ?
 // `demolish` {label, disabled, reason}; battle: a wave runs on screen, so it waits for the break.
 // flags: the server's feature flags (GET /api/config); an empty tower spot offers towerKinds({flags, point}), so the
 // culverin (T43) only while defenses_v2 is on.
+// D055: a built tower of a kind with an upgrade tree (cannon, mortar, harpoon, culverin, swivel nest) on an island
+// also gets `tree` (tree-model.js): its levels as the trunk and two paths of three tiers above; `treePicked` is the
+// tile the player tapped. The card then draws the tree in place of the plain Upgrade (the trunk tile upgrades).
 export function buildCardModel({spotId, kind, slot = null, spot = null, coins = null, visitor = false, ownerName = '',
-  busy = false, message = '', unlocks = null, prices = null, point = false, campaign = null, battle = false, movable = false, flags = null} = {}) {
-  const place = slot ?? (kind === 'cannon' || kind === 'mortar' || kind === 'harpoon' || kind === 'culverin' ? 'tower' : kind ?? 'wall');
+  busy = false, message = '', unlocks = null, prices = null, point = false, campaign = null, battle = false, movable = false, flags = null,
+  treePicked = null} = {}) {
+  const place = slot ?? (kind === 'cannon' || kind === 'mortar' || kind === 'harpoon' || kind === 'culverin' || kind === 'swivel' ? 'tower' : kind ?? 'wall');
   const built = spot?.built === true, standing = built ? spot.kind : null;
   const level = built ? (Number.isSafeInteger(spot.level) && spot.level > 0 ? spot.level : 1) : 0;
   const shown = standing ?? (place === 'tower' ? null : SLOT_KINDS[place]?.[0] ?? kind);
@@ -46,7 +51,7 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
     button: '', disabled: true, reason: '', upgrade: null, soon: '', message, busy, skills: null, locked: false,
     coins: coins === null ? '' : `You have ${coinText(coins)}`,
     owner: point ? 'Paid by you · belongs to Pirate Point' : visitor ? `You pay · it stays on ${ownerName ? `${ownerName}'s` : 'this'} island` : '', hire: false,
-    demolish: null, move: null};
+    demolish: null, move: null, tree: null};
   if (shown && level > 0) {
     model.pips = Array.from({length: model.maxLevel}, (_, index) => index < level);
     model.stats = statLine(shown, level);
@@ -94,6 +99,7 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
   if (!point && shown === 'house') model.skills = rolesOf(spot, level, busy);
   if (!point) model.demolish = {label: busy === 'demolish' ? 'Checking…' : 'Tear down', disabled: battle || !!busy,
     reason: battle ? 'You can tear it down between waves.' : ''};
+  if (!point) model.tree = towerTreeModel({kind: shown, spot, coins, prices, wave: campaignWave, unlocks, busy, picked: treePicked});
   const next = level + 1;
   if (level >= model.maxLevel) { model.reason = shown === 'house' ? '' : 'Highest level reached.'; return model; }
   if (allowed(shown) < next) { model.soon = `Level ${next}: ${opensText(lockedWave(unlocks, {kind: shown, level: next}) ?? '?')}.`; return model; }

@@ -11,6 +11,7 @@
     research()    the Tech hub: one research branch for the island, paid by any member (GAME-V3 5)
     specialise()  one tower picks a skill of its researched branch, paid in coins by the clicker
                   (GAME-V3 section 5, D051), or a house of level 2 a role, free (GAME-V3 "Houses")
+    tower_tree()  one tier of a level-5 tower's upgrade tree, paid in coins by the clicker (D055)
     repair_wreck()  coins into the island's wreck (GAME-V3 section 4)
     demolish(), demolish_quote()  tear a building down between waves; each payer gets half of what
                   they paid back (GAME-V3 section 4.2)
@@ -61,6 +62,7 @@ RESEARCH_PREFIX = "research:"
 WRECK_PREFIX = "wreck:"
 DEMOLISH_PREFIX = "demolish:"
 TOWER_SKILL_PREFIX = "towerskill:"
+TOWER_TREE_PREFIX = "towertree:"
 # The island has no timber any more (BUILD-PLAN 3.2): coins only.
 NO_TIMBER = 0
 # An answer made without reading the layout: the fixed spots, no moving (T36).
@@ -812,6 +814,73 @@ def specialise_refusal(
     if refusal.reason == "insufficient_funds":
         return not_enough_coins(rules.spec_name(entry, spec), refusal.price)
     return campaign_refusal(refusal, catalogue, "tech_hub", entry.name)
+
+
+async def tower_tree(
+    admin: SupabaseAdmin,
+    catalogue: IslandCatalogue,
+    player_id: str,
+    spot_id: str,
+    path: str,
+    tier: int,
+    action_uid: str,
+    code: str | None = None,
+) -> IslandView:
+    """One tier of the upgrade tree of a level-5 tower (D055): path a (it fires faster) or b (it
+    hits harder), on the player's own island or (with `code`) the game they are in. Paid once by
+    the player who clicks (tower_trees.json prices, ledger ref towertree:<actionUid>, reason
+    tower_tree); the island's best won wave opens the tiers (tree_1, tree_2, tree_3 of
+    campaign.json). 400 bad_tree, 404 no_such_spot, 404 no_such_island, 403 not_member, 409
+    not_built, 422 no_tree, 409 needs_level, 409 known, 409 needs_tier, 409 closed, 409 locked,
+    409 insufficient_funds. A repeated actionUid charges nothing."""
+    island, payer = await target_island(admin, catalogue, player_id, code, permissions.TOWER_TREE)
+    ref = f"{TOWER_TREE_PREFIX}{action_uid}"
+    if not await store.ledger_has(admin, player_id, "tower_tree", ref):
+        built = await store.read_built_spots(admin, island.owner)
+        progress = await store.read_progress(admin, island.owner)
+        spot, tree, price = rules.check_tree(
+            catalogue, spot_id, path, tier, built, progress.wave_best
+        )
+        validate_transaction(-price, "tower_tree", ref)
+        arguments = {
+            "p_player_id": player_id,
+            "p_island_owner": island.owner,
+            "p_plot": spot.id,
+            "p_kind": tree.kind,
+            "p_path": path,
+            "p_tier": tier,
+            "p_action_uid": action_uid,
+            "p_price": price,
+            "p_unlock_wave": tree.waves[tier - 1],
+            "p_level": tree.level,
+        }
+        outcome = await store.run_paid(admin, "island_tower_tree", arguments)
+        if isinstance(outcome, Refusal):
+            raise tree_refusal(outcome, catalogue, tree, path, tier)
+    return await look_open(admin, catalogue, island, payer)
+
+
+def tree_refusal(
+    refusal: Refusal, catalogue: IslandCatalogue, tree, path: str, tier: int
+) -> ApiError:
+    """The error for a tree tier that island_tower_tree() refused (it checks again under lock:
+    two clicks at once, or a wave won or lost in between). Nothing changed."""
+    reason = refusal.reason
+    if reason == "not_member":
+        return games.not_member()
+    if reason == "locked":
+        return rules.locked(tree.waves[tier - 1])
+    if reason == "needs_level":
+        return ApiError(409, "needs_level", f"Raise it to level {tree.level} first.")
+    if reason == "known":
+        return ApiError(409, "known", f"{tree.tier_name(path, tier)} is bought already.")
+    if reason == "needs_tier":
+        return ApiError(409, "needs_tier", f"Buy {tree.tier_name(path, tier - 1)} first.")
+    if reason == "closed":
+        return ApiError(409, "closed", "Closed: the other path is past tier 1.")
+    if reason == "insufficient_funds":
+        return not_enough_coins(tree.tier_name(path, tier), refusal.price)
+    return paid_refusal(refusal, tree.tier_name(path, tier))
 
 
 async def repair_wreck(
