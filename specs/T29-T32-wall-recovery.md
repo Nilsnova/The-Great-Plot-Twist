@@ -82,6 +82,11 @@ Values (D039, proposed): timer **600 s**; rebuild price **30 %** of the catalogu
 - **Best effort after payment.** `wall_repair.record_after_finish` catches and logs any database error of
   the wall record; the paid finish still answers 200. Tests: `test_wall_recovery.py`
   (`…cannot_heal…`, `…may_lower…`, `…never_breaks_an_already_paid_finish`).
+- **Paid-restore race fence (#82).** A successful restore records `wall_restored_at` under the wall row
+  lock. The SQL recorder locks report rows in plot order and leaves a wall unchanged when that restore
+  happened after the report's wave `starts_at`; this protects damaged and rebuilt walls even when Python
+  reads the start snapshot after the restore. RPC signatures stay unchanged. It does not authenticate
+  client damage or order arbitrary old reports from separate waves.
 
 ## Out of scope
 
