@@ -72,9 +72,8 @@
 .island-tags{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:var(--u-2)}
 .island-tag{padding:4px 12px;background:var(--u-parch);color:var(--u-pink);border:2px solid var(--u-brown);font-weight:700}
 @media(max-width:520px){.island-share{flex-direction:column}.island-crew-row{flex-direction:column;align-items:stretch}}
-/* Menu › Captain and skills (docs/TOWER-DEFENSE.md §10, §14, §15): the musket, the 3×3 skill tree and the
-   weapon shop, in the kit's tabs. Each skill is a ≥44 px button; a line joins the tiers of a branch (gold
-   once the tier above is learned); cost dots under the name; learned / can learn / locked by colour and mark. */
+/* Menu › Captain and skills (docs/TOWER-DEFENSE.md §10, §14, §15): the musket, the skill tree (below) and the
+   weapon shop, in the kit's tabs. The Skills tab makes the card wide (island-card-wide). */
 .island-card-captain.kit-modal{width:min(480px,calc(100vw - 32px))}
 .island-captain-tabs .kit-tablist{gap:6px;padding-bottom:var(--u-2)}
 .island-captain-tabs .kit-tab{padding:8px 12px;font-size:15px}
@@ -82,66 +81,151 @@
 .island-captain-musket,.island-skills,.island-weapons{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--u-3);min-width:0}
 .island-card-captain .island-card-body,.island-captain-tabs,.island-captain-tabs .kit-tabpanel{min-width:0;grid-template-columns:minmax(0,1fr)}
 .island-captain-musket>.kit-button{justify-self:start;min-width:160px}
-.island-points{font:800 var(--u-lg)/1.2 var(--u-font);color:var(--u-gold)}
-.island-tree{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--u-4);min-width:0}
-.island-branch{display:grid;gap:6px;align-content:start;min-width:0}
-.island-branch-head{margin:0;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:2px var(--u-2);text-align:center;min-width:0}
-.island-branch-role{flex-basis:100%;color:var(--u-mute);font:700 13px/1.2 var(--u-font)}
-/* Beats the modal's h3 size (src/ui/open-panels.css), keeps its serif and gold. */
-.island-card.island-card-captain.kit-modal .kit-modal-body h3.island-branch-head{font-size:16px;line-height:1.2;overflow-wrap:anywhere}
-.island-branch-icon{font-size:20px;line-height:1.2}
-.island-branch-nodes{list-style:none;margin:0 auto;padding:0;display:grid;gap:14px;width:min(100%,360px)}
-/* A fork tier: both options side by side before the choice; the twin you did not take is greyed after it. */
-.island-tier.is-fork{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;position:relative}
-.island-fork-or{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);padding:0 5px;border-radius:8px;background:var(--u-deep);color:var(--u-mute);font:800 12px/1.4 var(--u-font);pointer-events:none}
-.island-tier.is-fork::before{left:25%}
-.island-tier{position:relative}
-.island-tier+.island-tier::before{content:'';position:absolute;left:50%;top:-14px;width:4px;height:14px;margin-left:-2px;border-radius:2px;background:var(--u-line)}
-.island-tier.is-linked::before{background:var(--u-gold)}
-.island-skill{width:100%;min-height:58px;display:grid;justify-items:center;align-content:center;gap:3px;padding:6px 4px;position:relative;
-  font:700 13px/1.2 var(--u-font);color:var(--u-ink);text-align:center;cursor:pointer;background:linear-gradient(#24575f,var(--u-card)) var(--u-card);border:2px solid var(--u-line);border-radius:var(--u-radius-xs,10px);box-shadow:var(--u-bevel-quiet,0 3px var(--u-deep))}
-.island-skill:hover{background:var(--u-raise)}
-.island-skill:focus-visible{outline:3px solid var(--u-gold);outline-offset:2px}
-.island-skill.is-learned{background:#3b5a2c;border-color:#9fd26a}
-.island-skill.is-ready{border-color:var(--u-gold);box-shadow:var(--u-bevel-quiet,0 3px var(--u-deep)),0 0 0 2px #f3d58c55}
-.island-skill.is-locked{background:var(--u-deep);color:var(--u-mute)}
-.island-skill.is-closed{background:var(--u-deep);color:var(--u-mute);border-style:dashed;opacity:.55}
-.island-skill.is-closed .island-skill-name{text-decoration:line-through}
-.island-skill.is-capstone{border-color:var(--u-pink,var(--u-gold))}
-.island-skill.is-picked{outline:3px solid var(--u-gold);outline-offset:-1px}
-.island-skill-name{overflow-wrap:anywhere}
-.island-skill-cost{display:flex;gap:3px}
-.island-skill-dot{width:7px;height:7px;border-radius:50%;background:var(--u-gold);border:1px solid var(--u-deep)}
-.island-skill.is-locked .island-skill-dot{background:var(--u-line)}
-.island-skill-mark{position:absolute;top:2px;right:4px;font-size:11px;line-height:1}
-.island-skill-mark[hidden]{display:none}
-.island-skill-detail{display:grid;gap:6px;padding:var(--u-2) var(--u-3);background:var(--u-deep);border-left:4px solid var(--u-gold);border-radius:var(--u-radius-xs,10px)}
-.island-skill-detail-head{display:flex;justify-content:space-between;gap:var(--u-2);align-items:baseline}
-.island-skill-detail-head strong{font:800 var(--u-lg)/1.2 var(--u-font);color:var(--u-gold)}
-.island-skill-detail-cost{color:var(--u-mute);font-size:15px;white-space:nowrap}
-.island-skill-line{color:var(--u-ink);font-size:15px}
-.island-skill-detail>.kit-button{justify-self:start;min-width:140px}
-.island-skills-how{color:var(--u-mute);font-size:15px}
-.island-weapon.is-equipped{border-color:var(--u-gold)}
-/* The role card (docs/GAME-V3.md "Captain tree and roles"): three roles side by side, one line, one button. */
-.island-role{display:grid;gap:var(--u-2);padding:var(--u-3);background:linear-gradient(#24575f,var(--u-card)) var(--u-card);border:2px solid var(--u-gold);border-radius:var(--u-radius-sm,14px);box-shadow:var(--u-bevel-quiet,0 3px var(--u-deep))}
-.island-role-title{margin:0;display:flex;align-items:center;gap:var(--u-2);font:800 var(--u-lg)/1.2 var(--u-font);color:var(--u-gold)}
-.island-role-icon{font-size:24px;line-height:1}
-.island-role-lead,.island-role-line,.island-role-capstone{margin:0;color:var(--u-ink);font-size:15px}
-.island-role-capstone{color:var(--u-mute)}
+/* The skill tree and the Tech hub as real trees (skill-tree.js): a big card, round tiles joined by lines from a
+   root plate at the bottom, a short name and a price per tile, and one detail panel with one big button.
+   Learned = gold disc, can learn = glowing gold ring, locked = dim with a lock, a closed fork twin = faded ✕.
+   A desktop shows the tree left and the panel right; under 900 px the panel sticks to the bottom; under 640 px
+   one branch shows at a time (the branch buttons). */
+.kit-modal.island-card.island-card-wide{width:min(1100px,94vw);max-height:92dvh}
+.island-tree-card{--disc:56px;--row:88px;display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,300px);grid-template-rows:auto auto auto auto auto 1fr;
+  grid-template-areas:"tree top" "tree detail" "tree msg" "tree role" "tree respec" "tree coins";gap:var(--u-3) var(--u-5);align-items:start;min-width:0}
+/* The Tech hub has three tiers, so they get more room; its four branches get a slimmer panel. */
+.island-tech{--disc:60px;--row:116px;grid-template-columns:minmax(0,1fr) minmax(240px,270px)}
+.island-tree-top{grid-area:top;display:grid;gap:var(--u-2);justify-items:start}
+.island-tree-card>.island-tree{grid-area:tree}
+.island-tree-card>.island-skill-detail{grid-area:detail}
+.island-tree-card>.island-message{grid-area:msg}
+.island-tree-card>.island-role{grid-area:role}
+.island-tree-card>.island-respec{grid-area:respec}
+.island-tree-card>.island-coins{grid-area:coins}
+.island-tree-card>.island-branch-tabs{display:none}
+.island-points{margin:0;display:flex;align-items:center;gap:var(--u-2);padding:6px 16px 6px 10px;font:800 var(--u-xl)/1.2 var(--u-font);color:var(--u-gold);
+  background:var(--u-deep);border:2px solid var(--u-brass);border-radius:999px}
+.island-points::before{content:'⭐';font-size:26px}
+.island-points.has-points{box-shadow:0 0 0 3px #f6d27a40,0 0 18px #f6d27a66}
+.island-skills-how{color:var(--u-mute);font-size:14px;line-height:1.35}
+.island-legend{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:4px 14px;color:var(--u-mute);font:700 13px/1.4 var(--u-font)}
+.island-legend-item{display:flex;align-items:center;gap:6px}
+.island-legend-dot{width:14px;height:14px;border-radius:50%;box-sizing:border-box;border:2px solid var(--u-line);background:var(--u-deep)}
+.island-legend-item.is-learned .island-legend-dot{background:var(--u-gold);border-color:var(--u-brass)}
+.island-legend-item.is-ready .island-legend-dot{border-color:var(--u-gold);box-shadow:0 0 6px var(--u-gold)}
+.island-legend-item.is-locked .island-legend-dot{opacity:.6}
+.island-tech-next{margin:0;padding:var(--u-2) var(--u-3);background:var(--u-parch);color:var(--u-pink);border:2px solid var(--u-brown);border-radius:var(--u-radius-xs);font-weight:800;font-size:16px;line-height:1.35}
+/* The tree: the branches side by side, each a plot of tiers (the root at the bottom) over its lines. */
+.island-tree{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:var(--u-3);min-width:0;padding:var(--u-3) var(--u-2) var(--u-2);
+  background:radial-gradient(ellipse at 50% 100%,#2f6b5a66,transparent 70%),var(--u-deep);border:2px solid #0b2a31;border-radius:var(--u-radius-sm)}
+.island-branch{display:flex;flex-direction:column;align-items:stretch;min-width:0}
+.island-branch-plot{position:relative;order:1}
+.island-branch-head{order:2;align-self:center;margin:6px 0 0;display:flex;align-items:center;gap:5px;max-width:100%;box-sizing:border-box;padding:3px 10px;
+  background:var(--u-card);border:2px solid var(--u-brass);border-radius:999px;box-shadow:var(--u-bevel-quiet);white-space:nowrap}
+.kit-modal.island-card.island-card-wide .kit-modal-body h3.island-branch-head{font:800 14px/1.3 var(--u-font);color:var(--u-ink)}
+.island-branch-icon{font-size:18px;line-height:1}
+.island-branch-name{overflow:hidden;text-overflow:ellipsis}
+.island-branch-flag{padding:0 6px;border-radius:999px;background:var(--u-deep);color:var(--u-gold);font-size:12px}
+.island-branch-lines{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.island-branch-lines path{fill:none;stroke:var(--u-line);stroke-width:4;stroke-linejoin:round;vector-effect:non-scaling-stroke;opacity:.45}
+.island-branch-lines path.is-open{stroke:var(--u-gold);stroke-dasharray:7 6;opacity:.9}
+.island-branch-lines path.is-on{stroke:var(--u-gold);opacity:1}
+.island-branch-nodes{position:relative;list-style:none;margin:0;padding:0;display:grid;grid-template-rows:repeat(5,var(--row))}
+.island-branch-nodes.has-3{grid-template-rows:repeat(3,var(--row))}
+.island-branch-nodes>[data-tier="1"]{grid-row:-2}
+.island-branch-nodes.has-5>[data-tier="2"]{grid-row:4}
+.island-branch-nodes.has-5>[data-tier="3"]{grid-row:3}
+.island-branch-nodes.has-3>[data-tier="2"]{grid-row:2}
+.island-branch-nodes.has-5>[data-tier="4"]{grid-row:2}
+.island-branch-nodes.has-5>[data-tier="5"],.island-branch-nodes.has-3>[data-tier="3"]{grid-row:1}
+.island-tier{position:relative;display:grid;grid-template-columns:minmax(0,1fr);place-items:center;min-width:0}
+.island-tier.is-fork{grid-template-columns:repeat(2,minmax(0,1fr))}
+.island-fork-or{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);padding:0 6px;border-radius:8px;background:var(--u-deep);color:var(--u-mute);font:800 12px/1.5 var(--u-font);pointer-events:none}
+/* A tile: the button is the disc (≥ 44 px); the name hangs under it on a dark slip. */
+.island-node{position:relative;width:var(--disc);height:var(--disc);padding:0;margin:0;border:0;background:none;color:var(--u-ink);font:inherit;cursor:pointer;border-radius:50%;-webkit-tap-highlight-color:transparent}
+.island-node:focus-visible{outline:3px solid #fff;outline-offset:6px}
+.island-node-icon{position:absolute;inset:0;display:grid;place-items:center;box-sizing:border-box;border-radius:50%;font-size:calc(var(--disc) * .46);line-height:1;
+  background:radial-gradient(circle at 35% 30%,#2f6a70,var(--u-card) 70%);border:3px solid var(--u-line);box-shadow:var(--u-bevel-quiet);transition:transform .12s}
+.island-node:hover .island-node-icon{transform:scale(1.06)}
+.island-node-name{position:absolute;top:calc(100% + 5px);left:50%;transform:translateX(-50%);width:max-content;max-width:var(--label,118px);padding:1px 7px;
+  font:700 13px/1.25 var(--u-font);text-align:center;color:var(--u-ink);background:#061a1fe6;border-radius:6px;pointer-events:none}
+.island-node-mark,.island-node-cost,.island-node-role{position:absolute;display:grid;place-items:center;box-sizing:border-box;font:800 12px/1 var(--u-font);border-radius:999px}
+.island-node-mark{top:-6px;right:-6px;width:22px;height:22px;background:var(--u-deep);border:2px solid var(--u-line);color:var(--u-ink)}
+.island-node-cost{bottom:-6px;right:-14px;min-width:28px;height:20px;padding:0 5px;white-space:nowrap;background:var(--u-parch);color:var(--u-pink);border:2px solid var(--u-brown)}
+.island-node-role{top:-6px;left:-8px;width:24px;height:24px;font-size:14px;background:var(--u-parch);border:2px solid var(--u-brown)}
+.island-node-mark[hidden],.island-node-cost[hidden]{display:none}
+.island-node.is-learned .island-node-icon{background:radial-gradient(circle at 35% 30%,#fff3c4,var(--u-gold) 48%,#c8902f);border-color:#fff0bf;box-shadow:0 0 0 3px var(--u-brass),0 4px 10px #04161b80}
+.island-node.is-learned .island-node-mark{background:#3b8a3a;border-color:#c9f0a0;color:#fff}
+.island-node.is-learned .island-node-name{color:var(--u-gold)}
+.island-node.is-ready .island-node-icon{background:radial-gradient(circle at 35% 30%,#3d7c80,var(--u-raise) 70%);border-color:var(--u-gold);animation:island-node-glow 1.6s ease-in-out infinite alternate}
+.island-node.is-locked .island-node-icon{filter:grayscale(.85) brightness(.75);opacity:.7}
+.island-node.is-locked .island-node-name{color:var(--u-mute)}
+.island-node.is-closed .island-node-icon{filter:grayscale(1);opacity:.35;border-style:dashed}
+.island-node.is-closed .island-node-name{color:var(--u-mute);text-decoration:line-through;opacity:.7}
+.island-node.is-capstone{width:calc(var(--disc) + 10px);height:calc(var(--disc) + 10px)}
+.island-node.is-capstone .island-node-icon{border-radius:30%;border-width:4px}
+.island-node.is-picked .island-node-icon{outline:3px solid #fff;outline-offset:4px}
+@keyframes island-node-glow{from{box-shadow:0 0 0 2px #f6d27a55,0 0 8px #f6d27a55}to{box-shadow:0 0 0 5px #f6d27a66,0 0 22px #f6d27acc}}
+@media(prefers-reduced-motion:reduce){.island-node.is-ready .island-node-icon{animation:none;box-shadow:0 0 0 4px #f6d27a66,0 0 16px #f6d27a99}.island-node-icon{transition:none}}
+/* The detail panel: the picked tile, one line in numbers, the reason if any, and one big button. */
+.island-skill-detail{display:grid;gap:10px;padding:var(--u-3) var(--u-4) var(--u-4);background:linear-gradient(#24575f,var(--u-card)) var(--u-card);border:2px solid var(--u-brass);border-radius:var(--u-radius-sm);box-shadow:var(--u-bevel-quiet)}
+.island-skill-detail p{margin:0}
+.island-skill-detail-head{display:flex;align-items:center;gap:var(--u-3);min-width:0}
+.island-skill-detail .island-node-icon{position:relative;flex:none;width:58px;height:58px;font-size:28px}
+.island-skill-detail.is-learned .island-node-icon{background:radial-gradient(circle at 35% 30%,#fff3c4,var(--u-gold) 48%,#c8902f);border-color:#fff0bf}
+.island-skill-detail.is-ready .island-node-icon{border-color:var(--u-gold)}
+.island-skill-detail:is(.is-locked,.is-closed) .island-node-icon{filter:grayscale(.85);opacity:.7}
+.island-skill-detail-title{display:grid;min-width:0}
+.island-skill-detail-title strong{font:800 var(--u-lg)/1.2 var(--u-font);color:var(--u-gold);overflow-wrap:anywhere}
+.island-skill-detail-cost{color:var(--u-mute);font-size:14px}
+.island-skill-line{color:var(--u-ink);font-size:17px;line-height:1.4}
+.island-skill-note{color:var(--u-mute);font-size:14px;font-weight:700}
+.island-skill-detail .island-reason{color:var(--u-rust);font-size:15px}
+.island-skill-detail>.kit-button.island-primary{justify-self:stretch;min-height:56px;font-size:var(--u-lg)}
+/* The role: three tiles, the picked role's line and its button. */
+.island-role{display:grid;gap:var(--u-2);padding:var(--u-3);background:var(--u-card);border:2px solid var(--u-line);border-radius:var(--u-radius-sm)}
+.kit-modal.island-card.island-card-wide .kit-modal-body h3.island-role-title{margin:0;display:flex;align-items:center;gap:var(--u-2);font:800 var(--u-md)/1.2 var(--u-font);color:var(--u-gold)}
+.island-role-icon{font-size:22px;line-height:1}
+.island-role-lead,.island-role-line,.island-role-capstone{margin:0;color:var(--u-ink);font-size:15px;line-height:1.4}
+.island-role-capstone{color:var(--u-mute);font-size:14px}
 .island-role-choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.island-role-choice{min-height:72px;display:grid;justify-items:center;align-content:center;gap:2px;padding:6px 4px;font:700 14px/1.2 var(--u-font);color:var(--u-ink);text-align:center;cursor:pointer;background:var(--u-card);border:2px solid var(--u-line);border-radius:var(--u-radius-xs,10px);box-shadow:var(--u-bevel-quiet,0 3px var(--u-deep))}
+.island-role-choice{min-height:64px;display:grid;justify-items:center;align-content:center;gap:2px;padding:6px 4px;font:700 14px/1.2 var(--u-font);color:var(--u-ink);text-align:center;cursor:pointer;background:var(--u-deep);border:2px solid var(--u-line);border-radius:var(--u-radius-xs);box-shadow:var(--u-bevel-quiet)}
 .island-role-choice:focus-visible{outline:3px solid var(--u-gold);outline-offset:2px}
 .island-role-choice-icon{font-size:26px;line-height:1.1}
-.island-role-choice-branch{color:var(--u-mute);font-size:12px}
 .island-role-choice.is-ready{border-color:var(--u-gold)}
-.island-role-choice.is-picked{outline:3px solid var(--u-gold);outline-offset:-1px}
-.island-role-choice.is-locked,.island-role-choice.is-closed{background:var(--u-deep);color:var(--u-mute)}
-.island-role-choice.is-closed:not(.is-picked){opacity:.55}
-.island-role-choice.is-picked.is-picked{background:#3b5a2c;border-color:#9fd26a;color:var(--u-ink)}
-.island-role>.kit-button{justify-self:start;min-width:160px}
-.island-respec{display:grid;gap:6px;justify-items:start;padding-top:var(--u-2);border-top:2px solid var(--u-line)}
-@media(max-width:400px){.island-card-captain.kit-modal{padding:0 14px 16px}.island-tree{gap:4px}.island-skill{font-size:13px;padding:6px 2px}.island-card.island-card-captain.kit-modal .kit-modal-body h3.island-branch-head{font-size:14px}}
+.island-role-choice.is-shown{outline:3px solid #fff;outline-offset:2px}
+.island-role-choice.is-locked,.island-role-choice.is-closed{color:var(--u-mute)}
+.island-role-choice.is-locked .island-role-choice-icon{filter:grayscale(.85);opacity:.7}
+.island-role-choice.is-closed:not(.is-shown){opacity:.5}
+.island-role-choice.is-picked{background:radial-gradient(circle at 50% 30%,#fff3c4,var(--u-gold) 60%,#c8902f);border-color:#fff0bf;color:var(--u-pink)}
+.island-role>.kit-button{justify-self:stretch}
+.island-respec{display:grid;gap:6px;justify-items:start}
+.island-respec p{margin:0}
+.island-respec-line{color:var(--u-mute);font-size:14px;line-height:1.35}
+.island-respec .island-reason{font-size:14px}
+.island-branch-tab{min-height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:4px 2px;font:700 13px/1.2 var(--u-font);color:var(--u-ink);
+  background:var(--u-card);border:2px solid var(--u-line);border-radius:var(--u-radius-xs);cursor:pointer;min-width:0;overflow:hidden}
+.island-branch-tab>span:last-child{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.island-branch-tab.is-current{background:var(--u-raise);border-color:var(--u-gold);color:var(--u-gold);box-shadow:0 0 0 2px #f6d27a44}
+.island-branch-tab:focus-visible{outline:3px solid var(--u-gold);outline-offset:2px}
+/* Under 900 px: one column, the detail panel stuck to the bottom of the card. */
+@media(max-width:900px){
+  .island-tree-card{grid-template-columns:minmax(0,1fr);grid-template-rows:none;grid-template-areas:"top" "tabs" "tree" "detail" "msg" "role" "respec" "coins"}
+  .island-tree-card>.island-skill-detail{position:sticky;bottom:0;z-index:3;box-shadow:0 -10px 24px #04161bcc}
+}
+/* Under 640 px: the card fills the screen, and one branch shows at a time. */
+@media(max-width:640px){
+  .kit-modal.island-card.island-card-wide[open]{width:calc(100vw - 12px);max-width:none;max-height:calc(100dvh - 12px);padding:0 12px 12px}
+  .kit-modal.island-card.island-card-wide .kit-modal-header{margin:0 -12px 12px}
+  .island-tree-card{--disc:56px;--row:92px;--label:140px}
+  .island-node{scroll-margin:16px 0 240px}
+  .island-branch-tab{font-size:12px}
+  .island-tree-card>.island-branch-tabs{grid-area:tabs;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:6px}
+  .island-tree>.island-branch:not(.is-current){display:none}
+  .island-tree-top{grid-template-columns:auto minmax(0,1fr);align-items:center;column-gap:var(--u-3)}
+  .island-tree-top>:is(.island-skills-how,.island-tech-next,.island-campaign-locked){grid-column:1/-1}
+  .island-tree-top>.island-legend{gap:2px 10px;font-size:12px}
+  .island-points{font-size:var(--u-lg)}
+  .island-skill-detail{padding:10px var(--u-3) var(--u-3);gap:8px}
+  .island-skill-detail .island-node-icon{width:48px;height:48px;font-size:24px}
+  .island-skill-line{font-size:16px}
+}
 /* The game's lobby (docs/GAME-V3.md §2): the code, the link and QR, the players with who is online, Start. */
 .island-card-lobby.kit-modal{width:min(480px,calc(100vw - 32px))}
 .island-lobby-code{justify-self:center;border-radius:var(--u-radius-sm,14px);box-shadow:var(--u-lift,none);padding:var(--u-2) var(--u-4);font:800 30px/1.2 var(--u-font);letter-spacing:2px;color:var(--u-pink);background:var(--u-parch);border:2px solid var(--u-brown);text-align:center}
@@ -171,18 +255,20 @@
 .island-card-body.is-locked .island-soon{opacity:1;font-weight:700;color:var(--u-ink)}
 .island-campaign-locked{display:flex;align-items:center;gap:var(--u-3);padding:var(--u-3);background:var(--u-deep);border:2px dashed var(--u-line);border-radius:var(--u-radius-xs)}
 .island-campaign-lock{font-size:28px;line-height:1}
-.island-skills-pick{display:grid;gap:var(--u-2);padding:var(--u-3);background:var(--u-deep);border-left:4px solid var(--u-gold);border-radius:var(--u-radius-xs)}
+.island-skills-pick{display:grid;gap:var(--u-2);padding:var(--u-3);background:var(--u-deep);border:2px solid var(--u-brass);border-radius:var(--u-radius-sm)}
 .island-skills-title{margin:0;font:800 var(--u-md)/1.2 var(--u-font);color:var(--u-gold)}
 .island-skills-line{margin:0;color:var(--u-mute);font-size:15px}
-.island-spec-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:var(--u-2)}
-.island-spec{position:relative;display:grid;gap:2px;text-align:left;padding:10px 12px;min-height:56px;font:16px/1.3 var(--u-font);color:var(--u-ink);background:var(--u-card);border:2px solid var(--u-brass);box-shadow:var(--u-bevel-quiet);border-radius:var(--u-radius-xs);cursor:pointer}
+.island-spec-list{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--u-2)}
+.island-spec{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:10px;row-gap:2px;align-items:center;text-align:left;padding:10px 12px;min-height:56px;font:16px/1.3 var(--u-font);color:var(--u-ink);background:var(--u-card);border:2px solid var(--u-brass);box-shadow:var(--u-bevel-quiet);border-radius:var(--u-radius-xs);cursor:pointer}
 .island-spec:hover:not(:disabled){background:var(--u-raise)}
 .island-spec:focus-visible{outline:3px solid var(--u-gold);outline-offset:3px}
 .island-spec:disabled{cursor:default}
 .island-spec.is-active{border-color:var(--u-gold);background:var(--u-raise)}
-.island-spec-line{color:var(--u-mute);font-size:14px}
+.island-spec-line{grid-column:2;color:var(--u-mute);font-size:14px}
+.island-spec-icon{grid-row:span 2;display:grid;place-items:center;width:40px;height:40px;border-radius:50%;font-size:20px;line-height:1;background:var(--u-deep);border:2px solid var(--u-line)}
+.island-spec.is-active .island-spec-icon{background:radial-gradient(circle at 35% 30%,#fff3c4,var(--u-gold) 48%,#c8902f);border-color:#fff0bf}
 .island-spec-mark{position:absolute;top:6px;right:10px;color:var(--u-gold);font-weight:800}
-.island-stalls,.island-research{list-style:none;margin:0;padding:0;display:grid;gap:var(--u-2)}
+.island-stalls{list-style:none;margin:0;padding:0;display:grid;gap:var(--u-2)}
 .island-stall{display:flex;align-items:center;justify-content:space-between;gap:var(--u-3);padding:var(--u-2) var(--u-3);background:var(--u-card);border:2px solid var(--u-line);border-radius:var(--u-radius-xs)}
 .island-card-harbor .island-stall{flex-direction:column;align-items:stretch}
 .island-stall.is-locked{border-style:dashed}
@@ -191,44 +277,6 @@
 .island-stall-line{color:var(--u-mute);font-size:15px}
 .island-stall-reason{color:var(--u-ink);font-size:14px;font-weight:700}
 .island-stall .kit-button{flex:none;min-width:0;white-space:nowrap}
-/* The Tech hub (docs/GAME-V3.md §5.1): the next step on a gold slip; one folding row per tower kind; inside,
-   the three tiers as a short path from top to bottom (a dot per tier on a line, gold once done), tiers 2 and 3
-   a fork of two nodes side by side: the chosen one lit gold, the closed one greyed, a locked one dashed. */
-.island-tech-next{padding:var(--u-2) var(--u-3);background:var(--u-parch);color:var(--u-pink);border:2px solid var(--u-brown);border-radius:var(--u-radius-xs);font-weight:800}
-.island-research-branch{background:var(--u-card);border:2px solid var(--u-line);border-radius:var(--u-radius-xs)}
-.island-research-branch.is-done{border-color:var(--u-gold)}
-.island-research-branch.is-next{border-color:var(--u-brass);box-shadow:var(--u-bevel-quiet)}
-.island-research-summary{display:flex;align-items:center;justify-content:space-between;gap:var(--u-2);min-height:44px;padding:6px var(--u-3);cursor:pointer;list-style:none}
-.island-research-summary::-webkit-details-marker{display:none}
-.island-research-summary::before{content:'▸';color:var(--u-gold);font-weight:800}
-.island-research-branch[open]>.island-research-summary::before{content:'▾'}
-.island-research-summary:focus-visible{outline:3px solid var(--u-gold);outline-offset:2px}
-.island-research-name{flex:1;min-width:0}
-.island-research-flag{flex:none;padding:2px 8px;background:var(--u-gold);color:var(--u-deep);font:800 13px/1.3 var(--u-font);border-radius:999px}
-.island-research-step-path{list-style:none;margin:0;padding:0 var(--u-3) var(--u-3);display:grid;gap:var(--u-3)}
-.island-research-step{position:relative;display:grid;gap:6px;padding-left:34px}
-.island-research-step::before{content:'';position:absolute;left:12px;top:26px;bottom:calc(-1 * var(--u-3));width:4px;border-radius:2px;background:var(--u-line)}
-.island-research-step:last-child::before{display:none}
-.island-research-step.is-done::before{background:var(--u-gold)}
-.island-research-step-head{display:flex;align-items:center;gap:var(--u-2);margin:0}
-.island-research-step-dot{position:absolute;left:0;top:0;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;font:800 14px/1 var(--u-font);background:var(--u-deep);color:var(--u-mute);border:3px solid var(--u-line);box-sizing:border-box}
-.island-research-step.is-done .island-research-step-dot{background:var(--u-gold);border-color:var(--u-brass);color:var(--u-deep)}
-.island-research-step.is-next .island-research-step-dot{background:var(--u-parch);border-color:var(--u-gold);color:var(--u-pink)}
-.island-research-step-state{color:var(--u-mute);font-size:14px}
-.island-research-step.is-next .island-research-step-state{color:var(--u-gold);font-weight:800}
-.island-research-options{display:grid;gap:var(--u-2)}
-.island-research-step.is-fork .island-research-options{grid-template-columns:repeat(2,minmax(0,1fr))}
-.island-research-option{display:grid;align-content:start;gap:4px;min-width:0;padding:8px 10px;background:var(--u-deep);border:2px solid var(--u-line);border-radius:var(--u-radius-xs);font-size:15px;line-height:1.3}
-.island-research-option.is-open{border-color:var(--u-brass);background:var(--u-raise)}
-.island-research-option:is(.is-done,.is-chosen){border-color:var(--u-gold);background:var(--u-raise);box-shadow:0 0 0 2px #f3c35c55}
-.island-research-option.is-closed{opacity:.62;filter:grayscale(.7)}
-.island-research-option.is-locked{border-style:dashed;opacity:.8}
-.island-research-step-name{color:var(--u-ink)}
-.island-research-option:is(.is-done,.is-chosen) .island-research-step-name{color:var(--u-gold)}
-.island-research-step-line{color:var(--u-mute);font-size:14px}
-.island-research-step-note{color:var(--u-ink);font-size:14px;font-weight:700}
-.island-research-step-reason{margin:0;color:var(--u-rust);font-size:13px}
-.island-research-option .kit-button{min-width:0;min-height:44px;padding:6px 10px;font-size:15px;white-space:normal}
 .island-wreck-bar{height:18px;background:var(--u-deep);border:2px solid var(--u-line);border-radius:999px;overflow:hidden}
 .island-wreck-fill{display:block;height:100%;background:var(--u-gold);border-radius:999px;transition:width .3s}
 .island-wreck-progress{margin:0;color:var(--u-ink);font-weight:700}

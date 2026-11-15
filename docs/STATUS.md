@@ -584,6 +584,7 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 
 ## Log
 
+- **15 Nov — Nils with Claude / skill tree visual:** `feat/skill-tree-visual` redraws the captain's skill tree and the Tech hub as real trees (round tiles, lines from the root, one detail panel with one big button; wide card, one branch at a time on phones); rules, prices and server calls unchanged ([walkthrough](WALKTHROUGH.md#the-skill-tree-and-the-tech-hub-as-real-trees--nils-with-claude-15-nov)). 3,283 of 3,285 frontend tests pass; the two timeouts (`nearby-game`, `shortcuts-loading`) fail the same on main; build, budget and loading checks pass. Not merged; human review pending.
 - **14 Nov 2026 · Johannes / PR #58 conflict resolution:** integrated main `53a59d4` on `fix/b2-phone-controls`; retained teammate content and reran client checks. Exact results and limits: [task handover](../specs/B2-phone-controls.md#main-integration-and-conflict-resolution-14-nov-2026). Updated branch awaits independent review; no main merge.
 
 - **14 Nov — Johannes / B2:** four island actions measured 40px before / 44px after at both phone sizes and desktop; four browser cases, 3,206 frontend tests, build/budget/text lint, 33-screen accessibility and 33-check demo pass; draft #58, physical phone/full B2 remain open.
