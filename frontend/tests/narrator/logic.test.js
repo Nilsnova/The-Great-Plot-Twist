@@ -84,8 +84,8 @@ describe('line selection', () => {
     expect(finishTriggers(100, true)).toEqual(['victory']);
     expect(finishTriggers(4, false)).toEqual(['wave_lost']);
     expect(finishTriggers(null, true)).toEqual(['wave_won']);
-    // A wave that opens something (4, 12) waits for its unlock lines; 9 opens nothing, 11 is not every third.
-    expect([wonLineDue(4), wonLineDue(9), wonLineDue(11), wonLineDue(12), wonLineDue(21)]).toEqual([false, true, false, false, true]);
+    // A wave that opens something (4, 12) waits for its unlock lines; 18 opens nothing, 11 is not every third.
+    expect([wonLineDue(4), wonLineDue(18), wonLineDue(11), wonLineDue(12), wonLineDue(21)]).toEqual([false, true, false, false, true]);
   });
   it('gives a caption without audio a reading time between 3 and 11 seconds', () => {
     expect(readingMs('Hi.')).toBe(3000);

@@ -1,0 +1,12 @@
+{
+  "about": "Tower upgrade trees (decision D055): after level 5 a tower of one of these kinds grows on in two paths of three tiers (path a: it fires faster; path b: it hits harder). One path may reach tier 3; once a path is past tier 1 the other stays at tier 1 at most. A tier needs level 5, the tier before it on its path, the island's best won wave of the campaign id in 'steps' (campaign.json: tree_1, tree_2, tree_3) and its price in coins, paid once by the player who clicks (ledger reason tower_tree, ref towertree:<actionUid>). prices: tiers 1, 2 and 3, the same for both paths of a kind. The numbers the sim fights with, the names and the glyphs are in frontend/src/pirates/tower-trees.js; a frontend test keeps prices, ids and names equal. A kind that is not in the island's catalogue (the culverin while the flag defenses_v2 is off) is skipped.",
+  "steps": ["tree_1", "tree_2", "tree_3"],
+  "level": 5,
+  "kinds": [
+    {"kind": "cannon", "prices": [1000, 2200, 4800], "a": {"id": "drill", "name": "Drill"}, "b": {"id": "powder", "name": "Powder"}},
+    {"kind": "mortar", "prices": [1200, 2600, 5600], "a": {"id": "loaders", "name": "Loaders"}, "b": {"id": "big_shells", "name": "Big shells"}},
+    {"kind": "harpoon", "prices": [700, 1500, 3200], "a": {"id": "winch", "name": "Winch"}, "b": {"id": "barbs", "name": "Barbs"}},
+    {"kind": "culverin", "prices": [1400, 2800, 6000], "a": {"id": "rammers", "name": "Rammers"}, "b": {"id": "long_bore", "name": "Long bore"}},
+    {"kind": "swivel", "prices": [900, 2000, 4400], "a": {"id": "oiled", "name": "Oiled"}, "b": {"id": "scatter", "name": "Scatter"}}
+  ]
+}

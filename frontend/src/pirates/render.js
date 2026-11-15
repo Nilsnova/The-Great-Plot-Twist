@@ -21,7 +21,7 @@
 // fallen captain lies in their lobby colour (captain-down-1…10, src/art/people.js) inside a pulsing red ring
 // on the ground, and the ring fills with gold dots while you hold E to help them up.
 import * as THREE from 'three';
-import { CULVERIN_ART, FIRE_ART, HARPOON_ART, TIER_ART, crewArt, fireArt, levelArt, pipRow, pirateDimensions, pirateFrames, pirateLevels } from '../pixel/pirate-catalog.js';
+import { CULVERIN_ART, FIRE_ART, HARPOON_ART, SWIVEL_ART, TIER_ART, crewArt, fireArt, levelArt, pipRow, pirateDimensions, pirateFrames, pirateLevels } from '../pixel/pirate-catalog.js';
 // T33 (D049, proposed): the damaged and broken tower drawings, used only while the wave has tower health.
 import { TOWER_KINDS, towerStateFrame } from '../art/tower-states.js';
 import { towerLook } from './tower-health.js';
@@ -119,6 +119,9 @@ export const TOWER_STATE_IDS = TOWER_KINDS.flatMap(kind => [1, 2, 3, 4, 5].flatM
 // A pixel atlas has none and draws a cannon instead.
 export const CULVERIN_IDS = [...CULVERIN_ART.levels, ...CULVERIN_ART.fire, CULVERIN_ART.shot];
 export const CULVERIN_STATE_IDS = [...CULVERIN_ART.damaged, ...CULVERIN_ART.broken];
+// The swivel-gun nest (D055), the same way: only in the atlas of a wave that fights with one (loadAtlas swivels).
+export const SWIVEL_IDS = [...SWIVEL_ART.levels, ...SWIVEL_ART.fire, SWIVEL_ART.shot];
+export const SWIVEL_STATE_IDS = [...SWIVEL_ART.damaged, ...SWIVEL_ART.broken];
 /**
  * The frame of a cannon or mortar post: its level's art, or while it fires its level's firing frame (so a
  * level-3 cannon does not flick to level 1's plain barrel, nor a level-5 one lose its gold). has(id) says
@@ -133,8 +136,9 @@ export function towerFrame(kind, level, firing = false, has = () => true, state 
     if (has(id)) return id;
     if (state === 'broken') firing = false;
   }
-  if (kind === 'culverin') { // cartoon-only, like the harpoon: a pixel atlas has no culverin, so a cannon stands in
-    const n = Math.max(1, Math.min(5, Number.isInteger(level) ? level : 1)), id = (firing ? CULVERIN_ART.fire : CULVERIN_ART.levels)[n - 1];
+  if (kind === 'culverin' || kind === 'swivel') { // cartoon-only, like the harpoon: a pixel atlas has neither, so a cannon stands in
+    const art = kind === 'swivel' ? SWIVEL_ART : CULVERIN_ART;
+    const n = Math.max(1, Math.min(5, Number.isInteger(level) ? level : 1)), id = (firing ? art.fire : art.levels)[n - 1];
     return has(id) ? id : towerFrame('cannon', level, firing, has);
   }
   if (kind === 'harpoon') { // cartoon-only: a pixel atlas has no harpoon, so a cannon stands in
@@ -152,12 +156,13 @@ const BOARDER_ART = Object.freeze({ walk: ['boarder-walk-1', 'boarder-walk-2'], 
  * only; cached by the caller): linear filtering with mipmaps, premultiplied alpha, at the screen's
  * density within the atlas budget. rects, width and height stay in logical px (16 per world unit).
  */
-export async function loadAtlas({ quality = 'high', colour = 0, towerStates = false, culverins = false } = {}) {
+export async function loadAtlas({ quality = 'high', colour = 0, towerStates = false, culverins = false, swivels = false } = {}) {
   const { cartoonAtlas, smoothTexture } = await import('../art/textures.js');
   const { setPoseColour } = await import('../art/people.js');
   setPoseColour(colour); // your captain's musket and cutlass poses in your lobby colour
   const ids = [...new Set([...ATLAS_IDS.filter(id => !PIXEL_ONLY_IDS.includes(id)), ...CARTOON_EXTRA_IDS, ...TIER_IDS, ...FIRE_LEVEL_IDS, ...HARPOON_IDS, ...GUNBOAT_IDS,
-    ...(towerStates ? TOWER_STATE_IDS : []), ...(culverins ? CULVERIN_IDS : []), ...(culverins && towerStates ? CULVERIN_STATE_IDS : [])])];
+    ...(towerStates ? TOWER_STATE_IDS : []), ...(culverins ? CULVERIN_IDS : []), ...(culverins && towerStates ? CULVERIN_STATE_IDS : []),
+    ...(swivels ? SWIVEL_IDS : []), ...(swivels && towerStates ? SWIVEL_STATE_IDS : [])])];
   const atlas = await cartoonAtlas(ids, { quality, extra: [[WHITE, 8, 8]] });
   const white = atlas.rects[WHITE], context = atlas.image.getContext('2d');
   context.fillStyle = '#fff'; context.fillRect(white.x * atlas.density, white.y * atlas.density, white.w * atlas.density, white.h * atlas.density);
@@ -313,7 +318,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   });
   // A one-layer post per wall, cannon and mortar (the sprite, its level pips and its crew figure); the
   // watchtower gets one only for the lookout.
-  const hasPost = item => ['wall', 'cannon', 'mortar', 'harpoon', 'culverin', 'watchtower'].includes(item.kind);
+  const hasPost = item => ['wall', 'cannon', 'mortar', 'harpoon', 'culverin', 'swivel', 'watchtower'].includes(item.kind);
   const levelOf = item => (Number.isInteger(item.level) ? Math.max(1, Math.min(5, item.level)) : 1);
   // A level's art, or level 3's when the atlas has no tier frame (the pixel atlas).
   const levelFrame = (kind, level) => { const id = levelArt(kind, level); return rect[id] ? id : pirateLevels[kind][Math.min(3, level) - 1]; };
@@ -452,6 +457,19 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         if (!low() && !still()) spark(mx, my, { count: 12, speed: [.4, 1.4], angle: Math.PI / 2, spread: 1.8, gravity: -.8, life: [.6, 1.2], colour: '#d9d6c8', size: [1, 2] });
         effects()?.bloom(mx, my, { radius: 1.4, life: .45, colour: '#ffcf6a' });
         effects()?.ring(mx, my, { radius: 1.6, life: .6, colour: '#e8e4d8' });
+        break;
+      }
+      case 'swivel_fired': {
+        // The swivel-gun nest (D055): a quick spray of pellets at the boarders (one streak per pellet), a small fan of flashes.
+        const flip = event.toX < event.x, n = Math.max(1, Math.min(6, event.pellets ?? 3)), d = Math.hypot(event.toX - event.x, event.toZ - event.z);
+        for (let k = 0; k < n; k++) {
+          const side = (k - (n - 1) / 2) * .45;
+          balls.add(item => Object.assign(item, { x: event.x, z: event.z, toX: event.toX + side * .6, toZ: event.toZ + side, from: event.t, to: event.t + Math.max(.08, d / 40),
+            hit: true, enemy: false, splashed: false, manual: false, swivel: true }));
+        }
+        fire.set(event.towerId, { until: clock + FIRE_SECONDS * .8, flip });
+        const post = posts.find(item => item.id === event.towerId); if (post) post.flip = flip;
+        effects()?.bloom(event.x + (flip ? -1.3 : 1.3), drawnY(event.z) + 1.2, { radius: .7, life: .2, colour: '#ffd98a' });
         break;
       }
       case 'ship_slowed': {
@@ -734,8 +752,21 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     if (!still()) layers.air.push(rect[WHITE], x, drawnY(z) - .05, .3, .1, .5, 0, { ...DARK, a: .35 });
   }
 
+  // A swivel nest's pellet (D055): a tiny lead ball on a flat, quick line, a short bright streak behind it.
+  function drawPellet(ball) {
+    const span = Math.max(.05, ball.to - ball.from), p = Math.min(1, Math.max(0, (simNow - ball.from) / span)), r = rect[SWIVEL_ART.shot];
+    const x = ball.x + (ball.toX - ball.x) * p, z = ball.z + (ball.toZ - ball.z) * p, y = drawnY(z) + 1.2;
+    if (!still() && p > .1) {
+      const q = p - .1, tx = ball.x + (ball.toX - ball.x) * q, tz = ball.z + (ball.toZ - ball.z) * q;
+      layers.air.push(rect[WHITE], tx, drawnY(tz) + 1.2, .16, .16, .5, .08, { r: 1, g: .94, b: .72, a: .7 });
+    }
+    if (r) layers.air.push(r, x, y, r.w, r.h, .5, r.anchor, { angle: Math.atan2(drawnY(ball.toZ) - drawnY(ball.z), (ball.toX - ball.x) || .001) });
+    else layers.air.push(rect[WHITE], x, y, .2, .2, .5, .1, { r: .36, g: .38, b: .44, a: 1 });
+  }
+
   function drawBall(ball) {
     if (ball.harpoon) { drawHarpoon(ball); return; }
+    if (ball.swivel) { drawPellet(ball); return; }
     if (ball.culverin) { drawCulverinBall(ball); return; }
     const span = Math.max(.05, ball.to - ball.from), p = Math.min(1, Math.max(0, (simNow - ball.from) / span));
     const x = ball.x + (ball.toX - ball.x) * p, z = ball.z + (ball.toZ - ball.z) * p;

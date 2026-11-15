@@ -36,6 +36,7 @@ import {buildCardModel, bellModel, inviteModel, crewModel, captainModel, captain
   harborModel, techModel, wreckModel, demolishModel, refundToast} from './card-model.js';
 import {campaignOf, isOpen, openedBetween, opensText, waveOf} from '../campaign/index.js';
 import {BRANCH_BY_ID, SPECS, optionName, optionsOf} from '../campaign/tech.js';
+import {TOWER_TREES} from '../pirates/tower-trees.js';
 import {ROLES, activeRole, roleRadius} from '../campaign/houses.js';
 import {ROLE_BY_ID, SKILL_BY_ID, WEAPON_BY_ID, WEAPONS, isRole, readSkills, readWeapon} from '../pirates/captain-ids.js';
 import {displayIslandCode, islandCode, islandRoom, storeVisit, readVisit, forgetVisit} from './codes.js';
@@ -58,6 +59,8 @@ export const NEWS_KEY = 'plot_twist_td_news_v1';
 // GAME-V3.md §4: a won wave opened something on the island on screen.
 export const CAMPAIGN_UNLOCKED = 'campaign_unlocked';
 export const TOWER_SPECIALISED = 'tower_specialised';
+// D055: a tier of a tower's upgrade tree was bought on this page: {spot, kind, path, tier}.
+export const TOWER_TREE_BOUGHT = 'tower_tree_bought';
 // A house picked a role (GAME-V3.md "Houses"): {spot, role, first} (first: the first role on this island seen by this page).
 export const HOUSE_ROLE_PICKED = 'house_role_picked';
 export const VISIT_NAMED = 'island_visit_named';
@@ -87,6 +90,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   // D039: the walls of the island on screen (spot -> {health, recoversAt, repairCost}), read when a wall card opens.
   let walls = new Map(), wallsFor = null; // wallsFor: the island code they belong to
   let pickedRole = null, busyRole = false, respecAsk = false, busyRespec = false;
+  // D055: the tile of a tower's tree the player tapped, per spot (the card picks the next step without one).
+  const treePicked = new Map();
   // The games (GAME-V3.md §2): the room state from the wave wiring, the codes joined this page, the lobby.
   let game = null, gameCode = null, lobbyAnswer = null, lobbyProblem = '', lobbyBusy = false, lobbyRead = 0, stopGame = () => {};
   const joined = new Set();
@@ -367,7 +372,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     const model = buildCardModel({spotId, slot: spotById(spotId)?.slot, spot, coins: own?.coins ?? null,
       visitor: !!visiting, ownerName: visiting?.ownerName, busy: busySpot === spotId ? busyKind : false, message: cardMessage || (!island ? ownMessage : ''),
       unlocks: own ? islandUnlocks() : null, prices: own?.prices ?? null, campaign: campaign(), battle: battle && !waveOver,
-      movable: island?.layout?.movable === true, flags: {defenses_v2: defensesV2On() === true}});
+      movable: island?.layout?.movable === true, flags: {defenses_v2: defensesV2On() === true}, treePicked: treePicked.get(spotId) ?? null});
     // D039: a damaged or destroyed wall shows Repair or Rebuild instead of Upgrade (flag wall_recovery).
     const shown = wallsFor !== null && wallsFor === island?.code ? walls.get(spotId) ?? null : null;
     return withWallRecovery(model, {wall: shown, coins: own?.coins ?? null,
@@ -389,7 +394,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     respec: () => void respecCaptain(), respecCancel: () => { respecAsk = false; refreshCard(); },
     buy: id => void buyWeapon(id), equip: id => void equipWeapon(id)};
   const handlers = {build: (spotId, kind) => void build(spotId, kind), upgrade: spotId => void upgrade(spotId), repair: spotId => void repairWall(spotId), hire: () => openCrew(),
-    specialise: (spotId, spec) => void specialise(spotId, spec), demolish: spotId => void askDemolish(spotId), move: spotId => startMove(spotId)};
+    specialise: (spotId, spec) => void specialise(spotId, spec), demolish: spotId => void askDemolish(spotId), move: spotId => startMove(spotId),
+    treeSelect: (spotId, id) => { treePicked.set(spotId, id); cardMessage = ''; refreshCard(); }, tree: (spotId, path, tier) => void buyTree(spotId, path, tier)};
   const demolishHandlers = {confirm: () => void confirmDemolish(), keep: () => { const spot = demolishSpot; demolishSpot = null; if (spot) openBuild(spot); }};
   const demolishCardModel = () => demolishModel({quote: demolishQuote, busy: busyDemolish, message: cardMessage});
   // The campaign's buildings (GAME-V3.md §4, §5): the Harbor, the Tech hub and the wreck.
@@ -604,6 +610,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     if (answer.ok) {
       await took(answer, place);
       if (disposed) return;
+      treePicked.delete(spotId); // the tree card moves on to the next step
       const now = (place === 'point' ? point : place === 'visit' ? visiting : own)?.spots?.find(item => item.id === spotId);
       const name = BUILDINGS[now?.kind]?.name ?? 'Building';
       if (place === 'own') emit({type: ISLAND_UPGRADED, kind: now?.kind, spot: spotId, level: now?.level});
@@ -688,6 +695,25 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
         ui.toast(`${SPECS[spec].name}: this tower fights with it from the next wave.`, 'success');
       }
     } else { cardMessage = answer.message; if (['not_researched', 'not_built', 'wrong_kind', 'house_level', 'insufficient_funds'].includes(answer.code)) await refreshDefended(); }
+    refreshCard();
+  }
+  // D055: one tier of a level-5 tower's upgrade tree, paid by this player; the answer is the island and the room
+  // hears island_changed, so every screen (and the next wave's sim) reads the tree again.
+  async function buyTree(spotId, path, tier) {
+    if (busySpot || isPointSpot(spotId)) return;
+    busySpot = spotId; busyKind = `tree:${path}${tier}`; cardMessage = ''; refreshCard();
+    const answer = await api.towerTree({spot: spotId, path, tier, ...placeCode()});
+    if (disposed) return;
+    busySpot = null; busyKind = null;
+    if (answer.ok) {
+      await landed(answer, spotId);
+      if (disposed) return;
+      treePicked.delete(spotId);
+      const kind = (target()?.spots ?? []).find(item => item.id === spotId)?.kind;
+      emit({type: TOWER_TREE_BOUGHT, spot: spotId, kind, path, tier});
+      const step = TOWER_TREES[kind]?.[path];
+      ui.toast(`${step ? `${step.name} ${'I'.repeat(tier)}` : 'Upgrade'} · ${coinText(own?.coins)}`, 'success');
+    } else { cardMessage = answer.message; if (['not_built', 'needs_level', 'known', 'needs_tier', 'closed', 'locked', 'insufficient_funds'].includes(answer.code)) await refreshDefended(); }
     refreshCard();
   }
   // The reach of the open house card's role, for the ring on the ground (world.js), or null.
@@ -982,7 +1008,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     // Captain colours (GAME-V3.md §7): each member's 0-9 by join order, and your own (src/island/lobby.js).
     colourOf, captainColour,
     openLeaderboard, openInvite, openCrew, openCaptain, openCaptains, openLobby, enterGame, leaveGame, openHarbor, openTechHub, openWreck,
-    specialise, research, giveWreck, askDemolish, confirmDemolish, heardDemolish,
+    specialise, research, giveWreck, askDemolish, confirmDemolish, heardDemolish, buyTree,
     // The campaign of the island on screen (GAME-V3.md §4): {wave, open, locked, later, research, wreck}.
     get campaign() { return campaign(); },
     // The game's room state (src/island/game-room.js), handed in by the wave wiring.

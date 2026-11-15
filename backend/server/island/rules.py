@@ -30,6 +30,9 @@ from server.island.catalogue import (
     RESEARCH_SPECS,
     RESEARCH_TIER_ITEMS,
     RESEARCH_TOP_TIER,
+    TREE_OTHER_MAX,
+    TREE_PATHS,
+    TREE_TIERS,
     Crew,
     IslandCatalogue,
     Kind,
@@ -38,6 +41,7 @@ from server.island.catalogue import (
     Role,
     Skill,
     Spot,
+    TowerTree,
     Weapon,
     Weather,
 )
@@ -59,6 +63,12 @@ class Built:
     kind: str
     level: int
     spec: str | None = None  # the tower skill it picked at the Tech hub (GAME-V3 section 5)
+    # D055: the tiers bought on the two paths of its upgrade tree (0 to 3 each; level 5 only).
+    tree_a: int = 0
+    tree_b: int = 0
+
+    def tree_tier(self, path: str) -> int:
+        return self.tree_a if path == "a" else self.tree_b
 
 
 @dataclass(frozen=True)
@@ -94,6 +104,9 @@ class SpotView:
     # Where the spot stands on the build grid (T36, layout.py); None for Pirate Point's fixed spots.
     x: float | None = None
     z: float | None = None
+    # D055: (a, b), the tiers bought on its upgrade tree, for a built tower of a kind with a tree;
+    # None for everything else.
+    tree: tuple[int, int] | None = None
 
 
 def kind_named(catalogue: IslandCatalogue, kind: str) -> Kind | None:
@@ -135,7 +148,10 @@ def spot_view(
     )
     spec = built.spec if built.spec in allowed else None
     cost = engineer_price(catalogue, kind.coins, role)
-    return SpotView(spot.id, kind.kind, spot.kinds, True, built.level, cost, upgrade, spec)
+    tree = (built.tree_a, built.tree_b) if catalogue.tree_of(kind.kind) is not None else None
+    return SpotView(
+        spot.id, kind.kind, spot.kinds, True, built.level, cost, upgrade, spec, tree=tree
+    )
 
 
 def plan_spots(
@@ -661,6 +677,50 @@ def spot_taken(catalogue: IslandCatalogue, kind: str) -> BuildRefused:
     entry = kind_named(catalogue, kind)
     name = entry.name if entry else "Something"
     return BuildRefused(409, "spot_taken", f"{name} already stands on this spot.")
+
+
+# --- tower upgrade trees (D055) ---
+
+
+def check_tree(
+    catalogue: IslandCatalogue,
+    spot_id: str,
+    path: str,
+    tier: int,
+    built: dict[str, Built],
+    wave: int,
+) -> tuple[Spot, TowerTree, int]:
+    """Check one tier of a tower's upgrade tree and say what it costs. The checks in order:
+    400 bad_tree (a path or tier that does not exist), 404 no_such_spot, 409 not_built, 422 no_tree
+    (a kind without a tree), 409 needs_level (below level 5), 409 known (bought already), 409
+    needs_tier (the tier before it first), 409 closed (the other path is past tier 1), 409 locked
+    (the island has not won the tier's wave yet). The database checks the tree, the level, the
+    wave and the coins again under the island lock."""
+    if path not in TREE_PATHS or not 1 <= tier <= TREE_TIERS:
+        raise ApiError(400, "bad_tree", "There is no such step in a tower's tree.")
+    spot = find_spot(catalogue, spot_id)
+    standing = built.get(spot.id)
+    if standing is None or standing.kind not in spot.kinds:
+        raise ApiError(409, "not_built", "Build something on this spot first.")
+    tree = catalogue.tree_of(standing.kind)
+    if tree is None:
+        name = kind_of(catalogue, standing.kind).name
+        raise BuildRefused(422, "no_tree", f"A {name.lower()} has no upgrade tree.")
+    if standing.level < tree.level:
+        raise ApiError(409, "needs_level", f"Raise it to level {tree.level} first.")
+    now, other = standing.tree_tier(path), standing.tree_tier("b" if path == "a" else "a")
+    if now >= tier:
+        raise ApiError(409, "known", f"{tree.tier_name(path, tier)} is bought already.")
+    if now < tier - 1:
+        raise ApiError(409, "needs_tier", f"Buy {tree.tier_name(path, tier - 1)} first.")
+    if tier > TREE_OTHER_MAX and other > TREE_OTHER_MAX:
+        rival = tree.path_named("b" if path == "a" else "a")
+        raise ApiError(
+            409, "closed", f"Closed: {rival.name if rival else 'the other path'} is past tier 1."
+        )
+    if tree.waves[tier - 1] > wave:
+        raise locked(tree.waves[tier - 1])
+    return spot, tree, tree.prices[tier - 1]
 
 
 # --- waves ---

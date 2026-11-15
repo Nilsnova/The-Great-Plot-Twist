@@ -6,6 +6,7 @@
 //   bell    the harbor bell on the south beach, next to where you land
 import {surfaceClass} from '../world/places/surfaces.js';
 import {isCapstone, readBonus, readSpec} from '../campaign/tech.js';
+import {readTree} from '../pirates/tower-trees.js';
 
 export const ISLAND_PLACE = 'home_islet';
 export const KINDS = Object.freeze({
@@ -13,6 +14,8 @@ export const KINDS = Object.freeze({
   cannon: Object.freeze({name: 'Cannon', purpose: 'Fires at one ship at a time.', cost: 30}),
   mortar: Object.freeze({name: 'Mortar', purpose: 'Hits every ship near the impact.', cost: 60}),
   harpoon: Object.freeze({name: 'Harpoon tower', purpose: 'Slows one ship at a time with a rope harpoon.', cost: 40}),
+  // D055: a short, fast anti-boarder gun on a tower spot.
+  swivel: Object.freeze({name: 'Swivel-gun nest', purpose: 'Sprays pellets at boarders on the island.', cost: 50}),
   // T43 (D048 proposed): only an island answer with the flag defenses_v2 on holds one.
   culverin: Object.freeze({name: 'Culverin', purpose: 'Hits far ships hard but slowly.', cost: 80}),
   watchtower: Object.freeze({name: 'Watchtower', purpose: 'Gives all your towers more range.', cost: 40}),
@@ -126,9 +129,10 @@ export const slotName = slot => (slot === 'tower' ? 'Tower spot' : KINDS[DEFAULT
 // The defences of an island answer, with their place, for the wave simulation (BUILD-PLAN 3.5). The place
 // is the answer's x/z when the server sent one (T36: a spot moved on the build grid), else the fixed spot:
 // the sim (src/pirates/sim.js) reads x and z as before, so it fights the island where it stands.
-// [{id, kind, level, x, z, spec?, bonus?}] of the built spots only (TOWER-DEFENSE.md §8); spec is the tower
+// [{id, kind, level, x, z, spec?, bonus?, tree?}] of the built spots only (TOWER-DEFENSE.md §8); spec is the tower
 // skill it picked at the Tech hub (GAME-V3.md §5), bonus the island's tier-2 pick for its kind (§5.1, from
-// `tiers`: campaignOf(answer).research.tiers). The sim reads both, so every screen fights the same island.
+// `tiers`: campaignOf(answer).research.tiers), tree {a, b} the tiers of its upgrade tree (D055, only when one is
+// bought). The sim reads them all, so every screen fights the same island.
 export function defenses(spots = [], tiers = null) {
   return spots.filter(item => item?.built === true && (spotById(item.id) || ppSpotById(item.id)))
     .map(item => { const fixed = spotById(item.id) ?? ppSpotById(item.id), spec = readSpec(item.kind, item.spec);
@@ -136,6 +140,7 @@ export function defenses(spots = [], tiers = null) {
       const bonus = readBonus(item.kind, tiers?.[item.kind]?.tier2);
       // A capstone counts only while its island's tier-3 pick is that capstone.
       const kept = spec && isCapstone(spec) && tiers?.[item.kind]?.tier3 !== spec ? null : spec;
+      const tree = readTree(item.kind, item.tree);
       return {id: item.id, kind: item.kind, level: Number.isSafeInteger(item.level) && item.level > 0 ? item.level : 1, x: where.x, z: where.z,
-        ...(kept ? {spec: kept} : {}), ...(bonus ? {bonus} : {})}; });
+        ...(kept ? {spec: kept} : {}), ...(bonus ? {bonus} : {}), ...(tree ? {tree} : {})}; });
 }
