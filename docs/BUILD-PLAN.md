@@ -103,7 +103,7 @@ Events (also sent on the game's event bus): `wave_countdown`, `wave_started`, `s
   | `harbor_stake_placed` | `{}` | lane H, when a 5 / 10 / 25 🪙 stake is accepted | 4 Place a 🪙 stake |
   | `island_invite_opened` | `{}` | island (U4), when "Invite a friend" opens | 5 Invite a friend |
 
-  The strip shows three goals at a time, a hint toast after 20 s standing still, and the class goals instead for a player who joined by class code. Toasts for every lane: `showToast(text)` and `showError(reply)` from `frontend/src/ui/toasts.js` (one style, top-center, at most two). Coins in the HUD come from `view.captain.coins`; a lane with a local wallet passes it through `hud.setCoins(n)` in `game.js`.
+  The strip shows the current goal (three before 15 Nov), a hint toast after 20 s standing still, and the class goals instead for a player who joined by class code. Toasts for every lane: `showToast(text)` and `showError(reply)` from `frontend/src/ui/toasts.js` (one style, top-center, one at a time since 15 Nov). Coins in the HUD come from `view.captain.coins`; a lane with a local wallet passes it through `hud.setCoins(n)` in `game.js`.
 
 ## 4. Lanes and tasks
 

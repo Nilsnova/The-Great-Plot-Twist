@@ -22,3 +22,13 @@ body:has(.shell-screen[open]) .hud{visibility:hidden}
 .build-info{font-size:16px;line-height:1.5;overflow-wrap:anywhere}.build-info p{margin:6px 0 0}
 
 .title-build-stamp{position:fixed;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);font-size:16px}
+
+/* The pause menu (owner, 15 Nov: "things are too close together"): Resume big and alone on top, the rest
+   quiet buttons two a row with room between them; the status line is a plain quiet line. */
+.shell-screen[data-mode=pause] .shell-body{gap:18px}
+.shell-screen[data-mode=pause] .shell-menu{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 14px}
+.shell-screen[data-mode=pause] .shell-menu>:first-child{grid-column:1/-1;min-height:60px;font-size:20px}
+.shell-screen[data-mode=pause] .shell-menu>:not(:first-child){min-height:52px}
+.shell-screen[data-mode=pause] .shell-menu>:last-child:nth-child(even){grid-column:1/-1}
+.shell-screen[data-mode=pause] .shell-status{padding:0;background:none;border:0;font-size:15px}
+@media(max-width:380px){.shell-screen[data-mode=pause] .shell-menu{grid-template-columns:minmax(0,1fr)}}

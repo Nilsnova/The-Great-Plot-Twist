@@ -563,7 +563,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       emit({type: SPOTS_CHANGED, place, spot: spotId});
       // Close the card so the new building and the toast can be seen.
       if (ui.open === 'build' && openSpot === spotId) { ui.close(); openSpot = null; }
-      ui.toast(`${BUILDINGS[choice].name} built${onWhere(place)}! You have ${coinText(own?.coins)}.`, 'success');
+      ui.toast(`${BUILDINGS[choice].name} built${onWhere(place)} · ${coinText(own?.coins)}`, 'success');
     } else await refused(answer, place);
     refreshCard();
   }
@@ -586,7 +586,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       walls = new Map(answer.data.walls.map(wall => [wall.spot, wall])); wallsFor = target()?.code ?? null;
       tookCoins(answer.data.coins);
       emit({type: SPOTS_CHANGED, place, spot: spotId});
-      ui.toast(`Wall repaired${onWhere(place)}! You have ${coinText(answer.data.coins)}.`, 'success');
+      ui.toast(`Wall repaired${onWhere(place)} · ${coinText(answer.data.coins)}`, 'success');
     } else {
       cardMessage = answer.message;
       if (['intact', 'insufficient_funds', 'not_built'].includes(answer.code)) await readWalls();
@@ -608,7 +608,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       const name = BUILDINGS[now?.kind]?.name ?? 'Building';
       if (place === 'own') emit({type: ISLAND_UPGRADED, kind: now?.kind, spot: spotId, level: now?.level});
       emit({type: SPOTS_CHANGED, place, spot: spotId});
-      ui.toast(`${name} is now level ${now?.level ?? '?'}${onWhere(place)}! You have ${coinText(own?.coins)}.`, 'success');
+      ui.toast(`${name} level ${now?.level ?? '?'}${onWhere(place)} · ${coinText(own?.coins)}`, 'success');
     } else await refused(answer, place);
     refreshCard();
   }
@@ -645,7 +645,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     demolishSpot = null; demolishQuote = null;
     if (ui.open === 'demolish') { ui.close(); openSpot = null; }
     const mine = done.refunds.find(item => item.you)?.coins ?? 0;
-    ui.toast(`${done.name ?? BUILDINGS[done.kind]?.name ?? 'Building'} torn down.${mine > 0 ? ` You got back ${coinText(mine)}.` : ''} You have ${coinText(own?.coins)}.`, 'success');
+    ui.toast(`${done.name ?? BUILDINGS[done.kind]?.name ?? 'Building'} torn down${mine > 0 ? ` · +${coinText(mine)}` : ''}`, 'success');
     refreshCard();
   }
   // A teammate tore a building down (the room's island_changed): a toast for the payers who got coins back.
@@ -754,7 +754,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     if (answer.ok) {
       setOwn(answer.data);
       emit({type: CREW_HIRED, crew: id});
-      ui.toast(`${CREW[id].name} hired! You have ${coinText(own.coins)}.`, 'success');
+      ui.toast(`${CREW[id].name} hired · ${coinText(own.coins)}`, 'success');
     } else await refused(answer, false);
     refreshCard();
   }
@@ -767,7 +767,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     if (answer.ok) {
       setOwn(answer.data);
       emit({type: 'captain_upgraded', level: own.captain?.level});
-      ui.toast(`Your captain is now level ${own.captain?.level ?? '?'}! You have ${coinText(own.coins)}.`, 'success');
+      ui.toast(`Captain level ${own.captain?.level ?? '?'} · ${coinText(own.coins)}`, 'success');
     } else await refused(answer, false);
     refreshCard();
   }
@@ -809,7 +809,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     if (answer.ok) {
       setOwn(answer.data); pickedSkill = null; pickedRole = null;
       emit({type: 'captain_respec'});
-      ui.toast(`Skills reset. You have ${coinText(own.coins)}.`, 'success');
+      ui.toast(`Skills reset · ${coinText(own.coins)}`, 'success');
     } else { cardMessage = answer.message; if (answer.code === 'nothing_to_reset') await reloadOwn(); }
     refreshCard();
   }
@@ -823,7 +823,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     if (answer.ok) {
       setOwn(answer.data);
       emit({type: 'captain_weapon_bought', weapon: id});
-      ui.toast(`${WEAPON_BY_ID[id].name} bought and equipped! You have ${coinText(own.coins)}.`, 'success');
+      ui.toast(`${WEAPON_BY_ID[id].name} bought and equipped · ${coinText(own.coins)}`, 'success');
       if (readWeapon(own.weapons?.equipped) !== id) await equipWeapon(id, true);
     } else await refused(answer, false);
     refreshCard();
