@@ -66,7 +66,7 @@ def test_the_island_shows_levels_crew_captain_prices_unlocks_and_the_next_wave()
     campaign = body["campaign"]
     assert campaign["wave"] == 3 and "watchtower:1" in campaign["open"]
     assert (campaign["locked"]["harbor"], campaign["locked"]["tech_hub"]) == (4, 8)
-    assert campaign["later"] == ["ship"]
+    assert campaign["later"] == [] and campaign["locked"]["ship"] == 30  # D057
     assert campaign["wreck"] == {"paid": 0, "goal": 500, "gifts": [25, 100]}
     assert [b["branch"] for b in campaign["research"]["branches"]] == [
         "cannon", "mortar", "wall", "watchtower",

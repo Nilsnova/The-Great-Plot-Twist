@@ -1,0 +1,61 @@
+-- =============================================================================
+-- 20261116040000_boat_games.sql
+--
+-- WHAT IT DOES
+--   The own boat's games (decision D057, accepted by Nils on 16 Nov 2026).
+--   After wave 30, with the wreck repaired, every member of a game sails the
+--   island's boat between waves and plays short games (the broadside duel and
+--   the treasure dash). A round with stars pays a few play coins:
+--
+--     wallet_reasons       one new reason, boat_game (earn).
+--
+--   Nothing else changes: the coins move through apply_wallet_transaction()
+--   like every other coin, with ref boat:<island owner>:<best wave>:<game>, so
+--   each game pays a player at most once per island and best won wave.
+--
+-- WHO USES IT
+--   Only the Python server, with the secret key (service_role): the route
+--   POST /api/island/boat of backend/server/routes/island_boat.py. The amount
+--   comes from the server (backend/content/boat.json: stars x (6 + wave / 5),
+--   at most 3 stars, the wave capped at 100); the database checks that the
+--   reason earns (a positive amount) and that the ref is new for this player.
+--   No browser role gets anything new.
+--
+-- THE RULES THAT THE DATABASE KEEPS
+--   1. Play money only; coins move only through apply_wallet_transaction().
+--   2. boat_game only adds coins (direction earn): a negative amount fails.
+--   3. The same player, reason and ref are accepted once: a repeated claim,
+--      or a second tab, pays nothing.
+--
+-- WHAT IT NEEDS
+--   20261106000000_foundation.sql (wallet_reasons, apply_wallet_transaction).
+--
+-- DEPLOY ORDER
+--   Apply this file before the server of the same change is deployed. A
+--   server without it gets unknown_reason from the database on the first paid
+--   round (a 502, no coins moved); the games themselves still play.
+--
+-- SAFE TO RUN TWICE
+--   The reason uses "on conflict do nothing".
+--
+-- ROLLBACK (by hand)
+--   Deploy the server before D057. The reason boat_game stays (a reason is
+--   never removed); its ledger rows stay too.
+--
+-- HOW TO VERIFY (read-only queries, after applying)
+--   a. select reason, direction from public.wallet_reasons where reason = 'boat_game';
+--      -- one row, earn
+--   b. select count(*), sum(delta) from public.wallet_transactions where reason = 'boat_game';
+--      -- the rounds paid so far
+-- =============================================================================
+
+
+-- -----------------------------------------------------------------------------
+-- 1. The wallet reason
+-- -----------------------------------------------------------------------------
+-- The same pair ends WALLET_REASONS in backend/server/wallet.py (a test compares
+-- them).
+
+insert into public.wallet_reasons (reason, direction, description) values
+  ('boat_game', 'earn', 'A round of the island boat''s games after wave 30 (D057), once per game, island and best wave.')
+on conflict (reason) do nothing;

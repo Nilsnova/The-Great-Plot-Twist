@@ -34,7 +34,7 @@ import {createArsenal} from './arsenal.js';
 import {createArsenalApi} from './arsenal-api.js';
 import {buildCardModel, bellModel, inviteModel, crewModel, captainModel, captainsModel, skillsModel, weaponsModel, coinText,
   harborModel, techModel, wreckModel, demolishModel, refundToast} from './card-model.js';
-import {campaignOf, openedBetween, opensText, waveOf} from '../campaign/index.js';
+import {campaignOf, isOpen, openedBetween, opensText, waveOf} from '../campaign/index.js';
 import {BRANCH_BY_ID, SPECS, optionName, optionsOf} from '../campaign/tech.js';
 import {ROLES, activeRole, roleRadius} from '../campaign/houses.js';
 import {ROLE_BY_ID, SKILL_BY_ID, WEAPON_BY_ID, WEAPONS, isRole, readSkills, readWeapon} from '../pirates/captain-ids.js';
@@ -396,10 +396,46 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   let busyResearch = null, busyGift = null;
   const harbor = () => harborModel({campaign: campaign()});
   const tech = () => techModel({campaign: campaign(), coins: own?.coins ?? null, busy: busyResearch, battle: battle && !waveOver, message: cardMessage || (!target() ? ownMessage : '')});
-  const wreck = () => wreckModel({campaign: campaign(), coins: own?.coins ?? null, busy: busyGift, message: cardMessage || (!target() ? ownMessage : '')});
+  const wreck = () => wreckModel({campaign: campaign(), coins: own?.coins ?? null, busy: busyGift, message: cardMessage || (!target() ? ownMessage : ''),
+    boat: boatStatus, battle: battle && !waveOver});
   const harborHandlers = {open: id => { ui.close(); try { openHarborStall(id); } catch { /* The stall answers on its own. */ } }};
   const techHandlers = {research: step => void research(step)};
-  const wreckHandlers = {give: amount => void giveWreck(amount)};
+  const wreckHandlers = {give: amount => void giveWreck(amount), sail: game => void sail(game)};
+  // D057: the island's own boat after wave 30. boatStatus: GET /api/island/boat of the island on screen (null while
+  // it loads); boatGame: the round on screen (pirates/boat/scene.js, loaded on the first sail).
+  let boatStatus = null, boatGame = null, boatLoading = false, boatTicket = 0;
+  async function readBoat() {
+    if (!isOpen(campaign(), 'ship')) { boatStatus = null; return; }
+    const ticket = ++boatTicket, answer = await api.boatStatus(placeCode());
+    if (disposed || ticket !== boatTicket) return;
+    boatStatus = answer.ok ? answer.data : null;
+    if (ui.open === 'wreck') refreshCard();
+  }
+  async function sail(game) {
+    if (boatGame || boatLoading || (battle && !waveOver)) return;
+    boatLoading = true;
+    const at = campaign(), code = target()?.code ?? '', where = placeCode();
+    let scene;
+    try { scene = await import('../pirates/boat/scene.js'); } catch { boatLoading = false; ui.toast('The boat could not load. Try again.', 'info'); return; }
+    boatLoading = false;
+    if (disposed) return;
+    ui.close();
+    boatGame = scene.createBoatGame({container: document.body, game, wave: at?.wave ?? 0, code, reducedMotion,
+      easy: () => preferences()?.easyFinishers === true,
+      onFinish: async ({stars}) => {
+        if (stars < 1) return {line: 'No stars this time. Try again!', coins: 0};
+        const answer = await api.boatReward({game, stars, ...where});
+        if (disposed) return null;
+        if (!answer.ok) return {line: answer.message, coins: 0};
+        if (answer.data.paid) {
+          tellCoins(answer.data.balance);
+          void readBoat(); void reloadOwn();
+          return {line: `+${coinText(answer.data.coins)}!`, coins: answer.data.coins};
+        }
+        return {line: answer.data.already ? 'Paid already this wave. Win a wave to sail for coins again.' : 'No coins this time.', coins: 0};
+      },
+      onClose: () => { boatGame = null; focus(); openWreck(); }});
+  }
   function bell() {
     const wave = flow.current;
     return bellModel({wave: wave?.wave ?? null, joined: wave?.joined === true, countdown: flow.secondsLeft(), busy: flow.busy,
@@ -425,7 +461,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   function refreshCardIfBuild() { if (ui.open === 'build' && openSpot) refreshCard(); }
   function openHarbor() { openSpot = null; cardMessage = ''; ui.harborCard(harbor(), harborHandlers); }
   function openTechHub() { openSpot = null; cardMessage = ''; ui.techCard(tech(), techHandlers); void freshOwn(); }
-  function openWreck() { openSpot = null; cardMessage = ''; ui.wreckCard(wreck(), wreckHandlers); void freshOwn(); }
+  function openWreck() { openSpot = null; cardMessage = ''; ui.wreckCard(wreck(), wreckHandlers); void freshOwn(); void readBoat(); }
   function openBuild(spotId) { openSpot = spotId; cardMessage = ''; ui.buildCard(buildModel(spotId), handlers); if (spotById(spotId)?.slot === 'wall') void readWalls(); }
   async function freshOwn() {
     if (own) return null;
@@ -704,7 +740,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       await landed(answer, 'wreck');
       if (disposed) return;
       const now = campaign()?.wreck;
-      ui.toast(now && now.paid >= now.goal ? 'The wreck is repaired! Sailing opens later.' : `Thanks! The wreck has ${coinText(now?.paid ?? 0)} of ${coinText(now?.goal ?? 0)}.`, 'success');
+      if (now && now.paid >= now.goal) void readBoat();
+      ui.toast(now && now.paid >= now.goal ? (isOpen(campaign(), 'ship') ? 'The wreck is repaired! Your ship sails: tap her to play.' : `The wreck is repaired! She sails after wave ${waveOf('ship')}.`) : `Thanks! The wreck has ${coinText(now?.paid ?? 0)} of ${coinText(now?.goal ?? 0)}.`, 'success');
     } else { cardMessage = answer.message; if (['repaired', 'locked', 'insufficient_funds'].includes(answer.code)) await refreshDefended(); }
     refreshCard();
   }
@@ -1002,11 +1039,12 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     // The fake server's helpers (setCoins, failNext, startWaveAt...) in fake mode, for the console and checks.
     get dev() { return transport?.dev ?? null; },
     get ui() { return ui; },
-    get active() { return ui.active || !!cutscene; },
+    get active() { return ui.active || !!cutscene || !!boatGame; }, // D057: a boat round holds the keys too
     startMove,
     get moving() { return moving.state; },
     get moveMode() { return moving; },
     handleEscape() {
+      if (boatGame) { boatGame.close(); return true; }
       if (cutscene) { cutscene.skip(); return true; }
       if (moving.active && !ui.active) { moving.cancel(); return true; }
       return ui.close();
@@ -1014,6 +1052,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     dispose() {
       if (disposed) return; disposed = true;
       stopFinished(); stopStarted(); stopArrived(); stopPoint(); stopInteract(); stopTravel(); stopMenu?.(); stopStartedGame(); stopGame(); clearTimeout(syncSoon);
+      boatGame?.dispose(); boatGame = null;
       flow.dispose(); ui.dispose(); moveBar.dispose(); globalThis.removeEventListener?.('keydown', moveKeys, true); cutscene?.dispose?.(); world?.dispose(); world = null; pointWorld?.dispose(); pointWorld = null;
     },
     spots: SPOTS,
