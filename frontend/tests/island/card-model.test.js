@@ -217,7 +217,7 @@ describe('the campaign buildings (GAME-V3.md §4, §5)', () => {
       .toMatchObject({line: 'Tower skills: Opens after wave 8.', choices: []});
     expect(buildCardModel({spotId: 'cannon_1', slot: 'tower', spot: built, coins: 100, unlocks: unlocksFor(8), campaign: atWave(8)}).skills.line)
       .toBe('Research cannon skills at the Tech hub first.');
-    const pick = buildCardModel({spotId: 'cannon_1', slot: 'tower', spot: {...built, spec: 'heavy'}, coins: 100, unlocks: unlocksFor(8),
+    const pick = buildCardModel({spotId: 'cannon_1', slot: 'tower', spot: {...built, spec: 'heavy'}, coins: 1000, unlocks: unlocksFor(8),
       campaign: atWave(8, {research: {done: ['cannon']}})}).skills;
     expect(pick).toMatchObject({title: 'Skill: Heavy shot', current: 'heavy'});
     expect(pick.choices.map(choice => [choice.id, choice.active, choice.disabled])).toEqual([['rapid', false, false], ['heavy', true, true], ['chain', false, false]]);
@@ -228,6 +228,27 @@ describe('the campaign buildings (GAME-V3.md §4, §5)', () => {
       ['rapid', false, false], ['heavy', false, false], ['chain', false, false], ['grapeshot', true, true]]);
     // Pirate Point's shared towers have no skills.
     expect(buildCardModel({spotId: 'pp_tower_1', slot: 'tower', spot: built, point: true, campaign: atWave(8, {research: {done: ['cannon']}})}).skills).toBe(null);
+  });
+  it('a tower skill shows its price (D051): the capstone dearer, the active one free, a short reason when you cannot pay', () => {
+    const built = {...tower(true), level: 2, spec: 'rapid'};
+    const card = coins => buildCardModel({spotId: 'cannon_1', slot: 'tower', spot: built, coins, unlocks: unlocksFor(25),
+      campaign: atWave(25, {research: {done: ['cannon'], tiers: {cannon: {tier: 3, tier2: 'rapid_2', tier3: 'grapeshot'}}}})}).skills;
+    const rich = card(1000);
+    expect(rich.line).toBe('Switch for the next wave.');
+    expect(rich.choices.map(choice => [choice.id, choice.price, choice.disabled, choice.reason])).toEqual([
+      ['rapid', '', true, ''], ['heavy', '🪙 150', false, ''], ['chain', '🪙 150', false, ''], ['grapeshot', '🪙 600', false, '']]);
+    const poor = card(200).choices.find(choice => choice.id === 'grapeshot');
+    expect(poor).toMatchObject({disabled: true, reason: 'Need 🪙 400'});
+    expect(card(null).choices[1]).toMatchObject({disabled: true, reason: 'Coins loading'});
+    // The island answer's prices win over the browser's copy.
+    const sent = buildCardModel({spotId: 'wall_1', slot: 'wall', spot: {id: 'wall_1', kind: 'wall', built: true, level: 1}, coins: 1000, unlocks: unlocksFor(8),
+      prices: {towerSkills: {wall: {skill: 55, capstone: 200}}}, campaign: atWave(8, {research: {done: ['wall']}})}).skills;
+    expect(sent.line).toBe('Pick one skill.');
+    expect(sent.choices.map(choice => choice.price)).toEqual(['🪙 55', '🪙 55', '🪙 55']);
+  });
+  it('a house role stays free: no price on its choices', () => {
+    const house = buildCardModel({spotId: 'house_1', slot: 'house', spot: {id: 'house_1', kind: 'house', built: true, level: 2}, coins: 0, campaign: atWave(3)}).skills;
+    expect(house.choices.map(choice => [choice.id, choice.price ?? '', choice.disabled])).toEqual([['barracks', '', false], ['tavern', '', false], ['workshop', '', false]]);
   });
   it('the wreck: locked before wave 6, gifts cut to what is left, "Repaired, sailing opens later" at 100%', () => {
     expect(wreckModel({campaign: atWave(5)})).toMatchObject({open: false, line: 'Opens after wave 6.', gifts: []});

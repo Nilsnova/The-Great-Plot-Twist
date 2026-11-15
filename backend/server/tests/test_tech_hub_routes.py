@@ -134,8 +134,11 @@ def test_the_island_shows_the_research_done_and_the_tower_skill_of_a_spot():
 
 
 def specialise(world: World, spot: str = "cannon_1", spec: str = "rapid", headers=PLAYER, **body):
-    """No actionUid: picking a skill moves no coins and is the same every time."""
-    body = {"spot": spot, "spec": spec, **body}
+    """D051: a tower skill costs coins, so the click carries an actionUid (click-0001 unless the
+    test sends another, or None for an old tab that sends none)."""
+    body = {"spot": spot, "spec": spec, "actionUid": "click-0001", **body}
+    if body["actionUid"] is None:
+        del body["actionUid"]
     return world.client.post("/api/island/tower-skill", json=body, headers=headers)
 
 
@@ -154,6 +157,8 @@ def test_a_tower_picks_a_skill_of_its_researched_kind():
         "p_plot": "cannon_1",
         "p_branch": "cannon",
         "p_spec": "chain",
+        "p_action_uid": "click-0001",
+        "p_price": 150,
     }
 
 

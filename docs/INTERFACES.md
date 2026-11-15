@@ -1774,3 +1774,27 @@ With `tower_health` the room's `repair` / `rebuild` messages may name a tower in
   `island_changed` makes crewmates read the island and the arsenal again; locally also `arsenal_changed
   {carried}`. `createIsland({arsenalOn})` gets the flag from `/api/config` (`game.js`); the wave's
   `captainLoadout().weapon` is the carried copy's type on the island on screen, else the musket.
+
+## Tower skill prices (D051)
+
+[D051](DECISIONS.md#d051--tower-skills-cost-coins--2026-11-15). The source of truth is the comment at the top of
+`backend/server/routes/island.py`; the database part is `supabase/migrations/20261115130000_tower_skill_price.sql`
+(not applied yet; apply it together with the server of the same change).
+
+- **Route change:** `POST /api/island/tower-skill {spot, spec, actionUid, code?}`. A tower's pick (or switch) of
+  a skill is paid once by the caller from their own coins: `prices.towerSkills[kind].skill` for a tier-1 skill,
+  `.capstone` for the tier-3 capstone. Picking the skill the tower has already is free and needs no
+  `actionUid`; a repeated `actionUid` pays nothing and answers the island as it is now; a house role stays free
+  and `actionUid` may be left out. New errors: `409 insufficient_funds` ("Heavy shot costs 150 coins. You need
+  more coins."), `409 reload` (a paid pick without `actionUid`: a tab from before the prices; nothing is
+  charged, "Tower skills cost coins now. Reload the page to see the prices."). The other errors stay.
+- **Island answer:** `prices.towerSkills` `{cannon: {skill: 150, capstone: 600}, mortar: {skill: 120,
+  capstone: 480}, wall: {skill: 40, capstone: 160}, watchtower: {skill: 80, capstone: 320}}` (from
+  `islands.json` `research.branches[].skillCoins`; `frontend/src/campaign/tech.js` `skillPrice()` reads it and
+  falls back to its own copy).
+- **Money:** wallet reason `tower_skill` (new, spend), ref `towerskill:<actionUid>`. Co-op action
+  `island_tower_skill` is now `personal` (the clicker pays, D043).
+- **Database:** `island_specialise(p_player_id, p_island_owner, p_plot, p_branch, p_spec, p_action_uid,
+  p_price)` replaces the 5-argument function; it locks the payer's wallet, then the island, then the building,
+  and answers `{status: done, plot, spec, price, balance, repeat}` or a refusal (`insufficient_funds` with
+  `price`).

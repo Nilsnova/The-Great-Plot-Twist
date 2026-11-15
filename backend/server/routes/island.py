@@ -19,7 +19,8 @@ GET /api/island
         "crew": {"gunner": 0, "carpenter": 0, "lookout": 0},
         "captain": {"level": 1, "nextPrice": 20},
         "prices": {"kinds": {"wall": [10, 20, 40], ...}, "crew": {"gunner": {"price": 40,
-                   "max": 2}, ...}, "captain": [0, 20, 40, 80, 160]},
+                   "max": 2}, ...}, "captain": [0, 20, 40, 80, 160],
+                   "towerSkills": {"cannon": {"skill": 150, "capstone": 600}, ...}},
         "unlocks": {"wave": 0, "unlocked": ["wall:1", "cannon:1", "captain:1"],
                     "locked": {"wall:2": 2, "mortar:1": 3, "crew:gunner": 5, ...}},
         "skills": {"points": 1, "spent": 1, "known": ["steady_aim"],
@@ -109,14 +110,20 @@ POST /api/island/research  {"branch": "cannon", "actionUid": "...", "tier"?: 1 |
     Errors: 400 bad_research, 403 not_member, 404 no_such_island, 409 locked, 409 known,
             409 closed, 409 needs_tier, 409 top_tier, 409 wave_running, 409 insufficient_funds
 
-POST /api/island/tower-skill  {"spot": "cannon_1", "spec": "rapid", "code"?: "ISLE-K7Q2M"}
-    -> the island. The tower on the spot picks one skill of its researched branch (no coins;
-    picking another one changes it, for the next wave). Safe to repeat. A house of level 2 or
-    more picks a role the same way: "spec" barracks, tavern or workshop, with no research
-    (docs/GAME-V3.md "Houses"); the spot then carries it as "spec".
+POST /api/island/tower-skill  {"spot": "cannon_1", "spec": "rapid", "actionUid": "...",
+                              "code"?: "ISLE-K7Q2M"}
+    -> the island. The tower on the spot picks one skill of its researched branch, paid once by
+    the caller with their own coins (D051): prices.towerSkills[kind].skill for a tier-1 skill,
+    .capstone for the tier-3 capstone (ledger ref towerskill:<actionUid>, reason tower_skill).
+    Picking another one later pays that one's price (for the next wave); picking the skill the
+    tower has already is free and changes nothing; a repeated actionUid charges nothing. A house
+    of level 2 or more picks a role the same way, free and with no research: "spec" barracks,
+    tavern or workshop (docs/GAME-V3.md "Houses"; "actionUid" may be left out); the spot then
+    carries it as "spec". Coins spent on a skill are not refunded by a tear-down.
     Errors: 400 bad_spec, 403 not_member, 404 no_such_spot, 404 no_such_island, 409 not_built,
             409 not_researched, 409 house_level ("Raise this house to level 2 first."),
-            422 wrong_kind
+            409 insufficient_funds, 409 reload (a paid pick without "actionUid": a tab from
+            before the prices), 422 wrong_kind
 
 POST /api/island/wreck  {"amount": 25, "actionUid": "...", "code"?: "ISLE-K7Q2M"}
     -> the island. Coins into the island's wreck (GAME-V3 section 4, after wave 6; ledger ref
@@ -272,10 +279,16 @@ class CrewPriceOut(BaseModel):
     max: int
 
 
+class TowerSkillPriceOut(BaseModel):
+    skill: int  # one pick of a tier-1 skill
+    capstone: int  # one pick of the tier-3 capstone
+
+
 class PricesOut(BaseModel):
     kinds: dict[str, list[int]]
     crew: dict[str, CrewPriceOut]
     captain: list[int]
+    towerSkills: dict[str, TowerSkillPriceOut]  # D051: per research branch (tower kind)
 
 
 class UnlocksOut(BaseModel):
@@ -483,6 +496,8 @@ class SpecialiseRequest(BaseModel):
     spot: str = Field(pattern=ID_PATTERN)
     spec: str = Field(min_length=1, max_length=40)
     code: str | None = Field(default=None, max_length=CODE_MAX_LENGTH)
+    # D051: a paid tower skill needs one (409 reload without it); a house role does not.
+    actionUid: str | None = Field(default=None, pattern=ACTION_UID_PATTERN)
 
 
 class WreckRequest(BaseModel):
@@ -605,6 +620,10 @@ def prices_out(catalogue: IslandCatalogue) -> PricesOut:
         kinds={kind.kind: list(kind.prices) for kind in catalogue.kinds},
         crew={m.crew: CrewPriceOut(price=m.coins, max=m.max) for m in catalogue.crew},
         captain=list(catalogue.captain.prices),
+        towerSkills={
+            entry.branch: TowerSkillPriceOut(skill=entry.skill_coins, capstone=entry.capstone_coins)
+            for entry in catalogue.research
+        },
     )
 
 
@@ -847,7 +866,9 @@ async def post_specialise(
     request: Request,
 ) -> IslandResponse:
     request.app.state.island_build_budget.spend(player.id)
-    view = await service.specialise(admin, catalogue, player.id, body.spot, body.spec, body.code)
+    view = await service.specialise(
+        admin, catalogue, player.id, body.spot, body.spec, body.code, body.actionUid
+    )
     return island_out(view, catalogue)
 
 

@@ -272,12 +272,14 @@ export function createIslandApi({transport, makeUid = makeActionUid} = {}) {
       return writeSpots(`research:${where}:${branch}:${tier}:${choice ?? ''}:${change ? 'change' : 'pick'}`, actionUid => transport.post(PATHS.research, {...body, actionUid}),
         where ? hasSpots : isIsland);
     },
-    // A tower picks one skill of its researched kind (no coins, the same every time: no click id).
+    // A tower picks one skill of its researched kind, paid with the clicker's coins (D051), so it carries a click
+    // id: a retry after an unknown outcome reuses it and is never charged twice. A house role is free (same route).
     specialise({spot, spec, code = null} = {}) {
       const where = code ? displayIslandCode(code) : '';
       if (!Object.hasOwn(SPECS, spec ?? '') && !isHouseRole(spec)) return refuse(400, 'bad_spec', MESSAGES.badSpec);
       if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
-      return askSpots(() => transport.post(PATHS.specialise, {spot: sent(spot), spec, ...(where ? {code: where} : {})}), where ? hasSpots : isIsland);
+      return writeSpots(`spec:${where}:${spot}:${spec}`, actionUid => transport.post(PATHS.specialise, {spot: sent(spot), spec, actionUid, ...(where ? {code: where} : {})}),
+        where ? hasSpots : isIsland);
     },
     // GAME-V3.md §4: coins into the island's wreck (one of the gifts the answer lists).
     repairWreck({amount, code = null} = {}) {

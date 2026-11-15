@@ -3,7 +3,8 @@
 //   tier 1  unlocks the kind's skills: every tower of that kind may pick one (rapid, heavy, chain, ...)
 //   tier 2  a choice of two bonuses for every tower of that kind; the island picks one, the other closes
 //   tier 3  a choice of two capstone skills; the island picks one, then a tower of that kind may pick it
-// A team may change a tier-2 or tier-3 choice for that tier's price again. The ids, names and prices repeat
+// A team may change a tier-2 or tier-3 choice for that tier's price again. Each tower's pick of a skill costs coins
+// too (D051, skillCoins and skillPrice below). The ids, names and prices repeat
 // backend/content/islands.json (research.branches); tests/campaign/campaign.test.js keeps them equal. The
 // numbers of each skill live in the sim (CONFIG.specs and CONFIG.research in src/pirates/sim.js), so every
 // screen fights the same island. No DOM here.
@@ -13,15 +14,24 @@ const freeze = Object.freeze;
 export const TOP_TIER = 3;
 export const BRANCHES = freeze([
   freeze({branch: 'cannon', name: 'Cannon skills', price: 180, prices: freeze([180, 360, 630]), specs: freeze(['rapid', 'heavy', 'chain']),
-    tier2: freeze(['rapid_2', 'long_guns']), tier3: freeze(['broadside', 'grapeshot'])}),
+    tier2: freeze(['rapid_2', 'long_guns']), tier3: freeze(['broadside', 'grapeshot']), skillCoins: freeze({skill: 150, capstone: 600})}),
   freeze({branch: 'mortar', name: 'Mortar skills', price: 220, prices: freeze([220, 440, 770]), specs: freeze(['cluster', 'fire_pot', 'long_range']),
-    tier2: freeze(['quick_fuse', 'heavy_shells']), tier3: freeze(['shockwave', 'inferno'])}),
+    tier2: freeze(['quick_fuse', 'heavy_shells']), tier3: freeze(['shockwave', 'inferno']), skillCoins: freeze({skill: 120, capstone: 480})}),
   freeze({branch: 'wall', name: 'Wall skills', price: 120, prices: freeze([120, 240, 420]), specs: freeze(['stone', 'spiked', 'quick_mend']),
-    tier2: freeze(['mason_drill', 'thick_walls']), tier3: freeze(['bastion', 'thorns'])}),
+    tier2: freeze(['mason_drill', 'thick_walls']), tier3: freeze(['bastion', 'thorns']), skillCoins: freeze({skill: 40, capstone: 160})}),
   freeze({branch: 'watchtower', name: 'Watchtower skills', price: 160, prices: freeze([160, 320, 560]), specs: freeze(['spotter', 'signal_fire']),
-    tier2: freeze(['lookout_drill', 'high_tower']), tier3: freeze(['eagle_eye', 'war_drums'])}),
+    tier2: freeze(['lookout_drill', 'high_tower']), tier3: freeze(['eagle_eye', 'war_drums']), skillCoins: freeze({skill: 80, capstone: 320})}),
 ]);
 export const BRANCH_BY_ID = freeze(Object.fromEntries(BRANCHES.map(item => [item.branch, item])));
+// D051: what one tower pays to pick (or switch to) `spec`, paid by the player who clicks: `capstone` for the
+// tier-3 capstone, `skill` for a tier-1 skill. The island answer's prices.towerSkills wins over the copy above
+// (islands.json skillCoins is the source). Picking the skill a tower has already is free. null: no such skill.
+export function skillPrice(kind, spec, prices = null) {
+  const branch = BRANCH_BY_ID[kind];
+  if (!branch || SPECS[spec]?.branch !== kind) return null;
+  const key = SPECS[spec].capstone ? 'capstone' : 'skill', sent = prices?.towerSkills?.[kind]?.[key];
+  return Number.isSafeInteger(sent) && sent > 0 ? sent : branch.skillCoins[key];
+}
 // The skills a tower may pick: tier 1's three (or two), and the two capstones of tier 3 (only the one its island chose).
 export const SPECS = freeze({
   rapid: freeze({branch: 'cannon', name: 'Rapid', line: 'Reloads 30% faster.'}),

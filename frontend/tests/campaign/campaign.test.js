@@ -58,8 +58,10 @@ describe('the campaign table', () => {
 describe('the Tech hub', () => {
   it('has the research of islands.json: branches, prices per tier, skills and the options of tiers 2 and 3 in order', () => {
     const sent = islands.research.branches.map(item => ({branch: item.branch, name: item.name, price: item.coins[0], prices: item.coins,
-      specs: item.specs.map(spec => spec.spec), tier2: item.tier2.map(option => option.id), tier3: item.tier3.map(option => option.spec)}));
-    expect(BRANCHES.map(item => ({...item, prices: [...item.prices], specs: [...item.specs], tier2: [...item.tier2], tier3: [...item.tier3]}))).toEqual(sent);
+      specs: item.specs.map(spec => spec.spec), tier2: item.tier2.map(option => option.id), tier3: item.tier3.map(option => option.spec),
+      skillCoins: item.skillCoins}));
+    expect(BRANCHES.map(item => ({...item, prices: [...item.prices], specs: [...item.specs], tier2: [...item.tier2], tier3: [...item.tier3],
+      skillCoins: {...item.skillCoins}}))).toEqual(sent);
     for (const item of islands.research.branches) {
       for (const spec of [...item.specs, ...item.tier3]) expect(SPECS[spec.spec]).toMatchObject({branch: item.branch, name: spec.name});
       for (const option of item.tier2) expect(BONUSES[option.id]).toMatchObject({branch: item.branch, name: option.name});

@@ -82,7 +82,7 @@ ACTIONS: dict[str, Rule] = {
     BUILD: Rule("build here", PERSONAL),
     UPGRADE: Rule("upgrade buildings here", PERSONAL),
     RESEARCH: Rule("research at this Tech hub", PERSONAL, between_waves=True),
-    TOWER_SKILL: Rule("choose tower skills and house roles here", FREE),
+    TOWER_SKILL: Rule("choose tower skills and house roles here", PERSONAL),  # D051
     WRECK: Rule("repair this wreck", PERSONAL),
     DEMOLISH: Rule("tear buildings down here", REFUND_TO_PAYERS, between_waves=True),
     WAVE_START: Rule("ring the bell here", FREE),

@@ -75,6 +75,27 @@ wave per cycle, so it needs at least about 20 minutes to reach wave 50; that is 
 residual risk until the class battle (task 0.4) adds server-side checks. The pre-redesign Exchange, prediction and case numbers below are kept
 as the record of G12; the Exchange and the case leave the game with the redesign.
 
+### Tower skills (15 Nov 2026, D051)
+
+Research at the Tech hub is paid once per island and tier (`tech_research`, ref `research:<uid>`):
+cannon 180 / 360 / 630, mortar 220 / 440 / 770, wall 120 / 240 / 420, watchtower 160 / 320 / 560.
+Since D051 each tower's **pick of a skill** costs coins too, paid by the player who clicks
+(`island_specialise()`, reason `tower_skill`, ref `towerskill:<uid>`; prices in `islands.json`
+`research.branches[].skillCoins`, sent as `prices.towerSkills`):
+
+| Tower kind | Tier-1 skill | Tier-3 capstone |
+|---|---|---|
+| Cannon | 150 | 600 |
+| Mortar | 120 | 480 |
+| Watchtower | 80 | 320 |
+| Wall | 40 | 160 |
+
+Switching to another skill pays that skill's price again; picking the skill a tower has already is
+free; a repeated click is charged once; house roles stay free; a tear-down refunds nothing of it.
+For scale: at wave 8 (Tech hub) a won wave pays about 105 coins, at wave 25 (capstones) about 275
+(`islands.json` loot 25 + 10 × wave, plus the houses), so a cannon skill is about one and a half
+waves of loot and a capstone about two.
+
 ## Current scope and source contracts
 
 G12 now targets **Exchange v2**, the implemented 10× rising/falling position engine.
