@@ -226,6 +226,7 @@ blasts
 blazes
 blind
 blinking
+block
 blocks
 blow
 blows
@@ -1742,6 +1743,7 @@ prompts
 proof
 props
 prose
+protect
 prove
 proves
 provided

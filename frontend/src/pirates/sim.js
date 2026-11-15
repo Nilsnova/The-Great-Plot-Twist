@@ -22,7 +22,7 @@ import { createTowerHealth } from './tower-health.js';
 // T34 (D040, proposed): what a boarder goes for, here: a tower in reach (with tower health).
 import { TARGET_PROFILES, nearestWithin } from './targeting.js';
 // T35 (D040, proposed): routes over the real wall layout, only with the wave option pathing (the rule "pathing").
-import { createBoarderPaths } from './boarder-paths.js';
+import { BODY, createBoarderPaths, edgeDistance, wallInWay } from './boarder-paths.js';
 // T43 (D048, proposed): the culverin, a long gun, only with the wave option defensesV2 (the rule "defenses_v2").
 import { DEFENSES_V2 } from './defenses-v2.js';
 
@@ -164,9 +164,9 @@ export const CONFIG = freeze({
       { damage: 18, range: 18, reload: 0.75 }, { damage: 24, range: 20, reload: 0.6 }],
     shotSpeed: 45,
     cutlass: {
-      reach: 2.2,             // the controller strikes a boarder this close instead of firing
+      reach: 2.2,             // the swing's radius round the captain: every boarder this close is hit (a sweep, 15 Nov)
       slack: .8,              // the sim accepts a little more: the boarder walks on during the input's lead
-      reload: .5,
+      reload: .75,
       levels: [{ damage: 14 }, { damage: 18 }, { damage: 24 }, { damage: 30 }, { damage: 38 }],
     },
   },
@@ -556,6 +556,7 @@ export function createWave(options = {}) {
   const towerHealth = createTowerHealth({ enabled: options?.towerHealth === true, towers, now: () => now(), tick: C.tick });
   const towerById = new Map(towers.map(item => [item.id, item]));
   const wallById = new Map(walls.map(item => [item.id, item]));
+  const wallsInOrder = [...walls].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)); // walls are already in id order; kept explicit
   // T35: the routes over the walls (null without the option: today's fixed routes). No dice.
   const paths = options?.pathing === true ? createBoarderPaths({ coast: readCoast(options?.coast), heart, walls,
     pace: { hackPerSecond: B.hack * curve.damage / B.hackEvery, speed: B.speed * curve.speed } }) : null;
@@ -843,38 +844,33 @@ export function createWave(options = {}) {
     events.push({ ...base, t: now(), targetId: named.id, toX: last.toX, toZ: last.toZ, impactAt: last.impactAt, targets,
       ...(named.boarder ? { boarder: true } : {}) });
   }
-  // The cutlass (§12, §14 Brawler): an instant blow at a boarder within reach of where the captain stood
-  // (the named one, else the nearest), with its own short reload. The striker's skills scale it
-  // (captain-stats.js): damage × strikeMultiplier (Cutlass), reload × strikeReloadMultiplier (Second
-  // wind), and with Sweep every other boarder within sweepRadius of the struck one takes sweepShare.
+  // The cutlass (§12, §14 Brawler; a sweep since the battle-clarity change, D052 update 15 Nov): an instant swing
+  // round where the captain stood that hits EVERY boarder within the swing's radius (sweepRadius, plus the input's
+  // slack: boarders walk on during its lead), all at full damage, with its own short reload. The named boarder
+  // (else the nearest) is the one the swing faces. The striker's skills scale it (captain-stats.js): damage ×
+  // strikeMultiplier (Cutlass), reload × strikeReloadMultiplier (Second wind), radius + 1 with Sweep. No dice.
   function captainStrike(input, events) {
     const by = captainBy(input);
     if (!by || !finite(input.x) || !finite(input.z) || !standing(by, input)) return;
     const level = captainLevel(input), stats = captainStats(level, readSkills(input.skills));
-    const blade = C.captain.cutlass, reach = blade.reach + blade.slack, t = ticks * C.tick;
+    const blade = C.captain.cutlass, reach = stats.sweepRadius + blade.slack, t = ticks * C.tick;
     const reload = round2(blade.reload * stats.strikeReloadMultiplier);
     if (t - (blades.get(by) ?? -Infinity) < reload - 1e-9) return;
-    let target = findTarget(input.targetId);
-    if (!target?.boarder || distance(input.x, input.z, target.x, target.z) > reach) {
-      target = null;
-      let best = reach;
-      for (const boarder of boarders) {
-        const d = distance(input.x, input.z, boarder.x, boarder.z);
-        if (d <= best) { target = boarder; best = d; }
-      }
+    // Everyone in the circle, chosen before a blow lands (a boarder killed first never shifts the rest); in landing order.
+    const hit = boarders.filter(boarder => distance(input.x, input.z, boarder.x, boarder.z) <= reach + 1e-9);
+    if (!hit.length) return;
+    let target = hit.find(boarder => boarder.id === input.targetId) ?? null;
+    if (!target) {
+      let best = Infinity;
+      for (const boarder of hit) { const d = distance(input.x, input.z, boarder.x, boarder.z); if (d < best - 1e-9) { target = boarder; best = d; } }
     }
-    if (!target) return;
     blades.set(by, t);
     const damage = round2(blade.levels[level - 1].damage * stats.strikeMultiplier);
-    // The sweep's victims are chosen before the blow lands, so a boarder the blow kills still anchors it.
-    const swept = stats.sweep
-      ? boarders.filter(item => item !== target && distance(item.x, item.z, target.x, target.z) <= stats.sweepRadius + 1e-9) : [];
-    events.push({ type: 'captain_struck', t: now(), by, targetId: target.id, level, damage, reload,
-      x: round2(input.x), z: round2(input.z), toX: round2(target.x), toZ: round2(target.z),
-      ...(stats.sweep ? { swept: swept.map(item => item.id) } : {}) });
+    const swept = hit.filter(item => item !== target);
+    events.push({ type: 'captain_struck', t: now(), by, targetId: target.id, level, damage, reload, radius: stats.sweepRadius,
+      x: round2(input.x), z: round2(input.z), toX: round2(target.x), toZ: round2(target.z), swept: swept.map(item => item.id) });
     damageBoarder(target, damage, `captain:${by}`, events, { captain: true, blade: true });
-    const share = round2(damage * stats.sweepShare);
-    for (const item of swept) damageBoarder(item, share, `captain:${by}`, events, { captain: true, blade: true, sweep: true });
+    for (const item of swept) damageBoarder(item, damage, `captain:${by}`, events, { captain: true, blade: true, sweep: true });
   }
 
   // Captain health (GAME-V3.md §3). A captain is in the wave from their first captain_move; a shot or a
@@ -1165,6 +1161,12 @@ export function createWave(options = {}) {
   function pickBoarderTarget(boarder) {
     const foe = foeOf(boarder);
     if (foe) { boarder.towerFoe = null; return { kind: 'captain', hero: foe }; }
+    // Battle clarity (pathing): a standing wall that stopped this boarder's step holds it until it is broken.
+    if (paths && boarder.blockedBy) {
+      const wall = wallById.get(boarder.blockedBy);
+      if (wall && wall.hp > 0) { boarder.towerFoe = null; return { kind: 'wall', wall, leg: null }; }
+      boarder.blockedBy = null;
+    }
     if (paths && boarder.leg > 0) return pathTarget(boarder);
     while (boarder.leg < boarder.route.length - 1) {
       const leg = boarder.route[boarder.leg];
@@ -1187,6 +1189,22 @@ export function createWave(options = {}) {
     if (way.kind === 'heart' || toHeart(boarder) <= B.heartRadius) return { kind: 'heart', leg: boarder.route[boarder.route.length - 1] };
     if (way.kind === 'step') return { kind: 'step', point: { x: way.x, z: way.z } };
     return { kind: 'none' };
+  }
+  // Battle clarity (15 Nov, with the rule "pathing"): a boarder never walks into a standing wall. Every step goes
+  // through stepClear: the first wall on it (wallInWay, BODY off its footprint) stops the boarder there and the
+  // step returns that wall; blockAt then makes it hack that wall until it breaks (pickBoarderTarget, blockedBy).
+  // Without pathing the fixed routes step exactly as before.
+  function stepClear(boarder, ux, uz, step) {
+    if (!paths || !(step > 1e-9)) { boarder.x += ux * step; boarder.z += uz * step; return null; }
+    const to = { x: boarder.x + ux * step, z: boarder.z + uz * step }, hit = wallInWay(boarder, to, wallsInOrder);
+    if (!hit) { boarder.x = to.x; boarder.z = to.z; return null; }
+    const share = Math.max(0, hit.t - 1e-6);
+    boarder.x += ux * step * share; boarder.z += uz * step * share;
+    return hit.wall;
+  }
+  function blockAt(boarder, wall) {
+    boarder.state = 'hacking'; boarder.wallId = wall.id; boarder.towerId = null; boarder.blockedBy = wall.id;
+    boarder.hackIn = B.hackEvery / 2; boarder.vx = boarder.vz = 0;
   }
   // One tick of a boarder: hack the wall it stands at, or walk towards its target. True at the heart.
   function moveBoarder(boarder, events) {
@@ -1230,7 +1248,8 @@ export function createWave(options = {}) {
         }
         const step = Math.min(budget, d - H.contact * .9);
         boarder.vx = dx / d * boarder.speed; boarder.vz = dz / d * boarder.speed;
-        boarder.x += dx / d * step; boarder.z += dz / d * step; budget -= step;
+        if (stepClear(boarder, dx / d, dz / d, step)) { boarder.vx = boarder.vz = 0; break; } // a wall between: it waits there
+        budget -= step;
         if (step <= 1e-9) break;
         continue;
       }
@@ -1243,21 +1262,39 @@ export function createWave(options = {}) {
         }
         const step = Math.min(budget, d - B.contact * .9);
         boarder.vx = dx / d * boarder.speed; boarder.vz = dz / d * boarder.speed;
-        boarder.x += dx / d * step; boarder.z += dz / d * step; budget -= step;
+        const wall = stepClear(boarder, dx / d, dz / d, step);
+        if (wall) { blockAt(boarder, wall); return false; }
+        budget -= step;
         if (step <= 1e-9) break;
         continue;
       }
       if (target.kind === 'none') { boarder.vx = boarder.vz = 0; break; } // T35: no way to the heart: it waits
       if (target.kind === 'wall' && !target.leg) {
-        // T35: the next cell is a standing wall: hack it from where the boarder stands, next to it.
-        boarder.state = 'hacking'; boarder.wallId = target.wall.id; boarder.towerId = null; boarder.hackIn = B.hackEvery / 2; boarder.vx = boarder.vz = 0; return false;
+        // T35: a standing wall in the way: walk right up to it (its nearest edge), then hack it there, so a boarder
+        // is seen at the wall it breaks (battle clarity; before, it hacked from up to WALL_ENGAGE away).
+        const wall = target.wall, half = 1;
+        const nx = Math.max(wall.x - half, Math.min(wall.x + half, boarder.x)), nz = Math.max(wall.z - half, Math.min(wall.z + half, boarder.z));
+        const gap = edgeDistance(boarder, wall);
+        if (gap <= BODY + .05) { blockAt(boarder, wall); return false; }
+        const dx = nx - boarder.x, dz = nz - boarder.z, d = Math.sqrt(dx * dx + dz * dz);
+        if (Math.abs(dx) > .05) boarder.facing = dx < 0 ? -1 : 1;
+        const step = Math.min(budget, Math.max(0, gap - BODY));
+        boarder.vx = dx / d * boarder.speed; boarder.vz = dz / d * boarder.speed;
+        const hit = stepClear(boarder, dx / d, dz / d, step);
+        budget -= step;
+        if (hit || step <= 1e-9 || edgeDistance(boarder, wall) <= BODY + .05) { blockAt(boarder, hit ?? wall); return false; }
+        continue;
       }
       if (target.kind === 'step') {
         // T35: walk to the middle of the next cell; the next pick gives the cell after it.
         const dx = target.point.x - boarder.x, dz = target.point.z - boarder.z, d = Math.sqrt(dx * dx + dz * dz);
         if (Math.abs(dx) > .05) boarder.facing = dx < 0 ? -1 : 1;
         const step = Math.min(budget, d);
-        if (d > 1e-9) { boarder.vx = dx / d * boarder.speed; boarder.vz = dz / d * boarder.speed; boarder.x += dx / d * step; boarder.z += dz / d * step; }
+        if (d > 1e-9) {
+          boarder.vx = dx / d * boarder.speed; boarder.vz = dz / d * boarder.speed;
+          const wall = stepClear(boarder, dx / d, dz / d, step);
+          if (wall) { blockAt(boarder, wall); return false; }
+        }
         budget -= step;
         if (step <= 1e-9) break;
         continue;
@@ -1273,7 +1310,9 @@ export function createWave(options = {}) {
       const step = Math.min(budget, d - (heart ? reach * .5 : 0));
       boarder.vx = dx / d * boarder.speed; boarder.vz = dz / d * boarder.speed;
       if (Math.abs(dx) > .05) boarder.facing = dx < 0 ? -1 : 1;
-      boarder.x += dx / d * step; boarder.z += dz / d * step; budget -= step;
+      const blocked = stepClear(boarder, dx / d, dz / d, step); // pathing only: a wall on the beach stops the wade
+      if (blocked) { blockAt(boarder, blocked); return false; }
+      budget -= step;
       if (step <= 1e-9) break;
     }
     return pickBoarderTarget(boarder).kind === 'heart' && toHeart(boarder) <= B.heartRadius + 1e-6;

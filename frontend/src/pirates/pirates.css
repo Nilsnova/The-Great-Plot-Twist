@@ -119,3 +119,18 @@ html:has(.pirate-hud:not([hidden]) .pirate-bar:not([hidden])) .quest-strip{displ
 @media(max-width:900px){.pirate-hud:has(.pirate-event.is-open) .pirate-boss{top:auto}}
 @media(max-width:760px){.pirate-event{font-size:13px}.pirate-event.is-open .pirate-event-title{font-size:16px}}
 .pirate-event-art{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+
+/* The goal at a glance (battle clarity, 15 Nov): ❤️ + the heart's bar + its number, then icon chips; the words only for screen readers. */
+.pirate-quiet{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.pirate-goal{display:flex;align-items:center;gap:8px}
+.pirate-goal-heart{font-size:24px;line-height:1}
+.pirate-goal .pirate-bar-meter{flex:1;height:14px}
+.pirate-goal-value{font:700 20px/1 var(--u-font);min-width:2.2em;text-align:right}
+.pirate-chips{display:flex;justify-content:center;gap:14px;font:700 16px/1.2 var(--u-font)}
+.pirate-chip{display:inline-flex;align-items:center;gap:4px}.pirate-chip-icon{font-size:17px}
+.pirate-chip-ashore{color:#ff9a86}
+.pirate-goal-hint{position:absolute;left:50%;top:30%;transform:translateX(-50%);display:flex;align-items:center;gap:14px;padding:14px 22px;background:var(--u-parch);color:var(--u-brown);box-shadow:var(--u-frame);border-radius:var(--u-radius-sm);cursor:pointer}
+.pirate-goal-hint-step{display:flex;flex-direction:column;align-items:center;gap:2px}
+.pirate-goal-hint-icon{font-size:44px;line-height:1}.pirate-goal-hint-word{font:700 16px/1.2 var(--u-font)}
+.pirate-goal-hint-arrow{font:700 30px/1 var(--u-font);color:var(--u-pink)}
+@media(max-width:760px){.pirate-goal-hint{top:36%;gap:8px;padding:10px 14px}.pirate-goal-hint-icon{font-size:34px}.pirate-goal-hint-arrow{font-size:22px}}

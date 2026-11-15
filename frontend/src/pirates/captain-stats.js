@@ -8,10 +8,10 @@
 //   readSkills(list)  -> the known skill ids of a list, in tree order (anything else dropped)
 //   readWeapon(id)    -> a known weapon id, else 'musket'
 //
-// The strike, sweep and rebuild fields are for the cutlass and wall rebuild of another branch: the
-// integrator wires them (strike damage × strikeMultiplier, its reload × strikeReloadMultiplier, sweep
-// hits every other boarder within sweepRadius for sweepShare of the damage, a rebuilt wall gets
-// rebuildShare of its full hp).
+// The strike and rebuild fields: the cutlass's damage × strikeMultiplier, its reload × strikeReloadMultiplier, and
+// since the battle-clarity change (D052 update, 15 Nov) every swing is a sweep: it hits every boarder within
+// sweepRadius of the captain at full damage (the Sweep skill widens it by STRIKE.sweepWider). A rebuilt wall gets
+// rebuildShare of its full hp.
 import { CONFIG } from './sim.js';
 import { REACH } from './interact.js';
 import { DEFAULT_WEAPON, WEAPON_BY_ID, readSkills, readWeapon, roleOf } from './captain-ids.js';
@@ -23,7 +23,7 @@ const round2 = value => Math.round(value * 100) / 100;
 // The room sends at most one wave message every 200 ms (net/live-rules.js WAVE_GAP_MS): no gun is faster.
 export const MIN_RELOAD = .3;
 export const MIN_RANGE = 6;
-export const STRIKE = Object.freeze({ cutlass: 1.5, secondWind: .7, sweepRadius: 2, sweepShare: .5, heavyBlade: 1.25, bruiser: 1.3 });
+export const STRIKE = Object.freeze({ cutlass: 1.5, secondWind: .7, sweepWider: 1, heavyBlade: 1.25, bruiser: 1.3 });
 export const REPAIR = Object.freeze({ quickFix: 1.5, master: 2, longReach: 2, rebuild: .4, masterRebuild: .6,
   swiftHammer: 1.25, wideArc: 2, planksRebuild: .55, grandRebuild: .8 });
 export const MARKSMAN = Object.freeze({ steadyAim: 1.25, longBarrel: 3, quickHands: .75, hotShot: 1.15, farSight: 4,
@@ -59,10 +59,10 @@ export function captainStats(level = 1, skills = [], weapon = DEFAULT_WEAPON) {
     level: lvl, weapon: gun.id, name: gun.name, mode: gun.mode, damage, range, reload, shotSpeed: CONFIG.captain.shotSpeed,
     targets: gun.targets ?? 1, cone: gun.cone ?? 0, pierceDepth: gun.pierceDepth ?? 0, pierceWidth: gun.pierceWidth ?? 0,
     radius: gun.radius ?? 0, flight: gun.flight ?? 0, flightPerUnit: gun.flightPerUnit ?? 0,
-    // The cutlass of the boarding branch (wired by the integrator).
+    // The cutlass: a sweep round the captain (CONFIG.captain.cutlass.reach, wider with Sweep) that hits every boarder in it.
     strikeMultiplier: round2(times(['cutlass', STRIKE.cutlass], ['heavy_blade', STRIKE.heavyBlade], ['bruiser', STRIKE.bruiser])),
     strikeReloadMultiplier: has('second_wind') ? STRIKE.secondWind : 1,
-    sweep: has('sweep'), sweepRadius: STRIKE.sweepRadius, sweepShare: STRIKE.sweepShare,
+    sweep: has('sweep'), sweepRadius: round2(CONFIG.captain.cutlass.reach + (has('sweep') ? STRIKE.sweepWider : 0)),
     // Walls: your repairs (sim.js), how far you reach a wall (interact.js), a rebuild's share of hp.
     repairMultiplier, repairReach: round2(REACH + (has('long_reach') ? REPAIR.longReach : 0) + (has('wide_arc') ? REPAIR.wideArc : 0)),
     rebuildShare: has('grand_engineer') ? REPAIR.grandRebuild : has('master_shipwright') ? REPAIR.masterRebuild

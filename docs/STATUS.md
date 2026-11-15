@@ -584,6 +584,7 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 
 ## Log
 
+- **2026-11-15, battle clarity (D053), branch `feat/battle-clarity`.** Claude, for Nils after playtesting: landings, routes and the heart drawn on the island (faint between waves), wall hp bars, the cutlass as a sweep (reload 0.75 s), an icon goal HUD with a first-wave hint, and walls that block until broken (pathing). No migration; no PR yet.
 - **15 Nov 2026 · Claude, for Nils / D050:** bigger Harbor stakes on `feat/bigger-stakes`: one stake picker (− / + in 5 % steps, 10 % / 25 % / 50 % / All in, "Win 🪙 X") at the match board and the market stall, match board 1 to 10,000 a bet and 25,000 a day at double or nothing, market calls 5 to 10,000; migration `20261115120000_bigger_stakes.sql` not applied anywhere yet; no PR or merge.
 
 - **2026-11-15, tower skills cost coins (D051), branch `feat/tower-skill-prices`.** Claude, for Nils after playtesting: a tower's skill pick is paid by the clicker (cannon 150 / capstone 600, mortar 120 / 480, watchtower 80 / 320, wall 40 / 160; house roles free); migration `20261115130000_tower_skill_price.sql` not applied; no PR yet.

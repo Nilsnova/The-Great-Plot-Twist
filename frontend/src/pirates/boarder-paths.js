@@ -27,6 +27,42 @@ const MARGIN = 1.15;             // the grid reaches this many coast radii out, 
 export const WALL_ENGAGE = 3;
 export const WALL_LANE = .25;    // ... and a wall counts as across the way when the straight line passes this close to its footprint
 
+// Battle clarity (15 Nov, owner: "only once a wall breaks can pirates go forward"): a boarder's body keeps this far
+// (units) off a standing wall's footprint; a step that would come closer stops there and the boarder hacks that wall.
+export const BODY = .3;
+
+/** How far a point is from a wall's 2 x 2 footprint (0 on or inside it). Plain sums: the same bits everywhere. */
+export function edgeDistance(point, wall) {
+  const half = WALL_FOOTPRINT / 2;
+  const dx = Math.max(Math.abs(point.x - wall.x) - half, 0), dz = Math.max(Math.abs(point.z - wall.z) - half, 0);
+  return Math.sqrt(dx * dx + dz * dz);
+}
+
+/**
+ * The first standing wall a straight step from `from` to `to` runs into: {wall, t} (t: the share of the step walked
+ * before it, 0..1), or null. A wall counts from BODY off its footprint; a boarder already that close to one (it stands
+ * hacking next to it) is stopped by the footprint itself, and one already inside a footprint (a wall rebuilt round
+ * it) may walk out. `walls` in id order: equal t goes to the lower id. Pure and deterministic.
+ */
+export function wallInWay(from, to, walls, body = BODY) {
+  const half = WALL_FOOTPRINT / 2, dx = to.x - from.x, dz = to.z - from.z;
+  let best = null, bestT = Infinity;
+  for (const wall of walls) {
+    if (!(wall.hp > 0)) continue;
+    const inside = (h) => Math.abs(from.x - wall.x) < h - 1e-9 && Math.abs(from.z - wall.z) < h - 1e-9;
+    if (inside(half)) continue;
+    const h = inside(half + body) ? half : half + body;
+    let t0 = 0, t1 = 1, hit = true;
+    for (const [p, d, c] of [[from.x, dx, wall.x], [from.z, dz, wall.z]]) {
+      if (Math.abs(d) < 1e-12) { if (p <= c - h || p >= c + h) hit = false; continue; }
+      const ta = (c - h - p) / d, tb = (c + h - p) / d;
+      t0 = Math.max(t0, Math.min(ta, tb)); t1 = Math.min(t1, Math.max(ta, tb));
+    }
+    if (hit && t0 < t1 - 1e-12 && t0 < bestT - 1e-12) { best = wall; bestT = t0; }
+  }
+  return best ? { wall: best, t: bestT } : null;
+}
+
 /** True when x, z lies inside the coast (radius 1 of coastPoint in sim.js, the same edge formula). */
 export function isOnLand(x, z, coast) {
   const u = x / coast.rx, v = z / coast.rz, a = Math.atan2(v, u);

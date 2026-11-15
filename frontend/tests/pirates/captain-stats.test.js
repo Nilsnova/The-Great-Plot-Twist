@@ -23,7 +23,7 @@ describe('captainStats', () => {
     expect(captainStats(1, ['quick_hands']).reload).toBe(.9);
     const none = captainStats(1), all = captainStats(1, SKILL_IDS.filter(id => !SKILLS.find(skill => skill.id === id).excludes));
     expect([none.strikeMultiplier, none.strikeReloadMultiplier, none.sweep, none.repairMultiplier, none.repairReach, none.rebuildShare]).toEqual([1, 1, false, 1, REACH, .4]);
-    expect([all.strikeReloadMultiplier, captainStats(1, ['sweep']).sweep, all.sweepRadius, all.sweepShare]).toEqual([.7, true, 2, .5]);
+    expect([all.strikeReloadMultiplier, captainStats(1, ['sweep']).sweep, captainStats(1, ['cutlass', 'sweep']).sweepRadius, none.sweepRadius]).toEqual([.7, true, 3.2, 2.2]);
     expect(captainStats(1, ['cutlass']).strikeMultiplier).toBe(1.5);
     expect(captainStats(1, ['quick_fix']).repairMultiplier).toBe(1.5);
     expect(captainStats(1, ['quick_fix', 'long_reach']).repairReach).toBe(REACH + 2);

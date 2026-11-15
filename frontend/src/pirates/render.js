@@ -55,7 +55,7 @@ const TOWER_BAR_LIFT = 2.7;          // T33: drawn units above the ground for a 
 const BURST_SECONDS = .6, POSE_SECONDS = .6, POST_CAPACITY = 8;
 // Boarders on land: one sprite layer per 2-unit band of z (renderOrder 100 + z like the island's art), so
 // they pass in front of and behind walls, buildings and the player; a band is drawn only while it has one.
-const BAND = 2, BAND_FROM = -26, BANDS = 26, BAND_CAPACITY = 96, STRIKE_SECONDS = .3, FALL_SECONDS = .5;
+const BAND = 2, BAND_FROM = -26, BANDS = 26, BAND_CAPACITY = 96, STRIKE_SECONDS = .3, SWEEP_SECONDS = .5, FALL_SECONDS = .5;
 export const BOARDER_BANDS = BANDS;
 export const bandOf = z => Math.max(0, Math.min(BANDS - 1, Math.floor((z - BAND_FROM) / BAND)));
 // The musket (§10): the firing pose and its flash stay ~250 ms, a short tracer runs to the target, a puff on the hit.
@@ -551,10 +551,12 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         break;
       }
       case 'captain_struck': {
-        // The blow: a ring at the blade. The body that swings it is the captain's own (src/pirates/poses.js).
-        const dir = event.toX < event.x ? -1 : 1, from = shooterAt(event);
-        strikes.add(item => Object.assign(item, { x: from.x, z: from.z, dir, at: clock }));
-        effects()?.ring(from.x + dir * 1.4, drawnY(from.z) + .9, { radius: .9, life: .25, colour: '#e8eee8' });
+        // The sweep (melee, 15 Nov): a white blade arc swings once round the captain at the swing's radius, every
+        // boarder inside is hit. Unlike the musket's gold tracer (ranged) it is a circle on the ground at your feet.
+        // The body that swings it is the captain's own (src/pirates/poses.js).
+        const dir = event.toX < event.x ? -1 : 1, from = shooterAt(event), radius = Number.isFinite(event.radius) ? event.radius : 2.2;
+        strikes.add(item => Object.assign(item, { x: from.x, z: from.z, dir, at: clock, radius }));
+        effects()?.ring(from.x, drawnY(from.z) + .3, { radius, life: .3, colour: '#f4f8ff' });
         break;
       }
       // The house roles (GAME-V3.md "Houses"): a militia's spear thrust, a militia hurt or down, a Tavern's healing.
@@ -844,6 +846,20 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       if (puff) layers.air.push(puff, tx, ty - .3, puff.w * look.puff, puff.h * look.puff, .5, puff.anchor * look.puff, { a: 1 - p * p });
     }
   }
+  // The cutlass sweep: a bright arc that runs once round the captain (in the swing's direction) and fades, on the
+  // ground ellipse at the swing's radius, so melee reads as "everyone in this circle", never as a shot.
+  function drawSweep(item) {
+    const p = Math.max(0, Math.min(1, (clock - item.at) / SWEEP_SECONDS)), cy = drawnY(item.z) + .3, r = item.radius;
+    const head = still() ? Math.PI * 2 : Math.min(1, p / .6) * Math.PI * 2, fade = still() ? .8 : 1 - Math.max(0, p - .5) * 1.6, k = K();
+    for (let i = 0; i < 32; i++) {
+      const a = i / 32 * Math.PI * 2;
+      if (a > head) break;
+      const lit = 1 - Math.min(1, (head - a) / (Math.PI * 1.5)), angle = item.dir * a - Math.PI / 2, size = (.4 + lit * .3) * k;
+      const x = item.x + Math.cos(angle) * r, y = cy + Math.sin(angle) * r * Y;
+      layers.air.push(rect[WHITE], x, y, size + .12 * k, size + .12 * k, .5, (size + .12 * k) / 2, { ...DARK, a: .5 * fade });
+      layers.air.push(rect[WHITE], x, y, size, size, .5, size / 2, { r: .95, g: .98, b: 1, a: (.45 + lit * .55) * fade });
+    }
+  }
   function drawCaptain() {
     // The reload ring around your own captain: 12 brass dots fill up until the musket is ready again.
     if (!captain || captain.share >= 1) return;
@@ -965,6 +981,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       for (const item of warnings.items) drawWarning(item);
       for (const item of jamShots.items) drawJamShot(item);
       for (const tower of state.towers ?? []) if (tower.jammed !== undefined) drawJamMark(tower);
+      for (const item of strikes.items) drawSweep(item);
       drawCaptain();
       drawParty(state);
       // T33: a bar over every tower with hp that has taken damage (none while the wave has no tower health).
@@ -1033,7 +1050,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       warnings.sweep(item => clock - item.at < 3.2);
       jamShots.sweep(item => clock - item.at < .3);
       fallen.sweep(item => clock - item.at < FALL_SECONDS);
-      strikes.sweep(item => clock - item.at < STRIKE_SECONDS);
+      strikes.sweep(item => clock - item.at < SWEEP_SECONDS);
       balls.sweep(ball => { if (simNow < ball.to) return true; land(ball); return false; });
       splashes.sweep(item => clock - item.at < SPLASH_SECONDS);
       sinkers.sweep(item => clock - item.at < SINK_SECONDS);

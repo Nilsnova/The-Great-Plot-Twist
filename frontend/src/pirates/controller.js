@@ -73,6 +73,10 @@ export const bossText = warships => (warships >= 2 ? '⚠ Boss wave: two warship
 export const BREAK_SECONDS = 8;       // the break after a won wave (TOWER-DEFENSE.md §1; faster pace, owner 11 Nov)
 const BOSS_WARNING_SECONDS = 6;       // the boss warning stays this long after the wave starts
 export const AUTO_KEY = 'tgpt:pirates:auto-next';
+export const HINT_KEY = 'tgpt:pirates:goal-hint';   // the first-wave hint (🏝️ → 🧱 → ❤️) shows once per device
+export const HINT_SECONDS = 9;
+const readHint = () => { try { return globalThis.localStorage?.getItem(HINT_KEY) === '1'; } catch { return false; } };
+const writeHint = () => { try { globalThis.localStorage?.setItem(HINT_KEY, '1'); } catch { /* private mode: shown again next visit */ } };
 export const LOST_TITLE = 'The pirates broke through';
 export const LOST_LINE = 'Rebuild and ring the bell again.';
 const readAuto = () => { try { return globalThis.localStorage?.getItem(AUTO_KEY) === '1'; } catch { return false; } };
@@ -87,8 +91,8 @@ export function captainTarget(player, state, level = 1, range = captainStats(lev
   return best;
 }
 /** The nearest boarder within cutlass reach of (x, z), or null: close quarters (TOWER-DEFENSE.md §12). */
-export function bladeTarget(player, state) {
-  let best = null, bestDistance = CONFIG.captain.cutlass.reach;
+export function bladeTarget(player, state, reach = CONFIG.captain.cutlass.reach) {
+  let best = null, bestDistance = reach;
   for (const boarder of state?.boarders ?? []) {
     const d = Math.hypot(boarder.x - player.x, boarder.z - player.z);
     if (d <= bestDistance) { best = boarder; bestDistance = d; }
@@ -159,6 +163,8 @@ const defaultRenderer = async options => {
   return module.createWaveRenderer({ ...options, atlas: await atlasPromise });
 };
 const defaultHud = async options => (await import('./hud.js')).createWaveHud(options);
+// The battle guide (battle-guide.js): where pirates land, the way they walk, the heart and the walls' bars. Drawing only.
+const defaultGuide = async options => (await import('./battle-guide.js')).createBattleGuide(options);
 // v3 waves: the event's drawing and the finisher's scene load with their first wave; the finisher slows the sea.
 const defaultEventArt = async options => (typeof document === 'undefined' ? null : (await import('./wave-events-art.js')).createEventArt(options));
 const defaultFinisherScene = async options => {
@@ -185,7 +191,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   getCrew = () => null, captainLevel = () => 1, captainSkills = () => [], captainWeapon = () => 'musket', captainColour = () => 0,
   startNextWave = null, breakSeconds = BREAK_SECONDS,
   loadAuto = readAuto, saveAuto = writeAuto, holdBreak = null, toggleHold = null, reviveCaptain = null,
-  createEventArt = defaultEventArt, createFinisherScene = defaultFinisherScene, easyFinishers = readEasy, practiceIdentity = () => null } = {}) {
+  createEventArt = defaultEventArt, createFinisherScene = defaultFinisherScene, easyFinishers = readEasy, practiceIdentity = () => null,
+  guide: guideOn = false, createGuide = defaultGuide } = {}) {
   // The captains' poses (src/pirates/poses.js): your character and the teammates' figures fire in their own body.
   const poses = createPoses({ now: () => now() / 1000 });
   let wave = null, disposed = false, pressed = false, shootPressed = false, shootHeld = false, down = null, shake = 0;
@@ -204,6 +211,32 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   const cue = name => { if (wave?.shown) sound?.cue?.(name); };
   const here = () => !place || (world.place?.() ?? place) === place;
   const blocked = () => !!world.isBlocked?.();
+
+  // The battle guide (guide: true, the island's controller only): landings, routes, the heart and the walls' bars;
+  // faintly between waves on this island, in full during a wave. Drawing only: it reads the state, never the sim.
+  let guide = null, guideLoading = false, lastWave = 0;
+  function updateGuide(dt) {
+    if (!guideOn || !world.scene || disposed) return;
+    if (!guide) {
+      if (!guideLoading) {
+        guideLoading = true;
+        Promise.resolve(createGuide({ scene: world.scene, reducedMotion, characterScale: () => world.scene?.userData?.characterScale ?? 1 }))
+          .then(made => { if (disposed) made?.dispose(); else guide = made; }).catch(error => console.error(error));
+      }
+      return;
+    }
+    const current = wave, running = current && !current.done && !current.pause;
+    const show = here() && (!current || current.pause || running);
+    guide.setVisible?.(show);
+    if (!show) { guide.update(null); return; }
+    if (running) {
+      guide.update({ mode: 'wave', lanes: current.lanes?.length ? current.lanes : null, defenses: current.defenses, stateWalls: current.state.walls,
+        boarders: current.state.boarders, heart: current.state.heart, wave: current.info.wave, dt });
+    } else {
+      const defenses = read(getDefenses, []) ?? [];
+      guide.update({ mode: 'preview', lanes: null, defenses, stateWalls: null, boarders: [], heart: null, wave: (current?.info.wave ?? lastWave) + 1, dt });
+    }
+  }
 
   if (listen && bus?.on) stops.push(bus.on('wave_started_server', event => { const info = readWaveInfo(event); if (info && accept(info)) start(info); }));
   if (room?.on) for (const type of Object.values(ROOM_EVENTS)) {
@@ -320,8 +353,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     // Close quarters: the named boarder in reach, else (F, or a tap on a boarder further away) the nearest boarder
     // in reach. A musket at point blank is no use with a pirate in your face.
     const isBoarder = named?.id?.startsWith('boarder_');
-    const close = isBoarder && Math.hypot(named.x - player.x, named.z - player.z) <= CONFIG.captain.cutlass.reach
-      ? named : !targetId || isBoarder ? bladeTarget(player, state) : null;
+    const close = isBoarder && Math.hypot(named.x - player.x, named.z - player.z) <= stats.sweepRadius
+      ? named : !targetId || isBoarder ? bladeTarget(player, state, myStats().sweepRadius) : null;
     if (close) return strike(close);
     const target = targetId ? named : captainTarget(player, state, myLevel(), stats.range);
     if (!target || Math.hypot(target.x - player.x, target.z - player.z) > stats.range) return false;
@@ -386,7 +419,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   // captain swings by themself every AUTO_BLADE.reload seconds (slower than your own F). The same captain_strike.
   let autoBlade = true; // the browser checks turn it off to let a captain fall on purpose (controller.autoBlade)
   function autoStrike(current, player) {
-    const t = current.ticks * TICK_SECONDS, target = bladeTarget(player, current.state);
+    const t = current.ticks * TICK_SECONDS, target = bladeTarget(player, current.state, myStats().sweepRadius);
     if (!target || t - (current.handAt ?? -Infinity) < AUTO_BLADE.after - 1e-9) return false;
     return strike(target, Math.max(bladeReload(), AUTO_BLADE.reload));
   }
@@ -558,7 +591,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       else if (event.type === 'mortar_impact') { cue('pirate-mortar-impact'); cue(event.hits ? 'pirate-hit' : 'pirate-splash'); kick(.08); }
       else if (event.type === 'captain_fired') cue('pirate-musket');
       else if (event.type === 'captain_blast') { cue(event.hits ? 'pirate-hit' : 'pirate-splash'); kick(.06); } else if (event.type === 'ship_hit' && !event.blocked) cue('pirate-hit');
-      else if (event.type === 'captain_struck' || event.type === 'boarder_killed') cue('pirate-hit');
+      else if (event.type === 'captain_struck') cue('pirate-slash'); // melee: a blade's whoosh, not the musket's crack
+      else if (event.type === 'boarder_killed') cue('pirate-hit');
       else if (event.type === 'ship_sunk') { cue('pirate-sunk'); if (event.kind === 'flagship') kick(.5); }
       else if (event.type === 'wall_damaged') cue('pirate-wall');
       else if (event.type === 'island_damaged') { cue('pirate-wall'); kick(.18); }
@@ -569,8 +603,10 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   function kick(amount) { if (!reducedMotion() && wave?.shown) shake = Math.max(shake, amount); }
 
   function update(dt = 0) {
+    updateGuide(dt);
     if (disposed || !wave) return;
     const current = wave;
+    lastWave = current.info.wave;
     current.shown = here();
     current.renderer?.setVisible(current.shown);
     current.hud?.setVisible(current.shown);
@@ -617,6 +653,9 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     if (seconds !== current.lastCount) { current.lastCount = seconds; if (seconds > 0 && seconds <= 3) cue('pirate-tick'); }
     current.hud?.countdown(current.done ? 0 : Math.min(seconds, 99));
     current.hud?.boss?.(current.boss && !current.done && elapsed < BOSS_WARNING_SECONDS ? current.boss : '');
+    // The first-wave hint (guide on): the three pictures for HINT_SECONDS of the first wave this device plays.
+    if (guideOn && current.hud && current.hintShown === undefined) { current.hintShown = !readHint(); if (current.hintShown) writeHint(); }
+    current.hud?.goalHint?.(current.hintShown === true && !current.done && elapsed > -3 && elapsed < HINT_SECONDS);
     current.hud?.loot?.(startNextWave || runLoot > 0 ? runLoot : null);
     if (current.pause) updatePause(current);
     current.hud?.bar(current.done && !current.finished ? current.state : current.state.phase === 'countdown' ? countdownBar(current) : current.state);
@@ -638,7 +677,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     if (shootPressed || shootHeld) { shootPressed = false; if (!blocked()) shoot(); }
     else if (autoBlade && running && !fallen && !blocked() && !finishing(current)) autoStrike(current, player);
     // The button: "F: Slash" (the cutlass) with a boarder in strike reach, else the equipped weapon's name (none while fallen).
-    const blade = running && !!bladeTarget(player, current.state);
+    const blade = running && !!bladeTarget(player, current.state, stats.sweepRadius);
     current.hud?.musket?.(running && !fallen && !finishing(current) ? { share: blade ? bladeShare(current) : captainShare(current),
       ready: blade || !!captainTarget(player, current.state, myLevel(), stats.range), blade, label: stats.name } : null);
     current.hud?.health?.(me && !current.done && current.shown ? { hp: me.hp, maxHp: me.maxHp, down: me.down } : null);
@@ -804,7 +843,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     },
     dispose() {
       if (disposed) return;
-      stop(); disposed = true;
+      stop(); disposed = true; guide?.dispose(); guide = null;
       for (const id of timers) clearTimer(id);
       timers.clear(); stops.splice(0).forEach(stopListening => stopListening());
       if (typeof window !== 'undefined') { window.removeEventListener('keydown', keydown); window.removeEventListener('keyup', keyup); window.removeEventListener('blur', letGo); }

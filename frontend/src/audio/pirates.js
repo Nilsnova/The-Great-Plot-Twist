@@ -3,10 +3,10 @@
 // a whole battery firing at once stays one clean thump instead of a wall of noise.
 import { BATTLE_CUES } from './battle-sounds.js';
 const GAP = { 'pirate-cannon': .07, 'pirate-cannon-manual': .05, 'pirate-splash': .09, 'pirate-hit': .06, 'pirate-wall': .12,
-  'pirate-mortar': .12, 'pirate-mortar-impact': .12, 'pirate-musket': .04, 'pirate-gunboat': .06, 'pirate-harpoon': .08, 'pirate-culverin': .12, 'pirate-horn': 1 };
+  'pirate-mortar': .12, 'pirate-mortar-impact': .12, 'pirate-musket': .04, 'pirate-gunboat': .06, 'pirate-harpoon': .08, 'pirate-culverin': .12, 'pirate-horn': 1, 'pirate-slash': .08 };
 export const PIRATE_CUES = ['pirate-cannon', 'pirate-cannon-manual', 'pirate-splash', 'pirate-hit', 'pirate-wall',
   'pirate-sunk', 'pirate-bell', 'pirate-victory', 'pirate-defeat', 'pirate-tick',
-  'pirate-mortar', 'pirate-mortar-impact', 'pirate-musket', 'pirate-horn', 'pirate-harpoon', 'pirate-gunboat', 'pirate-culverin'];
+  'pirate-mortar', 'pirate-mortar-impact', 'pirate-musket', 'pirate-horn', 'pirate-harpoon', 'pirate-gunboat', 'pirate-culverin', 'pirate-slash'];
 const CAPTIONS = {
   'pirate-bell': 'The pirate bell rings',
   'pirate-victory': 'Victory: the island holds',
@@ -37,6 +37,8 @@ export function createPirateSound({ synth, effects, music, caption = () => {}, n
       case 'pirate-hit': synth.noise(effects, .14, .05, 520); synth.tone(effects, 118, .09, .035, 'square'); break;
       case 'pirate-wall': synth.noise(effects, .2, .045, 340); synth.tone(effects, 70, .12, .03, 'triangle'); break;
       case 'pirate-sunk': synth.noise(effects, .9, .035, 420); synth.tone(effects, 98, .7, .03, 'sine'); synth.tone(effects, 73, .9, .03, 'sine', .25); break;
+      // The cutlass sweep: a high whoosh of air and a short ring of steel (the musket is a crack, the hit a thud).
+      case 'pirate-slash': synth.noise(effects, .16, .04, 2800); synth.noise(effects, .1, .03, 1500); synth.tone(effects, 1320, .12, .012, 'triangle', .03); break;
       case 'pirate-tick': synth.tone(effects, 990, .06, .03, 'square'); break;
       case 'pirate-bell':
         for (const delay of [0, .55]) {

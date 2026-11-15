@@ -38,7 +38,7 @@ export const SKILLS = Object.freeze([
   skill('heavy_shot', 'marksman', 4, 'Heavy shot', 'Your gun does 20% more damage.', 3, ['quick_hands'], { excludes: 'far_sight' }),
   skill('dead_eye', 'marksman', 5, 'Dead eye', 'Gunner only: your gun does 30% more damage and reaches 2 units farther.', 4, ['far_sight', 'heavy_shot'], { role: 'gunner' }),
   skill('cutlass', 'brawler', 1, 'Cutlass', 'Your close-quarters strike does 50% more damage.', 1, []),
-  skill('sweep', 'brawler', 2, 'Sweep', 'A strike also hits every other boarder within 2 units for half damage.', 2, ['cutlass'], { excludes: 'heavy_blade' }),
+  skill('sweep', 'brawler', 2, 'Sweep', 'Your cutlass sweep reaches farther.', 2, ['cutlass'], { excludes: 'heavy_blade' }),
   skill('heavy_blade', 'brawler', 2, 'Heavy blade', 'Your strike does 25% more damage.', 2, ['cutlass'], { excludes: 'sweep' }),
   skill('second_wind', 'brawler', 3, 'Second wind', 'Your strike reloads 30% faster.', 3, ['sweep', 'heavy_blade']),
   skill('snap_shot', 'brawler', 4, 'Snap shot', 'Your gun reloads 15% faster.', 3, ['second_wind'], { excludes: 'bruiser' }),
