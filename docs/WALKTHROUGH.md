@@ -1183,6 +1183,18 @@ The UI kit and shortcuts overlay are existing team code; Codex drafted the host 
 for Johannes. A fixed error message plus explicit retry is simpler than automatic
 retries or another networking layer. Live networks/physical phones remain unverified.
 
+## Johannes: Arsenal replies after travel (B3)
+
+**What:** A buy, take or return requested on island A cannot replace inventory, coin display, messages or loadout after travel to island B. A completed server purchase is kept.
+
+**Where/how:** `arsenal.js` saves the island key before a move. After each awaited answer, including a refusal-triggered refresh, it checks that key before applying UI state. Initial reads also discard old-island errors. The existing busy state is released even when a reply is ignored. Source: [island/arsenal.js](../frontend/src/island/arsenal.js).
+
+**Why:** The controller already has a current-island key and refresh tickets. A few checks reuse those boundaries; there is no second cache, request queue or API change.
+
+**Tests:** [arsenal-context.test.js](../frontend/tests/island/arsenal-context.test.js). Eleven controlled cases cover delayed success/refusal for buy/take/return, late read success/error, travel during refusal refresh, normal delayed success and a completed fake-server purchase surviving the ignored answer.
+
+**Limits / possible change:** These are controlled controller replies. The persistent-purchase case uses the in-memory fake, not SQL or real Realtime. Returning to the same island before a reply finishes is not a new navigation-generation protocol. A future broader navigation cancellation policy should be agreed separately. [Evidence](evidence/B3-arsenal-context/README.md); [PR #88](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/88). Codex drafted the change and tests; Johannes's own rehearsal and independent human review are pending.
+
 ## The three course questions
 
 ### Q1. Where is the data stored?

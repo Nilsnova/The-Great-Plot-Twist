@@ -14,6 +14,8 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
+**15 Nov, B3 / Johannes:** Late arsenal replies stay with their original island in draft [PR #88](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/88). A buy, take or return requested on island A cannot replace inventory, coin display, messages or loadout after travel to island B. A completed server purchase is kept. [Evidence and verification](../specs/B3-arsenal-context.md). Login/APIs unchanged; author rehearsal and independent human review pending.
+
 
 **14 Nov, B2 / Johannes:** [draft PR #58](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/58) removes four 40px island-button overrides: Hire crew, Move, Tear down and Players now use the existing 44px kit minimum. Four browser cases and real fake-game before/after captures at 375x812, 390x844 and 1280x720; [measurements/limits](evidence/B2-phone-targets/README.md). Full frontend: 260 files / 3,206 tests; build/budget/text lint, accessibility 33 screens and demo 33 checks pass on main `4d83dcd`. Login/APIs unchanged; draft, author and human review pending. Full B2 and physical-device checks remain open.
 **14 Nov, B2 entry/lobby / Johannes:** [draft PR #61](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/61) fixes visually truncated captain names in full phone lobbies: a small mobile grid lets names wrap and puts status below. Seven focused cases, plus a repeatable 21-panel title-to-lobby fake-game audit at 375x812, 390x844 and 1280x720. Full frontend: 260 files / 3,209 tests; build/budget/text lint, accessibility 33 screens and demo 33 checks pass on the branch from main `4d83dcd`. [Before/after, entry audit and limits](evidence/B2-entry-lobby/README.md). Login/APIs unchanged; independent of #58. Draft; author/human review, physical phone/keyboard and remaining B2 game views are open.
@@ -583,6 +585,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+- **15 Nov 2026 · Johannes / B3 #88:** Late arsenal replies stay with their original island. Full frontend, build, budget, text lint and demo passed; known main accessibility failure reproduced separately. [Exact results/limits](../specs/B3-arsenal-context.md#verification-15-nov-2026). Draft; no merge.
 
 - **2026-11-15, no overlaps, branch `fix/overlaps`.** Claude, for Nils: an overlap audit (`npm run test:overlaps`) and its fixes: toasts under the wave bar and under an open card's header, the first-wave hint inside the wave bar, a shorter bar on short screens, battle guide badges that no longer sit on each other (axe beside the wall bar, skull off a shore wall, shared route cells drawn once, thinner routes on phones). No game rules changed; no PR yet.
 - **2026-11-15, battle clarity (D053), branch `feat/battle-clarity`.** Claude, for Nils after playtesting: landings, routes and the heart drawn on the island (faint between waves), wall hp bars, the cutlass as a sweep (reload 0.75 s), an icon goal HUD with a first-wave hint, and walls that block until broken (pathing). No migration; no PR yet.
