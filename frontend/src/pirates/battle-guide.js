@@ -234,6 +234,15 @@ function paintIcons() {
   return texture;
 }
 
+/** Where a landing's skull badge stands: on the landing, or SKULL_SHIFT seaward (away from the heart) when a wall stands within SKULL_CLEAR of it. */
+export const SKULL_CLEAR = 3, SKULL_SHIFT = 2.6;
+export function skullAt(landing, heart = CONFIG.boarding.heart, walls = [], scale = 1) {
+  if (!walls.some(wall => Math.hypot(wall.x - landing.x, wall.z - landing.z) < SKULL_CLEAR)) return [landing.x, landing.z];
+  const dx = landing.x - heart.x, dz = landing.z - heart.z, d = Math.hypot(dx, dz) || 1;
+  return [round2(landing.x + dx / d * SKULL_SHIFT * scale), round2(landing.z + dz / d * SKULL_SHIFT * scale)];
+}
+// How far right of a wall's centre its axe badge sits: half the hp bar (.8 + .07 frame) plus half the badge (.7) and a gap.
+export const AXE_SIDE = 1.75;
 const RGB = hex => { const c = new THREE.Color(hex); return { r: c.r, g: c.g, b: c.b }; };
 const RED = RGB('#ff4a36'), DARK = RGB('#1f2622'), GOLD = RGB('#ffd34d'), WHITE = { r: 1, g: 1, b: 1 };
 const BAR = { good: RGB('#7ed957'), low: RGB('#ffd34d'), bad: RGB('#ff4a36') };
@@ -245,7 +254,9 @@ const BAR = { good: RGB('#7ed957'), low: RGB('#ffd34d'), bad: RGB('#ff4a36') };
  * preview draws faintly and without wall marks; wave draws everything. The
  * routes are worked out again only when routeKey() changes (a wall placed, broken, rebuilt or past a quarter of hp).
  */
-export function createBattleGuide({ scene, reducedMotion = () => false, characterScale = () => 1 }) {
+// sparse(): a phone-sized screen (overlap audit, 15 Nov): half the dots and fewer chevrons, so the routes stay readable.
+const phoneSized = () => typeof window !== 'undefined' && Math.min(window.innerWidth, window.innerHeight) <= 500;
+export function createBattleGuide({ scene, reducedMotion = () => false, characterScale = () => 1, sparse = phoneSized }) {
   const owned = [], root = new THREE.Group(); root.name = 'battle-guide'; scene.add(root);
   const icons = paintIcons(), blank = icons ? null : new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1);
   if (blank) blank.needsUpdate = true;
@@ -260,16 +271,23 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
   const drawnY = z => -z * Y;
 
   // k: how big the marks draw, the characters' battle scale during a wave (the camera is zoomed out), 1 between waves.
-  let k = 1;
+  let k = 1, thin = false;
+  // Routes from two landings often share their last cells: each cell draws once (`cells`), each axe once (`axes`).
+  const cells = new Set(), axes = new Set();
   function drawRoute(route, alpha, live) {
     const dots = routeDots(route.points);
     const total = dots.length ? dots[dots.length - 1].along : 0;
+    const every = thin ? 4 : 3;
     dots.forEach((dot, i) => {
       if (i < 2) return; // under the landing ring
+      const cell = `${Math.round(dot.x * 2)},${Math.round(dot.z * 2)}`;
+      if (cells.has(cell)) return;
+      cells.add(cell);
+      if (thin && i % every !== 0 && i % 2) return;
       // A light runs along the route from the beach to the heart, so the way reads at a glance.
       const glow = still() || !live ? 0 : Math.max(0, Math.cos((dot.along - clock * 3.2) * .7)) ** 2;
       const y = drawnY(dot.z);
-      if (i % 3 === 0 && total - dot.along > 2) {
+      if (i % every === 0 && total - dot.along > 2) {
         const angle = Math.atan2(-dot.dz * Y, dot.dx);
         ground.push(SHAPE.chevron, dot.x, y, 1.05 * k, 1.05 * k, { ...DARK, a: alpha * .75 }, { angle });
         ground.push(SHAPE.chevron, dot.x, y, .8 * k, .8 * k, { r: 1, g: .3 + glow * .55, b: .2 + glow * .4, a: alpha }, { angle });
@@ -279,13 +297,21 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
         ground.push(SHAPE.disc, dot.x, y, d, d * Y, { r: 1, g: .3 + glow * .55, b: .2 + glow * .4, a: alpha });
       }
     });
-    for (const breach of route.breaches) air.push(SHAPE.icon, breach.x, drawnY(breach.z) + 1.5 * k, 1.5 * k, 1.5 * k, { ...WHITE, a: Math.min(1, alpha + .25) }, { icon: 'axe' });
+    // The axe sits beside the wall's hp bar (same row, to its right), never on top of it.
+    for (const breach of route.breaches) {
+      if (axes.has(breach.wallId)) continue;
+      axes.add(breach.wallId);
+      air.push(SHAPE.icon, breach.x + AXE_SIDE * k, drawnY(breach.z) + 1.45 * k, 1.4 * k, 1.4 * k, { ...WHITE, a: Math.min(1, alpha + .25) }, { icon: 'axe' });
+    }
   }
-  function drawLanding(landing, alpha, live) {
+  function drawLanding(landing, alpha, live, heart, walls) {
     const pulse = still() || !live ? 1 : 1 + .1 * Math.sin(clock * 5), y = drawnY(landing.z), r = 3.4 * k * pulse;
     ground.push(SHAPE.ring, landing.x, y, r + .3 * k, (r + .3 * k) * Y, { ...DARK, a: alpha * .6 });
     ground.push(SHAPE.ring, landing.x, y, r, r * Y, { ...RED, a: alpha });
-    air.push(SHAPE.icon, landing.x, y + 1.5 * k, 1.8 * k, 1.8 * k, { ...WHITE, a: Math.min(1, alpha + .3) }, { icon: 'skull' });
+    // A shore wall on the landing would hide under the skull (and its hp bar collide with it): the skull then
+    // moves seaward, still inside the ring.
+    const [sx, sz] = skullAt(landing, heart, walls, k);
+    air.push(SHAPE.icon, sx, drawnY(sz) + 1.5 * k, 1.8 * k, 1.8 * k, { ...WHITE, a: Math.min(1, alpha + .3) }, { icon: 'skull' });
   }
   function drawHeart(heart, live) {
     const pulse = still() ? 1 : 1 + (live ? .08 : .04) * Math.sin(clock * 3), y = drawnY(heart.z), r = 4 * k * pulse;
@@ -317,8 +343,9 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
     root,
     update(view) {
       if (disposed) return;
-      ground.begin(); air.begin();
+      ground.begin(); air.begin(); cells.clear(); axes.clear();
       if (view) {
+        thin = !!sparse();
         clock += Math.max(0, Math.min(.1, view.dt || 0));
         const live = view.mode === 'wave', alpha = live ? .95 : GUIDE.previewAlpha;
         k = live ? Math.max(1, Math.min(2, Number(characterScale()) || 1)) : 1;
@@ -327,7 +354,7 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
         const heart = view.heart ?? CONFIG.boarding.heart, next = `${heart.x},${heart.z}|${routeKey(landings, walls, view.wave ?? 1)}`;
         if (next !== key) { key = next; routes = guideRoutes({ landings, heart, walls, wave: view.wave ?? 1 }); }
         for (const route of routes) drawRoute(route, alpha, live);
-        for (const route of routes) drawLanding(route.landing, alpha, live);
+        for (const route of routes) drawLanding(route.landing, alpha, live, heart, walls);
         drawHeart(heart, live);
         if (live) for (const wall of walls) drawWall(wall, attacked.has(wall.id));
       }

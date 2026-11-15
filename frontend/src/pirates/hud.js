@@ -126,7 +126,15 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
   pause.append(pauseHead, pauseActions, autoLabel);
   // The island takes damage: a short red flash on the screen's edge (not with reduced motion).
   const edge = node('div', 'pirate-hurt-edge'); edge.setAttribute('aria-hidden', 'true');
-  layer.append(edge, marks, bar, countdown, warning, prompt, musket, banner, pause, mini, hint); container.append(layer);
+  // The first-wave hint sits inside the bar, under the goal row (overlap audit, 15 Nov): never over the heart,
+  // the bar or the toasts, which line up under the bar's measured bottom (--pirate-bar-bottom, pirates.css).
+  bar.append(hint);
+  layer.append(edge, marks, bar, countdown, warning, prompt, musket, banner, pause, mini); container.append(layer);
+  const root = document.documentElement;
+  const measureBar = () => { const bottom = bar.hidden || layer.hidden ? 0 : bar.getBoundingClientRect().bottom;
+    if (bottom > 0) root.style.setProperty('--pirate-bar-bottom', `${Math.ceil(bottom) + 10}px`); };
+  const barSize = typeof ResizeObserver === 'function' ? new ResizeObserver(measureBar) : null;
+  barSize?.observe(bar);
   let lastBar = '', lastCount = '', lastPrompt = '', lastLoot = '', lastPause = '', lastMusket = '', hurtUntil = 0, hp = null;
   let lastHealth = '', lastDown = '', ownHp = null, lastEvent = '';
 
@@ -144,7 +152,7 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
     bar(state) {
       if (!state) { bar.hidden = true; return; }
       const text = waveBarText(state);
-      bar.hidden = false;
+      if (bar.hidden) { bar.hidden = false; measureBar(); }
       if (hp !== null && state.islandHp < hp) {
         hurtUntil = performance.now() + 400;
         if (!reducedMotion()) { edge.classList.remove('pirate-flash'); void edge.offsetWidth; edge.classList.add('pirate-flash'); }
@@ -226,7 +234,7 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
       lastLoot = text; loot.hidden = !text; loot.textContent = text;
     },
     // The first-wave hint: true shows the three pictures, false hides them.
-    goalHint(show) { hint.hidden = show !== true; },
+    goalHint(show) { if (hint.hidden === (show !== true)) return; hint.hidden = show !== true; measureBar(); },
     boss(text) { warning.hidden = !text; warning.textContent = text || ''; },
     // The wave's event: {id, icon, title, line, open} (open: the line shows too) or null to hide it.
     event(info) {
@@ -263,6 +271,6 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
       if (line) banner.append(node('span', '', line));
       banner.hidden = false;
     },
-    dispose() { release(); letPromptGo(); layer.remove(); markPool.clear(); document.documentElement.style.removeProperty('--pirate-break-bottom'); },
+    dispose() { release(); letPromptGo(); barSize?.disconnect(); layer.remove(); markPool.clear(); root.style.removeProperty('--pirate-break-bottom'); root.style.removeProperty('--pirate-bar-bottom'); },
   };
 }
