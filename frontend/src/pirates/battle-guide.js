@@ -361,12 +361,12 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
         thin = !!sparse();
         clock += Math.max(0, Math.min(.1, view.dt || 0));
         const live = view.mode === 'wave', alpha = live ? .95 : GUIDE.previewAlpha;
+        if (!live && view.wallLanes !== false) drawLanes(); else laneBoxes = 0; // D056: under everything else
         k = live ? Math.max(1, Math.min(2, Number(characterScale()) || 1)) : 1;
         const landings = view.lanes?.length ? waveLandings(view.lanes) : laneLandings();
         const walls = guideWalls(view.defenses ?? [], view.stateWalls ?? null), attacked = attackedWalls(view.boarders);
         const heart = view.heart ?? CONFIG.boarding.heart, next = `${heart.x},${heart.z}|${routeKey(landings, walls, view.wave ?? 1)}`;
         if (next !== key) { key = next; routes = guideRoutes({ landings, heart, walls, wave: view.wave ?? 1 }); }
-        if (!live && view.wallLanes !== false) drawLanes(); else laneBoxes = 0;
         for (const route of routes) drawRoute(route, alpha, live);
         for (const route of routes) drawLanding(route.landing, alpha, live, heart, walls);
         drawHeart(heart, live);

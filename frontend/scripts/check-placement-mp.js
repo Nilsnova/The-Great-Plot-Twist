@@ -151,7 +151,7 @@ const simOf = captain => captain.page.evaluate(() => { const w = window.__island
     towers: w.state.towers.map(item => ({id: item.id, x: item.x, z: item.z}))}; });
 
 const WALL = 'wall_1', CANNON = 'cannon_1';
-const WALL_AT = {x: -16, z: -8}, CANNON_AT = {x: -8, z: -10}, FRIEND_AT = {x: -10, z: -10.5};
+const WALL_AT = {x: -13, z: 1}, CANNON_AT = {x: -8, z: -10}, FRIEND_AT = {x: -10, z: -10.5};
 try {
   // 1 The host creates a game, the friend joins it with the code, the host presses Start.
   const host = await openCaptain('Nils', 'me', {create: true});
@@ -171,7 +171,7 @@ try {
   await ben.page.waitForFunction(() => ['wall_1', 'cannon_1'].every(id => window.__island.island.visiting?.spots?.find(spot => spot.id === id)?.built), null, {timeout: 5000, polling: 100});
   for (const captain of pages) await captain.page.waitForFunction(() => { let n = 0; window.__island.scene.traverse(o => { if (/^island-(wall|cannon):(wall_1|cannon_1)$/.test(o.name) && o.visible && o.userData.level !== undefined) n++; }); return n === 2; }, null, {timeout: 30000, polling: 200});
   const fixedWall = await placeOf(ben, WALL);
-  assert.deepEqual(fixedWall, {answer: null, map: {x: -18.5, z: -4}}, 'an unmoved wall stands on its fixed spot (no x/z in the answer)');
+  assert.deepEqual(fixedWall, {answer: null, map: {x: -18.5, z: -1}}, 'an unmoved wall stands on its fixed spot (no x/z in the answer)');
   await shot('01-built');
   // 3 The host moves the wall and the cannon from their cards; the friend's answer and map follow within 2 s.
   const wallBar = await pickSquare(host, WALL, WALL_AT);
@@ -209,10 +209,8 @@ try {
   await reread();
   await refused(host, CANNON, {x: 3, z: 5}, 'blocks_route', 'That would wall the heart in. Leave the pirates a way through.');
   await refused(ben, CANNON, {x: 3, z: 5}, 'blocks_route', 'That would wall the heart in. Leave the pirates a way through.');
-  // Walls never block: the wall's bar calls the same gap free (not placed).
-  const wallGap = await pickSquare(host, WALL, {x: 3, z: 5});
-  assert.deepEqual({refused: wallGap.refused, place: wallGap.place}, {refused: false, place: true}, 'a wall may stand in the gap');
-  await cancel(host);
+  // D056: a wall stands only on a pirate path; that gap is off every wall lane, so the bar and the server refuse it.
+  await refused(host, WALL, {x: 3, z: 5}, 'off_path', 'Walls go on a pirate path.');
   // Back to the fixed spots (the spots that are not built do not fight, but the wave should see a normal island).
   const FIXED = {cannon_2: [13, -15], cannon_3: [15.5, 14], cannon_4: [-15.5, 14.5], cannon_5: [-15, -6], cannon_6: [14.5, -3], cannon_7: [4.5, 16.5], house_1: [7, -6], house_2: [-8, -6]};
   for (const [spot] of [...RING].reverse()) { const [x, z] = FIXED[spot]; const answer = await apiMove(host, spot, {x, z}); assert.equal(answer.ok, true, `back ${spot}: ${answer.message}`); }
@@ -238,7 +236,7 @@ try {
     assert.deepEqual(card, {disabled: true, why: 'You can move it between waves.', start: false}, `${captain.name}'s card waits for the break`);
   }
   // The bar sends it anyway (Move mode started by hand): the server's refusal stands on the bar, nothing moves.
-  await ben.page.evaluate(() => { const mode = window.__island.island.moveMode; mode.start('wall_1'); mode.tap(-16, -10); });
+  await ben.page.evaluate(() => { const mode = window.__island.island.moveMode; mode.start('wall_1'); mode.tap(-13, -1); });
   const sent = await ben.page.evaluate(() => window.__island.island.moveMode.confirm());
   const waveBar = await ben.page.evaluate(() => ({status: document.querySelector('.island-move-status').textContent, refused: document.querySelector('.island-move-bar').classList.contains('is-refused')}));
   assert.deepEqual({ok: sent.ok, status: sent.status, code: sent.code}, {ok: false, status: 409, code: 'wave_running'}, 'a move in the wave is refused');

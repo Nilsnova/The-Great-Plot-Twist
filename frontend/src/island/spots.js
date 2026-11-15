@@ -31,9 +31,9 @@ export const KINDS = Object.freeze({
 //   tower   the watchtower on the hill at the north end of the main path
 //   houses  inland, at the ends of the north cross path
 export const SPOT_TABLE = Object.freeze([
-  ['wall_1', 'wall', -16.5, -1, 'shore'], ['wall_2', 'wall', 16.5, 1, 'shore'],
-  ['wall_3', 'wall', 16.5, -1, 'shore'], ['wall_4', 'wall', -1, 17, 'shore'],
-  ['wall_5', 'wall', 1, 17, 'shore'], ['wall_6', 'wall', -16.5, 1, 'shore'],
+  ['wall_1', 'wall', -18.5, -1, 'shore'], ['wall_2', 'wall', 19, 1, 'shore'],
+  ['wall_3', 'wall', 19, -1, 'shore'], ['wall_4', 'wall', -1, 17, 'shore'],
+  ['wall_5', 'wall', 1, 17, 'shore'], ['wall_6', 'wall', -18.5, -3, 'shore'],
   ['cannon_1', 'tower', -12.5, -14.5, 'corner'], ['cannon_2', 'tower', 13, -15, 'corner'],
   ['cannon_3', 'tower', 15.5, 14, 'corner'], ['cannon_4', 'tower', -15.5, 14.5, 'corner'],
   ['cannon_5', 'tower', -15, -6, 'side'], ['cannon_6', 'tower', 14.5, -3, 'side'], ['cannon_7', 'tower', 4.5, 16.5, 'side'],

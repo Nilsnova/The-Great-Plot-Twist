@@ -49,7 +49,7 @@ describe('Move mode', () => {
     mode.start('wall_1');
     mode.tap(30, 30);
     expect(await mode.confirm()).toBe(null);
-    mode.tap(-16.5, -1);
+    mode.tap(-18.5, -1);
     expect(await mode.confirm()).toBe(null);
     expect(spy).not.toHaveBeenCalled();
     mode.start('wall_1'); mode.cancel();

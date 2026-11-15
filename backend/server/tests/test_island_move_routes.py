@@ -56,7 +56,7 @@ def layout_reads(world: World) -> int:
 def test_with_the_flag_off_the_island_shows_the_fixed_spots_and_never_asks_the_layout():
     world = World()  # islands on, placement off
     answer = world.island().json()
-    assert spot(answer, "wall_1") | {"x": -16.5, "z": -1.0} == spot(answer, "wall_1")
+    assert spot(answer, "wall_1") | {"x": -18.5, "z": -1.0} == spot(answer, "wall_1")
     assert answer["layout"] == {"version": 1, "grid": 0.5, "movable": False}
     assert layout_reads(world) == 0
 

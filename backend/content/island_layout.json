@@ -6,8 +6,8 @@
   "heart": {"x": 0, "z": 2},
   "footprints": {"wall": 2, "tower": 2, "watchtower": 3, "house": 3},
   "spots": [
-    ["wall_1", "wall", -16.5, -1], ["wall_2", "wall", 16.5, 1], ["wall_3", "wall", 16.5, -1],
-    ["wall_4", "wall", -1, 17], ["wall_5", "wall", 1, 17], ["wall_6", "wall", -16.5, 1],
+    ["wall_1", "wall", -18.5, -1], ["wall_2", "wall", 19, 1], ["wall_3", "wall", 19, -1],
+    ["wall_4", "wall", -1, 17], ["wall_5", "wall", 1, 17], ["wall_6", "wall", -18.5, -3],
     ["cannon_1", "tower", -12.5, -14.5], ["cannon_2", "tower", 13, -15], ["cannon_3", "tower", 15.5, 14],
     ["cannon_4", "tower", -15.5, 14.5], ["cannon_5", "tower", -15, -6], ["cannon_6", "tower", 14.5, -3],
     ["cannon_7", "tower", 4.5, 16.5],

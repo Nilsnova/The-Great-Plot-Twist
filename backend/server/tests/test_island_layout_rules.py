@@ -42,7 +42,7 @@ def test_the_slot_of_every_spot_matches_the_kinds_islands_json_allows():
 
 def test_an_old_save_with_no_stored_positions_stands_on_the_fixed_spots():
     placed = layout.positions_of(RULES, {})
-    assert placed["wall_1"] == (-16.5, -1)
+    assert placed["wall_1"] == (-18.5, -1)
     assert placed["tower_1"] == (0, -14)
     assert len(placed) == 22
 
@@ -195,17 +195,17 @@ def test_a_moved_wall_off_every_path_stands_on_the_nearest_free_lane_cell():
 
 
 def test_a_wall_whose_fixed_spot_a_moved_tower_now_covers_steps_aside():
-    placed = layout.positions_of(RULES, {"cannon_1": (16.5, 1)})
-    assert placed["cannon_1"] == (16.5, 1)
-    assert placed["wall_2"] != (16.5, 1)
+    placed = layout.positions_of(RULES, {"cannon_1": (19, 1)})
+    assert placed["cannon_1"] == (19, 1)
+    assert placed["wall_2"] != (19, 1)
     for spot in RULES.spots:
         layout.check_move(RULES, placed, spot.spot, *placed[spot.spot])
 
 
 def test_a_moved_wall_keeps_its_cell_and_the_unmoved_wall_there_steps_aside():
-    placed = layout.positions_of(RULES, {"wall_1": (16.5, 1)})
-    assert placed["wall_1"] == (16.5, 1)
-    assert placed["wall_2"] != (16.5, 1) and layout.on_wall_lane(RULES, *placed["wall_2"])
+    placed = layout.positions_of(RULES, {"wall_1": (19, 1)})
+    assert placed["wall_1"] == (19, 1)
+    assert placed["wall_2"] != (19, 1) and layout.on_wall_lane(RULES, *placed["wall_2"])
 
 
 def test_a_wall_on_a_lane_where_it_was_stored_stays_there():
