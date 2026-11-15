@@ -61,6 +61,8 @@ The game is built and live; nobody waits for anyone. You extend it.
 - [x] **B2 island action targets, Johannes:** implemented in draft [PR #58](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/58); Hire crew, Move, Tear down and Players use 44px targets, [evidence](evidence/B2-phone-targets/README.md). The full B2 journey/physical-phone audit and human review remain open.
 - [x] **B2 entry/full-lobby slice, Johannes:** implemented in draft [PR #61](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/61); complete phone names, seven regressions and 21-panel entry audit, [evidence/limits](evidence/B2-entry-lobby/README.md). Physical-device and remaining game-view B2 checks/human review stay open; #58 remains independent.
 
+**B3 current-game feedback audit:** Johannes (@frcola), [issue #30](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/30); help recovery in draft [#31](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/31), shortcuts next. Login/APIs unchanged.
+
 ## 3. Every member, before the freeze (walkthrough = 20% of the grade)
 
 - [ ] **Walkthrough sheet** ([FINAL-ROADMAP A1](FINAL-ROADMAP.md#a-repository-walkthrough-criterion-6-20)): each member writes the page about their own lane (what, where, why, limits, how it could change) in `docs/WALKTHROUGH.md`; one member adds the database/server page with the project owner.

@@ -225,3 +225,9 @@ and [results, screenshots and manual checkpoints](evidence/T28/README.md).
 | Repeatable real local fake-game entry audit | [Tool](../frontend/scripts/check-phone-entry.js); `cd frontend && node scripts/check-phone-entry.js` | Title, title Join opened, intro, tutorial, game choice, goal and lobby at 375x812/390x844/1280x720: panel bounds/overflow, 44px buttons, Escape from title Join, route reaches fake island, no browser errors/external requests | Ten connected clients, submitted title Join/auth, real invitations, every possible overlap/contrast, physical keyboard/phone and B2 outside entry/lobby |
 
 [Evidence and commands](evidence/B2-entry-lobby/README.md), [exact results](../specs/B2-entry-lobby.md).
+
+### B3 help recovery — Johannes Franz Lang
+
+| Built / why | Where / run | Covers | Misses |
+|---|---|---|---|
+| Visible loading and recoverable How to play failure | [help tests](../frontend/tests/ui/help-loading.test.js), existing [tutorial tests](../frontend/tests/ui/tutorial.test.js); `cd frontend && npm test -- tests/ui/help-loading.test.js tests/ui/tutorial.test.js` | Real Chromium modal/card, retry, duplicate requests, cancellation, stale success/failure, disposal, focus, Escape/back and 1280x720 / 375x812 fit | Real browser import caching/network outages, physical phones and screen readers; API/login unchanged |
