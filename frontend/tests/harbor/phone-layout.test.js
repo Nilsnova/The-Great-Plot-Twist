@@ -72,15 +72,19 @@ it.each(['market','match'])('%s selections stay local until one explicit confirm
     await open(page,name,sizes[0]);
     const item=page.locator(name === 'market' ? '.harbor-asset' : '.harbor-match').first();
     const confirm=item.locator('.harbor-confirm');expect(await confirm.isDisabled()).toBe(true);
-    const coinRows=await item.locator('.harbor-stakes [data-stake]').evaluateAll(nodes => nodes.map(node => node.getBoundingClientRect().y));
-    expect(new Set(coinRows).size).toBe(1);
+    // The quick amounts stay on one row, and − amount + on another (D050).
+    const quickRows=await item.locator('.harbor-quick [data-share]').evaluateAll(nodes => nodes.map(node => node.getBoundingClientRect().y));
+    expect(quickRows).toHaveLength(4);expect(new Set(quickRows).size).toBe(1);
+    const stepRows=await item.locator('.harbor-amount > *').evaluateAll(nodes => nodes.map(node => Math.round(node.getBoundingClientRect().top + node.getBoundingClientRect().height / 2)));
+    expect(new Set(stepRows).size).toBe(1);
     await item.locator('.harbor-sides [data-side]').first().click();
-    await item.locator('[data-stake="10"]').click();
+    await item.locator('[data-share="10"]').click();
     const read=()=>page.evaluate(name => (name === 'market' ? window.phoneFixture.adapter.requests : window.phoneFixture.adapter.calls)
       .filter(row => row[0] === (name === 'market' ? 'place' : 'stake')),name);
     expect(await read()).toEqual([]);expect(await confirm.isEnabled()).toBe(true);
     await confirm.click();expect(await read()).toHaveLength(1);
-    const sent=(await read())[0][1];expect(name === 'market' ? sent.stake : sent.amount).toBe(10);
+    // 10 % of the coins: 🪙 100 at the market stall's fake, 🪙 1,000 at the match board's fake.
+    const sent=(await read())[0][1];expect(name === 'market' ? sent.stake : sent.amount).toBe(name === 'market' ? 10 : 100);
   });
 });
 

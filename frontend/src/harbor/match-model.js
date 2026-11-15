@@ -1,7 +1,7 @@
 // What the match board shows, from GET /api/sports and /api/sports/mine. Pure: no DOM, no fetch.
-// Payout estimates are display only ("about"); the server settles and pays every stake.
-import {offeredStakes, poolGain} from './stakes.js';
-import {MATCH, MY_STAKES, POOL, kickoffText, refundedText, resultText} from './words.js';
+// A right pick pays twice the stake (D050); the server settles and pays every stake.
+import {MATCH_RULES, PAYOUT_MULTIPLIER, stakeRange, winFor} from './stakes.js';
+import {MATCH, MY_STAKES, STAKE, kickoffText, refundedText, resultText} from './words.js';
 
 // More games to pick from (owner, 11 Nov): up to 30 matches of the coming week, at most 5 per
 // competition, so one busy league cannot fill the board.
@@ -24,18 +24,22 @@ export function canPick(fixture, now) {
     && fixture.pool?.status === 'open' && now < Date.parse(fixture.closesAt);
 }
 
-export function matchHint(fixture, pick, stake, cutPercent) {
-  const total = fixture.pool?.total ?? 0, mine = fixture.pool?.sides?.[pick]?.coins ?? 0;
-  const gain = poolGain({stake, mine, total, cutPercent});
-  return gain > 0 ? POOL.win(gain) : POOL.lonely(stake);
+// "Win: 🪙 500 (double your stake)": the payout of a right pick (stake back plus the same again).
+export const matchWin = (stake, multiplier = PAYOUT_MULTIPLIER) => MATCH.win(winFor(stake, multiplier));
+
+// The amounts the player may stake now: the board's limits, their coins and what is left today.
+export function matchRange(board, mine) {
+  const rules = {...MATCH_RULES, ...(board?.rules ?? {})};
+  return stakeRange({rules, coins: mine?.coins, leftToday: mine?.coinsLeftToday});
 }
 
-// The stake's state in words, and the gain when it settled.
+// The stake's state in words, and the gain when it settled: a right pick shows what came back
+// ("You won 🪙 500" on a 🪙 250 stake), a wrong one the stake it lost, a called-off match the refund.
 export function matchStakeState(stake) {
   if (stake.status !== 'settled') return {text: MY_STAKES.waiting, tone: 'info', gain: null};
   if (String(stake.settlement ?? '').startsWith('refund_')) return {text: refundedText(stake.amount), tone: 'info', gain: 0};
-  const gain = (stake.payout ?? 0) - stake.amount;
-  return {text: resultText(gain), tone: gain > 0 ? 'good' : gain < 0 ? 'bad' : 'info', gain};
+  const payout = stake.payout ?? 0, gain = payout - stake.amount;
+  return {text: gain > 0 ? MY_STAKES.won(payout) : resultText(gain), tone: gain > 0 ? 'good' : gain < 0 ? 'bad' : 'info', gain};
 }
 
 export function matchView({board, boardFailure = null, mine = null, signedIn = false, now = Date.now(), timeZone} = {}) {
@@ -44,18 +48,19 @@ export function matchView({board, boardFailure = null, mine = null, signedIn = f
     const closed = boardFailure.status === 404 || boardFailure.code === 'feature_off';
     return {state: closed ? 'closed' : 'unavailable', line: closed ? MATCH.closed : MATCH.unavailable, matches: [], mine: []};
   }
-  const stakes = offeredStakes(board.rules), cut = board.rules?.poolCutPercent ?? 0;
+  const range = matchRange(board, mine), multiplier = board.rules?.payoutMultiplier ?? PAYOUT_MULTIPLIER;
   const own = list(mine?.stakes);
+  const dayUsed = Number.isSafeInteger(mine?.coinsLeftToday) && mine.coinsLeftToday < range.min;
   const matches = spread(list(board.fixtures).filter(fixture => fixture.status === 'scheduled' && fixture.source === 'live')
     .sort((a, b) => Date.parse(a.kickoff) - Date.parse(b.kickoff))).slice(0, MAX_MATCHES)
     .map(fixture => {
       const taken = own.find(stake => stake.fixtureId === fixture.id);
-      const open = canPick(fixture, now);
+      const open = canPick(fixture, now), ready = open && signedIn && !taken && Boolean(mine);
       return {id: fixture.id, name: matchName(fixture), when: [fixture.competition, kickoffText(fixture.kickoff, timeZone)].filter(Boolean).join(' · '),
         picks: list(fixture.picks).map(pick => ({id: pick, label: pickLabel(pick, fixture)})),
         taken: taken ? MATCH.yourPick(pickLabel(taken.pick, taken), taken.amount) : null,
-        reason: open ? null : MATCH.picksClosed, canStake: open && signedIn && !taken && stakes.length > 0, stakes,
-        hint: (pick, stake) => matchHint(fixture, pick, stake, cut)};
+        reason: !open ? MATCH.picksClosed : ready && !range.ok ? (dayUsed ? MATCH.dayUsed : STAKE.notEnough(range.min)) : null,
+        canStake: ready && range.ok, range, coins: mine?.coins ?? 0, win: stake => matchWin(stake, multiplier)};
     });
   const rows = own.map(stake => {
     const state = matchStakeState(stake);

@@ -14,6 +14,14 @@ describe('sports same-origin API boundary', () => {
     expect(fetchImpl.mock.calls[0][0]).toBe('/api/sports');
     expect(fetchImpl.mock.calls[0][1].headers.Authorization).toBeUndefined();
   });
+  it('accepts the double-or-nothing rules (D050) and refuses the old pool rules or another multiplier', async () => {
+    const read = async rules => (await createSportsHttp({ fetchImpl: async () => response({ ...BOARD, rules }) }).board()).ok;
+    expect(await read({ minStake: 1, maxStake: 10000, dailyCap: 25000, payoutMultiplier: 2, pickLeadMinutes: 60 })).toBe(true);
+    expect(await read({ minStake: 1, maxStake: 50, dailyCap: 200, poolCutPercent: 5, pickLeadMinutes: 60 })).toBe(false);
+    expect(await read({ minStake: 1, maxStake: 10000, dailyCap: 25000, payoutMultiplier: 3, pickLeadMinutes: 60 })).toBe(false);
+    const mine = createSportsHttp({ getToken: () => 'signed-in', fetchImpl: async () => response({ ...MINE, rules: { ...MINE.rules, payoutMultiplier: undefined } }) });
+    expect((await mine.mine()).ok).toBe(false);
+  });
   it('uses the current sign-in for mine and accepts an open stake with no payout', async () => {
     let token = 'first';
     const fetchImpl = vi.fn(async () => response({ ...MINE, stakes: [OPEN_STAKE] }));

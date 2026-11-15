@@ -1,9 +1,10 @@
 // The small DOM parts every Harbor card shares: the card shell (a kit modal), the pick-a-side and
-// stake picker, the sign-in line, the "My stakes" list and the sparkline. Strings are always text.
+// stake picker (D050), the sign-in line, the "My stakes" list and the sparkline. Strings are always text.
 import './harbor.css';
 import {createModal} from '../ui/kit/modal.js';
 import {formatCoins} from '../lib/coins.js';
-import {MY_STAKES, PLACE, SIGN_IN, SIGN_IN_BUTTON} from './words.js';
+import {QUICK_SHARES, clampStake, firstStake, shareStake, stepFor, stepStake} from './stakes.js';
+import {MY_STAKES, PLACE, SIGN_IN, SIGN_IN_BUTTON, STAKE} from './words.js';
 
 let ids = 0;
 export const uid = prefix => `harbor-${prefix}-${++ids}`;
@@ -51,21 +52,33 @@ export function signInLine(onSignIn) {
   return box;
 }
 
-// Pick a side, pick 5 / 10 / 25, see the promise, then confirm. Nothing is preselected, so one stray tap
-// never places a stake. `sides` is [{id, label}]; `hint(side, stake)` says what a win would bring.
+// Pick a side, choose an amount, see the win, then confirm (D050). One stray tap never places a stake:
+// no side is preselected and the confirm button stays off until one is chosen. The amount starts at
+// 10 % of the coins; "−" and "+" move it by 5 % of the coins (stakes.js), the quick buttons jump to
+// 10 %, 25 %, 50 % or "All in". Every amount stays inside `range` ({min, max} from stakeRange).
+// `sides` is [{id, label}]; `win(stake)` is the line under the amount ("Win: 🪙 500 ...").
 // `selection` ({side, stake}) belongs to the caller, so a refresh that redraws the card keeps the picks.
-// `itemName` (the asset, match or question) ends every button's accessible name, so a card with several
-// items never has two buttons with the same name ("Up, Bitcoin", "10 coins on Bitcoin").
-export function createPicker({name, itemName = '', sides, stakes, sideGroup, stakeGroup, choose, hint, confirmText, onConfirm,
+// `itemName` (the asset or match) ends every button's accessible name, so a card with several items
+// never has two buttons with the same name ("Up, Bitcoin", "More by 50 coins, Bitcoin").
+export function createPicker({name, itemName = '', sides, sideGroup, choose, range, coins, win, confirmText, onConfirm,
   busy = false, selection = {side: null, stake: null}}) {
   const named = text => (itemName ? `${text}, ${itemName}` : text);
+  if (!Number.isSafeInteger(selection.stake)) selection.stake = firstStake(coins, range);
+  selection.stake = clampStake(selection.stake, range);
   const box = el('div', 'harbor-picker');
-  const sideRow = el('div', 'harbor-choices harbor-sides'), stakeRow = el('div', 'harbor-choices harbor-stakes');
-  sideRow.setAttribute('role', 'group'); sideRow.setAttribute('aria-label', sideGroup);
-  stakeRow.setAttribute('role', 'group'); stakeRow.setAttribute('aria-label', stakeGroup);
-  const line = el('p', 'harbor-hint', choose);
+  const group = (className, label) => {
+    const row = el('div', className);
+    row.setAttribute('role', 'group'); row.setAttribute('aria-label', label); return row;
+  };
+  const sideRow = group('harbor-choices harbor-sides', sideGroup);
+  const amountRow = group('harbor-amount', named(STAKE.group));
+  const quickRow = group('harbor-choices harbor-quick', named(STAKE.quickGroup));
+  const amount = el('output', 'harbor-amount-value');
+  amount.setAttribute('aria-live', 'polite');
+  const line = el('p', 'harbor-hint harbor-win');
   const labelOf = id => sides.find(option => option.id === id)?.label ?? id;
-  const ready = () => sides.some(option => option.id === selection.side) && stakes.includes(selection.stake);
+  const ready = () => sides.some(option => option.id === selection.side);
+  const setStake = value => { selection.stake = clampStake(value, range); sync(); };
   const confirm = button(PLACE, () => { if (ready() && !busy) onConfirm(selection.side, selection.stake, labelOf(selection.side)); },
     'kit-button harbor-button harbor-confirm');
   confirm.dataset.key = `${name}:confirm`;
@@ -74,23 +87,35 @@ export function createPicker({name, itemName = '', sides, stakes, sideGroup, sta
     choice.dataset.side = option.id; choice.dataset.key = `${name}:side:${option.id}`;
     choice.setAttribute('aria-label', named(option.label)); return choice;
   });
-  const stakeButtons = stakes.map(amount => {
-    const choice = button(formatCoins(amount), () => { selection.stake = amount; sync(); }, 'kit-choice harbor-choice harbor-stake');
-    choice.dataset.stake = String(amount); choice.dataset.key = `${name}:stake:${amount}`;
-    choice.setAttribute('aria-label', itemName ? `${amount} coins on ${itemName}` : `${amount} coins`); return choice;
+  const stepButton = direction => {
+    const choice = button(direction < 0 ? STAKE.less : STAKE.more,
+      () => setStake(stepStake(selection.stake, direction, coins, range)), 'kit-choice harbor-choice harbor-step');
+    choice.dataset.step = direction < 0 ? 'less' : 'more'; choice.dataset.key = `${name}:${choice.dataset.step}`;
+    return choice;
+  };
+  const less = stepButton(-1), more = stepButton(1);
+  const quickButtons = QUICK_SHARES.map(percent => {
+    const choice = button(STAKE.quick(percent), () => setStake(shareStake(percent, coins, range)), 'kit-choice harbor-choice harbor-share');
+    choice.dataset.share = String(percent); choice.dataset.key = `${name}:share:${percent}`;
+    choice.setAttribute('aria-label', named(STAKE.quick(percent))); return choice;
   });
   function sync() {
+    const stake = selection.stake, step = stepFor(coins);
     sideButtons.forEach((choice, index) => choice.setAttribute('aria-pressed', String(sides[index].id === selection.side)));
-    stakeButtons.forEach((choice, index) => choice.setAttribute('aria-pressed', String(stakes[index] === selection.stake)));
-    const set = ready();
-    line.textContent = set ? hint(selection.side, selection.stake) : choose;
-    confirm.textContent = set ? confirmText(selection.stake, labelOf(selection.side)) : PLACE;
+    quickButtons.forEach((choice, index) => choice.setAttribute('aria-pressed', String(shareStake(QUICK_SHARES[index], coins, range) === stake)));
+    amount.textContent = formatCoins(stake); amount.dataset.stake = String(stake);
+    less.setAttribute('aria-label', named(STAKE.lessLabel(step))); more.setAttribute('aria-label', named(STAKE.moreLabel(step)));
+    line.textContent = win(stake);
+    confirm.textContent = ready() ? confirmText(stake, labelOf(selection.side)) : choose;
     confirm.setAttribute('aria-label', named(confirm.textContent));
-    confirm.disabled = !set || busy;
-    for (const choice of [...sideButtons, ...stakeButtons]) choice.disabled = busy;
+    confirm.disabled = !ready() || busy;
+    for (const choice of [...sideButtons, ...quickButtons]) choice.disabled = busy;
+    // At a limit the button stays focusable (aria-disabled), so keyboard focus never drops to the page.
+    less.disabled = more.disabled = busy;
+    less.setAttribute('aria-disabled', String(stake <= range.min)); more.setAttribute('aria-disabled', String(stake >= range.max));
   }
-  sideRow.append(...sideButtons); stakeRow.append(...stakeButtons);
-  box.append(sideRow, stakeRow, line, confirm);
+  sideRow.append(...sideButtons); amountRow.append(less, amount, more); quickRow.append(...quickButtons);
+  box.append(sideRow, amountRow, quickRow, line, confirm);
   sync();
   return box;
 }

@@ -435,10 +435,10 @@ Purpose: Up-or-down market calls at the Harbor market stall: the stake, the open
 | `outcome` | won, lost or refunded once decided. |
 | `payout` | Play coins paid back. |
 | `player_id` | The player's UUID. |
-| `settle_at` | When the call is decided (1 hour after the opening). |
+| `settle_at` | When the call is decided (5 minutes after the opening; 1 hour for calls opened before 12 Nov 2026). |
 | `settle_price` | The price the call was decided with. |
 | `settled_at` | When it was decided. |
-| `stake` | Play coins staked: 5, 10 or 25. |
+| `stake` | Play coins staked: 5 to 10,000 (5, 10 or 25 before 15 Nov 2026, D050). |
 
 ### public.exchange_positions
 
@@ -708,7 +708,7 @@ Purpose: Player fixture choice, play-coin amount, payout and repeat identity. Re
 
 | Column | What it holds and why |
 |---|---|
-| `amount` | Play-coin stake amount. |
+| `amount` | Play-coin stake amount: 1 to 10,000 (1 to 50 before 15 Nov 2026, D050). |
 | `created_at` | Database creation time. |
 | `fixture_id` | Canonical provider fixture ID. |
 | `id` | Internal primary key or singleton identifier. |

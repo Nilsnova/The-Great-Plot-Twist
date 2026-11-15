@@ -584,6 +584,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 
 ## Log
 
+- **15 Nov 2026 · Claude, for Nils / D050:** bigger Harbor stakes on `feat/bigger-stakes`: one stake picker (− / + in 5 % steps, 10 % / 25 % / 50 % / All in, "Win: 🪙 X") at the match board and the market stall, match board 1 to 10,000 a bet and 25,000 a day at double or nothing, market calls 5 to 10,000; migration `20261115120000_bigger_stakes.sql` not applied anywhere yet; no PR or merge.
+
 - **14 Nov 2026 · Johannes / PR #58 conflict resolution:** integrated main `53a59d4` on `fix/b2-phone-controls`; retained teammate content and reran client checks. Exact results and limits: [task handover](../specs/B2-phone-controls.md#main-integration-and-conflict-resolution-14-nov-2026). Updated branch awaits independent review; no main merge.
 
 - **14 Nov — Johannes / B2:** four island actions measured 40px before / 44px after at both phone sizes and desktop; four browser cases, 3,206 frontend tests, build/budget/text lint, 33-screen accessibility and 33-check demo pass; draft #58, physical phone/full B2 remain open.

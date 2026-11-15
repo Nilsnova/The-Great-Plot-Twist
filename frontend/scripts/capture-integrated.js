@@ -133,7 +133,7 @@ try {
     const picker = page.locator('.harbor-market[open] .harbor-picker').first();
     await picker.waitFor({timeout: 15000});
     await picker.locator('.harbor-choice[data-side="up"]').click();
-    await picker.locator('.harbor-choice[data-stake="10"]').click();
+    await picker.locator('.harbor-choice[data-share="10"]').click(); // 10 % of the coins (D050)
     await shot(`12-market-stake-${width}`);
     await picker.locator('.harbor-confirm').click();
     await page.waitForFunction(() => JSON.parse(localStorage.getItem('plot_twist_first_quests_v1') ?? '{}').done === 4, null, {timeout: 10000});

@@ -1,11 +1,11 @@
 // What the market stall shows, worked out from GET /api/market/calls (INTERFACES.md, the market stall, D034):
-// {assets: [{id, name, price, priceAt, open, closedReason}], calls: [...], balance}. Pure: no DOM, no fetch,
-// no rules. The server decides every price, every result and every coin.
+// {assets: [{id, name, price, priceAt, open, closedReason}], calls: [...], balance, rules}. Pure: no DOM,
+// no fetch, no rules. The server decides every price, every result and every coin.
 //   callsView({answer, failure, history, now}) -> {state, line, balance, full, assets}
 // state is loading, unavailable, signed_out, off (flag market off) or open. One item per asset, in the
 // server's order and with the server's names (Bitcoin, Ether, Gold, Apple, NVIDIA).
-import {STAKES} from './stakes.js';
-import {MARKET, priceText} from './words.js';
+import {MARKET_RULES, PAYOUT_MULTIPLIER, stakeRange, winFor} from './stakes.js';
+import {MARKET, STAKE, priceText} from './words.js';
 
 export const SIDES = Object.freeze({up: MARKET.up, down: MARKET.down});
 export const MAX_OPEN_CALLS = 3;
@@ -50,19 +50,29 @@ export function callsView({answer = null, failure = null, history = new Map(), n
     balance: null, full: false, assets: []};
   const calls = list(answer.calls).filter(call => call && typeof call.id === 'string');
   const full = calls.filter(call => call.status === 'open').length >= MAX_OPEN_CALLS;
+  const balance = Number.isSafeInteger(answer.balance) ? answer.balance : null;
+  const range = marketRange(answer), multiplier = answer.rules?.payoutMultiplier ?? PAYOUT_MULTIPLIER;
   const assets = list(answer.assets).filter(asset => asset && typeof asset.id === 'string').map(asset => {
     const own = calls.filter(call => call.asset === asset.id);
     const decided = own.filter(call => call.status !== 'open')
       .sort((a, b) => String(b.settleAt).localeCompare(String(a.settleAt))).slice(0, DECIDED_SHOWN);
     const price = priceText(asset.price);
     const open = asset.open === true && price !== null;
+    const reason = !open ? reasonText(asset.closedReason ?? (price ? null : 'no_price'))
+      : !full && !range.ok ? STAKE.notEnough(range.min) : null;
     return {id: asset.id, name: String(asset.name ?? asset.id), price: price ?? MARKET.noPrice,
-      history: list(history.get(asset.id)), reason: open ? null : reasonText(asset.closedReason ?? (price ? null : 'no_price')),
-      canStake: open && !full, stakes: [...STAKES],
+      history: list(history.get(asset.id)), reason,
+      canStake: open && !full && range.ok, range, coins: balance ?? 0, win: stake => MARKET.win(winFor(stake, multiplier)),
       calls: [...own.filter(call => call.status === 'open'), ...decided].map(call => callView(call, now))};
   });
-  const balance = Number.isSafeInteger(answer.balance) ? answer.balance : null;
   return {state: 'open', line: null, balance, full, assets};
+}
+
+// The amounts a call may stake now: the stall's limits (the answer's rules, else MARKET_RULES) and the
+// player's coins. Without a balance the stall's maximum is the only upper limit; the server checks.
+export function marketRange(answer) {
+  const rules = {...MARKET_RULES, ...(answer?.rules ?? {})};
+  return stakeRange({rules, coins: Number.isSafeInteger(answer?.balance) ? answer.balance : null});
 }
 
 // Keeps a few recent prices per asset, so a sparkline can appear once the stall was read twice.

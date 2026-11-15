@@ -1,5 +1,6 @@
-// The Harbor cards on a real DOM (headless Chrome): stake buttons send exactly 5, 10 or 25, the server's
-// accepted stake raises harbor_stake_placed, and the open, closed, unavailable, signed-out, refused and
+// The Harbor cards on a real DOM (headless Chrome): the stake picker (D050: − and + in steps of 5 % of the
+// coins, 10 % / 25 % / 50 % / All in) sends exactly the amount it shows, the server's accepted stake raises
+// harbor_stake_placed, and the open, closed, unavailable, signed-out, refused and
 // empty states show plain words. The market stall follows the calls routes ("Up or down in 5 minutes?"). Fakes from fixtures.js stand in for the server.
 import {describe, expect, it} from 'vitest';
 import {browserHarness} from '../g20-browser.js';
@@ -24,33 +25,36 @@ const run = (action, argument) => evaluate.withPage(async page => {
 });
 
 describe('market stall card', () => {
-  it('sends exactly 5, 10 or 25 coins on up or down with an actionUid and announces the accepted call', async () => {
+  it('sends exactly the amount it shows on up or down with an actionUid and announces the accepted call', async () => {
     const result = await run(async () => {
       const {fx, events, tick, press} = await window.harborKit();
       const {createMarketEntry} = await window.g20Import('/src/harbor/market-card.js');
-      const sent = [], labels = [], names = [];
+      const sent = [], labels = [], names = [], wins = [];
       let n = 0;
-      for (const [stake, side] of [[5, 'up'], [10, 'down'], [25, 'up']]) {
+      // 100 coins: the picker starts at 10 % (🪙 10), "−" steps by 5, "All in" is every coin.
+      for (const [buttons, side] of [[[], 'up'], [['[data-step="less"]'], 'down'], [['[data-share="100"]'], 'up']]) {
         const adapter = fx.fakeCalls();
         const market = createMarketEntry({adapter, now: () => fx.NOW, makeUid: () => `uid-${++n}-abcdefgh`});
         await market.open(); await tick();
         const bitcoin = document.querySelector('[data-asset="harbor-trust"]');
         names.push(bitcoin.querySelector('.harbor-question').textContent, bitcoin.querySelector(`[data-side="${side}"]`).getAttribute('aria-label'));
         await press(bitcoin, `[data-side="${side}"]`);
-        await press(bitcoin, `[data-stake="${stake}"]`);
+        for (const selector of buttons) await press(bitcoin, selector);
+        wins.push(bitcoin.querySelector('.harbor-win').textContent);
         labels.push(bitcoin.querySelector('.harbor-confirm').getAttribute('aria-label'));
         await press(bitcoin, '.harbor-confirm'); await tick();
         sent.push(...adapter.requests.filter(call => call[0] === 'place').map(call => [call[1], call[2]]));
         names.push(document.querySelector('[data-asset="harbor-trust"] [data-open="true"]')?.textContent);
         market.dispose();
       }
-      return {sent, labels, names, events};
+      return {sent, labels, names, events, wins};
     });
-    expect(result.sent).toEqual([[{asset: 'harbor-trust', direction: 'up', stake: 5}, 'uid-1-abcdefgh'],
-      [{asset: 'harbor-trust', direction: 'down', stake: 10}, 'uid-2-abcdefgh'], [{asset: 'harbor-trust', direction: 'up', stake: 25}, 'uid-3-abcdefgh']]);
-    expect(result.labels).toEqual(['Place 🪙 5 on Up, Bitcoin', 'Place 🪙 10 on Down, Bitcoin', 'Place 🪙 25 on Up, Bitcoin']);
-    expect(result.names.slice(0, 3)).toEqual(['Up or down in 5 minutes?', 'Up, Bitcoin', 'You said Up with 🪙 5.Decided in 5 min']);
-    expect(result.events).toEqual([{kind: 'market', stake: 5}, {kind: 'market', stake: 10}, {kind: 'market', stake: 25}]);
+    expect(result.sent).toEqual([[{asset: 'harbor-trust', direction: 'up', stake: 10}, 'uid-1-abcdefgh'],
+      [{asset: 'harbor-trust', direction: 'down', stake: 5}, 'uid-2-abcdefgh'], [{asset: 'harbor-trust', direction: 'up', stake: 100}, 'uid-3-abcdefgh']]);
+    expect(result.labels).toEqual(['Place 🪙 10 on Up, Bitcoin', 'Place 🪙 5 on Down, Bitcoin', 'Place 🪙 100 on Up, Bitcoin']);
+    expect(result.wins).toEqual(['Win: 🪙 20', 'Win: 🪙 10', 'Win: 🪙 200']);
+    expect(result.names.slice(0, 3)).toEqual(['Up or down in 5 minutes?', 'Up, Bitcoin', 'You said Up with 🪙 10.Decided in 5 min']);
+    expect(result.events).toEqual([{kind: 'market', stake: 10}, {kind: 'market', stake: 5}, {kind: 'market', stake: 100}]);
   });
 
   it('shows prices, closed reasons, open calls counting down and decided results, with nothing preselected', async () => {
@@ -65,8 +69,10 @@ describe('market stall card', () => {
       await market.open(); await tick();
       const piece = id => document.querySelector(`[data-asset="${id}"]`).textContent;
       const state = {names: [...document.querySelectorAll('[data-asset] h3')].map(node => node.textContent),
-        stakes: [...document.querySelectorAll('[data-asset="harbor-trust"] [data-stake]')].map(node => node.dataset.stake),
-        pressed: document.querySelectorAll('[aria-pressed="true"]').length, text: text(),
+        amount: document.querySelector('[data-asset="harbor-trust"] .harbor-amount-value').textContent,
+        quick: [...document.querySelectorAll('[data-asset="harbor-trust"] [data-share]')].map(node => node.textContent),
+        win: document.querySelector('[data-asset="harbor-trust"] .harbor-win').textContent,
+        pressed: document.querySelectorAll('[data-side][aria-pressed="true"]').length, text: text(),
         bitcoin: piece('harbor-trust'), ether: piece('tidewright-works'), gold: piece('greyfathom-salvage'),
         apple: piece('apple'), nvidia: piece('nvidia'),
         closedPickers: document.querySelectorAll('[data-asset="apple"] .harbor-picker, [data-asset="nvidia"] .harbor-picker').length,
@@ -80,7 +86,9 @@ describe('market stall card', () => {
       return state;
     });
     expect(result.names).toEqual(['Bitcoin', 'Ether', 'Gold', 'Apple', 'NVIDIA']);
-    expect(result.stakes).toEqual(['5', '10', '25']);
+    expect(result.amount).toBe('🪙 10');
+    expect(result.quick).toEqual(['10 %', '25 %', '50 %', 'All in']);
+    expect(result.win).toBe('Win: 🪙 20');
     expect(result.pressed).toBe(0);
     expect(result.confirmDisabled).toBe(true);
     expect(result.text).toContain('Bitcoin$74,339');
@@ -137,7 +145,7 @@ describe('market stall card', () => {
         const refused = createMarketEntry({adapter: fx.fakeCalls({refuse: code}), now: () => fx.NOW});
         await refused.open(); await tick();
         const ether = document.querySelector('[data-asset="tidewright-works"]');
-        await press(ether, '[data-side="up"]'); await press(ether, '[data-stake="25"]'); await press(ether, '.harbor-confirm'); await tick();
+        await press(ether, '[data-side="up"]'); await press(ether, '[data-share="25"]'); await press(ether, '.harbor-confirm'); await tick();
         out[code] = text(); refused.dispose();
       }
       return {out, events};
@@ -161,7 +169,7 @@ describe('market stall card', () => {
       const market = createMarketEntry({adapter, now: () => fx.NOW, makeUid: (() => { let n = 0; return () => `uid-${++n}-abcdefgh`; })()});
       await market.open(); await tick();
       const ether = document.querySelector('[data-asset="tidewright-works"]');
-      await press(ether, '[data-side="down"]'); await press(ether, '[data-stake="10"]'); await press(ether, '.harbor-confirm'); await tick();
+      await press(ether, '[data-side="down"]'); await press(ether, '[data-share="10"]'); await press(ether, '.harbor-confirm'); await tick();
       const unknown = text(), again = [...document.querySelectorAll('dialog[open] .harbor-status button')].map(button => button.textContent);
       document.querySelector('dialog[open] .harbor-status button').click(); await tick(60);
       const places = adapter.requests.filter(call => call[0] === 'place').map(call => [call[1], call[2]]);
@@ -181,19 +189,21 @@ describe('market stall card', () => {
 });
 
 describe('match board card', () => {
-  it('sends exactly 5, 10 or 25 coins on the picked side and lists my stakes', async () => {
+  it('sends exactly the amount it shows on the picked side, says the double win and lists my stakes', async () => {
     const result = await run(async () => {
       const {fx, events, tick, press, text} = await window.harborKit();
       const {createSportsPanel} = await window.g20Import('/src/harbor/match-card.js');
       const sent = [], hints = [];
       let last = '';
-      for (const [stake, pick] of [[5, 'home'], [10, 'draw'], [25, 'away']]) {
+      // 1,000 coins: the picker starts at 10 % (🪙 100), "+" steps by 5 % (🪙 50), "All in" is every coin.
+      for (const [buttons, pick] of [[[], 'home'], [['[data-step="more"]'], 'draw'], [['[data-share="100"]'], 'away']]) {
         const adapter = fx.fakeSports();
         const panel = createSportsPanel({adapter, getToken: () => 'token', clock: () => fx.NOW, timeZone: 'UTC'});
         await panel.open(); await tick();
         const match = document.querySelector('[data-fixture="fd-101"]');
-        await press(match, `[data-side="${pick}"]`); await press(match, `[data-stake="${stake}"]`);
-        hints.push(match.querySelector('.harbor-hint').textContent);
+        await press(match, `[data-side="${pick}"]`);
+        for (const selector of buttons) await press(match, selector);
+        hints.push(match.querySelector('.harbor-win').textContent);
         await press(match, '.harbor-confirm'); await tick();
         sent.push(...adapter.calls.filter(call => call[0] === 'stake').map(call => ({pick: call[1].pick, amount: call[1].amount})));
         last = text();
@@ -201,11 +211,53 @@ describe('match board card', () => {
       }
       return {sent, hints, events, last};
     });
-    expect(result.sent).toEqual([{pick: 'home', amount: 5}, {pick: 'draw', amount: 10}, {pick: 'away', amount: 25}]);
-    expect(result.hints[0]).toMatch(/^If you are right you win about 🪙 \d+$/);
-    expect(result.events).toEqual([{kind: 'match', stake: 5}, {kind: 'match', stake: 10}, {kind: 'match', stake: 25}]);
+    expect(result.sent).toEqual([{pick: 'home', amount: 100}, {pick: 'draw', amount: 150}, {pick: 'away', amount: 1000}]);
+    expect(result.hints).toEqual(['Win: 🪙 200 (double your stake)', 'Win: 🪙 300 (double your stake)', 'Win: 🪙 2,000 (double your stake)']);
+    expect(result.events).toEqual([{kind: 'match', stake: 100}, {kind: 'match', stake: 150}, {kind: 'match', stake: 1000}]);
     expect(result.last).toContain('My stakes');
-    expect(result.last).toContain('🪙 25 on Island United (Harbor Athletic v Island United): waiting for the result');
+    expect(result.last).toContain('🪙 1,000 on Island United (Harbor Athletic v Island United): waiting for the result');
+    expect(result.last).not.toMatch(/about|pool|\$/);
+  });
+
+  it('keeps the amount between the smallest stake and the most the player may stake, by click and by keyboard', async () => {
+    const result = await evaluate.withPage(async page => {
+      await page.addScriptTag({content: PRELUDE});
+      await page.evaluate(async () => {
+        const {fx, tick} = await window.harborKit();
+        const {createSportsPanel} = await window.g20Import('/src/harbor/match-card.js');
+        // 40,000 coins and 25,000 left today: the most one bet takes is 10,000.
+        window.panel = createSportsPanel({adapter: fx.fakeSports({coins: 40000}), getToken: () => 'token', clock: () => fx.NOW, timeZone: 'UTC'});
+        await window.panel.open(); await tick();
+      });
+      const amount = () => page.locator('[data-fixture="fd-101"] .harbor-amount-value').textContent();
+      const match = page.locator('[data-fixture="fd-101"]');
+      const seen = {first: await amount(), more: await match.locator('[data-step="more"]').getAttribute('aria-label')};
+      await match.locator('[data-share="50"]').click(); seen.half = await amount();
+      await match.locator('[data-share="100"]').click(); seen.allIn = await amount();
+      // At the limit the button says aria-disabled (Playwright waits for an enabled one), so force the click.
+      await match.locator('[data-step="more"]').click({force: true}); seen.overMax = await amount();
+      seen.moreDisabled = await match.locator('[data-step="more"]').getAttribute('aria-disabled');
+      await match.locator('[data-step="less"]').focus();
+      for (let i = 0; i < 3; i++) await page.keyboard.press('Enter');
+      seen.keyboard = await amount();
+      for (let i = 0; i < 10; i++) await page.keyboard.press('Space');
+      seen.lessDisabled = await match.locator('[data-step="less"]').getAttribute('aria-disabled');
+      seen.focusKept = await match.locator('[data-step="less"]').evaluate(node => node === document.activeElement);
+      seen.bottom = await amount();
+      seen.win = await match.locator('.harbor-win').textContent();
+      return seen;
+    });
+    expect(result.first).toBe('🪙 4,000');
+    expect(result.more).toBe('More by 1,000 coins, Harbor Athletic v Island United');
+    expect(result.half).toBe('🪙 10,000'); // 50 % is 20,000, more than one bet takes
+    expect(result.allIn).toBe('🪙 10,000');
+    expect(result.overMax).toBe('🪙 10,000');
+    expect(result.moreDisabled).toBe('true');
+    expect(result.keyboard).toBe('🪙 7,000'); // three steps of 1,000 (5 % of 40,000, rounded down to a friendly size)
+    expect(result.bottom).toBe('🪙 1');
+    expect(result.lessDisabled).toBe('true');
+    expect(result.focusKept).toBe(true);
+    expect(result.win).toBe('Win: 🪙 2 (double your stake)');
   });
 
   it('has friendly empty, closed and signed-out states', async () => {

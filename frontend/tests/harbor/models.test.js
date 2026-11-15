@@ -1,30 +1,60 @@
-// The pure parts of the Harbor cards: which assets show, card states, stake sizes, win estimates,
+// The pure parts of the Harbor cards: which assets show, card states, the stake picker's numbers, wins,
 // empty states, refusal words and the weather mapping (BUILD-PLAN 3.2, 3.4, lane H).
 import {readFileSync} from 'node:fs';
 import {describe, expect, it} from 'vitest';
-import {STAKES, STAKE_EVENT, offeredStakes, poolGain} from '../../src/harbor/stakes.js';
+import {MARKET_RULES, MATCH_RULES, PAYOUT_MULTIPLIER, QUICK_SHARES, STAKE_EVENT, clampStake, firstStake, shareStake, stakeRange,
+  stepFor, stepStake, winFor} from '../../src/harbor/stakes.js';
 import {callView, callsView, countdownText, reasonText, rememberPrices} from '../../src/harbor/market-model.js';
 import {matchView, MAX_MATCHES, PER_COMPETITION} from '../../src/harbor/match-model.js';
 import {PIRATE_LINES, weatherView} from '../../src/harbor/weather-model.js';
-import {EXPLAIN, SIGN_IN, priceText, refusalText, resultText} from '../../src/harbor/words.js';
+import {EXPLAIN, MARKET, MATCH, SIGN_IN, STAKE, priceText, refusalText, resultText} from '../../src/harbor/words.js';
 import {NOW, callAssets, fixture, marketCall, sportsBoard, weatherAnswer} from './fixtures.js';
 
-describe('stakes', () => {
-  it('are 5, 10 and 25 and nothing else', () => {
-    expect(STAKES).toEqual([5, 10, 25]);
+describe('stake picker numbers (D050)', () => {
+  it('know the stalls\' limits, the event name and the double payout', () => {
+    expect(MATCH_RULES).toEqual({minStake: 1, maxStake: 10000, dailyCap: 25000});
+    expect(MARKET_RULES).toEqual({minStake: 5, maxStake: 10000});
+    expect(QUICK_SHARES).toEqual([10, 25, 50, 100]);
     expect(STAKE_EVENT).toBe('harbor_stake_placed');
+    expect(PAYOUT_MULTIPLIER).toBe(2); expect(winFor(250)).toBe(500);
   });
-  it('keep only the sizes the server accepts', () => {
-    expect(offeredStakes({minStake: 1, maxStake: 50})).toEqual([5, 10, 25]);
-    expect(offeredStakes({minStake: 10, maxStake: 500})).toEqual([10, 25]); // today's Exchange rule
-    expect(offeredStakes({minStake: 30, maxStake: 50})).toEqual([]);
-    expect(offeredStakes(undefined)).toEqual([5, 10, 25]);
+  it('step by 5 % of the coins, rounded down to a friendly size, at least 5', () => {
+    expect([0, 60, 100, 250, 1000, 3000, 10000, 25000, 1000000].map(stepFor)).toEqual([5, 5, 5, 10, 50, 100, 500, 1000, 5000]);
   });
-  it('estimate a share of the other side after the cut, in whole coins', () => {
-    expect(poolGain({stake: 10, mine: 40, total: 60, cutPercent: 5})).toBe(3); // 10/50 * 20 * 0.95 = 3.8
-    expect(poolGain({stake: 25, mine: 0, total: 100, cutPercent: 0})).toBe(100);
-    expect(poolGain({stake: 10, mine: 40, total: 40, cutPercent: 5})).toBe(0);
-    expect(poolGain({stake: 0, mine: 0, total: 50})).toBe(0);
+  it('clamp to the stall minimum and the smallest of max stake, coins and coins left today', () => {
+    expect(stakeRange({rules: MATCH_RULES, coins: 1000, leftToday: 25000})).toEqual({min: 1, max: 1000, ok: true});
+    expect(stakeRange({rules: MATCH_RULES, coins: 50000, leftToday: 25000})).toEqual({min: 1, max: 10000, ok: true});
+    expect(stakeRange({rules: MATCH_RULES, coins: 50000, leftToday: 700})).toEqual({min: 1, max: 700, ok: true});
+    expect(stakeRange({rules: MARKET_RULES, coins: 4})).toEqual({min: 5, max: 4, ok: false});
+    expect(stakeRange({rules: MATCH_RULES, coins: 100, leftToday: 0}).ok).toBe(false);
+    const range = {min: 5, max: 1000};
+    expect([1, 5, 999.7, 1000, 99999, NaN].map(value => clampStake(value, range))).toEqual([5, 5, 999, 1000, 1000, 5]);
+  });
+  it('move with − and + and never leave the range', () => {
+    const range = stakeRange({rules: MATCH_RULES, coins: 1000, leftToday: 25000});
+    expect(stepStake(100, 1, 1000, range)).toBe(150);
+    expect(stepStake(100, -1, 1000, range)).toBe(50);
+    expect(stepStake(20, -1, 1000, range)).toBe(1);
+    expect(stepStake(980, 1, 1000, range)).toBe(1000);
+    expect(stepStake(9800, 1, 20000, stakeRange({rules: MATCH_RULES, coins: 20000}))).toBe(10000);
+  });
+  it('jump to 10 %, 25 %, 50 % of the coins or all in', () => {
+    const range = stakeRange({rules: MATCH_RULES, coins: 1000, leftToday: 25000});
+    expect([10, 25, 50, 100].map(percent => shareStake(percent, 1000, range))).toEqual([100, 250, 500, 1000]);
+    expect(shareStake(25, 1234, stakeRange({rules: MATCH_RULES, coins: 1234}))).toBe(305); // 308 down to a multiple of 5
+    expect(shareStake(100, 1234, stakeRange({rules: MATCH_RULES, coins: 1234}))).toBe(1234); // all in is exact
+    const rich = stakeRange({rules: MATCH_RULES, coins: 50000, leftToday: 25000});
+    expect(shareStake(50, 50000, rich)).toBe(10000); // the max stake per bet wins over 50 %
+    expect(shareStake(100, 50000, stakeRange({rules: MATCH_RULES, coins: 50000, leftToday: 3000}))).toBe(3000);
+    expect(shareStake(10, 30, stakeRange({rules: MARKET_RULES, coins: 30}))).toBe(5); // 3 is below the stall minimum
+    expect(firstStake(10000, stakeRange({rules: MARKET_RULES, coins: 10000}))).toBe(1000);
+  });
+  it('write every amount in coins, never in dollars', () => {
+    expect(MATCH.win(500)).toBe('Win: 🪙 500 (double your stake)');
+    expect(MARKET.win(20000)).toBe('Win: 🪙 20,000');
+    expect(STAKE.moreLabel(50)).toBe('More by 50 coins');
+    expect(STAKE.notEnough(5)).toBe('You need at least 🪙 5 to stake.');
+    expect([MATCH.win(1), MARKET.win(1), STAKE.notEnough(1), MATCH.confirm(10, 'Draw')].join(' ')).not.toContain('$');
   });
 });
 
@@ -39,11 +69,18 @@ describe('market stall', () => {
     expect(priceText(0.5123)).toBe('$0.5123');
     expect(priceText(null)).toBeNull();
   });
-  it('is open with the stakes 5, 10 and 25 on an open asset, and says the balance', () => {
+  it('is open with a stake range from 5 to the coins on an open asset, and says the balance', () => {
     const view = callsView({answer: board(), now: NOW});
     expect(view).toMatchObject({state: 'open', balance: 100, full: false});
     expect(view.assets[0]).toMatchObject({id: 'harbor-trust', name: 'Bitcoin', price: '$74,339', reason: null, canStake: true,
-      stakes: [5, 10, 25], calls: []});
+      range: {min: 5, max: 100, ok: true}, coins: 100, calls: []});
+    expect(view.assets[0].win(25)).toBe('Win: 🪙 50');
+    const rich = callsView({answer: board({balance: 50000, rules: {minStake: 5, maxStake: 10000, payoutMultiplier: 2}}), now: NOW});
+    expect(rich.assets[0].range).toEqual({min: 5, max: 10000, ok: true});
+  });
+  it('says so when the player has fewer coins than the smallest call', () => {
+    const view = callsView({answer: board({balance: 3}), now: NOW});
+    expect(view.assets[0]).toMatchObject({canStake: false, reason: 'You need at least 🪙 5 to stake.'});
   });
   it('words why a closed asset takes no call, from the server reason', () => {
     const view = callsView({answer: board(), now: NOW});
@@ -107,13 +144,22 @@ describe('market stall', () => {
 });
 
 describe('match board', () => {
-  it('lists open matches with picks, stakes and what a win brings', () => {
-    const view = matchView({board: sportsBoard(), mine: {stakes: []}, signedIn: true, now: NOW, timeZone: 'UTC'});
+  it('lists open matches with picks, a stake range and what a win brings (double, no pool)', () => {
+    const mine = {coins: 1000, coinsLeftToday: 25000, stakes: []};
+    const view = matchView({board: sportsBoard(), mine, signedIn: true, now: NOW, timeZone: 'UTC'});
     expect(view.state).toBe('open');
-    expect(view.matches[0]).toMatchObject({name: 'Harbor Athletic v Island United', when: 'Primeira Liga · Sat 20:00', canStake: true, stakes: [5, 10, 25]});
+    expect(view.matches[0]).toMatchObject({name: 'Harbor Athletic v Island United', when: 'Primeira Liga · Sat 20:00', canStake: true,
+      range: {min: 1, max: 1000, ok: true}, coins: 1000});
     expect(view.matches[0].picks.map(pick => pick.label)).toEqual(['Harbor Athletic', 'Draw', 'Island United']);
-    expect(view.matches[0].hint('away', 10)).toBe('If you are right you win about 🪙 12'); // 10/30 * 40 * 0.95
-    expect(view.matches[0].hint('draw', 5)).toBe('If you are right you win about 🪙 57');
+    expect(view.matches[0].win(250)).toBe('Win: 🪙 500 (double your stake)');
+    expect(view.matches[0].win(10000)).toBe('Win: 🪙 20,000 (double your stake)');
+  });
+  it('caps the range by the coins left today and says when the day is used up', () => {
+    const view = mine => matchView({board: sportsBoard(), mine: {stakes: [], ...mine}, signedIn: true, now: NOW}).matches[0];
+    expect(view({coins: 40000, coinsLeftToday: 25000}).range.max).toBe(10000);
+    expect(view({coins: 40000, coinsLeftToday: 700}).range.max).toBe(700);
+    expect(view({coins: 400, coinsLeftToday: 0})).toMatchObject({canStake: false, reason: 'You reached today\'s limit here. Come back tomorrow.'});
+    expect(view({coins: 0, coinsLeftToday: 25000})).toMatchObject({canStake: false, reason: 'You need at least 🪙 1 to stake.'});
   });
   it('has a friendly empty state', () => {
     expect(matchView({board: sportsBoard([]), now: NOW})).toMatchObject({state: 'empty', line: 'No matches this week. Leagues pause for internationals.'});
@@ -128,12 +174,12 @@ describe('match board', () => {
     expect(matchView({board: sportsBoard(), now: NOW, signedIn: false}).matches[0].canStake).toBe(false);
   });
   it('lists my stakes with their result in coins', () => {
-    const stakes = [{id: 'a', fixtureId: 'fd-101', pick: 'home', amount: 10, payout: 18, home: 'Harbor Athletic', away: 'Island United', status: 'settled', settlement: 'winners'},
+    const stakes = [{id: 'a', fixtureId: 'fd-101', pick: 'home', amount: 10, payout: 20, home: 'Harbor Athletic', away: 'Island United', status: 'settled', settlement: 'winners'},
       {id: 'b', fixtureId: 'fd-102', pick: 'away', amount: 5, payout: 0, home: 'Gull Rovers', away: 'Reef Town', status: 'settled', settlement: 'winners'},
       {id: 'c', fixtureId: 'fd-103', pick: 'draw', amount: 25, payout: 25, home: 'A', away: 'B', status: 'settled', settlement: 'refund_void'}];
     const view = matchView({board: sportsBoard(), mine: {stakes}, signedIn: true, now: NOW});
     expect(view.mine.map(row => row.text)).toEqual([
-      '🪙 10 on Harbor Athletic (Harbor Athletic v Island United): You won 🪙 +8',
+      '🪙 10 on Harbor Athletic (Harbor Athletic v Island United): You won 🪙 20',
       '🪙 5 on Reef Town (Gull Rovers v Reef Town): You lost 🪙 −5',
       '🪙 25 on Draw (A v B): Refunded 🪙 25']);
     expect(view.matches[0].taken).toBe('Your pick: Harbor Athletic, 🪙 10');

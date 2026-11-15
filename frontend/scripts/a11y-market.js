@@ -1,7 +1,7 @@
 // Audit the Harbor market stall (lane H, "Up or down in 5 minutes?") that the market hall hotspot opens, with
 // public native controls. The hotspot opens the card in the local game (?market=local: the in-memory
 // calls fake, with prices and calls); the same card is then audited with the made-up calls fixture of the
-// Harbor card tests: up or down, a 5 / 10 / 25 stake, the confirm button and the placed call with its
+// Harbor card tests: up or down, the stake picker (D050: − / + and 10 % / 25 % / 50 % / All in), the confirm button and the placed call with its
 // countdown. No /api/market* request.
 import {startFromTitle} from './shell-browser-tools.js';
 
@@ -94,10 +94,13 @@ export async function auditMarketPanel(page,{url,audit,capture}){
     await auditState('market-prices');
     const asset=panel.locator('.harbor-asset').filter({has:page.getByRole('heading',{name:'Ether',exact:true})});
     const sides=asset.getByRole('group',{name:'Up or down for Ether',exact:true});
-    const stakes=asset.getByRole('group',{name:'Your stake',exact:true});
-    checks.nothingPreselected=await asset.locator('[aria-pressed="true"]').count()===0
+    const stakes=asset.getByRole('group',{name:'Quick amounts, Ether',exact:true});
+    checks.nothingPreselected=await asset.locator('[data-side][aria-pressed="true"]').count()===0
       &&await asset.locator('.harbor-confirm').isDisabled();
-    const up=sides.getByRole('button',{name:'Up, Ether',exact:true}),ten=stakes.getByRole('button',{name:'10 coins on Ether',exact:true});
+    checks.stepsNamed=await asset.getByRole('group',{name:'Your stake, Ether',exact:true})
+      .getByRole('button',{name:'More by 5 coins, Ether',exact:true}).count()===1;
+    // 10 % of the fixture's 🪙 100 is 🪙 10.
+    const up=sides.getByRole('button',{name:'Up, Ether',exact:true}),ten=stakes.getByRole('button',{name:'10 %, Ether',exact:true});
     await up.click();await ten.click();
     const confirm=asset.getByRole('button',{name:'Place 🪙 10 on Up, Ether',exact:true});await confirm.waitFor();
     checks.choicesPressed=await up.getAttribute('aria-pressed')==='true'&&await ten.getAttribute('aria-pressed')==='true';

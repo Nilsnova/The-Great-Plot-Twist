@@ -1,4 +1,4 @@
-// The match board card: real football fixtures, pick a side, 5 / 10 / 25 coins, see what you would win,
+// The match board card: real football fixtures, pick a side and an amount, see what a right pick wins (2 x),
 // and "My stakes". Same surface as screens/sports/panel.js, so game.js hands it to createSportsEntry:
 //   createSportsPanel({container, adapter, getToken, resetInput, focusGame, onSessionChange, onSignIn})
 // adapter is screens/sports/http.js; screens/sports/actions.js keeps one stake id per click, so a
@@ -6,9 +6,9 @@
 import {emit} from '../core/events.js';
 import {createSportsActions} from '../screens/sports/actions.js';
 import {button, createCard, createPicker, el, myStakesList, replaceKeepingFocus, signInLine} from './dom.js';
-import {matchView} from './match-model.js';
+import {matchStakeState, matchView} from './match-model.js';
 import {STAKE_EVENT} from './stakes.js';
-import {LOADING, MARKET, MATCH, NOT_HEARD, PLAY_MONEY, POOL, SEND_AGAIN, TITLES, TRY_AGAIN, refusalText, resultText} from './words.js';
+import {LOADING, MATCH, NOT_HEARD, PLAY_MONEY, SEND_AGAIN, TITLES, TRY_AGAIN, refusalText} from './words.js';
 
 export function createSportsPanel({container, adapter, getToken = () => null, resetInput, focusGame, onSessionChange,
   onSignIn, refreshMs = 30000, clock = Date.now, timeZone} = {}) {
@@ -31,8 +31,8 @@ export function createSportsPanel({container, adapter, getToken = () => null, re
       if (!seen) seen = new Set(settled.map(stake => stake.id));
       for (const stake of settled.filter(row => !seen.has(row.id))) {
         seen.add(stake.id);
-        const gain = String(stake.settlement ?? '').startsWith('refund_') ? 0 : (stake.payout ?? 0) - stake.amount;
-        notices.set(stake.fixtureId, {tone: gain > 0 ? 'good' : gain < 0 ? 'bad' : 'info', text: resultText(gain)});
+        const {tone, text} = matchStakeState(stake);
+        notices.set(stake.fixtureId, {tone, text});
       }
     }
     render();
@@ -47,7 +47,7 @@ export function createSportsPanel({container, adapter, getToken = () => null, re
     if (!live(scope)) return;
     if (reply.ok) {
       selections.delete(fixtureId);
-      notices.set(fixtureId, {tone: 'good', text: POOL.placed(reply.data.amount, label)});
+      notices.set(fixtureId, {tone: 'good', text: MATCH.placed(reply.data.amount, label)});
       emit({type: STAKE_EVENT, kind: 'match', stake: reply.data.amount});
     } else if (reply.unknown) {
       card.say(NOT_HEARD, 'warn', [button(SEND_AGAIN, () => { const held = actions.pending; if (held) place(held.fixtureId, held.pick, held.amount, label); })]);
@@ -68,9 +68,9 @@ export function createSportsPanel({container, adapter, getToken = () => null, re
     else if (match.reason) item.append(el('p', 'harbor-reason', match.reason));
     if (match.canStake && mine) {
       if (!selections.has(match.id)) selections.set(match.id, {side: null, stake: null});
-      item.append(createPicker({name: match.id, itemName: match.name, busy, selection: selections.get(match.id), sides: match.picks, stakes: match.stakes,
-        sideGroup: MATCH.pickGroup(match.name), stakeGroup: MARKET.stakeGroup, choose: POOL.choose,
-        hint: match.hint, confirmText: POOL.confirm, onConfirm: (pick, stake, label) => place(match.id, pick, stake, label)}));
+      item.append(createPicker({name: match.id, itemName: match.name, busy, selection: selections.get(match.id), sides: match.picks,
+        range: match.range, coins: match.coins, sideGroup: MATCH.pickGroup(match.name), choose: MATCH.choose,
+        win: match.win, confirmText: MATCH.confirm, onConfirm: (pick, stake, label) => place(match.id, pick, stake, label)}));
     }
     return item;
   }

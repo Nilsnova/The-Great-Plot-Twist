@@ -177,7 +177,7 @@ def test_new_stake_uses_server_metadata_limits_and_verified_player_only():
     assert answer.headers["cache-control"] == "private, no-store"
     name, params = database.calls[0]
     assert name == "sports_place_stake" and params["p_player_id"] == PLAYER
-    assert params["p_max_stake"] == 50 and params["p_daily_cap"] == 200
+    assert params["p_max_stake"] == 10_000 and params["p_daily_cap"] == 25_000
     assert params["p_provider"] == "football-data.org" and params["p_provider_match_id"] == 101
     assert params["p_closes_at"] == "2026-11-07T14:00:00+00:00"
     assert "payout" not in params and len(database.calls) == 1
@@ -187,7 +187,7 @@ def test_new_stake_uses_server_metadata_limits_and_verified_player_only():
     "change",
     [
         {"amount": True},
-        {"amount": 51},
+        {"amount": 10_001},
         {"amount": 0},
         {"pick": "drawn"},
         {"outcome": "home"},
@@ -210,6 +210,18 @@ def test_client_cannot_send_amounts_identities_or_outcomes_outside_the_contract(
     )
     assert_error(response, 422, "validation_error")
     assert not database.calls
+
+
+def test_a_stake_of_10000_coins_reaches_the_database_function():
+    client, database, _ = make_client()
+    database.reply = {**database.reply, "amount": 10_000}
+    response = client.post(
+        "/api/sports/stake",
+        headers=HEADER,
+        json={"fixtureId": "fd-101", "pick": "home", "amount": 10_000, "stakeId": "sportsuid01"},
+    )
+    assert response.status_code == 200 and response.json()["amount"] == 10_000
+    assert database.calls[0][1]["p_amount"] == 10_000
 
 
 def test_durable_exact_retry_works_without_provider_and_changed_intent_never_debits():
@@ -244,7 +256,7 @@ def test_provider_failure_cannot_create_a_new_stake_or_settlement():
     assert not database.calls
 
 
-def test_fresh_final_result_drives_conserved_three_way_plan_without_client_outcome():
+def test_fresh_final_result_pays_double_the_stake_to_right_picks_without_client_outcome():
     database = ScriptedDatabase()
     database.fixtures = [fixture_row()]
     database.stakes = [
@@ -256,18 +268,20 @@ def test_fresh_final_result_drives_conserved_three_way_plan_without_client_outco
         "status": "done",
         "settlement": "winners",
         "paidPlayers": 1,
-        "paidCoins": 59,
-        "cutCoins": 1,
+        "paidCoins": 60,
+        "cutCoins": 0,
         "settledAt": "2026-11-07T18:00:00Z",
     }
     client, _, seen = make_client(database=database, final=True)
     response = client.post("/api/sports/settle", headers=HEADER, json={"fixtureId": "fd-101"})
-    assert response.status_code == 200 and response.json()["paidCoins"] == 59
+    assert response.status_code == 200 and response.json()["paidCoins"] == 60
     name, params = database.calls[0]
     assert name == "sports_settle_fixture" and params["p_outcome"] == "home"
     assert params["p_result_status"] == "finished" and params["p_home_score"] == 2
     assert params["p_expected_stakes"] == [1, 2, 3]
-    assert params["p_payouts"] == [{"row_id": 1, "player_id": PLAYER, "coins": 59}]
+    # 30 on home, home won: 2 x 30 back. The wrong picks get no entry; there is no cut.
+    assert params["p_payouts"] == [{"row_id": 1, "player_id": PLAYER, "coins": 60}]
+    assert "p_cut_percent" not in params
     assert len(seen) == 1 and seen[0].url.path == "/v4/matches/101"
     assert_error(
         client.post(

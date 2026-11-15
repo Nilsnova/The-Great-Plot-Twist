@@ -16,8 +16,27 @@ puts every coin on one small scale. The numbers live in `backend/content/islands
 | Starting coins | 100 | `island_open()`: once, only to a wallet that never moved (`starting_coins`); guests: the guest kit pays 100; existing players: `scripts/admin/fresh_start.sql` (`fresh_start`) |
 | Wall / cannon / watchtower / house | 10 / 30 / 40 / 50 | `islet_build()` with the price from `islands.json`, coins only (`building_purchase`) |
 | Loot for surviving wave *n* | 10 + 5 × *n* + 5 per house on that island; Pirate Point 20 + 5 × *n* | `wave_finish()`: computed in the database for each participant, once per player and wave; a lost or late finish pays 0 (`pirate_loot`) |
-| Market stall call (up or down in 5 minutes) | stake 5, 10 or 25; right 2 × stake, wrong 0, same price or no price in 24 h: stake back; at most 3 open | `market_call_open()` / `market_call_settle()` (D034); no fee, so a fair call has an expected value of about 0 |
-| Other Harbor stakes, duel stake | 5, 10 or 25; 0 or 10 | lane H |
+| Market stall call (up or down in 5 minutes) | stake 5 to 10,000 (D050; 5, 10 or 25 before 15 Nov); right 2 × stake, wrong 0, same price or no price in 24 h: stake back; at most 3 open | `market_call_open()` / `market_call_settle()` (D034); the check rule `market_calls_stake_allowed`; no fee, so a fair call has an expected value of about 0 |
+| Match board pick (D050) | stake 1 to 10,000 per match, at most 25,000 per Lisbon day; right pick 2 × stake, wrong 0, postponed/cancelled/suspended: stake back; no pool, no cut | `sports_place_stake()` / `sports_settle_fixture()` (migration `20261115120000_bigger_stakes.sql`), numbers in `backend/server/sports/rules.py` |
+| Duel stake | 0 or 10 | lane H |
+
+### Bigger Harbor stakes (15 Nov 2026, D050)
+
+The owner asked for stakes that stay relevant at 1,000 or 10,000 coins. Both Harbor stalls use one
+picker: − and + in steps of 5 % of the player's coins (rounded down to a friendly size, at least
+5), and 10 %, 25 %, 50 % and All in, always inside the stall's limits, the coins and (match board)
+the coins left today. Every amount shows as play coins (🪙), never in dollars.
+
+What it does to the coin flow:
+
+- **Market calls** stay a coin flip at 2 ×: an expected value of about 0, but a bigger spread. With 3
+  open calls of up to 10,000 each, a player can risk 30,000 coins at once. No daily cap.
+- **The match board** moved from a pool (coins only change hands, minus a 5 % cut) to fixed even
+  odds (the game pays every right pick 2 ×). A random pick of three loses a third of its stake on
+  average; a pick on a strong favorite (one that wins more than half its games) wins coins on average.
+  The daily cap bounds what one player can win to 25,000 coins a Lisbon day; one bet per match.
+- Island prices (D032, D036, at most a few hundred coins a building) are small next to these stakes,
+  so a lucky or well-informed player can build much faster. Accepted for the class game (D050).
 
 ### Tower defense v2 (11 Nov 2026, D036)
 

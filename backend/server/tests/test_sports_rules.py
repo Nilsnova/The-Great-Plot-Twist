@@ -5,8 +5,21 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
+from server.predictions import stake_rules
+from server.predictions.pools import Payout, SettlementPlan, Stake
 from server.sports.models import Match
-from server.sports.rules import closes_at, outcome, picking_open, validate_pick
+from server.sports.rules import (
+    DAILY_STAKE_CAP,
+    MAX_STAKE,
+    MIN_STAKE,
+    PAYOUT_MULTIPLIER,
+    closes_at,
+    coins_left_today,
+    outcome,
+    picking_open,
+    plan_payouts,
+    validate_pick,
+)
 
 KICKOFF = datetime(2023, 8, 11, 19, tzinfo=UTC)
 
@@ -77,3 +90,35 @@ def test_only_the_sports_named_outcomes_are_valid_picks(sport, pick):
 def test_invalid_picks_are_refused(sport, pick):
     with pytest.raises(ValueError):
         validate_pick(fixture(sport=sport), pick)
+
+
+# --- The match board's money rules (D050) ---
+
+STAKES = [Stake(1, "a", "home", 250), Stake(2, "b", "away", 100), Stake(3, "c", "draw", 10_000)]
+
+
+def test_limits_are_the_match_boards_own_and_not_the_prediction_desks():
+    assert (MIN_STAKE, MAX_STAKE, DAILY_STAKE_CAP, PAYOUT_MULTIPLIER) == (1, 10_000, 25_000, 2)
+    assert (stake_rules.MAX_STAKE, stake_rules.DAILY_STAKE_CAP) == (50, 200)  # unchanged desk
+    assert coins_left_today(24_000) == 1_000 and coins_left_today(30_000) == 0
+
+
+def test_a_right_pick_pays_double_and_a_wrong_pick_nothing():
+    plan = plan_payouts(STAKES, "home")
+    assert plan == SettlementPlan("winners", 0, (Payout(1, "a", 500),))
+
+
+def test_a_10000_stake_on_the_right_side_pays_20000():
+    assert plan_payouts(STAKES, "draw").payouts == (Payout(3, "c", 20_000),)
+
+
+def test_nobody_right_pays_nothing_and_everybody_right_pays_everybody_double():
+    assert plan_payouts(STAKES[:2], "draw") == SettlementPlan("winners", 0, ())
+    same = [Stake(1, "a", "home", 5), Stake(2, "b", "home", 7)]
+    assert plan_payouts(same, "home").payouts == (Payout(1, "a", 10), Payout(2, "b", 14))
+
+
+def test_a_void_match_refunds_every_stake():
+    plan = plan_payouts(list(reversed(STAKES)), "void")
+    assert plan.settlement == "refund_void" and plan.cut == 0
+    assert plan.payouts == (Payout(1, "a", 250), Payout(2, "b", 100), Payout(3, "c", 10_000))
