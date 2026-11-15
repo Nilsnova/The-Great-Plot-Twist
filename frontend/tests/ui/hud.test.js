@@ -101,7 +101,7 @@ it('flashes the screen edge red when the island takes damage, never with reduced
         hud.bar({wave:1,shipsLeft:3,islandHp:100,maxIslandHp:100});hud.bar({wave:1,shipsLeft:3,islandHp:90,maxIslandHp:100});
         const button=box.querySelector('.pirate-musket'),out={flash:box.querySelector('.pirate-hurt-edge').classList.contains('pirate-flash'),hint:!button.hidden};
         hud.musket({share:.5,ready:true});out.musket=[!button.hidden,button.textContent.includes('Musket')];
-        hud.musket({share:1,ready:false});out.idle=button.textContent.includes('No pirate in range');
+        hud.musket({share:1,ready:false});out.idle=button.textContent.includes('Musket')&&button.classList.contains('pirate-musket-idle')&&button.getAttribute('aria-label').includes('no pirate in range');
         hud.musket(null);out.hintLater=!button.hidden;
         hud.dispose();box.remove();return out;
       };
@@ -197,7 +197,7 @@ it('keeps the three groups apart and inside the screen at 320, 375 and 1280 px',
         return {boxes:Object.fromEntries(Object.entries(boxes).map(([k,r])=>[k,[r.left,r.top,r.right,r.bottom].map(Math.round)])),pairs,inside,small,targets,overflow:document.documentElement.scrollWidth>innerWidth,visibleGoals:[...document.querySelectorAll('.quest-item')].filter(node=>node.getClientRects().length).length};
       });
       expect(result,`${width}px ${JSON.stringify(result)}`).toMatchObject({pairs:[],inside:true,small:[],targets:true,overflow:false});
-      expect(result.visibleGoals).toBe(width<=900?1:3);
+      expect(result.visibleGoals).toBe(1); // only the current goal, on every screen (visual calm, 15 Nov)
     }
   });
 });
@@ -228,7 +228,7 @@ it('keeps the break between waves clear of the loot toasts and the victory capti
         hud.dispose();box.remove();caption.remove();document.querySelectorAll('.u-toast').forEach(node=>node.remove());
         out.toastsBack=toastsBack;return out;
       });
-      expect(result,`${width}px ${JSON.stringify(result)}`).toMatchObject({covered:[],toasts:2,inside:true,checkbox:true,cleared:true});
+      expect(result,`${width}px ${JSON.stringify(result)}`).toMatchObject({covered:[],toasts:1,inside:true,checkbox:true,cleared:true});
       if(width<=760)expect(result.toastsBack).toBeLessThan(200); // the toasts go back under the goals when the break ends
     }
   });
