@@ -314,7 +314,7 @@ it('the sea chart shows only Your island, The Harbor and Pirate Point', async ()
   expect(result.all).toBe(6);
 });
 
-it('docks the island cards at the side, folds a researched Tech hub branch and walks its tiers (GAME-V3.md §5.1)', async () => {
+it('the Tech hub is a big tree card: tap a tile, one detail with one button, research a fork; building cards still dock (GAME-V3.md §5.1)', async () => {
   const result = await evaluate(async () => {
     const {createIsland} = await window.g20Import('/src/island/index.js');
     const {createFakeIslandTransport} = await window.g20Import('/src/pirates/fake-api.js');
@@ -324,20 +324,28 @@ it('docks the island cards at the side, folds a researched Tech hub branch and w
     transport.dev.setWaveBest(16); transport.dev.setCoins(2000); await island.load();
     const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
     const card = () => document.querySelector('.island-card[open]');
-    const branch = id => card().querySelector(`.island-research-branch[data-branch="${id}"]`);
+    const tile = id => card().querySelector(`.island-research-option[data-option="${id}"]`);
+    const detail = () => ({count: card().querySelectorAll('.island-tech-detail').length, name: card().querySelector('.island-tech-detail strong').textContent,
+      buttons: card().querySelectorAll('.island-tech-detail .kit-button').length, button: card().querySelector('.island-tech-detail .kit-button').textContent,
+      disabled: card().querySelector('.island-tech-detail .kit-button').disabled, note: card().querySelector('.island-tech-detail .island-skill-note').textContent,
+      reason: card().querySelector('.island-tech-detail .island-reason').textContent});
     island.openTechHub(); await wait(30);
-    const docked = card().classList.contains('island-card-docked');
-    const box = card().getBoundingClientRect();
-    const first = {open: branch('cannon').open, focus: document.activeElement?.dataset.focus ?? null};
-    branch('cannon').querySelector('[data-option="cannon-1"] .kit-button').click(); await wait(40);
-    const folded = {open: branch('cannon').open, summary: branch('cannon').querySelector('.island-research-name').textContent,
-      flag: branch('cannon').querySelector('.island-research-flag')?.textContent ?? ''};
-    branch('cannon').querySelector('.island-research-summary').click(); await wait(20);
-    branch('cannon').querySelector('[data-option="long_guns"] .kit-button').click(); await wait(40);
-    const fork = [...branch('cannon').querySelectorAll('.island-research-step[data-tier="2"] .island-research-option')].map(node => [node.dataset.option, node.className.replace(/island-research-option\s*/, ''),
-      node.querySelector('.island-research-step-note')?.textContent ?? '']);
-    const tier3 = branch('cannon').querySelector('.island-research-step[data-tier="3"] .island-research-step-state').textContent;
-    const group = branch('cannon').querySelector('.island-research-step[data-tier="2"] .island-research-options').getAttribute('aria-label');
+    const opened = {docked: card().classList.contains('island-card-docked'), wide: card().classList.contains('island-card-wide'),
+      focus: document.activeElement?.dataset.focus ?? null, picked: card().querySelector('.island-node.is-picked')?.dataset.option, detail: detail(),
+      branches: [...card().querySelectorAll('.island-research-branch')].map(node => node.dataset.branch)};
+    card().querySelector('[data-focus="research-cannon-1"]').click(); await wait(40);
+    const afterOne = {cannon: tile('cannon-1').dataset.state, flag: card().querySelector('.island-research-branch[data-branch="cannon"] .island-branch-flag').textContent};
+    tile('long_guns').focus(); tile('long_guns').click(); await wait(20);
+    const pickedFocus = document.activeElement?.dataset.focus;
+    const longGuns = detail();
+    card().querySelector('[data-focus="research-long_guns"]').click(); await wait(40);
+    const fork = ['rapid_2', 'long_guns'].map(id => [id, tile(id).dataset.state, [...tile(id).classList].find(name => /^is-(learned|ready|locked|closed)$/.test(name))]);
+    tile('rapid_2').click(); await wait(20);
+    const closedTwin = detail();
+    tile('broadside').click(); await wait(20);
+    const tier3 = detail();
+    const group = tile('rapid_2').closest('.island-tier').getAttribute('aria-label');
+    const lines = [...card().querySelectorAll('.island-research-branch[data-branch="cannon"] .island-branch-lines path')].map(path => path.getAttribute('class'));
     document.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape', bubbles: true}));
     card()?.dispatchEvent(new Event('cancel'));
     await wait(30);
@@ -348,17 +356,21 @@ it('docks the island cards at the side, folds a researched Tech hub branch and w
     island.openCrew?.(); await wait(20);
     const crew = card() ? card().classList.contains('island-card-docked') : null;
     island.ui.close();
-    return {docked, width: Math.round(box.width), right: Math.round(window.innerWidth - box.right), first, folded, fork, tier3, group, closed, build, crew,
-      tiers: island.campaign.research.tiers.cannon};
+    return {opened, afterOne, pickedFocus, longGuns, fork, closedTwin, tier3, group, lines, closed, build, crew, tiers: island.campaign.research.tiers.cannon};
   });
-  expect(result.docked).toBe(true);
+  expect(result.opened).toMatchObject({docked: false, wide: true, focus: 'research-cannon-1', picked: 'cannon-1', branches: ['cannon', 'mortar', 'wall', 'watchtower']});
+  expect(result.opened.detail).toMatchObject({count: 1, buttons: 1, name: 'Tower skills', button: 'Research · 🪙 180', disabled: false});
+  expect(result.afterOne).toEqual({cannon: 'done', flag: '1/3'});
+  expect(result.pickedFocus).toBe('tech-long_guns'); // the tapped tile keeps the focus
+  expect(result.longGuns).toMatchObject({count: 1, buttons: 1, name: 'Long guns', button: 'Pick · 🪙 360', disabled: false});
+  expect(result.fork).toEqual([['rapid_2', 'closed', 'is-closed'], ['long_guns', 'chosen', 'is-learned']]);
+  expect(result.closedTwin).toMatchObject({name: 'Rapid II', note: 'Closed: your crew chose Long guns.'});
+  expect(result.closedTwin.button).toMatch(/^Change to it · 🪙/);
+  expect(result.tier3).toMatchObject({name: 'Broadside', button: 'Locked', disabled: true, reason: 'Opens after wave 25.'});
+  expect(result.group).toBe('Cannon skills, tier 2: one of two');
+  expect(result.lines).toContain('is-on'); // tier 1 to the chosen tier 2
+  expect(result.closed).toBe(true);
   expect(result.build).toBe(true);
   expect(result.crew).toBe(false); // the menus stay centred
-  expect(result.first.open).toBe(true);
-  expect(result.folded).toEqual({open: false, summary: 'Cannon skills · tier 1 of 3 ✓', flag: 'Next step'});
-  expect(result.fork).toEqual([['rapid_2', 'is-closed', 'Closed: your crew chose Long guns.'], ['long_guns', 'is-chosen', 'Your crew chose this.']]);
-  expect(result.tier3).toBe('Opens after wave 25.');
-  expect(result.group).toBe('Cannon skills, tier 2: one of two');
-  expect(result.closed).toBe(true);
   expect(result.tiers).toEqual({tier: 2, tier2: 'long_guns', tier3: null});
 });

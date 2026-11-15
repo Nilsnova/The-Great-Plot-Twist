@@ -494,7 +494,7 @@ instance; news can reach players before Manifold resolves, which is why pools cl
 
 **Migration reservations:** Phase 1 060000, Phase 2 080000, Phase 3 120000, Phase 4 130000; stream C 140000. Group 3 owns 090000, 100000 and 110000. All filenames start with 20261106. No historical or reviewed migration is edited.
 
-**Why:** One earned crew view, exact retry outcomes and database-guarded writes keep the browser contract and shared state consistent. Secret content remains server-only, and rewards use existing once-per-player wallet reasons. See [the specification](../specs/case-backend.md) and [the published API contract](INTERFACES.md#case-phase-1-contract-for-g9).
+**Why:** One earned crew view, exact retry outcomes and database-guarded writes keep the browser contract and shared state consistent. Secret content remains server-only, and rewards use existing once-per-player wallet reasons. See the specification (`specs/case-backend.md`) and [the published API contract](INTERFACES.md#case-phase-1-contract-for-g9).
 
 
 ## D008 · Grow order is moot · 2026-11-06

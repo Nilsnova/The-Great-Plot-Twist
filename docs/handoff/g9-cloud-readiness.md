@@ -14,7 +14,7 @@ the starter's historical server/configuration proposals.
 | Request | Current answer | Source / remaining proof |
 |---|---|---|
 | R1: disposable API/login | Ready: four local identities, configured host, actual migrated SQL and enabled case | [Local API guide](../LOCAL-TEST-SERVER.md), `backend/tools/local_server.py`, `local_players.py` |
-| R2: deployed headers | Implemented and deployed: enforcing strict CSP, exact Supabase HTTPS/WSS origins and popup-compatible COOP | Current `vercel.json`; [production proof](stabilization-release.md). Preserve these headers |
+| R2: deployed headers | Implemented and deployed: enforcing strict CSP, exact Supabase HTTPS/WSS origins and popup-compatible COOP | Current `vercel.json`; production proof. Preserve these headers |
 | R3: sign-in flag | Registered, default false, present in config; production remains off | `backend/server/flags.py`, `routes/config.py`. Enable only after real G9 integration/settings proofs |
 | R4: retire temporary auth | Deferred until the in-game sign-in works | Remove `/api/auth/exchange`, `auth-check.html` and coupled tests/checklist together. G9 must not depend on them |
 | R5: public build values/redirect | Public Vite binding names exist for Production and Preview; production host binding exists | Metadata-only Vercel check, no values read. Exact new callback/actual OAuth round trip still needs verification |
@@ -23,7 +23,7 @@ the starter's historical server/configuration proposals.
 | R8: crew push hints | Successful join/muster emits one version-only hint after commit; browser A4 maps it to `live_crew_updated` | `routes/crews.py`, `crew_nudges.py`, `frontend/src/net/live-view.js`, `test_crew_nudges.py` |
 | R9: preview join | Optional, absent; extra request fields remain forbidden | Keep the browser's two-step code-shape preview. Do not send `preview:true` |
 | R10: account metadata | GET `/api/me` includes `rerollsLeft` and verified `isHost` | `routes/me.py`, `test_me_browser_metadata.py` |
-| R11: case contract/fixtures | All four minimum case phases, NPCs and followups are published on main | Current route models and view builders; [complete case proof](case-complete-release.md). Browser fixtures need placeholders; never copy protected server fixture text |
+| R11: case contract/fixtures | All four minimum case phases, NPCs and followups are published on main | Current route models and view builders; complete case proof. Browser fixtures need placeholders; never copy protected server fixture text |
 | R12: weather attribution | Resolved: source/licence/adaptation notices belong in Settings → Credits | [Interfaces](../INTERFACES.md), `frontend/src/shell/credits.js`. Preserve the clean HUD |
 | R13: reveal fingerprints | Build verifies hash-only fingerprints against protected content and scans the production bundle | `frontend/scripts/check-spoilers.js`, `generate-reveal-fingerprints.js`. Private-content changes need the same reviewed fingerprint/build gate |
 | R14: G9 preview stamp | Pending G9's own pushed checkpoint and reachable preview | Main's verified `build-info.json` is a different contract from G9's `build-stamp.json`; it cannot substitute for that preview proof |
