@@ -1,1 +1,0 @@
-Final G7 captures and reports from checks that use fixed historical filenames. The original baseline files at captures/ are preserved; these copies show this final run. Exact commands and pass results are in ../ and ../../20261106_G7-Final-Verification.json.

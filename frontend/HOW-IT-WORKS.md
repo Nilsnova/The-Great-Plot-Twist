@@ -218,7 +218,7 @@ Run `npm test` and `npm run build`; after the build, `CHROME_PATH=/usr/bin/chrom
 
 The game’s [islet hook](src/online/islet-host.js) watches its exact session’s
 [private panel services](src/online/panel-services.js). The factory’s
-[islet lifecycle](src/online/case-adapter/islet-lifecycle.js) owns one
+islet lifecycle owns one
 [L2 engine](src/screens/islet/adapter.js), so the panel and the existing finale `buildLight` intent
 share server snapshots and uncertain click IDs. Screens display those views and send intents;
 A2 remains the authenticated transport. A changed wallet triggers a fresh own-account read.
@@ -235,7 +235,7 @@ panel as the plots (the finale screen is gone).
 Run `npm run test:online:islet` and `npm run test:online:islet:chaos` after the normal stream gate.
 Both use production UI, generated credential placeholders and intercepted endpoints. The recordings
 wait for native cloud-save acknowledgement and physically walk to the confirmed station before
-capturing it. See [stream-8 evidence](captures/20261107_G9-C3/stream8-proof.json). Real services,
+capturing it. See stream-8 evidence. Real services,
 physical hardware and the full online case remain outside that proof.
 
 ## G29: the front door (Play, Join, lore intro, harbor start)

@@ -2,7 +2,7 @@
 
 > **What this file is:** the approved story skeleton v1, the five decisions Nils made on 5 Nov, the next detail round and the rules for changing the story.
 >
-> **Who uses it:** the S lane first, and everyone who builds a part of the mystery (A3, A6, S3, S4, L3, G2 to G4). The work plan is in [ROADMAP.md](../ROADMAP.md); what is happening now is in [STATUS.md](STATUS.md).
+> **Who uses it:** the S lane first, and everyone who builds a part of the mystery (A3, A6, S3, S4, L3, G2 to G4). The work plan is in ROADMAP.md; what is happening now is in [STATUS.md](STATUS.md).
 
 **Spoiler warning.** This file names the culprit. The repository is public, so anyone can read it here. In the game, the culprit's name reaches only crews that solved the case.
 
@@ -105,7 +105,7 @@ A 10 to 15 minute daily round that never needs the case. Play money only.
 
 ## 8. The class demo moment (7:30)
 
-> **Changed by decision 4 (5 Nov):** the class demo is very short and shows highlights only. It is not the live first solve. The beats below stay as the list of candidate highlights. The plan is in [ROADMAP.md](../ROADMAP.md#demo).
+> **Changed by decision 4 (5 Nov):** the class demo is very short and shows highlights only. It is not the live first solve. The beats below stay as the list of candidate highlights. The plan is in ROADMAP.md.
 
 Before class the team may test the case in the live world, but the relight lock keeps the coast dark until the game opens, so the first real solve stays open for players (decisions 4 and 19 of 5 Nov). The class demo uses the highlights tour (`?demo=1`), which runs in the browser on a stand-in that never touches the live world. The beats below are candidates for it: the phone parts of beats 3 and 5 are dropped with the class join, the Relighting in beat 7 is the tour's own and not the real one, and the tour stops before the unmasking.
 
@@ -119,7 +119,7 @@ Before class the team may test the case in the live world, but the relight lock 
 
 ## 9. Core by 23 Nov vs later
 
-> **Cut by the roadmap:** this core list comes to about 50 package days, nearly twice the team's capacity. [ROADMAP.md](../ROADMAP.md#capacity-and-the-cut-rule) v0.2 cuts it into core, should and later, and the M1 cut rule decides how much of the core grows past its minimum version.
+> **Cut by the roadmap:** this core list comes to about 50 package days, nearly twice the team's capacity. ROADMAP.md v0.2 cuts it into core, should and later, and the M1 cut rule decides how much of the core grows past its minimum version.
 
 **Core:** Act 1 with Story v2 and the referee; crews, seats, NPC partners; the case (8 cards, 4 deductions, finale, accusation, twist); rewards and the Relighting switch; home islet, sailing, salvage, weather, Exchange; live presence (you see the other captains live, core since the late evening of 5 Nov); phone page for the class; presenter panel.
 
@@ -134,12 +134,12 @@ Nils answered the five questions of the skeleton on the evening of 5 Nov. They g
 | 1 | One shared case for the whole world, or an own copy per crew? | **Yes: own copy per crew.** The first solve relights the coast for everyone. | Each crew of up to four seats (players or NPC partners) solves the case once. Every later crew adds its names and one more light. Anything that names the culprit shows only to crews that solved it. |
 | 2 | How far may Story v2 change the original intro? | **Yes: small `story.json` edits only.** | An ending line per decision, a real third path for saying nothing, a card for reading the log, planted hints everyone sees, and the reordered warned shore note. Both engines ignore unknown fields, so the 11 existing tests and the referee keep working. |
 | 3 | How smart are NPC partners in version 1? | **Yes: scripted errand runners.** | A few fixed orders, about 10 minutes per errand, short preset lines. They never pick card pairs or accuse. No free hints and no AI voice yet. Hints that cost coins may come later. |
-| 4 | Is the class demo the live first solve? | **Changed: no.** The class demo is very short and shows highlights only. | The recommendation was a live first solve after rehearsals. Instead the demo shows highlights, and the live world's first solve stays open for players. See [ROADMAP.md](../ROADMAP.md#demo). |
+| 4 | Is the class demo the live first solve? | **Changed: no.** The class demo is very short and shows highlights only. | The recommendation was a live first solve after rehearsals. Instead the demo shows highlights, and the live world's first solve stays open for players. See ROADMAP.md. |
 | 5 | Who is the culprit, and do new characters get personal names? | **Yes: the harbor master, titles only.** | The cast is the harbor master, the fisherman in the yellow coat, the salvage foreman and the coastguard commander. Elena stays the only named character. |
 
 ## Next detail round
 
-This is the work of package S0 (Nils and the S-lane owner), due on Mon 9. Each item names the package that owns it. The cut of the core list into core, should and later is already done in [ROADMAP.md](../ROADMAP.md) v0.2.
+This is the work of package S0 (Nils and the S-lane owner), due on Mon 9. Each item names the package that owns it. The cut of the core list into core, should and later is already done in ROADMAP.md v0.2.
 
 1. **Story v2 change list for `story.json`.** Every new line, the three ending variants, the planted hints, the reordered warned shore note, and the fixed base shore text (it still shows the fisherman tying up the red boat after it has left). Tests go next to the 11 existing ones. *Owner:* S0, then S1 (its second pull request).
 2. **The case file in content JSON.** All 8 cards (text, kit route, slower route, cost or wait), the 4 deductions, the suspects' clearing lines, the four per-kit closing lines, the fisherman's continuity line (freed by a Harbor Office order, since the rescue ending shows his arrest), and an optional second remembered choice inside the case, for example opening or delivering a sealed crate. *Owner:* S0 drafts, S3 builds.

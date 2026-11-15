@@ -45,7 +45,6 @@ We are four equal teammates building with coding agents. Everyone can propose fe
 | Branches, features, reviews and handovers | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | Instructions for coding agents | [AGENTS.md](AGENTS.md) |
 | Shared technical and product decisions | [Decision log](docs/DECISIONS.md) |
-| What we build, in which order, and the lanes | [ROADMAP.md](ROADMAP.md) |
 | What works right now, next steps per lane and the log | [Status](docs/STATUS.md) |
 | Your island, the waves, the Harbor, Pirate Point and the controls | [How to play](docs/HOW-TO-PLAY.md) |
 | Player data, deletion and play money | [Privacy](docs/PRIVACY.md) |
@@ -57,6 +56,10 @@ We are four equal teammates building with coding agents. Everyone can propose fe
 | Commands to install, run and test, and how we write code | [How we write code, section 3](docs/ENGINEERING.md#3-commands) |
 
 **Spoiler warning.** The solution of the case is in this repository, labelled: [docs/STORY.md](docs/STORY.md), [docs/story/](docs/story/README.md), decision D013 in the [decision log](docs/DECISIONS.md) and `backend/content/secret/`. To solve the case yourself, play it before you open them. In the game, the culprit's name reaches only crews that solved the case.
+
+## Repository map
+
+`frontend/` is the browser game (plain JavaScript and Vite: `src/` code, `public/` assets, `tests/` Vitest suites, `scripts/` build helpers and browser checks). `backend/` is the Python API (FastAPI in `server/`, game data in `content/`, developer tools in `tools/`), deployed with the frontend by `vercel.json`. `supabase/migrations/` holds the database schema in order. `docs/` holds the team and project documents linked above, with `docs/evidence/` and `docs/handoff/` keeping screenshots and handovers that current specs link to. `specs/` holds one implementation spec per feature package (T29–T47 for the current sprint). `scripts/` holds repository-wide tools: the live smoke test, the secret and text checks, the dependency audit, the local dev server and the voice-line generator. `CLAUDE.md`, `GEMINI.md` and `.github/copilot-instructions.md` are tool entry files that only point to [AGENTS.md](AGENTS.md).
 
 ## Project status
 
