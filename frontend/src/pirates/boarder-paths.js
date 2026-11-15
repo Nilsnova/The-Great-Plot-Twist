@@ -151,7 +151,13 @@ export function createBoarderPaths({ coast, heart, walls, towers = [], towerBloc
         if (!best || field.cost[step.index] < field.cost[best.index]
             || (field.cost[step.index] === field.cost[best.index] && step.index < best.index)) best = step;
       }
-      return best ? {kind: 'step', ...centreOf(grid, best.index)} : {kind: 'none'};
+      if (best) return {kind: 'step', ...centreOf(grid, best.index)};
+      const escape = nextStep(grid, layout, field, index);
+      if (!escape) return {kind: 'none'};
+      if (escape.towerId === occupied.id) return {kind: 'step', ...centreOf(grid, escape.index)};
+      if (escape.towerId) return {kind: 'tower', towerId: escape.towerId};
+      if (escape.wallId) return {kind: 'wall', wallId: escape.wallId};
+      return {kind: 'step', ...centreOf(grid, escape.index)};
     }
     const wall = engaged(boarder);
     if (wall) return { kind: 'wall', wallId: wall.id };

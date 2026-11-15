@@ -5,7 +5,7 @@
 import { describe, expect, it } from 'vitest';
 import { createWave } from '../../src/pirates/sim.js';
 import { towerEdgeDistance } from '../../src/pirates/tower-obstacles.js';
-import { WALL_ENGAGE, WALL_FOOTPRINT, createBoarderPaths, footprintPoints, isOnLand } from '../../src/pirates/boarder-paths.js';
+import { WALL_ENGAGE, WALL_FOOTPRINT, createBoarderPaths, footprintPoints, isOnLand, obstacleInWay } from '../../src/pirates/boarder-paths.js';
 import { cellOf, standingWallAt } from '../../src/pirates/path-grid.js';
 import { FOOTPRINTS } from '../../src/island/placement.js';
 import { surfaces } from '../../src/world/places/surfaces.js';
@@ -129,6 +129,36 @@ describe('the island grid for boarders', () => {
     const boarder = {x: 0, z: 0}, way = paths.next(boarder);
     expect(way.kind).toBe('step');
     expect(towerEdgeDistance({x: way.x, z: way.z}, tower)).toBeGreaterThan(0);
+  });
+
+  it('escapes a rebuilt tower in a five-tower cross and reaches heart without crossing another footprint', () => {
+    const towers = [[8, 2], [6, 2], [10, 2], [8, 0], [8, 4]].map(([x, z], index) => ({
+      id: `cannon_${index + 1}`, kind: 'cannon', x, z, hp: 60, maxHp: 80,
+    }));
+    const paths = createBoarderPaths({coast: {rx: 20, rz: 22, seed: 3}, heart: HEART, walls: [], towers, towerBlocking: true,
+      pace: {hackPerSecond: 2.5, speed: 2.8}});
+    paths.refresh();
+    const boarder = {x: 8, z: 2}, first = paths.next(boarder), kinds = [first.kind];
+    expect(first.kind).not.toBe('none');
+    const actions = {
+      step: way => {
+        const to = {x: way.x, z: way.z};
+        expect(obstacleInWay(boarder, to, towers)).toBeNull();
+        Object.assign(boarder, to);
+      },
+      tower: way => { towers.find(tower => tower.id === way.towerId).hp = 0; },
+      wall: () => {},
+      heart: () => {},
+      none: () => {},
+    };
+    for (let tick = 0; tick < 200 && !kinds.includes('heart'); tick++) {
+      paths.refresh();
+      const way = paths.next(boarder);
+      kinds.push(way.kind);
+      actions[way.kind](way);
+    }
+    expect(kinds).toContain('heart');
+    expect(kinds).not.toContain('none');
   });
 
 });

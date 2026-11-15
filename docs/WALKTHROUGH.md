@@ -1500,9 +1500,12 @@ parity and geometry; [pathing-wiring.test.js](../frontend/tests/pirates/pathing-
 [tower-health.test.js](../frontend/tests/pirates/tower-health.test.js) exercise real wave movement, break/rebuild,
 escape, captain pursuit and feature-off behavior; [battle-guide.test.js](../frontend/tests/pirates/battle-guide.test.js)
 checks the preview. The closed-ring breach regression failed before implementation with `expected null not to be null`
-and passes with the tower-aware route field. The focused workload runs 300 boarders × 3,000 ticks through repeated
-tower breaches and rebuilds. [Two-client rule captures and limits](evidence/T35-tower-obstacles/README.md) record
-matching state for 451 ticks.
+and passes with the tower-aware route field. Final review also added a five-tower cross regression: before the escape
+fallback an enclosed boarder received `kind: 'none'`; now it reaches the heart through its own footprint or by
+attacking the adjacent route blocker, without crossing another footprint. The final affected suite passes 76 tests;
+the whole frontend suite of 3,348 tests was run before this narrow fix. The focused workload runs 300 boarders ×
+3,000 ticks through repeated tower breaches and rebuilds. [Two-client rule captures and limits](evidence/T35-tower-obstacles/README.md)
+record matching state for 451 ticks.
 
 **Limits.** The migration is unapplied and the feature flag stays off. The three-seed balance smoke is not sign-off,
 the generic multiplayer harness timed out later in its pause/break UI phase on both branch and unchanged base, and
