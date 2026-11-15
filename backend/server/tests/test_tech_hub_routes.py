@@ -209,7 +209,7 @@ def test_the_wreck_refuses_an_odd_amount_and_a_finished_repair():
     assert_error(gift(world_at(9), 30), 400, "bad_gift")
     done = gift(world_at(9, wreck_paid=500))
     assert_error(done, 409, "repaired")
-    assert done.json()["error"]["message"] == "The wreck is repaired. Sailing opens later."
+    assert done.json()["error"]["message"] == "The wreck is repaired. She sails after wave 30."
 
 
 def test_a_member_mends_the_wreck_of_the_game_and_a_stranger_cannot():

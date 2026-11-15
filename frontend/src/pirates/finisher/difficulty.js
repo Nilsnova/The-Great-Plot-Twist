@@ -24,8 +24,12 @@ export const CURVES = Object.freeze({
   duel: Object.freeze({ prompt: [9, 7], easyPrompt: [13, 11], share: [.55, .6] }),
   // The last-chance rescue (rescue.js) is kinder than a boss: a comeback should feel possible.
   rescue: Object.freeze({ speed: [.85, 1.15], width: [14, 12], easyWidth: [20, 17], share: [.5, .58] }),
+  // D057: the own boat's games between waves (src/pirates/boat/rules.js). The boat opens after wave 30, so a
+  // first sail already plays at pressure 0.22; the round's numbers come from the island's best wave.
+  broadside: Object.freeze({ speed: [1, 1.45], width: [9, 6.5], easyWidth: [13, 10] }),
+  dash: Object.freeze({ speed: [1, 1.4], catch: [8, 6.5], easyCatch: [11, 9], balls: [8, 16] }),
 });
-const WHOLE = new Set(['hits', 'prompt', 'easyPrompt']);
+const WHOLE = new Set(['hits', 'prompt', 'easyPrompt', 'balls']);
 
 /** 0 for waves up to 10 (and for a missing or broken wave), 1 from wave 100, evenly in between. */
 export function pressure(wave) {
