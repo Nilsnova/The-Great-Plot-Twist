@@ -207,6 +207,24 @@ The captain's own skill tree (TOWER-DEFENSE §14) is deeper and makes the crew d
 - **Screens agree:** the role is one more id in the skills list every room message already carries (shot, strike, repair, rebuild, and now `captain_revive`), so the wall hp and the revive hp come out the same on every screen; the help-up hold is the reviver's own timer (their loadout). The lobby (Players and invite) shows each captain's role icon: 🩹 Medic, 🔧 Engineer, 🔫 Gunner.
 - **Data:** `backend/content/islands.json` `captainSkills` and `frontend/src/pirates/captain-ids.js` are two copies that `tests/pirates/captain-stats.test.js` compares, with the check rules of `supabase/migrations/20261112120000_captain_tree.sql` (not applied: column `islands.captain_role`, `island_learn_skill()` recreated, `island_pick_role()`, `island_respec()`). Tests: `backend/server/tests/test_captain_tree_routes.py`, `island_sql/test_captain_tree_sql.py`, `frontend/tests/island/captain-tree.test.js`.
 
+### 5.4 Tower upgrade trees and the swivel-gun nest ([D055](DECISIONS.md), 16 Nov)
+
+After level 5 a cannon, mortar, harpoon tower, culverin or swivel-gun nest grows on in a small Bloons-style tree: two paths of three tiers, **path a fires faster, path b hits harder**. One path may reach tier 3; once a path is past tier 1 the other stays at tier 1 at most. Tiers open after waves **20 / 35 / 45** (`campaign.json` `tree_1..3`), need level 5 and the tier below, and are paid once by the player who clicks (ledger `towertree:<actionUid>`). The tree sits beside the tower skills (§5, D051) and multiplies on top of them.
+
+| Kind | Path a (faster) | Path b (harder) | Tier 1 / 2 / 3 price |
+|---|---|---|---|
+| Cannon | Drill: reload ×0.92 / ×0.85 / ×0.78 | Powder: damage ×1.1 / ×1.2 / ×1.3 | 🪙 1,000 / 2,200 / 4,800 |
+| Mortar | Loaders: reload ×0.92 / ×0.85 / ×0.78 | Big shells: damage ×1.08 / ×1.15 / ×1.22, blast ×1.1 / ×1.2 / ×1.3 | 🪙 1,200 / 2,600 / 5,600 |
+| Harpoon tower | Winch: reload ×0.92 / ×0.85 / ×0.78 | Barbs: slow +5 / +10 / +15 points, +0.5 / +1 / +1.5 s | 🪙 700 / 1,500 / 3,200 |
+| Culverin (flag `defenses_v2`) | Rammers: reload ×0.92 / ×0.85 / ×0.78 | Long bore: damage ×1.1 / ×1.2 / ×1.3 | 🪙 1,400 / 2,800 / 6,000 |
+| Swivel-gun nest | Oiled: reload ×0.92 / ×0.85 / ×0.78 | Scatter: +1 / +2 / +3 pellets | 🪙 900 / 2,000 / 4,400 |
+
+- **The card:** a tower's card is its tree, drawn with the captain-tree component (`src/island/skill-tree.js` `drawTowerTree`, model `src/island/tree-model.js`): a big centred card, the levels as the trunk tile (its detail panel has the Upgrade), the two paths as forks above it, one detail panel with one line of numbers ("Every 0.70 s → 0.64 s", "Damage 38 → 42") and one big button. The tower skill and Move / Tear down stay below it.
+- **The swivel-gun nest** (after wave 9; levels 4 and 5 after 15 and 20; 🪙 50 / 100 / 200 / 400 / 800): every 0.9 / 0.85 / 0.8 / 0.75 / 0.7 s (× the pace 0.7) three pellets of 3 / 4 / 6 / 8 / 10 damage, range 13–17, at boarders on the island only (the one nearest the heart, then the boarders within 2.5 of it). Always a hit, no dice; no watchtower range bonus, no gunner; hp 90 % of a cannon's. Art: `src/art/swivel.js` (a sandbag nest with a flared swivel gun; damaged and broken frames). Event `swivel_fired`.
+- **Sim:** `spot.tree {a, b}` → `defenses(...).tree` → `CONFIG`-independent factors from `src/pirates/tower-trees.js` (`treeStats`), only on a level-5 tower; a tower without a tree applies no factor, so every fixed-seed fingerprint is unchanged.
+- **Server and database:** `POST /api/island/tower-tree {spot, path, tier, actionUid, code?}` (INTERFACES.md), `backend/content/tower_trees.json`, migration `20261116020000_tower_trees.sql` (`islet_buildings.tree_a/tree_b`, `island_tower_tree()`, the swivel's spot pairs). Tests: `tests/pirates/tower-trees.test.js`, `tests/island/tower-tree.test.js`, `tests/island/tower-tree-dom.test.js`, `backend/server/tests/test_tower_trees_routes.py`, `island_sql/test_tower_trees_sql.py`. Screenshots: `node scripts/capture-tower-trees.js`.
+- **Balance** (`balance-rules.mjs --waves 20,40,60,80 --rules both`, 10 seeds): with two captains wave 60 goes from 10 % won to 100 % (♥83) and wave 80 from 0 % to 90 % (♥56; 20 % with tower health and pathing); the full crew keeps more heart at 80 (♥44 → ♥85). Towers alone still lose 80 with every tree full. Enemy waves were not rescaled.
+
 ## 6. Narration (lane N)
 
 - A **narrator** speaks short lines (one to three sentences) at: the opening (Start), each wave's start for the first 5 waves, every unlock in section 4, the first boss, the first boarding, a player falling and being revived, the heart in danger (below 30%), a lost wave, every 10th wave, the final battle. Captions show the text (always, for sound off and accessibility).

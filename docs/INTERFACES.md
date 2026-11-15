@@ -1798,3 +1798,14 @@ With `tower_health` the room's `repair` / `rebuild` messages may name a tower in
   p_price)` replaces the 5-argument function; it locks the payer's wallet, then the island, then the building,
   and answers `{status: done, plot, spec, price, balance, repeat}` or a refusal (`insufficient_funds` with
   `price`).
+
+
+## Tower upgrade trees and the swivel-gun nest (D055)
+
+[D055](DECISIONS.md#d055--tower-upgrade-trees-and-the-swivel-gun-nest--2026-11-16). Source of truth: the comment at the top of `backend/server/routes/island.py`; database part `supabase/migrations/20261116020000_tower_trees.sql` (not applied yet; apply it **before** the server of the same change starts, which reads the new columns).
+
+- **New route:** `POST /api/island/tower-tree {spot, path: "a" | "b", tier: 1 | 2 | 3, actionUid, code?}` → the island. One tier of the tree of a level-5 tower, paid once by the caller (`prices.towerTrees[kind].prices[tier - 1]`). Errors: `400 bad_tree`, `403 not_member`, `404 no_such_spot`, `404 no_such_island`, `409 not_built`, `409 needs_level`, `409 known`, `409 needs_tier`, `409 closed` (the other path is past tier 1), `409 locked` ("Opens after wave 35."), `409 insufficient_funds`, `422 no_tree`, `422 validation_error`. A repeated `actionUid` pays nothing.
+- **Island answer:** every spot carries `tree` (`{a, b}` for a built tower of a kind with a tree, else `null`); `prices.towerTrees {kind: {prices, waves, level, a: {id, name}, b: {id, name}}}` for the tree kinds in the catalogue (the culverin only with `defenses_v2`). Tower spots list the new kind `swivel` in `kinds`; `unlocks` has `swivel:1..5`; `campaign` has `tree_1..3`.
+- **Money and permissions:** wallet reason `tower_tree` (spend), ref `towertree:<actionUid>`; co-op action `island_tower_tree` (`personal`).
+- **Database:** `islet_buildings.tree_a`, `tree_b` (smallint 0–3, default 0) with the check rules `islet_buildings_tree_range` and `islet_buildings_tree_fits_kind`; `islet_buildings_plot_fits_building` also allows `(cannon_1..7, swivel)`; new `island_tower_tree(p_player_id, p_island_owner, p_plot, p_kind, p_path, p_tier, p_action_uid, p_price, p_unlock_wave, p_level)` (service_role only; locks wallet, island, building; refuses `not_member`, `not_built`, `wrong_kind`, `needs_level`, `locked`, `known`, `needs_tier`, `closed`, `insufficient_funds`).
+- **Sim:** the defense item takes `tree {a, b}`; new kind `swivel` and event `swivel_fired {towerId, targetId, damage, pellets, level, x, z, toX, toZ, hits}`.

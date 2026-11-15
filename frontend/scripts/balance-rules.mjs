@@ -6,7 +6,9 @@
 //   node scripts/balance-rules.mjs [--seeds 10] [--waves 1,3,5] [--json out.json] [--guards 3] [--captains 2]
 //
 // --guards N hires N guards (D052) on every island; --captains N plays with N captains instead of the band's crew
-// (a small class). Both are off by default, so the default tables stay what they were.
+// (a small class). --trees grows the typical upgrade trees of D055 on the level-5 towers (treesAt below), --swivels N
+// puts N swivel-gun nests (D055) in place of the last N cannons. All are off by default, so the default tables stay
+// what they were.
 //
 // The crew: N captains (more and stronger as the campaign goes on) stand near the heart, strike a boarder
 // next to them, else shoot the nearest ship or boarder in range. One of them is the carpenter: they walk
@@ -33,6 +35,7 @@ const JSON_OUT = arg('json', null);
 const LAYOUTS = arg('layouts', 'spots,ring').split(',');
 const ONLY = arg('rules', null)?.split(',');
 const GUARDS = Number(arg('guards', 0)), CAPTAINS = Number(arg('captains', 0));
+const TREES = args.includes('--trees'), SWIVELS = Number(arg('swivels', 0));
 
 export const RULE_SETS = {
   none: {},
@@ -54,6 +57,24 @@ export function progressAt(wave) {
   return { band: 'late', island: tiered(islandAt(5)), captains: 6, level: 5, skills: ALL_SKILLS, weapon: true };
 }
 
+// D055: the trees a class typically has grown by a wave (the tiers open after waves 20, 35 and 45; a level-5 tower
+// only): cannons go for speed (path a), mortars for bigger shells (path b), the other path at tier 1 once there is room.
+export function treesAt(wave) {
+  if (wave < 20) return {};
+  if (wave < 35) return { cannon: { a: 1, b: 0 }, mortar: { a: 0, b: 1 }, swivel: { a: 0, b: 1 } };
+  if (wave < 45) return { cannon: { a: 2, b: 1 }, mortar: { a: 1, b: 2 }, swivel: { a: 1, b: 2 } };
+  return { cannon: { a: 3, b: 1 }, mortar: { a: 1, b: 3 }, swivel: { a: 1, b: 3 } };
+}
+export function withTrees(island, wave) {
+  const trees = treesAt(wave);
+  return { ...island, defenses: island.defenses.map(item => (item.level === 5 && trees[item.kind] ? { ...item, tree: trees[item.kind] } : item)) };
+}
+// D055: n swivel-gun nests in place of the last n cannons (same spot, same level).
+export function withSwivels(island, n) {
+  const cannons = island.defenses.filter(item => item.kind === 'cannon').slice(-n).map(item => item.id);
+  return { ...island, defenses: island.defenses.map(item => (cannons.includes(item.id) ? { ...item, kind: 'swivel', spec: undefined } : item)) };
+}
+
 // "ring": the island's walls moved edge to edge (T36 placement, 2 x 2 footprints) into a closed square ring
 // around the heart (0, 2): 12 walls, 4 a side; with fewer walls the ring keeps gaps on its north side.
 const RING_SPOTS = [[-3, 5], [-1, 5], [1, 5], [3, 5], [3, 3], [3, 1], [3, -1], [1, -1], [-1, -1], [-3, -1], [-3, 1], [-3, 3]];
@@ -73,9 +94,10 @@ const E_REACH = 2;      // a captain presses E this close to a wall or tower
 const DUTY = Number(process.env.DUTY ?? 14);        // the carpenter looks after walls and towers this close to the heart
 
 /** One wave with the scripted crew. Returns the result and what happened. */
-export function playWave({ wave, seed, rules, layout = 'spots', guards = GUARDS, captains = CAPTAINS }) {
+export function playWave({ wave, seed, rules, layout = 'spots', guards = GUARDS, captains = CAPTAINS, trees = TREES, swivels = SWIVELS }) {
   const band = progressAt(wave), p = captains > 0 ? { ...band, captains } : band;
-  const laid = layout === 'ring' ? asRing(p.island) : p.island;
+  const built = trees ? withTrees(swivels ? withSwivels(p.island, swivels) : p.island, wave) : swivels ? withSwivels(p.island, swivels) : p.island;
+  const laid = layout === 'ring' ? asRing(built) : built;
   const island = guards > 0 ? { ...laid, crew: { ...laid.crew, guard: guards } } : laid;
   const sim = createWave({ seed, wave, ...island, ...rules });
   const posts = Array.from({ length: p.captains }, (_, i) => {
@@ -134,10 +156,10 @@ function wallPos(island, id) {
   return map.get(id) ?? { x: 99, z: 99 };
 }
 
-export function measureConfig({ wave, rules, layout, seeds = SEEDS, guards = GUARDS, captains = CAPTAINS }) {
+export function measureConfig({ wave, rules, layout, seeds = SEEDS, guards = GUARDS, captains = CAPTAINS, trees = TREES, swivels = SWIVELS }) {
   const sum = { won: 0, hp: 0, time: 0, towersBroken: 0, wallsBroken: 0, wallHacks: 0, towerHacks: 0, towerRebuilds: 0, heartHits: 0, landed: 0 };
   for (let s = 1; s <= seeds; s++) {
-    const r = playWave({ wave, seed: s * 7919, rules, layout, guards, captains });
+    const r = playWave({ wave, seed: s * 7919, rules, layout, guards, captains, trees, swivels });
     if (r.survived) sum.won++;
     sum.hp += r.islandHp; sum.time += r.time;
     for (const key of ['towersBroken', 'wallsBroken', 'wallHacks', 'towerHacks', 'towerRebuilds', 'heartHits', 'landed']) sum[key] += r[key];
@@ -171,7 +193,7 @@ export function check(table) {
 if (import.meta.url === `file://${process.argv[1]}`) {
   const table = {}, started = Date.now();
   for (const layout of LAYOUTS) {
-    console.log(`\n## layout ${layout} (${SEEDS} seeds${GUARDS ? `, ${GUARDS} guards` : ''}${CAPTAINS ? `, ${CAPTAINS} captains` : ''})\n`);
+    console.log(`\n## layout ${layout} (${SEEDS} seeds${GUARDS ? `, ${GUARDS} guards` : ''}${CAPTAINS ? `, ${CAPTAINS} captains` : ''}${TREES ? ', trees' : ''}${SWIVELS ? `, ${SWIVELS} swivels` : ''})\n`);
     console.log('| wave | band | rules | win % | heart hp | time s | towers broken | tower rebuilds | walls breached | wall hacks | boarders landed |');
     console.log('|---:|---|---|---:|---:|---:|---:|---:|---:|---:|---:|');
     for (const wave of WAVES) {
