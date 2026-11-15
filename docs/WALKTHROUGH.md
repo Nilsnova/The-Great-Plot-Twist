@@ -1242,6 +1242,54 @@ explain and review it. See [the test map](TEST-MAP.md#t28--ianno-hollensteiner--
 and [screenshots, exact checks and checkpoint links](evidence/T28/README.md).
 Local browser evidence does not establish live Supabase or physical-phone behavior.
 
+## B2 — Island actions on phones — Johannes Franz Lang
+
+**What and where.** [island.css](../frontend/src/island/island.css) no longer forces
+Hire crew, Move, Tear down or the game's Players button to a 40px minimum height.
+The existing [shared kit rule](../frontend/src/ui/kit/kit.css) sets 44px, which now
+applies to all four. Their labels, callbacks, disabled rules and confirmations stay
+as before. The chip-position comment follows its new bottom edge (126px).
+
+**Why this way.** Removing four conflicting declarations is smaller than adding
+a phone-only override or new button component. The same minimum works on desktop.
+A taller action stack needs a little more room; the existing card handles scrolling.
+At both phone sizes the chip still has 4px before the goals strip.
+
+**Tests and limits.** [phone-targets.test.js](../frontend/tests/island/phone-targets.test.js)
+uses real Chromium components at 375x812, 390x844 and 1280x720: actual dimensions,
+scroll/focus/Escape, one callback per click and disabled wave actions. Before the
+fix, three size cases failed at 40px; after it all four cases pass. [Real fake-game
+screenshots and measurements](evidence/B2-phone-targets/README.md) complement the
+controlled component callbacks. This does not prove live purchases/refunds or
+physical-phone input. A future larger shared minimum must also retain chip/goal
+separation. This is one B2 slice, not the whole journey audit.
+
+## B2 — Entry and full lobby on phones — Johannes Franz Lang
+
+**What and where.** A mobile block in [island.css](../frontend/src/island/island.css)
+gives lobby rows four columns: presence, colour, name, role. `minmax(0,1fr)` lets
+the name use remaining space without forcing the panel wider. Names wrap; status
+starts in column 3 and extends to the last column on the next row. Existing DOM,
+accessible text, online/host/member rules and callbacks stay as before.
+
+**Why.** The single-line row clipped all ten generated names in the phone fixture.
+The new rows show complete names, at the cost of fewer visible players at once;
+the existing list scrolls. The rule only applies up to 520px, preserving desktop.
+
+**Proof.** [Seven browser cases](../frontend/tests/island/phone-lobby.test.js)
+cover names, roles/status, last-player scroll, host/member Start, focus/Escape and
+Continue/Create/Join. Two cases fail on old CSS and pass after correction.
+[check-phone-entry.js](../frontend/scripts/check-phone-entry.js) uses the existing
+local browser helper and fake game to audit seven actual entry panels at three
+sizes. It refuses external TEST_URL and writes pictures/report to a temporary
+folder. [Evidence and reproduction](evidence/B2-entry-lobby/README.md).
+
+**Limits and change.** These prove component behavior and a local fake journey,
+not authentication or real multiplayer. Physical keyboard/touch, VoiceOver and
+Safari still need human checks. If row content or phone widths change, rerun both
+checks and revisit wrapping before reducing text or hiding names. This work is
+independent of [draft #58](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/58).
+
 ## Where older docs differ from the code
 
 Read the code when these disagree. Noted on 11 Nov; not yet fixed.

@@ -21,12 +21,12 @@
 /* Visiting a friend: a slim chip under the coins (top left), clear of the prompts at the bottom. */
 .island-visit{position:fixed;left:20px;top:82px;z-index:25;display:flex;gap:var(--u-3);align-items:center;box-sizing:border-box;
   font:600 15px/1.35 var(--u-font);color:var(--u-ink);background:var(--u-sea);padding:6px 6px 6px 12px;max-width:min(420px,calc(100vw - 32px))}
-.island-visit .kit-button{min-height:40px;padding:6px 10px;font-size:15px;flex:none}
+.island-visit .kit-button{padding:6px 10px;font-size:15px;flex:none}
 /* One line, so the chip keeps one height: a long host name ends in "…" (the whole text is still read out). */
 .island-visit>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .island-banner[hidden],.island-visit[hidden]{display:none}
 @media(max-width:900px){.island-banner{top:auto;bottom:164px;padding:8px 16px 10px}.island-banner-text{font-size:20px}.island-visit{left:12px;top:70px;max-width:calc(100vw - 24px);font-size:14px}.island-code{font-size:24px}}
-/* Phones: the goals strip spans the width under the Menu (src/ui/hud.css), where the chip sits (70 to 122 px).
+/* Phones: the goals strip spans the width under the Menu (src/ui/hud.css), where the chip sits (70 to 126 px).
    While the chip shows, the strip starts under it (130 px) instead of under the Menu (68 px). */
 @media(max-width:900px){html:has(.island-visit:not([hidden])) .hud-play .quest-strip{margin-top:62px}}
 /* Tower defense (docs/TOWER-DEFENSE.md): level pips, the cannon-or-mortar choice, the next level, the crew
@@ -52,7 +52,7 @@
 .island-soon{color:var(--u-mute);font-size:15px;opacity:.8}
 .island-soon::before{content:"🔒 "}
 .island-hint{color:var(--u-gold)}
-.island-card-body>.island-hire{justify-self:start;min-width:0;min-height:40px;padding:7px 14px;font-size:15px}
+.island-card-body>.island-hire{justify-self:start;min-width:0;padding:7px 14px;font-size:15px}
 .island-crew{list-style:none;margin:0;padding:0;display:grid;gap:var(--u-2)}
 .island-crew-row{display:flex;align-items:center;justify-content:space-between;gap:var(--u-3);padding:var(--u-2) var(--u-3);background:var(--u-card);border:2px solid var(--u-line)}
 .island-crew-text{display:grid;gap:2px;min-width:0}
@@ -158,6 +158,12 @@
 .island-card-body>.island-lobby-start{justify-self:stretch;min-height:56px;font-size:var(--u-lg)}
 .island-lobby-line{color:var(--u-gold);text-align:center}
 @media(max-height:760px){.island-lobby-qr{width:min(120px,34vw)}.island-lobby-code{font-size:24px}}
+/* Phones: keep the full captain name beside its colour/role; put status on the next line. */
+@media(max-width:520px){
+  .island-lobby-player{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;row-gap:2px}
+  .island-lobby-name{overflow:visible;white-space:normal;overflow-wrap:anywhere}
+  .island-lobby-state{grid-column:3/-1}
+}
 .island-choice,.island-crew-row,.island-code,.island-hint,.island-tag,.island-next,.island-share,.island-message,.island-qr,.island-level,.island-cost{border-radius:var(--u-radius-xs)}
 /* The campaign (GAME-V3.md §4, §5): locked things say when they open; the Tech hub, the tower skills and the wreck. */
 .island-choice.is-locked{border-style:dashed}
@@ -247,7 +253,7 @@ html:has(.island-card-docked[open]) .quest-strip{visibility:hidden}
 @media(max-width:900px){html:has(.island-card-docked[open]) .pirate-hud>.pirate-musket{bottom:calc(60dvh + 12px)}}
 @media(prefers-reduced-motion:reduce){.island-wreck-fill{transition:none}}
 /* GAME-V3.md §4.2: Tear down is secondary and red-outlined; the confirmation's red button is the only filled red. */
-.island-card-body>.island-teardown{justify-self:start;min-width:0;min-height:40px;padding:7px 14px;font-size:15px;color:#ffd6c8;
+.island-card-body>.island-teardown{justify-self:start;min-width:0;padding:7px 14px;font-size:15px;color:#ffd6c8;
   background:transparent;border:2px solid #e2664c;box-shadow:none}
 .island-card-body>.island-teardown:hover:not(:disabled){background:#e2664c22;color:#fff1ea}
 .island-teardown-why{margin:-6px 0 0;color:var(--u-mute);font-size:14px}
@@ -324,7 +330,7 @@ html:has(.island-card-docked[open]) .quest-strip{visibility:hidden}
 .island-leaderboard-row.is-rank-3 .island-leaderboard-rank { background: #d39a65; }
 
 /* T36, Move mode (src/island/move-bar.js): a parchment strip at the bottom, the island in view above it. */
-.island-card-body>.island-move{justify-self:start;min-width:0;min-height:40px;padding:7px 14px;font-size:15px}
+.island-card-body>.island-move{justify-self:start;min-width:0;padding:7px 14px;font-size:15px}
 .island-move-why{margin:-6px 0 0;color:var(--u-mute);font-size:14px}
 .island-move-bar{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:35;box-sizing:border-box;width:min(560px,calc(100vw - 32px));
   display:grid;grid-template-columns:1fr auto;gap:4px var(--u-3);padding:12px 14px;background:var(--u-parch);color:#392b1c;

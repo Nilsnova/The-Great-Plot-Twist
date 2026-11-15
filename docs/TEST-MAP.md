@@ -208,3 +208,20 @@ and [results, screenshots and manual checkpoints](evidence/T28/README.md).
 |---|---|---|---|
 | Wave-based speed/timing/error-budget curves and one frozen snapshot per run ([spec](../specs/T38-T39-minigames-rescue.md)) | [Curves and playability](../frontend/tests/pirates/finisher-difficulty.test.js), [finisher](../frontend/tests/pirates/finisher.test.js); `cd frontend && npm test` | Boundary waves 1–100, today's numbers up to wave 10, monotonic and bounded, rounding waves, unknown task refused, frozen snapshot and late joiner, lagging bot wins in crews 1/2/4/10 on both settings, Redtide two of three at wave 100, wrong input fails, smaller late error budget | Human playtests (T3), mixed client versions in one wave |
 | Last-chance rescue rules, scene and settlement (D044, flag `rescue`) | [Rescue rules](../frontend/tests/pirates/rescue.test.js), [finish pass-through and fake server](../frontend/tests/pirates/rescue-finish.test.js), [server](../backend/server/tests/test_wave_rescue.py): `cd backend && uv run pytest -q server/tests/test_wave_rescue.py` | Triggers and reasons, wave 4–100, fallen versus away captains, no captain, once per wave, win/fail/timeout, preparation limit and watchers, disconnects with a frozen goal, chunk/order determinism, `rescued` only true, flag off, Pirate Point/early/won waves ignored, loot arguments unchanged, JS/Python parity | The `sim.js` hook and a two-browser run (not built here), real `wave_finish()` SQL with `p_restart_back = 1` against Postgres, human playtest |
+
+## B2 — Johannes Franz Lang — Phone-sized island actions
+
+| What I built / why | Where and command | Covers | Misses |
+|---|---|---|---|
+| Remove four 40px overrides so island secondary actions use the existing 44px kit rule | [CSS](../frontend/src/island/island.css), [four browser cases](../frontend/tests/island/phone-targets.test.js); `cd frontend && npm test -- --run tests/island/phone-targets.test.js` | Four affected targets at 375x812, 390x844, 1280x720; width/height, scroll into viewport, focus/Escape, card/document overflow, one callback per enabled action, disabled Move/Tear down do nothing | Physical touch/keyboard, other engines, screen readers, live APIs/refunds and complete B2 journey; fake-game screenshots separately measure chip/goal gap |
+
+[Before/after images and measurements](evidence/B2-phone-targets/README.md), [spec/results](../specs/B2-phone-controls.md).
+
+## B2 — Johannes Franz Lang — Entry and full lobby
+
+| What I built / why | Where and command | Covers | Misses |
+|---|---|---|---|
+| Phone lobby rows show full generated names with status below | [CSS](../frontend/src/island/island.css), [seven regressions](../frontend/tests/island/phone-lobby.test.js); `cd frontend && npm test -- --run tests/island/phone-lobby.test.js` | 375x812/390x844: ten names, roles/no role, online/away/you, list scroll and reachable host Start, focus/Escape, disabled member Start; desktop bounds/Start; Continue/Create/Join, invalid code/no call and valid callbacks at all three sizes | Real Start/room authority, actual login or money writes, physical devices/keyboard, screen readers, other engines |
+| Repeatable real local fake-game entry audit | [Tool](../frontend/scripts/check-phone-entry.js); `cd frontend && node scripts/check-phone-entry.js` | Title, title Join opened, intro, tutorial, game choice, goal and lobby at 375x812/390x844/1280x720: panel bounds/overflow, 44px buttons, Escape from title Join, route reaches fake island, no browser errors/external requests | Ten connected clients, submitted title Join/auth, real invitations, every possible overlap/contrast, physical keyboard/phone and B2 outside entry/lobby |
+
+[Evidence and commands](evidence/B2-entry-lobby/README.md), [exact results](../specs/B2-entry-lobby.md).

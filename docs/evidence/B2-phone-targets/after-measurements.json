@@ -1,0 +1,74 @@
+[
+  {
+    "viewport": "1280x720",
+    "buttonSizes": {
+      ".island-hire": {
+        "width": 101.90625,
+        "height": 44
+      },
+      ".island-move": {
+        "width": 71.0625,
+        "height": 44
+      },
+      ".island-teardown": {
+        "width": 107.515625,
+        "height": 44
+      },
+      "lobby": {
+        "width": 78.015625,
+        "height": 44
+      }
+    },
+    "horizontalOverflow": false,
+    "chipBottom": 138,
+    "goalsTop": 76
+  },
+  {
+    "viewport": "375x812",
+    "buttonSizes": {
+      ".island-hire": {
+        "width": 101.90625,
+        "height": 44
+      },
+      ".island-move": {
+        "width": 71.0625,
+        "height": 44
+      },
+      ".island-teardown": {
+        "width": 107.515625,
+        "height": 44
+      },
+      "lobby": {
+        "width": 78.015625,
+        "height": 44
+      }
+    },
+    "horizontalOverflow": false,
+    "chipBottom": 126,
+    "goalsTop": 130
+  },
+  {
+    "viewport": "390x844",
+    "buttonSizes": {
+      ".island-hire": {
+        "width": 101.90625,
+        "height": 44
+      },
+      ".island-move": {
+        "width": 71.0625,
+        "height": 44
+      },
+      ".island-teardown": {
+        "width": 107.515625,
+        "height": 44
+      },
+      "lobby": {
+        "width": 78.015625,
+        "height": 44
+      }
+    },
+    "horizontalOverflow": false,
+    "chipBottom": 126,
+    "goalsTop": 130
+  }
+]
