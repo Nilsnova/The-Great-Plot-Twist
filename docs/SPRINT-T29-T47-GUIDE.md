@@ -989,7 +989,7 @@ The state of each flag **on Vercel** is not recorded in the repository (the code
 
 ## 14. Suggested split for the four teammates
 
-The README members table currently has only Nils Lenke filled in (the other three rows are placeholders until Fri 20 Nov), so the split uses **Teammate A to D**; put real names in when the table is complete. Nils's agents wrote this code under D047, so Nils should **explain** rather than be the independent reviewer, and each reviewer should be someone who did not write that section. Each section takes roughly 45 to 60 minutes (read, run tests, do the questions); sections 9 and 10 take longer. Each teammate gets at least one backend-heavy and one lighter section.
+The README members table is complete (Nils Christoph Lenke, Ianno Miranda Hollensteiner, Johannes Franz Lang, Nicolas Radomski). The split below still says **Teammate A to D**; the team puts its names on the four roles. Nils's agents wrote this code under D047, so Nils should **explain** rather than be the independent reviewer, and each reviewer should be someone who did not write that section. Each section takes roughly 45 to 60 minutes (read, run tests, do the questions); sections 9 and 10 take longer. Each teammate gets at least one backend-heavy and one lighter section.
 
 | Reviewer | Primary sections | Why this mix | Second reader (swap for the drill on Thu 19 / Sat 21) |
 |---|---|---|---|
