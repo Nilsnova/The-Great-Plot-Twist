@@ -12,7 +12,15 @@ from dataclasses import replace
 import pytest
 
 from server.flags import parse_flags
-from server.market.calls import CALL_ASSETS, HOLD, MAX_OPEN_CALLS, PRICE_WAIT, STAKES
+from server.market.calls import (
+    CALL_ASSETS,
+    HOLD,
+    MAX_OPEN_CALLS,
+    MAX_STAKE,
+    MIN_STAKE,
+    PAYOUT_MULTIPLIER,
+    PRICE_WAIT,
+)
 from server.tests.helpers import REPO_ROOT, assert_error
 from server.tests.market_calls_helpers import GUEST, GUEST_ID, MARKET_ON, PLAYER_ID, CallsWorld
 from server.wallet import find_direction
@@ -21,6 +29,7 @@ HOLD_SECONDS = int(HOLD.total_seconds())
 DAY = 24 * 3600
 MIGRATIONS = REPO_ROOT / "supabase" / "migrations"
 MIGRATION = MIGRATIONS / "20261111010000_market_calls.sql"
+BIGGER = MIGRATIONS / "20261115120000_bigger_stakes.sql"  # D050: the stake rule since 15 Nov
 
 
 def newest_open_function():
@@ -44,7 +53,8 @@ def test_the_stall_shows_the_five_assets_with_their_live_prices():
     assert response.status_code == 200
     assert response.headers["cache-control"] == "private, no-store"
     body = response.json()
-    assert list(body) == ["assets", "calls", "balance"]
+    assert list(body) == ["assets", "calls", "balance", "rules"]
+    assert body["rules"] == {"minStake": 5, "maxStake": 10_000, "payoutMultiplier": 2}
     assert [(a["id"], a["name"]) for a in body["assets"]] == list(CALL_ASSETS)
     bitcoin = body["assets"][0]
     assert (bitcoin["price"], bitcoin["open"], bitcoin["closedReason"]) == (76159.21, True, None)
@@ -134,12 +144,22 @@ def test_a_call_the_player_cannot_pay_is_refused():
     assert_error(world.call(stake=5), 409, "insufficient_funds")
 
 
-@pytest.mark.parametrize("stake", [0, 1, 6, 15, 50, 100, -5])
-def test_only_the_three_stakes_are_allowed(stake):
+@pytest.mark.parametrize("stake", [0, 1, 4, 10_001, 1_000_000, -5])
+def test_only_stakes_from_5_to_10000_are_allowed(stake):
     world = CallsWorld()
 
     assert_error(world.call(stake=stake), 422, "bad_stake")
     assert world.database.calls("market_call_open") == []
+
+
+@pytest.mark.parametrize("stake", [5, 6, 250, 10_000])
+def test_any_whole_stake_from_5_to_10000_reaches_the_database(stake):
+    world = CallsWorld()
+    world.database.balances[PLAYER_ID] = 20_000
+
+    response = world.call(stake=stake)
+    assert response.status_code == 200 and response.json()["stake"] == stake
+    assert world.database.calls("market_call_open")[0]["p_stake"] == stake
 
 
 @pytest.mark.parametrize("asset", ["swiftwater-ferries", "tesla", "dogecoin"])
@@ -265,7 +285,8 @@ def test_the_assets_stakes_and_reasons_are_the_ones_of_the_migration():
 
     ids = ", ".join(f"'{asset_id}'" for asset_id, _name in CALL_ASSETS)
     assert f"check (asset in ({ids}))" in text
-    assert f"check (stake in ({', '.join(str(stake) for stake in STAKES)}))" in text
+    assert f"check (stake between {MIN_STAKE} and {MAX_STAKE})" in BIGGER.read_text()
+    assert f"payout = stake * {PAYOUT_MULTIPLIER}" in text
     assert f"c_max_open constant integer  := {MAX_OPEN_CALLS};" in newest
     minutes = HOLD_SECONDS // 60
     assert f"c_hold     constant interval := interval '{minutes} minutes';" in newest

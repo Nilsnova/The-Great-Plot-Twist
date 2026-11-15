@@ -1,7 +1,7 @@
 // The Harbor market stall (lane H, "Up or down in 5 minutes?") in the production build with recorded answers
 // of GET and POST /api/market/calls (online-market-fixture.js): Play, open Menu > Harbor > Open the market
 // stall (public controls only, no game hooks) as an anonymous player, then signed in through the bundled
-// PKCE fixture with the market flag off, then on. With the flag on: nothing preselected, a 🪙 10 call on Up
+// PKCE fixture with the market flag off, then on. With the flag on: no side preselected, a 🪙 100 call on Up (10 % of the coins)
 // is POSTed once with a valid actionUid and exactly {asset, direction, stake, actionUid}, it shows as an open
 // call counting down to its five minutes, and the HUD's 🪙 counter follows the wallet (GET /api/me). The walk-up
 // hotspot and the keyboard are audited in dev by check-a11y.js (a11y-market.js).
@@ -79,7 +79,7 @@ for(const width of [1280,375]){
     check(await stall(page).locator('.harbor-footnote').textContent()===PLAY_MONEY,'The closed stall keeps its play-money line');
     await page.screenshot({path:`${folder}/flag-off-${width}.png`});
     await closeStall(page);
-    // 3. Flag on: the recorded assets and the decided call, then a 🪙 10 call on Up.
+    // 3. Flag on: the recorded assets and the decided call, then a 🪙 100 call on Up (D050).
     env.resetMarket({flag:true,tradingEnabled:true});
     await page.reload();await page.locator('.shell-screen[open]').waitFor();
     await play(page);
@@ -98,22 +98,23 @@ for(const width of [1280,375]){
       'Closed assets say why in plain words (weekend, quote_old, source_off)');
     check(await bitcoin.locator('.harbor-call[data-open="false"] .harbor-now').textContent()==='You won 🪙 +20',
       'The recorded decided call shows its payout: You won 🪙 +20');
-    check(await bitcoin.locator('[aria-pressed="true"]').count()===0&&await bitcoin.locator('.harbor-confirm').isDisabled(),
-      'Nothing is preselected, so one stray tap never places a call');
-    check(JSON.stringify(await bitcoin.locator('.harbor-stake').evaluateAll(nodes=>nodes.map(node=>node.dataset.stake)))==='["5","10","25"]',
-      'The stakes are 5, 10 and 25');
+    check(await bitcoin.locator('[data-side][aria-pressed="true"]').count()===0&&await bitcoin.locator('.harbor-confirm').isDisabled(),
+      'No side is preselected, so one stray tap never places a call');
+    check(JSON.stringify(await bitcoin.locator('[data-share]').allTextContents())==='["10 %","25 %","50 %","All in"]'
+      &&await bitcoin.locator('.harbor-amount-value').textContent()==='🪙 100'&&await bitcoin.locator('.harbor-win').textContent()==='Win 🪙 200',
+      'The stake picker starts at 10 % of the coins (🪙 100) and says the win (D050)');
     await bitcoin.getByRole('button',{name:'Up, Bitcoin',exact:true}).click();
-    await bitcoin.getByRole('button',{name:'10 coins on Bitcoin',exact:true}).click();
-    await bitcoin.getByRole('button',{name:'Place 🪙 10 on Up, Bitcoin',exact:true}).click();
-    await bitcoin.locator('.harbor-notice').filter({hasText:'Your 🪙 10 is on Up.'}).waitFor();
+    await bitcoin.getByRole('button',{name:'10 %, Bitcoin',exact:true}).click();
+    await bitcoin.getByRole('button',{name:'Place 🪙 100 on Up, Bitcoin',exact:true}).click();
+    await bitcoin.locator('.harbor-notice').filter({hasText:'Your 🪙 100 is on Up.'}).waitFor();
     const open=bitcoin.locator('.harbor-call[data-open="true"]');
     await open.waitFor();
-    check(await open.locator('p').first().textContent()==='You said Up with 🪙 10.'
+    check(await open.locator('p').first().textContent()==='You said Up with 🪙 100.'
       &&/^Decided in (5|4) min$/.test(await open.locator('.harbor-now').textContent()),
       'The call shows as an open call counting down to its five minutes');
     await page.screenshot({path:`${folder}/called-${width}.png`});
-    await page.waitForFunction(()=>document.querySelector('.hud-coins')?.textContent==='🪙 990',null,{timeout:15000});
-    check(true,'The HUD follows the authoritative wallet after the call (🪙 990)');
+    await page.waitForFunction(()=>document.querySelector('.hud-coins')?.textContent==='🪙 900',null,{timeout:15000});
+    check(true,'The HUD follows the authoritative wallet after the call (🪙 900)');
     phase=env.marketRequests.slice(before);
     const writes=phase.filter(request=>request.method==='POST');
     check(writes.length===1&&writes[0].path==='/api/market/calls','Exactly one POST /api/market/calls was sent');
@@ -124,7 +125,7 @@ for(const width of [1280,375]){
     check(!phase.some(request=>['/api/market/open','/api/market/close','/api/market/portfolio'].includes(request.path)),
       'The stall no longer uses the old Exchange routes');
     const proof=env.callsProof();report.proofs.push({width,...proof});
-    check(proof.posts===1&&proof.repeats===0&&proof.open===1&&proof.coins===990,'The recorded server applied one call, no repeat');
+    check(proof.posts===1&&proof.repeats===0&&proof.open===1&&proof.coins===900,'The recorded server applied one call, no repeat');
     check(proof.allCallBodiesExpected&&proof.allPrivateAuthorized,'Request bodies and authorisation match the published routes');
     check(await stall(page).locator('a[href*="example.invalid"]').count()===0,'The price credit stays in Settings, Credits');
     await closeStall(page);

@@ -10,9 +10,8 @@ from typing import Literal, Self
 from pydantic import BaseModel, Field, StrictStr, ValidationError, model_validator
 
 from server.predictions.pools import SettlementPlan
-from server.predictions.stake_rules import DAILY_STAKE_CAP, MAX_STAKE, POOL_CUT_PERCENT
 from server.sports.models import Match
-from server.sports.rules import closes_at, outcome
+from server.sports.rules import DAILY_STAKE_CAP, MAX_STAKE, closes_at, outcome
 from server.sports.source import FIXTURE_ID, SportsReading
 from server.supabase_admin import SupabaseAdmin, SupabaseRejected
 
@@ -309,7 +308,6 @@ class SportsStore:
                 "p_result_status": match.status,
                 "p_expected_stakes": [stake.id for stake in stakes],
                 "p_payouts": [asdict(payout) for payout in plan.payouts],
-                "p_cut_percent": POOL_CUT_PERCENT,
             },
         )
 

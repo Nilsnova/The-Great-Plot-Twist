@@ -1,8 +1,9 @@
 """Up-or-down market calls: the simple Harbor market stall (decision D034).
 
-"Will Bitcoin be higher in 5 minutes?" A player picks an asset, up or down, and a stake of 5, 10
-or 25 coins. Five minutes later the call is decided: right pays twice the stake, wrong pays
-nothing, the same price pays the stake back. It replaces the leverage positions in the game.
+"Will Bitcoin be higher in 5 minutes?" A player picks an asset, up or down, and a stake of 5 to
+10,000 whole coins (D050; it was 5, 10 or 25 until 15 Nov 2026). Five minutes later the call is
+decided: right pays twice the stake, wrong pays nothing, the same price pays the stake back. It
+replaces the leverage positions in the game.
 
     look()       the five assets with their price now, the player's calls and coins. Every open
                  call past its settle time is decided first (lazy settlement, see below).
@@ -54,7 +55,11 @@ CALL_ASSETS = (
     ("apple", "Apple"),
     ("nvidia", "NVIDIA"),
 )
-STAKES = (5, 10, 25)
+# The stake limits of one call (D050). The migration's check rule market_calls_stake_allowed
+# (20261115120000_bigger_stakes.sql) lists the same numbers (a test compares).
+MIN_STAKE = 5
+MAX_STAKE = 10_000
+PAYOUT_MULTIPLIER = 2  # a right call pays this many times its stake (market_call_settle)
 DIRECTIONS = ("up", "down")
 # The same numbers as the constants in market_call_open() and market_call_settle().
 MAX_OPEN_CALLS = 3
@@ -198,8 +203,10 @@ async def open_call(
     call it made already (and charges nothing)."""
     if asset_name(asset) is None:
         raise no_such_asset()
-    if stake not in STAKES:
-        raise ApiError(422, "bad_stake", "A call stakes 5, 10 or 25 coins.")
+    if not MIN_STAKE <= stake <= MAX_STAKE:
+        raise ApiError(
+            422, "bad_stake", f"A call stakes {MIN_STAKE} to {MAX_STAKE:,} whole coins."
+        )
     made = await store.find_by_action(admin, player_id, action_uid)
     if made is not None:
         return made, await read_balance(admin, player_id)

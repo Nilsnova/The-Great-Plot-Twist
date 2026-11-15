@@ -161,8 +161,8 @@ While the arsenal is on, weapons are bought there instead of in Menu › Captain
 
 The Harbor is a building on the east beach. Walk up to it and press **E** (or **Use**).
 
-- **Market stall** (after wave 4): will a real price go up or down in 5 minutes? Stake 🪙 5, 10 or 25. Right pays twice your stake. The same price gives it back.
-- **Match board** (after wave 7): pick the winner of a real football match with 🪙 5, 10 or 25.
+- **Market stall** (after wave 4): will a real price go up or down in 5 minutes? Stake 🪙 5 to 10,000 with − and + or 10 %, 25 %, 50 % or All in of your coins. Right pays twice your stake. The same price gives it back.
+- **Match board** (after wave 7): pick the winner of a real football match with 🪙 1 to 10,000 (at most 🪙 25,000 a day). A right pick pays twice your stake; a wrong one loses it; a called-off match gives it back.
 
 ## The Tech hub and the wreck
 

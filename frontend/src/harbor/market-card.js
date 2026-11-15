@@ -1,6 +1,6 @@
 // The market stall card: "Up or down in 5 minutes?" (INTERFACES.md, the market stall, D034). One item per asset
 // (Bitcoin, Ether, Gold, Apple, NVIDIA, with the server's names) with its real price, a tiny sparkline,
-// Up / Down and 5 / 10 / 25 coins. Open calls count down to their five minutes; decided calls show their result.
+// Up / Down and an amount of coins (D050). Open calls count down to their five minutes; decided calls show their result.
 // It talks to GET and POST /api/market/calls through calls-http.js; the server decides every number.
 //   const market = createMarketEntry(ctx);  await market.open();  market.active;  market.close();  market.dispose();
 // ctx comes from online/market-host.js: {container, resetInput, focusGame, onSignIn, request, onSessionChange};
@@ -101,8 +101,8 @@ export function createMarketEntry(ctx = {}) {
       if (!selections.has(asset.id)) selections.set(asset.id, {side: null, stake: null});
       item.append(el('p', 'harbor-question', MARKET.question), createPicker({name: asset.id, itemName: asset.name, busy,
         selection: selections.get(asset.id), sides: [{id: 'up', label: MARKET.up}, {id: 'down', label: MARKET.down}],
-        stakes: asset.stakes, sideGroup: MARKET.sideGroup(asset.name), stakeGroup: MARKET.stakeGroup, choose: MARKET.choose,
-        hint: (_side, stake) => MARKET.promise(stake), confirmText: MARKET.confirm,
+        range: asset.range, coins: asset.coins, sideGroup: MARKET.sideGroup(asset.name), choose: MARKET.choose,
+        win: asset.win, confirmText: MARKET.confirm,
         onConfirm: (direction, stake) => place({asset: asset.id, direction, stake})}));
     }
     return item;

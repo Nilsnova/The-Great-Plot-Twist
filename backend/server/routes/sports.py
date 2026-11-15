@@ -13,6 +13,7 @@ from pydantic import BaseModel, ConfigDict, Field, StrictInt
 from server.auth import PlayerDep
 from server.errors import ApiError
 from server.settings import SettingsDep
+from server.sports.rules import MAX_STAKE, MIN_STAKE
 from server.sports.service import SportsService
 from server.supabase_admin import AdminDep
 
@@ -27,7 +28,7 @@ class FixtureIntent(BaseModel):
 
 class StakeIntent(FixtureIntent):
     pick: Literal["home", "draw", "away"]
-    amount: StrictInt = Field(ge=1, le=50)
+    amount: StrictInt = Field(ge=MIN_STAKE, le=MAX_STAKE)  # 1 to 10,000 coins (D050)
     stakeId: str = Field(strict=True, pattern=r"^[A-Za-z0-9_-]{8,64}$")
 
 

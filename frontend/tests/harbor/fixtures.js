@@ -45,7 +45,7 @@ export function fakeCalls({assets, stocks = 'closed', calls = [], balance = 100,
     signIn() { signedIn = true; }};
 }
 
-const RULES = {minStake: 1, maxStake: 50, dailyCap: 200, poolCutPercent: 5, pickLeadMinutes: 60};
+const RULES = {minStake: 1, maxStake: 10000, dailyCap: 25000, payoutMultiplier: 2, pickLeadMinutes: 60};
 export const fixture = (extra = {}) => ({id: 'fd-101', sport: 'football', competition: 'Primeira Liga', home: 'Harbor Athletic',
   away: 'Island United', kickoff: '2026-11-14T20:00:00Z', closesAt: '2026-11-14T19:00:00Z', status: 'scheduled', source: 'live',
   homeScore: null, awayScore: null, picks: ['home', 'draw', 'away'], canStake: true,
@@ -56,12 +56,12 @@ export const sportsBoard = (fixtures = [fixture(), fixture({id: 'fd-102', compet
   provider: 'football-data.org', fetchedAt: '2026-11-11T11:00:00Z', attribution: 'Football data', rules: RULES, simulationNote: 'Play money.'});
 
 // The sports adapter surface (screens/sports/http.js).
-export function fakeSports({board = sportsBoard(), stakes = [], boardFailure = null, refuse = null} = {}) {
+export function fakeSports({board = sportsBoard(), stakes = [], boardFailure = null, refuse = null, coins = 1000} = {}) {
   const calls = [];
   let own = structuredClone(stakes);
   return {calls,
     async board() { calls.push(['board']); return boardFailure ?? {ok: true, data: structuredClone(board)}; },
-    async mine() { calls.push(['mine']); return {ok: true, data: {coins: 100, stakedToday: 0, coinsLeftToday: 200, stakes: structuredClone(own),
+    async mine() { calls.push(['mine']); return {ok: true, data: {coins, stakedToday: 0, coinsLeftToday: 25000, stakes: structuredClone(own),
       checksUnavailable: false, rules: RULES, simulationNote: 'Play money.'}}; },
     async stake(body) {
       calls.push(['stake', body]);
@@ -69,7 +69,7 @@ export function fakeSports({board = sportsBoard(), stakes = [], boardFailure = n
       const match = board.fixtures.find(row => row.id === body.fixtureId);
       own = [{id: `stake-${calls.length}`, fixtureId: body.fixtureId, pick: body.pick, amount: body.amount, payout: null,
         home: match.home, away: match.away, status: 'open', settlement: null}, ...own];
-      return {ok: true, data: {accepted: true, repeat: false, id: `stake-${calls.length}`, fixtureId: body.fixtureId, pick: body.pick, amount: body.amount, coins: 90}};
+      return {ok: true, data: {accepted: true, repeat: false, id: `stake-${calls.length}`, fixtureId: body.fixtureId, pick: body.pick, amount: body.amount, coins: coins - body.amount}};
     },
     async settle() { return {ok: false, status: 403, code: 'forbidden', message: ''}; }};
 }

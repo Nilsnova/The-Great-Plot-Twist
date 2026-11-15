@@ -2,19 +2,26 @@
 
 from datetime import datetime
 
-from server.predictions.stake_rules import DAILY_STAKE_CAP, MAX_STAKE, POOL_CUT_PERCENT
 from server.sports.models import Match
-from server.sports.rules import closes_at, picking_open
+from server.sports.rules import (
+    DAILY_STAKE_CAP,
+    MAX_STAKE,
+    MIN_STAKE,
+    PAYOUT_MULTIPLIER,
+    closes_at,
+    picking_open,
+)
 from server.sports.store import FixtureRow, StakeRow
 
 PLAY_MONEY = (
     "Simulation. Play money only. Coins cannot be bought, cashed out or exchanged for prizes."
 )
+# The match board's rules for the cards (D050): a right pick pays payoutMultiplier x the stake.
 RULES = {
-    "minStake": 1,
+    "minStake": MIN_STAKE,
     "maxStake": MAX_STAKE,
     "dailyCap": DAILY_STAKE_CAP,
-    "poolCutPercent": POOL_CUT_PERCENT,
+    "payoutMultiplier": PAYOUT_MULTIPLIER,
     "pickLeadMinutes": 60,
 }
 

@@ -1,6 +1,6 @@
 // Every sentence the Harbor cards show, in one place so the house text lint reads them all. Pure: no DOM.
 // Coins always go through formatCoins (src/lib/coins.js); asset prices keep their real size.
-import {formatCoinDelta, formatCoins} from '../lib/coins.js';
+import {coinsSpoken, formatCoinDelta, formatCoins} from '../lib/coins.js';
 
 export const SIGN_IN = 'Sign in or join with a class code to place a stake';
 export const SIGN_IN_BUTTON = 'Sign in';
@@ -10,6 +10,19 @@ export const SEND_AGAIN = 'Send again';
 export const NOT_HEARD = 'We did not hear back. Look at My stakes before you send it again.';
 export const LOADING = 'Opening the stall...';
 export const PLACE = 'Place stake';
+
+// The stake picker of both stalls (D050): a big amount, − and + in steps, and four quick buttons.
+export const STAKE = {
+  group: 'Your stake',
+  less: '−', more: '+',
+  lessLabel: step => `Less by ${coinsSpoken(step)}`,
+  moreLabel: step => `More by ${coinsSpoken(step)}`,
+  quick: percent => (percent >= 100 ? 'All in' : `${percent} %`),
+  quickGroup: 'Quick amounts',
+  notEnough: min => `Need ${formatCoins(min)}`,
+  // One short line under the amount, the same at both stalls (owner: no explanatory sentences).
+  win: payout => `Win ${formatCoins(payout)}`,
+};
 
 export const TITLES = {
   harbor: 'Harbor', market: 'Market stall', match: 'Match board',
@@ -25,16 +38,14 @@ export const EXPLAIN = {
 };
 export const OPEN_STALL = name => `Open the ${name.toLowerCase()}`;
 
-// The market stall: "Up or down in 5 minutes?" (INTERFACES.md, the market stall, D034). A won call shows
-// the server's payout (2 x stake: a 🪙 10 call on the right side shows "You won 🪙 +20"), a refunded
+// The market stall: "Up or down in 5 minutes?" (INTERFACES.md, the market stall, D034, D050). A won call
+// shows the server's payout (2 x stake: a 🪙 10 call on the right side shows "You won 🪙 +20"), a refunded
 // call the coins that came back, a lost call just "Lost".
 export const MARKET = {
   question: 'Up or down in 5 minutes?',
   up: 'Up', down: 'Down',
-  stakeGroup: 'Your stake',
   sideGroup: name => `Up or down for ${name}`,
-  promise: stake => `Right in 5 minutes: you get ${formatCoins(stake * 2)}. Wrong: the ${formatCoins(stake)} is gone.`,
-  choose: 'Pick up or down, then a stake.',
+  choose: 'Pick up or down',
   confirm: (stake, side) => `Place ${formatCoins(stake)} on ${side}`,
   placed: (stake, side) => `Your ${formatCoins(stake)} is on ${side}.`,
   call: (side, stake) => `You said ${side} with ${formatCoins(stake)}.`,
@@ -66,20 +77,17 @@ export const MATCH = {
   draw: 'Draw',
   picksClosed: 'Picks for this match are closed.',
   yourPick: (pick, stake) => `Your pick: ${pick}, ${formatCoins(stake)}`,
-};
-
-export const POOL = {
-  choose: 'Pick a side, then a stake.',
-  win: gain => `If you are right you win about ${formatCoins(gain)}`,
-  lonely: stake => `If you are right you get your ${formatCoins(stake)} back, plus a share of what others put on the other side.`,
+  choose: 'Pick a side',
   confirm: (stake, side) => `Place ${formatCoins(stake)} on ${side}`,
   placed: (stake, side) => `Your ${formatCoins(stake)} is on ${side}.`,
+  dayUsed: 'Daily limit reached',
 };
 
 export const MY_STAKES = {
   title: 'My stakes',
   none: 'No stakes yet.',
   waiting: 'waiting for the result',
+  won: payout => `You won ${formatCoins(payout)}`,
   row: (stake, side, what, state) => `${formatCoins(stake)} on ${side} (${what}): ${state}`,
 };
 
@@ -97,6 +105,8 @@ export const refundedText = stake => `Refunded ${formatCoins(stake)}`;
 const REFUSALS = {
   insufficient_funds: 'You do not have enough coins for this stake.',
   daily_stake_cap: 'You reached today\'s limit here. Come back tomorrow.',
+  daily_cap: 'You reached today\'s limit here. Come back tomorrow.',
+  invalid_amount: 'This stall does not take that stake.',
   too_many_requests: 'Wait a few seconds, then try again.',
   market_closed: 'The market just closed. Try again when it opens.',
   prices_stale: 'Prices are catching up. Try again in a minute.',
@@ -104,7 +114,7 @@ const REFUSALS = {
   company_delisted: 'This stall takes no new stakes.',
   too_many_calls: 'You have 3 calls waiting. Place a new one once one is decided.',
   no_such_asset: 'This stall does not offer that one.',
-  bad_stake: 'Pick one of the stakes on the stall.',
+  bad_stake: 'This stall does not take that stake.',
   demo_closed: 'This stall is closed for now.',
   stake_too_small: 'This stall needs a bigger stake.',
   stake_too_big: 'This stall needs a smaller stake.',
