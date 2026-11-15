@@ -216,3 +216,12 @@ and [results, screenshots and manual checkpoints](evidence/T28/README.md).
 | Remove four 40px overrides so island secondary actions use the existing 44px kit rule | [CSS](../frontend/src/island/island.css), [four browser cases](../frontend/tests/island/phone-targets.test.js); `cd frontend && npm test -- --run tests/island/phone-targets.test.js` | Four affected targets at 375x812, 390x844, 1280x720; width/height, scroll into viewport, focus/Escape, card/document overflow, one callback per enabled action, disabled Move/Tear down do nothing | Physical touch/keyboard, other engines, screen readers, live APIs/refunds and complete B2 journey; fake-game screenshots separately measure chip/goal gap |
 
 [Before/after images and measurements](evidence/B2-phone-targets/README.md), [spec/results](../specs/B2-phone-controls.md).
+
+## B2 — Johannes Franz Lang — Entry and full lobby
+
+| What I built / why | Where and command | Covers | Misses |
+|---|---|---|---|
+| Phone lobby rows show full generated names with status below | [CSS](../frontend/src/island/island.css), [seven regressions](../frontend/tests/island/phone-lobby.test.js); `cd frontend && npm test -- --run tests/island/phone-lobby.test.js` | 375x812/390x844: ten names, roles/no role, online/away/you, list scroll and reachable host Start, focus/Escape, disabled member Start; desktop bounds/Start; Continue/Create/Join, invalid code/no call and valid callbacks at all three sizes | Real Start/room authority, actual login or money writes, physical devices/keyboard, screen readers, other engines |
+| Repeatable real local fake-game entry audit | [Tool](../frontend/scripts/check-phone-entry.js); `cd frontend && node scripts/check-phone-entry.js` | Title, title Join opened, intro, tutorial, game choice, goal and lobby at 375x812/390x844/1280x720: panel bounds/overflow, 44px buttons, Escape from title Join, route reaches fake island, no browser errors/external requests | Ten connected clients, submitted title Join/auth, real invitations, every possible overlap/contrast, physical keyboard/phone and B2 outside entry/lobby |
+
+[Evidence and commands](evidence/B2-entry-lobby/README.md), [exact results](../specs/B2-entry-lobby.md).

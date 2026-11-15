@@ -158,6 +158,12 @@
 .island-card-body>.island-lobby-start{justify-self:stretch;min-height:56px;font-size:var(--u-lg)}
 .island-lobby-line{color:var(--u-gold);text-align:center}
 @media(max-height:760px){.island-lobby-qr{width:min(120px,34vw)}.island-lobby-code{font-size:24px}}
+/* Phones: keep the full captain name beside its colour/role; put status on the next line. */
+@media(max-width:520px){
+  .island-lobby-player{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;row-gap:2px}
+  .island-lobby-name{overflow:visible;white-space:normal;overflow-wrap:anywhere}
+  .island-lobby-state{grid-column:3/-1}
+}
 .island-choice,.island-crew-row,.island-code,.island-hint,.island-tag,.island-next,.island-share,.island-message,.island-qr,.island-level,.island-cost{border-radius:var(--u-radius-xs)}
 /* The campaign (GAME-V3.md §4, §5): locked things say when they open; the Tech hub, the tower skills and the wreck. */
 .island-choice.is-locked{border-style:dashed}

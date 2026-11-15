@@ -59,6 +59,7 @@ The game is built and live; nobody waits for anyone. You extend it.
 **T11–T21 are taken by the project owner's agents again (from Thu 12 Nov, ~07:30): do not pick them.** T4–T10 are yours. Migrations are applied only by the project owner. T1, T2, T17 and T18 all change `frontend/src/pirates/sim.js`: claim one at a time, or agree in the group chat who goes first.
 
 - [x] **B2 island action targets, Johannes:** implemented in draft [PR #58](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/58); Hire crew, Move, Tear down and Players use 44px targets, [evidence](evidence/B2-phone-targets/README.md). The full B2 journey/physical-phone audit and human review remain open.
+- [x] **B2 entry/full-lobby slice, Johannes:** implemented in draft [PR #61](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/61); complete phone names, seven regressions and 21-panel entry audit, [evidence/limits](evidence/B2-entry-lobby/README.md). Physical-device and remaining game-view B2 checks/human review stay open; #58 remains independent.
 
 ## 3. Every member, before the freeze (walkthrough = 20% of the grade)
 

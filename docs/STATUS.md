@@ -16,6 +16,7 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 
 **14 Nov, B2 / Johannes:** [draft PR #58](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/58) removes four 40px island-button overrides: Hire crew, Move, Tear down and Players now use the existing 44px kit minimum. Four browser cases and real fake-game before/after captures at 375x812, 390x844 and 1280x720; [measurements/limits](evidence/B2-phone-targets/README.md). Full frontend: 260 files / 3,206 tests; build/budget/text lint, accessibility 33 screens and demo 33 checks pass on main `4d83dcd`. Login/APIs unchanged; draft, author and human review pending. Full B2 and physical-device checks remain open.
+**14 Nov, B2 entry/lobby / Johannes:** [draft PR #61](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/61) fixes visually truncated captain names in full phone lobbies: a small mobile grid lets names wrap and puts status below. Seven focused cases, plus a repeatable 21-panel title-to-lobby fake-game audit at 375x812, 390x844 and 1280x720. Full frontend: 260 files / 3,209 tests; build/budget/text lint, accessibility 33 screens and demo 33 checks pass on the branch from main `4d83dcd`. [Before/after, entry audit and limits](evidence/B2-entry-lobby/README.md). Login/APIs unchanged; independent of #58. Draft; author/human review, physical phone/keyboard and remaining B2 game views are open.
 
 **14 Nov, ~22:05 UTC: `pathing` is live.** Nils accepted the closed-ring gap (D040: at wave 60 a closed wall ring is 12 to 18 points harder with pathing), so `pathing` was added to production `FEATURE_FLAGS` and redeployed. Checked after the redeploy: `/api/config` shows all new flags on (`islands`, `rescue`, `wall_recovery`, `placement`, `defenses_v2`, `arsenal`, `tower_health`, `pathing`), `/api/health` answers 200, and Vercel shows no runtime errors in the last hour. Every T29–T47 feature is now live; what the paragraph below says about `pathing` being off is superseded. Players should reload old tabs.
 
@@ -222,6 +223,7 @@ Nobody has decided these yet. Until they are decided, the plan in [ROADMAP.md](.
 
 
 **Johannes / B2:** review draft #58 and check touch/keyboard on a physical phone. Continue the remaining current-v3 phone journey separately; this PR only fixes four island targets. Preserve all teammate handovers and recheck current main before a later merge. No merge without Johannes explicit OK and independent human approval.
+**Johannes / B2:** review draft #61 and test entry/full lobby on a physical phone (including keyboard and a second-device invite). Remaining game views and draft #58 are separate. Keep draft; reconcile current main and handovers before a later merge; independent human approval and Johannes explicit OK required.
 
 **T28 / Ianno:** introductory explain-back completed after clarification; ask Johannes (`frcola`) for independent review of PR #19. No merge before a different human approves.
 
@@ -553,6 +555,9 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 - **14 Nov 2026 · Johannes / PR #58 conflict resolution:** integrated main `53a59d4` on `fix/b2-phone-controls`; retained teammate content and reran client checks. Exact results and limits: [task handover](../specs/B2-phone-controls.md#main-integration-and-conflict-resolution-14-nov-2026). Updated branch awaits independent review; no main merge.
 
 - **14 Nov — Johannes / B2:** four island actions measured 40px before / 44px after at both phone sizes and desktop; four browser cases, 3,206 frontend tests, build/budget/text lint, 33-screen accessibility and 33-check demo pass; draft #58, physical phone/full B2 remain open.
+- **14 Nov 2026 · Johannes / PR #61 conflict resolution:** integrated main `53a59d4` on `fix/b2-entry-lobby`; retained teammate content and reran client checks. Exact results and limits: [task handover](../specs/B2-entry-lobby.md#main-integration-and-conflict-resolution-14-nov-2026). Updated branch awaits independent review; no main merge.
+
+- **14 Nov — Johannes / B2:** full lobby names clipped 10/10 before → 0/10 after at both phone sizes; draft #61 adds seven regressions and a 21-panel entry audit. Final 3,209 frontend tests and applicable UI gates pass; real phones/rooms remain unverified.
 
 
 - **2026-11-14, ~22:05 UTC, pathing decision (docs only), branch `docs/pathing-decision`.** Claude, for Nils: Nils accepted the closed-ring balance gap; `pathing` switched on in production and checked (`/api/config`, `/api/health`, no runtime errors). Updated D040, OPEN-TODOS, INTERFACES and the sprint guide.
