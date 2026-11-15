@@ -3,10 +3,11 @@
 // tower in their reach, a broken tower stops firing, and E repairs or rebuilds it inside the wave.
 // Without the option every wave plays exactly as before. These are also the damage fixtures for T31/T32.
 import { describe, expect, it } from 'vitest';
-import { createWave } from '../../src/pirates/sim.js';
+import { CONFIG, createWave } from '../../src/pirates/sim.js';
 import { actionAt, inputFor } from '../../src/pirates/interact.js';
 import { TOWER_STATE_IDS, towerFrame } from '../../src/pirates/render.js';
 import { TOWER_HEALTH, createTowerHealth, towerLook, towerMaxHp } from '../../src/pirates/tower-health.js';
+import { towerEdgeDistance } from '../../src/pirates/tower-obstacles.js';
 
 // A harpoon tower right next to the heart (0, 2): every boarder walking in passes within its reach, and a
 // harpoon never shoots boarders, so they reach it. A cannon a little further off fires at them.
@@ -76,6 +77,67 @@ describe('towers in a wave', () => {
     expect(events.find(event => event.type === 'tower_damaged')?.by).toMatch(/^boarder_/);
   });
 
+  it('tower obstacles bring boarders to the outer edge, then break the tower without walking through it', () => {
+    const wave = createWave({seed: 5, wave: 3, defenses: NEAR_HEART, island: {hp: 5000},
+      towerHealth: true, pathing: true, towerObstacles: true});
+    let damaged = false;
+    for (let i = 0; i < 6000 && !wave.done; i++) {
+      damaged ||= wave.step(.05).some(event => event.type === 'tower_damaged' && event.by.startsWith('boarder_'));
+      const state = wave.state();
+      for (const boarder of state.boarders) {
+        for (const tower of state.towers.filter(item => item.hp > 0)) {
+          const gap = towerEdgeDistance(boarder, tower);
+          if (boarder.state === 'hacking' && boarder.towerId === tower.id) {
+            expect(gap).toBeGreaterThanOrEqual(.29);
+            expect(gap).toBeLessThanOrEqual(CONFIG.boarding.contact + .05);
+          }
+          if (boarder.state === 'walking') expect(gap).not.toBeLessThan(.29);
+        }
+      }
+    }
+    expect(damaged).toBe(true);
+  });
+
+  it('a rebuilt tower blocks the path again and is attacked from its boundary', () => {
+    const wave = createWave({seed: 5, wave: 3, defenses: NEAR_HEART, island: {hp: 5000},
+      towerHealth: true, pathing: true, towerObstacles: true});
+    let broken = null;
+    for (let i = 0; i < 6000 && !broken && !wave.done; i++) {
+      broken = wave.step(.05).find(event => event.type === 'tower_broken') ?? null;
+    }
+    expect(broken).not.toBeNull();
+    const rebuilt = wave.step(.05, [{type: 'rebuild', wallId: broken.towerId}]);
+    expect(rebuilt.some(event => event.type === 'tower_rebuilt' && event.towerId === broken.towerId)).toBe(true);
+    let hitAgain = false;
+    for (let i = 0; i < 2400 && !hitAgain && !wave.done; i++) {
+      hitAgain = wave.step(.05).some(event => event.type === 'tower_damaged' && event.towerId === broken.towerId
+        && event.by.startsWith('boarder_'));
+      const state = wave.state(), tower = state.towers.find(item => item.id === broken.towerId);
+      for (const boarder of state.boarders.filter(item => item.state === 'hacking' && item.towerId === tower.id)) {
+        expect(towerEdgeDistance(boarder, tower)).toBeLessThanOrEqual(CONFIG.boarding.contact + .05);
+        expect(towerEdgeDistance(boarder, tower)).toBeGreaterThanOrEqual(.29);
+      }
+    }
+    expect(hitAgain).toBe(true);
+  });
+
+  it('drops a held captain target after the captain moves behind a tower', () => {
+    const tower = {id: 'cannon_1', kind: 'cannon', level: 1, x: 8, z: 2};
+    const wave = createWave({seed: 5, wave: 3, defenses: [tower], island: {hp: 5000},
+      towerHealth: true, pathing: true, towerObstacles: true});
+    let pursuer = null;
+    for (let i = 0; i < 4000 && !pursuer && !wave.done; i++) {
+      wave.step(.05, [{type: 'captain_move', by: 'captain_1', x: 12, z: 2}]);
+      pursuer = wave.state().boarders.find(item => item.foe === 'captain_1') ?? null;
+    }
+    expect(pursuer).not.toBeNull();
+    for (let i = 0; i < 80 && !wave.done; i++) wave.step(.05, [{type: 'captain_move', by: 'captain_1', x: 4, z: 2}]);
+    const after = wave.state().boarders.find(item => item.id === pursuer.id);
+    expect(after).toBeDefined();
+    expect(after.foe).not.toBe('captain_1');
+    expect(towerEdgeDistance(after, tower)).toBeGreaterThanOrEqual(.29);
+  });
+
   it('E repairs a damaged tower up to its hp, never above, and rebuilds a broken one at 40%', () => {
     const wave = createWave({ seed: 5, wave: 3, defenses: NEAR_HEART, island: { hp: 5000 }, towerHealth: true });
     let broken = null;
@@ -93,6 +155,13 @@ describe('towers in a wave', () => {
 
   it('the same seed and inputs give the same wave with tower health on', () => {
     expect(run({ towerHealth: true }).events).toEqual(run({ towerHealth: true }).events);
+  });
+
+  it('tower obstacle mode replays deterministically, while its off state preserves T33 events', () => {
+    const base = run({towerHealth: true, pathing: true});
+    expect(run({towerHealth: true, pathing: true, towerObstacles: false}).events).toEqual(base.events);
+    const enabled = run({towerHealth: true, pathing: true, towerObstacles: true});
+    expect(run({towerHealth: true, pathing: true, towerObstacles: true}).events).toEqual(enabled.events);
   });
 });
 

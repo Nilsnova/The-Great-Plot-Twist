@@ -1,7 +1,7 @@
 // Release check for the wave rules tower_health (T33, D049) and pathing (T34/T35, D040) with two captains on one
 // island, without live accounts: headless Chrome, one browser context, the fake server shared by both tabs
 // (?islands=fake&fakeworld=…, fake-api.js) with both flags on (&fakeflags=tower_health,pathing), so every wave
-// answer carries rules: ['tower_health', 'pathing'] as the server's would, and the BroadcastChannel room.
+// answer carries rules: ['tower_health', 'pathing', 'tower_obstacles'] as the server's would, and the BroadcastChannel room.
 // The host moves three cannons next to the heart, where the boarders walk past them. Scenarios, each PASS or FAIL:
 //   1 rules    both tabs' controllers start the wave with towerHealth and pathing on; every cannon has hp
 //   2 E        a captain stands at a damaged tower and presses E: it is repaired (tower_repaired) in both tabs; a
@@ -27,7 +27,7 @@ const out = process.argv[2] ?? join(tmpdir(), 'tgpt-rules', stamp);
 await mkdir(out, {recursive: true});
 const WORLD = `rules${Date.now().toString(36)}`;
 const CODE = 'ISLE-K7Q2M';
-const FLAGS = 'tower_health,pathing';
+const FLAGS = 'tower_health,pathing,tower_obstacles';
 // Three cannons right by the heart (0, 2; its keep-out is 4 x 4), on the boarders' way in, and the shore walls.
 const BEST = 14; // wave 15 against four level-1 cannons: boarders reach the heart and hack the cannons by it
 const NEAR_HEART = {cannon_1: {x: 3, z: 2}, cannon_2: {x: -3, z: 2}, cannon_3: {x: 0, z: 6}};
@@ -159,6 +159,7 @@ try {
       assert.ok(start, `${pages[i].name}'s controller started ${first.waveId}`);
       assert.equal(start.rules.towerHealth, true, `${pages[i].name}: towerHealth`);
       assert.equal(start.rules.pathing, true, `${pages[i].name}: pathing`);
+      assert.equal(start.rules.towerObstacles, true, `${pages[i].name}: towerObstacles`);
       assert.ok(start.towers.filter(t => t.kind === 'cannon').every(t => t.maxHp > 0), `${pages[i].name}: cannons have hp ${JSON.stringify(start.towers)}`);
     }
     assert.deepEqual(starts[1].towers, starts[0].towers, 'the same towers and hp in both tabs');
@@ -225,8 +226,8 @@ try {
     const answers = await island(ben, async (i, waveId) => { const j = await i.api.joinWave({waveId}); const c = await i.api.currentWave({where: 'ISLE-K7Q2M'});
       return {join: j.data?.rules ?? j.rules ?? null, current: c?.data?.rules ?? c?.rules ?? null, ok: j.ok}; }, wave.waveId);
     note(`wave ${wave.wave} (${wave.waveId}) started with both flags; pathing switched off mid-wave; late join answers ${JSON.stringify(answers)}`);
-    assert.deepEqual(answers.join, ['tower_health', 'pathing'], 'join answers the kept set');
-    assert.deepEqual(answers.current, ['tower_health', 'pathing'], 'current answers the kept set');
+    assert.deepEqual(answers.join, ['tower_health', 'pathing', 'tower_obstacles'], 'join answers the kept set');
+    assert.deepEqual(answers.current, ['tower_health', 'pathing', 'tower_obstacles'], 'current answers the kept set');
     await island(host, async i => { await i.dev.setFlag('pathing', true); });
     await waveOver(wave.waveId);
   });

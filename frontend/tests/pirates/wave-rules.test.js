@@ -32,6 +32,7 @@ describe('the wave rules', () => {
     expect(readRules('tower_health')).toEqual({ towerHealth: false, pathing: false, towerObstacles: false, rescue: false, defensesV2: false });
     expect(readRules(['rescue']).rescue).toBe(true);
     expect(readRules(['defenses_v2']).defensesV2).toBe(true); // T43: the culverins fight only with this rule
+    expect(readRules(['tower_health', 'pathing', 'tower_obstacles']).towerObstacles).toBe(true);
     expect(Object.values(RULE_OPTIONS)).toContain('towerHealth');
   });
 

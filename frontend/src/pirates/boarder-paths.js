@@ -14,8 +14,8 @@
 //                       distance field is rebuilt only when the layout's key changes)
 //     .next(boarder)    {kind: 'wall', wallId} | {kind: 'tower', towerId} | {kind: 'step', x, z} | {kind: 'heart'} | {kind: 'none'}
 //     .canReach(a, b)   a straight walk from a to b crosses no water and no standing wall
-import { buildLayout, cellOf, centreOf, createGrid } from './path-grid.js';
-import { createFieldCache, lineIsClear, nextStep } from './pathing.js';
+import { buildLayout, cellOf, centreOf, createGrid, standingWallAt } from './path-grid.js';
+import { createFieldCache, lineIsClear, neighbours, nextStep } from './pathing.js';
 import { towerObstacles, towerFootprintPoints, TOWER_FOOTPRINT } from './tower-obstacles.js';
 
 export const WALL_FOOTPRINT = 2; // units: T36's wall square (FOOTPRINTS.wall in src/island/placement.js)
@@ -143,6 +143,16 @@ export function createBoarderPaths({ coast, heart, walls, towers = [], towerBloc
   function next(boarder) {
     const index = cellOf(grid, boarder.x, boarder.z);
     if (index >= 0 && index === field.goalIndex) return { kind: 'heart' };
+    const occupied = index >= 0 ? standingWallAt(layout, index) : null;
+    if (occupied?.kind === 'tower') {
+      let best = null;
+      for (const step of neighbours(grid, layout, index)) {
+        if (standingWallAt(layout, step.index)) continue;
+        if (!best || field.cost[step.index] < field.cost[best.index]
+            || (field.cost[step.index] === field.cost[best.index] && step.index < best.index)) best = step;
+      }
+      return best ? {kind: 'step', ...centreOf(grid, best.index)} : {kind: 'none'};
+    }
     const wall = engaged(boarder);
     if (wall) return { kind: 'wall', wallId: wall.id };
     if (index < 0 || field.cost[index] === Infinity) {

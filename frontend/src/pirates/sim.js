@@ -23,7 +23,7 @@ import { createTowerHealth } from './tower-health.js';
 import { TARGET_PROFILES, nearestWithin } from './targeting.js';
 // T35 (D040, proposed): routes over the real wall layout, only with the wave option pathing (the rule "pathing").
 import { BODY, createBoarderPaths, edgeDistance, obstacleInWay, wallInWay } from './boarder-paths.js';
-import { towerApproachPoint, towerEdgeDistance, TOWER_FOOTPRINT } from './tower-obstacles.js';
+import { towerApproachPoint, towerEdgeDistance } from './tower-obstacles.js';
 // T43 (D048, proposed): the culverin, a long gun, only with the wave option defensesV2 (the rule "defenses_v2").
 import { DEFENSES_V2 } from './defenses-v2.js';
 
@@ -944,7 +944,8 @@ export function createWave(options = {}) {
     const fit = hero => (hero.militia ? hero.hp > 0 : !hero.down && presentAt(hero, t));
     if (boarder.foe) {
       const hero = party.get(boarder.foe) ?? militiaById.get(boarder.foe);
-      if (hero && fit(hero) && distance(boarder.x, boarder.z, hero.x, hero.z) <= H.leash + 1e-9) return hero;
+      if (hero && fit(hero) && distance(boarder.x, boarder.z, hero.x, hero.z) <= H.leash + 1e-9
+          && (!paths || !towerBlocking || paths.canReach(boarder, hero))) return hero;
       boarder.foe = null; boarder.goal = null;
     }
     let best = null, near = H.reach + 1e-9;
@@ -969,15 +970,18 @@ export function createWave(options = {}) {
   function towerFoeOf(boarder) {
     if (!towerHealth.enabled) return null;
     const gap = tower => towerBlocking ? towerEdgeDistance(boarder, tower) : distance(boarder.x, boarder.z, tower.x, tower.z);
-    const reachable = tower => !paths || paths.canReach(boarder, towerBlocking
-      ? towerApproachPoint(boarder, tower, BODY + .01) : tower);
+    const reachable = tower => (!towerBlocking || gap(tower) > 1e-9) && (!paths || paths.canReach(boarder, towerBlocking
+      ? towerApproachPoint(boarder, tower, BODY + .01) : tower));
     if (boarder.towerFoe) {
       const held = towerById.get(boarder.towerFoe);
       if (held && towerHealth.isTarget(held) && gap(held) <= TP.leash + 1e-9 && reachable(held)) return held;
       boarder.towerFoe = null; boarder.goal = null;
     }
     const found = towerBlocking
-      ? [...towers].sort((a, b) => gap(a) - gap(b) || (a.id < b.id ? -1 : 1))
+      ? [...towers].sort((a, b) => {
+        const difference = gap(a) - gap(b);
+        return Math.abs(difference) <= 1e-9 ? (a.id < b.id ? -1 : 1) : difference;
+      })
         .find(tower => gap(tower) <= TP.towerReach + 1e-9 && towerHealth.isTarget(tower)
           && crowdOnTower(tower) < TP.crowd && reachable(tower)) ?? null
       : nearestWithin(boarder, towers, TP.towerReach, tower => towerHealth.isTarget(tower) && crowdOnTower(tower) < TP.crowd

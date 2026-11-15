@@ -32,6 +32,7 @@ FLAGS = (
     "tower_health",
     "pathing",
 )
+ALL_FLAGS = (*FLAGS, "tower_obstacles")
 VARIABLES = {
     "APP_ENV": " PrEvIeW ",
     "SUPABASE_URL": " https://g21-fixture.supabase.co/// ",
@@ -81,7 +82,7 @@ def test_all_variables_are_parsed_together_and_the_input_is_not_mutated():
     assert isinstance(settings.cron_secret, SecretStr)
     assert settings.cron_secret.get_secret_value() == "fake-b"
     assert settings.demo_mode is True
-    assert settings.flags == {name: name in {"raid", "market"} for name in FLAGS}
+    assert settings.flags == {name: name in {"raid", "market"} for name in ALL_FLAGS}
     assert settings.weather_place_name == "Tórshavn, Føroyar"
     assert settings.weather_latitude == -12.345
     assert settings.weather_longitude == 123.456
@@ -118,10 +119,16 @@ def test_every_flag_subset_round_trips_with_duplicates_and_empty_pieces(mask):
     selected = [name for index, name in enumerate(FLAGS) if mask & (1 << index)]
     value = " , ".join(["", *reversed(selected), *selected, ""])
     settings = module.load_settings({"FEATURE_FLAGS": value})
-    assert settings.flags == {name: name in selected for name in FLAGS}
+    assert settings.flags == {name: name in selected for name in ALL_FLAGS}
 
 
-@pytest.mark.parametrize("name", FLAGS)
+@pytest.mark.parametrize("enabled", [False, True])
+def test_tower_obstacles_flag_round_trips_without_expanding_the_existing_subset_matrix(enabled):
+    flags = "tower_obstacles" if enabled else ""
+    assert module.load_settings({"FEATURE_FLAGS": flags}).flags["tower_obstacles"] is enabled
+
+
+@pytest.mark.parametrize("name", ALL_FLAGS)
 def test_a_malformed_flag_is_not_accepted_alongside_known_flags(name):
     with pytest.raises(UnknownFlagError):
         module.load_settings({"FEATURE_FLAGS": f"market,{name.upper()},raid"})
@@ -135,7 +142,7 @@ def test_loaded_settings_do_not_share_flags_or_retain_the_input_mapping():
     first.flags["arena"] = True
     assert second.app_env == first.app_env == "preview"
     assert second.flags["arena"] is False
-    assert module.load_settings({}).flags == {name: False for name in FLAGS}
+    assert module.load_settings({}).flags == {name: False for name in ALL_FLAGS}
 
 
 def test_seeded_host_lists_normalize_order_case_duplicates_and_empty_pieces():
