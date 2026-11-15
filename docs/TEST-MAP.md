@@ -237,3 +237,11 @@ and [results, screenshots and manual checkpoints](evidence/T28/README.md).
 | Built / why | Where / run | Covers | Misses |
 |---|---|---|---|
 | Visible loading and recoverable How to play failure | [help tests](../frontend/tests/ui/help-loading.test.js), existing [tutorial tests](../frontend/tests/ui/tutorial.test.js); `cd frontend && npm test -- tests/ui/help-loading.test.js tests/ui/tutorial.test.js` | Real Chromium modal/card, retry, duplicate requests, cancellation, stale success/failure, disposal, focus, Escape/back and 1280x720 / 375x812 fit | Real browser import caching/network outages, physical phones and screen readers; API/login unchanged |
+
+## B3 — Johannes Franz Lang — Connection retry feedback
+
+| What I built / why | Where and command | Covers | Misses |
+|---|---|---|---|
+| Visible pending and recoverable callback failure; prevent stale feedback | [Banner](../frontend/src/ui/connection-banner.js), [six browser cases](../frontend/tests/ui/connection-retry.test.js); `cd frontend && npm test -- --run tests/ui/connection-retry.test.js` | Failure and second success, one pending intent, button label/reset, identical frames retain feedback, newer online/idle/cycled views, dispose | Real adapter/provider outages, server/database writes, physical phones, screen readers and combined drafts #31/#32 |
+
+[Results](../specs/B3-connection-retry.md) and [1280x720 / 375x812 screenshots](evidence/B3-connection/README.md).

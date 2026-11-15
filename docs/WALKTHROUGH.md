@@ -1341,6 +1341,25 @@ Safari still need human checks. If row content or phone widths change, rerun bot
 checks and revisit wrapping before reducing text or hiding names. This work is
 independent of [draft #58](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/58).
 
+## B3 — Connection retry feedback — Johannes Franz Lang
+
+**What and where.** [connection-banner.js](../frontend/src/ui/connection-banner.js)
+shows `Retrying…` while the existing `continueGame` callback is pending. If it
+rejects, the banner explains how to try again; it never displays the private error.
+
+**Why.** `pending` stops repeated clicks from issuing another intent. `try/catch`
+handles rejection; `finally` restores the button. A revision number changes when
+a new adapter state/message arrives. The attempt captures its revision, so an old
+failure cannot overwrite a newer view, including offline → online → offline.
+Disposal also blocks late updates. Identical frames retain the useful failure text.
+
+**Tests and limits.** [Six browser cases](../frontend/tests/ui/connection-retry.test.js)
+cover rejection/retry success, pending clicks, newer online/idle/cycled views and
+disposal. They inject callbacks; they do not prove live server recovery. Login,
+adapter/API contracts and game rules stay unchanged. [Evidence](evidence/B3-connection/README.md).
+If future retry actions become cancellable, their owner could abort the work;
+this banner only ignores stale results. Draft #38 needs author and human review.
+
 ## Where older docs differ from the code
 
 Read the code when these disagree. Noted on 11 Nov; not yet fixed.
