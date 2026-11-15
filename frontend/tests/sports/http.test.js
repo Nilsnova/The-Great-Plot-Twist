@@ -27,6 +27,15 @@ describe('sports same-origin API boundary', () => {
     expect(fetchImpl.mock.calls[0][0]).toBe('/api/sports/stake');
     expect(JSON.parse(fetchImpl.mock.calls[0][1].body)).toEqual(draft);
   });
+  it('accepts the real server answers, where a stake id is the database row number', async () => {
+    // The API sends sports_stakes.id (a bigint) as a JSON number; a text-only check reported every stake as "did not hear back".
+    const saved = { ...SAVED, id: 42 }, mine = { ...MINE, stakes: [{ ...OPEN_STAKE, id: 42 }] };
+    expect((await createSportsHttp({ fetchImpl: async () => response(saved) }).stake(draft)).ok).toBe(true);
+    expect((await createSportsHttp({ getToken: () => 'signed-in', fetchImpl: async () => response(mine) }).mine()).ok).toBe(true);
+    for (const bad of [0, -1, 1.5, '', null]) {
+      expect((await createSportsHttp({ fetchImpl: async () => response({ ...SAVED, id: bad }) }).stake(draft)).ok).toBe(false);
+    }
+  });
   it('settles only an own fixture intent, with no caller-supplied outcome', async () => {
     const fetchImpl = vi.fn(async () => response({ settled: true, repeat: false, fixtureId: 'fd-123', settlement: 'winners', paidCoins: 19, cutCoins: 1 }));
     expect((await createSportsHttp({ getToken: () => 'signed-in', fetchImpl }).settle({ fixtureId: 'fd-123', outcome: 'away' })).ok).toBe(true);
