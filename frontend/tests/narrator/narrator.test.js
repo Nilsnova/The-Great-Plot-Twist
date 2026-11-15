@@ -136,11 +136,11 @@ describe('the narrator on the bus', () => {
     events.emit({type: 'campaign_unlocked', wave: 1, ids: ['house:1'], code: 'ISLE-K7Q2M'});
     await flush(0);
     expect(narrator.speaking).toBe(null);
-    // Wave 2 (it opens something too): the won line waits for campaign_unlocked; wave 9 opens nothing: it plays.
-    events.emit({type: 'wave_started_server', waveId: 'w9', wave: 9});
-    events.emit({type: 'wave_finished', waveId: 'w9', survived: true});
+    // Wave 2 (it opens something too): the won line waits for campaign_unlocked; wave 18 opens nothing: it plays.
+    events.emit({type: 'wave_started_server', waveId: 'w18', wave: 18});
+    events.emit({type: 'wave_finished', waveId: 'w18', survived: true});
     await flush(0);
-    expect(narrator.speaking).toBe('wave_won_2');
+    expect(narrator.speaking).toBe('wave_won_1');
     narrator.dispose();
   });
 
