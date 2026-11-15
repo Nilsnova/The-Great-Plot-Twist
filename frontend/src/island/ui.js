@@ -4,6 +4,7 @@
 // Built on the UI kit's modal and button (the one brass panel); toasts go through the game's one toast
 // queue (src/ui/toasts.js).
 import './island.css';
+import './boat-card.css';
 import {createModal} from '../ui/kit/modal.js';
 import {createTabs} from '../ui/kit/tabs.js';
 import {node} from '../ui/kit/dom.js';
@@ -240,18 +241,32 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
       return drawTech(body, model, view, {button, line});
     });
   }
-  // handlers: {give(amount)}
+  // handlers: {give(amount), sail(game)}. D057: once she sails (after wave 30, repaired) the card lists the boat's games.
   function wreckCard(model, handlers = {}) {
     open('wreck', model.title, body => {
       if (!model.open) { lockedNote(body, model); return null; }
       let focusable = null;
       body.append(line('island-purpose', model.line));
+      if (model.sail?.open) {
+        const tiles = node('div', 'island-boat-games');
+        for (const game of model.sail.games) {
+          const go = button('', () => handlers.sail?.(game.id)); go.classList.add('island-boat-game'); go.dataset.focus = `boat-${game.id}`;
+          go.dataset.paid = game.paid ? 'yes' : 'no'; go.disabled = game.disabled;
+          go.replaceChildren(node('span', 'island-boat-game-icon', game.icon), node('span', 'island-boat-game-title', game.title), node('span', 'island-boat-game-pay', game.pay));
+          go.setAttribute('aria-label', `${game.title}: ${game.pay}`);
+          tiles.append(go); focusable ??= game.disabled ? null : go;
+        }
+        body.append(tiles);
+        if (model.sail.note) body.append(node('p', 'island-wreck-done', model.sail.note));
+        body.append(line('island-message', model.message, 'alert'), line('island-coins', model.coins));
+        return focusable;
+      }
       const bar = node('div', 'island-wreck-bar'); bar.setAttribute('role', 'progressbar');
       bar.setAttribute('aria-valuemin', '0'); bar.setAttribute('aria-valuemax', String(model.goal)); bar.setAttribute('aria-valuenow', String(model.paid));
       bar.setAttribute('aria-label', `Repair: ${model.progress}`);
       const fill = node('span', 'island-wreck-fill'); fill.style.width = `${model.percent}%`; bar.append(fill);
       body.append(bar, node('p', 'island-wreck-progress', `${model.percent}% · ${model.progress}`));
-      if (model.done) body.append(node('p', 'island-wreck-done', 'Repaired, sailing opens later'));
+      if (model.sail?.note) body.append(node('p', 'island-wreck-done', `⛵ ${model.sail.note}`));
       const row = node('div', 'island-wreck-gifts');
       for (const gift of model.gifts) {
         const go = button(gift.label, () => handlers.give?.(gift.amount)); go.dataset.focus = `gift-${gift.amount}`; go.disabled = gift.disabled;

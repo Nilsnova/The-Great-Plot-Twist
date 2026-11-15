@@ -7,6 +7,7 @@ import {formatCoinDelta, formatCoins} from '../lib/coins.js';
 import {BRANCHES, ROLES, ROLE_BY_ID, ROLE_LEVEL, SKILLS, SKILL_BY_ID, WEAPONS, WEAPON_BY_ID, isRole, pointsEarned, pointsSpent, readSkills, readWeapon, respecPrice, skillNeeds} from '../pirates/captain-ids.js';
 import {opensText, spotWave, waveOf, isOpen, tierItem, tierWave} from '../campaign/index.js';
 import {BRANCH_BY_ID, SPECS, TOP_TIER, isCapstone, optionLine, optionName, optionsOf, readSpec, readTier, skillPrice} from '../campaign/tech.js';
+import {BOAT, GAME_TEXT as BOAT_TEXT, coinsFor} from '../pirates/boat/rules.js';
 import {ROLES as HOUSE_ROLES, ROLE_IDS, ROLE_LEVEL as HOUSE_ROLE_LEVEL, readRole} from '../campaign/houses.js';
 
 // Coins always read "🪙 120" through formatCoins (BUILD-PLAN 3.2); an unknown amount reads "🪙 ?".
@@ -410,14 +411,17 @@ export function techModel({campaign = null, coins = null, busy = null, message =
     : lockedLine('tech_hub'), branches, message, coins: coins === null ? '' : `You have ${coinText(coins)}`};
 }
 
-// The wreck (after wave 6): members pay coins into her repair; at the goal she waits for sailing (later).
-export function wreckModel({campaign = null, coins = null, busy = null, message = ''} = {}) {
+// The wreck (after wave 6): members pay coins into her repair. D057: from wave 30 the repaired wreck is the
+// island's own boat: her card lists the boat's games (boat: GET /api/island/boat, null while it loads).
+export function wreckModel({campaign = null, coins = null, busy = null, message = '', boat = null, battle = false} = {}) {
   const open = isOpen(campaign, 'wreck'), wreck = campaign?.wreck ?? {paid: 0, goal: 500, gifts: [25, 100]};
   const paid = Math.min(wreck.goal, wreck.paid), left = wreck.goal - paid, done = left <= 0;
   const percent = Math.floor(paid / wreck.goal * 100);
-  const model = {title: 'The wreck', open, done, paid, goal: wreck.goal, percent, progress: `${coinText(paid)} of ${coinText(wreck.goal)}`,
-    line: !open ? lockedLine('wreck') : done ? 'Her hull is whole again, thanks to the whole crew.' : 'Pay a few coins into her repair after every wave. Anyone in the game can help.',
-    gifts: [], message, coins: coins === null ? '' : `You have ${coinText(coins)}`};
+  const sail = sailModel({campaign, done, boat, battle});
+  const model = {title: sail.open ? 'Your ship' : 'The wreck', open, done, paid, goal: wreck.goal, percent, progress: `${coinText(paid)} of ${coinText(wreck.goal)}`,
+    line: !open ? lockedLine('wreck') : sail.open ? 'Sail her out and play. ★★★ pays the most, once per game after every won wave.'
+      : done ? 'Her hull is whole again, thanks to the whole crew.' : 'Pay a few coins into her repair after every wave. Anyone in the game can help.',
+    gifts: [], message, coins: coins === null ? '' : `You have ${coinText(coins)}`, sail};
   if (!open || done) return model;
   model.gifts = wreck.gifts.map(amount => {
     const pay = Math.min(amount, left);
@@ -429,6 +433,21 @@ export function wreckModel({campaign = null, coins = null, busy = null, message 
     return gift;
   });
   return model;
+}
+
+// D057: the boat's part of the wreck card. Open once the ship step (wave 30) is reached and the repair is done;
+// one tile per game with what 3 stars pay at this wave, or "Paid ✓" once this player was paid at this wave.
+export function sailModel({campaign = null, done = false, boat = null, battle = false} = {}) {
+  const wave = campaign?.wave ?? 0, shipOpen = isOpen(campaign, 'ship'), open = shipOpen && done && boat?.open !== false;
+  const note = !shipOpen ? `She sails after wave ${waveOf('ship')}.` : !done ? 'Finish her repair and she sails.'
+    : battle ? 'Sail between waves.' : '';
+  const paid = new Map((boat?.games ?? []).map(item => [item.id, item.paid === true]));
+  const games = BOAT.games.map(id => {
+    const best = coinsFor(BOAT.stars, wave), isPaid = paid.get(id) === true;
+    return {id, icon: BOAT_TEXT[id].icon, title: BOAT_TEXT[id].title, paid: isPaid, best,
+      pay: isPaid ? 'Paid ✓ · play for fun' : `★★★ = ${coinText(best)}`, disabled: !open || battle};
+  });
+  return {open, note, wave, games: open ? games : []};
 }
 
 // GAME-V3.md §4.2: the confirmation before a tear-down. quote: the server's {kind, name, level, refunds:

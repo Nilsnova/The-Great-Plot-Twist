@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
 import { CONFIG, coastPoint, createWave } from '../../src/pirates/sim.js';
 import { isOnLand } from '../../src/pirates/boarder-paths.js';
+import { WALL_LANE_ROWS } from '../../src/island/wall-lanes.js';
 import { attackedWalls, bearingOf, createBattleGuide, guideRoute, guideRoutes, guideWalls, landingAt, laneLandings, routeDots,
   routeKey, waveLandings, wallBar, skullAt, AXE_SIDE, SKULL_SHIFT } from '../../src/pirates/battle-guide.js';
 import { ISLANDS } from './balance-fixture.js';
@@ -156,6 +157,17 @@ describe('drawing', () => {
     expect(guide.stats()).toMatchObject({ ground: 0, air: 0 });
     guide.dispose();
     expect(s.getObjectByName('battle-guide')).toBeUndefined();
+  });
+  it('between waves draws the wall lanes (D056) under the routes, and in a wave leaves them out', () => {
+    const guide = createBattleGuide({ scene: scene() });
+    guide.update({ mode: 'preview', defenses: [], wave: 4, dt: .016 });
+    const runs = WALL_LANE_ROWS.reduce((sum, row) => sum + (row.length - 1) / 2, 0);
+    expect(guide.stats().lanes).toBe(runs);
+    guide.update({ mode: 'preview', defenses: [], wave: 4, dt: .016, wallLanes: false });
+    expect(guide.stats().lanes).toBe(0);
+    guide.update({ mode: 'wave', lanes: null, defenses: [], stateWalls: [], boarders: [], heart: HEART, wave: 4, dt: .016 });
+    expect(guide.stats().lanes).toBe(0);
+    guide.dispose();
   });
   it('in a wave adds a bar over a hacked wall and a rubble badge over a broken one, and leaves the state alone', () => {
     const guide = createBattleGuide({ scene: scene() });

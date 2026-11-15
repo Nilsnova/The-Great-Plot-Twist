@@ -24,6 +24,7 @@ registerHooks({
 const { createWave } = await import('../src/pirates/sim.js');
 const { captainStats } = await import('../src/pirates/captain-stats.js');
 const { ALL_SKILLS, ISLANDS, islandAt, researched, tiered } = await import('../tests/pirates/balance-fixture.js');
+const { SPOTS } = await import('../src/island/spots.js');
 
 const args = process.argv.slice(2);
 const arg = (name, fallback) => { const at = args.indexOf(`--${name}`); return at >= 0 ? args[at + 1] : fallback; };
@@ -66,6 +67,18 @@ export function asRing(island) {
   }) };
 }
 
+// "island": every wall on its fixed spot of the game (src/island/spots.js, D056: on the pirate paths); "island-old": on
+// the fixed spots before D056 (16 Nov 2026), eight of which no pirate walked past. For before/after balance numbers.
+const OLD_WALL_SPOTS = { wall_1: [-18.5, -4], wall_2: [4, -19.5], wall_3: [18.5, -3], wall_4: [-6, 18.5], wall_5: [12, 18], wall_6: [-5, -19.5],
+  wall_7: [8.5, 2], wall_8: [4.5, 9], wall_9: [-4, 9.5], wall_10: [-9.5, -1], wall_11: [-4, -5.5], wall_12: [4, -5.5] };
+export function onSpots(island, old = false) {
+  return { ...island, defenses: island.defenses.map(item => {
+    if (item.kind !== 'wall') return item;
+    const spot = old ? OLD_WALL_SPOTS[item.id] : (s => s && [s.x, s.z])(SPOTS.find(entry => entry.id === item.id));
+    return spot ? { ...item, x: spot[0], z: spot[1] } : item;
+  }) };
+}
+
 const dist = (a, b) => Math.sqrt((a.x - b.x) ** 2 + (a.z - b.z) ** 2);
 const HEART = { x: 0, z: 2 };
 const WALK = 5 * .25;   // a captain walks 5 units a second; the crew acts every quarter second
@@ -75,7 +88,7 @@ const DUTY = Number(process.env.DUTY ?? 14);        // the carpenter looks after
 /** One wave with the scripted crew. Returns the result and what happened. */
 export function playWave({ wave, seed, rules, layout = 'spots', guards = GUARDS, captains = CAPTAINS }) {
   const band = progressAt(wave), p = captains > 0 ? { ...band, captains } : band;
-  const laid = layout === 'ring' ? asRing(p.island) : p.island;
+  const laid = layout === 'ring' ? asRing(p.island) : layout === 'island' ? onSpots(p.island) : layout === 'island-old' ? onSpots(p.island, true) : p.island;
   const island = guards > 0 ? { ...laid, crew: { ...laid.crew, guard: guards } } : laid;
   const sim = createWave({ seed, wave, ...island, ...rules });
   const posts = Array.from({ length: p.captains }, (_, i) => {

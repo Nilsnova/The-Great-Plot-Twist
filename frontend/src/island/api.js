@@ -62,6 +62,8 @@ export const PATHS = Object.freeze({
   // D039 (flag wall_recovery): the walls' health and the paid Repair/Rebuild.
   walls: code => `/api/island/walls${code ? `?code=${encodeURIComponent(code)}` : ''}`, repair: '/api/island/repair',
   demolishQuote: (spot, code) => `/api/island/demolish?spot=${encodeURIComponent(spot)}${code ? `&code=${encodeURIComponent(code)}` : ''}`,
+  // D057: the island's own boat (after wave 30): whether she sails and which games paid, and one round's reward.
+  boat: code => `/api/island/boat${code ? `?code=${encodeURIComponent(code)}` : ''}`, boatReward: '/api/island/boat',
 });
 export const CREW_IDS = Object.freeze(['gunner', 'carpenter', 'lookout', 'guard']);
 export const MESSAGES = Object.freeze({
@@ -78,6 +80,7 @@ export const MESSAGES = Object.freeze({
   badResearch: 'There is no such research.',
   badSpec: 'There is no such tower skill.',
   badGift: 'Pick one of the amounts shown.',
+  badBoat: 'There is no such boat game.',
   badCell: 'Pick a square of the build grid.',
 });
 const isCount = value => Number.isSafeInteger(value) && value >= 0;
@@ -156,6 +159,13 @@ export const isDemolished = data => hasSpots(data) && isCount(data.coins) && isD
 export function isFinish(data) {
   return !!data && isCount(data.loot) && isCount(data.coins) && isCount(data.waveBest) && isCount(data.flags);
 }
+
+// D057: GET /api/island/boat {open, reason, message, wave, unlockWave, wreck: {paid, goal}, games: [{id, paid, best}]}
+// and POST's {game, stars, coins, paid, already, balance, wave}.
+export const isBoatStatus = data => !!data && typeof data.open === 'boolean' && isCount(data.wave) && Array.isArray(data.games)
+  && data.games.length <= 8 && data.games.every(item => !!item && isText(item.id) && typeof item.paid === 'boolean' && isCount(item.best));
+export const isBoatReward = data => !!data && isText(data.game) && isCount(data.stars) && isCount(data.coins) && typeof data.paid === 'boolean'
+  && typeof data.already === 'boolean' && (data.balance === null || isCount(data.balance)) && isCount(data.wave);
 
 // --- failures ------------------------------------------------------------------------------------
 // One failure shape from whatever the transport gave: online/api.js already flattens the server's
@@ -288,6 +298,19 @@ export function createIslandApi({transport, makeUid = makeActionUid} = {}) {
       if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
       return writeSpots(`wreck:${where}:${amount}`, actionUid => transport.post(PATHS.wreck, {amount, actionUid, ...(where ? {code: where} : {})}),
         where ? hasSpots : isIsland);
+    },
+    // D057: the island's boat (code: the game's island, without it your own). A round's claim carries no click id: the
+    // server pays each game once per player, island and best wave, so a retry can never be paid twice.
+    boatStatus({code = null} = {}) {
+      const where = code ? displayIslandCode(code) : '';
+      if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
+      return ask(() => transport.get(PATHS.boat(where)), isBoatStatus);
+    },
+    boatReward({game, stars, code = null} = {}) {
+      const where = code ? displayIslandCode(code) : '';
+      if (typeof game !== 'string' || !Number.isSafeInteger(stars) || stars < 0 || stars > 3) return refuse(400, 'bad_game', MESSAGES.badBoat);
+      if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
+      return ask(() => transport.post(PATHS.boatReward, {game, stars, ...(where ? {code: where} : {})}), isBoatReward);
     },
     // GAME-V3.md §4.2: what tearing a building down gives back (the server works it out), then the tear-down
     // itself, between waves only; code: the game's island (ISLE-XXXXX), without it your own.

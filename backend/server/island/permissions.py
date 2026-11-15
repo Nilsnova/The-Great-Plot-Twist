@@ -57,6 +57,8 @@ ARSENAL_WITHDRAW = "arsenal_withdraw"
 ARSENAL_RETURN = "arsenal_return"
 # T36 (D041, flexible placement): move a build spot on the island's grid.
 MOVE = "island_move"
+# D057: sail the island's repaired boat and play its games (the coins are earned, nobody pays).
+BOAT = "island_boat"
 
 
 @dataclass(frozen=True)
@@ -95,6 +97,7 @@ ACTIONS: dict[str, Rule] = {
     ARSENAL_WITHDRAW: Rule("take weapons from this arsenal", FREE, between_waves=True),
     ARSENAL_RETURN: Rule("return weapons to this arsenal", FREE, between_waves=True),
     MOVE: Rule("move buildings here", FREE, between_waves=True),
+    BOAT: Rule("sail this island's boat", FREE),
 }
 
 
