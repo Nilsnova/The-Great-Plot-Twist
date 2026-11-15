@@ -127,6 +127,7 @@ FUNDING = {
     permissions.ARSENAL_WITHDRAW: permissions.FREE,
     permissions.ARSENAL_RETURN: permissions.FREE,
     permissions.MOVE: permissions.FREE,
+    permissions.BOAT: permissions.FREE,  # D057: the boat's games earn coins, nobody pays
 }
 
 

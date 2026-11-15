@@ -7,7 +7,7 @@ import * as THREE from 'three';
 import {artSizes, loadArt, placeArt, projectPoint} from '../world/art.js';
 import {pixelSizes} from '../pixel/catalog.js';
 import {SPOTS as ISLAND_SPOTS, CABIN, BELL, CAMPAIGN_BUILDINGS, ARSENAL, islandZones, placedSpot} from './spots.js';
-import {makeFootprint} from './move-preview.js';
+import {makeFootprint, makeWallLanes} from './move-preview.js';
 import {isOpen, spotWave, waveOf} from '../campaign/index.js';
 import {LOCK_WAVES} from '../art/campaign.js';
 import {SLOT_KINDS} from './td-rules.js';
@@ -227,6 +227,8 @@ export function decorateIsland(place, ctx = {}) {
   let state = {spots: [], visitor: false, battle: false, unlocks: null, crew: null, campaign: null, arsenal: false}, disposed = false;
   let preview = null;
   const footprint = makeFootprint(root);
+  // D056: while a wall is moved, the cells where a wall stops pirates glow (home island only).
+  const wallLanes = layout.zones === islandZones ? makeWallLanes(root) : null;
   // Where a spot stands now: the cell of a move under way, the answer's x/z, else its fixed spot (Pirate Point's stay).
   const whereOf = spot => {
     if (preview?.spotId === spot.id) return {x: preview.x, z: preview.z};
@@ -368,9 +370,11 @@ export function decorateIsland(place, ctx = {}) {
       if (disposed) return;
       preview = next && Number.isFinite(next.x) && Number.isFinite(next.z) ? {...next} : null;
       footprint.show(preview);
+      wallLanes?.show(preview && SPOTS.find(spot => spot.id === preview.spotId)?.slot === 'wall');
       apply(state);
     },
     get previewing() { return preview ? {...preview} : null; },
+    get wallLanesShown() { return !!wallLanes?.shown; },
     ring() { ringing = 1.2; },
     update(dt, time = 0) {
       if (disposed) return;

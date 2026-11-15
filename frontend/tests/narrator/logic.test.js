@@ -25,7 +25,7 @@ describe('the lines file', () => {
     const index = indexLines(data.lines);
     const needed = ['game_opening', 'game_welcome_back', 'wave_start:1', 'wave_start:2', 'wave_start:3', 'wave_start:4', 'wave_start:5',
       'boss_first', 'wave_start:100', 'victory', 'boarders_ashore', 'player_fell', 'player_revived', 'all_fallen', 'heart_low', 'wave_lost', 'wave_won',
-      ...[1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 15, 20, 30, 50].map(wave => `wave_unlock:${wave}`),
+      ...[1, 2, 3, 4, 5, 6, 7, 8, 12, 15, 20, 30, 50].map(wave => `wave_unlock:${wave}`),
       ...[10, 20, 30, 40, 50, 60, 70, 80, 90].map(wave => `wave_every_ten:${wave}`),
       ...[25, 50, 75].map(wave => `wave_milestone:${wave}`)];
     for (const trigger of needed) expect(index.get(trigger)?.length ?? 0, trigger).toBeGreaterThan(0);
@@ -39,12 +39,14 @@ describe('the lines file', () => {
     // One line for each thing the table opens: captain and houses after wave 1, level 2 and the mortar after 2 ...
     expect(index.get('wave_unlock:1').map(line => line.id)).toEqual(['unlock_captain', 'unlock_houses']);
     expect(index.get('wave_unlock:5').map(line => line.id)).toEqual(['unlock_inner_walls', 'unlock_carpenter']);
+    // D057: the own boat sails from wave 30, told with the ironclads.
+    expect(index.get('wave_unlock:30').map(line => line.id)).toEqual(['unlock_ship', 'unlock_tier_30']);
   });
-  it('generates the most important lines first: the opening, waves 1 to 5 and the unlocks up to wave 10', () => {
+  it('generates the most important lines first: the opening, waves 1 to 5 and the unlocks up to wave 8 and the ship', () => {
     const first = data.lines.filter(line => line.priority === 1).map(line => line.trigger);
     expect(first).toContain('game_opening');
     for (const wave of [1, 2, 3, 4, 5]) expect(first).toContain(`wave_start:${wave}`);
-    for (const wave of [1, 2, 3, 4, 5, 6, 7, 8, 10]) expect(first).toContain(`wave_unlock:${wave}`);
+    for (const wave of [1, 2, 3, 4, 5, 6, 7, 8, 30]) expect(first).toContain(`wave_unlock:${wave}`);
   });
 });
 

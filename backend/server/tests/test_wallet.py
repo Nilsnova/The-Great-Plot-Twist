@@ -101,6 +101,8 @@ def test_the_wallet_reasons_are_the_agreed_pairs_in_the_agreed_order():
         ("tower_skill", "spend"),
         # 20261116020000_tower_trees.sql: a tier of a tower's upgrade tree (D055).
         ("tower_tree", "spend"),
+        # 20261116040000_boat_games.sql: a round of the own boat's games (D057).
+        ("boat_game", "earn"),
     )
 
 
@@ -153,6 +155,7 @@ def test_list_reason_names_gives_the_names_in_the_agreed_order():
         "captain_respec",
         "tower_skill",
         "tower_tree",
+        "boat_game",
     ]
 
 

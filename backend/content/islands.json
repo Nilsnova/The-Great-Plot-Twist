@@ -839,7 +839,7 @@
     ]
   },
   "wreck": {
-    "about": "The wreck (docs/GAME-V3.md section 4, after wave 6): members pay coins into her repair; the island keeps the coins paid so far. Sailing out comes later.",
+    "about": "The wreck (docs/GAME-V3.md section 4, after wave 6): members pay coins into her repair; the island keeps the coins paid so far. Repaired, she is the island's own boat after wave 30 (D057, boat.json).",
     "goal": 500,
     "gifts": [
       25,

@@ -670,7 +670,7 @@ def check_wreck_gift(catalogue: IslandCatalogue, amount: int, paid: int, wave: i
 
 
 def wreck_repaired() -> ApiError:
-    return ApiError(409, "repaired", "The wreck is repaired. Sailing opens later.")
+    return ApiError(409, "repaired", "The wreck is repaired. She sails after wave 30.")
 
 
 def spot_taken(catalogue: IslandCatalogue, kind: str) -> BuildRefused:

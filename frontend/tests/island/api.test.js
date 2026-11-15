@@ -37,7 +37,7 @@ describe('island api: accepted answers', () => {
     expect(answer.data.captain).toEqual({level: 1, nextPrice: 20});
     expect(answer.data.unlocks).toMatchObject({wave: 0, unlocked: ['captain:1', 'wall:1', 'cannon:1'], locked: {'mortar:1': 2, 'crew:gunner': 3, 'captain:2': 1}});
     // The campaign of the island (GAME-V3.md §4): what is open, what opens after which wave, the Tech hub and the wreck.
-    expect(answer.data.campaign).toMatchObject({wave: 0, locked: {harbor: 4, ring_walls: 5, wreck: 6, tech_hub: 8}, later: ['ship'],
+    expect(answer.data.campaign).toMatchObject({wave: 0, locked: {harbor: 4, ring_walls: 5, wreck: 6, tech_hub: 8, ship: 30}, later: [],
       research: {done: []}, wreck: {paid: 0, goal: 500, gifts: [25, 100]}});
   });
   it('builds a cannon for 30 coins and answers the new island', async () => {
@@ -199,7 +199,7 @@ describe('island api: one click id per build and per bell', () => {
   });
   it('the function-level fake has the same names', () => {
     const api = createFakeIslandApi();
-    expect(Object.keys(api).sort()).toEqual(['build', 'buyWeapon', 'createGame', 'currentWave', 'demolish', 'demolishQuote', 'dev', 'equipWeapon', 'finishWave', 'games', 'getIsland',
+    expect(Object.keys(api).sort()).toEqual(['boatReward', 'boatStatus', 'build', 'buyWeapon', 'createGame', 'currentWave', 'demolish', 'demolishQuote', 'dev', 'equipWeapon', 'finishWave', 'games', 'getIsland',
       'heldActionUid', 'hire', 'joinGame', 'joinInvite', 'joinWave', 'leaderboard', 'learnSkill', 'leaveGame', 'lobby', 'move', 'pickRole', 'piratePoint', 'pointBuild', 'pointUpgrade',
       'repairWall', 'repairWreck', 'research', 'respec', 'reviveCaptain', 'specialise', 'startWave', 'towerTree', 'upgrade', 'upgradeCaptain', 'visit', 'walls']);
   });

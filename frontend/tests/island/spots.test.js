@@ -6,6 +6,7 @@ import {edgeTrees} from '../../src/world/places/layouts.js';
 import {places} from '../../src/world/places/registry.js';
 import {FAKE_SPOTS} from './fake.js';
 import {CONFIG} from '../../src/pirates/sim.js';
+import {onWallLane} from '../../src/island/placement.js';
 
 describe('island spots', () => {
   it('has 22 unique ids from one mapping table, in the order and kinds of the server', () => {
@@ -43,8 +44,8 @@ describe('island spots', () => {
       expect(Math.abs(item.z)).toBeLessThan(rz);
     }
   });
-  it('walls stand on the shore, towers on the four corners and the sides, houses and the watchtower inland', () => {
-    for (const wall of SPOTS.filter(spot => spot.edge === 'shore')) expect(surfaceClass('home_islet', wall.x, wall.z), wall.id).toBe(1);
+  it('walls stand on the pirate paths (D056), towers on the four corners and the sides, houses and the watchtower inland', () => {
+    for (const wall of SPOTS.filter(spot => spot.slot === 'wall')) expect(onWallLane(wall.x, wall.z), wall.id).toBe(true);
     const corners = SPOTS.filter(spot => spot.edge === 'corner').map(spot => [Math.sign(spot.x), Math.sign(spot.z)].join());
     expect(new Set(corners).size).toBe(4);
     for (const spot of SPOTS.filter(spot => ['house', 'watchtower'].includes(spot.kind))) expect(surfaceClass('home_islet', spot.x, spot.z)).toBe(2);
@@ -52,23 +53,25 @@ describe('island spots', () => {
   });
   it('keeps spots apart from each other, the trees and the landing', () => {
     const all = [...SPOTS, CABIN, BELL];
-    for (const a of all) for (const b of all) if (a !== b) expect(Math.hypot(a.x - b.x, a.z - b.z), `${a.id} ${b.id}`).toBeGreaterThan(3);
+    // D056: two walls stand side by side across each sea lane (touching, 2 apart); everything else keeps 3 apart.
+    const pair = (a, b) => a.slot === 'wall' && b.slot === 'wall' && a.edge === b.edge;
+    for (const a of all) for (const b of all) if (a !== b) expect(Math.hypot(a.x - b.x, a.z - b.z), `${a.id} ${b.id}`).toBeGreaterThanOrEqual(pair(a, b) ? 2 : 3.0001);
     for (const item of all) for (const [x, z] of edgeTrees.home_islet) expect(Math.hypot(item.x - x, item.z - z), item.id).toBeGreaterThan(2.5);
     const [sx, sz] = places.home_islet.spawn;
     for (const item of all) expect(Math.hypot(item.x - sx, item.z - sz), item.id).toBeGreaterThan(2);
   });
-  it('rings the island\'s heart with wall_7…wall_12: inland, within the sim\'s ring, one on every side', () => {
+  it('rings the island\'s heart with wall_7…wall_12: inland, within the sim\'s ring, two across each sea lane', () => {
     const {heart} = CONFIG.boarding, ring = SPOTS.filter(spot => spot.edge === 'ring');
     for (const wall of ring) {
       expect(surfaceClass('home_islet', wall.x, wall.z), wall.id).toBe(2);
       expect(Math.hypot(wall.x - heart.x, wall.z - heart.z), wall.id).toBeLessThanOrEqual(heart.ring);
     }
     for (const wall of SPOTS.filter(spot => spot.edge === 'shore')) expect(Math.hypot(wall.x - heart.x, wall.z - heart.z), wall.id).toBeGreaterThan(heart.ring);
-    // Every heading towards the heart is within the sim's gate angle of one ring wall: a full ring closes it.
-    const bearings = ring.map(wall => Math.atan2(wall.z - heart.z, wall.x - heart.x));
-    for (let a = -Math.PI; a < Math.PI; a += Math.PI / 36) {
-      const gap = Math.min(...bearings.map(b => Math.abs(((a - b) % (2 * Math.PI) + 3 * Math.PI) % (2 * Math.PI) - Math.PI)));
-      expect(gap * 180 / Math.PI).toBeLessThanOrEqual(CONFIG.boarding.gateAngle);
+    // D056: two ring walls stand across the way of each sea lane (east, south, west), none where no pirate walks.
+    for (const lane of CONFIG.lanes) {
+      const a = lane.bearing * Math.PI / 180;
+      const facing = ring.filter(wall => Math.abs(Math.atan2(Math.sin(Math.atan2(wall.z - heart.z, wall.x - heart.x) - a), Math.cos(Math.atan2(wall.z - heart.z, wall.x - heart.x) - a))) < Math.PI / 6);
+      expect(facing, lane.id).toHaveLength(2);
     }
   });
   it('gives each spot a reachable zone; a visitor gets no cabin', () => {
@@ -84,6 +87,6 @@ describe('island spots', () => {
       .toEqual([{id: 'cannon_1', kind: 'cannon', level: 1, x: -12.5, z: -14.5}, {id: 'cannon_5', kind: 'mortar', level: 2, x: -15, z: -6}]);
     // A tower skill rides along (GAME-V3.md §5), only one of its own kind.
     expect(defenses([{id: 'cannon_1', kind: 'cannon', built: true, level: 3, spec: 'chain'}, {id: 'wall_1', kind: 'wall', built: true, spec: 'chain'}]))
-      .toEqual([{id: 'cannon_1', kind: 'cannon', level: 3, x: -12.5, z: -14.5, spec: 'chain'}, {id: 'wall_1', kind: 'wall', level: 1, x: -18.5, z: -4}]);
+      .toEqual([{id: 'cannon_1', kind: 'cannon', level: 3, x: -12.5, z: -14.5, spec: 'chain'}, {id: 'wall_1', kind: 'wall', level: 1, x: -18.5, z: -1}]);
   });
 });

@@ -23,7 +23,10 @@ describe('the campaign table', () => {
     expect(['harbor', 'market_calls', 'ring_walls', 'crew:carpenter', 'wreck', 'football_board', 'tech_hub']
       .map(waveOf)).toEqual([4, 4, 5, 5, 6, 7, 8]);
     expect([12, 15, 20, 30, 50].map(wave => waveOf(`tier_${wave}`))).toEqual([12, 15, 20, 30, 50]);
-    expect(STEPS.find(step => step.opens.includes('ship')).later).toBe(true);
+    // D057: the own boat opens with the ironclads after wave 30, no longer as a later step at wave 10.
+    expect(waveOf('ship')).toBe(30);
+    expect(STEPS.find(step => step.opens.includes('ship')).later).toBe(false);
+    expect(STEPS.some(step => step.later)).toBe(false);
     expect(spotWave('wall_7')).toBe(5);
     expect(spotWave('wall_1')).toBe(0);
     expect(opensText(4)).toBe('Opens after wave 4');
@@ -44,7 +47,9 @@ describe('the campaign table', () => {
     const derived = campaignOf({waveBest: 4});
     expect(isOpen(derived, 'harbor')).toBe(true);
     expect(derived.locked.get('tech_hub')).toBe(8);
-    expect(derived.later.has('ship')).toBe(true);
+    expect(derived.later.has('ship')).toBe(false);
+    expect(derived.locked.get('ship')).toBe(30);
+    expect(isOpen(campaignOf({waveBest: 30}), 'ship')).toBe(true);
     const sent = campaignOf({waveBest: 9, campaign: {wave: 9, research: {done: ['cannon']}, wreck: {paid: 700, goal: 500, gifts: [25]}}});
     expect([...sent.research.done]).toEqual(['cannon']);
     expect(sent.wreck).toEqual({paid: 500, goal: 500, gifts: [25]});
