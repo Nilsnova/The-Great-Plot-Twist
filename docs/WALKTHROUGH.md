@@ -1445,3 +1445,36 @@ The pre-fix regression run failed four of five initial cases. Tests inject the l
 result while exercising real DOM/modal/card code; they do not prove live network behavior.
 [Before/after](evidence/B3-help/README.md). Codex drafted the change for Johannes;
 shared modal/tutorial machinery is existing team code. This is part 1 of B3.
+
+
+## The skill tree and the Tech hub as real trees — Nils with Claude (15 Nov)
+
+**What.** After playtesting on a laptop and a phone, Nils found the captain's skills and the Tech hub cramped and wordy
+(a narrow card, a gold line down the left, a wall of text). Both are now drawn by one small view module,
+[skill-tree.js](../frontend/src/island/skill-tree.js), styled in [island.css](../frontend/src/island/island.css):
+a wide card (up to 1100 px, 92% of the height; full screen on a phone) where each branch is a tree of round tiles
+growing up from its name. A tile shows a glyph, a short name and its price (`2 ⭐`, `🪙 360`); learned is gold, can learn
+glows, locked is dim with a lock, a closed fork twin is faded with ✕. Lines join each tile to the ones it opens
+(gold once both ends are learned, dashed gold to a tile you can learn now). Tapping a tile shows it in **one** detail
+panel: its one line in numbers, the reason if it cannot be taken, and one big button. The skill points and a
+three-state legend sit beside the tree. The tower's own skill picks on the build card lost the left line and got a glyph.
+
+**Why this way.** The tree is plain DOM: a CSS grid places the tiers (tier 1 at the bottom row), and one inline SVG
+per branch draws the lines in a 0–100 box stretched over the grid (`preserveAspectRatio="none"`, strokes with
+`vector-effect: non-scaling-stroke`), so no layout maths runs in JS and no style attribute is written (CSP).
+The view decides nothing: the states, reasons, prices and buttons still come from `skillsModel` / `techModel`
+([card-model.js](../frontend/src/island/card-model.js)); the models only gained `needs`, a branch's `start` tile
+and the tower kind's short name. The handlers, server calls, prices and unlock rules are unchanged. The Tech hub is
+no longer docked at the side (`DOCKED` in [ui.js](../frontend/src/island/ui.js)): four trees do not fit in 380 px.
+Under 900 px the detail panel sticks to the bottom of the card; under 640 px one branch shows at a time, chosen with
+branch buttons, so nothing is squeezed.
+
+**Tests.** [skill-tree-dom.test.js](../frontend/tests/island/skill-tree-dom.test.js) opens both cards at 1280x720 and
+390x844 in Chromium with the fake server: the three states, lines, one detail panel with one primary button, tiles
+of at least 44 px, no horizontal overflow, Enter on a tile and on Learn, the respec and Escape.
+[captain-card.test.js](../frontend/tests/island/captain-card.test.js) passes unchanged (points, learn, tier order,
+the server's refusal); the Tech hub case in [dom.test.js](../frontend/tests/island/dom.test.js) now walks the tree
+(research, pick a fork, the closed twin's "Change to it", a locked tier 3) instead of folding rows.
+
+**Limits.** The glyphs are emoji, so they look a little different per system. On a phone a long tree scrolls under
+the sticky detail panel. The skill tree is not zoomable; it is sized to fit instead.

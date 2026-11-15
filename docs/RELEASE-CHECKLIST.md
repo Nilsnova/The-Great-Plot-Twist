@@ -51,7 +51,7 @@ After a production push, verify the deployment is READY and check `/api/health`,
 
 Keep `RELIGHT_OPEN` unset. No production solve, reward or world Relighting is used as a release test. Festival and sports stay off until Nils authorizes activation; sports also needs its provider key. The host console uses verified host authorization, not a browser-supplied role.
 
-The current confirmed production baseline and candidate evidence are separated in [presentation sources](presentation/sources.md). Refresh them when the release owner records a newer rollout. G9 is paused until the laptop returns: a complete API/SQL case proof does not establish the normal browser mystery or multiplayer connection.
+G9 is paused until the laptop returns: a complete API/SQL case proof does not establish the normal browser mystery or multiplayer connection.
 
 ## Before the class demo
 

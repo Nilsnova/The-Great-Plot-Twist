@@ -680,7 +680,7 @@ No extra browser engines are downloaded by checks. If Playwright WebKit or Firef
 
 Checkpoint 3 fetched main again; it remains `8ff24cc77ab077e5d24fee297d568558315f6ed5`. The G7 branch is the base, and main was merged at checkpoint 1 (`35f4d3e`). Claude's islet, Exchange, desk and arena panels and real transport/adapter are not present on this main snapshot. No team-owned panel, transport, backend, story data, engine, infrastructure or credit row was changed. The golden path explicitly records `panelVerified:false`: it constructs the station through the accepted `islet_changed` event, verifies it in the world and uses it as the third finale light. The panel itself still needs Claude's combined-game test after integration.
 
-The complete command record is [the 31-command verification report](captures/20261106_G8-C3-after-Verification.json). Run it with `npm run test:g8 -- --phase=after --keep-going`; `--resume` reruns failed commands and retains successful results. The report records the exact command, exit code, duration and log for every command. All **31 commands pass**, including **345 Vitest tests in 58 files**, the production build/strong spoiler guard, the 204-PNG generator, every existing browser check, and the islet, bulletin, hook, harbor-life, presenter and accessibility checks. The final build scans 97 text files against twelve protected lines and checks for elimination data. Final confirmation commands/logs are in [final-confirmation.json](captures/20261106_G8-C3-after/final-confirmation.json).
+The complete command record is the 31-command verification report. Run it with `npm run test:g8 -- --phase=after --keep-going`; `--resume` reruns failed commands and retains successful results. The report records the exact command, exit code, duration and log for every command. All **31 commands pass**, including **345 Vitest tests in 58 files**, the production build/strong spoiler guard, the 204-PNG generator, every existing browser check, and the islet, bulletin, hook, harbor-life, presenter and accessibility checks. The final build scans 97 text files against twelve protected lines and checks for elimination data. Final confirmation commands/logs are in final-confirmation.json.
 
 The uninterrupted nine-beat tour lasts **170,593 ms** with every API returning 503; its limit remains 210,000 ms. It attempts only the existing weather GET, writes no journal/backend state, emits no intro completion, restores the departure state, skips each beat within 238 ms in that run, and settles repeated End during travel. Production presenter checks cover recording dimensions, notes, navigation, P holding an active cinematic, and B remaining black when another dialog opens. A queued native `close` event after rapid restore/reblank is ignored when the blank dialog has already reopened. Escape restores the later dialog. Cinematics still emit exactly one started and terminal event; the three-lights sample completes in 8,017 ms including loading.
 
@@ -707,7 +707,7 @@ Cold title JavaScript is **21,052 bytes / 9,944 gzip**, below the unchanged **21
 
 ### Accessibility and readability evidence
 
-`npm run test:a11y` passes **22 screen contexts**, **66 viewport samples** (1280, 375 and 320 CSS px), **200 actual Tab steps** and **1,522 text measurements**. Minimum computed CSS text contrast is **4.694:1**. It checks names and duplicate button names, font floors, DOM reading/Tab order, visible focus, modal traps/Escape, 44 px targets at 375 px, and overflow at 320 px. Intro, crew and account return focus to the canvas; Settings Escape returns to the title. Reduced motion has no running DOM animation and no fireworks. The report has zero browser errors, external requests or measured failures: [accessibility results](captures/20261106_G8-C3-after/20261106_G8-A11y-Checks.json).
+`npm run test:a11y` passes **22 screen contexts**, **66 viewport samples** (1280, 375 and 320 CSS px), **200 actual Tab steps** and **1,522 text measurements**. Minimum computed CSS text contrast is **4.694:1**. It checks names and duplicate button names, font floors, DOM reading/Tab order, visible focus, modal traps/Escape, 44 px targets at 375 px, and overflow at 320 px. Intro, crew and account return focus to the canvas; Settings Escape returns to the title. Reduced motion has no running DOM animation and no fireworks. The report has zero browser errors, external requests or measured failures: accessibility results.
 
 The pass corrected contextual names for pin/search/order/post/lock/tip controls, named partner route SVGs, undersized body/metadata text, 42 px targets, native disclosure focus trapping, phone board/settings overflow, quiet-button hover contrast, and caption overlap. It preserves visible labels and data-driven intents. Captures were inspected at laptop and phone sizes. Actual image/canvas contrast, visual flash analysis, VoiceOver, physical phones/gamepads, Safari and Firefox remain manual; this machine has only Playwright's Chromium shell installed. No engines or packages were downloaded. Use the rehearsal above.
 
@@ -726,7 +726,7 @@ Nils rejected the large provider/licence block in gameplay. It is removed from b
 
 `check-weather-wiring.js` now proves the four supplied weather values still reach the island, there is no attribution DOM in gameplay, and the source/licence links are reachable through Settings. The conditions strip is **224 × 58 px** at desktop width and **173 × 62 px** on the 375 px phone. Text sizes are unchanged. The credits page has 44 px link targets. The feedback photo and new clean-HUD captures are retained in `captures/20261106_G8-Credit-Placement/`.
 
-After this correction, `npm test` passes 345 tests in 58 files and `npm run build` passes the 97-file/twelve-line spoiler guard. Nine focused browser checks pass: `node scripts/check-weather-wiring.js`, `node scripts/check-credits.js`, `node scripts/check-bulletin.js`, `node scripts/check-experience.js`, `node scripts/check-a11y.js`, `node scripts/check-readability.js`, `node scripts/check-loading.js`, `node scripts/check-production.js`, `node scripts/check-csp.js`. The exact results are in [the credit-placement report](captures/20261106_G8-Credit-Placement/Verification.json), in addition to the earlier complete 31-command G8 run.
+After this correction, `npm test` passes 345 tests in 58 files and `npm run build` passes the 97-file/twelve-line spoiler guard. Nine focused browser checks pass: `node scripts/check-weather-wiring.js`, `node scripts/check-credits.js`, `node scripts/check-bulletin.js`, `node scripts/check-experience.js`, `node scripts/check-a11y.js`, `node scripts/check-readability.js`, `node scripts/check-loading.js`, `node scripts/check-production.js`, `node scripts/check-csp.js`. The exact results are in the credit-placement report, in addition to the earlier complete 31-command G8 run.
 
 The expanded accessibility pass includes Credits: **23 contexts / 69 viewport samples / 202 Tab steps / 1,537 text measurements**, minimum computed contrast **4.694:1**, zero failures/browser errors/external requests. Current cold title JavaScript is **21,080 bytes / 9,956 gzip**, matching the unchanged G7 ceiling. The original pre-feedback checkpoint measurements above remain historical evidence. Future integration must keep data/legal attribution in Settings → Credits and out of gameplay overlays.
 
@@ -764,14 +764,14 @@ Run `npm run test:call-states` for deferred loading, 375 px readability, explici
 
 ## Strict CSP readiness (G9 starter)
 
-[CSP.md](CSP.md) inventories every built entry, authored/runtime style path, URL scheme and outside origin, and gives Claude the proposed HTTP policy. The four production HTML pages use same-origin script/CSS files with no inline scripts, style blocks, event attributes or authored style attributes. Constant chart/label CSS text moves to stylesheets; dynamic layout uses individual CSSOM properties. No remote asset/font/audio load, `eval`, `unsafe-inline`, `unsafe-eval`, `data:` or `blob:` allowance is needed. Dormant Three.js URL recognition/serialization helpers are listed separately from active resource loads.
+CSP.md inventories every built entry, authored/runtime style path, URL scheme and outside origin, and gives Claude the proposed HTTP policy. The four production HTML pages use same-origin script/CSS files with no inline scripts, style blocks, event attributes or authored style attributes. Constant chart/label CSS text moves to stylesheets; dynamic layout uses individual CSSOM properties. No remote asset/font/audio load, `eval`, `unsafe-inline`, `unsafe-eval`, `data:` or `blob:` allowance is needed. Dormant Three.js URL recognition/serialization helpers are listed separately from active resource loads.
 
 Vite preview and `check-csp.js` share `scripts/csp-policy.js`, including explicit `script-src-attr`/`style-src-attr 'none'` and only the approved Supabase HTTPS/WSS connection origins alongside self. Credit/issue/OAuth navigation is documented separately. The existing team-check page's additional meta policy is preserved. Run `npm run test:csp:inventory` and `npm run test:csp`; the latter rehearses the built nine-beat tour with every API down. This package does not edit `vercel.json` or enable deployed headers. Claude must validate the integrated real adapter, deployed headers, OAuth and Realtime separately.
 
 
 ## G9 starter verification and handoff
 
-Items 1–3 landed at `cae6dad`, `bb7599e` and `f413006`; item 4 contains the CSP readiness inventory/policy and final evidence. **360 tests / 62 files**, `npm run build` and the **107-file/twelve-line spoiler guard** pass. [Combined verification](captures/20261106_G9-4/Verification.json) lists **19 exact commands, all successful**, including 16 browser scripts across the starter: identity, report privacy, shared call states, chaos, golden paths, kit, case, intro, lifecycle, loading, accessibility, timed demo, CSP, presence, signal and production. Earlier item-3 regression logs and final frozen-source runs are retained alongside captures; attempted runs remain in `iterations/`.
+Items 1–3 landed at `cae6dad`, `bb7599e` and `f413006`; item 4 contains the CSP readiness inventory/policy and final evidence. **360 tests / 62 files**, `npm run build` and the **107-file/twelve-line spoiler guard** pass. Combined verification lists **19 exact commands, all successful**, including 16 browser scripts across the starter: identity, report privacy, shared call states, chaos, golden paths, kit, case, intro, lifecycle, loading, accessibility, timed demo, CSP, presence, signal and production. Earlier item-3 regression logs and final frozen-source runs are retained alongside captures; attempted runs remain in `iterations/`.
 
 Cold title: **20,617 bytes / 9,803 gzip**, below the unchanged 21,080-byte cap. Eight captains with night storm: **59 FPS / 112 calls / one place root**. The full API-independent demo completes in **170.1 seconds**; policy rehearsal also walks all nine highlights with every API returning 503. Accessibility: **23 contexts / 69 viewport samples**, minimum sampled text contrast **4.694:1**, zero reported accessibility failures. The 375 px failure capture keeps request copy at 18 px and action controls at 16 px / 44 px.
 
@@ -799,7 +799,7 @@ Stream 0 gate: unit/build/loading, title stamp/performance copy, problem report,
 checks pass. Its independent title graph is 20,971 bytes; stream 1 adds further headroom before the real
 adapter. The unchanged refusal vocabulary lives in `adapter/reasons.js` and is re-exported by `contract.js`
 so diagnostics can load it separately. No schema, method, reason or browser event is added. Requests and
-ongoing checkpoint state are in [HANDOFF-G9.md](HANDOFF-G9.md).
+ongoing checkpoint state are in HANDOFF-G9.md.
 
 
 ## G9 adapter selection and title headroom (stream 1)
@@ -818,7 +818,7 @@ unchanged 21,080 cap (starter baseline 20,617). One laptop observation measured 
 contentful paint at 158.3 / 192 ms before, and 524.9 / 508 ms after; these uncontrolled samples on a busy
 laptop do not demonstrate a latency improvement. The network never gates this disconnected title.
 
-The header builder and source-of-truth rule are in [CSP.md](CSP.md), Security headers (G9).
+The header builder and source-of-truth rule are in CSP.md, Security headers (G9).
 `npm run print:headers` prints the no-address proposal; pass the approved public Supabase origin to
 include its exact HTTPS/WSS pair. `npm run test:title-start` records title paint timing.
 The old bulletin test's other-worktree fallback is removed. Its canonical parity check runs only when
@@ -928,7 +928,7 @@ Recorded production checks use a generated placeholder key and tokens, an interc
 and main's exact header set with only that origin substituted. They verify PKCE, address cleaning,
 tab-only persistence, reload, logout, public requests and absence of production inspection hooks.
 Full notices are retained in Settings → Credits. Actual OAuth/deployed and physical-device proofs
-remain separate. See [the stream-3 gate](captures/20261106_G9-C1/stream3-verification.json).
+remain separate. See the stream-3 gate.
 
 
 ## Account, replay saves and deletion (G9, stream 4)
@@ -1014,7 +1014,7 @@ reuses one genuine expired/report component, preserving primary sign-in focus an
 All 11 stream checks pass: 2,896 tests/195 files, 42 production islet checks,
 7 islet faults/42 assertions, 45 accessibility contexts/135 samples and short 375 × 400 audits.
 Cold title is 21,071 JS/11,878 CSS bytes under unchanged caps.
-See [stream-8 evidence](captures/20261107_G9-C3/stream8-proof.json) for fingerprints, complete gate
+See stream-8 evidence for fingerprints, complete gate
 logs, prior failed attempts and limitations. This is not a checkpoint: committed-source full44,
 R11’s case DTOs and R16’s target-hardware frames remain outstanding. No real account/service/database,
 other-engine or physical-device proof is implied.
@@ -1022,7 +1022,7 @@ other-engine or physical-device proof is implied.
 
 ## Overflow 1–3: idle hints, accessibility and touch walking
 
-The [release note](../docs/handoff/overflow-1-3-release.md) records the reviewed G9 integration,
+The release note records the reviewed G9 integration,
 recovery fixes, five device-dismissed hints and shared open-panel styles.
 On phones, tap a clear map path or room floor to walk, or hold the movement stick / room D-pad.
 Manual input and overlays cancel a route; movement still uses the ordinary collision controller.
