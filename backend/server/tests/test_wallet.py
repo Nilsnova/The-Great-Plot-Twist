@@ -99,6 +99,8 @@ def test_the_wallet_reasons_are_the_agreed_pairs_in_the_agreed_order():
         ("captain_respec", "spend"),
         # 20261115130000_tower_skill_price.sql: a tower's skill, paid by the clicker (D051).
         ("tower_skill", "spend"),
+        # 20261116040000_boat_games.sql: a round of the own boat's games (D057).
+        ("boat_game", "earn"),
     )
 
 
@@ -150,6 +152,7 @@ def test_list_reason_names_gives_the_names_in_the_agreed_order():
         "building_refund",
         "captain_respec",
         "tower_skill",
+        "boat_game",
     ]
 
 

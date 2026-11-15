@@ -60,6 +60,22 @@ for (const [name, width, height] of SIZES) {
     }
   }
 }
+// The wreck's card once she sails (wave 34, repaired; the broadside paid at this wave already).
+for (const [name, width, height] of SIZES) {
+  await page.setViewportSize({width, height});
+  await page.evaluate(async () => {
+    window.__boat?.dispose(); window.__card?.dispose();
+    const {createIslandUi} = await import('/src/island/ui.js'), {wreckModel} = await import('/src/island/card-model.js');
+    const {campaignOf} = await import('/src/campaign/index.js');
+    const ui = window.__card = createIslandUi({container: document.body});
+    ui.wreckCard(wreckModel({campaign: campaignOf({waveBest: 34, campaign: {wave: 34, wreck: {paid: 500, goal: 500, gifts: [25, 100]}}}), coins: 412,
+      boat: {open: true, games: [{id: 'broadside', paid: true, best: 36}, {id: 'dash', paid: false, best: 36}]}}), {});
+  });
+  await page.waitForTimeout(400);
+  const path = `${shotsDir}/boat-card-${name}-${width}x${height}.png`;
+  await page.screenshot({path});
+  report.shots.push({path});
+}
 await writeFile(`${shotsDir}/boat.json`, JSON.stringify(report, null, 2));
 console.log(JSON.stringify(report, null, 2));
 await env.close();
