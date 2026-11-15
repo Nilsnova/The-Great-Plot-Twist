@@ -21,6 +21,8 @@ The game is built and live; nobody waits for anyone. You extend it.
 
 ## 2. Open tasks you can pick (small, independent; updated Thu 12 Nov)
 
+**B3 current-v3 feedback pass:** Johannes, implemented in drafts [#31](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/31) / [#32](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/32); [audit and limits](B3-FEEDBACK-AUDIT.md). Author and human review pending; not merged.
+
 
 **14 Nov addition:** the new tasks T29–T47 are listed in [section 9](#9-defense-and-shared-island-expansion-proposal-14-nov); read their [delivery plan](BUILD-PLAN.md#6-defense-and-shared-island-expansion) and the prerequisites in each task row. Existing tasks below remain available under their current status.
 | ID | Task | Where | Size |
@@ -43,7 +45,7 @@ The game is built and live; nobody waits for anyone. You extend it.
 | T16 | ✅ **Done (Fri 13 Nov): live.** **Research tree with team choices**: 3 tiers per branch (tier 2 after wave 15, tier 3 after wave 25); at tiers 2 and 3 the island picks ONE of two options (e.g. Rapid II or Long barrel; Broadside or Grapeshot), the other closes. Migration `20261112100000_research_tiers.sql` (not applied). Built on `feat/v3-research`, waiting for review, merge and the migration |  Tech hub card, `sim.js`, migration | L |
 | T17 | ✅ **Done (Fri 13 Nov): live.** **Wave events** from wave 3, deterministic from the wave seed, each with a banner and a narrator caption: fog, storm, night raid, fire ships, pincer, armada, siege barge, treasure galleon, smugglers' landing, kraken. Barely started on `feat/v3-waves` (wip) | new `src/pirates/wave-events.js`, `sim.js` | L |
 | T18 | ✅ **Done (Fri 13 Nov): live.** **Boss finisher scenes**: below ~25% boss hp the battle freezes, letterbox + camera push-in, and the whole crew does a 10 s task together (haul the chain / aim the great cannon / board and duel; all three for Redtide). Success sinks the boss with bonus loot, failure gives it 15% hp back. Synced inputs (new message kind in `sync.js` + `live-rules.js`). Original design. Barely started on `feat/v3-waves` (wip) | new `src/pirates/finisher/` | L |
-| T19 | ✅ **Done (Fri 13 Nov): live.** **Walk up and press E**: open a building's card only when standing next to it (E, or a Use button on phones); a fallen teammate nearby takes priority (hold E = help up); a click from far away says "Walk closer". Not started | `src/player/`, island input | M |
+| T19 | ✅ **Done (Fri 13 Nov): live.** **Walk up and press E**: open a building's card only when standing next to it (E, or a Use button on phones); a fallen teammate nearby takes priority (hold E = help up); a click from far away says "Walk closer". Additional guard/regression work by Johannes remains in [PR #7](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/7), pending review | `src/player/`, island input | M |
 | T20 | ✅ **Done (Fri 13 Nov): live.** **Captain skill tree with exclusive choices**: branches where a captain picks one of two, so the crew splits roles (e.g. medic, engineer, gunner). Needs a migration. Not started | Captain card, `backend/server/island/` | L |
 | T21 | ✅ **Done (Fri 13 Nov): live.** **Cartoon title screen and intro** drawn in code instead of the painted images in `frontend/public/cutscenes/` and `places/` (they look AI-generated); keep captions, Skip and the narrator timing. Not started | `src/cutscenes/`, title, `src/art/` | M |
 | T22 | ✅ **Done (Fri 13 Nov): live.** **Follow-up: joining the next wave right after a wave ends.** In the four-page check one friend did not join the host's next wave on his own straight after the previous wave ended (two others did); the check now joins him by hand. Reproduce with two browsers and fix in `frontend/src/island/index.js` (`joinRunningWave`) or the wave room | `src/island/`, `src/pirates/room.js` | S–M |
@@ -60,6 +62,12 @@ The game is built and live; nobody waits for anyone. You extend it.
 
 - [x] **B2 island action targets, Johannes:** implemented in draft [PR #58](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/58); Hire crew, Move, Tear down and Players use 44px targets, [evidence](evidence/B2-phone-targets/README.md). The full B2 journey/physical-phone audit and human review remain open.
 - [x] **B2 entry/full-lobby slice, Johannes:** implemented in draft [PR #61](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/61); complete phone names, seven regressions and 21-panel entry audit, [evidence/limits](evidence/B2-entry-lobby/README.md). Physical-device and remaining game-view B2 checks/human review stay open; #58 remains independent.
+
+**B3 current-game feedback audit:** Johannes (@frcola), [issue #30](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/30); help recovery in draft [#31](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/31), shortcuts next. Login/APIs unchanged.
+
+- [x] **B3 connection-retry slice, Johannes:** implemented in draft [PR #38](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/38); six regression cases and [evidence](evidence/B3-connection/README.md). Full B3 and human review remain open; no login/API changes.
+- [x] **B3 repeatable audit, Johannes:** implemented in draft [PR #39](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/39); eight existing component cases at two sizes, [command and limits](evidence/B3-repeatable/README.md). Human review and broader B3 remain open.
+- [x] **B2 Harbor/menus slice, Johannes:** implemented in draft [PR #66](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/66); readable match choices, 36 cases for ten views/three sizes and menu interactions, [evidence/limits](evidence/B2-harbor-menus/README.md). Physical-device, remaining game-card and human review checks stay open; #58/#61 remain independent.
 
 ## 3. Every member, before the freeze (walkthrough = 20% of the grade)
 

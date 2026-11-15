@@ -138,7 +138,7 @@ The rows that start with "v3" were written on Fri 13 Nov 2026 at `6c9ffb3`. Coun
 |---|---|---|---|---|
 | P, Pirates (`frontend/src/pirates/`) | [tests/pirates/](../frontend/tests/pirates/) (10 files), `check-multiplayer.js` | `cd frontend && npx vitest run tests/pirates` and `npm run test:mp` | Determinism, the balance curve to wave 100, towers, crew, captain, boss waves, the break, room sync with a stand-in room | The real Realtime room, physical phones, drift after late packets |
 | H, Harbor and coins (`frontend/src/harbor/`, `lib/coins.js`) | to be written by the lane's members | | | |
-| U, Look and feel (`frontend/src/ui/`) | to be written by the lane's members | | | |
+| U / Johannes, T19 nearby interactions | [nearby-interactions.test.js](../frontend/tests/island/nearby-interactions.test.js), [nearby-game.test.js](../frontend/tests/island/nearby-game.test.js); existing [island DOM](../frontend/tests/island/dom.test.js), [input](../frontend/tests/g20-input.test.js) and [health](../frontend/tests/pirates/health.test.js) tests | `cd frontend && npm test` (Chrome required; set `CHROME_PATH`) | Real pointer reach/height boundaries, blocked/missing input, native E and phone Use; explicit UI fixtures for a fallen captain and a revive taking priority; existing controller hold/cancel/payment tests use fake services | Physical phones, live sign-in/Realtime, actual database payments or races; the UI state fixtures are not a live multiplayer proof |
 | v3 Rooms: games, lobby, 10 players (WALKTHROUGH part 16) | [test_games_routes.py](../backend/server/tests/test_games_routes.py) (21), [island_sql/test_game_rooms_sql.py](../backend/server/tests/island_sql/test_game_rooms_sql.py) (8), [island/games.test.js](../frontend/tests/island/games.test.js) (13), `island/invite.test.js`, `island/one-island.test.js`, [pirates/ten-players.test.js](../frontend/tests/pirates/ten-players.test.js) (4) | `cd backend && uv run pytest -q server/tests/test_games_routes.py`; SQL: `CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql/test_game_rooms_sql.py`; `cd frontend && npx vitest run tests/island/games.test.js tests/pirates/ten-players.test.js` | Create once, join, the 10th member and the refused 11th, a guest turned away by a full game is not admitted, budgets, leave and re-join, the lobby for members only, ten senders keep one order inside the send budget | Ten real devices (`test:mp` uses at most four pages), real Realtime, a membership check at room level (none exists) |
 | v3 Simulation and sync (part 17) | [pirates/sim.test.js](../frontend/tests/pirates/sim.test.js) (10), `pirates/td-sim.test.js` (15), [pirates/multiplayer.test.js](../frontend/tests/pirates/multiplayer.test.js) (17), `pirates/controller.test.js`, `pirates/td-flow.test.js`, [live-rules.test.js](../frontend/tests/live-rules.test.js) (43), `check-multiplayer.js` | `cd frontend && npx vitest run tests/pirates tests/live-rules.test.js`; `npm run test:mp` | Same seed and inputs give the same wave at any frame rate, inputs run at their target tick in a fixed order, every message shape and rate limit; `test:mp`: at least 90% of samples identical on two and four pages | The real Supabase Realtime, drift after late packets (not measured), 10 devices, a message sent in another player's name (not checked) |
 | v3 Captain health and help-up (part 18) | [pirates/health.test.js](../frontend/tests/pirates/health.test.js) (21), `pirates/boarding.test.js` (17), [test_wave_revive_routes.py](../backend/server/tests/test_wave_revive_routes.py) (11), [island_sql/test_captain_revive_sql.py](../backend/server/tests/island_sql/test_captain_revive_sql.py) (9) | `cd frontend && npx vitest run tests/pirates/health.test.js`; `cd backend && uv run pytest -q server/tests/test_wave_revive_routes.py`; SQL: `CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql/test_captain_revive_sql.py` | Falling, the 2 s hold, the price 20 + 5 × wave, a repeat pays once, a second helper of one fall pays nothing, only a member in the wave pays, balance on 8 seeds | Real players, whether a fall really happened (the server cannot know), slow phones |
@@ -180,6 +180,12 @@ The rows that start with "v3" were written on Fri 13 Nov 2026 at `6c9ffb3`. Coun
 
 [Walkthrough part 30](WALKTHROUGH.md#30-captain-shooting-direction--ianno-hollensteiner-t27)
 and [recorded results](../specs/T27-shooting-direction.md).
+
+### B3 shortcuts recovery — Johannes Franz Lang
+
+| Built / why | Where / run | Covers | Misses |
+|---|---|---|---|
+| Touch-usable shortcuts loading/error recovery | [browser tests](../frontend/tests/ui/shortcuts-loading.test.js); `cd frontend && npm test -- tests/ui/shortcuts-loading.test.js` | Real blocked module request/retry, duplicate pending open, cached reopen, late success/failure, disposal, keyboard retry, Back/Escape, focus and both viewports | Real prolonged outages, physical phones and screen readers; no API/login changes |
 
 ### T7 · Ianno Hollensteiner · Weekly island leaderboard
 
@@ -225,3 +231,33 @@ and [results, screenshots and manual checkpoints](evidence/T28/README.md).
 | Repeatable real local fake-game entry audit | [Tool](../frontend/scripts/check-phone-entry.js); `cd frontend && node scripts/check-phone-entry.js` | Title, title Join opened, intro, tutorial, game choice, goal and lobby at 375x812/390x844/1280x720: panel bounds/overflow, 44px buttons, Escape from title Join, route reaches fake island, no browser errors/external requests | Ten connected clients, submitted title Join/auth, real invitations, every possible overlap/contrast, physical keyboard/phone and B2 outside entry/lobby |
 
 [Evidence and commands](evidence/B2-entry-lobby/README.md), [exact results](../specs/B2-entry-lobby.md).
+
+### B3 help recovery — Johannes Franz Lang
+
+| Built / why | Where / run | Covers | Misses |
+|---|---|---|---|
+| Visible loading and recoverable How to play failure | [help tests](../frontend/tests/ui/help-loading.test.js), existing [tutorial tests](../frontend/tests/ui/tutorial.test.js); `cd frontend && npm test -- tests/ui/help-loading.test.js tests/ui/tutorial.test.js` | Real Chromium modal/card, retry, duplicate requests, cancellation, stale success/failure, disposal, focus, Escape/back and 1280x720 / 375x812 fit | Real browser import caching/network outages, physical phones and screen readers; API/login unchanged |
+
+## B3 — Johannes Franz Lang — Connection retry feedback
+
+| What I built / why | Where and command | Covers | Misses |
+|---|---|---|---|
+| Visible pending and recoverable callback failure; prevent stale feedback | [Banner](../frontend/src/ui/connection-banner.js), [six browser cases](../frontend/tests/ui/connection-retry.test.js); `cd frontend && npm test -- --run tests/ui/connection-retry.test.js` | Failure and second success, one pending intent, button label/reset, identical frames retain feedback, newer online/idle/cycled views, dispose | Real adapter/provider outages, server/database writes, physical phones, screen readers and combined drafts #31/#32 |
+
+[Results](../specs/B3-connection-retry.md) and [1280x720 / 375x812 screenshots](evidence/B3-connection/README.md).
+
+## B3 — Johannes Franz Lang — Repeatable feedback fixtures
+
+| What I built / why | Where and command | Covers | Misses |
+|---|---|---|---|
+| Durable assertions and screenshots for eight existing feedback states | [Runner](../frontend/scripts/check-feedback.mjs), [fixture](../frontend/scripts/feedback-fixtures.js); `cd frontend && node scripts/check-feedback.mjs` | Each case at 1280x720/375x812; messages, repeated join counts, zero invalid builds, successful Create retry, valid cannon, callback intent, no horizontal overflow/errors/external traffic; deliberate enabled-button countercheck fails | Live API/server/database rules, rewards, real accounts/outages, multiplayer, physical keyboard/phone, screen readers, complete journey and unmerged B3 fixes |
+
+[Case table and limitations](evidence/B3-repeatable/README.md), [results](../specs/B3-feedback-check.md).
+
+## B2 — Johannes Franz Lang — Harbor and menus
+
+| What I built / why | Where and command | Covers | Misses |
+|---|---|---|---|
+| Narrow match-side choices use full rows so club words remain intact | [CSS](../frontend/src/harbor/harbor.css), [36 browser cases](../frontend/tests/harbor/phone-layout.test.js), [fixtures](../frontend/tests/harbor/phone-fixtures.js); `cd frontend && npm test -- --run tests/harbor/phone-layout.test.js` | Ten views x 375x812/390x844/1280x720: bounds, panel overflow, 44px effective targets, no clipped choice text or fragmented club words, Tab/focus and Escape destination; Harbor stand IDs, one controlled confirmation/10 coins with no earlier spend, compact coin rows, pause-to-Harbor, local preference save and all help pages at both phone sizes | Actual sports/provider accuracy, server settlement/login/room authority, account view, real phones/keyboards/VoiceOver/Safari, actual external-link/clipboard use and game cards outside this pass |
+
+[Evidence, exact scope and commands](evidence/B2-harbor-menus/README.md), [results](../specs/B2-harbor-menus.md).

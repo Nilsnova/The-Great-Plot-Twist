@@ -37,6 +37,9 @@ The order of the tasks below follows this table: the walkthrough and the UX carr
 
 ## Task board
 
+
+**V3 follow-up T19:** nearby building interactions implemented in [PR #7](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/7), with [visual evidence](evidence/T19/README.md) and Johannes's lane notes in [WALKTHROUGH.md](WALKTHROUGH.md). Human review is pending; the task row is in [OPEN-TODOS.md](OPEN-TODOS.md).
+
 Value: ★★★ moves a 20% criterion, ★★ a 10% criterion or a clear risk, ★ nice to have. Size: S (under 2 hours), M (half a day), L (a day).
 
 - [x] **T27: exact-angle captain shooting direction**, including diagonals, body/gun overlap
@@ -58,12 +61,14 @@ Value: ★★★ moves a 20% criterion, ★★ a 10% criterion or a clear risk, 
 | ID | Value | Size | Task | Done when |
 |---|---|---|---|---|
 | B1 | ★★★ | M | **Hallway playtest**: 3 people outside the team play the class demo on a phone without help. Note every hesitation, question and wrong tap. Open one issue per problem, ranked | Notes and issues exist; the top 3 are fixed (B1 counts as done when the fixes are merged) |
-| B2 | ★★★ | M | **Island-target slice merged in [#58](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/58) and entry/full-lobby slice merged in [#61](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/61) (15 Nov); physical-device and remaining game-view checks open.** **Phone layout pass** at 375 × 812 and 390 × 844 on the demo path: title, Join, goal card, harbor, quest strip, duel, Keeper's Lock, lamps, Settings > Account | No overlap, no cut-off text, tap targets ≥ 44 px; before and after screenshots in the PR |
-| B3 | ★★★ | S | **Feedback audit**: every rejected action on the demo path shows a plain message and a next step (wrong or old class code, duel declined or timed out, wrong lock answer, place not found, offline, email code wrong or expired) | A table in the PR lists each case with a screenshot; missing messages added with tests |
+| B2 | ★★★ | M | **Island-target slice merged in [#58](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/58) and entry/full-lobby slice merged in [#61](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/61) (15 Nov); Harbor/menu slice in draft [#66](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/66); physical-device and remaining game-view checks open.** **Phone layout pass** at 375 × 812 and 390 × 844 on the demo path: title, Join, goal card, harbor, quest strip, duel, Keeper's Lock, lamps, Settings > Account | No overlap, no cut-off text, tap targets ≥ 44 px; before and after screenshots in the PR |
+| B3 | ★★★ | S | **Connection-retry slice in draft [#38](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/38) and repeatable current-v3 audit in draft [#39](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/39); broader audit/review open.** **Feedback audit**: every rejected action on the demo path shows a plain message and a next step (wrong or old class code, duel declined or timed out, wrong lock answer, place not found, offline, email code wrong or expired) | A table in the PR lists each case with a screenshot; missing messages added with tests |
 | B4 | ★★ | M | **Full-mystery first ten minutes**: apply the open points of [UX-SIMPLIFICATION.md](UX-SIMPLIFICATION.md) to the start of the full mystery (fewer clicks, clearer next goal) | Click count before and after in the PR; the golden-path check still passes |
 | B5 | ★★ | S | **Slow network**: title → harbor on throttled "Fast 3G" in Chrome DevTools; add or improve loading feedback where the screen looks frozen | Recording or screenshots before and after |
 | B6 | ★ | S | **Wind on flags** in the harbor (`frontend/src/world/wind.js`) | Flags move by whole pixels; low quality and reduced motion respected |
 | B7 | ★ | S | **Staggered arrivals** in rehearsal `?demo=1&captains=40` so the arrival ripple plays (`frontend/src/class-demo/rehearsal.js`) | Ripples visible in rehearsal; perf still about 60 fps |
+
+B3 current-game audit claimed by Johannes in [#30](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/30). Help loading/retry implemented in draft [#31](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/31); shortcuts and the audit handover are tracked separately in #32. This does not mark the whole B3 row done.
 
 ### C. Simplify the code base (helps criteria 5 and 6)
 
@@ -129,3 +134,5 @@ T28 UX follow-up: [Learn boss minigames with optional first-time practice](../sp
 The requested [defense and shared-island expansion](BUILD-PLAN.md#6-defense-and-shared-island-expansion) adds T29–T47, proposed by Ianno Hollensteiner. It preserves this grading/submission plan and the feature freeze. Start with investigation and reviewed contracts; schedule large implementation packages after the deadline unless the team explicitly revises the schedule. Existing T3/T5/T6/T7/T26 are extended, not replaced. Claiming, human review and merge rules above still apply.
 
 Planning handover (14 Nov): roadmap/task expansion drafted by Ianno Hollensteiner; documentation checks completed. Implementation tasks remain proposed, not done. Peer review and explain-back are pending.
+
+- [x] **B3 current-v3 feedback pass:** implemented by Johannes in drafts [#31](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/31) and [#32](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/32). [Audit, screenshots and limits](B3-FEEDBACK-AUDIT.md). This scoped pass does not claim the historical mystery/email workflows or live provider/multiplayer proof. Human review remains.

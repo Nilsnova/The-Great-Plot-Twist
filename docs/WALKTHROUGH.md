@@ -1132,6 +1132,57 @@ An unavailable database produces an error and Try again; offline rehearsal expli
 requires an online game rather than claiming fake global scores. The browser cannot
 award a score or reward through this read-only endpoint.
 
+## Johannes: nearby building interactions (T19)
+
+**What I built.** Building clicks now follow the same reach rule as E. A distant click shows
+"Walk closer" instead of opening a card. E and the phone Use button still work nearby. When the
+wave reports a combat/revive action, its own action button takes priority; a fallen local captain
+cannot click a building ([game.js](../frontend/src/game.js), [island/world.js](../frontend/src/island/world.js)).
+
+**Where and how.** A native pointer release identifies the clicked building in
+[island/world.js](../frontend/src/island/world.js). Main's [clickVerdict](../frontend/src/world/reach.js) finds the clicked building's zone and uses
+the existing [inZone](../frontend/src/world/zones.js) rule (also used by E's findZone) with the current position getter. Only an
+in-range result reaches the existing card callback. [island/index.js](../frontend/src/island/index.js)
+supplies main's player-position getter and onFar hint callback. The conflict resolution retains
+main's flexible placement, poses and eDecision/revive routing; this task keeps the fallen/action click guards. [game.js](../frontend/src/game.js) supplies
+the active/down/action state and gives the wave's button priority over generic Use.
+
+**Why this way.** Reusing [the existing zones](../frontend/src/island/spots.js) avoids inventing
+a second distance. A nearby bell must not grant permission to click a distant cannon: the check
+uses only the clicked target's zone. The existing [revival controller](../frontend/src/pirates/controller.js)
+keeps its hold timing, price and server call. This change does not rewrite login, APIs or movement.
+
+**Tests and limits.** [Pointer tests](../frontend/tests/island/nearby-interactions.test.js) cover the
+center, just inside/outside reach, height, missing position and blocked input with real browser
+events. [Full-game tests](../frontend/tests/island/nearby-game.test.js) use the local fake server
+and native E/phone Use. Their fallen/revive states are explicit UI fixtures; they do not prove a
+live multiplayer revival or SQL payment. Existing [health tests](../frontend/tests/pirates/health.test.js)
+cover the real controller's hold/cancel/payment flow with fake services. Physical devices and
+real Supabase remain separate checks; see [the test-map row](TEST-MAP.md#8-lane-rows-to-be-filled-by-the-lanes-members).
+
+**How it could change.** New buildings can reuse this rule by supplying a normal interaction zone.
+A future click-to-walk feature could walk to the target before offering Use; that would be a
+separate change. Browser reach is guidance, not a server-side anti-cheat guarantee.
+
+## B3. Shortcuts loading and recovery — Johannes Franz Lang
+
+[shortcuts-host.js](../frontend/src/shell/shortcuts-host.js) owns the existing ? shortcut
+and lazy overlay. It now shows the shared native modal during loading and failure,
+with Try again and Back to game controls usable on phones. Successful import replaces
+feedback with the real shortcuts. The completed overlay is cached for later opens.
+
+`requested` rejects duplicate pending opens. `request` identifies an open attempt;
+close increments it so old completion cannot reopen the view. Disposal also removes
+the global key listener and the cached overlay. A failed promise is cleared so a later
+attempt can load again. Messages never expose the raw exception.
+
+[Seven browser cases](../frontend/tests/ui/shortcuts-loading.test.js) cover a real failed
+module request and successful retry, pending deduplication, cached reopen, late results,
+keyboard retry, Back/Escape, focus, disposal and both viewport sizes. [Audit](B3-FEEDBACK-AUDIT.md).
+The UI kit and shortcuts overlay are existing team code; Codex drafted the host change
+for Johannes. A fixed error message plus explicit retry is simpler than automatic
+retries or another networking layer. Live networks/physical phones remain unverified.
+
 ## The three course questions
 
 ### Q1. Where is the data stored?
@@ -1290,6 +1341,74 @@ Safari still need human checks. If row content or phone widths change, rerun bot
 checks and revisit wrapping before reducing text or hiding names. This work is
 independent of [draft #58](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/58).
 
+## B3 — Connection retry feedback — Johannes Franz Lang
+
+**What and where.** [connection-banner.js](../frontend/src/ui/connection-banner.js)
+shows `Retrying…` while the existing `continueGame` callback is pending. If it
+rejects, the banner explains how to try again; it never displays the private error.
+
+**Why.** `pending` stops repeated clicks from issuing another intent. `try/catch`
+handles rejection; `finally` restores the button. A revision number changes when
+a new adapter state/message arrives. The attempt captures its revision, so an old
+failure cannot overwrite a newer view, including offline → online → offline.
+Disposal also blocks late updates. Identical frames retain the useful failure text.
+
+**Tests and limits.** [Six browser cases](../frontend/tests/ui/connection-retry.test.js)
+cover rejection/retry success, pending clicks, newer online/idle/cycled views and
+disposal. They inject callbacks; they do not prove live server recovery. Login,
+adapter/API contracts and game rules stay unchanged. [Evidence](evidence/B3-connection/README.md).
+If future retry actions become cancellable, their owner could abort the work;
+this banner only ignores stale results. Draft #38 needs author and human review.
+
+## B3 — Repeatable feedback checks — Johannes Franz Lang
+
+**What and where.** [check-feedback.mjs](../frontend/scripts/check-feedback.mjs)
+opens the existing local browser helper, loops through eight cases at desktop and
+phone sizes, asserts their behavior and saves pictures plus a report in a temporary
+folder. [feedback-fixtures.js](../frontend/scripts/feedback-fixtures.js) supplies
+controlled failures to the real cards. [qa/feedback.html](../frontend/qa/feedback.html)
+is served directly by Vite for the test; it is not a production build entry.
+
+**Why this split.** The fixture describes the inputs; the runner checks outputs.
+Join call counts detect an unwanted request for bad input. Build call counts and
+native disabled buttons check that rejected clicks do nothing. A second Create
+attempt uses the existing fake transport and real API wrapper, proving recovery
+without creating a live game. A valid cannon remains usable beside a locked mortar.
+
+**Limits and change.** These are isolated components, not a connected game or
+server-money proof. Browser dimensions are not a physical-phone test. New cases
+can extend the list and fixture; do not change login/APIs to make a test pass.
+[Command, case table and negative control](evidence/B3-repeatable/README.md).
+[Next proposals](handoff/B3-next-proposals.md) are for review, not new claims.
+
+## B2 — Harbor choices and game menus — Johannes Franz Lang
+
+**What and where.** [harbor.css](../frontend/src/harbor/harbor.css) adds one
+property inside the existing <=480px rule: match-side choices get a 100% flex
+basis. Each team/Draw choice uses a row; 5/10/25 coin choices retain their compact
+row. The desktop layout, labels, selection callbacks and server rules stay as before.
+
+**Why.** With the complete game styles, long club names stayed inside the old
+three-column buttons only by splitting “Nottingham” and “Manchester” mid-word.
+Full-width choices make those words readable without smaller type or changed data.
+The taller stack relies on the existing scrollable card.
+
+**Proof and reuse.** [phone-layout.test.js](../frontend/tests/harbor/phone-layout.test.js)
+uses the existing browser harness and [controlled fixtures](../frontend/tests/harbor/phone-fixtures.js).
+The fixture loads the main/world sheets in their real order and reuses existing
+fakeCalls/fakeSports, campaign model, cards and shell. DOM Ranges report a word's
+line rectangles; multiple rectangles mean it was broken across lines. That assertion
+fails on both phone sizes before the CSS change and passes afterward. The other
+checks cover ten views at three sizes, focus/Escape, selection before/after explicit
+confirmation, local settings and all help pages on both phones.
+
+**Limits and change.** These are real browser components with fake data/callbacks,
+not live purchases, provider accuracy or authentication. Radio target measurements
+use their clickable labels. Physical phones/keyboard, VoiceOver, Safari and actual
+link/clipboard use remain separate checks. [Evidence and reproduction](evidence/B2-harbor-menus/README.md).
+If picker content changes, repeat the word/target/scroll checks before altering
+shared choice styles; keep side choices separate from coin choices.
+
 ## Where older docs differ from the code
 
 Read the code when these disagree. Noted on 11 Nov; not yet fixed.
@@ -1306,3 +1425,23 @@ Read the code when these disagree. Noted on 11 Nov; not yet fixed.
   - Part 14 describes integer pixel scaling and a snapped camera; the cartoon art replaced them with smooth full-resolution rendering ([part 27](#27-the-cartoon-art-drawn-in-code)).
   - Part 3 and part 10 say 53 tables; a regex over the migrations finds 59, all with row-level security.
   - Part 8 lists unlocks by the player's best wave; in v3 what may be built follows the island's best wave ([part 19](#19-the-campaign-unlocks-the-harbor-gate-and-the-wreck)).
+
+## B3. Help loading and recovery — Johannes Franz Lang
+
+The menu's How to play action calls [tutorial/host.js](../frontend/src/tutorial/host.js).
+The host shows the shared native modal while its existing lazy import is pending.
+A successful load replaces that feedback with the real tutorial card; a failed load
+keeps a plain message, Try again and Back to game. No request or server contract changes.
+
+The `loading` guard prevents parallel clicks from starting duplicate imports. The
+`request` number identifies each attempt: close/dispose increments it, so a late
+success or failure cannot reopen a cancelled view. Closing pending/failed feedback
+calls the existing focus callback; normal card closure still uses its done promise.
+The modal provides keyboard focus and Escape; retry stays inside the same feedback view.
+
+[Browser tests](../frontend/tests/ui/help-loading.test.js) cover success, failure/retry,
+double open, late success/failure, disposal, Escape/back, focus and phone target sizes.
+The pre-fix regression run failed four of five initial cases. Tests inject the loader
+result while exercising real DOM/modal/card code; they do not prove live network behavior.
+[Before/after](evidence/B3-help/README.md). Codex drafted the change for Johannes;
+shared modal/tutorial machinery is existing team code. This is part 1 of B3.

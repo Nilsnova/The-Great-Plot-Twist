@@ -92,9 +92,11 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   // No prediction market in the game (D035, 11 Nov): the fortune teller and its desk are gone.
   function panelLabel(zone){return island?.label(zone);}
   const sailing = createSailing(container, reducedMotion, () => settings.quality === 'low');
+  const isCaptainDown=()=>!!(waves?.island.captainDown||waves?.point?.controller.captainDown);
+  const currentWaveAction=()=>waves?.island.wave?.action??waves?.point?.controller.wave?.action??null;
   const world = createWorld({ emit, isBlocked:worldBlocked, disposeVisuals(){harbor?.dispose();mapTouch?.dispose();perf?.dispose();experience?.dispose();marketUi?.dispose();sportsUi.dispose();shortcuts.dispose();tutorial.dispose();isletState.dispose();stopIslet?.();stopActualIslet?.();}, transition: (id, options) => sailing.start(id, options),
     cancelTransition: sailing.end, finishTransition() { sailing.end(); graphics.renderer.domElement.focus(); }, createPlace: id => createPlace({ id, isletState, island, reducedMotion, canvas: graphics.renderer.domElement, camera: view.camera,
-      isActive: () => active && !outsideBlocked(), player: () => controller.player.position, onFar: id => { farHint = { id, until: performance.now() + HINT_MS }; } }), attach(place) { scene.add(place.group); water.setCoast(place.group); lightPools.setPlace(place.group); controller.setPlace(place); view.setPlace(place.id, controller.player.position); } });
+      isActive: () => active && !outsideBlocked() && !isCaptainDown() && !currentWaveAction(), player: () => controller.player.position, onFar: id => { farHint = { id, until: performance.now() + HINT_MS }; } }), attach(place) { scene.add(place.group); water.setCoast(place.group); lightPools.setPlace(place.group); controller.setPlace(place); view.setPlace(place.id, controller.player.position); } });
   async function travel(id, options) {
     mapTouch?.cancel();
     try { await world.goTo(id, options); }
@@ -269,7 +271,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     settings.hour = (settings.hour + (shell.blocked && !followLocalTime ? 0 : delta) * (settings.fastTime ? 0.8 : followLocalTime ? 1 / 3600 : 0.003)) % 24;
     mapTouch.update(delta);
     // Captain health (GAME-V3.md §3): a fallen captain cannot walk, and lies as the wave draws them.
-    const captainDown=!!(waves?.island.captainDown||waves?.point?.controller.captainDown);controller.player.visible=!captainDown;
+    const captainDown=isCaptainDown();controller.player.visible=!captainDown;
     // A shot or a cutlass blow poses your own body (and a teammate's figure), never a second captain (pirates/poses.js).
     const poses=waves?.poses?.()??null;character.pose(poses?.own??null);
     const speed=captainDown?controller.update(delta,false):controller.update(delta, active && !outsideBlocked());
@@ -286,7 +288,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     const zone = active&&!outsideBlocked()&&!captainDown ? findZone(controller.player.position, world.current?.zones ?? []) : null;
     // During a wave E belongs to the wave's own prompt (fire, repair, rebuild, help up: TOWER-DEFENSE.md §12, GAME-V3.md §3) when it
     // has one, so a building's card never opens instead, and the phone's Use button hides while the wave owns E.
-    const waveAction=waves?.island.wave?.action??waves?.point?.controller.wave?.action??null;
+    const waveAction=currentWaveAction();
     touch.update(zone&&!waveAction?zone:null,active&&!outsideBlocked(),zone&&!waveAction?panelLabel(zone):'');
     classDemo?.update(delta,{blocked:!active||outsideBlocked(),zoneActive:!!zone});
     const reviving=!!(waves?.island.revive||waves?.point?.controller.revive);
