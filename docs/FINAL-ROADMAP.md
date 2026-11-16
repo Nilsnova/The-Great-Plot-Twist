@@ -71,6 +71,7 @@ Value: ★★★ moves a 20% criterion, ★★ a 10% criterion or a clear risk, 
 B3 current-game audit claimed by Johannes in [#30](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/30). Help loading/retry implemented in draft [#31](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/31); shortcuts and the audit handover are tracked separately in #32. This does not mark the whole B3 row done.
 
 B3 follow-up: Late arsenal replies stay with their original island, implemented in draft [PR #88](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/88), with [evidence](evidence/B3-arsenal-context/README.md). This completes only this slice; broader B3 and human review remain open.
+B3 follow-up: Retry an arsenal load directly in its card, implemented in draft [PR #90](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/90), with [evidence](evidence/B3-arsenal-retry/README.md). This completes only this slice; broader B3 and human review remain open.
 
 ### C. Simplify the code base (helps criteria 5 and 6)
 

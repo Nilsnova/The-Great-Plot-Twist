@@ -64,7 +64,13 @@ function shopPart(model, handlers, {button}) {
 
 export function drawArsenal(body, model, handlers = {}, kit) {
   body.append(kit.line('island-purpose', model.lead));
-  if (!model.carry) { body.append(kit.line('island-message', model.message, 'alert')); return null; }
+  if (!model.carry) {
+    body.append(kit.line('island-message', model.message, 'alert'));
+    const retry = kit.button(model.retry.label, () => handlers.retry?.());
+    retry.dataset.focus = 'arsenal-retry'; retry.disabled = model.retry.disabled;
+    body.append(retry);
+    return retry.disabled ? null : retry;
+  }
   const carry = carryPart(model, handlers, kit), rack = rackPart(model, handlers, kit);
   body.append(carry.box, rack.box, shopPart(model, handlers, kit),
     kit.line('island-message', model.message, 'alert'), kit.line('island-coins', model.coins));
