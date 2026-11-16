@@ -12,10 +12,11 @@
 //   createBoarderPaths({coast, heart, walls, pace})
 //     .refresh()        once a tick: the layout from the walls' hp now (skipped while no hp changed; the
 //                       distance field is rebuilt only when the layout's key changes)
-//     .next(boarder)    {kind: 'wall', wallId} | {kind: 'step', x, z} | {kind: 'heart'} | {kind: 'none'}
+//     .next(boarder)    {kind: 'wall', wallId} | {kind: 'tower', towerId} | {kind: 'step', x, z} | {kind: 'heart'} | {kind: 'none'}
 //     .canReach(a, b)   a straight walk from a to b crosses no water and no standing wall
-import { buildLayout, cellOf, centreOf, createGrid } from './path-grid.js';
-import { createFieldCache, lineIsClear, nextStep } from './pathing.js';
+import { buildLayout, cellOf, centreOf, createGrid, standingWallAt } from './path-grid.js';
+import { createFieldCache, lineIsClear, neighbours, nextStep } from './pathing.js';
+import { towerObstacles, towerFootprintPoints, TOWER_FOOTPRINT } from './tower-obstacles.js';
 
 export const WALL_FOOTPRINT = 2; // units: T36's wall square (FOOTPRINTS.wall in src/island/placement.js)
 const INSET = .25;               // points this far inside the square's edges, so only cells it covers count
@@ -45,10 +46,18 @@ export function edgeDistance(point, wall) {
  * it) may walk out. `walls` in id order: equal t goes to the lower id. Pure and deterministic.
  */
 export function wallInWay(from, to, walls, body = BODY) {
-  const half = WALL_FOOTPRINT / 2, dx = to.x - from.x, dz = to.z - from.z;
+  const hit = obstacleInWay(from, to, walls, body);
+  return hit ? {wall: hit.wall, t: hit.t} : null;
+}
+
+/** The first standing wall or enabled tower square a continuous step crosses. */
+export function obstacleInWay(from, to, obstacles, body = BODY) {
+  const dx = to.x - from.x, dz = to.z - from.z;
   let best = null, bestT = Infinity;
-  for (const wall of walls) {
+  for (const wall of obstacles) {
     if (!(wall.hp > 0)) continue;
+    const size = wall.kind === 'wall' ? WALL_FOOTPRINT : TOWER_FOOTPRINT;
+    const half = size / 2;
     const inside = (h) => Math.abs(from.x - wall.x) < h - 1e-9 && Math.abs(from.z - wall.z) < h - 1e-9;
     if (inside(half)) continue;
     const h = inside(half + body) ? half : half + body;
@@ -60,7 +69,7 @@ export function wallInWay(from, to, walls, body = BODY) {
     }
     if (hit && t0 < t1 - 1e-12 && t0 < bestT - 1e-12) { best = wall; bestT = t0; }
   }
-  return best ? { wall: best, t: bestT } : null;
+  return best ? { wall: best, t: bestT, kind: best.kind && best.kind !== 'wall' ? 'tower' : 'wall' } : null;
 }
 
 /** True when x, z lies inside the coast (radius 1 of coastPoint in sim.js, the same edge formula). */
@@ -83,18 +92,21 @@ export function footprintPoints(wall) {
  * The routes of one wave. walls: the sim's wall objects (their hp changes in the wave; read on refresh).
  * pace: {hackPerSecond, speed} of a boarder this wave, for the breach cost.
  */
-export function createBoarderPaths({ coast, heart, walls, pace }) {
+export function createBoarderPaths({ coast, heart, walls, towers = [], towerBlocking = false, pace }) {
   const reach = Math.ceil(Math.max(coast.rx, coast.rz) * MARGIN);
   const grid = createGrid({ minX: -reach, minZ: -reach, maxX: reach, maxZ: reach, isWalkable: (x, z) => isOnLand(x, z, coast) });
-  const cache = createFieldCache(grid), shapes = walls.map(wall => ({ wall, cells: footprintPoints(wall) }));
+  const cache = createFieldCache(grid), towerShapes = towerBlocking ? towerObstacles(towers) : [];
+  const shapes = [...walls.map(wall => ({ obstacle: wall, cells: footprintPoints(wall), kind: 'wall' })),
+    ...towerShapes.map(tower => ({ obstacle: tower.source, cells: tower.cells, kind: 'tower' }))];
   let layout = buildLayout(grid, [], pace), field = cache.fieldFor(layout, heart), seen = null;
 
   function refresh() {
     // Most ticks no wall's hp changed: then the layout of the last tick still holds.
-    const hps = walls.map(wall => `${wall.hp}/${wall.maxHp}`).join(',');
+    const hps = shapes.map(({ obstacle }) => `${obstacle.id}:${obstacle.x},${obstacle.z}:${obstacle.hp}/${obstacle.maxHp}`).join(',');
     if (hps === seen) return;
     seen = hps;
-    layout = buildLayout(grid, shapes.map(({ wall, cells }) => ({ id: wall.id, hp: wall.hp, maxHp: wall.maxHp, cells })), pace);
+    layout = buildLayout(grid, shapes.map(({ obstacle, cells, kind }) => ({ id: obstacle.id, hp: obstacle.hp,
+      maxHp: obstacle.maxHp, obstacleKind: kind, cells })), pace);
     field = cache.fieldFor(layout, heart);
   }
   // A boarder off the walking grid (pushed into the surf): back to the cheapest land cell next to it.
@@ -131,6 +143,22 @@ export function createBoarderPaths({ coast, heart, walls, pace }) {
   function next(boarder) {
     const index = cellOf(grid, boarder.x, boarder.z);
     if (index >= 0 && index === field.goalIndex) return { kind: 'heart' };
+    const occupied = index >= 0 ? standingWallAt(layout, index) : null;
+    if (occupied?.kind === 'tower') {
+      let best = null;
+      for (const step of neighbours(grid, layout, index)) {
+        if (standingWallAt(layout, step.index)) continue;
+        if (!best || field.cost[step.index] < field.cost[best.index]
+            || (field.cost[step.index] === field.cost[best.index] && step.index < best.index)) best = step;
+      }
+      if (best) return {kind: 'step', ...centreOf(grid, best.index)};
+      const escape = nextStep(grid, layout, field, index);
+      if (!escape) return {kind: 'none'};
+      if (escape.towerId === occupied.id) return {kind: 'step', ...centreOf(grid, escape.index)};
+      if (escape.towerId) return {kind: 'tower', towerId: escape.towerId};
+      if (escape.wallId) return {kind: 'wall', wallId: escape.wallId};
+      return {kind: 'step', ...centreOf(grid, escape.index)};
+    }
     const wall = engaged(boarder);
     if (wall) return { kind: 'wall', wallId: wall.id };
     if (index < 0 || field.cost[index] === Infinity) {
@@ -139,6 +167,7 @@ export function createBoarderPaths({ coast, heart, walls, pace }) {
     }
     const step = nextStep(grid, layout, field, index);
     if (!step) return { kind: 'none' };
+    if (step.towerId) return { kind: 'tower', towerId: step.towerId };
     if (step.wallId) return { kind: 'wall', wallId: step.wallId };
     return { kind: 'step', ...centreOf(grid, step.index) };
   }

@@ -1525,3 +1525,36 @@ runs against disposable local PostgreSQL with every migration applied twice.
 
 **Limits.** This fence protects a paid restore from a report belonging to a wave that started earlier.
 It does not validate the health a modified client reports or order arbitrary stale reports from other waves.
+
+## T35 — Damageable towers block boarder paths — Ianno Hollensteiner
+
+**What and why.** With the off-by-default `tower_obstacles` wave rule, standing cannons, mortars, harpoons and
+culverins occupy their T36 tower-slot squares in both the boarder route field and continuous movement. A boarder
+walks around a tower when that costs less than breaking it; otherwise it reaches the footprint edge and hacks it.
+Broken towers open the route, and repair or rebuild makes the footprint solid again. Houses and watchtowers remain
+passable. The rule requires both `pathing` and `tower_health`, so all clients use the same frozen wave rules.
+
+**Where the behavior lives.** [tower-obstacles.js](../frontend/src/pirates/tower-obstacles.js) derives its geometry
+from the [placement footprints](../frontend/src/island/placement.js). [boarder-paths.js](../frontend/src/pirates/boarder-paths.js)
+adds towers to the weighted field, while [sim.js](../frontend/src/pirates/sim.js) applies boundary targeting and
+movement collision. [battle-guide.js](../frontend/src/pirates/battle-guide.js) uses the same route and tower HP.
+The server filters the optional rule in [wave_rules.py](../backend/server/island/wave_rules.py); migration
+[`20261115160000_tower_obstacles.sql`](../supabase/migrations/20261115160000_tower_obstacles.sql) adds its allowed
+name to the existing frozen-rules constraint.
+
+**Tests and evidence.** [tower-obstacles.test.js](../frontend/tests/pirates/tower-obstacles.test.js) checks footprint
+parity and geometry; [pathing-wiring.test.js](../frontend/tests/pirates/pathing-wiring.test.js) and
+[tower-health.test.js](../frontend/tests/pirates/tower-health.test.js) exercise real wave movement, break/rebuild,
+escape, captain pursuit and feature-off behavior; [battle-guide.test.js](../frontend/tests/pirates/battle-guide.test.js)
+checks the preview. The closed-ring breach regression failed before implementation with `expected null not to be null`
+and passes with the tower-aware route field. Final review also added a five-tower cross regression: before the escape
+fallback an enclosed boarder received `kind: 'none'`; now it reaches the heart through its own footprint or by
+attacking the adjacent route blocker, without crossing another footprint. The final affected suite passes 76 tests;
+the whole frontend suite of 3,348 tests was run before this narrow fix. The focused workload runs 300 boarders ×
+3,000 ticks through repeated tower breaches and rebuilds. [Two-client rule captures and limits](evidence/T35-tower-obstacles/README.md)
+record matching state for 451 ticks.
+
+**Limits.** The migration is unapplied and the feature flag stays off. The three-seed balance smoke is not sign-off,
+the generic multiplayer harness timed out later in its pause/break UI phase on both branch and unchanged base, and
+physical-phone/live-Realtime performance remains unverified. See the full [T35 contract and checks](../specs/T35-tower-path-obstacles.md)
+and [draft PR #84](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/84).

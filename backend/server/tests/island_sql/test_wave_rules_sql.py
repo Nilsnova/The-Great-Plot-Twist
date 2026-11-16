@@ -43,6 +43,14 @@ def test_the_first_call_keeps_the_rules_and_a_later_one_changes_nothing(database
     assert keep(database, wave_id, ["pathing", "rescue"]) == {"rules": ["tower_health"]}
 
 
+def test_tower_obstacles_is_allowed_and_the_combined_rule_set_is_frozen(database):
+    wave_id = a_wave(database)
+
+    rules = ["tower_health", "pathing", "tower_obstacles"]
+    assert keep(database, wave_id, rules) == {"rules": rules}
+    assert keep(database, wave_id, ["tower_health"]) == {"rules": rules}
+
+
 def test_an_unknown_rule_name_is_refused(database):
     wave_id = a_wave(database)
     with pytest.raises(psycopg.errors.CheckViolation):

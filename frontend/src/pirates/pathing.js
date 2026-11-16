@@ -77,7 +77,9 @@ export function nextStep(grid, layout, field, index) {
     if (total < bestCost || (best !== null && total === bestCost && next.index < best.index)) { best = next; bestCost = total; }
   }
   if (!best || bestCost === Infinity) return null;
-  return { index: best.index, wallId: standingWallAt(layout, best.index)?.id ?? null };
+  const obstacle = standingWallAt(layout, best.index);
+  return obstacle?.kind === 'tower' ? { index: best.index, wallId: null, towerId: obstacle.id }
+    : { index: best.index, wallId: obstacle?.id ?? null };
 }
 
 /**
