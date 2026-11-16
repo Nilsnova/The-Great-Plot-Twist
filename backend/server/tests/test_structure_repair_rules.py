@@ -1,0 +1,152 @@
+"""Pure price and intent rules for the future paid structure repair route.
+
+These tests read the real island catalogue and need no database or network.
+Used by: pytest in backend/server/tests/.
+"""
+
+from uuid import UUID
+
+import pytest
+from pydantic import ValidationError
+
+from server.island.catalogue import catalogue_for_flags, load_island
+from server.island.structure_repair_models import RepairRequest
+from server.island.structure_repair_rules import intent_fingerprint, repair_price
+
+
+@pytest.mark.parametrize(
+    ("kind", "level", "expected"),
+    [
+        ("wall", 1, 10),
+        ("wall", 2, 20),
+        ("wall", 3, 40),
+        ("wall", 4, 80),
+        ("wall", 5, 160),
+        ("cannon", 1, 30),
+        ("cannon", 5, 480),
+        ("mortar", 1, 60),
+        ("harpoon", 3, 160),
+        ("swivel", 5, 800),
+    ],
+)
+def test_repair_price_is_the_catalogue_increment_for_the_current_base_level(kind, level, expected):
+    catalogue = load_island()
+
+    assert repair_price(catalogue, kind, level) == expected
+
+
+def test_culverin_price_comes_from_the_flagged_catalogue():
+    catalogue = catalogue_for_flags(load_island(), {"defenses_v2": True})
+    culverin = next(entry for entry in catalogue.kinds if entry.kind == "culverin")
+
+    assert repair_price(catalogue, "culverin", 1) == culverin.prices[0]
+    assert repair_price(catalogue, "culverin", 5) == culverin.prices[4]
+
+
+@pytest.mark.parametrize("kind", ["house", "watchtower", "unknown"])
+def test_non_repairable_or_unknown_kinds_have_no_repair_price(kind):
+    with pytest.raises(ValueError, match="not repairable"):
+        repair_price(load_island(), kind, 1)
+
+
+@pytest.mark.parametrize("level", [0, 6, True, 1.5])
+def test_invalid_repair_levels_are_refused(level):
+    with pytest.raises(ValueError, match="level"):
+        repair_price(load_island(), "wall", level)
+
+
+def request(**changes):
+    body = {
+        "code": "ISLE-K7Q2M",
+        "spot": "cannon_8",
+        "instanceId": "10b7b257-4f3f-4dd8-bcd3-b18a68d6e468",
+        "actionUid": "repair_123456",
+        "expectedEpoch": "dc6f36b8-b7b5-4fd1-b08c-e2f933be10d2",
+        "expectedWindow": "reserved_wave",
+        "expectedWaveId": "25126b41-cff8-4f53-b4bd-526849dd9ee0",
+        "expectedLevel": 2,
+        "expectedRepairSeq": 9,
+        "quotedPrice": 60,
+        "waveProtocol": 2,
+    }
+    body.update(changes)
+    return RepairRequest.model_validate(body)
+
+
+def test_repair_request_accepts_t54_wire_shape_and_strict_types():
+    parsed = request()
+
+    assert parsed.spot == "cannon_8"
+    assert parsed.action_uid == "repair_123456"
+    assert parsed.expected_epoch == UUID("dc6f36b8-b7b5-4fd1-b08c-e2f933be10d2")
+    assert parsed.expected_wave_id == UUID("25126b41-cff8-4f53-b4bd-526849dd9ee0")
+    assert parsed.expected_window == "reserved_wave"
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"waveProtocol": 1},
+        {"expectedWindow": "combat"},
+        {"expectedWindow": "reserved_wave", "expectedWaveId": None},
+        {
+            "expectedWindow": "between_waves",
+            "expectedWaveId": "25126b41-cff8-4f53-b4bd-526849dd9ee0",
+        },
+        {"expectedLevel": True},
+        {"expectedRepairSeq": -1},
+        {"quotedPrice": "60"},
+        {"unexpected": "field"},
+        {"actionUid": "short"},
+    ],
+)
+def test_repair_request_rejects_invalid_wire_values(changes):
+    with pytest.raises(ValidationError):
+        request(**changes)
+
+
+def test_intent_fingerprint_ignores_revision_and_repair_sequence_guards():
+    first = intent_fingerprint(
+        owner_id="owner-1",
+        reset_epoch="epoch-1",
+        instance_id="instance-1",
+        repair_kind="cannon",
+        quoted_level=2,
+        quoted_price=60,
+    )
+    retried = intent_fingerprint(
+        owner_id="owner-1",
+        reset_epoch="epoch-1",
+        instance_id="instance-1",
+        repair_kind="cannon",
+        quoted_level=2,
+        quoted_price=60,
+    )
+
+    assert first == retried
+    assert len(first) == 64
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        {"owner_id": "owner-2"},
+        {"reset_epoch": "epoch-2"},
+        {"instance_id": "instance-2"},
+        {"repair_kind": "mortar"},
+        {"quoted_level": 3},
+        {"quoted_price": 120},
+    ],
+)
+def test_intent_fingerprint_changes_when_the_paid_intent_changes(change):
+    values = {
+        "owner_id": "owner-1",
+        "reset_epoch": "epoch-1",
+        "instance_id": "instance-1",
+        "repair_kind": "cannon",
+        "quoted_level": 2,
+        "quoted_price": 60,
+    }
+    changed = values | change
+
+    assert intent_fingerprint(**values) != intent_fingerprint(**changed)
