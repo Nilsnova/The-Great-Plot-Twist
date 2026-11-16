@@ -203,7 +203,7 @@ Collected from the sprint's PR bodies and decisions; none blocks a flag that is 
 
 ## 11. Unified defense recovery — implementation pipeline (16 Nov)
 
-The gameplay rules in [D059](DECISIONS.md#d059--shared-gradual-hp-recovery-and-paid-instant-repair--2026-11-16) and [T33](../specs/T33-persistent-tower-damage.md) are approved, **not implemented**. Existing D039 wall recovery and D049 wave-health behavior remain runtime truth. Ianno (@Iannomh123456) owns T54–T60. PRs #127 and #128 are closed unmerged and remain closed. [T54](../specs/T54-recovery-implementation-plan.md) consolidates the current rules and the technical plan still required. T55–T60 are reserved and blocked until Ianno approves T54's concrete authority, replay, transaction, API/version and rollout plan. No implementation agent has started.
+The gameplay rules in [D059](DECISIONS.md#d059--shared-gradual-hp-recovery-and-paid-instant-repair--2026-11-16) and [T33](../specs/T33-persistent-tower-damage.md) are approved, **not implemented**. Existing D039 wall recovery and D049 wave-health behavior remain runtime truth. Ianno (@Iannomh123456) owns T54–T60. PR #127 remains closed as superseded planning history; [PR #128](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/128) tracks the approved rules and documentation review. [T54](../specs/T54-recovery-implementation-plan.md) consolidates the current rules and the technical plan still required. T55–T60 are reserved and blocked until Ianno approves T54's concrete authority, replay, transaction, API/version and rollout plan. No implementation agent has started.
 
 | ID | Size | Task | Status / owner | Depends on | Done when |
 |---|---|---|---|---|---|

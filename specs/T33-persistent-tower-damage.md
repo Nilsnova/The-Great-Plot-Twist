@@ -5,7 +5,7 @@
 > **Who uses it:** T54–T60 planning and implementation. See the [T54 implementation plan](T54-recovery-implementation-plan.md) for technical contracts and checks still required.
 
 - **Status:** gameplay rules approved by Ianno (@Iannomh123456), 16 Nov 2026. No runtime code, player guide or interface contract has been changed to claim this is live.
-- **Decision:** [D059](../docs/DECISIONS.md#d059--shared-gradual-hp-recovery-and-paid-instant-repair--2026-11-16); T54 issue #120. PRs #127 and #128 are closed unmerged and remain closed.
+- **Decision:** [D059](../docs/DECISIONS.md#d059--shared-gradual-hp-recovery-and-paid-instant-repair--2026-11-16); T54 issue #120. PR #127 remains closed as superseded planning history; [PR #128](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/128) tracks the approved rules and documentation review.
 
 ## Scope and automatic repair
 

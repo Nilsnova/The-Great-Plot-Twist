@@ -5,7 +5,7 @@
 > **Who uses it:** Ianno, the reserved T55–T60 implementers and reviewers. This is planning; no runtime behavior has changed.
 
 - **Status:** gameplay rules approved by Ianno. Technical authority, persistence, ordering, API/version, rollout and implementation acceptance remain to be made concrete and reviewed before T55–T60 start. No runtime implementation has started; future additive state migrations remain possible after technical approval.
-- **Owner:** Ianno (@Iannomh123456); T54 issue #120. PRs #127 and #128 are closed unmerged; keep them closed.
+- **Owner:** Ianno (@Iannomh123456); T54 issue #120. PR #127 remains closed as superseded planning history; [PR #128](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/128) tracks the approved rules and documentation review.
 - **Related records:** [D059](../docs/DECISIONS.md#d059--shared-gradual-hp-recovery-and-paid-instant-repair--2026-11-16), [T33 recovery spec](T33-persistent-tower-damage.md), [OPEN-TODOS §11](../docs/OPEN-TODOS.md#11-unified-defense-recovery--unassigned-follow-ups-16-nov).
 
 ## Approved gameplay rules
