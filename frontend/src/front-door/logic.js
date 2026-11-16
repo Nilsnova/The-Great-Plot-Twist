@@ -96,16 +96,19 @@ const players = count => `${count} ${count === 1 ? 'player' : 'players'}`;
 export function gameLine(game) {
   const host = game?.role === 'host' ? 'Your game' : `${game?.hostName || 'A friend'}'s game`;
   const wave = Number.isSafeInteger(game?.waveBest) && game.waveBest > 0 ? `wave ${game.waveBest}` : 'no wave yet';
-  return {title: host, line: `${game?.code ?? ''} · ${wave} · ${players(Math.max(1, game?.members ?? 1))}`};
+  return {title: host, line: `${game?.code ?? ''}, ${wave}, ${players(Math.max(1, game?.members ?? 1))}`};
 }
 // What the card says: games [{code, hostName, role, waveBest, members}] newest first (GET /api/games).
-export function gamesCopy({games = [], signedOut = false} = {}) {
+// signInFirst: online and signed out, so Create cannot work yet: its button leads to sign-in instead.
+export function gamesCopy({games = [], signedOut = false, signInFirst = false} = {}) {
   const list = Array.isArray(games) ? games.filter(game => game && typeof game.code === 'string') : [];
   const hosting = list.some(game => game.role === 'host');
   return {
     continue: list.length ? {title: 'Continue', games: list.map(game => ({...gameLine(game), code: game.code, raw: game}))} : null,
-    create: {title: 'Create a game', button: 'Create a game',
-      line: hosting ? 'Your island is your game, so Create opens it. Up to 10 players.' : 'Start on your own island. Up to 10 players can join.'},
+    create: signInFirst
+      ? {title: 'Create a game', button: 'Sign in to create a game', line: 'Your own game needs an account. Sign in first, then press Play again.'}
+      : {title: 'Create a game', button: 'Create a game',
+        line: hosting ? 'Your island is your game, so Create opens it. Up to 10 players.' : 'Start on your own island. Up to 10 players can join.'},
     join: {title: 'Join a game', label: 'Game code', button: 'Join',
       line: signedOut ? 'Got a code from a friend? Type it here. You join as a guest.' : 'Got a code from a friend? Type it here.'},
   };

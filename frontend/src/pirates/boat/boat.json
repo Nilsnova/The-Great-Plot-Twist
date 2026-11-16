@@ -1,0 +1,8 @@
+{
+  "about": "The own boat's games (D057, docs/GAME-V3.md section 4.5): once the island's best won wave reaches the 'ship' step of campaign.json (wave 30) and the wreck is repaired, any member sails her out between waves and plays one of these short games. A round ends with 0 to 3 stars; each game pays coins once per player, island and best won wave: stars x (coinsBase + floor(wave / coinsPerWaves)), the wave capped at maxWave. The server reads this file (server/island/boat.py); the browser keeps a copy in frontend/src/pirates/boat/boat.json and a test keeps the two equal.",
+  "games": ["broadside", "dash"],
+  "stars": 3,
+  "coinsBase": 6,
+  "coinsPerWaves": 5,
+  "maxWave": 100
+}

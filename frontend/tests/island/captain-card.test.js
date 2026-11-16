@@ -84,7 +84,7 @@ it('the skill tree: points from won waves, learn, tier order, no points; the wea
   expect(result.linked).toEqual([false, true, false, false, false]);
   expect(result.refused).toMatchObject({ok: false, status: 409, code: 'locked', message: 'Learn Sweep or Heavy blade first.'});
   expect(result.shop).toEqual(['musket:Equipped:true', 'pistols:Buy · 🪙 60:false', 'blunderbuss:Buy · 🪙 120:true', 'long_rifle:Locked:true', 'fire_bombs:Locked:true']);
-  expect(result.bought.toast).toBe('Pistols bought and equipped! You have 🪙 40.');
+  expect(result.bought.toast).toBe('Pistols bought and equipped · 🪙 40');
   expect(result.bought.coins).toBe(40);
   expect(result.bought.rows.slice(0, 2)).toEqual(['musket:Equip:false', 'pistols:Equipped:true']);
   expect(result.bought.loadout).toEqual({level: 1, skills: ['steady_aim'], weapon: 'pistols', colour: 0});

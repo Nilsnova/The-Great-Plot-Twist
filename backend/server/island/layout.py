@@ -5,10 +5,12 @@ stands on it, but it may stand on any free cell of a grid of half units. A spot 
 footprint (2 by 2 units for walls and towers, 3 by 3 for the watchtower and the houses).
 
     load_layout()   reads backend/content/island_layout.json (island_layout() keeps one copy)
-    positions_of()  where each spot stands: its stored position, else its fixed spot (an old save)
+    positions_of()  where each spot stands: its stored position, else its fixed spot (an old save);
+                    a wall off every pirate path stands on the nearest free wall lane cell (D056)
     info_of()       the layout version and whether moving is available, for the island answer
     check_move()    whether one spot may move to one cell; raises MoveRefused with the reason
     route_open()    whether the boarders still find a way from the heart to the beach
+    on_wall_lane()  whether a wall centred on (x, z) stands on a pirate path (D056, "wallLanes")
 
 Used by: service.py (the positions in every island answer) and placement.py (the move route).
 The browser repeats these rules for its preview in frontend/src/island/placement.js.
@@ -72,6 +74,8 @@ class LayoutRules:
     footprints: dict[str, float]
     spots: tuple[LayoutSpot, ...]
     keep_out: tuple[Box, ...]
+    # D056: on row z, a wall may be centred on every grid cell from x0 to x1 (one pair per run).
+    wall_lanes: dict[float, tuple[tuple[float, float], ...]]
 
 
 @dataclass(frozen=True)
@@ -92,6 +96,15 @@ def read_box(row: dict) -> Box:
     return Box(row["id"], row["name"], row["x"], row["z"], row["w"], row["d"])
 
 
+def read_lanes(rows: list) -> dict[float, tuple[tuple[float, float], ...]]:
+    lanes = {}
+    for z, *runs in rows:
+        lanes[float(z)] = tuple(
+            (float(runs[i]), float(runs[i + 1])) for i in range(0, len(runs) - 1, 2)
+        )
+    return lanes
+
+
 def load_layout(path: Path = CONTENT_FILE) -> LayoutRules:
     """Read and check the layout file. Raises LayoutFileError on any mistake."""
     try:
@@ -106,6 +119,7 @@ def load_layout(path: Path = CONTENT_FILE) -> LayoutRules:
             footprints={slot: float(size) for slot, size in data["footprints"].items()},
             spots=tuple(read_spot(row) for row in data["spots"]),
             keep_out=tuple(read_box(row) for row in data["keepOut"]),
+            wall_lanes=read_lanes(data["wallLanes"]["rows"]),
         )
     except (OSError, ValueError, KeyError, TypeError) as error:
         raise LayoutFileError(f"{path.name} cannot be read: {error}") from error
@@ -142,11 +156,72 @@ def spot_named(rules: LayoutRules, spot_id: str) -> LayoutSpot | None:
 
 def positions_of(rules: LayoutRules, stored: dict[str, Position]) -> dict[str, Position]:
     """Every spot's place: the stored one if any, else its fixed spot. An old save stores
-    nothing, so it is converted to the grid as it was (every fixed spot is a grid cell)."""
+    nothing, so it is converted to the grid as it was (every fixed spot is a grid cell).
+    Then settle_walls() puts a wall that stands on no pirate path (D056) on a lane."""
     placed = {}
     for spot in rules.spots:
         placed[spot.spot] = stored.get(spot.spot, (spot.x, spot.z))
-    return placed
+    return settle_walls(rules, placed, stored)
+
+
+def settle_walls(
+    rules: LayoutRules, placed: dict[str, Position], stored: dict[str, Position]
+) -> dict[str, Position]:
+    """D056: every wall stands on a pirate path. A wall off every lane (a wall moved before
+    16 Nov 2026), or one whose new fixed spot another building now covers, stands on the
+    nearest free lane cell instead. Deterministic: towers and houses keep their places, then
+    the moved walls and then the unmoved ones are settled in file order, each on the nearest
+    cell (ties: lower z, then lower x) clear of the fixed buildings and of everything settled
+    before it. Nothing is written: the same stored rows give the same island on every read,
+    and the wall's next move stores a lane cell for good."""
+    walls = [spot.spot for spot in rules.spots if spot.slot == WALL_SLOT]
+    order = [s for s in walls if s in stored] + [s for s in walls if s not in stored]
+    settled = {spot.spot: placed[spot.spot] for spot in rules.spots if spot.slot != WALL_SLOT}
+    out = dict(placed)
+    for spot_id in order:
+        where = placed[spot_id]
+        if not wall_fits(rules, settled, spot_id, where):
+            where = nearest_lane_cell(rules, settled, spot_id, where) or where
+        settled[spot_id] = out[spot_id] = where
+    return out
+
+
+def wall_fits(
+    rules: LayoutRules, others: dict[str, Position], spot_id: str, where: Position
+) -> bool:
+    """A wall may stand at `where` next to `others`: on a lane, on land, clear of everything."""
+    if not on_wall_lane(rules, where[0], where[1]):
+        return False
+    if surface_class(rules, where[0], where[1]) == SEA:
+        return False
+    box = box_of(rules, spot_id, where)
+    if any(overlaps(box, other) for other in rules.keep_out):
+        return False
+    return not any(
+        other_id != spot_id and overlaps(box, box_of(rules, other_id, at))
+        for other_id, at in others.items()
+    )
+
+
+def lane_cells(rules: LayoutRules) -> list[Position]:
+    cells = []
+    for z, runs in rules.wall_lanes.items():
+        for first, last in runs:
+            steps = round((last - first) / rules.grid)
+            cells.extend((first + i * rules.grid, z) for i in range(steps + 1))
+    return cells
+
+
+def nearest_lane_cell(
+    rules: LayoutRules, others: dict[str, Position], spot_id: str, where: Position
+) -> Position | None:
+    def far(cell: Position) -> tuple[float, float, float]:
+        return ((cell[0] - where[0]) ** 2 + (cell[1] - where[1]) ** 2, cell[1], cell[0])
+
+    for cell in sorted(lane_cells(rules), key=far):
+        if wall_fits(rules, others, spot_id, cell):
+            return cell
+    return None
 
 
 def place_spots(rules: LayoutRules, spots: tuple, stored: dict[str, Position] | None) -> tuple:
@@ -177,6 +252,11 @@ def box_of(rules: LayoutRules, spot_id: str, where: Position) -> Box:
 # --- the rules of a move ---
 
 
+def on_wall_lane(rules: LayoutRules, x: float, z: float) -> bool:
+    """D056: a wall centred on (x, z) stops boarders on their way to the heart."""
+    return any(first <= x <= last for first, last in rules.wall_lanes.get(float(z), ()))
+
+
 def on_grid(rules: LayoutRules, value: float) -> bool:
     return abs(value) <= MAX_UNITS and (value / rules.grid).is_integer()
 
@@ -198,13 +278,16 @@ def check_move(
     rules: LayoutRules, positions: dict[str, Position], spot_id: str, x: float, z: float
 ) -> None:
     """Raise MoveRefused when `spot_id` may not stand at (x, z). The first failing rule wins:
-    404 no_such_spot, 422 off_grid, 409 not_on_land, 409 place_taken, 409 blocks_route."""
+    404 no_such_spot, 422 off_grid, 409 not_on_land, 409 off_path (a wall off every pirate
+    path, D056), 409 place_taken, 409 blocks_route."""
     if spot_named(rules, spot_id) is None:
         raise MoveRefused(404, "no_such_spot", "There is no such build spot.")
     if not (on_grid(rules, x) and on_grid(rules, z)):
         raise MoveRefused(422, "off_grid", "Pick a square of the build grid.")
     if surface_class(rules, x, z) == SEA:
         raise MoveRefused(409, "not_on_land", "Buildings stand on land, not in the sea.")
+    if spot_named(rules, spot_id).slot == WALL_SLOT and not on_wall_lane(rules, x, z):
+        raise MoveRefused(409, "off_path", "Walls go on a pirate path.")
     moved = box_of(rules, spot_id, (x, z))
     for other in rules.keep_out:
         if overlaps(moved, other):

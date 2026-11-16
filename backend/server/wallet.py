@@ -106,6 +106,10 @@ WALLET_REASONS = (
     ("captain_respec", SPEND),
     # Added by supabase/migrations/20261115130000_tower_skill_price.sql (D051: a tower's skill).
     ("tower_skill", SPEND),
+    # Added by supabase/migrations/20261116020000_tower_trees.sql (D055: a tier of a tower's tree).
+    ("tower_tree", SPEND),
+    # Added by supabase/migrations/20261116040000_boat_games.sql (D057: the own boat's games).
+    ("boat_game", EARN),
 )
 
 

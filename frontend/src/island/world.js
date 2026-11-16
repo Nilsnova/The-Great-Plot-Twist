@@ -7,12 +7,12 @@ import * as THREE from 'three';
 import {artSizes, loadArt, placeArt, projectPoint} from '../world/art.js';
 import {pixelSizes} from '../pixel/catalog.js';
 import {SPOTS as ISLAND_SPOTS, CABIN, BELL, CAMPAIGN_BUILDINGS, ARSENAL, islandZones, placedSpot} from './spots.js';
-import {makeFootprint} from './move-preview.js';
+import {makeFootprint, makeWallLanes} from './move-preview.js';
 import {isOpen, spotWave, waveOf} from '../campaign/index.js';
 import {LOCK_WAVES} from '../art/campaign.js';
 import {SLOT_KINDS} from './td-rules.js';
 import {ROLE_IDS, activeRole, roleRadius} from '../campaign/houses.js';
-import {CULVERIN_ART, HARPOON_ART, TIER_ART, crewArt, pipRow, pirateLevels} from '../pixel/pirate-catalog.js';
+import {CULVERIN_ART, HARPOON_ART, SWIVEL_ART, TIER_ART, crewArt, pipRow, pirateLevels} from '../pixel/pirate-catalog.js';
 import {islandFrame} from '../art/registry.js';
 import {frameCanvas, smoothTexture, spriteMaterial} from '../art/textures.js';
 import {clickVerdict, WALK_CLOSER} from '../world/reach.js';
@@ -33,6 +33,7 @@ export const catalogArt = (kind, sizes = pixelSizes) => (ART_CANDIDATES[kind] ??
 const tiered = kind => [...pirateLevels[kind], ...TIER_ART[kind]];
 export const LEVEL_ART = Object.freeze({wall: tiered('wall'), cannon: tiered('cannon'), mortar: tiered('mortar'), harpoon: HARPOON_ART.levels,
   culverin: CULVERIN_ART.levels, // T43 (D048 proposed): only an island answer with the flag defenses_v2 on has one
+  swivel: SWIVEL_ART.levels, // D055: the swivel-gun nest
   watchtower: ['island-watchtower', 'island-watchtower', 'island-watchtower', 'island-watchtower-l4', 'island-watchtower-l5'], house: ['island-house']});
 export const PIP_ART = 'fx-level-pip';
 export const PIP_TIER_ART = 'fx-level-pip-gold';
@@ -84,11 +85,13 @@ export function crewPlaces(spots = [], crew = {}, {bell = null} = {}) {
 
 // The drawn stand-ins (until the level art has loaded), the bell, the build ring and the kind badges:
 // clean cartoon frames (src/art/island.js) painted once into smooth textures.
-const DRAWN = {wall: 'island-wall', cannon: 'island-cannon', mortar: 'island-mortar', harpoon: 'island-harpoon', culverin: 'island-culverin', watchtower: 'island-watchtower', house: 'island-house', bell: 'island-bell'};
+const DRAWN = {wall: 'island-wall', cannon: 'island-cannon', mortar: 'island-mortar', harpoon: 'island-harpoon', culverin: 'island-culverin', swivel: 'island-swivel', watchtower: 'island-watchtower', house: 'island-house', bell: 'island-bell'};
 function drawn(name) {
   const [width, height, anchor] = islandFrame(name);
   return {texture: smoothTexture(frameCanvas(name)), size: [width, height], anchor};
 }
+// How near (world units) the captain stands for a build marker to glow at full strength; farther ones fade to MARKER_FAR.
+export const MARKER_NEAR = 9, MARKER_FAR = .4;
 function sprite(group, {texture, size: [width, height], anchor = 0}, x, z, name) {
   const material = spriteMaterial(texture);
   const geometry = new THREE.PlaneGeometry(width / UNIT, height / UNIT); geometry.translate(0, (height / 2 - anchor) / UNIT, 0);
@@ -224,6 +227,8 @@ export function decorateIsland(place, ctx = {}) {
   let state = {spots: [], visitor: false, battle: false, unlocks: null, crew: null, campaign: null, arsenal: false}, disposed = false;
   let preview = null;
   const footprint = makeFootprint(root);
+  // D056: while a wall is moved, the cells where a wall stops pirates glow (home island only).
+  const wallLanes = layout.zones === islandZones ? makeWallLanes(root) : null;
   // Where a spot stands now: the cell of a move under way, the answer's x/z, else its fixed spot (Pirate Point's stay).
   const whereOf = spot => {
     if (preview?.spotId === spot.id) return {x: preview.x, z: preview.z};
@@ -282,6 +287,7 @@ export function decorateIsland(place, ctx = {}) {
       const answer = spots.find(item => item.id === spot.id), built = answer?.built === true, where = whereOf(spot);
       const marker = markers.get(spot.id);
       for (const mesh of [marker.ring, marker.badge, marker.lock, marker.lockRing]) moveSprite(mesh, where.x, where.z);
+      marker.x = where.x; marker.z = where.z;
       for (const kind of kindsOf(spot)) moveSprite(buildings.get(`${spot.id}:${kind}`), where.x, where.z);
       // Locked things stay on the map (GAME-V3.md §4): a spot the campaign opens later, or whose kind is not
       // open yet, shows a lock badge instead of the glowing ring.
@@ -364,16 +370,28 @@ export function decorateIsland(place, ctx = {}) {
       if (disposed) return;
       preview = next && Number.isFinite(next.x) && Number.isFinite(next.z) ? {...next} : null;
       footprint.show(preview);
+      wallLanes?.show(preview && SPOTS.find(spot => spot.id === preview.spotId)?.slot === 'wall');
       apply(state);
     },
     get previewing() { return preview ? {...preview} : null; },
+    get wallLanesShown() { return !!wallLanes?.shown; },
     ring() { ringing = 1.2; },
     update(dt, time = 0) {
       if (disposed) return;
       rangeRing.show(ctx.range?.() ?? null, reduced() ? 0 : time);
       const still = reduced();
       const glow = still ? 1 : .7 + .3 * Math.sin(time * 3.2), bob = still ? 0 : Math.sin(time * 2.4) * 2.4 / UNIT;
-      for (const marker of markers.values()) { marker.ring.material.opacity = glow; marker.badge.position.y = marker.badge.userData.baseY + bob; }
+      // Calm markers (owner, 15 Nov: "limit the visual overload"): only the spots near the captain glow and bob;
+      // the others stay on the map as faint, still rings and badges, so a dozen gold "+" never shout at once.
+      const at = ctx.player?.() ?? null;
+      for (const marker of markers.values()) {
+        const near = !at || !Number.isFinite(marker.x) || Math.hypot(at.x - marker.x, at.z - marker.z) <= MARKER_NEAR;
+        const target = near ? 1 : MARKER_FAR;
+        marker.fade = still || marker.fade === undefined ? target : marker.fade + (target - marker.fade) * Math.min(1, dt * 6);
+        marker.ring.material.opacity = (near ? glow : 1) * marker.fade;
+        for (const mesh of [marker.badge, marker.lock, marker.lockRing]) mesh.material.opacity = marker.fade;
+        marker.badge.position.y = marker.badge.userData.baseY + (near ? bob : 0);
+      }
       if (!bell) return;
       if (ringing > 0 && !still) { ringing = Math.max(0, ringing - dt); bell.rotation.z = Math.sin(ringing * 18) * .12 * ringing; }
       else bell.rotation.z = 0;

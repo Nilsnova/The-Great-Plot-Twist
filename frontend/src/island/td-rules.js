@@ -19,6 +19,10 @@ export const BUILDINGS = Object.freeze({
   // The harpoon tower (GAME-V3.md §5, T1): opens after wave 12. Its stats are CONFIG.levels.harpoon (slow in percent).
   harpoon: Object.freeze({name: 'Harpoon tower', line: 'Slows one ship at a time with a rope harpoon.', price: [40, 80, 160, 320, 640],
     stats: [{damage: 2, range: 30, slow: 25}, {damage: 3, range: 32, slow: 30}, {damage: 4, range: 34, slow: 35}, {damage: 5, range: 36, slow: 40}, {damage: 7, range: 38, slow: 45}]}),
+  // The swivel-gun nest (D055): a short, fast gun that sprays pellets at boarders on the island only. Opens after
+  // wave 9 (levels 4 and 5 after 15 and 20). Its stats are CONFIG.levels.swivel of sim.js (damage per pellet).
+  swivel: Object.freeze({name: 'Swivel-gun nest', line: 'Sprays pellets at boarders on the island. Never at ships.', price: [50, 100, 200, 400, 800],
+    stats: [{damage: 3, range: 13, pellets: 3}, {damage: 4, range: 14, pellets: 3}, {damage: 6, range: 15, pellets: 3}, {damage: 8, range: 16, pellets: 3}, {damage: 10, range: 17, pellets: 3}]}),
   // The culverin (T43, decision D048 proposed): a long gun, offered only while the flag defenses_v2 is on
   // (towerKinds() in ./defenses-v2.js). Prices, levelWaves and the line repeat backend/content/defenses_v2.json, which
   // the server merges into the island only with the flag; the stats are the sim's (src/pirates/defenses-v2.js).
@@ -35,7 +39,7 @@ export const BUILDINGS = Object.freeze({
 export const maxLevel = kind => BUILDINGS[kind]?.price.length ?? 1;
 // The kinds a spot of each slot accepts (§2): a tower spot takes a cannon, a mortar or (after wave 12) a harpoon tower,
 // chosen once. Pirate Point's tower spots take the first two only (POINT_TOWER_KINDS).
-export const SLOT_KINDS = Object.freeze({wall: ['wall'], tower: ['cannon', 'mortar', 'harpoon'], watchtower: ['watchtower'], house: ['house']});
+export const SLOT_KINDS = Object.freeze({wall: ['wall'], tower: ['cannon', 'mortar', 'harpoon', 'swivel'], watchtower: ['watchtower'], house: ['house']});
 
 export const POINT_TOWER_KINDS = Object.freeze(['cannon', 'mortar']);
 
@@ -78,13 +82,13 @@ export const UNLOCK_NEWS = Object.freeze(Object.fromEntries(CAMPAIGN_STEPS.filte
 export {opensText};
 
 // The unlocks for a won wave, as one plain object:
-//   {wonWave, levels: {wall, cannon, mortar, harpoon, culverin, watchtower, house}, captain, crew: {gunner, carpenter, lookout, guard}, next}
+//   {wonWave, levels: {wall, cannon, mortar, harpoon, swivel, culverin, watchtower, house}, captain, crew: {gunner, carpenter, lookout, guard}, next}
 // (a kind outside the campaign table, the culverin, opens by its own levelWaves, as unlockWave() reads them: a
 // visitor's card reads a friend's island through this table, and the server allows what that island has won)
 // levels[kind] 0 = locked; crew[id] true = may hire; next = {wave, title} of the next step or null.
 export function unlocksFor(wonWave = 0) {
   const won = Number.isSafeInteger(wonWave) && wonWave > 0 ? wonWave : 0;
-  const levels = {wall: 0, cannon: 0, mortar: 0, harpoon: 0, culverin: 0, watchtower: 0, house: 0}, crew = {gunner: false, carpenter: false, lookout: false, guard: false};
+  const levels = {wall: 0, cannon: 0, mortar: 0, harpoon: 0, swivel: 0, culverin: 0, watchtower: 0, house: 0}, crew = {gunner: false, carpenter: false, lookout: false, guard: false};
   let captain = 1, next = null;
   for (const step of UNLOCK_STEPS) {
     if (step.wave > won) { next ??= {wave: step.wave, title: UNLOCK_NEWS[step.wave]?.title ?? ''}; continue; }
@@ -116,7 +120,7 @@ export function readUnlocks(island) {
   const base = unlocksFor(won);
   const locked = sent?.locked && typeof sent.locked === 'object' ? {...sent.locked} : {};
   if (!Array.isArray(sent?.unlocked)) return {...base, locked};
-  const levels = {wall: 0, cannon: 0, mortar: 0, harpoon: 0, culverin: 0, watchtower: 0, house: 0}, crew = {gunner: false, carpenter: false, lookout: false, guard: false};
+  const levels = {wall: 0, cannon: 0, mortar: 0, harpoon: 0, swivel: 0, culverin: 0, watchtower: 0, house: 0}, crew = {gunner: false, carpenter: false, lookout: false, guard: false};
   let captain = 1;
   for (const id of sent.unlocked) {
     if (typeof id !== 'string') continue;
@@ -152,7 +156,7 @@ export function priceFor(kind, level, prices = null) {
   return BUILDINGS[kind]?.price[level] ?? null;
 }
 // "Damage 10 → 16 · Range 28 → 31" or "Hp 60 → 120": what an upgrade gives.
-const STAT_NAMES = {damage: 'Damage', range: 'Range', hp: 'Strength', loot: 'Loot', boost: 'Tower damage', slow: 'Slows'};
+const STAT_NAMES = {damage: 'Damage', range: 'Range', hp: 'Strength', loot: 'Loot', boost: 'Tower damage', slow: 'Slows', pellets: 'Pellets'};
 export function statLine(kind, level, nextLevel = null) {
   const now = BUILDINGS[kind]?.stats[level - 1], then = nextLevel ? BUILDINGS[kind]?.stats[nextLevel - 1] : null;
   if (!now) return '';

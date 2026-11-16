@@ -154,7 +154,7 @@ def test_flag_on_island_answer_lists_and_locks_the_culverin():
     assert body["unlocks"]["locked"]["culverin:1"] == 15
     assert body["unlocks"]["locked"]["culverin:5"] == 30
     shown = next(spot for spot in body["spots"] if spot["id"] == "cannon_5")
-    assert shown["kinds"] == ["cannon", "mortar", "harpoon", "culverin"]
+    assert shown["kinds"] == ["cannon", "mortar", "harpoon", "swivel", "culverin"]
     locked = early.build(spot="cannon_5", kind="culverin")
     assert_error(locked, 409, "locked")
     assert locked.json()["error"]["message"] == "Opens after wave 15."

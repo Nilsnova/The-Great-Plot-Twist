@@ -22,6 +22,8 @@ are in supabase/migrations/20261110010000_islands_and_waves.sql:
                                                (20261112050000_captain_revive.sql)
     island_demolish_quote, island_demolish     tear a building down between waves, half of what
                                                each payer paid back (20261112080000_demolish.sql)
+    island_tower_tree(...)                     one tier of a level-5 tower's upgrade tree, paid by
+                                               the clicker (20261116020000_tower_trees.sql, D055)
 
 A build goes through islet_build() of the home islet (islet_store.py) with a timber price of 0.
 
@@ -77,6 +79,9 @@ class BuildingRow(BaseModel):
     building_type: StrictStr
     level: StrictInt
     spec: StrictStr | None = None
+    # D055 (20261116020000_tower_trees.sql): the tiers bought on the two paths of its tree.
+    tree_a: StrictInt = 0
+    tree_b: StrictInt = 0
 
 
 class ResearchRow(BaseModel):
@@ -303,7 +308,7 @@ async def find_island(admin: SupabaseAdmin, code: str) -> Island | None:
 async def read_built_spots(admin: SupabaseAdmin, player_id: str) -> dict[str, Built]:
     """{plot: Built(kind, level)} of every building that stands on the player's island."""
     query = {
-        "select": "plot,building_type,level,spec",
+        "select": "plot,building_type,level,spec,tree_a,tree_b",
         "player_id": f"eq.{player_id}",
         "order": "plot.asc",
         "limit": str(MAX_BUILDING_ROWS),
@@ -312,7 +317,9 @@ async def read_built_spots(admin: SupabaseAdmin, player_id: str) -> dict[str, Bu
     built = {}
     for row in rows:
         checked = read_model(BuildingRow, row)
-        built[checked.plot] = Built(checked.building_type, checked.level, checked.spec)
+        built[checked.plot] = Built(
+            checked.building_type, checked.level, checked.spec, checked.tree_a, checked.tree_b
+        )
     return built
 
 
