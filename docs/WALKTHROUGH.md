@@ -1504,3 +1504,24 @@ the real run, run twice, must leave only the musket. They run on a throwaway loc
 Postgres, never on the live project, so they do not prove what the live data looks
 like. The script is run by hand by the project owner; no code calls it. If the old
 columns are dropped one day, this step and its count can be deleted again.
+
+## 32. A paid wall repair survives a delayed wave record — Ianno Hollensteiner (#82)
+
+Wall health is reported by the first participant to finish an island wave. The finish is already settled
+before that best-effort record reaches the database. If a paid repair commits in between, the delayed
+record must not damage the repaired wall again.
+
+The new migration adds `islet_buildings.wall_restored_at`. The restore function stamps it while it holds
+the wall row lock; the record function reads the wave's `starts_at`, locks the reported walls in plot
+order, and skips a wall restored after that wave began. Repair still takes locks in wallet → building
+order, and recording never takes a wallet lock. The normal one-record-per-wave guard and server-only
+function permissions remain in place.
+
+**Tests.** `backend/server/tests/island_sql/test_wall_recovery_sql.py` reproduces the old failure: a
+previous report damages a wall, the next wave finishes, the paid repair restores it, then that wave's
+delayed report arrives. It also checks a later wave, the equality boundary and both record/restore lock
+orderings with two connections, alongside ordinary damage, repair cost and duplicate behavior. The test
+runs against disposable local PostgreSQL with every migration applied twice.
+
+**Limits.** This fence protects a paid restore from a report belonging to a wave that started earlier.
+It does not validate the health a modified client reports or order arbitrary stale reports from other waves.

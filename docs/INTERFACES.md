@@ -1735,7 +1735,8 @@ With `tower_health` the room's `repair` / `rebuild` messages may name a tower in
 [D039](DECISIONS.md#d039--wall-recovery-damage-stays-after-a-wave--2026-11-14) (proposed) and
 [the spec](../specs/T29-T32-wall-recovery.md); only while the flag `wall_recovery` is on
 (404 `feature_off` otherwise). Route contracts: `backend/server/routes/wall_recovery.py` and
-`backend/server/routes/waves.py`; tables and functions: migration `20261114100000_wall_recovery.sql`.
+`backend/server/routes/waves.py`; tables and functions: migration `20261114100000_wall_recovery.sql`,
+with paid-restore race protection in `20261115150000_wall_restore_record_fence.sql`.
 
 - `GET /api/island/walls?code=` → `{coins, walls: [{spot, level, health, recoversAt, repairCost}]}`;
   health in percent (0 destroyed, 100 whole), `recoversAt` UTC or null, `repairCost` the caller's
@@ -1748,8 +1749,8 @@ With `tower_health` the room's `repair` / `rebuild` messages may name a tower in
 - `POST /api/waves/finish`: optional `walls: {wall_N: 0..100}` (at most 24); the first finish of an
   island wave keeps them, each capped at the health that wall started the wave with (a finish can only
   damage a wall, never heal or add one; an in-wave E repair helps only in that wave). Recording is best
-  effort: a database failure is logged and the already-paid finish still answers 200. Ignored while the
-  flag is off.
+  effort: a database failure is logged and the already-paid finish still answers 200. A delayed report
+  from a wave started before a successful paid restore is ignored. Ignored while the flag is off.
 - `POST /api/island/upgrade`: `409 needs_repair` for a damaged or destroyed wall.
 - `wave_started_server` on the game's bus may carry the same `walls` object.
 
