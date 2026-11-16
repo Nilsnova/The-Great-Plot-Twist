@@ -34,3 +34,11 @@ export function startPlace({mode, destination = 'saltreach_harbor', classHarbor 
   if (visiting) return 'home_islet';
   return classHarbor ? PIRATE_POINT : 'home_islet';
 }
+
+// T51: what stands behind the front door (the Play card, How to play) before the player is on a game's island.
+// With the island game on (or still being decided), open water only: no harbor, no buildings, no people.
+// With the islands off, the old start in the harbor stays. A chosen game shows its island ('island').
+export function frontScene({mode = null, game = false} = {}) {
+  if (mode === 'off') return 'harbor';
+  return game ? 'island' : 'water';
+}

@@ -10,6 +10,7 @@
 //   all_fallen          every captain is down (variant)       heart_low          the heart below 30% (variant)
 //   house_role          the first house role picked on an island (once; GAME-V3.md "Houses")
 //   wave_event:ID       a wave event's first time (once)      finisher_start|won|failed:KIND  a boss finisher
+//   guide:STEP          a step of the guided start (T52, once)
 // A line may list `covers` (other triggers it also answers): wave_5 is also the first boss.
 
 import {STEPS} from '../campaign/index.js';
@@ -47,6 +48,8 @@ export const RULES = Object.freeze({
   finisher_start: {once: false, priority: HIGH, ttl: 4000},
   finisher_won: {once: false, priority: HIGH, ttl: 5000},
   finisher_failed: {once: false, priority: HIGH, ttl: 5000},
+  // T52: the guided start of a new island (guide:<step>, src/tutorial/tutorials.js), once per island game.
+  guide: {once: true, priority: NORMAL, ttl: 15000},
 });
 const VARIANTS = new Set(['game_welcome_back', 'player_fell', 'player_revived', 'all_fallen', 'heart_low', 'wave_lost', 'wave_won']);
 const LINE_ID = /^[a-z0-9_]{1,48}$/;
@@ -139,6 +142,8 @@ export function createMemory(storage, {now = () => Date.now()} = {}) {
   return {
     told(key) { return new Set(data.games[key]?.told ?? []); },
     known(key) { return (data.games[key]?.told?.length ?? 0) > 0; },
+    // T53: an island reset to a fresh start is a new game: what was told there is forgotten.
+    forget(key) { if (Object.hasOwn(data.games, key)) { delete data.games[key]; save(); } },
     mark(key, ids) {
       const entry = game(key), set = new Set(entry.told);
       for (const id of ids) if (typeof id === 'string' && id) set.add(id);

@@ -11,7 +11,7 @@ import { ISLANDS } from './balance-fixture.js';
 const START = Date.parse('2026-11-12T12:00:00Z');
 const INFO = { waveId: 'w-5', wave: 5, seed: 7, startsAt: new Date(START).toISOString(), weather: {}, boss: true };
 
-function harness({ play = true, info = INFO } = {}) {
+function harness({ play = true, info = INFO, sceneFails = false } = {}) {
   const clock = { now: START }, sent = [], bus = [], events = [], scenes = [], arts = [];
   const room = { send: (type, payload) => { sent.push({ type, payload, at: clock.now }); return true; }, on: () => () => {} };
   const hud = { countdown() {}, bar() {}, banner() {}, setVisible() {}, dispose() {}, musket() {}, loot() {}, boss() {}, prompt() {}, health() {},
@@ -24,6 +24,7 @@ function harness({ play = true, info = INFO } = {}) {
     createEventArt: options => { const art = { options, updates: 0, events() {}, update() { art.updates++; }, setVisible() {}, dispose: vi.fn() }; arts.push(art); return art; },
     // A scene that plays the haul perfectly through the recorder (like a player keeping the needle in the zone).
     createFinisherScene: options => {
+      if (sceneFails) return Promise.reject(new Error('scene failed to load'));
       options.onReady(); // This fixture skips practice; readiness is still sent through the real controller.
       const scene = { options, updates: 0, element: {}, dispose: vi.fn(), update({ finisher: f }) {
         scene.updates++;
@@ -91,6 +92,16 @@ describe('a boss finisher in the controller', () => {
     expect(h.finishWave.mock.calls[0][0]).toMatchObject({ waveId: INFO.waveId, survived: true, bonuses: ['finisher'] });
   });
 
+  it('a scene that fails to load still reports ready, so the crew is not held for the whole preparation time', async () => {
+    const quiet = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const h = harness({ sceneFails: true });
+    h.controller.start(INFO);
+    for (let i = 0; i < 120 && !h.controller.state?.finisher; i++) await h.advance(1000);
+    await h.advance(2000);
+    expect(h.sent.some(item => item.type === 'finisher_ready')).toBe(true);
+    expect(quiet).toHaveBeenCalled();
+    quiet.mockRestore();
+  });
   it('a player who does nothing loses it: the boss breaks free and no bonus is asked for', async () => {
     const h = harness({ play: false });
     h.controller.start(INFO);

@@ -969,6 +969,13 @@ More languages (a text and a voice per language); lines by captain role; a check
 2. **Where is the API key?** In a private file in the home folder, mode 600, outside the repository. The script reads it only when it runs.
 3. **What if a voice file is missing?** The caption shows for a reading time and the game goes on.
 
+### The guided start and the unlock cards (T52)
+- **Guided start.** On a new island at wave 0, after the intro, the goals strip shows seven steps instead of the goals: walk, open a build spot (E or Use), build a cannon, open the Menu or a goal, ring the bell, fire the musket in wave 1 and, if boarders land, swing the cutlass. Each step waits for the real action; a caption panel under the strip says what to do, a gold ring (or an arrow at the screen's edge) marks the target. Skip step and Skip tutorial; stored per island code (`tgpt:tutorials:v1`), so it never comes back on that island. The steps live in [first-quests.js](../frontend/src/ui/first-quests.js) (`GUIDE_STEPS`) with the goals and use the same bus events, so building the cannon also ticks the goal "Build a cannon". Host: [tutorial/tutorials.js](../frontend/src/tutorial/tutorials.js); overlay [tutorial/coach.js](../frontend/src/tutorial/coach.js).
+- **Unlock cards.** When an island's best wave goes up, one short card per new thing (what it is, how to use it, Show me) waits for the break and shows once per island. The words are one table next to the campaign table, [campaign/tutorials.json](../frontend/src/campaign/tutorials.json) (41 cards); a test fails if a campaign id has no card. Show me moves the camera there for a moment (not with reduced motion: only the ring).
+- **Who gets what.** Each player on their own screen. A friend who first sees an island past wave 0 never gets the guide, only the cards for things this device never saw. Nothing starts without an island the player owns or joined ([tutorial/gate.js](../frontend/src/tutorial/gate.js)): the front door's intro and goal card, the arrival, the narrator's opening and the goals strip wait for it too.
+- Settings › **Tutorials** (on by default) and **Replay the guided start**. New caption lines: `guide_shoot`, `guide_cutlass`, `unlock_swivel`, `unlock_research_3`, `unlock_tree_2`, `unlock_tree_3`, `unlock_final_battle` (no voice files yet).
+- Tests: [tests/tutorial/](../frontend/tests/tutorial/) (steps on real actions, skip and never again, the cards, the friend rule, no island no tutorial).
+
 ## 27. The cartoon art drawn in code
 
 ### What it does
@@ -1036,6 +1043,9 @@ Everything a player cannot be trusted with lives here: coins, prices, unlocks, w
 - **Each stored text is checked by md5** against the repository file, and the version is recorded ([RELEASE-CHECKLIST.md](RELEASE-CHECKLIST.md), [OPEN-TODOS.md](OPEN-TODOS.md) section 7). Locally: `md5 -q supabase/migrations/<file>.sql`. I did not run the live comparison: the exact query on the Supabase side is not in the repository, so I cannot name it.
 - **An applied file is never edited.** The live text must stay byte-identical to the file. A fix is a new file, as `20261113010000` is for `20261112120000` and `20261112100000`.
 - Before applying, the SQL tests apply all files twice to a throwaway Postgres.
+
+### Reset my island (T53)
+`island_fresh_start()` in [20261116070000_island_fresh_start.sql](../supabase/migrations/20261116070000_island_fresh_start.sql) is the one v3 function that deletes a whole island's progress. It follows the house style: wallet locked first, then the island row; only the owner's own island; the island code must be typed; refused while a wave runs; one `island_resets` row per click, so a repeat answers the first counts. Because it is `security invoker`, the server needed `delete` on the seven tables it clears; the waves' participants and revives go by cascade, which runs with the table owner's rights. Members, the ledger and the island code stay. Tests: [test_island_fresh_start_sql.py](../backend/server/tests/island_sql/test_island_fresh_start_sql.py).
 
 ### Why it was built this way
 - **The browser is not trusted** ([D003](DECISIONS.md)). A rule in the database holds even if the Python has a bug.

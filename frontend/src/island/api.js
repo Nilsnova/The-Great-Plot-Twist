@@ -21,6 +21,7 @@
 //   await api.demolishQuote({spot, code?});            // GET  /api/island/demolish   (GAME-V3.md §4.2: who gets what back)
 //   await api.demolish({spot, code?});                 // POST /api/island/demolish   (between waves; half back to each payer)
 //   await api.move({spot, x, z, code?});               // POST /api/island/move       (T36: a spot to a cell of the build grid, free)
+//   await api.freshStart({confirmCode});               // POST /api/island/fresh-start (T53: reset your own island, between waves)
 //   await api.piratePoint();                          // GET  /api/pirate-point       (§5)
 //   await api.pointBuild({spot, kind}) / api.pointUpgrade({spot})   // POST /api/pirate-point/build|upgrade
 //   await api.joinInvite('ISLE-K7Q2M');               // POST /api/island/invite/join (§6)
@@ -64,6 +65,8 @@ export const PATHS = Object.freeze({
   demolishQuote: (spot, code) => `/api/island/demolish?spot=${encodeURIComponent(spot)}${code ? `&code=${encodeURIComponent(code)}` : ''}`,
   // D057: the island's own boat (after wave 30): whether she sails and which games paid, and one round's reward.
   boat: code => `/api/island/boat${code ? `?code=${encodeURIComponent(code)}` : ''}`, boatReward: '/api/island/boat',
+  // T53: reset your own island to a fresh start (Settings).
+  freshStart: '/api/island/fresh-start',
 });
 export const CREW_IDS = Object.freeze(['gunner', 'carpenter', 'lookout', 'guard']);
 export const MESSAGES = Object.freeze({
@@ -83,6 +86,7 @@ export const MESSAGES = Object.freeze({
   badGift: 'Pick one of the amounts shown.',
   badBoat: 'There is no such boat game.',
   badCell: 'Pick a square of the build grid.',
+  badConfirm: "Type your island's code, like ISLE-K7Q2M.",
 });
 const isCount = value => Number.isSafeInteger(value) && value >= 0;
 const isText = value => typeof value === 'string' && value.length > 0 && value.length <= 200;
@@ -171,6 +175,12 @@ export const isBoatReward = data => !!data && isText(data.game) && isCount(data.
 // --- failures ------------------------------------------------------------------------------------
 // One failure shape from whatever the transport gave: online/api.js already flattens the server's
 // nested error; a raw answer still carries it under data.error (or error).
+// T53: the answer of a reset, {reset: true, repeat, balance, counts: {buildings, waves, ...}}.
+const FRESH_COUNTS = ['saves', 'buildings', 'research', 'layout', 'arsenalMoves', 'arsenalCopies', 'wallRecords', 'waveRules', 'waves', 'membersKept'];
+export function isFreshStart(data) {
+  return !!data && data.reset === true && typeof data.repeat === 'boolean' && isCount(data.balance) && !!data.counts &&
+    Number.isSafeInteger(data.counts.coins) && FRESH_COUNTS.every(key => isCount(data.counts[key]));
+}
 export function readFailure(result) {
   const nested = result?.data?.error ?? result?.error ?? null;
   const status = Number.isInteger(result?.status) ? result.status : 0;
@@ -343,6 +353,12 @@ export function createIslandApi({transport, makeUid = makeActionUid} = {}) {
       if (![x, z].every(value => Number.isFinite(value) && Number.isInteger(value * 2))) return refuse(422, 'off_grid', MESSAGES.badCell);
       if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
       return askSpots(() => transport.post(PATHS.move, {spot: sent(spot), x, z, ...(where ? {code: where} : {})}), where ? hasSpots : isIsland);
+    },
+    // T53: reset your own island (Settings), between waves, after typing its code. The click id makes a
+    // retry after an unknown outcome safe: the server answers the first reset and never resets twice.
+    freshStart({confirmCode} = {}) {
+      if (!islandCode(confirmCode ?? '')) return refuse(400, 'wrong_code', MESSAGES.badConfirm);
+      return write('fresh-start', actionUid => transport.post(PATHS.freshStart, {confirmCode: displayIslandCode(confirmCode), actionUid}), isFreshStart);
     },
     // D039 (flag wall_recovery): every built wall's health, timer and Repair price; a Repair or Rebuild.
     walls({code = null} = {}) {

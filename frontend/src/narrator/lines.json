@@ -90,6 +90,13 @@
     {"id": "finisher_duel_failed", "trigger": "finisher_failed:duel", "priority": 3, "voice": "narrator", "text": "Driven back! Her crew holds the deck. Hit her again."},
     {"id": "finisher_redtide_start", "trigger": "finisher_start:redtide", "priority": 2, "voice": "narrator", "text": "Redtide's own ship is breaking. Chain, cannon and cutlass: bring her down!"},
     {"id": "finisher_redtide_won", "trigger": "finisher_won:redtide", "priority": 3, "voice": "narrator", "text": "Redtide's flagship goes under. The old pirate swims off, shouting."},
-    {"id": "finisher_redtide_failed", "trigger": "finisher_failed:redtide", "priority": 3, "voice": "narrator", "text": "Redtide laughs and breaks free. One more push, captains!"}
+    {"id": "finisher_redtide_failed", "trigger": "finisher_failed:redtide", "priority": 3, "voice": "narrator", "text": "Redtide laughs and breaks free. One more push, captains!"},
+    {"id": "guide_shoot", "trigger": "guide:shoot", "priority": 2, "voice": "narrator", "text": "Don't leave it all to the cannon, captain. Click toward a ship, or press F, and fire your musket."},
+    {"id": "guide_cutlass", "trigger": "guide:cutlass", "priority": 2, "voice": "narrator", "text": "Boarders on the sand! Walk right up to one and press F. Your cutlass does the rest."},
+    {"id": "unlock_swivel", "trigger": "wave_unlock:9", "priority": 2, "voice": "narrator", "text": "A swivel gun for a tower spot. It sprays the boarders on your sand and leaves the ships to the cannons."},
+    {"id": "unlock_research_3", "trigger": "wave_unlock:25", "priority": 3, "voice": "narrator", "text": "The Tech hub has its biggest secrets ready. Pick one great skill for each kind of tower."},
+    {"id": "unlock_tree_2", "trigger": "wave_unlock:35", "priority": 3, "voice": "narrator", "text": "Your best towers can climb higher in their trees now. Faster, or harder hitting: choose."},
+    {"id": "unlock_tree_3", "trigger": "wave_unlock:45", "priority": 3, "voice": "narrator", "text": "The top of the tower trees is open. One path to the very top for each tower."},
+    {"id": "unlock_final_battle", "trigger": "wave_unlock:99", "priority": 2, "voice": "narrator", "text": "Ninety-nine waves. Redtide himself is coming next. Make every tower as strong as it can be."}
   ]
 }
