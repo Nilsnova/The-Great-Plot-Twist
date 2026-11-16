@@ -11,7 +11,7 @@ export const loadMatchCard = () => Promise.all([import('../screens/sports/http.j
 
 export function createHarbor({container, resetInput, focusGame, getWeather, openStall, notify,
   load = () => import('./overview.js'), menu = addMenuExtras}) {
-  let cards = null, pending = null, disposed = false;
+  let cards = null, pending = null, disposed = false, request = 0;
   async function ready() {
     pending ??= load().then(module => {
       if (disposed) return null;
@@ -19,16 +19,23 @@ export function createHarbor({container, resetInput, focusGame, getWeather, open
       cards = {overview: module.createOverviewCard({...shared, openStall: id => (id === 'weather' ? show('weather') : openStall(id))}),
         weather: module.createWeatherCard({...shared, getWeather})};
       return cards;
-    }).catch(() => { pending = null; notify?.('The harbor could not open. Try again.'); return null; });
+    }).catch(() => { pending = null; return null; });
     return pending;
   }
-  async function show(name) { const loaded = await ready(); if (loaded && !disposed) loaded[name].open(); }
+  async function show(name) {
+    if (disposed) return;
+    const mine = ++request, loaded = await ready();
+    // Closing or choosing another view cancels this opening, not the shared module download.
+    if (disposed || mine !== request) return;
+    if (loaded) loaded[name].open();
+    else notify?.('The harbor could not open. Try again.');
+  }
   // travel: the Harbor leaves the Menu on the one island (docs/GAME-V3.md §2) until it is a building there.
   const stopMenu = menu(() => [{label: 'Harbor', onSelect: () => void show('overview'), travel: true}]);
   return {
     openOverview: () => show('overview'), openWeather: () => show('weather'),
     get active() { return Boolean(cards?.overview.active || cards?.weather.active); },
-    close() { cards?.overview.close(); cards?.weather.close(); },
+    close() { request++; cards?.overview.close(); cards?.weather.close(); },
     dispose() { if (disposed) return; disposed = true; stopMenu?.(); cards?.overview.dispose(); cards?.weather.dispose(); },
   };
 }
