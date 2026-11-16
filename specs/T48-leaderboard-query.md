@@ -6,7 +6,7 @@
 
 - **Status:** in progress
 - **Branch:** `fix/leaderboard-scalability`
-- **Issue and pull request:** [#107](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/107); draft PR pending
+- **Issue and pull request:** [#107](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/107); [draft PR #109](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/109)
 
 ## Why
 
@@ -18,6 +18,11 @@ The current service stops after 2,000 winning runs. If a small number of islands
 - Pass the request cutoff and optional UTC week bounds to that function; keep profile and crew reads batched in Python.
 - Add a partial index only if scratch PostgreSQL `EXPLAIN` on repeated-run history shows a useful benefit.
 - Keep the existing route, response, authentication, feature flag, cache policy and ranking rules unchanged.
+
+The migration must be applied before deploying this backend code because the route has no
+feature-flag fallback around the database function call. If merging this PR triggers the
+Vercel deployment, the migration must be applied before the human merges. Live application
+has not been authorized or performed by this task.
 
 **Files likely to change:**
 
@@ -64,5 +69,5 @@ The current service stops after 2,000 winning runs. If a small number of islands
 
 - **Responsible teammate:** Ianno Miranda Hollensteiner (`Iannomh123456`).
 - **Coding agent used, if any:** Codex, gpt-6-luna, high reasoning.
-- **Reviewer (a different human teammate):** pending.
+- **Reviewer (a different human teammate):** Franz (`frcola`), on the completed revision; Ianno manually reviews every PR.
 - **Last updated:** 2026-11-16

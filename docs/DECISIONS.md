@@ -772,11 +772,14 @@ Show a Harbor noticeboard with gold/silver/bronze rank badges, short reset text,
 and public host names; never return invite codes or private account fields.
 
 **Why and limits:** reuse existing wave records and the island login gate for a
-small read-only feature with no migration or rewards. Solo and multiplayer share
-one ranking. At most 2,000 sorted runs per request; fail visibly if that cannot
-establish the full result. Concurrent deletion can shift pages; there is no SQL
-snapshot, live database proof or anti-cheat upgrade in this task. Revisit a database
-aggregate/index if measured usage outgrows this bounded query. See the
+small read-only feature with no rewards. Solo and multiplayer share one ranking.
+The original T7 implementation scanned at most 2,000 sorted runs; issue #107's
+in-progress T48 branch replaces that scan with a service-only SQL function that
+returns at most ten best runs from distinct islands. The result is bounded, but the
+database still evaluates qualifying history. Its migration must be applied before
+the dependent backend deploy; if merge triggers deployment, apply it before merge.
+The branch has not changed a live database. There is no persisted ranking snapshot
+or anti-cheat upgrade in this task. See the
 [API contract](INTERFACES.md#weekly-island-leaderboard-t7).
 
 ## D038 · Personal boss practice before the shared attempt · 2026-11-14
@@ -849,8 +852,7 @@ tables, migrations or feature flags.
 the board small and avoids judging crew sizes; the label still makes the comparison visible. The statue already
 existed, so extending it keeps the art style and avoids a new landmark that could clash with T38's central building.
 
-**Limits and follow-up:** The all-time scan has T7's 2,000-run bound and answers 503 rather than a partial board; a
-database aggregate may be needed later. Statue and shield read `campaign.wave`; if T38/D044 lowers `wave_best` on reset
+**Limits and follow-up:** Before T48, the all-time scan inherited T7's 2,000-run bound and answered 503 rather than a partial board. Issue #107 replaces that scan with a service-only SQL query for the best winning run per island and the top ten; the database still evaluates the qualifying history, and its migration must precede the server deploy. Statue and shield read `campaign.wave`; if T38/D044 lowers `wave_best` on reset
 or splits best from current/unlocked wave, they must read the never-lowered best value. See the re-check list in
 [the T45 spec](../specs/T45-highscore-statue.md#re-check-once-t38s-reset-contract-proposed-d044-is-accepted) and the
 [API contract](INTERFACES.md#weekly-island-leaderboard-t7).

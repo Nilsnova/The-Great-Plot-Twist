@@ -21,6 +21,7 @@ The browser only reads from this database. Every write comes from our Python ser
 | [migrations/20261109010000_demo_window.sql](migrations/20261109010000_demo_window.sql) | The class demo (G29 C0, D029): the host's demo window for guest play and the answers of the Keeper's Lock. Three tables and three functions, no wallet reason. Run it after the whole 20261106 chain, before the flag `demo` goes on. See [Class demo migration](#class-demo-migration-20261109010000). |
 | [migrations/20261109020000_class_code.sql](migrations/20261109020000_class_code.sql) | The class code (G29, D030): the current class code, its audit and the admitted guests (three tables, five functions), and the guest condition `(not jwt_is_anonymous() or is_admitted_guest())` on every browser policy (16 tables and the five Realtime policies). Run it after every earlier file. See [Class code migration](#class-code-migration-20261109020000). |
 | [migrations/20261114120000_arsenal.sql](migrations/20261114120000_arsenal.sql) | The shared island arsenal (T40/T41, D042): two tables (`arsenal_copies`, `arsenal_moves`), a commit-time capacity trigger and the `arsenal_*` functions. Changes no existing row when applied. **Applied live 14 Nov 2026**; flag `arsenal` on since the same evening. See [The arsenal migration](#the-arsenal-migration). |
+| [migrations/20261116100000_leaderboard_query.sql](migrations/20261116100000_leaderboard_query.sql) | The T48 leaderboard query: a service-role-only, read-only function that returns up to ten best winning runs from distinct islands for the request cutoff and optional week window. Apply before deploying the server code that calls it; it adds no table, browser grant or write. |
 
 ## G10 follow-up migration (140000)
 
@@ -289,6 +290,21 @@ It also adds three wallet reasons (`pirate_loot` earn, `starting_coins` earn, `f
 
 `migrations/20261110020000_wave_crews.sql` (lane 0, task 0.4) builds on the islands and waves migration without editing it. It adds `wave_participants` (one row per player in a wave, with their own result and loot; RLS on, no policy, no browser grant), the column `wave_runs.flag_counted`, and the functions `wave_join()` (join a running wave, safe to repeat) and `wave_current()` (the running wave of an island or Pirate Point, or null). It replaces `wave_start()` (same arguments; the bell-ringer becomes the first participant) and drops the 7-argument `wave_finish()` for an 8-argument one (`p_point_loot_base`): every participant finishes for themselves, ledger ref `wave:<id>:<player>`; the first finish closes the wave run; the best wave and one flag count once (`flag_counted`). It backfills every existing wave with its bell-ringer as participant. Until the new server code is deployed, `POST /api/waves/finish` of an older server fails; the flag `islands` stays off until then.
 
+## The leaderboard query migration (T48, D046)
+
+`migrations/20261116100000_leaderboard_query.sql` adds
+`leaderboard_best_runs(p_cutoff, p_window_start, p_window_end)`. It chooses each
+island's highest qualifying finished win, with earliest finish and then run ID as
+tie-breakers, and returns at most ten islands ordered for the existing board. Both
+window bounds are null for all time; weekly bounds include the start and exclude the
+end. The cutoff is inclusive. The function is `SECURITY INVOKER`; only `service_role`
+may execute it, and that role already has read access to `wave_runs`. It returns run ID,
+island owner ID and wave only: the Python server separately reads public names and crew
+counts in batches. The output is bounded at ten, but the database still examines
+qualifying history to find each island's best score. Apply this migration **before**
+deploying the server code that calls it; otherwise the existing route cannot read its
+board. It changes no rows and has no live database operation in this task.
+
 ## The island layout migration (T36)
 
 `migrations/20261114110000_island_layout.sql` (T36 flexible placement, D041 PROPOSED) was **applied live on 14 Nov 2026** (registered in `schema_migrations`); the flag `placement` has been on in production since the same evening. A fresh database needs it applied before the flag goes on. It adds `island_layout` (one row per moved build spot of an island: `plot`, the cell in half units `x_half`/`z_half`, `layout_version` 2, `moved_by`, `moved_at`; a spot without a row stands on its fixed spot, which is how old saves keep working; RLS on, no policy, no browser grant; the server reads, inserts and updates, never deletes; rows go with their island by cascade) and `island_move()` (locks the island row like `wave_start()`, refuses `wave_running` like `island_demolish()`, then a compare-and-swap: the rows now must equal the rows the server checked, else `busy`; no coins). Opt-in SQL checks: `backend/server/tests/island_sql/test_island_layout_sql.py`.
@@ -529,6 +545,7 @@ The three actors, and the database role behind each:
 | `wave_runs` | update | no access | no access | yes (through `wave_start()` and `wave_finish()`) |
 | `wave_runs` | delete | no access | no access | no access (deleted with its player or island, by cascade) |
 | `island_open()`, `wave_start()`, `wave_finish()` | run | no access | no access | yes |
+| `leaderboard_best_runs(timestamptz, timestamptz, timestamptz)` | run | no access | no access | yes (T48, migration `20261116100000`) |
 | `wave_participants` | read | no access | no access | yes |
 | `wave_participants` | insert | no access | no access | yes (through `wave_start()` and `wave_join()`) |
 | `wave_participants` | update | no access | no access | yes (through `wave_finish()`) |
