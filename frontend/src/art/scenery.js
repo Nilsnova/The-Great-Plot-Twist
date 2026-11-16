@@ -180,7 +180,13 @@ function lighthouse(c, x, ground, u, lit) {
   c.fillStyle = '#ffffff55'; c.fillRect(x - 20 * u, top, 7 * u, H);
   c.restore();
   stroke(c, tower, INK, lw);
-  for (const fy of [.31, .67]) part(c, rect(x - 6 * u, top + H * fy, 12 * u, 18 * u, 5 * u), lit ? '#ffe39a' : '#2c3546', {shade: false, width: lw * .7});
+  // Square-cornered windows with a cross bar, warm when the lamp is lit: rounded dark slots read as "0 0".
+  for (const fy of [.31, .67]) {
+    const wx = x - 8 * u, wy = top + H * fy, ww = 16 * u, wh = 20 * u;
+    part(c, rect(wx, wy, ww, wh, 2 * u), lit ? '#ffd27a' : '#2c3546', {shade: false, width: lw * .7});
+    stroke(c, line([[x, wy], [x, wy + wh]]), INK, lw * .5);
+    stroke(c, line([[wx, wy + wh / 2], [wx + ww, wy + wh / 2]]), INK, lw * .5);
+  }
   part(c, poly([[x - 11 * u, ground + 2 * u], [x - 11 * u, ground - 26 * u], [x, ground - 34 * u], [x + 11 * u, ground - 26 * u], [x + 11 * u, ground + 2 * u]], 5 * u), '#8a5a34', {width: lw * .8});
   part(c, rect(x - 42 * u, top - 14 * u, 84 * u, 16 * u, 4 * u), '#3d4250', {width: lw});
   for (let i = -3; i <= 3; i++) stroke(c, line([[x + i * 11 * u, top - 14 * u], [x + i * 11 * u, top - 30 * u]]), INK, lw * .7);
