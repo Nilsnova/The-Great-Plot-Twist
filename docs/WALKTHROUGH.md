@@ -1207,6 +1207,18 @@ retries or another networking layer. Live networks/physical phones remain unveri
 
 **Limits / possible change:** The replies are controlled at the controller boundary. These tests do not exercise a live account, real timeout duration, physical phone or server/database rules. A future broader navigation cancellation policy should be agreed separately. [Evidence](evidence/B3-arsenal-retry/README.md); [PR #90](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/90). Codex drafted the change and tests; Johannes's own rehearsal and independent human review are pending.
 
+## Johannes: Closing the harbor while loading (B3)
+
+**What:** Closing the harbor during its first module load keeps it closed. Repeated opens share one download, and only the latest overview/weather intent opens. Obsolete errors and disposed views stay silent.
+
+**Where/how:** `harbor/host.js` increments a local request number for each show and close. After the shared download it compares the saved number and disposal state. Only the current intent opens its card or reports a load failure; a later explicit open reuses successfully loaded cards. Source: [harbor/host.js](../frontend/src/harbor/host.js).
+
+**Why:** Keep the existing shared lazy import. Cancel the opening intent rather than the download, using one counter instead of a new loading manager. Card factories, copy and APIs stay unchanged.
+
+**Tests:** [host-loading.test.js](../frontend/tests/harbor/host-loading.test.js). Eight controlled host cases cover close/reopen, repeated opens, both view orders, load rejection/retry, obsolete failure and success/failure after disposal. Existing Harbor card browser tests exercise real rendering.
+
+**Limits / possible change:** The focused tests control module resolution and use card-factory spies. Screenshots separately use the real cards with a controlled module delay. Network throttling, physical phones and a full live journey are not claimed. A future broader navigation cancellation policy should be agreed separately. [Evidence](evidence/B3-harbor-loading/README.md); [PR #92](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/92). Codex drafted the change and tests; Johannes's own rehearsal and independent human review are pending.
+
 ## The three course questions
 
 ### Q1. Where is the data stored?
