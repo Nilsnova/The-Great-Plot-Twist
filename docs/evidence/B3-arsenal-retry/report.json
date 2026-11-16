@@ -1,0 +1,40 @@
+{
+  "main": "e8c61c647ae1cd5bb96e89916e89015ddf6e840c",
+  "scene": "isolated real UI and controller with synthetic delayed replies",
+  "captures": [
+    {
+      "file": "before-1280x720.png",
+      "width": 1280,
+      "height": 720,
+      "trace": {
+        "retryButtons": 0
+      }
+    },
+    {
+      "file": "before-375x812.png",
+      "width": 375,
+      "height": 812,
+      "trace": {
+        "retryButtons": 0
+      }
+    },
+    {
+      "file": "after-1280x720.png",
+      "width": 1280,
+      "height": 720,
+      "trace": {
+        "retryButtons": 1
+      }
+    },
+    {
+      "file": "after-375x812.png",
+      "width": 375,
+      "height": 812,
+      "trace": {
+        "retryButtons": 1
+      }
+    }
+  ],
+  "errors": [],
+  "external": []
+}

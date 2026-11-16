@@ -1,0 +1,40 @@
+{
+  "main": "e8c61c647ae1cd5bb96e89916e89015ddf6e840c",
+  "command": "npm run test:a11y",
+  "exit": 1,
+  "screens": 33,
+  "failures": [
+    {
+      "screen": "market-placed",
+      "width": 1280,
+      "check": "contrast",
+      "count": 1
+    },
+    {
+      "screen": "market-placed",
+      "width": 375,
+      "check": "contrast",
+      "count": 1
+    },
+    {
+      "screen": "market-placed",
+      "width": 320,
+      "check": "contrast",
+      "count": 1
+    }
+  ],
+  "errors": [],
+  "contrast": [
+    {
+      "element": "button.kit-choice.harbor-choice.harbor-step",
+      "ratio": 3.9664425132344356,
+      "colour": "rgb(251, 242, 220)",
+      "background": {
+        "a": 1,
+        "r": 18,
+        "g": 58,
+        "b": 66
+      }
+    }
+  ]
+}

@@ -1184,6 +1184,66 @@ The UI kit and shortcuts overlay are existing team code; Codex drafted the host 
 for Johannes. A fixed error message plus explicit retry is simpler than automatic
 retries or another networking layer. Live networks/physical phones remain unverified.
 
+## Johannes: Arsenal replies after travel (B3)
+
+**What:** A buy, take or return requested on island A cannot replace inventory, coin display, messages or loadout after travel to island B. A completed server purchase is kept.
+
+**Where/how:** `arsenal.js` saves the island key before a move. After each awaited answer, including a refusal-triggered refresh, it checks that key before applying UI state. Initial reads also discard old-island errors. The existing busy state is released even when a reply is ignored. Source: [island/arsenal.js](../frontend/src/island/arsenal.js).
+
+**Why:** The controller already has a current-island key and refresh tickets. A few checks reuse those boundaries; there is no second cache, request queue or API change.
+
+**Tests:** [arsenal-context.test.js](../frontend/tests/island/arsenal-context.test.js). Eleven controlled cases cover delayed success/refusal for buy/take/return, late read success/error, travel during refusal refresh, normal delayed success and a completed fake-server purchase surviving the ignored answer.
+
+**Limits / possible change:** These are controlled controller replies. The persistent-purchase case uses the in-memory fake, not SQL or real Realtime. Returning to the same island before a reply finishes is not a new navigation-generation protocol. A future broader navigation cancellation policy should be agreed separately. [Evidence](evidence/B3-arsenal-context/README.md); [PR #88](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/88). Codex drafted the change and tests; Johannes's own rehearsal and independent human review are pending.
+
+## Johannes: Retrying an arsenal load (B3)
+
+**What:** An initial arsenal read failure offers Try again. During a read the control says Opening… and is disabled. Success removes the error state; Escape and close still work.
+
+**Where/how:** `arsenal-model.js` supplies the recovery button label and disabled state. `arsenal-ui.js` draws a native button with a stable focus id. `arsenal.js` calls its existing refresh method once while loading is false, clears the old load error, and sets loading before the initial card opens. Source: [island/arsenal.js](../frontend/src/island/arsenal.js), [island/arsenal-model.js](../frontend/src/island/arsenal-model.js), [island/arsenal-ui.js](../frontend/src/island/arsenal-ui.js).
+
+**Why:** Reuse the existing model, renderer, read method and UI kit. Retry performs a read only; buy/take/return and their existing action ids are unchanged.
+
+**Tests:** [arsenal-retry.test.js](../frontend/tests/island/arsenal-retry.test.js). Three native Chrome cases use the full shared stylesheet order at 1280x720 and 375x812: keyboard activation, 44px target, duplicate retry suppression, repeated failure then success, and closing before completion.
+
+**Limits / possible change:** The replies are controlled at the controller boundary. These tests do not exercise a live account, real timeout duration, physical phone or server/database rules. A future broader navigation cancellation policy should be agreed separately. [Evidence](evidence/B3-arsenal-retry/README.md); [PR #90](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/90). Codex drafted the change and tests; Johannes's own rehearsal and independent human review are pending.
+
+## Johannes: Closing the harbor while loading (B3)
+
+**What:** Closing the harbor during its first module load keeps it closed. Repeated opens share one download, and only the latest overview/weather intent opens. Obsolete errors and disposed views stay silent.
+
+**Where/how:** `harbor/host.js` increments a local request number for each show and close. After the shared download it compares the saved number and disposal state. Only the current intent opens its card or reports a load failure; a later explicit open reuses successfully loaded cards. Source: [harbor/host.js](../frontend/src/harbor/host.js).
+
+**Why:** Keep the existing shared lazy import. Cancel the opening intent rather than the download, using one counter instead of a new loading manager. Card factories, copy and APIs stay unchanged.
+
+**Tests:** [host-loading.test.js](../frontend/tests/harbor/host-loading.test.js). Eight controlled host cases cover close/reopen, repeated opens, both view orders, load rejection/retry, obsolete failure and success/failure after disposal. Existing Harbor card browser tests exercise real rendering.
+
+**Limits / possible change:** The focused tests control module resolution and use card-factory spies. Screenshots separately use the real cards with a controlled module delay. Network throttling, physical phones and a full live journey are not claimed. A future broader navigation cancellation policy should be agreed separately. [Evidence](evidence/B3-harbor-loading/README.md); [PR #92](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/92). Codex drafted the change and tests; Johannes's own rehearsal and independent human review are pending.
+
+## Johannes: Comparing arsenal weapons (U)
+
+**What:** Rack and shop options can be expanded to compare per-hit damage, range, reload time and firing mode with the weapon you carry. The displayed stats and comparisons use your level, learned skills and role, including reload floors.
+
+**Where/how:** index.js supplies the existing learned skills/role to the arsenal controller. arsenal-model.js calls the same captainStats calculator for both weapons and formats rounded differences. arsenal-ui.js draws native details/summary and a definition list; ui.js preserves open comparisons/focus by stable copy/shop keys on redraw. Source: [island/arsenal-model.js](../frontend/src/island/arsenal-model.js), [island/arsenal-ui.js](../frontend/src/island/arsenal-ui.js), [island/arsenal.js](../frontend/src/island/arsenal.js), [island/index.js](../frontend/src/island/index.js), [island/ui.js](../frontend/src/island/ui.js), [island/island.css](../frontend/src/island/island.css).
+
+**Why:** Reuse the real combat calculator, not a parallel formula or a universal weapon score: cone, pierce and area shots are not comparable by per-hit damage alone. Details remain optional so the card stays compact. No comparison opens or sends a transaction.
+
+**Tests:** [weapon-comparison.test.js](../frontend/tests/island/weapon-comparison.test.js), [weapon-comparison-dom.test.js](../frontend/tests/island/weapon-comparison-dom.test.js). 10 new cases: all five types, exact deltas, same type, invalid ids, learned skills/role/level, minimum reload and rounding, immutable server answer, native comparison at desktop/phone widths, actual fake-server learned skill, retained disclosure after refresh and no write from comparison.
+
+**Limits / possible change:** Per-hit numbers do not predict fleet outcomes, aim, pierce alignment or total area damage. Real provider/login/database behavior, physical phones and a screen-reader session are not covered. The UI word compare was checked in the macOS word dictionary before adding it to the house list. Broader server snapshots or navigation state would need a separately reviewed contract. [Evidence](evidence/U-weapon-comparison/README.md); [PR #96](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/96). Codex drafted/verified the implementation; Johannes's own review and independent human review remain pending.
+
+## Johannes: Filtering and grouping the arsenal (U)
+
+**What:** All, Available and Carried buttons show counts and filter the rack locally. Display groups follow weapon type and rack number; shared stats appear once per group while every copy number, holder and existing Take/Swap action remains.
+
+**Where/how:** rackView computes counts and a new ordered array without mutating the server answer. arsenalModel keeps the legacy rack model order and adds sorted groups for the UI. arsenal.js retains only a local filter id; its handler redraws without a GET or write. arsenal-ui.js renders native pressed-state buttons, grouping and a Show all recovery for empty filtered results. Source: [island/arsenal-model.js](../frontend/src/island/arsenal-model.js), [island/arsenal-ui.js](../frontend/src/island/arsenal-ui.js), [island/arsenal.js](../frontend/src/island/arsenal.js), [island/island.css](../frontend/src/island/island.css).
+
+**Why:** A rack with 20 stored copies can additionally have carried copies, so All and Carried counts must not be storage-slot counts. Grouped display preserves individual ownership and ids; every financial/availability restriction remains in the existing model/server.
+
+**Tests:** [arsenal-filters.test.js](../frontend/tests/island/arsenal-filters.test.js), [arsenal-filters-dom.test.js](../frontend/tests/island/arsenal-filters-dom.test.js). 10 new cases: 20 stored plus carried copies, stable ordering and immutable input, all empty views, bad optional filters/input, pending/wave restrictions, retained filter on refresh, keyboard/phone controls, no request from filtering, exact copy id for intentional Take and recovery when the chosen filter becomes empty.
+
+**Limits / possible change:** Filters last for this controller session, not browser storage. They do not change stock, reclaim another captain weapon or grant permission. Real multi-client races/SQL, physical phones and screen readers are not covered by these controlled UI tests. Broader server snapshots or navigation state would need a separately reviewed contract. [Evidence](evidence/U-arsenal-filters/README.md); [PR #98](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/98). Codex drafted/verified the implementation; Johannes's own review and independent human review remain pending.
+
 ## The three course questions
 
 ### Q1. Where is the data stored?
