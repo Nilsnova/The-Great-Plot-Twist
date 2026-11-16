@@ -40,6 +40,6 @@ import {performanceCopy} from '../src/build/format.js';
 it('includes the public identity and time in performance copies',()=>{
   const stamp={sha:'abcdef0-dirty',builtAt:'2026-11-06T16:00:00.000Z',environment:'preview'};
   expect(performanceCopy(stamp,'Frames per second: 60')).toBe(
-    'Build abcdef0-dirty · preview\nBuilt at: 2026-11-06T16:00:00.000Z\nFrames per second: 60'
+    'Build abcdef0-dirty (preview)\nBuilt at: 2026-11-06T16:00:00.000Z\nFrames per second: 60'
   );
 });
