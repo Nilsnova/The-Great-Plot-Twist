@@ -47,7 +47,7 @@ The exact shared recovery rate bonuses and caps are not approved yet. They must 
 
 ## What this replaces
 
-This decision replaces the earlier proposal's survivor-at-wave-end healing, one-subsequent-wave shortcut, partial rebuilds, rebuild cooldowns, automatic in-battle Carpenter/Workshop repairs and Captain repair actions. The prior nearby-only/strongest-Captain discussion applied to a discarded Captain-support design; it is not part of this replacement.
+This decision replaces the earlier proposal's survivor-at-wave-end healing, one-subsequent-wave shortcut, fixed-share rebuilds, rebuild cooldowns, independent in-battle Carpenter/Workshop repair jobs and Captain repair actions. The prior nearby-only/strongest-Captain discussion applied to a discarded Captain-support design; it is not part of this replacement.
 
 Earlier dated STATUS entries are historical records and must remain untouched. Existing D039/D049 runtime behavior stays valid until an explicitly versioned implementation is reviewed and released. This document does not assert that the current game already follows the new design.
 
@@ -65,7 +65,7 @@ Earlier dated STATUS entries are historical records and must remain untouched. E
 - Carpenter/Workshop rate percentages, stacking/caps/radius and treatment of changes during gradual healing.
 - Repair now pricing for each kind/level/upgrade state; preserve personal-wallet authority and show a consistent formula.
 - Exact refund handling for the retired Shipwright choices and Engineer's repair-triggered combat bonus; its existing building discount is separate.
-- Treatment of non-Captain wall modifiers such as Quick Mend, Mason Drill and Bastion: no retained battle healing or silently useless purchase.
+- Treatment of non-Captain wall modifiers such as Quick Mend, Mason Drill and Bastion: no separate healing mechanism or silently useless purchase; any retained healing modifier feeds the shared gradual rate.
 - Exact recovery clock/health authority, rate precision/rounding, zero-HP reactivation/firing/obstacle policy, immutable initial snapshots plus action-history/event ordering, finish-report reconciliation, endpoint/event/version names, upgrade safeguards and rollback sequencing. Paid-action prices and any cooldown, range or per-wave cap also remain unapproved. These are proposed implementation contracts, not existing APIs.
 
 ## Verification required for implementation
