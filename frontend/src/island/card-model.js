@@ -10,6 +10,7 @@ import {BRANCH_BY_ID, SPECS, TOP_TIER, isCapstone, optionLine, optionName, optio
 import {BOAT, GAME_TEXT as BOAT_TEXT, coinsFor} from '../pirates/boat/rules.js';
 import {ROLES as HOUSE_ROLES, ROLE_IDS, ROLE_LEVEL as HOUSE_ROLE_LEVEL, readRole} from '../campaign/houses.js';
 import {towerTreeModel} from './tree-model.js';
+import {nextWaveNumber} from './preparation-model.js';
 
 // Coins always read "🪙 120" through formatCoins (BUILD-PLAN 3.2); an unknown amount reads "🪙 ?".
 export const coinText = n => (Number.isSafeInteger(n) ? formatCoins(n) : '🪙 ?');
@@ -286,8 +287,8 @@ export function weaponsModel({weapons = null, coins = null, wonWave = 0, busy = 
 
 // wave: the running wave there or null. countdown: whole seconds left before it starts, or null.
 export function bellModel({wave = null, joined = false, countdown = null, busy = false, visitor = false,
-  ownerName = '', waveBest = 0, message = ''} = {}) {
-  const next = Math.max(1, (Number.isSafeInteger(waveBest) ? waveBest : 0) + 1);
+  ownerName = '', waveBest = 0, nextWave, preparation = null, message = ''} = {}) {
+  const next = nextWaveNumber(nextWave, waveBest);
   const model = {title: 'Harbor bell', line: '', button: 'Ring the bell', disabled: busy, message, action: 'ring'};
   if (wave && !joined) {
     model.line = `Wave ${wave.wave} is under way${visitor ? ` on ${ownerName ? `${ownerName}'s island` : 'this island'}` : ''}.`;
@@ -297,6 +298,7 @@ export function bellModel({wave = null, joined = false, countdown = null, busy =
     model.button = 'Under way'; model.disabled = true; model.action = 'none';
   } else {
     model.line = `Ring it and wave ${next} sails in after a 10 second countdown.`;
+    model.preparation = preparation;
     if (busy) model.button = 'Ringing…';
   }
   return model;

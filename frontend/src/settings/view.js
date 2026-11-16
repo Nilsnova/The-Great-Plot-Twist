@@ -5,6 +5,7 @@ import '../ui/settings-polish.css';
 import '../shell/preferences.css';
 import {node,uniqueId} from '../ui/kit/dom.js';
 import {getPreferences,setPreferences} from './preferences.js';
+import {emit} from '../core/events.js';
 import {noteAdapterView} from '../diagnostics/runtime.js';
 import {createBuildInfo} from '../build/info.js';
 import {createProblemLink,createProblemDescription} from '../diagnostics/report-link.js';
@@ -37,6 +38,11 @@ export function createSettingsView(view) {
   toggle('First-time hints','hintsEnabled');
   toggle('Narrator','narrator');
   toggle('Narrator captions','captions');
+  // T52: the guided start of a new island and the cards for every new thing; the guide again on the island on screen.
+  toggle('Tutorials','tutorials');
+  const replay=node('button','kit-button kit-quiet preference-action','Replay the guided start');replay.type='button';replay.dataset.preference='tutorialReplay';
+  replay.addEventListener('click',()=>{emit({type:'tutorial_replay'});status.textContent='The guided start begins on your island when you close the menu.';});
+  form.append(replay);
   toggle('Easier finishers','easyFinishers');
   choice('Quality','quality',[['high','High'],['low','Low']]);
   for(const key of ['master','music','effects','voice']) {

@@ -1005,6 +1005,10 @@ The harpoon tower and the culverin have no skills, so no price. The numbers live
 - **Alternatives and trade-offs:** walls that snap into lines or rings when placed (would make every wall a real barrier, but changes T36 placement rules and old layouts: proposed, not built); always breaching (lone walls would always be hacked, no gaps; reverses D040); a solid wall with no gap of 0.3 (boarders would overlap the art).
 - **Agreed by / issue or PR / impact:** pending Nils. `frontend/src/pirates/sim.js`, `boarder-paths.js`, `battle-guide.js`, `controller.js`; tests `wall-blocking.test.js`, `battle-guide.test.js`.
 
+## D054 · (superseded) Players can reset their own island, "Start fresh" · 2026-11-16
+
+- **Status:** superseded by T53 (Settings › Reset my island, [GAME-V3 4.6](GAME-V3.md), migration `20261116070000_island_fresh_start.sql`). The branch `feat/island-reset` (D054, migration `20261116010000`, never applied) is not merged; Nils chose the owner session's T53 reset on 16 Nov. The number D054 was also used earlier for the tower path obstacles, now [D058](#d058--damageable-towers-shape-boarder-paths--2026-11-15).
+
 ## D055 · Tower upgrade trees and the swivel-gun nest · 2026-11-16
 
 - **Status:** **accepted** by Nils (`Nilsnova`, project owner) on 16 Nov 2026 ("Upgrades are done too quickly with the mortar and the cannon. Enable further upgrades. Add, besides cannon and mortar, another tower that would be cool. And upgrade trees within them, like Bloons TD, but keep it super simple … do something like [the captain's visual tree] for the cannons, mortars and the new one"). Branch `feat/tower-trees`; migration `20261116020000_tower_trees.sql` not applied yet.

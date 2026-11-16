@@ -43,6 +43,9 @@ FLAG_NAMES = (
     "pathing",
     # T35 combat towers block boarders; requires both pathing and tower_health.
     "tower_obstacles",
+    # T50: ships at anchor fire at a real wall, tower or the heart and their hits count (a wave
+    # rule). Needs supabase/migrations/20261116160000_ship_fire_rule.sql applied first.
+    "ship_fire",
 )
 
 

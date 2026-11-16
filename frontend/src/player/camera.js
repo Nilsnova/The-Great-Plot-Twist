@@ -31,7 +31,10 @@ export function createCamera(input) {
       if (Number.isFinite(wheel) && wheel) targetZoom = Math.max(1, Math.min(2, targetZoom - wheel / 1000));
       // ...and lean towards the fight: camera.userData.battleFocus is a small logical offset {x, z}.
       const lean = camera.userData.battleFocus, leanX = Number.isFinite(lean?.x) ? lean.x : 0, leanZ = Number.isFinite(lean?.z) ? lean.z : 0;
-      const point = projectPoint(player.x + leanX, player.z + leanZ), blend = reduce ? 1 : 1 - Math.exp(-dt * 12);
+      // ...or, for a moment, look at a thing on the island instead (the unlock cards' Show me, T52): camera.userData.tour {x, z}.
+      const tour = camera.userData.tour, touring = Number.isFinite(tour?.x) && Number.isFinite(tour?.z);
+      const point = touring ? projectPoint(tour.x, tour.z) : projectPoint(player.x + leanX, player.z + leanZ);
+      const blend = reduce ? 1 : 1 - Math.exp(-dt * (touring ? 3 : 12));
       const headroom = placeId === 'lighthouse_isle' && Math.hypot(player.x - 9, player.z + 8) < 8 ? 4.2 : 3.1;
       place(follow.x + (point.x - follow.x) * blend, follow.y + (point.y + headroom - follow.y) * blend);
       // A pirate wave (lane P) may ask for a wider view while it runs: camera.userData.battleZoom (0.4-1).

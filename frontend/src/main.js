@@ -63,6 +63,7 @@ async function play(){
 // Play and the intro replay load their routes only when chosen.
 const routes=()=>import('./shell/routes.js'),flow={adapter,container,focus,loadGame,play,openAccount,
   claim(){const token=++playRequest;return ()=>!disposed&&token===playRequest&&shell.mode==='playing';},
+  leave:()=>{if(!disposed)shell.show('title');},
   get door(){return door;},set door(value){door=value;}};
 function onEscape(){
   if(door?.handleEscape())return true;

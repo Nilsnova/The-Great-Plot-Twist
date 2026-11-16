@@ -34,7 +34,9 @@ POST /api/waves/start  {"where": "own" | "ISLE-K7Q2M" | "pirate_point", "actionU
     simulation rules this wave plays with, from the feature flags of the same names, in order:
     "tower_health" (T33, D049 proposed), "pathing" (T34/T35, D040 proposed), "rescue" (T38,
     D044 proposed: the game offers the last-chance rescue), "defenses_v2" (T43, D048 proposed:
-    the island's culverins fight; without it every client's simulation ignores a culverin).
+    the island's culverins fight; without it every client's simulation ignores a culverin),
+    "tower_obstacles" (T35: only with pathing and tower_health) and "ship_fire" (T50: ships at
+    anchor fire at a real wall, tower or the heart; migration 20261116160000).
     The first answer for a wave keeps its rule set (island/wave_rules.py, table wave_rules,
     migration 20261114130500), an empty set too, and join and current answer that kept set
     even after a flag was switched on or off. Every client of a wave reads them from the wave

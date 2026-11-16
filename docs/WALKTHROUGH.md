@@ -969,6 +969,13 @@ More languages (a text and a voice per language); lines by captain role; a check
 2. **Where is the API key?** In a private file in the home folder, mode 600, outside the repository. The script reads it only when it runs.
 3. **What if a voice file is missing?** The caption shows for a reading time and the game goes on.
 
+### The guided start and the unlock cards (T52)
+- **Guided start.** On a new island at wave 0, after the intro, the goals strip shows seven steps instead of the goals: walk, open a build spot (E or Use), build a cannon, open the Menu or a goal, ring the bell, fire the musket in wave 1 and, if boarders land, swing the cutlass. Each step waits for the real action; a caption panel under the strip says what to do, a gold ring (or an arrow at the screen's edge) marks the target. Skip step and Skip tutorial; stored per island code (`tgpt:tutorials:v1`), so it never comes back on that island. The steps live in [first-quests.js](../frontend/src/ui/first-quests.js) (`GUIDE_STEPS`) with the goals and use the same bus events, so building the cannon also ticks the goal "Build a cannon". Host: [tutorial/tutorials.js](../frontend/src/tutorial/tutorials.js); overlay [tutorial/coach.js](../frontend/src/tutorial/coach.js).
+- **Unlock cards.** When an island's best wave goes up, one short card per new thing (what it is, how to use it, Show me) waits for the break and shows once per island. The words are one table next to the campaign table, [campaign/tutorials.json](../frontend/src/campaign/tutorials.json) (41 cards); a test fails if a campaign id has no card. Show me moves the camera there for a moment (not with reduced motion: only the ring).
+- **Who gets what.** Each player on their own screen. A friend who first sees an island past wave 0 never gets the guide, only the cards for things this device never saw. Nothing starts without an island the player owns or joined ([tutorial/gate.js](../frontend/src/tutorial/gate.js)): the front door's intro and goal card, the arrival, the narrator's opening and the goals strip wait for it too.
+- Settings › **Tutorials** (on by default) and **Replay the guided start**. New caption lines: `guide_shoot`, `guide_cutlass`, `unlock_swivel`, `unlock_research_3`, `unlock_tree_2`, `unlock_tree_3`, `unlock_final_battle` (no voice files yet).
+- Tests: [tests/tutorial/](../frontend/tests/tutorial/) (steps on real actions, skip and never again, the cards, the friend rule, no island no tutorial).
+
 ## 27. The cartoon art drawn in code
 
 ### What it does
@@ -1036,6 +1043,9 @@ Everything a player cannot be trusted with lives here: coins, prices, unlocks, w
 - **Each stored text is checked by md5** against the repository file, and the version is recorded ([RELEASE-CHECKLIST.md](RELEASE-CHECKLIST.md), [OPEN-TODOS.md](OPEN-TODOS.md) section 7). Locally: `md5 -q supabase/migrations/<file>.sql`. I did not run the live comparison: the exact query on the Supabase side is not in the repository, so I cannot name it.
 - **An applied file is never edited.** The live text must stay byte-identical to the file. A fix is a new file, as `20261113010000` is for `20261112120000` and `20261112100000`.
 - Before applying, the SQL tests apply all files twice to a throwaway Postgres.
+
+### Reset my island (T53)
+`island_fresh_start()` in [20261116070000_island_fresh_start.sql](../supabase/migrations/20261116070000_island_fresh_start.sql) is the one v3 function that deletes a whole island's progress. It follows the house style: wallet locked first, then the island row; only the owner's own island; the island code must be typed; refused while a wave runs; one `island_resets` row per click, so a repeat answers the first counts. Because it is `security invoker`, the server needed `delete` on the seven tables it clears; the waves' participants and revives go by cascade, which runs with the table owner's rights. Members, the ledger and the island code stay. Tests: [test_island_fresh_start_sql.py](../backend/server/tests/island_sql/test_island_fresh_start_sql.py).
 
 ### Why it was built this way
 - **The browser is not trusted** ([D003](DECISIONS.md)). A rule in the database holds even if the Python has a bug.
@@ -1243,6 +1253,12 @@ retries or another networking layer. Live networks/physical phones remain unveri
 **Tests:** [arsenal-filters.test.js](../frontend/tests/island/arsenal-filters.test.js), [arsenal-filters-dom.test.js](../frontend/tests/island/arsenal-filters-dom.test.js). 10 new cases: 20 stored plus carried copies, stable ordering and immutable input, all empty views, bad optional filters/input, pending/wave restrictions, retained filter on refresh, keyboard/phone controls, no request from filtering, exact copy id for intentional Take and recovery when the chosen filter becomes empty.
 
 **Limits / possible change:** Filters last for this controller session, not browser storage. They do not change stock, reclaim another captain weapon or grant permission. Real multi-client races/SQL, physical phones and screen readers are not covered by these controlled UI tests. Broader server snapshots or navigation state would need a separately reviewed contract. [Evidence](evidence/U-arsenal-filters/README.md); [PR #98](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/98). Codex drafted/verified the implementation; Johannes's own review and independent human review remain pending.
+## Johannes: Wave preparation at the bell (U)
+**What:** The existing bell card shows built towers/walls, last known persistent wall damage and up to three upcoming campaign unlocks in an optional disclosure. Its next-wave line uses the server nextWave, including restarts after defeat; the old-answer fallback stops at the existing wave-100 limit.
+**Where/how:** preparation-model.js derives descriptive lines from the current island and a matching-code wall snapshot; it never blocks starting. bellModel accepts nextWave/preparation, and index.js supplies them. Opening the bell reuses the existing flag-gated walls GET; late reads/repair replies are not assigned to a different island. ui.js retains the unlock disclosure and its focus during redraws. Source: [island/preparation-model.js](../frontend/src/island/preparation-model.js), [island/card-model.js](../frontend/src/island/card-model.js), [island/index.js](../frontend/src/island/index.js), [island/ui.js](../frontend/src/island/ui.js), [island/island.css](../frontend/src/island/island.css).
+**Why:** Read the existing server answers and campaign table instead of duplicating unlock rules or introducing a readiness score. Missing, invalid, partial or other-island health stays unknown; last-known health is labeled as such. The server still decides start/join and every repair.
+**Tests:** [preparation.test.js](../frontend/tests/island/preparation.test.js), [preparation-dom.test.js](../frontend/tests/island/preparation-dom.test.js). 15 new cases: nextWave after defeat, older-answer/final-wave fallback, built-only counts, campaign boundaries, partial/invalid/foreign health, running-wave behavior, native keyboard/phone disclosure and preserved focus, unchanged ring callback, and delayed wall read after an actual fake-island visit.
+**Limits / possible change:** Wall health is the last successful read, not a live guarantee; a failed read may leave labeled last-known data. The late-repair UI guard does not undo a completed server repair. Physical phones, live Realtime and SQL are not proven by controlled fixtures or the fake-server run. Broader server snapshots or navigation state would need a separately reviewed contract. [Evidence](evidence/U-wave-preparation/README.md); [PR #94](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/94). Codex drafted/verified the implementation; Johannes's own review and independent human review remain pending.
 
 ## The three course questions
 
@@ -1579,29 +1595,37 @@ unverified. See the full [T35 contract and checks](../specs/T35-tower-path-obsta
 
 ## #74 — Fresh start resets the old personal weapons — Nicolas Radomski
 
-**What and where.** [fresh_start.sql](../scripts/admin/fresh_start.sql) is the admin
-script that lets every player start the island game again. Its step 4 already set
-each island's best wave and flags to 0. It now also runs one more `update` on
-`islands`: `weapons_owned` becomes `'{musket}'` and `weapon_equipped` becomes
-`'musket'`. The number of changed islands goes into the variable `v_weapons` and
-shows up in the message as `island weapons reset: N`.
+*In my own words (explain-back, 16 Nov).*
 
-**Why.** These two columns come from the old weapon shop
-([20261112030000_captain_skills.sql](../supabase/migrations/20261112030000_captain_skills.sql)).
-Since the shared arsenal (D042) the game no longer uses them, but a bought weapon
-would still sit there after a fresh start. Both columns change in one `update`
-because a check rule says the carried weapon must be one the island owns. The
-`where` only picks islands that differ from the musket, so the count is honest and
-a second run changes 0 rows. The dry run and the real run share one counts
-sentence, so both report the new number.
+**What is fresh_start.sql?** [fresh_start.sql](../scripts/admin/fresh_start.sql) is a
+script for the admin. It resets the whole island game, so everyone starts again, for
+example before the presentation. Think of a board game: all pieces go back into the box.
+Only the project owner runs it, by hand; no code in the game calls it. It has a dry run
+first: the dry run only counts what it would change ("3 islands still have a pistol")
+and changes nothing, so you can check before the real run.
 
-**Tests and limits.** The two fresh-start tests in
+**What was the problem?** Before the shared arsenal, you could buy weapons in a shop,
+for example a pistol. The island table keeps them in two columns: `weapons_owned`
+(which weapons the island owns) and `weapon_equipped` (which one it carries). The
+script reset everything else, but it forgot these two columns. So after a fresh start,
+players still had the weapons they bought.
+
+**What did I change?** Now the script also puts every island back to the musket, the
+starting weapon: `weapons_owned` becomes `{musket}` and `weapon_equipped` becomes
+`musket`. It counts how many islands it changed and writes it in its message
+(`island weapons reset: N`). Both columns change in one step, because of a rule in the
+database: you can only carry a weapon you own. If you run the script twice, the second
+run changes nothing, because only islands that are not on the musket are changed.
+
+**How do the tests check it?** The two fresh-start tests in
 [test_islands_and_waves_sql.py](../backend/server/tests/island_sql/test_islands_and_waves_sql.py)
-give one island pistols. The dry run must report the count and leave the pistols;
-the real run, run twice, must leave only the musket. They run on a throwaway local
-Postgres, never on the live project, so they do not prove what the live data looks
-like. The script is run by hand by the project owner; no code calls it. If the old
-columns are dropped one day, this step and its count can be deleted again.
+give one test island pistols. In the dry run the script counts 1 island, but the
+pistols stay. Then the real run, twice: after it the island has only the musket, and
+the second run changes nothing.
+
+**What do the tests not check?** They run on a throwaway test database on the laptop,
+not on the real Supabase database. So they do not show what the real players' data
+looks like. There is also no test with many weapons at once.
 
 ## 32. A paid wall repair survives a delayed wave record — Ianno Hollensteiner (#82)
 

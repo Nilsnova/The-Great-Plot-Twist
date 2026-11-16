@@ -405,9 +405,11 @@ def test_no_browser_role_may_read_the_tables_or_run_the_functions(database):
     )
 
 
-def test_the_server_cannot_delete_islands_or_waves(database):
+def test_the_server_cannot_delete_islands(database):
     # Buildings can come down since 20261112080000_demolish.sql, but only through
     # island_demolish(), which refuses every home islet building (test_demolish_sql.py).
+    # Waves can go since 20261116070000_island_fresh_start.sql, which deletes the waves of the
+    # one island its owner resets (test_island_fresh_start_sql.py). An island never goes.
     rights = database.execute(
         """
         select has_table_privilege('service_role', 'public.islands', 'delete'),
@@ -415,7 +417,7 @@ def test_the_server_cannot_delete_islands_or_waves(database):
                has_table_privilege('service_role', 'public.islet_buildings', 'delete')
         """
     ).fetchone()
-    assert rights == (False, False, True)
+    assert rights == (False, True, True)
 
 
 # --- scripts/admin/fresh_start.sql ---

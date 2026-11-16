@@ -1,7 +1,9 @@
 // T35 tower footprint and route-shape helpers, sourced from T36 placement geometry.
 import {describe, expect, it} from 'vitest';
 import {FOOTPRINTS} from '../../src/island/placement.js';
-import {TOWER_FOOTPRINT, towerApproachPoint, towerEdgeDistance, towerObstacles} from '../../src/pirates/tower-obstacles.js';
+import {TOWER_FOOTPRINT, blocksAsTower, towerApproachPoint, towerEdgeDistance, towerObstacles} from '../../src/pirates/tower-obstacles.js';
+import {guideTowers} from '../../src/pirates/battle-guide.js';
+import {obstacleInWay} from '../../src/pirates/boarder-paths.js';
 
 describe('tower obstacles (T35)', () => {
   it('takes its square size from the T36 tower slot', () => {
@@ -26,5 +28,14 @@ describe('tower obstacles (T35)', () => {
     expect(out[0].cells).toHaveLength(16);
     expect(out[3].cells).toHaveLength(16);
     expect(out[3].cells[0]).toEqual({x: 3.25, z: 2.25});
+  });
+
+  it('treats every tower with hp as an obstacle, the swivel nest (D055) too, in the field, the movement and the guide alike', () => {
+    expect(['cannon', 'mortar', 'harpoon', 'culverin', 'swivel'].every(blocksAsTower)).toBe(true);
+    expect(['watchtower', 'house', 'wall'].some(blocksAsTower)).toBe(false);
+    const swivel = {id: 'cannon_2', kind: 'swivel', level: 1, x: 0, z: 0, hp: 72, maxHp: 72};
+    expect(towerObstacles([swivel]).map(item => item.id)).toEqual(['cannon_2']);
+    expect(obstacleInWay({x: -5, z: 0}, {x: 5, z: 0}, [swivel])?.kind).toBe('tower');
+    expect(guideTowers([swivel]).map(item => item.id)).toEqual(['cannon_2']);
   });
 });

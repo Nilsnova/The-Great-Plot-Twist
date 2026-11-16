@@ -6,12 +6,12 @@ import {node} from './kit/dom.js';
 import {places} from '../world/places/registry.js';
 import {settings} from '../config.js';
 import {getWeather} from '../world/weather.js';
-import {on as defaultOn} from '../core/events.js';
+import {on as defaultOn, emit as defaultEmit} from '../core/events.js';
 import {getPreferences, reducedMotion} from '../settings/preferences.js';
 import {counterValue} from './coin-counter.js';
 import {addMenuExtras, addMenuStatus} from '../shell/menu-extras.js';
 import {createQuestStrip} from './quest-strip.js';
-import {QUEST_EVENTS, PLACE_ARRIVED} from './quest-events.js';
+import {QUEST_EVENTS, PLACE_ARRIVED, HUD_OPENED} from './quest-events.js';
 import {applyQuestEvent, createIdleHint, firstQuestView, questsFor, readFirstQuests, writeFirstQuests} from './first-quests.js';
 import {showToast} from './toasts.js';
 import {coinsSpoken, formatCoins} from '../lib/coins.js';
@@ -23,7 +23,7 @@ const names = Object.fromEntries(Object.values(places).flatMap(p => p.zones.map(
 const local = () => { try { return globalThis.localStorage ?? null; } catch { return null; } };
 export const weatherLabel = weather => weather.rain > 0.5 ? 'Rain at sea' : weather.fog > 0.7 ? 'Sea mist' : weather.cloudCover > 0.6 ? 'Overcast' : 'Fair skies';
 
-export function createHud(container, actions, {on = defaultOn, storage = local(), toast = showToast, hintsEnabled = () => getPreferences().hintsEnabled !== false} = {}) {
+export function createHud(container, actions, {on = defaultOn, emit = defaultEmit, storage = local(), toast = showToast, hintsEnabled = () => getPreferences().hintsEnabled !== false} = {}) {
   let disposed = false, place = 'saltreach_harbor', override = null, coins = null, account = 'none', lastFrame = 0;
   // Where the balance comes from: the wallet (view.captain.coins) or, with the islands on, the island API
   // through setCoins(). The island's own count wins once chosen, so the wallet never overwrites it.
@@ -38,9 +38,12 @@ export function createHud(container, actions, {on = defaultOn, storage = local()
   const right = node('div', 'hud-right'), menu = node('button', 'hud-menu');
   menu.type = 'button';menu.dataset.hudGroup = 'menu';menu.setAttribute('aria-haspopup', 'dialog');
   const bars = node('span', 'hud-menu-icon');bars.setAttribute('aria-hidden', 'true');menu.append(bars, document.createTextNode('Menu'));
-  menu.addEventListener('click', () => (actions.menu ?? actions.settings)?.());
+  menu.addEventListener('click', () => { opened('menu'); (actions.menu ?? actions.settings)?.(); });
   right.append(menu);
   const strip = createQuestStrip({parent: right, focusGame: () => actions.focus?.()});
+  // The guided start (T52) waits for the Menu or the goals being opened: hud_opened {what}.
+  function opened(what) { try { emit?.({type: HUD_OPENED, what}); } catch { /* The HUD never stops for it. */ } }
+  strip.element.addEventListener('click', event => { if (event.target?.closest?.('button')) opened('goals'); });
   // Contextual: arrival banner (and a screen-reader place status), the E prompt.
   const banner = node('div', 'hud-arrival'), bannerEyebrow = node('span', '', 'You have arrived'), bannerName = node('strong');
   banner.hidden = true;banner.setAttribute('aria-hidden', 'true');banner.append(bannerEyebrow, bannerName);
@@ -74,18 +77,26 @@ export function createHud(container, actions, {on = defaultOn, storage = local()
   drawCoins();
 
   // ---- quests: the first 3 minutes unless a part of the game (the class demo) shows its own ----
-  let first = readFirstQuests(storage);
+  let first = readFirstQuests(storage), guide = null;
   const idle = createIdleHint();
+  // T52: the first-run goals show only on an island the player owns or joined (actions.hasIsland), never on the
+  // front door or signed out; a part of the game with its own goals (the class demo) keeps its strip.
+  const islandShown = () => { try { return actions.hasIsland ? actions.hasIsland() === true : true; } catch { return false; } };
   // actions.travel() says whether the sea chart is there (docs/GAME-V3.md §2 "one island": no, by default).
   const travel = () => { try { return actions.travel ? actions.travel() !== false : false; } catch { return false; } };
   const quests = () => questsFor(travel());
-  const draw = () => strip.render(override ?? firstQuestView(first, quests()));
+  const draw = () => {
+    const view = override ?? guide ?? (islandShown() ? firstQuestView(first, quests()) : null);
+    strip.hidden = !view;
+    if (view) strip.render(view);
+  };
   function progress(event) {
     const result = applyQuestEvent(first, event, quests());
     if (!result.changed || disposed) return;
     first = result.state;writeFirstQuests(storage, first);idle.progress();
     if (override) return;
     draw();
+    if (guide) return; // the guided start says it itself
     toast({text: first.done >= quests().length ? 'All goals done!' : `Goal done: ${result.completed.label}`, tone: 'success'});
   }
   const stops = Object.values(QUEST_EVENTS).map(type => on(type, progress));
@@ -144,9 +155,13 @@ export function createHud(container, actions, {on = defaultOn, storage = local()
     get coins() { return coins; },
     // A part of the game with its own goals (the class demo) passes its view; null gives the strip back.
     setQuests(view) { override = view ?? null; draw(); },
+    // The guided start of a new island (T52, src/tutorial/tutorials.js): its steps in the strip, or null for the goals.
+    setGuide(view) { guide = view ?? null; draw(); },
     get quests() { return {...first, view: override ?? firstQuestView(first, quests())}; },
     // The goals again (the island game decided on one island or travel after the first Play).
     refreshQuests() { draw(); },
+    // T51: open water behind the front door has no island, so no goals strip yet.
+    setBare(on) { overlay.classList.toggle('hud-bare', !!on); },
     togglePanel() {}, toggleControls() {},
     closeQuickPanels() { return strip.closeHint(); },
     start() {
@@ -180,7 +195,9 @@ export function createHud(container, actions, {on = defaultOn, storage = local()
         nudge.textContent = hint.text;
         nudge.style.left = hint.at ? `${Math.max(8, Math.min(92, hint.at.x * 100))}%` : '50%';nudge.style.top = hint.at ? `${Math.max(10, Math.min(92, hint.at.y * 100))}%` : '40%';
       }
-      if (idle.step(delta, {moving: (stats.speed ?? 0) > 0.05, blocked: stats.blocked === true || !overlay.classList.contains('exploring')})) {
+      // The island answered (or left): the goals follow (T52, islandShown).
+      if (!override && !guide && islandShown() === strip.element.hidden) draw();
+      if (idle.step(delta, {moving: (stats.speed ?? 0) > 0.05, blocked: stats.blocked === true || !overlay.classList.contains('exploring') || strip.element.hidden})) {
         const item = strip.current;
         if (item && !item.done && hintsEnabled()) toast({text: `Need a hand? ${item.hint}`, ms: 7000});
       }

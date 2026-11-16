@@ -1,0 +1,44 @@
+{
+  "main": "e8c61c647ae1cd5bb96e89916e89015ddf6e840c",
+  "scene": "isolated real UI and controller with synthetic delayed replies",
+  "captures": [
+    {
+      "file": "before-1280x720.png",
+      "width": 1280,
+      "height": 720,
+      "trace": {
+        "preparation": false,
+        "line": "Ring it and wave 21 sails in after a 10 second countdown."
+      }
+    },
+    {
+      "file": "before-375x812.png",
+      "width": 375,
+      "height": 812,
+      "trace": {
+        "preparation": false,
+        "line": "Ring it and wave 21 sails in after a 10 second countdown."
+      }
+    },
+    {
+      "file": "after-1280x720.png",
+      "width": 1280,
+      "height": 720,
+      "trace": {
+        "preparation": true,
+        "line": "Ring it and wave 18 sails in after a 10 second countdown."
+      }
+    },
+    {
+      "file": "after-375x812.png",
+      "width": 375,
+      "height": 812,
+      "trace": {
+        "preparation": true,
+        "line": "Ring it and wave 18 sails in after a 10 second countdown."
+      }
+    }
+  ],
+  "errors": [],
+  "external": []
+}
