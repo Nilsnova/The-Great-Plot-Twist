@@ -30,12 +30,19 @@ try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
   await page.goto(baseUrl + '/tests/fixtures/structure-recovery-preview.html');
   await page.locator('.recovery-card').first().waitFor();
-  await page.getByText('75 / 100 HP').waitFor();
+  await page.getByText('45 / 60 HP').waitFor();
+  await page.getByText('Or wait about 2 min 30 sec for free repair').waitFor();
   await page.getByRole('button', { name: 'Repair now: pay 10 coins' }).click();
   await page.getByText('Preview emitted an intent only; no API call was made.').waitFor();
 
   const counts = await page.locator('.recovery-card').count();
   if (counts !== 3) throw new Error('Expected three standalone recovery examples, got ' + counts);
+  await page.getByText('0 / 80 HP').waitFor();
+  await page.getByRole('button', { name: 'Repair now: pay 30 coins' }).waitFor();
+  await page.getByText('2 Repair now uses left this wave').waitFor();
+  await page.getByText('0.00006 / 60 HP').waitFor();
+  await page.getByRole('button', { name: 'Repair now: pay 40 coins' }).waitFor();
+  await page.getByText('Or wait about 10 min for free repair').waitFor();
   const bar = page.locator('#harpoon-recovery .health-fill');
   const barWidth = await bar.evaluate(element => element.getBoundingClientRect().width);
   if (barWidth < 1) throw new Error('Tiny positive HP did not render at least one visible pixel');
@@ -45,7 +52,7 @@ try {
   await page.screenshot({ path: path.join(captureDirectory, 't59-recovery-component-desktop.png'), fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.screenshot({ path: path.join(captureDirectory, 't59-recovery-component-phone.png'), fullPage: true });
-  await page.getByRole('button', { name: 'Repair now: pay 40 coins' }).waitFor();
+  await page.getByRole('button', { name: 'Repair now: pay 30 coins' }).waitFor();
   await page.locator('#cannon-recovery .recovery-marker').getByText('!').waitFor();
   console.log('T59 standalone component: 3 cards, exact HP, zero marker, tiny-positive visible width, intent-only button and desktop/phone screenshots passed.');
 } finally {
