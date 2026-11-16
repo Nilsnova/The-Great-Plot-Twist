@@ -31,6 +31,7 @@ FLAGS = (
     "arsenal",
     "tower_health",
     "pathing",
+    "ship_fire",
 )
 VARIABLES = {
     "APP_ENV": " PrEvIeW ",

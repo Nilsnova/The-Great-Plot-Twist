@@ -41,6 +41,9 @@ FLAG_NAMES = (
     "tower_health",
     # T34/T35 (D040, proposed): boarders walk round or through the real walls (a wave rule).
     "pathing",
+    # T50: ships at anchor fire at a real wall, tower or the heart and their hits count (a wave
+    # rule). Needs supabase/migrations/20261116160000_ship_fire_rule.sql applied first.
+    "ship_fire",
 )
 
 

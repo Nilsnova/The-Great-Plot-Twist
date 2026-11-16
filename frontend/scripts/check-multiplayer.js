@@ -24,7 +24,9 @@
 //   the 🩹 icon on Nils, the hold needs only 1.2 s and the friend stands up with 75% hp on both pages (screenshots at 1280 × 800 and 390 × 844). Ten players in one room are covered by the
 //   unit tests (tests/island/games.test.js, tests/pirates/ten-players.test.js). v3 waves: wave 3's event (fog bank or
 //   storm) is the same on both pages; the wave-5 boss finisher on four pages: every page hears every captain's
-//   samples and decides the same scores and outcome.
+//   samples and decides the same scores and outcome. T50: the fake server has the flag ship_fire on (?fakeflags), so
+//   wave 3 carries the rule ship_fire: both pages see the same ship shots (tick, ship, target) and the same heart ♥ at
+//   the same tick, and the same hits on the heart.
 //   node scripts/check-multiplayer.js [folder]        (npm run test:mp)
 import assert from 'node:assert/strict';
 import {mkdir} from 'node:fs/promises';
@@ -50,7 +52,8 @@ async function openCaptain(name, playerId, visit = null, {create = false, join =
     page.on('console', message => { if (message.type() === 'error') env.errors.push(`${name}: ${message.text()}`); });
   }
   await page.setViewportSize({width: 960, height: 600});
-  const query = `?islands=fake&fakeworld=${WORLD}&fakeplayer=${playerId}&fakename=${encodeURIComponent(name)}${visit ? `&visit=${visit}` : ''}`;
+  // T50: ship_fire on (the wave rule of the fake server, kept per wave like the real one).
+  const query = `?islands=fake&fakeflags=ship_fire&fakeworld=${WORLD}&fakeplayer=${playerId}&fakename=${encodeURIComponent(name)}${visit ? `&visit=${visit}` : ''}`;
   await page.goto(`${env.url}/${query}`);
   if (first) { await page.evaluate(() => { localStorage.clear(); sessionStorage.clear(); }); await page.reload(); }
   const captain = {name, page, playerId};
@@ -89,7 +92,10 @@ async function openCaptain(name, playerId, visit = null, {create = false, join =
   // What every page heard: the sim's musket shots, the loot answers, and a ship list per frame.
   await page.evaluate(() => {
     const g = window.__island; g.settings.hour = 12;
-    window.__mp = {shots: [], loot: [], samples: [], heard: [], started: [], fell: [], revived: [], events: [], finishers: []};
+    window.__mp = {shots: [], loot: [], samples: [], heard: [], started: [], fell: [], revived: [], events: [], finishers: [], shipFire: [], heartHits: []};
+    // T50: every ship shot (when, which ship, at what) and every ball that landed on the heart, as this page's sim had them.
+    g.on('ship_fired', event => window.__mp.shipFire.push(`${event.t}:${event.shipId}:${event.target}:${event.targetId ?? ''}`));
+    g.on('island_damaged', event => { if (event.shipId && event.landed) window.__mp.heartHits.push(`${event.t}:${event.shipId}:${event.damage}:${event.hp}`); });
     // v3 waves: the event each wave brought, and every finisher's outcome as this page's sim decided it.
     g.on('wave_event', event => window.__mp.events.push({wave: event.wave, event: event.event}));
     g.on('finisher_won', event => window.__mp.finishers.push({type: event.type, kind: event.kind, scores: event.scores, goals: event.goals}));
@@ -111,7 +117,7 @@ async function openCaptain(name, playerId, visit = null, {create = false, join =
           boarders: (wave.state.boarders ?? []).map(item => item.id).sort().join(','), landed: wave.state.boardersLanded ?? 0,
           // A Barracks' militia (GAME-V3.md "Houses"): where each stands, its hp and what it does.
           militia: (wave.state.militia ?? []).map(item => `${item.id}@${item.x},${item.z}:${item.hp}:${item.state}`).join('|'),
-          event: wave.state.event ? JSON.stringify(wave.state.event) : null});
+          event: wave.state.event ? JSON.stringify(wave.state.event) : null, heart: wave.state.islandHp});
         if (window.__mp.samples.length > 6000) window.__mp.samples.splice(0, 3000);
       }
       requestAnimationFrame(sample);
@@ -202,6 +208,10 @@ async function compare(a, b, waveId) {
     worstBoarders = Math.max(worstBoarders, Math.abs(size(other.boarders) - size(sample.boarders)));
   }
   const landed = Math.max(0, ...left.map(item => item.landed));
+  // T50: the heart's ♥ at exactly the same tick.
+  let heartChecked = 0, sameHeart = 0;
+  const atTick = new Map(right.map(item => [item.ticks, item]));
+  for (const sample of left) { const other = atTick.get(sample.ticks); if (!other) continue; heartChecked++; if (other.heart === sample.heart) sameHeart++; }
   // The militia at exactly the same tick (they move every tick, so ±1 would differ).
   let militiaChecked = 0, sameMilitia = 0, fighting = 0;
   const exact = new Map(right.map(item => [item.ticks, item]));
@@ -212,7 +222,7 @@ async function compare(a, b, waveId) {
     if (other.militia === sample.militia) sameMilitia++;
     if (sample.militia.includes(':fighting')) fighting++;
   }
-  return {checked, same, worst, sameBoarders, worstBoarders, withBoarders, landed, militiaChecked, sameMilitia, fighting};
+  return {checked, same, worst, sameBoarders, worstBoarders, withBoarders, landed, militiaChecked, sameMilitia, fighting, heartChecked, sameHeart};
 }
 
 // The musket fires from the captain's own body (owner, 12 Nov): the owner's character and, on the friend's
@@ -613,6 +623,17 @@ try {
   // Whether a militia meets a boarder depends on where this wave's boarders land; the fight itself is covered by
   // tests/pirates/houses.test.js. Here only the sync is required: both pages show the militia the same.
   if (!sync1.fighting) results.push("wave 1 militia: no boarder came near the Barracks in this wave's samples");
+  // T50 (the wave rule ship_fire): both sims ran the rule, fired the same shots at the same targets, and the heart lost
+  // the same ♥ at the same ticks.
+  const shipFireOn = await Promise.all([host, ben].map(captain => captain.page.evaluate(() => window.__island.waves.island.wave?.info?.rules?.shipFire === true)));
+  assert.deepEqual(shipFireOn, [true, true], 'both pages play the wave with the rule ship_fire');
+  const [hostFire, benFire] = await Promise.all([host, ben].map(captain => captain.page.evaluate(() => ({shots: window.__mp.shipFire, hits: window.__mp.heartHits}))));
+  const common = list => { const until = Math.min(...[hostFire, benFire].map(item => Number(item.shots.at(-1)?.split(':')[0] ?? 0))); return list.filter(item => Number(item.split(':')[0]) <= until); };
+  results.push(`wave ${first.wave} ship fire: owner ${hostFire.shots.length} shots, ${hostFire.hits.length} on the heart; friend ${benFire.shots.length} shots, ${benFire.hits.length} on the heart; heart ♥ alike at ${sync1.sameHeart}/${sync1.heartChecked} shared ticks`);
+  assert.deepEqual(common(benFire.shots), common(hostFire.shots), 'both pages saw the same ship shots (tick, ship, target)');
+  assert.deepEqual(common(benFire.hits), common(hostFire.hits), 'both pages saw the same hits on the heart (tick, ship, ♥ lost, ♥ left)');
+  assert.ok(sync1.heartChecked >= 5 && sync1.sameHeart === sync1.heartChecked, "the heart's ♥ is the same on both pages at every shared tick");
+  if (!hostFire.hits.length) results.push(`note: no ship ball reached the heart in wave ${first.wave} (the cannons and walls took the shots); the shots and the heart still agree`);
   // v3 waves (GAME-V3.md §4.2): wave 3 always brings an event (fog bank or storm); both pages ran the same one,
   // with the same event state, and the samples above (the same ships at the same tick) are of that event wave.
   const eventsSeen = await Promise.all([host, ben].map(captain => captain.page.evaluate(wave => window.__mp.events.filter(item => item.wave === wave), first.wave)));

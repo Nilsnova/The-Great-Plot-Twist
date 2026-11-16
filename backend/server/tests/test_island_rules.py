@@ -34,6 +34,7 @@ HARPOON = REPO_ROOT / "supabase" / "migrations" / "20261113020000_harpoon_tower.
 CULVERIN = REPO_ROOT / "supabase" / "migrations" / "20261114140000_culverin.sql"
 SWIVEL_RULE = REPO_ROOT / "supabase" / "migrations" / "20261116020100_swivel_spot_rule.sql"
 WAVE_RULES = REPO_ROOT / "supabase" / "migrations" / "20261114130500_wave_rules.sql"
+SHIP_FIRE_RULE = REPO_ROOT / "supabase" / "migrations" / "20261116160000_ship_fire_rule.sql"
 # The md5 of 20261110010000 as applied live (a checksum, not a secret).
 APPLIED_MD5 = "79278156e4925b2d39076722c11d2f00"  # pragma: allowlist secret
 
@@ -381,10 +382,22 @@ def rule_names(text: str) -> list[str]:
 
 
 def test_the_wave_rule_names_in_the_database_are_the_servers():
-    first = rule_names(WAVE_RULES.read_text())
-    assert rule_names(CULVERIN.read_text()) == list(SIM_RULES)
-    assert set(first) <= set(SIM_RULES)  # every name a kept wave may hold stays allowed
-    assert set(SIM_RULES) - set(first) == {"defenses_v2"}
+    first, culverin = rule_names(WAVE_RULES.read_text()), rule_names(CULVERIN.read_text())
+    assert rule_names(SHIP_FIRE_RULE.read_text()) == list(SIM_RULES)  # the latest check rule
+    assert set(first) <= set(culverin) <= set(SIM_RULES)  # every name a kept wave may hold stays allowed
+    assert set(culverin) - set(first) == {"defenses_v2"}
+    assert set(SIM_RULES) - set(culverin) == {"ship_fire"}
+
+
+def test_the_ship_fire_migration_changes_only_the_rule_names():
+    text = SHIP_FIRE_RULE.read_text()
+    verbs = r"^(alter|create|drop|insert|update|delete|grant|revoke|comment)"
+    statements = [line for line in text.splitlines() if re.match(verbs, line)]
+    assert statements == [
+        "alter table public.wave_rules drop constraint if exists wave_rules_known_names;",
+        "alter table public.wave_rules",
+        "comment on table public.wave_rules is",
+    ]
 
 
 def test_the_inner_wall_migration_changes_only_the_spot_rule():
