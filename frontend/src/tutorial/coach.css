@@ -1,0 +1,39 @@
+/* The guided start's caption panel and highlight (src/tutorial/coach.js, T52), and the unlock card
+   (src/tutorial/unlock-card.js). Kit tokens with fallbacks. The panel sits in the HUD's right column under the
+   goals strip (full width on a phone), so it never covers the coins, the Menu or the narrator's caption. */
+.coach-panel{box-sizing:border-box;width:100%;padding:10px 12px 12px;background:var(--u-sea,#123238);color:var(--u-ink,#f6ecd2);border:2px solid var(--u-gold,#f2c14e);border-radius:var(--u-radius-sm,12px);box-shadow:var(--u-frame,0 6px 20px rgb(0 0 0 / .35));pointer-events:auto;font-family:var(--u-font,system-ui,sans-serif)}
+.coach-panel[hidden]{display:none}
+.coach-panel.is-floating{position:fixed;top:84px;left:50%;transform:translateX(-50%);width:min(340px,calc(100vw - 24px));z-index:40}
+.coach-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.coach-step{font:700 14px/1.2 var(--u-font,system-ui,sans-serif);letter-spacing:1px;text-transform:uppercase;color:var(--u-mute,#b9c7bd)}
+.coach-key{display:grid;place-items:center;min-width:30px;height:30px;padding:0 6px;font:800 16px/1 var(--u-font,system-ui,sans-serif);color:#2b1d06;background:var(--u-gold,#f2c14e);border:2px solid var(--u-deep,#0b2226);border-radius:8px}
+.coach-key[hidden]{display:none}
+.coach-title{margin:4px 0 2px;font:700 18px/1.25 var(--u-serif,Georgia,serif);color:var(--u-gold,#f2c14e)}
+.coach-caption{margin:0;font:500 16px/1.45 var(--u-font,system-ui,sans-serif)}
+.coach-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.coach-actions[hidden]{display:none}
+.coach-button{min-height:44px;padding:6px 14px;font:700 15px/1.2 var(--u-font,system-ui,sans-serif);color:#2b1d06;background:var(--u-gold,#f2c14e);border:2px solid var(--u-deep,#0b2226);border-radius:var(--u-radius-xs,8px);cursor:pointer}
+.coach-button.is-quiet{color:var(--u-ink,#f6ecd2);background:transparent;border-color:var(--u-line,#5c8a86)}
+.coach-button:hover{filter:brightness(1.08)}.coach-button:focus-visible{outline:3px solid var(--u-gold,#f2c14e);outline-offset:3px}
+
+/* The highlight: a ring on the target, or an arrow on the edge of the screen. Never catches a click. */
+.coach-ring,.coach-arrow{position:fixed;z-index:39;pointer-events:none}
+.coach-ring[hidden],.coach-arrow[hidden]{display:none}
+.coach-ring{--coach-size:72px;width:var(--coach-size);height:var(--coach-size);transform:translate(-50%,-50%);border:4px solid var(--u-gold,#f2c14e);border-radius:50%;box-shadow:0 0 0 4px rgb(11 34 38 / .55),0 0 18px 4px rgb(242 193 78 / .55)}
+.coach-ring-label{position:absolute;left:50%;top:100%;transform:translate(-50%,8px);padding:4px 10px;white-space:nowrap;font:700 15px/1.2 var(--u-font,system-ui,sans-serif);color:var(--u-ink,#f6ecd2);background:var(--u-sea,#123238);border:2px solid var(--u-gold,#f2c14e);border-radius:8px}
+.coach-ring-label[hidden]{display:none}
+.coach-arrow{--coach-turn:0rad;width:0;height:0;transform:translate(-50%,-50%) rotate(var(--coach-turn));border-top:16px solid transparent;border-bottom:16px solid transparent;border-left:28px solid var(--u-gold,#f2c14e);filter:drop-shadow(0 0 4px rgb(11 34 38 / .9))}
+@media (prefers-reduced-motion:no-preference){:root:not([data-reduced-motion="true"]) .coach-ring{animation:coach-pulse 1.4s ease-in-out infinite}}
+@keyframes coach-pulse{0%,100%{scale:1}50%{scale:1.12}}
+
+/* The unlock card. */
+.unlock-card{max-width:min(460px,calc(100vw - 24px))}
+.unlock-card .unlock-eyebrow{margin:0 0 6px;font:700 14px/1.2 var(--u-font,system-ui,sans-serif);letter-spacing:1px;text-transform:uppercase;color:var(--u-mute,#b9c7bd)}
+.unlock-card .unlock-what{margin:0 0 10px;font:600 18px/1.45 var(--u-font,system-ui,sans-serif)}
+.unlock-card .unlock-how{margin:0 0 10px;font:16px/1.45 var(--u-font,system-ui,sans-serif)}
+.unlock-card .unlock-how strong{color:var(--u-gold,#f2c14e)}
+.unlock-card .unlock-note{margin:0 0 10px;padding:8px 12px;font:16px/1.4 var(--u-font,system-ui,sans-serif);background:var(--u-deep,#0b2226);border-radius:8px}
+.unlock-card .unlock-note[hidden]{display:none}
+.unlock-card .unlock-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.unlock-card .unlock-count{margin:12px 0 0;font:600 14px/1.2 var(--u-font,system-ui,sans-serif);color:var(--u-mute,#b9c7bd)}
+.unlock-card .unlock-count[hidden]{display:none}

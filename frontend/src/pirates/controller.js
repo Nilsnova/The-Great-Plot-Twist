@@ -347,6 +347,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   // The captain's gun: at a ship or boarder (a tap) or the nearest in range (F), from where the player
   // stands. A boarder within cutlass reach gets the cutlass instead (close quarters, §12). A spray
   // (blunderbuss) and a bomb (fire bombs) also carry the aim point: the target's place.
+  // The guided start (T52) waits for your own attack: captain_attack {weapon: 'gun' | 'cutlass'} (not the automatic blade).
+  const attacked = (weapon, ok) => { if (ok) emit({ type: 'captain_attack', weapon }); return ok; };
   function shoot(targetId = null) {
     const player = world.player?.position;
     if (!wave || wave.done || !player || !here() || isDown(wave) || finishing(wave)) return false;
@@ -358,10 +360,10 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     const isBoarder = named?.id?.startsWith('boarder_');
     const close = isBoarder && Math.hypot(named.x - player.x, named.z - player.z) <= stats.sweepRadius
       ? named : !targetId || isBoarder ? bladeTarget(player, state, myStats().sweepRadius) : null;
-    if (close) return strike(close);
+    if (close) return attacked('cutlass', strike(close));
     const target = targetId ? named : captainTarget(player, state, myLevel(), stats.range);
     if (!target || Math.hypot(target.x - player.x, target.z - player.z) > stats.range) return false;
-    return fireAt(stats, player, target, { x: target.x, z: target.z });
+    return attacked('gun', fireAt(stats, player, target, { x: target.x, z: target.z }));
   }
   function fireAt(stats, player, target, point) {
     const t = wave.ticks * TICK_SECONDS;
@@ -384,7 +386,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     if (!wave || wave.done || !point || !player || !here() || wave.state.phase !== 'running' || isDown(wave) || finishing(wave)) return false;
     const stats = myStats();
     wave.handAt = wave.ticks * TICK_SECONDS; // an attack of yours: the automatic cutlass waits (D052)
-    if (stats.mode === 'cone' || stats.mode === 'area') return fireAt(stats, player, target ?? null, target ?? point);
+    if (stats.mode === 'cone' || stats.mode === 'area') return attacked('gun', fireAt(stats, player, target ?? null, target ?? point));
     const inRange = item => Math.hypot(item.x - player.x, item.z - player.z) <= stats.range;
     let hit = target && inRange(target) ? target : null;
     if (!hit) {
@@ -404,7 +406,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       x: player.x, z: player.z, toX, toZ, impactAt: t + reach / stats.shotSpeed, miss: true, targets: [] }];
     wave.renderer?.events(shot); poses.note(shot);
     cue('pirate-musket');
-    return true;
+    return attacked('gun', true);
   }
   // The cutlass: one blow at a boarder within reach, synced as captain_strike with your skills (Brawler:
   // the sim scales damage and reload and sweeps with them; the reload here matches it).
