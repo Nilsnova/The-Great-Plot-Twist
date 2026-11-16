@@ -1,7 +1,7 @@
 // Island codes, visits by code, the islands flag and where Play lands.
 import {describe, expect, it} from 'vitest';
 import {islandCode, displayIslandCode, islandRoom, visitUrl, rememberVisit, readVisit, storeVisit, forgetVisit, VISIT_KEY} from '../../src/island/codes.js';
-import {islandsMode, resolveIslandsMode, startPlace} from '../../src/island/mode.js';
+import {islandsMode, resolveIslandsMode, startPlace, frontScene} from '../../src/island/mode.js';
 import {placeTopic, isPrivatePlace} from '../../src/net/live-rules.js';
 import {createFakeIslandApi} from './fake.js';
 
@@ -72,5 +72,21 @@ describe('the islands flag and where Play lands', () => {
     expect(startPlace({mode: 'off'})).toBe('saltreach_harbor');
     expect(startPlace({mode: 'off', visiting: true})).toBe('saltreach_harbor');
     expect(startPlace({mode: 'live', destination: 'lighthouse_isle'})).toBe('lighthouse_isle');
+  });
+});
+
+describe('T51: what stands behind the front door', () => {
+  it('shows open water until a game is chosen, and while the mode is still unknown', () => {
+    expect(frontScene()).toBe('water');
+    expect(frontScene({mode: null})).toBe('water');
+    expect(frontScene({mode: 'live'})).toBe('water');
+    expect(frontScene({mode: 'fake'})).toBe('water');
+  });
+  it('shows the island once a game is chosen', () => {
+    expect(frontScene({mode: 'live', game: true})).toBe('island');
+  });
+  it('keeps the old harbor start with the islands off', () => {
+    expect(frontScene({mode: 'off'})).toBe('harbor');
+    expect(frontScene({mode: 'off', game: true})).toBe('harbor');
   });
 });
