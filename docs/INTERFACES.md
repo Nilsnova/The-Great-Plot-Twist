@@ -1740,6 +1740,8 @@ With `tower_health` the room's `repair` / `rebuild` messages may name a tower in
 
 ### Wall recovery (T29–T32, T47)
 
+The runtime contracts below describe the currently deployed wall-only recovery behavior. The accepted replacement design for all HP-bearing structures is [D059](DECISIONS.md#d059--one-recovery-countdown-for-all-damageable-structures--2026-11-16) and [its T33 spec](../specs/T33-persistent-tower-damage.md); it is not implemented and does not change these routes, events or wave behavior yet. Update this section alongside any future implementation contract.
+
 [D039](DECISIONS.md#d039--wall-recovery-damage-stays-after-a-wave--2026-11-14) (proposed) and
 [the spec](../specs/T29-T32-wall-recovery.md); only while the flag `wall_recovery` is on
 (404 `feature_off` otherwise). Route contracts: `backend/server/routes/wall_recovery.py` and

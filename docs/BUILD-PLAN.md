@@ -244,6 +244,10 @@ Collaborators should investigate open choices, compare practical options, recomm
 
 Use `specs/_TEMPLATE.md` for each claimed package. Record API/event/table/flag changes in their canonical locations and [INTERFACES.md](INTERFACES.md) in the same PR. Agree authority for transient combat health versus server-owned purchases, inventory and progression. Network sync must preserve deterministic combat without trusting a client to charge coins, grant weapons or settle a reset. Reserve decision numbers and migration timestamps from current `origin/main`; this proposal assigns neither.
 
+### T33 persistent recovery follow-up
+
+Ianno approved the unified recovery design in [D059](DECISIONS.md#d059--one-recovery-countdown-for-all-damageable-structures--2026-11-16), tracked in [the T33 spec](../specs/T33-persistent-tower-damage.md). This remains design work: prepare and review the concrete implementation plan, including recovery modifiers, prices, refund and wall-skill compatibility, timer/state contracts and rollout, before production coding. Existing live recovery and wave contracts remain in force until implementation is separately reviewed and released.
+
 ### 6. Verification and handover
 
 Documentation-only changes require the documented link/content check ([ENGINEERING.md](ENGINEERING.md), section 3). Implementation PRs run the applicable documented checks, report exact results and state skipped checks:
