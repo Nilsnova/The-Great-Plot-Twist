@@ -1,11 +1,15 @@
 // The standing tower shapes boarders must walk around or break (T35, D054 proposed).
 // Used by sim.js and battle-guide.js only when a wave carries tower_obstacles.
 import {FOOTPRINTS} from '../island/placement.js';
+import {towerMaxHp} from './tower-health.js';
 
 export const TOWER_FOOTPRINT = FOOTPRINTS.tower;
 const HALF = TOWER_FOOTPRINT / 2;
 const INSET = .25;
 const SAMPLE_STEP = (HALF - INSET) * 2 / 3;
+
+/** True for every tower kind with T33 hp (cannon, mortar, harpoon, culverin, swivel nest): the kinds that block. */
+export const blocksAsTower = kind => towerMaxHp(kind, 1) > 0;
 
 /** How far a point is from a tower's T36 square (zero on or inside it). */
 export function towerEdgeDistance(point, tower) {
@@ -26,8 +30,7 @@ export function towerApproachPoint(from, tower, margin = 0) {
 
 /** Every standing damageable tower as a generic breakable square for the T35 distance field. */
 export function towerObstacles(towers = []) {
-  return towers.filter(tower => tower && tower.maxHp > 0
-      && ['cannon', 'mortar', 'harpoon', 'culverin'].includes(tower.kind))
+  return towers.filter(tower => tower && tower.maxHp > 0 && blocksAsTower(tower.kind))
     .map(tower => ({...tower, source: tower, cells: towerFootprintPoints(tower), obstacleKind: 'tower'}))
     .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
 }
