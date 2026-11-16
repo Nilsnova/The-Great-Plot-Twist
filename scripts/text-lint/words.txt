@@ -164,6 +164,7 @@ balance
 balances
 balldontlie
 balls
+band
 bank
 bar
 barge
@@ -544,6 +545,7 @@ dangerous
 daring
 dark
 darkness
+dash
 dashes
 data
 database
@@ -616,6 +618,7 @@ do
 dock
 dockhand
 docs
+dodge
 does
 dolphin
 don't
@@ -878,6 +881,7 @@ from
 front
 frontend
 full
+fun
 functions
 further
 fuse
@@ -1987,6 +1991,7 @@ sample
 samples
 sampling
 sank
+sans
 satchel
 save
 saved
@@ -2052,6 +2057,7 @@ sent
 separate
 separately
 sequence
+serif
 server
 server's
 servers
@@ -2244,6 +2250,7 @@ standing
 stands
 star
 starfish
+stars
 start
 started
 starter
@@ -2261,6 +2268,7 @@ stays
 steadily
 steady
 steal
+steer
 step
 steps
 stick
@@ -2330,6 +2338,7 @@ swings
 switch
 switched
 symbols
+system
 t
 tab
 tab's
@@ -2672,6 +2681,7 @@ worth
 would
 wraps
 wreck
+wreck's
 wrecks
 wren
 write
@@ -2748,3 +2758,18 @@ swap
 swapped
 guard
 guards
+swivel
+nest
+trees
+powder
+loaders
+winch
+barbs
+rammers
+bore
+oiled
+scatter
+sprays
+pellets
+iii
+tower's

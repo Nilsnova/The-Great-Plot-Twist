@@ -1,0 +1,6 @@
+/* The wreck's card once she sails: one tile per game. */
+.island-boat-games{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:6px 0 2px}
+.island-boat-game{display:grid;justify-items:center;gap:2px;min-height:96px;padding:10px 8px;font:800 16px/1.2 var(--u-font, system-ui, sans-serif);white-space:normal}
+.island-boat-game-icon{font-size:30px;line-height:1}
+.island-boat-game-pay{font:700 14px/1.2 var(--u-font, system-ui, sans-serif)}
+.island-boat-game[data-paid=yes] .island-boat-game-pay{color:#2f6f3a}

@@ -95,7 +95,7 @@ export function createHud(container, actions, {on = defaultOn, storage = local()
 
   // ---- what moved into the pause menu ----
   const clock = () => { const hour = Math.floor(settings.hour), minute = Math.floor((settings.hour % 1) * 60); return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`; };
-  stops.push(addMenuStatus(() => `${placeName(place)} · ${weatherLabel(getWeather())} · ${clock()}`));
+  stops.push(addMenuStatus(() => `${placeName(place)}, ${weatherLabel(getWeather())}, ${clock()}`));
   stops.push(addMenuExtras(() => [
     actions.chart && (!actions.travel || travel()) && {label: 'Sea chart', onSelect: () => actions.chart()},
     actions.controls && {label: 'Controls', onSelect: () => actions.controls()},

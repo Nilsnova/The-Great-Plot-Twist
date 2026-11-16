@@ -92,5 +92,7 @@ export const HARPOON_ART = {
 };
 // The culverin (T43, D048 proposed): cartoon-only like the harpoon tower; its frame names live with its drawings.
 export { CULVERIN_ART } from '../art/defenses-v2.js';
+// The swivel-gun nest (D055): cartoon-only like the harpoon tower and the culverin.
+export { SWIVEL_ART } from '../art/swivel.js';
 export const crewArt = { gunner: 'crew-gunner', carpenter: 'crew-carpenter', lookout: 'crew-lookout' };
 export const pirateArtIds = Object.keys(pirateDimensions);

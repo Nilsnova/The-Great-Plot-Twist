@@ -19,11 +19,13 @@ describe('build card (TOWER-DEFENSE.md §2, §9)', () => {
       {kind: 'mortar', name: 'Mortar', line: 'Hits every ship near the impact. Cannot hit close ships.', price: '🪙 60', disabled: true, locked: true,
         reason: 'Opens after wave 2.', busy: false},
       {kind: 'harpoon', name: 'Harpoon tower', line: 'Slows one ship at a time with a rope harpoon.', price: '🪙 40', disabled: true, locked: true,
-        reason: 'Opens after wave 12.', busy: false}]);
+        reason: 'Opens after wave 12.', busy: false},
+      {kind: 'swivel', name: 'Swivel-gun nest', line: 'Sprays pellets at boarders on the island. Never at ships.', price: '🪙 50', disabled: true, locked: true,
+        reason: 'Opens after wave 9.', busy: false}]);
     const later = buildCardModel({spotId: 'cannon_1', slot: 'tower', spot: tower(), coins: 40, unlocks: wave3});
     expect(later.choices.map(choice => [choice.kind, choice.price, choice.disabled, choice.reason])).toEqual([
       ['cannon', '🪙 30', false, ''], ['mortar', '🪙 60', true, 'Not enough 🪙: you need 🪙 20 more.'],
-      ['harpoon', '🪙 40', true, 'Opens after wave 12.']]);
+      ['harpoon', '🪙 40', true, 'Opens after wave 12.'], ['swivel', '🪙 50', true, 'Opens after wave 9.']]);
     expect(later.soon).toBe('');
   });
   it('the harpoon tower: locked until wave 12, then a plain line, its price and its levels (T1)', () => {
@@ -99,7 +101,7 @@ describe('build card (TOWER-DEFENSE.md §2, §9)', () => {
   it("on a friend's island: the same card, you pay, it stays theirs, no crew", () => {
     const empty = buildCardModel({spotId: 'cannon_1', slot: 'tower', spot: tower(), coins: 100, unlocks: fresh, visitor: true, ownerName: 'Captain Gull'});
     expect(empty).toMatchObject({mode: 'choose', owner: "You pay · it stays on Captain Gull's island", coins: 'You have 🪙 100'});
-    expect(empty.choices.map(choice => [choice.kind, choice.disabled])).toEqual([['cannon', false], ['mortar', true], ['harpoon', true]]);
+    expect(empty.choices.map(choice => [choice.kind, choice.disabled])).toEqual([['cannon', false], ['mortar', true], ['harpoon', true], ['swivel', true]]);
     expect(buildCardModel({spotId: 'cannon_1', slot: 'tower', spot: tower(true), coins: 100, unlocks: wave3, visitor: true, ownerName: 'Captain Gull'}))
       .toMatchObject({mode: 'upgrade', upgrade: {label: 'Level 2 · 🪙 60'}, hire: false, owner: "You pay · it stays on Captain Gull's island"});
     expect(buildCardModel({spotId: 'cannon_1', slot: 'tower', visitor: true}).reason).toBe('The island is still loading.');
@@ -145,7 +147,8 @@ describe('unlocks (GAME-V3.md §4, the campaign table)', () => {
     expect(wave3).toMatchObject({levels: {watchtower: 2}, crew: {gunner: true, carpenter: false}});
     expect(wave5).toMatchObject({levels: {wall: 3, cannon: 3, mortar: 3, watchtower: 2, house: 3}, crew: {gunner: true, carpenter: true, lookout: false, guard: false}, next: {wave: 6}});
     expect(unlocksFor(6)).toMatchObject({crew: {guard: true, lookout: false}, next: {wave: 8}}); // D052
-    expect(unlocksFor(8)).toMatchObject({captain: 5, crew: {lookout: true}, next: {wave: 12}});
+    expect(unlocksFor(8)).toMatchObject({captain: 5, crew: {lookout: true}, next: {wave: 9}});
+    expect(unlocksFor(9)).toMatchObject({levels: {swivel: 3}, next: {wave: 12}}); // D055: the swivel-gun nest
     expect(unlocksFor(12)).toMatchObject({levels: {wall: 4, cannon: 4, mortar: 3, watchtower: 3, house: 3}, next: {wave: 15}});
     expect(unlocksFor(15)).toMatchObject({levels: {mortar: 4, watchtower: 4}, next: {wave: 20}});
     expect(unlocksFor(20)).toMatchObject({levels: {wall: 5, cannon: 5, mortar: 5, watchtower: 5, house: 3}, next: null});
@@ -252,7 +255,7 @@ describe('the campaign buildings (GAME-V3.md §4, §5)', () => {
     const house = buildCardModel({spotId: 'house_1', slot: 'house', spot: {id: 'house_1', kind: 'house', built: true, level: 2}, coins: 0, campaign: atWave(3)}).skills;
     expect(house.choices.map(choice => [choice.id, choice.price ?? '', choice.disabled])).toEqual([['barracks', '', false], ['tavern', '', false], ['workshop', '', false]]);
   });
-  it('the wreck: locked before wave 6, gifts cut to what is left, "Repaired, sailing opens later" at 100%', () => {
+  it('the wreck: locked before wave 6, gifts cut to what is left, repaired at 100% and waiting for wave 30', () => {
     expect(wreckModel({campaign: atWave(5)})).toMatchObject({open: false, line: 'Opens after wave 6.', gifts: []});
     const half = wreckModel({campaign: atWave(6, {wreck: {paid: 450, goal: 500, gifts: [25, 100]}}), coins: 30});
     expect(half).toMatchObject({percent: 90, progress: '🪙 450 of 🪙 500', done: false});

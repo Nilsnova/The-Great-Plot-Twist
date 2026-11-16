@@ -7,7 +7,9 @@ import {formatCoinDelta, formatCoins} from '../lib/coins.js';
 import {BRANCHES, ROLES, ROLE_BY_ID, ROLE_LEVEL, SKILLS, SKILL_BY_ID, WEAPONS, WEAPON_BY_ID, isRole, pointsEarned, pointsSpent, readSkills, readWeapon, respecPrice, skillNeeds} from '../pirates/captain-ids.js';
 import {opensText, spotWave, waveOf, isOpen, tierItem, tierWave} from '../campaign/index.js';
 import {BRANCH_BY_ID, SPECS, TOP_TIER, isCapstone, optionLine, optionName, optionsOf, readSpec, readTier, skillPrice} from '../campaign/tech.js';
+import {BOAT, GAME_TEXT as BOAT_TEXT, coinsFor} from '../pirates/boat/rules.js';
 import {ROLES as HOUSE_ROLES, ROLE_IDS, ROLE_LEVEL as HOUSE_ROLE_LEVEL, readRole} from '../campaign/houses.js';
+import {towerTreeModel} from './tree-model.js';
 
 // Coins always read "🪙 120" through formatCoins (BUILD-PLAN 3.2); an unknown amount reads "🪙 ?".
 export const coinText = n => (Number.isSafeInteger(n) ? formatCoins(n) : '🪙 ?');
@@ -31,9 +33,13 @@ export const coinText = n => (Number.isSafeInteger(n) ? formatCoins(n) : '🪙 ?
 // `demolish` {label, disabled, reason}; battle: a wave runs on screen, so it waits for the break.
 // flags: the server's feature flags (GET /api/config); an empty tower spot offers towerKinds({flags, point}), so the
 // culverin (T43) only while defenses_v2 is on.
+// D055: a built tower of a kind with an upgrade tree (cannon, mortar, harpoon, culverin, swivel nest) on an island
+// also gets `tree` (tree-model.js): its levels as the trunk and two paths of three tiers above; `treePicked` is the
+// tile the player tapped. The card then draws the tree in place of the plain Upgrade (the trunk tile upgrades).
 export function buildCardModel({spotId, kind, slot = null, spot = null, coins = null, visitor = false, ownerName = '',
-  busy = false, message = '', unlocks = null, prices = null, point = false, campaign = null, battle = false, movable = false, flags = null} = {}) {
-  const place = slot ?? (kind === 'cannon' || kind === 'mortar' || kind === 'harpoon' || kind === 'culverin' ? 'tower' : kind ?? 'wall');
+  busy = false, message = '', unlocks = null, prices = null, point = false, campaign = null, battle = false, movable = false, flags = null,
+  treePicked = null} = {}) {
+  const place = slot ?? (kind === 'cannon' || kind === 'mortar' || kind === 'harpoon' || kind === 'culverin' || kind === 'swivel' ? 'tower' : kind ?? 'wall');
   const built = spot?.built === true, standing = built ? spot.kind : null;
   const level = built ? (Number.isSafeInteger(spot.level) && spot.level > 0 ? spot.level : 1) : 0;
   const shown = standing ?? (place === 'tower' ? null : SLOT_KINDS[place]?.[0] ?? kind);
@@ -46,7 +52,7 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
     button: '', disabled: true, reason: '', upgrade: null, soon: '', message, busy, skills: null, locked: false,
     coins: coins === null ? '' : `You have ${coinText(coins)}`,
     owner: point ? 'Paid by you · belongs to Pirate Point' : visitor ? `You pay · it stays on ${ownerName ? `${ownerName}'s` : 'this'} island` : '', hire: false,
-    demolish: null, move: null};
+    demolish: null, move: null, tree: null};
   if (shown && level > 0) {
     model.pips = Array.from({length: model.maxLevel}, (_, index) => index < level);
     model.stats = statLine(shown, level);
@@ -94,6 +100,7 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
   if (!point && shown === 'house') model.skills = rolesOf(spot, level, busy);
   if (!point) model.demolish = {label: busy === 'demolish' ? 'Checking…' : 'Tear down', disabled: battle || !!busy,
     reason: battle ? 'You can tear it down between waves.' : ''};
+  if (!point) model.tree = towerTreeModel({kind: shown, spot, coins, prices, wave: campaignWave, unlocks, busy, picked: treePicked});
   const next = level + 1;
   if (level >= model.maxLevel) { model.reason = shown === 'house' ? '' : 'Highest level reached.'; return model; }
   if (allowed(shown) < next) { model.soon = `Level ${next}: ${opensText(lockedWave(unlocks, {kind: shown, level: next}) ?? '?')}.`; return model; }
@@ -164,7 +171,7 @@ export function crewModel({crew = {}, coins = null, unlocks = null, busy = null,
     else row.disabled = false;
     rows.push(row);
   }
-  return {title: 'Crew', lead: rows.length ? 'Crew members help on their own during every wave. You keep them.'
+  return {title: 'Crew', lead: rows.length ? 'They help in every wave and stay with you.'
     : `Crew members join after you win wave ${lockedWave(unlocks, {crew: 'gunner'})}.`,
   rows, soon: soon.length ? soon.join(' · ') : '', message, coins: coins === null ? '' : `You have ${coinText(coins)}`};
 }
@@ -329,15 +336,16 @@ export function secondsUntil(startsAt, now = Date.now(), {fresh = false, countdo
 // "Opens after wave N" (so players see what is coming), and no button.
 const lockedLine = id => `${opensText(waveOf(id))}.`;
 
-// The Harbor (after wave 4): market and weather now, the football match board after wave 7.
+// The Harbor (after wave 4): market and weather now, the football match board after wave 7. Calm (owner, 15 Nov):
+// no lead line, one short line per stall and a short "Open" button (its label names the stall for screen readers).
 export function harborModel({campaign = null} = {}) {
   const open = isOpen(campaign, 'harbor');
-  const stall = (id, item, name, line) => ({id, name, line, open: isOpen(campaign, item),
-    button: `Open the ${name.toLowerCase()}`, reason: isOpen(campaign, item) ? '' : lockedLine(item)});
-  return {title: 'The Harbor', open, line: open ? 'The market stall, match board and weather board stand here.' : lockedLine('harbor'),
-    stalls: open ? [stall('market', 'market_calls', 'Market stall', 'Up or down in 5 minutes? Put a few coins on a real price.'),
-      stall('match', 'football_board', 'Match board', 'Pick who wins a real football match.'),
-      stall('weather', 'harbor', 'Weather board', 'The real weather right now, and what it does to the pirate ships.')] : []};
+  const stall = (id, item, name, line, icon) => ({id, name, line, icon, open: isOpen(campaign, item),
+    button: 'Open', label: `Open the ${name.toLowerCase()}`, reason: isOpen(campaign, item) ? '' : lockedLine(item)});
+  return {title: 'The Harbor', open, line: open ? '' : lockedLine('harbor'),
+    stalls: open ? [stall('market', 'market_calls', 'Market stall', 'Up or down in 5 minutes? Put a few coins on it.', '📈'),
+      stall('match', 'football_board', 'Match board', 'Pick who wins a real match.', '⚽'),
+      stall('weather', 'harbor', 'Weather board', 'Live weather, and what it does to the pirates.', '⛅')] : []};
 }
 
 // The Tech hub (GAME-V3.md §5, §5.1): one branch per tower kind, three tiers each, paid by any member for the
@@ -409,14 +417,17 @@ export function techModel({campaign = null, coins = null, busy = null, message =
     : lockedLine('tech_hub'), branches, message, coins: coins === null ? '' : `You have ${coinText(coins)}`};
 }
 
-// The wreck (after wave 6): members pay coins into her repair; at the goal she waits for sailing (later).
-export function wreckModel({campaign = null, coins = null, busy = null, message = ''} = {}) {
+// The wreck (after wave 6): members pay coins into her repair. D057: from wave 30 the repaired wreck is the
+// island's own boat: her card lists the boat's games (boat: GET /api/island/boat, null while it loads).
+export function wreckModel({campaign = null, coins = null, busy = null, message = '', boat = null, battle = false} = {}) {
   const open = isOpen(campaign, 'wreck'), wreck = campaign?.wreck ?? {paid: 0, goal: 500, gifts: [25, 100]};
   const paid = Math.min(wreck.goal, wreck.paid), left = wreck.goal - paid, done = left <= 0;
   const percent = Math.floor(paid / wreck.goal * 100);
-  const model = {title: 'The wreck', open, done, paid, goal: wreck.goal, percent, progress: `${coinText(paid)} of ${coinText(wreck.goal)}`,
-    line: !open ? lockedLine('wreck') : done ? 'Her hull is whole again, thanks to the whole crew.' : 'Pay a few coins into her repair after every wave. Anyone in the game can help.',
-    gifts: [], message, coins: coins === null ? '' : `You have ${coinText(coins)}`};
+  const sail = sailModel({campaign, done, boat, battle});
+  const model = {title: sail.open ? 'Your ship' : 'The wreck', open, done, paid, goal: wreck.goal, percent, progress: `${coinText(paid)} of ${coinText(wreck.goal)}`,
+    line: !open ? lockedLine('wreck') : sail.open ? 'Sail her out and play. ★★★ pays the most, once per game after every won wave.'
+      : done ? 'Her hull is whole again, thanks to the whole crew.' : 'Pay a few coins into her repair after every wave. Anyone in the game can help.',
+    gifts: [], message, coins: coins === null ? '' : `You have ${coinText(coins)}`, sail};
   if (!open || done) return model;
   model.gifts = wreck.gifts.map(amount => {
     const pay = Math.min(amount, left);
@@ -428,6 +439,21 @@ export function wreckModel({campaign = null, coins = null, busy = null, message 
     return gift;
   });
   return model;
+}
+
+// D057: the boat's part of the wreck card. Open once the ship step (wave 30) is reached and the repair is done;
+// one tile per game with what 3 stars pay at this wave, or "Paid ✓" once this player was paid at this wave.
+export function sailModel({campaign = null, done = false, boat = null, battle = false} = {}) {
+  const wave = campaign?.wave ?? 0, shipOpen = isOpen(campaign, 'ship'), open = shipOpen && done && boat?.open !== false;
+  const note = !shipOpen ? `She sails after wave ${waveOf('ship')}.` : !done ? 'Finish her repair and she sails.'
+    : battle ? 'Sail between waves.' : '';
+  const paid = new Map((boat?.games ?? []).map(item => [item.id, item.paid === true]));
+  const games = BOAT.games.map(id => {
+    const best = coinsFor(BOAT.stars, wave), isPaid = paid.get(id) === true;
+    return {id, icon: BOAT_TEXT[id].icon, title: BOAT_TEXT[id].title, paid: isPaid, best,
+      pay: isPaid ? 'Paid ✓ · play for fun' : `★★★ = ${coinText(best)}`, disabled: !open || battle};
+  });
+  return {open, note, wave, games: open ? games : []};
 }
 
 // GAME-V3.md §4.2: the confirmation before a tear-down. quote: the server's {kind, name, level, refunds:

@@ -1,4 +1,5 @@
-// One toast style for the whole game: top-center, hides itself, at most two at once (the oldest goes).
+// One toast style for the whole game: top-center, hides itself, one at a time (owner, 15 Nov: "limit the visual
+// overload"): a new toast replaces the shown one, except that a note never pushes out an error still showing.
 // Any lane can use it:
 //   import {showToast, showError} from '../ui/toasts.js';
 //   showToast('Cannon built.');                       // info
@@ -8,13 +9,17 @@
 import {node} from './kit/dom.js';
 import './toasts.css';
 
-export const TOAST_LIMIT = 2;
-export const TOAST_MS = 3600;
-export const ERROR_MS = 6000;
+export const TOAST_LIMIT = 1;
+export const TOAST_MS = 2800;
+export const ERROR_MS = 5000;
 
-// Pure stacking rule: a repeat of a shown text replaces it; beyond the limit the oldest leaves.
+// Pure stacking rule: a repeat of a shown text replaces it; beyond the limit the oldest leaves. A note (info or
+// success) that would push out an error still on screen is dropped instead: the error says what to do next.
 export function stackToasts(stack, toast, limit = TOAST_LIMIT) {
-  return [...stack.filter(item => item.text !== toast.text), toast].slice(-limit);
+  const rest = stack.filter(item => item.text !== toast.text);
+  const leaving = rest.slice(0, Math.max(0, rest.length + 1 - limit));
+  if (toast.tone !== 'error' && leaving.some(item => item.tone === 'error')) return stack;
+  return [...rest, toast].slice(-limit);
 }
 
 const NEXT_STEP = /\b(try again|wait|sign in|reload|check|tap|press|open|choose|walk)\b/i;
@@ -91,8 +96,9 @@ export function createToasts({parent = document.body, limit = TOAST_LIMIT} = {})
     if (!text) return null;
     const tone = ['error', 'success'].includes(data.tone) ? data.tone : 'info';
     const toast = {id: ++next, text, next: data.next ? String(data.next) : null, tone};
-    for (const item of stack) if (item.text === text) clearTimeout(item.timer);
     const kept = stackToasts(stack, toast, limit);
+    if (!kept.includes(toast)) return null; // an error is still showing
+    for (const item of stack) if (item.text === text) clearTimeout(item.timer);
     for (const item of stack) if (!kept.includes(item)) clearTimeout(item.timer);
     toast.timer = setTimeout(() => remove(toast.id), Number(data.ms) > 0 ? Number(data.ms) : tone === 'error' ? ERROR_MS : TOAST_MS);
     stack = kept;

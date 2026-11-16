@@ -4,6 +4,7 @@
 // Built on the UI kit's modal and button (the one brass panel); toasts go through the game's one toast
 // queue (src/ui/toasts.js).
 import './island.css';
+import './boat-card.css';
 import {createModal} from '../ui/kit/modal.js';
 import {createTabs} from '../ui/kit/tabs.js';
 import {node} from '../ui/kit/dom.js';
@@ -12,7 +13,7 @@ import {CAPTAIN_PALETTES} from '../art/people.js';
 import {toasts as gameToasts} from '../ui/toasts.js';
 import {crewLabel, progressLines} from './progression.js';
 import {drawArsenal} from './arsenal-ui.js';
-import {drawSkills, drawTech, iconOf} from './skill-tree.js';
+import {drawSkills, drawTech, drawTowerTree, iconOf} from './skill-tree.js';
 
 // The cards of the island's buildings: a spot's build or upgrade card (houses too), the wreck, the Harbor and
 // the arsenal. They dock at the right side on a desktop and come up as a bottom sheet on a phone
@@ -84,16 +85,32 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
     body.append(reason, line('island-soon', model.soon), line('island-message', model.message, 'alert'), line('island-coins', model.coins));
   }
 
-  // handlers: {build(spotId, kind), upgrade(spotId), repair(spotId), hire(), specialise(spotId, spec), demolish(spotId), move(spotId)}
+  // handlers: {build(spotId, kind), upgrade(spotId), repair(spotId), hire(), specialise(spotId, spec), demolish(spotId), move(spotId),
+  //   treeSelect(spotId, id), tree(spotId, path, tier)}
+  // D055: a tower with an upgrade tree (model.tree) gets a bigger, centred card like the captain's, with the tree
+  // (skill-tree.js) in place of the plain Upgrade: the trunk tile upgrades the level, the path tiles buy the tree.
   function buildCard(model, handlers) {
     const on = typeof handlers === 'function' ? {build: handlers} : handlers ?? {};
     open('build', model.title, body => {
       let focusable = null;
-      body.append(line('island-purpose', model.purpose));
-      if (model.pips.length) { const row = node('div', 'island-level'); row.append(pips(model.pips), line('island-stats', model.stats)); body.append(row); }
+      const treeCard = !!model.tree;
+      modal.element.classList.toggle('island-card-docked', !treeCard);
+      modal.element.classList.toggle('island-card-wide', treeCard);
+      modal.element.classList.toggle('island-card-tree', treeCard);
+      if (!treeCard) body.append(line('island-purpose', model.purpose));
+      if (model.pips.length && !treeCard) { const row = node('div', 'island-level'); row.append(pips(model.pips), line('island-stats', model.stats)); body.append(row); }
       if (model.owner) body.append(line('island-owner', model.owner));
       let act = null;
-      if (model.mode === 'choose') {
+      if (treeCard) {
+        const drawn = drawTowerTree(model.tree, {select: id => on.treeSelect?.(model.spotId, id),
+          buy: action => (action.type === 'upgrade' ? on.upgrade?.(model.spotId) : on.tree?.(model.spotId, action.path, action.tier))}, {button, line});
+        // The level pips stay at the top of the tree (read out as "Level 2 of 5"); the trunk's Upgrade keeps its focus name.
+        if (model.pips.length) drawn.part.querySelector('.island-tree-top')?.prepend(pips(model.pips));
+        if (model.tree.detail.action?.type === 'upgrade') drawn.act.dataset.focus = 'upgrade';
+        body.append(drawn.part);
+        act = drawn.act;
+        if (act.disabled) focusable = drawn.part.querySelector('.island-node.is-picked');
+      } else if (model.mode === 'choose') {
         const list = node('div', 'island-choices');
         for (const choice of model.choices) {
           const option = node('button', 'island-choice'); option.type = 'button'; option.dataset.focus = `choice-${choice.kind}`; option.dataset.kind = choice.kind;
@@ -123,7 +140,7 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
         body.append(next, act);
       }
       if (act && !act.disabled) focusable = act;
-      footer(body, model, act);
+      footer(body, treeCard ? {...model, reason: '', soon: ''} : model, treeCard ? null : act);
       if (model.locked) body.classList.add('is-locked');
       // GAME-V3.md §5: the tower's skill, chosen once its kind is researched at the Tech hub; a house's role the same way.
       if (model.skills) {
@@ -214,11 +231,14 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
       for (const stall of model.stalls) {
         const item = node('li', `island-stall${stall.open ? '' : ' is-locked'}`); item.dataset.stall = stall.id;
         const text = node('div', 'island-stall-text');
-        text.append(node('strong', '', stall.name), node('p', 'island-stall-line', stall.line));
+        const name = node('strong', 'island-stall-name', stall.name);
+        if (stall.icon) { const icon = node('span', 'island-stall-icon', stall.icon); icon.setAttribute('aria-hidden', 'true'); name.prepend(icon); }
+        text.append(name, node('p', 'island-stall-line', stall.line));
         if (stall.reason) text.append(node('p', 'island-stall-reason', stall.reason));
         item.append(text);
         if (stall.open) {
           const go = button(stall.button, () => handlers.open?.(stall.id)); go.dataset.focus = `stall-${stall.id}`;
+          if (stall.label) go.setAttribute('aria-label', stall.label);
           item.append(go); focusable ??= go;
         }
         list.append(item);
@@ -237,18 +257,32 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
       return drawTech(body, model, view, {button, line});
     });
   }
-  // handlers: {give(amount)}
+  // handlers: {give(amount), sail(game)}. D057: once she sails (after wave 30, repaired) the card lists the boat's games.
   function wreckCard(model, handlers = {}) {
     open('wreck', model.title, body => {
       if (!model.open) { lockedNote(body, model); return null; }
       let focusable = null;
       body.append(line('island-purpose', model.line));
+      if (model.sail?.open) {
+        const tiles = node('div', 'island-boat-games');
+        for (const game of model.sail.games) {
+          const go = button('', () => handlers.sail?.(game.id)); go.classList.add('island-boat-game'); go.dataset.focus = `boat-${game.id}`;
+          go.dataset.paid = game.paid ? 'yes' : 'no'; go.disabled = game.disabled;
+          go.replaceChildren(node('span', 'island-boat-game-icon', game.icon), node('span', 'island-boat-game-title', game.title), node('span', 'island-boat-game-pay', game.pay));
+          go.setAttribute('aria-label', `${game.title}: ${game.pay}`);
+          tiles.append(go); focusable ??= game.disabled ? null : go;
+        }
+        body.append(tiles);
+        if (model.sail.note) body.append(node('p', 'island-wreck-done', model.sail.note));
+        body.append(line('island-message', model.message, 'alert'), line('island-coins', model.coins));
+        return focusable;
+      }
       const bar = node('div', 'island-wreck-bar'); bar.setAttribute('role', 'progressbar');
       bar.setAttribute('aria-valuemin', '0'); bar.setAttribute('aria-valuemax', String(model.goal)); bar.setAttribute('aria-valuenow', String(model.paid));
       bar.setAttribute('aria-label', `Repair: ${model.progress}`);
       const fill = node('span', 'island-wreck-fill'); fill.style.width = `${model.percent}%`; bar.append(fill);
       body.append(bar, node('p', 'island-wreck-progress', `${model.percent}% · ${model.progress}`));
-      if (model.done) body.append(node('p', 'island-wreck-done', 'Repaired, sailing opens later'));
+      if (model.sail?.note) body.append(node('p', 'island-wreck-done', `⛵ ${model.sail.note}`));
       const row = node('div', 'island-wreck-gifts');
       for (const gift of model.gifts) {
         const go = button(gift.label, () => handlers.give?.(gift.amount)); go.dataset.focus = `gift-${gift.amount}`; go.disabled = gift.disabled;

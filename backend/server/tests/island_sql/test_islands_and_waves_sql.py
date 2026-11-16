@@ -476,6 +476,19 @@ def seed_progress(database):
         " values (%s, 'arsenal-0001', %s, 'buy', %s)",
         (OWNER, OWNER, copy),
     )
+    # The old personal weapons (20261112030000): the veteran bought and carries pistols.
+    database.execute(
+        "update public.islands set weapons_owned = '{musket,pistols}',"
+        " weapon_equipped = 'pistols' where player_id = %s",
+        (VETERAN,),
+    )
+
+
+def weapons(database, player):
+    return database.execute(
+        "select weapons_owned, weapon_equipped from public.islands where player_id = %s",
+        (player,),
+    ).fetchone()
 
 
 def test_the_fresh_start_dry_run_reports_the_counts_and_changes_nothing(database):
@@ -492,7 +505,9 @@ def test_the_fresh_start_dry_run_reports_the_counts_and_changes_nothing(database
         "layout rows removed: 1, arsenal clicks removed: 1, arsenal copies removed: 1, "
         "wall records removed: 1, wave rules removed: 1, wave runs removed: 1"
     ) in str(stopped.value)
+    assert "islands reset: 1, island weapons reset: 1" in str(stopped.value)
     assert balance(database, VETERAN) == 1000
+    assert weapons(database, VETERAN) == (["musket", "pistols"], "pistols")
 
 
 def test_the_fresh_start_sets_every_wallet_to_100_and_clears_the_progress(database):
@@ -519,3 +534,5 @@ def test_the_fresh_start_sets_every_wallet_to_100_and_clears_the_progress(databa
         "       (select count(*) from public.wave_rules)"
     ).fetchone()
     assert sprint == (0, 0, 0, 0, 0)
+    assert weapons(database, VETERAN) == (["musket"], "musket")
+    assert weapons(database, OWNER) == (["musket"], "musket")

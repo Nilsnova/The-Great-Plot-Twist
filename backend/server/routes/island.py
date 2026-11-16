@@ -125,6 +125,19 @@ POST /api/island/tower-skill  {"spot": "cannon_1", "spec": "rapid", "actionUid":
             409 insufficient_funds, 409 reload (a paid pick without "actionUid": a tab from
             before the prices), 422 wrong_kind
 
+POST /api/island/tower-tree  {"spot": "cannon_1", "path": "a" | "b", "tier": 1 | 2 | 3,
+                             "actionUid": "...", "code"?: "ISLE-K7Q2M"}
+    -> the island. One tier of the upgrade tree of a level-5 tower (D055): path a makes it fire
+    faster, path b hit harder. Paid once by the caller with their own coins:
+    prices.towerTrees[kind].prices[tier - 1] (ledger ref towertree:<actionUid>, reason
+    tower_tree); tier 1, 2 and 3 open after the waves prices.towerTrees[kind].waves. One path may
+    reach tier 3; once a path is past tier 1 the other stays at tier 1 at most. The spot then
+    carries "tree": {"a": 2, "b": 1}. A repeated actionUid charges nothing; a tear-down refunds
+    nothing of it.
+    Errors: 400 bad_tree, 403 not_member, 404 no_such_spot, 404 no_such_island, 409 not_built,
+            409 needs_level, 409 known, 409 needs_tier, 409 closed, 409 locked,
+            409 insufficient_funds, 422 no_tree
+
 POST /api/island/wreck  {"amount": 25, "actionUid": "...", "code"?: "ISLE-K7Q2M"}
     -> the island. Coins into the island's wreck (GAME-V3 section 4, after wave 6; ledger ref
     wreck:<actionUid>, reason wreck_repair), never more than the repair still needs.
@@ -241,6 +254,11 @@ async def require_islands(player: PlayerDep, settings: SettingsDep, response: Re
 IslandPlayerDep = Annotated[Player, Depends(require_islands)]
 
 
+class TreeOut(BaseModel):
+    a: int
+    b: int
+
+
 class SpotOut(BaseModel):
     id: str
     kind: str
@@ -253,6 +271,23 @@ class SpotOut(BaseModel):
     # T36: where the spot stands on the build grid (island units); null at Pirate Point.
     x: float | None = None
     z: float | None = None
+    # D055: the tiers bought on the two paths of a built tower's upgrade tree; null otherwise.
+    tree: TreeOut | None = None
+
+
+class TreePathOut(BaseModel):
+    id: str
+    name: str
+
+
+class TowerTreePriceOut(BaseModel):
+    """D055: one tower kind's tree: the price and the opening wave of tiers 1 to 3, the paths."""
+
+    prices: list[int]
+    waves: list[int]
+    level: int
+    a: TreePathOut
+    b: TreePathOut
 
 
 class LayoutOut(BaseModel):
@@ -290,6 +325,7 @@ class PricesOut(BaseModel):
     crew: dict[str, CrewPriceOut]
     captain: list[int]
     towerSkills: dict[str, TowerSkillPriceOut]  # D051: per research branch (tower kind)
+    towerTrees: dict[str, TowerTreePriceOut] = {}  # D055: per tower kind with a tree
 
 
 class UnlocksOut(BaseModel):
@@ -501,6 +537,16 @@ class SpecialiseRequest(BaseModel):
     actionUid: str | None = Field(default=None, pattern=ACTION_UID_PATTERN)
 
 
+class TowerTreeRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    spot: str = Field(pattern=ID_PATTERN)
+    path: Literal["a", "b"]
+    tier: int = Field(strict=True, ge=1, le=3)
+    actionUid: str = Field(pattern=ACTION_UID_PATTERN)
+    code: str | None = Field(default=None, max_length=CODE_MAX_LENGTH)
+
+
 class WreckRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -566,6 +612,7 @@ def spots_out(spots: tuple[SpotView, ...]) -> list[SpotOut]:
             spec=spot.spec,
             x=spot.x,
             z=spot.z,
+            tree=TreeOut(a=spot.tree[0], b=spot.tree[1]) if spot.tree is not None else None,
         )
         for spot in spots
     ]
@@ -624,6 +671,17 @@ def prices_out(catalogue: IslandCatalogue) -> PricesOut:
         towerSkills={
             entry.branch: TowerSkillPriceOut(skill=entry.skill_coins, capstone=entry.capstone_coins)
             for entry in catalogue.research
+        },
+        towerTrees={
+            tree.kind: TowerTreePriceOut(
+                prices=list(tree.prices),
+                waves=list(tree.waves),
+                level=tree.level,
+                a=TreePathOut(id=tree.paths[0].id, name=tree.paths[0].name),
+                b=TreePathOut(id=tree.paths[1].id, name=tree.paths[1].name),
+            )
+            for tree in catalogue.trees
+            if catalogue.tree_of(tree.kind) is not None
         },
     )
 
@@ -869,6 +927,21 @@ async def post_specialise(
     request.app.state.island_build_budget.spend(player.id)
     view = await service.specialise(
         admin, catalogue, player.id, body.spot, body.spec, body.code, body.actionUid
+    )
+    return island_out(view, catalogue)
+
+
+@router.post("/island/tower-tree")
+async def post_tower_tree(
+    body: TowerTreeRequest,
+    player: IslandPlayerDep,
+    catalogue: IslandCatalogueDep,
+    admin: AdminDep,
+    request: Request,
+) -> IslandResponse:
+    request.app.state.island_build_budget.spend(player.id)
+    view = await service.tower_tree(
+        admin, catalogue, player.id, body.spot, body.path, body.tier, body.actionUid, body.code
     )
     return island_out(view, catalogue)
 

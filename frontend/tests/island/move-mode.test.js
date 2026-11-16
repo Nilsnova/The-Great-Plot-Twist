@@ -49,11 +49,23 @@ describe('Move mode', () => {
     mode.start('wall_1');
     mode.tap(30, 30);
     expect(await mode.confirm()).toBe(null);
-    mode.tap(-18.5, -4);
+    mode.tap(-18.5, -1);
     expect(await mode.confirm()).toBe(null);
     expect(spy).not.toHaveBeenCalled();
     mode.start('wall_1'); mode.cancel();
     expect(mode.active).toBe(false);
+  });
+  it('shows a wall off every pirate path in red with the short reason, and a lane square in green (D056)', async () => {
+    const {mode, preview, render} = await setUp();
+    mode.start('wall_1');
+    expect(render.mock.calls.at(-1)[0].line).toBe('Walls go on a pirate path: tap a glowing square.');
+    mode.tap(-4, -5.5); // the old north spot of wall_11: no pirate walks there
+    expect(preview.mock.calls.at(-1)[0]).toMatchObject({spotId: 'wall_1', ok: false});
+    expect(render.mock.calls.at(-1)[0]).toMatchObject({ok: false, refused: true, status: 'Walls go on a pirate path.'});
+    mode.tap(-12, .5); // across the west route
+    expect(render.mock.calls.at(-1)[0]).toMatchObject({ok: true, status: 'This square is free.'});
+    const answer = await mode.confirm();
+    expect(answer.ok).toBe(true);
   });
   it('moves one square per arrow key and leaves other keys to the game', async () => {
     const {mode} = await setUp();
