@@ -247,7 +247,7 @@ Use `specs/_TEMPLATE.md` for each claimed package. Record API/event/table/flag c
 
 ### T54-T60 unified recovery delivery gates
 
-The detailed, unassigned work is in [OPEN-TODOS section 11](OPEN-TODOS.md#11-unified-defense-recovery--unassigned-follow-ups-16-nov), based on [D059](DECISIONS.md#d059--shared-gradual-hp-recovery-and-paid-instant-repair--2026-11-16) and [the T33 recovery spec](../specs/T33-persistent-tower-damage.md).
+The detailed, Ianno-owned pipeline is in [OPEN-TODOS section 11](OPEN-TODOS.md#11-unified-defense-recovery--unassigned-follow-ups-16-nov), based on [D059](DECISIONS.md#d059--shared-gradual-hp-recovery-and-paid-instant-repair--2026-11-16) and [the T33 recovery spec](../specs/T33-persistent-tower-damage.md).
 
 | Gate | Tasks | Required exit before next stage |
 |---|---|---|
@@ -256,7 +256,7 @@ The detailed, unassigned work is in [OPEN-TODOS section 11](OPEN-TODOS.md#11-uni
 | Integrate combat and progression | T57–T58 | New waves apply gradual shared HP recovery after the 3-second quiet period during combat and consume authenticated T56 paid events for instant full restoration; old frozen waves keep their behavior. Subsequent damage remains ordered; retirement/refunds preserve unrelated progression. T58 coordinates shared simulation edits after T57. |
 | Update client and verify | T59–T60 | Cards show gradual HP recovery and instant repair, with in-combat action/event synchronization, player guidance, migration, two-client behavior, zero-HP/firing/obstacle behavior, island reset and balance evidence matching the approved contract. |
 
-All stages remain proposed and unassigned. The feature freeze and submission schedule still apply; this breakdown does not fast-track work. Keep flags off, and do not apply a migration or deploy until separately authorized. Existing D039/D049 runtime contracts remain in force until a reviewed and released implementation replaces them.
+T54–T60 are claimed by Ianno: T54 is planning in [draft PR #127](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/127), while T55–T60 are reserved and blocked on plan approval and their prerequisites. No implementation agent has started. The feature freeze and submission schedule still apply; this breakdown does not fast-track work. Keep flags off, and do not apply a migration or deploy until separately authorized. Existing D039/D049 runtime contracts remain in force until a reviewed and released implementation replaces them.
 
 ### 6. Verification and handover
 
