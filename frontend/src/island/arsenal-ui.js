@@ -9,6 +9,15 @@ function described(act, body, id, reason, line) {
   const why = line('island-reason', reason); why.id = id; act.setAttribute('aria-describedby', why.id); body.append(why);
 }
 
+function comparisonPart(model, key) {
+  const detail = node('details', 'island-weapon-compare'); detail.dataset.compare = key;
+  const summary = node('summary', '', `Compare with ${model.reference}`); summary.dataset.focus = `compare-${key}`;
+  const list = node('dl');
+  for (const row of model.rows) list.append(node('dt', '', row.label), node('dd', '', `${row.value} · ${row.change}`));
+  detail.append(summary, list, node('p', '', `Current: ${model.currentMode}`), node('p', '', `This weapon: ${model.mode}`));
+  return detail;
+}
+
 function carryPart(model, handlers, {button, line}) {
   const box = node('section', 'island-arsenal-carry'); box.setAttribute('aria-label', 'What you carry');
   box.append(node('h3', 'island-skills-title', 'You carry'), node('strong', 'island-arsenal-name', model.carry.name),
@@ -24,13 +33,28 @@ function carryPart(model, handlers, {button, line}) {
 function rackPart(model, handlers, {button, line}) {
   const box = node('section', 'island-arsenal-rack'); box.setAttribute('aria-label', 'The rack');
   box.append(node('h3', 'island-skills-title', model.stock));
-  if (!model.rack.length) box.append(line('island-crew-line', 'No weapons yet. Buy the first one below.'));
-  const list = node('ul', 'island-crew'); let focusable = null;
-  for (const row of model.rack) {
+  const filters = node('div', 'island-arsenal-filters'); filters.setAttribute('role', 'group'); filters.setAttribute('aria-label', 'Show weapons');
+  for (const choice of model.filters) {
+    const go = button(`${choice.label} (${choice.count})`, () => handlers.filter?.(choice.id), true);
+    go.setAttribute('aria-pressed', String(choice.selected)); go.dataset.focus = `arsenal-filter-${choice.id}`; filters.append(go);
+  }
+  box.append(filters);
+  if (!model.rack.length) {
+    box.append(line('island-crew-line', model.empty, 'status'));
+    if (model.filter !== 'all') box.append(button('Show all', () => handlers.filter?.('all'), true));
+  }
+  const list = node('ul', 'island-crew'); let focusable = null, lastType = null;
+  for (const row of model.groups.flatMap(group => group.rows)) {
+    if (row.weapon !== lastType) {
+      const group = model.groups.find(item => item.id === row.weapon), heading = node('li', 'island-arsenal-group');
+      heading.append(node('h4', '', `${group.name} (${group.rows.length})`), line('island-arsenal-stats', row.stats));
+      list.append(heading); lastType = row.weapon;
+    }
     const item = node('li', 'island-crew-row island-arsenal-copy'); item.dataset.copy = row.id; item.dataset.weapon = row.weapon;
     const text = node('div', 'island-crew-text');
-    text.append(node('strong', '', row.label), node('p', 'island-arsenal-stats', row.stats));
+    text.append(node('strong', '', row.label));
     if (row.holder) text.append(node('p', 'island-crew-reason', row.holder));
+    if (row.button) text.append(comparisonPart(row.comparison, `copy-${row.id}`));
     item.append(text);
     if (row.button) {
       const go = button(row.button.label, () => handlers.take?.(row.id)); go.dataset.focus = `copy-${row.id}`; go.disabled = row.button.disabled;
@@ -54,6 +78,7 @@ function shopPart(model, handlers, {button}) {
     const head = node('p', 'island-crew-head'); head.append(node('strong', '', row.name), node('span', 'island-crew-owned', row.priceText));
     text.append(head, node('p', 'island-arsenal-stats', row.stats), node('p', 'island-crew-line', `${row.mode} ${row.line}`));
     if (row.button.reason) text.append(node('p', 'island-crew-reason', row.button.reason));
+    text.append(comparisonPart(row.comparison, `buy-${row.id}`));
     const go = button(row.button.label, () => handlers.buy?.(row.id)); go.dataset.focus = `buy-${row.id}`; go.disabled = row.button.disabled;
     go.setAttribute('aria-label', `${row.button.label} ${row.name}`);
     item.append(text, go); list.append(item);
@@ -64,7 +89,13 @@ function shopPart(model, handlers, {button}) {
 
 export function drawArsenal(body, model, handlers = {}, kit) {
   body.append(kit.line('island-purpose', model.lead));
-  if (!model.carry) { body.append(kit.line('island-message', model.message, 'alert')); return null; }
+  if (!model.carry) {
+    body.append(kit.line('island-message', model.message, 'alert'));
+    const retry = kit.button(model.retry.label, () => handlers.retry?.());
+    retry.dataset.focus = 'arsenal-retry'; retry.disabled = model.retry.disabled;
+    body.append(retry);
+    return retry.disabled ? null : retry;
+  }
   const carry = carryPart(model, handlers, kit), rack = rackPart(model, handlers, kit);
   body.append(carry.box, rack.box, shopPart(model, handlers, kit),
     kit.line('island-message', model.message, 'alert'), kit.line('island-coins', model.coins));
