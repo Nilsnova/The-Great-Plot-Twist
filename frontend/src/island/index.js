@@ -23,7 +23,7 @@
 // island and wave on this page; the narrator plays its lines), tower_specialised {spot, spec},
 // island_spots_changed {place, spot} (any build or upgrade, also a friend's island and Pirate Point), island_visit_named {place, name}
 // (the friend's game on screen learned its host's name, so the arrival banner can follow), crew_hired {crew}, island_invite_opened, wave_started_server {...} and wave_finished {...} (wave-hooks.js).
-// After a reset (T53): island_reset {code}, then game_started {code, first: true, fresh: true} (the intro and the guided start again).
+// After a reset (T53): island_reset {code}, then game_started {code, first: true, fresh: true} (no intro or guided start again: explained once per device).
 import {createIslandApi} from './api.js';
 import {createWaveFlow} from './wave-flow.js';
 import {createIslandUi} from './ui.js';
@@ -1102,6 +1102,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     placeName,
     get visiting() { return visiting ? {...visiting} : visitCode ? {code: visitCode} : null; },
     get island() { return own ? structuredClone(own) : null; },
+    // T52: your own island's best wave, without copying the island (the tutorials read it every frame).
+    get ownWaveBest() { return Number.isSafeInteger(own?.waveBest) ? own.waveBest : null; },
     get flow() { return flow; },
     // The fake server's helpers (setCoins, failNext, startWaveAt...) in fake mode, for the console and checks.
     get dev() { return transport?.dev ?? null; },

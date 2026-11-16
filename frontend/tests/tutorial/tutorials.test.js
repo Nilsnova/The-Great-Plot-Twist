@@ -84,7 +84,7 @@ describe('the guided start', () => {
     t.state.cutscene = false; t.frame();
     expect(t.tutorials.guide.current).toBe('move');
   });
-  it('can skip a step and the whole guide, and never shows it again on that island', () => {
+  it('can skip a step and the whole guide, and never shows it again on this device', () => {
     const storage = memoryStorage(), first = make({storage});
     first.frame();
     first.tutorials.skip(false);
@@ -92,26 +92,46 @@ describe('the guided start', () => {
     first.tutorials.skip(true);
     expect(first.tutorials.guide).toBeNull();
     expect(saved(storage).games['ISLE-K7Q2M'].guide.status).toBe('skipped');
+    expect(saved(storage).guided).toBe(true);
     const again = make({storage});
     again.frame(); again.frame();
     expect(again.tutorials.guide).toBeNull();
-    // Another new island on the same device gets it again.
+    // Another new island on the same device (a friend's at wave 0, or a second game) does not get it again.
     const other = make({storage, game: {code: 'B4C5D'}});
-    other.frame();
-    expect(other.tutorials.guide.current).toBe('move');
+    other.frame(); other.frame();
+    expect(other.tutorials.guide).toBeNull();
+    expect(other.views.filter(Boolean)).toEqual([]);
   });
-  it('resumes at the step it stood at after a reload, and Settings replays it', () => {
+  it('waits on the island during a trip to the Harbor, is over after a reload, and Settings replays it', () => {
     const storage = memoryStorage(), first = make({storage});
     first.frame(); first.events.emit({type: 'island_built', kind: 'cannon'});
     expect(first.tutorials.guide.current).toBe('menu');
+    // Off to the Harbor and back on this page: it goes on where it stood.
+    first.state.place = 'saltreach_harbor'; first.frame();
+    expect(first.tutorials.guide).toBeNull();
+    first.state.place = 'home_islet'; first.frame();
+    expect(first.tutorials.guide.current).toBe('menu');
     first.tutorials.dispose();
+    // A reload: re-entering the island does not explain it again.
     const second = make({storage});
-    second.frame();
-    expect(second.tutorials.guide.current).toBe('menu');
-    second.tutorials.skip(true);
+    second.frame(); second.frame();
+    expect(second.tutorials.guide).toBeNull();
+    expect(saved(storage).games['ISLE-K7Q2M'].guide.status).toBe('done');
     second.events.emit({type: 'tutorial_replay'});
     second.frame();
     expect(second.tutorials.guide.current).toBe('move');
+  });
+  it('gives a veteran on a new device (own island past wave 0) no guide', () => {
+    const storage = memoryStorage(), t = make({storage, game: {code: 'F1F2F', wave: 0, best: 4}});
+    t.frame(); t.frame();
+    expect(t.tutorials.guide).toBeNull();
+    expect(saved(storage).guided).toBe(true);
+  });
+  it('counts a guide finished before the device-wide flag (an older memory) as shown', () => {
+    const storage = memoryStorage([[TUTORIALS_KEY, JSON.stringify({version: 1, seen: [], games: {'ISLE-AAAAA': {guide: {status: 'done', step: 7}, wave: 1, cards: [], queued: []}}})]]);
+    const t = make({storage, game: {code: 'B4C5D', wave: 0}});
+    t.frame(); t.frame();
+    expect(t.tutorials.guide).toBeNull();
   });
   it('jumps to the fight when a wave already runs (a friend rang the bell)', () => {
     const t = make({game: {waveRunning: true}});
@@ -189,6 +209,37 @@ describe('the unlock cards', () => {
     const again = make({storage, game: {wave: 3}});
     again.frame(); await flush();
     expect(again.cards[0]).toMatchObject({title: 'Captain upgrades'});
+  });
+});
+
+describe('once per device (owner, 16 Nov: re-entering an island)', () => {
+  it('a card shown on one island never shows on another, after a reload, or after a reset (T53)', async () => {
+    const storage = memoryStorage(), t = make({storage, game: {wave: 0}});
+    t.tutorials.skip(true); t.frame(); t.tutorials.skip(true);
+    t.state.wave = 1; t.frame(); await flush();
+    const firstCards = [];
+    while (t.cards.length > firstCards.length) { const card = t.cards.at(-1); firstCards.push(card.title); card.close('ok'); await flush(); t.frame(); await flush(); }
+    expect(firstCards.length).toBeGreaterThan(0);
+    // T53: the island is reset to wave 0 and wins wave 1 again: no card again.
+    t.state.wave = 0; t.frame(); t.state.wave = 1; t.frame(); await flush();
+    expect(t.cards.length).toBe(firstCards.length);
+    t.tutorials.dispose();
+    // A second island on this device wins its wave 1 after a reload: the cards were seen, so none.
+    const other = make({storage, game: {code: 'B4C5D', wave: 0}});
+    other.frame(); other.state.wave = 1; other.frame(); await flush(); other.frame(); await flush();
+    expect(other.cards).toEqual([]);
+    expect(other.tutorials.guide).toBeNull();
+    // A friend's island past wave 0 brings only the cards of later waves, never seen ones.
+    const friend = make({storage, game: {code: 'F1F2F', wave: 1}});
+    friend.frame(); await flush();
+    expect(friend.cards).toEqual([]);
+    expect(friend.tutorials.queue).toEqual([]);
+  });
+  it('a signed-in veteran on a new device gets no catch-up cards for what their own island opened', async () => {
+    const t = make({game: {code: 'F1F2F', wave: 3, best: 3}});
+    t.frame(); await flush();
+    expect(t.tutorials.queue).toEqual([]);
+    expect(t.cards).toEqual([]);
   });
 });
 

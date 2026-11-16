@@ -51,6 +51,16 @@ export const RULES = Object.freeze({
   // T52: the guided start of a new island (guide:<step>, src/tutorial/tutorials.js), once per island game.
   guide: {once: true, priority: NORMAL, ttl: 15000},
 });
+// The lines that explain how to play (owner, 16 Nov: "once re-entering the island, do not always re-explain
+// things"): told once per device on any island, not once per island game, and a reset (T53) does not bring them
+// back. The story lines (every tenth wave, milestones, the final battle, victory) stay once per island game.
+const EXPLAINING = new Set(['game_opening', 'wave_start', 'boss_first', 'wave_unlock', 'boarders_ashore', 'house_role', 'wave_event', 'guide']);
+export function explains(trigger) {
+  const {name, wave} = parseTrigger(trigger);
+  return EXPLAINING.has(name) && !(name === 'wave_start' && wave === 100);
+}
+// "Welcome back" plays at most once in this long on a device, not on every reload or landing.
+export const WELCOME_GAP_MS = 12 * 60 * 60 * 1000;
 const VARIANTS = new Set(['game_welcome_back', 'player_fell', 'player_revived', 'all_fallen', 'heart_low', 'wave_lost', 'wave_won']);
 const LINE_ID = /^[a-z0-9_]{1,48}$/;
 
@@ -122,7 +132,9 @@ export function gameKey(code, fallback = 'local') {
 }
 
 // What this device told on which island game, in localStorage under STORE_KEY:
-//   {version: 1, games: {"ISLE-K7Q2M": {told: ["opening_1", "game_opening", ...], at: 1731300000000}}}
+//   {version: 1, games: {"ISLE-K7Q2M": {told: ["opening_1", "game_opening", ...], at: 1731300000000}},
+//    everywhere: ["opening_1", "game_opening", ...], welcomedAt: 1731300000000}
+// everywhere: the explaining lines (explains()) told on any island of this device; welcomedAt: the last welcome back.
 // The newest MAX_GAMES games are kept. Storage may be missing or full: then it is kept for this visit.
 export function createMemory(storage, {now = () => Date.now()} = {}) {
   let data = {version: 1, games: {}};
@@ -130,6 +142,12 @@ export function createMemory(storage, {now = () => Date.now()} = {}) {
     const saved = JSON.parse(storage?.getItem(STORE_KEY) ?? 'null');
     if (saved?.version === 1 && saved.games && typeof saved.games === 'object') data = saved;
   } catch { /* A fresh memory. */ }
+  // A memory from before `everywhere`: the explaining triggers told on any island so far count for the device.
+  if (!Array.isArray(data.everywhere)) {
+    const ids = new Set();
+    for (const entry of Object.values(data.games)) for (const id of Array.isArray(entry?.told) ? entry.told : []) if (typeof id === 'string') ids.add(id);
+    data.everywhere = [...ids].filter(explains); // the trigger names are enough: a told trigger is never picked again
+  }
   const game = key => {
     const entry = data.games[key];
     return entry && Array.isArray(entry.told) ? entry : (data.games[key] = {told: [], at: now()});
@@ -140,9 +158,20 @@ export function createMemory(storage, {now = () => Date.now()} = {}) {
     try { storage?.setItem(STORE_KEY, JSON.stringify(data)); } catch { /* Kept for this visit. */ }
   }
   return {
-    told(key) { return new Set(data.games[key]?.told ?? []); },
+    // What was told in this game, plus the explaining lines told anywhere on this device.
+    told(key) { return new Set([...(data.games[key]?.told ?? []), ...data.everywhere]); },
+    toldHere(key) { return new Set(data.games[key]?.told ?? []); },
+    everywhere(id) { return data.everywhere.includes(id); },
+    remember(ids) {
+      const set = new Set(data.everywhere);
+      for (const id of ids) if (typeof id === 'string' && id) set.add(id);
+      data.everywhere = [...set].slice(-400); save();
+    },
+    get welcomedAt() { return Number.isFinite(data.welcomedAt) ? data.welcomedAt : null; },
+    welcomed() { data.welcomedAt = now(); save(); },
     known(key) { return (data.games[key]?.told?.length ?? 0) > 0; },
-    // T53: an island reset to a fresh start is a new game: what was told there is forgotten.
+    // T53: an island reset to a fresh start is a new game: what was told there is forgotten (the explaining
+    // lines told anywhere stay told: the player knows the game).
     forget(key) { if (Object.hasOwn(data.games, key)) { delete data.games[key]; save(); } },
     mark(key, ids) {
       const entry = game(key), set = new Set(entry.told);

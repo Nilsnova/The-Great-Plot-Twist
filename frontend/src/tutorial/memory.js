@@ -1,7 +1,9 @@
 // What this device showed of the tutorials (T52), per island game, in localStorage like the narrator's memory
 // (src/narrator/logic.js): the guided start's state on that island, the best won wave whose cards were handed
-// out there, the cards shown or skipped there and the ones still waiting; plus every card seen on any island.
-//   {version: 1, seen: ["harbor", ...], games: {"ISLE-K7Q2M": {guide: {status, step, ready, skipped}, wave, cards, queued, at}}}
+// out there, the cards shown or skipped there and the ones still waiting; plus, for the whole device, every card
+// seen on any island and whether the guided start was ever shown (owner, 16 Nov: "once re-entering the island, do
+// not always re-explain things": each explanation once per player on this device, across islands, visits and resets).
+//   {version: 1, guided: true, seen: ["harbor", ...], games: {"ISLE-K7Q2M": {guide: {status, step, ready, skipped}, wave, cards, queued, at}}}
 // guide.status: 'active' (running or not begun), 'done', 'skipped' or 'none' (never offered: the island was
 // past wave 0 when this device first saw it). The newest MAX_GAMES games are kept; no storage keeps it per visit.
 import {STEPS} from '../campaign/index.js';
@@ -22,10 +24,17 @@ function readGuide(value) {
 }
 
 export function createTutorialMemory(storage, {now = () => Date.now()} = {}) {
-  let data = {version: 1, seen: [], games: {}};
+  let data = {version: 1, guided: false, seen: [], games: {}};
   try {
     const saved = JSON.parse(storage?.getItem(TUTORIALS_KEY) ?? 'null');
-    if (saved?.version === 1 && saved.games && typeof saved.games === 'object') data = {version: 1, seen: ids(saved.seen), games: saved.games};
+    if (saved?.version === 1 && saved.games && typeof saved.games === 'object') {
+      // A memory from before the device-wide flag: a guide finished, skipped or begun on any island counts.
+      const guided = saved.guided === true || Object.values(saved.games).some(entry => {
+        const guide = readGuide(entry?.guide);
+        return guide && (guide.status === 'done' || guide.status === 'skipped' || (guide.status === 'active' && guide.step > 0));
+      });
+      data = {version: 1, guided, seen: ids(saved.seen), games: saved.games};
+    }
   } catch { /* A fresh memory. */ }
   // Cards of the campaign steps the island lane already told on this device.
   const told = new Set();
@@ -69,5 +78,8 @@ export function createTutorialMemory(storage, {now = () => Date.now()} = {}) {
       return write(code, {cards: [...new Set([...entry.cards, ...list])], queued: entry.queued.filter(id => !list.includes(id))});
     },
     seenAnywhere: id => data.seen.includes(id) || told.has(id),
+    // The guided start was shown on this device (on any island): it is never offered again, except by Replay.
+    guided: () => data.guided === true,
+    setGuided() { if (!data.guided) { data.guided = true; save(); } },
   };
 }

@@ -3,7 +3,10 @@
 // plays its recording through the game's audio (audio.playVoice, Settings › Voice volume, music ducked).
 // Captions show also with the sound off; a missing recording keeps the caption for a reading time.
 // What was told is stored per island game (localStorage, keyed by island code), so a returning crew
-// is not told again, except the "welcome back" line.
+// is not told again. The lines that explain the game (logic.js explains(): the opening, the first waves, what a
+// win opens, ...) are told once per device on any island, and a reset (T53) does not bring them back (owner,
+// 16 Nov: "once re-entering the island, do not always re-explain things"). "Welcome back" plays at most once
+// in WELCOME_GAP_MS, never right after a reset.
 //
 //   const narrator = createNarrator({container, on, audio, getGame: () => ({code, waveBest})});
 //   narrator.begin()   the crew is on the island (game.js, after Play): the opening, or welcome back
@@ -30,12 +33,13 @@
 //   wave_event_announced {event, wave}                  (v3 waves) a wave's event: its line the first time in this game.
 //   finisher_moment {kind, phase: start|won|failed}     (v3 waves) a boss finisher starts or ends.
 //   island_reset {code}                                 (T53, src/island/index.js) the island was reset: what was told
-//       there is forgotten, so the game_started {first: true} that follows plays the opening again.
+//       there is forgotten, but the explaining lines stay told: the game_started {first: true, fresh: true} that
+//       follows plays no opening.
 import data from './lines.json';
 import {createNarratorCard} from './card.js';
 import {getPreferences, onPreferences as watchPreferences} from '../settings/preferences.js';
 import {indexLines, selectLines, ruleFor, startTriggers, finishTriggers, wonLineDue, readingMs, gameKey,
-  createMemory, createQueue, HEART_LOW, PRIORITY} from './logic.js';
+  createMemory, createQueue, explains, HEART_LOW, PRIORITY, WELCOME_GAP_MS} from './logic.js';
 
 const TAIL_MS = 500;          // quiet after a line before the next one
 const HOLD_MS = 400;          // how often a held queue looks again (a cutscene is open)
@@ -96,7 +100,9 @@ export function createNarrator({container = globalThis.document?.body, on, audio
     if (!picked.length) return [];
     lastSpoken.set(trigger, now());
     const queued = picked.filter(line => queue.push(line, {priority: rule.priority, ttl: rule.ttl}));
-    if (rule.once) memory.mark(game, [trigger, ...picked.map(line => line.id), ...picked.flatMap(line => line.covers ?? [])]);
+    const ids = [trigger, ...picked.map(line => line.id), ...picked.flatMap(line => line.covers ?? [])];
+    if (rule.once) memory.mark(game, ids);
+    if (explains(trigger)) memory.remember(ids); // told on this device: not again on another island
     pump();
     return queued.map(line => line.id);
   }
@@ -148,15 +154,19 @@ export function createNarrator({container = globalThis.document?.body, on, audio
     clearTimer(timer); timer = null; clearTimer(watch); watch = null; card.hide();
   }
 
-  // The crew is on an island: the opening the first time, welcome back after that.
-  function arrive(code, {resumed = false, wave = 0} = {}) {
+  // The crew is on an island: the opening on the first island of this device, welcome back now and then after that.
+  function arrive(code, {resumed = false, wave = 0, fresh = false} = {}) {
     const game = key = gameKey(code, 'local');
     if (begun.has(game)) return;
     begun.add(game);
-    if (memory.told(game).has('game_opening') || resumed || wave > 0) {
-      memory.mark(game, ['game_opening']);
-      say('game_welcome_back', {seed: wave >= 10 ? 1 : 0, game});
-    } else say('game_opening', {game});
+    const playedHere = memory.toldHere(game).has('game_opening') || resumed || wave > 0;
+    if (!playedHere && !memory.everywhere('game_opening')) { say('game_opening', {game}); return; }
+    memory.mark(game, ['game_opening']);
+    if (playedHere) memory.remember(['game_opening']); // a veteran on a new device: no opening on the next island
+    // Welcome back: only on an island played before, not after a reset, at most once in WELCOME_GAP_MS.
+    const last = memory.welcomedAt;
+    if (!playedHere || fresh || (last !== null && now() - last < WELCOME_GAP_MS) || !enabled()) return;
+    if (say('game_welcome_back', {seed: wave >= 10 ? 1 : 0, game}).length) memory.welcomed();
   }
   async function begin() {
     const ticket = ++beginTicket, until = now() + GAME_WAIT_MS;
@@ -195,7 +205,7 @@ export function createNarrator({container = globalThis.document?.body, on, audio
 
   stops.push(
     // The lobby's Start (src/island/game-room.js) sends {first, code}: first false is a game started before.
-    on('game_started', event => arrive(event?.code ?? getGame?.()?.code ?? null, {resumed: event?.resumed === true || event?.first === false, wave: Number(event?.wave) || 0})),
+    on('game_started', event => arrive(event?.code ?? getGame?.()?.code ?? null, {resumed: event?.resumed === true || event?.first === false, wave: Number(event?.wave) || 0, fresh: event?.fresh === true})),
     on('island_reset', event => { const game = gameKey(event?.code ?? null, null); if (game) { begun.delete(game); memory.forget(game); } }),
     on('wave_started_server', waveStarted),
     on('wave_controller_started', waveStarted),

@@ -1,14 +1,20 @@
 // The tutorials of the island game (T52): the guided start of a new island and one card for every new thing.
 //
-// The guided start. On an island at wave 0 that this device has not guided yet (stored per island code, like the
-// narrator), once the intro is over (no cutscene or card open, the narrator's opening said), the goals strip shows
+// Once per player on this device (owner, 16 Nov: "once re-entering the island, do not always re-explain things"):
+// the guided start is for the first island ever, and each card shows once on any island. Re-entering an island,
+// a reload, another island, joining a friend or a reset (T53) never brings them back; Settings › Replay the
+// guided start is the explicit way to see the guide again. A signed-in veteran on a new device (their own island
+// past wave 0) gets no guide, and no cards for what their own island already opened.
+//
+// The guided start. On an island at wave 0, on a device that never showed the guide, once the intro is over (no cutscene or card open, the narrator's opening said), the goals strip shows
 // GUIDE_STEPS (src/ui/first-quests.js) instead of the goals, and the coach (coach.js) shows the current step's
 // caption with a highlight on its target. Each step waits for the real action (a bus event, or what the frame
-// shows: walking, a build card open). Skip step, Skip tutorial; never again on that island once done or skipped.
+// shows: walking, a build card open). Skip step, Skip tutorial; never again once done or skipped. Left for the
+// Harbor, it waits on that island for the rest of the visit; after a reload it counts as done.
 // Settings › Replay the guided start runs it again on the island on screen.
 //
 // The unlock cards. When the island's best won wave goes up, the cards of what opened (src/campaign/tutorials.json,
-// unlock-cards.js) wait for a quiet moment (no wave, no card, no cutscene) and show one at a time, once per island.
+// unlock-cards.js) wait for a quiet moment (no wave, no card, no cutscene) and show one at a time, once per device.
 // Show me walks the camera to the thing (not with reduced motion) and rings it.
 //
 // Multiplayer. Each screen keeps its own: every player gets the guide on their own screen. A friend who first
@@ -48,6 +54,7 @@ export function createTutorials({container = globalThis.document?.body, on, stor
     onSkipStep: () => skip(false), onSkipAll: () => skip(true)});
   const stops = [];
   let disposed = false, code = null, guide = null, guiding = false, replaying = false, readyAt = null, lastCheck = -Infinity;
+  let begunCode = null; // the island where this page showed the guide (it may resume there after a trip away)
   let walked = 0, lastPos = null, cardOpen = null, cardLoading = false, showing = null, target = null, targetAt = -Infinity;
   const queue = [];
   const enabled = () => preferences()?.tutorials !== false;
@@ -89,12 +96,14 @@ export function createTutorials({container = globalThis.document?.body, on, stor
     saveGuide(); target = null; showGuide();
   }
   function beginGuide(state) {
+    memory.setGuided(); begunCode = code;
     guide = state ?? guideStart(); guiding = true; walked = 0; lastPos = null; target = null;
     showGuide();
   }
 
   // ---- the unlock cards ----
-  function hand(cards) {
+  function hand(all) {
+    const cards = all.filter(card => !memory.seenAnywhere(card.id)); // seen on any island: never again
     if (!code || !cards.length) return;
     if (!enabled()) { memory.mark(code, cards.map(card => card.id)); return; } // off: told as passed, never piled up
     memory.queue(code, cards.map(card => card.id));
@@ -112,12 +121,15 @@ export function createTutorials({container = globalThis.document?.body, on, stor
         else {
           // A friend (or a new device) on an island past wave 0: no guide, only what this device never saw.
           memory.setGuide(code, {status: 'none', step: 0});
-          hand(cardsOpenAt(wave, flags).filter(card => card.wave > 0 && !memory.seenAnywhere(card.id)));
+          // A veteran's own best wave (signed in, a new device): what it opened they met already.
+          const best = Number.isSafeInteger(p.best) ? p.best : 0;
+          hand(cardsOpenAt(wave, flags).filter(card => card.wave > 0 && card.wave > best));
         }
         memory.setWave(code, wave);
       } else {
-        for (const id of known.queued) if (!known.cards.includes(id) && cardById(id) && !queue.includes(id)) queue.push(id);
-        if (known.wave === null) memory.setWave(code, wave);
+        for (const id of known.queued) if (!known.cards.includes(id) && !memory.seenAnywhere(id) && cardById(id) && !queue.includes(id)) queue.push(id);
+        // null: not read yet; lower: the island was reset (T53), so its next wins hand their cards (if never seen).
+        if (known.wave === null || wave < known.wave) memory.setWave(code, wave);
       }
     }
     const entry = memory.game(code), from = entry?.wave ?? wave;
@@ -173,8 +185,16 @@ export function createTutorials({container = globalThis.document?.body, on, stor
       if (lastPos && guiding && !p.blocked) walked += Math.hypot(p.player.x - lastPos.x, p.player.z - lastPos.z);
       lastPos = {x: p.player.x, z: p.player.z};
     }
-    // Start (or resume) the guide once the intro is over.
-    const stored = code ? memory.game(code)?.guide : null;
+    // Start (or resume) the guide once the intro is over: only on this device's first guided island (or by
+    // Replay). Anywhere else, or after a reload, a guide still marked active is over.
+    let stored = code ? memory.game(code)?.guide : null;
+    if (!guiding && stored?.status === 'active' && !replaying && begunCode !== code
+      && (memory.guided() || (Number.isSafeInteger(p.best) && p.best > 0))) {
+      memory.setGuided();
+      memory.setGuide(code, {status: 'done', step: stored.step, skipped: stored.skipped});
+      memory.mark(code, ['defenses']);
+      stored = memory.game(code)?.guide;
+    }
     // (A wave may already run: a friend joined during wave 1. The guide then starts at the fight.)
     if (!guiding && enabled() && stored?.status === 'active' && !p.blocked && !p.cutscene && !p.dialog && !cardOpen && !showing) {
       const opening = readyAt !== null && t - readyAt < OPENING_WAIT_MS && p.narrating;

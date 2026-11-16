@@ -58,7 +58,7 @@ describe('the narrator on the bus', () => {
     expect(narratorVoices({version: 2, lines: {}})).toEqual({});
   });
 
-  it('opens a new game once, line after line, and says welcome back to a returning crew', async () => {
+  it('opens the first game of the device once, line after line, and says welcome back now and then', async () => {
     let {narrator} = make();
     await narrator.begin();
     await flush(0);
@@ -73,13 +73,51 @@ describe('the narrator on the bus', () => {
     await flush(10000);
     expect(card.shown).toEqual(['welcome_back_1']);
     narrator.dispose();
-    // Another island: its own opening.
+    // Another reload soon after: not even welcome back (owner, 16 Nov: "do not always re-explain things").
+    ({narrator} = make());
+    await narrator.begin();
+    await flush(10000);
+    expect(card.shown).toEqual([]);
+    narrator.dispose();
+    // Another island (a friend's, or a new one): the opening was told on this device, so it stays quiet.
     game = {code: 'isle-aaaaa', waveBest: 0};
     ({narrator} = make());
     await narrator.begin();
-    await flush(0);
-    expect(narrator.speaking).toBe('opening_1');
+    await flush(10000);
     expect(narrator.game).toBe('ISLE-AAAAA');
+    expect(card.shown).toEqual([]);
+    narrator.dispose();
+    // Half a day later the crew is welcomed back once more.
+    game = {code: 'ISLE-K7Q2M', waveBest: 0};
+    await flush(13 * 60 * 60 * 1000);
+    ({narrator} = make());
+    await narrator.begin();
+    await flush(10000);
+    expect(card.shown).toEqual(['welcome_back_1']);
+    narrator.dispose();
+  });
+  it('tells the explaining lines once per device: not again on another island, nor after a reset (T53)', async () => {
+    let {narrator, events} = make();
+    events.emit({type: 'game_started', code: 'ISLE-K7Q2M', first: true});
+    events.emit({type: 'wave_started_server', waveId: 'a1', wave: 1, where: 'own'});
+    events.emit({type: 'campaign_unlocked', wave: 1, code: 'ISLE-K7Q2M'});
+    await flush(60000);
+    expect(card.shown).toEqual(['opening_1', 'opening_2', 'wave_1', 'unlock_captain', 'unlock_houses']);
+    // T53: the island is reset; its fresh start says no opening, and wave 1 explains nothing again.
+    events.emit({type: 'island_reset', code: 'ISLE-K7Q2M'});
+    events.emit({type: 'game_started', code: 'ISLE-K7Q2M', first: true, fresh: true});
+    events.emit({type: 'wave_started_server', waveId: 'a2', wave: 1, where: 'own'});
+    await flush(60000);
+    expect(card.shown).toEqual(['opening_1', 'opening_2', 'wave_1', 'unlock_captain', 'unlock_houses']);
+    narrator.dispose();
+    // A friend's island after a reload: nothing told twice there either.
+    game = {code: 'ISLE-BBBBB', waveBest: 0};
+    ({narrator, events} = make());
+    events.emit({type: 'game_started', code: 'ISLE-BBBBB', first: true});
+    events.emit({type: 'wave_started_server', waveId: 'b1', wave: 1, where: 'ISLE-BBBBB'});
+    events.emit({type: 'campaign_unlocked', wave: 1, code: 'ISLE-BBBBB'});
+    await flush(60000);
+    expect(card.shown).toEqual([]);
     narrator.dispose();
   });
 

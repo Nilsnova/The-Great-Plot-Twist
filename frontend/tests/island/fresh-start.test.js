@@ -122,7 +122,7 @@ describe('the Settings section model', () => {
 });
 
 describe('the narrator after a reset', () => {
-  it('forgets the island game, so the game_started that follows plays the opening again', async () => {
+  it('forgets the island game but not what it explained: the fresh start plays no opening again (owner, 16 Nov)', async () => {
     vi.useFakeTimers();
     try {
       const listeners = new Map();
@@ -141,7 +141,7 @@ describe('the narrator after a reset', () => {
       emit({type: 'island_reset', code: 'ISLE-K7Q2M'});
       emit({type: 'game_started', code: 'ISLE-K7Q2M', first: true, fresh: true});
       await vi.advanceTimersByTimeAsync(10000);
-      expect(shown).toEqual(['opening_1', 'opening_1']);
+      expect(shown).toEqual(['opening_1']); // the player knows the game: no opening, no welcome back
       narrator.dispose();
     } finally { vi.useRealTimers(); }
   });

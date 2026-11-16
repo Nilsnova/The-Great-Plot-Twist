@@ -946,14 +946,14 @@ A voiced narrator tells the story and introduces each new thing: the opening, th
 - **Audio is generated once and committed.** The game never calls ElevenLabs while running. If the service or the key is gone, players still hear the narrator, and the game needs no secret for it.
 - **Captions always show,** for sound off and for accessibility. The text is plain text, never HTML.
 - **The narrator never blocks play.** Lines queue, old ones expire, and Skip hides the caption.
-- **Told once per island game,** so a returning crew is not told the opening again (except the "welcome back" line).
+- **Explanations once per device** (owner, 16 Nov): the opening, the first-wave lines, the unlock lines and the guide lines are told once on any island of this browser, also after a reset (T53). Story lines (milestones, every tenth wave) stay once per island game; "welcome back" plays at most once in 12 hours.
 - **Credit check before sending.** The free plan has a monthly character budget; the script never buys or changes anything on the account ([generate.py](../scripts/voice/generate.py) header).
 - Commit trail: `02375eb` (narrator mode of the generator), `91cd700` (voice for the 23 newest lines).
 
 ### Limits
 - I checked on 13 Nov that all 80 lines have a file in the manifest. No test keeps that true; a new line without a voice shows as a caption only.
 - The audio quality, the voice and the timing of captions against speech were not checked by me. Headless Chrome has no real audio device, so no automated check hears the sound.
-- Per-game memory is in the browser's `localStorage`, so a second device hears the opening again.
+- The memory is in the browser's `localStorage`, so a second device hears the opening again, unless the player's own island is already past wave 0.
 - The whole voice folder is 2.3 MB in the repository.
 
 ### What the tests cover and miss
