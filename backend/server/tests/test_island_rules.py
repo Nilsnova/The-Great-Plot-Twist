@@ -34,7 +34,7 @@ HARPOON = REPO_ROOT / "supabase" / "migrations" / "20261113020000_harpoon_tower.
 CULVERIN = REPO_ROOT / "supabase" / "migrations" / "20261114140000_culverin.sql"
 SWIVEL_RULE = REPO_ROOT / "supabase" / "migrations" / "20261116020100_swivel_spot_rule.sql"
 WAVE_RULES = REPO_ROOT / "supabase" / "migrations" / "20261114130500_wave_rules.sql"
-TOWER_OBSTACLES = REPO_ROOT / "supabase" / "migrations" / "20261115160000_tower_obstacles.sql"
+TOWER_OBSTACLES = REPO_ROOT / "supabase" / "migrations" / "20261116050100_tower_obstacles.sql"
 # The md5 of 20261110010000 as applied live (a checksum, not a secret).
 APPLIED_MD5 = "79278156e4925b2d39076722c11d2f00"  # pragma: allowlist secret
 

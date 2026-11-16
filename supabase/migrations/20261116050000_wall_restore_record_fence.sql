@@ -1,5 +1,5 @@
 -- =============================================================================
--- 20261115150000_wall_restore_record_fence.sql
+-- 20261116050000_wall_restore_record_fence.sql
 --
 -- WHAT IT DOES
 --   A paid wall restore fences out a delayed record from a wave that had already

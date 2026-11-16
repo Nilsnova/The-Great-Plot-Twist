@@ -1539,7 +1539,7 @@ from the [placement footprints](../frontend/src/island/placement.js). [boarder-p
 adds towers to the weighted field, while [sim.js](../frontend/src/pirates/sim.js) applies boundary targeting and
 movement collision. [battle-guide.js](../frontend/src/pirates/battle-guide.js) uses the same route and tower HP.
 The server filters the optional rule in [wave_rules.py](../backend/server/island/wave_rules.py); migration
-[`20261115160000_tower_obstacles.sql`](../supabase/migrations/20261115160000_tower_obstacles.sql) adds its allowed
+[`20261116050100_tower_obstacles.sql`](../supabase/migrations/20261116050100_tower_obstacles.sql) adds its allowed
 name to the existing frozen-rules constraint.
 
 **Tests and evidence.** [tower-obstacles.test.js](../frontend/tests/pirates/tower-obstacles.test.js) checks footprint
