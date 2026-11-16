@@ -32,6 +32,8 @@ CONTENT_FILE = Path(__file__).resolve().parents[2] / "content" / "islands.json"
 CAMPAIGN_FILE = CONTENT_FILE.with_name("campaign.json")
 # The second wave of defenses (T43, D048 proposed): read only while the flag defenses_v2 is on.
 DEFENSES_V2_FILE = CONTENT_FILE.with_name("defenses_v2.json")
+# D055: the upgrade trees of the towers after level 5 (two paths of three tiers each).
+TOWER_TREES_FILE = CONTENT_FILE.with_name("tower_trees.json")
 DEFENSES_V2_FLAG = "defenses_v2"
 
 ID_PATTERN = re.compile(r"[a-z][a-z0-9_]{1,39}")
@@ -130,7 +132,18 @@ SERVICE_IDS = (
     "tier_50",
     "research_2",
     "research_3",
+    # D055: the three tiers of the tower trees (tower_trees.json "steps").
+    "tree_1",
+    "tree_2",
+    "tree_3",
 )
+# D055: the tower kinds that may have an upgrade tree, the paths and the tiers per path. The
+# culverin is listed although its kind only exists while the flag defenses_v2 is on. The check
+# rules of 20261116020000_tower_trees.sql list the same kinds and limits.
+TREE_KIND_IDS = ("cannon", "mortar", "harpoon", "culverin", "swivel")
+TREE_PATHS = ("a", "b")
+TREE_TIERS = 3
+TREE_OTHER_MAX = 1  # once a path is past this tier, the other stays at this tier at most
 
 
 class IslandFileError(ValueError):
@@ -309,6 +322,37 @@ class Research:
 
 
 @dataclass(frozen=True)
+class TreePath:
+    """One path of a tower's upgrade tree (D055): a for faster, b for harder hitting."""
+
+    path: str  # "a" or "b"
+    id: str  # drill
+    name: str  # Drill
+
+
+@dataclass(frozen=True)
+class TowerTree:
+    """The upgrade tree of one tower kind (D055, tower_trees.json)."""
+
+    kind: str
+    prices: tuple[int, ...]  # tiers 1, 2 and 3, the same for both paths
+    paths: tuple[TreePath, ...]  # a, then b
+    waves: tuple[int, ...]  # the island's best won wave each tier needs (campaign.json tree_1..3)
+    level: int = MAX_LEVEL  # the level a tower needs before its tree opens
+
+    def path_named(self, path: str) -> TreePath | None:
+        for item in self.paths:
+            if item.path == path:
+                return item
+        return None
+
+    def tier_name(self, path: str, tier: int) -> str:
+        """Drill II: the path's name and the tier in Roman numerals."""
+        found = self.path_named(path)
+        return f"{found.name if found else path} {'I' * tier}"
+
+
+@dataclass(frozen=True)
 class Wreck:
     """The wreck that washes ashore after wave 6: members pay coins into her repair."""
 
@@ -378,6 +422,17 @@ class IslandCatalogue:
     # T36: the feature flag "placement" (set by create_app, not by the file). While it is off the
     # island layout table is never read and no spot moves: every answer shows the fixed spots.
     placement: bool = False
+    # D055: the upgrade trees by tower kind (tower_trees.json). A kind that is not in `kinds` (the
+    # culverin while defenses_v2 is off) is never built, so its tree is never offered.
+    trees: tuple[TowerTree, ...] = ()
+
+    def tree_of(self, kind: str) -> TowerTree | None:
+        if not any(entry.kind == kind for entry in self.kinds):
+            return None
+        for tree in self.trees:
+            if tree.kind == kind:
+                return tree
+        return None
 
 
 def read_whole(entry: dict, name: str, where: str, lowest: int, highest: int) -> int:
@@ -832,7 +887,54 @@ def load_island(path: Path = CONTENT_FILE, campaign_path: Path | None = None) ->
         campaign=campaign,
         research=read_research(data),
         wreck=read_wreck(data),
+        trees=read_tower_trees(campaign, kinds),
     )
+
+
+def read_tower_trees(
+    campaign: Campaign, kinds: tuple[Kind, ...], path: Path = TOWER_TREES_FILE
+) -> tuple[TowerTree, ...]:
+    """Read and check tower_trees.json (D055). Raises IslandFileError on any mistake."""
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as error:
+        raise IslandFileError(f"Cannot read {path.name}: {type(error).__name__}.") from error
+    if not isinstance(data, dict):
+        raise IslandFileError(f"{path.name} must hold one JSON object.")
+    read_text(data, "about", path.name, 2000)
+    steps = data.get("steps")
+    if not isinstance(steps, list) or len(steps) != TREE_TIERS:
+        raise IslandFileError(f"{path.name}: 'steps' must name {TREE_TIERS} campaign ids.")
+    waves = []
+    for step in steps:
+        wave = campaign.wave_of(step) if isinstance(step, str) else None
+        if wave is None:
+            raise IslandFileError(f"{path.name}: campaign.json does not say when '{step}' opens.")
+        waves.append(wave)
+    if waves != sorted(waves):
+        raise IslandFileError(f"{path.name}: the tiers must open in order.")
+    level = read_whole(data, "level", path.name, 1, MAX_LEVEL)
+    sizes = {kind.kind: kind.max_level for kind in kinds}
+    trees, seen = [], set()
+    for index, entry in enumerate(read_list(data, "kinds", len(TREE_KIND_IDS))):
+        where = f"tower_trees.kinds[{index}]"
+        name = read_id(entry, "kind", where)
+        if name not in TREE_KIND_IDS or name in seen:
+            raise IslandFileError(f"{where}: '{name}' is not a tower kind with a tree (or twice).")
+        if name in sizes and sizes[name] != level:
+            raise IslandFileError(f"{where}: a {name} has {sizes[name]} levels, not {level}.")
+        seen.add(name)
+        prices = read_whole_list(entry, "prices", where, 1, TREE_TIERS)
+        if len(prices) != TREE_TIERS or list(prices) != sorted(prices):
+            raise IslandFileError(f"{where}: 'prices' must be {TREE_TIERS} rising prices.")
+        paths = []
+        for key in TREE_PATHS:
+            item = read_object(entry, key)
+            paths.append(
+                TreePath(key, read_id(item, "id", where), read_text(item, "name", where, 20))
+            )
+        trees.append(TowerTree(name, prices, tuple(paths), tuple(waves), level))
+    return tuple(trees)
 
 
 def island_or_none() -> IslandCatalogue | None:

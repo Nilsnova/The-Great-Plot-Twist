@@ -14,15 +14,15 @@ it.each([
 const island = {code: 'ISLE-K7Q2M', waveBest: 1, spots: [
   {id: 'cannon_1', kind: 'cannon', built: true}, {id: 'tower_1', kind: 'watchtower', built: true},
   {id: 'wall_1', kind: 'wall', built: true}, {id: 'wall_2', kind: 'wall', built: true},
-  {id: 'house_1', kind: 'house', built: true}, {id: 'cannon_2', kind: 'mortar', built: false},
+  {id: 'swivel_1', kind: 'swivel', built: true}, {id: 'house_1', kind: 'house', built: true}, {id: 'cannon_2', kind: 'mortar', built: false},
 ]};
 it('counts built defenses only and reads the existing campaign unlocks', () => {
   const view = preparationModel({island});
-  expect(view.lines).toEqual(['Built: 2 towers · 2 walls.']);
+  expect(view.lines).toEqual(['Built: 3 towers · 2 walls.']);
   expect(view.unlocks).toHaveLength(3);
   expect(view.unlocks[0]).toContain('Win wave 2:');
   expect(view.unlocks.join(' ')).not.toContain('repaired ship');
-  expect(island.spots[5].built).toBe(false);
+  expect(island.spots[6].built).toBe(false);
 });
 it('known wall damage is descriptive, never a new start restriction', () => {
   const preparation = preparationModel({island, wallRecovery: true,

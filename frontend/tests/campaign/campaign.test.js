@@ -23,7 +23,10 @@ describe('the campaign table', () => {
     expect(['harbor', 'market_calls', 'ring_walls', 'crew:carpenter', 'wreck', 'football_board', 'tech_hub']
       .map(waveOf)).toEqual([4, 4, 5, 5, 6, 7, 8]);
     expect([12, 15, 20, 30, 50].map(wave => waveOf(`tier_${wave}`))).toEqual([12, 15, 20, 30, 50]);
-    expect(STEPS.find(step => step.opens.includes('ship')).later).toBe(true);
+    // D057: the own boat opens with the ironclads after wave 30, no longer as a later step at wave 10.
+    expect(waveOf('ship')).toBe(30);
+    expect(STEPS.find(step => step.opens.includes('ship')).later).toBe(false);
+    expect(STEPS.some(step => step.later)).toBe(false);
     expect(spotWave('wall_7')).toBe(5);
     expect(spotWave('wall_1')).toBe(0);
     expect(opensText(4)).toBe('Opens after wave 4');
@@ -34,7 +37,7 @@ describe('the campaign table', () => {
     expect(unlockWave({kind: 'wall', level: 3})).toBe(5);
     expect(unlockWave({crew: 'gunner'})).toBe(3);
     expect(unlockWave({captain: 4})).toBe(8);
-    expect(UNLOCK_STEPS.map(step => step.wave)).toEqual([0, 1, 2, 3, 5, 6, 8, 12, 15, 20]); // 6: the guard (D052)
+    expect(UNLOCK_STEPS.map(step => step.wave)).toEqual([0, 1, 2, 3, 5, 6, 8, 9, 12, 15, 20]); // 6: the guard (D052), 9: the swivel nest (D055)
     expect(unlockWave({crew: 'guard'})).toBe(6);
     // The tower tiers (GAME-V3.md §4.1): level 4 after wave 12 (the mortar and the watchtower's 4 after 15), level 5 after 20.
     expect([['cannon', 4], ['wall', 4], ['watchtower', 3], ['mortar', 4], ['watchtower', 4], ['cannon', 5], ['mortar', 5], ['wall', 5], ['watchtower', 5]]
@@ -44,7 +47,9 @@ describe('the campaign table', () => {
     const derived = campaignOf({waveBest: 4});
     expect(isOpen(derived, 'harbor')).toBe(true);
     expect(derived.locked.get('tech_hub')).toBe(8);
-    expect(derived.later.has('ship')).toBe(true);
+    expect(derived.later.has('ship')).toBe(false);
+    expect(derived.locked.get('ship')).toBe(30);
+    expect(isOpen(campaignOf({waveBest: 30}), 'ship')).toBe(true);
     const sent = campaignOf({waveBest: 9, campaign: {wave: 9, research: {done: ['cannon']}, wreck: {paid: 700, goal: 500, gifts: [25]}}});
     expect([...sent.research.done]).toEqual(['cannon']);
     expect(sent.wreck).toEqual({paid: 500, goal: 500, gifts: [25]});

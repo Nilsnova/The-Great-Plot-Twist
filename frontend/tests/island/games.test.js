@@ -96,8 +96,8 @@ describe('codes, links and the games card', () => {
     const copy = gamesCopy({games: [{code: 'ISLE-FR3ND', hostName: 'Captain Gull', role: 'member', waveBest: 7, members: 3},
       {code: 'ISLE-K7Q2M', hostName: 'Nils', role: 'host', waveBest: 0, members: 1}]});
     expect(copy.continue.games.map(game => game.title)).toEqual(["Captain Gull's game", 'Your game']);
-    expect(copy.continue.games.map(game => game.line)).toEqual(['ISLE-FR3ND · wave 7 · 3 players', 'ISLE-K7Q2M · no wave yet · 1 player']);
-    expect(gameLine({code: 'ISLE-K7Q2M', role: 'host', waveBest: 2, members: 10}).line).toBe('ISLE-K7Q2M · wave 2 · 10 players');
+    expect(copy.continue.games.map(game => game.line)).toEqual(['ISLE-FR3ND, wave 7, 3 players', 'ISLE-K7Q2M, no wave yet, 1 player']);
+    expect(gameLine({code: 'ISLE-K7Q2M', role: 'host', waveBest: 2, members: 10}).line).toBe('ISLE-K7Q2M, wave 2, 10 players');
     expect(gamesCopy({signedOut: true}).join.line).toContain('guest');
   });
 });

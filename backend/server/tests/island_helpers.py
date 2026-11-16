@@ -125,6 +125,7 @@ PAID_FUNCTIONS = (
     "island_wreck_repair",
     "island_respec_at_level",
     "island_wall_restore",
+    "island_tower_tree",  # D055
 )
 PAID_DONE = {"status": "done", "level": 2, "balance": 70, "repeat": False}
 ROLE_PICKED = {"status": "done", "role": "medic", "repeat": False}

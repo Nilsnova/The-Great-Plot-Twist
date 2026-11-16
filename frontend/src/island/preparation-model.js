@@ -2,7 +2,7 @@
 import {STEPS, campaignOf} from '../campaign/index.js';
 
 const LAST_WAVE = 100; // The existing campaign limit; only a fallback for older island answers.
-const TOWERS = new Set(['cannon', 'mortar', 'harpoon', 'culverin', 'watchtower']);
+const TOWERS = new Set(['cannon', 'mortar', 'harpoon', 'culverin', 'swivel', 'watchtower']);
 export function nextWaveNumber(nextWave, waveBest = 0) {
   if (Number.isSafeInteger(nextWave) && nextWave >= 1 && nextWave <= LAST_WAVE) return nextWave;
   const best = Number.isSafeInteger(waveBest) && waveBest >= 0 ? waveBest : 0;

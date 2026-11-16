@@ -16,12 +16,12 @@ describe('the walk-up range', () => {
     for (const spot of SPOTS) expect(zoneOf(spot.id).radius, spot.id).toBe(REACH);
   });
   it('picks the nearest thing in range, only one at a time', () => {
-    // house_1 (7, -6) and wall_12 (4, -5.5) are close together: standing next to one picks that one.
-    const house = zoneOf('house_1'), wall = zoneOf('wall_12');
-    expect(findZone(at(house, .3, .2), zones)).toBe('house_1');
+    // wall_7 (8.5, 2) and wall_12 (8.5, 0) stand side by side: standing next to one picks that one.
+    const house = zoneOf('wall_7'), wall = zoneOf('wall_12');
+    expect(findZone(at(house, .3, .2), zones)).toBe('wall_7');
     expect(findZone(at(wall, -.3, 0), zones)).toBe('wall_12');
     const between = {x: (house.x + wall.x) / 2 + .6, y: 1.03, z: (house.z + wall.z) / 2};
-    expect(findZone(between, zones)).toBe(Math.hypot(between.x - house.x, between.z - house.z) / house.radius < Math.hypot(between.x - wall.x, between.z - wall.z) / wall.radius ? 'house_1' : 'wall_12');
+    expect(findZone(between, zones)).toBe(Math.hypot(between.x - house.x, between.z - house.z) / house.radius < Math.hypot(between.x - wall.x, between.z - wall.z) / wall.radius ? 'wall_7' : 'wall_12');
   });
   it('finds nothing out of range', () => {
     expect(findZone({x: 0, y: 1.03, z: 0}, zones)).toBe(null);
