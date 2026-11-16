@@ -2,7 +2,9 @@
 // The text is always plain text. Small and token-based CSS (narrator.css), so the art lane can restyle it.
 import './narrator.css';
 
-const CONTROLS = '.bottom-bar,.interact:not([hidden]),.pirate-musket:not([hidden])';
+// The E prompt floating over a building (.interact.floating) moves with the world, so the card does not dodge it
+// (the overlap audit: dodging it pushed the card into the wave bar).
+const CONTROLS = '.bottom-bar,.interact:not([hidden]):not(.floating),.pirate-musket:not([hidden])';
 
 export function createNarratorCard(container = document.body, {onSkip = () => {}, large = () => false} = {}) {
   const card = document.createElement('div');
@@ -33,6 +35,12 @@ export function createNarratorCard(container = document.body, {onSkip = () => {}
     document.documentElement.style.setProperty('--narrator-card-height', `${Math.round(card.getBoundingClientRect().height)}px`);
   }
   addEventListener('resize', position);
+  // A control that appears or goes while the card shows (the Musket button at the start of a wave) moves it too
+  // (playtest 16 Nov: the card covered the Musket button). Only the hidden attribute is watched.
+  // The HUD sets some hidden flags every frame to the same value: only a real show or hide measures again.
+  const flipped = record => (record.oldValue === null) === record.target.hasAttribute('hidden');
+  const controlsChange = typeof MutationObserver === 'function' ? new MutationObserver(records => { if (records.some(flipped)) position(); }) : null;
+  const watch = on => { controlsChange?.disconnect(); if (on) controlsChange?.observe(container, {subtree: true, attributes: true, attributeOldValue: true, attributeFilter: ['hidden']}); };
   return {
     element: card,
     show(line) {
@@ -41,9 +49,10 @@ export function createNarratorCard(container = document.body, {onSkip = () => {}
       card.dataset.line = line.id;
       card.hidden = false;
       text.textContent = line.text;
-      position();
+      position(); watch(true);
     },
     hide() {
+      watch(false);
       card.hidden = true;
       delete card.dataset.line;
       text.textContent = '';

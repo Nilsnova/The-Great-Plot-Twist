@@ -833,9 +833,10 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     setFigures(value) { figures = value instanceof Map ? value : null; },
     // The island changed (an upgrade or a new building, ours or a friend's): once the wave is decided, in the
     // break, its posts show the new levels. A wave under way keeps the defenses it started with.
-    refreshDefenses() {
+    // walls ({spot: percent}, optional): fresh wall health from a paid repair or rebuild (D039).
+    refreshDefenses(walls = null) {
       if (!wave?.done || !wave.renderer) return false;
-      wave.renderer.setDefenses?.(getDefenses() ?? []); return true;
+      wave.renderer.setDefenses?.(withHealth(getDefenses() ?? [], walls)); return true;
     },
     setCaptainLevel(value) { level = Number.isInteger(value) ? value : null; },
     // Override the getters (tests, the dev harness): null goes back to captainSkills() / captainWeapon().
