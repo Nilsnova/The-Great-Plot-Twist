@@ -115,6 +115,7 @@ FUNDING = {
     permissions.UPGRADE: permissions.PERSONAL,
     permissions.RESEARCH: permissions.PERSONAL,
     permissions.TOWER_SKILL: permissions.PERSONAL,  # D051: tower skills cost coins
+    permissions.TOWER_TREE: permissions.PERSONAL,  # D055: tower trees
     permissions.WRECK: permissions.PERSONAL,
     permissions.DEMOLISH: permissions.REFUND_TO_PAYERS,
     permissions.WAVE_START: permissions.FREE,
@@ -126,6 +127,7 @@ FUNDING = {
     permissions.ARSENAL_WITHDRAW: permissions.FREE,
     permissions.ARSENAL_RETURN: permissions.FREE,
     permissions.MOVE: permissions.FREE,
+    permissions.BOAT: permissions.FREE,  # D057: the boat's games earn coins, nobody pays
 }
 
 

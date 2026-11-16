@@ -34,8 +34,9 @@ import {createArsenal} from './arsenal.js';
 import {createArsenalApi} from './arsenal-api.js';
 import {buildCardModel, bellModel, inviteModel, crewModel, captainModel, captainsModel, skillsModel, weaponsModel, coinText,
   harborModel, techModel, wreckModel, demolishModel, refundToast} from './card-model.js';
-import {campaignOf, openedBetween, opensText, waveOf} from '../campaign/index.js';
+import {campaignOf, isOpen, openedBetween, opensText, waveOf} from '../campaign/index.js';
 import {BRANCH_BY_ID, SPECS, optionName, optionsOf} from '../campaign/tech.js';
+import {TOWER_TREES} from '../pirates/tower-trees.js';
 import {ROLES, activeRole, roleRadius} from '../campaign/houses.js';
 import {ROLE_BY_ID, SKILL_BY_ID, WEAPON_BY_ID, WEAPONS, isRole, readSkills, readWeapon} from '../pirates/captain-ids.js';
 import {displayIslandCode, islandCode, islandRoom, storeVisit, readVisit, forgetVisit} from './codes.js';
@@ -58,6 +59,8 @@ export const NEWS_KEY = 'plot_twist_td_news_v1';
 // GAME-V3.md §4: a won wave opened something on the island on screen.
 export const CAMPAIGN_UNLOCKED = 'campaign_unlocked';
 export const TOWER_SPECIALISED = 'tower_specialised';
+// D055: a tier of a tower's upgrade tree was bought on this page: {spot, kind, path, tier}.
+export const TOWER_TREE_BOUGHT = 'tower_tree_bought';
 // A house picked a role (GAME-V3.md "Houses"): {spot, role, first} (first: the first role on this island seen by this page).
 export const HOUSE_ROLE_PICKED = 'house_role_picked';
 export const VISIT_NAMED = 'island_visit_named';
@@ -87,6 +90,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   // D039: the walls of the island on screen (spot -> {health, recoversAt, repairCost}), read when a wall card opens.
   let walls = new Map(), wallsFor = null; // wallsFor: the island code they belong to
   let pickedRole = null, busyRole = false, respecAsk = false, busyRespec = false;
+  // D055: the tile of a tower's tree the player tapped, per spot (the card picks the next step without one).
+  const treePicked = new Map();
   // The games (GAME-V3.md §2): the room state from the wave wiring, the codes joined this page, the lobby.
   let game = null, gameCode = null, lobbyAnswer = null, lobbyProblem = '', lobbyBusy = false, lobbyRead = 0, stopGame = () => {};
   const joined = new Set();
@@ -367,7 +372,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     const model = buildCardModel({spotId, slot: spotById(spotId)?.slot, spot, coins: own?.coins ?? null,
       visitor: !!visiting, ownerName: visiting?.ownerName, busy: busySpot === spotId ? busyKind : false, message: cardMessage || (!island ? ownMessage : ''),
       unlocks: own ? islandUnlocks() : null, prices: own?.prices ?? null, campaign: campaign(), battle: battle && !waveOver,
-      movable: island?.layout?.movable === true, flags: {defenses_v2: defensesV2On() === true}});
+      movable: island?.layout?.movable === true, flags: {defenses_v2: defensesV2On() === true}, treePicked: treePicked.get(spotId) ?? null});
     // D039: a damaged or destroyed wall shows Repair or Rebuild instead of Upgrade (flag wall_recovery).
     const shown = wallsFor !== null && wallsFor === island?.code ? walls.get(spotId) ?? null : null;
     return withWallRecovery(model, {wall: shown, coins: own?.coins ?? null,
@@ -389,17 +394,54 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     respec: () => void respecCaptain(), respecCancel: () => { respecAsk = false; refreshCard(); },
     buy: id => void buyWeapon(id), equip: id => void equipWeapon(id)};
   const handlers = {build: (spotId, kind) => void build(spotId, kind), upgrade: spotId => void upgrade(spotId), repair: spotId => void repairWall(spotId), hire: () => openCrew(),
-    specialise: (spotId, spec) => void specialise(spotId, spec), demolish: spotId => void askDemolish(spotId), move: spotId => startMove(spotId)};
+    specialise: (spotId, spec) => void specialise(spotId, spec), demolish: spotId => void askDemolish(spotId), move: spotId => startMove(spotId),
+    treeSelect: (spotId, id) => { treePicked.set(spotId, id); cardMessage = ''; refreshCard(); }, tree: (spotId, path, tier) => void buyTree(spotId, path, tier)};
   const demolishHandlers = {confirm: () => void confirmDemolish(), keep: () => { const spot = demolishSpot; demolishSpot = null; if (spot) openBuild(spot); }};
   const demolishCardModel = () => demolishModel({quote: demolishQuote, busy: busyDemolish, message: cardMessage});
   // The campaign's buildings (GAME-V3.md §4, §5): the Harbor, the Tech hub and the wreck.
   let busyResearch = null, busyGift = null;
   const harbor = () => harborModel({campaign: campaign()});
   const tech = () => techModel({campaign: campaign(), coins: own?.coins ?? null, busy: busyResearch, battle: battle && !waveOver, message: cardMessage || (!target() ? ownMessage : '')});
-  const wreck = () => wreckModel({campaign: campaign(), coins: own?.coins ?? null, busy: busyGift, message: cardMessage || (!target() ? ownMessage : '')});
+  const wreck = () => wreckModel({campaign: campaign(), coins: own?.coins ?? null, busy: busyGift, message: cardMessage || (!target() ? ownMessage : ''),
+    boat: boatStatus, battle: battle && !waveOver});
   const harborHandlers = {open: id => { ui.close(); try { openHarborStall(id); } catch { /* The stall answers on its own. */ } }};
   const techHandlers = {research: step => void research(step)};
-  const wreckHandlers = {give: amount => void giveWreck(amount)};
+  const wreckHandlers = {give: amount => void giveWreck(amount), sail: game => void sail(game)};
+  // D057: the island's own boat after wave 30. boatStatus: GET /api/island/boat of the island on screen (null while
+  // it loads); boatGame: the round on screen (pirates/boat/scene.js, loaded on the first sail).
+  let boatStatus = null, boatGame = null, boatLoading = false, boatTicket = 0;
+  async function readBoat() {
+    if (!isOpen(campaign(), 'ship')) { boatStatus = null; return; }
+    const ticket = ++boatTicket, answer = await api.boatStatus(placeCode());
+    if (disposed || ticket !== boatTicket) return;
+    boatStatus = answer.ok ? answer.data : null;
+    if (ui.open === 'wreck') refreshCard();
+  }
+  async function sail(game) {
+    if (boatGame || boatLoading || (battle && !waveOver)) return;
+    boatLoading = true;
+    const at = campaign(), code = target()?.code ?? '', where = placeCode();
+    let scene;
+    try { scene = await import('../pirates/boat/scene.js'); } catch { boatLoading = false; ui.toast('The boat could not load. Try again.', 'info'); return; }
+    boatLoading = false;
+    if (disposed) return;
+    ui.close();
+    boatGame = scene.createBoatGame({container: document.body, game, wave: at?.wave ?? 0, code, reducedMotion,
+      easy: () => preferences()?.easyFinishers === true,
+      onFinish: async ({stars}) => {
+        if (stars < 1) return {line: 'No stars this time. Try again!', coins: 0};
+        const answer = await api.boatReward({game, stars, ...where});
+        if (disposed) return null;
+        if (!answer.ok) return {line: answer.message, coins: 0};
+        if (answer.data.paid) {
+          tellCoins(answer.data.balance);
+          void readBoat(); void reloadOwn();
+          return {line: `+${coinText(answer.data.coins)}!`, coins: answer.data.coins};
+        }
+        return {line: answer.data.already ? 'Paid already this wave. Win a wave to sail for coins again.' : 'No coins this time.', coins: 0};
+      },
+      onClose: () => { boatGame = null; focus(); openWreck(); }});
+  }
   function bell() {
     const wave = flow.current;
     return bellModel({wave: wave?.wave ?? null, joined: wave?.joined === true, countdown: flow.secondsLeft(), busy: flow.busy,
@@ -425,7 +467,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   function refreshCardIfBuild() { if (ui.open === 'build' && openSpot) refreshCard(); }
   function openHarbor() { openSpot = null; cardMessage = ''; ui.harborCard(harbor(), harborHandlers); }
   function openTechHub() { openSpot = null; cardMessage = ''; ui.techCard(tech(), techHandlers); void freshOwn(); }
-  function openWreck() { openSpot = null; cardMessage = ''; ui.wreckCard(wreck(), wreckHandlers); void freshOwn(); }
+  function openWreck() { openSpot = null; cardMessage = ''; ui.wreckCard(wreck(), wreckHandlers); void freshOwn(); void readBoat(); }
   function openBuild(spotId) { openSpot = spotId; cardMessage = ''; ui.buildCard(buildModel(spotId), handlers); if (spotById(spotId)?.slot === 'wall') void readWalls(); }
   async function freshOwn() {
     if (own) return null;
@@ -527,7 +569,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       emit({type: SPOTS_CHANGED, place, spot: spotId});
       // Close the card so the new building and the toast can be seen.
       if (ui.open === 'build' && openSpot === spotId) { ui.close(); openSpot = null; }
-      ui.toast(`${BUILDINGS[choice].name} built${onWhere(place)}! You have ${coinText(own?.coins)}.`, 'success');
+      ui.toast(`${BUILDINGS[choice].name} built${onWhere(place)} · ${coinText(own?.coins)}`, 'success');
     } else await refused(answer, place);
     refreshCard();
   }
@@ -550,7 +592,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       walls = new Map(answer.data.walls.map(wall => [wall.spot, wall])); wallsFor = target()?.code ?? null;
       tookCoins(answer.data.coins);
       emit({type: SPOTS_CHANGED, place, spot: spotId});
-      ui.toast(`Wall repaired${onWhere(place)}! You have ${coinText(answer.data.coins)}.`, 'success');
+      ui.toast(`Wall repaired${onWhere(place)} · ${coinText(answer.data.coins)}`, 'success');
     } else {
       cardMessage = answer.message;
       if (['intact', 'insufficient_funds', 'not_built'].includes(answer.code)) await readWalls();
@@ -568,11 +610,12 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     if (answer.ok) {
       await took(answer, place);
       if (disposed) return;
+      treePicked.delete(spotId); // the tree card moves on to the next step
       const now = (place === 'point' ? point : place === 'visit' ? visiting : own)?.spots?.find(item => item.id === spotId);
       const name = BUILDINGS[now?.kind]?.name ?? 'Building';
       if (place === 'own') emit({type: ISLAND_UPGRADED, kind: now?.kind, spot: spotId, level: now?.level});
       emit({type: SPOTS_CHANGED, place, spot: spotId});
-      ui.toast(`${name} is now level ${now?.level ?? '?'}${onWhere(place)}! You have ${coinText(own?.coins)}.`, 'success');
+      ui.toast(`${name} level ${now?.level ?? '?'}${onWhere(place)} · ${coinText(own?.coins)}`, 'success');
     } else await refused(answer, place);
     refreshCard();
   }
@@ -609,7 +652,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     demolishSpot = null; demolishQuote = null;
     if (ui.open === 'demolish') { ui.close(); openSpot = null; }
     const mine = done.refunds.find(item => item.you)?.coins ?? 0;
-    ui.toast(`${done.name ?? BUILDINGS[done.kind]?.name ?? 'Building'} torn down.${mine > 0 ? ` You got back ${coinText(mine)}.` : ''} You have ${coinText(own?.coins)}.`, 'success');
+    ui.toast(`${done.name ?? BUILDINGS[done.kind]?.name ?? 'Building'} torn down${mine > 0 ? ` · +${coinText(mine)}` : ''}`, 'success');
     refreshCard();
   }
   // A teammate tore a building down (the room's island_changed): a toast for the payers who got coins back.
@@ -652,6 +695,25 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
         ui.toast(`${SPECS[spec].name}: this tower fights with it from the next wave.`, 'success');
       }
     } else { cardMessage = answer.message; if (['not_researched', 'not_built', 'wrong_kind', 'house_level', 'insufficient_funds'].includes(answer.code)) await refreshDefended(); }
+    refreshCard();
+  }
+  // D055: one tier of a level-5 tower's upgrade tree, paid by this player; the answer is the island and the room
+  // hears island_changed, so every screen (and the next wave's sim) reads the tree again.
+  async function buyTree(spotId, path, tier) {
+    if (busySpot || isPointSpot(spotId)) return;
+    busySpot = spotId; busyKind = `tree:${path}${tier}`; cardMessage = ''; refreshCard();
+    const answer = await api.towerTree({spot: spotId, path, tier, ...placeCode()});
+    if (disposed) return;
+    busySpot = null; busyKind = null;
+    if (answer.ok) {
+      await landed(answer, spotId);
+      if (disposed) return;
+      treePicked.delete(spotId);
+      const kind = (target()?.spots ?? []).find(item => item.id === spotId)?.kind;
+      emit({type: TOWER_TREE_BOUGHT, spot: spotId, kind, path, tier});
+      const step = TOWER_TREES[kind]?.[path];
+      ui.toast(`${step ? `${step.name} ${'I'.repeat(tier)}` : 'Upgrade'} · ${coinText(own?.coins)}`, 'success');
+    } else { cardMessage = answer.message; if (['not_built', 'needs_level', 'known', 'needs_tier', 'closed', 'locked', 'insufficient_funds'].includes(answer.code)) await refreshDefended(); }
     refreshCard();
   }
   // The reach of the open house card's role, for the ring on the ground (world.js), or null.
@@ -704,7 +766,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       await landed(answer, 'wreck');
       if (disposed) return;
       const now = campaign()?.wreck;
-      ui.toast(now && now.paid >= now.goal ? 'The wreck is repaired! Sailing opens later.' : `Thanks! The wreck has ${coinText(now?.paid ?? 0)} of ${coinText(now?.goal ?? 0)}.`, 'success');
+      if (now && now.paid >= now.goal) void readBoat();
+      ui.toast(now && now.paid >= now.goal ? (isOpen(campaign(), 'ship') ? 'The wreck is repaired! Your ship sails: tap her to play.' : `The wreck is repaired! She sails after wave ${waveOf('ship')}.`) : `Thanks! The wreck has ${coinText(now?.paid ?? 0)} of ${coinText(now?.goal ?? 0)}.`, 'success');
     } else { cardMessage = answer.message; if (['repaired', 'locked', 'insufficient_funds'].includes(answer.code)) await refreshDefended(); }
     refreshCard();
   }
@@ -717,7 +780,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     if (answer.ok) {
       setOwn(answer.data);
       emit({type: CREW_HIRED, crew: id});
-      ui.toast(`${CREW[id].name} hired! You have ${coinText(own.coins)}.`, 'success');
+      ui.toast(`${CREW[id].name} hired · ${coinText(own.coins)}`, 'success');
     } else await refused(answer, false);
     refreshCard();
   }
@@ -730,7 +793,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     if (answer.ok) {
       setOwn(answer.data);
       emit({type: 'captain_upgraded', level: own.captain?.level});
-      ui.toast(`Your captain is now level ${own.captain?.level ?? '?'}! You have ${coinText(own.coins)}.`, 'success');
+      ui.toast(`Captain level ${own.captain?.level ?? '?'} · ${coinText(own.coins)}`, 'success');
     } else await refused(answer, false);
     refreshCard();
   }
@@ -772,7 +835,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     if (answer.ok) {
       setOwn(answer.data); pickedSkill = null; pickedRole = null;
       emit({type: 'captain_respec'});
-      ui.toast(`Skills reset. You have ${coinText(own.coins)}.`, 'success');
+      ui.toast(`Skills reset · ${coinText(own.coins)}`, 'success');
     } else { cardMessage = answer.message; if (answer.code === 'nothing_to_reset') await reloadOwn(); }
     refreshCard();
   }
@@ -786,7 +849,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     if (answer.ok) {
       setOwn(answer.data);
       emit({type: 'captain_weapon_bought', weapon: id});
-      ui.toast(`${WEAPON_BY_ID[id].name} bought and equipped! You have ${coinText(own.coins)}.`, 'success');
+      ui.toast(`${WEAPON_BY_ID[id].name} bought and equipped · ${coinText(own.coins)}`, 'success');
       if (readWeapon(own.weapons?.equipped) !== id) await equipWeapon(id, true);
     } else await refused(answer, false);
     refreshCard();
@@ -945,7 +1008,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     // Captain colours (GAME-V3.md §7): each member's 0-9 by join order, and your own (src/island/lobby.js).
     colourOf, captainColour,
     openLeaderboard, openInvite, openCrew, openCaptain, openCaptains, openLobby, enterGame, leaveGame, openHarbor, openTechHub, openWreck,
-    specialise, research, giveWreck, askDemolish, confirmDemolish, heardDemolish,
+    specialise, research, giveWreck, askDemolish, confirmDemolish, heardDemolish, buyTree,
     // The campaign of the island on screen (GAME-V3.md §4): {wave, open, locked, later, research, wreck}.
     get campaign() { return campaign(); },
     // The game's room state (src/island/game-room.js), handed in by the wave wiring.
@@ -1002,11 +1065,12 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     // The fake server's helpers (setCoins, failNext, startWaveAt...) in fake mode, for the console and checks.
     get dev() { return transport?.dev ?? null; },
     get ui() { return ui; },
-    get active() { return ui.active || !!cutscene; },
+    get active() { return ui.active || !!cutscene || !!boatGame; }, // D057: a boat round holds the keys too
     startMove,
     get moving() { return moving.state; },
     get moveMode() { return moving; },
     handleEscape() {
+      if (boatGame) { boatGame.close(); return true; }
       if (cutscene) { cutscene.skip(); return true; }
       if (moving.active && !ui.active) { moving.cancel(); return true; }
       return ui.close();
@@ -1014,6 +1078,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     dispose() {
       if (disposed) return; disposed = true;
       stopFinished(); stopStarted(); stopArrived(); stopPoint(); stopInteract(); stopTravel(); stopMenu?.(); stopStartedGame(); stopGame(); clearTimeout(syncSoon);
+      boatGame?.dispose(); boatGame = null;
       flow.dispose(); ui.dispose(); moveBar.dispose(); globalThis.removeEventListener?.('keydown', moveKeys, true); cutscene?.dispose?.(); world?.dispose(); world = null; pointWorld?.dispose(); pointWorld = null;
     },
     spots: SPOTS,

@@ -1,4 +1,4 @@
-// The standing tower shapes boarders must walk around or break (T35, D054 proposed).
+// The standing tower shapes boarders must walk around or break (T35, D058 proposed).
 // Used by sim.js and battle-guide.js only when a wave carries tower_obstacles.
 import {FOOTPRINTS} from '../island/placement.js';
 
@@ -27,7 +27,7 @@ export function towerApproachPoint(from, tower, margin = 0) {
 /** Every standing damageable tower as a generic breakable square for the T35 distance field. */
 export function towerObstacles(towers = []) {
   return towers.filter(tower => tower && tower.maxHp > 0
-      && ['cannon', 'mortar', 'harpoon', 'culverin'].includes(tower.kind))
+      && ['cannon', 'mortar', 'harpoon', 'culverin', 'swivel'].includes(tower.kind))
     .map(tower => ({...tower, source: tower, cells: towerFootprintPoints(tower), obstacleKind: 'tower'}))
     .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
 }

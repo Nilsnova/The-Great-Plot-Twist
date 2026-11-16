@@ -9,7 +9,8 @@
 //   - the walls: a small hp bar over every wall that is hurt or being hacked (green, yellow, red), and a broken
 //     wall's gap outlined in red with a rubble badge.
 // Between waves (no wave, or the break after a won one) the same landings and routes show faintly, so players
-// can put walls and towers where the pirates will walk.
+// can put walls and towers where the pirates will walk, over the wall lanes (D056, island/wall-lanes.js): a faint
+// gold band where a wall stops the pirates, the only ground a wall may stand on.
 //
 // The pure part (tested in tests/pirates/battle-guide.test.js) works out landings and routes; the drawing part
 // is one instanced quad mesh on the ground and one in the air, like render.js's layers. Nothing is allocated per
@@ -19,13 +20,16 @@ import { CONFIG, coastPoint, curveFor, skillOf } from './sim.js';
 import { createBoarderPaths, WALL_FOOTPRINT } from './boarder-paths.js';
 import { towerMaxHp } from './tower-health.js';
 import { toScreen } from '../world/pixel-glsl.js';
+import { WALL_LANE_ROWS } from '../island/wall-lanes.js';
 
 const Y = .72; // drawn y per world z (the island's tilt)
 export const GUIDE = Object.freeze({
   routeLimit: 400,     // at most this many steps per route (a route never visits a cell twice)
   heartReach: CONFIG.boarding.heartRadius,
   dotEvery: 1,         // one dot per grid cell (1 unit)
-  previewAlpha: .45,   // between waves: the routes and landings are a faint preview
+  previewAlpha: .38,   // between waves: the routes and landings are a faint preview (dots only, no chevrons)
+  laneAlpha: .16,      // between waves: the wall lanes (D056) under the routes
+  chevronEvery: 6,     // in a wave: one chevron every this many cells (more on a phone), small dots between
   barShow: 1,          // a wall bar shows below this share of hp (or while the wall is hacked)
 });
 
@@ -62,7 +66,7 @@ export function guideWalls(defenses = [], stateWalls = null) {
 /** Damageable towers for the route preview: use the live wave's hp, or their T33 opening hp. */
 export function guideTowers(defenses = [], stateTowers = null) {
   const live = new Map((stateTowers ?? []).map(tower => [tower.id, tower]));
-  return defenses.filter(item => ['cannon', 'mortar', 'harpoon', 'culverin'].includes(item?.kind)
+  return defenses.filter(item => ['cannon', 'mortar', 'harpoon', 'culverin', 'swivel'].includes(item?.kind)
       && Number.isFinite(item.x) && Number.isFinite(item.z)).map(item => {
     const full = towerMaxHp(item.kind, item.level), now = live.get(item.id), maxHp = now?.maxHp > 0 ? now.maxHp : full;
     return {id: item.id, kind: item.kind, x: item.x, z: item.z, hp: now ? Math.max(0, now.hp) : full, maxHp};
@@ -263,17 +267,18 @@ export function skullAt(landing, heart = CONFIG.boarding.heart, walls = [], scal
 // How far right of a wall's centre its axe badge sits: half the hp bar (.8 + .07 frame) plus half the badge (.7) and a gap.
 export const AXE_SIDE = 1.75;
 const RGB = hex => { const c = new THREE.Color(hex); return { r: c.r, g: c.g, b: c.b }; };
-const RED = RGB('#ff4a36'), DARK = RGB('#1f2622'), GOLD = RGB('#ffd34d'), WHITE = { r: 1, g: 1, b: 1 };
+const LANE = RGB('#ffe08a'), RED = RGB('#ff4a36'), DARK = RGB('#1f2622'), GOLD = RGB('#ffd34d'), WHITE = { r: 1, g: 1, b: 1 };
 const BAR = { good: RGB('#7ed957'), low: RGB('#ffd34d'), bad: RGB('#ff4a36') };
 
 /**
  * createBattleGuide({scene, reducedMotion, characterScale}) → {update(view), dispose()}.
  * view: null (hide), or {mode: 'preview'|'wave', lanes (the wave_started lanes, or null: every sea lane), defenses
  * (where the walls stand), stateWalls (the sim's walls in a wave, else null), boarders, heart: {x, z}, wave, dt}.
- * preview draws faintly and without wall marks; wave draws everything. The
+ * preview draws faintly, over the wall lanes, without wall marks (view.wallLanes: false leaves the lanes out); wave draws everything. The
  * routes are worked out again only when routeKey() changes (a wall placed, broken, rebuilt or past a quarter of hp).
  */
 // sparse(): a phone-sized screen (overlap audit, 15 Nov): half the dots and fewer chevrons, so the routes stay readable.
+// Between waves the preview always draws half the dots and no chevrons.
 const phoneSized = () => typeof window !== 'undefined' && Math.min(window.innerWidth, window.innerHeight) <= 500;
 export function createBattleGuide({ scene, reducedMotion = () => false, characterScale = () => 1, sparse = phoneSized }) {
   const owned = [], root = new THREE.Group(); root.name = 'battle-guide'; scene.add(root);
@@ -283,7 +288,7 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
     transparent: true, premultipliedAlpha: true, depthTest: false, depthWrite: false, toneMapped: false });
   owned.push(material, icons ?? blank);
   // On the ground (over the terrain, under every building and character) and in the air (badges and bars).
-  const ground = createInstances('ground', 1400, material, 9, owned), air = createInstances('air', 160, material, 936, owned);
+  const ground = createInstances('ground', 1600, material, 9, owned), air = createInstances('air', 160, material, 936, owned);
   root.add(ground.mesh, air.mesh);
   let clock = 0, disposed = false, key = null, routes = [];
   const still = () => !!reducedMotion();
@@ -296,24 +301,27 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
   function drawRoute(route, alpha, live) {
     const dots = routeDots(route.points);
     const total = dots.length ? dots[dots.length - 1].along : 0;
-    const every = thin ? 4 : 3;
+    // Calm (owner, 15 Nov: "limit the visual overload"): a chevron only every GUIDE.chevronEvery cells in a wave
+    // (none in the preview), small soft dots, and every other dot left out between waves and on a phone.
+    const every = thin ? GUIDE.chevronEvery + 2 : GUIDE.chevronEvery, sparseDots = thin || !live;
     dots.forEach((dot, i) => {
       if (i < 2) return; // under the landing ring
       const cell = `${Math.round(dot.x * 2)},${Math.round(dot.z * 2)}`;
       if (cells.has(cell)) return;
       cells.add(cell);
-      if (thin && i % every !== 0 && i % 2) return;
+      const chevron = live && i % every === 0 && total - dot.along > 2;
+      if (sparseDots && !chevron && i % 2) return;
       // A light runs along the route from the beach to the heart, so the way reads at a glance.
       const glow = still() || !live ? 0 : Math.max(0, Math.cos((dot.along - clock * 3.2) * .7)) ** 2;
       const y = drawnY(dot.z);
-      if (i % every === 0 && total - dot.along > 2) {
+      if (chevron) {
         const angle = Math.atan2(-dot.dz * Y, dot.dx);
-        ground.push(SHAPE.chevron, dot.x, y, 1.05 * k, 1.05 * k, { ...DARK, a: alpha * .75 }, { angle });
-        ground.push(SHAPE.chevron, dot.x, y, .8 * k, .8 * k, { r: 1, g: .3 + glow * .55, b: .2 + glow * .4, a: alpha }, { angle });
+        ground.push(SHAPE.chevron, dot.x, y, .95 * k, .95 * k, { ...DARK, a: alpha * .6 }, { angle });
+        ground.push(SHAPE.chevron, dot.x, y, .72 * k, .72 * k, { r: 1, g: .3 + glow * .55, b: .2 + glow * .4, a: alpha }, { angle });
       } else {
-        const d = (.36 + glow * .1) * k;
-        ground.push(SHAPE.disc, dot.x, y, d + .16 * k, (d + .16 * k) * Y, { ...DARK, a: alpha * .7 });
-        ground.push(SHAPE.disc, dot.x, y, d, d * Y, { r: 1, g: .3 + glow * .55, b: .2 + glow * .4, a: alpha });
+        const d = (.26 + glow * .08) * k;
+        ground.push(SHAPE.disc, dot.x, y, d + .1 * k, (d + .1 * k) * Y, { ...DARK, a: alpha * .45 });
+        ground.push(SHAPE.disc, dot.x, y, d, d * Y, { r: 1, g: .3 + glow * .55, b: .2 + glow * .4, a: alpha * .85 });
       }
     });
     // The axe sits beside the wall's hp bar (same row, to its right), never on top of it.
@@ -332,6 +340,16 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
     // moves seaward, still inside the ring.
     const [sx, sz] = skullAt(landing, heart, walls, k);
     air.push(SHAPE.icon, sx, drawnY(sz) + 1.5 * k, 1.8 * k, 1.8 * k, { ...WHITE, a: Math.min(1, alpha + .3) }, { icon: 'skull' });
+  }
+  // D056: one box per run of a wall lane row (every half unit from x0 to x1 on row z, one grid cell round each).
+  let laneBoxes = 0;
+  function drawLanes() {
+    laneBoxes = 0;
+    for (const [z, ...runs] of WALL_LANE_ROWS) for (let i = 0; i < runs.length; i += 2) {
+      const w = runs[i + 1] - runs[i] + .5;
+      ground.push(SHAPE.box, (runs[i] + runs[i + 1]) / 2, drawnY(z), w, .5 * Y, { ...LANE, a: GUIDE.laneAlpha });
+      laneBoxes++;
+    }
   }
   function drawHeart(heart, live) {
     const pulse = still() ? 1 : 1 + (live ? .08 : .04) * Math.sin(clock * 3), y = drawnY(heart.z), r = 4 * k * pulse;
@@ -368,6 +386,7 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
         thin = !!sparse();
         clock += Math.max(0, Math.min(.1, view.dt || 0));
         const live = view.mode === 'wave', alpha = live ? .95 : GUIDE.previewAlpha;
+        if (!live && view.wallLanes !== false) drawLanes(); else laneBoxes = 0; // D056: under everything else
         k = live ? Math.max(1, Math.min(2, Number(characterScale()) || 1)) : 1;
         const landings = view.lanes?.length ? waveLandings(view.lanes) : laneLandings();
         const walls = guideWalls(view.defenses ?? [], view.stateWalls ?? null), attacked = attackedWalls(view.boarders);
@@ -384,7 +403,7 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
       ground.end(); air.end();
     },
     setVisible(value) { root.visible = value !== false; },
-    stats() { return { ground: ground.count, air: air.count, routes: routes.map(route => ({ id: route.id, points: route.points.length,
+    stats() { return { ground: ground.count, air: air.count, lanes: laneBoxes, routes: routes.map(route => ({ id: route.id, points: route.points.length,
       breaches: route.breaches.map(item => item.wallId ?? item.towerId), reachable: route.reachable })) }; },
     dispose() {
       if (disposed) return; disposed = true;

@@ -38,6 +38,7 @@ def test_the_catalogue_allows_five_levels_and_the_tower_kinds_have_them():
         "cannon": 5,
         "mortar": 5,
         "harpoon": 5,
+        "swivel": 5,  # D055
         "watchtower": 5,
         "house": 3,
     }

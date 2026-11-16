@@ -32,6 +32,7 @@ TOWER_DEFENSE = REPO_ROOT / "supabase" / "migrations" / "20261111030000_tower_de
 INNER_WALLS = REPO_ROOT / "supabase" / "migrations" / "20261112020000_inner_walls.sql"
 HARPOON = REPO_ROOT / "supabase" / "migrations" / "20261113020000_harpoon_tower.sql"
 CULVERIN = REPO_ROOT / "supabase" / "migrations" / "20261114140000_culverin.sql"
+SWIVEL_RULE = REPO_ROOT / "supabase" / "migrations" / "20261116020100_swivel_spot_rule.sql"
 WAVE_RULES = REPO_ROOT / "supabase" / "migrations" / "20261114130500_wave_rules.sql"
 TOWER_OBSTACLES = REPO_ROOT / "supabase" / "migrations" / "20261115160000_tower_obstacles.sql"
 # The md5 of 20261110010000 as applied live (a checksum, not a secret).
@@ -64,6 +65,7 @@ def test_the_prices_and_the_starting_coins_are_the_economy_table():
             320,
             640,
         ),  # the support tower of wave 12 (docs/GAME-V3.md section 5)
+        "swivel": (50, 100, 200, 400, 800),  # D055: the swivel-gun nest
         "watchtower": (40, 80, 160, 320, 640),
         "house": (50, 100, 200),  # level 3: the house roles (docs/GAME-V3.md "Houses")
     }
@@ -73,6 +75,8 @@ def test_the_prices_and_the_starting_coins_are_the_economy_table():
     assert waves["mortar"] == (2, 2, 5, 15, 20)
     # The harpoon tower: levels 1 to 3 after wave 12, level 4 after wave 15, level 5 after wave 20.
     assert waves["harpoon"] == (12, 12, 12, 15, 20)
+    # The swivel-gun nest (D055): levels 1 to 3 after wave 9, level 4 after 15, level 5 after 20.
+    assert waves["swivel"] == (9, 9, 9, 15, 20)
     assert waves["watchtower"] == (3, 3, 12, 15, 20)
     assert {m.crew: (m.coins, m.max, m.unlock_wave) for m in catalogue.crew} == {
         "gunner": (40, 2, 3),
@@ -88,7 +92,7 @@ def test_the_prices_and_the_starting_coins_are_the_economy_table():
 def test_the_spots_are_the_spots_of_the_contract():
     catalogue = load_island()
     spots = [(spot.id, spot.kinds) for spot in catalogue.spots]
-    tower = ("cannon", "mortar", "harpoon")
+    tower = ("cannon", "mortar", "harpoon", "swivel")
 
     assert spots == (
         [(f"wall_{n}", ("wall",)) for n in range(1, 7)]
@@ -162,7 +166,8 @@ def test_the_campaign_table_says_what_is_open_locked_and_later():
 
     assert {"harbor", "market_calls", "watchtower:1", "mortar:1"} <= set(opened)
     assert locked["ring_walls"] == 5 and locked["tech_hub"] == 8 and "harbor" not in locked
-    assert later == ["ship"]
+    # D057: the ship opens after wave 30; no step comes later any more.
+    assert later == [] and locked["ship"] == 30
 
 
 def test_a_locked_kind_level_crew_or_captain_level_is_refused_with_its_wave():
@@ -302,7 +307,7 @@ def test_the_spots_are_planned_in_file_order_with_their_state():
     assert (plans["cannon_3"].level, plans["cannon_3"].upgrade_cost) == (5, None)
     assert (plans["cannon_2"].kind, plans["cannon_2"].kinds) == (
         "cannon",
-        ("cannon", "mortar", "harpoon"),
+        ("cannon", "mortar", "harpoon", "swivel"),
     )
 
 
@@ -329,9 +334,11 @@ def check_pairs(text: str, constraint: str) -> set[tuple[str, str]]:
 
 
 def test_the_check_rule_allows_the_old_pairs_and_every_island_spot():
-    # The newest rule (20261114140000, the culverin of T43) is the file's with the flag
-    # defenses_v2 on (the catalogue then has the culverin on the tower spots); the harpoon
-    # tower's rule (20261113020000) is the file's with the flag off.
+    # The newest rule (20261116020100, the swivel-gun nest of D055) is the file's with the flag
+    # defenses_v2 on (the catalogue then has the culverin on the tower spots too); the
+    # culverin's rule (20261114140000) added the culverin, the harpoon tower's (20261113020000)
+    # the harpoon.
+    newest = check_pairs(SWIVEL_RULE.read_text(), "islet_buildings_plot_fits_building")
     pairs = check_pairs(CULVERIN.read_text(), "islet_buildings_plot_fits_building")
     harpoon = check_pairs(HARPOON.read_text(), "islet_buildings_plot_fits_building")
     inner = check_pairs(INNER_WALLS.read_text(), "islet_buildings_plot_fits_building")
@@ -342,9 +349,10 @@ def test_the_check_rule_allows_the_old_pairs_and_every_island_spot():
     flagged_new = {(spot.id, kind) for spot in flagged.spots for kind in spot.kinds}
     first = check_pairs(migration_text(), "islet_buildings_plot_fits_building")
     before = check_pairs(TOWER_DEFENSE.read_text(), "islet_buildings_plot_fits_building")
-    assert pairs == old | flagged_new
-    assert harpoon == old | new
-    assert first <= before <= inner <= harpoon <= pairs  # every pair a row may use stays allowed
+    assert newest == old | flagged_new
+    assert harpoon | {(f"cannon_{n}", "swivel") for n in range(1, 8)} == old | new
+    assert first <= before <= inner <= harpoon <= pairs <= newest  # every pair stays allowed
+    assert newest - pairs == {(f"cannon_{n}", "swivel") for n in range(1, 8)}
     assert inner - before == {(f"wall_{n}", "wall") for n in range(7, 13)}
     assert harpoon - inner == {(f"cannon_{n}", "harpoon") for n in range(1, 8)}
     assert pairs - harpoon == {(f"cannon_{n}", "culverin") for n in range(1, 8)}

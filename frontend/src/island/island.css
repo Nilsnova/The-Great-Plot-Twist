@@ -130,7 +130,11 @@
 .island-branch-lines path.is-on{stroke:var(--u-gold);opacity:1}
 .island-branch-nodes{position:relative;list-style:none;margin:0;padding:0;display:grid;grid-template-rows:repeat(5,var(--row))}
 .island-branch-nodes.has-3{grid-template-rows:repeat(3,var(--row))}
+.island-branch-nodes.has-4{grid-template-rows:repeat(4,var(--row))}
 .island-branch-nodes>[data-tier="1"]{grid-row:-2}
+.island-branch-nodes.has-4>[data-tier="2"]{grid-row:3}
+.island-branch-nodes.has-4>[data-tier="3"]{grid-row:2}
+.island-branch-nodes.has-4>[data-tier="4"]{grid-row:1}
 .island-branch-nodes.has-5>[data-tier="2"]{grid-row:4}
 .island-branch-nodes.has-5>[data-tier="3"]{grid-row:3}
 .island-branch-nodes.has-3>[data-tier="2"]{grid-row:2}
@@ -227,6 +231,21 @@
   .island-skill-detail{padding:10px var(--u-3) var(--u-3);gap:8px}
   .island-skill-detail .island-node-icon{width:48px;height:48px;font-size:24px}
   .island-skill-line{font-size:16px}
+}
+/* D055: a tower's card with its upgrade tree (skill-tree.js drawTowerTree): centred and bigger, like the captain's;
+   the tree left (the level as the trunk, two paths of three tiers), the detail panel right; the skills and the
+   secondary buttons below. Under 900 px one column, the panel sticks to the bottom. */
+.kit-modal.island-card.island-card-wide.island-card-tree{width:min(780px,94vw)}
+.island-card-tree .island-card-body{display:grid;gap:var(--u-3);min-width:0}
+.island-tower-tree{--disc:58px;--row:96px;grid-template-columns:minmax(0,1fr) minmax(240px,280px)}
+.island-tower-tree-plot{padding:var(--u-3) var(--u-4) var(--u-2)}
+.island-tower-tree .island-branch{max-width:360px;width:100%;justify-self:center}
+.island-card-tree .island-skills-pick{margin-top:0}
+.island-card-tree .island-card-body>:is(.island-move,.island-teardown,.island-hire){justify-self:start}
+@media(max-width:900px){.island-tower-tree{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:640px){
+  .island-tower-tree{--disc:54px;--row:88px;--label:120px}
+  .island-card-tree .island-card-body>:is(.island-move,.island-teardown,.island-hire){justify-self:stretch}
 }
 /* The game's lobby (docs/GAME-V3.md §2): the code, the link and QR, the players with who is online, Start. */
 .island-card-lobby.kit-modal{width:min(480px,calc(100vw - 32px))}
@@ -406,3 +425,21 @@ html:has(.island-card-docked[open]) .quest-strip{visibility:hidden}
 .island-arsenal-stats{margin:0;font-variant-numeric:tabular-nums;opacity:.85}
 .island-arsenal-type.is-locked{opacity:.7}
 .island-arsenal-copy .island-crew-text,.island-arsenal-type .island-crew-text{min-width:0}
+/* Calm cards (owner, 15 Nov: "things are too close together"): more room inside the cards, and the building
+   card's secondary actions (Hire crew, Move, Tear down) side by side in one quiet row under its main action. */
+.island-card .island-card-body{gap:var(--u-4)}
+.island-card-build .island-card-body{grid-template-columns:auto auto minmax(0,1fr);column-gap:var(--u-2)}
+.island-card-build .island-card-body>*{grid-column:1/-1}
+.island-card-build .island-card-body>:is(.island-hire,.island-move,.island-teardown){grid-column:auto;justify-self:start;margin-top:var(--u-2)}
+.island-card-build .island-card-body>:is(.island-move-why,.island-teardown-why){margin:0}
+.island-card-build .island-card-body>.kit-button:not(.kit-quiet){min-width:200px;min-height:52px;font-size:18px}
+/* The Harbor: an icon and one short line per stall, a short Open button at its side. */
+.island-card-harbor .island-stall{flex-direction:row;align-items:center;padding:var(--u-3)}
+.island-stall-name{display:flex;align-items:center;gap:var(--u-2)}
+.island-stall-icon{font-size:22px;line-height:1}
+.island-card-harbor .island-stall .kit-button{min-width:88px}
+/* The crew card: a little more air between the rows. */
+.island-crew{gap:var(--u-3)}
+.island-card-crew.kit-modal{width:min(460px,calc(100vw - 32px))}
+/* The Hire button already shows the price (and says it to screen readers): no second price badge on the tile. */
+.island-card-crew .island-crew-price{display:none}

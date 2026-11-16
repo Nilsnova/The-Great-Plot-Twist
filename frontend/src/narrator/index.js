@@ -62,6 +62,9 @@ export function createNarrator({container = globalThis.document?.body, on, audio
   const card = createCard(container, {onSkip: () => skip(), large: () => preferences()?.subtitleSize === 'large'});
   const stops = [], started = new Map(), finished = new Set(), lastSpoken = new Map();
   let disposed = false, key = null, speaking = null, timer = null, watch = null, heartWarned = false, beginTicket = 0;
+  // While a wave runs only the lines that matter now speak (owner, 15 Nov: "limit the visual overload"): a
+  // repeatable line below high priority (a captain fell or was helped up) stays quiet until the wave ends.
+  let fighting = null;
   const begun = new Set();
   let voices = null, voicesLoad = null;
 
@@ -86,6 +89,7 @@ export function createNarrator({container = globalThis.document?.body, on, audio
     const rule = ruleFor(trigger);
     if (!rule) return [];
     if (rule.cooldown && now() - (lastSpoken.get(trigger) ?? -Infinity) < rule.cooldown) return [];
+    if (fighting !== null && !rule.once && rule.priority < PRIORITY.HIGH) return [];
     const picked = selectLines(index, trigger, {told: memory.told(game), seed});
     if (!picked.length) return [];
     lastSpoken.set(trigger, now());
@@ -175,10 +179,12 @@ export function createNarrator({container = globalThis.document?.body, on, audio
     heartWarned = false;
     queue.dropBelow(PRIORITY.HIGH); // the last break's chatter is stale now
     for (const trigger of startTriggers(wave, {boss: event.boss === true})) say(trigger, {seed: wave, game: started.get(id).game});
+    fighting = id;
   }
   function waveFinished(event) {
     const id = event?.waveId ?? null, info = id !== null ? started.get(id) : null;
     if (id !== null) { if (finished.has(id)) return; finished.add(id); }
+    fighting = null;
     const wave = Number.isSafeInteger(event?.wave) ? event.wave : info?.wave ?? null, game = info?.game ?? current();
     const survived = event?.survived === true;
     const told = finishTriggers(wave, survived).flatMap(trigger => say(trigger, {seed: wave ?? 0, game}));

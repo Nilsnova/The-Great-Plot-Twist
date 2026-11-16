@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
 import { CONFIG, coastPoint, createWave } from '../../src/pirates/sim.js';
 import { isOnLand } from '../../src/pirates/boarder-paths.js';
+import { WALL_LANE_ROWS } from '../../src/island/wall-lanes.js';
 import { attackedWalls, bearingOf, createBattleGuide, guideRoute, guideRoutes, guideTowers, guideWalls, landingAt, laneLandings, routeDots,
   routeKey, waveLandings, wallBar, skullAt, AXE_SIDE, SKULL_SHIFT } from '../../src/pirates/battle-guide.js';
 import { ISLANDS } from './balance-fixture.js';
@@ -179,6 +180,27 @@ describe('drawing', () => {
     expect(withRule.some(id => id.startsWith('cannon_'))).toBe(true);
     guide.dispose();
   });
+  it('between waves draws the wall lanes (D056) under the routes, and in a wave leaves them out', () => {
+    const guide = createBattleGuide({ scene: scene() });
+    guide.update({ mode: 'preview', defenses: [], wave: 4, dt: .016 });
+    const runs = WALL_LANE_ROWS.reduce((sum, row) => sum + (row.length - 1) / 2, 0);
+    expect(guide.stats().lanes).toBe(runs);
+    guide.update({ mode: 'preview', defenses: [], wave: 4, dt: .016, wallLanes: false });
+    expect(guide.stats().lanes).toBe(0);
+    guide.update({ mode: 'wave', lanes: null, defenses: [], stateWalls: [], boarders: [], heart: HEART, wave: 4, dt: .016 });
+    expect(guide.stats().lanes).toBe(0);
+    guide.dispose();
+  });
+  it('previews swivel nests as damageable obstacles and reads their live hp', () => {
+    const ring = RING.map((wall, i) => ({ ...wall, id: `swivel_${i + 1}`, kind: 'swivel', level: 1 }));
+    const route = guideRoute({ from: { x: 15, z: 2 }, walls: [], towers: guideTowers(ring), towerBlocking: true, wave: 3 });
+    expect(route.reachable).toBe(true);
+    expect(route.breaches).toHaveLength(1);
+    expect(route.breaches[0].towerId).toMatch(/^swivel_/);
+    expect(guideTowers([{ id: 'swivel_1', kind: 'swivel', level: 1, x: 0, z: 0 }],
+      [{ id: 'swivel_1', hp: 0, maxHp: 72 }])[0]).toMatchObject({ hp: 0, maxHp: 72 });
+    expect(guideTowers([{ id: 'swivel_1', kind: 'swivel', level: 1, x: 0, z: 0 }])[0].maxHp).toBe(72);
+  });
   it('in a wave adds a bar over a hacked wall and a rubble badge over a broken one, and leaves the state alone', () => {
     const guide = createBattleGuide({ scene: scene() });
     const defenses = RING, stateWalls = RING.map((wall, i) => ({ id: wall.id, hp: i === 0 ? 0 : 60, maxHp: 60 }));
@@ -198,9 +220,13 @@ describe('drawing', () => {
     expect(skullAt(landing, { x: 0, z: 0 }, [])).toEqual([10, 0]);
     expect(skullAt(landing, { x: 0, z: 0 }, [{ x: 9, z: 1 }])).toEqual([10 + SKULL_SHIFT, 0]);
     const dense = createBattleGuide({ scene: scene() }), sparse = createBattleGuide({ scene: scene(), sparse: () => true });
-    const view = { mode: 'preview', defenses: ISLANDS.full.defenses, wave: 4, dt: .016 };
+    // In a wave a phone draws fewer dots; between waves (the preview) every screen draws the sparse dots.
+    const view = { mode: 'wave', lanes: null, defenses: ISLANDS.full.defenses, heart: HEART, wave: 4, dt: .016 };
     dense.update(view); sparse.update(view);
     expect(sparse.stats().ground).toBeLessThan(dense.stats().ground * .8);
+    const preview = { mode: 'preview', defenses: ISLANDS.full.defenses, wave: 4, dt: .016 };
+    dense.update(preview); sparse.update(preview);
+    expect(sparse.stats().ground).toBe(dense.stats().ground);
     dense.dispose(); sparse.dispose();
   });
 });

@@ -3,17 +3,18 @@
 > **What this is:** standing damageable towers become obstacles to boarder movement and routing while the wave rule is enabled.
 > **Who uses it:** the wave simulation, battle guide, wave-rule server and reviewers of issue #84.
 
-- **Status:** implementation in progress on `feat/tower-path-obstacles`; draft PR pending. Decision D054 is proposed; implementation is authorized for review, while team balance/review remain open.
+- **Status:** implementation in progress on `feat/tower-path-obstacles`; draft PR #84. Decision D058 is proposed; implementation is authorized for review, while team balance/review remain open.
 - **Issue:** [#84](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/84)
 - **Responsible teammate:** Ianno (`Iannomh123456`)
 
 ## Contract
 
 - The off-by-default `tower_obstacles` wave rule is present only when both `pathing` and `tower_health` are enabled. The existing frozen-wave table carries the rule set to every client. The additive migration extends its known-name check; disabling the flag is the rollback.
-- Under the rule, a standing cannon, mortar, harpoon or culverin blocks boarder movement over its T36 tower-slot square. The size comes from `frontend/src/island/placement.js` `FOOTPRINTS.tower`, which mirrors `backend/content/island_layout.json`. Houses and watchtowers remain passable. Tower hit points, including breaks, repairs and rebuilds during a wave, determine whether the shape blocks.
+- Under the rule, a standing cannon, mortar, harpoon, culverin or swivel nest blocks boarder movement over its T36 tower-slot square. The size comes from `frontend/src/island/placement.js` `FOOTPRINTS.tower`, which mirrors `backend/content/island_layout.json`. Houses and watchtowers remain passable. Tower hit points, including breaks, repairs and rebuilds during a wave, determine whether the shape blocks. The accepted D055 swivel nest is included because it is a damageable tower in a tower slot.
 - The path field compares detour cost with breaking a tower, using the same live-HP hack cost used for walls. A route that chooses a tower reaches its boundary and attacks it. Its square opens when hp reaches zero and blocks again when hp rises above zero. A boarder enclosed by a rebuild can leave through a legal neighboring cell. Movement collision also prevents corner cuts.
 - Target order remains captain, wall, tower, heart. Tower reach and approach use distance to the footprint edge. Walls retain their current footprint, breach cost and decision logic.
 - The battle guide uses the same path function, tower positions and wave HP snapshot as the sim. A preview uses the most recent known wave rule set. Without `tower_obstacles`, the current route preview is unchanged.
+- D056's server wall lanes remain static placement guidance derived from baseline paths. T35 changes live route fields for a wave carrying the frozen rule; it does not rewrite or regenerate wall-lane data.
 - In a live wave, `controller.js` filters culverins from the shared `current.defenses` array unless the frozen `defenses_v2` rule is enabled, and passes that same array into `createWave`; `sim.js` applies the same gate before exposing `state.towers`. The guide's full-HP fallback is used only for between-wave previews where `stateTowers` is null, so the live guide cannot add a culverin omitted by the simulation.
 - The feature adds no between-wave tower persistence, repair policy or payment behavior. Existing T33 in-wave tower rules remain in force; a later separately reviewed feature can change them.
 
@@ -32,3 +33,7 @@
 ## Current limits
 
 This branch is not approved for release. The feature flag remains off in code and no database has been changed. The small balance sample and desktop browser checks do not approve flag-on balance, phone performance, or production realtime behavior.
+
+## Review and handover
+
+Keep PR #84 as a draft until reconciled verification and documentation are complete. Franz (`@frcola`) is the required human reviewer; Ianno manually reviews every PR. Approval must cover the current revision and required checks must pass. The agent must not merge or enable auto-merge. Franz may merge manually after the approvals and checks are complete.

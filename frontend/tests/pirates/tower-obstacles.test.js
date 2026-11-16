@@ -14,14 +14,17 @@ describe('tower obstacles (T35)', () => {
     expect(towerApproachPoint({x: 9, z: 4}, tower, .3)).toEqual({x: 6.3, z: 4});
   });
 
-  it('only returns standing damageable combat towers in stable id order', () => {
+  it('selects damageable combat tower kinds in stable id order and keeps broken ones as rubble', () => {
     const out = towerObstacles([
       {id: 'c', kind: 'culverin', x: 0, z: 0, hp: 1, maxHp: 2},
+      {id: 'swivel', kind: 'swivel', x: 4, z: 3, hp: 1, maxHp: 72},
       {id: 'watch', kind: 'watchtower', x: 0, z: 0, hp: 1, maxHp: 2},
       {id: 'broken', kind: 'cannon', x: 0, z: 0, hp: 0, maxHp: 2},
       {id: 'a', kind: 'harpoon', x: 0, z: 0, hp: 1, maxHp: 2},
     ]);
-    expect(out.map(item => item.id)).toEqual(['a', 'broken', 'c']);
+    expect(out.map(item => item.id)).toEqual(['a', 'broken', 'c', 'swivel']);
     expect(out[0].cells).toHaveLength(16);
+    expect(out[3].cells).toHaveLength(16);
+    expect(out[3].cells[0]).toEqual({x: 3.25, z: 2.25});
   });
 });

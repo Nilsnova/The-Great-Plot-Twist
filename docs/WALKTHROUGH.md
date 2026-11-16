@@ -1481,11 +1481,13 @@ the sticky detail panel. The skill tree is not zoomable; it is sized to fit inst
 
 ## T35 — Damageable towers block boarder paths — Ianno Hollensteiner
 
-**What and why.** With the off-by-default `tower_obstacles` wave rule, standing cannons, mortars, harpoons and
-culverins occupy their T36 tower-slot squares in both the boarder route field and continuous movement. A boarder
+**What and why.** With the off-by-default `tower_obstacles` wave rule, standing cannons, mortars, harpoons,
+culverins and swivel nests occupy their T36 tower-slot squares in both the boarder route field and continuous movement. A boarder
 walks around a tower when that costs less than breaking it; otherwise it reaches the footprint edge and hacks it.
 Broken towers open the route, and repair or rebuild makes the footprint solid again. Houses and watchtowers remain
 passable. The rule requires both `pathing` and `tower_health`, so all clients use the same frozen wave rules.
+The wall-lane band from D056 remains static placement guidance derived from baseline paths; when T35 is enabled,
+the actual wave route also accounts for standing damageable towers.
 
 **Where the behavior lives.** [tower-obstacles.js](../frontend/src/pirates/tower-obstacles.js) derives its geometry
 from the [placement footprints](../frontend/src/island/placement.js). [boarder-paths.js](../frontend/src/pirates/boarder-paths.js)
@@ -1507,7 +1509,35 @@ the whole frontend suite of 3,348 tests was run before this narrow fix. The focu
 3,000 ticks through repeated tower breaches and rebuilds. [Two-client rule captures and limits](evidence/T35-tower-obstacles/README.md)
 record matching state for 451 ticks.
 
-**Limits.** The migration is unapplied and the feature flag stays off. The three-seed balance smoke is not sign-off,
-the generic multiplayer harness timed out later in its pause/break UI phase on both branch and unchanged base, and
-physical-phone/live-Realtime performance remains unverified. See the full [T35 contract and checks](../specs/T35-tower-path-obstacles.md)
-and [draft PR #84](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/84).
+**Limits.** The results above are from before this branch was integrated with current main; affected focused tests,
+full suites and balance/browser checks are pending for the reconciled branch. The migration is unapplied and the
+feature flag stays off. The three-seed balance smoke is not sign-off, the generic multiplayer harness timed out later
+in its pause/break UI phase on both branch and unchanged base, and physical-phone/live-Realtime performance remains
+unverified. See the full [T35 contract and checks](../specs/T35-tower-path-obstacles.md) and
+[draft PR #84](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/84).
+
+## #74 — Fresh start resets the old personal weapons — Nicolas Radomski
+
+**What and where.** [fresh_start.sql](../scripts/admin/fresh_start.sql) is the admin
+script that lets every player start the island game again. Its step 4 already set
+each island's best wave and flags to 0. It now also runs one more `update` on
+`islands`: `weapons_owned` becomes `'{musket}'` and `weapon_equipped` becomes
+`'musket'`. The number of changed islands goes into the variable `v_weapons` and
+shows up in the message as `island weapons reset: N`.
+
+**Why.** These two columns come from the old weapon shop
+([20261112030000_captain_skills.sql](../supabase/migrations/20261112030000_captain_skills.sql)).
+Since the shared arsenal (D042) the game no longer uses them, but a bought weapon
+would still sit there after a fresh start. Both columns change in one `update`
+because a check rule says the carried weapon must be one the island owns. The
+`where` only picks islands that differ from the musket, so the count is honest and
+a second run changes 0 rows. The dry run and the real run share one counts
+sentence, so both report the new number.
+
+**Tests and limits.** The two fresh-start tests in
+[test_islands_and_waves_sql.py](../backend/server/tests/island_sql/test_islands_and_waves_sql.py)
+give one island pistols. The dry run must report the count and leave the pistols;
+the real run, run twice, must leave only the musket. They run on a throwaway local
+Postgres, never on the live project, so they do not prove what the live data looks
+like. The script is run by hand by the project owner; no code calls it. If the old
+columns are dropped one day, this step and its count can be deleted again.
