@@ -44,16 +44,20 @@ export function createArsenal({api, ui, emit = () => {}, enabled = () => false, 
     const result = await api.state(code());
     if (mine !== ticket) return result;
     loading = false;
-    if (result.ok && asked === key()) { take(result.data); if (loadFailed) { message = ''; loadFailed = false; } }
+    if (asked !== key() || !enabled()) return result;
+    if (result.ok) { take(result.data); if (loadFailed) { message = ''; loadFailed = false; } }
     else if (!result.ok && !current()) { message = result.message; loadFailed = true; }
     redraw();
     return result;
   }
   async function move(kind, send, success) {
     if (busy || !enabled()) return;
+    const asked = key();
     busy = kind; message = ''; loadFailed = false; redraw();
     const before = answer, result = await send();
     busy = null;
+    // A completed server move stays valid, but its answer must not become another island's inventory.
+    if (asked !== key() || !enabled()) { redraw(); return; }
     if (result.ok) {
       const text = success(result.data); take(result.data);
       emit({type: 'island_spots_changed', place: place(), spot: ARSENAL.id});
@@ -62,6 +66,7 @@ export function createArsenal({api, ui, emit = () => {}, enabled = () => false, 
     } else {
       answer = before;
       if (REFRESH_ON.has(result.code)) await refresh();
+      if (asked !== key() || !enabled()) return;
       message = result.message; loadFailed = false;
     }
     redraw();
