@@ -452,11 +452,25 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
     });
   }
   function bellCard(model, onAction) {
+    const unlocksOpen = kind === 'bell' && modal.element.querySelector('.island-unlocks')?.open === true;
     open('bell', model.title, body => {
       const line = node('p', 'island-purpose', model.line);
       const act = button(model.button, () => onAction(model.action)); act.dataset.focus = 'bell'; act.disabled = model.disabled;
       const message = node('p', 'island-message', model.message); message.hidden = !model.message; message.setAttribute('role', 'alert');
-      body.append(line, act, message);
+      body.append(line);
+      if (model.preparation) {
+        const section = node('section', 'island-preparation'); section.setAttribute('aria-label', 'Before the wave');
+        section.append(node('h3', 'island-skills-title', 'Before the wave'));
+        for (const text of model.preparation.lines) section.append(node('p', 'island-purpose', text));
+        if (model.preparation.unlocks.length) {
+          const details = node('details', 'island-unlocks'), summary = node('summary', '', 'Next unlocks'), list = node('ul');
+          details.open = unlocksOpen; summary.dataset.focus = 'bell-unlocks';
+          for (const text of model.preparation.unlocks) list.append(node('li', '', text));
+          details.append(summary, list); section.append(details);
+        }
+        body.append(section);
+      }
+      body.append(act, message);
       return model.disabled ? null : act;
     });
   }

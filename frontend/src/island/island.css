@@ -456,3 +456,6 @@ html:has(.island-card-docked[open]) .quest-strip{visibility:hidden}
 .island-arsenal-filters>[aria-pressed="true"]{outline:2px solid currentColor;outline-offset:2px}
 .island-arsenal-group{list-style:none;margin-top:12px}
 .island-arsenal-group h4{margin:0 0 6px}
+/* The optional bell unlock preview uses the same minimum touch target as the kit. */
+.island-unlocks>summary{min-height:44px;display:list-item;align-content:center;cursor:pointer;font-weight:700}
+.island-unlocks li{margin-block:8px}

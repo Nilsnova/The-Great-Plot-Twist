@@ -76,6 +76,7 @@ B3 follow-up: Closing a loading harbor cancels the old opening, implemented in d
 Approved U addition: Optional skill-aware comparison against the carried weapon, implemented in draft [PR #96](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/96) with [evidence](evidence/U-weapon-comparison/README.md). This completes only the approved addition; author and independent human review remain.
 
 Approved U addition: Local inventory filters and grouped rack rows, implemented in draft [PR #98](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/98) with [evidence](evidence/U-arsenal-filters/README.md). This completes only the approved addition; author and independent human review remain.
+Approved U addition: Preparation and upcoming unlocks before ringing the bell, implemented in draft [PR #94](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/94) with [evidence](evidence/U-wave-preparation/README.md). This completes only the approved addition; author and independent human review remain.
 
 ### C. Simplify the code base (helps criteria 5 and 6)
 
