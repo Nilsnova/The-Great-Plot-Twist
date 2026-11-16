@@ -1,0 +1,17 @@
+/* Reset my island (T53, island/reset.js): one Settings section with a code field and a red button. */
+.island-reset p{margin:0;font-size:var(--u-sm,16px);line-height:1.5}
+.island-reset-stays{font-weight:700;color:var(--u-rust,#e7a587)}
+.island-reset-note{color:var(--u-mute,#cfdcd6)}
+.island-reset-form{display:flex;flex-wrap:wrap;align-items:flex-end;gap:var(--u-3,12px)}
+.island-reset-label{display:grid;gap:6px;flex:1 1 220px;min-width:0;font:600 var(--u-sm,16px)/1.4 var(--u-font)}
+.island-reset-code{min-height:48px;width:100%;box-sizing:border-box;padding:8px 12px;font:20px/1.2 var(--u-font);letter-spacing:2px;text-transform:uppercase;color:#15382f;background:#fff7dc;border:2px solid #a7b58c;border-radius:6px}
+.island-reset-code::placeholder{color:#6d7a72;letter-spacing:2px}
+.island-reset-code:focus-visible{outline:3px solid var(--u-gold,#f6d27a);outline-offset:2px}
+.island-reset-code[aria-invalid=true]{border-color:#c4402f}
+.island-reset-hint{font-weight:400;color:var(--u-mute,#cfdcd6)}
+.kit-button.island-reset-button{min-height:48px;color:#fff;background:linear-gradient(#d8513c,#a92f22) #b8392a;border-color:#4a1209;box-shadow:inset 0 -3px #7d1f15,inset 0 2px #f08a77,0 3px #4a1209,0 6px 12px #04161b40}
+.kit-button.island-reset-button:hover:not(:disabled){background:linear-gradient(#e2614b,#b8392a) #c4402f}
+.kit-button.island-reset-button:active:not(:disabled){box-shadow:inset 0 -1px #7d1f15,0 1px #4a1209}
+.island-reset-status:empty{display:none}
+.island-reset[data-state=done] .island-reset-status{padding:8px 12px;border:2px solid #5d9a6e;border-radius:var(--u-radius-xs,10px);background:#173f34;color:var(--u-ink,#fbf2dc)}
+@media(max-width:600px){.island-reset-form{flex-direction:column;align-items:stretch}.island-reset-label{flex-basis:auto}}

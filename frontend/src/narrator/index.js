@@ -29,6 +29,8 @@
 //       the house_role line, once per island game (caption only until its voice file is made).
 //   wave_event_announced {event, wave}                  (v3 waves) a wave's event: its line the first time in this game.
 //   finisher_moment {kind, phase: start|won|failed}     (v3 waves) a boss finisher starts or ends.
+//   island_reset {code}                                 (T53, src/island/index.js) the island was reset: what was told
+//       there is forgotten, so the game_started {first: true} that follows plays the opening again.
 import data from './lines.json';
 import {createNarratorCard} from './card.js';
 import {getPreferences, onPreferences as watchPreferences} from '../settings/preferences.js';
@@ -194,6 +196,7 @@ export function createNarrator({container = globalThis.document?.body, on, audio
   stops.push(
     // The lobby's Start (src/island/game-room.js) sends {first, code}: first false is a game started before.
     on('game_started', event => arrive(event?.code ?? getGame?.()?.code ?? null, {resumed: event?.resumed === true || event?.first === false, wave: Number(event?.wave) || 0})),
+    on('island_reset', event => { const game = gameKey(event?.code ?? null, null); if (game) { begun.delete(game); memory.forget(game); } }),
     on('wave_started_server', waveStarted),
     on('wave_controller_started', waveStarted),
     on('wave_finished', waveFinished),

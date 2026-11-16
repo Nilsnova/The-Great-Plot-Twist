@@ -22,6 +22,7 @@
 //   await api.demolishQuote({spot, code?});      // GET  /api/island/demolish     (GAME-V3.md §4.2: half back to each payer)
 //   await api.demolish({spot, actionUid, code?}); // POST /api/island/demolish    (between waves, any member; not the heart)
 //   await api.move({spot, x, z, code?});           // POST /api/island/move        (T36: a spot to a grid cell, between waves, free)
+//   await api.freshStart({confirmCode, actionUid}); // POST /api/island/fresh-start (T53: reset your own island, between waves)
 //   await api.walls({code?});                    // GET  /api/island/walls        (D039, flag wall_recovery: health, timer, Repair price)
 //   await api.repairWall({spot, actionUid, code?}); // POST /api/island/repair    (D039: Repair/Rebuild between waves, paid once)
 //   await api.piratePoint();                     // GET  /api/pirate-point        (§5)
@@ -84,7 +85,7 @@ export const ISLAND_RULES = Object.freeze({
 export const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 // The run of TOWER-DEFENSE.md §1: waves to 100, a boss every 5th, a lost run restarts 2 waves back.
 // The simulation rules of the wave answers, in their fixed order (SIM_RULES in backend/server/island/wave_rules.py).
-export const SIM_RULES = Object.freeze(['tower_health', 'pathing', 'tower_obstacles', 'rescue', 'defenses_v2']);
+export const SIM_RULES = Object.freeze(['tower_health', 'pathing', 'tower_obstacles', 'rescue', 'defenses_v2', 'ship_fire']);
 export const TD_RULES = Object.freeze({ highestWave: 100, bossEvery: 5, restartBack: 2,
   spots: Object.freeze(['wall_1', 'wall_2', 'wall_3', 'wall_4', 'wall_5', 'wall_6', 'cannon_1', 'cannon_2', 'cannon_3', 'cannon_4',
     'cannon_5', 'cannon_6', 'cannon_7', 'tower_1', 'house_1', 'house_2', 'wall_7', 'wall_8', 'wall_9', 'wall_10', 'wall_11', 'wall_12']),
@@ -230,6 +231,9 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
   const rescueOn = flags?.rescue === true;
   let weatherKind = weather;
   const v2 = version === 2; // the answers' tower defense extras (boss, nextWave on finish), as the real server sends them
+  // A new island, as island_open() makes it (and as a reset leaves it, T53).
+  const newIsland = (code, owner, name) => ({ code, owner, ownerName: name, waveBest: 0, flags: 0, built: new Set(),
+    levels: new Map(), kinds: new Map(), crew: { gunner: 0, carpenter: 0, lookout: 0, guard: 0 }, captain: 1, nextWave: 1 });
   const me = () => {
     let player = world.players.get(playerId);
     if (!player) world.players.set(playerId, player = { coins: 0, ownerName, actions: new Map(), code: null });
@@ -237,8 +241,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       let code = readIslandCode(wantedCode ?? '');
       if (code && world.islands.has(code)) code = null;
       while (!code || world.islands.has(code)) code = Array.from({ length: 5 }, () => CODE_ALPHABET[Math.floor(world.random() * CODE_ALPHABET.length)]).join('');
-      world.islands.set(code, { code, owner: playerId, ownerName: player.ownerName, waveBest: 0, flags: 0, built: new Set(),
-        levels: new Map(), kinds: new Map(), crew: { gunner: 0, carpenter: 0, lookout: 0, guard: 0 }, captain: 1, nextWave: 1 });
+      world.islands.set(code, newIsland(code, playerId, player.ownerName));
       player.code = code; player.coins = ISLAND_RULES.startingCoins; // a brand-new captain is paid once
     }
     return player;
@@ -698,6 +701,33 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       player.actions.set(`demolish:${actionUid}`, quote);
       return { ...answer(), demolished: { ...quote, refunds: quote.refunds.map(item => ({ ...item, you: item.id === playerId })), repeat: false } };
     },
+    // T53 (island_fresh_start(), 20261116070000): your own island back to a fresh start, between waves, after typing
+    // its code. The members stay; the coins become a new player's (startingCoins); a repeated actionUid answers the first counts.
+    async freshStart({ confirmCode, actionUid } = {}) {
+      if (typeof confirmCode !== 'string' || !uid(actionUid)) invalid('Send the island code and an action id.');
+      const player = me(), island = world.islands.get(player.code);
+      const done = player.actions.get(`reset:${actionUid}`);
+      if (done) return { reset: true, repeat: true, balance: player.coins, counts: { ...done } };
+      const typed = readIslandCode(confirmCode);
+      if (!typed) refuse(400, 'wrong_code', "That is not your island's code. Type the code shown.");
+      if (typed !== island.code) {
+        if (world.islands.has(typed)) refuse(403, 'not_owner', "Only the host can reset this game's island.");
+        refuse(400, 'wrong_code', "That is not your island's code. Type the code shown.");
+      }
+      waveGuard(island, 'A wave is under way. Reset your island between waves.');
+      let waves = 0;
+      for (const [id, run] of world.waves) if (run.place === island.code) { world.waves.delete(id); waves += 1; }
+      const start = ISLAND_RULES.startingCoins;
+      const counts = { coins: start - player.coins, saves: 0, buildings: island.built.size, research: (island.research ?? []).length,
+        layout: island.positions instanceof Map ? island.positions.size : 0, arsenalMoves: 0,
+        arsenalCopies: world.arsenals?.[island.code]?.copies?.length ?? 0, wallRecords: 0, waveRules: 0, waves,
+        membersKept: activeOf(island) - 1 };
+      if (world.arsenals) delete world.arsenals[island.code];
+      world.islands.set(island.code, newIsland(island.code, island.owner, island.ownerName));
+      player.coins = start; player.wonBest = 0;
+      player.actions.set(`reset:${actionUid}`, counts);
+      return { reset: true, repeat: false, balance: player.coins, counts: { ...counts } };
+    },
     // T36 (backend/server/island/placement.py): the same rules as the server (src/island/placement.js), between waves.
     async move({ spot, x, z, code } = {}) {
       if (typeof spot !== 'string' || typeof x !== 'number' || typeof z !== 'number') invalid('Send the spot, x and z.');
@@ -930,6 +960,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
         if (route === 'POST /api/island/skill') return reply(200, await api.learnSkill(body));
         if (route === 'POST /api/island/role') return reply(200, await api.pickRole(body));
         if (route === 'POST /api/island/respec') return reply(200, await api.respec(body));
+        if (route === 'POST /api/island/fresh-start') return reply(200, await api.freshStart(body));
         if (route === 'POST /api/island/weapon/buy') return reply(200, await api.buyWeapon(body));
         if (route === 'POST /api/island/weapon/equip') return reply(200, await api.equipWeapon(body));
         if (route === 'GET /api/island/arsenal') return reply(200, await api.arsenal({ code: searchParams.get('code') }));
@@ -1099,6 +1130,7 @@ export function createFakeIslandTransport({ coins = ISLAND_RULES.startingCoins, 
       if (method === 'POST' && pathname === '/api/island/skill') return ok(await api.learnSkill(body));
       if (method === 'POST' && pathname === '/api/island/role') return ok(await api.pickRole(body));
       if (method === 'POST' && pathname === '/api/island/respec') return ok(await api.respec(body));
+      if (method === 'POST' && pathname === '/api/island/fresh-start') return ok(await api.freshStart(body));
       if (method === 'POST' && pathname === '/api/island/weapon/buy') return ok(await api.buyWeapon(body));
       if (method === 'POST' && pathname === '/api/island/weapon/equip') return ok(await api.equipWeapon(body));
       if (method === 'GET' && pathname === '/api/island/arsenal') return ok(await api.arsenal({ code: new URLSearchParams(query).get('code') }));

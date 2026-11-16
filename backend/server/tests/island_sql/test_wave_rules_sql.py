@@ -14,6 +14,7 @@ import pytest
 
 psycopg = pytest.importorskip("psycopg")
 
+from server.island.wave_rules import SIM_RULES  # noqa: E402
 from server.tests.island_sql.test_islands_and_waves_sql import (  # noqa: E402
     OWNER,
     add_players,
@@ -49,6 +50,12 @@ def test_tower_obstacles_is_allowed_and_the_combined_rule_set_is_frozen(database
     rules = ["tower_health", "pathing", "tower_obstacles"]
     assert keep(database, wave_id, rules) == {"rules": rules}
     assert keep(database, wave_id, ["tower_health"]) == {"rules": rules}
+
+
+def test_every_server_rule_together_is_allowed_after_the_last_check_rule(database):
+    # 20261116160000_ship_fire_rule.sql is the last widening: it must keep tower_obstacles too.
+    wave_id = a_wave(database)
+    assert keep(database, wave_id, list(SIM_RULES)) == {"rules": list(SIM_RULES)}
 
 
 def test_an_unknown_rule_name_is_refused(database):

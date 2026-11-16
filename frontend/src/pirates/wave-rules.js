@@ -4,7 +4,7 @@
 // whatever its own /api/config says. A wave without "rules" (every flag off, an older server) plays
 // exactly as before. No DOM, no Three.js. Used by controller.js.
 //
-//   readRules(list)   {towerHealth, pathing, towerObstacles, rescue, defensesV2}: true only for the names the list holds
+//   readRules(list)   {towerHealth, pathing, towerObstacles, rescue, defensesV2, shipFire}: true only for the names the list holds
 
 // The name on the wave answer -> the option of createWave().
 export const RULE_OPTIONS = Object.freeze({
@@ -13,6 +13,7 @@ export const RULE_OPTIONS = Object.freeze({
   tower_obstacles: 'towerObstacles', // T35: standing damageable towers shape boarder routes and movement
   rescue: 'rescue',            // T38 (D044, proposed): a lost wave first offers the last-chance rescue
   defenses_v2: 'defensesV2',   // T43 (D048, proposed): the culverins of the island fight (without it the sim ignores them)
+  ship_fire: 'shipFire',       // T50: ships at anchor fire at a real wall, tower or the heart, and their hits count (ship-fire.js)
 });
 
 /** The wave's rules as createWave() options, each true or false; anything that is not a known name is ignored. */

@@ -10,7 +10,7 @@ describe('the lines file', () => {
   it('holds 50 to 90 short narrator lines with unique ids and known triggers', () => {
     const lines = data.lines;
     expect(lines.length).toBeGreaterThanOrEqual(50);
-    expect(lines.length).toBeLessThanOrEqual(90); // 57 lines, plus 22 for the wave events and the boss finishers (v3 waves)
+    expect(lines.length).toBeLessThanOrEqual(90); // 57 lines, plus 22 for the wave events and the boss finishers (v3 waves), plus 7 for T52's guide and unlocks
     expect(new Set(lines.map(line => line.id)).size).toBe(lines.length);
     for (const line of lines) {
       expect(line.id).toMatch(/^[a-z0-9_]{1,48}$/);
@@ -64,7 +64,7 @@ describe('line selection', () => {
     expect(selectLines(index, 'game_opening').map(line => line.id)).toEqual(['opening_1', 'opening_2']);
     expect(selectLines(index, 'game_opening', {told: new Set(['opening_1'])}).map(line => line.id)).toEqual(['opening_2']);
     expect(selectLines(index, 'game_opening', {told: new Set(['game_opening'])})).toEqual([]);
-    expect(selectLines(index, 'wave_unlock:9')).toEqual([]);
+    expect(selectLines(index, 'wave_unlock:10')).toEqual([]); // wave 10 opens nothing
   });
   it('picks one variant by the wave number, also when it was heard before', () => {
     const won = index.get('wave_won');

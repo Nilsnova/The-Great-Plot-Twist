@@ -1,6 +1,7 @@
 // Compose menus only when opened, keeping pause/settings/report code out of the cold title.
 import {node} from '../ui/kit/dom.js';
 import {menuButton} from './screens.js';
+import {settingsSections} from './settings-extras.js';
 // Account and sign-in live in Settings. The summary follows account changes while shown.
 async function accountSummary(ctx,section){
   try{
@@ -36,7 +37,8 @@ export async function fillSubpage({mode,body,nav,ctx,isCurrent,play,page,show,ba
     else if(ctx.openAccount)account.append(menuButton('Account',ctx.openAccount,true));
     if(!isCurrent())return;
     const links=node('div','shell-links');links.append(menuButton('Credits',()=>show('credits'),true));
-    body.replaceChildren(account,story,...(settings?[settings]:[]),links);
+    // Sections a running part of the game adds (shell/settings-extras.js), such as Reset my island (T53).
+    body.replaceChildren(account,story,...(settings?[settings]:[]),...settingsSections(),links);
     for(const [label,path] of [['How to play','help.html'],['Privacy','privacy.html']]){
       const link=document.createElement('a');link.className='kit-button kit-quiet';link.textContent=label;
       link.href=`${import.meta.env.BASE_URL}${path}`;link.target='_blank';link.rel='noopener noreferrer';links.append(link);

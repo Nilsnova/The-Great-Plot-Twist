@@ -12,6 +12,10 @@ const EPSILON = 1e-9; // distances closer than this count as equal
 export const TARGET_PROFILES = Object.freeze({
   boarder: Object.freeze({ order: Object.freeze(['captain', 'wall', 'tower', 'heart']), captainReach: 3, towerReach: 1.5, leash: 5, crowd: 3 }),
   brute: Object.freeze({ order: Object.freeze(['wall', 'tower', 'captain', 'heart']), captainReach: 1.5, towerReach: 4, leash: 3, crowd: 3 }),
+  // T50: what a ship at anchor shoots at (ship-fire.js, the wave rule "ship_fire"): the wall on its beach (sim.js
+  // CONFIG.wall.reach), else the nearest standing tower, else the heart, each within reach of the ship. No captain:
+  // a captain is hurt only next to an impact. Picked again for every shot.
+  ship: Object.freeze({ order: Object.freeze(['wall', 'tower', 'heart']), wallReach: 8, towerReach: 16, heartReach: 25 }),
 });
 
 /** The profile for an enemy: a brute's when it is a brute and brutes are switched on, else a boarder's. */
