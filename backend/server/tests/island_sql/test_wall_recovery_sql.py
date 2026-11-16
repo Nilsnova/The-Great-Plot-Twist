@@ -7,10 +7,13 @@ twice. Run from backend/:
     CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' \
         pytest -q server/tests/island_sql/test_wall_recovery_sql.py
 
-Each test is one transaction, rolled back at the end.
+Most checks run in one rolled-back transaction. The concurrency checks commit their scratch rows
+and clean them up explicitly after the two-connection exercise.
 """
 
 import json
+import threading
+import time
 from uuid import UUID
 
 import pytest
@@ -35,6 +38,11 @@ from server.tests.island_sql.test_islands_and_waves_sql import (  # noqa: E402
 STRANGER = UUID(int=951)
 FULL_PRICE = 9  # a level-2 wall: 30% of 10 + 20, rounded up
 RECOVER = 600
+
+
+def cleanup_committed(uri: str) -> None:
+    with psycopg.connect(uri, autocommit=True) as cleanup:
+        cleanup.execute("delete from auth.users where id = any(%s)", ([OWNER, STRANGER],))
 
 
 def record(database, player, wave_id, walls):
@@ -126,6 +134,222 @@ def test_a_repair_takes_the_missing_share_once_and_makes_the_wall_whole(database
     assert again == {"status": "refused", "reason": "intact"}
     assert wall(database) == (100, False, 1)
     assert ledger(database, OWNER, "building_purchase")[-1] == (-6, "wallfix:fix-00001")
+
+
+def test_a_delayed_wave_record_does_not_undo_a_paid_repair(database):
+    first_wave = island_with_a_fought_wave(database)
+    record(database, OWNER, first_wave, {"wall_1": 40})
+    second_wave = start(database, OWNER, "bell-0002", owner=OWNER)
+    move_start(database, second_wave["waveId"], 20)
+    finish(database, OWNER, second_wave["waveId"])
+
+    assert restore(database, "fix-race1")["status"] == "done"
+    stale = record(database, OWNER, UUID(second_wave["waveId"]), {"wall_1": 20})
+
+    assert stale == {"status": "recorded"}
+    assert wall(database) == (100, False, 1)
+
+
+def test_a_newer_wave_can_record_damage_after_a_paid_repair(database, scratch_server):
+    first_wave = island_with_a_fought_wave(database)
+    record(database, OWNER, first_wave, {"wall_1": 40})
+    database.commit()
+
+    try:
+        with psycopg.connect(scratch_server.get_uri()) as repair:
+            as_server(repair)
+            assert call(
+                repair,
+                "select public.island_wall_restore(%s, %s, %s, %s, %s, %s)",
+                OWNER,
+                OWNER,
+                "wall_1",
+                "fix-newer1",
+                FULL_PRICE,
+                RECOVER,
+            )["status"] == "done"
+
+        with psycopg.connect(scratch_server.get_uri()) as newer:
+            as_server(newer)
+            wave = start(newer, OWNER, "bell-0002", owner=OWNER)
+            newer.execute(
+                "update public.wave_runs set minimum_seconds = 0 where id = %s", (wave["waveId"],)
+            )
+            finish(newer, OWNER, wave["waveId"])
+            assert record(newer, OWNER, UUID(wave["waveId"]), {"wall_1": 60}) == {
+                "status": "recorded"
+            }
+            assert wall(newer) == (60, True, 1)
+    finally:
+        cleanup_committed(scratch_server.get_uri())
+
+
+def test_a_restore_at_the_wave_start_boundary_fences_the_record(database):
+    wave_id = island_with_a_fought_wave(database)
+    record(database, OWNER, wave_id, {"wall_1": 40})
+    assert restore(database, "fix-equal1")["status"] == "done"
+    restored_at = database.execute(
+        "select wall_restored_at from public.islet_buildings "
+        "where player_id = %s and plot = 'wall_1'",
+        (OWNER,),
+    ).fetchone()[0]
+    later_wave = start(database, OWNER, "bell-0002", owner=OWNER)
+    as_owner(database)
+    database.execute(
+        "update public.wave_runs set starts_at = %s where id = %s",
+        (restored_at, later_wave["waveId"]),
+    )
+
+    record(database, OWNER, UUID(later_wave["waveId"]), {"wall_1": 20})
+
+    assert wall(database) == (100, False, 1)
+
+
+def test_a_record_waiting_on_a_paid_restore_rechecks_the_restore_marker(database, scratch_server):
+    first_wave = island_with_a_fought_wave(database)
+    record(database, OWNER, first_wave, {"wall_1": 40})
+    second_wave = start(database, OWNER, "bell-0002", owner=OWNER)
+    move_start(database, second_wave["waveId"], 20)
+    finish(database, OWNER, second_wave["waveId"])
+    database.commit()
+
+    result = {}
+    started = threading.Event()
+
+    def delayed_record() -> None:
+        try:
+            with psycopg.connect(scratch_server.get_uri()) as connection:
+                as_server(connection)
+                result["pid"] = connection.info.backend_pid
+                started.set()
+                result["answer"] = call(
+                    connection,
+                    "select public.island_walls_record(%s, %s, %s::jsonb)",
+                    OWNER,
+                    second_wave["waveId"],
+                    json.dumps({"wall_1": 20}),
+                )
+                connection.commit()
+        except Exception as error:
+            result["error"] = error
+
+    try:
+        with psycopg.connect(scratch_server.get_uri()) as restore_connection:
+            as_server(restore_connection)
+            assert call(
+                restore_connection,
+                "select public.island_wall_restore(%s, %s, %s, %s, %s, %s)",
+                OWNER,
+                OWNER,
+                "wall_1",
+                "fix-wait1",
+                FULL_PRICE,
+                RECOVER,
+            )["status"] == "done"
+
+            worker = threading.Thread(target=delayed_record)
+            worker.start()
+            started_ok = started.wait(timeout=5)
+            waiting = False
+            try:
+                if started_ok:
+                    with psycopg.connect(scratch_server.get_uri(), autocommit=True) as observer:
+                        deadline = time.monotonic() + 5
+                        while time.monotonic() < deadline:
+                            waiting = observer.execute(
+                                "select exists (select 1 from pg_locks "
+                                "where pid = %s and not granted)",
+                                (result["pid"],),
+                            ).fetchone()[0]
+                            if waiting:
+                                break
+                            time.sleep(0.01)
+            finally:
+                restore_connection.commit()
+                worker.join(timeout=10)
+            assert not worker.is_alive()
+            if "error" in result:
+                raise result["error"]
+            assert started_ok
+            assert waiting, "the report did not wait on the restore's wall row lock"
+
+        assert result["answer"] == {"status": "recorded"}
+        with psycopg.connect(scratch_server.get_uri()) as check:
+            assert wall(check) == (100, False, 1)
+    finally:
+        cleanup_committed(scratch_server.get_uri())
+
+
+def test_a_paid_restore_waiting_on_a_record_repairs_the_recorded_damage(database, scratch_server):
+    first_wave = island_with_a_fought_wave(database)
+    record(database, OWNER, first_wave, {"wall_1": 40})
+    second_wave = start(database, OWNER, "bell-0002", owner=OWNER)
+    move_start(database, second_wave["waveId"], 20)
+    finish(database, OWNER, second_wave["waveId"])
+    database.commit()
+
+    result = {}
+    started = threading.Event()
+
+    def paid_restore() -> None:
+        try:
+            with psycopg.connect(scratch_server.get_uri()) as connection:
+                as_server(connection)
+                result["pid"] = connection.info.backend_pid
+                started.set()
+                result["answer"] = call(
+                    connection,
+                    "select public.island_wall_restore(%s, %s, %s, %s, %s, %s)",
+                    OWNER,
+                    OWNER,
+                    "wall_1",
+                    "fix-wait2",
+                    FULL_PRICE,
+                    RECOVER,
+                )
+                connection.commit()
+        except Exception as error:
+            result["error"] = error
+
+    try:
+        with psycopg.connect(scratch_server.get_uri()) as record_connection:
+            as_server(record_connection)
+            record_connection.execute(
+                "select public.island_walls_record(%s, %s, %s::jsonb)",
+                (OWNER, second_wave["waveId"], json.dumps({"wall_1": 20})),
+            )
+
+            worker = threading.Thread(target=paid_restore)
+            worker.start()
+            started_ok = started.wait(timeout=5)
+            waiting = False
+            try:
+                if started_ok:
+                    with psycopg.connect(scratch_server.get_uri(), autocommit=True) as observer:
+                        deadline = time.monotonic() + 5
+                        while time.monotonic() < deadline:
+                            waiting = observer.execute(
+                                "select exists (select 1 from pg_locks "
+                                "where pid = %s and not granted)",
+                                (result["pid"],),
+                            ).fetchone()[0]
+                            if waiting:
+                                break
+                            time.sleep(0.01)
+            finally:
+                record_connection.commit()
+                worker.join(timeout=10)
+            assert not worker.is_alive()
+            if "error" in result:
+                raise result["error"]
+            assert started_ok
+            assert waiting, "the restore did not wait on the report's wall row lock"
+
+        assert result["answer"]["status"] == "done"
+        with psycopg.connect(scratch_server.get_uri()) as check:
+            assert wall(check) == (100, False, 1)
+    finally:
+        cleanup_committed(scratch_server.get_uri())
 
 
 def test_a_rebuild_keeps_the_level_and_costs_the_full_price(database):
