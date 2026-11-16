@@ -214,7 +214,7 @@ it('keeps the break between waves clear of the loot toasts and the victory capti
         const box=document.createElement('div');box.className='game-layer';document.querySelector('#game').append(box);
         const hud=createWaveHud({container:box});
         hud.pause({title:'Wave 1 won!',line:'3 ships sunk · 🪙 +15',seconds:14,auto:false,ready:true});
-        showToast('🪙 +15 loot · you have 🪙 325');showToast('Captain upgrades unlocked! Open Menu › Captain to make your musket stronger.');
+        showToast('Loot 🪙 +15');showToast('Captain upgrades unlocked! Open Menu › Captain to make your musket stronger.');
         const caption=document.createElement('div');caption.className='sound-caption';caption.textContent='Victory: the island holds';document.body.append(caption);
         await new Promise(resolve=>setTimeout(resolve,300));
         const rect=node=>node.getBoundingClientRect();

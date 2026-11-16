@@ -26,9 +26,10 @@ export const GOAL_HINT = Object.freeze([['🏝️', 'Land'], ['🧱', 'Block'], 
 export const runLootText = loot => `Loot this run: 🪙 ${Math.max(0, Math.round(loot) || 0)}`;
 // What the bar shows of it (owner, 15 Nov: "less text"): the coin and the number only, nothing while it is 0;
 // runLootText stays its spoken label.
-export const runLootChip = loot => { const n = Math.max(0, Math.round(loot) || 0); return n > 0 ? `🪙 +${n}` : ''; };
+export const runLootChip = loot => { const n = Math.max(0, Math.round(loot) || 0); return n > 0 ? `Loot 🪙 +${n}` : ''; };
 // What the bar shows of your hp: a short word and the meter; healthText stays its spoken label.
-export const HEALTH_WORD = 'You';
+// The captain's hp row: an icon, not the word "You" (owner, 16 Nov: "You" next to the loot read as a total).
+export const HEALTH_WORD = '🧑‍✈️';
 
 // The button: "F: Slash" (the cutlass, D052) with a boarder within strike reach (§12), else the equipped weapon's name (§15).
 // With no pirate in range the name stays and the button dims (owner, 15 Nov: "less text"); OUT_OF_RANGE is spoken.

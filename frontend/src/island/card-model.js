@@ -323,7 +323,8 @@ export function captainsModel(names = []) {
     line: list.length ? `${list.length} of 9 friends here.` : 'Nobody else is here yet. Open Players and invite and send the link.'};
 }
 
-export const lootText = ({loot, coins}) => `${formatCoinDelta(loot)} loot · you have ${coinText(coins)}`;
+// Only the gain: the coin chip (top left) already shows the total (owner, 16 Nov: "you have" read as confusing).
+export const lootText = ({loot}) => `Loot ${formatCoinDelta(loot)}`;
 export const countdownText = (seconds, wave) => (seconds > 0 ? `Pirates in ${seconds} s! Wave ${wave}` : `Wave ${wave}: the pirates are here!`);
 // Whole seconds until startsAt. A clock far off the server's falls back to the full countdown.
 export function secondsUntil(startsAt, now = Date.now(), {fresh = false, countdown = 10} = {}) {
