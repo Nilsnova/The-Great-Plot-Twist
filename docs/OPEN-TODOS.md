@@ -72,6 +72,7 @@ The game is built and live; nobody waits for anyone. You extend it.
 - [x] **B3 follow-up / Johannes: Closing a loading harbor cancels the old opening**, implemented in draft [PR #92](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/92); [evidence/limits](evidence/B3-harbor-loading/README.md). Author rehearsal and independent human review pending; broader B3 remains open.
 - [x] **B3 follow-up / Johannes: Late arsenal replies stay with their original island**, implemented in draft [PR #88](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/88); [evidence/limits](evidence/B3-arsenal-context/README.md). Author rehearsal and independent human review pending; broader B3 remains open.
 - [x] **B3 follow-up / Johannes: Retry an arsenal load directly in its card**, implemented in draft [PR #90](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/90); [evidence/limits](evidence/B3-arsenal-retry/README.md). Author rehearsal and independent human review pending; broader B3 remains open.
+- [x] **Approved U addition / Johannes: Optional skill-aware comparison against the carried weapon**, implemented in draft [PR #96](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/96); [evidence/limits](evidence/U-weapon-comparison/README.md). Author and independent human review pending; no wider task completion or merge claimed.
 
 ## 3. Every member, before the freeze (walkthrough = 20% of the grade)
 
