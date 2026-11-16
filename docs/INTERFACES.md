@@ -1655,9 +1655,15 @@ It returns each island's highest win that week, regardless of restarts/current w
 Shared islands count once. At most ten entries; fewer qualifying islands produce
 fewer rows. Equal waves share competition ranks (1, 1, 3); stable internal owner-ID
 order breaks display ties at the ten-island cutoff. Crew size does not adjust scores.
-No rewards or database writes. The scan reads highest waves first, 100 rows per
-page, at most 20 pages; insufficient coverage returns `503 leaderboard_unavailable`,
-never a partial ranking. Public host names are read only for the final islands.
+No rewards or database writes. The server calls the service-only
+`leaderboard_best_runs(cutoff, window_start, window_end)` SQL function, which returns
+up to ten best runs from distinct islands. It filters winning, nonexpired island runs
+through the request cutoff and optional half-open window, then orders by wave descending,
+finish time ascending and run ID ascending. The result and metadata reads are bounded;
+the database still evaluates qualifying history to identify each island's best run.
+Migration `20261116100000_leaderboard_query.sql` must be applied before deploying the
+backend revision that calls this function; the route has no flag-based fallback.
+Public host names are read only for the final islands.
 Fake/offline games show an online-required message instead of invented global data.
 
 **T45 addition ([D046](DECISIONS.md#d046--highscore-scope-and-statue-stages--2026-11-14)).**
@@ -1665,7 +1671,8 @@ Optional query `scope=week` (default) or `scope=all`; any other value answers `4
 Response: `{scope, weekStart, weekEnd, entries: [{rank, name, wave, crew}]}`; for
 `scope=all` both week fields are `null` and the window is every finish up to the
 request (never resets). Equal waves still share rank; display order among them is
-earliest `finished_at` first (replacing the owner-ID order above). `crew` (1–10) is the
+earliest `finished_at` first, then run ID for an exact finish-time tie (replacing the
+owner-ID order above). `crew` (1–10) is the
 number of `wave_participants` of the scoring run, a count only (`1` = solo; an empty
 answer shows `1`). Scores come only from winning `wave_runs`, never from
 `islands.wave_best`, so restarts/resets cannot lower them. The client accepts a T7

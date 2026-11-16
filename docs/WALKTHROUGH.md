@@ -1120,10 +1120,11 @@ Only rank, the host's public captain name and wave reach the card; no invite cod
 private IDs or coins. The wooden board and parchment reuse the game's existing UI.
 
 **Limits and change.** [Tests and evidence](handoff/T7-weekly-leaderboard.md) use
-fakes, not live Supabase. The scan is bounded at 2,000 runs and returns a clear error
-if it cannot finish. Concurrent deletion can shift offset pages. Solo and multiplayer
-are not separated; ties at the cutoff use a stable internal order. Names may match.
-A database aggregate/index could replace pagination after measuring real load.
+fakes for the original T7 contract. T48 replaces the 2,000-run scan with a service-only
+SQL function that returns at most ten best runs from distinct islands. The database
+still evaluates qualifying history; query-plan and live Supabase checks remain separate.
+Concurrent deletion does not create a transaction snapshot. Solo and multiplayer are
+not separated; exact ties use finish time and run ID. Names may match.
 
 **Walkthrough questions.** Data: existing Supabase rows, with no new writes. Tests:
 weekly boundaries, repeated islands, restart preservation, ties, paging, the login

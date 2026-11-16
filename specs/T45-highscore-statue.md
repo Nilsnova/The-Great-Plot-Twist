@@ -102,10 +102,13 @@ new tables, rewards or gameplay rules.
 
 ## Limits
 
-Fake database reads only; no live PostgREST/Supabase proof. The all-time scan uses T7's bound (2,000 runs) and
-answers `503 leaderboard_unavailable` rather than a partial board; with many repeated wins at top waves it may need a
-database aggregate (a migration) later. Crew size counts captains who joined the run, including ones who dropped out.
-Local browser screenshots use sample data and do not prove physical phones.
+The original T45 implementation used fake database reads and inherited T7's 2,000-run bound.
+Issue #107 / T48 implements the replacement on its draft branch: a service-only SQL query for
+the best qualifying run per island and at most ten islands. The database still evaluates
+qualifying history; scratch PostgreSQL checks and query-plan evidence are tracked by T48, while
+live PostgREST/Supabase proof remains unverified.
+Crew size counts captains who joined the run, including ones who dropped out. Local browser
+screenshots use sample data and do not prove physical phones.
 
 ## Owner and reviewer
 
