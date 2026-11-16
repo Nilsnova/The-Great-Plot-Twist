@@ -48,7 +48,7 @@ export function isAllowedWallRecoveryChoice({wallSpec = null, wallResearch = nul
 }
 
 /** The approved rate factor applies between waves; Wall Tech only affects walls, never towers. */
-export function recoveryRateFactor({ownerCarpenters = 0, nearbyWorkshops = 0, structureKind = 'wall', wallSpec = null,
+export function recoveryRateFactor({ownerCarpenters = 0, nearbyWorkshops = 0, structureKind, wallSpec = null,
   wallResearch = null, isBetweenWaves = true} = {}) {
   if (!Number.isSafeInteger(ownerCarpenters) || !Number.isSafeInteger(nearbyWorkshops)
     || ownerCarpenters < 0 || nearbyWorkshops < 0) {

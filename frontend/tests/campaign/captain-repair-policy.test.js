@@ -95,9 +95,10 @@ describe('new recovery wall research', () => {
   });
 
   it('rejects invalid counts and unsupported wall choices', () => {
-    expect(() => recoveryRateFactor({ownerCarpenters: -4, isBetweenWaves: true})).toThrow();
-    expect(() => recoveryRateFactor({nearbyWorkshops: -1, isBetweenWaves: true})).toThrow();
-    expect(() => recoveryRateFactor({wallSpec: 'unknown', isBetweenWaves: true})).toThrow();
+    expect(() => recoveryRateFactor({ownerCarpenters: -4, structureKind: 'wall', isBetweenWaves: true})).toThrow();
+    expect(() => recoveryRateFactor({nearbyWorkshops: -1, structureKind: 'wall', isBetweenWaves: true})).toThrow();
+    expect(() => recoveryRateFactor({wallSpec: 'unknown', structureKind: 'wall', isBetweenWaves: true})).toThrow();
+    expect(() => recoveryRateFactor({ownerCarpenters: 0, nearbyWorkshops: 0, isBetweenWaves: true})).toThrow();
     expect(() => recoveryRateFactor({structureKind: 'house', isBetweenWaves: true})).toThrow();
   });
 });
