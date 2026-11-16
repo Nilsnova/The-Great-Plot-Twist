@@ -43,6 +43,8 @@ export const RULE_SETS = {
   tower_health: { towerHealth: true },
   pathing: { pathing: true },
   both: { towerHealth: true, pathing: true },
+  // T50: the live rules with ship fire (ships at anchor shoot a real wall, tower or the heart): --rules ship_fire.
+  ship_fire: { towerHealth: true, pathing: true, shipFire: true },
 };
 
 // The island and the crew a class has at each point of the campaign.

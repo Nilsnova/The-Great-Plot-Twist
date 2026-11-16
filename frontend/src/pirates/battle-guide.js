@@ -1,7 +1,9 @@
 // The battle guide (owner's playtest, 15 Nov: "make their paths clearer … where the pirates land and where
 // they will go"): drawing only, read from the wave's state, never fed back into the sim.
 //
-//   - where pirates land: a red ring with a skull flag on the beach of every sea lane of the wave;
+//   - where pirates land: a dashed red ring with a boot-prints badge on the beach of every sea lane of the wave
+//     (T50, the owner's play-test of 16 Nov: a solid ring with a skull read as a target the ships shoot at; it is a
+//     landing place, so it now looks like one: an open, dashed edge and footprints walking inland);
 //   - where they walk: a dotted line from each landing to the heart, the route the boarders' own grid takes
 //     (boarder-paths.js, the same rule as sim.js with the wave rule "pathing"); an axe badge where the route has
 //     to hack through a wall, so a wall the route walks round shows the detour;
@@ -158,7 +160,7 @@ const round2 = value => Math.round(value * 100) / 100;
 
 // ---------------------------------------------------------------- drawing
 
-const SHAPE = { disc: 0, ring: 1, chevron: 2, icon: 3, box: 4 };
+const SHAPE = { disc: 0, ring: 1, chevron: 2, icon: 3, box: 4, dashed: 5 };
 const ICONS = ['skull', 'heart', 'axe', 'rubble'];
 const ICON_PX = 64;
 const vertex = /* glsl */`
@@ -180,6 +182,8 @@ void main(){
     // A chevron pointing along +x: the big arrowhead minus a smaller one set back behind it.
     a*=step(-.75,x)*step(y,(.85-x)*.62)*(1.0-step(y,(.1-x)*.62));}
   else if(vShape<3.5){vec4 t=texture2D(uIcons,vUv);a*=t.a;rgb=t.rgb*vColor.rgb;}
+  else if(vShape>4.5){// T50: a dashed ring (a landing place, not a target): the ring's band cut into 14 dashes.
+    a*=smoothstep(.66,.74,r)*(1.0-smoothstep(.9,1.0,r))*step(0.0,sin(atan(vLocal.y,vLocal.x)*14.0));}
   if(a<.01)discard;
   gl_FragColor=vec4(rgb*a,a);
   ${toScreen}
@@ -216,7 +220,8 @@ function createInstances(name, capacity, material, renderOrder, owned) {
   };
 }
 
-// The badges, painted once on a small canvas (one 64 px square each): a skull flag, a heart, an axe, rubble.
+// The badges, painted once on a small canvas (one 64 px square each): boot prints (the landing; its id stays
+// 'skull', the badge it replaced), a heart, an axe, rubble.
 function paintIcons() {
   if (typeof document === 'undefined') return null;
   const canvas = document.createElement('canvas'); canvas.width = ICON_PX * ICONS.length; canvas.height = ICON_PX;
@@ -228,11 +233,13 @@ function paintIcons() {
     c.beginPath(); c.arc(x, y, 25, 0, Math.PI * 2); c.fillStyle = fill; c.fill();
     return { x, y };
   };
-  { // skull (pirates land here)
+  { // boot prints (pirates land here and walk inland): two soles with heels, one a step ahead of the other
     const { x, y } = badge(0, '#b8322a');
-    c.fillStyle = '#fff6e6'; c.beginPath(); c.arc(x, y - 4, 13, 0, Math.PI * 2); c.fill(); c.fillRect(x - 8, y + 4, 16, 10);
-    c.fillStyle = '#1f2622'; c.beginPath(); c.arc(x - 5, y - 4, 4, 0, Math.PI * 2); c.arc(x + 5, y - 4, 4, 0, Math.PI * 2); c.fill();
-    c.fillRect(x - 5, y + 9, 2, 5); c.fillRect(x - 1, y + 9, 2, 5); c.fillRect(x + 3, y + 9, 2, 5);
+    c.fillStyle = '#fff6e6';
+    for (const [dx, dy] of [[-7, 5], [7, -6]]) {
+      c.beginPath(); c.ellipse(x + dx, y + dy - 4, 5.5, 8, 0, 0, Math.PI * 2); c.fill();   // the sole
+      c.beginPath(); c.ellipse(x + dx, y + dy + 8, 4.5, 3.6, 0, 0, Math.PI * 2); c.fill(); // the heel
+    }
   }
   { // heart (defend this)
     const { x, y } = badge(1, '#f3c35c');
@@ -334,9 +341,9 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
   }
   function drawLanding(landing, alpha, live, heart, walls) {
     const pulse = still() || !live ? 1 : 1 + .1 * Math.sin(clock * 5), y = drawnY(landing.z), r = 3.4 * k * pulse;
-    ground.push(SHAPE.ring, landing.x, y, r + .3 * k, (r + .3 * k) * Y, { ...DARK, a: alpha * .6 });
-    ground.push(SHAPE.ring, landing.x, y, r, r * Y, { ...RED, a: alpha });
-    // A shore wall on the landing would hide under the skull (and its hp bar collide with it): the skull then
+    ground.push(SHAPE.dashed, landing.x, y, r + .3 * k, (r + .3 * k) * Y, { ...DARK, a: alpha * .6 });
+    ground.push(SHAPE.dashed, landing.x, y, r, r * Y, { ...RED, a: alpha });
+    // A shore wall on the landing would hide under the badge (and its hp bar collide with it): the badge then
     // moves seaward, still inside the ring.
     const [sx, sz] = skullAt(landing, heart, walls, k);
     air.push(SHAPE.icon, sx, drawnY(sz) + 1.5 * k, 1.8 * k, 1.8 * k, { ...WHITE, a: Math.min(1, alpha + .3) }, { icon: 'skull' });

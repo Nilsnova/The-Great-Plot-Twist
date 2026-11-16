@@ -26,19 +26,20 @@ function controllerWith(renderers, defenses = DEFENSES) {
 
 describe('the wave rules', () => {
   it('turns known names into true options and ignores everything else', () => {
-    expect(readRules(['tower_health', 'nonsense'])).toEqual({ towerHealth: true, pathing: false, towerObstacles: false, rescue: false, defensesV2: false });
-    expect(readRules(undefined)).toEqual({ towerHealth: false, pathing: false, towerObstacles: false, rescue: false, defensesV2: false });
-    expect(readRules(['pathing'])).toEqual({ towerHealth: false, pathing: true, towerObstacles: false, rescue: false, defensesV2: false });
-    expect(readRules('tower_health')).toEqual({ towerHealth: false, pathing: false, towerObstacles: false, rescue: false, defensesV2: false });
+    expect(readRules(['tower_health', 'nonsense'])).toEqual({ towerHealth: true, pathing: false, towerObstacles: false, rescue: false, defensesV2: false, shipFire: false });
+    expect(readRules(undefined)).toEqual({ towerHealth: false, pathing: false, towerObstacles: false, rescue: false, defensesV2: false, shipFire: false });
+    expect(readRules(['pathing'])).toEqual({ towerHealth: false, pathing: true, towerObstacles: false, rescue: false, defensesV2: false, shipFire: false });
+    expect(readRules('tower_health')).toEqual({ towerHealth: false, pathing: false, towerObstacles: false, rescue: false, defensesV2: false, shipFire: false });
     expect(readRules(['rescue']).rescue).toBe(true);
     expect(readRules(['defenses_v2']).defensesV2).toBe(true); // T43: the culverins fight only with this rule
     expect(readRules(['tower_health', 'pathing', 'tower_obstacles']).towerObstacles).toBe(true);
+    expect(readRules(['ship_fire']).shipFire).toBe(true); // T50: ships fire at real targets only with this rule
     expect(Object.values(RULE_OPTIONS)).toContain('towerHealth');
   });
 
   it('reads the rules of a wave answer', () => {
-    expect(readWaveInfo({ ...INFO, rules: ['tower_health'] }).rules).toEqual({ towerHealth: true, pathing: false, towerObstacles: false, rescue: false, defensesV2: false });
-    expect(readWaveInfo(INFO).rules).toEqual({ towerHealth: false, pathing: false, towerObstacles: false, rescue: false, defensesV2: false });
+    expect(readWaveInfo({ ...INFO, rules: ['tower_health'] }).rules).toEqual({ towerHealth: true, pathing: false, towerObstacles: false, rescue: false, defensesV2: false, shipFire: false });
+    expect(readWaveInfo(INFO).rules).toEqual({ towerHealth: false, pathing: false, towerObstacles: false, rescue: false, defensesV2: false, shipFire: false });
   });
 
   it('a wave with tower_health gives its towers hp and paints the tower states; without it nothing changes', () => {
@@ -51,6 +52,17 @@ describe('the wave rules', () => {
     expect(without.controller.state.towers[0].hp).toBeUndefined();
     expect(on[0].towerStates).toBe(true);
     expect(off[0].towerStates).toBe(false);
+  });
+
+  it('a wave with ship_fire (T50) has the ships fire at real targets; without it they shell as before', () => {
+    const withRule = controllerWith([], []), without = controllerWith([], []);
+    withRule.bus.emit({ type: 'wave_started_server', ...INFO, rules: ['ship_fire'] });
+    without.bus.emit({ type: 'wave_started_server', ...INFO });
+    withRule.advance(40000); without.advance(40000);
+    // Nothing built: the sloops at anchor aim at the heart, and their balls cost it ♥.
+    expect(withRule.controller.state.shipShots).toBeDefined();
+    expect(withRule.controller.state.islandHp).toBeLessThan(without.controller.state.islandHp);
+    expect(without.controller.state.shipShots).toBeUndefined();
   });
 
   it('a culverin fights and is drawn only in a wave with defenses_v2 (T43); without it the wave plays without it', () => {

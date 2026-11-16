@@ -32,7 +32,8 @@ FLAGS = (
     "tower_health",
     "pathing",
 )
-ALL_FLAGS = (*FLAGS, "tower_obstacles")
+# Kept out of FLAGS so the every-combination test below does not double for each new flag.
+ALL_FLAGS = (*FLAGS, "tower_obstacles", "ship_fire")
 VARIABLES = {
     "APP_ENV": " PrEvIeW ",
     "SUPABASE_URL": " https://g21-fixture.supabase.co/// ",
