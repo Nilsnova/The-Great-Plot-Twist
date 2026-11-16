@@ -160,6 +160,17 @@ describe('the unlock cards', () => {
     expect(again.tutorials.queue).toEqual([]);
     expect(again.cards).toEqual([]);
   });
+  it('a card open when a wave begins gives way and comes back unread in the next break', async () => {
+    const t = make({game: {wave: 3}});
+    t.frame(); await flush();
+    expect(t.cards).toHaveLength(1);
+    t.state.waveRunning = true; t.frame(); await flush(); // a friend rang the bell
+    expect(t.tutorials.queue[0]).toBe('captain_upgrades');
+    expect(t.cards).toHaveLength(1);
+    t.state.waveRunning = false; t.frame(); await flush();
+    expect(t.cards).toHaveLength(2);
+    expect(t.cards.at(-1)).toMatchObject({title: 'Captain upgrades', total: 9});
+  });
   it('Show me does not move the camera with reduced motion; the ring still says where', async () => {
     const t = make({game: {wave: 3}, reduced: true});
     t.frame(); await flush();

@@ -142,6 +142,7 @@ export function createTutorials({container = globalThis.document?.body, on, stor
     if (cardOpen === current) cardOpen = null;
     current.dispose?.();
     if (disposed || reason === 'disposed') return;
+    if (reason === 'wave') { focusGame(); return; } // a wave began under it: unread, it comes back in the next break
     if (reason === 'skip_all') { memory.mark(code, [...queue]); queue.length = 0; }
     else { queue.shift(); memory.mark(code, [id]); }
     if (reason === 'show') showMe(card);
@@ -190,6 +191,9 @@ export function createTutorials({container = globalThis.document?.body, on, stor
     }
     if (guiding) drawCoach(p, t); else if (!showing) coach.point(null);
     if (showing) drawShow(t);
+    // A wave began while a card was open (a friend rang the bell): the card gives way, so it never holds the
+    // player's input in the fight, and stays first in the queue for the next quiet moment.
+    if (cardOpen && p.waveRunning) cardOpen.close?.('wave');
     if (!guiding && queue.length && calm(p) && enabled()) void nextCard();
   }
   function drawCoach(p, t) {
