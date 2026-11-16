@@ -96,6 +96,7 @@ def test_repair_request_accepts_t54_wire_shape_and_strict_types():
         {"expectedLevel": True},
         {"expectedRepairSeq": -1},
         {"quotedPrice": "60"},
+        {"code": "ISLE-K7Q2M-ISLE-K7Q2M-ISLE-K7Q2M-ISLE-K7Q2M"},
         {"unexpected": "field"},
         {"actionUid": "short"},
     ],

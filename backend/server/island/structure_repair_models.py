@@ -29,7 +29,7 @@ class RepairRequest(BaseModel):
 
     model_config = ConfigDict(extra="forbid", populate_by_name=True)
 
-    code: StrictStr | None = None
+    code: StrictStr | None = Field(default=None, max_length=32)
     spot: SpotId
     instance_id: UUID = Field(alias="instanceId")
     action_uid: ActionUid = Field(alias="actionUid")
