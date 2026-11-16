@@ -60,6 +60,8 @@ import { createCamera } from './player/camera.js';
 import { createHud } from './ui/hud.js';
 import {startDiagnostics,noteUiAction,noteAdapterView,disposeDiagnostics} from './diagnostics/runtime.js';
 import {createNarrator} from './narrator/index.js';
+import {createTutorials} from './tutorial/tutorials.js';
+import {createTutorialHooks} from './tutorial/game-hooks.js';
 
 export async function startGame({container,shell,audio,captions,adapter,isAppBlocked,openAccount,session=defaultSession}) {
   startDiagnostics();noteAdapterView(adapter?.read());
@@ -82,10 +84,11 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   // The narrator (src/narrator/): voiced lines and captions for the story and every new thing; keyed by island code.
   const narrator=createNarrator({container,on,audio,getGame:()=>{const visit=island?.visiting,own=island?.island;return visit?{code:visit.code,waveBest:0}:own?{code:own.code,waveBest:own.waveBest??0}:null;}});
   let mapTouch=null;
+  let tutorials=null,tutorialHooks=null,islandFlags={};
   let classDemo=null,classDemoLoad=null,island=null,islandLoad=null,islandsMode=null,pirates=null,waves=null,wavesLoad=null;
   let harbor=null, farHint=null, active = false, disposed=false, hud, chart, perf, marketUi=null, marketLoad=null, experience,beginRequest=0, fpsFrames = 0, fpsStart = performance.now(), fps = 0,weatherAnswer=null;
-  const externalOverlay=()=>!!(harbor?.active||island?.active||classDemo?.active||shortcuts.active||tutorial.active||shell?.blocked||isAppBlocked?.()||marketUi?.active||sportsUi.active||chart?.open||sailing.active||stopPlots?.active);
-  const worldBlocked=()=>!!(harbor?.active||island?.active||classDemo?.active||shortcuts.active||tutorial.active||shell?.blocked||isAppBlocked?.()||marketUi?.active||sportsUi.active);
+  const externalOverlay=()=>!!(harbor?.active||island?.active||classDemo?.active||shortcuts.active||tutorial.active||!!tutorials?.active||shell?.blocked||isAppBlocked?.()||marketUi?.active||sportsUi.active||chart?.open||sailing.active||stopPlots?.active);
+  const worldBlocked=()=>!!(harbor?.active||island?.active||classDemo?.active||shortcuts.active||tutorial.active||!!tutorials?.active||shell?.blocked||isAppBlocked?.()||marketUi?.active||sportsUi.active);
   function resetControls(){mapTouch?.cancel();input.reset();}
   const outsideBlocked=()=>externalOverlay()||world.busy;
   const sportsUi=createSportsEntry({container,getToken:session.getToken,onSessionChange:session.onChange,resetInput:resetControls,focusGame:()=>graphics.renderer.domElement.focus(),onSignIn:()=>{sportsUi.close();openAccount?.();}},{load:loadMatchCard});
@@ -113,8 +116,16 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   function quality(name) { settings.quality = name; setArtQuality(name); graphics.setQuality(name); water.setQuality(name); }
   hud = createHud(container, {
     start() { active = true; view.start(reducedMotion()); },
+    // T52: the first-run goals only on an island the player owns or joined (without the island game: as before).
+    hasIsland:()=>islandsMode==='off'||tutorialHooks?.hasIsland()===true,
     focus() { graphics.renderer.domElement.focus({ preventScroll: true }); }, settings(){shell?.openSettings();},menu:()=>shell.show('pause'),quality(name){setUserQuality(name);}, chart() { if (active) showChart(); },travel:()=>travelOpen(),placeName:id=>island?.placeName?.(id)??null,controls:()=>void shortcuts.open(),tutorial:()=>void tutorial.open(),
   });
+  // The guided start and the unlock cards (T52, src/tutorial/tutorials.js): what they read from the game is in game-hooks.js.
+  tutorialHooks=createTutorialHooks({island:()=>island,place:()=>world.current?.id,player:controller.player,camera:view.camera,canvas:graphics.renderer.domElement,container,
+    waveRunning:()=>!!waves?.island.wave,blocked:()=>!active||outsideBlocked(),narrating:()=>narrator.speaking});
+  tutorials=createTutorials({container,on,reducedMotion,probe:tutorialHooks.probe,locate:tutorialHooks.locate,spotTarget:tutorialHooks.spotTarget,anchor:tutorialHooks.anchor,tour:tutorialHooks.tour,
+    say:trigger=>narrator.say(trigger),setGuide:view=>hud.setGuide(view),hudParent:()=>container.querySelector('.hud-play .hud-right'),
+    focusGame:()=>graphics.renderer.domElement.focus({preventScroll:true}),flags:{arsenal:()=>islandFlags.arsenal?.()===true,defenses_v2:()=>islandFlags.defenses_v2?.()===true}});
   experience=createWorldExperience({scene,container,art,world,player:controller.player,camera:view.camera,canvas:graphics.renderer.domElement,reducedMotion,preferences:getPreferences,
     send:(name,...args)=>sendIntent(adapter,name,...args),
     colourOf:id=>island?.colourOf?.(id)??null,characterScale:()=>characterScale,
@@ -215,11 +226,11 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
         wallRecovery:()=>{if(fakeTransport)return fakeTransport.flags.wall_recovery===true;
           const services=findPanelServices(session);return services?.isReady()?services.getFlags()?.wall_recovery===true:false;},
         // The arsenal (T41, D042): the server's flag "arsenal"; in the dev fake ?fakeflags=arsenal (or ?arsenal=1).
-        arsenalOn:()=>fakeTransport?(fakeTransport.flags.arsenal===true||new URLSearchParams(location.search).get('arsenal')==='1')
+        arsenalOn:islandFlags.arsenal=()=>fakeTransport?(fakeTransport.flags.arsenal===true||new URLSearchParams(location.search).get('arsenal')==='1')
           :findPanelServices(session)?.getFlags?.()?.arsenal===true,
         // T43 (D048 proposed): the culverin on the tower spots, only while the server's flag defenses_v2 is on
         // (in the dev fake ?fakeflags=defenses_v2).
-        defensesV2On:()=>fakeTransport?fakeTransport.flags.defenses_v2===true:findPanelServices(session)?.getFlags?.()?.defenses_v2===true});
+        defensesV2On:islandFlags.defenses_v2=()=>fakeTransport?fakeTransport.flags.defenses_v2===true:findPanelServices(session)?.getFlags?.()?.defenses_v2===true});
       if(adapter)island.setPresence(adapter.read()?.presence);
       void ensureWaves();
       return island;
@@ -300,7 +311,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     }
     const info = graphics.renderer.info.render;
     hud.update(waveAction?null:zone, { fps, calls: info.calls, triangles: info.triangles, night,interactionLabel:waveAction?undefined:panelLabel(zone),promptAt:zone&&!waveAction?screenAt(zone):null,
-      hint:farHint?{text:WALK_CLOSER,at:screenAt(farHint.id)}:null,speed,blocked:!active||outsideBlocked()||!!waves?.island.wave||!!waves?.point?.controller.wave }); input.endFrame();
+      hint:farHint?{text:WALK_CLOSER,at:screenAt(farHint.id)}:null,speed,blocked:!active||outsideBlocked()||!!waves?.island.wave||!!waves?.point?.controller.wave }); tutorials?.update(delta); input.endFrame();
   }, () => {
     const draw=shell.mode!=='title';
     if(draw)graphics.renderer.render(scene,view.camera);
@@ -309,10 +320,10 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   let soundcheck=null;
   // Local dev inspection only; Vite removes this branch in the production build.
   if (import.meta.env.DEV) window.__island = { get island(){return island;}, scene, renderer: graphics.renderer,
-    camera: view.camera, view, player: controller.player, settings, quality:setUserQuality, setWeather, emit, on, world, chart, sailing, shell, audio, adapter, get marketUi(){return marketUi;},sportsUi, get marketLoad(){return marketLoad;},mapTouch, experience,isletState,get classDemo(){return classDemo;},get waves(){return waves;}, soundcheck:()=>soundcheck??=import('./audio/soundcheck.js').then(m=>m.mountSoundcheck({audio})) };
+    camera: view.camera, view, player: controller.player, settings, quality:setUserQuality, setWeather, emit, on, world, chart, sailing, shell, audio, adapter, get marketUi(){return marketUi;},sportsUi, get marketLoad(){return marketLoad;},mapTouch, experience,isletState,get classDemo(){return classDemo;},get waves(){return waves;},get tutorials(){return tutorials;}, soundcheck:()=>soundcheck??=import('./audio/soundcheck.js').then(m=>m.mountSoundcheck({audio})) };
   if (import.meta.env.DEV && new URLSearchParams(location.search).get('soundcheck')==='1') window.__island.soundcheck();
   function dispose() {
-    if(disposed)return;disposed=true;narrator.dispose();container.removeEventListener('close',panelClosed,true);classDemo?.dispose();classDemo=null;waves?.dispose();waves=null;island?.dispose();island=null;void pirates?.then(harness=>harness?.dispose());
+    if(disposed)return;disposed=true;tutorials?.dispose();narrator.dispose();container.removeEventListener('close',panelClosed,true);classDemo?.dispose();classDemo=null;waves?.dispose();waves=null;island?.dispose();island=null;void pirates?.then(harness=>harness?.dispose());
     harbor?.dispose();mapTouch?.dispose();touch.dispose();gamepad.dispose();marketUi?.dispose();sportsUi.dispose();stopLiveWeather();stopPreferences();stopMotion();stop();stopView();stopListening();for(const stopOne of stopScale)stopOne?.(); stopArrivals(); stopVisitNamed(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
     window.removeEventListener('resize', resize); createLifetime(scene, art)();
     setMenuTravel(null);disposeDiagnostics();character.dispose();graphics.renderer.dispose();graphics.renderer.domElement.remove(); delete window.__island;
@@ -322,11 +333,12 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     event.preventDefault(); dispose();
     captions.show('Graphics paused. Reload the page to restore the island.');
   }, { once: true });
-  return {dispose,resetInput:resetControls,hasOverlay:()=>!!harbor?.active||!!island?.active||!!classDemo?.active||shortcuts.active||tutorial.active||chart.open||sailing.active||(marketUi?.active||sportsUi.active)||stopPlots.active,
+  return {dispose,resetInput:resetControls,hasOverlay:()=>!!harbor?.active||!!island?.active||!!tutorials?.active||!!classDemo?.active||shortcuts.active||tutorial.active||chart.open||sailing.active||(marketUi?.active||sportsUi.active)||stopPlots.active,
     setMode(mode){mapTouch?.cancel();if(mode!=='playing'){harbor?.close();marketUi?.close();sportsUi.close();beginRequest++;}audio.setScreen(mode);input.reset();if(mode==='playing')view.start(reducedMotion());else view.pause();},
     handleEscape(){
       if(shortcuts.active){shortcuts.close();return true;}
       if(tutorial.active){tutorial.close();return true;}
+      if(tutorials?.handleEscape())return true;
       if(island?.handleEscape())return true;
       if(classDemo?.handleEscape())return true;
       if(marketUi?.pending&&!container.querySelector('.market-modal[open]')){marketUi.close();input.reset();graphics.renderer.domElement.focus({preventScroll:true});return true;}
@@ -350,6 +362,8 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     // The island arrival cutscene (once per device), after the front door's goal card.
     // The "Your island" banner shows again as the player takes over.
     async playArrival(){if(disposed||!onOwnIsland())return;await island.playArrival();if(!disposed&&world.current)hud.arrive(world.current.id);},
+    // T52: true once the player stands on an island they own or joined (its code and campaign answered); the front door's intro waits for it.
+    islandReady:()=>tutorialHooks?tutorialHooks.islandReady():Promise.resolve(false),
     // Play lands the player outside in Saltreach Harbor (the front door's HARBOR_START), or where a
     // world continuation points. Every start loads the class demo layer (quest strip, lamps, duels).
     async begin(_resume=false,continuation){
@@ -368,11 +382,15 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
       else if(destination==='home_islet')void island?.load();
       if(disposed||token!==beginRequest||shell.blocked||isAppBlocked?.()||world.current?.id!==destination)return;
       // The front door shows its goal card first on a first Play and then asks for the arrival itself.
-      if(destination==='home_islet'&&continuation?.arrival!=='later')await island?.playArrival();
+      // T52: the arrival cutscene and the narrator's opening only on an island the player owns or joined.
+      const signedOut=adapter?.read?.()?.mode==='online'&&adapter.read().account?.state==='signed_out';
+      const onAnIsland=destination==='home_islet'&&!!island&&!signedOut&&await tutorialHooks.islandReady({timeout:4000});
+      if(disposed||token!==beginRequest||shell.blocked)return;
+      if(onAnIsland&&continuation?.arrival!=='later')await island?.playArrival();
       if(disposed||token!==beginRequest||shell.blocked)return;
       hud.start();
       // With a game's lobby (GAME-V3.md §2) the narrator waits for its Start (game_started); else it begins here.
-      if(destination==='home_islet'&&continuation?.lobby!==true)void narrator.begin();
+      if(destination==='home_islet'&&continuation?.lobby!==true&&(onAnIsland||!island))void narrator.begin();
       // Lane P: ?pirates=demo plays waves with the fake API (src/pirates/dev-harness.js), its own lazy chunk.
       if(new URLSearchParams(location.search).get('pirates')==='demo')pirates??=import('./pirates/dev-harness.js').then(m=>disposed?null:m.startPirateDemo({scene,camera:view.camera,canvas:graphics.renderer.domElement,container,player:controller.player,world,input,audio,reducedMotion,quality:()=>settings.quality,isBlocked:()=>!active||outsideBlocked(),on,emit,travel})).catch(error=>{console.error(error);return null;});
       if(continuation?.demo!==false||classDemoQuery())void loadClassDemo();
