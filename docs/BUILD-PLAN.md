@@ -196,15 +196,16 @@ The existing submission, rehearsal and Thu 19 Nov feature-freeze commitments rem
 |---|---|---|---|
 | 1. Understand and agree | Reproduce the action problem; settle lifecycle, permissions and reset rules | T29, T30, T37, T42 | Reproduction evidence and reviewed decisions/contracts; no unresolved shared rule silently selected in code |
 | 2. Make recovery coherent | Implement the agreed repair, rebuild and upgrade behavior and defense damage | T31–T33, T47 | Lifecycle tests, safe charging and two-browser agreement |
+| Recovery follow-up | Turn approved D059 into a concrete plan, then separate persistence, payment, simulation, progression, UI/docs and release verification | T54–T60 ([detailed board](OPEN-TODOS.md#11-unified-defense-recovery--unassigned-follow-ups-16-nov)) | T54 approved by Ianno before code; T55–T60 checks and reviews complete before any separately authorized rollout |
 | 3. Make attacks coherent | Target selection, wall paths and flexible placement | T34–T36 | Deterministic targets/routes; existing saves remain usable |
 | 4. Add shared progression | Rescue, minigame scaling and arsenal | T38–T41 | Solo and multiplayer outcomes agree, retries do not duplicate rewards or weapons |
 | 5. Expand and polish | New defenses/captain options, score/landmark, Harbor and final balance | T43–T46; existing T3/T5/T6/T7/T26 | Playtest evidence, documentation and existing regression checks |
 
-The phases describe delivery milestones, not a ban on earlier design work: T34 target design must be agreed before T33 implementation; T35/T36 agree their path/placement contract before either implementation. Use each task’s dependency column for the actual start conditions.
+The phases describe delivery milestones, not a ban on earlier design work: T34 target design must be agreed before T33 implementation; T35/T36 agree their path/placement contract before either implementation. Use each task’s dependency column for the actual start conditions. The T54–T60 recovery sequence below is separately gated by explicit Ianno approval of T54 before runtime implementation.
 
 ### 3. How teammates claim work
 
-[OPEN-TODOS section 2](OPEN-TODOS.md#2-open-tasks-you-can-pick-small-independent-updated-thu-12-nov) links to the detailed task board in section 9. Read the full acceptance criteria and prerequisites before proposing an implementation. Use the responsible teammate’s own identity. Follow that human’s explicit approval requirements for coding and publication.
+[OPEN-TODOS section 2](OPEN-TODOS.md#2-open-tasks-you-can-pick-small-independent-updated-thu-12-nov) links to the detailed boards in sections 9 and 11. Read the full acceptance criteria and prerequisites before proposing an implementation. Use the responsible teammate’s own identity. Follow that human’s explicit approval requirements for coding and publication.
 
 No expansion implementation task is assigned by this PR. Ianno owns this planning contribution; each implementing teammate is responsible for their own issue, branch, code and explain-back. After the responsible human approves remote publication, claim ONE task with an issue and draft PR, recording your real name, branch, likely files, dependencies and reviewer. Do not imply that a proposed feature is already approved or implemented.
 
@@ -236,7 +237,7 @@ Recheck these paths on the latest main. Art must extend the existing art pipelin
 
 ### 4. Task board
 
-[OPEN-TODOS section 9](OPEN-TODOS.md#9-defense-and-shared-island-expansion-proposal-14-nov) is the single detailed board for T29–T47: scope, dependencies and acceptance checks. Existing IDs and statuses remain unchanged. T5/T7/T26/T27/T28 have merged implementation; related expansion work builds on that baseline. T3/T6 remain follow-ups. The link in OPEN-TODOS section 2 makes the detailed board discoverable from the existing task list.
+[OPEN-TODOS section 9](OPEN-TODOS.md#9-defense-and-shared-island-expansion-proposal-14-nov) is the detailed board for T29–T47, and [section 11](OPEN-TODOS.md#11-unified-defense-recovery--unassigned-follow-ups-16-nov) is the single detailed board for T54–T60: scope, dependencies and acceptance checks. Existing IDs and statuses remain unchanged. T5/T7/T26/T27/T28 have merged implementation; related expansion work builds on that baseline. T3/T6 remain follow-ups. The link in OPEN-TODOS section 2 makes the detailed board discoverable from the existing task list.
 
 ### 5. Decisions and contracts before implementation
 
@@ -244,9 +245,18 @@ Collaborators should investigate open choices, compare practical options, recomm
 
 Use `specs/_TEMPLATE.md` for each claimed package. Record API/event/table/flag changes in their canonical locations and [INTERFACES.md](INTERFACES.md) in the same PR. Agree authority for transient combat health versus server-owned purchases, inventory and progression. Network sync must preserve deterministic combat without trusting a client to charge coins, grant weapons or settle a reset. Reserve decision numbers and migration timestamps from current `origin/main`; this proposal assigns neither.
 
-### T33 persistent recovery follow-up
+### T54-T60 unified recovery delivery gates
 
-Ianno approved the unified recovery design in [D059](DECISIONS.md#d059--one-recovery-countdown-for-all-damageable-structures--2026-11-16), tracked in [the T33 spec](../specs/T33-persistent-tower-damage.md). This remains design work: prepare and review the concrete implementation plan, including recovery modifiers, prices, refund and wall-skill compatibility, timer/state contracts and rollout, before production coding. Existing live recovery and wave contracts remain in force until implementation is separately reviewed and released.
+The detailed, unassigned work is in [OPEN-TODOS section 11](OPEN-TODOS.md#11-unified-defense-recovery--unassigned-follow-ups-16-nov), based on [D059](DECISIONS.md#d059--one-recovery-countdown-for-all-damageable-structures--2026-11-16) and [the T33 recovery spec](../specs/T33-persistent-tower-damage.md).
+
+| Gate | Tasks | Required exit before next stage |
+|---|---|---|
+| Agree the implementation | T54 | Ianno approves concrete timer, pricing/modifier, refund/compatibility, API/snapshot/version and rollout contracts. No runtime code in this planning task. |
+| Persist and charge | T55–T56 | Server-owned countdown and frozen snapshots exist before paid recovery is implemented against them; database and race tests cover concurrent finish/payment/reset. |
+| Integrate combat and progression | T57–T58 | New waves cannot heal structures in battle; old frozen waves keep their behavior; retirement/refunds preserve unrelated progression. T58 coordinates shared simulation edits after T57. |
+| Update client and verify | T59–T60 | Cards, player guidance, migration, two-client behavior, island reset and balance evidence match the approved contract. |
+
+All stages remain proposed and unassigned. The feature freeze and submission schedule still apply; this breakdown does not fast-track work. Keep flags off, and do not apply a migration or deploy until separately authorized. Existing D039/D049 runtime contracts remain in force until a reviewed and released implementation replaces them.
 
 ### 6. Verification and handover
 

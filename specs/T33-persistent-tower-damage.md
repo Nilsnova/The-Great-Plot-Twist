@@ -18,14 +18,16 @@ The same rules apply to walls and all island towers with HP: cannon, mortar, har
 
 | Choice | Approved behavior |
 |---|---|
-| Wait | One automatic recovery countdown, 10 minutes before bonuses. Completion restores full health. |
+| Wait | One automatic countdown with base required duration `600 seconds × (maxHP − currentHP) / maxHP`, before approved acceleration bonuses. Thus 10% missing health is 1 minute, 50% is 5 minutes, and zero HP is 10 minutes. Every damaging hit pauses the timer and discards all prior elapsed recovery progress. Start a fresh base duration from current HP after 3 seconds with no additional damaging hit; each new hit restarts this quiet window. Paused and quiet-window time do not count toward the 600-second base-duration cap, so wall-clock time may exceed 10 minutes. This 3-second quiet window is separate from the removed three-second Captain repair action. Completion restores full health. |
 | Pay | One **Repair now** action between waves skips the remaining wait and restores full health immediately. |
 
-The clock runs during battles and offline. Health restoration completes only between waves. A timer expiring during a battle does not heal the structure, revive a tower or close an obstacle gap in that battle; recovery is applied at the next safe inactive boundary.
+The clock may run during battles and offline while the structure is not actively being damaged. Each damaging hit pauses the timer and discards all prior elapsed recovery progress. After 3 seconds with no further damaging hit, a fresh base duration is calculated from current HP; another hit restarts that quiet window. Paused and quiet-window time do not count toward the 600-second base-duration cap, so wall-clock time may exceed 10 minutes. Health restoration completes only between waves. A timer expiring during a battle does not heal the structure, revive a tower or close an obstacle gap in that battle; recovery is applied at the next safe inactive boundary.
 
-Further damage does not reset or create another countdown. Once a structure has actually returned to full health, later damage starts a fresh cycle. A subsequent wave ending is not itself a recovery trigger. Surviving structures do not automatically become whole just because a wave ended.
+A subsequent wave ending is not itself a recovery trigger. Surviving structures do not automatically become whole just because a wave ended. Once a structure has actually returned to full health, later damage starts a fresh recovery cycle.
 
-For example, a structure ending a wave at 40/100 HP and one ending at 0/100 HP each wait on the same kind of countdown or use Repair now. On completion both become 100/100. There is no partial rebuild percentage or separate rebuild cooldown in the replacement model.
+A structure ending a wave at 40/100 HP and one ending at 0/100 HP use the same damage-proportional countdown rule or Repair now. The base duration is 600 seconds multiplied by the missing-health fraction; zero health reaches the same 10-minute maximum. On completion both become 100/100. There is no separate rebuild cooldown in the replacement model.
+
+Every damaging hit discards prior elapsed recovery progress. After 3 seconds without another damaging hit, start a fresh duration using the current missing-health fraction; each further hit restarts the 3-second quiet window. This window is distinct from the removed three-second Captain repair action. T54 must still specify trusted server-clock handling and the remaining implementation contracts.
 
 ## Captain, Carpenter and Workshop roles
 
@@ -52,7 +54,7 @@ Earlier dated STATUS entries are historical records and must remain untouched. E
 ## Implementation plan to prepare before production coding
 
 1. Audit current HP-bearing kinds, all structure-healing sources, Captain skill costs, Engineer effects and wall research bonuses. Propose exact speed/price/compatibility values without leaving inert purchases behind.
-2. Define a versioned server-owned recovery state and immutable wave snapshots for walls and towers. One clock must persist across further damage, reload, travel and offline time, and may complete only between waves.
+2. Define a versioned server-owned recovery state and immutable wave snapshots for walls and towers. The base duration is `600 seconds × missing-health fraction`; each damaging hit discards prior progress, and after exactly 3 seconds without another hit start a fresh duration from current HP. Further hits restart that quiet window. T54 / [issue #120](../docs/OPEN-TODOS.md#11-unified-defense-recovery--unassigned-follow-ups-16-nov) specifies trusted server-clock handling and remaining contracts. Persist its state across reload, travel and offline time, and complete only between waves.
 3. Specify atomic paid recovery with a personal wallet, an idempotent action ID, current-health pricing, sufficient-funds checks and a running-wave guard. Preserve the paid-restore-versus-late-record fence from #86 for every supported structure.
 4. Plan simulation, interaction, card and guide changes: no new-policy battle healing; one recovery countdown and Repair now; broken towers remain inactive/passable until actual recovery. Preserve old frozen waves and unrelated E actions.
 5. Specify safe, repeatable skill refunds and staged migration/flag rollout. Use additive migrations; do not edit applied migrations. Preview and production changes require their own authorization.
@@ -68,8 +70,8 @@ Earlier dated STATUS entries are historical records and must remain untouched. E
 
 ## Verification required for implementation
 
-- Lifecycle parity for every supported kind: partial HP and zero HP; one countdown; later damage keeps it; restoration clears it; later fresh damage starts a new cycle.
-- Before/at/after expiry; battle/offline elapsed time; expiry while a wave is active; first inactive boundary; no survivor or next-wave shortcut.
+- Lifecycle parity for every supported kind: exact base-duration formula (600 seconds × missing-health fraction), including 10% / 50% / 100% missing health; damage-time pause excluded from the 600-second base cap; the exact 3-second quiet window, discarded prior progress and restart-on-hit behavior; restoration clears recovery; later fresh damage after full restoration starts a new cycle.
+- Before/at/after expiry; battle/offline elapsed time; 3-second quiet-window and restart-on-hit boundaries; wall-clock time exceeding 10 minutes while paused; expiry while a wave is active; first inactive boundary; no survivor or next-wave shortcut.
 - No new-policy HP restoration from E, Carpenter, Workshop or wall regeneration during a battle. Legacy waves retain their frozen behavior; unrelated E/revive/weapon actions still work.
 - Paid restore at full price/missing health as finally agreed; insufficient funds; whole structure; active wave; same-UID retry; concurrent requests; timer-expiry race; late finish record; upgrade/demolish/build identity safeguards.
 - Skill-point conservation and idempotent refunds for all valid retired loadouts. Preserve unrelated skills, roles, coins, XP and progression according to the reviewed migration plan.
@@ -80,6 +82,6 @@ This documentation-only change needs document/link checks and a full diff/conten
 
 ## Risks and release limits
 
-Removing combat repairs changes balance. Countdown acceleration and paid prices also affect pacing, and skill removal must not lose player investment. A client-reported finish is bounded but does not become authoritative combat verification through this design. Review legacy-wave compatibility and timer/payment concurrency before implementation.
+Removing combat repairs changes balance. The proportional timer, damage-pause rule and 3-second quiet-window rule all affect pacing; acceleration and paid prices also need review, and skill removal must not lose player investment. A client-reported finish is bounded but does not become authoritative combat verification through this design. Review legacy-wave compatibility and timer/payment concurrency before implementation.
 
 No production code, runtime flag, migration or deployed data is changed by this design update. Keep the documentation PR draft until Ianno's review and Franz's current-revision approval. New STATUS content must be appended only, with `Ianno /` at the start of the entry; existing STATUS bytes must remain unchanged.
