@@ -7,7 +7,7 @@
 - **Responsible teammate:** Ianno (`Iannomh123456`)
 - **Agent assistance:** Codex, `gpt-6-luna` (high reasoning)
 - **Branch:** `fix/multiplayer-pause-flow`
-- **Status:** investigating current `main` (`a9386656`); no diagnosis or product change approved yet
+- **Status:** diagnosis confirmed on current `main` (`a9386656`); minimal journey fix in progress
 
 ## Goal
 
@@ -27,4 +27,6 @@ Likely surface: `frontend/scripts/check-multiplayer.js`, `frontend/src/pirates/h
 
 ## Evidence
 
-The current journey checks the pause flow around `frontend/scripts/check-multiplayer.js` lines 592–600. Earlier runs differed and are not treated as one reproduced failure. Record exact command, output directory, failing assertion or result, and any environmental limit in the PR before review.
+The current journey failed at the pause click after all earlier multiplayer checks passed, including the captain revive. Its `04-break-upgrade-me.png` capture showed only about 3 seconds left in the authored 8-second break when setup and both renderer waits had finished; the `failure-me.png` capture after Playwright's existing 30-second click limit showed that the break HUD had naturally closed. This establishes an expired interaction window, not a broken room permission or a per-render detach reproduced within the valid break. The fix pauses as soon as the host's break appears, then checks the peer state, 9-second hold, upgrade propagation, and resume.
+
+Initial reproduction: `cd frontend && npm run test:mp -- /tmp/multiplayer-pause-flow-main-repro` on current `main` with `/usr/bin/chromium`. It failed at line 592 with `locator.click: Timeout 30000ms exceeded`; the locator found the enabled Pause button, but the break ended before Playwright's stability wait completed. Earlier runs differed and are not treated as one reproduced failure. Final post-change results are recorded in the PR.
