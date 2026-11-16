@@ -19,12 +19,18 @@
 | Taking damage | Damage subtracts from current HP and pauses healing for three seconds after the latest damaging hit. Regained HP is retained in actual HP; no separate time-credit bank. Example: 50% HP heals to 60%, then 10 percentage points of damage leaves 50%. |
 | Carpenter | Each Carpenter gives +100% shared healing speed island-wide; maximum two gives ×3. |
 | Workshop | Each Workshop within 10 units gives +30% shared healing speed, capped at +50%; multiply this with the Carpenter factor. Maximum combined crew/Workshop rate is ×4.5, so full recovery takes about 133.3 seconds of eligible healing. |
-| Destroyed structures | Recovery starts after the same quiet period; a structure becomes active as soon as HP is positive. Towers can fire again and their applicable path obstacle closes, subject to safe egress for units already inside. |
+| Destroyed structures | Revised by Ianno: a structure destroyed during a wave cannot function again in that wave unless a confirmed paid Repair now restores it. Positive HP alone must not reactivate it during that wave. Automatic HP treatment while disabled and unpaid between-wave reactivation are pending clarification. |
 | Paid Repair now | One selected structure returns to full HP immediately during either phase, skipping gradual recovery and the quiet period. Charge the caller's personal wallet once per accepted action; retries never double-charge. |
 | Fixed price | `max(1, ceil(30% × sum(catalogue construction prices through current level)))`. Same kind/level has the same price at 90%, 20% or 0% HP, for every payer. No damage, Carpenter, Workshop or Engineer discount. Engineer construction/upgrade discounts remain separate. Wall prices at levels 1–5: 3, 9, 21, 45, 93 coins. |
 | Compensation | No free respec tokens, special skill refunds, purchase compensation or player-compensation migrations. Ordinary skill definitions and point accounting must remain valid. |
 
 Wave end alone never restores health. New damage after full recovery uses the same three-second pause. No separate fixed-share rebuild or rebuild cooldown is introduced.
+
+## Destroyed-wave amendment — current rule
+
+This supersedes the earlier unconditional positive-HP activation choice. Standing damaged structures still use normal shared healing. A structure destroyed in the active wave stays non-operational for that wave unless the server accepts paid instant repair; neither a healing tick nor a room-only message can bring it back. A later destruction after paid repair reapplies the gate.
+
+Two choices remain pending: whether disabled structures stay at zero HP or accumulate HP without functioning, including already-broken wave-start cases; and whether unpaid reactivation between waves happens at positive HP or full HP. Do not implement either unresolved choice. This separate amendment is stacked on the T54 planning branch so the plan and dependent tasks use one consistent rule.
 
 ## Final recommended Captain and Tech rules
 
@@ -54,7 +60,7 @@ These effects are recommendations for final plan approval, not implemented behav
 | Area | Required evidence |
 |---|---|
 | HP arithmetic | Every kind; 50→60→damage10→50; exact quiet boundary and repeated hits; base/bonus rates; full HP during combat; offline time and rate changes; integer rounding/clamping. |
-| Zero HP | First positive HP reactivates; firing and obstacle closure; an enemy inside can exit; repeated break/recovery cannot cause stuck loops or ghost shots. |
+| Zero HP | Destruction during an active wave disables functioning for that wave unless paid restoration succeeds. Positive HP cannot bypass this gate. Test paid restoration followed by new destruction, firing and obstacle state, plus the pending HP/between-wave choices when selected. |
 | Fixed payment | Same kind/level at every eligible HP costs the same; different levels/kinds use the catalogue; insufficient funds, whole/stale target and unauthorized caller have no side effects; one charge on retries/two callers. |
 | Ordering | Hits/gradual HP/paid restore/finish in both orderings; damage after restore retained; old reports rejected; immutable start snapshot unchanged; upgrade/demolition/reset identity guards. |
 | Multiplayer | Identical committed HP and paid events on two clients, late join and reconnect; duplicate/out-of-order/lost messages recover through the authoritative history; no local-only heal. |
