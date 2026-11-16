@@ -14,7 +14,7 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
-**16 Nov, E2 / Ianno:** [draft PR #108](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/108) pins the seven Python direct dependencies and Playwright to their existing locked versions. `uv sync`, Ruff, `npm install`, build and budget check pass; `npm audit` finds 0 vulnerabilities. Backend pytest reports 536,618 passed and 283 skipped. Frontend reports 3,389 passed and one 20-second `nearby-game` timeout. A prior report on main named this test, but the current-base confirmation is still pending. All 28 Python and 71 npm non-root lock records are unchanged. Review remains: Franz (@frcola) must approve the current revision, and Ianno also manually reviews every PR; the draft stays open.
+**16 Nov, E2 / Ianno:** [draft PR #108](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/108) pins the seven Python direct dependencies and Playwright to their existing locked versions. `uv sync`, Ruff, `npm install`, build and budget check pass; `npm audit` finds 0 vulnerabilities. Backend pytest reports 536,618 passed and 283 skipped. Frontend reports 3,389 passed and one 20-second `nearby-game` timeout. Focused reruns passed 2/2 on this branch (32.06 s) and base a9386656 (34.38 s); the suite-load timeout is not reproducible in isolation and remains unexplained. All 28 Python and 71 npm non-root lock records are unchanged. Review remains: Franz (@frcola) must approve the current revision, and Ianno also manually reviews every PR; the draft stays open.
 
 
 **14 Nov, B2 / Johannes:** [draft PR #58](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/58) removes four 40px island-button overrides: Hire crew, Move, Tear down and Players now use the existing 44px kit minimum. Four browser cases and real fake-game before/after captures at 375x812, 390x844 and 1280x720; [measurements/limits](evidence/B2-phone-targets/README.md). Full frontend: 260 files / 3,206 tests; build/budget/text lint, accessibility 33 screens and demo 33 checks pass on main `4d83dcd`. Login/APIs unchanged; draft, author and human review pending. Full B2 and physical-device checks remain open.
@@ -241,7 +241,7 @@ Nobody has decided these yet. Until they are decided, the plan in ROADMAP.md sta
 
 ## Next steps per lane
 
-**E2 / Ianno:** compare the `nearby-game` timeout against current main using the same focused test and 20-second threshold; do not change app code, assertions or limits. Then explain the exact-pin diff in [PR #108](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/108). Ianno manually reviews the current PR; Franz (@frcola) must approve the current revision. Root coordinates the review request after verification is complete. Keep the PR as draft until then; do not merge automatically.
+**E2 / Ianno:** explain the exact-pin diff in [PR #108](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/108) and report the full-suite timeout as load-sensitive but not reproduced by isolated runs on either revision. Do not change app code, assertions or timeout limits. Ianno manually reviews the current PR; Franz (@frcola) must approve the current revision. Root coordinates the review request after verification is complete. Keep the PR as draft until then; do not merge automatically.
 
 
 **Johannes / B2:** review draft #58 and check touch/keyboard on a physical phone. Continue the remaining current-v3 phone journey separately; this PR only fixes four island targets. Preserve all teammate handovers and recheck current main before a later merge. No merge without Johannes explicit OK and independent human approval.
@@ -587,6 +587,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+- **Ianno / E2 · 16 Nov 2026, focused timeout comparison:** the full frontend suite remains 3,389 passed / 1 timeout. `npm test -- tests/island/nearby-game.test.js` passed 2/2 on E2 (32.06 s) and on detached base a9386656 (34.38 s) using the same installed packages. The isolated check did not reproduce the 20-second full-suite timeout, so its baseline status is unconfirmed; no tests, app code or limits were changed.
 
 - **Ianno / E2 · 16 Nov 2026, verification update:** [draft PR #108](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/108) has 536,618 backend tests passing / 283 skipped, Ruff clean, frontend build and budget passing (18,669-byte initial JavaScript; 9,092-byte initial CSS), and npm audit at 0 vulnerabilities. Full frontend tests: 3,389 pass / 1 timeout in `nearby-game`; a prior main report names this test, but current-base confirmation is pending. No test changes or skips were made. All 28 uv and 71 npm non-root package records stay unchanged. Ianno will review manually; Franz (@frcola) must approve the current revision. PR remains draft; root will coordinate review after verification.
 

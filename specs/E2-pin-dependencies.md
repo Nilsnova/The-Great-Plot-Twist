@@ -34,7 +34,7 @@ The manifests currently permit dependency versions newer than those recorded in 
 
 - [x] Python direct declarations exactly match `uv.lock`; Playwright exactly matches `package-lock.json`.
 - [x] Structured before/after comparison proves lock package records and versions are unchanged; installed versions are recorded.
-- [ ] `uv sync`, backend pytest/Ruff, `npm install`, frontend tests/build/budget check and `npm audit` are recorded here with exact results, including the frontend timeout. A previous main report names this test, but current-main confirmation is pending.
+- [x] `uv sync`, backend pytest/Ruff, `npm install`, frontend tests/build/budget check and `npm audit` were run and exact results are recorded here, including one frontend full-suite timeout. Focused reruns passed 2/2 on this branch (32.06 s) and base a9386656 (34.38 s); the full-suite timeout is not reproducible in isolation, so the timeout remains unexplained and the full suite is not green.
 - [x] Audit findings are reported without changing dependencies to address them: `npm audit` found 0 vulnerabilities.
 - [ ] Ianno manually reviews the current PR, and Franz (@frcola) approves the current revision before merge. Root coordinates the review request after verification; keep the PR as draft until then.
 
@@ -50,5 +50,5 @@ None. `requires-python` and Node `engines` remain unchanged.
 
 - **Owner:** Ianno (@Iannomh123456)
 - **Agent assistance:** Codex, model gpt-6-luna/high
-- **Verified:** `uv sync` and `uv run ruff check .` passed; backend pytest: 536,618 passed and 283 skipped; `npm install` passed; frontend tests: 3,389 passed and 1 `nearby-game` timeout (current-main confirmation pending); `npm run build` passed; budget check passed (18,669 bytes initial JavaScript / 21,080 limit, 9,092 bytes CSS / 12,000 limit); `npm audit` found 0 vulnerabilities. All non-root lock package records and versions are unchanged.
-- **Remaining:** rerun the focused `nearby-game` test on this branch and current main with the unchanged 20-second threshold; explain-back; Ianno's manual review; and Franz (@frcola)'s approval of the current revision. Keep the PR in draft; no automatic merge.
+- **Verified:** `uv sync` and `uv run ruff check .` passed; backend pytest: 536,618 passed and 283 skipped; `npm install` passed; frontend tests: 3,389 passed and 1 full-suite `nearby-game` timeout; the focused `nearby-game` test passed 2/2 on this branch and base a9386656; `npm run build` passed; budget check passed (18,669 bytes initial JavaScript / 21,080 limit, 9,092 bytes CSS / 12,000 limit); `npm audit` found 0 vulnerabilities. All non-root lock package records and versions are unchanged.
+- **Remaining:** explain-back; Ianno's manual review; and Franz (@frcola)'s approval of the current revision. Keep the PR in draft; no automatic merge. The one full-suite frontend timeout remains an explicit verification limit; no timeout or test changes were made.
