@@ -87,7 +87,7 @@ export function buildLayout(grid, walls, pace) {
   const owner = new Int32Array(grid.cols * grid.rows).fill(-1);
   const list = sorted.map(wall => {
     const standing = wall.hp > 0, maxHp = wall.maxHp > 0 ? wall.maxHp : Math.max(1, wall.hp);
-    return { id: wall.id, hp: wall.hp, maxHp, standing, cost: standing ? breachCost({ hp: wall.hp, maxHp }, grid, pace) : 0,
+    return { id: wall.id, kind: wall.obstacleKind ?? 'wall', hp: wall.hp, maxHp, standing, cost: standing ? breachCost({ hp: wall.hp, maxHp }, grid, pace) : 0,
       cells: wallCells(grid, wall) };
   });
   list.forEach((wall, i) => { for (const index of wall.cells) if (owner[index] === -1) owner[index] = i; });

@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { CONFIG, coastPoint, createWave } from '../../src/pirates/sim.js';
 import { isOnLand } from '../../src/pirates/boarder-paths.js';
 import { WALL_LANE_ROWS } from '../../src/island/wall-lanes.js';
-import { attackedWalls, bearingOf, createBattleGuide, guideRoute, guideRoutes, guideWalls, landingAt, laneLandings, routeDots,
+import { attackedWalls, bearingOf, createBattleGuide, guideRoute, guideRoutes, guideTowers, guideWalls, landingAt, laneLandings, routeDots,
   routeKey, waveLandings, wallBar, skullAt, AXE_SIDE, SKULL_SHIFT } from '../../src/pirates/battle-guide.js';
 import { ISLANDS } from './balance-fixture.js';
 
@@ -111,6 +111,15 @@ describe('routes', () => {
     const walls = guideWalls(ISLANDS.full.defenses), from = laneLandings()[1];
     expect(guideRoute({ from, walls, wave: 12 })).toEqual(guideRoute({ from, walls: [...walls].reverse(), wave: 12 }));
   });
+  it('previews the same breakable tower footprint and current hp as the route field', () => {
+    const towers = RING.map((wall, i) => ({...wall, id: `cannon_${i + 1}`, kind: 'cannon', hp: 1, maxHp: 1}));
+    const route = guideRoute({from: {x: 15, z: 2}, walls: [], towers, towerBlocking: true, wave: 3});
+    expect(route.reachable).toBe(true);
+    expect(route.breaches).toHaveLength(1);
+    expect(route.breaches[0].towerId).toMatch(/^cannon_/);
+    expect(guideTowers([{id: 'cannon_1', kind: 'cannon', level: 1, x: 0, z: 0}],
+      [{id: 'cannon_1', hp: 0, maxHp: 80}])[0]).toMatchObject({hp: 0, maxHp: 80});
+  });
   it('lays dots one unit apart along the way, in order', () => {
     const dots = routeDots([{ x: 0, z: 0 }, { x: 3, z: 0 }, { x: 3, z: 2.5 }]);
     expect(dots.map(dot => dot.along)).toEqual([0, 1, 2, 3, 4, 5]);
@@ -158,6 +167,19 @@ describe('drawing', () => {
     guide.dispose();
     expect(s.getObjectByName('battle-guide')).toBeUndefined();
   });
+  it('uses tower obstacles in the preview only when the wave rule is present', () => {
+    const guide = createBattleGuide({scene: scene()});
+    const defenses = RING.map((wall, i) => ({...wall, id: `cannon_${i + 1}`, kind: 'cannon'}));
+    const stateTowers = defenses.map(tower => ({id: tower.id, hp: 1, maxHp: 1}));
+    const view = {mode: 'preview', defenses, stateTowers, wave: 3, dt: .016};
+    guide.update({...view, towerObstacles: false});
+    const withoutRule = guide.stats().routes.flatMap(route => route.breaches);
+    expect(withoutRule.some(id => id.startsWith('cannon_'))).toBe(false);
+    guide.update({...view, towerObstacles: true});
+    const withRule = guide.stats().routes.flatMap(route => route.breaches);
+    expect(withRule.some(id => id.startsWith('cannon_'))).toBe(true);
+    guide.dispose();
+  });
   it('between waves draws the wall lanes (D056) under the routes, and in a wave leaves them out', () => {
     const guide = createBattleGuide({ scene: scene() });
     guide.update({ mode: 'preview', defenses: [], wave: 4, dt: .016 });
@@ -168,6 +190,16 @@ describe('drawing', () => {
     guide.update({ mode: 'wave', lanes: null, defenses: [], stateWalls: [], boarders: [], heart: HEART, wave: 4, dt: .016 });
     expect(guide.stats().lanes).toBe(0);
     guide.dispose();
+  });
+  it('previews swivel nests as damageable obstacles and reads their live hp', () => {
+    const ring = RING.map((wall, i) => ({ ...wall, id: `swivel_${i + 1}`, kind: 'swivel', level: 1 }));
+    const route = guideRoute({ from: { x: 15, z: 2 }, walls: [], towers: guideTowers(ring), towerBlocking: true, wave: 3 });
+    expect(route.reachable).toBe(true);
+    expect(route.breaches).toHaveLength(1);
+    expect(route.breaches[0].towerId).toMatch(/^swivel_/);
+    expect(guideTowers([{ id: 'swivel_1', kind: 'swivel', level: 1, x: 0, z: 0 }],
+      [{ id: 'swivel_1', hp: 0, maxHp: 72 }])[0]).toMatchObject({ hp: 0, maxHp: 72 });
+    expect(guideTowers([{ id: 'swivel_1', kind: 'swivel', level: 1, x: 0, z: 0 }])[0].maxHp).toBe(72);
   });
   it('in a wave adds a bar over a hacked wall and a rubble badge over a broken one, and leaves the state alone', () => {
     const guide = createBattleGuide({ scene: scene() });

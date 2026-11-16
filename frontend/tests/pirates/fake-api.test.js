@@ -12,6 +12,13 @@ async function refusal(promise) {
 }
 
 describe('fake island API', () => {
+  it('keeps tower obstacles off unless both pathing and tower health are enabled', async () => {
+    const partial = createFakeIslandApi({flags: {tower_obstacles: true, pathing: true}});
+    expect((await partial.startWave({where: 'own', actionUid: 'partial'})).rules).toEqual(['pathing']);
+    const full = createFakeIslandApi({flags: {tower_obstacles: true, pathing: true, tower_health: true}});
+    expect((await full.startWave({where: 'own', actionUid: 'full'})).rules).toEqual(['tower_health', 'pathing', 'tower_obstacles']);
+  });
+
   it('opens an island with 100 coins and the 16 spots of TOWER-DEFENSE.md §2 in the contract order', async () => {
     const api = createFakeIslandApi();
     const island = await api.island();
@@ -205,7 +212,8 @@ describe('fake island API', () => {
 
 describe('?fakeflags', () => {
   it('reads every flag name the server knows, defenses_v2 too, and ignores anything else', () => {
-    expect(fakeFlagsFor('?fakeflags=defenses_v2,wall_recovery,tower_health')).toEqual({ defenses_v2: true, wall_recovery: true, tower_health: true });
+    expect(fakeFlagsFor('?fakeflags=defenses_v2,wall_recovery,tower_health,tower_obstacles')).toEqual({
+      defenses_v2: true, wall_recovery: true, tower_health: true, tower_obstacles: true });
     expect(fakeFlagsFor('?fakeflags=Arsenal,2x,a-b,,arsenal')).toEqual({ arsenal: true });
     expect(fakeFlagsFor('')).toEqual({});
   });
