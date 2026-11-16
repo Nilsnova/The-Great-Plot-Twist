@@ -1,0 +1,248 @@
+{
+  "main": "e8c61c647ae1cd5bb96e89916e89015ddf6e840c",
+  "scene": "isolated real UI and controller with synthetic delayed replies",
+  "captures": [
+    {
+      "file": "before-1280x720.png",
+      "width": 1280,
+      "height": 720,
+      "trace": {
+        "filters": false,
+        "shown": 23,
+        "geometry": {
+          "dialog": {
+            "x": 884,
+            "y": 76,
+            "width": 380,
+            "height": 628,
+            "top": 76,
+            "right": 1264,
+            "bottom": 704,
+            "left": 884
+          },
+          "scrollers": [
+            {
+              "class": "kit-modal island-card island-card-arsenal island-card-docked",
+              "scroll": 367,
+              "height": 628,
+              "total": 4178
+            },
+            {
+              "class": "",
+              "scroll": 0,
+              "height": 24,
+              "total": 26
+            }
+          ],
+          "bodyScroll": 0
+        },
+        "lateGeometry": {
+          "dialog": {
+            "x": 884,
+            "y": 76,
+            "width": 380,
+            "height": 628,
+            "top": 76,
+            "right": 1264,
+            "bottom": 704,
+            "left": 884
+          },
+          "header": {
+            "x": 884,
+            "y": 76,
+            "width": 380,
+            "height": 66,
+            "top": 76,
+            "right": 1264,
+            "bottom": 142,
+            "left": 884
+          },
+          "scroll": 367,
+          "transform": "none"
+        }
+      }
+    },
+    {
+      "file": "before-375x812.png",
+      "width": 375,
+      "height": 812,
+      "trace": {
+        "filters": false,
+        "shown": 23,
+        "geometry": {
+          "dialog": {
+            "x": 0,
+            "y": 324.8125,
+            "width": 375,
+            "height": 487.1875,
+            "top": 324.8125,
+            "right": 375,
+            "bottom": 812,
+            "left": 0
+          },
+          "scrollers": [
+            {
+              "class": "kit-modal island-card island-card-arsenal island-card-docked",
+              "scroll": 363,
+              "height": 487,
+              "total": 5033
+            },
+            {
+              "class": "",
+              "scroll": 0,
+              "height": 24,
+              "total": 26
+            }
+          ],
+          "bodyScroll": 0
+        },
+        "lateGeometry": {
+          "dialog": {
+            "x": 0,
+            "y": 324.8125,
+            "width": 375,
+            "height": 487.1875,
+            "top": 324.8125,
+            "right": 375,
+            "bottom": 812,
+            "left": 0
+          },
+          "header": {
+            "x": 0,
+            "y": 324.8125,
+            "width": 375,
+            "height": 62,
+            "top": 324.8125,
+            "right": 375,
+            "bottom": 386.8125,
+            "left": 0
+          },
+          "scroll": 363,
+          "transform": "none"
+        }
+      }
+    },
+    {
+      "file": "after-1280x720.png",
+      "width": 1280,
+      "height": 720,
+      "trace": {
+        "filters": true,
+        "shown": 3,
+        "geometry": {
+          "dialog": {
+            "x": 884,
+            "y": 76,
+            "width": 380,
+            "height": 628,
+            "top": 76,
+            "right": 1264,
+            "bottom": 704,
+            "left": 884
+          },
+          "scrollers": [
+            {
+              "class": "kit-modal island-card island-card-arsenal island-card-docked",
+              "scroll": 367,
+              "height": 628,
+              "total": 2018
+            },
+            {
+              "class": "",
+              "scroll": 0,
+              "height": 24,
+              "total": 26
+            }
+          ],
+          "bodyScroll": 0
+        },
+        "lateGeometry": {
+          "dialog": {
+            "x": 884,
+            "y": 76,
+            "width": 380,
+            "height": 628,
+            "top": 76,
+            "right": 1264,
+            "bottom": 704,
+            "left": 884
+          },
+          "header": {
+            "x": 884,
+            "y": 76,
+            "width": 380,
+            "height": 66,
+            "top": 76,
+            "right": 1264,
+            "bottom": 142,
+            "left": 884
+          },
+          "scroll": 367,
+          "transform": "none"
+        }
+      }
+    },
+    {
+      "file": "after-375x812.png",
+      "width": 375,
+      "height": 812,
+      "trace": {
+        "filters": true,
+        "shown": 3,
+        "geometry": {
+          "dialog": {
+            "x": 0,
+            "y": 324.8125,
+            "width": 375,
+            "height": 487.1875,
+            "top": 324.8125,
+            "right": 375,
+            "bottom": 812,
+            "left": 0
+          },
+          "scrollers": [
+            {
+              "class": "kit-modal island-card island-card-arsenal island-card-docked",
+              "scroll": 363,
+              "height": 487,
+              "total": 1990
+            },
+            {
+              "class": "",
+              "scroll": 0,
+              "height": 24,
+              "total": 26
+            }
+          ],
+          "bodyScroll": 0
+        },
+        "lateGeometry": {
+          "dialog": {
+            "x": 0,
+            "y": 324.8125,
+            "width": 375,
+            "height": 487.1875,
+            "top": 324.8125,
+            "right": 375,
+            "bottom": 812,
+            "left": 0
+          },
+          "header": {
+            "x": 0,
+            "y": 324.8125,
+            "width": 375,
+            "height": 62,
+            "top": 324.8125,
+            "right": 375,
+            "bottom": 386.8125,
+            "left": 0
+          },
+          "scroll": 363,
+          "transform": "none"
+        }
+      }
+    }
+  ],
+  "errors": [],
+  "external": []
+}
