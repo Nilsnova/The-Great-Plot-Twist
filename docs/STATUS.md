@@ -14,6 +14,8 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
+**15 Nov, U / Johannes:** Preparation and upcoming unlocks before ringing the bell in draft [PR #94](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/94). [Implementation, checks and limits](../specs/U-wave-preparation.md); login/API contracts and game rules unchanged. No merge; human review pending.
+
 
 **14 Nov, B2 / Johannes:** [draft PR #58](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/58) removes four 40px island-button overrides: Hire crew, Move, Tear down and Players now use the existing 44px kit minimum. Four browser cases and real fake-game before/after captures at 375x812, 390x844 and 1280x720; [measurements/limits](evidence/B2-phone-targets/README.md). Full frontend: 260 files / 3,206 tests; build/budget/text lint, accessibility 33 screens and demo 33 checks pass on main `4d83dcd`. Login/APIs unchanged; draft, author and human review pending. Full B2 and physical-device checks remain open.
 **14 Nov, B2 entry/lobby / Johannes:** [draft PR #61](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/61) fixes visually truncated captain names in full phone lobbies: a small mobile grid lets names wrap and puts status below. Seven focused cases, plus a repeatable 21-panel title-to-lobby fake-game audit at 375x812, 390x844 and 1280x720. Full frontend: 260 files / 3,209 tests; build/budget/text lint, accessibility 33 screens and demo 33 checks pass on the branch from main `4d83dcd`. [Before/after, entry audit and limits](evidence/B2-entry-lobby/README.md). Login/APIs unchanged; independent of #58. Draft; author/human review, physical phone/keyboard and remaining B2 game views are open.

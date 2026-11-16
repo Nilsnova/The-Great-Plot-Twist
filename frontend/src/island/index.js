@@ -48,6 +48,7 @@ import {resolvePeer} from '../net/live-extras.js';
 import {travelAllowed, visitChip, visitName} from './one-island.js';
 import {progressSummary} from './progression.js';
 import {withWallRecovery} from './wall-recovery.js';
+import {preparationModel} from './preparation-model.js';
 
 export const ARRIVAL_KEY = 'plot_twist_island_arrival_v1';
 // A build or upgrade went through: {place: 'own' | 'visit' | 'point', spot}. The wave wiring tells the
@@ -401,9 +402,10 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const techHandlers = {research: step => void research(step)};
   const wreckHandlers = {give: amount => void giveWreck(amount)};
   function bell() {
-    const wave = flow.current;
+    const wave = flow.current, island = target();
     return bellModel({wave: wave?.wave ?? null, joined: wave?.joined === true, countdown: flow.secondsLeft(), busy: flow.busy,
-      visitor: !!visiting, ownerName: visiting?.ownerName, waveBest: target()?.waveBest ?? 0, message: cardMessage});
+      visitor: !!visiting, ownerName: visiting?.ownerName, waveBest: island?.waveBest ?? 0, nextWave: island?.nextWave,
+      preparation: preparationModel({island, wallRecovery: wallRecovery(), wallState: {code: wallsFor, rows: [...walls.values()]}}), message: cardMessage});
   }
   function refreshCard() {
     if (disposed) return;
@@ -454,6 +456,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   function openCaptains() { openSpot = null; cardMessage = ''; ui.captainsCard(captainsModel([...here.values()])); }
   async function openBell() {
     openSpot = null; cardMessage = ''; ui.bellCard(bell(), bellAction);
+    void readWalls();
     if (target()) await flow.look(where());
   }
   function openInvite() {
@@ -534,18 +537,22 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   // D039 (flag wall_recovery): the walls' health of the island on screen; nothing at all while the flag is off.
   async function readWalls() {
     if (!wallRecovery() || isPointSpot(openSpot ?? '')) return;
+    const asked = target()?.code;
     const answer = await api.walls({code: visiting ? visiting.code : null});
-    if (disposed || !answer.ok) return;
+    if (disposed || !answer.ok || asked !== target()?.code) return;
     walls = new Map(answer.data.walls.map(wall => [wall.spot, wall])); wallsFor = target()?.code ?? null;
     refreshCardIfBuild();
+    if (ui.open === 'bell') ui.bellCard(bell(), bellAction);
   }
   async function repairWall(spotId) {
     const place = placeOf(spotId);
     if (busySpot || place === 'point') return;
+    const asked = target()?.code;
     busySpot = spotId; busyKind = 'repair'; cardMessage = ''; refreshCard();
     const answer = await api.repairWall({spot: spotId, ...(place === 'visit' ? {code: visiting.code} : {})});
     if (disposed) return;
     busySpot = null; busyKind = null;
+    if (asked !== target()?.code) { refreshCard(); return; }
     if (answer.ok) {
       walls = new Map(answer.data.walls.map(wall => [wall.spot, wall])); wallsFor = target()?.code ?? null;
       tookCoins(answer.data.coins);

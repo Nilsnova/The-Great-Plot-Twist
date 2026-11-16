@@ -69,6 +69,8 @@ The game is built and live; nobody waits for anyone. You extend it.
 - [x] **B3 repeatable audit, Johannes:** implemented in draft [PR #39](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/39); eight existing component cases at two sizes, [command and limits](evidence/B3-repeatable/README.md). Human review and broader B3 remain open.
 - [x] **B2 Harbor/menus slice, Johannes:** implemented in draft [PR #66](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/66); readable match choices, 36 cases for ten views/three sizes and menu interactions, [evidence/limits](evidence/B2-harbor-menus/README.md). Physical-device, remaining game-card and human review checks stay open; #58/#61 remain independent.
 
+- [x] **Approved U addition / Johannes: Preparation and upcoming unlocks before ringing the bell**, implemented in draft [PR #94](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/94); [evidence/limits](evidence/U-wave-preparation/README.md). Author and independent human review pending; no wider task completion or merge claimed.
+
 ## 3. Every member, before the freeze (walkthrough = 20% of the grade)
 
 - [ ] **Walkthrough sheet** ([FINAL-ROADMAP A1](FINAL-ROADMAP.md#a-repository-walkthrough-criterion-6-20)): each member writes the page about their own lane (what, where, why, limits, how it could change) in `docs/WALKTHROUGH.md`; one member adds the database/server page with the project owner.

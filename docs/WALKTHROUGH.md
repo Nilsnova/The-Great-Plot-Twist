@@ -1183,6 +1183,18 @@ The UI kit and shortcuts overlay are existing team code; Codex drafted the host 
 for Johannes. A fixed error message plus explicit retry is simpler than automatic
 retries or another networking layer. Live networks/physical phones remain unverified.
 
+## Johannes: Wave preparation at the bell (U)
+
+**What:** The existing bell card shows built towers/walls, last known persistent wall damage and up to three upcoming campaign unlocks in an optional disclosure. Its next-wave line uses the server nextWave, including restarts after defeat; the old-answer fallback stops at the existing wave-100 limit.
+
+**Where/how:** preparation-model.js derives descriptive lines from the current island and a matching-code wall snapshot; it never blocks starting. bellModel accepts nextWave/preparation, and index.js supplies them. Opening the bell reuses the existing flag-gated walls GET; late reads/repair replies are not assigned to a different island. ui.js retains the unlock disclosure and its focus during redraws. Source: [island/preparation-model.js](../frontend/src/island/preparation-model.js), [island/card-model.js](../frontend/src/island/card-model.js), [island/index.js](../frontend/src/island/index.js), [island/ui.js](../frontend/src/island/ui.js), [island/island.css](../frontend/src/island/island.css).
+
+**Why:** Read the existing server answers and campaign table instead of duplicating unlock rules or introducing a readiness score. Missing, invalid, partial or other-island health stays unknown; last-known health is labeled as such. The server still decides start/join and every repair.
+
+**Tests:** [preparation.test.js](../frontend/tests/island/preparation.test.js), [preparation-dom.test.js](../frontend/tests/island/preparation-dom.test.js). 15 new cases: nextWave after defeat, older-answer/final-wave fallback, built-only counts, campaign boundaries, partial/invalid/foreign health, running-wave behavior, native keyboard/phone disclosure and preserved focus, unchanged ring callback, and delayed wall read after an actual fake-island visit.
+
+**Limits / possible change:** Wall health is the last successful read, not a live guarantee; a failed read may leave labeled last-known data. The late-repair UI guard does not undo a completed server repair. Physical phones, live Realtime and SQL are not proven by controlled fixtures or the fake-server run. Broader server snapshots or navigation state would need a separately reviewed contract. [Evidence](evidence/U-wave-preparation/README.md); [PR #94](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/94). Codex drafted/verified the implementation; Johannes's own review and independent human review remain pending.
+
 ## The three course questions
 
 ### Q1. Where is the data stored?
