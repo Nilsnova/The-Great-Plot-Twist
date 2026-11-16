@@ -107,7 +107,7 @@ export function createFrontDoor({container, focus, storage = safeStorage(), sess
       let lane = null;
       try { lane = (await runtime.gameLane?.()) ?? null; } catch { lane = null; }
       if (!current()) return false;
-      // T51 (found by Nicolas Radomski): the Play card comes first, over open water. Signed out, it is all the
+      // T51: the Play card comes first, over open water. Signed out, it is all the
       // player sees (sign in, or join a friend as a guest): closing it goes back to the title, never to an island
       // they cannot build on. A class harbor player has no games card and starts as before.
       let chosen = null;

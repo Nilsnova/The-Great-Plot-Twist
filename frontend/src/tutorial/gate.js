@@ -1,4 +1,4 @@
-// When the tutorials may start (T52, and the bug Nicolas Radomski found: a signed-out player was walked through the
+// When the tutorials may start (T52, and a bug found in a play-test: a signed-out player was walked through the
 // intro and the first goal before having an island). The intro, the guided start, the unlock cards and the
 // first-run goals start only while the player stands on an island they own or joined: on the island place, with
 // the island's code and its campaign known from the server's answer. A signed-out player, the front door and a
