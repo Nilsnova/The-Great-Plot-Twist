@@ -210,7 +210,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   const later = (run, ms) => { const id = setTimer(() => { timers.delete(id); if (!disposed) run(); }, ms); timers.add(id); return id; };
   const emit = event => { try { bus?.emit?.(event); } catch (error) { console.error(error); } };
   const cue = name => { if (wave?.shown) sound?.cue?.(name); };
-  const here = () => !place || (world.place?.() ?? place) === place;
+  // No place on screen (null: the front door's open water) is not here; a world without place() always is.
+  const here = () => !place || (world.place ? world.place() : place) === place;
   const blocked = () => !!world.isBlocked?.();
 
   // The battle guide (guide: true, the island's controller only): landings, routes, the heart and the walls' bars;

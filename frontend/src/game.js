@@ -28,7 +28,7 @@ import {createIsletHost} from './online/islet-host.js';
 import {createMarketHost} from './online/market-host.js';
 import {createHarbor,loadMarketCard,loadMatchCard} from './harbor/host.js';
 import {findPanelServices} from './online/panel-services.js';
-import {islandsMode as quickIslandsMode,resolveIslandsMode,startPlace} from './island/mode.js';
+import {islandsMode as quickIslandsMode,resolveIslandsMode,startPlace,frontScene} from './island/mode.js';
 import {PLACE_ARRIVED} from './ui/quest-events.js';
 import {readVisit} from './island/codes.js';
 import {setOneIslandFlags,travelAllowed} from './island/one-island.js';
@@ -173,6 +173,17 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     disposed=true;container.removeEventListener('close',panelClosed,true);stopView();stopListening();for(const stopOne of stopScale)stopOne?.(); stopArrivals(); stopVisitNamed(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
     createLifetime(scene, art)(); graphics.renderer.dispose();graphics.renderer.domElement.remove(); throw error;
   }
+  // T51: until the player is on a game's island, the front door shows open water only (src/island/mode.js frontScene).
+  // The harbor stays in the scene (hidden) for the islands-off start; its coast and the captain sprite go with it.
+  let bareWater=false,waterDecided=false;
+  function setBareWater(on){
+    if(disposed||bareWater===on)return;bareWater=on;hud.setBare(on);
+    const group=world.current?.group;if(group)group.visible=!on;
+    if(on){scene.remove(character.sprite);water.setCoast(new THREE.Group());}
+    else{scene.add(character.sprite);if(group)water.setCoast(group);}
+  }
+  setBareWater(frontScene()==='water');
+  void ensureIsland().then(mode=>{if(mode&&!disposed&&!waterDecided)setBareWater(frontScene({mode})==='water');}).catch(()=>null);
   // ?perf=1 shows the frame-rate panel (the old highlights tour left with the mystery, 10 Nov).
   if(new URLSearchParams(location.search).get('perf')==='1'){const {createPerformancePanel}=await import('./shell/perf/index.js');
     if(!disposed)perf=createPerformancePanel(container,{readStats(){const info=graphics.renderer.info;return {fps,calls:info.render.calls,triangles:info.render.triangles,geometries:info.memory.geometries,textures:info.memory.textures,quality:settings.quality};},setQuality:setUserQuality});}
@@ -366,6 +377,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
       const destination=startPlace({mode,destination:planned,classHarbor:joinedHarbor(),visiting:!!island?.visiting});
       if(world.current?.id!==destination)await travel(destination,{fast:true});
       else if(destination==='home_islet')void island?.load();
+      waterDecided=true;setBareWater(false);
       if(disposed||token!==beginRequest||shell.blocked||isAppBlocked?.()||world.current?.id!==destination)return;
       // The front door shows its goal card first on a first Play and then asks for the arrival itself.
       if(destination==='home_islet'&&continuation?.arrival!=='later')await island?.playArrival();

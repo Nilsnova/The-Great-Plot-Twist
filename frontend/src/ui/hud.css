@@ -55,3 +55,6 @@ html[data-reduced-motion=true] .hud-arrival{animation:none}
 .hud-play .hud-captain{margin-left:12px;padding-left:12px;border-left:2px solid var(--u-line);color:var(--u-ink);font-size:18px}
 .hud-play .hud-captain[hidden]{display:none}
 .quest-item,.quest-hint{border-radius:var(--u-radius-xs)}.quest-check{border-radius:8px}
+
+/* T51: no goals before the player is on a game's island (open water behind the front door). */
+.hud-bare .quest-strip{display:none}

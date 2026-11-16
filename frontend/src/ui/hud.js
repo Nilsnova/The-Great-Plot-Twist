@@ -147,6 +147,8 @@ export function createHud(container, actions, {on = defaultOn, storage = local()
     get quests() { return {...first, view: override ?? firstQuestView(first, quests())}; },
     // The goals again (the island game decided on one island or travel after the first Play).
     refreshQuests() { draw(); },
+    // T51: open water behind the front door has no island, so no goals strip yet.
+    setBare(on) { overlay.classList.toggle('hud-bare', !!on); },
     togglePanel() {}, toggleControls() {},
     closeQuickPanels() { return strip.closeHint(); },
     start() {
