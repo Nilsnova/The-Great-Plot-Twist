@@ -35,7 +35,7 @@ describe('the bell and the wave', () => {
     await vi.advanceTimersByTimeAsync(3000);
     expect(test.banners.at(-1)).toBe(null);
     await vi.advanceTimersByTimeAsync(PLACEHOLDER_SECONDS * 1000);
-    expect(test.toasts.at(-1)).toBe('🪙 +15 loot · you have 🪙 115');
+    expect(test.toasts.at(-1)).toBe('Loot 🪙 +15');
     expect(test.events.find(event => event.type === WAVE_FINISHED)).toMatchObject({survived: true, loot: 15, coins: 115, waveBest: 1});
     expect(flow.current).toBe(null);
   });
@@ -52,7 +52,7 @@ describe('the bell and the wave', () => {
       expect(test.toasts).toEqual([]); // no placeholder
       const done = await finishWave({waveId: answer.data.waveId, survived: true, shipsSunk: 6});
       expect(done.data).toEqual({loot: 15, coins: 115, waveBest: 1, flags: 1});
-      expect(test.toasts.at(-1)).toBe('🪙 +15 loot · you have 🪙 115');
+      expect(test.toasts.at(-1)).toBe('Loot 🪙 +15');
     } finally { stop(); }
   });
   // The wave renderer (src/pirates/controller.js) gets the refusal back and tries again itself after
@@ -68,7 +68,7 @@ describe('the bell and the wave', () => {
       expect(test.events.some(event => event.type === WAVE_FINISHED)).toBe(false);
       expect(await finishWave({waveId: answer.data.waveId, survived: true})).toMatchObject({ok: true});
       expect(test.events.filter(event => event.type === WAVE_FINISHED)).toHaveLength(1);
-      expect(test.toasts.filter(text => /loot/.test(text))).toHaveLength(1);
+      expect(test.toasts.filter(text => /loot/i.test(text))).toHaveLength(1);
     } finally { stop(); }
   });
   it('the placeholder finish still retries by itself after Retry-After', async () => {

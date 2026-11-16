@@ -284,7 +284,7 @@ describe('bell, invite and toasts', () => {
   });
   it('writes coins, loot and the countdown', () => {
     expect(coinText(120)).toBe('🪙 120');
-    expect(lootText({loot: 25, coins: 125})).toBe('🪙 +25 loot · you have 🪙 125');
+    expect(lootText({loot: 25, coins: 125})).toBe('Loot 🪙 +25');
     expect(countdownText(7, 1)).toBe('Pirates in 7 s! Wave 1');
     expect(countdownText(0, 1)).toBe('Wave 1: the pirates are here!');
   });
