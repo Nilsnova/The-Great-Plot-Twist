@@ -264,3 +264,27 @@ it('shows a readable caption card above the prompts with a working Skip button',
   expect(result.after).toEqual({hidden: true, speaking: null});
   expect(result.removed).toBe(true);
 });
+
+// The E prompt floating over a building moves with the world: the card does not dodge it (overlap audit,
+// it pushed the card into the wave bar), but it still moves for the Musket button that appears after it.
+it('ignores the floating E prompt and still moves above a control that appears later', async () => {
+  const result = await evaluate(async () => {
+    const {createNarratorCard} = await window.g20Import('/src/narrator/card.js');
+    const host = document.createElement('div'); document.body.append(host);
+    const floating = document.createElement('div'); floating.className = 'interact floating';
+    floating.style.cssText = 'position:fixed;left:0;right:0;top:40%;height:60px';
+    const musket = document.createElement('button'); musket.className = 'pirate-musket'; musket.hidden = true;
+    musket.style.cssText = 'position:fixed;left:0;right:0;bottom:0;height:90px';
+    host.append(floating, musket);
+    const card = createNarratorCard(host);
+    card.show({id: 'test', text: 'A line.'});
+    const first = card.element.getBoundingClientRect().bottom;
+    floating.hidden = true; floating.hidden = false; // a real flip of the floating prompt
+    musket.hidden = false;
+    await new Promise(resolve => setTimeout(resolve, 50));
+    const second = card.element.getBoundingClientRect().bottom;
+    card.dispose(); host.remove();
+    return {nearBottom: first >= innerHeight - 20, aboveMusket: second <= innerHeight - 90};
+  });
+  expect(result).toEqual({nearBottom: true, aboveMusket: true});
+});
