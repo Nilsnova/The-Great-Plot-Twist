@@ -4,7 +4,7 @@
 >
 > **Who uses it:** Ianno, the T58 agent and the recovery-state/simulation implementers.
 
-- **Status:** in progress; isolated implementation first, integration coordinated with T55/T57.
+- **Status:** isolated frontend policy hooks implemented and focused tests/build pass; full-policy integration remains pending T55/T57. This is not activated or shipped behavior.
 - **Branch:** `refactor/t58-captain-repair`
 - **Issue:** [#124](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/124)
 
@@ -19,6 +19,12 @@ Captain repair skills and independent wall regeneration conflict with the approv
 - Begin with isolated Captain/Tech definitions, pure helpers, tests and skill UI. Coordinate exports with T55. T57 owns `sim.js`, `interact.js` and runtime E-action removal; provide the necessary contract and integration checks rather than editing its files concurrently.
 
 **Files likely to change:** Captain definitions/stat helpers, Captain skill UI, campaign Tech definitions, isolated backend policy helpers and focused tests. Obtain an ownership handoff before touching shared backend service/catalogue files or migrations. T55 owns shared task boards and contract index during the parallel batch.
+
+## Implementation progress
+
+The frontend now has an isolated version-aware policy module at `frontend/src/campaign/captain-repair-policy.js`. `recoveryRateFactor()` accepts the island owner's Carpenter count, nearby Workshop count, supported structure kind, one wall's equipped `wallSpec`, island `wallResearch` and a between-wave boolean. It returns 0 during a reservation, applies Quick Mend or equipped Bastion only to walls, applies Mason Drill only to walls, and leaves other valid wall choices neutral. `isRetiredCaptainSkill()` and `captainBranchesForPolicy()` retain legacy behavior by default; under recovery v1 they hide the seven repair-only Captain choices without deleting stored ids or changing spent points. Captain stats accept an explicit `{recoveryVersion}` option so existing callers remain legacy by default. Captain/Tech renderer helpers accept a version to show the retained Engineer discount and recovery-specific research text.
+
+T55 owns the authoritative backend recovery helper, Captain route/catalogue enforcement and server-sourced policy version. T57 owns combat E-action removal, no-free-heal runtime gates and passing the frozen `recoveryVersion` into consumers. Building-skill text in the shared island card UI needs version wiring at integration. Until those hooks are connected, the frontend helpers alone do not change game behavior. Visual evidence and full acceptance checks remain pending that integration.
 
 ## Out of scope
 
