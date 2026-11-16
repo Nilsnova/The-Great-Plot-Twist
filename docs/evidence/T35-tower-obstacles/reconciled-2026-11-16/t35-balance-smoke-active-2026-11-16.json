@@ -1,0 +1,190 @@
+{
+  "seeds": 3,
+  "table": {
+    "spots/15": {
+      "none": {
+        "win": 100,
+        "hp": 100,
+        "time": 22,
+        "towersBroken": 0,
+        "wallsBroken": 0,
+        "wallHacks": 0,
+        "towerRebuilds": 0,
+        "heartHits": 0,
+        "landed": 2
+      },
+      "tower_health": {
+        "win": 100,
+        "hp": 100,
+        "time": 22,
+        "towersBroken": 0,
+        "wallsBroken": 0,
+        "wallHacks": 0,
+        "towerRebuilds": 0,
+        "heartHits": 0,
+        "landed": 2
+      },
+      "pathing": {
+        "win": 100,
+        "hp": 100,
+        "time": 22,
+        "towersBroken": 0,
+        "wallsBroken": 0,
+        "wallHacks": 0.3,
+        "towerRebuilds": 0,
+        "heartHits": 0,
+        "landed": 2
+      },
+      "both": {
+        "win": 100,
+        "hp": 100,
+        "time": 22,
+        "towersBroken": 0,
+        "wallsBroken": 0,
+        "wallHacks": 0.3,
+        "towerRebuilds": 0,
+        "heartHits": 0,
+        "landed": 2
+      }
+    },
+    "spots/30": {
+      "none": {
+        "win": 100,
+        "hp": 100,
+        "time": 50,
+        "towersBroken": 0,
+        "wallsBroken": 1,
+        "wallHacks": 178.3,
+        "towerRebuilds": 0,
+        "heartHits": 0,
+        "landed": 80
+      },
+      "tower_health": {
+        "win": 100,
+        "hp": 100,
+        "time": 50,
+        "towersBroken": 0,
+        "wallsBroken": 1,
+        "wallHacks": 178.3,
+        "towerRebuilds": 0,
+        "heartHits": 0,
+        "landed": 80
+      },
+      "pathing": {
+        "win": 100,
+        "hp": 99,
+        "time": 50,
+        "towersBroken": 0,
+        "wallsBroken": 1.3,
+        "wallHacks": 179.7,
+        "towerRebuilds": 0,
+        "heartHits": 0,
+        "landed": 80
+      },
+      "both": {
+        "win": 100,
+        "hp": 99,
+        "time": 50,
+        "towersBroken": 0,
+        "wallsBroken": 1.3,
+        "wallHacks": 179.7,
+        "towerRebuilds": 0,
+        "heartHits": 0,
+        "landed": 80
+      }
+    },
+    "ring/15": {
+      "none": {
+        "win": 100,
+        "hp": 100,
+        "time": 23,
+        "towersBroken": 0,
+        "wallsBroken": 0,
+        "wallHacks": 0,
+        "towerRebuilds": 0,
+        "heartHits": 0,
+        "landed": 4.7
+      },
+      "tower_health": {
+        "win": 100,
+        "hp": 100,
+        "time": 23,
+        "towersBroken": 0,
+        "wallsBroken": 0,
+        "wallHacks": 0,
+        "towerRebuilds": 0,
+        "heartHits": 0,
+        "landed": 4.7
+      },
+      "pathing": {
+        "win": 100,
+        "hp": 100,
+        "time": 23,
+        "towersBroken": 0,
+        "wallsBroken": 0,
+        "wallHacks": 0,
+        "towerRebuilds": 0,
+        "heartHits": 0,
+        "landed": 4.7
+      },
+      "both": {
+        "win": 100,
+        "hp": 100,
+        "time": 23,
+        "towersBroken": 0,
+        "wallsBroken": 0,
+        "wallHacks": 0,
+        "towerRebuilds": 0,
+        "heartHits": 0,
+        "landed": 4.7
+      }
+    },
+    "ring/30": {
+      "none": {
+        "win": 100,
+        "hp": 70,
+        "time": 52,
+        "towersBroken": 0,
+        "wallsBroken": 0,
+        "wallHacks": 5.3,
+        "towerRebuilds": 0,
+        "heartHits": 0,
+        "landed": 81.3
+      },
+      "tower_health": {
+        "win": 100,
+        "hp": 70,
+        "time": 52,
+        "towersBroken": 0,
+        "wallsBroken": 0,
+        "wallHacks": 5.3,
+        "towerRebuilds": 0,
+        "heartHits": 0,
+        "landed": 81.3
+      },
+      "pathing": {
+        "win": 100,
+        "hp": 69,
+        "time": 53,
+        "towersBroken": 0,
+        "wallsBroken": 0,
+        "wallHacks": 21.3,
+        "towerRebuilds": 0,
+        "heartHits": 0,
+        "landed": 81
+      },
+      "both": {
+        "win": 100,
+        "hp": 69,
+        "time": 52,
+        "towersBroken": 0,
+        "wallsBroken": 0,
+        "wallHacks": 13,
+        "towerRebuilds": 0,
+        "heartHits": 0,
+        "landed": 81
+      }
+    }
+  },
+  "fails": []
+}

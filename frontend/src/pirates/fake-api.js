@@ -84,7 +84,7 @@ export const ISLAND_RULES = Object.freeze({
 export const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 // The run of TOWER-DEFENSE.md §1: waves to 100, a boss every 5th, a lost run restarts 2 waves back.
 // The simulation rules of the wave answers, in their fixed order (SIM_RULES in backend/server/island/wave_rules.py).
-export const SIM_RULES = Object.freeze(['tower_health', 'pathing', 'rescue', 'defenses_v2']);
+export const SIM_RULES = Object.freeze(['tower_health', 'pathing', 'tower_obstacles', 'rescue', 'defenses_v2']);
 export const TD_RULES = Object.freeze({ highestWave: 100, bossEvery: 5, restartBack: 2,
   spots: Object.freeze(['wall_1', 'wall_2', 'wall_3', 'wall_4', 'wall_5', 'wall_6', 'cannon_1', 'cannon_2', 'cannon_3', 'cannon_4',
     'cannon_5', 'cannon_6', 'cannon_7', 'tower_1', 'house_1', 'house_2', 'wall_7', 'wall_8', 'wall_9', 'wall_10', 'wall_11', 'wall_12']),
@@ -226,7 +226,6 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
   // The wave rules (backend/server/island/wave_rules.py): the rule flags on at the wave's first answer, in SIM_RULES
   // order. That answer keeps its set (wave_rules_keep()), an empty set too, and every later answer serves it whatever
   // the flags say then (a test may change `flags` mid-wave); an empty set leaves `rules` out.
-  const wantedRules = () => SIM_RULES.filter(name => flags?.[name] === true);
   // T38 (routes/waves.py): the server honours `rescued` only while the flag rescue is on.
   const rescueOn = flags?.rescue === true;
   let weatherKind = weather;
@@ -431,9 +430,10 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
   // first answer keeps its set for the wave (an empty set too), every later one serves the kept set.
   // world.liveFlags (dev.setFlag) switches a flag for every tab of a shared world, like a redeploy.
   const flagOn = name => (world.liveFlags && Object.hasOwn(world.liveFlags, name) ? world.liveFlags[name] : flags?.[name]) === true;
+  const ruleOn = name => flagOn(name) && (name !== 'tower_obstacles' || (flagOn('pathing') && flagOn('tower_health')));
   const rulesOf = run => {
     // Kept by the wave's first answer, even when empty (the server's wave_rules_keep), whatever the flags say later.
-    if (!Array.isArray(run.rules)) run.rules = SIM_RULES.filter(flagOn);
+    if (!Array.isArray(run.rules)) run.rules = SIM_RULES.filter(ruleOn);
     const rules = SIM_RULES.filter(name => run.rules.includes(name));
     return rules.length ? rules : null;
   };

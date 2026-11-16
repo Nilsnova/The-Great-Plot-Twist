@@ -18,6 +18,7 @@
 import * as THREE from 'three';
 import { CONFIG, coastPoint, curveFor, skillOf } from './sim.js';
 import { createBoarderPaths, WALL_FOOTPRINT } from './boarder-paths.js';
+import { towerMaxHp } from './tower-health.js';
 import { toScreen } from '../world/pixel-glsl.js';
 import { WALL_LANE_ROWS } from '../island/wall-lanes.js';
 
@@ -62,6 +63,15 @@ export function guideWalls(defenses = [], stateWalls = null) {
     return { id: item.id, x: item.x, z: item.z, level, hp: round2(hp), maxHp };
   }).sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
 }
+/** Damageable towers for the route preview: use the live wave's hp, or their T33 opening hp. */
+export function guideTowers(defenses = [], stateTowers = null) {
+  const live = new Map((stateTowers ?? []).map(tower => [tower.id, tower]));
+  return defenses.filter(item => ['cannon', 'mortar', 'harpoon', 'culverin', 'swivel'].includes(item?.kind)
+      && Number.isFinite(item.x) && Number.isFinite(item.z)).map(item => {
+    const full = towerMaxHp(item.kind, item.level), now = live.get(item.id), maxHp = now?.maxHp > 0 ? now.maxHp : full;
+    return {id: item.id, kind: item.kind, x: item.x, z: item.z, hp: now ? Math.max(0, now.hp) : full, maxHp};
+  }).filter(item => item.maxHp > 0).sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+}
 const startShare = health => (Number.isInteger(health) && health >= 0 && health <= 100 ? health / 100 : 1);
 
 /**
@@ -70,10 +80,12 @@ const startShare = health => (Number.isInteger(health) && health >= 0 && health 
  * A wall on the way is treated as broken once reached, so the line goes on through the gap it will make.
  * wave: the wave number (the boarders' hack and walk speed set what a breach costs against a detour).
  */
-export function guideRoute({ from, heart = CONFIG.boarding.heart, walls = [], coast = CONFIG.coast, wave = 1 }) {
+export function guideRoute({ from, heart = CONFIG.boarding.heart, walls = [], towers = [], towerBlocking = false, coast = CONFIG.coast, wave = 1 }) {
   const curve = curveFor(Math.max(1, wave || 1)), B = CONFIG.boarding;
   const copies = walls.map(wall => ({ id: wall.id, x: wall.x, z: wall.z, hp: wall.hp, maxHp: wall.maxHp }));
-  const paths = createBoarderPaths({ coast, heart, walls: copies, pace: { hackPerSecond: B.hack * curve.damage / B.hackEvery, speed: B.speed * curve.speed } });
+  const towerCopies = towers.map(tower => ({...tower}));
+  const paths = createBoarderPaths({ coast, heart, walls: copies, towers: towerCopies, towerBlocking,
+    pace: { hackPerSecond: B.hack * curve.damage / B.hackEvery, speed: B.speed * curve.speed } });
   paths.refresh();
   const walker = { x: from.x, z: from.z }, points = [{ x: from.x, z: from.z }], breaches = [];
   for (let i = 0; i < GUIDE.routeLimit; i++) {
@@ -87,6 +99,13 @@ export function guideRoute({ from, heart = CONFIG.boarding.heart, walls = [], co
       wall.hp = 0; paths.refresh(); // hacked down: the route goes on through its gap
       continue;
     }
+    if (way.kind === 'tower') {
+      const tower = towerCopies.find(item => item.id === way.towerId);
+      if (!tower || breaches.some(item => item.towerId === tower.id)) break;
+      breaches.push({towerId: tower.id, x: tower.x, z: tower.z});
+      tower.hp = 0; paths.refresh();
+      continue;
+    }
     if (way.kind !== 'step') break;
     walker.x = way.x; walker.z = way.z; points.push({ x: way.x, z: way.z });
   }
@@ -94,14 +113,14 @@ export function guideRoute({ from, heart = CONFIG.boarding.heart, walls = [], co
 }
 
 /** A route per landing: [{id, landing, points, breaches, reachable}]. */
-export function guideRoutes({ landings = [], heart, walls = [], coast, wave }) {
-  return landings.map(landing => ({ id: landing.id, landing, ...guideRoute({ from: landing, heart, walls, coast, wave }) }));
+export function guideRoutes({ landings = [], heart, walls = [], towers = [], towerBlocking = false, coast, wave }) {
+  return landings.map(landing => ({ id: landing.id, landing, ...guideRoute({ from: landing, heart, walls, towers, towerBlocking, coast, wave }) }));
 }
 
 /** What changes a route: the landings and each wall's quarter of hp (the grid's own breach bands). */
-export function routeKey(landings, walls, wave) {
+export function routeKey(landings, walls, wave, towers = [], towerBlocking = false) {
   const band = wall => (wall.hp > 0 ? Math.ceil(wall.hp / wall.maxHp * 4) : 0);
-  return `${wave}|${landings.map(item => `${item.id}:${item.x},${item.z}`).join(';')}|${walls.map(wall => `${wall.id}:${wall.x},${wall.z}:${band(wall)}`).join(';')}`;
+  return `${wave}|${towerBlocking ? 1 : 0}|${landings.map(item => `${item.id}:${item.x},${item.z}`).join(';')}|${walls.map(wall => `${wall.id}:${wall.x},${wall.z}:${band(wall)}`).join(';')}|${towers.map(tower => `${tower.id}:${tower.x},${tower.z}:${band(tower)}`).join(';')}`;
 }
 
 /**
@@ -307,8 +326,9 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
     });
     // The axe sits beside the wall's hp bar (same row, to its right), never on top of it.
     for (const breach of route.breaches) {
-      if (axes.has(breach.wallId)) continue;
-      axes.add(breach.wallId);
+      const id = breach.wallId ?? breach.towerId;
+      if (axes.has(id)) continue;
+      axes.add(id);
       air.push(SHAPE.icon, breach.x + AXE_SIDE * k, drawnY(breach.z) + 1.45 * k, 1.4 * k, 1.4 * k, { ...WHITE, a: Math.min(1, alpha + .25) }, { icon: 'axe' });
     }
   }
@@ -370,8 +390,11 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
         k = live ? Math.max(1, Math.min(2, Number(characterScale()) || 1)) : 1;
         const landings = view.lanes?.length ? waveLandings(view.lanes) : laneLandings();
         const walls = guideWalls(view.defenses ?? [], view.stateWalls ?? null), attacked = attackedWalls(view.boarders);
-        const heart = view.heart ?? CONFIG.boarding.heart, next = `${heart.x},${heart.z}|${routeKey(landings, walls, view.wave ?? 1)}`;
-        if (next !== key) { key = next; routes = guideRoutes({ landings, heart, walls, wave: view.wave ?? 1 }); }
+        const towerBlocking = view.towerObstacles === true;
+        const towers = towerBlocking ? guideTowers(view.defenses ?? [], view.stateTowers ?? null) : [];
+        const heart = view.heart ?? CONFIG.boarding.heart;
+        const next = `${heart.x},${heart.z}|${routeKey(landings, walls, view.wave ?? 1, towers, towerBlocking)}`;
+        if (next !== key) { key = next; routes = guideRoutes({ landings, heart, walls, towers, towerBlocking, wave: view.wave ?? 1 }); }
         for (const route of routes) drawRoute(route, alpha, live);
         for (const route of routes) drawLanding(route.landing, alpha, live, heart, walls);
         drawHeart(heart, live);
@@ -380,7 +403,8 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
       ground.end(); air.end();
     },
     setVisible(value) { root.visible = value !== false; },
-    stats() { return { ground: ground.count, air: air.count, lanes: laneBoxes, routes: routes.map(route => ({ id: route.id, points: route.points.length, breaches: route.breaches.map(item => item.wallId), reachable: route.reachable })) }; },
+    stats() { return { ground: ground.count, air: air.count, lanes: laneBoxes, routes: routes.map(route => ({ id: route.id, points: route.points.length,
+      breaches: route.breaches.map(item => item.wallId ?? item.towerId), reachable: route.reachable })) }; },
     dispose() {
       if (disposed) return; disposed = true;
       root.removeFromParent(); root.clear();

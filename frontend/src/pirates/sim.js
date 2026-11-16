@@ -22,7 +22,8 @@ import { createTowerHealth } from './tower-health.js';
 // T34 (D040, proposed): what a boarder goes for, here: a tower in reach (with tower health).
 import { TARGET_PROFILES, nearestWithin } from './targeting.js';
 // T35 (D040, proposed): routes over the real wall layout, only with the wave option pathing (the rule "pathing").
-import { BODY, createBoarderPaths, edgeDistance, wallInWay } from './boarder-paths.js';
+import { BODY, createBoarderPaths, edgeDistance, obstacleInWay, wallInWay } from './boarder-paths.js';
+import { towerApproachPoint, towerEdgeDistance } from './tower-obstacles.js';
 // T43 (D048, proposed): the culverin, a long gun, only with the wave option defensesV2 (the rule "defenses_v2").
 import { DEFENSES_V2 } from './defenses-v2.js';
 // D055: the upgrade trees after level 5 (two paths of three tiers each, src/pirates/tower-trees.js).
@@ -577,8 +578,11 @@ export function createWave(options = {}) {
   const towerById = new Map(towers.map(item => [item.id, item]));
   const wallById = new Map(walls.map(item => [item.id, item]));
   const wallsInOrder = [...walls].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)); // walls are already in id order; kept explicit
+  const blockingObjects = [...wallsInOrder, ...towers];
   // T35: the routes over the walls (null without the option: today's fixed routes). No dice.
+  const towerBlocking = options?.towerObstacles === true && options?.pathing === true && towerHealth.enabled;
   const paths = options?.pathing === true ? createBoarderPaths({ coast: readCoast(options?.coast), heart, walls,
+    towers, towerBlocking,
     pace: { hackPerSecond: B.hack * curve.damage / B.hackEvery, speed: B.speed * curve.speed } }) : null;
 
   // Where a gunboat anchors (CONFIG.gunboat): the first point of its course where the nearest tower is as
@@ -976,7 +980,8 @@ export function createWave(options = {}) {
     const fit = hero => (hero.militia ? hero.hp > 0 : !hero.down && presentAt(hero, t));
     if (boarder.foe) {
       const hero = party.get(boarder.foe) ?? militiaById.get(boarder.foe);
-      if (hero && fit(hero) && distance(boarder.x, boarder.z, hero.x, hero.z) <= H.leash + 1e-9) return hero;
+      if (hero && fit(hero) && distance(boarder.x, boarder.z, hero.x, hero.z) <= H.leash + 1e-9
+          && (!paths || !towerBlocking || paths.canReach(boarder, hero))) return hero;
       boarder.foe = null; boarder.goal = null;
     }
     let best = null, near = H.reach + 1e-9;
@@ -1000,13 +1005,23 @@ export function createWave(options = {}) {
   const crowdOnTower = tower => { let n = 0; for (const other of boarders) if (other.towerFoe === tower.id) n++; return n; };
   function towerFoeOf(boarder) {
     if (!towerHealth.enabled) return null;
+    const gap = tower => towerBlocking ? towerEdgeDistance(boarder, tower) : distance(boarder.x, boarder.z, tower.x, tower.z);
+    const reachable = tower => (!towerBlocking || gap(tower) > 1e-9) && (!paths || paths.canReach(boarder, towerBlocking
+      ? towerApproachPoint(boarder, tower, BODY + .01) : tower));
     if (boarder.towerFoe) {
       const held = towerById.get(boarder.towerFoe);
-      if (held && towerHealth.isTarget(held) && distance(boarder.x, boarder.z, held.x, held.z) <= TP.leash + 1e-9) return held;
+      if (held && towerHealth.isTarget(held) && gap(held) <= TP.leash + 1e-9 && reachable(held)) return held;
       boarder.towerFoe = null; boarder.goal = null;
     }
-    const found = nearestWithin(boarder, towers, TP.towerReach, tower => towerHealth.isTarget(tower) && crowdOnTower(tower) < TP.crowd
-      && (!paths || paths.canReach(boarder, tower)));
+    const found = towerBlocking
+      ? [...towers].sort((a, b) => {
+        const difference = gap(a) - gap(b);
+        return Math.abs(difference) <= 1e-9 ? (a.id < b.id ? -1 : 1) : difference;
+      })
+        .find(tower => gap(tower) <= TP.towerReach + 1e-9 && towerHealth.isTarget(tower)
+          && crowdOnTower(tower) < TP.crowd && reachable(tower)) ?? null
+      : nearestWithin(boarder, towers, TP.towerReach, tower => towerHealth.isTarget(tower) && crowdOnTower(tower) < TP.crowd
+        && (!paths || paths.canReach(boarder, tower)));
     if (found) { boarder.towerFoe = found.id; boarder.goal = null; }
     return found;
   }
@@ -1212,6 +1227,11 @@ export function createWave(options = {}) {
       if (wall && wall.hp > 0) { boarder.towerFoe = null; return { kind: 'wall', wall, leg: null }; }
       boarder.blockedBy = null;
     }
+    if (paths && boarder.blockedTowerBy) {
+      const tower = towerById.get(boarder.blockedTowerBy);
+      if (tower && towerHealth.isTarget(tower)) { boarder.towerFoe = tower.id; return { kind: 'tower', tower }; }
+      boarder.blockedTowerBy = null;
+    }
     if (paths && boarder.leg > 0) return pathTarget(boarder);
     while (boarder.leg < boarder.route.length - 1) {
       const leg = boarder.route[boarder.leg];
@@ -1229,6 +1249,8 @@ export function createWave(options = {}) {
   function pathTarget(boarder) {
     const way = paths.next(boarder), wall = way.kind === 'wall' ? wallById.get(way.wallId) : null;
     if (wall && wall.hp > 0) { boarder.towerFoe = null; return { kind: 'wall', wall, leg: null }; }
+    const obstacleTower = way.kind === 'tower' ? towerById.get(way.towerId) : null;
+    if (obstacleTower && towerHealth.isTarget(obstacleTower)) { boarder.towerFoe = obstacleTower.id; return { kind: 'tower', tower: obstacleTower }; }
     const tower = towerFoeOf(boarder);
     if (tower) return { kind: 'tower', tower };
     if (way.kind === 'heart' || toHeart(boarder) <= B.heartRadius) return { kind: 'heart', leg: boarder.route[boarder.route.length - 1] };
@@ -1241,13 +1263,20 @@ export function createWave(options = {}) {
   // Without pathing the fixed routes step exactly as before.
   function stepClear(boarder, ux, uz, step) {
     if (!paths || !(step > 1e-9)) { boarder.x += ux * step; boarder.z += uz * step; return null; }
-    const to = { x: boarder.x + ux * step, z: boarder.z + uz * step }, hit = wallInWay(boarder, to, wallsInOrder);
+    const to = { x: boarder.x + ux * step, z: boarder.z + uz * step };
+    const hit = towerBlocking ? obstacleInWay(boarder, to, blockingObjects) : wallInWay(boarder, to, wallsInOrder);
     if (!hit) { boarder.x = to.x; boarder.z = to.z; return null; }
     const share = Math.max(0, hit.t - 1e-6);
     boarder.x += ux * step * share; boarder.z += uz * step * share;
-    return hit.wall;
+    return hit.kind === 'tower' ? {kind: 'tower', obstacle: hit.wall} : hit.wall;
   }
   function blockAt(boarder, wall) {
+    if (wall?.kind === 'tower') {
+      const tower = wall.obstacle;
+      boarder.state = 'hacking'; boarder.towerId = tower.id; boarder.wallId = null; boarder.blockedTowerBy = tower.id;
+      boarder.hackIn = B.hackEvery / 2; boarder.vx = boarder.vz = 0;
+      return;
+    }
     boarder.state = 'hacking'; boarder.wallId = wall.id; boarder.towerId = null; boarder.blockedBy = wall.id;
     boarder.hackIn = B.hackEvery / 2; boarder.vx = boarder.vz = 0;
   }
@@ -1293,19 +1322,26 @@ export function createWave(options = {}) {
         }
         const step = Math.min(budget, d - H.contact * .9);
         boarder.vx = dx / d * boarder.speed; boarder.vz = dz / d * boarder.speed;
-        if (stepClear(boarder, dx / d, dz / d, step)) { boarder.vx = boarder.vz = 0; break; } // a wall between: it waits there
+        const hit = stepClear(boarder, dx / d, dz / d, step);
+        if (hit) {
+          boarder.vx = boarder.vz = 0;
+          if (hit.kind === 'tower') { blockAt(boarder, hit); return false; }
+          break; // a wall between: it waits there, as before
+        }
         budget -= step;
         if (step <= 1e-9) break;
         continue;
       }
       if (target.kind === 'tower') {
         // T33: after a tower: walk up to it and start hacking from `contact`, as at a wall.
-        const tower = target.tower, dx = tower.x - boarder.x, dz = tower.z - boarder.z, d = Math.sqrt(dx * dx + dz * dz);
+        const tower = target.tower, approach = towerBlocking ? towerApproachPoint(boarder, tower) : tower;
+        const dx = approach.x - boarder.x, dz = approach.z - boarder.z, d = Math.sqrt(dx * dx + dz * dz);
         if (Math.abs(dx) > .05) boarder.facing = dx < 0 ? -1 : 1;
-        if (d <= B.contact + 1e-9) {
+        if ((towerBlocking ? towerEdgeDistance(boarder, tower) : d) <= B.contact + 1e-9) {
           boarder.state = 'hacking'; boarder.towerId = tower.id; boarder.wallId = null; boarder.hackIn = B.hackEvery / 2; boarder.vx = boarder.vz = 0; return false;
         }
-        const step = Math.min(budget, d - B.contact * .9);
+        const gap = towerBlocking ? towerEdgeDistance(boarder, tower) : d;
+        const step = Math.min(budget, Math.max(0, gap - B.contact * .9));
         boarder.vx = dx / d * boarder.speed; boarder.vz = dz / d * boarder.speed;
         const wall = stepClear(boarder, dx / d, dz / d, step);
         if (wall) { blockAt(boarder, wall); return false; }

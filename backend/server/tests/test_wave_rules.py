@@ -62,8 +62,21 @@ def test_every_rule_flag_switched_off_mid_wave_keeps_the_starters_rules():
 
 @pytest.mark.parametrize("rule", SIM_RULES)
 def test_a_rule_flag_puts_that_rule_on_the_wave_answer(rule: str):
-    world = world_with(f"islands,{rule}")
-    assert world.start().json()["rules"] == [rule]
+    flags = f"islands,{rule}"
+    expected = [rule]
+    if rule == "tower_obstacles":
+        flags += ",pathing,tower_health"
+        expected = ["tower_health", "pathing", "tower_obstacles"]
+    assert world_with(flags).start().json()["rules"] == expected
+
+
+def test_tower_obstacles_only_turns_on_with_its_three_dependencies():
+    for flags, expected in (("islands,tower_obstacles", []),
+                            ("islands,tower_obstacles,pathing", ["pathing"]),
+                            ("islands,tower_obstacles,tower_health", ["tower_health"])):
+        assert world_with(flags).start().json().get("rules", []) == expected
+    world = world_with("islands,pathing,tower_health,tower_obstacles")
+    assert world.start().json()["rules"] == ["tower_health", "pathing", "tower_obstacles"]
 
 
 def test_the_rules_follow_the_agreed_order_whatever_the_order_of_the_flags():

@@ -1337,7 +1337,8 @@ A flag is off unless the setting `FEATURE_FLAGS` names it (comma separated). The
 | `islands` | your island, building, visits by code and the pirate waves: `/api/island`, `/api/island/build`, `/api/island/visit/{code}`, `/api/waves/start`, `/api/waves/finish`; since D036 also `/api/island/upgrade`, `/hire`, `/captain`, `/invite/join` and `/api/pirate-point` (+ `/build`, `/upgrade`), which need migration `20261111030000` | lane 0 (D032); off by default; needs migration 20261110010000 applied first |
 | `rescue` | T38 last-chance rescue: the server honours `rescued` on `POST /api/waves/finish`, and lists `"rescue"` in the wave answers' `rules`, so every client's sim offers the rescue (apply `20261114130500_wave_rules.sql` first, done live 14 Nov 2026; without it the waves play with no rules and a warning is logged) | T38/T39, D044 proposed; off by default in code; **on in production since ~21:05 UTC, 14 Nov 2026**; no migration of its own (it uses `wave_rules` above); needs `islands` |
 | `pathing` | T34/T35 boarder routes (D040, proposed): the wave answers carry `"pathing"` in `rules`; boarders take gaps or break through closed rings of walls on their T36 footprints. Off: today's fixed routes (option A) | T34/T35; off by default (**on in production since 14 Nov 2026, ~22:00 UTC**: Nils accepted the closed-ring gap at wave 60, specs/T33-T35-balance.md); needs migration `20261114130500_wave_rules.sql` applied first (done live 14 Nov 2026), and `islands` |
-| `tower_health` | T33 tower hp inside a wave (D049, proposed): the wave answers carry `rules: ["tower_health"]`, and every client of that wave gives cannons, mortars and harpoons hp. Off: no `rules`, towers as before | T33; off by default in code (**on in production since ~21:53 UTC, 14 Nov 2026**); needs migration `20261114130500_wave_rules.sql` applied first (done live 14 Nov 2026), and `islands` |
+| `tower_obstacles` | T35 (D058, proposed): wave answers carry this rule only when both `pathing` and `tower_health` are on; standing cannons, mortars, harpoons, culverins and swivel nests block boarder routes and movement by their T36 tower-slot footprint. Off: existing tower targeting and pathing | Issue #84; off by default; needs `20261115160000_tower_obstacles.sql` and `islands` |
+| `tower_health` | T33 tower hp inside a wave (D049, proposed): the wave answers carry `rules: ["tower_health"]`, and every client of that wave gives cannons, mortars, harpoons and culverins hp. Off: no `rules`, towers as before | T33; off by default in code (**on in production since ~21:53 UTC, 14 Nov 2026**); needs migration `20261114130500_wave_rules.sql` applied first (done live 14 Nov 2026), and `islands` |
 | `wall_recovery` | wall damage that stays after a wave (D039, proposed): `GET /api/island/walls`, `POST /api/island/repair`, `walls` on the wave routes, `409 needs_repair` on upgrade. Off: exactly the old behavior, the new columns are never read | T29–T32/T47; off by default in code; needs migration 20261114100000 applied first (applied live 14 Nov 2026; flag on in production), and `islands` on |
 | `defenses_v2` | new tower kinds beyond cannon, mortar and harpoon, first the culverin (T43, D048 proposed): `backend/content/defenses_v2.json` is merged into the island catalogue, so `GET /api/island` lists the kind on the tower spots, in `prices` and in `unlocks`, and `POST /api/island/build`/`upgrade` accept it; it is also a wave rule: the wave answers carry `"defenses_v2"` in `rules`, and only then does every client's sim let the culverins fight (event `culverin_fired`). Off: the file is not read, every island answer is as before, and a sim ignores any culverin | T43; off by default in code (**on in production since ~21:53 UTC, 14 Nov 2026**). Both migrations `20261114130500_wave_rules.sql` and `20261114140000_culverin.sql` were applied live 14 Nov 2026 |
 
@@ -1655,9 +1656,15 @@ It returns each island's highest win that week, regardless of restarts/current w
 Shared islands count once. At most ten entries; fewer qualifying islands produce
 fewer rows. Equal waves share competition ranks (1, 1, 3); stable internal owner-ID
 order breaks display ties at the ten-island cutoff. Crew size does not adjust scores.
-No rewards or database writes. The scan reads highest waves first, 100 rows per
-page, at most 20 pages; insufficient coverage returns `503 leaderboard_unavailable`,
-never a partial ranking. Public host names are read only for the final islands.
+No rewards or database writes. The server calls the service-only
+`leaderboard_best_runs(cutoff, window_start, window_end)` SQL function, which returns
+up to ten best runs from distinct islands. It filters winning, nonexpired island runs
+through the request cutoff and optional half-open window, then orders by wave descending,
+finish time ascending and run ID ascending. The result and metadata reads are bounded;
+the database still evaluates qualifying history to identify each island's best run.
+Migration `20261116100000_leaderboard_query.sql` must be applied before deploying the
+backend revision that calls this function; the route has no flag-based fallback.
+Public host names are read only for the final islands.
 Fake/offline games show an online-required message instead of invented global data.
 
 **T45 addition ([D046](DECISIONS.md#d046--highscore-scope-and-statue-stages--2026-11-14)).**
@@ -1665,7 +1672,8 @@ Optional query `scope=week` (default) or `scope=all`; any other value answers `4
 Response: `{scope, weekStart, weekEnd, entries: [{rank, name, wave, crew}]}`; for
 `scope=all` both week fields are `null` and the window is every finish up to the
 request (never resets). Equal waves still share rank; display order among them is
-earliest `finished_at` first (replacing the owner-ID order above). `crew` (1–10) is the
+earliest `finished_at` first, then run ID for an exact finish-time tie (replacing the
+owner-ID order above). `crew` (1–10) is the
 number of `wave_participants` of the scoring run, a count only (`1` = solo; an empty
 answer shows `1`). Scores come only from winning `wave_runs`, never from
 `islands.wave_best`, so restarts/resets cannot lower them. The client accepts a T7
@@ -1723,7 +1731,7 @@ the kept set whatever the flags say now, so a joiner after a flag flip (on or of
 rules. Left out when the kept set is empty (or keeping failed: logged, never a 5xx). A wave with no row yet
 (started before this) keeps the flags of its next answer. Every client reads them from the wave answer
 (`frontend/src/pirates/wave-rules.js`), never from its own `/api/config`, so a whole wave plays one rule set;
-the island passes them on in `wave_started_server` (`rules`). Names: `tower_health` (T33, [spec](../specs/T33-tower-health.md)), `pathing` (T34/T35 boarder routes over the walls' footprints, [spec](../specs/T34-T35-targeting-pathing.md#wiring-as-built-14-nov)), `rescue` (T38: the sim offers the last-chance rescue; the same flag also lets the server honour `rescued`), `defenses_v2` (T43, [spec](../specs/T43-new-defenses.md): the island's culverins fight; without it every client's sim and renderer leave a culverin out; the server also hides a culverin row while the flag is off; the name needs migration `20261114140000_culverin.sql`).
+the island passes them on in `wave_started_server` (`rules`). Names: `tower_health` (T33, [spec](../specs/T33-tower-health.md)), `pathing` (T34/T35 boarder routes over the walls' footprints, [spec](../specs/T34-T35-targeting-pathing.md#wiring-as-built-14-nov)), `tower_obstacles` (T35, [spec](../specs/T35-tower-path-obstacles.md); only with both `pathing` and `tower_health`), `rescue` (T38: the sim offers the last-chance rescue; the same flag also lets the server honour `rescued`), `defenses_v2` (T43, [spec](../specs/T43-new-defenses.md): the island's culverins fight; without it every client's sim and renderer leave a culverin out; the server also hides a culverin row while the flag is off; the name needs migration `20261114140000_culverin.sql`).
 With `defenses_v2` a new sim event `culverin_fired {t, towerId, targetId, damage, level, x, z, toX, toZ, impactAt}` (its hit is the usual
 `ship_hit`, with `culverin: true`); `state().towers[]` may hold `kind: "culverin"`.
 With `tower_health` the room's `repair` / `rebuild` messages may name a tower in `wallId`; new sim events
@@ -1735,7 +1743,8 @@ With `tower_health` the room's `repair` / `rebuild` messages may name a tower in
 [D039](DECISIONS.md#d039--wall-recovery-damage-stays-after-a-wave--2026-11-14) (proposed) and
 [the spec](../specs/T29-T32-wall-recovery.md); only while the flag `wall_recovery` is on
 (404 `feature_off` otherwise). Route contracts: `backend/server/routes/wall_recovery.py` and
-`backend/server/routes/waves.py`; tables and functions: migration `20261114100000_wall_recovery.sql`.
+`backend/server/routes/waves.py`; tables and functions: migration `20261114100000_wall_recovery.sql`,
+with paid-restore race protection in `20261115150000_wall_restore_record_fence.sql`.
 
 - `GET /api/island/walls?code=` → `{coins, walls: [{spot, level, health, recoversAt, repairCost}]}`;
   health in percent (0 destroyed, 100 whole), `recoversAt` UTC or null, `repairCost` the caller's
@@ -1748,8 +1757,8 @@ With `tower_health` the room's `repair` / `rebuild` messages may name a tower in
 - `POST /api/waves/finish`: optional `walls: {wall_N: 0..100}` (at most 24); the first finish of an
   island wave keeps them, each capped at the health that wall started the wave with (a finish can only
   damage a wall, never heal or add one; an in-wave E repair helps only in that wave). Recording is best
-  effort: a database failure is logged and the already-paid finish still answers 200. Ignored while the
-  flag is off.
+  effort: a database failure is logged and the already-paid finish still answers 200. A delayed report
+  from a wave started before a successful paid restore is ignored. Ignored while the flag is off.
 - `POST /api/island/upgrade`: `409 needs_repair` for a damaged or destroyed wall.
 - `wave_started_server` on the game's bus may carry the same `walls` object.
 

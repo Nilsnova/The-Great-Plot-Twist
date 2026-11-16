@@ -34,7 +34,7 @@ from server.supabase_admin import SupabaseAdmin
 # 20261114140000_culverin.sql). defenses_v2 (T43): the culverins of the island fight in this wave;
 # without it every client's sim ignores a culverin, so a whole wave fights the same island even
 # if the flag (and so the island answer) changed while it ran.
-SIM_RULES = ("tower_health", "pathing", "rescue", "defenses_v2")
+SIM_RULES = ("tower_health", "pathing", "tower_obstacles", "rescue", "defenses_v2")
 logger = logging.getLogger(__name__)
 
 
@@ -44,7 +44,12 @@ class KeptRules(BaseModel):
 
 def wanted_rules(settings: Settings) -> list[str]:
     """The rules of SIM_RULES whose flag is on now, in that order."""
-    return [name for name in SIM_RULES if is_enabled(name, settings.flags)]
+    enabled = {name for name in SIM_RULES if is_enabled(name, settings.flags)}
+    # T35 needs the shared path and tower-health simulation rules. A partial deployment
+    # must keep the old pathing/tower behavior, and the frozen wave still carries one complete set.
+    if not all(settings.flags.get(name, False) for name in ("pathing", "tower_health")):
+        enabled.discard("tower_obstacles")
+    return [name for name in SIM_RULES if name in enabled]
 
 
 async def rules_for_wave(

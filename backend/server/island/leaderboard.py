@@ -12,12 +12,9 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, StrictInt
 
-from server.errors import ApiError
 from server.island.store import NameRow, read_model, unreadable
 from server.supabase_admin import SupabaseAdmin
 
-PAGE_SIZE = 100
-MAX_PAGES = 20
 TOP = 10
 
 Scope = Literal["week", "all"]
@@ -61,51 +58,36 @@ def week_of(now: datetime) -> tuple[datetime, datetime]:
 async def weekly(admin: SupabaseAdmin, now: datetime | None = None) -> Leaderboard:
     now = (now or datetime.now(UTC)).astimezone(UTC)
     start, end = week_of(now)
-    window = {
-        "and": (
-            f"(finished_at.gte.{start.isoformat()},"
-            f"finished_at.lt.{end.isoformat()},finished_at.lte.{now.isoformat()})"
-        )
-    }
-    entries = await ranked(admin, await best_runs(admin, window))
+    runs = await best_runs(admin, now, start, end)
+    entries = await ranked(admin, runs)
     return Leaderboard(scope="week", weekStart=start, weekEnd=end, entries=entries)
 
 
 async def all_time(admin: SupabaseAdmin, now: datetime | None = None) -> Leaderboard:
     """Every winning run ever finished up to this request: this board never resets."""
     now = (now or datetime.now(UTC)).astimezone(UTC)
-    runs = await best_runs(admin, {"finished_at": f"lte.{now.isoformat()}"})
+    runs = await best_runs(admin, now)
     return Leaderboard(scope="all", weekStart=None, weekEnd=None, entries=await ranked(admin, runs))
 
 
-async def best_runs(admin: SupabaseAdmin, window: dict[str, str]) -> list[WaveRow]:
-    """Scan highest waves first until ten distinct islands or the end, not ten runs.
-
-    Equal waves come earliest finish first, so the island that reached a wave first is
-    listed first (D046). The fixed cutoff excludes finishes during pagination. A bounded
-    scan fails visibly rather than returning an incomplete ranking.
-    """
-    best: dict[UUID, WaveRow] = {}
-    for page in range(MAX_PAGES):
-        query = {
-            "select": "id,island_owner,wave",
-            "place": "eq.island",
-            "survived": "eq.true",
-            "expired": "eq.false",
-            **window,
-            "order": "wave.desc,finished_at.asc,id.asc",
-            "limit": str(PAGE_SIZE),
-            "offset": str(page * PAGE_SIZE),
-        }
-        rows = await admin.select_rows("wave_runs", query)
-        for raw in rows:
-            run = read_model(WaveRow, raw)
-            best.setdefault(run.island_owner, run)
-            if len(best) == TOP:
-                return list(best.values())
-        if len(rows) < PAGE_SIZE:
-            return list(best.values())
-    raise ApiError(503, "leaderboard_unavailable", "The leaderboard is busy. Try again later.")
+async def best_runs(
+    admin: SupabaseAdmin,
+    cutoff: datetime,
+    window_start: datetime | None = None,
+    window_end: datetime | None = None,
+) -> list[WaveRow]:
+    """Ask the database for the top ten best winning runs, one per island (D046)."""
+    rows = await admin.call_function(
+        "leaderboard_best_runs",
+        {
+            "p_cutoff": cutoff.isoformat(),
+            "p_window_start": window_start.isoformat() if window_start else None,
+            "p_window_end": window_end.isoformat() if window_end else None,
+        },
+    )
+    if not isinstance(rows, list) or len(rows) > TOP:
+        raise unreadable()
+    return [read_model(WaveRow, row) for row in rows]
 
 
 async def ranked(admin: SupabaseAdmin, runs: list[WaveRow]) -> list[Entry]:

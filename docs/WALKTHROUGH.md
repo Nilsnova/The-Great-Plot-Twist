@@ -1120,10 +1120,11 @@ Only rank, the host's public captain name and wave reach the card; no invite cod
 private IDs or coins. The wooden board and parchment reuse the game's existing UI.
 
 **Limits and change.** [Tests and evidence](handoff/T7-weekly-leaderboard.md) use
-fakes, not live Supabase. The scan is bounded at 2,000 runs and returns a clear error
-if it cannot finish. Concurrent deletion can shift offset pages. Solo and multiplayer
-are not separated; ties at the cutoff use a stable internal order. Names may match.
-A database aggregate/index could replace pagination after measuring real load.
+fakes for the original T7 contract. T48 replaces the 2,000-run scan with a service-only
+SQL function that returns at most ten best runs from distinct islands. The database
+still evaluates qualifying history; query-plan and live Supabase checks remain separate.
+Concurrent deletion does not create a transaction snapshot. Solo and multiplayer are
+not separated; exact ties use finish time and run ID. Names may match.
 
 **Walkthrough questions.** Data: existing Supabase rows, with no new writes. Tests:
 weekly boundaries, repeated islands, restart preservation, ties, paging, the login
@@ -1539,6 +1540,43 @@ the server's refusal); the Tech hub case in [dom.test.js](../frontend/tests/isla
 **Limits.** The glyphs are emoji, so they look a little different per system. On a phone a long tree scrolls under
 the sticky detail panel. The skill tree is not zoomable; it is sized to fit instead.
 
+## T35 — Damageable towers block boarder paths — Ianno Hollensteiner
+
+**What and why.** With the off-by-default `tower_obstacles` wave rule, standing cannons, mortars, harpoons,
+culverins and swivel nests occupy their T36 tower-slot squares in both the boarder route field and continuous movement. A boarder
+walks around a tower when that costs less than breaking it; otherwise it reaches the footprint edge and hacks it.
+Broken towers open the route, and repair or rebuild makes the footprint solid again. Houses and watchtowers remain
+passable. The rule requires both `pathing` and `tower_health`, so all clients use the same frozen wave rules.
+The wall-lane band from D056 remains static placement guidance derived from baseline paths; when T35 is enabled,
+the actual wave route also accounts for standing damageable towers.
+
+**Where the behavior lives.** [tower-obstacles.js](../frontend/src/pirates/tower-obstacles.js) derives its geometry
+from the [placement footprints](../frontend/src/island/placement.js). [boarder-paths.js](../frontend/src/pirates/boarder-paths.js)
+adds towers to the weighted field, while [sim.js](../frontend/src/pirates/sim.js) applies boundary targeting and
+movement collision. [battle-guide.js](../frontend/src/pirates/battle-guide.js) uses the same route and tower HP.
+The server filters the optional rule in [wave_rules.py](../backend/server/island/wave_rules.py); migration
+[`20261115160000_tower_obstacles.sql`](../supabase/migrations/20261115160000_tower_obstacles.sql) adds its allowed
+name to the existing frozen-rules constraint.
+
+**Tests and evidence.** [tower-obstacles.test.js](../frontend/tests/pirates/tower-obstacles.test.js) checks footprint
+parity and geometry; [pathing-wiring.test.js](../frontend/tests/pirates/pathing-wiring.test.js) and
+[tower-health.test.js](../frontend/tests/pirates/tower-health.test.js) exercise real wave movement, break/rebuild,
+escape, captain pursuit and feature-off behavior; [battle-guide.test.js](../frontend/tests/pirates/battle-guide.test.js)
+checks the preview. The closed-ring breach regression failed before implementation with `expected null not to be null`
+and passes with the tower-aware route field. Final review also added a five-tower cross regression: before the escape
+fallback an enclosed boarder received `kind: 'none'`; now it reaches the heart through its own footprint or by
+attacking the adjacent route blocker, without crossing another footprint. The final affected suite passes 76 tests;
+the whole frontend suite of 3,348 tests was run before this narrow fix. The focused workload runs 300 boarders ×
+3,000 ticks through repeated tower breaches and rebuilds. [Two-client rule captures and limits](evidence/T35-tower-obstacles/README.md)
+record matching state for 451 ticks.
+
+**Limits.** The results above are from before this branch was integrated with current main; affected focused tests,
+full suites and balance/browser checks are pending for the reconciled branch. The migration is unapplied and the
+feature flag stays off. The three-seed balance smoke is not sign-off, the generic multiplayer harness timed out later
+in its pause/break UI phase on both branch and unchanged base, and physical-phone/live-Realtime performance remains
+unverified. See the full [T35 contract and checks](../specs/T35-tower-path-obstacles.md) and
+[draft PR #84](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/84).
+
 ## #74 — Fresh start resets the old personal weapons — Nicolas Radomski
 
 **What and where.** [fresh_start.sql](../scripts/admin/fresh_start.sql) is the admin
@@ -1564,3 +1602,24 @@ the real run, run twice, must leave only the musket. They run on a throwaway loc
 Postgres, never on the live project, so they do not prove what the live data looks
 like. The script is run by hand by the project owner; no code calls it. If the old
 columns are dropped one day, this step and its count can be deleted again.
+
+## 32. A paid wall repair survives a delayed wave record — Ianno Hollensteiner (#82)
+
+Wall health is reported by the first participant to finish an island wave. The finish is already settled
+before that best-effort record reaches the database. If a paid repair commits in between, the delayed
+record must not damage the repaired wall again.
+
+The new migration adds `islet_buildings.wall_restored_at`. The restore function stamps it while it holds
+the wall row lock; the record function reads the wave's `starts_at`, locks the reported walls in plot
+order, and skips a wall restored after that wave began. Repair still takes locks in wallet → building
+order, and recording never takes a wallet lock. The normal one-record-per-wave guard and server-only
+function permissions remain in place.
+
+**Tests.** `backend/server/tests/island_sql/test_wall_recovery_sql.py` reproduces the old failure: a
+previous report damages a wall, the next wave finishes, the paid repair restores it, then that wave's
+delayed report arrives. It also checks a later wave, the equality boundary and both record/restore lock
+orderings with two connections, alongside ordinary damage, repair cost and duplicate behavior. The test
+runs against disposable local PostgreSQL with every migration applied twice.
+
+**Limits.** This fence protects a paid restore from a report belonging to a wave that started earlier.
+It does not validate the health a modified client reports or order arbitrary stale reports from other waves.

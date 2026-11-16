@@ -772,11 +772,14 @@ Show a Harbor noticeboard with gold/silver/bronze rank badges, short reset text,
 and public host names; never return invite codes or private account fields.
 
 **Why and limits:** reuse existing wave records and the island login gate for a
-small read-only feature with no migration or rewards. Solo and multiplayer share
-one ranking. At most 2,000 sorted runs per request; fail visibly if that cannot
-establish the full result. Concurrent deletion can shift pages; there is no SQL
-snapshot, live database proof or anti-cheat upgrade in this task. Revisit a database
-aggregate/index if measured usage outgrows this bounded query. See the
+small read-only feature with no rewards. Solo and multiplayer share one ranking.
+The original T7 implementation scanned at most 2,000 sorted runs; issue #107's
+in-progress T48 branch replaces that scan with a service-only SQL function that
+returns at most ten best runs from distinct islands. The result is bounded, but the
+database still evaluates qualifying history. Its migration must be applied before
+the dependent backend deploy; if merge triggers deployment, apply it before merge.
+The branch has not changed a live database. There is no persisted ranking snapshot
+or anti-cheat upgrade in this task. See the
 [API contract](INTERFACES.md#weekly-island-leaderboard-t7).
 
 ## D038 · Personal boss practice before the shared attempt · 2026-11-14
@@ -849,8 +852,7 @@ tables, migrations or feature flags.
 the board small and avoids judging crew sizes; the label still makes the comparison visible. The statue already
 existed, so extending it keeps the art style and avoids a new landmark that could clash with T38's central building.
 
-**Limits and follow-up:** The all-time scan has T7's 2,000-run bound and answers 503 rather than a partial board; a
-database aggregate may be needed later. Statue and shield read `campaign.wave`; if T38/D044 lowers `wave_best` on reset
+**Limits and follow-up:** Before T48, the all-time scan inherited T7's 2,000-run bound and answered 503 rather than a partial board. Issue #107 replaces that scan with a service-only SQL query for the best winning run per island and the top ten; the database still evaluates the qualifying history, and its migration must precede the server deploy. Statue and shield read `campaign.wave`; if T38/D044 lowers `wave_best` on reset
 or splits best from current/unlocked wave, they must read the never-lowered best value. See the re-check list in
 [the T45 spec](../specs/T45-highscore-statue.md#re-check-once-t38s-reset-contract-proposed-d044-is-accepted) and the
 [API contract](INTERFACES.md#weekly-island-leaderboard-t7).
@@ -903,7 +905,7 @@ or splits best from current/unlocked wave, they must read the never-lowered best
 - **Upgrades** of a damaged or destroyed wall are refused (`409 needs_repair`), and the card shows Repair/Rebuild instead of Upgrade. An intact wall upgrades at full health. Health is a share, so even a racing upgrade never heals.
 - Towers (T33) and Pirate Point walls are unchanged.
 - **Update 14 Nov (review of PR #43):** the server records each wall as `min(health at wave start, reported health)` (`wall_health.cap_to_start`, in Python, no new migration), so a finish can only damage a wall, never heal or add one. Consequence, intended and conservative: a wall repaired or rebuilt for free with E during the wave is recorded at most at its start health; lasting recovery is the paid card or the 10-minute timer. A client reporting lower numbers can still leave walls damaged (bounded: first finish only, participants only, 10-minute timer, play money). Recording after a paid finish is best effort (logged, never a 5xx).
-- **Known, low impact (review follow-up):** the start health is read in Python before `island_walls_record()` runs; between that read and the record nothing else writes those rows during the wave (restores are refused, only the first finish records), but two finishes at the same moment both read, and the second gets `repeat` — so only a record that is already the first counts. A paid restore right after the wave closes and before the first finish's record lands could be overwritten by that record (its walls capped at the old start health). Rare and bounded (play money, 10-minute timer); not fixed here.
+- **Known race and fix (#82):** the start health is read in Python before `island_walls_record()` runs; a paid restore after a wave closes but before the delayed first record lands could previously be overwritten by that record. Migration `20261115150000_wall_restore_record_fence.sql` adds `wall_restored_at`: restore stamps it while holding the wall row lock, and a report whose wave `starts_at` is earlier than or equal to that stamp leaves the wall unchanged. The recorder locks wall rows in plot order; restore retains wallet → building order. Scratch SQL tests cover the delayed report and the timestamp boundary. This protects paid restores only; it does not validate client-reported damage or order arbitrary stale reports from different waves. The migration is not live-applied by this task.
 
 **Why:** BUILD-PLAN §6 requires damage to persist past the wave end, no upgrade bypass, and money decided by the server. Percent plus one timestamp is the smallest state that survives reloads, offline time and upgrades; a server snapshot keeps multiplayer deterministic. The browser's reported health cannot be proven, like `survived`; it is bounded (0–100, walls on that island, first finish only) and only affects play-money costs.
 
@@ -1041,3 +1043,12 @@ The harpoon tower and the culverin have no skills, so no price. The numbers live
 - **Why:** wave 30 is where the late game starts (GAME-V3 §4.1: research and skills matter, loot 🪙 325 a wave), so the boat is a reward for a long run and a change of pace between harder waves. Two games test the two skills the finishers already teach (timing like the cannon, steering like the haul), so they feel familiar. The finisher's bonus is client-claimed with a server-fixed amount (`bonuses: ["finisher"]`), and so is this, with the ledger ref as the cap: both games at ★★★ pay under a third of a won wave's loot at every wave from 30 to 100 (a test keeps it), so the boat cannot replace defending.
 - **Alternatives and trade-offs:** a shared crew minigame through the wave room (heavier: the finishers' sync path needs a running wave; a between-waves room message would be new); re-scoring the samples on the server (stronger against a forged claim, but needs a Python copy of the rules; the once-per-wave cap already bounds a forged ★★★ to 🪙 36–78 a game a wave); keeping wave 10 (Nils asked for 30); dropping the repair gate (simpler, but the 🪙 500 repair would buy nothing). A player who scores badly first still gets that payment's coins only; the next won wave pays again.
 - **Impact:** `backend/content/boat.json`, `backend/content/campaign.json` (+ browser copy), `backend/server/island/boat.py`, `backend/server/routes/island_boat.py`, `permissions.BOAT` (free), `wallet.py` (`boat_game`, earn), `rules.wreck_repaired` message; `frontend/src/pirates/boat/` (rules, scene, css, json copy), `finisher/difficulty.js`, `island/{api,card-model,ui,index}.js`, `island/boat-card.css`, `pirates/fake-api.js`, `narrator/lines.json`; tests `test_boat_routes.py`, `tests/pirates/boat.test.js`, `tests/pirates/boat-scene.test.js`; docs GAME-V3 §4.5, HOW-TO-PLAY, INTERFACES.
+
+## D058 · Damageable towers shape boarder paths · 2026-11-15
+
+- **Status:** proposed by Ianno (`Iannomh123456`) for issue #84 and implementation authorized for a reviewable draft. Team review and balance review remain open. No production flag change.
+- **Decision:** add the off-by-default frozen wave rule `tower_obstacles`, selectable only when `pathing` and `tower_health` are also enabled. Standing cannons, mortars, harpoons, culverins and swivel nests use the T36 `tower` slot footprint; watchtowers and houses remain passable. The path field treats a tower as a breakable obstacle at the same hack-time cost as its live hp. Boarders choose the cheaper detour or breach, reach a tower at its footprint boundary, and cannot pass through its standing square. A broken tower opens the route; an in-wave repair or rebuild makes it solid again. Rebuilding around a boarder lets it step out. Existing captain/wall/tower/heart priority and wall breach costs stay as they are. With the rule off, the simulation and route guide keep their current behavior.
+- **Unresolved:** balance when enabled on representative layouts/seeds, phone performance, and team review of the numbers. D040's existing wall balance is unchanged; T3 follow-up is needed before any flag is enabled.
+- **D056 interaction:** its server-derived wall lanes remain the static placement rule; this optional wave rule adds standing towers to the live route field after wave rules are frozen. Tower obstacles therefore do not rewrite or regenerate the wall-lane set.
+- **Tower kinds:** the accepted D055 swivel nest is included because it uses a tower slot and has tower health; houses and watchtowers have neither and remain passable.
+- **Impact:** `frontend/src/pirates/{tower-obstacles,boarder-paths,path-grid,pathing,sim,battle-guide,wave-rules,controller}.js`, `backend/server/{flags.py,island/wave_rules.py}`, `supabase/migrations/20261115160000_tower_obstacles.sql`; tests in `frontend/tests/pirates/` and backend wave-rule tests. The existing wave-rule table remains authoritative; the additive constraint allows the new name. Rollback means turning the flag off. Keep the allowed name while any retained wave row can contain it.

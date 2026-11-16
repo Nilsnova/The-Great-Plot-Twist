@@ -68,15 +68,17 @@ real players, live Supabase queries or a deployment.
 
 ## Not verified and limits
 
-- Live PostgREST filtering/pagination, query performance, real sign-in and deployment.
+- Live PostgREST RPC behavior, query performance, real sign-in and deployment.
 - Physical phones, VoiceOver and another browser engine; global accessibility check
   covers existing screens, while the T7 script adds local leaderboard checks.
-- The server scans at most 2,000 sorted runs; if it cannot finish, it returns 503
-  rather than an incomplete ranking. A database aggregate/index is a future option.
-- Concurrent deletion may shift offset pages. The cutoff excludes new finishes,
-  but does not create a transaction snapshot. Names can match; IDs stay private.
+- The original T7 service scanned at most 2,000 sorted runs. Issue #107 / T48 replaces
+  that with a service-only SQL function that returns at most ten best runs from distinct
+  islands. The database still evaluates qualifying history; scratch SQL and query-plan
+  evidence are tracked in [T48](../../specs/T48-leaderboard-query.md).
+- The ranking SQL function reads qualifying runs in one statement snapshot. The later
+  profile and crew-count reads are separate requests; names can match, and IDs stay private.
 - Solo and multiplayer share the ranking without crew-size adjustment or new
-  anti-cheat checks. Ties crossing tenth place use stable internal owner ordering.
+  anti-cheat checks. Exact ties use finish time, then run ID.
 - Rankings depend on existing recorded wave outcomes, not a new server simulation.
 
 ## Explain-back draft for Ianno to confirm

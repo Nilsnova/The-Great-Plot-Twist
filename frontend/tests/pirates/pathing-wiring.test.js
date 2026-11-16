@@ -4,7 +4,8 @@
 // option the fixed routes stay (D040 option A).
 import { describe, expect, it } from 'vitest';
 import { createWave } from '../../src/pirates/sim.js';
-import { WALL_ENGAGE, WALL_FOOTPRINT, createBoarderPaths, footprintPoints, isOnLand } from '../../src/pirates/boarder-paths.js';
+import { towerEdgeDistance } from '../../src/pirates/tower-obstacles.js';
+import { WALL_ENGAGE, WALL_FOOTPRINT, createBoarderPaths, footprintPoints, isOnLand, obstacleInWay } from '../../src/pirates/boarder-paths.js';
 import { cellOf, standingWallAt } from '../../src/pirates/path-grid.js';
 import { FOOTPRINTS } from '../../src/island/placement.js';
 import { surfaces } from '../../src/world/places/surfaces.js';
@@ -79,6 +80,87 @@ describe('the island grid for boarders', () => {
       walker.x = way.x; walker.z = way.z;
     }
   });
+
+  it('treats a closed ring of cheap standing towers as a breakable route obstacle', () => {
+    const towers = [];
+    for (let x = -6; x <= 6; x += 2) for (let z = -4; z <= 8; z += 2) {
+      if (Math.abs(x) === 6 || z === -4 || z === 8) {
+        towers.push({id: `cannon_${String(towers.length + 1).padStart(2, '0')}`, kind: 'cannon', x, z, hp: 1, maxHp: 1});
+      }
+    }
+    const paths = createBoarderPaths({coast: COAST, heart: HEART, walls: [], towers, towerBlocking: true,
+      pace: {hackPerSecond: 2.5, speed: 2.8}});
+    paths.refresh();
+    const boarder = {x: 15, z: 2};
+    let target = null;
+    for (let i = 0; i < 200 && !target; i++) {
+      const way = paths.next(boarder);
+      if (way.kind === 'tower') target = way.towerId;
+      if (way.kind !== 'step') break;
+      boarder.x = way.x; boarder.z = way.z;
+    }
+    expect(target).not.toBeNull();
+    expect(target).toMatch(/^cannon_/);
+  });
+
+  it('adds an initially broken tower back to the route field when it is rebuilt', () => {
+    const towers = closedRing().map((item, index) => ({...item, id: `cannon_${index + 1}`, kind: 'cannon', hp: 0, maxHp: 80}));
+    const paths = createBoarderPaths({coast: COAST, heart: HEART, walls: [], towers, towerBlocking: true,
+      pace: {hackPerSecond: 2.5, speed: 2.8}});
+    paths.refresh();
+    for (const tower of towers) tower.hp = 1;
+    paths.refresh();
+    const boarder = {x: 15, z: 2};
+    let target = null;
+    for (let i = 0; i < 200 && !target; i++) {
+      const way = paths.next(boarder);
+      if (way.kind === 'tower') target = way.towerId;
+      if (way.kind !== 'step') break;
+      boarder.x = way.x; boarder.z = way.z;
+    }
+    expect(target).toMatch(/^cannon_/);
+  });
+
+  it('lets a boarder step out when a tower rebuilds around its current cell', () => {
+    const tower = {id: 'cannon_1', kind: 'cannon', x: 0, z: 0, hp: 20, maxHp: 80};
+    const paths = createBoarderPaths({coast: COAST, heart: HEART, walls: [], towers: [tower], towerBlocking: true,
+      pace: {hackPerSecond: 2.5, speed: 2.8}});
+    paths.refresh();
+    const boarder = {x: 0, z: 0}, way = paths.next(boarder);
+    expect(way.kind).toBe('step');
+    expect(towerEdgeDistance({x: way.x, z: way.z}, tower)).toBeGreaterThan(0);
+  });
+
+  it('escapes a rebuilt tower in a five-tower cross and reaches heart without crossing another footprint', () => {
+    const towers = [[8, 2], [6, 2], [10, 2], [8, 0], [8, 4]].map(([x, z], index) => ({
+      id: `cannon_${index + 1}`, kind: 'cannon', x, z, hp: 60, maxHp: 80,
+    }));
+    const paths = createBoarderPaths({coast: {rx: 20, rz: 22, seed: 3}, heart: HEART, walls: [], towers, towerBlocking: true,
+      pace: {hackPerSecond: 2.5, speed: 2.8}});
+    paths.refresh();
+    const boarder = {x: 8, z: 2}, first = paths.next(boarder), kinds = [first.kind];
+    expect(first.kind).not.toBe('none');
+    const actions = {
+      step: way => {
+        const to = {x: way.x, z: way.z};
+        expect(obstacleInWay(boarder, to, towers)).toBeNull();
+        Object.assign(boarder, to);
+      },
+      tower: way => { towers.find(tower => tower.id === way.towerId).hp = 0; },
+      wall: () => {},
+      heart: () => {},
+      none: () => {},
+    };
+    for (let tick = 0; tick < 200 && !kinds.includes('heart'); tick++) {
+      paths.refresh();
+      const way = paths.next(boarder);
+      kinds.push(way.kind);
+      actions[way.kind](way);
+    }
+    expect(kinds).toContain('heart');
+    expect(kinds).not.toContain('none');
+  });
+
 });
 
 describe('a wave with pathing', () => {
