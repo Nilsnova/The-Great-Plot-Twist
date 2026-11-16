@@ -620,6 +620,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 
 ## Log
 
+- **Nicolas / 2026-11-16 / small demo polish (playtest finds).** Signed out, the HUD no longer shows an endless "🪙 …" (the chip waits for coins) and Settings/Account say only "Signed out" instead of "Signed out, Captain pending"; the title lighthouse windows are square with a cross bar, so they no longer read as "0 0". Test: `frontend/tests/signed-out-polish.test.js`; evidence `docs/evidence/demo-polish/`. Not checked on a real phone.
+
 - **Ianno / 2026-11-16 / task-board reconciliation.** Updated this task branch with main `937b1b56`, whose two new commits affect only OPEN-TODOS: presenter rehearsal and the owner’s claimed T50–T53 tasks. Application source and prior verification are unchanged. Every existing committed log entry remains.
 
 - **Ianno / 2026-11-16 / standing orchestration and review rules.** All Ianno task status and new logs use Ianno as owner; new logs begin `Ianno /`. Logs are append-only: retain every committed collaborator entry, resolve ordinary conflicts by keeping both sides, and add corrections as new entries. Every agent task has its own branch and draft PR; explicit smaller-model task agents are separate from selected-model orchestration/review. Ianno manually reviews every PR; Franz (@frcola) must approve the current revision for all current and future tasks. Franz may merge manually after the required checks and reviews. Agents never merge or enable auto-merge. Ask Ianno about consequential product/code ambiguity; do not ask Ianno to resolve routine log conflicts.
