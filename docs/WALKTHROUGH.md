@@ -1037,6 +1037,9 @@ Everything a player cannot be trusted with lives here: coins, prices, unlocks, w
 - **An applied file is never edited.** The live text must stay byte-identical to the file. A fix is a new file, as `20261113010000` is for `20261112120000` and `20261112100000`.
 - Before applying, the SQL tests apply all files twice to a throwaway Postgres.
 
+### Reset my island (T53)
+`island_fresh_start()` in [20261116070000_island_fresh_start.sql](../supabase/migrations/20261116070000_island_fresh_start.sql) is the one v3 function that deletes a whole island's progress. It follows the house style: wallet locked first, then the island row; only the owner's own island; the island code must be typed; refused while a wave runs; one `island_resets` row per click, so a repeat answers the first counts. Because it is `security invoker`, the server needed `delete` on the seven tables it clears; the waves' participants and revives go by cascade, which runs with the table owner's rights. Members, the ledger and the island code stay. Tests: [test_island_fresh_start_sql.py](../backend/server/tests/island_sql/test_island_fresh_start_sql.py).
+
 ### Why it was built this way
 - **The browser is not trusted** ([D003](DECISIONS.md)). A rule in the database holds even if the Python has a bug.
 - **Locks in a fixed order** prevent deadlocks, and the wallet-first rule means a repeated click finds its own ledger row before anything else changes.
