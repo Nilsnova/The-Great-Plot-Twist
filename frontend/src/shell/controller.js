@@ -16,7 +16,7 @@ export function createShell(ctx) {
     modal.element.dataset.mode=mode;
     const body=node('div','shell-body'),nav=node('nav','shell-menu');nav.setAttribute('aria-label','Game menu');
     if(mode==='title') {
-      modal.setTitle('The Great Plot Twist');body.append(titleEmblem(),node('p','shell-kicker','BUILD · TRADE · DEFEND'),node('p','shell-copy','Build your island, trade at the harbor and hold the coast against the pirates.'));
+      modal.setTitle('The Great Plot Twist');body.append(titleEmblem(),node('p','shell-copy','Build your island, trade at the harbor and hold the coast against the pirates.'));
       const go=menuButton('Play',()=>{play();ctx.onStart?.();});go.id='play';nav.append(go,menuButton('Join',()=>page('join'),true));
       const more=menuButton('Settings',()=>page('settings'),true);more.classList.add('shell-more');body.append(nav,more);
     } else {

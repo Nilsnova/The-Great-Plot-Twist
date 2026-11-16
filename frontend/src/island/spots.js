@@ -6,6 +6,7 @@
 //   bell    the harbor bell on the south beach, next to where you land
 import {surfaceClass} from '../world/places/surfaces.js';
 import {isCapstone, readBonus, readSpec} from '../campaign/tech.js';
+import {readTree} from '../pirates/tower-trees.js';
 
 export const ISLAND_PLACE = 'home_islet';
 export const KINDS = Object.freeze({
@@ -13,6 +14,8 @@ export const KINDS = Object.freeze({
   cannon: Object.freeze({name: 'Cannon', purpose: 'Fires at one ship at a time.', cost: 30}),
   mortar: Object.freeze({name: 'Mortar', purpose: 'Hits every ship near the impact.', cost: 60}),
   harpoon: Object.freeze({name: 'Harpoon tower', purpose: 'Slows one ship at a time with a rope harpoon.', cost: 40}),
+  // D055: a short, fast anti-boarder gun on a tower spot.
+  swivel: Object.freeze({name: 'Swivel-gun nest', purpose: 'Sprays pellets at boarders on the island.', cost: 50}),
   // T43 (D048 proposed): only an island answer with the flag defenses_v2 on holds one.
   culverin: Object.freeze({name: 'Culverin', purpose: 'Hits far ships hard but slowly.', cost: 80}),
   watchtower: Object.freeze({name: 'Watchtower', purpose: 'Gives all your towers more range.', cost: 40}),
@@ -22,23 +25,25 @@ export const KINDS = Object.freeze({
 // there: wall, tower (a cannon, a mortar or a harpoon tower, chosen at the first build), watchtower or house. The
 // server's ids are the first column (the backend's ids as built, 11 Nov); if the backend renames a
 // spot, change it here (or add the old name to SPOT_ALIASES) and nothing else.
-//   walls   six along the shore (west, north twice, east, south twice), and the inner ring wall_7…wall_12
-//           around the island's heart (§12; the sim's CONFIG.boarding.heart, 0,2), on the paths the
-//           boarders take: east, the south cross path twice, west (north of the cabin), the north cross path twice
+//   walls   D056 (every wall stands on a pirate path, src/island/wall-lanes.js): two side by side across each
+//           sea lane's beach route (west wall_1 + wall_6, east wall_3 + wall_2, south wall_4 + wall_5), and the
+//           inner ring wall_7…wall_12 nearer the island's heart (§12; the sim's CONFIG.boarding.heart, 0,2), again
+//           two across each lane (east wall_7 + wall_12, south wall_8 + wall_9, west wall_10 + wall_11). Before
+//           16 Nov wall_2, wall_4, wall_5, wall_6, wall_8, wall_9, wall_11 and wall_12 stood where no pirate walked.
 //   towers  cannon_1…cannon_7 (a cannon, a mortar or a harpoon tower): the four corners, west, east and the south beach
 //   tower   the watchtower on the hill at the north end of the main path
 //   houses  inland, at the ends of the north cross path
 export const SPOT_TABLE = Object.freeze([
-  ['wall_1', 'wall', -18.5, -4, 'shore'], ['wall_2', 'wall', 4, -19.5, 'shore'],
-  ['wall_3', 'wall', 18.5, -3, 'shore'], ['wall_4', 'wall', -6, 18.5, 'shore'],
-  ['wall_5', 'wall', 12, 18, 'shore'], ['wall_6', 'wall', -5, -19.5, 'shore'],
+  ['wall_1', 'wall', -18.5, -1, 'shore'], ['wall_2', 'wall', 19, 1, 'shore'],
+  ['wall_3', 'wall', 19, -1, 'shore'], ['wall_4', 'wall', -1, 17, 'shore'],
+  ['wall_5', 'wall', 1, 17, 'shore'], ['wall_6', 'wall', -18.5, -3, 'shore'],
   ['cannon_1', 'tower', -12.5, -14.5, 'corner'], ['cannon_2', 'tower', 13, -15, 'corner'],
   ['cannon_3', 'tower', 15.5, 14, 'corner'], ['cannon_4', 'tower', -15.5, 14.5, 'corner'],
   ['cannon_5', 'tower', -15, -6, 'side'], ['cannon_6', 'tower', 14.5, -3, 'side'], ['cannon_7', 'tower', 4.5, 16.5, 'side'],
   ['tower_1', 'watchtower', 0, -14, 'hill'],
   ['house_1', 'house', 7, -6, 'inland'], ['house_2', 'house', -8, -6, 'inland'],
-  ['wall_7', 'wall', 8.5, 2, 'ring'], ['wall_8', 'wall', 4.5, 9, 'ring'], ['wall_9', 'wall', -4, 9.5, 'ring'],
-  ['wall_10', 'wall', -9.5, -1, 'ring'], ['wall_11', 'wall', -4, -5.5, 'ring'], ['wall_12', 'wall', 4, -5.5, 'ring'],
+  ['wall_7', 'wall', 8.5, 2, 'ring'], ['wall_8', 'wall', 0.5, 9.5, 'ring'], ['wall_9', 'wall', -1.5, 9.5, 'ring'],
+  ['wall_10', 'wall', -9.5, -1, 'ring'], ['wall_11', 'wall', -9.5, 1, 'ring'], ['wall_12', 'wall', 8.5, 0, 'ring'],
 ].map(row => Object.freeze(row)));
 // Other names an answer may use for the same spots (old drafts of §2). The backend's ids need none.
 export const SPOT_ALIASES = Object.freeze(Object.fromEntries([1, 2, 3, 4, 5, 6, 7].map(n => [`tower_s${n}`, `cannon_${n}`])));
@@ -124,9 +129,10 @@ export const slotName = slot => (slot === 'tower' ? 'Tower spot' : KINDS[DEFAULT
 // The defences of an island answer, with their place, for the wave simulation (BUILD-PLAN 3.5). The place
 // is the answer's x/z when the server sent one (T36: a spot moved on the build grid), else the fixed spot:
 // the sim (src/pirates/sim.js) reads x and z as before, so it fights the island where it stands.
-// [{id, kind, level, x, z, spec?, bonus?}] of the built spots only (TOWER-DEFENSE.md §8); spec is the tower
+// [{id, kind, level, x, z, spec?, bonus?, tree?}] of the built spots only (TOWER-DEFENSE.md §8); spec is the tower
 // skill it picked at the Tech hub (GAME-V3.md §5), bonus the island's tier-2 pick for its kind (§5.1, from
-// `tiers`: campaignOf(answer).research.tiers). The sim reads both, so every screen fights the same island.
+// `tiers`: campaignOf(answer).research.tiers), tree {a, b} the tiers of its upgrade tree (D055, only when one is
+// bought). The sim reads them all, so every screen fights the same island.
 export function defenses(spots = [], tiers = null) {
   return spots.filter(item => item?.built === true && (spotById(item.id) || ppSpotById(item.id)))
     .map(item => { const fixed = spotById(item.id) ?? ppSpotById(item.id), spec = readSpec(item.kind, item.spec);
@@ -134,6 +140,7 @@ export function defenses(spots = [], tiers = null) {
       const bonus = readBonus(item.kind, tiers?.[item.kind]?.tier2);
       // A capstone counts only while its island's tier-3 pick is that capstone.
       const kept = spec && isCapstone(spec) && tiers?.[item.kind]?.tier3 !== spec ? null : spec;
+      const tree = readTree(item.kind, item.tree);
       return {id: item.id, kind: item.kind, level: Number.isSafeInteger(item.level) && item.level > 0 ? item.level : 1, x: where.x, z: where.z,
-        ...(kept ? {spec: kept} : {}), ...(bonus ? {bonus} : {})}; });
+        ...(kept ? {spec: kept} : {}), ...(bonus ? {bonus} : {}), ...(tree ? {tree} : {})}; });
 }

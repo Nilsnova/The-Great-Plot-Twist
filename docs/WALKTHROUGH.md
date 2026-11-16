@@ -1490,3 +1490,29 @@ the server's refusal); the Tech hub case in [dom.test.js](../frontend/tests/isla
 
 **Limits.** The glyphs are emoji, so they look a little different per system. On a phone a long tree scrolls under
 the sticky detail panel. The skill tree is not zoomable; it is sized to fit instead.
+
+## #74 — Fresh start resets the old personal weapons — Nicolas Radomski
+
+**What and where.** [fresh_start.sql](../scripts/admin/fresh_start.sql) is the admin
+script that lets every player start the island game again. Its step 4 already set
+each island's best wave and flags to 0. It now also runs one more `update` on
+`islands`: `weapons_owned` becomes `'{musket}'` and `weapon_equipped` becomes
+`'musket'`. The number of changed islands goes into the variable `v_weapons` and
+shows up in the message as `island weapons reset: N`.
+
+**Why.** These two columns come from the old weapon shop
+([20261112030000_captain_skills.sql](../supabase/migrations/20261112030000_captain_skills.sql)).
+Since the shared arsenal (D042) the game no longer uses them, but a bought weapon
+would still sit there after a fresh start. Both columns change in one `update`
+because a check rule says the carried weapon must be one the island owns. The
+`where` only picks islands that differ from the musket, so the count is honest and
+a second run changes 0 rows. The dry run and the real run share one counts
+sentence, so both report the new number.
+
+**Tests and limits.** The two fresh-start tests in
+[test_islands_and_waves_sql.py](../backend/server/tests/island_sql/test_islands_and_waves_sql.py)
+give one island pistols. The dry run must report the count and leave the pistols;
+the real run, run twice, must leave only the musket. They run on a throwaway local
+Postgres, never on the live project, so they do not prove what the live data looks
+like. The script is run by hand by the project owner; no code calls it. If the old
+columns are dropped one day, this step and its count can be deleted again.

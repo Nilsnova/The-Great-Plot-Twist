@@ -4,6 +4,7 @@
 // back; it decides nothing (the rules stay in the models and on the server).
 //   drawSkills(model, on, kit)        -> the Skills tab      on: {pick, learn, pickRole, role, respec, respecCancel}
 //   drawTech(body, model, view, kit)  -> the element to focus  view: {picked, select(id), research(action), locked(body)}
+//   drawTowerTree(model, on, kit)     -> the tree part of a tower's card (D055)  on: {select(id), buy(action)}
 //   kit: {button(label, onClick, quiet), line(className, text, role)} from ui.js
 // On a phone (CSS, island.css) one branch shows at a time, chosen with the branch buttons above the tree.
 import {node} from '../ui/kit/dom.js';
@@ -21,6 +22,8 @@ const ICONS = {
   rapid: '⏩', heavy: '🏋️', chain: '⛓️', cluster: '🎆', fire_pot: '🔥', long_range: '🔭', stone: '🛡️', spiked: '🌵', quick_mend: '🩹',
   spotter: '👀', signal_fire: '🔥', barracks: '⚔️', tavern: '🍺', workshop: '🔨',
 };
+// D055: a tree tile brings its own glyph (the tower's, or its path's), so a tile may name one directly.
+const glyph = (id, icon) => icon ?? iconOf(id);
 export const iconOf = id => ICONS[id] ?? '★';
 // The mark in a tile's corner: learned ✓, locked 🔒, a closed fork twin ✕; none while it can be learned.
 const MARK = {learned: '✓', locked: '🔒', closed: '✕', ready: ''};
@@ -36,10 +39,10 @@ function legend(words) {
 }
 
 // One round tile: the glyph, its price badge and state mark, the short name under it.
-function tile({id, className, state, name, cost, label, picked, capstone, extra, focus, onClick}) {
+function tile({id, icon, className, state, name, cost, label, picked, capstone, extra, focus, onClick}) {
   const button = node('button', `island-node ${className} is-${state}${capstone ? ' is-capstone' : ''}${picked ? ' is-picked' : ''}`); button.type = 'button';
   button.dataset.focus = focus; button.setAttribute('aria-pressed', String(picked)); button.setAttribute('aria-label', label);
-  const disc = node('span', 'island-node-icon', iconOf(id)); disc.setAttribute('aria-hidden', 'true');
+  const disc = node('span', 'island-node-icon', glyph(id, icon)); disc.setAttribute('aria-hidden', 'true');
   const mark = node('span', 'island-node-mark', MARK[state] ?? ''); mark.hidden = !mark.textContent;
   const badge = node('span', 'island-node-cost', cost ?? ''); badge.hidden = !cost;
   disc.append(mark, badge);
@@ -110,10 +113,10 @@ function branchTabs(branches, current, label, choose) {
 }
 
 // The detail panel: the picked tile big, its one line in numbers, why not (if so), and ONE big button.
-function detailPanel(className, {id, state, name, sub, line: text, note, reason}, act, kit) {
+function detailPanel(className, {id, icon, state, name, sub, line: text, note, reason}, act, kit) {
   const detail = node('div', `island-skill-detail ${className} is-${state}`); detail.setAttribute('aria-live', 'polite');
   const head = node('div', 'island-skill-detail-head');
-  const disc = node('span', 'island-node-icon', iconOf(id)); disc.setAttribute('aria-hidden', 'true');
+  const disc = node('span', 'island-node-icon', glyph(id, icon)); disc.setAttribute('aria-hidden', 'true');
   const title = node('div', 'island-skill-detail-title');
   title.append(node('strong', '', name), node('span', 'island-skill-detail-cost', sub));
   head.append(disc, title);
@@ -243,4 +246,30 @@ export function drawTech(body, model, view, kit) {
   part.append(kit.line('island-message', model.message, 'alert'), kit.line('island-coins', model.coins));
   body.append(part);
   return focusable ?? part.querySelector('.island-node.is-picked');
+}
+
+// --- a tower's upgrade tree (D055, tree-model.js): the levels as the trunk, then two paths of three tiers ---
+// The same tiles, lines, legend and detail panel as the captain's tree; one tree, so no branch buttons on a phone.
+export function drawTowerTree(model, on, kit) {
+  const part = node('div', 'island-tower-tree island-tree-card');
+  const top = node('div', 'island-tree-top');
+  top.append(legend({learned: 'Bought', ready: 'Can buy', locked: 'Locked'}));
+  const tree = node('div', 'island-tree island-tower-tree-plot'); tree.setAttribute('role', 'group'); tree.setAttribute('aria-label', model.title);
+  const tiers = model.tiers.map((tier, index) => ({...tier, linked: index > 0 && model.tiers[index - 1].nodes.some(item => item.state === 'learned'),
+    group: tier.fork ? `Tier ${tier.tier - 1}: faster or harder` : '', nodes: tier.nodes.map(item => ({...item, visual: item.state}))}));
+  // The paths grow from the trunk: a tier needs the one below it on its own path (tier 1 needs the trunk).
+  const needs = item => (item.id === 'level' ? [] : item.tier === 1 ? ['level'] : [`${item.path}${item.tier - 1}`]);
+  tree.append(branchTree({id: model.kind, className: `island-tower-branch is-current`, name: model.title, icon: model.tiers[0].nodes[0].icon,
+    flag: model.flag, tiers, needs,
+    makeTile: item => {
+      const button = tile({id: item.id, icon: item.icon, className: 'island-tree-step', state: item.state, name: item.name, cost: item.cost ? `🪙 ${item.cost}` : '',
+        label: item.label, picked: item.id === model.picked, focus: `tree-${item.id}`, onClick: () => on.select?.(item.id)});
+      button.dataset.step = item.id;
+      return button;
+    }}));
+  const pick = model.detail;
+  const act = kit.button(pick.button, () => pick.action && on.buy?.(pick.action)); act.dataset.focus = 'tree-buy'; act.disabled = pick.disabled;
+  part.append(top, tree, detailPanel('island-tree-detail', {id: pick.id, icon: pick.icon, state: pick.state, name: pick.name, sub: pick.sub,
+    line: pick.line, note: '', reason: pick.reason}, act, kit), kit.line('island-message', model.message, 'alert'));
+  return {part, act};
 }

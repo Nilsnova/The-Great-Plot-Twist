@@ -197,6 +197,10 @@ try {
     assert.ok(repaired, 'a damaged tower was repaired with E');
     if (!sawBroken) note('note: no tower broke in this wave, so a rebuild was not seen');
     else assert.ok(rebuilt, 'a broken tower was rebuilt with E');
+    // The friend's sim hears the repair through the room a moment later: wait for it (up to 5 s) before reading.
+    await ben.page.waitForFunction(([id, rebuilt]) => { const list = window.__rules.events[id] ?? [];
+      return list.some(e => e.includes(':tower_repaired:')) && (!rebuilt || list.some(e => e.includes(':tower_rebuilt:'))); },
+    [first.waveId, rebuilt], {timeout: 5000, polling: 100}).catch(() => {});
     const theirs = await eventsOf(ben, first.waveId);
     assert.ok(theirs.some(e => e.includes(':tower_repaired:')), 'the friend\'s sim repaired it too');
     if (rebuilt) assert.ok(theirs.some(e => e.includes(':tower_rebuilt:')), 'the friend\'s sim rebuilt it too');

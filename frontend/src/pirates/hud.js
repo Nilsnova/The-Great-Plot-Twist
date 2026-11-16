@@ -24,10 +24,16 @@ export function goalChips({ wave, shipsLeft, islandHp, maxIslandHp, boardersLeft
 export const GOAL_HINT = Object.freeze([['🏝️', 'Land'], ['🧱', 'Block'], ['❤️', 'Protect']]);
 
 export const runLootText = loot => `Loot this run: 🪙 ${Math.max(0, Math.round(loot) || 0)}`;
+// What the bar shows of it (owner, 15 Nov: "less text"): the coin and the number only, nothing while it is 0;
+// runLootText stays its spoken label.
+export const runLootChip = loot => { const n = Math.max(0, Math.round(loot) || 0); return n > 0 ? `🪙 +${n}` : ''; };
+// What the bar shows of your hp: a short word and the meter; healthText stays its spoken label.
+export const HEALTH_WORD = 'You';
 
-// The button: "F: Slash" (the cutlass, D052) with a boarder within strike reach (§12), else the equipped weapon's name (§15),
-// or that no pirate is in range.
-export const musketText = (ready, blade = false, name = 'Musket') => (blade ? 'F: Slash' : ready ? name : 'No pirate in range');
+// The button: "F: Slash" (the cutlass, D052) with a boarder within strike reach (§12), else the equipped weapon's name (§15).
+// With no pirate in range the name stays and the button dims (owner, 15 Nov: "less text"); OUT_OF_RANGE is spoken.
+export const OUT_OF_RANGE = 'No pirate in range';
+export const musketText = (ready, blade = false, name = 'Musket') => (blade ? 'F: Slash' : name);
 
 // Your captain's hp under the wave bar, and the timer over a fallen captain (seconds as m:ss).
 export const healthText = ({ hp, maxHp }) => `Captain ${Math.max(0, Math.ceil(hp))} / ${maxHp}`;
@@ -72,7 +78,7 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
   // Your hp under the wave bar (role=status with the bar), the strip while you are down, the timers.
   const health = node('span', 'pirate-health'), healthLabel = node('span', 'pirate-health-text'), healthMeter = node('span', 'pirate-health-meter');
   const healthFill = node('span', 'pirate-health-fill'); healthMeter.append(healthFill); healthMeter.setAttribute('aria-hidden', 'true');
-  health.append(healthLabel, healthMeter); health.hidden = true;
+  health.append(healthLabel, healthMeter); health.hidden = true; health.setAttribute('role', 'img');
   // While you are down: one slim line under the wave's numbers, "You have fallen · a teammate can hold E
   // next to you · 0:12", inside the bar (its role=status reads it once; the ticking clock is not read out).
   const down = node('div', 'pirate-down'); down.hidden = true;
@@ -182,11 +188,12 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
     health(info) {
       if (!info) { if (!health.hidden) { health.hidden = true; lastHealth = ''; ownHp = null; } return; }
       const text = info.down ? 'Captain down' : healthText(info), share = Math.max(0, Math.min(1, info.hp / (info.maxHp || 1)));
+      const shown = info.down ? 'Down' : HEALTH_WORD;
       health.hidden = false;
       if (ownHp !== null && info.hp < ownHp && !reducedMotion()) { health.classList.remove('pirate-flash'); void health.offsetWidth; health.classList.add('pirate-flash'); }
       ownHp = info.hp;
       if (text === lastHealth) return;
-      lastHealth = text; healthLabel.textContent = text;
+      lastHealth = text; healthLabel.textContent = shown; health.setAttribute('aria-label', text); health.title = text;
       healthFill.style.width = `${Math.round(share * 100)}%`;
       healthFill.dataset.level = share > .5 ? 'good' : share > .25 ? 'low' : 'bad';
     },
@@ -223,15 +230,17 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
       if (key === lastMusket) return;
       lastMusket = key; musketLabel.textContent = musketText(info.ready === true, blade, name);
       musket.classList.toggle('pirate-musket-blade', blade);
-      musket.setAttribute('aria-label', blade ? 'Strike with your cutlass (F)' : `Fire your ${name.toLowerCase()} (F)`);
+      musket.setAttribute('aria-label', blade ? 'Strike with your cutlass (F)' : `Fire your ${name.toLowerCase()} (F)${info.ready === true ? '' : `: ${OUT_OF_RANGE.toLowerCase()}`}`);
+      musket.title = info.ready === true || blade ? '' : OUT_OF_RANGE;
       musket.classList.toggle('pirate-musket-idle', info.ready !== true);
       musketFill.style.width = `${Math.round(share * 100)}%`;
     },
     // Loot this run, under the bar; null hides it.
     loot(amount) {
-      const text = amount === null || amount === undefined ? '' : runLootText(amount);
+      const text = amount === null || amount === undefined ? '' : runLootChip(amount);
       if (text === lastLoot) return;
       lastLoot = text; loot.hidden = !text; loot.textContent = text;
+      if (text) { loot.setAttribute('aria-label', runLootText(amount)); loot.title = runLootText(amount); }
     },
     // The first-wave hint: true shows the three pictures, false hides them.
     goalHint(show) { if (hint.hidden === (show !== true)) return; hint.hidden = show !== true; measureBar(); },

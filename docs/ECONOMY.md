@@ -97,6 +97,20 @@ For scale: at wave 8 (Tech hub) a won wave pays about 105 coins, at wave 25 (cap
 (`islands.json` loot 25 + 10 × wave, plus the houses), so a cannon skill is about one and a half
 waves of loot and a capstone about two.
 
+### Tower upgrade trees (16 Nov 2026, D055)
+
+After level 5, tiers of a tower's upgrade tree are paid once by the player who clicks (`island_tower_tree()`, reason `tower_tree`, ref `towertree:<uid>`; prices in `backend/content/tower_trees.json`, sent as `prices.towerTrees`). Tiers open after waves 20 / 35 / 45; one path to tier 3, the other at tier 1 (a full tree is 3 + 1 tiers):
+
+| Kind | Path a (faster) | Path b (harder) | Tier 1 / 2 / 3 price |
+|---|---|---|---|
+| Cannon | Drill: reload ×0.92 / ×0.85 / ×0.78 | Powder: damage ×1.1 / ×1.2 / ×1.3 | 🪙 1,000 / 2,200 / 4,800 |
+| Mortar | Loaders: reload ×0.92 / ×0.85 / ×0.78 | Big shells: damage ×1.08 / ×1.15 / ×1.22, blast ×1.1 / ×1.2 / ×1.3 | 🪙 1,200 / 2,600 / 5,600 |
+| Harpoon tower | Winch: reload ×0.92 / ×0.85 / ×0.78 | Barbs: slow +5 / +10 / +15 points, +0.5 / +1 / +1.5 s | 🪙 700 / 1,500 / 3,200 |
+| Culverin (flag `defenses_v2`) | Rammers: reload ×0.92 / ×0.85 / ×0.78 | Long bore: damage ×1.1 / ×1.2 / ×1.3 | 🪙 1,400 / 2,800 / 6,000 |
+| Swivel-gun nest | Oiled: reload ×0.92 / ×0.85 / ×0.78 | Scatter: +1 / +2 / +3 pellets | 🪙 900 / 2,000 / 4,400 |
+
+A full cannon tree costs 🪙 9,000 (the level track to 5 costs 930); seven full towers about 🪙 60,000. For scale a won wave pays about 225 coins at wave 20 and 425 at wave 40 (× 2 on a boss wave), so tier 1 is about four waves of loot and tier 3 about ten, spread over every member's wallet: progress lasts far beyond wave 20. No engineer discount; a tear-down refunds nothing of it. The swivel-gun nest costs 🪙 50 / 100 / 200 / 400 / 800 (`building_purchase`, like every kind).
+
 ## Current scope and source contracts
 
 G12 now targets **Exchange v2**, the implemented 10× rising/falling position engine.
