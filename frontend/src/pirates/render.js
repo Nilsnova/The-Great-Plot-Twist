@@ -418,8 +418,18 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       case 'tower_broken': // T33: once per break (the sim sends it once), a puff of smoke
         effects()?.bloom(x, y + 1, { radius: 2.2, life: .6, colour: '#8c8a92' });
         break;
+      case 'ship_fired': {
+        // T50 (the wave rule ship_fire): the ship's ball flies from its hull to the wall, tower or heart it aims at, on
+        // the sim's own flight (its impactAt); the impact's dust, flash or red burst comes when it lands (land()).
+        balls.add(item => Object.assign(item, { x: event.x, z: event.z, toX: event.toX, toZ: event.toZ, from: event.t, to: event.impactAt,
+          hit: true, enemy: true, splashed: false, dust: event.target === 'heart' ? 'heart' : 'wall', wallId: event.targetId ?? null }));
+        const meta = ships.get(event.shipId), size = SHIP_SIZE[event.kind] ?? SHIP_SIZE.sloop;
+        effects()?.bloom(x + (meta?.facing ?? 1) * size.w * .25, y + size.h * .4, { radius: .8, life: .3, colour: '#ffcf6a' });
+        break;
+      }
       case 'wall_damaged': case 'island_damaged': {
-        // The pirates' shot: a short flat arc from the ship to what it hit (drawn only).
+        // The pirates' shot: a short flat arc from the ship to what it hit (drawn only). T50: a landed ball (ship_fired) flew already.
+        if (event.landed) break;
         if (event.boarderId) {
           // A boarder's blow: dust off the wall, or a red flash at the heart.
           if (event.type === 'wall_damaged') {
@@ -971,7 +981,9 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     if (ball.enemy) {
       const x = ball.toX, y = drawnY(ball.toZ) + .6;
       if (ball.wallId) wallFlash.set(ball.wallId, clock + FLASH_SECONDS);
-      spark(x, y, { count: 10, speed: [.6, 2.4], angle: Math.PI / 2, spread: 2.2, gravity: 5, life: [.4, .8], colour: ball.dust === 'wall' ? '#b8b2a0' : '#d8c590', size: [1, 2] });
+      // T50: a ball on the heart bursts red, like a boarder's blow there, a little bigger.
+      if (ball.dust === 'heart') effects()?.bloom(x, y + .2, { radius: 2.4, life: .5, colour: '#d8553f' });
+      spark(x, y, { count: 10, speed: [.6, 2.4], angle: Math.PI / 2, spread: 2.2, gravity: 5, life: [.4, .8], colour: ball.dust === 'wall' ? '#b8b2a0' : ball.dust === 'heart' ? '#e0705a' : '#d8c590', size: [1, 2] });
       effects()?.bloom(x, y, { radius: .9, life: .25, colour: '#ffb35a' });
       return;
     }
