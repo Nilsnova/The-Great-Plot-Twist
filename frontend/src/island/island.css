@@ -449,3 +449,10 @@ html:has(.island-card-docked[open]) .quest-strip{visibility:hidden}
 .island-weapon-compare>summary{min-height:44px;align-content:center;cursor:pointer;font-weight:700}
 .island-weapon-compare dl{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:6px;margin:8px 0}
 .island-weapon-compare dd{margin:0;overflow-wrap:anywhere}
+
+/* Filters are local view controls; each copy keeps its own existing Take/Swap action. */
+.island-arsenal-filters{display:flex;flex-wrap:wrap;gap:6px}
+.island-arsenal-filters>.kit-button{flex:1;min-height:44px}
+.island-arsenal-filters>[aria-pressed="true"]{outline:2px solid currentColor;outline-offset:2px}
+.island-arsenal-group{list-style:none;margin-top:12px}
+.island-arsenal-group h4{margin:0 0 6px}

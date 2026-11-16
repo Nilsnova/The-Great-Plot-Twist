@@ -1231,6 +1231,18 @@ retries or another networking layer. Live networks/physical phones remain unveri
 
 **Limits / possible change:** Per-hit numbers do not predict fleet outcomes, aim, pierce alignment or total area damage. Real provider/login/database behavior, physical phones and a screen-reader session are not covered. The UI word compare was checked in the macOS word dictionary before adding it to the house list. Broader server snapshots or navigation state would need a separately reviewed contract. [Evidence](evidence/U-weapon-comparison/README.md); [PR #96](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/96). Codex drafted/verified the implementation; Johannes's own review and independent human review remain pending.
 
+## Johannes: Filtering and grouping the arsenal (U)
+
+**What:** All, Available and Carried buttons show counts and filter the rack locally. Display groups follow weapon type and rack number; shared stats appear once per group while every copy number, holder and existing Take/Swap action remains.
+
+**Where/how:** rackView computes counts and a new ordered array without mutating the server answer. arsenalModel keeps the legacy rack model order and adds sorted groups for the UI. arsenal.js retains only a local filter id; its handler redraws without a GET or write. arsenal-ui.js renders native pressed-state buttons, grouping and a Show all recovery for empty filtered results. Source: [island/arsenal-model.js](../frontend/src/island/arsenal-model.js), [island/arsenal-ui.js](../frontend/src/island/arsenal-ui.js), [island/arsenal.js](../frontend/src/island/arsenal.js), [island/island.css](../frontend/src/island/island.css).
+
+**Why:** A rack with 20 stored copies can additionally have carried copies, so All and Carried counts must not be storage-slot counts. Grouped display preserves individual ownership and ids; every financial/availability restriction remains in the existing model/server.
+
+**Tests:** [arsenal-filters.test.js](../frontend/tests/island/arsenal-filters.test.js), [arsenal-filters-dom.test.js](../frontend/tests/island/arsenal-filters-dom.test.js). 10 new cases: 20 stored plus carried copies, stable ordering and immutable input, all empty views, bad optional filters/input, pending/wave restrictions, retained filter on refresh, keyboard/phone controls, no request from filtering, exact copy id for intentional Take and recovery when the chosen filter becomes empty.
+
+**Limits / possible change:** Filters last for this controller session, not browser storage. They do not change stock, reclaim another captain weapon or grant permission. Real multi-client races/SQL, physical phones and screen readers are not covered by these controlled UI tests. Broader server snapshots or navigation state would need a separately reviewed contract. [Evidence](evidence/U-arsenal-filters/README.md); [PR #98](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/98). Codex drafted/verified the implementation; Johannes's own review and independent human review remain pending.
+
 ## The three course questions
 
 ### Q1. Where is the data stored?
