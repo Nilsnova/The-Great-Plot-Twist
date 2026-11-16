@@ -17,7 +17,10 @@ export function createTutorialHooks({island = () => null, place = () => null, pl
     const lane = isle(), doc = globalThis.document;
     let wave = null;
     try { wave = lane?.campaign?.wave ?? null; } catch { wave = null; }
-    return {place: place(), code: lane?.gameCode ?? null, wave, card: lane?.ui?.open ?? null,
+    // best: the player's own island's best wave (signed in: the server's answer), a veteran on a new device.
+    let best = null;
+    try { best = lane?.ownWaveBest ?? null; } catch { best = null; }
+    return {place: place(), code: lane?.gameCode ?? null, wave, best: Number.isSafeInteger(best) ? best : null, card: lane?.ui?.open ?? null,
       waveRunning: waveRunning() === true, blocked: blocked() === true, narrating: !!narrating(),
       cutscene: !!doc?.querySelector('dialog.cutscene[open]'), dialog: !!doc?.querySelector('dialog[open]'),
       // The pause menu (Menu, or Escape): the guide's Menu step counts it too.

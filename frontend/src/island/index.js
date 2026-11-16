@@ -1102,6 +1102,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     placeName,
     get visiting() { return visiting ? {...visiting} : visitCode ? {code: visitCode} : null; },
     get island() { return own ? structuredClone(own) : null; },
+    // T52: your own island's best wave, without copying the island (the tutorials read it every frame).
+    get ownWaveBest() { return Number.isSafeInteger(own?.waveBest) ? own.waveBest : null; },
     get flow() { return flow; },
     // The fake server's helpers (setCoins, failNext, startWaveAt...) in fake mode, for the console and checks.
     get dev() { return transport?.dev ?? null; },
