@@ -19,14 +19,41 @@ export const readArsenal = data => !!data && typeof data.code === 'string' && is
   && Array.isArray(data.copies) && data.copies.every(isCopy) && typeof data.waveRunning === 'boolean' && isCount(data.coins);
 
 /** The type's numbers for your captain level (the same numbers the wave uses: captain-stats.js). */
-export function weaponStats(id, level = 1) {
-  const stats = captainStats(level, [], readWeapon(id));
+export function weaponStats(id, level = 1, skills = []) {
+  const stats = captainStats(level, skills, readWeapon(id));
   return `Damage ${stats.damage} · Range ${stats.range} · Reload ${stats.reload} s`;
 }
 
-function copyRow(copy, {carries, closed, busy, level}) {
+// Compare per-hit numbers, not a universal ranking: cone, pierce and area shots hit differently.
+export function weaponComparison(id, carried = 'musket', level = 1, skills = []) {
+  const current = captainStats(level, skills, carried), next = captainStats(level, skills, id);
+  const change = (after, before, time = false) => {
+    const delta = Math.round((after - before) * 100) / 100;
+    if (!delta) return 'No change';
+    return `${Math.abs(delta)}${time ? ' s' : ''} ${time ? (delta < 0 ? 'faster' : 'slower') : (delta > 0 ? 'more' : 'less')}`;
+  };
+  return {reference: current.name, currentMode: MODE_LINES[current.mode], mode: MODE_LINES[next.mode], rows: [
+    {label: 'Damage per hit', value: String(next.damage), change: change(next.damage, current.damage)},
+    {label: 'Range', value: String(next.range), change: change(next.range, current.range)},
+    {label: 'Reload', value: `${next.reload} s`, change: change(next.reload, current.reload, true)},
+  ]};
+}
+
+// Local view only: equipped copies do not use the rack's 20 storage slots.
+export function rackView(copies = [], filter = 'all') {
+  const all = Array.isArray(copies) ? copies.filter(isCopy) : [];
+  const carried = copy => copy.you || !!copy.holder;
+  const selected = ['all', 'available', 'carried'].includes(filter) ? filter : 'all';
+  const counts = {all: all.length, available: all.filter(copy => !carried(copy)).length, carried: all.filter(carried).length};
+  const shown = all.filter(copy => selected === 'all' || (selected === 'carried' ? carried(copy) : !carried(copy)));
+  const ordered = WEAPONS.flatMap(type => shown.filter(copy => copy.weapon === type.id)
+    .sort((a, b) => a.no - b.no || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)));
+  return {filter: selected, counts, copies: ordered};
+}
+
+function copyRow(copy, {carries, closed, busy, level, carried, skills}) {
   const type = WEAPON_BY_ID[copy.weapon];
-  const row = {id: copy.id, label: `${type.name} #${copy.no}`, weapon: copy.weapon, stats: weaponStats(copy.weapon, level),
+  const row = {id: copy.id, label: `${type.name} #${copy.no}`, weapon: copy.weapon, stats: weaponStats(copy.weapon, level, skills), comparison: weaponComparison(copy.weapon, carried, level, skills),
     holder: '', button: null};
   if (copy.you) { row.holder = 'You carry it'; return row; }
   if (copy.holder) { row.holder = `Carried by ${copy.holderName ?? 'a captain'}${copy.away ? ' (left the game)' : ''}`; return row; }
@@ -35,12 +62,12 @@ function copyRow(copy, {carries, closed, busy, level}) {
   return row;
 }
 
-function shopRow(type, {answer, carries, full, closed, busy, level}) {
+function shopRow(type, {answer, carries, full, closed, busy, level, carried, skills}) {
   const sent = answer?.types?.find(item => item?.id === type.id);
   const price = isCount(sent?.price) ? sent.price : type.price, unlockWave = isCount(sent?.unlockWave) ? sent.unlockWave : type.unlockWave;
   const unlocked = typeof sent?.unlocked === 'boolean' ? sent.unlocked : (answer?.unlockWave ?? 0) >= unlockWave;
   const row = {id: type.id, name: type.name, line: type.line, mode: MODE_LINES[type.mode], price, priceText: coinText(price),
-    stats: weaponStats(type.id, level), locked: !unlocked, button: {label: busy === `buy:${type.id}` ? 'Buying…' : `Buy · ${coinText(price)}`, disabled: true, reason: ''}};
+    stats: weaponStats(type.id, level, skills), comparison: weaponComparison(type.id, carried, level, skills), locked: !unlocked, button: {label: busy === `buy:${type.id}` ? 'Buying…' : `Buy · ${coinText(price)}`, disabled: true, reason: ''}};
   const coins = answer?.coins;
   if (!unlocked) { row.button.label = 'Locked'; row.button.reason = `${opensText(unlockWave)}.`; }
   else if (closed) row.button.reason = closed;
@@ -54,23 +81,34 @@ function shopRow(type, {answer, carries, full, closed, busy, level}) {
  * answer: GET /api/island/arsenal (or null while loading); level: your captain level (the stats shown);
  * busy: 'buy:<type>', a copy id, 'return' or null; loading: true before the first answer.
  */
-export function arsenalModel({answer = null, level = 1, busy = null, message = '', loading = false} = {}) {
+export function arsenalModel({answer = null, level = 1, skills = [], filter = 'all', busy = null, message = '', loading = false} = {}) {
   const title = 'Arsenal';
   if (!readArsenal(answer)) {
     return {title, lead: loading ? 'Opening the arsenal…' : 'The arsenal could not be opened.', stock: '', full: false,
-      carry: null, back: null, rack: [], shop: [], message, coins: ''};
+      carry: null, back: null, rack: [], shop: [], message, coins: '',
+      retry: {label: loading ? 'Opening…' : 'Try again', disabled: loading}};
   }
   const capacity = answer.capacity || CAPACITY, mine = answer.copies.find(copy => copy.you) ?? null;
   const full = answer.stored >= capacity, carries = !!mine;
   const closed = answer.waveRunning ? 'A wave is under way. Use the arsenal between waves.' : '';
   const carried = mine ? mine.weapon : 'musket', type = WEAPON_BY_ID[carried];
-  const carry = {name: mine ? `${type.name} #${mine.no}` : 'Musket (standard issue)', stats: weaponStats(carried, level), line: type.line};
+  const carry = {name: mine ? `${type.name} #${mine.no}` : 'Musket (standard issue)', stats: weaponStats(carried, level, skills), line: type.line};
   const back = mine ? {label: busy === 'return' ? 'Returning…' : 'Return to the rack', disabled: !!closed || full || busy !== null,
     reason: closed || (full ? `The rack is full (${capacity} of ${capacity}): swap instead, or wait for a free slot.` : '')} : null;
-  const context = {answer, carries, full, closed, busy, level};
+  const context = {answer, carries, full, closed, busy, level, carried, skills};
+  const view = rackView(answer.copies, filter), order = new Map(view.copies.map((copy, index) => [copy.id, index]));
+  // Keep the existing rack model's server order; only the grouped view changes display order.
+  const rack = answer.copies.filter(copy => order.has(copy.id)).map(copy => copyRow(copy, context));
+  const filters = [['all', 'All'], ['available', 'Available'], ['carried', 'Carried']]
+    .map(([id, label]) => ({id, label, count: view.counts[id], selected: id === view.filter}));
+  const groups = WEAPONS.map(type => ({id: type.id, name: type.name, rows: rack.filter(row => row.weapon === type.id).sort((a, b) => order.get(a.id) - order.get(b.id))}))
+    .filter(group => group.rows.length);
+  const empty = view.filter === 'all' ? 'No weapons yet. Buy the first one below.'
+    : view.filter === 'available' ? 'No weapons are available on the rack. Choose All to see who carries them.'
+      : 'No weapons are carried. Choose All to see the rack.';
   return {title, lead: 'The crew shares these weapons. Take one to carry it; return it for a crewmate. Every captain always has a musket.',
     stock: `Stored: ${answer.stored} of ${capacity}${full ? ' · Full' : ''}`, full, carry, back,
-    rack: answer.copies.map(copy => copyRow(copy, context)),
+    rack, filters, groups, filter: view.filter, empty,
     shop: WEAPONS.filter(item => item.price > 0).map(item => shopRow(item, context)),
     message, coins: `You have ${coinText(answer.coins)}`};
 }

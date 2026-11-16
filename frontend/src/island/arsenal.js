@@ -15,17 +15,19 @@ const REFRESH_ON = new Set(['taken', 'arsenal_full', 'no_such_copy', 'wave_runni
 const nameOf = (data, id) => { const copy = data.copies.find(item => item.id === id); return copy ? `${WEAPON_BY_ID[copy.weapon].name} #${copy.no}` : 'The weapon'; };
 
 export function createArsenal({api, ui, emit = () => {}, enabled = () => false, code = () => null, place = () => 'own',
-  level = () => 1, onCoins = () => {}} = {}) {
-  let answer = null, answeredFor = null, busy = null, message = '', loading = false, ticket = 0;
+  level = () => 1, skills = () => [], onCoins = () => {}} = {}) {
+  let answer = null, answeredFor = null, busy = null, message = '', loading = false, ticket = 0, rackFilter = 'all';
   // loadFailed: the message is the arsenal's own read failing (a later good read clears it). A refused move's
   // reason stays until the card opens again or the next move, also through a crewmate's change (island_changed).
   let loadFailed = false;
   const key = () => code() ?? 'own';
   const current = () => (answer && answeredFor === key() ? answer : null);
-  const model = () => arsenalModel({answer: current(), level: level(), busy, message, loading: loading && !current()});
+  const model = () => arsenalModel({answer: current(), level: level(), skills: skills(), filter: rackFilter, busy, message, loading: loading && !current()});
   const handlers = {take: id => void move(id, () => api.take({copy: id, code: code()}), took(id)),
     giveBack: () => void move('return', () => api.giveBack({code: code()}), data => `${nameOf(answer ?? data, current()?.mine)} is back on the rack. You carry the musket.`),
-    buy: id => void move(`buy:${id}`, () => api.buy({weapon: id, code: code()}), bought(id))};
+    buy: id => void move(`buy:${id}`, () => api.buy({weapon: id, code: code()}), bought(id)),
+    retry: () => { if (!loading) { message = ''; loadFailed = false; void refresh(); } },
+    filter: id => { if (['all', 'available', 'carried'].includes(id)) { rackFilter = id; redraw(); } }};
   function took(id) {
     return data => (data.mine === id && answer?.mine && answer.mine !== id ? `Swapped: you carry ${nameOf(data, id)} now.` : `You carry ${nameOf(data, id)} now.`);
   }
@@ -44,16 +46,20 @@ export function createArsenal({api, ui, emit = () => {}, enabled = () => false, 
     const result = await api.state(code());
     if (mine !== ticket) return result;
     loading = false;
-    if (result.ok && asked === key()) { take(result.data); if (loadFailed) { message = ''; loadFailed = false; } }
+    if (asked !== key() || !enabled()) return result;
+    if (result.ok) { take(result.data); if (loadFailed) { message = ''; loadFailed = false; } }
     else if (!result.ok && !current()) { message = result.message; loadFailed = true; }
     redraw();
     return result;
   }
   async function move(kind, send, success) {
     if (busy || !enabled()) return;
+    const asked = key();
     busy = kind; message = ''; loadFailed = false; redraw();
     const before = answer, result = await send();
     busy = null;
+    // A completed server move stays valid, but its answer must not become another island's inventory.
+    if (asked !== key() || !enabled()) { redraw(); return; }
     if (result.ok) {
       const text = success(result.data); take(result.data);
       emit({type: 'island_spots_changed', place: place(), spot: ARSENAL.id});
@@ -62,12 +68,13 @@ export function createArsenal({api, ui, emit = () => {}, enabled = () => false, 
     } else {
       answer = before;
       if (REFRESH_ON.has(result.code)) await refresh();
+      if (asked !== key() || !enabled()) return;
       message = result.message; loadFailed = false;
     }
     redraw();
   }
   return {
-    open() { message = ''; loadFailed = false; ui.arsenalCard(model(), handlers); void refresh(); },
+    open() { message = ''; loadFailed = false; loading = true; ui.arsenalCard(model(), handlers); void refresh(); },
     refresh, redraw,
     weapon() {
       if (!enabled()) return null;
