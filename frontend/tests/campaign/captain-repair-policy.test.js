@@ -48,9 +48,9 @@ describe('Captain repair policy versions', () => {
 
   it('keeps legacy repair text but describes recovery-v1 Tech effects clearly', () => {
     expect(recoveryTechLine('bastion', 'Old repair text')).toBe('Old repair text');
-    expect(recoveryTechLine('quick_mend', 'Old repair text', 1)).toBe('This wall recovers twice as fast between waves.');
-    expect(recoveryTechLine('mason_drill', 'Old repair text', 1)).toBe('Automatic wall recovery for this island runs 50% faster.');
-    expect(recoveryTechLine('bastion', 'Old repair text', 1)).toBe('Unlocks the Bastion wall skill: +50% max HP and 3× between-wave recovery when equipped.');
+    expect(recoveryTechLine('quick_mend', 'Old repair text', 1)).toBe('This wall mends twice as fast between waves.');
+    expect(recoveryTechLine('mason_drill', 'Old repair text', 1)).toBe('Automatic wall repair for this island runs 50% faster.');
+    expect(recoveryTechLine('bastion', 'Old repair text', 1)).toBe('Bastion adds 50% more HP and repairs it three times faster between waves when equipped.');
   });
 });
 

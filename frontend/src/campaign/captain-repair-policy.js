@@ -10,9 +10,9 @@ const STRUCTURE_KINDS = new Set(['wall', 'cannon', 'mortar', 'harpoon', 'culveri
 const WALL_SPEC_FACTORS = Object.freeze({stone: 1, spiked: 1, quick_mend: 2, bastion: 3, thorns: 1});
 const WALL_RESEARCH_FACTORS = Object.freeze({mason_drill: 1.5, thick_walls: 1});
 const RECOVERY_RESEARCH_LINES = Object.freeze({
-  quick_mend: 'This wall recovers twice as fast between waves.',
-  mason_drill: 'Automatic wall recovery for this island runs 50% faster.',
-  bastion: 'Unlocks the Bastion wall skill: +50% max HP and 3× between-wave recovery when equipped.',
+  quick_mend: 'This wall mends twice as fast between waves.',
+  mason_drill: 'Automatic wall repair for this island runs 50% faster.',
+  bastion: 'Bastion adds 50% more HP and repairs it three times faster between waves when equipped.',
 });
 const MAX_CARPENTERS = 2;
 const MAX_WORKSHOP_BONUS_PERCENT = 50;
