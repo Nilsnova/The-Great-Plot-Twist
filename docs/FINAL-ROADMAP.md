@@ -75,6 +75,8 @@ B3 follow-up: Late arsenal replies stay with their original island, implemented 
 B3 follow-up: Retry an arsenal load directly in its card, implemented in draft [PR #90](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/90), with [evidence](evidence/B3-arsenal-retry/README.md). This completes only this slice; broader B3 and human review remain open.
 Approved U addition: Optional skill-aware comparison against the carried weapon, implemented in draft [PR #96](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/96) with [evidence](evidence/U-weapon-comparison/README.md). This completes only the approved addition; author and independent human review remain.
 
+Approved U addition: Local inventory filters and grouped rack rows, implemented in draft [PR #98](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/98) with [evidence](evidence/U-arsenal-filters/README.md). This completes only the approved addition; author and independent human review remain.
+
 ### C. Simplify the code base (helps criteria 5 and 6)
 
 | ID | Value | Size | Task | Done when |
