@@ -76,6 +76,8 @@ class LayoutRules:
     keep_out: tuple[Box, ...]
     # D056: on row z, a wall may be centred on every grid cell from x0 to x1 (one pair per run).
     wall_lanes: dict[float, tuple[tuple[float, float], ...]]
+    # D060: the extra tower spots ("extraSpots"); part of `spots` only in island_layout(more=True).
+    extra_spots: tuple[LayoutSpot, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -120,6 +122,7 @@ def load_layout(path: Path = CONTENT_FILE) -> LayoutRules:
             spots=tuple(read_spot(row) for row in data["spots"]),
             keep_out=tuple(read_box(row) for row in data["keepOut"]),
             wall_lanes=read_lanes(data["wallLanes"]["rows"]),
+            extra_spots=tuple(read_spot(row) for row in data.get("extraSpots", {}).get("rows", [])),
         )
     except (OSError, ValueError, KeyError, TypeError) as error:
         raise LayoutFileError(f"{path.name} cannot be read: {error}") from error
@@ -128,10 +131,10 @@ def load_layout(path: Path = CONTENT_FILE) -> LayoutRules:
 
 
 def check_file(rules: LayoutRules, path: Path) -> None:
-    ids = [spot.spot for spot in rules.spots]
+    ids = [spot.spot for spot in rules.spots + rules.extra_spots]
     if len(ids) != len(set(ids)):
         raise LayoutFileError(f"{path.name} lists a spot twice.")
-    for spot in rules.spots:
+    for spot in rules.spots + rules.extra_spots:
         if spot.slot not in rules.footprints:
             raise LayoutFileError(f"{path.name}: {spot.spot} has the unknown slot {spot.slot}.")
         if not (on_grid(rules, spot.x) and on_grid(rules, spot.z)):
@@ -139,9 +142,16 @@ def check_file(rules: LayoutRules, path: Path) -> None:
 
 
 @cache
-def island_layout() -> LayoutRules:
-    """The layout file, read once per server process."""
-    return load_layout()
+def island_layout(more: bool = False) -> LayoutRules:
+    """The layout file, read once per server process. more: with the extra tower spots of D060
+    (the catalogue's more_tower_spots, the flag of the same name)."""
+    rules = load_layout()
+    return with_extra_spots(rules) if more else rules
+
+
+def with_extra_spots(rules: LayoutRules) -> LayoutRules:
+    """D060: the extra tower spots stand, block the route and can move like the others."""
+    return replace(rules, spots=rules.spots + rules.extra_spots)
 
 
 # --- where the spots stand ---

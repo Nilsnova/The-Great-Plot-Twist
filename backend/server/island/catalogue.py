@@ -35,6 +35,11 @@ DEFENSES_V2_FILE = CONTENT_FILE.with_name("defenses_v2.json")
 # D055: the upgrade trees of the towers after level 5 (two paths of three tiers each).
 TOWER_TREES_FILE = CONTENT_FILE.with_name("tower_trees.json")
 DEFENSES_V2_FLAG = "defenses_v2"
+# D060: the extra tower spots that open with progress (islands.json "extraTowerSpots"). Offered
+# only while this flag is on (the database rule: migrations/20261117010000_more_tower_spots.sql).
+MORE_TOWER_SPOTS_FLAG = "more_tower_spots"
+# The tower spot whose kinds every extra tower spot copies (so the culverin comes along too).
+TOWER_SPOT_TEMPLATE = "cannon_1"
 
 ID_PATTERN = re.compile(r"[a-z][a-z0-9_]{1,39}")
 # The weather states of weather/states.py. Each one needs its line in the file.
@@ -177,6 +182,9 @@ class Kind:
 class Spot:
     id: str  # "wall_1": the marker in the island scene and the plot in islet_buildings
     kinds: tuple[str, ...]  # what can stand here; the first is shown on an empty spot
+    # D060: the island's best won wave this spot needs before anything is built on it (0: from the
+    # start). Only the extra tower spots have one; the inner wall ring uses campaign.json instead.
+    unlock_wave: int = 0
 
     @property
     def kind(self) -> str:
@@ -425,6 +433,10 @@ class IslandCatalogue:
     # D055: the upgrade trees by tower kind (tower_trees.json). A kind that is not in `kinds` (the
     # culverin while defenses_v2 is off) is never built, so its tree is never offered.
     trees: tuple[TowerTree, ...] = ()
+    # D060: (spot id, unlock wave) of the extra tower spots of islands.json. They join `spots` only
+    # through catalogue_for_flags() while the flag more_tower_spots is on (more_tower_spots True).
+    extra_tower_spots: tuple[tuple[str, int], ...] = ()
+    more_tower_spots: bool = False
 
     def tree_of(self, kind: str) -> TowerTree | None:
         if not any(entry.kind == kind for entry in self.kinds):
@@ -888,7 +900,31 @@ def load_island(path: Path = CONTENT_FILE, campaign_path: Path | None = None) ->
         research=read_research(data),
         wreck=read_wreck(data),
         trees=read_tower_trees(campaign, kinds),
+        extra_tower_spots=read_extra_tower_spots(data, spot_ids),
     )
+
+
+def read_extra_tower_spots(data: dict, spot_ids: set[str]) -> tuple[tuple[str, int], ...]:
+    """D060: islands.json "extraTowerSpots" ({"spots": [{"id", "unlockWave"}]}), checked. The
+    spots are new ids (not one of "spots") and open in order. Missing: none."""
+    block = data.get("extraTowerSpots")
+    if block is None:
+        return ()
+    if not isinstance(block, dict):
+        raise IslandFileError("'extraTowerSpots' must be an object.")
+    found = []
+    for index, entry in enumerate(read_list(block, "spots", 8)):
+        where = f"extraTowerSpots.spots[{index}]"
+        spot_id = read_id(entry, "id", where)
+        if spot_id in spot_ids or spot_id in {item for item, _ in found}:
+            raise IslandFileError(f"{where}: '{spot_id}' is already a spot.")
+        found.append((spot_id, read_whole(entry, "unlockWave", where, 1, MAX_WAVE)))
+    waves = [wave for _, wave in found]
+    if waves != sorted(waves):
+        raise IslandFileError("extraTowerSpots: the spots must open in order.")
+    if TOWER_SPOT_TEMPLATE not in spot_ids:
+        raise IslandFileError(f"extraTowerSpots needs the tower spot {TOWER_SPOT_TEMPLATE}.")
+    return tuple(found)
 
 
 def read_tower_trees(
@@ -1017,7 +1053,7 @@ def with_defenses_v2(catalogue: IslandCatalogue, extra: tuple[FlaggedKind, ...])
     """A copy of the catalogue with the flagged kinds added. The original is not changed."""
     kinds = catalogue.kinds + tuple(item.kind for item in extra)
     spots = tuple(
-        Spot(spot.id, spot.kinds + tuple(i.kind.kind for i in extra if spot.id in i.spots))
+        replace(spot, kinds=spot.kinds + tuple(i.kind.kind for i in extra if spot.id in i.spots))
         for spot in catalogue.spots
     )
     steps = tuple(
@@ -1038,16 +1074,30 @@ def with_defenses_v2(catalogue: IslandCatalogue, extra: tuple[FlaggedKind, ...])
     return replace(catalogue, kinds=kinds, spots=spots, campaign=campaign)
 
 
+def with_more_tower_spots(catalogue: IslandCatalogue) -> IslandCatalogue:
+    """D060: the catalogue with the extra tower spots added after the island's spots. Each one
+    takes every kind the tower spot TOWER_SPOT_TEMPLATE takes (the culverin too while defenses_v2
+    is on) and opens after its unlock wave."""
+    template = next(spot for spot in catalogue.spots if spot.id == TOWER_SPOT_TEMPLATE)
+    extra = tuple(
+        Spot(spot_id, template.kinds, unlock_wave=wave)
+        for spot_id, wave in catalogue.extra_tower_spots
+    )
+    return replace(catalogue, spots=catalogue.spots + extra, more_tower_spots=True)
+
+
 def catalogue_for_flags(
     catalogue: IslandCatalogue, flags: Mapping[str, bool], path: Path = DEFENSES_V2_FILE
 ) -> IslandCatalogue:
     """The catalogue the server runs with. Flag defenses_v2 off: the same object, untouched (the
     file is not even read). On: the copy of with_defenses_v2(). A broken file with the flag on
-    is logged and the island keeps running without the new kinds."""
-    if not flags.get(DEFENSES_V2_FLAG, False):
-        return catalogue
-    try:
-        return with_defenses_v2(catalogue, read_defenses_v2(catalogue, path))
-    except IslandFileError as error:
-        logger.error("The %s defenses cannot start: %s", DEFENSES_V2_FLAG, error)
-        return catalogue
+    is logged and the island keeps running without the new kinds. Then, with the flag
+    more_tower_spots on (D060), the extra tower spots join (off: nothing changes)."""
+    if flags.get(DEFENSES_V2_FLAG, False):
+        try:
+            catalogue = with_defenses_v2(catalogue, read_defenses_v2(catalogue, path))
+        except IslandFileError as error:
+            logger.error("The %s defenses cannot start: %s", DEFENSES_V2_FLAG, error)
+    if flags.get(MORE_TOWER_SPOTS_FLAG, False) and catalogue.extra_tower_spots:
+        catalogue = with_more_tower_spots(catalogue)
+    return catalogue

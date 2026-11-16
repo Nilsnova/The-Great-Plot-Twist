@@ -44,7 +44,9 @@ GET /api/island
     The first call makes the player's island with a new code and, for a brand-new player whose
     wallet never moved, pays the starting coins (once). The 22 spots come in the order of
     islands.json: wall_1..wall_6, cannon_1..cannon_7 (cannon or mortar), tower_1, house_1,
-    house_2, then the inner ring wall_7..wall_12 (TOWER-DEFENSE section 12). "kind" is what
+    house_2, then the inner ring wall_7..wall_12 (TOWER-DEFENSE section 12); with the flag
+    more_tower_spots (D060) also cannon_8..cannon_11, built only after won waves 10, 20, 30 and
+    40 (409 locked before). "kind" is what
     stands there, or the first kind an empty spot takes; "cost" is the level-1 price of that
     kind; "upgradeCost" the price of the next level (null while empty or at the top). Price
     lists are indexed by level - 1 (the first entry is the build; the captain's level 1 is

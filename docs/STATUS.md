@@ -14,6 +14,8 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
+**16 Nov / Nils — slots and badges (D060):** branch `feat/slots-and-badges`: the orange 🪓 badges of the battle guide are gone; four extra tower spots (`cannon_8`..`cannon_11`, after waves 10/20/30/40) behind the off-by-default flag `more_tower_spots`. Migration `20261117010000_more_tower_spots.sql` is not applied (paste `docs/handoff/apply-2026-11-17.sql`, then switch the flag on).
+
 **16 Nov / Ianno — wall-record race:** [PR #86](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/86) is reconciled with main `a9386656`, preserving both status and walkthrough additions. The SQL fence is unchanged; on the new baseline 250 scratch PostgreSQL tests and 30 wall-route tests pass, Ruff is clean, and all 50 migrations parse. Ianno reviews the PR; Franz (@frcola) must approve its current revision before a human merge. Migration application remains separate.
 
 - **Wall record race (#82):** [draft PR #86](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/86) is ready for human review; all scoped SQL/backend checks pass. Migration is not applied live.

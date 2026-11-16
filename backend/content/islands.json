@@ -234,6 +234,15 @@
       ]
     }
   ],
+  "extraTowerSpots": {
+    "about": "D060: more tower spots over time. While the server flag more_tower_spots is on, each spot joins the island after 'spots' and opens once the island has won its unlockWave; it takes every kind cannon_1 takes (with the culverin while defenses_v2 is on). Where they stand: backend/content/island_layout.json extraSpots. The database rule: supabase/migrations/20261117010000_more_tower_spots.sql.",
+    "spots": [
+      {"id": "cannon_8", "unlockWave": 10},
+      {"id": "cannon_9", "unlockWave": 20},
+      {"id": "cannon_10", "unlockWave": 30},
+      {"id": "cannon_11", "unlockWave": 40}
+    ]
+  },
   "piratePointSpots": [
     {
       "id": "pp_wall_1",

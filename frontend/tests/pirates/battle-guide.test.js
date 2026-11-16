@@ -7,7 +7,7 @@ import { CONFIG, coastPoint, createWave } from '../../src/pirates/sim.js';
 import { isOnLand } from '../../src/pirates/boarder-paths.js';
 import { WALL_LANE_ROWS } from '../../src/island/wall-lanes.js';
 import { attackedWalls, bearingOf, createBattleGuide, guideRoute, guideRoutes, guideTowers, guideWalls, landingAt, laneLandings, routeDots,
-  routeKey, waveLandings, wallBar, skullAt, AXE_SIDE, SKULL_SHIFT } from '../../src/pirates/battle-guide.js';
+  routeKey, waveLandings, wallBar, skullAt, SKULL_SHIFT } from '../../src/pirates/battle-guide.js';
 import { ISLANDS } from './balance-fixture.js';
 
 const HEART = CONFIG.boarding.heart;
@@ -214,8 +214,7 @@ describe('drawing', () => {
     guide.dispose();
   });
   // The overlap audit (15 Nov): badges never sit on each other.
-  it('keeps the axe beside a wall bar, the skull off a shore wall, and draws a shared cell or axe once', () => {
-    expect(AXE_SIDE - 1.4 / 2).toBeGreaterThan((1.6 + .14) / 2); // the axe's left edge clears the bar's right edge
+  it('keeps the skull off a shore wall and draws a shared cell once', () => {
     const landing = { x: 10, z: 0 };
     expect(skullAt(landing, { x: 0, z: 0 }, [])).toEqual([10, 0]);
     expect(skullAt(landing, { x: 0, z: 0 }, [{ x: 9, z: 1 }])).toEqual([10 + SKULL_SHIFT, 0]);
@@ -228,5 +227,15 @@ describe('drawing', () => {
     dense.update(preview); sparse.update(preview);
     expect(sparse.stats().ground).toBe(dense.stats().ground);
     dense.dispose(); sparse.dispose();
+  });
+  // Owner's playtest (16 Nov): "the orange flags do not really make sense". No axe badge on a wall the route
+  // hacks: the only badges in the air are the landings and the heart (wall bars only show in a wave).
+  it('draws no badge on the walls the routes hack through', () => {
+    const guide = createBattleGuide({ scene: scene() });
+    guide.update({ mode: 'preview', defenses: RING, wave: 8, dt: .016 });
+    const { routes, air } = guide.stats();
+    expect(routes.some(route => route.breaches.length > 0)).toBe(true);
+    expect(air).toBe(routes.length + 1);
+    guide.dispose();
   });
 });

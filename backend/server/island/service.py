@@ -206,7 +206,7 @@ def view_of(
     visitor after a co-op build or upgrade on a friend's island. `stored`: the island's moved
     spots (layout_store.read_layout); None shows the fixed spots and no moving."""
     mine = progress if personal is None else personal
-    grid = layout.island_layout()
+    grid = layout.island_layout(catalogue.more_tower_spots)
     return IslandView(
         code=shown(island.code),
         coins=coins,
@@ -1064,7 +1064,7 @@ async def visit(
     owner_name = await store.read_display_name(admin, island.owner)
     built = await store.read_built_spots(admin, island.owner)
     stored = await read_stored(admin, catalogue, island.owner)
-    grid = layout.island_layout()
+    grid = layout.island_layout(catalogue.more_tower_spots)
     spots = layout.place_spots(grid, rules.plan_spots(catalogue, built), stored)
     progress = await store.read_progress(admin, island.owner)
     research = await store.read_research(admin, island.owner)
