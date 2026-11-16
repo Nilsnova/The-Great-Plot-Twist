@@ -591,6 +591,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 
 ## Log
 
+- **Ianno / 2026-11-16 / captain repair checkpoint.** Confirmed nearby-only benefit and strongest nearby captain bonus per target; exact skill values and range remain open. The repair-source model still needs a choice: independent automatic captain repair (closest to current worker-independent repair) or boosting existing wall workers. No model or production implementation approved. Existing committed log entries retained.
+
 - **Ianno / 2026-11-16 / recovery-design reconciliation.** Integrated main `a9386656` into `docs/t33-persistent-tower-damage-design` only, preserving all competing teammate status entries and the latest recovery decision. Design-only PR #85; no implementation or live changes.
 
 - **2026-11-16 / Ianno, shared defense recovery, branch `docs/t33-persistent-tower-damage-design`.** Recorded the confirmed fresh lifecycle after automatic rebuild and re-destruction, retained the automatic battle crew exception, and clarified that the Quick Fix crew-support example is unapproved. A targeted audit of main `a9386656` identified swivel and tower trees for the final implementation scope; no source code was changed. Codex assistance; design-only PR #85 still awaits the skill decision and final human plan approval.
