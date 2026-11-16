@@ -141,3 +141,8 @@ html:has(.pirate-hud:not([hidden]) .pirate-bar:not([hidden])) .quest-strip{displ
 @media(max-height:500px){.pirate-goal-hint-step{flex-direction:row;gap:6px}.pirate-goal-hint-icon{font-size:22px}}
 /* Short screens (a phone on its side): the event's line stays in the narrator card, so the bar stays short (overlap audit). */
 @media(max-height:500px){.pirate-event-line{display:none}.pirate-event.is-open{padding:4px 8px}}
+/* Announcement lane (playtest 16 Nov, "speech bubbles, announcements and the life bar on top of each other"):
+   under the wave bar come the toasts (--pirate-bar-bottom), then the countdown, then the boss warning.
+   Each one starts where the ones above it end (--toast-stack-height from src/ui/toasts.js, --pirate-count-space from hud.js). */
+.pirate-countdown{top:calc(var(--pirate-bar-bottom,150px) + var(--toast-stack-height,0px))}
+.pirate-hud .pirate-boss,.pirate-hud:has(.pirate-event.is-open) .pirate-boss{top:calc(var(--pirate-bar-bottom,150px) + var(--toast-stack-height,0px) + var(--pirate-count-space,0px));bottom:auto}

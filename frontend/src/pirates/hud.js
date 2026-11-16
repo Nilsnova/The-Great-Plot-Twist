@@ -141,6 +141,11 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
     if (bottom > 0) root.style.setProperty('--pirate-bar-bottom', `${Math.ceil(bottom) + 10}px`); };
   const barSize = typeof ResizeObserver === 'function' ? new ResizeObserver(measureBar) : null;
   barSize?.observe(bar);
+  // The countdown's room (playtest 16 Nov): on laptops the boss warning sits under it, not on it (pirates.css).
+  const measureCount = () => { const height = countdown.hidden || layer.hidden ? 0 : countdown.offsetHeight;
+    root.style.setProperty('--pirate-count-space', height > 0 ? `${height + 8}px` : '0px'); };
+  const countSize = typeof ResizeObserver === 'function' ? new ResizeObserver(measureCount) : null;
+  countSize?.observe(countdown);
   let lastBar = '', lastCount = '', lastPrompt = '', lastLoot = '', lastPause = '', lastMusket = '', hurtUntil = 0, hp = null;
   let lastHealth = '', lastDown = '', ownHp = null, lastEvent = '';
 
@@ -280,6 +285,6 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
       if (line) banner.append(node('span', '', line));
       banner.hidden = false;
     },
-    dispose() { release(); letPromptGo(); barSize?.disconnect(); layer.remove(); markPool.clear(); root.style.removeProperty('--pirate-break-bottom'); root.style.removeProperty('--pirate-bar-bottom'); },
+    dispose() { release(); letPromptGo(); barSize?.disconnect(); countSize?.disconnect(); layer.remove(); markPool.clear(); root.style.removeProperty('--pirate-break-bottom'); root.style.removeProperty('--pirate-bar-bottom'); root.style.removeProperty('--pirate-count-space'); },
   };
 }

@@ -133,7 +133,8 @@ export function wireWaves(ctx) {
     joinRunning();
   }
   // The wave on screen (in its break, or the Pirate Point one) draws its towers from its own list: give it the new levels.
-  const relevel = () => { try { pirates.island.refreshDefenses?.(); pirates.point?.controller?.refreshDefenses?.(); } catch { /* A drawing cannot stop the island. */ } };
+  // walls: {spot: percent} after a paid repair or rebuild, so a rebuilt wall stops looking broken (D039).
+  const relevel = (walls = null) => { try { pirates.island.refreshDefenses?.(walls); pirates.point?.controller?.refreshDefenses?.(); } catch { /* A drawing cannot stop the island. */ } };
   let quiet = 0;
   async function readIsland() {
     quiet = 0;
@@ -167,7 +168,7 @@ export function wireWaves(ctx) {
       // A tear-down (GAME-V3.md §4.2) also says who got coins back, for their toast.
       const note = event.demolished ? {spot: event.spot, demolished: event.demolished} : {spot: event.spot};
       const tell = () => { if (event.place === 'point') pirates.point?.room?.send?.('island_changed', {spot: event.spot}); else islandRoom.send('island_changed', note); };
-      tell(); after(tell, CHANGED_AGAIN_MS); relevel();
+      tell(); after(tell, CHANGED_AGAIN_MS); relevel(event.walls ?? null);
     }));
     // Back on this tab after a while: the room may have missed something.
     const document = globalThis.document;

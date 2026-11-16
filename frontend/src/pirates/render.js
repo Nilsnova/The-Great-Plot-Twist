@@ -293,6 +293,13 @@ export const BRUTE_LOOK = Object.freeze({ tint: Object.freeze({ r: 1, g: .7, b: 
  * beamFrom an optional drawn point {x, y} the lamps' beam starts from (the lighthouse lamp).
  * update({state, simTime, dt}) every frame; events(list) with the wave's events; dispose() once.
  */
+// How whole a wall is drawn (0 = rubble, 1 = whole): a health set in the break (a paid repair or rebuild,
+// D039) wins over the hp the wave ended with; otherwise the wave's own hp; a wall the wave does not know is whole.
+export function wallShare(post, wall) {
+  if (Number.isFinite(post?.rest)) return post.rest;
+  return wall && wall.maxHp > 0 ? wall.hp / wall.maxHp : 1;
+}
+
 export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion = () => false, quality = () => 'high',
   beamFrom = null, fx = () => scene.userData?.pixelFx ?? null }) {
   const owned = [], root = new THREE.Group(); root.name = 'pirate-wave'; scene.add(root);
@@ -1040,7 +1047,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         const level = post.level, suffix = level > 1 ? `-l${level}` : '';
         let smoking = false, look = 'intact';
         if (post.kind === 'wall') {
-          const wall = walls.get(post.id), share = wall ? wall.hp / wall.maxHp : 1;
+          const share = wallShare(post, walls.get(post.id));
           id = share > .6 ? levelFrame('wall', level) : share > 0 ? pirateFrames.wall[1] : pirateFrames.wall[2];
           smoking = share <= .6;
         } else {
@@ -1102,9 +1109,11 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       }
       for (const item of list ?? []) {
         if (!hasPost(item)) continue;
-        const post = posts.find(entry => entry.id === item.id);
-        if (post) { post.level = levelOf(item); if (item.kind === post.kind) continue; Object.assign(post, {kind: item.kind}); }
-        else posts.push(makePost(item));
+        let post = posts.find(entry => entry.id === item.id);
+        if (post) { post.level = levelOf(item); if (item.kind !== post.kind) Object.assign(post, {kind: item.kind}); }
+        else { post = makePost(item); posts.push(post); }
+        // A wall repaired or rebuilt in the break (D039): draw its new health, not the one the wave ended with.
+        if (post.kind === 'wall' && Number.isInteger(item.health)) post.rest = Math.max(0, Math.min(100, item.health)) / 100;
       }
       cannonsList = (list ?? []).filter(item => item.kind === 'cannon' || item.kind === 'mortar');
       fogUniforms.uCannons.value.forEach((vector, i) => vector.set(cannonsList[i]?.x ?? 0, cannonsList[i]?.z ?? 0));
@@ -1112,6 +1121,8 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     },
     // Each post's level, for checks.
     levels() { return Object.fromEntries(posts.map(post => [post.id, post.level])); },
+    // Each wall's drawn health share (0 broken, 1 whole), for checks.
+    wallShares(state = null) { const walls = new Map((state?.walls ?? []).map(wall => [wall.id, wall])); return Object.fromEntries(posts.filter(post => post.kind === 'wall').map(post => [post.id, wallShare(post, walls.get(post.id))])); },
     // For the pooling test and the perf panel: what the renderer holds right now.
     stats() {
       return { objects: root.children.length, owned: owned.length, ships: ships.size, balls: balls.size, splashes: splashes.size,
