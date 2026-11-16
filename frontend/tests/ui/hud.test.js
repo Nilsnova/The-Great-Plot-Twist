@@ -325,3 +325,43 @@ it('keeps the break card compact and off the island centre: × in its corner, Ne
     }
   });
 });
+
+// Playtest 16 Nov ("speech bubbles, announcements and the life bar on top of each other"): at the start of a busy wave
+// the bar with an open event, a toast, the countdown and the boss warning line up under each other; in a narrow
+// laptop window the narrator's bubble sits above the Musket button.
+it('lines up the bar, toasts, countdown and boss warning, and keeps the narrator off the musket',async()=>{
+  await evaluate.withPage(async page=>{
+    await mount(page);
+    await page.evaluate(async()=>{for(const sheet of ['/src/ui/toasts.css','/src/ui/shell.css','/src/pirates/pirates.css','/src/narrator/narrator.css'])await window.g20Import(sheet);});
+    for(const [width,height] of [[1280,720],[800,600],[390,844]]){
+      await page.setViewportSize({width,height});
+      const result=await page.evaluate(async()=>{
+        const {createWaveHud}=await window.g20Import('/src/pirates/hud.js');
+        const {showToast,toasts}=await window.g20Import('/src/ui/toasts.js');
+        const box=document.createElement('div');box.className='game-layer';document.querySelector('#game').append(box);
+        const hud=createWaveHud({container:box});
+        hud.bar({wave:10,shipsLeft:17,islandHp:100,maxIslandHp:100});
+        hud.event({id:'fire_ships',icon:'🔥',title:'Fire ships',line:'Burning hulks ram the walls and blow up. Sink them before they land.',open:true});
+        hud.countdown(9);hud.boss('⚠ Boss wave: two warships!');
+        showToast('Tap a ship to fire your musket (F).');
+        // The narrator speaks first, the Musket button appears after it (the order in a real wave).
+        const {createNarratorCard}=await window.g20Import('/src/narrator/card.js');
+        const card=createNarratorCard(document.querySelector('#game'));card.show({id:'test',text:'You sank the warship! Now raise the inner ring of walls around the heart.'});
+        const narrator=card.element;
+        await new Promise(resolve=>setTimeout(resolve,50));
+        hud.musket({ready:true,share:1,label:'Musket'});
+        await new Promise(resolve=>setTimeout(resolve,400));
+        const rect=node=>node.getBoundingClientRect(),q=selector=>box.querySelector(selector);
+        const overlap=(a,b)=>a.left<b.right-1&&b.left<a.right-1&&a.top<b.bottom-1&&b.top<a.bottom-1;
+        const parts={bar:rect(q('.pirate-bar')),toast:rect(document.querySelector('.u-toast')),countdown:rect(q('.pirate-countdown')),boss:rect(q('.pirate-boss')),
+          musket:rect(q('.pirate-musket')),narrator:rect(narrator)};
+        const names=Object.keys(parts),pairs=[];
+        for(let i=0;i<names.length;i++)for(let j=i+1;j<names.length;j++)if(overlap(parts[names[i]],parts[names[j]]))pairs.push(`${names[i]}+${names[j]}`);
+        const order=[parts.bar.bottom<=parts.toast.top,parts.toast.bottom<=parts.countdown.top];
+        hud.dispose();box.remove();card.dispose();toasts().clear();
+        return {pairs,order,countdownInside:parts.countdown.bottom<=innerHeight};
+      });
+      expect(result,`${width}x${height} ${JSON.stringify(result)}`).toEqual({pairs:[],order:[true,true],countdownInside:true});
+    }
+  });
+});

@@ -88,6 +88,13 @@ export function createToasts({parent = document.body, limit = TOAST_LIMIT} = {})
     // In the top layer (popover) a toast stays readable above an open panel's backdrop.
     if (!element.isConnected || typeof element.showPopover !== 'function') return;
     try { if (element.matches(':popover-open')) element.hidePopover(); if (stack.length) element.showPopover(); } catch { /* plain fixed toast */ }
+    measureStack();
+  }
+  // How much room the toasts take (playtest 16 Nov): in a wave the countdown and the boss warning line up under
+  // the bar's toasts instead of under them (--toast-stack-height, src/pirates/pirates.css).
+  function measureStack() {
+    const height = stack.length && element.isConnected ? element.offsetHeight : 0;
+    document.documentElement?.style.setProperty('--toast-stack-height', height > 0 ? `${height + 10}px` : '0px');
   }
   function remove(id) { const before = stack.length; stack = stack.filter(item => item.id !== id); if (stack.length !== before) render(); }
   function show(input) {
@@ -111,7 +118,7 @@ export function createToasts({parent = document.body, limit = TOAST_LIMIT} = {})
     hide(id) { const item = stack.find(entry => entry.id === id); if (item) clearTimeout(item.timer); remove(id); },
     clear() { for (const item of stack) clearTimeout(item.timer); stack = []; render(); },
     get shown() { return stack.map(({id, text, next: step, tone}) => ({id, text, next: step, tone})); },
-    dispose() { for (const item of stack) clearTimeout(item.timer); stack = []; watching?.disconnect(); watching = null; element.remove(); }};
+    dispose() { for (const item of stack) clearTimeout(item.timer); stack = []; watching?.disconnect(); watching = null; element.remove(); measureStack(); }};
 }
 
 // The game's one queue, created on first use inside #game (or the page body).

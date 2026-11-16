@@ -33,6 +33,10 @@ export function createNarratorCard(container = document.body, {onSkip = () => {}
     document.documentElement.style.setProperty('--narrator-card-height', `${Math.round(card.getBoundingClientRect().height)}px`);
   }
   addEventListener('resize', position);
+  // A control that appears or goes while the card shows (the Musket button at the start of a wave) moves it too
+  // (playtest 16 Nov: the card covered the Musket button). Only the hidden attribute is watched.
+  const controlsChange = typeof MutationObserver === 'function' ? new MutationObserver(position) : null;
+  const watch = on => { controlsChange?.disconnect(); if (on) controlsChange?.observe(container, {subtree: true, attributes: true, attributeFilter: ['hidden']}); };
   return {
     element: card,
     show(line) {
@@ -41,9 +45,10 @@ export function createNarratorCard(container = document.body, {onSkip = () => {}
       card.dataset.line = line.id;
       card.hidden = false;
       text.textContent = line.text;
-      position();
+      position(); watch(true);
     },
     hide() {
+      watch(false);
       card.hidden = true;
       delete card.dataset.line;
       text.textContent = '';
