@@ -6,6 +6,8 @@
 
 - **Responsible teammate:** Ianno (`Iannomh123456`)
 - **Agent assistance:** Codex, `gpt-6-luna` (high reasoning)
+- **Review:** Franz (`frcola`) must approve the current revision; Ianno manually reviews every PR.
+- **Merge:** this task agent will not merge or enable auto-merge; Ianno's task authorization excludes merging.
 - **Branch:** `fix/multiplayer-pause-flow`
 - **Status:** diagnosis confirmed on current `main` (`a9386656`); minimal journey fix in progress
 
