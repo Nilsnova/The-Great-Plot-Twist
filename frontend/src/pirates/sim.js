@@ -30,6 +30,7 @@ import { blocksAsTower, towerApproachPoint, towerEdgeDistance } from './tower-ob
 import { DEFENSES_V2 } from './defenses-v2.js';
 // D055: the upgrade trees after level 5 (two paths of three tiers each, src/pirates/tower-trees.js).
 import { readTree, treeStats } from './tower-trees.js';
+import { canFreeStructureRepair, readRecoveryPolicy } from './recovery-policy.js';
 
 const freeze = value => {
   for (const inner of Object.values(value)) if (inner && typeof inner === 'object') freeze(inner);
@@ -320,7 +321,12 @@ function readDefenses(list, { culverin = false } = {}) {
     const bonus = readBonus(item.kind, item.bonus); // the island's tier-2 pick for this kind (GAME-V3.md §5.1)
     const health = item.kind === 'wall' ? readHealth(item.health) : 100; // D039: 0..100, whole without one
     const tree = level === levels ? readTree(item.kind, item.tree) : null; // D055: a tree grows on a level-5 tower only
+    const recoveredHp = Number.isInteger(item.hpUnits) && item.hpUnits >= 0 && item.hpUnits <= 1_000_000
+      && finite(item.maxHP) && item.maxHP > 0 && typeof item.instanceId === 'string'
+      && Number.isInteger(item.repairSeq) && item.repairSeq >= 0
+      ? { hpUnits: item.hpUnits, maxHP: item.maxHP, instanceId: item.instanceId, repairSeq: item.repairSeq } : {};
     seen.add(item.id); out.push({ id: item.id, kind: item.kind, level, x: item.x, z: item.z, ...(spec ? { spec } : {}), ...(bonus ? { bonus } : {}), ...(health < 100 ? { health } : {}),
+      ...recoveredHp,
       ...(tree ? { tree } : {}) });
   }
   return out.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
@@ -502,6 +508,9 @@ function shuffle(list, random) {
  */
 export function createWave(options = {}) {
   const C = CONFIG, B = C.boarding, random = createRandom(options?.seed);
+  // Recovery v1 pauses every free structure repair path. An unknown version pair fails closed.
+  const recoveryPolicy = readRecoveryPolicy(options);
+  const freeStructureRepair = canFreeStructureRepair(recoveryPolicy);
   // The boarders draw from their own stream, so the fleet and the cannons' rolls do not depend on them.
   const crowd = createRandom((seedNumber(options?.seed) ^ 0x2545f491) >>> 0);
   const heart = readHeart(options?.heart);
@@ -569,18 +578,22 @@ export function createWave(options = {}) {
   const barracks = withRole('barracks'), taverns = withRole('tavern'), workshops = withRole('workshop');
   const W = HO.workshop, housesNear = (list, item, radius) => list.filter(house => distance(house.x, house.z, item.x, item.z) <= radius + 1e-9).length;
   const walls = defenses.filter(item => item.kind === 'wall').map(item => {
-    const skill = skillOf(item, C), hp = round2(C.levels.wall[item.level - 1].hp * (skill.hp ?? 1) * bonusOf(item, 'hp', C));
+    const skill = skillOf(item, C), baseHp = round2(C.levels.wall[item.level - 1].hp * (skill.hp ?? 1) * bonusOf(item, 'hp', C));
+    const hp = recoveryPolicy === 'structure-recovery-v1' && finite(item.maxHP) && item.maxHP > 0 ? item.maxHP : baseHp;
     // Workshops in reach: faster repairs, a shorter rebuild, and a broken wall that mends by itself.
     const shops = housesNear(workshops, item, W.radius), sooner = 1 - Math.min(W.maxFaster, W.faster * shops);
     // D039: the wall's hp starts at the share its last wave left it (0: broken, to be rebuilt); maxHp is its level's.
-    return { ...item, skill, repairBoost: round2((skill.repair ?? 1) * bonusOf(item, 'repair', C)), hp: startHp(hp, item.health), maxHp: hp, repairLeft: 0, repaired: 0, crew: false, rebuildAt: -Infinity, rebuilding: 0,
+    const initialHp = recoveryPolicy === 'structure-recovery-v1' && Number.isInteger(item.hpUnits)
+      ? hp * item.hpUnits / 1_000_000 : startHp(hp, item.health);
+    return { ...item, skill, repairBoost: round2((skill.repair ?? 1) * bonusOf(item, 'repair', C)), hp: initialHp, maxHp: hp, repairLeft: 0, repaired: 0, crew: false, rebuildAt: -Infinity, rebuilding: 0,
       inner: distance(item.x, item.z, heart.x, heart.z) <= heart.ring, bearing: Math.atan2(item.z - heart.z, item.x - heart.x),
       workshop: shops, boost: round2(1 + Math.min(W.maxRepair, W.repair * shops)), sooner: round2(sooner),
       cooldown: round2(C.wall.rebuildCooldown * sooner), mendAfter: shops ? Math.max(W.minMend, W.mend / shops) : Infinity, mending: 0 };
   });
   const cannonById = new Map(cannons.map(item => [item.id, item]));
   // T33: tower hp (inert unless the wave carries the rule): no dice, so the fleet's random stream is untouched.
-  const towerHealth = createTowerHealth({ enabled: options?.towerHealth === true, towers, now: () => now(), tick: C.tick });
+  const towerHealth = createTowerHealth({ enabled: options?.towerHealth === true, towers, now: () => now(), tick: C.tick,
+    recoveryVersion: options?.recoveryVersion });
   const towerById = new Map(towers.map(item => [item.id, item]));
   const wallById = new Map(walls.map(item => [item.id, item]));
   const wallsInOrder = [...walls].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)); // walls are already in id order; kept explicit
@@ -1079,6 +1092,7 @@ export function createWave(options = {}) {
       if (ticks * C.tick - cannon.lastShot < C.cannon.manualCooldown) return;
       fire(cannon, target, true, events);
     } else if (input.type === 'repair') {
+      if (!freeStructureRepair) return;
       const wall = typeof input.wallId === 'string' ? wallById.get(input.wallId) : undefined;
       // T33: with tower health the same message repairs a tower (wallId names it).
       if (!wall && towerHealth.enabled) { towerHealth.repair(towerById.get(input.wallId), captainStats(1, input.skills)); return; }
@@ -1090,6 +1104,7 @@ export function createWave(options = {}) {
       wall.repairRate = round2(C.wall.repairRate * stats.repairMultiplier * wall.repairBoost * wall.boost);
       boostWall(wall, stats); // an engineer's repair raises the wall's strength by 25% (once)
     } else if (input.type === 'rebuild') {
+      if (!freeStructureRepair) return;
       const wall = typeof input.wallId === 'string' ? wallById.get(input.wallId) : undefined;
       if (!wall && towerHealth.enabled) { towerHealth.rebuild(towerById.get(input.wallId), captainStats(1, input.skills), ticks * C.tick, events); return; }
       if (!wall || wall.hp > 0 || ticks * C.tick - wall.rebuildAt < wall.cooldown - 1e-9) return;
@@ -1677,25 +1692,28 @@ export function createWave(options = {}) {
     }
     for (const wall of walls) {
       wall.crew = false;
-      // Bastion (tier 3): a standing wall mends a little every tick by itself.
-      if (wall.skill.mend && wall.hp > 0 && wall.hp < wall.maxHp) wall.hp = round2(Math.min(wall.maxHp, wall.hp + wall.maxHp * wall.skill.mend * C.tick));
-      // A Workshop in reach (CONFIG.houses.workshop): a broken wall comes back by itself after a while.
-      if (wall.hp <= 0 && wall.workshop) {
-        wall.mending = round2(wall.mending + C.tick);
-        if (wall.mending + 1e-9 >= wall.mendAfter) rebuild(wall, 'workshop', events, W.share);
-        continue;
-      }
-      if (wall.repairLeft <= 0) continue;
-      const amount = Math.min((wall.repairRate ?? C.wall.repairRate) * C.tick, wall.maxHp - wall.hp);
-      wall.hp = round2(wall.hp + amount); wall.repaired += amount; wall.repairLeft -= C.tick;
-      if (wall.hp >= wall.maxHp || wall.repairLeft <= 1e-9) {
-        wall.repairLeft = 0;
-        events.push({ type: 'wall_repaired', t: now(), wallId: wall.id, hp: wall.hp, amount: round2(wall.repaired), x: wall.x, z: wall.z });
-        wall.repaired = 0;
+      if (freeStructureRepair) {
+        // Bastion (tier 3): a standing wall mends a little every tick by itself.
+        if (wall.skill.mend && wall.hp > 0 && wall.hp < wall.maxHp) wall.hp = round2(Math.min(wall.maxHp, wall.hp + wall.maxHp * wall.skill.mend * C.tick));
+        // A Workshop in reach (CONFIG.houses.workshop): a broken wall comes back by itself after a while.
+        if (wall.hp <= 0 && wall.workshop) {
+          wall.mending = round2(wall.mending + C.tick);
+          if (wall.mending + 1e-9 >= wall.mendAfter) rebuild(wall, 'workshop', events, W.share);
+          continue;
+        }
+        if (wall.repairLeft > 0) {
+          const amount = Math.min((wall.repairRate ?? C.wall.repairRate) * C.tick, wall.maxHp - wall.hp);
+          wall.hp = round2(wall.hp + amount); wall.repaired += amount; wall.repairLeft -= C.tick;
+          if (wall.hp >= wall.maxHp || wall.repairLeft <= 1e-9) {
+            wall.repairLeft = 0;
+            events.push({ type: 'wall_repaired', t: now(), wallId: wall.id, hp: wall.hp, amount: round2(wall.repaired), x: wall.x, z: wall.z });
+            wall.repaired = 0;
+          }
+        }
       }
     }
-    towerHealth.tick(t, events); // T33: the towers' E repairs in progress
-    if (crew.carpenter) {
+    if (freeStructureRepair) towerHealth.tick(t, events); // T33: legacy E repairs in progress
+    if (freeStructureRepair && crew.carpenter) {
       // Each carpenter takes the most damaged wall nobody else is on (a broken one first); two share a lone
       // one. A standing wall gains `rate` hp a second; a broken one comes back at the rebuild share after
       // `rebuild` seconds of work (two carpenters together take half the time).
@@ -1723,7 +1741,30 @@ export function createWave(options = {}) {
     return { survived, shipsSunk: sunk, boardersKilled: killed, islandHp, time: now(), ...(bonuses.length ? { bonuses } : {}), ...rescue.result() };
   }
 
+  function applyRecoveryEvent(event) {
+    if (recoveryPolicy !== 'structure-recovery-v1' || event?.type !== 'structure_repaired'
+      || !Number.isInteger(event.serverSeq) || event.serverSeq < 1
+      || !Number.isInteger(event.effectiveTick) || event.effectiveTick !== ticks) return false;
+    const payload = event.payload;
+    if (!payload || typeof payload.spot !== 'string' || typeof payload.instanceId !== 'string'
+      || payload.hpUnits !== 1_000_000 || !finite(payload.maxHP)
+      || !Number.isInteger(payload.repairSeq) || payload.repairSeq < 1) return false;
+    const structure = wallById.get(payload.spot) ?? towerById.get(payload.spot);
+    if (!structure || structure.instanceId !== payload.instanceId || structure.maxHp !== payload.maxHP
+      || payload.repairSeq <= (structure.repairSeq ?? 0)) return false;
+    structure.hp = structure.maxHp;
+    structure.repairSeq = payload.repairSeq;
+    structure.repairLeft = 0;
+    if (structure.kind === 'wall') {
+      structure.repaired = 0;
+      structure.rebuilding = 0;
+      structure.mending = 0;
+    }
+    return true;
+  }
+
   return {
+    applyRecoveryEvent,
     step(dt, inputs = []) {
       const events = [];
       if (done) return events;

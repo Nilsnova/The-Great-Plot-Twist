@@ -55,6 +55,8 @@ import { getPreferences } from '../settings/preferences.js';
 import { healthReport, readWalls, withHealth } from './wall-health.js';
 // The wave's simulation rules from the server (tower health, …), the same on every client of the wave.
 import { readRules } from './wave-rules.js';
+import { isParticipantToken, readRecoveryPolicy } from './recovery-policy.js';
+import { readRecoverySnapshot, recoveryWaveDefenses } from './recovery-snapshot.js';
 
 const MAX_TICKS_PER_FRAME = 600;      // a friend joining late catches up 30 s of wave per frame
 const SHOWN_LATE_SECONDS = 1;         // events older than this (catching up) are not drawn or heard
@@ -130,10 +132,23 @@ export function readWaveInfo(info) {
   if (!info || typeof info !== 'object' || typeof info.waveId !== 'string' || !info.waveId) return null;
   const startsAtMs = parseTime(info.startsAt);
   if (!Number.isFinite(startsAtMs) || !Number.isFinite(Number(info.seed))) return null;
+  const recoveryVersion = info.recoveryVersion ?? 0, waveProtocol = info.waveProtocol ?? 1;
+  const recoveryPolicy = readRecoveryPolicy({ recoveryVersion, waveProtocol });
+  if (!recoveryPolicy) return null;
+  const snapshot = recoveryPolicy === 'structure-recovery-v1' ? readRecoverySnapshot(info.initialSnapshot, info.waveId) : null;
+  if (recoveryPolicy === 'structure-recovery-v1' && (!snapshot || !isParticipantToken(info.participantToken)
+    || snapshot.seed !== Number(info.seed)
+    || Date.parse(snapshot.startsAt) !== startsAtMs
+    || snapshot.createWave.seed !== snapshot.seed
+    || snapshot.createWave.wave !== info.wave)) return null;
+  const rules = readRules(info.rules);
+  if ((recoveryPolicy === 'structure-recovery-v1') !== rules.structureRecovery) return null;
+  if (snapshot && JSON.stringify(readRules(snapshot.rules)) !== JSON.stringify(rules)) return null;
   const wave = Number.isInteger(info.wave) && info.wave > 0 ? info.wave : 1;
   const weather = info.weather && typeof info.weather === 'object' ? info.weather : {};
   return { waveId: info.waveId, wave, seed: Number(info.seed), startsAtMs, weather, flagship: info.flagship === true,
-    boss: typeof info.boss === 'boolean' ? info.boss : undefined, walls: readWalls(info.walls), rules: readRules(info.rules),
+    boss: typeof info.boss === 'boolean' ? info.boss : undefined, walls: readWalls(info.walls), rules,
+    recoveryVersion, waveProtocol, ...(snapshot ? { initialSnapshot: snapshot, participantToken: info.participantToken } : {}),
     serverTimeMs: Number.isFinite(parseTime(info.serverTime)) ? parseTime(info.serverTime) : null };
 }
 
@@ -193,7 +208,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   startNextWave = null, breakSeconds = BREAK_SECONDS,
   loadAuto = readAuto, saveAuto = writeAuto, holdBreak = null, toggleHold = null, reviveCaptain = null,
   createEventArt = defaultEventArt, createFinisherScene = defaultFinisherScene, easyFinishers = readEasy, practiceIdentity = () => null,
-  guide: guideOn = false, createGuide = defaultGuide } = {}) {
+  guide: guideOn = false, createGuide = defaultGuide, recoveryTransport = null } = {}) {
   // The captains' poses (src/pirates/poses.js): your character and the teammates' figures fire in their own body.
   const poses = createPoses({ now: () => now() / 1000 });
   let wave = null, disposed = false, pressed = false, shootPressed = false, shootHeld = false, down = null, shake = 0;
@@ -204,6 +219,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   const read = (get, fallback) => { try { return get(); } catch { return fallback; } };
   const mySkills = () => readSkills(skills ?? read(captainSkills, []));
   const myWeapon = () => readWeapon(weapon ?? read(captainWeapon, 'musket'));
+  const actorId = current => current?.info?.recoveryVersion === 1 ? current.info.participantToken : playerId;
   // Your gun's numbers now: level, skills and the equipped weapon (captain-stats.js).
   const myStats = () => captainStats(myLevel(), mySkills(), myWeapon());
   const timers = new Set(), stops = [];
@@ -270,6 +286,13 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     if (disposed) return null;
     const info = raw?.startsAtMs !== undefined ? raw : readWaveInfo(raw);
     if (!info) return null;
+    const recoveryPolicy = readRecoveryPolicy(info);
+    if (!recoveryPolicy) return null;
+    if (recoveryPolicy === 'structure-recovery-v1' && !isParticipantToken(info.participantToken)) return null;
+    if (recoveryPolicy === 'structure-recovery-v1' && (!recoveryTransport
+      || typeof recoveryTransport.sendInput !== 'function' || typeof recoveryTransport.readEvents !== 'function')) return null;
+    const snapshot = recoveryPolicy === 'structure-recovery-v1' ? readRecoverySnapshot(info.initialSnapshot, info.waveId) : null;
+    if (recoveryPolicy === 'structure-recovery-v1' && !snapshot) return null;
     lastTowerObstacles = info.rules?.towerObstacles === true;
     if (wave?.info.waveId === info.waveId) return wave;
     // A friend rang the next wave while ours still runs here (a ship that sinks a moment later on this
@@ -281,14 +304,22 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     // D039: with the flag wall_recovery on the server sends each wall's health after its last wave.
     // T43: a culverin fights only in a wave whose rules say defenses_v2 (every client of the wave alike); without
     // the rule it is left out here too, so the screen does not show a gun that never fires.
-    const defenses = withHealth(getDefenses() ?? [], info.walls).filter(item => item?.kind !== 'culverin' || info.rules?.defensesV2 === true);
+    const sourceDefenses = snapshot ? recoveryWaveDefenses(snapshot) : withHealth(getDefenses() ?? [], info.walls);
+    const defenses = (sourceDefenses ?? []).filter(item => item?.kind !== 'culverin' || info.rules?.defensesV2 === true);
     const offset = info.serverTimeMs !== null ? info.serverTimeMs - now() : serverOffset();
     // v3 waves: the event from the wave's seed and number (the server repeats it for the galleon's bonus), and
     // the boss finishers with the room's wave gap (their grace time). simOptions may name an event (the demo).
     const event = info.flagship ? null : eventFor(info.wave, info.seed);
-    const sim = createWave({ seed: info.seed, wave: info.wave, weather: info.weather, flagship: info.flagship, defenses, countdown: 0,
-      crew: getCrew() ?? undefined, ...(info.boss !== undefined ? { boss: info.boss } : {}), event, finishers: true, finisherPreparation: true, gapMs: waveGapMs,
-      ...(info.rules ?? {}), ...simOptions }); // the server's rules for this wave (wave-rules.js); simOptions last (the demo harness)
+    const simOptionsForWave = snapshot ? { ...snapshot.createWave,
+      seed: snapshot.seed, wave: info.wave, weather: snapshot.createWave.weather ?? snapshot.weather,
+      flagship: snapshot.createWave.flagship ?? info.flagship, defenses, countdown: 0,
+      ...(snapshot.createWave.boss !== undefined ? {} : (info.boss !== undefined ? { boss: info.boss } : {})),
+      event: snapshot.createWave.event ?? event, finishers: true, finisherPreparation: true, gapMs: waveGapMs,
+      ...info.rules, recoveryVersion: info.recoveryVersion, waveProtocol: info.waveProtocol }
+      : { seed: info.seed, wave: info.wave, weather: info.weather, flagship: info.flagship, defenses, countdown: 0,
+        crew: getCrew() ?? undefined, ...(info.boss !== undefined ? { boss: info.boss } : {}), event, finishers: true,
+        finisherPreparation: true, gapMs: waveGapMs, ...(info.rules ?? {}), ...simOptions };
+    const sim = createWave(simOptionsForWave);
     const first = sim.state();
     const current = wave = { info, sim, defenses, offset, ticks: 0, seq: 0, schedule: createInputSchedule(), done: false, finished: false,
       pause: null, boss: first.boss ? bossText(first.warships) : '', captainAt: -Infinity, bladeAt: -Infinity, handAt: -Infinity,
@@ -334,7 +365,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   const finishing = current => current?.state?.finisher?.active === true;
   function submit(input, lead = INPUT_LEAD_TICKS) {
     if (!wave || wave.done || wave.state.phase !== 'running') return false;
-    const entry = { by: playerId, seq: ++wave.seq, tick: wave.ticks + lead, input };
+    const entry = { by: actorId(wave), seq: ++wave.seq, tick: wave.ticks + lead, input };
     wave.schedule.add(entry, wave.ticks);
     const message = toMessage(input, { ...entry, waveId: wave.info.waveId });
     if (message) try { room?.send?.(message.type, message.payload); } catch (error) { console.error(error); }
@@ -342,8 +373,9 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   }
   function receive(type, payload) {
     if (!wave || wave.done) return;
+    if (wave.info.recoveryVersion === 1) return; // Recovery v1 accepts commands only from durable replay.
     const entry = readMessage(type, payload, wave.info.waveId);
-    if (!entry || entry.by === playerId) return;
+    if (!entry || entry.by === actorId(wave)) return;
     if (entry.input.type === 'lamps_lit') wave.lampsSent = true; // somebody else lit them first
     wave.schedule.add(entry, wave.ticks);
   }
