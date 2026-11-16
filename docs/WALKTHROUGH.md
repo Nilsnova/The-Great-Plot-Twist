@@ -1579,29 +1579,37 @@ unverified. See the full [T35 contract and checks](../specs/T35-tower-path-obsta
 
 ## #74 — Fresh start resets the old personal weapons — Nicolas Radomski
 
-**What and where.** [fresh_start.sql](../scripts/admin/fresh_start.sql) is the admin
-script that lets every player start the island game again. Its step 4 already set
-each island's best wave and flags to 0. It now also runs one more `update` on
-`islands`: `weapons_owned` becomes `'{musket}'` and `weapon_equipped` becomes
-`'musket'`. The number of changed islands goes into the variable `v_weapons` and
-shows up in the message as `island weapons reset: N`.
+*In my own words (explain-back, 16 Nov).*
 
-**Why.** These two columns come from the old weapon shop
-([20261112030000_captain_skills.sql](../supabase/migrations/20261112030000_captain_skills.sql)).
-Since the shared arsenal (D042) the game no longer uses them, but a bought weapon
-would still sit there after a fresh start. Both columns change in one `update`
-because a check rule says the carried weapon must be one the island owns. The
-`where` only picks islands that differ from the musket, so the count is honest and
-a second run changes 0 rows. The dry run and the real run share one counts
-sentence, so both report the new number.
+**What is fresh_start.sql?** [fresh_start.sql](../scripts/admin/fresh_start.sql) is a
+script for the admin. It resets the whole island game, so everyone starts again, for
+example before the presentation. Think of a board game: all pieces go back into the box.
+Only the project owner runs it, by hand; no code in the game calls it. It has a dry run
+first: the dry run only counts what it would change ("3 islands still have a pistol")
+and changes nothing, so you can check before the real run.
 
-**Tests and limits.** The two fresh-start tests in
+**What was the problem?** Before the shared arsenal, you could buy weapons in a shop,
+for example a pistol. The island table keeps them in two columns: `weapons_owned`
+(which weapons the island owns) and `weapon_equipped` (which one it carries). The
+script reset everything else, but it forgot these two columns. So after a fresh start,
+players still had the weapons they bought.
+
+**What did I change?** Now the script also puts every island back to the musket, the
+starting weapon: `weapons_owned` becomes `{musket}` and `weapon_equipped` becomes
+`musket`. It counts how many islands it changed and writes it in its message
+(`island weapons reset: N`). Both columns change in one step, because of a rule in the
+database: you can only carry a weapon you own. If you run the script twice, the second
+run changes nothing, because only islands that are not on the musket are changed.
+
+**How do the tests check it?** The two fresh-start tests in
 [test_islands_and_waves_sql.py](../backend/server/tests/island_sql/test_islands_and_waves_sql.py)
-give one island pistols. The dry run must report the count and leave the pistols;
-the real run, run twice, must leave only the musket. They run on a throwaway local
-Postgres, never on the live project, so they do not prove what the live data looks
-like. The script is run by hand by the project owner; no code calls it. If the old
-columns are dropped one day, this step and its count can be deleted again.
+give one test island pistols. In the dry run the script counts 1 island, but the
+pistols stay. Then the real run, twice: after it the island has only the musket, and
+the second run changes nothing.
+
+**What do the tests not check?** They run on a throwaway test database on the laptop,
+not on the real Supabase database. So they do not show what the real players' data
+looks like. There is also no test with many weapons at once.
 
 ## 32. A paid wall repair survives a delayed wave record — Ianno Hollensteiner (#82)
 
