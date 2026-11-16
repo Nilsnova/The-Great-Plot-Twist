@@ -586,6 +586,7 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 
 ## Log
 
+- **Ianno / 2026-11-16, T48 branch sync:** merged latest `main` (`937b1b56`) into `fix/leaderboard-scalability`, preserving the presenter-rehearsal policy and T50–T53 owner tasks in `docs/OPEN-TODOS.md`. The upstream change was docs-only; application source and test evidence are unchanged. PR #109 remains draft for Franz's current-revision review.
 - **Ianno / 2026-11-16, T48 full backend verification:** `cd backend && uv run pytest -q` passed: 536,612 passed, 289 skipped in 1,349.68 seconds. The skips are optional checks disabled in the normal backend run; focused leaderboard scratch SQL was separately run with `CASE_PG_SCRATCH=1` and passed 6/6. No live database operation.
 - **Ianno / 2026-11-16, T48 review coordination:** Franz (`frcola`) is the required human reviewer of PR #109's completed current revision; Ianno manually reviews every PR. Keep #109 in draft through verification; root coordinates the review request after verification. An agent does not merge.
 - **Ianno / 2026-11-16, T48 rollout dependency:** migration `20261116100000` must be applied before the new backend deploy. If PR merge triggers Vercel deployment, apply it before human merge; no live application authorization was given. Keep #109 draft for required current-revision review.
