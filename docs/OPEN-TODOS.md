@@ -179,3 +179,12 @@ Collected from the sprint's PR bodies and decisions; none blocks a flag that is 
 | **Reload old tabs after a flag flips** | PR #52, PR #63 | A running wave keeps its rules (PR #63), but a client with an old tab can still draw and simulate with the previous code or answers. Say "reload" when a flag is switched. |
 | **Do not switch `defenses_v2` off while culverins are built** | [T43 spec](../specs/T43-new-defenses.md) | With the flag off the server hides a culverin row (`plan_spots()` ignores it), so built culverins vanish from play. Decide first what happens to them (refund, convert or keep the flag on). |
 | **Culverin balance** | [T43 spec](../specs/T43-new-defenses.md), PR #56 | Mid island, wave 16: the cannons sink 4 of 8 gunboats before their first shot, one culverin in place of a cannon 0 of 8 (fewer balls for the boarders). Needs a playtest before D048 is accepted. |
+
+## 10. Owner's play-test, Mon 16 Nov (taken by the owner's agents)
+
+| ID | Task | Status |
+|---|---|---|
+| T50 | **Ships fire at real targets, and their hits count.** In wave 1 the ships fire at a spot on the beach where nothing stands (the red landing ring with the skull), and their shots hurt nobody. Ship shots must aim at something real (a tower, a wall, the heart of the island), and a hit must cost that target health: the heart's ♥ drops, towers and walls take damage under the existing health rules, so ignoring ships is no longer safe. Waves 1–3 stay winnable for a new player; deterministic on every screen. | In progress |
+| T51 | **No outdated island behind the front door.** A first-time player stands on an old island before they have one. Until a player has a game, the background is open water only. | In progress |
+| T52 | **A guided start and a tutorial for every new thing.** When a new island starts (wave 1), the intro plays, then a short guided tutorial of what you can do at the start (walk, press E at a build spot, build a cannon, ring the bell, shoot); later, whenever something new opens (campaign unlocks), a short tutorial for that thing plays once. Skippable, captions, works with the narrator. | In progress |
+| T53 | **Reset my island in Settings.** A player can reset their own island to a fresh start (no buildings, wave 0, research, wreck, arsenal and captain back to the start, 🪙 100), between waves only, after typing the island code to confirm. Members of the game stay members. Server-checked, idempotent, one migration. | In progress |
