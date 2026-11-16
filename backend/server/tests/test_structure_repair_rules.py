@@ -10,7 +10,7 @@ import pytest
 from pydantic import ValidationError
 
 from server.island.catalogue import catalogue_for_flags, load_island
-from server.island.structure_repair_models import RepairRequest
+from server.island.structure_repair_models import RepairRequest, RepairResponse
 from server.island.structure_repair_rules import (
     intent_fingerprint,
     repair_price,
@@ -124,6 +124,54 @@ def test_repair_request_accepts_t54_wire_shape_and_strict_types():
 def test_repair_request_rejects_invalid_wire_values(changes):
     with pytest.raises(ValidationError):
         request(**changes)
+
+
+def test_repair_response_keeps_commit_balance_separate_from_current_wallet_and_state():
+    response = RepairResponse.model_validate(
+        {
+            "receipt": {
+                "actionUid": "repair_123456",
+                "spot": "cannon_8",
+                "instanceId": "10b7b257-4f3f-4dd8-bcd3-b18a68d6e468",
+                "kind": "cannon",
+                "level": 2,
+                "chargedPrice": 60,
+                "balanceAtCommit": 40,
+                "waveId": "25126b41-cff8-4f53-b4bd-526849dd9ee0",
+                "useOrdinal": 1,
+                "eventSeq": 11,
+                "repairSeq": 10,
+            },
+            "currentState": {"repairWindow": "reserved_wave", "remainingPaidUses": 2},
+            "coins": 15,
+        }
+    )
+
+    assert response.receipt.balance_at_commit == 40
+    assert response.coins == 15
+
+
+def test_repair_response_rejects_incomplete_shared_quota_receipt():
+    with pytest.raises(ValidationError, match="quota receipt fields"):
+        RepairResponse.model_validate(
+            {
+                "receipt": {
+                    "actionUid": "repair_123456",
+                    "spot": "wall_1",
+                    "instanceId": "10b7b257-4f3f-4dd8-bcd3-b18a68d6e468",
+                    "kind": "wall",
+                    "level": 1,
+                    "chargedPrice": 10,
+                    "balanceAtCommit": 90,
+                    "waveId": "25126b41-cff8-4f53-b4bd-526849dd9ee0",
+                    "useOrdinal": None,
+                    "eventSeq": 2,
+                    "repairSeq": 1,
+                },
+                "currentState": {},
+                "coins": 90,
+            }
+        )
 
 
 def test_request_fingerprint_ignores_phase_wave_and_repair_sequence_guards():

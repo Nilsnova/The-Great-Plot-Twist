@@ -53,3 +53,39 @@ class RepairRequest(BaseModel):
         if has_wave != (self.expected_window == "reserved_wave"):
             raise ValueError("expectedWaveId must be present only for a reserved_wave quote.")
         return self
+
+
+class RepairReceipt(BaseModel):
+    """Immutable facts of one successful charge, separate from current state and wallet."""
+
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+
+    action_uid: ActionUid = Field(alias="actionUid")
+    spot: SpotId
+    instance_id: UUID = Field(alias="instanceId")
+    kind: Literal["wall", "cannon", "mortar", "harpoon", "culverin", "swivel"]
+    level: StrictInt = Field(ge=1, le=5)
+    charged_price: StrictInt = Field(alias="chargedPrice", ge=1, le=MAX_DELTA)
+    balance_at_commit: StrictInt = Field(alias="balanceAtCommit", ge=0)
+    wave_id: UUID | None = Field(alias="waveId")
+    use_ordinal: StrictInt | None = Field(alias="useOrdinal", ge=1, le=3)
+    event_seq: StrictInt | None = Field(alias="eventSeq", ge=1, le=9_223_372_036_854_775_807)
+    repair_seq: StrictInt = Field(alias="repairSeq", ge=1, le=9_223_372_036_854_775_807)
+
+    @model_validator(mode="after")
+    def check_quota_receipt(self) -> "RepairReceipt":
+        """A wave UUID, shared quota ordinal and event sequence are an all-or-none set."""
+        values = (self.wave_id, self.use_ordinal, self.event_seq)
+        if any(value is None for value in values) and any(value is not None for value in values):
+            raise ValueError("Wave quota receipt fields must be present together.")
+        return self
+
+
+class RepairResponse(BaseModel):
+    """One retry-safe receipt plus separately current caller balance and canonical state."""
+
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+
+    receipt: RepairReceipt
+    current_state: dict[str, object] = Field(alias="currentState")
+    coins: StrictInt = Field(ge=0)
