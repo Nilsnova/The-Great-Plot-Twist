@@ -35,3 +35,14 @@ Nothing in this note is live yet. Live is `main` at the time of writing (this mo
 - Narrator voices: Nico voices the new lines with his own ElevenLabs key after the release (`python3 -I scripts/voice/generate.py --narrator --voice-id JBFqnCBsd6RMkjVDRZzb`); do not voice them from the owner's key.
 - No personal names in code comments.
 - Not done here: T25 (sender check in the wave room); the old branches `fix/v3-t25-sender`, `fix/v3-walls`, `fix/v3-menus` are stale and can be dropped.
+
+## Integration on `integ/owner-0116` (16 Nov, evening)
+
+Nils approved "push all to main". One branch from `main` with `git merge --no-ff` of `owner/integrate-2026-11-16`, `feat/v3-t50-shipfire`, `docs/74-own-words` (#119) and `feat/u-wave-preparation` (#94), plus the one fix commit of `review/rv-ianno` (`7c8fdfa0`, cherry-picked). Not taken:
+
+- `review/rv-ianno`'s merges of #84/#86 (already on `main`) and its `79ad773d`, which renamed Ianno's migrations to `20261116050000`/`20261116050100`: `main` keeps `20261115150000_wall_restore_record_fence.sql` (applied live) and `20261115160000_tower_obstacles.sql` (not applied), so the same migration is never in twice.
+- `feat/island-reset` (D054 "Start fresh", migration `20261116010000`, never applied): superseded by T53 (see DECISIONS D054).
+
+**Migrations to apply, in this order, before `main` deploys** (the T53 Settings section calls the new function as soon as the backend is live, only behind the flag `islands`): paste [`apply-2026-11-16.sql`](apply-2026-11-16.sql) into the Supabase SQL editor. It holds `20261115160000_tower_obstacles`, `20261116070000_island_fresh_start` and `20261116160000_ship_fire_rule` verbatim, in one transaction, then registers the three versions. `20261116160000` is the last check rule and lists all six wave rule names (`tower_health`, `pathing`, `tower_obstacles`, `rescue`, `defenses_v2`, `ship_fire`).
+
+Flags: no production flag is switched on. `ship_fire` (new) and `tower_obstacles` stay off; switch `ship_fire` on only after the SQL above is applied.
