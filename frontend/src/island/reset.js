@@ -15,7 +15,7 @@ import {node, uniqueId} from '../ui/kit/dom.js';
 import {islandCode} from './codes.js';
 
 export const RESET_TITLE = 'Reset my island';
-export const RESET_WHAT = 'Start your island again from nothing: every building except the cabin, the waves won, the research, ' +
+export const RESET_WHAT = 'Start your island again from nothing: every building but the cabin, the waves won, the research, ' +
   'the wreck, the arsenal, your crew and your captain\'s level and skills go back to the start, and your coins become 🪙 100.';
 export const RESET_STAYS = 'Your friends stay in your game. This cannot be undone.';
 export const MEMBER_LINE = 'Only the host can reset this game\'s island.';
@@ -70,7 +70,7 @@ export function createResetSection({read = () => null, reset = async () => ({ok:
     const model = resetModel(state, input.value, {busy});
     button.disabled = !model.enabled;
     button.setAttribute('aria-disabled', String(!model.enabled));
-    button.textContent = busy ? 'Resetting…' : RESET_TITLE;
+    button.textContent = busy ? 'Starting again…' : RESET_TITLE;
     input.setAttribute('aria-invalid', String(input.value.trim() !== '' && !model.matches));
     hint.textContent = model.hint;
     return model;
@@ -79,7 +79,7 @@ export function createResetSection({read = () => null, reset = async () => ({ok:
   form.addEventListener('submit', async event => {
     event.preventDefault();
     if (!paint().enabled) { input.focus(); return; }
-    busy = true; paint(); status.textContent = 'Resetting your island…';
+    busy = true; paint(); status.textContent = 'Starting your island again…';
     let answer;
     try { answer = await reset(input.value); } catch { answer = {ok: false}; }
     busy = false;
