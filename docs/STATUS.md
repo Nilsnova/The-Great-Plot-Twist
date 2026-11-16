@@ -14,6 +14,8 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
+**16 Nov / Ianno — shared defense recovery:** [draft PR #85](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/85) remains design only. Confirmed: Carpenter/Workshop automatic wall work continues during battle; a wall rebuilt and destroyed again starts a fresh recovery lifecycle, replacing its original deadline. The captain repair-skill/Engineer replacement is still undecided. Current-main scope also includes the new HP-bearing swivel. No recovery implementation is authorized.
+
 **15 Nov, T33 persistent tower damage / Ianno:** [draft PR #85](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/85) contains design only; no implementation is authorized. The confirmed shared rule heals every HP-bearing defense with positive ending hp to full at wave end; destroyed defenses recover after 10 minutes or one subsequent wave, whichever comes first, only at an inactive-wave boundary. Scope is walls plus cannon/mortar/harpoon/culverin; watchtower and houses remain excluded. Player E repair/rebuild is disabled during new-policy battles; existing wall-only automatic Carpenter/Workshop repairs continue unchanged. Captain Shipwright repair skills and the Engineer wall-health combat bonus lose their current player-action effect; a compatibility treatment is undecided.
 
 
@@ -240,6 +242,8 @@ Nobody has decided these yet. Until they are decided, the plan in ROADMAP.md sta
 6. **Pick a package.** Take your lane's next package below, or one from "Start today" in ROADMAP.md. Open an issue with the goal, acceptance checks, scope, responsible teammate and likely files. Create your branch from `main` (`git switch main`, `git pull`, then for example `git switch -c feat/l1-live-weather`). Paste the agent brief below and open a draft pull request early.
 
 ## Next steps per lane
+
+**Ianno / shared defense recovery:** decide the captain-skill replacement effects, support range and multiplayer stacking, then review the final plan against current main before authorizing implementation of [#85](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/85). The second-destruction choice is settled: restart the lifecycle.
 
 
 **Johannes / B2:** review draft #58 and check touch/keyboard on a physical phone. Continue the remaining current-v3 phone journey separately; this PR only fixes four island targets. Preserve all teammate handovers and recheck current main before a later merge. No merge without Johannes explicit OK and independent human approval.
@@ -586,6 +590,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+- **2026-11-16 / Ianno, shared defense recovery, branch `docs/t33-persistent-tower-damage-design`.** Recorded the confirmed fresh lifecycle after automatic rebuild and re-destruction, retained the automatic battle crew exception, and clarified that the Quick Fix crew-support example is unapproved. A targeted audit of main `a9386656` identified swivel and tower trees for the final implementation scope; no source code was changed. Codex assistance; design-only PR #85 still awaits the skill decision and final human plan approval.
 
 - **2026-11-15, T33 compatibility audit, branch `docs/t33-persistent-tower-damage-design`.** Added the exact Captain Shipwright/Engineer effects affected by the confirmed player-repair restriction and documented the compatibility decision; passive crew support is preferred to evaluate, but no effect mapping or stacking is approved. One Workshop rebuild/re-destruction recovery edge also remains open. Design only; no implementation authorized; draft PR #85 awaits human review.
 - **2026-11-15, T33 persistent tower damage, branch `docs/t33-persistent-tower-damage-design`.** Codex for Ianno opened draft [PR #85](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/85), adding a proposed design spec only. Source links and `git diff --check` pass. User confirmed positive ending hp restores whole at wave end; destroyed defenses recover after 10 minutes or one subsequent wave, whichever comes sooner, only at an inactive-wave boundary; paid rebuild is instant between waves; player E repair/rebuild is disabled during new-policy battle. Current wall-only Carpenter/Workshop automatic repairs continue during battle. One edge remains: if Workshop rebuilds a destroyed wall during its one subsequent wave and the wall is destroyed again before the wave ends, restart recovery or let the original deadline win? Final design approval and human review are pending. Captain Shipwright repair-rate/rebuild-share/range skills and the Engineer wall-health combat boost become inert unless the user chooses a compatibility treatment; passive crew support is the preferred option to evaluate, with its effects/stacking still undecided. Engineer 10% build discount remains. No production code, migration, live change or implementation authorization.
