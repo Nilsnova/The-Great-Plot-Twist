@@ -20,6 +20,8 @@ export function createTutorialHooks({island = () => null, place = () => null, pl
     return {place: place(), code: lane?.gameCode ?? null, wave, card: lane?.ui?.open ?? null,
       waveRunning: waveRunning() === true, blocked: blocked() === true, narrating: !!narrating(),
       cutscene: !!doc?.querySelector('dialog.cutscene[open]'), dialog: !!doc?.querySelector('dialog[open]'),
+      // The pause menu (Menu, or Escape): the guide's Menu step counts it too.
+      menu: !!doc?.querySelector('dialog.shell-screen[open]:not([data-mode="title"])'),
       player: player?.position ? {x: player.position.x, z: player.position.z} : null};
   }
   // A zone on screen in client pixels: {x, y, size, inside}. 'hud:menu' is the HUD's Menu button.

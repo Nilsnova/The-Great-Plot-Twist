@@ -53,7 +53,7 @@ describe('the guided start', () => {
     expect(t.tutorials.guide.current).toBe('menu');
     t.state.card = null; t.frame();
     expect(t.coach.pointed).toMatchObject({id: 'hud:menu'});
-    t.events.emit({type: 'hud_opened', what: 'menu'});
+    t.state.menu = true; t.frame(); t.state.menu = false; // the pause menu opened (Menu or Escape)
     expect(t.tutorials.guide.current).toBe('bell');
     t.frame(); expect(t.coach.pointed).toMatchObject({id: 'island_bell'});
     t.events.emit({type: 'wave_controller_started', wave: 1});
@@ -68,6 +68,13 @@ describe('the guided start', () => {
     expect(t.views.at(-1)).toBeNull(); // the goals are back in the strip
     expect(saved(t.storage).games['ISLE-K7Q2M'].guide.status).toBe('done');
     await flush();
+  });
+  it('counts the Menu button or a goal tapped (hud_opened from the HUD) for the Menu step', () => {
+    const t = make();
+    t.frame(); t.tutorials.skip(false); t.tutorials.skip(false); t.tutorials.skip(false);
+    expect(t.tutorials.guide.current).toBe('menu');
+    t.events.emit({type: 'hud_opened', what: 'goals'});
+    expect(t.tutorials.guide.current).toBe('bell');
   });
   it('waits at most a while for the narrator, and not during a cutscene or a card', () => {
     const t = make({game: {narrating: true, cutscene: true}});

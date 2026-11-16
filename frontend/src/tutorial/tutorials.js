@@ -22,7 +22,7 @@
 //   tutorials.replay()     Settings › Replay the guided start (bus event tutorial_replay)
 //   tutorials.active       an unlock card is open (the game pauses walking, like any card)
 import {GUIDE_STEPS, GUIDE_TITLE, applyGuideEvent, guideCaption, guideCurrent, guideStart, guideView, skipGuideStep} from '../ui/first-quests.js';
-import {GUIDE_EVENTS, BUILD_CARD_OPENED, PLAYER_MOVED, WAVE_BEGAN} from '../ui/quest-events.js';
+import {GUIDE_EVENTS, BUILD_CARD_OPENED, HUD_OPENED, PLAYER_MOVED, WAVE_BEGAN} from '../ui/quest-events.js';
 import {gameKey} from '../narrator/logic.js';
 import {getPreferences, onPreferences as watchPreferences} from '../settings/preferences.js';
 import {cardById, cardsBetween, cardsOpenAt, cardText} from './unlock-cards.js';
@@ -185,6 +185,7 @@ export function createTutorials({container = globalThis.document?.body, on, stor
     if (guiding) {
       if (walked >= MOVE_STEP) { walked = 0; apply({type: PLAYER_MOVED}); }
       if (guiding && p.card === 'build') apply({type: BUILD_CARD_OPENED});
+      if (guiding && p.menu) apply({type: HUD_OPENED, what: 'menu'});
       if (guiding && p.waveRunning && (guide?.step ?? 0) <= GUIDE_STEPS.findIndex(step => step.id === 'bell')) apply({type: WAVE_BEGAN, wave: Math.max(1, p.wave + 1)});
     }
     if (guiding) drawCoach(p, t); else if (!showing) coach.point(null);
