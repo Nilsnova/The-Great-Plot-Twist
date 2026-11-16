@@ -141,11 +141,19 @@ try {
       await page.keyboard.press('Escape');
     } else if (await page.locator('.goal-card[open]').count()) await page.locator('.goal-card[open]').getByRole('button', {name: 'Got it', exact: true}).click();
     else if (await page.locator('dialog.cutscene[open],.tutorial-card[open]').count()) await page.getByRole('button', {name: 'Skip', exact: true}).click({timeout: 5000}).catch(() => {});
-    else break;
+    else {
+      // T52: the intro, the goal card and the arrival wait for the island (tutorial/gate.js), so they can open a
+      // moment after the player stands on it. Only a quiet island for a while ends the front door.
+      await wait(2500);
+      if (await page.locator('dialog.cutscene[open],.tutorial-card[open],.goal-card[open],.games-card[open],.island-card-lobby[open],dialog[open]').count()) continue;
+      break;
+    }
     await wait(300);
   }
   await page.waitForFunction(() => window.__island?.world.current?.id === 'home_islet' && window.__island.island && !document.querySelector('dialog[open]'), null, {timeout: 60000});
   await page.evaluate(() => { window.__island.settings.hour = 11; window.__island.settings.fastTime = false; });
+  // T52: Settings › Tutorials off, so the unlock cards of the jump to wave 6 below do not cover the audited HUD.
+  await page.evaluate(async () => (await import('/src/settings/preferences.js')).setPreferences({tutorials: false}));
   await island(async i => { i.dev.setCoins(2000); i.dev.setWaveBest(6); i.dev.setCaptain(3); await i.load(); });
   // Walls on the boarders' way, so the wave shows the guide's axes and wall bars.
   await island(async i => { for (const spot of ['wall_1', 'wall_3', 'wall_7', 'wall_8', 'wall_9', 'cannon_1']) await i.build(spot); await i.load(); });
