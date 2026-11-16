@@ -19,6 +19,7 @@ MIGRATIONS = Path(__file__).resolve().parents[3] / "supabase" / "migrations"
 DEMOLISH = MIGRATIONS / "20261112080000_demolish.sql"
 TOWER_DEFENSE = MIGRATIONS / "20261111030000_tower_defense.sql"
 TIERS = MIGRATIONS / "20261112070000_tower_tiers.sql"
+MORE_TOWER_SPOTS = MIGRATIONS / "20261117010000_more_tower_spots.sql"
 
 REFUND_NOTE = (
     "  -- 20261112080000_demolish.sql: who paid for this {}, for a refund when it is torn down.\n"
@@ -77,7 +78,18 @@ def test_no_later_migration_changes_the_build_or_upgrade_functions_again():
             r"function public\.(island_build|island_upgrade|island_demolish)\(", path.read_text()
         )
     ]
-    assert later == []
+    # D060: the extra tower spots copy island_demolish() with only its plot test widened.
+    assert later == [MORE_TOWER_SPOTS.name]
+
+
+def test_the_extra_tower_spots_widen_only_the_plot_test_of_the_tear_down():
+    old_test = "'^(wall_([1-9]|1[0-2])|cannon_[1-7]|tower_1|house_[12])$'"
+    new_test = "'^(wall_([1-9]|1[0-2])|cannon_([1-9]|1[01])|tower_1|house_[12])$'"
+    for name in ("island_demolish", "island_demolish_quote"):
+        before = body(DEMOLISH.read_text(), name)
+        after = body(MORE_TOWER_SPOTS.read_text(), name)
+        assert before.count(old_test) == 1
+        assert after == before.replace(old_test, new_test)
 
 
 def test_the_refund_reason_is_an_earning_in_both_places():

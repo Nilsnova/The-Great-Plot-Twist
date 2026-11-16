@@ -41,13 +41,18 @@ def move_refusal(refusal: Refusal) -> ApiError:
 
 
 async def try_move(
-    admin: SupabaseAdmin, island: Island, mover: str, spot_id: str, where: layout.Position
+    admin: SupabaseAdmin,
+    island: Island,
+    mover: str,
+    spot_id: str,
+    where: layout.Position,
+    more: bool = False,
 ) -> Refusal | None:
     """One read, check and store. None when the spot stands at `where` afterwards."""
     rows = await layout_store.read_rows(admin, island.owner)
     if rows is None:
         raise unavailable()
-    rules = layout.island_layout()
+    rules = layout.island_layout(more)  # D060: with the extra tower spots while they are offered
     positions = layout.positions_of(rules, layout_store.positions_from(rows))
     if positions.get(spot_id) == where:
         return None  # it stands there already: nothing to do
@@ -74,12 +79,12 @@ async def move(
     """
     if not catalogue.placement:
         raise ApiError(404, "feature_off", "Moving buildings is not open yet.")
-    island, payer = await service.target_island(
-        admin, catalogue, player_id, code, permissions.MOVE
-    )
+    island, payer = await service.target_island(admin, catalogue, player_id, code, permissions.MOVE)
     refusal = None
     for _ in range(TRIES):
-        refusal = await try_move(admin, island, player_id, spot_id, (x, z))
+        refusal = await try_move(
+            admin, island, player_id, spot_id, (x, z), catalogue.more_tower_spots
+        )
         if refusal is None or refusal.reason != "busy":
             break
     if refusal is not None:

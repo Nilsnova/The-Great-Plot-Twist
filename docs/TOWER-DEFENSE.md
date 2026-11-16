@@ -23,6 +23,8 @@ Fight pirate waves → earn 🪙 loot → build and upgrade towers, hire crew �
 
 **Spots on your island (22):** `wall_1`…`wall_6` (shore walls), `cannon_1`…`cannon_7` (cannon **or** mortar: the player chooses at the first build; an upgrade keeps the kind), `tower_1` (watchtower), `house_1`, `house_2` (house), and the **inner ring** `wall_7`…`wall_12` (wall; added 12 Nov for boarding, §12). Final ids, decided by the backend build (D036): the old `cannon_1`…`cannon_4` keep their ids, so built rows stay valid, and `cannon_5`…`cannon_7` are new. The ring walls are ordinary walls (same prices, levels and unlocks: level 1 from the start) placed around the island's heart on the paths the boarders take: `wall_7` east (8.5, 2), `wall_8` and `wall_9` on the south cross path (4.5, 9) and (−4, 9.5), `wall_10` west north of the cabin (−9.5, −1), `wall_11` and `wall_12` on the north cross path (−4, −5.5) and (4, −5.5). The database allows them through `supabase/migrations/20261112020000_inner_walls.sql`; the server lists them in `GET /api/island` after `house_2`.
 
+**More tower spots over time (D060, flag `more_tower_spots`):** `cannon_8` after wave 10, `cannon_9` after 20, `cannon_10` after 30, `cannon_11` after 40; each takes every tower kind of `cannon_1`. Until then a padlock with the wave; a "New tower spot!" card when one opens.
+
 ## 3. Crew (NPC support), bought once, kept
 
 | Crew | What it does | Price | Max |
@@ -180,7 +182,7 @@ Weapons are bought **once** with coins and then equipped, one at a time. The equ
 Less text, more shapes (`src/pirates/battle-guide.js`, drawing only, never fed back into the sim):
 
 - **Landing:** a red ring with a 💀 badge on the beach of every sea lane of the wave (all three lanes between waves).
-- **Route:** red dots and chevrons from each landing to the heart, the route the boarders' own grid takes (`boarder-paths.js`, rule `pathing`); a light runs along it in a wave. An 🪓 badge marks each wall the route has to hack; a lone wall the route walks round shows as the detour.
+- **Route:** red dots and chevrons from each landing to the heart, the route the boarders' own grid takes (`boarder-paths.js`, rule `pathing`); a light runs along it in a wave. A lone wall the route walks round shows as the detour. No badge marks the walls it hacks (D060, owner's playtest 16 Nov: "the orange flags do not really make sense"): the wall's hp bar shows a wall under attack.
 - **Goal:** a gold ring and a ❤️ badge on the heart.
 - **Walls:** a small bar (green, yellow, red) over every wall that is hurt or being hacked; a broken wall's gap is outlined in red dashes with a rubble badge.
 - **Melee vs ranged:** the cutlass (`captain_strike`, F or the button with a boarder within 2.2) is a sweep: one swing hits **every** boarder in the circle at full damage, drawn as a white arc running once round the captain with a whoosh (`pirate-slash`). The musket and every gun stay a single shot with a gold tracer and a crack. Reload 0.75 s (balance, below); the automatic swing stays at 1.5 s. Balance (`balance-rules.mjs --rules pathing --captains 3`, 20 seeds, win % before → after, 0 / 3 guards): wave 40 100 → 100 / 100 → 100; wave 50 30 → 60 / 65 → 85; wave 60 15 → 30 / 40 → 70. With the old 0.5 s reload the sweep gave 95 / 100 at wave 50 and 50 / 90 at wave 60, too easy for a small crew.

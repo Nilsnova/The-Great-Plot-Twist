@@ -7,7 +7,7 @@
 //   checkMove(spotId, x, z, positions)  {ok: true} or {ok: false, code, message} (the server's codes)
 //   routeOpen(positions)                a way from the heart to the beach (towers, houses block)
 //   onWallLane(x, z)                    a wall centred here stands on a pirate path (D056, wall-lanes.js)
-import {SPOTS, spotById, ISLAND_PLACE} from './spots.js';
+import {ALL_SPOTS, offeredSpots, spotById, ISLAND_PLACE} from './spots.js';
 import {surfaceClass} from '../world/places/surfaces.js';
 import {WALL_LANE_ROWS} from './wall-lanes.js';
 
@@ -33,10 +33,11 @@ export const snap = (x, z) => ({x: Math.round(x / GRID) * GRID + 0, z: Math.roun
 export const footprintOf = spotId => FOOTPRINTS[spotById(spotId)?.slot] ?? 0;
 const land = (x, z) => surfaceClass(ISLAND_PLACE, x, z);
 
-// {spotId: {x, z}} for the 22 spots: a finite x/z of the answer wins (a moved spot), else the fixed spot.
+// {spotId: {x, z}} for the 22 spots (and the extra tower spots the answer lists, D060): a finite x/z of the
+// answer wins (a moved spot), else the fixed spot.
 export function positionsOf(spots = []) {
   const placed = {};
-  for (const spot of SPOTS) {
+  for (const spot of offeredSpots(spots)) {
     const sent = Array.isArray(spots) ? spots.find(item => item?.id === spot.id) : null;
     placed[spot.id] = Number.isFinite(sent?.x) && Number.isFinite(sent?.z) ? {x: sent.x, z: sent.z} : {x: spot.x, z: spot.z};
   }
@@ -81,7 +82,8 @@ function blockedCells(positions) {
   };
   KEEP_OUT.filter(item => item.id !== 'heart').forEach(cover);
   // Walls never block: the boarders hack through them (src/pirates/sim.js).
-  for (const spot of SPOTS) if (spot.slot !== 'wall') cover(boxOf(spot.id, positions[spot.id] ?? spot));
+  // An extra tower spot (D060) blocks only while it stands (the answer listed it, so positions has it).
+  for (const spot of ALL_SPOTS) if (spot.slot !== 'wall' && (!spot.unlockWave || positions[spot.id])) cover(boxOf(spot.id, positions[spot.id] ?? spot));
   return blocked;
 }
 export function routeOpen(positions = positionsOf()) {

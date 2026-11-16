@@ -35,6 +35,7 @@ def test_flag_names_are_exactly_the_agreed_list():
         "pathing",
         "tower_obstacles",
         "ship_fire",
+        "more_tower_spots",
     )
 
 

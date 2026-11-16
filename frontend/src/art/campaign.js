@@ -128,7 +128,7 @@ function lockBadge(wave = null) {
   };
 }
 // The waves a build spot can wait for (the house after 1, the watchtower after 3, the inner ring after 5, ...).
-export const LOCK_WAVES = Object.freeze([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20]);
+export const LOCK_WAVES = Object.freeze([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20, 30, 40]); // 30, 40: the extra tower spots (D060)
 
 /** The campaign frames: name -> [width, height, anchor, draw]. */
 export function campaignFrames() {

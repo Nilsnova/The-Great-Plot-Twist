@@ -33,7 +33,7 @@ FLAGS = (
     "pathing",
 )
 # Kept out of FLAGS so the every-combination test below does not double for each new flag.
-ALL_FLAGS = (*FLAGS, "tower_obstacles", "ship_fire")
+ALL_FLAGS = (*FLAGS, "tower_obstacles", "ship_fire", "more_tower_spots")
 VARIABLES = {
     "APP_ENV": " PrEvIeW ",
     "SUPABASE_URL": " https://g21-fixture.supabase.co/// ",

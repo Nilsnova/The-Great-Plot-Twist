@@ -46,6 +46,9 @@ FLAG_NAMES = (
     # T50: ships at anchor fire at a real wall, tower or the heart and their hits count (a wave
     # rule). Needs supabase/migrations/20261116160000_ship_fire_rule.sql applied first.
     "ship_fire",
+    # D060: extra tower spots that open with progress (cannon_8..cannon_11 after waves 10, 20, 30
+    # and 40). Needs supabase/migrations/20261117010000_more_tower_spots.sql applied first.
+    "more_tower_spots",
 )
 
 
