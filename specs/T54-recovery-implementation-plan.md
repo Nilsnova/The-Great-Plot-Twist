@@ -1,76 +1,97 @@
-# T54 Unified recovery implementation plan
+# T54 Repair rules and implementation plan
 
-> **What this is:** the gameplay choices and implementation proposal for D059, prepared before runtime coding.
+> **What this is:** the approved gameplay rules and the technical contract still needed before implementation.
 >
-> **Who uses it:** Ianno, the T55–T60 implementers and Franz when reviewing the plan and later changes.
+> **Who uses it:** Ianno, the reserved T55–T60 implementers and reviewers. This is planning; no runtime behavior has changed.
 
-- **Status:** accepted gameplay choices consolidated; final skill/research recommendations and technical contracts still need final T54 approval. Runtime implementation has not started.
-- **Responsible teammate:** Ianno (@Iannomh123456).
-- **Issue:** [T54 #120](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/120); [draft PR #127](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/127).
-- **Branch/baseline:** `docs/t54-recovery-implementation-plan`, main `e180ef53`.
-- **Design:** [D059](../docs/DECISIONS.md#d059--shared-gradual-hp-recovery-and-paid-instant-repair--2026-11-16) and [T33 recovery spec](T33-persistent-tower-damage.md), merged in PR #118.
+- **Status:** gameplay rules approved by Ianno. Technical authority, persistence, ordering, API/version, rollout and implementation acceptance remain to be made concrete and reviewed before T55–T60 start. No runtime implementation has started; future additive state migrations remain possible after technical approval.
+- **Owner:** Ianno (@Iannomh123456); T54 issue #120. PRs #127 and #128 are closed unmerged; keep them closed.
+- **Related records:** [D059](../docs/DECISIONS.md#d059--shared-gradual-hp-recovery-and-paid-instant-repair--2026-11-16), [T33 recovery spec](T33-persistent-tower-damage.md), [OPEN-TODOS §11](../docs/OPEN-TODOS.md#11-unified-defense-recovery--unassigned-follow-ups-16-nov).
 
-## Gameplay choices accepted by Ianno
+## Approved gameplay rules
 
-| Concern | Rule |
+| Area | Rule |
 |---|---|
-| Supported structures | Walls, cannon, mortar, harpoon, culverin and swivel. Preserve kind, level and upgrades at every HP value. |
-| Automatic recovery | Actual HP gradually increases at base `maxHP / 600 seconds`, during combat, between waves and offline. It can reach full HP during combat. |
-| Taking damage | Damage subtracts from current HP and pauses healing for three seconds after the latest damaging hit. Regained HP is retained in actual HP; no separate time-credit bank. Example: 50% HP heals to 60%, then 10 percentage points of damage leaves 50%. |
-| Carpenter | Each Carpenter gives +100% shared healing speed island-wide; maximum two gives ×3. |
-| Workshop | Each Workshop within 10 units gives +30% shared healing speed, capped at +50%; multiply this with the Carpenter factor. Maximum combined crew/Workshop rate is ×4.5, so full recovery takes about 133.3 seconds of eligible healing. |
-| Destroyed structures | Revised by Ianno: a structure destroyed during a wave cannot function again in that wave unless a confirmed paid Repair now restores it. Positive HP alone must not reactivate it during that wave. Automatic HP treatment while disabled and unpaid between-wave reactivation are pending clarification. |
-| Paid Repair now | One selected structure returns to full HP immediately during either phase, skipping gradual recovery and the quiet period. Charge the caller's personal wallet once per accepted action; retries never double-charge. |
-| Fixed price | `max(1, ceil(30% × sum(catalogue construction prices through current level)))`. Same kind/level has the same price at 90%, 20% or 0% HP, for every payer. No damage, Carpenter, Workshop or Engineer discount. Engineer construction/upgrade discounts remain separate. Wall prices at levels 1–5: 3, 9, 21, 45, 93 coins. |
-| Compensation | No free respec tokens, special skill refunds, purchase compensation or player-compensation migrations. Ordinary skill definitions and point accounting must remain valid. |
+| Supported structures | Walls, cannon, mortar, harpoon, culverin and swivel. Houses and watchtowers have no HP and are excluded. Preserve kind, level and upgrades. |
+| Automatic repair | Actual HP heals gradually only between waves. During an active wave automatic healing is fully paused: no free HP gain and no battle-time credit through any Carpenter, Workshop or Tech path, including offline time. Successful paid Repair now remains allowed. Between waves it resumes from actual HP once 3 seconds have passed since the latest damaging hit. |
+| Base rate and damage | Base rate is `maxHP / 600` HP per eligible second; missing HP determines time to full. Damage subtracts from current HP; it does not additionally reset or roll back prior healing, and it creates no separate credit bank. Example: 50→60, then damage of 10 percentage points returns HP to 50. Full restoration then later damage follows the same rule. |
+| Offline | Apply the same canonical active/inactive wave phase as online play. Only inactive eligible elapsed time counts; active-wave offline time adds no healing or credit. |
+| Destroyed structures | A structure at 0 HP stays at 0 and non-operational throughout an active wave unless paid Repair now succeeds. Between waves gradual repair can restore it. Any positive HP may start the next wave, but it is fragile. |
+| Paid Repair now | Immediately restore one selected supported structure to full HP and reactivate it, preserving kind, level and upgrades. It works in either phase. Invalid, intact, unauthorized, insufficient-funds or quota-exhausted requests do not charge or consume a slot. |
+| Combat limit | At most three successful paid repairs per island wave, shared by all players and all structures. The quota resets to three at the next wave. Between waves there is no limit. Keep quota history. |
+| Fixed price | Charge the caller's personal wallet the catalogue incremental cost of the current base level, independent of damage and payer: wall levels 1–5 cost 10, 20, 40, 80, 160 coins. Level 1 price is its construction price. No Engineer discount or Tech/upgrade-tree purchase additions. Engineer's 10% build/upgrade discount remains separate. |
+| Retry and concurrency | Same action UID returns its original receipt and does not heal, charge or spend a slot again. If that old UID is retried after new damage, return its old receipt plus current state without repairing the new damage. A fresh restore requires a fresh UID and, in combat, an available slot. Wallet, HP, event and shared quota changes are atomic. A stale phase/level quote at a boundary must be rejected for reconfirmation, never silently spend a scarce slot. |
 
-Wave end alone never restores health. New damage after full recovery uses the same three-second pause. No separate fixed-share rebuild or rebuild cooldown is introduced.
+## Approved between-wave bonuses
 
-## Destroyed-wave amendment — current rule
+These multiply the same gradual between-wave rate; none creates an alternate repair path. They do not operate during waves because automatic repair is paused then.
 
-This supersedes the earlier unconditional positive-HP activation choice. Standing damaged structures still use normal shared healing. A structure destroyed in the active wave stays non-operational for that wave unless the server accepts paid instant repair; neither a healing tick nor a room-only message can bring it back. A later destruction after paid repair reapplies the gate.
+- The island owner's hired Carpenters count, capped at two, is the shared island-wide source even while that owner is offline. Each adds +100%, for a maximum Carpenter factor of ×3. Visiting players' personal crew does not add to it.
+- Each Workshop within 10 units adds +30%, capped at +50%; multiply its factor by the Carpenter factor.
+- Wall Tech multiplies rate: Quick Mend ×2; Mason Drill ×1.5; Bastion ×3 and retains its +50% wall max HP. Quick Mend and Bastion are mutually exclusive choices; Mason Drill stacks with either.
+- Fully stacked: ×4.5 from Carpenter/Workshop, then Tech; Quick Mend + Mason Drill yields ×13.5 total rate (about 44.44 seconds for full eligible healing). Bastion + Mason Drill yields ×20.25 (about 29.63 seconds). Quiet time applies as specified above.
 
-Two choices remain pending: whether disabled structures stay at zero HP or accumulate HP without functioning, including already-broken wave-start cases; and whether unpaid reactivation between waves happens at positive HP or full HP. Do not implement either unresolved choice. This separate amendment is stacked on the T54 planning branch so the plan and dependent tasks use one consistent rule.
+## Captain and progression
 
-## Final recommended Captain and Tech rules
+Remove manual Captain E repair/rebuild, repair-only Shipwright skills, and the Engineer repair-triggered +25% wall HP effect. Keep Engineer's 10% construction/upgrade discount, unrelated E build/fire/revive actions, Captain/Tavern healing, and other unrelated progression. Do not add special refunds, respec tokens, player compensation or compensation migrations; ordinary state migrations may be part of approved future T55 work. Preserve normal earned/spent skill-point accounting.
 
-These effects are recommendations for final plan approval, not implemented behavior:
+## Visual and player-facing behavior for T59
 
-- Remove Captain E repair/rebuild and the seven repair-only Shipwright choices (`quick_fix`, `long_reach`, `sturdy_planks`, `master_shipwright`, `swift_hammer`, `wide_arc`, `grand_engineer`). Keep unrelated E interactions and non-structure healing/revives.
-- Keep Engineer's 10% construction/upgrade discount; remove the old manual-repair-triggered +25% wall HP effect. No free role reset or compensation feature.
-- Quick Mend multiplies that wall's shared recovery rate by ×2; Mason Drill multiplies all walls' rate by ×1.5.
-- Bastion keeps +50% wall maximum HP and multiplies its wall's shared recovery rate by ×3, replacing its independent passive regeneration.
-- Quick Mend and Bastion share one wall skill slot and cannot combine; Mason Drill can combine with either. All benefits use the same healing process.
+Reuse the existing pixel-style health bars: dark border, green/gold/red fill. Show bars on all damaged walls and towers in both phases; hide bars on healthy structures. Fill is proportional to exact HP. Destroyed structures show an empty bar, a small `!`, and the existing ruin appearance. During waves the bar changes only from damage or successful paid repair; between waves it reflects gradual healing. Cards show exact HP, fixed current price, and the shared combat quota remaining; between waves paid repair is unlimited. Display rounding must never make low positive HP look like 0 HP. Existing relevant renderer locations are `render.js` `drawHealthBar` (around line 913) and tower bars (around line 1026); these currently omit zero HP and bars outside waves and are future implementation work.
 
-## Source-audit findings and implementation proposal
+## Technical plan required before implementation
 
-- `wall_health.py` currently uses a wall-only 600-second full-restore timer and missing-HP pricing. Replace those rules only under the new reviewed policy; its 30% cumulative full-rebuild basis provides the accepted fixed price.
-- `tower-health.js` currently has transient per-wave HP, free Captain repairs and positive-HP firing eligibility. Persist HP and use the shared recovery rule; preserve unrelated targeting/jam behavior.
-- `sim.js` has independent Carpenter jobs, Workshop rebuilding, Bastion regeneration and wall repair multipliers. Route approved bonuses through one recovery helper and remove the separate new-policy paths.
-- `rules.skill_points()` derives available points from earned points minus active skill costs. Use valid final definitions and ordinary accounting; do not create a refund balance or migration reward.
-- Co-op `IslandView.crew` is personal, so it cannot be read independently by each client for an island-wide bonus. Proposed canonical source: the island owner's hired Carpenter count, capped at two and frozen in the wave snapshot; visiting crew does not add extra stacks. Between waves, settle HP at the old rate before applying a crew/layout/research change. This co-op interpretation needs final plan approval.
-- Existing `sync.js` applies late inputs at the receiver's next tick and explicitly documents possible drift; rooms do not retain full history for late joiners. Paid repair requires durable ordered events and consistent replay, not an unsigned room-only heal. T55/T57 must define the accepted input/history boundary, late-event replay and recovery checkpoints before coding.
-- Proposed arithmetic: normalized integer HP units (one million = full health), a canonical 50-ms simulation tick and a three-second/60-tick quiet period. Compute gradual HP from a canonical time/HP anchor; specify rounding once at authoritative settlement rather than independently rounding every display frame. Persist between-wave HP/time/rate anchors for offline recovery.
-- Keep immutable wave-start HP, layout, max-HP/research, rate and policy snapshots plus separate ordered damage/paid-action history. Current HP eligibility and finish reports remain participant-reported combat data with server bounds unless a separately approved authoritative simulator is introduced. Server authority over coins/events is not proof that every reported hit occurred.
-- A paid transaction validates membership, target identity, kind/level fixed price, accepted current HP and wave/policy state; locks and commits one personal-wallet charge and one ordered restore event atomically. Persist receipt/action ID and return the same outcome on retry. Preserve damage after restore and reject stale pre-restore reports; the current whole-wave timestamp fence alone is insufficient.
-- New-wave start, finish, paid repair, gradual settlement, upgrades, demolition and reset must serialize with the same target generation. No damaged upgrade may bypass recovery. T55 must define the lock order and API/state shapes; T56 implements against that shared contract.
+T54 must turn the following into explicit, reviewable contracts before T55 begins. This is not an assertion that today's server is a full combat verifier: it is not.
 
-## Tests and release gates
+1. **Authority and phase:** identify the trusted source for current HP, canonical wave identity/phase, damage ordering, offline settlement and eligible time. Preserve the server's current limits; do not imply it proves client-reported combat hits. Define phase-boundary behavior for settlement, quotes and requests.
+2. **State and replay:** specify persistent actual HP, last damaging-hit time, structure identity/generation, repair receipts, per-wave shared quota and quota history. Keep wave-start snapshots immutable. Define ordered authoritative damage/repair events, replay/checkpoint behavior for active clients, late joiners and reconnects, and stale finish-report reconciliation so post-repair damage survives while stale pre-repair state cannot overwrite it.
+3. **Atomicity and locks:** specify one transaction boundary for wallet debit, current HP/full restore, event receipt and shared combat slot. Define a consistent lock order across repairs, damage/gradual settlement, wave finish/start, upgrades, demolition and island reset. Specify idempotency keys and receipt/current-state response on old-UID retries after later damage.
+4. **Precision and clocks:** choose exact stored HP precision, deterministic rate arithmetic and rounding/clamping, quiet-period boundary, offline eligible-time calculation and rate changes between waves. Do not introduce elapsed healing credit beyond actual HP.
+5. **API and compatibility:** define versioned request, response, event and error shapes; authorization/membership checks; phase/level stale quote rejection; feature flag and additive migration plan; legacy wave behavior; upgrade safeguards; and rollback/drain sequencing. Preserve existing live wall-only route semantics until a reviewed versioned replacement ships. Keep current API documentation truthful.
+6. **Safe world behavior:** document how a successful paid restoration re-enables tower firing and any obstacle/path collision without trapping or stranding boarders. Preserve the existing safe obstacle restore/egress behavior. No free instant healing through wave end, reload, upgrade, or stale payment; guard bypasses while permitting legitimate new construction.
+7. **Rollout:** staged migration and feature-flag sequence, legacy-wave drain, observability and rollback. No production migration application, flag activation or deployment is authorized by this plan; future additive state migrations may be developed after approval.
 
-| Area | Required evidence |
-|---|---|
-| HP arithmetic | Every kind; 50→60→damage10→50; exact quiet boundary and repeated hits; base/bonus rates; full HP during combat; offline time and rate changes; integer rounding/clamping. |
-| Zero HP | Destruction during an active wave disables functioning for that wave unless paid restoration succeeds. Positive HP cannot bypass this gate. Test paid restoration followed by new destruction, firing and obstacle state, plus the pending HP/between-wave choices when selected. |
-| Fixed payment | Same kind/level at every eligible HP costs the same; different levels/kinds use the catalogue; insufficient funds, whole/stale target and unauthorized caller have no side effects; one charge on retries/two callers. |
-| Ordering | Hits/gradual HP/paid restore/finish in both orderings; damage after restore retained; old reports rejected; immutable start snapshot unchanged; upgrade/demolition/reset identity guards. |
-| Multiplayer | Identical committed HP and paid events on two clients, late join and reconnect; duplicate/out-of-order/lost messages recover through the authoritative history; no local-only heal. |
-| Skills/research | No retired Captain actions; valid ordinary point accounting; Engineer construction discount preserved; each shared wall multiplier and exclusive slot; no compensation subsystem. |
-| Balance/performance | Early/mid/late solo and co-op waves. Fully supported Bastion + Mason Drill wall can heal at ×20.25: about 29.6 seconds from zero, plus quiet time. Test this deliberately before release. Measure journal/replay and mobile performance with the actual new policy enabled. |
+### Verified existing-code constraints
 
-Use documented backend pytest/Ruff, real disposable PostgreSQL migration/concurrency/permission tests, frontend tests/build, rules/obstacle and multiplayer checks when implementation changes those areas. Record actual results and baseline failures without weakening assertions. No application tests have been run for this documentation-only proposal.
+These describe current code, not future behavior:
 
-## Task ownership and next gate
+- `wall_health.py` has a wall-only 600-second recovery timer and missing-HP-based price; the approved fixed current-level incremental price replaces that price basis.
+- `tower-health.js` keeps transient per-wave tower HP and has free Captain E repair behavior.
+- `sim.js` has independent Carpenter jobs, Workshop rebuilding and Bastion regeneration paths. Future work must route only the approved between-wave rate bonuses through one recovery path and fully pause them in waves.
+- `rules.skill_points()` derives available points from earned points minus active skill costs; retain ordinary accounting after retiring repair-only skills.
+- `IslandView.crew` is personal to each viewer. The co-op Carpenter rate must come from the island owner's hired Carpenter count, including when that owner is offline, not from visitor-local crew.
+- `sync.js` applies late inputs at the receiver's next tick and documents possible drift; rooms do not retain full history for late joiners. Durable ordered paid-repair events and replay/reconciliation are therefore still technical design work.
+- The seven repair-only Shipwright choices currently named in the old proposal are `quick_fix`, `long_reach`, `sturdy_planks`, `master_shipwright`, `swift_hammer`, `wide_arc`, and `grand_engineer`. Retire these under the approved policy while preserving unrelated Captain skills and normal earned/spent point accounting.
 
-T54–T60 belong to Ianno. T54 is planning in this orchestration session; T55–T60 remain reserved and dependency-blocked. Each implementation task gets its own branch, draft PR and writing agent when its approved prerequisites are available.
+## Implementation task sequence
 
-Finish the proposed authority/input-history/API/lock/rounding and rollout contracts, then obtain Ianno's explicit OK on the complete T54 plan before runtime coding. Use additive migrations, preserve applied migrations and retain old frozen waves until safely drained. Migration application, flag activation and deployment require their own authorization. Ianno manually reviews; Franz must approve the current revision before a human merge; agents never merge or enable auto-merge.
+The issues remain claimed by Ianno, and T55–T60 are reserved and blocked pending the complete T54 technical plan and approval. Improve display names while retaining task IDs:
+
+| Task | Name | Scope |
+|---|---|---|
+| T54 | Repair rules and implementation plan | This approved gameplay contract plus concrete authority, replay, locks, rounding, API/version and rollout plan. Planning only. |
+| T55 | Save wall and tower health | Persistent actual HP and ordered shared state for walls and five tower kinds; immutable initial snapshots and separate repair/damage history. |
+| T56 | Paid instant repair | Atomic Repair now, fixed incremental price, per-island-wave shared three-use quota, wallet and receipt idempotency. |
+| T57 | Repair behavior during waves | Enforce pause during waves, offline phase rules, destroyed gate, safe firing/obstacle behavior, legacy-wave parity. |
+| T58 | Captain skills and wall research | Remove repair actions/skills and repair-triggered bonus; retain approved Engineer discount and set Tech multipliers. |
+| T59 | Repair cards and feedback | Health bars, exact HP, fixed price/quota display, errors, and future help/tutorial/interface documentation matching shipped behavior. |
+| T60 | Repair tests and balance | Lifecycle, persistence, concurrency, multiplayer, UI, migration and balance verification plus staged rollout readiness. |
+
+Coordinate unrelated T50 ship damage, T52 preparation/tutorial UI and T53 island reset. Each future implementation task has its own branch and review. No player guide is to be rewritten as though future behavior has shipped; update player-facing docs only with T59 after implementation.
+
+## Required future verification
+
+- Phase boundaries: automatic repair is paused through the full active wave, including Carpenter, Workshop, Tech, disconnected owner and offline intervals; successful paid Repair now is allowed. Only between-wave eligible time advances HP after the 3-second quiet period. Test exact boundaries across phases: a hit 1 second before wave end leaves 2 quiet seconds before repair resumes; a hit more than 3 seconds before the inactive phase needs no new 3-second wait. Also test reload, wave finish/start and offline settlement.
+- Six supported structure kinds, all levels, 10/50/100% missing HP, 50→60→50 after damage, repeated hits, full health then damage, precision/clamping; houses/watchtowers excluded.
+- Every old free healing path: Captain E, each Carpenter/Workshop/Tech path, Bastion, wave end, reload, upgrades and stale payments. Confirm no FREE/automatic active-wave HP increase while allowing successful paid Repair now and valid new construction.
+- Destroyed structures stay at zero and inactive during waves absent a successful paid repair; successful paid repair reactivates, and any later destruction reapplies the gate. Test next-wave start after any positive between-wave repair.
+- Prices for each supported kind/current base level, including wall 10/20/40/80/160; same price at partial and zero HP and across payers; no Engineer/Tech price discount. Failed actions do not charge or consume quota.
+- Quota: three successes total for the island wave across players and all structures, fourth fails, four distinct structures, two clients racing for last slot, shared reset next wave, unlimited between waves, preserved history.
+- Same UID retries, including after new damage; distinct UID after new damage; old receipt with current state; concurrent charge/quota/HP transaction; phase or level boundary stale quote; wallet race.
+- Two-client replay, reconnect, late join, duplicated/reordered events, paid repair then subsequent damage, finish reporting, immutable snapshots, offline recovery, wave history and island reset.
+- No free instant-heal bypass, safe obstacle restoration and egress, restored tower firing, exact HP bars including destroyed empty bars and low positive HP, cards and shared quota.
+- Run actual documented code, migration, multiplayer and UI checks only once implementation exists; record actual results. This planning update has no runtime test results.
+
+## Known limits and gate
+
+Server authority over wallet and accepted events is not proof of every combat hit. T54 must not promise a full combat verifier unless a separately approved design provides one. Rate, payment, quota and phase rules materially affect balance; demonstrate them in early/mid/late solo and co-op waves before release. Obtain Ianno's explicit approval of the concrete technical plan before runtime work. Preserve old frozen-wave behavior. Additive migrations only; no migration edit/application, flag flip, or production change without its separate authorization. Ianno manually reviews; Franz approves the current revision before a human merge; agents do not merge or enable auto-merge.
