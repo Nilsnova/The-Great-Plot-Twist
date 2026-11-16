@@ -61,6 +61,8 @@ export function createHud(container, actions, {on = defaultOn, emit = defaultEmi
     const known = Number.isFinite(coins);
     purseText.textContent = known ? formatCoins(coins) : '🪙 …';
     purse.setAttribute('aria-label', known ? coinsSpoken(coins) : 'Coins not loaded yet');
+    // Signed out there is no purse to load, so no endless "🪙 …": the chip waits until there are coins.
+    purse.hidden = !known && account === 'signed_out';
   }
   // Loot: the number counts up to the new balance (the label says the new balance at once).
   function tickCoins(from) {
@@ -134,10 +136,11 @@ export function createHud(container, actions, {on = defaultOn, emit = defaultEmi
     get quickPanelsOpen() { return false; },
     setCaptain(view) {
       const value = view?.captain?.coins;
-      if (coinSource === 'wallet' && Number.isFinite(value)) { coins = value; drawCoins(); }
       const state = view?.account?.state ?? 'none';
       if (state === 'expired' && account !== 'expired') toast({text: 'Your sign-in ran out.', next: 'Sign in again from Menu › Settings to keep playing online.', tone: 'error'});
       account = state;
+      if (coinSource === 'wallet' && Number.isFinite(value)) { coins = value; drawCoins(); }
+      else purse.hidden = !Number.isFinite(coins) && account === 'signed_out';
     },
     // {tick: true} (loot after a wave): an increase counts up, unless motion is reduced.
     setCoins(value, {tick = false} = {}) {

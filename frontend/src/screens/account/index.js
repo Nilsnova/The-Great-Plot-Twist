@@ -34,7 +34,8 @@ export function createAccountScreen({send}){
     const account=accountOf(view),name=String(account.captainName??'Captain pending'),state=account.state??'signed_out';
     if(state==='signed_out')deleteArmed=false;
     clearButtons();element.replaceChildren(node('h3','','Account'));
-    element.append(node('p','account-status',`${stateLabel(state,accountStates)}, ${name}`));
+    const named=account.captainName!=null||state==='signed_in';
+    element.append(node('p','account-status',named?`${stateLabel(state,accountStates)}, ${name}`:stateLabel(state,accountStates)));
     if(state==='expired'){
       const banner=node('p','account-banner','Your session expired. Sign in again to keep playing online.');banner.setAttribute('role','alert');banner.dataset.state=state;element.append(banner);
     }else if(state==='error'){

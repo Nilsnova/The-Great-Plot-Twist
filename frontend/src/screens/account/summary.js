@@ -17,9 +17,11 @@ export function createAccountSummary({send,openAccount}){
   function button(label,onClick,focusKey,disabled=false){const component=createButton({label,onClick,disabled,variant:'quiet'});component.element.dataset.focus=focusKey;buttons.push(component);actions.append(component.element);}
   function update(view){
     const active=actions.contains(document.activeElement)?document.activeElement:null,focusKey=active?.dataset.focus??null;
-    const account=accountOf(view),state=account.state??'signed_out';name.textContent=String(account.captainName??'Captain pending');
-    status.setAttribute('role','status');status.setAttribute('aria-label',`${labels[state]??state}, ${name.textContent}`);
-    status.replaceChildren(node('span','account-summary-state',labels[state]??state),document.createTextNode(', '),name);
+    const account=accountOf(view),state=account.state??'signed_out';
+    // No captain yet while signed out: show only the state ("Signed out"), not "Signed out, Captain pending".
+    const named=account.captainName!=null||state==='signed_in';name.textContent=String(account.captainName??'Captain pending');
+    status.setAttribute('role','status');status.setAttribute('aria-label',named?`${labels[state]??state}, ${name.textContent}`:labels[state]??state);
+    status.replaceChildren(node('span','account-summary-state',labels[state]??state),...(named?[document.createTextNode(', '),name]:[]));
     replayNote.textContent=account.guest?'You are playing as a guest. Sign in to keep your progress.':'';replayNote.hidden=!account.guest;
     buttons.forEach(item=>item.dispose());buttons=[];actions.replaceChildren();
     button('Account',()=>openAccount?.(),'account');
