@@ -30,6 +30,21 @@ def repair_price(catalogue: IslandCatalogue, kind: str, level: int) -> int:
     return entry.prices[level - 1]
 
 
+def repair_price_from_schedule(prices: object, kind: str, level: int) -> int:
+    """Read the quoted level from the immutable price schedule captured when a wave began."""
+    if kind not in REPAIRABLE_KINDS or isinstance(level, bool) or not isinstance(level, int):
+        raise ValueError("The frozen price schedule does not contain this repair.")
+    if not isinstance(prices, dict):
+        raise ValueError("The frozen price schedule is invalid.")
+    levels = prices.get(kind)
+    if not isinstance(levels, list) or not 1 <= level <= len(levels):
+        raise ValueError("The frozen price schedule does not contain this repair level.")
+    price = levels[level - 1]
+    if isinstance(price, bool) or not isinstance(price, int) or price < 1:
+        raise ValueError("The frozen price schedule has an invalid repair price.")
+    return price
+
+
 def intent_fingerprint(
     *,
     owner_id: str,

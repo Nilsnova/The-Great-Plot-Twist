@@ -11,7 +11,11 @@ from pydantic import ValidationError
 
 from server.island.catalogue import catalogue_for_flags, load_island
 from server.island.structure_repair_models import RepairRequest
-from server.island.structure_repair_rules import intent_fingerprint, repair_price
+from server.island.structure_repair_rules import (
+    intent_fingerprint,
+    repair_price,
+    repair_price_from_schedule,
+)
 
 
 @pytest.mark.parametrize(
@@ -41,6 +45,19 @@ def test_culverin_price_comes_from_the_flagged_catalogue():
 
     assert repair_price(catalogue, "culverin", 1) == culverin.prices[0]
     assert repair_price(catalogue, "culverin", 5) == culverin.prices[4]
+
+
+def test_wave_repair_uses_the_price_schedule_frozen_in_its_snapshot():
+    frozen = {"cannon": [30, 60, 120, 240, 480]}
+
+    assert repair_price_from_schedule(frozen, "cannon", 2) == 60
+
+
+def test_wave_repair_refuses_a_missing_or_invalid_frozen_price_schedule():
+    with pytest.raises(ValueError, match="price schedule"):
+        repair_price_from_schedule({}, "cannon", 2)
+    with pytest.raises(ValueError, match="price schedule"):
+        repair_price_from_schedule({"cannon": [30, 0, 120]}, "cannon", 2)
 
 
 @pytest.mark.parametrize("kind", ["house", "watchtower", "unknown"])
