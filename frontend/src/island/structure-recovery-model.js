@@ -118,7 +118,7 @@ function buildStructureRecoveryView(state, structure, options = {}) {
     repairLabel: canQuote ? `Repair now: pay ${fixedPrice} coins` : null,
     quotedPrice: fixedPrice,
     freeRepairLabel,
-    helperLabel: 'Automatic repair pauses during waves',
+    helperLabel: reserved ? null : 'Automatic repair pauses during waves',
     automaticRepairPaused: reserved,
     statusLabel: reserved ? 'Automatic repair paused during waves' : null,
     remainingPaidUses: remainingUses,

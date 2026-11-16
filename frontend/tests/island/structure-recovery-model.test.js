@@ -114,6 +114,7 @@ describe('structure recovery presentation', () => {
       automaticRepairPaused: true,
       freeRepairLabel: null,
       statusLabel: 'Automatic repair paused during waves',
+      helperLabel: null,
       remainingUsesLabel: '2 Repair now uses left this wave',
     });
   });
