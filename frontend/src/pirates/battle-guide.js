@@ -21,6 +21,7 @@ import * as THREE from 'three';
 import { CONFIG, coastPoint, curveFor, skillOf } from './sim.js';
 import { createBoarderPaths, WALL_FOOTPRINT } from './boarder-paths.js';
 import { towerMaxHp } from './tower-health.js';
+import { blocksAsTower } from './tower-obstacles.js';
 import { toScreen } from '../world/pixel-glsl.js';
 import { WALL_LANE_ROWS } from '../island/wall-lanes.js';
 
@@ -68,7 +69,7 @@ export function guideWalls(defenses = [], stateWalls = null) {
 /** Damageable towers for the route preview: use the live wave's hp, or their T33 opening hp. */
 export function guideTowers(defenses = [], stateTowers = null) {
   const live = new Map((stateTowers ?? []).map(tower => [tower.id, tower]));
-  return defenses.filter(item => ['cannon', 'mortar', 'harpoon', 'culverin', 'swivel'].includes(item?.kind)
+  return defenses.filter(item => blocksAsTower(item?.kind)
       && Number.isFinite(item.x) && Number.isFinite(item.z)).map(item => {
     const full = towerMaxHp(item.kind, item.level), now = live.get(item.id), maxHp = now?.maxHp > 0 ? now.maxHp : full;
     return {id: item.id, kind: item.kind, x: item.x, z: item.z, hp: now ? Math.max(0, now.hp) : full, maxHp};

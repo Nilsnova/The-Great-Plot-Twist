@@ -25,7 +25,7 @@ import { createShipFire } from './ship-fire.js';
 import { TARGET_PROFILES, nearestWithin } from './targeting.js';
 // T35 (D040, proposed): routes over the real wall layout, only with the wave option pathing (the rule "pathing").
 import { BODY, createBoarderPaths, edgeDistance, obstacleInWay, wallInWay } from './boarder-paths.js';
-import { towerApproachPoint, towerEdgeDistance } from './tower-obstacles.js';
+import { blocksAsTower, towerApproachPoint, towerEdgeDistance } from './tower-obstacles.js';
 // T43 (D048, proposed): the culverin, a long gun, only with the wave option defensesV2 (the rule "defenses_v2").
 import { DEFENSES_V2 } from './defenses-v2.js';
 // D055: the upgrade trees after level 5 (two paths of three tiers each, src/pirates/tower-trees.js).
@@ -584,7 +584,8 @@ export function createWave(options = {}) {
   const towerById = new Map(towers.map(item => [item.id, item]));
   const wallById = new Map(walls.map(item => [item.id, item]));
   const wallsInOrder = [...walls].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)); // walls are already in id order; kept explicit
-  const blockingObjects = [...wallsInOrder, ...towers];
+  // T35: what stops a step under tower_obstacles: the walls, then the towers the path field also treats as obstacles.
+  const blockingObjects = [...wallsInOrder, ...towers.filter(tower => blocksAsTower(tower.kind))];
   // T35: the routes over the walls (null without the option: today's fixed routes). No dice.
   const towerBlocking = options?.towerObstacles === true && options?.pathing === true && towerHealth.enabled;
   const paths = options?.pathing === true ? createBoarderPaths({ coast: readCoast(options?.coast), heart, walls,
