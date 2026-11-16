@@ -59,6 +59,12 @@ const GOAL_CONTROLS = Object.freeze([
   ['Use', 'Press E, or tap the Use button that appears next to you.'],
 ]);
 
+// T51: a player who is online and not signed in (a guest counts as signed in). Play opens the Play card for
+// them first (sign in, or join a friend as a guest): no intro, no How to play, no goals, no island.
+export function signedOutPlayer(view) {
+  return view?.mode === 'online' && view?.account?.state !== 'signed_in';
+}
+
 // Remember the class code of a projector invitation (?join=K7QXM) for the Join page and the class
 // harbor; sessionStorage only, so it ends with the tab. Anything that is not a class code is ignored.
 export function rememberJoin(search = globalThis.location?.search ?? '', storage = safeSession()) {

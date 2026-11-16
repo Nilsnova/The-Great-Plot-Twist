@@ -12,7 +12,7 @@ import {createButton} from '../ui/kit/button.js';
 import {node} from '../ui/kit/dom.js';
 import {getPreferences, reducedMotion as defaultReducedMotion} from '../settings/preferences.js';
 import {TUTORIAL_KEY, firstRunPages, wantsFirstRun} from '../tutorial/pages.js';
-import {FRONT_DOOR_KEY, HARBOR_START, readFlag, writeFlag, goalCopy, readJoinCode, forgetJoinCode, joinedHarbor} from './logic.js';
+import {FRONT_DOOR_KEY, HARBOR_START, readFlag, writeFlag, goalCopy, readJoinCode, forgetJoinCode, joinedHarbor, signedOutPlayer} from './logic.js';
 import {readVisit} from '../island/codes.js';
 
 export function createFrontDoor({container, focus, storage = safeStorage(), session = safeSession(),
@@ -72,10 +72,11 @@ export function createFrontDoor({container, focus, storage = safeStorage(), sess
   }
 
   // The games card (GAME-V3.md §2): which game Play opens. A pending ?game= code goes straight in (the
-  // island lane joins it on landing); null keeps your own island without a lobby.
+  // island lane joins it on landing); null keeps your own island without a lobby; undefined: no games lane
+  // (islands off, or the class harbor), so the old start.
   async function pickGame(runtime, adapter, token) {
     const lane = await runtime.gameLane?.();
-    if (!lane || disposed || token !== request) return null;
+    if (!lane || disposed || token !== request) return undefined;
     const pending = readVisit(session);
     if (pending) return {code: pending, role: 'member', joined: false};
     const {chooseGame} = await loadGames();
@@ -90,13 +91,24 @@ export function createFrontDoor({container, focus, storage = safeStorage(), sess
   return {
     get active() { return !!player || !!tutorial || !!card || !!games; },
     // run() resolves when the player stands in the harbor (or the request was replaced).
-    async run({loadGame, isCurrent = () => true, adapter, replay = false} = {}) {
+    async run({loadGame, isCurrent = () => true, adapter, replay = false, leave = null} = {}) {
       const token = ++request;
       const current = () => !disposed && token === request && isCurrent();
       const seen = !replay && readFlag(storage, FRONT_DOOR_KEY);
-      const pages = !seen && wantsFirstRun({seen: readFlag(storage, TUTORIAL_KEY), classHarbor: joinedHarbor(session)});
       startGuest(adapter);
       const game = loadGame();
+      // T51: the Play card comes first, over open water. Signed out, it is all the player sees (sign in, or
+      // join a friend as a guest): no intro, no How to play, no goals, and no island until they have a game.
+      // A class harbor player has no games card and starts as before.
+      let runtime = null, chosen;
+      if (!joinedHarbor(session)) {
+        runtime = await game;
+        if (!runtime || !current()) return false;
+        try { chosen = await pickGame(runtime, adapter, token); } catch { chosen = undefined; /* The old start. */ }
+        if (!current()) return false;
+        if (chosen === null && signedOutPlayer(adapter?.read?.())) { leave?.(); return false; }
+      }
+      const pages = !seen && wantsFirstRun({seen: readFlag(storage, TUTORIAL_KEY), classHarbor: joinedHarbor(session)});
       if (!seen) {
         try { await playLore(token); } catch { /* No player: go straight to the card. */ }
         if (!current()) return false;
@@ -105,11 +117,9 @@ export function createFrontDoor({container, focus, storage = safeStorage(), sess
           if (!current()) return false;
         }
       }
-      const runtime = await game;
+      runtime ??= await game;
       if (!runtime || !current()) return false;
-      let chosen = null;
-      try { chosen = await pickGame(runtime, adapter, token); } catch { chosen = null; /* Your own island, as before. */ }
-      if (!current()) return false;
+      chosen ??= null;
       // First Play: lore, then the goal card over your island, then the island arrival cutscene
       // (docs/PITCH.md, the first 3 minutes). game.js plays the arrival itself on a later Play.
       // lobby: the game's lobby opens after this, and its Start tells the narrator (game_started), so
