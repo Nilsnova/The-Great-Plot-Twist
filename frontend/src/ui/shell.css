@@ -30,5 +30,7 @@ body:has(.shell-screen[open]) .hud{visibility:hidden}
 .shell-screen[data-mode=pause] .shell-menu>:first-child{grid-column:1/-1;min-height:60px;font-size:20px}
 .shell-screen[data-mode=pause] .shell-menu>:not(:first-child){min-height:52px}
 .shell-screen[data-mode=pause] .shell-menu>:last-child:nth-child(even){grid-column:1/-1}
+/* One icon per menu button (src/shell/menu-icons.js); the `/ ""` keeps it out of the screen-reader name. */
+.shell-screen[data-mode=pause] .shell-menu [data-icon]::before{content:attr(data-icon);content:attr(data-icon) / "";margin-right:8px;font-size:1.1em;line-height:1}
 .shell-screen[data-mode=pause] .shell-status{padding:0;background:none;border:0;font-size:15px}
 @media(max-width:380px){.shell-screen[data-mode=pause] .shell-menu{grid-template-columns:minmax(0,1fr)}}
