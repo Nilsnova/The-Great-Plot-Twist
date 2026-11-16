@@ -19,6 +19,8 @@ import { createRescue } from './finisher/rescue.js';
 import { readHealth, startHp } from './wall-health.js';
 // T33 (D049, proposed): towers with hp, only with the wave option towerHealth (the server's rule "tower_health").
 import { createTowerHealth } from './tower-health.js';
+// T50: ships at anchor fire at a real wall, tower or the heart, only with the wave option shipFire (the rule "ship_fire").
+import { createShipFire } from './ship-fire.js';
 // T34 (D040, proposed): what a boarder goes for, here: a tower in reach (with tower health).
 import { TARGET_PROFILES, nearestWithin } from './targeting.js';
 // T35 (D040, proposed): routes over the real wall layout, only with the wave option pathing (the rule "pathing").
@@ -492,6 +494,10 @@ function shuffle(list, random) {
  * defensesV2: true (T43, D048; the wave's rule "defenses_v2") lets culverins in `defenses` fight: a long gun on a
  * tower spot that shoots gunboats and siege barges first, then the ship with the most hp. Without it a culverin
  * in `defenses` is ignored, and a wave without a culverin plays exactly as before either way.
+ * shipFire: true (T50; the wave's rule "ship_fire") makes a ship at anchor fire at a real target (ship-fire.js): the wall
+ * on its beach, else the nearest standing tower (with towerHealth), else the heart, each in reach; the ball flies and
+ * its impact costs that target hp (the heart its ♥, captains next to it a little). With nothing in reach it holds its
+ * fire. Without it a ship shells the nearest wall in reach, else the island at CONFIG.boarding.shellShare, as before.
  */
 export function createWave(options = {}) {
   const C = CONFIG, B = C.boarding, random = createRandom(options?.seed);
@@ -716,6 +722,11 @@ export function createWave(options = {}) {
   const removeShip = ship => { const at = ships.indexOf(ship); if (at >= 0) ships.splice(at, 1); };
   happening.bind({ ships, walls, towers, tick: C.tick, now: () => now(), newShipId: () => `ship_${nextShipId++}`, remove: removeShip, hitWall, hurtIsland });
   finisher.bind({ party, ships, presentAt: (hero, t) => presentAt(hero, t), damageShip, now: () => now() });
+  // T50: the ship fire of the wave rule ship_fire (inert without it). No dice.
+  const shipFire = createShipFire({ enabled: options?.shipFire === true, walls, towers, towerHealth, heart, wallReach: C.wall.reach,
+    hitWall, hurtIsland, hurtCaptain: (hero, damage, shipId, events) => woundCaptain(hero, damage, { shipId }, events),
+    captains: () => { const t = ticks * C.tick; return [...party.values()].filter(hero => !hero.down && presentAt(hero, t)); }, now: () => now(),
+    powerOf: ship => statsOf(ship.kind)?.damage ?? ship.damage });
   rescue.bind({ party, presentAt: (hero, t) => presentAt(hero, t), now: () => now(), heart });
   const damageTarget = (target, amount, by, events, extra) => (target.boarder
     ? damageBoarder(target, amount, by, events, extra) : damageShip(target, amount, by, events, extra));
@@ -958,9 +969,13 @@ export function createWave(options = {}) {
   // A boarder's blow at a captain; at 0 hp the captain falls and every boarder on them walks on.
   function hurtCaptain(hero, boarder, events) {
     if (hero.militia) { hurtMilitia(hero, boarder, events); return; }
-    const damage = Math.min(hero.hp, round2(H.damage * curve.damage));
+    woundCaptain(hero, round2(H.damage * curve.damage), { boarderId: boarder.id }, events);
+  }
+  // A captain takes `amount` (a boarder's blow, or T50 a ship's ball landing next to them: source {boarderId} or {shipId}).
+  function woundCaptain(hero, amount, source, events) {
+    const damage = Math.min(hero.hp, round2(amount));
     hero.hp = round2(hero.hp - damage);
-    events.push({ type: 'captain_hit', t: now(), captainId: hero.id, boarderId: boarder.id, damage, hp: hero.hp,
+    events.push({ type: 'captain_hit', t: now(), captainId: hero.id, ...source, damage, hp: hero.hp,
       x: round2(hero.x), z: round2(hero.z) });
     if (hero.hp > 0) return;
     hero.down = true; hero.downAt = now();
@@ -1495,21 +1510,24 @@ export function createWave(options = {}) {
         if (ship.crew > 0 && (ship.unloadIn -= C.tick) <= 1e-9) { ship.unloadIn += B.interval; ship.crew--; landBoarder(ship, events); }
         if ((ship.attackIn -= C.tick) <= 1e-9) {
           ship.attackIn += stats.interval;
-          let wall = null, best = C.wall.reach;
-          for (const item of walls) {
-            const d = distance(item.x, item.z, ship.x, ship.z);
-            if (item.hp > 0 && d <= best) { wall = item; best = d; }
-          }
-          if (wall) {
-            wall.hp = round2(Math.max(0, wall.hp - ship.damage));
-            if (wall.hp === 0) { wall.repairLeft = 0; wall.rebuilding = 0; }
-            events.push({ type: 'wall_damaged', t: now(), wallId: wall.id, shipId: ship.id, damage: ship.damage, hp: wall.hp,
-              broken: wall.hp === 0, x: wall.x, z: wall.z });
-          } else if (B.shellShare > 0) {
-            const damage = Math.min(islandHp, round2(ship.damage * B.shellShare));
-            islandHp = round2(islandHp - damage);
-            events.push({ type: 'island_damaged', t: now(), shipId: ship.id, damage, hp: islandHp, x: round2(ship.x), z: round2(ship.z) });
-            if (islandHp <= 0) { end('island_lost', events); return; }
+          if (shipFire.enabled) shipFire.aim(ship, t, events); // T50: a real target, or no shot at all
+          else {
+            let wall = null, best = C.wall.reach;
+            for (const item of walls) {
+              const d = distance(item.x, item.z, ship.x, ship.z);
+              if (item.hp > 0 && d <= best) { wall = item; best = d; }
+            }
+            if (wall) {
+              wall.hp = round2(Math.max(0, wall.hp - ship.damage));
+              if (wall.hp === 0) { wall.repairLeft = 0; wall.rebuilding = 0; }
+              events.push({ type: 'wall_damaged', t: now(), wallId: wall.id, shipId: ship.id, damage: ship.damage, hp: wall.hp,
+                broken: wall.hp === 0, x: wall.x, z: wall.z });
+            } else if (B.shellShare > 0) {
+              const damage = Math.min(islandHp, round2(ship.damage * B.shellShare));
+              islandHp = round2(islandHp - damage);
+              events.push({ type: 'island_damaged', t: now(), shipId: ship.id, damage, hp: islandHp, x: round2(ship.x), z: round2(ship.z) });
+              if (islandHp <= 0) { end('island_lost', events); return; }
+            }
           }
         }
       }
@@ -1523,6 +1541,8 @@ export function createWave(options = {}) {
         }
       }
     }
+    shipFire.land(t, events, () => done); // T50: the ships' balls land (the heart at 0 ♥ ends the wave)
+    if (done) return;
     happening.tick(t, events); // v3 waves: the kraken rises, the barge's shells land
     if (done) return;
     if (paths) paths.refresh(); // T35: the layout from the walls' hp now; the field is rebuilt only when it changed
@@ -1700,6 +1720,7 @@ export function createWave(options = {}) {
         towers: towers.map(tower => ({ id: tower.id, kind: tower.kind, level: tower.level, ...(tower.spec ? { spec: tower.spec } : {}), ...(tower.bonus ? { bonus: tower.bonus } : {}), x: tower.x, z: tower.z, manned: tower.manned, ...(jammed(tower, t) ? { jammed: tower.jammedUntil } : {}),
           reload: round2(tower.reload), range: round2(tower.sight), ...towerHealth.stateOf(tower, t) })),
         balls: balls.map(ball => ({ ...ball })),
+        ...(shipFire.enabled ? { shipShots: shipFire.state() } : {}), // T50: the ships' balls on their way
         shells: shells.map(shell => ({ ...shell })),
         fires: fires.map(fire => ({ x: fire.x, z: fire.z, radius: fire.radius, until: fire.until })),
         captains: Object.fromEntries([...captains].map(([by, at]) => [by, round2(at)])),
