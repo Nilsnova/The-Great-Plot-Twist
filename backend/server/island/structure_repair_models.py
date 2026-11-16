@@ -16,6 +16,9 @@ from pydantic import (
     model_validator,
 )
 
+from server.island.codes import MAX_TYPED_LENGTH
+from server.wallet import MAX_DELTA
+
 ActionUid = Annotated[
     StrictStr, StringConstraints(min_length=8, max_length=64, pattern=r"^[A-Za-z0-9_-]+$")
 ]
@@ -29,7 +32,7 @@ class RepairRequest(BaseModel):
 
     model_config = ConfigDict(extra="forbid", populate_by_name=True)
 
-    code: StrictStr | None = Field(default=None, max_length=32)
+    code: StrictStr | None = Field(default=None, max_length=MAX_TYPED_LENGTH)
     spot: SpotId
     instance_id: UUID = Field(alias="instanceId")
     action_uid: ActionUid = Field(alias="actionUid")
@@ -37,8 +40,10 @@ class RepairRequest(BaseModel):
     expected_window: Literal["between_waves", "reserved_wave"] = Field(alias="expectedWindow")
     expected_wave_id: UUID | None = Field(default=None, alias="expectedWaveId")
     expected_level: StrictInt = Field(alias="expectedLevel", ge=1, le=5)
-    expected_repair_seq: StrictInt = Field(alias="expectedRepairSeq", ge=0)
-    quoted_price: StrictInt = Field(alias="quotedPrice", ge=1)
+    expected_repair_seq: StrictInt = Field(
+        alias="expectedRepairSeq", ge=0, le=9_223_372_036_854_775_807
+    )
+    quoted_price: StrictInt = Field(alias="quotedPrice", ge=1, le=MAX_DELTA)
     wave_protocol: Literal[2] = Field(alias="waveProtocol")
 
     @model_validator(mode="after")

@@ -15,6 +15,7 @@ from server.island.structure_repair_rules import (
     intent_fingerprint,
     repair_price,
     repair_price_from_schedule,
+    request_intent_fingerprint,
 )
 
 
@@ -113,6 +114,8 @@ def test_repair_request_accepts_t54_wire_shape_and_strict_types():
         {"expectedLevel": True},
         {"expectedRepairSeq": -1},
         {"quotedPrice": "60"},
+        {"quotedPrice": 1_000_001},
+        {"expectedRepairSeq": 9_223_372_036_854_775_808},
         {"code": "ISLE-K7Q2M-ISLE-K7Q2M-ISLE-K7Q2M-ISLE-K7Q2M"},
         {"unexpected": "field"},
         {"actionUid": "short"},
@@ -123,25 +126,18 @@ def test_repair_request_rejects_invalid_wire_values(changes):
         request(**changes)
 
 
-def test_intent_fingerprint_ignores_revision_and_repair_sequence_guards():
-    first = intent_fingerprint(
-        owner_id="owner-1",
-        reset_epoch="epoch-1",
-        instance_id="instance-1",
-        repair_kind="cannon",
-        quoted_level=2,
-        quoted_price=60,
-    )
-    retried = intent_fingerprint(
-        owner_id="owner-1",
-        reset_epoch="epoch-1",
-        instance_id="instance-1",
-        repair_kind="cannon",
-        quoted_level=2,
-        quoted_price=60,
+def test_request_fingerprint_ignores_phase_wave_and_repair_sequence_guards():
+    reserved = request()
+    between = request(
+        expectedWindow="between_waves",
+        expectedWaveId=None,
+        expectedRepairSeq=11,
     )
 
-    assert first == retried
+    first = request_intent_fingerprint("owner-1", "cannon", reserved)
+    retry = request_intent_fingerprint("owner-1", "cannon", between)
+
+    assert first == retry
     assert len(first) == 64
 
 

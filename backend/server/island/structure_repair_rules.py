@@ -8,6 +8,7 @@ import json
 from collections.abc import Mapping
 
 from server.island.catalogue import IslandCatalogue
+from server.island.structure_repair_models import RepairRequest
 
 REPAIRABLE_KINDS = frozenset({"wall", "cannon", "mortar", "harpoon", "culverin", "swivel"})
 
@@ -65,3 +66,15 @@ def intent_fingerprint(
     }
     canonical = json.dumps(intent, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+def request_intent_fingerprint(owner_id: str, repair_kind: str, request: RepairRequest) -> str:
+    """Map a validated request to stable intent fields, excluding all quote cursors and phase."""
+    return intent_fingerprint(
+        owner_id=owner_id,
+        reset_epoch=str(request.expected_epoch),
+        instance_id=str(request.instance_id),
+        repair_kind=repair_kind,
+        quoted_level=request.expected_level,
+        quoted_price=request.quoted_price,
+    )
