@@ -44,7 +44,17 @@ Reconciled code is on `feat/tower-path-obstacles`, with main integrated through 
 - `UV_CACHE_DIR=/tmp/tower-path-uv-cache uv run ruff check .` passed. The documented pglast parse command parsed all 50 migration files.
 - The latest multiplayer integration attempt passed pause/resume, upgrade, and next-wave checks, then failed a later musket-pose assertion (0/2). A controlled rerun/diagnosis is pending; this outcome is unresolved and is not counted as a passing multiplayer check.
 - The current two-client fake browser `npm run test:rules` check passed: both simulations matched for 489 ticks (0–488), both clients observed one repair, the wave retained its frozen rules for a late join after pathing was switched off, and there were no browser errors. This wave did not break or rebuild a tower. Screenshots are in [reconciled two-client evidence](../docs/evidence/T35-tower-obstacles/reconciled-2026-11-16/).
-- Correction: the earlier three-seed `balance-rules.mjs` smoke used its built-in `none`, `tower_health`, `pathing`, and `both` modes. `both` means `{towerHealth:true,pathing:true}`; it does not enable `towerObstacles`. Its archived results are baseline-only and are not evidence for T35 obstacle balance. A paired comparison that explicitly toggles `towerObstacles` remains pending.
+- Correction: the earlier three-seed `balance-rules.mjs` smoke used its built-in `none`, `tower_health`, `pathing`, and `both` modes. `both` means `{towerHealth:true,pathing:true}`; it does not enable `towerObstacles`. It also used the helper's `spots` layout, which retains the legacy fixture positions rather than applying current D056 spots. Its archived results are baseline-only and are not evidence for T35 obstacle balance.
+- A paired diagnostic now compares baseline `{towerHealth:true,pathing:true}` with the same flags plus `towerObstacles:true`, using the same three seeds, 3 guards, 2 captains, D055 trees, and 2 swivel nests for each pair. The helper's `island` layout applies current D056 spots; `ring` is a synthetic stress layout.
+
+  | Layout / wave | Baseline → trial wins | Mean heart HP | Tower hacks | Tower repairs | Towers broken / rebuilt |
+  |---|---:|---:|---:|---:|---:|
+  | Current island / 30 | 3/3 → 3/3 | 99.5 → 99.5 | 0 → 0 | 0 → 0 | 0 / 0 → 0 / 0 |
+  | Current island / 60 | 3/3 → 3/3 | 80.7 → 80.1 | 11.3 → 56 | 0 → 1.7 | 0 / 0 → 0 / 0 |
+  | Synthetic ring / 30 | 3/3 → 3/3 | 69.3 → 69.7 | 19 → 52.7 | 0.7 → 2 | 0 / 0 → 0 / 0 |
+  | Synthetic ring / 60 | 0/3 → 2/3 | 0 → 2.3 | 80.7 → 172.3 | 3.3 → 6 | 0 / 0 → 1.7 / 1.7 |
+
+  The wave-30 cases showed no tower break/rebuild; current-island wave 60 showed increased tower hacking and some repairs without breaks, while the three-seed ring wave 60 showed breaks/rebuilds and a different survival count. This small diagnostic sample, especially the synthetic ring, is not balance approval or a statistical conclusion. Keep `tower_obstacles` off pending broader human review. Raw output and exact per-seed pairs are in [paired balance evidence](../docs/evidence/T35-tower-obstacles/reconciled-2026-11-16/t35-paired-balance-smoke-2026-11-16.json).
 - The reconciled 300-boarder × 3,000-tick obstacle workload passed in 1,093 ms (0.364 ms/tick), with 111 field builds, 5,547 tower-target ticks, 37 rebuilds, 7,071 heart arrivals, 887,382 movement steps, and zero stuck outcomes. This is one quiet local synthetic workload, not production Realtime or phone performance approval.
 - Full frontend suite and fresh build/budget checks passed as recorded above. The multiplayer/browser musket-pose failure remains unresolved; no full multiplayer rerun has been accepted. The feature flag remains off pending human balance review and approval.
 

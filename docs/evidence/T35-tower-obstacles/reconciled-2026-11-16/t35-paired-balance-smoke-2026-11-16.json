@@ -1,0 +1,546 @@
+{
+  "command": {
+    "baseline": {
+      "towerHealth": true,
+      "pathing": true
+    },
+    "trial": {
+      "towerHealth": true,
+      "pathing": true,
+      "towerObstacles": true
+    },
+    "waves": [
+      30,
+      60
+    ],
+    "layouts": [
+      "island",
+      "ring"
+    ],
+    "seedIds": [
+      1,
+      2,
+      3
+    ],
+    "options": {
+      "guards": 3,
+      "captains": 2,
+      "trees": true,
+      "swivels": 2
+    }
+  },
+  "paired": [
+    {
+      "layout": "island",
+      "wave": 30,
+      "baselineRules": {
+        "towerHealth": true,
+        "pathing": true
+      },
+      "trialRules": {
+        "towerHealth": true,
+        "pathing": true,
+        "towerObstacles": true
+      },
+      "baseline": {
+        "survived": "3/3",
+        "islandHp": 99.5,
+        "time": 49.8,
+        "towerHacks": 0,
+        "towersBroken": 0,
+        "towerRebuilds": 0,
+        "towerRepairs": 0,
+        "wallHacks": 199.3,
+        "wallsBroken": 1,
+        "heartHits": 0,
+        "landed": 81.3
+      },
+      "trial": {
+        "survived": "3/3",
+        "islandHp": 99.5,
+        "time": 49.8,
+        "towerHacks": 0,
+        "towersBroken": 0,
+        "towerRebuilds": 0,
+        "towerRepairs": 0,
+        "wallHacks": 199.3,
+        "wallsBroken": 1,
+        "heartHits": 0,
+        "landed": 81.3
+      },
+      "perSeed": [
+        {
+          "seedId": 1,
+          "baseline": {
+            "survived": true,
+            "islandHp": 98.44,
+            "time": 51.3,
+            "towerHacks": 0,
+            "towersBroken": 0,
+            "towerRebuilds": 0,
+            "towerRepairs": 0,
+            "wallHacks": 243,
+            "wallsBroken": 3,
+            "heartHits": 0,
+            "landed": 83
+          },
+          "trial": {
+            "survived": true,
+            "islandHp": 98.44,
+            "time": 51.3,
+            "towerHacks": 0,
+            "towersBroken": 0,
+            "towerRebuilds": 0,
+            "towerRepairs": 0,
+            "wallHacks": 243,
+            "wallsBroken": 3,
+            "heartHits": 0,
+            "landed": 83
+          }
+        },
+        {
+          "seedId": 2,
+          "baseline": {
+            "survived": true,
+            "islandHp": 100,
+            "time": 49,
+            "towerHacks": 0,
+            "towersBroken": 0,
+            "towerRebuilds": 0,
+            "towerRepairs": 0,
+            "wallHacks": 249,
+            "wallsBroken": 0,
+            "heartHits": 0,
+            "landed": 85
+          },
+          "trial": {
+            "survived": true,
+            "islandHp": 100,
+            "time": 49,
+            "towerHacks": 0,
+            "towersBroken": 0,
+            "towerRebuilds": 0,
+            "towerRepairs": 0,
+            "wallHacks": 249,
+            "wallsBroken": 0,
+            "heartHits": 0,
+            "landed": 85
+          }
+        },
+        {
+          "seedId": 3,
+          "baseline": {
+            "survived": true,
+            "islandHp": 100,
+            "time": 49.2,
+            "towerHacks": 0,
+            "towersBroken": 0,
+            "towerRebuilds": 0,
+            "towerRepairs": 0,
+            "wallHacks": 106,
+            "wallsBroken": 0,
+            "heartHits": 0,
+            "landed": 76
+          },
+          "trial": {
+            "survived": true,
+            "islandHp": 100,
+            "time": 49.2,
+            "towerHacks": 0,
+            "towersBroken": 0,
+            "towerRebuilds": 0,
+            "towerRepairs": 0,
+            "wallHacks": 106,
+            "wallsBroken": 0,
+            "heartHits": 0,
+            "landed": 76
+          }
+        }
+      ]
+    },
+    {
+      "layout": "island",
+      "wave": 60,
+      "baselineRules": {
+        "towerHealth": true,
+        "pathing": true
+      },
+      "trialRules": {
+        "towerHealth": true,
+        "pathing": true,
+        "towerObstacles": true
+      },
+      "baseline": {
+        "survived": "3/3",
+        "islandHp": 80.7,
+        "time": 64.8,
+        "towerHacks": 11.3,
+        "towersBroken": 0,
+        "towerRebuilds": 0,
+        "towerRepairs": 0,
+        "wallHacks": 359,
+        "wallsBroken": 6.3,
+        "heartHits": 0,
+        "landed": 182.7
+      },
+      "trial": {
+        "survived": "3/3",
+        "islandHp": 80.1,
+        "time": 65.5,
+        "towerHacks": 56,
+        "towersBroken": 0,
+        "towerRebuilds": 0,
+        "towerRepairs": 1.7,
+        "wallHacks": 341,
+        "wallsBroken": 6.7,
+        "heartHits": 0,
+        "landed": 182.7
+      },
+      "perSeed": [
+        {
+          "seedId": 1,
+          "baseline": {
+            "survived": true,
+            "islandHp": 75.24,
+            "time": 61.8,
+            "towerHacks": 0,
+            "towersBroken": 0,
+            "towerRebuilds": 0,
+            "towerRepairs": 0,
+            "wallHacks": 420,
+            "wallsBroken": 7,
+            "heartHits": 0,
+            "landed": 182
+          },
+          "trial": {
+            "survived": true,
+            "islandHp": 73.73,
+            "time": 63.8,
+            "towerHacks": 62,
+            "towersBroken": 0,
+            "towerRebuilds": 0,
+            "towerRepairs": 1,
+            "wallHacks": 390,
+            "wallsBroken": 7,
+            "heartHits": 0,
+            "landed": 182
+          }
+        },
+        {
+          "seedId": 2,
+          "baseline": {
+            "survived": true,
+            "islandHp": 87.72,
+            "time": 64,
+            "towerHacks": 19,
+            "towersBroken": 0,
+            "towerRebuilds": 0,
+            "towerRepairs": 0,
+            "wallHacks": 311,
+            "wallsBroken": 6,
+            "heartHits": 0,
+            "landed": 183
+          },
+          "trial": {
+            "survived": true,
+            "islandHp": 87.34,
+            "time": 64,
+            "towerHacks": 83,
+            "towersBroken": 0,
+            "towerRebuilds": 0,
+            "towerRepairs": 4,
+            "wallHacks": 288,
+            "wallsBroken": 7,
+            "heartHits": 0,
+            "landed": 183
+          }
+        },
+        {
+          "seedId": 3,
+          "baseline": {
+            "survived": true,
+            "islandHp": 79.24,
+            "time": 68.7,
+            "towerHacks": 15,
+            "towersBroken": 0,
+            "towerRebuilds": 0,
+            "towerRepairs": 0,
+            "wallHacks": 346,
+            "wallsBroken": 6,
+            "heartHits": 0,
+            "landed": 183
+          },
+          "trial": {
+            "survived": true,
+            "islandHp": 79.24,
+            "time": 68.7,
+            "towerHacks": 23,
+            "towersBroken": 0,
+            "towerRebuilds": 0,
+            "towerRepairs": 0,
+            "wallHacks": 345,
+            "wallsBroken": 6,
+            "heartHits": 0,
+            "landed": 183
+          }
+        }
+      ]
+    },
+    {
+      "layout": "ring",
+      "wave": 30,
+      "baselineRules": {
+        "towerHealth": true,
+        "pathing": true
+      },
+      "trialRules": {
+        "towerHealth": true,
+        "pathing": true,
+        "towerObstacles": true
+      },
+      "baseline": {
+        "survived": "3/3",
+        "islandHp": 69.3,
+        "time": 52.4,
+        "towerHacks": 19,
+        "towersBroken": 0,
+        "towerRebuilds": 0,
+        "towerRepairs": 0.7,
+        "wallHacks": 13,
+        "wallsBroken": 0,
+        "heartHits": 0,
+        "landed": 81
+      },
+      "trial": {
+        "survived": "3/3",
+        "islandHp": 69.7,
+        "time": 52.5,
+        "towerHacks": 52.7,
+        "towersBroken": 0,
+        "towerRebuilds": 0,
+        "towerRepairs": 2,
+        "wallHacks": 2.7,
+        "wallsBroken": 0,
+        "heartHits": 0,
+        "landed": 81
+      },
+      "perSeed": [
+        {
+          "seedId": 1,
+          "baseline": {
+            "survived": true,
+            "islandHp": 65.42,
+            "time": 52.75,
+            "towerHacks": 29,
+            "towersBroken": 0,
+            "towerRebuilds": 0,
+            "towerRepairs": 1,
+            "wallHacks": 20,
+            "wallsBroken": 0,
+            "heartHits": 0,
+            "landed": 84
+          },
+          "trial": {
+            "survived": true,
+            "islandHp": 65.96,
+            "time": 52.75,
+            "towerHacks": 61,
+            "towersBroken": 0,
+            "towerRebuilds": 0,
+            "towerRepairs": 2,
+            "wallHacks": 0,
+            "wallsBroken": 0,
+            "heartHits": 0,
+            "landed": 84
+          }
+        },
+        {
+          "seedId": 2,
+          "baseline": {
+            "survived": true,
+            "islandHp": 67.39,
+            "time": 50.4,
+            "towerHacks": 24,
+            "towersBroken": 0,
+            "towerRebuilds": 0,
+            "towerRepairs": 1,
+            "wallHacks": 19,
+            "wallsBroken": 0,
+            "heartHits": 0,
+            "landed": 83
+          },
+          "trial": {
+            "survived": true,
+            "islandHp": 67.61,
+            "time": 50.55,
+            "towerHacks": 77,
+            "towersBroken": 0,
+            "towerRebuilds": 0,
+            "towerRepairs": 4,
+            "wallHacks": 8,
+            "wallsBroken": 0,
+            "heartHits": 0,
+            "landed": 83
+          }
+        },
+        {
+          "seedId": 3,
+          "baseline": {
+            "survived": true,
+            "islandHp": 75.12,
+            "time": 54.1,
+            "towerHacks": 4,
+            "towersBroken": 0,
+            "towerRebuilds": 0,
+            "towerRepairs": 0,
+            "wallHacks": 0,
+            "wallsBroken": 0,
+            "heartHits": 0,
+            "landed": 76
+          },
+          "trial": {
+            "survived": true,
+            "islandHp": 75.5,
+            "time": 54.1,
+            "towerHacks": 20,
+            "towersBroken": 0,
+            "towerRebuilds": 0,
+            "towerRepairs": 0,
+            "wallHacks": 0,
+            "wallsBroken": 0,
+            "heartHits": 0,
+            "landed": 76
+          }
+        }
+      ]
+    },
+    {
+      "layout": "ring",
+      "wave": 60,
+      "baselineRules": {
+        "towerHealth": true,
+        "pathing": true
+      },
+      "trialRules": {
+        "towerHealth": true,
+        "pathing": true,
+        "towerObstacles": true
+      },
+      "baseline": {
+        "survived": "0/3",
+        "islandHp": 0,
+        "time": 64.6,
+        "towerHacks": 80.7,
+        "towersBroken": 0,
+        "towerRebuilds": 0,
+        "towerRepairs": 3.3,
+        "wallHacks": 216.3,
+        "wallsBroken": 0,
+        "heartHits": 0,
+        "landed": 196.7
+      },
+      "trial": {
+        "survived": "2/3",
+        "islandHp": 2.3,
+        "time": 65.2,
+        "towerHacks": 172.3,
+        "towersBroken": 1.7,
+        "towerRebuilds": 1.7,
+        "towerRepairs": 6,
+        "wallHacks": 163.7,
+        "wallsBroken": 0,
+        "heartHits": 0,
+        "landed": 195
+      },
+      "perSeed": [
+        {
+          "seedId": 1,
+          "baseline": {
+            "survived": false,
+            "islandHp": 0,
+            "time": 65.7,
+            "towerHacks": 76,
+            "towersBroken": 0,
+            "towerRebuilds": 0,
+            "towerRepairs": 4,
+            "wallHacks": 196,
+            "wallsBroken": 0,
+            "heartHits": 0,
+            "landed": 196
+          },
+          "trial": {
+            "survived": true,
+            "islandHp": 1.93,
+            "time": 68.1,
+            "towerHacks": 179,
+            "towersBroken": 1,
+            "towerRebuilds": 1,
+            "towerRepairs": 8,
+            "wallHacks": 195,
+            "wallsBroken": 0,
+            "heartHits": 0,
+            "landed": 197
+          }
+        },
+        {
+          "seedId": 2,
+          "baseline": {
+            "survived": false,
+            "islandHp": 0,
+            "time": 65.55,
+            "towerHacks": 24,
+            "towersBroken": 0,
+            "towerRebuilds": 0,
+            "towerRepairs": 1,
+            "wallHacks": 177,
+            "wallsBroken": 0,
+            "heartHits": 0,
+            "landed": 193
+          },
+          "trial": {
+            "survived": true,
+            "islandHp": 4.99,
+            "time": 68.6,
+            "towerHacks": 104,
+            "towersBroken": 0,
+            "towerRebuilds": 0,
+            "towerRepairs": 7,
+            "wallHacks": 93,
+            "wallsBroken": 0,
+            "heartHits": 0,
+            "landed": 186
+          }
+        },
+        {
+          "seedId": 3,
+          "baseline": {
+            "survived": false,
+            "islandHp": 0,
+            "time": 62.6,
+            "towerHacks": 142,
+            "towersBroken": 0,
+            "towerRebuilds": 0,
+            "towerRepairs": 5,
+            "wallHacks": 276,
+            "wallsBroken": 0,
+            "heartHits": 0,
+            "landed": 201
+          },
+          "trial": {
+            "survived": false,
+            "islandHp": 0,
+            "time": 58.8,
+            "towerHacks": 234,
+            "towersBroken": 4,
+            "towerRebuilds": 4,
+            "towerRepairs": 3,
+            "wallHacks": 203,
+            "wallsBroken": 0,
+            "heartHits": 0,
+            "landed": 202
+          }
+        }
+      ]
+    }
+  ]
+}
