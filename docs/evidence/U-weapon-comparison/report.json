@@ -1,0 +1,44 @@
+{
+  "main": "e8c61c647ae1cd5bb96e89916e89015ddf6e840c",
+  "scene": "isolated real UI and controller with synthetic delayed replies",
+  "captures": [
+    {
+      "file": "before-1280x720.png",
+      "width": 1280,
+      "height": 720,
+      "trace": {
+        "comparison": false,
+        "text": ""
+      }
+    },
+    {
+      "file": "before-375x812.png",
+      "width": 375,
+      "height": 812,
+      "trace": {
+        "comparison": false,
+        "text": ""
+      }
+    },
+    {
+      "file": "after-1280x720.png",
+      "width": 1280,
+      "height": 720,
+      "trace": {
+        "comparison": true,
+        "text": "Compare with PistolsDamage per hit35.1 · 25.35 moreRange24 · 12 moreReload1.38 s · 1.07 s slowerCurrent: One ship per shot.This weapon: Goes through to a second ship behind the first."
+      }
+    },
+    {
+      "file": "after-375x812.png",
+      "width": 375,
+      "height": 812,
+      "trace": {
+        "comparison": true,
+        "text": "Compare with PistolsDamage per hit35.1 · 25.35 moreRange24 · 12 moreReload1.38 s · 1.07 s slowerCurrent: One ship per shot.This weapon: Goes through to a second ship behind the first."
+      }
+    }
+  ],
+  "errors": [],
+  "external": []
+}
