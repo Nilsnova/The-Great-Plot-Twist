@@ -591,7 +591,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     if (answer.ok) {
       walls = new Map(answer.data.walls.map(wall => [wall.spot, wall])); wallsFor = target()?.code ?? null;
       tookCoins(answer.data.coins);
-      emit({type: SPOTS_CHANGED, place, spot: spotId});
+      // The fresh health goes along, so the wave's picture of this island stops drawing the old damage.
+      emit({type: SPOTS_CHANGED, place, spot: spotId, walls: Object.fromEntries(answer.data.walls.map(wall => [wall.spot, wall.health]))});
       ui.toast(`Wall repaired${onWhere(place)} · ${coinText(answer.data.coins)}`, 'success');
     } else {
       cardMessage = answer.message;
