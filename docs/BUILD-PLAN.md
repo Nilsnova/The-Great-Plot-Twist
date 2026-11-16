@@ -247,14 +247,14 @@ Use `specs/_TEMPLATE.md` for each claimed package. Record API/event/table/flag c
 
 ### T54-T60 unified recovery delivery gates
 
-The detailed, unassigned work is in [OPEN-TODOS section 11](OPEN-TODOS.md#11-unified-defense-recovery--unassigned-follow-ups-16-nov), based on [D059](DECISIONS.md#d059--one-recovery-countdown-for-all-damageable-structures--2026-11-16) and [the T33 recovery spec](../specs/T33-persistent-tower-damage.md).
+The detailed, unassigned work is in [OPEN-TODOS section 11](OPEN-TODOS.md#11-unified-defense-recovery--unassigned-follow-ups-16-nov), based on [D059](DECISIONS.md#d059--shared-gradual-hp-recovery-and-paid-instant-repair--2026-11-16) and [the T33 recovery spec](../specs/T33-persistent-tower-damage.md).
 
 | Gate | Tasks | Required exit before next stage |
 |---|---|---|
-| Agree the implementation | T54 | Ianno approves concrete timer, pricing/modifier, refund/compatibility, API/snapshot/version and rollout contracts. No runtime code in this planning task. |
-| Persist and charge | T55–T56 | Server-owned countdown and immutable wave-start snapshots plus separate ordered paid-action history exist before paid recovery is implemented against them; database and race tests preserve post-restore damage and reject stale pre-restore reports across finish/payment/reset. Paid restore is allowed in or out of combat. |
-| Integrate combat and progression | T57–T58 | New waves allow only the authenticated T56 paid event to restore structure HP during battle; T57 consumes that event contract, while old frozen waves keep their behavior. Restore effects and subsequent damage remain ordered; retirement/refunds preserve unrelated progression. T58 coordinates shared simulation edits after T57. |
-| Update client and verify | T59–T60 | Cards, in-combat action/event synchronization, player guidance, migration, two-client behavior, post-restore damage ordering, safe tower/obstacle behavior, island reset and balance evidence match the approved contract. |
+| Agree the implementation | T54 | Ianno approves gradual rate/clock/HP authority/zero-HP behavior, pricing/modifier, refund/compatibility, API/snapshot/version and rollout contracts. No runtime code in this planning task. |
+| Persist and charge | T55–T56 | Server-owned gradual recovery stores authoritative current HP through damage/offline time; immutable wave-start snapshots plus separate ordered paid-action history exist before paid recovery is implemented against them. Database and race tests preserve in-wave damage after paid restores and reject stale pre-restore reports across finish/payment/reset. Paid restore is allowed in or out of combat. |
+| Integrate combat and progression | T57–T58 | New waves apply gradual shared HP recovery after the 3-second quiet period during combat and consume authenticated T56 paid events for instant full restoration; old frozen waves keep their behavior. Subsequent damage remains ordered; retirement/refunds preserve unrelated progression. T58 coordinates shared simulation edits after T57. |
+| Update client and verify | T59–T60 | Cards show gradual HP recovery and instant repair, with in-combat action/event synchronization, player guidance, migration, two-client behavior, zero-HP/firing/obstacle behavior, island reset and balance evidence matching the approved contract. |
 
 All stages remain proposed and unassigned. The feature freeze and submission schedule still apply; this breakdown does not fast-track work. Keep flags off, and do not apply a migration or deploy until separately authorized. Existing D039/D049 runtime contracts remain in force until a reviewed and released implementation replaces them.
 
