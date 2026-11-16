@@ -17,11 +17,13 @@
 //   openHarbor(id) / openTechHub() / openWreck()  the campaign's buildings (GAME-V3.md §4, §5)
 //   startMove(spotId) / moving                 T36 Move mode: a spot to another square of the build grid
 //   arsenal                                    the shared weapon rack (T41, D042, flag "arsenal": arsenalOn()), arsenal.js
+//   resetIsland(typed)                         T53: Settings › Reset my island (reset.js), your own island only
 // Events it emits on the game's bus: island_built {kind, spot}, island_upgraded {kind, spot, level},
 // campaign_unlocked {wave, ids, code} (a won wave opened something on the island on screen, once per
 // island and wave on this page; the narrator plays its lines), tower_specialised {spot, spec},
 // island_spots_changed {place, spot} (any build or upgrade, also a friend's island and Pirate Point), island_visit_named {place, name}
 // (the friend's game on screen learned its host's name, so the arrival banner can follow), crew_hired {crew}, island_invite_opened, wave_started_server {...} and wave_finished {...} (wave-hooks.js).
+// After a reset (T53): island_reset {code}, then game_started {code, first: true, fresh: true} (the intro and the guided start again).
 import {createIslandApi} from './api.js';
 import {createWaveFlow} from './wave-flow.js';
 import {createIslandUi} from './ui.js';
@@ -49,6 +51,8 @@ import {resolvePeer} from '../net/live-extras.js';
 import {travelAllowed, visitChip, visitName} from './one-island.js';
 import {progressSummary} from './progression.js';
 import {withWallRecovery} from './wall-recovery.js';
+import {createResetSection} from './reset.js';
+import {addSettingsSection} from '../shell/settings-extras.js';
 
 export const ARRIVAL_KEY = 'plot_twist_island_arrival_v1';
 // A build or upgrade went through: {place: 'own' | 'visit' | 'point', spot}. The wave wiring tells the
@@ -64,6 +68,8 @@ export const TOWER_TREE_BOUGHT = 'tower_tree_bought';
 // A house picked a role (GAME-V3.md "Houses"): {spot, role, first} (first: the first role on this island seen by this page).
 export const HOUSE_ROLE_PICKED = 'house_role_picked';
 export const VISIT_NAMED = 'island_visit_named';
+// T53: your own island was reset to a fresh start on this page: {code}. The narrator forgets what it told there.
+export const ISLAND_RESET = 'island_reset';
 export const CHART_NAMES = Object.freeze({home_islet: 'Your island', saltreach_harbor: 'The Harbor', lighthouse_isle: 'Pirate Point'});
 const notReady = () => Promise.resolve({ok: false, status: 503, code: 'not_ready',
   message: 'Sign in to build on your island. You can keep exploring.'});
@@ -72,7 +78,7 @@ const safeLocal = () => { try { return globalThis.localStorage ?? null; } catch 
 export function createIsland({container, emit, on, mode = 'live', getTransport = () => null, transport = null,
   search = globalThis.location?.search ?? '', focus = () => {}, resetInput = () => {}, reducedMotion = () => false,
   preferences = () => ({}), storage = safeLocal(), visitStorage = undefined, loadCutscenes = () => import('../cutscenes/player.js'),
-  onCoins = () => {}, onCaptain = () => {}, menu = addMenuExtras, now, setTimer, clearTimer, openHarborStall = () => {},
+  onCoins = () => {}, onCaptain = () => {}, menu = addMenuExtras, settings = addSettingsSection, now, setTimer, clearTimer, openHarborStall = () => {},
   travel = () => travelAllowed({islandsMode: mode}),
   // D039 (proposed): whether /api/config says the flag wall_recovery is on (lasting wall damage, Repair/Rebuild).
   wallRecovery = () => false, arsenalOn = () => false,
@@ -341,8 +347,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     void syncGame(true).finally(() => { lobbyBusy = false; if (ui.open === 'lobby') refreshCard(); });
   }
   // Start pressed anywhere in the room: every lobby closes (the narrator listens to the same event).
-  const stopStartedGame = on(GAME_STARTED, () => {
-    if (disposed) return;
+  const stopStartedGame = on(GAME_STARTED, event => {
+    if (disposed || event?.fresh === true) return; // a reset (T53) has its own toast
     if (ui.open === 'lobby') { ui.close(); openSpot = null; }
     ui.toast('The game is on! Ring the bell when you are ready.', 'success');
   });
@@ -893,6 +899,30 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     {label: 'Captain and skills', onSelect: () => openCaptain()},
     ...(here.size ? [{label: `Captains here (${here.size})`, onSelect: () => openCaptains()}] : []),
   ]);
+  // T53: Settings › Reset my island. Only on your own island; in a friend's game only its host may.
+  function resetState() {
+    if (visiting || visitCode) return {kind: 'member'};
+    if (!own?.code) return {kind: 'none', message: ownMessage || 'Open your island first to reset it.'};
+    return {kind: 'owner', code: displayIslandCode(own.code), wave: battle === true};
+  }
+  async function resetIsland(typed) {
+    const answer = await api.freshStart({confirmCode: typed});
+    if (disposed || !answer.ok) return answer;
+    const code = islandCode(own?.code ?? '') || islandCode(typed);
+    // This page's memory of the old island goes too: its campaign, walls and tree picks.
+    campaignSeen.delete(code);
+    for (const key of [...campaignTold]) if (key.startsWith(`${code}:`)) campaignTold.delete(key);
+    walls = new Map(); wallsFor = null; treePicked.clear(); waveOver = false;
+    moving.cancel(); flow.reset(); ui.close(); openSpot = null;
+    await load();
+    if (disposed) return answer;
+    emit({type: SPOTS_CHANGED, place: 'own', spot: 'cabin'}); // the members on the island read it again
+    ui.toast('Your island starts fresh', 'success', '🪙 100 and wave 1. Ring the bell when you are ready.');
+    emit({type: ISLAND_RESET, code: displayIslandCode(code)});
+    emit({type: GAME_STARTED, code: displayIslandCode(code), first: true, fresh: true});
+    return answer;
+  }
+  const stopSettings = settings(() => createResetSection({read: resetState, reset: resetIsland}));
   async function bellAction(action) {
     cardMessage = '';
     const answer = action === 'join' ? await flow.join(where()) : action === 'ring' ? await flow.ring(where()) : null;
@@ -999,7 +1029,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       if (place !== ISLAND_PLACE) return null;
       return islandRoom(visiting?.code ?? visitCode ?? own?.code ?? '');
     },
-    load, loadPoint, playArrival, visit, sailHome, pick, build, upgrade, hire, upgradeCaptain, learnSkill, takeRole, respecCaptain, buyWeapon, equipWeapon, setPresence,
+    load, loadPoint, playArrival, visit, sailHome, resetIsland, pick, build, upgrade, hire, upgradeCaptain, learnSkill, takeRole, respecCaptain, buyWeapon, equipWeapon, setPresence,
     // Your captain for the wave (src/pirates/game-wiring.js): level, learnt skills (§14), equipped weapon (§15).
     captainLoadout: () => ({level: own?.captain?.level ?? 1, skills: readSkills([...(own?.skills?.known ?? []), ...(isRole(own?.skills?.role) ? [own.skills.role] : [])]), weapon: arsenal.weapon() ?? readWeapon(own?.weapons?.equipped),
       colour: captainColour()}),
@@ -1077,7 +1107,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     },
     dispose() {
       if (disposed) return; disposed = true;
-      stopFinished(); stopStarted(); stopArrived(); stopPoint(); stopInteract(); stopTravel(); stopMenu?.(); stopStartedGame(); stopGame(); clearTimeout(syncSoon);
+      stopFinished(); stopStarted(); stopArrived(); stopPoint(); stopInteract(); stopTravel(); stopMenu?.(); stopSettings?.(); stopStartedGame(); stopGame(); clearTimeout(syncSoon);
       boatGame?.dispose(); boatGame = null;
       flow.dispose(); ui.dispose(); moveBar.dispose(); globalThis.removeEventListener?.('keydown', moveKeys, true); cutscene?.dispose?.(); world?.dispose(); world = null; pointWorld?.dispose(); pointWorld = null;
     },

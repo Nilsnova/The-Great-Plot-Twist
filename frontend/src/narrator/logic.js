@@ -139,6 +139,8 @@ export function createMemory(storage, {now = () => Date.now()} = {}) {
   return {
     told(key) { return new Set(data.games[key]?.told ?? []); },
     known(key) { return (data.games[key]?.told?.length ?? 0) > 0; },
+    // T53: an island reset to a fresh start is a new game: what was told there is forgotten.
+    forget(key) { if (Object.hasOwn(data.games, key)) { delete data.games[key]; save(); } },
     mark(key, ids) {
       const entry = game(key), set = new Set(entry.told);
       for (const id of ids) if (typeof id === 'string' && id) set.add(id);
