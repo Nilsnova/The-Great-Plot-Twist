@@ -9,18 +9,18 @@ requires-python = ">=3.12"
 
 # Packages the server needs when it runs on Vercel.
 dependencies = [
-    "fastapi>=0.162.0",
-    "httpx>=0.28.1",
-    "pydantic>=2.14.3",
+    "fastapi==0.162.0",
+    "httpx==0.28.1",
+    "pydantic==2.14.3",
 ]
 
 # Packages only developers need. `uv sync` installs them, Vercel does not.
 [dependency-groups]
 dev = [
-    "httpx2>=2.16.0", # used only inside FastAPI's TestClient (Starlette dropped httpx there)
-    "pytest>=9.2.0",
-    "ruff>=0.17.3",
-    "uvicorn>=0.54.0", # a local web server: uv run uvicorn main:app --reload
+    "httpx2==2.16.0", # used only inside FastAPI's TestClient (Starlette dropped httpx there)
+    "pytest==9.2.0",
+    "ruff==0.17.3",
+    "uvicorn==0.54.0", # a local web server: uv run uvicorn main:app --reload
 ]
 
 # This project is an app, not a library, so uv does not build or install it.

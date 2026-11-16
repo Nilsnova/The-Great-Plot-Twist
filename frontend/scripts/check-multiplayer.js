@@ -579,24 +579,31 @@ try {
   // 4b Captain health: the friend falls, the owner helps him up for coins, both pages agree.
   const health = await captainHealth(host, ben, first);
   results.push(...health);
-  // 5 Everybody finishes with loot, then both press "Next wave" at the same moment.
-  // The break lasts 15 s: press Next wave on both pages first, look at the loot after.
-  for (const captain of pages) await until(captain, state => state?.pause, 'the break', 240000);
-  // An upgrade in the break (the wave's own drawing hides the island's sprites): both pages show it at once.
+  // 5 Pause the short break first. It lasts 8 seconds by design, so do setup work after the room hold.
+  await until(host, state => state?.pause, 'the host\'s break', 240000);
+  const secondsBeforePause = await host.page.evaluate(() => {
+    const pause = window.__island.waves.island.wave?.pause;
+    return pause ? Math.max(0, Math.ceil((pause.until - Date.now()) / 1000 - 1e-9)) : null;
+  });
+  assert.ok(secondsBeforePause > 0, 'the break is still open when the host pauses it');
+  results.push(`break time remaining when the host paused: ${secondsBeforePause} s`);
+  // The host pauses the break for the whole room; the friend's break says who paused and waits.
+  await host.page.locator('.pirate-break:not([hidden]) .pirate-hold').click();
+  await Promise.all([host, ben].map(captain => captain.page.waitForFunction(() =>
+    document.querySelector('.pirate-break:not([hidden]) .pirate-break-line')?.textContent === 'Paused by Nils', null, {timeout: 10000, polling: 100})));
+  await ben.page.waitForTimeout(9000); // longer than the normal 8-second break
+  for (const captain of pages) assert.ok(await captain.page.evaluate(() => window.__island.waves.island.inBreak), `${captain.name}: the paused break stays open`);
+  await shot('04-paused-break');
+  results.push('Pause: both clients said "Paused by Nils" and stayed in the break past its 8 seconds');
+  // An upgrade in the paused break (the wave's own drawing hides the island's sprites): both pages show it at once.
   await island(host, async i => i.upgrade('cannon_2'));
   const postLevels = captain => captain.page.evaluate(() => window.__island.waves.island.wave?.renderer?.levels?.().cannon_2 ?? 0);
   for (const captain of [host, ben]) await captain.page.waitForFunction(() => window.__island.waves.island.wave?.renderer?.levels?.().cannon_2 === 2, null, {timeout: 2500, polling: 100});
   results.push(`upgrade in the break: cannon_2 is level ${await postLevels(host)} / ${await postLevels(ben)} in the wave's drawing on both pages`);
   await shot('04-break-upgrade');
-  // The host pauses the break for the whole room; the friend's break says who paused and waits.
   await host.page.locator('.pirate-break:not([hidden]) .pirate-hold').click();
-  await ben.page.waitForFunction(() => document.querySelector('.pirate-break:not([hidden]) .pirate-break-line')?.textContent === 'Paused by Nils', null, {timeout: 10000, polling: 100});
-  await ben.page.waitForTimeout(9000); // longer than the 8-second break
-  assert.ok(await ben.page.evaluate(() => window.__island.waves.island.inBreak), 'the paused break stays open');
-  await shot('04-paused-break');
-  results.push('Pause: the friend\'s break said "Paused by Nils" and stayed open past its 8 seconds');
-  await host.page.locator('.pirate-break:not([hidden]) .pirate-hold').click();
-  await ben.page.waitForFunction(() => !document.querySelector('.pirate-break.is-paused'), null, {timeout: 10000, polling: 100});
+  await Promise.all([host, ben].map(captain => captain.page.waitForFunction(() =>
+    !document.querySelector('.pirate-break.is-paused'), null, {timeout: 10000, polling: 100})));
   await Promise.all([host, ben].map(captain => captain.page.waitForFunction(() => window.__island.waves.island.wave?.pause?.ready === true, null, {timeout: 14000})));
   await Promise.all([host, ben].map(captain => captain.page.evaluate(() => window.__island.waves.island.next())));
   for (const captain of pages) await captain.page.waitForFunction(id => window.__mp.loot.some(item => item.waveId === id && item.loot > 0), first.waveId, {timeout: 30000});

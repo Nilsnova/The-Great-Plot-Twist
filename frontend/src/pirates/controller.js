@@ -708,7 +708,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
         Promise.resolve(createFinisherScene({ container: world.container, me: playerId, easy: () => !!easyFinishers(), reducedMotion, recorder: entry.recorder,
           practiceIdentity: practiceIdentity(), onReady: () => { entry.ready = true; } }))
           .then(scene => { if (disposed || current.finisher !== entry || current.finished) scene?.dispose(); else entry.scene = scene; })
-          .catch(error => console.error(error));
+          // A scene that cannot load must not hold the whole crew in the preparation phase: say ready anyway.
+          .catch(error => { console.error(error); entry.ready = true; });
       }
     }
     const entry = current.finisher;
