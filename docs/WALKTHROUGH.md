@@ -1207,6 +1207,18 @@ retries or another networking layer. Live networks/physical phones remain unveri
 
 **Limits / possible change:** These are controlled controller replies. The persistent-purchase case uses the in-memory fake, not SQL or real Realtime. Returning to the same island before a reply finishes is not a new navigation-generation protocol. A future broader navigation cancellation policy should be agreed separately. [Evidence](evidence/B3-arsenal-context/README.md); [PR #88](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/88). Codex drafted the change and tests; Johannes's own rehearsal and independent human review are pending.
 
+## Johannes: Retrying an arsenal load (B3)
+
+**What:** An initial arsenal read failure offers Try again. During a read the control says Opening… and is disabled. Success removes the error state; Escape and close still work.
+
+**Where/how:** `arsenal-model.js` supplies the recovery button label and disabled state. `arsenal-ui.js` draws a native button with a stable focus id. `arsenal.js` calls its existing refresh method once while loading is false, clears the old load error, and sets loading before the initial card opens. Source: [island/arsenal.js](../frontend/src/island/arsenal.js), [island/arsenal-model.js](../frontend/src/island/arsenal-model.js), [island/arsenal-ui.js](../frontend/src/island/arsenal-ui.js).
+
+**Why:** Reuse the existing model, renderer, read method and UI kit. Retry performs a read only; buy/take/return and their existing action ids are unchanged.
+
+**Tests:** [arsenal-retry.test.js](../frontend/tests/island/arsenal-retry.test.js). Three native Chrome cases use the full shared stylesheet order at 1280x720 and 375x812: keyboard activation, 44px target, duplicate retry suppression, repeated failure then success, and closing before completion.
+
+**Limits / possible change:** The replies are controlled at the controller boundary. These tests do not exercise a live account, real timeout duration, physical phone or server/database rules. A future broader navigation cancellation policy should be agreed separately. [Evidence](evidence/B3-arsenal-retry/README.md); [PR #90](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/90). Codex drafted the change and tests; Johannes's own rehearsal and independent human review are pending.
+
 ## The three course questions
 
 ### Q1. Where is the data stored?
