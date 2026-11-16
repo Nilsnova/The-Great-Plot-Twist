@@ -2,10 +2,10 @@
 import {describe, expect, it} from 'vitest';
 import table from '../../src/campaign/tutorials.json';
 import {STEPS} from '../../src/campaign/index.js';
-import {SPOTS, BELL, CABIN, ARSENAL, CAMPAIGN_BUILDINGS} from '../../src/island/spots.js';
+import {ALL_SPOTS, BELL, CABIN, ARSENAL, CAMPAIGN_BUILDINGS} from '../../src/island/spots.js';
 import {CARDS, cardById, cardOfItem, cardsBetween, cardsOpenAt, cardText, coverage, flagAllows} from '../../src/tutorial/unlock-cards.js';
 
-const ZONES = new Set([...SPOTS.map(spot => spot.id), BELL.id, CABIN.id, ARSENAL.id, ...CAMPAIGN_BUILDINGS.map(item => item.id), 'hud:menu']);
+const ZONES = new Set([...ALL_SPOTS.map(spot => spot.id), BELL.id, CABIN.id, ARSENAL.id, ...CAMPAIGN_BUILDINGS.map(item => item.id), 'hud:menu']);
 
 describe('the card table', () => {
   it('gives every id of the campaign table exactly one card, and names no id the table lacks', () => {

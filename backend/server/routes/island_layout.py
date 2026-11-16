@@ -13,7 +13,8 @@ POST /api/island/move  {"spot": "cannon_1", "x": -10, "z": -10.5, "code"?: "ISLE
     on it moves with it, with its level and tower skill. Free, between waves only. With "code":
     the island of a game you are a member of (403 not_member otherwise); without it your own.
     "x" and "z" are island units on the grid of half units. The rules, in this order:
-      404 no_such_spot   not one of the island's 22 spots (Pirate Point's spots do not move)
+      404 no_such_spot   not one of the island's 22 spots (26 with more_tower_spots, D060; Pirate
+                         Point's spots do not move)
       422 off_grid       not a multiple of 0.5, or further out than 30 units
       409 not_on_land    the cell is in the sea
       409 place_taken    the footprint (2 x 2 units for walls and towers, 3 x 3 for the

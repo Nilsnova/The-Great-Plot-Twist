@@ -11,9 +11,10 @@
 //   isOpen(campaign, id)        true once open
 //   openedBetween(from, to)     the steps a win from `from` to `to` opened: [{wave, ids, title, line}]
 //   opensText(wave)             "Opens after wave 4"
-//   spotWave(spotId)            the wave a spot needs (the inner wall ring after 5), 0 for most
+//   spotWave(spotId)            the wave a spot needs (the inner wall ring after 5, an extra tower spot of D060), 0 for most
 import table from './campaign.json';
 import {BRANCHES, readTier} from './tech.js';
+import {extraSpotWave} from '../island/extra-spots.js';
 
 export const CAMPAIGN = table;
 export const STEPS = Object.freeze(table.steps.map(step => Object.freeze({...step, opens: Object.freeze([...step.opens]), later: step.later === true})));
@@ -26,7 +27,7 @@ export const isLater = id => BY_ID.get(id)?.later === true;
 export const opensText = wave => `Opens after wave ${wave}`;
 export function spotWave(spotId) {
   for (const [group, spots] of Object.entries(SPOT_GROUPS)) if (spots.includes(spotId)) return waveOf(group) ?? 0;
-  return 0;
+  return extraSpotWave(spotId); // D060: an extra tower spot (cannon_8 after 10 ... cannon_11 after 40)
 }
 
 const isWave = value => Number.isSafeInteger(value) && value >= 0;

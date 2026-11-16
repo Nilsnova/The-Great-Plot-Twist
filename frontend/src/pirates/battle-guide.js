@@ -5,8 +5,9 @@
 //     (T50, the owner's play-test of 16 Nov: a solid ring with a skull read as a target the ships shoot at; it is a
 //     landing place, so it now looks like one: an open, dashed edge and footprints walking inland);
 //   - where they walk: a dotted line from each landing to the heart, the route the boarders' own grid takes
-//     (boarder-paths.js, the same rule as sim.js with the wave rule "pathing"); an axe badge where the route has
-//     to hack through a wall, so a wall the route walks round shows the detour;
+//     (boarder-paths.js, the same rule as sim.js with the wave rule "pathing"), so a wall the route walks round
+//     shows the detour. No badge marks the walls the route hacks through (owner's playtest, 16 Nov: "the orange
+//     flags do not really make sense"): a wall under attack shows its hp bar, a broken one its gap;
 //   - the goal: a gold ring and a heart badge on the island's heart;
 //   - the walls: a small hp bar over every wall that is hurt or being hacked (green, yellow, red), and a broken
 //     wall's gap outlined in red with a rubble badge.
@@ -162,7 +163,7 @@ const round2 = value => Math.round(value * 100) / 100;
 // ---------------------------------------------------------------- drawing
 
 const SHAPE = { disc: 0, ring: 1, chevron: 2, icon: 3, box: 4, dashed: 5 };
-const ICONS = ['skull', 'heart', 'axe', 'rubble'];
+const ICONS = ['skull', 'heart', 'rubble'];
 const ICON_PX = 64;
 const vertex = /* glsl */`
 attribute vec4 iPos;attribute vec2 iSize;attribute vec4 iColor;attribute vec4 iUv;
@@ -222,7 +223,7 @@ function createInstances(name, capacity, material, renderOrder, owned) {
 }
 
 // The badges, painted once on a small canvas (one 64 px square each): boot prints (the landing; its id stays
-// 'skull', the badge it replaced), a heart, an axe, rubble.
+// 'skull', the badge it replaced), a heart, rubble. (The orange axe badge beside hacked walls is gone, D060.)
 function paintIcons() {
   if (typeof document === 'undefined') return null;
   const canvas = document.createElement('canvas'); canvas.width = ICON_PX * ICONS.length; canvas.height = ICON_PX;
@@ -247,15 +248,8 @@ function paintIcons() {
     c.fillStyle = '#d8323f'; c.beginPath(); c.moveTo(x, y + 15);
     c.bezierCurveTo(x - 22, y, x - 13, y - 17, x, y - 7); c.bezierCurveTo(x + 13, y - 17, x + 22, y, x, y + 15); c.fill();
   }
-  { // axe (they hack through here)
-    const { x, y } = badge(2, '#e2762e');
-    c.save(); c.translate(x, y); c.rotate(-.7);
-    c.fillStyle = '#7a4a24'; c.fillRect(-2.5, -16, 5, 32);
-    c.fillStyle = '#e8eef0'; c.beginPath(); c.moveTo(2, -15); c.quadraticCurveTo(16, -10, 13, 2); c.lineTo(2, -3); c.closePath(); c.fill();
-    c.restore();
-  }
   { // rubble (a broken wall: a gap)
-    const { x, y } = badge(3, '#5b5f63');
+    const { x, y } = badge(2, '#5b5f63');
     c.fillStyle = '#c9b48f';
     for (const [dx, dy, w, h] of [[-14, 4, 10, 8], [-3, 6, 12, 8], [8, 2, 9, 9], [-8, -6, 11, 8], [3, -8, 8, 7]]) c.fillRect(x + dx, y + dy, w, h);
     c.strokeStyle = '#ff5a4a'; c.lineWidth = 4; c.beginPath(); c.moveTo(x - 13, y - 13); c.lineTo(x + 13, y + 13); c.moveTo(x + 13, y - 13); c.lineTo(x - 13, y + 13); c.stroke();
@@ -272,8 +266,6 @@ export function skullAt(landing, heart = CONFIG.boarding.heart, walls = [], scal
   const dx = landing.x - heart.x, dz = landing.z - heart.z, d = Math.hypot(dx, dz) || 1;
   return [round2(landing.x + dx / d * SKULL_SHIFT * scale), round2(landing.z + dz / d * SKULL_SHIFT * scale)];
 }
-// How far right of a wall's centre its axe badge sits: half the hp bar (.8 + .07 frame) plus half the badge (.7) and a gap.
-export const AXE_SIDE = 1.75;
 const RGB = hex => { const c = new THREE.Color(hex); return { r: c.r, g: c.g, b: c.b }; };
 const LANE = RGB('#ffe08a'), RED = RGB('#ff4a36'), DARK = RGB('#1f2622'), GOLD = RGB('#ffd34d'), WHITE = { r: 1, g: 1, b: 1 };
 const BAR = { good: RGB('#7ed957'), low: RGB('#ffd34d'), bad: RGB('#ff4a36') };
@@ -304,8 +296,8 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
 
   // k: how big the marks draw, the characters' battle scale during a wave (the camera is zoomed out), 1 between waves.
   let k = 1, thin = false;
-  // Routes from two landings often share their last cells: each cell draws once (`cells`), each axe once (`axes`).
-  const cells = new Set(), axes = new Set();
+  // Routes from two landings often share their last cells: each cell draws once.
+  const cells = new Set();
   function drawRoute(route, alpha, live) {
     const dots = routeDots(route.points);
     const total = dots.length ? dots[dots.length - 1].along : 0;
@@ -332,13 +324,6 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
         ground.push(SHAPE.disc, dot.x, y, d, d * Y, { r: 1, g: .3 + glow * .55, b: .2 + glow * .4, a: alpha * .85 });
       }
     });
-    // The axe sits beside the wall's hp bar (same row, to its right), never on top of it.
-    for (const breach of route.breaches) {
-      const id = breach.wallId ?? breach.towerId;
-      if (axes.has(id)) continue;
-      axes.add(id);
-      air.push(SHAPE.icon, breach.x + AXE_SIDE * k, drawnY(breach.z) + 1.45 * k, 1.4 * k, 1.4 * k, { ...WHITE, a: Math.min(1, alpha + .25) }, { icon: 'axe' });
-    }
   }
   function drawLanding(landing, alpha, live, heart, walls) {
     const pulse = still() || !live ? 1 : 1 + .1 * Math.sin(clock * 5), y = drawnY(landing.z), r = 3.4 * k * pulse;
@@ -389,7 +374,7 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
     root,
     update(view) {
       if (disposed) return;
-      ground.begin(); air.begin(); cells.clear(); axes.clear();
+      ground.begin(); air.begin(); cells.clear();
       if (view) {
         thin = !!sparse();
         clock += Math.max(0, Math.min(.1, view.dt || 0));

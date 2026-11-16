@@ -6,7 +6,8 @@
 import * as THREE from 'three';
 import {artSizes, loadArt, placeArt, projectPoint} from '../world/art.js';
 import {pixelSizes} from '../pixel/catalog.js';
-import {SPOTS as ISLAND_SPOTS, CABIN, BELL, CAMPAIGN_BUILDINGS, ARSENAL, islandZones, placedSpot} from './spots.js';
+import {ALL_SPOTS as ISLAND_SPOTS, CABIN, BELL, CAMPAIGN_BUILDINGS, ARSENAL, islandZones, placedSpot} from './spots.js';
+import {isExtraSpot} from './extra-spots.js';
 import {makeFootprint, makeWallLanes} from './move-preview.js';
 import {isOpen, spotWave, waveOf} from '../campaign/index.js';
 import {LOCK_WAVES} from '../art/campaign.js';
@@ -286,6 +287,8 @@ export function decorateIsland(place, ctx = {}) {
     for (const spot of SPOTS) {
       const answer = spots.find(item => item.id === spot.id), built = answer?.built === true, where = whereOf(spot);
       const marker = markers.get(spot.id);
+      // D060: an extra tower spot stands only while the answer lists it (the server's flag more_tower_spots).
+      if (isExtraSpot(spot.id) && !answer) { marker.visible = false; marker.locked = false; clear(spot.id); for (const kind of kindsOf(spot)) buildings.get(`${spot.id}:${kind}`).visible = false; continue; }
       for (const mesh of [marker.ring, marker.badge, marker.lock, marker.lockRing]) moveSprite(mesh, where.x, where.z);
       marker.x = where.x; marker.z = where.z;
       for (const kind of kindsOf(spot)) moveSprite(buildings.get(`${spot.id}:${kind}`), where.x, where.z);
@@ -326,7 +329,8 @@ export function decorateIsland(place, ctx = {}) {
 
   // The nearest pickable thing to a ground point (a tap), or null.
   function pickAt(x, z) {
-    const candidates = [...SPOTS.map(spot => ({id: spot.id, ...whereOf(spot), w: 2.4, h: spot.kind === 'watchtower' ? 5 : 3})),
+    const candidates = [...SPOTS.filter(spot => !isExtraSpot(spot.id) || state.spots.some(item => item.id === spot.id))
+        .map(spot => ({id: spot.id, ...whereOf(spot), w: 2.4, h: spot.kind === 'watchtower' ? 5 : 3})),
       ...(bell ? [{id: BELL.id, x: BELL.x, z: BELL.z, w: 1.6, h: 3.4}] : []),
       ...(arsenalMesh?.visible ? [{id: ARSENAL.id, x: ARSENAL.x, z: ARSENAL.z, w: ARSENAL.w / 2, h: ARSENAL.h}] : []),
       ...(campaignMeshes.size ? CAMPAIGN_BUILDINGS.map(item => ({id: item.id, x: item.x, z: item.z, w: item.w, h: item.h})) : []),

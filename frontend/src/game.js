@@ -125,7 +125,9 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     waveRunning:()=>!!waves?.island.wave,blocked:()=>!active||outsideBlocked()||performance.now()<introUntil,narrating:()=>narrator.speaking});
   tutorials=createTutorials({container,on,reducedMotion,probe:tutorialHooks.probe,locate:tutorialHooks.locate,spotTarget:tutorialHooks.spotTarget,anchor:tutorialHooks.anchor,tour:tutorialHooks.tour,
     say:trigger=>narrator.say(trigger),setGuide:view=>hud.setGuide(view),hudParent:()=>container.querySelector('.hud-play .hud-right'),
-    focusGame:()=>graphics.renderer.domElement.focus({preventScroll:true}),flags:{arsenal:()=>islandFlags.arsenal?.()===true,defenses_v2:()=>islandFlags.defenses_v2?.()===true}});
+    focusGame:()=>graphics.renderer.domElement.focus({preventScroll:true}),flags:{arsenal:()=>islandFlags.arsenal?.()===true,defenses_v2:()=>islandFlags.defenses_v2?.()===true,
+      // D060: the server offers the extra tower spots (its flag more_tower_spots) when the island answer lists them.
+      more_tower_spots:()=>(island?.island?.spots??[]).some(item=>item?.id==='cannon_8')}});
   experience=createWorldExperience({scene,container,art,world,player:controller.player,camera:view.camera,canvas:graphics.renderer.domElement,reducedMotion,preferences:getPreferences,
     send:(name,...args)=>sendIntent(adapter,name,...args),
     colourOf:id=>island?.colourOf?.(id)??null,characterScale:()=>characterScale,

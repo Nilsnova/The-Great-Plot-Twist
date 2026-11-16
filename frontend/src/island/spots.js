@@ -7,6 +7,7 @@
 import {surfaceClass} from '../world/places/surfaces.js';
 import {isCapstone, readBonus, readSpec} from '../campaign/tech.js';
 import {readTree} from '../pirates/tower-trees.js';
+import {EXTRA_SPOT_TABLE, offeredExtra} from './extra-spots.js';
 
 export const ISLAND_PLACE = 'home_islet';
 export const KINDS = Object.freeze({
@@ -51,6 +52,11 @@ export const localSpotId = id => SPOT_ALIASES[id] ?? id;
 const DEFAULT_KIND = {wall: 'wall', tower: 'cannon', watchtower: 'watchtower', house: 'house'};
 const spot = ([id, slot, x, z, edge]) => Object.freeze({id, slot, kind: DEFAULT_KIND[slot], x, z, edge});
 export const SPOTS = Object.freeze(SPOT_TABLE.map(spot));
+// D060: the extra tower spots (src/island/extra-spots.js), shown only while an island answer lists them.
+export const EXTRA_SPOTS = Object.freeze(EXTRA_SPOT_TABLE.map(([id, x, z, unlockWave]) => Object.freeze({...spot([id, 'tower', x, z, 'extra']), unlockWave})));
+export const ALL_SPOTS = Object.freeze([...SPOTS, ...EXTRA_SPOTS]);
+/** The spots of an island answer: the 22 of the table, then the extra tower spots it lists (D060). */
+export const offeredSpots = (spots = []) => { const extra = new Set(offeredExtra(spots)); return [...SPOTS, ...EXTRA_SPOTS.filter(item => extra.has(item.id))]; };
 export const isTowerSlot = id => spotById(id)?.slot === 'tower' || ppSpotById(id)?.slot === 'tower';
 
 // Pirate Point's shared spots (§5) on lighthouse_isle: [id, slot, x, z]. pp_wall_1…4 and pp_tower_1…4
@@ -88,8 +94,8 @@ export const SPOT_IDS = Object.freeze(SPOTS.map(item => item.id));
 export const REACH = 2.6, BIG_REACH = 3.2;
 const ZONE_Y = 1.03, SPOT_RADIUS = REACH, ROUND_RADIUS = 2.2;
 
-export const spotById = id => SPOTS.find(item => item.id === localSpotId(id)) ?? null;
-export const isSpotId = id => SPOT_IDS.includes(localSpotId(id));
+export const spotById = id => ALL_SPOTS.find(item => item.id === localSpotId(id)) ?? null;
+export const isSpotId = id => !!spotById(id);
 export const isIslandZone = id => isSpotId(id) || id === BELL.id || id === ARSENAL.id || id === CABIN.id || isPointSpot(id) || !!campaignBuilding(id);
 // On the island's land (beach included), never in the sea.
 export const onIsland = (x, z) => surfaceClass(ISLAND_PLACE, x, z) > 0;
@@ -112,7 +118,7 @@ export function placedSpot(id, spots = []) {
 export function islandZones({visitor = false, spots = [], arsenal = false} = {}) {
   const zone = (id, name, x, z, radius) => ({id, name, x, z, y: ZONE_Y, radius});
   return [
-    ...SPOTS.map(item => { const [x, z] = landward(placedSpot(item.id, spots)); return zone(item.id, slotName(item.slot), x, z, SPOT_RADIUS); }),
+    ...offeredSpots(spots).map(item => { const [x, z] = landward(placedSpot(item.id, spots)); return zone(item.id, slotName(item.slot), x, z, SPOT_RADIUS); }),
     zone(BELL.id, 'Harbor bell', BELL.x, BELL.z + .8, ROUND_RADIUS),
     ...CAMPAIGN_BUILDINGS.map(item => { const [x, z] = landward(item, 1.6); return zone(item.id, item.name, x, z + .6, BIG_REACH); }),
     ...(visitor ? [] : [zone(CABIN.id, 'Your cabin', CABIN.x + 2.5, CABIN.z + 1.2, ROUND_RADIUS)]),

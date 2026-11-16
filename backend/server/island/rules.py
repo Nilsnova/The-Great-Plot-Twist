@@ -283,9 +283,10 @@ def check_build(
         raise spot_taken(catalogue, built[spot.id].kind)
     entry = kind_of(catalogue, kind)
     check_unlocked(catalogue, entry, 1, wave)
-    # A spot of a later step (the inner wall ring after wave 5).
-    if spots is None and catalogue.campaign.spot_wave(spot.id) > wave:
-        raise locked(catalogue.campaign.spot_wave(spot.id))
+    # A spot of a later step (the inner wall ring after wave 5, an extra tower spot of D060).
+    needed = max(catalogue.campaign.spot_wave(spot.id), spot.unlock_wave)
+    if spots is None and needed > wave:
+        raise locked(needed)
     return spot, entry.coins
 
 

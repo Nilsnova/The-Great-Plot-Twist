@@ -61,6 +61,7 @@ import { TOWER_TREES, TREE_LEVEL, TREE_STEPS, treeStep } from './tower-trees.js'
 import { ROLES as HOUSE_ROLES, ROLE_LEVEL as HOUSE_ROLE_LEVEL } from '../campaign/houses.js';
 import { GRID as LAYOUT_GRID, checkMove, positionsOf } from '../island/placement.js';
 import { createFakeArsenal } from '../island/arsenal-fake.js';
+import { EXTRA_SPOT_IDS, isExtraSpot } from '../island/extra-spots.js';
 import { BOAT as BOAT_RULES, coinsFor as boatCoins } from './boat/rules.js';
 
 export const ISLAND_RULES = Object.freeze({
@@ -224,6 +225,9 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
   // flags: the server's feature flags this fake follows (wall_recovery, D039; the wave rules below); all off by default.
   const wallsOn = flags?.wall_recovery === true;
   const culverinOn = flags?.defenses_v2 === true; // T43: the culverin, and the wave rule defenses_v2 on every wave answer
+  // D060: the extra tower spots (cannon_8..cannon_11) join the island only while the flag more_tower_spots is on
+  // (?fakeflags=more_tower_spots), as the real server's catalogue_for_flags(); each opens after its won wave.
+  const islandSpots = flags?.more_tower_spots === true ? Object.freeze([...ISLAND_RULES.spots, ...EXTRA_SPOT_IDS]) : ISLAND_RULES.spots;
   // The wave rules (backend/server/island/wave_rules.py): the rule flags on at the wave's first answer, in SIM_RULES
   // order. That answer keeps its set (wave_rules_keep()), an empty set too, and every later answer serves it whatever
   // the flags say then (a test may change `flags` mid-wave); an empty set leaves `rules` out.
@@ -246,7 +250,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     }
     return player;
   };
-  const spots = island => ISLAND_RULES.spots.map(id => spotView(island, id, culverinOn));
+  const spots = island => islandSpots.map(id => spotView(island, id, culverinOn));
   // --- the games (GAME-V3.md §2): the SQL rules of game_join and game_leave, in memory ---
   const membersOf = code => {
     if (!(world.members instanceof Map)) world.members = new Map();
@@ -327,14 +331,14 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     if (player.actions.has(`build:${actionUid}`)) return;
     if (spot === 'cabin') refuse(409, 'spot_taken', 'Your cabin already stands there.');
     if (!ids.includes(spot)) refuse(404, 'no_such_spot', 'There is no such build spot here.');
-    const slot = slotOfSpot(spot), allowed = kindsOfSpot(spot, culverinOn && ids === ISLAND_RULES.spots);
+    const slot = slotOfSpot(spot), allowed = kindsOfSpot(spot, culverinOn && ids === islandSpots);
     if (!allowed.includes(kind)) refuse(422, 'wrong_kind', slot === 'tower' ? `Only ${allowed.includes('harpoon') ? 'a cannon, a mortar or a harpoon tower' : 'a cannon or a mortar'} can stand on this spot.`
       : `Only a ${ISLAND_RULES.kinds[allowed[0]][0].toLowerCase()} can stand on this spot.`);
     const [name, price] = ISLAND_RULES.kinds[kind];
     if (place.built.has(spot)) refuse(409, 'spot_taken', `${ISLAND_RULES.kinds[place.kinds.get(spot) ?? kindOfSpot(spot)][0]} already stands on this spot.`);
     if (unlocks && (unlocks.levels[kind] ?? 0) < 1) refuse(409, 'locked', lockedMessage(unlockWave({ kind, level: 1 })));
     // A spot of a later campaign step (the inner wall ring after wave 5), on an island only.
-    if (unlocking && place.waveBest !== undefined && spotWave(spot) > place.waveBest) refuse(409, 'locked', lockedMessage(spotWave(spot)));
+    if ((unlocking || isExtraSpot(spot)) && place.waveBest !== undefined && spotWave(spot) > place.waveBest) refuse(409, 'locked', lockedMessage(spotWave(spot)));
     if (player.coins < price) refuse(409, 'insufficient_funds', `A ${name.toLowerCase()} costs ${price} coins. You need more coins.`);
     player.coins -= price; place.built.add(spot); place.levels.set(spot, 1); place.kinds.set(spot, kind); once(player, `build:${actionUid}`);
     paidFor(place, spot, 1, price);
@@ -380,7 +384,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
   const PROTECTED = new Set(['cabin', 'heart', 'island_cabin', 'island_bell', 'island_harbor', 'island_techhub', 'island_wreck']);
   function demolishable(island, spot) {
     if (PROTECTED.has(spot)) refuse(409, 'protected', 'The heart of the island stays. Only walls, towers and houses come down.');
-    if (!ISLAND_RULES.spots.includes(spot)) refuse(404, 'no_such_spot', 'There is no such build spot here.');
+    if (!islandSpots.includes(spot)) refuse(404, 'no_such_spot', 'There is no such build spot here.');
     if (!island.built.has(spot)) refuse(409, 'not_built', 'Nothing stands on this spot now.');
     waveGuard(island, 'A wave is under way. Tear it down between waves.');
     const kind = island.kinds?.get(spot) ?? kindOfSpot(spot);
@@ -399,7 +403,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
   // D039 (flag wall_recovery; backend/server/island/wall_health.py, wall_repair.py): a wall's health after its last
   // recorded wave (island.walls: spot -> {health 0-100, damagedAt ms}); no row is a whole wall. It counts as whole
   // 10 minutes after the wave that left it damaged; Repair/Rebuild costs 30% of its levels' prices x the missing share.
-  const builtWalls = island => ISLAND_RULES.spots.filter(id => kindOfSpot(id) === 'wall' && island.built.has(id));
+  const builtWalls = island => islandSpots.filter(id => kindOfSpot(id) === 'wall' && island.built.has(id));
   const healthAt = (island, spot, at) => {
     const wall = island.walls instanceof Map ? island.walls.get(spot) : null;
     if (!wall || wall.health >= 100) return 100;
@@ -468,7 +472,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     async build({ code, ...body } = {}) {
       body.spot = canonicalSpot(body.spot);
       const mine = world.islands.get(me().code), island = code === undefined ? mine : visited(code);
-      buildOn(island, ISLAND_RULES.spots, body, islandAllowed(island));
+      buildOn(island, islandSpots, body, islandAllowed(island));
       return island === mine ? view() : visitedView(island);
     },
     async upgrade({ code, ...body } = {}) {
@@ -477,7 +481,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       // D039 (T47): a damaged or destroyed wall is repaired first; an upgrade never heals it.
       if (wallsOn && island.built.has(body.spot) && kindOfSpot(body.spot) === 'wall' && !me().actions.has(`upgrade:${body.actionUid}`)
         && healthAt(island, body.spot, nowMs()) < 100) refuse(409, 'needs_repair', 'Repair this wall before you upgrade it.');
-      upgradeOn(island, ISLAND_RULES.spots, body, islandAllowed(island));
+      upgradeOn(island, islandSpots, body, islandAllowed(island));
       return island === mine ? view() : visitedView(island);
     },
     async hire({ crew, actionUid } = {}) {
@@ -591,7 +595,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       if (typeof spot !== 'string' || typeof spec !== 'string' || (actionUid !== undefined && !uid(actionUid))) invalid('Send the spot and the skill.');
       const mine = world.islands.get(me().code), island = code === undefined ? mine : visited(code), player = me();
       spot = canonicalSpot(spot);
-      if (!ISLAND_RULES.spots.includes(spot)) refuse(404, 'no_such_spot', 'There is no such build spot here.');
+      if (!islandSpots.includes(spot)) refuse(404, 'no_such_spot', 'There is no such build spot here.');
       if (!island.built.has(spot)) refuse(409, 'not_built', 'Build something on this spot first.');
       const info = SPECS[spec], kind = island.kinds?.get(spot) ?? kindOfSpot(spot);
       if (Object.hasOwn(HOUSE_ROLES, spec)) {
@@ -625,7 +629,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       const done = () => (island === mine ? view() : visitedView(island));
       if (player.actions.has(`towertree:${actionUid}`)) return done();
       spot = canonicalSpot(spot);
-      if (!ISLAND_RULES.spots.includes(spot)) refuse(404, 'no_such_spot', 'There is no such build spot.');
+      if (!islandSpots.includes(spot)) refuse(404, 'no_such_spot', 'There is no such build spot.');
       if (!island.built.has(spot)) refuse(409, 'not_built', 'Build something on this spot first.');
       const kind = island.kinds?.get(spot) ?? kindOfSpot(spot), tree = TOWER_TREES[kind];
       if (!tree) refuse(422, 'no_tree', `A ${ISLAND_RULES.kinds[kind][0].toLowerCase()} has no upgrade tree.`);
@@ -757,7 +761,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       const player = me(), mine = world.islands.get(player.code), island = code === undefined || code === null ? mine : visited(code);
       if (player.actions.has(`repair:${actionUid}`)) return wallsView(island);
       spot = canonicalSpot(spot);
-      if (!ISLAND_RULES.spots.includes(spot)) refuse(404, 'no_such_spot', 'There is no such build spot here.');
+      if (!islandSpots.includes(spot)) refuse(404, 'no_such_spot', 'There is no such build spot here.');
       if (kindOfSpot(spot) !== 'wall') refuse(422, 'wrong_kind', 'Only walls are repaired here.');
       if (!island.built.has(spot)) refuse(409, 'not_built', 'Build a wall on this spot first.');
       waveGuard(island, 'Repair it between waves, or press E at it now.');
