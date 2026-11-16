@@ -20,15 +20,30 @@
 
 ## Verification
 
-- Focused tests: T36 footprint parity; actual routing through a cheap tower breach; opened routes after break and restored blocking after rebuild; collision and boundary-target cases; guide/sim route parity; deterministic replay; feature-off event equality.
-- Before the final enclosed-boarder edge fix, `cd frontend && npm test -- --reporter=verbose` passed 274 files and 3,348 tests. After that fix, the affected suite `npm test -- --reporter=verbose tests/pirates/pathing-wiring.test.js tests/pirates/pathing.test.js tests/pirates/wall-blocking.test.js tests/pirates/tower-health.test.js tests/pirates/battle-guide.test.js tests/pirates/tower-obstacles.test.js tests/pirates/tower-obstacle-performance.test.js tests/pirates/wave-rules.test.js` passed 8 files and 76 tests. `npm run build` passes including the spoiler guard.
-- Final focused tower performance case: 300 boarders × 3,000 ticks, 1,897 ms total (0.632 ms/tick), 111 field builds, 5,547 tower-target ticks, 37 rebuilds, 7,071 heart arrivals and 887,382 movement steps, zero stuck outcomes. The eight-tower ring is centered on the actual heart position.
-- `npm run test:rules`: both desktop clients enabled `tower_health`, `pathing`, and `tower_obstacles`; matching deterministic state for 451 ticks, 80/80 initial tower HP, matching repairs, and a frozen rule set after pathing was switched off for later waves. Captures: [two-client evidence](../docs/evidence/T35-tower-obstacles/README.md).
-- `npm run test:mp -- /tmp/tgpt-mp/T35-recheck` reaches and passes the two-client captain revive (1.6 s Medic hold and 75/100 HP on both clients), then times out on a pause control detached from the DOM. An unchanged `e8c61c64` run also passed the revive and timed out later in the pause/break flow; this does not count as a passing full multiplayer check. No browser errors were recorded.
-- Backend: `UV_CACHE_DIR=/tmp/tower-path-uv-cache uv run pytest -x -q` reports 536,584 passed and 282 skipped in 765.32 s. Ruff passes. Disposable PostgreSQL scratch suite applies all migrations twice and reports 221 passed, including the new tower-rule allowlist/freeze case.
-- `node scripts/report-budget.js --check`: passes; cold title is 18,723 JavaScript bytes and 8,550 CSS bytes, below the 21,080 / 12,000 byte limits; no title image or unshipped assets.
-- A 3-seed balance smoke comparison at waves 15, 30 and 60 (wall spots and ring layouts): at waves 15/30 both rule sets win with 100 hp. At wave 60, the spots layout is 67% wins / 42 mean hp both ways; with obstacles, mean towers broken is 0.7 vs 0.3, wall hacks 498 vs 516.7 and boarders landed 174.7 vs 176. For the ring, both sets lose with 0 hp; obstacles result in 2.3 towers broken vs 0, wall hacks 347 vs 385.3 and both have 188.3 landed. This sample confirms the new behavior is exercised but is not enough seeds for balance approval; no retuning was made.
-- Red/green evidence: the original closed-ring breach regression failed before tower-aware fields with `expected null not to be null`; it passes after implementation. The final five-tower cross regression reproduced an enclosed boarder receiving `kind: 'none'`; after the fallback fix it steps through its own footprint or attacks the route blocker and reaches the heart without crossing another footprint.
+### Historical results before mainline reconciliation
+
+The following measurements were made on the original T35 branch based on `e8c61c64`, before its merge with current main at `a9386656`. They document the original implementation; they are not current full-suite, multiplayer, performance, or balance sign-off for the reconciled branch.
+
+- Focused cases covered T36 footprint parity; routing through a cheap tower breach; opening a route after break and restoring blocking after rebuild; collision and boundary-target cases; guide/sim route parity; deterministic replay; and feature-off event equality.
+- Before the final enclosed-boarder edge fix, `cd frontend && npm test -- --reporter=verbose` passed 274 files and 3,348 tests. After that fix, the affected suite `npm test -- --reporter=verbose tests/pirates/pathing-wiring.test.js tests/pirates/pathing.test.js tests/pirates/wall-blocking.test.js tests/pirates/tower-health.test.js tests/pirates/battle-guide.test.js tests/pirates/tower-obstacles.test.js tests/pirates/tower-obstacle-performance.test.js tests/pirates/wave-rules.test.js` passed 8 files and 76 tests. `npm run build` and the bundle budget passed on that pre-reconciliation branch.
+- The original focused workload simulated 300 boarders × 3,000 ticks in 1,897 ms (0.632 ms/tick), with 111 field builds, 5,547 tower-target ticks, 37 rebuilds, 7,071 heart arrivals, 887,382 movement steps, and no stuck outcomes. This is a pre-reconciliation workload result, not a quiet-machine benchmark for the current branch.
+- `npm run test:rules` matched both desktop clients for 451 ticks, with 80/80 initial tower HP, matching repairs, and a frozen rule set after pathing was switched off for later waves. Captures: [two-client evidence](../docs/evidence/T35-tower-obstacles/README.md).
+- The original multiplayer attempt passed the two-client captain revive (1.6 s Medic hold and 75/100 HP on both clients), then timed out on a pause control detached from the DOM. The unchanged `e8c61c64` comparison also passed the revive and timed out later in the pause/break flow. These are historical results only.
+- Original backend results were 536,584 passed and 282 skipped; Ruff passed; the scratch PostgreSQL suite applied migrations twice and passed 221 tests. The original build budget reported a cold title of 18,723 JavaScript bytes and 8,550 CSS bytes against 21,080 / 12,000 byte limits.
+- The original three-seed smoke at waves 15, 30 and 60 confirmed that obstacles were exercised, but was explicitly not enough seeds for balance approval. No balance sign-off was granted.
+- Red/green regressions showed the closed-ring breach fail before tower-aware fields and pass afterward; the five-tower cross case reached the heart without crossing another footprint after the enclosed-boarder fallback fix.
+
+### Reconciled branch results
+
+Reconciled code is on `feat/tower-path-obstacles`, with main integrated through `a9386656` and the docs-only update through `937b1b56`. The feature flag remains off. These are the checks run on the reconciled branch; entries marked pending have not been rerun.
+
+- Focused T35/mainline Vitest coverage passed 9 files and 98 tests: tower-obstacle geometry, battle guide, wall lanes, tower health, pathing wiring, pathing, wall blocking, wave rules, and tower trees.
+- Root's independent T35 check passed 4 files and 33 tests, including a performance exercise. It took 17.89 s while other suites were running, so that runtime is not a quiet-machine performance measurement.
+- Full backend: `UV_CACHE_DIR=/tmp/tower-path-uv-cache uv run pytest -q` passed 536,623 tests and skipped 283 in 1,356.42 s.
+- Disposable PostgreSQL scratch suite: `CASE_PG_SCRATCH=1 UV_CACHE_DIR=/tmp/tower-path-uv-cache uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql` passed 246 tests in 14.39 s.
+- `UV_CACHE_DIR=/tmp/tower-path-uv-cache uv run ruff check .` passed. The documented pglast parse command parsed all 50 migration files.
+- The latest multiplayer integration attempt passed pause/resume, upgrade, and next-wave checks, then failed a later musket-pose assertion (0/2). A controlled rerun/diagnosis is pending; this outcome is unresolved and is not counted as a passing multiplayer check.
+- Full frontend suite, a fresh build/budget check, balance run, final multiplayer/browser run, and a quiet-machine performance measurement on the reconciled branch remain pending. The old full frontend/build/budget, two-client rule, balance, and workload numbers above are historical only.
 
 ## Current limits
 
