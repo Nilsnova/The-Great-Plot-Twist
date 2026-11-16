@@ -42,6 +42,6 @@ T54 recovery version 1 / wave protocol 2, `structure_recovery` off-by-default fl
 ## Owner and reviewer
 
 - **Responsible teammate:** Ianno (@Iannomh123456).
-- **Coding agent:** `gpt-6-luna`, high reasoning; stronger-session orchestration and review.
+- **Coding agent:** `gpt-6-luna`, high reasoning.
 - **Human reviewer:** Franz (@frcola), after Ianno's manual review and publication confirmation.
 - **Last updated:** 2026-11-16.
