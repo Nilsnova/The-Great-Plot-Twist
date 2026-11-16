@@ -71,7 +71,9 @@ export function chooseGame({container, lane, adapter = null, openAccount = null}
   let typed = '';
   function draw() {
     if (disposed) return;
-    const copy = gamesCopy({games, signedOut, busy});
+    // Online and signed out: Create cannot work, so its button opens the account screen (sign-in) instead.
+    const signInFirst = online() && !signedIn() && !!openAccount;
+    const copy = gamesCopy({games, signedOut, signInFirst});
     const had = modal.element.contains(document.activeElement) ? document.activeElement?.dataset?.focus : null;
     const parts = [];
     let first = null;
@@ -93,7 +95,7 @@ export function chooseGame({container, lane, adapter = null, openAccount = null}
     }
     // Create a game.
     const create$ = node('section', 'games-section games-create');
-    const createButton$ = button(copy.create.button, () => void create(), !!copy.continue);
+    const createButton$ = button(copy.create.button, () => { if (signInFirst) { end(null); openAccount(); } else void create(); }, !!copy.continue);
     createButton$.dataset.focus = 'create'; createButton$.classList.add('games-create-button'); createButton$.disabled = busy;
     create$.append(node('h3', 'games-heading', copy.create.title), node('p', 'games-line', copy.create.line), createButton$);
     // Join a game: the code field.
@@ -110,7 +112,7 @@ export function chooseGame({container, lane, adapter = null, openAccount = null}
     // Brand new: Create and Join come first; with games, Continue comes first.
     parts.push(create$, join$);
     const extra = [];
-    if (signedOut && openAccount) extra.push(button('Sign in', () => { end(null); openAccount(); }, true));
+    if (signedOut && openAccount && !signInFirst) extra.push(button('Sign in', () => { end(null); openAccount(); }, true));
     body.replaceChildren(...parts, status, ...extra);
     first ??= createButton$;
     const again = had ? body.querySelector(`[data-focus="${had}"]`) : null;
