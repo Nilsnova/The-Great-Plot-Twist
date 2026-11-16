@@ -43,6 +43,6 @@ Consume T54's server-owned state and paid-action API shapes, versions, epochs, i
 ## Owner and reviewer
 
 - **Responsible teammate:** Ianno (@Iannomh123456).
-- **Coding agent:** `gpt-6-luna`, high reasoning; stronger-session orchestration and review.
+- **Coding agent:** `gpt-6-luna`, high reasoning.
 - **Human reviewer:** Franz (@frcola), after Ianno's manual review and publication confirmation.
 - **Last updated:** 2026-11-16.
