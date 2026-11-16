@@ -4,11 +4,12 @@ route it needs a signed-in player (a guest too, once let in with the class code)
 "islands" (404 feature_off). Answers carry `Cache-Control: private, no-store`.
 
 POST /api/island/fresh-start  {"confirmCode": "ISLE-K7Q2M", "actionUid": "..."}
-    -> {"reset": true, "repeat": false, "balance": 100,
-        "counts": {"coins": -900, "saves": 1, "buildings": 6, "research": 1, "layout": 0,
+    -> {"reset": true, "repeat": false, "balance": 200,
+        "counts": {"coins": -800, "saves": 1, "buildings": 6, "research": 1, "layout": 0,
                    "arsenalMoves": 0, "arsenalCopies": 0, "wallRecords": 3, "waveRules": 3,
                    "waves": 3, "membersKept": 2}}
-    Resets YOUR OWN island to a fresh start: 🪙 100, no buildings but the cabin, wave 0, no
+    Resets YOUR OWN island to a fresh start: the coins of a brand-new player (islands.json
+    startingCoins, 🪙 200 today), no buildings but the cabin, wave 0, no
     research, the wreck, the arsenal and the captain back to the start. The game's members stay.
     "confirmCode" is your island's code, typed to confirm (with or without ISLE-, any case).
     "actionUid" is made once per click: a repeat answers the first reset (repeat true) and
@@ -25,6 +26,7 @@ from fastapi import APIRouter, Request
 from pydantic import BaseModel, ConfigDict, Field
 
 from server.island import fresh_start
+from server.island.service import IslandCatalogueDep
 from server.routes.island import ACTION_UID_PATTERN, CODE_MAX_LENGTH, IslandPlayerDep
 from server.supabase_admin import AdminDep
 
@@ -49,8 +51,14 @@ class FreshStartOut(BaseModel):
 
 @router.post("/island/fresh-start")
 async def post_fresh_start(
-    body: FreshStartRequest, player: IslandPlayerDep, admin: AdminDep, request: Request
+    body: FreshStartRequest,
+    player: IslandPlayerDep,
+    catalogue: IslandCatalogueDep,
+    admin: AdminDep,
+    request: Request,
 ) -> FreshStartOut:
     request.app.state.island_build_budget.spend(player.id)
-    done = await fresh_start.fresh_start(admin, player.id, body.confirmCode, body.actionUid)
+    done = await fresh_start.fresh_start(
+        admin, catalogue, player.id, body.confirmCode, body.actionUid
+    )
     return FreshStartOut(reset=True, repeat=done.repeat, balance=done.balance, counts=done.counts)

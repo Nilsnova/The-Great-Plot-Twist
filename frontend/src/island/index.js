@@ -903,7 +903,9 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   function resetState() {
     if (visiting || visitCode) return {kind: 'member'};
     if (!own?.code) return {kind: 'none', message: ownMessage || 'Open your island first to reset it.'};
-    return {kind: 'owner', code: displayIslandCode(own.code), wave: battle === true};
+    // The island answer may carry the starting coins (startingCoins); without it the section says "your starting coins".
+    return {kind: 'owner', code: displayIslandCode(own.code), wave: battle === true,
+      ...(Number.isSafeInteger(own.startingCoins) ? {startingCoins: own.startingCoins} : {})};
   }
   async function resetIsland(typed) {
     const answer = await api.freshStart({confirmCode: typed});
@@ -917,7 +919,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     await load();
     if (disposed) return answer;
     emit({type: SPOTS_CHANGED, place: 'own', spot: 'cabin'}); // the members on the island read it again
-    ui.toast('Your island starts fresh', 'success', '🪙 100 and wave 1. Ring the bell when you are ready.');
+    ui.toast('Your island starts fresh', 'success', `${coinText(answer.data.balance)} and wave 1. Ring the bell when you are ready.`);
     emit({type: ISLAND_RESET, code: displayIslandCode(code)});
     emit({type: GAME_STARTED, code: displayIslandCode(code), first: true, fresh: true});
     return answer;

@@ -15,9 +15,11 @@
 --     island_fresh_start()  NEW function: the reset, in one transaction.
 --
 --   What one reset changes, for the island of p_player_id only:
---     1. the wallet back to 100 coins through apply_wallet_transaction() (reason
---        fresh_start, ref reset:<actionUid>); no ledger row when it holds 100
---        already (a change of 0 coins is not allowed),
+--     1. the wallet set to the starting coins of a brand-new player
+--        (p_starting_coins: islands.json startingCoins, sent by the server, the
+--        same number island_open() pays) through apply_wallet_transaction()
+--        (reason fresh_start, ref reset:<actionUid>); no ledger row when it holds
+--        that amount already (a change of 0 coins is not allowed),
 --     2. the cloud save emptied (saves.data becomes {}; the row stays),
 --     3. every building of the owner removed except the cabin (the cabin stands
 --        from the start and has no row anyway),
@@ -93,7 +95,8 @@
 --
 -- ROLLBACK (by hand)
 --   Deploy the server without the route; drop function
---   public.island_fresh_start(uuid, text, text); revoke the deletes listed above.
+--   public.island_fresh_start(uuid, text, text, integer); revoke the deletes listed
+--   above.
 --   Keep island_resets (it records what happened).
 --
 -- HOW TO VERIFY (read-only queries, after applying)
@@ -101,11 +104,11 @@
 --      select count(*) from pg_policies where tablename = 'island_resets';               -- 0
 --   b. Only the server may run the function (browser and visitor false):
 --      select has_function_privilege('authenticated',
---               'public.island_fresh_start(uuid, text, text)', 'execute') as browser,
+--               'public.island_fresh_start(uuid, text, text, integer)', 'execute') as browser,
 --             has_function_privilege('anon',
---               'public.island_fresh_start(uuid, text, text)', 'execute') as visitor,
+--               'public.island_fresh_start(uuid, text, text, integer)', 'execute') as visitor,
 --             has_function_privilege('service_role',
---               'public.island_fresh_start(uuid, text, text)', 'execute') as server;
+--               'public.island_fresh_start(uuid, text, text, integer)', 'execute') as server;
 --   c. select count(*) from public.island_resets;                       -- 0 until a reset
 -- =============================================================================
 
@@ -164,18 +167,21 @@ grant delete on table public.wave_runs           to service_role;
 --   p_player_id     the player, who must own the island (it is always their own)
 --   p_action_uid    the click id (8 to 64 letters, digits, hyphens or underscores)
 --   p_confirm_code  the island code as the player typed it (ISLE-K7Q2M, k7q2m, ...)
+--   p_starting_coins  the coins of a brand-new player (islands.json startingCoins),
+--                   1 to 100000; the wallet is set to it
 --
 -- Returns {status: done, repeat, balance, counts: {coins, saves, buildings, research,
 -- layout, arsenalMoves, arsenalCopies, wallRecords, waveRules, waves, membersKept}}
 -- or {status: refused, reason: player_not_set_up | not_owner | wrong_code |
--- wave_running}. coins is the change made to the wallet (100 - the balance before;
--- 0 when it held 100). Raises bad_fresh_start for a missing player, a bad click id or
--- a missing code.
+-- wave_running}. coins is the change made to the wallet (p_starting_coins - the
+-- balance before; 0 when it held that already). Raises bad_fresh_start for a missing
+-- player, a bad click id, a missing code or starting coins outside 1 to 100000.
 
 create or replace function public.island_fresh_start(
   p_player_id     uuid,
   p_action_uid    text,
-  p_confirm_code  text
+  p_confirm_code    text,
+  p_starting_coins  integer
 )
 returns jsonb
 language plpgsql
@@ -183,8 +189,6 @@ security invoker
 set search_path = ''  -- empty on purpose: every name inside is written in full
 as $$
 declare
-  -- The coins of a fresh start: the same 100 as scripts/admin/fresh_start.sql.
-  c_coins          constant bigint := 100;
   v_balance        bigint;
   v_island         public.islands;
   v_typed          text;
@@ -203,7 +207,8 @@ declare
   v_members        integer := 0;
 begin
   if p_player_id is null or p_confirm_code is null
-     or p_action_uid is null or p_action_uid !~ '^[A-Za-z0-9_-]{8,64}$' then
+     or p_action_uid is null or p_action_uid !~ '^[A-Za-z0-9_-]{8,64}$'
+     or p_starting_coins is null or p_starting_coins not between 1 and 100000 then
     raise exception 'bad_fresh_start';
   end if;
 
@@ -253,9 +258,9 @@ begin
     return jsonb_build_object('status', 'refused', 'reason', 'wave_running');
   end if;
 
-  -- 1. The wallet back to 100, through the one wallet function.
-  if v_balance <> c_coins then
-    v_coins := c_coins - v_balance;
+  -- 1. The wallet to the starting coins, through the one wallet function.
+  if v_balance <> p_starting_coins then
+    v_coins := p_starting_coins - v_balance;
     v_balance := public.apply_wallet_transaction(
       p_player_id, v_coins, 'fresh_start', 'reset:' || p_action_uid
     );
@@ -337,10 +342,10 @@ begin
 end;
 $$;
 
-revoke all on function public.island_fresh_start(uuid, text, text)
+revoke all on function public.island_fresh_start(uuid, text, text, integer)
   from public, anon, authenticated, service_role;
-grant execute on function public.island_fresh_start(uuid, text, text)
+grant execute on function public.island_fresh_start(uuid, text, text, integer)
   to service_role;
 
-comment on function public.island_fresh_start(uuid, text, text) is
-  'Resets the island of p_player_id to a fresh start (T53): wallet to 100 coins (reason fresh_start, ref reset:<actionUid>), the save emptied, every building but the cabin, the research, the moved spots, the arsenal, the wall records and the waves removed, and the island row (best waves, flags, next wave, crews, captain, wreck, weapons) back to its defaults. The island, its code, its members and the ledger stay. Locks the wallet, then the island. A repeated actionUid (island_resets) answers {status: done, repeat: true} with the first counts. Refuses player_not_set_up, not_owner (no island of your own, or a code of somebody else''s island), wrong_code (not the island''s code, compared without case, spaces, dashes or ISLE-) and wave_running, with nothing changed. Only service_role may run it.';
+comment on function public.island_fresh_start(uuid, text, text, integer) is
+  'Resets the island of p_player_id to a fresh start (T53): wallet to p_starting_coins, the coins of a brand-new player (reason fresh_start, ref reset:<actionUid>), the save emptied, every building but the cabin, the research, the moved spots, the arsenal, the wall records and the waves removed, and the island row (best waves, flags, next wave, crews, captain, wreck, weapons) back to its defaults. The island, its code, its members and the ledger stay. Locks the wallet, then the island. A repeated actionUid (island_resets) answers {status: done, repeat: true} with the first counts. Refuses player_not_set_up, not_owner (no island of your own, or a code of somebody else''s island), wrong_code (not the island''s code, compared without case, spaces, dashes or ISLE-) and wave_running, with nothing changed. Only service_role may run it.';

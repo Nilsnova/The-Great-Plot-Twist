@@ -24,7 +24,7 @@ from server.tests.island_helpers import (
 )
 
 COUNTS = {
-    "coins": -900,
+    "coins": -800,
     "saves": 1,
     "buildings": 6,
     "research": 1,
@@ -36,7 +36,7 @@ COUNTS = {
     "waves": 3,
     "membersKept": 2,
 }
-DONE = {"status": "done", "repeat": False, "balance": 100, "counts": COUNTS}
+DONE = {"status": "done", "repeat": False, "balance": 200, "counts": COUNTS}
 
 
 class ResetDatabase(FakeIslandDatabase):
@@ -70,9 +70,16 @@ def test_the_owner_resets_and_gets_the_counts():
 
     assert answer.status_code == 200
     assert answer.headers["cache-control"] == "private, no-store"
-    assert answer.json() == {"reset": True, "repeat": False, "balance": 100, "counts": COUNTS}
+    assert answer.json() == {"reset": True, "repeat": False, "balance": 200, "counts": COUNTS}
+    # The starting coins are the catalogue's (islands.json startingCoins), as for a new player.
+    assert made.app.state.island.starting_coins == 200
     assert made.database.calls("island_fresh_start") == [
-        {"p_player_id": PLAYER_ID, "p_action_uid": "reset-0001", "p_confirm_code": "K7Q2M"}
+        {
+            "p_player_id": PLAYER_ID,
+            "p_action_uid": "reset-0001",
+            "p_confirm_code": "K7Q2M",
+            "p_starting_coins": made.app.state.island.starting_coins,
+        }
     ]
 
 

@@ -27,7 +27,7 @@ it('Reset my island: explain, type the code, the red button, Enter resets, the i
     const label = section.querySelector(`label[for="${input.id}"]`);
     const described = input.getAttribute('aria-describedby').split(' ').map(id => document.getElementById(id)?.textContent ?? '');
     const empty = {title: section.querySelector('h3').textContent, labelled: section.getAttribute('aria-labelledby') === section.querySelector('h3').id,
-      label: label?.textContent ?? '', described, disabled: button.disabled, red: getComputedStyle(button).backgroundColor, text: button.textContent};
+      label: label?.textContent ?? '', described, what: section.querySelector('.island-reset-copy').textContent, disabled: button.disabled, red: getComputedStyle(button).backgroundColor, text: button.textContent};
     input.focus(); input.value = 'ISLE-ZZZZZ'; input.dispatchEvent(new Event('input'));
     const wrong = {disabled: button.disabled, invalid: input.getAttribute('aria-invalid')};
     input.value = code.toLowerCase(); input.dispatchEvent(new Event('input'));
@@ -55,8 +55,9 @@ it('Reset my island: explain, type the code, the red button, Enter resets, the i
   expect(result.wrong).toEqual({disabled: true, invalid: 'true'});
   expect(result.typed).toEqual({disabled: false, invalid: 'false'});
   expect(result.done).toMatchObject({state: 'done', value: '', focus: true, disabled: true});
-  expect(result.done.status).toContain('Your island starts fresh');
-  expect(result.after).toMatchObject({coins: 100, waveBest: 0, built: 0});
+  expect(result.done.status).toBe('Your island starts fresh: 🪙 100 and wave 1. Ring the bell when you are ready.'); // the fake's startingCoins
+  expect(result.empty.what).toContain('your coins become your starting coins.'); // the island answer has no startingCoins
+  expect(result.after).toMatchObject({coins: 100, waveBest: 0, built: 0}); // ISLAND_RULES.startingCoins of the fake
   expect(result.after.toast).toContain('Your island starts fresh');
   expect(result.after.events).toEqual(expect.arrayContaining([
     {type: 'island_spots_changed', code: null, first: undefined, spot: 'cabin'},

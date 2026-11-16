@@ -2,7 +2,9 @@
 it again from nothing, from Settings, between waves only, after typing the island code.
 
 The work is one database function, island_fresh_start() (20261116070000_island_fresh_start.sql),
-in one transaction: the wallet back to 🪙 100 (reason fresh_start, ref reset:<actionUid>), the save
+in one transaction: the wallet set to the starting coins of a brand-new player (the catalogue's
+startingCoins, islands.json, the same number island_open() pays; reason fresh_start, ref
+reset:<actionUid>), the save
 emptied, every building but the cabin, the research, the moved spots, the arsenal, the wall records
 and the island's waves removed, and the island row (best waves, flags, crews, captain, wreck,
 weapons) back to its defaults. The island, its code, its members and the ledger stay.
@@ -27,6 +29,7 @@ from pydantic import BaseModel, StrictBool, StrictInt, StrictStr
 from server.errors import ApiError
 from server.game.islet_store import player_not_set_up
 from server.island import codes
+from server.island.catalogue import IslandCatalogue
 from server.island.store import read_model
 from server.supabase_admin import SupabaseAdmin
 
@@ -34,7 +37,7 @@ FUNCTION = "island_fresh_start"
 
 
 class CountsRow(BaseModel):
-    """What one reset cleared (the coins: the change made to the wallet, 100 minus before)."""
+    """What one reset cleared (the coins: the change made to the wallet, start minus before)."""
 
     coins: StrictInt
     saves: StrictInt
@@ -93,7 +96,11 @@ def refusal(reason: str) -> ApiError:
 
 
 async def fresh_start(
-    admin: SupabaseAdmin, player_id: str, confirm_code: str, action_uid: str
+    admin: SupabaseAdmin,
+    catalogue: IslandCatalogue,
+    player_id: str,
+    confirm_code: str,
+    action_uid: str,
 ) -> FreshStart:
     """Reset the player's own island (see the module text). Raises ApiError for a refusal."""
     typed = codes.read_code(confirm_code)
@@ -101,7 +108,12 @@ async def fresh_start(
         raise wrong_code()
     reply = await admin.call_function(
         FUNCTION,
-        {"p_player_id": player_id, "p_action_uid": action_uid, "p_confirm_code": typed},
+        {
+            "p_player_id": player_id,
+            "p_action_uid": action_uid,
+            "p_confirm_code": typed,
+            "p_starting_coins": catalogue.starting_coins,
+        },
     )
     if isinstance(reply, dict) and reply.get("status") == "refused":
         raise refusal(read_model(RefusedRow, reply).reason)

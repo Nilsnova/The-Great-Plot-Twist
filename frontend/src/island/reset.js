@@ -4,8 +4,10 @@
 // island code, and keeps the red button off until the code typed is the island's own.
 //
 //   const section = createResetSection({read, reset});
-//     read()        -> {kind: 'owner', code: 'ISLE-K7Q2M', wave?: true} | {kind: 'member'} | {kind: 'none', message}
-//     reset(typed)  -> Promise<{ok, message?}> (island/index.js: the route, then the island read again)
+//     read()        -> {kind: 'owner', code: 'ISLE-K7Q2M', wave?: true, startingCoins?: 200} | {kind: 'member'} | {kind: 'none', message}
+//     reset(typed)  -> Promise<{ok, data?: {balance}, message?}> (island/index.js: the route, then the island read again)
+// The coins after a reset are a brand-new player's (the server's islands.json startingCoins): the section names the
+// amount when the island answer carries it, else says "your starting coins"; the done line shows the new balance.
 //   resetModel(state, typed) is the same decision without the DOM (tests).
 //
 // Keyboard: Tab reaches the field and the button; Enter in the field resets once the code matches. The
@@ -15,12 +17,13 @@ import {node, uniqueId} from '../ui/kit/dom.js';
 import {islandCode} from './codes.js';
 
 export const RESET_TITLE = 'Reset my island';
-export const RESET_WHAT = 'Start your island again from nothing: every building but the cabin, the waves won, the research, ' +
-  'the wreck, the arsenal, your crew and your captain\'s level and skills go back to the start, and your coins become 🪙 100.';
+const coinsText = coins => (Number.isSafeInteger(coins) && coins > 0 ? `🪙 ${coins}` : 'your starting coins');
+export const resetWhat = coins => 'Start your island again from nothing: every building but the cabin, the waves won, the research, ' +
+  `the wreck, the arsenal, your crew and your captain's level and skills go back to the start, and your coins become ${coinsText(coins)}.`;
 export const RESET_STAYS = 'Your friends stay in your game. This cannot be undone.';
 export const MEMBER_LINE = 'Only the host can reset this game\'s island.';
 export const WAVE_LINE = 'A wave is under way. Reset your island between waves.';
-export const DONE_LINE = 'Your island starts fresh: 🪙 100 and wave 1. Ring the bell when you are ready.';
+export const doneLine = coins => `Your island starts fresh: ${coinsText(coins)} and wave 1. Ring the bell when you are ready.`;
 
 // Whether what was typed is the island's own code (any case, with or without ISLE-, spaces or dashes).
 export const codeMatches = (typed, code) => !!islandCode(code ?? '') && islandCode(typed ?? '') === islandCode(code ?? '');
@@ -50,7 +53,7 @@ export function createResetSection({read = () => null, reset = async () => ({ok:
     return section;
   }
   section.dataset.state = 'ready';
-  const what = node('p', 'island-reset-copy', RESET_WHAT), stays = node('p', 'island-reset-stays', RESET_STAYS);
+  const what = node('p', 'island-reset-copy', resetWhat(state?.startingCoins)), stays = node('p', 'island-reset-stays', RESET_STAYS);
   what.id = uniqueId('island-reset-what'); stays.id = uniqueId('island-reset-stays');
   const form = node('form', 'island-reset-form'); form.noValidate = true;
   const label = node('label', 'island-reset-label'), input = node('input', 'island-reset-code'), id = uniqueId('island-reset-code');
@@ -84,7 +87,7 @@ export function createResetSection({read = () => null, reset = async () => ({ok:
     try { answer = await reset(input.value); } catch { answer = {ok: false}; }
     busy = false;
     if (answer?.ok) {
-      input.value = ''; section.dataset.state = 'done'; status.textContent = DONE_LINE;
+      input.value = ''; section.dataset.state = 'done'; status.textContent = doneLine(answer.data?.balance ?? state?.startingCoins);
     } else {
       status.textContent = typeof answer?.message === 'string' && answer.message ? answer.message : 'Your island could not be reset. Nothing changed. Try again.';
     }

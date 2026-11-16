@@ -1,7 +1,8 @@
 """Real SQL checks for 20261116070000_island_fresh_start.sql (T53): a player resets their own island
 in Settings. The reset clears exactly the owner's island progress (and answers the counts), keeps
-the members, sets the wallet to 100, refuses a stranger, a wrong code and a running wave, answers a
-repeated click without a second reset and leaves every other island alone.
+the members, sets the wallet to the starting coins the server sends, refuses a stranger, a wrong
+code and a running wave, answers a repeated click without a second reset and leaves every other
+island alone.
 
 Opt-in, like the other island_sql checks, on a disposable local PostgreSQL with every migration
 applied twice. Run from backend/:
@@ -54,9 +55,14 @@ TABLES = (
 )
 
 
-def reset(database, player=OWNER, uid="reset-0001", code=CODE):
+START = 200  # islands.json startingCoins, which the server sends
+
+
+def reset(database, player=OWNER, uid="reset-0001", code=CODE, coins=START):
     as_server(database)
-    return call(database, "select public.island_fresh_start(%s, %s, %s)", player, uid, code)
+    return call(
+        database, "select public.island_fresh_start(%s, %s, %s, %s)", player, uid, code, coins
+    )
 
 
 def seed(database, owner, code, *, uid_tail):
@@ -152,16 +158,16 @@ def test_the_owner_resets_their_island_and_the_members_stay(islands):
     before = left_of(islands, OWNER)
     assert all(count > 0 for count in before.values())
     coins_before = balance(islands, OWNER)
-    assert coins_before > 100  # the kit made it more than 100
+    assert coins_before > START  # the kit made it more than the starting coins
 
     answer = reset(islands, code="isle-k7q2m")
 
     assert answer == {
         "status": "done",
         "repeat": False,
-        "balance": 100,
+        "balance": START,
         "counts": {
-            "coins": 100 - coins_before,
+            "coins": START - coins_before,
             "saves": 1,
             "buildings": 2,
             "research": 1,
@@ -174,7 +180,7 @@ def test_the_owner_resets_their_island_and_the_members_stay(islands):
             "membersKept": 1,
         },
     }
-    assert balance(islands, OWNER) == 100
+    assert balance(islands, OWNER) == START
     assert ledger(islands, OWNER, "fresh_start") == [
         (answer["counts"]["coins"], "reset:reset-0001")
     ]
@@ -197,16 +203,16 @@ def test_the_owner_resets_their_island_and_the_members_stay(islands):
     ).fetchone() == (1,)
 
 
-def test_a_wallet_at_100_gets_no_ledger_row(islands):
+def test_a_wallet_at_the_starting_coins_gets_no_ledger_row(islands):
     as_server(islands)
-    call(islands, "select public.apply_wallet_transaction(%s, %s, 'admin_adjust', 'to-100')",
-         OWNER, 100 - balance(islands, OWNER))  # fmt: skip
+    call(islands, "select public.apply_wallet_transaction(%s, %s, 'admin_adjust', 'to-start')",
+         OWNER, START - balance(islands, OWNER))  # fmt: skip
 
     answer = reset(islands)
 
     assert answer["status"] == "done" and answer["counts"]["coins"] == 0
     assert ledger(islands, OWNER, "fresh_start") == []
-    assert balance(islands, OWNER) == 100
+    assert balance(islands, OWNER) == START
 
 
 def test_a_player_without_an_island_or_with_a_friends_code_is_refused_not_owner(islands):
@@ -292,6 +298,18 @@ def test_another_island_is_untouched(islands):
     ).fetchone() == (1,)
 
 
+@pytest.mark.parametrize("coins", [0, -5, 100001, None])
+def test_starting_coins_outside_1_to_100000_raise(islands, coins):
+    with pytest.raises(psycopg.errors.RaiseException, match="bad_fresh_start"):
+        reset(islands, coins=coins)
+
+
+def test_a_smaller_starting_amount_takes_coins_away_through_the_ledger(islands):
+    before = balance(islands, OWNER)
+    assert reset(islands, coins=150)["counts"]["coins"] == 150 - before
+    assert balance(islands, OWNER) == 150
+
+
 def test_a_bad_click_id_raises_and_the_browser_gets_nothing(islands):
     with pytest.raises(psycopg.errors.RaiseException, match="bad_fresh_start"):
         reset(islands, uid="short")
@@ -300,9 +318,10 @@ def test_a_bad_click_id_raises_and_the_browser_gets_nothing(islands):
     assert islands.execute(
         "select has_table_privilege('authenticated', 'public.island_resets', 'select'),"
         " has_function_privilege('authenticated',"
-        " 'public.island_fresh_start(uuid, text, text)', 'execute'),"
-        " has_function_privilege('anon', 'public.island_fresh_start(uuid, text, text)', 'execute'),"
+        " 'public.island_fresh_start(uuid, text, text, integer)', 'execute'),"
+        " has_function_privilege('anon',"
+        " 'public.island_fresh_start(uuid, text, text, integer)', 'execute'),"
         " has_function_privilege('service_role',"
-        " 'public.island_fresh_start(uuid, text, text)', 'execute'),"
+        " 'public.island_fresh_start(uuid, text, text, integer)', 'execute'),"
         " (select relrowsecurity from pg_class where oid = 'public.island_resets'::regclass)"
     ).fetchone() == (False, False, False, True, True)

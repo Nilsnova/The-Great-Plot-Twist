@@ -702,7 +702,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       return { ...answer(), demolished: { ...quote, refunds: quote.refunds.map(item => ({ ...item, you: item.id === playerId })), repeat: false } };
     },
     // T53 (island_fresh_start(), 20261116070000): your own island back to a fresh start, between waves, after typing
-    // its code. The members stay; the coins become 100; a repeated actionUid answers the first counts.
+    // its code. The members stay; the coins become a new player's (startingCoins); a repeated actionUid answers the first counts.
     async freshStart({ confirmCode, actionUid } = {}) {
       if (typeof confirmCode !== 'string' || !uid(actionUid)) invalid('Send the island code and an action id.');
       const player = me(), island = world.islands.get(player.code);
@@ -717,13 +717,14 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       waveGuard(island, 'A wave is under way. Reset your island between waves.');
       let waves = 0;
       for (const [id, run] of world.waves) if (run.place === island.code) { world.waves.delete(id); waves += 1; }
-      const counts = { coins: 100 - player.coins, saves: 0, buildings: island.built.size, research: (island.research ?? []).length,
+      const start = ISLAND_RULES.startingCoins;
+      const counts = { coins: start - player.coins, saves: 0, buildings: island.built.size, research: (island.research ?? []).length,
         layout: island.positions instanceof Map ? island.positions.size : 0, arsenalMoves: 0,
         arsenalCopies: world.arsenals?.[island.code]?.copies?.length ?? 0, wallRecords: 0, waveRules: 0, waves,
         membersKept: activeOf(island) - 1 };
       if (world.arsenals) delete world.arsenals[island.code];
       world.islands.set(island.code, newIsland(island.code, island.owner, island.ownerName));
-      player.coins = 100; player.wonBest = 0;
+      player.coins = start; player.wonBest = 0;
       player.actions.set(`reset:${actionUid}`, counts);
       return { reset: true, repeat: false, balance: player.coins, counts: { ...counts } };
     },

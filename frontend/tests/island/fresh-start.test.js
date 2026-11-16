@@ -2,10 +2,10 @@
 // freshStart(), the Settings section's model, the Settings section registry and the narrator forgetting a
 // reset island so its opening plays again.
 import {describe, expect, it, vi} from 'vitest';
-import {createFakeIslandApi as createFunctionApi, createFakeWorld, FAKE_FRIEND} from '../../src/pirates/fake-api.js';
+import {createFakeIslandApi as createFunctionApi, createFakeWorld, FAKE_FRIEND, ISLAND_RULES} from '../../src/pirates/fake-api.js';
 import {createFakeIslandApi} from './fake.js';
 import {isFreshStart, PATHS} from '../../src/island/api.js';
-import {codeMatches, resetModel, MEMBER_LINE, WAVE_LINE} from '../../src/island/reset.js';
+import {codeMatches, doneLine, resetModel, resetWhat, MEMBER_LINE, WAVE_LINE} from '../../src/island/reset.js';
 import {addSettingsSection, settingsSections} from '../../src/shell/settings-extras.js';
 import {createNarrator} from '../../src/narrator/index.js';
 
@@ -34,14 +34,15 @@ async function game() {
 }
 
 describe('resetting an island on the fake server (the rules of island_fresh_start)', () => {
-  it('the owner resets: everything is back to the start, the coins are 100 and Ana stays in the game', async () => {
+  it('the owner resets: everything is back to the start, the coins are a new player\'s and Ana stays in the game', async () => {
+    const start = ISLAND_RULES.startingCoins;
     const {world, host, code} = await game();
     const answer = await host.freshStart({confirmCode: code.toLowerCase(), actionUid: 'reset-0001'});
-    expect(answer).toMatchObject({reset: true, repeat: false, balance: 100,
-      counts: {coins: 100 - 1000 + 30 + 10, buildings: 3, research: 1, membersKept: 1}});
+    expect(answer).toMatchObject({reset: true, repeat: false, balance: start,
+      counts: {coins: start - 1000 + 30 + 10, buildings: 3, research: 1, membersKept: 1}});
     expect(isFreshStart(answer)).toBe(true);
     const view = await host.island();
-    expect(view).toMatchObject({code, coins: 100, waveBest: 0, flags: 0, nextWave: 1, captain: {level: 1}, crew: {gunner: 0, carpenter: 0, lookout: 0, guard: 0}});
+    expect(view).toMatchObject({code, coins: start, waveBest: 0, flags: 0, nextWave: 1, captain: {level: 1}, crew: {gunner: 0, carpenter: 0, lookout: 0, guard: 0}});
     expect(view.spots.filter(spot => spot.built)).toEqual([]);
     expect(view.campaign.research.done).toEqual([]);
     expect(view.campaign.wreck.paid).toBe(0);
@@ -69,7 +70,7 @@ describe('resetting an island on the fake server (the rules of island_fresh_star
     const first = await host.freshStart({confirmCode: code, actionUid: 'reset-0005'});
     await host.build({spot: 'wall_3', kind: 'wall', actionUid: 'build-0009'});
     const again = await host.freshStart({confirmCode: code, actionUid: 'reset-0005'});
-    expect(again).toEqual({...first, repeat: true, balance: 90});
+    expect(again).toEqual({...first, repeat: true, balance: ISLAND_RULES.startingCoins - 10});
     expect((await host.island()).spots.filter(spot => spot.built).map(spot => spot.id)).toEqual(['wall_3']);
     const anaIsland = await ana.island();
     expect(anaIsland.code).toBe(anaCode);
@@ -83,7 +84,7 @@ describe('resetting an island on the fake server (the rules of island_fresh_star
     const bad = await api.freshStart({confirmCode: 'nope'});
     expect(bad).toMatchObject({ok: false, status: 400, code: 'wrong_code'});
     const done = await api.freshStart({confirmCode: code.toLowerCase()});
-    expect(done).toMatchObject({ok: true, data: {reset: true, repeat: false, balance: 100}});
+    expect(done).toMatchObject({ok: true, data: {reset: true, repeat: false, balance: ISLAND_RULES.startingCoins}});
     const wrong = await api.freshStart({confirmCode: FAKE_FRIEND.code});
     expect(wrong).toMatchObject({ok: false, status: 403, code: 'not_owner'});
   });
@@ -102,6 +103,13 @@ describe('the Settings section model', () => {
     expect(resetModel({...owner, wave: true}, 'K7Q2M')).toMatchObject({enabled: false, hint: WAVE_LINE});
     expect(resetModel({kind: 'member'})).toEqual({kind: 'member', line: MEMBER_LINE});
     expect(resetModel(null).kind).toBe('none');
+  });
+
+  it('names the starting coins when the island answer has them, else says "your starting coins"', () => {
+    expect(resetWhat(200)).toContain('your coins become 🪙 200.');
+    expect(resetWhat(undefined)).toContain('your coins become your starting coins.');
+    expect(doneLine(200)).toBe('Your island starts fresh: 🪙 200 and wave 1. Ring the bell when you are ready.');
+    expect(doneLine(null)).toContain('your starting coins and wave 1');
   });
 
   it('the registry skips a provider that breaks or gives nothing', () => {
