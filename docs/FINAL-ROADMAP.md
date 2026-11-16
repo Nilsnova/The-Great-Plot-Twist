@@ -95,7 +95,7 @@ D1 current-demo sweep done in [#5](https://github.com/Nilsnova/The-Great-Plot-Tw
 | ID | Value | Size | Task | Done when |
 |---|---|---|---|---|
 | E1 | ★★ | S | **Test map** [`docs/TEST-MAP.md`](TEST-MAP.md) (started 11 Nov; lane rows to be written by members): per part, which test folder covers it, how to run it, what it does NOT cover (physical phones, 40 real users on one Wi-Fi, provider outages over hours) | Linked from A1 and the README |
-| E2 | ★★ | S | **Pin every dependency exactly**: `backend/pyproject.toml` from `>=` to `==` (matching `uv.lock`), `playwright-core` in `frontend/package.json` without `^`; run `npm audit` and record the result | Lockfiles unchanged in substance; tests pass; audit output in the PR |
+| E2 | ★★ | S | **Pin every dependency exactly**: draft [PR #108 by Ianno](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/108) pins `backend/pyproject.toml` to `uv.lock` and `playwright-core` to `package-lock.json`; `npm audit` reports 0 vulnerabilities | Lock package records unchanged; full tests/build/budget pending shared-machine slot; independent human review remains |
 | E3 | ★ | S | **Busy-laptop timing check**: `test:g8`'s "one key skips each step quickly" fails under heavy load; measure in frames instead of milliseconds | Passes under load and at normal speed |
 
 ### F. Submission and presentation (must be done, not optional)

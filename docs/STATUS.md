@@ -14,6 +14,8 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
+**16 Nov, E2 / Ianno:** [draft PR #108](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/108) pins the seven Python direct dependencies and Playwright to their existing locked versions. `uv sync`, Ruff, `npm install` and `npm audit` pass; audit reports 0 vulnerabilities. Structured comparison confirms all 28 Python and 71 npm non-root lock records are unchanged. Full pytest/frontend tests, build and budget check await the shared-machine slot; human review remains.
+
 
 **14 Nov, B2 / Johannes:** [draft PR #58](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/58) removes four 40px island-button overrides: Hire crew, Move, Tear down and Players now use the existing 44px kit minimum. Four browser cases and real fake-game before/after captures at 375x812, 390x844 and 1280x720; [measurements/limits](evidence/B2-phone-targets/README.md). Full frontend: 260 files / 3,206 tests; build/budget/text lint, accessibility 33 screens and demo 33 checks pass on main `4d83dcd`. Login/APIs unchanged; draft, author and human review pending. Full B2 and physical-device checks remain open.
 **14 Nov, B2 entry/lobby / Johannes:** [draft PR #61](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/61) fixes visually truncated captain names in full phone lobbies: a small mobile grid lets names wrap and puts status below. Seven focused cases, plus a repeatable 21-panel title-to-lobby fake-game audit at 375x812, 390x844 and 1280x720. Full frontend: 260 files / 3,209 tests; build/budget/text lint, accessibility 33 screens and demo 33 checks pass on the branch from main `4d83dcd`. [Before/after, entry audit and limits](evidence/B2-entry-lobby/README.md). Login/APIs unchanged; independent of #58. Draft; author/human review, physical phone/keyboard and remaining B2 game views are open.
@@ -238,6 +240,8 @@ Nobody has decided these yet. Until they are decided, the plan in ROADMAP.md sta
 6. **Pick a package.** Take your lane's next package below, or one from "Start today" in ROADMAP.md. Open an issue with the goal, acceptance checks, scope, responsible teammate and likely files. Create your branch from `main` (`git switch main`, `git pull`, then for example `git switch -c feat/l1-live-weather`). Paste the agent brief below and open a draft pull request early.
 
 ## Next steps per lane
+
+**E2 / Ianno:** finish full backend pytest and Ruff plus frontend tests, build and budget check when the shared-machine slot opens; keep the audit result (0 vulnerabilities) and unchanged-lock-record comparison in [PR #108](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/108). Update the handover with exact results, rehearse the explain-back, then obtain independent human review. Do not merge automatically.
 
 
 **Johannes / B2:** review draft #58 and check touch/keyboard on a physical phone. Continue the remaining current-v3 phone journey separately; this PR only fixes four island targets. Preserve all teammate handovers and recheck current main before a later merge. No merge without Johannes explicit OK and independent human approval.
@@ -583,6 +587,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+- **2026-11-16, E2 / Ianno, with Codex assistance:** exact Python direct pins and Playwright pin in [draft PR #108](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/108). `uv sync`, Ruff, `npm install` pass; `npm audit` finds 0 vulnerabilities. All 28 non-root uv and 71 non-root npm lock records compare equal to `main`; package versions are unchanged. Full backend/frontend gates await the shared-machine slot; independent review remains.
 
 - **2026-11-16, tower upgrade trees and the swivel-gun nest (D055), branch `feat/tower-trees`.** Claude, for Nils: after level 5 every tower kind grows a Bloons-style tree (path a faster, path b harder, 3 tiers, one path to 3; tiers after waves 20/35/45, 🪙 700–6,000, paid by the clicker), drawn like the captain tree on a big tower card; the new swivel-gun nest (after wave 9) sprays pellets at boarders only. Migrations `20261116020000_tower_trees.sql` (adds only; apply before the server) and `20261116020100_swivel_spot_rule.sql` (the swivel's spot rule, the one DROP CONSTRAINT); neither applied. Balance: two captains now win wave 60 and most of 80; towers alone still lose 80.
 - **2026-11-16, walls on pirate paths (D056), branch `feat/walls-matter`.** Claude, for Nils ("walls don't stand around useless"): walls may stand only on wall lanes derived from the sim's routes (server `409 off_path`, glowing lanes in Move mode, faint lanes in the battle guide), new default wall spots two by two across each lane, walls stored off a lane settle on the nearest lane cell on read. Sim unchanged; no migration; no PR yet.

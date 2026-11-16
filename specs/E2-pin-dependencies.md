@@ -6,7 +6,7 @@
 
 - **Status:** in progress
 - **Branch:** `chore/pin-dependencies`
-- **Issue and pull request:** [#9](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/9); draft PR pending
+- **Issue and pull request:** [#9](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/9); [draft PR #108](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/108)
 
 ## Why
 
@@ -28,14 +28,14 @@ The manifests currently permit dependency versions newer than those recorded in 
 ## Out of scope
 
 - Dependency upgrades, additions, removals, audit remediation, or runtime/engine constraint changes.
-- Lockfile package record or version changes. Root lock metadata may change only if `uv` requires it after the declaration edits.
+- Lockfile package record or version changes. Only root declaration metadata may change when needed to match the manifests (`uv.lock` root specifiers and `package-lock.json` root dependency metadata).
 
 ## Done when
 
-- [ ] Python direct declarations exactly match `uv.lock`; Playwright exactly matches `package-lock.json`.
-- [ ] Structured before/after comparison proves lock package records and versions are unchanged; installed versions are recorded.
+- [x] Python direct declarations exactly match `uv.lock`; Playwright exactly matches `package-lock.json`.
+- [x] Structured before/after comparison proves lock package records and versions are unchanged; installed versions are recorded.
 - [ ] `uv sync`, backend pytest/Ruff, `npm install`, frontend tests/build/budget check and `npm audit` are recorded with exact results.
-- [ ] Audit findings are reported without changing dependencies to address them.
+- [x] Audit findings are reported without changing dependencies to address them: `npm audit` found 0 vulnerabilities.
 - [ ] A different human teammate reviews and approves the current change before merge.
 
 ## Tests to write first
@@ -50,4 +50,5 @@ None. `requires-python` and Node `engines` remain unchanged.
 
 - **Owner:** Ianno (@Iannomh123456)
 - **Agent assistance:** Codex, model gpt-6-luna/high
-- **Remaining:** implementation, installation/check results, npm audit output and independent review.
+- **Verified so far:** `uv sync` succeeded; `uv run ruff check .` passed; `npm install` succeeded; `npm audit` found 0 vulnerabilities. Full backend/frontend suites, build and budget check await the shared-machine slot.
+- **Remaining:** full checks, PR completion, explain-back and independent human review.
