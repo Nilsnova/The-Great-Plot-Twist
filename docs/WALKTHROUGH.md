@@ -969,6 +969,13 @@ More languages (a text and a voice per language); lines by captain role; a check
 2. **Where is the API key?** In a private file in the home folder, mode 600, outside the repository. The script reads it only when it runs.
 3. **What if a voice file is missing?** The caption shows for a reading time and the game goes on.
 
+### The guided start and the unlock cards (T52)
+- **Guided start.** On a new island at wave 0, after the intro, the goals strip shows seven steps instead of the goals: walk, open a build spot (E or Use), build a cannon, open the Menu or a goal, ring the bell, fire the musket in wave 1 and, if boarders land, swing the cutlass. Each step waits for the real action; a caption panel under the strip says what to do, a gold ring (or an arrow at the screen's edge) marks the target. Skip step and Skip tutorial; stored per island code (`tgpt:tutorials:v1`), so it never comes back on that island. The steps live in [first-quests.js](../frontend/src/ui/first-quests.js) (`GUIDE_STEPS`) with the goals and use the same bus events, so building the cannon also ticks the goal "Build a cannon". Host: [tutorial/tutorials.js](../frontend/src/tutorial/tutorials.js); overlay [tutorial/coach.js](../frontend/src/tutorial/coach.js).
+- **Unlock cards.** When an island's best wave goes up, one short card per new thing (what it is, how to use it, Show me) waits for the break and shows once per island. The words are one table next to the campaign table, [campaign/tutorials.json](../frontend/src/campaign/tutorials.json) (41 cards); a test fails if a campaign id has no card. Show me moves the camera there for a moment (not with reduced motion: only the ring).
+- **Who gets what.** Each player on their own screen. A friend who first sees an island past wave 0 never gets the guide, only the cards for things this device never saw. Nothing starts without an island the player owns or joined ([tutorial/gate.js](../frontend/src/tutorial/gate.js)): the front door's intro and goal card, the arrival, the narrator's opening and the goals strip wait for it too.
+- Settings › **Tutorials** (on by default) and **Replay the guided start**. New caption lines: `guide_shoot`, `guide_cutlass`, `unlock_swivel`, `unlock_research_3`, `unlock_tree_2`, `unlock_tree_3`, `unlock_final_battle` (no voice files yet).
+- Tests: [tests/tutorial/](../frontend/tests/tutorial/) (steps on real actions, skip and never again, the cards, the friend rule, no island no tutorial).
+
 ## 27. The cartoon art drawn in code
 
 ### What it does
