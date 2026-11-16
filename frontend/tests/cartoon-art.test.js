@@ -25,8 +25,8 @@ describe('clean cartoon art', () => {
   it('draws the island: level art, pips, the explorer frames and the scenery of the home island', () => {
     // Levels 4 and 5 (GAME-V3.md §4.1) are cartoon-only: they keep the box of their level-3 drawing (or pip).
     const sibling = { 'island-watchtower-l4': 'island-watchtower', 'island-watchtower-l5': 'island-watchtower', [PIP_TIER_ART]: PIP_ART };
-    // The harpoon tower (T1) and the culverin (T43) have no pixel art at all: they keep the cannon's box.
-    const box = name => (/^island-(harpoon|culverin)/.test(name) ? pixelSizes['island-cannon'] : pixelSizes[name] ?? pixelSizes[sibling[name] ?? name.replace(/-l[45]$/, '-l3')]);
+    // The harpoon tower (T1), the culverin (T43) and the swivel-gun nest (D055) have no pixel art at all: they keep the cannon's box.
+    const box = name => (/^island-(harpoon|culverin|swivel)/.test(name) ? pixelSizes['island-cannon'] : pixelSizes[name] ?? pixelSizes[sibling[name] ?? name.replace(/-l[45]$/, '-l3')]);
     const names = [...Object.values(LEVEL_ART).flat(), PIP_ART, PIP_TIER_ART, 'cabin', 'oak', 'pine', 'birch', 'rock', 'flowers', 'grass-tuft', 'bench', 'barrel', 'lantern',
       ...['', '-back', '-side'].flatMap(view => [`explorer${view}`, `explorer${view}-walk-1`, `explorer${view}-walk-2`])];
     for (const name of names) {

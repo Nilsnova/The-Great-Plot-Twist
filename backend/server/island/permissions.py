@@ -44,6 +44,7 @@ BUILD = "island_build"
 UPGRADE = "island_upgrade"
 RESEARCH = "island_research"
 TOWER_SKILL = "island_tower_skill"
+TOWER_TREE = "island_tower_tree"  # D055: one tier of a level-5 tower's upgrade tree
 WRECK = "island_wreck"
 DEMOLISH = "island_demolish"
 WAVE_START = "wave_start"
@@ -57,6 +58,8 @@ ARSENAL_WITHDRAW = "arsenal_withdraw"
 ARSENAL_RETURN = "arsenal_return"
 # T36 (D041, flexible placement): move a build spot on the island's grid.
 MOVE = "island_move"
+# D057: sail the island's repaired boat and play its games (the coins are earned, nobody pays).
+BOAT = "island_boat"
 
 
 @dataclass(frozen=True)
@@ -83,6 +86,7 @@ ACTIONS: dict[str, Rule] = {
     UPGRADE: Rule("upgrade buildings here", PERSONAL),
     RESEARCH: Rule("research at this Tech hub", PERSONAL, between_waves=True),
     TOWER_SKILL: Rule("choose tower skills and house roles here", PERSONAL),  # D051
+    TOWER_TREE: Rule("upgrade tower trees here", PERSONAL),  # D055
     WRECK: Rule("repair this wreck", PERSONAL),
     DEMOLISH: Rule("tear buildings down here", REFUND_TO_PAYERS, between_waves=True),
     WAVE_START: Rule("ring the bell here", FREE),
@@ -95,6 +99,7 @@ ACTIONS: dict[str, Rule] = {
     ARSENAL_WITHDRAW: Rule("take weapons from this arsenal", FREE, between_waves=True),
     ARSENAL_RETURN: Rule("return weapons to this arsenal", FREE, between_waves=True),
     MOVE: Rule("move buildings here", FREE, between_waves=True),
+    BOAT: Rule("sail this island's boat", FREE),
 }
 
 

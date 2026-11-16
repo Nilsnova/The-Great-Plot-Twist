@@ -18,8 +18,8 @@ export function createAccountSummary({send,openAccount}){
   function update(view){
     const active=actions.contains(document.activeElement)?document.activeElement:null,focusKey=active?.dataset.focus??null;
     const account=accountOf(view),state=account.state??'signed_out';name.textContent=String(account.captainName??'Captain pending');
-    status.setAttribute('role','status');status.setAttribute('aria-label',`${labels[state]??state} · ${name.textContent}`);
-    status.replaceChildren(node('span','account-summary-state',labels[state]??state),document.createTextNode(' · '),name);
+    status.setAttribute('role','status');status.setAttribute('aria-label',`${labels[state]??state}, ${name.textContent}`);
+    status.replaceChildren(node('span','account-summary-state',labels[state]??state),document.createTextNode(', '),name);
     replayNote.textContent=account.guest?'You are playing as a guest. Sign in to keep your progress.':'';replayNote.hidden=!account.guest;
     buttons.forEach(item=>item.dispose());buttons=[];actions.replaceChildren();
     button('Account',()=>openAccount?.(),'account');

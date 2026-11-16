@@ -2,7 +2,7 @@
 // deterministic, no DOM or Three.js: used by sim.js only when the wave carries the rule "tower_health"
 // (the server's flag, on every client of the wave alike), and by render.js / interact.js to read a tower.
 //
-// A cannon, mortar, harpoon tower or culverin gets hp by its level. Boarders on foot hack a tower in their reach
+// A cannon, mortar, harpoon tower, culverin or swivel-gun nest gets hp by its level. Boarders on foot hack a tower in their reach
 // (the T34 target order: captain, wall in the way, tower, heart). At 0 hp the tower is broken: it stops
 // firing, cannot be fired by hand and is no longer jammed by gunboats. In the wave a captain repairs a
 // damaged tower for free with E (like a wall: +10 hp a second for 3 s) and rebuilds a broken one at 40 %
@@ -23,6 +23,8 @@ export const TOWER_HEALTH = Object.freeze({
     mortar: Object.freeze([70, 115, 180, 260, 360]),
     harpoon: Object.freeze([60, 100, 155, 230, 320]),
     culverin: Object.freeze(CANNON_HP.map(hp => Math.round(hp * DEFENSES_V2.culverin.hpShare))),
+    // The swivel-gun nest (D055) stands where the boarders walk, behind sandbags: 90% of a same-level cannon's hp.
+    swivel: Object.freeze(CANNON_HP.map(hp => Math.round(hp * .9))),
   }),
   damagedShare: .5,      // at or below this share of its hp a tower shows its damaged drawing
   repairRate: 10,        // hp a second while an E repair runs (the repairer's skills scale it)

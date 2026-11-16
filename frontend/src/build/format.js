@@ -1,6 +1,6 @@
 // One public label for title HTML, Settings > About, Credits and performance copies.
 export function formatBuildStamp(stamp) {
-  return `Build ${stamp.sha}${stamp.environment ? ` · ${stamp.environment}` : ''}`;
+  return `Build ${stamp.sha}${stamp.environment ? ` (${stamp.environment})` : ''}`;
 }
 
 export function performanceCopy(stamp, numbers) {

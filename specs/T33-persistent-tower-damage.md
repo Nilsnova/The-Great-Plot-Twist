@@ -5,6 +5,7 @@
 > **Who uses it:** the T33 owner, server and client implementers, reviewers of the tower health and wave contracts.
 
 - **Status:** design proposal only; production implementation is not authorized by this document.
+- **Review:** Ianno manually reviews; Franz (@frcola) must approve the current revision before a human merge. Franz may merge manually after required checks and reviews; agents never merge or enable auto-merge.
 - **Issue:** [#83](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/83), requested by Ianno Hollensteiner (`Iannomh123456`).
 - **Branch:** `docs/t33-persistent-tower-damage-design`.
 - **Baseline:** original design main `e8c61c64`; a targeted source audit of main `a9386656` on 16 Nov found the new HP-bearing swivel-gun nest and tower upgrade trees. The implementation plan must use current main and include swivel under the all-HP-bearing-defenses rule.

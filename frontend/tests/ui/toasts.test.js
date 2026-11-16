@@ -5,11 +5,17 @@ import {browserHarness} from '../g20-browser.js';
 const evaluate=browserHarness();
 
 describe('stacking rule',()=>{
-  it('keeps at most two, drops the oldest and replaces a repeated text',()=>{
-    expect(TOAST_LIMIT).toBe(2);
+  it('keeps one at a time, the newest, and never lets a note push out an error',()=>{
+    expect(TOAST_LIMIT).toBe(1);
     let stack=[];for(const text of ['a','b','c'])stack=stackToasts(stack,{text});
-    expect(stack.map(item=>item.text)).toEqual(['b','c']);
-    expect(stackToasts(stack,{text:'b'}).map(item=>item.text)).toEqual(['c','b']);
+    expect(stack.map(item=>item.text)).toEqual(['c']);
+    // With room for two (a caller's own limit) the oldest goes and a repeated text moves to the end.
+    let two=[];for(const text of ['a','b','c'])two=stackToasts(two,{text},2);
+    expect(two.map(item=>item.text)).toEqual(['b','c']);
+    expect(stackToasts(two,{text:'b'},2).map(item=>item.text)).toEqual(['c','b']);
+    const error=[{text:'Closed now.',tone:'error'}];
+    expect(stackToasts(error,{text:'Cannon built.',tone:'success'})).toBe(error);
+    expect(stackToasts(error,{text:'Other error.',tone:'error'}).map(item=>item.text)).toEqual(['Other error.']);
   });
 });
 
@@ -30,12 +36,13 @@ describe('errors say what happened and what to do next',()=>{
   });
 });
 
-it('shows toasts top-center, at most two at once, and hides them by itself',async()=>{
+it('shows one toast top-center at a time, keeps an error over a later note, and hides them by itself',async()=>{
   const result=await evaluate(async()=>{
     await window.g20Import('/src/ui/kit/kit.css');
     const {createToasts}=await window.g20Import('/src/ui/toasts.js');
     const queue=createToasts({parent:document.body});
     queue.show('First');queue.show({text:'Second',tone:'success'});queue.error({status:503,code:'unavailable',message:'Closed now.'});
+    const dropped=queue.show({text:'A note while the error shows'});
     const boxes=[...document.querySelectorAll('.u-toast')];
     const rect=document.querySelector('.u-toasts').getBoundingClientRect(),box=boxes[0].getBoundingClientRect();
     const shown={count:boxes.length,texts:boxes.map(node=>node.textContent),tones:boxes.map(node=>node.dataset.tone),
@@ -44,10 +51,11 @@ it('shows toasts top-center, at most two at once, and hides them by itself',asyn
     const id=queue.show({text:'Quick',ms:60});await new Promise(resolve=>setTimeout(resolve,200));
     const after=queue.shown.map(item=>item.text);queue.hide(id);queue.clear();
     const cleared=document.querySelectorAll('.u-toast').length;queue.dispose();
-    return {shown,after,cleared,removed:!document.querySelector('.u-toasts')};
+    return {shown,after,cleared,dropped,removed:!document.querySelector('.u-toasts')};
   });
-  expect(result.shown).toMatchObject({count:2,tones:['success','error'],centered:true,live:'polite'});
-  expect(result.shown.texts[1]).toBe('!Closed now.Check your connection, then try again.');
+  expect(result.shown).toMatchObject({count:1,tones:['error'],centered:true,live:'polite'});
+  expect(result.shown.texts[0]).toBe('!Closed now.Check your connection, then try again.');
+  expect(result.dropped).toBeNull();
   expect(result.shown.top).toBeLessThan(40);expect(result.shown.fontSize).toBeGreaterThanOrEqual(16);
   expect(result.after).toEqual(['Closed now.']);expect(result.cleared).toBe(0);expect(result.removed).toBe(true);
 });
