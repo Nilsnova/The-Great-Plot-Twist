@@ -33,8 +33,9 @@ documentation or AST-identical formatting. These are local checks, not CI status
 The original `npm run test:mp` run on `dcc5a89b` timed out after 240 seconds waiting for the host's
 wave break, with its wave state already `null`. The same command and local Chromium setup on an
 archive of exact main `a09787c` failed at the same host-break wait with `wave=null` and no page
-errors. A single bounded diagnostic retry on `d19570be` kept the same seed, gameplay, assertions and
-timeout while recording passive lifecycle transitions. The host trace showed `wave_finished` twice
+errors. A single bounded diagnostic retry on `d19570be` used the unchanged script/fixture seed
+setting, gameplay, assertions and timeout while recording passive lifecycle transitions; no numeric
+seed value was separately recorded. The host trace showed `wave_finished` twice
 for `fake-wave-1` with `survived:false`, then a `done:true`/`ended` state and controller stop; no
 `pause:true` or break state was observed. The smoke flow's unconditional wait for a break after that
 lost-wave outcome explains this timeout; it is not evidence of a recovery or break regression. The
@@ -43,6 +44,39 @@ its outcome. The multiplayer check remains failed, and the diagnostic does not e
 host lost. No gameplay behavior, seed, timeout or test assertion was changed. Passive failure
 logging was syntax-checked with `node --check scripts/check-multiplayer.js`; it is not included in
 the full frontend test result above.
+
+**Reproduction commands** (run from the indicated directories; output paths are local logs):
+
+```bash
+# frontend/
+npm test > /tmp/t60-final-frontend-dcc5a89b.log 2>&1
+npm run build > /tmp/t60-final-build-dcc5a89b.log 2>&1
+
+# backend/
+UV_CACHE_DIR=/tmp/t55-uv-cache nice -n 10 uv run pytest -q \
+  --ignore=server/tests/correctness/test_settings_contract.py \
+  > /tmp/t60-final-backend-dcc5a89b.log 2>&1
+UV_CACHE_DIR=/tmp/t55-uv-cache CASE_PG_SCRATCH=1 uv run --with pgserver \
+  --with 'psycopg[binary]' --with pglast pytest -q server/tests/island_sql \
+  > /tmp/t60-final-island-sql-795eaf47.log 2>&1
+```
+
+The unchanged 524,322-case settings-contract matrix was separately verified; its exact invocation
+is not included here. The browser run used an ephemeral executable wrapper because the local
+Chromium install required flags in this environment. To reproduce the launch setup from
+`frontend/`:
+
+```bash
+cat >/tmp/t60-local-chromium <<'EOF'
+#!/bin/sh
+exec /usr/bin/chromium --no-sandbox --disable-dev-shm-usage --use-gl=angle --use-angle=swiftshader "$@"
+EOF
+chmod +x /tmp/t60-local-chromium
+CHROME_PATH=/tmp/t60-local-chromium npm run test:mp -- /tmp/t60-mp-repro
+```
+
+The integrated smoke command used `/tmp/t60-mp-dcc5a89b`; the exact-main baseline used the same
+wrapper with its own archive checkout and `/tmp/t60-main-mp-a09787c` output path.
 
 **Strict API/replay command** (from `backend/`):
 
@@ -100,10 +134,13 @@ on `795eaf47` passed 368 in 34.59 seconds.
 **Focused Python route/transport command** (from `backend/`):
 
 ```bash
-uv run --frozen pytest -q server/tests/test_wave_recovery_routes.py \
-  server/tests/test_wave_routes.py server/tests/test_structure_recovery_routes.py \
-  server/tests/test_wave_recovery_transport.py server/tests/test_structure_repair_routes.py \
-  server/tests/test_structure_recovery_manifest.py server/tests/test_captain_skills_routes.py
+UV_CACHE_DIR=/tmp/t55-uv-cache uv run pytest -q \
+  server/tests/test_wave_recovery_routes.py \
+  server/tests/test_wave_recovery_transport.py \
+  server/tests/test_structure_recovery_routes.py \
+  server/tests/test_structure_repair_routes.py \
+  server/tests/test_wave_routes.py \
+  server/tests/test_captain_skills_routes.py
 ```
 
 **Result:** 140 passed in 24.60 seconds. These are request/model/transport tests with local fakes;
