@@ -14,7 +14,7 @@ export function drawUpgradeOverview(body, model, {kind = 'all', state = 'all', c
     return input;
   }
   const first = select('Building type', 'overview-kind', kind,
-    [['all', 'All building types'], ...model.kinds.map(item => [item.id, item.name])], next => choose(next, state));
+    [['all', 'All types'], ...model.kinds.map(item => [item.id, item.name])], next => choose(next, state));
   select('Next building level', 'overview-state', state,
     [['all', 'All levels'], ['ready', 'Within budget'], ['blocked', 'Not ready yet'], ['top', 'Highest building level']], next => choose(kind, next));
   const rows = overviewRows(model, kind, state), count = node('p', 'base-overview-count', `${rows.length} shown`);

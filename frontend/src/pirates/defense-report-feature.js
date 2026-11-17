@@ -26,9 +26,8 @@ export function mountDefenseReport({on, container, context, defenses, menu = add
     const list = node('ul');
     for (const item of value.structures.filter(row => row.taken || row.dealt || row.breaks)) {
       const number = item.id.match(/\d+$/)?.[0] ?? '';
-      const where = Number.isFinite(item.x) && Number.isFinite(item.z) ? ` (${item.x}, ${item.z})` : '';
       const row = node('li');
-      row.append(node('strong', '', `${NAMES[item.kind]} ${number}${where}`),
+      row.append(node('strong', '', `${NAMES[item.kind]} ${number}`),
         node('p', '', `Hit damage: ${item.taken} · Damage done: ${item.dealt} · Breaks: ${item.breaks}`));
       list.append(row);
     }
