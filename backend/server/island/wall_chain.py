@@ -2,6 +2,7 @@
 
 import math
 from dataclasses import dataclass
+from uuid import UUID
 
 from server.errors import ApiError
 from server.island import layout, rules
@@ -27,6 +28,7 @@ class WallQuote:
     placements: tuple[WallPlacement, ...]
     unit_cost: int
     remaining: int
+    island_epoch: UUID
 
     @property
     def total_cost(self) -> int:
@@ -38,6 +40,7 @@ class WallQuote:
             "unitCost": self.unit_cost,
             "totalCost": self.total_cost,
             "remaining": self.remaining,
+            "islandEpoch": str(self.island_epoch),
             "wallRuleVersion": 1,
             "wallCapacity": 128,
         }
@@ -76,10 +79,19 @@ def quote_chain(
     *,
     wave: int,
     role: str | None,
+    island_epoch: UUID | str,
 ) -> WallQuote:
     """Allocate eligible IDs in input order and validate the whole final layout before quoting."""
     if (snapshot.rule_version, snapshot.capacity) != (1, 128):
         raise ApiError(409, "walls_not_ready", "Open perimeter wall building first.")
+    if isinstance(island_epoch, str):
+        try:
+            parsed = UUID(island_epoch)
+        except ValueError:
+            parsed = None
+        island_epoch = parsed if parsed is not None and str(parsed) == island_epoch else None
+    if not isinstance(island_epoch, UUID):
+        raise ApiError(502, "database_error", "The island scope could not be read.")
     cells = chain_cells(cells)
     catalogue = with_wall_capacity(catalogue, snapshot.capacity)
     geometry = layout.island_layout(
@@ -117,4 +129,6 @@ def quote_chain(
         final[p.spot] = (p.x, p.z)
     price = rules.engineer_price(catalogue, rules.price_of(catalogue, "wall"), role)
     wall_count = sum(item.kind == "wall" for item in built.values())
-    return WallQuote(placements, price, snapshot.capacity - wall_count - len(placements))
+    return WallQuote(
+        placements, price, snapshot.capacity - wall_count - len(placements), island_epoch
+    )
