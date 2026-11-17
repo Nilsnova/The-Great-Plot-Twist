@@ -20,6 +20,7 @@ begin
   if p_island_owner is null then raise exception 'bad_wall_layout_read'; end if;
   select jsonb_build_object(
     'ruleVersion', coalesce(p.rule_version, 0), 'capacity', coalesce(p.capacity, 12),
+    'islandEpoch', (select reset_epoch from public.island_recovery_state where island_owner=p_island_owner),
     'rows', coalesce((select jsonb_agg(jsonb_build_object(
       'plot', l.plot, 'x_half', l.x_half, 'z_half', l.z_half) order by l.plot collate "C")
       from public.island_layout l where l.island_owner = p_island_owner), '[]'::jsonb))
