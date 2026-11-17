@@ -10,6 +10,8 @@ FakeIslandDatabase answers exactly the calls the island and wave routes make, an
   * GET islands, GET profiles                a visit by code and the owner's captain name
   * POST rpc/wave_start, rpc/wave_finish     start_reply and finish_reply
   * POST rpc/wave_join, rpc/wave_current     join_reply and current_reply (None: no wave)
+  * POST rpc/recovery_wave_current           recovery_current_reply as given, else current_reply
+                                             as a legacy (version 0) wave
   * POST rpc/wave_revive                     revive_reply (captain health, default REVIVED)
   * GET islands?player_id=                   the tower defense columns (progress)
   * GET wallet_transactions                  the repeat check of a paid action (ledger_refs)
@@ -214,6 +216,7 @@ class FakeIslandDatabase:
         self.finish_reply: dict | httpx.Response = FINISHED
         self.join_reply: dict | httpx.Response = {**STARTED, "status": "joined"}
         self.current_reply: dict | None = None
+        self.recovery_current_reply: dict | None = None
         self.revive_reply: dict | httpx.Response = REVIVED
         self.progress = {
             "wave_best": 0,
@@ -382,6 +385,8 @@ class FakeIslandDatabase:
         )
 
     def recovery_current(self, _request: httpx.Request) -> httpx.Response:
+        if self.recovery_current_reply is not None:
+            return self.answer(self.recovery_current_reply)
         if self.current_reply is None:
             return httpx.Response(200, json={"status": "empty"})
         return self.answer(

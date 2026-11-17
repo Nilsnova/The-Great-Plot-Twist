@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createWaveController } from '../../src/pirates/controller.js';
+import { RECOVERY_POLL_MIN_MS } from '../../src/pirates/recovery-transport.js';
 
 const START = Date.UTC(2026, 10, 14, 12, 0, 0);
 const TOKEN = '7165d60f-14f5-4b9e-96a0-2ed457b4c219';
@@ -92,7 +93,7 @@ describe('recovery-v1 controller replay', () => {
 
     paidEvent = { serverSeq: 1, effectiveTick: 1, type: 'structure_repaired', participantToken: null,
       payload: { spot: 'wall_1', instanceId: 'wall-instance', hpUnits: 1_000_000, maxHP: 60, repairSeq: 1, chargedPrice: 20 } };
-    now += 300;
+    now += RECOVERY_POLL_MIN_MS + 50; // the next regular read is no sooner than this after the checkpoint's own read
     controller.update(.05);
     await new Promise(resolve => setTimeout(resolve, 0));
     controller.update(.05);

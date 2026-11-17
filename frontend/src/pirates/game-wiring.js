@@ -145,7 +145,8 @@ export function wireWaves(ctx) {
   function tick() {
     if (disposed) return;
     followRoom();
-    if (world.current?.id === ISLAND_PLACE && island && ++quiet >= REREAD_SECONDS && globalThis.document?.visibilityState !== 'hidden') void readIsland();
+    // A wave under way keeps the island it started with (builds wait for its break): the quiet clock waits too.
+    if (world.current?.id === ISLAND_PLACE && island && !waveRunning() && ++quiet >= REREAD_SECONDS && globalThis.document?.visibilityState !== 'hidden') void readIsland();
     if (!landed || world.current?.id !== ISLAND_PLACE || pirates.island.wave) return;
     const ready = island.visiting ? !!island.visiting.ownerName : !!island.island;
     if (!ready) return;
@@ -155,10 +156,20 @@ export function wireWaves(ctx) {
   // The wave on screen (in its break, or the Pirate Point one) draws its towers from its own list: give it the new levels.
   // walls: {spot: percent} after a paid repair or rebuild, so a rebuilt wall stops looking broken (D039).
   const relevel = (walls = null) => { try { pirates.island.refreshDefenses?.(walls); pirates.point?.controller?.refreshDefenses?.(); } catch { /* A drawing cannot stop the island. */ } };
-  let quiet = 0;
-  async function readIsland() {
+  let quiet = 0, reading = null, readAgain = false;
+  const waveRunning = () => { const wave = pirates.island.wave; return !!wave && !wave.done; };
+  // One reread at a time (the island, the visit and the arsenal): a reason that comes up meanwhile
+  // (island_changed, the tab back, the timer) reads once more after it, however many came.
+  function readIsland() {
     quiet = 0;
-    try { await island.refreshDefended?.(); relevel(); } catch { /* The island as we had it. */ }
+    if (reading) { readAgain = true; return reading; }
+    reading = (async () => {
+      do {
+        readAgain = false;
+        try { await island.refreshDefended?.(); relevel(); } catch { /* The island as we had it. */ }
+      } while (readAgain && !disposed);
+    })().finally(() => { reading = null; });
+    return reading;
   }
   function changed() {
     if (changedSoon) return;

@@ -58,15 +58,18 @@ import { readRules } from './wave-rules.js';
 import { isParticipantToken, readRecoveryPolicy } from './recovery-policy.js';
 import { readRecoverySnapshot, recoveryWaveDefenses } from './recovery-snapshot.js';
 import { createReplayDriver, createWaveReplay, fetchSealedEvents } from './wave-replay.js';
-import { commandForJournal, MAX_INPUT_BATCH, MAX_INPUT_BATCH_BYTES, RECOVERY_FLUSH_MS, RECOVERY_POLL_MS, simulationInputFromJournal } from './recovery-transport.js';
+import { commandForJournal, MAX_INPUT_BATCH, MAX_INPUT_BATCH_BYTES, RECOVERY_FLUSH_MS, RECOVERY_POLL_LEAD_MS, RECOVERY_POLL_MARGIN_MS,
+  RECOVERY_POLL_MIN_MS, RECOVERY_POLL_MS, simulationInputFromJournal } from './recovery-transport.js';
 import { makeActionUid } from '../screens/islet/action-uid.js';
 
 const MAX_TICKS_PER_FRAME = 600;      // a friend joining late catches up 30 s of wave per frame
 // Recovery waves (structure_recovery) may only run ticks the server has sealed, and the seal moves on
-// each poll (RECOVERY_POLL_MS plus the round trip). Run them this far behind real time, like a video
-// buffer, so ships and shots move every frame instead of freezing and jumping after each poll (#324).
-// Only when ticks run changes, never what they compute.
-export const RECOVERY_PLAYOUT_MS = 750;
+// each poll. Run them this far behind real time, like a video buffer, so ships and shots move every
+// frame instead of freezing and jumping after each poll (#324). Only when ticks run changes, never what
+// they compute. It covers a slow 450 ms round trip plus the gap between polls (recovery-transport.js),
+// so a wave reads the journal about twice a second instead of back to back.
+export const RECOVERY_PLAYOUT_MS = 1000;
+const RECOVERY_RTT_START_MS = 300;     // the round-trip guess before the first read has answered
 const SHOWN_LATE_SECONDS = 1;         // events older than this (catching up) are not drawn or heard
 const canonicalJson = value => Array.isArray(value) ? `[${value.map(canonicalJson).join(',')}]`
   : value && typeof value === 'object' ? `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${canonicalJson(value[key])}`).join(',')}}`
@@ -372,7 +375,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       // Captain health: the last position sent, your fall (pin: where you lie on this screen), a revive you hold.
       moveSentAt: -Infinity, moveSent: null, awaySent: false, pin: null, revive: null, reviveNote: null, reviveWait: false,
       actorCounter: info.lastActorCounter ?? 0, recoveryPending: [], recoverySending: false, recoveryPolling: false,
-      recoveryLastFlushAt: -Infinity, recoveryLastPollAt: -Infinity, recoveryReplay,
+      recoveryLastFlushAt: -Infinity, recoveryLastPollAt: -Infinity, recoveryRttMs: RECOVERY_RTT_START_MS, recoveryReplay,
       recoveryHealthPersistedSignature: initialRecoverySignature,
       recoveryHealthLastAttemptAt: -Infinity, recoveryHealthCheckpointPromise: null,
       recoveryDriver: recoveryReplay ? createReplayDriver(recoveryReplay) : null,
@@ -462,29 +465,47 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
           .finally(() => { current.recoverySending = false; current.recoverySendPromise = null; tryRecoveryFinish(current); });
       }
     }
-    if (!current.recoveryPolling && at - current.recoveryLastPollAt >= RECOVERY_POLL_MS) {
-      current.recoveryLastPollAt = at;
-      void fetchRecoveryFrontier(current);
-    }
-    if (!current.done && !current.recoveryInvalid) {
+    if (recoveryPollDue(current, at)) void fetchRecoveryFrontier(current);
+    // The health vector and its signature only when a checkpoint could go out (not every frame).
+    if (!current.done && !current.recoveryInvalid && !current.recoveryHealthCheckpointPromise
+      && at - current.recoveryHealthLastAttemptAt >= HEALTH_CHECKPOINT_COALESCE_MS) {
       const vector = current.sim.recoveryHealthVector();
       const signature = vector ? canonicalJson(vector) : null;
-      if (signature && signature !== current.recoveryHealthPersistedSignature
-        && at - current.recoveryHealthLastAttemptAt >= HEALTH_CHECKPOINT_COALESCE_MS
-        && !current.recoveryHealthCheckpointPromise) void checkpointBeforeRepair({ force: false }).catch(() => {});
+      if (signature && signature !== current.recoveryHealthPersistedSignature) void checkpointBeforeRepair({ force: false }).catch(() => {});
     }
     reconcileTerminalRecovery(current);
     tryRecoveryFinish(current);
   }
 
+  // The next regular journal read (fetchRecoveryFrontier keeps one in flight at a time). A closed,
+  // refused or diverged wave reads nothing more on its own: the break can stay open for minutes.
+  function recoveryPollDue(current, at) {
+    if (current.recoveryPolling || current.recoveryFinishing || current.recoveryInvalid || current.recoveryFinishAnswered
+      || current.recoveryFinishFailed) return false;
+    const since = at - current.recoveryLastPollAt;
+    if (since >= RECOVERY_POLL_MS) return true;
+    if (since < RECOVERY_POLL_MIN_MS) return false;
+    const sealed = current.recoveryReplay.sealedThroughTick;
+    // The ended wave waits for its close (fresh seals for the finish); no seal yet: read.
+    if (current.done || !Number.isInteger(sealed)) return true;
+    // How long the sealed ticks still last under the playout clock, against the time a read takes.
+    const playoutAt = at + current.offset - current.info.startsAtMs - Math.max(0, recoveryPlayoutMs);
+    const headroomMs = (sealed + 1) * TICK_SECONDS * 1000 - playoutAt;
+    return headroomMs < Math.max(RECOVERY_POLL_LEAD_MS, current.recoveryRttMs + RECOVERY_POLL_MARGIN_MS);
+  }
+
   function fetchRecoveryFrontier(current) {
     if (current.recoveryPolling) return current.recoveryPollPromise ?? Promise.resolve(false);
     current.recoveryPolling = true;
+    const startedAt = current.recoveryLastPollAt = now();
     let polling;
     polling = Promise.resolve().then(() => fetchSealedEvents(current.recoveryReplay,
       request => recoveryTransport.readEvents({ waveId: current.info.waveId, ...request })))
       .catch(() => false).finally(() => {
         if (current.recoveryPollPromise !== polling) return;
+        // A slow answer counts at once; a fast one lowers the estimate gradually.
+        const took = Math.max(0, now() - startedAt);
+        current.recoveryRttMs = took >= current.recoveryRttMs ? took : current.recoveryRttMs + (took - current.recoveryRttMs) / 4;
         current.recoveryPolling = false;
         current.recoveryPollPromise = null;
         reconcileTerminalRecovery(current);
@@ -551,11 +572,17 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   async function checkpointRecovery(current, { force = true } = {}) {
     if (!current?.recoveryReplay || !recoveryTransport?.checkpoint || current.recoveryFinishAnswered
       || current.recoveryInvalid) return { ok: false, code: 'recovery_unavailable' };
-    if (!await flushRecoveryInputs(current)) return { ok: false, code: 'input_sync_required' };
-    let fetched = false;
-    try { fetched = await fetchRecoveryFrontier(current); }
-    catch { fetched = false; }
-    if (!fetched || !current.recoveryReplay.complete()) return { ok: false, code: 'health_sync_required' };
+    // The periodic checkpoint of a running wave saves ticks already shown, so a complete frontier from the
+    // regular reads is enough: every later journal event lands after its seal (the server clamps effective
+    // ticks past it), and a waiting command does too. Only a paid repair or the end reads afresh.
+    const reuse = !force && !current.done && current.recoveryReplay.complete();
+    if (!reuse) {
+      if (!await flushRecoveryInputs(current)) return { ok: false, code: 'input_sync_required' };
+      let fetched = false;
+      try { fetched = await fetchRecoveryFrontier(current); }
+      catch { fetched = false; }
+      if (!fetched || !current.recoveryReplay.complete()) return { ok: false, code: 'health_sync_required' };
+    }
     // The periodic health checkpoint (force false) saves the ticks already shown, which the server accepts
     // while they are sealed; only a checkpoint before a paid repair catches the wave up to the seal.
     if (!current.done && force) {

@@ -200,8 +200,13 @@ def wave_of(catalogue: IslandCatalogue, row: WaveRow) -> WaveStart:
     return WaveStart(row.waveId, row.wave, row.seed, row.startsAt, weather, flagship, boss)
 
 
-def recovery_wave_of(catalogue: IslandCatalogue, reply: object) -> WaveStart:
-    """Validate a versioned lifecycle reply while retaining the legacy wave metadata parser."""
+def recovery_wave_of(
+    catalogue: IslandCatalogue, reply: object, *, joinable: bool = False
+) -> WaveStart:
+    """Validate a versioned lifecycle reply while retaining the legacy wave metadata parser.
+
+    joinable (current reads only): a protocol-2 wave the caller may join but has not joined yet
+    comes without snapshot, token and counter (joined false); the join reply carries them."""
     if not isinstance(reply, dict):
         raise SupabaseRejected("The database sent an unreadable recovery wave.")
     row = store.read_model(
@@ -221,7 +226,15 @@ def recovery_wave_of(catalogue: IslandCatalogue, reply: object) -> WaveStart:
     snapshot = reply.get("initialSnapshot")
     token = reply.get("participantToken")
     counter = reply.get("lastActorCounter")
-    if version == 1 and not isinstance(snapshot, dict):
+    not_joined = (
+        joinable
+        and version == 1
+        and reply.get("joined") is False
+        and snapshot is None
+        and token is None
+        and counter is None
+    )
+    if version == 1 and not not_joined and not isinstance(snapshot, dict):
         raise SupabaseRejected("The database sent an incomplete recovery snapshot.")
     if token is not None:
         try:
@@ -327,7 +340,7 @@ async def current_protocol2(
     )
     if reply["status"] == "empty":
         return None
-    return recovery_wave_of(catalogue, reply)
+    return recovery_wave_of(catalogue, reply, joinable=True)
 
 
 def no_such_wave() -> ApiError:

@@ -228,3 +228,82 @@ def test_protocol2_finish_maps_the_rpc_balance_to_the_legacy_coins_field(monkeyp
     assert response.status_code == 200, response.text
     assert response.json()["coins"] == 115
     assert response.json()["recovery"]["closedHp"] == {"instance-1": 987654}
+
+
+def _current_v2(world):
+    return world.client.get(
+        "/api/waves/current", params={"where": "own", "waveProtocol": 2}, headers=PLAYER
+    )
+
+
+RUNNING = {
+    "status": "running",
+    "waveId": str(WAVE),
+    "wave": 3,
+    "seed": 123456789,
+    "startsAt": "2026-11-10T12:00:10+00:00",
+    "weatherKind": "calm",
+    "ships": 1.0,
+    "fog": 0,
+    "place": "island",
+}
+JOINABLE = {**RUNNING, "recoveryVersion": 1, "waveProtocol": 2, "joined": False}
+
+
+def test_a_member_who_has_not_joined_gets_the_joinable_recovery_wave_without_a_token():
+    world = World()
+    world.database.recovery_current_reply = JOINABLE
+
+    response = _current_v2(world)
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["waveId"] == str(WAVE) and body["wave"] == 3 and body["seed"] == 123456789
+    assert body["recoveryVersion"] == 1 and body["waveProtocol"] == 2
+    assert "participantToken" not in body
+    assert "initialSnapshot" not in body
+    assert "lastActorCounter" not in body
+
+
+def test_a_joinable_answer_still_needs_the_protocol2_client():
+    world = World()
+    world.database.recovery_current_reply = JOINABLE
+
+    assert_error(world.current(), 409, "client_update_required")
+
+
+def test_a_recovery_wave_without_snapshot_is_only_accepted_as_not_joined():
+    world = World()
+    world.database.recovery_current_reply = {
+        **JOINABLE,
+        "joined": True,
+        "participantToken": str(TOKEN),
+        "lastActorCounter": 0,
+    }
+
+    assert _current_v2(world).status_code == 502
+
+
+def test_a_participant_still_gets_their_token_and_snapshot():
+    world = World()
+    snapshot = {"recoveryVersion": 1, "waveProtocol": 2, "participants": []}
+    world.database.recovery_current_reply = {
+        **JOINABLE,
+        "joined": True,
+        "initialSnapshot": snapshot,
+        "participantToken": str(TOKEN),
+        "lastActorCounter": 4,
+    }
+
+    body = _current_v2(world).json()
+
+    assert body["participantToken"] == str(TOKEN)
+    assert body["initialSnapshot"] == snapshot
+    assert body["lastActorCounter"] == 4
+
+
+def test_an_outsider_is_still_refused_the_recovery_wave():
+    world = World()
+    world.database.recovery_current_reply = {"status": "refused", "reason": "not_in_wave"}
+
+    assert_error(_current_v2(world), 403, "not_in_wave")
