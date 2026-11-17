@@ -1,5 +1,7 @@
 // Actual HUD/toast geometry follows Goal wrapping, folding, visibility and its owner's lifetime.
 import {expect, it} from 'vitest';
+import {mkdir} from 'node:fs/promises';
+import {join} from 'node:path';
 import {browserHarness} from '../g20-browser.js';
 const browser = browserHarness();
 
@@ -38,9 +40,15 @@ async function geometry(page) {
 it('keeps the real two-row purse Goals and island toast clear at the failing and review sizes', async () => {
   await browser.withPage(async page => {
     await mount(page);
+    const results = [], shots = process.env.VIS52_SHOTS_DIR;
+    if (shots) await mkdir(shots, {recursive: true});
     for (const [width, height] of [[390, 844], [844, 390], [375, 812], [1280, 720]]) {
       await page.setViewportSize({width, height});
       const value = await geometry(page);
+      if (shots) await page.screenshot({path: join(shots, `island-toast-${width}x${height}.png`)});
+      results.push({width, height, value});
+    }
+    for (const {width, height, value} of results) {
       expect(value.inside, `${width}×${height}`).toBe(true); expect(value.overflow).toBe(false);
       if (width <= 900) expect(value.toastTop - value.goalBottom).toBeGreaterThanOrEqual(9.5);
       else expect(value.toastTop).toBe(16); // The wide-screen middle slot keeps its existing position.
