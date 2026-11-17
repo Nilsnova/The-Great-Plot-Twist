@@ -113,13 +113,15 @@ begin
     return jsonb_build_object('status', 'done', 'level', 1, 'balance', v_balance, 'repeat', true);
   end if;
 
+  -- Recovery is only defined for a persisted island, not a legacy home islet.
+  perform 1 from public.islands where player_id = p_island_owner for update;
+  if found then v_recovery := '{}'::jsonb; end if;
+  -- The persisted owner row is locked before the legacy progress/islet row, so
+  -- this mutation follows the same owner-first order as recovery admission.
   insert into public.islets (player_id, timber)
   values (p_island_owner, 0)
   on conflict (player_id) do nothing;
   perform 1 from public.islets where player_id = p_island_owner for update;
-  -- Recovery is only defined for a persisted island, not a legacy home islet.
-  perform 1 from public.islands where player_id = p_island_owner for update;
-  if found then v_recovery := '{}'::jsonb; end if;
 
   if exists (
     select 1 from public.islet_buildings where player_id = p_island_owner and plot = p_plot
@@ -410,13 +412,17 @@ begin
   ) then
     return jsonb_build_object('status', 'refused', 'reason', 'not_member');
   end if;
+  v_recovery := public.structure_recovery_mutation_begin(p_island_owner);
   -- No research step while a wave runs on this island: a tier-3 change takes the old
   -- capstone off the towers, and the wave is reading them. The same test as
   -- island_demolish() (20261112080000_demolish.sql); the island row is locked above.
-  if exists (
-    select 1 from public.wave_runs
-     where island_owner = p_island_owner and finished_at is null
-       and starts_at + make_interval(secs => maximum_seconds) >= now()
+  if (v_recovery ->> 'recoveryVersion')::integer = 1 then
+    if v_recovery #>> '{settlement,status}' = 'reserved' then
+      return jsonb_build_object('status', 'refused', 'reason', 'wave_running');
+    end if;
+  elsif exists (
+    select 1 from public.wave_runs where island_owner = p_island_owner
+      and finished_at is null and starts_at + make_interval(secs => maximum_seconds) >= now()
   ) then
     return jsonb_build_object('status', 'refused', 'reason', 'wave_running');
   end if;
@@ -426,8 +432,6 @@ begin
   if v_island.wave_best < p_unlock_wave then
     return jsonb_build_object('status', 'refused', 'reason', 'locked');
   end if;
-
-  v_recovery := public.structure_recovery_mutation_begin(p_island_owner);
 
   select * into v_row from public.island_research
    where island_owner = p_island_owner and branch = p_branch
@@ -764,13 +768,17 @@ begin
   if not found then
     return jsonb_build_object('status', 'refused', 'reason', 'no_island');
   end if;
+  v_recovery := public.structure_recovery_mutation_begin(p_island_owner);
 
   -- No move under a running wave: it fights the defenses where they stood at its start.
   -- The same test as island_demolish() (20261112080000_demolish.sql).
-  if exists (
-    select 1 from public.wave_runs
-     where island_owner = p_island_owner and finished_at is null
-       and starts_at + make_interval(secs => maximum_seconds) >= now()
+  if (v_recovery ->> 'recoveryVersion')::integer = 1 then
+    if v_recovery #>> '{settlement,status}' = 'reserved' then
+      return jsonb_build_object('status', 'refused', 'reason', 'wave_running');
+    end if;
+  elsif exists (
+    select 1 from public.wave_runs where island_owner = p_island_owner
+      and finished_at is null and starts_at + make_interval(secs => maximum_seconds) >= now()
   ) then
     return jsonb_build_object('status', 'refused', 'reason', 'wave_running');
   end if;
@@ -784,8 +792,6 @@ begin
   if v_now is distinct from p_seen then
     return jsonb_build_object('status', 'refused', 'reason', 'busy');
   end if;
-
-  v_recovery := public.structure_recovery_mutation_begin(p_island_owner);
 
   insert into public.island_layout (island_owner, plot, x_half, z_half, moved_by)
   values (p_island_owner, p_plot, p_x_half, p_z_half, p_mover)
@@ -890,10 +896,13 @@ begin
   ) then
     return jsonb_build_object('status', 'refused', 'reason', 'not_member');
   end if;
-  if exists (
-    select 1 from public.wave_runs
-     where island_owner = p_island_owner and finished_at is null
-       and starts_at + make_interval(secs => maximum_seconds) >= now()
+  if (v_recovery ->> 'recoveryVersion')::integer = 1 then
+    if v_recovery #>> '{settlement,status}' = 'reserved' then
+      return jsonb_build_object('status', 'refused', 'reason', 'wave_running');
+    end if;
+  elsif exists (
+    select 1 from public.wave_runs where island_owner = p_island_owner
+      and finished_at is null and starts_at + make_interval(secs => maximum_seconds) >= now()
   ) then
     return jsonb_build_object('status', 'refused', 'reason', 'wave_running');
   end if;
@@ -1057,18 +1066,20 @@ begin
     return jsonb_build_object('status', 'refused', 'reason', 'wrong_code');
   end if;
 
-  -- No reset while a wave runs on this island: the wave reads the buildings, the
-  -- crews and the captain. The same test as island_demolish(); the island row is
-  -- locked above, so no wave can start between this test and the reset.
-  if exists (
-    select 1 from public.wave_runs
-     where island_owner = p_player_id and finished_at is null
-       and starts_at + make_interval(secs => maximum_seconds) >= now()
+  v_recovery := public.structure_recovery_mutation_begin(p_player_id);
+
+  -- No reset while a wave runs on this island: use the canonical post-lock
+  -- recovery boundary in v1, and keep the legacy transaction-time guard in v0.
+  if (v_recovery ->> 'recoveryVersion')::integer = 1 then
+    if v_recovery #>> '{settlement,status}' = 'reserved' then
+      return jsonb_build_object('status', 'refused', 'reason', 'wave_running');
+    end if;
+  elsif exists (
+    select 1 from public.wave_runs where island_owner = p_player_id
+      and finished_at is null and starts_at + make_interval(secs => maximum_seconds) >= now()
   ) then
     return jsonb_build_object('status', 'refused', 'reason', 'wave_running');
   end if;
-
-  v_recovery := public.structure_recovery_mutation_begin(p_player_id);
 
   -- 1. The wallet to the starting coins, through the one wallet function.
   if v_balance <> p_starting_coins then

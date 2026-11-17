@@ -90,6 +90,22 @@ def seed_v1(database, structures=("wall_1",)):
         "wave_protocol=2,revision=0 where island_owner=%s", (EPOCH, OWNER)
     )
     snapshot = template(tuple((spot, kinds[spot]) for spot in structures))
+    snapshot["structures"] = [
+        {
+            "spot": spot,
+            "instanceId": str(call(
+                database,
+                "select recovery_instance_id from public.islet_buildings where player_id=%s and plot=%s",
+                OWNER, spot,
+            )),
+            "kind": kinds[spot],
+            "level": 1,
+            "hpUnits": 500_000,
+            "maxHP": CONFIG["structureMaxHp"][kinds[spot]][0],
+            "repairSeq": 0,
+        }
+        for spot in structures
+    ]
     database.execute(
         "insert into public.recovery_wave_states "
         "(wave_id,island_owner,reset_epoch,recovery_version,wave_protocol,initial_snapshot) "
@@ -265,6 +281,85 @@ def test_moved_workshop_at_radius_boundary_updates_future_rate(database):
     assert health == (130, 100)
 
 
+def test_v1_in_wave_hire_keeps_snapshot_paused_hp_and_resumes_after_expiry(database):
+    seed_v1(database)
+    as_server(database)
+    start_template = template((("wall_1", "wall"),))
+    start_template["expectedRevision"] = call(
+        database,
+        "select revision from public.island_recovery_state where island_owner=%s",
+        OWNER,
+    )
+    start_template["createWave"]["defenses"] = [
+        {"id": "wall_1", "kind": "wall", "level": 1, "x": -18.5, "z": -1}
+    ]
+    started = call(
+        database,
+        "select public.recovery_wave_start(%s,'wave-start-01','island',%s,4242,0,15,900,50,"
+        "'calm',1,0,%s::text[],%s::jsonb,true,2::smallint)",
+        OWNER, OWNER, ["structure_recovery"], json.dumps(start_template),
+    )
+    assert started["status"] == "started"
+    snapshot = started["initialSnapshot"]
+
+    hired = call(database,
+        "select public.island_hire(%s,'carpenter','hire-wave-01',10,10)", OWNER)
+    assert hired["status"] == "done"
+    health = database.execute(
+        "select hp_units,rate_numerator,rate_denominator from public.island_structure_health "
+        "where island_owner=%s and spot='wall_1'", (OWNER,)
+    ).fetchone()
+    assert health == (500_000, 200, 100)
+    assert call(database,
+        "select initial_snapshot from public.recovery_wave_states where wave_id=%s",
+        started["waveId"]) == snapshot
+    during_wave = call(database,
+        "select public.structure_recovery_settle_locked(%s,clock_timestamp())", OWNER)
+    assert during_wave["status"] == "reserved"
+    assert call(database,
+        "select hp_units from public.island_structure_health where island_owner=%s and spot='wall_1'",
+        OWNER) == 500_000
+
+    # Use the exact post-mutation DB anchor as the synthetic canonical expiry
+    # boundary; no arbitrary timing tolerance is introduced.
+    expired_at = call(database,
+        "select settled_at from public.island_structure_health where island_owner=%s and spot='wall_1'",
+        OWNER)
+    starts_at = expired_at - timedelta(seconds=900)
+    database.execute("update public.wave_runs set starts_at=%s where id=%s",
+                     (starts_at, started["waveId"]))
+    database.execute(
+        "update public.island_recovery_state set reserved_at=%s,starts_at=%s,expires_at=%s "
+        "where island_owner=%s", (starts_at, starts_at, expired_at, OWNER)
+    )
+    finished = call(database,
+        "select public.recovery_wave_finish(%s,%s,true,0,0,0,0,0,0,1,0,%s,"
+        "null,null,null,null,null,null)", OWNER, started["waveId"], EPOCH)
+    assert finished["status"] == "done" and finished["expired"] is True
+    after_expiry = database.execute(
+        "select hp_units,settled_at,rate_numerator,rate_denominator "
+        "from public.island_structure_health where island_owner=%s and spot='wall_1'", (OWNER,)
+    ).fetchone()
+    expected_at_finish = call(
+        database,
+        "select public.structure_recovery_project_hp(500000,"
+        "floor(extract(epoch from (%s::timestamptz-%s::timestamptz))*1000)::bigint,200,100)",
+        after_expiry[1], expired_at,
+    )
+    assert after_expiry[0] == expected_at_finish
+    assert after_expiry[2:] == (200, 100)
+
+    millis_to_full = call(database,
+        "select ceil((1000000-%s)::numeric*600000*%s/(1000000::numeric*%s))::bigint",
+        after_expiry[0], after_expiry[3], after_expiry[2])
+    exact_full_at = after_expiry[1] + timedelta(milliseconds=millis_to_full)
+    call(database,
+        "select public.structure_recovery_settle_locked(%s,%s)", OWNER, exact_full_at)
+    assert call(database,
+        "select hp_units from public.island_structure_health where island_owner=%s and spot='wall_1'",
+        OWNER) == 1_000_000
+
+
 def test_v1_cannot_purchase_a_retired_recovery_skill(database):
     seed_v1(database)
     as_server(database)
@@ -332,6 +427,17 @@ def test_reset_advances_epoch_clears_current_health_and_keeps_wave_history(datab
     )
     old_epoch = call(database,
         "select reset_epoch from public.island_recovery_state where island_owner=%s", OWNER)
+    active_reset = call(database,
+        "select public.island_fresh_start(%s,'reset-active-01','MUT55',100)", OWNER)
+    assert active_reset == {"status": "refused", "reason": "wave_running"}
+    assert call(database,
+        "select reset_epoch from public.island_recovery_state where island_owner=%s", OWNER) == old_epoch
+    expired_at = now - timedelta(seconds=901)
+    expires_at = expired_at + timedelta(seconds=900)
+    database.execute(
+        "update public.island_recovery_state set reserved_at=%s,starts_at=%s,expires_at=%s "
+        "where island_owner=%s", (expired_at, expired_at, expires_at, OWNER)
+    )
     result = call(database,
         "select public.island_fresh_start(%s,'reset-0001','MUT55',100)", OWNER)
     assert result["status"] == "done"
