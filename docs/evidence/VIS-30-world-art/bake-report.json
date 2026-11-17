@@ -1,7 +1,7 @@
 {
   "scope": "offline normalized PNG source compilation; runtime activation/build exclusion and actual-game acceptance remain separate",
-  "sourceCommit": "562d1199e897d4def060f5cfd9c7356d8a1e3a00",
-  "compilerDirtyPaths": "?? public/village/compiled/\n?? src/art/village/baked.js",
+  "sourceCommit": "eb157fc82bd7e1192f65d7cca439fc166bc2fed1",
+  "compilerDirtyPaths": "M src/art/village/baked.js\n?? public/village/compiled/core-4x-1-daa09d51a079.png\n?? public/village/compiled/progress-4x-1-d783d3b573f4.png\n?? public/village/compiled/walls-4x-1-da339745c863.png",
   "browser": "156.0.8078.79",
   "families": [
     "buildings",
@@ -10,7 +10,15 @@
     "services",
     "nature",
     "cannons",
-    "walls"
+    "walls",
+    "core",
+    "progress"
+  ],
+  "proofDensities": [
+    4,
+    2.5,
+    2,
+    1.5
   ],
   "original": {
     "files": [
@@ -69,10 +77,24 @@
         "sha256": "459a08817a8f9c1a29603dde25655b36287e71e723111739dea6a465e6081ca8",
         "width": 1536,
         "height": 1024
+      },
+      {
+        "file": "village/core-v1.png",
+        "bytes": 1078155,
+        "sha256": "add2139b0c727713130ef46a61babfa73be43ab8b71a7b6c1db3fef9236f4f54",
+        "width": 1254,
+        "height": 1254
+      },
+      {
+        "file": "village/progress-v1.png",
+        "bytes": 1200780,
+        "sha256": "e1bb8a1679dd6e0d53ff50b515f6e849f6f2cb93637d775827b4ebe023183636",
+        "width": 1774,
+        "height": 887
       }
     ],
-    "encodedBytes": 15963924,
-    "summedDecodedBytes": 50327472
+    "encodedBytes": 18242859,
+    "summedDecodedBytes": 62911688
   },
   "compiled": {
     "files": [
@@ -119,23 +141,37 @@
         "height": 1000
       },
       {
-        "file": "village/compiled/walls-4x-1-c5cb2436d6e0.png",
-        "bytes": 744024,
-        "sha256": "c5cb2436d6e0ce2f0d9b13d57c8f5718a0608409227b2370d913c2efdfb6ca62",
-        "width": 1008,
-        "height": 680
+        "file": "village/compiled/walls-4x-1-da339745c863.png",
+        "bytes": 773261,
+        "sha256": "da339745c863503949cf49c3f1b52b549dbadf6f65e45389a6d1c9783478df87",
+        "width": 1000,
+        "height": 816
+      },
+      {
+        "file": "village/compiled/core-4x-1-daa09d51a079.png",
+        "bytes": 892095,
+        "sha256": "daa09d51a07973604013379f55c51d42839ddc9116aa7c00e4f8ff29b214691f",
+        "width": 520,
+        "height": 1560
+      },
+      {
+        "file": "village/compiled/progress-4x-1-d783d3b573f4.png",
+        "bytes": 248278,
+        "sha256": "d783d3b573f4cfbf15aef99fc966cecff6719e8e110351b0bece0951b4042789",
+        "width": 840,
+        "height": 232
       }
     ],
-    "encodedBytes": 5488897,
-    "summedDecodedBytes": 19148544,
+    "encodedBytes": 6658507,
+    "summedDecodedBytes": 23695104,
     "peakSingleDecodedBytes": 5541888
   },
   "initialTransfer": {
     "unchangedTerrainBytes": 2683357,
-    "rawPlusTerrainBytes": 18647281,
-    "compiledPlusTerrainBytes": 8172254,
+    "rawPlusTerrainBytes": 20926216,
+    "compiledPlusTerrainBytes": 9341864,
     "targetBytes": 8388608,
-    "targetMet": true
+    "targetMet": false
   },
   "budgets": {
     "decodedPoolBytes": 12582912,
@@ -1421,7 +1457,7 @@
     {
       "name": "walls",
       "module": "src/art/village/walls.js",
-      "sha256": "891d6cf39b6d600ff650202bce1c573d704079d5cdf4609e46016b20f411c9a4",
+      "sha256": "3f03a49fb4605790fc3e3485b2f17e71fb13ba815c0258dda70f3f687d8941c7",
       "frames": {
         "island-wall": {
           "sheet": {
@@ -1451,16 +1487,16 @@
             20
           ]
         },
-        "island-wall-damaged": {
+        "island-wall-l1-damaged": {
           "sheet": {
             "file": "village/walls-posts-v1.png",
             "width": 1536,
             "height": 1024
           },
           "rect": [
-            614,
+            0,
             370,
-            308,
+            307,
             420
           ],
           "logical": [
@@ -1469,26 +1505,26 @@
             6
           ],
           "sourceFoot": [
-            150,
+            166,
             364
           ],
           "fitBounds": [
-            150,
+            166,
             364,
-            158,
+            141,
             56
           ]
         },
-        "island-wall-broken": {
+        "island-wall-l1-broken": {
           "sheet": {
             "file": "village/walls-posts-v1.png",
             "width": 1536,
             "height": 1024
           },
           "rect": [
-            614,
+            0,
             790,
-            308,
+            307,
             234
           ],
           "logical": [
@@ -1497,13 +1533,13 @@
             6
           ],
           "sourceFoot": [
-            150,
+            166,
             192
           ],
           "fitBounds": [
-            150,
+            166,
             192,
-            158,
+            141,
             42
           ]
         },
@@ -2261,6 +2297,300 @@
             192,
             96,
             0
+          ]
+        },
+        "island-wall-damaged": {
+          "sheet": {
+            "file": "village/walls-posts-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            614,
+            370,
+            308,
+            420
+          ],
+          "logical": [
+            48,
+            32,
+            6
+          ],
+          "sourceFoot": [
+            150,
+            364
+          ],
+          "fitBounds": [
+            150,
+            364,
+            158,
+            56
+          ]
+        },
+        "island-wall-broken": {
+          "sheet": {
+            "file": "village/walls-posts-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            614,
+            790,
+            308,
+            234
+          ],
+          "logical": [
+            48,
+            32,
+            6
+          ],
+          "sourceFoot": [
+            150,
+            192
+          ],
+          "fitBounds": [
+            150,
+            192,
+            158,
+            42
+          ]
+        }
+      }
+    },
+    {
+      "name": "core",
+      "module": "src/art/village/core.js",
+      "sha256": "cc2c9ea28a2e854ff5de0b40ea7388f4181075671a4edec78a0ea7520d3d8017",
+      "frames": {
+        "island_core": {
+          "sheet": {
+            "file": "village/core-v1.png",
+            "width": 1254,
+            "height": 1254
+          },
+          "rect": [
+            42,
+            17,
+            542,
+            573
+          ],
+          "sourceFoot": [
+            271,
+            550
+          ],
+          "logical": [
+            128,
+            128,
+            12
+          ],
+          "fitBounds": [
+            281,
+            551,
+            282,
+            24
+          ]
+        },
+        "island_core_damaged": {
+          "sheet": {
+            "file": "village/core-v1.png",
+            "width": 1254,
+            "height": 1254
+          },
+          "rect": [
+            660,
+            16,
+            545,
+            574
+          ],
+          "sourceFoot": [
+            280,
+            551
+          ],
+          "logical": [
+            128,
+            128,
+            12
+          ],
+          "fitBounds": [
+            281,
+            551,
+            282,
+            24
+          ]
+        },
+        "island_core_broken": {
+          "sheet": {
+            "file": "village/core-v1.png",
+            "width": 1254,
+            "height": 1254
+          },
+          "rect": [
+            42,
+            954,
+            563,
+            248
+          ],
+          "sourceFoot": [
+            281,
+            224
+          ],
+          "logical": [
+            128,
+            128,
+            12
+          ],
+          "fitBounds": [
+            281,
+            551,
+            282,
+            24
+          ]
+        }
+      }
+    },
+    {
+      "name": "progress",
+      "module": "src/art/village/progress.js",
+      "sha256": "f83886df501eb1869da472e309e3cc149d51301bc53c3ea53c55a10f882bfb83",
+      "frames": {
+        "island_record": {
+          "sheet": {
+            "file": "village/progress-v1.png",
+            "width": 1774,
+            "height": 887
+          },
+          "rect": [
+            34,
+            303,
+            341,
+            411
+          ],
+          "sourceFoot": [
+            172,
+            389
+          ],
+          "logical": [
+            40,
+            48,
+            4
+          ],
+          "fitBounds": [
+            172,
+            389,
+            169,
+            22
+          ]
+        },
+        "island_statue_1": {
+          "sheet": {
+            "file": "village/progress-v1.png",
+            "width": 1774,
+            "height": 887
+          },
+          "rect": [
+            375,
+            274,
+            313,
+            447
+          ],
+          "sourceFoot": [
+            154,
+            427
+          ],
+          "logical": [
+            40,
+            56,
+            4
+          ],
+          "fitBounds": [
+            203,
+            526,
+            209,
+            20
+          ]
+        },
+        "island_statue_2": {
+          "sheet": {
+            "file": "village/progress-v1.png",
+            "width": 1774,
+            "height": 887
+          },
+          "rect": [
+            693,
+            201,
+            325,
+            519
+          ],
+          "sourceFoot": [
+            156,
+            500
+          ],
+          "logical": [
+            40,
+            56,
+            4
+          ],
+          "fitBounds": [
+            203,
+            526,
+            209,
+            20
+          ]
+        },
+        "island_statue_3": {
+          "sheet": {
+            "file": "village/progress-v1.png",
+            "width": 1774,
+            "height": 887
+          },
+          "rect": [
+            1022,
+            186,
+            351,
+            535
+          ],
+          "sourceFoot": [
+            163,
+            516
+          ],
+          "logical": [
+            40,
+            56,
+            4
+          ],
+          "fitBounds": [
+            203,
+            526,
+            209,
+            20
+          ]
+        },
+        "island_statue_4": {
+          "sheet": {
+            "file": "village/progress-v1.png",
+            "width": 1774,
+            "height": 887
+          },
+          "rect": [
+            1373,
+            176,
+            401,
+            546
+          ],
+          "sourceFoot": [
+            203,
+            526
+          ],
+          "logical": [
+            40,
+            56,
+            4
+          ],
+          "fitBounds": [
+            203,
+            526,
+            209,
+            20
           ]
         }
       }
@@ -3585,9 +3915,9 @@
       "name": "walls",
       "pages": [
         {
-          "file": "village/compiled/walls-4x-1-c5cb2436d6e0.png",
-          "width": 1008,
-          "height": 680,
+          "file": "village/compiled/walls-4x-1-da339745c863.png",
+          "width": 1000,
+          "height": 816,
           "items": [
             {
               "id": "island-wall",
@@ -3599,7 +3929,7 @@
               ]
             },
             {
-              "id": "island-wall-broken",
+              "id": "island-wall-l1-broken",
               "rect": [
                 204,
                 4,
@@ -3608,7 +3938,7 @@
               ]
             },
             {
-              "id": "island-wall-damaged",
+              "id": "island-wall-l1-damaged",
               "rect": [
                 404,
                 4,
@@ -3653,7 +3983,7 @@
               ]
             },
             {
-              "id": "island-wall-l4",
+              "id": "island-wall-l3-broken",
               "rect": [
                 404,
                 140,
@@ -3662,7 +3992,7 @@
               ]
             },
             {
-              "id": "island-wall-l4-broken",
+              "id": "island-wall-l3-damaged",
               "rect": [
                 604,
                 140,
@@ -3671,7 +4001,7 @@
               ]
             },
             {
-              "id": "island-wall-l4-damaged",
+              "id": "island-wall-l4",
               "rect": [
                 804,
                 140,
@@ -3680,7 +4010,7 @@
               ]
             },
             {
-              "id": "island-wall-l5",
+              "id": "island-wall-l4-broken",
               "rect": [
                 4,
                 276,
@@ -3689,7 +4019,7 @@
               ]
             },
             {
-              "id": "island-wall-l5-broken",
+              "id": "island-wall-l4-damaged",
               "rect": [
                 204,
                 276,
@@ -3698,7 +4028,7 @@
               ]
             },
             {
-              "id": "island-wall-l5-damaged",
+              "id": "island-wall-l5",
               "rect": [
                 404,
                 276,
@@ -3707,10 +4037,28 @@
               ]
             },
             {
-              "id": "village-wall-front-l1",
+              "id": "island-wall-l5-broken",
               "rect": [
                 604,
                 276,
+                192,
+                128
+              ]
+            },
+            {
+              "id": "island-wall-l5-damaged",
+              "rect": [
+                804,
+                276,
+                192,
+                128
+              ]
+            },
+            {
+              "id": "village-wall-front-l1",
+              "rect": [
+                4,
+                412,
                 128,
                 128
               ]
@@ -3718,8 +4066,8 @@
             {
               "id": "village-wall-front-l2",
               "rect": [
-                740,
-                276,
+                140,
+                412,
                 128,
                 128
               ]
@@ -3727,8 +4075,8 @@
             {
               "id": "village-wall-front-l3",
               "rect": [
-                876,
                 276,
+                412,
                 128,
                 128
               ]
@@ -3736,7 +4084,7 @@
             {
               "id": "village-wall-front-l4",
               "rect": [
-                4,
+                412,
                 412,
                 128,
                 128
@@ -3745,7 +4093,7 @@
             {
               "id": "village-wall-front-l5",
               "rect": [
-                140,
+                548,
                 412,
                 128,
                 128
@@ -3754,7 +4102,7 @@
             {
               "id": "village-wall-side-l1",
               "rect": [
-                276,
+                684,
                 412,
                 128,
                 128
@@ -3763,7 +4111,7 @@
             {
               "id": "village-wall-side-l2",
               "rect": [
-                412,
+                820,
                 412,
                 128,
                 128
@@ -3772,33 +4120,6 @@
             {
               "id": "village-wall-side-l3",
               "rect": [
-                548,
-                412,
-                128,
-                128
-              ]
-            },
-            {
-              "id": "village-wall-side-l4",
-              "rect": [
-                684,
-                412,
-                128,
-                128
-              ]
-            },
-            {
-              "id": "village-wall-side-l5",
-              "rect": [
-                820,
-                412,
-                128,
-                128
-              ]
-            },
-            {
-              "id": "village-wall-top-l1",
-              "rect": [
                 4,
                 548,
                 128,
@@ -3806,7 +4127,7 @@
               ]
             },
             {
-              "id": "village-wall-top-l2",
+              "id": "village-wall-side-l4",
               "rect": [
                 140,
                 548,
@@ -3815,7 +4136,7 @@
               ]
             },
             {
-              "id": "village-wall-top-l3",
+              "id": "village-wall-side-l5",
               "rect": [
                 276,
                 548,
@@ -3824,7 +4145,7 @@
               ]
             },
             {
-              "id": "village-wall-top-l4",
+              "id": "village-wall-top-l1",
               "rect": [
                 412,
                 548,
@@ -3833,10 +4154,37 @@
               ]
             },
             {
-              "id": "village-wall-top-l5",
+              "id": "village-wall-top-l2",
               "rect": [
                 548,
                 548,
+                128,
+                128
+              ]
+            },
+            {
+              "id": "village-wall-top-l3",
+              "rect": [
+                684,
+                548,
+                128,
+                128
+              ]
+            },
+            {
+              "id": "village-wall-top-l4",
+              "rect": [
+                820,
+                548,
+                128,
+                128
+              ]
+            },
+            {
+              "id": "village-wall-top-l5",
+              "rect": [
+                4,
+                684,
                 128,
                 128
               ]
@@ -3846,9 +4194,9 @@
       ],
       "sheets": {
         "wallsBaked1": {
-          "file": "village/compiled/walls-4x-1-c5cb2436d6e0.png",
-          "width": 1008,
-          "height": 680
+          "file": "village/compiled/walls-4x-1-da339745c863.png",
+          "width": 1000,
+          "height": 816
         }
       },
       "frames": {
@@ -3870,7 +4218,7 @@
             104
           ]
         },
-        "island-wall-damaged": {
+        "island-wall-l1-damaged": {
           "sheet": "wallsBaked1",
           "rect": [
             404,
@@ -3888,7 +4236,7 @@
             104
           ]
         },
-        "island-wall-broken": {
+        "island-wall-l1-broken": {
           "sheet": "wallsBaked1",
           "rect": [
             204,
@@ -3909,8 +4257,8 @@
         "village-wall-front-l1": {
           "sheet": "wallsBaked1",
           "rect": [
-            604,
-            276,
+            4,
+            412,
             128,
             128
           ],
@@ -3927,7 +4275,7 @@
         "village-wall-top-l1": {
           "sheet": "wallsBaked1",
           "rect": [
-            4,
+            412,
             548,
             128,
             128
@@ -3945,7 +4293,7 @@
         "village-wall-side-l1": {
           "sheet": "wallsBaked1",
           "rect": [
-            276,
+            684,
             412,
             128,
             128
@@ -4017,8 +4365,8 @@
         "village-wall-front-l2": {
           "sheet": "wallsBaked1",
           "rect": [
-            740,
-            276,
+            140,
+            412,
             128,
             128
           ],
@@ -4035,7 +4383,7 @@
         "village-wall-top-l2": {
           "sheet": "wallsBaked1",
           "rect": [
-            140,
+            548,
             548,
             128,
             128
@@ -4053,7 +4401,7 @@
         "village-wall-side-l2": {
           "sheet": "wallsBaked1",
           "rect": [
-            412,
+            820,
             412,
             128,
             128
@@ -4089,8 +4437,8 @@
         "island-wall-l3-damaged": {
           "sheet": "wallsBaked1",
           "rect": [
-            404,
-            4,
+            604,
+            140,
             192,
             128
           ],
@@ -4107,8 +4455,8 @@
         "island-wall-l3-broken": {
           "sheet": "wallsBaked1",
           "rect": [
-            204,
-            4,
+            404,
+            140,
             192,
             128
           ],
@@ -4125,8 +4473,8 @@
         "village-wall-front-l3": {
           "sheet": "wallsBaked1",
           "rect": [
-            876,
             276,
+            412,
             128,
             128
           ],
@@ -4143,7 +4491,7 @@
         "village-wall-top-l3": {
           "sheet": "wallsBaked1",
           "rect": [
-            276,
+            684,
             548,
             128,
             128
@@ -4161,8 +4509,8 @@
         "village-wall-side-l3": {
           "sheet": "wallsBaked1",
           "rect": [
+            4,
             548,
-            412,
             128,
             128
           ],
@@ -4177,24 +4525,6 @@
           ]
         },
         "island-wall-l4": {
-          "sheet": "wallsBaked1",
-          "rect": [
-            404,
-            140,
-            192,
-            128
-          ],
-          "logical": [
-            48,
-            32,
-            6
-          ],
-          "sourceFoot": [
-            96,
-            104
-          ]
-        },
-        "island-wall-l4-damaged": {
           "sheet": "wallsBaked1",
           "rect": [
             804,
@@ -4212,115 +4542,7 @@
             104
           ]
         },
-        "island-wall-l4-broken": {
-          "sheet": "wallsBaked1",
-          "rect": [
-            604,
-            140,
-            192,
-            128
-          ],
-          "logical": [
-            48,
-            32,
-            6
-          ],
-          "sourceFoot": [
-            96,
-            104
-          ]
-        },
-        "village-wall-front-l4": {
-          "sheet": "wallsBaked1",
-          "rect": [
-            4,
-            412,
-            128,
-            128
-          ],
-          "logical": [
-            32,
-            32,
-            0
-          ],
-          "sourceFoot": [
-            64,
-            128
-          ]
-        },
-        "village-wall-top-l4": {
-          "sheet": "wallsBaked1",
-          "rect": [
-            412,
-            548,
-            128,
-            128
-          ],
-          "logical": [
-            32,
-            32,
-            0
-          ],
-          "sourceFoot": [
-            64,
-            128
-          ]
-        },
-        "village-wall-side-l4": {
-          "sheet": "wallsBaked1",
-          "rect": [
-            684,
-            412,
-            128,
-            128
-          ],
-          "logical": [
-            32,
-            32,
-            0
-          ],
-          "sourceFoot": [
-            64,
-            128
-          ]
-        },
-        "island-wall-l5": {
-          "sheet": "wallsBaked1",
-          "rect": [
-            4,
-            276,
-            192,
-            128
-          ],
-          "logical": [
-            48,
-            32,
-            6
-          ],
-          "sourceFoot": [
-            96,
-            104
-          ]
-        },
-        "island-wall-l5-damaged": {
-          "sheet": "wallsBaked1",
-          "rect": [
-            404,
-            276,
-            192,
-            128
-          ],
-          "logical": [
-            48,
-            32,
-            6
-          ],
-          "sourceFoot": [
-            96,
-            104
-          ]
-        },
-        "island-wall-l5-broken": {
+        "island-wall-l4-damaged": {
           "sheet": "wallsBaked1",
           "rect": [
             204,
@@ -4338,10 +4560,136 @@
             104
           ]
         },
-        "village-wall-front-l5": {
+        "island-wall-l4-broken": {
+          "sheet": "wallsBaked1",
+          "rect": [
+            4,
+            276,
+            192,
+            128
+          ],
+          "logical": [
+            48,
+            32,
+            6
+          ],
+          "sourceFoot": [
+            96,
+            104
+          ]
+        },
+        "village-wall-front-l4": {
+          "sheet": "wallsBaked1",
+          "rect": [
+            412,
+            412,
+            128,
+            128
+          ],
+          "logical": [
+            32,
+            32,
+            0
+          ],
+          "sourceFoot": [
+            64,
+            128
+          ]
+        },
+        "village-wall-top-l4": {
+          "sheet": "wallsBaked1",
+          "rect": [
+            820,
+            548,
+            128,
+            128
+          ],
+          "logical": [
+            32,
+            32,
+            0
+          ],
+          "sourceFoot": [
+            64,
+            128
+          ]
+        },
+        "village-wall-side-l4": {
           "sheet": "wallsBaked1",
           "rect": [
             140,
+            548,
+            128,
+            128
+          ],
+          "logical": [
+            32,
+            32,
+            0
+          ],
+          "sourceFoot": [
+            64,
+            128
+          ]
+        },
+        "island-wall-l5": {
+          "sheet": "wallsBaked1",
+          "rect": [
+            404,
+            276,
+            192,
+            128
+          ],
+          "logical": [
+            48,
+            32,
+            6
+          ],
+          "sourceFoot": [
+            96,
+            104
+          ]
+        },
+        "island-wall-l5-damaged": {
+          "sheet": "wallsBaked1",
+          "rect": [
+            804,
+            276,
+            192,
+            128
+          ],
+          "logical": [
+            48,
+            32,
+            6
+          ],
+          "sourceFoot": [
+            96,
+            104
+          ]
+        },
+        "island-wall-l5-broken": {
+          "sheet": "wallsBaked1",
+          "rect": [
+            604,
+            276,
+            192,
+            128
+          ],
+          "logical": [
+            48,
+            32,
+            6
+          ],
+          "sourceFoot": [
+            96,
+            104
+          ]
+        },
+        "village-wall-front-l5": {
+          "sheet": "wallsBaked1",
+          "rect": [
+            548,
             412,
             128,
             128
@@ -4359,8 +4707,8 @@
         "village-wall-top-l5": {
           "sheet": "wallsBaked1",
           "rect": [
-            548,
-            548,
+            4,
+            684,
             128,
             128
           ],
@@ -4377,8 +4725,8 @@
         "village-wall-side-l5": {
           "sheet": "wallsBaked1",
           "rect": [
-            820,
-            412,
+            276,
+            548,
             128,
             128
           ],
@@ -4390,6 +4738,300 @@
           "sourceFoot": [
             64,
             128
+          ]
+        },
+        "island-wall-damaged": {
+          "sheet": "wallsBaked1",
+          "rect": [
+            604,
+            140,
+            192,
+            128
+          ],
+          "logical": [
+            48,
+            32,
+            6
+          ],
+          "sourceFoot": [
+            96,
+            104
+          ]
+        },
+        "island-wall-broken": {
+          "sheet": "wallsBaked1",
+          "rect": [
+            404,
+            140,
+            192,
+            128
+          ],
+          "logical": [
+            48,
+            32,
+            6
+          ],
+          "sourceFoot": [
+            96,
+            104
+          ]
+        }
+      }
+    },
+    {
+      "name": "core",
+      "pages": [
+        {
+          "file": "village/compiled/core-4x-1-daa09d51a079.png",
+          "width": 520,
+          "height": 1560,
+          "items": [
+            {
+              "id": "island_core",
+              "rect": [
+                4,
+                4,
+                512,
+                512
+              ]
+            },
+            {
+              "id": "island_core_broken",
+              "rect": [
+                4,
+                524,
+                512,
+                512
+              ]
+            },
+            {
+              "id": "island_core_damaged",
+              "rect": [
+                4,
+                1044,
+                512,
+                512
+              ]
+            }
+          ]
+        }
+      ],
+      "sheets": {
+        "coreBaked1": {
+          "file": "village/compiled/core-4x-1-daa09d51a079.png",
+          "width": 520,
+          "height": 1560
+        }
+      },
+      "frames": {
+        "island_core": {
+          "sheet": "coreBaked1",
+          "rect": [
+            4,
+            4,
+            512,
+            512
+          ],
+          "logical": [
+            128,
+            128,
+            12
+          ],
+          "sourceFoot": [
+            256,
+            464
+          ]
+        },
+        "island_core_damaged": {
+          "sheet": "coreBaked1",
+          "rect": [
+            4,
+            1044,
+            512,
+            512
+          ],
+          "logical": [
+            128,
+            128,
+            12
+          ],
+          "sourceFoot": [
+            256,
+            464
+          ]
+        },
+        "island_core_broken": {
+          "sheet": "coreBaked1",
+          "rect": [
+            4,
+            524,
+            512,
+            512
+          ],
+          "logical": [
+            128,
+            128,
+            12
+          ],
+          "sourceFoot": [
+            256,
+            464
+          ]
+        }
+      }
+    },
+    {
+      "name": "progress",
+      "pages": [
+        {
+          "file": "village/compiled/progress-4x-1-d783d3b573f4.png",
+          "width": 840,
+          "height": 232,
+          "items": [
+            {
+              "id": "island_statue_1",
+              "rect": [
+                4,
+                4,
+                160,
+                224
+              ]
+            },
+            {
+              "id": "island_statue_2",
+              "rect": [
+                172,
+                4,
+                160,
+                224
+              ]
+            },
+            {
+              "id": "island_statue_3",
+              "rect": [
+                340,
+                4,
+                160,
+                224
+              ]
+            },
+            {
+              "id": "island_statue_4",
+              "rect": [
+                508,
+                4,
+                160,
+                224
+              ]
+            },
+            {
+              "id": "island_record",
+              "rect": [
+                676,
+                4,
+                160,
+                192
+              ]
+            }
+          ]
+        }
+      ],
+      "sheets": {
+        "progressBaked1": {
+          "file": "village/compiled/progress-4x-1-d783d3b573f4.png",
+          "width": 840,
+          "height": 232
+        }
+      },
+      "frames": {
+        "island_record": {
+          "sheet": "progressBaked1",
+          "rect": [
+            676,
+            4,
+            160,
+            192
+          ],
+          "logical": [
+            40,
+            48,
+            4
+          ],
+          "sourceFoot": [
+            80,
+            176
+          ]
+        },
+        "island_statue_1": {
+          "sheet": "progressBaked1",
+          "rect": [
+            4,
+            4,
+            160,
+            224
+          ],
+          "logical": [
+            40,
+            56,
+            4
+          ],
+          "sourceFoot": [
+            80,
+            208
+          ]
+        },
+        "island_statue_2": {
+          "sheet": "progressBaked1",
+          "rect": [
+            172,
+            4,
+            160,
+            224
+          ],
+          "logical": [
+            40,
+            56,
+            4
+          ],
+          "sourceFoot": [
+            80,
+            208
+          ]
+        },
+        "island_statue_3": {
+          "sheet": "progressBaked1",
+          "rect": [
+            340,
+            4,
+            160,
+            224
+          ],
+          "logical": [
+            40,
+            56,
+            4
+          ],
+          "sourceFoot": [
+            80,
+            208
+          ]
+        },
+        "island_statue_4": {
+          "sheet": "progressBaked1",
+          "rect": [
+            508,
+            4,
+            160,
+            224
+          ],
+          "logical": [
+            40,
+            56,
+            4
+          ],
+          "sourceFoot": [
+            80,
+            208
           ]
         }
       }
@@ -4442,8 +5084,22 @@
       "family": "walls",
       "peakSourceBytes": 6291456,
       "retainedDecodedAfterRelease": 0,
-      "canvasBytes": 2741760,
+      "canvasBytes": 3264000,
       "largestTemporaryCanvasBytes": 98304
+    },
+    {
+      "family": "core",
+      "peakSourceBytes": 6290064,
+      "retainedDecodedAfterRelease": 0,
+      "canvasBytes": 3244800,
+      "largestTemporaryCanvasBytes": 1048576
+    },
+    {
+      "family": "progress",
+      "peakSourceBytes": 6294152,
+      "retainedDecodedAfterRelease": 0,
+      "canvasBytes": 779520,
+      "largestTemporaryCanvasBytes": 143360
     }
   ],
   "verification": [
@@ -4459,6 +5115,16 @@
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
           "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "cabin",
+          "density": 2.5,
+          "pixels": 57600,
+          "visiblePixels": 29773,
+          "differingPixels": 28020,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 50,
+          "alphaWeightedMeanRgbDelta": 2.400989690669146
         },
         {
           "id": "cabin",
@@ -4499,6 +5165,16 @@
         },
         {
           "id": "island-house",
+          "density": 2.5,
+          "pixels": 40000,
+          "visiblePixels": 14957,
+          "differingPixels": 13387,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 23,
+          "alphaWeightedMeanRgbDelta": 1.8789265226807033
+        },
+        {
+          "id": "island-house",
           "density": 2,
           "pixels": 25600,
           "visiblePixels": 9431,
@@ -4526,6 +5202,16 @@
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
           "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-house-l2",
+          "density": 2.5,
+          "pixels": 40000,
+          "visiblePixels": 19501,
+          "differingPixels": 17657,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 35,
+          "alphaWeightedMeanRgbDelta": 1.8480831773382838
         },
         {
           "id": "island-house-l2",
@@ -4559,6 +5245,16 @@
         },
         {
           "id": "island-house-l3",
+          "density": 2.5,
+          "pixels": 40000,
+          "visiblePixels": 23451,
+          "differingPixels": 20941,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 24,
+          "alphaWeightedMeanRgbDelta": 1.8955736325472272
+        },
+        {
+          "id": "island-house-l3",
           "density": 2,
           "pixels": 25600,
           "visiblePixels": 14718,
@@ -4586,6 +5282,16 @@
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
           "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-house-barracks",
+          "density": 2.5,
+          "pixels": 52800,
+          "visiblePixels": 25599,
+          "differingPixels": 21919,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 26,
+          "alphaWeightedMeanRgbDelta": 1.909550497250598
         },
         {
           "id": "island-house-barracks",
@@ -4619,6 +5325,16 @@
         },
         {
           "id": "island-house-tavern",
+          "density": 2.5,
+          "pixels": 52800,
+          "visiblePixels": 25766,
+          "differingPixels": 21890,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 27,
+          "alphaWeightedMeanRgbDelta": 1.8268090770706131
+        },
+        {
+          "id": "island-house-tavern",
           "density": 2,
           "pixels": 33792,
           "visiblePixels": 16080,
@@ -4646,6 +5362,16 @@
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
           "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-house-workshop",
+          "density": 2.5,
+          "pixels": 52800,
+          "visiblePixels": 25779,
+          "differingPixels": 22025,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 30,
+          "alphaWeightedMeanRgbDelta": 1.818116994149411
         },
         {
           "id": "island-house-workshop",
@@ -4679,6 +5405,16 @@
         },
         {
           "id": "island-house-barracks-l3",
+          "density": 2.5,
+          "pixels": 52800,
+          "visiblePixels": 30117,
+          "differingPixels": 25806,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 32,
+          "alphaWeightedMeanRgbDelta": 1.9094876265161063
+        },
+        {
+          "id": "island-house-barracks-l3",
           "density": 2,
           "pixels": 33792,
           "visiblePixels": 18761,
@@ -4709,6 +5445,16 @@
         },
         {
           "id": "island-house-tavern-l3",
+          "density": 2.5,
+          "pixels": 52800,
+          "visiblePixels": 30969,
+          "differingPixels": 26236,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 27,
+          "alphaWeightedMeanRgbDelta": 1.850731341418555
+        },
+        {
+          "id": "island-house-tavern-l3",
           "density": 2,
           "pixels": 33792,
           "visiblePixels": 19336,
@@ -4736,6 +5482,16 @@
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
           "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-house-workshop-l3",
+          "density": 2.5,
+          "pixels": 52800,
+          "visiblePixels": 31598,
+          "differingPixels": 27541,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 29,
+          "alphaWeightedMeanRgbDelta": 1.8931677547090184
         },
         {
           "id": "island-house-workshop-l3",
@@ -4776,6 +5532,16 @@
         },
         {
           "id": "island-bell",
+          "density": 2.5,
+          "pixels": 25200,
+          "visiblePixels": 13672,
+          "differingPixels": 12209,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 36,
+          "alphaWeightedMeanRgbDelta": 2.027667398900375
+        },
+        {
+          "id": "island-bell",
           "density": 2,
           "pixels": 16128,
           "visiblePixels": 8649,
@@ -4803,6 +5569,16 @@
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
           "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-watchtower",
+          "density": 2.5,
+          "pixels": 51200,
+          "visiblePixels": 26501,
+          "differingPixels": 23070,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 36,
+          "alphaWeightedMeanRgbDelta": 1.7272445626780113
         },
         {
           "id": "island-watchtower",
@@ -4836,6 +5612,16 @@
         },
         {
           "id": "island-watchtower-l4",
+          "density": 2.5,
+          "pixels": 51200,
+          "visiblePixels": 28389,
+          "differingPixels": 24525,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 26,
+          "alphaWeightedMeanRgbDelta": 1.6744543299270245
+        },
+        {
+          "id": "island-watchtower-l4",
           "density": 2,
           "pixels": 32768,
           "visiblePixels": 17949,
@@ -4863,6 +5649,16 @@
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
           "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-watchtower-l5",
+          "density": 2.5,
+          "pixels": 51200,
+          "visiblePixels": 25919,
+          "differingPixels": 22768,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 29,
+          "alphaWeightedMeanRgbDelta": 1.9658586611099014
         },
         {
           "id": "island-watchtower-l5",
@@ -4903,6 +5699,16 @@
         },
         {
           "id": "island-techhub",
+          "density": 2.5,
+          "pixels": 44000,
+          "visiblePixels": 24593,
+          "differingPixels": 22758,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 52,
+          "alphaWeightedMeanRgbDelta": 2.179738189736808
+        },
+        {
+          "id": "island-techhub",
           "density": 2,
           "pixels": 28160,
           "visiblePixels": 15631,
@@ -4930,6 +5736,16 @@
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
           "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-arsenal",
+          "density": 2.5,
+          "pixels": 40000,
+          "visiblePixels": 25363,
+          "differingPixels": 23403,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 36,
+          "alphaWeightedMeanRgbDelta": 2.0499154858734125
         },
         {
           "id": "island-arsenal",
@@ -4970,6 +5786,16 @@
         },
         {
           "id": "oak",
+          "density": 2.5,
+          "pixels": 52000,
+          "visiblePixels": 24975,
+          "differingPixels": 21980,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 34,
+          "alphaWeightedMeanRgbDelta": 1.4660936509880136
+        },
+        {
+          "id": "oak",
           "density": 2,
           "pixels": 33280,
           "visiblePixels": 15775,
@@ -4997,6 +5823,16 @@
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
           "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "pine",
+          "density": 2.5,
+          "pixels": 56000,
+          "visiblePixels": 28292,
+          "differingPixels": 23800,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 34,
+          "alphaWeightedMeanRgbDelta": 1.2464031408926803
         },
         {
           "id": "pine",
@@ -5030,6 +5866,16 @@
         },
         {
           "id": "birch",
+          "density": 2.5,
+          "pixels": 52000,
+          "visiblePixels": 19713,
+          "differingPixels": 16576,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 42,
+          "alphaWeightedMeanRgbDelta": 1.4889784166382605
+        },
+        {
+          "id": "birch",
           "density": 2,
           "pixels": 33280,
           "visiblePixels": 12116,
@@ -5057,6 +5903,16 @@
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
           "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "birch-tall",
+          "density": 2.5,
+          "pixels": 52000,
+          "visiblePixels": 22093,
+          "differingPixels": 18479,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 36,
+          "alphaWeightedMeanRgbDelta": 1.516941491420016
         },
         {
           "id": "birch-tall",
@@ -5090,6 +5946,16 @@
         },
         {
           "id": "rock",
+          "density": 2.5,
+          "pixels": 10800,
+          "visiblePixels": 5556,
+          "differingPixels": 5045,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 33,
+          "alphaWeightedMeanRgbDelta": 1.4999769252311765
+        },
+        {
+          "id": "rock",
           "density": 2,
           "pixels": 6912,
           "visiblePixels": 3536,
@@ -5117,6 +5983,16 @@
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
           "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "shrub",
+          "density": 2.5,
+          "pixels": 8000,
+          "visiblePixels": 5259,
+          "differingPixels": 4726,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 31,
+          "alphaWeightedMeanRgbDelta": 1.6647846458289546
         },
         {
           "id": "shrub",
@@ -5150,6 +6026,16 @@
         },
         {
           "id": "flowers",
+          "density": 2.5,
+          "pixels": 3600,
+          "visiblePixels": 1687,
+          "differingPixels": 1614,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 33,
+          "alphaWeightedMeanRgbDelta": 2.947788571865661
+        },
+        {
+          "id": "flowers",
           "density": 2,
           "pixels": 2304,
           "visiblePixels": 1094,
@@ -5177,6 +6063,16 @@
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
           "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "grass-tuft",
+          "density": 2.5,
+          "pixels": 6400,
+          "visiblePixels": 2503,
+          "differingPixels": 2294,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 36,
+          "alphaWeightedMeanRgbDelta": 2.024609904270227
         },
         {
           "id": "grass-tuft",
@@ -5217,6 +6113,16 @@
         },
         {
           "id": "island-cannon",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 6664,
+          "differingPixels": 5185,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 31,
+          "alphaWeightedMeanRgbDelta": 1.577294146108922
+        },
+        {
+          "id": "island-cannon",
           "density": 2,
           "pixels": 10752,
           "visiblePixels": 4036,
@@ -5244,6 +6150,16 @@
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
           "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-cannon-fire",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 8028,
+          "differingPixels": 5541,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 36,
+          "alphaWeightedMeanRgbDelta": 1.6714839901251828
         },
         {
           "id": "island-cannon-fire",
@@ -5277,6 +6193,16 @@
         },
         {
           "id": "island-cannon-damaged",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 7140,
+          "differingPixels": 5586,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 31,
+          "alphaWeightedMeanRgbDelta": 1.764428940304163
+        },
+        {
+          "id": "island-cannon-damaged",
           "density": 2,
           "pixels": 10752,
           "visiblePixels": 4404,
@@ -5304,6 +6230,16 @@
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
           "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-cannon-broken",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 7238,
+          "differingPixels": 5460,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 27,
+          "alphaWeightedMeanRgbDelta": 1.9923660716482283
         },
         {
           "id": "island-cannon-broken",
@@ -5337,6 +6273,16 @@
         },
         {
           "id": "island-cannon-l2",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 7948,
+          "differingPixels": 6310,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 25,
+          "alphaWeightedMeanRgbDelta": 1.6499261673340224
+        },
+        {
+          "id": "island-cannon-l2",
           "density": 2,
           "pixels": 10752,
           "visiblePixels": 4929,
@@ -5364,6 +6310,16 @@
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
           "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-cannon-fire-l2",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 9746,
+          "differingPixels": 7197,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 31,
+          "alphaWeightedMeanRgbDelta": 1.735107303498767
         },
         {
           "id": "island-cannon-fire-l2",
@@ -5397,6 +6353,16 @@
         },
         {
           "id": "island-cannon-l2-damaged",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 8924,
+          "differingPixels": 6959,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 26,
+          "alphaWeightedMeanRgbDelta": 1.814760846373256
+        },
+        {
+          "id": "island-cannon-l2-damaged",
           "density": 2,
           "pixels": 10752,
           "visiblePixels": 5426,
@@ -5424,6 +6390,16 @@
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
           "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-cannon-l2-broken",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 7751,
+          "differingPixels": 6324,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 27,
+          "alphaWeightedMeanRgbDelta": 1.886189977549831
         },
         {
           "id": "island-cannon-l2-broken",
@@ -5457,6 +6433,16 @@
         },
         {
           "id": "island-cannon-l3",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 9639,
+          "differingPixels": 7399,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 26,
+          "alphaWeightedMeanRgbDelta": 1.8176911893191845
+        },
+        {
+          "id": "island-cannon-l3",
           "density": 2,
           "pixels": 10752,
           "visiblePixels": 5793,
@@ -5484,6 +6470,16 @@
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
           "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-cannon-fire-l3",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 10561,
+          "differingPixels": 7747,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 24,
+          "alphaWeightedMeanRgbDelta": 1.8491221436993561
         },
         {
           "id": "island-cannon-fire-l3",
@@ -5517,6 +6513,16 @@
         },
         {
           "id": "island-cannon-l3-damaged",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 8720,
+          "differingPixels": 7398,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 25,
+          "alphaWeightedMeanRgbDelta": 1.874694047348639
+        },
+        {
+          "id": "island-cannon-l3-damaged",
           "density": 2,
           "pixels": 10752,
           "visiblePixels": 5382,
@@ -5544,6 +6550,16 @@
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
           "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-cannon-l3-broken",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 6813,
+          "differingPixels": 5919,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 24,
+          "alphaWeightedMeanRgbDelta": 2.0974341502617375
         },
         {
           "id": "island-cannon-l3-broken",
@@ -5577,6 +6593,16 @@
         },
         {
           "id": "island-cannon-l4",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 9502,
+          "differingPixels": 7319,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 23,
+          "alphaWeightedMeanRgbDelta": 2.149603907334238
+        },
+        {
+          "id": "island-cannon-l4",
           "density": 2,
           "pixels": 10752,
           "visiblePixels": 5840,
@@ -5604,6 +6630,16 @@
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
           "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-cannon-fire-l4",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 9479,
+          "differingPixels": 7564,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 31,
+          "alphaWeightedMeanRgbDelta": 2.1850530692588426
         },
         {
           "id": "island-cannon-fire-l4",
@@ -5637,6 +6673,16 @@
         },
         {
           "id": "island-cannon-l4-damaged",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 8239,
+          "differingPixels": 7198,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 25,
+          "alphaWeightedMeanRgbDelta": 2.268119252040265
+        },
+        {
+          "id": "island-cannon-l4-damaged",
           "density": 2,
           "pixels": 10752,
           "visiblePixels": 5132,
@@ -5664,6 +6710,16 @@
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
           "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-cannon-l4-broken",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 6676,
+          "differingPixels": 5956,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 22,
+          "alphaWeightedMeanRgbDelta": 2.5385724804005396
         },
         {
           "id": "island-cannon-l4-broken",
@@ -5697,6 +6753,16 @@
         },
         {
           "id": "island-cannon-l5",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 8090,
+          "differingPixels": 7098,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 23,
+          "alphaWeightedMeanRgbDelta": 2.4236598865515093
+        },
+        {
+          "id": "island-cannon-l5",
           "density": 2,
           "pixels": 10752,
           "visiblePixels": 5033,
@@ -5724,6 +6790,16 @@
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
           "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-cannon-fire-l5",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 9740,
+          "differingPixels": 7777,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 30,
+          "alphaWeightedMeanRgbDelta": 2.491422232366048
         },
         {
           "id": "island-cannon-fire-l5",
@@ -5757,6 +6833,16 @@
         },
         {
           "id": "island-cannon-l5-damaged",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 7907,
+          "differingPixels": 6966,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 26,
+          "alphaWeightedMeanRgbDelta": 2.5719634473598103
+        },
+        {
+          "id": "island-cannon-l5-damaged",
           "density": 2,
           "pixels": 10752,
           "visiblePixels": 4948,
@@ -5784,6 +6870,16 @@
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
           "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-cannon-l5-broken",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 7080,
+          "differingPixels": 6312,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 27,
+          "alphaWeightedMeanRgbDelta": 2.672136580242515
         },
         {
           "id": "island-cannon-l5-broken",
@@ -5824,6 +6920,16 @@
         },
         {
           "id": "island-wall",
+          "density": 2.5,
+          "pixels": 9600,
+          "visiblePixels": 1562,
+          "differingPixels": 1503,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 24,
+          "alphaWeightedMeanRgbDelta": 3.098701732721172
+        },
+        {
+          "id": "island-wall",
           "density": 2,
           "pixels": 6144,
           "visiblePixels": 1002,
@@ -5843,64 +6949,84 @@
           "alphaWeightedMeanRgbDelta": 4.16647618725115
         },
         {
-          "id": "island-wall-damaged",
+          "id": "island-wall-l1-damaged",
           "density": 4,
           "pixels": 24576,
-          "visiblePixels": 4828,
+          "visiblePixels": 3859,
           "differingPixels": 0,
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
           "alphaWeightedMeanRgbDelta": 0
         },
         {
-          "id": "island-wall-damaged",
-          "density": 2,
-          "pixels": 6144,
-          "visiblePixels": 1262,
-          "differingPixels": 1214,
+          "id": "island-wall-l1-damaged",
+          "density": 2.5,
+          "pixels": 9600,
+          "visiblePixels": 1575,
+          "differingPixels": 1512,
           "maxVisibleDelta": 255,
-          "maxAlphaDelta": 26,
-          "alphaWeightedMeanRgbDelta": 2.885384327741692
+          "maxAlphaDelta": 27,
+          "alphaWeightedMeanRgbDelta": 2.84200849088298
         },
         {
-          "id": "island-wall-damaged",
-          "density": 1.5,
-          "pixels": 3456,
-          "visiblePixels": 722,
-          "differingPixels": 701,
-          "maxVisibleDelta": 170,
-          "maxAlphaDelta": 46,
-          "alphaWeightedMeanRgbDelta": 3.704101189885428
-        },
-        {
-          "id": "island-wall-broken",
-          "density": 4,
-          "pixels": 24576,
-          "visiblePixels": 6012,
-          "differingPixels": 0,
-          "maxVisibleDelta": 0,
-          "maxAlphaDelta": 0,
-          "alphaWeightedMeanRgbDelta": 0
-        },
-        {
-          "id": "island-wall-broken",
+          "id": "island-wall-l1-damaged",
           "density": 2,
           "pixels": 6144,
-          "visiblePixels": 1517,
-          "differingPixels": 1405,
+          "visiblePixels": 1020,
+          "differingPixels": 996,
           "maxVisibleDelta": 255,
           "maxAlphaDelta": 22,
-          "alphaWeightedMeanRgbDelta": 2.445807914358507
+          "alphaWeightedMeanRgbDelta": 3.0372035540861106
         },
         {
-          "id": "island-wall-broken",
+          "id": "island-wall-l1-damaged",
           "density": 1.5,
           "pixels": 3456,
-          "visiblePixels": 860,
-          "differingPixels": 823,
+          "visiblePixels": 588,
+          "differingPixels": 580,
           "maxVisibleDelta": 255,
-          "maxAlphaDelta": 32,
-          "alphaWeightedMeanRgbDelta": 3.392874915177574
+          "maxAlphaDelta": 29,
+          "alphaWeightedMeanRgbDelta": 4.1725162330772845
+        },
+        {
+          "id": "island-wall-l1-broken",
+          "density": 4,
+          "pixels": 24576,
+          "visiblePixels": 5247,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-wall-l1-broken",
+          "density": 2.5,
+          "pixels": 9600,
+          "visiblePixels": 2102,
+          "differingPixels": 1930,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 38,
+          "alphaWeightedMeanRgbDelta": 2.469306279303604
+        },
+        {
+          "id": "island-wall-l1-broken",
+          "density": 2,
+          "pixels": 6144,
+          "visiblePixels": 1340,
+          "differingPixels": 1252,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 24,
+          "alphaWeightedMeanRgbDelta": 2.5132032967103153
+        },
+        {
+          "id": "island-wall-l1-broken",
+          "density": 1.5,
+          "pixels": 3456,
+          "visiblePixels": 761,
+          "differingPixels": 730,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 38,
+          "alphaWeightedMeanRgbDelta": 3.6592621706603166
         },
         {
           "id": "village-wall-front-l1",
@@ -5911,6 +7037,16 @@
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
           "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "village-wall-front-l1",
+          "density": 2.5,
+          "pixels": 6400,
+          "visiblePixels": 6400,
+          "differingPixels": 5727,
+          "maxVisibleDelta": 14,
+          "maxAlphaDelta": 9,
+          "alphaWeightedMeanRgbDelta": 1.1953645833333333
         },
         {
           "id": "village-wall-front-l1",
@@ -5944,6 +7080,16 @@
         },
         {
           "id": "village-wall-top-l1",
+          "density": 2.5,
+          "pixels": 6400,
+          "visiblePixels": 6400,
+          "differingPixels": 4011,
+          "maxVisibleDelta": 9,
+          "maxAlphaDelta": 9,
+          "alphaWeightedMeanRgbDelta": 0.5019791666666666
+        },
+        {
+          "id": "village-wall-top-l1",
           "density": 2,
           "pixels": 4096,
           "visiblePixels": 4096,
@@ -5974,6 +7120,16 @@
         },
         {
           "id": "village-wall-side-l1",
+          "density": 2.5,
+          "pixels": 6400,
+          "visiblePixels": 6400,
+          "differingPixels": 5441,
+          "maxVisibleDelta": 10,
+          "maxAlphaDelta": 9,
+          "alphaWeightedMeanRgbDelta": 0.920625
+        },
+        {
+          "id": "village-wall-side-l1",
           "density": 2,
           "pixels": 4096,
           "visiblePixels": 4096,
@@ -5990,7 +7146,7 @@
           "differingPixels": 2018,
           "maxVisibleDelta": 12,
           "maxAlphaDelta": 0,
-          "alphaWeightedMeanRgbDelta": 1.0954861111111112
+          "alphaWeightedMeanRgbDelta": 1.0953414351851851
         },
         {
           "id": "island-wall-l2",
@@ -6001,6 +7157,16 @@
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
           "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-wall-l2",
+          "density": 2.5,
+          "pixels": 9600,
+          "visiblePixels": 1505,
+          "differingPixels": 1435,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 36,
+          "alphaWeightedMeanRgbDelta": 2.8533022901044944
         },
         {
           "id": "island-wall-l2",
@@ -6034,6 +7200,16 @@
         },
         {
           "id": "island-wall-l2-damaged",
+          "density": 2.5,
+          "pixels": 9600,
+          "visiblePixels": 1512,
+          "differingPixels": 1428,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 39,
+          "alphaWeightedMeanRgbDelta": 2.6674278656268178
+        },
+        {
+          "id": "island-wall-l2-damaged",
           "density": 2,
           "pixels": 6144,
           "visiblePixels": 970,
@@ -6061,6 +7237,16 @@
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
           "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-wall-l2-broken",
+          "density": 2.5,
+          "pixels": 9600,
+          "visiblePixels": 1887,
+          "differingPixels": 1733,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 36,
+          "alphaWeightedMeanRgbDelta": 2.4321679563528558
         },
         {
           "id": "island-wall-l2-broken",
@@ -6094,6 +7280,16 @@
         },
         {
           "id": "village-wall-front-l2",
+          "density": 2.5,
+          "pixels": 6400,
+          "visiblePixels": 6400,
+          "differingPixels": 5280,
+          "maxVisibleDelta": 15,
+          "maxAlphaDelta": 9,
+          "alphaWeightedMeanRgbDelta": 1.16640625
+        },
+        {
+          "id": "village-wall-front-l2",
           "density": 2,
           "pixels": 4096,
           "visiblePixels": 4096,
@@ -6124,6 +7320,16 @@
         },
         {
           "id": "village-wall-top-l2",
+          "density": 2.5,
+          "pixels": 6400,
+          "visiblePixels": 6400,
+          "differingPixels": 2470,
+          "maxVisibleDelta": 7,
+          "maxAlphaDelta": 9,
+          "alphaWeightedMeanRgbDelta": 0.30505208333333333
+        },
+        {
+          "id": "village-wall-top-l2",
           "density": 2,
           "pixels": 4096,
           "visiblePixels": 4096,
@@ -6140,7 +7346,7 @@
           "differingPixels": 1981,
           "maxVisibleDelta": 8,
           "maxAlphaDelta": 0,
-          "alphaWeightedMeanRgbDelta": 0.7913773148148148
+          "alphaWeightedMeanRgbDelta": 0.7912326388888888
         },
         {
           "id": "village-wall-side-l2",
@@ -6151,6 +7357,16 @@
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
           "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "village-wall-side-l2",
+          "density": 2.5,
+          "pixels": 6400,
+          "visiblePixels": 6400,
+          "differingPixels": 5061,
+          "maxVisibleDelta": 17,
+          "maxAlphaDelta": 9,
+          "alphaWeightedMeanRgbDelta": 0.9292708333333334
         },
         {
           "id": "village-wall-side-l2",
@@ -6184,6 +7400,16 @@
         },
         {
           "id": "island-wall-l3",
+          "density": 2.5,
+          "pixels": 9600,
+          "visiblePixels": 1904,
+          "differingPixels": 1807,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 27,
+          "alphaWeightedMeanRgbDelta": 2.8423120347189585
+        },
+        {
+          "id": "island-wall-l3",
           "density": 2,
           "pixels": 6144,
           "visiblePixels": 1205,
@@ -6211,6 +7437,16 @@
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
           "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-wall-l3-damaged",
+          "density": 2.5,
+          "pixels": 9600,
+          "visiblePixels": 1949,
+          "differingPixels": 1842,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 28,
+          "alphaWeightedMeanRgbDelta": 3.0189474722125214
         },
         {
           "id": "island-wall-l3-damaged",
@@ -6244,6 +7480,16 @@
         },
         {
           "id": "island-wall-l3-broken",
+          "density": 2.5,
+          "pixels": 9600,
+          "visiblePixels": 2396,
+          "differingPixels": 2190,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 38,
+          "alphaWeightedMeanRgbDelta": 2.314099256996505
+        },
+        {
+          "id": "island-wall-l3-broken",
           "density": 2,
           "pixels": 6144,
           "visiblePixels": 1517,
@@ -6274,6 +7520,16 @@
         },
         {
           "id": "village-wall-front-l3",
+          "density": 2.5,
+          "pixels": 6400,
+          "visiblePixels": 6400,
+          "differingPixels": 5142,
+          "maxVisibleDelta": 24,
+          "maxAlphaDelta": 9,
+          "alphaWeightedMeanRgbDelta": 0.9886458333333333
+        },
+        {
+          "id": "village-wall-front-l3",
           "density": 2,
           "pixels": 4096,
           "visiblePixels": 4096,
@@ -6290,7 +7546,7 @@
           "differingPixels": 1997,
           "maxVisibleDelta": 20,
           "maxAlphaDelta": 0,
-          "alphaWeightedMeanRgbDelta": 1.3689236111111112
+          "alphaWeightedMeanRgbDelta": 1.369212962962963
         },
         {
           "id": "village-wall-top-l3",
@@ -6301,6 +7557,16 @@
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
           "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "village-wall-top-l3",
+          "density": 2.5,
+          "pixels": 6400,
+          "visiblePixels": 6400,
+          "differingPixels": 2334,
+          "maxVisibleDelta": 7,
+          "maxAlphaDelta": 9,
+          "alphaWeightedMeanRgbDelta": 0.28234375
         },
         {
           "id": "village-wall-top-l3",
@@ -6334,6 +7600,16 @@
         },
         {
           "id": "village-wall-side-l3",
+          "density": 2.5,
+          "pixels": 6400,
+          "visiblePixels": 6400,
+          "differingPixels": 4874,
+          "maxVisibleDelta": 28,
+          "maxAlphaDelta": 9,
+          "alphaWeightedMeanRgbDelta": 0.77421875
+        },
+        {
+          "id": "village-wall-side-l3",
           "density": 2,
           "pixels": 4096,
           "visiblePixels": 4096,
@@ -6347,10 +7623,10 @@
           "density": 1.5,
           "pixels": 2304,
           "visiblePixels": 2304,
-          "differingPixels": 1884,
+          "differingPixels": 1885,
           "maxVisibleDelta": 26,
           "maxAlphaDelta": 0,
-          "alphaWeightedMeanRgbDelta": 1.0823206018518519
+          "alphaWeightedMeanRgbDelta": 1.0826099537037037
         },
         {
           "id": "island-wall-l4",
@@ -6361,6 +7637,16 @@
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
           "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-wall-l4",
+          "density": 2.5,
+          "pixels": 9600,
+          "visiblePixels": 1772,
+          "differingPixels": 1691,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 30,
+          "alphaWeightedMeanRgbDelta": 3.043072749729875
         },
         {
           "id": "island-wall-l4",
@@ -6394,6 +7680,16 @@
         },
         {
           "id": "island-wall-l4-damaged",
+          "density": 2.5,
+          "pixels": 9600,
+          "visiblePixels": 1810,
+          "differingPixels": 1729,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 31,
+          "alphaWeightedMeanRgbDelta": 3.0155908394690445
+        },
+        {
+          "id": "island-wall-l4-damaged",
           "density": 2,
           "pixels": 6144,
           "visiblePixels": 1166,
@@ -6410,7 +7706,7 @@
           "differingPixels": 663,
           "maxVisibleDelta": 255,
           "maxAlphaDelta": 32,
-          "alphaWeightedMeanRgbDelta": 4.344418572537366
+          "alphaWeightedMeanRgbDelta": 4.343221004814078
         },
         {
           "id": "island-wall-l4-broken",
@@ -6421,6 +7717,16 @@
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
           "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-wall-l4-broken",
+          "density": 2.5,
+          "pixels": 9600,
+          "visiblePixels": 2283,
+          "differingPixels": 2058,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 28,
+          "alphaWeightedMeanRgbDelta": 2.1492092765046826
         },
         {
           "id": "island-wall-l4-broken",
@@ -6440,7 +7746,7 @@
           "differingPixels": 780,
           "maxVisibleDelta": 255,
           "maxAlphaDelta": 31,
-          "alphaWeightedMeanRgbDelta": 3.244746267455432
+          "alphaWeightedMeanRgbDelta": 3.2448126685178496
         },
         {
           "id": "village-wall-front-l4",
@@ -6451,6 +7757,16 @@
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
           "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "village-wall-front-l4",
+          "density": 2.5,
+          "pixels": 6400,
+          "visiblePixels": 6400,
+          "differingPixels": 4941,
+          "maxVisibleDelta": 19,
+          "maxAlphaDelta": 9,
+          "alphaWeightedMeanRgbDelta": 0.98375
         },
         {
           "id": "village-wall-front-l4",
@@ -6467,10 +7783,10 @@
           "density": 1.5,
           "pixels": 2304,
           "visiblePixels": 2304,
-          "differingPixels": 1922,
+          "differingPixels": 1920,
           "maxVisibleDelta": 22,
           "maxAlphaDelta": 0,
-          "alphaWeightedMeanRgbDelta": 1.2981770833333333
+          "alphaWeightedMeanRgbDelta": 1.2975983796296295
         },
         {
           "id": "village-wall-top-l4",
@@ -6481,6 +7797,16 @@
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
           "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "village-wall-top-l4",
+          "density": 2.5,
+          "pixels": 6400,
+          "visiblePixels": 6400,
+          "differingPixels": 1791,
+          "maxVisibleDelta": 9,
+          "maxAlphaDelta": 9,
+          "alphaWeightedMeanRgbDelta": 0.21270833333333333
         },
         {
           "id": "village-wall-top-l4",
@@ -6500,7 +7826,7 @@
           "differingPixels": 1683,
           "maxVisibleDelta": 9,
           "maxAlphaDelta": 0,
-          "alphaWeightedMeanRgbDelta": 0.5326967592592593
+          "alphaWeightedMeanRgbDelta": 0.5328414351851852
         },
         {
           "id": "village-wall-side-l4",
@@ -6511,6 +7837,16 @@
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
           "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "village-wall-side-l4",
+          "density": 2.5,
+          "pixels": 6400,
+          "visiblePixels": 6400,
+          "differingPixels": 4722,
+          "maxVisibleDelta": 11,
+          "maxAlphaDelta": 9,
+          "alphaWeightedMeanRgbDelta": 0.6725520833333334
         },
         {
           "id": "village-wall-side-l4",
@@ -6530,7 +7866,7 @@
           "differingPixels": 1795,
           "maxVisibleDelta": 8,
           "maxAlphaDelta": 0,
-          "alphaWeightedMeanRgbDelta": 0.8317418981481481
+          "alphaWeightedMeanRgbDelta": 0.8318865740740741
         },
         {
           "id": "island-wall-l5",
@@ -6541,6 +7877,16 @@
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
           "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-wall-l5",
+          "density": 2.5,
+          "pixels": 9600,
+          "visiblePixels": 1997,
+          "differingPixels": 1925,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 34,
+          "alphaWeightedMeanRgbDelta": 3.487071865886311
         },
         {
           "id": "island-wall-l5",
@@ -6574,6 +7920,16 @@
         },
         {
           "id": "island-wall-l5-damaged",
+          "density": 2.5,
+          "pixels": 9600,
+          "visiblePixels": 2045,
+          "differingPixels": 1946,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 26,
+          "alphaWeightedMeanRgbDelta": 3.1359418217040913
+        },
+        {
+          "id": "island-wall-l5-damaged",
           "density": 2,
           "pixels": 6144,
           "visiblePixels": 1312,
@@ -6590,7 +7946,7 @@
           "differingPixels": 736,
           "maxVisibleDelta": 255,
           "maxAlphaDelta": 47,
-          "alphaWeightedMeanRgbDelta": 4.707016063346521
+          "alphaWeightedMeanRgbDelta": 4.707547169811326
         },
         {
           "id": "island-wall-l5-broken",
@@ -6601,6 +7957,16 @@
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
           "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-wall-l5-broken",
+          "density": 2.5,
+          "pixels": 9600,
+          "visiblePixels": 2976,
+          "differingPixels": 2641,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 31,
+          "alphaWeightedMeanRgbDelta": 2.1123072869363915
         },
         {
           "id": "island-wall-l5-broken",
@@ -6620,7 +7986,7 @@
           "differingPixels": 984,
           "maxVisibleDelta": 255,
           "maxAlphaDelta": 29,
-          "alphaWeightedMeanRgbDelta": 2.9667670991794415
+          "alphaWeightedMeanRgbDelta": 2.9663737644158
         },
         {
           "id": "village-wall-front-l5",
@@ -6631,6 +7997,16 @@
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
           "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "village-wall-front-l5",
+          "density": 2.5,
+          "pixels": 6400,
+          "visiblePixels": 6400,
+          "differingPixels": 4899,
+          "maxVisibleDelta": 21,
+          "maxAlphaDelta": 9,
+          "alphaWeightedMeanRgbDelta": 0.8339583333333334
         },
         {
           "id": "village-wall-front-l5",
@@ -6650,7 +8026,7 @@
           "differingPixels": 1986,
           "maxVisibleDelta": 20,
           "maxAlphaDelta": 0,
-          "alphaWeightedMeanRgbDelta": 1.2120949074074074
+          "alphaWeightedMeanRgbDelta": 1.2122395833333333
         },
         {
           "id": "village-wall-top-l5",
@@ -6661,6 +8037,16 @@
           "maxVisibleDelta": 0,
           "maxAlphaDelta": 0,
           "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "village-wall-top-l5",
+          "density": 2.5,
+          "pixels": 6400,
+          "visiblePixels": 6400,
+          "differingPixels": 2109,
+          "maxVisibleDelta": 8,
+          "maxAlphaDelta": 9,
+          "alphaWeightedMeanRgbDelta": 0.238125
         },
         {
           "id": "village-wall-top-l5",
@@ -6694,6 +8080,16 @@
         },
         {
           "id": "village-wall-side-l5",
+          "density": 2.5,
+          "pixels": 6400,
+          "visiblePixels": 6400,
+          "differingPixels": 4776,
+          "maxVisibleDelta": 17,
+          "maxAlphaDelta": 9,
+          "alphaWeightedMeanRgbDelta": 0.6201041666666667
+        },
+        {
+          "id": "village-wall-side-l5",
           "density": 2,
           "pixels": 4096,
           "visiblePixels": 4096,
@@ -6710,10 +8106,424 @@
           "differingPixels": 1911,
           "maxVisibleDelta": 20,
           "maxAlphaDelta": 0,
-          "alphaWeightedMeanRgbDelta": 0.9509548611111112
+          "alphaWeightedMeanRgbDelta": 0.9508101851851852
+        },
+        {
+          "id": "island-wall-damaged",
+          "density": 4,
+          "pixels": 24576,
+          "visiblePixels": 4828,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-wall-damaged",
+          "density": 2.5,
+          "pixels": 9600,
+          "visiblePixels": 1949,
+          "differingPixels": 1842,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 28,
+          "alphaWeightedMeanRgbDelta": 3.0189474722125214
+        },
+        {
+          "id": "island-wall-damaged",
+          "density": 2,
+          "pixels": 6144,
+          "visiblePixels": 1262,
+          "differingPixels": 1214,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 26,
+          "alphaWeightedMeanRgbDelta": 2.885384327741692
+        },
+        {
+          "id": "island-wall-damaged",
+          "density": 1.5,
+          "pixels": 3456,
+          "visiblePixels": 722,
+          "differingPixels": 701,
+          "maxVisibleDelta": 170,
+          "maxAlphaDelta": 46,
+          "alphaWeightedMeanRgbDelta": 3.704101189885428
+        },
+        {
+          "id": "island-wall-broken",
+          "density": 4,
+          "pixels": 24576,
+          "visiblePixels": 6012,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-wall-broken",
+          "density": 2.5,
+          "pixels": 9600,
+          "visiblePixels": 2396,
+          "differingPixels": 2190,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 38,
+          "alphaWeightedMeanRgbDelta": 2.314099256996505
+        },
+        {
+          "id": "island-wall-broken",
+          "density": 2,
+          "pixels": 6144,
+          "visiblePixels": 1517,
+          "differingPixels": 1405,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 22,
+          "alphaWeightedMeanRgbDelta": 2.445807914358507
+        },
+        {
+          "id": "island-wall-broken",
+          "density": 1.5,
+          "pixels": 3456,
+          "visiblePixels": 860,
+          "differingPixels": 823,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 32,
+          "alphaWeightedMeanRgbDelta": 3.392874915177574
         }
       ],
       "peakSourceBytes": 6291456,
+      "retainedDecodedAfterRelease": 0
+    },
+    {
+      "family": "core",
+      "results": [
+        {
+          "id": "island_core",
+          "density": 4,
+          "pixels": 262144,
+          "visiblePixels": 129703,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island_core",
+          "density": 2.5,
+          "pixels": 102400,
+          "visiblePixels": 50848,
+          "differingPixels": 44209,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 24,
+          "alphaWeightedMeanRgbDelta": 1.583405339453184
+        },
+        {
+          "id": "island_core",
+          "density": 2,
+          "pixels": 65536,
+          "visiblePixels": 32232,
+          "differingPixels": 27998,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 27,
+          "alphaWeightedMeanRgbDelta": 1.6662182739341693
+        },
+        {
+          "id": "island_core",
+          "density": 1.5,
+          "pixels": 36864,
+          "visiblePixels": 18446,
+          "differingPixels": 17138,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 35,
+          "alphaWeightedMeanRgbDelta": 2.3758576106153995
+        },
+        {
+          "id": "island_core_damaged",
+          "density": 4,
+          "pixels": 262144,
+          "visiblePixels": 129184,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island_core_damaged",
+          "density": 2.5,
+          "pixels": 102400,
+          "visiblePixels": 50567,
+          "differingPixels": 44348,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 24,
+          "alphaWeightedMeanRgbDelta": 1.627269538682741
+        },
+        {
+          "id": "island_core_damaged",
+          "density": 2,
+          "pixels": 65536,
+          "visiblePixels": 32196,
+          "differingPixels": 28063,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 26,
+          "alphaWeightedMeanRgbDelta": 1.7712233774377846
+        },
+        {
+          "id": "island_core_damaged",
+          "density": 1.5,
+          "pixels": 36864,
+          "visiblePixels": 18432,
+          "differingPixels": 17205,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 37,
+          "alphaWeightedMeanRgbDelta": 2.52507573954374
+        },
+        {
+          "id": "island_core_broken",
+          "density": 4,
+          "pixels": 262144,
+          "visiblePixels": 64945,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island_core_broken",
+          "density": 2.5,
+          "pixels": 102400,
+          "visiblePixels": 25473,
+          "differingPixels": 22861,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 29,
+          "alphaWeightedMeanRgbDelta": 1.7559183727972423
+        },
+        {
+          "id": "island_core_broken",
+          "density": 2,
+          "pixels": 65536,
+          "visiblePixels": 16232,
+          "differingPixels": 14454,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 31,
+          "alphaWeightedMeanRgbDelta": 1.9330533658998252
+        },
+        {
+          "id": "island_core_broken",
+          "density": 1.5,
+          "pixels": 36864,
+          "visiblePixels": 9320,
+          "differingPixels": 8838,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 37,
+          "alphaWeightedMeanRgbDelta": 2.7138478211111963
+        }
+      ],
+      "peakSourceBytes": 6290064,
+      "retainedDecodedAfterRelease": 0
+    },
+    {
+      "family": "progress",
+      "results": [
+        {
+          "id": "island_record",
+          "density": 4,
+          "pixels": 30720,
+          "visiblePixels": 20138,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island_record",
+          "density": 2.5,
+          "pixels": 12000,
+          "visiblePixels": 8035,
+          "differingPixels": 7288,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 40,
+          "alphaWeightedMeanRgbDelta": 1.9070030107766456
+        },
+        {
+          "id": "island_record",
+          "density": 2,
+          "pixels": 7680,
+          "visiblePixels": 5131,
+          "differingPixels": 4821,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 44,
+          "alphaWeightedMeanRgbDelta": 3.2972383181526173
+        },
+        {
+          "id": "island_record",
+          "density": 1.5,
+          "pixels": 4320,
+          "visiblePixels": 3027,
+          "differingPixels": 2870,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 54,
+          "alphaWeightedMeanRgbDelta": 3.930952192211155
+        },
+        {
+          "id": "island_statue_1",
+          "density": 4,
+          "pixels": 35840,
+          "visiblePixels": 12322,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island_statue_1",
+          "density": 2.5,
+          "pixels": 14000,
+          "visiblePixels": 4970,
+          "differingPixels": 4702,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 38,
+          "alphaWeightedMeanRgbDelta": 2.8592127168247066
+        },
+        {
+          "id": "island_statue_1",
+          "density": 2,
+          "pixels": 8960,
+          "visiblePixels": 3188,
+          "differingPixels": 3085,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 36,
+          "alphaWeightedMeanRgbDelta": 4.627514591592865
+        },
+        {
+          "id": "island_statue_1",
+          "density": 1.5,
+          "pixels": 5040,
+          "visiblePixels": 1920,
+          "differingPixels": 1890,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 41,
+          "alphaWeightedMeanRgbDelta": 4.944929246082361
+        },
+        {
+          "id": "island_statue_2",
+          "density": 4,
+          "pixels": 35840,
+          "visiblePixels": 13742,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island_statue_2",
+          "density": 2.5,
+          "pixels": 14000,
+          "visiblePixels": 5560,
+          "differingPixels": 5192,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 35,
+          "alphaWeightedMeanRgbDelta": 3.0070041468662847
+        },
+        {
+          "id": "island_statue_2",
+          "density": 2,
+          "pixels": 8960,
+          "visiblePixels": 3551,
+          "differingPixels": 3402,
+          "maxVisibleDelta": 153,
+          "maxAlphaDelta": 35,
+          "alphaWeightedMeanRgbDelta": 4.807354246084785
+        },
+        {
+          "id": "island_statue_2",
+          "density": 1.5,
+          "pixels": 5040,
+          "visiblePixels": 2175,
+          "differingPixels": 2133,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 35,
+          "alphaWeightedMeanRgbDelta": 5.034628503056961
+        },
+        {
+          "id": "island_statue_3",
+          "density": 4,
+          "pixels": 35840,
+          "visiblePixels": 15907,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island_statue_3",
+          "density": 2.5,
+          "pixels": 14000,
+          "visiblePixels": 6471,
+          "differingPixels": 6131,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 40,
+          "alphaWeightedMeanRgbDelta": 2.7209956048845814
+        },
+        {
+          "id": "island_statue_3",
+          "density": 2,
+          "pixels": 8960,
+          "visiblePixels": 4098,
+          "differingPixels": 3956,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 46,
+          "alphaWeightedMeanRgbDelta": 4.446157966860572
+        },
+        {
+          "id": "island_statue_3",
+          "density": 1.5,
+          "pixels": 5040,
+          "visiblePixels": 2524,
+          "differingPixels": 2490,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 40,
+          "alphaWeightedMeanRgbDelta": 4.656184833654417
+        },
+        {
+          "id": "island_statue_4",
+          "density": 4,
+          "pixels": 35840,
+          "visiblePixels": 18675,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island_statue_4",
+          "density": 2.5,
+          "pixels": 14000,
+          "visiblePixels": 7574,
+          "differingPixels": 7248,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 44,
+          "alphaWeightedMeanRgbDelta": 3.1282473633648444
+        },
+        {
+          "id": "island_statue_4",
+          "density": 2,
+          "pixels": 8960,
+          "visiblePixels": 4820,
+          "differingPixels": 4688,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 59,
+          "alphaWeightedMeanRgbDelta": 5.190346129254299
+        },
+        {
+          "id": "island_statue_4",
+          "density": 1.5,
+          "pixels": 5040,
+          "visiblePixels": 2918,
+          "differingPixels": 2888,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 74,
+          "alphaWeightedMeanRgbDelta": 5.549814298425998
+        }
+      ],
+      "peakSourceBytes": 6294152,
       "retainedDecodedAfterRelease": 0
     }
   ],
