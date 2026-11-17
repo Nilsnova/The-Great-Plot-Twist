@@ -11,6 +11,9 @@ async function ready(page, base, phone) {
     localStorage.setItem('tgpt:tutorials:v1', JSON.stringify({version: 1, guided: true, seen: [], games: {}}));
   });
   await page.goto(`${base}/?islands=fake&fakeplayer=coc49-test`);
+  // Navigating from the component harness clears its module helper; install it in the actual game document.
+  await page.addScriptTag({type: 'module', content: 'window.g20Import = path => import(path);'});
+  await page.waitForFunction(() => typeof window.g20Import === 'function');
   await page.locator('#play').click();
   await page.getByRole('button', {name: 'Create a game', exact: true}).click();
   await page.getByRole('button', {name: 'Start', exact: true}).click();
@@ -42,8 +45,8 @@ async function manage(page) {
   const fit = await page.evaluate(async () => {
     const g = window.__island, {villageFrame} = await window.g20Import('/src/player/camera.js');
     const canvas = g.renderer.domElement.getBoundingClientRect(), bar = document.querySelector('.island-village-mode:not([hidden])').getBoundingClientRect();
-    const quest = document.querySelector('.quest-strip').getBoundingClientRect(), purse = document.querySelector('.hud-coins').getBoundingClientRect();
-    const top = Math.max(80, (canvas.width < 640 ? Math.max(quest.bottom, purse.bottom) : 80) + 12);
+    const quest = document.querySelector('.quest-strip')?.getBoundingClientRect(), purse = document.querySelector('.hud-coins')?.getBoundingClientRect();
+    const top = Math.max(80, (canvas.width < 640 ? Math.max(quest?.bottom ?? 0, purse?.bottom ?? 0) : 80) + 12);
     return villageFrame(g.camera, 'home_islet', {height: canvas.height, top, bottom: canvas.height - bar.top + 12});
   });
   await page.waitForFunction(fit => {
