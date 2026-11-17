@@ -92,5 +92,8 @@ it.each([false, true])('explicit management selects remotely, holds captain inpu
     const answer = await page.evaluate(async () => { window.coc49RestoreRead(); window.coc49ReleasePrepare(); return window.coc49Ring; });
     expect(answer.ok).toBe(true);
     expect(await page.evaluate(() => window.__island.island.managing)).toBe(false);
+    await page.keyboard.press('Escape');
+    expect(await page.getByRole('button', {name: 'Manage village', exact: true}).count()).toBe(0);
+    expect(await page.getByRole('button', {name: 'Exit village mode', exact: true}).count()).toBe(0);
   });
 });

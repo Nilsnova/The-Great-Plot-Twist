@@ -48,6 +48,21 @@ was then added and the final pure controller/flow file reported `13 passed (13)`
 the two browser cases were unchanged by that extra model-only test. Root's
 combined validation remains separate.
 
+The final Menu-eligibility/boundary follow-up used:
+
+```sh
+npm test -- --maxWorkers=1 tests/island/village-mode.test.js tests/island/village-game.test.js tests/islet-boundary.test.js
+npm test -- --maxWorkers=1 tests/island/dom.test.js -t 'builds from the card'
+```
+
+The first reported `3 passed (3)` files and `88 passed (88)` tests in `30.52s`.
+The selected legacy DOM/card/menu case reported `1 passed | 7 skipped (8)` in
+`3.48s`; those seven cases were not selected by `-t`, not removed or weakened.
+The controller now exposes pure eligibility and the Menu hides Manage while
+unavailable. Existing islet boundary assertions now check the actual
+`captainBlocked` call sites and additionally lock its OR-composition with
+`outsideBlocked()` and management; all StopPlots/external-overlay checks remain.
+
 Two initial runs reached the first desktop test's existing 20-second runner
 limit; the phone case and controller cases passed. A quiet run with the original
 shared runner and no module warmup passed 13/13 in 27.80s. After adding the

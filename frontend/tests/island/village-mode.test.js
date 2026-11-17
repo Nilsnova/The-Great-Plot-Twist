@@ -12,6 +12,7 @@ function setup(change = {}) {
 describe('own-island village mode', () => {
   it.each([{ready: false}, {own: false}, {reserved: true}, {code: null}])('does not enter an unavailable context: %o', change => {
     const {mode, render} = setup(change);
+    expect(mode.available).toBe(false);
     expect(mode.enter()).toBe(false); expect(mode.active).toBe(false);
     expect(render).not.toHaveBeenCalled();
   });
@@ -35,6 +36,14 @@ describe('own-island village mode', () => {
     const {mode, onLeave} = setup(); mode.enter(); mode.dispose();
     expect(mode.active).toBe(false); expect(mode.enter()).toBe(false);
     expect(onLeave).toHaveBeenCalledTimes(1);
+    expect(mode.available).toBe(false);
+  });
+  it('queries current menu eligibility without entering or rendering a mode', () => {
+    const {mode, set, render} = setup();
+    expect(mode.available).toBe(true); expect(mode.active).toBe(false);
+    set({reserved: true}); expect(mode.available).toBe(false);
+    set({reserved: false}); expect(mode.available).toBe(true);
+    expect(render).not.toHaveBeenCalled();
   });
   it('leaves before a pending start resolves and stays in Explore after refusal', async () => {
     let resolveStart, flow;

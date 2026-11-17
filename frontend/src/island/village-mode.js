@@ -5,6 +5,7 @@ export const isTextEntry = target => target?.isContentEditable === true || (type
 export function createVillageMode({context, render = () => {}, onLeave = () => {}}) {
   let active = false, code = null, disposed = false;
   const allowed = value => value?.ready === true && value.own === true && value.reserved !== true;
+  const canEnter = value => allowed(value) && !!value.code;
   function leave() {
     if (!active) return false;
     active = false; code = null; onLeave(); render(false);
@@ -20,11 +21,12 @@ export function createVillageMode({context, render = () => {}, onLeave = () => {
     enter() {
       if (disposed) return false;
       const value = context();
-      if (!allowed(value) || !value.code) return false;
+      if (!canEnter(value)) return false;
       active = true; code = value.code; render(true);
       return true;
     },
     leave, refresh,
+    get available() { return !disposed && canEnter(context()); },
     get active() { refresh(); return active; },
     dispose() { leave(); disposed = true; },
   };

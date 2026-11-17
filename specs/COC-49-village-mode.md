@@ -16,6 +16,9 @@ existing card and the captain does not walk. Other landmarks retain walk-up inpu
   permissions, building limits, phase guards and payment outcomes.
 - Entry requires a loaded own island and no accepted wave reservation. It does
   not add visitor rights or pause a server wave/countdown.
+- The Menu only offers Manage when the controller's side-effect-free `available`
+  query permits entry; an active mode instead offers Exit. Loading, visits and
+  busy/reserved waves therefore do not expose an ineffective Manage button.
 - The first slice conservatively exits as soon as a start/join request is
   outstanding (`flow.busy`), before an accepted reservation can wait for its
   defended-island preparation read. Entry stays blocked throughout that gap.
@@ -51,7 +54,7 @@ COC-02/03/06 remain separate follow-ups. Ianno's T55–T59 draft work is unchang
 | Arrow key in a text input | Text/cursor keeps the key | Input-target guard |
 | Escape with a card or Move open | Close/cancel that layer, stay managing | Existing UI/Move lifecycle |
 | Escape with no card or Move | Exit, reset controls | Local mode lifecycle |
-| Visiting, island missing, or a reserved wave | Entry refused | Current island/phase context |
+| Visiting, island missing, or a reserved wave | Menu entry absent; direct entry refused | Current island/phase context |
 | Outstanding start/join, including accepted but preparing | Exit; re-entry refused | Existing flow busy/current state |
 | Travel, visit, reset or accepted wave start | Exit and cancel unconfirmed placement | Existing context events |
 

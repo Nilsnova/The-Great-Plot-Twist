@@ -926,7 +926,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const stopMenu = menu(() => [
     {label: 'Players and invite', onSelect: () => openLobby()},
     ...(visiting || visitCode ? [{label: 'Leave this game', onSelect: () => void leaveGame()}] : []),
-    ...(!visiting && !visitCode ? [{label: village.active ? 'Exit village mode' : 'Manage village', onSelect: toggleVillage}] : []),
+    ...(village.active || village.available ? [{label: village.active ? 'Exit village mode' : 'Manage village', onSelect: toggleVillage}] : []),
     {label: 'Leaderboard', onSelect: () => void openLeaderboard()},
     {label: 'Crew', onSelect: () => openCrew()},
     {label: 'Captain and skills', onSelect: () => openCaptain()},

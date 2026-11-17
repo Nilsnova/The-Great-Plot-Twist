@@ -292,3 +292,7 @@ shared runner timeouts were weakened.
 The reservation follow-up also holds the accepted-start preparation read and
 checks exit before the bell promise resolves; pending/refused start and join
 requests block re-entry without automatically resuming management after failure.
+Menu eligibility is queried without entering/rendering. Unavailable contexts do
+not offer a Manage action; after a reservation the full-game test checks both
+Manage and Exit Menu entries are absent. Existing islet-boundary tests preserve
+the outside-overlay/StopPlots assertions through the captain-blocking wrapper.
