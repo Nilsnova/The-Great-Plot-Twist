@@ -13,7 +13,7 @@ async function mount(page, wave = 41) {
     playHud.setCoinSource('island'); playHud.setCoins(7180); playHud.start();
     playHud.update(null, {waveStatus: {bestWave: 40, currentWave: wave}});
     window.battle = createWaveHud({container: game, reducedMotion: () => true});
-    window.battleState = {wave, shipsLeft: 7, boardersAlive: 3, islandHp: 0, maxIslandHp: 100};
+    window.battleState = {wave, shipsLeft: 7, boardersLeft: 3, islandHp: 0, maxIslandHp: 100};
     battle.goalHint(true); battle.bar(battleState); battle.health({hp: 0, maxHp: 100, down: true});
     battle.down({seconds: 12, alone: false}); battle.loot(950); battle.boss('Warship approaching!');
     battle.event({id: 'fog_bank', icon: '🌫️', title: 'Fog bank', line: 'Thick fog rolls in. Cannons have shorter range until it lifts.', open: true});
@@ -50,7 +50,7 @@ it('fits the actual purse/Menu at desktop, phone and 320 px, including live larg
         const result = await bounds(page);
         expect(result, `${width} large=${large} ${JSON.stringify(result)}`).toMatchObject({overlaps: false, within: true, targets: true, fonts: true, textFits: true,
           hint: false, eventOpen: true, health: 'Captain down'});
-        expect(result.label).toContain('0'); expect(result.label).toContain('41'); expect(result.down).toContain('0:12'); expect(result.loot).toContain('950');
+        expect(result.label).toContain('0'); expect(result.label).toContain('41'); expect(result.label).toContain('3 ashore'); expect(result.down).toContain('0:12'); expect(result.loot).toContain('950');
         expect(result.bossTop).toBeGreaterThan(result.barBottom);
       }
       await page.evaluate(() => {battle.dispose(); playHud.dispose(); document.querySelector('#game').remove();});
