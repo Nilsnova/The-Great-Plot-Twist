@@ -4,6 +4,7 @@ import {expect, it} from 'vitest';
 import * as baked from '../../src/art/village/baked.js';
 import {collectRasterFrames} from '../../src/art/village-raster.js';
 import {validateBakedPng} from '../../scripts/village-bake-plan.js';
+import {verifyPngEquivalent} from '../../scripts/village-png-codec.js';
 const report = JSON.parse(await readFile(new URL('../../../docs/evidence/VIS-30-world-art/bake-report.json', import.meta.url)));
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 it('binds every generated PNG and unchanged raw source/module to its measured hash and dimensions', async () => {
@@ -20,10 +21,20 @@ it('preserves every current raw ID/logical box/foot and proves all measured maxi
   expect(Object.keys(normalized).sort()).toEqual(Object.keys(raw).sort());
   for (const [id, source] of Object.entries(raw)) {
     const frame = normalized[id], [w, h, anchor] = source.logical; expect(frame.logical).toEqual(source.logical);
+    expect(frame.rect).toEqual(report.plans.find(plan => plan.frames[id]).frames[id].rect);
     expect(frame.rect.slice(2)).toEqual([w * 4, h * 4]); expect(frame.sourceFoot).toEqual([w * 2, (h - anchor) * 4]);
     const proofs = report.verification.flatMap(row => row.results).filter(row => row.id === id); expect(proofs.map(row => row.density)).toEqual(report.proofDensities ?? [4, 2, 1.5]);
     expect(proofs[0]).toMatchObject({differingPixels: 0, maxVisibleDelta: 0, maxAlphaDelta: 0}); expect(proofs[0].visiblePixels).toBeGreaterThan(0);
   }
   expect(report.errors).toEqual([]); expect(report.externalRequests).toEqual([]);
   for (const row of [...report.verification, ...report.compilerMemory]) expect(row.retainedDecodedAfterRelease).toBe(0);
+});
+it('binds any completed lossless transport pass to current decoded scanline and metadata identities', async () => {
+  const latest = report.transportHistory?.at(-1); if (!latest) return;
+  expect(latest.allLogicalFramesUnchanged).toBe(true); expect(latest.records).toHaveLength(report.compiled.files.length);
+  for (const record of latest.records) {
+    const bytes = await readFile(new URL(`../../public/${record.file}`, import.meta.url)), identity = verifyPngEquivalent(bytes, bytes);
+    expect(hash(bytes)).toBe(record.sha256); expect(identity.filteredSha256).toBe(record.filteredSha256); expect(identity.nonIdatSha256).toBe(record.nonIdatSha256);
+  }
+  expect(latest.errors).toEqual([]); expect(latest.externalRequests).toEqual([]);
 });
