@@ -237,6 +237,7 @@ class FakeIslandDatabase:
         self.ledger_refs: set[tuple[str, str]] = set()
         self.skill_refs: set[str] = set()
         self.paid_replies: dict[str, dict | httpx.Response] = {}
+        self.recovery_state_reply: dict | httpx.Response = {"status": "missing"}
         # The island arsenal (T40): the answer of each arsenal_* function.
         self.arsenal_replies: dict[str, dict | httpx.Response] = {}
         self.point_buildings: list[dict] = []
@@ -314,6 +315,9 @@ class FakeIslandDatabase:
         handlers["POST /rpc/island_walls_record"] = lambda request: self.answer(
             self.paid_replies.get("island_walls_record", {"status": "recorded"})
         )
+        handlers["POST /rpc/structure_recovery_read_state"] = lambda request: self.answer(
+            self.recovery_state_reply
+        )
         handlers["POST /rpc/island_demolish"] = lambda request: self.answer(
             self.paid_replies.get("island_demolish", DEMOLISHED)
         )
@@ -363,6 +367,13 @@ class FakeIslandDatabase:
         return httpx.Response(200, json=[{"id": 1}] if key in self.ledger_refs else [])
 
     def read_island(self, request: httpx.Request) -> httpx.Response:
+        if (
+            request.url.params.get("select") == "player_id,code,wave_best,flags"
+            and "player_id" in request.url.params
+        ):
+            player = request.url.params.get("player_id", "").removeprefix("eq.")
+            rows = [row for row in self.islands.values() if row.get("player_id") == player]
+            return httpx.Response(200, json=rows[:1])
         if request.url.params.get("player_id", "").startswith("in."):
             ids = request.url.params["player_id"].removeprefix("in.(").removesuffix(")").split(",")
             rows = [{"player_id": who, "captain_role": self.captain_roles.get(who)} for who in ids]
