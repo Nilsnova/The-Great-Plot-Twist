@@ -10,7 +10,7 @@ The original **walkable top** remains the analytic `surfaces.home_islet` contour
 
 Backdrop **decorative alpha** becomes the cliff-body/base silhouette. The existing sea distance field follows it visually, placing foam at the cliff base. Walking/placement do not read that alpha. No second bitmap is allocated: the existing analytic surface is the named walkable-top authority. Correct the misleading ground-header claim that the walker reads backdrop alpha.
 
-Decorative depth is bounded to about 1.4 projected world units, tapered to .35 around the southern naval/beach approach (approximately ±18 degrees with a soft transition). This avoids covering the nearest south anchors/entry while preserving actual routes. East/west screen-X extent is unchanged. Report the decorative depth to the camera lane and check actual foreground ship/captain/wall feet rather than inferring safety from an asset sheet.
+Decorative depth is bounded to about 1.4 projected world units, tapered to .35 around each current east/south/west naval/beach approach (approximately ±18 degrees with a soft transition). This avoids covering the nearest south anchors/entry while preserving actual routes. East/west screen-X extent is unchanged. Report the decorative depth to the camera lane and check actual foreground ship/captain/wall feet rather than inferring safety from an asset sheet.
 
 ## Plan
 
