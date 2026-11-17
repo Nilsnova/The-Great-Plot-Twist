@@ -35,16 +35,22 @@ colliders, sway, captain-occlusion fade, placements, picking and gameplay remain
 
 ## Acceptance and evidence
 
-- [ ] All eight existing nature frames have original, distinct shaded artwork.
-- [ ] Transparent edges have no checkerboard or opaque rectangular background.
+- [x] All eight existing nature frames have original, distinct shaded artwork.
+- [x] The actual PNG has transparent background and clear crop boundaries; runtime
+  halo/fade acceptance remains below.
 - [ ] Feet and logical dimensions do not drift or crop; collider radii stay .48.
 - [ ] Existing sway and foreground fade remain visible without halo seams.
-- [ ] Source-sheet memory and encoded bytes are reported; VIS-32 owns decoding.
+- [x] Source-sheet memory and encoded bytes are reported; VIS-32 owns decoding.
 - [ ] Actual game captures, source revisions and quality settings are recorded.
 
 Generated artwork is an asset, not proof that it is rendered in the game. The
 coordinator's intermediate real-scene comparison is required before visual
 acceptance. Physical devices, Safari and final human acceptance remain separate.
+
+Initial asset/metadata verification: 11 tests passed in 488ms. The
+[evidence record](../docs/evidence/VIS-21-nature/README.md) includes exact source
+rectangles, alpha inspection and original generation provenance. VIS-32 and the
+coordinator's actual-game intermediate comparison remain open.
 
 ## Explain-back
 
