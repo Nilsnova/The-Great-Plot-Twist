@@ -18,4 +18,20 @@ Run focused backend tests and Ruff against the changed files. Important cases ar
 
 ## Handover
 
-Status: implementation claimed; checks pending. No runtime change, passing check, migration application, deployment or merge is claimed by this initial draft.
+The pure validation slice is implemented in Draft [#271](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/271). Existing D056 reads/refusals remain the default; trusted rule 1/capacity 128 preserves accepted coordinates and recognizes canonical new IDs without default positions. `LayoutInfo.wall_rule_version` and `.wall_capacity` do not change the old fixed/stored version meaning.
+
+Executed from `backend/`, with the existing shared project environment and `UV_CACHE_DIR=/workspace/.cache/uv`:
+
+```sh
+uv run --frozen --no-env-file pytest -q server/tests/test_island_layout_rules.py server/tests/test_wall_policy_layout.py server/tests/test_island_move_routes.py
+uv run --frozen --no-env-file ruff check server/island/layout.py server/island/wall_cohort.py server/tests/test_wall_policy_layout.py
+uv run --frozen --no-env-file ruff format --check server/island/layout.py server/island/wall_cohort.py server/tests/test_wall_policy_layout.py
+```
+
+Results: **72 passed in 2.45s**; Ruff **All checks passed!**; format **3 files already formatted**. The first tool attempt failed because the default uv cache directory was read-only; the corrected workspace-cache invocation above passed. No test was weakened or skipped to get this result.
+
+Remaining: WALL-07 atomic snapshot/Move transport, root SQL admission/CAS, catalogue/wave/response integration, actual browser builder and complete perimeter lifecycle. Pure tests prove neither transaction safety nor a running builder. No migration application, activation or merge.
+
+Explain-back: I kept the old policy as the default, so old saves still mean the same thing. The new policy skips lane resettling and admits bounded inventory pieces only when it is explicitly supplied by trusted server state. Extra pieces have no position until construction; this prevents invisible empty walls from reserving the island.
+
+Questions: Why are layout.version and wall_rule_version separate? Why must admission preserve effective old coordinates rather than raw rows? Why must a new inventory wall not have a fallback position?
