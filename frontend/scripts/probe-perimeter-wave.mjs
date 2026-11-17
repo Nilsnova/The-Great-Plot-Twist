@@ -7,7 +7,7 @@ import {execFileSync} from 'node:child_process';
 import {createServer} from 'vite';
 import {chromium} from 'playwright-core';
 import {stubOfflineApi} from './api-browser-fixture.js';
-import {boot, manage} from './perimeter-game-ui.mjs';
+import {boot, manage, settleCards} from './perimeter-game-ui.mjs';
 import {capturePerimeterWave} from './perimeter-game-wave.mjs';
 const root = resolve(process.argv[2]), out = resolve(process.argv[3]); await mkdir(out, {recursive: true});
 const source = execFileSync('git', ['rev-parse', 'HEAD'], {cwd: root, encoding: 'utf8'}).trim();
@@ -31,7 +31,7 @@ try {
     const g = window.__island; await g.island.dev.setCoins(5000); await g.island.dev.setWaveBest(7); await g.island.load();
     g.settings.hour = 11; g.settings.fastTime = false; g.player.position.set(8.5, 1.03, 12.8); g.view.setPlace('home_islet', g.player.position);
   });
-  await manage(page);
+  await settleCards(page); await manage(page);
   await page.evaluate(async cells => {
     const i = window.__island.island;
     for (let start = 0; start < cells.length; start += 32) {
