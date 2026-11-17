@@ -1,8 +1,10 @@
 # WALL-24 actual-game evidence
 
-These are actual Chromium screenshots of the unmerged local game. They establish the bounded functional prototype on source `b1755351b07e5c7e76c22de199ab5ddb70068d0c`, frontend tree `85f2140ffd36b4c488fc3105dc89d7dde649191e`, using QA helper revision `1ba621da2728a61bf0cc04aa94dcab51ce772366`. [Machine-readable actions, positions, receipts and rendering report](report.json).
+These are actual Chromium screenshots of the unmerged local game. They establish the bounded functional prototype on source `76f66f3f434b98cfa474b0ff0447c95ea9421bc1`, frontend tree `a4e49e7e665825d89d4a7186b4d4cda4d11e0bb7`, using QA helper revision `250f9824937e7170ac827e3b698dd1c9273528bd`. [Machine-readable actions, positions, receipts and rendering report](report.json).
 
-**Visual acceptance remains open.** The expanded phone Fine position panel consumes about 516px and the island's southern edge overlaps its inset. WALL-44 is addressing the real layout and camera measurement. The phone image is retained as evidence of that defect. A subsequent source revision must supply superseding captures before calling the phone workspace accepted.
+The corrected phone workspace passes its bounded acceptance guards: expanded controls are 316.1px high, every enabled control has an unobscured 44px target and the actual canonical shore clears the panel by 34.7px. The separate actual quoted-state probe measures 335.0px and 33.2px clearance. WALL-44 fixes the layout/inset defect; WALL-45 reduces joined-wall drawing while retaining the exact logical connections. Final human art/playability acceptance and production rollout remain open.
+
+The superseded `b1755351` functional pass, its roughly 516px phone defect and original screenshots/report are preserved in [historical evidence commit `4a5105fb`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/4a5105fb0f16cd26c492b917590d8e643f2e47e9/docs/evidence/WALL-24). The images linked below are the corrected combined source.
 
 ## What was exercised
 
@@ -30,16 +32,18 @@ Both sides below use the **same tested source** and real renderer. “Before” 
 
 | Actual state | Desktop | Phone |
 |---|---|---|
-| Unpaid draft and expanded fine controls | [Desktop](unpaid-ghost-1280x720.png) | [Phone: known composition defect](unpaid-ghost-375x812.png) |
+| Unpaid draft and expanded fine controls | [Desktop](unpaid-ghost-1280x720.png) | [Corrected phone](unpaid-ghost-375x812.png) |
 | Frozen local-demo wave before breach | [Desktop](wave-standing-1280x720.png) | [Phone](wave-standing-375x812.png) |
 | Actual first wall breach | [Desktop](wave-breach-1280x720.png) | [Phone](wave-breach-375x812.png) |
+
+The bounded real-phone workspace probe also records [unquoted](workspace/workspace-unquoted-375x812.png) and [quoted](workspace/workspace-quoted-375x812.png) controls, with [its own metadata](workspace/workspace-report.json). It uses a smaller declared 5,000-coin/best-7 fixture with empty building sites; only normal pointer/key/fine/quote/Cancel actions occur and the wallet is unchanged. It establishes the quoted 335px layout without presenting that fixture as the full paid journey. Reproduce with `node frontend/scripts/probe-perimeter-wave.mjs <runtime-frontend> <output> workspace`.
 
 ## Exact recorded results
 
 Command from the QA checkout:
 
 ```sh
-node frontend/scripts/capture-perimeter-game.mjs /workspace/village-perimeter-work/integration/frontend /workspace/village-perimeter-work/wall-24-accepted
+node frontend/scripts/capture-perimeter-game.mjs /workspace/village-perimeter-work/integration/frontend /workspace/village-perimeter-work/wall-24-final-76f
 ```
 
 ```text
@@ -52,10 +56,12 @@ PASS: 2 actual-game viewports; 4 paid runs each / 102 exact walls, cancel/reload
 | Paid construction / wall upgrade | 1,020 / 20 | 1,020 / 20 |
 | Visible enabled target minimum | 44px | 44px |
 | Recorded control centers hit-tested | All | All |
-| Delayed Move refusal shore clearance | 36.7px | 10.7px |
+| Expanded builder height / shore clearance | 183.8px / 43.8px | 316.1px / 34.7px |
+| Delayed Move refusal shore clearance | 36.7px | 23.1px |
 | Native snapshot drawing size | 1280 × 720 | 375 × 812 |
-| Paid Fit/working draw calls | 375 | 375 |
-| Paid Fit/working geometry / textures | 269 / 30 | 269 / 30 |
+| Paid Fit/working draw calls | 235 | 235 |
+| Paid Fit/working geometry / textures | 199 / 30 | 199 / 30 |
+| Logical world joins / draw meshes | 106 / 36 | 106 / 36 |
 | Standing / first-breach joins | 106 / 104 | 106 / 104 |
 | First broken wall | `wall_56` | `wall_56` |
 | Actual local-demo wave / seed | 41 / 25135766 | 41 / 25135766 |
@@ -63,7 +69,9 @@ PASS: 2 actual-game viewports; 4 paid runs each / 102 exact walls, cancel/reload
 | Page exceptions / external requests | 0 / 0 | 0 / 0 |
 | Deliberate offline-service console 503 lines | 2 | 2 |
 
-The differing 15/20 accelerated seconds at observation reflect real-frame polling, not a deterministic first-break timing claim. The frozen seed and source are recorded. Each screenshot requests existing high quality through the game's own preference before recording its actual renderer metadata. The desktop adaptive renderer had previously reduced density to 0.5; the snapshots were taken at native pixel ratio 1. These stills do not prove sustained frame rate or memory stability over repeated travel.
+The differing 15/19 accelerated seconds at observation reflect real-frame polling, not a deterministic first-break timing claim. The frozen seed and source are recorded. Each screenshot requests existing high quality through the game's own preference before recording its actual renderer metadata. The desktop adaptive renderer had previously reduced density to 0.5; the snapshots were taken at native pixel ratio 1. These stills do not prove sustained frame rate or memory stability over repeated travel.
+
+The live observer reads cloned logical `wallLinks` independently from draw-mesh counts: the actual accepted zero-HP break changes 106 logical joins to 104 while 36 painter-layer meshes remain. WALL-45's separate parity tests verify actual position/color/index buffers omit broken links; its matching before/after no-reload metric fixture measures 375 → 235 calls, 330 → 260 geometries and 38 unchanged textures at both sizes. That cache/lifetime point differs from this report's reloaded scene. The whole-scene under-150 target remains open.
 
 The two console resource errors per viewport are the deliberately closed services from `api-browser-fixture.js`; its config response is 200 and other API services answer 503. The fake island uses its own actual in-memory/shared transport. No global clean-console claim is made.
 
@@ -73,4 +81,4 @@ Supplementary sheets are generated from real raster routes and **are not gamepla
 
 This proof found the normal-bell event losing the frozen demo; WALL-43 fixes that adapter and supplies API → normal flow → bus → real controller regressions. The final screenshots above use the corrected adapter. Prior failed/diagnostic runs are excluded.
 
-Remaining: WALL-44 phone workspace correction and superseding evidence, final human art/playability acceptance, Safari/physical devices, sustained performance, broader automated suites and production authorization. Real HTTP/private PostgreSQL evidence belongs to WALL-38 and the coordinator's separate results. Nothing here applies a live migration, enables a deployed offer, merges a PR or establishes completion of all visual families or WALL-24 rollout gates.
+Remaining: final human art/playability acceptance, Safari/physical devices, sustained performance, broader automated suites and production authorization. Real HTTP/private PostgreSQL evidence belongs to WALL-38 and the coordinator's separate results. Nothing here applies a live migration, enables a deployed offer, merges a PR or establishes completion of all visual families or WALL-24 rollout gates.

@@ -1,6 +1,6 @@
 {
-  "source": "b1755351b07e5c7e76c22de199ab5ddb70068d0c",
-  "fixtureSource": "1ba621da2728a61bf0cc04aa94dcab51ce772366",
+  "source": "76f66f3f434b98cfa474b0ff0447c95ea9421bc1",
+  "fixtureSource": "250f9824937e7170ac827e3b698dd1c9273528bd",
   "root": "/workspace/village-perimeter-work/integration/frontend",
   "fixture": "Funded/progressed local shared fake transport; noon/captain beside bell reapplied for each new page only. Real pointer/keyboard cancel proof, public-controller long drafts, real quote/pay/upgrade/reload and frozen local-demo bell. Time acceleration is browser clock only. No production claim.",
   "checks": [
@@ -17,11 +17,11 @@
           "densityScale": 0.5
         },
         "camera": [
-          0.0045395207394283,
-          1.63273736785772,
+          0.004608126809687677,
+          1.6326747920360118,
           100
         ],
-        "zoom": 0.3519950738450685,
+        "zoom": 0.3520003068835366,
         "captain": [
           8.5,
           1.03,
@@ -45,7 +45,8 @@
           "geometries": 116,
           "textures": 34
         },
-        "worldLinks": 0
+        "worldLinks": 0,
+        "worldWallDrawMeshes": 0
       },
       "villageButtons": [
         {
@@ -89,11 +90,11 @@
           "densityScale": 1
         },
         "camera": [
-          0.000010919789804513169,
-          1.9700834067324542,
+          0.0000051324171187474945,
+          1.9730987875208,
           100
         ],
-        "zoom": 0.47199452418106413,
+        "zoom": 0.47308121818471294,
         "captain": [
           8.5,
           1.03,
@@ -117,7 +118,15 @@
           "geometries": 116,
           "textures": 34
         },
-        "worldLinks": 0
+        "worldLinks": 0,
+        "worldWallDrawMeshes": 0
+      },
+      "builderWorkspace": {
+        "canonicalLandTop": 167.37569814931481,
+        "canonicalLandBottom": 468.40929704331336,
+        "barTop": 512.21875,
+        "barHeight": 183.78125,
+        "barBottom": 696
       },
       "builderButtons": [
         {
@@ -164,25 +173,25 @@
         },
         {
           "label": "Remove last",
-          "width": 143.578125,
+          "width": 96.25,
           "height": 46.09375,
           "hit": true
         },
         {
           "label": "Clear",
-          "width": 168.421875,
+          "width": 215.75,
           "height": 46.09375,
           "hit": true
         },
         {
           "label": "Cancel",
-          "width": 143.578125,
+          "width": 96.25,
           "height": 46.09375,
           "hit": true
         },
         {
           "label": "Get price",
-          "width": 168.421875,
+          "width": 215.75,
           "height": 46.09375,
           "hit": true
         }
@@ -196,18 +205,18 @@
       "ghost": {
         "name": "unpaid-ghost-1280x720.png",
         "qualityBefore": {
-          "pixelRatio": 0.55,
-          "drawingWidth": 704,
-          "drawingHeight": 396,
+          "pixelRatio": 0.5,
+          "drawingWidth": 640,
+          "drawingHeight": 360,
           "quality": "high",
-          "densityScale": 0.55
+          "densityScale": 0.5
         },
         "camera": [
-          4.215813434187914e-15,
-          -6.379214631274055,
+          1.0142839853268172e-19,
+          -3.862683502125326,
           100
         ],
-        "zoom": 0.2617165533962605,
+        "zoom": 0.28446891858143203,
         "captain": [
           8.5,
           1.03,
@@ -231,7 +240,8 @@
           "geometries": 120,
           "textures": 36
         },
-        "worldLinks": 0
+        "worldLinks": 0,
+        "worldWallDrawMeshes": 0
       },
       "runs": [
         {
@@ -402,7 +412,7 @@
             "unitCost": 10,
             "totalCost": 320,
             "remaining": 96,
-            "islandEpoch": "bd4d56ac-8739-4b21-bc96-95c46213d4bc",
+            "islandEpoch": "4d021bcb-6407-4499-807f-de852bffb532",
             "wallRuleVersion": 1,
             "wallCapacity": 128
           },
@@ -577,7 +587,7 @@
             "unitCost": 10,
             "totalCost": 320,
             "remaining": 64,
-            "islandEpoch": "bd4d56ac-8739-4b21-bc96-95c46213d4bc",
+            "islandEpoch": "4d021bcb-6407-4499-807f-de852bffb532",
             "wallRuleVersion": 1,
             "wallCapacity": 128
           },
@@ -752,7 +762,7 @@
             "unitCost": 10,
             "totalCost": 320,
             "remaining": 32,
-            "islandEpoch": "bd4d56ac-8739-4b21-bc96-95c46213d4bc",
+            "islandEpoch": "4d021bcb-6407-4499-807f-de852bffb532",
             "wallRuleVersion": 1,
             "wallCapacity": 128
           },
@@ -797,7 +807,7 @@
             "unitCost": 10,
             "totalCost": 60,
             "remaining": 26,
-            "islandEpoch": "bd4d56ac-8739-4b21-bc96-95c46213d4bc",
+            "islandEpoch": "4d021bcb-6407-4499-807f-de852bffb532",
             "wallRuleVersion": 1,
             "wallCapacity": 128
           },
@@ -807,8 +817,8 @@
       ],
       "receipts": [
         {
-          "actionUid": "sxf00xam29sne0py",
-          "islandEpoch": "bd4d56ac-8739-4b21-bc96-95c46213d4bc",
+          "actionUid": "sa9wrfs74uwvicxl",
+          "islandEpoch": "4d021bcb-6407-4499-807f-de852bffb532",
           "totalCost": 320,
           "placements": [
             {
@@ -975,8 +985,8 @@
           "repeat": false
         },
         {
-          "actionUid": "n73s5ng4h0dm8amz",
-          "islandEpoch": "bd4d56ac-8739-4b21-bc96-95c46213d4bc",
+          "actionUid": "tguu3s8bklx6ri64",
+          "islandEpoch": "4d021bcb-6407-4499-807f-de852bffb532",
           "totalCost": 320,
           "placements": [
             {
@@ -1143,8 +1153,8 @@
           "repeat": false
         },
         {
-          "actionUid": "bt3hszzoitl9r26r",
-          "islandEpoch": "bd4d56ac-8739-4b21-bc96-95c46213d4bc",
+          "actionUid": "4zophecjbelhd91i",
+          "islandEpoch": "4d021bcb-6407-4499-807f-de852bffb532",
           "totalCost": 320,
           "placements": [
             {
@@ -1311,8 +1321,8 @@
           "repeat": false
         },
         {
-          "actionUid": "28w9a75m7u4mcj2c",
-          "islandEpoch": "bd4d56ac-8739-4b21-bc96-95c46213d4bc",
+          "actionUid": "d9qw74a7pkscxo4c",
+          "islandEpoch": "4d021bcb-6407-4499-807f-de852bffb532",
           "totalCost": 60,
           "placements": [
             {
@@ -1978,18 +1988,18 @@
           "densityScale": 0.5
         },
         "camera": [
-          2.389100877877084e-10,
-          1.6368778793956633,
+          7.659273174666074e-10,
+          1.6368778789149694,
           100
         ],
-        "zoom": 0.35164922614698346,
+        "zoom": 0.3516496990215486,
         "captain": [
           8.5,
           1.03,
           12.8
         ],
         "contextLost": false,
-        "drawCalls": 375,
+        "drawCalls": 235,
         "rendering": {
           "pixelRatio": 1,
           "drawingWidth": 1280,
@@ -2003,10 +2013,11 @@
           720
         ],
         "memory": {
-          "geometries": 269,
+          "geometries": 199,
           "textures": 30
         },
-        "worldLinks": 106
+        "worldLinks": 106,
+        "worldWallDrawMeshes": 36
       },
       "working": {
         "name": "working-zoom-1280x720.png",
@@ -2018,18 +2029,18 @@
           "densityScale": 1
         },
         "camera": [
-          4.498177759442477e-13,
-          1.994211988939151,
+          5.226136950799053e-13,
+          2.0074298453546704,
           100
         ],
-        "zoom": 0.4807044286926098,
+        "zoom": 0.48547822031308674,
         "captain": [
           8.5,
           1.03,
           12.8
         ],
         "contextLost": false,
-        "drawCalls": 375,
+        "drawCalls": 235,
         "rendering": {
           "pixelRatio": 1,
           "drawingWidth": 1280,
@@ -2043,10 +2054,11 @@
           720
         ],
         "memory": {
-          "geometries": 269,
+          "geometries": 199,
           "textures": 30
         },
-        "worldLinks": 106
+        "worldLinks": 106,
+        "worldWallDrawMeshes": 36
       },
       "lateRefusal": {
         "transport": "explicit one-request local refusal wrapper; no persistence",
@@ -2063,8 +2075,11 @@
           "height": 282.140625
         },
         "inset": {
-          "canonicalLandBottom": 385.1339976215288,
-          "barTop": 421.859375
+          "canonicalLandTop": 150.68734762643336,
+          "canonicalLandBottom": 385.1405444372858,
+          "barTop": 421.859375,
+          "barHeight": 282.140625,
+          "barBottom": 704
         },
         "buttons": [
           {
@@ -2114,21 +2129,21 @@
             1.03,
             12.8
           ],
-          "zoom": 0.9927382765747814
+          "zoom": 0.9899903604733318
         },
         "initial": {
           "waveId": "fake-wave-1",
           "wave": 41,
           "seed": 25135766,
-          "startsAtMs": 1794923152000,
+          "startsAtMs": 1794924389000,
           "recoveryVersion": 0,
           "perimeterDemo": {
             "version": 1,
             "waveId": "fake-wave-1",
             "wave": 41,
             "seed": 25135766,
-            "startsAt": "2026-11-17T13:45:52Z",
-            "islandEpoch": "bd4d56ac-8739-4b21-bc96-95c46213d4bc",
+            "startsAt": "2026-11-17T14:06:29Z",
+            "islandEpoch": "4d021bcb-6407-4499-807f-de852bffb532",
             "pathing": true,
             "perimeterWalls": true,
             "defenses": [
@@ -3116,6 +3131,7 @@
             "wall-join:wall_97:wall_98",
             "wall-join:wall_98:wall_99"
           ],
+          "wallDrawMeshes": 36,
           "expectedLinks": [
             "wall-join:wall_100:wall_101",
             "wall-join:wall_100:wall_99",
@@ -3240,14 +3256,14 @@
             -6.116,
             100
           ],
-          "zoom": 0.5785158929642945,
+          "zoom": 0.5770879726560212,
           "captain": [
             8.5,
             1.03,
             12.8
           ],
           "contextLost": false,
-          "drawCalls": 361,
+          "drawCalls": 221,
           "rendering": {
             "pixelRatio": 1,
             "drawingWidth": 1280,
@@ -3261,24 +3277,25 @@
             720
           ],
           "memory": {
-            "geometries": 265,
+            "geometries": 195,
             "textures": 31
           },
-          "worldLinks": 0
+          "worldLinks": 0,
+          "worldWallDrawMeshes": 0
         },
         "breached": {
           "waveId": "fake-wave-1",
           "wave": 41,
           "seed": 25135766,
-          "startsAtMs": 1794923152000,
+          "startsAtMs": 1794924389000,
           "recoveryVersion": 0,
           "perimeterDemo": {
             "version": 1,
             "waveId": "fake-wave-1",
             "wave": 41,
             "seed": 25135766,
-            "startsAt": "2026-11-17T13:45:52Z",
-            "islandEpoch": "bd4d56ac-8739-4b21-bc96-95c46213d4bc",
+            "startsAt": "2026-11-17T14:06:29Z",
+            "islandEpoch": "4d021bcb-6407-4499-807f-de852bffb532",
             "pathing": true,
             "perimeterWalls": true,
             "defenses": [
@@ -4155,7 +4172,7 @@
               "guard": 0
             }
           },
-          "ticks": 276,
+          "ticks": 289,
           "done": false,
           "broken": [
             "wall_56"
@@ -4266,6 +4283,7 @@
             "wall-join:wall_97:wall_98",
             "wall-join:wall_98:wall_99"
           ],
+          "wallDrawMeshes": 36,
           "expectedLinks": [
             "wall-join:wall_100:wall_101",
             "wall-join:wall_100:wall_99",
@@ -4385,18 +4403,18 @@
             "densityScale": 1
           },
           "camera": [
-            4.2253352187349345,
-            -4.956938581509285,
+            5.377930315697637,
+            -4.86715625220557,
             100
           ],
-          "zoom": 0.5751639724551026,
+          "zoom": 0.5751636037348816,
           "captain": [
             8.5,
             1.03,
             12.8
           ],
           "contextLost": false,
-          "drawCalls": 364,
+          "drawCalls": 228,
           "rendering": {
             "pixelRatio": 1,
             "drawingWidth": 1280,
@@ -4410,10 +4428,11 @@
             720
           ],
           "memory": {
-            "geometries": 270,
+            "geometries": 202,
             "textures": 31
           },
-          "worldLinks": 0
+          "worldLinks": 0,
+          "worldWallDrawMeshes": 0
         }
       },
       "cannon": {
@@ -4794,18 +4813,18 @@
       "before": {
         "name": "before-construction-375x812.png",
         "qualityBefore": {
-          "pixelRatio": 0.8,
-          "drawingWidth": 300,
-          "drawingHeight": 649,
+          "pixelRatio": 0.7,
+          "drawingWidth": 262,
+          "drawingHeight": 568,
           "quality": "high",
-          "densityScale": 0.8
+          "densityScale": 0.7
         },
         "camera": [
-          0.005016946303217421,
-          -2.4081897495041114,
+          0.0027396260760116603,
+          -2.4071957662049424,
           100
         ],
-        "zoom": 0.3337268193178994,
+        "zoom": 0.33354820596674595,
         "captain": [
           8.5,
           1.03,
@@ -4829,7 +4848,8 @@
           "geometries": 116,
           "textures": 34
         },
-        "worldLinks": 0
+        "worldLinks": 0,
+        "worldWallDrawMeshes": 0
       },
       "villageButtons": [
         {
@@ -4873,11 +4893,11 @@
           "densityScale": 1
         },
         "camera": [
-          0.000040067948340802786,
-          -0.975594734106693,
+          0.0000030361088787631537,
+          -1.0043808743210623,
           100
         ],
-        "zoom": 0.45681605762450944,
+        "zoom": 0.4543268277914741,
         "captain": [
           8.5,
           1.03,
@@ -4901,7 +4921,15 @@
           "geometries": 116,
           "textures": 34
         },
-        "worldLinks": 0
+        "worldLinks": 0,
+        "worldWallDrawMeshes": 0
+      },
+      "builderWorkspace": {
+        "canonicalLandTop": 222.87383395438562,
+        "canonicalLandBottom": 437.28396380865115,
+        "barTop": 471.9375,
+        "barHeight": 316.0625,
+        "barBottom": 788
       },
       "builderButtons": [
         {
@@ -4930,43 +4958,43 @@
         },
         {
           "label": "Zoom out",
-          "width": 49.9375,
-          "height": 46.09375,
+          "width": 44,
+          "height": 44,
           "hit": true
         },
         {
           "label": "Zoom in",
-          "width": 49.734375,
-          "height": 46.09375,
+          "width": 44,
+          "height": 44,
           "hit": true
         },
         {
           "label": "Fit village",
-          "width": 61.90625,
-          "height": 46.09375,
+          "width": 44,
+          "height": 44,
           "hit": true
         },
         {
           "label": "Remove last",
-          "width": 103,
-          "height": 68.1875,
+          "width": 60.328125,
+          "height": 44,
           "hit": true
         },
         {
           "label": "Clear",
-          "width": 103,
-          "height": 46.09375,
+          "width": 60.328125,
+          "height": 44,
           "hit": true
         },
         {
           "label": "Cancel",
-          "width": 103,
-          "height": 46.09375,
+          "width": 60.328125,
+          "height": 44,
           "hit": true
         },
         {
           "label": "Get price",
-          "width": 325,
+          "width": 332.984375,
           "height": 46.09375,
           "hit": true
         }
@@ -4980,18 +5008,18 @@
       "ghost": {
         "name": "unpaid-ghost-375x812.png",
         "qualityBefore": {
-          "pixelRatio": 0.85,
-          "drawingWidth": 318,
-          "drawingHeight": 690,
+          "pixelRatio": 0.65,
+          "drawingWidth": 243,
+          "drawingHeight": 527,
           "quality": "high",
-          "densityScale": 0.85
+          "densityScale": 0.65
         },
         "camera": [
-          2.444088794844659e-13,
-          -40.926151927570785,
+          2.0942236887022324e-19,
+          -10.789610946360499,
           100
         ],
-        "zoom": 0.15421306266227916,
+        "zoom": 0.28291778068859696,
         "captain": [
           8.5,
           1.03,
@@ -5015,7 +5043,8 @@
           "geometries": 120,
           "textures": 36
         },
-        "worldLinks": 0
+        "worldLinks": 0,
+        "worldWallDrawMeshes": 0
       },
       "runs": [
         {
@@ -5186,7 +5215,7 @@
             "unitCost": 10,
             "totalCost": 320,
             "remaining": 96,
-            "islandEpoch": "ab4106e8-3bbe-4b38-96bf-6e45285fccb0",
+            "islandEpoch": "c5536f0b-d934-431d-b0de-ba7fbd85da93",
             "wallRuleVersion": 1,
             "wallCapacity": 128
           },
@@ -5361,7 +5390,7 @@
             "unitCost": 10,
             "totalCost": 320,
             "remaining": 64,
-            "islandEpoch": "ab4106e8-3bbe-4b38-96bf-6e45285fccb0",
+            "islandEpoch": "c5536f0b-d934-431d-b0de-ba7fbd85da93",
             "wallRuleVersion": 1,
             "wallCapacity": 128
           },
@@ -5536,7 +5565,7 @@
             "unitCost": 10,
             "totalCost": 320,
             "remaining": 32,
-            "islandEpoch": "ab4106e8-3bbe-4b38-96bf-6e45285fccb0",
+            "islandEpoch": "c5536f0b-d934-431d-b0de-ba7fbd85da93",
             "wallRuleVersion": 1,
             "wallCapacity": 128
           },
@@ -5581,7 +5610,7 @@
             "unitCost": 10,
             "totalCost": 60,
             "remaining": 26,
-            "islandEpoch": "ab4106e8-3bbe-4b38-96bf-6e45285fccb0",
+            "islandEpoch": "c5536f0b-d934-431d-b0de-ba7fbd85da93",
             "wallRuleVersion": 1,
             "wallCapacity": 128
           },
@@ -5591,8 +5620,8 @@
       ],
       "receipts": [
         {
-          "actionUid": "v3eee5ns4a731jq7",
-          "islandEpoch": "ab4106e8-3bbe-4b38-96bf-6e45285fccb0",
+          "actionUid": "nzxmv8gywbgm4c4o",
+          "islandEpoch": "c5536f0b-d934-431d-b0de-ba7fbd85da93",
           "totalCost": 320,
           "placements": [
             {
@@ -5759,8 +5788,8 @@
           "repeat": false
         },
         {
-          "actionUid": "h3y6rpg8897lyr4g",
-          "islandEpoch": "ab4106e8-3bbe-4b38-96bf-6e45285fccb0",
+          "actionUid": "8aqs0mk9lkhn0wuo",
+          "islandEpoch": "c5536f0b-d934-431d-b0de-ba7fbd85da93",
           "totalCost": 320,
           "placements": [
             {
@@ -5927,8 +5956,8 @@
           "repeat": false
         },
         {
-          "actionUid": "dq1au75ftq22lj5r",
-          "islandEpoch": "ab4106e8-3bbe-4b38-96bf-6e45285fccb0",
+          "actionUid": "8bxx9xzomlcz7m4d",
+          "islandEpoch": "c5536f0b-d934-431d-b0de-ba7fbd85da93",
           "totalCost": 320,
           "placements": [
             {
@@ -6095,8 +6124,8 @@
           "repeat": false
         },
         {
-          "actionUid": "rnxssig9mzlcszw5",
-          "islandEpoch": "ab4106e8-3bbe-4b38-96bf-6e45285fccb0",
+          "actionUid": "n3jggeh90gcyqa7l",
+          "islandEpoch": "c5536f0b-d934-431d-b0de-ba7fbd85da93",
           "totalCost": 60,
           "placements": [
             {
@@ -6762,18 +6791,18 @@
           "densityScale": 1
         },
         "camera": [
-          5.54741470572446e-9,
-          -2.4060000024212838,
+          2.733948516932303e-8,
+          -2.406000011932882,
           100
         ],
-        "zoom": 0.3333343333787842,
+        "zoom": 0.33333347632705557,
         "captain": [
           8.5,
           1.03,
           12.8
         ],
         "contextLost": false,
-        "drawCalls": 375,
+        "drawCalls": 235,
         "rendering": {
           "pixelRatio": 1,
           "drawingWidth": 375,
@@ -6787,10 +6816,11 @@
           812
         ],
         "memory": {
-          "geometries": 269,
+          "geometries": 199,
           "textures": 30
         },
-        "worldLinks": 106
+        "worldLinks": 106,
+        "worldWallDrawMeshes": 36
       },
       "working": {
         "name": "working-zoom-375x812.png",
@@ -6802,18 +6832,18 @@
           "densityScale": 1
         },
         "camera": [
-          1.671133579760969e-11,
-          -0.9494430876929449,
+          2.1509661072851123e-10,
+          -1.0109592768190394,
           100
         ],
-        "zoom": 0.4590689158503728,
+        "zoom": 0.45375860234667564,
         "captain": [
           8.5,
           1.03,
           12.8
         ],
         "contextLost": false,
-        "drawCalls": 375,
+        "drawCalls": 235,
         "rendering": {
           "pixelRatio": 1,
           "drawingWidth": 375,
@@ -6827,10 +6857,11 @@
           812
         ],
         "memory": {
-          "geometries": 269,
+          "geometries": 199,
           "textures": 30
         },
-        "worldLinks": 106
+        "worldLinks": 106,
+        "worldWallDrawMeshes": 36
       },
       "lateRefusal": {
         "transport": "explicit one-request local refusal wrapper; no persistence",
@@ -6847,8 +6878,11 @@
           "height": 478.59375
         },
         "inset": {
-          "canonicalLandBottom": 312.691370132567,
-          "barTop": 323.40625
+          "canonicalLandTop": 195.40348386912916,
+          "canonicalLandBottom": 300.32463927255253,
+          "barTop": 323.40625,
+          "barHeight": 478.59375,
+          "barBottom": 802
         },
         "buttons": [
           {
@@ -6898,21 +6932,21 @@
             1.03,
             12.8
           ],
-          "zoom": 0.9879737443412753
+          "zoom": 0.995334093637487
         },
         "initial": {
           "waveId": "fake-wave-1",
           "wave": 41,
           "seed": 25135766,
-          "startsAtMs": 1794923223000,
+          "startsAtMs": 1794924460000,
           "recoveryVersion": 0,
           "perimeterDemo": {
             "version": 1,
             "waveId": "fake-wave-1",
             "wave": 41,
             "seed": 25135766,
-            "startsAt": "2026-11-17T13:47:03Z",
-            "islandEpoch": "ab4106e8-3bbe-4b38-96bf-6e45285fccb0",
+            "startsAt": "2026-11-17T14:07:40Z",
+            "islandEpoch": "c5536f0b-d934-431d-b0de-ba7fbd85da93",
             "pathing": true,
             "perimeterWalls": true,
             "defenses": [
@@ -7900,6 +7934,7 @@
             "wall-join:wall_97:wall_98",
             "wall-join:wall_98:wall_99"
           ],
+          "wallDrawMeshes": 36,
           "expectedLinks": [
             "wall-join:wall_100:wall_101",
             "wall-join:wall_100:wall_99",
@@ -8013,25 +8048,25 @@
         "start": {
           "name": "wave-standing-375x812.png",
           "qualityBefore": {
-            "pixelRatio": 0.6,
-            "drawingWidth": 225,
-            "drawingHeight": 487,
+            "pixelRatio": 0.8,
+            "drawingWidth": 300,
+            "drawingHeight": 649,
             "quality": "high",
-            "densityScale": 0.6
+            "densityScale": 0.8
           },
           "camera": [
             8.5,
             -6.116,
             100
           ],
-          "zoom": 0.4339853535902303,
+          "zoom": 0.43288214004919223,
           "captain": [
             8.5,
             1.03,
             12.8
           ],
           "contextLost": false,
-          "drawCalls": 363,
+          "drawCalls": 223,
           "rendering": {
             "pixelRatio": 1,
             "drawingWidth": 375,
@@ -8045,24 +8080,25 @@
             812
           ],
           "memory": {
-            "geometries": 265,
+            "geometries": 195,
             "textures": 31
           },
-          "worldLinks": 0
+          "worldLinks": 0,
+          "worldWallDrawMeshes": 0
         },
         "breached": {
           "waveId": "fake-wave-1",
           "wave": 41,
           "seed": 25135766,
-          "startsAtMs": 1794923223000,
+          "startsAtMs": 1794924460000,
           "recoveryVersion": 0,
           "perimeterDemo": {
             "version": 1,
             "waveId": "fake-wave-1",
             "wave": 41,
             "seed": 25135766,
-            "startsAt": "2026-11-17T13:47:03Z",
-            "islandEpoch": "ab4106e8-3bbe-4b38-96bf-6e45285fccb0",
+            "startsAt": "2026-11-17T14:07:40Z",
+            "islandEpoch": "c5536f0b-d934-431d-b0de-ba7fbd85da93",
             "pathing": true,
             "perimeterWalls": true,
             "defenses": [
@@ -8939,7 +8975,7 @@
               "guard": 0
             }
           },
-          "ticks": 281,
+          "ticks": 271,
           "done": false,
           "broken": [
             "wall_56"
@@ -9050,6 +9086,7 @@
             "wall-join:wall_97:wall_98",
             "wall-join:wall_98:wall_99"
           ],
+          "wallDrawMeshes": 36,
           "expectedLinks": [
             "wall-join:wall_100:wall_101",
             "wall-join:wall_100:wall_99",
@@ -9157,7 +9194,7 @@
             "wall-join:wall_98:wall_99"
           ],
           "worldLinks": 0,
-          "acceleratedSeconds": 20
+          "acceleratedSeconds": 19
         },
         "breach": {
           "name": "wave-breach-375x812.png",
@@ -9169,18 +9206,18 @@
             "densityScale": 1
           },
           "camera": [
-            5.395168221898143,
-            -4.816498115623052,
+            4.904548173269443,
+            -4.676494753179544,
             100
           ],
-          "zoom": 0.4000015260534127,
+          "zoom": 0.40000104884014914,
           "captain": [
             8.5,
             1.03,
             12.8
           ],
           "contextLost": false,
-          "drawCalls": 366,
+          "drawCalls": 230,
           "rendering": {
             "pixelRatio": 1,
             "drawingWidth": 375,
@@ -9194,10 +9231,11 @@
             812
           ],
           "memory": {
-            "geometries": 270,
+            "geometries": 202,
             "textures": 31
           },
-          "worldLinks": 0
+          "worldLinks": 0,
+          "worldWallDrawMeshes": 0
         }
       },
       "cannon": {
