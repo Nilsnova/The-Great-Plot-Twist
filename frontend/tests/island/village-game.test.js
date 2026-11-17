@@ -1,6 +1,7 @@
 // Real game/controller/picking against the existing fake island transport, not live services.
 import {expect, it} from 'vitest';
 import {browserHarness} from '../g20-browser.js';
+import {villageFrameEvidence} from '../../scripts/perimeter-game-ui.mjs';
 const browser = browserHarness();
 
 async function ready(page, base, phone) {
@@ -23,9 +24,11 @@ async function ready(page, base, phone) {
   });
 }
 async function pickCannon(page) {
-  const at = await page.evaluate(() => {
+  const at = await page.evaluate(async () => {
     const g = window.__island, rect = g.renderer.domElement.getBoundingClientRect();
-    const point = g.player.position.clone().set(-12.5, 14.5 * .72 + .7, 0).project(g.camera);
+    const {projectGround} = await import('/src/world/projection.js');
+    const spot = g.island.island.spots.find(item => item.id === 'cannon_1'), foot = projectGround(spot.x, spot.z);
+    const point = g.player.position.clone().set(foot.x, foot.y + .7, 0).project(g.camera);
     return {x: rect.left + (point.x + 1) * rect.width / 2, y: rect.top + (1 - point.y) * rect.height / 2};
   });
   await page.mouse.click(at.x, at.y);
@@ -34,6 +37,13 @@ async function manage(page) {
   await page.keyboard.press('Escape');
   await page.getByRole('button', {name: 'Manage village', exact: true}).click();
   await page.locator('.island-village-mode:not([hidden])').waitFor();
+  // D064 phone Work is pannable; use the real whole-island view for a remote edge tower.
+  await page.getByRole('button', {name: 'Fit village', exact: true}).click();
+  const {fit} = await villageFrameEvidence(page, '.island-village-mode:not([hidden])');
+  await page.waitForFunction(fit => {
+    const camera = window.__island.camera;
+    return Math.abs(camera.zoom - fit.zoom) < .005 && Math.abs(camera.position.x - fit.x) < .05 && Math.abs(camera.position.y - fit.y) < .05;
+  }, fit);
 }
 
 it.each([false, true])('explicit management selects remotely, holds captain input and exits at reservation (phone=%s)', async phone => {

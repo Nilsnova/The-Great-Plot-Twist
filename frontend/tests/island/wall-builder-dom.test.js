@@ -2,6 +2,15 @@
 import {expect, it} from 'vitest';
 import {browserHarness} from '../g20-browser.js';
 const browser = browserHarness();
+async function wallPoint(page, x, z) {
+  return page.evaluate(async ([x, z]) => {
+    const {projectGround} = await import('/src/world/projection.js');
+    const {Vector3} = await import('/node_modules/three/build/three.module.js');
+    const {canvas, camera} = window.wallComponent, box = canvas.getBoundingClientRect(), foot = projectGround(x, z);
+    const point = new Vector3(foot.x, foot.y, 0).project(camera);
+    return {x: box.left + (point.x + 1) * box.width / 2, y: box.top + (1 - point.y) * box.height / 2};
+  }, [x, z]);
+}
 async function installIsland(page, holdBuild = false, {offers = true, admitted = false} = {}) {
   await page.evaluate(async ({holdBuild, offers, admitted}) => {
       const THREE = await window.g20Import('/node_modules/three/build/three.module.js');
@@ -66,7 +75,7 @@ it('routes an actual canvas tap through the island builder, quotes, confirms and
     await installIsland(page);
     await page.getByRole('button', {name: 'Build walls', exact: true}).click();
     await page.waitForFunction(() => window.wallComponent.island.wallBuilder.state?.phase === 'draft');
-    const point = await page.evaluate(() => {const {canvas} = window.wallComponent, r = canvas.getBoundingClientRect(); return {x: r.left + (1 - 14 / 30) * r.width / 2, y: r.top + (1 - 5.76 / 20) * r.height / 2};});
+    const point = await wallPoint(page, -14, -8);
     await page.mouse.click(point.x, point.y); await page.keyboard.press('ArrowRight');
     expect(await page.evaluate(() => window.wallComponent.island.wallBuilder.state.cells)).toEqual([{x: -14, z: -8}, {x: -12, z: -8}]);
     await page.getByRole('button', {name: 'Get price', exact: true}).click(); await page.getByRole('button', {name: 'Build for 20 coins', exact: true}).click();
@@ -125,7 +134,7 @@ it('fine-positions an unpaid draft with visible 44px phone controls and a new qu
     await page.evaluate(() => document.documentElement.style.setProperty('--narrator-card-height', '120px'));
     await installIsland(page); await page.getByRole('button', {name: 'Build walls', exact: true}).click();
     await page.waitForFunction(() => window.wallComponent.island.wallBuilder.state?.phase === 'draft');
-    const point = await page.evaluate(() => {const r = window.wallComponent.canvas.getBoundingClientRect(); return {x: (1 - 14 / 30) * r.width / 2, y: (1 - 5.76 / 20) * r.height / 2};});
+    const point = await wallPoint(page, -14, -8);
     await page.mouse.click(point.x, point.y); await page.keyboard.press('ArrowRight');
     await page.getByRole('button', {name: 'Get price', exact: true}).click();
     const details = page.locator('.wall-builder-fine'), summary = details.locator('summary');
@@ -181,12 +190,17 @@ it('retains phone quote/refusal/pending information with scrollable tools and la
           const THREE = await window.g20Import('/node_modules/three/build/three.module.js');
           const {createCamera} = await window.g20Import('/src/player/camera.js'), {worldViewport} = await window.g20Import('/src/pixel/display.js');
           const {cliffProfile} = await window.g20Import('/src/art/coast-cliffs.js'), {surfaces} = await window.g20Import('/src/world/places/surfaces.js');
+          const {projectLegacyGround} = await window.g20Import('/src/world/projection.js');
           const view = createCamera({pointer: {wheel: 0}}), player = {x: 0, z: 2};
           Object.assign(view.camera, worldViewport(innerWidth, innerHeight, 22, 16)); view.camera.updateProjectionMatrix();
           view.setPlace('home_islet', player); view.start(true);
-          view.setVillageView(true, {height: innerHeight, top: 100, bottom: innerHeight - rect.top + 12}); view.update(.05, player);
+          view.setVillageView(true, {height: innerHeight, top: 100, bottom: innerHeight - rect.top + 12});
+          view.villageControl('fit'); view.update(.05, player);
           view.camera.updateMatrixWorld();
-          const landBottom = Math.max(...cliffProfile(surfaces.home_islet).map(p => (1 - new THREE.Vector3(p.x, -p.z * .72, 0).project(view.camera).y) * innerHeight / 2));
+          const landBottom = Math.max(...cliffProfile(surfaces.home_islet).flatMap(p => [p.y, p.baseY].map(y => {
+            const at = projectLegacyGround(p.x, -y);
+            return (1 - new THREE.Vector3(at.x, at.y, 0).project(view.camera).y) * innerHeight / 2;
+          })));
           return {height: rect.height, bottom: rect.bottom, top: rect.top, landBottom, status: bar.element.querySelector('[role=status]').textContent,
             hint: bar.element.querySelector('.wall-builder-hint').hidden, price: bar.element.querySelector('.wall-builder-price').hidden,
             quoted: bar.element.querySelector('.wall-builder-price').textContent, classes: bar.element.className};
