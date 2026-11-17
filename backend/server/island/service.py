@@ -359,6 +359,14 @@ def paid_refusal(refusal: Refusal, name: str) -> ApiError:
         return not_enough_coins(name, refusal.price)
     if reason == "not_built":
         return ApiError(409, "not_built", "Build something on this spot first.")
+    if reason == "wave_running":
+        return ApiError(
+            409, "wave_running", "A wave is under way. Upgrade structures between waves."
+        )
+    if reason == "needs_repair":
+        return ApiError(
+            409, "needs_repair", "Repair this structure between waves before upgrading it."
+        )
     if reason == "max_level":
         return rules.max_level(name)
     if reason == "locked":
@@ -471,8 +479,8 @@ async def upgrade(
     """One level up for the building on `spot_id`, on the player's own island or (with `code`)
     on a friend's island, paid by the player; the island's best won wave decides the levels that
     are open (GAME-V3 section 4). 404 no_such_spot, 404 no_such_island, 403 not_member, 409
-    not_built, 409 max_level, 409 locked, 409 insufficient_funds. A repeated actionUid charges
-    nothing."""
+    not_built, 409 max_level, 409 locked, 409 insufficient_funds, 409 wave_running and
+    409 needs_repair. A repeated actionUid charges nothing."""
     ref = f"{UPGRADE_PREFIX}{action_uid}"
     island, payer = await target_island(admin, catalogue, player_id, code, permissions.UPGRADE)
     if not await store.ledger_has(admin, player_id, "building_purchase", ref):

@@ -241,6 +241,27 @@ def test_the_database_has_the_last_word_on_the_level():
     assert_error(world.post("/api/island/upgrade", spot="wall_1"), 409, "max_level")
 
 
+def test_recovery_upgrade_refusals_are_conflicts_and_do_not_charge():
+    for reason, message in (
+        ("wave_running", "A wave is under way. Upgrade structures between waves."),
+        ("needs_repair", "Repair this structure between waves before upgrading it."),
+    ):
+        world = world_at(2)
+        world.database.buildings[PLAYER_ID] = [
+            {"plot": "wall_1", "building_type": "wall", "level": 1}
+        ]
+        world.database.paid_replies["island_upgrade"] = {"status": "refused", "reason": reason}
+        action_uid = f"upgrade-{reason}"
+
+        refused = world.post("/api/island/upgrade", spot="wall_1", actionUid=action_uid)
+
+        assert_error(refused, 409, reason)
+        assert refused.json()["error"]["message"] == message
+        assert world.database.balance == 100
+        assert ("building_purchase", f"upgrade:{action_uid}") not in world.database.ledger_refs
+        assert len(world.database.calls("island_upgrade")) == 1
+
+
 # --- Levels 4 and 5 (docs/GAME-V3.md section 4.1) ---
 
 
