@@ -1095,11 +1095,12 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       } else if (visible) {
         let id;
         const level = post.level, suffix = level > 1 ? `-l${level}` : '';
-        let smoking = false, look = 'intact', share = 1;
+        let smoking = false, look = 'intact', share = 1, joinedWall = false;
         if (post.kind === 'wall') {
           share = wallShare(post, walls.get(post.id));
           id = share > .6 ? levelFrame('wall', level) : share > 0 ? pirateFrames.wall[1] : pirateFrames.wall[2];
           smoking = share <= .6;
+          joinedWall = share > .6 && wallConnections.isJoined(post.id);
         } else {
           // Each kind and level has its own art; firing shows that level's firing frame (a mortar stays a mortar).
           look = towerLook(towers.get(post.id)); // T33: intact unless the wave has tower health
@@ -1108,7 +1109,8 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         const r = rect[id], flashing = (wallFlash.get(post.id) ?? -1) > clock ? .7 : 0;
         const repairing = post.kind === 'wall' && (walls.get(post.id)?.repairing || walls.get(post.id)?.crew);
         const grow = 1, x = post.x, y = drawnY(post.z);
-        post.layer.push(r, x, y, r.w, r.h, .5, r.anchor, { flip: post.kind !== 'wall' && post.flip, flashing,
+        // Match the world renderer's healthy junction posts; damaged/ruin frames remain full width.
+        post.layer.push(r, x, y, r.w * (joinedWall ? .62 : 1), r.h, .5, r.anchor, { flip: post.kind !== 'wall' && post.flip, flashing,
           g: repairing && !still() ? 1 + Math.sin(clock * 10) * .15 : 1 });
         if (smoking) {
           const puff = rect[pirateFrames.smoke[(still() ? 0 : Math.floor(clock * 5)) % 3]];

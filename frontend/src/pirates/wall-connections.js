@@ -17,18 +17,19 @@ export function standingCombatWalls(posts = [], walls = [], inBreak = false) {
 export function makeCombatWallConnections(root) {
   const group = new THREE.Group(); group.name = 'pirates:wall-connections'; root.add(group);
   const drawing = makeWallConnections(group);
-  let key = null, disposed = false;
+  let key = null, disposed = false, connected = new Set();
   return {
     show(posts, walls, {visible = true, inBreak = false} = {}) {
       if (disposed) return;
       group.visible = visible;
       const standing = standingCombatWalls(posts, walls, inBreak), next = JSON.stringify(standing);
       if (key === next) return;
-      key = next; drawing.show(standing);
+      key = next; connected = drawing.show(standing).connected;
       // Joins are decoration, never a second target, interaction zone or pathing collider.
       group.traverse(object => { if (object.isMesh) object.raycast = () => {}; });
     },
     get links() { return drawing.links; },
+    isJoined(id) { return connected.has(id); },
     dispose() {
       if (disposed) return; disposed = true;
       drawing.dispose(); root.remove(group);
