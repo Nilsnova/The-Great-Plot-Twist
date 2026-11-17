@@ -71,7 +71,8 @@ function validCanonicalClose(receipt, current) {
   if (!receipt || receipt.waveId !== current?.info?.waveId
     || receipt.islandEpoch !== current?.info?.initialSnapshot?.islandEpoch
     || !Number.isFinite(Date.parse(receipt.closedAt))
-    || typeof receipt.checkpointUid !== 'string' || !/^[A-Za-z0-9_-]{8,64}$/.test(receipt.checkpointUid)
+    || (receipt.checkpointUid !== null && (typeof receipt.checkpointUid !== 'string'
+      || !/^[A-Za-z0-9_-]{8,64}$/.test(receipt.checkpointUid)))
     || !Number.isInteger(receipt.throughTick) || receipt.throughTick < 0 || receipt.throughTick > 18_000
     || !Number.isSafeInteger(receipt.inputHeadSeq) || receipt.inputHeadSeq < 0
     || !Number.isSafeInteger(receipt.lastRepairSeq) || receipt.lastRepairSeq < 0
