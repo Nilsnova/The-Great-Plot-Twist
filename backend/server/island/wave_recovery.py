@@ -457,6 +457,7 @@ async def build_snapshot_template(
     default_positions = {spot.spot: {"x": spot.x, "z": spot.z} for spot in complete_geometry.spots}
     return {
         "expectedRevision": expected_revision,
+        "weather": dict(create_wave["weather"]),
         "createWave": create_wave,
         "priceSchedule": island_rules.price_table(catalogue),
         "eventByWave": events,
@@ -465,7 +466,7 @@ async def build_snapshot_template(
         "defaultPositions": default_positions,
         "structureConfigBySpot": structure_config,
         "legacyWallRecoverSeconds": wall_health.RECOVERY_SECONDS,
-        "recoveryConfigVersion": RECOVERY_MANIFEST.recovery_version,
+        "configVersion": RECOVERY_MANIFEST.recovery_version,
         "supportedStructureKinds": list(SUPPORTED_KINDS),
     }
 

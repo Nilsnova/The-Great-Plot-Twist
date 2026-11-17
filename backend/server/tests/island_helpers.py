@@ -238,6 +238,7 @@ class FakeIslandDatabase:
         self.skill_refs: set[str] = set()
         self.paid_replies: dict[str, dict | httpx.Response] = {}
         self.recovery_state_reply: dict | httpx.Response = {"status": "missing"}
+        self.recovery_policy_version = 0
         # The island arsenal (T40): the answer of each arsenal_* function.
         self.arsenal_replies: dict[str, dict | httpx.Response] = {}
         self.point_buildings: list[dict] = []
@@ -270,6 +271,7 @@ class FakeIslandDatabase:
             "GET /islet_buildings": self.read_buildings,
             "POST /rpc/islet_build": lambda _: self.answer(self.build_reply),
             "GET /islands": self.read_island,
+            "GET /island_recovery_state": self.read_recovery_state,
             "GET /profiles": self.read_name,
             "POST /rpc/wave_start": lambda _: self.answer(self.start_reply),
             "POST /rpc/recovery_wave_start": self.recovery_start,
@@ -430,6 +432,17 @@ class FakeIslandDatabase:
         code = request.url.params["code"].removeprefix("eq.")
         row = self.islands.get(code)
         return httpx.Response(200, json=[row] if row else [])
+
+    def read_recovery_state(self, request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            json=[
+                {
+                    "recovery_version": self.recovery_policy_version,
+                    "wave_protocol": 2 if self.recovery_policy_version == 1 else 1,
+                }
+            ],
+        )
 
     def keep_wave_rules(self, request: httpx.Request) -> httpx.Response:
         """wave_rules_keep(): the first call for a wave keeps its rules; every call answers them."""

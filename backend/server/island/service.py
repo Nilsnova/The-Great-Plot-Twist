@@ -42,6 +42,11 @@ from server.errors import ApiError
 from server.game import islet_store
 from server.game.building_catalogue import Cost
 from server.island import games, layout, layout_store, permissions, rules, store
+from server.island.captain_recovery_policy import (
+    LEGACY_RECOVERY_VERSION,
+    STRUCTURE_RECOVERY_VERSION,
+    is_retired_recovery_skill,
+)
 from server.island.catalogue import IslandCatalogue
 from server.island.codes import read_code, shown
 from server.island.layout import LayoutInfo, Position
@@ -129,6 +134,7 @@ class IslandView:
     weapons: WeaponsView
     campaign: CampaignView
     layout: LayoutInfo = FIXED_LAYOUT  # T36: the grid layout's version and whether moving works
+    recovery_version: int = LEGACY_RECOVERY_VERSION
 
 
 @dataclass(frozen=True)
@@ -200,6 +206,7 @@ def view_of(
     personal: Progress | None = None,
     research: dict[str, ResearchTier] | tuple[str, ...] = (),
     stored: dict[str, Position] | None = None,
+    recovery_version: int = LEGACY_RECOVERY_VERSION,
 ) -> IslandView:
     """The island of `progress` (its spots, best and next wave, campaign) with the personal part
     (coins, crew, captain, unlocks) of `personal`: the same player on their own island, the
@@ -222,6 +229,7 @@ def view_of(
         weapons=weapons_of(catalogue, mine),
         campaign=campaign_of(catalogue, progress.wave_best, research, progress.wreck_paid),
         layout=layout.info_of(grid, stored),
+        recovery_version=recovery_version,
     )
 
 
@@ -274,7 +282,36 @@ async def look_open(
     personal = None if payer is None else await store.read_progress(admin, payer)
     research = await store.read_research(admin, island.owner)
     stored = await read_stored(admin, catalogue, island.owner)
-    return view_of(catalogue, island, coins, built, progress, personal, research, stored)
+    recovery_version = await read_recovery_version(admin, island.owner)
+    return view_of(
+        catalogue, island, coins, built, progress, personal, research, stored, recovery_version
+    )
+
+
+async def read_recovery_version(admin: SupabaseAdmin, owner: str) -> int:
+    """Read the island's persisted Captain policy; absence is the legacy policy."""
+    rows = await admin.select_rows(
+        "island_recovery_state",
+        {
+            "select": "recovery_version",
+            "island_owner": f"eq.{owner}",
+            "limit": "1",
+        },
+    )
+    if not rows:
+        return LEGACY_RECOVERY_VERSION
+    version = rows[0].get("recovery_version")
+    if (
+        isinstance(version, bool)
+        or not isinstance(version, int)
+        or version
+        not in {
+            LEGACY_RECOVERY_VERSION,
+            STRUCTURE_RECOVERY_VERSION,
+        }
+    ):
+        raise SupabaseRejected("The island recovery policy could not be read.")
+    return version
 
 
 async def target_island(
@@ -517,6 +554,13 @@ async def learn_skill(
     entry = rules.skill_named(catalogue, skill)
     if await store.skill_learnt(admin, player_id, f"{SKILL_PREFIX}{action_uid}"):
         return await look_open(admin, catalogue, island)
+    recovery_version = await read_recovery_version(admin, player_id)
+    if recovery_version == STRUCTURE_RECOVERY_VERSION and is_retired_recovery_skill(entry.skill):
+        raise ApiError(
+            409,
+            "skill_retired",
+            "This skill is unavailable under the island's structure recovery rules.",
+        )
     progress = await store.read_progress(admin, player_id)
     rules.check_skill(
         catalogue, entry.skill, progress.skills, progress.won_wave_best, progress.role
@@ -560,6 +604,12 @@ def skill_refusal(
         return rules.no_points()
     if refusal.reason == "bad_skill":
         return ApiError(400, "bad_skill", "There is no such skill.")
+    if refusal.reason == "retired_skill":
+        return ApiError(
+            409,
+            "skill_retired",
+            "This skill is unavailable under the island's structure recovery rules.",
+        )
     return SupabaseRejected()
 
 
