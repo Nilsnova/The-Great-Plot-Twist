@@ -59,4 +59,40 @@ describe('recovery-v1 immutable wave snapshots', () => {
     wave.step(.05);
     expect(wave.applyRecoveryEvent(repair)).toBe(false);
   });
+
+  it('preserves one normalized HP unit as positive wall and tower health in public sim state', () => {
+    const snapshotData = makeSnapshot();
+    snapshotData.createWave.defenses[0].level = 1;
+    snapshotData.structures = [
+      { spot: 'wall_1', instanceId: 'wall-tiny', kind: 'wall', level: 1, x: 0, z: 1, hpUnits: 1, maxHP: 60, repairSeq: 0 },
+      { spot: 'cannon_1', instanceId: 'tower-tiny', kind: 'cannon', level: 1, x: 2, z: 1, hpUnits: 1, maxHP: 80, repairSeq: 0 },
+    ];
+    const snapshot = readRecoverySnapshot(snapshotData, 'wave-a');
+    const wave = createWave({ ...snapshot.createWave, defenses: recoveryWaveDefenses(snapshot), towerHealth: true,
+      recoveryVersion: 1, waveProtocol: 2 });
+    const state = wave.state();
+    const wall = state.walls.find(item => item.id === 'wall_1');
+    const tower = state.towers.find(item => item.id === 'cannon_1');
+    expect(wall.hp).toBeGreaterThan(0);
+    expect(wall.broken).toBe(false);
+    expect(tower.hp).toBeGreaterThan(0);
+    expect(tower.broken).toBe(false);
+    expect(wave.recoveryHealthVector()).toEqual({ hpUnits: { 'wall-tiny': 1, 'tower-tiny': 1 },
+      basisRepairSeq: { 'wall-tiny': 0, 'tower-tiny': 0 } });
+  });
+
+  it('keeps an inactive culverin in the full vector and accepts a matching paid restore event', () => {
+    const snapshotData = makeSnapshot();
+    snapshotData.structures.push({ spot: 'culverin_8', instanceId: 'culverin-instance', kind: 'culverin', level: 1,
+      x: 3, z: 4, hpUnits: 250_000, maxHP: 56, repairSeq: 3 });
+    const snapshot = readRecoverySnapshot(snapshotData, 'wave-a');
+    const wave = createWave({ ...snapshot.createWave, defenses: recoveryWaveDefenses(snapshot), towerHealth: true,
+      recoveryStructures: snapshot.structures, recoveryVersion: 1, waveProtocol: 2 });
+    expect(wave.recoveryHealthVector().hpUnits['culverin-instance']).toBe(250_000);
+    expect(wave.applyRecoveryEvent({ serverSeq: 10, effectiveTick: 0, type: 'structure_repaired', payload: {
+      spot: 'culverin_8', instanceId: 'culverin-instance', hpUnits: 1_000_000, maxHP: 56, repairSeq: 4, chargedPrice: 200,
+    } })).toBe(true);
+    expect(wave.recoveryHealthVector()).toMatchObject({ hpUnits: { 'culverin-instance': 1_000_000 },
+      basisRepairSeq: { 'culverin-instance': 4 } });
+  });
 });

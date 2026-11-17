@@ -57,6 +57,9 @@ import { healthReport, readWalls, withHealth } from './wall-health.js';
 import { readRules } from './wave-rules.js';
 import { isParticipantToken, readRecoveryPolicy } from './recovery-policy.js';
 import { readRecoverySnapshot, recoveryWaveDefenses } from './recovery-snapshot.js';
+import { createReplayDriver, createWaveReplay, fetchSealedEvents } from './wave-replay.js';
+import { commandForJournal, MAX_INPUT_BATCH, MAX_INPUT_BATCH_BYTES, RECOVERY_FLUSH_MS, RECOVERY_POLL_MS, simulationInputFromJournal } from './recovery-transport.js';
+import { makeActionUid } from '../screens/islet/action-uid.js';
 
 const MAX_TICKS_PER_FRAME = 600;      // a friend joining late catches up 30 s of wave per frame
 const SHOWN_LATE_SECONDS = 1;         // events older than this (catching up) are not drawn or heard
@@ -137,6 +140,7 @@ export function readWaveInfo(info) {
   if (!recoveryPolicy) return null;
   const snapshot = recoveryPolicy === 'structure-recovery-v1' ? readRecoverySnapshot(info.initialSnapshot, info.waveId) : null;
   if (recoveryPolicy === 'structure-recovery-v1' && (!snapshot || !isParticipantToken(info.participantToken)
+    || !Number.isSafeInteger(info.lastActorCounter) || info.lastActorCounter < 0
     || snapshot.seed !== Number(info.seed)
     || Date.parse(snapshot.startsAt) !== startsAtMs
     || snapshot.createWave.seed !== snapshot.seed
@@ -148,7 +152,8 @@ export function readWaveInfo(info) {
   const weather = info.weather && typeof info.weather === 'object' ? info.weather : {};
   return { waveId: info.waveId, wave, seed: Number(info.seed), startsAtMs, weather, flagship: info.flagship === true,
     boss: typeof info.boss === 'boolean' ? info.boss : undefined, walls: readWalls(info.walls), rules,
-    recoveryVersion, waveProtocol, ...(snapshot ? { initialSnapshot: snapshot, participantToken: info.participantToken } : {}),
+    recoveryVersion, waveProtocol, ...(snapshot ? { initialSnapshot: snapshot, participantToken: info.participantToken,
+      lastActorCounter: info.lastActorCounter } : {}),
     serverTimeMs: Number.isFinite(parseTime(info.serverTime)) ? parseTime(info.serverTime) : null };
 }
 
@@ -290,7 +295,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     if (!recoveryPolicy) return null;
     if (recoveryPolicy === 'structure-recovery-v1' && !isParticipantToken(info.participantToken)) return null;
     if (recoveryPolicy === 'structure-recovery-v1' && (!recoveryTransport
-      || typeof recoveryTransport.sendInput !== 'function' || typeof recoveryTransport.readEvents !== 'function')) return null;
+      || typeof recoveryTransport.sendInputs !== 'function' || typeof recoveryTransport.readEvents !== 'function')) return null;
     const snapshot = recoveryPolicy === 'structure-recovery-v1' ? readRecoverySnapshot(info.initialSnapshot, info.waveId) : null;
     if (recoveryPolicy === 'structure-recovery-v1' && !snapshot) return null;
     lastTowerObstacles = info.rules?.towerObstacles === true;
@@ -315,24 +320,30 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       flagship: snapshot.createWave.flagship ?? info.flagship, defenses, countdown: 0,
       ...(snapshot.createWave.boss !== undefined ? {} : (info.boss !== undefined ? { boss: info.boss } : {})),
       event: snapshot.createWave.event ?? event, finishers: true, finisherPreparation: true, gapMs: waveGapMs,
-      ...info.rules, recoveryVersion: info.recoveryVersion, waveProtocol: info.waveProtocol }
+      ...info.rules, recoveryStructures: snapshot.structures, towerHealth: true,
+      recoveryVersion: info.recoveryVersion, waveProtocol: info.waveProtocol }
       : { seed: info.seed, wave: info.wave, weather: info.weather, flagship: info.flagship, defenses, countdown: 0,
         crew: getCrew() ?? undefined, ...(info.boss !== undefined ? { boss: info.boss } : {}), event, finishers: true,
         finisherPreparation: true, gapMs: waveGapMs, ...(info.rules ?? {}), ...simOptions };
     const sim = createWave(simOptionsForWave);
     const first = sim.state();
+    const recoveryReplay = snapshot ? createWaveReplay() : null;
     const current = wave = { info, sim, defenses, offset, ticks: 0, seq: 0, schedule: createInputSchedule(), done: false, finished: false,
       pause: null, boss: first.boss ? bossText(first.warships) : '', captainAt: -Infinity, bladeAt: -Infinity, handAt: -Infinity,
       result: null, renderer: null, hud: null, shown: false, lampsSent: false, lampsRelit: false, flagshipSunk: false,
       splashesAt: [], lastCount: null, state: sim.state(), action: null, lanes: [], lean: { x: 0, z: 0 },
       // Captain health: the last position sent, your fall (pin: where you lie on this screen), a revive you hold.
       moveSentAt: -Infinity, moveSent: null, awaySent: false, pin: null, revive: null, reviveNote: null, reviveWait: false,
+      actorCounter: info.lastActorCounter ?? 0, recoveryPending: [], recoverySending: false, recoveryPolling: false,
+      recoveryLastFlushAt: -Infinity, recoveryLastPollAt: -Infinity, recoveryReplay,
+      recoveryDriver: recoveryReplay ? createReplayDriver(recoveryReplay) : null,
+      recoveryLastRepairSeq: 0, recoveryInvalid: false,
       // v3 waves: the event's id and drawing, the finisher's scene and this player's recorder of its samples.
       eventId: first.event?.id ?? null, eventArt: null, finisher: null };
     emit({ type: 'wave_controller_started', waveId: info.waveId, wave: info.wave, flagship: info.flagship });
     if (world.scene) {
       Promise.resolve(createRenderer({ scene: world.scene, defenses, reducedMotion, quality, beamFrom, colour: read(captainColour, 0),
-        towerStates: info.rules?.towerHealth === true, culverins: defenses.some(item => item.kind === 'culverin'),
+        towerStates: info.rules?.towerHealth === true || !!snapshot, culverins: defenses.some(item => item.kind === 'culverin'),
         swivels: defenses.some(item => item.kind === 'swivel') })).then(renderer => {
         if (disposed || wave !== current || current.finished) renderer?.dispose(); else current.renderer = renderer;
       }).catch(error => console.error(error));
@@ -357,6 +368,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   }
 
   function settle(current) {
+    if (current.recoveryReplay) return;
     for (let i = 0; i < SETTLE_TICKS && !current.sim.done; i++) { current.sim.step(TICK_SECONDS, current.schedule.take(current.ticks)); current.ticks++; }
     current.state = current.sim.state();
     if (current.sim.done) end(current);
@@ -365,11 +377,53 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   const finishing = current => current?.state?.finisher?.active === true;
   function submit(input, lead = INPUT_LEAD_TICKS) {
     if (!wave || wave.done || wave.state.phase !== 'running') return false;
+    if (wave.recoveryReplay) {
+      const command = commandForJournal(input);
+      if (!command) return false;
+      const attack = ['captain_shot', 'captain_strike', 'fire', 'finisher_ready', 'finisher_input', 'lamps_lit'].includes(command.type);
+      const elapsed = (now() + wave.offset - wave.info.startsAtMs) / 1000;
+      if (attack && elapsed < 0) return false;
+      let inputUid;
+      try { inputUid = makeActionUid(); } catch { return false; }
+      const tick = Math.max(0, wave.ticks + lead, (wave.recoveryReplay.sealedThroughTick ?? -1) + 1);
+      wave.recoveryPending.push({ inputUid, actorCounter: ++wave.actorCounter, tick, command });
+      return true;
+    }
     const entry = { by: actorId(wave), seq: ++wave.seq, tick: wave.ticks + lead, input };
     wave.schedule.add(entry, wave.ticks);
     const message = toMessage(input, { ...entry, waveId: wave.info.waveId });
     if (message) try { room?.send?.(message.type, message.payload); } catch (error) { console.error(error); }
     return true;
+  }
+
+  function pumpRecovery(current, at) {
+    if (!current.recoveryReplay || !recoveryTransport) return;
+    const waveId = current.info.waveId;
+    if (!current.recoverySending && current.recoveryPending.length && at - current.recoveryLastFlushAt >= RECOVERY_FLUSH_MS) {
+      current.recoveryLastFlushAt = at;
+      const batch = [];
+      for (const item of current.recoveryPending) {
+        const candidate = [...batch, item];
+        if (candidate.length > MAX_INPUT_BATCH || new TextEncoder().encode(JSON.stringify({ waveProtocol: 2, inputs: candidate })).length > MAX_INPUT_BATCH_BYTES) break;
+        batch.push(item);
+      }
+      if (batch.length) {
+        current.recoverySending = true;
+        Promise.resolve().then(() => recoveryTransport.sendInputs({ waveId, inputs: batch }))
+          .then(answer => {
+            if (wave !== current || !Array.isArray(answer?.accepted)) return;
+            const accepted = new Set(answer.accepted);
+            current.recoveryPending = current.recoveryPending.filter(item => !accepted.has(item.inputUid));
+          }).catch(() => {})
+          .finally(() => { current.recoverySending = false; });
+      }
+    }
+    if (!current.recoveryPolling && at - current.recoveryLastPollAt >= RECOVERY_POLL_MS) {
+      current.recoveryLastPollAt = at;
+      current.recoveryPolling = true;
+      fetchSealedEvents(current.recoveryReplay, request => recoveryTransport.readEvents({ waveId, ...request }))
+        .catch(() => false).finally(() => { current.recoveryPolling = false; });
+    }
   }
   function receive(type, payload) {
     if (!wave || wave.done) return;
@@ -648,6 +702,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     updateGuide(dt);
     if (disposed || !wave) return;
     const current = wave;
+    pumpRecovery(current, now());
     lastWave = current.info.wave;
     current.shown = here();
     current.renderer?.setVisible(current.shown);
@@ -661,8 +716,32 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       // sim's clock while real time runs on, so its outcome's t lies seconds behind).
       const lateTicks = Math.round(SHOWN_LATE_SECONDS / TICK_SECONDS);
       while (current.ticks < due && budget-- > 0 && !current.sim.done) {
-        const out = current.sim.step(TICK_SECONDS, current.schedule.take(current.ticks));
-        events.push(...out); if (current.ticks >= due - lateTicks) recent.push(...out);
+        if (current.recoveryReplay) {
+          const tick = current.ticks;
+          const advanced = current.recoveryDriver.advanceThrough(tick, (simTick, journal) => {
+            const inputs = journal.map(simulationInputFromJournal).filter(Boolean);
+            const before = current.sim.recoveryHealthVector();
+            const out = current.sim.step(TICK_SECONDS, inputs);
+            const after = current.sim.recoveryHealthVector();
+            if (!before || !after) current.recoveryInvalid = true;
+            else {
+              const expected = { ...before.basisRepairSeq };
+              let repairs = 0;
+              for (const event of journal) if (event.type === 'structure_repaired') {
+                const id = event.payload?.instanceId, sequence = event.payload?.repairSeq;
+                if (!Object.hasOwn(expected, id) || !Number.isInteger(sequence) || sequence !== expected[id] + 1) current.recoveryInvalid = true;
+                else { expected[id] = sequence; repairs++; }
+              }
+              if (JSON.stringify(expected) !== JSON.stringify(after.basisRepairSeq)) current.recoveryInvalid = true;
+              else current.recoveryLastRepairSeq += repairs;
+            }
+            events.push(...out); if (simTick >= due - lateTicks) recent.push(...out);
+          });
+          if (!advanced) break;
+        } else {
+          const out = current.sim.step(TICK_SECONDS, current.schedule.take(current.ticks));
+          events.push(...out); if (current.ticks >= due - lateTicks) recent.push(...out);
+        }
         current.ticks++;
       }
       current.state = current.sim.state();
@@ -813,6 +892,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   async function submitFinish(current) {
     if (current.finishing) return;
     current.finishing = true;
+    // Recovery v1 requires the journal/checkpoint/close transaction; legacy finish must not bypass it.
+    if (current.recoveryReplay) return;
     // v3 waves: the bonuses the sim saw (the galleon sunk, a finisher won); the server pays them only where the wave allows.
     const body = { waveId: current.info.waveId, survived: current.result.survived, shipsSunk: current.result.shipsSunk,
       ...(current.result.bonuses?.length ? { bonuses: [...current.result.bonuses] } : {}),

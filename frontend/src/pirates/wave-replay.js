@@ -6,52 +6,79 @@ const MAX_PAGE_EVENTS = 256;
 
 const validWatermark = value => Number.isInteger(value) && value >= 0 && value <= MAX_SEQUENCE;
 const validTick = value => Number.isInteger(value) && value >= 0 && value <= MAX_TICK;
+const validSeal = value => Number.isInteger(value) && value >= -1 && value <= MAX_TICK;
 
-/** Collect pages for one fixed journal head and expose only complete, sealed replay prefixes. */
+function cloneJson(value) {
+  try { return JSON.parse(JSON.stringify(value)); } catch { return null; }
+}
+
+function freezeTree(value) {
+  if (!value || typeof value !== 'object') return value;
+  for (const item of Object.values(value)) freezeTree(item);
+  return Object.freeze(value);
+}
+
+function canonicalJson(value) {
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`;
+  if (value && typeof value === 'object') {
+    const fields = Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${canonicalJson(value[key])}`);
+    return `{${fields.join(',')}}`;
+  }
+  return JSON.stringify(value);
+}
+
+function validEvent(event, headSeq) {
+  return !!event && typeof event === 'object' && !Array.isArray(event)
+    && validWatermark(event.serverSeq) && event.serverSeq > 0 && event.serverSeq <= headSeq
+    && validTick(event.effectiveTick) && typeof event.type === 'string'
+    && !!event.payload && typeof event.payload === 'object' && !Array.isArray(event.payload);
+}
+
+/** Collect complete pages at a fixed head and expose only whole sealed prefixes. */
 export function createWaveReplay() {
-  let headSeq = null, sealedThroughTick = null;
-  let previousHeadSeq = null, previousSeal = null;
+  let headSeq = null, sealedThroughTick = null, previousHeadSeq = null, previousSeal = null, contiguousSeq = 0;
   const events = new Map();
 
-  function openPage(page) {
-    if (!page || !validWatermark(page.headSeq) || !validTick(page.sealedThroughTick)) return false;
-    if (headSeq === null) {
-      headSeq = page.headSeq;
-      sealedThroughTick = page.sealedThroughTick;
-      return true;
-    }
-    if (page.headSeq === headSeq && page.sealedThroughTick === sealedThroughTick) return true;
-    if (!complete() || page.headSeq < headSeq || page.sealedThroughTick < sealedThroughTick) return false;
-    previousHeadSeq = headSeq;
-    previousSeal = sealedThroughTick;
-    headSeq = page.headSeq;
-    sealedThroughTick = page.sealedThroughTick;
-    return true;
-  }
-
-  function add(event) {
-    if (headSeq === null || !event || !validWatermark(event.serverSeq) || event.serverSeq === 0
-      || event.serverSeq > headSeq || !validTick(event.effectiveTick) || typeof event.type !== 'string'
-      || !event.payload || typeof event.payload !== 'object' || Array.isArray(event.payload)) return false;
-    if (previousHeadSeq !== null && event.serverSeq > previousHeadSeq && event.effectiveTick <= previousSeal) return false;
-    const saved = events.get(event.serverSeq);
-    if (saved) return JSON.stringify(saved) === JSON.stringify(event);
-    events.set(event.serverSeq, Object.freeze({ ...event }));
-    return true;
+  function complete() {
+    return headSeq !== null && contiguousSeq === headSeq;
   }
 
   function addPage(page) {
     if (!Array.isArray(page?.events) || page.events.length > MAX_PAGE_EVENTS) return false;
-    if (page.headSeq !== undefined) {
-      if (!openPage(page)) return false;
-    } else if (page.through !== headSeq
-      || (page.headSeq !== undefined && page.headSeq !== headSeq)
-      || (page.sealedThroughTick !== undefined && page.sealedThroughTick !== sealedThroughTick)) return false;
-    return page.events.every(add);
-  }
+    const firstPage = headSeq === null;
+    const nextRound = !firstPage && complete();
+    let nextHead = headSeq, nextSeal = sealedThroughTick, nextPreviousHead = previousHeadSeq, nextPreviousSeal = previousSeal;
 
-  function complete() {
-    return headSeq !== null && events.size === headSeq;
+    if (firstPage || nextRound) {
+      if (!validWatermark(page.headSeq) || !validSeal(page.sealedThroughTick)) return false;
+      if (nextRound && (page.headSeq < headSeq || page.sealedThroughTick < sealedThroughTick)) return false;
+      if (nextRound) { nextPreviousHead = headSeq; nextPreviousSeal = sealedThroughTick; }
+      nextHead = page.headSeq;
+      nextSeal = page.sealedThroughTick;
+    } else {
+      if (page.headSeq !== undefined && page.headSeq !== headSeq) return false;
+      if (page.sealedThroughTick !== undefined && page.sealedThroughTick !== sealedThroughTick) return false;
+      if (page.through !== headSeq) return false;
+    }
+
+    const staged = new Map();
+    for (const source of page.events) {
+      if (!validEvent(source, nextHead)) return false;
+      const copy = cloneJson(source);
+      if (!copy) return false;
+      if (nextPreviousHead !== null && copy.serverSeq > nextPreviousHead && copy.effectiveTick <= nextPreviousSeal) return false;
+      const saved = staged.get(copy.serverSeq) ?? events.get(copy.serverSeq);
+      if (saved && canonicalJson(saved) !== canonicalJson(copy)) return false;
+      staged.set(copy.serverSeq, freezeTree(copy));
+    }
+
+    headSeq = nextHead;
+    sealedThroughTick = nextSeal;
+    previousHeadSeq = nextPreviousHead;
+    previousSeal = nextPreviousSeal;
+    for (const [sequence, event] of staged) if (!events.has(sequence)) events.set(sequence, event);
+    while (events.has(contiguousSeq + 1)) contiguousSeq++;
+    return true;
   }
 
   function canAdvanceThrough(tick) {
@@ -66,14 +93,13 @@ export function createWaveReplay() {
   }
 
   return {
-    openPage,
-    add,
     addPage,
     complete,
     canAdvanceThrough,
     through,
     get headSeq() { return headSeq; },
     get sealedThroughTick() { return sealedThroughTick; },
+    get contiguousSeq() { return contiguousSeq; },
     get size() { return events.size; },
   };
 }
@@ -104,22 +130,35 @@ export function createReplayDriver(replay) {
   };
 }
 
-/** Fetch every page through the first page's fixed head before declaring the replay prefix usable. */
-export async function fetchSealedEvents(replay, readPage, after = replay?.headSeq ?? 0) {
-  if (typeof readPage !== 'function' || !validWatermark(after)) return false;
-  const first = await readPage({ after });
-  if (!first || !validWatermark(first.headSeq) || !validTick(first.sealedThroughTick)
-    || first.headSeq < after || !Array.isArray(first.events)) return false;
-  const fixedHead = first.headSeq;
-  if (!replay.addPage(first)) return false;
-  let cursor = after;
-  if (!advanceCursor(first.events, cursor, fixedHead)) return false;
-  cursor = first.events.at(-1)?.serverSeq ?? cursor;
-  while (cursor < fixedHead) {
-    const page = await readPage({ after: cursor, through: fixedHead });
-    if (!page || page.through !== fixedHead || !Array.isArray(page.events)
-      || !advanceCursor(page.events, cursor, fixedHead) || page.events.length === 0 || !replay.addPage(page)) return false;
-    cursor = page.events.at(-1).serverSeq;
+/** Fetch every page through one fixed head; resume partial pages before opening a newer head. */
+export async function fetchSealedEvents(replay, readPage, after) {
+  if (typeof readPage !== 'function' || !replay || !Number.isInteger(replay.contiguousSeq)) return false;
+  const alreadyComplete = replay.complete();
+  const cursor = after ?? replay.contiguousSeq;
+  if (!validWatermark(cursor) || cursor !== replay.contiguousSeq) return false;
+  let page;
+  let fixedHead;
+
+  if (replay.headSeq !== null && !alreadyComplete) {
+    fixedHead = replay.headSeq;
+    page = await readPage({ after: cursor, through: fixedHead });
+    if (!page || page.through !== fixedHead || !Array.isArray(page.events) || !page.events.length
+      || !advanceCursor(page.events, cursor, fixedHead) || !replay.addPage(page)) return false;
+  } else {
+    const requestAfter = replay.headSeq ?? 0;
+    page = await readPage({ after: requestAfter });
+    if (!page || !validWatermark(page.headSeq) || !validSeal(page.sealedThroughTick)
+      || page.headSeq < requestAfter || !Array.isArray(page.events) || !advanceCursor(page.events, requestAfter, page.headSeq)
+      || !replay.addPage(page)) return false;
+    fixedHead = page.headSeq;
+  }
+
+  let next = page.events.at(-1)?.serverSeq ?? cursor;
+  while (next < fixedHead) {
+    page = await readPage({ after: next, through: fixedHead });
+    if (!page || page.through !== fixedHead || !Array.isArray(page.events) || page.events.length === 0
+      || !advanceCursor(page.events, next, fixedHead) || !replay.addPage(page)) return false;
+    next = page.events.at(-1).serverSeq;
   }
   return replay.headSeq === fixedHead && replay.complete();
 }

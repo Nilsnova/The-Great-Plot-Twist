@@ -31,13 +31,15 @@ describe('sealed recovery wave replay', () => {
 
   it('deduplicates an identical sequence and rejects conflicting or out-of-range events', () => {
     const replay = createWaveReplay();
-    replay.addPage({ headSeq: 1, sealedThroughTick: 20, events: [] });
     const event = { serverSeq: 1, effectiveTick: 5, type: 'paid_repair', payload: { spot: 'cannon_8' } };
-    expect(replay.add(event)).toBe(true);
-    expect(replay.add({ ...event })).toBe(true);
-    expect(replay.add({ ...event, payload: { spot: 'cannon_1' } })).toBe(false);
-    expect(replay.add({ ...event, serverSeq: 2 })).toBe(false);
+    expect(replay.addPage({ headSeq: 1, sealedThroughTick: 20, events: [event] })).toBe(true);
+    expect(replay.addPage({ headSeq: 1, sealedThroughTick: 20, events: [{
+      payload: { spot: 'cannon_8' }, type: 'paid_repair', effectiveTick: 5, serverSeq: 1,
+    }] })).toBe(true);
+    expect(replay.addPage({ headSeq: 1, sealedThroughTick: 20, events: [{ ...event, payload: { spot: 'cannon_1' } }] })).toBe(false);
+    expect(replay.addPage({ headSeq: 1, sealedThroughTick: 20, events: [{ ...event, serverSeq: 2 }] })).toBe(false);
     expect(replay.size).toBe(1);
+    expect(replay.through(10)[0].payload.spot).toBe('cannon_8');
   });
 
   it('accepts a higher watermark only after completing the previous fixed-head pages', () => {
@@ -88,6 +90,53 @@ describe('sealed recovery wave replay', () => {
     expect(ready).toBe(true);
     expect(calls).toEqual([{ after: 0 }, { after: 2, through: 3 }]);
     expect(replay.canAdvanceThrough(8)).toBe(true);
+  });
+
+  it('keeps a preparation seal at -1 queued until tick 0 is sealed', () => {
+    const replay = createWaveReplay();
+    expect(replay.addPage({ headSeq: 1, sealedThroughTick: -1,
+      events: [{ serverSeq: 1, effectiveTick: 0, type: 'structure_repaired', payload: {} }] })).toBe(true);
+    expect(replay.complete()).toBe(true);
+    expect(replay.canAdvanceThrough(0)).toBe(false);
+    expect(replay.addPage({ headSeq: 1, sealedThroughTick: 0, events: [] })).toBe(true);
+    expect(replay.canAdvanceThrough(0)).toBe(true);
+  });
+
+  it('resumes an interrupted fixed-head fetch, then opens a later growing head', async () => {
+    const replay = createWaveReplay(), requests = [];
+    const firstPages = [
+      { headSeq: 3, sealedThroughTick: 5, events: [
+        { serverSeq: 1, effectiveTick: 1, type: 'captain_move', payload: {} },
+        { serverSeq: 2, effectiveTick: 2, type: 'captain_move', payload: {} },
+      ] },
+      null,
+    ];
+    expect(await fetchSealedEvents(replay, async request => { requests.push(request); return firstPages.shift(); })).toBe(false);
+    expect(replay.contiguousSeq).toBe(2);
+    expect(await fetchSealedEvents(replay, async request => {
+      requests.push(request);
+      if (request.through === 3) return { through: 3, events: [{ serverSeq: 3, effectiveTick: 4, type: 'captain_move', payload: {} }] };
+      return { headSeq: 4, sealedThroughTick: 6, events: [{ serverSeq: 4, effectiveTick: 6, type: 'captain_move', payload: {} }] };
+    })).toBe(true);
+    expect(await fetchSealedEvents(replay, async request => {
+      requests.push(request);
+      return { headSeq: 4, sealedThroughTick: 6, events: [{ serverSeq: 4, effectiveTick: 6, type: 'captain_move', payload: {} }] };
+    })).toBe(true);
+    expect(requests).toEqual([{ after: 0 }, { after: 2, through: 3 }, { after: 2, through: 3 }, { after: 3 }]);
+    expect(replay.headSeq).toBe(4);
+    expect(replay.contiguousSeq).toBe(4);
+  });
+
+  it('owns a deeply frozen JSON copy and rejects a malformed page without partial ingestion', () => {
+    const replay = createWaveReplay();
+    const source = { serverSeq: 1, effectiveTick: 2, type: 'captain_move', payload: { path: [{ x: 1 }] } };
+    expect(replay.addPage({ headSeq: 2, sealedThroughTick: 4, events: [source, { ...source, serverSeq: 3 }] })).toBe(false);
+    expect(replay.headSeq).toBeNull();
+    expect(replay.size).toBe(0);
+    expect(replay.addPage({ headSeq: 1, sealedThroughTick: 4, events: [source] })).toBe(true);
+    source.payload.path[0].x = 99;
+    expect(replay.through(4)[0].payload.path[0].x).toBe(1);
+    expect(Object.isFrozen(replay.through(4)[0].payload.path[0])).toBe(true);
   });
 
   it('reconstructs identical commands from the stable participant token after private account deletion', () => {

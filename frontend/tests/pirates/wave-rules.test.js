@@ -58,9 +58,9 @@ describe('the wave rules', () => {
         { spot: 'wall_2', instanceId: 'wall-instance', kind: 'wall', level: 2, x: 0, z: 1, hpUnits: 0, maxHP: 120, repairSeq: 0 },
         { spot: 'cannon_8', instanceId: 'gun-instance', kind: 'cannon', level: 1, x: -8, z: 12, hpUnits: 500_000, maxHP: 80, repairSeq: 0 },
       ] };
-    const made = controllerWith([], DEFENSES, { sendInput: async () => ({}), readEvents: async () => ({}) });
+    const made = controllerWith([], DEFENSES, { sendInputs: async () => ({ ok: true }), readEvents: async () => ({ ok: true, data: {} }) });
     made.bus.emit({ type: 'wave_started_server', ...INFO, recoveryVersion: 1, waveProtocol: 2, rules, initialSnapshot,
-      participantToken: '7165d60f-14f5-4b9e-96a0-2ed457b4c219' });
+      participantToken: '7165d60f-14f5-4b9e-96a0-2ed457b4c219', lastActorCounter: 0 });
     made.advance(2000);
     expect(made.controller.state.walls).toMatchObject([{ id: 'wall_2', hp: 0, broken: true }]);
     expect(made.controller.state.towers).toMatchObject([{ id: 'cannon_8', hp: 40, maxHp: 80 }]);

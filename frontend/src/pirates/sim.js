@@ -511,6 +511,8 @@ export function createWave(options = {}) {
   // Recovery v1 pauses every free structure repair path. An unknown version pair fails closed.
   const recoveryPolicy = readRecoveryPolicy(options);
   const freeStructureRepair = canFreeStructureRepair(recoveryPolicy);
+  const recoveryStructureState = new Map((recoveryPolicy === 'structure-recovery-v1' && Array.isArray(options?.recoveryStructures)
+    ? options.recoveryStructures : []).filter(item => typeof item?.instanceId === 'string').map(item => [item.instanceId, { ...item }]));
   // The boarders draw from their own stream, so the fleet and the cannons' rolls do not depend on them.
   const crowd = createRandom((seedNumber(options?.seed) ^ 0x2545f491) >>> 0);
   const heart = readHeart(options?.heart);
@@ -1083,6 +1085,7 @@ export function createWave(options = {}) {
     if (!input || typeof input !== 'object' || typeof input.type !== 'string') return;
     // v3 waves: while a finisher runs the battle stands still: only positions and the finisher's own input count.
     if (input.type === 'finisher_input' || input.type === 'finisher_ready') { finisher.input(input); rescue.input(input); return; }
+    if (input.type === 'structure_repaired') { applyRecoveryEvent(input.event); return; }
     if ((finisher.active || rescue.active) && input.type !== 'captain_move') return;
     if (input.type === 'fire') {
       const cannon = typeof input.cannonId === 'string' ? cannonById.get(input.cannonId) : undefined;
@@ -1744,14 +1747,19 @@ export function createWave(options = {}) {
   function applyRecoveryEvent(event) {
     if (recoveryPolicy !== 'structure-recovery-v1' || event?.type !== 'structure_repaired'
       || !Number.isInteger(event.serverSeq) || event.serverSeq < 1
-      || !Number.isInteger(event.effectiveTick) || event.effectiveTick !== ticks) return false;
+      || !Number.isInteger(event.effectiveTick) || event.effectiveTick < 0 || event.effectiveTick > 18_000) return false;
     const payload = event.payload;
     if (!payload || typeof payload.spot !== 'string' || typeof payload.instanceId !== 'string'
       || payload.hpUnits !== 1_000_000 || !finite(payload.maxHP)
       || !Number.isInteger(payload.repairSeq) || payload.repairSeq < 1) return false;
     const structure = wallById.get(payload.spot) ?? towerById.get(payload.spot);
-    if (!structure || structure.instanceId !== payload.instanceId || structure.maxHp !== payload.maxHP
-      || payload.repairSeq <= (structure.repairSeq ?? 0)) return false;
+    const frozen = recoveryStructureState.get(payload.instanceId);
+    if ((!structure && !frozen) || frozen && frozen.spot !== payload.spot
+      || structure?.instanceId !== undefined && structure.instanceId !== payload.instanceId
+      || (structure?.maxHp ?? frozen?.maxHP) !== payload.maxHP
+      || (structure?.repairSeq ?? frozen?.repairSeq ?? 0) >= payload.repairSeq) return false;
+    if (frozen) { frozen.hpUnits = payload.hpUnits; frozen.repairSeq = payload.repairSeq; }
+    if (!structure) return true;
     structure.hp = structure.maxHp;
     structure.repairSeq = payload.repairSeq;
     structure.repairLeft = 0;
@@ -1763,8 +1771,24 @@ export function createWave(options = {}) {
     return true;
   }
 
+  function recoveryHealthVector() {
+    if (recoveryPolicy !== 'structure-recovery-v1') return null;
+    const hpUnits = {}, basisRepairSeq = {};
+    for (const structure of recoveryStructureState.values()) {
+      hpUnits[structure.instanceId] = structure.hpUnits;
+      basisRepairSeq[structure.instanceId] = structure.repairSeq;
+    }
+    for (const structure of [...walls, ...towers]) {
+      if (typeof structure.instanceId !== 'string' || !structure.instanceId || !(structure.maxHp > 0) || !finite(structure.hp)) return null;
+      hpUnits[structure.instanceId] = Math.max(0, Math.min(1_000_000, Math.round(structure.hp / structure.maxHp * 1_000_000)));
+      basisRepairSeq[structure.instanceId] = Number.isInteger(structure.repairSeq) && structure.repairSeq >= 0 ? structure.repairSeq : 0;
+    }
+    return { hpUnits, basisRepairSeq };
+  }
+
   return {
     applyRecoveryEvent,
+    recoveryHealthVector,
     step(dt, inputs = []) {
       const events = [];
       if (done) return events;
