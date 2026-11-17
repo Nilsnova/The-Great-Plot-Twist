@@ -14,8 +14,8 @@
     12
   ],
   "sourceFoot": [
-    627,
-    1124
+    552,
+    1085
   ],
   "alpha": {
     "corners": [
@@ -42,5 +42,22 @@
     "Generated asset only; actual game proof is coordinated separately.",
     "Faint alpha below16 includes peripheral generation noise; the solid silhouette is inside the logical frame.",
     "No image edits or offline cropping were used; bytes are copied from the generated source."
-  ]
+  ],
+  "sourceRect": [
+    75,
+    39,
+    1108,
+    1103
+  ],
+  "nativeGroundFoot": [
+    627,
+    1124
+  ],
+  "fitBounds": [
+    552,
+    1085,
+    556,
+    18
+  ],
+  "revision": "Stage-one actual-render follow-up: tight source fit, unchanged PNG/logical geometry"
 }

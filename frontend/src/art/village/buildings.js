@@ -6,8 +6,9 @@ export const sheets = {
 export const frames = {
   cabin: {
     sheet: 'buildingsHero',
-    rect: [0, 0, 1254, 1254],
+    rect: [75, 39, 1108, 1103],
     logical: [96, 96, 12],
-    sourceFoot: [627, 1124],
+    sourceFoot: [552, 1085],
+    fitBounds: [552, 1085, 556, 18],
   },
 };
