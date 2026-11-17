@@ -23,26 +23,28 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import AwareDatetime, BaseModel, StrictInt, StrictStr
+from pydantic import AwareDatetime, BaseModel, Field, StrictInt, StrictStr
 
 from server.errors import ApiError
 from server.game import islet_store
-from server.island import permissions, service, store, wall_health
+from server.island import layout_store, permissions, service, store, wall_health
 from server.island.catalogue import IslandCatalogue
 from server.island.rules import find_spot
 from server.island.store import Island, Refusal, read_model
+from server.island.wall_cohort import PERIMETER_WALL_CAPACITY, is_inventory_wall_id
 from server.island.wall_health import WallState
 from server.island.waves import WaveStart
 from server.supabase_admin import SupabaseAdmin, SupabaseRejected
 
-MAX_WALL_ROWS = 50
+MAX_WALL_ROWS = PERIMETER_WALL_CAPACITY
+WALL_IDS = frozenset(f"wall_{number}" for number in range(1, MAX_WALL_ROWS + 1))
 logger = logging.getLogger(__name__)
 
 
 class WallRow(BaseModel):
     plot: StrictStr
-    level: StrictInt
-    wall_health: StrictInt
+    level: StrictInt = Field(ge=1, le=5)
+    wall_health: StrictInt = Field(ge=0, le=100)
     wall_damaged_at: AwareDatetime | None = None
 
 
@@ -70,11 +72,16 @@ async def read_walls(admin: SupabaseAdmin, owner: str) -> dict[str, WallState]:
         "player_id": f"eq.{owner}",
         "building_type": "eq.wall",
         "order": "plot.asc",
-        "limit": str(MAX_WALL_ROWS),
+        "limit": str(MAX_WALL_ROWS + 1),  # Sentinel: never silently truncate a paid wall.
     }
+    rows = await admin.select_rows("islet_buildings", query)
+    if len(rows) > MAX_WALL_ROWS:
+        raise store.unreadable()
     walls = {}
-    for row in await admin.select_rows("islet_buildings", query):
+    for row in rows:
         checked = read_model(WallRow, row)
+        if checked.plot not in WALL_IDS or checked.plot in walls:
+            raise store.unreadable()
         walls[checked.plot] = WallState(
             checked.plot, checked.level, checked.wall_health, checked.wall_damaged_at
         )
@@ -157,6 +164,11 @@ async def restore(
     charges nothing and answers the walls as they are now."""
     # D043 (T37): repair and rebuild have the same row (members, paid by the clicker).
     island, _ = await service.target_island(admin, catalogue, player_id, code, permissions.REPAIR)
+    if is_inventory_wall_id(spot_id):
+        policy = await layout_store.read_snapshot(admin, island.owner)
+        if policy.rule_version == 0:
+            raise ApiError(404, "no_such_spot", "There is no such build spot.")
+        raise ApiError(409, "client_update_required", "Reload to use the current repair controls.")
     spot = find_spot(catalogue, spot_id)
     wall = (await read_walls(admin, island.owner)).get(spot.id)
     role = (await store.read_progress(admin, player_id)).role

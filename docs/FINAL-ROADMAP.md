@@ -202,3 +202,5 @@ WALL-26 (Johannes): [Draft PR #282](https://github.com/Nilsnova/The-Great-Plot-T
 
 
 WALL-27 (Johannes): actual construction entry, quote/build/retry controls, keyboard/pointer routing and snapped wall/grid ghosts are implemented in [Draft PR #296](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/296) for [#281](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/281). [Scope and component evidence](../specs/WALL-27-builder-controls.md). Focused checks and a real Chromium DOM/index/pointer component pass are recorded; integrated server/fake/cohort behavior, actual-game paired captures, full perimeter lifecycle and human review remain. No merge.
+WALL-39 health-read slice (Johannes): complete bounded 128-wall legacy reads and safe added-ID legacy-restore refusal are implemented in [Draft #318](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/318), tracking [#317](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/317). [Scope and exact focused checks](../specs/WALL-39-complete-health-reads.md). Client bounds and the full perimeter lifecycle remain separate; no activation, production claim or merge.
+

@@ -43,3 +43,20 @@ The current `MAX_WALL_ROWS = 50` query can silently drop paid rows, especially u
 ## Verification and explain-back
 
 Run meaningful focused Python tests and Ruff; report exact outcomes and distinguish them from full application or production evidence. Johannes should explain why the query reads one extra row, why duplicate IDs cannot be overwritten, and why new pieces do not use the old repair RPC.
+
+## Implemented handoff
+
+Draft [#318](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/318), tracking [#317](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/317), starts from aggregate `dc6f80efb6f2811b0fee1b8cd1b475b8ae5e0dba`. The response shape is unchanged. `read_walls` reads 128 plus an overflow sentinel and rejects duplicate/noncanonical IDs and invalid level/health ranges. It does not invent missing full health or silently overwrite a paid wall. Old timers, prices and report capping remain unchanged.
+
+After resolving current actor access, legacy restore for a canonical added ID reads the trusted owner policy. An admitted new piece receives `409 client_update_required` before the unsupported paid RPC; an unadmitted added identity remains `404 no_such_spot`. Original-wall restores keep their existing behavior.
+
+Executed from `backend/`, using the existing installed environment:
+
+```sh
+/workspace/The-Great-Plot-Twist/backend/.venv/bin/python -m pytest -q server/tests/test_perimeter_wall_health_reads.py server/tests/test_wall_recovery.py server/tests/test_wave_recovery_routes.py
+/workspace/The-Great-Plot-Twist/backend/.venv/bin/ruff check server/island/wall_repair.py server/tests/test_perimeter_wall_health_reads.py
+```
+
+Results: **65 passed in 5.02s**; Ruff **All checks passed!**; `git diff --check` passed. The focused API fixture verifies all 128 fresh/full walls while recovery policy is still V0, explicit first/last added-ID restore refusal, and access-before-policy order. A query-honoring fake proves the old truncation regression rather than returning more rows than requested.
+
+Full application/client decoder/SQL/browser/perimeter journey evidence is separate; this backend read slice does not claim those checks, activation, production or a merge. WALL-40 owns the corresponding client response bounds.
