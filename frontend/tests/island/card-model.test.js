@@ -305,7 +305,7 @@ describe('the campaign buildings (GAME-V3.md §4, §5)', () => {
     expect(house(0).choices.find(choice => choice.id === 'workshop').line)
       .toBe('Walls near it repair and rebuild 30% faster, and a broken one mends by itself.');
     expect(house(1).choices.find(choice => choice.id === 'workshop').line)
-      .toBe('Each nearby Workshop within 10 units adds 30% to between-wave recovery, up to 50% total.');
+      .toBe('Walls and towers within 10 units recover 30% faster between waves; Workshops add up to 50%.');
   });
   it('the wreck: locked before wave 6, gifts cut to what is left, repaired at 100% and waiting for wave 30', () => {
     expect(wreckModel({campaign: atWave(5)})).toMatchObject({open: false, line: 'Opens after wave 6.', gifts: []});
