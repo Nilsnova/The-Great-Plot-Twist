@@ -11,6 +11,7 @@ import {cartoonAtlas} from '../../src/art/textures.js';
 import {loadTexture} from '../../src/world/texture.js';
 const release = art => Object.values(art).forEach(material => { material.map.dispose(); material.dispose(); });
 beforeEach(() => {
+  loadTexture.mockReset();
   state.images = []; state.decode.mockReset().mockImplementation(async sheet => {
     const image = {width: sheet.width, height: sheet.height, close: vi.fn()}; state.images.push(image); return image;
   });
@@ -57,8 +58,22 @@ it('rejects registered failure without fallback, disposes prepared world sibling
   state.decode.mockRejectedValueOnce(error); await expect(cartoonAtlas(['oak'], {density: 2})).rejects.toBe(error);
   const retry = await loadArt(['oak', 'island_core'], {density: 2});
   for (const id of ['oak', 'island_core']) expect(retry[id].map.userData.villageArt.source).toBe('png');
-  const atlas = await cartoonAtlas(['oak'], {density: 2}); expect(atlas.missing).toEqual([]);
-  expect(atlas.image.villageArt).toContainEqual({id: 'oak', file: getRasterFrame('oak').sheet.file, logical: getRasterFrame('oak').logical, source: 'png'});
-  expect(loadTexture).not.toHaveBeenCalled(); expect(state.decode).toHaveBeenCalledTimes(6);
+  const ids = ['oak', 'island_core', 'island-wall-l1-damaged'], atlas = await cartoonAtlas(ids, {density: 2}); expect(atlas.missing).toEqual([]);
+  for (const id of ids) {
+    const frame = getRasterFrame(id), [w, h, anchor] = frame.logical;
+    expect(atlas.rects[id]).toMatchObject({w, h, anchor});
+    expect(atlas.image.villageArt).toContainEqual({id, file: frame.sheet.file, logical: frame.logical, source: 'png'});
+  }
+  expect(loadTexture).not.toHaveBeenCalled(); expect(state.decode).toHaveBeenCalledTimes(8);
   expect(state.images.every(image => image.close.mock.calls.length === 1)).toBe(true); release(retry);
+});
+
+it('releases already-prepared registered art when a later legacy PNG fails', async () => {
+  const error = new Error('missing legacy lighthouse'); loadTexture.mockRejectedValueOnce(error);
+  const textureDispose = vi.spyOn(THREE.Texture.prototype, 'dispose'), materialDispose = vi.spyOn(THREE.Material.prototype, 'dispose');
+  await expect(loadArt(['oak', 'lighthouse'], {density: 2})).rejects.toBe(error);
+  expect(loadTexture).toHaveBeenCalledWith('/pixel/lighthouse.png', expect.any(THREE.TextureLoader));
+  expect(textureDispose).toHaveBeenCalledOnce(); expect(materialDispose).toHaveBeenCalledOnce(); expect(state.images[0].close).toHaveBeenCalledOnce();
+  const retry = await loadArt(['oak'], {density: 2}); expect(retry.oak.map.userData.villageArt.source).toBe('png');
+  expect(state.decode).toHaveBeenCalledTimes(2); expect(state.images.every(image => image.close.mock.calls.length === 1)).toBe(true); release(retry);
 });
