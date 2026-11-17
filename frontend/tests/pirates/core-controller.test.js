@@ -2,6 +2,8 @@ import {describe, expect, it, vi} from 'vitest';
 import {createWaveController} from '../../src/pirates/controller.js';
 import {createCorePublisher} from '../../src/pirates/core-display.js';
 import {createCoreState} from '../../src/island/core-state.js';
+import {createWaveFlow} from '../../src/island/wave-flow.js';
+import {WAVE_STARTED} from '../../src/island/wave-hooks.js';
 
 const START = Date.UTC(2026, 10, 17, 12);
 const INFO = {waveId: 'core-wave', wave: 2, seed: 77, startsAt: new Date(START).toISOString(),
@@ -21,6 +23,26 @@ function harness(options = {}) {
 }
 
 describe('core display through the actual wave controller', () => {
+  it('retains actual controller HP authority after an older flow lookup returns', async () => {
+    const h = harness(), model = createCoreState(), context = {key: 'home:legacy:0', epoch: null};
+    model.reset(context.key);
+    let resolveRead;
+    const flow = createWaveFlow({now: () => START, hasRenderer: () => true,
+      api: {currentWave: () => new Promise(resolve => { resolveRead = resolve; }), startWave: async () => ({ok: true, data: INFO})},
+      emit: event => { if (event.type === WAVE_STARTED) h.controller.start(event); }});
+    try {
+      const old = flow.look(); await flow.ring(); await flush();
+      resolveRead({ok: true, data: {...INFO, waveId: 'stale-wave'}}); await old;
+      for (let i = 0; i < 600 && h.controller.state.islandHp === h.controller.state.maxIslandHp; i++) h.step();
+      createCorePublisher({controller: () => h.controller, context: () => context,
+        publish: snapshot => model.accept(snapshot, {waveId: flow.current?.wave.waveId,
+          contextKey: context.key, epoch: context.epoch})})();
+      expect(flow.current.wave.waveId).toBe(h.controller.wave.info.waveId);
+      expect(model.current).toMatchObject({hp: h.controller.state.islandHp, waveId: INFO.waveId});
+      expect(model.current.hp).toBeLessThan(h.controller.state.maxIslandHp);
+    } finally { flow.dispose(); h.controller.dispose(); }
+  });
+
   it('resumes actual HP after an authorized same-wave return and still rejects another island', async () => {
     let place = 'home_islet';
     const h = harness({place: 'home_islet', world: {scene: {}, container: {}, place: () => place}});
