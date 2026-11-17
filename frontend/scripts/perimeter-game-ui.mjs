@@ -49,8 +49,9 @@ export async function wallet(page) {
   });
 }
 export async function groundPoint(page, [x, z], lift = 0) {
-  return page.evaluate(([x, z, lift]) => {
-    const g = window.__island, p = g.player.position.clone().set(x, -z * .72 + lift, 0).project(g.camera);
+  return page.evaluate(async ([x, z, lift]) => {
+    const {projectPoint} = await import('/src/world/art.js'), g = window.__island, at = projectPoint(x, z);
+    const p = g.player.position.clone().set(at.x, at.y + lift, 0).project(g.camera);
     const r = g.renderer.domElement.getBoundingClientRect();
     return {x: r.x + (p.x + 1) * r.width / 2, y: r.y + (1 - p.y) * r.height / 2};
   }, [x, z, lift]);
@@ -78,10 +79,29 @@ export async function workspaceBounds(page, selector) {
   return page.evaluate(async selector => {
     const g = window.__island, {cliffProfile} = await import('/src/art/coast-cliffs.js'), {surfaces} = await import('/src/world/places/surfaces.js');
     const canvas = g.renderer.domElement.getBoundingClientRect(), bar = document.querySelector(selector).getBoundingClientRect();
-    const ys = cliffProfile(surfaces.home_islet).map(p => {
-      const v = g.player.position.clone().set(p.x, -p.y, 0).project(g.camera); return canvas.y + (1 - v.y) * canvas.height / 2;
-    });
-    return {canonicalLandTop: Math.min(...ys), canonicalLandBottom: Math.max(...ys), barTop: bar.top, barHeight: bar.height, barBottom: bar.bottom};
+    const backdrop = g.world.current.group.children.find(mesh => mesh.userData.legacyGround ||
+      (mesh.renderOrder === 4 && mesh.geometry?.parameters?.width === 64 && mesh.geometry.parameters.height === 48));
+    if (!backdrop) throw Error('Actual ground backdrop is required for shore measurement.');
+    backdrop.updateWorldMatrix(true, false);
+    const tops = [], bases = [];
+    for (const p of cliffProfile(surfaces.home_islet)) for (const [rows, y] of [[tops, p.y], [bases, p.baseY]]) {
+      const v = backdrop.localToWorld(g.player.position.clone().set(p.x, -y, 0)).project(g.camera);
+      rows.push({x: canvas.x + (v.x + 1) * canvas.width / 2, y: canvas.y + (1 - v.y) * canvas.height / 2});
+    }
+    return {canonicalLandTop: Math.min(...tops.map(p => p.y)), canonicalLandBottom: Math.max(...tops.map(p => p.y)),
+      decorativeBaseTop: Math.min(...bases.map(p => p.y)), decorativeBaseBottom: Math.max(...bases.map(p => p.y)),
+      landLeft: Math.min(...tops.map(p => p.x), ...bases.map(p => p.x)), landRight: Math.max(...tops.map(p => p.x), ...bases.map(p => p.x)),
+      backdropMatrix: backdrop.matrixWorld.toArray(), barTop: bar.top, barHeight: bar.height, barBottom: bar.bottom};
+  }, selector);
+}
+export async function villageFrameEvidence(page, selector) {
+  return page.evaluate(async selector => {
+    const g = window.__island, {villageFrame} = await import('/src/player/camera.js');
+    const canvas = g.renderer.domElement.getBoundingClientRect(), bar = document.querySelector(selector).getBoundingClientRect();
+    const quest = document.querySelector('.quest-strip')?.getBoundingClientRect(), purse = document.querySelector('.hud-coins')?.getBoundingClientRect();
+    const top = Math.max(80, (canvas.width < 640 ? Math.max(quest?.bottom ?? 0, purse?.bottom ?? 0) : 80) + 12);
+    const viewport = {height: canvas.height, top, bottom: canvas.height - bar.top + 12};
+    return {viewport, fit: villageFrame(g.camera, 'home_islet', viewport), phone: (g.camera.right - g.camera.left) / (g.camera.top - g.camera.bottom) < .8};
   }, selector);
 }
 export async function capture(page, out, name) {
