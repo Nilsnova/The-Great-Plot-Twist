@@ -163,3 +163,6 @@ Not released or marked complete: focused evidence, Johannes's explain-back and
 independent human review remain. No change to the existing freeze or merge rules.
 
 COC-02 follow-up (Johannes, draft): current-base management fit view is a bounded implementation slice for issue #143 and depends on COC-49/PR #192. The parent camera task remains open; see [specification](../specs/COC-02-village-overview.md). No merge or full editor-camera completion is claimed.
+
+
+WALL-16 (Johannes): the route-preview durability correction is implemented in [Draft PR #268](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/268) for [#257](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/257). [Scope, executed red/green regressions and limits](../specs/WALL-16-durability-guide.md). Focused guide/pathing/research checks passed 68 tests in 4 files. Coordinated build/browser/capture evidence, explain-back and independent human review remain; no merge or whole-perimeter completion is claimed.
