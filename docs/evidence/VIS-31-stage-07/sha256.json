@@ -1,0 +1,201 @@
+{
+  "status": "intermediate before selected-wall visibility correction; not final acceptance",
+  "source": "5e3dd6ccb3597617e67a8b720525d3add78c3704",
+  "frontendTree": "d40e9c78a8c1179965db1af0f5c10a29f41bf48e",
+  "publicTree": "9306942db1050d728799cee2fbdc8e8960f14ad2",
+  "backendTree": "e61fa1b8f6bcd02bb357b17b530b427acf5abee2",
+  "publishedFiles": [
+    {
+      "file": "execution.json",
+      "bytes": 914,
+      "sha256": "7eed4c1aaf93a7f2a3766ba0bf0676054f4a491f4c9e2c011aea535064e9fd8b"
+    },
+    {
+      "file": "report.json",
+      "bytes": 4530253,
+      "sha256": "02f8dd8b8c9db307c6452d7660788267e384330023cd2a3cbc8355b7985a96cc"
+    },
+    {
+      "file": "capture.log",
+      "bytes": 201,
+      "sha256": "512b2d752d5fde7d4b05e170a5f703bb209b5f8547651ca79a3797853769e5dd"
+    },
+    {
+      "file": "reference-selected-level3-1280x720.png",
+      "bytes": 1135309,
+      "sha256": "986df84cd3ab8c4bc2688ffa4acae326e1f66bab26270b375a307ae9844ce511",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "reference-selected-level3-375x812.png",
+      "bytes": 306665,
+      "sha256": "3c41ace725c11cec97460c43f0e19933dcb3c0e5c858b271afc692e6b8e65590",
+      "width": 375,
+      "height": 812
+    }
+  ],
+  "originalCapturePngs": [
+    {
+      "file": "reference-arranged-1280x720.png",
+      "bytes": 1175705,
+      "sha256": "4a13b8ad278dfe50f17228f2353dde0b768f70479c6b5318d7d5ea42404bcc1a",
+      "width": 1280,
+      "height": 720,
+      "publishedHere": false
+    },
+    {
+      "file": "reference-arranged-375x812.png",
+      "bytes": 443215,
+      "sha256": "872b3791433086391483dc5daf49ae6b7f37810af6bc1f77950ff86ae613063a",
+      "width": 375,
+      "height": 812,
+      "publishedHere": false
+    },
+    {
+      "file": "reference-entry-1280x720.png",
+      "bytes": 1175204,
+      "sha256": "a79727ae696e676af429613b798de346bc0cacff1155bfa7bbc62e9695d0c7d5",
+      "width": 1280,
+      "height": 720,
+      "publishedHere": false
+    },
+    {
+      "file": "reference-entry-375x812.png",
+      "bytes": 442853,
+      "sha256": "b0c4fba7247c4e927a3c6f7cd6e8725887e1a403072ed1946a0fa49559ad3c5d",
+      "width": 375,
+      "height": 812,
+      "publishedHere": false
+    },
+    {
+      "file": "reference-fit-1280x720.png",
+      "bytes": 1131296,
+      "sha256": "f3e1f380f9fb6342d5961f8662f3d43ef415c5dc5ce70dc1ee3f0571833ed595",
+      "width": 1280,
+      "height": 720,
+      "publishedHere": false
+    },
+    {
+      "file": "reference-fit-375x812.png",
+      "bytes": 311485,
+      "sha256": "bd498e2ef68dcbdaa5b0f648d8de77dbfa9d1938efa8d7b6894e3e9734486de5",
+      "width": 375,
+      "height": 812,
+      "publishedHere": false
+    },
+    {
+      "file": "reference-move-level3-1280x720.png",
+      "bytes": 1113963,
+      "sha256": "3cbe2fc09de9ebb73cfcc89271cf01db4c0655821c3fadac1de1ea92fd64dea4",
+      "width": 1280,
+      "height": 720,
+      "publishedHere": false
+    },
+    {
+      "file": "reference-move-level3-375x812.png",
+      "bytes": 336022,
+      "sha256": "0ee6e44903129ea46a219f33791271c479e7b872e1f2920045da53875b0cec75",
+      "width": 375,
+      "height": 812,
+      "publishedHere": false
+    },
+    {
+      "file": "reference-selected-level3-1280x720.png",
+      "bytes": 1135309,
+      "sha256": "986df84cd3ab8c4bc2688ffa4acae326e1f66bab26270b375a307ae9844ce511",
+      "width": 1280,
+      "height": 720,
+      "publishedHere": true
+    },
+    {
+      "file": "reference-selected-level3-375x812.png",
+      "bytes": 306665,
+      "sha256": "3c41ace725c11cec97460c43f0e19933dcb3c0e5c858b271afc692e6b8e65590",
+      "width": 375,
+      "height": 812,
+      "publishedHere": true
+    },
+    {
+      "file": "reference-wall-draft-1280x720.png",
+      "bytes": 923957,
+      "sha256": "0f2d3535c049409a85c002ad1012b88b1e2c866f33d02d03b41ce305ee5f1590",
+      "width": 1280,
+      "height": 720,
+      "publishedHere": false
+    },
+    {
+      "file": "reference-wall-draft-375x812.png",
+      "bytes": 361393,
+      "sha256": "b9344ff446a5a80dcfccb72c64147d09c71a9cc031f549af0f02da3734f913a8",
+      "width": 375,
+      "height": 812,
+      "publishedHere": false
+    },
+    {
+      "file": "reference-wall-draft-fine-1280x720.png",
+      "bytes": 903513,
+      "sha256": "4459f41989a0a085e6e38f1b7ecbb07ef0ece6beaf288e74194d99aef1ef205f",
+      "width": 1280,
+      "height": 720,
+      "publishedHere": false
+    },
+    {
+      "file": "reference-wall-draft-fine-375x812.png",
+      "bytes": 272921,
+      "sha256": "6c87155a647997af7cf23d103aa0e36e00cab1e6a7798ffb6304b1045ccb1b0c",
+      "width": 375,
+      "height": 812,
+      "publishedHere": false
+    },
+    {
+      "file": "wave-breach-1280x720.png",
+      "bytes": 1174218,
+      "sha256": "88e0c5097f826bcea94da5304fd95f2a480614caa904d5d9c43437954f0c2752",
+      "width": 1280,
+      "height": 720,
+      "publishedHere": false
+    },
+    {
+      "file": "wave-breach-375x812.png",
+      "bytes": 305522,
+      "sha256": "9bfc010dfd456ac774805f39566b8506feb67689ead14e5c1c0ce29df0da5965",
+      "width": 375,
+      "height": 812,
+      "publishedHere": false
+    },
+    {
+      "file": "wave-projectiles-1280x720.png",
+      "bytes": 1072069,
+      "sha256": "3d6ec63d4257b1073b5cdf97ceae418ba06c3a4cc3ed7aaeb1f966bfe90b52f8",
+      "width": 1280,
+      "height": 720,
+      "publishedHere": false
+    },
+    {
+      "file": "wave-projectiles-375x812.png",
+      "bytes": 252666,
+      "sha256": "74e2e2720372c0b1fe695d2f9bc757856217ac2a4560056ee7032306d2fe8744",
+      "width": 375,
+      "height": 812,
+      "publishedHere": false
+    },
+    {
+      "file": "wave-standing-1280x720.png",
+      "bytes": 1055612,
+      "sha256": "c1b128f7de99a2049e990a2e0c65b1b3e87ec0d06644d13d54a454870f97a8e4",
+      "width": 1280,
+      "height": 720,
+      "publishedHere": false
+    },
+    {
+      "file": "wave-standing-375x812.png",
+      "bytes": 261885,
+      "sha256": "283d5fcab97e1c1b4d31f4496b3a09a5f8f673464173ad8b4319b4aeeb0fe980",
+      "width": 375,
+      "height": 812,
+      "publishedHere": false
+    }
+  ],
+  "publication": "Only the two selected-wall before PNGs are published here; other original PNGs remain in the coordinator archive."
+}
