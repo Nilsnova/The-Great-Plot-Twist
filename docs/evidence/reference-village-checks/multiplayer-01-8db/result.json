@@ -1,0 +1,12 @@
+{
+  "source": "8db343ba071f000583a843bd537a692732053542",
+  "started": "2026-11-17T21:12:23.802399+00:00",
+  "command": [
+    "node",
+    "scripts/check-multiplayer.js",
+    "/workspace/reference-village-work/multiplayer-baseline-8db"
+  ],
+  "exitCode": 1,
+  "seconds": 65.84,
+  "finished": "2026-11-17T21:13:29.641974+00:00"
+}

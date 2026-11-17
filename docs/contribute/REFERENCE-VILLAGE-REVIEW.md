@@ -10,7 +10,10 @@ source tree is `8365d88e76889e68f5e1aa1d6aa9a858d3afaea3`. The fresh complete ru
 4,463 passed / 1 failed across 409 files (408 passed / 1 failed) in 563.22 s.
 The remaining defense-report ownership case reached its 20-second timeout.
 VIS46 candidate 4844c2c1 has identical frontend source/public/backend trees but
-its new sole-owner assertion also failed in 18.375 s; diagnosis is ongoing.
+its new sole-owner assertion failed in 18.375 s: `worldBusy` includes the report's
+own blocked state. Corrected derived-state and coherent veteran fixtures still
+exceeded the unchanged 20-second limit. The [raw verification chronology](../evidence/reference-village-checks/README.md)
+preserves these failed results; no completed input-resume pass is claimed.
 
 The [final rendered review capture](../evidence/reference-village-visual-review/README.md)
 contains twenty unchanged actual PNGs/report, source boundary/hashes and a
@@ -222,10 +225,11 @@ from overlapping commands must not be added together.
 | Historical stage-three attempt | Partial coordinator run in `stage-03-compiled/` | Desktop level-three upgrade/selection and Move/Cancel passed before a **failed ghost-toolbar visibility assertion**. Those partial PNGs never became a combined PASS. The later stage four run has separate source/evidence. |
 | Stage four actual compiled game | [Twenty raw PNGs/report/manifest](../evidence/VIS-31-stage-04/README.md), runtime `414559fb`, helper `074a4675`; source/public/backend trees match main-ancestry candidate `59181376` | Both 1280×720 and 375×812 journeys passed entry/Fit/Tab/drag, paid L3 selection/Move Cancel, three-cell ghost/indexed buffers/Fine shore clearance, four real API moves, 21 paid walls / 42 upgrades and local legacy frozen-wave projectiles/breach. End 123 walls / 5,150 coins. Zero page errors/external requests; one offline 503 console message per viewport. Breach calls 152 / 151 still miss under 150; no full-suite/device/final visual pass. |
 | Final rendered review capture | [Twenty actual PNGs/report/manifest and comparison](../evidence/reference-village-visual-review/README.md), capture `9f47` / helper `074a4675`; later frozen candidate `6e2c3e8b` has only the documented post-capture source changes | Both viewport functional journeys pass their declared paid camera/selection/Move/ghost/arranged-local-wave scope. Standing/firing/breach: 117/119/129 desktop, 116/120/129 phone; zero page errors/external requests, one offline 503 console each. Visible render/CSS/assets unchanged after capture; not a fresh later-candidate screenshot or full-suite/device/balance pass. |
-| First new complete-suite attempt | Runtime `9f47`; coordinator archive `verification-attempt-01-9f47` | 4,402 passed / 27 failed in 609.82 s. Preserve this failed attempt. Thirteen failing files received focused green corrections with assertions/timeouts retained; the subsequent 6e2 complete run below still failed one case. |
-| New complete-run retry | Frozen 6e2c3e8b; coordinator-reported exact result | **4,463 passed / 1 failed**, 409 files (408 passed / 1 failed), 563.22 s. Defense-report ownership timed out at 20 s; this is a failed complete run, not acceptance. |
-| VIS46 focused diagnostic | Candidate 4844c2c1; app source/public/backend trees equal 6e2c3e8b | New report sole-owner assertion **failed in 18.375 s**. Cause under diagnosis; original 24 rAF/high-quality/20 s assertions are retained. No focused or full green claim for this revision. |
-| Accessibility retry | Source 6e2c3e8b, 33 screens in 382.39 s | **Failed lobby keyboard audit only**; browser errors/external requests empty. Raw markers were observed lost across legitimate refresh. VIS47 semantic-identity correction is under review; no new accessibility pass is claimed. |
+| First new complete-suite attempt | Runtime `9f47`; [raw output and source record](../evidence/reference-village-checks/README.md) | 4,402 passed / 27 failed in 609.82 s. Preserve this failed attempt. Thirteen failing files received focused green corrections with assertions/timeouts retained; the subsequent 6e2 complete run below still failed one case. |
+| New complete-run retry | Frozen 6e2c3e8b; [raw output and source record](../evidence/reference-village-checks/README.md) | **4,463 passed / 1 failed**, 409 files (408 passed / 1 failed), 563.22 s. Defense-report ownership timed out at 20 s; this is a failed complete run, not acceptance. |
+| VIS46 focused diagnostics | Candidates 4844c2c1, 4f69978f, 870e624b; [exact failed receipts](../evidence/reference-village-checks/README.md), app source/public/backend trees equal 6e2c3e8b | Initial sole-owner assertion **failed in 18.375 s** because `worldBusy` includes the report's own block. Derived-state and coherent veteran corrections timed out at 20.007 s and 20.013 s. Original actions, 24 rAF/high-quality/20 s checks remain; no completed input-resume pass is claimed. |
+| Accessibility retry | Source 6e2c3e8b, [raw output](../evidence/reference-village-checks/README.md), 33 screens in 382.39 s | **Failed lobby keyboard audit only**; browser errors/external requests empty. Temporary markers were lost across legitimate refresh. VIS47 semantic-identity correction needs its own native result; no new accessibility pass is claimed here. |
+| Unchanged multiplayer baseline | Documentation-only 8db343ba; [raw output/source record](../evidence/reference-village-checks/README.md), exit 1 in 65.84 s | Host/friend lobby and co-op construction progressed. The old per-wall-mesh observer then reported level 0 for a textured batched level-one wall. Later wave/revive/simultaneous-next/late-join/boss assertions were not reached. |
 | HUD focused proof | [BASE05 spec](../../specs/BASE-05-reference-hud.md), runtime `60573698` / final doc head `0729faf5`: 5 native HUD cases, 3 selected legacy coin cases, 20 model cases passed in separate commands | Desktop/phone/320px HUD semantics and controls, Goals restoration and coin compatibility. No final combined scene, a11y/demo or live-account claim. |
 | Wall tier correction | [Correction spec](../../specs/VIS-14-level-one-wall-art.md), head `b84eadfc`: 7 files / 76 tests passed in 3.81s | All canonical damage tiers, world/combat UV buffers, fallback/API/scene/preload cases. No combined final visual or live recovery acceptance. |
 | Core optional travel correction | [Handover](../handoff/vis35-core-travel-rejoin.md), `f52a05c5`: 6 files / 49 tests passed, build/spoiler guard passed | Guarded rejoin, actual controller and island-load behavior; browser travel/full-suite/live cases remain unverified. |
@@ -236,8 +240,10 @@ repository publication is **pending** in VIS36/VIS31; no broken or fabricated
 download link is provided here. The shore-correct desktop image is already
 preserved by the immutable VIS37 evidence link above. Stage-three desktop PNGs remain partial diagnostics from a failed run.
 The later [stage four package](../evidence/VIS-31-stage-04/README.md) now supplies
-twenty raw actual frames and its exact source/helper/hash records. Final stage five
-combat/HUD polish and visual acceptance require their own source and evidence.
+twenty raw actual frames and its exact source/helper/hash records. The later
+[rendered review package](../evidence/reference-village-visual-review/README.md)
+supplies the stage-six combat/HUD source and evidence; final human visual
+acceptance remains open.
 
 The 116-call observation is below the unchanged under-150 target for that
 declared scene. It does not prove the worst-case battle, sustained frame rate or

@@ -88,12 +88,18 @@ failing files received focused green corrections preserving assertions/timeouts;
 that did not establish a complete pass.
 The complete retry on 6e2c3e8b is **not green**: 4,463 passed / 1 failed,
 409 files (408 passed / 1 failed), 563.22 s; only defense-report ownership timed out
-at 20 s. VIS46 candidate 4844c2c1 then failed its new sole-owner assertion in 18.375 s.
-Its application source/public/backend trees match 6e2c3e8b. Diagnosis remains open
-and the original 24 rAF/high-quality/20 s assertions remain. Accessibility on 6e2
+at 20 s. VIS46 candidate 4844c2c1 then failed its new sole-owner assertion in 18.375 s:
+`worldBusy` includes the report's own blocked state. Its derived-state correction
+and coherent veteran fixture still exceeded the unchanged 20-second limit.
+Their application source/public/backend trees match 6e2c3e8b. The original
+actions, 24 rAF/high-quality/20 s checks remain; completed input-resume proof is
+still open. Accessibility on 6e2
 also failed the lobby keyboard audit (33 screens, 382.39 s); browser/external
 errors were empty. VIS47 is correcting audit identity across legitimate refresh.
 No passing complete/a11y replacement is claimed until exact verified logs arrive.
+The [raw failed-check chronology](../reference-village-checks/README.md) preserves
+unchanged outputs, JSON records and hashes, including the later unchanged
+multiplayer observer failure before its wave checks.
 
 Active 13-family/164-ID transport at VIS30 f6bbc967 / VIS18 e54b0f46 matches the
 candidate's public 9306942 tree: 9,871,501 compiled bytes plus 2,683,357 terrain,
