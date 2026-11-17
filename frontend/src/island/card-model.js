@@ -114,16 +114,26 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
   if (!point && shown === 'house') model.skills = rolesOf(spot, level, busy);
   if (!point) model.demolish = {label: busy === 'demolish' ? 'Checking…' : 'Tear down', disabled: battle || !!busy,
     reason: battle ? 'You can tear it down between waves.' : ''};
-  if (!point) model.tree = towerTreeModel({kind: shown, spot, coins, prices, wave: campaignWave, unlocks, busy, picked: treePicked});
+  const recoveryRow = recoveryState?.recoveryVersion === 1
+    ? recoveryState.structures?.find(item => item.spot === spotId) : null;
+  if (shown === 'wall' && recoveryRow) model.stats = model.stats.replace(/^Strength\b/, 'Base strength');
+  const upgradeBlockedReason = recoveryRow && recoveryState.recoveryVersion === 1
+    ? recoveryState.repairWindow === 'reserved_wave' ? 'Upgrades are available between waves.'
+      : recoveryRow.hpUnits < 1_000_000 ? 'Fully repair before upgrading.' : ''
+    : '';
+  if (!point) model.tree = towerTreeModel({kind: shown, spot, coins, prices, wave: campaignWave, unlocks, busy,
+    picked: treePicked, upgradeBlockedReason});
   const next = level + 1;
   if (level >= model.maxLevel) { model.reason = shown === 'house' ? '' : 'Highest level reached.'; return model; }
   if (allowed(shown) < next) { model.soon = `Level ${next}: ${opensText(lockedWave(unlocks, {kind: shown, level: next}) ?? '?')}.`; return model; }
   const price = Number.isSafeInteger(spot.upgradeCost) ? spot.upgradeCost : priceFor(shown, level, prices);
   model.mode = 'upgrade';
   model.upgrade = {label: `Level ${next} · ${coinText(price)}`, stats: statLine(shown, level, next)};
+  if (shown === 'wall' && recoveryRow) model.upgrade.stats = model.upgrade.stats.replace(/^Strength\b/, 'Base strength');
   model.button = busy ? 'Upgrading…' : 'Upgrade';
   if (busy) return model;
-  if (coins === null) model.reason = 'Your coins are still loading.';
+  if (upgradeBlockedReason) model.reason = upgradeBlockedReason;
+  else if (coins === null) model.reason = 'Your coins are still loading.';
   else if (!enough(price)) model.reason = short(price);
   else model.disabled = false;
   return model;
