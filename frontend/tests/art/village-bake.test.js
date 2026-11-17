@@ -6,6 +6,14 @@ it('requires explicit raw names, rejects recursive/unsafe/duplicate inputs, and 
   expect(rawFamilyNames('buildings,core')).toEqual(['buildings', 'core']);
   for (const input of [[], ['baked'], ['compiled-core'], ['../core'], ['core', 'core']]) expect(() => rawFamilyNames(input)).toThrow('raw family');
 });
+it('prepares the nine explicit raw families including shared-fit core states before any browser work', async () => {
+  const names = rawFamilyNames(); expect(names).toContain('core'); expect(names).toContain('progress');
+  for (const name of names) {
+    const family = await import(`../../src/art/village/${name}.js`), raw = collectRasterFrames([family]), plan = planFamily(name, raw);
+    expect(Object.keys(plan.frames)).toEqual(Object.keys(raw));
+    if (name === 'core') for (const frame of Object.values(plan.frames)) { expect(frame.logical).toEqual([128, 128, 12]); expect(frame.sourceFoot).toEqual([256, 464]); }
+  }
+});
 it('preserves every ID/logical/foot while packing multiple bounded transparent-gutter pages', () => {
   const input = Object.fromEntries(Array.from({length: 40}, (_, i) => [`frame${i}`, {...frame(96, 128), rect: [i, 0, 1200, 1254]}]));
   const before = JSON.stringify(input), plan = planFamily('core', input); expect(plan.pages.length).toBeGreaterThan(1); expect(JSON.stringify(input)).toBe(before);

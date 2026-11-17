@@ -20,3 +20,9 @@ The coordinator owns central `village-families.js` activation and any atomic raw
 6. Hand over a clean Draft for coordinator activation plus later combined build/budget/cold/full-game checks and human visual review.
 
 Main risks: virtual source padding/state scale lost during metadata conversion; accidental recursive baking; overlarge output sources or unbounded decode; stale provenance after appending families; lower-density filtering changes; counting source sheets as GPU textures or declaring final transfer before atomic activation. Unit and isolated browser pixel proof are supplementary, not a full-game appearance/performance pass.
+
+## Provisional result and final input preparation
+
+Compiler source `3a2a549a`/`99d3a2e1` and provisional outputs `9180ca3d` implement the route. Approved cabin/house input dependencies `4bd02615`/`6f495947` are preserved separately as `9f6408eb`/`562d1199`. The executed seven-family source is `562d1199e897d4def060f5cfd9c7356d8a1e3a00`: 74 IDs pass actual Chromium4× pixels with zero difference, and transfer including unchanged terrain is 8,172,254 bytes versus 18,647,281 raw. [Exact proof/cost/filtering limits](../docs/evidence/VIS-30-world-art/README.md). Lower densities are measured and differ; no all-scale losslessness or final GPU/pass reduction is claimed.
+
+Final preparation appends core/progress as explicit raw inputs: exact five raw files from approved coordinator source `5e0e9f7b3b06524dc75de97e282bbeb84faef463` (VIS-35 original `7deaf12c`), copied unchanged in dependency commit `bc9c848b`. No renderer hooks are copied. Nine-family/82-ID baking and the final budget result await the coordinator's sole Chromium grant after its coherent game captures; the provisional result does not include these additional assets. No central manifest or source exclusion has been changed.
