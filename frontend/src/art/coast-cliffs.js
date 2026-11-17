@@ -1,6 +1,7 @@
 // The top is the existing analytic coast; base points extend only the decorative backdrop/foam silhouette.
 import {linear, mix, poly, stroke, line} from './paint.js';
 export const CLIFF_DEPTH = 1.4, APPROACH_DEPTH = .35;
+export const NAVAL_APPROACH_BEARINGS = Object.freeze([0, 90, 180]);
 const TAU = Math.PI * 2, PROJECT = .72;
 
 /** Same 180-point top contour as ground.js; downward rock depth never changes a logical x/z. */
@@ -8,8 +9,11 @@ export function cliffProfile(surface) {
   return Array.from({length: 181}, (_, i) => {
     const a = i / 180 * TAU, edge = 1 + .055 * Math.sin(a * 5 + surface.seed) + .035 * Math.cos(a * 7);
     const x = Math.cos(a) * surface.rx * edge, z = Math.sin(a) * surface.rz * edge, y = z * PROJECT;
-    // Keep the actual southern ship/beach approach shallow, easing from 18 to 30 degrees off south.
-    const arc = Math.abs(Math.atan2(Math.sin(a - Math.PI / 2), Math.cos(a - Math.PI / 2)));
+    // Keep each current naval/beach approach shallow, easing from 18 to 30 degrees off its lane.
+    const arc = Math.min(...NAVAL_APPROACH_BEARINGS.map(bearing => {
+      const offset = a - bearing * Math.PI / 180;
+      return Math.abs(Math.atan2(Math.sin(offset), Math.cos(offset)));
+    }));
     const t = Math.max(0, Math.min(1, (arc - Math.PI / 10) / (Math.PI / 15)));
     const depth = APPROACH_DEPTH + (CLIFF_DEPTH - APPROACH_DEPTH) * t * t * (3 - 2 * t);
     return {x, z, y, depth, baseY: y + depth};
@@ -28,12 +32,14 @@ export function paintCliffFaces(c, rows) {
   // A translucent contact shadow does not become opaque land in the sea's alpha threshold.
   stroke(c, base, '#253d3a', .35, .24);
   c.fillStyle = '#71634f'; c.fill(base);
+  c.clip(base); // Material detail cannot enlarge the declared decorative silhouette.
   for (let from = 0; from < rows.length - 1; from += 6) {
     const side = rows.slice(from, Math.min(rows.length, from + 7));
     const middle = side[Math.floor(side.length / 2)], variation = .1 + .08 * Math.sin(from * 1.7);
     const upper = mix('#d3c4a2', '#899785', variation + (middle.x > 0 ? .12 : 0));
     const stone = mix('#a8987b', '#666950', variation + (middle.x > 0 ? .14 : 0));
-    const face = poly([...side.map(p => [p.x, p.y]), ...[...side].reverse().map(p => [p.x, p.baseY])]);
+    // Terrain is measured in world units; sprite-pixel rounding would overshoot these narrow faces.
+    const face = poly([...side.map(p => [p.x, p.y]), ...[...side].reverse().map(p => [p.x, p.baseY])], 0);
     c.fillStyle = linear(c, middle.x, middle.y, middle.x, middle.baseY, [[0, upper], [.45, stone], [1, '#71634f']]);
     c.fill(face);
     // Broken vertical seams and ledges make rock strata rather than a uniformly striped retaining wall.

@@ -1,7 +1,8 @@
 import {describe, expect, it} from 'vitest';
-import {APPROACH_DEPTH, CLIFF_DEPTH, cliffProfile} from '../../src/art/coast-cliffs.js';
+import {APPROACH_DEPTH, CLIFF_DEPTH, NAVAL_APPROACH_BEARINGS, cliffProfile} from '../../src/art/coast-cliffs.js';
 import {surfaceClass, surfaces} from '../../src/world/places/surfaces.js';
 import {projectPoint} from '../../src/world/art.js';
+import {CONFIG} from '../../src/pirates/sim.js';
 
 const coast = surfaces.home_islet;
 describe('decorative cliffs and the unchanged walkable top', () => {
@@ -28,9 +29,13 @@ describe('decorative cliffs and the unchanged walkable top', () => {
     expect(profile[0].x).toBeCloseTo(profile.at(-1).x, 12);
     expect(profile[0].baseY).toBeCloseTo(profile.at(-1).baseY, 12);
   });
-  it('keeps the southern naval/beach window shallow and eases into the taller side faces', () => {
+  it('keeps every current naval/beach window shallow and eases into taller faces between lanes', () => {
     const profile = cliffProfile(coast);
-    for (let i = 36; i <= 54; i++) expect(profile[i].depth).toBeCloseTo(APPROACH_DEPTH, 12);
+    expect(NAVAL_APPROACH_BEARINGS).toEqual(CONFIG.lanes.map(lane => lane.bearing));
+    for (const bearing of NAVAL_APPROACH_BEARINGS) for (let offset = -18; offset <= 18; offset += 2) {
+      const i = ((bearing + offset + 360) % 360) / 2;
+      expect(profile[i].depth).toBeCloseTo(APPROACH_DEPTH, 12);
+    }
     expect(profile[30].depth).toBeCloseTo(CLIFF_DEPTH, 12);
     expect(profile[60].depth).toBeCloseTo(CLIFF_DEPTH, 12);
     expect(profile[34].depth).toBeGreaterThan(APPROACH_DEPTH);
