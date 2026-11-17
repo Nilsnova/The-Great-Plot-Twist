@@ -41,4 +41,14 @@ package, service, image dependency or backend change.
 2. What prevents a previous island's coast from remaining after travel?
 3. How do low quality and reduced motion affect the new water detail?
 
-Application code and runtime evidence are pending at this claim commit.
+The shader refinement and focused regressions are implemented. From `frontend/`:
+
+```sh
+npm test -- --maxWorkers=1 tests/art/coast-water.test.js tests/g20-weather-wiring.test.js tests/weather.test.js
+```
+
+Actual result: **3 files passed, 71 tests passed in 1.02s**, exit0. This checks
+distance/orientation, travel/reset/fallback, shared beam/weather/quality state,
+the existing paced/reduced-motion clock and owned-resource disposal. Actual GPU
+compilation, rendered coast/quality/motion checks and combined scene captures are
+still pending; the unit result is not visual acceptance.
