@@ -11,6 +11,8 @@ const MAX_TICK = 18_000;
 
 const isObject = value => !!value && typeof value === 'object' && !Array.isArray(value);
 const isCoordinate = value => typeof value === 'number' && Number.isFinite(value) && Math.abs(value) < 500;
+const successData = answer => answer?.ok === true && isObject(answer.data) ? answer.data
+  : answer?.ok === undefined && answer?.status === undefined && !answer?.error && isObject(answer) ? answer : null;
 
 /** Reduce a local simulation action to an intent; the server adds actor identity and Captain stats. */
 export function commandForJournal(input) {
@@ -51,11 +53,17 @@ export function simulationInputFromJournal(event) {
     || !Number.isInteger(event.effectiveTick) || event.effectiveTick < 0 || event.effectiveTick > MAX_TICK
     || !isObject(event.payload)) return null;
   if (event.type === 'structure_repaired') return { type: 'structure_repaired', event };
+  if (event.type === 'participant_joined') return null;
   const command = event.payload.command;
-  if (!isObject(command) || typeof command.type !== 'string' || !isParticipantToken(event.participantToken)) return null;
+  const token = event.participantToken ?? event.payload.participantToken;
+  if (!isObject(command) || typeof command.type !== 'string' || !isParticipantToken(token)
+    || (event.participantToken && event.payload.participantToken && event.participantToken !== event.payload.participantToken)
+    || (event.type !== 'captain_input' && event.type !== command.type)) return null;
+  if (event.type === 'captain_input' && (typeof event.payload.inputUid !== 'string' || !event.payload.inputUid
+    || !Number.isSafeInteger(event.payload.actorCounter) || event.payload.actorCounter < 1)) return null;
   const normalized = commandForJournal(command);
   if (!normalized) return null;
-  const input = { ...normalized, by: event.participantToken };
+  const input = { ...normalized, by: token };
   if (['captain_shot', 'captain_strike', 'captain_revive'].includes(command.type)) {
     const captain = event.payload.captain;
     if (!isObject(captain) || !Number.isInteger(captain.level) || captain.level < 1 || captain.level > 5
@@ -76,16 +84,40 @@ export function createRecoveryTransport({ get, post } = {}) {
       const query = new URLSearchParams({ after: String(after) });
       if (Number.isInteger(through) && through >= 0) query.set('through', String(through));
       return Promise.resolve(get(`/api/waves/${encodeURIComponent(waveId)}/events?${query}`))
-        .then(answer => answer?.ok === true && isObject(answer.data) ? answer.data : null, () => null);
+        .then(successData, () => null);
     },
     sendInputs({ waveId, inputs } = {}) {
       if (typeof waveId !== 'string' || !validBatch(inputs)) return Promise.resolve(null);
       const body = { waveProtocol: 2, inputs };
       if (byteLength(JSON.stringify(body)) > MAX_INPUT_BATCH_BYTES) return Promise.resolve(null);
       return Promise.resolve(post(`/api/waves/${encodeURIComponent(waveId)}/inputs`, body))
-        .then(answer => answer?.ok === true && isObject(answer.data) ? answer.data : null, () => null);
+        .then(successData, () => null);
+    },
+    finishWave(body) {
+      if (!validRecoveryFinishBody(body)) return Promise.resolve(null);
+      return Promise.resolve(post('/api/waves/finish', body)).then(answer => {
+        if (answer?.ok === true || answer?.ok === false) return answer;
+        if (isObject(answer?.error)) return { ok: false, status: answer.status ?? 0, code: answer.error.code, error: answer.error };
+        return isObject(answer) ? { ok: true, data: answer } : null;
+      }).catch(() => null);
     },
   };
+}
+
+function validRecoveryFinishBody(body) {
+  const checkpoint = body?.checkpoint;
+  if (!isObject(body) || body.waveProtocol !== 2 || typeof body.waveId !== 'string' || !body.waveId
+    || !isObject(checkpoint) || typeof checkpoint.islandEpoch !== 'string' || !checkpoint.islandEpoch
+    || typeof checkpoint.checkpointUid !== 'string' || checkpoint.checkpointUid.length < 8
+    || !Number.isInteger(checkpoint.throughTick) || checkpoint.throughTick < 0 || checkpoint.throughTick > MAX_TICK
+    || !Number.isSafeInteger(checkpoint.inputHeadSeq) || checkpoint.inputHeadSeq < 0
+    || !Number.isSafeInteger(checkpoint.lastRepairSeq) || checkpoint.lastRepairSeq < 0
+    || !isObject(checkpoint.basisRepairSeq) || !isObject(checkpoint.hpUnits)) return false;
+  const ids = Object.keys(checkpoint.hpUnits);
+  return ids.length > 0 && ids.length === Object.keys(checkpoint.basisRepairSeq).length
+    && ids.every(id => Object.hasOwn(checkpoint.basisRepairSeq, id)
+      && Number.isInteger(checkpoint.hpUnits[id]) && checkpoint.hpUnits[id] >= 0 && checkpoint.hpUnits[id] <= 1_000_000
+      && Number.isSafeInteger(checkpoint.basisRepairSeq[id]) && checkpoint.basisRepairSeq[id] >= 0);
 }
 
 function validBatch(inputs) {

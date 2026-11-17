@@ -19,6 +19,13 @@ describe('recovery-v1 command transport', () => {
       by: TOKEN, level: 3, skills: ['steady_aim'], weapon: 'musket' });
     expect(simulationInputFromJournal({ ...event, participantToken: undefined })).toBeNull();
     expect(simulationInputFromJournal({ ...event, participantToken: 'profile-uuid' })).toBeNull();
+    expect(simulationInputFromJournal({ ...event, type: 'captain_input', payload: { ...event.payload,
+      participantToken: TOKEN, inputUid: 'accepted-uid-1', actorCounter: 7 } })).toEqual({ type: 'captain_shot', targetId: 'ship_1', x: 2, z: 3,
+      by: TOKEN, level: 3, skills: ['steady_aim'], weapon: 'musket' });
+    expect(simulationInputFromJournal({ ...event, type: 'captain_input', payload: { ...event.payload,
+      participantToken: 'a7856e02-de9f-4e2d-b3cc-abc856524dac', inputUid: 'accepted-uid-1', actorCounter: 7 } })).toBeNull();
+    expect(simulationInputFromJournal({ serverSeq: 5, effectiveTick: 10, type: 'participant_joined', participantToken: TOKEN,
+      payload: { captain: { level: 3, skills: [], weapon: 'musket' } } })).toBeNull();
   });
 
   it('accepts server-paid repair events without a Captain token, but only as a special journal input', () => {
@@ -43,6 +50,21 @@ describe('recovery-v1 command transport', () => {
     expect(await transport.readEvents({ waveId: 'wave-a' })).toBeNull();
     expect(await transport.sendInputs({ waveId: 'wave-a', inputs: [{ inputUid: 'uid-1', actorCounter: 1, tick: 0,
       command: { type: 'captain_move', x: 1, z: 2 } }] })).toBeNull();
+  });
+
+  it('posts a complete v2 terminal checkpoint through the injected authenticated client', async () => {
+    const post = vi.fn(async () => ({ ok: true, data: { loot: 5, recovery: { waveId: 'wave-a' } } }));
+    const transport = createRecoveryTransport({ get: vi.fn(), post });
+    const body = { waveId: 'wave-a', survived: true, shipsSunk: 3, waveProtocol: 2,
+      checkpoint: { islandEpoch: 'epoch-a', checkpointUid: 'checkpointuid1234', throughTick: 20, inputHeadSeq: 4,
+        lastRepairSeq: 1, basisRepairSeq: { 'instance-a': 2 }, hpUnits: { 'instance-a': 900_000 } } };
+    expect(await transport.finishWave(body)).toMatchObject({ ok: true });
+    expect(post).toHaveBeenCalledWith('/api/waves/finish', body);
+    expect(await transport.finishWave({ ...body, checkpoint: { ...body.checkpoint, hpUnits: {} } })).toBeNull();
+    const direct = createRecoveryTransport({ get: vi.fn(async () => ({ headSeq: 0, sealedThroughTick: -1, events: [] })),
+      post: vi.fn(async () => ({ loot: 5, recovery: { waveId: 'wave-a' } })) });
+    expect(await direct.readEvents({ waveId: 'wave-a' })).toMatchObject({ sealedThroughTick: -1 });
+    expect(await direct.finishWave(body)).toMatchObject({ ok: true, data: { loot: 5 } });
   });
 
   it('rejects overlarge batches before making an HTTP request', async () => {

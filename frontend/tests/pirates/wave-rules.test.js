@@ -50,6 +50,7 @@ describe('the wave rules', () => {
     const rules = ['structure_recovery', 'tower_health'];
     const initialSnapshot = { recoveryVersion: 1, waveProtocol: 2, configVersion: 1, waveId: 'w-r', islandEpoch: 'epoch-1',
       seed: 77, startsAt: INFO.startsAt, weather: INFO.weather, rules,
+      participants: [{ participantToken: '7165d60f-14f5-4b9e-96a0-2ed457b4c219', captain: { level: 1, skills: [], weapon: 'musket' } }],
       createWave: { seed: 77, wave: 1, weather: INFO.weather, defenses: [
         { id: 'wall_2', kind: 'wall', level: 2, x: 0, z: 1 },
         { id: 'house_1', kind: 'house', level: 2, spec: 'workshop', x: 1, z: 1 },
@@ -58,7 +59,7 @@ describe('the wave rules', () => {
         { spot: 'wall_2', instanceId: 'wall-instance', kind: 'wall', level: 2, x: 0, z: 1, hpUnits: 0, maxHP: 120, repairSeq: 0 },
         { spot: 'cannon_8', instanceId: 'gun-instance', kind: 'cannon', level: 1, x: -8, z: 12, hpUnits: 500_000, maxHP: 80, repairSeq: 0 },
       ] };
-    const made = controllerWith([], DEFENSES, { sendInputs: async () => ({ ok: true }), readEvents: async () => ({ ok: true, data: {} }) });
+    const made = controllerWith([], DEFENSES, { sendInputs: async () => ({ accepted: [] }), readEvents: async () => ({ headSeq: 0, sealedThroughTick: -1, events: [] }), finishWave: async () => null });
     made.bus.emit({ type: 'wave_started_server', ...INFO, recoveryVersion: 1, waveProtocol: 2, rules, initialSnapshot,
       participantToken: '7165d60f-14f5-4b9e-96a0-2ed457b4c219', lastActorCounter: 0 });
     made.advance(2000);

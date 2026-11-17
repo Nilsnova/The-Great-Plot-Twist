@@ -4,6 +4,7 @@ import { createWave } from '../../src/pirates/sim.js';
 
 const makeSnapshot = () => ({ recoveryVersion: 1, waveProtocol: 2, configVersion: 1, waveId: 'wave-a', islandEpoch: 'epoch-a',
   seed: 4, startsAt: '2026-11-16T12:00:00Z', weather: { kind: 'calm' }, rules: ['structure_recovery'],
+  participants: [{ participantToken: '7165d60f-14f5-4b9e-96a0-2ed457b4c219', captain: { level: 2, skills: [], weapon: 'musket' } }],
   createWave: { defenses: [
     { id: 'wall_1', kind: 'wall', level: 2, x: 0, z: 1 },
     { id: 'house_1', kind: 'house', level: 2, spec: 'workshop', x: 1, z: 1 },
@@ -28,6 +29,9 @@ describe('recovery-v1 immutable wave snapshots', () => {
   it('rejects unsupported versions, missing rule, duplicate identity, and out-of-range health', () => {
     expect(readRecoverySnapshot({ ...makeSnapshot(), waveProtocol: 1 }, 'wave-a')).toBeNull();
     expect(readRecoverySnapshot({ ...makeSnapshot(), rules: [] }, 'wave-a')).toBeNull();
+    const privateIdentity = makeSnapshot(); privateIdentity.participants[0].playerId = 'profile-uuid';
+    expect(readRecoverySnapshot(privateIdentity, 'wave-a')).toBeNull();
+    expect(readRecoverySnapshot({ ...makeSnapshot(), participants: [] }, 'wave-a')).toBeNull();
     const duplicate = makeSnapshot(); duplicate.structures[1].spot = 'wall_1';
     expect(readRecoverySnapshot(duplicate, 'wave-a')).toBeNull();
     const invalid = makeSnapshot(); invalid.structures[0].hpUnits = 1_000_001;
@@ -94,5 +98,24 @@ describe('recovery-v1 immutable wave snapshots', () => {
     } })).toBe(true);
     expect(wave.recoveryHealthVector()).toMatchObject({ hpUnits: { 'culverin-instance': 1_000_000 },
       basisRepairSeq: { 'culverin-instance': 4 } });
+  });
+
+  it('reconciles a paid restore after terminal sim without changing combat result or ticking combat again', () => {
+    const snapshot = readRecoverySnapshot(makeSnapshot(), 'wave-a');
+    const wave = createWave({ ...snapshot.createWave, wave: 1, seed: snapshot.seed, weather: { ships: .5, fog: 0 },
+      defenses: recoveryWaveDefenses(snapshot), towerHealth: true, recoveryStructures: snapshot.structures,
+      recoveryVersion: 1, waveProtocol: 2 });
+    let ticks = 0;
+    while (!wave.done && ticks < 4000) { wave.step(.05); ticks++; }
+    expect(wave.done).toBe(true);
+    const result = wave.result();
+    expect(wave.state().walls.find(item => item.id === 'wall_1').hp).toBe(0);
+    expect(wave.applyRecoveryEvent({ serverSeq: 1, effectiveTick: ticks, type: 'structure_repaired', payload: {
+      spot: 'wall_1', instanceId: 'instance-a', hpUnits: 1_000_000, maxHP: 120, repairSeq: 1, chargedPrice: 50,
+    } })).toBe(true);
+    expect(wave.state().walls.find(item => item.id === 'wall_1').hp).toBe(120);
+    wave.step(1);
+    expect(wave.result()).toEqual(result);
+    expect(wave.state().walls.find(item => item.id === 'wall_1').hp).toBe(120);
   });
 });
