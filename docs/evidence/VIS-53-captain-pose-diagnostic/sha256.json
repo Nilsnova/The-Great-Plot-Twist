@@ -1,0 +1,32 @@
+{
+  "status": "INCONCLUSIVE native setup; no accepted shot; known upstream failure remains open",
+  "source": "52f6bb158b03188b57260c1872e273391598debf",
+  "frontendTree": "6e0c6b27b717a7b8eedcde498d7372de6f0942cb",
+  "copyMethod": "unchanged original bytes; original README retained as text because its relative workspace links describe the original location",
+  "files": [
+    {
+      "file": "original-readme.txt",
+      "original": "musket-pose-native-diagnostic/README.md",
+      "bytes": 3130,
+      "sha256": "acdfc2d27da5d1f25f1e7895ec4e2322f6dfb1316eafd60c74ffceb0a4ce757a"
+    },
+    {
+      "file": "report.json",
+      "original": "musket-pose-native-diagnostic/report.json",
+      "bytes": 48047,
+      "sha256": "090a54df4fc17634cc14c5be59e69928c98dc995d7ccd011d5239658bd146f89"
+    },
+    {
+      "file": "summary.json",
+      "original": "musket-pose-native-diagnostic/summary.json",
+      "bytes": 907,
+      "sha256": "061bf60faaf93f6807fcfce540756ae8c5d2ce49468b25da22069a03dd3fa436"
+    },
+    {
+      "file": "attempt-01-script.mjs",
+      "original": "musket-pose-native-diagnostic/attempt-01-script.mjs",
+      "bytes": 7563,
+      "sha256": "715dda1f9b0a9d949431e2595ea2d641c5350a5130e9a84b8d716a3de1af875f"
+    }
+  ]
+}

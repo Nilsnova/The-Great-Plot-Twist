@@ -9,7 +9,13 @@ The later [source-52 completed sequence](source-52-completed/README.md) is
 archived separately: 4,583 frontend tests passed / one timed out; accessibility
 33 and demo 34 passed; two layout overlaps and a known upstream multiplayer
 firing-pose check failed. Its later keyboard variant also timed out. Those
-source-specific results do not rewrite the historical failures below. The [manifest](sha256.json) records each copied file's
+source-specific results do not rewrite the historical failures below.
+
+The later [final e874 review](source-e874-review/README.md) uses a new UI tree
+after measured Goals/toast clearance: 21 measured layout rows pass (three
+wave-hint rows skipped), and frontend has 4,586 passes / one 20-second timeout.
+The remaining five final commands/native document proof are still pending.
+Stage-nine actual images and source-52 history retain separate boundaries. The [manifest](sha256.json) records each copied file's
 original archive name, byte count and SHA-256. No application/browser run was
 performed to package these records.
 
