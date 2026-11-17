@@ -10,6 +10,7 @@ import pytest
 from pydantic import ValidationError
 
 from server.island.catalogue import catalogue_for_flags, load_island
+from server.island.structure_repair import kind_for_instance
 from server.island.structure_repair_models import RepairRequest, RepairResponse
 from server.island.structure_repair_rules import (
     intent_fingerprint,
@@ -172,6 +173,35 @@ def test_repair_response_rejects_incomplete_shared_quota_receipt():
                 "coins": 90,
             }
         )
+
+
+def test_recovery_state_kind_lookup_uses_instance_id_on_an_extra_d060_spot():
+    instance = UUID("10b7b257-4f3f-4dd8-bcd3-b18a68d6e468")
+    state = {
+        "structures": [
+            {
+                "spot": "cannon_11",
+                "instanceId": str(instance),
+                "kind": "culverin",
+            }
+        ]
+    }
+
+    assert kind_for_instance(state, instance) == "culverin"
+
+
+def test_recovery_state_kind_lookup_does_not_match_a_replacement_instance():
+    state = {
+        "structures": [
+            {
+                "spot": "wall_1",
+                "instanceId": "10b7b257-4f3f-4dd8-bcd3-b18a68d6e468",
+                "kind": "wall",
+            }
+        ]
+    }
+
+    assert kind_for_instance(state, UUID("dc6f36b8-b7b5-4fd1-b08c-e2f933be10d2")) is None
 
 
 def test_request_fingerprint_ignores_phase_wave_and_repair_sequence_guards():

@@ -46,6 +46,15 @@ def repair_price_from_schedule(prices: object, kind: str, level: int) -> int:
     return price
 
 
+def catalogue_price_schedule(catalogue: IslandCatalogue) -> dict[str, list[int]]:
+    """Build the server-only level schedule sent to the atomic transaction."""
+    return {
+        entry.kind: list(entry.prices)
+        for entry in catalogue.kinds
+        if entry.kind in REPAIRABLE_KINDS
+    }
+
+
 def intent_fingerprint(
     *,
     owner_id: str,
