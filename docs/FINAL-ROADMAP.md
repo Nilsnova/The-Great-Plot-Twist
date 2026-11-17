@@ -12,6 +12,8 @@
 >
 > Last updated: Tue 10 Nov 2026.
 
+**17 Nov perimeter candidate:** the [Draft workboard](contribute/PERIMETER-WORKBOARD.md), [implementation/explain-back guide](contribute/PERIMETER-REVIEW.md) and [integrated verification](evidence/PERIMETER-VERIFICATION.md) supersede older slice-only evidence checkpoints below. Functional implementation, the remaining under-150 rendering gate and independent human acceptance are recorded separately. This candidate does not close the full visual or land-expansion programme.
+
 ## Where we stand against the grading criteria
 
 | Criterion (weight) | Today | What "excellent" means for us |

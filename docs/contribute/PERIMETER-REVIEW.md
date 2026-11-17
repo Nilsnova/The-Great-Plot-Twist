@@ -8,6 +8,11 @@ Draft [#332](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/332). Source 
 collects the candidate; its final evidence must name the exact tested revision.
 This guide is not a deployment, activation, merge or human approval record.
 
+The later [integrated verification record](../evidence/PERIMETER-VERIFICATION.md) names
+the exact tested sources and remaining performance gate. The [current Draft
+workboard](PERIMETER-WORKBOARD.md) supplies the task-by-task review order and
+observed heads; its timestamp distinguishes that snapshot from later commits.
+
 Read the [API/policy contract](../INTERFACES.md#12-perimeter-defense-candidate)
 and [six-migration runbook](../../supabase/README.md#perimeter-defense-candidate-six-migration-additions)
 for exact shared interfaces. [D061](../DECISIONS.md#d061--full-perimeter-wall-building--2026-11-17)
