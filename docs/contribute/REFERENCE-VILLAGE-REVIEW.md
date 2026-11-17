@@ -5,7 +5,16 @@ Responsible human: **Johannes Franz Lang (`frcola`)**. Documentation child
 [VIS31 acceptance #236](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/236);
 [documentation Draft #388](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/388).
 
-**Frozen candidate: `6e2c3e8b3437ba7302870adb59e2351c2fa74f5e`.** Its frontend
+**Latest-main integration is still being verified.** The main cutoff is
+`ee5677ff`; the [stage-seven before record](../evidence/VIS-31-stage-07/README.md)
+pins actual runtime `5e3dd6cc`, before the selected-wall foliage correction and
+later checkpoint guard. The [targeted backend record](../evidence/reference-village-backend-checks/README.md)
+has separate 262 route/unit and 269 disposable-PostgreSQL passes on backend
+`c7851960`, with the initial 269 SQL skips preserved. It is not a fresh full
+backend run. The final frontend suite and stage-eight visual capture remain
+**PENDING**; earlier sources/results below keep their original boundaries.
+
+**Historical complete-check source: `6e2c3e8b3437ba7302870adb59e2351c2fa74f5e`.** Its frontend
 source tree is `8365d88e76889e68f5e1aa1d6aa9a858d3afaea3`. The fresh complete run on that source is **not green**:
 4,463 passed / 1 failed across 409 files (408 passed / 1 failed) in 563.22 s.
 The remaining defense-report ownership case reached its 20-second timeout.
@@ -231,6 +240,8 @@ from overlapping commands must not be added together.
 | Accessibility retry | Source 6e2c3e8b, [raw output](../evidence/reference-village-checks/README.md), 33 screens in 382.39 s | **Failed lobby keyboard audit only**; browser errors/external requests empty. Temporary markers were lost across legitimate refresh. VIS47 semantic-identity correction needs its own native result; no new accessibility pass is claimed here. |
 | Unchanged multiplayer baseline | Documentation-only 8db343ba; [raw output/source record](../evidence/reference-village-checks/README.md), exit 1 in 65.84 s | Host/friend lobby and co-op construction progressed. The old per-wall-mesh observer then reported level 0 for a textured batched level-one wall. Later wave/revive/simultaneous-next/late-join/boss assertions were not reached. |
 | Standalone comparison document | [Actual browser receipts](../evidence/reference-village-comparison-browser/README.md), HTML hash ee507bf4, Chromium 156.0.8078.79 | Owned-loopback HTTP passes both viewports: 8 decoded original images, 3 tablists / 27 real actions each, exact native dimensions, focus/selection/panel/overflow checks and zero page errors/external requests. Direct file-URI navigation was separately blocked before assertions. This tests the documentation page, not a later game runtime. |
+| Latest-main stage-seven before record | [Selected-wall before images/raw capture/execution](../evidence/VIS-31-stage-07/README.md), source 5e3dd6cc, 208.25 s | Actual local journey completed at both viewports with 20 PNGs, zero page errors/external requests and one offline 503 console diagnostic each. The selected shore wall is still partly covered by foliage. This precedes the selected-wall correction and later backend checkpoint guard; final stage eight is pending. |
+| Latest targeted backend/SQL | [Exact logs and selected-file lists](../evidence/reference-village-backend-checks/README.md), backend c7851960 / Supabase 6e52a63b | Initial a85f4f29: 262 passed / 269 skipped in 25.62 s, Ruff clean. Corrected scratch opt-in at 0d3589c2: 269 actual PostgreSQL checks passed in 15.56 s, zero skips. These are 26 selected files, not a fresh full-backend result; no live migration was applied. |
 | HUD focused proof | [BASE05 spec](../../specs/BASE-05-reference-hud.md), runtime `60573698` / final doc head `0729faf5`: 5 native HUD cases, 3 selected legacy coin cases, 20 model cases passed in separate commands | Desktop/phone/320px HUD semantics and controls, Goals restoration and coin compatibility. No final combined scene, a11y/demo or live-account claim. |
 | Wall tier correction | [Correction spec](../../specs/VIS-14-level-one-wall-art.md), head `b84eadfc`: 7 files / 76 tests passed in 3.81s | All canonical damage tiers, world/combat UV buffers, fallback/API/scene/preload cases. No combined final visual or live recovery acceptance. |
 | Core optional travel correction | [Handover](../handoff/vis35-core-travel-rejoin.md), `f52a05c5`: 6 files / 49 tests passed, build/spoiler guard passed | Guarded rejoin, actual controller and island-load behavior; browser travel/full-suite/live cases remain unverified. |

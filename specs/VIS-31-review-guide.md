@@ -144,3 +144,25 @@ Packaging checks passed seven exact copied files, two full-document screenshot
 dimensions, both 27-action browser reports, the zero-assertion failed-file record,
 HTML source hash identity and 106 relative links/anchors. The copied checker
 passes `node --check`. Final latest-main gameplay evidence remains separate.
+
+## Latest-main intermediate capture and targeted backend evidence
+
+Preserved stage-seven source 5e3dd6cc, its original execution/report/log and the
+two actual selected-wall before PNGs. Its manifest lists all 20 original capture
+hashes/dimensions while explicitly publishing only the two selected-wall images
+needed for the foliage correction. This is an intermediate pre-correction /
+pre-checkpoint-guard source, not the final stage-eight package.
+
+Preserved eight exact backend log/result files for backend c7851960 / Supabase
+6e52a63b. Initial source a85f4f29 passed 262 route/unit cases and skipped 269 SQL
+cases without scratch opt-in; its Ruff result is clean. Source 0d3589c2 then ran
+the same 16 SQL files with CASE_PG_SCRATCH=1: 269 passed, zero skips. Both source
+identities and process/test durations remain distinct. These are 26 selected
+files; no fresh full-backend or live-migration result is claimed. Final frontend
+checks and stage-eight evidence remain pending.
+
+Packaging checks passed all eight original backend copies and five published
+stage-seven copies, all twenty original PNG hashes, the two published native
+before-image dimensions, source/tree and 26/16-file command scopes, raw result
+lines and 71 relative links/anchors across the guide and new evidence READMEs.
+The historical stage-six package was not modified.
