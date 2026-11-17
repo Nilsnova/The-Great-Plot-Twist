@@ -3,12 +3,15 @@
 Run only on the disposable full-chain PostgreSQL fixture; every migration is applied twice.
 """
 
+import json
+from pathlib import Path
 from uuid import UUID, uuid4
 
 import pytest
 
 psycopg = pytest.importorskip("psycopg")
 
+from server.island.layout import island_layout  # noqa: E402
 from server.tests.island_sql.test_islands_and_waves_sql import (  # noqa: E402
     OWNER,
     add_players,
@@ -51,7 +54,7 @@ def test_recovery_tables_are_service_only_and_protect_normalized_health(database
                 "structure_repair_receipts",
             ],
         ),
-        ).fetchone() == (7,)
+    ).fetchone() == (7,)
     assert database.execute(
         "select recovery_instance_id is not null from public.islet_buildings "
         "where player_id = %s and plot = 'wall_1'",
@@ -158,14 +161,17 @@ def test_sql_projection_uses_integer_units_and_zero_can_recover(
     database, hp, elapsed, numerator, denominator, expected
 ) -> None:
     as_server(database)
-    assert call(
-        database,
-        "select public.structure_recovery_project_hp(%s, %s, %s, %s)",
-        hp,
-        elapsed,
-        numerator,
-        denominator,
-    ) == expected
+    assert (
+        call(
+            database,
+            "select public.structure_recovery_project_hp(%s, %s, %s, %s)",
+            hp,
+            elapsed,
+            numerator,
+            denominator,
+        )
+        == expected
+    )
 
 
 @pytest.mark.parametrize(
@@ -183,15 +189,18 @@ def test_phase_uses_canonical_expiry_not_request_access_time(
     database, starts, expires, closed, now, expected
 ) -> None:
     as_server(database)
-    assert call(
-        database,
-        "select public.structure_recovery_phase(to_timestamp(%s), to_timestamp(%s), "
-        "to_timestamp(%s), to_timestamp(%s))",
-        starts,
-        expires,
-        closed,
-        now,
-    ) == expected
+    assert (
+        call(
+            database,
+            "select public.structure_recovery_phase(to_timestamp(%s), to_timestamp(%s), "
+            "to_timestamp(%s), to_timestamp(%s))",
+            starts,
+            expires,
+            closed,
+            now,
+        )
+        == expected
+    )
 
 
 def test_database_state_reader_returns_canonical_wire_shape_and_pure_projection(database) -> None:
@@ -373,10 +382,57 @@ def test_post_bell_build_is_readable_and_survives_expiry_settlement(database) ->
         (OWNER, original_id),
     )
     wave_id = uuid4()
+    recovery_config = json.loads(
+        (Path(__file__).resolve().parents[3] / "content" / "structure_recovery_v1.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    recovery_config["baseRateUnitsPerSecond"] = [5000, 3]
+    recovery_config["recoveryRateFactors"] = {
+        "carpenterMultiplierPerWorker": 1,
+        "carpenterMaximumWorkers": 2,
+        "workshopPercentPerHouse": 30,
+        "workshopPercentCap": 50,
+        "workshopRadius": 10,
+        "wallSpecRateFactors": {"quick_mend": [2, 1], "bastion": [3, 1]},
+        "wallResearchRateFactors": {"mason_drill": [3, 2]},
+    }
+    default_positions = {
+        spot.spot: {"x": spot.x, "z": spot.z} for spot in island_layout(more=True).spots
+    }
     initial_snapshot = {
         "recoveryVersion": 1,
         "waveProtocol": 2,
+        "configVersion": 1,
         "waveId": str(wave_id),
+        "islandEpoch": str(reset_epoch),
+        "seed": 1,
+        "startsAt": "2026-11-17T02:00:00Z",
+        "weather": {"ships": 1, "fog": 0},
+        "rules": ["structure_recovery"],
+        "participants": [
+            {
+                "participantToken": str(uuid4()),
+                "captain": {"level": 1, "skills": [], "weapon": "musket"},
+            }
+        ],
+        "createWave": {
+            "weather": {"ships": 1, "fog": 0},
+            "island": {"hp": 100},
+            "crew": {"gunner": 0, "carpenter": 0, "lookout": 0, "guard": 0},
+            "flagship": False,
+            "countdown": 0,
+            "defenses": [
+                {
+                    "id": "wall_1",
+                    "kind": "wall",
+                    "level": 1,
+                    **default_positions["wall_1"],
+                }
+            ],
+        },
+        "defaultPositions": default_positions,
+        "recoveryConfig": recovery_config,
         "priceSchedule": {"wall": [10, 20, 40, 80, 160]},
         "structures": [
             {
@@ -387,6 +443,7 @@ def test_post_bell_build_is_readable_and_survives_expiry_settlement(database) ->
                 "hpUnits": 600000,
                 "maxHP": 60,
                 "repairSeq": 0,
+                **default_positions["wall_1"],
             }
         ],
     }
