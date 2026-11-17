@@ -4,7 +4,7 @@
 >
 > **Who uses it:** Ianno, the T58 agent and the recovery-state/simulation implementers.
 
-- **Status:** isolated frontend policy hooks implemented and focused tests/build pass; full-policy integration remains pending T55/T57. This is not activated or shipped behavior.
+- **Status:** version-aware frontend policy hooks and Captain/Tech models implemented; server-sourced version wiring, T57 runtime gates and final visual evidence remain in integration. This is not activated or shipped behavior.
 - **Branch:** `refactor/t58-captain-repair`
 - **Issue:** [#124](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/124)
 
@@ -22,9 +22,9 @@ Captain repair skills and independent wall regeneration conflict with the approv
 
 ## Implementation progress
 
-The frontend now has an isolated version-aware policy module at `frontend/src/campaign/captain-repair-policy.js`. `recoveryRateFactor()` accepts the island owner's Carpenter count, nearby Workshop count, supported structure kind, one wall's equipped `wallSpec`, island `wallResearch` and a between-wave boolean. It returns 0 during a reservation, applies Quick Mend or equipped Bastion only to walls, applies Mason Drill only to walls, and leaves other valid wall choices neutral. `isRetiredCaptainSkill()` and `captainBranchesForPolicy()` retain legacy behavior by default; under recovery v1 they hide the seven repair-only Captain choices without deleting stored ids or changing spent points. Captain stats accept an explicit `{recoveryVersion}` option so existing callers remain legacy by default. Captain/Tech renderer helpers accept a version to show the retained Engineer discount and recovery-specific research text.
+The frontend now has an isolated version-aware policy module at `frontend/src/campaign/captain-repair-policy.js`. `recoveryRateFactor()` accepts the island owner's Carpenter count, nearby Workshop count, supported structure kind, one wall's equipped `wallSpec`, island `wallResearch` and a between-wave boolean. It returns 0 during a reservation, applies Quick Mend or equipped Bastion only to walls, applies Mason Drill only to walls, and leaves other valid wall choices neutral. `isRetiredCaptainSkill()` and `captainBranchesForPolicy()` retain legacy behavior by default; under recovery v1 they hide the seven repair-only Captain choices without deleting stored ids or changing spent points. Captain stats accept an explicit `{recoveryVersion}` option so existing callers remain legacy by default. `skillsModel()` and `techModel()` also accept a `recoveryVersion`, defaulting to legacy 0, and show the recovery-v1 Captain choices and research text only when the server version is passed.
 
-T55 owns the authoritative backend recovery helper, Captain route/catalogue enforcement and server-sourced policy version. T57 owns combat E-action removal, no-free-heal runtime gates and passing the frozen `recoveryVersion` into consumers. Building-skill text in the shared island card UI needs version wiring at integration. Until those hooks are connected, the frontend helpers alone do not change game behavior. Visual evidence and full acceptance checks remain pending that integration.
+T55 owns the authoritative backend recovery helper, Captain route/catalogue enforcement and server-sourced policy version; the canonical GET `/api/island/structures` state now exposes `recoveryVersion`. T59 owns passing that server value through the island index into Captain/Tech models, while T57 owns combat E-action removal, no-free-heal runtime gates and passing the frozen wave `recoveryVersion` into Captain stats. The per-wall Quick Mend text in the shared build card also needs version wiring. Until those hooks are connected, these frontend model changes alone do not change game behavior. Visual evidence and full acceptance checks remain pending that integration.
 
 ## Out of scope
 
