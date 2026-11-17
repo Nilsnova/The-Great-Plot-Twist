@@ -1,12 +1,12 @@
 {
-  "source": "76f66f3f434b98cfa474b0ff0447c95ea9421bc1",
+  "source": "525c2ab470d455ac76414bb0b963526897519008",
   "fixture": "declared funded/progressed fake; actual pointer/keys/fine/quote/cancel; no paid save injection",
   "states": [
     {
       "phase": "unquoted",
       "bounds": {
-        "canonicalLandTop": 222.8756128098744,
-        "canonicalLandBottom": 437.29179752184183,
+        "canonicalLandTop": 222.87715701144344,
+        "canonicalLandBottom": 437.29937898891944,
         "barTop": 471.9375,
         "barHeight": 316.0625,
         "barBottom": 788
@@ -14,86 +14,339 @@
       "buttons": [
         {
           "label": "Shift draft one square west",
+          "visibleText": "←",
+          "fontSize": "17px",
           "width": 44,
           "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 32.5,
+            "right": 49.5,
+            "top": 619.671875,
+            "bottom": 642.671875
+          },
+          "paddingBounds": {
+            "left": 21,
+            "right": 61,
+            "top": 611.71875,
+            "bottom": 651.71875
+          },
+          "contentBounds": {
+            "left": 25,
+            "right": 57,
+            "top": 615.71875,
+            "bottom": 647.71875
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
           "hit": true
         },
         {
           "label": "Shift draft one square north",
+          "visibleText": "↑",
+          "fontSize": "17px",
           "width": 44,
           "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 84.75,
+            "right": 93.25,
+            "top": 619.671875,
+            "bottom": 642.671875
+          },
+          "paddingBounds": {
+            "left": 69,
+            "right": 109,
+            "top": 611.71875,
+            "bottom": 651.71875
+          },
+          "contentBounds": {
+            "left": 73,
+            "right": 105,
+            "top": 615.71875,
+            "bottom": 647.71875
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
           "hit": true
         },
         {
           "label": "Shift draft one square south",
+          "visibleText": "↓",
+          "fontSize": "17px",
           "width": 44,
           "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 132.75,
+            "right": 141.25,
+            "top": 619.671875,
+            "bottom": 642.671875
+          },
+          "paddingBounds": {
+            "left": 117,
+            "right": 157,
+            "top": 611.71875,
+            "bottom": 651.71875
+          },
+          "contentBounds": {
+            "left": 121,
+            "right": 153,
+            "top": 615.71875,
+            "bottom": 647.71875
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
           "hit": true
         },
         {
           "label": "Shift draft one square east",
+          "visibleText": "→",
+          "fontSize": "17px",
           "width": 44,
           "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 176.5,
+            "right": 193.5,
+            "top": 619.671875,
+            "bottom": 642.671875
+          },
+          "paddingBounds": {
+            "left": 165,
+            "right": 205,
+            "top": 611.71875,
+            "bottom": 651.71875
+          },
+          "contentBounds": {
+            "left": 169,
+            "right": 201,
+            "top": 615.71875,
+            "bottom": 647.71875
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
           "hit": true
         },
         {
           "label": "Zoom out",
+          "visibleText": "−",
+          "fontSize": "17px",
           "width": 44,
           "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 36.03125,
+            "right": 45.96875,
+            "top": 691.859375,
+            "bottom": 714.859375
+          },
+          "paddingBounds": {
+            "left": 21,
+            "right": 61,
+            "top": 683.90625,
+            "bottom": 723.90625
+          },
+          "contentBounds": {
+            "left": 25,
+            "right": 57,
+            "top": 687.90625,
+            "bottom": 719.90625
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
           "hit": true
         },
         {
           "label": "Zoom in",
+          "visibleText": "+",
+          "fontSize": "17px",
           "width": 44,
           "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 84.125,
+            "right": 93.859375,
+            "top": 691.859375,
+            "bottom": 714.859375
+          },
+          "paddingBounds": {
+            "left": 69,
+            "right": 109,
+            "top": 683.90625,
+            "bottom": 723.90625
+          },
+          "contentBounds": {
+            "left": 73,
+            "right": 105,
+            "top": 687.90625,
+            "bottom": 719.90625
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
           "hit": true
         },
         {
           "label": "Fit village",
+          "visibleText": "Fit",
+          "fontSize": "17px",
           "width": 44,
           "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 126.046875,
+            "right": 147.953125,
+            "top": 691.859375,
+            "bottom": 714.859375
+          },
+          "paddingBounds": {
+            "left": 117,
+            "right": 157,
+            "top": 683.90625,
+            "bottom": 723.90625
+          },
+          "contentBounds": {
+            "left": 121,
+            "right": 153,
+            "top": 687.90625,
+            "bottom": 719.90625
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
           "hit": true
         },
         {
           "label": "Remove last",
-          "width": 60.328125,
+          "visibleText": "Undo",
+          "fontSize": "17px",
+          "width": 58.375,
           "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 169.53125,
+            "right": 214.84375,
+            "top": 691.859375,
+            "bottom": 714.859375
+          },
+          "paddingBounds": {
+            "left": 165,
+            "right": 219.375,
+            "top": 683.90625,
+            "bottom": 723.90625
+          },
+          "contentBounds": {
+            "left": 169,
+            "right": 215.375,
+            "top": 687.90625,
+            "bottom": 719.90625
+          },
+          "scrollWidth": 54,
+          "clientWidth": 54,
           "hit": true
         },
         {
           "label": "Clear",
-          "width": 60.328125,
+          "visibleText": "Clear",
+          "fontSize": "17px",
+          "width": 58.375,
           "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 232.53125,
+            "right": 276.59375,
+            "top": 691.859375,
+            "bottom": 714.859375
+          },
+          "paddingBounds": {
+            "left": 227.375,
+            "right": 281.75,
+            "top": 683.90625,
+            "bottom": 723.90625
+          },
+          "contentBounds": {
+            "left": 231.375,
+            "right": 277.75,
+            "top": 687.90625,
+            "bottom": 719.90625
+          },
+          "scrollWidth": 54,
+          "clientWidth": 54,
           "hit": true
         },
         {
           "label": "Cancel",
-          "width": 60.328125,
+          "visibleText": "Cancel",
+          "fontSize": "17px",
+          "width": 68.25,
           "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 293.75,
+            "right": 350,
+            "top": 691.859375,
+            "bottom": 714.859375
+          },
+          "paddingBounds": {
+            "left": 289.75,
+            "right": 354,
+            "top": 683.90625,
+            "bottom": 723.90625
+          },
+          "contentBounds": {
+            "left": 293.75,
+            "right": 350,
+            "top": 687.90625,
+            "bottom": 719.90625
+          },
+          "scrollWidth": 64,
+          "clientWidth": 64,
           "hit": true
         },
         {
           "label": "Get price",
-          "width": 332.984375,
+          "visibleText": "Get price",
+          "fontSize": "17px",
+          "width": 337,
           "height": 46.09375,
+          "textFits": true,
+          "textBounds": {
+            "left": 149.1875,
+            "right": 225.796875,
+            "top": 740.90625,
+            "bottom": 763.90625
+          },
+          "paddingBounds": {
+            "left": 21,
+            "right": 354,
+            "top": 731.90625,
+            "bottom": 774
+          },
+          "contentBounds": {
+            "left": 39,
+            "right": 336,
+            "top": 741.90625,
+            "bottom": 764
+          },
+          "scrollWidth": 333,
+          "clientWidth": 333,
           "hit": true
         }
       ],
       "frame": {
         "name": "workspace-unquoted-375x812.png",
         "qualityBefore": {
-          "pixelRatio": 0.8,
-          "drawingWidth": 300,
-          "drawingHeight": 649,
+          "pixelRatio": 1,
+          "drawingWidth": 375,
+          "drawingHeight": 812,
           "quality": "high",
-          "densityScale": 0.8
+          "densityScale": 1
         },
         "camera": [
-          4.2670259828272004e-10,
-          -10.78899982780831,
+          9.401949801302703e-10,
+          -10.788551866066497,
           100
         ],
-        "zoom": 0.2829222547860701,
+        "zoom": 0.28292578291637266,
         "captain": [
           8.5,
           1.03,
@@ -124,8 +377,8 @@
     {
       "phase": "quoted",
       "bounds": {
-        "canonicalLandTop": 219.38837975876888,
-        "canonicalLandBottom": 419.88861971711617,
+        "canonicalLandTop": 219.38895069260954,
+        "canonicalLandBottom": 419.8942143327366,
         "barTop": 453.046875,
         "barHeight": 334.953125,
         "barBottom": 788
@@ -133,68 +386,321 @@
       "buttons": [
         {
           "label": "Shift draft one square west",
+          "visibleText": "←",
+          "fontSize": "17px",
           "width": 44,
           "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 32.5,
+            "right": 49.5,
+            "top": 619.671875,
+            "bottom": 642.671875
+          },
+          "paddingBounds": {
+            "left": 21,
+            "right": 61,
+            "top": 611.71875,
+            "bottom": 651.71875
+          },
+          "contentBounds": {
+            "left": 25,
+            "right": 57,
+            "top": 615.71875,
+            "bottom": 647.71875
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
           "hit": true
         },
         {
           "label": "Shift draft one square north",
+          "visibleText": "↑",
+          "fontSize": "17px",
           "width": 44,
           "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 84.75,
+            "right": 93.25,
+            "top": 619.671875,
+            "bottom": 642.671875
+          },
+          "paddingBounds": {
+            "left": 69,
+            "right": 109,
+            "top": 611.71875,
+            "bottom": 651.71875
+          },
+          "contentBounds": {
+            "left": 73,
+            "right": 105,
+            "top": 615.71875,
+            "bottom": 647.71875
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
           "hit": true
         },
         {
           "label": "Shift draft one square south",
+          "visibleText": "↓",
+          "fontSize": "17px",
           "width": 44,
           "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 132.75,
+            "right": 141.25,
+            "top": 619.671875,
+            "bottom": 642.671875
+          },
+          "paddingBounds": {
+            "left": 117,
+            "right": 157,
+            "top": 611.71875,
+            "bottom": 651.71875
+          },
+          "contentBounds": {
+            "left": 121,
+            "right": 153,
+            "top": 615.71875,
+            "bottom": 647.71875
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
           "hit": true
         },
         {
           "label": "Shift draft one square east",
+          "visibleText": "→",
+          "fontSize": "17px",
           "width": 44,
           "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 176.5,
+            "right": 193.5,
+            "top": 619.671875,
+            "bottom": 642.671875
+          },
+          "paddingBounds": {
+            "left": 165,
+            "right": 205,
+            "top": 611.71875,
+            "bottom": 651.71875
+          },
+          "contentBounds": {
+            "left": 169,
+            "right": 201,
+            "top": 615.71875,
+            "bottom": 647.71875
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
           "hit": true
         },
         {
           "label": "Zoom out",
+          "visibleText": "−",
+          "fontSize": "17px",
           "width": 44,
           "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 36.03125,
+            "right": 45.96875,
+            "top": 691.859375,
+            "bottom": 714.859375
+          },
+          "paddingBounds": {
+            "left": 21,
+            "right": 61,
+            "top": 683.90625,
+            "bottom": 723.90625
+          },
+          "contentBounds": {
+            "left": 25,
+            "right": 57,
+            "top": 687.90625,
+            "bottom": 719.90625
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
           "hit": true
         },
         {
           "label": "Zoom in",
+          "visibleText": "+",
+          "fontSize": "17px",
           "width": 44,
           "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 84.125,
+            "right": 93.859375,
+            "top": 691.859375,
+            "bottom": 714.859375
+          },
+          "paddingBounds": {
+            "left": 69,
+            "right": 109,
+            "top": 683.90625,
+            "bottom": 723.90625
+          },
+          "contentBounds": {
+            "left": 73,
+            "right": 105,
+            "top": 687.90625,
+            "bottom": 719.90625
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
           "hit": true
         },
         {
           "label": "Fit village",
+          "visibleText": "Fit",
+          "fontSize": "17px",
           "width": 44,
           "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 126.046875,
+            "right": 147.953125,
+            "top": 691.859375,
+            "bottom": 714.859375
+          },
+          "paddingBounds": {
+            "left": 117,
+            "right": 157,
+            "top": 683.90625,
+            "bottom": 723.90625
+          },
+          "contentBounds": {
+            "left": 121,
+            "right": 153,
+            "top": 687.90625,
+            "bottom": 719.90625
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
           "hit": true
         },
         {
           "label": "Remove last",
-          "width": 60.328125,
+          "visibleText": "Undo",
+          "fontSize": "17px",
+          "width": 58.375,
           "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 169.53125,
+            "right": 214.84375,
+            "top": 691.859375,
+            "bottom": 714.859375
+          },
+          "paddingBounds": {
+            "left": 165,
+            "right": 219.375,
+            "top": 683.90625,
+            "bottom": 723.90625
+          },
+          "contentBounds": {
+            "left": 169,
+            "right": 215.375,
+            "top": 687.90625,
+            "bottom": 719.90625
+          },
+          "scrollWidth": 54,
+          "clientWidth": 54,
           "hit": true
         },
         {
           "label": "Clear",
-          "width": 60.328125,
+          "visibleText": "Clear",
+          "fontSize": "17px",
+          "width": 58.375,
           "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 232.53125,
+            "right": 276.59375,
+            "top": 691.859375,
+            "bottom": 714.859375
+          },
+          "paddingBounds": {
+            "left": 227.375,
+            "right": 281.75,
+            "top": 683.90625,
+            "bottom": 723.90625
+          },
+          "contentBounds": {
+            "left": 231.375,
+            "right": 277.75,
+            "top": 687.90625,
+            "bottom": 719.90625
+          },
+          "scrollWidth": 54,
+          "clientWidth": 54,
           "hit": true
         },
         {
           "label": "Cancel",
-          "width": 60.328125,
+          "visibleText": "Cancel",
+          "fontSize": "17px",
+          "width": 68.25,
           "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 293.75,
+            "right": 350,
+            "top": 691.859375,
+            "bottom": 714.859375
+          },
+          "paddingBounds": {
+            "left": 289.75,
+            "right": 354,
+            "top": 683.90625,
+            "bottom": 723.90625
+          },
+          "contentBounds": {
+            "left": 293.75,
+            "right": 350,
+            "top": 687.90625,
+            "bottom": 719.90625
+          },
+          "scrollWidth": 64,
+          "clientWidth": 64,
           "hit": true
         },
         {
           "label": "Build for 20 coins",
-          "width": 332.984375,
+          "visibleText": "Build for 20 coins",
+          "fontSize": "17px",
+          "width": 337,
           "height": 46.09375,
+          "textFits": true,
+          "textBounds": {
+            "left": 114.828125,
+            "right": 260.15625,
+            "top": 740.90625,
+            "bottom": 763.90625
+          },
+          "paddingBounds": {
+            "left": 21,
+            "right": 354,
+            "top": 731.90625,
+            "bottom": 774
+          },
+          "contentBounds": {
+            "left": 39,
+            "right": 336,
+            "top": 741.90625,
+            "bottom": 764
+          },
+          "scrollWidth": 333,
+          "clientWidth": 333,
           "hit": true
         }
       ],
@@ -208,11 +714,11 @@
           "densityScale": 1
         },
         "camera": [
-          1.898867138421639e-14,
-          -13.269332612378134,
+          9.081664269524369e-14,
+          -13.268639393061074,
           100
         ],
-        "zoom": 0.26455042561164244,
+        "zoom": 0.2645558381932356,
         "captain": [
           8.5,
           1.03,
