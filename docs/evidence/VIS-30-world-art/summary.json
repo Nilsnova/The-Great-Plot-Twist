@@ -1,6 +1,6 @@
 {
   "scope": "offline normalized PNG source compilation; runtime activation/build exclusion and actual-game acceptance remain separate",
-  "sourceCommit": "f635640ec959c08c7cc57856db1bf83533973b9d",
+  "sourceCommit": "d39ba70278c7060774a7cc03aa01e44e159cf1ac",
   "browser": "156.0.8078.79",
   "families": [
     "buildings",
@@ -12,25 +12,28 @@
     "walls",
     "core",
     "progress",
-    "mortars"
+    "mortars",
+    "harpoons",
+    "culverins",
+    "swivels"
   ],
-  "frames": 104,
+  "frames": 164,
   "initialTransfer": {
     "unchangedTerrainBytes": 2683357,
-    "rawPlusTerrainBytes": 22947185,
-    "compiledPlusTerrainBytes": 10353548,
+    "rawPlusTerrainBytes": 29819059,
+    "compiledPlusTerrainBytes": 13608302,
     "targetBytes": 8388608,
     "targetMet": false
   },
-  "originalEncoded": 20263828,
-  "compiledEncoded": 7670191,
-  "originalDecoded": 69203144,
-  "compiledDecoded": 27407104,
+  "originalEncoded": 27135702,
+  "compiledEncoded": 10924945,
+  "originalDecoded": 88077512,
+  "compiledDecoded": 38543104,
   "largestCompiledDecoded": 5541888,
   "density": [
     {
       "density": 4,
-      "cases": 104,
+      "cases": 164,
       "maxRgb": 0,
       "maxAlpha": 0,
       "worstAlphaWeightedMeanRgb": 0,
@@ -39,29 +42,29 @@
     },
     {
       "density": 2.5,
-      "cases": 104,
+      "cases": 164,
       "maxRgb": 255,
       "maxAlpha": 52,
-      "worstAlphaWeightedMeanRgb": 3.487071865886311,
-      "differingPixels": 935661,
+      "worstAlphaWeightedMeanRgb": 3.5373021553435815,
+      "differingPixels": 1309620,
       "minVisiblePixels": 1505
     },
     {
       "density": 2,
-      "cases": 104,
+      "cases": 164,
       "maxRgb": 255,
       "maxAlpha": 59,
       "worstAlphaWeightedMeanRgb": 5.190346129254299,
-      "differingPixels": 602528,
+      "differingPixels": 841504,
       "minVisiblePixels": 953
     },
     {
       "density": 1.5,
-      "cases": 104,
+      "cases": 164,
       "maxRgb": 255,
       "maxAlpha": 74,
       "worstAlphaWeightedMeanRgb": 5.549814298425998,
-      "differingPixels": 363828,
+      "differingPixels": 505651,
       "minVisiblePixels": 556
     }
   ],
