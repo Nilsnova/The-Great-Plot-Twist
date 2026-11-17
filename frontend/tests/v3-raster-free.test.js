@@ -28,7 +28,7 @@ const RASTER = /(?:cutscenes|places|pixel)\/[\w.${}-]*\.(?:png|webp|jpe?g)|['"`]
 const WORLD_IMAGE = /village\/[\w./${}-]+\.(?:png|webp|jpe?g)/;
 // This named world-only boundary is deliberate, not an exception for all shared art.
 const worldRasterModule = path => path.startsWith('src/art/village/') ||
-  path.startsWith('src/art/village-raster') || path === 'src/art/village-families.js';
+  path.startsWith('src/art/village-');
 function staticClosure(roots) {
   const pending = [...roots], visited = new Set();
   while (pending.length) {
