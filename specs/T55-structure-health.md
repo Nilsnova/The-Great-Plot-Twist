@@ -4,8 +4,8 @@
 >
 > **Who uses it:** Ianno, the T55 agent and dependent repair-task implementers.
 
-- **Status:** in progress after Ianno confirmed approval of merged [PR #135](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/135).
-- **Branch:** `feat/t55-structure-health`
+- **Status:** core implementation merged through PR #203. This branch fixes saved-v1 availability compatibility; the two HTTP/PostgreSQL regressions failed on main and pass after the fix. Human review and publication confirmation remain pending.
+- **Branch:** `fix/recovery-gated-defenses`
 - **Issue:** [#121](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/121)
 
 ## Why
@@ -39,6 +39,8 @@ Test deterministic HP projection and phase boundaries, then authenticated state/
 
 A saved recovery-v1 island may contain extra tower plots or culverins after the `more_tower_spots` or `defenses_v2` availability flags are disabled. Existing buildings remain visible, repairable, upgradable when full and between waves, movable and demolishable under the normal v1 rules; a demolished gated building cannot be rebuilt while its availability flag is off. New builds and new gated kinds remain blocked. Recovery repair prices use the full server catalogue, including culverin prices. A v1 wave snapshot must include saved culverins and freeze `defenses_v2` for every participant even when new availability is disabled. Version-zero and ordinary legacy behavior remain flag-controlled.
 
+Focused current-source results, exact commands and limits are in [the compatibility evidence](../docs/evidence/T55-existing-defenses/README.md). The prior compatibility PR #238 closed without merging; this branch reuses its reviewed source fix on current main and does not reopen that PR.
+
 ## Contracts touched
 
 T54 recovery version 1 / wave protocol 2, `structure_recovery` off-by-default flag, service-only recovery tables, state/journal/checkpoint APIs and canonical locks. Document exact implemented shapes in the owning modules/migrations and contract index. Existing wallet reasons remain unchanged.
@@ -48,4 +50,4 @@ T54 recovery version 1 / wave protocol 2, `structure_recovery` off-by-default fl
 - **Responsible teammate:** Ianno (@Iannomh123456).
 - **Coding agent:** `gpt-6-luna`, high reasoning.
 - **Human reviewer:** Franz (@frcola), after Ianno's manual review and publication confirmation.
-- **Last updated:** 2026-11-16.
+- **Last updated:** 2026-11-17.

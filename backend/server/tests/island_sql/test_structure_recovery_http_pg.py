@@ -696,6 +696,7 @@ def test_saved_v1_extra_spots_and_culverin_still_start_with_availability_flags_o
     assert "defenses_v2" in body["rules"]
     assert {item["id"] for item in snapshot["createWave"]["defenses"]} >= set(by_spot)
 
+
 def test_saved_v1_culverin_between_wave_repair_and_empty_plot_remain_compatible(database):
     epoch, _ = seed_recovery(database, (("cannon_8", "culverin"),))
     as_server(database)
