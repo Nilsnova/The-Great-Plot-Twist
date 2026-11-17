@@ -18,6 +18,7 @@ import {islandFrame} from '../art/registry.js';
 import {frameCanvas, smoothTexture, spriteMaterial} from '../art/textures.js';
 import {clickVerdict, WALK_CLOSER} from '../world/reach.js';
 import {decorateProgress} from './decorations.js';
+import {createStructureRecoveryIndicators} from './structure-recovery-indicators.js';
 
 const UNIT = 16;
 // The first id the catalog knows wins; none known means the drawn sprite stays.
@@ -235,6 +236,10 @@ export function decorateIsland(place, ctx = {}) {
     if (preview?.spotId === spot.id) return {x: preview.x, z: preview.z};
     return layout.zones === islandZones ? placedSpot(spot.id, state.spots) ?? spot : spot;
   };
+  const recoveryIndicators = createStructureRecoveryIndicators({root, locate: id => {
+    const spot = SPOTS.find(item => item.id === id);
+    return spot ? whereOf(spot) : null;
+  }});
   // The real art once it has loaded (null until then: the drawn sprites stand in), and what each spot shows.
   let art = null;
   const shown = new Map(); // spot id (or 'crew') -> {key, meshes}
@@ -369,6 +374,7 @@ export function decorateIsland(place, ctx = {}) {
   let ringing = 0;
   return {
     apply, pickAt,
+    setRecoveryState(value) { recoveryIndicators.setState(value); recoveryIndicators.update(); },
     // T36: the cell a building is moved to ({spotId, x, z, size, ok}), or null when the move ends.
     preview(next) {
       if (disposed) return;
@@ -382,6 +388,7 @@ export function decorateIsland(place, ctx = {}) {
     ring() { ringing = 1.2; },
     update(dt, time = 0) {
       if (disposed) return;
+      recoveryIndicators.update();
       rangeRing.show(ctx.range?.() ?? null, reduced() ? 0 : time);
       const still = reduced();
       const glow = still ? 1 : .7 + .3 * Math.sin(time * 3.2), bob = still ? 0 : Math.sin(time * 2.4) * 2.4 / UNIT;
@@ -403,7 +410,7 @@ export function decorateIsland(place, ctx = {}) {
     get root() { return root; },
     dispose() {
       if (disposed) return; disposed = true; cleanups.splice(0).forEach(stop => stop());
-      progress?.dispose();
+      progress?.dispose(); recoveryIndicators.dispose();
       for (const id of [...shown.keys()]) clear(id);
       for (const item of lockTextures.values()) item.texture.dispose(); // the padlocks a spot no longer shows
       if (art) Object.values(art).forEach(material => { material.map?.dispose(); material.dispose(); });

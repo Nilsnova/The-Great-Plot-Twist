@@ -1688,3 +1688,20 @@ measures fixed-head paging for 10,000 input events. It also found no automatic r
 durable global journal cap. HTTP writes and event reads have per-player, per-process token buckets;
 the direct SQL measurements bypass those route limits. Activation remains gated on an
 operating-budget and retention decision.
+
+
+## T58. Captain repair choices and shared wall Tech — Ianno Hollensteiner (#124)
+
+Recovery version 1 hides seven repair-only Captain choices while retaining their saved IDs as spent points.
+Engineer keeps the 10% build and upgrade discount. Wall recovery uses the equipped wall skill and island research:
+Quick Mend ×2 or Bastion ×3 plus 50% max HP, with Mason Drill ×1.5 stacking; researching Bastion does not equip it
+to every wall. Versioned tutorial pages preserve legacy instructions for version 0 and explain the shared between-wave
+recovery rules for version 1.
+
+Recovery-v1 structure cards keep level upgrades disabled during a reserved wave or while that structure is damaged;
+the card says to fully repair it first and labels catalogue strength separately from modified HP.
+
+Focused checks: `cd frontend && npm exec vitest -- run tests/tutorial-pages.test.js tests/tutorial/host.test.js tests/campaign/captain-repair-policy.test.js tests/island/captain-recovery-tree.test.js tests/island/card-model.test.js` (66 tests) and `cd frontend && npm run build`.
+The [evidence README](evidence/T58-captain-repair/README.md) records screenshot fixtures and the exact scope. These
+checks do not prove persisted production state, live recovery, payments, multiplayer or release activation; combined
+dependency review and release acceptance remain pending.

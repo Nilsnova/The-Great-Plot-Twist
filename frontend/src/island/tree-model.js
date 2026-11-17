@@ -50,7 +50,8 @@ export function stepLine(kind, path, from, to) {
   return parts.join(' · ');
 }
 
-export function towerTreeModel({kind, spot = null, coins = null, prices = null, wave = 0, unlocks = null, busy = false, picked = null, message = ''} = {}) {
+export function towerTreeModel({kind, spot = null, coins = null, prices = null, wave = 0, unlocks = null, busy = false, picked = null,
+  message = '', upgradeBlockedReason = ''} = {}) {
   const info = treeInfo(kind, prices);
   if (!info || !spot?.built) return null;
   const top = maxLevel(kind), level = Number.isSafeInteger(spot.level) && spot.level > 0 ? Math.min(spot.level, top) : 1;
@@ -61,13 +62,15 @@ export function towerTreeModel({kind, spot = null, coins = null, prices = null, 
   // The trunk: the tower's levels.
   const next = level + 1, upgrade = Number.isSafeInteger(spot.upgradeCost) ? spot.upgradeCost : priceFor(kind, level, prices);
   const trunkLocked = level < top && allowed < next;
+  const trunkUnavailable = trunkLocked || !!upgradeBlockedReason;
   const trunk = {id: 'level', icon: KIND_ICONS[kind] ?? '★', name: `Level ${level}`, cost: level < top && !trunkLocked ? shortCoins(upgrade) : '',
-    state: level >= top ? 'learned' : trunkLocked ? 'locked' : 'ready'};
+    state: level >= top ? 'learned' : trunkUnavailable ? 'locked' : 'ready'};
   trunk.label = `${name}, level ${level} of ${top}${level < top ? `, next level ${coinText(upgrade)}` : ''}`;
   const trunkDetail = () => {
     if (level >= top) return {id: 'level', icon: trunk.icon, state: 'learned', name: `Level ${top}`, sub: 'Top level', line: statLine(kind, level),
       reason: '', button: 'Pick a path above', disabled: true, busy: false, action: null};
-    const reason = trunkLocked ? `${opensText(lockedWave(unlocks, {kind, level: next}) ?? '?')}.` : busy ? '' : short(upgrade);
+    const reason = trunkLocked ? `${opensText(lockedWave(unlocks, {kind, level: next}) ?? '?')}.`
+      : upgradeBlockedReason || (busy ? '' : short(upgrade));
     return {id: 'level', icon: trunk.icon, state: trunk.state, name: `Level ${next}`, sub: `Level ${level} → ${next}`,
       line: statLine(kind, level, next), reason, button: busy === true || busy === 'upgrade' ? 'Upgrading…' : `Upgrade · ${coinText(upgrade)}`,
       disabled: !!busy || reason !== '', busy: busy === true || busy === 'upgrade', action: {type: 'upgrade'}};

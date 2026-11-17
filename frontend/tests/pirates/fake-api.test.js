@@ -1,6 +1,6 @@
 // The in-memory island and wave API (BUILD-PLAN 3.4): prices, refusals, loot and timing.
 import { describe, expect, it } from 'vitest';
-import { createFakeIslandApi, createFakeWorld, fakeFlagsFor, islandRoom, lootFor, readIslandCode, wantsFakeIslands } from '../../src/pirates/fake-api.js';
+import { createFakeIslandApi, createFakeIslandTransport, createFakeWorld, fakeFlagsFor, islandRoom, lootFor, readIslandCode, wantsFakeIslands } from '../../src/pirates/fake-api.js';
 
 const clock = (start = Date.UTC(2026, 10, 11, 12, 0, 0, 400)) => {
   let now = start;
@@ -12,6 +12,17 @@ async function refusal(promise) {
 }
 
 describe('fake island API', () => {
+  it('accepts protocol-two capability and keeps the legacy policy for a legacy island', async () => {
+    const transport = createFakeIslandTransport();
+    const started = await transport.post('/api/waves/start', {where: 'own', actionUid: 'capability-1', waveProtocol: 2});
+    expect(started.ok).toBe(true);
+    expect(started.data.waveProtocol).toBeUndefined();
+    const current = await transport.get('/api/waves/current?where=own&waveProtocol=2');
+    expect(current.data.waveId).toBe(started.data.waveId);
+    const joined = await transport.post('/api/waves/join', {waveId: started.data.waveId, waveProtocol: 2});
+    expect(joined.data.waveId).toBe(started.data.waveId);
+  });
+
   it('keeps tower obstacles off unless both pathing and tower health are enabled', async () => {
     const partial = createFakeIslandApi({flags: {tower_obstacles: true, pathing: true}});
     expect((await partial.startWave({where: 'own', actionUid: 'partial'})).rules).toEqual(['pathing']);
@@ -212,9 +223,21 @@ describe('fake island API', () => {
 
 describe('?fakeflags', () => {
   it('reads every flag name the server knows, defenses_v2 too, and ignores anything else', () => {
-    expect(fakeFlagsFor('?fakeflags=defenses_v2,wall_recovery,tower_health,tower_obstacles')).toEqual({
-      defenses_v2: true, wall_recovery: true, tower_health: true, tower_obstacles: true });
+    expect(fakeFlagsFor('?fakeflags=defenses_v2,wall_recovery,tower_health,tower_obstacles,structure_recovery')).toEqual({
+      defenses_v2: true, wall_recovery: true, tower_health: true, tower_obstacles: true, structure_recovery: true });
     expect(fakeFlagsFor('?fakeflags=Arsenal,2x,a-b,,arsenal')).toEqual({ arsenal: true });
     expect(fakeFlagsFor('')).toEqual({});
+  });
+
+  it('does not simulate persistent structure health or authorize paid repairs', async () => {
+    const transport = createFakeIslandTransport({coins: 100});
+    const before = await transport.api.island();
+    const read = await transport.get('/api/island/structures');
+    const repair = await transport.post('/api/island/structures/repair', {spot: 'wall_1', instanceId: '32345678-1234-4234-8234-123456789abc',
+      actionUid: 'action00001', expectedEpoch: '22345678-1234-4234-8234-123456789abc', expectedWindow: 'between_waves', expectedLevel: 1,
+      expectedRepairSeq: 0, quotedPrice: 10, waveProtocol: 2});
+    expect(read).toMatchObject({ok: false, status: 404, code: 'feature_off'});
+    expect(repair).toMatchObject({ok: false, status: 404, code: 'feature_off'});
+    expect((await transport.api.island()).coins).toBe(before.coins);
   });
 });

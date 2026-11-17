@@ -11,6 +11,33 @@ const fresh = unlocksFor(0), wave3 = unlocksFor(3), wave5 = unlocksFor(5);
 const atWave = (wave, extra = {}) => campaignOf({waveBest: wave, campaign: {wave, ...extra}});
 
 describe('build card (TOWER-DEFENSE.md §2, §9)', () => {
+  it('blocks level upgrades while recovery HP is damaged or reserved, but leaves tree skills available', () => {
+    const row = (spot, kind, hpUnits) => ({spot, instanceId: '22345678-1234-4234-8234-123456789abc', kind, level: 1,
+      hpUnits, maxHP: kind === 'wall' ? 60 : 90, fixedPrice: kind === 'wall' ? 10 : 45, repairSeq: 0});
+    const recovery = (displayPhase, repairWindow, hpUnits) => ({recoveryVersion: 1, waveProtocol: 2,
+      islandEpoch: '32345678-1234-4234-8234-123456789abc', waveId: repairWindow === 'reserved_wave' ? '42345678-1234-4234-8234-123456789abc' : null,
+      displayPhase, repairWindow, structures: [row('wall_1', 'wall', hpUnits), row('cannon_1', 'cannon', hpUnits)]});
+    const wallCard = (state, hpUnits) => buildCardModel({spotId: 'wall_1', slot: 'wall', spot: wall(true), coins: 1000,
+      unlocks: wave3, recoveryState: recovery(state, state === 'between_waves' ? 'between_waves' : 'reserved_wave', hpUnits), recoveryStatus: 'ready'});
+    const damagedBetween = wallCard('between_waves', 750_000);
+    expect(damagedBetween).toMatchObject({button: 'Upgrade', disabled: true, reason: 'Fully repair before upgrading.'});
+    expect(damagedBetween.stats).toMatch(/^Base strength /);
+    expect(damagedBetween.upgrade.stats).toMatch(/^Base strength /);
+    expect(wallCard('between_waves', 1_000_000)).toMatchObject({button: 'Upgrade', disabled: false, reason: ''});
+
+    const towerCard = (phase, picked = 'level') => buildCardModel({spotId: 'cannon_1', slot: 'tower', spot: tower(true), coins: 10_000,
+      unlocks: wave3, campaign: atWave(50), treePicked: picked,
+      recoveryState: recovery(phase, 'reserved_wave', 750_000), recoveryStatus: 'ready'});
+    for (const phase of ['preparing', 'combat']) {
+      const card = towerCard(phase);
+      expect(card.tree.detail).toMatchObject({action: {type: 'upgrade'}, disabled: true, reason: 'Upgrades are available between waves.'});
+    }
+    const paths = buildCardModel({spotId: 'cannon_1', slot: 'tower', spot: tower(true, 'cannon', 5), coins: 10_000,
+      unlocks: wave3, campaign: atWave(50), treePicked: 'a1',
+      recoveryState: recovery('combat', 'reserved_wave', 750_000), recoveryStatus: 'ready'});
+    expect(paths.tree.detail).toMatchObject({action: {type: 'tree', path: 'a', tier: 1}, disabled: false});
+  });
+
   it('an empty tower spot offers the unlocked kinds, one line and price each', () => {
     const start = buildCardModel({spotId: 'cannon_1', slot: 'tower', spot: tower(), coins: 100, unlocks: fresh});
     expect(start).toMatchObject({mode: 'choose', title: 'Tower spot', soon: '', coins: 'You have 🪙 100'});
@@ -215,6 +242,21 @@ describe('the campaign buildings (GAME-V3.md §4, §5)', () => {
     expect(late.branches[0].summary).toBe('Cannon skills · tier 3 of 3 ✓');
     expect(late.branches[0].tiers[2].nodes.map(node => [node.id, node.state])).toEqual([['broadside', 'closed'], ['grapeshot', 'chosen']]);
     expect(late.branches[0].tiers[2].nodes[0].button).toMatchObject({disabled: true, reason: 'Not enough 🪙: you need 🪙 630 more.'});
+  });
+  it('shows recovery-v1 Mason and Bastion wording only for the persisted new policy', () => {
+    const research = {done: ['wall'], tiers: {wall: {tier: 3, tier2: 'mason_drill', tier3: 'bastion'}}};
+    const campaign = atWave(25, {research});
+    const legacy = techModel({campaign, coins: 5000, recoveryVersion: 0});
+    const current = techModel({campaign, coins: 5000, recoveryVersion: 1});
+    const wall = model => model.branches.find(branch => branch.branch === 'wall');
+    const option = (model, tier, id) => wall(model).tiers[tier - 1].nodes.find(item => item.id === id);
+
+    expect(legacy.recoveryVersion).toBe(0);
+    expect(option(legacy, 2, 'mason_drill').line).toBe('Repairs on every wall go 50% faster.');
+    expect(option(legacy, 3, 'bastion').line).toBe('50% more strength, and it mends itself slowly.');
+    expect(current.recoveryVersion).toBe(1);
+    expect(option(current, 2, 'mason_drill').line).toBe('Automatic wall repair for this island runs 50% faster.');
+    expect(option(current, 3, 'bastion').line).toBe('Bastion adds 50% more HP and repairs it three times faster between waves when equipped.');
   });
   it('a built tower shows its skills: locked, research first, then a free pick', () => {
     const built = {...tower(true), level: 2};

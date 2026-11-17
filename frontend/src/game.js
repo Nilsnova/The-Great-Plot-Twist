@@ -68,7 +68,8 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   const shortcuts=createShortcutsHost(container);
   // Menu › How to play (src/tutorial/): the paged card, loaded on first use; the one-island pages while the
   // sea chart is closed (travelOpen below, read when the card opens).
-  const tutorial=createTutorialHost(container,{onClose:()=>graphics.renderer.domElement.focus({preventScroll:true}),one:()=>!travelOpen()});
+  const tutorial=createTutorialHost(container,{onClose:()=>graphics.renderer.domElement.focus({preventScroll:true}),one:()=>!travelOpen(),
+    recoveryVersion:()=>island?.recoveryVersion??0});
   const scene = new THREE.Scene();
   // Your captain: the explorer frames and the ten captain colours (GAME-V3.md §7; painted on first use).
   const art = await loadArt([...pixelArtIds.filter(id => id.startsWith('explorer')),
@@ -238,6 +239,12 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
         // In fake mode (?islands=fake) the fake server's own flags decide (?fakeflags=wall_recovery, fake-api.js).
         wallRecovery:()=>{if(fakeTransport)return fakeTransport.flags.wall_recovery===true;
           const services=findPanelServices(session);return services?.isReady()?services.getFlags()?.wall_recovery===true:false;},
+        // T55/T59: only show persistent structure recovery once the server enables its versioned rules.
+        structureRecoveryOn:()=>{if(fakeTransport)return fakeTransport.flags.structure_recovery===true;
+          const services=findPanelServices(session);return services?.isReady()?services.getFlags()?.structure_recovery===true:false;},
+        // T55/T59: persistent structure health cards are enabled only by the server's versioned flag.
+        structureRecoveryOn:()=>{if(fakeTransport)return fakeTransport.flags.structure_recovery===true;
+          const services=findPanelServices(session);return services?.isReady()?services.getFlags()?.structure_recovery===true:false;},
         // The arsenal (T41, D042): the server's flag "arsenal"; in the dev fake ?fakeflags=arsenal (or ?arsenal=1).
         arsenalOn:islandFlags.arsenal=()=>fakeTransport?(fakeTransport.flags.arsenal===true||new URLSearchParams(location.search).get('arsenal')==='1')
           :findPanelServices(session)?.getFlags?.()?.arsenal===true,

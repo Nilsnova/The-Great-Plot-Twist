@@ -39,6 +39,22 @@ describe('skillsModel', () => {
     expect(skillsModel({skills: {known: ['steady_aim']}, captainLevel: 4, coins: 500}).respec.disabled).toBe(false);
     expect(skillsModel({skills: {known: []}, captainLevel: 4, coins: 500}).respec.disabled).toBe(true);
   });
+  it('keeps legacy Captain choices but hides retired choices and Engineer repair text for recovery v1', () => {
+    const skills = {known: ['steady_aim', 'quick_fix', 'master_shipwright', 'grand_engineer'], points: 2, role: 'engineer'};
+    const legacy = skillsModel({skills, picked: 'quick_fix', captainLevel: 3, recoveryVersion: 0});
+    const current = skillsModel({skills, picked: 'quick_fix', captainLevel: 3, recoveryVersion: 1});
+
+    expect(legacy.branches.map(branch => branch.id)).toContain('shipwright');
+    expect(legacy.role.detail.line).toContain('25% more hp');
+    expect(legacy.role.detail.capstone).toBe('Grand engineer');
+    expect(current.branches.map(branch => branch.id)).not.toContain('shipwright');
+    expect(current.learned).toBe(4);
+    expect(current.points).toBe(2);
+    expect(current.picked).not.toBe('quick_fix');
+    expect(current.detail.id).not.toBe('quick_fix');
+    expect(current.role.detail.line).toBe('Buildings and upgrades cost you 10% less.');
+    expect(current.role.detail.capstone).toBe('');
+  });
 });
 
 describe('the fake server follows the same rules', () => {
