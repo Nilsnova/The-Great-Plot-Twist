@@ -41,3 +41,12 @@ main/force push, deployment or merge belongs to this slice.
 At claim time source and passing application/runtime checks are pending. Explain
 back why the instrument is visual identity rather than a new service, how source
 feet preserve the logical ground, and what actual interaction evidence establishes.
+
+## Authored-source handoff
+
+Original transparent service sources, measured rectangles/feet and both existing
+identity mappings are implemented. [Source and exact checks](../docs/evidence/VIS-13-services/README.md)
+record 2 files / 7 tests passed in 862ms, build/spoiler guard, unchanged cold-title
+transfer limits and text lint. Shared VIS-32 registration and actual service,
+phase and desktop/phone evidence remain coordinated work. The source family alone
+does not claim a standalone live art switch or final visual acceptance.
