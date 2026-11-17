@@ -1,7 +1,6 @@
 // Real game/controller/picking against the existing fake island transport, not live services.
 import {expect, it} from 'vitest';
 import {browserHarness} from '../g20-browser.js';
-import {villageFrameEvidence} from '../../scripts/perimeter-game-ui.mjs';
 const browser = browserHarness();
 
 async function ready(page, base, phone) {
@@ -26,8 +25,8 @@ async function ready(page, base, phone) {
 async function pickCannon(page) {
   const at = await page.evaluate(async () => {
     const g = window.__island, rect = g.renderer.domElement.getBoundingClientRect();
-    const {projectGround} = await import('/src/world/projection.js');
-    const {placedSpot} = await import('/src/island/spots.js');
+    const {projectGround} = await window.g20Import('/src/world/projection.js');
+    const {placedSpot} = await window.g20Import('/src/island/spots.js');
     const spot = placedSpot('cannon_1', g.island.island.spots), foot = projectGround(spot.x, spot.z);
     const point = g.player.position.clone().set(foot.x, foot.y + .7, 0).project(g.camera);
     return {x: rect.left + (point.x + 1) * rect.width / 2, y: rect.top + (1 - point.y) * rect.height / 2};
@@ -40,7 +39,13 @@ async function manage(page) {
   await page.locator('.island-village-mode:not([hidden])').waitFor();
   // D064 phone Work is pannable; use the real whole-island view for a remote edge tower.
   await page.getByRole('button', {name: 'Fit village', exact: true}).click();
-  const {fit} = await villageFrameEvidence(page, '.island-village-mode:not([hidden])');
+  const fit = await page.evaluate(async () => {
+    const g = window.__island, {villageFrame} = await window.g20Import('/src/player/camera.js');
+    const canvas = g.renderer.domElement.getBoundingClientRect(), bar = document.querySelector('.island-village-mode:not([hidden])').getBoundingClientRect();
+    const quest = document.querySelector('.quest-strip').getBoundingClientRect(), purse = document.querySelector('.hud-coins').getBoundingClientRect();
+    const top = Math.max(80, (canvas.width < 640 ? Math.max(quest.bottom, purse.bottom) : 80) + 12);
+    return villageFrame(g.camera, 'home_islet', {height: canvas.height, top, bottom: canvas.height - bar.top + 12});
+  });
   await page.waitForFunction(fit => {
     const camera = window.__island.camera;
     return Math.abs(camera.zoom - fit.zoom) < .005 && Math.abs(camera.position.x - fit.x) < .05 && Math.abs(camera.position.y - fit.y) < .05;
