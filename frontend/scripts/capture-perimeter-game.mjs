@@ -50,6 +50,10 @@ try {
     const initial = await wallet(page); assert.equal(initial.walls.length, 0);
     record.before = await capture(page, out, `before-construction-${width}x${height}.png`);
     record.villageButtons = await hitButtons(village(page));
+    await village(page).getByRole('button', {name: 'Zoom in', exact: true}).click();
+    await page.waitForFunction(zoom => window.__island.camera.zoom > zoom * 1.3, record.before.zoom);
+    record.beforeWorking = await capture(page, out, `before-working-zoom-${width}x${height}.png`);
+    await village(page).getByRole('button', {name: 'Fit village', exact: true}).click(); await page.waitForTimeout(1200);
     await openBuilder(page);
     const point = await groundPoint(page, [cells[0].x, cells[0].z]); await page.mouse.click(point.x, point.y);
     await page.waitForFunction(() => window.__island.island.wallBuilder.state?.cells.length === 1);
