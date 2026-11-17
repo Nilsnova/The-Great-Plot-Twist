@@ -580,6 +580,8 @@ declare
   v_captain jsonb;
   v_snapshot jsonb;
   v_create jsonb;
+  v_wave_event jsonb;
+  v_wave_boss jsonb;
   v_refresh jsonb;
   v_positions jsonb;
   v_defenses jsonb := '[]'::jsonb;
@@ -668,6 +670,9 @@ begin
          or jsonb_typeof(p_snapshot_template) is distinct from 'object'
          or jsonb_typeof(p_snapshot_template -> 'createWave') is distinct from 'object'
          or jsonb_typeof(p_snapshot_template -> 'priceSchedule') is distinct from 'object'
+         or jsonb_typeof(p_snapshot_template -> 'eventByWave') is distinct from 'object'
+         or jsonb_typeof(p_snapshot_template -> 'bossByWave') is distinct from 'object'
+         or (p_snapshot_template ->> 'configVersion')::integer is distinct from 1
          or jsonb_typeof(p_snapshot_template -> 'expectedRevision') is distinct from 'number'
          or (p_snapshot_template ->> 'expectedRevision') !~ '^[0-9]+$' then
         raise exception 'bad_recovery_snapshot';
@@ -844,6 +849,18 @@ begin
     'wave',v_run.wave,'seed',v_run.seed,'startsAt',v_run.starts_at,
     'weatherKind',v_run.weather_kind,'ships',v_run.weather_ships,'fog',v_run.weather_fog,
     'rules',to_jsonb(v_rules),'defenses',v_defenses);
+  if not (p_snapshot_template -> 'eventByWave') ? v_run.wave::text
+     or not (p_snapshot_template -> 'bossByWave') ? v_run.wave::text then
+    raise exception 'recovery_snapshot_wave_config_missing';
+  end if;
+  v_wave_event := p_snapshot_template -> 'eventByWave' -> v_run.wave::text;
+  v_wave_boss := p_snapshot_template -> 'bossByWave' -> v_run.wave::text;
+  if (jsonb_typeof(v_wave_event) is distinct from 'string'
+      and jsonb_typeof(v_wave_event) is distinct from 'null')
+     or jsonb_typeof(v_wave_boss) is distinct from 'boolean' then
+    raise exception 'recovery_snapshot_wave_config_invalid';
+  end if;
+  v_create := v_create || jsonb_build_object('event',v_wave_event,'boss',v_wave_boss);
   v_snapshot := jsonb_set(v_snapshot,'{createWave}',v_create,true);
   insert into public.recovery_wave_states
     (wave_id,island_owner,reset_epoch,recovery_version,wave_protocol,initial_snapshot)
@@ -1251,6 +1268,7 @@ declare
   v_boss boolean := false;
   v_status jsonb;
   v_repeat boolean := false;
+  v_is_expired boolean := false;
 begin
   if p_player_id is null or p_wave_id is null or p_survived is null
      or p_ships_sunk is null or p_ships_sunk not between 0 and 1000
@@ -1285,6 +1303,10 @@ begin
    where wave_id=p_wave_id and player_id=p_player_id for update;
   if not found then return jsonb_build_object('status','refused','reason','not_in_wave'); end if;
   v_repeat := v_part.finished_at is not null;
+  if p_player_id<>v_owner and not exists (
+    select 1 from public.island_members where island_owner=v_owner
+      and player_id=p_player_id and left_at is null
+  ) then return jsonb_build_object('status','refused','reason','not_member'); end if;
   if v_wave.recovery_version<>1 or v_wave.wave_protocol<>2 then
     return jsonb_build_object('status','refused','reason','client_update_required');
   end if;
@@ -1297,6 +1319,7 @@ begin
   -- Exact expiry is a canonical settlement boundary and never pays a late local win.
   if v_wave.closed_at is null
      and v_server_now >= v_run.starts_at + make_interval(secs=>v_run.maximum_seconds) then
+    v_is_expired := true;
     perform public.structure_recovery_settle_locked(v_owner,v_server_now);
     select * into v_wave from public.recovery_wave_states where wave_id=p_wave_id for update;
     v_closed_hp := public.structure_recovery_wave_hp(p_wave_id);
@@ -1330,11 +1353,11 @@ begin
     end loop;
     v_recovery := jsonb_build_object(
       'waveId',p_wave_id,'islandEpoch',v_wave.reset_epoch,'closedAt',v_wave.closed_at,
-      'closedHp',v_wave.closed_hp,'checkpointUid',v_wave.checkpoint_uid,
-      'throughTick',coalesce(v_wave.checkpoint_through_tick,greatest(0,v_wave.sealed_through_tick)),
-      'inputHeadSeq',coalesce(v_wave.checkpoint_input_head_seq,v_wave.journal_head),
+      'closedHp',v_wave.closed_hp,'checkpointUid',null,
+      'throughTick',greatest(0,v_run.maximum_seconds*20-1),
+      'inputHeadSeq',v_wave.journal_head,
       'lastRepairSeq',v_wave.last_repair_seq,
-      'basisRepairSeq',coalesce(v_wave.checkpoint_basis_repair_seq,v_basis));
+      'basisRepairSeq',v_basis);
     return jsonb_build_object('status','done','loot',0,'balance',v_balance,
       'survived',false,'wave',v_run.wave,'waveBest',v_wave_best,'flags',v_flags,
       'expired',true,'repeat',v_repeat,
@@ -1363,7 +1386,20 @@ begin
   end if;
 
   -- Expiry closes canonical HP without credit; later callers cannot turn it into a win.
-  if v_run.expired then
+  v_is_expired := v_is_expired or v_run.expired or (
+    v_wave.closed_at is not null and v_run.finished_at is null
+    and v_wave.closed_at >= v_run.starts_at + make_interval(secs=>v_run.maximum_seconds)
+  );
+  if v_is_expired then
+    if not v_run.expired then
+      update public.wave_runs set finished_at=v_wave.closed_at,survived=false,
+        ships_sunk=0,loot=0,expired=true where id=p_wave_id and finished_at is null;
+      v_run.finished_at := v_wave.closed_at;
+      v_run.expired := true;
+      v_run.survived := false;
+      v_run.ships_sunk := 0;
+      v_run.loot := 0;
+    end if;
     if v_part.finished_at is null then
       update public.wave_participants set finished_at=v_server_now,survived=false,
         ships_sunk=0,loot=0,expired=true
@@ -1375,6 +1411,9 @@ begin
       'expired',true,'repeat',v_repeat,
       'boss',p_boss_every>0 and v_run.wave%p_boss_every=0);
   else
+    if not v_repeat and p_last_repair_seq is distinct from v_wave.last_repair_seq then
+      return jsonb_build_object('status','refused','reason','health_sync_required');
+    end if;
     if not v_repeat and v_server_now < v_run.starts_at + make_interval(secs=>v_run.minimum_seconds) then
       return jsonb_build_object('status','refused','reason','too_early',
         'waitSeconds',greatest(1,ceil(extract(epoch from
@@ -1427,13 +1466,35 @@ begin
       'boss',v_boss);
   end if;
   select * into v_wave from public.recovery_wave_states where wave_id=p_wave_id;
+  if v_is_expired then
+    v_basis := '{}'::jsonb;
+    for v_structure in select value from jsonb_array_elements(v_wave.initial_snapshot -> 'structures') as item(value)
+    loop
+      v_instance := v_structure ->> 'instanceId';
+      if v_instance is null then raise exception 'recovery_snapshot_incomplete'; end if;
+      v_basis := jsonb_set(v_basis,array[v_instance],
+        coalesce(v_structure -> 'repairSeq','0'::jsonb),true);
+    end loop;
+    for v_event in select * from public.recovery_wave_events
+      where wave_id=p_wave_id and event_kind='structure_repaired' order by seq
+    loop
+      v_instance := v_event.payload ->> 'instanceId';
+      v_previous_basis := coalesce((v_basis ->> v_instance)::bigint,0);
+      v_basis := jsonb_set(v_basis,array[v_instance],
+        to_jsonb(greatest(v_previous_basis,(v_event.payload ->> 'repairSeq')::bigint)),true);
+    end loop;
+  end if;
   v_recovery := jsonb_build_object(
     'waveId',p_wave_id,'islandEpoch',v_wave.reset_epoch,'closedAt',v_wave.closed_at,
-    'closedHp',v_wave.closed_hp,'checkpointUid',v_wave.checkpoint_uid,
-    'throughTick',coalesce(v_wave.checkpoint_through_tick,greatest(0,v_wave.sealed_through_tick)),
-    'inputHeadSeq',coalesce(v_wave.checkpoint_input_head_seq,v_wave.journal_head),
-    'lastRepairSeq',coalesce(v_wave.checkpoint_last_repair_seq,v_wave.last_repair_seq),
-    'basisRepairSeq',coalesce(v_wave.checkpoint_basis_repair_seq,'{}'::jsonb));
+    'closedHp',v_wave.closed_hp,
+    'checkpointUid',case when v_is_expired then null else v_wave.checkpoint_uid end,
+    'throughTick',case when v_is_expired then greatest(0,v_run.maximum_seconds*20-1)
+                       else coalesce(v_wave.checkpoint_through_tick,greatest(0,v_wave.sealed_through_tick)) end,
+    'inputHeadSeq',case when v_is_expired then v_wave.journal_head
+                        else coalesce(v_wave.checkpoint_input_head_seq,v_wave.journal_head) end,
+    'lastRepairSeq',v_wave.last_repair_seq,
+    'basisRepairSeq',case when v_is_expired then v_basis
+                          else coalesce(v_wave.checkpoint_basis_repair_seq,'{}'::jsonb) end);
   return v_result || jsonb_build_object('recovery',v_recovery);
 end;
 $$;

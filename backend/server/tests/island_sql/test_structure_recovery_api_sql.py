@@ -330,6 +330,7 @@ def test_recovery_start_freezes_v1_and_repeat_reads_same_token_and_snapshot(data
     open_island(database, OWNER, "K7Q2M")
     as_server(database)
     template = {
+        "configVersion": 1,
         "createWave": {"defenses": []},
         "priceSchedule": {},
         "structureConfigBySpot": {},
@@ -341,6 +342,8 @@ def test_recovery_start_freezes_v1_and_repeat_reads_same_token_and_snapshot(data
             "recoveryRateFactors": {"carpenterMaximumWorkers": 2},
         },
         "defaultPositions": {},
+        "eventByWave": {"1": "frozen_event"},
+        "bossByWave": {"1": True},
     }
     template["expectedRevision"] = database.execute(
         "select revision from public.island_recovery_state where island_owner=%s", (OWNER,)
@@ -362,7 +365,12 @@ def test_recovery_start_freezes_v1_and_repeat_reads_same_token_and_snapshot(data
             "captain": {"level": 1, "skills": [], "weapon": "musket"},
         }
     ]
-    repeat = call(database, sql, *args)
+    assert first["initialSnapshot"]["configVersion"] == 1
+    assert first["initialSnapshot"]["createWave"]["event"] == "frozen_event"
+    assert first["initialSnapshot"]["createWave"]["boss"] is True
+    template["eventByWave"]["1"] = "future_event"
+    template["bossByWave"]["1"] = False
+    repeat = call(database, sql, *args[:-1], json.dumps(template))
     assert repeat["repeat"] is True
     assert repeat["participantToken"] == first["participantToken"]
     assert repeat["initialSnapshot"] == first["initialSnapshot"]
@@ -445,6 +453,7 @@ def test_recovery_start_rejects_stale_template_without_side_effects(database):
         "select revision from public.island_recovery_state where island_owner=%s", (OWNER,)
     ).fetchone()[0]
     template = {
+        "configVersion": 1,
         "expectedRevision": revision + 1,
         "createWave": {"defenses": []},
         "priceSchedule": {},
@@ -457,6 +466,8 @@ def test_recovery_start_rejects_stale_template_without_side_effects(database):
             "recoveryRateFactors": {"carpenterMaximumWorkers": 2},
         },
         "defaultPositions": {},
+        "eventByWave": {"1": None, "2": None},
+        "bossByWave": {"1": False, "2": False},
     }
     sql = (
         "select public.recovery_wave_start(%s,%s,'island',%s,4242,0,15,900,50,"
@@ -481,6 +492,87 @@ def test_recovery_start_rejects_stale_template_without_side_effects(database):
     )
     assert retried["status"] == "started"
     assert retried["recoveryVersion"] == 1
+
+
+def test_finish_normalizes_expiry_closed_by_settlement_without_late_credit(database):
+    add_players(database, OWNER)
+    open_island(database, OWNER, "K7Q2M")
+    as_server(database)
+    template = {
+        "configVersion": 1,
+        "expectedRevision": database.execute(
+            "select revision from public.island_recovery_state where island_owner=%s", (OWNER,)
+        ).fetchone()[0],
+        "createWave": {"defenses": []},
+        "priceSchedule": {},
+        "structureConfigBySpot": {},
+        "legacyWallRecoverSeconds": 600,
+        "recoveryConfig": {
+            "recoveryVersion": 1,
+            "waveProtocol": 2,
+            "structureMaxHp": {},
+            "recoveryRateFactors": {"carpenterMaximumWorkers": 2},
+        },
+        "defaultPositions": {},
+        "eventByWave": {"1": None, "2": None},
+        "bossByWave": {"1": False, "2": False},
+    }
+    started = call(
+        database,
+        "select public.recovery_wave_start(%s,%s,'island',%s,4242,0,0,10,50,"
+        "'calm',1,0,%s::text[],%s::jsonb,true,2::smallint)",
+        OWNER,
+        "expiryclose1",
+        OWNER,
+        ["structure_recovery"],
+        json.dumps(template),
+    )
+    wave_id = started["waveId"]
+    epoch = UUID(started["initialSnapshot"]["islandEpoch"])
+    as_owner(database)
+    database.execute(
+        "update public.wave_runs set starts_at=now()-interval '11 seconds' where id=%s",
+        (wave_id,),
+    )
+    database.execute(
+        "update public.island_recovery_state set starts_at=now()-interval '11 seconds',"
+        "reserved_at=now()-interval '11 seconds',expires_at=now()-interval '1 second' "
+        "where island_owner=%s",
+        (OWNER,),
+    )
+    as_server(database)
+    settled = call(
+        database,
+        "select public.structure_recovery_settle_locked(%s,clock_timestamp())",
+        OWNER,
+    )
+    assert settled["status"] == "settled"
+    assert database.execute(
+        "select closed_at is not null from public.recovery_wave_states where wave_id=%s",
+        (wave_id,),
+    ).fetchone() == (True,)
+    assert database.execute(
+        "select finished_at,expired from public.wave_runs where id=%s", (wave_id,)
+    ).fetchone() == (None, False)
+    result = call(
+        database,
+        "select public.recovery_wave_finish(%s,%s,true,7,10,5,5,20,5,2,2,%s,"
+        "'lateexpiry01',0,0,0,%s::jsonb,%s::jsonb)",
+        OWNER,
+        wave_id,
+        epoch,
+        json.dumps({}),
+        json.dumps({}),
+    )
+    assert result["status"] == "done"
+    assert result["expired"] is True
+    assert result["loot"] == 0
+    assert result["recovery"]["checkpointUid"] is None
+    assert result["recovery"]["basisRepairSeq"] == {}
+    assert database.execute(
+        "select expired,finished_at is not null from public.wave_runs where id=%s",
+        (wave_id,),
+    ).fetchone() == (True, True)
 
 
 def test_recovery_start_snapshots_db_wall_identity_and_legacy_effective_hp(database):
@@ -519,6 +611,7 @@ def test_recovery_start_snapshots_db_wall_identity_and_legacy_effective_hp(datab
         },
     }
     template = {
+        "configVersion": 1,
         "createWave": {"defenses": [{"id": "wall_1", "kind": "wall", "level": 1, "x": 0, "z": 0}]},
         "priceSchedule": {"wall": [10, 20, 40, 80, 160]},
         "structureConfigBySpot": {
@@ -544,7 +637,7 @@ def test_recovery_start_snapshots_db_wall_identity_and_legacy_effective_hp(datab
     ).fetchone()[0]
     started = call(
         database,
-        "select public.recovery_wave_start(%s,%s,'island',%s,4242,0,15,900,50,"
+        "select public.recovery_wave_start(%s,%s,'island',%s,4242,0,0,900,50,"
         "'calm',1,0,%s::text[],%s::jsonb,true,2::smallint)",
         OWNER,
         "wallwave01",
@@ -568,6 +661,139 @@ def test_recovery_start_snapshots_db_wall_identity_and_legacy_effective_hp(datab
     ).fetchone()
     assert current_health == (400000, 0)
 
+    wave_id = started["waveId"]
+    epoch = UUID(started["initialSnapshot"]["islandEpoch"])
+    instance_id = UUID(structure["instanceId"])
+    as_owner(database)
+    database.execute(
+        "update public.wave_runs set starts_at=now()-interval '10 seconds' where id=%s",
+        (wave_id,),
+    )
+    database.execute(
+        "update public.island_recovery_state set starts_at=now()-interval '10 seconds',"
+        "reserved_at=now()-interval '10 seconds',expires_at=now()+interval '890 seconds' "
+        "where island_owner=%s",
+        (OWNER,),
+    )
+    database.execute(
+        "update public.recovery_wave_states set sealed_through_tick=10000 where wave_id=%s",
+        (wave_id,),
+    )
+    as_server(database)
+    first_page = call(
+        database,
+        "select public.recovery_wave_events_page(%s,%s,0,null)",
+        OWNER,
+        wave_id,
+    )
+    assert first_page["headSeq"] == 0
+    assert first_page["sealedThroughTick"] == 10000
+    paid = call(
+        database,
+        "select public.island_structure_repair(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s::jsonb)",
+        OWNER,
+        OWNER,
+        "wall_1",
+        instance_id,
+        "futurepaid01",
+        epoch,
+        "reserved_wave",
+        wave_id,
+        1,
+        0,
+        10,
+        "a" * 64,
+        json.dumps({"wall": [10, 20, 40, 80, 160]}),
+    )
+    assert paid["status"] == "done"
+    call(
+        database,
+        "select public.recovery_wave_events_page(%s,%s,0,0)",
+        OWNER,
+        wave_id,
+    )
+    current_page = call(
+        database,
+        "select public.recovery_wave_events_page(%s,%s,0,null)",
+        OWNER,
+        wave_id,
+    )
+    event_tick = database.execute(
+        "select effective_tick from public.recovery_wave_events where wave_id=%s "
+        "and event_kind='structure_repaired'",
+        (wave_id,),
+    ).fetchone()[0]
+    assert current_page["headSeq"] == 1
+    assert event_tick > current_page["sealedThroughTick"]
+    checkpoint = call(
+        database,
+        "select public.recovery_wave_report_health(%s,%s,%s,'futurehp01',%s,%s,0,"
+        "%s::jsonb,%s::jsonb)",
+        OWNER,
+        wave_id,
+        epoch,
+        current_page["sealedThroughTick"],
+        current_page["headSeq"],
+        json.dumps({str(instance_id): 0}),
+        json.dumps({str(instance_id): 400000}),
+    )
+    assert checkpoint["status"] == "accepted"
+    refused = call(
+        database,
+        "select public.recovery_wave_finish(%s,%s,true,0,10,5,5,20,5,2,2,%s,"
+        "'paidfinish01',%s,%s,0,%s::jsonb,%s::jsonb)",
+        OWNER,
+        wave_id,
+        epoch,
+        current_page["sealedThroughTick"],
+        current_page["headSeq"],
+        json.dumps({str(instance_id): 0}),
+        json.dumps({str(instance_id): 400000}),
+    )
+    assert refused == {"status": "refused", "reason": "health_sync_required"}
+    assert database.execute(
+        "select closed_at from public.recovery_wave_states where wave_id=%s", (wave_id,)
+    ).fetchone() == (None,)
+    assert database.execute(
+        "select finished_at from public.wave_runs where id=%s", (wave_id,)
+    ).fetchone() == (None,)
+    as_owner(database)
+    database.execute(
+        "update public.wave_runs set starts_at=now()-interval '901 seconds' where id=%s",
+        (wave_id,),
+    )
+    database.execute(
+        "update public.island_recovery_state set starts_at=now()-interval '901 seconds',"
+        "reserved_at=now()-interval '901 seconds',expires_at=now()-interval '1 second' "
+        "where island_owner=%s",
+        (OWNER,),
+    )
+    as_server(database)
+    settled = call(
+        database,
+        "select public.structure_recovery_settle_locked(%s,clock_timestamp())",
+        OWNER,
+    )
+    assert settled["status"] == "settled"
+    late_finish = call(
+        database,
+        "select public.recovery_wave_finish(%s,%s,true,0,10,5,5,20,5,2,2,%s,"
+        "'paidexpiry01',%s,%s,0,%s::jsonb,%s::jsonb)",
+        OWNER,
+        wave_id,
+        epoch,
+        current_page["sealedThroughTick"],
+        current_page["headSeq"],
+        json.dumps({str(instance_id): 0}),
+        json.dumps({str(instance_id): 400000}),
+    )
+    assert late_finish["status"] == "done"
+    assert late_finish["expired"] is True
+    assert late_finish["loot"] == 0
+    assert late_finish["recovery"]["checkpointUid"] is None
+    assert late_finish["recovery"]["closedHp"] == {str(instance_id): 1000000}
+    assert late_finish["recovery"]["basisRepairSeq"] == {str(instance_id): 1}
+
 
 def test_recovery_finish_preserves_first_close_receipt_and_pays_each_actor_once(database):
     add_players(database, OWNER, FRIEND)
@@ -575,6 +801,7 @@ def test_recovery_finish_preserves_first_close_receipt_and_pays_each_actor_once(
     open_island(database, FRIEND, "M8P3N")
     as_server(database)
     template = {
+        "configVersion": 1,
         "createWave": {"defenses": []},
         "priceSchedule": {},
         "structureConfigBySpot": {},
@@ -586,6 +813,8 @@ def test_recovery_finish_preserves_first_close_receipt_and_pays_each_actor_once(
             "recoveryRateFactors": {"carpenterMaximumWorkers": 2},
         },
         "defaultPositions": {},
+        "eventByWave": {"1": None, "2": None},
+        "bossByWave": {"1": False, "2": False},
     }
     template["expectedRevision"] = database.execute(
         "select revision from public.island_recovery_state where island_owner=%s", (OWNER,)
@@ -664,6 +893,22 @@ def test_recovery_finish_preserves_first_close_receipt_and_pays_each_actor_once(
         json.dumps({}),
         json.dumps({}),
     )
+    as_owner(database)
+    database.execute(
+        "update public.island_members set left_at=now() where island_owner=%s and player_id=%s",
+        (OWNER, FRIEND),
+    )
+    as_server(database)
+    assert call(database, finish_sql, *second_args) == {
+        "status": "refused",
+        "reason": "not_member",
+    }
+    as_owner(database)
+    database.execute(
+        "update public.island_members set left_at=null where island_owner=%s and player_id=%s",
+        (OWNER, FRIEND),
+    )
+    as_server(database)
     second = call(database, finish_sql, *second_args)
     assert second["status"] == "done"
     assert second["loot"] == 15
