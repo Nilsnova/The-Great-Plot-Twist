@@ -11,7 +11,7 @@ it('appends only new raw families to compatible successful proof and refuses rec
   expect(appendFamilyNames(proof, 'mortars')).toEqual(['core', 'mortars']);
   for (const [previous, added] of [[proof, 'core'], [proof, 'baked'], [{...proof, errors: ['failed']}, 'mortars'], [{...proof, proofDensities: [4]}, 'mortars']]) expect(() => appendFamilyNames(previous, added)).toThrow();
 });
-it('prepares the nine explicit raw families including shared-fit core states before any browser work', async () => {
+it('prepares the explicit raw families including shared-fit core states before any browser work', async () => {
   const names = rawFamilyNames(); expect(names).toContain('core'); expect(names).toContain('progress');
   for (const name of names) {
     const family = await import(`../../src/art/village/${name}.js`), raw = collectRasterFrames([family]), plan = planFamily(name, raw);
