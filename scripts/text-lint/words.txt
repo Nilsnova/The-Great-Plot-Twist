@@ -2784,3 +2784,9 @@ tutorials
 tutorial
 guided
 swing
+# T58: reviewed public terms in recovery help and card labels.
+base
+catalog
+discount
+fully
+upgrading

@@ -34,5 +34,5 @@ it('keeps legacy Captain repair help at version zero and selects shared recovery
   expect(result.currentAshore.id).toBe('ashore');
   expect(result.currentAshore.text).not.toMatch(/press E.*repair|repair it|rebuild it/i);
   expect(result.recovery.id).toBe('repair');
-  expect(result.recovery.text).toContain('Three successful uses are shared across the island');
+  expect(result.recovery.text).toContain('up to three successful Repair now uses across the island for that wave');
 });

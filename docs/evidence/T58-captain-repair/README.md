@@ -41,6 +41,14 @@ cd backend && uv run pytest -q server/tests/test_structure_recovery_rate.py
 
 Results: 2 frontend files / 29 tests, and 9 backend rate tests. The backend test used a task-local uv cache under `/tmp` because the default cache directory was read-only in this environment.
 
+From the repository root, the strict display-copy audit is:
+
+```sh
+node scripts/text-lint/index.mjs
+```
+
+Result: 0 errors and 8 report-only findings.
+
 The recovery-aware level-up gate was merged from T59 commit `4c14e7a6`. Partial-HP and reserved-phase cards disable structure level upgrades and explain the blocker; full-health between-wave upgrades and unrelated tower skill picks remain available. The changed card model and actual DOM were checked in the merged T58 tree with:
 
 ```sh
@@ -49,6 +57,6 @@ cd frontend && npm exec vitest -- run tests/island/card-model.test.js tests/isla
 
 Result: 2 files, 30 tests passed. The DOM check verifies the disabled Upgrade control and no upgrade callback; it does not call the live API. After merging this gate, `npm run build` also passed: Vite transformed 504 modules and the spoiler guard passed.
 
-The tutorial host uses the read-only `island.recoveryVersion` value derived from canonical saved island state; the admission flag does not select the help copy. Version 0 retains the historical help, including manual E repair and Shipwright choices. Version 1 documents automatic between-wave recovery, the shared three successful Repair now uses from bell acceptance through finish/expiry, current-level fixed price, no special refund/respec, the retained E help-up and F firing controls, and the Engineer discount.
+The tutorial host uses the read-only `island.recoveryVersion` value derived from canonical saved island state; the admission flag does not select the help copy. Version 0 retains the historical help, including manual E repair and Shipwright choices. Version 1 uses player-facing wording: buildings mend between waves and pause when the bell is rung; Repair now uses the current level's catalog price; up to three successful Repair now uses are shared for a wave. It also keeps the E help-up and F firing controls and the Engineer discount.
 
 **Limits:** fixture screenshots are not persisted-API or live-game proof; they do not exercise a real wave, physical phone, multiplayer delivery, SQL transaction, payment, or runtime recovery. The combined T55/T57/T59/T60 review and full release checks are tracked separately; this draft evidence does not authorize activation or deployment.

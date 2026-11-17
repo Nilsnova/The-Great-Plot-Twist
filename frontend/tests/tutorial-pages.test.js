@@ -96,13 +96,14 @@ describe('versioned recovery help',()=>{
     expect(current.slice(0,FIRST_RUN_PAGES).map(page=>page.id)).toEqual(['island','build','bell','captain']);
     expect(current.map(page=>page.id)).toEqual([...ONE_ISLAND_PAGES.map(page=>page.id),'repair']);
     expect(current.find(page=>page.id==='ashore').text.join(' ')).not.toMatch(/press E.*repair|repair it|rebuild it/i);
-    expect(current.find(page=>page.id==='crew').text.join(' ')).toContain('saved skills still count as spent points');
+    expect(current.find(page=>page.id==='ashore').text.join(' ')).toContain('mend on their own but stop when you ring the bell');
+    expect(current.find(page=>page.id==='crew').text.join(' ')).not.toMatch(/saved skills|refund|respec/i);
     expect(current.find(page=>page.id==='crew').text.join(' ')).toContain('10% build and upgrade discount');
 
     const repair=current.find(page=>page.id==='repair').text.join(' ');
-    expect(repair).toContain('accepted bell');
-    expect(repair).toContain('fixed current-level catalogue price');
-    expect(repair).toContain('Three successful uses are shared across the island');
+    expect(repair).toContain('catalog price for your current level');
+    expect(repair).toContain('Ring the bell to share up to three successful Repair now uses across the island for that wave');
+    expect(repair).not.toMatch(/acceptance|preparation|recovery|whatever/i);
     expect(current.find(page=>page.id==='health').text.join(' ')).toContain('holds E for 2 seconds to help you up');
     expect(current.find(page=>page.id==='captain').text.join(' ')).toContain('Press F to fire');
     expect(current.at(-2).keys.find(([key])=>key==='E')).toEqual(['E','Walk up, then build or open a card']);
