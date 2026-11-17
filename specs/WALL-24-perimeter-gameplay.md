@@ -24,3 +24,9 @@ Keep actual pointer/keyboard checks separate from controller-assisted long-run p
 The old twelve-piece/base game is not an implemented after screenshot. The generated reference is concept artwork; current prototype art does not establish all 32 visual families complete. A full-game screenshot must show the actual renderer and controls, never a painted replacement. Simulation state, scene objects and actual actions establish functional proof alongside pictures.
 
 Execute only after the final runtime source handoff and release of the shared Chromium lane. Split helper responsibilities if source/test/capture code exceeds about 400 lines. No new package, `.env`, migration application, activation, deployment or merge. Keep Draft pending applicable evidence, author explain-back and independent human review; do not mark wider rollout complete prematurely.
+
+## Recorded functional prototype and remaining acceptance
+
+The actual two-viewport run on `b1755351` passed paid 32/32/32/6 construction, 102 exact positions, real reload/four persisted receipts, a 20-coin wall upgrade, normal camera controls, delayed Move refusal, normal frozen-demo bell/breach and 40 cannon world/atlas raster cases per viewport. [Screenshots, exact command/result, metadata and limits](../docs/evidence/WALL-24/README.md). There were zero page exceptions/external requests and two deliberately closed-service console 503 lines per viewport.
+
+Visual inspection rejects the expanded phone workspace as final acceptance: its roughly 516px panel leaves a very small island and partially overlaps the southern contour. WALL-44 owns the correction and requires superseding real captures. This task remains Draft and does not mark all WALL-24 or production rollout complete.
