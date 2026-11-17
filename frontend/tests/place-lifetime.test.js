@@ -3,6 +3,9 @@ import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
 import { createPlace } from '../src/world/places/factory.js';
 import { places, placeIds } from '../src/world/places/registry.js';
+import {edgeTrees, layouts} from '../src/world/places/layouts.js';
+import {projectGround} from '../src/world/projection.js';
+import {decorateProgress} from '../src/island/decorations.js';
 import { canStand } from '../src/player/collision.js';
 import { on, emit } from '../src/core/events.js';
 const adapters = {
@@ -10,6 +13,65 @@ const adapters = {
   loadBackdrop: async () => new THREE.Texture(),
 };
 describe('real place lifetime', () => {
+  it.each(Object.keys(edgeTrees))('keeps %s tree feet, blockers and drawing behavior while restraining only home foliage', async id => {
+    const place = await createPlace({id, ...adapters, island: {decorate() {}}});
+    try {
+      const trees = place.group.children.filter(mesh => ['oak', 'pine', 'birch'].includes(mesh.userData.asset));
+      expect(trees).toHaveLength(edgeTrees[id].length);
+      expect(place.colliders).toEqual([
+        ...layouts[id].filter(item => item.collider).map(item => item.collider),
+        ...edgeTrees[id].map(([x, z]) => ({x, z, radius: .48})),
+      ]);
+      trees.forEach((mesh, index) => {
+        const [x, z] = edgeTrees[id][index], foot = projectGround(x, z), scale = id === 'home_islet' ? .7 : 1;
+        expect(mesh.userData.ground).toEqual({x, z});
+        expect(mesh.position.toArray()).toEqual([foot.x, foot.y, 0]);
+        expect(mesh.renderOrder).toBe(100 + z);
+        expect(mesh.scale.toArray()).toEqual([scale, scale, scale]);
+        expect(mesh.material.userData.sway).toBeDefined();
+      });
+      const first = trees[0], {x, z} = first.userData.ground, sway = first.material.userData.sway;
+      place.update(1 / 60, {time: 1, player: {x, z: z - 1}, night: 0, weather: {wind: .8}});
+      expect(first.material.opacity).toBe(.3);
+      expect(first.material.userData.sway).toBe(sway);
+      expect(Number.isFinite(sway.uniform.value)).toBe(true);
+      place.update(1 / 60, {time: 2, player: {x: x + 10, z: z + 10}, night: 0, weather: {wind: 0}});
+      expect(first.material.opacity).toBe(1);
+    } finally { place.dispose(); }
+  });
+
+  it('grows actual home trees from their smaller baseline and restores it without changing collision or ownership', async () => {
+    const place = await createPlace({id: 'home_islet', ...adapters, island: {decorate() {}}});
+    const trees = place.group.children.filter(mesh => ['oak', 'pine', 'birch'].includes(mesh.userData.asset));
+    const colliders = structuredClone(place.colliders);
+    const original = trees.map(mesh => ({position: mesh.position.clone(), geometry: mesh.geometry,
+      material: mesh.material, order: mesh.renderOrder, ground: {...mesh.userData.ground}}));
+    const progress = decorateProgress(place), house = id => ({id, kind: 'house', built: true});
+    try {
+      for (const [houses, scale] of [[[], .7], [[house('house_1')], .77],
+        [[house('house_1'), house('house_2')], .84], [[house('house_2')], .77], [[], .7]]) {
+        progress.apply({wave: 0}, houses, true);
+        trees.forEach((mesh, index) => {
+          for (const value of mesh.scale.toArray()) expect(value).toBeCloseTo(scale, 12);
+          expect(mesh.position).toEqual(original[index].position);
+          expect(mesh.geometry).toBe(original[index].geometry);
+          expect(mesh.material).toBe(original[index].material);
+          expect(mesh.renderOrder).toBe(original[index].order);
+          expect(mesh.userData.ground).toEqual(original[index].ground);
+        });
+        expect(place.colliders).toEqual(colliders);
+      }
+      progress.apply({wave: 0}, [house('house_1'), house('house_2')], true);
+      progress.dispose(); progress.dispose();
+      for (const mesh of trees) expect(mesh.scale.toArray()).toEqual([.7, .7, .7]);
+      expect(place.colliders).toEqual(colliders);
+      const materials = [...new Set(trees.map(mesh => mesh.material))], releases = materials.map(() => 0);
+      materials.forEach((material, index) => material.addEventListener('dispose', () => releases[index]++));
+      place.dispose(); place.dispose();
+      expect(releases).toEqual(materials.map(() => 1));
+    } finally { progress.dispose(); place.dispose(); }
+  });
+
   it('creates every registered hotspot, safe stand point, anchor and light in every place', async () => {
     for (const id of placeIds) {
       const place = await createPlace({ id, ...adapters });
