@@ -40,8 +40,10 @@ resolution controls material detail; it changes no world position or collider.
 [`buildings.js`](../../../frontend/src/art/village/buildings.js) exports the
 VIS-32 `sheets`/`frames` contract. Only the existing `cabin` frame is selected. The
 shared loader normalizes this original source for exploration and combat; it owns
-decode, density, caching and cleanup. A failed or unsupported source retains the
-agreed provider fallback. Nothing here introduces headquarters progression,
+decode, density, caching and cleanup. Unregistered families retain their original procedural route. A registered image
+load failure rejects clearly for retry rather than silently replacing the
+approved art; any synchronous preparation placeholder keeps the same normalized
+logical foot. Nothing here introduces headquarters progression,
 levels, new services, new building rights or a different Move rule.
 
 The focused source test verifies the actual PNG header/dimensions and inspected
