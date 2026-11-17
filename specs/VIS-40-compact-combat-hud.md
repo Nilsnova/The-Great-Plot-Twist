@@ -1,0 +1,39 @@
+# VIS-40 — Compact, truthful combat HUD
+
+Bounded battle UI correction for Johannes Franz Lang (`frcola`, `83476@novasbe.pt`), child of VIS-31 #236. Tracks #395.
+
+## Agreed scope and source
+
+The approved reference review found a first-wave pictogram on wave 41 and the phone battle bar overlapping the actual two-line coin purse. Keep every health, threat, loot, down/boss and weather state truthful while making the bar readable. No simulation, purchase, art, game/index or rendering change. The coordinator explicitly authorized the single controller first-wave guard so playing wave 41 cannot consume the first-wave device hint.
+
+Pin the immutable review base `review/vis-40-preview-414559fb` at `414559fb` (the coordinator's runtime-equivalent integration source; requested `59181376` is unavailable in fetched GitHub history). Preserve teammate playout and core publisher code. Draft only; independent human review and explain-back remain required.
+
+## Plan and contracts
+
+1. Gate the pictogram to actual wave 1, retain its existing controller lifetime, and latch a tap dismissal for that wave.
+2. Keep the genuine weather introduction window; afterward a native 44 px disclosure preserves its real detail for keyboard/touch.
+3. Measure the actual play HUD coin/Menu rectangles and resize changes; place the bar below overlapping header content without shrinking type.
+4. Compact existing battle rows and retain spoken labels, zero health, captain status, ships, ashore, loot and warnings.
+5. Add controller/storage and semantic/native layout regressions, inspect the diff and report exact evidence.
+
+Affected: `frontend/src/pirates/hud.js`, `pirates.css`, the first-wave condition/comment in `controller.js`, focused tests and this spec. No dependency, environment, live flag, schema or simulation contract changes.
+
+## Acceptance and risks
+
+- Wave 41 neither displays nor consumes the first-wave hint; wave 1 shows it once, tap stays dismissed, and the existing timeout/reduced-motion behavior remains.
+- Weather initial warning remains, then its full real line is available through a native disclosure; fresh weather copy cannot remain stale.
+- Actual `createHud` coin/Menu and battle bar do not overlap at 1280×720, 375×812 or 320×812, including a large purse and resize. Player-facing text is at least 17 px and actionable targets at least 44 px.
+- Preserve zero HP, down text, boss, loot and accessible battle labels. Disconnect size/listener resources on disposal.
+- Run focused pure/controller checks first; native Chrome checks only in the coordinator's exclusive lane. Full suite/build and integrated screenshot acceptance belong to the coordinator.
+
+Risks: resize-observer feedback, controller calling hint before bar state, native disclosure state being overwritten each frame, and large-header content pushing the bar down. Tests must cover those boundaries without masks, forced clicks, shortened text or fabricated state.
+
+## Explain-back
+
+The battle bar uses the actual wave number and header measurements. Weather keeps its existing game timing; only its presentation folds after the introduction. Limits: a very tall purse or first-wave warning naturally uses more screen space; the change does not alter gameplay or solve unrelated center prompts.
+
+Before readiness: Why must wave 41 not write the hint flag? Why measure the real purse rather than assume 72 px? Why preserve native weather disclosure state after the intro?
+
+## Verification
+
+Pending focused implementation and checks. No browser or full-suite pass is claimed by this initial specification.
