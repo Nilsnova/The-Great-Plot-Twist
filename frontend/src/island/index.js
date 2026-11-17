@@ -1339,6 +1339,9 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     get recoveryTransport() { return recoveryTransport; },
     get recoveryVersion() { return recoveryModelVersion(); },
     roomPlace: () => islandRoom(visiting?.code ?? visitCode ?? own?.code ?? '') || null,
+    // A recovery wave ended on screen (controller.js): free the bell and the village, and with its close
+    // answer ({survived, loot, coins, waveBest, flags}) tell the island like a finish answer.
+    recoveryWaveEnded(waveId, data = null) { if (!disposed && typeof waveId === 'string') flow.ended(waveId, data); },
     async joinRunningWave() {
       if (disposed || !target()) return null;
       if (visitCode && !(await joinFirst(visitCode))) return null; // a friend's wave: join the game first

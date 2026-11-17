@@ -164,3 +164,129 @@ describe('recovery wave request load (one browser, fake clock)', () => {
     expect(result.eventStarts.filter(at => at > closedBy)).toEqual([]);
   }, 60_000);
 });
+
+// Two players on one island (integ/recovery-fixes owner goal): one shared in-memory journal server, both
+// browsers frame by frame, each shooting at the nearest ship. Measures per player the event reads, input and
+// health writes a second, the time from a shot's key press to its first drawing on that player's screen,
+// and that nothing is requested after both closes.
+const TOKENS = [TOKEN, '2b8c0f0e-5a71-4c2e-9d55-0f6b2b7e9a10'];
+const median = values => { const sorted = [...values].sort((a, b) => a - b); return sorted.length ? sorted[Math.floor(sorted.length / 2)] : null; };
+async function measureTwoPlayers({ roundTripMs = 200, seconds = 60, shootEveryMs = 900 } = {}) {
+  let now = START;
+  const journal = [], queue = [];
+  let sealed = -1, closed = false;
+  const serverTick = at => Math.floor((at - STARTS) / TICK_MS);
+  const request = (counts, kind, answer) => {
+    counts[kind]++;
+    counts.at.push(now);
+    return new Promise(resolve => {
+      const sent = now;
+      queue.push({ at: sent + roundTripMs / 2, run: () => {
+        const value = answer(now);
+        queue.push({ at: sent + roundTripMs, run: () => resolve(value) });
+      } });
+    });
+  };
+  const players = TOKENS.map(token => {
+    const counts = { events: 0, inputs: 0, health: 0, finish: 0, at: [] }, presses = [], drawn = [];
+    const transport = {
+      readEvents: ({ after = 0, through, sealedThroughTick } = {}) => request(counts, 'events', at => {
+        if (through === undefined) {
+          if (!closed) sealed = at < STARTS ? Math.max(sealed, -1) : Math.max(sealed, serverTick(at) - 1);
+          return { headSeq: journal.length, sealedThroughTick: sealed, events: journal.slice(after, after + 256) };
+        }
+        return { headSeq: through, through, sealedThroughTick, events: journal.slice(after, Math.min(through, after + 256)) };
+      }),
+      sendInputs: ({ inputs }) => request(counts, 'inputs', at => {
+        if (closed) return { refused: true, status: 409, code: 'wave_over', retryAfterSeconds: null };
+        return { headSeq: journal.length + inputs.length, accepted: inputs.map(item => {
+          const event = { serverSeq: journal.length + 1, type: 'captain_input', participantToken: token,
+            effectiveTick: at < STARTS ? 0 : Math.max(item.tick, serverTick(at) + 5, sealed + 1),
+            payload: { inputUid: item.inputUid, actorCounter: item.actorCounter, participantToken: token, command: item.command,
+              captain: { level: 1, skills: [], weapon: 'musket' } } };
+          journal.push(event);
+          return event;
+        }) };
+      }),
+      checkpoint: ({ checkpoint: body }) => request(counts, 'health', () => ({ accepted: true, throughTick: body.throughTick,
+        inputHeadSeq: body.inputHeadSeq, lastRepairSeq: body.lastRepairSeq, hpUnits: body.hpUnits })),
+      finishWave: body => request(counts, 'finish', at => { closed = true; return { ok: true, data: { loot: 10, recovery: { waveId: body.waveId,
+        islandEpoch: body.checkpoint.islandEpoch, closedAt: new Date(at).toISOString(), closedHp: body.checkpoint.hpUnits,
+        checkpointUid: body.checkpoint.checkpointUid, throughTick: body.checkpoint.throughTick, inputHeadSeq: body.checkpoint.inputHeadSeq,
+        lastRepairSeq: body.checkpoint.lastRepairSeq, basisRepairSeq: body.checkpoint.basisRepairSeq } } }; }),
+    };
+    const listeners = new Map(), bus = {
+      on(type, fn) { if (!listeners.has(type)) listeners.set(type, new Set()); listeners.get(type).add(fn); return () => listeners.get(type).delete(fn); },
+      emit(event) { for (const fn of listeners.get(event.type) ?? []) fn(event); },
+    };
+    const renderer = { events: list => { for (const event of list) if (event.type === 'captain_fired' && event.by === token) drawn.push(now); },
+      update() {}, setVisible() {}, dispose() {} };
+    const world = { scene: {}, player: { position: { x: 0, z: 0 } } };
+    const timers = [];
+    const controller = createWaveController({ bus, now: () => now, recoveryTransport: transport, world, getDefenses: () => defenses,
+      createRenderer: () => renderer, createHud: () => null, startNextWave: () => new Promise(() => {}), loadAuto: () => false, saveAuto: () => {},
+      setTimer: (run, ms) => { const timer = { at: now + ms, run }; timers.push(timer); return timer; },
+      clearTimer: timer => { const index = timers.indexOf(timer); if (index >= 0) timers.splice(index, 1); } });
+    const snap = snapshot({ ships: 2, wave: 6 });
+    snap.participants = TOKENS.map(participantToken => ({ participantToken, captain: { level: 1, skills: [], weapon: 'musket' } }));
+    bus.emit({ type: 'wave_started_server', waveId: 'wave-load', wave: 6, seed: snap.seed, startsAt: snap.startsAt, weather: snap.weather,
+      rules: snap.rules, recoveryVersion: 1, waveProtocol: 2, initialSnapshot: snap, participantToken: token, lastActorCounter: 0 });
+    return { token, counts, presses, drawn, controller, world, timers, nextShot: STARTS + 1500 };
+  });
+  const settle = async () => { for (let i = 0; i < 12; i++) await Promise.resolve(); };
+  let closedAt = null;
+  while (now < STARTS + seconds * 1000) {
+    now += FRAME_MS;
+    for (let again = true; again;) {
+      again = false;
+      queue.sort((a, b) => a.at - b.at);
+      while (queue.length && queue[0].at <= now) { queue.shift().run(); again = true; }
+      for (const player of players) for (const timer of player.timers.filter(item => item.at <= now)) {
+        player.timers.splice(player.timers.indexOf(timer), 1); timer.run(); again = true;
+      }
+      await settle();
+    }
+    for (const player of players) {
+      const { controller, world } = player;
+      controller.update(FRAME_MS / 1000);
+      const ship = controller.wave && !controller.wave.done ? controller.state?.ships?.[0] : null;
+      if (ship && now >= player.nextShot) {
+        world.player.position = { x: ship.x + 2, z: ship.z }; // stand within musket range of it
+        if (controller.shoot(ship.id)) player.presses.push(now);
+        player.nextShot = now + shootEveryMs;
+      }
+    }
+    await settle();
+    if (closed && closedAt === null) closedAt = now;
+  }
+  const result = players.map(({ counts, presses, drawn, controller }) => {
+    const latency = presses.map(at => (drawn.find(time => time >= at) ?? Infinity) - at);
+    const during = at => at >= STARTS && at < (closedAt ?? STARTS + seconds * 1000);
+    const span = ((closedAt ?? STARTS + seconds * 1000) - STARTS) / 1000;
+    const kindRate = kind => counts.at.filter(during).length && counts[kind] / span;
+    return { readsPerSecond: kindRate('events'), inputsPerSecond: counts.inputs / span, healthPerSecond: counts.health / span,
+      presses: presses.length, pressToVisibleMs: median(latency.filter(Number.isFinite)),
+      neverDrawn: latency.filter(value => !Number.isFinite(value)).length,
+      afterClose: closedAt === null ? null : counts.at.filter(at => at > closedAt + 5000).length,
+      answered: controller.wave?.recoveryFinishAnswered ?? null };
+  });
+  players.forEach(player => player.controller.dispose());
+  return { players: result, closedAt: closedAt === null ? null : closedAt - STARTS };
+}
+
+describe('two players on one recovery wave (fake clock)', () => {
+  it('draws your own shot at once and stays inside the read/write bounds; nothing after the close', async () => {
+    const result = await measureTwoPlayers({ roundTripMs: 200, seconds: 60 });
+    report('two players, 200 ms round trip:', JSON.stringify(result));
+    for (const player of result.players) {
+      expect(player.presses).toBeGreaterThan(3);
+      // A shot shows on the shooter's screen in the frame of the key press (cosmetic prediction).
+      expect(player.pressToVisibleMs).toBeLessThanOrEqual(FRAME_MS);
+      expect(player.neverDrawn).toBe(0);
+      expect(player.readsPerSecond).toBeLessThanOrEqual(2.5);
+      expect(player.inputsPerSecond).toBeLessThanOrEqual(2);
+      expect(player.healthPerSecond).toBeLessThanOrEqual(0.4);
+      if (result.closedAt !== null) expect(player.afterClose).toBe(0);
+    }
+  }, 120_000);
+});

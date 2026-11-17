@@ -307,3 +307,36 @@ def test_an_outsider_is_still_refused_the_recovery_wave():
     world.database.recovery_current_reply = {"status": "refused", "reason": "not_in_wave"}
 
     assert_error(_current_v2(world), 403, "not_in_wave")
+
+
+CHECKPOINT = {
+    "islandEpoch": "33333333-3333-4333-8333-333333333333",
+    "checkpointUid": "checkpoint_001",
+    "throughTick": 30,
+    "inputHeadSeq": 4,
+    "lastRepairSeq": 1,
+    "basisRepairSeq": {"33333333-3333-4333-8333-333333333333": 1},
+    "hpUnits": {"33333333-3333-4333-8333-333333333333": 987654},
+}
+
+
+def test_protocol2_finish_too_early_is_a_409_with_retry_after_not_a_502(monkeypatch):
+    # Finding 8: the recovery finish RPC answers too_early like the legacy one; it used to fall
+    # through to a 502, which the client retried every 250 ms until the bell budget ran out.
+    world = World()
+
+    async def refused(admin, function, arguments, *, statuses):
+        assert function == "recovery_wave_finish"
+        wave_recovery._refusal({"status": "refused", "reason": "too_early", "waitSeconds": 4})
+
+    monkeypatch.setattr(wave_recovery, "call_lifecycle_rpc", refused)
+    response = world.finish(waveProtocol=2, checkpoint=CHECKPOINT)
+    assert_error(response, 409, "wave_too_early")
+    assert response.headers["retry-after"] == "4"
+
+
+def test_too_early_without_a_usable_wait_still_asks_for_one_second():
+    with pytest.raises(wave_recovery.ApiError) as raised:
+        wave_recovery._refusal({"status": "refused", "reason": "too_early", "waitSeconds": True})
+    assert (raised.value.status_code, raised.value.code) == (409, "wave_too_early")
+    assert raised.value.headers == {"Retry-After": "1"}

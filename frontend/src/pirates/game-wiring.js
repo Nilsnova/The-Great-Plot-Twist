@@ -180,7 +180,7 @@ export function wireWaves(ctx) {
     stops.push(on('arrived', event => { if (event?.place === ISLAND_PLACE) landed = true; followRoom(); }),
       on('travel', () => { landed = false; islandRoom.attach(null); realRoom?.close?.(); realRoom = null; roomTopic = null; }));
     stops.push(every(tick, 1000));
-    stops.push(every(publishRecoveryState, 250));
+    stops.push(on('recovery_combat_changed', publishRecoveryState), on('wave_controller_stopped', publishRecoveryState));
     publishRecoveryState();
     // A wave we are in (rung here or joined): tell the island's room, so the other defenders join too;
     // again a little later for a friend whose room was still joining (a repeat changes nothing).
@@ -218,6 +218,15 @@ export function wireWaves(ctx) {
     if (pirates.point?.room?.on) stops.push(pirates.point.room.on('island_changed', () => { if (!disposed) void Promise.resolve(island.loadPoint()).then(relevel).catch(() => {}); }));
     stops.push(on('wave_controller_started', event => { if (event?.flagship === true) island.setPointBattle(true); else island.setBattle(true); }));
     stops.push(on('wave_controller_stopped', () => { island.setBattle(false); island.setPointBattle(false); }));
+    // Recovery waves finish over their own journal transport: their end frees the island's bell and village.
+    stops.push(on('wave_finish_answered', event => {
+      if (!event?.recovery || typeof event.waveId !== 'string') return;
+      try { island.recoveryWaveEnded?.(event.waveId, {survived: event.survived === true, loot: event.loot ?? 0, coins: event.coins,
+        waveBest: event.waveBest, flags: event.flags}); } catch (error) { console.error(error); }
+    }), on('wave_controller_stopped', event => {
+      if (event?.recovery !== true || typeof event.waveId !== 'string') return;
+      try { island.recoveryWaveEnded?.(event.waveId); } catch (error) { console.error(error); }
+    }));
     followRoom();
   }
   return {

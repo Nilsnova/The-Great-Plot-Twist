@@ -229,6 +229,16 @@ def _refusal(reply: Any) -> None:
     if not isinstance(reply, dict):
         raise SupabaseRejected("The recovery journal could not be read.")
     reason = reply.get("reason")
+    if reason == "too_early":
+        # A protocol-2 finish before the wave's minimum: the same 409 as the legacy finish.
+        wait = reply.get("waitSeconds")
+        wait = wait if isinstance(wait, int) and not isinstance(wait, bool) and wait > 0 else 1
+        raise ApiError(
+            409,
+            "wave_too_early",
+            f"The wave is not over yet. Try again in {wait} seconds.",
+            headers={"Retry-After": str(wait)},
+        )
     mapped = {
         "no_such_wave": (404, "no_such_wave", "There is no such wave."),
         "not_in_wave": (403, "not_in_wave", "Join the wave first: you are not in this wave."),

@@ -628,9 +628,12 @@ def test_finish_normalizes_expiry_closed_by_settlement_without_late_credit(datab
         "select closed_at is not null from public.recovery_wave_states where wave_id=%s",
         (wave_id,),
     ).fetchone() == (True,)
+    # 20261118020000: the settlement that closes an expired wave also finishes its run without
+    # credit, so the bell is no longer refused wave_running by a run nobody will finish.
     assert database.execute(
-        "select finished_at,expired from public.wave_runs where id=%s", (wave_id,)
-    ).fetchone() == (None, False)
+        "select finished_at is not null,expired,survived,loot from public.wave_runs where id=%s",
+        (wave_id,),
+    ).fetchone() == (True, True, False, 0)
     result = call(
         database,
         "select public.recovery_wave_finish(%s,%s,true,7,10,5,5,20,5,2,2,%s,"
@@ -803,7 +806,12 @@ def test_recovery_start_snapshots_db_wall_identity_and_legacy_effective_hp(datab
     ).fetchone()[0]
     assert current_page["headSeq"] == 1
     assert event_tick > current_page["sealedThroughTick"]
-    stale_finish = call(
+    # 20261118020000: the server owns the end. A finish names its own complete prefix (the seal it
+    # read, the head it read); a paid repair committed after that seal is not in the prefix and is
+    # merged into the close instead of refusing the finish (which a teammate's poll could repeat
+    # forever). Tried in a savepoint so the rest of the check still sees the open wave.
+    database.execute("savepoint own_prefix_finish")
+    own_prefix_finish = call(
         database,
         "select public.recovery_wave_finish(%s,%s,true,0,10,5,5,20,5,2,2,%s,"
         "'paidfinish00',%s,%s,0,%s::jsonb,%s::jsonb)",
@@ -815,10 +823,26 @@ def test_recovery_start_snapshots_db_wall_identity_and_legacy_effective_hp(datab
         json.dumps({str(instance_id): 0}),
         json.dumps({str(instance_id): 400000}),
     )
-    assert stale_finish == {"status": "refused", "reason": "health_sync_required"}
+    assert own_prefix_finish["status"] == "done"
+    assert own_prefix_finish["recovery"]["checkpointUid"] == "paidfinish00"
+    assert own_prefix_finish["recovery"]["closedHp"] == {str(instance_id): 1000000}
+    database.execute("rollback to savepoint own_prefix_finish")
+    # A prefix past the seal (ticks no participant can have run yet) is still refused.
+    missing = call(
+        database,
+        "select public.recovery_wave_finish(%s,%s,true,0,10,5,5,20,5,2,2,%s,"
+        "'paidfinish02',%s,0,0,%s::jsonb,%s::jsonb)",
+        OWNER,
+        wave_id,
+        epoch,
+        event_tick,
+        json.dumps({str(instance_id): 0}),
+        json.dumps({str(instance_id): 400000}),
+    )
+    assert missing == {"status": "refused", "reason": "health_sync_required"}
     assert database.execute(
         "select count(*) from public.recovery_health_checkpoints "
-        "where wave_id=%s and actor_id=%s and checkpoint_uid='paidfinish00'",
+        "where wave_id=%s and actor_id=%s and checkpoint_uid like 'paidfinish%%'",
         (wave_id, OWNER),
     ).fetchone() == (0,)
     checkpoint = call(
@@ -834,19 +858,6 @@ def test_recovery_start_snapshots_db_wall_identity_and_legacy_effective_hp(datab
         json.dumps({str(instance_id): 400000}),
     )
     assert checkpoint["status"] == "accepted"
-    refused = call(
-        database,
-        "select public.recovery_wave_finish(%s,%s,true,0,10,5,5,20,5,2,2,%s,"
-        "'paidfinish01',%s,%s,0,%s::jsonb,%s::jsonb)",
-        OWNER,
-        wave_id,
-        epoch,
-        current_page["sealedThroughTick"],
-        current_page["headSeq"],
-        json.dumps({str(instance_id): 0}),
-        json.dumps({str(instance_id): 400000}),
-    )
-    assert refused == {"status": "refused", "reason": "health_sync_required"}
     assert database.execute(
         "select closed_at from public.recovery_wave_states where wave_id=%s", (wave_id,)
     ).fetchone() == (None,)
