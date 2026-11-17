@@ -28,7 +28,7 @@ world/atlas decoding. Vegetation has a separate owner.
 ## Boundaries and acceptance
 
 - Keep the 64×48 backdrop, .72 projection and analytic top from D062.
-- D063 explicitly expands the old bounded1.4-unit trial facade to at most3.2
+- D063 explicitly expands the old bounded1.4-unit trial facade to at most 3.2
   projected units between coves, retaining .35 at the existing east/south/west
   approaches. The analytic top and projection stay unchanged; texture pixels
   never grant land. Combined hull/captain/shore and camera checks remain gates.
