@@ -56,4 +56,7 @@ test timeouts, state assertions and the unchanged rendering budget.
 2. How do seeded details stay fixed when the screen size changes?
 3. Why is a decoded source image released after the backdrop is composed?
 
-Implementation and runtime evidence are pending at the claim commit.
+The source material and bounded integration are implemented in this Draft.
+[Exact source and scoped verification](../docs/evidence/VIS-20-terrain/README.md)
+separate pure tests from the composed provider dependency and later real runtime
+evidence. Keep the visual/human acceptance gate open until that evidence exists.

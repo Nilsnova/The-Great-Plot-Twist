@@ -1,5 +1,6 @@
 // The top is the existing analytic coast; base points extend only the decorative backdrop/foam silhouette.
 import {linear, mix, poly, stroke, line} from './paint.js';
+import {paintMaterial} from './village/terrain-materials.js';
 export const CLIFF_DEPTH = 1.4, APPROACH_DEPTH = .35;
 export const NAVAL_APPROACH_BEARINGS = Object.freeze([0, 90, 180]);
 const TAU = Math.PI * 2, PROJECT = .72;
@@ -26,7 +27,7 @@ const path = (rows, fraction = 0) => {
 };
 
 /** Draw before the old beach/top fill: its interior hides rear faces and keeps valid feet on top. */
-export function paintCliffFaces(c, rows) {
+export function paintCliffFaces(c, rows, materials = null) {
   const base = path(rows, 1); base.closePath();
   c.save(); c.lineJoin = 'round'; c.lineCap = 'round';
   // A translucent contact shadow does not become opaque land in the sea's alpha threshold.
@@ -42,6 +43,17 @@ export function paintCliffFaces(c, rows) {
     const face = poly([...side.map(p => [p.x, p.y]), ...[...side].reverse().map(p => [p.x, p.baseY])], 0);
     c.fillStyle = linear(c, middle.x, middle.y, middle.x, middle.baseY, [[0, upper], [.45, stone], [1, '#71634f']]);
     c.fill(face);
+    if (materials) {
+      c.save(); c.clip(face);
+      paintMaterial(c, materials, 'rock', {bounds: {
+        left: Math.min(...side.map(p => p.x)), right: Math.max(...side.map(p => p.x)),
+        top: Math.min(...side.map(p => p.y)), bottom: Math.max(...side.map(p => p.baseY)),
+      }});
+      c.globalCompositeOperation = 'multiply';
+      c.fillStyle = linear(c, middle.x, middle.y, middle.x, middle.baseY,
+        [[0, '#fff2cb'], [.5, middle.x > 0 ? '#b8b6a5' : '#d5c6a6'], [1, '#756a55']]);
+      c.fill(face); c.restore();
+    }
     // Broken vertical seams and ledges make rock strata rather than a uniformly striped retaining wall.
     const seam = side[0], bend = Math.sin(from + 2) * .12;
     stroke(c, line([[seam.x, seam.y + seam.depth * .12], [seam.x + bend, seam.y + seam.depth * .48],
