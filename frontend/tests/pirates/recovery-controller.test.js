@@ -34,6 +34,7 @@ describe('recovery-v1 controller replay', () => {
       startsAt: new Date(START + 1000).toISOString(), weather: { kind: 'calm', ships: 1, fog: 0 }, rules: ['structure_recovery'],
       recoveryVersion: 1, waveProtocol: 2, initialSnapshot: makeSnapshot(), participantToken: TOKEN, lastActorCounter: 0 });
     expect(controller.wave).toBeTruthy();
+    expect(controller.recoveryCombatState).toBeNull(); // During prep, the island's server snapshot remains the source.
 
     now = START + 1050;
     controller.update(.05);
@@ -127,7 +128,7 @@ describe('recovery-v1 controller replay', () => {
     }
     expect(finishCalls.length).toBeGreaterThanOrEqual(3);
     expect(controller.state.walls.find(item => item.id === 'wall_1').hp).toBe(60);
-    expect(controller.recoveryCombatState.structures.find(item => item.instanceId === 'wall-instance')).toMatchObject({ hpUnits: 1_000_000, repairSeq: 1 });
+    expect(controller.recoveryCombatState).toBeNull(); // After canonical close, the server's between-wave HP is authoritative.
     expect(finishCalls[0].survived).toBe(finishCalls[1].survived);
     expect(finishCalls[0].shipsSunk).toBe(finishCalls[1].shipsSunk);
     const terminal = finishCalls.at(-1).checkpoint;

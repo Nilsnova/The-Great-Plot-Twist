@@ -1037,7 +1037,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     get state() { return wave?.state ?? null; },
     get recoveryCombatState() {
       const current = wave;
-      if (!current?.recoveryReplay || !current.info.initialSnapshot?.structures) return null;
+      if (!current?.recoveryReplay || current.recoveryFinishAnswered || !current.info.initialSnapshot?.structures
+        || now() + current.offset < current.info.startsAtMs) return null;
       const vector = current.sim.recoveryHealthVector();
       if (!vector) return null;
       const structures = current.info.initialSnapshot.structures.map(row => {
