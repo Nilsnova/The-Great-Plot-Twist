@@ -64,6 +64,8 @@ The bounded journal volume diagnostic is [test_structure_recovery_journal_budget
 
 The T60 command and exact fixture limitations are recorded in [its evidence README](evidence/T60-structure-recovery/README.md). The focused API/replay command is run from `backend/`: `CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql/test_structure_recovery_http_pg.py`.
 
+The later local fake-room `npm run test:mp` follow-up passed on 2026-11-17; see the [browser evidence](evidence/T60-structure-recovery/README.md#2026-11-17-local-multiplayer-browser-follow-up) for exact source, command and scope. It does not extend the API/PG or hosted transport evidence.
+
 ## 3. Frontend unit tests (Vitest)
 
 Command: `cd frontend && npm test` (runs `vitest run`; files `tests/**/*.test.js`, one file at a time, set in [frontend/vite.config.js](../frontend/vite.config.js)). Input only: `npm run test:input`.

@@ -233,3 +233,47 @@ join failure after a real v2 start. The schema test found the draft granted `ser
 The remaining finish test also refused the participant join. These were reported to the SQL
 owners; no assertion was changed. This draft probe is diagnostic evidence only and is not counted
 as a passing lifecycle check.
+
+## 2026-11-17 local multiplayer browser follow-up
+
+The historical multiplayer failure above describes the earlier integrated checkpoint on
+`dcc5a89b`; it is preserved as recorded. A later harness-only follow-up completed the documented
+multiplayer browser journey on source SHA-256
+`41e8df74dfb3db365dded59ef9166716d648040b2bc5e760ee7a07c80cf2152a` (harness source was reviewed
+and committed as `d48f1d4084d1d706a3e8216a9ab9ed3f61274c4d`). It used local fake room members and an
+ephemeral local Chromium launcher, not a real account or hosted protocol-2/database transport.
+
+From `frontend/`, with dependencies installed from the repository lockfile:
+
+```bash
+env -u TEST_URL CHROME_PATH=/tmp/t60-local-chromium npm run test:mp -- /tmp/t60-browser-final-41e8df74
+```
+
+The command exited 0; the full output is `/tmp/t60-browser-final-41e8df74.log`. The run retained
+the original seed, game rules, timeouts and assertions. It passed cooperative build/upgrade/research/
+demolish, captain fall/revive and shared health, a held eight-second break, cross-page loot and
+upgrade state, ship-fire/militia/event samples, mid-wave joins, own and teammate musket poses at
+1280×720 and 375×812, four-page boss practice/late-join checks, and shared finisher participation
+and outcome. The runner reported `check-multiplayer: OK (4 pages)`.
+
+The harness repairs the local fixture's defense and observation sequence using normal captain
+controls: it resumes auto-blade after the deliberate fall/revive assertion, defends the first wave,
+uses contextual fire during later ship encounters so close boarders still receive normal cutlass
+defense, and arms the existing pose observation before firing. It does not force simulation health,
+victory, clocks or acceptance. The pose observer retains the original three-second bound, fresh
+actor/target event requirement, exact mesh assertions and both viewport checks. A separate focused
+four-page late-wave-4 pose run at the same source revision also passed, including the desktop/phone
+screenshot workloads. Pose success is established by the runtime event and mesh assertions; the
+screenshots are taken after observation and may miss the short-lived pose. Earlier failures at
+revisions `9ed5f06a`, `62b3b911` and `cec9164e` remain
+diagnostic failures and were not relabeled as passes.
+
+Selected full-run captures are in
+[`browser-followup/full-run/`](browser-followup/full-run/): paused break, four-member mid-wave
+roster, own and teammate phone poses, finisher haul, and shared finisher outcome. The focused
+four-page late-wave pose captures are in
+[`browser-followup/targeted-pose/four-page-late-wave4/`](browser-followup/targeted-pose/four-page-late-wave4/).
+These local browser screenshots and fake-room assertions do not prove hosted realtime delivery,
+authenticated protocol-2 transport, database persistence, physical-device behavior or release
+readiness. The T60 availability flag remains off; the saved-v1 D060/culverin compatibility and
+operating-budget/retention decisions remain open.
