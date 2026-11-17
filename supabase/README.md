@@ -3248,3 +3248,116 @@ migrations/20261118030000_recovery_away.sql replaces recovery_wave_is_abandoned 
 For a backend/client candidate that contains T55/T60 recovery code, review and apply the required files in timestamp order: `20261117020000_structure_recovery.sql`, `20261117025000_legacy_wave_locks.sql`, `20261117030000_paid_structure_repair.sql`, `20261117040000_structure_recovery_api.sql`, then `20261117050000_structure_recovery_mutations.sql`. Include any earlier candidate prerequisite, such as `20261117010000_more_tower_spots.sql`, before this set. The integration tests only apply/reapply this chain in disposable Unix-socket PostgreSQL; no live application or activation is recorded here.
 
 The recovery feature flag remains off by default and governs admission of new v1 waves on legacy islands. It does not make the migrations optional for a deployed server or protocol-2 client that can read or mutate a saved v1 island. If a release must stop admitting new v1 waves, turn the flag off and preserve saved v1 state. Admission off does not downgrade saved v1 policy, which persists between waves; no safe policy downgrade is implemented. Keep a v1-capable backend and protocol-2 client while any saved v1 island remains, even when no wave is active. Do not reverse the migrations or delete receipts to roll back. Fix forward with reviewed code and migrations; any future saved-policy data transition needs separate review. See the [release checklist](../docs/RELEASE-CHECKLIST.md#t55t60-structure-recovery-release-gate). No live migration, deployment or flag activation was performed by T60.
+
+## Perimeter defense candidate: six migration additions
+
+This is the D061 review candidate, documented against source
+`f8a22d904dfd3518d9e47793ff46108e1612b6e6`. It is not evidence of live application,
+flag activation or deployment. The [review guide](../docs/contribute/PERIMETER-REVIEW.md)
+connects the implementation, draft PRs and evidence; the
+[API/policy contract](../docs/INTERFACES.md#12-perimeter-defense-candidate) defines
+the browser/server boundary. The owner applies reviewed migrations separately.
+
+### Prerequisites and order
+
+Apply the complete existing repository chain in timestamp order, including core
+wallet/build/layout/demolition support, D060 `20261117010000_more_tower_spots.sql`,
+and the five T55 recovery additions listed above. The six new perimeter files then
+follow in this exact order. Do not apply the last file alone or copy one function
+out of its migration.
+
+| Order | Migration | Purpose and dependency |
+|---|---|---|
+| 1 | [`20261117140000_wall_policy.sql`](migrations/20261117140000_wall_policy.sql) | Add monotonic owner policy, atomic policy/layout/epoch reader, owner-only admission and policy/raw-layout-fenced Move. Admission preserves all effective original/D060 coordinates and settles old recovery before changing future geometry. |
+| 2 | [`20261117141000_wall_cohort.sql`](migrations/20261117141000_wall_cohort.sql) | Admit canonical `wall_1`..`wall_128` in building/payment/layout/health constraints. Add strict identity helper and inventory guard/release triggers. Added pieces require transaction-local positioned-build authority and a saved coordinate. |
+| 3 | [`20261117142000_wall_repair_cohort.sql`](migrations/20261117142000_wall_repair_cohort.sql) | Extend the existing service-only V1 paid-repair identity guard to the bounded wall cohort. Preserve current access, receipt, epoch/window/instance/sequence, price, quota and journal checks. |
+| 4 | [`20261117143000_wall_demolition_cohort.sql`](migrations/20261117143000_wall_demolition_cohort.sql) | Extend quote/execute demolition to the same cohort, retaining contributor refunds, access-before-receipt and instance/recovery hooks. Replaying an old receipt cannot remove or refund a replacement instance. |
+| 5 | [`20261117144000_perimeter_wave_start.sql`](migrations/20261117144000_perimeter_wave_start.sql) | Add the owner-locked policy/client/protocol/recovery/pathing gate, then delegate to existing `recovery_wave_start`. Preserve original target and frozen snapshot on replay. |
+| 6 | [`20261117145000_wall_chain_build.sql`](migrations/20261117145000_wall_chain_build.sql) | Add immutable run receipts and atomic positioned construction, using all earlier policy/cohort/recovery support. Validate current access before receipt lookup; bind new purchases to exact ordered intent, price, epoch, policy/layout and role/wave state. |
+
+**Deploy the schema before dependent server code, even with `perimeter_walls` off.**
+Candidate island views call `island_wall_layout_read` regardless of the new-offer
+flag or placement flag. Missing RPCs are failures; the server must not hide paid
+pieces or silently reinterpret an admitted island as legacy. Flag-off is not a
+schema compatibility strategy.
+
+### Tables, functions and grants
+
+Both new tables enable RLS and provide no browser policies. `PUBLIC`, `anon` and
+`authenticated` have no access. `service_role` receives only SELECT/INSERT on
+`island_wall_policy` and `island_wall_build_receipts`; the migrations do not grant
+service UPDATE/DELETE. Policy has one supported stored pair, rule 1/capacity 128;
+absence represents legacy 0/12. Receipt primary key is `(payer,action_uid)`, bound
+also to owner, epoch and immutable intent. Existing owner/account deletion cascades
+remain separate from feature rollback.
+
+Every added/replaced function below is `SECURITY INVOKER` with an empty
+`search_path`. Function execution is revoked from `PUBLIC`, `anon` and
+`authenticated`, then granted only to `service_role`. The browser calls the
+authenticated backend, never these RPCs directly. Existing underlying table grants
+and transaction authorization still apply; service execution alone is not a player
+permission grant.
+
+| Function family | Signature or location | Contract |
+|---|---|---|
+| Atomic read | `island_wall_layout_read(uuid)` | Statement-consistent policy, complete raw rows and recovery reset epoch; overflow/malformed state fails rather than truncating |
+| Policy admission | `island_wall_policy_admit(uuid,uuid,jsonb,jsonb)` | Current owner only; owner lock and raw-layout CAS; fresh admission requires no active wave and materializes effective old positions before monotonic admission |
+| Single Move | `island_wall_move(uuid,uuid,text,integer,integer,jsonb,integer,integer)` | Current actor/owner context, saved policy and complete raw-layout CAS; no unbuilt added-ID positioning shortcut |
+| Cohort helper/triggers | `island_wall_number(text)`, `island_inventory_wall_build_guard()`, `island_inventory_wall_position_release()` | Canonical 1..128 IDs; added-ID insert requires server transaction context and coordinates; removing an added building releases its coordinate, retaining original reservation semantics |
+| Paid repair | `island_structure_repair(...)`, exact 13-argument signature in migration 3 | Existing V1 repair transaction and nonrefundable repair spend; only the selected wall identity guard is enlarged |
+| Demolition | `island_demolish_quote(uuid,uuid,text,jsonb)`, `island_demolish(uuid,uuid,text,text,jsonb)` | Existing per-contributor refunds and recovery hooks, with bounded cohort and authorized historical replay |
+| Wave start | `perimeter_wave_start(...)`, exact 17-argument signature in migration 5 | Policy-1 new waves require protocol 2, wall client 1, V1 support and perimeter/pathing template; delegates durable start and journal semantics |
+| Receipt lookup | `island_wall_build_receipt(uuid,uuid,text,jsonb)` | Current access before private historical receipt; same UID with changed owner/intent refuses |
+| Atomic build | `island_wall_build(uuid,uuid,text,jsonb,jsonb,jsonb,text,integer)` | Entire positioned run and per-piece charges/contributions commit once or all roll back; original receipt returned before fresh eligibility |
+
+The `app.positioned_wall_build` transaction-local setting used by the insert guard
+is internal SQL authority, not a request field or browser capability. The atomic
+builder scopes it to owner/payer/UID/plots and restores its previous value. New
+piece references are `island:<actionUid>:wall_N`, using the existing
+`building_purchase` wallet reason and distinct contribution rows. No new wallet
+reason, browser write grant or external service is introduced.
+
+### Review and application sequence
+
+1. Review the six migrations together with their backend/client dependents. Confirm
+   the full previous migration chain is present, and compare actual grants/function
+   signatures with the files above.
+2. Use disposable PostgreSQL to apply/reapply the chain and run the complete island
+   SQL tests. Inspect receipt idempotency, rollback, permission loss, reset epochs,
+   role/layout races, per-contributor refunds and recovery instance continuity.
+3. An authorized owner applies the reviewed schema before the corresponding server
+   release. No command in this guide applies it to a live database.
+4. Release mutually compatible backend and browser code. Keep new offers off until
+   independent human review and the integrated gameplay/release gates pass.
+5. If activation is separately approved, verify placement, recovery and actual wave
+   pathing support before offering admission. An admitted island that has not yet
+   entered recovery V1 still needs valid V1 admission for its first production wave.
+6. Observe actual supported-client construction, saved reads, start/join/current,
+   breach/repair, upgrades, refunds and retry outcomes. Preserve the legacy path for
+   owners not admitted to the new policy.
+
+Coordinator-reported disposable-database evidence, not a run performed by this
+docs-only task: backend source `51b566b4173fb50ab6fc89e79db3f48150061911`, from
+`backend/`, command
+`CASE_PG_SCRATCH=1 UV_CACHE_DIR=/workspace/.cache/uv uv run --frozen --no-env-file --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql`
+reported **609 passed in 25.19s**. This is the complete island SQL directory, not
+609 plus an earlier selected subset. It proves the disposable test scope only;
+it does not record production migration application or browser acceptance.
+
+### Pausing offers and rollback meaning
+
+Pause **new** perimeter offers with the feature flag; do not delete policy rows,
+paid pieces, saved positions, contribution rows, run receipts or recovery state.
+Already-admitted owners retain policy 1/128 and supported read/upgrade/repair/
+demolition/frozen-wave behavior. Move remains subject to its own placement offer.
+Matching committed build receipts remain reconcilable after offers pause, current
+access permitting, and return history plus the current island without rebuilding.
+
+Keep a compatible backend/client and the schema while any admitted island exists.
+Reverting to old narrow CHECK constraints, dropping new RPCs, disabling all durable
+recovery support or replacing current views with twelve defaults is not a safe
+rollback. Turning off new recovery admission before an admitted owner’s first V1
+wave can produce `structure_recovery_required`; it does not downgrade that owner.
+Fix forward with reviewed code/migrations. No downgrade/data conversion is supplied.
+Normal explicitly requested demolition, reset and account deletion retain their
+own reviewed behavior; they are not a deployment rollback technique.

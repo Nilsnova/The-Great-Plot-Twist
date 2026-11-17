@@ -1,0 +1,52 @@
+{
+  "scope": "Native DOM/GPU component proof only; not a complete game or final reference acceptance",
+  "runtimeHead": "0c282c0444d94d0905e8ec1be280fa512bd1b8aa",
+  "proofTestCommit": "6dd2fa1eaf9ad6c569b83d6e979d9391bd028d84",
+  "source": "frontend/tests/island/selection-clarity-dom.test.js",
+  "fixture": {
+    "kind": "wall",
+    "level": 3,
+    "spot": "wall_1",
+    "coins": 1000,
+    "upgradeCost": 80,
+    "health": "unavailable",
+    "transport": "declared component model; no live or fake API payment"
+  },
+  "testResult": {
+    "filesPassed": 1,
+    "testsPassed": 1,
+    "durationSeconds": 3.37,
+    "exitCode": 0
+  },
+  "assertions": {
+    "actualPngPostAndSurfaceReceipts": 4,
+    "actualPortraitOpaquePixelsGreaterThan": 5000,
+    "actualPortraitHorizontalSpanFractionGreaterThan": 0.6,
+    "actualGpuGreenPixelsGreaterThan": 200,
+    "actualGpuDarkOutlinePixelsGreaterThan": 200,
+    "gpuDrawCalls": 3,
+    "gpuDrawCallComposition": "one brown fixture base plus two selected-corner batches"
+  },
+  "artSource": "village/compiled/walls-4x-1-da339745c863.png",
+  "screenshots": [
+    {
+      "file": "vis38-component-1280x720.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 66773,
+      "sha256": "cb26a45720ab44960da42e5909037b106645cddb684453c2e4d4ec62dc6434d3"
+    },
+    {
+      "file": "vis38-component-375x812.png",
+      "width": 375,
+      "height": 812,
+      "bytes": 41871,
+      "sha256": "e09d650d19df43fe2abfacb90387077a7ae685f70b98872364f7adcd05b6f1ef"
+    }
+  ],
+  "limits": [
+    "Raw pixel counts were asserted in the native test but not serialized; thresholds are recorded, not invented exact measurements.",
+    "WebGL component geometry and declared DOM model are separate from the full game.",
+    "Final game screenshots, UI interaction/a11y/demo/full suite and live data remain coordinator verification."
+  ]
+}

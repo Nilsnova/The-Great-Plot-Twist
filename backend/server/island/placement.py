@@ -6,11 +6,11 @@
 How a move is made:
   1. The island is found as for a build (service.target_island): your own, or a game's island
      whose permissions.py row MOVE allows you (host or member; 403 not_member otherwise).
-  2. The island's stored cells are read. Moving the spot to where it stands already changes
+  2. The island's policy and stored cells are read atomically. Moving to the current cell changes
      nothing and answers the island: a repeat is safe without a click id.
   3. layout.py checks the rules (grid, land, overlaps, a way from the heart to the beach).
-  4. island_move() stores the cell under the island lock, between waves only, and only if the
-     stored cells are still the ones step 3 checked. When another move came first it answers
+  4. island_wall_move() stores the cell under the island lock, between waves only, and only if
+     the policy and cells are still those step 3 checked. A changed policy or move answers
      busy; the server then reads and checks once more before it gives up (409 busy).
 
 Used by: routes/island_layout.py.
@@ -21,6 +21,7 @@ from server.island import layout, layout_store, permissions, service
 from server.island.catalogue import IslandCatalogue
 from server.island.service import IslandView
 from server.island.store import Island, Refusal
+from server.island.wall_cohort import is_inventory_wall_id
 from server.supabase_admin import SupabaseAdmin
 
 # One fresh read and check after a busy answer; a second busy goes back to the player.
@@ -37,6 +38,10 @@ def move_refusal(refusal: Refusal) -> ApiError:
         return ApiError(409, "wave_running", "A wave is under way. Move buildings between waves.")
     if refusal.reason == "busy":
         return ApiError(409, "busy", "Someone else moved a building just now. Try again.")
+    if refusal.reason == "not_built":
+        return ApiError(409, "not_built", "Build a wall on this spot first.")
+    if refusal.reason == "not_member":
+        return permissions.refusal(permissions.MOVE)
     return ApiError(404, "no_such_island", "There is no island with that code.")
 
 
@@ -48,16 +53,20 @@ async def try_move(
     where: layout.Position,
     more: bool = False,
 ) -> Refusal | None:
-    """One read, check and store. None when the spot stands at `where` afterwards."""
-    rows = await layout_store.read_rows(admin, island.owner)
-    if rows is None:
-        raise unavailable()
-    rules = layout.island_layout(more)  # D060: with the extra tower spots while they are offered
-    positions = layout.positions_of(rules, layout_store.positions_from(rows))
+    """One atomic snapshot, check and fenced store. None once the spot stands at `where`."""
+    snapshot = await layout_store.read_snapshot(admin, island.owner)
+    # A perimeter island retains all non-wall reservations even when new tower offers pause.
+    rules = layout.island_layout(more or snapshot.rule_version == 1)
+    if not more and any(spot.spot == spot_id for spot in rules.extra_spots):
+        raise layout.MoveRefused(404, "no_such_spot", "There is no such build spot.")
+    policy = {"wall_rule_version": snapshot.rule_version, "wall_capacity": snapshot.capacity}
+    positions = layout.positions_of(rules, layout_store.positions_from(snapshot.rows), **policy)
+    if is_inventory_wall_id(spot_id, snapshot.capacity) and spot_id not in positions:
+        raise move_refusal(Refusal("not_built"))
     if positions.get(spot_id) == where:
         return None  # it stands there already: nothing to do
-    layout.check_move(rules, positions, spot_id, where[0], where[1])
-    return await layout_store.save_move(admin, island.owner, mover, spot_id, where, rows)
+    layout.check_move(rules, positions, spot_id, where[0], where[1], **policy)
+    return await layout_store.save_wall_move(admin, island.owner, mover, spot_id, where, snapshot)
 
 
 async def move(

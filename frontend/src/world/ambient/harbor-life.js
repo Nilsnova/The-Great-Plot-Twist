@@ -1,8 +1,9 @@
 // Small, pooled ambient details for the home islet and Saltreach Harbor.
 import * as THREE from 'three';
+import {projectGround} from '../projection.js';
+import {isletPlots} from '../islet/state.js';
 
 const reduced = value => typeof value === 'function' ? value() : !!value;
-const worldY = z => -z * .72;
 
 function points(points, color, size, opacity) {
   const geometry = new THREE.BufferGeometry();
@@ -26,11 +27,11 @@ function birds(color = '#e0dcc0', opacity = .82) {
   return mesh;
 }
 
-function litWindow(group) {
+function litWindow(group, cabin) {
   const mesh = new THREE.Mesh(new THREE.PlaneGeometry(.48, .38), new THREE.MeshBasicMaterial({
     color: '#f1c76e', transparent: true, opacity: 0, depthTest: false, depthWrite: false, toneMapped: false,
   }));
-  mesh.position.set((-7.45), (worldY(6) + 1.85), .02); mesh.renderOrder = 111; group.add(mesh);
+  mesh.position.set(cabin.x + .55, cabin.y + 1.85, .02); mesh.renderOrder = 111; group.add(mesh);
   return mesh;
 }
 
@@ -41,6 +42,10 @@ export function createHarborLife({ place, art, ctx } = {}) {
   const group = place?.group;
   const supportsHarborLife = group && ['home_islet', 'saltreach_harbor'].includes(place.id);
   if (!supportsHarborLife) return { update() {}, dispose() {} };
+  // Feet project; window/chimney heights and pooled drift remain upright artwork offsets.
+  const cabin = projectGround(isletPlots.plot_1.x, isletPlots.plot_1.z);
+  const greenhouse = projectGround(isletPlots.plot_4.x, isletPlots.plot_4.z);
+  const gulls = projectGround(-1.5, 16.5);
 
   let built = new Set(isletState?.getBuilt?.() ?? ['plot_1']);
   const unsubscribe = isletState?.subscribe?.(ids => {
@@ -51,15 +56,15 @@ export function createHarborLife({ place, art, ctx } = {}) {
     // Fixed particles drift as one mesh. The geometry is allocated once with the place.
     smoke = points([-.08, 0, 0, .05, .28, 0, -.04, .58, 0, .07, .9, 0], '#b5b7a7', 1.2, .22);
     smoke.userData.ambientLife = 'cabin-smoke';
-    smoke.position.set((-8.15), (worldY(6) + 5.1), .03); smoke.renderOrder = 112; group.add(smoke);
-    windowLight = litWindow(group);
+    smoke.position.set(cabin.x - .15, cabin.y + 5.1, .03); smoke.renderOrder = 112; group.add(smoke);
+    windowLight = litWindow(group, cabin);
     windowLight.userData.ambientLife = 'cabin-window';
     greenhouseBirds = birds('#d7d1b7', .75);
-    greenhouseBirds.position.set(7, (worldY(-7) + 4.55), .03);
+    greenhouseBirds.position.set(greenhouse.x, greenhouse.y + 4.55, .03);
     greenhouseBirds.userData.ambientLife = 'greenhouse-birds';
     greenhouseBirds.renderOrder = 114; greenhouseBirds.visible = built.has('plot_4'); group.add(greenhouseBirds);
   } else {
-    harborGulls = birds('#e5dfca', .7); harborGulls.position.set((-1.5), (worldY(16.5)), .03);
+    harborGulls = birds('#e5dfca', .7); harborGulls.position.set(gulls.x, gulls.y, .03);
     harborGulls.userData.ambientLife = 'harbor-gulls';
     harborGulls.renderOrder = 126; group.add(harborGulls);
   }
@@ -73,12 +78,12 @@ export function createHarborLife({ place, art, ctx } = {}) {
         smoke.visible = built.has('plot_1');
         if (!still) {
           const drift = (elapsed % 2.8) * .22;
-          smoke.position.y = (worldY(6) + 5.1 + drift);
+          smoke.position.y = cabin.y + 5.1 + drift;
         }
       }
       if (greenhouseBirds) {
         greenhouseBirds.visible = built.has('plot_4');
-        if (!still && greenhouseBirds.visible) greenhouseBirds.position.x = (7 + Math.sin(elapsed * .7) * .18);
+        if (!still && greenhouseBirds.visible) greenhouseBirds.position.x = greenhouse.x + Math.sin(elapsed * .7) * .18;
       }
       if (windowLight) {
         const night = state.night ?? 0;
@@ -86,7 +91,7 @@ export function createHarborLife({ place, art, ctx } = {}) {
       }
       if (harborGulls) {
         harborGulls.visible = (state.weather?.fog ?? 0) <= .65;
-        if (!still) harborGulls.position.y = (worldY(16.5) + Math.sin(elapsed * .45) * .12);
+        if (!still) harborGulls.position.y = gulls.y + Math.sin(elapsed * .45) * .12;
       }
     },
     dispose() { if (disposed) return; disposed = true; unsubscribe?.(); },

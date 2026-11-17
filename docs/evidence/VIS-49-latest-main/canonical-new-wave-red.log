@@ -1,0 +1,164 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run --maxWorkers=1 --reporter=verbose tests/island/wave-flow-races.test.js
+
+
+ RUN  v5.1.0 /workspace/reference-village-work/latest-main-preview/frontend
+
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > only the newest requested target may apply, old reply first=true 7ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > only the newest requested target may apply, old reply first=false 2ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > stale empty/failed reads cannot clear a newer target: {"ok":true,"data":null} 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > stale empty/failed reads cannot clear a newer target: {"ok":false,"code":"offline"} 0ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a failed newest lookup does not make an older pending answer current again 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > reset during a read cannot repopulate current or notify after the reset 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > an accepted new wave fences a lookup already in flight 2ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > wave begin also fences a read started during defense preparation 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a newer confirmed same-target wave during preparation cannot be overwritten by the older accepted start 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a newer confirmed same-target wave before the start response cannot be overwritten either 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > starting admission invalidates an older read before it can interfere with preparation 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > reset cancels a pending ring admission before it begins 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > reset cancels a pending join admission before it begins 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > reset while preparing an already accepted response still prevents its late begin 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a same-target refresh does not cancel a valid pending start admission 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a late accepted start cannot move back from a newer requested target 4ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a superseded ring fallback lookup cannot auto-join cached state or cancel a newer same-target read 2ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a late join outcome cannot replace/clear the newer target: {"ok":true,"data":{"waveId":"wave-a","wave":2,"seed":77,"startsAt":"2026-11-17T12:00:10.000Z","weather":{"kind":"calm"},"flagship":false}} 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a late join outcome cannot replace/clear the newer target: {"ok":false,"code":"wave_over"} 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a late join cannot replace/clear a newer wave on the same target: {"ok":true,"data":{"waveId":"wave-a","wave":2,"seed":77,"startsAt":"2026-11-17T12:00:10.000Z","weather":{"kind":"calm"},"flagship":false}} 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a late join cannot replace/clear a newer wave on the same target: {"ok":false,"code":"wave_over"} 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > same-target reads preserve a joined wave, and a fresh real next wave can replace it 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a confirmed empty different target clears the joined old wave and its countdown timers 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a same-target empty refresh preserves the joined wave and its countdown 2ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > finishing/clearing a wave invalidates a lookup that would revive it 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a recovery end fences an older read before it can revive that wave: null 2ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a recovery end fences an older read before it can revive that wave: {"survived":true,"loot":0,"coins":100} 2ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > ending an unrelated old wave does not cancel the current wave or its current lookup 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a canonical close after local stop rejects a later pending read of the same closed wave 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a canonical close for the old wave does not cancel a pending read of a different wave 1ms
+ × tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a canonical recovery close preserves a pending new-wave read on own while the old wave is still joined 15ms
+   → expected null to match object { where: 'own', joined: false, …(1) }
+ × tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a canonical recovery close preserves a pending new-wave read on ISLE-FR3ND while the old wave is still joined 2ms
+   → expected null to match object { where: 'ISLE-FR3ND', …(2) }
+ × tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a successful finish preserves a pending new-wave read on own while the old wave is still joined 2ms
+   → expected null to match object { where: 'own', joined: false, …(1) }
+ × tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a successful finish preserves a pending new-wave read on ISLE-FR3ND while the old wave is still joined 1ms
+   → expected null to match object { where: 'ISLE-FR3ND', …(2) }
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a local stop alone still permits the server to report the same wave open for rejoin 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a reset boundary starts a fresh closed-wave history 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a context boundary starts a fresh closed-wave history 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a successful finish keeps a later stale read closed too 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a late accepted old start cannot reopen a canonically closed wave or cancel a different-wave read 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a canonical recovery close preserves a pending new-wave read on own while the old wave is still joined
+AssertionError: expected null to match object { where: 'own', joined: false, …(1) }
+
+- Expected:
+{
+  "joined": false,
+  "wave": {
+    "waveId": "new-wave",
+  },
+  "where": "own",
+}
+
++ Received:
+null
+
+ ❯ tests/island/wave-flow-races.test.js:217:28
+    215|     h.flow.ended('accepted-wave', {survived: true, loot: 0, coins: 100…
+    216|     h.reads[0].resolve(ok(wave('new-wave'))); await pending;
+    217|     expect(h.flow.current).toMatchObject({where, joined: false, wave: …
+       |                            ^
+    218|   });
+    219|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a canonical recovery close preserves a pending new-wave read on ISLE-FR3ND while the old wave is still joined
+AssertionError: expected null to match object { where: 'ISLE-FR3ND', …(2) }
+
+- Expected:
+{
+  "joined": false,
+  "wave": {
+    "waveId": "new-wave",
+  },
+  "where": "ISLE-FR3ND",
+}
+
++ Received:
+null
+
+ ❯ tests/island/wave-flow-races.test.js:217:28
+    215|     h.flow.ended('accepted-wave', {survived: true, loot: 0, coins: 100…
+    216|     h.reads[0].resolve(ok(wave('new-wave'))); await pending;
+    217|     expect(h.flow.current).toMatchObject({where, joined: false, wave: …
+       |                            ^
+    218|   });
+    219|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a successful finish preserves a pending new-wave read on own while the old wave is still joined
+AssertionError: expected null to match object { where: 'own', joined: false, …(1) }
+
+- Expected:
+{
+  "joined": false,
+  "wave": {
+    "waveId": "new-wave",
+  },
+  "where": "own",
+}
+
++ Received:
+null
+
+ ❯ tests/island/wave-flow-races.test.js:224:28
+    222|     await h.flow.finish({waveId: 'accepted-wave', survived: true});
+    223|     h.reads[0].resolve(ok(wave('new-wave'))); await pending;
+    224|     expect(h.flow.current).toMatchObject({where, joined: false, wave: …
+       |                            ^
+    225|   });
+    226|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a successful finish preserves a pending new-wave read on ISLE-FR3ND while the old wave is still joined
+AssertionError: expected null to match object { where: 'ISLE-FR3ND', …(2) }
+
+- Expected:
+{
+  "joined": false,
+  "wave": {
+    "waveId": "new-wave",
+  },
+  "where": "ISLE-FR3ND",
+}
+
++ Received:
+null
+
+ ❯ tests/island/wave-flow-races.test.js:224:28
+    222|     await h.flow.finish({waveId: 'accepted-wave', survived: true});
+    223|     h.reads[0].resolve(ok(wave('new-wave'))); await pending;
+    224|     expect(h.flow.current).toMatchObject({where, joined: false, wave: …
+       |                            ^
+    225|   });
+    226|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 35 passed (39)
+   Start at  21:38:36
+   Duration  572ms (transform 40%, import 32%, tests 25%, worker 3%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice

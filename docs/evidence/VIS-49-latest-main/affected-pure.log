@@ -1,0 +1,326 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run --maxWorkers=1 --reporter=verbose tests/first-load.test.js tests/security-headers.test.js tests/island/api.test.js tests/island/visit-and-mode.test.js tests/island/structure-recovery-api.test.js tests/island/wave-flow.test.js tests/island/wave-flow-races.test.js tests/island/perimeter-wave-flow.test.js tests/island/core-rejoin-load.test.js tests/island/core-state.test.js tests/pirates/core-display.test.js tests/pirates/core-controller.test.js tests/pirates/multiplayer.test.js tests/pirates/live-waves-clock.test.js tests/pirates/live-waves-finish.test.js tests/pirates/live-waves-load.test.js tests/pirates/recovery-controller.test.js tests/pirates/recovery-load.test.js tests/pirates/recovery-playout.test.js tests/pirates/recovery-teammate.test.js tests/pirates/recovery-transport.test.js tests/pirates/recovery-wave-end.test.js tests/pirates/recovery-snapshot.test.js tests/pirates/perimeter-demo.test.js
+
+
+ RUN  v5.1.0 /workspace/reference-village-work/latest-main-preview/frontend
+
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > only the newest requested target may apply, old reply first=true 18ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > only the newest requested target may apply, old reply first=false 2ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > stale empty/failed reads cannot clear a newer target: {"ok":true,"data":null} 3ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > stale empty/failed reads cannot clear a newer target: {"ok":false,"code":"offline"} 0ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a failed newest lookup does not make an older pending answer current again 3ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > reset during a read cannot repopulate current or notify after the reset 2ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > an accepted new wave fences a lookup already in flight 3ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > wave begin also fences a read started during defense preparation 3ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a newer confirmed same-target wave during preparation cannot be overwritten by the older accepted start 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a newer confirmed same-target wave before the start response cannot be overwritten either 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > starting admission invalidates an older read before it can interfere with preparation 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > reset cancels a pending ring admission before it begins 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > reset cancels a pending join admission before it begins 2ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > reset while preparing an already accepted response still prevents its late begin 4ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a same-target refresh does not cancel a valid pending start admission 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a late accepted start cannot move back from a newer requested target 5ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a superseded ring fallback lookup cannot auto-join cached state or cancel a newer same-target read 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a late join outcome cannot replace/clear the newer target: {"ok":true,"data":{"waveId":"wave-a","wave":2,"seed":77,"startsAt":"2026-11-17T12:00:10.000Z","weather":{"kind":"calm"},"flagship":false}} 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a late join outcome cannot replace/clear the newer target: {"ok":false,"code":"wave_over"} 2ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a late join cannot replace/clear a newer wave on the same target: {"ok":true,"data":{"waveId":"wave-a","wave":2,"seed":77,"startsAt":"2026-11-17T12:00:10.000Z","weather":{"kind":"calm"},"flagship":false}} 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a late join cannot replace/clear a newer wave on the same target: {"ok":false,"code":"wave_over"} 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > same-target reads preserve a joined wave, and a fresh real next wave can replace it 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a confirmed empty different target clears the joined old wave and its countdown timers 3ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a same-target empty refresh preserves the joined wave and its countdown 5ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > finishing/clearing a wave invalidates a lookup that would revive it 2ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a recovery end fences an older read before it can revive that wave: null 3ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a recovery end fences an older read before it can revive that wave: {"survived":true,"loot":0,"coins":100} 6ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > ending an unrelated old wave does not cancel the current wave or its current lookup 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a canonical close after local stop rejects a later pending read of the same closed wave 2ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a canonical close for the old wave does not cancel a pending read of a different wave 3ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a canonical recovery close preserves a pending new-wave read on own while the old wave is still joined 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a canonical recovery close preserves a pending new-wave read on ISLE-FR3ND while the old wave is still joined 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a successful finish preserves a pending new-wave read on own while the old wave is still joined 4ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a successful finish preserves a pending new-wave read on ISLE-FR3ND while the old wave is still joined 2ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a local stop alone still permits the server to report the same wave open for rejoin 2ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a reset boundary starts a fresh closed-wave history 2ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a context boundary starts a fresh closed-wave history 1ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a successful finish keeps a later stale read closed too 5ms
+ ✓ tests/island/wave-flow-races.test.js > current-wave lookup and admission ordering > a late accepted old start cannot reopen a canonically closed wave or cancel a different-wave read 1ms
+
+[recovery-load] 60 s wave, 200 ms round trip: {"events":125,"inputs":83,"emptyInputs":0,"health":12,"finish":0,"maxFlight":{"events":1,"inputs":1,"health":1,"finish":0},"maxStep":1,"longestFreezeMs":48,"endedAt":null}
+ ✓ tests/pirates/recovery-load.test.js > recovery wave request load (one browser, fake clock) > stays well inside the per-participant budgets over a 60 s wave and never overlaps a request 801ms
+
+[recovery-load] 60 s wave, 450 ms round trip: {"events":125,"inputs":83,"emptyInputs":0,"health":12,"finish":0,"maxFlight":{"events":1,"inputs":1,"health":1,"finish":0},"maxStep":1,"longestFreezeMs":48}
+ ✓ tests/pirates/recovery-load.test.js > recovery wave request load (one browser, fake clock) > keeps the playout fed at a slow 450 ms round trip without going back to back 387ms
+
+[recovery-load] won wave, held break: {"events":31,"inputs":17,"emptyInputs":0,"health":0,"finish":1,"endedAt":13160,"finishAnswered":true}
+ ✓ tests/pirates/recovery-load.test.js > recovery wave request load (one browser, fake clock) > stops reading the journal once the wave is closed, even while the room holds the break open 122ms
+
+[recovery-load] two players, 200 ms round trip, no room: {"players":[{"readsPerSecond":2.1321961620469083,"inputsPerSecond":1.1253257521914237,"healthPerSecond":0.059227671167969675,"presses":18,"pressToVisibleMs":0,"neverDrawn":0,"teammatePressToVisibleMs":1024,"teammateDrawn":14,"teammatePresses":14,"journalEffectMs":1024,"afterClose":0,"ended":true,"waveDone":null,"finishes":1},{"readsPerSecond":2.1321961620469083,"inputsPerSecond":1.0068704098554844,"healthPerSecond":0.059227671167969675,"presses":14,"pressToVisibleMs":0,"neverDrawn":0,"teammatePressToVisibleMs":1024,"teammateDrawn":17,"teammatePresses":18,"journalEffectMs":1024,"afterClose":0,"ended":true,"waveDone":null,"finishes":1}],"closedAt":33768,"roomPerSecond":0,"journal":72,"controllers":null}
+ ✓ tests/pirates/recovery-load.test.js > two players on one recovery wave (fake clock) > draws your own shot at once and stays inside the read/write bounds; nothing after the close 619ms
+
+[recovery-load] two players, 200 ms round trip, 100 ms room: {"players":[{"readsPerSecond":2.1321961620469083,"inputsPerSecond":1.1253257521914237,"healthPerSecond":0.059227671167969675,"presses":18,"pressToVisibleMs":0,"neverDrawn":0,"teammatePressToVisibleMs":112,"teammateDrawn":14,"teammatePresses":14,"journalEffectMs":1024,"afterClose":0,"ended":true,"waveDone":null,"finishes":1},{"readsPerSecond":2.1321961620469083,"inputsPerSecond":1.0068704098554844,"healthPerSecond":0.059227671167969675,"presses":14,"pressToVisibleMs":0,"neverDrawn":0,"teammatePressToVisibleMs":112,"teammateDrawn":18,"teammatePresses":18,"journalEffectMs":1024,"afterClose":0,"ended":true,"waveDone":null,"finishes":1}],"closedAt":33768,"roomPerSecond":0.9476427386875148,"journal":72,"controllers":null}
+ ✓ tests/pirates/recovery-load.test.js > two players on one recovery wave (fake clock) > draws a teammate's shot within 250 ms over a 100 ms room, exactly once, and replays it sooner 400ms
+
+[recovery-load] hidden 1 min: {"shown":true,"caughtUpAt":250,"closedAt":null}
+ ✓ tests/pirates/recovery-load.test.js > a hidden tab comes back to the wave (fake clock) > catches up after 1 min hidden within a few seconds, saying so meanwhile 200ms
+
+[recovery-load] hidden 3 min: {"shown":true,"caughtUpAt":200,"closedAt":150900}
+ ✓ tests/pirates/recovery-load.test.js > a hidden tab comes back to the wave (fake clock) > catches up after 3 min hidden within a few seconds, saying so meanwhile 239ms
+
+[recovery-load] hidden 10 min: {"shown":true,"caughtUpAt":200,"closedAt":150900}
+ ✓ tests/pirates/recovery-load.test.js > a hidden tab comes back to the wave (fake clock) > catches up after 10 min hidden within a few seconds, saying so meanwhile 264ms
+ ✓ tests/pirates/recovery-load.test.js > a hidden tab comes back to the wave (fake clock) > ends a wave the server closed while every tab was away: clear message, finish sent, the wave stops 25ms
+ ✓ tests/island/perimeter-wave-flow.test.js > frozen perimeter inputs across normal bell events > pays for102walls, rings through the real API/flow/bus/controller and rejoins the same frozen simulation 1252ms
+ ✓ tests/island/perimeter-wave-flow.test.js > frozen perimeter inputs across normal bell events > forwards supplied malformed demo null to strict rejection rather than legacy fallback 3ms
+ ✓ tests/island/perimeter-wave-flow.test.js > frozen perimeter inputs across normal bell events > forwards supplied malformed demo false to strict rejection rather than legacy fallback 1ms
+ ✓ tests/island/perimeter-wave-flow.test.js > frozen perimeter inputs across normal bell events > forwards supplied malformed demo 0 to strict rejection rather than legacy fallback 1ms
+ ✓ tests/island/perimeter-wave-flow.test.js > frozen perimeter inputs across normal bell events > forwards supplied malformed demo "bad" to strict rejection rather than legacy fallback 5ms
+ ✓ tests/island/perimeter-wave-flow.test.js > frozen perimeter inputs across normal bell events > forwards supplied malformed demo {} to strict rejection rather than legacy fallback 1ms
+ ✓ tests/island/perimeter-wave-flow.test.js > frozen perimeter inputs across normal bell events > forwards supplied malformed demo {"version":2} to strict rejection rather than legacy fallback 1ms
+ ✓ tests/pirates/perimeter-demo.test.js > bounded explicit local perimeter inputs > clones/freezes inputs and keeps ordinary absent-demo legacy answers unchanged 5ms
+ ✓ tests/pirates/perimeter-demo.test.js > bounded explicit local perimeter inputs > rejects malformed provided demo {"version":2} without fallback 1ms
+ ✓ tests/pirates/perimeter-demo.test.js > bounded explicit local perimeter inputs > rejects malformed provided demo {"pathing":false} without fallback 0ms
+ ✓ tests/pirates/perimeter-demo.test.js > bounded explicit local perimeter inputs > rejects malformed provided demo {"perimeterWalls":false} without fallback 0ms
+ ✓ tests/pirates/perimeter-demo.test.js > bounded explicit local perimeter inputs > rejects malformed provided demo {"seed":1} without fallback 0ms
+ ✓ tests/pirates/perimeter-demo.test.js > bounded explicit local perimeter inputs > rejects malformed provided demo {"waveId":"other"} without fallback 0ms
+ ✓ tests/pirates/perimeter-demo.test.js > bounded explicit local perimeter inputs > rejects malformed provided demo {"startsAt":"2026-11-17T13:00:00Z"} without fallback 0ms
+ ✓ tests/pirates/perimeter-demo.test.js > bounded explicit local perimeter inputs > rejects malformed provided demo {"crew":{"gunner":0,"carpenter":0,"lookout":0,"guard":4}} without fallback 1ms
+ ✓ tests/pirates/perimeter-demo.test.js > bounded explicit local perimeter inputs > rejects malformed provided demo {"defenses":[{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}]} without fallback 0ms
+ ✓ tests/pirates/perimeter-demo.test.js > bounded explicit local perimeter inputs > rejects malformed provided demo {"islandEpoch":"12345678-1234-4234-8234-123456789abc\n"} without fallback 1ms
+ ✓ tests/pirates/perimeter-demo.test.js > bounded explicit local perimeter inputs > rejects malformed provided demo {"extra":true} without fallback 0ms
+ ✓ tests/pirates/perimeter-demo.test.js > bounded explicit local perimeter inputs > rejects malformed defense {"id":"wall_129"} 0ms
+ ✓ tests/pirates/perimeter-demo.test.js > bounded explicit local perimeter inputs > rejects malformed defense {"id":"wall_013"} 0ms
+ ✓ tests/pirates/perimeter-demo.test.js > bounded explicit local perimeter inputs > rejects malformed defense {"id":"wall_128\n"} 0ms
+ ✓ tests/pirates/perimeter-demo.test.js > bounded explicit local perimeter inputs > rejects malformed defense {"x":1.25} 0ms
+ ✓ tests/pirates/perimeter-demo.test.js > bounded explicit local perimeter inputs > rejects malformed defense {"z":null} 0ms
+ ✓ tests/pirates/perimeter-demo.test.js > bounded explicit local perimeter inputs > rejects malformed defense {"level":0} 1ms
+ ✓ tests/pirates/perimeter-demo.test.js > bounded explicit local perimeter inputs > rejects malformed defense {"kind":"cannon"} 0ms
+ ✓ tests/pirates/perimeter-demo.test.js > bounded explicit local perimeter inputs > rejects duplicate IDs, unsupported production mixing and missing pathing rule 1ms
+ ✓ tests/pirates/perimeter-demo.test.js > bounded explicit local perimeter inputs > retains canonical first/last health report IDs and refuses aliases/out-of-range IDs 3ms
+ ✓ tests/pirates/perimeter-demo.test.js > bounded explicit local perimeter inputs > uses frozen defenses and crew instead of later getters or overriding ordinary sim options 42ms
+ ✓ tests/pirates/perimeter-demo.test.js > freezes, reloads, fights and finishes the paid102-piece ring as an explicitly legacy local demo 1087ms
+ ✓ tests/pirates/perimeter-demo.test.js > pauses new offers without hiding owned pieces or blocking committed receipt reconciliation 10ms
+ ✓ tests/pirates/recovery-teammate.test.js > a teammate's actions over the room (drawing only) > draws a valid teammate shot at once and ignores another wave, a stranger, yourself and a bad shape 101ms
+ ✓ tests/pirates/recovery-teammate.test.js > a teammate's actions over the room (drawing only) > accepts at most 8 a second from one teammate 69ms
+ ✓ tests/pirates/recovery-teammate.test.js > a teammate's actions over the room (drawing only) > does not draw the replayed copy of a drawn shot, and forgets one the journal never replays 396ms
+ ✓ tests/pirates/recovery-teammate.test.js > a teammate's actions over the room (drawing only) > tells the room about your own shot with your token and actor counter 67ms
+ ✓ tests/pirates/recovery-teammate.test.js > the adaptive playout > follows the round trip between its floor and the configured ceiling 0ms
+ ✓ tests/pirates/recovery-controller.test.js > recovery-v1 controller replay > only applies a paid repair after its event arrives in a sealed page 34ms
+ ✓ tests/pirates/recovery-controller.test.js > recovery-v1 controller replay > posts a complete damaged HP checkpoint before a repair request can proceed 5ms
+ ✓ tests/pirates/recovery-controller.test.js > recovery-v1 controller replay > checkpoints dirty HP periodically during continuing combat damage 515ms
+ ✓ tests/pirates/recovery-controller.test.js > recovery-v1 controller replay > keeps one HP unit positive through the public controller state and display vector 2ms
+ ✓ tests/pirates/recovery-controller.test.js > recovery-v1 controller replay > retries an uncertain intent with the same UID and counter and never echoes it to the room 5ms
+ ✓ tests/pirates/recovery-controller.test.js > recovery-v1 controller replay > waits for a paid terminal repair catch-up, preserves outcome, and never calls legacy finish 33ms
+ ✓ tests/pirates/recovery-wave-end.test.js > recovery refusal policy (recovery-transport.js) > sorts every refusal into later, refresh or terminal and keeps Retry-After 2ms
+ ✓ tests/pirates/recovery-wave-end.test.js > recovery refusal policy (recovery-transport.js) > answers a server refusal instead of null, so the caller can tell a 403 from a timeout 2ms
+stderr | tests/pirates/recovery-wave-end.test.js > the end of a recovery wave (controller.js) > F2: a refused input batch is dropped and queued commands never hold the finish back
+Recovery inputs refused (wave_over); dropped.
+
+stderr | tests/pirates/recovery-wave-end.test.js > the end of a recovery wave (controller.js) > F7: a counter conflict drops the queue and numbers the next command after the journal
+Recovery inputs refused (input_counter_conflict); dropped.
+
+stderr | tests/pirates/recovery-wave-end.test.js > the end of a recovery wave (controller.js) > a terminal journal refusal ends the wave on screen and stops reading (no silent retry)
+Recovery wave ended by the server (not_in_wave).
+
+ ✓ tests/pirates/recovery-wave-end.test.js > the end of a recovery wave (controller.js) > F1: finishes with its own prefix, paces health_sync_required and retries a 429 instead of giving up 108ms
+ ✓ tests/pirates/recovery-wave-end.test.js > the end of a recovery wave (controller.js) > F2: a refused input batch is dropped and queued commands never hold the finish back 51ms
+ ✓ tests/pirates/recovery-wave-end.test.js > the end of a recovery wave (controller.js) > F7: a counter conflict drops the queue and numbers the next command after the journal 14ms
+ ✓ tests/pirates/recovery-wave-end.test.js > the end of a recovery wave (controller.js) > F6: in a recovery wave "me" is the participant token, in other waves the player id 3ms
+ ✓ tests/pirates/recovery-wave-end.test.js > the end of a recovery wave (controller.js) > F9: an unfinished recovery wave hands its finish off when the next wave starts 7ms
+ ✓ tests/pirates/recovery-wave-end.test.js > the end of a recovery wave (controller.js) > a terminal journal refusal ends the wave on screen and stops reading (no silent retry) 8ms
+ ✓ tests/pirates/recovery-wave-end.test.js > F3: the bell after a recovery wave (wave-flow.js) > ended() frees the joined wave and tells the island like a finish answer 3ms
+ ✓ tests/pirates/recovery-wave-end.test.js > F3: the running-game wiring frees the island bell for a recovery wave > passes a recovery close answer and a recovery stop to island.recoveryWaveEnded, and nothing for legacy waves 4ms
+ ✓ tests/pirates/multiplayer.test.js > the break with several captains > Auto next with a refused start ends the break instead of keeping it (and the input) forever 28ms
+ ✓ tests/pirates/multiplayer.test.js > the break with several captains > a friend's next wave arriving before ours ended here plays ours out and finishes it first 6ms
+ ✓ tests/pirates/multiplayer.test.js > the room-wide Pause between waves (GAME-V3.md §2) > holds the break open, stops Auto next and "Next wave", and shows who paused; Resume lets it run out 17ms
+ ✓ tests/pirates/multiplayer.test.js > the bell when two captains ring at once > "Next wave" that finds the other captain's wave running joins it 21ms
+ ✓ tests/pirates/multiplayer.test.js > the bell when two captains ring at once > reads the island once more before a wave starts, so a friend's new wall is in it 3ms
+ ✓ tests/pirates/multiplayer.test.js > the island room for every defender > periodically republishes a retained legacy core after a proven same-wave return without rereading recovery vectors 8ms
+ ✓ tests/pirates/multiplayer.test.js > the island room for every defender > wires authenticated recovery reads and checkpoints into the mounted island controller 6ms
+ ✓ tests/pirates/multiplayer.test.js > the island room for every defender > keeps Pirate Point waves on protocol 1 when island recovery is enabled 1ms
+ ✓ tests/pirates/multiplayer.test.js > the island room for every defender > publishes and clears replayed structure health through the island setter 2ms
+ ✓ tests/pirates/multiplayer.test.js > the island room for every defender > the owner joins the island room as soon as the island answered (it is unknown at the landing) 3ms
+ ✓ tests/pirates/multiplayer.test.js > the island room for every defender > sends wave_start, again a little later, and joins when a friend's wave_start arrives 2ms
+ ✓ tests/pirates/multiplayer.test.js > the island room for every defender > tries the join again while the bell is busy with our own ring 2ms
+ ✓ tests/pirates/multiplayer.test.js > the island room for every defender > joins the next wave after a retry found its wave already joined by our own "Next wave" 2ms
+ ✓ tests/pirates/multiplayer.test.js > the island room for every defender > asks the server once while a join is in progress, however many wave_start arrive 2ms
+ ✓ tests/pirates/multiplayer.test.js > the island room for every defender > a friend landing while a wave runs joins it once the island answered 1ms
+ ✓ tests/pirates/multiplayer.test.js > the island room for every defender > co-op builds: ours go to the room as island_changed, a friend's make us read the island again 1ms
+ ✓ tests/pirates/multiplayer.test.js > an upgrade is never missed (11 Nov: "sometimes some upgrades were not visible") > tells the room about our upgrade twice, in case a friend's room was still joining 1ms
+ ✓ tests/pirates/multiplayer.test.js > an upgrade is never missed (11 Nov: "sometimes some upgrades were not visible") > reads the island on screen again every 15 seconds, also when no message came 1ms
+ ✓ tests/pirates/multiplayer.test.js > an upgrade is never missed (11 Nov: "sometimes some upgrades were not visible") > gives the wave on screen the new levels after our change and after every read 4ms
+ ✓ tests/pirates/multiplayer.test.js > the shared fake world (?islands=fake&fakeworld=…, scripts/check-multiplayer.js) > reads its tab's captain from the address 0ms
+ ✓ tests/pirates/multiplayer.test.js > the shared fake world (?islands=fake&fakeworld=…, scripts/check-multiplayer.js) > lets four tabs join, build, visit and fight one island together 14ms
+ ✓ tests/security-headers.test.js > security headers > pins every default header without a project address 3ms
+ ✓ tests/security-headers.test.js > security headers > adds only the validated HTTPS and derived WSS origins 0ms
+ ✓ tests/security-headers.test.js > security headers > rejects invalid public address null 1ms
+ ✓ tests/security-headers.test.js > security headers > rejects invalid public address 42 0ms
+ ✓ tests/security-headers.test.js > security headers > rejects invalid public address {} 0ms
+ ✓ tests/security-headers.test.js > security headers > rejects invalid public address " " 0ms
+ ✓ tests/security-headers.test.js > security headers > rejects invalid public address "https://example.supabase.co/" 0ms
+ ✓ tests/security-headers.test.js > security headers > rejects invalid public address "https://example.supabase.co/path" 0ms
+ ✓ tests/security-headers.test.js > security headers > rejects invalid public address "https://user@example.supabase.co" 0ms
+ ✓ tests/security-headers.test.js > security headers > rejects invalid public address "https://example.supabase.co?x=1" 0ms
+ ✓ tests/security-headers.test.js > security headers > rejects invalid public address "https://example.supabase.co#x" 0ms
+ ✓ tests/security-headers.test.js > security headers > rejects invalid public address "https://example.supabase.co:443" 0ms
+ ✓ tests/security-headers.test.js > security headers > rejects invalid public address "http://example.supabase.co" 0ms
+ ✓ tests/security-headers.test.js > security headers > rejects invalid public address "wss://example.supabase.co" 0ms
+ ✓ tests/security-headers.test.js > security headers > rejects invalid public address "https://nested.example.supabase.co" 0ms
+ ✓ tests/security-headers.test.js > security headers > rejects invalid public address "https://example.supabase.co.evil.test" 0ms
+ ✓ tests/security-headers.test.js > security headers > rejects invalid public address "https://example-supabase.co" 0ms
+ ✓ tests/security-headers.test.js > security headers > rejects invalid public address "https://-example.supabase.co" 0ms
+ ✓ tests/security-headers.test.js > security headers > rejects invalid public address "https://example-.supabase.co" 0ms
+ ✓ tests/security-headers.test.js > security headers > rejects invalid public address "https://example.supabase.co\n" 0ms
+ ✓ tests/security-headers.test.js > security headers > rejects invalid public address "https://example.supabase.co; script-src *" 0ms
+ ✓ tests/security-headers.test.js > security headers > reproduces enforcing and report-only platform policy exactly 2ms
+ ✓ tests/security-headers.test.js > security headers > fails closed on a mismatching address or weakened platform policy 1ms
+ ✓ tests/security-headers.test.js > security headers > preserves additional platform headers without changing their values or order 0ms
+ ✓ tests/security-headers.test.js > security headers > mirrors the deployed compact policy with inherited self-only directives 1ms
+ ✓ tests/security-headers.test.js > security headers > rejects missing, duplicated and scoped deployment security blocks 1ms
+ ✓ tests/security-headers.test.js > security headers > emits the documented Vercel JSON from the CLI without environment defaults 101ms
+ ✓ tests/security-headers.test.js > security headers > matches actual platform headers when present and otherwise uses the explicit proposal 1ms
+ ✓ tests/security-headers.test.js > security headers > accepts only the exact immutable cache block for hashed assets beside the security block 1ms
+ ✓ tests/security-headers.test.js > security headers > keeps the hashed-asset cache block in the deployed vercel.json 0ms
+stderr | tests/pirates/live-waves-finish.test.js > a legacy wave finish with an unknown outcome > is not sent again after a clear refusal, and gives up after a few unknown outcomes
+Error: No connection to the server.
+    at refusal (/workspace/reference-village-work/latest-main-preview/frontend/tests/pirates/live-waves-finish.test.js:11:49)
+    at /workspace/reference-village-work/latest-main-preview/frontend/tests/pirates/live-waves-finish.test.js:51:50
+    at Mock (file:///workspace/The-Great-Plot-Twist/frontend/node_modules/vitest/dist/chunks/spy.DDMXghXv.js:353:40)
+    at attempt (/workspace/reference-village-work/latest-main-preview/frontend/src/pirates/controller.js:1514:33)
+    at submitFinish (/workspace/reference-village-work/latest-main-preview/frontend/src/pirates/controller.js:1525:11)
+    at end (/workspace/reference-village-work/latest-main-preview/frontend/src/pirates/controller.js:1483:10)
+    at Object.update (/workspace/reference-village-work/latest-main-preview/frontend/src/pirates/controller.js:1348:29)
+    at Object.advance (/workspace/reference-village-work/latest-main-preview/frontend/tests/pirates/live-waves-finish.test.js:23:32)
+    at /workspace/reference-village-work/latest-main-preview/frontend/tests/pirates/live-waves-finish.test.js:54:70
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  status: 404,
+  code: 'no_such_wave',
+  retryAfter: null
+}
+
+ ✓ tests/pirates/live-waves-finish.test.js > a legacy wave finish with an unknown outcome > is sent again (same body) after a dropped connection and a 503, and the break gets its loot 44ms
+ ✓ tests/pirates/live-waves-finish.test.js > a legacy wave finish with an unknown outcome > is not sent again after a clear refusal, and gives up after a few unknown outcomes 59ms
+ ✓ tests/pirates/live-waves-finish.test.js > the bell after a wave whose finish never got through > does not stay "Under way": once the server closed the wave the bell rings again 5ms
+ ✓ tests/pirates/live-waves-finish.test.js > the bell after a wave whose finish never got through > offers to join the still open wave again instead (its replay finishes once more) 2ms
+ ✓ tests/pirates/recovery-playout.test.js > recovery waves play out smoothly (#324) > without the buffer the wave freezes between polls and jumps after each one 40ms
+ ✓ tests/pirates/recovery-playout.test.js > recovery waves play out smoothly (#324) > with the default buffer it advances at most two ticks a frame, like the local clock 14ms
+ ✓ tests/pirates/core-controller.test.js > core display through the actual wave controller > retains actual controller HP authority after an older flow lookup returns 22ms
+ ✓ tests/pirates/core-controller.test.js > core display through the actual wave controller > resumes actual HP after an authorized same-wave return and still rejects another island 5ms
+ ✓ tests/pirates/core-controller.test.js > core display through the actual wave controller > publishes real final zero from onEvents before finishWave and keeps rubble after a late finish response 19ms
+ ✓ tests/pirates/core-controller.test.js > core display through the actual wave controller > forwards management state to trusted-perimeter previews while retaining useful live guide updates 3ms
+ ✓ tests/pirates/live-waves-clock.test.js > the wave clock between two browsers > a teammate's cannon shot lands late on a screen whose clock is a second ahead 51ms
+ ✓ tests/pirates/live-waves-clock.test.js > the wave clock between two browsers > with the server's clock from the wave answer both screens count the same ticks 18ms
+ ✓ tests/pirates/live-waves-clock.test.js > the wave clock between two browsers > the api measures the offset when the answer arrives, and leaves a well-set clock alone 10ms
+ ✓ tests/pirates/live-waves-clock.test.js > the wave clock between two browsers > the bell hands the measured offset to the wave on screen 2ms
+ ✓ tests/island/api.test.js > island api: accepted answers > keeps protocol-one start requests free of perimeter capability fields 19ms
+ ✓ tests/island/api.test.js > island api: accepted answers > reads the island with its 22 spots in the server order and 100 starting coins 5ms
+ ✓ tests/island/api.test.js > island api: accepted answers > builds a cannon for 30 coins and answers the new island 3ms
+ ✓ tests/island/api.test.js > island api: accepted answers > visits a friend by code in any spelling 6ms
+ ✓ tests/island/api.test.js > island api: accepted answers > starts, finds, joins and finishes a wave 7ms
+ ✓ tests/island/api.test.js > island api: accepted answers > pays 5 more loot per house 3ms
+ ✓ tests/island/api.test.js > island api: every refusal keeps the server code and plain message > build refusals 3ms
+ ✓ tests/island/api.test.js > island api: every refusal keeps the server code and plain message > visit and wave refusals 3ms
+ ✓ tests/island/api.test.js > island api: every refusal keeps the server code and plain message > a finished wave refuses new captains with wave_over 2ms
+ ✓ tests/island/api.test.js > island api: every refusal keeps the server code and plain message > reads the nested error shape of a raw answer and other flags 2ms
+ ✓ tests/island/api.test.js > island api: every refusal keeps the server code and plain message > a transport that throws counts as no connection; an unreadable answer is refused 1ms
+ ✓ tests/island/api.test.js > island api: one click id per build and per bell > sends the same actionUid again after an unknown outcome and charges once 2ms
+ ✓ tests/island/api.test.js > island api: one click id per build and per bell > keeps the id after a 503 and drops it after a clear refusal 1ms
+ ✓ tests/island/api.test.js > island api: one click id per build and per bell > a repeated bell after a lost answer gives the same wave 1ms
+ ✓ tests/island/api.test.js > island api: one click id per build and per bell > builds and upgrades on a friend's island with your own coins (code in the body) 4ms
+ ✓ tests/island/api.test.js > island api: one click id per build and per bell > the function-level fake has the same names 1ms
+ ✓ tests/island/core-rejoin-load.test.js > actual returned-island current-wave authority > clears proof on travel and authorizes the new context only after a successful same-target server read 18ms
+ ✓ tests/island/core-rejoin-load.test.js > actual returned-island current-wave authority > does not authorize a late current-wave answer from before another travel 2ms
+ ✓ tests/island/core-rejoin-load.test.js > actual returned-island current-wave authority > requires a fresh island answer rather than authorizing cached identity after a failed island read 2ms
+ ✓ tests/island/core-rejoin-load.test.js > actual returned-island current-wave authority > does not let an older concurrent load replace the newer confirmed wave proof 2ms
+ ✓ tests/island/core-rejoin-load.test.js > actual returned-island current-wave authority > clears a joined friend wave when a failed visit reload falls back to an empty own island 7ms
+ ✓ tests/island/core-rejoin-load.test.js > actual returned-island current-wave authority > does not authorize absent, failed or invalid current-wave answers: {"ok":true,"data":null} 2ms
+ ✓ tests/island/core-rejoin-load.test.js > actual returned-island current-wave authority > does not authorize absent, failed or invalid current-wave answers: {"ok":false,"status":503,"code":"unavailable"} 2ms
+ ✓ tests/island/core-rejoin-load.test.js > actual returned-island current-wave authority > does not authorize absent, failed or invalid current-wave answers: {"ok":true,"data":{"waveId":"unreadable"}} 2ms
+ ✓ tests/island/wave-flow.test.js > the bell and the wave > rings, tells the game, counts down 10 s and finishes with loot (placeholder) 26ms
+ ✓ tests/island/wave-flow.test.js > the bell and the wave > forwards the immutable v2 snapshot and assigned participant identity to the controller event 4ms
+ ✓ tests/island/wave-flow.test.js > the bell and the wave > waits for the wave lane when a renderer is registered, and finishes through the hook 3ms
+ ✓ tests/island/wave-flow.test.js > the bell and the wave > hands a finish that came too early back to the renderer, which tries again after Retry-After 4ms
+ ✓ tests/island/wave-flow.test.js > the bell and the wave > the placeholder finish still retries by itself after Retry-After 4ms
+ ✓ tests/island/wave-flow.test.js > the bell and the wave > no placeholder outside the fake or ?wavedebug=1 10ms
+ ✓ tests/island/wave-flow.test.js > the bell and the wave > a lost wave pays nothing and says so 5ms
+ ✓ tests/island/wave-flow.test.js > the bell and the wave > a ring while a wave runs shows that wave; a visitor joins it 6ms
+ ✓ tests/island/wave-flow.test.js > the bell and the wave > a friend sailing in sees the running wave without joining 3ms
+ ✓ tests/pirates/recovery-snapshot.test.js > recovery-v1 immutable wave snapshots > accepts public geometry v2 only with the complete frozen perimeter contract 5ms
+ ✓ tests/pirates/recovery-snapshot.test.js > recovery-v1 immutable wave snapshots > validates versions and HP identity, then owns a frozen copy 1ms
+ ✓ tests/pirates/recovery-snapshot.test.js > recovery-v1 immutable wave snapshots > rejects unsupported versions, missing rule, duplicate identity, and out-of-range health 1ms
+ ✓ tests/pirates/recovery-snapshot.test.js > recovery-v1 immutable wave snapshots > uses frozen instance rows, includes newly unlocked D060 spots, and keeps role buildings 2ms
+ ✓ tests/pirates/recovery-snapshot.test.js > recovery-v1 immutable wave snapshots > applies only the current instance full-repair event once and rejects stale sequence, instance and tick 12ms
+ ✓ tests/pirates/recovery-snapshot.test.js > recovery-v1 immutable wave snapshots > preserves one normalized HP unit as positive wall and tower health in public sim state 1ms
+ ✓ tests/pirates/recovery-snapshot.test.js > recovery-v1 immutable wave snapshots > keeps an inactive culverin in the full vector and accepts a matching paid restore event 2ms
+ ✓ tests/pirates/recovery-snapshot.test.js > recovery-v1 immutable wave snapshots > reconciles a paid restore after terminal sim without changing combat result or ticking combat again 3ms
+ ✓ tests/pirates/recovery-transport.test.js > recovery-v1 command transport > sends only player intent and rejects Captain E repair/rebuild 3ms
+ ✓ tests/pirates/recovery-transport.test.js > recovery-v1 command transport > restores accepted Captain metadata from the journal and identifies actors by stable token 1ms
+ ✓ tests/pirates/recovery-transport.test.js > recovery-v1 command transport > accepts server-paid repair events without a Captain token, but only as a special journal input 0ms
+ ✓ tests/pirates/recovery-transport.test.js > recovery-v1 command transport > uses the injected authenticated get/post transport for journal endpoints 3ms
+ ✓ tests/pirates/recovery-transport.test.js > recovery-v1 command transport > requires both fixed-page watermarks while allowing the preparation seal -1 1ms
+ ✓ tests/pirates/recovery-transport.test.js > recovery-v1 command transport > treats failed authenticated responses as uncertain outcomes (refusals for the refusal policy) 1ms
+ ✓ tests/pirates/recovery-transport.test.js > recovery-v1 command transport > posts a complete v2 terminal checkpoint through the injected authenticated client 3ms
+ ✓ tests/pirates/recovery-transport.test.js > recovery-v1 command transport > posts the accepted complete health vector to the active wave checkpoint endpoint 1ms
+ ✓ tests/pirates/recovery-transport.test.js > recovery-v1 command transport > rejects overlarge batches before making an HTTP request 1ms
+ ✓ tests/island/visit-and-mode.test.js > island codes > reads ISLE codes in any spelling and refuses others 2ms
+ ✓ tests/island/visit-and-mode.test.js > island codes > names the island presence room after BUILD-PLAN 3.6 0ms
+ ✓ tests/island/visit-and-mode.test.js > island codes > remembers a visit link for the tab only 1ms
+ ✓ tests/island/visit-and-mode.test.js > island codes > visits a friend by code through the api, and refuses an unknown one with the plain message 14ms
+ ✓ tests/island/visit-and-mode.test.js > the islands flag and where Play lands > is fake only in a dev build, live with the flag, otherwise off 0ms
+ ✓ tests/island/visit-and-mode.test.js > the islands flag and where Play lands > waits a moment for the flags of an online adapter only 0ms
+ ✓ tests/island/visit-and-mode.test.js > the islands flag and where Play lands > still finds the islands when the first /api/config answers late (a cold start, one failed read) 0ms
+ ✓ tests/island/visit-and-mode.test.js > the islands flag and where Play lands > lands on your island, but keeps the class harbor for a class code 0ms
+ ✓ tests/island/visit-and-mode.test.js > T51: what stands behind the front door > shows open water until a game is chosen, and while the mode is still unknown 0ms
+ ✓ tests/island/visit-and-mode.test.js > T51: what stands behind the front door > shows the island once a game is chosen 0ms
+ ✓ tests/island/visit-and-mode.test.js > T51: what stands behind the front door > keeps the old harbor start with the islands off 0ms
+ ✓ tests/island/structure-recovery-api.test.js > structure recovery API > requests protocol two from the persisted policy and preserves the entire recovery wave DTO 5ms
+ ✓ tests/island/structure-recovery-api.test.js > structure recovery API > lets a second player find a teammate's recovery wave without a token and join it for their own 3ms
+ ✓ tests/island/structure-recovery-api.test.js > structure recovery API > advertises protocol two for first-wave admission while accepting a frozen legacy reply 1ms
+ ✓ tests/island/structure-recovery-api.test.js > structure recovery API > refuses local legacy perimeter data mixed into a public recovery wave 1ms
+ ✓ tests/island/structure-recovery-api.test.js > structure recovery API > accepts only the canonical versioned state and requests it for the selected island 1ms
+ ✓ tests/island/structure-recovery-api.test.js > structure recovery API > submits the quoted fields and retries an unknown result with the same action UID 1ms
+ ✓ tests/island/structure-recovery-api.test.js > structure recovery API > keeps a stale quote response current state and wallet separately from the refusal 5ms
+ ✓ tests/island/structure-recovery-api.test.js > structure recovery API > remembers the server spot alias from the canonical recovery view for the repair request 0ms
+ ✓ tests/pirates/live-waves-load.test.js > island rereads on the live path > one reread at a time: island_changed hints during a slow read add one more read, not one each 9ms
+ ✓ tests/pirates/live-waves-load.test.js > island rereads on the live path > the quiet 15 s reread waits while a wave runs on the island 10ms
+ ✓ tests/pirates/core-display.test.js > the readonly core health publisher > forwards actual state on demand without needing a threshold narrator event 3ms
+ ✓ tests/pirates/core-display.test.js > the readonly core health publisher > delivers final zero immediately before finish and does not replace rubble afterward 1ms
+ ✓ tests/pirates/core-display.test.js > the readonly core health publisher > retains the original captured target through travel even if its source context object changes 1ms
+ ✓ tests/pirates/core-display.test.js > the readonly core health publisher > rebinds a retained wave only after server-confirmed return to its original island identity 2ms
+ ✓ tests/pirates/core-display.test.js > the readonly core health publisher > refuses a rejoin whose original identity, epoch, context or server wave differs: {"islandIdentity":"friend:epoch-a:reset-0"} 1ms
+ ✓ tests/pirates/core-display.test.js > the readonly core health publisher > refuses a rejoin whose original identity, epoch, context or server wave differs: {"islandIdentity":"home:epoch-a:reset-1"} 0ms
+ ✓ tests/pirates/core-display.test.js > the readonly core health publisher > refuses a rejoin whose original identity, epoch, context or server wave differs: {"epoch":"epoch-b"} 0ms
+ ✓ tests/pirates/core-display.test.js > the readonly core health publisher > refuses a rejoin whose original identity, epoch, context or server wave differs: {"islandIdentity":null} 0ms
+ ✓ tests/pirates/core-display.test.js > the readonly core health publisher > refuses a rejoin whose original identity, epoch, context or server wave differs: {"rejoin":{"contextKey":"old-context","waveId":"wave-a"}} 1ms
+ ✓ tests/pirates/core-display.test.js > the readonly core health publisher > refuses a rejoin whose original identity, epoch, context or server wave differs: {"rejoin":{"contextKey":"returned-context","waveId":"wave-old"}} 1ms
+ ✓ tests/pirates/core-display.test.js > the readonly core health publisher > captures the new target for a new wave object, even when its ID is reused in a test or local reset 0ms
+ ✓ tests/pirates/core-display.test.js > the readonly core health publisher > uses the wave snapshot epoch when available, allowing the model to reject a mismatched island 1ms
+ ✓ tests/pirates/core-display.test.js > the readonly core health publisher > waits for context once, captures before state arrives, and never borrows a later target 1ms
+ ✓ tests/pirates/core-display.test.js > the readonly core health publisher > ignores missing wave identity, missing context, and structurally unavailable health 1ms
+ ✓ tests/pirates/core-display.test.js > the readonly core health publisher > does not mutate frozen sim state, wave data or captured context, and leaves numeric policy to the model 0ms
+ ✓ tests/island/core-state.test.js > the existing core landmark health state > keeps unknown health unknown until the current island and wave supply a valid snapshot 3ms
+ ✓ tests/island/core-state.test.js > the existing core landmark health state > uses real partial HP, preserves tiny positive HP, and distinguishes zero from damage 1ms
+ ✓ tests/island/core-state.test.js > the existing core landmark health state > uses the actual maximum from each accepted state rather than a cached full-health value 0ms
+ ✓ tests/island/core-state.test.js > the existing core landmark health state > rejects old ticks and other waves, island contexts or epochs without replacing the last truth 1ms
+ ✓ tests/island/core-state.test.js > the existing core landmark health state > keeps a destroyed core as rubble through late healing, then accepts a genuinely new wave 0ms
+ ✓ tests/island/core-state.test.js > the existing core landmark health state > clears accepted damage on actual reset/travel and refuses late state from the previous target 0ms
+ ✓ tests/island/core-state.test.js > the existing core landmark health state > allows a captured legacy context with no server epoch but never invents an epoch match 0ms
+ ✓ tests/island/core-state.test.js > the existing core landmark health state > rejects malformed health and ordering data, retaining the last accepted state 0ms
+ ✓ tests/island/core-state.test.js > the existing core landmark health state > copies the readonly snapshot so later caller mutations cannot change the accepted view 0ms
+ ✓ tests/first-load.test.js > first load > downloads the motion setting beside the world chunk, and starts both when Play is chosen 2ms
+ ✓ tests/first-load.test.js > first load > loads the motion module once even when Play and Settings ask together 1ms
+ ✓ tests/first-load.test.js > first load > starts the island game chunks with the harbor art when the flags already say islands 1ms
+ ✓ tests/first-load.test.js > first load > waits longer than the API timeout for the flags, shows the wait, and keeps only a real answer 1ms
+
+ Test Files  24 passed (24)
+      Tests  263 passed (263)
+   Start at  21:38:59
+   Duration  16.26s (tests 67%, import 26%, transform 5%, worker 1%)
+
+    Isolate  24 workers spawned · ~173ms startup each (spawn + environment, per file)
+             at least ~3.98s faster with isolate: false — reuses workers across files instead of one per file
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice

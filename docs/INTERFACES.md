@@ -35,6 +35,7 @@
 9. [Reserved interfaces](#9-reserved-interfaces)
 10. [The shared mystery](#10-the-shared-mystery)
 11. [Open questions for Mon 9](#11-open-questions-for-mon-9)
+12. [Perimeter defense candidate](#12-perimeter-defense-candidate)
 
 ## 1. API conventions
 
@@ -1352,13 +1353,14 @@ A flag is off unless the setting `FEATURE_FLAGS` names it (comma separated). The
 | `bulletin` | the bulletin, tonight chip and Chapter 2 hook screens; `GET /api/bulletin` | G9/R6; default off; off returns 404 before data reads |
 | `festival` | the 48-hour festival after the first Relighting; private claims and friendly ring | G13; applying its migration never starts the clock |
 | `demo` | guest play for the class demo: a Supabase anonymous user may use the API after presenting the current class code (`POST /api/demo/join`) | G29 C0, D030; off by default; needs migrations 20261109010000 and 20261109020000 applied first |
-| `placement` | T36 flexible placement: the island layout is read (`island_layout`), answers say `layout.movable: true` and `POST /api/island/move` works; the browser shows the Move button only then ([D041](DECISIONS.md#d041--flexible-building-placement-on-a-build-grid-t36--2026-11-14), PROPOSED). Off: every answer shows the fixed spots, the table is never asked, the move route answers `404 feature_off` | T36; off by default in code; needs migration `20261114110000_island_layout.sql` applied first (applied live 14 Nov 2026; flag on in production) |
+| `placement` | T36 flexible placement: answers say `layout.movable: true` and `POST /api/island/move` works; the browser shows Move only then ([D041](DECISIONS.md#d041--flexible-building-placement-on-a-build-grid-t36--2026-11-14)). Off: Move refuses `404 feature_off`. In the perimeter candidate, views still read the trusted policy/layout snapshot and preserve admitted owners' paid coordinates; flag-off does not restore fixed geometry | T36; off by default in code; original prerequisite `20261114110000_island_layout.sql` (applied live 14 Nov 2026). Candidate also requires the [perimeter migration chain](../supabase/README.md#perimeter-defense-candidate-six-migration-additions) before server deployment, even with new offers off |
 | `islands` | your island, building, visits by code and the pirate waves: `/api/island`, `/api/island/build`, `/api/island/visit/{code}`, `/api/waves/start`, `/api/waves/finish`; since D036 also `/api/island/upgrade`, `/hire`, `/captain`, `/invite/join` and `/api/pirate-point` (+ `/build`, `/upgrade`), which need migration `20261111030000` | lane 0 (D032); off by default; needs migration 20261110010000 applied first |
 | `rescue` | T38 last-chance rescue: the server honours `rescued` on `POST /api/waves/finish`, and lists `"rescue"` in the wave answers' `rules`, so every client's sim offers the rescue (apply `20261114130500_wave_rules.sql` first, done live 14 Nov 2026; without it the waves play with no rules and a warning is logged) | T38/T39, D044 proposed; off by default in code; **on in production since ~21:05 UTC, 14 Nov 2026**; no migration of its own (it uses `wave_rules` above); needs `islands` |
 | `pathing` | T34/T35 boarder routes (D040, proposed): the wave answers carry `"pathing"` in `rules`; boarders take gaps or break through closed rings of walls on their T36 footprints. Off: today's fixed routes (option A) | T34/T35; off by default (**on in production since 14 Nov 2026, ~22:00 UTC**: Nils accepted the closed-ring gap at wave 60, specs/T33-T35-balance.md); needs migration `20261114130500_wave_rules.sql` applied first (done live 14 Nov 2026), and `islands` |
 | `tower_obstacles` | T35 (D058, proposed): wave answers carry this rule only when both `pathing` and `tower_health` are on; standing cannons, mortars, harpoons, culverins and swivel nests block boarder routes and movement by their T36 tower-slot footprint. Off: existing tower targeting and pathing | Issue #84; off by default; needs `20261115160000_tower_obstacles.sql` and `islands` |
 | `ship_fire` | T50: the wave answers carry `"ship_fire"` in `rules`; every client's sim has a ship at anchor fire at a real wall, else a standing tower (with `tower_health`), else the heart, each in reach, and the hit costs that target hp (`frontend/src/pirates/ship-fire.js`). Off: a ship shells the nearest wall in reach, else the island at `shellShare`, as before | Off by default; needs `20261116160000_ship_fire_rule.sql` applied first (else the wave keeps no rules) and `islands` |
 | `more_tower_spots` | D060: four extra tower spots `cannon_8`..`cannon_11` (islands.json `extraTowerSpots`, island_layout.json `extraSpots`) join every island answer after the 22 spots and open after won waves 10, 20, 30 and 40 (`409 locked` before); each takes every tower kind of `cannon_1`, moves and can be torn down. Off: 22 spots, exactly as before | Off by default; needs `20261117010000_more_tower_spots.sql` applied first (else a build there is a check violation, 502, nothing charged) and `islands` |
+| `perimeter_walls` | Offers owner admission and newly positioned wall runs. New offers also require placement and configured or saved V1 recovery support. Pausing offers preserves saved 1/128 policy, paid pieces and original committed receipt reconciliation; it does not grant or remove membership | WALL-25/33, D061; off by default. Apply all [six perimeter migrations](../supabase/README.md#perimeter-defense-candidate-six-migration-additions) and earlier prerequisites before deploying dependent code. Production activation is separate; see [candidate contracts](#12-perimeter-defense-candidate) |
 | `tower_health` | T33 tower hp inside a wave (D049, proposed): the wave answers carry `rules: ["tower_health"]`, and every client of that wave gives cannons, mortars, harpoons and culverins hp. Off: no `rules`, towers as before | T33; off by default in code (**on in production since ~21:53 UTC, 14 Nov 2026**); needs migration `20261114130500_wave_rules.sql` applied first (done live 14 Nov 2026), and `islands` |
 | `wall_recovery` | wall damage that stays after a wave (D039, proposed): `GET /api/island/walls`, `POST /api/island/repair`, `walls` on the wave routes, `409 needs_repair` on upgrade. Off: exactly the old behavior, the new columns are never read | T29–T32/T47; off by default in code; needs migration 20261114100000 applied first (applied live 14 Nov 2026; flag on in production), and `islands` on |
 | `defenses_v2` | new tower kinds beyond cannon, mortar and harpoon, first the culverin (T43, D048 proposed): `backend/content/defenses_v2.json` is merged into the island catalogue, so `GET /api/island` lists the kind on the tower spots, in `prices` and in `unlocks`, and `POST /api/island/build`/`upgrade` accept it; it is also a wave rule: the wave answers carry `"defenses_v2"` in `rules`, and only then does every client's sim let the culverins fight (event `culverin_fired`). Off: the file is not read, every island answer is as before, and a sim ignores any culverin | T43; off by default in code (**on in production since ~21:53 UTC, 14 Nov 2026**). Both migrations `20261114130500_wave_rules.sql` and `20261114140000_culverin.sql` were applied live 14 Nov 2026 |
@@ -1843,3 +1845,170 @@ with paid-restore race protection in `20261115150000_wall_restore_record_fence.s
 - **Money and permissions:** wallet reason `tower_tree` (spend), ref `towertree:<actionUid>`; co-op action `island_tower_tree` (`personal`).
 - **Database:** `islet_buildings.tree_a`, `tree_b` (smallint 0–3, default 0) with the check rules `islet_buildings_tree_range` and `islet_buildings_tree_fits_kind`; `islet_buildings_plot_fits_building` also allows `(cannon_1..7, swivel)` (in the follow-up `20261116020100_swivel_spot_rule.sql`, the one file that replaces a rule; until it is applied a swivel build is refused by the database); new `island_tower_tree(p_player_id, p_island_owner, p_plot, p_kind, p_path, p_tier, p_action_uid, p_price, p_unlock_wave, p_level)` (service_role only; locks wallet, island, building; refuses `not_member`, `not_built`, `wrong_kind`, `needs_level`, `locked`, `known`, `needs_tier`, `closed`, `insufficient_funds`).
 - **Sim:** the defense item takes `tree {a, b}`; new kind `swivel` and event `swivel_fired {towerId, targetId, damage, pellets, level, x, z, toX, toZ, hits}`.
+
+## 12. Perimeter defense candidate
+
+This section describes the unmerged D061 candidate at source snapshot
+`f8a22d904dfd3518d9e47793ff46108e1612b6e6`, not a production activation record.
+It qualifies the older lane-only Move and flag-off descriptions above for admitted
+islands. The [implementation and review guide](contribute/PERIMETER-REVIEW.md)
+maps the source and evidence; the [migration runbook](../supabase/README.md#perimeter-defense-candidate-six-migration-additions)
+lists the required schema. [WALL-01](../specs/WALL-01-perimeter-defense.md) and
+[D061](DECISIONS.md#d061--full-perimeter-wall-building--2026-11-17) define the product boundary.
+
+### Persisted policy, coordinates and read bounds
+
+| Field or boundary | Meaning |
+|---|---|
+| `layout.version` | Existing fixed/stored-layout version (1/2); never authority to use free-grid walls |
+| `layout.grid` | 0.5 world units; saved coordinates use integer half units |
+| `layout.movable` | Current Move offer; does not determine whether paid coordinates exist |
+| `layout.wallRuleVersion`, `layout.wallCapacity` | Trusted owner policy: exactly 0/12 or 1/128 |
+| `layout.reservedPositions` | Read-only `{spot:{x,z}}` occupancy for unoffered D060 tower sites under policy 1, including their effective saved positions; not an offer to buy or move those sites |
+| Layout/defense bound | At most 142 spatial defenses: 128 walls and 14 non-wall sites |
+| Building-store bound | At most 146 building rows, including four non-spatial home plots |
+| Legacy wall-health response | At most 128 canonical wall rows; backend requests one extra row to detect overflow |
+| V1 structure-health response | At most 139 recoverable rows: 128 walls and 11 cannon-slot towers; houses and the HP-less watchtower are not recoverable structures |
+
+`island_wall_policy` absence means 0/12: the original twelve IDs keep D056 lane
+placement. Persisted 1/128 permits reviewed free-grid walls, retaining existing
+on-land centers, bounds, keep-outs and collision checks. Other policy combinations
+fail closed. A browser cannot grant itself the policy by posting layout fields.
+Policy is read for the island owner, including when a different player visits or pays.
+
+`island_wall_layout_read(owner)` returns exactly
+`{ruleVersion,capacity,rows:[{plot,x_half,z_half}],islandEpoch}` from one statement
+snapshot. The complete bounded rows are sorted by plot in C/codepoint order.
+Duplicate, unknown, out-of-range or malformed rows are errors, not omissions.
+Legacy policy may have a null epoch; admitted policy requires a canonical UUID.
+New views use this RPC even when new offers are off: a missing RPC cannot authorize
+a fallback to twelve walls or default coordinates.
+
+Admission materializes the effective 26 old/D060 positions before switching policy.
+The additional 116 wall IDs are unbuilt inventory without default coordinates or
+empty reserved sites. An added ID appears in island views only when actually built
+with its saved position. A paid added ID missing that position is unreadable state,
+not a wall at the origin. The old unpositioned single-build route refuses an added
+ID with `position_required` before payment. Original unbuilt reservations remain
+compatible. Policy-1 D060 occupancy remains reserved when its purchase flag pauses;
+the older `more_tower_spots` flag-off statement does not discard those reservations.
+
+Move compares the checked raw layout rows and expected policy under the owner lock.
+It remains a free single-spot action between waves; these APIs add no paid group Move.
+Recovery mutation hooks settle elapsed recovery under the old geometry/rate, then
+apply future geometry at one database instant. They preserve instance IDs, health
+units and repair sequences. Ordinary elapsed recovery can settle on a refusal;
+a refused action cannot grant extra action-induced healing or spending.
+
+### Authenticated wall-construction API
+
+All routes below use the existing island authentication, target permissions,
+private/no-store responses and per-player build budget. Omitted `code` selects the
+caller’s own island. A code is a target selector, not permission. Request models
+forbid extra fields. Coordinates are finite numbers within -30..30, on the exact
+0.5 grid; strings and booleans do not count as numbers.
+
+| Route and JSON body | Success |
+|---|---|
+| `POST /api/island/walls/enable` `{code?}` | Current `IslandResponse` after owner-only, between-wave admission; repeated admission preserves the existing policy even after offers pause |
+| `POST /api/island/walls/quote` `{cells:[{x,z}],code?}` | `{placements:[{spot,x,z}],unitCost,totalCost,remaining,wallRuleVersion:1,wallCapacity:128,islandEpoch}` |
+| `POST /api/island/walls/build` `{placements:[{spot,x,z}],quotedTotal,actionUid,islandEpoch,code?}` | `{receipt:{actionUid,totalCost,placements,repeat,islandEpoch},island:currentIsland}` |
+
+Quote/build contain 1..32 ordered pieces. Each successive 2×2 wall shares a full
+cardinal edge with the previous piece (center delta 2 on one axis); turns are valid,
+overlap and self-crossing are not. Separate runs can complete an enclosure.
+The server allocates eligible unbuilt IDs in catalogue order, using original IDs
+before added IDs, and returns them in submitted cell order. Existing unlocks and
+all final-layout occupancy checks apply. No request supplies prices, capacity,
+payer role, progress or permission as trusted authority.
+
+`unitCost` uses the actual payer’s per-piece Engineer rounding; `totalCost` is the
+sum of those prices, not a separately discounted sum. `remaining` is capacity minus
+built walls minus the quoted pieces: **remaining after building**. It does not mean
+all remaining IDs are already unlocked. `quotedTotal` is a strict positive integer
+(at most 1,000,000). `actionUid` retains the existing 8..64-character allowed format.
+The build must carry the exact ordered identity/coordinate pairs, total and UUID
+returned by the accepted quote. A new request is requoted against current server
+state before SQL may charge it.
+
+The browser and server preserve this order:
+
+1. Resolve current target membership/build permission before exposing any receipt.
+2. Look up the original UID with immutable intent `{placements,quotedTotal,islandEpoch}`.
+3. Return a matching committed receipt before checking today’s offer flag, price,
+   layout, role, unlocks or reset eligibility. Changed intent refuses.
+4. For an uncommitted action, require current offers and eligibility, match the
+   quote and reset epoch, then atomically validate layout/policy/role/wave fences,
+   charge the payer, position every piece, record each contribution and save one receipt.
+
+New offers require `perimeter_walls`, placement, and configured `structure_recovery`
+or saved recovery version 1. Admission is owner-only; quote/build follow existing
+BUILD membership rules. SQL retains current access checks as well. The transaction
+uses separate `island:<actionUid>:wall_N` payment references. Any failed child item
+rolls back the entire run; no partial paid chain is accepted.
+
+An ambiguous timeout is not proof that payment failed. The controller retains the
+original frozen body/UID across close/reopen in its current live session and retries
+that exact action. It does not create a replacement UID automatically. This retained
+browser intent is not promised to survive a full page reload. The durable receipt
+is server-side. Clearing, fine-shifting or editing a held unknown intent is refused.
+A definite refusal permits editing and requires a new quote before confirmation.
+
+A historical receipt describes past payment, while the separate `island` describes
+current state. Reconciliation after demolition/reset never reapplies, repairs or
+refunds the old pieces. A fresh pre-reset quote cannot purchase in a new reset epoch.
+Production `IslandResponse` has no top-level epoch guarantee: authoritative epochs
+come from quote/layout RPC and recovery contracts. Local reset generations and
+session tickets also prevent late responses repainting a different UI context.
+
+Representative refusals include `feature_off`, `owner_only`, `not_member`,
+`walls_not_ready`, `off_grid`, `invalid_chain`, `place_taken`, `quote_changed`,
+`action_uid_conflict`, `spot_taken`, `wave_running`, `busy` and existing paid-action
+refusals. A missing/malformed receipt RPC is an error, never permission to charge
+again. Models and status mappings live in [the route](../backend/server/routes/island_walls.py)
+and [service](../backend/server/island/wall_build.py).
+
+### Wave capability and frozen state
+
+`POST /api/waves/start` adds strict integer `wallClientVersion` (0 or 1; missing
+means 0). A new wave on saved policy 1 requires this value to be 1 and
+`waveProtocol:2`; advertising capability on a legacy island does not admit its
+wall policy. There is no perimeter key added to `GET /api/config.capabilities`:
+that map still contains `hostCaseClock`. Config flags advertise offers; the
+start-request field advertises the client’s ability to consume perimeter geometry.
+
+Under the same owner lock used for admission, `perimeter_wave_start` requires
+saved or admissible V1 recovery, actual pathing and a complete perimeter template.
+Unsupported combinations refuse with `client_update_required`,
+`structure_recovery_required` or `perimeter_rules_required`, rather than running
+unrelated geometry. Current access precedes UID replay; a start UID is bound to its
+original target. A committed wave keeps its original snapshot for current/join/retry.
+
+| Version | Exact purpose |
+|---|---|
+| `wallRuleVersion:1`, `wallCapacity:128` | Persisted free-grid wall policy and bounded inventory |
+| `recoveryVersion:1`, `waveProtocol:2` | Existing durable per-instance recovery and event protocol |
+| SQL/template `configVersion:1` | Internal recovery manifest/template version validated by the database |
+| Public `initialSnapshot.configVersion:2` | Server response capability fence for perimeter geometry, after validating the stored version-1 recovery manifest |
+| Local `perimeterDemo.version:1` | Explicit frozen fake-transport demo only; never production V1 recovery |
+
+Public config 2 requires matching policy markers, `createWave.perimeterWalls:true`,
+`createWave.pathing:true`, the pathing rule and the complete bounded defense set.
+The browser refuses incomplete/unsupported combinations. It is not recovery v2
+or wave protocol 3. Walls block hostile boarders until breached; they do not block
+naval fire or change friendly captain collision. Breach/restoration changes real
+barriers and connection drawing; already-inside egress remains supported.
+
+Complete health reads retain strict canonical identity, uniqueness, level, health,
+time, epoch and instance validation. The supported `tower_s1`..`tower_s7` aliases
+normalize before duplicate checks; wall aliases/leading zeros are invalid. New
+pieces cannot enter recovery without authoritative saved positions. An admitted
+added ID sent to legacy paid wall restore receives `client_update_required` before
+the old RPC; original-wall legacy behavior remains supported. Limits are not new
+permissions to invent structures or instances.
+
+The explicit local demo freezes the fake island’s inputs and runs the real seeded
+simulation with legacy headers; malformed supplied demo input refuses. It proves
+local construction/combat integration, not production V1 durability. See
+[WALL-35](../specs/WALL-35-local-wave-demo.md), [WALL-39](../specs/WALL-39-complete-health-reads.md)
+and [WALL-40](../specs/WALL-40-health-reads.md) for the distinct proof boundaries.

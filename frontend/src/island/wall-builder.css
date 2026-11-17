@@ -1,0 +1,51 @@
+/* Keep construction controls measurable by the existing village camera and clear of narration. */
+.island-wall-builder {grid-template-columns:1fr;bottom:calc(max(12px,env(safe-area-inset-bottom)) + var(--narrator-card-height,0px) + 12px);max-height:calc(100dvh - var(--narrator-card-height,0px) - 180px);overflow-y:auto}
+.island-wall-builder .wall-builder-actions,.wall-builder-camera {display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.island-wall-builder button {min-width:44px;min-height:44px}
+.wall-builder-actions>button:last-child {flex:1 1 150px}
+.wall-builder-camera {justify-content:flex-end}
+@media(max-width:480px) {.island-wall-builder{padding:9px 10px;gap:5px}.island-wall-builder .island-move-title{font-size:18px}.wall-builder-actions>button{flex:1}.wall-builder-actions>button:last-child{flex-basis:100%}}
+
+.wall-builder-fine {border-top:1px solid #6c492b55}
+.wall-builder-fine summary {min-height:44px;line-height:44px;cursor:pointer}
+.wall-builder-fine-layout {display:flex;align-items:center;flex-wrap:wrap;gap:12px}
+.wall-builder-fine-pad {display:grid;grid-template-columns:repeat(3,44px);gap:6px;flex:none}
+.wall-builder-fine-pad button {padding:4px}
+.fine-north {grid-area:1/2}.fine-west {grid-area:2/1}.fine-south {grid-area:2/2}.fine-east {grid-area:2/3}
+.wall-builder-anchors {margin:0;font-size:12px;max-width:100%;overflow-wrap:anywhere}
+
+/* Intrinsic label minima keep the compact text buttons readable; purchase has its own full row. */
+@media(max-width:480px) {
+  .island-wall-builder {width:calc(100vw - 16px);padding-inline:8px;
+    grid-template-columns:repeat(3,44px) minmax(min-content,1fr) minmax(min-content,1fr) minmax(min-content,1fr);
+    grid-template-areas:"title title title title title title" "hint hint hint hint hint hint" "status status status status status status"
+      "price price price price price price" "fine fine fine fine fine fine" "camera camera camera undo clear cancel" "submit submit submit submit submit submit";
+    gap:4px;max-height:min(340px,calc(100dvh - var(--narrator-card-height,0px) - 200px))}
+  .island-wall-builder .island-move-title {grid-area:title}.wall-builder-hint {grid-area:hint}
+  .island-wall-builder .island-move-status {grid-area:status}.wall-builder-price {grid-area:price}
+  .wall-builder-fine {grid-area:fine}.island-wall-builder .wall-builder-camera {grid-area:camera;gap:4px}
+  .island-wall-builder .wall-builder-actions {display:contents}
+  .wall-builder-actions>button:nth-child(1) {grid-area:undo}.wall-builder-actions>button:nth-child(2) {grid-area:clear}
+  .wall-builder-actions>button:nth-child(3) {grid-area:cancel}.wall-builder-actions>button:nth-child(4) {grid-area:submit}
+  .island-wall-builder .wall-builder-camera button,.wall-builder-actions>button:not(:last-child) {padding:4px}
+  .wall-builder-fine-layout {gap:8px}.wall-builder-fine-pad {grid-template-columns:repeat(4,44px);gap:4px}
+  .wall-builder-fine-pad button {grid-area:auto}
+}
+@media(max-width:374px) {
+  .island-wall-builder {grid-template-columns:repeat(3,minmax(44px,1fr));
+    grid-template-areas:"title title title" "hint hint hint" "status status status" "price price price" "fine fine fine"
+      "camera camera camera" "undo clear cancel" "submit submit submit"}
+}
+
+/* Use the desktop's width for information and actions, preserving the phone's single-column flow. */
+@media(min-width:900px) {
+  .island-wall-builder {width:min(960px,calc(100vw - 32px));grid-template-columns:minmax(0,1fr) 320px;gap:4px 20px;
+    max-height:min(250px,calc(100dvh - var(--narrator-card-height,0px) - 180px))}
+  .island-wall-builder:not(:has(.wall-builder-fine[open])) {max-height:min(200px,calc(100dvh - var(--narrator-card-height,0px) - 180px))}
+  .island-wall-builder>:is(.island-move-title,.island-move-line,.island-move-status,.wall-builder-fine) {grid-column:1;min-width:0}
+  .island-wall-builder .wall-builder-camera {grid-column:2;grid-row:1/3;align-self:start}
+  .island-wall-builder .wall-builder-actions {grid-column:2;grid-row:3/6;align-self:end;display:grid;grid-template-columns:auto minmax(150px,1fr)}
+  .island-wall-builder .wall-builder-fine-layout {flex-wrap:nowrap}
+  .island-wall-builder .wall-builder-fine-pad {grid-template-columns:repeat(4,44px)}
+  .island-wall-builder .wall-builder-fine-pad button {grid-area:auto}
+}

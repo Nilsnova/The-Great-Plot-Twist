@@ -8,6 +8,7 @@ import {surfaceClass} from '../world/places/surfaces.js';
 import {isCapstone, readBonus, readSpec} from '../campaign/tech.js';
 import {readTree} from '../pirates/tower-trees.js';
 import {EXTRA_SPOT_TABLE, offeredExtra} from './extra-spots.js';
+import {inventoryWall, isInventoryWallId, offeredInventoryWalls} from './wall-cohort.js';
 
 export const ISLAND_PLACE = 'home_islet';
 export const KINDS = Object.freeze({
@@ -56,7 +57,10 @@ export const SPOTS = Object.freeze(SPOT_TABLE.map(spot));
 export const EXTRA_SPOTS = Object.freeze(EXTRA_SPOT_TABLE.map(([id, x, z, unlockWave]) => Object.freeze({...spot([id, 'tower', x, z, 'extra']), unlockWave})));
 export const ALL_SPOTS = Object.freeze([...SPOTS, ...EXTRA_SPOTS]);
 /** The spots of an island answer: the 22 of the table, then the extra tower spots it lists (D060). */
-export const offeredSpots = (spots = []) => { const extra = new Set(offeredExtra(spots)); return [...SPOTS, ...EXTRA_SPOTS.filter(item => extra.has(item.id))]; };
+export const offeredSpots = (spots = []) => {
+  const extra = new Set(offeredExtra(spots));
+  return [...SPOTS, ...EXTRA_SPOTS.filter(item => extra.has(item.id)), ...offeredInventoryWalls(spots)];
+};
 export const isTowerSlot = id => spotById(id)?.slot === 'tower' || ppSpotById(id)?.slot === 'tower';
 
 // Pirate Point's shared spots (§5) on lighthouse_isle: [id, slot, x, z]. pp_wall_1…4 and pp_tower_1…4
@@ -94,7 +98,7 @@ export const SPOT_IDS = Object.freeze(SPOTS.map(item => item.id));
 export const REACH = 2.6, BIG_REACH = 3.2;
 const ZONE_Y = 1.03, SPOT_RADIUS = REACH, ROUND_RADIUS = 2.2;
 
-export const spotById = id => ALL_SPOTS.find(item => item.id === localSpotId(id)) ?? null;
+export const spotById = id => ALL_SPOTS.find(item => item.id === localSpotId(id)) ?? inventoryWall(id);
 export const isSpotId = id => !!spotById(id);
 export const isIslandZone = id => isSpotId(id) || id === BELL.id || id === ARSENAL.id || id === CABIN.id || isPointSpot(id) || !!campaignBuilding(id);
 // On the island's land (beach included), never in the sea.
@@ -110,6 +114,7 @@ function landward({x, z}, step = 1) {
 export function placedSpot(id, spots = []) {
   const where = spotById(id);
   if (!where) return null;
+  if (isInventoryWallId(where.id)) return offeredInventoryWalls(spots).find(item => item.id === where.id) ?? null;
   const sent = Array.isArray(spots) ? spots.find(item => item?.id === where.id) : null;
   return Number.isFinite(sent?.x) && Number.isFinite(sent?.z) ? {...where, x: sent.x, z: sent.z} : where;
 }
@@ -140,7 +145,9 @@ export const slotName = slot => (slot === 'tower' ? 'Tower spot' : KINDS[DEFAULT
 // `tiers`: campaignOf(answer).research.tiers), tree {a, b} the tiers of its upgrade tree (D055, only when one is
 // bought). The sim reads them all, so every screen fights the same island.
 export function defenses(spots = [], tiers = null) {
-  return spots.filter(item => item?.built === true && (spotById(item.id) || ppSpotById(item.id)))
+  const inventory = new Set(offeredInventoryWalls(spots).map(spot => spot.id));
+  return spots.filter(item => item?.built === true && (spotById(item.id) || ppSpotById(item.id))
+      && (!isInventoryWallId(item.id) || inventory.has(item.id)))
     .map(item => { const fixed = spotById(item.id) ?? ppSpotById(item.id), spec = readSpec(item.kind, item.spec);
       const where = Number.isFinite(item.x) && Number.isFinite(item.z) ? {x: item.x, z: item.z} : fixed;
       const bonus = readBonus(item.kind, tiers?.[item.kind]?.tier2);

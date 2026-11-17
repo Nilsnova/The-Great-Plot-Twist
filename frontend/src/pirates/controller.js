@@ -57,6 +57,7 @@ import { healthReport, readWalls, withHealth } from './wall-health.js';
 import { readRules } from './wave-rules.js';
 import { isParticipantToken, readRecoveryPolicy } from './recovery-policy.js';
 import { readRecoverySnapshot, recoveryWaveDefenses } from './recovery-snapshot.js';
+import {readPerimeterDemo} from './perimeter-demo.js';
 import { createReplayDriver, createWaveReplay, fetchSealedEvents } from './wave-replay.js';
 import { commandForJournal, MAX_INPUT_BATCH, MAX_INPUT_BATCH_BYTES, RECOVERY_FLUSH_MS, RECOVERY_POLL_LEAD_MS, RECOVERY_POLL_MARGIN_MS,
   RECOVERY_POLL_MIN_MS, RECOVERY_POLL_MS, recoveryRefusal, refusalDelayMs, refusalKind, simulationInputFromJournal } from './recovery-transport.js';
@@ -207,13 +208,15 @@ export function readWaveInfo(info) {
     || snapshot.createWave.seed !== snapshot.seed
     || snapshot.createWave.wave !== info.wave)) return null;
   const rules = readRules(info.rules);
+  const perimeterDemo = info.perimeterDemo === undefined ? null : readPerimeterDemo(info.perimeterDemo,info);
+  if (info.perimeterDemo !== undefined && (!perimeterDemo || !rules.pathing)) return null;
   if ((recoveryPolicy === 'structure-recovery-v1') !== rules.structureRecovery) return null;
   if (snapshot && JSON.stringify(readRules(snapshot.rules)) !== JSON.stringify(rules)) return null;
   const wave = Number.isInteger(info.wave) && info.wave > 0 ? info.wave : 1;
   const weather = info.weather && typeof info.weather === 'object' ? info.weather : {};
   return { waveId: info.waveId, wave, seed: Number(info.seed), startsAtMs, weather, flagship: info.flagship === true,
     boss: typeof info.boss === 'boolean' ? info.boss : undefined, walls: readWalls(info.walls), rules,
-    recoveryVersion, waveProtocol, ...(snapshot ? { initialSnapshot: snapshot, participantToken: info.participantToken,
+    recoveryVersion, waveProtocol, ...(perimeterDemo ? {perimeterDemo} : {}), ...(snapshot ? { initialSnapshot: snapshot, participantToken: info.participantToken,
       lastActorCounter: info.lastActorCounter } : {}),
     serverTimeMs: Number.isFinite(parseTime(info.serverTime)) ? parseTime(info.serverTime) : null,
     // The browser's clock offset to the server, measured when the wave answer arrived (island/api.js clockOffset).
@@ -278,7 +281,7 @@ export const EVENT_ICONS = Object.freeze({ fog_bank: '☁', storm: '⛈', night_
   siege_barge: '💣', treasure_galleon: '💰', smugglers: '🛶', kraken: '🐙' });
 const readEasy = () => { try { return getPreferences()?.easyFinishers === true; } catch { return false; } };
 
-export function createWaveController({ bus, world = {}, getDefenses = () => [], finishWave = async () => null, room = null,
+export function createWaveController({ bus, world = {}, getDefenses = () => [], getPerimeterWalls = () => false, getManaging = () => false, finishWave = async () => null, room = null,
   sound = null, reducedMotion = () => false, quality = () => 'high', playerId = `p-${Math.random().toString(36).slice(2, 10)}`,
   now = () => Date.now(), serverOffset = () => 0, place = null, accept = info => info.flagship !== true, listen = true,
   simOptions = {}, beamFrom = null, cutsceneFor = (result, summary) => (summary.lampsRelit ? 'lamps_relit' : result.survived ? 'wave_won' : 'wave_lost'),
@@ -332,10 +335,14 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     if (running) {
       guide.update({ mode: 'wave', lanes: current.lanes?.length ? current.lanes : null, defenses: current.defenses, stateWalls: current.state.walls,
         stateTowers: current.state.towers, towerObstacles: current.info.rules?.towerObstacles === true,
+        perimeterWalls: current.info.initialSnapshot?.createWave?.perimeterWalls === true || !!current.info.perimeterDemo,
         boarders: current.state.boarders, heart: current.state.heart, wave: current.info.wave, dt });
     } else {
       const defenses = read(getDefenses, []) ?? [];
+      const perimeterWalls = read(getPerimeterWalls, null);
+      if (perimeterWalls !== true && perimeterWalls !== false) { guide.update(null); return; }
       guide.update({ mode: 'preview', lanes: null, defenses, stateWalls: null, stateTowers: null,
+        perimeterWalls, managing: read(getManaging, false) === true,
         towerObstacles: current?.info.rules?.towerObstacles ?? lastTowerObstacles, boarders: [], heart: null,
         wave: (current?.info.wave ?? lastWave) + 1, dt });
     }
@@ -376,6 +383,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       || typeof recoveryTransport.checkpoint !== 'function' || typeof recoveryTransport.finishWave !== 'function')) return null;
     const snapshot = recoveryPolicy === 'structure-recovery-v1' ? readRecoverySnapshot(info.initialSnapshot, info.waveId) : null;
     if (recoveryPolicy === 'structure-recovery-v1' && !snapshot) return null;
+    const demo = info.perimeterDemo === undefined ? null : readPerimeterDemo(info.perimeterDemo,info);
+    if (info.perimeterDemo !== undefined && (!demo || !info.rules?.pathing)) return null;
     lastTowerObstacles = info.rules?.towerObstacles === true;
     if (wave?.info.waveId === info.waveId) return wave;
     // A friend rang the next wave while ours still runs here (a ship that sinks a moment later on this
@@ -388,7 +397,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     // D039: with the flag wall_recovery on the server sends each wall's health after its last wave.
     // T43: a culverin fights only in a wave whose rules say defenses_v2 (every client of the wave alike); without
     // the rule it is left out here too, so the screen does not show a gun that never fires.
-    const sourceDefenses = snapshot ? recoveryWaveDefenses(snapshot) : withHealth(getDefenses() ?? [], info.walls);
+    const sourceDefenses = snapshot ? recoveryWaveDefenses(snapshot) : demo ? demo.defenses : withHealth(getDefenses() ?? [], info.walls);
     const defenses = (sourceDefenses ?? []).filter(item => item?.kind !== 'culverin' || info.rules?.defensesV2 === true);
     const offset = info.clockOffsetMs ?? (info.serverTimeMs !== null ? info.serverTimeMs - now() : serverOffset());
     // v3 waves: the event from the wave's seed and number (the server repeats it for the galleon's bonus), and
@@ -403,7 +412,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       recoveryVersion: info.recoveryVersion, waveProtocol: info.waveProtocol }
       : { seed: info.seed, wave: info.wave, weather: info.weather, flagship: info.flagship, defenses, countdown: 0,
         crew: getCrew() ?? undefined, ...(info.boss !== undefined ? { boss: info.boss } : {}), event, finishers: true,
-        finisherPreparation: true, gapMs: waveGapMs, ...(info.rules ?? {}), ...simOptions };
+        finisherPreparation: true, gapMs: waveGapMs, ...(info.rules ?? {}), ...simOptions,
+        ...(demo ? {defenses, crew: demo.crew, pathing: true, perimeterWalls: true} : {}) };
     const sim = createWave(simOptionsForWave);
     const first = sim.state();
     const recoveryReplay = snapshot ? createWaveReplay() : null;
@@ -1166,7 +1176,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   }
   // A Tavern on the island (GAME-V3.md "Houses") takes 25% off; the server checks the island's buildings as
   // they are now, so the island's latest answer decides, else the wave's own defenses.
-  const helpPrice = current => revivePrice(current.info.wave, { tavern: hasTavern(getDefenses() ?? current.defenses) });
+  const helpPrice = current => revivePrice(current.info.wave, { tavern: hasTavern(current.info.perimeterDemo ? current.defenses : getDefenses() ?? current.defenses) });
   // The timers over fallen captains (yours where you lie, a teammate's where their sim has them).
   function fallenMarks(current, player) {
     if (!world.project || current.done || !current.shown) return [];
@@ -1364,8 +1374,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     if (seconds !== current.lastCount) { current.lastCount = seconds; if (seconds > 0 && seconds <= 3) cue('pirate-tick'); }
     current.hud?.countdown(current.done ? 0 : Math.min(seconds, 99));
     current.hud?.boss?.(current.boss && !current.done && elapsed < BOSS_WARNING_SECONDS ? current.boss : '');
-    // The first-wave hint (guide on): the three pictures for HINT_SECONDS of the first wave this device plays.
-    if (guideOn && current.hud && current.hintShown === undefined) { current.hintShown = !readHint(); if (current.hintShown) writeHint(); }
+    // Only actual wave one consumes the device's first-wave hint, for its existing HINT_SECONDS window.
+    if (guideOn && current.info.wave === 1 && current.hud && current.hintShown === undefined) { current.hintShown = !readHint(); if (current.hintShown) writeHint(); }
     current.hud?.goalHint?.(current.hintShown === true && !current.done && elapsed > -3 && elapsed < HINT_SECONDS);
     current.hud?.loot?.(startNextWave || runLoot > 0 ? runLoot : null);
     if (current.pause) updatePause(current);

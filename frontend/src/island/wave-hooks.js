@@ -8,7 +8,9 @@
 //   });
 //   await finishWave({waveId, survived: true, shipsSunk: 7});      // POST /api/waves/finish, loot toast
 //
-// The event on the game's bus is `wave_started_server` with exactly the fields above. `where` is
+// The event on the game's bus is `wave_started_server` with the fields above and optional versioned
+// wave inputs: production `initialSnapshot`, or explicit local-only `perimeterDemo`. The flow preserves
+// supplied demo values for strict controller validation; absent production/legacy fields stay absent. `where` is
 // "own", an island code (ISLE-K7Q2M) or "pirate_point"; `defenses` lists the built spots with their
 // place on the island ([{id, kind, x, z}], src/island/spots.js). finishWave answers like api.js:
 // {ok: true, data: {loot, coins, waveBest, flags}} or {ok: false, code, message}.

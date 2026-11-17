@@ -15,6 +15,7 @@ import {QUEST_EVENTS, PLACE_ARRIVED, HUD_OPENED} from './quest-events.js';
 import {applyQuestEvent, createIdleHint, firstQuestView, questsFor, readFirstQuests, writeFirstQuests} from './first-quests.js';
 import {showToast} from './toasts.js';
 import {coinsSpoken, formatCoins} from '../lib/coins.js';
+import {hudWaveView} from './wave-progress.js';
 import './hud.css';
 
 export const ARRIVAL_MS = 2000;
@@ -28,12 +29,14 @@ export function createHud(container, actions, {on = defaultOn, emit = defaultEmi
   // Where the balance comes from: the wallet (view.captain.coins) or, with the islands on, the island API
   // through setCoins(). The island's own count wins once chosen, so the wallet never overwrites it.
   let coinSource = 'wallet';
+  let managing = false, captainLevel = null, waveView = null, waveKey = '';
   const overlay = node('div', 'hud hud-play');
   // 1. Coins.
   const purse = node('div', 'hud-coins'), purseText = node('span', 'hud-coins-value');
   purse.dataset.hudGroup = 'coins';purse.setAttribute('role', 'status');purse.append(purseText);
-  // The captain's level (TOWER-DEFENSE.md §10) next to the coins, once the island tells it: "⚔ 2".
-  const captainBadge = node('span', 'hud-captain');captainBadge.hidden = true;purse.append(captainBadge);
+  const waveBadge = node('span', 'hud-wave'), waveText = node('span', 'hud-wave-value');
+  const waveIcon = node('span', 'hud-wave-icon');waveIcon.setAttribute('aria-hidden', 'true');
+  waveBadge.hidden = true;waveBadge.append(waveIcon, waveText);purse.append(waveBadge);
   // 2. Menu, and 3. the quest strip under it.
   const right = node('div', 'hud-right'), menu = node('button', 'hud-menu');
   menu.type = 'button';menu.dataset.hudGroup = 'menu';menu.setAttribute('aria-haspopup', 'dialog');
@@ -54,15 +57,34 @@ export function createHud(container, actions, {on = defaultOn, emit = defaultEmi
   const nudge = node('div', 'interact-nudge');nudge.setAttribute('role', 'status');nudge.hidden = true;
   overlay.append(purse, right, banner, chapter, prompt, nudge);
   container.append(overlay);
+  // A two-row phone purse must not collide with the normal Goals panel beneath Menu.
+  function measureHeader() {
+    const extra = Math.max(0, purse.getBoundingClientRect().bottom - menu.getBoundingClientRect().bottom);
+    right.style.setProperty('--hud-quest-offset', `${extra}px`);
+  }
+  const headerSize = typeof ResizeObserver === 'function' ? new ResizeObserver(measureHeader) : null;
+  headerSize?.observe(purse);headerSize?.observe(menu);
+  window.addEventListener('resize', measureHeader);
 
   let tickFrame = 0;
+  function drawPurseLabel() {
+    const balance = Number.isFinite(coins) ? coinsSpoken(coins) : 'Coins not loaded yet';
+    purse.setAttribute('aria-label', waveView ? `${balance} · ${waveView.label}` : balance);
+  }
+  function drawWave(status) {
+    const next = hudWaveView(status), key = next ? `${next.text}|${next.label}` : '';
+    if (key === waveKey) return;
+    waveKey = key;waveView = next;waveBadge.hidden = !next;waveIcon.textContent = next ? '⚔️' : '';waveText.textContent = next?.text ?? '';
+    drawPurseLabel();measureHeader();
+  }
   function drawCoins() {
     cancelAnimationFrame(tickFrame);
     const known = Number.isFinite(coins);
     purseText.textContent = known ? formatCoins(coins) : '🪙 …';
-    purse.setAttribute('aria-label', known ? coinsSpoken(coins) : 'Coins not loaded yet');
+    drawPurseLabel();
     // Signed out there is no purse to load, so no endless "🪙 …": the chip waits until there are coins.
     purse.hidden = !known && account === 'signed_out';
+    measureHeader();
   }
   // Loot: the number counts up to the new balance (the label says the new balance at once).
   function tickCoins(from) {
@@ -89,9 +111,16 @@ export function createHud(container, actions, {on = defaultOn, emit = defaultEmi
   const quests = () => questsFor(travel());
   const draw = () => {
     const view = override ?? guide ?? (islandShown() ? firstQuestView(first, quests()) : null);
-    strip.hidden = !view;
+    strip.hidden = managing || !view;
     if (view) strip.render(view);
   };
+  function setManaging(value) {
+    const next = value === true;
+    if (next === managing) return;
+    managing = next;
+    if (managing && strip.element.contains(document.activeElement)) actions.focus?.();
+    draw();
+  }
   function progress(event) {
     const result = applyQuestEvent(first, event, quests());
     if (!result.changed || disposed) return;
@@ -108,7 +137,7 @@ export function createHud(container, actions, {on = defaultOn, emit = defaultEmi
 
   // ---- what moved into the pause menu ----
   const clock = () => { const hour = Math.floor(settings.hour), minute = Math.floor((settings.hour % 1) * 60); return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`; };
-  stops.push(addMenuStatus(() => `${placeName(place)}, ${weatherLabel(getWeather())}, ${clock()}`));
+  stops.push(addMenuStatus(() => `${placeName(place)}, ${weatherLabel(getWeather())}, ${clock()}${captainLevel === null ? '' : `, Captain level ${captainLevel}`}`));
   stops.push(addMenuExtras(() => [
     actions.chart && (!actions.travel || travel()) && {label: 'Sea chart', onSelect: () => actions.chart()},
     actions.controls && {label: 'Controls', onSelect: () => actions.controls()},
@@ -149,10 +178,9 @@ export function createHud(container, actions, {on = defaultOn, emit = defaultEmi
       if (tick && Number.isFinite(from) && coins > from && !reducedMotion()) tickCoins(from); else drawCoins();
     },
     setCaptainLevel(level) {
-      const known = Number.isSafeInteger(level) && level > 0;
-      captainBadge.hidden = !known;captainBadge.textContent = known ? `⚔️ ${level}` : '';
-      if (known) captainBadge.setAttribute('aria-label', `Captain level ${level}`); else captainBadge.removeAttribute('aria-label');
+      captainLevel = Number.isSafeInteger(level) && level > 0 ? level : null;
     },
+    setManaging,
     // 'island' (the island API sends setCoins) or 'wallet' (the default).
     setCoinSource(source) { coinSource = source === 'island' ? 'island' : 'wallet'; },
     get coins() { return coins; },
@@ -172,7 +200,7 @@ export function createHud(container, actions, {on = defaultOn, emit = defaultEmi
       showBanner(placeName(place));
       actions.focus();
     },
-    dispose() { if (disposed) return; disposed = true; cancelAnimationFrame(tickFrame); clearTimeout(bannerTimer); stops.forEach(stop => stop()); strip.dispose(); overlay.remove(); },
+    dispose() { if (disposed) return; disposed = true; cancelAnimationFrame(tickFrame); clearTimeout(bannerTimer); headerSize?.disconnect();window.removeEventListener('resize', measureHeader);stops.forEach(stop => stop()); strip.dispose(); overlay.remove(); },
     arrive,
     // The place on screen got its name late (a friend's game learned its host): the place status and a
     // banner still showing follow; no new banner.
@@ -183,6 +211,8 @@ export function createHud(container, actions, {on = defaultOn, emit = defaultEmi
     message(text, options = {}) { toast({text, ...options}); },
     notify() { /* The E prompt already names the hotspot; no extra toast. */ },
     update(zone, stats = {}) {
+      if (Object.hasOwn(stats, 'managing')) setManaging(stats.managing);
+      drawWave(stats.waveStatus);
       const now = performance.now(), delta = lastFrame ? Math.min(250, now - lastFrame) : 0;lastFrame = now;
       overlay.classList.toggle('night', stats.night > 0.4);
       prompt.hidden = !zone;prompt.dataset.zone = zone || '';
@@ -199,7 +229,7 @@ export function createHud(container, actions, {on = defaultOn, emit = defaultEmi
         nudge.style.left = hint.at ? `${Math.max(8, Math.min(92, hint.at.x * 100))}%` : '50%';nudge.style.top = hint.at ? `${Math.max(10, Math.min(92, hint.at.y * 100))}%` : '40%';
       }
       // The island answered (or left): the goals follow (T52, islandShown).
-      if (!override && !guide && islandShown() === strip.element.hidden) draw();
+      if (!override && !guide && strip.element.hidden !== (managing || !islandShown())) draw();
       if (idle.step(delta, {moving: (stats.speed ?? 0) > 0.05, blocked: stats.blocked === true || !overlay.classList.contains('exploring') || strip.element.hidden})) {
         const item = strip.current;
         if (item && !item.done && hintsEnabled()) toast({text: `Need a hand? ${item.hint}`, ms: 7000});

@@ -1,0 +1,43 @@
+{
+  "task": "VIS-20",
+  "responsibleHuman": "Johannes Franz Lang",
+  "github": "frcola",
+  "source": "Original terrain material sheet generated with image_gen from the user-approved reference concept.",
+  "generatedFile": "/workspace/generated_images/exec-8c53a921-5057-4558-8c18-6023b0e44c5c.png",
+  "runtimeFile": "frontend/public/village/terrain-materials-v1.png",
+  "width": 1254,
+  "height": 1254,
+  "bytes": 2683357,
+  "sha256": "a4d94dde648a784d106f547df1073903d982573478f1775d914ceb30879ece6f",
+  "reference": "/workspace/generated_images/exec-4359f2a8-1176-4e6a-9d50-6809e483ed06.png",
+  "sourceRects": {
+    "grass": [
+      1,
+      1,
+      625,
+      625
+    ],
+    "path": [
+      628,
+      1,
+      625,
+      625
+    ],
+    "rock": [
+      1,
+      628,
+      625,
+      625
+    ],
+    "sand": [
+      628,
+      628,
+      625,
+      625
+    ]
+  },
+  "samplingNote": "One-pixel insets prevent bilinear bleed between the four equal627px quadrants. Source PNG copied byte-for-byte; no offline crop or image edit.",
+  "allocation": "Decoded sheet6,290,064 bytes RGBA. Temporary provider lease released after synchronous composition. Existing owned backdrop remains one64x48 world-unit canvas/texture.",
+  "prompt": "Create an ORIGINAL production game terrain-material texture sheet matching the attached richly shaded stylized 3D pirate-village reference. This is a source material atlas for the actual browser game, not a screenshot, no UI, no buildings, no props, no characters, no scenery silhouette, no ocean and no text or labels.\n\nOutput ONE perfectly square image divided exactly into a clean 2×2 grid of four equal square material panels, edge-to-edge with NO gutters, outlines, margins or separators. Panels must use the same warm sunlight and richly painted 3D mobile-strategy material quality as the reference, clean softly beveled forms with restrained microdetail and no black cartoon outlines. Use an orthographic straight-on texture view; do not add perspective vanishing points.\n\nTOP LEFT quadrant: rich golden-green lawn grass, small natural tuft detail, broad warm/light variation and soft tiny shadows. It should read as lush maintained village ground, not a checkerboard, aerial farmland, long reeds or photographic noise. Mostly mid-light grass green and chartreuse, subtle darker moss.\n\nTOP RIGHT quadrant: warm pale sandstone path paving, a close-set regular grid of softly beveled rectangular stone pavers and fine darker sandy joints. Small slight wear and warm light from upper-left. Flat ground stone texture with no foliage. Many pavers across the quadrant; not a single huge stone.\n\nBOTTOM LEFT quadrant: substantial tan/gray sandstone cliff rock face made of irregular interlocking faceted stone blocks, thick three-dimensional bevels, warm cream top highlights, brown recessed crevices and cooler shaded lower faces, like the reference island cliff. Frame it as a repeatable material with no turf, no horizon, no external border, no obvious dark edge vignette. This rock material will be clipped to our analytic cliff polygons.\n\nBOTTOM RIGHT quadrant: clean warm golden beach sand, softly textured with tiny sparse pebbles, broad subtle natural tonal variation, bright warm beige with slightly darker sparse grains. No footprints, shells, water, plants or cast-object shadows.\n\nAll FOUR quadrants tile reasonably in both directions with no dominant center object or vignette. Maximize usable texture area and material consistency. Natural original stylized materials rather than flat vector fill or photographic textures. Four exact equal square quadrants in one square image, high resolution, opaque background.",
+  "evidenceBoundary": "This generated sheet is a source asset, not an actual gameplay screenshot or final visual acceptance."
+}

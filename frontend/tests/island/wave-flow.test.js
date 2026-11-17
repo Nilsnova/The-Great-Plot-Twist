@@ -55,6 +55,7 @@ describe('the bell and the wave', () => {
     expect(test.events.find(event => event.type === WAVE_STARTED)).toMatchObject({
       waveId: wave.waveId, recoveryVersion: 1, waveProtocol: 2, initialSnapshot, participantToken: token, lastActorCounter: 7,
     });
+    expect(test.events.find(event => event.type === WAVE_STARTED)).not.toHaveProperty('perimeterDemo');
   });
   it('waits for the wave lane when a renderer is registered, and finishes through the hook', async () => {
     const stop = registerWaveRenderer({name: 'test'});

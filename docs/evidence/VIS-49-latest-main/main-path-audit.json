@@ -1,0 +1,409 @@
+{
+  "oldMain": "dbc11c46e8f61a8b1dd6f043286eaedbffe280ad",
+  "newMain": "ee5677ff4986b671c271c85a35abcee70aa8fe59",
+  "visualSource": "a4ecdce6e4cab0fe9cfb282099d0b2bf941df2be",
+  "paths": [
+    {
+      "path": "backend/server/island/wave_recovery.py",
+      "prior": "8bdcaa8b1837a308376aed0b63de446d7c1bfeff",
+      "upstream": "84b5eb43dcace8429d6f6415ff54fb1f9cadf014",
+      "visual": "5e8ba82c9d55e79e7362d11f555bcfe55dcd7dd5",
+      "merged": "1f17f6f5f021843db45951a4d3d1e8c3218a7209",
+      "category": "both sources changed; inspect combined difference"
+    },
+    {
+      "path": "backend/server/island/waves.py",
+      "prior": "006a17bc0335e66d64dd5729d3d520ebf37cbc11",
+      "upstream": "3cd64091e19960575f066a1009d7a12622c51226",
+      "visual": "a935041952dfcf7868773247566ba99ca2307dff",
+      "merged": "14c5ebdbb096f071ef908d5a2d735daadcfd8384",
+      "category": "both sources changed; inspect combined difference"
+    },
+    {
+      "path": "backend/server/routes/waves.py",
+      "prior": "9a90851ebacb422466a1363f0ea6aa4f60e60004",
+      "upstream": "28bc5e8fbc2dd2d97a5abb1546d356574b678fe4",
+      "visual": "5ef8bb1f2250342c1089d850f079656e8412dc26",
+      "merged": "da30c1704ff949ebcb46d27281adb10a4cd8d50d",
+      "category": "both sources changed; inspect combined difference"
+    },
+    {
+      "path": "backend/server/tests/island_helpers.py",
+      "prior": "93dddd14fd93df667441a47fdbda34dee40e4d5e",
+      "upstream": "3b4bd9f9a1945da3b0ea0cd82936fb313531a43f",
+      "visual": "0686423c643efc7821c3ffef4072bc76ab24d331",
+      "merged": "7a4d008a45c86b0a8841eeadedfb4364ad0cb374",
+      "category": "both sources changed; inspect combined difference"
+    },
+    {
+      "path": "backend/server/tests/island_sql/test_live_wave_wrappers_sql.py",
+      "prior": null,
+      "upstream": "87f0eaa4a05ff43d34ba2bc30a67c8d94d08bb33",
+      "visual": null,
+      "merged": "87f0eaa4a05ff43d34ba2bc30a67c8d94d08bb33",
+      "category": "upstream only; exact preserved"
+    },
+    {
+      "path": "backend/server/tests/island_sql/test_recovery_away_sql.py",
+      "prior": null,
+      "upstream": "b9e935ed10eb1223fac6272cc6a5a7f71aeb1ee0",
+      "visual": null,
+      "merged": "b9e935ed10eb1223fac6272cc6a5a7f71aeb1ee0",
+      "category": "upstream only; exact preserved"
+    },
+    {
+      "path": "backend/server/tests/island_sql/test_recovery_two_player_http_pg.py",
+      "prior": null,
+      "upstream": "6d6d74e04d4a89a171048050612c6eaf0924fd04",
+      "visual": null,
+      "merged": "6d6d74e04d4a89a171048050612c6eaf0924fd04",
+      "category": "upstream only; exact preserved"
+    },
+    {
+      "path": "backend/server/tests/island_sql/test_recovery_wave_end_sql.py",
+      "prior": null,
+      "upstream": "c0af335a124974353a1a3a95816f0d7232c1927f",
+      "visual": null,
+      "merged": "c0af335a124974353a1a3a95816f0d7232c1927f",
+      "category": "upstream only; exact preserved"
+    },
+    {
+      "path": "backend/server/tests/island_sql/test_structure_recovery_api_sql.py",
+      "prior": "d97ce25d03b8300d0d9fe230e96a702cf0af3d91",
+      "upstream": "1c301c1fed1f0ab5861a2bdabe449b31e6c710b2",
+      "visual": "d97ce25d03b8300d0d9fe230e96a702cf0af3d91",
+      "merged": "1c301c1fed1f0ab5861a2bdabe449b31e6c710b2",
+      "category": "upstream only; exact preserved"
+    },
+    {
+      "path": "backend/server/tests/island_sql/test_structure_recovery_http_pg.py",
+      "prior": "eee9ed36eb9efbfc9dd991ff963df093bc1de6a2",
+      "upstream": "918aad643dff6e00a34598b770918ccee95f25c2",
+      "visual": "eee9ed36eb9efbfc9dd991ff963df093bc1de6a2",
+      "merged": "918aad643dff6e00a34598b770918ccee95f25c2",
+      "category": "upstream only; exact preserved"
+    },
+    {
+      "path": "backend/server/tests/test_coop_permissions.py",
+      "prior": "9ceeed78a3a5851ce683e7bc7271bb537df4d256",
+      "upstream": "42ecdd201adfaf2b11e7e9f0ddc70dc5627246d8",
+      "visual": "9ceeed78a3a5851ce683e7bc7271bb537df4d256",
+      "merged": "42ecdd201adfaf2b11e7e9f0ddc70dc5627246d8",
+      "category": "upstream only; exact preserved"
+    },
+    {
+      "path": "backend/server/tests/test_wave_recovery_routes.py",
+      "prior": "814ba7b31fe1ca81d0a8d18abc0b23c042994c13",
+      "upstream": "0fc3a3a5106ea8e6be77e46acd663f89e62903fd",
+      "visual": "814ba7b31fe1ca81d0a8d18abc0b23c042994c13",
+      "merged": "0fc3a3a5106ea8e6be77e46acd663f89e62903fd",
+      "category": "upstream only; exact preserved"
+    },
+    {
+      "path": "backend/server/tests/test_wave_routes.py",
+      "prior": "0e51ac8e435e8915b551386be9b7ccf83dbc245e",
+      "upstream": "2a3bd8fe3c3d38ab0e68f2afc8963f18a2878853",
+      "visual": "0e51ac8e435e8915b551386be9b7ccf83dbc245e",
+      "merged": "2a3bd8fe3c3d38ab0e68f2afc8963f18a2878853",
+      "category": "upstream only; exact preserved"
+    },
+    {
+      "path": "backend/server/tests/test_wave_rules.py",
+      "prior": "2b7bfb413414b00d804d2882530091ce582351be",
+      "upstream": "ec6c8a9755ba624031262c89a1b252b254a513f3",
+      "visual": "2b7bfb413414b00d804d2882530091ce582351be",
+      "merged": "ec6c8a9755ba624031262c89a1b252b254a513f3",
+      "category": "upstream only; exact preserved"
+    },
+    {
+      "path": "docs/INTERFACES.md",
+      "prior": "6b2d8e2eb86adc873e2df63a59bafbb79663f41a",
+      "upstream": "c62f8395eec173985c64a1a02e7d793df23bc519",
+      "visual": "cda42c821608c256de05b52c2b7ec95c9505d005",
+      "merged": "858e0cf3a6c71eb77ea87e66a1eea36db68fd1cf",
+      "category": "both sources changed; inspect combined difference"
+    },
+    {
+      "path": "docs/STATUS.md",
+      "prior": "dc5a59603747e556a38c58b7c0384100a7ca4057",
+      "upstream": "5b92b4e8d9873fa537b26e161e7390340c80b274",
+      "visual": "90e78a452f091c7dbf05f03d57bad76ab541b629",
+      "merged": "97e850d7a23ba886d0d0913400d151f83e58f8e1",
+      "category": "both sources changed; inspect combined difference"
+    },
+    {
+      "path": "docs/handoff/apply-2026-11-18-recovery-away.sql",
+      "prior": null,
+      "upstream": "202e6de61d22d0f38db4ea6410f1fe1b7b9500ae",
+      "visual": null,
+      "merged": "202e6de61d22d0f38db4ea6410f1fe1b7b9500ae",
+      "category": "upstream only; exact preserved"
+    },
+    {
+      "path": "docs/handoff/apply-2026-11-18-recovery-fixes.sql",
+      "prior": null,
+      "upstream": "216a05eccd43a83c41b0334ff775227b16bc83bc",
+      "visual": null,
+      "merged": "216a05eccd43a83c41b0334ff775227b16bc83bc",
+      "category": "upstream only; exact preserved"
+    },
+    {
+      "path": "docs/handoff/apply-2026-11-18-recovery-join.sql",
+      "prior": null,
+      "upstream": "78ac979fa683644a7eb30115ca788815a028bd16",
+      "visual": null,
+      "merged": "78ac979fa683644a7eb30115ca788815a028bd16",
+      "category": "upstream only; exact preserved"
+    },
+    {
+      "path": "frontend/scripts/security-headers.js",
+      "prior": "6a989427d3dbe95734f1261df4aa8f97c5d25306",
+      "upstream": "740dce6bec9e0ac90c9f56d9ff4fb2f978d60a1d",
+      "visual": "6a989427d3dbe95734f1261df4aa8f97c5d25306",
+      "merged": "740dce6bec9e0ac90c9f56d9ff4fb2f978d60a1d",
+      "category": "upstream only; exact preserved"
+    },
+    {
+      "path": "frontend/src/game.js",
+      "prior": "e086414ab1bdcd263f5e9335747df0ed284e8db2",
+      "upstream": "fa80238887fe129658d17af62e106029e8b681a7",
+      "visual": "5987033b298bf1bd925a18a21ff3d29d638d15ca",
+      "merged": "db0b87635a15684a6e2622f6897768efb9db2a79",
+      "category": "both sources changed; inspect combined difference"
+    },
+    {
+      "path": "frontend/src/island/api.js",
+      "prior": "4bb22cd4b3dbad6c978de6c2a9ac40cbf75ea7ee",
+      "upstream": "cf09cf85492274ac9262dfdfba04ae7a5d4a33d4",
+      "visual": "7ffcbe60c4988d497b09c16fff99f599e97696e1",
+      "merged": "f933074f74177ba5aa764655fe7d63d9f2bd9bfb",
+      "category": "both sources changed; inspect combined difference"
+    },
+    {
+      "path": "frontend/src/island/index.js",
+      "prior": "84bb9a562661ee1802cbda022669d7814b9d2748",
+      "upstream": "aa668ce283e936c92ad427c96c5be84750c7c5d7",
+      "visual": "856d1db7bef04f0c71aab6cf1bf53a21dfb867ea",
+      "merged": "6e0fe961c7eadffd5d89f430962e3ad786dbec28",
+      "category": "both sources changed; inspect combined difference"
+    },
+    {
+      "path": "frontend/src/island/mode.js",
+      "prior": "9e4d1a0ef608ea6f19c84f545ab0d808a320ad71",
+      "upstream": "67a99e84bbf363d291689891b9c0ad2ebe9ce725",
+      "visual": "9e4d1a0ef608ea6f19c84f545ab0d808a320ad71",
+      "merged": "67a99e84bbf363d291689891b9c0ad2ebe9ce725",
+      "category": "upstream only; exact preserved"
+    },
+    {
+      "path": "frontend/src/island/wave-flow.js",
+      "prior": "8108af1be50eb2f509c6bdb6e92f9e263923abce",
+      "upstream": "a7ccea9629fbddf5353a18e2d49e8d504b19b557",
+      "visual": "269e0ef255e9d7d3f9e2a9d4b8197b9dfe10a6d1",
+      "merged": "fc9f4e954131f158ce470470adc5da55f6304ac0",
+      "category": "both sources changed; inspect combined difference"
+    },
+    {
+      "path": "frontend/src/main.js",
+      "prior": "e3c7c09b8989987f3d8bb3e0914aac56c9b33649",
+      "upstream": "1a3c4e2adb502b66bdc2da349072b961433e9f11",
+      "visual": "e3c7c09b8989987f3d8bb3e0914aac56c9b33649",
+      "merged": "1a3c4e2adb502b66bdc2da349072b961433e9f11",
+      "category": "upstream only; exact preserved"
+    },
+    {
+      "path": "frontend/src/pirates/controller.js",
+      "prior": "e85eb2e8a440ed39608a2fb5bddb9c294521b529",
+      "upstream": "4655cbec830fd66432cce2fd2ebfc97afdfc8f4f",
+      "visual": "7e54ee731d7a158fa88f9fad9f981c287b8590cf",
+      "merged": "0400376c2bfb9c8b8e4805f414555ce301eab0c5",
+      "category": "both sources changed; inspect combined difference"
+    },
+    {
+      "path": "frontend/src/pirates/game-wiring.js",
+      "prior": "77fc27557ab2db8da10a7f4517ec821d4ec11fa8",
+      "upstream": "ee52a26221fffe2b7b6f046b5987c6cabd223a09",
+      "visual": "fcb74b4d1a46ac644c83badd725eeb21e15a9f24",
+      "merged": "78afd0af117f973e71b2d74c50874c3481ecb6ec",
+      "category": "both sources changed; inspect combined difference"
+    },
+    {
+      "path": "frontend/src/pirates/recovery-transport.js",
+      "prior": "430dcaaab16a4317650a9d2946e1836f4ec768d8",
+      "upstream": "1705b1ab16658cb91406f674d6222979f0cf99c2",
+      "visual": "430dcaaab16a4317650a9d2946e1836f4ec768d8",
+      "merged": "1705b1ab16658cb91406f674d6222979f0cf99c2",
+      "category": "upstream only; exact preserved"
+    },
+    {
+      "path": "frontend/src/pirates/wave-replay.js",
+      "prior": "e265fd78bb687ea2566b2fbb7acaf6a8bd35d221",
+      "upstream": "0779cb677f79e05202c84536cd3d771bf9075825",
+      "visual": "e265fd78bb687ea2566b2fbb7acaf6a8bd35d221",
+      "merged": "0779cb677f79e05202c84536cd3d771bf9075825",
+      "category": "upstream only; exact preserved"
+    },
+    {
+      "path": "frontend/tests/first-load.test.js",
+      "prior": null,
+      "upstream": "d57332b8ee60632d7f05dd4d27f3cf4c8cdab1e7",
+      "visual": null,
+      "merged": "d57332b8ee60632d7f05dd4d27f3cf4c8cdab1e7",
+      "category": "upstream only; exact preserved"
+    },
+    {
+      "path": "frontend/tests/island/first-read-retry.test.js",
+      "prior": null,
+      "upstream": "d9d6cfe647ef92ba302c821e93a89f467b016476",
+      "visual": null,
+      "merged": "d9d6cfe647ef92ba302c821e93a89f467b016476",
+      "category": "upstream only; exact preserved"
+    },
+    {
+      "path": "frontend/tests/island/structure-recovery-api.test.js",
+      "prior": "9e14dafcf4286a50fd80566dd80ab553033dfaac",
+      "upstream": "aa96535ae0b96bef26474ffe95cd924278b37bc8",
+      "visual": "e4e1a6595073618252f102868b1042762a922525",
+      "merged": "c629a11b85832b8cf3f00f20a4b09d97646d22b4",
+      "category": "both sources changed; inspect combined difference"
+    },
+    {
+      "path": "frontend/tests/island/visit-and-mode.test.js",
+      "prior": "108e213ce9120ac5a4797198a534bf30e5d5146f",
+      "upstream": "6c090361db33bf7b5b38d4ce4d8c25c8c391eebf",
+      "visual": "108e213ce9120ac5a4797198a534bf30e5d5146f",
+      "merged": "6c090361db33bf7b5b38d4ce4d8c25c8c391eebf",
+      "category": "upstream only; exact preserved"
+    },
+    {
+      "path": "frontend/tests/pirates/live-waves-clock.test.js",
+      "prior": null,
+      "upstream": "438c1f744df83a572da139284996f2c8e60c9f09",
+      "visual": null,
+      "merged": "438c1f744df83a572da139284996f2c8e60c9f09",
+      "category": "upstream only; exact preserved"
+    },
+    {
+      "path": "frontend/tests/pirates/live-waves-finish.test.js",
+      "prior": null,
+      "upstream": "f4d8b54c0623fbdff41dbe3765555fae82c4f18f",
+      "visual": null,
+      "merged": "f4d8b54c0623fbdff41dbe3765555fae82c4f18f",
+      "category": "upstream only; exact preserved"
+    },
+    {
+      "path": "frontend/tests/pirates/live-waves-load.test.js",
+      "prior": null,
+      "upstream": "b1ee9af42c9c430696f78b34fb91e9303131c40e",
+      "visual": null,
+      "merged": "b1ee9af42c9c430696f78b34fb91e9303131c40e",
+      "category": "upstream only; exact preserved"
+    },
+    {
+      "path": "frontend/tests/pirates/multiplayer.test.js",
+      "prior": "85a8027cff2ecde47d425cf3424b56acb5d8aa28",
+      "upstream": "a3b0d8364e5d312ea16066e9cc491f52549106d8",
+      "visual": "85a8027cff2ecde47d425cf3424b56acb5d8aa28",
+      "merged": "4b23b74316391447706fc1a0090d3ec3d6fb8bef",
+      "category": "upstream preserved plus explicit integration regression",
+      "integrationChange": "Add actual wireWaves core-only periodic publication/rejoin/guard/disposal regression; make interval cancellations real in test harness. Existing no-periodic-recovery-vector assertion remains intact."
+    },
+    {
+      "path": "frontend/tests/pirates/recovery-controller.test.js",
+      "prior": "9cbe305526e19e447c0a39e7b307e6dc2cdaf7e6",
+      "upstream": "007f4aa90933e552437a62e40de6ffff110cf68c",
+      "visual": "9cbe305526e19e447c0a39e7b307e6dc2cdaf7e6",
+      "merged": "007f4aa90933e552437a62e40de6ffff110cf68c",
+      "category": "upstream only; exact preserved"
+    },
+    {
+      "path": "frontend/tests/pirates/recovery-load.test.js",
+      "prior": null,
+      "upstream": "79a32fdff4eb33f4f7129e404e609f482bfb5ef8",
+      "visual": null,
+      "merged": "79a32fdff4eb33f4f7129e404e609f482bfb5ef8",
+      "category": "upstream only; exact preserved"
+    },
+    {
+      "path": "frontend/tests/pirates/recovery-playout.test.js",
+      "prior": "ab52a8827965532aa0dedb98c8c012d24c7e42c6",
+      "upstream": "90131039a697e2de24d5b48bef6b0225185b5239",
+      "visual": "ab52a8827965532aa0dedb98c8c012d24c7e42c6",
+      "merged": "90131039a697e2de24d5b48bef6b0225185b5239",
+      "category": "upstream only; exact preserved"
+    },
+    {
+      "path": "frontend/tests/pirates/recovery-teammate.test.js",
+      "prior": null,
+      "upstream": "facc69a965e3963fd082baa435c8d3fdd2d62488",
+      "visual": null,
+      "merged": "facc69a965e3963fd082baa435c8d3fdd2d62488",
+      "category": "upstream only; exact preserved"
+    },
+    {
+      "path": "frontend/tests/pirates/recovery-transport.test.js",
+      "prior": "e608ff8da01014e828145b8e67b8005daf2f5afd",
+      "upstream": "b5816c3257a253ff58c742d169f792ac240804e3",
+      "visual": "e608ff8da01014e828145b8e67b8005daf2f5afd",
+      "merged": "b5816c3257a253ff58c742d169f792ac240804e3",
+      "category": "upstream only; exact preserved"
+    },
+    {
+      "path": "frontend/tests/pirates/recovery-wave-end.test.js",
+      "prior": null,
+      "upstream": "325cc192bdce35a780c751dee3373ceeb5c80d55",
+      "visual": null,
+      "merged": "325cc192bdce35a780c751dee3373ceeb5c80d55",
+      "category": "upstream only; exact preserved"
+    },
+    {
+      "path": "frontend/tests/security-headers.test.js",
+      "prior": "8167de4c3e0c4f0bf3c312c1a86bc326676c54c6",
+      "upstream": "2df74dcdea2e4f7a740dbe9fb144df8a5e288f81",
+      "visual": "8167de4c3e0c4f0bf3c312c1a86bc326676c54c6",
+      "merged": "2df74dcdea2e4f7a740dbe9fb144df8a5e288f81",
+      "category": "upstream only; exact preserved"
+    },
+    {
+      "path": "supabase/README.md",
+      "prior": "4bca9bc02c1ae3debbf5028217f9e4e7f64e4b80",
+      "upstream": "e0a3c01f54277ea20cd52d021f060ee5194c0b3e",
+      "visual": "4bdba5a47e60caeb1c5fdcfcbb5ac568ae23f289",
+      "merged": "b04090b3ce4dc7c3c291a4455afd7df4c1a697be",
+      "category": "both sources changed; inspect combined difference"
+    },
+    {
+      "path": "supabase/migrations/20261118010000_recovery_current_for_joiners.sql",
+      "prior": null,
+      "upstream": "171db9beedbfe2623d8ad7096504ff44f20600e7",
+      "visual": null,
+      "merged": "171db9beedbfe2623d8ad7096504ff44f20600e7",
+      "category": "upstream only; exact preserved"
+    },
+    {
+      "path": "supabase/migrations/20261118020000_recovery_wave_end.sql",
+      "prior": null,
+      "upstream": "09cc8b98172d654123119485ce09e76a88df5e53",
+      "visual": null,
+      "merged": "09cc8b98172d654123119485ce09e76a88df5e53",
+      "category": "upstream only; exact preserved"
+    },
+    {
+      "path": "supabase/migrations/20261118030000_recovery_away.sql",
+      "prior": null,
+      "upstream": "12514b4df6ac532ac8b60a5613b36a771af151bc",
+      "visual": null,
+      "merged": "12514b4df6ac532ac8b60a5613b36a771af151bc",
+      "category": "upstream only; exact preserved"
+    },
+    {
+      "path": "vercel.json",
+      "prior": "b83159236f51f66b4a54ceaf2a97415ce9d21f49",
+      "upstream": "0f5d6c20e9717c4422087fab240329095e1cd4e0",
+      "visual": "b83159236f51f66b4a54ceaf2a97415ce9d21f49",
+      "merged": "0f5d6c20e9717c4422087fab240329095e1cd4e0",
+      "category": "upstream only; exact preserved"
+    }
+  ],
+  "unexpectedChangesToUpstreamOnlyPaths": []
+}

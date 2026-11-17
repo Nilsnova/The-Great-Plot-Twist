@@ -1,0 +1,73 @@
+{
+  "source": "1fd16f1fc0055edc832f3a849b6959e77e78ca2b",
+  "mode": "before",
+  "fixture": "Production market entry with declared 100-coin calls fixture; actual 10-coin call; real 15-second refresh under browser clock.",
+  "initial": {
+    "key": "tidewright-works:less",
+    "name": "Less by 5 coins, Ether",
+    "index": 11,
+    "reads": 2
+  },
+  "refresh": {
+    "replaced": true,
+    "key": "tidewright-works:less",
+    "oldMarker": null,
+    "reads": 3
+  },
+  "tab": {
+    "domOrder": true,
+    "key": "tidewright-works:more",
+    "oldAuditWouldPass": false
+  },
+  "minimumAmountUnchanged": "🪙 5",
+  "placeRequests": 1,
+  "contrast": [
+    {
+      "width": 1280,
+      "key": "tidewright-works:less",
+      "name": "Less by 5 coins, Ether",
+      "ariaDisabled": "true",
+      "opacity": "0.5",
+      "colour": "rgb(251, 242, 220)",
+      "background": {
+        "a": 1,
+        "r": 18,
+        "g": 58,
+        "b": 66
+      },
+      "ratio": 3.9664425132344356
+    },
+    {
+      "width": 375,
+      "key": "tidewright-works:less",
+      "name": "Less by 5 coins, Ether",
+      "ariaDisabled": "true",
+      "opacity": "0.5",
+      "colour": "rgb(251, 242, 220)",
+      "background": {
+        "a": 1,
+        "r": 18,
+        "g": 58,
+        "b": 66
+      },
+      "ratio": 3.9664425132344356
+    },
+    {
+      "width": 320,
+      "key": "tidewright-works:less",
+      "name": "Less by 5 coins, Ether",
+      "ariaDisabled": "true",
+      "opacity": "0.5",
+      "colour": "rgb(251, 242, 220)",
+      "background": {
+        "a": 1,
+        "r": 18,
+        "g": 58,
+        "b": 66
+      },
+      "ratio": 3.9664425132344356
+    }
+  ],
+  "pageErrors": [],
+  "external": []
+}

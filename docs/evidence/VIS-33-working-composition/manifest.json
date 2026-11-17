@@ -1,0 +1,82 @@
+{
+  "task": "VIS-33",
+  "scope": "Actual existing-artwork camera regression, not approved-new-look acceptance",
+  "runtimeBefore": "9dc1bea505fe3b26bd56d6ad02c21a2db8bd8be9",
+  "runtimeAfter": "f117a446013309ac8c7002ecf6b763b911a07cce",
+  "cameraSourceCommit": "37faa5b6295b236d4632da437607070a05449225",
+  "qaHelperCommit": "f117a446013309ac8c7002ecf6b763b911a07cce",
+  "sourceTrees": {
+    "before": "52716c98798a4956fcd34a609af276451be87e7b",
+    "after": "c69e07572bd4b538e6cf3f02974ee99182eb7939"
+  },
+  "sourceAssetHashes": {
+    "before": {
+      "artTree": "72ee0bd7f04bcfd31605c941a6b2780bf66c384b",
+      "publicTree": "93c1d0c66c9d2c223a2d8788435d46c7998e995d",
+      "worldArtBlob": "022756857170f6490129411bb194c3026915cab2",
+      "texturesBlob": "5198592a5530ba239af3c0ebf98a49751251d448"
+    },
+    "after": {
+      "artTree": "72ee0bd7f04bcfd31605c941a6b2780bf66c384b",
+      "publicTree": "93c1d0c66c9d2c223a2d8788435d46c7998e995d",
+      "worldArtBlob": "022756857170f6490129411bb194c3026915cab2",
+      "texturesBlob": "5198592a5530ba239af3c0ebf98a49751251d448"
+    }
+  },
+  "sourceAssetsIdentical": true,
+  "paidLayoutEqualWithinBothPairs": true,
+  "artState": "Existing artwork only; no new VIS-31/32/20/21/14 image/terrain registration; old1.4decorativecliff depth",
+  "captureMode": "Actual local Chromium at1280x720 and375x812; existing high-quality preference refresh; native ratio1; no image/DOM/canvas replacement",
+  "files": [
+    {
+      "file": "before-entry-375x812.png",
+      "sha256": "bbf60285b40d407ea19b14eb730d3daf077f03a8ea79b5c8a82274028a38d0bd",
+      "bytes": 235233
+    },
+    {
+      "file": "before-entry-1280x720.png",
+      "sha256": "0d3ff666834c9239d0ccb132c2625588bd4e8e3470d6fdc8eca47a90a5a2f429",
+      "bytes": 582762
+    },
+    {
+      "file": "before-report.json",
+      "sha256": "f2b7637c256c4716870dd206229148aae326ec8212b45b45cd811110a6061fbe",
+      "bytes": 38294
+    },
+    {
+      "file": "before-fit-375x812.png",
+      "sha256": "8cb06060ea18ccb37ff06629ff85e1ac19da7bf8a5490d0976ce0dedc57619e0",
+      "bytes": 235580
+    },
+    {
+      "file": "before-fit-1280x720.png",
+      "sha256": "cee4a182f13a1cc45b3f6854e3fd675c73efbd1d05bf67876592f9e37141c655",
+      "bytes": 580168
+    },
+    {
+      "file": "after-fit-1280x720.png",
+      "sha256": "d35d06e629fc6914b7a411e0fc0398aeb4c9a01fa96f355ac5f404c3d182c360",
+      "bytes": 585874
+    },
+    {
+      "file": "after-entry-375x812.png",
+      "sha256": "ba5ece64d6c8a07dcc4b726a3e53fa7635a99228e8950a111bc19f0f2dccbe19",
+      "bytes": 182589
+    },
+    {
+      "file": "after-entry-1280x720.png",
+      "sha256": "053c7e8159aaed8f30ecaa73c06bb603c25bc84b198fc00008924f545bca45d3",
+      "bytes": 646353
+    },
+    {
+      "file": "after-report.json",
+      "sha256": "84d3bac60f12df752cf9e7ec58155f8305a2295d7510354a3b91d18beec5bcd7",
+      "bytes": 38277
+    },
+    {
+      "file": "after-fit-375x812.png",
+      "sha256": "d097d2379b433262dfd4c53a566b6dfd8d144e80ea7fcfea2818a861bd9a5eb4",
+      "bytes": 235498
+    }
+  ]
+}
