@@ -37,6 +37,7 @@ def test_flag_names_are_exactly_the_agreed_list():
         "ship_fire",
         "more_tower_spots",
         "structure_recovery",
+        "perimeter_walls",
     )
 
 
@@ -64,7 +65,7 @@ def test_spaces_empty_pieces_and_repeats_are_fine():
     assert [name for name in FLAG_NAMES if flags[name]] == ["market", "arena"]
 
 
-@pytest.mark.parametrize("name", ["markt", "companion_llm"])
+@pytest.mark.parametrize("name", ["markt", "companion_llm", "perimeter_wall", "Perimeter_walls"])
 def test_unknown_or_removed_flag_is_rejected_and_the_message_helps(name):
     with pytest.raises(UnknownFlagError) as problem:
         parse_flags(name)
@@ -96,6 +97,7 @@ def test_is_enabled_reads_the_flags():
 
 def test_is_enabled_treats_a_missing_entry_as_off():
     assert is_enabled("market", {}) is False
+    assert is_enabled("perimeter_walls", {}) is False
 
 
 def test_is_enabled_rejects_a_misspelled_name():

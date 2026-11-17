@@ -27,3 +27,9 @@ These fake-transport tests prove API semantics and handoff arguments, not real S
 Explain-back: I ask whether this exact action already committed before checking today's prices or build eligibility. That lets a lost old reply be reconciled safely. The receipt describes past payment, while the separate island describes what exists now. A new action must match the current quoted epoch and state before SQL can charge it.
 
 Questions: Why must receipt lookup precede current eligibility? Why return receipt and current island separately? Why can a timeout not safely generate a replacement UID?
+
+## Exact flag contract follow-up
+
+The full backend run exposed two literal expected flag lists that had not yet named perimeter_walls. They now explicitly include the new off-by-default flag while retaining every existing full-dictionary assertion and the unchanged 19-flag exhaustive subset matrix. Two bounded settings cases verify explicit off/on behavior without implicitly enabling dependencies; typo/case checks retain all old cases and add the new name's common mistakes.
+
+Targeted registry/settings command, including the new correctness function: **63 passed in 18.72s**. Ruff passed. This does not claim the full exhaustive matrix was rerun by this writer; the aggregate verification owner runs it separately. No assertion was weakened, case skipped or combination removed.
