@@ -762,3 +762,80 @@ def test_saved_v1_culverin_between_wave_repair_and_empty_plot_remain_compatible(
         "select plot,building_type from public.islet_buildings where player_id=%s",
         (OWNER,),
     ).fetchall() == [("cannon_8", "culverin")]
+
+
+def test_saved_v1_gated_plot_demolition_retry_uses_receipt_without_refund_repeat(database):
+    seed_recovery(database, (("cannon_8", "cannon"),))
+    as_server(database)
+    settings = replace(CONFIGURED_SETTINGS, flags=parse_flags("islands"))
+
+    def login(request: httpx.Request) -> httpx.Response:
+        token = request.headers["authorization"].removeprefix("Bearer ")
+        who = token.removeprefix("test.").removesuffix(".signature")
+        player_id = TOKENS.get(who)
+        if player_id is None:
+            return httpx.Response(401, json={"message": "bad token"})
+        return httpx.Response(200, json={"id": player_id, "is_anonymous": False})
+
+    verifier = PlayerVerifier(settings, transport=httpx.MockTransport(login), clock=FakeClock())
+    admin = ScratchRecoveryAdmin(database)
+    app = create_app(settings, verifier, admin, weather_source=FakeWeather(CALM))
+    owner_balance = balance(database, OWNER)
+
+    with TestClient(app) as client:
+        started = client.post(
+            "/api/waves/start",
+            headers=HEADERS["owner"],
+            json={"where": "own", "actionUid": "demolish-wave-01", "waveProtocol": 2},
+        )
+        assert started.status_code == 200, f"{started.text}; {admin.last_database_error}"
+        wave_id = started.json()["waveId"]
+        as_owner(database)
+        database.execute(
+            "update public.recovery_wave_states "
+            "set closed_at=clock_timestamp()-interval '1 second', "
+            "closed_hp=public.structure_recovery_wave_hp(wave_id) where wave_id=%s",
+            (wave_id,),
+        )
+        as_server(database)
+        first = client.post(
+            "/api/island/demolish",
+            headers=HEADERS["owner"],
+            json={"spot": "cannon_8", "actionUid": "demolish-gated-01"},
+        )
+        assert first.status_code == 200, (
+            f"{first.text}; local SQL error: {admin.last_database_error}"
+        )
+        first_receipt = first.json()["demolished"]
+        assert first_receipt["repeat"] is False
+        refund = sum(item["coins"] for item in first_receipt["refunds"] if item["you"])
+        assert refund > 0
+
+        repeated = client.post(
+            "/api/island/demolish",
+            headers=HEADERS["owner"],
+            json={"spot": "cannon_8", "actionUid": "demolish-gated-01"},
+        )
+        assert repeated.status_code == 200, repeated.text
+        assert repeated.json()["demolished"] == first.json()["demolished"] | {"repeat": True}
+
+        empty_gated_plot = client.post(
+            "/api/island/demolish",
+            headers=HEADERS["owner"],
+            json={"spot": "cannon_9", "actionUid": "demolish-empty-01"},
+        )
+        unknown_plot = client.post(
+            "/api/island/demolish",
+            headers=HEADERS["owner"],
+            json={"spot": "cannon_12", "actionUid": "demolish-unknown-01"},
+        )
+
+    assert empty_gated_plot.status_code == 409
+    assert empty_gated_plot.json()["error"]["code"] == "not_built"
+    assert unknown_plot.status_code == 404
+    assert balance(database, OWNER) == owner_balance + refund
+    assert database.execute(
+        "select count(*) from public.building_demolitions "
+        "where demolished_by=%s and ref='demolish:demolish-gated-01'",
+        (OWNER,),
+    ).fetchone() == (1,)

@@ -1151,6 +1151,21 @@ def catalogue_for_existing_structures(
     return runtime
 
 
+def catalogue_for_demolition(catalogue: IslandCatalogue) -> IslandCatalogue:
+    """Include all known gated plots for the SQL-backed demolition receipt check only.
+
+    This does not authorize a purchase. The demolition RPC checks the caller, UID, receipt, and
+    actual built row atomically; the wider plot catalogue lets a retry reach that check after the
+    original gated building has already been removed.
+    """
+    runtime = catalogue
+    if runtime.extra_tower_spots and not runtime.more_tower_spots:
+        runtime = with_more_tower_spots(runtime)
+    if not any(kind.kind == "culverin" for kind in runtime.kinds):
+        runtime = with_defenses_v2(runtime, read_defenses_v2(runtime))
+    return runtime
+
+
 def catalogue_with_recovery_prices(catalogue: IslandCatalogue) -> IslandCatalogue:
     """Return supported recovery kind prices without inventing an existing building instance."""
     if any(kind.kind == "culverin" for kind in catalogue.kinds):

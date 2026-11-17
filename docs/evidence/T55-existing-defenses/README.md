@@ -1,6 +1,6 @@
 # T55 saved-v1 availability compatibility
 
-This evidence is for Ianno's bug follow-up in [issue #121](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/121), branch `fix/recovery-gated-defenses`, based on main `8759fc80`. The application source reuses the reviewed fix from `9b127467`; its earlier PR #238 closed without merging. The new implementation commit is `48d3d45c`.
+This evidence is for Ianno's bug follow-up in [issue #121](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/121), branch `fix/recovery-gated-defenses`, based on main `8759fc80`. The application source reuses the reviewed fix from `9b127467`; its earlier PR #238 closed without merging. The initial compatibility implementation is commit `48d3d45c`; a later follow-up adds bounded demolition receipt replay.
 
 ## Failure and fix
 
@@ -43,6 +43,20 @@ The complete disposable PostgreSQL island suite was run on the new branch:
 CASE_PG_SCRATCH=1 UV_CACHE_DIR=/tmp/recovery-gated-uv-cache uv run --with pgserver --with 'psycopg[binary]' --with pglast pytest -q server/tests/island_sql
 ```
 
-Result: **370 passed in 33.30 seconds**. The fixture applies/reapplies the full repository migration chain locally. No migration file was changed by this fix. Runtime application source matches the previously reviewed `9b127467` implementation; current-source checks above are recorded separately from its older evidence.
+Result: **370 passed in 33.30 seconds**. The fixture applies/reapplies the full repository migration chain locally. No migration file was changed by this fix. The saved-island runtime/purchase separation and wave snapshot changes reuse the previously reviewed `9b127467` implementation. The demolition retry follow-up below is additional current-source behavior.
 
 No full backend/frontend suite, browser multiplayer, live database, migration application, feature activation or deployment is claimed. The change has no new rendered UI, so no screenshot is presented as proof of backend behavior. Wider authenticated two-browser recovery, balance and release gates remain separate. Ianno's manual review and publication confirmation, then Franz's current-revision review, are still required before human merge.
+
+## Demolition receipt retry follow-up
+
+The HTTP test creates a saved recovery-v1 wave snapshot, closes the disposable wave, demolishes built `cannon_8`, then repeats the same caller/UID request. Before the final source change the first request succeeded (`repeat: false`) and the retry failed before SQL with `404 no_such_spot`. The recovery-v1 demolition mutation now uses the full known gated-plot catalogue only for that validation and SQL receipt path. The regression confirms the repeat returns the stored receipt, the refund is paid once, a fresh UID against an empty gated plot returns `409 not_built`, and an unknown plot remains `404`. The existing caller and UID checks in SQL remain authoritative.
+
+Focused current-source command from `backend/`:
+
+```sh
+CASE_PG_SCRATCH=1 UV_CACHE_DIR=/tmp/recovery-gated-uv-cache uv run --with pgserver --with 'psycopg[binary]' --with pglast pytest -q server/tests/island_sql/test_structure_recovery_http_pg.py server/tests/island_sql/test_demolish_sql.py server/tests/island_sql/test_more_tower_spots_sql.py
+```
+
+Before the positive-refund assertion was added, the combined command above reported **32 passed in 9.88 seconds**. After that assertion, separately rerun checks passed: the three saved-v1 HTTP regressions (**3 passed, 1 unrelated test deselected**) and the demolition/extra-plot SQL suites (**28 passed**). The new HTTP regression proves the first refund is positive before checking that the retry does not change the balance. These checks use only disposable local PostgreSQL.
+
+A later combined rerun reported **31 passed, 1 failed**: the existing `test_accepted_bell_member_join_and_paid_repair_match_committed_state` observed `combat` where it expects `preparing`, because the API start/join test elapsed through the phase boundary under the combined run. The three affected saved-v1 HTTP tests and the demolition/extra-plot SQL suites passed separately afterward; that phase-timing test was not changed. Changed-file Ruff and format checks pass; the focused island route suite passes **54 tests**. The previous **370 passed** complete island SQL result was run before this follow-up and remains historical, not final-source evidence; root is running the final independent suite.

@@ -47,7 +47,11 @@ from server.island.captain_recovery_policy import (
     STRUCTURE_RECOVERY_VERSION,
     is_retired_recovery_skill,
 )
-from server.island.catalogue import IslandCatalogue, catalogue_for_existing_structures
+from server.island.catalogue import (
+    IslandCatalogue,
+    catalogue_for_demolition,
+    catalogue_for_existing_structures,
+)
 from server.island.codes import read_code, shown
 from server.island.layout import LayoutInfo, Position
 from server.island.rules import Built, ResearchTier, SpotView
@@ -1128,10 +1132,9 @@ async def demolish(
     refunds. 409 protected, 404 no_such_spot, 404 no_such_island, 403 not_member, 409 not_built,
     409 wave_running, 409 busy."""
     island, payer = await target_island(admin, catalogue, player_id, code, permissions.DEMOLISH)
-    built = await store.read_built_spots(admin, island.owner)
     runtime_catalogue = catalogue
     if await read_recovery_version(admin, island.owner) == STRUCTURE_RECOVERY_VERSION:
-        runtime_catalogue = catalogue_for_existing_structures(catalogue, built)
+        runtime_catalogue = catalogue_for_demolition(catalogue)
     spot = rules.check_demolish(runtime_catalogue, spot_id)
     arguments = {
         "p_player_id": player_id,
