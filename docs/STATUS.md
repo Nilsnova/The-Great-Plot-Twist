@@ -973,3 +973,6 @@ Ianno / 2026-11-17 — T60 API-to-database-to-replay milestone: the focused actu
 
 
 Ianno / 2026-11-17 — T55 recovery SQL fixture now seeds the complete v1 configuration surface used by mutation refresh: configVersion, versioned manifest plus recovery-rate factors, complete D060 default positions, and frozen wave metadata. The disposable PostgreSQL structure recovery schema/reader suite passed: 19. Ruff import and format checks passed. This remains additive schema verification; no live database or feature activation.
+
+
+Ianno / 2026-11-17 — T60 integration fixture correction: added the required `configVersion: 1` to the shared mutation-test recovery template after merge of expiry-safe SQL revision `9d4d4b6`. The exact full-chain disposable migration fixture and focused mutation suite then passed all 12 cases, with migrations applied twice. Runtime SQL remains strict; only the versioned test fixture changed.
