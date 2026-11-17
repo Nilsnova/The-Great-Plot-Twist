@@ -1,0 +1,199 @@
+{
+  "sourceFile": "frontend/public/village/houses-v1.png",
+  "generatedBy": "OpenAI image_gen, 17 November 2026",
+  "sha256": "9c7e6e80c8f8b089e2213c2274d4cf98d0d8ba7c9f1574b417855e3f4aad2585",
+  "bytes": 2055185,
+  "nativeSize": [
+    1254,
+    1254
+  ],
+  "mode": "RGBA",
+  "alpha": {
+    "corners": [
+      0,
+      0,
+      1,
+      0
+    ],
+    "solidThreshold": 240,
+    "transparentNoiseThreshold": 16
+  },
+  "cells": [
+    {
+      "id": "island-house",
+      "rect": [
+        0,
+        0,
+        418,
+        418
+      ],
+      "sourceFoot": [
+        209,
+        373
+      ],
+      "solidBounds": [
+        59,
+        99,
+        355,
+        375
+      ]
+    },
+    {
+      "id": "island-house-l2",
+      "rect": [
+        418,
+        0,
+        418,
+        418
+      ],
+      "sourceFoot": [
+        209,
+        376
+      ],
+      "solidBounds": [
+        15,
+        93,
+        377,
+        378
+      ]
+    },
+    {
+      "id": "island-house-l3",
+      "rect": [
+        836,
+        0,
+        418,
+        418
+      ],
+      "sourceFoot": [
+        209,
+        387
+      ],
+      "solidBounds": [
+        24,
+        35,
+        381,
+        388
+      ]
+    },
+    {
+      "id": "island-house-barracks",
+      "rect": [
+        0,
+        418,
+        418,
+        418
+      ],
+      "sourceFoot": [
+        209,
+        366
+      ],
+      "solidBounds": [
+        37,
+        70,
+        401,
+        367
+      ]
+    },
+    {
+      "id": "island-house-tavern",
+      "rect": [
+        418,
+        418,
+        418,
+        418
+      ],
+      "sourceFoot": [
+        209,
+        366
+      ],
+      "solidBounds": [
+        31,
+        70,
+        385,
+        367
+      ]
+    },
+    {
+      "id": "island-house-workshop",
+      "rect": [
+        836,
+        418,
+        418,
+        418
+      ],
+      "sourceFoot": [
+        209,
+        366
+      ],
+      "solidBounds": [
+        18,
+        70,
+        385,
+        368
+      ]
+    },
+    {
+      "id": "island-house-barracks-l3",
+      "rect": [
+        0,
+        836,
+        418,
+        418
+      ],
+      "sourceFoot": [
+        209,
+        387
+      ],
+      "solidBounds": [
+        37,
+        16,
+        403,
+        388
+      ]
+    },
+    {
+      "id": "island-house-tavern-l3",
+      "rect": [
+        418,
+        836,
+        418,
+        418
+      ],
+      "sourceFoot": [
+        209,
+        387
+      ],
+      "solidBounds": [
+        24,
+        16,
+        390,
+        389
+      ]
+    },
+    {
+      "id": "island-house-workshop-l3",
+      "rect": [
+        836,
+        836,
+        418,
+        418
+      ],
+      "sourceFoot": [
+        209,
+        389
+      ],
+      "solidBounds": [
+        17,
+        15,
+        389,
+        391
+      ]
+    }
+  ],
+  "limits": [
+    "Read-only alpha inspection; source PNG is unchanged and no offline edited image is emitted.",
+    "Faint peripheral alpha below16 includes generation noise.",
+    "Actual gameplay/state/provider evidence is separate from this generated source."
+  ]
+}

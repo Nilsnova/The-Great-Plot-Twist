@@ -44,3 +44,12 @@ flag activation, main/force push, deployment or merge is authorized.
 
 Explain back: why roles remain gameplay data; why native image size differs from
 logical geometry; and which actual runtime transition proves the selected frame.
+
+## Authored-source handoff
+
+The original9-cell transparent family and complete declarative state mapping are
+implemented. [Measured source/provenance](../docs/evidence/VIS-06-houses/README.md)
+records native geometry and feet; no offline image edits are used. Focused source
+and existing registry checks pass2 files /7 tests in1.47s. Shared VIS-32 loading,
+actual role/upgrade rendering and desktop/phone images remain separate coordinated
+gates. These source checks do not claim the new family is active standalone.
