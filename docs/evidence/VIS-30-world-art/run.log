@@ -1,0 +1,8 @@
+buildings: 1 frames, 1 bounded PNG sheet(s),4× pixel proof passed.
+houses: 9 frames, 1 bounded PNG sheet(s),4× pixel proof passed.
+landmarks: 4 frames, 1 bounded PNG sheet(s),4× pixel proof passed.
+services: 2 frames, 1 bounded PNG sheet(s),4× pixel proof passed.
+nature: 8 frames, 1 bounded PNG sheet(s),4× pixel proof passed.
+cannons: 20 frames, 1 bounded PNG sheet(s),4× pixel proof passed.
+walls: 30 frames, 1 bounded PNG sheet(s),4× pixel proof passed.
+{"frames":74,"unchangedTerrainBytes":2683357,"rawPlusTerrainBytes":18647281,"compiledPlusTerrainBytes":8172254,"targetBytes":8388608,"targetMet":true,"originalDecoded":50327472,"compiledDecoded":19148544,"errors":[],"externalRequests":[]}
