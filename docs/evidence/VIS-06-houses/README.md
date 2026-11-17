@@ -25,16 +25,19 @@ light, a stone foundation and a recognizable entrance.
 | Grid | 3×3, each cell418×418 native pixels |
 | Encoded size | 2,055,185bytes |
 | SHA-256 | `9c7e6e80c8f8b089e2213c2274d4cf98d0d8ba7c9f1574b417855e3f4aad2585` |
-| Plain logical geometry | 64×64, anchor8 |
-| Role logical geometry | 80×72, anchor8 |
+| Approved plain presentation | 80×80, anchor8 |
+| Approved role presentation | 96×88, anchor8 |
 | Alpha at whole-sheet corners | 0 /0 /1 /0 |
 
 [Raw source/cell report](asset-report.json) records each exact source rectangle,
 solid alpha bounds at threshold240 and the measured ground foot at the cell's
 center. Low alpha below16 includes faint peripheral generation noise. Every solid
-building stays at least8 native pixels inside its own cell. The shared provider
-uses the explicit feet and complete transparent cells, preserving aspect ratio
-and the existing logical ground point without stretching.
+building stays within a tight measured rectangle with at least12px margin. The
+original418×418 source cells remain recorded, while runtime rectangles omit blank
+margins. After the actual stage-one checkpoint, root approved80×80/anchor8 plain
+and96×88/anchor8 role presentation boxes. Common fit bounds per related level group
+retain actual silhouette growth instead of fitting every tier to equal size.
+Original PNG bytes, native ground feet, saved positions and collision stay fixed.
 
 ## Mapping and runtime boundary
 
@@ -42,7 +45,8 @@ and the existing logical ground point without stretching.
 VIS-32 `sheets`/`frames` data contract. All9 supported frame identities are mapped
 one-to-one; role choice and level still come from the real `buildingArt()` state
 selector. No new house slot, role, price, unlock, range, recovery or upgrade rule
-is added. The original logical geometry and collision/interaction remain.
+is added. Only the approved visible presentation boxes change; collision,
+interaction, original ground feet and gameplay geometry remain.
 
 The source test compares PNG headers, dimensions and hash with the actual asset,
 derives the required identities from the real level/role selector, rejects cell

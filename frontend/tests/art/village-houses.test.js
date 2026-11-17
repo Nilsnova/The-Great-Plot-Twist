@@ -24,7 +24,11 @@ describe('approved house family source', () => {
     for (const role of ROLE_IDS) for (const level of [2, 3]) expected.push(buildingArt('house', level, role));
     expect(Object.keys(frames).sort()).toEqual(expected.sort());
     expect(new Set(Object.values(frames).map(frame => frame.rect.join(','))).size).toBe(expected.length);
-    for (const [id, frame] of Object.entries(frames)) expect(frame.logical, id).toEqual(islandFrame(id).slice(0, 3));
+    for (const [id, frame] of Object.entries(frames)) {
+      const role = ROLE_IDS.some(role => id.includes(`-${role}`));
+      expect(frame.logical, id).toEqual(role ? [96, 88, 8] : [80, 80, 8]);
+      expect(islandFrame(id).slice(0, 3)).toEqual(role ? [80, 72, 8] : [64, 64, 8]);
+    }
   });
 
   it('keeps the measured foot and all solid source details inside each transparent cell', () => {
@@ -32,15 +36,32 @@ describe('approved house family source', () => {
       const frame = frames[cell.id], sheet = sheets[frame.sheet];
       expect(frame.rect).toEqual(cell.rect);
       expect(frame.sourceFoot).toEqual(cell.sourceFoot);
+      expect([frame.rect[0] + frame.sourceFoot[0], frame.rect[1] + frame.sourceFoot[1]]).toEqual(cell.nativeGroundFoot);
       expect(frame.rect[0] + frame.rect[2]).toBeLessThanOrEqual(sheet.width);
       expect(frame.rect[1] + frame.rect[3]).toBeLessThanOrEqual(sheet.height);
       const [left, top, right, bottom] = cell.solidBounds;
-      expect(Math.min(left, top)).toBeGreaterThanOrEqual(8);
-      expect(Math.max(right, bottom)).toBeLessThanOrEqual(410);
+      expect(Math.min(left, top)).toBeGreaterThanOrEqual(12);
+      expect(frame.rect[2] - right).toBeGreaterThanOrEqual(12);
+      expect(frame.rect[3] - bottom).toBeGreaterThanOrEqual(12);
       expect(frame.sourceFoot[0]).toBeGreaterThan(left);
       expect(frame.sourceFoot[0]).toBeLessThan(right);
       expect(frame.sourceFoot[1]).toBeGreaterThan(top);
       expect(frame.sourceFoot[1]).toBeLessThanOrEqual(bottom);
     }
+  });
+
+  it('uses one fit scale per related level group so real silhouette growth is retained', () => {
+    for (const group of ['plain', 'role']) {
+      const cells = report.cells.filter(cell => cell.group === group);
+      expect(new Set(cells.map(cell => frames[cell.id].fitBounds.join(','))).size).toBe(1);
+      for (const cell of cells) {
+        const {rect, sourceFoot: [x, y], fitBounds} = frames[cell.id];
+        [x, y, rect[2] - x, rect[3] - y].forEach((extent, i) => expect(fitBounds[i]).toBeGreaterThanOrEqual(extent));
+      }
+    }
+    const height = id => { const cell = report.cells.find(cell => cell.id === id); return cell.solidBounds[3] - cell.solidBounds[1]; };
+    expect(height('island-house-l2')).toBeGreaterThan(height('island-house'));
+    expect(height('island-house-l3')).toBeGreaterThan(height('island-house-l2'));
+    for (const role of ROLE_IDS) expect(height(`island-house-${role}-l3`)).toBeGreaterThan(height(`island-house-${role}`));
   });
 });
