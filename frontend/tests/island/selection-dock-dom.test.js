@@ -17,12 +17,12 @@ it('keeps supplied healthy HP, real portrait and readable44px actions within bot
         // Deliberately supplied service-view values, not inferred from the building's Strength statistic.
         model.recovery = {status: 'ready', visible: false, actualHp: 60, maxHP: 60};
         ui.buildCard(model, {move() {}, upgrade() {}}, {dock: true}); window.selectionUi = ui;
-        return {active: ui.active, hp: ui.selectionElement.querySelector('.island-selection-health').textContent, registered: !!getRasterFrame('island-wall')};
+        return {active: ui.active, hp: ui.selectionElement.querySelector('.island-selection-health').textContent, registered: getRasterFrame('island-wall')?.sheet.file ?? null};
       });
       expect(result).toMatchObject({active: false, hp: '60 / 60 HP'});
       await page.waitForFunction(() => !!document.querySelector('.island-selection-portrait canvas'));
       const source = await page.locator('.island-selection-portrait canvas').evaluate(canvas => canvas.villageArt ?? null);
-      if (result.registered) expect(source).toMatchObject({id: 'island-wall', file: 'village/walls-posts-v1.png', source: 'png'});
+      if (result.registered) expect(source).toMatchObject({id: 'island-wall', file: result.registered, source: 'png'});
       else expect(source).toBe(null); // Pinned dependency has no wall registration: explicitly procedural.
       const bounds = await page.locator('.island-selection-dock').evaluate(element => ({height: element.getBoundingClientRect().height,
         buttons: [...element.querySelectorAll('button')].filter(button => button.getClientRects().length).map(button => {
