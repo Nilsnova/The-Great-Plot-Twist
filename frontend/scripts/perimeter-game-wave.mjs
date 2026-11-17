@@ -38,7 +38,7 @@ async function inspect(page) {
     const hp = new Map(w.state.walls.map(wall => [wall.id, wall.hp]));
     const standing = w.defenses.filter(p => p.kind === 'wall' && hp.get(p.id) > 0).map(p => ({...p, built: true}));
     const layer = w.renderer.root.getObjectByName('pirates:wall-connections')?.getObjectByName('island-wall-connections');
-    return {waveId: w.info.waveId, wave: w.info.wave, seed: w.info.seed, startsAt: w.info.startsAt,
+    return {waveId: w.info.waveId, wave: w.info.wave, seed: w.info.seed, startsAtMs: w.info.startsAtMs,
       recoveryVersion: w.info.recoveryVersion, perimeterDemo: w.info.perimeterDemo, ticks: w.ticks, done: w.done,
       broken: w.state.walls.filter(p => p.hp === 0).map(p => p.id),
       actualLinks: layer?.children.map(mesh => mesh.name) ?? [], expectedLinks: wallTopology(standing).links.map(l => `wall-join:${l.a}:${l.b}`),
