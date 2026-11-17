@@ -1,7 +1,8 @@
 // The top is the existing analytic coast; base points extend only the decorative backdrop/foam silhouette.
 import {linear, mix, poly, stroke, line} from './paint.js';
 import {paintMaterial} from './village/terrain-materials.js';
-export const CLIFF_DEPTH = 1.4, APPROACH_DEPTH = .35;
+// D063 expands the old1.4-unit trial facade; the analytic top and naval coves stay unchanged.
+export const CLIFF_DEPTH = 3.2, APPROACH_DEPTH = .35;
 export const NAVAL_APPROACH_BEARINGS = Object.freeze([0, 90, 180]);
 const TAU = Math.PI * 2, PROJECT = .72;
 
