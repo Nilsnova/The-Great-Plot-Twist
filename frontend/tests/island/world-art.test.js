@@ -5,13 +5,13 @@ import {artSizes} from '../../src/world/art.js';
 import {crewArt} from '../../src/pixel/pirate-catalog.js';
 
 describe('island building art', () => {
-  it('uses the level art for walls, cannons and mortars and one drawing for the rest', () => {
+  it('uses level art for defenses and houses, with safe kind and level fallbacks', () => {
     expect(buildingArt('wall', 1)).toBe('island-wall');
     expect(buildingArt('wall', 3)).toBe('island-wall-l3');
     expect(buildingArt('cannon', 2)).toBe('island-cannon-l2');
     expect(buildingArt('mortar', 3)).toBe('island-mortar-l3');
     expect(buildingArt('watchtower', 2)).toBe('island-watchtower');
-    expect(buildingArt('house', 2)).toBe('island-house');
+    expect(buildingArt('house', 2)).toBe('island-house-l2');
     expect(buildingArt('cannon', 5)).toBe('island-cannon-l5'); // the tower tiers (GAME-V3.md §4.1)
     expect(buildingArt('cannon', 9)).toBe('island-cannon-l5');
     expect(buildingArt('cannon', undefined)).toBe('island-cannon');

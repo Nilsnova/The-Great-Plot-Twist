@@ -230,7 +230,7 @@ describe('house roles: what the screens show', () => {
       expect(buildingArt('house', 2, id)).toBe(ROLE_ART[id]);
       expect(Object.hasOwn(frames, ROLE_ART[id])).toBe(true);
     }
-    expect([buildingArt('house', 1, 'tavern'), buildingArt('house', 3), buildingArt('wall', 2, 'tavern')]).toEqual(['island-house', 'island-house', buildingArt('wall', 2)]);
+    expect([buildingArt('house', 1, 'tavern'), buildingArt('house', 3), buildingArt('wall', 2, 'tavern')]).toEqual(['island-house', 'island-house-l3', buildingArt('wall', 2)]);
     const people = peopleFrames();
     for (const id of MILITIA_IDS) expect(Object.hasOwn(people, id)).toBe(true);
   });

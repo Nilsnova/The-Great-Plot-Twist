@@ -1,0 +1,443 @@
+{
+  "baseRef": "a09787c079ba2921fb05facdecb41f61ca8ab84d",
+  "baselineCommit": "a09787c079ba2921fb05facdecb41f61ca8ab84d",
+  "fixture": "Actual house painter and current buildingArt selection; no gameplay simulation",
+  "captures": [
+    {
+      "phase": "before",
+      "width": 1280,
+      "height": 720,
+      "path": "../docs/evidence/COC-07-house-levels/before-1280x720.png",
+      "frames": [
+        {
+          "role": null,
+          "level": 1,
+          "id": "island-house",
+          "box": [
+            64,
+            64,
+            8
+          ],
+          "silhouetteSha256": "77cac4c6eedd4391df17af8ccd5681858a7cc25fba2ba60d512ce0160e65d1c3"
+        },
+        {
+          "role": null,
+          "level": 2,
+          "id": "island-house",
+          "box": [
+            64,
+            64,
+            8
+          ],
+          "silhouetteSha256": "77cac4c6eedd4391df17af8ccd5681858a7cc25fba2ba60d512ce0160e65d1c3"
+        },
+        {
+          "role": null,
+          "level": 3,
+          "id": "island-house",
+          "box": [
+            64,
+            64,
+            8
+          ],
+          "silhouetteSha256": "77cac4c6eedd4391df17af8ccd5681858a7cc25fba2ba60d512ce0160e65d1c3"
+        },
+        {
+          "role": "barracks",
+          "level": 2,
+          "id": "island-house-barracks",
+          "box": [
+            80,
+            72,
+            8
+          ],
+          "silhouetteSha256": "bd9173ecab07506590d3522a4741ad82eb251a55f0358dd92adc5eb8ad0a39f6"
+        },
+        {
+          "role": "barracks",
+          "level": 3,
+          "id": "island-house-barracks",
+          "box": [
+            80,
+            72,
+            8
+          ],
+          "silhouetteSha256": "bd9173ecab07506590d3522a4741ad82eb251a55f0358dd92adc5eb8ad0a39f6"
+        },
+        {
+          "role": "tavern",
+          "level": 2,
+          "id": "island-house-tavern",
+          "box": [
+            80,
+            72,
+            8
+          ],
+          "silhouetteSha256": "d248d412569700c38bf59da5d39433bb85295fb230b2cced5abdeac8e453fd50"
+        },
+        {
+          "role": "tavern",
+          "level": 3,
+          "id": "island-house-tavern",
+          "box": [
+            80,
+            72,
+            8
+          ],
+          "silhouetteSha256": "d248d412569700c38bf59da5d39433bb85295fb230b2cced5abdeac8e453fd50"
+        },
+        {
+          "role": "workshop",
+          "level": 2,
+          "id": "island-house-workshop",
+          "box": [
+            80,
+            72,
+            8
+          ],
+          "silhouetteSha256": "938df0deeaa15435adeeb5fddceefd3baa024dedb4cbd0af5c8717b66fec106a"
+        },
+        {
+          "role": "workshop",
+          "level": 3,
+          "id": "island-house-workshop",
+          "box": [
+            80,
+            72,
+            8
+          ],
+          "silhouetteSha256": "938df0deeaa15435adeeb5fddceefd3baa024dedb4cbd0af5c8717b66fec106a"
+        }
+      ],
+      "browserErrors": [],
+      "blockedRequests": []
+    },
+    {
+      "phase": "after",
+      "width": 1280,
+      "height": 720,
+      "path": "../docs/evidence/COC-07-house-levels/after-1280x720.png",
+      "frames": [
+        {
+          "role": null,
+          "level": 1,
+          "id": "island-house",
+          "box": [
+            64,
+            64,
+            8
+          ],
+          "silhouetteSha256": "77cac4c6eedd4391df17af8ccd5681858a7cc25fba2ba60d512ce0160e65d1c3"
+        },
+        {
+          "role": null,
+          "level": 2,
+          "id": "island-house-l2",
+          "box": [
+            64,
+            64,
+            8
+          ],
+          "silhouetteSha256": "27d404c1adc4f84c98ae6b88a76dbbafc297431bc4b7b3fdc9ac6fae4058ee02"
+        },
+        {
+          "role": null,
+          "level": 3,
+          "id": "island-house-l3",
+          "box": [
+            64,
+            64,
+            8
+          ],
+          "silhouetteSha256": "59daa7f708080ac73686062027f69a1284c57fd9502c9136602fbf1cf035fa71"
+        },
+        {
+          "role": "barracks",
+          "level": 2,
+          "id": "island-house-barracks",
+          "box": [
+            80,
+            72,
+            8
+          ],
+          "silhouetteSha256": "8cda08e065142812b675ca2b836eb53d4fd461b7c4f281849710c18d3788ecbd"
+        },
+        {
+          "role": "barracks",
+          "level": 3,
+          "id": "island-house-barracks-l3",
+          "box": [
+            80,
+            72,
+            8
+          ],
+          "silhouetteSha256": "1c7be1bd4172261aec004802b2e6bdad756d78b271a3cd729bc00fe110793ceb"
+        },
+        {
+          "role": "tavern",
+          "level": 2,
+          "id": "island-house-tavern",
+          "box": [
+            80,
+            72,
+            8
+          ],
+          "silhouetteSha256": "a6e92f9288476fbba63edb3a8381ed3474a8f39ec71b8805c2a520f10c795d3e"
+        },
+        {
+          "role": "tavern",
+          "level": 3,
+          "id": "island-house-tavern-l3",
+          "box": [
+            80,
+            72,
+            8
+          ],
+          "silhouetteSha256": "9c263099d2cd2f452a62a8236ff0109da88ec8e094c1f1403c755efbbb7c178f"
+        },
+        {
+          "role": "workshop",
+          "level": 2,
+          "id": "island-house-workshop",
+          "box": [
+            80,
+            72,
+            8
+          ],
+          "silhouetteSha256": "d5dfcce99724e9e36e0d5e0b9a4de4f52e08e0ab4d20d169f6ae33a044e89c99"
+        },
+        {
+          "role": "workshop",
+          "level": 3,
+          "id": "island-house-workshop-l3",
+          "box": [
+            80,
+            72,
+            8
+          ],
+          "silhouetteSha256": "cf3a9fb7e243a1537f2a657fac512d6497c53596a6d7f63752e119144b3b8cf2"
+        }
+      ],
+      "browserErrors": [],
+      "blockedRequests": []
+    },
+    {
+      "phase": "before",
+      "width": 375,
+      "height": 812,
+      "path": "../docs/evidence/COC-07-house-levels/before-375x812.png",
+      "frames": [
+        {
+          "role": null,
+          "level": 1,
+          "id": "island-house",
+          "box": [
+            64,
+            64,
+            8
+          ],
+          "silhouetteSha256": "77cac4c6eedd4391df17af8ccd5681858a7cc25fba2ba60d512ce0160e65d1c3"
+        },
+        {
+          "role": null,
+          "level": 2,
+          "id": "island-house",
+          "box": [
+            64,
+            64,
+            8
+          ],
+          "silhouetteSha256": "77cac4c6eedd4391df17af8ccd5681858a7cc25fba2ba60d512ce0160e65d1c3"
+        },
+        {
+          "role": null,
+          "level": 3,
+          "id": "island-house",
+          "box": [
+            64,
+            64,
+            8
+          ],
+          "silhouetteSha256": "77cac4c6eedd4391df17af8ccd5681858a7cc25fba2ba60d512ce0160e65d1c3"
+        },
+        {
+          "role": "barracks",
+          "level": 2,
+          "id": "island-house-barracks",
+          "box": [
+            80,
+            72,
+            8
+          ],
+          "silhouetteSha256": "bd9173ecab07506590d3522a4741ad82eb251a55f0358dd92adc5eb8ad0a39f6"
+        },
+        {
+          "role": "barracks",
+          "level": 3,
+          "id": "island-house-barracks",
+          "box": [
+            80,
+            72,
+            8
+          ],
+          "silhouetteSha256": "bd9173ecab07506590d3522a4741ad82eb251a55f0358dd92adc5eb8ad0a39f6"
+        },
+        {
+          "role": "tavern",
+          "level": 2,
+          "id": "island-house-tavern",
+          "box": [
+            80,
+            72,
+            8
+          ],
+          "silhouetteSha256": "d248d412569700c38bf59da5d39433bb85295fb230b2cced5abdeac8e453fd50"
+        },
+        {
+          "role": "tavern",
+          "level": 3,
+          "id": "island-house-tavern",
+          "box": [
+            80,
+            72,
+            8
+          ],
+          "silhouetteSha256": "d248d412569700c38bf59da5d39433bb85295fb230b2cced5abdeac8e453fd50"
+        },
+        {
+          "role": "workshop",
+          "level": 2,
+          "id": "island-house-workshop",
+          "box": [
+            80,
+            72,
+            8
+          ],
+          "silhouetteSha256": "938df0deeaa15435adeeb5fddceefd3baa024dedb4cbd0af5c8717b66fec106a"
+        },
+        {
+          "role": "workshop",
+          "level": 3,
+          "id": "island-house-workshop",
+          "box": [
+            80,
+            72,
+            8
+          ],
+          "silhouetteSha256": "938df0deeaa15435adeeb5fddceefd3baa024dedb4cbd0af5c8717b66fec106a"
+        }
+      ],
+      "browserErrors": [],
+      "blockedRequests": []
+    },
+    {
+      "phase": "after",
+      "width": 375,
+      "height": 812,
+      "path": "../docs/evidence/COC-07-house-levels/after-375x812.png",
+      "frames": [
+        {
+          "role": null,
+          "level": 1,
+          "id": "island-house",
+          "box": [
+            64,
+            64,
+            8
+          ],
+          "silhouetteSha256": "77cac4c6eedd4391df17af8ccd5681858a7cc25fba2ba60d512ce0160e65d1c3"
+        },
+        {
+          "role": null,
+          "level": 2,
+          "id": "island-house-l2",
+          "box": [
+            64,
+            64,
+            8
+          ],
+          "silhouetteSha256": "27d404c1adc4f84c98ae6b88a76dbbafc297431bc4b7b3fdc9ac6fae4058ee02"
+        },
+        {
+          "role": null,
+          "level": 3,
+          "id": "island-house-l3",
+          "box": [
+            64,
+            64,
+            8
+          ],
+          "silhouetteSha256": "59daa7f708080ac73686062027f69a1284c57fd9502c9136602fbf1cf035fa71"
+        },
+        {
+          "role": "barracks",
+          "level": 2,
+          "id": "island-house-barracks",
+          "box": [
+            80,
+            72,
+            8
+          ],
+          "silhouetteSha256": "8cda08e065142812b675ca2b836eb53d4fd461b7c4f281849710c18d3788ecbd"
+        },
+        {
+          "role": "barracks",
+          "level": 3,
+          "id": "island-house-barracks-l3",
+          "box": [
+            80,
+            72,
+            8
+          ],
+          "silhouetteSha256": "1c7be1bd4172261aec004802b2e6bdad756d78b271a3cd729bc00fe110793ceb"
+        },
+        {
+          "role": "tavern",
+          "level": 2,
+          "id": "island-house-tavern",
+          "box": [
+            80,
+            72,
+            8
+          ],
+          "silhouetteSha256": "a6e92f9288476fbba63edb3a8381ed3474a8f39ec71b8805c2a520f10c795d3e"
+        },
+        {
+          "role": "tavern",
+          "level": 3,
+          "id": "island-house-tavern-l3",
+          "box": [
+            80,
+            72,
+            8
+          ],
+          "silhouetteSha256": "9c263099d2cd2f452a62a8236ff0109da88ec8e094c1f1403c755efbbb7c178f"
+        },
+        {
+          "role": "workshop",
+          "level": 2,
+          "id": "island-house-workshop",
+          "box": [
+            80,
+            72,
+            8
+          ],
+          "silhouetteSha256": "d5dfcce99724e9e36e0d5e0b9a4de4f52e08e0ab4d20d169f6ae33a044e89c99"
+        },
+        {
+          "role": "workshop",
+          "level": 3,
+          "id": "island-house-workshop-l3",
+          "box": [
+            80,
+            72,
+            8
+          ],
+          "silhouetteSha256": "cf3a9fb7e243a1537f2a657fac512d6497c53596a6d7f63752e119144b3b8cf2"
+        }
+      ],
+      "browserErrors": [],
+      "blockedRequests": []
+    }
+  ]
+}

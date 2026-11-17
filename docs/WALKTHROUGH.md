@@ -1647,3 +1647,10 @@ runs against disposable local PostgreSQL with every migration applied twice.
 
 **Limits.** This fence protects a paid restore from a report belonging to a wave that started earlier.
 It does not validate the health a modified client reports or order arbitrary stale reports from other waves.
+
+
+## COC-07 — Visible house levels — Johannes Franz Lang
+
+A level-2 house now gains a side room; level 3 adds a taller main building and upper windows. Barracks, Tavern and Workshop keep their existing role signs. The small parameter in `house(role, level)` reuses the current painter; `buildingArt()` selects from the confirmed kind, level and active role. The existing frame boxes and ground anchor remain unchanged, so the drawing does not change building placement or role effects.
+
+[Scope, implementation, exact focused results, limits and three explain-back questions](../specs/COC-07-house-levels.md). [Before/after art fixtures](evidence/COC-07-house-levels/README.md) show all valid combinations at 1280 × 720 and 375 × 812. The new real-Chromium tests check different opaque silhouettes, loaded role frames and the upgrade/disposal lifecycle. These fixtures do not establish full-game, physical-phone or Safari acceptance. Draft review and the coordinated integration checks remain.
