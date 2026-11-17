@@ -57,11 +57,11 @@ function expectedPost(post, group) {
   return {id, points: [[p.x-width/2,bottom,0],[p.x+width/2,bottom,0],[p.x+width/2,top,0],[p.x-width/2,top,0]]};
 }
 
-function hasDrawnPost(mesh, expected) {
-  if (!expected || !visible(mesh) || !unmovedChain(mesh) || mesh.material?.visible === false || !(mesh.material?.opacity > 0)
-    || !textureMatches(mesh.material?.map)) return false;
+function hasDrawnPost(mesh, expected, requireArtwork = true) {
+  if (!expected || !visible(mesh) || mesh.material?.visible === false || !(mesh.material?.opacity > 0)) return false;
+  if (requireArtwork && (!unmovedChain(mesh) || !textureMatches(mesh.material?.map))) return false;
   const position = mesh.geometry?.getAttribute('position'), uv = mesh.geometry?.getAttribute('uv'), index = mesh.geometry?.index;
-  if (!position || !uv || !index) return false;
+  if (!position || !index || requireArtwork && !uv) return false;
   const frame = rects[expected.id], u0 = (frame.x+.5)/256, u1 = (frame.x+frame.w-.5)/256;
   const v0 = 1-(frame.y+frame.h-.5)/WALL_AUDIT_ATLAS.height, v1 = 1-(frame.y+.5)/WALL_AUDIT_ATLAS.height;
   const expectedUV = [[u0,v0],[u1,v0],[u1,v1],[u0,v1]];
@@ -71,7 +71,7 @@ function hasDrawnPost(mesh, expected) {
     const first = index.getX(at), quad = [first, first+1, first+2, first, first+2, first+3];
     if (!quad.every((value, n) => index.getX(at+n) === value)) continue;
     if (expected.points.every((point, n) => point.every((value, axis) => close(position.array[(first+n)*3+axis], value))
-      && expectedUV[n].every((value, axis) => close(uv.array[(first+n)*2+axis], value)))) return true;
+      && (!requireArtwork || expectedUV[n].every((value, axis) => close(uv.array[(first+n)*2+axis], value))))) return true;
   }
   return false;
 }
@@ -88,7 +88,8 @@ export function observeMultiplayerMap(scene, spot) {
   if (!groups.length) {
     if (sprites.length) return {level: sprites.length === 1 ? sprites[0].userData.level ?? 0 : 0, pips, mode: sprites.length === 1 ? 'sprite' : 'invalid-sprites'};
     const previous = lastDrawn.get(scene)?.get(spot);
-    if (previous && allGroups.some(group => group.children.some(mesh => hasDrawnPost(mesh, previous)))) return invalid;
+    // Rejection is deliberately independent of art validity: a remapped/plain stale quad is still a remnant.
+    if (previous && allGroups.some(group => group.children.some(mesh => hasDrawnPost(mesh, previous, false)))) return invalid;
     return {level: 0, pips, mode: previous || !spot.startsWith('wall_') ? 'none' : 'unobserved-wall'};
   }
   if (groups.length !== 1 || sprites.length || pips) return invalid;

@@ -69,6 +69,14 @@ describe('actual multiplayer map observer', () => {
     state.walls.show(rows);
     expect(read(state)).toEqual({level: 0, pips: 0, mode: 'none'}); state.walls.dispose();
   });
+  it.each(['wrong UV', 'no texture', 'moved ancestor'])('rejects a stale teardown remnant despite %s', fault => {
+    const rows = [wall()], state = drawing(rows);
+    expect(read(state).mode).toBe('wall-batch'); rows.splice(0);
+    if (fault === 'wrong UV') state.mesh.geometry.getAttribute('uv').array.fill(0);
+    if (fault === 'no texture') state.mesh.material.map = null;
+    if (fault === 'moved ancestor') state.scene.position.x = 1;
+    invalid(state); state.walls.dispose();
+  });
   it('preserves legacy walls, towers and real pip counts, refusing duplicate renderers', () => {
     const scene = new THREE.Scene(), mesh = new THREE.Group(); mesh.name = 'island-wall:wall_2'; mesh.userData.level = 3; scene.add(mesh);
     for (let n = 1; n <= 3; n++) {const pip = new THREE.Group(); pip.name = `island-pip:wall_2:${n}`; scene.add(pip);}
