@@ -54,7 +54,8 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
   chips.setAttribute('aria-hidden', 'true'); label.className = 'pirate-bar-text pirate-quiet';
   bar.append(label, goal, chips); bar.hidden = true;
   // The first-wave hint (GOAL_HINT): three big pictures with arrows, gone after a few seconds or a tap.
-  const hint = node('button', 'pirate-goal-hint'); hint.type = 'button'; hint.hidden = true; hint.setAttribute('aria-label', 'Dismiss first-wave hint');
+  const hint = node('button', 'pirate-goal-hint'); hint.type = 'button'; hint.hidden = true;
+  hint.setAttribute('aria-label', `${GOAL_HINT.map(([, word]) => word).join(', ')}. Dismiss first-wave hint.`);
   GOAL_HINT.forEach(([icon, word], i) => {
     if (i) hint.append(node('span', 'pirate-goal-hint-arrow', '→'));
     const step = node('span', 'pirate-goal-hint-step'); step.append(node('span', 'pirate-goal-hint-icon', icon), node('span', 'pirate-goal-hint-word', word)); hint.append(step);
