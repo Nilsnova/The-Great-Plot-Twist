@@ -62,7 +62,8 @@ export function guideWalls(defenses = [], stateWalls = null) {
   const live = new Map((stateWalls ?? []).map(wall => [wall.id, wall]));
   return defenses.filter(item => item?.kind === 'wall' && Number.isFinite(item.x) && Number.isFinite(item.z)).map(item => {
     const level = Math.max(1, Math.min(CONFIG.levels.wall.length, Number.isInteger(item.level) ? item.level : 1));
-    const full = round2(CONFIG.levels.wall[level - 1].hp * (skillOf(item).hp ?? 1)), now = live.get(item.id);
+    const researchHp = CONFIG.research[item.bonus]?.hp ?? 1;
+    const full = round2(CONFIG.levels.wall[level - 1].hp * (skillOf(item).hp ?? 1) * researchHp), now = live.get(item.id);
     const maxHp = now?.maxHp > 0 ? now.maxHp : full, hp = now ? Math.max(0, now.hp) : startShare(item.health) * maxHp;
     return { id: item.id, x: item.x, z: item.z, level, hp: round2(hp), maxHp };
   }).sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
@@ -121,10 +122,11 @@ export function guideRoutes({ landings = [], heart, walls = [], towers = [], tow
   return landings.map(landing => ({ id: landing.id, landing, ...guideRoute({ from: landing, heart, walls, towers, towerBlocking, coast, wave }) }));
 }
 
-/** What changes a route: the landings and each wall's quarter of hp (the grid's own breach bands). */
+/** Route identity includes absolute durability: the same quarter of a stronger obstacle costs more to breach. */
 export function routeKey(landings, walls, wave, towers = [], towerBlocking = false) {
   const band = wall => (wall.hp > 0 ? Math.ceil(wall.hp / wall.maxHp * 4) : 0);
-  return `${wave}|${towerBlocking ? 1 : 0}|${landings.map(item => `${item.id}:${item.x},${item.z}`).join(';')}|${walls.map(wall => `${wall.id}:${wall.x},${wall.z}:${band(wall)}`).join(';')}|${towers.map(tower => `${tower.id}:${tower.x},${tower.z}:${band(tower)}`).join(';')}`;
+  const obstacleKey = item => `${item.id}:${item.x},${item.z}:${item.maxHp}:${band(item)}`;
+  return `${wave}|${towerBlocking ? 1 : 0}|${landings.map(item => `${item.id}:${item.x},${item.z}`).join(';')}|${walls.map(obstacleKey).join(';')}|${towers.map(obstacleKey).join(';')}`;
 }
 
 /**
@@ -275,7 +277,7 @@ const BAR = { good: RGB('#7ed957'), low: RGB('#ffd34d'), bad: RGB('#ff4a36') };
  * view: null (hide), or {mode: 'preview'|'wave', lanes (the wave_started lanes, or null: every sea lane), defenses
  * (where the walls stand), stateWalls (the sim's walls in a wave, else null), boarders, heart: {x, z}, wave, dt}.
  * preview draws faintly, over the wall lanes, without wall marks (view.wallLanes: false leaves the lanes out); wave draws everything. The
- * routes are worked out again only when routeKey() changes (a wall placed, broken, rebuilt or past a quarter of hp).
+ * routes are worked out again only when routeKey() changes (position, maximum hp or quarter-health band).
  */
 // sparse(): a phone-sized screen (overlap audit, 15 Nov): half the dots and fewer chevrons, so the routes stay readable.
 // Between waves the preview always draws half the dots and no chevrons.
