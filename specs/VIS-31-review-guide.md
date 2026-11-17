@@ -35,3 +35,12 @@ The updated documentation check passed 43 changed relative links/anchors with
 0 errors and matched 35 public component branch/head/Draft rows. Content checks
 retain the exact byte/result boundaries, old 4,051-suite source and three quiz
 questions. No app command or Chrome run was performed by this task.
+
+## Independent documentation review
+
+A separate read-only reader found that the reproduction snippet invoked the
+older helper in this documentation review base. The guide now explicitly obtains
+a separate checkout pinned to the compiled-compatible VIS36 helper `ad0894bb`,
+while labeling its failed stage-three journey. No app code or test was changed.
+Actor/effect IDs outside the supplied 164-frame set retain their existing
+renderers. Final acceptance still needs the final helper/runtime hashes.

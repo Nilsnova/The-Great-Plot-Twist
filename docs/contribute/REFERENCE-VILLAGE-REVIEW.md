@@ -15,7 +15,9 @@ frozen acceptance source and its fresh full-suite results are still pending.
 A passing component check does not approve a later aggregate revision.
 
 All thirteen original frame families are now compiled: **164 IDs**, including
-cannon, mortar, harpoon, culverin and swivel defenses. Artifact `6a04dbed` totals
+cannon, mortar, harpoon, culverin and swivel defenses. This count describes the
+supplied frame families; actor and transient-effect IDs outside that set retain
+their existing renderers. Artifact `6a04dbed` totals
 **13,608,302 bytes including unchanged terrain**, compared with 29,819,059 raw
 bytes. The 8,388,608-byte effort target is **not met**; the Node codec follow-up
 remains in progress and no further size result is claimed.
@@ -248,15 +250,27 @@ npm run test:overlaps
 
 From the repository root, run `node scripts/text-lint/index.mjs`. Browser
 commands need installed Chrome; set `CHROME_PATH` to the available binary when
-needed. The actual-game helper accepts a separately pinned runtime frontend:
+needed. The actual-game helper accepts a separately pinned runtime frontend. For this
+19:26 checkpoint, VIS36 helper revision `ad0894bbeab96b635322e522c7b1644e38891618`
+is compiled-compatible. The older helper in this documentation review base still
+requires nine raw families; it cannot capture the configured compiled provider.
+Use a separate helper checkout instead of changing an active writer's checkout:
 
 ~~~bash
-node frontend/scripts/capture-village-composition.mjs \
+git clone --no-checkout https://github.com/Nilsnova/The-Great-Plot-Twist.git \
+  /absolute/path/to/helper-checkout
+git -C /absolute/path/to/helper-checkout checkout --detach \
+  ad0894bbeab96b635322e522c7b1644e38891618
+cd /absolute/path/to/helper-checkout/frontend
+npm ci --include=dev --no-audit --no-fund
+node scripts/capture-village-composition.mjs \
   /absolute/path/to/frozen-runtime/frontend /absolute/path/to/output reference
 ~~~
 
-The final compiled-compatible helper revision and its hashes must be recorded;
-do not run the older raw-family-count assertion and call it compiled acceptance.
+This reproduces that checkpoint's helper, not a claim its failed stage-three
+journey passes. Final acceptance must record and use its final helper revision
+and file hashes; do not run the older raw-family-count assertion and label it
+compiled acceptance.
 The current source list and exact bake invocation are in the artifact record.
 No app command above was run by this docs task. Backend/SQL results stay attached
 to their earlier source unless backend changes justify another run. Capture
