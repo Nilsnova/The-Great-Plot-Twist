@@ -7,15 +7,15 @@ shared VIS-04 presentation decision, on unmerged candidate `9dc1bea5`.
 ## Scope
 
 Generate one coherent original transparent source for the existing bell pavilion
-and three actual watchtower frames: base (also selected at levels2/3), level4 and
-level5. Use shaded timber, navy slate, brass/gold, stone foundations and clear
+and three actual watchtower frames: base (also selected at levels 2/3), level 4 and
+level 5. Use shaded timber, navy slate, brass/gold, stone foundations and clear
 upper-left light. No decorative occupant creates a crew member or new weapon.
 
-Root approved a presentation-only bell box of56×72/anchor8; the previous24×40
+Root approved a presentation-only bell box of 56×72/anchor 8; the previous 24×40
 box was too small for the approved pavilion. Its existing ground point,
 interaction zone, keep-out/collider and wave/input rules remain unchanged.
-Watchtower stays64×128/anchor8. The shared provider must apply the same logical
-metrics, aspect-preserving source-foot alignment and fallback normalization in
+Watchtower stays 64×128/anchor 8. The shared provider must apply the same logical
+metrics, aspect-preserving source-foot alignment and preparation-placeholder normalization in
 every renderer. Presentation bounds do not grant land or change collision.
 
 ## Plan and owned files
@@ -38,10 +38,10 @@ from this family branch.
 ## Acceptance and risks
 
 - Bell remains the real ring-the-bell action; decorative details add no service.
-- Watchtower level2/3 still selects its authoritative base; tier4 teal and tier5
+- Watchtower level 2/3 still selects its authoritative base; tier 4 teal and tier 5
   royal-blue/gold-star identity remain legible without adding a new level.
 - Feet align exactly, with complete roof, pennant, posts, foundation and shadow.
-- The larger bell art clears neighbors and real HUD controls at1280×720 /375×812.
+- The larger bell art clears neighbors and real HUD controls at 1280×720 /375×812.
 - Original transparent art is supplementary; actual gameplay decides acceptance.
 
 At claim time no asset, passing application check or runtime evidence is claimed.
@@ -49,5 +49,14 @@ No new dependencies, services, environment changes, backend rules, migrations,
 production flags, main/force push, deployment or merge belongs to this slice.
 
 Explain back: why the bell's visible box can change while its interaction stays
-fixed; which watchtower frame is selected at each real level; and how a failed
-image load keeps a correct logical foot through the shared provider.
+fixed; which watchtower frame is selected at each real level; and why a registered
+image failure rejects clearly while an unprepared synchronous placeholder still
+keeps the correct foot.
+
+## Authored-source handoff
+
+The original four-frame source, measured source rectangles and shared data mapping
+are implemented. [Source and exact boundary checks](../docs/evidence/VIS-12-landmarks/README.md)
+record 2 files / 7 tests passed in 1.32s. Shared provider registration and actual
+desktop/phone bell-neighbor/phase evidence remain coordinated work; this source
+branch does not claim a standalone live visual switch or final acceptance.
