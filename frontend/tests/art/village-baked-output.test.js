@@ -12,6 +12,7 @@ it('binds every generated PNG and unchanged raw source/module to its measured ha
     validateBakedPng(bytes, record);
   }
   for (const input of report.inputs) expect(hash(await readFile(new URL(`../../${input.module}`, import.meta.url)))).toBe(input.sha256);
+  for (const [file, expected] of Object.entries(report.normalizerHashes ?? {})) expect(hash(await readFile(new URL(`../../${file}`, import.meta.url)))).toBe(expected);
   for (const sheet of Object.values(baked.sheets)) expect(report.compiled.files.find(row => row.file === sheet.file)).toMatchObject(sheet);
 });
 it('preserves every current raw ID/logical box/foot and proves all measured maximum-density frames are visible and exact', async () => {
