@@ -1,7 +1,7 @@
 {
   "scope": "offline normalized PNG source compilation; runtime activation/build exclusion and actual-game acceptance remain separate",
-  "sourceCommit": "f635640ec959c08c7cc57856db1bf83533973b9d",
-  "compilerDirtyPaths": "M src/art/village/baked.js\n?? public/village/compiled/mortars-4x-1-96d5d33beed9.png",
+  "sourceCommit": "d39ba70278c7060774a7cc03aa01e44e159cf1ac",
+  "compilerDirtyPaths": "M src/art/village/baked.js\n?? public/village/compiled/culverins-4x-1-55a658a2645c.png\n?? public/village/compiled/harpoons-4x-1-1c4a26b65375.png\n?? public/village/compiled/swivels-4x-1-a20225be2494.png",
   "browser": "156.0.8078.79",
   "families": [
     "buildings",
@@ -13,7 +13,10 @@
     "walls",
     "core",
     "progress",
-    "mortars"
+    "mortars",
+    "harpoons",
+    "culverins",
+    "swivels"
   ],
   "proofDensities": [
     4,
@@ -31,9 +34,12 @@
     "walls": "eb157fc82bd7e1192f65d7cca439fc166bc2fed1",
     "core": "eb157fc82bd7e1192f65d7cca439fc166bc2fed1",
     "progress": "eb157fc82bd7e1192f65d7cca439fc166bc2fed1",
-    "mortars": "f635640ec959c08c7cc57856db1bf83533973b9d"
+    "mortars": "f635640ec959c08c7cc57856db1bf83533973b9d",
+    "harpoons": "d39ba70278c7060774a7cc03aa01e44e159cf1ac",
+    "culverins": "d39ba70278c7060774a7cc03aa01e44e159cf1ac",
+    "swivels": "d39ba70278c7060774a7cc03aa01e44e159cf1ac"
   },
-  "reusedReportSha256": "dc9375a91a39e7db0c69cecee0593cce3dae943e9a0d0314609ea1dc64cc302a",
+  "reusedReportSha256": "103a2c81661580313b589c8f0a67af370351d86fb965152a17d0c91cb057c9ec",
   "normalizerHashes": {
     "src/art/village-raster.js": "ec35729ea275655317c3802fc9d1fe45470fb31ec04ca551450382b1a0dbe3d9",
     "src/art/village-decode.js": "123ea0cbe2a59d6d62e5e6bec7e11a575a1f2cd0cbfec7f09d4f47c78896054f"
@@ -116,10 +122,31 @@
         "sha256": "6c61d30dd35419312568d98e66f80b4d54f5885fc4302475b3a6435fc102719f",
         "width": 1536,
         "height": 1024
+      },
+      {
+        "file": "village/harpoons-v1.png",
+        "bytes": 2004621,
+        "sha256": "46e2050d0c7fc4480babe7f54f210a7a04572c5fe232f51e7943fc30b5a6d755",
+        "width": 1536,
+        "height": 1024
+      },
+      {
+        "file": "village/culverins-v1.png",
+        "bytes": 2257251,
+        "sha256": "c1d8549fd93913df9dfa9ad5977bc77e5a236347dfbc852cdf0ac61875612377",
+        "width": 1536,
+        "height": 1024
+      },
+      {
+        "file": "village/swivels-v1.png",
+        "bytes": 2610002,
+        "sha256": "f9ea99856f45b670f7f708b225c08ab819f393a2b1f4aa69515e2f446c4f5d78",
+        "width": 1536,
+        "height": 1024
       }
     ],
-    "encodedBytes": 20263828,
-    "summedDecodedBytes": 69203144
+    "encodedBytes": 27135702,
+    "summedDecodedBytes": 88077512
   },
   "compiled": {
     "files": [
@@ -192,16 +219,37 @@
         "sha256": "96d5d33beed980a0aea46b69f50e252af2d465cffee49f9385aa836f79887d21",
         "width": 928,
         "height": 1000
+      },
+      {
+        "file": "village/compiled/harpoons-4x-1-1c4a26b65375.png",
+        "bytes": 1009474,
+        "sha256": "1c4a26b653759acf6ff7b5b936222011bfbbae062a96caa40a2de752f5f6fb74",
+        "width": 928,
+        "height": 1000
+      },
+      {
+        "file": "village/compiled/culverins-4x-1-55a658a2645c.png",
+        "bytes": 1164347,
+        "sha256": "55a658a2645c80afe591bf6ea977ec74e8a8133c97e9850c00742f773ed8ba2b",
+        "width": 928,
+        "height": 1000
+      },
+      {
+        "file": "village/compiled/swivels-4x-1-a20225be2494.png",
+        "bytes": 1080933,
+        "sha256": "a20225be24940156dab4973e584233a93aa223d9a27b72640446358581eea01f",
+        "width": 928,
+        "height": 1000
       }
     ],
-    "encodedBytes": 7670191,
-    "summedDecodedBytes": 27407104,
+    "encodedBytes": 10924945,
+    "summedDecodedBytes": 38543104,
     "peakSingleDecodedBytes": 5541888
   },
   "initialTransfer": {
     "unchangedTerrainBytes": 2683357,
-    "rawPlusTerrainBytes": 22947185,
-    "compiledPlusTerrainBytes": 10353548,
+    "rawPlusTerrainBytes": 29819059,
+    "compiledPlusTerrainBytes": 13608302,
     "targetBytes": 8388608,
     "targetMet": false
   },
@@ -3189,6 +3237,1707 @@
             110,
             186,
             102,
+            6
+          ]
+        }
+      }
+    },
+    {
+      "name": "harpoons",
+      "module": "src/art/village/harpoons.js",
+      "sha256": "61163919f704994c4eeeccd947ed50716be05b9669d4605895d4b64dd4b8b078",
+      "frames": {
+        "island-harpoon": {
+          "sheet": {
+            "file": "village/harpoons-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            87,
+            63,
+            185,
+            182
+          ],
+          "sourceFoot": [
+            75,
+            176
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            94,
+            176,
+            110,
+            7
+          ]
+        },
+        "island-harpoon-fire": {
+          "sheet": {
+            "file": "village/harpoons-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            87,
+            327,
+            169,
+            157
+          ],
+          "sourceFoot": [
+            75,
+            151
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            94,
+            176,
+            110,
+            7
+          ]
+        },
+        "island-harpoon-damaged": {
+          "sheet": {
+            "file": "village/harpoons-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            85,
+            563,
+            171,
+            164
+          ],
+          "sourceFoot": [
+            77,
+            157
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            94,
+            176,
+            110,
+            7
+          ]
+        },
+        "island-harpoon-broken": {
+          "sheet": {
+            "file": "village/harpoons-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            68,
+            852,
+            187,
+            84
+          ],
+          "sourceFoot": [
+            94,
+            78
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            94,
+            176,
+            110,
+            7
+          ]
+        },
+        "island-harpoon-l2": {
+          "sheet": {
+            "file": "village/harpoons-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            381,
+            62,
+            186,
+            182
+          ],
+          "sourceFoot": [
+            82,
+            176
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            95,
+            176,
+            104,
+            7
+          ]
+        },
+        "island-harpoon-fire-l2": {
+          "sheet": {
+            "file": "village/harpoons-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            384,
+            327,
+            179,
+            157
+          ],
+          "sourceFoot": [
+            79,
+            151
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            95,
+            176,
+            104,
+            7
+          ]
+        },
+        "island-harpoon-l2-damaged": {
+          "sheet": {
+            "file": "village/harpoons-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            380,
+            560,
+            175,
+            166
+          ],
+          "sourceFoot": [
+            83,
+            159
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            95,
+            176,
+            104,
+            7
+          ]
+        },
+        "island-harpoon-l2-broken": {
+          "sheet": {
+            "file": "village/harpoons-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            368,
+            848,
+            193,
+            88
+          ],
+          "sourceFoot": [
+            95,
+            82
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            95,
+            176,
+            104,
+            7
+          ]
+        },
+        "island-harpoon-l3": {
+          "sheet": {
+            "file": "village/harpoons-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            683,
+            61,
+            181,
+            184
+          ],
+          "sourceFoot": [
+            80,
+            178
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            100,
+            178,
+            103,
+            7
+          ]
+        },
+        "island-harpoon-fire-l3": {
+          "sheet": {
+            "file": "village/harpoons-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            683,
+            323,
+            183,
+            162
+          ],
+          "sourceFoot": [
+            80,
+            156
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            100,
+            178,
+            103,
+            7
+          ]
+        },
+        "island-harpoon-l3-damaged": {
+          "sheet": {
+            "file": "village/harpoons-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            676,
+            560,
+            176,
+            167
+          ],
+          "sourceFoot": [
+            87,
+            160
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            100,
+            178,
+            103,
+            7
+          ]
+        },
+        "island-harpoon-l3-broken": {
+          "sheet": {
+            "file": "village/harpoons-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            663,
+            846,
+            196,
+            91
+          ],
+          "sourceFoot": [
+            100,
+            85
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            100,
+            178,
+            103,
+            7
+          ]
+        },
+        "island-harpoon-l4": {
+          "sheet": {
+            "file": "village/harpoons-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            982,
+            61,
+            187,
+            183
+          ],
+          "sourceFoot": [
+            82,
+            177
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            99,
+            177,
+            110,
+            7
+          ]
+        },
+        "island-harpoon-fire-l4": {
+          "sheet": {
+            "file": "village/harpoons-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            984,
+            323,
+            190,
+            161
+          ],
+          "sourceFoot": [
+            80,
+            155
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            99,
+            177,
+            110,
+            7
+          ]
+        },
+        "island-harpoon-l4-damaged": {
+          "sheet": {
+            "file": "village/harpoons-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            978,
+            559,
+            180,
+            168
+          ],
+          "sourceFoot": [
+            86,
+            161
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            99,
+            177,
+            110,
+            7
+          ]
+        },
+        "island-harpoon-l4-broken": {
+          "sheet": {
+            "file": "village/harpoons-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            965,
+            847,
+            199,
+            88
+          ],
+          "sourceFoot": [
+            99,
+            82
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            99,
+            177,
+            110,
+            7
+          ]
+        },
+        "island-harpoon-l5": {
+          "sheet": {
+            "file": "village/harpoons-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            1279,
+            61,
+            190,
+            184
+          ],
+          "sourceFoot": [
+            85,
+            178
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            96,
+            178,
+            109,
+            7
+          ]
+        },
+        "island-harpoon-fire-l5": {
+          "sheet": {
+            "file": "village/harpoons-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            1280,
+            320,
+            193,
+            165
+          ],
+          "sourceFoot": [
+            84,
+            159
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            96,
+            178,
+            109,
+            7
+          ]
+        },
+        "island-harpoon-l5-damaged": {
+          "sheet": {
+            "file": "village/harpoons-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            1277,
+            557,
+            186,
+            170
+          ],
+          "sourceFoot": [
+            87,
+            163
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            96,
+            178,
+            109,
+            7
+          ]
+        },
+        "island-harpoon-l5-broken": {
+          "sheet": {
+            "file": "village/harpoons-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            1268,
+            842,
+            201,
+            96
+          ],
+          "sourceFoot": [
+            96,
+            90
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            96,
+            178,
+            109,
+            7
+          ]
+        }
+      }
+    },
+    {
+      "name": "culverins",
+      "module": "src/art/village/culverins.js",
+      "sha256": "7091381c7158629cddc86e37dd93d832e1c42c2f1deb4f549d36cea0ffd2b480",
+      "frames": {
+        "island-culverin": {
+          "sheet": {
+            "file": "village/culverins-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            52,
+            67,
+            198,
+            184
+          ],
+          "sourceFoot": [
+            95,
+            175
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            112,
+            180,
+            119,
+            9
+          ]
+        },
+        "island-culverin-fire": {
+          "sheet": {
+            "file": "village/culverins-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            51,
+            318,
+            214,
+            188
+          ],
+          "sourceFoot": [
+            96,
+            179
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            112,
+            180,
+            119,
+            9
+          ]
+        },
+        "island-culverin-damaged": {
+          "sheet": {
+            "file": "village/culverins-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            52,
+            571,
+            198,
+            189
+          ],
+          "sourceFoot": [
+            95,
+            180
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            112,
+            180,
+            119,
+            9
+          ]
+        },
+        "island-culverin-broken": {
+          "sheet": {
+            "file": "village/culverins-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            35,
+            848,
+            231,
+            141
+          ],
+          "sourceFoot": [
+            112,
+            132
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            112,
+            180,
+            119,
+            9
+          ]
+        },
+        "island-culverin-l2": {
+          "sheet": {
+            "file": "village/culverins-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            342,
+            67,
+            214,
+            184
+          ],
+          "sourceFoot": [
+            106,
+            175
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            123,
+            178,
+            129,
+            9
+          ]
+        },
+        "island-culverin-fire-l2": {
+          "sheet": {
+            "file": "village/culverins-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            341,
+            318,
+            218,
+            187
+          ],
+          "sourceFoot": [
+            107,
+            178
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            123,
+            178,
+            129,
+            9
+          ]
+        },
+        "island-culverin-l2-damaged": {
+          "sheet": {
+            "file": "village/culverins-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            342,
+            571,
+            217,
+            187
+          ],
+          "sourceFoot": [
+            106,
+            178
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            123,
+            178,
+            129,
+            9
+          ]
+        },
+        "island-culverin-l2-broken": {
+          "sheet": {
+            "file": "village/culverins-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            325,
+            848,
+            252,
+            139
+          ],
+          "sourceFoot": [
+            123,
+            130
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            123,
+            178,
+            129,
+            9
+          ]
+        },
+        "island-culverin-l3": {
+          "sheet": {
+            "file": "village/culverins-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            622,
+            67,
+            224,
+            180
+          ],
+          "sourceFoot": [
+            113,
+            171
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            113,
+            179,
+            142,
+            9
+          ]
+        },
+        "island-culverin-fire-l3": {
+          "sheet": {
+            "file": "village/culverins-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            623,
+            314,
+            223,
+            188
+          ],
+          "sourceFoot": [
+            112,
+            179
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            113,
+            179,
+            142,
+            9
+          ]
+        },
+        "island-culverin-l3-damaged": {
+          "sheet": {
+            "file": "village/culverins-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            623,
+            571,
+            221,
+            186
+          ],
+          "sourceFoot": [
+            112,
+            177
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            113,
+            179,
+            142,
+            9
+          ]
+        },
+        "island-culverin-l3-broken": {
+          "sheet": {
+            "file": "village/culverins-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            623,
+            844,
+            254,
+            149
+          ],
+          "sourceFoot": [
+            112,
+            140
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            113,
+            179,
+            142,
+            9
+          ]
+        },
+        "island-culverin-l4": {
+          "sheet": {
+            "file": "village/culverins-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            925,
+            62,
+            238,
+            192
+          ],
+          "sourceFoot": [
+            117,
+            183
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            126,
+            191,
+            132,
+            9
+          ]
+        },
+        "island-culverin-fire-l4": {
+          "sheet": {
+            "file": "village/culverins-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            925,
+            308,
+            238,
+            200
+          ],
+          "sourceFoot": [
+            117,
+            191
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            126,
+            191,
+            132,
+            9
+          ]
+        },
+        "island-culverin-l4-damaged": {
+          "sheet": {
+            "file": "village/culverins-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            925,
+            567,
+            237,
+            194
+          ],
+          "sourceFoot": [
+            117,
+            185
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            126,
+            191,
+            132,
+            9
+          ]
+        },
+        "island-culverin-l4-broken": {
+          "sheet": {
+            "file": "village/culverins-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            916,
+            842,
+            258,
+            147
+          ],
+          "sourceFoot": [
+            126,
+            138
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            126,
+            191,
+            132,
+            9
+          ]
+        },
+        "island-culverin-l5": {
+          "sheet": {
+            "file": "village/culverins-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            1226,
+            64,
+            263,
+            186
+          ],
+          "sourceFoot": [
+            132,
+            177
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            133,
+            185,
+            149,
+            9
+          ]
+        },
+        "island-culverin-fire-l5": {
+          "sheet": {
+            "file": "village/culverins-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            1226,
+            312,
+            263,
+            194
+          ],
+          "sourceFoot": [
+            132,
+            185
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            133,
+            185,
+            149,
+            9
+          ]
+        },
+        "island-culverin-l5-damaged": {
+          "sheet": {
+            "file": "village/culverins-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            1227,
+            571,
+            261,
+            188
+          ],
+          "sourceFoot": [
+            131,
+            179
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            133,
+            185,
+            149,
+            9
+          ]
+        },
+        "island-culverin-l5-broken": {
+          "sheet": {
+            "file": "village/culverins-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            1225,
+            847,
+            282,
+            145
+          ],
+          "sourceFoot": [
+            133,
+            136
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            133,
+            185,
+            149,
+            9
+          ]
+        }
+      }
+    },
+    {
+      "name": "swivels",
+      "module": "src/art/village/swivels.js",
+      "sha256": "f611fbde44475d06bbc8b63c3aeacfa7e063e47ccb4e8a432fe04d0b544a913b",
+      "frames": {
+        "island-swivel": {
+          "sheet": {
+            "file": "village/swivels-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            41,
+            58,
+            216,
+            192
+          ],
+          "sourceFoot": [
+            108,
+            186
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            130,
+            239,
+            135,
+            6
+          ]
+        },
+        "island-swivel-fire": {
+          "sheet": {
+            "file": "village/swivels-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            41,
+            315,
+            243,
+            191
+          ],
+          "sourceFoot": [
+            108,
+            185
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            130,
+            239,
+            135,
+            6
+          ]
+        },
+        "island-swivel-damaged": {
+          "sheet": {
+            "file": "village/swivels-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            38,
+            532,
+            223,
+            245
+          ],
+          "sourceFoot": [
+            112,
+            239
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            130,
+            239,
+            135,
+            6
+          ]
+        },
+        "island-swivel-broken": {
+          "sheet": {
+            "file": "village/swivels-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            25,
+            873,
+            260,
+            127
+          ],
+          "sourceFoot": [
+            130,
+            121
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            130,
+            239,
+            135,
+            6
+          ]
+        },
+        "island-swivel-l2": {
+          "sheet": {
+            "file": "village/swivels-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            334,
+            52,
+            228,
+            202
+          ],
+          "sourceFoot": [
+            114,
+            196
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            147,
+            244,
+            134,
+            6
+          ]
+        },
+        "island-swivel-fire-l2": {
+          "sheet": {
+            "file": "village/swivels-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            334,
+            309,
+            248,
+            200
+          ],
+          "sourceFoot": [
+            114,
+            194
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            147,
+            244,
+            134,
+            6
+          ]
+        },
+        "island-swivel-l2-damaged": {
+          "sheet": {
+            "file": "village/swivels-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            328,
+            531,
+            242,
+            250
+          ],
+          "sourceFoot": [
+            121,
+            244
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            147,
+            244,
+            134,
+            6
+          ]
+        },
+        "island-swivel-l2-broken": {
+          "sheet": {
+            "file": "village/swivels-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            309,
+            863,
+            265,
+            139
+          ],
+          "sourceFoot": [
+            147,
+            133
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            147,
+            244,
+            134,
+            6
+          ]
+        },
+        "island-swivel-l3": {
+          "sheet": {
+            "file": "village/swivels-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            627,
+            51,
+            240,
+            207
+          ],
+          "sourceFoot": [
+            120,
+            201
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            146,
+            245,
+            144,
+            6
+          ]
+        },
+        "island-swivel-fire-l3": {
+          "sheet": {
+            "file": "village/swivels-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            627,
+            309,
+            249,
+            204
+          ],
+          "sourceFoot": [
+            120,
+            198
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            146,
+            245,
+            144,
+            6
+          ]
+        },
+        "island-swivel-l3-damaged": {
+          "sheet": {
+            "file": "village/swivels-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            612,
+            531,
+            267,
+            251
+          ],
+          "sourceFoot": [
+            135,
+            245
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            146,
+            245,
+            144,
+            6
+          ]
+        },
+        "island-swivel-l3-broken": {
+          "sheet": {
+            "file": "village/swivels-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            606,
+            857,
+            290,
+            147
+          ],
+          "sourceFoot": [
+            146,
+            141
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            146,
+            245,
+            144,
+            6
+          ]
+        },
+        "island-swivel-l4": {
+          "sheet": {
+            "file": "village/swivels-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            931,
+            31,
+            253,
+            227
+          ],
+          "sourceFoot": [
+            126,
+            221
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            141,
+            244,
+            155,
+            6
+          ]
+        },
+        "island-swivel-fire-l4": {
+          "sheet": {
+            "file": "village/swivels-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            931,
+            287,
+            264,
+            227
+          ],
+          "sourceFoot": [
+            126,
+            221
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            141,
+            244,
+            155,
+            6
+          ]
+        },
+        "island-swivel-l4-damaged": {
+          "sheet": {
+            "file": "village/swivels-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            928,
+            533,
+            257,
+            250
+          ],
+          "sourceFoot": [
+            129,
+            244
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            141,
+            244,
+            155,
+            6
+          ]
+        },
+        "island-swivel-l4-broken": {
+          "sheet": {
+            "file": "village/swivels-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            916,
+            819,
+            296,
+            186
+          ],
+          "sourceFoot": [
+            141,
+            180
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            141,
+            244,
+            155,
+            6
+          ]
+        },
+        "island-swivel-l5": {
+          "sheet": {
+            "file": "village/swivels-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            1237,
+            28,
+            267,
+            230
+          ],
+          "sourceFoot": [
+            134,
+            224
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            141,
+            240,
+            148,
+            6
+          ]
+        },
+        "island-swivel-fire-l5": {
+          "sheet": {
+            "file": "village/swivels-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            1238,
+            280,
+            275,
+            233
+          ],
+          "sourceFoot": [
+            133,
+            227
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            141,
+            240,
+            148,
+            6
+          ]
+        },
+        "island-swivel-l5-damaged": {
+          "sheet": {
+            "file": "village/swivels-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            1230,
+            535,
+            279,
+            246
+          ],
+          "sourceFoot": [
+            141,
+            240
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            141,
+            240,
+            148,
+            6
+          ]
+        },
+        "island-swivel-l5-broken": {
+          "sheet": {
+            "file": "village/swivels-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            1233,
+            812,
+            288,
+            194
+          ],
+          "sourceFoot": [
+            140,
+            188
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            141,
+            240,
+            148,
             6
           ]
         }
@@ -6195,6 +7944,1689 @@
           ]
         }
       }
+    },
+    {
+      "name": "harpoons",
+      "pages": [
+        {
+          "file": "village/compiled/harpoons-4x-1-1c4a26b65375.png",
+          "width": 928,
+          "height": 1000,
+          "items": [
+            {
+              "id": "island-harpoon",
+              "rect": [
+                4,
+                4,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-harpoon-broken",
+              "rect": [
+                236,
+                4,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-harpoon-damaged",
+              "rect": [
+                468,
+                4,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-harpoon-fire",
+              "rect": [
+                700,
+                4,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-harpoon-fire-l2",
+              "rect": [
+                4,
+                204,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-harpoon-fire-l3",
+              "rect": [
+                236,
+                204,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-harpoon-fire-l4",
+              "rect": [
+                468,
+                204,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-harpoon-fire-l5",
+              "rect": [
+                700,
+                204,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-harpoon-l2",
+              "rect": [
+                4,
+                404,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-harpoon-l2-broken",
+              "rect": [
+                236,
+                404,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-harpoon-l2-damaged",
+              "rect": [
+                468,
+                404,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-harpoon-l3",
+              "rect": [
+                700,
+                404,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-harpoon-l3-broken",
+              "rect": [
+                4,
+                604,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-harpoon-l3-damaged",
+              "rect": [
+                236,
+                604,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-harpoon-l4",
+              "rect": [
+                468,
+                604,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-harpoon-l4-broken",
+              "rect": [
+                700,
+                604,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-harpoon-l4-damaged",
+              "rect": [
+                4,
+                804,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-harpoon-l5",
+              "rect": [
+                236,
+                804,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-harpoon-l5-broken",
+              "rect": [
+                468,
+                804,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-harpoon-l5-damaged",
+              "rect": [
+                700,
+                804,
+                224,
+                192
+              ]
+            }
+          ]
+        }
+      ],
+      "sheets": {
+        "harpoonsBaked1": {
+          "file": "village/compiled/harpoons-4x-1-1c4a26b65375.png",
+          "width": 928,
+          "height": 1000
+        }
+      },
+      "frames": {
+        "island-harpoon": {
+          "sheet": "harpoonsBaked1",
+          "rect": [
+            4,
+            4,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-harpoon-fire": {
+          "sheet": "harpoonsBaked1",
+          "rect": [
+            700,
+            4,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-harpoon-damaged": {
+          "sheet": "harpoonsBaked1",
+          "rect": [
+            468,
+            4,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-harpoon-broken": {
+          "sheet": "harpoonsBaked1",
+          "rect": [
+            236,
+            4,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-harpoon-l2": {
+          "sheet": "harpoonsBaked1",
+          "rect": [
+            4,
+            404,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-harpoon-fire-l2": {
+          "sheet": "harpoonsBaked1",
+          "rect": [
+            4,
+            204,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-harpoon-l2-damaged": {
+          "sheet": "harpoonsBaked1",
+          "rect": [
+            468,
+            404,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-harpoon-l2-broken": {
+          "sheet": "harpoonsBaked1",
+          "rect": [
+            236,
+            404,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-harpoon-l3": {
+          "sheet": "harpoonsBaked1",
+          "rect": [
+            700,
+            404,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-harpoon-fire-l3": {
+          "sheet": "harpoonsBaked1",
+          "rect": [
+            236,
+            204,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-harpoon-l3-damaged": {
+          "sheet": "harpoonsBaked1",
+          "rect": [
+            236,
+            604,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-harpoon-l3-broken": {
+          "sheet": "harpoonsBaked1",
+          "rect": [
+            4,
+            604,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-harpoon-l4": {
+          "sheet": "harpoonsBaked1",
+          "rect": [
+            468,
+            604,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-harpoon-fire-l4": {
+          "sheet": "harpoonsBaked1",
+          "rect": [
+            468,
+            204,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-harpoon-l4-damaged": {
+          "sheet": "harpoonsBaked1",
+          "rect": [
+            4,
+            804,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-harpoon-l4-broken": {
+          "sheet": "harpoonsBaked1",
+          "rect": [
+            700,
+            604,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-harpoon-l5": {
+          "sheet": "harpoonsBaked1",
+          "rect": [
+            236,
+            804,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-harpoon-fire-l5": {
+          "sheet": "harpoonsBaked1",
+          "rect": [
+            700,
+            204,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-harpoon-l5-damaged": {
+          "sheet": "harpoonsBaked1",
+          "rect": [
+            700,
+            804,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-harpoon-l5-broken": {
+          "sheet": "harpoonsBaked1",
+          "rect": [
+            468,
+            804,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        }
+      }
+    },
+    {
+      "name": "culverins",
+      "pages": [
+        {
+          "file": "village/compiled/culverins-4x-1-55a658a2645c.png",
+          "width": 928,
+          "height": 1000,
+          "items": [
+            {
+              "id": "island-culverin",
+              "rect": [
+                4,
+                4,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-culverin-broken",
+              "rect": [
+                236,
+                4,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-culverin-damaged",
+              "rect": [
+                468,
+                4,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-culverin-fire",
+              "rect": [
+                700,
+                4,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-culverin-fire-l2",
+              "rect": [
+                4,
+                204,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-culverin-fire-l3",
+              "rect": [
+                236,
+                204,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-culverin-fire-l4",
+              "rect": [
+                468,
+                204,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-culverin-fire-l5",
+              "rect": [
+                700,
+                204,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-culverin-l2",
+              "rect": [
+                4,
+                404,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-culverin-l2-broken",
+              "rect": [
+                236,
+                404,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-culverin-l2-damaged",
+              "rect": [
+                468,
+                404,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-culverin-l3",
+              "rect": [
+                700,
+                404,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-culverin-l3-broken",
+              "rect": [
+                4,
+                604,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-culverin-l3-damaged",
+              "rect": [
+                236,
+                604,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-culverin-l4",
+              "rect": [
+                468,
+                604,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-culverin-l4-broken",
+              "rect": [
+                700,
+                604,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-culverin-l4-damaged",
+              "rect": [
+                4,
+                804,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-culverin-l5",
+              "rect": [
+                236,
+                804,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-culverin-l5-broken",
+              "rect": [
+                468,
+                804,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-culverin-l5-damaged",
+              "rect": [
+                700,
+                804,
+                224,
+                192
+              ]
+            }
+          ]
+        }
+      ],
+      "sheets": {
+        "culverinsBaked1": {
+          "file": "village/compiled/culverins-4x-1-55a658a2645c.png",
+          "width": 928,
+          "height": 1000
+        }
+      },
+      "frames": {
+        "island-culverin": {
+          "sheet": "culverinsBaked1",
+          "rect": [
+            4,
+            4,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-culverin-fire": {
+          "sheet": "culverinsBaked1",
+          "rect": [
+            700,
+            4,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-culverin-damaged": {
+          "sheet": "culverinsBaked1",
+          "rect": [
+            468,
+            4,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-culverin-broken": {
+          "sheet": "culverinsBaked1",
+          "rect": [
+            236,
+            4,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-culverin-l2": {
+          "sheet": "culverinsBaked1",
+          "rect": [
+            4,
+            404,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-culverin-fire-l2": {
+          "sheet": "culverinsBaked1",
+          "rect": [
+            4,
+            204,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-culverin-l2-damaged": {
+          "sheet": "culverinsBaked1",
+          "rect": [
+            468,
+            404,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-culverin-l2-broken": {
+          "sheet": "culverinsBaked1",
+          "rect": [
+            236,
+            404,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-culverin-l3": {
+          "sheet": "culverinsBaked1",
+          "rect": [
+            700,
+            404,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-culverin-fire-l3": {
+          "sheet": "culverinsBaked1",
+          "rect": [
+            236,
+            204,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-culverin-l3-damaged": {
+          "sheet": "culverinsBaked1",
+          "rect": [
+            236,
+            604,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-culverin-l3-broken": {
+          "sheet": "culverinsBaked1",
+          "rect": [
+            4,
+            604,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-culverin-l4": {
+          "sheet": "culverinsBaked1",
+          "rect": [
+            468,
+            604,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-culverin-fire-l4": {
+          "sheet": "culverinsBaked1",
+          "rect": [
+            468,
+            204,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-culverin-l4-damaged": {
+          "sheet": "culverinsBaked1",
+          "rect": [
+            4,
+            804,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-culverin-l4-broken": {
+          "sheet": "culverinsBaked1",
+          "rect": [
+            700,
+            604,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-culverin-l5": {
+          "sheet": "culverinsBaked1",
+          "rect": [
+            236,
+            804,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-culverin-fire-l5": {
+          "sheet": "culverinsBaked1",
+          "rect": [
+            700,
+            204,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-culverin-l5-damaged": {
+          "sheet": "culverinsBaked1",
+          "rect": [
+            700,
+            804,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-culverin-l5-broken": {
+          "sheet": "culverinsBaked1",
+          "rect": [
+            468,
+            804,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        }
+      }
+    },
+    {
+      "name": "swivels",
+      "pages": [
+        {
+          "file": "village/compiled/swivels-4x-1-a20225be2494.png",
+          "width": 928,
+          "height": 1000,
+          "items": [
+            {
+              "id": "island-swivel",
+              "rect": [
+                4,
+                4,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-swivel-broken",
+              "rect": [
+                236,
+                4,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-swivel-damaged",
+              "rect": [
+                468,
+                4,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-swivel-fire",
+              "rect": [
+                700,
+                4,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-swivel-fire-l2",
+              "rect": [
+                4,
+                204,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-swivel-fire-l3",
+              "rect": [
+                236,
+                204,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-swivel-fire-l4",
+              "rect": [
+                468,
+                204,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-swivel-fire-l5",
+              "rect": [
+                700,
+                204,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-swivel-l2",
+              "rect": [
+                4,
+                404,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-swivel-l2-broken",
+              "rect": [
+                236,
+                404,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-swivel-l2-damaged",
+              "rect": [
+                468,
+                404,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-swivel-l3",
+              "rect": [
+                700,
+                404,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-swivel-l3-broken",
+              "rect": [
+                4,
+                604,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-swivel-l3-damaged",
+              "rect": [
+                236,
+                604,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-swivel-l4",
+              "rect": [
+                468,
+                604,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-swivel-l4-broken",
+              "rect": [
+                700,
+                604,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-swivel-l4-damaged",
+              "rect": [
+                4,
+                804,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-swivel-l5",
+              "rect": [
+                236,
+                804,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-swivel-l5-broken",
+              "rect": [
+                468,
+                804,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-swivel-l5-damaged",
+              "rect": [
+                700,
+                804,
+                224,
+                192
+              ]
+            }
+          ]
+        }
+      ],
+      "sheets": {
+        "swivelsBaked1": {
+          "file": "village/compiled/swivels-4x-1-a20225be2494.png",
+          "width": 928,
+          "height": 1000
+        }
+      },
+      "frames": {
+        "island-swivel": {
+          "sheet": "swivelsBaked1",
+          "rect": [
+            4,
+            4,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-swivel-fire": {
+          "sheet": "swivelsBaked1",
+          "rect": [
+            700,
+            4,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-swivel-damaged": {
+          "sheet": "swivelsBaked1",
+          "rect": [
+            468,
+            4,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-swivel-broken": {
+          "sheet": "swivelsBaked1",
+          "rect": [
+            236,
+            4,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-swivel-l2": {
+          "sheet": "swivelsBaked1",
+          "rect": [
+            4,
+            404,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-swivel-fire-l2": {
+          "sheet": "swivelsBaked1",
+          "rect": [
+            4,
+            204,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-swivel-l2-damaged": {
+          "sheet": "swivelsBaked1",
+          "rect": [
+            468,
+            404,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-swivel-l2-broken": {
+          "sheet": "swivelsBaked1",
+          "rect": [
+            236,
+            404,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-swivel-l3": {
+          "sheet": "swivelsBaked1",
+          "rect": [
+            700,
+            404,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-swivel-fire-l3": {
+          "sheet": "swivelsBaked1",
+          "rect": [
+            236,
+            204,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-swivel-l3-damaged": {
+          "sheet": "swivelsBaked1",
+          "rect": [
+            236,
+            604,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-swivel-l3-broken": {
+          "sheet": "swivelsBaked1",
+          "rect": [
+            4,
+            604,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-swivel-l4": {
+          "sheet": "swivelsBaked1",
+          "rect": [
+            468,
+            604,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-swivel-fire-l4": {
+          "sheet": "swivelsBaked1",
+          "rect": [
+            468,
+            204,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-swivel-l4-damaged": {
+          "sheet": "swivelsBaked1",
+          "rect": [
+            4,
+            804,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-swivel-l4-broken": {
+          "sheet": "swivelsBaked1",
+          "rect": [
+            700,
+            604,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-swivel-l5": {
+          "sheet": "swivelsBaked1",
+          "rect": [
+            236,
+            804,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-swivel-fire-l5": {
+          "sheet": "swivelsBaked1",
+          "rect": [
+            700,
+            204,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-swivel-l5-damaged": {
+          "sheet": "swivelsBaked1",
+          "rect": [
+            700,
+            804,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-swivel-l5-broken": {
+          "sheet": "swivelsBaked1",
+          "rect": [
+            468,
+            804,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        }
+      }
     }
   ],
   "compilerMemory": [
@@ -6263,6 +9695,27 @@
     },
     {
       "family": "mortars",
+      "peakSourceBytes": 6291456,
+      "retainedDecodedAfterRelease": 0,
+      "canvasBytes": 3712000,
+      "largestTemporaryCanvasBytes": 172032
+    },
+    {
+      "family": "harpoons",
+      "peakSourceBytes": 6291456,
+      "retainedDecodedAfterRelease": 0,
+      "canvasBytes": 3712000,
+      "largestTemporaryCanvasBytes": 172032
+    },
+    {
+      "family": "culverins",
+      "peakSourceBytes": 6291456,
+      "retainedDecodedAfterRelease": 0,
+      "canvasBytes": 3712000,
+      "largestTemporaryCanvasBytes": 172032
+    },
+    {
+      "family": "swivels",
       "peakSourceBytes": 6291456,
       "retainedDecodedAfterRelease": 0,
       "canvasBytes": 3712000,
@@ -10495,6 +13948,2427 @@
           "maxVisibleDelta": 255,
           "maxAlphaDelta": 43,
           "alphaWeightedMeanRgbDelta": 4.042217458382614
+        }
+      ],
+      "peakSourceBytes": 6291456,
+      "retainedDecodedAfterRelease": 0
+    },
+    {
+      "family": "harpoons",
+      "results": [
+        {
+          "id": "island-harpoon",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 17904,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-harpoon",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 7035,
+          "differingPixels": 5800,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 35,
+          "alphaWeightedMeanRgbDelta": 2.2188955708676903
+        },
+        {
+          "id": "island-harpoon",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4379,
+          "differingPixels": 3711,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 26,
+          "alphaWeightedMeanRgbDelta": 2.1510472213781946
+        },
+        {
+          "id": "island-harpoon",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2483,
+          "differingPixels": 2232,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 38,
+          "alphaWeightedMeanRgbDelta": 3.501504059548601
+        },
+        {
+          "id": "island-harpoon-fire",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 17184,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-harpoon-fire",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 6753,
+          "differingPixels": 5494,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 31,
+          "alphaWeightedMeanRgbDelta": 2.2797650279822603
+        },
+        {
+          "id": "island-harpoon-fire",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4188,
+          "differingPixels": 3492,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 23,
+          "alphaWeightedMeanRgbDelta": 2.475686262058026
+        },
+        {
+          "id": "island-harpoon-fire",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2374,
+          "differingPixels": 2099,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 28,
+          "alphaWeightedMeanRgbDelta": 3.8195537143056795
+        },
+        {
+          "id": "island-harpoon-damaged",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 18474,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-harpoon-damaged",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 7258,
+          "differingPixels": 5888,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 32,
+          "alphaWeightedMeanRgbDelta": 2.2943972063179
+        },
+        {
+          "id": "island-harpoon-damaged",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4555,
+          "differingPixels": 3777,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 22,
+          "alphaWeightedMeanRgbDelta": 2.333971094917088
+        },
+        {
+          "id": "island-harpoon-damaged",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2571,
+          "differingPixels": 2228,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 38,
+          "alphaWeightedMeanRgbDelta": 3.7395674110946397
+        },
+        {
+          "id": "island-harpoon-broken",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 10295,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-harpoon-broken",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 4048,
+          "differingPixels": 3532,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 30,
+          "alphaWeightedMeanRgbDelta": 2.515738333044224
+        },
+        {
+          "id": "island-harpoon-broken",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 2536,
+          "differingPixels": 2239,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 28,
+          "alphaWeightedMeanRgbDelta": 2.4919889408661007
+        },
+        {
+          "id": "island-harpoon-broken",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 1442,
+          "differingPixels": 1322,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 41,
+          "alphaWeightedMeanRgbDelta": 3.99317945795804
+        },
+        {
+          "id": "island-harpoon-l2",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 18814,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-harpoon-l2",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 7374,
+          "differingPixels": 6082,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 34,
+          "alphaWeightedMeanRgbDelta": 2.4033173474092067
+        },
+        {
+          "id": "island-harpoon-l2",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4615,
+          "differingPixels": 3917,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 27,
+          "alphaWeightedMeanRgbDelta": 2.5832185441907907
+        },
+        {
+          "id": "island-harpoon-l2",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2607,
+          "differingPixels": 2304,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 42,
+          "alphaWeightedMeanRgbDelta": 4.100811482925718
+        },
+        {
+          "id": "island-harpoon-fire-l2",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 18800,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-harpoon-fire-l2",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 7409,
+          "differingPixels": 5945,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 28,
+          "alphaWeightedMeanRgbDelta": 2.319174773224
+        },
+        {
+          "id": "island-harpoon-fire-l2",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4560,
+          "differingPixels": 3771,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 21,
+          "alphaWeightedMeanRgbDelta": 2.4337910276498937
+        },
+        {
+          "id": "island-harpoon-fire-l2",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2583,
+          "differingPixels": 2263,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 41,
+          "alphaWeightedMeanRgbDelta": 3.771156150008252
+        },
+        {
+          "id": "island-harpoon-l2-damaged",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 19010,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-harpoon-l2-damaged",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 7457,
+          "differingPixels": 6131,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 31,
+          "alphaWeightedMeanRgbDelta": 2.3128638347603574
+        },
+        {
+          "id": "island-harpoon-l2-damaged",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4701,
+          "differingPixels": 4009,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 27,
+          "alphaWeightedMeanRgbDelta": 2.2956132197106056
+        },
+        {
+          "id": "island-harpoon-l2-damaged",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2669,
+          "differingPixels": 2355,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 44,
+          "alphaWeightedMeanRgbDelta": 3.513353525985866
+        },
+        {
+          "id": "island-harpoon-l2-broken",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 11490,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-harpoon-l2-broken",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 4518,
+          "differingPixels": 3907,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 31,
+          "alphaWeightedMeanRgbDelta": 2.522833018920116
+        },
+        {
+          "id": "island-harpoon-l2-broken",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 2848,
+          "differingPixels": 2501,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 23,
+          "alphaWeightedMeanRgbDelta": 2.456840780632357
+        },
+        {
+          "id": "island-harpoon-l2-broken",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 1608,
+          "differingPixels": 1480,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 33,
+          "alphaWeightedMeanRgbDelta": 3.87911097212886
+        },
+        {
+          "id": "island-harpoon-l3",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 19014,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-harpoon-l3",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 7453,
+          "differingPixels": 6170,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 35,
+          "alphaWeightedMeanRgbDelta": 2.414058354898639
+        },
+        {
+          "id": "island-harpoon-l3",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4677,
+          "differingPixels": 3955,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 25,
+          "alphaWeightedMeanRgbDelta": 2.4395388097687025
+        },
+        {
+          "id": "island-harpoon-l3",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2655,
+          "differingPixels": 2368,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 42,
+          "alphaWeightedMeanRgbDelta": 3.8444356325376963
+        },
+        {
+          "id": "island-harpoon-fire-l3",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 18844,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-harpoon-fire-l3",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 7366,
+          "differingPixels": 6096,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 30,
+          "alphaWeightedMeanRgbDelta": 2.431315753807657
+        },
+        {
+          "id": "island-harpoon-fire-l3",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4618,
+          "differingPixels": 3934,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 26,
+          "alphaWeightedMeanRgbDelta": 2.388228695791471
+        },
+        {
+          "id": "island-harpoon-fire-l3",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2615,
+          "differingPixels": 2338,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 39,
+          "alphaWeightedMeanRgbDelta": 3.840499907904769
+        },
+        {
+          "id": "island-harpoon-l3-damaged",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 19822,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-harpoon-l3-damaged",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 7786,
+          "differingPixels": 6604,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 30,
+          "alphaWeightedMeanRgbDelta": 2.4403316226075775
+        },
+        {
+          "id": "island-harpoon-l3-damaged",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4891,
+          "differingPixels": 4199,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 22,
+          "alphaWeightedMeanRgbDelta": 2.5345653813072007
+        },
+        {
+          "id": "island-harpoon-l3-damaged",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2757,
+          "differingPixels": 2494,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 43,
+          "alphaWeightedMeanRgbDelta": 4.024928155288832
+        },
+        {
+          "id": "island-harpoon-l3-broken",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 11793,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-harpoon-l3-broken",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 4645,
+          "differingPixels": 4008,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 29,
+          "alphaWeightedMeanRgbDelta": 2.643959252134326
+        },
+        {
+          "id": "island-harpoon-l3-broken",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 2924,
+          "differingPixels": 2528,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 24,
+          "alphaWeightedMeanRgbDelta": 2.808291248818899
+        },
+        {
+          "id": "island-harpoon-l3-broken",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 1658,
+          "differingPixels": 1501,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 41,
+          "alphaWeightedMeanRgbDelta": 4.299147779826059
+        },
+        {
+          "id": "island-harpoon-l4",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 19672,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-harpoon-l4",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 7723,
+          "differingPixels": 6425,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 29,
+          "alphaWeightedMeanRgbDelta": 2.4622308287347257
+        },
+        {
+          "id": "island-harpoon-l4",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4865,
+          "differingPixels": 4038,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 38,
+          "alphaWeightedMeanRgbDelta": 2.46507555058335
+        },
+        {
+          "id": "island-harpoon-l4",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2761,
+          "differingPixels": 2460,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 36,
+          "alphaWeightedMeanRgbDelta": 3.9684964099798723
+        },
+        {
+          "id": "island-harpoon-fire-l4",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 20055,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-harpoon-fire-l4",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 7855,
+          "differingPixels": 6301,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 27,
+          "alphaWeightedMeanRgbDelta": 2.530341229586411
+        },
+        {
+          "id": "island-harpoon-fire-l4",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4875,
+          "differingPixels": 4045,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 24,
+          "alphaWeightedMeanRgbDelta": 2.6556526337340305
+        },
+        {
+          "id": "island-harpoon-fire-l4",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2752,
+          "differingPixels": 2408,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 41,
+          "alphaWeightedMeanRgbDelta": 4.148882273998701
+        },
+        {
+          "id": "island-harpoon-l4-damaged",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 20678,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-harpoon-l4-damaged",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 8106,
+          "differingPixels": 6637,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 31,
+          "alphaWeightedMeanRgbDelta": 2.3613839919851505
+        },
+        {
+          "id": "island-harpoon-l4-damaged",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 5105,
+          "differingPixels": 4284,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 29,
+          "alphaWeightedMeanRgbDelta": 2.3901296622118893
+        },
+        {
+          "id": "island-harpoon-l4-damaged",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2885,
+          "differingPixels": 2547,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 40,
+          "alphaWeightedMeanRgbDelta": 3.780230621786708
+        },
+        {
+          "id": "island-harpoon-l4-broken",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 12124,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-harpoon-l4-broken",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 4755,
+          "differingPixels": 4162,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 24,
+          "alphaWeightedMeanRgbDelta": 2.6107928410901486
+        },
+        {
+          "id": "island-harpoon-l4-broken",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 2995,
+          "differingPixels": 2670,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 27,
+          "alphaWeightedMeanRgbDelta": 2.61285203010374
+        },
+        {
+          "id": "island-harpoon-l4-broken",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 1700,
+          "differingPixels": 1576,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 45,
+          "alphaWeightedMeanRgbDelta": 4.179852275638247
+        },
+        {
+          "id": "island-harpoon-l5",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 20513,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-harpoon-l5",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 8070,
+          "differingPixels": 6873,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 31,
+          "alphaWeightedMeanRgbDelta": 2.483769385024992
+        },
+        {
+          "id": "island-harpoon-l5",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 5070,
+          "differingPixels": 4363,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 31,
+          "alphaWeightedMeanRgbDelta": 2.628619075646411
+        },
+        {
+          "id": "island-harpoon-l5",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2856,
+          "differingPixels": 2585,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 39,
+          "alphaWeightedMeanRgbDelta": 4.040781203089161
+        },
+        {
+          "id": "island-harpoon-fire-l5",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 21427,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-harpoon-fire-l5",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 8390,
+          "differingPixels": 6670,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 30,
+          "alphaWeightedMeanRgbDelta": 2.4998869572456686
+        },
+        {
+          "id": "island-harpoon-fire-l5",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 5273,
+          "differingPixels": 4286,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 24,
+          "alphaWeightedMeanRgbDelta": 2.493015621937855
+        },
+        {
+          "id": "island-harpoon-fire-l5",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2978,
+          "differingPixels": 2541,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 42,
+          "alphaWeightedMeanRgbDelta": 3.9474487838258034
+        },
+        {
+          "id": "island-harpoon-l5-damaged",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 22022,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-harpoon-l5-damaged",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 8666,
+          "differingPixels": 7142,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 30,
+          "alphaWeightedMeanRgbDelta": 2.4286916209350196
+        },
+        {
+          "id": "island-harpoon-l5-damaged",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 5464,
+          "differingPixels": 4588,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 30,
+          "alphaWeightedMeanRgbDelta": 2.4461904152042564
+        },
+        {
+          "id": "island-harpoon-l5-damaged",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 3072,
+          "differingPixels": 2707,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 35,
+          "alphaWeightedMeanRgbDelta": 3.774334697915454
+        },
+        {
+          "id": "island-harpoon-l5-broken",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 13768,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-harpoon-l5-broken",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 5375,
+          "differingPixels": 4606,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 32,
+          "alphaWeightedMeanRgbDelta": 2.5611333328673838
+        },
+        {
+          "id": "island-harpoon-l5-broken",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 3389,
+          "differingPixels": 2953,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 22,
+          "alphaWeightedMeanRgbDelta": 2.645436009466476
+        },
+        {
+          "id": "island-harpoon-l5-broken",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 1935,
+          "differingPixels": 1727,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 36,
+          "alphaWeightedMeanRgbDelta": 4.0902849534003325
+        }
+      ],
+      "peakSourceBytes": 6291456,
+      "retainedDecodedAfterRelease": 0
+    },
+    {
+      "family": "culverins",
+      "results": [
+        {
+          "id": "island-culverin",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 20609,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-culverin",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 8071,
+          "differingPixels": 6529,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 35,
+          "alphaWeightedMeanRgbDelta": 2.401235709534946
+        },
+        {
+          "id": "island-culverin",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 5060,
+          "differingPixels": 4165,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 25,
+          "alphaWeightedMeanRgbDelta": 2.4864421154266285
+        },
+        {
+          "id": "island-culverin",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2864,
+          "differingPixels": 2519,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 35,
+          "alphaWeightedMeanRgbDelta": 3.8843873099494988
+        },
+        {
+          "id": "island-culverin-fire",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 22350,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-culverin-fire",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 8796,
+          "differingPixels": 6804,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 35,
+          "alphaWeightedMeanRgbDelta": 2.2636591485145607
+        },
+        {
+          "id": "island-culverin-fire",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 5396,
+          "differingPixels": 4356,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 29,
+          "alphaWeightedMeanRgbDelta": 2.438251384811341
+        },
+        {
+          "id": "island-culverin-fire",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 3037,
+          "differingPixels": 2585,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 43,
+          "alphaWeightedMeanRgbDelta": 3.70134711902585
+        },
+        {
+          "id": "island-culverin-damaged",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 20753,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-culverin-damaged",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 8118,
+          "differingPixels": 6668,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 34,
+          "alphaWeightedMeanRgbDelta": 2.340873623624604
+        },
+        {
+          "id": "island-culverin-damaged",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 5022,
+          "differingPixels": 4220,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 25,
+          "alphaWeightedMeanRgbDelta": 2.5108267437430913
+        },
+        {
+          "id": "island-culverin-damaged",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2837,
+          "differingPixels": 2540,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 38,
+          "alphaWeightedMeanRgbDelta": 3.832380816983906
+        },
+        {
+          "id": "island-culverin-broken",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 18848,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-culverin-broken",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 7439,
+          "differingPixels": 5976,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 34,
+          "alphaWeightedMeanRgbDelta": 2.658417847927365
+        },
+        {
+          "id": "island-culverin-broken",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4585,
+          "differingPixels": 3776,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 26,
+          "alphaWeightedMeanRgbDelta": 2.678231606545635
+        },
+        {
+          "id": "island-culverin-broken",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2608,
+          "differingPixels": 2308,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 34,
+          "alphaWeightedMeanRgbDelta": 4.270491884675835
+        },
+        {
+          "id": "island-culverin-l2",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 21351,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-culverin-l2",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 8345,
+          "differingPixels": 6914,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 29,
+          "alphaWeightedMeanRgbDelta": 2.4348979568632845
+        },
+        {
+          "id": "island-culverin-l2",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 5234,
+          "differingPixels": 4408,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 25,
+          "alphaWeightedMeanRgbDelta": 2.6817824477355394
+        },
+        {
+          "id": "island-culverin-l2",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2976,
+          "differingPixels": 2661,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 35,
+          "alphaWeightedMeanRgbDelta": 3.7347461190842415
+        },
+        {
+          "id": "island-culverin-fire-l2",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 22520,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-culverin-fire-l2",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 8802,
+          "differingPixels": 7090,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 29,
+          "alphaWeightedMeanRgbDelta": 2.3683182335270394
+        },
+        {
+          "id": "island-culverin-fire-l2",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 5536,
+          "differingPixels": 4539,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 35,
+          "alphaWeightedMeanRgbDelta": 2.746964157351733
+        },
+        {
+          "id": "island-culverin-fire-l2",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 3114,
+          "differingPixels": 2720,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 38,
+          "alphaWeightedMeanRgbDelta": 3.7867573920149793
+        },
+        {
+          "id": "island-culverin-l2-damaged",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 21426,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-culverin-l2-damaged",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 8408,
+          "differingPixels": 7003,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 25,
+          "alphaWeightedMeanRgbDelta": 2.58725949354481
+        },
+        {
+          "id": "island-culverin-l2-damaged",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 5240,
+          "differingPixels": 4450,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 24,
+          "alphaWeightedMeanRgbDelta": 2.756551262202906
+        },
+        {
+          "id": "island-culverin-l2-damaged",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2960,
+          "differingPixels": 2660,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 30,
+          "alphaWeightedMeanRgbDelta": 3.9230821755284673
+        },
+        {
+          "id": "island-culverin-l2-broken",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 19649,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-culverin-l2-broken",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 7652,
+          "differingPixels": 6314,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 30,
+          "alphaWeightedMeanRgbDelta": 2.6668312270083105
+        },
+        {
+          "id": "island-culverin-l2-broken",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4840,
+          "differingPixels": 4041,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 29,
+          "alphaWeightedMeanRgbDelta": 2.9026654391860474
+        },
+        {
+          "id": "island-culverin-l2-broken",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2747,
+          "differingPixels": 2445,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 34,
+          "alphaWeightedMeanRgbDelta": 4.198185607453463
+        },
+        {
+          "id": "island-culverin-l3",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 17387,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-culverin-l3",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 6805,
+          "differingPixels": 5709,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 29,
+          "alphaWeightedMeanRgbDelta": 2.814334132157469
+        },
+        {
+          "id": "island-culverin-l3",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4278,
+          "differingPixels": 3622,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 29,
+          "alphaWeightedMeanRgbDelta": 3.2333633191223314
+        },
+        {
+          "id": "island-culverin-l3",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2423,
+          "differingPixels": 2167,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 30,
+          "alphaWeightedMeanRgbDelta": 4.2227616908056556
+        },
+        {
+          "id": "island-culverin-fire-l3",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 18395,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-culverin-fire-l3",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 7197,
+          "differingPixels": 6025,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 32,
+          "alphaWeightedMeanRgbDelta": 2.7600017976043505
+        },
+        {
+          "id": "island-culverin-fire-l3",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4486,
+          "differingPixels": 3794,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 29,
+          "alphaWeightedMeanRgbDelta": 3.34172537898046
+        },
+        {
+          "id": "island-culverin-fire-l3",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2537,
+          "differingPixels": 2251,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 39,
+          "alphaWeightedMeanRgbDelta": 4.438390083867731
+        },
+        {
+          "id": "island-culverin-l3-damaged",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 17235,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-culverin-l3-damaged",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 6734,
+          "differingPixels": 5793,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 26,
+          "alphaWeightedMeanRgbDelta": 2.9354131242943344
+        },
+        {
+          "id": "island-culverin-l3-damaged",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4224,
+          "differingPixels": 3652,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 30,
+          "alphaWeightedMeanRgbDelta": 3.4789873637176907
+        },
+        {
+          "id": "island-culverin-l3-damaged",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2407,
+          "differingPixels": 2209,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 34,
+          "alphaWeightedMeanRgbDelta": 4.486400340728251
+        },
+        {
+          "id": "island-culverin-l3-broken",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 16822,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-culverin-l3-broken",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 6582,
+          "differingPixels": 5598,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 32,
+          "alphaWeightedMeanRgbDelta": 3.1234092524322983
+        },
+        {
+          "id": "island-culverin-l3-broken",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4146,
+          "differingPixels": 3562,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 28,
+          "alphaWeightedMeanRgbDelta": 3.6453283742029408
+        },
+        {
+          "id": "island-culverin-l3-broken",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2356,
+          "differingPixels": 2129,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 33,
+          "alphaWeightedMeanRgbDelta": 4.4994878533864995
+        },
+        {
+          "id": "island-culverin-l4",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 23876,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-culverin-l4",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 9347,
+          "differingPixels": 7999,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 33,
+          "alphaWeightedMeanRgbDelta": 2.546465959860226
+        },
+        {
+          "id": "island-culverin-l4",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 5919,
+          "differingPixels": 5109,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 31,
+          "alphaWeightedMeanRgbDelta": 2.955391533678158
+        },
+        {
+          "id": "island-culverin-l4",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 3350,
+          "differingPixels": 3066,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 34,
+          "alphaWeightedMeanRgbDelta": 4.176510656871321
+        },
+        {
+          "id": "island-culverin-fire-l4",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 24793,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-culverin-fire-l4",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 9692,
+          "differingPixels": 8291,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 37,
+          "alphaWeightedMeanRgbDelta": 2.465869120550538
+        },
+        {
+          "id": "island-culverin-fire-l4",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 6087,
+          "differingPixels": 5220,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 35,
+          "alphaWeightedMeanRgbDelta": 2.848757458093553
+        },
+        {
+          "id": "island-culverin-fire-l4",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 3461,
+          "differingPixels": 3175,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 32,
+          "alphaWeightedMeanRgbDelta": 4.0394571783758355
+        },
+        {
+          "id": "island-culverin-l4-damaged",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 24320,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-culverin-l4-damaged",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 9498,
+          "differingPixels": 8102,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 27,
+          "alphaWeightedMeanRgbDelta": 2.6350312684262343
+        },
+        {
+          "id": "island-culverin-l4-damaged",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 6015,
+          "differingPixels": 5159,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 26,
+          "alphaWeightedMeanRgbDelta": 2.9259737966983494
+        },
+        {
+          "id": "island-culverin-l4-damaged",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 3385,
+          "differingPixels": 3124,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 28,
+          "alphaWeightedMeanRgbDelta": 4.127713520205827
+        },
+        {
+          "id": "island-culverin-l4-broken",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 20296,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-culverin-l4-broken",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 7917,
+          "differingPixels": 6628,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 34,
+          "alphaWeightedMeanRgbDelta": 2.707243498140106
+        },
+        {
+          "id": "island-culverin-l4-broken",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4966,
+          "differingPixels": 4205,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 28,
+          "alphaWeightedMeanRgbDelta": 2.976602481352523
+        },
+        {
+          "id": "island-culverin-l4-broken",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2796,
+          "differingPixels": 2538,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 35,
+          "alphaWeightedMeanRgbDelta": 4.268741994470899
+        },
+        {
+          "id": "island-culverin-l5",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 19597,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-culverin-l5",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 7664,
+          "differingPixels": 6679,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 28,
+          "alphaWeightedMeanRgbDelta": 3.177198056848401
+        },
+        {
+          "id": "island-culverin-l5",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4801,
+          "differingPixels": 4244,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 29,
+          "alphaWeightedMeanRgbDelta": 3.6319608967135273
+        },
+        {
+          "id": "island-culverin-l5",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2726,
+          "differingPixels": 2527,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 38,
+          "alphaWeightedMeanRgbDelta": 4.499884569390078
+        },
+        {
+          "id": "island-culverin-fire-l5",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 20615,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-culverin-fire-l5",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 8066,
+          "differingPixels": 6945,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 29,
+          "alphaWeightedMeanRgbDelta": 3.0737292549899413
+        },
+        {
+          "id": "island-culverin-fire-l5",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 5011,
+          "differingPixels": 4362,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 33,
+          "alphaWeightedMeanRgbDelta": 3.7237695037633523
+        },
+        {
+          "id": "island-culverin-fire-l5",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2830,
+          "differingPixels": 2607,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 36,
+          "alphaWeightedMeanRgbDelta": 4.556594438888427
+        },
+        {
+          "id": "island-culverin-l5-damaged",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 19772,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-culverin-l5-damaged",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 7729,
+          "differingPixels": 6735,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 26,
+          "alphaWeightedMeanRgbDelta": 3.2888237016409945
+        },
+        {
+          "id": "island-culverin-l5-damaged",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4850,
+          "differingPixels": 4236,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 27,
+          "alphaWeightedMeanRgbDelta": 3.776696121409905
+        },
+        {
+          "id": "island-culverin-l5-damaged",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2760,
+          "differingPixels": 2565,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 29,
+          "alphaWeightedMeanRgbDelta": 4.716613856959976
+        },
+        {
+          "id": "island-culverin-l5-broken",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 17732,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-culverin-l5-broken",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 6944,
+          "differingPixels": 6105,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 30,
+          "alphaWeightedMeanRgbDelta": 3.265863792137341
+        },
+        {
+          "id": "island-culverin-l5-broken",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4358,
+          "differingPixels": 3840,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 32,
+          "alphaWeightedMeanRgbDelta": 3.883102978428952
+        },
+        {
+          "id": "island-culverin-l5-broken",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2471,
+          "differingPixels": 2291,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 40,
+          "alphaWeightedMeanRgbDelta": 4.705245119830498
+        }
+      ],
+      "peakSourceBytes": 6291456,
+      "retainedDecodedAfterRelease": 0
+    },
+    {
+      "family": "swivels",
+      "results": [
+        {
+          "id": "island-swivel",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 13918,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-swivel",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 5479,
+          "differingPixels": 5031,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 28,
+          "alphaWeightedMeanRgbDelta": 2.48616727300075
+        },
+        {
+          "id": "island-swivel",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 3473,
+          "differingPixels": 3239,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 32,
+          "alphaWeightedMeanRgbDelta": 2.624589596102196
+        },
+        {
+          "id": "island-swivel",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 1992,
+          "differingPixels": 1900,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 29,
+          "alphaWeightedMeanRgbDelta": 3.3583395854899094
+        },
+        {
+          "id": "island-swivel-fire",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 14446,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-swivel-fire",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 5676,
+          "differingPixels": 5227,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 28,
+          "alphaWeightedMeanRgbDelta": 2.5249695098852927
+        },
+        {
+          "id": "island-swivel-fire",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 3587,
+          "differingPixels": 3344,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 31,
+          "alphaWeightedMeanRgbDelta": 2.6892291333271223
+        },
+        {
+          "id": "island-swivel-fire",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2057,
+          "differingPixels": 1971,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 26,
+          "alphaWeightedMeanRgbDelta": 3.448458462377635
+        },
+        {
+          "id": "island-swivel-damaged",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 16051,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-swivel-damaged",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 6321,
+          "differingPixels": 5808,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 29,
+          "alphaWeightedMeanRgbDelta": 2.7612903461811094
+        },
+        {
+          "id": "island-swivel-damaged",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 3978,
+          "differingPixels": 3702,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 31,
+          "alphaWeightedMeanRgbDelta": 2.9407949166603427
+        },
+        {
+          "id": "island-swivel-damaged",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2286,
+          "differingPixels": 2191,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 34,
+          "alphaWeightedMeanRgbDelta": 3.422107573823846
+        },
+        {
+          "id": "island-swivel-broken",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 10870,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-swivel-broken",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 4275,
+          "differingPixels": 4007,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 31,
+          "alphaWeightedMeanRgbDelta": 2.8822780001428403
+        },
+        {
+          "id": "island-swivel-broken",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 2712,
+          "differingPixels": 2557,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 31,
+          "alphaWeightedMeanRgbDelta": 3.045445414075048
+        },
+        {
+          "id": "island-swivel-broken",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 1568,
+          "differingPixels": 1515,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 26,
+          "alphaWeightedMeanRgbDelta": 3.697340926616537
+        },
+        {
+          "id": "island-swivel-l2",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 15601,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-swivel-l2",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 6137,
+          "differingPixels": 5643,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 25,
+          "alphaWeightedMeanRgbDelta": 2.7343152733285785
+        },
+        {
+          "id": "island-swivel-l2",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 3910,
+          "differingPixels": 3652,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 25,
+          "alphaWeightedMeanRgbDelta": 2.775180187554538
+        },
+        {
+          "id": "island-swivel-l2",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2235,
+          "differingPixels": 2142,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 31,
+          "alphaWeightedMeanRgbDelta": 3.255290963481726
+        },
+        {
+          "id": "island-swivel-fire-l2",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 16391,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-swivel-fire-l2",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 6430,
+          "differingPixels": 5842,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 28,
+          "alphaWeightedMeanRgbDelta": 2.696627166449043
+        },
+        {
+          "id": "island-swivel-fire-l2",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4073,
+          "differingPixels": 3773,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 32,
+          "alphaWeightedMeanRgbDelta": 2.7529670894651375
+        },
+        {
+          "id": "island-swivel-fire-l2",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2325,
+          "differingPixels": 2213,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 32,
+          "alphaWeightedMeanRgbDelta": 3.3925680410822303
+        },
+        {
+          "id": "island-swivel-l2-damaged",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 17786,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-swivel-l2-damaged",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 6979,
+          "differingPixels": 6357,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 27,
+          "alphaWeightedMeanRgbDelta": 2.8719404064689855
+        },
+        {
+          "id": "island-swivel-l2-damaged",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4425,
+          "differingPixels": 4100,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 30,
+          "alphaWeightedMeanRgbDelta": 3.0492953457180816
+        },
+        {
+          "id": "island-swivel-l2-damaged",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2509,
+          "differingPixels": 2393,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 36,
+          "alphaWeightedMeanRgbDelta": 3.74322264522977
+        },
+        {
+          "id": "island-swivel-l2-broken",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 11804,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-swivel-l2-broken",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 4657,
+          "differingPixels": 4363,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 26,
+          "alphaWeightedMeanRgbDelta": 3.1519581440598476
+        },
+        {
+          "id": "island-swivel-l2-broken",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 2978,
+          "differingPixels": 2838,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 25,
+          "alphaWeightedMeanRgbDelta": 3.3257753146678577
+        },
+        {
+          "id": "island-swivel-l2-broken",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 1693,
+          "differingPixels": 1635,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 28,
+          "alphaWeightedMeanRgbDelta": 4.027169838266234
+        },
+        {
+          "id": "island-swivel-l3",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 16902,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-swivel-l3",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 6642,
+          "differingPixels": 6105,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 25,
+          "alphaWeightedMeanRgbDelta": 2.967276375156044
+        },
+        {
+          "id": "island-swivel-l3",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4221,
+          "differingPixels": 3899,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 27,
+          "alphaWeightedMeanRgbDelta": 2.9717316668677416
+        },
+        {
+          "id": "island-swivel-l3",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2396,
+          "differingPixels": 2276,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 29,
+          "alphaWeightedMeanRgbDelta": 3.8856473381981083
+        },
+        {
+          "id": "island-swivel-fire-l3",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 17548,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-swivel-fire-l3",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 6891,
+          "differingPixels": 6325,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 23,
+          "alphaWeightedMeanRgbDelta": 3.075381285181284
+        },
+        {
+          "id": "island-swivel-fire-l3",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4378,
+          "differingPixels": 4063,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 27,
+          "alphaWeightedMeanRgbDelta": 3.192527226897318
+        },
+        {
+          "id": "island-swivel-fire-l3",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2484,
+          "differingPixels": 2368,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 32,
+          "alphaWeightedMeanRgbDelta": 4.1612315231230745
+        },
+        {
+          "id": "island-swivel-l3-damaged",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 18701,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-swivel-l3-damaged",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 7337,
+          "differingPixels": 6802,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 25,
+          "alphaWeightedMeanRgbDelta": 3.1646185654265637
+        },
+        {
+          "id": "island-swivel-l3-damaged",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4656,
+          "differingPixels": 4360,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 27,
+          "alphaWeightedMeanRgbDelta": 3.2088400008232423
+        },
+        {
+          "id": "island-swivel-l3-damaged",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2645,
+          "differingPixels": 2547,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 32,
+          "alphaWeightedMeanRgbDelta": 4.1472313572936725
+        },
+        {
+          "id": "island-swivel-l3-broken",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 13062,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-swivel-l3-broken",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 5153,
+          "differingPixels": 4805,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 29,
+          "alphaWeightedMeanRgbDelta": 3.4018691786817037
+        },
+        {
+          "id": "island-swivel-l3-broken",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 3275,
+          "differingPixels": 3075,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 24,
+          "alphaWeightedMeanRgbDelta": 3.601147366139493
+        },
+        {
+          "id": "island-swivel-l3-broken",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 1869,
+          "differingPixels": 1802,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 30,
+          "alphaWeightedMeanRgbDelta": 4.358906254462388
+        },
+        {
+          "id": "island-swivel-l4",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 20087,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-swivel-l4",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 7868,
+          "differingPixels": 7225,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 42,
+          "alphaWeightedMeanRgbDelta": 3.0937712718337345
+        },
+        {
+          "id": "island-swivel-l4",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 5008,
+          "differingPixels": 4701,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 31,
+          "alphaWeightedMeanRgbDelta": 3.246436183973205
+        },
+        {
+          "id": "island-swivel-l4",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2831,
+          "differingPixels": 2690,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 44,
+          "alphaWeightedMeanRgbDelta": 4.041515348855307
+        },
+        {
+          "id": "island-swivel-fire-l4",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 20544,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-swivel-fire-l4",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 8050,
+          "differingPixels": 7386,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 36,
+          "alphaWeightedMeanRgbDelta": 3.0376663786898153
+        },
+        {
+          "id": "island-swivel-fire-l4",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 5110,
+          "differingPixels": 4777,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 31,
+          "alphaWeightedMeanRgbDelta": 3.301701869278217
+        },
+        {
+          "id": "island-swivel-fire-l4",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2902,
+          "differingPixels": 2766,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 35,
+          "alphaWeightedMeanRgbDelta": 3.972399887836711
+        },
+        {
+          "id": "island-swivel-l4-damaged",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 22000,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-swivel-l4-damaged",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 8632,
+          "differingPixels": 7947,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 29,
+          "alphaWeightedMeanRgbDelta": 3.090010371429975
+        },
+        {
+          "id": "island-swivel-l4-damaged",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 5481,
+          "differingPixels": 5109,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 26,
+          "alphaWeightedMeanRgbDelta": 3.361653027685991
+        },
+        {
+          "id": "island-swivel-l4-damaged",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 3128,
+          "differingPixels": 2995,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 27,
+          "alphaWeightedMeanRgbDelta": 4.154076160468192
+        },
+        {
+          "id": "island-swivel-l4-broken",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 14933,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-swivel-l4-broken",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 5862,
+          "differingPixels": 5329,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 25,
+          "alphaWeightedMeanRgbDelta": 3.5373021553435815
+        },
+        {
+          "id": "island-swivel-l4-broken",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 3706,
+          "differingPixels": 3402,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 26,
+          "alphaWeightedMeanRgbDelta": 3.7187919709627986
+        },
+        {
+          "id": "island-swivel-l4-broken",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2102,
+          "differingPixels": 2018,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 34,
+          "alphaWeightedMeanRgbDelta": 4.629728756228706
+        },
+        {
+          "id": "island-swivel-l5",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 22749,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-swivel-l5",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 8880,
+          "differingPixels": 8233,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 30,
+          "alphaWeightedMeanRgbDelta": 3.1347294909786863
+        },
+        {
+          "id": "island-swivel-l5",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 5673,
+          "differingPixels": 5300,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 34,
+          "alphaWeightedMeanRgbDelta": 3.4933391364917705
+        },
+        {
+          "id": "island-swivel-l5",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 3217,
+          "differingPixels": 3096,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 35,
+          "alphaWeightedMeanRgbDelta": 4.116018791140238
+        },
+        {
+          "id": "island-swivel-fire-l5",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 23221,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-swivel-fire-l5",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 9111,
+          "differingPixels": 8421,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 29,
+          "alphaWeightedMeanRgbDelta": 3.1125565911035955
+        },
+        {
+          "id": "island-swivel-fire-l5",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 5778,
+          "differingPixels": 5409,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 34,
+          "alphaWeightedMeanRgbDelta": 3.4302308276739293
+        },
+        {
+          "id": "island-swivel-fire-l5",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 3287,
+          "differingPixels": 3167,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 36,
+          "alphaWeightedMeanRgbDelta": 4.090027316900627
+        },
+        {
+          "id": "island-swivel-l5-damaged",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 23926,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-swivel-l5-damaged",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 9396,
+          "differingPixels": 8740,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 30,
+          "alphaWeightedMeanRgbDelta": 3.1712391498555763
+        },
+        {
+          "id": "island-swivel-l5-damaged",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 5976,
+          "differingPixels": 5607,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 35,
+          "alphaWeightedMeanRgbDelta": 3.4852543292203877
+        },
+        {
+          "id": "island-swivel-l5-damaged",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 3404,
+          "differingPixels": 3271,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 32,
+          "alphaWeightedMeanRgbDelta": 4.227777943379664
+        },
+        {
+          "id": "island-swivel-l5-broken",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 16691,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-swivel-l5-broken",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 6532,
+          "differingPixels": 5983,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 26,
+          "alphaWeightedMeanRgbDelta": 3.4841143801136414
+        },
+        {
+          "id": "island-swivel-l5-broken",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4132,
+          "differingPixels": 3849,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 28,
+          "alphaWeightedMeanRgbDelta": 3.898466651523463
+        },
+        {
+          "id": "island-swivel-l5-broken",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2352,
+          "differingPixels": 2245,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 31,
+          "alphaWeightedMeanRgbDelta": 4.673169500450809
         }
       ],
       "peakSourceBytes": 6291456,

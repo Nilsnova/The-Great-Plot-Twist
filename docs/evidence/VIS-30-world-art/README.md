@@ -1,8 +1,8 @@
-# VIS-30: current 10-family world-art compilation
+# VIS-30: current 13-family world-art compilation
 
-This is software texture compilation and isolated browser pixel evidence, not a gameplay screenshot or final visual acceptance. Current selected scope: **10 raw families, 104 IDs**. Mortars, core/progress and corrected level-one wall state IDs are included.
+This is software texture compilation and isolated browser pixel evidence, not a gameplay screenshot or final visual acceptance. Current selected scope: **13 raw families, 164 IDs**. All five defense families, core/progress and corrected level-one wall state IDs are included.
 
-Source executed: `f635640ec959c08c7cc57856db1bf83533973b9d`; Chromium **156.0.8078.79**. From `frontend`, full reproduction: `node scripts/bake-village-art.mjs`. This stage executed `node scripts/bake-village-art.mjs --append=mortars`: only20 new raw mortar frames were normalized; nine prior families were reused after source/output/normalizer/browser checks. Per-family proof origins are recorded in the report. See [compact summary](summary.json), [complete source/output hashes and pixel proof](bake-report.json), and [unmodified process log](run.log). A historical provisional 74-ID proof is retained in commit9180ca3d. Approved hero/house fitting dependencies4bd02615/6f495947, core/progress5e0e9f7b and canonical walls813a0867 are input dependencies, not this task's artwork.
+Source executed: `d39ba70278c7060774a7cc03aa01e44e159cf1ac`; Chromium **156.0.8078.79**. From `frontend`, full reproduction: `node scripts/bake-village-art.mjs`. This stage executed `node scripts/bake-village-art.mjs --append=harpoons,culverins,swivels`: only 60 new raw defense frames were normalized; ten prior families were reused after source/output/normalizer/browser checks. Per-family proof source commits remain explicit. See [compact summary](summary.json), [complete source/output hashes and pixel proof](bake-report.json), and [unmodified process log](run.log). A historical provisional 74-ID proof is retained in commit 9180ca3d. Approved hero/house fitting dependencies 4bd02615/6f495947, core/progress 5e0e9f7b and canonical walls 813a0867 are input dependencies, not this task's artwork.
 
 | Family | IDs | Original encoded bytes | Compiled encoded bytes | Compiled source dimensions |
 |---|---:|---:|---:|---|
@@ -16,19 +16,22 @@ Source executed: `f635640ec959c08c7cc57856db1bf83533973b9d`; Chromium **156.0.80
 | core | 3 | 1,078,155 | 892,095 | 520×1560 |
 | progress | 5 | 1,200,780 | 248,278 | 840×232 |
 | mortars | 20 | 2,020,969 | 1,011,684 | 928×1000 |
+| harpoons | 20 | 2,004,621 | 1,009,474 | 928×1000 |
+| culverins | 20 | 2,257,251 | 1,164,347 | 928×1000 |
+| swivels | 20 | 2,610,002 | 1,080,933 | 928×1000 |
 
-Frame source transfer: **20,263,828→7,670,191 bytes**. Including unchanged terrain **2,683,357 bytes**: **22,947,185→10,353,548 bytes**. The effort target is **8,388,608 bytes (8MiB)** and is **NOT met** for this expanded scope. Limits were not raised. These bytes describe selected assets after future atomic activation/exclusion; this branch changes no runtime registration or production exclusion.
+Frame source transfer: **27,135,702→10,924,945 bytes**. Including unchanged terrain **2,683,357 bytes**: **29,819,059→13,608,302 bytes**. The effort target is **8,388,608 bytes (8MiB)** and is **NOT met** for this expanded scope. Limits were not raised. These bytes describe selected assets after future atomic activation/exclusion; this branch changes no runtime registration or production exclusion.
 
-Summed decoded frame-source RGBA: **69,203,144→27,407,104 bytes**; this is not simultaneous residency. Largest compiled source: **5,541,888 bytes**. Every compile/proof family releases its source cache to zero; offline canvas costs are separate in the report. The 12MiB decoded pool, two-decode cap and 8MiB encoded-source cap stay unchanged. Final world canvases, mipmapped GPU allocations and renderer passes remain a separate unchanged-density cost; no FPS/device improvement is claimed. Existing 40/12MiB atlas and under-150 world-draw targets remain.
+Summed decoded frame-source RGBA: **88,077,512→38,543,104 bytes**; this is not simultaneous residency. Largest compiled source: **5,541,888 bytes**. Every compile/proof family releases its source cache to zero; offline canvas costs are separate in the report. The 12MiB decoded pool, two-decode cap and 8MiB encoded-source cap stay unchanged. Final world canvases, mipmapped GPU allocations and renderer passes remain a separate unchanged-density cost; no FPS/device improvement is claimed. Existing 40/12MiB atlas and under-150 world-draw targets remain.
 
-At density4 every 104-frame original-normalized versus decoded-compiled comparison is visible and **pixel exact (RGB delta0, alpha delta0)**. Native output feet equal logical feet×4; original virtual padding is already rendered. Original source PNG bytes remain unchanged and transparent gutters pass. Lower-density two-stage filtering is **not lossless**:
+At density 4 every 164-frame original-normalized versus decoded-compiled comparison is visible and **pixel exact (RGB delta 0, alpha delta 0)**. Native output feet equal logical feet×4; original virtual padding is already rendered. Original source PNG bytes remain unchanged and transparent gutters pass. Lower-density two-stage filtering is **not lossless**:
 
 | Density | Cases | Maximum RGB delta | Maximum alpha delta | Worst alpha-weighted mean RGB delta /255 |
 |---|---:|---:|---:|---:|
-| 4 | 104 | 0 | 0 | 0.000 |
-| 2.5 | 104 | 255 | 52 | 3.487 |
-| 2 | 104 | 255 | 59 | 5.190 |
-| 1.5 | 104 | 255 | 74 | 5.550 |
+| 4 | 164 | 0 | 0 | 0.000 |
+| 2.5 | 164 | 255 | 52 | 3.537 |
+| 2 | 164 | 255 | 59 | 5.190 |
+| 1.5 | 164 | 255 | 74 | 5.550 |
 
 Raw RGB maxima include low-alpha fringes. Density2.5 covers a common desktop source density. Actual lower-quality game appearance still needs review; these values are reported, not hidden behind an all-scale lossless claim. Errors and external requests are both empty.
 
