@@ -33,15 +33,23 @@ it('keeps actual quote/retry controls accessible and within both viewport widths
         await window.g20Import('/src/island/island.css'); const {createWallBuilderBar} = await window.g20Import('/src/island/wall-builder-bar.js');
         const calls = [], handlers = Object.fromEntries(['open', 'quote', 'confirm', 'undo', 'clear', 'cancel', 'camera'].map(key => [key, () => calls.push(key)]));
         const bar = createWallBuilderBar({container: document.body, handlers});
-        const model = {cells: [{x: 1, z: 6}], phase: 'ready', busy: false, status: 'Positions checked.', quote: {totalCost: 10, remaining: 127}};
+        const model = {cells: [{x: 1, z: 6}], phase: 'ready', busy: false, status: 'Draft moved. Get the price to check these positions.', quote: {totalCost: 10, remaining: 127}};
         bar.render(model); const submit = [...bar.element.querySelectorAll('button')].find(button => button.textContent === 'Build for 10 coins'); submit.click();
-        const buttons = [...bar.element.querySelectorAll('button')].filter(button => button.getClientRects().length).map(button => { const r = button.getBoundingClientRect(); return {width: r.width, height: r.height, inside: r.left >= 0 && r.right <= innerWidth}; });
+        const closed = bar.element.getBoundingClientRect().toJSON(); bar.element.querySelector('details').open = true;
+        const expanded = bar.element.getBoundingClientRect().toJSON();
+        const buttons = [...bar.element.querySelectorAll('button')].filter(button => button.getClientRects().length).map(button => { const r = button.getBoundingClientRect(); return {width: r.width, height: r.height, inside: r.left >= 0 && r.right <= innerWidth,
+          hit: button.contains(document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2))}; });
         bar.render({...model, phase: 'unknown'}); const undo = [...bar.element.querySelectorAll('button')].find(button => button.textContent === 'Remove last');
         const unknown = {label: submit.textContent, disabled: undo.disabled, live: bar.element.querySelector('[role=status]').getAttribute('aria-live')};
-        const copy = bar.element.textContent; bar.dispose(); return {calls, buttons, unknown, copy};
+        const copy = bar.element.textContent; bar.dispose(); return {calls, buttons, unknown, copy, closed, expanded};
       });
       expect(result.calls).toEqual(['confirm']); expect(result.buttons.every(button => button.inside && button.width >= 44 && button.height >= 44)).toBe(true);
-      expect(result.unknown).toEqual({label: 'Check previous build', disabled: true, live: 'polite'}); expect(result.copy).toContain('Remaining after building: 127');
+      expect(result.buttons.every(button => button.hit)).toBe(true);
+      if (size.width === 1280) {
+        expect(result.closed.width).toBeGreaterThanOrEqual(800); expect(result.closed.width).toBeLessThanOrEqual(1000);
+        expect(result.closed.height).toBeLessThanOrEqual(200); expect(result.expanded.height).toBeLessThanOrEqual(250);
+      }
+      expect(result.unknown).toEqual({label: 'Check previous build', disabled: true, live: 'polite'}); expect(result.copy).toContain('Wall slots remaining: 127');
     }
   });
 });

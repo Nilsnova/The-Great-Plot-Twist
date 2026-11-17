@@ -34,7 +34,7 @@ export function createWallBuilderBar({container, handlers}) {
       title.textContent = `Build walls · ${model.cells.length} ${model.cells.length === 1 ? 'wall' : 'walls'}`;
       hint.textContent = ['building', 'unknown'].includes(model.phase) ? 'Closing does not cancel a purchase already sent.' : 'Tap to start, then add walls or turn. Arrow keys add one wall.';
       status.textContent = model.status; bar.classList.toggle('is-refused', ['refused', 'enable_failed'].includes(model.phase));
-      price.textContent = model.quote ? `Total: ${model.quote.totalCost} coins · Remaining after building: ${model.quote.remaining}` : 'Get the price to check these positions.';
+      price.textContent = model.quote ? `Total: ${model.quote.totalCost} coins · Wall slots remaining: ${model.quote.remaining}` : 'Get the price to check these positions.';
       const editable = ['draft', 'ready', 'refused'].includes(model.phase) && !model.busy;
       undo.disabled = clear.disabled = !editable || !model.cells.length;
       fineButtons.forEach(item => { item.disabled = !editable || !model.cells.length; });

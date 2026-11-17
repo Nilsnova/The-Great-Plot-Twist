@@ -2812,3 +2812,5 @@ pieces
 square
 squares
 quote
+# WALL-42: slots is the standard American English plural of slot; this count is capacity, not coins.
+slots
