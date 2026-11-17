@@ -14,7 +14,7 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
-**17 Nov / Johannes — reference-village visual review:** the [guide](contribute/REFERENCE-VILLAGE-REVIEW.md) now links the [final rendered capture/comparison](evidence/reference-village-visual-review/README.md). Capture 9f47 has twenty unchanged PNGs/report; frozen check candidate 6e2c3e8b adds only documented post-capture hint accessibility wording and the wave-lookup fence, so source trees are distinct. Final sampled standing/firing/breach calls 117/119/129 desktop and 116/120/129 phone are below 150. Fresh complete checks remain PENDING after the archived first 4402-pass/27-fail run; focused corrections preserve assertions/timeouts. Human visual/device/balance, 8MiB and land-expansion limits remain open. No merge or rollout.
+**17 Nov / Johannes — reference-village visual review:** the [guide](contribute/REFERENCE-VILLAGE-REVIEW.md) and [actual capture/comparison](evidence/reference-village-visual-review/README.md) preserve the 9f47→6e2 nonvisual source boundary. The 6e2 complete run failed one defense-report case (4,463 pass/1 fail, 563.22s); VIS46 revision 4844 also failed its new sole-owner assertion. Accessibility failed lobby keyboard only (33 screens, 382.39 s); VIS47 refresh-identity correction is underway. No green replacement is claimed. Active art/terrain is 12,554,858 bytes after lossless transport, still above 8MiB. Scenery detail, phone tree occlusion, device/balance/land-expansion and human acceptance remain open; no merge or rollout.
 
 **17 Nov / Johannes — perimeter defense review candidate:** the [integration preview](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/chore/perimeter-integration-review) collects positioned wall construction, saved 1/128 policy, compatible recovery/combat and village controls. Start with the [implementation and review guide](contribute/PERIMETER-REVIEW.md), [verified evidence](evidence/PERIMETER-VERIFICATION.md), [Draft workboard](contribute/PERIMETER-WORKBOARD.md) and [Wall Gameplay epic #241](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/241), not the older slice checkpoints below. Drafts remain unmerged; `perimeter_walls` defaults off, live migrations/flags/deployment are unchanged by this work. Integrated evidence and independent human acceptance are separate release gates.
 
@@ -629,6 +629,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+- **17 Nov / Johannes:** recorded exact failed complete/ownership/a11y provenance and VIS46/47 Drafts in the [review guide](contribute/REFERENCE-VILLAGE-REVIEW.md). Independently matched all 13 active compiled source hashes to VIS30 f6bbc967, confirming 12,554,858 bytes with terrain and the unresolved 8MiB miss. Documentation only; no app/Chrome rerun or acceptance gate closed.
 
 - **17 Nov / Johannes:** packaged [final rendered visual evidence](evidence/reference-village-visual-review/README.md) and a self-contained accessible comparison from unchanged actual PNGs. Capture 9f47 and frozen candidate 6e2c3e8b retain an explicit post-capture source boundary. Fresh complete results stay pending; no app rerun, final acceptance or merge by this docs task.
 

@@ -83,14 +83,25 @@ appearance is shown by the actual images and its separate VIS40 component
 checks. The single offline 503 diagnostic remains in each raw viewport record.
 
 The first complete run on `9f47` reported **4,402 passed / 27 failed in 609.82 s**;
-the coordinator preserves it as `verification-attempt-01-9f47`. All thirteen
-failing files now have focused green corrections preserving assertions/timeouts.
-The fresh complete checks on the frozen candidate are **PENDING** here until
-their exact logs arrive; focused green checks are not a complete-suite pass.
+the coordinator preserves it as `verification-attempt-01-9f47`. The thirteen
+failing files received focused green corrections preserving assertions/timeouts;
+that did not establish a complete pass.
+The complete retry on 6e2c3e8b is **not green**: 4,463 passed / 1 failed,
+409 files (408 passed / 1 failed), 563.22 s; only defense-report ownership timed out
+at 20 s. VIS46 candidate 4844c2c1 then failed its new sole-owner assertion in 18.375 s.
+Its application source/public/backend trees match 6e2c3e8b. Diagnosis remains open
+and the original 24 rAF/high-quality/20 s assertions remain. Accessibility on 6e2
+also failed the lobby keyboard audit (33 screens, 382.39 s); browser/external
+errors were empty. VIS47 is correcting audit identity across legitimate refresh.
+No passing complete/a11y replacement is claimed until exact verified logs arrive.
 
-The 13-family/164-ID source-art checkpoint still totals 13,608,302 bytes including
-terrain and misses the 8MiB effort target. Codec work does not become a production
-transfer improvement until activated and measured. Balance sign-off, land
+Active 13-family/164-ID transport at VIS30 f6bbc967 / VIS18 e54b0f46 matches the
+candidate's public 9306942 tree: 9,871,501 compiled bytes plus 2,683,357 terrain,
+**12,554,858 bytes total**. Lossless zlib recompression of thirteen compiled PNGs
+preserves image content; this is already active, not merely tooling. The earlier
+13,608,302-byte checkpoint remains historical. The 8MiB target is still **not
+met**. Cliffs/scenery remain less detailed than the approved concept, and the
+phone-selected wall can be partly hidden by a tree; visual acceptance is open. Balance sign-off, land
 expansion and automatic island growth are not established by this visual phase.
 Existing building upgrades remain governed by the existing manual/server rules.
 
