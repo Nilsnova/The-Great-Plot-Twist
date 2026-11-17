@@ -96,4 +96,4 @@ it.each([false, true])('explicit management selects remotely, holds captain inpu
     expect(await page.getByRole('button', {name: 'Manage village', exact: true}).count()).toBe(0);
     expect(await page.getByRole('button', {name: 'Exit village mode', exact: true}).count()).toBe(0);
   });
-});
+}, 60000); // a long real-browser journey: ~17 s locally, too close to the harness's 20 s default
