@@ -368,8 +368,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       moveSentAt: -Infinity, moveSent: null, awaySent: false, pin: null, revive: null, reviveNote: null, reviveWait: false,
       actorCounter: info.lastActorCounter ?? 0, recoveryPending: [], recoverySending: false, recoveryPolling: false,
       recoveryLastFlushAt: -Infinity, recoveryLastPollAt: -Infinity, recoveryReplay,
-      recoveryHealthObservedSignature: initialRecoverySignature, recoveryHealthPersistedSignature: initialRecoverySignature,
-      recoveryHealthChangedAt: now(), recoveryHealthCheckpointPromise: null,
+      recoveryHealthPersistedSignature: initialRecoverySignature,
+      recoveryHealthLastAttemptAt: -Infinity, recoveryHealthCheckpointPromise: null,
       recoveryDriver: recoveryReplay ? createReplayDriver(recoveryReplay) : null,
       recoveryLastRepairSeq: 0, recoveryInvalid: false, recoveryFinishPending: false, recoveryFinishing: false,
       recoveryFinishAnswered: false, recoveryFinishFailed: false, recoveryFinishRequest: null, recoveryFinishRetryAt: -Infinity,
@@ -464,13 +464,9 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     if (!current.done && !current.recoveryInvalid) {
       const vector = current.sim.recoveryHealthVector();
       const signature = vector ? canonicalJson(vector) : null;
-      if (signature && signature !== current.recoveryHealthObservedSignature) {
-        current.recoveryHealthObservedSignature = signature;
-        current.recoveryHealthChangedAt = at;
-      }
       if (signature && signature !== current.recoveryHealthPersistedSignature
-        && at - current.recoveryHealthChangedAt >= HEALTH_CHECKPOINT_COALESCE_MS
-        && !current.recoveryHealthCheckpointPromise) void checkpointBeforeRepair().catch(() => {});
+        && at - current.recoveryHealthLastAttemptAt >= HEALTH_CHECKPOINT_COALESCE_MS
+        && !current.recoveryHealthCheckpointPromise) void checkpointBeforeRepair({ force: false }).catch(() => {});
     }
     reconcileTerminalRecovery(current);
     tryRecoveryFinish(current);
@@ -531,7 +527,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     return true;
   }
 
-  function checkpointBeforeRepair() {
+  function checkpointBeforeRepair({ force = true } = {}) {
     const current = wave;
     if (!current?.recoveryReplay) return Promise.resolve({ ok: false, code: 'recovery_unavailable' });
     if (now() + current.offset < current.info.startsAtMs && current.info.initialSnapshot?.waveId === current.info.waveId) {
@@ -539,15 +535,15 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       return Promise.resolve({ ok: true });
     }
     const prior = current.recoveryHealthCheckpointPromise;
-    const running = (prior ? prior.then(result => result?.ok ? checkpointRecovery(current) : result)
-      : checkpointRecovery(current)).finally(() => {
+    const running = (prior ? prior.then(result => result?.ok ? checkpointRecovery(current, { force }) : result)
+      : checkpointRecovery(current, { force })).finally(() => {
       if (current.recoveryHealthCheckpointPromise === running) current.recoveryHealthCheckpointPromise = null;
     });
     current.recoveryHealthCheckpointPromise = running;
     return running;
   }
 
-  async function checkpointRecovery(current) {
+  async function checkpointRecovery(current, { force = true } = {}) {
     if (!current?.recoveryReplay || !recoveryTransport?.checkpoint || current.recoveryFinishAnswered
       || current.recoveryInvalid) return { ok: false, code: 'recovery_unavailable' };
     if (!await flushRecoveryInputs(current)) return { ok: false, code: 'input_sync_required' };
@@ -579,6 +575,11 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
         basisRepairSeq: { ...vector.basisRepairSeq }, hpUnits: { ...vector.hpUnits } };
       current.recoveryHealthRequest = checkpoint;
     }
+    const attemptAt = now();
+    if (!force && attemptAt - current.recoveryHealthLastAttemptAt < HEALTH_CHECKPOINT_COALESCE_MS) {
+      return { ok: false, code: 'checkpoint_throttled' };
+    }
+    current.recoveryHealthLastAttemptAt = attemptAt;
     let answer;
     try { answer = await recoveryTransport.checkpoint({ waveId: current.info.waveId, checkpoint }); }
     catch { answer = null; }
