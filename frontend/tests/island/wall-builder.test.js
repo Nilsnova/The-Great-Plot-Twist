@@ -2,16 +2,16 @@
 import {describe, expect, it, vi} from 'vitest';
 import {createWallBuilder} from '../../src/island/wall-builder-mode.js';
 import {createWallBuilderApi} from '../../src/island/wall-builder-api.js';
-const code = 'ISLE-K7Q2M';
+const code = 'ISLE-K7Q2M', epoch = '11111111-1111-4111-8111-111111111111';
 const island = {code, coins: 1000, waveBest: 50, flags: 0, spots: [], layout: {wallRuleVersion: 1, wallCapacity: 128}};
 const quoteFor = cells => ({placements: cells.map((cell, i) => ({spot: `wall_${i + 1}`, ...cell})), unitCost: 10,
-  totalCost: cells.length * 10, remaining: 128 - cells.length, wallRuleVersion: 1, wallCapacity: 128});
+  islandEpoch: epoch, totalCost: cells.length * 10, remaining: 128 - cells.length, wallRuleVersion: 1, wallCapacity: 128});
 const success = data => ({ok: true, status: 200, data});
 const receiptFor = body => success({receipt: {actionUid: body.actionUid, totalCost: body.quotedTotal,
-  placements: body.placements, repeat: false}, island});
+  placements: body.placements, islandEpoch: body.islandEpoch, repeat: false}, island});
 const deferred = () => { let resolve; const promise = new Promise(done => { resolve = done; }); return {promise, resolve}; };
 function setup() {
-  let context = {allowed: true, code, epoch: 'epoch-a'};
+  let context = {allowed: true, code, epoch};
   const api = {enableWalls: vi.fn(async () => success(island)), quoteWalls: vi.fn(async body => success(quoteFor(body.cells))),
     buildWalls: vi.fn(async body => receiptFor(body))};
   const render = vi.fn(), preview = vi.fn(), onIsland = vi.fn(), makeUid = vi.fn(() => 'abcdefgh12345678');
@@ -42,8 +42,17 @@ describe('wall construction controller', () => {
   it('confirms only the exact ordered quote and approved total', async () => {
     const t = setup(); await ready(t); const placements = quoteFor([{x: 1.5, z: 6}]).placements;
     expect(t.mode.state.phase).toBe('ready'); await t.mode.confirm();
-    expect(t.api.buildWalls).toHaveBeenCalledWith({code, placements, quotedTotal: 10, actionUid: 'abcdefgh12345678'});
+    expect(t.api.buildWalls).toHaveBeenCalledWith({code, placements, islandEpoch: epoch, quotedTotal: 10, actionUid: 'abcdefgh12345678'});
     expect(t.onIsland).toHaveBeenCalledTimes(2); expect(t.mode.active).toBe(false);
+  });
+  it('binds a legacy unknown-context purchase to the real server quote epoch', async () => {
+    const t = setup(); t.set({epoch: null}); await ready(t); await t.mode.confirm();
+    expect(t.api.buildWalls.mock.calls[0][0].islandEpoch).toBe(epoch);
+  });
+  it('refuses a quote that disagrees with the known canonical context epoch', async () => {
+    const t = setup(); await t.mode.start(); t.mode.tap(1.5, 6);
+    t.api.quoteWalls.mockResolvedValueOnce(success({...quoteFor([{x: 1.5, z: 6}]), islandEpoch: '22222222-2222-4222-8222-222222222222'}));
+    await t.mode.quote(); expect(t.mode.state.phase).toBe('refused'); expect(await t.mode.confirm()).toBeNull();
   });
   it('invalidates an old quote when an unpaid draft is edited', async () => {
     const t = setup(); await ready(t); t.mode.tap(5.5, 6); expect(await t.mode.confirm()).toBeNull();
@@ -64,7 +73,7 @@ describe('wall construction controller', () => {
     expect(t.onIsland).toHaveBeenCalledTimes(1); expect(t.mode.state.phase).toBe('unknown');
     await t.mode.confirm(); expect(t.onIsland).toHaveBeenCalledTimes(2); expect(t.makeUid).toHaveBeenCalledTimes(1);
   });
-  it.each([{epoch: 'epoch-b'}, {code: 'ISLE-ABCDE'}])('ignores a changed scope response without repainting it: %j', async changed => {
+  it.each([{epoch: '22222222-2222-4222-8222-222222222222'}, {code: 'ISLE-ABCDE'}])('ignores a changed scope response without repainting it: %j', async changed => {
     const t = setup(), pending = deferred(); await ready(t); t.api.buildWalls.mockReturnValueOnce(pending.promise);
     const first = t.mode.confirm(); t.set(changed);
     pending.resolve(receiptFor(t.api.buildWalls.mock.calls[0][0])); await first;
@@ -94,18 +103,19 @@ describe('wall builder transport', () => {
     const cells = [{x: 1.5, z: 6}], quote = quoteFor(cells);
     const transport = {post: vi.fn(async (path, body) => success(path.endsWith('enable') ? island : path.endsWith('quote') ? quote : receiptFor(body).data))};
     const api = createWallBuilderApi({transport}); await api.enableWalls({code}); expect((await api.quoteWalls({cells, code})).ok).toBe(true);
-    const body = {placements: quote.placements, quotedTotal: 10, actionUid: 'abcdefgh12345678', code};
+    const body = {placements: quote.placements, islandEpoch: epoch, quotedTotal: 10, actionUid: 'abcdefgh12345678', code};
     expect((await api.buildWalls(body)).ok).toBe(true); expect(transport.post).toHaveBeenLastCalledWith('/api/island/walls/build', body);
   });
   it.each([[], [{x: 1.25, z: 0}], [{x: 0, z: 0}, {x: 0, z: 0}]])('refuses invalid cells before posting: %j', async cells => {
     const transport = {post: vi.fn()}, api = createWallBuilderApi({transport});
     expect((await api.quoteWalls({cells})).status).toBe(422); expect(transport.post).not.toHaveBeenCalled();
   });
-  it.each(['spot', 'UID', 'price'])('refuses an invalid construction %s before posting', async changed => {
-    const body = {placements: quoteFor([{x: 1, z: 6}]).placements, quotedTotal: 10, actionUid: 'abcdefgh12345678', code};
+  it.each(['spot', 'UID', 'price', 'epoch'])('refuses an invalid construction %s before posting', async changed => {
+    const body = {placements: quoteFor([{x: 1, z: 6}]).placements, islandEpoch: epoch, quotedTotal: 10, actionUid: 'abcdefgh12345678', code};
     if (changed === 'spot') body.placements[0].spot = 'wall_129';
     if (changed === 'UID') body.actionUid = 'bad';
     if (changed === 'price') body.quotedTotal = 0;
+    if (changed === 'epoch') delete body.islandEpoch;
     const transport = {post: vi.fn()}, api = createWallBuilderApi({transport});
     expect((await api.buildWalls(body)).status).toBe(422); expect(transport.post).not.toHaveBeenCalled();
   });
@@ -126,13 +136,14 @@ describe('wall builder transport', () => {
     const api = createWallBuilderApi({transport: {post: () => pending.promise}}), asked = api.quoteWalls({cells});
     cells[0].x = 9; pending.resolve(success(quoted)); expect((await asked).ok).toBe(true);
   });
-  it.each(['price', 'UID', 'cell', 'island'])('treats a mismatched %s receipt as unknown', async changed => {
-    const body = {placements: quoteFor([{x: 1, z: 6}]).placements, quotedTotal: 10, actionUid: 'abcdefgh12345678', code};
+  it.each(['price', 'UID', 'cell', 'island', 'epoch'])('treats a mismatched %s receipt as unknown', async changed => {
+    const body = {placements: quoteFor([{x: 1, z: 6}]).placements, islandEpoch: epoch, quotedTotal: 10, actionUid: 'abcdefgh12345678', code};
     const reply = receiptFor(body); reply.data = structuredClone(reply.data);
     if (changed === 'price') reply.data.receipt.totalCost++;
     if (changed === 'UID') reply.data.receipt.actionUid = 'otheruid12345678';
     if (changed === 'cell') reply.data.receipt.placements[0].x++;
     if (changed === 'island') reply.data.island.code = 'ISLE-ABCDE';
+    if (changed === 'epoch') reply.data.receipt.islandEpoch = '22222222-2222-4222-8222-222222222222';
     const transport = {post: vi.fn(async () => reply)}, api = createWallBuilderApi({transport});
     expect(await api.buildWalls(body)).toMatchObject({ok: false, status: 502});
     transport.post.mockRejectedValueOnce(new Error('offline')); expect(await api.buildWalls(body)).toMatchObject({ok: false, status: 0});

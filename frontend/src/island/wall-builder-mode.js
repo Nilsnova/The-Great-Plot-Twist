@@ -3,7 +3,7 @@ import {makeActionUid} from '../screens/islet/action-uid.js';
 import {outcomeUnknown} from './api.js';
 import {onGrid, snap} from './placement.js';
 const copyCells = cells => cells.map(cell => ({...cell}));
-const scopeKey = scope => `${scope?.code ?? ''}|${scope?.epoch ?? ''}`;
+const scopeKey = scope => `${scope?.code ?? ''}|${scope?.epoch ?? ''}|${scope?.generation ?? 0}`;
 function extend(cells, x, z) {
   if (!Number.isFinite(x) || !Number.isFinite(z)) return {message: 'Pick a square of the build grid.'};
   const target = snap(x, z), last = cells.at(-1);
@@ -52,8 +52,11 @@ export function createWallBuilder({api, context, render = () => {}, preview = ()
     if (!editable() || !view.cells.length) return null;
     const ticket = ++serial, key = view.key;
     view.busy = true; view.phase = 'quoting'; view.status = 'Checking positions and price…'; show();
-    const answer = await api.quoteWalls({cells: copyCells(view.cells), code: view.scope.code});
+    let answer = await api.quoteWalls({cells: copyCells(view.cells), code: view.scope.code});
     if (!current(ticket, key)) { refresh(); return answer; }
+    if (answer.ok && view.scope.epoch && answer.data.islandEpoch !== view.scope.epoch) {
+      answer = {ok: false, status: 409, code: 'island_changed', message: 'Your island changed. Check the positions again.'};
+    }
     view.busy = false; view.quote = answer.ok ? structuredClone(answer.data) : null;
     view.phase = answer.ok ? 'ready' : 'refused';
     view.status = answer.ok ? 'Positions checked. Confirm the total price to build.' : answer.message; show(); return answer;
@@ -61,7 +64,7 @@ export function createWallBuilder({api, context, render = () => {}, preview = ()
   async function confirm() {
     refresh(); if (!view || view.busy || !['ready', 'unknown'].includes(view.phase)) return null;
     if (!view.intent) {
-      const body = {placements: copyCells(view.quote.placements), quotedTotal: view.quote.totalCost, actionUid: makeUid(), code: view.scope.code};
+      const body = {placements: copyCells(view.quote.placements), islandEpoch: view.quote.islandEpoch, quotedTotal: view.quote.totalCost, actionUid: makeUid(), code: view.scope.code};
       body.placements.forEach(Object.freeze); Object.freeze(body.placements); Object.freeze(body);
       view.intent = {body, quote: structuredClone(view.quote), pending: false}; held.set(view.key, view.intent);
     }
