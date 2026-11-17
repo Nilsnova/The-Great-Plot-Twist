@@ -1647,3 +1647,12 @@ runs against disposable local PostgreSQL with every migration applied twice.
 
 **Limits.** This fence protects a paid restore from a report belonging to a wave that started earlier.
 It does not validate the health a modified client reports or order arbitrary stale reports from other waves.
+
+
+## COC-13 — Between-wave wall joins — Johannes Franz Lang
+
+The first COC-13 slice makes full-side neighboring built walls look connected in the normal island and valid Move preview. [Spec and Explain-back](../specs/COC-13-wall-connections.md) explain the geometry, lower-level spans, cache lifetime and the intentional battle handoff. The pure `wallTopology` function and `makeWallConnections` renderer are in [wall-connections.js](../frontend/src/island/wall-connections.js); the playable integration is [world.js](../frontend/src/island/world.js).
+
+**Why:** players can read a line, corner or T instead of unrelated broad wall icons. **Limits:** existing placement, HP and collision rules are unchanged; the battle renderer still owns damage and ruins. A base-art connection is not proof of canonical full health. **How it could change:** a future coordinated slice could use the same pure geometry with the accepted battle-health state.
+
+**Evidence:** [before/after and raw browser reports](evidence/COC-13/README.md). Focused tests passed 17/17 across two files; broad integration checks and human quiz/review are separately pending.

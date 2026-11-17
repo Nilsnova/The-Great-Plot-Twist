@@ -278,3 +278,11 @@ and [results, screenshots and manual checkpoints](evidence/T28/README.md).
 | The admin script [fresh_start.sql](../scripts/admin/fresh_start.sql) resets the island game, but it forgot the two old weapon columns, so players kept bought weapons after a fresh start. Now it puts every island back to the musket (`weapons_owned`, `weapon_equipped`) and counts those islands | The two fresh-start tests in [test_islands_and_waves_sql.py](../backend/server/tests/island_sql/test_islands_and_waves_sql.py); from `backend/`: `CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql` | One test island with pistols: the dry run only counts (`island weapons reset: 1`) and the pistols stay; the real run, twice, leaves only the musket, and the second run changes nothing | The real Supabase database (the tests use a throwaway test database), so not what the real players' data looks like; no test with many weapons at once |
 
 [Walkthrough part](WALKTHROUGH.md#74--fresh-start-resets-the-old-personal-weapons--nicolas-radomski).
+
+
+## COC-13 — Johannes Franz Lang — between-wave wall joins
+
+| What / why | Where and command | Covers | Does not cover |
+|---|---|---|---|
+| Connect genuine full shared wall sides while arranging the base; retain actual level art and visible gaps | [wall-connections.test.js](../frontend/tests/island/wall-connections.test.js), existing [world-art.test.js](../frontend/tests/island/world-art.test.js); `cd frontend && npm test -- --maxWorkers=1 tests/island/wall-connections.test.js tests/island/world-art.test.js` | Line/L/T adjacency; gaps, partial/diagonal/overlapping contacts; unbuilt/broken/non-wall rows; nonmutation; mixed levels; cache invalidation and disposal. Actual result: 2 files / 17 tests passed | New placement policy, canonical HP persistence, combat connection art, server payments and production state |
+| Real application browser fixture at two sizes | [capture-wall-connections.js](../frontend/scripts/capture-wall-connections.js), [screenshots and reports](evidence/COC-13/README.md) | Normal builds and valid Moves form a T; before/after 1280×720 and 375×812; unchanged position/level data; normal bell hides base joins | Safari, physical devices, broad UI audit, full frontend/build/budget results before central integration |

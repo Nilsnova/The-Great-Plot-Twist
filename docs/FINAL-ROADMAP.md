@@ -146,3 +146,6 @@ The unified-recovery follow-up T54–T60 is claimed by Ianno. The technical prop
 Planning handover (14 Nov): roadmap/task expansion drafted by Ianno Hollensteiner; documentation checks completed. Implementation tasks remain proposed, not done. Peer review and explain-back are pending.
 
 - [x] **B3 current-v3 feedback pass:** implemented by Johannes in drafts [#31](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/31) and [#32](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/32). [Audit, screenshots and limits](B3-FEEDBACK-AUDIT.md). This scoped pass does not claim the historical mystery/email workflows or live provider/multiplayer proof. Human review remains.
+
+
+COC-13 scoped addition (Johannes): the first **between-wave wall-connection drawing** slice is implemented on `feat/coc-13-wall-connections`, tracking [#154](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/154). [Spec](../specs/COC-13-wall-connections.md) and [evidence](evidence/COC-13/README.md) describe the exact phase boundary. The whole COC-13 task is **not** marked complete: combat integration, central checks, Explain-back and independent human review remain. No merge or feature-policy change is claimed.

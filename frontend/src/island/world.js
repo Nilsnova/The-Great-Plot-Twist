@@ -18,6 +18,7 @@ import {islandFrame} from '../art/registry.js';
 import {frameCanvas, smoothTexture, spriteMaterial} from '../art/textures.js';
 import {clickVerdict, WALK_CLOSER} from '../world/reach.js';
 import {decorateProgress} from './decorations.js';
+import {makeWallConnections} from './wall-connections.js';
 
 const UNIT = 16;
 // The first id the catalog knows wins; none known means the drawn sprite stays.
@@ -224,6 +225,8 @@ export function decorateIsland(place, ctx = {}) {
   // The reach of a house's role while its card is open (GAME-V3.md "Houses"): a soft disc with a bright rim on
   // the ground, in the role's colour. ctx.range() says which ({x, z, radius, role} or null), read every frame.
   const rangeRing = makeRangeRing(root);
+  const wallConnections = makeWallConnections(root);
+  let joinedWalls = new Set();
   const baseColliders = [...place.colliders];
   let state = {spots: [], visitor: false, battle: false, unlocks: null, crew: null, campaign: null, arsenal: false}, disposed = false;
   let preview = null;
@@ -246,11 +249,13 @@ export function decorateIsland(place, ctx = {}) {
     const built = answer?.built === true, kind = built ? (kindsOf(spot).includes(answer.kind) ? answer.kind : kindsOf(spot)[0]) : null;
     const level = Number.isSafeInteger(answer?.level) && answer.level > 0 ? answer.level : 1;
     const id = kind ? buildingArt(kind, level, answer?.spec) : null, pips = kind ? pipCount(kind, level) : 0;
-    const where = whereOf(spot), key = !id || hidden ? '' : `${id}:${pips}@${where.x},${where.z}`;
+    const joined = kind === 'wall' && joinedWalls.has(spot.id);
+    const where = whereOf(spot), key = !id || hidden ? '' : `${id}:${pips}:${joined}@${where.x},${where.z}`;
     if (shown.get(spot.id)?.key === key) return;
     clear(spot.id);
     if (!key) return;
     const mesh = put(id, where.x, where.z); mesh.name = `island-${kind}:${spot.id}`; mesh.userData.level = level;
+    if (joined) mesh.scale.x = .62; // Keep the original level art as posts; the join draws the span.
     mesh.userData.role = activeRole({kind, level, spec: answer?.spec}); mesh.userData.art = id;
     const meshes = [mesh], [, height, anchor] = artSizes[id], top = height * (1 - anchor) + .15;
     // One row (pipRow): 4 and 5 smaller and spaced wider than a disc, so the gold stars never overlap.
@@ -276,6 +281,10 @@ export function decorateIsland(place, ctx = {}) {
   function apply({spots = [], visitor = false, battle = false, unlocks = null, crew = null, campaign = null, arsenal = false} = {}) {
     if (disposed) return;
     state = {spots, visitor, battle, unlocks, crew, campaign, arsenal: arsenal === true};
+    joinedWalls = wallConnections.show(battle ? [] : spots.map(item => {
+      const spot = SPOTS.find(entry => entry.id === item.id);
+      return spot ? {...item, ...whereOf(spot), ...(preview?.spotId === item.id && !preview.ok ? {built: false} : {})} : item;
+    })).connected;
     const known = spots.length > 0;
     const shownArsenal = showArsenal(known && state.arsenal);
     if (shownArsenal) shownArsenal.visible = known && state.arsenal;
@@ -299,6 +308,7 @@ export function decorateIsland(place, ctx = {}) {
       for (const kind of kindsOf(spot)) {
         buildings.get(`${spot.id}:${kind}`).visible = !art && built && (answer.kind === kind || (kindsOf(spot).length === 1))
           && !(battle && BATTLE_KINDS.includes(kind));
+        if (kind === 'wall') buildings.get(`${spot.id}:${kind}`).scale.x = joinedWalls.has(spot.id) ? .62 : 1;
       }
       if (art) showSpot(spot, answer, hidden);
       marker.visible = !built && known && !battle && open; // a visitor builds too, with their own coins
@@ -401,9 +411,11 @@ export function decorateIsland(place, ctx = {}) {
       else bell.rotation.z = 0;
     },
     get root() { return root; },
+    get wallJoins() { return wallConnections.links; },
     dispose() {
       if (disposed) return; disposed = true; cleanups.splice(0).forEach(stop => stop());
       progress?.dispose();
+      wallConnections.dispose();
       for (const id of [...shown.keys()]) clear(id);
       for (const item of lockTextures.values()) item.texture.dispose(); // the padlocks a spot no longer shows
       if (art) Object.values(art).forEach(material => { material.map?.dispose(); material.dispose(); });
