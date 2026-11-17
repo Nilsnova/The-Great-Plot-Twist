@@ -128,6 +128,15 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
     get busy() { return busy; },
     get current() { return current ? {...current} : null; },
     secondsLeft: () => (current ? Math.max(0, Math.ceil((current.startAt - now()) / 1000)) : null),
+    // The wave on screen ended here (its controller stopped) but no finish got through: the bell must not say
+    // "Under way" for good. The server decides: a closed or expired wave goes, an open one can be joined again
+    // (the replay catches up at once and finishes once more).
+    release(waveId) {
+      if (disposed || !current || current.wave.waveId !== waveId || !current.joined || current.finished) return false;
+      current = {...current, joined: false}; changed();
+      void look(current.where);
+      return true;
+    },
     // Leaving the island ends the countdown on screen; the wave itself keeps its server time.
     reset() { stopTimers(); current = null; banner(null); changed(); },
     dispose() { if (disposed) return; disposed = true; stopTimers(); stopFinisher(); current = null; banner(null); },

@@ -2,6 +2,9 @@
 // network failure is sent again, and a bell never stays "Under way" after the wave on screen is over.
 import { describe, expect, it, vi } from 'vitest';
 import { createWaveController, finishRetryWait } from '../../src/pirates/controller.js';
+import { createWaveFlow } from '../../src/island/wave-flow.js';
+import { bellModel } from '../../src/island/card-model.js';
+import { WAVE_STARTED } from '../../src/island/wave-hooks.js';
 
 const START = Date.UTC(2026, 10, 18, 12, 0, 0);
 const info = (id, wave = 1) => ({ waveId: id, wave, seed: 77, startsAt: new Date(START + 10000).toISOString(), weather: { ships: 1, fog: 0 }, flagship: false });
@@ -54,3 +57,40 @@ describe('a legacy wave finish with an unknown outcome', () => {
   });
 });
 
+describe('the bell after a wave whose finish never got through', () => {
+  function stubApi() {
+    const wave = { waveId: 'w-1', wave: 3, seed: 7, startsAt: new Date(Date.now() + 10000).toISOString(), weather: {}, flagship: false };
+    const api = { running: wave,
+      startWave: vi.fn(async () => (api.running && api.running !== wave ? { ok: false, status: 409, code: 'wave_running', message: 'A wave is already under way on this island.' } : { ok: true, status: 200, data: wave })),
+      joinWave: vi.fn(async () => (api.running ? { ok: true, status: 200, data: api.running } : { ok: false, status: 409, code: 'wave_over', message: 'This wave is over.' })),
+      currentWave: vi.fn(async () => ({ ok: true, status: 200, data: api.running })),
+      finishWave: vi.fn(async () => ({ ok: false, status: 0, code: 'network_error', message: 'No connection to the server.' })) };
+    return api;
+  }
+  const settle = async () => { for (let i = 0; i < 10; i++) await Promise.resolve(); };
+  it('does not stay "Under way": once the server closed the wave the bell rings again', async () => {
+    const api = stubApi(), events = [];
+    const flow = createWaveFlow({ api, emit: event => events.push(event), notify() {}, setTimer: () => 0, clearTimer() {} });
+    await flow.ring('own');
+    expect(events.filter(event => event.type === WAVE_STARTED)).toHaveLength(1);
+    await flow.finish({ waveId: 'w-1', survived: true, shipsSunk: 3 }, { retry: false });
+    expect(bellModel({ wave: flow.current.wave, joined: flow.current.joined }).action).toBe('none'); // "Under way", disabled
+    api.running = null; // a teammate's finish closed it (or its 900 s ran out)
+    expect(flow.release('w-1')).toBe(true);
+    await settle();
+    expect(flow.current).toBe(null);
+    expect(bellModel({ wave: null }).action).toBe('ring');
+    flow.dispose();
+  });
+  it('offers to join the still open wave again instead (its replay finishes once more)', async () => {
+    const api = stubApi();
+    const flow = createWaveFlow({ api, emit() {}, notify() {}, setTimer: () => 0, clearTimer() {} });
+    await flow.ring('own');
+    expect(flow.release('other-wave')).toBe(false);
+    expect(flow.release('w-1')).toBe(true);
+    await settle();
+    expect(flow.current).toMatchObject({ joined: false, wave: { waveId: 'w-1' } });
+    expect(bellModel({ wave: flow.current.wave, joined: false }).action).toBe('join');
+    flow.dispose();
+  });
+});

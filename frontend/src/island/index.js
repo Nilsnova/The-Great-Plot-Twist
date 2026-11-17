@@ -1350,6 +1350,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       if (!disposed && answer.ok) tookCoins(answer.data.coins);
       return answer;
     },
+    // The island's wave controller stopped this wave (src/pirates/game-wiring.js): a bell still holding it goes.
+    waveStopped(waveId) { if (!disposed && typeof waveId === 'string') flow.release(waveId); },
     setBattle(value) { battle = value === true; if (battle) { village.leave(); waveOver = false; moving.cancel(); } applyWorld(); refreshCardIfBuild(); if (['captain', 'tech', 'overview'].includes(ui.open)) refreshCard(); },
     // A Pirate Point battle: its built walls, cannons and mortars are drawn by the wave renderer meanwhile.
     setPointBattle(value) { pointBattle = value === true; applyWorld(); },
