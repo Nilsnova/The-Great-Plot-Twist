@@ -101,6 +101,76 @@ describe('recovery-v1 controller replay', () => {
     controller.dispose();
   });
 
+  it('checkpoints dirty HP periodically during continuing combat damage', async () => {
+    const listeners = new Map(), bus = {
+      on(type, fn) { if (!listeners.has(type)) listeners.set(type, new Set()); listeners.get(type).add(fn); return () => listeners.get(type).delete(fn); },
+      emit(event) { for (const fn of listeners.get(event.type) ?? []) fn(event); },
+    };
+    let now = START + 1050, activeCheckpoints = 0, maxActiveCheckpoints = 0;
+    const checkpointCalls = [], damageChanges = [];
+    const defenses = [
+      { id: 'wall_1', kind: 'wall', level: 2, x: 0, z: 11 },
+      { id: 'wall_2', kind: 'wall', level: 2, x: 8, z: 8 },
+      { id: 'wall_3', kind: 'wall', level: 2, x: -8, z: 8 },
+      { id: 'wall_4', kind: 'wall', level: 2, x: 0, z: -12 },
+      { id: 'cannon_1', kind: 'cannon', level: 2, x: -8, z: -3 },
+      { id: 'cannon_2', kind: 'cannon', level: 2, x: 8, z: -3 },
+      { id: 'house_1', kind: 'house', level: 2, spec: 'workshop', x: 0, z: 9 },
+    ];
+    const structures = defenses.filter(item => item.kind === 'wall' || item.kind === 'cannon').map(item => ({
+      spot: item.id, instanceId: `${item.id}-damage`, kind: item.kind, level: item.level, x: item.x, z: item.z,
+      hpUnits: 1_000_000, maxHP: item.kind === 'wall' ? 120 : 130, repairSeq: 0,
+    }));
+    const snapshot = { recoveryVersion: 1, waveProtocol: 2, configVersion: 1, waveId: 'wave-r', islandEpoch: 'epoch-r',
+      seed: 20261130, startsAt: new Date(START + 1000).toISOString(), weather: { kind: 'calm', ships: 1, fog: 0 },
+      rules: ['structure_recovery'], participants: [{ participantToken: TOKEN, captain: { level: 1, skills: [], weapon: 'musket' } }],
+      createWave: { seed: 20261130, wave: 15, weather: { ships: 1, fog: 0 }, island: { hp: 10_000 }, crew: { carpenter: 2 },
+        towerHealth: true, pathing: true, towerObstacles: true, defenses }, structures };
+    const readEvents = vi.fn(async () => ({ headSeq: 0,
+      sealedThroughTick: Math.max(-1, Math.floor((now - (START + 1000)) / 50)), events: [] }));
+    const checkpoint = vi.fn(async ({ checkpoint: body }) => {
+      activeCheckpoints++;
+      maxActiveCheckpoints = Math.max(maxActiveCheckpoints, activeCheckpoints);
+      checkpointCalls.push({ at: now, hpUnits: { ...body.hpUnits }, throughTick: body.throughTick });
+      activeCheckpoints--;
+      return { accepted: true, throughTick: body.throughTick, inputHeadSeq: body.inputHeadSeq,
+        lastRepairSeq: body.lastRepairSeq, hpUnits: body.hpUnits };
+    });
+    const controller = createWaveController({ bus, now: () => now,
+      recoveryTransport: { readEvents, sendInputs: vi.fn(async () => ({ accepted: [] })), checkpoint,
+        finishWave: () => new Promise(() => {}) },
+      world: {}, getDefenses: () => [], createRenderer: () => null, createHud: () => null,
+      setTimer: () => ({}), clearTimer: () => {} });
+    bus.emit({ type: 'wave_started_server', waveId: 'wave-r', wave: 15, seed: snapshot.seed,
+      startsAt: snapshot.startsAt, weather: snapshot.weather, rules: snapshot.rules,
+      recoveryVersion: 1, waveProtocol: 2, initialSnapshot: snapshot, participantToken: TOKEN, lastActorCounter: 0 });
+
+    let lastVector = null;
+    for (let i = 0; i < 600 && controller.state?.phase !== 'ended'; i++) {
+      now = START + 1250 + i * 250;
+      controller.update(0.25);
+      const vector = controller.recoveryCombatState?.structures.map(row => row.hpUnits).join(',') ?? null;
+      if (vector && lastVector && vector !== lastVector) damageChanges.push(now);
+      lastVector = vector;
+      await new Promise(resolve => setTimeout(resolve, 0));
+    }
+    // After combat ends, a final 1s idle-render window persists its final dirty vector without more sim ticks.
+    now += 1000;
+    controller.update(0);
+    await new Promise(resolve => setTimeout(resolve, 0));
+    await new Promise(resolve => setTimeout(resolve, 0));
+    const latest = controller.recoveryCombatState;
+    const latestHp = Object.fromEntries(latest.structures.map(row => [row.instanceId, row.hpUnits]));
+    expect(damageChanges.length).toBeGreaterThan(4);
+    expect(damageChanges.at(-1) - damageChanges[0]).toBeGreaterThanOrEqual(3000);
+    expect(checkpointCalls.length).toBeGreaterThanOrEqual(3);
+    expect(checkpointCalls.at(-1).at - checkpointCalls.at(-2).at).toBeGreaterThanOrEqual(950);
+    expect(checkpointCalls.at(-1).at - checkpointCalls.at(-2).at).toBeLessThanOrEqual(1100);
+    expect(checkpointCalls.at(-1).hpUnits).toEqual(latestHp);
+    expect(maxActiveCheckpoints).toBe(1);
+    controller.dispose();
+  });
+
   it('keeps one HP unit positive through the public controller state and display vector', () => {
     const listeners = new Map(), bus = {
       on(type, fn) { if (!listeners.has(type)) listeners.set(type, new Set()); listeners.get(type).add(fn); return () => listeners.get(type).delete(fn); },
