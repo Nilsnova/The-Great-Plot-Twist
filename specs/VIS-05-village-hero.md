@@ -47,7 +47,7 @@ world/combat registration. The coordinator serializes those hooks.
 
 ## Evidence and remaining work
 
-Implementation and runtime proof are pending at claim time. Relevant commands are
+Implementation and runtime proof were pending at claim time. Relevant commands are
 the selected provider/frame checks, `npm run build`, transfer budget, text lint,
 and the coordinator's browser/complete-client checks. Actual-game captures must
 state exact source, fixture, viewport, quality and browser/device limits.
@@ -55,3 +55,12 @@ state exact source, fixture, viewport, quality and browser/device limits.
 Before review, Johannes should explain which identity and foot point stay fixed,
 why native pixels differ from gameplay geometry, and what the actual-game proof
 does not establish. A different human reviews the current revision.
+
+## Authored-source handoff
+
+The original transparent cabin source, data-only VIS-32 mapping and measured alpha
+report are implemented. [Source evidence and exact checks](../docs/evidence/VIS-05-hero/README.md)
+record the unchanged bytes, native geometry and logical foot boundary. Focused
+source/registry checks:2 files /6 tests passed in1.13s; build/spoiler guard,
+cold-title transfer limits and text lint passed. Shared provider registration and
+actual-game1280×720 /375×812 captures remain coordinated work, not a claimed pass.
