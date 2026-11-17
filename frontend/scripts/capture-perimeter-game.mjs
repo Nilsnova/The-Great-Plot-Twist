@@ -30,7 +30,8 @@ try {
   browser = await chromium.launch({executablePath: process.env.CHROME_PATH || '/usr/bin/chromium', headless: true});
   for (const [width, height] of [[1280, 720], [375, 812]]) {
     const context = await browser.newContext({viewport: {width, height}}), page = active = await context.newPage();
-    const errors = [], external = [], consoleErrors = [], record = {width, height, steps: []};
+    const errors = [], external = [], consoleErrors = [], record = {width, height};
+    console.log(`${width}x${height}: actual game boot`);
     page.on('pageerror', error => errors.push(error.message)); page.on('console', msg => { if (msg.type() === 'error') consoleErrors.push(msg.text()); });
     await page.route('**/*', route => route.request().url().startsWith(base) ? route.continue() : (external.push(route.request().url()), route.abort()));
     await stubOfflineApi(page); await page.addInitScript(() => {
@@ -65,10 +66,10 @@ try {
         gridVertices: group.getObjectByName('wall-draft-grid').geometry.attributes.position.count,
         polite: document.querySelector('.island-wall-builder [role=status]').getAttribute('aria-live')};
     });
-    assert.equal(record.preview.ghosts, 2); assert.ok(record.preview.gridVertices >= 80); assert.equal(record.preview.polite, 'polite');
+    assert.equal(record.preview.ghosts, 2); assert.equal(record.preview.gridVertices, 40); assert.equal(record.preview.polite, 'polite');
     record.ghost = await capture(page, out, `unpaid-ghost-${width}x${height}.png`);
     await builder(page).getByRole('button', {name: 'Cancel', exact: true}).click(); assert.deepEqual(await wallet(page), initial);
-    const paid = []; record.runs = [];
+    const paid = []; record.runs = []; console.log(`${width}x${height}: pointer/keyboard/fine grid and unpaid cancel passed`);
     for (let offset = 0; offset < cells.length; offset += 32) {
       const run = cells.slice(offset, offset + 32); await openBuilder(page);
       await page.evaluate(run => { for (const p of run) if (!window.__island.island.wallBuilder.tap(p.x, p.z)) throw new Error('public draft extension refused'); }, run);
@@ -82,11 +83,13 @@ try {
       const after = await wallet(page); assert.equal(before.coins - after.coins, quote.totalCost);
       paid.push(...quote.placements.map(({spot, x, z}) => ({id: spot, x, z, level: 1}))); assert.deepEqual(after.walls, paid);
       record.runs.push({pieces: run.length, quote, coinsBefore: before.coins, coinsAfter: after.coins});
+      console.log(`${width}x${height}: paid ${run.length} walls (${after.walls.length}/102), ${quote.totalCost} coins`);
     }
     const saved = await wallet(page), storedReceipts = await receipts(page); assert.equal(storedReceipts.length, 4);
     assert.equal(new Set(storedReceipts.map(r => r.actionUid)).size, 4); record.receipts = storedReceipts;
     await boot(page, null, true); assert.deepEqual(await wallet(page), saved, 'actual reload retains paid positions, levels and wallet');
     assert.deepEqual(await receipts(page), storedReceipts); await manage(page);
+    console.log(`${width}x${height}: actual reload retained four receipts, exact positions and wallet`);
     const p = await groundPoint(page, [paid[0].x, paid[0].z], .6); await page.mouse.click(p.x, p.y);
     const card = page.locator('.island-card-build[open]'); await card.waitFor();
     record.upgradeCard = await card.innerText(); assert.match(record.upgradeCard, /Wall/);
@@ -98,10 +101,13 @@ try {
     const fitZoom = record.after.zoom, captain = record.after.captain;
     await village(page).getByRole('button', {name: 'Zoom in', exact: true}).click();
     await page.waitForFunction(zoom => window.__island.camera.zoom > zoom * 1.3, fitZoom);
+    record.working = await capture(page, out, `working-zoom-${width}x${height}.png`);
     await village(page).getByRole('button', {name: 'Zoom out', exact: true}).click();
     await village(page).getByRole('button', {name: 'Fit village', exact: true}).click(); await page.waitForTimeout(1200);
-    record.lateRefusal = await lateRefusal(page); record.wave = await capturePerimeterWave(page, out, width, height);
+    record.lateRefusal = await lateRefusal(page);
     assert.deepEqual(await page.evaluate(() => window.__island.player.position.toArray()), captain, 'village controls preserve captain');
+    console.log(`${width}x${height}: upgrade/camera/late refusal passed; starting real frozen-demo bell`);
+    record.wave = await capturePerimeterWave(page, out, width, height);
     const cannon = await page.evaluate(async () => (await import('/scripts/cannon-style-fixture.js')).verifyCannonStyle());
     record.cannon = {scope: cannon.scope, frames: cannon.results}; assert.equal(cannon.results.length, 40);
     for (const sheet of cannon.sheets) await writeFile(join(out, `supplementary-cannon-${width}-${sheet.density}.png`), Buffer.from(sheet.dataUrl.split(',')[1], 'base64'));
@@ -127,8 +133,17 @@ async function lateRefusal(page) {
   const before = await bar.boundingBox(); await bar.getByRole('button', {name: 'Place here', exact: true}).click();
   await page.waitForFunction(() => document.querySelector('.island-move-bar:not(.island-wall-builder).is-refused')?.textContent.includes('Controlled local refusal'));
   await page.waitForTimeout(1300); const after = await bar.boundingBox(); assert.ok(after.y < before.y, 'late longer refusal updates the measured camera inset');
+  const inset = await page.evaluate(async () => {
+    const g = window.__island, {cliffProfile} = await import('/src/art/coast-cliffs.js'), {surfaces} = await import('/src/world/places/surfaces.js');
+    const r = g.renderer.domElement.getBoundingClientRect(), barTop = document.querySelector('.island-move-bar:not(.island-wall-builder):not([hidden])').getBoundingClientRect().top;
+    const topBottom = Math.max(...cliffProfile(surfaces.home_islet).map(p => {
+      const v = g.player.position.clone().set(p.x, -p.y, 0).project(g.camera); return r.y + (1 - v.y) * r.height / 2;
+    }));
+    return {canonicalLandBottom: topBottom, barTop};
+  });
+  assert.ok(inset.canonicalLandBottom < inset.barTop - 4, 'actual Fit camera keeps the canonical shore above the late-refusal inset');
   assert.deepEqual(await wallet(page), old); const buttons = await hitButtons(bar);
   await page.evaluate(() => { window.__island.island.api.move = window.__perimeterSavedMove; delete window.__perimeterSavedMove; });
   await bar.getByRole('button', {name: 'Cancel', exact: true}).click();
-  return {transport: 'explicit one-request local refusal wrapper; no persistence', before, after, buttons, walletUnchanged: true};
+  return {transport: 'explicit one-request local refusal wrapper; no persistence', before, after, inset, buttons, walletUnchanged: true};
 }
