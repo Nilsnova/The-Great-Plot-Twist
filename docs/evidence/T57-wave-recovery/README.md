@@ -27,3 +27,13 @@ The early-wave runs show legacy carpenter/workshop free healing raising the four
 ## Limits
 
 This is a pure `createWave()` combat-simulation harness. The solo/co-op labels are crew-loadout proxies, not separate Captain/player-control simulations. The fixture `chargedPrice` is not a price quote; this diagnostic does not exercise SQL, authorization, shared quota, paid-repair races, transport, persistence, or offline clients. It isolates the changed free-repair gate and replayed full-HP events; it does not validate end-to-end payment correctness or client-reported hit trust. No gameplay tuning was changed.
+
+## T57 follow-up verification · 17 Nov 2026
+
+The isolated T57 regression run on `test/t57-wave-recovery-followup` passed **58 tests across 7 files** with one Vitest worker. It included the existing balance diagnostic plus replay, controller, snapshot, legacy wall recovery and tower health suites. The new `recovery-tower-replay.test.js` runs a zero-HP cannon until a boarder is inside its footprint, then sends a synthetic sealed `structure_repaired` event through the production replay driver and journal-to-sim adapter. It verifies that the tower becomes operational and fires, later boarder damage lowers HP below full, and HP does not rise again after the single restore.
+
+The test does not assert an outside position after restoration, so it does not prove paid-restore egress. The changed test was rerun alone with explicit HP monotonicity assertions and passed **1/1**. Egress remains an integration gap.
+
+This is deterministic client-sim evidence only. The synthetic journal row is not server-authenticated, and this run did not use two signed-in browsers or a live API/database. T60 owns the protocol-2 authenticated multiplayer and full lifecycle verification; paid transaction/quota evidence belongs to T56. The replay test does not establish server verification of every combat hit.
+
+Independent review on 17 Nov ran `npm exec vitest -- run tests/pirates/recovery-tower-replay.test.js tests/pirates/pathing-wiring.test.js --maxWorkers=1` from `frontend/`: 11 tests across 2 files passed in 4.32 seconds. This includes the new paid-event damage/firing regression and existing generic obstacle-exit tests. It does not turn the generic path tests into evidence of an authenticated paid-restore egress scenario.
