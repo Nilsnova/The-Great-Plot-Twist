@@ -54,10 +54,10 @@ describe('projected ground buffers and coast sampling',()=>{
     expect(halo.x).toBe(5);expect(halo.y).toBe(12);lights.dispose();
   });
   it('places and releases an independent selected bracket without creating Move state',()=>{
-    const root=new THREE.Group(),bracket=makeSelectionBracket(root),mesh=root.children[0],dispose=vi.spyOn(mesh.geometry,'dispose');
+    const root=new THREE.Group(),bracket=makeSelectionBracket(root),mesh=root.children[0],dispose=vi.spyOn(mesh.children[0].geometry,'dispose');
     bracket.show({spotId:'wall_13',x:-4,z:-17.5});expect(mesh.visible).toBe(true);expect(mesh.userData.spotId).toBe('wall_13');
     const foot=projectGround(-4,-17.5);expect(mesh.position.x).toBe(foot.x);expect(mesh.position.y).toBe(foot.y);
-    expect(mesh.geometry.attributes.position.count).toBe(16);expect(root.getObjectByName('island-move-footprint')).toBeUndefined();
+    expect(mesh.children).toHaveLength(2);expect(mesh.children[1].geometry.attributes.position.count).toBe(32);expect(root.getObjectByName('island-move-footprint')).toBeUndefined();
     bracket.show(null);expect(mesh.visible).toBe(false);bracket.dispose();expect(dispose).toHaveBeenCalledOnce();expect(root.children).toEqual([]);
   });
 });
