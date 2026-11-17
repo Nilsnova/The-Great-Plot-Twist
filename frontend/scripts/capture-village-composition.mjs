@@ -8,7 +8,7 @@ import {execFileSync} from 'node:child_process';
 import {createServer} from 'vite';
 import {chromium} from 'playwright-core';
 import {stubOfflineApi} from './api-browser-fixture.js';
-import {boot,capture,groundPoint,hitButtons,manage,settleCards,village,villageFrameEvidence,wallet,workspaceBounds} from './perimeter-game-ui.mjs';
+import {boot,builder,capture,groundPoint,hitButtons,manage,openBuilder,settleCards,village,villageFrameEvidence,wallet,wallRenderEvidence,workspaceBounds} from './perimeter-game-ui.mjs';
 const root=resolve(process.argv[2]),out=resolve(process.argv[3]),mode=process.argv[4];
 assert.ok(['before','after','materials','reference'].includes(mode));await mkdir(out,{recursive:true});
 const head=()=>execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim(),source=head();
@@ -48,32 +48,36 @@ try{
     await settleCards(page);
     await village(page).getByRole('button',{name:'Exit village mode',exact:true}).click();await manage(page);
     const paid=await wallet(page);assert.equal(paid.coins,6660);assert.equal(paid.walls.length,102);
-    let pngMeshes=[],rasterParity=null;
+    let pngMeshes=[],rasterParity=null,bindings=[];
     if(['materials','reference'].includes(mode)){
-      await page.waitForFunction(async reference=>{
-        const ids=new Set();let nature=false;
-        const files=new Set();
+      const required=mode==='reference'?['cabin','island-house','oak','island-watchtower','island-bell','island-techhub','island_core','island-cannon','island-mortar','island-harpoon','island-wall-l2','village-wall-front-l1']:['cabin','island-house','oak','island-watchtower'];
+      bindings=await page.evaluate(async ids=>{
+        const {getRasterFrame}=await import('/src/art/village-raster.js');
+        return ids.map(id=>{const f=getRasterFrame(id);if(!f)throw Error(`Required paid-fixture PNG is not registered: ${id}`);return{id,file:f.sheet.file,rect:[...f.rect],logical:[...f.logical]};});
+      },required);
+      // Resolve module metadata before polling: this predicate returns a synchronous truth value.
+      await page.waitForFunction(required=>{
+        const sources=[];
         window.__island.world.current.group.traverse(mesh=>{
           const source=mesh.material?.map?.userData.villageArt;
-          for(const row of Array.isArray(source)?source:[source])if(mesh.visible&&row?.source==='png'){ids.add(row.id);files.add(row.file);nature||=row.file==='village/nature-v1.png';}
+          for(const row of Array.isArray(source)?source:[source])if(mesh.visible&&row?.source==='png')sources.push(row);
         });
-        if(reference){const {villageFamilies}=await import('/src/art/village-families.js');return villageFamilies.length===9&&villageFamilies.every(f=>Object.values(f.sheets).every(s=>files.has(s.file)));}
-        return nature&&['cabin','island-house','island-watchtower'].every(id=>ids.has(id));
-      },mode==='reference');
+        return required.every(wanted=>sources.some(row=>row.id===wanted.id&&row.file===wanted.file));
+      },bindings);
       pngMeshes=await page.evaluate(()=>{
         const rows=[];window.__island.world.current.group.traverse(mesh=>{
           const source=mesh.material?.map?.userData.villageArt;
           if(mesh.visible&&source)rows.push({name:mesh.name,source,ground:mesh.userData.ground??null});
         });return rows;
       });
-      rasterParity=await page.evaluate(async()=>
-        (await import('/scripts/village-raster-fixture.js')).verifyVillageRasterFrames(['cabin','island-house','oak','island-watchtower']));
+      rasterParity=await page.evaluate(async ids=>
+        (await import('/scripts/village-raster-fixture.js')).verifyVillageRasterFrames(ids),required.filter(id=>!id.startsWith('village-wall-')));
     }
     const frame=await villageFrameEvidence(page,'.island-village-mode:not([hidden])');
     const entry=await capture(page,out,`${mode}-entry-${width}x${height}.png`),buttons=await hitButtons(village(page));
     const expectedWork=frame.fit?.bounds?(frame.phone?Math.max(frame.fit.zoom,.9):frame.fit.zoom*1.05):1;
     if(mode!=='before')assert.ok(Math.abs(entry.zoom-expectedWork)<.005,`entry uses actual Work contract: ${entry.zoom} vs ${expectedWork}`);else assert.ok(entry.zoom<.5,'old complete-island entry');
-    const bar=await village(page).boundingBox(),quests=await page.locator('.quest-strip').boundingBox();
+    const bar=await village(page).boundingBox();
     const x=width/2,y=(frame.viewport.top+bar.y)/2;
     await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x+60,y+20,{steps:6});await page.mouse.up();await page.waitForTimeout(900);
     const dragged=await page.evaluate(()=>({camera:window.__island.camera.position.toArray(),zoom:window.__island.camera.zoom}));
@@ -95,12 +99,39 @@ try{
     await page.mouse.click(pick.x,pick.y);await page.locator('.island-card-build[open]').waitFor();
     assert.match(await page.locator('.island-card-build[open]').innerText(),/Mortar/,'actual ground pick opens the paid remote mortar');
     assert.deepEqual(await wallet(page),paid,'camera actions do not alter paid layout');
+    let details=null;
+    if(mode==='reference'){
+      await page.keyboard.press('Escape');await village(page).getByRole('button',{name:'Fit village',exact:true}).click();await page.waitForTimeout(1200);
+      const chosen=paid.walls.find(w=>w.id==='wall_1'),point=await groundPoint(page,[chosen.x,chosen.z],.4);
+      await page.mouse.click(point.x,point.y);const dock=page.locator('.island-selection-dock');await dock.waitFor();
+      await dock.locator('[data-focus=upgrade]').click();
+      await page.waitForFunction(()=>window.__island.island.island.spots.find(s=>s.id==='wall_1').level===3);await page.waitForTimeout(1100);
+      const upgraded=await wallet(page),expected=structuredClone(paid);expected.coins-=40;expected.walls.find(w=>w.id==='wall_1').level=3;
+      assert.deepEqual(upgraded,expected,'actual selected upgrade pays exactly40coins, preserving every paid position');
+      const selectedFrame=await villageFrameEvidence(page,'.island-selection-dock'),foot=await groundPoint(page,[chosen.x,chosen.z]);
+      const dockBox=await dock.boundingBox();assert.ok(foot.x>0&&foot.x<width&&foot.y>selectedFrame.viewport.top&&foot.y<dockBox.y-4,'selected logical foot clears actual HUD/dock');
+      const portrait=await dock.locator('canvas').evaluate(c=>c.villageArt);
+      assert.equal(portrait?.id,'island-wall-l3');assert.equal(portrait?.source,'png','level3 portrait uses actual prepared PNG');
+      const selected={frame:selectedFrame,foot,portrait,buttons:await hitButtons(dock),capture:await capture(page,out,`reference-selected-level3-${width}x${height}.png`)};
+      await dock.locator('[data-focus=move]').click();const move=page.locator('.island-reference-move:not([hidden])');await move.waitFor();
+      await move.getByRole('button',{name:'One square west',exact:true}).click();await page.waitForTimeout(900);
+      const moving=await page.evaluate(()=>window.__island.island.moveMode.state);
+      assert.equal(moving.spotId,chosen.id);assert.equal(moving.x,chosen.x-.5);assert.equal(moving.z,chosen.z);
+      const movement={state:moving,buttons:await hitButtons(move),capture:await capture(page,out,`reference-move-level3-${width}x${height}.png`)};
+      await move.getByRole('button',{name:'Cancel',exact:true}).click();assert.deepEqual(await wallet(page),upgraded,'Move cancel never commits the preview');
+      await openBuilder(page);await builder(page).getByRole('button',{name:'Fit village',exact:true}).click();await page.waitForTimeout(1100);
+      const start=await groundPoint(page,[-4,10]);await page.mouse.click(start.x,start.y);await page.keyboard.press('ArrowRight');await page.keyboard.press('ArrowRight');await page.waitForTimeout(1100);
+      const ghost=await wallRenderEvidence(page);assert.equal(ghost.world.posts.length,102);assert.equal(ghost.draft.cells.length,3);
+      const ghostFrame={...ghost,buttons:await hitButtons(builder(page)),capture:await capture(page,out,`reference-wall-draft-${width}x${height}.png`)};
+      await builder(page).getByRole('button',{name:'Cancel',exact:true}).click();assert.deepEqual(await wallet(page),upgraded,'unpaid wall ghosts never change the paid save');
+      details={selected,movement,ghost:ghostFrame,paidBeforeUpgrade:paid,paidAfterUpgrade:upgraded,extraPaidAction:'actual selected wall level2→3,40coins'};
+    }
     assert.deepEqual(await page.evaluate(()=>window.__island.player.position.toArray()),entry.captain,'management preserves captain');
     assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
-    checks.push({width,height,paid,entry,expectedWork,frame,buttons,dragged,peek,fit,workspace,focusApiDiagnostic:focus,pick,pngMeshes,rasterParity,pageErrors:errors,externalRequests:external,consoleErrors});
+    checks.push({width,height,paid,entry,expectedWork,frame,buttons,dragged,peek,fit,workspace,focusApiDiagnostic:focus,pick,bindings,pngMeshes,rasterParity,details,pageErrors:errors,externalRequests:external,consoleErrors});
     await context.close();
   }
   assert.equal(head(),source,'runtime remained frozen');
-  await writeFile(join(out,'report.json'),JSON.stringify({mode,source,sourceTree,scope:mode==='reference'?'actual nine-family scene and D064 camera/projection checkpoint; visual acceptance and performance/device budgets remain separate':mode==='materials'?'historical cabin/houses/nature/watchtower material checkpoint; other active families are outside this scope':'actual camera regression, not new-look acceptance; explicit focus is a public camera API diagnostic',fixture:'declared8000coins/best40/seven paid buildings/102paid ring/one20coin upgrade; long drafts use public builder; entry/Fit/Tab/drag/pick use real controls',checks},null,2)+'\n');
+  await writeFile(join(out,'report.json'),JSON.stringify({mode,source,sourceTree,scope:mode==='reference'?'actual registered paid-fixture PNGs and D064 camera/selection/Move/ghost checkpoint; compiled/raw binding receipts determine source files, not family counts; final visual/device acceptance remains separate':mode==='materials'?'historical cabin/houses/nature/watchtower material checkpoint; other active families are outside this scope':'actual camera regression, not new-look acceptance; explicit focus is a public camera API diagnostic',fixture:'declared8000coins/best40/seven paid buildings/102paid ring/one20coin upgrade leaves6660; reference selected wall level3 upgrade pays40more, leaves6620; real Move/ghost Cancel preserves this save',checks},null,2)+'\n');
   console.log(`PASS: ${mode} actual-game camera/material checkpoint at1280x720/375x812;102walls/6660coins unchanged; entry/Fit/Tab/drag/ground pick;0page errors/external`);
 }finally{await browser?.close();await server.close();}
