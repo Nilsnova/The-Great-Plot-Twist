@@ -29,3 +29,75 @@ Expected files: `frontend/src/art/village/walls.js`, focused wall metadata/atlas
 ## Limits
 
 No new dependency, gameplay/HP/breach change, source-image editing, main push, force push, merge, live migration or production activation. Keep Draft for explain-back and a different human's review.
+
+## Implemented correction
+
+`wallFrame(1, 'damaged')` and `wallFrame(1, 'broken')` now return
+`island-wall-l1-damaged` and `island-wall-l1-broken`. Level-one intact and
+all level-two through level-five selectors retain their previous IDs. The
+generic damaged/broken aliases retain the existing level-three source crops.
+All canonical frames still share logical48×32 dimensions and anchor6; no
+PNG bytes, coordinates, source feet or gameplay data changed.
+
+The32 metadata entries now represent30 canonical atlas frames and two
+separate legacy aliases. Both world and combat already import the same
+canonical selector/list, so the correction reaches their batched UVs without
+another renderer implementation. The final asset compiler must include this
+metadata; its previous bake predates the two distinct L1 state entries.
+
+## Exact verification
+
+Verified runtime source: `813a08673c2f2159cb41612d1af784d157552800`.
+
+Before the fix, `npx vitest run tests/art/wall-tier-identity.test.js` exited1
+with **3 failed tests**. It reproduced the wrong canonical L1 selector and
+wrong actual world and combat UV rectangles for level-one damage. After the
+fix, from `frontend/`:
+
+```text
+npx vitest run tests/art/wall-tier-identity.test.js tests/art/wall-atlas.test.js tests/art/village-activation.test.js tests/island/wall-shaded-preview.test.js
+Test Files  4 passed (4)
+Tests       14 passed (14)
+Duration    1.13s
+
+npm run build
+Built in 1.01s
+Spoiler guard: 244 text files, 12 protected lines, no suspect elimination data.
+
+node scripts/report-budget.js --check
+Exit 0; cold-title JavaScript 18,825 bytes, CSS 9,410 bytes.
+```
+
+From the repository root, `node scripts/text-lint/index.mjs` exited0:
+`4538 candidate strings in 528 source files; 0 errors, 8 report-only findings.`
+The existing report-only findings were not modified.
+
+The regression checks all15 canonical tier/state crops against the authored
+five-column/three-row source layout, their shared metrics, registration and
+unique canonical atlas coverage. Separate actual Three.js buffer checks use
+both world and combat consumers for all15 states and inspect the post UVs;
+these are pure geometry checks, not GPU screenshot acceptance. No Chrome
+process was launched by this lane.
+
+Not verified here: final baked asset output, combined screenshots, live
+recovery behavior, full frontend suite, a11y/demo or production. A separate
+integration finding remains: `structureRecoveryAppearance` in `world.js`
+uses generic wall state IDs in its nonbatch fallback. The coordinator owns
+that shared-file correction and its recovery tests. This metadata PR does
+not claim to resolve it. Overall wall visual acceptance remains open.
+
+## Explain-back
+
+I keep the old generic aliases because an older caller may still expect
+them to mean level three. The new renderer knows each wall's actual level,
+so it uses an explicit level-one ID for damaged and broken artwork. This
+prevents one dictionary entry from replacing another tier's source crop.
+The image lookup changes; wall health, paid upgrades and breach behavior
+do not. The focused tests inspect the actual selected UVs as well as the
+metadata so they catch the error reaching either consumer.
+
+1. Why did the generic damaged ID replace level-one artwork with level three?
+2. Why do we preserve the generic alias while adding an explicit L1 ID?
+3. How do the actual buffer checks prove the fix reaches both consumers?
+
+Keep Draft for Johannes's explain-back and a different human's review.
