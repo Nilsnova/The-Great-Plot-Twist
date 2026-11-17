@@ -17,6 +17,13 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
   now = () => Date.now(), setTimer = (fn, ms) => setTimeout(fn, ms), clearTimer = id => clearTimeout(id)} = {}) {
   let current = null; // {wave, where, joined, finished}
   let busy = false, disposed = false;
+  let contextWhere = null, contextGeneration = 0, lookupGeneration = 0;
+  // Reads may overlap preparation. Target/reset changes cancel admission; a join also keeps its wave ID.
+  // a newer read, accepted begin or clear invalidates older read responses before they mutate current.
+  const contextFor = where => {
+    if (where !== contextWhere) { contextWhere = where; contextGeneration++; lookupGeneration++; }
+    return contextGeneration;
+  };
   const timers = new Set();
   const later = (fn, ms) => { const id = setTimer(() => { timers.delete(id); if (!disposed) fn(); }, ms); timers.add(id); return id; };
   const stopTimers = () => { for (const id of timers) clearTimer(id); timers.clear(); };
@@ -45,6 +52,7 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
   }
   // A wave we are in: remember it, tell the game, count down.
   function begin(wave, where, {fresh = false} = {}) {
+    lookupGeneration++;
     if (current?.wave.waveId === wave.waveId && current.joined) return;
     stopTimers();
     current = {wave, where, joined: true, finished: false, startAt: now()};
@@ -74,29 +82,33 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
   // joinRunning: the break's "Next wave" (two friends may press it at once): when the other one's
   // wave already runs there, join it instead of saying no.
   const ring = (where = 'own', {joinRunning = false} = {}) => run(async () => {
+    const generation = contextFor(where);
     const answer = await api.startWave({where});
-    if (disposed) return answer;
-    if (answer.ok) { await ready(); if (!disposed) begin(answer.data, where, {fresh: true}); }
+    if (disposed || generation !== contextGeneration) return answer;
+    if (answer.ok) { await ready(); if (!disposed && generation === contextGeneration) begin(answer.data, where, {fresh: true}); }
     else if (answer.code === 'wave_running') {
       await look(where);
-      if (joinRunning && !disposed && current && !current.joined) return joinNow(where);
+      if (joinRunning && !disposed && generation === contextGeneration && current && !current.joined) return joinNow(where);
     }
     return answer;
   });
   async function joinNow(where) {
+    const generation = contextFor(where);
     const waveId = current?.wave.waveId;
-    if (!waveId) return {ok: false, status: 404, code: 'no_such_wave', message: 'There is no wave to join.'};
+    if (!waveId || current.where !== where) return {ok: false, status: 404, code: 'no_such_wave', message: 'There is no wave to join.'};
+    const stillCurrent = () => !disposed && generation === contextGeneration && current?.where === where && current?.wave.waveId === waveId;
     const answer = await api.joinWave({waveId});
-    if (disposed) return answer;
-    if (answer.ok) { await ready(); if (!disposed) begin(answer.data, where); }
-    else if (answer.code === 'wave_over') { current = null; changed(); }
+    if (!stillCurrent()) return answer;
+    if (answer.ok) { await ready(); if (stillCurrent()) begin(answer.data, where); }
+    else if (answer.code === 'wave_over') { lookupGeneration++; current = null; changed(); }
     return answer;
   }
   const join = (where = 'own') => run(() => joinNow(where));
   // A friend sailing in (or a page reload) asks whether a wave runs there; it is shown, not joined.
   async function look(where = 'own') {
+    const generation = contextFor(where), lookup = ++lookupGeneration;
     const answer = await api.currentWave({where});
-    if (disposed || !answer.ok) return answer;
+    if (disposed || generation !== contextGeneration || lookup !== lookupGeneration || !answer.ok) return answer;
     if (answer.data && current?.wave.waveId !== answer.data.waveId) {
       stopTimers(); current = {wave: answer.data, where, joined: false, finished: false, startAt: now()};
     } else if (!answer.data && current && !current.joined) current = null;
@@ -116,7 +128,7 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
     }
     if (!answer.ok) { notify(answer.message, 'error'); return answer; }
     const number = current?.wave.waveId === waveId ? current.wave.wave : undefined;
-    if (current?.wave.waveId === waveId) { current.finished = true; stopTimers(); banner(null); current = null; }
+    if (current?.wave.waveId === waveId) { lookupGeneration++; current.finished = true; stopTimers(); banner(null); current = null; }
     if (survived) notify(lootText(answer.data), 'success');
     else notify(`The pirates broke through. You have ${coinText(answer.data.coins)}.`, 'error');
     emit({type: WAVE_FINISHED, survived: survived === true, waveId, ...(number ? {wave: number} : {}), ...answer.data});
@@ -154,7 +166,7 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
       return true;
     },
     // Leaving the island ends the countdown on screen; the wave itself keeps its server time.
-    reset() { stopTimers(); current = null; banner(null); changed(); },
-    dispose() { if (disposed) return; disposed = true; stopTimers(); stopFinisher(); current = null; banner(null); },
+    reset() { contextGeneration++; lookupGeneration++; contextWhere = null; stopTimers(); current = null; banner(null); changed(); },
+    dispose() { if (disposed) return; disposed = true; contextGeneration++; lookupGeneration++; stopTimers(); stopFinisher(); current = null; banner(null); },
   };
 }
