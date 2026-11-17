@@ -1,0 +1,246 @@
+{
+  "source": "76f66f3f434b98cfa474b0ff0447c95ea9421bc1",
+  "fixture": "declared funded/progressed fake; actual pointer/keys/fine/quote/cancel; no paid save injection",
+  "states": [
+    {
+      "phase": "unquoted",
+      "bounds": {
+        "canonicalLandTop": 222.8756128098744,
+        "canonicalLandBottom": 437.29179752184183,
+        "barTop": 471.9375,
+        "barHeight": 316.0625,
+        "barBottom": 788
+      },
+      "buttons": [
+        {
+          "label": "Shift draft one square west",
+          "width": 44,
+          "height": 44,
+          "hit": true
+        },
+        {
+          "label": "Shift draft one square north",
+          "width": 44,
+          "height": 44,
+          "hit": true
+        },
+        {
+          "label": "Shift draft one square south",
+          "width": 44,
+          "height": 44,
+          "hit": true
+        },
+        {
+          "label": "Shift draft one square east",
+          "width": 44,
+          "height": 44,
+          "hit": true
+        },
+        {
+          "label": "Zoom out",
+          "width": 44,
+          "height": 44,
+          "hit": true
+        },
+        {
+          "label": "Zoom in",
+          "width": 44,
+          "height": 44,
+          "hit": true
+        },
+        {
+          "label": "Fit village",
+          "width": 44,
+          "height": 44,
+          "hit": true
+        },
+        {
+          "label": "Remove last",
+          "width": 60.328125,
+          "height": 44,
+          "hit": true
+        },
+        {
+          "label": "Clear",
+          "width": 60.328125,
+          "height": 44,
+          "hit": true
+        },
+        {
+          "label": "Cancel",
+          "width": 60.328125,
+          "height": 44,
+          "hit": true
+        },
+        {
+          "label": "Get price",
+          "width": 332.984375,
+          "height": 46.09375,
+          "hit": true
+        }
+      ],
+      "frame": {
+        "name": "workspace-unquoted-375x812.png",
+        "qualityBefore": {
+          "pixelRatio": 0.8,
+          "drawingWidth": 300,
+          "drawingHeight": 649,
+          "quality": "high",
+          "densityScale": 0.8
+        },
+        "camera": [
+          4.2670259828272004e-10,
+          -10.78899982780831,
+          100
+        ],
+        "zoom": 0.2829222547860701,
+        "captain": [
+          8.5,
+          1.03,
+          12.8
+        ],
+        "contextLost": false,
+        "drawCalls": 88,
+        "rendering": {
+          "pixelRatio": 1,
+          "drawingWidth": 375,
+          "drawingHeight": 812,
+          "quality": "high",
+          "densityScale": 1
+        },
+        "pixelRatio": 1,
+        "drawingSize": [
+          375,
+          812
+        ],
+        "memory": {
+          "geometries": 107,
+          "textures": 28
+        },
+        "worldLinks": 0,
+        "worldWallDrawMeshes": 0
+      }
+    },
+    {
+      "phase": "quoted",
+      "bounds": {
+        "canonicalLandTop": 219.38837975876888,
+        "canonicalLandBottom": 419.88861971711617,
+        "barTop": 453.046875,
+        "barHeight": 334.953125,
+        "barBottom": 788
+      },
+      "buttons": [
+        {
+          "label": "Shift draft one square west",
+          "width": 44,
+          "height": 44,
+          "hit": true
+        },
+        {
+          "label": "Shift draft one square north",
+          "width": 44,
+          "height": 44,
+          "hit": true
+        },
+        {
+          "label": "Shift draft one square south",
+          "width": 44,
+          "height": 44,
+          "hit": true
+        },
+        {
+          "label": "Shift draft one square east",
+          "width": 44,
+          "height": 44,
+          "hit": true
+        },
+        {
+          "label": "Zoom out",
+          "width": 44,
+          "height": 44,
+          "hit": true
+        },
+        {
+          "label": "Zoom in",
+          "width": 44,
+          "height": 44,
+          "hit": true
+        },
+        {
+          "label": "Fit village",
+          "width": 44,
+          "height": 44,
+          "hit": true
+        },
+        {
+          "label": "Remove last",
+          "width": 60.328125,
+          "height": 44,
+          "hit": true
+        },
+        {
+          "label": "Clear",
+          "width": 60.328125,
+          "height": 44,
+          "hit": true
+        },
+        {
+          "label": "Cancel",
+          "width": 60.328125,
+          "height": 44,
+          "hit": true
+        },
+        {
+          "label": "Build for 20 coins",
+          "width": 332.984375,
+          "height": 46.09375,
+          "hit": true
+        }
+      ],
+      "frame": {
+        "name": "workspace-quoted-375x812.png",
+        "qualityBefore": {
+          "pixelRatio": 1,
+          "drawingWidth": 375,
+          "drawingHeight": 812,
+          "quality": "high",
+          "densityScale": 1
+        },
+        "camera": [
+          1.898867138421639e-14,
+          -13.269332612378134,
+          100
+        ],
+        "zoom": 0.26455042561164244,
+        "captain": [
+          8.5,
+          1.03,
+          12.8
+        ],
+        "contextLost": false,
+        "drawCalls": 88,
+        "rendering": {
+          "pixelRatio": 1,
+          "drawingWidth": 375,
+          "drawingHeight": 812,
+          "quality": "high",
+          "densityScale": 1
+        },
+        "pixelRatio": 1,
+        "drawingSize": [
+          375,
+          812
+        ],
+        "memory": {
+          "geometries": 107,
+          "textures": 28
+        },
+        "worldLinks": 0,
+        "worldWallDrawMeshes": 0
+      }
+    }
+  ],
+  "errors": [],
+  "external": []
+}
