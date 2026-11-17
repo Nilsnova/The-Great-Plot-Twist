@@ -75,7 +75,29 @@ try {
       });
       assert.ok(point.x>0&&point.x<width&&point.y>0&&point.y<height,'distant tower is on screen');
       await page.mouse.click(point.x,point.y);await page.locator('.island-card-build[open]').waitFor();
-      await page.keyboard.press('Escape');await button.click();await page.waitForFunction(()=>!window.__island.island.managing&&window.__island.camera.zoom>.98);
+      await page.locator('.island-card-build[open] .island-move').click();
+      await page.waitForTimeout(1300);
+      const reflow=await page.evaluate(async()=>{
+        const g=window.__island,i=g.island,bar=document.querySelector('.island-move-bar');g.camera.updateMatrixWorld();
+        const before=bar.getBoundingClientRect().top,canvas=g.renderer.domElement.getBoundingClientRect();
+        const oldLandBottom=(1-g.player.position.clone().set(0,-22*.72,0).project(g.camera).y)*canvas.height/2;
+        i.moveMode.nudge(0,1);if(!i.moveMode.state.ok)throw new Error('failure probe needs a valid candidate');
+        const original=i.api.move;
+        try{
+          i.api.move=async()=>({ok:false,status:503,code:'database_unavailable',message:('The connection is busy. Your island did not change. Check the selected square and try again when the connection is back. ').repeat(2).trim()});
+          await i.moveMode.confirm();
+        }finally{i.api.move=original;}
+        return {before,after:bar.getBoundingClientRect().top,oldLandBottom};
+      });
+      assert.ok(reflow.before-reflow.after>30,'a real refusal row wraps and grows the active bar');
+      assert.ok(reflow.oldLandBottom>reflow.after,'stale framing would now cover the southern land');
+      await page.waitForFunction(()=>{
+        const g=window.__island,r=g.renderer.domElement.getBoundingClientRect();g.camera.updateMatrixWorld();
+        const y=(1-g.player.position.clone().set(0,-22*.72,0).project(g.camera).y)*r.height/2;
+        return y<document.querySelector('.island-move-bar').getBoundingClientRect().top-4;
+      });
+      state.refusalReflow=reflow;
+      await page.locator('.island-move-cancel').click();await button.click();await page.waitForFunction(()=>!window.__island.island.managing&&window.__island.camera.zoom>.98);
     }
     assert.deepEqual(errors,[]);assert.deepEqual(external,[]);screens.push({width,height,name,...state,pageErrors:errors,externalRequests:external.length});
     await context.close();

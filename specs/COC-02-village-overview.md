@@ -26,7 +26,9 @@ returns to the captain and the player's previous exploration zoom on exit.
   It includes the existing wavy coast and space for buildings and screen UI.
 - The game measures the visible management/move bar and phone quest strip when
   the layout key changes. Caption-height changes, resize, quest content/folding
-  and entering placement invalidate that key. The camera fits and centers the
+  and entering placement invalidate that key. The active bar's text and classes
+  also invalidate it: a wrapped refusal must not keep the previous short bar's
+  inset while placement stays active. The camera fits and centers the
   base in the remaining vertical viewport rather than behind these overlays.
 - Reading the existing inline caption-height signal and canvas dimensions avoids
   measuring DOM rectangles every frame. No resize observer or new global UI
@@ -60,6 +62,9 @@ view. The existing input end-of-frame handling clears that wheel delta normally.
 - The actual current coastline's sampled land cells fit inside both 1280 × 720
   and 375 × 812 camera views, with a separate tall-building check.
 - Land cells and the tall-building point also fit between measured UI insets.
+- A recorded long client refusal grows the same active Move bar; the fit updates
+  before that bar can cover the southern land. The probe restores the client
+  adapter and cancels the uncommitted move without a server write.
 - Entering the view leaves the captain position unchanged.
 - Exiting restores the prior exploration zoom and follow position.
 - Combat and tutorial requests still work and are not overwritten.

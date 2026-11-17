@@ -8,10 +8,10 @@
       "height": 720,
       "name": "after-1280x720.png",
       "managing": true,
-      "zoom": 0.26754765760326404,
+      "zoom": 0.2675295544495836,
       "position": [
-        -0.00020943652434229717,
-        -5.685223249983383,
+        -0.00003643102355162671,
+        -5.685636133124382,
         100
       ],
       "captain": [
@@ -22,10 +22,15 @@
       "built": 19,
       "contextLost": false,
       "drawCalls": 88,
-      "landTop": 118.98625072778322,
-      "landBottom": 442.6118973646914,
+      "landTop": 118.99894350645408,
+      "landBottom": 442.60269256867036,
       "safeTop": 80,
       "safeBottom": 487.90625,
+      "refusalReflow": {
+        "before": 551.421875,
+        "after": 486.640625,
+        "oldLandBottom": 507.89812368713
+      },
       "pageErrors": [],
       "externalRequests": 0
     },
@@ -34,10 +39,10 @@
       "height": 812,
       "name": "after-375x812.png",
       "managing": true,
-      "zoom": 0.31970047204979374,
+      "zoom": 0.3197004822348465,
       "position": [
-        -0.0002095412687883996,
-        -6.6820661061943625,
+        -0.0002096460656198176,
+        -6.682065841169224,
         100
       ],
       "captain": [
@@ -48,10 +53,15 @@
       "built": 19,
       "contextLost": false,
       "drawCalls": 88,
-      "landTop": 192.28473442220874,
-      "landBottom": 469.22526833534255,
+      "landTop": 192.2847295994724,
+      "landBottom": 469.22527233540814,
       "safeTop": 157.1875,
       "safeBottom": 509.71875,
+      "refusalReflow": {
+        "before": 582.53125,
+        "after": 452.96875,
+        "oldLandBottom": 517.003207152617
+      },
       "pageErrors": [],
       "externalRequests": 0
     }

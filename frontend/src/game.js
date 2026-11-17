@@ -266,16 +266,20 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     return wavesLoad;
   }
   const projected=new THREE.Vector3(),canvas=graphics.renderer.domElement;
-  let villageLayoutKey='',villageViewport=null,villageQuests=null;
+  let villageLayoutKey='',villageViewport=null,villageQuests=null,villageBar=null,villagePlacing=null;
   function updateVillageView(){
     const managing=island?.managing===true&&!inBattle;
-    if(!managing){villageLayoutKey='';view.setVillageView(false);return;}
+    if(!managing){villageLayoutKey='';villageBar=null;view.setVillageView(false);return;}
     const width=parseFloat(canvas.style.width)||window.innerWidth,height=parseFloat(canvas.style.height)||window.innerHeight;
     villageQuests??=container.querySelector('.quest-strip');
     const caption=document.documentElement.style.getPropertyValue('--narrator-card-height');
-    const key=`${width}:${height}:${caption}:${villageQuests?.textContent}:${villageQuests?.className}:${!!island.moving}`;
+    const placing=!!island.moving;
+    if(!villageBar?.isConnected||villagePlacing!==placing){
+      villageBar=container.querySelector(placing?'.island-move-bar:not([hidden])':'.island-village-mode:not([hidden])');villagePlacing=placing;
+    }
+    const key=`${width}:${height}:${caption}:${villageQuests?.textContent}:${villageQuests?.className}:${placing}:${villageBar?.textContent}:${villageBar?.className}:${document.documentElement.className}:${document.body.className}`;
     if(key!==villageLayoutKey){
-      const bar=container.querySelector(island.moving?'.island-move-bar:not([hidden])':'.island-village-mode:not([hidden])');
+      const bar=villageBar;
       const top=width<640?villageQuests?.getBoundingClientRect().bottom??80:80;
       villageViewport={height,top:Math.max(80,top+12),bottom:bar?height-bar.getBoundingClientRect().top+12:112};
       villageLayoutKey=key;
