@@ -77,6 +77,7 @@ from server.routes import (
     predictions,
     save,
     sports,
+    structure_repair,
     wall_recovery,
     wave_recovery,
     waves,
@@ -313,6 +314,7 @@ def create_app(
     app.include_router(islet.router, prefix="/api")
     app.include_router(island.router, prefix="/api")
     app.include_router(island_structures.router, prefix="/api")
+    app.include_router(structure_repair.router, prefix="/api")
     app.include_router(island_layout.router, prefix="/api")
     app.include_router(island_boat.router, prefix="/api")
     app.include_router(island_reset.router, prefix="/api")

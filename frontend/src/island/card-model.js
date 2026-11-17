@@ -12,6 +12,7 @@ import {BOAT, GAME_TEXT as BOAT_TEXT, coinsFor} from '../pirates/boat/rules.js';
 import {ROLES as HOUSE_ROLES, ROLE_IDS, ROLE_LEVEL as HOUSE_ROLE_LEVEL, readRole} from '../campaign/houses.js';
 import {towerTreeModel} from './tree-model.js';
 import {nextWaveNumber} from './preparation-model.js';
+import {buildStructureRecoveryView} from './structure-recovery-model.js';
 import {isRetiredCaptainSkill, recoveryTechLine} from '../campaign/captain-repair-policy.js';
 
 // Coins always read "🪙 120" through formatCoins (BUILD-PLAN 3.2); an unknown amount reads "🪙 ?".
@@ -41,7 +42,8 @@ export const coinText = n => (Number.isSafeInteger(n) ? formatCoins(n) : '🪙 ?
 // tile the player tapped. The card then draws the tree in place of the plain Upgrade (the trunk tile upgrades).
 export function buildCardModel({spotId, kind, slot = null, spot = null, coins = null, visitor = false, ownerName = '',
   busy = false, message = '', unlocks = null, prices = null, point = false, campaign = null, battle = false, movable = false, flags = null,
-  treePicked = null} = {}) {
+  treePicked = null, recoveryState = null, recoveryStatus = 'disabled', recoveryError = null, recoveryPending = false,
+  recoveryVersion = 0} = {}) {
   const place = slot ?? (kind === 'cannon' || kind === 'mortar' || kind === 'harpoon' || kind === 'culverin' || kind === 'swivel' ? 'tower' : kind ?? 'wall');
   const built = spot?.built === true, standing = built ? spot.kind : null;
   const level = built ? (Number.isSafeInteger(spot.level) && spot.level > 0 ? spot.level : 1) : 0;
@@ -62,6 +64,14 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
   }
   if (!spot) { model.reason = message ? '' : visitor ? 'The island is still loading.' : 'Your island is still loading.'; return model; }
   model.hire = !point && !visitor && built && (place === 'tower' || place === 'wall');
+  if (!point && built && ['wall', 'cannon', 'mortar', 'harpoon', 'culverin', 'swivel'].includes(shown) && recoveryStatus !== 'disabled') {
+    const recovery = recoveryState?.structures?.find(item => item.spot === spotId) ?? null;
+    model.recovery = buildStructureRecoveryView(recoveryState, recovery, {
+      status: recoveryPending ? 'submitting' : recoveryStatus,
+      errorCode: recoveryError,
+      coins,
+    });
+  }
   // A spot of a later campaign step (the inner wall ring after wave 5): shown, marked, not buildable yet.
   const spotNeeds = point ? 0 : spotWave(spotId), campaignWave = campaign?.wave ?? unlocks?.wonWave ?? 0;
   if (!built && spotNeeds > campaignWave) {
@@ -99,7 +109,7 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
     return model;
   }
   // Built: its tower skill (GAME-V3.md §5), then the next level, if any; and a way to tear it down (§4.2).
-  if (!point && campaign && BRANCH_BY_ID[shown]) model.skills = skillsOf(shown, spot, campaign, busy, coins, prices);
+  if (!point && campaign && BRANCH_BY_ID[shown]) model.skills = skillsOf(shown, spot, campaign, busy, coins, prices, recoveryVersion);
   // GAME-V3.md "Houses": a house keeps its loot and, from level 2, picks a role (free, changeable between waves).
   if (!point && shown === 'house') model.skills = rolesOf(spot, level, busy);
   if (!point) model.demolish = {label: busy === 'demolish' ? 'Checking…' : 'Tear down', disabled: battle || !!busy,
@@ -123,7 +133,7 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
 // researched on this island, then one skill is picked (changeable between waves). D051: each pick costs coins,
 // paid once by the player who clicks (skillPrice: islands.json skillCoins, the capstone dearer); the skill the
 // tower has already is free. A choice carries its price ("🪙 150") and, when it cannot be paid, a short reason.
-function skillsOf(kind, spot, campaign, busy, coins = null, prices = null) {
+function skillsOf(kind, spot, campaign, busy, coins = null, prices = null, recoveryVersion = 0) {
   const branch = BRANCH_BY_ID[kind], current = readSpec(kind, spot?.spec);
   const title = current ? `Skill: ${SPECS[current].name}` : 'Tower skill';
   if (!isOpen(campaign, 'tech_hub')) return {title, line: `Tower skills: ${opensText(waveOf('tech_hub'))}.`, choices: [], current};
@@ -131,16 +141,16 @@ function skillsOf(kind, spot, campaign, busy, coins = null, prices = null) {
   // Tier 3 (GAME-V3.md §5.1): the capstone the island chose is one more pick.
   const capstone = campaign.research.tiers?.[kind]?.tier3 ?? null;
   return {title, line: current ? 'Switch for the next wave.' : 'Pick one skill.', current,
-    choices: [...branch.specs, ...(capstone ? [capstone] : [])].map(id => skillChoice(kind, id, current, busy, coins, prices))};
+    choices: [...branch.specs, ...(capstone ? [capstone] : [])].map(id => skillChoice(kind, id, current, busy, coins, prices, recoveryVersion))};
 }
 
 // One tower skill on the card: its price, and whether this player can pay it now.
-function skillChoice(kind, id, current, busy, coins, prices) {
+function skillChoice(kind, id, current, busy, coins, prices, recoveryVersion = 0) {
   const active = id === current, price = skillPrice(kind, id, prices), busyHere = busy === `spec:${id}`;
   let reason = '';
   if (!active && coins === null) reason = 'Coins loading';
   else if (!active && coins < price) reason = `Need ${coinText(price - coins)}`; // what is still missing
-  return {id, name: SPECS[id].name, line: SPECS[id].line, active, capstone: isCapstone(id), price: active ? '' : coinText(price), cost: active ? 0 : price,
+  return {id, name: SPECS[id].name, line: recoveryTechLine(id, SPECS[id].line, recoveryVersion), active, capstone: isCapstone(id), price: active ? '' : coinText(price), cost: active ? 0 : price,
     reason, disabled: active || busyHere || reason !== '', busy: busyHere,
     label: `${SPECS[id].name}, ${active ? 'your skill' : `${coinText(price)}${reason ? `, ${reason}` : ''}`}`};
 }

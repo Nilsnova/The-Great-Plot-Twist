@@ -5,6 +5,7 @@
 // queue (src/ui/toasts.js).
 import './island.css';
 import './boat-card.css';
+import './structure-recovery.css';
 import {createModal} from '../ui/kit/modal.js';
 import {createTabs} from '../ui/kit/tabs.js';
 import {node} from '../ui/kit/dom.js';
@@ -14,6 +15,7 @@ import {toasts as gameToasts} from '../ui/toasts.js';
 import {crewLabel, progressLines} from './progression.js';
 import {drawArsenal} from './arsenal-ui.js';
 import {drawSkills, drawTech, drawTowerTree, iconOf} from './skill-tree.js';
+import {renderStructureRecoveryView} from './structure-recovery-view.js';
 
 // The cards of the island's buildings: a spot's build or upgrade card (houses too), the wreck, the Harbor and
 // the arsenal. They dock at the right side on a desktop and come up as a bottom sheet on a phone
@@ -138,6 +140,11 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
         next.append(node('strong', 'island-next-label', model.upgrade.label), node('span', 'island-next-stats', model.upgrade.stats));
         act = button(model.button, () => on.repair?.(model.spotId)); act.dataset.focus = 'repair'; act.disabled = model.disabled;
         body.append(next, act);
+      }
+      if (model.recovery?.visible || model.recovery?.status === 'loading' || model.recovery?.status === 'error') {
+        const recovery = node('div', 'island-structure-recovery');
+        renderStructureRecoveryView(recovery, model.recovery, {onRepair: quote => on.repairStructure?.(model.spotId, quote)});
+        body.append(recovery);
       }
       if (act && !act.disabled) focusable = act;
       footer(body, treeCard ? {...model, reason: '', soon: ''} : model, treeCard ? null : act);

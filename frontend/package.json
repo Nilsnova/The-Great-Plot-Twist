@@ -23,6 +23,8 @@
     "test:mp": "node scripts/check-multiplayer.js",
     "test:placement": "node scripts/check-placement-mp.js",
     "test:walls": "node scripts/check-wall-recovery-mp.js",
+    "test:recovery:component": "node scripts/check-structure-recovery-component.js",
+    "capture:recovery:card": "node scripts/capture-structure-recovery-card.js",
     "test:rescue": "node scripts/check-rescue-mp.js",
     "test:arsenal": "node scripts/check-arsenal-mp.js",
     "test:culverin": "node scripts/check-culverin-mp.js",
