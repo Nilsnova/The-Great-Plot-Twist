@@ -123,7 +123,7 @@ function buildStructureRecoveryView(state, structure, options = {}) {
     repairReasonLabel: fundsReason,
     quotedPrice: fixedPrice,
     freeRepairLabel,
-    helperLabel: reserved ? null : 'Automatic repair pauses during waves',
+    helperLabel: reserved ? null : 'Free repair pauses when the bell rings. This estimate counts only time between waves.',
     automaticRepairPaused: reserved,
     statusLabel: reserved ? 'Automatic repair paused during waves' : null,
     remainingPaidUses: remainingUses,
