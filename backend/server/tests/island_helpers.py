@@ -284,6 +284,7 @@ class FakeIslandDatabase:
             "GET /profiles": self.read_name,
             "POST /rpc/wave_start": lambda _: self.answer(self.start_reply),
             "POST /rpc/recovery_wave_start": self.recovery_start,
+            "POST /rpc/perimeter_wave_start": self.recovery_start,
             "POST /rpc/wave_finish": lambda _: self.answer(self.finish_reply),
             "POST /rpc/wave_join": lambda _: self.answer(self.join_reply),
             "POST /rpc/recovery_wave_join": self.recovery_join,
@@ -535,6 +536,10 @@ class FakeIslandDatabase:
             json.loads(r.content)
             for r in self.requests
             if r.url.path.endswith(f"/rpc/{negotiated}")
+            or (
+                name in {"wave_start", "recovery_wave_start"}
+                and r.url.path.endswith("/rpc/perimeter_wave_start")
+            )
         ]
         # Existing route tests assert the unchanged legacy arguments; capability plumbing is
         # covered separately by assertions on the negotiated RPC request.
