@@ -9,7 +9,7 @@ function setup() {
 it('draws snapped wall art and half-grid footprints, green only for an accepted quote', () => {
   const {root, preview} = setup(), cells = [{x: 1.5, z: 6}, {x: 3.5, z: 6}];
   preview.show({cells, valid: false}); const group = root.getObjectByName('island-wall-draft');
-  const first = group.getObjectByName('wall-draft:0'); expect(first.position.x).toBe(1.5); expect(first.position.y).toBeCloseTo(-4.32);
+  const first = group.getObjectByName('wall-draft:0'); expect(first.position.x).toBeCloseTo(3.15,10); expect(first.position.y).toBeCloseTo(-3.6,10); // D064:1.3×1.5+.2×6,−.6×6.
   expect(first.userData.ground).toEqual(cells[0]); expect(first.geometry.parameters).toMatchObject({width: 2, height: 2});
   const amber = first.material.color.getHex(); preview.show({cells, valid: true}); expect(first.material.color.getHex()).not.toBe(amber);
   const grid = group.getObjectByName('wall-draft-grid'); expect(grid.geometry.attributes.position.count).toBe(40);

@@ -31,9 +31,10 @@ describe('dimensional wall artwork contract', () => {
     const rows = [wall('a', 4, 3, 5)], before = structuredClone(rows), atlas = art();
     const layers = texturedWallBatches([], wallVisualRows(rows), atlas), batch = layers.get(103);
     const corners = batch.positions.slice(-12);
-    expect(corners.filter((_, i) => i % 3 === 0)).toEqual([2.5, 5.5, 5.5, 2.5]);
-    expect(corners[1]).toBeCloseTo(-2.535); expect(corners[4]).toBeCloseTo(-2.535);
-    expect(corners[7]).toBeCloseTo(-.535); expect(corners[10]).toBeCloseTo(-.535);
+    // Foot(4,3) projects to(5.8,−1.8); image width48/16=3 and anchor6/16=.375 stay upright.
+    expect(corners.filter((_, i) => i % 3 === 0)).toEqual([4.3,7.3,7.3,4.3].map(x=>expect.closeTo(x,10)));
+    expect(corners[1]).toBeCloseTo(-2.175,10); expect(corners[4]).toBeCloseTo(-2.175,10);
+    expect(corners[7]).toBeCloseTo(-.175,10); expect(corners[10]).toBeCloseTo(-.175,10);
     expect(rows).toEqual(before); expect(batch.indices.slice(-6).map(value => value - batch.positions.length/3 + 4)).toEqual([0, 1, 2, 0, 2, 3]);
     expect(batch.uvs.every(value => value >= 0 && value <= 1)).toBe(true);
   });
