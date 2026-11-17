@@ -278,3 +278,14 @@ and [results, screenshots and manual checkpoints](evidence/T28/README.md).
 | The admin script [fresh_start.sql](../scripts/admin/fresh_start.sql) resets the island game, but it forgot the two old weapon columns, so players kept bought weapons after a fresh start. Now it puts every island back to the musket (`weapons_owned`, `weapon_equipped`) and counts those islands | The two fresh-start tests in [test_islands_and_waves_sql.py](../backend/server/tests/island_sql/test_islands_and_waves_sql.py); from `backend/`: `CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql` | One test island with pistols: the dry run only counts (`island weapons reset: 1`) and the pistols stay; the real run, twice, leaves only the musket, and the second run changes nothing | The real Supabase database (the tests use a throwaway test database), so not what the real players' data looks like; no test with many weapons at once |
 
 [Walkthrough part](WALKTHROUGH.md#74--fresh-start-resets-the-old-personal-weapons--nicolas-radomski).
+
+
+## COC-39: local defense-report slice
+
+| Coverage | Evidence / limits |
+|---|---|
+| Bounded event aggregation, identical hits, rebuilding, payout guards | `frontend/tests/pirates/defense-report.test.js`; real local simulation forwarding and actual gameplay menu wiring are exercised; no live API/payment proof |
+| Reachable menu, copied report, focus/escape, stale result, travel, mobile overflow | `frontend/tests/pirates/defense-report-dom.test.js` at 1280×720 and 375×812; controlled browser component data, not a production account |
+| Screenshot reproduction | `frontend/scripts/capture-defense-report.js`; browser-slot capture pending; no missing screenshot claimed |
+
+[Exact run results and remaining central checks](../specs/COC-39-defense-report.md). Full replay authority, production multi-client completeness and COC-40 tactical navigation are not covered by this bounded report slice.

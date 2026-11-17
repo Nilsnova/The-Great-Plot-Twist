@@ -1647,3 +1647,10 @@ runs against disposable local PostgreSQL with every migration applied twice.
 
 **Limits.** This fence protects a paid restore from a report belonging to a wave that started earlier.
 It does not validate the health a modified client reports or order arbitrary stale reports from other waves.
+
+
+## Johannes: COC-39 local defense report (draft)
+
+Issue [#180](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/180), branch `feat/coc-39-defense-report`. The existing island controller's event batches reach a bounded pure aggregate in [`defense-report.js`](../frontend/src/pirates/defense-report.js), through a small `onIslandEvents` handoff in `pirates/index.js` and `game-wiring.js`. [`defense-report-feature.js`](../frontend/src/pirates/defense-report-feature.js) offers the completed report through the existing pause-menu provider and modal. It never submits combat results or changes money/HP. The old finish adapter confirms only the report's displayed loot.
+
+The report is deliberately local/incomplete: current messages do not prove full multiplayer history. Identical legitimate hits count, repainting does not; a future replay explicitly clears/rebuilds rather than hashing hit content. Travel/reset clears context and a new wave hides the old report. [Specification, actual checks, limits and three rehearsal questions](../specs/COC-39-defense-report.md). The richer COC-40 navigation remains a separate task. Draft, no merge; personal explain-back and independent human review are still pending.
