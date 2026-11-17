@@ -109,3 +109,22 @@ all 8 embedded original PNG hashes, and verified the HTML output hash/JavaScript
 syntax. All 13 active compiled hashes matched the candidate public tree. The exact
 failed-run metrics and unresolved visual/size/device/balance/land limits remain
 explicit. No new application/browser test or final-preview edit was performed.
+
+## Durable failed-check chronology
+
+Preserved seventeen original failed-check log/result files with a byte/hash
+manifest: both complete frontend attempts, the failed accessibility command,
+three VIS46 revisions and the unchanged multiplayer baseline. These records are
+all explicitly failed; pre-wave multiplayer progress is not late-join/revive/
+boss evidence. The first VIS46 sole-owner mismatch was the report-derived
+`worldBusy` field, not a competing independent owner. Its corrected derived-state
+and coherent veteran revisions still exceeded the unchanged 20-second limit.
+
+The guide links the raw chronology and distinguishes Vitest duration from runner
+wall time. Static packaging checks passed 17 exact copied receipts, 21 original
+capture records/20 PNG dimensions, 8 embedded original image hashes, 95 relative
+links/anchors and the comparison HTML hash/JavaScript syntax. A bounded known-
+credential-format scan found no match in the newly preserved receipts. The stale
+stage-five evidence wording now points to the available stage-six package while
+keeping visual acceptance open. No app/browser run or final-preview write was
+performed by this documentation task.

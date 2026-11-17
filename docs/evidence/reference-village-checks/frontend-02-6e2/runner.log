@@ -1,0 +1,2 @@
+START frontend
+DONE frontend {'name': 'frontend', 'command': ['npm', 'test', '--', '--maxWorkers=1', '--reporter=verbose'], 'exitCode': 1, 'seconds': 564.04, 'log': 'frontend.log'}

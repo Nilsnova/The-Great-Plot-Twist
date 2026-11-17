@@ -1,0 +1,33 @@
+
+ RUN  v5.1.0 /workspace/reference-village-work/report-fixture-qa/frontend
+
+ ❯ tests/pirates/defense-report-ownership.test.js (1 test | 1 failed) 20999ms
+   × the actual game blocks keyboard and gamepad movement while the report owns input 20013ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/pirates/defense-report-ownership.test.js > the actual game blocks keyboard and gamepad movement while the report owns input
+Error: Test timed out in 20000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ tests/pirates/defense-report-ownership.test.js:29:1
+     27| }
+     28|
+     29| it('the actual game blocks keyboard and gamepad movement while the rep…
+       | ^
+     30|   await browser.withPage(async (page, base) => {
+     31|     // A veteran device has seen actual cards through wave30, includin…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  21:15:50
+   Duration  21.94s (tests 97%, import 3%)
+
+JSON report written to /workspace/reference-village-work/report-fixture-qa-checks/vis46-veteran-result.json
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice

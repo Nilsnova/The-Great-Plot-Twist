@@ -1,0 +1,18 @@
+{
+  "started": "2026-11-17T20:56:05.538989+00:00",
+  "source": "6e2c3e8b3437ba7302870adb59e2351c2fa74f5e",
+  "frontendTree": "8365d88e76889e68f5e1aa1d6aa9a858d3afaea3",
+  "checks": [
+    {
+      "name": "a11y",
+      "command": [
+        "npm",
+        "run",
+        "test:a11y"
+      ],
+      "exitCode": 1,
+      "seconds": 382.39,
+      "log": "a11y.log"
+    }
+  ]
+}

@@ -1,0 +1,2 @@
+START a11y
+DONE a11y {'name': 'a11y', 'command': ['npm', 'run', 'test:a11y'], 'exitCode': 1, 'seconds': 382.39, 'log': 'a11y.log'}
