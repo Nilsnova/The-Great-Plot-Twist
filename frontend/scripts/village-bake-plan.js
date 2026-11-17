@@ -1,6 +1,11 @@
 // Build-time inputs only. Generated baked.js is deliberately never discovered as a raw family.
 export const RAW_FAMILIES = Object.freeze(['buildings', 'houses', 'landmarks', 'services', 'nature', 'cannons', 'walls']);
 export const BAKE_DENSITY = 4, GUTTER = 4, MAX_WIDTH = 1024, MAX_HEIGHT = 2048;
+export function validateBakedPng(bytes, sheet) {
+  if (bytes.length < 24 || bytes.length > 8 * 2 ** 20) throw new Error('Compiled PNG exceeds encoded decoder limits.');
+  const header = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  if (header.getUint32(0) !== 0x89504e47 || header.getUint32(4) !== 0x0d0a1a0a || header.getUint32(16) !== sheet.width || header.getUint32(20) !== sheet.height) throw new Error('Compiled PNG header/dimensions differ.');
+}
 export function rawFamilyNames(value = RAW_FAMILIES) {
   const names = typeof value === 'string' ? value.split(',') : [...value];
   if (!names.length || new Set(names).size !== names.length || names.some(name => !/^[a-z][a-z0-9-]*$/.test(name) || /baked|compiled/.test(name))) throw new Error('Use unique explicit raw family names, never generated output.');
@@ -32,12 +37,12 @@ export function planFamily(name, frames) {
 }
 export function pixelDifference(a, b) {
   if (a.length !== b.length || a.length % 4) throw new Error('Pixel comparison dimensions differ.');
-  let maxVisibleDelta = 0, maxAlphaDelta = 0, differingPixels = 0, weighted = 0, weight = 0;
+  let maxVisibleDelta = 0, maxAlphaDelta = 0, differingPixels = 0, visiblePixels = 0, weighted = 0, weight = 0;
   for (let i = 0; i < a.length; i += 4) {
     const alpha = Math.max(a[i + 3], b[i + 3]) / 255; let changed = a[i + 3] !== b[i + 3];
     maxAlphaDelta = Math.max(maxAlphaDelta, Math.abs(a[i + 3] - b[i + 3]));
     if (alpha) for (let c = 0; c < 3; c++) { const delta = Math.abs(a[i + c] - b[i + c]); maxVisibleDelta = Math.max(maxVisibleDelta, delta); weighted += delta * alpha; changed ||= delta > 0; }
-    weight += alpha * 3; if (changed) differingPixels++;
+    weight += alpha * 3; if (alpha) visiblePixels++; if (changed) differingPixels++;
   }
-  return {pixels: a.length / 4, differingPixels, maxVisibleDelta, maxAlphaDelta, alphaWeightedMeanRgbDelta: weight ? weighted / weight : 0};
+  return {pixels: a.length / 4, visiblePixels, differingPixels, maxVisibleDelta, maxAlphaDelta, alphaWeightedMeanRgbDelta: weight ? weighted / weight : 0};
 }

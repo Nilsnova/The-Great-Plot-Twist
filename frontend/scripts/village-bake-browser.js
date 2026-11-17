@@ -40,7 +40,7 @@ export async function verifyFamily(plan, raw) {
     try {
       const read = canvas => canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
       const difference = pixelDifference(read(a), read(b));
-      if (density === 4 && (difference.maxAlphaDelta !== 0 || difference.maxVisibleDelta > 2)) throw new Error(`Baked4× pixels differ for ${id}: ${JSON.stringify(difference)}`);
+      if (density === 4 && (!difference.visiblePixels || difference.maxAlphaDelta !== 0 || difference.maxVisibleDelta > 2)) throw new Error(`Baked4× pixels differ for ${id}: ${JSON.stringify(difference)}`);
       results.push({id, density, ...difference});
     } finally { a.width = a.height = b.width = b.height = 0; }
   }
