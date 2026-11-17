@@ -1,7 +1,7 @@
 // Draws your island on the home_islet place: a glowing marker on every empty build spot, the buildings
 // that stand, the cabin and the harbor bell. Tapping a marker, a building or the bell picks it.
-// The marker, badges, bell and stand-ins are clean cartoon frames painted in code (src/art/, no outside
-// asset, no data: URL); the level art (walls, cannons, mortars by level) replaces the stand-ins once loaded. Everything is added under place.group, so the place's own
+// Markers and stand-ins are painted in code; registered original world artwork replaces them after preparation.
+// Everything is added under place.group, so the place's own
 // lifetime (resources.js) releases every texture, material and geometry when the player leaves.
 import * as THREE from 'three';
 import {artSizes, loadArt, placeArt, projectPoint} from '../world/art.js';
@@ -24,6 +24,9 @@ import {makeWallConnections} from './wall-connections.js';
 import {createStructureRecoveryIndicators} from './structure-recovery-indicators.js';
 import {towerStateFrame} from '../art/tower-states.js';
 import {loadWallAtlas, wallPreviewCanvas} from '../art/wall-atlas.js';
+import {getRasterFrame} from '../art/village-raster.js';
+import {createArtworkTasks, createStaticVillageArt} from './static-village-art.js';
+import {createVillageArtNotice} from '../ui/village-art-notice.js';
 
 const UNIT = 16;
 const FULL_HP_UNITS = 1_000_000;
@@ -115,7 +118,7 @@ export function crewPlaces(spots = [], crew = {}, {bell = null} = {}) {
 // clean cartoon frames (src/art/island.js) painted once into smooth textures.
 const DRAWN = {wall: 'island-wall', cannon: 'island-cannon', mortar: 'island-mortar', harpoon: 'island-harpoon', culverin: 'island-culverin', swivel: 'island-swivel', watchtower: 'island-watchtower', house: 'island-house', bell: 'island-bell'};
 function drawn(name) {
-  const [width, height, anchor] = islandFrame(name);
+  const [width, height, anchor] = getRasterFrame(name)?.logical ?? islandFrame(name);
   return {texture: smoothTexture(frameCanvas(name)), size: [width, height], anchor};
 }
 // How near (world units) the captain stands for a build marker to glow at full strength; farther ones fade to MARKER_FAR.
@@ -195,6 +198,16 @@ export function decorateIsland(place, ctx = {}) {
   const fixedSpots = layout.spots;
   let SPOTS = fixedSpots;
   const root = new THREE.Group(); root.name = layout.name ?? 'island'; place.group.add(root);
+  let state = {spots: [], visitor: false, battle: false, unlocks: null, crew: null, campaign: null, arsenal: false}, disposed = false;
+  let notice;
+  const tasks = createArtworkTasks(value => {
+    root.userData.artError = value.failed.length ? 'Island artwork unavailable' : null;
+    root.userData.wallArtError = value.failed.includes('walls') ? 'Wall artwork unavailable' : null;
+    notice?.set(value); ctx.onArtState?.(value);
+  }, error => ctx.onArtError?.(error));
+  const staticArt = createStaticVillageArt({root, load: ctx.loadArt ?? loadArt, sizes: artSizes, registered: getRasterFrame, tasks});
+  notice = createVillageArtNotice({container: ctx.container, isActive: ctx.isActive,
+    retry: () => Promise.all([retryArt(), staticArt.retry(), retryWallArt()]), focus: () => ctx.canvas?.focus({preventScroll: true})});
   const progress = layout.zones === islandZones ? decorateProgress(place) : null;
   const baseZones = [...(place.zones ?? [])];
   const reduced = () => (typeof ctx.reducedMotion === 'function' ? ctx.reducedMotion() : !!ctx.reducedMotion);
@@ -228,6 +241,7 @@ export function decorateIsland(place, ctx = {}) {
     }
   }
   const bell = layout.bell === false ? null : sprite(root, textures.bell, BELL.x, BELL.z, 'island-bell');
+  if (bell) staticArt.track(bell, 'island-bell');
   // The campaign's buildings (home island only): one mesh per frame they can show, the right one visible.
   const campaignMeshes = new Map(); // building id -> {frame name -> mesh}
   const campaignTextures = new Map();
@@ -238,6 +252,7 @@ export function decorateIsland(place, ctx = {}) {
       const texture = campaignTextures.get(name) ?? drawn(name); campaignTextures.set(name, texture);
       const mesh = sprite(root, texture, building.x, building.z, `island-campaign:${building.id}:${name}`);
       mesh.visible = false; mesh.userData.campaign = building.id; meshes[name] = mesh;
+      staticArt.track(mesh, name);
     }
     campaignMeshes.set(building.id, meshes);
   }
@@ -245,7 +260,9 @@ export function decorateIsland(place, ctx = {}) {
   // nothing of it is drawn or kept (home island only, like the bell).
   let arsenalMesh = null;
   const showArsenal = on => {
-    if (on && !arsenalMesh && layout.bell !== false) arsenalMesh = sprite(root, drawn(ARSENAL.art), ARSENAL.x, ARSENAL.z, 'island-arsenal');
+    if (on && !arsenalMesh && layout.bell !== false) {
+      arsenalMesh = sprite(root, drawn(ARSENAL.art), ARSENAL.x, ARSENAL.z, 'island-arsenal'); staticArt.track(arsenalMesh, ARSENAL.art);
+    }
     return arsenalMesh;
   };
   if (layout.cabin !== false && ctx.art?.cabin) placeArt(root, ctx.art, 'cabin', CABIN.x, CABIN.z).name = 'island-cabin';
@@ -255,7 +272,6 @@ export function decorateIsland(place, ctx = {}) {
   const wallConnections = makeWallConnections(root);
   let joinedWalls = new Set();
   const baseColliders = [...place.colliders];
-  let state = {spots: [], visitor: false, battle: false, unlocks: null, crew: null, campaign: null, arsenal: false}, disposed = false;
   let preview = null;
   const footprint = makeFootprint(root);
   const wallDraft = createWallBuilderPreview({root, wall: textures.wall});
@@ -395,30 +411,33 @@ export function decorateIsland(place, ctx = {}) {
   const wanted = [...new Set([...SPOTS.flatMap(kindsOf).flatMap(kind => LEVEL_ART[kind] ?? []), ...Object.values(ROLE_ART).flatMap(id => [id, `${id}-l3`]), PIP_ART, PIP_TIER_ART, ...Object.values(crewArt)])]
     .concat(RECOVERY_ART)
     .filter(id => Object.hasOwn(artSizes, id));
-  (ctx.loadArt ?? loadArt)(wanted).then(loaded => {
-    if (disposed) { Object.values(loaded).forEach(material => { material.map?.dispose(); material.dispose(); }); return; }
-    art = loaded;
-    for (const mesh of buildings.values()) releaseStandin(mesh);
-    apply(state);
-  }).catch(() => { /* The drawn sprites stay. */ });
+  function retryArt() {
+    if (disposed || art) return Promise.resolve();
+    return tasks.run('buildings', async () => {
+      const loaded = await (ctx.loadArt ?? loadArt)(wanted);
+      if (disposed) { Object.values(loaded).forEach(material => { material.map?.dispose(); material.dispose(); }); return; }
+      art = loaded;
+      for (const mesh of buildings.values()) releaseStandin(mesh);
+      apply(state);
+    });
+  }
+  retryArt();
 
-  let wallArtLoading = null;
+  let wallArtReady = false;
   function retryWallArt() {
-    if (disposed || wallArtLoading) return wallArtLoading;
+    if (disposed || wallArtReady) return Promise.resolve();
     root.userData.wallArtError = null;
-    wallArtLoading = Promise.resolve().then(() => (ctx.loadWallAtlas ?? loadWallAtlas)({
-      quality: typeof ctx.quality === 'function' ? ctx.quality() : ctx.quality ?? 'high',
-    })).then(value => {
-      if (!value) return;
-      if (disposed || !wallConnections.setArt(value)) { if (value.ownsTexture) value.texture.dispose(); return; }
+    return tasks.run('walls', async () => {
+      const value = await (ctx.loadWallAtlas ?? loadWallAtlas)({quality: typeof ctx.quality === 'function' ? ctx.quality() : ctx.quality ?? 'high'});
+      if (!value) { if (getRasterFrame('island-wall')) throw new Error('Wall artwork could not be prepared.'); wallArtReady = true; return; }
+      if (disposed) { if (value.ownsTexture) value.texture.dispose(); return; }
+      if (!wallConnections.setArt(value)) { if (value.ownsTexture) value.texture.dispose(); throw new Error('Wall artwork could not be prepared.'); }
+      wallArtReady = true;
       textures.wall.texture.image = wallPreviewCanvas(value); textures.wall.texture.needsUpdate = true;
       const frame = value.rects['island-wall']; wallDraft.setFrame({size: [frame.w, frame.h], anchor: frame.anchor});
       wallDraft.setWallArt(value);
       apply(state);
-    }).catch(error => {
-      if (!disposed) { root.userData.wallArtError = String(error?.message ?? 'Wall artwork unavailable'); ctx.onArtError?.(error); }
-    }).finally(() => { wallArtLoading = null; });
-    return wallArtLoading;
+    });
   }
   retryWallArt();
 
@@ -469,7 +488,7 @@ export function decorateIsland(place, ctx = {}) {
   }
   let ringing = 0;
   return {
-    apply, pickAt,
+    apply, pickAt, retryArt: () => Promise.all([retryArt(), staticArt.retry(), retryWallArt()]),
     setRecoveryState(value) {
       const accepted = value?.recoveryVersion === 1 && RECOVERY_PHASES.has(value.displayPhase)
         && typeof value.islandEpoch === 'string' && Array.isArray(value.structures) ? value : null;
@@ -494,6 +513,7 @@ export function decorateIsland(place, ctx = {}) {
     ring() { ringing = 1.2; },
     update(dt, time = 0) {
       if (disposed) return;
+      notice.update();
       recoveryIndicators.update();
       rangeRing.show(ctx.range?.() ?? null, reduced() ? 0 : time);
       const still = reduced();
@@ -510,7 +530,7 @@ export function decorateIsland(place, ctx = {}) {
         marker.badge.position.y = marker.badge.userData.baseY + (near ? bob : 0);
       }
       if (!bell) return;
-      if (ringing > 0 && !still) { ringing = Math.max(0, ringing - dt); bell.rotation.z = Math.sin(ringing * 18) * .12 * ringing; }
+      if (ringing > 0 && !still) { ringing = Math.max(0, ringing - dt); bell.rotation.z = bell.userData.art ? 0 : Math.sin(ringing * 18) * .12 * ringing; }
       else bell.rotation.z = 0;
     },
     get root() { return root; },
@@ -518,6 +538,7 @@ export function decorateIsland(place, ctx = {}) {
     retryWallArt,
     dispose() {
       if (disposed) return; disposed = true; cleanups.splice(0).forEach(stop => stop());
+      tasks.dispose(); notice.dispose(); staticArt.dispose();
       progress?.dispose(); recoveryIndicators.dispose();
       wallConnections.dispose(); wallDraft.dispose();
       for (const id of [...shown.keys()]) clear(id);
