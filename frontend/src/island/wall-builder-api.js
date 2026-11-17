@@ -2,6 +2,7 @@
 import {isIsland, MESSAGES, readFailure} from './api.js';
 import {displayIslandCode} from './codes.js';
 import {onGrid} from './placement.js';
+const isEpoch = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 const count = value => Number.isSafeInteger(value) && value >= 0;
 const cellsOk = cells => Array.isArray(cells) && cells.length > 0 && cells.length <= 32
   && cells.every(cell => onGrid(cell?.x) && onGrid(cell?.z))
@@ -29,16 +30,16 @@ export function createWallBuilderApi({transport}) {
     quoteWalls({cells: askedCells, code} = {}) {
       if (!cellsOk(askedCells)) return Promise.resolve(bad());
       const cells = structuredClone(askedCells);
-      return ask('quote', {cells, code}, data => placementsOk(data?.placements) && sameCells(data.placements, cells)
+      return ask('quote', {cells, code}, data => placementsOk(data?.placements) && sameCells(data.placements, cells) && isEpoch(data.islandEpoch)
         && count(data.unitCost) && data.unitCost > 0 && count(data.totalCost) && data.totalCost === data.unitCost * cells.length
         && count(data.remaining) && data.remaining <= 128 - cells.length && data.wallRuleVersion === 1 && data.wallCapacity === 128);
     },
-    buildWalls({placements: askedPlacements, actionUid, quotedTotal, code} = {}) {
-      if (!placementsOk(askedPlacements) || !/^[A-Za-z0-9_-]{8,64}$/.test(actionUid ?? '') || !count(quotedTotal) || quotedTotal === 0) return Promise.resolve(bad());
+    buildWalls({placements: askedPlacements, actionUid, quotedTotal, islandEpoch, code} = {}) {
+      if (!isEpoch(islandEpoch) || !placementsOk(askedPlacements) || !/^[A-Za-z0-9_-]{8,64}$/.test(actionUid ?? '') || !count(quotedTotal) || quotedTotal === 0) return Promise.resolve(bad());
       const placements = structuredClone(askedPlacements);
-      return ask('build', {placements, actionUid, quotedTotal, code}, data => currentIsland(data?.island)
+      return ask('build', {placements, actionUid, quotedTotal, islandEpoch, code}, data => currentIsland(data?.island)
         && (!code || data.island.code === displayIslandCode(code))
-        && data.receipt?.actionUid === actionUid && data.receipt.totalCost === quotedTotal && typeof data.receipt.repeat === 'boolean'
+        && data.receipt?.actionUid === actionUid && data.receipt.islandEpoch === islandEpoch && data.receipt.totalCost === quotedTotal && typeof data.receipt.repeat === 'boolean'
         && placementsOk(data.receipt.placements) && samePlacements(data.receipt.placements, placements));
     },
   };
