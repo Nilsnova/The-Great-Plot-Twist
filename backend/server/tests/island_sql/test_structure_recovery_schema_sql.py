@@ -469,11 +469,16 @@ def test_post_bell_build_is_readable_and_survives_expiry_settlement(database) ->
         "where player_id = %s and plot = 'wall_2'",
         (OWNER,),
     ).fetchone()[0]
+    new_health = database.execute(
+        "select hp_units from public.island_structure_health "
+        "where island_owner = %s and spot = 'wall_2' and instance_id = %s",
+        (OWNER, next_wave_id),
+    ).fetchone()
+    assert new_health == (1_000_000,)
     database.execute(
-        "insert into public.island_structure_health "
-        "(island_owner, spot, instance_id, building_kind, level, hp_units, max_hp, config_version, "
-        "settled_at, rate_numerator, rate_denominator) "
-        "values (%s, 'wall_2', %s, 'wall', 1, 750000, 60, 1, clock_timestamp(), 0, 1)",
+        "update public.island_structure_health set hp_units = 750000, "
+        "settled_at = clock_timestamp() where island_owner = %s and spot = 'wall_2' "
+        "and instance_id = %s",
         (OWNER, next_wave_id),
     )
     read = call(
@@ -502,6 +507,24 @@ def test_post_bell_build_is_readable_and_survives_expiry_settlement(database) ->
     )
     database.execute("select 1 from public.islands where player_id = %s for update", (OWNER,))
     server_now = database.execute("select clock_timestamp()").fetchone()[0]
+    boundary, settled_at, rate_numerator, rate_denominator = database.execute(
+        "select state.expires_at, health.settled_at, health.rate_numerator, "
+        "health.rate_denominator from public.island_recovery_state as state "
+        "join public.island_structure_health as health using (island_owner) "
+        "where state.island_owner = %s and health.spot = 'wall_2'",
+        (OWNER,),
+    ).fetchone()
+    elapsed_ms = database.execute(
+        "select greatest(0, floor(extract(epoch from (%s - greatest(%s, %s))) * 1000)::bigint)",
+        (server_now, boundary, settled_at),
+    ).fetchone()[0]
+    expected_new_build_hp = call(
+        database,
+        "select public.structure_recovery_project_hp(750000, %s, %s, %s)",
+        elapsed_ms,
+        rate_numerator,
+        rate_denominator,
+    )
     settled = call(
         database,
         "select public.structure_recovery_settle_locked(%s, %s)",
@@ -513,7 +536,7 @@ def test_post_bell_build_is_readable_and_survives_expiry_settlement(database) ->
         "select hp_units from public.island_structure_health "
         "where island_owner = %s and spot = 'wall_2' and instance_id = %s",
         (OWNER, next_wave_id),
-    ).fetchone() == (750000,)
+    ).fetchone() == (expected_new_build_hp,)
     assert database.execute(
         "select current_wave_id from public.island_recovery_state where island_owner = %s",
         (OWNER,),
