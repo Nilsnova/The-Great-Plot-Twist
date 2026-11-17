@@ -21,6 +21,11 @@ const expectRefusal = (answer, status, code) => {
 };
 
 describe('island api: accepted answers', () => {
+  it('keeps protocol-one start requests free of perimeter capability fields', async () => {
+    const {api, sent} = setup();
+    expect((await api.startWave()).ok).toBe(true);
+    expect(sent[0]).toEqual({path: PATHS.start, body: {where: 'own', actionUid: 'click000001'}});
+  });
   it('reads the island with its 22 spots in the server order and 100 starting coins', async () => {
     const {api} = setup();
     const answer = await api.getIsland();

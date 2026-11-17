@@ -233,6 +233,16 @@ def _refusal(reply: Any) -> None:
         raise SupabaseRejected("The recovery journal could not be read.")
     reason = reply.get("reason")
     mapped = {
+        "structure_recovery_required": (
+            409,
+            "structure_recovery_required",
+            "Perimeter waves need recovery support.",
+        ),
+        "perimeter_rules_required": (
+            409,
+            "perimeter_rules_required",
+            "Reload to use the perimeter wall rules.",
+        ),
         "no_such_wave": (404, "no_such_wave", "There is no such wave."),
         "not_in_wave": (403, "not_in_wave", "Join the wave first: you are not in this wave."),
         "wave_over": (409, "wave_over", "This wave is over."),

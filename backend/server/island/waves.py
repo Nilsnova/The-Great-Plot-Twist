@@ -160,6 +160,7 @@ async def start_protocol2(
     protocol: int = 2,
     resolved: tuple[str, str | None] | None = None,
     make_seed: Callable[[int], int] = secrets.randbelow,
+    wall_client_version: int = 0,
 ) -> WaveStart:
     """Start or replay a wave using capability-aware, atomic v1 admission."""
     place, owner = resolved or await find_place(
@@ -183,9 +184,10 @@ async def start_protocol2(
         "p_snapshot_template": snapshot_template,
         "p_admit_v1": admit_v1 and place == "island",
         "p_protocol": protocol,
+        "p_wall_client_version": wall_client_version,
     }
     reply = await wave_recovery.call_lifecycle_rpc(
-        admin, "recovery_wave_start", arguments, statuses={"started"}
+        admin, "perimeter_wave_start", arguments, statuses={"started"}
     )
     return recovery_wave_of(catalogue, reply)
 

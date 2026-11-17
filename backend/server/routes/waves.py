@@ -146,6 +146,7 @@ class StartRequest(BaseModel):
     where: str = Field(pattern=WHERE_PATTERN)
     actionUid: str = Field(pattern=ACTION_UID_PATTERN)
     waveProtocol: StrictInt = Field(default=1, ge=1, le=2)
+    wallClientVersion: StrictInt = Field(default=0, ge=0, le=1)
 
 
 class JoinRequest(BaseModel):
@@ -307,7 +308,7 @@ async def post_start(
     selected_rules = wave_rules.wanted_rules(settings)
     policy = await layout_store.read_snapshot(admin, owner) if owner is not None else None
     perimeter = policy is not None and policy.rule_version == 1
-    if perimeter and body.waveProtocol < 2:
+    if perimeter and (body.waveProtocol < 2 or body.wallClientVersion < 1):
         raise ApiError(409, "client_update_required", "Reload to defend perimeter walls.")
     if owner is not None and body.waveProtocol == 2:
         persisted_version = await service.read_recovery_version(admin, owner)
@@ -343,6 +344,7 @@ async def post_start(
         protocol=body.waveProtocol,
         resolved=(place, owner),
         make_seed=lambda _limit: seed,
+        wall_client_version=body.wallClientVersion,
     )
     walls = await start_walls(admin, settings, started)
     return wave_out(started, walls, await wave_rules.rules_for_wave(admin, settings, started))

@@ -33,7 +33,7 @@ describe('structure recovery API', () => {
     expect(isWave(data)).toBe(true);
     expect((await api.startWave({where: 'own'})).data).toEqual(data);
     expect(sent[0]).toMatchObject({method: 'post', path: PATHS.start,
-      body: {where: 'own', actionUid: 'wave-action-1', waveProtocol: 2}});
+      body: {where: 'own', actionUid: 'wave-action-1', waveProtocol: 2, wallClientVersion: 1}});
     expect((await api.joinWave({waveId})).data.initialSnapshot).toEqual(data.initialSnapshot);
     expect(sent[1]).toEqual({method: 'post', path: PATHS.join, body: {waveId, waveProtocol: 2}});
     expect((await api.currentWave({where: 'own'})).data.participantToken).toBe(token);
@@ -52,7 +52,7 @@ describe('structure recovery API', () => {
     }});
     expect(isWave(legacy)).toBe(true);
     expect((await api.startWave({where: 'own'})).data).toEqual(legacy);
-    expect(sent).toEqual({path: PATHS.start, body: {where: 'own', actionUid: 'new-island-wave', waveProtocol: 2}});
+    expect(sent).toEqual({path: PATHS.start, body: {where: 'own', actionUid: 'new-island-wave', waveProtocol: 2, wallClientVersion: 1}});
   });
 
   it('accepts only the canonical versioned state and requests it for the selected island', async () => {
