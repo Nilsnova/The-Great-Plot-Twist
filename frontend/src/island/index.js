@@ -89,7 +89,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   onCoins = () => {}, onCaptain = () => {}, menu = addMenuExtras, settings = addSettingsSection, now, setTimer, clearTimer, openHarborStall = () => {},
   travel = () => travelAllowed({islandsMode: mode}), villageCamera = () => {},
   // D039 (proposed): whether /api/config says the flag wall_recovery is on (lasting wall damage, Repair/Rebuild).
-  wallRecovery = () => false, structureRecoveryOn = () => false, arsenalOn = () => false,
+  wallRecovery = () => false, structureRecoveryOn = () => false, perimeterWallsOn = () => false, arsenalOn = () => false,
   // T43 (D048 proposed): whether /api/config says the flag defenses_v2 is on (a tower spot then offers the culverin).
   defensesV2On = () => false} = {}) {
   let disposed = false, own = null, ownMessage = '', visiting = null, visitCode = readVisit(visitStorage), busySpot = null, cardMessage = '';
@@ -217,7 +217,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const wallBar = createWallBuilderBar({container, handlers: {open: () => void startWalls(), quote: () => void wallBuilder.quote(),
     confirm: () => void wallBuilder.confirm(), undo: () => wallBuilder.undo(), clear: () => wallBuilder.clear(),
     cancel: () => { wallBuilder.cancel(); focus(); }, camera: villageCamera}});
-  const villageBar = createVillageBar({container, onLeave: () => village.leave(), onCamera: villageCamera, onBuildWalls: () => void startWalls()});
+  const villageBar = createVillageBar({container, onLeave: () => village.leave(), onCamera: villageCamera, onBuildWalls: () => void startWalls(),
+    showWalls: () => perimeterWallsOn() === true || own?.layout?.wallRuleVersion === 1});
   const village = createVillageMode({
     context: () => ({ready: !!own?.code && !!world, own: !visiting && !visitCode, code: own?.code,
       // A successful start/join awaits preparation before flow.current is set.

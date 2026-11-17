@@ -42,3 +42,9 @@ WALL-26 now requires the server quote's UUID `islandEpoch` in the immutable buil
 The actual-index reset regression first failed with only the generation increment disabled: **1 failed / 4 filtered-out cases**, duration **3.46s**. Restoring it passed the whole Chromium component file: **5 tests / 1 file**, duration **6.66s**, exit 0. The new cases hold a pre-reset response, reset the same code without an islandEpoch field, reopen a fresh draft and verify the old reply cannot repaint walls or replace that draft. Actual registered travel/dispose paths also reject late painting. Both browser slots were released immediately.
 
 Current focused geometry/controller/Move/village tests: **60 tests / 4 files**, duration **1.15s**, exit 0. Text lint initially found seven new-copy errors; the UI now uses existing reviewed words (including “Remove last”), with **0 errors / 8 existing report-only findings**. No dictionary exemption or assertion was weakened. Full-game/server/SQL/capture evidence remains the integration owner's work.
+
+### Offer visibility follow-up
+
+The game passes `perimeterWallsOn` from real ready configuration or the fake transport's actual flags. The village entry is shown when that flag is true or the own island is already admitted under wall rule 1. Existing admitted islands retain access to historical receipt reconciliation when new offers pause. This display condition is not permission and does not alter controller eligibility or the server's checks.
+
+The component fixtures explicitly enable offers. Legacy/off hides the entry, flag-on shows it, and admitted rule 1 with flag-off still shows it. The full Chromium component file now passes **8 tests / 1 file**, duration **10.57s**, exit 0. Actual combined game/SQL/capture evidence remains separate.
