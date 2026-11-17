@@ -12,8 +12,10 @@ canonical snapshot fixtures; assertions and server limits were left intact.
 `81171490`, snapshot schema/API `941703df`, finish response `cb181055`, lifecycle/expiry SQL
 `9d4d4b6c` and `14a1841f`, saved-v1 flag-off start `22026006`, canonical mutation fixtures
 `f16a46a1` and `0dbfcae5`, mutation hooks `3b9c289e` and `cc519114`; T56 paid repair `a4d4fe5a`;
-T57 replay modules `80b79c22`; T55 contract notes `704f7ea5`; T60 API/PG/replay harness base commit
-`5ebbd657` with expiry/flag-off coverage and release docs in `825d2c56` and `9e2e55b8`.
+T57 replay modules `80b79c22` and fixed-seal reader `aad93866`; T55 contract notes `704f7ea5`,
+stateless SQL paging `db9cd0d4`, HTTP page adapter `081f5e1b`, and input response contract `583b9802`;
+T60 API/PG/replay harness base commit `5ebbd657` with expiry/flag-off coverage and release docs in
+`825d2c56` and `9e2e55b8`.
 
 **Strict API/replay command** (from `backend/`):
 
@@ -22,18 +24,22 @@ UV_CACHE_DIR=/tmp/t60-uv-cache CASE_PG_SCRATCH=1 uv run --with pgserver --with '
   pytest -q server/tests/island_sql/test_structure_recovery_http_pg.py
 ```
 
-**Result:** 1 passed in 9.09 seconds. It applies the full repository migration chain twice to the
+**Result:** 1 passed in 11.94 seconds. It applies the full repository migration chain twice to the
 existing disposable Unix-socket PostgreSQL fixture. A synthetic owner and member authenticate
 through a fake verifier; actual FastAPI route services call the local SupabaseAdmin adapter over
 the same scratch connection used by the fixture. Local flags are `islands,structure_recovery`.
 
 The route sequence starts a v1 wave, joins the member, reads the owner’s current wave, and checks
-that structure HP stays fixed through preparation and combat. It confirms a health checkpoint is
-rejected before the paid event is sealed, pays one repair through the actual route, reads the sealed
-journal page, accepts a checkpoint, and runs the unmodified production `recovery-snapshot.js` and
-`wave-replay.js` modules in two independent Node replay consumers. After a later sealed tick, it
-submits damage, retries the old repair UID and verifies the immutable original receipt, unchanged
-wallet/use count, and no healing. It finishes through the API with canonical closed HP of 750,000,
+that structure HP stays fixed through preparation and combat. It rejects a health checkpoint before
+the paid event is sealed, pays one repair through the actual route, and reads the journal. The member
+then reconnects as the same actor with a fresh `after=0` request and receives the prefix again. The
+owner appends an input through the actual HTTP route; a fixed read using the earlier
+`(headSeq,sealedThroughTick)` still returns the exact old prefix after the journal head advances.
+The member’s old fixed page accepts its health checkpoint, and two independent production Node
+replay consumers replay the actual fresh HTTP reconnect page using the unmodified
+`recovery-snapshot.js` and `wave-replay.js` modules. After a later sealed tick, the test reads the new
+input suffix, submits damage, retries the old repair UID and verifies the immutable original receipt,
+unchanged wallet/use count, and no healing. It finishes through the API with canonical closed HP of 750,000,
 checks between-wave healing resumes, then disables new-v1 admission and verifies the saved v1 island
 can start another protocol-2 wave with a fresh three-use quota. A stale paid quote after the second
 wave expires settles the wave without charge; its later API finish returns zero loot and the same
@@ -57,12 +63,14 @@ UV_CACHE_DIR=/tmp/t60-uv-cache CASE_PG_SCRATCH=1 uv run --with pgserver --with '
   server/tests/island_sql/test_structure_recovery_http_pg.py
 ```
 
-**Result:** 71 passed in 14.42 seconds. The suite includes lifecycle/checkpoint/finish SQL, the full
-mutation hook slice, schema and paid repair suites, and the actual API/replay integration case above.
+**Historical result:** 71 passed in 14.42 seconds before stateless fixed-seal paging. The current
+stateless SQL migration/full-chain slice passed 44 SQL checks; the direct journal-budget diagnostic
+passed 1 check with the new five-argument RPC; and the actual HTTP reconnect/input/replay case above
+passed 1 check. These focused results supplement the historical combined run.
 
 **Full island SQL sweep:** the complete `server/tests/island_sql` folder passed 367 tests in 33.98
-seconds on code commit `fafd000f`. Later commits through this evidence update change documentation
-only; no SQL or API code changed after that sweep.
+seconds on code commit `fafd000f`, before the stateless page SQL/API changes. That historical count
+does not represent the current migration chain; see the focused current results above.
 
 **Focused Python route/transport command** (from `backend/`):
 
@@ -73,8 +81,9 @@ uv run --frozen pytest -q server/tests/test_wave_recovery_routes.py \
   server/tests/test_structure_recovery_manifest.py server/tests/test_captain_skills_routes.py
 ```
 
-**Result:** 138 passed in 15.75 seconds. These are request/model/transport tests with local fakes;
-the actual API-to-Postgres path is the dedicated HTTP fixture above.
+**Historical result:** 138 passed in 15.75 seconds on the earlier T55 route contract. The current
+T55 route and transport suites separately passed 31 focused tests after stateless page support and
+the input response fix. The actual API-to-Postgres path is the dedicated HTTP fixture above.
 
 The narrow adapter allowlists only the local tables and RPCs needed by these calls. It does not
 read environment credentials, connect to a hosted Supabase instance, or create a network client.

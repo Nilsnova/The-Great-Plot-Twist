@@ -217,6 +217,46 @@ def test_accepted_bell_member_join_and_paid_repair_match_committed_state(databas
         page = events_response.json()
         assert page["headSeq"] == len(page["events"]), page
         assert page["sealedThroughTick"] >= 0
+        # A same-actor reload/lost response may restart from seq 0 after already opening a head.
+        # It must be able to fetch that prefix again instead of being stranded by prior page state.
+        reconnect_response = client.get(
+            f"/api/waves/{wave_id}/events?after=0", headers=HEADERS["member"]
+        )
+        assert reconnect_response.status_code == 200, reconnect_response.text
+        reconnect_page = reconnect_response.json()
+        assert reconnect_page["headSeq"] == page["headSeq"]
+        assert reconnect_page["sealedThroughTick"] >= page["sealedThroughTick"]
+        assert reconnect_page["events"] == page["events"]
+        page = reconnect_page
+        appended_response = client.post(
+            f"/api/waves/{wave_id}/inputs",
+            headers=HEADERS["owner"],
+            json={
+                "waveProtocol": 2,
+                "inputs": [
+                    {
+                        "inputUid": "reconnect-command-01",
+                        "actorCounter": 1,
+                        "tick": page["sealedThroughTick"],
+                        "command": {"type": "captain_move", "x": 1, "z": 2},
+                    }
+                ],
+            },
+        )
+        assert appended_response.status_code == 200, appended_response.text
+        appended = appended_response.json()
+        assert appended["headSeq"] == page["headSeq"] + 1
+        fixed_response = client.get(
+            f"/api/waves/{wave_id}/events?after=0&through={page['headSeq']}"
+            f"&sealedThroughTick={page['sealedThroughTick']}",
+            headers=HEADERS["member"],
+        )
+        assert fixed_response.status_code == 200, fixed_response.text
+        fixed_page = fixed_response.json()
+        assert fixed_page["headSeq"] == page["headSeq"]
+        assert fixed_page["through"] == page["headSeq"]
+        assert fixed_page["sealedThroughTick"] == page["sealedThroughTick"]
+        assert fixed_page["events"] == page["events"]
         repair_events = [event for event in page["events"] if event["type"] == "structure_repaired"]
         assert len(repair_events) == 1, page
         assert repair_events[0]["serverSeq"] == body["receipt"]["eventSeq"]
@@ -298,7 +338,9 @@ def test_accepted_bell_member_join_and_paid_repair_match_committed_state(databas
         )
         assert damage_page_response.status_code == 200, damage_page_response.text
         damage_page = damage_page_response.json()
-        assert damage_page["headSeq"] == page["headSeq"]
+        assert damage_page["headSeq"] == appended["headSeq"]
+        assert damage_page["events"][-1]["serverSeq"] == appended["headSeq"]
+        assert damage_page["events"][-1]["type"] == "captain_input"
         assert damage_page["sealedThroughTick"] > page["sealedThroughTick"]
         damage_response = client.post(
             f"/api/waves/{wave_id}/health",
@@ -505,7 +547,11 @@ def test_accepted_bell_member_join_and_paid_repair_match_committed_state(databas
     assert database.execute(
         "select seq,event_kind from public.recovery_wave_events where wave_id=%s order by seq",
         (wave_id,),
-    ).fetchall() == [(1, "participant_joined"), (2, "structure_repaired")]
+    ).fetchall() == [
+        (1, "participant_joined"),
+        (2, "structure_repaired"),
+        (3, "captain_input"),
+    ]
     assert database.execute(
         "select instance_id from public.structure_repair_receipts "
         "where payer_id=%s and action_uid=%s",

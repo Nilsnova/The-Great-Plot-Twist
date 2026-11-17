@@ -115,7 +115,7 @@ def test_bounded_four_actor_journal_budget_and_fixed_head_pages(database):
     first_started = time.perf_counter_ns()
     first = call(
         database,
-        "select public.recovery_wave_events_page(%s,%s,0,null)",
+        "select public.recovery_wave_events_page(%s,%s,0,null,null)",
         OWNER,
         wave_id,
     )
@@ -131,11 +131,12 @@ def test_bounded_four_actor_journal_budget_and_fixed_head_pages(database):
         page_started = time.perf_counter_ns()
         page = call(
             database,
-            "select public.recovery_wave_events_page(%s,%s,%s,%s)",
+            "select public.recovery_wave_events_page(%s,%s,%s,%s,%s)",
             OWNER,
             wave_id,
             cursor,
             fixed_head,
+            watermark,
         )
         page_durations.append(time.perf_counter_ns() - page_started)
         assert page["status"] == "ok"
