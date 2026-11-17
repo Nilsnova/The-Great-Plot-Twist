@@ -58,17 +58,20 @@ export async function groundPoint(page, [x, z], lift = 0) {
 export async function hitButtons(locator) {
   const buttons = await locator.locator('button').evaluateAll(nodes => nodes.filter(n => !n.disabled && n.getClientRects().length).map(n => {
     const r = n.getBoundingClientRect(), style = getComputedStyle(n), range = document.createRange(); range.selectNodeContents(n);
-    const text = range.getBoundingClientRect(), left = r.left + parseFloat(style.borderLeftWidth) + parseFloat(style.paddingLeft),
-      right = r.right - parseFloat(style.borderRightWidth) - parseFloat(style.paddingRight),
-      top = r.top + parseFloat(style.borderTopWidth) + parseFloat(style.paddingTop), bottom = r.bottom - parseFloat(style.borderBottomWidth) - parseFloat(style.paddingBottom);
+    const text = range.getBoundingClientRect(), padding = {left: r.left + parseFloat(style.borderLeftWidth), right: r.right - parseFloat(style.borderRightWidth),
+      top: r.top + parseFloat(style.borderTopWidth), bottom: r.bottom - parseFloat(style.borderBottomWidth)};
+    const content = {left: padding.left + parseFloat(style.paddingLeft), right: padding.right - parseFloat(style.paddingRight),
+      top: padding.top + parseFloat(style.paddingTop), bottom: padding.bottom - parseFloat(style.paddingBottom)};
     return {label: n.getAttribute('aria-label') || n.textContent, visibleText: n.textContent, fontSize: style.fontSize, width: r.width, height: r.height,
-      textFits: text.left >= left - .5 && text.right <= right + .5 && text.top >= top - .5 && text.bottom <= bottom + .5,
+      // CSS clips at the padding box. Font ascenders may legitimately extend beyond the content box.
+      textFits: text.left >= padding.left - .5 && text.right <= padding.right + .5 && text.top >= padding.top - .5 && text.bottom <= padding.bottom + .5,
+      textBounds: {left: text.left, right: text.right, top: text.top, bottom: text.bottom}, paddingBounds: padding, contentBounds: content,
       scrollWidth: n.scrollWidth, clientWidth: n.clientWidth,
       hit: n.contains(document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2))};
   }));
   assert.ok(buttons.length > 0 && buttons.every(b => b.width >= 44 && b.height >= 44), 'visible enabled controls have 44px targets');
   assert.ok(buttons.every(b => b.hit), 'visible enabled control centers are unobscured in the actual game');
-  for (const b of buttons) assert.ok(b.textFits && b.scrollWidth <= b.clientWidth, `visible label fits actual padded control: ${b.visibleText}`);
+  for (const b of buttons) assert.ok(b.textFits && b.scrollWidth <= b.clientWidth, `visible label fits actual padded control: ${JSON.stringify(b)}`);
   return buttons;
 }
 export async function workspaceBounds(page, selector) {

@@ -34,6 +34,7 @@ try {
   }, metrics);
   await settleCards(page); await manage(page);
   if (workspace) {
+    await hitButtons(page.locator('.island-village-mode:not([hidden])'));
     const before = await wallet(page); await openBuilder(page);
     const p = await groundPoint(page, [-18.5, 2]); await page.mouse.click(p.x, p.y); await page.keyboard.press('ArrowUp');
     await builder(page).getByText('Fine position', {exact: true}).click();
