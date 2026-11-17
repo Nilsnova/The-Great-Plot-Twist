@@ -296,3 +296,17 @@ changed by this synchronization. All committed STATUS lines from both parents we
 `node --check scripts/check-multiplayer.js` passed, and the incoming Tab/tutorial checks passed
 19 tests across three files in 7.43 seconds. The unchanged long browser journey was not rerun solely
 for that synchronization. No full-suite or settings-matrix rerun is claimed for this harness/docs follow-up.
+
+
+### Publication checkpoint
+
+Before publication, current `main` at `8759fc80` was merged into the task branch. It includes the
+merged T57/T58/T59 follow-ups, guest invite validation, and protocol-2 playout buffering. All committed
+STATUS entries from both parents were preserved, including a collaborator's insertion in an earlier
+section. The browser harness still has source SHA-256 `41e8df74dfb3db365dded59ef9166716d648040b2bc5e760ee7a07c80cf2152a`.
+
+The incoming recovery controller/playout, paid-tower replay, guest invite, card and recovery-model
+checks passed 74 tests across six files in 3.94 seconds. The full browser output above remains the
+recorded run before this later synchronization; it was not rerun. The new playout path is guarded by
+protocol-2 recovery and does not change this legacy fake-room journey. These focused checks do not
+close the separate authenticated two-browser recovery gate.
