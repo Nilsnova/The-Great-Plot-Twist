@@ -1,0 +1,24 @@
+# VIS-01: approved village visual contract
+
+For Johannes Franz Lang (`frcola`), supporting issue #206. This branch records the
+17 November approval and the world-art policy needed to implement it. Runtime
+implementation starts from the unmerged perimeter candidate `9dc1bea5`.
+
+The previous flat-painter proof did not satisfy the requested visual target.
+The approved desktop, selected-wall and portrait concepts require richly shaded
+buildings, continuous material walls, textured cliffs and vegetation, a readable
+close village composition and compact touch controls. Generated concepts are
+design references; actual game captures are the acceptance evidence.
+
+Root coordinates docs/policy and shared interfaces. Independent writers claim
+VIS-32 (asset provider), VIS-33 (framing), VIS-05 (hero building), VIS-14 (walls),
+VIS-20 (terrain) and VIS-21 (nature) in their own clones and Draft PRs.
+
+Original runtime image assets are approved for world art. The cold title,
+intro/cutscenes and tutorial retain their existing source and load protections.
+Logical terrain, placement, paid progression, health and deterministic combat
+rules remain authoritative. No new app package or external service is needed.
+
+No merge, deployment, live migration or production activation is performed.
+Documentation link/content checks and exact implementation evidence will be
+recorded before this handover is complete. Human review and explain-back remain.
