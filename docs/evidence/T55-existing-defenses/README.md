@@ -60,3 +60,17 @@ CASE_PG_SCRATCH=1 UV_CACHE_DIR=/tmp/recovery-gated-uv-cache uv run --with pgserv
 Before the positive-refund assertion was added, the combined command above reported **32 passed in 9.88 seconds**. After that assertion, separately rerun checks passed: the three saved-v1 HTTP regressions (**3 passed, 1 unrelated test deselected**) and the demolition/extra-plot SQL suites (**28 passed**). The new HTTP regression proves the first refund is positive before checking that the retry does not change the balance. These checks use only disposable local PostgreSQL.
 
 A later combined rerun reported **31 passed, 1 failed**: the existing `test_accepted_bell_member_join_and_paid_repair_match_committed_state` observed `combat` where it expects `preparing`, because the API start/join test elapsed through the phase boundary under the combined run. The three affected saved-v1 HTTP tests and the demolition/extra-plot SQL suites passed separately afterward; that phase-timing test was not changed. Changed-file Ruff and format checks pass; the focused island route suite passes **54 tests**. The previous **370 passed** complete island SQL result was run before this follow-up and remains historical, not final-source evidence; root is running the final independent suite.
+
+
+## Final independent verification
+
+On final application/test source commit `f75aca71`, the full disposable island SQL suite passed:
+
+```sh
+# backend/
+CASE_PG_SCRATCH=1 UV_CACHE_DIR=/tmp/recovery-gated-uv-cache uv run --with pgserver --with 'psycopg[binary]' --with pglast pytest -q server/tests/island_sql
+```
+
+Result: **371 passed in 22.25 seconds**, including all four HTTP/PostgreSQL cases and the earlier preparation-phase test. [Saved exact output](final-island-sql.txt) is copied unchanged from `/tmp/recovery-gated-final-sql-f75aca71.log`. The preceding combined run's phase-timing failure remains a failed historical attempt; no assertion or product timing limit was changed to obtain this result. Main remained `8759fc80` at the final fetch.
+
+The final source review checked that demolition-only known-plot validation occurs after caller permission checks and delegates old UID receipt/refund authority to the atomic SQL function. A positive first refund, unchanged retry balance, one demolition record, refused fresh actions on empty plots and refused unknown plots are asserted. The wider catalogue is not used for purchases or ordinary island views. Protected instruction files are unchanged, every prior STATUS entry is retained and local documentation links were checked. No bug-fix PR has been created.
