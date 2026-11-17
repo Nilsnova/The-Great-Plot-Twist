@@ -220,6 +220,51 @@ def test_carpenter_rate_change_does_not_apply_new_rate_to_elapsed_old_time(datab
     assert health == (500_000, 200, 100)
 
 
+def test_wall_research_rate_change_settles_old_rate_before_refresh(database):
+    seed_v1(database)
+    as_server(database)
+    database.execute(
+        "update public.island_structure_health set settled_at=clock_timestamp()-interval '10 minutes',"
+        "hp_units=500000,rate_numerator=0,rate_denominator=1 "
+        "where island_owner=%s and spot='wall_1'", (OWNER,)
+    )
+    database.execute(
+        "insert into public.island_research(island_owner,branch,researched_by,coins_paid,ref,tier) "
+        "values (%s,'wall',%s,10,'research:seed-0001',1)", (OWNER, OWNER)
+    )
+    changed = call(database,
+        "select public.island_research(%s,%s,'wall','research-0001',10,0,2,'mason_drill',false)",
+        OWNER, OWNER)
+    assert changed["status"] == "done"
+    health = database.execute(
+        "select hp_units,rate_numerator,rate_denominator from public.island_structure_health "
+        "where island_owner=%s and spot='wall_1'", (OWNER,)
+    ).fetchone()
+    assert health == (500_000, 300, 200)
+
+
+def test_moved_workshop_at_radius_boundary_updates_future_rate(database):
+    seed_v1(database)
+    as_server(database)
+    call(database, "select public.islet_build(%s,'house_1','house',10,0,0,'seed-house-01')", OWNER)
+    database.execute(
+        "update public.islet_buildings set level=2,spec='workshop' "
+        "where player_id=%s and plot='house_1'", (OWNER,)
+    )
+    moved = call(database,
+        "select public.island_move(%s,%s,'house_1',-17,-2,'[]'::jsonb)", OWNER, OWNER)
+    assert moved == {"status": "done"}
+    position = call(database,
+        "select jsonb_build_object('x',x_half,'z',z_half) from public.island_layout "
+        "where island_owner=%s and plot='house_1'", OWNER)
+    assert position == {"x": -17, "z": -2}
+    health = database.execute(
+        "select rate_numerator,rate_denominator from public.island_structure_health "
+        "where island_owner=%s and spot='wall_1'", (OWNER,)
+    ).fetchone()
+    assert health == (130, 100)
+
+
 def test_v1_cannot_purchase_a_retired_recovery_skill(database):
     seed_v1(database)
     as_server(database)
