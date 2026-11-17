@@ -21,7 +21,7 @@ function controllerWith(renderers, defenses = DEFENSES, recoveryTransport = null
     createHud: () => ({ countdown() {}, bar() {}, prompt() {}, banner() {}, setVisible() {}, dispose() {} }),
     setTimer: () => ({}), clearTimer: () => {}, recoveryTransport });
   const advance = ms => { for (let t = 0; t < ms; t += 100) { clock.now += 100; controller.update(.1); } };
-  return { bus, controller, advance };
+  return { bus, controller, clock, advance };
 }
 
 describe('the wave rules', () => {
@@ -46,7 +46,7 @@ describe('the wave rules', () => {
     expect(readWaveInfo({ ...INFO, recoveryVersion: 1, waveProtocol: 2 })).toBeNull();
   });
 
-  it('starts recovery v1 from the immutable HP vector and snapshot defenses, including a D060 spot', () => {
+  it('starts recovery v1 from the immutable HP vector and snapshot defenses, including a D060 spot', async () => {
     const rules = ['structure_recovery', 'tower_health'];
     const initialSnapshot = { recoveryVersion: 1, waveProtocol: 2, configVersion: 1, waveId: 'w-r', islandEpoch: 'epoch-1',
       seed: 77, startsAt: INFO.startsAt, weather: INFO.weather, rules,
@@ -59,9 +59,21 @@ describe('the wave rules', () => {
         { spot: 'wall_2', instanceId: 'wall-instance', kind: 'wall', level: 2, x: 0, z: 1, hpUnits: 0, maxHP: 120, repairSeq: 0 },
         { spot: 'cannon_8', instanceId: 'gun-instance', kind: 'cannon', level: 1, x: -8, z: 12, hpUnits: 500_000, maxHP: 80, repairSeq: 0 },
       ] };
-    const made = controllerWith([], DEFENSES, { sendInputs: async () => ({ accepted: [] }), readEvents: async () => ({ headSeq: 0, sealedThroughTick: -1, events: [] }), finishWave: async () => null });
+    const participantToken = '7165d60f-14f5-4b9e-96a0-2ed457b4c219';
+    const joined = seq => ({ serverSeq: seq, effectiveTick: 0, type: 'participant_joined', participantToken,
+      payload: { captain: { level: 1, skills: [], weapon: 'musket' } } });
+    const readEvents = vi.fn(async ({ after, through } = {}) => through === undefined
+      ? { headSeq: 2, sealedThroughTick: 1, events: after === 0 ? [joined(1)] : [] }
+      : { through, events: [joined(2)] });
+    const checkpoint = async ({ checkpoint }) => ({ accepted: true, throughTick: checkpoint.throughTick,
+      inputHeadSeq: checkpoint.inputHeadSeq, lastRepairSeq: checkpoint.lastRepairSeq, hpUnits: checkpoint.hpUnits });
+    const made = controllerWith([], DEFENSES, { sendInputs: async () => ({ accepted: [] }), readEvents, checkpoint, finishWave: async () => null });
     made.bus.emit({ type: 'wave_started_server', ...INFO, recoveryVersion: 1, waveProtocol: 2, rules, initialSnapshot,
-      participantToken: '7165d60f-14f5-4b9e-96a0-2ed457b4c219', lastActorCounter: 0 });
+      participantToken, lastActorCounter: 0 });
+    made.clock.now = START + 1050;
+    made.controller.update(0.05); // Kick the asynchronous sealed-page read at the first live tick.
+    await new Promise(resolve => setTimeout(resolve, 0)); // Drain first page and fixed (head=2, seal=1) continuation.
+    expect(readEvents).toHaveBeenCalledWith(expect.objectContaining({ waveId: 'w-r', after: 1, through: 2, sealedThroughTick: 1 }));
     made.advance(2000);
     expect(made.controller.state.walls).toMatchObject([{ id: 'wall_2', hp: 0, broken: true }]);
     expect(made.controller.state.towers).toMatchObject([{ id: 'cannon_8', hp: 40, maxHp: 80 }]);
