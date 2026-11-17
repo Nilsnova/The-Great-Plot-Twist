@@ -1,27 +1,27 @@
 {
-  "source": "91c1f9d57c1edd957d26588b99fbb1489e575127",
-  "frontendTree": "6e0c6b27b717a7b8eedcde498d7372de6f0942cb",
+  "source": "e874023f27fff1a7bf5b21787e1ecd5c55a75a9f",
+  "frontendTree": "d76918ec05735c46c9cda4a55cc495e28bfa0d5a",
   "publicTree": "9306942db1050d728799cee2fbdc8e8960f14ad2",
   "backendTree": "c785196095edef4f5416744b46435ab564da4e9c",
   "supabaseTree": "6e52a63b87028291127dbae8c344c9f49a73896d",
   "helperHead": "12fe7ab781b2223de191485170aa48f664e4b91e",
   "helperCodeEquivalentTo": "074a4675b99c68a41604bb1658943f5dfb1ee067",
-  "started": "2026-11-17T22:00:12.983985+00:00",
   "helperHashes": {
     "capture-village-composition.mjs": "0ffcefb64fd6a32f6348e6c35542bd54887e07b8fe8aed0eb85f904e427dbda8",
     "perimeter-game-ui.mjs": "8f47d596ea378800b89e88171ab58aa37477faf892658cd7aca7c20f327a8ffb",
     "perimeter-game-wave.mjs": "9c2f3a1951a1a57154c93e7cc113a33fc3b6dd16eb895126eac5eb5adb7547af"
   },
+  "started": "2026-11-17T22:55:51.883352+00:00",
   "command": [
     "node",
     "scripts/capture-village-composition.mjs",
     "/workspace/reference-village-work/latest-main-preview/frontend",
-    "/workspace/reference-village-work/stage-08-selected-wall",
+    "/workspace/reference-village-work/stage-09-final-toast",
     "reference",
     "--arranged",
     "--wave"
   ],
   "exitCode": 0,
-  "seconds": 200.36,
-  "finished": "2026-11-17T22:03:33.343348+00:00"
+  "seconds": 199.76,
+  "finished": "2026-11-17T22:59:11.641017+00:00"
 }

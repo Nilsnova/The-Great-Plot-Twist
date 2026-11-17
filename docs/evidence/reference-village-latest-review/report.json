@@ -1,7 +1,7 @@
 {
   "mode": "reference",
-  "source": "91c1f9d57c1edd957d26588b99fbb1489e575127",
-  "sourceTree": "6e0c6b27b717a7b8eedcde498d7372de6f0942cb",
+  "source": "e874023f27fff1a7bf5b21787e1ecd5c55a75a9f",
+  "sourceTree": "d76918ec05735c46c9cda4a55cc495e28bfa0d5a",
   "helperSources": {
     "capture-village-composition.mjs": "0ffcefb64fd6a32f6348e6c35542bd54887e07b8fe8aed0eb85f904e427dbda8",
     "perimeter-game-ui.mjs": "8f47d596ea378800b89e88171ab58aa37477faf892658cd7aca7c20f327a8ffb",
@@ -646,7 +646,7 @@
           -1.1372584878228744,
           100
         ],
-        "zoom": 0.5513289488491365,
+        "zoom": 0.5513294132140699,
         "captain": [
           8.5,
           1.03,
@@ -951,19 +951,19 @@
       ],
       "dragged": {
         "camera": [
-          -3.63350669247541,
-          -0.06131414673155971,
+          -3.7246270240059287,
+          -0.030940699246386896,
           100
         ],
-        "zoom": 0.5513289488491365
+        "zoom": 0.5513294132140699
       },
       "peek": {
         "camera": [
-          -0.40687626940701976,
-          -1.1722408797324575,
+          -0.40694795694858626,
+          -1.1722163858748755,
           100
         ],
-        "zoom": 0.5250846115481648
+        "zoom": 0.5250850550983402
       },
       "fit": {
         "name": "reference-fit-1280x720.png",
@@ -975,11 +975,11 @@
           "densityScale": 0.5
         },
         "camera": [
-          -0.43339694218584685,
-          -1.1631185463296987,
+          -0.4214151328860265,
+          -1.1672400235248064,
           100
         ],
-        "zoom": 0.5252938546395898,
+        "zoom": 0.5251992564173577,
         "captain": [
           8.5,
           1.03,
@@ -1007,12 +1007,12 @@
         "worldWallDrawMeshes": 58
       },
       "workspace": {
-        "canonicalLandTop": 98.87521973171629,
-        "canonicalLandBottom": 561.9223474180269,
-        "decorativeBaseTop": 144.70046938182438,
-        "decorativeBaseBottom": 595.58661304366,
-        "landLeft": 164.82150371293528,
-        "landRight": 1115.2046613804268,
+        "canonicalLandTop": 98.87711913152637,
+        "canonicalLandBottom": 561.9309094085835,
+        "decorativeBaseTop": 144.70302814191552,
+        "decorativeBaseBottom": 595.5956594152034,
+        "landLeft": 164.83111127447884,
+        "landRight": 1115.2279436062825,
         "backdropMatrix": [
           1.3,
           0,
@@ -1037,8 +1037,8 @@
       },
       "focusApiDiagnostic": true,
       "pick": {
-        "x": 897.8297007537137,
-        "y": 164.66624938067545
+        "x": 897.7809051889699,
+        "y": 164.7012445296904
       },
       "bindings": [
         {
@@ -20965,8 +20965,8 @@
             "phone": false
           },
           "foot": {
-            "x": 237.39701335274873,
-            "y": 350.34843083222887
+            "x": 237.39741186532137,
+            "y": 350.3508561240651
           },
           "portrait": {
             "id": "island-wall-l3",
@@ -21219,11 +21219,11 @@
               "densityScale": 0.5
             },
             "camera": [
-              -0.4056736470649984,
-              -1.7572378199765641,
+              -0.4056736470656589,
+              -1.7572282356406377,
               100
             ],
-            "zoom": 0.5292370163172903,
+            "zoom": 0.5292375429522325,
             "captain": [
               8.5,
               1.03,
@@ -21483,10 +21483,10 @@
             },
             "camera": [
               -0.4056736470649956,
-              -3.777901352677991,
+              -3.7778104106151864,
               100
             ],
-            "zoom": 0.5292370163172903,
+            "zoom": 0.5292375429522325,
             "captain": [
               8.5,
               1.03,
@@ -42133,10 +42133,10 @@
             },
             "camera": [
               -0.4056736470649956,
-              -4.857074232492416,
+              -4.857054378466882,
               100
             ],
-            "zoom": 0.4409024470672759,
+            "zoom": 0.4409064383793344,
             "captain": [
               8.5,
               1.03,
@@ -42186,12 +42186,12 @@
               "phone": false
             },
             "bounds": {
-              "canonicalLandTop": 97.19269781075138,
-              "canonicalLandBottom": 468.05487020255225,
-              "decorativeBaseTop": 133.89490503651092,
-              "decorativeBaseBottom": 495.01714236754594,
-              "landLeft": 259.4111340045731,
-              "landRight": 1020.5888659954269,
+              "canonicalLandTop": 96.38725330225836,
+              "canonicalLandBottom": 468.73162189561003,
+              "decorativeBaseTop": 133.23614540501063,
+              "decorativeBaseBottom": 495.8016520913849,
+              "landLeft": 257.8900638779197,
+              "landRight": 1022.1099361220803,
               "backdropMatrix": [
                 1.3,
                 0,
@@ -42689,10 +42689,10 @@
               },
               "camera": [
                 -0.4056736470649956,
-                -5.076518292956428,
+                -5.070103295722083,
                 100
               ],
-              "zoom": 0.4200937598222485,
+              "zoom": 0.42070214027849695,
               "captain": [
                 8.5,
                 1.03,
@@ -45469,13 +45469,13 @@
             "unitCost": 10,
             "totalCost": 210,
             "remaining": 5,
-            "islandEpoch": "56ada54d-4022-4c55-a76f-533be136f861",
+            "islandEpoch": "d2093499-5c96-4383-8a81-4983bc4c6802",
             "wallRuleVersion": 1,
             "wallCapacity": 128
           },
           "buildReceipt": {
-            "actionUid": "bkaiut1ncu8uwduy",
-            "islandEpoch": "56ada54d-4022-4c55-a76f-533be136f861",
+            "actionUid": "yaazaat1laaloop6",
+            "islandEpoch": "d2093499-5c96-4383-8a81-4983bc4c6802",
             "totalCost": 210,
             "placements": [
               {
@@ -68818,10 +68818,10 @@
           },
           "camera": [
             -0.4056736470649956,
-            -1.13726159701025,
+            -1.1372607008501763,
             100
           ],
-          "zoom": 0.5513264176244145,
+          "zoom": 0.5513270823150482,
           "captain": [
             8.5,
             1.03,
@@ -68857,13 +68857,13 @@
             1.03,
             12.8
           ],
-          "zoom": 0.9909813875174341
+          "zoom": 0.99268234079958
         },
         "initial": {
           "waveId": "fake-wave-1",
           "wave": 41,
           "seed": 25135766,
-          "startsAtMs": 1794952926000,
+          "startsAtMs": 1794956266000,
           "renderStats": {
             "objects": 159,
             "owned": 160,
@@ -69508,8 +69508,8 @@
             "waveId": "fake-wave-1",
             "wave": 41,
             "seed": 25135766,
-            "startsAt": "2026-11-17T22:02:06Z",
-            "islandEpoch": "56ada54d-4022-4c55-a76f-533be136f861",
+            "startsAt": "2026-11-17T22:57:46Z",
+            "islandEpoch": "d2093499-5c96-4383-8a81-4983bc4c6802",
             "pathing": true,
             "perimeterWalls": true,
             "defenses": [
@@ -70830,7 +70830,7 @@
             -4.58,
             100
           ],
-          "zoom": 0.5751638074883736,
+          "zoom": 0.5751642186197068,
           "captain": [
             8.5,
             1.03,
@@ -70862,12 +70862,12 @@
             "waveId": "fake-wave-1",
             "wave": 41,
             "seed": 25135766,
-            "startsAtMs": 1794952926000,
+            "startsAtMs": 1794956266000,
             "renderStats": {
               "objects": 159,
               "owned": 160,
               "ships": 3,
-              "balls": 0,
+              "balls": 2,
               "splashes": 0,
               "sinkers": 0,
               "wrecks": 0,
@@ -70877,7 +70877,7 @@
               "boarders": 0,
               "fallen": 0,
               "strikes": 0,
-              "instances": 17
+              "instances": 30
             },
             "atlasSources": [
               {
@@ -71507,8 +71507,8 @@
               "waveId": "fake-wave-1",
               "wave": 41,
               "seed": 25135766,
-              "startsAt": "2026-11-17T22:02:06Z",
-              "islandEpoch": "56ada54d-4022-4c55-a76f-533be136f861",
+              "startsAt": "2026-11-17T22:57:46Z",
+              "islandEpoch": "d2093499-5c96-4383-8a81-4983bc4c6802",
               "pathing": true,
               "perimeterWalls": true,
               "defenses": [
@@ -72553,7 +72553,7 @@
                 "guard": 0
               }
             },
-            "ticks": 63,
+            "ticks": 76,
             "done": false,
             "broken": [],
             "actualLinks": [
@@ -72818,25 +72818,25 @@
           "capture": {
             "name": "wave-projectiles-1280x720.png",
             "qualityBefore": {
-              "pixelRatio": 0.5,
-              "drawingWidth": 640,
-              "drawingHeight": 360,
+              "pixelRatio": 1,
+              "drawingWidth": 1280,
+              "drawingHeight": 720,
               "quality": "high",
-              "densityScale": 0.5
+              "densityScale": 1
             },
             "camera": [
-              13.662340055624828,
-              -4.652730072057031,
+              12.280251365429905,
+              -6.274259784903271,
               100
             ],
-            "zoom": 0.5751638074883736,
+            "zoom": 0.5751642186197068,
             "captain": [
               8.5,
               1.03,
               12.8
             ],
             "contextLost": false,
-            "drawCalls": 121,
+            "drawCalls": 119,
             "rendering": {
               "pixelRatio": 1,
               "drawingWidth": 1280,
@@ -72861,22 +72861,22 @@
           "waveId": "fake-wave-1",
           "wave": 41,
           "seed": 25135766,
-          "startsAtMs": 1794952926000,
+          "startsAtMs": 1794956266000,
           "renderStats": {
             "objects": 159,
             "owned": 160,
-            "ships": 16,
+            "ships": 17,
             "balls": 3,
-            "splashes": 13,
+            "splashes": 20,
             "sinkers": 0,
             "wrecks": 0,
             "shells": 0,
             "bursts": 2,
             "tracers": 0,
-            "boarders": 15,
+            "boarders": 19,
             "fallen": 0,
             "strikes": 0,
-            "instances": 117
+            "instances": 133
           },
           "atlasSources": [
             {
@@ -73506,8 +73506,8 @@
             "waveId": "fake-wave-1",
             "wave": 41,
             "seed": 25135766,
-            "startsAt": "2026-11-17T22:02:06Z",
-            "islandEpoch": "56ada54d-4022-4c55-a76f-533be136f861",
+            "startsAt": "2026-11-17T22:57:46Z",
+            "islandEpoch": "d2093499-5c96-4383-8a81-4983bc4c6802",
             "pathing": true,
             "perimeterWalls": true,
             "defenses": [
@@ -74552,7 +74552,7 @@
               "guard": 0
             }
           },
-          "ticks": 275,
+          "ticks": 287,
           "done": false,
           "broken": [
             "wall_56"
@@ -74811,23 +74811,23 @@
             "wall-join:wall_98:wall_99"
           ],
           "worldLinks": 0,
-          "acceleratedSeconds": 8
+          "acceleratedSeconds": 10
         },
         "breach": {
           "name": "wave-breach-1280x720.png",
           "qualityBefore": {
-            "pixelRatio": 1,
-            "drawingWidth": 1280,
-            "drawingHeight": 720,
+            "pixelRatio": 0.5,
+            "drawingWidth": 640,
+            "drawingHeight": 360,
             "quality": "high",
-            "densityScale": 1
+            "densityScale": 0.5
           },
           "camera": [
-            9.737965291286837,
-            -3.605914951720583,
+            9.841158243087321,
+            -3.874611936541762,
             100
           ],
-          "zoom": 0.5751638074883736,
+          "zoom": 0.5751642186197068,
           "captain": [
             8.5,
             1.03,
@@ -74848,7 +74848,7 @@
             720
           ],
           "memory": {
-            "geometries": 199,
+            "geometries": 132,
             "textures": 39
           },
           "worldLinks": 0,
@@ -75486,18 +75486,18 @@
       "entry": {
         "name": "reference-entry-375x812.png",
         "qualityBefore": {
-          "pixelRatio": 0.5,
-          "drawingWidth": 187,
-          "drawingHeight": 406,
+          "pixelRatio": 0.55,
+          "drawingWidth": 206,
+          "drawingHeight": 446,
           "quality": "high",
-          "densityScale": 0.5
+          "densityScale": 0.55
         },
         "camera": [
-          -5.9999999999997975,
-          -0.9588888888889339,
+          -5.9999999999996145,
+          -0.9588888888889722,
           100
         ],
-        "zoom": 0.9000004129183474,
+        "zoom": 0.9000001689117598,
         "captain": [
           8.5,
           1.03,
@@ -75802,35 +75802,35 @@
       ],
       "dragged": {
         "camera": [
-          -8.829309860215652,
-          -0.015785602559684038,
+          -8.83273293319153,
+          -0.014644580168124432,
           100
         ],
-        "zoom": 0.9000004129183474
+        "zoom": 0.9000001689117598
       },
       "peek": {
         "camera": [
-          -0.4072175217315847,
-          -11.027611250581586,
+          -0.4073723034522918,
+          -11.027409846426231,
           100
         ],
-        "zoom": 0.28529334871178175
+        "zoom": 0.2853045730140568
       },
       "fit": {
         "name": "reference-fit-375x812.png",
         "qualityBefore": {
-          "pixelRatio": 0.8,
-          "drawingWidth": 300,
-          "drawingHeight": 649,
+          "pixelRatio": 0.75,
+          "drawingWidth": 281,
+          "drawingHeight": 609,
           "quality": "high",
-          "densityScale": 0.8
+          "densityScale": 0.75
         },
         "camera": [
-          -0.41932106758147575,
-          -11.01180904600299,
+          -0.42564742992926624,
+          -11.003548425810129,
           100
         ],
-        "zoom": 0.28617502471802414,
+        "zoom": 0.28663594131671755,
         "captain": [
           8.5,
           1.03,
@@ -75858,12 +75858,12 @@
         "worldWallDrawMeshes": 58
       },
       "workspace": {
-        "canonicalLandTop": 238.5060461316749,
-        "canonicalLandBottom": 418.66846314648717,
-        "decorativeBaseTop": 256.33573828098815,
-        "decorativeBaseBottom": 431.7665585659483,
-        "landLeft": 2.6210777577571966,
-        "landRight": 372.39624002059094,
+        "canonicalLandTop": 238.38496978621214,
+        "canonicalLandBottom": 418.7110547875278,
+        "decorativeBaseTop": 256.23085926381617,
+        "decorativeBaseBottom": 431.82104913097027,
+        "landLeft": 2.4769298773940975,
+        "landRight": 372.58801323447904,
         "backdropMatrix": [
           1.3,
           0,
@@ -75888,8 +75888,8 @@
       },
       "focusApiDiagnostic": true,
       "pick": {
-        "x": 188.19986593716655,
-        "y": 340.714594229487
+        "x": 188.30103985494128,
+        "y": 340.6049007154144
       },
       "bindings": [
         {
@@ -95816,8 +95816,8 @@
             "phone": true
           },
           "foot": {
-            "x": 187.4409359750822,
-            "y": 341.63657779760433
+            "x": 187.42067214003072,
+            "y": 341.6325086845158
           },
           "portrait": {
             "id": "island-wall-l3",
@@ -96070,11 +96070,11 @@
               "densityScale": 0.75
             },
             "camera": [
-              -23.649724804261762,
-              -4.250820615186263,
+              -23.649534795003202,
+              -4.250875767765728,
               100
             ],
-            "zoom": 0.8999927383892312,
+            "zoom": 0.8999877244566896,
             "captain": [
               8.5,
               1.03,
@@ -96333,11 +96333,11 @@
               "densityScale": 1
             },
             "camera": [
-              -23.64999999828359,
-              -5.659595113074621,
+              -23.649999981268,
+              -5.659267968928065,
               100
             ],
-            "zoom": 0.8999993039949249,
+            "zoom": 0.8999991708805672,
             "captain": [
               8.5,
               1.03,
@@ -116976,18 +116976,18 @@
           "capture": {
             "name": "reference-wall-draft-375x812.png",
             "qualityBefore": {
-              "pixelRatio": 0.75,
-              "drawingWidth": 281,
-              "drawingHeight": 609,
+              "pixelRatio": 0.8,
+              "drawingWidth": 300,
+              "drawingHeight": 649,
               "quality": "high",
-              "densityScale": 0.75
+              "densityScale": 0.8
             },
             "camera": [
-              1.997880990854593,
-              -9.518073352106606,
+              1.9996402592291618,
+              -9.516343187272184,
               100
             ],
-            "zoom": 0.8997093968617883,
+            "zoom": 0.899910767743646,
             "captain": [
               8.5,
               1.03,
@@ -117037,12 +117037,12 @@
               "phone": true
             },
             "bounds": {
-              "canonicalLandTop": 178.2306737198579,
-              "canonicalLandBottom": 360.00166876511344,
-              "decorativeBaseTop": 196.2195580667236,
-              "decorativeBaseBottom": 373.21671037613606,
-              "landLeft": 0.891931800627091,
-              "landRight": 373.96862726930533,
+              "canonicalLandTop": 178.46516730158172,
+              "canonicalLandBottom": 360.0255092193658,
+              "decorativeBaseTop": 196.43320445692245,
+              "decorativeBaseBottom": 373.225236011628,
+              "landLeft": 1.116984106157598,
+              "landRight": 373.76132361690304,
               "backdropMatrix": [
                 1.3,
                 0,
@@ -117539,11 +117539,11 @@
                 "densityScale": 1
               },
               "camera": [
-                -0.40203879245547613,
-                -19.766207484147213,
+                -0.4030209333889067,
+                -19.769704253632106,
                 100
               ],
-              "zoom": 0.28610969011518794,
+              "zoom": 0.2858586769375105,
               "captain": [
                 8.5,
                 1.03,
@@ -120320,13 +120320,13 @@
             "unitCost": 10,
             "totalCost": 210,
             "remaining": 5,
-            "islandEpoch": "26a48a7e-07c1-4217-9daa-c7ab5447e2cf",
+            "islandEpoch": "687c7a03-889d-4fe9-adff-494166b360d1",
             "wallRuleVersion": 1,
             "wallCapacity": 128
           },
           "buildReceipt": {
-            "actionUid": "qcp1ljcdeos4dgzj",
-            "islandEpoch": "26a48a7e-07c1-4217-9daa-c7ab5447e2cf",
+            "actionUid": "4m2trcaq2owbm6mv",
+            "islandEpoch": "687c7a03-889d-4fe9-adff-494166b360d1",
             "totalCost": 210,
             "placements": [
               {
@@ -143661,18 +143661,18 @@
         "capture": {
           "name": "reference-arranged-375x812.png",
           "qualityBefore": {
-            "pixelRatio": 0.5,
-            "drawingWidth": 187,
-            "drawingHeight": 406,
+            "pixelRatio": 0.65,
+            "drawingWidth": 243,
+            "drawingHeight": 527,
             "quality": "high",
-            "densityScale": 0.5
+            "densityScale": 0.65
           },
           "camera": [
-            -5.997566045058579,
-            -0.9581813438477786,
+            -5.998267583105755,
+            -0.9583852793266091,
             100
           ],
-          "zoom": 0.8999992297032924,
+          "zoom": 0.8999992022515693,
           "captain": [
             8.5,
             1.03,
@@ -143708,13 +143708,13 @@
             1.03,
             12.8
           ],
-          "zoom": 0.992977142503573
+          "zoom": 0.9966425888497811
         },
         "initial": {
           "waveId": "fake-wave-1",
           "wave": 41,
           "seed": 25135766,
-          "startsAtMs": 1794953013000,
+          "startsAtMs": 1794956352000,
           "renderStats": {
             "objects": 159,
             "owned": 160,
@@ -144359,8 +144359,8 @@
             "waveId": "fake-wave-1",
             "wave": 41,
             "seed": 25135766,
-            "startsAt": "2026-11-17T22:03:33Z",
-            "islandEpoch": "26a48a7e-07c1-4217-9daa-c7ab5447e2cf",
+            "startsAt": "2026-11-17T22:59:12Z",
+            "islandEpoch": "687c7a03-889d-4fe9-adff-494166b360d1",
             "pathing": true,
             "perimeterWalls": true,
             "defenses": [
@@ -145670,18 +145670,18 @@
         "start": {
           "name": "wave-standing-375x812.png",
           "qualityBefore": {
-            "pixelRatio": 1,
-            "drawingWidth": 375,
-            "drawingHeight": 812,
+            "pixelRatio": 0.7,
+            "drawingWidth": 262,
+            "drawingHeight": 568,
             "quality": "high",
-            "densityScale": 1
+            "densityScale": 0.7
           },
           "camera": [
             13.610000000000001,
             -4.58,
             100
           ],
-          "zoom": 0.4000423803552034,
+          "zoom": 0.4001454285548459,
           "captain": [
             8.5,
             1.03,
@@ -145713,7 +145713,7 @@
             "waveId": "fake-wave-1",
             "wave": 41,
             "seed": 25135766,
-            "startsAtMs": 1794953013000,
+            "startsAtMs": 1794956352000,
             "renderStats": {
               "objects": 159,
               "owned": 160,
@@ -145728,7 +145728,7 @@
               "boarders": 0,
               "fallen": 0,
               "strikes": 0,
-              "instances": 14
+              "instances": 13
             },
             "atlasSources": [
               {
@@ -146358,8 +146358,8 @@
               "waveId": "fake-wave-1",
               "wave": 41,
               "seed": 25135766,
-              "startsAt": "2026-11-17T22:03:33Z",
-              "islandEpoch": "26a48a7e-07c1-4217-9daa-c7ab5447e2cf",
+              "startsAt": "2026-11-17T22:59:12Z",
+              "islandEpoch": "687c7a03-889d-4fe9-adff-494166b360d1",
               "pathing": true,
               "perimeterWalls": true,
               "defenses": [
@@ -147404,7 +147404,7 @@
                 "guard": 0
               }
             },
-            "ticks": 60,
+            "ticks": 52,
             "done": false,
             "broken": [],
             "actualLinks": [
@@ -147676,11 +147676,11 @@
               "densityScale": 1
             },
             "camera": [
-              14.916245269041257,
-              -5.441998142579156,
+              15.309692661451123,
+              -4.722163743249713,
               100
             ],
-            "zoom": 0.40000087606493356,
+            "zoom": 0.40000093864769115,
             "captain": [
               8.5,
               1.03,
@@ -147712,17 +147712,17 @@
           "waveId": "fake-wave-1",
           "wave": 41,
           "seed": 25135766,
-          "startsAtMs": 1794953013000,
+          "startsAtMs": 1794956352000,
           "renderStats": {
             "objects": 159,
             "owned": 160,
             "ships": 16,
             "balls": 2,
-            "splashes": 19,
+            "splashes": 18,
             "sinkers": 0,
             "wrecks": 0,
             "shells": 0,
-            "bursts": 3,
+            "bursts": 2,
             "tracers": 0,
             "boarders": 16,
             "fallen": 0,
@@ -148357,8 +148357,8 @@
             "waveId": "fake-wave-1",
             "wave": 41,
             "seed": 25135766,
-            "startsAt": "2026-11-17T22:03:33Z",
-            "islandEpoch": "26a48a7e-07c1-4217-9daa-c7ab5447e2cf",
+            "startsAt": "2026-11-17T22:59:12Z",
+            "islandEpoch": "687c7a03-889d-4fe9-adff-494166b360d1",
             "pathing": true,
             "perimeterWalls": true,
             "defenses": [
@@ -149403,7 +149403,7 @@
               "guard": 0
             }
           },
-          "ticks": 279,
+          "ticks": 278,
           "done": false,
           "broken": [
             "wall_56"
@@ -149662,7 +149662,7 @@
             "wall-join:wall_98:wall_99"
           ],
           "worldLinks": 0,
-          "acceleratedSeconds": 16
+          "acceleratedSeconds": 17
         },
         "breach": {
           "name": "wave-breach-375x812.png",
@@ -149674,11 +149674,11 @@
             "densityScale": 1
           },
           "camera": [
-            10.059855204154637,
-            -3.918323108192524,
+            10.353466900092839,
+            -3.6019080576168836,
             100
           ],
-          "zoom": 0.40000087606493356,
+          "zoom": 0.40000093864769115,
           "captain": [
             8.5,
             1.03,

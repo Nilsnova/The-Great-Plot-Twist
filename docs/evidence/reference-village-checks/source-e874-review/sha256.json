@@ -1,0 +1,67 @@
+{
+  "source": "e874023f27fff1a7bf5b21787e1ecd5c55a75a9f",
+  "applicationTrees": {
+    "frontend/src": "d76918ec05735c46c9cda4a55cc495e28bfa0d5a",
+    "frontend/public": "9306942db1050d728799cee2fbdc8e8960f14ad2",
+    "backend": "c785196095edef4f5416744b46435ab564da4e9c",
+    "supabase": "6e52a63b87028291127dbae8c344c9f49a73896d"
+  },
+  "status": "21 measured overlap rows passed; 3 wave-hint rows skipped; full frontend 4586 passed/1 unchanged 20-second timeout; remaining five final command results pending",
+  "copyMethod": "unchanged original bytes; only three island-toast PNGs published here; all 21 measured rows and 3 skipped rows remain in the complete report",
+  "files": [
+    {
+      "file": "report.json",
+      "original": "final-toast-smoke/report.json",
+      "bytes": 1071,
+      "sha256": "6837b31da1b5bcb74aac5e96a7bc16166e84803f43d8b56781fd6e92da2528e1"
+    },
+    {
+      "file": "runner.log",
+      "original": "final-toast-smoke/runner.log",
+      "bytes": 540,
+      "sha256": "e52b017fe3eee723a7a2cec8cfee64a0eb41b223475d2a489eccd0a7960764a0"
+    },
+    {
+      "file": "overlaps.log",
+      "original": "final-toast-smoke/overlaps.log",
+      "bytes": 6189,
+      "sha256": "0e9cb4f7aeffd819c53d4a27b85344bfd40c99ee75cf45a298f9b80a3962da3a"
+    },
+    {
+      "file": "overlap-captures/report.json",
+      "original": "final-toast-smoke/overlap-captures/report.json",
+      "bytes": 6349,
+      "sha256": "85d1fa6dcb7f6529a178b93f91b672090a8b010a0b58fe556df7e2601ea1d181"
+    },
+    {
+      "file": "overlap-captures/island-toast-1280x720.png",
+      "original": "final-toast-smoke/overlap-captures/island-toast-1280x720.png",
+      "bytes": 1326350,
+      "sha256": "019d2af610287365020c6eda4bf64ef1b523487fb219ddd6e8fba0891e6b3857",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "overlap-captures/island-toast-390x844.png",
+      "original": "final-toast-smoke/overlap-captures/island-toast-390x844.png",
+      "bytes": 369099,
+      "sha256": "077d94d186b431e13432daeba5049d802d15a2c109237352a81bb09fe420c500",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "file": "overlap-captures/island-toast-844x390.png",
+      "original": "final-toast-smoke/overlap-captures/island-toast-844x390.png",
+      "bytes": 452256,
+      "sha256": "97ea592edd58c871749a679baaf61117819d79e7c77eb23a8c3e87be2a860a71",
+      "width": 844,
+      "height": 390
+    },
+    {
+      "file": "frontend.log",
+      "original": "final-post-toast-checks/frontend.log",
+      "bytes": 637356,
+      "sha256": "2e56517eaf6cb6c7d3d48c0aedb4bcd11d4c8e9e06f86f2d27bcd647e396f7d4"
+    }
+  ]
+}

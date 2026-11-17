@@ -1,7 +1,7 @@
 # Reference village: latest actual review
 
 Responsible human: Johannes Franz Lang (`frcola`). This package contains the
-coordinator's completed **stage-eight actual game capture**, its original report
+coordinator's completed **stage-nine actual game capture**, its original report
 and execution record, twenty unchanged final PNGs and six unchanged before PNGs.
 It does not close final human visual, device or balance acceptance.
 
@@ -18,32 +18,38 @@ does not validate this new twelve-image page.
 
 | Identity | Exact value |
 |---|---|
-| Actual capture runtime | `91c1f9d57c1edd957d26588b99fbb1489e575127` |
-| Frozen complete-check source | `52f6bb158b03188b57260c1872e273391598debf` |
-| Frontend source tree | `6e0c6b27b717a7b8eedcde498d7372de6f0942cb` |
+| Actual capture runtime | `e874023f27fff1a7bf5b21787e1ecd5c55a75a9f` |
+| Frozen final six-command source | `e874023f27fff1a7bf5b21787e1ecd5c55a75a9f` |
+| Frontend source tree | `d76918ec05735c46c9cda4a55cc495e28bfa0d5a` |
 | Public tree | `9306942db1050d728799cee2fbdc8e8960f14ad2` |
 | Backend tree | `c785196095edef4f5416744b46435ab564da4e9c` |
 | Supabase tree | `6e52a63b87028291127dbae8c344c9f49a73896d` |
 | Included main cutoff | `ee5677ff4986b671c271c85a35abcee70aa8fe59` |
 
-All four application trees are **identical** between the captured and frozen
-check sources. The intervening files are documentation/specification evidence
-only; the [manifest](sha256.json) lists every changed path. The
+Capture, passing full-game layout audit and final six-command checks use the
+**same frozen source** and all four application trees above. The final command
+sequence is still being completed; capture success does not imply it passed.
+The [manifest](sha256.json) records the exact source boundary. The
 [execution record](execution.json) identifies the actual helper checkout and
 three helper hashes. The [raw report](report.json) retains the exact declared
 fixture, camera/selection/placement/wave observations and diagnostics.
-The capture completed successfully in **200.36 seconds**.
+The capture completed successfully in **199.76 seconds**.
 
 The [50-component Draft snapshot](pr-snapshot.json) records public branch heads
 at its stated observation time. It is a review map, not a composition manifest:
-the exact frozen source above determines which code/tests were checked. Later
-branch variants remain separate until reconciled; source 52 retains its original
-UI button clicks and excludes VIS52. The separately recorded b9da2783 keyboard
-variant failed too; the current branch index is not an application test result.
+the exact frozen source above determines which code/tests were checked. This
+source includes VIS52's measured Goals/toast clearance and the keyboard-activated
+report test. Source-52/b9da2783 failures remain historical records; the current
+branch index is not an application test result. VIS53 is issue #421 only, with
+no runtime PR or pose fix.
 
 The original stage-eight package is preserved at immutable documentation head
 [`07d0c146`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/07d0c14649ae7d1fb6a3503012d8941bee4e6a42/docs/evidence/reference-village-latest-review);
-its prior manifest/snapshot are also in the source-52 archive.
+its prior manifest/snapshot are also in the source-52 archive. Documentation
+commit `267405ea` preserves the stage-eight package plus the completed source-52
+results before this stage-nine replacement. The frontend source has changed
+from `6e0c6b27` to `d76918ec`; stage-eight images are not represented as new UI
+evidence. Selected-wall before remains stage seven and after is now stage nine.
 
 This is a separate later package. The historical
 [stage-six package](../reference-village-visual-review/README.md) and
@@ -92,11 +98,11 @@ where the declared legacy response supplies no recovery value.
 
 ## Measurements and remaining boundaries
 
-| Stage-eight sample | Desktop | Phone viewport |
+| Stage-nine sample | Desktop | Phone viewport |
 |---|---:|---:|
 | Entry draw calls | 116 | 116 |
 | Selected wall draw calls | 119 | 116 |
-| Combat standing / firing / breach | 117 / 121 / 129 | 116 / 120 / 129 |
+| Combat standing / firing / breach | 117 / 119 / 129 | 116 / 120 / 129 |
 | JavaScript page errors | 0 | 0 |
 | External requests | 0 | 0 |
 | Expected offline 503 console diagnostics | 1 | 1 |
@@ -109,13 +115,21 @@ remains **12,554,858 bytes**, above the unchanged **8MiB** effort target. The
 existing analytic coast and manual/server upgrade rules remain authoritative;
 automatic island expansion is not implemented here.
 
-The [completed source-52 sequence](../reference-village-checks/source-52-completed/README.md)
-has exact mixed results: 4,583 frontend passes / one 20-second timeout; 33
-accessibility screens and 34 demo checks passed; two Goals/toast overlaps and
-the known upstream firing-pose multiplayer assertion failed. Build/budget/text
-lint exited 0. The later keyboard-activation test also timed out. VIS52 Draft
-#420 addresses the real overlap; its final composed capture/checks and this
-document's native check remain **PENDING** until their own receipts arrive.
+The [final exact-source evidence](../reference-village-checks/source-e874-review/README.md)
+records **21 measured full-game layout checks passed** in 86.77 s, with three
+wave-hint rows explicitly skipped. The final frontend run has **4,586 passed /
+one 20-second timeout** across 420 files (419 pass / one fail), 554.53 s Vitest /
+555.61 s process; all three toast-clearance cases passed. The other five commands
+(accessibility, demo, build, title budget and text lint) remain **PENDING** until
+their exact closed report arrives. This document's native check remains pending.
+
+The [completed historical source-52 sequence](../reference-village-checks/source-52-completed/README.md)
+retains 4,583 frontend passes / one timeout, 33 accessibility screens and 34 demo
+passes, the two original overlaps and the known upstream firing-pose multiplayer
+failure. The later b9 keyboard variant also timed out. Those failures are not
+rewritten by the new layout pass. [VIS53's separate native diagnostic](../VIS-53-captain-pose-diagnostic/README.md)
+accepted no shot and was **INCONCLUSIVE**; issue #421 remains open without a
+runtime fix. No final-source full multiplayer pass is claimed.
 The [targeted backend record](../reference-village-backend-checks/README.md)
 separately proves 262 route/unit checks and 269 actual disposable-PostgreSQL
 checks on the matching backend/Supabase trees; it is not a new full-backend pass.
@@ -143,7 +157,7 @@ a separate helper checkout, locked dependencies and installed Chromium:
 
 ~~~bash
 CHROME_PATH=/usr/bin/chromium node scripts/capture-village-composition.mjs \
-  /absolute/path/to/runtime-at-91c1f9d5/frontend /absolute/path/to/output reference --arranged --wave
+  /absolute/path/to/runtime-at-e874023f/frontend /absolute/path/to/output reference --arranged --wave
 ~~~
 
 The exact [document checker](verify-comparison.mjs) uses the existing frontend's

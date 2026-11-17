@@ -1,0 +1,17 @@
+{
+  "checked": "2026-11-17T23:15:03.699077+00:00",
+  "scope": "static packaging only; no browser/application rerun",
+  "source": "e874023f27fff1a7bf5b21787e1ecd5c55a75a9f",
+  "latestPackageHashReceipts": 35,
+  "additionalExactRawReceipts": 12,
+  "exactEmbeddedPngs": 12,
+  "nativePublishedPngDimensions": 26,
+  "existingLocalMarkdownTargets": 330,
+  "uniqueObservedOpenDrafts": 50,
+  "htmlSha256": "f65e50207d375c2b594c872e403dbff5a308e1d1809a54eabc0feda33d067e76",
+  "checkerSha256": "dbdb2dc8e443d4414f206a31575344b1020a4586a1f10130d4d8f1df4ef3b789",
+  "historicalSource52Archive": "unchanged from 267405ea",
+  "result": "passed",
+  "strictNativeComparison": "PENDING",
+  "remainingFiveFinalCommands": "PENDING"
+}

@@ -1,5 +1,5 @@
 {
-  "at": "2026-11-17T22:49:56.716469+00:00",
+  "at": "2026-11-17T23:11:03.695806+00:00",
   "rows": [
     {
       "pr": 349,
@@ -164,9 +164,9 @@
     {
       "pr": 414,
       "expectedBranch": "chore/vis-49-latest-main",
-      "expectedHeadPrefix": "52f6bb15",
+      "expectedHeadPrefix": "e874023f",
       "branch": "chore/vis-49-latest-main",
-      "head": "52f6bb158b03188b57260c1872e273391598debf",
+      "head": "e874023f27fff1a7bf5b21787e1ecd5c55a75a9f",
       "draft": true,
       "state": "open",
       "matches": true
@@ -494,13 +494,13 @@
     {
       "pr": 420,
       "expectedBranch": "fix/vis-52-toast-goal-clearance",
-      "expectedHeadPrefix": "46fe08ab",
+      "expectedHeadPrefix": "533208d2",
       "branch": "fix/vis-52-toast-goal-clearance",
-      "head": "46fe08ab4c622234086350b269138834f6286c38",
+      "head": "533208d241f7481f8cbd78e27abf7a9c66606e48",
       "draft": true,
       "state": "open",
       "matches": true
     }
   ],
-  "scope": "50 live Draft branch/head snapshot only; source-52 completed checks and stage-eight capture have separate immutable boundaries. VIS52 and later keyboard activation are outside source 52. Pending final candidate is not verified by this index."
+  "scope": "50 observed live Draft heads only, not a composition manifest or test result. Stage-nine capture/final command source is e874023f; older source-52 mixed results and uncomposed future branch changes retain their own boundaries. VIS53 is issue #421 only, without a runtime PR."
 }
