@@ -1,6 +1,6 @@
 """The strict HTTP body for paid structure Repair now.
 
-Used by: the future structure-repair route and focused request-validation tests.
+Used by: the paid structure-repair route and focused request-validation tests.
 """
 
 from typing import Annotated, Literal

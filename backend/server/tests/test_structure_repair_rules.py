@@ -1,4 +1,4 @@
-"""Pure price and intent rules for the future paid structure repair route.
+"""Pure price and intent rules for the paid structure repair route.
 
 These tests read the real island catalogue and need no database or network.
 Used by: pytest in backend/server/tests/.

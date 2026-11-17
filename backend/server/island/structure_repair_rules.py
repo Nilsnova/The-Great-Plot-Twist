@@ -1,6 +1,6 @@
 """Fixed price and stable intent rules for paid structure Repair now.
 
-Used by: the future paid repair transaction and pure rule tests.
+Used by: the paid repair service and pure rule tests.
 """
 
 import hashlib
