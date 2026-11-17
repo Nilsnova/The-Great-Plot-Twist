@@ -12,6 +12,14 @@ Explain-back: Why are refunds split by payer? Why does a previously valid receip
 
 ## Implemented boundary
 
-The static migration is 288 lines: the current quote and final recovery-aware mutation with bounded identity admission, current permission before cached disclosure, an owner lock on the read-only replay path, and owner/plot intent checks on both replay returns. Fresh mutations keep their original wallet lock order and exact refund/recovery operations. The focused test file is 133 lines, slightly above the approximate combined target because the current two functions form one refund lifecycle boundary.
+The static migration is 287 lines: the current quote and final recovery-aware mutation with bounded identity admission, current permission before cached disclosure, an owner lock on the read-only replay path, and owner/plot intent checks on both replay returns. Fresh mutations keep their original wallet lock order and exact refund/recovery operations. The focused test file is 133 lines, slightly above the approximate combined target because the current two functions form one refund lifecycle boundary.
 
-Ruff check/format, Python test compilation and `git diff --check` pass. Actual PostgreSQL execution remains pending the root-coordinated integrated lane. No runtime pass is inferred from source comparison or test presence.
+Ruff check/format, Python test compilation and `git diff --check` pass. The completed scoped private PostgreSQL evidence and its remaining regression gate are recorded below. No runtime pass is inferred from source comparison or test presence.
+
+## Executed verification and remaining gate
+
+The private integrated set returned **`265 passed in 14.00s`**, exit **0**, on epoch-fenced WALL-12 source `f339235d` plus WALL-34 pressure tests. This branch's production migration and focused SQL test file were independently compared byte-for-byte with the tested source and match. The new boundary refund/rebuild/retry/access cases passed, together with cohort, repair, policy, construction, pressure and existing recovery-mutation/layout cases.
+
+[Exact executed command and evidence limits](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/1ddf3712d713b409e43fc7e0065488a1cbc0fafd/specs/WALL-34-chain-pressure.md). The full original `test_demolish_sql.py` regression file was not in that selected set and remains a required gate in root's next aggregate SQL run. Importing its helpers did not execute its tests. Root also owns the new plain 409 API mapping for `action_uid_conflict`; this database slice does not claim API proof.
+
+**Changed:** canonical cohort quote/refund admission and access/intent-fenced historical replay. **Verified:** declared focused private SQL boundaries and source/style checks. **Not verified:** original full demolition regression gate, API mapping, complete game or production rollout. **Remaining:** the named aggregate checks, author explain-back and independent human review. **Branch/PR:** `feat/wall-21-cohort-refunds`, [Draft #291](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/291); no live application or merge.

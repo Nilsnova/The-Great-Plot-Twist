@@ -169,3 +169,6 @@ WALL-19 perimeter follow-up (Johannes): [Draft PR #275](https://github.com/Nilsn
 
 
 WALL-20 perimeter follow-up (Johannes): [Draft #283](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/283) admits the selected wall cohort to the existing paid-repair transaction. [Scope and exact private SQL evidence](../specs/WALL-20-cohort-repair.md). This is one verified database slice; the complete perimeter feature, live migration and release remain separate.
+
+
+WALL-21 perimeter follow-up (Johannes): [Draft #291](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/291) admits the new cohort to quote/refund transactions and fences historical receipt access. [Scope, focused SQL evidence and remaining original regression gate](../specs/WALL-21-cohort-refunds.md). This does not complete the overall perimeter feature or authorize release.

@@ -14,6 +14,8 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
+**17 Nov / Johannes — WALL-21:** [Draft #291](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/291) preserves perimeter payer refunds and checks access/intent before historical replay. Its focused cases passed in the 265-check private SQL set; the full original demolition regression file and API refusal mapping remain separate gates. [Evidence and limits](../specs/WALL-21-cohort-refunds.md). No live application or merge.
+
 **17 Nov / Johannes — WALL-20:** [Draft #283](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/283) extends only paid-repair ID admission, preserving its transaction rules. The source-identical private SQL set passed 265 checks; [scope and limits](../specs/WALL-20-cohort-repair.md). No live application or merge.
 
 **17 Nov / Johannes — WALL-19:** [Draft #275](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/275) implements bounded perimeter-wall database identities and positioned-build/coordinate-release guards. The source-identical coordinated private SQL set passed 265 checks; scope and limits are in [the spec](../specs/WALL-19-cohort-constraints.md). No live application or merge.
@@ -269,6 +271,8 @@ Nobody has decided these yet. Until they are decided, the plan in ROADMAP.md sta
 6. **Pick a package.** Take your lane's next package below, or one from "Start today" in ROADMAP.md. Open an issue with the goal, acceptance checks, scope, responsible teammate and likely files. Create your branch from `main` (`git switch main`, `git pull`, then for example `git switch -c feat/l1-live-weather`). Paste the agent brief below and open a draft pull request early.
 
 ## Next steps per lane
+
+**Johannes / WALL-21:** finish the original demolition regression/API refusal checks for [Draft #291](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/291), then rehearse and obtain different-human review. No live application or automatic merge.
 
 **Johannes / WALL-20:** rehearse [Draft #283](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/283) and seek independent human review of the current guard and SQL evidence; full perimeter activation stays separate.
 
@@ -629,6 +633,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+**17 Nov / Johannes — WALL-21:** [Draft #291](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/291) preserves perimeter payer refunds and checks access/intent before historical replay. Its focused cases passed in the 265-check private SQL set; the full original demolition regression file and API refusal mapping remain separate gates. [Evidence and limits](../specs/WALL-21-cohort-refunds.md). No live application or merge.
 
 **17 Nov / Johannes — WALL-20:** [Draft #283](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/283) extends only paid-repair ID admission, preserving its transaction rules. The source-identical private SQL set passed 265 checks; [scope and limits](../specs/WALL-20-cohort-repair.md). No live application or merge.
 
