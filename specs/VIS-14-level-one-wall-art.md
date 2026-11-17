@@ -58,7 +58,7 @@ fix, from `frontend/`:
 npx vitest run tests/art/wall-tier-identity.test.js tests/art/wall-atlas.test.js tests/art/village-activation.test.js tests/island/wall-shaded-preview.test.js
 Test Files  4 passed (4)
 Tests       14 passed (14)
-Duration    1.13s
+Duration    1.18s
 
 npm run build
 Built in 1.01s
@@ -73,11 +73,19 @@ From the repository root, `node scripts/text-lint/index.mjs` exited 0:
 The existing report-only findings were not modified.
 
 The regression checks all 15 canonical tier/state crops against the authored
-five-column/three-row source layout, their shared metrics, registration and
+five-column/three-row source layout, their authored feet, shared metrics and
 unique canonical atlas coverage. Separate actual Three.js buffer checks use
 both world and combat consumers for all 15 states and inspect the post UVs;
 these are pure geometry checks, not GPU screenshot acceptance. No Chrome
 process was launched by this lane.
+
+The metadata test deliberately inspects raw authored rectangles and feet,
+not the coordinator's provider rectangles. The compiled provider legitimately
+uses different normalized coordinates, and an isolated metadata branch need
+not activate every family. Provider registration and exact source-to-compiled
+pixel identity remain separate activation/compiler checks. A test followup
+replaced the incorrect raw/provider rectangle equality with authored-foot
+checks; the tier/state and actual consumer UV assertions were retained.
 
 Not verified here: final baked asset output, combined screenshots, live
 recovery behavior, full frontend suite, a11y/demo or production. A separate

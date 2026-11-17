@@ -2,7 +2,6 @@
 import {describe, expect, it} from 'vitest';
 import * as THREE from 'three';
 import {frames, wallFrame, WALL_ATLAS_IDS, WALL_POST_IDS} from '../../src/art/village/walls.js';
-import {getRasterFrame} from '../../src/art/village-raster.js';
 import {makeWallConnections} from '../../src/island/wall-connections.js';
 import {makeCombatWallConnections} from '../../src/pirates/wall-connections.js';
 
@@ -20,7 +19,7 @@ describe('wall tier identity across canonical artwork and consumers', () => {
       expect(x + width / 2, id).toBeLessThan(level * 1536 / 5);
       expect([y, height], id).toEqual([[0, 370], [370, 420], [790, 234]][row]);
       expect(frame.logical, id).toEqual([48, 32, 6]);
-      expect(getRasterFrame(id)?.rect, id).toEqual(frame.rect);
+      expect(frame.sourceFoot, id).toEqual([[166, 461, 764, 1064, 1358][level - 1] - x, [350, 364, 192][row]]);
       expect(WALL_POST_IDS.filter(value => value === id), id).toHaveLength(1);
       expect(WALL_ATLAS_IDS.filter(value => value === id), id).toHaveLength(1);
     }
