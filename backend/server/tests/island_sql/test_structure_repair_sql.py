@@ -59,10 +59,9 @@ def seed_recovery(
     epoch = UUID(int=964)
     as_server(database)
     database.execute(
-        "insert into public.island_recovery_state "
-        "(island_owner, reset_epoch, recovery_version, wave_protocol, revision) "
-        "values (%s, %s, 1, 2, 0)",
-        (OWNER, epoch),
+        "update public.island_recovery_state set reset_epoch=%s, recovery_version=1, "
+        "wave_protocol=2, revision=0 where island_owner=%s",
+        (epoch, OWNER),
     )
     for spot, kind in structure_rows:
         instance = call(
@@ -78,6 +77,11 @@ def seed_recovery(
             "settled_at,rate_numerator,rate_denominator,repair_seq) "
             "values (%s,%s,%s,%s,1,500000,%s,1,clock_timestamp(),1,1,0)",
             (OWNER, spot, instance, kind, MAX_HP[kind]),
+        )
+        database.execute(
+            "update public.island_structure_health set rate_numerator=0 "
+            "where island_owner=%s and spot=%s",
+            (OWNER, spot),
         )
 
     wave_id = None
@@ -232,6 +236,11 @@ def test_intact_unaffordable_and_changed_uid_requests_have_no_paid_side_effects(
     assert balance(database, OWNER) == 90
     assert hp(database) == (1_000_000, 0)
     as_server(database)
+    database.execute(
+        "update public.island_structure_health set hp_units=500000 "
+        "where island_owner=%s and spot='wall_1'",
+        (OWNER,),
+    )
     database.execute("update public.wallets set balance=0 where player_id=%s", (OWNER,))
     assert repair(database, action_uid="repair-0002")["reason"] == "insufficient_funds"
     assert balance(database, OWNER) == 0
@@ -271,7 +280,7 @@ def test_between_wave_healing_finishes_under_the_same_lock_before_intact_refusal
     as_server(database)
     database.execute(
         "update public.island_structure_health "
-        "set settled_at=clock_timestamp()-interval '301 seconds' "
+        "set settled_at=clock_timestamp()-interval '301 seconds', rate_numerator=1 "
         "where island_owner=%s and spot='wall_1'",
         (OWNER,),
     )

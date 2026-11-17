@@ -200,8 +200,7 @@ begin
     select participant_token into v_participant_token
       from public.recovery_wave_participants
      where wave_id = v_current_wave
-       and player_id = p_player_id
-       for key share;
+       and player_id = p_player_id;
     v_prices := v_wave.initial_snapshot -> 'priceSchedule' -> v_building.building_type;
   else
     v_prices := p_prices -> v_building.building_type;
@@ -284,7 +283,7 @@ begin
       (wave_id, seq, actor_id, participant_token, input_uid, event_kind, effective_tick, payload)
     values (
       v_current_wave, v_event_seq,
-      case when v_participant_token is null then null else p_player_id end,
+      null,
       v_participant_token, null,
       'structure_repaired', v_effective_tick,
       v_event -> 'payload'
