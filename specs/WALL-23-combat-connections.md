@@ -39,6 +39,8 @@ Executed from `frontend/`:
 npm test -- --maxWorkers=1 tests/pirates/wall-connections.test.js tests/island/wall-connections.test.js tests/pirates/render.test.js tests/pirates/recovery-snapshot.test.js
 ```
 
-Exact result: `Test Files  4 passed (4)`, `Tests  31 passed (31)`, `Duration  1.79s`, exit 0. New cases cover exact mixed-level contacts, 119 positive HP ticks without geometry replacement, both adjacent spans opening at zero, tiny-positive restoration, actual V1 wrong-instance/repeated-repair rejection, ignored animation-only repairs, explicit break/visibility handoff, raycast exclusion and idempotent disposal. The renderer's precise root-object count increases by one owned group.
+Exact result: `Test Files  4 passed (4)`, `Tests  32 passed (32)`, `Duration  3.17s`, exit 0. New cases cover exact mixed-level contacts, 119 positive HP ticks without geometry replacement, both adjacent spans opening at zero, tiny-positive restoration, actual V1 wrong-instance/repeated-repair rejection, ignored animation-only repairs, explicit break/visibility handoff, raycast exclusion and idempotent disposal. Healthy connected posts use the world renderer's existing .62 horizontal scale without moving feet/anchors; damage/ruin frames keep their original width. The renderer's precise root-object count increases by one owned group.
 
 JavaScript syntax and `git diff --check` also passed. Browser captures and combined build/budget/UI checks remain with the coordinated verification lane; the unit scenes are not production or actual-browser evidence. Human explain-back and independent review remain pending.
+
+Repository text lint also ran: `Text lint: 4413 candidate strings in 488 source files; 0 errors, 8 report-only findings.` No dictionary entries were added; report-only findings are outside changed files.

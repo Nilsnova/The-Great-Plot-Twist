@@ -78,6 +78,22 @@ describe('live combat wall connections', () => {
     renderer.dispose();
   });
 
+  it('matches healthy world junction widths without shifting feet and leaves damage/ruins full width', () => {
+    const defenses = [post('a', 0, 0), post('b', 2, 0)];
+    const renderer = createWaveRenderer({scene: new THREE.Scene(), atlas: atlas(), defenses, fx: () => null});
+    const state = {ships: [], walls: [hp('a'), hp('b')], towers: [], fog: 0};
+    const postMesh = () => renderer.root.getObjectByName('pirates:defense:a');
+    renderer.update({state});
+    const foot = [...postMesh().geometry.getAttribute('iPos').array.slice(0, 2)];
+    expect(postMesh().geometry.getAttribute('iSize').array[0]).toBeCloseTo(3 * .62);
+    renderer.update({state: {...state, walls: [hp('a', 60), hp('b')]}});
+    expect(postMesh().geometry.getAttribute('iSize').array[0]).toBe(3);
+    renderer.update({state: {...state, walls: [hp('a', 0), hp('b')]}});
+    expect(postMesh().geometry.getAttribute('iSize').array[0]).toBe(3);
+    expect([...postMesh().geometry.getAttribute('iPos').array.slice(0, 2)]).toEqual(foot);
+    renderer.dispose();
+  });
+
   it('keeps connections outside picking and releases owned geometry/material exactly once', () => {
     const root = new THREE.Group(), joins = makeCombatWallConnections(root);
     joins.show([post('a', 0, 0), post('b', 2, 0)], [hp('a'), hp('b')]);
