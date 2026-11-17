@@ -89,7 +89,7 @@ try {
   const total = records => records.reduce((sum, record) => sum + record.bytes, 0), decoded = records => records.reduce((sum, record) => sum + record.width * record.height * 4, 0);
   const sourceCommit = git(['rev-parse', 'HEAD']);
   const report = {scope: 'offline normalized PNG source compilation; runtime activation/build exclusion and actual-game acceptance remain separate', sourceCommit, compilerDirtyPaths: git(['status', '--short']), browser: browser.version(), families: names, proofDensities: PROOF_DENSITIES,
-    proofOrigins: Object.fromEntries(names.map(name => [name, prior?.families.includes(name) ? prior.proofOrigins?.[name] ?? prior.sourceCommit : sourceCommit])), reusedReportSha256: priorBytes ? hash(priorBytes) : null, normalizerHashes,
+    proofOrigins: Object.fromEntries(names.map(name => [name, prior?.families.includes(name) ? prior.proofOrigins?.[name] ?? prior.sourceCommit : sourceCommit])), reusedReportSha256: priorBytes ? hash(priorBytes) : null, normalizerHashes, transportHistory: prior?.transportHistory ?? [],
     original: {files: [...originals.values()], encodedBytes: total([...originals.values()]), summedDecodedBytes: decoded([...originals.values()])},
     compiled: {files: compiled, encodedBytes: total(compiled), summedDecodedBytes: decoded(compiled), peakSingleDecodedBytes: Math.max(...compiled.map(item => item.width * item.height * 4))},
     initialTransfer: {unchangedTerrainBytes: terrainBytes, rawPlusTerrainBytes: total([...originals.values()]) + terrainBytes, compiledPlusTerrainBytes: total(compiled) + terrainBytes, targetBytes: 8 * 2 ** 20, targetMet: total(compiled) + terrainBytes <= 8 * 2 ** 20},
