@@ -1,4 +1,4 @@
-// Actual native DOM/PNG/controller evidence against a declared local transport; no live recovery claim.
+// Actual native DOM/shared-frame/controller evidence on a local transport; no live recovery claim.
 import {expect, it} from 'vitest';
 import {browserHarness} from '../g20-browser.js';
 const browser = browserHarness();
@@ -10,16 +10,20 @@ it('keeps supplied healthy HP, real portrait and readable44px actions within bot
       const result = await page.evaluate(async () => {
         await window.g20Import('/src/ui/kit/kit.css');
         const {createIslandUi} = await window.g20Import('/src/island/ui.js'), {buildCardModel} = await window.g20Import('/src/island/card-model.js');
+        const {getRasterFrame} = await window.g20Import('/src/art/village-raster.js');
         const ui = createIslandUi({container: document.body});
         const model = buildCardModel({spotId: 'wall_1', slot: 'wall', coins: 1000, movable: true,
           spot: {id: 'wall_1', kind: 'wall', built: true, level: 1, upgradeCost: 37}});
         // Deliberately supplied service-view values, not inferred from the building's Strength statistic.
         model.recovery = {status: 'ready', visible: false, actualHp: 60, maxHP: 60};
         ui.buildCard(model, {move() {}, upgrade() {}}, {dock: true}); window.selectionUi = ui;
-        return {active: ui.active, hp: ui.selectionElement.querySelector('.island-selection-health').textContent};
+        return {active: ui.active, hp: ui.selectionElement.querySelector('.island-selection-health').textContent, registered: !!getRasterFrame('island-wall')};
       });
-      expect(result).toEqual({active: false, hp: '60 / 60 HP'});
+      expect(result).toMatchObject({active: false, hp: '60 / 60 HP'});
       await page.waitForFunction(() => !!document.querySelector('.island-selection-portrait canvas'));
+      const source = await page.locator('.island-selection-portrait canvas').evaluate(canvas => canvas.villageArt ?? null);
+      if (result.registered) expect(source).toMatchObject({id: 'island-wall', file: 'village/walls-posts-v1.png', source: 'png'});
+      else expect(source).toBe(null); // Pinned dependency has no wall registration: explicitly procedural.
       const bounds = await page.locator('.island-selection-dock').evaluate(element => ({height: element.getBoundingClientRect().height,
         buttons: [...element.querySelectorAll('button')].filter(button => button.getClientRects().length).map(button => {
           const r = button.getBoundingClientRect(), s = getComputedStyle(button), range = document.createRange(); range.selectNodeContents(button); const text = range.getBoundingClientRect();
