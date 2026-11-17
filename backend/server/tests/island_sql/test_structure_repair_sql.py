@@ -154,6 +154,30 @@ def hp(database, spot="wall_1"):
     ).fetchone()
 
 
+def checkpoint_damage(database, wave_id, amount, spot="wall_1"):
+    """Seed an accepted checkpoint's postcondition; T60 exercises its actual API path."""
+    as_server(database)
+    vector = call(database, "select public.structure_recovery_wave_hp(%s)", wave_id)
+    vector[str(instance(database, spot))] = amount
+    basis = dict(
+        database.execute(
+            "select instance_id::text,repair_seq from public.island_structure_health "
+            "where island_owner=%s",
+            (OWNER,),
+        ).fetchall()
+    )
+    database.execute(
+        "update public.recovery_wave_states set checkpoint_actor=%s, "
+        "checkpoint_uid='damage-checkpoint-1', "
+        "checkpoint_through_tick=(select coalesce(max(effective_tick),0)+1 "
+        "from public.recovery_wave_events where wave_id=%s), "
+        "checkpoint_input_head_seq=journal_head, checkpoint_last_repair_seq=last_repair_seq, "
+        "checkpoint_basis_repair_seq=%s::jsonb, checkpoint_hp=%s::jsonb, "
+        "checkpoint_accepted_at=clock_timestamp() where wave_id=%s",
+        (OWNER, wave_id, json.dumps(basis), json.dumps(vector), wave_id),
+    )
+
+
 def repair(
     database,
     *,
@@ -486,6 +510,79 @@ def test_paid_repair_event_includes_only_the_server_mapped_participant_token(dat
     )
 
 
+def test_reserved_repair_uses_checkpoint_damage_instead_of_the_full_health_cache(database):
+    epoch, wave_id = seed_recovery(database, active=True)
+    first = repair(database, epoch=epoch, wave_id=wave_id, window="reserved_wave")
+    target = str(instance(database))
+    as_server(database)
+    database.execute(
+        "update public.recovery_wave_states set checkpoint_actor=%s, "
+        "checkpoint_uid='damage-checkpoint-1', checkpoint_through_tick=200, "
+        "checkpoint_input_head_seq=1, checkpoint_last_repair_seq=1, "
+        "checkpoint_basis_repair_seq=%s::jsonb, checkpoint_hp=%s::jsonb, "
+        "checkpoint_accepted_at=clock_timestamp() where wave_id=%s",
+        (OWNER, json.dumps({target: 1}), json.dumps({target: 400000}), wave_id),
+    )
+    assert hp(database) == (1_000_000, 1)
+    assert call(database, "select public.structure_recovery_wave_hp(%s)", wave_id) == {
+        target: 400000
+    }
+    coins = balance(database, OWNER)
+
+    old = repair(database, epoch=epoch, wave_id=wave_id, window="reserved_wave")
+    assert old["receipt"] == first["receipt"]
+    assert balance(database, OWNER) == coins
+    assert call(database, "select public.structure_recovery_wave_hp(%s)", wave_id) == {
+        target: 400000
+    }
+
+    second = repair(
+        database,
+        action_uid="repair-0002",
+        epoch=epoch,
+        wave_id=wave_id,
+        window="reserved_wave",
+        repair_seq=1,
+    )
+
+    assert second["status"] == "done"
+    assert second["receipt"]["useOrdinal"] == 2
+    assert balance(database, OWNER) == coins - 10
+    assert call(database, "select public.structure_recovery_wave_hp(%s)", wave_id) == {
+        target: 1_000_000
+    }
+
+
+def test_reserved_repair_refuses_canonical_full_hp_even_if_the_health_cache_is_damaged(database):
+    epoch, wave_id = seed_recovery(database, active=True)
+    repair(database, epoch=epoch, wave_id=wave_id, window="reserved_wave")
+    as_server(database)
+    database.execute(
+        "update public.island_structure_health set hp_units=400000 "
+        "where island_owner=%s and spot='wall_1'",
+        (OWNER,),
+    )
+    coins = balance(database, OWNER)
+
+    refused = repair(
+        database,
+        action_uid="repair-0002",
+        epoch=epoch,
+        wave_id=wave_id,
+        window="reserved_wave",
+        repair_seq=1,
+    )
+
+    assert refused["reason"] == "intact"
+    assert balance(database, OWNER) == coins
+    assert (
+        call(
+            database, "select paid_used from public.recovery_wave_states where wave_id=%s", wave_id
+        )
+        == 1
+    )
+
+
 def test_old_success_uid_after_new_damage_returns_receipt_without_healing_or_charging(database):
     epoch, wave_id = seed_recovery(database, active=True)
     first = repair(
@@ -501,6 +598,7 @@ def test_old_success_uid_after_new_damage_returns_receipt_without_healing_or_cha
         "where island_owner=%s and spot='wall_1'",
         (OWNER,),
     )
+    checkpoint_damage(database, wave_id, 400000)
     coins = balance(database, OWNER)
 
     old = repair(
@@ -515,6 +613,9 @@ def test_old_success_uid_after_new_damage_returns_receipt_without_healing_or_cha
     assert old["repeat"] is True and old["receipt"] == first["receipt"]
     assert old["balance"] == coins
     assert hp(database) == (400_000, 1)
+    assert call(database, "select public.structure_recovery_wave_hp(%s)", wave_id) == {
+        str(instance(database)): 400000
+    }
     conflict = repair(
         database,
         action_uid="repair-0001",
@@ -713,6 +814,7 @@ def test_target_and_global_repair_sequences_do_not_alias_across_targets(database
         "where island_owner=%s and spot='wall_1'",
         (OWNER,),
     )
+    checkpoint_damage(database, wave_id, 500000)
     second_a = repair(
         database,
         action_uid="repair-0002",

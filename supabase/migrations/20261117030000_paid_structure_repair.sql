@@ -53,6 +53,7 @@ declare
   v_participant_token uuid;
   v_repair_seq bigint;
   v_event_max_hp numeric;
+  v_target_hp integer;
   v_balance bigint;
   v_event jsonb;
   v_receipt_json jsonb;
@@ -223,7 +224,18 @@ begin
   if v_price <> p_quoted_price then
     return jsonb_build_object('status', 'refused', 'reason', 'stale_recovery_quote', 'price', v_price);
   end if;
-  if v_health.hp_units = 1000000 then
+  -- During a reservation, accepted checkpoints and subsequent paid events are
+  -- authoritative. The health row can still contain its bell-time or last-paid
+  -- value until canonical closure; consulting it would reject newly damaged
+  -- targets or charge a target the shared journal has already restored.
+  v_target_hp := v_health.hp_units;
+  if v_current_window = 'reserved_wave' then
+    v_target_hp := coalesce(
+      (public.structure_recovery_wave_hp(v_current_wave) ->> p_instance_id::text)::integer,
+      v_target_hp
+    );
+  end if;
+  if v_target_hp = 1000000 then
     return jsonb_build_object('status', 'refused', 'reason', 'intact');
   end if;
 
