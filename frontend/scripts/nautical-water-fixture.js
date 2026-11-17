@@ -13,6 +13,9 @@ export async function createWaterFixture({width, height}) {
   scene.add(group); water.setCoast(group);
   const renderer = new THREE.WebGLRenderer({alpha: true, antialias: true, preserveDrawingBuffer: true});
   renderer.setPixelRatio(1); renderer.setSize(width, height); renderer.setClearColor(0x000000, 0);
+  const gl = renderer.getContext(), info = gl.getExtension('WEBGL_debug_renderer_info');
+  const backend = {renderer: gl.getParameter(info?.UNMASKED_RENDERER_WEBGL ?? gl.RENDERER),
+    vendor: gl.getParameter(info?.UNMASKED_VENDOR_WEBGL ?? gl.VENDOR), version: gl.getParameter(gl.VERSION)};
   document.body.style.cssText = 'margin:0;background:#092e37'; document.body.append(renderer.domElement);
   const label = document.createElement('div'); label.style.cssText = 'position:absolute;top:12px;left:12px;right:12px;padding:8px 12px;background:#123b3eee;border:1px solid #e9bf5b;border-radius:8px;color:#fff1cf;font:14px system-ui;pointer-events:none';
   document.body.append(label);
@@ -50,7 +53,7 @@ export async function createWaterFixture({width, height}) {
       times.sort((a, b) => a - b);
       return {name, quality, reduced, rain, hash: firstHash, laterHash, unchangedWhenReduced: reduced ? firstHash === laterHash : null,
         drawCalls: renderer.info.render.calls, geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures,
-        softwareMilliseconds: {median: times[4], max: times.at(-1)}, shaderErrors: [...shaderErrors]};
+        gpuSynchronizedMilliseconds: {median: (times[3] + times[4]) / 2, max: times.at(-1)}, backend, shaderErrors: [...shaderErrors]};
     },
     mask() {
       group.visible = false; render(); const data = pixels(), hidden = [];
