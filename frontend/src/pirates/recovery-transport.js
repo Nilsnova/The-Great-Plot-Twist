@@ -5,8 +5,17 @@ import { isParticipantToken } from './recovery-policy.js';
 
 export const MAX_INPUT_BATCH = 32;
 export const MAX_INPUT_BATCH_BYTES = 16 * 1024;
+// Inputs: one write at a time, only while commands wait, at most every RECOVERY_FLUSH_MS.
 export const RECOVERY_FLUSH_MS = 250;
-export const RECOVERY_POLL_MS = 250;
+// Events: one read at a time. A running wave reads again when its sealed ticks are about to run out under
+// the playout buffer (the round trip plus RECOVERY_POLL_MARGIN_MS before the playout would starve, at
+// least RECOVERY_POLL_LEAD_MS), never sooner than RECOVERY_POLL_MIN_MS after the last read started and
+// never later than RECOVERY_POLL_MS. Measured production round trips are 130-450 ms; the T54 budget is
+// 8 reads a second per participant (TokenBucket(8, 8) in backend/server/app.py).
+export const RECOVERY_POLL_MS = 1000;
+export const RECOVERY_POLL_MIN_MS = 400;
+export const RECOVERY_POLL_LEAD_MS = 300;
+export const RECOVERY_POLL_MARGIN_MS = 200;
 const MAX_TICK = 18_000;
 
 const isObject = value => !!value && typeof value === 'object' && !Array.isArray(value);
