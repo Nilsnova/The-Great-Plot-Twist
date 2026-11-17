@@ -55,6 +55,7 @@ describe('actual returned-island current-wave authority', () => {
     const reply = h.defer(), loading = h.island.load(); await reply.asked;
     h.travel(); reply.resolve({ok: true, data: INFO}); await loading;
     expect(h.island.coreContext.rejoin).toBeNull();
+    expect(h.island.flow.current).toBeNull();
   });
 
   it('requires a fresh island answer rather than authorizing cached identity after a failed island read', async () => {
@@ -73,6 +74,7 @@ describe('actual returned-island current-wave authority', () => {
     old.resolve({ok: true, data: INFO}); await oldLoad;
     expect(h.island.coreContext.rejoin).toEqual(proof);
     expect(proof.waveId).toBe('newer-wave');
+    expect(h.island.flow.current.wave.waveId).toBe('newer-wave');
   });
 
   it.each([{ok: true, data: null}, {ok: false, status: 503, code: 'unavailable'},
