@@ -72,3 +72,7 @@ The tutorial host uses the read-only `island.recoveryVersion` value derived from
 The recovery-aware house-card model preserves the legacy Workshop line for version 0. For version 1 it names walls and towers within 10 units as receiving 30% faster between-wave recovery, with Workshops adding up to 50%. The focused `card-model.test.js` regression checks both strings; the two screenshots above show the rendered recovery-v1 row in the local fixture.
 
 **Limits:** fixture screenshots are not persisted-API or live-game proof; they do not exercise a real wave, physical phone, multiplayer delivery, SQL transaction, payment, or runtime recovery. The combined T55/T57/T59/T60 review and full release checks are tracked separately; this draft evidence does not authorize activation or deployment.
+
+### Independent follow-up verification
+
+On 17 Nov 2026, the current production copy and version wiring passed `npm exec vitest -- run tests/island/card-model.test.js tests/campaign/captain-repair-policy.test.js tests/pirates/houses.test.js --maxWorkers=1` from `frontend/`: 74 tests across 3 files. `npm run build` passed in 1.55 seconds and the spoiler guard passed across 241 text files. The desktop and phone Workshop crops were inspected for readable, consistent wording. These checks do not demonstrate live API or multiplayer behavior.
