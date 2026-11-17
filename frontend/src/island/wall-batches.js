@@ -2,6 +2,8 @@
 import {projectPoint} from '../world/art.js';
 import {wallFrame, wallSurfaceFrame} from '../art/village/walls.js';
 const UNIT = 16;
+// All caps remain below the authored post top (32-6)/16 = 1.625 above its foot.
+const HEIGHTS = [.95, 1.15, 1.35, 1.45, 1.55];
 export function wallVisualRows(spots = []) {
   return spots.filter(row => row?.built === true && row.kind === 'wall' && typeof row.id === 'string'
     && Number.isFinite(row.x) && Number.isFinite(row.z)).map(row => ({id: row.id, x: row.x, z: row.z,
@@ -25,7 +27,7 @@ export function texturedWallBatches(links, posts, art, selectedId = null) {
     layer.indices.push(first, first + 1, first + 2, first, first + 2, first + 3);
   }
   function span(link, layer) {
-    const height = link.level === 1 ? .95 : link.level === 2 ? 1.15 : 1.45;
+    const height = HEIGHTS[link.level - 1];
     const vertical = link.x0 === link.x1, half = .28;
     const x0 = Math.min(link.x0, link.x1) - (vertical ? half : 0), x1 = Math.max(link.x0, link.x1) + (vertical ? half : 0);
     const z0 = Math.min(link.z0, link.z1) - (vertical ? 0 : half), z1 = Math.max(link.z0, link.z1) + (vertical ? 0 : half);
@@ -35,7 +37,10 @@ export function texturedWallBatches(links, posts, art, selectedId = null) {
     face([[x0,z0],[x1,z0],[x1,z1],[x0,z1]], height, 'top');
     face([[x0,z1,0],[x1,z1,0],[x1,z1,height],[x0,z1,height]], 0, 'front');
     face([[x1,z0,0],[x1,z1,0],[x1,z1,height],[x1,z0,height]], 0, 'side');
-    face([[x0,z1],[x1,z1],[x1,z1-.07],[x0,z1-.07]], height + .01, 'top');
+    // Reuse the fourth face for upright cap trim, along the longer visible side.
+    face(vertical
+      ? [[x1,z0,height-.14],[x1,z1,height-.14],[x1,z1,height+.01],[x1,z0,height+.01]]
+      : [[x0,z1,height-.14],[x1,z1,height-.14],[x1,z1,height+.01],[x0,z1,height+.01]], 0, 'top');
   }
   for (const link of links) if (selectedId === null || link.a === selectedId || link.b === selectedId)
     span(link, layerAt(100 + (link.z0 + link.z1) / 2 - .02));
@@ -52,8 +57,10 @@ export function texturedWallBatches(links, posts, art, selectedId = null) {
     }
     const straight = post.look === 'intact' && neighbors.length === 2 && neighbors.every(row => row.level === post.level)
       && neighbors[0].x + neighbors[1].x === post.x * 2 && neighbors[0].z + neighbors[1].z === post.z * 2;
-    if (straight) {
-      const height = post.level === 1 ? .95 : post.level === 2 ? 1.15 : 1.45;
+    // Every third two-unit cell keeps a buttress. Coordinates survive reorder and renamed IDs.
+    const buttress = straight && Math.floor((neighbors[0].x === neighbors[1].x ? post.z : post.x) / 2) % 3 === 0;
+    if (straight && !buttress && post.id !== selectedId) {
+      const height = HEIGHTS[post.level - 1];
       quad(layer, [[post.x-.28,post.z-.28],[post.x+.28,post.z-.28],[post.x+.28,post.z+.28],[post.x-.28,post.z+.28]]
         .map(([x,z]) => {const point=projectPoint(x,z);return [point.x,point.y+height+.02];}), wallSurfaceFrame(post.level,'top'));
       continue;

@@ -46,18 +46,40 @@ describe('dimensional wall artwork contract', () => {
     expect([...layers.keys()].sort()).toEqual([...orders].sort()); expect(layers.size).toBeLessThan(70);
     expect([...layers.values()].reduce((sum, layer) => sum + layer.positions.length / 12, 0)).toBe(106 * 4 + 102);
   });
-  it('preserves the actual old span position/index buffers under the new material and post batches', () => {
-    const rows = ring.map(([x, z], i) => wall(`wall_${i+1}`, x, z, i % 5 + 1));
-    const oldRoot = new THREE.Group(), newRoot = new THREE.Group();
-    const oldDrawing = makeWallConnections(oldRoot), newDrawing = makeWallConnections(newRoot);
-    oldDrawing.show(rows); newDrawing.setArt(art()); newDrawing.show(rows);
-    const newLayers = new Map(newRoot.children[0].children.map(mesh => [mesh.renderOrder, mesh]));
-    for (const oldMesh of oldRoot.children[0].children) {
-      const newMesh = newLayers.get(oldMesh.renderOrder);
-      expect(Array.from(newMesh.geometry.getAttribute('position').array)).toEqual(Array.from(oldMesh.geometry.getAttribute('position').array));
-      expect(Array.from(newMesh.geometry.index.array)).toEqual(Array.from(oldMesh.geometry.index.array));
+  // Fixed arithmetic receipts: x'=1.3x+.2z, y'=-.6z+lift. No runtime height/projection helper.
+  // The legacy fallback's independent position/hash receipts remain in wall-span-batches.test.js.
+  it.each([
+    [1, [1.118, .782, .642, .792], [.95, -.25, .81, -.39, -.24, .96]],
+    [2, [1.318, .982, .842, .992], [1.15, -.05, 1.01, -.19, -.04, 1.16]],
+    [3, [1.518, 1.182, 1.042, 1.192], [1.35, .15, 1.21, .01, .16, 1.36]],
+    [4, [1.618, 1.282, 1.142, 1.292], [1.45, .25, 1.31, .11, .26, 1.46]],
+    [5, [1.718, 1.382, 1.242, 1.392], [1.55, .35, 1.41, .21, .36, 1.56]],
+  ])('draws level %i spans with fixed projected feet, tier profile, upright trim and unchanged indices', (level, h, v) => {
+    const cases = [
+      {end: [2, 0], order: 99.98, points: [
+        [-.056,h[0]],[2.544,h[0]],[2.656,h[1]],[.056,h[1]],
+        [.056,-.168],[2.656,-.168],[2.656,h[1]],[.056,h[1]],
+        [2.544,.168],[2.656,-.168],[2.656,h[1]],[2.544,h[0]],
+        [.056,h[2]],[2.656,h[2]],[2.656,h[3]],[.056,h[3]],
+      ]},
+      {end: [0, 2], order: 100.98, points: [
+        [-.364,v[0]],[.364,v[0]],[.764,v[1]],[.036,v[1]],
+        [.036,-1.2],[.764,-1.2],[.764,v[1]],[.036,v[1]],
+        [.364,0],[.764,-1.2],[.764,v[1]],[.364,v[0]],
+        [.364,v[2]],[.764,v[3]],[.764,v[4]],[.364,v[5]],
+      ]},
+    ];
+    for (const {end: [x, z], order, points} of cases) {
+      const root = new THREE.Group(), drawing = makeWallConnections(root);
+      drawing.setArt(art()); drawing.show([wall('a', 0, 0, level), wall('b', x, z, level)]);
+      const mesh = drawing.root.children.find(row => row.renderOrder === order);
+      const expected = Array.from(new Float32Array(points.flatMap(([px, py]) => [px, py, 0])));
+      expect(Array.from(mesh.geometry.attributes.position.array)).toEqual(expected);
+      expect(Array.from(mesh.geometry.index.array)).toEqual([0,1,2,0,2,3,4,5,6,4,6,7,8,9,10,8,10,11,12,13,14,12,14,15]);
+      expect(mesh.geometry.attributes.position.count).toBe(16);
+      expect(mesh.renderOrder).toBe(order); expect(mesh.frustumCulled).toBe(false);
+      drawing.dispose();
     }
-    oldDrawing.dispose(); newDrawing.dispose();
   });
   it('rebuilds real buffers for a breach, retains its ruin post and restores exactly the original contacts', () => {
     const root = new THREE.Group(), drawing = makeWallConnections(root), atlas = art(true), disposed = vi.spyOn(atlas.texture, 'dispose');

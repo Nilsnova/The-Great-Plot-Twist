@@ -34,7 +34,7 @@ describe('current selected wall above decorative foliage', () => {
     const normal = [...drawing.root.children], buffers = normal.map(mesh => mesh.geometry);
     const bytes = normal.map(mesh => [mesh.geometry.attributes.position.array.slice(), mesh.geometry.attributes.uv.array.slice(), mesh.geometry.index.array.slice()]);
     const spans = normal.find(mesh => mesh.renderOrder === 99.98), posts = normal.find(mesh => mesh.renderOrder === 100);
-    // The ordinary batch independently supplies two real spans and B's one straight top quad.
+    // B is the regular coordinate-zero buttress: the ordinary batch supplies its full tier post.
     const expected = [...quads(spans.geometry), quads(posts.geometry)[5]];
     drawing.select('b'); const mesh = selected(root);
     expect(quads(mesh.geometry)).toEqual(expected); expect(expected).toHaveLength(9);
