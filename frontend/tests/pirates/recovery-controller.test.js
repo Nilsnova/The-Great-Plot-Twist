@@ -24,7 +24,8 @@ describe('recovery-v1 controller replay', () => {
     };
     const repair = { serverSeq: 1, effectiveTick: 0, type: 'structure_repaired', participantToken: null,
       payload: { spot: 'wall_1', instanceId: 'wall-instance', hpUnits: 1_000_000, maxHP: 60, repairSeq: 1, chargedPrice: 20 } };
-    const readEvents = vi.fn(async () => ({ headSeq: 1, sealedThroughTick: 0, events: [repair] }));
+    const readEvents = vi.fn(async ({ after = 0 } = {}) => ({ headSeq: 1, sealedThroughTick: 0,
+      events: after === 0 ? [repair] : [] }));
     const sendInputs = vi.fn(async () => ({ accepted: [] }));
     const checkpoint = vi.fn(async ({ checkpoint: body }) => ({ accepted: true, throughTick: body.throughTick,
       inputHeadSeq: body.inputHeadSeq, lastRepairSeq: body.lastRepairSeq, hpUnits: body.hpUnits }));
@@ -49,6 +50,13 @@ describe('recovery-v1 controller replay', () => {
     expect(controller.recoveryCombatState).toEqual({ waveId: 'wave-r', islandEpoch: 'epoch-r', structures: [
       { spot: 'wall_1', instanceId: 'wall-instance', hpUnits: 1_000_000, maxHP: 60, repairSeq: 1 },
     ] });
+    now += 1050; controller.update(.05); await new Promise(resolve => setTimeout(resolve, 0));
+    now += 1; controller.update(.05); await new Promise(resolve => setTimeout(resolve, 0));
+    now += 1050; controller.update(.05); await new Promise(resolve => setTimeout(resolve, 0));
+    now += 1; controller.update(.05); await new Promise(resolve => setTimeout(resolve, 0));
+    expect(checkpoint).toHaveBeenCalledWith(expect.objectContaining({ waveId: 'wave-r', checkpoint: expect.objectContaining({
+      hpUnits: { 'wall-instance': 1_000_000 }, basisRepairSeq: { 'wall-instance': 1 }, lastRepairSeq: 1,
+    }) })); // Changed health is coalesced to a periodic durable checkpoint.
     expect(sendInputs).not.toHaveBeenCalled();
     controller.dispose();
   });

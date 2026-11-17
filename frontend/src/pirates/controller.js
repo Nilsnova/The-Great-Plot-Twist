@@ -94,6 +94,7 @@ function validCanonicalClose(receipt, current) {
 const END_BEAT_MS = 1800;             // the last ship sinks on screen before the cutscene
 const LOST_BEAT_MS = 4500;            // a lost run's result stays up a little longer
 const DEFAULT_WAIT_SECONDS = 5;
+const HEALTH_CHECKPOINT_COALESCE_MS = 1000;
 const AIM_RADIUS = 8;                 // free aim: a ship this close to the aim point is hit
 const SETTLE_TICKS = 20000;           // more than the longest wave (900 s)
 const BREAK_GRACE_MS = 10000;         // with Auto next on, the break waits this long for the loot answer
@@ -358,6 +359,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     const sim = createWave(simOptionsForWave);
     const first = sim.state();
     const recoveryReplay = snapshot ? createWaveReplay() : null;
+    const initialRecoveryHealth = recoveryReplay ? sim.recoveryHealthVector() : null;
+    const initialRecoverySignature = initialRecoveryHealth ? canonicalJson(initialRecoveryHealth) : null;
     const current = wave = { info, sim, defenses, offset, ticks: 0, seq: 0, schedule: createInputSchedule(), done: false, finished: false,
       pause: null, boss: first.boss ? bossText(first.warships) : '', captainAt: -Infinity, bladeAt: -Infinity, handAt: -Infinity,
       result: null, renderer: null, hud: null, shown: false, lampsSent: false, lampsRelit: false, flagshipSunk: false,
@@ -366,6 +369,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       moveSentAt: -Infinity, moveSent: null, awaySent: false, pin: null, revive: null, reviveNote: null, reviveWait: false,
       actorCounter: info.lastActorCounter ?? 0, recoveryPending: [], recoverySending: false, recoveryPolling: false,
       recoveryLastFlushAt: -Infinity, recoveryLastPollAt: -Infinity, recoveryReplay,
+      recoveryHealthObservedSignature: initialRecoverySignature, recoveryHealthPersistedSignature: initialRecoverySignature,
+      recoveryHealthChangedAt: now(), recoveryHealthCheckpointPromise: null,
       recoveryDriver: recoveryReplay ? createReplayDriver(recoveryReplay) : null,
       recoveryLastRepairSeq: 0, recoveryInvalid: false, recoveryFinishPending: false, recoveryFinishing: false,
       recoveryFinishAnswered: false, recoveryFinishFailed: false, recoveryFinishRequest: null, recoveryFinishRetryAt: -Infinity,
@@ -463,6 +468,17 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
           tryRecoveryFinish(current);
         });
     }
+    if (!current.done && !current.recoveryInvalid) {
+      const vector = current.sim.recoveryHealthVector();
+      const signature = vector ? canonicalJson(vector) : null;
+      if (signature && signature !== current.recoveryHealthObservedSignature) {
+        current.recoveryHealthObservedSignature = signature;
+        current.recoveryHealthChangedAt = at;
+      }
+      if (signature && signature !== current.recoveryHealthPersistedSignature
+        && at - current.recoveryHealthChangedAt >= HEALTH_CHECKPOINT_COALESCE_MS
+        && !current.recoveryHealthCheckpointPromise && !current.recoveryPolling) void checkpointBeforeRepair();
+    }
     reconcileTerminalRecovery(current);
     tryRecoveryFinish(current);
   }
@@ -504,8 +520,18 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     return true;
   }
 
-  async function checkpointBeforeRepair() {
+  function checkpointBeforeRepair() {
     const current = wave;
+    if (current?.recoveryHealthCheckpointPromise) return current.recoveryHealthCheckpointPromise;
+    if (!current?.recoveryReplay) return Promise.resolve({ ok: false, code: 'recovery_unavailable' });
+    const running = checkpointRecovery(current).finally(() => {
+      if (current.recoveryHealthCheckpointPromise === running) current.recoveryHealthCheckpointPromise = null;
+    });
+    current.recoveryHealthCheckpointPromise = running;
+    return running;
+  }
+
+  async function checkpointRecovery(current) {
     if (!current?.recoveryReplay || !recoveryTransport?.checkpoint || current.recoveryFinishAnswered
       || current.recoveryInvalid) return { ok: false, code: 'recovery_unavailable' };
     if (!await flushRecoveryInputs(current)) return { ok: false, code: 'input_sync_required' };
@@ -544,6 +570,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     const accepted = answer?.accepted === true && answer.throughTick === checkpoint.throughTick
       && answer.inputHeadSeq === checkpoint.inputHeadSeq && answer.lastRepairSeq === checkpoint.lastRepairSeq
       && canonicalJson(answer.hpUnits) === canonicalJson(checkpoint.hpUnits);
+    if (accepted) current.recoveryHealthPersistedSignature = canonicalJson({ hpUnits: checkpoint.hpUnits,
+      basisRepairSeq: checkpoint.basisRepairSeq });
     return accepted ? { ok: true } : { ok: false, code: answer?.reason ?? 'health_sync_required' };
   }
 
