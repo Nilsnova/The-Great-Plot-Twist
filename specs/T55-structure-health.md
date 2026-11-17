@@ -39,6 +39,20 @@ Test deterministic HP projection and phase boundaries, then authenticated state/
 
 T54 recovery version 1 / wave protocol 2, `structure_recovery` off-by-default flag, service-only recovery tables, state/journal/checkpoint APIs and canonical locks. Document exact implemented shapes in the owning modules/migrations and contract index. Existing wallet reasons remain unchanged.
 
+## Compatibility follow-up verification
+
+On 2026-11-17, the complete island SQL suite passed 370 tests in 31.39 seconds, and the focused recovery UI/controller/policy/snapshot suite passed 76 tests across 11 files in 28.41 seconds. These checks include saved-v1 gated structures with availability flags off. Commands run from the indicated directory:
+
+```sh
+# From backend/
+UV_CACHE_DIR=/tmp/t55-followup-uv-cache CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' --with pglast pytest -q server/tests/island_sql
+
+# From frontend/
+npm test -- tests/island/structure-recovery-api.test.js tests/island/structure-recovery-policy.test.js tests/island/structure-recovery-model.test.js tests/island/structure-recovery-card.test.js tests/island/structure-recovery-card-dom.test.js tests/island/structure-recovery-upgrade-dom.test.js tests/island/captain-recovery-tree.test.js tests/pirates/defenses-v2.test.js tests/pirates/recovery-controller.test.js tests/pirates/recovery-snapshot.test.js tests/pirates/recovery-policy.test.js
+```
+
+Earlier focused checks for this compatibility change are recorded in [STATUS](../docs/STATUS.md). These are disposable local tests; no live database, migration, feature activation or deployment was involved. Human review and release gates remain.
+
 ## Owner and reviewer
 
 - **Responsible teammate:** Ianno (@Iannomh123456).
