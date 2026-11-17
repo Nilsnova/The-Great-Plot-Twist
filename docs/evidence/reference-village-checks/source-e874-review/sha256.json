@@ -6,7 +6,7 @@
     "backend": "c785196095edef4f5416744b46435ab564da4e9c",
     "supabase": "6e52a63b87028291127dbae8c344c9f49a73896d"
   },
-  "status": "21 measured overlap rows passed; 3 wave-hint rows skipped; full frontend 4586 passed/1 unchanged 20-second timeout; remaining five final command results pending",
+  "status": "closed mixed result: frontend4586pass/1 unchanged20s timeout; a11y33/demo34/build/title-budget/text pass;21 measured overlaps pass/3 skipped; separate12-image native comparison passed",
   "copyMethod": "unchanged original bytes; only three island-toast PNGs published here; all 21 measured rows and 3 skipped rows remain in the complete report",
   "files": [
     {
@@ -62,6 +62,129 @@
       "original": "final-post-toast-checks/frontend.log",
       "bytes": 637356,
       "sha256": "2e56517eaf6cb6c7d3d48c0aedb4bcd11d4c8e9e06f86f2d27bcd647e396f7d4"
+    },
+    {
+      "file": "final-commands-report.json",
+      "original": "final-post-toast-checks/report.json",
+      "bytes": 1563,
+      "sha256": "ef45510a821817b5990ed5efd5453e061fe9d51efec3818a38051d9b58891df1"
+    },
+    {
+      "file": "final-commands-runner.log",
+      "original": "final-post-toast-checks/runner.log",
+      "bytes": 849,
+      "sha256": "484a3a64a7c4c0d7d0be12738106e7f5c9ef8ec2a1399b6dd0610e0187571fc4"
+    },
+    {
+      "file": "a11y.log",
+      "original": "final-post-toast-checks/a11y.log",
+      "bytes": 818,
+      "sha256": "a966f2a7f04a2795da2f363d4f6fffaf2c78ac4dfa9ad6cb0b6c61e0175945de"
+    },
+    {
+      "file": "demo.log",
+      "original": "final-post-toast-checks/demo.log",
+      "bytes": 2692,
+      "sha256": "6e2babd496bacf26a60526202e9db732dd981492378797887016fc85adfefb77"
+    },
+    {
+      "file": "build.log",
+      "original": "final-post-toast-checks/build.log",
+      "bytes": 17404,
+      "sha256": "8d905a31078b3baebf837a7cada473a92792c4919772fe2a4ea3da90d00dd64d"
+    },
+    {
+      "file": "budget.log",
+      "original": "final-post-toast-checks/budget.log",
+      "bytes": 83560,
+      "sha256": "3accf31696c61af7905aa162e174b4d6206980b5b534e4a5afc939b75351c360"
+    },
+    {
+      "file": "text-lint.log",
+      "original": "final-post-toast-checks/text-lint.log",
+      "bytes": 1037,
+      "sha256": "b5cf05cd71da1e3d4b824e499509fd61efca5ccf5dbb8f1049fd0ce659f341f3"
+    },
+    {
+      "file": "demo-captures/journey.json",
+      "original": "final-post-toast-checks/demo-captures/journey.json",
+      "bytes": 2614,
+      "sha256": "79bbd1744212bf6e7e6ea1c69976ce6db967f55a4dc9f2c95cb2be172c5adb5a"
     }
-  ]
+  ],
+  "finalCommands": {
+    "source": "e874023f27fff1a7bf5b21787e1ecd5c55a75a9f",
+    "started": "2026-11-17T22:59:48.635341+00:00",
+    "finished": "2026-11-17T23:16:40.118952+00:00",
+    "overallExitCode": 1,
+    "checks": [
+      {
+        "name": "frontend",
+        "command": [
+          "npm",
+          "test",
+          "--",
+          "--maxWorkers=1",
+          "--reporter=verbose"
+        ],
+        "exitCode": 1,
+        "seconds": 555.61,
+        "log": "frontend.log"
+      },
+      {
+        "name": "a11y",
+        "command": [
+          "npm",
+          "run",
+          "test:a11y"
+        ],
+        "exitCode": 0,
+        "seconds": 359.22,
+        "log": "a11y.log"
+      },
+      {
+        "name": "demo",
+        "command": [
+          "npm",
+          "run",
+          "test:demo"
+        ],
+        "exitCode": 0,
+        "seconds": 91.97,
+        "log": "demo.log"
+      },
+      {
+        "name": "build",
+        "command": [
+          "npm",
+          "run",
+          "build"
+        ],
+        "exitCode": 0,
+        "seconds": 1.88,
+        "log": "build.log"
+      },
+      {
+        "name": "budget",
+        "command": [
+          "node",
+          "scripts/report-budget.js",
+          "--check"
+        ],
+        "exitCode": 0,
+        "seconds": 0.37,
+        "log": "budget.log"
+      },
+      {
+        "name": "text-lint",
+        "command": [
+          "node",
+          "../scripts/text-lint/index.mjs"
+        ],
+        "exitCode": 0,
+        "seconds": 2.4,
+        "log": "text-lint.log"
+      }
+    ]
+  }
 }

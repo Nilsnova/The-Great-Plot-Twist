@@ -133,12 +133,68 @@ try {
     const item = {viewport, status: 'running', pageErrors: errors, externalRequests: external,
       ownedRequests: owned, checks: []};
     report.viewports.push(item); await save();
-    const response = await page.goto(`${origin}/`);
-    assert.equal(response.status(), 200, 'owned server supplied the HTML');
-    const delivered = await response.body();
-    assert.equal(Buffer.compare(bytes, delivered), 0, 'owned server delivered exact original HTML bytes');
-    item.htmlResponse = {status: response.status(), bytes: delivered.length,
-      sha256: createHash('sha256').update(delivered).digest('hex')};
+    // Stream this navigation's actual response; a later inspector-cache body
+    // read can evict this large embedded-image document before the byte proof.
+    const network = await context.newCDPSession(page), documentResponses = [];
+    const resourceBufferBytes = bytes.length * 4;
+    const totalBufferBytes = resourceBufferBytes * 4;
+    const chunks = [];
+    let streamedBytes = 0, streamStart, streamError, finishDocument;
+    const documentFinished = new Promise(resolve => { finishDocument = resolve; });
+    network.on('Network.responseReceived', event => {
+      if (event.type === 'Document' && event.response.url === `${origin}/`) {
+        documentResponses.push({requestId: event.requestId, status: event.response.status});
+        // Register the prefix operation immediately. Chunks emitted while its
+        // reply is pending still belong after the returned buffered prefix.
+        if (documentResponses.length === 1)
+          streamStart = network.send('Network.streamResourceContent', {requestId: event.requestId})
+            .catch(error => { streamError = error; });
+      }
+    });
+    network.on('Network.dataReceived', event => {
+      if (event.requestId !== documentResponses[0]?.requestId || typeof event.data !== 'string') return;
+      const chunk = Buffer.from(event.data, 'base64');
+      if (streamedBytes + chunk.length > bytes.length) {
+        streamError ??= new Error('document response stream exceeds original HTML byte bound');
+        return;
+      }
+      chunks.push(chunk); streamedBytes += chunk.length;
+    });
+    network.on('Network.loadingFinished', event => {
+      if (event.requestId === documentResponses[0]?.requestId) finishDocument();
+    });
+    network.on('Network.loadingFailed', event => {
+      if (event.requestId === documentResponses[0]?.requestId) {
+        streamError ??= new Error(`owned document loading failed: ${event.errorText}`);
+        finishDocument();
+      }
+    });
+    try {
+      await network.send('Network.enable', {maxResourceBufferSize: resourceBufferBytes,
+        maxTotalBufferSize: totalBufferBytes});
+      const response = await page.goto(`${origin}/`);
+      assert.equal(response.status(), 200, 'owned server supplied the HTML');
+      assert.equal(documentResponses.length, 1, 'one owned main-document response on the configured session');
+      const documentResponse = documentResponses[0];
+      assert.equal(documentResponse.status, 200, 'configured session observed successful document response');
+      assert.ok(streamStart, 'streaming began on this navigation response');
+      const body = await streamStart;
+      await documentFinished;
+      if (streamError) throw streamError;
+      assert.equal(typeof body?.bufferedData, 'string', 'stream reply contains its buffered base64 prefix');
+      const prefix = Buffer.from(body.bufferedData, 'base64');
+      assert.ok(prefix.length + streamedBytes <= bytes.length, 'complete response stays within original HTML byte bound');
+      const delivered = Buffer.concat([prefix, ...chunks]);
+      assert.equal(delivered.length, bytes.length, 'stream contains every original HTML byte');
+      assert.equal(Buffer.compare(bytes, delivered), 0, 'owned server delivered exact original HTML bytes');
+      item.htmlResponse = {status: response.status(), bytes: delivered.length,
+        sha256: createHash('sha256').update(delivered).digest('hex'),
+        transport: 'scoped-cdp-navigation-stream', requestId: documentResponse.requestId,
+        bufferedPrefixBytes: prefix.length, streamedChunks: chunks.length, streamedBytes,
+        resourceBufferBytes, totalBufferBytes, originalSizeBound: bytes.length};
+    } finally {
+      await network.detach();
+    }
     await page.evaluate(() => document.fonts.ready);
     item.images = await page.evaluate(async () => Promise.all([...document.images].map(async image => {
       await image.decode();

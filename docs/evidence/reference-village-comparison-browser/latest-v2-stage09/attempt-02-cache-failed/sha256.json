@@ -1,0 +1,26 @@
+{
+  "status": "FAILED before native image/tab assertions; scoped buffered response body still evicted from inspector cache",
+  "htmlSha256": "f65e50207d375c2b594c872e403dbff5a308e1d1809a54eabc0feda33d067e76",
+  "checkerSha256": "b2ecab8eadd8d57629b3b02461abb1b1e1e586e2fd2b52b57e0b114da033a9dc",
+  "files": [
+    {
+      "file": "report.json",
+      "original": "final-comparison-browser-checks-cdp/report.json",
+      "bytes": 1632,
+      "sha256": "db116d88eba97243fd393da8adda9be0955999cbb8f658de69ab285369df317b"
+    },
+    {
+      "file": "run.log",
+      "original": "final-comparison-browser-checks-cdp/run.log",
+      "bytes": 165,
+      "sha256": "06b301acf1de3a94a2a8ffb0d85054c945b7909ecc9b3be8f0996fa7cd8437be"
+    },
+    {
+      "file": "original-checker.mjs",
+      "bytes": 13497,
+      "sha256": "b2ecab8eadd8d57629b3b02461abb1b1e1e586e2fd2b52b57e0b114da033a9dc",
+      "originalCheckerSha256": "b2ecab8eadd8d57629b3b02461abb1b1e1e586e2fd2b52b57e0b114da033a9dc",
+      "note": "Exact checker bytes identified independently by the original native report; preserved before any further transport changes."
+    }
+  ]
+}

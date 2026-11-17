@@ -1,0 +1,78 @@
+{
+  "started": "2026-11-17T22:59:48.635341+00:00",
+  "source": "e874023f27fff1a7bf5b21787e1ecd5c55a75a9f",
+  "frontendTree": "d76918ec05735c46c9cda4a55cc495e28bfa0d5a",
+  "publicTree": "9306942db1050d728799cee2fbdc8e8960f14ad2",
+  "backendTree": "c785196095edef4f5416744b46435ab564da4e9c",
+  "checks": [
+    {
+      "name": "frontend",
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "--maxWorkers=1",
+        "--reporter=verbose"
+      ],
+      "exitCode": 1,
+      "seconds": 555.61,
+      "log": "frontend.log"
+    },
+    {
+      "name": "a11y",
+      "command": [
+        "npm",
+        "run",
+        "test:a11y"
+      ],
+      "exitCode": 0,
+      "seconds": 359.22,
+      "log": "a11y.log"
+    },
+    {
+      "name": "demo",
+      "command": [
+        "npm",
+        "run",
+        "test:demo"
+      ],
+      "exitCode": 0,
+      "seconds": 91.97,
+      "log": "demo.log"
+    },
+    {
+      "name": "build",
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "exitCode": 0,
+      "seconds": 1.88,
+      "log": "build.log"
+    },
+    {
+      "name": "budget",
+      "command": [
+        "node",
+        "scripts/report-budget.js",
+        "--check"
+      ],
+      "exitCode": 0,
+      "seconds": 0.37,
+      "log": "budget.log"
+    },
+    {
+      "name": "text-lint",
+      "command": [
+        "node",
+        "../scripts/text-lint/index.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 2.4,
+      "log": "text-lint.log"
+    }
+  ],
+  "finished": "2026-11-17T23:16:40.118952+00:00",
+  "exitCode": 1
+}

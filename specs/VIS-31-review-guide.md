@@ -13,6 +13,38 @@ current main through the unmerged perimeter and visual task branches. The guide
 must not imply this review base is deployed or approved. Final app verification
 remains the coordinator's work; only documentation content/links are checked here.
 
+## Final handover snapshot, 23:28 UTC
+
+The [current guide](../docs/contribute/REFERENCE-VILLAGE-REVIEW.md) maps 50 component
+Drafts. [Stage nine](../docs/evidence/reference-village-latest-review/README.md)
+contains twenty unchanged actual game PNGs plus six before PNGs, source
+`e874023f` / frontend `d76918ec`; the exact source matches the final checks.
+All four trees and original source/helper hashes are recorded. Earlier sections
+below are chronological checkpoint notes, including their then-pending states.
+
+[Closed final results](../docs/evidence/reference-village-checks/source-e874-review/README.md):
+frontend **4,586 passed / one 20-second timeout**, 420 files (419 passed / one failed),
+554.53 s Vitest / 555.61 s process; a11y **33**, demo **34**, build/spoiler guard,
+title budget and text lint pass (0 errors / eight report-only findings).
+Full-game layout passes **21 measured rows**, with three wave-hint rows skipped.
+The backend/Supabase trees retain 262 route/unit and 269 real scratch-PG passes
+plus Ruff; this is not a fresh full-backend run or live migration.
+
+The [twelve-image document](../docs/evidence/reference-village-comparison-browser/latest-v2-stage09/README.md)
+passes at both viewports: twelve original PNGs, three exact tablists, **33 real
+actions** each, zero errors/external requests and exact browser-delivered HTML
+bytes. HTML `f65e5020…` is unchanged. Checker `d3d59405…` streams this owned
+navigation's response with original-size and exact-byte assertions. Both earlier
+inspector-cache failures and their exact checkers remain archived; no assertion,
+app timing bound, graphics rule or browser policy was weakened.
+
+The report-input timeout stays open. The known upstream full-MP pose failure
+remains tracked by VIS53/#421; its refused-shot native diagnostic is explicitly
+INCONCLUSIVE and adds no runtime fix. Stage-eight history is preserved at
+07d0/267. Art/terrain 12,554,858 bytes still misses 8MiB; scenery, Safari/physical
+devices, sustained performance, balance, land expansion and final human visual/
+explain-back review remain open. All PRs stay Draft; no PR merge or live rollout.
+
 ## Initial documentation verification
 
 The changed relative-link/anchor check passed 45 links with 0 errors. The public
