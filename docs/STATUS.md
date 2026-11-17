@@ -14,6 +14,8 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
+**17 Nov / Johannes — WALL-19:** [Draft #275](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/275) implements bounded perimeter-wall database identities and positioned-build/coordinate-release guards. SQL verification awaits the preceding wall-policy migration; scope and limits are in [the spec](../specs/WALL-19-cohort-constraints.md). No live application or merge.
+
 **16 Nov / Nils — slots and badges (D060):** branch `feat/slots-and-badges`: the orange 🪓 badges of the battle guide are gone; four extra tower spots (`cannon_8`..`cannon_11`, after waves 10/20/30/40) behind the off-by-default flag `more_tower_spots`. Migration `20261117010000_more_tower_spots.sql` is not applied (paste `docs/handoff/apply-2026-11-17.sql`, then switch the flag on).
 
 **16 Nov / Ianno — wall-record race:** [PR #86](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/86) is reconciled with main `a9386656`, preserving both status and walkthrough additions. The SQL fence is unchanged; on the new baseline 250 scratch PostgreSQL tests and 30 wall-route tests pass, Ruff is clean, and all 50 migrations parse. Ianno reviews the PR; Franz (@frcola) must approve its current revision before a human merge. Migration application remains separate.
@@ -621,6 +623,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+**17 Nov / Johannes — WALL-19:** [Draft #275](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/275) implements bounded perimeter-wall database identities and positioned-build/coordinate-release guards. SQL verification awaits the preceding wall-policy migration; scope and limits are in [the spec](../specs/WALL-19-cohort-constraints.md). No live application or merge.
 
 - **Nicolas / 2026-11-16 / small demo polish (playtest finds).** Signed out, the HUD no longer shows an endless "🪙 …" (the chip waits for coins) and Settings/Account say only "Signed out" instead of "Signed out, Captain pending"; the title lighthouse windows are square with a cross bar, so they no longer read as "0 0". Test: `frontend/tests/signed-out-polish.test.js`; evidence `docs/evidence/demo-polish/`. Not checked on a real phone.
 

@@ -17,3 +17,9 @@ Root owns the preceding `20261117140000_wall_policy.sql` migration and positione
 The new constraints do not by themselves complete read/vector capacity, recovery, refunds, pathing, placement or the wall builder. Those remain required dependencies of the full-perimeter release. A missing authority marker must roll back the whole old build transaction, including any wallet debit. Migration order must preserve all D060 and home-building pairs. The migration is applied twice by the scratch harness to check rerun safety; no production database is involved.
 
 Implementation and exact executed results will be recorded here before handover. The draft stays open for Johannes's explain-back and a different human's review.
+
+## Implementation status
+
+The migration now includes a canonical bounded SQL identity helper, all three constraint changes, exact owner/piece/per-piece-ref authority validation, persisted policy and coordinate prerequisites, and added-piece coordinate release on deletion. The marker contract is `app.positioned_wall_build = {owner,payer,actionUid,plots}`; refs are `island:<actionUid>:<wall ID>`. Root owns setting/restoring that transaction-local context. No generic build, upgrade, repair or demolition function was copied.
+
+The focused Python SQL test file compiles, Ruff check/format passes, and `git diff --check` passes. Disposable SQL execution is pending the actual preceding wall-policy migration; these source checks do not establish runtime success.

@@ -163,3 +163,6 @@ Not released or marked complete: focused evidence, Johannes's explain-back and
 independent human review remain. No change to the existing freeze or merge rules.
 
 COC-02 follow-up (Johannes, draft): current-base management fit view is a bounded implementation slice for issue #143 and depends on COC-49/PR #192. The parent camera task remains open; see [specification](../specs/COC-02-village-overview.md). No merge or full editor-camera completion is claimed.
+
+
+WALL-19 perimeter follow-up (Johannes): [Draft PR #275](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/275) adds bounded database identities and positioned-build/lifecycle guards for the 128-piece target. [Scope, dependencies and evidence](../specs/WALL-19-cohort-constraints.md). This is one required slice; it does not complete the perimeter wall feature, apply a migration or authorize release.
