@@ -61,6 +61,7 @@ import { createCamera } from './player/camera.js';
 import {createVillageNavigation} from './player/village-navigation.js';
 import {createVillagePlacementFocus} from './player/village-placement-focus.js';
 import { createHud } from './ui/hud.js';
+import {readHudWaveStatus} from './ui/wave-progress.js';
 import {startDiagnostics,noteUiAction,noteAdapterView,disposeDiagnostics} from './diagnostics/runtime.js';
 import {createNarrator} from './narrator/index.js';
 import {createTutorials} from './tutorial/tutorials.js';
@@ -279,23 +280,25 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   const projected=new THREE.Vector3(),canvas=graphics.renderer.domElement;
   const villageNavigation=createVillageNavigation({canvas, view, enabled:()=>active&&!disposed&&!inBattle&&island?.managing===true&&!outsideBlocked()});
   const focusPlacement=createVillagePlacementFocus(view),focusSelection=createVillagePlacementFocus(view);
-  let villageLayoutKey='',villageViewport=null,villageQuests=null,villageBar=null,villagePlacing=null;
+  let villageLayoutKey='',villageViewport=null,villageQuests=null,villagePurse=null,villageBar=null,villagePlacing=null;
   function updateVillageView(){
     villageNavigation.refresh();
     const managing=island?.managing===true&&!inBattle;
+    hud.setManaging?.(managing);
     if(!managing){villageLayoutKey='';villageBar=null;focusPlacement(null);focusSelection(null);view.setVillageView(false);return;}
     const width=parseFloat(canvas.style.width)||window.innerWidth,height=parseFloat(canvas.style.height)||window.innerHeight;
     villageQuests??=container.querySelector('.quest-strip');
+    villagePurse??=container.querySelector('.hud-coins');
     const caption=document.documentElement.style.getPropertyValue('--narrator-card-height');
     const placing=!!island.moving,selectionBar=!placing?island.ui?.selectionElement??island.selectionElement:null;
     if(selectionBar){villageBar=selectionBar;villagePlacing=placing;}
     else if(!villageBar?.isConnected||villageBar.hidden||villagePlacing!==placing||villageBar.classList.contains('island-selection-dock')){
       villageBar=container.querySelector(placing?'.island-move-bar:not([hidden])':'.island-village-mode:not([hidden])');villagePlacing=placing;
     }
-    const key=`${width}:${height}:${caption}:${villageQuests?.textContent}:${villageQuests?.className}:${villageQuests?.hidden}:${placing}:${villageBar?.textContent}:${villageBar?.className}:${document.documentElement.className}:${document.body.className}`;
+    const key=`${width}:${height}:${caption}:${villageQuests?.textContent}:${villageQuests?.className}:${villageQuests?.hidden}:${villagePurse?.textContent}:${placing}:${villageBar?.textContent}:${villageBar?.className}:${document.documentElement.className}:${document.body.className}`;
     if(key!==villageLayoutKey){
       const bar=villageBar;
-      const top=width<640?villageQuests?.getBoundingClientRect().bottom??80:80;
+      const top=width<640?Math.max(villageQuests?.getBoundingClientRect().bottom??0,villagePurse?.getBoundingClientRect().bottom??0):80;
       villageViewport={height,top:Math.max(80,top+12),bottom:bar?height-bar.getBoundingClientRect().top+12:112};
       villageLayoutKey=key;
     }
@@ -362,8 +365,10 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
       fps = Math.round(fpsFrames * 1000 / (performance.now() - fpsStart)); fpsFrames = 0; fpsStart = performance.now();
     }
     const info = graphics.renderer.info.render;
+    const displayedWave=world.current?.id==='home_islet'?waves?.island:waves?.point?.controller;
+    const waveStatus=readHudWaveStatus({place:world.current?.id,ownBest:island?.ownWaveBest,visiting:island?.visiting,wave:displayedWave?.wave});
     hud.update(waveAction?null:zone, { fps, calls: info.calls, triangles: info.triangles, night,interactionLabel:waveAction?undefined:panelLabel(zone),promptAt:zone&&!waveAction?screenAt(zone):null,
-      hint:farHint?{text:WALK_CLOSER,at:screenAt(farHint.id)}:null,speed,managing:island?.managing===true,blocked:!active||outsideBlocked()||!!waves?.island.wave||!!waves?.point?.controller.wave }); tutorials?.update(delta); input.endFrame();
+      hint:farHint?{text:WALK_CLOSER,at:screenAt(farHint.id)}:null,managing:island?.managing===true&&!inBattle,waveStatus,speed,blocked:!active||outsideBlocked()||!!waves?.island.wave||!!waves?.point?.controller.wave }); tutorials?.update(delta); input.endFrame();
   }, () => {
     const draw=shell.mode!=='title';
     if(draw)graphics.renderer.render(scene,view.camera);
