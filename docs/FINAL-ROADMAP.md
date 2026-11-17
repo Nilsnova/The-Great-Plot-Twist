@@ -41,6 +41,8 @@ The order of the tasks below follows this table: the walkthrough and the UX carr
 
 ## Task board
 
+**Reference-village visual phase, 17 Nov / Johannes:** the [review guide](contribute/REFERENCE-VILLAGE-REVIEW.md) maps the separate visual component drafts, dependencies and source-specific evidence. VIS31 final acceptance remains **open**: intermediate functional/GPU checks and earlier perimeter-suite passes do not complete the new all-defense visual/full-suite/device/human-review gates. Documentation child [#387](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/387), Draft [#388](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/388); no new duplicate implementation ID, merge or rollout.
+
 **Perimeter defense progress, 17 Nov / Johannes:** bounded implementation drafts are collected in the [review preview](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/chore/perimeter-integration-review); the [implementation/review guide](contribute/PERIMETER-REVIEW.md) maps actual contracts, migrations, evidence and remaining gates to [epic #241](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/241). The broader [visual roadmap Draft #239](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/239) is separate. This records progress, not rollout completion: drafts remain unmerged, new offers default off, and human acceptance/live application/activation remain open.
 
 
