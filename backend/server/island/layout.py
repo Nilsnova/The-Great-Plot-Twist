@@ -19,7 +19,7 @@ The browser repeats these rules for its preview in frontend/src/island/placement
 import json
 import math
 from collections import deque
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from functools import cache
 from pathlib import Path
 
@@ -94,6 +94,7 @@ class LayoutInfo:
     movable: bool  # False while the layout table cannot be read (before its migration)
     wall_rule_version: int = 0  # Separate trusted policy; version above still means fixed/stored.
     wall_capacity: int = LEGACY_WALL_CAPACITY
+    reserved_positions: dict[str, Position] = field(default_factory=dict)
 
 
 def read_spot(row: list) -> LayoutSpot:

@@ -5,7 +5,7 @@ from dataclasses import replace
 import pytest
 
 from server.flags import parse_flags
-from server.tests.island_helpers import FRIEND_ID, ISLAND_SETTINGS, PLAYER_ID, World
+from server.tests.island_helpers import FRIEND_ID, ISLAND_SETTINGS, PLAYER, PLAYER_ID, World
 from server.tests.test_island_routes import friend_island
 
 
@@ -34,6 +34,12 @@ def test_paid_owner_positions_survive_paused_placement_and_empty_inventory_is_hi
         "movable": placement_on,
         "wallRuleVersion": 1,
         "wallCapacity": 128,
+        "reservedPositions": {
+            "cannon_8": {"x": -8.5, "z": 12},
+            "cannon_9": {"x": 11.5, "z": -8.5},
+            "cannon_10": {"x": 5, "z": 10},
+            "cannon_11": {"x": -3.5, "z": -7.5},
+        },
     }
     assert len(answer["spots"]) == 23 and all(s["id"] != "wall_13" for s in answer["spots"])
     world.database.buildings[PLAYER_ID] = []
@@ -117,3 +123,25 @@ def test_wrong_intent_demolition_receipt_is_a_clear_conflict():
     response = world.post("/api/island/demolish", spot="wall_128")
     assert response.status_code == 409
     assert response.json()["error"]["code"] == "action_uid_conflict"
+
+
+def test_paused_tower_offer_keeps_its_moved_position_reserved_against_walls():
+    settings = replace(ISLAND_SETTINGS, flags=parse_flags("islands,placement"))
+    world = admitted(World(settings=settings))
+    world.database.layout_rows_by_owner[PLAYER_ID].append(
+        {"plot": "cannon_8", "x_half": -8, "z_half": -18}
+    )
+    world.database.buildings[PLAYER_ID].append({"plot": "cannon_8", "building_type": "cannon"})
+    answer = world.island().json()
+    assert answer["layout"]["reservedPositions"]["cannon_8"] == {"x": -4, "z": -9}
+    response = world.client.post(
+        "/api/island/move", json={"spot": "wall_128", "x": -4, "z": -9}, headers=PLAYER
+    )
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "place_taken"
+    assert world.database.calls("island_wall_move") == []
+    hidden_move = world.client.post(
+        "/api/island/move", json={"spot": "cannon_8", "x": -4, "z": -9}, headers=PLAYER
+    )
+    assert hidden_move.status_code == 404
+    assert hidden_move.json()["error"]["code"] == "no_such_spot"

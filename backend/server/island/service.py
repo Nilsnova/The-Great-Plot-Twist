@@ -263,10 +263,21 @@ def placed_view(
     owned = with_wall_capacity(catalogue, capacity)
     planned = rules.plan_spots(owned, built, role=role)
     visible = tuple(spot for spot in planned if spot.built or not is_inventory_wall_id(spot.id))
-    grid = layout.island_layout(catalogue.more_tower_spots)
+    grid = layout.island_layout(catalogue.more_tower_spots or version == 1)
     policy = {"wall_rule_version": version, "wall_capacity": capacity}
     spots = layout.place_spots(grid, visible, positions, **policy)
     info = layout.info_of(grid, positions, **policy)
+    if version == 1:
+        effective = layout.positions_of(grid, positions or {}, **policy)
+        visible_ids = {spot.id for spot in visible}
+        info = replace(
+            info,
+            reserved_positions={
+                spot.spot: effective[spot.spot]
+                for spot in grid.extra_spots
+                if spot.spot not in visible_ids
+            },
+        )
     return spots, replace(info, movable=False) if snapshot and not catalogue.placement else info
 
 
