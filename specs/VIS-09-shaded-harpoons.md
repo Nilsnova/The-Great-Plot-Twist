@@ -35,3 +35,43 @@ final shared-atlas parity follow after coordinator registration.
 
 No app dependency, service/account, .env change, migration, production flag,
 deployment or merge. Keep Draft for explain-back and a different human review.
+
+## Implemented and verified
+
+The source supplies all20 canonical frames with approved56×48/anchor7 metrics.
+Each tier has one measured fitting box across intact, released, damaged and
+collapsed states. The original PNG remains unchanged, with exact image-tool
+prompts, rejected intermediate and SHA-256 in its provenance README.
+
+Before source implementation, the new test failed because the family module was
+missing (284ms). After implementation,
+`npx vitest run tests/art/village-harpoons.test.js tests/v3-raster-free.test.js`:
+**2 files passed,33 tests passed,1.01s**. Includes20 names/native crop/alpha/source
+integrity cases and60 recording-canvas normalizations at1.5/2/4 density: same
+per-tier scale to12 decimals and normalized foot(28,41). This proves metadata
+geometry, not actual decoded-pixel/GPU parity or game appearance.
+
+`npm run build`: built in1.02s; spoiler guard244 text files/12 protected lines,
+no suspect elimination data. `node scripts/report-budget.js --check`: exit0,
+initial JavaScript18,825 bytes/CSS9,410; limits21,080/12,000 unchanged.
+`node scripts/text-lint/index.mjs`:4,538 candidate strings/530 source files,
+0 errors,8 existing report-only findings. `git diff --check`: clean.
+
+Not run: full suite, actual world/combat captures, firing/picking alignment,
+a11y/demo/overlaps, live backend, full world-art payload/GPU costs and final
+reference acceptance. The coordinator must register this family and include it
+as a raw source in the final asset bake before those combined checks.
+
+## Explain-back
+
+I changed the harpoon drawing, keeping the existing requested level and state
+names. The firing drawing removes the loaded shaft and releases the string;
+the slowing effect remains the existing simulation's decision. Each tier shares
+one fitting box, so low broken rubble does not grow into a standing tower.
+The native image is original unchanged source, while tiny crop/foot metadata
+lets the shared world and combat provider place it consistently. The bigger
+visual box does not enlarge the paid tile or create a stronger weapon.
+
+Questions: Why does the firing pose have no gun flash? How does one fit box
+prevent a broken-state scale jump? Which actual-game checks are still needed
+before accepting this family against the reference?
