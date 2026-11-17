@@ -5,15 +5,11 @@ import {artSizes} from '../../src/world/art.js';
 import {villageFamilies} from '../../src/art/village-families.js';
 
 describe('approved village family activation', () => {
-  it('binds the hero, all house roles and nature to their original local sources', () => {
-    expect(getRasterFrame('cabin').sheet.file).toBe('village/buildings-hero-v1.png');
-    for (const id of ['island-house', 'island-house-l2', 'island-house-l3',
-      'island-house-barracks', 'island-house-barracks-l3', 'island-house-tavern',
-      'island-house-tavern-l3', 'island-house-workshop', 'island-house-workshop-l3']) {
-      expect(getRasterFrame(id)?.sheet.file, id).toBe('village/houses-v1.png');
-    }
-    for (const id of ['oak', 'pine', 'birch', 'birch-tall', 'rock', 'shrub', 'flowers', 'grass-tuft']) {
-      expect(getRasterFrame(id)?.sheet.file, id).toBe('village/nature-v1.png');
+  it('binds supplied world frames to the proved compiled provider', () => {
+    expect(villageFamilies).toHaveLength(1);
+    for (const id of ['cabin', 'island-house', 'oak', 'island-watchtower', 'island-cannon',
+      'island-wall', 'island_core', 'island_record', 'island-techhub', 'island-arsenal', 'island-mortar']) {
+      expect(getRasterFrame(id)?.sheet.file, id).toMatch(/^village\/compiled\/[a-z]+-4x-\d+-[a-f0-9]{12}\.png$/);
     }
   });
 
