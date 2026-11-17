@@ -16,7 +16,7 @@ const head = path => execFileSync('git', ['rev-parse', 'HEAD'], {cwd: path, enco
 const source = head(root), fixtureSource = head(qaRoot), fixture = JSON.parse(await readFile(join(root, 'tests/pirates/fixtures/perimeter-ring.json'), 'utf8'));
 const cells = (fixture.cells ?? fixture.ring).map(([x, z]) => ({x, z})); assert.equal(cells.length, 102);
 const server = await createServer({root, configFile: false, envDir: false, logLevel: 'error', cacheDir: await mkdtemp(join(tmpdir(), 'perimeter-game-')),
-  define: {__BUILD_STAMP__: JSON.stringify({sha: source, builtAt: '2026-11-17T12:00:00Z'})}, server: {host: '127.0.0.1', port: 0, hmr: false}});
+  define: {__BUILD_STAMP__: JSON.stringify({sha: source, builtAt: new Date().toISOString()})}, server: {host: '127.0.0.1', port: 0, hmr: false}});
 let browser, active; const checks = [];
 async function receipts(page) {
   return page.evaluate(() => {
@@ -120,6 +120,7 @@ try {
       fixture: 'Funded/progressed local shared fake transport; real pointer/keyboard cancel proof, public-controller long drafts, real quote/pay/upgrade/reload and frozen local-demo bell. Time acceleration is browser clock only. No production claim.', checks}, null, 2) + '\n');
     await context.close(); active = null;
   }
+  assert.equal(head(root), source, 'runtime HEAD remained frozen for both actual viewport captures');
   console.log('PASS: 2 actual-game viewports; 4 paid runs each / 102 exact walls, cancel/reload/upgrade/camera/refusal, frozen wave and 40 cannon frames each; 0 page errors / 0 external requests');
 } catch (error) { await active?.screenshot({path: join(out, 'failure.png')}).catch(() => {}); throw error; }
 finally { await browser?.close(); await server.close(); }
