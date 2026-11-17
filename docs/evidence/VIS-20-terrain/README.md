@@ -19,8 +19,9 @@ facet, then shaded by that facet's existing direction and depth.
 
 Only the cosmetic meadow boundary moves toward the cliff lip, tapering back to
 the existing sandy east/south/west approach coves. Analytic land, projection,
-64×48 backdrop, path anchors, saved positions, navigation, footprint rules and
-the bounded1.4/.35 decorative depth do not change. The new paint grants no land.
+64×48 backdrop, path anchors, saved positions, navigation and footprint rules do
+not change. D063 explicitly expands the old1.4-unit decorative trial to3.2
+between coves, retaining .35 at all three approaches. The new paint grants no land.
 
 The temporary source-image lease comes from VIS-32. `loadBackdrop` holds it only
 while composing the owned canvas/texture, releases it in `finally`, and propagates
@@ -39,12 +40,62 @@ Actual result: **3 files passed, 17 tests passed in1.96s**, exit0. This checks t
 committed PNG dimensions and non-overlapping source regions, stable material
 placement, grass bounds/coves and unchanged analytical coast/placement behavior.
 
-The new backdrop lifetime suite was attempted on the isolated pinned base and
-could not collect because VIS-32's `village-raster.js` is a separate dependency.
-No assertions ran in that attempt. Composed provider/terrain checks and actual
-Canvas/game evidence will be added with their exact source revision.
+The first backdrop lifetime attempt on the isolated pinned base could not collect
+because VIS-32's provider was a separate dependency; no assertions ran. Verification
+then used a separate composed clone with provider commit `3b8fe1be` and the terrain
+commits. The final3.2 source run is `9bdbeb75` (the capture's later QA-only label
+commit does not change application code).
 
-Actual desktop/phone screenshots, texture clipping/shore-foot checks, full client,
-build, budget, accessibility/demo/overlap and physical-device acceptance are not
-claimed at this feature commit. The coordinator owns combined acceptance. No
-new package, service, gameplay data, migration, production activation or merge.
+```sh
+npm test -- --maxWorkers=1 tests/art/terrain-materials.test.js tests/art/terrain-backdrop-lifetime.test.js tests/art/coast-cliffs.test.js tests/cartoon-art.test.js tests/island/placement.test.js tests/island/world-art.test.js tests/places.test.js tests/place-lifetime.test.js
+```
+
+Actual composed result: **8 files passed, 40 tests passed in3.70s**, exit0. The
+strict3.2 limit initially caught a floating-point overshoot to3.2000000000000006;
+the source interpolation was clamped, retaining the strict original assertion.
+Lifetime tests cover success, painter/texture failure, failed acquisition and the
+unchanged other-place route. Counts above are overlapping runs, not additive.
+
+## Real Canvas evidence
+
+Capture source [`e02d49054d3306280310f16ad5692748b8339327`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/e02d49054d3306280310f16ad5692748b8339327)
+is pinned on `review/vis-20-proof-e02d4905`. It composes the provider and terrain,
+including the reproduction helper. Run from that checkout's root:
+
+```sh
+node frontend/scripts/check-terrain-materials.mjs frontend <output-directory>
+```
+
+Actual result: `PASS: actual16/32 terrain materials, clipping, analytic top, real naval anchors and decoded-source release; 0 page errors/external requests`.
+
+These PNGs are **isolated terrain components**, exported directly by the actual
+Canvas renderer. Both sides use the same candidate3.2 facade; Before means its
+procedural fallback, not an old-software screenshot. No image file was edited.
+
+| Density / native canvas | Before material | After material |
+|---|---|---|
+| 16 /1024×768 | [Before](component-before-16.png) | [After](component-after-16.png) |
+| 32 /2048×1536 | [Before](component-before-32.png) | [After](component-after-32.png) |
+
+[Raw report](report.json) and [capture hashes](capture-hashes.json) retain:
+
+- Zero opaque pixels beyond the declared decorative bounds at both densities.
+- All5,543 sampled analytic top points visible;17 actual simulation anchors and21
+  minimum-distance anchors remain in visual water; zero hidden anchors.
+-6,290,064 source bytes while leased; probe-owned cache bytes/entries/queue/decodes
+  all return to zero after release. Actual `loadBackdrop` is exercised separately
+  by the same probe; its `finally` behavior is covered by the lifetime tests.
+- Changed material pixels258,752 /1,028,782; alpha-threshold differences24 /50.
+  The latter are preserved observations, not an exact silhouette-pixel identity
+  claim. The analytic land and declared profile bounds remain authoritative.
+
+The earlier1.4 trial's14 /43 alpha-threshold differences are preserved in the
+[historical report](historical-1_4-report.json), not presented as the final3.2 run.
+
+## Remaining acceptance
+
+Actual1280×720 /375×812 gameplay screenshots, whole captain/hull/shore-wall
+occlusion, full client, build/budget, accessibility/demo/overlap, physical devices
+and final visual acceptance remain with the coordinator's combined scene. The
+component proof does not close those gates. No new package, service, gameplay
+data, migration, production activation, deployment or merge occurred here.
