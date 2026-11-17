@@ -59,11 +59,16 @@ export function createHud(container, actions, {on = defaultOn, emit = defaultEmi
   container.append(overlay);
   // A two-row phone purse must not collide with the normal Goals panel beneath Menu.
   function measureHeader() {
+    if (disposed) return;
     const extra = Math.max(0, purse.getBoundingClientRect().bottom - menu.getBoundingClientRect().bottom);
     right.style.setProperty('--hud-quest-offset', `${extra}px`);
+    // Toasts share #game but may be in the popover top layer. Reserve the actual Goals box,
+    // including visibility:hidden cards; display:none/hidden Goals have no box to reserve.
+    const goal = strip.element.getBoundingClientRect();
+    document.documentElement.style.setProperty('--hud-goals-toast-top', `${goal.width > 0 && goal.height > 0 ? goal.bottom + 10 : 0}px`);
   }
   const headerSize = typeof ResizeObserver === 'function' ? new ResizeObserver(measureHeader) : null;
-  headerSize?.observe(purse);headerSize?.observe(menu);
+  headerSize?.observe(purse);headerSize?.observe(menu);headerSize?.observe(strip.element);
   window.addEventListener('resize', measureHeader);
 
   let tickFrame = 0;
@@ -113,6 +118,7 @@ export function createHud(container, actions, {on = defaultOn, emit = defaultEmi
     const view = override ?? guide ?? (islandShown() ? firstQuestView(first, quests()) : null);
     strip.hidden = managing || !view;
     if (view) strip.render(view);
+    measureHeader();
   };
   function setManaging(value) {
     const next = value === true;
@@ -192,7 +198,7 @@ export function createHud(container, actions, {on = defaultOn, emit = defaultEmi
     // The goals again (the island game decided on one island or travel after the first Play).
     refreshQuests() { draw(); },
     // T51: open water behind the front door has no island, so no goals strip yet.
-    setBare(on) { overlay.classList.toggle('hud-bare', !!on); },
+    setBare(on) { overlay.classList.toggle('hud-bare', !!on); measureHeader(); },
     togglePanel() {}, toggleControls() {},
     closeQuickPanels() { return strip.closeHint(); },
     start() {
@@ -200,7 +206,7 @@ export function createHud(container, actions, {on = defaultOn, emit = defaultEmi
       showBanner(placeName(place));
       actions.focus();
     },
-    dispose() { if (disposed) return; disposed = true; cancelAnimationFrame(tickFrame); clearTimeout(bannerTimer); headerSize?.disconnect();window.removeEventListener('resize', measureHeader);stops.forEach(stop => stop()); strip.dispose(); overlay.remove(); },
+    dispose() { if (disposed) return; disposed = true; cancelAnimationFrame(tickFrame); clearTimeout(bannerTimer); headerSize?.disconnect();window.removeEventListener('resize', measureHeader); document.documentElement.style.removeProperty('--hud-goals-toast-top');stops.forEach(stop => stop()); strip.dispose(); overlay.remove(); },
     arrive,
     // The place on screen got its name late (a friend's game learned its host): the place status and a
     // banner still showing follow; no new banner.
