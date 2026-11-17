@@ -26,7 +26,8 @@ it.each([{width: 1280, height: 720}, {width: 375, height: 812}])('the real menu 
     expect(await report.textContent()).toContain('All captains fell');
     expect(await report.textContent()).toContain('Earlier actions may be missing');
     expect(await report.textContent()).toContain('Heart damage: 7');
-    expect(await report.textContent()).toContain('Damage taken: 20');
+    expect(await report.textContent()).toContain('Hit damage: 20');
+    expect(await report.textContent()).toContain('greater than health lost');
     expect(await report.textContent()).toContain('Damage done: 30');
     expect(await report.textContent()).toContain('waiting for confirmation');
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -36,6 +37,12 @@ it.each([{width: 1280, height: 720}, {width: 375, height: 812}])('the real menu 
     expect(await report.textContent()).toContain('Loot confirmed: 35 coins');
     await page.keyboard.press('Escape'); expect(await page.locator('dialog[open]').count()).toBe(0);
     expect(await page.evaluate(() => window.reportFocus)).toBe(1);
+    await page.evaluate(() => window.reportOpen());
+    await page.evaluate(() => window.reportEmit({type: 'wave_controller_started', waveId: 'w2', wave: 3}));
+    expect(await page.locator('dialog[open]').count()).toBe(0);
+    expect(await page.evaluate(() => window.reportMenu().some(item => item.label === 'Last defense report'))).toBe(false);
+    await page.evaluate(() => window.reportFeature.events([{type: 'wave_ended', reason: 'all_sunk'}]));
+    expect(await page.evaluate(() => window.reportMenu().some(item => item.label === 'Last defense report'))).toBe(true);
     await page.evaluate(() => window.reportOpen());
     await page.evaluate(() => window.reportEmit({type: 'travel'}));
     expect(await page.locator('dialog[open]').count()).toBe(0);

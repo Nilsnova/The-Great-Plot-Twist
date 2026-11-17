@@ -4,7 +4,7 @@ Responsible teammate: Johannes Franz Lang (`frcola`). Task: [#180](https://githu
 
 ## Resulting behavior
 
-After an island wave ends, **Menu → Last defense report** shows its end reason, observed heart damage, per-structure damage taken/dealt and zero-HP transitions. A structure's initial spot ID and position remain in the report so a player can identify it. Structures with no observed activity are omitted from the view. The report appears only after a completed local wave, is unavailable during the next active island wave, and clears when travelling or resetting the island. It is held only in memory for this game session.
+After an island wave ends, **Menu → Last defense report** shows its end reason, observed heart damage, per-structure recorded hit damage/dealt damage and zero-HP transitions. A structure's initial spot ID and position remain in the report so a player can identify it. Structures with no observed activity are omitted from the view. The report appears only after a completed local wave, is unavailable during the next active island wave, and clears when travelling or resetting the island. It is held only in memory for this game session.
 
 The report does not buy, repair, heal, move or upgrade anything. It does not submit another finish result or award coins. Earlier report data cannot overwrite the current wallet, island, health or score.
 
@@ -23,12 +23,14 @@ The local controller and existing bus are not proof of every combat hit. In part
 | Field | Meaning | Limit |
 |---|---|---|
 | Heart damage | Sum of positive finite observed `island_damaged.damage` values | Not inferred from final HP; healing is not negative damage |
-| Damage taken | Positive observed wall/tower damage for a known initial ID | Unknown IDs do not create an unbounded registry |
+| Hit damage | Positive reported wall/tower hit damage for a known initial ID | Legacy ship shells can report raw damage beyond remaining HP; this is not exact HP loss. Unknown IDs do not create an unbounded registry |
 | Damage done | Positive observed ship/boarder hit damage whose `by` equals a known defense ID | Not a predicted DPS value or claim of whole-kill attribution |
 | Breaks | Positive damage causing HP zero after the structure was not already broken | Known repair/rebuild with positive HP enables a later distinct break |
 | Loot | The existing finish answer's accepted amount | Pending, refused and unknown are never displayed as awarded money |
 
-Only walls, cannon, mortar, harpoon, culverin and swivel defenses enter the aggregate. Houses and watchtowers are not introduced as damageable structures. At most 64 structure entries are retained, which exceeds the current bounded catalogue without creating unlimited history. One current and one last-wave aggregate are kept; older results are discarded.
+An independent source review identified the legacy shell path in `sim.js`: it clamps wall HP but emits the raw incoming shell damage. The UI therefore names the field **Hit damage** and explicitly warns that it can exceed health lost; the report does not invent missing pre-hit HP or change combat.
+
+Only walls, cannon, mortar, harpoon, culverin and swivel defenses enter the aggregate. Houses and watchtowers are not introduced as damageable structures. Each aggregate has at most 64 entries. At most a current and a last-wave aggregate are retained (128 entries total while they differ); older results are discarded.
 
 ## Repetition, replay and context
 
@@ -40,13 +42,15 @@ Report payout updates match a retained wave UUID and cannot confirm a different 
 
 Actual focused runs so far:
 
-- `npm test -- --maxWorkers=1 tests/pirates/defense-report.test.js tests/pirates/multiplayer.test.js`: **24 passed, 2 files, 868 ms** after the menu-active-wave guard. The final observer-isolation wrapper will be included in the next focused rerun.
-- `npm test -- --maxWorkers=1 tests/pirates/defense-report-dom.test.js`: **2 passed, 1 file, 5.60 s** before that guard; final rerun is pending the shared browser slot.
-- `node scripts/text-lint/index.mjs`: **0 errors, 8 report-only findings** on the branch's player text before that guard; those existing report-only findings remain outside this feature.
+- `npm test -- --maxWorkers=1 tests/pirates/defense-report.test.js tests/pirates/multiplayer.test.js`: **25 passed, 2 files, 935 ms**, including the observer boundary and recorded-hit/overkill case.
+- `npm test -- --maxWorkers=1 tests/pirates/defense-report-dom.test.js`: **2 passed, 1 file, 2.83 s** on the final view, including active-wave hiding and recorded-hit wording.
+- `node scripts/text-lint/index.mjs`: **0 errors, 8 existing report-only findings**. The correctly spelled American English comparative `greater` was manually reviewed and added to the project vocabulary for the hit-damage warning.
+
+An independent read-only source review found the raw-wall-hit/overkill ambiguity; the label and an explicit warning were corrected without changing combat. No other concrete defect was found in that review.
 
 The tests cover identical legitimate hits, zero-HP transitions and rebuilding, explicit replay rebuilding, payout guards, memory bounds, copied snapshots, actual `mountPirates` event forwarding and the actual running-game wiring's reachable menu provider. DOM cases at 1280×720 and 375×812 exercise end reason, amounts, stale payout, Escape/focus, travel cleanup and overflow.
 
-`frontend/scripts/capture-defense-report.js` is prepared for four before/after screenshots. It renders the existing real pause menu and the branch's real report component using a controlled `createWave` event stream. It makes no API writes and does not claim a production backend run. Captures and the final browser rerun remain pending until Root releases the exclusive browser slot. Full-suite/build/budget/a11y/demo validation is coordinated centrally by Root and is not claimed here.
+`node frontend/scripts/capture-defense-report.js` completed: **4 screenshots saved; 2 viewports; browser errors: 0; no API writes.** All four were visually inspected. It renders the existing real pause menu and the branch's real report component using a controlled `createWave` event stream. This is component evidence, not a production backend run. The screenshot JSON records actual event-derived values. Full-suite/build/budget/a11y/demo validation is coordinated centrally by Root and is not claimed here.
 
 ## Explain-back preparation
 

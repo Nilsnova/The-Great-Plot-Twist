@@ -21,6 +21,7 @@ export function mountDefenseReport({on, container, context, defenses, menu = add
     body.setAttribute('aria-label', 'Last defense report');
     body.append(node('p', '', `Wave ${value.wave} · ${ENDINGS[value.reason] ?? 'Wave ended'}`),
       node('p', '', 'Local report. Earlier actions may be missing.'),
+      node('p', '', 'Hit damage may be greater than health lost.'),
       node('p', '', `Heart damage: ${value.heartDamage}`), node('p', '', paidLine(value.payout)));
     const list = node('ul');
     for (const item of value.structures.filter(row => row.taken || row.dealt || row.breaks)) {
@@ -28,7 +29,7 @@ export function mountDefenseReport({on, container, context, defenses, menu = add
       const where = Number.isFinite(item.x) && Number.isFinite(item.z) ? ` (${item.x}, ${item.z})` : '';
       const row = node('li');
       row.append(node('strong', '', `${NAMES[item.kind]} ${number}${where}`),
-        node('p', '', `Damage taken: ${item.taken} · Damage done: ${item.dealt} · Breaks: ${item.breaks}`));
+        node('p', '', `Hit damage: ${item.taken} · Damage done: ${item.dealt} · Breaks: ${item.breaks}`));
       list.append(row);
     }
     body.append(list.childElementCount ? list : node('p', '', 'No damage was recorded.'));

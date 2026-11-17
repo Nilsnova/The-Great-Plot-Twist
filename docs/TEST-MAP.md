@@ -286,6 +286,6 @@ and [results, screenshots and manual checkpoints](evidence/T28/README.md).
 |---|---|
 | Bounded event aggregation, identical hits, rebuilding, payout guards | `frontend/tests/pirates/defense-report.test.js`; real local simulation forwarding and actual gameplay menu wiring are exercised; no live API/payment proof |
 | Reachable menu, copied report, focus/escape, stale result, travel, mobile overflow | `frontend/tests/pirates/defense-report-dom.test.js` at 1280×720 and 375×812; controlled browser component data, not a production account |
-| Screenshot reproduction | `frontend/scripts/capture-defense-report.js`; browser-slot capture pending; no missing screenshot claimed |
+| Screenshot reproduction | `frontend/scripts/capture-defense-report.js`; four controlled component images and JSON in docs/evidence/COC-39, zero API writes |
 
 [Exact run results and remaining central checks](../specs/COC-39-defense-report.md). Full replay authority, production multi-client completeness and COC-40 tactical navigation are not covered by this bounded report slice.

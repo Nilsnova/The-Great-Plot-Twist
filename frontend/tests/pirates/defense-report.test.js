@@ -29,6 +29,13 @@ describe('local defense report', () => {
     report.events([{type: 'wall_damaged', wallId: 'wall_1', damage: 20, hp: 0}]);
     expect(report.read('A').structures[0].breaks).toBe(2);
   });
+  it('retains raw recorded hit damage without pretending it is exact HP loss', () => {
+    const report = createDefenseReport(); start(report);
+    report.events([{type: 'wall_damaged', wallId: 'wall_1', damage: 10, hp: 5},
+      {type: 'wall_damaged', wallId: 'wall_1', damage: 20, hp: 0}]); end(report);
+    // Legacy ship shells report raw damage even when only 5 HP remained.
+    expect(report.read('A').structures[0]).toMatchObject({taken: 30, breaks: 1});
+  });
   it('does not reset a duplicate start, and explicitly clears before rebuilding a replay', () => {
     const report = createDefenseReport(); start(report);
     report.events([{type: 'island_damaged', damage: 3}]); start(report); end(report);
