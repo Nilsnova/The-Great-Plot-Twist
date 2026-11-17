@@ -38,6 +38,9 @@ describe('recovery-v1 controller replay', () => {
       recoveryVersion: 1, waveProtocol: 2, initialSnapshot: makeSnapshot(), participantToken: TOKEN, lastActorCounter: 0 });
     expect(controller.wave).toBeTruthy();
     expect(controller.recoveryCombatState).toBeNull(); // During prep, the island's server snapshot remains the source.
+    expect(await controller.checkpointBeforeRepair()).toEqual({ ok: true });
+    expect(readEvents).not.toHaveBeenCalled();
+    expect(checkpoint).not.toHaveBeenCalled(); // Preparation repair needs no combat-damage checkpoint.
 
     now = START + 1050;
     controller.update(.05);

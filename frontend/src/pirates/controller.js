@@ -494,6 +494,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   }
 
   function acceptedRecoveryInputs(events, batch, participantToken) {
+    if (!Array.isArray(events)) return null;
     const expected = new Map(batch.map(item => [item.inputUid, item]));
     const accepted = new Set();
     for (const event of events) {
@@ -533,6 +534,10 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   function checkpointBeforeRepair() {
     const current = wave;
     if (!current?.recoveryReplay) return Promise.resolve({ ok: false, code: 'recovery_unavailable' });
+    if (now() + current.offset < current.info.startsAtMs && current.info.initialSnapshot?.waveId === current.info.waveId) {
+      // During preparation the frozen bell snapshot is canonical; accepted paid repairs replay at tick zero.
+      return Promise.resolve({ ok: true });
+    }
     const prior = current.recoveryHealthCheckpointPromise;
     const running = (prior ? prior.then(result => result?.ok ? checkpointRecovery(current) : result)
       : checkpointRecovery(current)).finally(() => {
