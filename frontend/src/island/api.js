@@ -50,6 +50,7 @@ import {SKILL_BY_ID, WEAPON_BY_ID, isRole} from '../pirates/captain-ids.js';
 import {BRANCH_BY_ID, SPECS, optionsOf} from '../campaign/tech.js';
 import {isRole as isHouseRole} from '../campaign/houses.js';
 import {readRecoverySnapshot} from '../pirates/recovery-snapshot.js';
+import {readPerimeterDemo, canonicalWallId} from '../pirates/perimeter-demo.js';
 import {isParticipantToken} from '../pirates/recovery-policy.js';
 
 export const PATHS = Object.freeze({
@@ -190,7 +191,7 @@ function isStructureRepair(data) {
 export function wallHealthBody(walls) {
   if (!walls || typeof walls !== 'object') return null;
   const out = {};
-  for (const [id, value] of Object.entries(walls)) if (/^wall_[0-9]{1,2}$/.test(id) && Number.isInteger(value) && value >= 0 && value <= 100) out[id] = value;
+  for (const [id, value] of Object.entries(walls)) if (canonicalWallId(id) && Number.isInteger(value) && value >= 0 && value <= 100) out[id] = value;
   return Object.keys(out).length ? out : null;
 }
 export function isWave(data) {
@@ -198,6 +199,7 @@ export function isWave(data) {
     && typeof data.startsAt === 'string' && Number.isFinite(Date.parse(data.startsAt))
     && !!data.weather && typeof data.weather.kind === 'string' && typeof data.flagship === 'boolean';
   if (!base) return false;
+  if (data.perimeterDemo !== undefined && (!readPerimeterDemo(data.perimeterDemo,data) || (!Array.isArray(data.rules) || !data.rules.includes('pathing')))) return false;
   if (data.waveProtocol === undefined && (data.recoveryVersion === undefined || data.recoveryVersion === 0)) return true;
   if (data.waveProtocol === 1 && (data.recoveryVersion === undefined || data.recoveryVersion === 0)) return true;
   return data.waveProtocol === 2 && data.recoveryVersion === 1

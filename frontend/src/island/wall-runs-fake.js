@@ -10,7 +10,7 @@ const epochOf = island => island.wallEpoch ??= globalThis.crypto.randomUUID();
 const copy = rows => rows.map(row => ({...row}));
 const exact = (row, fields) => row && typeof row === 'object' && !Array.isArray(row) && Object.keys(row).sort().join() === [...fields].sort().join();
 
-export function createFakeWallRuns({player, target, rows, answer, isOwner, guard, canBuild, unitPrice, paidFor, refuse, layout}) {
+export function createFakeWallRuns({player, target, rows, answer, isOwner, guard, canBuild, unitPrice, paidFor, refuse, layout, offersOn = () => false}) {
   const bad = message => refuse(422, 'validation_error', message);
   function policyOf(island) {
     const policy = wallPolicy(island.wallPolicy);
@@ -20,6 +20,7 @@ export function createFakeWallRuns({player, target, rows, answer, isOwner, guard
   function quoteOn(island, cells) {
     if (policyOf(island).wallRuleVersion !== 1) refuse(409, 'wall_policy_required', 'Open wall construction first.');
     guard(island);
+    if (!offersOn()) refuse(404, 'feature_off', 'New perimeter construction is paused.');
     if (!Array.isArray(cells) || cells.length < 1 || cells.length > 32) bad('Build from 1 to 32 wall pieces at a time.');
     const free = Array.from({length: 128}, (_, i) => `wall_${i + 1}`).filter(id => !island.built.has(id));
     if (free.length < cells.length) refuse(409, 'wall_capacity', 'There are not enough wall pieces left.');
@@ -50,6 +51,7 @@ export function createFakeWallRuns({player, target, rows, answer, isOwner, guard
       if (!isOwner(island)) refuse(403, 'not_owner', 'Only the owner can open perimeter construction.');
       guard(island); epochOf(island);
       if (policyOf(island).wallRuleVersion === 0) {
+        if (!offersOn()) refuse(404, 'feature_off', 'Perimeter construction is not open yet.');
         island.positions = new Map([...(island.positions ?? []), ...Object.entries(positionsOf(rows(island)))]);
         island.wallPolicy = {...POLICY};
       }
@@ -58,7 +60,7 @@ export function createFakeWallRuns({player, target, rows, answer, isOwner, guard
     quote({code, cells} = {}) { return quoteOn(target(code), cells); },
     build({code, placements, quotedTotal, islandEpoch, actionUid} = {}) {
       const island = target(code), payer = player();
-      if (typeof islandEpoch !== 'string' || !UUID.test(islandEpoch) || typeof actionUid !== 'string' || !UID.test(actionUid) || !Number.isSafeInteger(quotedTotal) || quotedTotal < 1 || !Array.isArray(placements)
+      if (typeof islandEpoch !== 'string' || !UUID.test(islandEpoch) || typeof actionUid !== 'string' || !UID.test(actionUid) || /[^A-Za-z0-9_-]/.test(actionUid) || !Number.isSafeInteger(quotedTotal) || quotedTotal < 1 || !Array.isArray(placements)
           || placements.length < 1 || placements.length > 32 || placements.some(row => !exact(row, ['spot', 'x', 'z']) || typeof row.spot !== 'string' || !onGrid(row.x) || !onGrid(row.z))) bad('Send the quoted wall positions, total and action id.');
       placements = placements.map(({spot, x, z}) => ({spot, x, z}));
       const intent = JSON.stringify({code: island.code, placements, quotedTotal, islandEpoch}), key = `wall-run:${actionUid}`, previous = payer.actions.get(key);
