@@ -54,6 +54,59 @@ it('keeps saved recovery cards when admission is off, while legacy islands stay 
   expect(result.old.card).toContain('Level 2: Opens after wave 2.');
 });
 
+it('keeps an island with unavailable canonical health fail closed, then discovers v1 policy on retry', async () => {
+  const result = await browser.withPage(page => page.evaluate(async () => {
+    const {createIsland} = await window.g20Import('/src/island/index.js');
+    const {createFakeIslandTransport} = await window.g20Import('/src/pirates/fake-api.js');
+    const {on, emit} = await window.g20Import('/src/core/events.js');
+    const base = createFakeIslandTransport();
+    base.dev.setWaveBest(20); base.dev.setCoins(5000);
+    const state = {serverNow: '2026-11-17T12:00:00Z', islandEpoch: '22345678-1234-4234-8234-123456789abc', revision: 4,
+      recoveryVersion: 1, waveProtocol: 2, displayPhase: 'between_waves', repairWindow: 'between_waves', waveId: null,
+      remainingPaidUses: null, structures: [{spot: 'wall_1', instanceId: '32345678-1234-4234-8234-123456789abc',
+        kind: 'wall', level: 1, hpUnits: 750_000, maxHP: 60, rateUnitsPerSecond: 1666.67, estimatedFreeSeconds: 150,
+        fixedPrice: 10, repairSeq: 0}]};
+    let failures = 5, canonicalReads = 0, nextTimer = 1;
+    const timers = new Map();
+    const setTimer = (run, ms) => { const id = nextTimer++; timers.set(id, {run, ms}); return id; };
+    const clearTimer = id => timers.delete(id);
+    const transport = {...base,
+      get: async path => {
+        if (path.startsWith('/api/island/structures')) {
+          canonicalReads++;
+          if (failures-- > 0) return {ok: false, status: 503, code: 'database_unavailable', message: 'Try again.'};
+          return {ok: true, status: 200, data: state};
+        }
+        if (path.startsWith('/api/island/walls')) return {ok: true, status: 200,
+          data: {coins: 5000, walls: [{spot: 'wall_1', level: 1, health: 50, recoversAt: null, repairCost: 10}]}};
+        return base.get(path);
+      },
+      post: async (path, body) => {
+        const answer = await base.post(path, body);
+        if (answer.ok && answer.data?.spots) answer.data.recoveryVersion = 1;
+        return answer;
+      }};
+    const island = createIsland({container: document.body, emit, on, mode: 'fake', transport, storage: null,
+      structureRecoveryOn: () => false, wallRecovery: () => true, menu: () => () => {}, setTimer, clearTimer});
+    await island.load();
+    await island.build('wall_1', 'wall');
+    island.pick('wall_1');
+    await new Promise(resolve => setTimeout(resolve, 120));
+    const unavailable = {message: document.querySelector('.recovery-message')?.textContent ?? '',
+      paidButton: !!document.querySelector('.recovery-repair'), legacyAction: !!document.querySelector('[data-focus="repair"]'),
+      upgradeDisabled: document.querySelector('[data-focus="upgrade"]')?.disabled ?? null};
+    failures = 0;
+    const poll = [...timers.values()].find(timer => timer.ms === 5000);
+    await poll.run();
+    const recovered = {reads: canonicalReads, hp: document.querySelector('.recovery-hp')?.textContent ?? '',
+      paidButton: !!document.querySelector('.recovery-repair'), legacyAction: !!document.querySelector('[data-focus="repair"]')};
+    island.dispose(); return {unavailable, recovered};
+  }));
+  expect(result.unavailable).toMatchObject({message: 'Building health could not be loaded.', paidButton: false,
+    legacyAction: false, upgradeDisabled: true});
+  expect(result.recovered).toMatchObject({reads: 3, hp: '45 / 60 HP', paidButton: true, legacyAction: false});
+});
+
 it('requires the replayed combat health checkpoint to succeed before submitting a paid repair', async () => {
   const result = await browser.withPage(page => page.evaluate(async () => {
     const {createIsland} = await window.g20Import('/src/island/index.js');
@@ -99,6 +152,78 @@ it('requires the replayed combat health checkpoint to succeed before submitting 
     return {repairPosts, checkpoints, error};
   }));
   expect(result).toEqual({repairPosts: 0, checkpoints: 1, error: 'Battle damage is still being checked. Refresh and try again.'});
+});
+
+it('keeps a paid-repair refusal visible after the canonical refresh', async () => {
+  const result = await browser.withPage(page => page.evaluate(async () => {
+    const {createIsland} = await window.g20Import('/src/island/index.js');
+    const {createFakeIslandTransport} = await window.g20Import('/src/pirates/fake-api.js');
+    const {on, emit} = await window.g20Import('/src/core/events.js');
+    const base = createFakeIslandTransport();
+    const state = {serverNow: '2026-11-17T12:00:00Z', islandEpoch: '22345678-1234-4234-8234-123456789abc', revision: 4,
+      recoveryVersion: 1, waveProtocol: 2, displayPhase: 'between_waves', repairWindow: 'between_waves', waveId: null,
+      remainingPaidUses: null, structures: [{spot: 'wall_1', instanceId: '32345678-1234-4234-8234-123456789abc',
+        kind: 'wall', level: 1, hpUnits: 750000, maxHP: 60, rateUnitsPerSecond: 1666.67, estimatedFreeSeconds: 150,
+        fixedPrice: 10, repairSeq: 0}]};
+    let repairPosts = 0;
+    const transport = {...base,
+      get: async path => path.startsWith('/api/island/structures') ? {ok: true, status: 200, data: state} : base.get(path),
+      post: async (path, body) => {
+        if (path === '/api/island/structures/repair') { repairPosts++; return {ok: false, status: 409,
+          code: 'insufficient_funds', message: 'Not enough coins for this repair.'}; }
+        return base.post(path, body);
+      }};
+    const island = createIsland({container: document.body, emit, on, mode: 'fake', transport, storage: null,
+      structureRecoveryOn: () => false, menu: () => () => {}});
+    await island.load();
+    if (!island.island.spots.find(spot => spot.id === 'wall_1')?.built) await island.build('wall_1', 'wall');
+    island.pick('wall_1'); document.querySelector('.recovery-repair')?.click();
+    await new Promise(resolve => setTimeout(resolve, 150));
+    const answer = {repairPosts, hp: document.querySelector('.recovery-hp')?.textContent ?? '',
+      error: document.querySelector('.recovery-error')?.textContent ?? ''};
+    island.dispose(); return answer;
+  }));
+  expect(result).toEqual({repairPosts: 1, hp: '45 / 60 HP', error: 'Not enough coins for this repair.'});
+});
+
+it('refreshes saved recovery while no card is open and clears the timer on dispose', async () => {
+  const result = await browser.withPage(page => page.evaluate(async () => {
+    const {createIsland} = await window.g20Import('/src/island/index.js');
+    const {createFakeIslandTransport} = await window.g20Import('/src/pirates/fake-api.js');
+    const {on, emit} = await window.g20Import('/src/core/events.js');
+    const base = createFakeIslandTransport();
+    const partial = {serverNow: '2026-11-17T12:00:00Z', islandEpoch: '22345678-1234-4234-8234-123456789abc', revision: 4,
+      recoveryVersion: 1, waveProtocol: 2, displayPhase: 'between_waves', repairWindow: 'between_waves', waveId: null,
+      remainingPaidUses: null, structures: [{spot: 'wall_1', instanceId: '32345678-1234-4234-8234-123456789abc',
+        kind: 'wall', level: 1, hpUnits: 750000, maxHP: 60, rateUnitsPerSecond: 1666.67, estimatedFreeSeconds: 150,
+        fixedPrice: 10, repairSeq: 0}]};
+    let state = partial, reads = 0, nextId = 1;
+    const timers = new Map();
+    const setTimer = (run, ms) => { const id = nextId++; timers.set(id, {run, ms}); return id; };
+    const clearTimer = id => timers.delete(id);
+    const transport = {...base, get: async path => {
+      if (path.startsWith('/api/island/structures')) { reads++; return {ok: true, status: 200, data: state}; }
+      return base.get(path);
+    }};
+    const island = createIsland({container: document.body, emit, on, mode: 'fake', transport, storage: null,
+      structureRecoveryOn: () => false, menu: () => () => {}, setTimer, clearTimer});
+    await island.load();
+    await island.api.build({spot: 'wall_1', kind: 'wall'});
+    await island.load();
+    const hadClosedCard = !document.querySelector('.island-card-build');
+    const poll = [...timers.entries()].find(([, item]) => item.ms === 5000);
+    const readsBeforePoll = reads;
+    state = {...partial, revision: 5, structures: [{...partial.structures[0], hpUnits: 1_000_000, repairSeq: 1, estimatedFreeSeconds: 0}]};
+    timers.delete(poll[0]); await poll[1].run();
+    const readsAfterPoll = reads;
+    island.pick('wall_1');
+    const answer = {hadClosedCard, readsBeforePoll, readsAfterPoll, reads, hpHiddenAfterFull: !document.querySelector('.recovery-hp'), timersBeforeDispose: timers.size};
+    island.dispose(); answer.timersAfterDispose = timers.size;
+    return answer;
+  }));
+  expect(result.hadClosedCard).toBe(true);
+  expect(result.readsAfterPoll).toBe(result.readsBeforePoll + 1);
+  expect(result).toMatchObject({hpHiddenAfterFull: true, timersBeforeDispose: 1, timersAfterDispose: 0});
 });
 
 it('allows preparation repair after the wave checkpoint gate succeeds', async () => {

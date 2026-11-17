@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Structure recovery integration fixture</title>
+  <style>
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #8fc3cc; }
+    #island-scene { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+    .fixture-watermark { position: fixed; z-index: 10000; top: 8px; left: 8px; max-width: calc(100vw - 16px); padding: 5px 8px;
+      border-radius: 4px; background: #18241e; color: #fff4d5; font: 12px/1.2 system-ui, sans-serif; }
+  </style>
+</head>
+<body>
+  <canvas id="island-scene" aria-label="Island scene"></canvas>
+  <div class="fixture-watermark">Offline signed transport fixture · no account, payment or database call</div>
+  <script type="module" src="/tests/fixtures/structure-recovery-integration.js"></script>
+</body>
+</html>
