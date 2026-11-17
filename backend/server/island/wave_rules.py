@@ -37,7 +37,15 @@ from server.supabase_admin import SupabaseAdmin
 # culverin, so a whole wave fights the same island even if the flag (and so the island answer)
 # changed while it ran. ship_fire (T50): ships at anchor fire at a real wall, tower or the heart
 # (frontend/src/pirates/ship-fire.js); a wave that started without it keeps the old shelling.
-SIM_RULES = ("tower_health", "pathing", "tower_obstacles", "rescue", "defenses_v2", "ship_fire")
+SIM_RULES = (
+    "tower_health",
+    "pathing",
+    "tower_obstacles",
+    "rescue",
+    "defenses_v2",
+    "ship_fire",
+    "structure_recovery",
+)
 logger = logging.getLogger(__name__)
 
 
