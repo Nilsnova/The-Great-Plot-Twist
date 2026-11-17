@@ -1126,7 +1126,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
           const puff = rect[pirateFrames.smoke[(still() ? 0 : Math.floor(clock * 5)) % 3]];
           post.layer.push(puff, x, y + r.h - r.anchor, puff.w, puff.h, .5, puff.anchor, { a: .85 });
         }
-        if ((level > 1 || post.kind !== 'wall') && look !== 'broken') drawPips(post.layer, x, y + (r.h - r.anchor) * grow + .2, level);
+        if (!(post.kind === 'wall' && wallConnections.hasPost(post.id)) && (level > 1 || post.kind !== 'wall') && look !== 'broken') drawPips(post.layer, x, y + (r.h - r.anchor) * grow + .2, level);
         if (post.kind === 'wall' && walls.get(post.id)?.crew) drawCrew(post.layer, 'carpenter', x + (x > 0 ? -1.3 : 1.3), y - .3, true);
         if (post.kind !== 'wall' && towers.get(post.id)?.manned) drawCrew(post.layer, 'gunner', x + (post.flip ? 1.2 : -1.2), y - .15, (fire.get(post.id)?.until ?? -1) > clock);
       }
