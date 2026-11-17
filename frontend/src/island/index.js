@@ -409,12 +409,13 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       unlocks: own ? islandUnlocks() : null, prices: own?.prices ?? null, campaign: campaign(), battle: battle && !waveOver,
       movable: island?.layout?.movable === true, flags: {defenses_v2: defensesV2On() === true}, treePicked: treePicked.get(spotId) ?? null,
       recoveryState: recoveryView, recoveryStatus: recoveryEnabled ? (recoveryReady ? 'ready' : recoveryStatus) : 'disabled',
-      recoveryError, recoveryPending: recoveryPendingSpot === spotId});
+      recoveryError, recoveryPending: recoveryPendingSpot === spotId, recoveryVersion: recoveryState?.recoveryVersion ?? 0});
     if (recoveryEnabled && recoveryState?.displayPhase === 'combat' && !live) {
       model.recovery = {visible: false, status: 'error', message: 'Battle health is still loading.'};
     }
     // D039: a damaged or destroyed wall shows Repair or Rebuild instead of Upgrade (flag wall_recovery).
     const shown = wallsFor !== null && wallsFor === island?.code ? walls.get(spotId) ?? null : null;
+    if (structureRecoveryOn() === true) return model;
     return withWallRecovery(model, {wall: shown, coins: own?.coins ?? null,
       busy: busySpot === spotId ? busyKind : false, battle: battle && !waveOver});
   }
@@ -489,7 +490,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     const wave = flow.current, island = target();
     return bellModel({wave: wave?.wave ?? null, joined: wave?.joined === true, countdown: flow.secondsLeft(), busy: flow.busy,
       visitor: !!visiting, ownerName: visiting?.ownerName, waveBest: island?.waveBest ?? 0, nextWave: island?.nextWave,
-      preparation: preparationModel({island, wallRecovery: wallRecovery(), wallState: {code: wallsFor, rows: [...walls.values()]}}), message: cardMessage});
+      preparation: preparationModel({island, wallRecovery: wallRecovery() && structureRecoveryOn() !== true,
+        wallState: {code: wallsFor, rows: [...walls.values()]}}), message: cardMessage});
   }
   function refreshCard() {
     if (disposed) return;
@@ -577,6 +579,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       recoveryError = null;
     } else {
       recoveryError = answer.code;
+      await reloadOwn();
     }
     refreshCard();
     // The response receipt is not a combat HP patch. Read the current canonical view and let the

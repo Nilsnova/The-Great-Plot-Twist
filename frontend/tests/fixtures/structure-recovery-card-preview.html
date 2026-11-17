@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>T59 offline structure card preview</title>
+    <link rel="stylesheet" href="/src/ui/kit/kit.css">
+    <style>
+      body{min-height:100vh;margin:0;padding:24px;background:#e7ddc6;color:#34291f;font:600 16px/1.4 system-ui,sans-serif}
+      .preview-note{max-width:680px;padding:10px;background:#fff4d5;border:2px solid #8a6738}
+      @media(max-width:600px){body{padding:12px}}
+    </style>
+  </head>
+  <body>
+    <h1>Offline structure card review</h1>
+    <p class="preview-note">Actual island card UI with fixture data only. No backend API or payment action is called.</p>
+    <div id="mount"></div>
+    <script type="module" src="./structure-recovery-card-preview.js"></script>
+  </body>
+</html>

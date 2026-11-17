@@ -1,5 +1,5 @@
-// Checks the standalone T59 recovery component in Chromium and captures desktop/phone examples.
-// Used by the T59 implementation while API and island-card integration are pending.
+// Checks the standalone T59 component preview in Chromium and captures component-only examples.
+// The island card now has its own capture at capture:recovery:card.
 
 import { chromium } from 'playwright-core';
 import { createServer } from 'vite';

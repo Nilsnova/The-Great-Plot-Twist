@@ -67,6 +67,9 @@ function renderStructureRecoveryView(container, view, options = {}) {
   if (view.freeRepairLabel) {
     appendText(document, card, 'p', 'recovery-free', view.freeRepairLabel);
   }
+  if (view.repairReasonLabel) {
+    appendText(document, card, 'p', 'recovery-funds', view.repairReasonLabel);
+  }
   if (view.statusLabel) {
     appendText(document, card, 'p', 'recovery-status', view.statusLabel);
   }

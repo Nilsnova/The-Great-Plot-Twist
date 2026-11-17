@@ -6,7 +6,7 @@
 .health-fill-gold{background:#efc84c}
 .health-fill-red{background:#d65343}
 .recovery-marker{position:absolute;right:1px;top:50%;transform:translateY(-50%);padding:0 2px;background:#18241e;color:#fff4d5;font:800 9px/1 var(--u-font,system-ui)}
-.recovery-hp,.recovery-free,.recovery-status,.recovery-helper,.recovery-quota,.recovery-error,.recovery-message{margin:0}
+.recovery-hp,.recovery-free,.recovery-funds,.recovery-status,.recovery-helper,.recovery-quota,.recovery-error,.recovery-message{margin:0}
 .recovery-repair{justify-self:start;min-height:44px;padding:8px 12px;border:2px solid var(--u-brass,#8a6738);background:var(--u-parch,#efe0bb);color:var(--u-brown,#4b3524);font:700 15px/1.25 var(--u-font,system-ui);cursor:pointer}
 .recovery-repair:focus-visible{outline:3px solid var(--u-gold,#e3b447);outline-offset:2px}
 .recovery-repair:disabled{cursor:default;opacity:.6}

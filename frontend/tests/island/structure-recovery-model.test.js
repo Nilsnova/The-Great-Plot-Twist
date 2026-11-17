@@ -182,6 +182,16 @@ describe('structure recovery presentation', () => {
     expect(exhausted.remainingUsesLabel).toBe('No Repair now uses left this wave');
   });
 
+  it('disables a paid action while the caller balance is unknown or too low', () => {
+    const damaged = structure();
+    const unknown = buildStructureRecoveryView(state(), damaged);
+    const short = buildStructureRecoveryView(state(), damaged, {coins: 10});
+    const ready = buildStructureRecoveryView(state(), damaged, {coins: 100});
+    expect(unknown).toMatchObject({repairDisabled: true, repairReasonLabel: 'Coins are still loading.'});
+    expect(short).toMatchObject({repairDisabled: true, repairReasonLabel: 'Need 30 more coins.'});
+    expect(ready).toMatchObject({repairDisabled: false, repairReasonLabel: null});
+  });
+
   it('fails closed if reserved-wave quota state is missing', () => {
     const damaged = structure();
     const view = buildStructureRecoveryView(

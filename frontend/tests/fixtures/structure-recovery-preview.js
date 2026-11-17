@@ -54,7 +54,7 @@ const samples = [
 ];
 
 for (const sample of samples) {
-  const view = buildStructureRecoveryView(sample.state, sample.structure);
+  const view = buildStructureRecoveryView(sample.state, sample.structure, {coins: 100});
   const container = document.getElementById(sample.target);
   renderStructureRecoveryView(container, view, {
     onRepair: () => {

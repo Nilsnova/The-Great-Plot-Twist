@@ -47,8 +47,16 @@ it('renders real structure cards and repair feedback at desktop and phone widths
       const button = document.querySelector('.recovery-repair'), bar = document.querySelector('.recovery-bar');
       const buttonBox = button.getBoundingClientRect();
       return {width: buttonBox.width, height: buttonBox.height, barWidth: bar.getBoundingClientRect().width,
-        overflows: document.documentElement.scrollWidth > innerWidth};
+        left: buttonBox.left, right: buttonBox.right, overflows: document.documentElement.scrollWidth > innerWidth};
     })).toMatchObject({width: expect.any(Number), height: expect.any(Number), overflows: false});
     expect(await page.locator('.recovery-repair').evaluate(node => node.getBoundingClientRect().height)).toBeGreaterThanOrEqual(44);
+    expect(await page.locator('.recovery-repair').evaluate(node => node.getBoundingClientRect().right)).toBeLessThanOrEqual(390);
+
+    const harpoon = {spot: 'tower_1', instanceId: '52345678-1234-4234-8234-123456789abc', kind: 'harpoon', level: 1,
+      hpUnits: 1, maxHP: 60, rateUnitsPerSecond: 1666.67, estimatedFreeSeconds: 600, fixedPrice: 40, repairSeq: 0};
+    await draw(page, {width: 375, height: 812}, harpoon, {...base, structures: [harpoon]});
+    expect(await page.locator('.recovery-hp').textContent()).toBe('0.00006 / 60 HP');
+    expect(await page.locator('.health-fill').evaluate(node => node.getBoundingClientRect().width)).toBeGreaterThanOrEqual(1);
+    expect(await page.locator('.recovery-repair').evaluate(node => node.getBoundingClientRect().right)).toBeLessThanOrEqual(375);
   });
 });

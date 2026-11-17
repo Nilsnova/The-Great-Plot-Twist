@@ -34,4 +34,11 @@ describe('structure recovery card model', () => {
     expect(house.recovery).toBeUndefined();
     expect(point.recovery).toBeUndefined();
   });
+
+  it('uses the recovery-v1 Quick Mend wording on a built wall card', () => {
+    const campaign = {wave: 8, open: new Set(['tech_hub']), research: {done: new Set(['wall']), tiers: {}}};
+    const model = buildCardModel({spotId: 'wall_1', slot: 'wall', spot: {id: 'wall_1', kind: 'wall', built: true, level: 1},
+      campaign, coins: 500, recoveryVersion: 1});
+    expect(model.skills.choices.find(item => item.id === 'quick_mend').line).toBe('This wall mends twice as fast between waves.');
+  });
 });

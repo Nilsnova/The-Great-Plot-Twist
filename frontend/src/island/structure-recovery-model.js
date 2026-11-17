@@ -99,6 +99,10 @@ function buildStructureRecoveryView(state, structure, options = {}) {
   const freeSeconds = reserved ? null : structure.estimatedFreeSeconds;
   const errorMessage = ERROR_LABELS[options.errorCode] ?? null;
   const actionPending = options.status === 'submitting';
+  const coinsKnown = Number.isSafeInteger(options.coins) && options.coins >= 0;
+  const canAfford = coinsKnown && fixedPrice !== null && options.coins >= fixedPrice;
+  const fundsReason = !coinsKnown ? 'Coins are still loading.'
+    : fixedPrice !== null && !canAfford ? `Need ${fixedPrice - options.coins} more coins.` : null;
   const freeRepairLabel = Number.isFinite(freeSeconds) && freeSeconds >= 0
     ? `Or wait about ${formatRecoveryDuration(freeSeconds)} for free repair`
     : null;
@@ -116,6 +120,7 @@ function buildStructureRecoveryView(state, structure, options = {}) {
     hpLabel: `${formatHp(actualHp)} / ${formatHp(structure.maxHP)} HP`,
     healthBar: getStructureHealthBarModel(structure.hpUnits, structure.maxHP),
     repairLabel: canQuote ? `Repair now: pay ${fixedPrice} coins` : null,
+    repairReasonLabel: fundsReason,
     quotedPrice: fixedPrice,
     freeRepairLabel,
     helperLabel: reserved ? null : 'Automatic repair pauses during waves',
@@ -127,7 +132,7 @@ function buildStructureRecoveryView(state, structure, options = {}) {
       : null,
     errorMessage,
     actionPending,
-    repairDisabled: !canQuote || actionPending || (reserved && remainingUses !== null && remainingUses === 0)
+    repairDisabled: !canQuote || actionPending || !canAfford || (reserved && remainingUses !== null && remainingUses === 0)
       || (reserved && remainingUses === null),
     repairIntent: canQuote ? {
       spot: structure.spot,
