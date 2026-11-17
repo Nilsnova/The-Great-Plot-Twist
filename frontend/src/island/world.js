@@ -8,6 +8,7 @@ import {artSizes, loadArt, placeArt, projectPoint} from '../world/art.js';
 import {pixelSizes} from '../pixel/catalog.js';
 import {ALL_SPOTS as ISLAND_SPOTS, CABIN, BELL, CAMPAIGN_BUILDINGS, ARSENAL, islandZones, placedSpot} from './spots.js';
 import {isExtraSpot} from './extra-spots.js';
+import {isInventoryWallId, offeredInventoryWalls} from './wall-cohort.js';
 import {makeFootprint, makeWallLanes} from './move-preview.js';
 import {isOpen, spotWave, waveOf} from '../campaign/index.js';
 import {LOCK_WAVES} from '../art/campaign.js';
@@ -189,7 +190,8 @@ export function lockWave(kinds, unlocks) {
 // A marker shows on an empty spot only when something may be built there (unlocks, TOWER-DEFENSE.md §9).
 export function decorateIsland(place, ctx = {}) {
   const layout = ctx.layout ?? {spots: ISLAND_SPOTS, zones: islandZones, bell: true, cabin: true};
-  const SPOTS = layout.spots;
+  const fixedSpots = layout.spots;
+  let SPOTS = fixedSpots;
   const root = new THREE.Group(); root.name = layout.name ?? 'island'; place.group.add(root);
   const progress = layout.zones === islandZones ? decorateProgress(place) : null;
   const baseZones = [...(place.zones ?? [])];
@@ -270,6 +272,24 @@ export function decorateIsland(place, ctx = {}) {
   let art = null;
   const shown = new Map(); // spot id (or 'crew') -> {key, meshes}
   const clear = id => { const item = shown.get(id); if (!item) return; for (const mesh of item.meshes) { root.remove(mesh); mesh.geometry.dispose(); } shown.delete(id); };
+  const releaseStandin = mesh => {
+    mesh.visible = false; root.remove(mesh);
+    if (mesh.userData.standinReleased) return;
+    mesh.userData.standinReleased = true; mesh.geometry.dispose(); mesh.material.dispose();
+  };
+  function syncInventory(rows) {
+    const added = layout.zones === islandZones ? offeredInventoryWalls(rows) : [], live = new Set(added.map(spot => spot.id));
+    for (const [key, mesh] of buildings) {
+      const id = key.split(':')[0];
+      if (isInventoryWallId(id) && !live.has(id)) { clear(id); releaseStandin(mesh); buildings.delete(key); }
+    }
+    for (const spot of added) if (!buildings.has(`${spot.id}:wall`)) {
+      const mesh = sprite(root, textures.wall, spot.x, spot.z, `island-wall:${spot.id}`);
+      mesh.visible = false; buildings.set(`${spot.id}:wall`, mesh);
+      if (art) releaseStandin(mesh); // Real loaded art replaces it without allocating empty markers.
+    }
+    SPOTS = [...fixedSpots, ...added];
+  }
   const put = (id, x, z, lift = 0, order = 0, scale = 1) => {
     const mesh = placeArt(root, art, id, x, z, scale); mesh.position.y += lift; mesh.renderOrder += order; return mesh;
   };
@@ -315,9 +335,12 @@ export function decorateIsland(place, ctx = {}) {
   function apply({spots = [], visitor = false, battle = false, unlocks = null, crew = null, campaign = null, arsenal = false} = {}) {
     if (disposed) return;
     state = {spots, visitor, battle, unlocks, crew, campaign, arsenal: arsenal === true};
+    syncInventory(spots);
     joinedWalls = wallConnections.show(battle ? [] : spots.map(item => {
       const spot = SPOTS.find(entry => entry.id === item.id);
-      return spot ? {...item, ...whereOf(spot), ...(preview?.spotId === item.id && !preview.ok ? {built: false} : {})} : item;
+      const appearance = structureRecoveryAppearance(item, recoveryState?.structures?.find(row => row.spot === item.id), recoveryState);
+      return spot ? {...item, ...whereOf(spot), ...(appearance?.look === 'broken' ? {broken: true} : {}),
+        ...(preview?.spotId === item.id && !preview.ok ? {built: false} : {})} : item;
     })).connected;
     const known = spots.length > 0;
     const shownArsenal = showArsenal(known && state.arsenal);
@@ -332,8 +355,10 @@ export function decorateIsland(place, ctx = {}) {
       const marker = markers.get(spot.id);
       // D060: an extra tower spot stands only while the answer lists it (the server's flag more_tower_spots).
       if (isExtraSpot(spot.id) && !answer) { marker.visible = false; marker.locked = false; clear(spot.id); for (const kind of kindsOf(spot)) buildings.get(`${spot.id}:${kind}`).visible = false; continue; }
-      for (const mesh of [marker.ring, marker.badge, marker.lock, marker.lockRing]) moveSprite(mesh, where.x, where.z);
-      marker.x = where.x; marker.z = where.z;
+      if (marker) {
+        for (const mesh of [marker.ring, marker.badge, marker.lock, marker.lockRing]) moveSprite(mesh, where.x, where.z);
+        marker.x = where.x; marker.z = where.z;
+      }
       for (const kind of kindsOf(spot)) moveSprite(buildings.get(`${spot.id}:${kind}`), where.x, where.z);
       // Locked things stay on the map (GAME-V3.md §4): a spot the campaign opens later, or whose kind is not
       // open yet, shows a lock badge instead of the glowing ring.
@@ -345,6 +370,7 @@ export function decorateIsland(place, ctx = {}) {
         if (kind === 'wall') buildings.get(`${spot.id}:${kind}`).scale.x = joinedWalls.has(spot.id) ? .62 : 1;
       }
       if (art) showSpot(spot, answer, hidden);
+      if (!marker) continue;
       marker.visible = !built && known && !battle && open; // a visitor builds too, with their own coins
       marker.locked = !built && known && !battle && !open;
       // The wave the padlock shows: the campaign step of the spot, else the first wave its kind opens after.
@@ -368,7 +394,7 @@ export function decorateIsland(place, ctx = {}) {
   (ctx.loadArt ?? loadArt)(wanted).then(loaded => {
     if (disposed) { Object.values(loaded).forEach(material => { material.map?.dispose(); material.dispose(); }); return; }
     art = loaded;
-    for (const mesh of buildings.values()) { mesh.visible = false; root.remove(mesh); mesh.geometry.dispose(); mesh.material.dispose(); }
+    for (const mesh of buildings.values()) releaseStandin(mesh);
     apply(state);
   }).catch(() => { /* The drawn sprites stay. */ });
 
@@ -435,7 +461,7 @@ export function decorateIsland(place, ctx = {}) {
       if (disposed) return;
       preview = next && Number.isFinite(next.x) && Number.isFinite(next.z) ? {...next} : null;
       footprint.show(preview);
-      wallLanes?.show(preview && SPOTS.find(spot => spot.id === preview.spotId)?.slot === 'wall');
+      wallLanes?.show(preview && preview.wallRuleVersion !== 1 && SPOTS.find(spot => spot.id === preview.spotId)?.slot === 'wall');
       apply(state);
     },
     get previewing() { return preview ? {...preview} : null; },
@@ -469,6 +495,7 @@ export function decorateIsland(place, ctx = {}) {
       progress?.dispose(); recoveryIndicators.dispose();
       wallConnections.dispose();
       for (const id of [...shown.keys()]) clear(id);
+      for (const [key, mesh] of buildings) if (isInventoryWallId(key.split(':')[0])) releaseStandin(mesh);
       for (const item of lockTextures.values()) item.texture.dispose(); // the padlocks a spot no longer shows
       if (art) Object.values(art).forEach(material => { material.map?.dispose(); material.dispose(); });
     },
