@@ -982,6 +982,8 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
         if (route === 'POST /api/island/move') return reply(200, await api.move(body));
         if (route === 'GET /api/island/walls') return reply(200, await api.walls({ code: searchParams.get('code') }));
         if (route === 'POST /api/island/repair') return reply(200, await api.repairWall(body));
+        if (route === 'GET /api/island/structures') return reply(404, {error: {code: 'feature_off', message: 'This view is available online only.'}});
+        if (route === 'POST /api/island/structures/repair') return reply(404, {error: {code: 'feature_off', message: 'This repair needs the online server.'}});
         if (route === 'POST /api/island/invite/join') return reply(200, await api.inviteJoin(body));
         if (route === 'POST /api/games') return reply(200, await api.createGame(body));
         if (route === 'POST /api/games/join') return reply(200, await api.joinGame(body));
@@ -1155,6 +1157,8 @@ export function createFakeIslandTransport({ coins = ISLAND_RULES.startingCoins, 
       if (method === 'POST' && pathname === '/api/island/move') return ok(await api.move(body));
       if (method === 'GET' && pathname === '/api/island/walls') return ok(await api.walls({ code: new URLSearchParams(query).get('code') }));
       if (method === 'POST' && pathname === '/api/island/repair') return ok(await api.repairWall(body));
+      if (method === 'GET' && pathname === '/api/island/structures') return fail(404, 'feature_off', 'This view is available online only.');
+      if (method === 'POST' && pathname === '/api/island/structures/repair') return fail(404, 'feature_off', 'This repair needs the online server.');
       if (method === 'POST' && pathname === '/api/island/invite/join') return ok(await api.inviteJoin(body));
       if (method === 'POST' && pathname === '/api/games') return ok(await api.createGame(body));
       if (method === 'POST' && pathname === '/api/games/join') return ok(await api.joinGame(body));
