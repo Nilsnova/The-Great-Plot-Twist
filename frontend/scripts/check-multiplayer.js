@@ -115,11 +115,11 @@ async function openCaptain(name, playerId, visit = null, {create = false, join =
       const wave = g.waves?.island.wave;
       const phase = wave ? {waveId: wave.info.waveId, wave: wave.info.wave, done: !!wave.done,
         pause: !!wave.pause, ticks: wave.ticks, phase: wave.state.phase} : null;
-      const signature = JSON.stringify({phase, inBreak: !!g.waves?.island.inBreak});
+      const signature = JSON.stringify({waveId: phase?.waveId, wave: phase?.wave, done: phase?.done,
+        pause: phase?.pause, phase: phase?.phase, inBreak: !!g.waves?.island.inBreak});
       if (signature !== lastLifecycle) {
         window.__mp.lifecycle.push({at: performance.now(), type: 'state', phase, inBreak: !!g.waves?.island.inBreak});
         lastLifecycle = signature;
-        if (window.__mp.lifecycle.length > 200) window.__mp.lifecycle.splice(0, 100);
       }
       if (wave && !wave.done && wave.ticks > 0) {
         const last = window.__mp.samples.at(-1);
@@ -769,7 +769,7 @@ try {
       return {
         place: game?.world.current?.id,
         own: !!game?.island?.island,
-        visiting: game?.island?.visiting,
+        visiting: game?.island?.visiting ? {code: game.island.visiting.code, waveBest: game.island.visiting.waveBest} : null,
         wave: wave ? {waveId: wave.info.waveId, wave: wave.info.wave, done: wave.done,
           pause: !!wave.pause, ticks: wave.ticks, phase: wave.state.phase, ships: wave.state.ships.length} : null,
         inBreak: game?.waves?.island?.inBreak ?? null,

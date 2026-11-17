@@ -108,6 +108,14 @@ Size: 193 test files in [frontend/tests/](../frontend/tests/), about 1,830 `it`/
 | others | `test:art` (`check-pixel.js`), `test:weather:wiring`, `test:harbor:life`, `test:lifecycle`, `test:living`, `test:title-start`, `test:settings:visuals`, `test:build-stamp`, `test:problem-report`, `test:islet:world`, `test:festival` | See the first line of each script |
 | no npm script | `check-islet.js`, `check-local-dev.js`, `check-redesign-hud.js`, `check-redesign-movement.js`, `check-sports.js`, `check-sports-hotspot.js`, `capture-integrated.js` (the first 3 minutes with `?islands=fake`, screenshots) | Run with `node scripts/<name>` |
 
+The final local frontend suite passed 3,694 tests across 322 files. The separate `npm run test:mp`
+smoke test did not pass: it timed out waiting for the host's wave break with `wave=null`. The same
+failure reproduced on exact main `a09787c`. A passive retry recorded the host wave ending with
+`survived:false` and no break state, so the flow's unconditional break wait does not account for a
+lost wave. This is not evidence of a recovery/break regression; it did not change multiplayer
+assertions or gameplay. See the
+[T60 evidence](evidence/T60-structure-recovery/README.md#final-integrated-verification-and-multiplayer-result).
+
 **Do not cover:** physical phones and their browsers, real audio output (headless Chrome has no real audio device), real sign-in, the live API and Realtime, and slow class Wi-Fi.
 
 ## 5. Live smoke test

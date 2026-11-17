@@ -1691,6 +1691,16 @@ durable global journal cap. HTTP writes and event reads have per-player, per-pro
 the direct SQL measurements bypass those route limits. Activation remains gated on an
 operating-budget and retention decision.
 
+The final local frontend suite passed 3,694 tests across 322 files; the backend suite excluding the
+unchanged settings matrix passed 12,461 with 293 skips, and that matrix passed 524,322. The complete
+island SQL sweep passed 368; the focused API/transport suite passed 140; build, spoiler guard, Ruff
+and changed-file Python formatting passed. `npm run test:mp` failed at the host-break wait on both
+the integrated revision and exact main `a09787c`. A passive diagnostic on the integrated run showed
+the host wave ended with `survived:false` and no break state, so this was not a missed winning break.
+The smoke flow waited for a break after losing; this is not evidence of a recovery or break
+regression. No multiplayer pass or cause for the host's lost wave is claimed. See the [full T60
+result](evidence/T60-structure-recovery/README.md#final-integrated-verification-and-multiplayer-result).
+
 
 ## T58. Captain repair choices and shared wall Tech — Ianno Hollensteiner (#124)
 

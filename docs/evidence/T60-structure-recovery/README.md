@@ -18,7 +18,31 @@ T55 stateless contract documentation `d260bfd6`; T58 integrated UI/evidence `a3a
 integrated card/indicator UI `ba0d6cae`; T55 version compatibility notes `097029f0`; and T60 HTTP
 reconnect regression `d6b686e6`.
 T60 API/PG/replay harness base commit `5ebbd657` with expiry/flag-off coverage and release docs in
-`825d2c56` and `9e2e55b8`; final integrated branch verification at `795eaf47`.
+`825d2c56` and `9e2e55b8`; final integrated branch verification at `dcc5a89b`; passive multiplayer
+failure diagnostics at `d19570be`.
+
+## Final integrated verification and multiplayer result
+
+On `dcc5a89b`, the full frontend suite passed 3,694 tests across 322 files; the backend suite
+excluding the separately verified unchanged settings-contract matrix passed 12,461 and skipped 293;
+that matrix passed 524,322. The complete island SQL suite passed 368, the focused API/transport
+suite passed 140, build and spoiler guard passed, and Ruff plus formatting for all 53 changed Python
+files passed. The SQL/API counts are from the exact runtime code; subsequent backend changes were
+documentation or AST-identical formatting. These are local checks, not CI statuses.
+
+The original `npm run test:mp` run on `dcc5a89b` timed out after 240 seconds waiting for the host's
+wave break, with its wave state already `null`. The same command and local Chromium setup on an
+archive of exact main `a09787c` failed at the same host-break wait with `wave=null` and no page
+errors. A single bounded diagnostic retry on `d19570be` kept the same seed, gameplay, assertions and
+timeout while recording passive lifecycle transitions. The host trace showed `wave_finished` twice
+for `fake-wave-1` with `survived:false`, then a `done:true`/`ended` state and controller stop; no
+`pause:true` or break state was observed. The smoke flow's unconditional wait for a break after that
+lost-wave outcome explains this timeout; it is not evidence of a recovery or break regression. The
+second page's `survived` value was not retained as a separate artifact, so no claim is made about
+its outcome. The multiplayer check remains failed, and the diagnostic does not establish why the
+host lost. No gameplay behavior, seed, timeout or test assertion was changed. Passive failure
+logging was syntax-checked with `node --check scripts/check-multiplayer.js`; it is not included in
+the full frontend test result above.
 
 **Strict API/replay command** (from `backend/`):
 
