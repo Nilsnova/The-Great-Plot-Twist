@@ -166,3 +166,41 @@ stage-seven copies, all twenty original PNG hashes, the two published native
 before-image dimensions, source/tree and 26/16-file command scopes, raw result
 lines and 71 relative links/anchors across the guide and new evidence READMEs.
 The historical stage-six package was not modified.
+
+## Latest stage-eight package and comparison version two
+
+Preserved all twenty original final PNGs/report/execution/log from source
+91c1f9d5, plus six unchanged before PNGs. Frozen complete-check source 52f6bb15
+has identical frontend/src, public, backend and Supabase trees; its intervening
+paths are documentation/specification evidence only. Main cutoff ee5677ff is a
+real ancestor. Actual selected-wall samples cost exactly one extra draw call
+versus stage seven, while final combat samples are 117/121/129 desktop and
+116/120/129 phone. Both viewports retain zero page errors/external requests and
+one expected offline 503 console diagnostic. Final full-check results remain
+pending rather than inheriting older source results.
+
+The NEW latest-review folder leaves the historical stage-six folder unchanged.
+Its self-contained comparison embeds twelve exact actual PNGs with Village,
+Combat and Selected wall scenes. Static structure has three tablists (2/3/3
+tabs) and eight tab/panel pairs. The checker preserves strict hashes, native
+dimensions, focus/visibility/selection/order/overflow/origin/cleanup assertions
+and exercises all 33 real actions per viewport when granted a later Chrome
+slot. Native version-two execution is pending; the eight-image baseline proof
+is not reused as a pass for this new document.
+
+An independent read-only review verified all thirty copied capture/comparison
+inputs, the exact stage-seven 118/115 → stage-eight 119/116 selection costs and all
+four tree identities. The guide distinguishes the historical 6e failures from
+the pending latest source, corrected scenery scope and final desktop firing
+count. The earlier one-case keyboard/gamepad report-input success is preserved
+with its exact source and body duration of 19.440 seconds; it is not a robust timing
+claim. The branch's later keyboard activation of UI buttons remains outside the
+frozen 52f6 source, which retains the original button clicks and real movement
+assertions. No application or browser test was rerun by this packaging task.
+
+Final static packaging checks passed thirty original capture/comparison copies
+plus two focused-input receipts, twenty-six native PNG dimensions, twelve
+embedded original hashes, eight tab/panel pairs, the four application-tree
+identities, checker/inline JavaScript syntax and the 49-row public Draft snapshot.
+The exact HTML hash is recorded before the pending native document check. Source
+branches that advanced beyond the frozen composition are labeled explicitly.

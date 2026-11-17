@@ -6,35 +6,46 @@ Responsible human: **Johannes Franz Lang (`frcola`)**. Documentation child
 [documentation Draft #388](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/388).
 
 **Latest-main integration is still being verified.** The main cutoff is
-`ee5677ff`; the [stage-seven before record](../evidence/VIS-31-stage-07/README.md)
-pins actual runtime `5e3dd6cc`, before the selected-wall foliage correction and
-later checkpoint guard. The [targeted backend record](../evidence/reference-village-backend-checks/README.md)
-has separate 262 route/unit and 269 disposable-PostgreSQL passes on backend
-`c7851960`, with the initial 269 SQL skips preserved. It is not a fresh full
-backend run. The final frontend suite and stage-eight visual capture remain
-**PENDING**; earlier sources/results below keep their original boundaries.
+`ee5677ff`. The [latest stage-eight package](../evidence/reference-village-latest-review/README.md)
+preserves twenty actual final PNGs, original report/execution and a new
+twelve-image comparison with a Selected wall scene. Capture source `91c1f9d5`
+and frozen check source `52f6bb15` have identical frontend/public/backend/Supabase
+trees. The selected shore wall is readable above foliage; the exact before
+source remains in [stage seven](../evidence/VIS-31-stage-07/README.md).
+
+The [targeted backend record](../evidence/reference-village-backend-checks/README.md)
+has separate 262 route/unit and 269 disposable-PostgreSQL passes on the matching
+`c7851960` backend / `6e52a63b` Supabase trees, with the initial 269 SQL skips
+preserved. It is not a fresh full-backend run. The complete frontend/a11y/demo/
+overlap/build/budget/text/multiplayer sequence and native check of the new
+twelve-image document remain **PENDING**; earlier sources/results below keep
+their original boundaries.
 
 **Historical complete-check source: `6e2c3e8b3437ba7302870adb59e2351c2fa74f5e`.** Its frontend
-source tree is `8365d88e76889e68f5e1aa1d6aa9a858d3afaea3`. The fresh complete run on that source is **not green**:
+source tree is `8365d88e76889e68f5e1aa1d6aa9a858d3afaea3`. The complete run on that source is **not green**:
 4,463 passed / 1 failed across 409 files (408 passed / 1 failed) in 563.22 s.
 The remaining defense-report ownership case reached its 20-second timeout.
 VIS46 candidate 4844c2c1 has identical frontend source/public/backend trees but
 its new sole-owner assertion failed in 18.375 s: `worldBusy` includes the report's
 own blocked state. Corrected derived-state and coherent veteran fixtures still
 exceeded the unchanged 20-second limit. The [raw verification chronology](../evidence/reference-village-checks/README.md)
-preserves these failed results; no completed input-resume pass is claimed.
+preserves these failed results. On later main-integrated source `5e3dd6cc`, the
+unchanged report keyboard/gamepad case, using the original pointer-activated UI
+controls, passed in 19.440 s; the roughly 0.56-second margin does
+not establish a robust performance fix or a new complete-suite pass.
 
-The [final rendered review capture](../evidence/reference-village-visual-review/README.md)
+The historical [stage-six rendered review capture](../evidence/reference-village-visual-review/README.md)
 contains twenty unchanged actual PNGs/report, source boundary/hashes and a
 [self-contained before/after page](../evidence/reference-village-visual-review/comparison.html).
 It used runtime `9f47c14277c801d10f2c504799a72fe059b52171`, frontend tree
-`ff56655849b11e8f0acaa3b4e0aa2b68192b9984`. The candidate's later changes are
+`ff56655849b11e8f0acaa3b4e0aa2b68192b9984`. The historical 6e2 candidate's later changes are
 first-wave hint accessibility wording and the current-wave lookup fence;
 visible rendering/CSS/assets in this scenario are unchanged. The source trees
 are **not identical** and this is not a fresh capture of the later candidate.
-Public/backend trees match; the manifest names the exact two source changes.
+Public/backend trees match between those two historical sources; the manifest
+names their exact two source changes.
 
-The final capture samples standing/firing/breach at **117/119/129 desktop** and
+That stage-six capture samples standing/firing/breach at **117/119/129 desktop** and
 **116/120/129 phone draw calls**, with zero page errors/external requests and
 one offline 503 console message per viewport. These samples are below 150, while
 sustained performance, balance, physical-device/Safari coverage and final human
@@ -63,7 +74,7 @@ The reviewed product direction is a readable pirate village with movable grid
 buildings, defensive perimeter walls and the existing wave/high-score progression.
 Online play is not a new prerequisite.
 
-All listed implementation PRs are **Draft** at this snapshot. No merge,
+All listed implementation PRs are **Draft** at this snapshot. No PR merge to main,
 deployment, live migration or production flag activation is represented here.
 The earlier paid-wall/recovery work remains the functional foundation. Its
 [perimeter review guide](PERIMETER-REVIEW.md),
@@ -170,8 +181,12 @@ checks. Do not merge the aggregate preview wholesale.
 | VIS43 [#402](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/402) | `test/vis-43-art-readiness@25bbcf1a` | Registered asynchronous art | Await real artwork before lifecycle assertions; readiness is not fabricated success. |
 | VIS45 [#404](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/404) | `test/vis-45-wall-projection-qa@82e8078e` | D064/canonical wall receipts | Wall test pointers/receipt expectations follow the actual shared projection and declared context, preserving meaningful assertions. |
 | VIS44 [#406](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/406) | `test/vis-44-art-provider-contracts@8431f059` | Native painter plus raster provider contracts | Preserve native source checks while checking registered provider dimensions separately; no skip or timeout relaxation. |
-| VIS46 [#408](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/408) | `test/vis-46-report-input-owners@4844c2c1` | Remaining complete-run report timeout | Coherent advanced tutorial fixture plus explicit report-only ownership assertions; Revision 4844 failed its new sole-owner assertion; pending verified diagnostic handover. Original 24 rAF/high-quality/20-second bounds remain. |
-| VIS47 [#410](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/410) | `test/vis-47-lobby-refresh-identity@3c870558` | Lobby keyboard accessibility audit failure | Audit refreshed controls by semantic identity instead of lost raw markers; correction/retry under review, no pass or relaxed check claimed. |
+| VIS48 [#412](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/412) | `test/vis-48-multiplayer-wall-observer@1b4065d5` | Actual textured wall geometry | Observe actual batched wall posts/material levels while retaining legacy/tower checks; full multiplayer evidence needs its own final source/result. |
+| VIS49 [#414](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/414) | `chore/vis-49-latest-main@52f6bb15` | Main cutoff ee5677ff plus bounded visual changes | Preserve teammate startup/cache/recovery fixes on a separate review branch, resolve semantic integration findings and run new source-specific checks. No PR merge to main. |
+| VIS50 [#416](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/416) | `fix/vis-50-finish-checkpoint-guard@455c8387` | Real first-checkpoint SQL finding | Reject malformed first finish checkpoints before payout using a forward migration file; targeted route/private-PG checks do not imply live application or a full-backend pass. |
+| VIS51 [#418](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/418) | `fix/vis-51-selected-wall-visibility@cd41fd2f` | Stage-seven foliage finding | Present one actual selected owned wall above foliage with its real geometry/material/state. Stage-eight selected samples add one draw call; no HP/placement/payment authority changes. The latest branch addition packages after evidence only, after the frozen source. |
+| VIS46 [#408](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/408) | `test/vis-46-report-input-owners@5cdc9b17` | Complete-run report timeout | Frozen 52f6bb15 retains revision 870e624b's original UI button clicks and real keyboard/gamepad movement checks. The later branch variant activates those UI controls by keyboard and is outside the frozen source. Original movement assertions, 24 rAF/high-quality/20-second bounds remain; latest complete verification is pending. |
+| VIS47 [#410](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/410) | `test/vis-47-lobby-refresh-identity@397ab17a` | Lobby keyboard accessibility audit failure | Use existing action/readonly-field identities across real refresh while preserving order/count/type/trap/visibility assertions. Latest complete-source native audit still needs its own result. |
 | VIS31 ancestry [#392](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/392) | `chore/reference-village-current-main@59181376` | Current main and composed source | Real ancestry candidate; frontend source/public/backend trees match stage four runtime 414559fb. Documentation/QA changes do not imply a new visual pass. |
 | VIS18 compiled [#381](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/381) | `perf/vis-18-compiled-activation@e54b0f46` | Complete artifact outputs | Configured provider, original-source copy exclusion and shipped-file assertions implemented; 35 focused tests plus build/budget proof exist. Final combined scene/full-suite gate remains pending. |
 
@@ -233,15 +248,16 @@ from overlapping commands must not be added together.
 | Compiled-provider activation | [Draft #381](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/381), `e54b0f46`: 9 files / 35 tests passed in 3.28 s; build 1.11 s; spoiler guard 244 text files/12 protected lines clean | Cold title 18,825 JS/9,410 CSS bytes, no title image; unshipped originals in production: 0. Text lint 4,538 strings / 532 files, 0 errors / 8 report-only findings. These focused results do not constitute the new complete visual suite. |
 | Historical stage-three attempt | Partial coordinator run in `stage-03-compiled/` | Desktop level-three upgrade/selection and Move/Cancel passed before a **failed ghost-toolbar visibility assertion**. Those partial PNGs never became a combined PASS. The later stage four run has separate source/evidence. |
 | Stage four actual compiled game | [Twenty raw PNGs/report/manifest](../evidence/VIS-31-stage-04/README.md), runtime `414559fb`, helper `074a4675`; source/public/backend trees match main-ancestry candidate `59181376` | Both 1280×720 and 375×812 journeys passed entry/Fit/Tab/drag, paid L3 selection/Move Cancel, three-cell ghost/indexed buffers/Fine shore clearance, four real API moves, 21 paid walls / 42 upgrades and local legacy frozen-wave projectiles/breach. End 123 walls / 5,150 coins. Zero page errors/external requests; one offline 503 console message per viewport. Breach calls 152 / 151 still miss under 150; no full-suite/device/final visual pass. |
-| Final rendered review capture | [Twenty actual PNGs/report/manifest and comparison](../evidence/reference-village-visual-review/README.md), capture `9f47` / helper `074a4675`; later frozen candidate `6e2c3e8b` has only the documented post-capture source changes | Both viewport functional journeys pass their declared paid camera/selection/Move/ghost/arranged-local-wave scope. Standing/firing/breach: 117/119/129 desktop, 116/120/129 phone; zero page errors/external requests, one offline 503 console each. Visible render/CSS/assets unchanged after capture; not a fresh later-candidate screenshot or full-suite/device/balance pass. |
+| Historical stage-six rendered review capture | [Twenty actual PNGs/report/manifest and comparison](../evidence/reference-village-visual-review/README.md), capture `9f47` / helper `074a4675`; later historical candidate `6e2c3e8b` has only the documented post-capture source changes | Both viewport functional journeys pass their declared paid camera/selection/Move/ghost/arranged-local-wave scope. Standing/firing/breach: 117/119/129 desktop, 116/120/129 phone; zero page errors/external requests, one offline 503 console each. Visible render/CSS/assets unchanged across those two sources; not a new latest-main screenshot or full-suite/device/balance pass. |
 | First new complete-suite attempt | Runtime `9f47`; [raw output and source record](../evidence/reference-village-checks/README.md) | 4,402 passed / 27 failed in 609.82 s. Preserve this failed attempt. Thirteen failing files received focused green corrections with assertions/timeouts retained; the subsequent 6e2 complete run below still failed one case. |
 | New complete-run retry | Frozen 6e2c3e8b; [raw output and source record](../evidence/reference-village-checks/README.md) | **4,463 passed / 1 failed**, 409 files (408 passed / 1 failed), 563.22 s. Defense-report ownership timed out at 20 s; this is a failed complete run, not acceptance. |
 | VIS46 focused diagnostics | Candidates 4844c2c1, 4f69978f, 870e624b; [exact failed receipts](../evidence/reference-village-checks/README.md), app source/public/backend trees equal 6e2c3e8b | Initial sole-owner assertion **failed in 18.375 s** because `worldBusy` includes the report's own block. Derived-state and coherent veteran corrections timed out at 20.007 s and 20.013 s. Original actions, 24 rAF/high-quality/20 s checks remain; no completed input-resume pass is claimed. |
 | Accessibility retry | Source 6e2c3e8b, [raw output](../evidence/reference-village-checks/README.md), 33 screens in 382.39 s | **Failed lobby keyboard audit only**; browser errors/external requests empty. Temporary markers were lost across legitimate refresh. VIS47 semantic-identity correction needs its own native result; no new accessibility pass is claimed here. |
 | Unchanged multiplayer baseline | Documentation-only 8db343ba; [raw output/source record](../evidence/reference-village-checks/README.md), exit 1 in 65.84 s | Host/friend lobby and co-op construction progressed. The old per-wall-mesh observer then reported level 0 for a textured batched level-one wall. Later wave/revive/simultaneous-next/late-join/boss assertions were not reached. |
 | Standalone comparison document | [Actual browser receipts](../evidence/reference-village-comparison-browser/README.md), HTML hash ee507bf4, Chromium 156.0.8078.79 | Owned-loopback HTTP passes both viewports: 8 decoded original images, 3 tablists / 27 real actions each, exact native dimensions, focus/selection/panel/overflow checks and zero page errors/external requests. Direct file-URI navigation was separately blocked before assertions. This tests the documentation page, not a later game runtime. |
-| Latest-main stage-seven before record | [Selected-wall before images/raw capture/execution](../evidence/VIS-31-stage-07/README.md), source 5e3dd6cc, 208.25 s | Actual local journey completed at both viewports with 20 PNGs, zero page errors/external requests and one offline 503 console diagnostic each. The selected shore wall is still partly covered by foliage. This precedes the selected-wall correction and later backend checkpoint guard; final stage eight is pending. |
+| Latest-main stage-seven before record | [Selected-wall before images/raw capture/execution](../evidence/VIS-31-stage-07/README.md), source 5e3dd6cc, 208.25 s | Actual local journey completed at both viewports with 20 PNGs, zero page errors/external requests and one offline 503 console diagnostic each. The selected shore wall is still partly covered by foliage. This precedes the selected-wall correction and backend checkpoint guard; its before images remain distinct from stage eight. |
 | Latest targeted backend/SQL | [Exact logs and selected-file lists](../evidence/reference-village-backend-checks/README.md), backend c7851960 / Supabase 6e52a63b | Initial a85f4f29: 262 passed / 269 skipped in 25.62 s, Ruff clean. Corrected scratch opt-in at 0d3589c2: 269 actual PostgreSQL checks passed in 15.56 s, zero skips. These are 26 selected files, not a fresh full-backend result; no live migration was applied. |
+| Latest stage-eight actual capture | [Twenty final PNGs/report/execution and twelve-image comparison](../evidence/reference-village-latest-review/README.md), capture 91c1f9d5 / frozen check source 52f6bb15, 200.36 s | All four application trees match. Both local paid/camera/selection/Move/ghost/arranged-wave journeys complete; the selected wall is readable above foliage. Selected calls 119/116; combat 117/121/129 desktop and 116/120/129 phone. Zero page errors/external requests; one expected offline 503 each. Complete checks and native new-document check remain pending. |
 | HUD focused proof | [BASE05 spec](../../specs/BASE-05-reference-hud.md), runtime `60573698` / final doc head `0729faf5`: 5 native HUD cases, 3 selected legacy coin cases, 20 model cases passed in separate commands | Desktop/phone/320px HUD semantics and controls, Goals restoration and coin compatibility. No final combined scene, a11y/demo or live-account claim. |
 | Wall tier correction | [Correction spec](../../specs/VIS-14-level-one-wall-art.md), head `b84eadfc`: 7 files / 76 tests passed in 3.81s | All canonical damage tiers, world/combat UV buffers, fallback/API/scene/preload cases. No combined final visual or live recovery acceptance. |
 | Core optional travel correction | [Handover](../handoff/vis35-core-travel-rejoin.md), `f52a05c5`: 6 files / 49 tests passed, build/spoiler guard passed | Guarded rejoin, actual controller and island-load behavior; browser travel/full-suite/live cases remain unverified. |
@@ -270,10 +286,10 @@ keeps the 12MiB decode pool, two-decode cap, 8MiB encoded-source cap and existin
 |---|---|---|
 | Complete defense appearance | All thirteen source families/ 164 IDs compiled and configured, including all five defenses; final appearance acceptance open | Exact source/provenance, all supported levels/states and configured world/combat/portrait receipts for all supplied families. |
 | Production asset handoff | Active VIS30 f6bbc967 / VIS18 e54b0f46 sources match public 9306942; 12,554,858 bytes with terrain still misses 8MiB | Every active compiled source is shipped and exists; inactive originals stay on disk and out of downloads; actual build/cold results and final whole-world bytes are recorded. |
-| Final visual acceptance, VIS31 | Rendered review package exists; not pixel-perfect, human visual acceptance remains open | Cliffs/scenery remain less detailed than the approved concepts; a phone-selected wall can be occluded by tree canopy. Review composition/occlusion and source/fixture differences; the current captures do not close visual acceptance. |
+| Final visual acceptance, VIS31 | Latest stage-eight package includes the actual selected-wall foliage correction; human visual acceptance remains open | Cliffs/scenery remain less detailed than the approved concepts. The bounded selected-wall presentation does not remove all scenery occlusion. Review composition, supported states and source/fixture differences; actual captures do not replace independent human acceptance. |
 | Playable placement/upgrade proof | Stage four both-viewport functional journey passed selection, actual 40-coin upgrade, Move/Cancel, semantic/indexed ghost and arranged paid layout; final visual review remains open | Real upgrade price/wallet, current level/HP, Move/cancel, exact valid/invalid snapped cells, semantic draft cells and rendered indexed buffers agree. |
-| New visual full-suite gate | **Not green:** 6e complete run failed 1; 4844 ownership assertion failed; accessibility lobby keyboard retry failed | Fresh `npm test`, build/spoiler guard, budget, a11y, demo, overlap and text lint on the exact final visual source, with actual result lines. |
-| Combat and failure/quality gate | Final capture samples 117/119/129 and 116/120/129 are below 150; broader acceptance stays open | Sustained/worst-case performance, quality/failure/device evidence and actual damage/muzzle/HP alignment. Local legacy demo does not prove production V1 durability or live multiplayer. |
+| New visual full-suite gate | Latest frozen source 52f6bb15 sequence is **PENDING**. Historical 6e2/4844/lobby failures remain source-specific; later focused success does not replace a complete run. | Fresh `npm test`, build/spoiler guard, budget, a11y, demo, overlap, text lint and multiplayer on the exact latest source, with actual result lines. |
+| Combat and failure/quality gate | Latest stage-eight samples 117/121/129 and 116/120/129 are below 150; broader acceptance stays open | Sustained/worst-case performance, quality/failure/device evidence and actual damage/muzzle/HP alignment. Local legacy demo does not prove production V1 durability or live multiplayer. |
 | Balance | Not signed off | Progressed local seed and rendering/breach proof do not establish multi-seed/multi-wave difficulty or economy balance. |
 | Land expansion / growth | Not implemented by this visual phase | D064 preserves the existing analytic coast and paid footprints. Separate expansion/progression tasks need their own implementation and review; decorative pixels grant no territory. |
 | Browser/device coverage | Chromium component/local evidence only | Safari and physical touch hardware are unverified. A Linux Chromium screenshot is not a Safari or real-phone test. |
@@ -304,8 +320,8 @@ npm run test:overlaps
 From the repository root, run `node scripts/text-lint/index.mjs`. Browser
 commands need installed Chrome; set `CHROME_PATH` to the available binary when
 needed. The actual-game helper accepts a separately pinned runtime frontend. For this
-stage four checkpoint, VIS36 helper revision `074a4675b99c68a41604bb1658943f5dfb1ee067`
-is compiled-compatible. The older helper in this documentation review base still
+latest stage-eight checkpoint, VIS36 helper revision `12fe7ab781b2223de191485170aa48f664e4b91e`
+is code-identical to `074a4675b99c68a41604bb1658943f5dfb1ee067` and compiled-compatible. The older helper in this documentation review base still
 requires nine raw families; it cannot capture the configured compiled provider.
 Use a separate helper checkout instead of changing an active writer's checkout:
 
@@ -313,16 +329,17 @@ Use a separate helper checkout instead of changing an active writer's checkout:
 git clone --no-checkout https://github.com/Nilsnova/The-Great-Plot-Twist.git \
   /absolute/path/to/helper-checkout
 git -C /absolute/path/to/helper-checkout checkout --detach \
-  074a4675b99c68a41604bb1658943f5dfb1ee067
+  12fe7ab781b2223de191485170aa48f664e4b91e
 cd /absolute/path/to/helper-checkout/frontend
 npm ci --include=dev --no-audit --no-fund
 node scripts/capture-village-composition.mjs \
-  /absolute/path/to/runtime-at-9f47c142/frontend /absolute/path/to/output reference --arranged --wave
+  /absolute/path/to/runtime-at-91c1f9d5/frontend /absolute/path/to/output reference --arranged --wave
 ~~~
 
-This uses the preserved helper and final capture runtime with declared arranged/
-local-wave scope. The later frozen candidate has the explicit source boundary
-above. A new capture must record its new source/helper hashes; an older raw-
+This uses the preserved helper and latest capture runtime with declared arranged/
+local-wave scope. All four application trees match frozen verification source
+52f6bb15; documentation-only paths differ and are listed in the latest manifest.
+A new capture must record its new source/helper hashes; an older raw-
 family-count assertion cannot establish compiled acceptance.
 The current source list and exact bake invocation are in the artifact record.
 No app command above was run by this docs task. Backend/SQL results stay attached
@@ -367,13 +384,13 @@ not merge from this guide.
 - **Changed:** a detailed review map for the current visual phase and its real
   component drafts, dependency order, source/evidence boundaries and explain-back.
 - **Verified:** documentation links/content, copied file hashes/dimensions and
-  source/helper tree identity. Quoted stage four functional and 35-test component
-  results keep their own sources; this docs task reran no app suite/browser.
-- **Not verified:** a green complete candidate/a11y retry, Safari/physical devices,
+  source/helper tree identity. Quoted stage-eight actual captures and targeted
+  backend results retain their precise sources; packaging reran no app suite/browser.
+- **Not verified:** the latest 52f6 complete sequence/native twelve-image document check, Safari/physical devices,
   sustained performance, balance, land expansion, live deployment and human
-  understanding/visual approval. Cliffs/scenery and phone tree occlusion remain
-  known visual differences from the concept.
-- **Remaining:** resolve report ownership/lobby audit failures, add exact verified reruns and remaining
+  understanding/visual approval. Cliffs/scenery remain less detailed; the selected
+  wall is corrected, while other scenery occlusion retains its normal scope.
+- **Remaining:** inspect the exact latest complete results, preserve historical failure boundaries and address remaining
   performance/visual/device/balance work, then the coordinator addresses the
   acceptance gates above and hands the current revision to an independent human.
 - **Branch/PR:** `docs/reference-village-handover`,
