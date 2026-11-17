@@ -1751,8 +1751,10 @@ and changed-file Python formatting passed. `npm run test:mp` failed at the host-
 the integrated revision and exact main `a09787c`. A passive diagnostic on the integrated run showed
 the host wave ended with `survived:false` and no break state, so this was not a missed winning break.
 The smoke flow waited for a break after losing; this is not evidence of a recovery or break
-regression. No multiplayer pass or cause for the host's lost wave is claimed. See the [full T60
-result](evidence/T60-structure-recovery/README.md#final-integrated-verification-and-multiplayer-result).
+regression. This is the historical integrated checkpoint at `dcc5a89b`; its multiplayer attempt
+failed after the host lost the wave. A harness-only follow-up later passed the complete local fake
+four-page browser journey on 2026-11-17; it does not prove hosted protocol-2/database transport or
+physical-device behavior. See the [full T60 result and follow-up](evidence/T60-structure-recovery/README.md#2026-11-17-local-multiplayer-browser-follow-up).
 
 
 ## T58. Captain repair choices and shared wall Tech — Ianno Hollensteiner (#124)
