@@ -28,8 +28,10 @@ world/atlas decoding. Vegetation has a separate owner.
 ## Boundaries and acceptance
 
 - Keep the 64×48 backdrop, .72 projection and analytic top from D062.
-- Decorative cliff depth stays at most1.4 projected units, tapering to .35 at the
-  existing east/south/west approaches; texture pixels never grant land.
+- D063 explicitly expands the old bounded1.4-unit trial facade to at most3.2
+  projected units between coves, retaining .35 at the existing east/south/west
+  approaches. The analytic top and projection stay unchanged; texture pixels
+  never grant land. Combined hull/captain/shore and camera checks remain gates.
 - No new collision, road ownership, movement bonus, land purchase, save format,
   cost, unlock, building identity or authoritative gameplay change.
 - Original runtime assets are separate from the target concept. Record the
