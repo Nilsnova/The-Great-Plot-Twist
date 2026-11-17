@@ -107,6 +107,110 @@ it('keeps an island with unavailable canonical health fail closed, then discover
   expect(result.recovered).toMatchObject({reads: 3, hp: '45 / 60 HP', paidButton: true, legacyAction: false});
 });
 
+it('does not downgrade a persisted v1 island when the structure endpoint says feature_off', async () => {
+  const result = await browser.withPage(page => page.evaluate(async () => {
+    const {createIsland} = await window.g20Import('/src/island/index.js');
+    const {createFakeIslandTransport} = await window.g20Import('/src/pirates/fake-api.js');
+    const {on, emit} = await window.g20Import('/src/core/events.js');
+    const base = createFakeIslandTransport({flags: {wall_recovery: true}});
+    base.dev.setWaveBest(20); base.dev.setCoins(5000);
+    const transport = {...base,
+      get: async path => {
+        if (path === '/api/island') {
+          const answer = await base.get(path);
+          if (answer.ok) answer.data.recoveryVersion = 1;
+          return answer;
+        }
+        if (path.startsWith('/api/island/structures')) return {ok: false, status: 404, code: 'feature_off', message: 'Unavailable.'};
+        if (path.startsWith('/api/island/walls')) return {ok: true, status: 200,
+          data: {coins: 5000, walls: [{spot: 'wall_1', level: 1, health: 50, recoversAt: null, repairCost: 10}]}};
+        return base.get(path);
+      },
+      post: async (path, body) => {
+        const answer = await base.post(path, body);
+        if (answer.ok && answer.data?.spots) answer.data.recoveryVersion = 1;
+        return answer;
+      }};
+    const island = createIsland({container: document.body, emit, on, mode: 'fake', transport, storage: null,
+      structureRecoveryOn: () => false, wallRecovery: () => true, menu: () => () => {}});
+    await island.load();
+    for (const [spot, kind] of [['wall_1', 'wall'], ['cannon_1', 'cannon']]) {
+      if (!island.island.spots.find(item => item.id === spot)?.built) await island.build(spot, kind);
+    }
+    island.pick('wall_1');
+    await new Promise(resolve => setTimeout(resolve, 100));
+    const wall = {message: document.querySelector('.recovery-message')?.textContent ?? '',
+      legacyRepair: !!document.querySelector('.island-card[open] [data-focus="repair"]'), policyVersion: island.recoveryVersion};
+    island.pick('cannon_1');
+    await new Promise(resolve => setTimeout(resolve, 50));
+    const upgrade = document.querySelector('.island-card[open] [data-focus="upgrade"]');
+    const tower = {message: document.querySelector('.recovery-message')?.textContent ?? '', upgradeDisabled: upgrade?.disabled ?? null};
+    island.dispose();
+    return {wall, tower};
+  }));
+  expect(result.wall).toEqual({message: 'Building health could not be loaded.', legacyRepair: false, policyVersion: 1});
+  expect(result.tower).toEqual({message: 'Building health could not be loaded.', upgradeDisabled: true});
+});
+
+it('keeps a previously discovered v1 policy when a later structure read says feature_off', async () => {
+  const result = await browser.withPage(page => page.evaluate(async () => {
+    const {createIsland} = await window.g20Import('/src/island/index.js');
+    const {createFakeIslandTransport} = await window.g20Import('/src/pirates/fake-api.js');
+    const {on, emit} = await window.g20Import('/src/core/events.js');
+    const base = createFakeIslandTransport({flags: {wall_recovery: true}});
+    base.dev.setWaveBest(20); base.dev.setCoins(5000);
+    const state = {serverNow: '2026-11-17T12:00:00Z', islandEpoch: '22345678-1234-4234-8234-123456789abc', revision: 4,
+      recoveryVersion: 1, waveProtocol: 2, displayPhase: 'between_waves', repairWindow: 'between_waves', waveId: null,
+      remainingPaidUses: null, structures: [{spot: 'wall_1', instanceId: '32345678-1234-4234-8234-123456789abc',
+        kind: 'wall', level: 1, hpUnits: 500_000, maxHP: 60, rateUnitsPerSecond: 1666.67, estimatedFreeSeconds: 300,
+        fixedPrice: 10, repairSeq: 0}]};
+    let featureOff = false, nextTimer = 1;
+    const timers = new Map();
+    const setTimer = (run, ms) => { const id = nextTimer++; timers.set(id, {run, ms}); return id; };
+    const clearTimer = id => timers.delete(id);
+    const transport = {...base,
+      get: async path => {
+        if (path.startsWith('/api/island/structures')) return featureOff
+          ? {ok: false, status: 404, code: 'feature_off', message: 'Unavailable.'}
+          : {ok: true, status: 200, data: state};
+        if (path.startsWith('/api/island/walls')) return {ok: true, status: 200,
+          data: {coins: 5000, walls: [{spot: 'wall_1', level: 1, health: 50, recoversAt: null, repairCost: 10}]}};
+        return base.get(path);
+      }};
+    const island = createIsland({container: document.body, emit, on, mode: 'fake', transport, storage: null,
+      structureRecoveryOn: () => false, wallRecovery: () => true, setTimer, clearTimer, menu: () => () => {}});
+    await island.load();
+    for (const [spot, kind] of [['wall_1', 'wall'], ['cannon_1', 'cannon']]) {
+      if (!island.island.spots.find(item => item.id === spot)?.built) await island.build(spot, kind);
+    }
+    island.pick('wall_1');
+    await new Promise(resolve => setTimeout(resolve, 100));
+    const before = island.recoveryVersion;
+    featureOff = true;
+    const pollId = [...timers.entries()].find(([, timer]) => timer.ms === 5000)?.[0];
+    const poll = timers.get(pollId);
+    if (poll) { timers.delete(pollId); await poll.run(); }
+    const wall = {message: document.querySelector('.recovery-message')?.textContent ?? '',
+      legacyRepair: !!document.querySelector('.island-card[open] [data-focus="repair"]'), policyVersion: island.recoveryVersion};
+    featureOff = false;
+    island.pick('wall_1');
+    await new Promise(resolve => setTimeout(resolve, 80));
+    const resumed = {hp: document.querySelector('.recovery-hp')?.textContent ?? '',
+      legacyRepair: !!document.querySelector('.island-card[open] [data-focus="repair"]')};
+    featureOff = true;
+    island.pick('cannon_1');
+    await new Promise(resolve => setTimeout(resolve, 50));
+    const upgrade = document.querySelector('.island-card[open] [data-focus="upgrade"]');
+    const tower = {message: document.querySelector('.recovery-message')?.textContent ?? '', upgradeDisabled: upgrade?.disabled ?? null};
+    island.dispose();
+    return {before, wall, resumed, tower};
+  }));
+  expect(result.before).toBe(1);
+  expect(result.wall).toEqual({message: 'Building health could not be loaded.', legacyRepair: false, policyVersion: 1});
+  expect(result.resumed).toEqual({hp: '30 / 60 HP', legacyRepair: false});
+  expect(result.tower).toEqual({message: 'Building health could not be loaded.', upgradeDisabled: true});
+});
+
 it('requires the replayed combat health checkpoint to succeed before submitting a paid repair', async () => {
   const result = await browser.withPage(page => page.evaluate(async () => {
     const {createIsland} = await window.g20Import('/src/island/index.js');

@@ -84,6 +84,20 @@ The fixture asserts canonical response shapes and request flow, exact card HP/qu
 
 The latest capture completed with 103 calls to the offline API fixture. It does not prove SQL behavior, real signed-in transport, or two-client synchronization. The separate disposable PostgreSQL/API/replay evidence is documented by T60.
 
+### Saved-v1 policy when the recovery endpoint is unavailable
+
+Issue [#344](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/344) tracks a UI fallback bug: a `feature_off` answer from the structure endpoint must not downgrade a persisted recovery-v1 island to legacy wall repair and upgrades. The focused browser regression uses local fake-island/API-shaped responses. It covers `feature_off` on the first canonical read, `feature_off` after a successful v1 read, retry recovery, the legacy wall-action guard, and disabled tower upgrades while health is unavailable.
+
+Before the fix, the first-read fixture produced no recovery error and exposed the legacy wall Repair action. The cached-v1 case also allowed a tower upgrade after a later `feature_off` response. After the fix, both cases retain recovery v1 and display the health-load error; a later successful read restores the card.
+
+Verified with:
+
+```sh
+cd frontend && ./node_modules/.bin/vitest run --maxWorkers=1 tests/island/structure-recovery-policy.test.js tests/island/structure-recovery-upgrade-dom.test.js tests/island/structure-recovery-card.test.js tests/island/structure-recovery-card-dom.test.js tests/island/card-model.test.js tests/island/structure-recovery-model.test.js tests/island/structure-recovery-api.test.js tests/island/captain-recovery-tree.test.js tests/campaign/captain-repair-policy.test.js
+```
+
+Result: 103 tests passed across 9 files. This is fixture evidence only, not live service, wallet, database, multiplayer, activation or deployment evidence; no screenshot was needed for this state-policy regression.
+
 ### Independent follow-up verification
 
 On 17 Nov 2026, `npm exec vitest -- run tests/island/structure-recovery-model.test.js tests/island/structure-recovery-card-dom.test.js --maxWorkers=1` from `frontend/` passed 25 tests across 2 files. `npm run build` passed in 1.12 seconds and the spoiler guard passed across 241 text files. The corrected desktop/phone captures were inspected: Wall level-2 upgrade is 20 coins and Harpoon level-2 upgrade is 80 coins, with the existing current-level repair prices unchanged. The bell-pause explanation wraps legibly. These remain offline fixture screenshots and do not prove API/payment/database/multiplayer behavior.
