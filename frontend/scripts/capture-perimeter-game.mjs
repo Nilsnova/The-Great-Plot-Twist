@@ -129,7 +129,8 @@ async function lateRefusal(page) {
   const old = await wallet(page);
   assert.equal(await page.evaluate(() => window.__island.island.startMove('house_1')), true);
   const bar = page.locator('.island-move-bar:not(.island-wall-builder):not([hidden])');
-  await bar.getByRole('button', {name: 'One square east', exact: true}).click();
+  await bar.getByRole('button', {name: 'One square west', exact: true}).click();
+  assert.equal(await page.evaluate(() => window.__island.island.moveMode.state.ok), true, 'controlled refusal starts from a genuinely valid empty square');
   await page.evaluate(() => {
     const api = window.__island.island.api; window.__perimeterSavedMove = api.move;
     api.move = () => new Promise(resolve => setTimeout(() => resolve({ok: false, status: 503, code: 'database_unavailable',
