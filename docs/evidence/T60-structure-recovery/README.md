@@ -12,7 +12,7 @@ canonical snapshot fixtures; assertions and server limits were left intact.
 `81171490`, snapshot schema/API `941703df`, finish response `cb181055`, lifecycle/expiry SQL
 `9d4d4b6c` and `14a1841f`, saved-v1 flag-off start `22026006`, mutation hooks `3b9c289e` and
 `cc519114`; T56 paid repair `a4d4fe5a`; T57 replay modules `80b79c22`; T60 API/PG/replay harness
-commit `5ebbd657`.
+base commit `5ebbd657` with expiry/flag-off coverage and release docs in `825d2c56`.
 
 **Strict API/replay command** (from `backend/`):
 
