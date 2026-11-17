@@ -1,0 +1,17 @@
+{
+  "source": "870e624b710112df8971b4e74ac3437c0772a51d",
+  "diagnosticSourceSha256": "bddbda983ca8000070c2806bfcd670a709ec3158147e3908affc3edb993c5c98",
+  "command": [
+    "npm",
+    "test",
+    "--",
+    "--maxWorkers=1",
+    "--reporter=verbose",
+    "tests/pirates/defense-report-ownership.test.js"
+  ],
+  "started": "2026-11-17T21:20:25.699327+00:00",
+  "description": "Timestamp-only diagnostic; original20s/highquality/actions/assertions/24realframes unchanged",
+  "exitCode": 1,
+  "seconds": 23.09,
+  "finished": "2026-11-17T21:20:48.791462+00:00"
+}
