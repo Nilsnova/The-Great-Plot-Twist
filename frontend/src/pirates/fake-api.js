@@ -51,6 +51,9 @@
 // read, reset). It is the one fake behind ?islands=fake: your island ISLE-K7Q2M and a friend's island
 // ISLE-FR3ND (Captain Gull) to visit.
 import { bonusLoot, eventFor } from './wave-events.js';
+import {readPerimeterDemo, canonicalWallId} from './perimeter-demo.js';
+import {defenses as islandDefenses} from '../island/spots.js';
+import {withHealth} from './wall-health.js';
 import { rescueAllowed } from './finisher/rescue.js'; // T38: which lost waves a rescue can soften
 import { createRandom, hasTavern, revivePrice } from './sim.js';
 import { BUILDINGS, CREW, CAPTAIN, readUnlocks, unlockWave, SLOT_KINDS } from '../island/td-rules.js';
@@ -192,8 +195,8 @@ export function lootFor(wave, houses, piratePoint = false) {
 const WALL_RECOVERY_MS = 600 * 1000;
 const rebuildPrice = level => Math.max(1, Math.ceil(BUILDINGS.wall.price.slice(0, Math.max(1, level)).reduce((sum, price) => sum + price, 0) * 30 / 100));
 const restorePrice = (full, health) => Math.max(1, Math.ceil(full * (100 - Math.max(0, Math.min(100, health))) / 100));
-const isWallReport = walls => !!walls && typeof walls === 'object' && !Array.isArray(walls) && Object.keys(walls).length <= 50
-  && Object.entries(walls).every(([id, value]) => /^wall_[0-9]{1,2}$/.test(id) && Number.isInteger(value) && value >= 0 && value <= 100);
+const isWallReport = walls => !!walls && typeof walls === 'object' && !Array.isArray(walls) && Object.keys(walls).length <= 128
+  && Object.entries(walls).every(([id, value]) => canonicalWallId(id) && Number.isInteger(value) && value >= 0 && value <= 100);
 const iso = ms => new Date(Math.floor(ms / 1000) * 1000).toISOString().replace('.000Z', 'Z');
 
 export const DEFAULT_FRIEND = Object.freeze({ code: 'K7Q2M', ownerName: 'Captain Wren', waveBest: 2, built: Object.freeze(['wall_1', 'cannon_1', 'cannon_2']) });
@@ -423,7 +426,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       repairCost: health < 100 ? restorePrice(fakeEngineerPrice(rebuildPrice(level), payerRole(island)), health) : null };
   }) });
   // The walls a wave starts with, worked out at its startsAt (the same for every client); none on Pirate Point.
-  const waveWalls = run => (wallsOn && run.island
+  const waveWalls = run => run.perimeterDemo ? Object.fromEntries(run.perimeterDemo.defenses.filter(row => row.kind === 'wall').map(row => [row.id,row.health ?? 100])) : (wallsOn && run.island
     ? Object.fromEntries(builtWalls(run.island).sort().map(id => [id, healthAt(run.island, id, run.startsAtMs)])) : null);
   // The server's wall record (wall_repair.record, D039): the first finish of the wave keeps the walls, each capped
   // at the health it started the wave with (wall_health.cap_to_start), so a finish can only damage a wall.
@@ -455,7 +458,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     const rules = rulesOf(run);
     return { waveId: run.waveId, wave: run.wave, seed: run.seed, startsAt: iso(run.startsAtMs),
       weather: { ...run.weather }, flagship: run.flagship, ...(v2 ? { boss: isBoss(run) } : {}), ...(walls ? { walls } : {}),
-      ...(rules ? { rules } : {}) };
+      ...(rules ? { rules } : {}), ...(run.perimeterDemo ? {perimeterDemo: structuredClone(run.perimeterDemo)} : {}) };
   };
   const uid = value => typeof value === 'string' && value.length > 0 && value.length <= 64;
   // The shared island arsenal (T40, D042): copies of an island, stored (20 at most) or carried by one captain.
@@ -470,7 +473,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     answer: island => island.owner === playerId ? view() : visitedView(island), isOwner: island => island.owner === playerId,
     guard: island => waveGuard(island, 'Build walls between waves.'),
     canBuild: (island, spot) => !unlocking || ((islandAllowed(island).levels.wall ?? 0) >= 1 && spotWave(spot) <= island.waveBest),
-    unitPrice: island => fakeEngineerPrice(BUILDINGS.wall.price[0], world.islands.get(me().code)?.role), paidFor, refuse, layout: island => layoutOf(island, islandSpots)});
+    unitPrice: island => fakeEngineerPrice(BUILDINGS.wall.price[0], world.islands.get(me().code)?.role), paidFor, refuse, layout: island => layoutOf(island, islandSpots), offersOn: () => flagOn('perimeter_walls')});
   const api = {
     enableWalls: async body => wallRuns.enable(body), quoteWalls: async body => wallRuns.quote(body), buildWalls: async body => wallRuns.build(body),
     arsenal: async ({ code = null } = {}) => arsenal.state(code ? readIslandCode(code) : null),
@@ -484,6 +487,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     async build({ code, ...body } = {}) {
       body.spot = canonicalSpot(body.spot);
       const mine = world.islands.get(me().code), island = code === undefined ? mine : visited(code);
+      if (island.wallPolicy?.wallRuleVersion === 1 && !me().actions.has(`build:${body.actionUid}`)) waveGuard(island, 'Build between waves.');
       if (isInventoryWallId(body.spot) && island.wallPolicy?.wallRuleVersion === 1) refuse(409, 'position_required', 'Place new walls with Build walls.');
       if (island.wallPolicy?.wallRuleVersion === 1 && islandSpots.includes(body.spot) && !island.built.has(body.spot)) {
         const placed = positionsOf(spots(island)), at = placed[body.spot], verdict = checkMove(body.spot, at.x, at.z, placed, layoutOf(island, islandSpots));
@@ -495,6 +499,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     async upgrade({ code, ...body } = {}) {
       body.spot = canonicalSpot(body.spot);
       const mine = world.islands.get(me().code), island = code === undefined ? mine : visited(code);
+      if (island.wallPolicy?.wallRuleVersion === 1 && !me().actions.has(`upgrade:${body.actionUid}`)) waveGuard(island, 'Upgrade between waves.');
       // D039 (T47): a damaged or destroyed wall is repaired first; an upgrade never heals it.
       if (wallsOn && island.built.has(body.spot) && kindOfSpot(body.spot) === 'wall' && !me().actions.has(`upgrade:${body.actionUid}`)
         && healthAt(island, body.spot, nowMs()) < 100) refuse(409, 'needs_repair', 'Repair this wall before you upgrade it.');
@@ -867,6 +872,14 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
         startsAtMs: Math.floor(nowMs() / 1000) * 1000 + ISLAND_RULES.waves.countdownSeconds * 1000,
         weather: { ...(ISLAND_RULES.weather[weatherKind] ?? ISLAND_RULES.weather.calm) }, flagship: place.key === 'pirate_point',
         participants: new Set([playerId]), results: new Map(), finishedAt: null, counted: false, expired: false };
+      if (place.island?.wallPolicy?.wallRuleVersion === 1) {
+        const header = {...run, startsAt: iso(run.startsAtMs)};
+        run.perimeterDemo = readPerimeterDemo({version: 1, waveId: run.waveId, wave: run.wave, seed: run.seed, startsAt: header.startsAt,
+          islandEpoch: place.island.wallEpoch, pathing: true, perimeterWalls: true,
+          defenses: withHealth(islandDefenses(spots(place.island),campaignAt(place.island).research.tiers),waveWalls(run)), crew: {...place.island.crew}}, header);
+        if (!run.perimeterDemo) refuse(409, 'layout_unavailable', 'The local perimeter wave could not be prepared.');
+        run.rules = SIM_RULES.filter(name => name === 'pathing' || ruleOn(name));
+      }
       world.waves.set(run.waveId, run); player.actions.set(`start:${actionUid}`, run.waveId);
       return shape(run);
     },

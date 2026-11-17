@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs';
 import {createFakeIslandApi, createFakeIslandTransport, createSharedFakeStore, readIslandCode} from '../../src/pirates/fake-api.js';
 const cells = [{x:-4,z:-17.5},{x:-2,z:-17.5},{x:0,z:-17.5}];
 async function setup({oldBuilt = false, shared = null} = {}) {
-  const t=createFakeIslandTransport({coins:5000,version:2,flags:{wall_recovery:true},shared});await t.dev.setWaveBest(50);
+  const t=createFakeIslandTransport({coins:5000,version:2,flags:{wall_recovery:true,perimeter_walls:true},shared});await t.dev.setWaveBest(50);
   if(oldBuilt)for(let n=1;n<=12;n++)await t.api.build({spot:`wall_${n}`,kind:'wall',actionUid:`original-${n}`});
   expect((await t.post('/api/island/walls/enable',{})).ok).toBe(true);return t;
 }
@@ -13,7 +13,7 @@ const own = async t => t.world.islands.get(readIslandCode((await t.api.island())
 
 describe('local fake perimeter construction', () => {
   it('keeps legacy metadata until owner admission and returns readonly hidden coordinates', async () => {
-    const t=createFakeIslandTransport({coins:5000});const before=(await t.get('/api/island')).data;
+    const t=createFakeIslandTransport({coins:5000,flags:{perimeter_walls:true}});const before=(await t.get('/api/island')).data;
     expect(before.layout.wallRuleVersion).toBeUndefined();
     const island=await own(t);island.positions=new Map([['cannon_8',{x:-4,z:-17.5}]]);
     const enabled=await t.post('/api/island/walls/enable',{});
@@ -69,7 +69,7 @@ describe('local fake perimeter construction', () => {
     expect(retry.data.island.layout.wallCapacity).toBe(128);expect(retry.data.island.spots.some(s=>s.built)).toBe(false);
   });
   it('checks membership before receipt replay and owner permission before enabling', async () => {
-    const t=await setup(),island=await own(t),guest=createFakeIslandApi({world:t.world,playerId:'guest'});
+    const t=await setup(),island=await own(t),guest=createFakeIslandApi({world:t.world,playerId:'guest',flags:{perimeter_walls:true}});
     await guest.joinGame({code:island.code,actionUid:'join-walls-1'});
     await expect(guest.enableWalls({code:island.code})).rejects.toMatchObject({code:'not_owner'});
     const q=await guest.quoteWalls({code:island.code,cells:[cells[0]]});t.world.players.get('guest').coins=1000;
@@ -86,7 +86,7 @@ describe('local fake perimeter construction', () => {
     const saved=new Map(),storage={getItem:k=>saved.get(k)??null,setItem:(k,v)=>saved.set(k,v)};
     const shared=createSharedFakeStore('wall-runs',{storage,locks:null}),t=await setup({shared});
     const q=(await quote(t)).data;t.dev.failNext('timeout');expect(await t.post('/api/island/walls/build',body(q))).toMatchObject({code:'timeout'});
-    const reload=createFakeIslandTransport({shared,version:2,flags:{wall_recovery:true}}),again=await reload.post('/api/island/walls/build',body(q));
+    const reload=createFakeIslandTransport({shared,version:2,flags:{wall_recovery:true,perimeter_walls:true}}),again=await reload.post('/api/island/walls/build',body(q));
     expect(again.data).toMatchObject({receipt:{repeat:true},island:{coins:4970,layout:{wallRuleVersion:1,wallCapacity:128}}});
     expect(again.data.island.spots.find(s=>s.id==='wall_1')).toMatchObject({built:true,x:-4,z:-17.5});
   });

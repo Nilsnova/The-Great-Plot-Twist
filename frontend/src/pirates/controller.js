@@ -57,6 +57,7 @@ import { healthReport, readWalls, withHealth } from './wall-health.js';
 import { readRules } from './wave-rules.js';
 import { isParticipantToken, readRecoveryPolicy } from './recovery-policy.js';
 import { readRecoverySnapshot, recoveryWaveDefenses } from './recovery-snapshot.js';
+import {readPerimeterDemo} from './perimeter-demo.js';
 import { createReplayDriver, createWaveReplay, fetchSealedEvents } from './wave-replay.js';
 import { commandForJournal, MAX_INPUT_BATCH, MAX_INPUT_BATCH_BYTES, RECOVERY_FLUSH_MS, RECOVERY_POLL_MS, simulationInputFromJournal } from './recovery-transport.js';
 import { makeActionUid } from '../screens/islet/action-uid.js';
@@ -174,13 +175,15 @@ export function readWaveInfo(info) {
     || snapshot.createWave.seed !== snapshot.seed
     || snapshot.createWave.wave !== info.wave)) return null;
   const rules = readRules(info.rules);
+  const perimeterDemo = info.perimeterDemo === undefined ? null : readPerimeterDemo(info.perimeterDemo,info);
+  if (info.perimeterDemo !== undefined && (!perimeterDemo || !rules.pathing)) return null;
   if ((recoveryPolicy === 'structure-recovery-v1') !== rules.structureRecovery) return null;
   if (snapshot && JSON.stringify(readRules(snapshot.rules)) !== JSON.stringify(rules)) return null;
   const wave = Number.isInteger(info.wave) && info.wave > 0 ? info.wave : 1;
   const weather = info.weather && typeof info.weather === 'object' ? info.weather : {};
   return { waveId: info.waveId, wave, seed: Number(info.seed), startsAtMs, weather, flagship: info.flagship === true,
     boss: typeof info.boss === 'boolean' ? info.boss : undefined, walls: readWalls(info.walls), rules,
-    recoveryVersion, waveProtocol, ...(snapshot ? { initialSnapshot: snapshot, participantToken: info.participantToken,
+    recoveryVersion, waveProtocol, ...(perimeterDemo ? {perimeterDemo} : {}), ...(snapshot ? { initialSnapshot: snapshot, participantToken: info.participantToken,
       lastActorCounter: info.lastActorCounter } : {}),
     serverTimeMs: Number.isFinite(parseTime(info.serverTime)) ? parseTime(info.serverTime) : null };
 }
@@ -328,6 +331,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       || typeof recoveryTransport.checkpoint !== 'function' || typeof recoveryTransport.finishWave !== 'function')) return null;
     const snapshot = recoveryPolicy === 'structure-recovery-v1' ? readRecoverySnapshot(info.initialSnapshot, info.waveId) : null;
     if (recoveryPolicy === 'structure-recovery-v1' && !snapshot) return null;
+    const demo = info.perimeterDemo === undefined ? null : readPerimeterDemo(info.perimeterDemo,info);
+    if (info.perimeterDemo !== undefined && (!demo || !info.rules?.pathing)) return null;
     lastTowerObstacles = info.rules?.towerObstacles === true;
     if (wave?.info.waveId === info.waveId) return wave;
     // A friend rang the next wave while ours still runs here (a ship that sinks a moment later on this
@@ -339,7 +344,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     // D039: with the flag wall_recovery on the server sends each wall's health after its last wave.
     // T43: a culverin fights only in a wave whose rules say defenses_v2 (every client of the wave alike); without
     // the rule it is left out here too, so the screen does not show a gun that never fires.
-    const sourceDefenses = snapshot ? recoveryWaveDefenses(snapshot) : withHealth(getDefenses() ?? [], info.walls);
+    const sourceDefenses = snapshot ? recoveryWaveDefenses(snapshot) : demo ? demo.defenses : withHealth(getDefenses() ?? [], info.walls);
     const defenses = (sourceDefenses ?? []).filter(item => item?.kind !== 'culverin' || info.rules?.defensesV2 === true);
     const offset = info.serverTimeMs !== null ? info.serverTimeMs - now() : serverOffset();
     // v3 waves: the event from the wave's seed and number (the server repeats it for the galleon's bonus), and
@@ -354,7 +359,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       recoveryVersion: info.recoveryVersion, waveProtocol: info.waveProtocol }
       : { seed: info.seed, wave: info.wave, weather: info.weather, flagship: info.flagship, defenses, countdown: 0,
         crew: getCrew() ?? undefined, ...(info.boss !== undefined ? { boss: info.boss } : {}), event, finishers: true,
-        finisherPreparation: true, gapMs: waveGapMs, ...(info.rules ?? {}), ...simOptions };
+        finisherPreparation: true, gapMs: waveGapMs, ...(info.rules ?? {}), ...simOptions,
+        ...(demo ? {defenses, crew: demo.crew, pathing: true, perimeterWalls: true} : {}) };
     const sim = createWave(simOptionsForWave);
     const first = sim.state();
     const recoveryReplay = snapshot ? createWaveReplay() : null;
@@ -876,7 +882,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   }
   // A Tavern on the island (GAME-V3.md "Houses") takes 25% off; the server checks the island's buildings as
   // they are now, so the island's latest answer decides, else the wave's own defenses.
-  const helpPrice = current => revivePrice(current.info.wave, { tavern: hasTavern(getDefenses() ?? current.defenses) });
+  const helpPrice = current => revivePrice(current.info.wave, { tavern: hasTavern(current.info.perimeterDemo ? current.defenses : getDefenses() ?? current.defenses) });
   // The timers over fallen captains (yours where you lie, a teammate's where their sim has them).
   function fallenMarks(current, player) {
     if (!world.project || current.done || !current.shown) return [];
