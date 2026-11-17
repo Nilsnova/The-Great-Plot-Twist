@@ -119,7 +119,7 @@ function wiringHarness({ visiting = null } = {}) {
     api: {}, get island() { return state.own; }, get visiting() { return state.visiting; },
     defenses: () => [], roomPlace: () => (state.visiting ? `isle_${state.visiting.code.toLowerCase()}` : state.own ? 'isle_k7q2m' : null),
     joinRunningWave: vi.fn(async () => null), refreshDefended: vi.fn(async () => {}), loadPoint: vi.fn(async () => {}),
-    ringBell: vi.fn(async () => ({ ok: true })), setBattle() {}, setPointBattle() {}, point: null,
+    ringBell: vi.fn(async () => ({ ok: true })), setBattle() {}, setPointBattle() {}, setRecoveryCombatState: vi.fn(), point: null,
   };
   const world = { current: { id: 'home_islet' } };
   const waves = wireWaves({ island, on, emit, world, openRoom, loop: false, every: run => { ticks.push(run); return () => {}; },
@@ -130,6 +130,17 @@ function wiringHarness({ visiting = null } = {}) {
 }
 
 describe('the island room for every defender', () => {
+  it('publishes and clears replayed structure health through the island setter', () => {
+    const h = wiringHarness(), state = { waveId: 'wave-a', islandEpoch: 'epoch-a', structures: [
+      { spot: 'wall_1', instanceId: 'instance-a', hpUnits: 500_000, maxHP: 60, repairSeq: 2 },
+    ] };
+    Object.defineProperty(h.waves.island, 'recoveryCombatState', { configurable: true, get: () => state });
+    h.tick();
+    expect(h.island.setRecoveryCombatState).toHaveBeenLastCalledWith(state);
+    h.waves.dispose();
+    expect(h.island.setRecoveryCombatState).toHaveBeenLastCalledWith(null);
+  });
+
   it('the owner joins the island room as soon as the island answered (it is unknown at the landing)', () => {
     const h = wiringHarness();
     expect(h.rooms).toHaveLength(0);
