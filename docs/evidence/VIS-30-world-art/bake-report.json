@@ -151,105 +151,105 @@
   "compiled": {
     "files": [
       {
-        "file": "village/compiled/buildings-4x-1-e380cc58f866.png",
-        "bytes": 215050,
-        "sha256": "e380cc58f86631cce3057ca6ba990462388edb8e935b440661b03cb1c399c2bd",
+        "file": "village/compiled/buildings-4x-1-4cac98be2a82.png",
+        "bytes": 195710,
+        "sha256": "4cac98be2a8227dbc9e4bcccc5408e12c21ff8f858fc0fdc23ca91f4d0e7bf68",
         "width": 392,
         "height": 392
       },
       {
-        "file": "village/compiled/houses-4x-1-6111d5601c45.png",
-        "bytes": 1602640,
-        "sha256": "6111d5601c4576476d3c2d89703378f667cae6aa384c7d4188c4a6b6da2adeef",
+        "file": "village/compiled/houses-4x-1-715fc4e23c25.png",
+        "bytes": 1447769,
+        "sha256": "715fc4e23c252124d41b58b1d40c9437c6b7cab10019ed087b8ec6d0eaf6446e",
         "width": 984,
         "height": 1408
       },
       {
-        "file": "village/compiled/landmarks-4x-1-edf354806e0b.png",
-        "bytes": 650386,
-        "sha256": "edf354806e0bfb327b6f28a2583d6db99fb7d7c76140e0c878c5c8e903c99c2d",
+        "file": "village/compiled/landmarks-4x-1-110c2841118f.png",
+        "bytes": 584481,
+        "sha256": "110c2841118fb00c0d41b68b4d7aa290211c7d0abd868fb5b39197e3c0f93150",
         "width": 1024,
         "height": 520
       },
       {
-        "file": "village/compiled/services-4x-1-744bdeee9b69.png",
-        "bytes": 361375,
-        "sha256": "744bdeee9b691f00fe6baf0a3fd490ba79ff80cf268b72cbaa750c6a24e20847",
+        "file": "village/compiled/services-4x-1-6b01dd508dca.png",
+        "bytes": 330405,
+        "sha256": "6b01dd508dca1e32ab35b684a67d545dd999f8a0fcc1e3b3c93843edf5f032a2",
         "width": 656,
         "height": 360
       },
       {
-        "file": "village/compiled/nature-4x-1-5daf6446cdb1.png",
-        "bytes": 781068,
-        "sha256": "5daf6446cdb136ff089a8d8e240736af79f75b84bc884e145fbf7688d6706e7a",
+        "file": "village/compiled/nature-4x-1-237071b5ed40.png",
+        "bytes": 714854,
+        "sha256": "237071b5ed4024de97ed3fba9c71aa848b74a3345c92449a7252ee0064662d52",
         "width": 984,
         "height": 880
       },
       {
-        "file": "village/compiled/cannons-4x-1-e3fdd5e76473.png",
-        "bytes": 1134354,
-        "sha256": "e3fdd5e76473fb8921bb0acc5165d35b59b23b2789ba3ed2651eba1c9e5f26ff",
+        "file": "village/compiled/cannons-4x-1-f0a74bf14d40.png",
+        "bytes": 1005906,
+        "sha256": "f0a74bf14d40dcabf9582cdaaa1271cb4bd4f306574b83e80ae13af6f4fc7216",
         "width": 928,
         "height": 1000
       },
       {
-        "file": "village/compiled/walls-4x-1-da339745c863.png",
-        "bytes": 773261,
-        "sha256": "da339745c863503949cf49c3f1b52b549dbadf6f65e45389a6d1c9783478df87",
+        "file": "village/compiled/walls-4x-1-cf3e4db5982f.png",
+        "bytes": 651044,
+        "sha256": "cf3e4db5982fe89f791d6ed7d3b9e8036f0530c994935c80201016f5232b231d",
         "width": 1000,
         "height": 816
       },
       {
-        "file": "village/compiled/core-4x-1-daa09d51a079.png",
-        "bytes": 892095,
-        "sha256": "daa09d51a07973604013379f55c51d42839ddc9116aa7c00e4f8ff29b214691f",
+        "file": "village/compiled/core-4x-1-5729b2fcc8b4.png",
+        "bytes": 798655,
+        "sha256": "5729b2fcc8b448b029ef810b465c3aeffc1070d2b1e18f9958ba3b08647678db",
         "width": 520,
         "height": 1560
       },
       {
-        "file": "village/compiled/progress-4x-1-d783d3b573f4.png",
-        "bytes": 248278,
-        "sha256": "d783d3b573f4cfbf15aef99fc966cecff6719e8e110351b0bece0951b4042789",
+        "file": "village/compiled/progress-4x-1-ee57813737ea.png",
+        "bytes": 232321,
+        "sha256": "ee57813737ea06d0af02fff52487ac035961eede3a4600af72a52c16e2e14e6e",
         "width": 840,
         "height": 232
       },
       {
-        "file": "village/compiled/mortars-4x-1-96d5d33beed9.png",
-        "bytes": 1011684,
-        "sha256": "96d5d33beed980a0aea46b69f50e252af2d465cffee49f9385aa836f79887d21",
+        "file": "village/compiled/mortars-4x-1-5be0794d7341.png",
+        "bytes": 912517,
+        "sha256": "5be0794d73416b91ae5162a5f937c98ee9171b146c80b3a8be5e5fdcacf6017a",
         "width": 928,
         "height": 1000
       },
       {
-        "file": "village/compiled/harpoons-4x-1-1c4a26b65375.png",
-        "bytes": 1009474,
-        "sha256": "1c4a26b653759acf6ff7b5b936222011bfbbae062a96caa40a2de752f5f6fb74",
+        "file": "village/compiled/harpoons-4x-1-54d919207a2e.png",
+        "bytes": 923330,
+        "sha256": "54d919207a2ee8fdeee07af5c948ebf7f9831ec8c0026b97eec1b8c5ac9f2362",
         "width": 928,
         "height": 1000
       },
       {
-        "file": "village/compiled/culverins-4x-1-55a658a2645c.png",
-        "bytes": 1164347,
-        "sha256": "55a658a2645c80afe591bf6ea977ec74e8a8133c97e9850c00742f773ed8ba2b",
+        "file": "village/compiled/culverins-4x-1-a861813ffd35.png",
+        "bytes": 1069222,
+        "sha256": "a861813ffd355534f709b7816683aa50041fe5476df88bc6aeb191463dfeb52d",
         "width": 928,
         "height": 1000
       },
       {
-        "file": "village/compiled/swivels-4x-1-a20225be2494.png",
-        "bytes": 1080933,
-        "sha256": "a20225be24940156dab4973e584233a93aa223d9a27b72640446358581eea01f",
+        "file": "village/compiled/swivels-4x-1-742154d719cf.png",
+        "bytes": 1005287,
+        "sha256": "742154d719cf3f4ec0d3ca369b4a8bb1f25a5b2430c8eb9025b2157815be5777",
         "width": 928,
         "height": 1000
       }
     ],
-    "encodedBytes": 10924945,
+    "encodedBytes": 9871501,
     "summedDecodedBytes": 38543104,
     "peakSingleDecodedBytes": 5541888
   },
   "initialTransfer": {
     "unchangedTerrainBytes": 2683357,
     "rawPlusTerrainBytes": 29819059,
-    "compiledPlusTerrainBytes": 13608302,
+    "compiledPlusTerrainBytes": 12554858,
     "targetBytes": 8388608,
     "targetMet": false
   },
@@ -4949,7 +4949,7 @@
       "name": "buildings",
       "pages": [
         {
-          "file": "village/compiled/buildings-4x-1-e380cc58f866.png",
+          "file": "village/compiled/buildings-4x-1-4cac98be2a82.png",
           "width": 392,
           "height": 392,
           "items": [
@@ -4967,7 +4967,7 @@
       ],
       "sheets": {
         "buildingsBaked1": {
-          "file": "village/compiled/buildings-4x-1-e380cc58f866.png",
+          "file": "village/compiled/buildings-4x-1-4cac98be2a82.png",
           "width": 392,
           "height": 392
         }
@@ -4997,7 +4997,7 @@
       "name": "houses",
       "pages": [
         {
-          "file": "village/compiled/houses-4x-1-6111d5601c45.png",
+          "file": "village/compiled/houses-4x-1-715fc4e23c25.png",
           "width": 984,
           "height": 1408,
           "items": [
@@ -5087,7 +5087,7 @@
       ],
       "sheets": {
         "housesBaked1": {
-          "file": "village/compiled/houses-4x-1-6111d5601c45.png",
+          "file": "village/compiled/houses-4x-1-715fc4e23c25.png",
           "width": 984,
           "height": 1408
         }
@@ -5261,7 +5261,7 @@
       "name": "landmarks",
       "pages": [
         {
-          "file": "village/compiled/landmarks-4x-1-edf354806e0b.png",
+          "file": "village/compiled/landmarks-4x-1-110c2841118f.png",
           "width": 1024,
           "height": 520,
           "items": [
@@ -5306,7 +5306,7 @@
       ],
       "sheets": {
         "landmarksBaked1": {
-          "file": "village/compiled/landmarks-4x-1-edf354806e0b.png",
+          "file": "village/compiled/landmarks-4x-1-110c2841118f.png",
           "width": 1024,
           "height": 520
         }
@@ -5390,7 +5390,7 @@
       "name": "services",
       "pages": [
         {
-          "file": "village/compiled/services-4x-1-744bdeee9b69.png",
+          "file": "village/compiled/services-4x-1-6b01dd508dca.png",
           "width": 656,
           "height": 360,
           "items": [
@@ -5417,7 +5417,7 @@
       ],
       "sheets": {
         "servicesBaked1": {
-          "file": "village/compiled/services-4x-1-744bdeee9b69.png",
+          "file": "village/compiled/services-4x-1-6b01dd508dca.png",
           "width": 656,
           "height": 360
         }
@@ -5465,7 +5465,7 @@
       "name": "nature",
       "pages": [
         {
-          "file": "village/compiled/nature-4x-1-5daf6446cdb1.png",
+          "file": "village/compiled/nature-4x-1-237071b5ed40.png",
           "width": 984,
           "height": 880,
           "items": [
@@ -5546,7 +5546,7 @@
       ],
       "sheets": {
         "natureBaked1": {
-          "file": "village/compiled/nature-4x-1-5daf6446cdb1.png",
+          "file": "village/compiled/nature-4x-1-237071b5ed40.png",
           "width": 984,
           "height": 880
         }
@@ -5702,7 +5702,7 @@
       "name": "cannons",
       "pages": [
         {
-          "file": "village/compiled/cannons-4x-1-e3fdd5e76473.png",
+          "file": "village/compiled/cannons-4x-1-f0a74bf14d40.png",
           "width": 928,
           "height": 1000,
           "items": [
@@ -5891,7 +5891,7 @@
       ],
       "sheets": {
         "cannonsBaked1": {
-          "file": "village/compiled/cannons-4x-1-e3fdd5e76473.png",
+          "file": "village/compiled/cannons-4x-1-f0a74bf14d40.png",
           "width": 928,
           "height": 1000
         }
@@ -6263,7 +6263,7 @@
       "name": "walls",
       "pages": [
         {
-          "file": "village/compiled/walls-4x-1-da339745c863.png",
+          "file": "village/compiled/walls-4x-1-cf3e4db5982f.png",
           "width": 1000,
           "height": 816,
           "items": [
@@ -6542,7 +6542,7 @@
       ],
       "sheets": {
         "wallsBaked1": {
-          "file": "village/compiled/walls-4x-1-da339745c863.png",
+          "file": "village/compiled/walls-4x-1-cf3e4db5982f.png",
           "width": 1000,
           "height": 816
         }
@@ -7130,7 +7130,7 @@
       "name": "core",
       "pages": [
         {
-          "file": "village/compiled/core-4x-1-daa09d51a079.png",
+          "file": "village/compiled/core-4x-1-5729b2fcc8b4.png",
           "width": 520,
           "height": 1560,
           "items": [
@@ -7166,7 +7166,7 @@
       ],
       "sheets": {
         "coreBaked1": {
-          "file": "village/compiled/core-4x-1-daa09d51a079.png",
+          "file": "village/compiled/core-4x-1-5729b2fcc8b4.png",
           "width": 520,
           "height": 1560
         }
@@ -7232,7 +7232,7 @@
       "name": "progress",
       "pages": [
         {
-          "file": "village/compiled/progress-4x-1-d783d3b573f4.png",
+          "file": "village/compiled/progress-4x-1-ee57813737ea.png",
           "width": 840,
           "height": 232,
           "items": [
@@ -7286,7 +7286,7 @@
       ],
       "sheets": {
         "progressBaked1": {
-          "file": "village/compiled/progress-4x-1-d783d3b573f4.png",
+          "file": "village/compiled/progress-4x-1-ee57813737ea.png",
           "width": 840,
           "height": 232
         }
@@ -7388,7 +7388,7 @@
       "name": "mortars",
       "pages": [
         {
-          "file": "village/compiled/mortars-4x-1-96d5d33beed9.png",
+          "file": "village/compiled/mortars-4x-1-5be0794d7341.png",
           "width": 928,
           "height": 1000,
           "items": [
@@ -7577,7 +7577,7 @@
       ],
       "sheets": {
         "mortarsBaked1": {
-          "file": "village/compiled/mortars-4x-1-96d5d33beed9.png",
+          "file": "village/compiled/mortars-4x-1-5be0794d7341.png",
           "width": 928,
           "height": 1000
         }
@@ -7949,7 +7949,7 @@
       "name": "harpoons",
       "pages": [
         {
-          "file": "village/compiled/harpoons-4x-1-1c4a26b65375.png",
+          "file": "village/compiled/harpoons-4x-1-54d919207a2e.png",
           "width": 928,
           "height": 1000,
           "items": [
@@ -8138,7 +8138,7 @@
       ],
       "sheets": {
         "harpoonsBaked1": {
-          "file": "village/compiled/harpoons-4x-1-1c4a26b65375.png",
+          "file": "village/compiled/harpoons-4x-1-54d919207a2e.png",
           "width": 928,
           "height": 1000
         }
@@ -8510,7 +8510,7 @@
       "name": "culverins",
       "pages": [
         {
-          "file": "village/compiled/culverins-4x-1-55a658a2645c.png",
+          "file": "village/compiled/culverins-4x-1-a861813ffd35.png",
           "width": 928,
           "height": 1000,
           "items": [
@@ -8699,7 +8699,7 @@
       ],
       "sheets": {
         "culverinsBaked1": {
-          "file": "village/compiled/culverins-4x-1-55a658a2645c.png",
+          "file": "village/compiled/culverins-4x-1-a861813ffd35.png",
           "width": 928,
           "height": 1000
         }
@@ -9071,7 +9071,7 @@
       "name": "swivels",
       "pages": [
         {
-          "file": "village/compiled/swivels-4x-1-a20225be2494.png",
+          "file": "village/compiled/swivels-4x-1-742154d719cf.png",
           "width": 928,
           "height": 1000,
           "items": [
@@ -9260,7 +9260,7 @@
       ],
       "sheets": {
         "swivelsBaked1": {
-          "file": "village/compiled/swivels-4x-1-a20225be2494.png",
+          "file": "village/compiled/swivels-4x-1-742154d719cf.png",
           "width": 928,
           "height": 1000
         }
@@ -16376,5 +16376,815 @@
     }
   ],
   "errors": [],
-  "externalRequests": []
+  "externalRequests": [],
+  "transportHistory": [
+    {
+      "sourceCommit": "9a52ebcce7922e4a70030440e1d8f2525269c479",
+      "priorReportSha256": "2ef71cba282a50887574d6f8da29eff49e48fb7f54ab32b3c8801430ee7e0433",
+      "method": "Node zlib level9; exact filtered scanlines/non-IDAT chunks and validated CRCs",
+      "browser": "156.0.8078.79",
+      "beforeBytes": 10924945,
+      "afterBytes": 9871501,
+      "records": [
+        {
+          "source": "village/compiled/buildings-4x-1-e380cc58f866.png",
+          "sourceSha256": "e380cc58f86631cce3057ca6ba990462388edb8e935b440661b03cb1c399c2bd",
+          "file": "village/compiled/buildings-4x-1-4cac98be2a82.png",
+          "sha256": "4cac98be2a8227dbc9e4bcccc5408e12c21ff8f858fc0fdc23ca91f4d0e7bf68",
+          "width": 392,
+          "height": 392,
+          "filteredBytes": 615048,
+          "filteredSha256": "955e5ca985dc6382b76a0aa811fb8097aa994f48cb25bed1e41740527c4c2a68",
+          "nonIdatSha256": "a3e7031d5b1de41e836e1958b67dbae152f615fb3af4d82675496e38197b427c",
+          "originalBytes": 215050,
+          "encodedBytes": 195710,
+          "savedBytes": 19340
+        },
+        {
+          "source": "village/compiled/houses-4x-1-6111d5601c45.png",
+          "sourceSha256": "6111d5601c4576476d3c2d89703378f667cae6aa384c7d4188c4a6b6da2adeef",
+          "file": "village/compiled/houses-4x-1-715fc4e23c25.png",
+          "sha256": "715fc4e23c252124d41b58b1d40c9437c6b7cab10019ed087b8ec6d0eaf6446e",
+          "width": 984,
+          "height": 1408,
+          "filteredBytes": 5543296,
+          "filteredSha256": "c682692319390d548cd9b073cd334d78f5bc78095e55b75d4057b17697d27a55",
+          "nonIdatSha256": "949dcf786e317d557faff372635b26e5ad96ce4fe3b88356093937f9eddb7637",
+          "originalBytes": 1602640,
+          "encodedBytes": 1447769,
+          "savedBytes": 154871
+        },
+        {
+          "source": "village/compiled/landmarks-4x-1-edf354806e0b.png",
+          "sourceSha256": "edf354806e0bfb327b6f28a2583d6db99fb7d7c76140e0c878c5c8e903c99c2d",
+          "file": "village/compiled/landmarks-4x-1-110c2841118f.png",
+          "sha256": "110c2841118fb00c0d41b68b4d7aa290211c7d0abd868fb5b39197e3c0f93150",
+          "width": 1024,
+          "height": 520,
+          "filteredBytes": 2130440,
+          "filteredSha256": "8fe4e7834f3195dac4304006fd1e2b447133281fc0e64d37cee4f918601085c7",
+          "nonIdatSha256": "14364685a35a1efc1e5478bc3e7c0f67017fa8562e9267b2ce2a46a842b9259a",
+          "originalBytes": 650386,
+          "encodedBytes": 584481,
+          "savedBytes": 65905
+        },
+        {
+          "source": "village/compiled/services-4x-1-744bdeee9b69.png",
+          "sourceSha256": "744bdeee9b691f00fe6baf0a3fd490ba79ff80cf268b72cbaa750c6a24e20847",
+          "file": "village/compiled/services-4x-1-6b01dd508dca.png",
+          "sha256": "6b01dd508dca1e32ab35b684a67d545dd999f8a0fcc1e3b3c93843edf5f032a2",
+          "width": 656,
+          "height": 360,
+          "filteredBytes": 945000,
+          "filteredSha256": "ce84eec8a156277c205a24d06dc1fa0e444658a55e8c14173ea31bd253372a33",
+          "nonIdatSha256": "952944d18faf03014a379d4d449865d16b7fe580b57563466ff0b5209983fe35",
+          "originalBytes": 361375,
+          "encodedBytes": 330405,
+          "savedBytes": 30970
+        },
+        {
+          "source": "village/compiled/nature-4x-1-5daf6446cdb1.png",
+          "sourceSha256": "5daf6446cdb136ff089a8d8e240736af79f75b84bc884e145fbf7688d6706e7a",
+          "file": "village/compiled/nature-4x-1-237071b5ed40.png",
+          "sha256": "237071b5ed4024de97ed3fba9c71aa848b74a3345c92449a7252ee0064662d52",
+          "width": 984,
+          "height": 880,
+          "filteredBytes": 3464560,
+          "filteredSha256": "4e47b940252b1bf80849b21ee6f13523c53bb248c3db54f62ee401689271e18d",
+          "nonIdatSha256": "22fa9c817b7d850c93eb695e31152648238d06f3b85b36fd268cbcaceb4925a9",
+          "originalBytes": 781068,
+          "encodedBytes": 714854,
+          "savedBytes": 66214
+        },
+        {
+          "source": "village/compiled/cannons-4x-1-e3fdd5e76473.png",
+          "sourceSha256": "e3fdd5e76473fb8921bb0acc5165d35b59b23b2789ba3ed2651eba1c9e5f26ff",
+          "file": "village/compiled/cannons-4x-1-f0a74bf14d40.png",
+          "sha256": "f0a74bf14d40dcabf9582cdaaa1271cb4bd4f306574b83e80ae13af6f4fc7216",
+          "width": 928,
+          "height": 1000,
+          "filteredBytes": 3713000,
+          "filteredSha256": "6fc341d386d239894a2c40acd604d93ccd4ff4ba70c5c914112600467d099b10",
+          "nonIdatSha256": "f92fe9265baee4b66dbcd7b4f79b3b03b26dc048c76030ddc8b611da4a5199fc",
+          "originalBytes": 1134354,
+          "encodedBytes": 1005906,
+          "savedBytes": 128448
+        },
+        {
+          "source": "village/compiled/walls-4x-1-da339745c863.png",
+          "sourceSha256": "da339745c863503949cf49c3f1b52b549dbadf6f65e45389a6d1c9783478df87",
+          "file": "village/compiled/walls-4x-1-cf3e4db5982f.png",
+          "sha256": "cf3e4db5982fe89f791d6ed7d3b9e8036f0530c994935c80201016f5232b231d",
+          "width": 1000,
+          "height": 816,
+          "filteredBytes": 3264816,
+          "filteredSha256": "eb656fb797a8431ecd5c95738b0cced25a9adf062a612f93380b676e8629bb2c",
+          "nonIdatSha256": "d7818a6fbf959c93581d84c6a04522e838a0338245d80396c31d59ff04cf04eb",
+          "originalBytes": 773261,
+          "encodedBytes": 651044,
+          "savedBytes": 122217
+        },
+        {
+          "source": "village/compiled/core-4x-1-daa09d51a079.png",
+          "sourceSha256": "daa09d51a07973604013379f55c51d42839ddc9116aa7c00e4f8ff29b214691f",
+          "file": "village/compiled/core-4x-1-5729b2fcc8b4.png",
+          "sha256": "5729b2fcc8b448b029ef810b465c3aeffc1070d2b1e18f9958ba3b08647678db",
+          "width": 520,
+          "height": 1560,
+          "filteredBytes": 3246360,
+          "filteredSha256": "ff2d87f6b257a447461ed0e9b63b643466b2dfa478f311605b2fca4f2b65195e",
+          "nonIdatSha256": "7f8b725706dd8a4cdf218e8eae9fcfb8a0667a6cea68fb7c22e061c135989198",
+          "originalBytes": 892095,
+          "encodedBytes": 798655,
+          "savedBytes": 93440
+        },
+        {
+          "source": "village/compiled/progress-4x-1-d783d3b573f4.png",
+          "sourceSha256": "d783d3b573f4cfbf15aef99fc966cecff6719e8e110351b0bece0951b4042789",
+          "file": "village/compiled/progress-4x-1-ee57813737ea.png",
+          "sha256": "ee57813737ea06d0af02fff52487ac035961eede3a4600af72a52c16e2e14e6e",
+          "width": 840,
+          "height": 232,
+          "filteredBytes": 779752,
+          "filteredSha256": "adfd7eb2dc9f83f5dcf2d330f411581844b5722c8d6ac0526196f3b8523f151a",
+          "nonIdatSha256": "dbccffac7e46edd3acd85d15a5a11e73cedc03c6ccb2b03beba98503d8996a0f",
+          "originalBytes": 248278,
+          "encodedBytes": 232321,
+          "savedBytes": 15957
+        },
+        {
+          "source": "village/compiled/mortars-4x-1-96d5d33beed9.png",
+          "sourceSha256": "96d5d33beed980a0aea46b69f50e252af2d465cffee49f9385aa836f79887d21",
+          "file": "village/compiled/mortars-4x-1-5be0794d7341.png",
+          "sha256": "5be0794d73416b91ae5162a5f937c98ee9171b146c80b3a8be5e5fdcacf6017a",
+          "width": 928,
+          "height": 1000,
+          "filteredBytes": 3713000,
+          "filteredSha256": "9ad3e4905e5a328013d6a29b2cc52baf2661251500a547ac05950d76639f40d1",
+          "nonIdatSha256": "f92fe9265baee4b66dbcd7b4f79b3b03b26dc048c76030ddc8b611da4a5199fc",
+          "originalBytes": 1011684,
+          "encodedBytes": 912517,
+          "savedBytes": 99167
+        },
+        {
+          "source": "village/compiled/harpoons-4x-1-1c4a26b65375.png",
+          "sourceSha256": "1c4a26b653759acf6ff7b5b936222011bfbbae062a96caa40a2de752f5f6fb74",
+          "file": "village/compiled/harpoons-4x-1-54d919207a2e.png",
+          "sha256": "54d919207a2ee8fdeee07af5c948ebf7f9831ec8c0026b97eec1b8c5ac9f2362",
+          "width": 928,
+          "height": 1000,
+          "filteredBytes": 3713000,
+          "filteredSha256": "2f8b1e68960f8bdfd3c53476ae44e6a2e7965ff3aacf4a84671a34353b32683a",
+          "nonIdatSha256": "f92fe9265baee4b66dbcd7b4f79b3b03b26dc048c76030ddc8b611da4a5199fc",
+          "originalBytes": 1009474,
+          "encodedBytes": 923330,
+          "savedBytes": 86144
+        },
+        {
+          "source": "village/compiled/culverins-4x-1-55a658a2645c.png",
+          "sourceSha256": "55a658a2645c80afe591bf6ea977ec74e8a8133c97e9850c00742f773ed8ba2b",
+          "file": "village/compiled/culverins-4x-1-a861813ffd35.png",
+          "sha256": "a861813ffd355534f709b7816683aa50041fe5476df88bc6aeb191463dfeb52d",
+          "width": 928,
+          "height": 1000,
+          "filteredBytes": 3713000,
+          "filteredSha256": "d8c0fd9bf4870329af3ebd6f06ef8cf341e22089eed8025397dd21b5b35b7635",
+          "nonIdatSha256": "f92fe9265baee4b66dbcd7b4f79b3b03b26dc048c76030ddc8b611da4a5199fc",
+          "originalBytes": 1164347,
+          "encodedBytes": 1069222,
+          "savedBytes": 95125
+        },
+        {
+          "source": "village/compiled/swivels-4x-1-a20225be2494.png",
+          "sourceSha256": "a20225be24940156dab4973e584233a93aa223d9a27b72640446358581eea01f",
+          "file": "village/compiled/swivels-4x-1-742154d719cf.png",
+          "sha256": "742154d719cf3f4ec0d3ca369b4a8bb1f25a5b2430c8eb9025b2157815be5777",
+          "width": 928,
+          "height": 1000,
+          "filteredBytes": 3713000,
+          "filteredSha256": "54abd449e3c16b4c5d62ef65540ade2f9c8b492f4837ba1764d3edd933d19616",
+          "nonIdatSha256": "f92fe9265baee4b66dbcd7b4f79b3b03b26dc048c76030ddc8b611da4a5199fc",
+          "originalBytes": 1080933,
+          "encodedBytes": 1005287,
+          "savedBytes": 75646
+        }
+      ],
+      "allLogicalFramesUnchanged": true,
+      "representativeBrowserProof": [
+        {
+          "family": "buildings",
+          "results": [
+            {
+              "id": "cabin",
+              "density": 4,
+              "pixels": 147456,
+              "visiblePixels": 75207,
+              "differingPixels": 0,
+              "maxVisibleDelta": 0,
+              "maxAlphaDelta": 0,
+              "alphaWeightedMeanRgbDelta": 0
+            },
+            {
+              "id": "cabin",
+              "density": 2.5,
+              "pixels": 57600,
+              "visiblePixels": 29773,
+              "differingPixels": 28020,
+              "maxVisibleDelta": 255,
+              "maxAlphaDelta": 50,
+              "alphaWeightedMeanRgbDelta": 2.400989690669146
+            },
+            {
+              "id": "cabin",
+              "density": 2,
+              "pixels": 36864,
+              "visiblePixels": 19459,
+              "differingPixels": 18713,
+              "maxVisibleDelta": 255,
+              "maxAlphaDelta": 50,
+              "alphaWeightedMeanRgbDelta": 3.3316895164589235
+            },
+            {
+              "id": "cabin",
+              "density": 1.5,
+              "pixels": 20736,
+              "visiblePixels": 11051,
+              "differingPixels": 10798,
+              "maxVisibleDelta": 255,
+              "maxAlphaDelta": 65,
+              "alphaWeightedMeanRgbDelta": 4.121086974404331
+            }
+          ],
+          "peakSourceBytes": 6290064,
+          "retainedDecodedAfterRelease": 0
+        },
+        {
+          "family": "houses",
+          "results": [
+            {
+              "id": "island-house-barracks",
+              "density": 4,
+              "pixels": 135168,
+              "visiblePixels": 65527,
+              "differingPixels": 0,
+              "maxVisibleDelta": 0,
+              "maxAlphaDelta": 0,
+              "alphaWeightedMeanRgbDelta": 0
+            },
+            {
+              "id": "island-house-barracks",
+              "density": 2.5,
+              "pixels": 52800,
+              "visiblePixels": 25599,
+              "differingPixels": 21919,
+              "maxVisibleDelta": 255,
+              "maxAlphaDelta": 26,
+              "alphaWeightedMeanRgbDelta": 1.909550497250598
+            },
+            {
+              "id": "island-house-barracks",
+              "density": 2,
+              "pixels": 33792,
+              "visiblePixels": 15945,
+              "differingPixels": 13911,
+              "maxVisibleDelta": 255,
+              "maxAlphaDelta": 28,
+              "alphaWeightedMeanRgbDelta": 2.2353465869202207
+            },
+            {
+              "id": "island-house-barracks",
+              "density": 1.5,
+              "pixels": 19008,
+              "visiblePixels": 9018,
+              "differingPixels": 8359,
+              "maxVisibleDelta": 255,
+              "maxAlphaDelta": 41,
+              "alphaWeightedMeanRgbDelta": 3.0920336178704124
+            }
+          ],
+          "peakSourceBytes": 6290064,
+          "retainedDecodedAfterRelease": 0
+        },
+        {
+          "family": "landmarks",
+          "results": [
+            {
+              "id": "island-watchtower",
+              "density": 4,
+              "pixels": 131072,
+              "visiblePixels": 67702,
+              "differingPixels": 0,
+              "maxVisibleDelta": 0,
+              "maxAlphaDelta": 0,
+              "alphaWeightedMeanRgbDelta": 0
+            },
+            {
+              "id": "island-watchtower",
+              "density": 2.5,
+              "pixels": 51200,
+              "visiblePixels": 26501,
+              "differingPixels": 23070,
+              "maxVisibleDelta": 255,
+              "maxAlphaDelta": 36,
+              "alphaWeightedMeanRgbDelta": 1.7272445626780113
+            },
+            {
+              "id": "island-watchtower",
+              "density": 2,
+              "pixels": 32768,
+              "visiblePixels": 16715,
+              "differingPixels": 14524,
+              "maxVisibleDelta": 255,
+              "maxAlphaDelta": 27,
+              "alphaWeightedMeanRgbDelta": 2.001653828993988
+            },
+            {
+              "id": "island-watchtower",
+              "density": 1.5,
+              "pixels": 18432,
+              "visiblePixels": 9602,
+              "differingPixels": 8998,
+              "maxVisibleDelta": 255,
+              "maxAlphaDelta": 38,
+              "alphaWeightedMeanRgbDelta": 2.688606892619229
+            }
+          ],
+          "peakSourceBytes": 6290064,
+          "retainedDecodedAfterRelease": 0
+        },
+        {
+          "family": "services",
+          "results": [
+            {
+              "id": "island-techhub",
+              "density": 4,
+              "pixels": 112640,
+              "visiblePixels": 62009,
+              "differingPixels": 0,
+              "maxVisibleDelta": 0,
+              "maxAlphaDelta": 0,
+              "alphaWeightedMeanRgbDelta": 0
+            },
+            {
+              "id": "island-techhub",
+              "density": 2.5,
+              "pixels": 44000,
+              "visiblePixels": 24593,
+              "differingPixels": 22758,
+              "maxVisibleDelta": 255,
+              "maxAlphaDelta": 52,
+              "alphaWeightedMeanRgbDelta": 2.179738189736808
+            },
+            {
+              "id": "island-techhub",
+              "density": 2,
+              "pixels": 28160,
+              "visiblePixels": 15631,
+              "differingPixels": 14602,
+              "maxVisibleDelta": 255,
+              "maxAlphaDelta": 38,
+              "alphaWeightedMeanRgbDelta": 2.613571398623386
+            },
+            {
+              "id": "island-techhub",
+              "density": 1.5,
+              "pixels": 15840,
+              "visiblePixels": 9009,
+              "differingPixels": 8660,
+              "maxVisibleDelta": 255,
+              "maxAlphaDelta": 40,
+              "alphaWeightedMeanRgbDelta": 3.517568339743989
+            }
+          ],
+          "peakSourceBytes": 6291456,
+          "retainedDecodedAfterRelease": 0
+        },
+        {
+          "family": "nature",
+          "results": [
+            {
+              "id": "pine",
+              "density": 4,
+              "pixels": 143360,
+              "visiblePixels": 72377,
+              "differingPixels": 0,
+              "maxVisibleDelta": 0,
+              "maxAlphaDelta": 0,
+              "alphaWeightedMeanRgbDelta": 0
+            },
+            {
+              "id": "pine",
+              "density": 2.5,
+              "pixels": 56000,
+              "visiblePixels": 28292,
+              "differingPixels": 23800,
+              "maxVisibleDelta": 255,
+              "maxAlphaDelta": 34,
+              "alphaWeightedMeanRgbDelta": 1.2464031408926803
+            },
+            {
+              "id": "pine",
+              "density": 2,
+              "pixels": 35840,
+              "visiblePixels": 17861,
+              "differingPixels": 15167,
+              "maxVisibleDelta": 255,
+              "maxAlphaDelta": 28,
+              "alphaWeightedMeanRgbDelta": 1.3758202512369386
+            },
+            {
+              "id": "pine",
+              "density": 1.5,
+              "pixels": 20160,
+              "visiblePixels": 10117,
+              "differingPixels": 9189,
+              "maxVisibleDelta": 255,
+              "maxAlphaDelta": 40,
+              "alphaWeightedMeanRgbDelta": 1.9338118763312604
+            }
+          ],
+          "peakSourceBytes": 6291456,
+          "retainedDecodedAfterRelease": 0
+        },
+        {
+          "family": "cannons",
+          "results": [
+            {
+              "id": "island-cannon",
+              "density": 4,
+              "pixels": 43008,
+              "visiblePixels": 17112,
+              "differingPixels": 0,
+              "maxVisibleDelta": 0,
+              "maxAlphaDelta": 0,
+              "alphaWeightedMeanRgbDelta": 0
+            },
+            {
+              "id": "island-cannon",
+              "density": 2.5,
+              "pixels": 16800,
+              "visiblePixels": 6664,
+              "differingPixels": 5185,
+              "maxVisibleDelta": 255,
+              "maxAlphaDelta": 31,
+              "alphaWeightedMeanRgbDelta": 1.577294146108922
+            },
+            {
+              "id": "island-cannon",
+              "density": 2,
+              "pixels": 10752,
+              "visiblePixels": 4036,
+              "differingPixels": 3300,
+              "maxVisibleDelta": 255,
+              "maxAlphaDelta": 20,
+              "alphaWeightedMeanRgbDelta": 1.7172592126178943
+            },
+            {
+              "id": "island-cannon",
+              "density": 1.5,
+              "pixels": 6048,
+              "visiblePixels": 2278,
+              "differingPixels": 1940,
+              "maxVisibleDelta": 255,
+              "maxAlphaDelta": 40,
+              "alphaWeightedMeanRgbDelta": 2.4920209634641743
+            }
+          ],
+          "peakSourceBytes": 6291456,
+          "retainedDecodedAfterRelease": 0
+        },
+        {
+          "family": "walls",
+          "results": [
+            {
+              "id": "island-wall",
+              "density": 4,
+              "pixels": 24576,
+              "visiblePixels": 3848,
+              "differingPixels": 0,
+              "maxVisibleDelta": 0,
+              "maxAlphaDelta": 0,
+              "alphaWeightedMeanRgbDelta": 0
+            },
+            {
+              "id": "island-wall",
+              "density": 2.5,
+              "pixels": 9600,
+              "visiblePixels": 1562,
+              "differingPixels": 1503,
+              "maxVisibleDelta": 255,
+              "maxAlphaDelta": 24,
+              "alphaWeightedMeanRgbDelta": 3.098701732721172
+            },
+            {
+              "id": "island-wall",
+              "density": 2,
+              "pixels": 6144,
+              "visiblePixels": 1002,
+              "differingPixels": 978,
+              "maxVisibleDelta": 255,
+              "maxAlphaDelta": 23,
+              "alphaWeightedMeanRgbDelta": 3.0015673282860638
+            },
+            {
+              "id": "island-wall",
+              "density": 1.5,
+              "pixels": 3456,
+              "visiblePixels": 575,
+              "differingPixels": 565,
+              "maxVisibleDelta": 255,
+              "maxAlphaDelta": 35,
+              "alphaWeightedMeanRgbDelta": 4.16647618725115
+            }
+          ],
+          "peakSourceBytes": 6291456,
+          "retainedDecodedAfterRelease": 0
+        },
+        {
+          "family": "core",
+          "results": [
+            {
+              "id": "island_core",
+              "density": 4,
+              "pixels": 262144,
+              "visiblePixels": 129703,
+              "differingPixels": 0,
+              "maxVisibleDelta": 0,
+              "maxAlphaDelta": 0,
+              "alphaWeightedMeanRgbDelta": 0
+            },
+            {
+              "id": "island_core",
+              "density": 2.5,
+              "pixels": 102400,
+              "visiblePixels": 50848,
+              "differingPixels": 44209,
+              "maxVisibleDelta": 255,
+              "maxAlphaDelta": 24,
+              "alphaWeightedMeanRgbDelta": 1.583405339453184
+            },
+            {
+              "id": "island_core",
+              "density": 2,
+              "pixels": 65536,
+              "visiblePixels": 32232,
+              "differingPixels": 27998,
+              "maxVisibleDelta": 255,
+              "maxAlphaDelta": 27,
+              "alphaWeightedMeanRgbDelta": 1.6662182739341693
+            },
+            {
+              "id": "island_core",
+              "density": 1.5,
+              "pixels": 36864,
+              "visiblePixels": 18446,
+              "differingPixels": 17138,
+              "maxVisibleDelta": 255,
+              "maxAlphaDelta": 35,
+              "alphaWeightedMeanRgbDelta": 2.3758576106153995
+            }
+          ],
+          "peakSourceBytes": 6290064,
+          "retainedDecodedAfterRelease": 0
+        },
+        {
+          "family": "progress",
+          "results": [
+            {
+              "id": "island_statue_1",
+              "density": 4,
+              "pixels": 35840,
+              "visiblePixels": 12322,
+              "differingPixels": 0,
+              "maxVisibleDelta": 0,
+              "maxAlphaDelta": 0,
+              "alphaWeightedMeanRgbDelta": 0
+            },
+            {
+              "id": "island_statue_1",
+              "density": 2.5,
+              "pixels": 14000,
+              "visiblePixels": 4970,
+              "differingPixels": 4702,
+              "maxVisibleDelta": 255,
+              "maxAlphaDelta": 38,
+              "alphaWeightedMeanRgbDelta": 2.8592127168247066
+            },
+            {
+              "id": "island_statue_1",
+              "density": 2,
+              "pixels": 8960,
+              "visiblePixels": 3188,
+              "differingPixels": 3085,
+              "maxVisibleDelta": 255,
+              "maxAlphaDelta": 36,
+              "alphaWeightedMeanRgbDelta": 4.627514591592865
+            },
+            {
+              "id": "island_statue_1",
+              "density": 1.5,
+              "pixels": 5040,
+              "visiblePixels": 1920,
+              "differingPixels": 1890,
+              "maxVisibleDelta": 255,
+              "maxAlphaDelta": 41,
+              "alphaWeightedMeanRgbDelta": 4.944929246082361
+            }
+          ],
+          "peakSourceBytes": 6294152,
+          "retainedDecodedAfterRelease": 0
+        },
+        {
+          "family": "mortars",
+          "results": [
+            {
+              "id": "island-mortar",
+              "density": 4,
+              "pixels": 43008,
+              "visiblePixels": 14063,
+              "differingPixels": 0,
+              "maxVisibleDelta": 0,
+              "maxAlphaDelta": 0,
+              "alphaWeightedMeanRgbDelta": 0
+            },
+            {
+              "id": "island-mortar",
+              "density": 2.5,
+              "pixels": 16800,
+              "visiblePixels": 5532,
+              "differingPixels": 4497,
+              "maxVisibleDelta": 255,
+              "maxAlphaDelta": 27,
+              "alphaWeightedMeanRgbDelta": 1.88945149430201
+            },
+            {
+              "id": "island-mortar",
+              "density": 2,
+              "pixels": 10752,
+              "visiblePixels": 3499,
+              "differingPixels": 2847,
+              "maxVisibleDelta": 255,
+              "maxAlphaDelta": 20,
+              "alphaWeightedMeanRgbDelta": 1.5812647395822665
+            },
+            {
+              "id": "island-mortar",
+              "density": 1.5,
+              "pixels": 6048,
+              "visiblePixels": 1972,
+              "differingPixels": 1724,
+              "maxVisibleDelta": 255,
+              "maxAlphaDelta": 41,
+              "alphaWeightedMeanRgbDelta": 2.5547080866071283
+            }
+          ],
+          "peakSourceBytes": 6291456,
+          "retainedDecodedAfterRelease": 0
+        },
+        {
+          "family": "harpoons",
+          "results": [
+            {
+              "id": "island-harpoon",
+              "density": 4,
+              "pixels": 43008,
+              "visiblePixels": 17904,
+              "differingPixels": 0,
+              "maxVisibleDelta": 0,
+              "maxAlphaDelta": 0,
+              "alphaWeightedMeanRgbDelta": 0
+            },
+            {
+              "id": "island-harpoon",
+              "density": 2.5,
+              "pixels": 16800,
+              "visiblePixels": 7035,
+              "differingPixels": 5800,
+              "maxVisibleDelta": 255,
+              "maxAlphaDelta": 35,
+              "alphaWeightedMeanRgbDelta": 2.2188955708676903
+            },
+            {
+              "id": "island-harpoon",
+              "density": 2,
+              "pixels": 10752,
+              "visiblePixels": 4379,
+              "differingPixels": 3711,
+              "maxVisibleDelta": 255,
+              "maxAlphaDelta": 26,
+              "alphaWeightedMeanRgbDelta": 2.1510472213781946
+            },
+            {
+              "id": "island-harpoon",
+              "density": 1.5,
+              "pixels": 6048,
+              "visiblePixels": 2483,
+              "differingPixels": 2232,
+              "maxVisibleDelta": 255,
+              "maxAlphaDelta": 38,
+              "alphaWeightedMeanRgbDelta": 3.501504059548601
+            }
+          ],
+          "peakSourceBytes": 6291456,
+          "retainedDecodedAfterRelease": 0
+        },
+        {
+          "family": "culverins",
+          "results": [
+            {
+              "id": "island-culverin",
+              "density": 4,
+              "pixels": 43008,
+              "visiblePixels": 20609,
+              "differingPixels": 0,
+              "maxVisibleDelta": 0,
+              "maxAlphaDelta": 0,
+              "alphaWeightedMeanRgbDelta": 0
+            },
+            {
+              "id": "island-culverin",
+              "density": 2.5,
+              "pixels": 16800,
+              "visiblePixels": 8071,
+              "differingPixels": 6529,
+              "maxVisibleDelta": 255,
+              "maxAlphaDelta": 35,
+              "alphaWeightedMeanRgbDelta": 2.401235709534946
+            },
+            {
+              "id": "island-culverin",
+              "density": 2,
+              "pixels": 10752,
+              "visiblePixels": 5060,
+              "differingPixels": 4165,
+              "maxVisibleDelta": 255,
+              "maxAlphaDelta": 25,
+              "alphaWeightedMeanRgbDelta": 2.4864421154266285
+            },
+            {
+              "id": "island-culverin",
+              "density": 1.5,
+              "pixels": 6048,
+              "visiblePixels": 2864,
+              "differingPixels": 2519,
+              "maxVisibleDelta": 255,
+              "maxAlphaDelta": 35,
+              "alphaWeightedMeanRgbDelta": 3.8843873099494988
+            }
+          ],
+          "peakSourceBytes": 6291456,
+          "retainedDecodedAfterRelease": 0
+        },
+        {
+          "family": "swivels",
+          "results": [
+            {
+              "id": "island-swivel",
+              "density": 4,
+              "pixels": 43008,
+              "visiblePixels": 13918,
+              "differingPixels": 0,
+              "maxVisibleDelta": 0,
+              "maxAlphaDelta": 0,
+              "alphaWeightedMeanRgbDelta": 0
+            },
+            {
+              "id": "island-swivel",
+              "density": 2.5,
+              "pixels": 16800,
+              "visiblePixels": 5479,
+              "differingPixels": 5031,
+              "maxVisibleDelta": 255,
+              "maxAlphaDelta": 28,
+              "alphaWeightedMeanRgbDelta": 2.48616727300075
+            },
+            {
+              "id": "island-swivel",
+              "density": 2,
+              "pixels": 10752,
+              "visiblePixels": 3473,
+              "differingPixels": 3239,
+              "maxVisibleDelta": 255,
+              "maxAlphaDelta": 32,
+              "alphaWeightedMeanRgbDelta": 2.624589596102196
+            },
+            {
+              "id": "island-swivel",
+              "density": 1.5,
+              "pixels": 6048,
+              "visiblePixels": 1992,
+              "differingPixels": 1900,
+              "maxVisibleDelta": 255,
+              "maxAlphaDelta": 29,
+              "alphaWeightedMeanRgbDelta": 3.3583395854899094
+            }
+          ],
+          "peakSourceBytes": 6291456,
+          "retainedDecodedAfterRelease": 0
+        }
+      ],
+      "errors": [],
+      "externalRequests": []
+    }
+  ]
 }

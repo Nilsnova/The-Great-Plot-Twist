@@ -21,12 +21,12 @@
   "initialTransfer": {
     "unchangedTerrainBytes": 2683357,
     "rawPlusTerrainBytes": 29819059,
-    "compiledPlusTerrainBytes": 13608302,
+    "compiledPlusTerrainBytes": 12554858,
     "targetBytes": 8388608,
     "targetMet": false
   },
   "originalEncoded": 27135702,
-  "compiledEncoded": 10924945,
+  "compiledEncoded": 9871501,
   "originalDecoded": 88077512,
   "compiledDecoded": 38543104,
   "largestCompiledDecoded": 5541888,
@@ -70,5 +70,18 @@
   ],
   "zeroRetained": true,
   "errors": [],
-  "externalRequests": []
+  "externalRequests": [],
+  "transport": {
+    "sourceCommit": "9a52ebcce7922e4a70030440e1d8f2525269c479",
+    "beforeBytes": 10924945,
+    "afterBytes": 9871501,
+    "savedBytes": 1053444,
+    "files": 13,
+    "allLogicalFramesUnchanged": true,
+    "browserCases": 52,
+    "max4Rgb": 0,
+    "max4Alpha": 0,
+    "errors": [],
+    "externalRequests": []
+  }
 }
