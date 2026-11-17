@@ -1,0 +1,6722 @@
+{
+  "scope": "offline normalized PNG source compilation; runtime activation/build exclusion and actual-game acceptance remain separate",
+  "sourceCommit": "562d1199e897d4def060f5cfd9c7356d8a1e3a00",
+  "compilerDirtyPaths": "?? public/village/compiled/\n?? src/art/village/baked.js",
+  "browser": "156.0.8078.79",
+  "families": [
+    "buildings",
+    "houses",
+    "landmarks",
+    "services",
+    "nature",
+    "cannons",
+    "walls"
+  ],
+  "original": {
+    "files": [
+      {
+        "file": "village/buildings-hero-v1.png",
+        "bytes": 1624431,
+        "sha256": "b5fb1350f511718b901f8f8ecd2291e7e5ca7b13dce5b7376d1e1353ede1fc75",
+        "width": 1254,
+        "height": 1254
+      },
+      {
+        "file": "village/houses-v1.png",
+        "bytes": 2055185,
+        "sha256": "9c7e6e80c8f8b089e2213c2274d4cf98d0d8ba7c9f1574b417855e3f4aad2585",
+        "width": 1254,
+        "height": 1254
+      },
+      {
+        "file": "village/landmarks-v1.png",
+        "bytes": 1191880,
+        "sha256": "f1b8eeeadb2883b3565b47e592a722539edeb1281902955fb67650b4a819fab2",
+        "width": 1254,
+        "height": 1254
+      },
+      {
+        "file": "village/services-v1.png",
+        "bytes": 2193948,
+        "sha256": "d9091a95d8a3267f2c0790a06343d42d21232bc1c521bbcd1afc410914c991ff",
+        "width": 1536,
+        "height": 1024
+      },
+      {
+        "file": "village/nature-v1.png",
+        "bytes": 2103968,
+        "sha256": "c528807c91a2d79ba73ba201085ac7343a271818500421e656c3a9576b774412",
+        "width": 1536,
+        "height": 1024
+      },
+      {
+        "file": "village/cannons-v1.png",
+        "bytes": 2301091,
+        "sha256": "34d114e147b363bbef131b407d762d7006201a9d4c0cd89a3d01aa12238f48bf",
+        "width": 1536,
+        "height": 1024
+      },
+      {
+        "file": "village/walls-posts-v1.png",
+        "bytes": 2145071,
+        "sha256": "38347e0c44d75b59a3fc07748e90bc6d2df769e10de34d2a1376ded6187dc18a",
+        "width": 1536,
+        "height": 1024
+      },
+      {
+        "file": "village/walls-surfaces-v1.png",
+        "bytes": 2348350,
+        "sha256": "459a08817a8f9c1a29603dde25655b36287e71e723111739dea6a465e6081ca8",
+        "width": 1536,
+        "height": 1024
+      }
+    ],
+    "encodedBytes": 15963924,
+    "summedDecodedBytes": 50327472
+  },
+  "compiled": {
+    "files": [
+      {
+        "file": "village/compiled/buildings-4x-1-e380cc58f866.png",
+        "bytes": 215050,
+        "sha256": "e380cc58f86631cce3057ca6ba990462388edb8e935b440661b03cb1c399c2bd",
+        "width": 392,
+        "height": 392
+      },
+      {
+        "file": "village/compiled/houses-4x-1-6111d5601c45.png",
+        "bytes": 1602640,
+        "sha256": "6111d5601c4576476d3c2d89703378f667cae6aa384c7d4188c4a6b6da2adeef",
+        "width": 984,
+        "height": 1408
+      },
+      {
+        "file": "village/compiled/landmarks-4x-1-edf354806e0b.png",
+        "bytes": 650386,
+        "sha256": "edf354806e0bfb327b6f28a2583d6db99fb7d7c76140e0c878c5c8e903c99c2d",
+        "width": 1024,
+        "height": 520
+      },
+      {
+        "file": "village/compiled/services-4x-1-744bdeee9b69.png",
+        "bytes": 361375,
+        "sha256": "744bdeee9b691f00fe6baf0a3fd490ba79ff80cf268b72cbaa750c6a24e20847",
+        "width": 656,
+        "height": 360
+      },
+      {
+        "file": "village/compiled/nature-4x-1-5daf6446cdb1.png",
+        "bytes": 781068,
+        "sha256": "5daf6446cdb136ff089a8d8e240736af79f75b84bc884e145fbf7688d6706e7a",
+        "width": 984,
+        "height": 880
+      },
+      {
+        "file": "village/compiled/cannons-4x-1-e3fdd5e76473.png",
+        "bytes": 1134354,
+        "sha256": "e3fdd5e76473fb8921bb0acc5165d35b59b23b2789ba3ed2651eba1c9e5f26ff",
+        "width": 928,
+        "height": 1000
+      },
+      {
+        "file": "village/compiled/walls-4x-1-c5cb2436d6e0.png",
+        "bytes": 744024,
+        "sha256": "c5cb2436d6e0ce2f0d9b13d57c8f5718a0608409227b2370d913c2efdfb6ca62",
+        "width": 1008,
+        "height": 680
+      }
+    ],
+    "encodedBytes": 5488897,
+    "summedDecodedBytes": 19148544,
+    "peakSingleDecodedBytes": 5541888
+  },
+  "initialTransfer": {
+    "unchangedTerrainBytes": 2683357,
+    "rawPlusTerrainBytes": 18647281,
+    "compiledPlusTerrainBytes": 8172254,
+    "targetBytes": 8388608,
+    "targetMet": true
+  },
+  "budgets": {
+    "decodedPoolBytes": 12582912,
+    "combatAtlasHighBytes": 41943040,
+    "combatAtlasLowBytes": 12582912,
+    "note": "unchanged final logical frame/density means no renderer-pass or final GPU-texture saving is claimed"
+  },
+  "inputs": [
+    {
+      "name": "buildings",
+      "module": "src/art/village/buildings.js",
+      "sha256": "c0304fcaa21e835e382131a13521f4f0d2d76d3b577a80c069eff2662720c0d5",
+      "frames": {
+        "cabin": {
+          "sheet": {
+            "file": "village/buildings-hero-v1.png",
+            "width": 1254,
+            "height": 1254
+          },
+          "rect": [
+            75,
+            39,
+            1108,
+            1103
+          ],
+          "logical": [
+            96,
+            96,
+            12
+          ],
+          "sourceFoot": [
+            552,
+            1085
+          ],
+          "fitBounds": [
+            552,
+            1085,
+            556,
+            18
+          ]
+        }
+      }
+    },
+    {
+      "name": "houses",
+      "module": "src/art/village/houses.js",
+      "sha256": "fac5b6df72225aec5a99771a79f3b8c12c72fce2ce4099adf3acce3115224029",
+      "frames": {
+        "island-house": {
+          "sheet": {
+            "file": "village/houses-v1.png",
+            "width": 1254,
+            "height": 1254
+          },
+          "rect": [
+            46,
+            85,
+            322,
+            304
+          ],
+          "sourceFoot": [
+            163,
+            288
+          ],
+          "logical": [
+            80,
+            80,
+            8
+          ],
+          "fitBounds": [
+            207,
+            365,
+            186,
+            16
+          ]
+        },
+        "island-house-l2": {
+          "sheet": {
+            "file": "village/houses-v1.png",
+            "width": 1254,
+            "height": 1254
+          },
+          "rect": [
+            420,
+            79,
+            389,
+            313
+          ],
+          "sourceFoot": [
+            207,
+            297
+          ],
+          "logical": [
+            80,
+            80,
+            8
+          ],
+          "fitBounds": [
+            207,
+            365,
+            186,
+            16
+          ]
+        },
+        "island-house-l3": {
+          "sheet": {
+            "file": "village/houses-v1.png",
+            "width": 1254,
+            "height": 1254
+          },
+          "rect": [
+            847,
+            22,
+            384,
+            380
+          ],
+          "sourceFoot": [
+            198,
+            365
+          ],
+          "logical": [
+            80,
+            80,
+            8
+          ],
+          "fitBounds": [
+            207,
+            365,
+            186,
+            16
+          ]
+        },
+        "island-house-barracks": {
+          "sheet": {
+            "file": "village/houses-v1.png",
+            "width": 1254,
+            "height": 1254
+          },
+          "rect": [
+            24,
+            474,
+            391,
+            324
+          ],
+          "sourceFoot": [
+            185,
+            310
+          ],
+          "logical": [
+            96,
+            88,
+            8
+          ],
+          "fitBounds": [
+            206,
+            387,
+            207,
+            16
+          ]
+        },
+        "island-house-tavern": {
+          "sheet": {
+            "file": "village/houses-v1.png",
+            "width": 1254,
+            "height": 1254
+          },
+          "rect": [
+            435,
+            474,
+            381,
+            325
+          ],
+          "sourceFoot": [
+            192,
+            310
+          ],
+          "logical": [
+            96,
+            88,
+            8
+          ],
+          "fitBounds": [
+            206,
+            387,
+            207,
+            16
+          ]
+        },
+        "island-house-workshop": {
+          "sheet": {
+            "file": "village/houses-v1.png",
+            "width": 1254,
+            "height": 1254
+          },
+          "rect": [
+            840,
+            474,
+            394,
+            326
+          ],
+          "sourceFoot": [
+            205,
+            310
+          ],
+          "logical": [
+            96,
+            88,
+            8
+          ],
+          "fitBounds": [
+            206,
+            387,
+            207,
+            16
+          ]
+        },
+        "island-house-barracks-l3": {
+          "sheet": {
+            "file": "village/houses-v1.png",
+            "width": 1254,
+            "height": 1254
+          },
+          "rect": [
+            23,
+            839,
+            393,
+            399
+          ],
+          "sourceFoot": [
+            186,
+            384
+          ],
+          "logical": [
+            96,
+            88,
+            8
+          ],
+          "fitBounds": [
+            206,
+            387,
+            207,
+            16
+          ]
+        },
+        "island-house-tavern-l3": {
+          "sheet": {
+            "file": "village/houses-v1.png",
+            "width": 1254,
+            "height": 1254
+          },
+          "rect": [
+            428,
+            838,
+            393,
+            401
+          ],
+          "sourceFoot": [
+            199,
+            385
+          ],
+          "logical": [
+            96,
+            88,
+            8
+          ],
+          "fitBounds": [
+            206,
+            387,
+            207,
+            16
+          ]
+        },
+        "island-house-workshop-l3": {
+          "sheet": {
+            "file": "village/houses-v1.png",
+            "width": 1254,
+            "height": 1254
+          },
+          "rect": [
+            839,
+            838,
+            400,
+            402
+          ],
+          "sourceFoot": [
+            206,
+            387
+          ],
+          "logical": [
+            96,
+            88,
+            8
+          ],
+          "fitBounds": [
+            206,
+            387,
+            207,
+            16
+          ]
+        }
+      }
+    },
+    {
+      "name": "landmarks",
+      "module": "src/art/village/landmarks.js",
+      "sha256": "d9e5b1e6868de909f451d2a79e68cf93f44875a99e532a4585d5422433f3da43",
+      "frames": {
+        "island-bell": {
+          "sheet": {
+            "file": "village/landmarks-v1.png",
+            "width": 1254,
+            "height": 1254
+          },
+          "rect": [
+            112,
+            69,
+            459,
+            497
+          ],
+          "logical": [
+            56,
+            72,
+            8
+          ],
+          "sourceFoot": [
+            225,
+            483
+          ],
+          "fitBounds": [
+            225,
+            483,
+            234,
+            14
+          ]
+        },
+        "island-watchtower": {
+          "sheet": {
+            "file": "village/landmarks-v1.png",
+            "width": 1254,
+            "height": 1254
+          },
+          "rect": [
+            760,
+            8,
+            325,
+            558
+          ],
+          "logical": [
+            64,
+            128,
+            8
+          ],
+          "sourceFoot": [
+            161,
+            543
+          ],
+          "fitBounds": [
+            161,
+            543,
+            164,
+            15
+          ]
+        },
+        "island-watchtower-l4": {
+          "sheet": {
+            "file": "village/landmarks-v1.png",
+            "width": 1254,
+            "height": 1254
+          },
+          "rect": [
+            168,
+            582,
+            332,
+            611
+          ],
+          "logical": [
+            64,
+            128,
+            8
+          ],
+          "sourceFoot": [
+            164,
+            596
+          ],
+          "fitBounds": [
+            164,
+            596,
+            168,
+            15
+          ]
+        },
+        "island-watchtower-l5": {
+          "sheet": {
+            "file": "village/landmarks-v1.png",
+            "width": 1254,
+            "height": 1254
+          },
+          "rect": [
+            742,
+            575,
+            357,
+            624
+          ],
+          "logical": [
+            64,
+            128,
+            8
+          ],
+          "sourceFoot": [
+            174,
+            609
+          ],
+          "fitBounds": [
+            174,
+            609,
+            183,
+            15
+          ]
+        }
+      }
+    },
+    {
+      "name": "services",
+      "module": "src/art/village/services.js",
+      "sha256": "689a6a9845e02fa77d7036403382aa538b61d0b5bfd0bfff203a5a927c216dad",
+      "frames": {
+        "island-techhub": {
+          "sheet": {
+            "file": "village/services-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            20,
+            125,
+            698,
+            776
+          ],
+          "logical": [
+            80,
+            88,
+            8
+          ],
+          "sourceFoot": [
+            345,
+            761
+          ],
+          "fitBounds": [
+            345,
+            761,
+            353,
+            15
+          ]
+        },
+        "island-arsenal": {
+          "sheet": {
+            "file": "village/services-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            771,
+            225,
+            747,
+            680
+          ],
+          "logical": [
+            80,
+            80,
+            8
+          ],
+          "sourceFoot": [
+            365,
+            665
+          ],
+          "fitBounds": [
+            365,
+            665,
+            382,
+            15
+          ]
+        }
+      }
+    },
+    {
+      "name": "nature",
+      "module": "src/art/village/nature.js",
+      "sha256": "ab1a50a6161b82345aff2cb5fa02bdc5059ed84b8f3623bbf6bb7b954fdff93d",
+      "frames": {
+        "oak": {
+          "sheet": {
+            "file": "village/nature-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            24,
+            132,
+            418,
+            431
+          ],
+          "logical": [
+            80,
+            104,
+            8
+          ],
+          "sourceFoot": [
+            197,
+            420
+          ],
+          "fitBounds": [
+            197,
+            420,
+            221,
+            11
+          ]
+        },
+        "pine": {
+          "sheet": {
+            "file": "village/nature-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            442,
+            74,
+            322,
+            489
+          ],
+          "logical": [
+            80,
+            112,
+            8
+          ],
+          "sourceFoot": [
+            158,
+            478
+          ],
+          "fitBounds": [
+            158,
+            478,
+            164,
+            11
+          ]
+        },
+        "birch": {
+          "sheet": {
+            "file": "village/nature-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            779,
+            144,
+            362,
+            419
+          ],
+          "logical": [
+            80,
+            104,
+            8
+          ],
+          "sourceFoot": [
+            145,
+            408
+          ],
+          "fitBounds": [
+            145,
+            408,
+            217,
+            11
+          ]
+        },
+        "birch-tall": {
+          "sheet": {
+            "file": "village/nature-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            1149,
+            54,
+            369,
+            509
+          ],
+          "logical": [
+            80,
+            104,
+            8
+          ],
+          "sourceFoot": [
+            164,
+            498
+          ],
+          "fitBounds": [
+            164,
+            498,
+            205,
+            11
+          ]
+        },
+        "rock": {
+          "sheet": {
+            "file": "village/nature-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            53,
+            737,
+            337,
+            223
+          ],
+          "logical": [
+            48,
+            36,
+            4
+          ],
+          "sourceFoot": [
+            167,
+            209
+          ],
+          "fitBounds": [
+            167,
+            209,
+            170,
+            14
+          ]
+        },
+        "shrub": {
+          "sheet": {
+            "file": "village/nature-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            439,
+            739,
+            307,
+            221
+          ],
+          "logical": [
+            40,
+            32,
+            4
+          ],
+          "sourceFoot": [
+            152,
+            208
+          ],
+          "fitBounds": [
+            152,
+            208,
+            155,
+            13
+          ]
+        },
+        "flowers": {
+          "sheet": {
+            "file": "village/nature-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            813,
+            748,
+            284,
+            211
+          ],
+          "logical": [
+            24,
+            24,
+            3
+          ],
+          "sourceFoot": [
+            145,
+            198
+          ],
+          "fitBounds": [
+            145,
+            198,
+            139,
+            13
+          ]
+        },
+        "grass-tuft": {
+          "sheet": {
+            "file": "village/nature-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            1177,
+            763,
+            303,
+            196
+          ],
+          "logical": [
+            32,
+            32,
+            4
+          ],
+          "sourceFoot": [
+            154,
+            183
+          ],
+          "fitBounds": [
+            154,
+            183,
+            149,
+            13
+          ]
+        }
+      }
+    },
+    {
+      "name": "cannons",
+      "module": "src/art/village/cannons.js",
+      "sha256": "bec851ae51be9937a4bfc3935340f07ed3a2392e76e107457efa421025fa1066",
+      "frames": {
+        "island-cannon": {
+          "sheet": {
+            "file": "village/cannons-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            42,
+            88,
+            232,
+            176
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            123,
+            165
+          ],
+          "fitBounds": [
+            123,
+            165,
+            109,
+            11
+          ]
+        },
+        "island-cannon-fire": {
+          "sheet": {
+            "file": "village/cannons-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            42,
+            351,
+            232,
+            176
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            123,
+            165
+          ],
+          "fitBounds": [
+            123,
+            165,
+            109,
+            11
+          ]
+        },
+        "island-cannon-damaged": {
+          "sheet": {
+            "file": "village/cannons-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            42,
+            618,
+            232,
+            176
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            123,
+            165
+          ],
+          "fitBounds": [
+            123,
+            165,
+            109,
+            11
+          ]
+        },
+        "island-cannon-broken": {
+          "sheet": {
+            "file": "village/cannons-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            42,
+            832,
+            232,
+            176
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            123,
+            165
+          ],
+          "fitBounds": [
+            123,
+            165,
+            109,
+            11
+          ]
+        },
+        "island-cannon-l2": {
+          "sheet": {
+            "file": "village/cannons-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            325,
+            67,
+            250,
+            195
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            129,
+            184
+          ],
+          "fitBounds": [
+            129,
+            184,
+            121,
+            11
+          ]
+        },
+        "island-cannon-fire-l2": {
+          "sheet": {
+            "file": "village/cannons-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            325,
+            328,
+            250,
+            195
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            129,
+            184
+          ],
+          "fitBounds": [
+            129,
+            184,
+            121,
+            11
+          ]
+        },
+        "island-cannon-l2-damaged": {
+          "sheet": {
+            "file": "village/cannons-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            325,
+            597,
+            250,
+            195
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            129,
+            184
+          ],
+          "fitBounds": [
+            129,
+            184,
+            121,
+            11
+          ]
+        },
+        "island-cannon-l2-broken": {
+          "sheet": {
+            "file": "village/cannons-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            325,
+            814,
+            250,
+            195
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            129,
+            184
+          ],
+          "fitBounds": [
+            129,
+            184,
+            121,
+            11
+          ]
+        },
+        "island-cannon-l3": {
+          "sheet": {
+            "file": "village/cannons-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            615,
+            45,
+            269,
+            216
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            139,
+            206
+          ],
+          "fitBounds": [
+            139,
+            206,
+            130,
+            10
+          ]
+        },
+        "island-cannon-fire-l3": {
+          "sheet": {
+            "file": "village/cannons-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            615,
+            309,
+            269,
+            216
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            139,
+            206
+          ],
+          "fitBounds": [
+            139,
+            206,
+            130,
+            10
+          ]
+        },
+        "island-cannon-l3-damaged": {
+          "sheet": {
+            "file": "village/cannons-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            615,
+            576,
+            269,
+            216
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            139,
+            206
+          ],
+          "fitBounds": [
+            139,
+            206,
+            130,
+            10
+          ]
+        },
+        "island-cannon-l3-broken": {
+          "sheet": {
+            "file": "village/cannons-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            615,
+            800,
+            269,
+            209
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            139,
+            199
+          ],
+          "fitBounds": [
+            139,
+            206,
+            130,
+            10
+          ]
+        },
+        "island-cannon-l4": {
+          "sheet": {
+            "file": "village/cannons-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            910,
+            31,
+            279,
+            233
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            148,
+            222
+          ],
+          "fitBounds": [
+            148,
+            222,
+            131,
+            11
+          ]
+        },
+        "island-cannon-fire-l4": {
+          "sheet": {
+            "file": "village/cannons-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            910,
+            296,
+            279,
+            233
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            148,
+            222
+          ],
+          "fitBounds": [
+            148,
+            222,
+            131,
+            11
+          ]
+        },
+        "island-cannon-l4-damaged": {
+          "sheet": {
+            "file": "village/cannons-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            910,
+            563,
+            279,
+            233
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            148,
+            222
+          ],
+          "fitBounds": [
+            148,
+            222,
+            131,
+            11
+          ]
+        },
+        "island-cannon-l4-broken": {
+          "sheet": {
+            "file": "village/cannons-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            910,
+            800,
+            279,
+            211
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            148,
+            200
+          ],
+          "fitBounds": [
+            148,
+            222,
+            131,
+            11
+          ]
+        },
+        "island-cannon-l5": {
+          "sheet": {
+            "file": "village/cannons-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            1222,
+            12,
+            287,
+            251
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            140,
+            240
+          ],
+          "fitBounds": [
+            140,
+            240,
+            147,
+            11
+          ]
+        },
+        "island-cannon-fire-l5": {
+          "sheet": {
+            "file": "village/cannons-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            1222,
+            275,
+            287,
+            251
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            140,
+            240
+          ],
+          "fitBounds": [
+            140,
+            240,
+            147,
+            11
+          ]
+        },
+        "island-cannon-l5-damaged": {
+          "sheet": {
+            "file": "village/cannons-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            1222,
+            545,
+            287,
+            251
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            140,
+            240
+          ],
+          "fitBounds": [
+            140,
+            240,
+            147,
+            11
+          ]
+        },
+        "island-cannon-l5-broken": {
+          "sheet": {
+            "file": "village/cannons-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            1222,
+            800,
+            287,
+            214
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            140,
+            203
+          ],
+          "fitBounds": [
+            140,
+            240,
+            147,
+            11
+          ]
+        }
+      }
+    },
+    {
+      "name": "walls",
+      "module": "src/art/village/walls.js",
+      "sha256": "891d6cf39b6d600ff650202bce1c573d704079d5cdf4609e46016b20f411c9a4",
+      "frames": {
+        "island-wall": {
+          "sheet": {
+            "file": "village/walls-posts-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            0,
+            0,
+            307,
+            370
+          ],
+          "logical": [
+            48,
+            32,
+            6
+          ],
+          "sourceFoot": [
+            166,
+            350
+          ],
+          "fitBounds": [
+            166,
+            350,
+            141,
+            20
+          ]
+        },
+        "island-wall-damaged": {
+          "sheet": {
+            "file": "village/walls-posts-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            614,
+            370,
+            308,
+            420
+          ],
+          "logical": [
+            48,
+            32,
+            6
+          ],
+          "sourceFoot": [
+            150,
+            364
+          ],
+          "fitBounds": [
+            150,
+            364,
+            158,
+            56
+          ]
+        },
+        "island-wall-broken": {
+          "sheet": {
+            "file": "village/walls-posts-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            614,
+            790,
+            308,
+            234
+          ],
+          "logical": [
+            48,
+            32,
+            6
+          ],
+          "sourceFoot": [
+            150,
+            192
+          ],
+          "fitBounds": [
+            150,
+            192,
+            158,
+            42
+          ]
+        },
+        "village-wall-front-l1": {
+          "sheet": {
+            "file": "village/walls-surfaces-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            58,
+            95,
+            192,
+            192
+          ],
+          "logical": [
+            32,
+            32,
+            0
+          ],
+          "sourceFoot": [
+            96,
+            192
+          ],
+          "fitBounds": [
+            96,
+            192,
+            96,
+            0
+          ]
+        },
+        "village-wall-top-l1": {
+          "sheet": {
+            "file": "village/walls-surfaces-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            90,
+            405,
+            128,
+            128
+          ],
+          "logical": [
+            32,
+            32,
+            0
+          ],
+          "sourceFoot": [
+            64,
+            128
+          ],
+          "fitBounds": [
+            64,
+            128,
+            64,
+            0
+          ]
+        },
+        "village-wall-side-l1": {
+          "sheet": {
+            "file": "village/walls-surfaces-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            58,
+            735,
+            192,
+            192
+          ],
+          "logical": [
+            32,
+            32,
+            0
+          ],
+          "sourceFoot": [
+            96,
+            192
+          ],
+          "fitBounds": [
+            96,
+            192,
+            96,
+            0
+          ]
+        },
+        "island-wall-l2": {
+          "sheet": {
+            "file": "village/walls-posts-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            307,
+            0,
+            307,
+            370
+          ],
+          "logical": [
+            48,
+            32,
+            6
+          ],
+          "sourceFoot": [
+            154,
+            350
+          ],
+          "fitBounds": [
+            154,
+            350,
+            153,
+            20
+          ]
+        },
+        "island-wall-l2-damaged": {
+          "sheet": {
+            "file": "village/walls-posts-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            307,
+            370,
+            307,
+            420
+          ],
+          "logical": [
+            48,
+            32,
+            6
+          ],
+          "sourceFoot": [
+            154,
+            364
+          ],
+          "fitBounds": [
+            154,
+            364,
+            153,
+            56
+          ]
+        },
+        "island-wall-l2-broken": {
+          "sheet": {
+            "file": "village/walls-posts-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            307,
+            790,
+            307,
+            234
+          ],
+          "logical": [
+            48,
+            32,
+            6
+          ],
+          "sourceFoot": [
+            154,
+            192
+          ],
+          "fitBounds": [
+            154,
+            192,
+            153,
+            42
+          ]
+        },
+        "village-wall-front-l2": {
+          "sheet": {
+            "file": "village/walls-surfaces-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            365,
+            95,
+            192,
+            192
+          ],
+          "logical": [
+            32,
+            32,
+            0
+          ],
+          "sourceFoot": [
+            96,
+            192
+          ],
+          "fitBounds": [
+            96,
+            192,
+            96,
+            0
+          ]
+        },
+        "village-wall-top-l2": {
+          "sheet": {
+            "file": "village/walls-surfaces-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            397,
+            405,
+            128,
+            128
+          ],
+          "logical": [
+            32,
+            32,
+            0
+          ],
+          "sourceFoot": [
+            64,
+            128
+          ],
+          "fitBounds": [
+            64,
+            128,
+            64,
+            0
+          ]
+        },
+        "village-wall-side-l2": {
+          "sheet": {
+            "file": "village/walls-surfaces-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            365,
+            735,
+            192,
+            192
+          ],
+          "logical": [
+            32,
+            32,
+            0
+          ],
+          "sourceFoot": [
+            96,
+            192
+          ],
+          "fitBounds": [
+            96,
+            192,
+            96,
+            0
+          ]
+        },
+        "island-wall-l3": {
+          "sheet": {
+            "file": "village/walls-posts-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            614,
+            0,
+            308,
+            370
+          ],
+          "logical": [
+            48,
+            32,
+            6
+          ],
+          "sourceFoot": [
+            150,
+            350
+          ],
+          "fitBounds": [
+            150,
+            350,
+            158,
+            20
+          ]
+        },
+        "island-wall-l3-damaged": {
+          "sheet": {
+            "file": "village/walls-posts-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            614,
+            370,
+            308,
+            420
+          ],
+          "logical": [
+            48,
+            32,
+            6
+          ],
+          "sourceFoot": [
+            150,
+            364
+          ],
+          "fitBounds": [
+            150,
+            364,
+            158,
+            56
+          ]
+        },
+        "island-wall-l3-broken": {
+          "sheet": {
+            "file": "village/walls-posts-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            614,
+            790,
+            308,
+            234
+          ],
+          "logical": [
+            48,
+            32,
+            6
+          ],
+          "sourceFoot": [
+            150,
+            192
+          ],
+          "fitBounds": [
+            150,
+            192,
+            158,
+            42
+          ]
+        },
+        "village-wall-front-l3": {
+          "sheet": {
+            "file": "village/walls-surfaces-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            672,
+            95,
+            192,
+            192
+          ],
+          "logical": [
+            32,
+            32,
+            0
+          ],
+          "sourceFoot": [
+            96,
+            192
+          ],
+          "fitBounds": [
+            96,
+            192,
+            96,
+            0
+          ]
+        },
+        "village-wall-top-l3": {
+          "sheet": {
+            "file": "village/walls-surfaces-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            704,
+            405,
+            128,
+            128
+          ],
+          "logical": [
+            32,
+            32,
+            0
+          ],
+          "sourceFoot": [
+            64,
+            128
+          ],
+          "fitBounds": [
+            64,
+            128,
+            64,
+            0
+          ]
+        },
+        "village-wall-side-l3": {
+          "sheet": {
+            "file": "village/walls-surfaces-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            672,
+            735,
+            192,
+            192
+          ],
+          "logical": [
+            32,
+            32,
+            0
+          ],
+          "sourceFoot": [
+            96,
+            192
+          ],
+          "fitBounds": [
+            96,
+            192,
+            96,
+            0
+          ]
+        },
+        "island-wall-l4": {
+          "sheet": {
+            "file": "village/walls-posts-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            922,
+            0,
+            307,
+            370
+          ],
+          "logical": [
+            48,
+            32,
+            6
+          ],
+          "sourceFoot": [
+            142,
+            350
+          ],
+          "fitBounds": [
+            142,
+            350,
+            165,
+            20
+          ]
+        },
+        "island-wall-l4-damaged": {
+          "sheet": {
+            "file": "village/walls-posts-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            922,
+            370,
+            307,
+            420
+          ],
+          "logical": [
+            48,
+            32,
+            6
+          ],
+          "sourceFoot": [
+            142,
+            364
+          ],
+          "fitBounds": [
+            142,
+            364,
+            165,
+            56
+          ]
+        },
+        "island-wall-l4-broken": {
+          "sheet": {
+            "file": "village/walls-posts-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            922,
+            790,
+            307,
+            234
+          ],
+          "logical": [
+            48,
+            32,
+            6
+          ],
+          "sourceFoot": [
+            142,
+            192
+          ],
+          "fitBounds": [
+            142,
+            192,
+            165,
+            42
+          ]
+        },
+        "village-wall-front-l4": {
+          "sheet": {
+            "file": "village/walls-surfaces-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            980,
+            95,
+            192,
+            192
+          ],
+          "logical": [
+            32,
+            32,
+            0
+          ],
+          "sourceFoot": [
+            96,
+            192
+          ],
+          "fitBounds": [
+            96,
+            192,
+            96,
+            0
+          ]
+        },
+        "village-wall-top-l4": {
+          "sheet": {
+            "file": "village/walls-surfaces-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            1012,
+            405,
+            128,
+            128
+          ],
+          "logical": [
+            32,
+            32,
+            0
+          ],
+          "sourceFoot": [
+            64,
+            128
+          ],
+          "fitBounds": [
+            64,
+            128,
+            64,
+            0
+          ]
+        },
+        "village-wall-side-l4": {
+          "sheet": {
+            "file": "village/walls-surfaces-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            980,
+            735,
+            192,
+            192
+          ],
+          "logical": [
+            32,
+            32,
+            0
+          ],
+          "sourceFoot": [
+            96,
+            192
+          ],
+          "fitBounds": [
+            96,
+            192,
+            96,
+            0
+          ]
+        },
+        "island-wall-l5": {
+          "sheet": {
+            "file": "village/walls-posts-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            1229,
+            0,
+            307,
+            370
+          ],
+          "logical": [
+            48,
+            32,
+            6
+          ],
+          "sourceFoot": [
+            129,
+            350
+          ],
+          "fitBounds": [
+            129,
+            350,
+            178,
+            20
+          ]
+        },
+        "island-wall-l5-damaged": {
+          "sheet": {
+            "file": "village/walls-posts-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            1229,
+            370,
+            307,
+            420
+          ],
+          "logical": [
+            48,
+            32,
+            6
+          ],
+          "sourceFoot": [
+            129,
+            364
+          ],
+          "fitBounds": [
+            129,
+            364,
+            178,
+            56
+          ]
+        },
+        "island-wall-l5-broken": {
+          "sheet": {
+            "file": "village/walls-posts-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            1229,
+            790,
+            307,
+            234
+          ],
+          "logical": [
+            48,
+            32,
+            6
+          ],
+          "sourceFoot": [
+            129,
+            192
+          ],
+          "fitBounds": [
+            129,
+            192,
+            178,
+            42
+          ]
+        },
+        "village-wall-front-l5": {
+          "sheet": {
+            "file": "village/walls-surfaces-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            1287,
+            95,
+            192,
+            192
+          ],
+          "logical": [
+            32,
+            32,
+            0
+          ],
+          "sourceFoot": [
+            96,
+            192
+          ],
+          "fitBounds": [
+            96,
+            192,
+            96,
+            0
+          ]
+        },
+        "village-wall-top-l5": {
+          "sheet": {
+            "file": "village/walls-surfaces-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            1319,
+            405,
+            128,
+            128
+          ],
+          "logical": [
+            32,
+            32,
+            0
+          ],
+          "sourceFoot": [
+            64,
+            128
+          ],
+          "fitBounds": [
+            64,
+            128,
+            64,
+            0
+          ]
+        },
+        "village-wall-side-l5": {
+          "sheet": {
+            "file": "village/walls-surfaces-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            1287,
+            735,
+            192,
+            192
+          ],
+          "logical": [
+            32,
+            32,
+            0
+          ],
+          "sourceFoot": [
+            96,
+            192
+          ],
+          "fitBounds": [
+            96,
+            192,
+            96,
+            0
+          ]
+        }
+      }
+    }
+  ],
+  "plans": [
+    {
+      "name": "buildings",
+      "pages": [
+        {
+          "file": "village/compiled/buildings-4x-1-e380cc58f866.png",
+          "width": 392,
+          "height": 392,
+          "items": [
+            {
+              "id": "cabin",
+              "rect": [
+                4,
+                4,
+                384,
+                384
+              ]
+            }
+          ]
+        }
+      ],
+      "sheets": {
+        "buildingsBaked1": {
+          "file": "village/compiled/buildings-4x-1-e380cc58f866.png",
+          "width": 392,
+          "height": 392
+        }
+      },
+      "frames": {
+        "cabin": {
+          "sheet": "buildingsBaked1",
+          "rect": [
+            4,
+            4,
+            384,
+            384
+          ],
+          "logical": [
+            96,
+            96,
+            12
+          ],
+          "sourceFoot": [
+            192,
+            336
+          ]
+        }
+      }
+    },
+    {
+      "name": "houses",
+      "pages": [
+        {
+          "file": "village/compiled/houses-4x-1-6111d5601c45.png",
+          "width": 984,
+          "height": 1408,
+          "items": [
+            {
+              "id": "island-house-barracks",
+              "rect": [
+                4,
+                4,
+                384,
+                352
+              ]
+            },
+            {
+              "id": "island-house-barracks-l3",
+              "rect": [
+                396,
+                4,
+                384,
+                352
+              ]
+            },
+            {
+              "id": "island-house-tavern",
+              "rect": [
+                4,
+                364,
+                384,
+                352
+              ]
+            },
+            {
+              "id": "island-house-tavern-l3",
+              "rect": [
+                396,
+                364,
+                384,
+                352
+              ]
+            },
+            {
+              "id": "island-house-workshop",
+              "rect": [
+                4,
+                724,
+                384,
+                352
+              ]
+            },
+            {
+              "id": "island-house-workshop-l3",
+              "rect": [
+                396,
+                724,
+                384,
+                352
+              ]
+            },
+            {
+              "id": "island-house",
+              "rect": [
+                4,
+                1084,
+                320,
+                320
+              ]
+            },
+            {
+              "id": "island-house-l2",
+              "rect": [
+                332,
+                1084,
+                320,
+                320
+              ]
+            },
+            {
+              "id": "island-house-l3",
+              "rect": [
+                660,
+                1084,
+                320,
+                320
+              ]
+            }
+          ]
+        }
+      ],
+      "sheets": {
+        "housesBaked1": {
+          "file": "village/compiled/houses-4x-1-6111d5601c45.png",
+          "width": 984,
+          "height": 1408
+        }
+      },
+      "frames": {
+        "island-house": {
+          "sheet": "housesBaked1",
+          "rect": [
+            4,
+            1084,
+            320,
+            320
+          ],
+          "logical": [
+            80,
+            80,
+            8
+          ],
+          "sourceFoot": [
+            160,
+            288
+          ]
+        },
+        "island-house-l2": {
+          "sheet": "housesBaked1",
+          "rect": [
+            332,
+            1084,
+            320,
+            320
+          ],
+          "logical": [
+            80,
+            80,
+            8
+          ],
+          "sourceFoot": [
+            160,
+            288
+          ]
+        },
+        "island-house-l3": {
+          "sheet": "housesBaked1",
+          "rect": [
+            660,
+            1084,
+            320,
+            320
+          ],
+          "logical": [
+            80,
+            80,
+            8
+          ],
+          "sourceFoot": [
+            160,
+            288
+          ]
+        },
+        "island-house-barracks": {
+          "sheet": "housesBaked1",
+          "rect": [
+            4,
+            4,
+            384,
+            352
+          ],
+          "logical": [
+            96,
+            88,
+            8
+          ],
+          "sourceFoot": [
+            192,
+            320
+          ]
+        },
+        "island-house-tavern": {
+          "sheet": "housesBaked1",
+          "rect": [
+            4,
+            364,
+            384,
+            352
+          ],
+          "logical": [
+            96,
+            88,
+            8
+          ],
+          "sourceFoot": [
+            192,
+            320
+          ]
+        },
+        "island-house-workshop": {
+          "sheet": "housesBaked1",
+          "rect": [
+            4,
+            724,
+            384,
+            352
+          ],
+          "logical": [
+            96,
+            88,
+            8
+          ],
+          "sourceFoot": [
+            192,
+            320
+          ]
+        },
+        "island-house-barracks-l3": {
+          "sheet": "housesBaked1",
+          "rect": [
+            396,
+            4,
+            384,
+            352
+          ],
+          "logical": [
+            96,
+            88,
+            8
+          ],
+          "sourceFoot": [
+            192,
+            320
+          ]
+        },
+        "island-house-tavern-l3": {
+          "sheet": "housesBaked1",
+          "rect": [
+            396,
+            364,
+            384,
+            352
+          ],
+          "logical": [
+            96,
+            88,
+            8
+          ],
+          "sourceFoot": [
+            192,
+            320
+          ]
+        },
+        "island-house-workshop-l3": {
+          "sheet": "housesBaked1",
+          "rect": [
+            396,
+            724,
+            384,
+            352
+          ],
+          "logical": [
+            96,
+            88,
+            8
+          ],
+          "sourceFoot": [
+            192,
+            320
+          ]
+        }
+      }
+    },
+    {
+      "name": "landmarks",
+      "pages": [
+        {
+          "file": "village/compiled/landmarks-4x-1-edf354806e0b.png",
+          "width": 1024,
+          "height": 520,
+          "items": [
+            {
+              "id": "island-watchtower",
+              "rect": [
+                4,
+                4,
+                256,
+                512
+              ]
+            },
+            {
+              "id": "island-watchtower-l4",
+              "rect": [
+                268,
+                4,
+                256,
+                512
+              ]
+            },
+            {
+              "id": "island-watchtower-l5",
+              "rect": [
+                532,
+                4,
+                256,
+                512
+              ]
+            },
+            {
+              "id": "island-bell",
+              "rect": [
+                796,
+                4,
+                224,
+                288
+              ]
+            }
+          ]
+        }
+      ],
+      "sheets": {
+        "landmarksBaked1": {
+          "file": "village/compiled/landmarks-4x-1-edf354806e0b.png",
+          "width": 1024,
+          "height": 520
+        }
+      },
+      "frames": {
+        "island-bell": {
+          "sheet": "landmarksBaked1",
+          "rect": [
+            796,
+            4,
+            224,
+            288
+          ],
+          "logical": [
+            56,
+            72,
+            8
+          ],
+          "sourceFoot": [
+            112,
+            256
+          ]
+        },
+        "island-watchtower": {
+          "sheet": "landmarksBaked1",
+          "rect": [
+            4,
+            4,
+            256,
+            512
+          ],
+          "logical": [
+            64,
+            128,
+            8
+          ],
+          "sourceFoot": [
+            128,
+            480
+          ]
+        },
+        "island-watchtower-l4": {
+          "sheet": "landmarksBaked1",
+          "rect": [
+            268,
+            4,
+            256,
+            512
+          ],
+          "logical": [
+            64,
+            128,
+            8
+          ],
+          "sourceFoot": [
+            128,
+            480
+          ]
+        },
+        "island-watchtower-l5": {
+          "sheet": "landmarksBaked1",
+          "rect": [
+            532,
+            4,
+            256,
+            512
+          ],
+          "logical": [
+            64,
+            128,
+            8
+          ],
+          "sourceFoot": [
+            128,
+            480
+          ]
+        }
+      }
+    },
+    {
+      "name": "services",
+      "pages": [
+        {
+          "file": "village/compiled/services-4x-1-744bdeee9b69.png",
+          "width": 656,
+          "height": 360,
+          "items": [
+            {
+              "id": "island-techhub",
+              "rect": [
+                4,
+                4,
+                320,
+                352
+              ]
+            },
+            {
+              "id": "island-arsenal",
+              "rect": [
+                332,
+                4,
+                320,
+                320
+              ]
+            }
+          ]
+        }
+      ],
+      "sheets": {
+        "servicesBaked1": {
+          "file": "village/compiled/services-4x-1-744bdeee9b69.png",
+          "width": 656,
+          "height": 360
+        }
+      },
+      "frames": {
+        "island-techhub": {
+          "sheet": "servicesBaked1",
+          "rect": [
+            4,
+            4,
+            320,
+            352
+          ],
+          "logical": [
+            80,
+            88,
+            8
+          ],
+          "sourceFoot": [
+            160,
+            320
+          ]
+        },
+        "island-arsenal": {
+          "sheet": "servicesBaked1",
+          "rect": [
+            332,
+            4,
+            320,
+            320
+          ],
+          "logical": [
+            80,
+            80,
+            8
+          ],
+          "sourceFoot": [
+            160,
+            288
+          ]
+        }
+      }
+    },
+    {
+      "name": "nature",
+      "pages": [
+        {
+          "file": "village/compiled/nature-4x-1-5daf6446cdb1.png",
+          "width": 984,
+          "height": 880,
+          "items": [
+            {
+              "id": "pine",
+              "rect": [
+                4,
+                4,
+                320,
+                448
+              ]
+            },
+            {
+              "id": "birch",
+              "rect": [
+                332,
+                4,
+                320,
+                416
+              ]
+            },
+            {
+              "id": "birch-tall",
+              "rect": [
+                660,
+                4,
+                320,
+                416
+              ]
+            },
+            {
+              "id": "oak",
+              "rect": [
+                4,
+                460,
+                320,
+                416
+              ]
+            },
+            {
+              "id": "rock",
+              "rect": [
+                332,
+                460,
+                192,
+                144
+              ]
+            },
+            {
+              "id": "grass-tuft",
+              "rect": [
+                532,
+                460,
+                128,
+                128
+              ]
+            },
+            {
+              "id": "shrub",
+              "rect": [
+                668,
+                460,
+                160,
+                128
+              ]
+            },
+            {
+              "id": "flowers",
+              "rect": [
+                836,
+                460,
+                96,
+                96
+              ]
+            }
+          ]
+        }
+      ],
+      "sheets": {
+        "natureBaked1": {
+          "file": "village/compiled/nature-4x-1-5daf6446cdb1.png",
+          "width": 984,
+          "height": 880
+        }
+      },
+      "frames": {
+        "oak": {
+          "sheet": "natureBaked1",
+          "rect": [
+            4,
+            460,
+            320,
+            416
+          ],
+          "logical": [
+            80,
+            104,
+            8
+          ],
+          "sourceFoot": [
+            160,
+            384
+          ]
+        },
+        "pine": {
+          "sheet": "natureBaked1",
+          "rect": [
+            4,
+            4,
+            320,
+            448
+          ],
+          "logical": [
+            80,
+            112,
+            8
+          ],
+          "sourceFoot": [
+            160,
+            416
+          ]
+        },
+        "birch": {
+          "sheet": "natureBaked1",
+          "rect": [
+            332,
+            4,
+            320,
+            416
+          ],
+          "logical": [
+            80,
+            104,
+            8
+          ],
+          "sourceFoot": [
+            160,
+            384
+          ]
+        },
+        "birch-tall": {
+          "sheet": "natureBaked1",
+          "rect": [
+            660,
+            4,
+            320,
+            416
+          ],
+          "logical": [
+            80,
+            104,
+            8
+          ],
+          "sourceFoot": [
+            160,
+            384
+          ]
+        },
+        "rock": {
+          "sheet": "natureBaked1",
+          "rect": [
+            332,
+            460,
+            192,
+            144
+          ],
+          "logical": [
+            48,
+            36,
+            4
+          ],
+          "sourceFoot": [
+            96,
+            128
+          ]
+        },
+        "shrub": {
+          "sheet": "natureBaked1",
+          "rect": [
+            668,
+            460,
+            160,
+            128
+          ],
+          "logical": [
+            40,
+            32,
+            4
+          ],
+          "sourceFoot": [
+            80,
+            112
+          ]
+        },
+        "flowers": {
+          "sheet": "natureBaked1",
+          "rect": [
+            836,
+            460,
+            96,
+            96
+          ],
+          "logical": [
+            24,
+            24,
+            3
+          ],
+          "sourceFoot": [
+            48,
+            84
+          ]
+        },
+        "grass-tuft": {
+          "sheet": "natureBaked1",
+          "rect": [
+            532,
+            460,
+            128,
+            128
+          ],
+          "logical": [
+            32,
+            32,
+            4
+          ],
+          "sourceFoot": [
+            64,
+            112
+          ]
+        }
+      }
+    },
+    {
+      "name": "cannons",
+      "pages": [
+        {
+          "file": "village/compiled/cannons-4x-1-e3fdd5e76473.png",
+          "width": 928,
+          "height": 1000,
+          "items": [
+            {
+              "id": "island-cannon",
+              "rect": [
+                4,
+                4,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-cannon-broken",
+              "rect": [
+                236,
+                4,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-cannon-damaged",
+              "rect": [
+                468,
+                4,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-cannon-fire",
+              "rect": [
+                700,
+                4,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-cannon-fire-l2",
+              "rect": [
+                4,
+                204,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-cannon-fire-l3",
+              "rect": [
+                236,
+                204,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-cannon-fire-l4",
+              "rect": [
+                468,
+                204,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-cannon-fire-l5",
+              "rect": [
+                700,
+                204,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-cannon-l2",
+              "rect": [
+                4,
+                404,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-cannon-l2-broken",
+              "rect": [
+                236,
+                404,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-cannon-l2-damaged",
+              "rect": [
+                468,
+                404,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-cannon-l3",
+              "rect": [
+                700,
+                404,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-cannon-l3-broken",
+              "rect": [
+                4,
+                604,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-cannon-l3-damaged",
+              "rect": [
+                236,
+                604,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-cannon-l4",
+              "rect": [
+                468,
+                604,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-cannon-l4-broken",
+              "rect": [
+                700,
+                604,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-cannon-l4-damaged",
+              "rect": [
+                4,
+                804,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-cannon-l5",
+              "rect": [
+                236,
+                804,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-cannon-l5-broken",
+              "rect": [
+                468,
+                804,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-cannon-l5-damaged",
+              "rect": [
+                700,
+                804,
+                224,
+                192
+              ]
+            }
+          ]
+        }
+      ],
+      "sheets": {
+        "cannonsBaked1": {
+          "file": "village/compiled/cannons-4x-1-e3fdd5e76473.png",
+          "width": 928,
+          "height": 1000
+        }
+      },
+      "frames": {
+        "island-cannon": {
+          "sheet": "cannonsBaked1",
+          "rect": [
+            4,
+            4,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-cannon-fire": {
+          "sheet": "cannonsBaked1",
+          "rect": [
+            700,
+            4,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-cannon-damaged": {
+          "sheet": "cannonsBaked1",
+          "rect": [
+            468,
+            4,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-cannon-broken": {
+          "sheet": "cannonsBaked1",
+          "rect": [
+            236,
+            4,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-cannon-l2": {
+          "sheet": "cannonsBaked1",
+          "rect": [
+            4,
+            404,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-cannon-fire-l2": {
+          "sheet": "cannonsBaked1",
+          "rect": [
+            4,
+            204,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-cannon-l2-damaged": {
+          "sheet": "cannonsBaked1",
+          "rect": [
+            468,
+            404,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-cannon-l2-broken": {
+          "sheet": "cannonsBaked1",
+          "rect": [
+            236,
+            404,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-cannon-l3": {
+          "sheet": "cannonsBaked1",
+          "rect": [
+            700,
+            404,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-cannon-fire-l3": {
+          "sheet": "cannonsBaked1",
+          "rect": [
+            236,
+            204,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-cannon-l3-damaged": {
+          "sheet": "cannonsBaked1",
+          "rect": [
+            236,
+            604,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-cannon-l3-broken": {
+          "sheet": "cannonsBaked1",
+          "rect": [
+            4,
+            604,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-cannon-l4": {
+          "sheet": "cannonsBaked1",
+          "rect": [
+            468,
+            604,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-cannon-fire-l4": {
+          "sheet": "cannonsBaked1",
+          "rect": [
+            468,
+            204,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-cannon-l4-damaged": {
+          "sheet": "cannonsBaked1",
+          "rect": [
+            4,
+            804,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-cannon-l4-broken": {
+          "sheet": "cannonsBaked1",
+          "rect": [
+            700,
+            604,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-cannon-l5": {
+          "sheet": "cannonsBaked1",
+          "rect": [
+            236,
+            804,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-cannon-fire-l5": {
+          "sheet": "cannonsBaked1",
+          "rect": [
+            700,
+            204,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-cannon-l5-damaged": {
+          "sheet": "cannonsBaked1",
+          "rect": [
+            700,
+            804,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-cannon-l5-broken": {
+          "sheet": "cannonsBaked1",
+          "rect": [
+            468,
+            804,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        }
+      }
+    },
+    {
+      "name": "walls",
+      "pages": [
+        {
+          "file": "village/compiled/walls-4x-1-c5cb2436d6e0.png",
+          "width": 1008,
+          "height": 680,
+          "items": [
+            {
+              "id": "island-wall",
+              "rect": [
+                4,
+                4,
+                192,
+                128
+              ]
+            },
+            {
+              "id": "island-wall-broken",
+              "rect": [
+                204,
+                4,
+                192,
+                128
+              ]
+            },
+            {
+              "id": "island-wall-damaged",
+              "rect": [
+                404,
+                4,
+                192,
+                128
+              ]
+            },
+            {
+              "id": "island-wall-l2",
+              "rect": [
+                604,
+                4,
+                192,
+                128
+              ]
+            },
+            {
+              "id": "island-wall-l2-broken",
+              "rect": [
+                804,
+                4,
+                192,
+                128
+              ]
+            },
+            {
+              "id": "island-wall-l2-damaged",
+              "rect": [
+                4,
+                140,
+                192,
+                128
+              ]
+            },
+            {
+              "id": "island-wall-l3",
+              "rect": [
+                204,
+                140,
+                192,
+                128
+              ]
+            },
+            {
+              "id": "island-wall-l4",
+              "rect": [
+                404,
+                140,
+                192,
+                128
+              ]
+            },
+            {
+              "id": "island-wall-l4-broken",
+              "rect": [
+                604,
+                140,
+                192,
+                128
+              ]
+            },
+            {
+              "id": "island-wall-l4-damaged",
+              "rect": [
+                804,
+                140,
+                192,
+                128
+              ]
+            },
+            {
+              "id": "island-wall-l5",
+              "rect": [
+                4,
+                276,
+                192,
+                128
+              ]
+            },
+            {
+              "id": "island-wall-l5-broken",
+              "rect": [
+                204,
+                276,
+                192,
+                128
+              ]
+            },
+            {
+              "id": "island-wall-l5-damaged",
+              "rect": [
+                404,
+                276,
+                192,
+                128
+              ]
+            },
+            {
+              "id": "village-wall-front-l1",
+              "rect": [
+                604,
+                276,
+                128,
+                128
+              ]
+            },
+            {
+              "id": "village-wall-front-l2",
+              "rect": [
+                740,
+                276,
+                128,
+                128
+              ]
+            },
+            {
+              "id": "village-wall-front-l3",
+              "rect": [
+                876,
+                276,
+                128,
+                128
+              ]
+            },
+            {
+              "id": "village-wall-front-l4",
+              "rect": [
+                4,
+                412,
+                128,
+                128
+              ]
+            },
+            {
+              "id": "village-wall-front-l5",
+              "rect": [
+                140,
+                412,
+                128,
+                128
+              ]
+            },
+            {
+              "id": "village-wall-side-l1",
+              "rect": [
+                276,
+                412,
+                128,
+                128
+              ]
+            },
+            {
+              "id": "village-wall-side-l2",
+              "rect": [
+                412,
+                412,
+                128,
+                128
+              ]
+            },
+            {
+              "id": "village-wall-side-l3",
+              "rect": [
+                548,
+                412,
+                128,
+                128
+              ]
+            },
+            {
+              "id": "village-wall-side-l4",
+              "rect": [
+                684,
+                412,
+                128,
+                128
+              ]
+            },
+            {
+              "id": "village-wall-side-l5",
+              "rect": [
+                820,
+                412,
+                128,
+                128
+              ]
+            },
+            {
+              "id": "village-wall-top-l1",
+              "rect": [
+                4,
+                548,
+                128,
+                128
+              ]
+            },
+            {
+              "id": "village-wall-top-l2",
+              "rect": [
+                140,
+                548,
+                128,
+                128
+              ]
+            },
+            {
+              "id": "village-wall-top-l3",
+              "rect": [
+                276,
+                548,
+                128,
+                128
+              ]
+            },
+            {
+              "id": "village-wall-top-l4",
+              "rect": [
+                412,
+                548,
+                128,
+                128
+              ]
+            },
+            {
+              "id": "village-wall-top-l5",
+              "rect": [
+                548,
+                548,
+                128,
+                128
+              ]
+            }
+          ]
+        }
+      ],
+      "sheets": {
+        "wallsBaked1": {
+          "file": "village/compiled/walls-4x-1-c5cb2436d6e0.png",
+          "width": 1008,
+          "height": 680
+        }
+      },
+      "frames": {
+        "island-wall": {
+          "sheet": "wallsBaked1",
+          "rect": [
+            4,
+            4,
+            192,
+            128
+          ],
+          "logical": [
+            48,
+            32,
+            6
+          ],
+          "sourceFoot": [
+            96,
+            104
+          ]
+        },
+        "island-wall-damaged": {
+          "sheet": "wallsBaked1",
+          "rect": [
+            404,
+            4,
+            192,
+            128
+          ],
+          "logical": [
+            48,
+            32,
+            6
+          ],
+          "sourceFoot": [
+            96,
+            104
+          ]
+        },
+        "island-wall-broken": {
+          "sheet": "wallsBaked1",
+          "rect": [
+            204,
+            4,
+            192,
+            128
+          ],
+          "logical": [
+            48,
+            32,
+            6
+          ],
+          "sourceFoot": [
+            96,
+            104
+          ]
+        },
+        "village-wall-front-l1": {
+          "sheet": "wallsBaked1",
+          "rect": [
+            604,
+            276,
+            128,
+            128
+          ],
+          "logical": [
+            32,
+            32,
+            0
+          ],
+          "sourceFoot": [
+            64,
+            128
+          ]
+        },
+        "village-wall-top-l1": {
+          "sheet": "wallsBaked1",
+          "rect": [
+            4,
+            548,
+            128,
+            128
+          ],
+          "logical": [
+            32,
+            32,
+            0
+          ],
+          "sourceFoot": [
+            64,
+            128
+          ]
+        },
+        "village-wall-side-l1": {
+          "sheet": "wallsBaked1",
+          "rect": [
+            276,
+            412,
+            128,
+            128
+          ],
+          "logical": [
+            32,
+            32,
+            0
+          ],
+          "sourceFoot": [
+            64,
+            128
+          ]
+        },
+        "island-wall-l2": {
+          "sheet": "wallsBaked1",
+          "rect": [
+            604,
+            4,
+            192,
+            128
+          ],
+          "logical": [
+            48,
+            32,
+            6
+          ],
+          "sourceFoot": [
+            96,
+            104
+          ]
+        },
+        "island-wall-l2-damaged": {
+          "sheet": "wallsBaked1",
+          "rect": [
+            4,
+            140,
+            192,
+            128
+          ],
+          "logical": [
+            48,
+            32,
+            6
+          ],
+          "sourceFoot": [
+            96,
+            104
+          ]
+        },
+        "island-wall-l2-broken": {
+          "sheet": "wallsBaked1",
+          "rect": [
+            804,
+            4,
+            192,
+            128
+          ],
+          "logical": [
+            48,
+            32,
+            6
+          ],
+          "sourceFoot": [
+            96,
+            104
+          ]
+        },
+        "village-wall-front-l2": {
+          "sheet": "wallsBaked1",
+          "rect": [
+            740,
+            276,
+            128,
+            128
+          ],
+          "logical": [
+            32,
+            32,
+            0
+          ],
+          "sourceFoot": [
+            64,
+            128
+          ]
+        },
+        "village-wall-top-l2": {
+          "sheet": "wallsBaked1",
+          "rect": [
+            140,
+            548,
+            128,
+            128
+          ],
+          "logical": [
+            32,
+            32,
+            0
+          ],
+          "sourceFoot": [
+            64,
+            128
+          ]
+        },
+        "village-wall-side-l2": {
+          "sheet": "wallsBaked1",
+          "rect": [
+            412,
+            412,
+            128,
+            128
+          ],
+          "logical": [
+            32,
+            32,
+            0
+          ],
+          "sourceFoot": [
+            64,
+            128
+          ]
+        },
+        "island-wall-l3": {
+          "sheet": "wallsBaked1",
+          "rect": [
+            204,
+            140,
+            192,
+            128
+          ],
+          "logical": [
+            48,
+            32,
+            6
+          ],
+          "sourceFoot": [
+            96,
+            104
+          ]
+        },
+        "island-wall-l3-damaged": {
+          "sheet": "wallsBaked1",
+          "rect": [
+            404,
+            4,
+            192,
+            128
+          ],
+          "logical": [
+            48,
+            32,
+            6
+          ],
+          "sourceFoot": [
+            96,
+            104
+          ]
+        },
+        "island-wall-l3-broken": {
+          "sheet": "wallsBaked1",
+          "rect": [
+            204,
+            4,
+            192,
+            128
+          ],
+          "logical": [
+            48,
+            32,
+            6
+          ],
+          "sourceFoot": [
+            96,
+            104
+          ]
+        },
+        "village-wall-front-l3": {
+          "sheet": "wallsBaked1",
+          "rect": [
+            876,
+            276,
+            128,
+            128
+          ],
+          "logical": [
+            32,
+            32,
+            0
+          ],
+          "sourceFoot": [
+            64,
+            128
+          ]
+        },
+        "village-wall-top-l3": {
+          "sheet": "wallsBaked1",
+          "rect": [
+            276,
+            548,
+            128,
+            128
+          ],
+          "logical": [
+            32,
+            32,
+            0
+          ],
+          "sourceFoot": [
+            64,
+            128
+          ]
+        },
+        "village-wall-side-l3": {
+          "sheet": "wallsBaked1",
+          "rect": [
+            548,
+            412,
+            128,
+            128
+          ],
+          "logical": [
+            32,
+            32,
+            0
+          ],
+          "sourceFoot": [
+            64,
+            128
+          ]
+        },
+        "island-wall-l4": {
+          "sheet": "wallsBaked1",
+          "rect": [
+            404,
+            140,
+            192,
+            128
+          ],
+          "logical": [
+            48,
+            32,
+            6
+          ],
+          "sourceFoot": [
+            96,
+            104
+          ]
+        },
+        "island-wall-l4-damaged": {
+          "sheet": "wallsBaked1",
+          "rect": [
+            804,
+            140,
+            192,
+            128
+          ],
+          "logical": [
+            48,
+            32,
+            6
+          ],
+          "sourceFoot": [
+            96,
+            104
+          ]
+        },
+        "island-wall-l4-broken": {
+          "sheet": "wallsBaked1",
+          "rect": [
+            604,
+            140,
+            192,
+            128
+          ],
+          "logical": [
+            48,
+            32,
+            6
+          ],
+          "sourceFoot": [
+            96,
+            104
+          ]
+        },
+        "village-wall-front-l4": {
+          "sheet": "wallsBaked1",
+          "rect": [
+            4,
+            412,
+            128,
+            128
+          ],
+          "logical": [
+            32,
+            32,
+            0
+          ],
+          "sourceFoot": [
+            64,
+            128
+          ]
+        },
+        "village-wall-top-l4": {
+          "sheet": "wallsBaked1",
+          "rect": [
+            412,
+            548,
+            128,
+            128
+          ],
+          "logical": [
+            32,
+            32,
+            0
+          ],
+          "sourceFoot": [
+            64,
+            128
+          ]
+        },
+        "village-wall-side-l4": {
+          "sheet": "wallsBaked1",
+          "rect": [
+            684,
+            412,
+            128,
+            128
+          ],
+          "logical": [
+            32,
+            32,
+            0
+          ],
+          "sourceFoot": [
+            64,
+            128
+          ]
+        },
+        "island-wall-l5": {
+          "sheet": "wallsBaked1",
+          "rect": [
+            4,
+            276,
+            192,
+            128
+          ],
+          "logical": [
+            48,
+            32,
+            6
+          ],
+          "sourceFoot": [
+            96,
+            104
+          ]
+        },
+        "island-wall-l5-damaged": {
+          "sheet": "wallsBaked1",
+          "rect": [
+            404,
+            276,
+            192,
+            128
+          ],
+          "logical": [
+            48,
+            32,
+            6
+          ],
+          "sourceFoot": [
+            96,
+            104
+          ]
+        },
+        "island-wall-l5-broken": {
+          "sheet": "wallsBaked1",
+          "rect": [
+            204,
+            276,
+            192,
+            128
+          ],
+          "logical": [
+            48,
+            32,
+            6
+          ],
+          "sourceFoot": [
+            96,
+            104
+          ]
+        },
+        "village-wall-front-l5": {
+          "sheet": "wallsBaked1",
+          "rect": [
+            140,
+            412,
+            128,
+            128
+          ],
+          "logical": [
+            32,
+            32,
+            0
+          ],
+          "sourceFoot": [
+            64,
+            128
+          ]
+        },
+        "village-wall-top-l5": {
+          "sheet": "wallsBaked1",
+          "rect": [
+            548,
+            548,
+            128,
+            128
+          ],
+          "logical": [
+            32,
+            32,
+            0
+          ],
+          "sourceFoot": [
+            64,
+            128
+          ]
+        },
+        "village-wall-side-l5": {
+          "sheet": "wallsBaked1",
+          "rect": [
+            820,
+            412,
+            128,
+            128
+          ],
+          "logical": [
+            32,
+            32,
+            0
+          ],
+          "sourceFoot": [
+            64,
+            128
+          ]
+        }
+      }
+    }
+  ],
+  "compilerMemory": [
+    {
+      "family": "buildings",
+      "peakSourceBytes": 6290064,
+      "retainedDecodedAfterRelease": 0,
+      "canvasBytes": 614656,
+      "largestTemporaryCanvasBytes": 589824
+    },
+    {
+      "family": "houses",
+      "peakSourceBytes": 6290064,
+      "retainedDecodedAfterRelease": 0,
+      "canvasBytes": 5541888,
+      "largestTemporaryCanvasBytes": 540672
+    },
+    {
+      "family": "landmarks",
+      "peakSourceBytes": 6290064,
+      "retainedDecodedAfterRelease": 0,
+      "canvasBytes": 2129920,
+      "largestTemporaryCanvasBytes": 524288
+    },
+    {
+      "family": "services",
+      "peakSourceBytes": 6291456,
+      "retainedDecodedAfterRelease": 0,
+      "canvasBytes": 944640,
+      "largestTemporaryCanvasBytes": 450560
+    },
+    {
+      "family": "nature",
+      "peakSourceBytes": 6291456,
+      "retainedDecodedAfterRelease": 0,
+      "canvasBytes": 3463680,
+      "largestTemporaryCanvasBytes": 573440
+    },
+    {
+      "family": "cannons",
+      "peakSourceBytes": 6291456,
+      "retainedDecodedAfterRelease": 0,
+      "canvasBytes": 3712000,
+      "largestTemporaryCanvasBytes": 172032
+    },
+    {
+      "family": "walls",
+      "peakSourceBytes": 6291456,
+      "retainedDecodedAfterRelease": 0,
+      "canvasBytes": 2741760,
+      "largestTemporaryCanvasBytes": 98304
+    }
+  ],
+  "verification": [
+    {
+      "family": "buildings",
+      "results": [
+        {
+          "id": "cabin",
+          "density": 4,
+          "pixels": 147456,
+          "visiblePixels": 75207,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "cabin",
+          "density": 2,
+          "pixels": 36864,
+          "visiblePixels": 19459,
+          "differingPixels": 18713,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 50,
+          "alphaWeightedMeanRgbDelta": 3.3316895164589235
+        },
+        {
+          "id": "cabin",
+          "density": 1.5,
+          "pixels": 20736,
+          "visiblePixels": 11051,
+          "differingPixels": 10798,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 65,
+          "alphaWeightedMeanRgbDelta": 4.121086974404331
+        }
+      ],
+      "peakSourceBytes": 6290064,
+      "retainedDecodedAfterRelease": 0
+    },
+    {
+      "family": "houses",
+      "results": [
+        {
+          "id": "island-house",
+          "density": 4,
+          "pixels": 102400,
+          "visiblePixels": 38250,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-house",
+          "density": 2,
+          "pixels": 25600,
+          "visiblePixels": 9431,
+          "differingPixels": 8516,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 25,
+          "alphaWeightedMeanRgbDelta": 2.22438946778607
+        },
+        {
+          "id": "island-house",
+          "density": 1.5,
+          "pixels": 14400,
+          "visiblePixels": 5405,
+          "differingPixels": 5179,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 32,
+          "alphaWeightedMeanRgbDelta": 3.14564195196761
+        },
+        {
+          "id": "island-house-l2",
+          "density": 4,
+          "pixels": 102400,
+          "visiblePixels": 49786,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-house-l2",
+          "density": 2,
+          "pixels": 25600,
+          "visiblePixels": 12339,
+          "differingPixels": 11180,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 28,
+          "alphaWeightedMeanRgbDelta": 2.184838966302637
+        },
+        {
+          "id": "island-house-l2",
+          "density": 1.5,
+          "pixels": 14400,
+          "visiblePixels": 7057,
+          "differingPixels": 6782,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 44,
+          "alphaWeightedMeanRgbDelta": 2.8436285674896347
+        },
+        {
+          "id": "island-house-l3",
+          "density": 4,
+          "pixels": 102400,
+          "visiblePixels": 60065,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-house-l3",
+          "density": 2,
+          "pixels": 25600,
+          "visiblePixels": 14718,
+          "differingPixels": 13286,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 26,
+          "alphaWeightedMeanRgbDelta": 2.187292230011415
+        },
+        {
+          "id": "island-house-l3",
+          "density": 1.5,
+          "pixels": 14400,
+          "visiblePixels": 8374,
+          "differingPixels": 8042,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 36,
+          "alphaWeightedMeanRgbDelta": 3.089317918378127
+        },
+        {
+          "id": "island-house-barracks",
+          "density": 4,
+          "pixels": 135168,
+          "visiblePixels": 65527,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-house-barracks",
+          "density": 2,
+          "pixels": 33792,
+          "visiblePixels": 15945,
+          "differingPixels": 13911,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 28,
+          "alphaWeightedMeanRgbDelta": 2.2353465869202207
+        },
+        {
+          "id": "island-house-barracks",
+          "density": 1.5,
+          "pixels": 19008,
+          "visiblePixels": 9018,
+          "differingPixels": 8359,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 41,
+          "alphaWeightedMeanRgbDelta": 3.0920336178704124
+        },
+        {
+          "id": "island-house-tavern",
+          "density": 4,
+          "pixels": 135168,
+          "visiblePixels": 65966,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-house-tavern",
+          "density": 2,
+          "pixels": 33792,
+          "visiblePixels": 16080,
+          "differingPixels": 13783,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 30,
+          "alphaWeightedMeanRgbDelta": 2.135344808476964
+        },
+        {
+          "id": "island-house-tavern",
+          "density": 1.5,
+          "pixels": 19008,
+          "visiblePixels": 9150,
+          "differingPixels": 8343,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 33,
+          "alphaWeightedMeanRgbDelta": 2.9110266544437686
+        },
+        {
+          "id": "island-house-workshop",
+          "density": 4,
+          "pixels": 135168,
+          "visiblePixels": 66004,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-house-workshop",
+          "density": 2,
+          "pixels": 33792,
+          "visiblePixels": 16182,
+          "differingPixels": 14049,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 25,
+          "alphaWeightedMeanRgbDelta": 2.183368907788546
+        },
+        {
+          "id": "island-house-workshop",
+          "density": 1.5,
+          "pixels": 19008,
+          "visiblePixels": 9187,
+          "differingPixels": 8462,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 33,
+          "alphaWeightedMeanRgbDelta": 2.987282247531007
+        },
+        {
+          "id": "island-house-barracks-l3",
+          "density": 4,
+          "pixels": 135168,
+          "visiblePixels": 77079,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-house-barracks-l3",
+          "density": 2,
+          "pixels": 33792,
+          "visiblePixels": 18761,
+          "differingPixels": 16366,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 27,
+          "alphaWeightedMeanRgbDelta": 2.1654890027727975
+        },
+        {
+          "id": "island-house-barracks-l3",
+          "density": 1.5,
+          "pixels": 19008,
+          "visiblePixels": 10668,
+          "differingPixels": 9968,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 40,
+          "alphaWeightedMeanRgbDelta": 3.162051854075548
+        },
+        {
+          "id": "island-house-tavern-l3",
+          "density": 4,
+          "pixels": 135168,
+          "visiblePixels": 79231,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-house-tavern-l3",
+          "density": 2,
+          "pixels": 33792,
+          "visiblePixels": 19336,
+          "differingPixels": 16691,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 32,
+          "alphaWeightedMeanRgbDelta": 2.120071038936322
+        },
+        {
+          "id": "island-house-tavern-l3",
+          "density": 1.5,
+          "pixels": 19008,
+          "visiblePixels": 10970,
+          "differingPixels": 10198,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 37,
+          "alphaWeightedMeanRgbDelta": 2.9934655728155626
+        },
+        {
+          "id": "island-house-workshop-l3",
+          "density": 4,
+          "pixels": 135168,
+          "visiblePixels": 80902,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-house-workshop-l3",
+          "density": 2,
+          "pixels": 33792,
+          "visiblePixels": 19903,
+          "differingPixels": 17474,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 30,
+          "alphaWeightedMeanRgbDelta": 2.1447036775644244
+        },
+        {
+          "id": "island-house-workshop-l3",
+          "density": 1.5,
+          "pixels": 19008,
+          "visiblePixels": 11336,
+          "differingPixels": 10683,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 38,
+          "alphaWeightedMeanRgbDelta": 3.1184214942402266
+        }
+      ],
+      "peakSourceBytes": 6290064,
+      "retainedDecodedAfterRelease": 0
+    },
+    {
+      "family": "landmarks",
+      "results": [
+        {
+          "id": "island-bell",
+          "density": 4,
+          "pixels": 64512,
+          "visiblePixels": 34525,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-bell",
+          "density": 2,
+          "pixels": 16128,
+          "visiblePixels": 8649,
+          "differingPixels": 8121,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 37,
+          "alphaWeightedMeanRgbDelta": 3.089369872213128
+        },
+        {
+          "id": "island-bell",
+          "density": 1.5,
+          "pixels": 9072,
+          "visiblePixels": 4906,
+          "differingPixels": 4628,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 57,
+          "alphaWeightedMeanRgbDelta": 3.8170318474251075
+        },
+        {
+          "id": "island-watchtower",
+          "density": 4,
+          "pixels": 131072,
+          "visiblePixels": 67702,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-watchtower",
+          "density": 2,
+          "pixels": 32768,
+          "visiblePixels": 16715,
+          "differingPixels": 14524,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 27,
+          "alphaWeightedMeanRgbDelta": 2.001653828993988
+        },
+        {
+          "id": "island-watchtower",
+          "density": 1.5,
+          "pixels": 18432,
+          "visiblePixels": 9602,
+          "differingPixels": 8998,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 38,
+          "alphaWeightedMeanRgbDelta": 2.688606892619229
+        },
+        {
+          "id": "island-watchtower-l4",
+          "density": 4,
+          "pixels": 131072,
+          "visiblePixels": 72368,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-watchtower-l4",
+          "density": 2,
+          "pixels": 32768,
+          "visiblePixels": 17949,
+          "differingPixels": 15482,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 29,
+          "alphaWeightedMeanRgbDelta": 1.9223747734081813
+        },
+        {
+          "id": "island-watchtower-l4",
+          "density": 1.5,
+          "pixels": 18432,
+          "visiblePixels": 10290,
+          "differingPixels": 9563,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 35,
+          "alphaWeightedMeanRgbDelta": 2.566454265134847
+        },
+        {
+          "id": "island-watchtower-l5",
+          "density": 4,
+          "pixels": 131072,
+          "visiblePixels": 66100,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-watchtower-l5",
+          "density": 2,
+          "pixels": 32768,
+          "visiblePixels": 16340,
+          "differingPixels": 14537,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 33,
+          "alphaWeightedMeanRgbDelta": 2.3154681072317316
+        },
+        {
+          "id": "island-watchtower-l5",
+          "density": 1.5,
+          "pixels": 18432,
+          "visiblePixels": 9370,
+          "differingPixels": 8916,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 35,
+          "alphaWeightedMeanRgbDelta": 3.130457575077037
+        }
+      ],
+      "peakSourceBytes": 6290064,
+      "retainedDecodedAfterRelease": 0
+    },
+    {
+      "family": "services",
+      "results": [
+        {
+          "id": "island-techhub",
+          "density": 4,
+          "pixels": 112640,
+          "visiblePixels": 62009,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-techhub",
+          "density": 2,
+          "pixels": 28160,
+          "visiblePixels": 15631,
+          "differingPixels": 14602,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 38,
+          "alphaWeightedMeanRgbDelta": 2.613571398623386
+        },
+        {
+          "id": "island-techhub",
+          "density": 1.5,
+          "pixels": 15840,
+          "visiblePixels": 9009,
+          "differingPixels": 8660,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 40,
+          "alphaWeightedMeanRgbDelta": 3.517568339743989
+        },
+        {
+          "id": "island-arsenal",
+          "density": 4,
+          "pixels": 102400,
+          "visiblePixels": 64103,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-arsenal",
+          "density": 2,
+          "pixels": 25600,
+          "visiblePixels": 16128,
+          "differingPixels": 15040,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 34,
+          "alphaWeightedMeanRgbDelta": 2.575626428578144
+        },
+        {
+          "id": "island-arsenal",
+          "density": 1.5,
+          "pixels": 14400,
+          "visiblePixels": 9265,
+          "differingPixels": 8892,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 37,
+          "alphaWeightedMeanRgbDelta": 3.3113427604168235
+        }
+      ],
+      "peakSourceBytes": 6291456,
+      "retainedDecodedAfterRelease": 0
+    },
+    {
+      "family": "nature",
+      "results": [
+        {
+          "id": "oak",
+          "density": 4,
+          "pixels": 133120,
+          "visiblePixels": 63942,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "oak",
+          "density": 2,
+          "pixels": 33280,
+          "visiblePixels": 15775,
+          "differingPixels": 14019,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 32,
+          "alphaWeightedMeanRgbDelta": 1.7414923287715787
+        },
+        {
+          "id": "oak",
+          "density": 1.5,
+          "pixels": 18720,
+          "visiblePixels": 8948,
+          "differingPixels": 8322,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 32,
+          "alphaWeightedMeanRgbDelta": 2.147589572072494
+        },
+        {
+          "id": "pine",
+          "density": 4,
+          "pixels": 143360,
+          "visiblePixels": 72377,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "pine",
+          "density": 2,
+          "pixels": 35840,
+          "visiblePixels": 17861,
+          "differingPixels": 15167,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 28,
+          "alphaWeightedMeanRgbDelta": 1.3758202512369386
+        },
+        {
+          "id": "pine",
+          "density": 1.5,
+          "pixels": 20160,
+          "visiblePixels": 10117,
+          "differingPixels": 9189,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 40,
+          "alphaWeightedMeanRgbDelta": 1.9338118763312604
+        },
+        {
+          "id": "birch",
+          "density": 4,
+          "pixels": 133120,
+          "visiblePixels": 50577,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "birch",
+          "density": 2,
+          "pixels": 33280,
+          "visiblePixels": 12116,
+          "differingPixels": 10290,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 41,
+          "alphaWeightedMeanRgbDelta": 1.7383924180134533
+        },
+        {
+          "id": "birch",
+          "density": 1.5,
+          "pixels": 18720,
+          "visiblePixels": 6880,
+          "differingPixels": 6243,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 41,
+          "alphaWeightedMeanRgbDelta": 2.1698460711863143
+        },
+        {
+          "id": "birch-tall",
+          "density": 4,
+          "pixels": 133120,
+          "visiblePixels": 56776,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "birch-tall",
+          "density": 2,
+          "pixels": 33280,
+          "visiblePixels": 13733,
+          "differingPixels": 11583,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 49,
+          "alphaWeightedMeanRgbDelta": 1.7644365256591108
+        },
+        {
+          "id": "birch-tall",
+          "density": 1.5,
+          "pixels": 18720,
+          "visiblePixels": 7816,
+          "differingPixels": 7068,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 46,
+          "alphaWeightedMeanRgbDelta": 2.235592470859155
+        },
+        {
+          "id": "rock",
+          "density": 4,
+          "pixels": 27648,
+          "visiblePixels": 14008,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "rock",
+          "density": 2,
+          "pixels": 6912,
+          "visiblePixels": 3536,
+          "differingPixels": 3194,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 21,
+          "alphaWeightedMeanRgbDelta": 1.427966063076604
+        },
+        {
+          "id": "rock",
+          "density": 1.5,
+          "pixels": 3888,
+          "visiblePixels": 2006,
+          "differingPixels": 1883,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 33,
+          "alphaWeightedMeanRgbDelta": 2.031919606717574
+        },
+        {
+          "id": "shrub",
+          "density": 4,
+          "pixels": 20480,
+          "visiblePixels": 13338,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "shrub",
+          "density": 2,
+          "pixels": 5120,
+          "visiblePixels": 3342,
+          "differingPixels": 3058,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 30,
+          "alphaWeightedMeanRgbDelta": 1.8252733984652225
+        },
+        {
+          "id": "shrub",
+          "density": 1.5,
+          "pixels": 2880,
+          "visiblePixels": 1886,
+          "differingPixels": 1775,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 39,
+          "alphaWeightedMeanRgbDelta": 2.6431513487656
+        },
+        {
+          "id": "flowers",
+          "density": 4,
+          "pixels": 9216,
+          "visiblePixels": 4132,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "flowers",
+          "density": 2,
+          "pixels": 2304,
+          "visiblePixels": 1094,
+          "differingPixels": 1074,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 29,
+          "alphaWeightedMeanRgbDelta": 3.243684727589444
+        },
+        {
+          "id": "flowers",
+          "density": 1.5,
+          "pixels": 1296,
+          "visiblePixels": 642,
+          "differingPixels": 636,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 42,
+          "alphaWeightedMeanRgbDelta": 4.624359908086486
+        },
+        {
+          "id": "grass-tuft",
+          "density": 4,
+          "pixels": 16384,
+          "visiblePixels": 6113,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "grass-tuft",
+          "density": 2,
+          "pixels": 4096,
+          "visiblePixels": 1570,
+          "differingPixels": 1444,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 37,
+          "alphaWeightedMeanRgbDelta": 2.5066247442607783
+        },
+        {
+          "id": "grass-tuft",
+          "density": 1.5,
+          "pixels": 2304,
+          "visiblePixels": 944,
+          "differingPixels": 927,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 35,
+          "alphaWeightedMeanRgbDelta": 3.3762615474982853
+        }
+      ],
+      "peakSourceBytes": 6291456,
+      "retainedDecodedAfterRelease": 0
+    },
+    {
+      "family": "cannons",
+      "results": [
+        {
+          "id": "island-cannon",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 17112,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-cannon",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4036,
+          "differingPixels": 3300,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 20,
+          "alphaWeightedMeanRgbDelta": 1.7172592126178943
+        },
+        {
+          "id": "island-cannon",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2278,
+          "differingPixels": 1940,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 40,
+          "alphaWeightedMeanRgbDelta": 2.4920209634641743
+        },
+        {
+          "id": "island-cannon-fire",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 20523,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-cannon-fire",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4901,
+          "differingPixels": 3514,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 22,
+          "alphaWeightedMeanRgbDelta": 1.7027010833722092
+        },
+        {
+          "id": "island-cannon-fire",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2789,
+          "differingPixels": 2133,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 36,
+          "alphaWeightedMeanRgbDelta": 2.550699223343889
+        },
+        {
+          "id": "island-cannon-damaged",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 18264,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-cannon-damaged",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4404,
+          "differingPixels": 3572,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 24,
+          "alphaWeightedMeanRgbDelta": 1.9169441222595454
+        },
+        {
+          "id": "island-cannon-damaged",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2503,
+          "differingPixels": 2132,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 34,
+          "alphaWeightedMeanRgbDelta": 2.74788207727376
+        },
+        {
+          "id": "island-cannon-broken",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 18469,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-cannon-broken",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4342,
+          "differingPixels": 3480,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 32,
+          "alphaWeightedMeanRgbDelta": 2.126561023195573
+        },
+        {
+          "id": "island-cannon-broken",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2445,
+          "differingPixels": 2088,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 37,
+          "alphaWeightedMeanRgbDelta": 3.2132400763741504
+        },
+        {
+          "id": "island-cannon-l2",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 20429,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-cannon-l2",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4929,
+          "differingPixels": 4033,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 21,
+          "alphaWeightedMeanRgbDelta": 1.7213095730617027
+        },
+        {
+          "id": "island-cannon-l2",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2779,
+          "differingPixels": 2425,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 37,
+          "alphaWeightedMeanRgbDelta": 2.5245709387792945
+        },
+        {
+          "id": "island-cannon-fire-l2",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 24843,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-cannon-fire-l2",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 5903,
+          "differingPixels": 4437,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 23,
+          "alphaWeightedMeanRgbDelta": 1.646457789399268
+        },
+        {
+          "id": "island-cannon-fire-l2",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 3308,
+          "differingPixels": 2695,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 32,
+          "alphaWeightedMeanRgbDelta": 2.459211910243712
+        },
+        {
+          "id": "island-cannon-l2-damaged",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 22817,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-cannon-l2-damaged",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 5426,
+          "differingPixels": 4426,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 23,
+          "alphaWeightedMeanRgbDelta": 1.938457754265885
+        },
+        {
+          "id": "island-cannon-l2-damaged",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 3063,
+          "differingPixels": 2635,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 28,
+          "alphaWeightedMeanRgbDelta": 2.875574600268933
+        },
+        {
+          "id": "island-cannon-l2-broken",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 19887,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-cannon-l2-broken",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4715,
+          "differingPixels": 3967,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 25,
+          "alphaWeightedMeanRgbDelta": 2.0498763758002982
+        },
+        {
+          "id": "island-cannon-l2-broken",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2661,
+          "differingPixels": 2403,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 34,
+          "alphaWeightedMeanRgbDelta": 3.0161549467522835
+        },
+        {
+          "id": "island-cannon-l3",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 25000,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-cannon-l3",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 5793,
+          "differingPixels": 4559,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 25,
+          "alphaWeightedMeanRgbDelta": 1.877784959123463
+        },
+        {
+          "id": "island-cannon-l3",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 3277,
+          "differingPixels": 2756,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 34,
+          "alphaWeightedMeanRgbDelta": 2.332087071047642
+        },
+        {
+          "id": "island-cannon-fire-l3",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 27338,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-cannon-fire-l3",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 6554,
+          "differingPixels": 4835,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 22,
+          "alphaWeightedMeanRgbDelta": 1.9458590011836359
+        },
+        {
+          "id": "island-cannon-fire-l3",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 3689,
+          "differingPixels": 2907,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 27,
+          "alphaWeightedMeanRgbDelta": 2.407442253298707
+        },
+        {
+          "id": "island-cannon-l3-damaged",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 22388,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-cannon-l3-damaged",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 5382,
+          "differingPixels": 4581,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 27,
+          "alphaWeightedMeanRgbDelta": 1.9764511050004574
+        },
+        {
+          "id": "island-cannon-l3-damaged",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 3042,
+          "differingPixels": 2773,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 29,
+          "alphaWeightedMeanRgbDelta": 2.612219359626344
+        },
+        {
+          "id": "island-cannon-l3-broken",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 17641,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-cannon-l3-broken",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4248,
+          "differingPixels": 3690,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 22,
+          "alphaWeightedMeanRgbDelta": 2.2459450082907138
+        },
+        {
+          "id": "island-cannon-l3-broken",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2424,
+          "differingPixels": 2220,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 26,
+          "alphaWeightedMeanRgbDelta": 2.769634121151806
+        },
+        {
+          "id": "island-cannon-l4",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 24453,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-cannon-l4",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 5840,
+          "differingPixels": 4528,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 27,
+          "alphaWeightedMeanRgbDelta": 2.3787231040297785
+        },
+        {
+          "id": "island-cannon-l4",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 3329,
+          "differingPixels": 2780,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 32,
+          "alphaWeightedMeanRgbDelta": 2.9159152496535268
+        },
+        {
+          "id": "island-cannon-fire-l4",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 24382,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-cannon-fire-l4",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 5826,
+          "differingPixels": 4673,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 31,
+          "alphaWeightedMeanRgbDelta": 2.490468203045191
+        },
+        {
+          "id": "island-cannon-fire-l4",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 3290,
+          "differingPixels": 2847,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 25,
+          "alphaWeightedMeanRgbDelta": 3.0295452242798855
+        },
+        {
+          "id": "island-cannon-l4-damaged",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 21176,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-cannon-l4-damaged",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 5132,
+          "differingPixels": 4461,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 25,
+          "alphaWeightedMeanRgbDelta": 2.6386149240132903
+        },
+        {
+          "id": "island-cannon-l4-damaged",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2907,
+          "differingPixels": 2670,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 31,
+          "alphaWeightedMeanRgbDelta": 3.199411757555074
+        },
+        {
+          "id": "island-cannon-l4-broken",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 17189,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-cannon-l4-broken",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4167,
+          "differingPixels": 3789,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 34,
+          "alphaWeightedMeanRgbDelta": 2.8033473794771573
+        },
+        {
+          "id": "island-cannon-l4-broken",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2390,
+          "differingPixels": 2248,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 29,
+          "alphaWeightedMeanRgbDelta": 3.463884836507884
+        },
+        {
+          "id": "island-cannon-l5",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 20793,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-cannon-l5",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 5033,
+          "differingPixels": 4487,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 26,
+          "alphaWeightedMeanRgbDelta": 2.5810715708401513
+        },
+        {
+          "id": "island-cannon-l5",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2849,
+          "differingPixels": 2670,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 35,
+          "alphaWeightedMeanRgbDelta": 3.1899499790243544
+        },
+        {
+          "id": "island-cannon-fire-l5",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 25042,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-cannon-fire-l5",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 5968,
+          "differingPixels": 4815,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 24,
+          "alphaWeightedMeanRgbDelta": 2.6866449343848484
+        },
+        {
+          "id": "island-cannon-fire-l5",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 3361,
+          "differingPixels": 2889,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 31,
+          "alphaWeightedMeanRgbDelta": 3.4414419042430713
+        },
+        {
+          "id": "island-cannon-l5-damaged",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 20257,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-cannon-l5-damaged",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4948,
+          "differingPixels": 4452,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 27,
+          "alphaWeightedMeanRgbDelta": 2.8645585437896504
+        },
+        {
+          "id": "island-cannon-l5-damaged",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2791,
+          "differingPixels": 2612,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 26,
+          "alphaWeightedMeanRgbDelta": 3.537743993189492
+        },
+        {
+          "id": "island-cannon-l5-broken",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 18276,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-cannon-l5-broken",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4365,
+          "differingPixels": 3935,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 29,
+          "alphaWeightedMeanRgbDelta": 2.9824864642666236
+        },
+        {
+          "id": "island-cannon-l5-broken",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2469,
+          "differingPixels": 2324,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 33,
+          "alphaWeightedMeanRgbDelta": 3.6297477321459564
+        }
+      ],
+      "peakSourceBytes": 6291456,
+      "retainedDecodedAfterRelease": 0
+    },
+    {
+      "family": "walls",
+      "results": [
+        {
+          "id": "island-wall",
+          "density": 4,
+          "pixels": 24576,
+          "visiblePixels": 3848,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-wall",
+          "density": 2,
+          "pixels": 6144,
+          "visiblePixels": 1002,
+          "differingPixels": 978,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 23,
+          "alphaWeightedMeanRgbDelta": 3.0015673282860638
+        },
+        {
+          "id": "island-wall",
+          "density": 1.5,
+          "pixels": 3456,
+          "visiblePixels": 575,
+          "differingPixels": 565,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 35,
+          "alphaWeightedMeanRgbDelta": 4.16647618725115
+        },
+        {
+          "id": "island-wall-damaged",
+          "density": 4,
+          "pixels": 24576,
+          "visiblePixels": 4828,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-wall-damaged",
+          "density": 2,
+          "pixels": 6144,
+          "visiblePixels": 1262,
+          "differingPixels": 1214,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 26,
+          "alphaWeightedMeanRgbDelta": 2.885384327741692
+        },
+        {
+          "id": "island-wall-damaged",
+          "density": 1.5,
+          "pixels": 3456,
+          "visiblePixels": 722,
+          "differingPixels": 701,
+          "maxVisibleDelta": 170,
+          "maxAlphaDelta": 46,
+          "alphaWeightedMeanRgbDelta": 3.704101189885428
+        },
+        {
+          "id": "island-wall-broken",
+          "density": 4,
+          "pixels": 24576,
+          "visiblePixels": 6012,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-wall-broken",
+          "density": 2,
+          "pixels": 6144,
+          "visiblePixels": 1517,
+          "differingPixels": 1405,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 22,
+          "alphaWeightedMeanRgbDelta": 2.445807914358507
+        },
+        {
+          "id": "island-wall-broken",
+          "density": 1.5,
+          "pixels": 3456,
+          "visiblePixels": 860,
+          "differingPixels": 823,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 32,
+          "alphaWeightedMeanRgbDelta": 3.392874915177574
+        },
+        {
+          "id": "village-wall-front-l1",
+          "density": 4,
+          "pixels": 16384,
+          "visiblePixels": 16384,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "village-wall-front-l1",
+          "density": 2,
+          "pixels": 4096,
+          "visiblePixels": 4096,
+          "differingPixels": 3689,
+          "maxVisibleDelta": 10,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 1.2522786458333333
+        },
+        {
+          "id": "village-wall-front-l1",
+          "density": 1.5,
+          "pixels": 2304,
+          "visiblePixels": 2304,
+          "differingPixels": 2081,
+          "maxVisibleDelta": 14,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 1.4215856481481481
+        },
+        {
+          "id": "village-wall-top-l1",
+          "density": 4,
+          "pixels": 16384,
+          "visiblePixels": 16384,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "village-wall-top-l1",
+          "density": 2,
+          "pixels": 4096,
+          "visiblePixels": 4096,
+          "differingPixels": 3574,
+          "maxVisibleDelta": 15,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 1.434326171875
+        },
+        {
+          "id": "village-wall-top-l1",
+          "density": 1.5,
+          "pixels": 2304,
+          "visiblePixels": 2304,
+          "differingPixels": 2162,
+          "maxVisibleDelta": 17,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 2.0377604166666665
+        },
+        {
+          "id": "village-wall-side-l1",
+          "density": 4,
+          "pixels": 16384,
+          "visiblePixels": 16384,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "village-wall-side-l1",
+          "density": 2,
+          "pixels": 4096,
+          "visiblePixels": 4096,
+          "differingPixels": 3518,
+          "maxVisibleDelta": 8,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0.8832194010416666
+        },
+        {
+          "id": "village-wall-side-l1",
+          "density": 1.5,
+          "pixels": 2304,
+          "visiblePixels": 2304,
+          "differingPixels": 2018,
+          "maxVisibleDelta": 12,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 1.0954861111111112
+        },
+        {
+          "id": "island-wall-l2",
+          "density": 4,
+          "pixels": 24576,
+          "visiblePixels": 3631,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-wall-l2",
+          "density": 2,
+          "pixels": 6144,
+          "visiblePixels": 953,
+          "differingPixels": 913,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 24,
+          "alphaWeightedMeanRgbDelta": 3.085801482249653
+        },
+        {
+          "id": "island-wall-l2",
+          "density": 1.5,
+          "pixels": 3456,
+          "visiblePixels": 557,
+          "differingPixels": 539,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 34,
+          "alphaWeightedMeanRgbDelta": 4.371601740454194
+        },
+        {
+          "id": "island-wall-l2-damaged",
+          "density": 4,
+          "pixels": 24576,
+          "visiblePixels": 3657,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-wall-l2-damaged",
+          "density": 2,
+          "pixels": 6144,
+          "visiblePixels": 970,
+          "differingPixels": 937,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 27,
+          "alphaWeightedMeanRgbDelta": 2.697646926548774
+        },
+        {
+          "id": "island-wall-l2-damaged",
+          "density": 1.5,
+          "pixels": 3456,
+          "visiblePixels": 556,
+          "differingPixels": 545,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 40,
+          "alphaWeightedMeanRgbDelta": 3.9128885160200477
+        },
+        {
+          "id": "island-wall-l2-broken",
+          "density": 4,
+          "pixels": 24576,
+          "visiblePixels": 4701,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-wall-l2-broken",
+          "density": 2,
+          "pixels": 6144,
+          "visiblePixels": 1181,
+          "differingPixels": 1093,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 23,
+          "alphaWeightedMeanRgbDelta": 2.4342777494251755
+        },
+        {
+          "id": "island-wall-l2-broken",
+          "density": 1.5,
+          "pixels": 3456,
+          "visiblePixels": 672,
+          "differingPixels": 638,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 38,
+          "alphaWeightedMeanRgbDelta": 3.67893905428135
+        },
+        {
+          "id": "village-wall-front-l2",
+          "density": 4,
+          "pixels": 16384,
+          "visiblePixels": 16384,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "village-wall-front-l2",
+          "density": 2,
+          "pixels": 4096,
+          "visiblePixels": 4096,
+          "differingPixels": 3378,
+          "maxVisibleDelta": 12,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 1.19091796875
+        },
+        {
+          "id": "village-wall-front-l2",
+          "density": 1.5,
+          "pixels": 2304,
+          "visiblePixels": 2304,
+          "differingPixels": 2086,
+          "maxVisibleDelta": 19,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 1.8583622685185186
+        },
+        {
+          "id": "village-wall-top-l2",
+          "density": 4,
+          "pixels": 16384,
+          "visiblePixels": 16384,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "village-wall-top-l2",
+          "density": 2,
+          "pixels": 4096,
+          "visiblePixels": 4096,
+          "differingPixels": 3153,
+          "maxVisibleDelta": 8,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0.6177571614583334
+        },
+        {
+          "id": "village-wall-top-l2",
+          "density": 1.5,
+          "pixels": 2304,
+          "visiblePixels": 2304,
+          "differingPixels": 1981,
+          "maxVisibleDelta": 8,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0.7913773148148148
+        },
+        {
+          "id": "village-wall-side-l2",
+          "density": 4,
+          "pixels": 16384,
+          "visiblePixels": 16384,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "village-wall-side-l2",
+          "density": 2,
+          "pixels": 4096,
+          "visiblePixels": 4096,
+          "differingPixels": 3259,
+          "maxVisibleDelta": 12,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0.9235026041666666
+        },
+        {
+          "id": "village-wall-side-l2",
+          "density": 1.5,
+          "pixels": 2304,
+          "visiblePixels": 2304,
+          "differingPixels": 1981,
+          "maxVisibleDelta": 20,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 1.3488136574074074
+        },
+        {
+          "id": "island-wall-l3",
+          "density": 4,
+          "pixels": 24576,
+          "visiblePixels": 4699,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-wall-l3",
+          "density": 2,
+          "pixels": 6144,
+          "visiblePixels": 1205,
+          "differingPixels": 1150,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 23,
+          "alphaWeightedMeanRgbDelta": 2.9031698151150716
+        },
+        {
+          "id": "island-wall-l3",
+          "density": 1.5,
+          "pixels": 3456,
+          "visiblePixels": 703,
+          "differingPixels": 680,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 30,
+          "alphaWeightedMeanRgbDelta": 3.9865875946938205
+        },
+        {
+          "id": "island-wall-l3-damaged",
+          "density": 4,
+          "pixels": 24576,
+          "visiblePixels": 4828,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-wall-l3-damaged",
+          "density": 2,
+          "pixels": 6144,
+          "visiblePixels": 1262,
+          "differingPixels": 1214,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 26,
+          "alphaWeightedMeanRgbDelta": 2.885384327741692
+        },
+        {
+          "id": "island-wall-l3-damaged",
+          "density": 1.5,
+          "pixels": 3456,
+          "visiblePixels": 722,
+          "differingPixels": 701,
+          "maxVisibleDelta": 170,
+          "maxAlphaDelta": 46,
+          "alphaWeightedMeanRgbDelta": 3.704101189885428
+        },
+        {
+          "id": "island-wall-l3-broken",
+          "density": 4,
+          "pixels": 24576,
+          "visiblePixels": 6012,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-wall-l3-broken",
+          "density": 2,
+          "pixels": 6144,
+          "visiblePixels": 1517,
+          "differingPixels": 1405,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 22,
+          "alphaWeightedMeanRgbDelta": 2.445807914358507
+        },
+        {
+          "id": "island-wall-l3-broken",
+          "density": 1.5,
+          "pixels": 3456,
+          "visiblePixels": 860,
+          "differingPixels": 823,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 32,
+          "alphaWeightedMeanRgbDelta": 3.392874915177574
+        },
+        {
+          "id": "village-wall-front-l3",
+          "density": 4,
+          "pixels": 16384,
+          "visiblePixels": 16384,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "village-wall-front-l3",
+          "density": 2,
+          "pixels": 4096,
+          "visiblePixels": 4096,
+          "differingPixels": 3304,
+          "maxVisibleDelta": 19,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0.900634765625
+        },
+        {
+          "id": "village-wall-front-l3",
+          "density": 1.5,
+          "pixels": 2304,
+          "visiblePixels": 2304,
+          "differingPixels": 1997,
+          "maxVisibleDelta": 20,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 1.3689236111111112
+        },
+        {
+          "id": "village-wall-top-l3",
+          "density": 4,
+          "pixels": 16384,
+          "visiblePixels": 16384,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "village-wall-top-l3",
+          "density": 2,
+          "pixels": 4096,
+          "visiblePixels": 4096,
+          "differingPixels": 2918,
+          "maxVisibleDelta": 11,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0.600341796875
+        },
+        {
+          "id": "village-wall-top-l3",
+          "density": 1.5,
+          "pixels": 2304,
+          "visiblePixels": 2304,
+          "differingPixels": 1872,
+          "maxVisibleDelta": 14,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0.8106192129629629
+        },
+        {
+          "id": "village-wall-side-l3",
+          "density": 4,
+          "pixels": 16384,
+          "visiblePixels": 16384,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "village-wall-side-l3",
+          "density": 2,
+          "pixels": 4096,
+          "visiblePixels": 4096,
+          "differingPixels": 2999,
+          "maxVisibleDelta": 18,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0.713623046875
+        },
+        {
+          "id": "village-wall-side-l3",
+          "density": 1.5,
+          "pixels": 2304,
+          "visiblePixels": 2304,
+          "differingPixels": 1884,
+          "maxVisibleDelta": 26,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 1.0823206018518519
+        },
+        {
+          "id": "island-wall-l4",
+          "density": 4,
+          "pixels": 24576,
+          "visiblePixels": 4381,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-wall-l4",
+          "density": 2,
+          "pixels": 6144,
+          "visiblePixels": 1147,
+          "differingPixels": 1095,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 21,
+          "alphaWeightedMeanRgbDelta": 3.03684095130871
+        },
+        {
+          "id": "island-wall-l4",
+          "density": 1.5,
+          "pixels": 3456,
+          "visiblePixels": 650,
+          "differingPixels": 621,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 37,
+          "alphaWeightedMeanRgbDelta": 4.152716204118181
+        },
+        {
+          "id": "island-wall-l4-damaged",
+          "density": 4,
+          "pixels": 24576,
+          "visiblePixels": 4451,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-wall-l4-damaged",
+          "density": 2,
+          "pixels": 6144,
+          "visiblePixels": 1166,
+          "differingPixels": 1120,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 27,
+          "alphaWeightedMeanRgbDelta": 3.090855590097499
+        },
+        {
+          "id": "island-wall-l4-damaged",
+          "density": 1.5,
+          "pixels": 3456,
+          "visiblePixels": 677,
+          "differingPixels": 663,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 32,
+          "alphaWeightedMeanRgbDelta": 4.344418572537366
+        },
+        {
+          "id": "island-wall-l4-broken",
+          "density": 4,
+          "pixels": 24576,
+          "visiblePixels": 5698,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-wall-l4-broken",
+          "density": 2,
+          "pixels": 6144,
+          "visiblePixels": 1437,
+          "differingPixels": 1326,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 22,
+          "alphaWeightedMeanRgbDelta": 2.16166232468911
+        },
+        {
+          "id": "island-wall-l4-broken",
+          "density": 1.5,
+          "pixels": 3456,
+          "visiblePixels": 814,
+          "differingPixels": 780,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 31,
+          "alphaWeightedMeanRgbDelta": 3.244746267455432
+        },
+        {
+          "id": "village-wall-front-l4",
+          "density": 4,
+          "pixels": 16384,
+          "visiblePixels": 16384,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "village-wall-front-l4",
+          "density": 2,
+          "pixels": 4096,
+          "visiblePixels": 4096,
+          "differingPixels": 3135,
+          "maxVisibleDelta": 13,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0.8484700520833334
+        },
+        {
+          "id": "village-wall-front-l4",
+          "density": 1.5,
+          "pixels": 2304,
+          "visiblePixels": 2304,
+          "differingPixels": 1922,
+          "maxVisibleDelta": 22,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 1.2981770833333333
+        },
+        {
+          "id": "village-wall-top-l4",
+          "density": 4,
+          "pixels": 16384,
+          "visiblePixels": 16384,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "village-wall-top-l4",
+          "density": 2,
+          "pixels": 4096,
+          "visiblePixels": 4096,
+          "differingPixels": 2665,
+          "maxVisibleDelta": 8,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0.4234212239583333
+        },
+        {
+          "id": "village-wall-top-l4",
+          "density": 1.5,
+          "pixels": 2304,
+          "visiblePixels": 2304,
+          "differingPixels": 1683,
+          "maxVisibleDelta": 9,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0.5326967592592593
+        },
+        {
+          "id": "village-wall-side-l4",
+          "density": 4,
+          "pixels": 16384,
+          "visiblePixels": 16384,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "village-wall-side-l4",
+          "density": 2,
+          "pixels": 4096,
+          "visiblePixels": 4096,
+          "differingPixels": 2888,
+          "maxVisibleDelta": 10,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0.6263834635416666
+        },
+        {
+          "id": "village-wall-side-l4",
+          "density": 1.5,
+          "pixels": 2304,
+          "visiblePixels": 2304,
+          "differingPixels": 1795,
+          "maxVisibleDelta": 8,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0.8317418981481481
+        },
+        {
+          "id": "island-wall-l5",
+          "density": 4,
+          "pixels": 24576,
+          "visiblePixels": 4945,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-wall-l5",
+          "density": 2,
+          "pixels": 6144,
+          "visiblePixels": 1280,
+          "differingPixels": 1242,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 28,
+          "alphaWeightedMeanRgbDelta": 3.685965921493272
+        },
+        {
+          "id": "island-wall-l5",
+          "density": 1.5,
+          "pixels": 3456,
+          "visiblePixels": 731,
+          "differingPixels": 715,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 39,
+          "alphaWeightedMeanRgbDelta": 5.027200047959772
+        },
+        {
+          "id": "island-wall-l5-damaged",
+          "density": 4,
+          "pixels": 24576,
+          "visiblePixels": 5043,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-wall-l5-damaged",
+          "density": 2,
+          "pixels": 6144,
+          "visiblePixels": 1312,
+          "differingPixels": 1270,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 24,
+          "alphaWeightedMeanRgbDelta": 3.4422631756908495
+        },
+        {
+          "id": "island-wall-l5-damaged",
+          "density": 1.5,
+          "pixels": 3456,
+          "visiblePixels": 749,
+          "differingPixels": 736,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 47,
+          "alphaWeightedMeanRgbDelta": 4.707016063346521
+        },
+        {
+          "id": "island-wall-l5-broken",
+          "density": 4,
+          "pixels": 24576,
+          "visiblePixels": 7477,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-wall-l5-broken",
+          "density": 2,
+          "pixels": 6144,
+          "visiblePixels": 1834,
+          "differingPixels": 1664,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 22,
+          "alphaWeightedMeanRgbDelta": 2.194189875634941
+        },
+        {
+          "id": "island-wall-l5-broken",
+          "density": 1.5,
+          "pixels": 3456,
+          "visiblePixels": 1049,
+          "differingPixels": 984,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 29,
+          "alphaWeightedMeanRgbDelta": 2.9667670991794415
+        },
+        {
+          "id": "village-wall-front-l5",
+          "density": 4,
+          "pixels": 16384,
+          "visiblePixels": 16384,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "village-wall-front-l5",
+          "density": 2,
+          "pixels": 4096,
+          "visiblePixels": 4096,
+          "differingPixels": 3129,
+          "maxVisibleDelta": 16,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0.7833658854166666
+        },
+        {
+          "id": "village-wall-front-l5",
+          "density": 1.5,
+          "pixels": 2304,
+          "visiblePixels": 2304,
+          "differingPixels": 1986,
+          "maxVisibleDelta": 20,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 1.2120949074074074
+        },
+        {
+          "id": "village-wall-top-l5",
+          "density": 4,
+          "pixels": 16384,
+          "visiblePixels": 16384,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "village-wall-top-l5",
+          "density": 2,
+          "pixels": 4096,
+          "visiblePixels": 4096,
+          "differingPixels": 2946,
+          "maxVisibleDelta": 18,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0.513916015625
+        },
+        {
+          "id": "village-wall-top-l5",
+          "density": 1.5,
+          "pixels": 2304,
+          "visiblePixels": 2304,
+          "differingPixels": 1827,
+          "maxVisibleDelta": 25,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0.6556712962962963
+        },
+        {
+          "id": "village-wall-side-l5",
+          "density": 4,
+          "pixels": 16384,
+          "visiblePixels": 16384,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "village-wall-side-l5",
+          "density": 2,
+          "pixels": 4096,
+          "visiblePixels": 4096,
+          "differingPixels": 2955,
+          "maxVisibleDelta": 14,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0.5924479166666666
+        },
+        {
+          "id": "village-wall-side-l5",
+          "density": 1.5,
+          "pixels": 2304,
+          "visiblePixels": 2304,
+          "differingPixels": 1911,
+          "maxVisibleDelta": 20,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0.9509548611111112
+        }
+      ],
+      "peakSourceBytes": 6291456,
+      "retainedDecodedAfterRelease": 0
+    }
+  ],
+  "errors": [],
+  "externalRequests": []
+}
