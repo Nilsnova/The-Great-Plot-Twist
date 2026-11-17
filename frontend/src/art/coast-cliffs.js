@@ -17,7 +17,7 @@ export function cliffProfile(surface) {
       return Math.abs(Math.atan2(Math.sin(offset), Math.cos(offset)));
     }));
     const t = Math.max(0, Math.min(1, (arc - Math.PI / 10) / (Math.PI / 15)));
-    const depth = APPROACH_DEPTH + (CLIFF_DEPTH - APPROACH_DEPTH) * t * t * (3 - 2 * t);
+    const depth = Math.min(CLIFF_DEPTH, APPROACH_DEPTH + (CLIFF_DEPTH - APPROACH_DEPTH) * t * t * (3 - 2 * t));
     return {x, z, y, depth, baseY: y + depth};
   });
 }
