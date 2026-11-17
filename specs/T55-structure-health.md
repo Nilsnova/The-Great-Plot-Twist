@@ -35,6 +35,10 @@ Paid transactions belong to T56; simulation wiring to T57; Captain/research clea
 
 Test deterministic HP projection and phase boundaries, then authenticated state/checkpoint APIs and disposable-SQL lifecycle/concurrency. Follow the full acceptance matrix in issue #121 and T54; do not substitute mock-only tests for database guarantees.
 
+## Saved v1 availability compatibility
+
+A saved recovery-v1 island may contain extra tower plots or culverins after the `more_tower_spots` or `defenses_v2` availability flags are disabled. Existing buildings remain visible, repairable, upgradable when full and between waves, movable and demolishable under the normal v1 rules; a demolished gated building cannot be rebuilt while its availability flag is off. New builds and new gated kinds remain blocked. Recovery repair prices use the full server catalogue, including culverin prices. A v1 wave snapshot must include saved culverins and freeze `defenses_v2` for every participant even when new availability is disabled. Version-zero and ordinary legacy behavior remain flag-controlled.
+
 ## Contracts touched
 
 T54 recovery version 1 / wave protocol 2, `structure_recovery` off-by-default flag, service-only recovery tables, state/journal/checkpoint APIs and canonical locks. Document exact implemented shapes in the owning modules/migrations and contract index. Existing wallet reasons remain unchanged.
