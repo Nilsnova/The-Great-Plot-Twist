@@ -181,8 +181,8 @@
   ],
   "comparison": {
     "file": "comparison.html",
-    "bytes": 6680614,
-    "sha256": "57a9db84eec90d942387d7d75439a691038099e0d0f35842009068f6f491915c",
+    "bytes": 6680852,
+    "sha256": "1b013663f890355679a4a0005dea7f01dee3f9d07c113ee1c140cbe77e9e0dd8",
     "embeddedOriginals": [
       {
         "file": "docs/evidence/VIS-33-working-composition/before-fit-1280x720.png",
