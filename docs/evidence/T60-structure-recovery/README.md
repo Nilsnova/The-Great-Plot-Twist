@@ -5,14 +5,14 @@ feature activation or real credentials are used.
 
 ## Current integrated checkpoint
 
-The strict API-to-PostgreSQL-to-production-replay test passes on the integrated branch. The larger
-focused SQL slice has two fixture-contract failures described below; those failures are not counted
-as passing coverage and no assertions were weakened.
+The integrated focused API, SQL and replay slice passes. It uses the latest tested T55 contract and
+canonical snapshot fixtures; assertions and server limits were left intact.
 
 **Source revisions:** T60 baseline `76c9764b`; T55 foundation `72996af7`, API revision fence
-`81171490`, snapshot schema/API `941703df`, finish response `cb181055`, lifecycle SQL `9d4d4b6c`,
-mutation hooks `3b9c289e` and `cc519114`; T56 paid repair `a4d4fe5a`; T57 replay modules
-`80b79c22`; T60 API/PG/replay harness commit `5ebbd657`.
+`81171490`, snapshot schema/API `941703df`, finish response `cb181055`, lifecycle/expiry SQL
+`9d4d4b6c` and `14a1841f`, saved-v1 flag-off start `22026006`, mutation hooks `3b9c289e` and
+`cc519114`; T56 paid repair `a4d4fe5a`; T57 replay modules `80b79c22`; T60 API/PG/replay harness
+commit `5ebbd657`.
 
 **Strict API/replay command** (from `backend/`):
 
@@ -21,7 +21,7 @@ UV_CACHE_DIR=/tmp/t60-uv-cache CASE_PG_SCRATCH=1 uv run --with pgserver --with '
   pytest -q server/tests/island_sql/test_structure_recovery_http_pg.py
 ```
 
-**Result:** 1 passed in 10.35 seconds. It applies the full repository migration chain twice to the
+**Result:** 1 passed in 9.09 seconds. It applies the full repository migration chain twice to the
 existing disposable Unix-socket PostgreSQL fixture. A synthetic owner and member authenticate
 through a fake verifier; actual FastAPI route services call the local SupabaseAdmin adapter over
 the same scratch connection used by the fixture. Local flags are `islands,structure_recovery`.
@@ -33,10 +33,13 @@ journal page, accepts a checkpoint, and runs the unmodified production `recovery
 `wave-replay.js` modules in two independent Node replay consumers. After a later sealed tick, it
 submits damage, retries the old repair UID and verifies the immutable original receipt, unchanged
 wallet/use count, and no healing. It finishes through the API with canonical closed HP of 750,000,
-checks between-wave healing resumes, starts another wave and checks its fresh three-use quota.
+checks between-wave healing resumes, then disables new-v1 admission and verifies the saved v1 island
+can start another protocol-2 wave with a fresh three-use quota. A stale paid quote after the second
+wave expires settles the wave without charge; its later API finish returns zero loot and the same
+closed HP, with no owner credit.
 
-Only disposable timestamps are moved to put the synthetic wave into combat and to cross the
-minimum finish time. Short real sleeps verify pause and resume behavior. No product timeouts,
+Only disposable timestamps are moved to put the synthetic wave into combat, cross the minimum finish
+time and place a second wave just beyond expiry. Short real sleeps verify pause and resume behavior. No product timeouts,
 assertions or server thresholds are changed. The JavaScript check imports the production snapshot
 and replay modules directly; it does not run the browser or the T59 authenticated frontend transport.
 The HTTP path repairs one wall. Broader SQL regressions exercise the other paid quota, old-UID,
@@ -53,11 +56,8 @@ UV_CACHE_DIR=/tmp/t60-uv-cache CASE_PG_SCRATCH=1 uv run --with pgserver --with '
   server/tests/island_sql/test_structure_recovery_http_pg.py
 ```
 
-**Result:** 68 passed, 2 failed. The two failures are fixture contract mismatches: the new mutation
-suite’s start template omits required `configVersion: 1` (`bad_recovery_snapshot`), and an older
-schema test hand-builds a minimal active v1 snapshot without `recoveryConfig`, so the real mutation
-refresh hook refuses it (`recovery_config_missing`). The API owner is updating the snapshot fixtures;
-the hook remains strict. This combined command is not a clean pass.
+**Result:** 71 passed in 14.42 seconds. The suite includes lifecycle/checkpoint/finish SQL, the full
+mutation hook slice, schema and paid repair suites, and the actual API/replay integration case above.
 
 The narrow adapter allowlists only the local tables and RPCs needed by these calls. It does not
 read environment credentials, connect to a hosted Supabase instance, or create a network client.

@@ -1647,3 +1647,39 @@ runs against disposable local PostgreSQL with every migration applied twice.
 
 **Limits.** This fence protects a paid restore from a report belonging to a wave that started earlier.
 It does not validate the health a modified client reports or order arbitrary stale reports from other waves.
+
+## 33. Durable structure recovery v1 — T55/T60
+
+Structure recovery records normalized health for walls and supported towers and freezes a versioned
+snapshot when the server accepts a wave start. That accepted bell starts the reservation: Carpenter,
+Workshop and Tech-based free healing pause through preparation and combat. Inactive elapsed time
+starts contributing again only after the canonical finish or expiry closes the wave. A returning
+client reads the saved wave version and snapshot, even if new v1 admission has since been switched
+off.
+
+The server owns the structure identity, maximum health, repair price, repair sequence, wallet
+transaction and shared quota. A successful paid Repair restores the selected structure to full HP at
+the base cost for its current level and appends a server-sequenced event. All island participants
+share three successful repairs for that wave. A repeated UID returns its original receipt and current
+health; it cannot heal later damage or spend a second use. A fresh accepted wave gets a fresh quota.
+
+Protocol-2 clients read journal pages through a fixed head and only advance across sealed ticks. A
+health checkpoint must identify the exact island epoch, tick, input head, repair sequence, per-structure
+repair basis and HP vector. The first canonical finish stores its close receipt; a late client cannot
+replace that HP vector or turn an expired wave into a win. The wave still trusts bounded client-reported
+combat health; this work does not run the full battle simulation on the server or compensate players
+for an interrupted wave.
+
+The database sequence is additive and timestamp ordered: normalized recovery state and history, legacy
+wave locks, paid repair, lifecycle/journal/checkpoint/finish APIs, then the island mutation hooks that
+keep saved HP and recovery rates aligned with builds, upgrades, research, moves and resets. The matching
+server feature flag `structure_recovery` is off by default. A capable backend and protocol-2 frontend
+still require the reviewed migration chain before deployment, even with new-v1 admission off. See the
+[release and rollback gate](RELEASE-CHECKLIST.md#t55t60-structure-recovery-release-gate) before a
+separately authorized release.
+
+**Evidence.** [T60's local API/database/replay test](evidence/T60-structure-recovery/README.md) sends
+real FastAPI requests to a disposable PostgreSQL fixture and passes the production snapshot and
+journal directly into two JavaScript replay consumers. Its SQL companions cover retries, quota races,
+expiry and mutation refresh. This does not exercise the browser transport adapter, hosted Supabase,
+live migration history or a physical device. The feature has not been enabled or deployed by this work.

@@ -393,19 +393,107 @@ def test_accepted_bell_member_join_and_paid_repair_match_committed_state(databas
         resumed = resumed_response.json()
         assert resumed["structures"][0]["hpUnits"] > hp_at_finish
 
+        # Saved v1 islands remain readable and can ring the next bell with admission off.
+        client.app.state.settings = replace(settings, flags=parse_flags("islands"))
         next_start_response = client.post(
             "/api/waves/start",
             headers=HEADERS["owner"],
             json={"where": "own", "actionUid": "bell-api-0002", "waveProtocol": 2},
         )
-        assert next_start_response.status_code == 200, next_start_response.text
+        assert next_start_response.status_code == 200, (
+            f"{next_start_response.text}; local SQL error: {admin.last_database_error}"
+        )
         next_start = next_start_response.json()
         assert next_start["waveId"] != wave_id
+        assert next_start["recoveryVersion"] == 1
+        assert next_start["waveProtocol"] == 2
         next_state_response = client.get(
             f"/api/island/structures?code=ISLE-{ISLAND_CODE}", headers=HEADERS["member"]
         )
         assert next_state_response.status_code == 200, next_state_response.text
-        assert next_state_response.json()["remainingPaidUses"] == 3
+        next_state = next_state_response.json()
+        assert next_state["remainingPaidUses"] == 3
+
+        # A stale paid quote after expiry settles the wave but cannot charge or start healing early.
+        expiring_structure = next_state["structures"][0]
+        owner_balance_before_late_finish = balance(database, OWNER)
+        member_balance_before_stale_quote = balance(database, MEMBER)
+        as_owner(database)
+        database.execute(
+            "update public.wave_runs set starts_at=clock_timestamp()-interval '901 seconds' "
+            "where id=%s",
+            (next_start["waveId"],),
+        )
+        database.execute(
+            "update public.island_recovery_state "
+            "set starts_at=clock_timestamp()-interval '901 seconds', "
+            "reserved_at=clock_timestamp()-interval '901 seconds', "
+            "expires_at=clock_timestamp()-interval '1 second' where island_owner=%s",
+            (OWNER,),
+        )
+        as_server(database)
+        stale_quote_response = client.post(
+            "/api/island/structures/repair",
+            headers=HEADERS["member"],
+            json={
+                "code": f"ISLE-{ISLAND_CODE}",
+                "spot": expiring_structure["spot"],
+                "instanceId": expiring_structure["instanceId"],
+                "actionUid": "expired-repair-01",
+                "expectedEpoch": str(epoch),
+                "expectedWindow": "reserved_wave",
+                "expectedWaveId": next_start["waveId"],
+                "expectedLevel": expiring_structure["level"],
+                "expectedRepairSeq": expiring_structure["repairSeq"],
+                "quotedPrice": expiring_structure["fixedPrice"],
+                "waveProtocol": 2,
+            },
+        )
+        assert stale_quote_response.status_code == 409, stale_quote_response.text
+        assert stale_quote_response.json()["error"]["code"] == "stale_recovery_quote"
+        assert balance(database, MEMBER) == member_balance_before_stale_quote
+        assert database.execute(
+            "select current_wave_id from public.island_recovery_state where island_owner=%s",
+            (OWNER,),
+        ).fetchone() == (None,)
+        assert database.execute(
+            "select closed_at is not null from public.recovery_wave_states where wave_id=%s",
+            (next_start["waveId"],),
+        ).fetchone() == (True,)
+
+        expired_snapshot_structure = next_start["initialSnapshot"]["structures"][0]
+        late_finish_response = client.post(
+            "/api/waves/finish",
+            headers=HEADERS["owner"],
+            json={
+                "waveId": next_start["waveId"],
+                "waveProtocol": 2,
+                "survived": True,
+                "shipsSunk": 1,
+                "checkpoint": {
+                    "islandEpoch": next_start["initialSnapshot"]["islandEpoch"],
+                    "checkpointUid": "expired-late-ck01",
+                    "throughTick": 0,
+                    "inputHeadSeq": 0,
+                    "lastRepairSeq": 0,
+                    "basisRepairSeq": {
+                        expiring_structure["instanceId"]: expiring_structure["repairSeq"]
+                    },
+                    "hpUnits": {
+                        expiring_structure["instanceId"]: expired_snapshot_structure["hpUnits"]
+                    },
+                },
+            },
+        )
+        assert late_finish_response.status_code == 200, late_finish_response.text
+        late_finish = late_finish_response.json()
+        assert late_finish["loot"] == 0
+        assert late_finish["coins"] == owner_balance_before_late_finish
+        assert (
+            late_finish["recovery"]["closedHp"][expiring_structure["instanceId"]]
+            == (expired_snapshot_structure["hpUnits"])
+        )
+        assert balance(database, OWNER) == owner_balance_before_late_finish
 
     persisted_hp, persisted_repair_seq = hp(database)
     assert persisted_hp > 750_000

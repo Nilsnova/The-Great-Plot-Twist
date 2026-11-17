@@ -33,6 +33,14 @@ The `--tb=no` bound prevents an unexpected story assertion from copying protecte
 
 For each database file, the coordinator follows the standing protocol: an independent subagent reviews the file against read-only live state and the chain; scratch/tests pass; live history/counts/required ownership and privileges are read; one file is applied per call in timestamp order; exact stored-text MD5 and repository version are proven; expected counts and security-advisor findings are checked. Only then push code that reads the new objects. Report each application. `150000` is unused because G12 required no migration; do not fill a reserved timestamp for an unrelated fix.
 
+## T55/T60 structure recovery release gate
+
+The local T60 integration work does not apply migrations, enable flags or authorize a release. Before deploying a backend or protocol-2 client that can use structure recovery, the release owner must independently review and apply the complete required migration chain in timestamp order, then verify stored checksums, object counts, ownership, grants and RLS. For the recovery implementation, the required files are `20261117020000_structure_recovery.sql`, `20261117025000_legacy_wave_locks.sql`, `20261117030000_paid_structure_repair.sql`, `20261117040000_structure_recovery_api.sql` and `20261117050000_structure_recovery_mutations.sql`, after any earlier migration prerequisites such as `20261117010000_more_tower_spots.sql` that are in the candidate.
+
+Migration readiness is a prerequisite even while `structure_recovery` is off: capable server code reads saved v1 islands and uses the v1 lifecycle/repair contracts, while the flag only controls admitting new v1 waves on legacy islands. Keep the flag off by default. After the migrations are verified, deploy the compatible backend before the protocol-2 frontend; keep admission off until the release owner has reviewed the user-facing behavior and the remaining release checks.
+
+For rollback, turn off new v1 admission first and preserve saved v1 state and its history. Keep a v1-capable backend available until every reserved v1 wave has a canonical finish or expiry receipt; do not roll back to a protocol-1-only server while one is active. Treat the migrations as forward-only: do not drop recovery tables, reverse replacement functions, or erase receipts to undo a release. Fix forward with a reviewed migration. A paid repair already committed remains charged and recorded; rollback does not refund it or replay an older health vector over it. No live migration, backend deployment, frontend deployment or feature activation is part of this task.
+
 ## Browser and deployment checks
 
 From `frontend/`, after building, run the relevant production, CSP, loading and feature gates with an installed Chromium. Use external artifact directories where supported, and preserve historical evidence.
