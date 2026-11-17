@@ -8,12 +8,12 @@
 //   readSkills(list)  -> the known skill ids of a list, in tree order (anything else dropped)
 //   readWeapon(id)    -> a known weapon id, else 'musket'
 //
-// The strike and rebuild fields: the cutlass's damage × strikeMultiplier, its reload × strikeReloadMultiplier, and
-// since the battle-clarity change (D052 update, 15 Nov) every swing is a sweep: it hits every boarder within
-// sweepRadius of the captain at full damage (the Sweep skill widens it by STRIKE.sweepWider). A rebuilt wall gets
-// rebuildShare of its full hp.
+// Legacy recovery fields describe Captain repair inputs in protocol 1. The optional recoveryVersion is supplied by
+// a frozen wave; under version 1 the seven retired skills and Engineer wall HP effect are ignored. New recovery is
+// server-owned and does not use these fields.
 import { CONFIG } from './sim.js';
 import { REACH } from './interact.js';
+import { isRetiredCaptainSkill } from '../campaign/captain-repair-policy.js';
 import { DEFAULT_WEAPON, WEAPON_BY_ID, readSkills, readWeapon, roleOf } from './captain-ids.js';
 
 export * from './captain-ids.js';
@@ -39,12 +39,14 @@ export const ROLE_EFFECTS = Object.freeze({
 
 /**
  * Everything your captain does, from the musket level (1-5), the learnt skills (and the role, one more id in the
- * list) and the equipped weapon. Bad input falls back to level 1, no skills and the musket, so a junk message never
- * crashes a client.
+ * list) and the equipped weapon. `recoveryVersion` defaults to legacy 0 for old waves; version 1 removes the
+ * retired repair-only Captain effects while preserving saved skill IDs for point accounting. Bad input falls back
+ * to level 1, no skills and the musket, so a junk message never crashes a client.
  */
-export function captainStats(level = 1, skills = [], weapon = DEFAULT_WEAPON) {
+export function captainStats(level = 1, skills = [], weapon = DEFAULT_WEAPON, {recoveryVersion = 0} = {}) {
   const levels = CONFIG.captain.levels, lvl = Number.isInteger(level) ? Math.min(levels.length, Math.max(1, level)) : 1;
-  const list = readSkills(skills), base = levels[lvl - 1], known = new Set(list), gun = WEAPON_BY_ID[readWeapon(weapon)];
+  const list = readSkills(skills).filter(id => !isRetiredCaptainSkill(id, recoveryVersion));
+  const base = levels[lvl - 1], known = new Set(list), gun = WEAPON_BY_ID[readWeapon(weapon)];
   const has = id => known.has(id), role = roleOf(list), R = CONFIG.health.revive;
   const times = (...pairs) => pairs.reduce((product, [id, factor]) => product * (has(id) ? factor : 1), 1);
   const damage = round2(base.damage * gun.damage * times(['steady_aim', MARKSMAN.steadyAim], ['hot_shot', MARKSMAN.hotShot],
@@ -70,6 +72,6 @@ export function captainStats(level = 1, skills = [], weapon = DEFAULT_WEAPON) {
     // Roles: the medic's help-up (hold seconds, hp share of the one helped up) and the engineer's wall hp.
     role, reviveHold: role === 'medic' ? ROLE_EFFECTS.medic.reviveHold : R.hold,
     reviveShare: has('field_surgeon') ? ROLE_EFFECTS.medic.surgeonShare : role === 'medic' ? ROLE_EFFECTS.medic.reviveShare : R.share,
-    wallHpMultiplier: role === 'engineer' ? ROLE_EFFECTS.engineer.wallHp : 1,
+    wallHpMultiplier: recoveryVersion === 0 && role === 'engineer' ? ROLE_EFFECTS.engineer.wallHp : 1,
   };
 }
