@@ -1,0 +1,59 @@
+{
+  "mode": "before",
+  "root": "/workspace/coc-overnight/camera-baseline/frontend",
+  "fixture": "real game / local fake transport, not production",
+  "screens": [
+    {
+      "width": 1280,
+      "height": 720,
+      "name": "before-1280x720.png",
+      "managing": true,
+      "zoom": 1,
+      "position": [
+        -7,
+        11.02,
+        100
+      ],
+      "captain": [
+        -7,
+        1.03,
+        -11
+      ],
+      "built": 19,
+      "contextLost": false,
+      "drawCalls": 87,
+      "landTop": 5.890909090909089,
+      "landBottom": 1215.490909090909,
+      "safeTop": 80,
+      "safeBottom": 487.90625,
+      "pageErrors": [],
+      "externalRequests": 0
+    },
+    {
+      "width": 375,
+      "height": 812,
+      "name": "before-375x812.png",
+      "managing": true,
+      "zoom": 1,
+      "position": [
+        -7,
+        11.02,
+        100
+      ],
+      "captain": [
+        -7,
+        1.03,
+        -11
+      ],
+      "built": 19,
+      "contextLost": false,
+      "drawCalls": 88,
+      "landTop": 152.40625,
+      "landBottom": 1018.65625,
+      "safeTop": 157.1875,
+      "safeBottom": 509.71875,
+      "pageErrors": [],
+      "externalRequests": 0
+    }
+  ]
+}

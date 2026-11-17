@@ -267,6 +267,26 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     return wavesLoad;
   }
   const projected=new THREE.Vector3(),canvas=graphics.renderer.domElement;
+  let villageLayoutKey='',villageViewport=null,villageQuests=null,villageBar=null,villagePlacing=null;
+  function updateVillageView(){
+    const managing=island?.managing===true&&!inBattle;
+    if(!managing){villageLayoutKey='';villageBar=null;view.setVillageView(false);return;}
+    const width=parseFloat(canvas.style.width)||window.innerWidth,height=parseFloat(canvas.style.height)||window.innerHeight;
+    villageQuests??=container.querySelector('.quest-strip');
+    const caption=document.documentElement.style.getPropertyValue('--narrator-card-height');
+    const placing=!!island.moving;
+    if(!villageBar?.isConnected||villagePlacing!==placing){
+      villageBar=container.querySelector(placing?'.island-move-bar:not([hidden])':'.island-village-mode:not([hidden])');villagePlacing=placing;
+    }
+    const key=`${width}:${height}:${caption}:${villageQuests?.textContent}:${villageQuests?.className}:${placing}:${villageBar?.textContent}:${villageBar?.className}:${document.documentElement.className}:${document.body.className}`;
+    if(key!==villageLayoutKey){
+      const bar=villageBar;
+      const top=width<640?villageQuests?.getBoundingClientRect().bottom??80:80;
+      villageViewport={height,top:Math.max(80,top+12),bottom:bar?height-bar.getBoundingClientRect().top+12:112};
+      villageLayoutKey=key;
+    }
+    view.setVillageView(true,villageViewport);
+  }
   // Where a world point hangs on screen, as fractions of the canvas (the floating E prompt and the "Walk closer" hint).
   function screenAt(id){const a=island?.anchor?.(id);if(!a)return null;projected.set(a.x,-a.z*.72+a.lift,0).project(view.camera);
     return Math.abs(projected.x)<=1.2&&Math.abs(projected.y)<=1.2?{x:(projected.x+1)/2,y:(1-projected.y)/2}:null;}
@@ -307,6 +327,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     world.update(delta, { player: controller.player.position, time:reducedMotion()?0:time, night, weather: state,weatherAnswer });
     characterScale=inBattle?characterScaleFor(view.camera.zoom):1;scene.userData.characterScale=characterScale;
     character.setColour(island?.game?island.captainColour():null);character.setScale(characterScale);
+    updateVillageView();
     view.update(delta, controller.player.position);
     // A captain down in the wave lies in the wave's drawing: their standing presence figure hides (pirates/figures.js).
     experience.update(delta,{speed,hide:waves?.figures?.(experience.figures())??null,poses:poses?.figures??null});

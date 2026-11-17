@@ -1696,3 +1696,7 @@ neither pauses combat nor changes a price, capacity, level or HP.
 Explain-back questions: Why separate movement from picking? Which checks still
 belong to the server? What happens to placement when a wave is accepted? The
 three questions are prepared, not a claim Johannes has already answered them.
+
+## Johannes — COC-02 current-base overview
+
+The camera accepts a local management-view request and fits the current home island. It preserves normal zoom and gives combat/tutorial focus precedence. Runtime: `frontend/src/player/camera.js`, with one `game.js` handoff from optional `island.managing`. See [the specification](../specs/COC-02-village-overview.md) for why, limits, future land bounds and three questions. This is a draft dependent on PR #192, not a merged feature.

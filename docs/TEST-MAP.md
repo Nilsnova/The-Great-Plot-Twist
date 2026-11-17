@@ -330,3 +330,7 @@ Menu eligibility is queried without entering/rendering. Unavailable contexts do
 not offer a Manage action; after a reservation the full-game test checks both
 Manage and Exit Menu entries are absent. Existing islet-boundary tests preserve
 the outside-overlay/StopPlots assertions through the captain-blocking wrapper.
+
+## COC-02 — village overview camera (Johannes)
+
+`frontend/tests/player/village-camera.test.js`: eight tests cover real current-land and overlay-inset fit at both required viewport sizes, captain/zoom restoration, battle/tutorial precedence, resize/travel, motion preferences and invalid/paused updates. Run `cd frontend && npx vitest run tests/player/village-camera.test.js --maxWorkers=1`. Final focused result: 1 file / 8 tests passed, 516 ms. This does not prove production, Safari, expanded land or integrated UI; [evidence](evidence/COC-02/README.md) records later checks.

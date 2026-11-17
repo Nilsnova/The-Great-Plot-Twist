@@ -3,13 +3,27 @@
 // textures need no pixel grid, so the art never shimmers at any position or zoom.
 import * as THREE from 'three';
 import {projectPoint} from '../world/art.js';
+import {surfaces} from '../world/places/surfaces.js';
+
+// Fit today's whole island, including its wavy shore, tall buildings and HUD space.
+// This is a village overview, not an alternate battle zoom or a future land-growth rule.
+export function villageFrame(camera, placeId, viewport = null) {
+  const land = placeId === 'home_islet' ? surfaces[placeId] : null;
+  const width = camera.right - camera.left, height = camera.top - camera.bottom;
+  if (!land || !Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) return null;
+  const fraction = value => Number.isFinite(viewport?.height) && viewport.height > 0 && Number.isFinite(value)
+    ? Math.max(0, Math.min(.6, value / viewport.height)) : 0;
+  const top = fraction(viewport?.top), bottom = fraction(viewport?.bottom), free = Math.max(.1, 1 - top - bottom);
+  const zoom = Math.min(1, width / (2 * (land.rx * 1.1 + 2)), height * free / (2 * (land.rz * .72 * 1.1 + 4.5)));
+  return {x: 0, y: 3 - (bottom - top) * height / (2 * zoom), zoom};
+}
 
 export function createCamera(input) {
   const camera = new THREE.OrthographicCamera(-15, 15, 10, -10, .1, 200);
   const start = projectPoint(-1, 10);
   camera.position.set(start.x, start.y + 3.1, 100); camera.lookAt(camera.position.x, camera.position.y, 0);
   camera.userData.viewHeight = 22; // world units tall at zoom 1 (at least 16 wide on a phone)
-  let exploring = false, targetZoom = 1, placeId = 'lighthouse_isle', reduce = false, zoom = 1;
+  let exploring = false, targetZoom = 1, placeId = 'lighthouse_isle', reduce = false, zoom = 1, village = false, villageViewport = null;
   const follow = new THREE.Vector2(camera.position.x, camera.position.y);
   function place(x, y) { follow.set(x, y); camera.position.set(x, y, 100); }
   function applyZoom(value) {
@@ -18,21 +32,30 @@ export function createCamera(input) {
   }
   return {camera, get yaw() { return 0; },
     setPlace(id, player) {
-      placeId = id; targetZoom = 1; const point = projectPoint(player.x, player.z);
+      placeId = id; village = false; targetZoom = 1; const point = projectPoint(player.x, player.z);
       place(point.x, point.y + 3.1); zoom = 1;
       camera.zoom = 1; camera.updateProjectionMatrix();
     },
     pause() { exploring = false; },
     overview() { exploring = false; targetZoom = 1; applyZoom(1); },
     start(reducedMotion = false) { exploring = true; reduce = reducedMotion === true; },
+    setVillageView(active, viewport = null) { village = active === true; villageViewport = viewport; },
     update(delta, player) {
       if (!exploring || !Number.isFinite(delta) || delta <= 0) return;
-      const dt = Math.min(delta, .1), wheel = input.pointer.wheel;
+      const dt = Math.min(delta, .1);
+      const tour = camera.userData.tour, touring = Number.isFinite(tour?.x) && Number.isFinite(tour?.z);
+      const frame = village && !touring && !Number.isFinite(camera.userData.battleZoom) ? villageFrame(camera, placeId, villageViewport) : null;
+      if (frame) {
+        const blend = reduce ? 1 : 1 - Math.exp(-dt * 5);
+        place(follow.x + (frame.x - follow.x) * blend, follow.y + (frame.y - follow.y) * blend);
+        applyZoom(zoom + (frame.zoom - zoom) * blend);
+        return; // Preserve the player's exploration zoom; a fit view owns no movement input.
+      }
+      const wheel = input.pointer.wheel;
       if (Number.isFinite(wheel) && wheel) targetZoom = Math.max(1, Math.min(2, targetZoom - wheel / 1000));
       // ...and lean towards the fight: camera.userData.battleFocus is a small logical offset {x, z}.
       const lean = camera.userData.battleFocus, leanX = Number.isFinite(lean?.x) ? lean.x : 0, leanZ = Number.isFinite(lean?.z) ? lean.z : 0;
       // ...or, for a moment, look at a thing on the island instead (the unlock cards' Show me, T52): camera.userData.tour {x, z}.
-      const tour = camera.userData.tour, touring = Number.isFinite(tour?.x) && Number.isFinite(tour?.z);
       const point = touring ? projectPoint(tour.x, tour.z) : projectPoint(player.x + leanX, player.z + leanZ);
       const blend = reduce ? 1 : 1 - Math.exp(-dt * (touring ? 3 : 12));
       const headroom = placeId === 'lighthouse_isle' && Math.hypot(player.x - 9, player.z + 8) < 8 ? 4.2 : 3.1;
