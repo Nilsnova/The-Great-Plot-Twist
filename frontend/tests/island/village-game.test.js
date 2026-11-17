@@ -27,7 +27,8 @@ async function pickCannon(page) {
   const at = await page.evaluate(async () => {
     const g = window.__island, rect = g.renderer.domElement.getBoundingClientRect();
     const {projectGround} = await import('/src/world/projection.js');
-    const spot = g.island.island.spots.find(item => item.id === 'cannon_1'), foot = projectGround(spot.x, spot.z);
+    const {placedSpot} = await import('/src/island/spots.js');
+    const spot = placedSpot('cannon_1', g.island.island.spots), foot = projectGround(spot.x, spot.z);
     const point = g.player.position.clone().set(foot.x, foot.y + .7, 0).project(g.camera);
     return {x: rect.left + (point.x + 1) * rect.width / 2, y: rect.top + (1 - point.y) * rect.height / 2};
   });
