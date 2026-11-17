@@ -1,0 +1,31 @@
+{
+  "mode": "after",
+  "viewports": [
+    [
+      1280,
+      720
+    ],
+    [
+      375,
+      812
+    ]
+  ],
+  "walls": 12,
+  "links": 6,
+  "positions_unchanged": true,
+  "battle_handoff_hidden": true,
+  "pageErrors": [],
+  "consoleErrors": [],
+  "debug": {
+    "lost": false,
+    "camera": [
+      -6,
+      3.1,
+      100
+    ],
+    "zoom": 0.8022322488351739,
+    "drawCalls": 41
+  },
+  "externalRequests": 0,
+  "fixture": "Real application fake API; two normal valid Move operations form a T. No production data."
+}

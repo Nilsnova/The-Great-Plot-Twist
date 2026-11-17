@@ -149,3 +149,5 @@ Planning handover (14 Nov): roadmap/task expansion drafted by Ianno Hollensteine
 
 
 COC-07 scoped visual follow-up ([issue #148](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/148)): distinct neutral and role house-level silhouettes are implemented on `feat/coc-07-house-levels`, with [focused checks and limitations](../specs/COC-07-house-levels.md) and [before/after fixtures](evidence/COC-07-house-levels/README.md). This is one small feature slice; it does not mark the wider COC roadmap complete. Draft/human review and coordinated integration checks remain; no merge or release is claimed.
+
+COC-13 scoped addition (Johannes): the first **between-wave wall-connection drawing** slice is implemented on `feat/coc-13-wall-connections`, tracking [#154](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/154). [Spec](../specs/COC-13-wall-connections.md) and [evidence](evidence/COC-13/README.md) describe the exact phase boundary. The whole COC-13 task is **not** marked complete: combat integration, central checks, Explain-back and independent human review remain. No merge or feature-policy change is claimed.

@@ -1,0 +1,20 @@
+{
+  "mode": "before",
+  "viewports": [
+    [
+      1280,
+      720
+    ],
+    [
+      375,
+      812
+    ]
+  ],
+  "walls": 12,
+  "links": 0,
+  "positions_unchanged": true,
+  "battle_handoff_hidden": null,
+  "pageErrors": [],
+  "externalRequests": 0,
+  "fixture": "Real application fake API; two normal valid Move operations form a T. No production data."
+}
