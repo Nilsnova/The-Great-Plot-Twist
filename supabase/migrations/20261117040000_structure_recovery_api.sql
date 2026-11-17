@@ -1303,10 +1303,6 @@ begin
    where wave_id=p_wave_id and player_id=p_player_id for update;
   if not found then return jsonb_build_object('status','refused','reason','not_in_wave'); end if;
   v_repeat := v_part.finished_at is not null;
-  if p_player_id<>v_owner and not exists (
-    select 1 from public.island_members where island_owner=v_owner
-      and player_id=p_player_id and left_at is null
-  ) then return jsonb_build_object('status','refused','reason','not_member'); end if;
   if v_wave.recovery_version<>1 or v_wave.wave_protocol<>2 then
     return jsonb_build_object('status','refused','reason','client_update_required');
   end if;
@@ -1373,6 +1369,9 @@ begin
     if p_through_tick < v_wave.sealed_through_tick or p_input_head_seq < v_wave.journal_head then
       return jsonb_build_object('status','refused','reason','health_sync_required');
     end if;
+    if p_last_repair_seq is distinct from v_wave.last_repair_seq then
+      return jsonb_build_object('status','refused','reason','health_sync_required');
+    end if;
     if v_server_now < v_run.starts_at + make_interval(secs=>v_run.minimum_seconds)
        and v_part.finished_at is null then
       return jsonb_build_object('status','refused','reason','too_early',
@@ -1410,10 +1409,17 @@ begin
       'survived',v_part.survived,'wave',v_run.wave,'waveBest',v_wave_best,'flags',v_flags,
       'expired',true,'repeat',v_repeat,
       'boss',p_boss_every>0 and v_run.wave%p_boss_every=0);
+  elsif not v_repeat
+        and v_server_now > v_run.starts_at + make_interval(secs=>v_run.maximum_seconds) then
+    update public.wave_participants set finished_at=v_server_now,survived=false,
+      ships_sunk=0,loot=0,expired=true
+     where wave_id=p_wave_id and player_id=p_player_id returning * into v_part;
+    select wave_best,flags into v_wave_best,v_flags from public.islands where player_id=v_owner;
+    v_result := jsonb_build_object('status','done','loot',0,'balance',v_balance,
+      'survived',false,'wave',v_run.wave,'waveBest',v_wave_best,'flags',v_flags,
+      'expired',true,'repeat',false,
+      'boss',p_boss_every>0 and v_run.wave%p_boss_every=0);
   else
-    if not v_repeat and p_last_repair_seq is distinct from v_wave.last_repair_seq then
-      return jsonb_build_object('status','refused','reason','health_sync_required');
-    end if;
     if not v_repeat and v_server_now < v_run.starts_at + make_interval(secs=>v_run.minimum_seconds) then
       return jsonb_build_object('status','refused','reason','too_early',
         'waitSeconds',greatest(1,ceil(extract(epoch from
