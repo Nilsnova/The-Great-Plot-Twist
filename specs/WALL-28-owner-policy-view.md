@@ -36,3 +36,11 @@ Explain-back: I use the island owner policy rather than the visiting player poli
 Questions: Why is the owner policy used during a visit? Why must missing coordinates fail instead of placing a wall at the origin? Why does a larger catalogue not make the old unpositioned build safe?
 
 Remaining: real SQL mutation/concurrency proof, positioned construction, actual builder and full perimeter lifecycle. No live migration application, activation, deployment or merge.
+
+## Paused D060 offers retain occupancy
+
+For rule 1, server read/Move geometry includes all fourteen non-wall sites, even when the four D060 offers are paused. `layout.reservedPositions` exposes the actual/default coordinates of those four unoffered sites as read-only occupancy metadata. It grants no new purchases or control, and ordinary Move still rejects an unoffered D060 ID. Legacy rule 0 keeps its previous geometry behavior. This preserves occupancy; it does not claim the broader D060 kind/availability decision is solved.
+
+Follow-up regression: a paid `cannon_8` moved to (-4,-9) while its offer is off remains reserved at that coordinate; moving a wall there refuses before the write. The first Move fixture accidentally included an unrelated action UID; using the actual strict Move body corrected the fixture without weakening the 409 occupancy assertion.
+
+Final expanded command adds `server/tests/test_wall_policy_layout.py server/tests/test_wall_layout_snapshot.py` to the focused pytest command above: **159 passed in 8.10s**. Ruff check passed on all seven changed Python files; format check reported **7 files already formatted**. SQL/actual browser gates remain separate.

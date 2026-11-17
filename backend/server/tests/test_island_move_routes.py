@@ -65,6 +65,7 @@ def test_legacy_flag_off_keeps_fixed_spots_but_reads_policy_to_find_paid_cohorts
         "movable": False,
         "wallRuleVersion": 0,
         "wallCapacity": 12,
+        "reservedPositions": {},
     }
     assert layout_reads(world) == 1
 
@@ -89,6 +90,7 @@ def test_an_old_save_shows_its_fixed_spots_as_grid_cells_and_may_move(world):
         "movable": True,
         "wallRuleVersion": 0,
         "wallCapacity": 12,
+        "reservedPositions": {},
     }
 
 

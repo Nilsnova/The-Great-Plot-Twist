@@ -55,7 +55,10 @@ async def try_move(
 ) -> Refusal | None:
     """One atomic snapshot, check and fenced store. None once the spot stands at `where`."""
     snapshot = await layout_store.read_snapshot(admin, island.owner)
-    rules = layout.island_layout(more)  # D060: with the extra tower spots while they are offered
+    # A perimeter island retains all non-wall reservations even when new tower offers pause.
+    rules = layout.island_layout(more or snapshot.rule_version == 1)
+    if not more and any(spot.spot == spot_id for spot in rules.extra_spots):
+        raise layout.MoveRefused(404, "no_such_spot", "There is no such build spot.")
     policy = {"wall_rule_version": snapshot.rule_version, "wall_capacity": snapshot.capacity}
     positions = layout.positions_of(rules, layout_store.positions_from(snapshot.rows), **policy)
     if is_inventory_wall_id(spot_id, snapshot.capacity) and spot_id not in positions:
