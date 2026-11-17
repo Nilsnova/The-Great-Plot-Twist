@@ -100,14 +100,14 @@ def test_wave_revive_changes_only_the_tavern_block():
     assert f"(100 - {load_island().revive.tavern_percent})" in after
 
 
-def test_the_migration_is_the_last_word_on_wave_revive():
-    later = [
-        path.name
-        for path in sorted(MIGRATIONS.glob("*.sql"))
-        if path.name > ROLES.name
-        and re.search(r"function public\.wave_revive\(", path.read_text())
-    ]
-    assert later == []
+def test_the_latest_wave_revive_keeps_the_tavern_rule():
+    latest = next(
+        path
+        for path in sorted(MIGRATIONS.glob("*.sql"), reverse=True)
+        if re.search(r"function public\.wave_revive\(", path.read_text())
+    )
+    assert latest.name == ROLES.name
+    assert function(latest.read_text(), "wave_revive") == function(ROLES.read_text(), "wave_revive")
 
 
 # The tests above pin 20261112090000 itself: it is applied to production and never edited, so what
