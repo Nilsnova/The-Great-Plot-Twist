@@ -137,11 +137,25 @@ CHROME_PATH=/usr/bin/chromium node scripts/capture-village-composition.mjs \
 ~~~
 
 The exact [document checker](verify-comparison.mjs) uses the existing frontend's
-`playwright-core` package and headless Chromium. It accepts this HTML plus an
-output directory, serves only the original HTML on owned ephemeral loopback,
-and verifies all twelve images and 2/3/3 tablists. Its dependency-resolution path
-is explicit for the managed workspace; use an equivalent installed frontend
-package path elsewhere. The HTML itself has no package or remote-asset dependency.
+locked `playwright-core` package and headless Chromium. Run it from a repository
+checkout with the frontend's locked dependencies installed:
+
+~~~bash
+CHROME_PATH=/usr/bin/chromium node docs/evidence/reference-village-latest-review/verify-comparison.mjs
+~~~
+
+It resolves the checkout's `frontend/package.json` relative to its own file,
+opens the sibling `comparison.html`, and writes to `captures/review-document`
+relative to the command's working directory. Optional first/second arguments
+select another HTML/output path. For an extracted checker outside that checkout,
+`REVIEW_FRONTEND_PACKAGE=/absolute/path/to/frontend/package.json` explicitly
+selects an existing locked frontend installation; it installs no packages.
+Set `CHROME_PATH` to the installed Chromium/Chrome executable on another machine.
+
+The checker serves only the original HTML on owned ephemeral loopback and
+verifies all twelve images and 2/3/3 tablists. The static HTML itself has no
+package or remote-asset dependency; the checker requires the checkout's existing
+dependencies. An extracted image-review ZIP is not an installed app checkout.
 Managed-browser direct file opening was previously blocked before assertions;
 do not disable browser policy to run this check.
 
