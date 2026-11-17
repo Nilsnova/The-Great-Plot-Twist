@@ -228,6 +228,7 @@ from server.clock import ClockDep
 from server.errors import ApiError
 from server.flags import is_enabled
 from server.island import leaderboard, rules, service, wall_repair
+from server.island.captain_recovery_policy import active_captain_skills
 from server.island.catalogue import IslandCatalogue
 from server.island.layout import LayoutInfo
 from server.island.rules import ResearchTier, SpotView
@@ -689,6 +690,11 @@ def prices_out(catalogue: IslandCatalogue) -> PricesOut:
 
 
 def island_out(view: IslandView, catalogue: IslandCatalogue) -> IslandResponse:
+    active_skill_ids = set(
+        active_captain_skills(
+            tuple(item.skill for item in catalogue.skills.tree), view.recovery_version
+        )
+    )
     return IslandResponse(
         code=view.code,
         coins=view.coins,
@@ -720,6 +726,7 @@ def island_out(view: IslandView, catalogue: IslandCatalogue) -> IslandResponse:
                     role=skill.role,
                 )
                 for skill in catalogue.skills.tree
+                if skill.skill in active_skill_ids
             ],
             role=view.skills.role,
             roleLevel=view.skills.role_level,

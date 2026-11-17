@@ -82,6 +82,19 @@ def test_points_count_only_waves_the_player_won_themselves():
     assert body["skills"]["points"] == 0
 
 
+def test_recovery_v1_hides_retired_choices_without_changing_saved_skill_accounting():
+    world = world_at(9, captain_skills=["quick_fix", "steady_aim"])
+    world.database.recovery_policy_version = 1
+
+    skills = world.island().json()["skills"]
+
+    assert "quick_fix" in skills["known"]
+    assert skills["spent"] == 2
+    assert skills["points"] == 2
+    assert "quick_fix" not in {item["id"] for item in skills["tree"]}
+    assert "steady_aim" in {item["id"] for item in skills["tree"]}
+
+
 # --- POST /api/island/skill ---
 
 
@@ -129,6 +142,29 @@ def test_a_repeated_skill_click_learns_nothing_and_answers_the_island():
 
     assert skill(world, "steady_aim").status_code == 200
     assert world.database.calls("island_learn_skill") == []
+
+
+def test_recovery_v1_rejects_new_retired_skill_uid_but_keeps_uid_replay_read_only():
+    world = world_at(9, captain_skills=["quick_fix"])
+    world.database.recovery_policy_version = 1
+
+    assert_error(skill(world, "quick_fix", "new-click"), 409, "skill_retired")
+    assert world.database.calls("island_learn_skill") == []
+
+    world.database.skill_refs.add("skill:old-click")
+    replay = skill(world, "quick_fix", "old-click")
+    assert replay.status_code == 200
+    assert world.database.calls("island_learn_skill") == []
+
+
+def test_database_retired_skill_race_maps_to_the_same_conflict():
+    world = world_at(9)
+    world.database.paid_replies["island_learn_skill"] = {
+        "status": "refused",
+        "reason": "retired_skill",
+    }
+
+    assert_error(skill(world, "steady_aim"), 409, "skill_retired")
 
 
 def test_a_skill_needs_a_click_id():

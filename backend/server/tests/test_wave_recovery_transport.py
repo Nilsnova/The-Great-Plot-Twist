@@ -192,6 +192,9 @@ def test_snapshot_template_captures_server_sim_inputs_and_exact_hp_rate(monkeypa
     assert "tower_1" not in snapshot["structureConfigBySpot"]
     assert snapshot["legacyWallRecoverSeconds"] == 600
     assert snapshot["expectedRevision"] == 7
+    assert snapshot["configVersion"] == 1
+    assert "recoveryConfigVersion" not in snapshot
+    assert snapshot["weather"] == snapshot["createWave"]["weather"]
     assert snapshot["recoveryConfig"]["baseRateUnitsPerSecond"] == [5000, 3]
     wall = next(kind for kind in catalogue.kinds if kind.kind == "wall")
     assert snapshot["priceSchedule"]["wall"] == list(wall.prices)
