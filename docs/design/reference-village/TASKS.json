@@ -1,0 +1,2749 @@
+[
+  {
+    "id": "VIS-01",
+    "source_proposal": "consolidated-audit",
+    "title": "Agree the reference style, frame and shoreline contract",
+    "kind": "design",
+    "priority": "P1",
+    "size": "S, one reviewed contract; no runtime rewrite",
+    "files": [
+      "docs/design/reference-village/REFERENCE.md",
+      "specs/vis-01-style-contract.md (proposed)",
+      "frontend/GRAPHICS.md",
+      "docs/DECISIONS.md"
+    ],
+    "baseline": [
+      "docs/GAME-V3.md:270–277 specifies code-drawn smooth cartoon art, unchanged angle and no runtime image downloads.",
+      "frontend/src/world/art.js:47–58 uses fixed-view plane projection; frontend/src/art/textures.js:46–54 uses unlit sprite materials.",
+      "frontend/src/world/places/surfaces.js:2–18 defines playable land while frontend/src/world/water.js:153–163 derives foam from backdrop alpha."
+    ],
+    "goal": "Turn the supplied concept into a measurable, original maritime art direction and a small shared rendering contract before agents redraw different parts of the game.",
+    "plan": [
+      "Map the supplied image to existing behavior, new visual work, existing base-building gameplay tasks and optional pier work.",
+      "Write the palette, light, material, size and rejection checklist using reference annotations; do not implement application art in this design task.",
+      "Document frame/foot/picking metadata and the playable-top versus decorative-waterline contract against current source.",
+      "Name shared integration ownership and the accepted/rejected trial outcomes, including when conditional VIS-32 can be considered.",
+      "Review the contract, source links and handoff with Johannes; actual running-game proof belongs to VIS-02."
+    ],
+    "acceptance": [
+      "Name palette, light direction, roof/wall/base planes, outline weight, contact-shadow treatment, relative sizes and phone readability with illustrated examples and explicit rejection examples.",
+      "Keep the existing projection and gameplay geometry for the first proof. Distinguish visual extents, feet/anchors, pick regions, server footprints, playable top and decorative cliff waterline.",
+      "Record unchanged legacy-save, other-place, quality and asset-lifetime behavior plus one owner for shared registration/renderer hooks.",
+      "Define the actual-game quality gate in VIS-02. If code-painted art cannot reach the accepted result, explicitly revise the art contract and consider conditional VIS-32 rather than silently changing the no-download rule.",
+      "Classify reference elements as existing behavior, visual work, existing base-building gameplay work or optional pier work; illustrative money, wave and positions are not implementation data.",
+      "Define readable working zoom and a separate whole-island Fit state. If the current fixed projection/land aspect cannot meet the reference composition, record the required BASE-02/05/06 slice or explicit geometry/projection decision rather than promising a match by denser textures alone."
+    ],
+    "scenarios": [
+      {
+        "input": "The reference shows an off-shore pier and a green tile grid",
+        "action": "Review the style/geometry diagram",
+        "expected": "The diagram distinguishes decorative cliff, actual walking support and valid building cells; none automatically grants owned land."
+      },
+      {
+        "input": "A high-resolution painter still looks flat in the real village",
+        "action": "Evaluate the VIS-02 gate",
+        "expected": "The style remains unaccepted; change the art approach explicitly rather than increasing density or marking all families ready."
+      },
+      {
+        "input": "Several agents begin asset work",
+        "action": "Read the shared frame/registration plan",
+        "expected": "Each has a distinct family file and a named integration handoff; shared world/atlas files have one active owner."
+      }
+    ],
+    "checks": [
+      "Content, source-link and coordinate-contract review only for this design task. Do not claim game checks from a document review."
+    ],
+    "risks": [
+      "Larger detail can clip, shift an anchor or reduce legibility at phone village zoom.",
+      "Shared registration/render hooks can conflict with another branch unless one integration owner coordinates them.",
+      "A style pass must not invent or hide real kind, level, damage, recovery, unlock or input state."
+    ],
+    "questions": [
+      "Why will Three.js lights not shade the current MeshBasic sprite art?",
+      "How do a visual frame, a logical footprint and a decorative waterline differ?",
+      "What evidence chooses the art pipeline before bulk work?"
+    ],
+    "notes": [],
+    "not_in_scope": [],
+    "parent_tasks": [
+      "BASE-09",
+      "BASE-08",
+      "BASE-20"
+    ],
+    "parallel_owner": "One writer owns the bounded family/helper on a separate branch/clone. Coordinate shared art registration, world, combat, ground and resource hooks with the integration owner; do not overwrite a concurrent writer.",
+    "optional": false,
+    "dependencies": [],
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "conditional_dependencies": [],
+    "github_issue": 206,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/206"
+  },
+  {
+    "id": "VIS-02",
+    "source_proposal": "R01",
+    "title": "Prove the richer pirate-village style in one runtime vertical slice",
+    "kind": "runtime investigation and visual decision",
+    "priority": "P1",
+    "size": "S–M, one cannon and a small terrain sample; split further if the source/test change would exceed approximately 400 lines.",
+    "files": [
+      "specs/vis-01-style-contract.md",
+      "frontend/src/art/reference-slice.js",
+      "frontend/scripts/capture-reference-style.mjs",
+      "docs/DECISIONS.md"
+    ],
+    "baseline": [
+      "GAME-V3.md:270–277 already specifies code-authored clean cartoon art at the existing angle.",
+      "world/art.js:47–58 uses flat planes; art/textures.js:46–54 uses MeshBasicMaterial, so Three lights do not shade the drawn buildings."
+    ],
+    "goal": "Prove a bounded runtime slice with one newly styled cannon, a small grass/cliff/contact-shadow sample and the existing Move preview. Keep the current cabin as scale context; do not redraw the whole village in this prototype.",
+    "plan": [
+      "Inspect current frames, actual consumers and the agreed reference contract; record the bounded change in a small spec.",
+      "Implement only this task’s approved art/presentation change using existing helpers and authoritative state.",
+      "Check normal, failure and phase/quality cases listed below without changing gameplay rules.",
+      "Capture the actual game at both required sizes and run the applicable documented checks.",
+      "Update the walkthrough/test map and hand over the exact branch, evidence and remaining limits."
+    ],
+    "acceptance": [
+      "Record the chosen projection, light direction, materials and reference traits; do not promise a pixel-perfect reproduction.",
+      "At both required sizes, capture the actual game and explicitly assess weapon/base volume, coherent light/materials, soft contact and placement readability. Record accepted or rejected quality against the checklist; do not present a rejected trial as a successful style match.",
+      "Footprints, selection, Move, combat handoff and player permissions retain their existing rules.",
+      "Johannes reviews the rendered slice and requests concrete corrections or accepts the visual target before bulk asset redraw.",
+      "Record fallback behavior and quality/performance limits that remain unproven.",
+      "Measure usable play area and selected-object size at actual desktop/phone working zoom and Fit, with quiet and caption/refusal states. Classify any rejection as artwork quality versus camera/composition/input. Fix the relevant BASE-02/05/06 slice before bulk conversion; VIS-32 alone cannot solve a composition failure."
+    ],
+    "scenarios": [
+      {
+        "input": "A populated valid current-game fixture",
+        "action": "Apply this bounded task and compare before/after in the actual renderer",
+        "expected": "The stated visual goal and every acceptance check are observable without a hidden gameplay or authority change."
+      },
+      {
+        "input": "Dense/edge/phase or quality case relevant to this task",
+        "action": "Exercise the stated failure path rather than only a beauty shot",
+        "expected": "Selection, coordinates, state and necessary feedback remain truthful."
+      },
+      {
+        "input": "Repeated travel or reload",
+        "action": "Leave and recreate the scene",
+        "expected": "No stale appearance, duplicate object or unbounded resource survives."
+      }
+    ],
+    "checks": [
+      "Actual renderer before/after at 1280×720 and 375×812 with the same canonical fixture; the generated concept is reference only.",
+      "Run the relevant actual checks plus build/budget; report exact results and browser/device limits."
+    ],
+    "risks": [
+      "Larger detail can clip, shift an anchor or reduce legibility at phone village zoom.",
+      "Shared registration/render hooks can conflict with another branch unless one integration owner coordinates them.",
+      "A style pass must not invent or hide real kind, level, damage, recovery, unlock or input state."
+    ],
+    "questions": [
+      "Which existing state and frame contracts does VIS-02 preserve?",
+      "Why are visible art bounds different from gameplay collision and building rights?",
+      "Which actual-game evidence demonstrates the change and its limits?"
+    ],
+    "notes": [
+      "Keep server state, gameplay coordinates, prices and combat rules authoritative.",
+      "No new runtime packages, services, .env edits, migration application or merges.",
+      "Use a separate branch/clone and one writing owner. Target under approximately 400 changed source/test lines; split larger work.",
+      "This first slice is an explicit human visual-quality decision point. Do not start all family repaints solely because a prototype branch exists.",
+      "Record a reviewed accepted or rejected trial outcome. A rejected painter result is valid investigation evidence for considering VIS-32; it is never a passing style-quality result.",
+      "Bulk family work starts only after the runtime look is accepted in VIS-02 or, if selected, in the alternative VIS-32 sample. Issue closure alone is not the visual approval signal."
+    ],
+    "not_in_scope": [],
+    "parent_tasks": [
+      "BASE-02",
+      "BASE-09",
+      "BASE-49"
+    ],
+    "parallel_owner": "One writer owns the bounded family/helper on a separate branch/clone. Coordinate shared art registration, world, combat, ground and resource hooks with the integration owner; do not overwrite a concurrent writer.",
+    "optional": false,
+    "dependencies": [
+      "VIS-01"
+    ],
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "conditional_dependencies": [],
+    "github_issue": 207,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/207"
+  },
+  {
+    "id": "VIS-03",
+    "source_proposal": "R02",
+    "title": "Add bounded painted material and contact-shadow primitives",
+    "kind": "visual_renderer",
+    "priority": "P1",
+    "size": "M, one or two focused sessions",
+    "files": [
+      "frontend/src/art/paint.js",
+      "frontend/src/art/materials.js",
+      "frontend/tests/materials.test.js"
+    ],
+    "baseline": [
+      "paint.js:39–55 provides two-tone shading and an outline; :64–66 provides elliptical shadows; :68–72 already supports gradients."
+    ],
+    "goal": "Add only the painter primitives demonstrated by the accepted slice: stone bevels, wood planes, metal rim light and soft contact shadows.",
+    "plan": [
+      "Inspect the reviewed runtime trial and the selected art route.",
+      "On the painter route, reuse existing helpers and add only primitives demonstrated to be necessary by the accepted sample.",
+      "On the authored-image route, record painter work as not applicable and document the provider, palette and export contract; do not add unused helper code.",
+      "Check the selected outcome with relevant bounds/cache behavior or document/source checks as applicable.",
+      "Hand over exact helper/provider contracts to family owners with the real sample evidence and remaining limits."
+    ],
+    "acceptance": [
+      "Keep the existing part()/paint() defaults unchanged for assets that have not been converted.",
+      "Use one agreed top-left light direction; clip gradients and shadows to bounded canvases.",
+      "Rasterize and cache the artwork when needed rather than rebuilding it every animation frame.",
+      "At low density, roofs, walls and bases remain distinguishable without opaque or dark alpha halos.",
+      "Compare named materials at actual game size as well as in a larger contact sheet.",
+      "On a selected authored-image route, document the not-applicable/superseded painter outcome and the accepted provider/material contract instead of requiring unnecessary painter implementation."
+    ],
+    "scenarios": [
+      {
+        "input": "A populated valid current-game fixture",
+        "action": "Apply this bounded task and compare before/after in the actual renderer",
+        "expected": "The stated visual goal and every acceptance check are observable without a hidden gameplay or authority change."
+      },
+      {
+        "input": "Dense/edge/phase or quality case relevant to this task",
+        "action": "Exercise the stated failure path rather than only a beauty shot",
+        "expected": "Selection, coordinates, state and necessary feedback remain truthful."
+      },
+      {
+        "input": "Repeated travel or reload",
+        "action": "Leave and recreate the scene",
+        "expected": "No stale appearance, duplicate object or unbounded resource survives."
+      }
+    ],
+    "checks": [
+      "Actual renderer before/after at 1280×720 and 375×812 with the same canonical fixture; the generated concept is reference only.",
+      "Run the relevant actual checks plus build/budget; report exact results and browser/device limits."
+    ],
+    "risks": [
+      "Larger detail can clip, shift an anchor or reduce legibility at phone village zoom.",
+      "Shared registration/render hooks can conflict with another branch unless one integration owner coordinates them.",
+      "A style pass must not invent or hide real kind, level, damage, recovery, unlock or input state."
+    ],
+    "questions": [
+      "Which existing state and frame contracts does VIS-03 preserve?",
+      "Why are visible art bounds different from gameplay collision and building rights?",
+      "Which actual-game evidence demonstrates the change and its limits?"
+    ],
+    "notes": [
+      "Keep server state, gameplay coordinates, prices and combat rules authoritative.",
+      "No new runtime packages, services, .env edits, migration application or merges.",
+      "Use a separate branch/clone and one writing owner. Target under approximately 400 changed source/test lines; split larger work.",
+      "There are two explicit outcomes: (a) accepted painters need the few demonstrated reusable primitives, or (b) the selected authored-image route makes new painter primitives not applicable. In case (b), record the provider/palette/export contract and that no painter code was needed; do not invent a helper layer to satisfy this ticket."
+    ],
+    "not_in_scope": [],
+    "parent_tasks": [],
+    "parallel_owner": "One writer owns the bounded family/helper on a separate branch/clone. Coordinate shared art registration, world, combat, ground and resource hooks with the integration owner; do not overwrite a concurrent writer.",
+    "optional": false,
+    "dependencies": [
+      "VIS-02"
+    ],
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "conditional_dependencies": [
+      "VIS-32 only if the revised art contract selects authored image assets"
+    ],
+    "github_issue": 208,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/208"
+  },
+  {
+    "id": "VIS-04",
+    "source_proposal": "R03",
+    "title": "Keep richer art bounds, anchors and picking consistent",
+    "kind": "visual_renderer",
+    "priority": "P1",
+    "size": "M, one or two focused sessions",
+    "files": [
+      "frontend/src/art/registry.js",
+      "frontend/src/world/art.js",
+      "frontend/src/island/world.js",
+      "frontend/src/pixel/pirate-catalog.js",
+      "frontend/tests/island/style-picking.test.js"
+    ],
+    "baseline": [
+      "world/art.js:12 merges pixelSizes after islandSizes.",
+      "island/world.js:375–389 selects with hardcoded widths/heights and distance from the ground point; :392–410 unprojects using the current 0.72 factor."
+    ],
+    "goal": "Define only the visual bounds and pick regions needed by richer roofs and bases, while keeping gameplay footprints independent.",
+    "plan": [
+      "Inspect current frames, actual consumers and the agreed reference contract; record the bounded change in a small spec.",
+      "Implement only this task’s approved art/presentation change using existing helpers and authoritative state.",
+      "Check normal, failure and phase/quality cases listed below without changing gameplay rules.",
+      "Capture the actual game at both required sizes and run the applicable documented checks.",
+      "Update the walkthrough/test map and hand over the exact branch, evidence and remaining limits."
+    ],
+    "acceptance": [
+      "Logical ground positions and server footprints remain equivalent for unchanged inputs.",
+      "A specified overlap case selects the visible front building; transparent roof corners do not steal a neighboring selection.",
+      "Roofs and bases fit the frame/atlas padding; feet do not shift across level changes, Move or firing frames.",
+      "Explore and Village keep their existing reach/permission rules, pointer drag threshold and DOM focus behavior.",
+      "If the accepted artwork fits all existing boxes, document that and avoid adding unnecessary metadata."
+    ],
+    "scenarios": [
+      {
+        "input": "A tall watchtower behind a cannon/house, with overlapping visual roof boxes but separate logical feet",
+        "action": "Tap visible front art and then a transparent roof corner beside the neighbor",
+        "expected": "The specified visible object wins; transparent padding does not steal the neighbor; unchanged ground/collision footprints remain independent."
+      },
+      {
+        "input": "The same confirmed building at supported level/frame changes",
+        "action": "Refresh level/role/firing art and open Move",
+        "expected": "The ground foot stays aligned with the existing snapped footprint; no clipped roof or inherited pixel box silently overrides the accepted visual bounds."
+      },
+      {
+        "input": "The same distant building in Explore and Village, plus a focused DOM control",
+        "action": "Tap the building or press Enter on the focused control",
+        "expected": "Explore reach and Village direct-selection rules stay distinct; the art pick shape does not bypass permissions or steal DOM input."
+      }
+    ],
+    "checks": [
+      "Actual renderer before/after at 1280×720 and 375×812 with the same canonical fixture; the generated concept is reference only.",
+      "Run the relevant actual checks plus build/budget; report exact results and browser/device limits."
+    ],
+    "risks": [
+      "Larger detail can clip, shift an anchor or reduce legibility at phone village zoom.",
+      "Shared registration/render hooks can conflict with another branch unless one integration owner coordinates them.",
+      "A style pass must not invent or hide real kind, level, damage, recovery, unlock or input state."
+    ],
+    "questions": [
+      "Which existing state and frame contracts does VIS-04 preserve?",
+      "Why are visible art bounds different from gameplay collision and building rights?",
+      "Which actual-game evidence demonstrates the change and its limits?"
+    ],
+    "notes": [
+      "Keep server state, gameplay coordinates, prices and combat rules authoritative.",
+      "No new runtime packages, services, .env edits, migration application or merges.",
+      "Use a separate branch/clone and one writing owner. Target under approximately 400 changed source/test lines; split larger work."
+    ],
+    "not_in_scope": [],
+    "parent_tasks": [
+      "BASE-06",
+      "BASE-08"
+    ],
+    "parallel_owner": "One writer owns the bounded family/helper on a separate branch/clone. Coordinate shared art registration, world, combat, ground and resource hooks with the integration owner; do not overwrite a concurrent writer.",
+    "optional": false,
+    "dependencies": [
+      "VIS-02"
+    ],
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "conditional_dependencies": [],
+    "github_issue": 209,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/209"
+  },
+  {
+    "id": "VIS-05",
+    "source_proposal": "R04",
+    "title": "Redraw the existing cabin as the village hero building",
+    "kind": "visual_renderer",
+    "priority": "P1",
+    "size": "M, one or two focused sessions",
+    "files": [
+      "frontend/src/art/island.js:cabin",
+      "frontend/src/art/cabin.js",
+      "frontend/tests/cabin-art.test.js"
+    ],
+    "baseline": [
+      "island.js:426 draws the existing cabin; island/world.js:382 selects it and :358–359 retains its existing collider."
+    ],
+    "goal": "Give the existing cabin a deep navy roof, stone plinth, gold brackets, warm windows and a readable central entrance.",
+    "plan": [
+      "Inspect current frames, actual consumers and the agreed reference contract; record the bounded change in a small spec.",
+      "Implement only this task’s approved art/presentation change using existing helpers and authoritative state.",
+      "Check normal, failure and phase/quality cases listed below without changing gameplay rules.",
+      "Capture the actual game at both required sizes and run the applicable documented checks.",
+      "Update the walkthrough/test map and hand over the exact branch, evidence and remaining limits."
+    ],
+    "acceptance": [
+      "Do not introduce a headquarters progression system, new levels, prices or unlocks.",
+      "Keep the recognizable entrance and ground anchor; the plinth does not appear to float.",
+      "Roof, stone and timber read as separate materials at the phone fit zoom.",
+      "Existing collider, interaction zone and Move eligibility stay unchanged; decorative details imply no new action.",
+      "The cabin remains visible within the current camera fit and clear of required HUD controls."
+    ],
+    "scenarios": [
+      {
+        "input": "The real supported kind/level/role frames for VIS-05",
+        "action": "Render the family in the actual home scene at normal and phone village zoom",
+        "expected": "Approved material/light and silhouette changes are visible, with unchanged ground anchors and no clipped important detail."
+      },
+      {
+        "input": "The same confirmed building or actor state across a supported phase/animation transition",
+        "action": "Select it and enter the existing combat or movement view",
+        "expected": "Its real identity and state stay correct with no art-induced jump, false upgrade or new ability."
+      },
+      {
+        "input": "Low quality, repeated visit and fallback/missing-state fixture",
+        "action": "Load, resize, refresh and dispose the family",
+        "expected": "Readable state and bounded resources remain; no per-frame texture creation or misleading healthy fallback."
+      }
+    ],
+    "checks": [
+      "Actual renderer before/after at 1280×720 and 375×812 with the same canonical fixture; the generated concept is reference only.",
+      "Run the relevant actual checks plus build/budget; report exact results and browser/device limits."
+    ],
+    "risks": [
+      "Larger detail can clip, shift an anchor or reduce legibility at phone village zoom.",
+      "Shared registration/render hooks can conflict with another branch unless one integration owner coordinates them.",
+      "A style pass must not invent or hide real kind, level, damage, recovery, unlock or input state."
+    ],
+    "questions": [
+      "Which existing state and frame contracts does VIS-05 preserve?",
+      "Why are visible art bounds different from gameplay collision and building rights?",
+      "Which actual-game evidence demonstrates the change and its limits?"
+    ],
+    "notes": [
+      "Keep server state, gameplay coordinates, prices and combat rules authoritative.",
+      "No new runtime packages, services, .env edits, migration application or merges.",
+      "Use a separate branch/clone and one writing owner. Target under approximately 400 changed source/test lines; split larger work.",
+      "Develop the isolated family painter and fixture in parallel. Serialize the small shared dispatcher/registry hunk through the integration owner; retain a real-game registration path in the delivered PR."
+    ],
+    "not_in_scope": [],
+    "parent_tasks": [
+      "BASE-28",
+      "BASE-29",
+      "BASE-30"
+    ],
+    "parallel_owner": "One writer owns the bounded family/helper on a separate branch/clone. Coordinate shared art registration, world, combat, ground and resource hooks with the integration owner; do not overwrite a concurrent writer.",
+    "optional": false,
+    "dependencies": [
+      "VIS-03",
+      "VIS-04"
+    ],
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "conditional_dependencies": [
+      "VIS-32 only if the revised art contract selects authored image assets"
+    ],
+    "github_issue": 210,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/210"
+  },
+  {
+    "id": "VIS-06",
+    "source_proposal": "R05",
+    "title": "Restyle the full house and support-role family without losing level silhouettes",
+    "kind": "visual_renderer",
+    "priority": "P2",
+    "size": "M, one or two focused sessions",
+    "files": [
+      "frontend/src/art/island.js:house",
+      "frontend/src/art/houses.js",
+      "frontend/tests/island/house-level-art.test.js"
+    ],
+    "baseline": [
+      "BASE-07 already supplies L1/L2/L3 silhouettes and role-specific L2/L3 frames.",
+      "island/world.js:69–75 chooses a frame from the real building level and specialization."
+    ],
+    "goal": "Restyle neutral houses, Barracks, Tavern and Workshop with the accepted roof volume, stone base and warm window detail, preserving the implemented level system.",
+    "plan": [
+      "Inspect current frames, actual consumers and the agreed reference contract; record the bounded change in a small spec.",
+      "Implement only this task’s approved art/presentation change using existing helpers and authoritative state.",
+      "Check normal, failure and phase/quality cases listed below without changing gameplay rules.",
+      "Capture the actual game at both required sizes and run the applicable documented checks.",
+      "Update the walkthrough/test map and hand over the exact branch, evidence and remaining limits."
+    ],
+    "acceptance": [
+      "Keep every existing neutral and role-level mapping; roles still begin at level 2.",
+      "Preserve genuinely different level silhouettes and the existing alpha-silhouette regression.",
+      "Role signs, entrances and the navy/gold family remain recognizable at whole-village phone zoom.",
+      "Support circles and actual bonuses do not change; do not add health or economy behavior.",
+      "Geometry reuse and disposal checks still pass after repeated refresh and upgrade."
+    ],
+    "scenarios": [
+      {
+        "input": "The real supported kind/level/role frames for VIS-06",
+        "action": "Render the family in the actual home scene at normal and phone village zoom",
+        "expected": "Approved material/light and silhouette changes are visible, with unchanged ground anchors and no clipped important detail."
+      },
+      {
+        "input": "The same confirmed building or actor state across a supported phase/animation transition",
+        "action": "Select it and enter the existing combat or movement view",
+        "expected": "Its real identity and state stay correct with no art-induced jump, false upgrade or new ability."
+      },
+      {
+        "input": "Low quality, repeated visit and fallback/missing-state fixture",
+        "action": "Load, resize, refresh and dispose the family",
+        "expected": "Readable state and bounded resources remain; no per-frame texture creation or misleading healthy fallback."
+      }
+    ],
+    "checks": [
+      "Actual renderer before/after at 1280×720 and 375×812 with the same canonical fixture; the generated concept is reference only.",
+      "Run the relevant actual checks plus build/budget; report exact results and browser/device limits."
+    ],
+    "risks": [
+      "Larger detail can clip, shift an anchor or reduce legibility at phone village zoom.",
+      "Shared registration/render hooks can conflict with another branch unless one integration owner coordinates them.",
+      "A style pass must not invent or hide real kind, level, damage, recovery, unlock or input state."
+    ],
+    "questions": [
+      "Which existing state and frame contracts does VIS-06 preserve?",
+      "Why are visible art bounds different from gameplay collision and building rights?",
+      "Which actual-game evidence demonstrates the change and its limits?"
+    ],
+    "notes": [
+      "Keep server state, gameplay coordinates, prices and combat rules authoritative.",
+      "No new runtime packages, services, .env edits, migration application or merges.",
+      "Use a separate branch/clone and one writing owner. Target under approximately 400 changed source/test lines; split larger work.",
+      "Develop the isolated family painter and fixture in parallel. Serialize the small shared dispatcher/registry hunk through the integration owner; retain a real-game registration path in the delivered PR."
+    ],
+    "not_in_scope": [],
+    "parent_tasks": [
+      "BASE-07",
+      "BASE-34"
+    ],
+    "parallel_owner": "One writer owns the bounded family/helper on a separate branch/clone. Coordinate shared art registration, world, combat, ground and resource hooks with the integration owner; do not overwrite a concurrent writer.",
+    "optional": false,
+    "dependencies": [
+      "VIS-03",
+      "VIS-04"
+    ],
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "conditional_dependencies": [
+      "VIS-32 only if the revised art contract selects authored image assets"
+    ],
+    "github_issue": 211,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/211"
+  },
+  {
+    "id": "VIS-07",
+    "source_proposal": "R06",
+    "title": "Restyle the cannon level and firing family in the approved village look",
+    "kind": "visual_renderer",
+    "priority": "P2",
+    "size": "M, one asset family only",
+    "files": [
+      "frontend/src/art/island.js",
+      "frontend/src/art/cannon.js",
+      "frontend/tests/cannon-art.test.js"
+    ],
+    "baseline": [
+      "Level 1–5, intact and firing frames already exist in art/island.js, art/defenses-v2.js or art/swivel.js.",
+      "World and combat atlas rendering read the same identifiers and logical ground anchors."
+    ],
+    "goal": "Redraw the cannon family with clear material depth and function, retaining the existing level and effect identity.",
+    "plan": [
+      "Inspect current frames, actual consumers and the agreed reference contract; record the bounded change in a small spec.",
+      "Implement only this task’s approved art/presentation change using existing helpers and authoritative state.",
+      "Check normal, failure and phase/quality cases listed below without changing gameplay rules.",
+      "Capture the actual game at both required sizes and run the applicable documented checks.",
+      "Update the walkthrough/test map and hand over the exact branch, evidence and remaining limits."
+    ],
+    "acceptance": [
+      "Every supported cannon level and its firing frame uses the actual level/state; introduce no invented statistics.",
+      "Stone base, weapon volume and metal rim lighting match the accepted slice; levels have recognizable additions at phone zoom.",
+      "The muzzle/firing effect aligns with its weapon and the base does not jump; reduced motion still communicates a shot.",
+      "Existing frame identifiers, anchors and boxes remain unless VIS-04 explicitly coordinates an approved change.",
+      "Damage/broken variants follow VIS-17; capture both between-wave and combat use."
+    ],
+    "scenarios": [
+      {
+        "input": "The real supported kind/level/role frames for VIS-07",
+        "action": "Render the family in the actual home scene at normal and phone village zoom",
+        "expected": "Approved material/light and silhouette changes are visible, with unchanged ground anchors and no clipped important detail."
+      },
+      {
+        "input": "The same confirmed building or actor state across a supported phase/animation transition",
+        "action": "Select it and enter the existing combat or movement view",
+        "expected": "Its real identity and state stay correct with no art-induced jump, false upgrade or new ability."
+      },
+      {
+        "input": "Low quality, repeated visit and fallback/missing-state fixture",
+        "action": "Load, resize, refresh and dispose the family",
+        "expected": "Readable state and bounded resources remain; no per-frame texture creation or misleading healthy fallback."
+      }
+    ],
+    "checks": [
+      "Actual renderer before/after at 1280×720 and 375×812 with the same canonical fixture; the generated concept is reference only.",
+      "Run the relevant actual checks plus build/budget; report exact results and browser/device limits."
+    ],
+    "risks": [
+      "Larger detail can clip, shift an anchor or reduce legibility at phone village zoom.",
+      "Shared registration/render hooks can conflict with another branch unless one integration owner coordinates them.",
+      "A style pass must not invent or hide real kind, level, damage, recovery, unlock or input state."
+    ],
+    "questions": [
+      "Which existing state and frame contracts does VIS-07 preserve?",
+      "Why are visible art bounds different from gameplay collision and building rights?",
+      "Which actual-game evidence demonstrates the change and its limits?"
+    ],
+    "notes": [
+      "Keep server state, gameplay coordinates, prices and combat rules authoritative.",
+      "No new runtime packages, services, .env edits, migration application or merges.",
+      "Use a separate branch/clone and one writing owner. Target under approximately 400 changed source/test lines; split larger work.",
+      "Develop the isolated family painter and fixture in parallel. Serialize the small shared dispatcher/registry hunk through the integration owner; retain a real-game registration path in the delivered PR."
+    ],
+    "not_in_scope": [],
+    "parent_tasks": [],
+    "parallel_owner": "One writer owns the bounded family/helper on a separate branch/clone. Coordinate shared art registration, world, combat, ground and resource hooks with the integration owner; do not overwrite a concurrent writer.",
+    "optional": false,
+    "dependencies": [
+      "VIS-03",
+      "VIS-04"
+    ],
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "conditional_dependencies": [
+      "VIS-32 only if the revised art contract selects authored image assets"
+    ],
+    "github_issue": 212,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/212"
+  },
+  {
+    "id": "VIS-08",
+    "source_proposal": "R07",
+    "title": "Restyle the mortar level and firing family in the approved village look",
+    "kind": "visual_renderer",
+    "priority": "P2",
+    "size": "M, one asset family only",
+    "files": [
+      "frontend/src/art/island.js",
+      "frontend/src/art/mortar.js",
+      "frontend/tests/mortar-art.test.js"
+    ],
+    "baseline": [
+      "Level 1–5, intact and firing frames already exist in art/island.js, art/defenses-v2.js or art/swivel.js.",
+      "World and combat atlas rendering read the same identifiers and logical ground anchors."
+    ],
+    "goal": "Redraw the mortar family with clear material depth and function, retaining the existing level and effect identity.",
+    "plan": [
+      "Inspect current frames, actual consumers and the agreed reference contract; record the bounded change in a small spec.",
+      "Implement only this task’s approved art/presentation change using existing helpers and authoritative state.",
+      "Check normal, failure and phase/quality cases listed below without changing gameplay rules.",
+      "Capture the actual game at both required sizes and run the applicable documented checks.",
+      "Update the walkthrough/test map and hand over the exact branch, evidence and remaining limits."
+    ],
+    "acceptance": [
+      "Every supported mortar level and its firing frame uses the actual level/state; introduce no invented statistics.",
+      "Stone base, weapon volume and metal rim lighting match the accepted slice; levels have recognizable additions at phone zoom.",
+      "The muzzle/firing effect aligns with its weapon and the base does not jump; reduced motion still communicates a shot.",
+      "Existing frame identifiers, anchors and boxes remain unless VIS-04 explicitly coordinates an approved change.",
+      "Damage/broken variants follow VIS-17; capture both between-wave and combat use."
+    ],
+    "scenarios": [
+      {
+        "input": "The real supported kind/level/role frames for VIS-08",
+        "action": "Render the family in the actual home scene at normal and phone village zoom",
+        "expected": "Approved material/light and silhouette changes are visible, with unchanged ground anchors and no clipped important detail."
+      },
+      {
+        "input": "The same confirmed building or actor state across a supported phase/animation transition",
+        "action": "Select it and enter the existing combat or movement view",
+        "expected": "Its real identity and state stay correct with no art-induced jump, false upgrade or new ability."
+      },
+      {
+        "input": "Low quality, repeated visit and fallback/missing-state fixture",
+        "action": "Load, resize, refresh and dispose the family",
+        "expected": "Readable state and bounded resources remain; no per-frame texture creation or misleading healthy fallback."
+      }
+    ],
+    "checks": [
+      "Actual renderer before/after at 1280×720 and 375×812 with the same canonical fixture; the generated concept is reference only.",
+      "Run the relevant actual checks plus build/budget; report exact results and browser/device limits."
+    ],
+    "risks": [
+      "Larger detail can clip, shift an anchor or reduce legibility at phone village zoom.",
+      "Shared registration/render hooks can conflict with another branch unless one integration owner coordinates them.",
+      "A style pass must not invent or hide real kind, level, damage, recovery, unlock or input state."
+    ],
+    "questions": [
+      "Which existing state and frame contracts does VIS-08 preserve?",
+      "Why are visible art bounds different from gameplay collision and building rights?",
+      "Which actual-game evidence demonstrates the change and its limits?"
+    ],
+    "notes": [
+      "Keep server state, gameplay coordinates, prices and combat rules authoritative.",
+      "No new runtime packages, services, .env edits, migration application or merges.",
+      "Use a separate branch/clone and one writing owner. Target under approximately 400 changed source/test lines; split larger work.",
+      "Develop the isolated family painter and fixture in parallel. Serialize the small shared dispatcher/registry hunk through the integration owner; retain a real-game registration path in the delivered PR."
+    ],
+    "not_in_scope": [],
+    "parent_tasks": [],
+    "parallel_owner": "One writer owns the bounded family/helper on a separate branch/clone. Coordinate shared art registration, world, combat, ground and resource hooks with the integration owner; do not overwrite a concurrent writer.",
+    "optional": false,
+    "dependencies": [
+      "VIS-03",
+      "VIS-04"
+    ],
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "conditional_dependencies": [
+      "VIS-32 only if the revised art contract selects authored image assets"
+    ],
+    "github_issue": 213,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/213"
+  },
+  {
+    "id": "VIS-09",
+    "source_proposal": "R08",
+    "title": "Restyle the harpoon level and firing family in the approved village look",
+    "kind": "visual_renderer",
+    "priority": "P2",
+    "size": "M, one asset family only",
+    "files": [
+      "frontend/src/art/island.js",
+      "frontend/src/art/harpoon.js",
+      "frontend/tests/harpoon-art.test.js"
+    ],
+    "baseline": [
+      "Level 1–5, intact and firing frames already exist in art/island.js, art/defenses-v2.js or art/swivel.js.",
+      "World and combat atlas rendering read the same identifiers and logical ground anchors."
+    ],
+    "goal": "Redraw the harpoon family with clear material depth and function, retaining the existing level and effect identity.",
+    "plan": [
+      "Inspect current frames, actual consumers and the agreed reference contract; record the bounded change in a small spec.",
+      "Implement only this task’s approved art/presentation change using existing helpers and authoritative state.",
+      "Check normal, failure and phase/quality cases listed below without changing gameplay rules.",
+      "Capture the actual game at both required sizes and run the applicable documented checks.",
+      "Update the walkthrough/test map and hand over the exact branch, evidence and remaining limits."
+    ],
+    "acceptance": [
+      "Every supported harpoon level and its firing frame uses the actual level/state; introduce no invented statistics.",
+      "Stone base, weapon volume and metal rim lighting match the accepted slice; levels have recognizable additions at phone zoom.",
+      "The muzzle/firing effect aligns with its weapon and the base does not jump; reduced motion still communicates a shot.",
+      "Existing frame identifiers, anchors and boxes remain unless VIS-04 explicitly coordinates an approved change.",
+      "Damage/broken variants follow VIS-17; capture both between-wave and combat use."
+    ],
+    "scenarios": [
+      {
+        "input": "The real supported kind/level/role frames for VIS-09",
+        "action": "Render the family in the actual home scene at normal and phone village zoom",
+        "expected": "Approved material/light and silhouette changes are visible, with unchanged ground anchors and no clipped important detail."
+      },
+      {
+        "input": "The same confirmed building or actor state across a supported phase/animation transition",
+        "action": "Select it and enter the existing combat or movement view",
+        "expected": "Its real identity and state stay correct with no art-induced jump, false upgrade or new ability."
+      },
+      {
+        "input": "Low quality, repeated visit and fallback/missing-state fixture",
+        "action": "Load, resize, refresh and dispose the family",
+        "expected": "Readable state and bounded resources remain; no per-frame texture creation or misleading healthy fallback."
+      }
+    ],
+    "checks": [
+      "Actual renderer before/after at 1280×720 and 375×812 with the same canonical fixture; the generated concept is reference only.",
+      "Run the relevant actual checks plus build/budget; report exact results and browser/device limits."
+    ],
+    "risks": [
+      "Larger detail can clip, shift an anchor or reduce legibility at phone village zoom.",
+      "Shared registration/render hooks can conflict with another branch unless one integration owner coordinates them.",
+      "A style pass must not invent or hide real kind, level, damage, recovery, unlock or input state."
+    ],
+    "questions": [
+      "Which existing state and frame contracts does VIS-09 preserve?",
+      "Why are visible art bounds different from gameplay collision and building rights?",
+      "Which actual-game evidence demonstrates the change and its limits?"
+    ],
+    "notes": [
+      "Keep server state, gameplay coordinates, prices and combat rules authoritative.",
+      "No new runtime packages, services, .env edits, migration application or merges.",
+      "Use a separate branch/clone and one writing owner. Target under approximately 400 changed source/test lines; split larger work.",
+      "Develop the isolated family painter and fixture in parallel. Serialize the small shared dispatcher/registry hunk through the integration owner; retain a real-game registration path in the delivered PR."
+    ],
+    "not_in_scope": [],
+    "parent_tasks": [],
+    "parallel_owner": "One writer owns the bounded family/helper on a separate branch/clone. Coordinate shared art registration, world, combat, ground and resource hooks with the integration owner; do not overwrite a concurrent writer.",
+    "optional": false,
+    "dependencies": [
+      "VIS-03",
+      "VIS-04"
+    ],
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "conditional_dependencies": [
+      "VIS-32 only if the revised art contract selects authored image assets"
+    ],
+    "github_issue": 214,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/214"
+  },
+  {
+    "id": "VIS-10",
+    "source_proposal": "R09",
+    "title": "Restyle the culverin level and firing family in the approved village look",
+    "kind": "visual_renderer",
+    "priority": "P2",
+    "size": "M, one asset family only",
+    "files": [
+      "frontend/src/art/defenses-v2.js",
+      "frontend/src/art/culverin.js",
+      "frontend/tests/culverin-art.test.js"
+    ],
+    "baseline": [
+      "Level 1–5, intact and firing frames already exist in art/island.js, art/defenses-v2.js or art/swivel.js.",
+      "World and combat atlas rendering read the same identifiers and logical ground anchors."
+    ],
+    "goal": "Redraw the culverin family with clear material depth and function, retaining the existing level and effect identity.",
+    "plan": [
+      "Inspect current frames, actual consumers and the agreed reference contract; record the bounded change in a small spec.",
+      "Implement only this task’s approved art/presentation change using existing helpers and authoritative state.",
+      "Check normal, failure and phase/quality cases listed below without changing gameplay rules.",
+      "Capture the actual game at both required sizes and run the applicable documented checks.",
+      "Update the walkthrough/test map and hand over the exact branch, evidence and remaining limits."
+    ],
+    "acceptance": [
+      "Every supported culverin level and its firing frame uses the actual level/state; introduce no invented statistics.",
+      "Stone base, weapon volume and metal rim lighting match the accepted slice; levels have recognizable additions at phone zoom.",
+      "The muzzle/firing effect aligns with its weapon and the base does not jump; reduced motion still communicates a shot.",
+      "Existing frame identifiers, anchors and boxes remain unless VIS-04 explicitly coordinates an approved change.",
+      "Damage/broken variants follow VIS-17; capture both between-wave and combat use."
+    ],
+    "scenarios": [
+      {
+        "input": "The real supported kind/level/role frames for VIS-10",
+        "action": "Render the family in the actual home scene at normal and phone village zoom",
+        "expected": "Approved material/light and silhouette changes are visible, with unchanged ground anchors and no clipped important detail."
+      },
+      {
+        "input": "The same confirmed building or actor state across a supported phase/animation transition",
+        "action": "Select it and enter the existing combat or movement view",
+        "expected": "Its real identity and state stay correct with no art-induced jump, false upgrade or new ability."
+      },
+      {
+        "input": "Low quality, repeated visit and fallback/missing-state fixture",
+        "action": "Load, resize, refresh and dispose the family",
+        "expected": "Readable state and bounded resources remain; no per-frame texture creation or misleading healthy fallback."
+      }
+    ],
+    "checks": [
+      "Actual renderer before/after at 1280×720 and 375×812 with the same canonical fixture; the generated concept is reference only.",
+      "Run the relevant actual checks plus build/budget; report exact results and browser/device limits."
+    ],
+    "risks": [
+      "Larger detail can clip, shift an anchor or reduce legibility at phone village zoom.",
+      "Shared registration/render hooks can conflict with another branch unless one integration owner coordinates them.",
+      "A style pass must not invent or hide real kind, level, damage, recovery, unlock or input state."
+    ],
+    "questions": [
+      "Which existing state and frame contracts does VIS-10 preserve?",
+      "Why are visible art bounds different from gameplay collision and building rights?",
+      "Which actual-game evidence demonstrates the change and its limits?"
+    ],
+    "notes": [
+      "Keep server state, gameplay coordinates, prices and combat rules authoritative.",
+      "No new runtime packages, services, .env edits, migration application or merges.",
+      "Use a separate branch/clone and one writing owner. Target under approximately 400 changed source/test lines; split larger work.",
+      "Develop the isolated family painter and fixture in parallel. Serialize the small shared dispatcher/registry hunk through the integration owner; retain a real-game registration path in the delivered PR."
+    ],
+    "not_in_scope": [],
+    "parent_tasks": [],
+    "parallel_owner": "One writer owns the bounded family/helper on a separate branch/clone. Coordinate shared art registration, world, combat, ground and resource hooks with the integration owner; do not overwrite a concurrent writer.",
+    "optional": false,
+    "dependencies": [
+      "VIS-03",
+      "VIS-04"
+    ],
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "conditional_dependencies": [
+      "VIS-32 only if the revised art contract selects authored image assets"
+    ],
+    "github_issue": 215,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/215"
+  },
+  {
+    "id": "VIS-11",
+    "source_proposal": "R10",
+    "title": "Restyle the swivel level and firing family in the approved village look",
+    "kind": "visual_renderer",
+    "priority": "P2",
+    "size": "M, one asset family only",
+    "files": [
+      "frontend/src/art/swivel.js",
+      "frontend/tests/swivel-art.test.js"
+    ],
+    "baseline": [
+      "Level 1–5, intact and firing frames already exist in art/island.js, art/defenses-v2.js or art/swivel.js.",
+      "World and combat atlas rendering read the same identifiers and logical ground anchors."
+    ],
+    "goal": "Redraw the swivel family with clear material depth and function, retaining the existing level and effect identity.",
+    "plan": [
+      "Inspect current frames, actual consumers and the agreed reference contract; record the bounded change in a small spec.",
+      "Implement only this task’s approved art/presentation change using existing helpers and authoritative state.",
+      "Check normal, failure and phase/quality cases listed below without changing gameplay rules.",
+      "Capture the actual game at both required sizes and run the applicable documented checks.",
+      "Update the walkthrough/test map and hand over the exact branch, evidence and remaining limits."
+    ],
+    "acceptance": [
+      "Every supported swivel level and its firing frame uses the actual level/state; introduce no invented statistics.",
+      "Stone base, weapon volume and metal rim lighting match the accepted slice; levels have recognizable additions at phone zoom.",
+      "The muzzle/firing effect aligns with its weapon and the base does not jump; reduced motion still communicates a shot.",
+      "Existing frame identifiers, anchors and boxes remain unless VIS-04 explicitly coordinates an approved change.",
+      "Damage/broken variants follow VIS-17; capture both between-wave and combat use."
+    ],
+    "scenarios": [
+      {
+        "input": "The real supported kind/level/role frames for VIS-11",
+        "action": "Render the family in the actual home scene at normal and phone village zoom",
+        "expected": "Approved material/light and silhouette changes are visible, with unchanged ground anchors and no clipped important detail."
+      },
+      {
+        "input": "The same confirmed building or actor state across a supported phase/animation transition",
+        "action": "Select it and enter the existing combat or movement view",
+        "expected": "Its real identity and state stay correct with no art-induced jump, false upgrade or new ability."
+      },
+      {
+        "input": "Low quality, repeated visit and fallback/missing-state fixture",
+        "action": "Load, resize, refresh and dispose the family",
+        "expected": "Readable state and bounded resources remain; no per-frame texture creation or misleading healthy fallback."
+      }
+    ],
+    "checks": [
+      "Actual renderer before/after at 1280×720 and 375×812 with the same canonical fixture; the generated concept is reference only.",
+      "Run the relevant actual checks plus build/budget; report exact results and browser/device limits."
+    ],
+    "risks": [
+      "Larger detail can clip, shift an anchor or reduce legibility at phone village zoom.",
+      "Shared registration/render hooks can conflict with another branch unless one integration owner coordinates them.",
+      "A style pass must not invent or hide real kind, level, damage, recovery, unlock or input state."
+    ],
+    "questions": [
+      "Which existing state and frame contracts does VIS-11 preserve?",
+      "Why are visible art bounds different from gameplay collision and building rights?",
+      "Which actual-game evidence demonstrates the change and its limits?"
+    ],
+    "notes": [
+      "Keep server state, gameplay coordinates, prices and combat rules authoritative.",
+      "No new runtime packages, services, .env edits, migration application or merges.",
+      "Use a separate branch/clone and one writing owner. Target under approximately 400 changed source/test lines; split larger work.",
+      "Develop the isolated family painter and fixture in parallel. Serialize the small shared dispatcher/registry hunk through the integration owner; retain a real-game registration path in the delivered PR."
+    ],
+    "not_in_scope": [],
+    "parent_tasks": [],
+    "parallel_owner": "One writer owns the bounded family/helper on a separate branch/clone. Coordinate shared art registration, world, combat, ground and resource hooks with the integration owner; do not overwrite a concurrent writer.",
+    "optional": false,
+    "dependencies": [
+      "VIS-03",
+      "VIS-04"
+    ],
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "conditional_dependencies": [
+      "VIS-32 only if the revised art contract selects authored image assets"
+    ],
+    "github_issue": 216,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/216"
+  },
+  {
+    "id": "VIS-12",
+    "source_proposal": "R11",
+    "title": "Restyle the watchtower and harbor bell as readable tall landmarks",
+    "kind": "visual_renderer",
+    "priority": "P2",
+    "size": "M, one or two focused sessions",
+    "files": [
+      "frontend/src/art/island.js:watchtower",
+      "frontend/src/art/island.js:bell",
+      "frontend/tests/landmarks.test.js"
+    ],
+    "baseline": [
+      "The watchtower has a 64×128 frame and anchor 8; the bell is already an interactive harbor landmark."
+    ],
+    "goal": "Give the watchtower timber bracing, stone feet and a navy canopy, and the bell warm shaped metal, while keeping both landmarks readable.",
+    "plan": [
+      "Inspect current frames, actual consumers and the agreed reference contract; record the bounded change in a small spec.",
+      "Implement only this task’s approved art/presentation change using existing helpers and authoritative state.",
+      "Check normal, failure and phase/quality cases listed below without changing gameplay rules.",
+      "Capture the actual game at both required sizes and run the applicable documented checks.",
+      "Update the walkthrough/test map and hand over the exact branch, evidence and remaining limits."
+    ],
+    "acceptance": [
+      "Tall roof geometry is not clipped and does not cover required health or level information.",
+      "Ground contact and captain front/behind ordering are correct.",
+      "Click and ring zones stay attached to the real landmarks; the wave-start request is unchanged.",
+      "Existing watchtower levels and purpose remain clear without introducing new upgrade effects."
+    ],
+    "scenarios": [
+      {
+        "input": "The real supported kind/level/role frames for VIS-12",
+        "action": "Render the family in the actual home scene at normal and phone village zoom",
+        "expected": "Approved material/light and silhouette changes are visible, with unchanged ground anchors and no clipped important detail."
+      },
+      {
+        "input": "The same confirmed building or actor state across a supported phase/animation transition",
+        "action": "Select it and enter the existing combat or movement view",
+        "expected": "Its real identity and state stay correct with no art-induced jump, false upgrade or new ability."
+      },
+      {
+        "input": "Low quality, repeated visit and fallback/missing-state fixture",
+        "action": "Load, resize, refresh and dispose the family",
+        "expected": "Readable state and bounded resources remain; no per-frame texture creation or misleading healthy fallback."
+      }
+    ],
+    "checks": [
+      "Actual renderer before/after at 1280×720 and 375×812 with the same canonical fixture; the generated concept is reference only.",
+      "Run the relevant actual checks plus build/budget; report exact results and browser/device limits."
+    ],
+    "risks": [
+      "Larger detail can clip, shift an anchor or reduce legibility at phone village zoom.",
+      "Shared registration/render hooks can conflict with another branch unless one integration owner coordinates them.",
+      "A style pass must not invent or hide real kind, level, damage, recovery, unlock or input state."
+    ],
+    "questions": [
+      "Which existing state and frame contracts does VIS-12 preserve?",
+      "Why are visible art bounds different from gameplay collision and building rights?",
+      "Which actual-game evidence demonstrates the change and its limits?"
+    ],
+    "notes": [
+      "Keep server state, gameplay coordinates, prices and combat rules authoritative.",
+      "No new runtime packages, services, .env edits, migration application or merges.",
+      "Use a separate branch/clone and one writing owner. Target under approximately 400 changed source/test lines; split larger work.",
+      "Develop the isolated family painter and fixture in parallel. Serialize the small shared dispatcher/registry hunk through the integration owner; retain a real-game registration path in the delivered PR."
+    ],
+    "not_in_scope": [],
+    "parent_tasks": [],
+    "parallel_owner": "One writer owns the bounded family/helper on a separate branch/clone. Coordinate shared art registration, world, combat, ground and resource hooks with the integration owner; do not overwrite a concurrent writer.",
+    "optional": false,
+    "dependencies": [
+      "VIS-03",
+      "VIS-04"
+    ],
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "conditional_dependencies": [
+      "VIS-32 only if the revised art contract selects authored image assets"
+    ],
+    "github_issue": 217,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/217"
+  },
+  {
+    "id": "VIS-13",
+    "source_proposal": "R13",
+    "title": "Restyle the tech hub and arsenal without adding new building systems",
+    "kind": "visual_renderer",
+    "priority": "P2",
+    "size": "M, one or two focused sessions",
+    "files": [
+      "frontend/src/art/campaign.js:techhub",
+      "frontend/src/art/arsenal.js",
+      "frontend/tests/special-buildings.test.js"
+    ],
+    "baseline": [
+      "campaign.js:38 draws the existing Tech hub; arsenal.js:18 draws the existing Arsenal."
+    ],
+    "goal": "Bring the existing research and weapons-store buildings into the same material, perspective and detail language as the cabin.",
+    "plan": [
+      "Inspect current frames, actual consumers and the agreed reference contract; record the bounded change in a small spec.",
+      "Implement only this task’s approved art/presentation change using existing helpers and authoritative state.",
+      "Check normal, failure and phase/quality cases listed below without changing gameplay rules.",
+      "Capture the actual game at both required sizes and run the applicable documented checks.",
+      "Update the walkthrough/test map and hand over the exact branch, evidence and remaining limits."
+    ],
+    "acceptance": [
+      "Keep current campaign unlocks, research/inventory actions and building identifiers.",
+      "Distinguish the two buildings by silhouette and props at phone zoom.",
+      "Doors and base anchors match actual interaction zones; a decorative globe or crate does not create a new action.",
+      "Locked/construction states remain truthful and do not look completed before their unlock.",
+      "Load artwork only where used, without adding it to the cold title."
+    ],
+    "scenarios": [
+      {
+        "input": "The real supported kind/level/role frames for VIS-13",
+        "action": "Render the family in the actual home scene at normal and phone village zoom",
+        "expected": "Approved material/light and silhouette changes are visible, with unchanged ground anchors and no clipped important detail."
+      },
+      {
+        "input": "The same confirmed building or actor state across a supported phase/animation transition",
+        "action": "Select it and enter the existing combat or movement view",
+        "expected": "Its real identity and state stay correct with no art-induced jump, false upgrade or new ability."
+      },
+      {
+        "input": "Low quality, repeated visit and fallback/missing-state fixture",
+        "action": "Load, resize, refresh and dispose the family",
+        "expected": "Readable state and bounded resources remain; no per-frame texture creation or misleading healthy fallback."
+      }
+    ],
+    "checks": [
+      "Actual renderer before/after at 1280×720 and 375×812 with the same canonical fixture; the generated concept is reference only.",
+      "Run the relevant actual checks plus build/budget; report exact results and browser/device limits."
+    ],
+    "risks": [
+      "Larger detail can clip, shift an anchor or reduce legibility at phone village zoom.",
+      "Shared registration/render hooks can conflict with another branch unless one integration owner coordinates them.",
+      "A style pass must not invent or hide real kind, level, damage, recovery, unlock or input state."
+    ],
+    "questions": [
+      "Which existing state and frame contracts does VIS-13 preserve?",
+      "Why are visible art bounds different from gameplay collision and building rights?",
+      "Which actual-game evidence demonstrates the change and its limits?"
+    ],
+    "notes": [
+      "Keep server state, gameplay coordinates, prices and combat rules authoritative.",
+      "No new runtime packages, services, .env edits, migration application or merges.",
+      "Use a separate branch/clone and one writing owner. Target under approximately 400 changed source/test lines; split larger work.",
+      "Develop the isolated family painter and fixture in parallel. Serialize the small shared dispatcher/registry hunk through the integration owner; retain a real-game registration path in the delivered PR."
+    ],
+    "not_in_scope": [],
+    "parent_tasks": [
+      "BASE-28",
+      "BASE-33"
+    ],
+    "parallel_owner": "One writer owns the bounded family/helper on a separate branch/clone. Coordinate shared art registration, world, combat, ground and resource hooks with the integration owner; do not overwrite a concurrent writer.",
+    "optional": false,
+    "dependencies": [
+      "VIS-03",
+      "VIS-04"
+    ],
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "conditional_dependencies": [
+      "VIS-32 only if the revised art contract selects authored image assets"
+    ],
+    "github_issue": 218,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/218"
+  },
+  {
+    "id": "VIS-14",
+    "source_proposal": "consolidated-audit",
+    "title": "Restyle wall segments and joins without changing breach rules",
+    "kind": "visual implementation",
+    "priority": "P1",
+    "size": "One or two focused sessions; split before claiming if the source/test/capture diff would exceed about 400 lines.",
+    "files": [
+      "frontend/src/art/island.js:wall, wallDamaged, wallBroken",
+      "frontend/src/island/wall-connections.js",
+      "frontend/src/art/walls.js (proposed family module)",
+      "frontend/tests/island/wall-connections.test.js"
+    ],
+    "baseline": [
+      "frontend/src/art/island.js:147–197 already paints wall levels and damaged/broken appearances.",
+      "frontend/src/island/wall-connections.js already draws full-side joins between waves; this is not a new barrier/pathfinding feature."
+    ],
+    "goal": "Give the existing wall family and supported connections the same stone/wood/brass depth as the village while retaining actual gaps, level identity and state truth.",
+    "plan": [
+      "Inspect current frames, actual consumers and the agreed reference contract; record the bounded change in a small spec.",
+      "Implement only this task’s approved art/presentation change using existing helpers and authoritative state.",
+      "Check normal, failure and phase/quality cases listed below without changing gameplay rules.",
+      "Capture the actual game at both required sizes and run the applicable documented checks.",
+      "Update the walkthrough/test map and hand over the exact branch, evidence and remaining limits."
+    ],
+    "acceptance": [
+      "Keep existing wall IDs, five level mappings, ground anchors and logical 2×2 footprints; style changes do not retire D056.",
+      "Use consistent material faces and contact shadows; joined spans match the existing weaker-neighbor level rule without hiding posts or gaps.",
+      "Keep damaged and zero-health appearances identifiable; do not paint a solid intact-looking join across a supported broken gap.",
+      "Prove isolated, straight, corner, T, mixed-level, partial-contact and real-gap examples at actual game scale.",
+      "Respect the current phase policy for connectors; combat integration and free wall footprints remain separate existing tasks."
+    ],
+    "scenarios": [
+      {
+        "input": "Two full-side adjacent walls at different levels",
+        "action": "Render the existing between-wave join",
+        "expected": "The span uses the approved weaker-level material and both posts retain their own level identity."
+      },
+      {
+        "input": "Diagonal walls, partial contact or a real gap",
+        "action": "Enter the village view",
+        "expected": "The artwork does not invent a closed barrier."
+      },
+      {
+        "input": "A broken wall or combat phase where this connector layer is hidden",
+        "action": "Refresh the actual state",
+        "expected": "The appropriate ruin/gap and phase handoff remain truthful; no new collision or HP rule is introduced."
+      }
+    ],
+    "checks": [
+      "Run relevant focused art/world/phase/input tests for the changed consumers; exact new test filenames are proposed until implemented.",
+      "Run frontend build, budget and text lint. For UI changes run current documented browser/overlap checks and report exact results, including existing failures.",
+      "Provide actual before/after game evidence at 1280×720 and 375×812; a concept or isolated renderer sheet alone is not completion."
+    ],
+    "risks": [
+      "Larger detail can clip, shift an anchor or reduce legibility at phone village zoom.",
+      "Shared registration/render hooks can conflict with another branch unless one integration owner coordinates them.",
+      "A style pass must not invent or hide real kind, level, damage, recovery, unlock or input state."
+    ],
+    "questions": [
+      "Which existing rule decides whether a join exists?",
+      "Why can a more solid-looking wall not change its footprint or breach cost?",
+      "How do we avoid visually sealing an actual gap?"
+    ],
+    "notes": [],
+    "not_in_scope": [],
+    "parent_tasks": [
+      "BASE-13",
+      "BASE-50"
+    ],
+    "parallel_owner": "Wall painter owns its family module and wall-connection appearance only; coordinate renderer hooks with VIS-18.",
+    "optional": false,
+    "dependencies": [
+      "VIS-03",
+      "VIS-04"
+    ],
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "conditional_dependencies": [
+      "VIS-32 only if the revised art contract selects authored image assets"
+    ],
+    "github_issue": 219,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/219"
+  },
+  {
+    "id": "VIS-15",
+    "source_proposal": "R14",
+    "title": "Bring captains, crew and boarders into the new material and scale language",
+    "kind": "visual_renderer",
+    "priority": "P2",
+    "size": "M; retain existing parameterized poses rather than individually authoring all combinations",
+    "files": [
+      "frontend/src/art/people.js",
+      "frontend/tests/people-art.test.js"
+    ],
+    "baseline": [
+      "people.js:9–21 defines ten captain palettes; :103–158 has aiming, cutlass and fallen poses; :169–277 has crew, boarders and militia."
+    ],
+    "goal": "Improve volume, clothing, boot contact and shared line weight without changing movement, aiming or captain identity.",
+    "plan": [
+      "Inspect current frames, actual consumers and the agreed reference contract; record the bounded change in a small spec.",
+      "Implement only this task’s approved art/presentation change using existing helpers and authoritative state.",
+      "Check normal, failure and phase/quality cases listed below without changing gameplay rules.",
+      "Capture the actual game at both required sizes and run the applicable documented checks.",
+      "Update the walkthrough/test map and hand over the exact branch, evidence and remaining limits."
+    ],
+    "acceptance": [
+      "All ten palettes keep the same identity across walking, musket, cutlass and fallen poses.",
+      "Retain directional pose and hand/gun orientation regressions.",
+      "Actors stay readable at phone battle zoom and are not lost behind the new bases/shadows.",
+      "Low quality and reduced motion retain gameplay and identity signals; do not change input or simulation.",
+      "Do not create alpha halos or unbounded caches for per-color frame generation."
+    ],
+    "scenarios": [
+      {
+        "input": "The real supported kind/level/role frames for VIS-15",
+        "action": "Render the family in the actual home scene at normal and phone village zoom",
+        "expected": "Approved material/light and silhouette changes are visible, with unchanged ground anchors and no clipped important detail."
+      },
+      {
+        "input": "The same confirmed building or actor state across a supported phase/animation transition",
+        "action": "Select it and enter the existing combat or movement view",
+        "expected": "Its real identity and state stay correct with no art-induced jump, false upgrade or new ability."
+      },
+      {
+        "input": "Low quality, repeated visit and fallback/missing-state fixture",
+        "action": "Load, resize, refresh and dispose the family",
+        "expected": "Readable state and bounded resources remain; no per-frame texture creation or misleading healthy fallback."
+      }
+    ],
+    "checks": [
+      "Actual renderer before/after at 1280×720 and 375×812 with the same canonical fixture; the generated concept is reference only.",
+      "Run the relevant actual checks plus build/budget; report exact results and browser/device limits."
+    ],
+    "risks": [
+      "Larger detail can clip, shift an anchor or reduce legibility at phone village zoom.",
+      "Shared registration/render hooks can conflict with another branch unless one integration owner coordinates them.",
+      "A style pass must not invent or hide real kind, level, damage, recovery, unlock or input state."
+    ],
+    "questions": [
+      "Which existing state and frame contracts does VIS-15 preserve?",
+      "Why are visible art bounds different from gameplay collision and building rights?",
+      "Which actual-game evidence demonstrates the change and its limits?"
+    ],
+    "notes": [
+      "Keep server state, gameplay coordinates, prices and combat rules authoritative.",
+      "No new runtime packages, services, .env edits, migration application or merges.",
+      "Use a separate branch/clone and one writing owner. Target under approximately 400 changed source/test lines; split larger work.",
+      "Develop the isolated family painter and fixture in parallel. Serialize the small shared dispatcher/registry hunk through the integration owner; retain a real-game registration path in the delivered PR."
+    ],
+    "not_in_scope": [],
+    "parent_tasks": [],
+    "parallel_owner": "One writer owns the bounded family/helper on a separate branch/clone. Coordinate shared art registration, world, combat, ground and resource hooks with the integration owner; do not overwrite a concurrent writer.",
+    "optional": false,
+    "dependencies": [
+      "VIS-03",
+      "VIS-04"
+    ],
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "conditional_dependencies": [
+      "VIS-32 only if the revised art contract selects authored image assets"
+    ],
+    "github_issue": 220,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/220"
+  },
+  {
+    "id": "VIS-16",
+    "source_proposal": "consolidated-audit",
+    "title": "Bring the existing naval fleet into the reference material style",
+    "kind": "visual implementation",
+    "priority": "P2",
+    "size": "One or two focused sessions; split before claiming if the source/test/capture diff would exceed about 400 lines.",
+    "files": [
+      "frontend/src/art/fleet.js",
+      "frontend/src/art/fleet-hulls.js (proposed only if a small family split is useful)",
+      "frontend/tests/cartoon-art.test.js",
+      "frontend/src/pirates/render.js (registration handoff only)"
+    ],
+    "baseline": [
+      "frontend/src/art/fleet.js:1–6 already defines original ships, three bobbing frames, waterline anchors and effect art.",
+      "The same fleet module supports recognizable sloop, brig, flagship, warship and gunboat families."
+    ],
+    "goal": "Make the existing fleet belong beside the richer village through coherent wood, cloth, metal and water contact while preserving enemy identification, animation and targeting.",
+    "plan": [
+      "Inspect current frames, actual consumers and the agreed reference contract; record the bounded change in a small spec.",
+      "Implement only this task’s approved art/presentation change using existing helpers and authoritative state.",
+      "Check normal, failure and phase/quality cases listed below without changing gameplay rules.",
+      "Capture the actual game at both required sizes and run the applicable documented checks.",
+      "Update the walkthrough/test map and hand over the exact branch, evidence and remaining limits."
+    ],
+    "acceptance": [
+      "Preserve supported frame IDs, hull class silhouettes, waterline anchors and bobbing-frame alignment; no new hull/gameplay type is added.",
+      "Use the shared material/light language without making enemy flags look like friendly navy village banners.",
+      "Keep damage tint, burning, gunboat flash/jam and targeting/readability overlays correct at actual battle zoom.",
+      "Do not change spawn, hitboxes, speed, damage, selection or naval/coast geometry.",
+      "If one ticket cannot fit all families in a readable diff, split by hull family before claiming; the final family matrix still covers every supported hull."
+    ],
+    "scenarios": [
+      {
+        "input": "Every existing hull and its three animation frames",
+        "action": "Render at normal and phone battle zoom",
+        "expected": "Class identity and waterline stay stable with no frame jump or clipped mast."
+      },
+      {
+        "input": "A damaged burning enemy beside the friendly shore boat",
+        "action": "Play the existing test encounter",
+        "expected": "Enemy identity, damage and targeting remain clear; friendly decoration never receives an enemy marker."
+      },
+      {
+        "input": "Low quality and reduced motion",
+        "action": "Load and leave a wave",
+        "expected": "Required class/state signals remain and textures dispose within current caps."
+      }
+    ],
+    "checks": [
+      "Run relevant focused art/world/phase/input tests for the changed consumers; exact new test filenames are proposed until implemented.",
+      "Run frontend build, budget and text lint. For UI changes run current documented browser/overlap checks and report exact results, including existing failures.",
+      "Provide actual before/after game evidence at 1280×720 and 375×812; a concept or isolated renderer sheet alone is not completion."
+    ],
+    "risks": [
+      "Larger detail can clip, shift an anchor or reduce legibility at phone village zoom.",
+      "Shared registration/render hooks can conflict with another branch unless one integration owner coordinates them.",
+      "A style pass must not invent or hide real kind, level, damage, recovery, unlock or input state."
+    ],
+    "questions": [
+      "What makes a ship frame anchor different from a building ground anchor?",
+      "Which existing states must stay readable after a cosmetic repaint?",
+      "Why are hull silhouettes more important than decorative detail at phone zoom?"
+    ],
+    "notes": [],
+    "not_in_scope": [],
+    "parent_tasks": [],
+    "parallel_owner": "One writer owns the bounded family/helper on a separate branch/clone. Coordinate shared art registration, world, combat, ground and resource hooks with the integration owner; do not overwrite a concurrent writer.",
+    "optional": false,
+    "dependencies": [
+      "VIS-03",
+      "VIS-04"
+    ],
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "conditional_dependencies": [
+      "VIS-32 only if the revised art contract selects authored image assets"
+    ],
+    "github_issue": 221,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/221"
+  },
+  {
+    "id": "VIS-17",
+    "source_proposal": "R12",
+    "title": "Carry the richer style through damage and recovery states in both renderers",
+    "kind": "visual_renderer",
+    "priority": "P2",
+    "size": "M, cross-family matrix and small integration fixes only. Per-kind artwork corrections stay with that family owner rather than redrawing all five kinds in this ticket.",
+    "files": [
+      "frontend/src/art/tower-states.js",
+      "frontend/src/island/world.js:structureRecoveryAppearance",
+      "frontend/src/pirates/render.js:loadAtlas",
+      "frontend/tests/style-structure-states.test.js"
+    ],
+    "baseline": [
+      "island/world.js:25–44 already reads the legacy and Recovery V1 appearance; :418–426 accepts a canonical recovery context.",
+      "pirates/render.js:159–170 selectively packs damage-state frames when relevant."
+    ],
+    "goal": "Carry the accepted materials and silhouettes through intact, damaged, broken and partially recovered structures in both world and combat rendering.",
+    "plan": [
+      "Inspect current frames, actual consumers and the agreed reference contract; record the bounded change in a small spec.",
+      "Implement only this task’s approved art/presentation change using existing helpers and authoritative state.",
+      "Check normal, failure and phase/quality cases listed below without changing gameplay rules.",
+      "Capture the actual game at both required sizes and run the applicable documented checks.",
+      "Update the walkthrough/test map and hand over the exact branch, evidence and remaining limits."
+    ],
+    "acceptance": [
+      "A structure at zero health does not appear operational or firing; rubble/smoke does not hide necessary health context.",
+      "The real zero-to-positive health transition changes the existing display state; an art timer never creates healing.",
+      "Flag-off and flag-on paths retain their respective correct legacy/canonical behavior.",
+      "Bell acceptance, preparation, combat and finish cause no unintended ground-anchor, family or fallback-style jump.",
+      "Verify actual paid/gradual repair state transitions without changing wallet, simulation or recovery contracts."
+    ],
+    "scenarios": [
+      {
+        "input": "A matching canonical recovery row at zero health, then its real between-wave update to a small positive value",
+        "action": "Refresh the actual supported display states",
+        "expected": "Zero shows a ruin and no operational/firing appearance; positive state changes only from actual approved data, never from an art timer or rounding to a false zero."
+      },
+      {
+        "input": "A damaged defense during a frozen wave, with a refused then accepted paid-repair reply",
+        "action": "Render both authoritative outcomes",
+        "expected": "A refusal grants no visual heal; the accepted event updates the correct instance/state with the approved family and anchor, without changing wallet or repair quota logic."
+      },
+      {
+        "input": "Legacy flag-off and canonical flag-on scenes, including an obsolete epoch/instance row",
+        "action": "Enter preparation, combat and finish with the same confirmed layout",
+        "expected": "Each path uses its existing correct state/fallback; stale recovery cannot repaint a different structure, and neither phase swaps back to unintended old art."
+      }
+    ],
+    "checks": [
+      "Actual renderer before/after at 1280×720 and 375×812 with the same canonical fixture; the generated concept is reference only.",
+      "Run the relevant actual checks plus build/budget; report exact results and browser/device limits."
+    ],
+    "risks": [
+      "Larger detail can clip, shift an anchor or reduce legibility at phone village zoom.",
+      "Shared registration/render hooks can conflict with another branch unless one integration owner coordinates them.",
+      "A style pass must not invent or hide real kind, level, damage, recovery, unlock or input state."
+    ],
+    "questions": [
+      "Which existing state and frame contracts does VIS-17 preserve?",
+      "Why are visible art bounds different from gameplay collision and building rights?",
+      "Which actual-game evidence demonstrates the change and its limits?"
+    ],
+    "notes": [
+      "Keep server state, gameplay coordinates, prices and combat rules authoritative.",
+      "No new runtime packages, services, .env edits, migration application or merges.",
+      "Use a separate branch/clone and one writing owner. Target under approximately 400 changed source/test lines; split larger work.",
+      "One integration owner handles the state matrix and renderer handoff. Keep substantive per-kind painter changes in the corresponding asset-family PR."
+    ],
+    "not_in_scope": [],
+    "parent_tasks": [
+      "T55–T60",
+      "BASE-13"
+    ],
+    "parallel_owner": "One writer owns the bounded family/helper on a separate branch/clone. Coordinate shared art registration, world, combat, ground and resource hooks with the integration owner; do not overwrite a concurrent writer.",
+    "optional": false,
+    "dependencies": [
+      "VIS-04",
+      "VIS-07",
+      "VIS-08",
+      "VIS-09",
+      "VIS-10",
+      "VIS-11",
+      "VIS-14"
+    ],
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "conditional_dependencies": [],
+    "github_issue": 222,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/222"
+  },
+  {
+    "id": "VIS-18",
+    "source_proposal": "R15",
+    "title": "Integrate the richer art with deterministic depth and phase handoff",
+    "kind": "visual_renderer",
+    "priority": "P1",
+    "size": "M, one or two focused sessions",
+    "files": [
+      "frontend/src/world/art.js",
+      "frontend/src/island/world.js",
+      "frontend/src/pirates/render.js",
+      "frontend/tests/depth-handoff.test.js"
+    ],
+    "baseline": [
+      "World sprites use 100+z; combat boarders use two-unit depth bands and defense posts use 100+z.",
+      "Combat hides the world defenses and draws atlas frames; existing frame identifiers are already shared."
+    ],
+    "goal": "Resolve style-induced depth/anchor problems and prove the world-to-combat handoff with dense valid layouts.",
+    "plan": [
+      "Inspect current frames, actual consumers and the agreed reference contract; record the bounded change in a small spec.",
+      "Implement only this task’s approved art/presentation change using existing helpers and authoritative state.",
+      "Check normal, failure and phase/quality cases listed below without changing gameplay rules.",
+      "Capture the actual game at both required sizes and run the applicable documented checks.",
+      "Update the walkthrough/test map and hand over the exact branch, evidence and remaining limits."
+    ],
+    "acceptance": [
+      "The same confirmed layout/state retains its foot positions and visual family before and after the bell.",
+      "Captain and boarders pass visually behind and in front of tall buildings in explicitly checked cases.",
+      "Contact shadows stay below their owner; grass, cliffs and bases do not paint over active actors or health bars.",
+      "Do not display a preview ghost and a committed structure as two completed buildings.",
+      "Keep combat state/events and fixed-seed behavior unchanged; draw-order fixes do not alter routing, targeting or collisions."
+    ],
+    "scenarios": [
+      {
+        "input": "A captain/boarder moving behind and then in front of a tall approved building",
+        "action": "Cross its ground depth while the same roof/base is visible",
+        "expected": "The actor changes visual order at the agreed ground relation; shadows stay below owners and no routing/collider value changes."
+      },
+      {
+        "input": "A populated mixed-level village with walls, a foreground cliff and a selected damaged structure",
+        "action": "Inspect it in Explore, Village and the existing wave view",
+        "expected": "Confirmed feet, family, health and gaps match; terrain/roof detail does not cover required state or actual input targets."
+      },
+      {
+        "input": "An active Move ghost followed by an accepted wave request with delayed preparation",
+        "action": "Complete the existing handoff into combat and later finish",
+        "expected": "Uncommitted ghost/grid are cleared, exactly one confirmed defense representation remains and the same style/anchor survives without a double world/combat draw."
+      }
+    ],
+    "checks": [
+      "Actual renderer before/after at 1280×720 and 375×812 with the same canonical fixture; the generated concept is reference only.",
+      "Run the relevant actual checks plus build/budget; report exact results and browser/device limits."
+    ],
+    "risks": [
+      "Larger detail can clip, shift an anchor or reduce legibility at phone village zoom.",
+      "Shared registration/render hooks can conflict with another branch unless one integration owner coordinates them.",
+      "A style pass must not invent or hide real kind, level, damage, recovery, unlock or input state."
+    ],
+    "questions": [
+      "Which existing state and frame contracts does VIS-18 preserve?",
+      "Why are visible art bounds different from gameplay collision and building rights?",
+      "Which actual-game evidence demonstrates the change and its limits?"
+    ],
+    "notes": [
+      "Keep server state, gameplay coordinates, prices and combat rules authoritative.",
+      "No new runtime packages, services, .env edits, migration application or merges.",
+      "Use a separate branch/clone and one writing owner. Target under approximately 400 changed source/test lines; split larger work."
+    ],
+    "not_in_scope": [],
+    "parent_tasks": [
+      "BASE-02",
+      "BASE-08",
+      "BASE-13"
+    ],
+    "parallel_owner": "One writer owns the bounded family/helper on a separate branch/clone. Coordinate shared art registration, world, combat, ground and resource hooks with the integration owner; do not overwrite a concurrent writer.",
+    "optional": false,
+    "dependencies": [
+      "VIS-04",
+      "VIS-05",
+      "VIS-06",
+      "VIS-12",
+      "VIS-13",
+      "VIS-15",
+      "VIS-16",
+      "VIS-17",
+      "VIS-19",
+      "VIS-22",
+      "VIS-27",
+      "VIS-29"
+    ],
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "conditional_dependencies": [],
+    "github_issue": 223,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/223"
+  },
+  {
+    "id": "VIS-19",
+    "source_proposal": "ENV-02",
+    "title": "Paint layered rock cliffs and a readable grass lip around the current island",
+    "kind": "implementation",
+    "priority": "P1",
+    "size": "M, one helper and bounded integration",
+    "files": [
+      "frontend/src/art/coast-cliffs.js (proposed)",
+      "frontend/src/art/ground.js",
+      "frontend/tests/art/coast-cliffs.test.js (proposed)"
+    ],
+    "baseline": [
+      "frontend/src/art/ground.js:37-56 paints sand and meadow rings, not vertical rock walls",
+      "frontend/src/world/art.js:47 fixes the .72 projection"
+    ],
+    "goal": "Replace the flat-looking edge with shaded rock strata, a warm grass rim and a convincing painted platform in the existing view.",
+    "plan": [
+      "Render a small reusable cliff contour with top-light, side shade, cracks and a grass cap from the agreed current contour.",
+      "Composite it through the agreed mask seam, with bounded visual extents.",
+      "Keep logical coordinates, existing keep-outs and classified coast unchanged.",
+      "Capture the real home scene, including a valid building close to the foreground rim."
+    ],
+    "acceptance": [
+      "Cliff depth, layered stone and grass lip are clearly visible at1280x720 and375x812.",
+      "No copied rectangle replaces today's wavy island footprint.",
+      "No source change in server layout, sim land geometry, price or ownership.",
+      "Visual bounds are handed to the camera lane so the front cliff foot is not cut off by the HUD.",
+      "Current-mask fallback and disposal remain correct."
+    ],
+    "scenarios": [
+      {
+        "input": "Legal near-edge tower and wall",
+        "action": "Enter village view and select/move each",
+        "expected": "Their foot points and valid footprints remain on the same logical cells and visible above the cliff face."
+      },
+      {
+        "input": "Travel away/back five times",
+        "action": "Reload the painted place",
+        "expected": "No duplicated cliffs or leaked geometry/textures."
+      }
+    ],
+    "checks": [
+      "Meaningful new painter/mask regression plus existing placement/world-art/camera/lifetime tests.",
+      "Build/budget and actual paired game captures; broad UI checks reported honestly."
+    ],
+    "risks": [
+      "Outward cliff alpha can change the sea distance field unless the approved seam is used.",
+      "Foreground cliffs can cover captain feet, HP or Move feedback."
+    ],
+    "questions": [
+      "Which part of the cliff is decorative?",
+      "How are new visual bounds different from owned land?",
+      "How does the painter keep the current coast and saved positions?"
+    ],
+    "notes": [
+      "The new appearance is still the current island: it does not implement BASE-19–27 land growth, relocate saves or copy the concept’s rectangle as new legal land."
+    ],
+    "not_in_scope": [],
+    "parent_tasks": [
+      "BASE-09"
+    ],
+    "parallel_owner": "One writer owns the bounded family/helper on a separate branch/clone. Coordinate shared art registration, world, combat, ground and resource hooks with the integration owner; do not overwrite a concurrent writer.",
+    "optional": false,
+    "dependencies": [
+      "VIS-01",
+      "VIS-02",
+      "VIS-03",
+      "VIS-04"
+    ],
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "conditional_dependencies": [
+      "VIS-32 only if the revised art contract selects authored image assets"
+    ],
+    "github_issue": 224,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/224"
+  },
+  {
+    "id": "VIS-20",
+    "source_proposal": "ENV-03",
+    "title": "Give existing village paths stone edges and grass a richer terrain material",
+    "kind": "implementation",
+    "priority": "P1",
+    "size": "M",
+    "files": [
+      "frontend/src/art/ground.js",
+      "frontend/tests/art/ground-material.test.js (proposed)"
+    ],
+    "baseline": [
+      "frontend/src/art/ground.js:10-12 fixed home paths/clearings",
+      "frontend/src/art/ground.js:57-66 draws smooth sandy bands"
+    ],
+    "goal": "Make the village floor feel crafted like the reference while keeping roads cosmetic and every current route/placement rule intact.",
+    "plan": [
+      "Use the agreed warm stone palette for path borders, joints and restrained highlights.",
+      "Add broad grass value variation and sparse wear without noisy high-frequency tiling.",
+      "Keep current path anchors and clearings; draw paths under building foundations.",
+      "Document that these paths do not change routeOpen or create a player-owned road system."
+    ],
+    "acceptance": [
+      "Existing path layout is readable at village zoom and does not compete with placement grid/HP markers.",
+      "No new collision, snap-grid rule, speed bonus or road purchase appears.",
+      "Moved buildings do not receive invented accessibility or route guarantees from the paint.",
+      "Material remains deterministic on resize and respects current low/high art-density caps."
+    ],
+    "scenarios": [
+      {
+        "input": "Same source, same surface seed",
+        "action": "Resize through desktop and phone then return",
+        "expected": "Path joints/grass features remain in the same logical positions."
+      },
+      {
+        "input": "Existing moved house crossing a painted path",
+        "action": "Reload the island",
+        "expected": "Confirmed footprint wins; paint does not move the building or reject its saved cell."
+      }
+    ],
+    "checks": [
+      "Painter determinism and representative contour-mask check; existing placement tests unchanged.",
+      "Before/after real game captures and build/budget."
+    ],
+    "risks": [
+      "Detailed joints can alias at fit zoom.",
+      "A bright road may be confused with a build/no-build boundary."
+    ],
+    "questions": [
+      "Why are roads art rather than pathfinding in this task?",
+      "Which seed makes grass stable after resize?",
+      "Why should terrain contrast stay below selection feedback?"
+    ],
+    "notes": [],
+    "not_in_scope": [],
+    "parent_tasks": [
+      "BASE-09"
+    ],
+    "parallel_owner": "One writer owns the bounded family/helper on a separate branch/clone. Coordinate shared art registration, world, combat, ground and resource hooks with the integration owner; do not overwrite a concurrent writer.",
+    "optional": false,
+    "dependencies": [
+      "VIS-19",
+      "VIS-03"
+    ],
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "conditional_dependencies": [
+      "VIS-32 only if the revised art contract selects authored image assets"
+    ],
+    "github_issue": 225,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/225"
+  },
+  {
+    "id": "VIS-21",
+    "source_proposal": "ENV-04",
+    "title": "Redraw palms, trees, rocks and shrubs with the reference material depth",
+    "kind": "implementation",
+    "priority": "P1",
+    "size": "M; split an asset family if the code diff exceeds about400lines",
+    "files": [
+      "frontend/src/art/island.js:40-109 existing nature painters or small delegated helper",
+      "frontend/src/art/paint.js only through agreed shared owner",
+      "frontend/tests/cartoon-art.test.js",
+      "frontend/ASSETS.md"
+    ],
+    "baseline": [
+      "frontend/src/art/island.js:51-109 already draws oak/pine/palm/rock/shrub",
+      "frontend/src/art/island.js:510-511 retains existing frame IDs/boxes/anchors",
+      "frontend/src/world/places/settlement.js:43-49,74-81 adds tree collisions and fade"
+    ],
+    "goal": "Create lush clustered foliage and faceted warm rock that match the building light direction without changing existing tree identity or collision.",
+    "plan": [
+      "Use current original asset IDs and anchors as the integration contract.",
+      "Add restrained leaf clumps, light/shadow masses, bark detail and faceted rock highlights.",
+      "Retain silhouette readability and present low-density fallback.",
+      "Show asset sheet plus real home scene under the same lighting."
+    ],
+    "acceptance": [
+      "Oak, pine and the existing birch/palm frames remain distinguishable.",
+      "Foot anchors/frame bounds do not clip or drift; collider positions/radii remain unchanged.",
+      "Existing sway and captain-occlusion fade work without halo seams.",
+      "New shapes are original and source-listed; no package or external asset service is required."
+    ],
+    "scenarios": [
+      {
+        "input": "Captain behind an existing foreground tree",
+        "action": "Walk/select a nearby building",
+        "expected": "Existing fade makes the captain/building interaction legible and restores opacity after passing."
+      },
+      {
+        "input": "Two-house progress tree scale1.2",
+        "action": "Render at maximum current scale",
+        "expected": "No clipped crown, changing collision radius or implied new land."
+      }
+    ],
+    "checks": [
+      "Canvas silhouette/anchor and unchanged collider evidence; existing world-art/cartoon/lifetime cases.",
+      "Real scene screenshots, low/high art-density comparison and truthful performance evidence."
+    ],
+    "risks": [
+      "Bigger crowns can cover valid build positions.",
+      "Global nature frames may affect all places, so home-first adoption must be explicit if other scenes are not restyled."
+    ],
+    "questions": [
+      "Why does a larger crown not authorize a larger collider?",
+      "What does the old birch ID actually draw today?",
+      "How does shared foliage change other places?"
+    ],
+    "notes": [],
+    "not_in_scope": [],
+    "parent_tasks": [
+      "BASE-09"
+    ],
+    "parallel_owner": "One writer owns the bounded family/helper on a separate branch/clone. Coordinate shared art registration, world, combat, ground and resource hooks with the integration owner; do not overwrite a concurrent writer.",
+    "optional": false,
+    "dependencies": [
+      "VIS-03",
+      "VIS-04"
+    ],
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "conditional_dependencies": [
+      "VIS-32 only if the revised art contract selects authored image assets"
+    ],
+    "github_issue": 226,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/226"
+  },
+  {
+    "id": "VIS-22",
+    "source_proposal": "ENV-05",
+    "title": "Compose a lush island edge while keeping build space and attack windows clear",
+    "kind": "implementation",
+    "priority": "P1",
+    "size": "M",
+    "files": [
+      "frontend/src/world/places/layouts.js home-only decorative data",
+      "frontend/src/world/places/home-environment.js (proposed small helper)",
+      "frontend/src/world/places/settlement.js one coordinated hook",
+      "frontend/src/island/decorations.js only if progress-scale handoff requires it"
+    ],
+    "baseline": [
+      "frontend/src/world/places/layouts.js:28-34 has fixed edge trees",
+      "frontend/src/world/places/settlement.js:72-81 couples those trees to colliders/fade",
+      "frontend/src/island/placement.js:19-28 defines current keep-outs",
+      "frontend/src/pirates/sim.js:6-9,305-308 defines naval shore behavior"
+    ],
+    "goal": "Frame a calm buildable center with greenery/rocks without filling the village with random clutter or hiding where enemies land.",
+    "plan": [
+      "Map current keep-outs, saved building foot points, legal build cells and west/east/south approaches.",
+      "Add bounded non-colliding scenery groups and intentional gaps using the new nature kit.",
+      "Retain the existing colliding tree coordinates unless a separate gameplay change is agreed.",
+      "Keep placement/selection/recovery overlays above or visually clear of scenery."
+    ],
+    "acceptance": [
+      "Three attack approaches and Harbor/Bell/Arsenal access remain visible and usable.",
+      "No valid building is removed, moved, disabled or falsely covered by the border.",
+      "New cosmetic shrubs/rocks add no collider, resource, purchase or clear action.",
+      "Dense/current legacy layouts remain usable in desktop and phone management.",
+      "The scene root owns and disposes all added assets/subscriptions."
+    ],
+    "scenarios": [
+      {
+        "input": "Dense old save with buildings close to current edge trees",
+        "action": "Enter Move mode, select remote structures and ring the bell",
+        "expected": "Selection/feedback/landings stay visible and current server rules are unchanged."
+      },
+      {
+        "input": "Existing colliding trees before/after",
+        "action": "Compare collider list and representative walking paths",
+        "expected": "Same coordinates/radii and no new invisible block."
+      }
+    ],
+    "checks": [
+      "Collider snapshot and representative legal/illegal placement checks; real fake-API travel/build/wave captures.",
+      "One scene integrator owns shared hook; no parallel writer collision."
+    ],
+    "risks": [
+      "Cosmetic props can imply illegal build area.",
+      "Multiple agents editing settlement.js can drop another lane's lifecycle or recovery integration."
+    ],
+    "questions": [
+      "Which props block walking and which do not?",
+      "How are enemy approaches protected from visual clutter?",
+      "Why can we not just move a tree to match the concept?"
+    ],
+    "notes": [],
+    "not_in_scope": [],
+    "parent_tasks": [
+      "BASE-09"
+    ],
+    "parallel_owner": "One writer owns the bounded family/helper on a separate branch/clone. Coordinate shared art registration, world, combat, ground and resource hooks with the integration owner; do not overwrite a concurrent writer.",
+    "optional": false,
+    "dependencies": [
+      "VIS-19",
+      "VIS-21"
+    ],
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "conditional_dependencies": [],
+    "github_issue": 227,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/227"
+  },
+  {
+    "id": "VIS-23",
+    "source_proposal": "ENV-06",
+    "title": "Tune the existing sea and foam to the new cliff waterline",
+    "kind": "implementation",
+    "priority": "P1",
+    "size": "M",
+    "files": [
+      "frontend/src/world/water.js",
+      "frontend/src/world/places/resources.js coast-mask handoff only via shared owner",
+      "frontend/tests/art/coast-water.test.js (proposed)"
+    ],
+    "baseline": [
+      "frontend/src/world/water.js:79-147 already supplies turquoise shallows/foam/glints/rain",
+      "frontend/src/world/water.js:153-163 reads backdrop alpha as coast",
+      "frontend/src/world/water.js:149-151 preserves quality switch"
+    ],
+    "goal": "Make turquoise near-shore water, deeper open water and broken white foam sit naturally at the painted cliff foot, instead of drawing through rock or far from it.",
+    "plan": [
+      "Consume the agreed decorative waterline input with current-place fallback.",
+      "Tune existing depth/streak/foam parameters to the style palette rather than add a second water engine.",
+      "Keep low quality and reduced-motion behavior explicit.",
+      "Capture close and fit views across home/another place/travel return."
+    ],
+    "acceptance": [
+      "Foam follows the intended visible coast foot and stays out of opaque cliff/grass pixels.",
+      "Existing weather/rain/beam shared uniforms continue to work.",
+      "No glint, moving-foam or rain-ring work is added to low quality beyond its existing policy.",
+      "Missing/unreadable coast input has a deliberate fallback, not a solid rectangular shoreline.",
+      "No ship spawn, landing coordinate, combat pace or simulation clock change is included."
+    ],
+    "scenarios": [
+      {
+        "input": "Home cliffs then travel to Saltreach Harbor",
+        "action": "Refresh water coast and return",
+        "expected": "No stale home mask appears around the harbor; each scene uses its own correct fallback."
+      },
+      {
+        "input": "Low quality and reduced motion",
+        "action": "Run the new coast scene",
+        "expected": "Chosen existing still/low-detail policy remains effective and documented."
+      }
+    ],
+    "checks": [
+      "Small mask/coastField regression, missing-mask/other-place case and lifecycle checks.",
+      "Real scene captures; measured frame behavior if shader cost changes; build/budget."
+    ],
+    "risks": [
+      "Reading a more complex silhouette at current256x192 distance-field resolution can alias.",
+      "Shared coast texture must be refreshed, not leaked or retained from another place."
+    ],
+    "questions": [
+      "Why does water need the decorative cliff foot rather than a bought-land flag?",
+      "How is another place protected from a stale coast texture?",
+      "Which water effects already exist today?"
+    ],
+    "notes": [],
+    "not_in_scope": [],
+    "parent_tasks": [
+      "BASE-09"
+    ],
+    "parallel_owner": "One writer owns the bounded family/helper on a separate branch/clone. Coordinate shared art registration, world, combat, ground and resource hooks with the integration owner; do not overwrite a concurrent writer.",
+    "optional": false,
+    "dependencies": [
+      "VIS-01",
+      "VIS-19"
+    ],
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "conditional_dependencies": [],
+    "github_issue": 228,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/228"
+  },
+  {
+    "id": "VIS-24",
+    "source_proposal": "ENV-07",
+    "title": "Add a warm nautical cove and mooring set without inventing new walkable land",
+    "kind": "implementation",
+    "priority": "P2",
+    "size": "M; one decorative shore set first",
+    "files": [
+      "frontend/src/art/home-shore.js (proposed small painter set)",
+      "frontend/src/world/places/layouts.js home-only decorative placements",
+      "frontend/ASSETS.md"
+    ],
+    "baseline": [
+      "frontend/src/world/places/layouts.js:18-19 has only bench/barrel/lantern for home",
+      "frontend/src/world/places/surfaces.js:3-4 declares harbor docks but no home dock rectangle",
+      "frontend/src/island/placement.js:23 reserves the existing Harbor anchor"
+    ],
+    "goal": "Add the reference's maritime warmth through shore rocks, ropes, mooring details and a clearly decorative friendly boat while preserving current travel and land contracts.",
+    "plan": [
+      "Choose one uncluttered coastal set beside a retained approach, with current Harbor/travel anchors shown on the plan.",
+      "Use warm wood, brass, navy cloth and consistent shadows from the common style kit.",
+      "Keep the set decorative unless existing walkable ground truly supports its apparent walking surface.",
+      "If a real new home dock or relocated Harbor is desired, record it as a separate reviewed geometry/travel change rather than hide it in this art PR."
+    ],
+    "acceptance": [
+      "The set reads as friendly environment rather than a targetable enemy ship or a new paid build action.",
+      "No new walkable pier is drawn as an expected access route unless the current ground contract actually permits it.",
+      "Existing Harbor/Bell/travel IDs, stand points and saved positions remain unchanged.",
+      "The three naval approaches, selected defenses and wave telegraphs remain clear.",
+      "Foliage/boat motion respects reduced motion if any movement is included."
+    ],
+    "scenarios": [
+      {
+        "input": "Current home island with no dock rectangle",
+        "action": "Inspect shoreline and attempt normal walking",
+        "expected": "The art does not promise a usable pier outside existing ground; no hidden fall or new travel trigger."
+      },
+      {
+        "input": "An active wave near the shore set",
+        "action": "Select/shoot/inspect approaching enemies",
+        "expected": "Decorative friendly boat and foam do not hide enemy silhouettes or change hit targets."
+      }
+    ],
+    "checks": [
+      "Actual screenshot and walking/targeting evidence on current ground; no invented new dock functionality.",
+      "One family asset review plus existing place/lifetime checks."
+    ],
+    "risks": [
+      "The attractive concept dock is an affordance, so a nonfunctional lookalike can mislead players.",
+      "A decorative boat can be mistaken for a combat object."
+    ],
+    "questions": [
+      "Why is the concept dock not permission to add walkable surface?",
+      "How does the player distinguish a decorative boat from an enemy?",
+      "Which travel identifiers remain unchanged?"
+    ],
+    "notes": [],
+    "not_in_scope": [],
+    "parent_tasks": [
+      "BASE-09"
+    ],
+    "parallel_owner": "One writer owns the bounded family/helper on a separate branch/clone. Coordinate shared art registration, world, combat, ground and resource hooks with the integration owner; do not overwrite a concurrent writer.",
+    "optional": false,
+    "dependencies": [
+      "VIS-21",
+      "VIS-22"
+    ],
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "conditional_dependencies": [
+      "VIS-32 only if the revised art contract selects authored image assets"
+    ],
+    "github_issue": 229,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/229"
+  },
+  {
+    "id": "VIS-25",
+    "source_proposal": "DOCK-01",
+    "title": "Agree a usable home-pier surface, shore access and existing-service contract",
+    "kind": "design",
+    "priority": "P2",
+    "size": "S, one small reviewed contract",
+    "files": [
+      "specs/reference-home-pier.md (proposed)",
+      "frontend/GRAPHICS.md",
+      "docs/DECISIONS.md reviewed decision only"
+    ],
+    "baseline": [
+      "frontend/src/world/places/surfaces.js:3,10-18 already supports a Saltreach dock rectangle but couples dock class3 to surfaceClass",
+      "frontend/src/island/placement.js:34,61-72 treats any nonzero surface as land; backend/server/island/layout.py:274-279,297-298 keeps ellipse sea rejection",
+      "frontend/src/world/places/registry.js:11-15 home spawn[0,12]; spots.js:73-88 fixed Harbor(13,7.5), wreck(-16.5,5), bell(8.5,12)",
+      "frontend/src/island/one-island.js:29-34 hides world travel by default; existing Harbor/boat services remain"
+    ],
+    "goal": "The reference's home pier must be a real captain-accessible platform leading to an existing working service, without granting new buildable or purchased land.",
+    "plan": [
+      "Map one reachable shore junction and pier footprint in the current logical projection, checking fixed colliders, saved layouts, normal and special-wave approaches.",
+      "Declare separate canonical build/naval land, captain walking support and rendered cliff-waterline masks; preserve current home spawn and fixed/saved anchors.",
+      "Choose one concrete pierhead interaction that delegates to an existing Harbor or boat-status/repair/game card with its real unlocks; do not invent a fake Sail action.",
+      "Choose and document phase/combat policy after inspecting off-land captain reach. State what happens if a shared wave begins with someone already on the pier.",
+      "Record source ownership and exact fixture/acceptance cases for the runtime card; no new backend/schema/payment needed for captain-only walking support."
+    ],
+    "acceptance": [
+      "One diagram and data table name the actual proposed shore junction, bridge/deck support bounds, safe walking width, art bounds and selected existing interaction; coordinates remain proposed until human review.",
+      "The captain can walk from the existing home spawn/path to the pierhead in the proposed route without using a building as the visual passage or changing existing colliders/owned positions.",
+      "The contract explicitly avoids the frontend dock-class3/build-preview mismatch. Dock walking does not expand surfaceClass used by placement or the server's ellipse.",
+      "One-island travel restrictions and existing Harbor/boat unlock/payment rules remain intact. The user gets a real existing service, not a nonfunctional menu label.",
+      "Phase policy is explicit, including occupants at wave acceptance, visitors, death/revive if allowed, reset/travel and legacy scenes. No unapproved teleport or shared-wave cancellation.",
+      "Existing coast radii/seed, naval spawn/landing points, route geometry, building counts and saves do not change. If later dock tiles become buildable or owned, reuse COC20/22/26 contracts instead."
+    ],
+    "scenarios": [
+      {
+        "input": "Current home save and spawn[0,12]",
+        "action": "Follow proposed visible path and bridge to pierhead",
+        "expected": "Support is continuous for the full captain radius, no previously owned building or collider moves, and the intended existing service is identified."
+      },
+      {
+        "input": "Grid Move preview at an outside-ellipse pier point",
+        "action": "Compare frontend verdict and unchanged backend classification",
+        "expected": "Both continue to reject construction there; walking support does not advertise a legal build tile."
+      },
+      {
+        "input": "Captain already on the pier when another player starts a wave",
+        "action": "Review the selected phase policy",
+        "expected": "No silent teleport, stuck occupant or unilateral client cancellation; consequences are explicit before implementation."
+      }
+    ],
+    "checks": [
+      "Source/diagram/link review only for design; no runtime checks claimed.",
+      "Approved contract names the required movement, placement-parity, real-action, phase and visual evidence for VIS-26."
+    ],
+    "risks": [
+      "Changing home_islet.docks directly makes browser class3 look buildable while backend still rejects sea.",
+      "A captain-only all-phase pier can create an unreachable firing position because boarder pathing stays on land.",
+      "The reference's lower-left position may conflict with existing trees, saved buildings, or event ship paths."
+    ],
+    "questions": [
+      "Why is a captain-walkable pier not automatically buildable land?",
+      "Which real action does the pierhead open, and which unlocks still apply?",
+      "What is the approved behavior when a wave starts while a captain stands there?"
+    ],
+    "notes": [
+      "Optional functional extension, outside the core style gate. Implementation stays blocked until a reviewed phase/position policy resolves the off-land combat implications; do not silently add home_islet.docks."
+    ],
+    "not_in_scope": [],
+    "parent_tasks": [
+      "BASE-09"
+    ],
+    "parallel_owner": "One writer owns the bounded family/helper on a separate branch/clone. Coordinate shared art registration, world, combat, ground and resource hooks with the integration owner; do not overwrite a concurrent writer.",
+    "optional": true,
+    "dependencies": [
+      "VIS-01"
+    ],
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "conditional_dependencies": [],
+    "github_issue": 230,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/230"
+  },
+  {
+    "id": "VIS-26",
+    "source_proposal": "DOCK-02",
+    "title": "Implement the approved walkable home pier and real existing-service access",
+    "kind": "implementation",
+    "priority": "P2",
+    "size": "M, one pier; split artwork into existing art card if needed to keep code reviewable",
+    "files": [
+      "frontend/src/world/places/surfaces.js small walking-support helper or existing agreed equivalent",
+      "frontend/src/world/places/settlement.js home-only ground/scene hook (one owner)",
+      "frontend/src/world/places/home-pier.js (proposed small helper, not a new terrain framework)",
+      "frontend/src/island/spots.js pierhead zone/alias per approved contract",
+      "frontend/src/island/world.js only for agreed pier picking integration",
+      "frontend/src/island/index.js dispatch to the agreed existing Harbor/boat card",
+      "frontend/tests/world/home-pier.test.js (proposed)",
+      "frontend/tests/island/home-pier-game.test.js (proposed)",
+      "docs/evidence/reference-home-pier/README.md (proposed)"
+    ],
+    "baseline": [
+      "frontend/src/player/controller.js:12-14,26-28 consumes place.groundHeight",
+      "frontend/src/player/collision.js:15-30 checks8samples around .34radius and .15step movement",
+      "frontend/src/game.js:298-302 tap-to-walk consumes the same ground query",
+      "frontend/src/island/index.js:566-568,763-770 already opens actual Harbor/Wreck service flows",
+      "frontend/src/world/places/settlement.js:40 renders existing ferry-pier below captain sprites; existing lifetime owns art/geometry"
+    ],
+    "goal": "A player can really walk along the reference-style home pier, remain on its visible deck, and invoke the agreed working Harbor/boat service; neither new land nor hidden new server privileges are introduced.",
+    "plan": [
+      "Mount the approved pier art and its bounded captain-support geometry together in the active home scene, reusing the rectangular support approach and current collision controller.",
+      "Keep canonical surfaceClass, server layout, saved X/Z and sim coast unchanged; implement only the reviewed walking overlay and phase behavior.",
+      "Add the approved normal-reach pierhead interaction and delegate to the existing action/model, preserving locked/pending/error states.",
+      "Expose pier visual extents to the existing camera-fit handoff without treating them as owned land; keep water foam tied to the approved coast mask rather than the deck rectangle.",
+      "Verify support, sea-edge refusal, keyboard/touch movement, real service action, current phase behavior and travel/disposal; capture actual before/after gameplay at required sizes."
+    ],
+    "acceptance": [
+      "From the normal home spawn/path, keyboard and touch can reach the pierhead and walk back. The whole captain remains supported on the visible bridge/deck; adjacent sea and railing edges stop movement.",
+      "The agreed existing service is actually usable at normal reach. Locked/unknown boat/campaign state stays honest and cannot bypass unlock, repair payment or reward rules.",
+      "The existing inland Harbor/Wreck interactions and one-island travel policy remain usable. No new destination, fake Sail button or unearned boat ownership appears.",
+      "Frontend Move rejects outside-ellipse pier cells consistently with the unchanged backend; existing saved/default/legal build coordinates and naval coast/landing inputs remain unchanged.",
+      "The approved phase policy works for a pier occupant before countdown, active wave, down/revive if applicable, refusal, reset and travel. Off-land combat behavior is measured rather than assumed safe.",
+      "The painted pier, support and interaction activate/dispose together; no invisible support after art failure and no misleading visible planks without support.",
+      "Pier front/bounds remain visible at1280x720 and375x812 without covering selection, HP or actual Exit/Place controls.",
+      "All changes remain within existing dependencies; no migration, database apply, main push or automatic merge."
+    ],
+    "scenarios": [
+      {
+        "input": "Normal home spawn and approved pier scene",
+        "action": "Walk with WASD to pierhead, activate the real service, close it and return; repeat with tap-to-walk",
+        "expected": "Both paths use the same support and proximity checks, no foot slides into sea, action uses current actual state."
+      },
+      {
+        "input": "A pier point outside canonical ellipse plus representative old legal build points",
+        "action": "Run Move preview and compare server pure-rule rejection/allowed cases",
+        "expected": "Pier remains non-buildable and all preserved existing points keep their prior verdicts; no new backend rule is needed."
+      },
+      {
+        "input": "Wave start while captain stands on pier, then a down/revive case if the approved policy allows it",
+        "action": "Use the approved current simulation/rules and record the result",
+        "expected": "No stuck/teleported captain or hidden boarder-route change; behavior matches the reviewed dock contract."
+      },
+      {
+        "input": "Travel away/back, reset, or a failed optional pier-art load",
+        "action": "Recreate/dispose the scene",
+        "expected": "No ghost interaction/support, duplicate meshes or stale water mask; current spawn/other-place docks stay correct."
+      }
+    ],
+    "checks": [
+      "Meaningful pure walking-support/sea-boundary and placement-parity regression, plus existing collision/place/lifetime/camera cases as applicable.",
+      "Real fake-API home journey proves ordinary keyboard and touch walking plus the actual existing service action, not only a static art fixture.",
+      "Relevant unchanged-input combat replay and the approved new pier-position reach/balance cases; do not claim unchanged gameplay for newly possible positions.",
+      "Build/budget/text lint and required UI checks with actual results. Before/after1280x720 and375x812 game captures record source/fixture/limits, no production or Safari claim."
+    ],
+    "risks": [
+      "A one-line addition to surfaceClass creates incorrect client placement eligibility.",
+      "All-phase captain support changes possible battle positions even if the sim code is untouched.",
+      "A narrow bridge can look wide enough but fail the eight radius samples, especially at the shore seam.",
+      "Home-only scene integration must not alter legacy home, Saltreach dock, wave recovery ownership or current feature flags."
+    ],
+    "questions": [
+      "Which helper makes planks walkable without granting a build tile?",
+      "How does the pierhead reuse an existing real action without bypassing its server rules?",
+      "What evidence covers the new battle positions and the shore junction?"
+    ],
+    "notes": [
+      "Optional functional extension, outside the core style gate. Implementation stays blocked until a reviewed phase/position policy resolves the off-land combat implications; do not silently add home_islet.docks."
+    ],
+    "not_in_scope": [],
+    "parent_tasks": [
+      "BASE-09"
+    ],
+    "parallel_owner": "One writer owns the bounded family/helper on a separate branch/clone. Coordinate shared art registration, world, combat, ground and resource hooks with the integration owner; do not overwrite a concurrent writer.",
+    "optional": true,
+    "dependencies": [
+      "VIS-25",
+      "VIS-19",
+      "VIS-24"
+    ],
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "conditional_dependencies": [],
+    "github_issue": 231,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/231"
+  },
+  {
+    "id": "VIS-27",
+    "source_proposal": "UI-VIS-01",
+    "title": "Give existing Move mode a ground grid, ghost and explicit validity marker",
+    "kind": "visual implementation child",
+    "priority": "P1",
+    "size": "One or two focused sessions; target below about 400 changed source/test/capture lines; split terrain-grid geometry from ghost integration if the cap would be exceeded",
+    "files": [
+      "frontend/src/island/move-preview.js",
+      "frontend/src/island/world.js (small appearance handoff only)",
+      "frontend/tests/island/move-preview.test.js or a narrow new visual-helper test",
+      "frontend/scripts/capture-style-placement.mjs (proposed capture helper)",
+      "docs/evidence/visual-task-id/"
+    ],
+    "baseline": [
+      "frontend/src/island/move-preview.js:13–31 creates only a red/green fill and rim, with no grid, corner brackets or check/cross glyph.",
+      "frontend/src/island/world.js:259–262 uses the candidate position for the existing building art while a move is open; world.js:429–434 owns the preview handoff.",
+      "frontend/src/island/move-mode.js:37–44 already supplies snapped coordinates, logical footprint size and the current checkMove verdict.",
+      "frontend/src/island/placement.js:61–72 is the actual client verdict source, including D056 wall lanes, keep-outs, overlap and route openness; server authority remains separate."
+    ],
+    "goal": "Make a candidate position look like the reference: a faint terrain-aligned tile grid, a translucent preview of the real selected structure, bright footprint corners and a visible check/cross; the player can understand validity without relying on green/red alone.",
+    "plan": [
+      "Reuse the existing projected ground convention and logical GRID; cache one bounded grid geometry and hide it outside Move.",
+      "Clip/limit the visual grid against the current real land/build region; distinguish a visible tile from a claim that it is a valid candidate.",
+      "Render the selected existing kind/level/spec frame as a temporary ghost at the candidate anchor, with the correct footprint corners beneath it.",
+      "Drive the glyph and tint solely from the existing verdict; leave the exact refusal text in the current Move bar.",
+      "Restore normal appearance and remove temporary overlays on cancel, confirm, travel, battle handoff and dispose.",
+      "Capture valid, occupied, shore and off-lane wall candidates at both required viewport sizes."
+    ],
+    "acceptance": [
+      "Exactly one ghost/corner footprint follows the same logical snap result; a visible check accompanies the positive state; nothing is purchased or committed before Place here.",
+      "Cross plus the existing plain refusal are shown; Place here stays disabled; the tile is not misleadingly rendered as a buildable success.",
+      "Existing off_path refusal remains authoritative; a general grass grid does not imply free wall placement.",
+      "Ghost/grid/corners disappear, the confirmed art is restored, and no stale preview survives into combat or another island.",
+      "The candidate and actionable controls remain visible and usable; decorative overlays do not intercept pointer or keyboard input.",
+      "The result meets the approved reference checklist in actual gameplay at both required sizes.",
+      "Use the current real kind/level/role/damage appearance for the ghost wherever existing Move eligibility allows it; ghost styling cannot turn a ruin into a healthy structure or grant a new Move entry."
+    ],
+    "scenarios": [
+      {
+        "input": "Move a confirmed cannon to a valid empty snapped tile",
+        "action": "Tap the tile, then nudge once",
+        "expected": "Exactly one ghost/corner footprint follows the same logical snap result; a visible check accompanies the positive state; nothing is purchased or committed before Place here."
+      },
+      {
+        "input": "Candidate overlaps another building",
+        "action": "Choose the occupied tile",
+        "expected": "Cross plus the existing plain refusal are shown; Place here stays disabled; the tile is not misleadingly rendered as a buildable success."
+      },
+      {
+        "input": "Wall candidate on ordinary grass outside D056 lanes",
+        "action": "Move there",
+        "expected": "Existing off_path refusal remains authoritative; a general grass grid does not imply free wall placement."
+      },
+      {
+        "input": "A valid ghost is visible while a wave request is accepted or the island is changed",
+        "action": "Allow the existing mode handoff",
+        "expected": "Ghost/grid/corners disappear, the confirmed art is restored, and no stale preview survives into combat or another island."
+      },
+      {
+        "input": "375×812 with narrator text, long refusal and the Move panel",
+        "action": "Inspect and tap both glyph/ground and controls",
+        "expected": "The candidate and actionable controls remain visible and usable; decorative overlays do not intercept pointer or keyboard input."
+      }
+    ],
+    "checks": [
+      "Focused helper assertions verify snap-to-overlay alignment, verdict glyph, clipping bounds, hide/restore and resource reuse/disposal.",
+      "Before/after real local-game captures at 1280×720 and 375×812, with a declared fake-API fixture; generated art concepts are not counted as runtime evidence.",
+      "Run the relevant existing Move/world/village ownership tests, frontend build, budget and text lint; apply the current documented a11y/demo/overlap checks and report exact outcomes."
+    ],
+    "risks": [
+      "Grid may fight paths/foliage visually",
+      "Ghost tint may hide damaged/ruined identity",
+      "Transparent render order can put corners beneath ground or over HUD",
+      "Frame-to-ground anchor mismatch makes a mathematically valid cell look wrong"
+    ],
+    "questions": [
+      "Why can a visible grass grid not promise every wall cell is legal?",
+      "Which value controls both the ghost tint and Place here availability?",
+      "What must be restored when an unconfirmed move ends?"
+    ],
+    "notes": [],
+    "not_in_scope": [
+      "No catalogue purchase flow, new API call, land purchase, free wall footprint or new placement permission.",
+      "No change to GRID, FOOTPRINTS, D056, routeOpen, price, health, collisions, sim ticks or confirmed spot positions.",
+      "No separate projected-coordinate system and no DOM or geometry allocation per pointer frame.",
+      "No always-on grid in exploration and no player-facing raw map-coordinate label."
+    ],
+    "parent_tasks": [],
+    "parallel_owner": "Placement-overlay writer. Own move-preview.js and a coordinated small world.js hunk; do not let the building-asset writer edit that same hunk simultaneously.",
+    "optional": false,
+    "dependencies": [
+      "VIS-01",
+      "VIS-04"
+    ],
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "conditional_dependencies": [],
+    "github_issue": 232,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/232"
+  },
+  {
+    "id": "VIS-28",
+    "source_proposal": "UI-VIS-02",
+    "title": "Give the existing Move bar a real building portrait and directional layout",
+    "kind": "visual implementation child",
+    "priority": "P1",
+    "size": "One focused session for data/markup/CSS and evidence, approximately below 400 changed source/test/capture lines",
+    "files": [
+      "frontend/src/island/move-bar.js",
+      "frontend/src/island/move-mode.js (presentation model only)",
+      "frontend/src/island/island.css (Move selectors only, or an extracted narrow Move stylesheet)",
+      "frontend/tests/island/move-mode.test.js and a narrow Move-bar DOM test",
+      "docs/evidence/visual-task-id/"
+    ],
+    "baseline": [
+      "frontend/src/island/move-bar.js:16–35 renders title, hint, status, inline arrow pad and Cancel/Place here; no building thumbnail is present.",
+      "frontend/src/island/island.css:408–420 supplies the existing parchment panel, red/green status and a single-row arrow pad, already with 44px controls.",
+      "frontend/src/island/move-mode.js:16–28 knows the selected confirmed building through spots and creates the presentation model; existing button/input semantics live at 55–74.",
+      "frontend/src/ui/kit/kit.css:1–10 already supplies rounded navy, brass, parchment and beveled gold/quiet buttons; a new global UI theme is unnecessary."
+    ],
+    "goal": "Bring the already functional Move strip close to the concept composition: a current building portrait and concise title on the left, one clear status line, a directional cross, teal Cancel and gold Place here; on phones the same semantics stack without covering the island.",
+    "plan": [
+      "Expose read-only portrait identity from the existing move presentation model, retaining the actual confirmed kind, level and specialization or a neutral empty-slot fallback.",
+      "Use the approved cached art portrait with stable intrinsic bounds and an appropriate accessible label; do not generate a new texture on every nudge.",
+      "Lay out the four existing arrow buttons as a cross with their current semantic labels and at least 44×44 targets.",
+      "Reuse existing brass/parchment/gold/teal kit tokens and make the primary/secondary action distinction match the reference.",
+      "Keep status/refusal/loading text readable at 375px and permit long text to reflow; preserve the camera's existing usable-area measurement contract.",
+      "Exercise actual pointer, keyboard, cancel, refusal and unknown-art states, then capture both required sizes."
+    ],
+    "acceptance": [
+      "Real state drives the portrait/title. Unknown/unbuilt view data uses a neutral fallback, without adding a new Move entry where existing rules deny it.",
+      "Each advances the existing preview by exactly one logical grid step in its named direction; the visual cross changes no movement semantics.",
+      "Existing disabled/busy rules and status remain correct; a gold-looking button never implies an allowed or successful move.",
+      "All controls and the actual topmost Cancel target are visible; camera refit responds to changed panel height; cancel restores the original confirmed position.",
+      "Existing focus ownership is preserved; no unintended Place here request is sent.",
+      "The result meets the approved reference checklist in actual gameplay at both required sizes."
+    ],
+    "scenarios": [
+      {
+        "input": "Real movable level-3 cannon and house-role rows; separately an unavailable/unknown portrait in a component fixture",
+        "action": "Open Move only where current eligibility permits; exercise the view fallback separately",
+        "expected": "Real state drives the portrait/title. Unknown/unbuilt view data uses a neutral fallback, without adding a new Move entry where existing rules deny it."
+      },
+      {
+        "input": "Four directional buttons",
+        "action": "Click each once and use keyboard equivalents",
+        "expected": "Each advances the existing preview by exactly one logical grid step in its named direction; the visual cross changes no movement semantics."
+      },
+      {
+        "input": "Invalid or pending move",
+        "action": "Inspect and try Place here",
+        "expected": "Existing disabled/busy rules and status remain correct; a gold-looking button never implies an allowed or successful move."
+      },
+      {
+        "input": "375×812, narrator visible, deliberately long server refusal",
+        "action": "Let the text wrap and then hit Cancel",
+        "expected": "All controls and the actual topmost Cancel target are visible; camera refit responds to changed panel height; cancel restores the original confirmed position."
+      },
+      {
+        "input": "Focused Cancel or a text field elsewhere",
+        "action": "Press Enter",
+        "expected": "Existing focus ownership is preserved; no unintended Place here request is sent."
+      }
+    ],
+    "checks": [
+      "Model/DOM checks cover real portrait identity, fallback, labels, button state and the existing nudge actions.",
+      "Real-game before/after screenshots at 1280×720 and 375×812, including a long-refusal overlap/hit-target check; label test data and local transport honestly.",
+      "Run affected Move/village/camera tests and the current documented frontend build/budget/text/a11y/demo/overlap checks as appropriate; report failed checks rather than claiming a blanket pass."
+    ],
+    "risks": [
+      "A tall portrait or wrapped error changes camera safe area",
+      "More ornament consumes phone space",
+      "Asset loading must not cause a late panel jump",
+      "Changing DOM order can alter focus order",
+      "Broad selectors could restyle other game menus"
+    ],
+    "questions": [
+      "Why does the portrait come from the confirmed building model rather than a hardcoded cannon image?",
+      "Which current function still decides whether Place here is allowed?",
+      "Why must the camera know when a long refusal makes the panel taller?"
+    ],
+    "notes": [],
+    "not_in_scope": [
+      "No new selected-building action dock, catalogue, purchase workflow, upgrade tree, new coordinate display or second Move state machine.",
+      "No changes to confirm/cancel UID, server calls, Enter ownership, refusal reason or pricing.",
+      "No global kit restyle that silently changes Harbor, menus or combat dialogs.",
+      "No baked-text screenshot used as an interactive panel."
+    ],
+    "parent_tasks": [],
+    "parallel_owner": "Move-panel writer. Can run alongside VIS-27 because that writer does not need move-bar.js/island.css/move-mode model changes. Coordinate screenshot fixtures and final camera overlap check centrally.",
+    "optional": false,
+    "dependencies": [
+      "VIS-03",
+      "VIS-04"
+    ],
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "conditional_dependencies": [],
+    "github_issue": 233,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/233"
+  },
+  {
+    "id": "VIS-29",
+    "source_proposal": "consolidated-audit",
+    "title": "Restyle existing combat effects without obscuring play",
+    "kind": "visual implementation",
+    "priority": "P2",
+    "size": "One or two focused sessions; split before claiming if the source/test/capture diff would exceed about 400 lines.",
+    "files": [
+      "frontend/src/art/fleet.js (effect functions only)",
+      "frontend/src/art/combat-effects.js (proposed small extraction if useful)",
+      "frontend/src/pirates/render.js (appearance handoff only)",
+      "frontend/tests/cartoon-art.test.js"
+    ],
+    "baseline": [
+      "frontend/src/art/fleet.js already provides shots, shells, smoke, fire, explosions, splashes and musket flash.",
+      "Current combat event/rendering paths determine when effects occur; art is not authoritative combat state."
+    ],
+    "goal": "Carry the accepted style into existing powder flash, smoke, splash and impact art without adding false attacks, longer state timers or visual clutter.",
+    "plan": [
+      "Inspect current frames, actual consumers and the agreed reference contract; record the bounded change in a small spec.",
+      "Implement only this task’s approved art/presentation change using existing helpers and authoritative state.",
+      "Check normal, failure and phase/quality cases listed below without changing gameplay rules.",
+      "Capture the actual game at both required sizes and run the applicable documented checks.",
+      "Update the walkthrough/test map and hand over the exact branch, evidence and remaining limits."
+    ],
+    "acceptance": [
+      "Drive every effect from the existing real event/state; preserve muzzle, impact and water-contact alignment.",
+      "Use bounded cached art and current particle/lifetime limits; no per-frame painter or new effect engine.",
+      "Keep selected enemies, health, ruins, footprint corners and range feedback visible; avoid full-screen opaque smoke.",
+      "Respect current low-quality/reduced-motion policies and retain non-motion state cues.",
+      "Unchanged simulation input/event/fixed-seed behavior remains unchanged; this is an art pass, not a balance change."
+    ],
+    "scenarios": [
+      {
+        "input": "One real cannon shot and one splash",
+        "action": "Advance the existing render event",
+        "expected": "Exactly the existing event produces the aligned effect; no additional damage or phantom firing."
+      },
+      {
+        "input": "Dense late-wave combat with a damaged selected defense",
+        "action": "Inspect the scene at phone zoom",
+        "expected": "HP, ruin state and targets remain visible beneath the restrained effects."
+      },
+      {
+        "input": "Reduced motion/low quality",
+        "action": "Repeat the same event fixture",
+        "expected": "Essential state remains clear without adding prohibited animation work."
+      }
+    ],
+    "checks": [
+      "Run relevant focused art/world/phase/input tests for the changed consumers; exact new test filenames are proposed until implemented.",
+      "Run frontend build, budget and text lint. For UI changes run current documented browser/overlap checks and report exact results, including existing failures.",
+      "Provide actual before/after game evidence at 1280×720 and 375×812; a concept or isolated renderer sheet alone is not completion."
+    ],
+    "risks": [
+      "Larger detail can clip, shift an anchor or reduce legibility at phone village zoom.",
+      "Shared registration/render hooks can conflict with another branch unless one integration owner coordinates them.",
+      "A style pass must not invent or hide real kind, level, damage, recovery, unlock or input state."
+    ],
+    "questions": [
+      "Which event creates the effect, and which code still decides damage?",
+      "How do we keep smoke from hiding useful state?",
+      "What prevents a repaint from adding per-frame texture allocations?"
+    ],
+    "notes": [],
+    "not_in_scope": [],
+    "parent_tasks": [],
+    "parallel_owner": "One writer owns the bounded family/helper on a separate branch/clone. Coordinate shared art registration, world, combat, ground and resource hooks with the integration owner; do not overwrite a concurrent writer.",
+    "optional": false,
+    "dependencies": [
+      "VIS-03",
+      "VIS-07",
+      "VIS-16"
+    ],
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "conditional_dependencies": [
+      "VIS-32 only if the revised art contract selects authored image assets"
+    ],
+    "github_issue": 234,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/234"
+  },
+  {
+    "id": "VIS-30",
+    "source_proposal": "R16",
+    "title": "Keep new art within atlas, load and lifecycle budgets",
+    "kind": "visual_renderer",
+    "priority": "P1",
+    "size": "M; final measurement after converted families, small fixes only",
+    "files": [
+      "frontend/src/art/textures.js",
+      "frontend/src/world/places/resources.js",
+      "frontend/src/pirates/render.js:loadAtlas",
+      "frontend/scripts/capture-reference-style.mjs",
+      "frontend/tests/art-lifecycle.test.js"
+    ],
+    "baseline": [
+      "The atlas budget is 40 MiB high / 12 MiB low, with density caps of 4 / 2.",
+      "resources.js:17–29 releases maps, materials and geometries; display.js:1–44 bounds the framebuffer and adaptive density."
+    ],
+    "goal": "Measure and control the richer assets within existing loading, atlas, frame and lifecycle constraints, without increasing budgets or adding packages.",
+    "plan": [
+      "Assemble the approved family/terrain/UI changes and record the exact combined source.",
+      "Measure largest supported high/low atlases, achieved density, transfer/decode and actual texture memory against existing limits.",
+      "Exercise repeated travel, reset and quality changes while recording settled resources and representative frame cost/draw calls.",
+      "Fix only bounded lifetime/performance regressions here; return substantive art changes to their source-family tasks.",
+      "Run relevant existing checks and publish exact measurements, low-quality images and hardware/browser limits."
+    ],
+    "acceptance": [
+      "The largest supported atlas fits existing high/low caps; report its area, achieved density and memory estimate.",
+      "Cold-title JavaScript/CSS budgets remain green; village assets load where used rather than through a new bulk preload.",
+      "After repeated travel, reset and quality changes, settled texture/material counts remain bounded and include new shadows/caches.",
+      "Record representative phone-sized combat frame cost and draw calls while preserving quality and reduced-motion semantics.",
+      "The approved look remains legible at low quality; a performance pass cannot silently remove necessary state signals."
+    ],
+    "scenarios": [
+      {
+        "input": "A populated valid current-game fixture",
+        "action": "Apply this bounded task and compare before/after in the actual renderer",
+        "expected": "The stated visual goal and every acceptance check are observable without a hidden gameplay or authority change."
+      },
+      {
+        "input": "Dense/edge/phase or quality case relevant to this task",
+        "action": "Exercise the stated failure path rather than only a beauty shot",
+        "expected": "Selection, coordinates, state and necessary feedback remain truthful."
+      },
+      {
+        "input": "Repeated travel or reload",
+        "action": "Leave and recreate the scene",
+        "expected": "No stale appearance, duplicate object or unbounded resource survives."
+      }
+    ],
+    "checks": [
+      "Actual renderer before/after at 1280×720 and 375×812 with the same canonical fixture; the generated concept is reference only.",
+      "Run the relevant actual checks plus build/budget; report exact results and browser/device limits."
+    ],
+    "risks": [
+      "Larger detail can clip, shift an anchor or reduce legibility at phone village zoom.",
+      "Shared registration/render hooks can conflict with another branch unless one integration owner coordinates them.",
+      "A style pass must not invent or hide real kind, level, damage, recovery, unlock or input state."
+    ],
+    "questions": [
+      "Which existing state and frame contracts does VIS-30 preserve?",
+      "Why are visible art bounds different from gameplay collision and building rights?",
+      "Which actual-game evidence demonstrates the change and its limits?"
+    ],
+    "notes": [
+      "Keep server state, gameplay coordinates, prices and combat rules authoritative.",
+      "No new runtime packages, services, .env edits, migration application or merges.",
+      "Use a separate branch/clone and one writing owner. Target under approximately 400 changed source/test lines; split larger work.",
+      "Existing budget limits bind every family from the start. This task is final combined measurement after VIS-18, not a new prerequisite contract on which VIS-18 depends."
+    ],
+    "not_in_scope": [],
+    "parent_tasks": [],
+    "parallel_owner": "One writer owns the bounded family/helper on a separate branch/clone. Coordinate shared art registration, world, combat, ground and resource hooks with the integration owner; do not overwrite a concurrent writer.",
+    "optional": false,
+    "dependencies": [
+      "VIS-18",
+      "VIS-20",
+      "VIS-23",
+      "VIS-24",
+      "VIS-28"
+    ],
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "conditional_dependencies": [],
+    "github_issue": 235,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/235"
+  },
+  {
+    "id": "VIS-31",
+    "source_proposal": "consolidated-audit",
+    "title": "Accept the reference style in a complete playable village scene",
+    "kind": "verification",
+    "priority": "P1",
+    "size": "One or two focused sessions; split before claiming if the source/test/capture diff would exceed about 400 lines.",
+    "files": [
+      "frontend/scripts/capture-reference-style.mjs (proposed)",
+      "docs/evidence/reference-village/README.md (proposed)",
+      "docs/TEST-MAP.md",
+      "docs/WALKTHROUGH.md"
+    ],
+    "baseline": [
+      "Main already contains usable village selection, Move, camera fit and separate world/combat rendering.",
+      "Existing BASE-48 covers the wider build-defend-expand loop; this child is a visual and input acceptance slice only."
+    ],
+    "goal": "Demonstrate the approved visual direction across the integrated village and real interaction, rather than treating an asset sheet or generated concept as completion.",
+    "plan": [
+      "Assemble the accepted core style tasks and the agreed visible slices of existing base-building UI tasks.",
+      "Prepare declared deterministic current-game data, matching before/after source, viewports and quality settings.",
+      "Exercise actual selection, Move, cancel/confirm, refusal, captions and supported wave/recovery phase states.",
+      "Run applicable combined checks and capture the actual game at both required sizes.",
+      "Compare each named reference dimension and input/state result; send any mismatch to its bounded source task and keep the quality gate open.",
+      "Publish the source/evidence matrix and human acceptance decision without claiming optional or unimplemented features."
+    ],
+    "acceptance": [
+      "Use a declared deterministic current-game fixture for paired real captures at 1280×720 and 375×812, recording commit, quality, density, state and transport.",
+      "Compare material volume, light/contact consistency, island/cliff/waterline composition, foliage, path clarity, selection accuracy, grid/ghost feedback and HUD clearance against the reference checklist.",
+      "Exercise actual selection, valid and invalid Move, Cancel, Place, long refusal, captions, wave preparation, combat, damage and recovery in supported flag paths; no painted UI overlay substitutes for controls.",
+      "Prove confirmed coins and correctly labeled wave/captain-level state. Existing base-building HUD/action-dock/camera slices must supply the agreed visible behavior; this child does not duplicate their implementations.",
+      "Record remaining differences honestly. If the accepted reference quality is not reached, leave this gate open and iterate a bounded source task.",
+      "Optional off-shore pier and conditional authored-image route are evaluated only if approved/implemented; do not fake them in captures. Broader catalogue/land-growth/highscore tasks remain open."
+    ],
+    "scenarios": [
+      {
+        "input": "The new asset contact sheet looks polished but the phone village is unreadable",
+        "action": "Review the actual full-size game captures and controls",
+        "expected": "The gate fails until the real composition/readability improves."
+      },
+      {
+        "input": "A dense legacy layout with damaged structures and a long Move refusal",
+        "action": "Select, move, cancel and start the existing wave flow",
+        "expected": "True state and actual topmost controls stay visible with no authority/position change caused by art."
+      },
+      {
+        "input": "A static concept or an unimplemented pier in the evidence set",
+        "action": "Check screenshot provenance and actual movement",
+        "expected": "Concepts remain references; no runtime capability is claimed from them."
+      }
+    ],
+    "checks": [
+      "Run the current full frontend checks, build, budget, text lint and documented UI/browser checks on the combined source; report exact results and any source/base comparison.",
+      "No new runtime test result is claimed by creation of this planning issue."
+    ],
+    "risks": [
+      "Larger detail can clip, shift an anchor or reduce legibility at phone village zoom.",
+      "Shared registration/render hooks can conflict with another branch unless one integration owner coordinates them.",
+      "A style pass must not invent or hide real kind, level, damage, recovery, unlock or input state."
+    ],
+    "questions": [
+      "Which exact reference traits are demonstrated by actual gameplay?",
+      "Which states can a static beauty image not prove?",
+      "What remains unverified without Safari or a physical phone?"
+    ],
+    "notes": [
+      "External visible slices: BASE-02 camera/fit, BASE-05 truthful HUD, BASE-06 selected-building dock, BASE-08 identity and BASE-15 range if displayed. Coordinate their scoped evidence rather than requiring every parent task to close."
+    ],
+    "not_in_scope": [],
+    "parent_tasks": [
+      "BASE-48"
+    ],
+    "parallel_owner": "One writer owns the bounded family/helper on a separate branch/clone. Coordinate shared art registration, world, combat, ground and resource hooks with the integration owner; do not overwrite a concurrent writer.",
+    "optional": false,
+    "dependencies": [
+      "VIS-30"
+    ],
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "conditional_dependencies": [],
+    "github_issue": 236,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/236"
+  },
+  {
+    "id": "VIS-32",
+    "source_proposal": "consolidated-audit",
+    "title": "Conditionally support original sprite assets if the style proof rejects painters",
+    "kind": "conditional implementation",
+    "priority": "P2",
+    "size": "One or two focused sessions; split before claiming if the source/test/capture diff would exceed about 400 lines.",
+    "files": [
+      "specs/vis-01-style-contract.md (proposed)",
+      "docs/GAME-V3.md section 7 if explicitly superseded",
+      "frontend/src/world/art.js",
+      "frontend/src/art/textures.js",
+      "frontend/public/art/reference-village/ (proposed, only if this route is selected)",
+      "frontend/ASSETS.md",
+      "frontend/src/art/registry.js"
+    ],
+    "baseline": [
+      "GAME-V3 section 7 currently forbids runtime image downloads and prefers code-drawn art.",
+      "The existing Three.js TextureLoader already supports ordinary textures; selecting an authored-image route does not require a new engine or package."
+    ],
+    "goal": "Provide a small, explicit alternative texture path only if the reviewed playable slice shows code-painted art cannot meet the accepted reference quality.",
+    "plan": [
+      "Inspect current frames, actual consumers and the agreed reference contract; record the bounded change in a small spec.",
+      "Implement only this task’s approved art/presentation change using existing helpers and authoritative state.",
+      "Check normal, failure and phase/quality cases listed below without changing gameplay rules.",
+      "Capture the actual game at both required sizes and run the applicable documented checks.",
+      "Update the walkthrough/test map and hand over the exact branch, evidence and remaining limits."
+    ],
+    "acceptance": [
+      "Do not start unless VIS-01/VIS-02 record the chosen alternative and the explicit current art-contract change. Otherwise mark this task not selected, not implemented.",
+      "Use original assets with recorded source/provenance, transparent bounds, consistent camera/light, named frames, ground anchors and low/high density/export rules.",
+      "Keep sprite/frame selection keyed by actual kind, level and state, with bounded lazy loading, failure fallback and proper disposal; no entire generated scene as a gameplay background.",
+      "Measure transfer, decode, atlas and GPU memory using existing caps. Keep cold-title budgets unchanged; splitting the asset packet is preferable to raising limits.",
+      "Prototype one asset family first. Bulk content remains in its separate family tasks and must pass the same runtime quality/input/state checks.",
+      "An alternative sample must pass the same actual-game visual/input/quality review before bulk family work proceeds. If it also fails, record the failure and keep the bulk-work gate blocked.",
+      "The one-family alternative proof works through both world loadArt and combat framesFor/cartoonAtlas, with matching kind/level/damage frames and anchors during a real world-to-wave handoff. Loading an image only in the world renderer is insufficient."
+    ],
+    "scenarios": [
+      {
+        "input": "The code-painted VIS-02 slice is accepted",
+        "action": "Review this task",
+        "expected": "The alternative remains unselected; no unnecessary image loader or downloaded asset pack is added."
+      },
+      {
+        "input": "An authored-image route is explicitly selected",
+        "action": "Load one approved family then simulate a missing frame",
+        "expected": "Correct anchors and state mapping are used with an honest fallback; no fake building or broken health state appears."
+      },
+      {
+        "input": "Repeated place changes and a low-quality device setting",
+        "action": "Load/dispose the alternative art",
+        "expected": "Bounded memory, appropriate density and unchanged cold-title/authority rules are measured."
+      },
+      {
+        "input": "An accepted alternative cannon family including one damage state",
+        "action": "Load it in the real village, then begin the existing test wave and update its displayed state",
+        "expected": "World sprites and the combat atlas use the same selected source, state and anchor; no old-style combat fallback is silently accepted."
+      }
+    ],
+    "checks": [
+      "Run relevant focused art/world/phase/input tests for the changed consumers; exact new test filenames are proposed until implemented.",
+      "Run frontend build, budget and text lint. For UI changes run current documented browser/overlap checks and report exact results, including existing failures.",
+      "Provide actual before/after game evidence at 1280×720 and 375×812; a concept or isolated renderer sheet alone is not completion."
+    ],
+    "risks": [
+      "Larger detail can clip, shift an anchor or reduce legibility at phone village zoom.",
+      "Shared registration/render hooks can conflict with another branch unless one integration owner coordinates them.",
+      "A style pass must not invent or hide real kind, level, damage, recovery, unlock or input state."
+    ],
+    "questions": [
+      "Why is this a conditional contract change rather than the default?",
+      "What metadata lets an image remain a real selectable gameplay object?",
+      "How are provenance, failure fallback and memory checked?"
+    ],
+    "notes": [],
+    "not_in_scope": [
+      "No engine replacement, new dependency or external asset account.",
+      "No copying an existing commercial game asset pack; the reference directs original maritime artwork."
+    ],
+    "parent_tasks": [],
+    "parallel_owner": "One writer owns the bounded family/helper on a separate branch/clone. Coordinate shared art registration, world, combat, ground and resource hooks with the integration owner; do not overwrite a concurrent writer.",
+    "optional": true,
+    "dependencies": [
+      "VIS-01",
+      "VIS-02",
+      "VIS-04"
+    ],
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "conditional_dependencies": [],
+    "dependency_events": {
+      "VIS-02": "A reviewed runtime trial result, including an explicit rejection; not a successful painter-quality gate or a closed-issue requirement."
+    },
+    "github_issue": 237,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/237"
+  }
+]

@@ -1,0 +1,470 @@
+{
+  "at_utc": "2026-11-17T10:40:06.495350+00:00",
+  "tasks": 32,
+  "optional_or_conditional": [
+    "VIS-25",
+    "VIS-26",
+    "VIS-32"
+  ],
+  "existing_tasks_refined": 8,
+  "new_runtime_features_implemented": 0,
+  "scenarios": 96,
+  "questions": 96,
+  "sections": 352,
+  "acceptance_checks": 170,
+  "default_dependency_edges": 80,
+  "alternative_route_edges": 98,
+  "default_topological_order": [
+    "VIS-01",
+    "VIS-02",
+    "VIS-03",
+    "VIS-04",
+    "VIS-05",
+    "VIS-06",
+    "VIS-07",
+    "VIS-08",
+    "VIS-09",
+    "VIS-10",
+    "VIS-11",
+    "VIS-12",
+    "VIS-13",
+    "VIS-14",
+    "VIS-15",
+    "VIS-16",
+    "VIS-17",
+    "VIS-19",
+    "VIS-21",
+    "VIS-22",
+    "VIS-27",
+    "VIS-29",
+    "VIS-18",
+    "VIS-20",
+    "VIS-23",
+    "VIS-24",
+    "VIS-25",
+    "VIS-26",
+    "VIS-28",
+    "VIS-30",
+    "VIS-31",
+    "VIS-32"
+  ],
+  "alternative_topological_order": [
+    "VIS-01",
+    "VIS-02",
+    "VIS-04",
+    "VIS-32",
+    "VIS-03",
+    "VIS-05",
+    "VIS-06",
+    "VIS-07",
+    "VIS-08",
+    "VIS-09",
+    "VIS-10",
+    "VIS-11",
+    "VIS-12",
+    "VIS-13",
+    "VIS-14",
+    "VIS-15",
+    "VIS-16",
+    "VIS-17",
+    "VIS-19",
+    "VIS-21",
+    "VIS-22",
+    "VIS-27",
+    "VIS-29",
+    "VIS-18",
+    "VIS-20",
+    "VIS-23",
+    "VIS-24",
+    "VIS-25",
+    "VIS-26",
+    "VIS-28",
+    "VIS-30",
+    "VIS-31"
+  ],
+  "dependency_cycles": false,
+  "optional_pier_not_a_core_gate": true,
+  "alternative_provider_required_only_when_selected": true,
+  "source_file_links_checked": 72,
+  "reference_image_sha256": "308ee4fc74c848f04ced76cd33a47e9b04b9a1018780a4db99c377eae66301ad",
+  "runtime_tests_run_for_planning": false,
+  "merges": 0,
+  "publication": {
+    "result": "PUBLISHED_AND_READ_BACK",
+    "identity": "frcola",
+    "epic": {
+      "number": 205,
+      "id": 6441940108,
+      "url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/205"
+    },
+    "child_issues": [
+      {
+        "id": "VIS-01",
+        "number": 206,
+        "url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/206",
+        "state": "open",
+        "assignees": [],
+        "body_sha256": "86227c42f8c40a775f68f34f13725128202a363d1b94eae1a0d4668025ef8ad0",
+        "read_back": true
+      },
+      {
+        "id": "VIS-02",
+        "number": 207,
+        "url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/207",
+        "state": "open",
+        "assignees": [],
+        "body_sha256": "4f893e64ca0fd71d958361d367baa505b3b7bdc13607ab631ee92b2c8cd1e3fe",
+        "read_back": true
+      },
+      {
+        "id": "VIS-03",
+        "number": 208,
+        "url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/208",
+        "state": "open",
+        "assignees": [],
+        "body_sha256": "70b69fac890cae6a86863b0ab305416baa4b2d1864d7ff7b1ec21d74ce85d5ae",
+        "read_back": true
+      },
+      {
+        "id": "VIS-04",
+        "number": 209,
+        "url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/209",
+        "state": "open",
+        "assignees": [],
+        "body_sha256": "40279c3de5e5779dd0ce9d691e985fff7a7783f6649fd415fc4cd8254a740f68",
+        "read_back": true
+      },
+      {
+        "id": "VIS-05",
+        "number": 210,
+        "url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/210",
+        "state": "open",
+        "assignees": [],
+        "body_sha256": "99979e1313823b5ac8233be18d876120f75bb309d52990635e0c7e226b21772f",
+        "read_back": true
+      },
+      {
+        "id": "VIS-06",
+        "number": 211,
+        "url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/211",
+        "state": "open",
+        "assignees": [],
+        "body_sha256": "69f9ab4dcaccdcb77e1bc49f3437e61435c75c1c4ff79cfcb6b11c4686c14b3e",
+        "read_back": true
+      },
+      {
+        "id": "VIS-07",
+        "number": 212,
+        "url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/212",
+        "state": "open",
+        "assignees": [],
+        "body_sha256": "841a84cdf9cba5818cabc30eb3aec6342ac5bff475e5c8286cc71917b412493a",
+        "read_back": true
+      },
+      {
+        "id": "VIS-08",
+        "number": 213,
+        "url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/213",
+        "state": "open",
+        "assignees": [],
+        "body_sha256": "904138ab678ee4656faad9ae51d85a405791e3823ba52fb2d9be3b35dfacd9db",
+        "read_back": true
+      },
+      {
+        "id": "VIS-09",
+        "number": 214,
+        "url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/214",
+        "state": "open",
+        "assignees": [],
+        "body_sha256": "f45ee2a4c7cedb35af027f79b5649485dfecc023aadeaeaa91f1006a88a407ea",
+        "read_back": true
+      },
+      {
+        "id": "VIS-10",
+        "number": 215,
+        "url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/215",
+        "state": "open",
+        "assignees": [],
+        "body_sha256": "2dbec12c16577429a52e2c734fa0d8b9287019076aecaf11a999cedc4d68dac1",
+        "read_back": true
+      },
+      {
+        "id": "VIS-11",
+        "number": 216,
+        "url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/216",
+        "state": "open",
+        "assignees": [],
+        "body_sha256": "df35895dab0860a9701021e1d51f5b6b7cef8875784e2e6cb3af4ba0320d62c4",
+        "read_back": true
+      },
+      {
+        "id": "VIS-12",
+        "number": 217,
+        "url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/217",
+        "state": "open",
+        "assignees": [],
+        "body_sha256": "b6c7a3d538eee0a708b090108b63de04c54ece99752913748aed70bd31de175c",
+        "read_back": true
+      },
+      {
+        "id": "VIS-13",
+        "number": 218,
+        "url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/218",
+        "state": "open",
+        "assignees": [],
+        "body_sha256": "5c7582fe07afbb63144eebc108c5fdb06df14d206a53c4628e8562ed05c990df",
+        "read_back": true
+      },
+      {
+        "id": "VIS-14",
+        "number": 219,
+        "url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/219",
+        "state": "open",
+        "assignees": [],
+        "body_sha256": "de4bef599e6b52b77ef90f21fb69c3fa040193162305d790befb26c7ea288720",
+        "read_back": true
+      },
+      {
+        "id": "VIS-15",
+        "number": 220,
+        "url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/220",
+        "state": "open",
+        "assignees": [],
+        "body_sha256": "51d5d50d1f6b72546f2af4d8624de637fb61e2fb73210cf0c2b4a3b7461e192f",
+        "read_back": true
+      },
+      {
+        "id": "VIS-16",
+        "number": 221,
+        "url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/221",
+        "state": "open",
+        "assignees": [],
+        "body_sha256": "796ebc7184354ceda3e75dd82617a5b944d24aa5e7206e00e9c33a8a7adae6c8",
+        "read_back": true
+      },
+      {
+        "id": "VIS-17",
+        "number": 222,
+        "url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/222",
+        "state": "open",
+        "assignees": [],
+        "body_sha256": "57d5093f7281b244297fd4cfa919475cb3962b81a93354076570f2e313d3e6bd",
+        "read_back": true
+      },
+      {
+        "id": "VIS-18",
+        "number": 223,
+        "url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/223",
+        "state": "open",
+        "assignees": [],
+        "body_sha256": "550d92198afbd1230bbf78ce4d83f5e76434bfa9b4ae08760c0ab51d153b16e1",
+        "read_back": true
+      },
+      {
+        "id": "VIS-19",
+        "number": 224,
+        "url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/224",
+        "state": "open",
+        "assignees": [],
+        "body_sha256": "30b1bd4a9f8876a68c9f48ee6a162b0f60c87d29b75fb23ec350bf980b6bec9f",
+        "read_back": true
+      },
+      {
+        "id": "VIS-20",
+        "number": 225,
+        "url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/225",
+        "state": "open",
+        "assignees": [],
+        "body_sha256": "ac72941b44b5f6839b049df01d26101e5b711b015fd653fd638e6407cc9ed3ec",
+        "read_back": true
+      },
+      {
+        "id": "VIS-21",
+        "number": 226,
+        "url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/226",
+        "state": "open",
+        "assignees": [],
+        "body_sha256": "ec6aa3356a32496b755096a5c47259ea86221e060acdb0e7cf30b2f57994513f",
+        "read_back": true
+      },
+      {
+        "id": "VIS-22",
+        "number": 227,
+        "url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/227",
+        "state": "open",
+        "assignees": [],
+        "body_sha256": "a8be6a05893e6623bd3e7a9383c6ee8f3b19d7104f74007573266c332d4a44c0",
+        "read_back": true
+      },
+      {
+        "id": "VIS-23",
+        "number": 228,
+        "url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/228",
+        "state": "open",
+        "assignees": [],
+        "body_sha256": "1f6d0dec99f3d9641ca4cca468c48382f777c7f702d9f0d09a91d281e35249ee",
+        "read_back": true
+      },
+      {
+        "id": "VIS-24",
+        "number": 229,
+        "url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/229",
+        "state": "open",
+        "assignees": [],
+        "body_sha256": "87f84e81f3c8d5a484fd8e3dbf89f5a562aa59072d3ff3b61dd854bdd7b040f6",
+        "read_back": true
+      },
+      {
+        "id": "VIS-25",
+        "number": 230,
+        "url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/230",
+        "state": "open",
+        "assignees": [],
+        "body_sha256": "5b1d693753288bd3bf709fc215d474e0a6b2944728fdbe3ec30b61041bbdccf1",
+        "read_back": true
+      },
+      {
+        "id": "VIS-26",
+        "number": 231,
+        "url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/231",
+        "state": "open",
+        "assignees": [],
+        "body_sha256": "795ee6b056aa91a0bcd5d3ed56e882eff464b8bdb192f686973a2711aff40cbf",
+        "read_back": true
+      },
+      {
+        "id": "VIS-27",
+        "number": 232,
+        "url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/232",
+        "state": "open",
+        "assignees": [],
+        "body_sha256": "04918c6068642b0ee7716bb66e2521423ed6935340adeb2e51f365c078ba36c4",
+        "read_back": true
+      },
+      {
+        "id": "VIS-28",
+        "number": 233,
+        "url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/233",
+        "state": "open",
+        "assignees": [],
+        "body_sha256": "10c1cb2f8d0e388142f9414fabb98818a84d096d37b7477cf34e4a8ad4616c01",
+        "read_back": true
+      },
+      {
+        "id": "VIS-29",
+        "number": 234,
+        "url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/234",
+        "state": "open",
+        "assignees": [],
+        "body_sha256": "f67f5a582599ef976e40737b076f9e5b4f263e83dc031825c2bc161fbb81611e",
+        "read_back": true
+      },
+      {
+        "id": "VIS-30",
+        "number": 235,
+        "url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/235",
+        "state": "open",
+        "assignees": [],
+        "body_sha256": "e27f4e2a1907dc5680d5ca3edc5bf2e7289bf3fe334c462477e010ee48284d2a",
+        "read_back": true
+      },
+      {
+        "id": "VIS-31",
+        "number": 236,
+        "url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/236",
+        "state": "open",
+        "assignees": [],
+        "body_sha256": "1ab7e2605616cf21d6d4db8b15fbb93f5c7a9e1b8429b16d4949e60574f53fd0",
+        "read_back": true
+      },
+      {
+        "id": "VIS-32",
+        "number": 237,
+        "url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/237",
+        "state": "open",
+        "assignees": [],
+        "body_sha256": "f6942d190f18452a2bf42f39f9b128cf8e1096aa7e3307cfa84419dc1d229b09",
+        "read_back": true
+      }
+    ],
+    "existing_refinements": [
+      {
+        "id": "COC-02",
+        "number": 143,
+        "url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/143",
+        "body_sha256": "cfa9dbe96c521932a748852744250ae3be4f7f3140c99b4bd63ccd31281fbd39",
+        "read_back": true
+      },
+      {
+        "id": "COC-05",
+        "number": 146,
+        "url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/146",
+        "body_sha256": "3823e623ed4893f9d95d0ea2d1b727f30e1e42cc3369369dcc9bb779aea9a67b",
+        "read_back": true
+      },
+      {
+        "id": "COC-06",
+        "number": 147,
+        "url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/147",
+        "body_sha256": "0fd168baf4e4a578adbd422390e4989a21d06694c7aac982d3da33ef020ab5db",
+        "read_back": true
+      },
+      {
+        "id": "COC-08",
+        "number": 149,
+        "url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/149",
+        "body_sha256": "a6dbac677bf68b0963b722664889db6cf3a298095ba2d9038126b08b1f343d1b",
+        "read_back": true
+      },
+      {
+        "id": "COC-09",
+        "number": 150,
+        "url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/150",
+        "body_sha256": "5deeac19e00cbd3f8236cc591dc2ad7adb58a83e1cf605e44da148a3d7a881a9",
+        "read_back": true
+      },
+      {
+        "id": "COC-15",
+        "number": 156,
+        "url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/156",
+        "body_sha256": "65a3e23a46216732d9cf6f4bc6c92c3de917f19c5577e5ecf3cae664fe04baf4",
+        "read_back": true
+      },
+      {
+        "id": "COC-38",
+        "number": 179,
+        "url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/179",
+        "body_sha256": "c3451dc495834c1682a5f23f440f508c1057391e8d0f706f0f301d85d3bbbfa1",
+        "read_back": true
+      },
+      {
+        "id": "COC-48",
+        "number": 189,
+        "url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/189",
+        "body_sha256": "65aa9199e236f5f451fcf6b460e942088b04e0667cd7a561dee82da043699bed",
+        "read_back": true
+      }
+    ],
+    "real_sub_issue_links": 32,
+    "publication_finished_at_utc": "2026-11-17T09:57:07.536511+00:00"
+  },
+  "documentation_draft_pr": 204,
+  "runtime_changes": false,
+  "runtime_test_result": "BASELINE_75_PASSED; TARGET_FEATURES_NOT_IMPLEMENTED",
+  "merge_performed": false,
+  "language_and_naming": {
+    "result": "ENGLISH_AND_NEUTRAL_PUBLISHED_AND_READ_BACK",
+    "base_issues_translated_and_renamed": 50,
+    "issue_states_and_assignments_preserved": true,
+    "technical_urls_paths_and_branches_preserved": true
+  },
+  "baseline_evidence": {
+    "files_passed": 6,
+    "tests_passed": 75,
+    "test_scope": "Existing baseline only, not proposed free-grid or art behavior",
+    "source_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "actual_captures": 2,
+    "page_errors": 0,
+    "external_requests": 0
+  }
+}

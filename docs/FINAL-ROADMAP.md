@@ -163,3 +163,6 @@ Not released or marked complete: focused evidence, Johannes's explain-back and
 independent human review remain. No change to the existing freeze or merge rules.
 
 COC-02 follow-up (Johannes, draft): current-base management fit view is a bounded implementation slice for issue #143 and depends on COC-49/PR #192. The parent camera task remains open; see [specification](../specs/COC-02-village-overview.md). No merge or full editor-camera completion is claimed.
+
+
+Reference-style planning requested by Johannes (17 Nov): [VIS-00 #205](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/205) records 32 proposed bounded visual tasks and reference acceptance in 8 existing COC issues. [Reference, current-code audit, dependencies and parallel owners](design/reference-village/ROADMAP.md). This documentation does not implement the target style, close the wider COC gameplay roadmap, reschedule the freeze, apply migrations, deploy or authorize a merge.

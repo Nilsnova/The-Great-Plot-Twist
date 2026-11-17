@@ -1,0 +1,132 @@
+{
+  "source_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+  "current_capture": "Actual local game with declared fake API; high quality selected using existing preference control, not a target-style implementation.",
+  "current_capture_report": {
+    "mode": "after",
+    "root": "/workspace/reference-style-roadmap/baseline/frontend",
+    "fixture": "real game / local fake transport, not production",
+    "screens": [
+      {
+        "width": 1280,
+        "height": 720,
+        "name": "current-1280x720.png",
+        "managing": true,
+        "zoom": 0.2681333759630404,
+        "position": [
+          -0.0001928515471193618,
+          -5.635084409683734,
+          100
+        ],
+        "captain": [
+          -7,
+          1.03,
+          -11
+        ],
+        "built": 19,
+        "contextLost": false,
+        "drawCalls": 88,
+        "landTop": 118.89860276821098,
+        "landBottom": 443.2327343331046,
+        "safeTop": 80,
+        "safeBottom": 487.90625,
+        "captureRendering": {
+          "before": {
+            "pixelRatio": 0.5,
+            "drawingWidth": 640,
+            "drawingHeight": 360,
+            "quality": "high",
+            "densityScale": 0.5
+          },
+          "atScreenshot": {
+            "pixelRatio": 1,
+            "drawingWidth": 1280,
+            "drawingHeight": 720,
+            "quality": "high",
+            "densityScale": 1
+          }
+        },
+        "refusalReflow": {
+          "before": 551.421875,
+          "after": 486.640625,
+          "oldLandBottom": 507.9168021099583
+        },
+        "pageErrors": [],
+        "externalRequests": 0
+      },
+      {
+        "width": 375,
+        "height": 812,
+        "name": "current-375x812.png",
+        "managing": true,
+        "zoom": 0.3197004720497937,
+        "position": [
+          -0.0002095412687883975,
+          -6.6820661061943625,
+          100
+        ],
+        "captain": [
+          -7,
+          1.03,
+          -11
+        ],
+        "built": 19,
+        "contextLost": false,
+        "drawCalls": 88,
+        "landTop": 192.2847344222088,
+        "landBottom": 469.22526833534255,
+        "safeTop": 157.1875,
+        "safeBottom": 509.71875,
+        "captureRendering": {
+          "before": {
+            "pixelRatio": 1,
+            "drawingWidth": 375,
+            "drawingHeight": 812,
+            "quality": "high",
+            "densityScale": 1
+          },
+          "atScreenshot": {
+            "pixelRatio": 1,
+            "drawingWidth": 375,
+            "drawingHeight": 812,
+            "quality": "high",
+            "densityScale": 1
+          }
+        },
+        "refusalReflow": {
+          "before": 582.53125,
+          "after": 452.96875,
+          "oldLandBottom": 516.9994281280301
+        },
+        "pageErrors": [],
+        "externalRequests": 0
+      }
+    ]
+  },
+  "concept": "Generated target illustration derived from the supplied reference; not implemented gameplay, not a legality or capacity proof.",
+  "source_concept_sha256": "308ee4fc74c848f04ced76cd33a47e9b04b9a1018780a4db99c377eae66301ad",
+  "target_sha256": "db624eb4b6866aa30d4558f4b903945f700e44a5dd52f8531824e828e295688a",
+  "baseline_checks": {
+    "command": [
+      "npm",
+      "test",
+      "--",
+      "--maxWorkers=1",
+      "tests/island/placement.test.js",
+      "tests/island/wall-connections.test.js",
+      "tests/pirates/pathing.test.js",
+      "tests/pirates/pathing-wiring.test.js",
+      "tests/pirates/battle-guide.test.js",
+      "tests/pirates/wall-blocking.test.js"
+    ],
+    "cwd": "/workspace/reference-style-roadmap/baseline/frontend",
+    "source": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "scope": "Existing baseline behavior only; no proposed free-grid implementation or target-style pass",
+    "started_at_utc": "2026-11-17T10:25:13.042305+00:00",
+    "status": "passed",
+    "exit_code": 0,
+    "duration_seconds": 5.22
+  },
+  "baseline_tests_passed": 75,
+  "baseline_files_passed": 6,
+  "target_runtime_implemented": false
+}
