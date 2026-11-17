@@ -121,7 +121,11 @@ def first_added_pieces(db, role=None):
     catalogue = load_island()
     wall = rules.kind_of(catalogue, "wall")
     stage = max(
-        max(s.unlock_wave for s in catalogue.spots if s.kinds == ("wall",)),
+        max(
+            max(catalogue.campaign.spot_wave(s.id), s.unlock_wave)
+            for s in catalogue.spots
+            if s.kinds == ("wall",)
+        ),
         rules.unlock_wave_of(catalogue, wall, 2),
     )
     call(
