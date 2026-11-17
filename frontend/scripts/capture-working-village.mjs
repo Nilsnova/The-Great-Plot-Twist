@@ -21,6 +21,9 @@ async function settle(page){
     await page.waitForTimeout(100);
   }
 }
+async function capture(page,path){
+  return page.evaluate(async()=>{const g=window.__island;g.quality('low');g.quality('high');await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));return{zoom:g.camera.zoom,position:g.camera.position.toArray(),pixelRatio:g.renderer.getPixelRatio(),drawingWidth:g.renderer.domElement.width,drawingHeight:g.renderer.domElement.height,quality:g.settings.quality,...g.renderer.userData};}).then(async rendering=>{await page.screenshot({path});return rendering;});
+}
 try{
   await server.listen();const base=`http://127.0.0.1:${server.httpServer.address().port}`;
   browser=await chromium.launch({executablePath:process.env.CHROME_PATH||'/usr/bin/chromium',headless:true});
@@ -47,7 +50,7 @@ try{
     if(mode==='after'){
       for(let n=0;n<3;n++)await page.getByRole('button',{name:'Zoom in',exact:true}).click();
       await page.waitForFunction(zoom=>window.__island.camera.zoom>zoom*2.5,initial.zoom);
-      const canvas=page.locator('canvas').first(),rect=await canvas.boundingBox();
+      const rect=await page.evaluate(()=>window.__island.renderer.domElement.getBoundingClientRect().toJSON());
       const bar=await page.locator('.island-village-mode').boundingBox(),top=await page.locator('.quest-strip').boundingBox();
       const x=rect.x+rect.width/2,y=((top?.y+top?.height||80)+bar.y)/2;
       await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x+70,y+25,{steps:6});await page.mouse.up();
@@ -57,16 +60,16 @@ try{
       const before=await page.evaluate(()=>window.__island.camera.zoom);
       await page.mouse.wheel(0,-80);await page.waitForFunction(zoom=>window.__island.camera.zoom>zoom*1.1,before);
       // The screenshot records the actual working view; future art is not painted into it.
-      const name=`${mode}-${width}x${height}.png`;await page.screenshot({path:join(out,name)});
+      const name=`${mode}-${width}x${height}.png`;const rendering=await capture(page,join(out,name));
       await page.getByRole('button',{name:'Fit village',exact:true}).click();
-      await page.waitForFunction(zoom=>Math.abs(window.__island.camera.zoom-zoom)<.005,initial.zoom);
+      await page.waitForFunction(zoom=>Math.abs(window.__island.camera.zoom-zoom)<.005&&Math.abs(window.__island.camera.position.x)<.1,initial.zoom);
       assert.ok(Math.abs(await page.evaluate(()=>window.__island.camera.position.x))<.1,'Fit restores island center');
       assert.deepEqual(await page.evaluate(()=>window.__island.player.position.toArray()),initial.captain,'camera gestures never move captain');
       const buttons=await page.locator('.island-village-mode button').evaluateAll(nodes=>nodes.map(n=>{const r=n.getBoundingClientRect();return{width:r.width,height:r.height,hit:n.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2))};}));
       assert.ok(buttons.every(b=>b.width>=44&&b.height>=44&&b.hit),'camera and exit buttons fit and are clickable');
-      screens.push({width,height,name,initial,workingPan:pan,workingZoom:before,buttons});
+      screens.push({width,height,name,initial,workingPan:pan,workingZoom:before,buttons,rendering});
     }else{
-      const name=`${mode}-${width}x${height}.png`;await page.screenshot({path:join(out,name)});screens.push({width,height,name,initial});
+      const name=`${mode}-${width}x${height}.png`;const rendering=await capture(page,join(out,name));screens.push({width,height,name,initial,rendering});
     }
     await page.getByRole('button',{name:'Exit village mode',exact:true}).click();
     await page.waitForFunction(()=>!window.__island.island.managing&&window.__island.camera.zoom>.98);
