@@ -28,3 +28,17 @@ The renderer's existing `setDefenses` contract is called only after the wave is 
 - Actual-game before/after at 1280×720 and 375×812 is required from the coordinated capture lane; unit scene objects are not a production/browser capture.
 
 No new dependencies, migrations, recovery activation, deployment or merge. Keep Draft pending actual evidence, explain-back and a different human review.
+
+## Implemented and verified scope
+
+`pirates/wall-connections.js` adapts frozen post geometry and accepted live HP, then calls the existing full-side topology/material helper. `pirates/render.js` owns one connection group. Its positive/zero membership signature ignores ordinary HP amounts, joins are excluded from raycasting, and teardown releases geometry/material once. The existing explicit post-wave health handoff remains supported.
+
+Executed from `frontend/`:
+
+```sh
+npm test -- --maxWorkers=1 tests/pirates/wall-connections.test.js tests/island/wall-connections.test.js tests/pirates/render.test.js tests/pirates/recovery-snapshot.test.js
+```
+
+Exact result: `Test Files  4 passed (4)`, `Tests  31 passed (31)`, `Duration  1.79s`, exit 0. New cases cover exact mixed-level contacts, 119 positive HP ticks without geometry replacement, both adjacent spans opening at zero, tiny-positive restoration, actual V1 wrong-instance/repeated-repair rejection, ignored animation-only repairs, explicit break/visibility handoff, raycast exclusion and idempotent disposal. The renderer's precise root-object count increases by one owned group.
+
+JavaScript syntax and `git diff --check` also passed. Browser captures and combined build/budget/UI checks remain with the coordinated verification lane; the unit scenes are not production or actual-browser evidence. Human explain-back and independent review remain pending.

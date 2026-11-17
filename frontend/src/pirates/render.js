@@ -29,6 +29,7 @@ import { towerLook } from './tower-health.js';
 import { MARK_IDS, buildingMarks } from '../art/path-marks.js';
 import { pixelGlsl, toScreen } from '../world/pixel-glsl.js';
 import { CHARACTER_SCALE } from './character-scale.js';
+import {makeCombatWallConnections} from './wall-connections.js';
 
 const UNIT = 16, Y = .72;
 // Characters on foot (boarders, the cutlass swing, the musket pose) are drawn larger in a wave, so they read
@@ -347,6 +348,8 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     for (const mark of marks) { const r = rect[mark.art]; if (r) layer.push(r, x + mark.dx, y + mark.dy, r.w, r.h, .5, r.anchor); }
   }
   const posts = defenses.filter(hasPost).map(makePost);
+  const wallConnections = makeCombatWallConnections(root);
+  let inBreak = false;
   let cannonsList = defenses.filter(item => item.kind === 'cannon' || item.kind === 'mortar');
   const fogUniforms = { uCannons: { value: Array.from({ length: 8 }, (_, i) => new THREE.Vector2(cannonsList[i]?.x ?? 0, cannonsList[i]?.z ?? 0)) },
     uCount: { value: Math.min(8, cannonsList.length) }, uSight: { value: 28 }, uFog: { value: 0 }, uTime: { value: 0 } };
@@ -1081,6 +1084,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     }
     for (const layer of Object.values(layers)) layer.end();
     for (const layer of bands) layer.end();
+    wallConnections.show(posts, state?.walls ?? [], {visible, inBreak});
     const walls = new Map((state?.walls ?? []).map(wall => [wall.id, wall]));
     const towers = new Map((state?.towers ?? []).map(tower => [tower.id, tower]));
     const crew = state?.crew ?? {};
@@ -1154,6 +1158,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     // touched; it fights with the defenses it started with.
     setDefenses(list) {
       if (disposed) return;
+      inBreak = true;
       // A building torn down in the break (GAME-V3.md §4.2) takes its post with it.
       for (const post of posts.filter(entry => !(list ?? []).some(item => item.id === entry.id))) {
         post.layer.mesh.visible = false; posts.splice(posts.indexOf(post), 1);
@@ -1185,6 +1190,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     },
     dispose() {
       if (disposed) return; disposed = true;
+      wallConnections.dispose();
       root.removeFromParent(); root.clear();
       for (const item of owned) item.dispose();
       owned.length = 0; ships.clear(); fire.clear(); wallFlash.clear(); crew.clear();
