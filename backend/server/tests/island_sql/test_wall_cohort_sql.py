@@ -30,6 +30,10 @@ def ready(database, *, admitted=True):
     add_players(database, OWNER, OTHER)
     open_island(database, OWNER, "WAC29")
     as_server(database)
+    database.execute(
+        "insert into public.islets (player_id,timber) values (%s,0) on conflict do nothing",
+        (OWNER,),
+    )
     if admitted:
         database.execute(
             "insert into public.island_wall_policy (island_owner,rule_version,capacity) "
