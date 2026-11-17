@@ -149,7 +149,11 @@ def test_snapshot_template_captures_server_sim_inputs_and_exact_hp_rate(monkeypa
     async def read_view(*_):
         return view
 
+    async def read_revision(*_):
+        return 7
+
     monkeypatch.setattr(wave_recovery.service, "look_open", read_view)
+    monkeypatch.setattr(wave_recovery, "read_recovery_revision", read_revision)
     catalogue = world.app.state.island
     snapshot = asyncio.run(
         wave_recovery.build_snapshot_template(
@@ -187,6 +191,82 @@ def test_snapshot_template_captures_server_sim_inputs_and_exact_hp_rate(monkeypa
     }
     assert "tower_1" not in snapshot["structureConfigBySpot"]
     assert snapshot["legacyWallRecoverSeconds"] == 600
+    assert snapshot["expectedRevision"] == 7
     assert snapshot["recoveryConfig"]["baseRateUnitsPerSecond"] == [5000, 3]
     wall = next(kind for kind in catalogue.kinds if kind.kind == "wall")
     assert snapshot["priceSchedule"]["wall"] == list(wall.prices)
+
+
+def test_snapshot_template_retries_once_after_island_revision_changes(monkeypatch):
+    world = World()
+    view = SimpleNamespace(
+        spots=[],
+        crew={"gunner": 0, "carpenter": 0, "lookout": 0, "guard": 0},
+        campaign=SimpleNamespace(tiers={}),
+    )
+    revisions = iter([4, 5, 5, 5])
+    reads = []
+
+    async def read_view(*_):
+        reads.append(len(reads) + 1)
+        return view
+
+    async def read_revision(*_):
+        return next(revisions)
+
+    monkeypatch.setattr(wave_recovery.service, "look_open", read_view)
+    monkeypatch.setattr(wave_recovery, "read_recovery_revision", read_revision)
+    snapshot = asyncio.run(
+        wave_recovery.build_snapshot_template(
+            world.app.state.admin,
+            world.app.state.island,
+            Island("owner", "K7Q2M", 0, 0),
+            Weather("calm", "Calm sea", 1, 0),
+            42,
+            [],
+        )
+    )
+
+    assert len(reads) == 2
+    assert snapshot["expectedRevision"] == 5
+
+
+def test_snapshot_template_refuses_two_unstable_revision_reads(monkeypatch):
+    world = World()
+    view = SimpleNamespace(
+        spots=[],
+        crew={"gunner": 0, "carpenter": 0, "lookout": 0, "guard": 0},
+        campaign=SimpleNamespace(tiers={}),
+    )
+    revisions = iter([4, 5, 5, 6])
+
+    async def read_view(*_):
+        return view
+
+    async def read_revision(*_):
+        return next(revisions)
+
+    monkeypatch.setattr(wave_recovery.service, "look_open", read_view)
+    monkeypatch.setattr(wave_recovery, "read_recovery_revision", read_revision)
+    with pytest.raises(ApiError) as error:
+        asyncio.run(
+            wave_recovery.build_snapshot_template(
+                world.app.state.admin,
+                world.app.state.island,
+                Island("owner", "K7Q2M", 0, 0),
+                Weather("calm", "Calm sea", 1, 0),
+                42,
+                [],
+            )
+        )
+
+    assert error.value.status_code == 409
+    assert error.value.code == "island_changed"
+
+
+def test_stale_admission_rpc_revision_uses_retryable_conflict():
+    with pytest.raises(ApiError) as error:
+        wave_recovery._refusal({"status": "refused", "reason": "island_changed"})
+
+    assert error.value.status_code == 409
+    assert error.value.code == "island_changed"
