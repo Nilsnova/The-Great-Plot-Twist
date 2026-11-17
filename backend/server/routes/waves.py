@@ -41,6 +41,9 @@ POST /api/waves/start  {"where": "own" | "ISLE-K7Q2M" | "pirate_point", "actionU
     migration 20261114130500), an empty set too, and join and current answer that kept set
     even after a flag was switched on or off. Every client of a wave reads them from the wave
     answer, never from its own /api/config, so the whole wave plays one rule set.
+    "serverNow" (start, join and current): the server's clock as the answer leaves, UTC with
+    milliseconds. A browser whose clock is off by more than 250 ms runs the wave on it, so every
+    screen of the wave counts the same ticks from startsAt.
     Errors: 404 no_such_island, 409 wave_running (one wave per island at a time)
 
 POST /api/waves/join  {"waveId": "6f1c..."}
@@ -109,6 +112,7 @@ too_many_requests, 502 database_error, 503 database_unavailable.
 Used by: the bell, the wave bar and the Pirate Point battle of the game client (lane P).
 """
 
+from datetime import UTC, datetime
 from secrets import randbelow
 from typing import Annotated, Literal
 from uuid import UUID
@@ -214,6 +218,9 @@ class WaveResponse(BaseModel):
     walls: dict[str, int] | None = None
     # The simulation rules this wave keeps (SIM_RULES); null when it keeps none.
     rules: list[str] | None = None
+    # The server's clock as this answer leaves (UTC, milliseconds): a browser whose own clock is off
+    # by more than a quarter second runs the wave on this clock instead (frontend island/api.js).
+    serverNow: str | None = None
 
 
 class RecoveryFinishResponse(BaseModel):
@@ -272,7 +279,13 @@ def wave_out(
         lastActorCounter=wave.last_actor_counter,
         walls=walls,
         rules=rules,
+        serverNow=server_now(),
     )
+
+
+def server_now() -> str:
+    """Now in UTC with milliseconds and a Z (2026-11-18T12:00:00.250Z)."""
+    return datetime.now(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
 
 def require_protocol2(wave: WaveStart, protocol: int) -> None:

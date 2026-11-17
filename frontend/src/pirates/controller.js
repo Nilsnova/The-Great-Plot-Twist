@@ -194,7 +194,9 @@ export function readWaveInfo(info) {
     boss: typeof info.boss === 'boolean' ? info.boss : undefined, walls: readWalls(info.walls), rules,
     recoveryVersion, waveProtocol, ...(snapshot ? { initialSnapshot: snapshot, participantToken: info.participantToken,
       lastActorCounter: info.lastActorCounter } : {}),
-    serverTimeMs: Number.isFinite(parseTime(info.serverTime)) ? parseTime(info.serverTime) : null };
+    serverTimeMs: Number.isFinite(parseTime(info.serverTime)) ? parseTime(info.serverTime) : null,
+    // The browser's clock offset to the server, measured when the wave answer arrived (island/api.js clockOffset).
+    clockOffsetMs: Number.isSafeInteger(info.clockOffsetMs) && Math.abs(info.clockOffsetMs) <= 86_400_000 ? info.clockOffsetMs : null };
 }
 
 /** How long to wait before finishing again, from a 409 wave_too_early refusal; null for other errors. */
@@ -203,6 +205,18 @@ export function tooEarlyWait(error) {
   if (code !== 'wave_too_early') return null;
   const seconds = Number(error.waitSeconds ?? error.retryAfter ?? error.body?.error?.waitSeconds ?? error.headers?.get?.('retry-after'));
   return Number.isFinite(seconds) && seconds > 0 ? Math.min(60, seconds) : DEFAULT_WAIT_SECONDS;
+}
+// A legacy finish whose outcome is unknown (no answer, 429, a 5xx such as 503 database_unavailable) is sent
+// again, byte for byte: the server answers a repeat with the stored result and pays nothing twice. Without it
+// one failed request left the wave open on the server (the bell "under way" until its 900 s ran out).
+export const FINISH_RETRY_SECONDS = Object.freeze([2, 5, 10, 20]);
+export function finishRetryWait(error, attempt) {
+  const status = error?.status;
+  if (error?.code === 'not_ready' || !Number.isInteger(status) || !(status === 0 || status === 429 || status >= 500)) return null;
+  const wait = FINISH_RETRY_SECONDS[attempt];
+  if (wait === undefined) return null;
+  const asked = Number(error.retryAfter);
+  return Number.isFinite(asked) && asked > wait ? Math.min(60, asked) : wait;
 }
 
 const defaultCutscene = (world, reducedMotion) => async id => {
@@ -355,7 +369,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     // the rule it is left out here too, so the screen does not show a gun that never fires.
     const sourceDefenses = snapshot ? recoveryWaveDefenses(snapshot) : withHealth(getDefenses() ?? [], info.walls);
     const defenses = (sourceDefenses ?? []).filter(item => item?.kind !== 'culverin' || info.rules?.defensesV2 === true);
-    const offset = info.serverTimeMs !== null ? info.serverTimeMs - now() : serverOffset();
+    const offset = info.clockOffsetMs ?? (info.serverTimeMs !== null ? info.serverTimeMs - now() : serverOffset());
     // v3 waves: the event from the wave's seed and number (the server repeats it for the galleon's bonus), and
     // the boss finishers with the room's wave gap (their grace time). simOptions may name an event (the demo).
     const event = info.flagship ? null : eventFor(info.wave, info.seed);
@@ -1373,13 +1387,16 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       ...(current.result.rescued === true ? { rescued: true } : {}), // T38: a won last-chance rescue (rescue.js)
       // D039: only a wave that came with walls (the flag on) reports them back, every wall's percent.
       ...(current.info.walls ? { walls: healthReport(current.sim.state().walls) } : {}) };
+    let unknown = 0; // finishes sent again after an unknown outcome
     const attempt = async () => {
       try {
         current.answer = (await finishWave(body)) ?? null;
         if (Number.isFinite(current.answer?.loot)) runLoot += current.answer.loot;
         emit({ type: 'wave_finish_answered', waveId: body.waveId, loot: current.answer?.loot ?? null, runLoot });
       } catch (error) {
-        const wait = tooEarlyWait(error);
+        const early = tooEarlyWait(error), retry = early === null ? finishRetryWait(error, unknown) : null;
+        if (retry !== null) unknown++;
+        const wait = early ?? retry;
         if (wait !== null && !disposed) later(attempt, wait * 1000);
         else { console.error(error); if (current.pause) current.pause.failed = true; }
       }

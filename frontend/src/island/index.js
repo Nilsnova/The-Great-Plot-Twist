@@ -79,6 +79,8 @@ export const CHART_NAMES = Object.freeze({home_islet: 'Your island', saltreach_h
 const notReady = () => Promise.resolve({ok: false, status: 503, code: 'not_ready',
   message: 'Sign in to build on your island. You can keep exploring.'});
 const safeLocal = () => { try { return globalThis.localStorage ?? null; } catch { return null; } };
+// An island read that failed for a reason that may pass (no answer, 429, a 5xx): worth reading again.
+const mayPass = answer => !answer.ok && answer.code !== 'not_ready' && (answer.status === 0 || answer.status === 429 || answer.status >= 500);
 
 export function createIsland({container, emit, on, mode = 'live', getTransport = () => null, transport = null,
   search = globalThis.location?.search ?? '', focus = () => {}, resetInput = () => {}, reducedMotion = () => false,
@@ -89,7 +91,9 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   wallRecovery = () => false, structureRecoveryOn = () => false, arsenalOn = () => false,
   // T43 (D048 proposed): whether /api/config says the flag defenses_v2 is on (a tower spot then offers the culverin).
   defensesV2On = () => false} = {}) {
-  let disposed = false, own = null, ownMessage = '', visiting = null, visitCode = readVisit(visitStorage), busySpot = null, cardMessage = '';
+  // ownRetry: your own island's read failed for a passing reason, so the next reread (the wave wiring's
+  // 15 s timer, the bell or a build card) reads it again instead of leaving the island empty for good.
+  let disposed = false, own = null, ownMessage = '', ownRetry = false, visiting = null, visitCode = readVisit(visitStorage), busySpot = null, cardMessage = '';
   let world = null, cutscene = null, openSpot = null, loadTicket = 0, battle = false;
   let pointBattle = false;
   // GAME-V3.md §4.2, tearing a building down: the wave on screen is over (its break), the spot whose
@@ -340,7 +344,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       const current = reading('own');
       const answer = await api.getIsland();
       if (disposed || ticket !== loadTicket) return answer;
-      if (answer.ok) { if (current()) setOwn(answer.data); ownMessage = ''; } else ownMessage = answer.message;
+      if (answer.ok) { if (current()) setOwn(answer.data); ownMessage = ''; ownRetry = false; } else { ownMessage = answer.message; ownRetry = mayPass(answer); }
     }
     await readStructureRecovery();
     applyWorld(); refreshCard();
@@ -568,6 +572,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   function openWreck() { openSpot = null; cardMessage = ''; ui.wreckCard(wreck(), wreckHandlers); void freshOwn(); void readBoat(); }
   function openBuild(spotId) {
     openSpot = spotId; cardMessage = ''; ui.buildCard(buildModel(spotId), handlers);
+    if (!own && ownRetry) void refreshDefended();
     if (spotById(spotId)?.slot === 'wall') void readWalls();
     if (recoveryControlsOn() && !isPointSpot(spotId) && target()?.spots.find(item => item.id === spotId)?.built) {
       recoveryStatus = recoveryState && recoveryIslandCode === target()?.code ? 'ready' : 'loading';
@@ -754,6 +759,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   function openCaptains() { openSpot = null; cardMessage = ''; ui.captainsCard(captainsModel([...here.values()])); }
   async function openBell() {
     openSpot = null; cardMessage = ''; ui.bellCard(bell(), bellAction);
+    if (!own && ownRetry) void refreshDefended();
     void readWalls();
     if (target()) await flow.look(where());
   }
@@ -788,12 +794,19 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     const current = reading('visit'), fresh = await api.visit(visiting.code);
     if (!disposed && fresh.ok && visiting && current()) { visiting = {...visiting, ...fresh.data, code: islandCode(fresh.data.code)}; noteCampaign(visiting); }
   }
-  async function reloadOwn() { const current = reading('own'), mine = await api.getIsland(); if (!disposed && mine.ok && current()) setOwn(mine.data); }
+  async function reloadOwn() {
+    const current = reading('own'), mine = await api.getIsland();
+    if (disposed) return;
+    if (mine.ok) { ownRetry = false; ownMessage = ''; if (current()) setOwn(mine.data); } else if (!own) { ownMessage = mine.message; ownRetry = mayPass(mine); }
+  }
   // The island being defended, read again: after a friend built or upgraded there (island_changed in
   // the island's room, src/pirates/game-wiring.js) and before every wave, so all defenders agree.
   async function refreshDefended() {
     if (disposed) return;
-    if (visiting) await reloadVisit(); else if (own) await reloadOwn(); else return;
+    const had = !!own;
+    if (visiting) { await reloadVisit(); if (!own && ownRetry) await reloadOwn(); } else if (own || ownRetry) await reloadOwn(); else return;
+    if (disposed) return;
+    if (!had && own) { void syncGame(); if (!flow.current) void flow.look(where()); } // the first read that worked: the rest of load()
     await arsenal.refresh(); // the weapon you carry is read again before every wave
     refreshCard();
   }
@@ -1356,6 +1369,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       if (!disposed && answer.ok) tookCoins(answer.data.coins);
       return answer;
     },
+    // The island's wave controller stopped this wave (src/pirates/game-wiring.js): a bell still holding it goes.
+    waveStopped(waveId) { if (!disposed && typeof waveId === 'string') flow.release(waveId); },
     setBattle(value) { battle = value === true; if (battle) { village.leave(); waveOver = false; moving.cancel(); } applyWorld(); refreshCardIfBuild(); if (['captain', 'tech', 'overview'].includes(ui.open)) refreshCard(); },
     // A Pirate Point battle: its built walls, cannons and mortars are drawn by the wave renderer meanwhile.
     setPointBattle(value) { pointBattle = value === true; applyWorld(); },
