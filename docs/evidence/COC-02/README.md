@@ -40,9 +40,11 @@ in the JSON. These are actual renderer measurements, not concept images.
 The after runner also enters a valid uncommitted Move and injects one documented
 client refusal. This is a controlled failure probe, not a live service outage.
 The message wraps in the same bar while `moving` stays true. Desktop bar top
-moves from 551.42 to 486.64 px; old framing put southern land at 507.90 px. Phone
-bar top moves from 582.53 to 452.97 px; old land was at 517.00 px. Both runs assert
-the stale frame would overlap and wait for the updated frame to clear the bar.
+moves from 551.42 to 486.64 px; old framing put the southern fitting probe at
+507.90 px. Phone bar top moves from 582.53 to 452.97 px; the old probe was at
+517.00 px. This uses the conservative point at x=0,z=22, not a claim about every
+pixel of the wavy shore. Both runs assert the stale frame would overlap and wait
+for the eased updated frame to clear the bar.
 Cancel and Exit then work through real controls. No move is committed.
 
 Broader build/budget/full-suite/UI checks are still pending at this commit. No

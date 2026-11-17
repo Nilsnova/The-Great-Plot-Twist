@@ -62,9 +62,11 @@ view. The existing input end-of-frame handling clears that wheel delta normally.
 - The actual current coastline's sampled land cells fit inside both 1280 × 720
   and 375 × 812 camera views, with a separate tall-building check.
 - Land cells and the tall-building point also fit between measured UI insets.
-- A recorded long client refusal grows the same active Move bar; the fit updates
-  before that bar can cover the southern land. The probe restores the client
-  adapter and cancels the uncommitted move without a server write.
+- A recorded long client refusal grows the same active Move bar; the fit reacts
+  and eases the southern fitting boundary back above it. Normal-motion easing
+  can briefly pass through covered frames; reduced motion snaps. The probe
+  restores the client adapter and cancels the uncommitted move without a server
+  write.
 - Entering the view leaves the captain position unchanged.
 - Exiting restores the prior exploration zoom and follow position.
 - Combat and tutorial requests still work and are not overwritten.
