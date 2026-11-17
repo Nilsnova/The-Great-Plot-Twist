@@ -1,6 +1,7 @@
 // Actual-game UI helpers. No DOM clicks, forced clicks, saved-wall injection or screenshot substitution.
 import assert from 'node:assert/strict';
 import {join} from 'node:path';
+import {createHash} from 'node:crypto';
 export const builder = page => page.locator('.island-wall-builder:not([hidden])');
 export const village = page => page.locator('.island-village-mode:not([hidden])');
 export async function settleCards(page) {
@@ -45,7 +46,7 @@ export async function openBuilder(page) {
 export async function wallet(page) {
   return page.evaluate(() => {
     const i = window.__island.island.island;
-    return {coins: i.coins, code: i.code, epoch: i.epoch, walls: i.spots.filter(s => s.built && s.kind === 'wall').map(({id, x, z, level}) => ({id, x, z, level}))};
+    return {coins: i.coins, code: i.code, epoch: i.islandEpoch ?? i.epoch ?? null, walls: i.spots.filter(s => s.built && s.kind === 'wall').map(({id, x, z, level}) => ({id, x, z, level}))};
   });
 }
 export async function groundPoint(page, [x, z], lift = 0) {
@@ -103,6 +104,52 @@ export async function villageFrameEvidence(page, selector) {
     const viewport = {height: canvas.height, top, bottom: canvas.height - bar.top + 12};
     return {viewport, fit: villageFrame(g.camera, 'home_islet', viewport), phone: (g.camera.right - g.camera.left) / (g.camera.top - g.camera.bottom) < .8};
   }, selector);
+}
+// Logical contacts alone cannot prove that batching actually emitted drawable geometry.
+export function checkWallBuffers(layer) {
+  assert.ok(layer, 'actual wall layer exists');
+  const degree = new Map();
+  for (const link of layer.links) for (const id of [link.a, link.b]) degree.set(id, (degree.get(id) ?? 0) + 1);
+  assert.equal(new Set(layer.links.map(l => JSON.stringify([l.a,l.b]))).size, layer.links.length, 'logical joins are unique');
+  const caps = layer.posts.filter(p => p.look !== 'broken' && (degree.get(p.id) ?? 0) < 2).length;
+  const expectedQuads = layer.links.length * 4 + layer.posts.length + caps * 4;
+  let vertices = 0, indices = 0;
+  const meshes = layer.meshes.map(({positions, index, uvs, ...row}) => {
+    assert.ok(positions.length > 0 && positions.length % 3 === 0 && positions.every(Number.isFinite), 'finite actual position buffer');
+    assert.ok(index.length > 0 && index.length % 6 === 0 && index.every(n => Number.isInteger(n) && n >= 0 && n < positions.length / 3), 'complete in-range indexed quads');
+    if (layer.posts.length) assert.ok(uvs.length === positions.length / 3 * 2 && uvs.every(Number.isFinite), 'textured posts/joins have actual UV buffers');
+    vertices += positions.length / 3; indices += index.length;
+    return {...row, vertices: positions.length / 3, indices: index.length,
+      bufferSha256: createHash('sha256').update(JSON.stringify({positions,index,uvs})).digest('hex')};
+  });
+  assert.equal(vertices, expectedQuads * 4, 'actual buffers contain every span, post and end cap');
+  assert.equal(indices, expectedQuads * 6, 'actual triangle indices cover every wall quad');
+  return {links: layer.links, posts: layer.posts, expectedQuads, vertices, indices, meshes};
+}
+export async function wallRenderEvidence(page) {
+  const actual = await page.evaluate(async () => {
+    const g = window.__island, root = g.world.current.group, {wallTopology} = await import('/src/island/wall-connections.js');
+    const read = layer => layer ? {links: layer.wallLinks ?? [], posts: layer.wallPosts ?? [],
+      meshes: layer.children.filter(mesh => mesh.visible && mesh.geometry?.getAttribute('position')).map(mesh => ({
+        name: mesh.name, order: mesh.renderOrder, positions: Array.from(mesh.geometry.getAttribute('position').array),
+        index: Array.from(mesh.geometry.index?.array ?? []), uvs: Array.from(mesh.geometry.getAttribute('uv')?.array ?? []),
+        sources: mesh.material.map?.userData.villageArt ?? null,
+      }))} : null;
+    const draft = root.getObjectByName('island-wall-draft');
+    return {world: read(root.getObjectByName('island-wall-connections')),
+      expectedLinks: wallTopology(g.island.island.spots).links,
+      draft: draft?.visible ? {cells: draft.draftCells, rendered: draft.renderedWallCells,
+        controller: g.island.wallBuilder.state?.cells, layer: read(draft.getObjectByName('wall-draft-connections'))} : null};
+  });
+  const world = checkWallBuffers(actual.world);
+  assert.deepEqual(world.links, actual.expectedLinks, 'real paid positions match the actual logical joins');
+  if (!actual.draft) return {world, draft: null};
+  const {cells, rendered, controller, layer} = actual.draft;
+  assert.deepEqual(cells, controller, 'semantic draft cells match controller intent');
+  assert.deepEqual(rendered, cells, 'actual rendered wall cells match semantic draft');
+  const draft = checkWallBuffers(layer);
+  assert.equal(draft.posts.length, cells.length, 'actual shaded ghost posts cover the complete draft');
+  return {world, draft: {cells, rendered, controller, ...draft}};
 }
 export async function capture(page, out, name) {
   const before = await page.evaluate(() => ({...window.__island.renderer.userData}));
