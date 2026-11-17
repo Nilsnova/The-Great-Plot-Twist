@@ -43,10 +43,10 @@ export function paintGround(id, density = 28) {
   // The beach: warm sand, darker at the waterline, lighter towards the meadow.
   const beach = coast(1);
   c.fillStyle = '#f2d595'; c.fill(beach);
-  paintGrassRim(c, rim, beach);
   c.save(); c.clip(beach); c.lineWidth = .9; c.strokeStyle = '#ddb877'; c.stroke(beach); c.lineWidth = .3; c.strokeStyle = '#c99f5e'; c.stroke(beach);
   c.fillStyle = '#e2bf7e'; for (let i = 0; i < 260; i++) { const a = random() * Math.PI * 2, k = .86 + random() * .13; c.fill(ellipse(Math.cos(a) * s.rx * k, Math.sin(a) * s.rz * k * .72, .07 + random() * .08, .05)); }
   c.restore();
+  paintGrassRim(c, rim, beach);
   // The meadow: a soft edge, a darker rim and a lighter heart.
   const meadow = coast(.85, .012, 3);
   c.save(); c.translate(.05, .3); c.fillStyle = '#c9ab6a'; c.fill(meadow); c.restore();
