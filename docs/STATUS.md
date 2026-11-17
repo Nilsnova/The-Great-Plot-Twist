@@ -14,7 +14,7 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
-**17 Nov / Johannes — reference-village visual review:** the [visual review guide](contribute/REFERENCE-VILLAGE-REVIEW.md) maps the approved concepts, component Draft PRs, actual intermediate checks and open final gates. It preserves the rejected first stage and the separate earlier perimeter-suite results. Final all-defense compiled captures, a fresh complete visual suite, explain-back and current-head human review remain open; no merge or rollout is claimed.
+**17 Nov / Johannes — reference-village visual review:** the [visual review guide](contribute/REFERENCE-VILLAGE-REVIEW.md) maps the approved concepts, component Draft PRs and evidence. All 13 frame families / 164 IDs are compiled; provider activation has focused checks. The actual stage-three run passed desktop upgrade/selection and Move/Cancel before failing ghost-toolbar visibility; VIS38 selection clarity and codec follow-up are in progress. Final combined captures, a fresh complete visual suite, explain-back and human review remain open. The rejected first stage and earlier perimeter-suite results keep their own sources; no merge or rollout is claimed.
 
 **17 Nov / Johannes — perimeter defense review candidate:** the [integration preview](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/chore/perimeter-integration-review) collects positioned wall construction, saved 1/128 policy, compatible recovery/combat and village controls. Start with the [implementation and review guide](contribute/PERIMETER-REVIEW.md), [verified evidence](evidence/PERIMETER-VERIFICATION.md), [Draft workboard](contribute/PERIMETER-WORKBOARD.md) and [Wall Gameplay epic #241](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/241), not the older slice checkpoints below. Drafts remain unmerged; `perimeter_walls` defaults off, live migrations/flags/deployment are unchanged by this work. Integrated evidence and independent human acceptance are separate release gates.
 
@@ -629,6 +629,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+- **17 Nov, 19:26 Lisbon / Johannes:** updated the [visual review guide](contribute/REFERENCE-VILLAGE-REVIEW.md) for 13 compiled families / 164 IDs and focused provider checks, while preserving the failed stage-three ghost-toolbar check, unresolved asset target and pending complete-suite/visual/human gates. Documentation update only; no new app checks or merge.
 
 - **17 Nov / Johannes:** added [VIS31 visual review documentation](contribute/REFERENCE-VILLAGE-REVIEW.md), [Draft #388](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/388), with source-specific evidence, real component branches/PRs, dependencies and pending gates. Documentation-only checks; no app test, final visual acceptance, merge or rollout claimed.
 
