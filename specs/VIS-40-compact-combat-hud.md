@@ -38,4 +38,8 @@ Before readiness: Why must wave 41 not write the hint flag? Why measure the real
 
 `cd frontend && npx --no-install vitest run tests/pirates/first-wave-hint.test.js tests/pirates/controller.test.js`: 2 files, 6 tests passed (2.05 s). The new storage regression failed on the original condition because wave 41 displayed and consumed the hint, then passed after the one-condition correction. `git diff --check` and `node --check frontend/src/pirates/hud.js`: exit 0.
 
-Native real-header/disclosure tests are written but await the coordinator's exclusive Chrome lane. No browser, full-suite or integrated screenshot pass is claimed in this source checkpoint.
+`cd frontend && npx --no-install vitest run tests/ui/combat-hud.test.js tests/ui/hud.test.js`: 2 files, 16 tests passed (21.37 s), using installed headless Chromium in the coordinator's exclusive lane. The new native cases mount the actual play `createHud` and combat HUD at 1280×720, 375×812 and 320×812, then change the real purse to `Number.MAX_SAFE_INTEGER`. They assert header separation, viewport/text bounds, 44 px controls, 17 px type, island HP 0, captain down, three ashore, loot/boss, first-wave dismissal, real weather intro/manual keyboard disclosure with refreshed copy, and cleanup. Existing fourteen play-HUD tests also passed. The fixtures deliberately supply component states; this is not a full-game screenshot or gameplay acceptance claim.
+
+Both native harness browser/server instances closed through their normal cleanup. A process readback found no live Chrome/Chromium; the slot was explicitly released to the coordinator. No timeout, existing assertion, test or copy was weakened or skipped.
+
+Full frontend/build/demo/a11y and integrated before/after screenshots remain with the coordinator's final combined lane. Keep this PR Draft until that evidence, a human's current review and the three explain-back answers are complete. No merge or deployment was performed.
