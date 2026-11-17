@@ -45,3 +45,16 @@ Why is captain level a different value from best wave? Why must a temporary
 management view not write the folded preference? Why does hiding Goals before
 camera measurement matter? Keep Draft for a different human's review; no merge,
 deployment, live flag/database action or new app dependency.
+
+## First source handover
+
+Pure source/model checks:20tests passed in262ms. Build passed in1.19s with
+spoiler guard242text files/12protected lines; cold-title transfer passed at
+18,734JavaScript bytes and9,410CSS bytes. Native HUD/Goals/layout tests are
+written and await the coordinated sole browser lane; no DOM pass is inferred.
+
+The game bridge applies `hud.setManaging(managing)` before measuring Goals,
+includes hidden/coin-header state in the layout key, and clears a taller phone
+header in the safe inset. It reads the displayed controller and current island's
+real best record. Root must preserve VIS-34's primary projection, selected-dock
+selection/focus and resource hooks when composing these `game.js` hunks.
