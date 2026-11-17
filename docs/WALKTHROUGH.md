@@ -1674,3 +1674,25 @@ COC-39 input ownership: native dialog inertness does not stop global keyboard st
 ## COC-31 — Base overview (Johannes Franz Lang)
 
 My menu overview reads the existing accepted island answer, groups built buildings and reuses the normal building-card model for prices and lock reasons. Its type and next-level filters only change local rows; there are no purchase callbacks. The normal island modal owns focus, Escape and disposal, and accepted data reloads redraw the list. A top building level does not mean all tower paths are finished. [Code, trace examples, limits and three practice questions](../specs/COC-31-base-overview.md); [test and screenshot evidence](evidence/COC-31-base-overview/README.md). This text is explain-back preparation, not proof that my rehearsal or independent review has happened.
+
+## COC-49 — Optional village management — Johannes Franz Lang
+
+Draft implementation in [PR #192](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/192),
+following the bounded [policy and state table](../specs/COC-49-village-mode.md).
+Johannes requested this direction; independent human review is still required.
+
+The new [local controller](../frontend/src/island/village-mode.js) holds only whether
+management is active and the original island code. It refuses entry on visits or
+reserved waves and releases placement/input once on context loss. The separate
+[bar](../frontend/src/island/village-bar.js) makes leaving visible. Existing build,
+upgrade and Move cards still send their original authenticated server requests.
+
+In `game.js`, captain movement is blocked separately from the world's picking
+permission. Otherwise the new mode would block all building selection too.
+`world.js` bypasses distance only for a structure explicitly allowed by that local
+own-island mode; Explore and other landmarks keep the old reach rule. The mode
+neither pauses combat nor changes a price, capacity, level or HP.
+
+Explain-back questions: Why separate movement from picking? Which checks still
+belong to the server? What happens to placement when a wave is accepted? The
+three questions are prepared, not a claim Johannes has already answered them.

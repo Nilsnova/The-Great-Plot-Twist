@@ -1,0 +1,29 @@
+{
+  "transport": "existing local fake island API; not live backend/login",
+  "managing": false,
+  "root": "/workspace/coc-overnight/village-before/frontend",
+  "screens": [
+    {
+      "width": 1280,
+      "height": 720,
+      "name": "before-1280x720.png",
+      "state": {
+        "managing": false,
+        "card": false
+      },
+      "errors": [],
+      "externalRequests": 0
+    },
+    {
+      "width": 375,
+      "height": 812,
+      "name": "before-375x812.png",
+      "state": {
+        "managing": false,
+        "card": false
+      },
+      "errors": [],
+      "externalRequests": 0
+    }
+  ]
+}

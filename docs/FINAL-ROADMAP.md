@@ -155,3 +155,9 @@ COC-13 scoped addition (Johannes): the first **between-wave wall-connection draw
 COC-39 local report slice: [issue #180](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/180), `feat/coc-39-defense-report`, responsible Johannes Franz Lang (`frcola`). A bounded local event collector and reachable read-only report menu are drafted. [Scope, exact checks and gaps](../specs/COC-39-defense-report.md). This does not mark the wider COC-40 report-navigation package or T54–T60 complete. Four component screenshots and focused checks are recorded; draft review and final coordinated checks remain. No merge.
 
 COC-31 / Johannes: a first read-only base overview slice is implemented in [draft PR #196](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/196) on `feat/coc-31-base-overview` for [issue #172](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/172). [Scope and limits](../specs/COC-31-base-overview.md); [screenshots](evidence/COC-31-base-overview/README.md). The broad task stays open: village-mode selection handoff, author explain-back and human review remain.
+
+COC-49, optional own-island village management: bounded implementation in draft
+[PR #192](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/192), tracked by
+[issue #190](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/190).
+Not released or marked complete: focused evidence, Johannes's explain-back and
+independent human review remain. No change to the existing freeze or merge rules.

@@ -77,12 +77,15 @@ describe('the hook in game.js', () => {
   });
 
   it('stops the gamepad from playing while the panel is open, so its dialog branch can drive the panel', () => {
-    expect(game).toContain('isPlaying:()=>active&&!outsideBlocked()');
+    expect(game).toContain('isPlaying:()=>active&&!captainBlocked()');
     expect(game.match(/const externalOverlay=.*$/m)?.[0]).toContain('stopPlots?.active');
   });
 
   it('keeps the explorer still while the panel is open, whatever pushes it', () => {
-    expect(game).toContain('controller.update(delta, active && !outsideBlocked())');
+    expect(game).toContain('controller.update(delta, active && !captainBlocked())');
     expect(game.match(/const externalOverlay=.*$/m)?.[0]).toContain('stopPlots?.active');
+  });
+  it('retains every outside overlay when village management also blocks the captain', () => {
+    expect(game).toContain('const captainBlocked=()=>outsideBlocked()||island?.managing===true;');
   });
 });

@@ -237,3 +237,9 @@ T55–T60 remain reserved and dependency-blocked pending explicit T54 technical-
 ## COC-31 — base overview first slice (17 Nov, Johannes)
 
 [Issue #172](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/172), [draft PR #196](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/196), branch `feat/coc-31-base-overview`: read-only built-building overview with existing prices/locks and local filters. [Scope/evidence](../specs/COC-31-base-overview.md). No purchase endpoint or remote building selection; the larger COC-31 task is not done. Draft PR, explain-back and independent review remain.
+
+COC-49 / Johannes (@frcola): optional own-island management slice is claimed in
+[draft PR #192](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/192),
+[issue #190](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/190).
+Existing cards/server authority are reused; no catalogue, editor camera or
+recovery work is claimed. Checks and human review remain on the draft, not done.

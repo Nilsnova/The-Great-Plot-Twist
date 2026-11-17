@@ -312,3 +312,21 @@ COC-39 ownership follow-up: `frontend/tests/pirates/defense-report-ownership.tes
 | What / where | Evidence | Coverage and limits |
 |---|---|---|
 | Read-only model and actual menu/card integration; `src/island/upgrade-overview*.js` | `tests/island/upgrade-overview.test.js`, `upgrade-overview-dom.test.js`; [capture report](evidence/COC-31-base-overview/README.md) | Extra offered plots, duplicate/unknown entries, server prices, affordability, loading/locks/roles, filters, accepted refresh, focus, 375px overflow and zero overview POST writes. Local fake transport + Chromium; no live backend, Safari or physical phone proof. Focused four-file run: 40 tests passed; broader parent checks reported separately. |
+
+## COC-49 — Johannes Franz Lang — Village management
+
+| What I built / why | Where and command | Covers | Misses |
+|---|---|---|---|
+| Explicit own-island management lets players select distant structures while keeping captain controls still | `frontend/tests/island/village-mode.test.js`, `frontend/tests/island/village-game.test.js`; `cd frontend && npm test -- --maxWorkers=1 tests/island/village-mode.test.js tests/island/village-game.test.js` | Controller entry/context/disposal; real game picking and movement with existing fake API at 1280×720/375×812; Move Escape/text-focus and reservation exit | Live login/API/database authority, Ianno's future repair behavior, real phones/Safari, independent camera/catalogue, and runtime performance beyond the focused browser runner |
+
+Exact executed results and screenshots belong to [PR #192](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/192).
+A listed check is not a claim that every run passed; an initial desktop timeout is
+recorded in the PR and must be resolved or remain explicit. No assertions or
+shared runner timeouts were weakened.
+The reservation follow-up also holds the accepted-start preparation read and
+checks exit before the bell promise resolves; pending/refused start and join
+requests block re-entry without automatically resuming management after failure.
+Menu eligibility is queried without entering/rendering. Unavailable contexts do
+not offer a Manage action; after a reservation the full-game test checks both
+Manage and Exit Menu entries are absent. Existing islet-boundary tests preserve
+the outside-overlay/StopPlots assertions through the captain-blocking wrapper.

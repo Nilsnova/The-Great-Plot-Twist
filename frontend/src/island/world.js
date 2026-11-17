@@ -367,6 +367,7 @@ export function decorateIsland(place, ctx = {}) {
       if (ctx.placing?.()) { ctx.onGround?.(point.x, -point.y / .72); return; }
       const picked = pickAt(point.x, -point.y / .72);
       if (!picked) return;
+      if (ctx.canPickRemote?.(picked)) { ctx.onPick?.(picked); return; }
       // Walk up first: a click on something out of reach only says so (ctx.player is the player's position).
       const position = ctx.player?.(), verdict = clickVerdict(position, place.zones, picked);
       // An installed position adapter must have a position before it can open a building.
