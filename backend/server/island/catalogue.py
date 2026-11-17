@@ -1101,3 +1101,58 @@ def catalogue_for_flags(
     if flags.get(MORE_TOWER_SPOTS_FLAG, False) and catalogue.extra_tower_spots:
         catalogue = with_more_tower_spots(catalogue)
     return catalogue
+
+
+def catalogue_for_existing_structures(
+    catalogue: IslandCatalogue, built: Mapping[str, object]
+) -> IslandCatalogue:
+    """Add only gated kinds and plots already present on a persisted recovery-v1 island.
+
+    This catalogue is for reading and changing existing objects. Purchase validation continues to
+    use the flag-filtered catalogue supplied to the build route.
+    """
+    culverin_was_available = any(kind.kind == "culverin" for kind in catalogue.kinds)
+    extra_spots_were_available = catalogue.more_tower_spots
+    existing_kinds = {getattr(building, "kind", None) for building in built.values()}
+    existing_spots = set(built)
+    runtime = catalogue
+    gated_spots = {spot for spot, _wave in runtime.extra_tower_spots}
+    if existing_spots & gated_spots and not extra_spots_were_available:
+        runtime = with_more_tower_spots(runtime)
+    if "culverin" in existing_kinds and not culverin_was_available:
+        runtime = with_defenses_v2(runtime, read_defenses_v2(runtime))
+    culverin_spots = {
+        spot for spot, building in built.items() if getattr(building, "kind", None) == "culverin"
+    }
+    if not culverin_was_available and "culverin" in existing_kinds:
+        spots = []
+        for spot in runtime.spots:
+            kinds = spot.kinds
+            if spot.id in culverin_spots and "culverin" not in kinds:
+                kinds = (*kinds, "culverin")
+            elif spot.id not in culverin_spots:
+                kinds = tuple(kind for kind in kinds if kind != "culverin")
+            spots.append(replace(spot, kinds=kinds))
+        runtime = replace(
+            runtime,
+            spots=tuple(spots),
+        )
+    if runtime.more_tower_spots and not extra_spots_were_available:
+        runtime = replace(
+            runtime,
+            spots=tuple(
+                spot
+                for spot in runtime.spots
+                if spot.id not in gated_spots or spot.id in existing_spots
+            ),
+        )
+        if not existing_spots & gated_spots:
+            runtime = replace(runtime, more_tower_spots=False)
+    return runtime
+
+
+def catalogue_with_recovery_prices(catalogue: IslandCatalogue) -> IslandCatalogue:
+    """Return supported recovery kind prices without inventing an existing building instance."""
+    if any(kind.kind == "culverin" for kind in catalogue.kinds):
+        return catalogue
+    return with_defenses_v2(catalogue, read_defenses_v2(catalogue))

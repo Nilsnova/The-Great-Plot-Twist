@@ -304,6 +304,7 @@ async def post_start(
     seed = randbelow(waves.SEED_LIMIT)
     admit_v1 = is_enabled("structure_recovery", settings.flags)
     template = None
+    requested_rules = wave_rules.wanted_rules(settings)
     if owner is not None and body.waveProtocol == 2:
         persisted_version = await service.read_recovery_version(admin, owner)
         if admit_v1 or persisted_version == 1:
@@ -314,8 +315,14 @@ async def post_start(
                 island,
                 weather,
                 seed,
-                wave_rules.wanted_rules(settings),
+                requested_rules,
             )
+            if template["createWave"].get("defensesV2"):
+                requested_rules = [
+                    name
+                    for name in wave_rules.SIM_RULES
+                    if name in requested_rules or name == "defenses_v2"
+                ]
     started = await waves.start_protocol2(
         admin,
         catalogue,
@@ -324,7 +331,7 @@ async def post_start(
         body.where,
         body.actionUid,
         template,
-        wave_rules.wanted_rules(settings),
+        requested_rules,
         admit_v1,
         protocol=body.waveProtocol,
         resolved=(place, owner),

@@ -4,8 +4,8 @@
 >
 > **Who uses it:** Ianno, the T55 agent and dependent repair-task implementers.
 
-- **Status:** in progress after Ianno confirmed approval of merged [PR #135](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/135).
-- **Branch:** `feat/t55-structure-health`
+- **Status:** implementation merged to main via [PR #203](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/203); this compatibility follow-up is in progress.
+- **Branch:** `fix/t55-existing-defenses`
 - **Issue:** [#121](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/121)
 
 ## Why

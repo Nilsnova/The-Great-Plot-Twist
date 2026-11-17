@@ -9,6 +9,7 @@ Used by: pytest (cd backend && uv run pytest).
 import hashlib
 import json
 import re
+from types import SimpleNamespace
 
 import pytest
 
@@ -18,6 +19,7 @@ from server.island import codes, rules
 from server.island.catalogue import (
     CONTENT_FILE,
     IslandFileError,
+    catalogue_for_existing_structures,
     catalogue_for_flags,
     load_island,
 )
@@ -360,6 +362,48 @@ def test_the_check_rule_allows_the_old_pairs_and_every_island_spot():
     assert inner - before == {(f"wall_{n}", "wall") for n in range(7, 13)}
     assert harpoon - inner == {(f"cannon_{n}", "harpoon") for n in range(1, 8)}
     assert pairs - harpoon == {(f"cannon_{n}", "culverin") for n in range(1, 8)}
+
+
+def test_existing_recovery_structures_expand_runtime_catalogue_only_for_built_items():
+    purchase_catalogue = catalogue_for_flags(load_island(), {})
+    built = {
+        "cannon_8": SimpleNamespace(kind="culverin", level=3),
+        "cannon_10": SimpleNamespace(kind="cannon", level=1),
+    }
+
+    runtime = catalogue_for_existing_structures(purchase_catalogue, built)
+    runtime_spots = {spot.id: spot for spot in runtime.spots}
+
+    assert "culverin" not in {kind.kind for kind in purchase_catalogue.kinds}
+    assert "cannon_8" not in {spot.id for spot in purchase_catalogue.spots}
+    with pytest.raises(rules.BuildRefused):
+        rules.check_build(purchase_catalogue, "cannon_8", "cannon", {}, 100)
+    with pytest.raises(rules.BuildRefused):
+        rules.check_build(purchase_catalogue, "cannon_1", "culverin", {}, 100)
+    assert {spot for spot in runtime_spots if spot.startswith("cannon_") and int(spot[7:]) > 7} == {
+        "cannon_8",
+        "cannon_10",
+    }
+    assert "cannon_9" not in runtime_spots
+    assert "cannon_11" not in runtime_spots
+    assert "culverin" in runtime_spots["cannon_8"].kinds
+    assert "culverin" not in runtime_spots["cannon_10"].kinds
+    assert "culverin" not in runtime_spots["cannon_1"].kinds
+    assert runtime.more_tower_spots
+
+
+def test_existing_recovery_catalogue_preserves_all_originally_enabled_choices():
+    available = catalogue_for_flags(load_island(), {"defenses_v2": True, "more_tower_spots": True})
+
+    runtime = catalogue_for_existing_structures(available, {})
+
+    assert {spot.id for spot in runtime.spots if spot.id.startswith("cannon_")} >= {
+        "cannon_8",
+        "cannon_9",
+        "cannon_10",
+        "cannon_11",
+    }
+    assert all("culverin" in spot.kinds for spot in runtime.spots if spot.id.startswith("cannon_"))
 
 
 def test_the_culverin_migration_changes_only_the_spot_rule_and_the_rule_names():

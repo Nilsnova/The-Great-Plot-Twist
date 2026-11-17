@@ -175,6 +175,32 @@ describe('the culverin outside the sim', () => {
     expect(buildingArt('culverin', 4)).toBe('island-culverin-l4');
     expect(pipCount('culverin', 1)).toBe(1);
   });
+  it('keeps a saved culverin upgradeable with the catalogue flag off', () => {
+    const islandAnswer = {
+      waveBest: 40,
+      unlocks: {wave: 40, unlocked: ['culverin:1', 'culverin:2', 'culverin:3', 'culverin:4', 'culverin:5'], locked: {}},
+      spots: [
+        {id: 'cannon_11', kind: 'culverin', kinds: ['cannon', 'mortar', 'harpoon', 'swivel', 'culverin'], built: true, level: 4, upgradeCost: 640},
+        {id: 'cannon_7', kind: 'cannon', kinds: ['cannon', 'mortar', 'harpoon', 'swivel'], built: false, level: 0, cost: 30},
+      ],
+    };
+    const recovery = (hpUnits, repairWindow = 'between_waves') => ({
+      recoveryVersion: 1, repairWindow, structures: [{spot: 'cannon_11', hpUnits}],
+    });
+    const card = state => buildCardModel({
+      spotId: 'cannon_11', slot: 'tower', spot: islandAnswer.spots[0], coins: 5000,
+      flags: {defenses_v2: false}, unlocks: readUnlocks(islandAnswer),
+      campaign: {wave: 40, open: new Set(), research: {done: new Set(), tiers: {}}},
+      recoveryState: state, recoveryStatus: 'ready', recoveryVersion: 1,
+    });
+
+    expect(card(recovery(1_000_000))).toMatchObject({mode: 'upgrade', disabled: false, upgrade: {label: 'Level 5 · 🪙 640'}});
+    expect(card(recovery(500_000))).toMatchObject({disabled: true, reason: 'Repair to full before an upgrade.'});
+    expect(card(recovery(1_000_000, 'reserved_wave'))).toMatchObject({disabled: true, reason: 'Upgrades are available between waves.'});
+    const empty = buildCardModel({spotId: 'cannon_7', slot: 'tower', spot: islandAnswer.spots[1], coins: 5000,
+      flags: {defenses_v2: false}, unlocks: readUnlocks(islandAnswer)});
+    expect(empty.choices.map(choice => choice.kind)).not.toContain('culverin');
+  });
   it('is in the dev fake only with ?fakeflags=defenses_v2, and its waves then carry the rule', async () => {
     const {createFakeIslandApi} = await import('../../src/pirates/fake-api.js');
     const off = createFakeIslandApi(), on = createFakeIslandApi({flags: {defenses_v2: true}});
