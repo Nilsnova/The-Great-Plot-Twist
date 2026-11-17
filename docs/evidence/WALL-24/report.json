@@ -1,6 +1,6 @@
 {
-  "source": "76f66f3f434b98cfa474b0ff0447c95ea9421bc1",
-  "fixtureSource": "250f9824937e7170ac827e3b698dd1c9273528bd",
+  "source": "525c2ab470d455ac76414bb0b963526897519008",
+  "fixtureSource": "a1c8509b8e9023b00e89b1b893f07a990f1cacfd",
   "root": "/workspace/village-perimeter-work/integration/frontend",
   "fixture": "Funded/progressed local shared fake transport; noon/captain beside bell reapplied for each new page only. Real pointer/keyboard cancel proof, public-controller long drafts, real quote/pay/upgrade/reload and frozen local-demo bell. Time acceleration is browser clock only. No production claim.",
   "checks": [
@@ -17,11 +17,11 @@
           "densityScale": 0.5
         },
         "camera": [
-          0.004608126809687677,
-          1.6326747920360118,
+          0.004539520739428298,
+          1.63273736785772,
           100
         ],
-        "zoom": 0.3520003068835366,
+        "zoom": 0.3519950738450685,
         "captain": [
           8.5,
           1.03,
@@ -51,32 +51,147 @@
       "villageButtons": [
         {
           "label": "Zoom out",
+          "visibleText": "−",
+          "fontSize": "17px",
           "width": 44,
           "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 615.3125,
+            "right": 625.25,
+            "top": 637.265625,
+            "bottom": 660.265625
+          },
+          "paddingBounds": {
+            "left": 600.28125,
+            "right": 640.28125,
+            "top": 629.3125,
+            "bottom": 669.3125
+          },
+          "contentBounds": {
+            "left": 608.28125,
+            "right": 632.28125,
+            "top": 637.3125,
+            "bottom": 661.3125
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
           "hit": true
         },
         {
           "label": "Zoom in",
+          "visibleText": "+",
+          "fontSize": "17px",
           "width": 44,
           "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 663.40625,
+            "right": 673.140625,
+            "top": 637.265625,
+            "bottom": 660.265625
+          },
+          "paddingBounds": {
+            "left": 648.28125,
+            "right": 688.28125,
+            "top": 629.3125,
+            "bottom": 669.3125
+          },
+          "contentBounds": {
+            "left": 656.28125,
+            "right": 680.28125,
+            "top": 637.3125,
+            "bottom": 661.3125
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
           "hit": true
         },
         {
           "label": "Fit village",
+          "visibleText": "Fit",
+          "fontSize": "17px",
           "width": 44,
           "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 705.328125,
+            "right": 727.234375,
+            "top": 637.265625,
+            "bottom": 660.265625
+          },
+          "paddingBounds": {
+            "left": 696.28125,
+            "right": 736.28125,
+            "top": 629.3125,
+            "bottom": 669.3125
+          },
+          "contentBounds": {
+            "left": 704.28125,
+            "right": 728.28125,
+            "top": 637.3125,
+            "bottom": 661.3125
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
           "hit": true
         },
         {
           "label": "Build walls",
+          "visibleText": "Build walls",
+          "fontSize": "17px",
           "width": 131.796875,
           "height": 46.09375,
+          "textFits": true,
+          "textBounds": {
+            "left": 770.28125,
+            "right": 862.078125,
+            "top": 637.265625,
+            "bottom": 660.265625
+          },
+          "paddingBounds": {
+            "left": 752.28125,
+            "right": 880.078125,
+            "top": 628.265625,
+            "bottom": 670.359375
+          },
+          "contentBounds": {
+            "left": 770.28125,
+            "right": 862.078125,
+            "top": 638.265625,
+            "bottom": 660.359375
+          },
+          "scrollWidth": 128,
+          "clientWidth": 128,
           "hit": true
         },
         {
           "label": "Exit village mode",
+          "visibleText": "Exit",
+          "fontSize": "17px",
           "width": 71.921875,
           "height": 46.09375,
+          "textFits": true,
+          "textBounds": {
+            "left": 914.078125,
+            "right": 946,
+            "top": 637.265625,
+            "bottom": 660.265625
+          },
+          "paddingBounds": {
+            "left": 896.078125,
+            "right": 964,
+            "top": 628.265625,
+            "bottom": 670.359375
+          },
+          "contentBounds": {
+            "left": 914.078125,
+            "right": 946,
+            "top": 638.265625,
+            "bottom": 660.359375
+          },
+          "scrollWidth": 68,
+          "clientWidth": 68,
           "hit": true
         }
       ],
@@ -90,11 +205,11 @@
           "densityScale": 1
         },
         "camera": [
-          0.0000051324171187474945,
-          1.9730987875208,
+          0.000001371049796831311,
+          2.0093985272775114,
           100
         ],
-        "zoom": 0.47308121818471294,
+        "zoom": 0.48618979025993764,
         "captain": [
           8.5,
           1.03,
@@ -122,8 +237,8 @@
         "worldWallDrawMeshes": 0
       },
       "builderWorkspace": {
-        "canonicalLandTop": 167.37569814931481,
-        "canonicalLandBottom": 468.40929704331336,
+        "canonicalLandTop": 167.37591703394713,
+        "canonicalLandBottom": 468.4091563925398,
         "barTop": 512.21875,
         "barHeight": 183.78125,
         "barBottom": 696
@@ -131,68 +246,321 @@
       "builderButtons": [
         {
           "label": "Shift draft one square west",
+          "visibleText": "←",
+          "fontSize": "17px",
           "width": 44,
           "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 190.5,
+            "right": 207.5,
+            "top": 635.765625,
+            "bottom": 658.765625
+          },
+          "paddingBounds": {
+            "left": 179,
+            "right": 219,
+            "top": 627.8125,
+            "bottom": 667.8125
+          },
+          "contentBounds": {
+            "left": 183,
+            "right": 215,
+            "top": 631.8125,
+            "bottom": 663.8125
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
           "hit": true
         },
         {
           "label": "Shift draft one square north",
+          "visibleText": "↑",
+          "fontSize": "17px",
           "width": 44,
           "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 244.75,
+            "right": 253.25,
+            "top": 635.765625,
+            "bottom": 658.765625
+          },
+          "paddingBounds": {
+            "left": 229,
+            "right": 269,
+            "top": 627.8125,
+            "bottom": 667.8125
+          },
+          "contentBounds": {
+            "left": 233,
+            "right": 265,
+            "top": 631.8125,
+            "bottom": 663.8125
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
           "hit": true
         },
         {
           "label": "Shift draft one square south",
+          "visibleText": "↓",
+          "fontSize": "17px",
           "width": 44,
           "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 294.75,
+            "right": 303.25,
+            "top": 635.765625,
+            "bottom": 658.765625
+          },
+          "paddingBounds": {
+            "left": 279,
+            "right": 319,
+            "top": 627.8125,
+            "bottom": 667.8125
+          },
+          "contentBounds": {
+            "left": 283,
+            "right": 315,
+            "top": 631.8125,
+            "bottom": 663.8125
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
           "hit": true
         },
         {
           "label": "Shift draft one square east",
+          "visibleText": "→",
+          "fontSize": "17px",
           "width": 44,
           "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 340.5,
+            "right": 357.5,
+            "top": 635.765625,
+            "bottom": 658.765625
+          },
+          "paddingBounds": {
+            "left": 329,
+            "right": 369,
+            "top": 627.8125,
+            "bottom": 667.8125
+          },
+          "contentBounds": {
+            "left": 333,
+            "right": 365,
+            "top": 631.8125,
+            "bottom": 663.8125
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
           "hit": true
         },
         {
           "label": "Zoom out",
+          "visibleText": "−",
+          "fontSize": "17px",
           "width": 49.9375,
           "height": 46.09375,
+          "textFits": true,
+          "textBounds": {
+            "left": 945.421875,
+            "right": 955.359375,
+            "top": 538.21875,
+            "bottom": 561.21875
+          },
+          "paddingBounds": {
+            "left": 927.421875,
+            "right": 973.359375,
+            "top": 529.21875,
+            "bottom": 571.3125
+          },
+          "contentBounds": {
+            "left": 945.421875,
+            "right": 955.359375,
+            "top": 539.21875,
+            "bottom": 561.3125
+          },
+          "scrollWidth": 46,
+          "clientWidth": 46,
           "hit": true
         },
         {
           "label": "Zoom in",
+          "visibleText": "+",
+          "fontSize": "17px",
           "width": 49.734375,
           "height": 46.09375,
+          "textFits": true,
+          "textBounds": {
+            "left": 1003.359375,
+            "right": 1013.09375,
+            "top": 538.21875,
+            "bottom": 561.21875
+          },
+          "paddingBounds": {
+            "left": 985.359375,
+            "right": 1031.09375,
+            "top": 529.21875,
+            "bottom": 571.3125
+          },
+          "contentBounds": {
+            "left": 1003.359375,
+            "right": 1013.09375,
+            "top": 539.21875,
+            "bottom": 561.3125
+          },
+          "scrollWidth": 46,
+          "clientWidth": 46,
           "hit": true
         },
         {
           "label": "Fit village",
+          "visibleText": "Fit",
+          "fontSize": "17px",
           "width": 61.90625,
           "height": 46.09375,
+          "textFits": true,
+          "textBounds": {
+            "left": 1061.09375,
+            "right": 1083,
+            "top": 538.21875,
+            "bottom": 561.21875
+          },
+          "paddingBounds": {
+            "left": 1043.09375,
+            "right": 1101,
+            "top": 529.21875,
+            "bottom": 571.3125
+          },
+          "contentBounds": {
+            "left": 1061.09375,
+            "right": 1083,
+            "top": 539.21875,
+            "bottom": 561.3125
+          },
+          "scrollWidth": 58,
+          "clientWidth": 58,
           "hit": true
         },
         {
           "label": "Remove last",
+          "visibleText": "Undo",
+          "fontSize": "17px",
           "width": 96.25,
           "height": 46.09375,
+          "textFits": true,
+          "textBounds": {
+            "left": 808.46875,
+            "right": 853.78125,
+            "top": 591.8125,
+            "bottom": 614.8125
+          },
+          "paddingBounds": {
+            "left": 785,
+            "right": 877.25,
+            "top": 582.8125,
+            "bottom": 624.90625
+          },
+          "contentBounds": {
+            "left": 803,
+            "right": 859.25,
+            "top": 592.8125,
+            "bottom": 614.90625
+          },
+          "scrollWidth": 92,
+          "clientWidth": 92,
           "hit": true
         },
         {
           "label": "Clear",
+          "visibleText": "Clear",
+          "fontSize": "17px",
           "width": 215.75,
           "height": 46.09375,
+          "textFits": true,
+          "textBounds": {
+            "left": 973.09375,
+            "right": 1017.15625,
+            "top": 591.8125,
+            "bottom": 614.8125
+          },
+          "paddingBounds": {
+            "left": 889.25,
+            "right": 1101,
+            "top": 582.8125,
+            "bottom": 624.90625
+          },
+          "contentBounds": {
+            "left": 907.25,
+            "right": 1083,
+            "top": 592.8125,
+            "bottom": 614.90625
+          },
+          "scrollWidth": 212,
+          "clientWidth": 212,
           "hit": true
         },
         {
           "label": "Cancel",
+          "visibleText": "Cancel",
+          "fontSize": "17px",
           "width": 96.25,
           "height": 46.09375,
+          "textFits": true,
+          "textBounds": {
+            "left": 803,
+            "right": 859.25,
+            "top": 645.90625,
+            "bottom": 668.90625
+          },
+          "paddingBounds": {
+            "left": 785,
+            "right": 877.25,
+            "top": 636.90625,
+            "bottom": 679
+          },
+          "contentBounds": {
+            "left": 803,
+            "right": 859.25,
+            "top": 646.90625,
+            "bottom": 669
+          },
+          "scrollWidth": 92,
+          "clientWidth": 92,
           "hit": true
         },
         {
           "label": "Get price",
+          "visibleText": "Get price",
+          "fontSize": "17px",
           "width": 215.75,
           "height": 46.09375,
+          "textFits": true,
+          "textBounds": {
+            "left": 956.8125,
+            "right": 1033.421875,
+            "top": 645.90625,
+            "bottom": 668.90625
+          },
+          "paddingBounds": {
+            "left": 889.25,
+            "right": 1101,
+            "top": 636.90625,
+            "bottom": 679
+          },
+          "contentBounds": {
+            "left": 907.25,
+            "right": 1083,
+            "top": 646.90625,
+            "bottom": 669
+          },
+          "scrollWidth": 212,
+          "clientWidth": 212,
           "hit": true
         }
       ],
@@ -205,18 +573,18 @@
       "ghost": {
         "name": "unpaid-ghost-1280x720.png",
         "qualityBefore": {
-          "pixelRatio": 0.5,
-          "drawingWidth": 640,
-          "drawingHeight": 360,
+          "pixelRatio": 0.6,
+          "drawingWidth": 768,
+          "drawingHeight": 432,
           "quality": "high",
-          "densityScale": 0.5
+          "densityScale": 0.6
         },
         "camera": [
-          1.0142839853268172e-19,
-          -3.862683502125326,
+          1.6473747008387427e-19,
+          -3.8626833669857157,
           100
         ],
-        "zoom": 0.28446891858143203,
+        "zoom": 0.2844685788298279,
         "captain": [
           8.5,
           1.03,
@@ -412,7 +780,7 @@
             "unitCost": 10,
             "totalCost": 320,
             "remaining": 96,
-            "islandEpoch": "4d021bcb-6407-4499-807f-de852bffb532",
+            "islandEpoch": "15eeb203-94be-478c-a6bb-45eee0395286",
             "wallRuleVersion": 1,
             "wallCapacity": 128
           },
@@ -587,7 +955,7 @@
             "unitCost": 10,
             "totalCost": 320,
             "remaining": 64,
-            "islandEpoch": "4d021bcb-6407-4499-807f-de852bffb532",
+            "islandEpoch": "15eeb203-94be-478c-a6bb-45eee0395286",
             "wallRuleVersion": 1,
             "wallCapacity": 128
           },
@@ -762,7 +1130,7 @@
             "unitCost": 10,
             "totalCost": 320,
             "remaining": 32,
-            "islandEpoch": "4d021bcb-6407-4499-807f-de852bffb532",
+            "islandEpoch": "15eeb203-94be-478c-a6bb-45eee0395286",
             "wallRuleVersion": 1,
             "wallCapacity": 128
           },
@@ -807,7 +1175,7 @@
             "unitCost": 10,
             "totalCost": 60,
             "remaining": 26,
-            "islandEpoch": "4d021bcb-6407-4499-807f-de852bffb532",
+            "islandEpoch": "15eeb203-94be-478c-a6bb-45eee0395286",
             "wallRuleVersion": 1,
             "wallCapacity": 128
           },
@@ -817,8 +1185,8 @@
       ],
       "receipts": [
         {
-          "actionUid": "sa9wrfs74uwvicxl",
-          "islandEpoch": "4d021bcb-6407-4499-807f-de852bffb532",
+          "actionUid": "n2zfwwz1c8514940",
+          "islandEpoch": "15eeb203-94be-478c-a6bb-45eee0395286",
           "totalCost": 320,
           "placements": [
             {
@@ -985,8 +1353,8 @@
           "repeat": false
         },
         {
-          "actionUid": "tguu3s8bklx6ri64",
-          "islandEpoch": "4d021bcb-6407-4499-807f-de852bffb532",
+          "actionUid": "ojdmw4iw1c6yw3a5",
+          "islandEpoch": "15eeb203-94be-478c-a6bb-45eee0395286",
           "totalCost": 320,
           "placements": [
             {
@@ -1153,8 +1521,8 @@
           "repeat": false
         },
         {
-          "actionUid": "4zophecjbelhd91i",
-          "islandEpoch": "4d021bcb-6407-4499-807f-de852bffb532",
+          "actionUid": "osi14idzl6u1ew9w",
+          "islandEpoch": "15eeb203-94be-478c-a6bb-45eee0395286",
           "totalCost": 320,
           "placements": [
             {
@@ -1321,8 +1689,8 @@
           "repeat": false
         },
         {
-          "actionUid": "d9qw74a7pkscxo4c",
-          "islandEpoch": "4d021bcb-6407-4499-807f-de852bffb532",
+          "actionUid": "4tomf9mkv4qamttc",
+          "islandEpoch": "15eeb203-94be-478c-a6bb-45eee0395286",
           "totalCost": 60,
           "placements": [
             {
@@ -1988,11 +2356,11 @@
           "densityScale": 0.5
         },
         "camera": [
-          7.659273174666074e-10,
-          1.6368778789149694,
+          6.792009905728932e-8,
+          1.6368778176634289,
           100
         ],
-        "zoom": 0.3516496990215486,
+        "zoom": 0.3516493377809713,
         "captain": [
           8.5,
           1.03,
@@ -2029,11 +2397,11 @@
           "densityScale": 1
         },
         "camera": [
-          5.226136950799053e-13,
-          2.0074298453546704,
+          2.025703592782896e-10,
+          1.9904760495082643,
           100
         ],
-        "zoom": 0.48547822031308674,
+        "zoom": 0.4793551482415926,
         "captain": [
           8.5,
           1.03,
@@ -2075,8 +2443,8 @@
           "height": 282.140625
         },
         "inset": {
-          "canonicalLandTop": 150.68734762643336,
-          "canonicalLandBottom": 385.1405444372858,
+          "canonicalLandTop": 150.684005151888,
+          "canonicalLandBottom": 385.1788414808654,
           "barTop": 421.859375,
           "barHeight": 282.140625,
           "barBottom": 704
@@ -2084,38 +2452,176 @@
         "buttons": [
           {
             "label": "One square west",
+            "visibleText": "←",
+            "fontSize": "20px",
             "width": 44,
             "height": 44,
+            "textFits": true,
+            "textBounds": {
+              "left": 389,
+              "right": 409,
+              "top": 651.953125,
+              "bottom": 678.953125
+            },
+            "paddingBounds": {
+              "left": 379,
+              "right": 419,
+              "top": 645.953125,
+              "bottom": 685.953125
+            },
+            "contentBounds": {
+              "left": 383,
+              "right": 415,
+              "top": 649.953125,
+              "bottom": 681.953125
+            },
+            "scrollWidth": 40,
+            "clientWidth": 40,
             "hit": true
           },
           {
             "label": "One square north",
+            "visibleText": "↑",
+            "fontSize": "20px",
             "width": 44,
             "height": 44,
+            "textFits": true,
+            "textBounds": {
+              "left": 444,
+              "right": 454,
+              "top": 651.953125,
+              "bottom": 678.953125
+            },
+            "paddingBounds": {
+              "left": 429,
+              "right": 469,
+              "top": 645.953125,
+              "bottom": 685.953125
+            },
+            "contentBounds": {
+              "left": 433,
+              "right": 465,
+              "top": 649.953125,
+              "bottom": 681.953125
+            },
+            "scrollWidth": 40,
+            "clientWidth": 40,
             "hit": true
           },
           {
             "label": "One square south",
+            "visibleText": "↓",
+            "fontSize": "20px",
             "width": 44,
             "height": 44,
+            "textFits": true,
+            "textBounds": {
+              "left": 494,
+              "right": 504,
+              "top": 651.953125,
+              "bottom": 678.953125
+            },
+            "paddingBounds": {
+              "left": 479,
+              "right": 519,
+              "top": 645.953125,
+              "bottom": 685.953125
+            },
+            "contentBounds": {
+              "left": 483,
+              "right": 515,
+              "top": 649.953125,
+              "bottom": 681.953125
+            },
+            "scrollWidth": 40,
+            "clientWidth": 40,
             "hit": true
           },
           {
             "label": "One square east",
+            "visibleText": "→",
+            "fontSize": "20px",
             "width": 44,
             "height": 44,
+            "textFits": true,
+            "textBounds": {
+              "left": 539,
+              "right": 559,
+              "top": 651.953125,
+              "bottom": 678.953125
+            },
+            "paddingBounds": {
+              "left": 529,
+              "right": 569,
+              "top": 645.953125,
+              "bottom": 685.953125
+            },
+            "contentBounds": {
+              "left": 533,
+              "right": 565,
+              "top": 649.953125,
+              "bottom": 681.953125
+            },
+            "scrollWidth": 40,
+            "clientWidth": 40,
             "hit": true
           },
           {
             "label": "Cancel",
+            "visibleText": "Cancel",
+            "fontSize": "17px",
             "width": 96.25,
             "height": 46.09375,
+            "textFits": true,
+            "textBounds": {
+              "left": 690.765625,
+              "right": 747.015625,
+              "top": 653.90625,
+              "bottom": 676.90625
+            },
+            "paddingBounds": {
+              "left": 672.765625,
+              "right": 765.015625,
+              "top": 644.90625,
+              "bottom": 687
+            },
+            "contentBounds": {
+              "left": 690.765625,
+              "right": 747.015625,
+              "top": 654.90625,
+              "bottom": 677
+            },
+            "scrollWidth": 92,
+            "clientWidth": 92,
             "hit": true
           },
           {
             "label": "Place here",
+            "visibleText": "Place here",
+            "fontSize": "17px",
             "width": 127.984375,
             "height": 46.09375,
+            "textFits": true,
+            "textBounds": {
+              "left": 795.015625,
+              "right": 883,
+              "top": 653.90625,
+              "bottom": 676.90625
+            },
+            "paddingBounds": {
+              "left": 777.015625,
+              "right": 901,
+              "top": 644.90625,
+              "bottom": 687
+            },
+            "contentBounds": {
+              "left": 795.015625,
+              "right": 883,
+              "top": 654.90625,
+              "bottom": 677
+            },
+            "scrollWidth": 124,
+            "clientWidth": 124,
             "hit": true
           }
         ],
@@ -2129,21 +2635,21 @@
             1.03,
             12.8
           ],
-          "zoom": 0.9899903604733318
+          "zoom": 0.9806594038857598
         },
         "initial": {
           "waveId": "fake-wave-1",
           "wave": 41,
           "seed": 25135766,
-          "startsAtMs": 1794924389000,
+          "startsAtMs": 1794925638000,
           "recoveryVersion": 0,
           "perimeterDemo": {
             "version": 1,
             "waveId": "fake-wave-1",
             "wave": 41,
             "seed": 25135766,
-            "startsAt": "2026-11-17T14:06:29Z",
-            "islandEpoch": "4d021bcb-6407-4499-807f-de852bffb532",
+            "startsAt": "2026-11-17T14:27:18Z",
+            "islandEpoch": "15eeb203-94be-478c-a6bb-45eee0395286",
             "pathing": true,
             "perimeterWalls": true,
             "defenses": [
@@ -3245,18 +3751,18 @@
         "start": {
           "name": "wave-standing-1280x720.png",
           "qualityBefore": {
-            "pixelRatio": 0.5,
-            "drawingWidth": 640,
-            "drawingHeight": 360,
+            "pixelRatio": 0.55,
+            "drawingWidth": 704,
+            "drawingHeight": 396,
             "quality": "high",
-            "densityScale": 0.5
+            "densityScale": 0.55
           },
           "camera": [
             8.5,
             -6.116,
             100
           ],
-          "zoom": 0.5770879726560212,
+          "zoom": 0.5832864399532914,
           "captain": [
             8.5,
             1.03,
@@ -3287,15 +3793,15 @@
           "waveId": "fake-wave-1",
           "wave": 41,
           "seed": 25135766,
-          "startsAtMs": 1794924389000,
+          "startsAtMs": 1794925638000,
           "recoveryVersion": 0,
           "perimeterDemo": {
             "version": 1,
             "waveId": "fake-wave-1",
             "wave": 41,
             "seed": 25135766,
-            "startsAt": "2026-11-17T14:06:29Z",
-            "islandEpoch": "4d021bcb-6407-4499-807f-de852bffb532",
+            "startsAt": "2026-11-17T14:27:18Z",
+            "islandEpoch": "15eeb203-94be-478c-a6bb-45eee0395286",
             "pathing": true,
             "perimeterWalls": true,
             "defenses": [
@@ -4172,7 +4678,7 @@
               "guard": 0
             }
           },
-          "ticks": 289,
+          "ticks": 278,
           "done": false,
           "broken": [
             "wall_56"
@@ -4391,7 +4897,7 @@
             "wall-join:wall_98:wall_99"
           ],
           "worldLinks": 0,
-          "acceleratedSeconds": 15
+          "acceleratedSeconds": 18
         },
         "breach": {
           "name": "wave-breach-1280x720.png",
@@ -4403,11 +4909,11 @@
             "densityScale": 1
           },
           "camera": [
-            5.377930315697637,
-            -4.86715625220557,
+            4.381166507821309,
+            -5.028297084282665,
             100
           ],
-          "zoom": 0.5751636037348816,
+          "zoom": 0.5751642039930542,
           "captain": [
             8.5,
             1.03,
@@ -4813,18 +5319,18 @@
       "before": {
         "name": "before-construction-375x812.png",
         "qualityBefore": {
-          "pixelRatio": 0.7,
-          "drawingWidth": 262,
-          "drawingHeight": 568,
+          "pixelRatio": 1,
+          "drawingWidth": 375,
+          "drawingHeight": 812,
           "quality": "high",
-          "densityScale": 0.7
+          "densityScale": 1
         },
         "camera": [
-          0.0027396260760116603,
-          -2.4071957662049424,
+          0.002952999526683224,
+          -2.407288897440471,
           100
         ],
-        "zoom": 0.33354820596674595,
+        "zoom": 0.3335649411393477,
         "captain": [
           8.5,
           1.03,
@@ -4854,32 +5360,147 @@
       "villageButtons": [
         {
           "label": "Zoom out",
+          "visibleText": "−",
+          "fontSize": "17px",
           "width": 44,
           "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 43.03125,
+            "right": 52.96875,
+            "top": 657.671875,
+            "bottom": 680.671875
+          },
+          "paddingBounds": {
+            "left": 28,
+            "right": 68,
+            "top": 649.71875,
+            "bottom": 689.71875
+          },
+          "contentBounds": {
+            "left": 36,
+            "right": 60,
+            "top": 657.71875,
+            "bottom": 681.71875
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
           "hit": true
         },
         {
           "label": "Zoom in",
+          "visibleText": "+",
+          "fontSize": "17px",
           "width": 44,
           "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 91.125,
+            "right": 100.859375,
+            "top": 657.671875,
+            "bottom": 680.671875
+          },
+          "paddingBounds": {
+            "left": 76,
+            "right": 116,
+            "top": 649.71875,
+            "bottom": 689.71875
+          },
+          "contentBounds": {
+            "left": 84,
+            "right": 108,
+            "top": 657.71875,
+            "bottom": 681.71875
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
           "hit": true
         },
         {
           "label": "Fit village",
+          "visibleText": "Fit",
+          "fontSize": "17px",
           "width": 44,
           "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 133.046875,
+            "right": 154.953125,
+            "top": 657.671875,
+            "bottom": 680.671875
+          },
+          "paddingBounds": {
+            "left": 124,
+            "right": 164,
+            "top": 649.71875,
+            "bottom": 689.71875
+          },
+          "contentBounds": {
+            "left": 132,
+            "right": 156,
+            "top": 657.71875,
+            "bottom": 681.71875
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
           "hit": true
         },
         {
           "label": "Build walls",
+          "visibleText": "Build walls",
+          "fontSize": "17px",
           "width": 112,
           "height": 68.1875,
+          "textFits": true,
+          "textBounds": {
+            "left": 271.125,
+            "right": 314.859375,
+            "top": 658.71875,
+            "bottom": 703.8125
+          },
+          "paddingBounds": {
+            "left": 239,
+            "right": 347,
+            "top": 649.71875,
+            "bottom": 713.90625
+          },
+          "contentBounds": {
+            "left": 257,
+            "right": 329,
+            "top": 659.71875,
+            "bottom": 703.90625
+          },
+          "scrollWidth": 108,
+          "clientWidth": 108,
           "hit": true
         },
         {
           "label": "Exit village mode",
+          "visibleText": "Exit",
+          "fontSize": "17px",
           "width": 71.921875,
           "height": 46.09375,
+          "textFits": true,
+          "textBounds": {
+            "left": 46,
+            "right": 77.921875,
+            "top": 734.90625,
+            "bottom": 757.90625
+          },
+          "paddingBounds": {
+            "left": 28,
+            "right": 95.921875,
+            "top": 725.90625,
+            "bottom": 768
+          },
+          "contentBounds": {
+            "left": 46,
+            "right": 77.921875,
+            "top": 735.90625,
+            "bottom": 758
+          },
+          "scrollWidth": 68,
+          "clientWidth": 68,
           "hit": true
         }
       ],
@@ -4893,11 +5514,11 @@
           "densityScale": 1
         },
         "camera": [
-          0.0000030361088787631537,
-          -1.0043808743210623,
+          0.00008610579558836104,
+          -1.082320133894603,
           100
         ],
-        "zoom": 0.4543268277914741,
+        "zoom": 0.4476084569506533,
         "captain": [
           8.5,
           1.03,
@@ -4925,8 +5546,8 @@
         "worldWallDrawMeshes": 0
       },
       "builderWorkspace": {
-        "canonicalLandTop": 222.87383395438562,
-        "canonicalLandBottom": 437.28396380865115,
+        "canonicalLandTop": 222.87705913433618,
+        "canonicalLandBottom": 437.2984229830625,
         "barTop": 471.9375,
         "barHeight": 316.0625,
         "barBottom": 788
@@ -4934,68 +5555,321 @@
       "builderButtons": [
         {
           "label": "Shift draft one square west",
+          "visibleText": "←",
+          "fontSize": "17px",
           "width": 44,
           "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 32.5,
+            "right": 49.5,
+            "top": 619.671875,
+            "bottom": 642.671875
+          },
+          "paddingBounds": {
+            "left": 21,
+            "right": 61,
+            "top": 611.71875,
+            "bottom": 651.71875
+          },
+          "contentBounds": {
+            "left": 25,
+            "right": 57,
+            "top": 615.71875,
+            "bottom": 647.71875
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
           "hit": true
         },
         {
           "label": "Shift draft one square north",
+          "visibleText": "↑",
+          "fontSize": "17px",
           "width": 44,
           "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 84.75,
+            "right": 93.25,
+            "top": 619.671875,
+            "bottom": 642.671875
+          },
+          "paddingBounds": {
+            "left": 69,
+            "right": 109,
+            "top": 611.71875,
+            "bottom": 651.71875
+          },
+          "contentBounds": {
+            "left": 73,
+            "right": 105,
+            "top": 615.71875,
+            "bottom": 647.71875
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
           "hit": true
         },
         {
           "label": "Shift draft one square south",
+          "visibleText": "↓",
+          "fontSize": "17px",
           "width": 44,
           "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 132.75,
+            "right": 141.25,
+            "top": 619.671875,
+            "bottom": 642.671875
+          },
+          "paddingBounds": {
+            "left": 117,
+            "right": 157,
+            "top": 611.71875,
+            "bottom": 651.71875
+          },
+          "contentBounds": {
+            "left": 121,
+            "right": 153,
+            "top": 615.71875,
+            "bottom": 647.71875
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
           "hit": true
         },
         {
           "label": "Shift draft one square east",
+          "visibleText": "→",
+          "fontSize": "17px",
           "width": 44,
           "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 176.5,
+            "right": 193.5,
+            "top": 619.671875,
+            "bottom": 642.671875
+          },
+          "paddingBounds": {
+            "left": 165,
+            "right": 205,
+            "top": 611.71875,
+            "bottom": 651.71875
+          },
+          "contentBounds": {
+            "left": 169,
+            "right": 201,
+            "top": 615.71875,
+            "bottom": 647.71875
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
           "hit": true
         },
         {
           "label": "Zoom out",
+          "visibleText": "−",
+          "fontSize": "17px",
           "width": 44,
           "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 36.03125,
+            "right": 45.96875,
+            "top": 691.859375,
+            "bottom": 714.859375
+          },
+          "paddingBounds": {
+            "left": 21,
+            "right": 61,
+            "top": 683.90625,
+            "bottom": 723.90625
+          },
+          "contentBounds": {
+            "left": 25,
+            "right": 57,
+            "top": 687.90625,
+            "bottom": 719.90625
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
           "hit": true
         },
         {
           "label": "Zoom in",
+          "visibleText": "+",
+          "fontSize": "17px",
           "width": 44,
           "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 84.125,
+            "right": 93.859375,
+            "top": 691.859375,
+            "bottom": 714.859375
+          },
+          "paddingBounds": {
+            "left": 69,
+            "right": 109,
+            "top": 683.90625,
+            "bottom": 723.90625
+          },
+          "contentBounds": {
+            "left": 73,
+            "right": 105,
+            "top": 687.90625,
+            "bottom": 719.90625
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
           "hit": true
         },
         {
           "label": "Fit village",
+          "visibleText": "Fit",
+          "fontSize": "17px",
           "width": 44,
           "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 126.046875,
+            "right": 147.953125,
+            "top": 691.859375,
+            "bottom": 714.859375
+          },
+          "paddingBounds": {
+            "left": 117,
+            "right": 157,
+            "top": 683.90625,
+            "bottom": 723.90625
+          },
+          "contentBounds": {
+            "left": 121,
+            "right": 153,
+            "top": 687.90625,
+            "bottom": 719.90625
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
           "hit": true
         },
         {
           "label": "Remove last",
-          "width": 60.328125,
+          "visibleText": "Undo",
+          "fontSize": "17px",
+          "width": 58.375,
           "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 169.53125,
+            "right": 214.84375,
+            "top": 691.859375,
+            "bottom": 714.859375
+          },
+          "paddingBounds": {
+            "left": 165,
+            "right": 219.375,
+            "top": 683.90625,
+            "bottom": 723.90625
+          },
+          "contentBounds": {
+            "left": 169,
+            "right": 215.375,
+            "top": 687.90625,
+            "bottom": 719.90625
+          },
+          "scrollWidth": 54,
+          "clientWidth": 54,
           "hit": true
         },
         {
           "label": "Clear",
-          "width": 60.328125,
+          "visibleText": "Clear",
+          "fontSize": "17px",
+          "width": 58.375,
           "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 232.53125,
+            "right": 276.59375,
+            "top": 691.859375,
+            "bottom": 714.859375
+          },
+          "paddingBounds": {
+            "left": 227.375,
+            "right": 281.75,
+            "top": 683.90625,
+            "bottom": 723.90625
+          },
+          "contentBounds": {
+            "left": 231.375,
+            "right": 277.75,
+            "top": 687.90625,
+            "bottom": 719.90625
+          },
+          "scrollWidth": 54,
+          "clientWidth": 54,
           "hit": true
         },
         {
           "label": "Cancel",
-          "width": 60.328125,
+          "visibleText": "Cancel",
+          "fontSize": "17px",
+          "width": 68.25,
           "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 293.75,
+            "right": 350,
+            "top": 691.859375,
+            "bottom": 714.859375
+          },
+          "paddingBounds": {
+            "left": 289.75,
+            "right": 354,
+            "top": 683.90625,
+            "bottom": 723.90625
+          },
+          "contentBounds": {
+            "left": 293.75,
+            "right": 350,
+            "top": 687.90625,
+            "bottom": 719.90625
+          },
+          "scrollWidth": 64,
+          "clientWidth": 64,
           "hit": true
         },
         {
           "label": "Get price",
-          "width": 332.984375,
+          "visibleText": "Get price",
+          "fontSize": "17px",
+          "width": 337,
           "height": 46.09375,
+          "textFits": true,
+          "textBounds": {
+            "left": 149.1875,
+            "right": 225.796875,
+            "top": 740.90625,
+            "bottom": 763.90625
+          },
+          "paddingBounds": {
+            "left": 21,
+            "right": 354,
+            "top": 731.90625,
+            "bottom": 774
+          },
+          "contentBounds": {
+            "left": 39,
+            "right": 336,
+            "top": 741.90625,
+            "bottom": 764
+          },
+          "scrollWidth": 333,
+          "clientWidth": 333,
           "hit": true
         }
       ],
@@ -5008,18 +5882,18 @@
       "ghost": {
         "name": "unpaid-ghost-375x812.png",
         "qualityBefore": {
-          "pixelRatio": 0.65,
-          "drawingWidth": 243,
-          "drawingHeight": 527,
+          "pixelRatio": 1,
+          "drawingWidth": 375,
+          "drawingHeight": 812,
           "quality": "high",
-          "densityScale": 0.65
+          "densityScale": 1
         },
         "camera": [
-          2.0942236887022324e-19,
-          -10.789610946360499,
+          6.813068175412e-15,
+          -10.788298132508611,
           100
         ],
-        "zoom": 0.28291778068859696,
+        "zoom": 0.28292772196667587,
         "captain": [
           8.5,
           1.03,
@@ -5215,7 +6089,7 @@
             "unitCost": 10,
             "totalCost": 320,
             "remaining": 96,
-            "islandEpoch": "c5536f0b-d934-431d-b0de-ba7fbd85da93",
+            "islandEpoch": "cd048d46-5fc9-4e8b-aa89-f9a9c5ac09c5",
             "wallRuleVersion": 1,
             "wallCapacity": 128
           },
@@ -5390,7 +6264,7 @@
             "unitCost": 10,
             "totalCost": 320,
             "remaining": 64,
-            "islandEpoch": "c5536f0b-d934-431d-b0de-ba7fbd85da93",
+            "islandEpoch": "cd048d46-5fc9-4e8b-aa89-f9a9c5ac09c5",
             "wallRuleVersion": 1,
             "wallCapacity": 128
           },
@@ -5565,7 +6439,7 @@
             "unitCost": 10,
             "totalCost": 320,
             "remaining": 32,
-            "islandEpoch": "c5536f0b-d934-431d-b0de-ba7fbd85da93",
+            "islandEpoch": "cd048d46-5fc9-4e8b-aa89-f9a9c5ac09c5",
             "wallRuleVersion": 1,
             "wallCapacity": 128
           },
@@ -5610,7 +6484,7 @@
             "unitCost": 10,
             "totalCost": 60,
             "remaining": 26,
-            "islandEpoch": "c5536f0b-d934-431d-b0de-ba7fbd85da93",
+            "islandEpoch": "cd048d46-5fc9-4e8b-aa89-f9a9c5ac09c5",
             "wallRuleVersion": 1,
             "wallCapacity": 128
           },
@@ -5620,8 +6494,8 @@
       ],
       "receipts": [
         {
-          "actionUid": "nzxmv8gywbgm4c4o",
-          "islandEpoch": "c5536f0b-d934-431d-b0de-ba7fbd85da93",
+          "actionUid": "1odi9pvnzoszjwcg",
+          "islandEpoch": "cd048d46-5fc9-4e8b-aa89-f9a9c5ac09c5",
           "totalCost": 320,
           "placements": [
             {
@@ -5788,8 +6662,8 @@
           "repeat": false
         },
         {
-          "actionUid": "8aqs0mk9lkhn0wuo",
-          "islandEpoch": "c5536f0b-d934-431d-b0de-ba7fbd85da93",
+          "actionUid": "j382a5d0imd3do06",
+          "islandEpoch": "cd048d46-5fc9-4e8b-aa89-f9a9c5ac09c5",
           "totalCost": 320,
           "placements": [
             {
@@ -5956,8 +6830,8 @@
           "repeat": false
         },
         {
-          "actionUid": "8bxx9xzomlcz7m4d",
-          "islandEpoch": "c5536f0b-d934-431d-b0de-ba7fbd85da93",
+          "actionUid": "4ubcfj0oxcb7cavy",
+          "islandEpoch": "cd048d46-5fc9-4e8b-aa89-f9a9c5ac09c5",
           "totalCost": 320,
           "placements": [
             {
@@ -6124,8 +6998,8 @@
           "repeat": false
         },
         {
-          "actionUid": "n3jggeh90gcyqa7l",
-          "islandEpoch": "c5536f0b-d934-431d-b0de-ba7fbd85da93",
+          "actionUid": "m8lwd71yq6wq9zjy",
+          "islandEpoch": "cd048d46-5fc9-4e8b-aa89-f9a9c5ac09c5",
           "totalCost": 60,
           "placements": [
             {
@@ -6791,11 +7665,11 @@
           "densityScale": 1
         },
         "camera": [
-          2.733948516932303e-8,
-          -2.406000011932882,
+          7.581771712104619e-8,
+          -2.406000033092204,
           100
         ],
-        "zoom": 0.33333347632705557,
+        "zoom": 0.33333353726821363,
         "captain": [
           8.5,
           1.03,
@@ -6832,11 +7706,11 @@
           "densityScale": 1
         },
         "camera": [
-          2.1509661072851123e-10,
-          -1.0109592768190394,
+          9.033294076531909e-10,
+          -1.0155131650609808,
           100
         ],
-        "zoom": 0.45375860234667564,
+        "zoom": 0.4533654933170335,
         "captain": [
           8.5,
           1.03,
@@ -6878,8 +7752,8 @@
           "height": 478.59375
         },
         "inset": {
-          "canonicalLandTop": 195.40348386912916,
-          "canonicalLandBottom": 300.32463927255253,
+          "canonicalLandTop": 195.30017099894008,
+          "canonicalLandBottom": 300.32611782689276,
           "barTop": 323.40625,
           "barHeight": 478.59375,
           "barBottom": 802
@@ -6887,38 +7761,176 @@
         "buttons": [
           {
             "label": "One square west",
+            "visibleText": "←",
+            "fontSize": "20px",
             "width": 44,
             "height": 44,
+            "textFits": true,
+            "textBounds": {
+              "left": 41,
+              "right": 61,
+              "top": 700.90625,
+              "bottom": 727.90625
+            },
+            "paddingBounds": {
+              "left": 31,
+              "right": 71,
+              "top": 694.90625,
+              "bottom": 734.90625
+            },
+            "contentBounds": {
+              "left": 35,
+              "right": 67,
+              "top": 698.90625,
+              "bottom": 730.90625
+            },
+            "scrollWidth": 40,
+            "clientWidth": 40,
             "hit": true
           },
           {
             "label": "One square north",
+            "visibleText": "↑",
+            "fontSize": "20px",
             "width": 44,
             "height": 44,
+            "textFits": true,
+            "textBounds": {
+              "left": 96,
+              "right": 106,
+              "top": 700.90625,
+              "bottom": 727.90625
+            },
+            "paddingBounds": {
+              "left": 81,
+              "right": 121,
+              "top": 694.90625,
+              "bottom": 734.90625
+            },
+            "contentBounds": {
+              "left": 85,
+              "right": 117,
+              "top": 698.90625,
+              "bottom": 730.90625
+            },
+            "scrollWidth": 40,
+            "clientWidth": 40,
             "hit": true
           },
           {
             "label": "One square south",
+            "visibleText": "↓",
+            "fontSize": "20px",
             "width": 44,
             "height": 44,
+            "textFits": true,
+            "textBounds": {
+              "left": 146,
+              "right": 156,
+              "top": 700.90625,
+              "bottom": 727.90625
+            },
+            "paddingBounds": {
+              "left": 131,
+              "right": 171,
+              "top": 694.90625,
+              "bottom": 734.90625
+            },
+            "contentBounds": {
+              "left": 135,
+              "right": 167,
+              "top": 698.90625,
+              "bottom": 730.90625
+            },
+            "scrollWidth": 40,
+            "clientWidth": 40,
             "hit": true
           },
           {
             "label": "One square east",
+            "visibleText": "→",
+            "fontSize": "20px",
             "width": 44,
             "height": 44,
+            "textFits": true,
+            "textBounds": {
+              "left": 191,
+              "right": 211,
+              "top": 700.90625,
+              "bottom": 727.90625
+            },
+            "paddingBounds": {
+              "left": 181,
+              "right": 221,
+              "top": 694.90625,
+              "bottom": 734.90625
+            },
+            "contentBounds": {
+              "left": 185,
+              "right": 217,
+              "top": 698.90625,
+              "bottom": 730.90625
+            },
+            "scrollWidth": 40,
+            "clientWidth": 40,
             "hit": true
           },
           {
             "label": "Cancel",
+            "visibleText": "Cancel",
+            "fontSize": "17px",
             "width": 154.5,
             "height": 46.09375,
+            "textFits": true,
+            "textBounds": {
+              "left": 78.125,
+              "right": 134.375,
+              "top": 751.90625,
+              "bottom": 774.90625
+            },
+            "paddingBounds": {
+              "left": 31,
+              "right": 181.5,
+              "top": 742.90625,
+              "bottom": 785
+            },
+            "contentBounds": {
+              "left": 49,
+              "right": 163.5,
+              "top": 752.90625,
+              "bottom": 775
+            },
+            "scrollWidth": 151,
+            "clientWidth": 151,
             "hit": true
           },
           {
             "label": "Place here",
+            "visibleText": "Place here",
+            "fontSize": "17px",
             "width": 154.5,
             "height": 46.09375,
+            "textFits": true,
+            "textBounds": {
+              "left": 224.75,
+              "right": 312.734375,
+              "top": 751.90625,
+              "bottom": 774.90625
+            },
+            "paddingBounds": {
+              "left": 193.5,
+              "right": 344,
+              "top": 742.90625,
+              "bottom": 785
+            },
+            "contentBounds": {
+              "left": 211.5,
+              "right": 326,
+              "top": 752.90625,
+              "bottom": 775
+            },
+            "scrollWidth": 151,
+            "clientWidth": 151,
             "hit": true
           }
         ],
@@ -6932,21 +7944,21 @@
             1.03,
             12.8
           ],
-          "zoom": 0.995334093637487
+          "zoom": 0.9811981892617332
         },
         "initial": {
           "waveId": "fake-wave-1",
           "wave": 41,
           "seed": 25135766,
-          "startsAtMs": 1794924460000,
+          "startsAtMs": 1794925699000,
           "recoveryVersion": 0,
           "perimeterDemo": {
             "version": 1,
             "waveId": "fake-wave-1",
             "wave": 41,
             "seed": 25135766,
-            "startsAt": "2026-11-17T14:07:40Z",
-            "islandEpoch": "c5536f0b-d934-431d-b0de-ba7fbd85da93",
+            "startsAt": "2026-11-17T14:28:19Z",
+            "islandEpoch": "cd048d46-5fc9-4e8b-aa89-f9a9c5ac09c5",
             "pathing": true,
             "perimeterWalls": true,
             "defenses": [
@@ -8048,18 +9060,18 @@
         "start": {
           "name": "wave-standing-375x812.png",
           "qualityBefore": {
-            "pixelRatio": 0.8,
-            "drawingWidth": 300,
-            "drawingHeight": 649,
+            "pixelRatio": 0.85,
+            "drawingWidth": 318,
+            "drawingHeight": 690,
             "quality": "high",
-            "densityScale": 0.8
+            "densityScale": 0.85
           },
           "camera": [
-            8.5,
-            -6.116,
+            8.499999999999998,
+            -6.1160000000000005,
             100
           ],
-          "zoom": 0.43288214004919223,
+          "zoom": 0.4264149369294016,
           "captain": [
             8.5,
             1.03,
@@ -8090,15 +9102,15 @@
           "waveId": "fake-wave-1",
           "wave": 41,
           "seed": 25135766,
-          "startsAtMs": 1794924460000,
+          "startsAtMs": 1794925699000,
           "recoveryVersion": 0,
           "perimeterDemo": {
             "version": 1,
             "waveId": "fake-wave-1",
             "wave": 41,
             "seed": 25135766,
-            "startsAt": "2026-11-17T14:07:40Z",
-            "islandEpoch": "c5536f0b-d934-431d-b0de-ba7fbd85da93",
+            "startsAt": "2026-11-17T14:28:19Z",
+            "islandEpoch": "cd048d46-5fc9-4e8b-aa89-f9a9c5ac09c5",
             "pathing": true,
             "perimeterWalls": true,
             "defenses": [
@@ -8975,7 +9987,7 @@
               "guard": 0
             }
           },
-          "ticks": 271,
+          "ticks": 278,
           "done": false,
           "broken": [
             "wall_56"
@@ -9194,7 +10206,7 @@
             "wall-join:wall_98:wall_99"
           ],
           "worldLinks": 0,
-          "acceleratedSeconds": 19
+          "acceleratedSeconds": 20
         },
         "breach": {
           "name": "wave-breach-375x812.png",
@@ -9206,11 +10218,11 @@
             "densityScale": 1
           },
           "camera": [
-            4.904548173269443,
-            -4.676494753179544,
+            4.921230874688958,
+            -4.866766028162248,
             100
           ],
-          "zoom": 0.40000104884014914,
+          "zoom": 0.4000013534879429,
           "captain": [
             8.5,
             1.03,
