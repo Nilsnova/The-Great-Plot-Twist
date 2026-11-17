@@ -4,7 +4,7 @@
 >
 > **Who uses it:** Ianno, the T58 agent and the recovery-state/simulation implementers.
 
-- **Status:** version-aware frontend policy hooks and Captain/Tech models implemented; server-sourced version wiring, T57 runtime gates and final visual evidence remain in integration. This is not activated or shipped behavior.
+- **Status:** policy models, persisted-version UI wiring, versioned help copy and focused integration evidence are implemented on this draft branch. T55/T57/T59/T60 combined review and release checks remain pending; no activation or live behavior is claimed.
 - **Branch:** `refactor/t58-captain-repair`
 - **Issue:** [#124](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/124)
 
@@ -22,9 +22,9 @@ Captain repair skills and independent wall regeneration conflict with the approv
 
 ## Implementation progress
 
-The frontend now has an isolated version-aware policy module at `frontend/src/campaign/captain-repair-policy.js`. `recoveryRateFactor()` accepts the island owner's Carpenter count, nearby Workshop count, supported structure kind, one wall's equipped `wallSpec`, island `wallResearch` and a between-wave boolean. It returns 0 during a reservation, applies Quick Mend or equipped Bastion only to walls, applies Mason Drill only to walls, and leaves other valid wall choices neutral. `isRetiredCaptainSkill()` and `captainBranchesForPolicy()` retain legacy behavior by default; under recovery v1 they hide the seven repair-only Captain choices without deleting stored ids or changing spent points. Captain stats accept an explicit `{recoveryVersion}` option so existing callers remain legacy by default. `skillsModel()` and `techModel()` also accept a `recoveryVersion`, defaulting to legacy 0, and show the recovery-v1 Captain choices and research text only when the server version is passed.
+The frontend has an isolated version-aware policy module at `frontend/src/campaign/captain-repair-policy.js`. `recoveryRateFactor()` accepts the island owner's Carpenter count, nearby Workshop count, supported structure kind, one wall's equipped `wallSpec`, island `wallResearch` and a between-wave boolean. It returns 0 during a reservation, applies Quick Mend or equipped Bastion only to walls, applies Mason Drill only to walls, and leaves other valid wall choices neutral. `isRetiredCaptainSkill()` and `captainBranchesForPolicy()` retain legacy behavior by default; under recovery v1 they hide the seven repair-only Captain choices without deleting stored ids or changing spent points. Captain stats accept an explicit `{recoveryVersion}` option so existing callers remain legacy by default. `skillsModel()` and `techModel()` also accept a `recoveryVersion`, defaulting to legacy 0.
 
-T55 owns the authoritative backend recovery helper, Captain route/catalogue enforcement and server-sourced policy version; the canonical GET `/api/island/structures` state now exposes `recoveryVersion`. T59 owns passing that server value through the island index into Captain/Tech models, while T57 owns combat E-action removal, no-free-heal runtime gates and passing the frozen wave `recoveryVersion` into Captain stats. The per-wall Quick Mend text in the shared build card also needs version wiring. Until those hooks are connected, these frontend model changes alone do not change game behavior. Visual evidence and full acceptance checks remain pending that integration.
+The canonical GET `/api/island/structures` getter provides the saved recovery version, and the island integration passes it into Captain and Tech models. Tutorial help now selects a recovery-v1 copy from that same persisted version while preserving the original version-0 pages. Focused model, integration and help tests plus production-UI fixture captures are documented in [T58 evidence](../docs/evidence/T58-captain-repair/README.md). The captures use controlled fixture data and do not demonstrate live API state, multiplayer, a deployed feature flag, or production activation. T55/T57/T59/T60 combined review, full acceptance checks and release checks remain pending.
 
 ## Out of scope
 
