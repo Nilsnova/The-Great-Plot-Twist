@@ -32,3 +32,20 @@ limit is increased. On this policy revision, `npm test -- --maxWorkers=1
 tests/v3-raster-free.test.js tests/hires-art.test.js` passed2files/11tests in1.06s.
 The integrated provider must run the same guards and actual cold network/budget
 checks again; this pre-provider result is not an acceptance of future source.
+
+## Presentation correction after the first actual checkpoint
+
+[D064](../docs/DECISIONS.md#d064--shared-reference-village-projection-and-presentation-bounds--2026-11-17)
+records the coordinator's shared ground mapping, legacy backdrop conversion,
+measured Fit and working views, and tighter visual boxes after the first composed
+material screenshot was rejected. The approved concepts remain the target;
+neither the numeric coefficients nor the implemented scene have separate final
+human acceptance. Desktop Work is 1.05×Fit; phone Work is at least **absolute**
+zoom 0.9, with panning, rather than 0.9×Fit. Native source pixels, upright visual
+boxes and unchanged logical tile/physics footprints remain distinct.
+
+This followup changes documentation only. Content checks confirm the decision
+anchor, internal links, declared coefficients and the distinction between source
+paint units and displayed facade depth. No application tests or screenshots were
+run for this documentation revision. Actual composed-scene evidence remains the
+coordinator's VIS-31/intermediate-checkpoint work.
