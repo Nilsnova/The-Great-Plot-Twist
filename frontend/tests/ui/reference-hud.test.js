@@ -88,9 +88,11 @@ it('removes focus from suppressed Goals and keeps unknown values distinct from a
       const focusedCanvas = document.activeElement.tagName === 'CANVAS';
       hud.setCoins(NaN);const coins = document.querySelector('.hud-coins-value').textContent;
       hud.update(null, {managing: false, waveStatus: {bestWave: 0, currentWave: null}});
-      const zero = document.querySelector('.hud-wave-value').textContent;hud.dispose();return {unknown, focusedCanvas, coins, zero};
+      const zero = document.querySelector('.hud-wave-value').textContent;
+      hud.update(null, {});const legacyCoins = document.querySelector('.hud-coins').textContent;
+      hud.dispose();return {unknown, focusedCanvas, coins, zero, legacyCoins};
     });
-    expect(result).toEqual({unknown: 'Best wave …', focusedCanvas: true, coins: '🪙 7,180', zero: 'Best wave 0'});
+    expect(result).toEqual({unknown: 'Best wave …', focusedCanvas: true, coins: '🪙 7,180', zero: 'Best wave 0', legacyCoins: '🪙 7,180'});
   });
 });
 
