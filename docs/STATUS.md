@@ -14,6 +14,8 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
+**17 Nov / Johannes — perimeter defense review candidate:** the [integration preview](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/chore/perimeter-integration-review) collects positioned wall construction, saved 1/128 policy, compatible recovery/combat and village controls. Start with the [implementation and review guide](contribute/PERIMETER-REVIEW.md) and [Wall Gameplay epic #241](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/241), not the older slice checkpoints below. Drafts remain unmerged; `perimeter_walls` defaults off, live migrations/flags/deployment are unchanged by this work. Integrated evidence and independent human acceptance are separate release gates.
+
 **17 Nov / Johannes — WALL-19:** [Draft #275](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/275) implements bounded perimeter-wall database identities and positioned-build/coordinate-release guards. SQL verification awaits the preceding wall-policy migration; scope and limits are in [the spec](../specs/WALL-19-cohort-constraints.md). No live application or merge.
 
 **17 Nov / Johannes — BASE-02 working village camera:** [Draft #270](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/270) adds local Zoom in/out, bounded drag pan and Fit, preserving exploration/battle precedence and returning Move to Fit. Focused camera/gesture tests: 16 passed; actual desktop/phone evidence and coordinated broader verification remain. No merge.
@@ -271,6 +273,8 @@ Nobody has decided these yet. Until they are decided, the plan in ROADMAP.md sta
 6. **Pick a package.** Take your lane's next package below, or one from "Start today" in ROADMAP.md. Open an issue with the goal, acceptance checks, scope, responsible teammate and likely files. Create your branch from `main` (`git switch main`, `git pull`, then for example `git switch -c feat/l1-live-weather`). Paste the agent brief below and open a draft pull request early.
 
 ## Next steps per lane
+
+**Johannes / perimeter defense:** review the [guide](contribute/PERIMETER-REVIEW.md), source contracts and coordinated evidence, rehearse its three explain-back questions, then obtain a different human teammate’s review. Keep the preview/drafts unmerged; migration application, activation and release require separate authorization. The [planning roadmap Draft #239](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/239) remains distinct from completed runtime slices.
 
 **Johannes / WALL-19:** verify [Draft #275](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/275) with the preceding wall-policy migration in the coordinated scratch-SQL lane, then rehearse the spec and obtain independent human review. Do not apply live or merge.
 
@@ -633,6 +637,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+**17 Nov / Johannes — perimeter handover:** [Draft #332](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/332), [task #331](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/331), documents current API/policy/epoch, six migration additions and review/evidence boundaries. Documentation only; no live application, activation, deployment or merge.
 
 **17 Nov / Johannes — WALL-19:** [Draft #275](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/275) implements bounded perimeter-wall database identities and positioned-build/coordinate-release guards. SQL verification awaits the preceding wall-policy migration; scope and limits are in [the spec](../specs/WALL-19-cohort-constraints.md). No live application or merge.
 
