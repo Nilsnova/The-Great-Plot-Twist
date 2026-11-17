@@ -31,6 +31,7 @@ MAX_BATCH = 32
 MAX_BODY_BYTES = 16 * 1024
 MAX_PAGE = 256
 MAX_HP_UNITS = 1_000_000
+SNAPSHOT_READ_ATTEMPTS = 2
 
 
 class RecoveryInput(BaseModel):
@@ -268,6 +269,11 @@ def _refusal(reply: Any) -> None:
             "The island was reset while this wave was running.",
         ),
         "wave_running": (409, "wave_running", "A wave is already under way on this island."),
+        "island_changed": (
+            409,
+            "island_changed",
+            "The island changed while the wave was being prepared. Retry the same request.",
+        ),
         "not_member": (
             403,
             "not_member",
@@ -326,7 +332,21 @@ async def build_snapshot_template(
     This read is only a template. The SQL admission RPC must validate the built/layout identity
     under the owner-island lock and replace the recovery structures from current DB rows.
     """
-    view = await service.look_open(admin, catalogue, island)
+    expected_revision: int | None = None
+    view = None
+    for _ in range(SNAPSHOT_READ_ATTEMPTS):
+        before = await read_recovery_revision(admin, island.owner)
+        view = await service.look_open(admin, catalogue, island)
+        after = await read_recovery_revision(admin, island.owner)
+        if before == after:
+            expected_revision = after
+            break
+    if expected_revision is None or view is None:
+        raise ApiError(
+            409,
+            "island_changed",
+            "The island changed while the wave was being prepared. Retry the same request.",
+        )
     geometry = layout.island_layout(catalogue.more_tower_spots)
     complete_geometry = layout.island_layout(more=True)
     defenses = []
@@ -436,6 +456,7 @@ async def build_snapshot_template(
     }
     default_positions = {spot.spot: {"x": spot.x, "z": spot.z} for spot in complete_geometry.spots}
     return {
+        "expectedRevision": expected_revision,
         "createWave": create_wave,
         "priceSchedule": island_rules.price_table(catalogue),
         "eventByWave": events,
@@ -447,6 +468,20 @@ async def build_snapshot_template(
         "recoveryConfigVersion": RECOVERY_MANIFEST.recovery_version,
         "supportedStructureKinds": list(SUPPORTED_KINDS),
     }
+
+
+async def read_recovery_revision(admin: SupabaseAdmin, owner: str) -> int:
+    """Read the monotone server revision used to fence multi-query snapshot assembly."""
+    rows = await admin.select_rows(
+        "island_recovery_state",
+        {"select": "revision", "island_owner": f"eq.{owner}", "limit": "1"},
+    )
+    if not rows:
+        raise SupabaseRejected("The island recovery revision could not be read.")
+    value = rows[0].get("revision")
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        raise SupabaseRejected("The island recovery revision could not be read.")
+    return value
 
 
 async def read_owner_island(admin: SupabaseAdmin, owner: str) -> Island:
