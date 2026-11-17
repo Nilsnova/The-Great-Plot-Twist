@@ -19,7 +19,11 @@ async function settleCards(page) {
     if (await skipAll.count()) { calm = 0; await skipAll.first().click(); }
     else if (await got.count()) { calm = 0; await got.first().click(); }
     else if (await page.locator('dialog[open]').count()) { calm = 0; await page.keyboard.press('Escape'); }
-    else if (await narrator.isVisible()) { calm = 0; await narrator.click(); }
+    else if (await narrator.isVisible()) {
+      calm = 0;
+      try { await narrator.click({timeout: 300}); }
+      catch (error) { if (!await page.locator('dialog[open]').count() && await narrator.isVisible()) throw error; }
+    }
     else calm++;
     await page.waitForTimeout(100);
   }
