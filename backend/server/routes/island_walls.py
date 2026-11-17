@@ -8,7 +8,13 @@ from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt
 
 from server.island import wall_build
 from server.island.service import IslandCatalogueDep
-from server.routes.island import CODE_MAX_LENGTH, IslandPlayerDep, IslandResponse, island_out
+from server.routes.island import (
+    ACTION_UID_PATTERN,
+    CODE_MAX_LENGTH,
+    IslandPlayerDep,
+    IslandResponse,
+    island_out,
+)
 from server.settings import SettingsDep
 from server.supabase_admin import AdminDep
 
@@ -44,6 +50,22 @@ class QuoteOut(BaseModel):
     islandEpoch: UUID
 
 
+class BuildPlacement(PlacementOut):
+    spot: str = Field(pattern=r"^wall_([1-9]|[1-9][0-9]|1[01][0-9]|12[0-8])$")
+
+
+class BuildRequest(EnableRequest):
+    placements: list[BuildPlacement] = Field(min_length=1, max_length=32)
+    quotedTotal: StrictInt = Field(ge=1, le=1_000_000)
+    actionUid: str = Field(pattern=ACTION_UID_PATTERN)
+    islandEpoch: UUID
+
+
+class BuildOut(BaseModel):
+    receipt: wall_build.WallReceipt
+    island: IslandResponse
+
+
 @router.post("/island/walls/enable")
 async def post_enable(
     body: EnableRequest,
@@ -77,3 +99,27 @@ async def post_quote(
         body.code,
     )
     return QuoteOut(**quoted.wire())
+
+
+@router.post("/island/walls/build")
+async def post_build(
+    body: BuildRequest,
+    player: IslandPlayerDep,
+    catalogue: IslandCatalogueDep,
+    admin: AdminDep,
+    settings: SettingsDep,
+    request: Request,
+) -> BuildOut:
+    request.app.state.island_build_budget.spend(player.id)
+    receipt, view = await wall_build.build(
+        admin,
+        catalogue,
+        player.id,
+        settings.flags,
+        [{"spot": p.spot, "x": p.x + 0, "z": p.z + 0} for p in body.placements],
+        body.quotedTotal,
+        body.actionUid,
+        str(body.islandEpoch),
+        body.code,
+    )
+    return BuildOut(receipt=receipt, island=island_out(view, catalogue))

@@ -270,6 +270,10 @@ class FakeIslandDatabase:
         self.wall_epochs: dict[str, str] = {}
         self.wall_policy_read_reply: dict | httpx.Response | None = None
         self.wall_admit_reply: dict | httpx.Response | None = None
+        self.wall_build_reply: dict | httpx.Response | None = None
+        self.wall_receipt_reply: dict | httpx.Response | None = None
+        self.wall_build_after_commit: httpx.Response | None = None
+        self.wall_build_receipts: dict[tuple[str, str], dict] = {}
         self.layout_missing = False
         self.move_replies: list[dict] = []
         self.requests: list[httpx.Request] = []
@@ -316,6 +320,8 @@ class FakeIslandDatabase:
             "POST /rpc/island_move": self.move,
             "POST /rpc/island_wall_layout_read": self.read_wall_layout,
             "POST /rpc/island_wall_policy_admit": self.admit_wall_policy,
+            "POST /rpc/island_wall_build_receipt": self.wall_build_receipt,
+            "POST /rpc/island_wall_build": self.wall_build,
             "POST /rpc/island_wall_move": self.wall_move,
             "POST /rpc/island_specialise": lambda _: self.answer(
                 self.paid_replies.get("island_specialise", SPECIALISED)
@@ -543,6 +549,50 @@ class FakeIslandDatabase:
         self.wall_policies[owner] = {"ruleVersion": 1, "capacity": 128}
         self.layout_rows_by_owner[owner] = body["p_effective"]
         return self.answer({"status": "done", "repeat": False})
+
+    def wall_build_receipt(self, request: httpx.Request) -> httpx.Response:
+        if self.wall_receipt_reply is not None:
+            return self.answer(self.wall_receipt_reply)
+        body = json.loads(request.content)
+        old = self.wall_build_receipts.get((body["p_player_id"], body["p_action_uid"]))
+        if old is None:
+            return self.answer({"status": "missing"})
+        if old["owner"] != body["p_island_owner"] or old["intent"] != body["p_intent"]:
+            return self.answer({"status": "refused", "reason": "action_uid_conflict"})
+        return self.answer({"status": "done", "receipt": {**old["receipt"], "repeat": True}})
+
+    def wall_build(self, request: httpx.Request) -> httpx.Response:
+        if self.wall_build_reply is not None:
+            return self.answer(self.wall_build_reply)
+        body = json.loads(request.content)
+        owner, intent = body["p_island_owner"], body["p_intent"]
+        receipt = {
+            "actionUid": body["p_action_uid"],
+            "totalCost": intent["quotedTotal"],
+            "placements": intent["placements"],
+            "islandEpoch": intent["islandEpoch"],
+            "repeat": False,
+        }
+        self.balance -= receipt["totalCost"]
+        self.wall_build_receipts[(body["p_player_id"], body["p_action_uid"])] = {
+            "owner": owner,
+            "intent": intent,
+            "receipt": receipt,
+        }
+        rows = self.layout_rows_by_owner.setdefault(owner, list(self.layout_rows))
+        for item in body["p_items"]:
+            rows[:] = [row for row in rows if row["plot"] != item["spot"]]
+            rows.append({"plot": item["spot"], "x_half": item["x_half"], "z_half": item["z_half"]})
+            self.buildings.setdefault(owner, []).append(
+                {
+                    "plot": item["spot"],
+                    "building_type": "wall",
+                    "level": 1,
+                }
+            )
+        if self.wall_build_after_commit is not None:
+            return self.wall_build_after_commit
+        return self.answer({"status": "done", "receipt": receipt, "balance": self.balance})
 
     def read_name(self, request: httpx.Request) -> httpx.Response:
         player = request.url.params["id"].removeprefix("eq.")
