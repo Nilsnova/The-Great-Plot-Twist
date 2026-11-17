@@ -1,0 +1,61 @@
+{
+  "source": "e02d49054d3306280310f16ad5692748b8339327",
+  "scope": "Actual Canvas terrain components and source decode; no full-gameplay, hull or final-quality claim",
+  "comparison": "Same candidate facade geometry: procedural fallback before versus decoded materials after; not an old-software comparison",
+  "reports": [
+    {
+      "density": 16,
+      "quality": "low",
+      "allowed": {
+        "minX": -21.282291578839562,
+        "maxX": 21.88490361569788,
+        "minY": -17.627601972477454,
+        "maxY": 18.65800194096398
+      },
+      "opaque": 274337,
+      "outsideOpaque": 0,
+      "changed": 258752,
+      "maskDifferences": 24,
+      "testedTop": 5543,
+      "hiddenTop": 0,
+      "actualAnchors": 17,
+      "closestAnchors": 21,
+      "hiddenAnchors": [],
+      "leasedBytes": 6290064,
+      "released": {
+        "bytes": 0,
+        "entries": 0,
+        "queued": 0,
+        "decodes": 0
+      }
+    },
+    {
+      "density": 32,
+      "quality": "high",
+      "allowed": {
+        "minX": -21.282291578839562,
+        "maxX": 21.88490361569788,
+        "minY": -17.627601972477454,
+        "maxY": 18.65800194096398
+      },
+      "opaque": 1096514,
+      "outsideOpaque": 0,
+      "changed": 1028782,
+      "maskDifferences": 50,
+      "testedTop": 5543,
+      "hiddenTop": 0,
+      "actualAnchors": 17,
+      "closestAnchors": 21,
+      "hiddenAnchors": [],
+      "leasedBytes": 6290064,
+      "released": {
+        "bytes": 0,
+        "entries": 0,
+        "queued": 0,
+        "decodes": 0
+      }
+    }
+  ],
+  "errors": [],
+  "external": []
+}
