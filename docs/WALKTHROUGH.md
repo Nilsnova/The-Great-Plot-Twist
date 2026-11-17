@@ -1770,3 +1770,7 @@ Focused checks: `cd frontend && npm exec vitest -- run tests/tutorial-pages.test
 The [evidence README](evidence/T58-captain-repair/README.md) records screenshot fixtures and the exact scope. These
 checks do not prove persisted production state, live recovery, payments, multiplayer or release activation; combined
 dependency review and release acceptance remain pending.
+
+## VIS-18. Static village artwork and visible retry — Johannes
+
+`island/static-village-art.js` prepares registered landmark materials and swaps their visual geometry on the same mesh, preserving its ground position and authoritative visibility. `island/world.js` tracks main/static/wall requests and passes failures to a visible, nonmodal Retry notice. It does not load or retain arsenal art before the feature first enables it; a later completion cannot override a disabled state. Owned textures/materials are released once, and borrowed placeholder maps remain with their existing scene owner. [Exact scope, tests and remaining real-browser gates](../specs/VIS-18-static-art-retry.md). Explain why a changed visual box does not change collision, why late loading cannot decide visibility, and which resources this decoration owns.
