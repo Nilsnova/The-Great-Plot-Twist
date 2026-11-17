@@ -404,7 +404,7 @@ async def post_finish(
             raise ApiError(502, "database_error", "The recovery finish answer could not be read.")
         return FinishResponse(
             loot=reply["loot"],
-            coins=reply["coins"],
+            coins=reply["balance"],
             waveBest=reply["waveBest"],
             flags=reply["flags"],
             boss=reply["boss"],
