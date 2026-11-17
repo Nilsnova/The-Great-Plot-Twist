@@ -1,0 +1,26 @@
+{
+  "status": "FAILED before native image/tab assertions; original HTTP response body evicted from inspector cache",
+  "htmlSha256": "f65e50207d375c2b594c872e403dbff5a308e1d1809a54eabc0feda33d067e76",
+  "checkerSha256": "dbdb2dc8e443d4414f206a31575344b1020a4586a1f10130d4d8f1df4ef3b789",
+  "files": [
+    {
+      "file": "report.json",
+      "original": "final-comparison-browser-checks/report.json",
+      "bytes": 1762,
+      "sha256": "40c0b4614ffa7b97a2d3ee34bef28c5d09dfa83663c1dcb1066e5b6c3fdc610f"
+    },
+    {
+      "file": "run.log",
+      "original": "final-comparison-browser-checks/run.log",
+      "bytes": 295,
+      "sha256": "cc4a78cfd929f34aad56fac53e844c41e41e1f1469a3c04886d6feae88bbd72e"
+    },
+    {
+      "file": "original-checker.mjs",
+      "originalRevision": "1ee3b9de1c0fc4e549d0488ef666c60664d693c1",
+      "originalRepositoryPath": "docs/evidence/reference-village-latest-review/verify-comparison.mjs",
+      "bytes": 12036,
+      "sha256": "dbdb2dc8e443d4414f206a31575344b1020a4586a1f10130d4d8f1df4ef3b789"
+    }
+  ]
+}

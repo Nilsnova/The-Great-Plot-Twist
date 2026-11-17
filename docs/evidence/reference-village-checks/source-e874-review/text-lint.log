@@ -1,0 +1,9 @@
+REPORT frontend/src/online/adapter/index.js:30 [spelling] Unreviewed word: qxm. Check spelling before adding to words.txt.
+REPORT frontend/src/online/adapter/reasons.js:15 [spelling] Unreviewed word: re. Check spelling before adding to words.txt.
+REPORT frontend/src/online/adapter/reasons.js:15 [spelling] Unreviewed word: roll. Check spelling before adding to words.txt.
+REPORT frontend/src/online/adapter/reasons.js:16 [spelling] Unreviewed word: understood. Check spelling before adding to words.txt.
+REPORT frontend/src/online/auth.js:350 [spelling] Unreviewed word: delta. Check spelling before adding to words.txt.
+REPORT frontend/src/screens/islet/fake-catalogue.js:3 [name] Use canonical capitalization: Home islet.
+REPORT frontend/src/screens/islet/fake-catalogue.js:32 [spelling] Unreviewed word: shines. Check spelling before adding to words.txt.
+REPORT frontend/src/screens/market/fixtures.js:40 [dialect] Use gray (American English).
+Text lint: 4549 candidate strings in 533 source files; 0 errors, 8 report-only findings.

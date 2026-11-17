@@ -5,7 +5,7 @@ Responsible human: **Johannes Franz Lang (`frcola`)**. Documentation child
 [VIS31 acceptance #236](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/236);
 [documentation Draft #388](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/388).
 
-**Latest-main integration has a fresh stage-nine capture; final checks are still arriving.**
+**Latest-main integration has a fresh stage-nine capture and closed mixed checks.**
 The included main cutoff is `ee5677ff`. The [latest actual package](../evidence/reference-village-latest-review/README.md)
 preserves twenty unchanged final game PNGs, six unchanged before PNGs and a
 twelve-image comparison with a Selected wall scene. Capture, final layout audit
@@ -19,8 +19,13 @@ currently proves **21 measured full-game layout checks passed** in 86.77 s
 (three wave-hint rows explicitly skipped). Full frontend completed with
 **4,586 passed / one 20-second timeout**, 420 files (419 pass / one fail),
 554.53 s Vitest / 555.61 s process. All three new toast-clearance cases passed.
-Accessibility/demo/build/title-budget/text results and native verification of
-the twelve-image document remain **PENDING** until their exact receipts arrive.
+Accessibility **33 screens**, demo **34 checks**, build/spoiler guard, title
+budget and text lint all pass on that same source. Text lint retains eight
+report-only findings. Overall exit is **1** because the frontend timeout remains.
+The [native twelve-image document proof](../evidence/reference-village-comparison-browser/latest-v2-stage09/README.md)
+also passes: twelve original images, three tablists and 33 real actions at each
+viewport, zero page errors/external requests and exact browser-response bytes.
+Two earlier inspector-cache failures remain preserved; all assertions stayed intact.
 The [source-52 mixed results](../evidence/reference-village-checks/source-52-completed/README.md)
 and later b9 keyboard timeout remain unchanged history. The known upstream
 multiplayer pose failure stays open in [VIS53 issue #421](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/421);
@@ -277,8 +282,9 @@ from overlapping commands must not be added together.
 | Later keyboard-input candidate | Source b9da2783; [unchanged raw record](../evidence/reference-village-checks/source-52-completed/keyboard-follow-up/report.json) | One file / one test failed at the unchanged 20-second limit: 20.025 s body / 22.32 s Vitest / 23.09 s process. Same application trees as source 52, different test files. The timing failure remains open. |
 | Final stage-nine actual capture | [Twenty final PNGs/report/execution and twelve-image comparison](../evidence/reference-village-latest-review/README.md), source e874023f / frontend d76918ec, 199.76 s | New capture after VIS52; both viewport paid/camera/selection/Move/ghost/arranged local-wave journeys pass. Selected calls 119/116; combat 117/119/129 desktop, 116/120/129 phone. Zero page errors/external requests, one expected offline 503 each. Same frozen source as final checks; no production durability/device/balance acceptance. |
 | Final-source full-game layout | [Original report/log and three island-toast PNGs](../evidence/reference-village-checks/source-e874-review/README.md), source e874023f | **21 measured rows passed**, 86.77 s; three wave-hint rows skipped. Default viewports 1280×720, 390×844, 844×390. Goals/toast gaps are ten pixels at compact sizes. This does not turn skipped rows into coverage or replace separate 375×812 native component/game images. |
-| Final-source frontend | [Unchanged full output](../evidence/reference-village-checks/source-e874-review/frontend.log), source e874023f | **4,586 passed / one failed**; 420 files (419 passed / one failed), 554.53 s Vitest / 555.61 s process. Defense-report ownership exceeded the unchanged 20-second bound at 20.006 s; all three toast-clearance cases passed. Remaining five final commands and native comparison check still pending. |
+| Final-source frontend | [Unchanged full output](../evidence/reference-village-checks/source-e874-review/frontend.log), source e874023f | **4,586 passed / one failed**; 420 files (419 passed / one failed), 554.53 s Vitest / 555.61 s process. Defense-report ownership exceeded the unchanged 20-second bound at 20.006 s; all three toast-clearance cases passed. A11y 33 and demo 34 pass, with build/spoiler guard, title budget and text lint passing too; overall exit 1. Native comparison proof passes separately; this application timing failure remains open. |
 | Known upstream pose diagnosis | [Four unchanged diagnostic originals](../evidence/VIS-53-captain-pose-diagnostic/README.md), source 52f6bb15, issue #421 | **INCONCLUSIVE:** the single native diagnostic shot was refused and emitted zero accepted fire events. Foreground frame gaps and a synthetic-controller mechanism do not prove the full journey's accepted-shot failure cause. No runtime fix/PR or final-source MP pass. |
+| Final twelve-image document | [All three attempts and original native proof](../evidence/reference-village-comparison-browser/latest-v2-stage09/README.md), HTML f65e5020 / checker d3d59405 | **PASS** on Chromium 156: each viewport decodes twelve exact original images and passes three tablists / 33 real actions, zero page errors/external requests and exact same-navigation HTML response bytes. Two prior inspector-cache failures are preserved. The transport correction retained every native assertion and changed no app/graphics/timing rule. |
 | HUD focused proof | [BASE05 spec](../../specs/BASE-05-reference-hud.md), runtime `60573698` / final doc head `0729faf5`: 5 native HUD cases, 3 selected legacy coin cases, 20 model cases passed in separate commands | Desktop/phone/320px HUD semantics and controls, Goals restoration and coin compatibility. No final combined scene, a11y/demo or live-account claim. |
 | Wall tier correction | [Correction spec](../../specs/VIS-14-level-one-wall-art.md), head `b84eadfc`: 7 files / 76 tests passed in 3.81s | All canonical damage tiers, world/combat UV buffers, fallback/API/scene/preload cases. No combined final visual or live recovery acceptance. |
 | Core optional travel correction | [Handover](../handoff/vis35-core-travel-rejoin.md), `f52a05c5`: 6 files / 49 tests passed, build/spoiler guard passed | Guarded rejoin, actual controller and island-load behavior; browser travel/full-suite/live cases remain unverified. |
@@ -309,7 +315,7 @@ keeps the 12MiB decode pool, two-decode cap, 8MiB encoded-source cap and existin
 | Production asset handoff | Active VIS30 f6bbc967 / VIS18 e54b0f46 sources match public 9306942; 12,554,858 bytes with terrain still misses 8MiB | Every active compiled source is shipped and exists; inactive originals stay on disk and out of downloads; actual build/cold results and final whole-world bytes are recorded. |
 | Final visual acceptance, VIS31 | Latest stage-nine package includes selected-wall correction and measured toast clearance; human visual acceptance remains open | Cliffs/scenery remain less detailed than the approved concepts. The bounded selected-wall presentation does not remove all scenery occlusion. Review composition, supported states and source/fixture differences; actual captures do not replace independent human acceptance. |
 | Playable placement/upgrade proof | Stage four both-viewport functional journey passed selection, actual 40-coin upgrade, Move/Cancel, semantic/indexed ghost and arranged paid layout; final visual review remains open | Real upgrade price/wallet, current level/HP, Move/cancel, exact valid/invalid snapped cells, semantic draft cells and rendered indexed buffers agree. |
-| New visual full-suite gate | Historical source 52f6bb15 completed with three failed checks; later keyboard input also failed. Final e874 frontend has one timeout and layout passes 21 measured rows; five final commands/native document proof remain **PENDING**. Historical failures keep their boundaries; focused successes do not replace a complete run. | Fresh `npm test`, build/spoiler guard, budget, a11y, demo, overlap, text lint and multiplayer on the exact latest source, with actual result lines. |
+| New visual full-suite gate | Historical source 52f6bb15 completed with three failed checks; later keyboard input also failed. Final e874 frontend has one timeout and layout passes 21 measured rows; the six-command sequence is closed with that timeout; native document proof passed separately and does not close the application failure. Historical failures keep their boundaries; focused successes do not replace a complete run. | Fresh `npm test`, build/spoiler guard, budget, a11y, demo, overlap, text lint and multiplayer on the exact latest source, with actual result lines. |
 | Combat and failure/quality gate | Latest stage-nine samples 117/119/129 and 116/120/129 are below 150; broader acceptance stays open | Sustained/worst-case performance, quality/failure/device evidence and actual damage/muzzle/HP alignment. Local legacy demo does not prove production V1 durability or live multiplayer. |
 | Balance | Not signed off | Progressed local seed and rendering/breach proof do not establish multi-seed/multi-wave difficulty or economy balance. |
 | Land expansion / growth | Not implemented by this visual phase | D064 preserves the existing analytic coast and paid footprints. Separate expansion/progression tasks need their own implementation and review; decorative pixels grant no territory. |
@@ -409,12 +415,11 @@ not merge from this guide.
   source/helper tree identity. Quoted stage-nine actual captures and targeted
   backend results and completed source-52 mixed results retain their precise sources;
   packaging reran no app suite/browser.
-- **Not verified:** the five still-running final command results and native
-  twelve-image document check, Safari/physical devices,
+- **Not verified:** Safari/physical devices,
   sustained performance, balance, land expansion, live deployment and human
   understanding/visual approval. Cliffs/scenery remain less detailed; the selected
   wall is corrected, while other scenery occlusion retains its normal scope.
-- **Remaining:** obtain the final correction/capture/check receipts, retain the
+- **Remaining:** inspect the final exact-source receipts, retain the
   report-input timeout and known upstream pose failure until evidence resolves
   them, and address remaining performance/visual/device/balance work. The coordinator addresses the
   acceptance gates above and hands the current revision to an independent human.

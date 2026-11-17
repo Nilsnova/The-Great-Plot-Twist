@@ -51,7 +51,7 @@ after cases in 8.92 s; it is separate from this full-game audit and the
 1280×720/375×812 stage-nine game journey. Earlier source-52 failures remain
 [unchanged history](../source-52-completed/README.md).
 
-## Final six-command sequence: results still arriving
+## Final six-command sequence: closed mixed result
 
 The [frozen-source full frontend run](frontend.log) has completed: **4,586 passed / one failed**,
 420 files (419 passed / one failed), **554.53 s Vitest / 555.61 s process**.
@@ -59,11 +59,28 @@ The sole failure is the defense-report ownership test's unchanged 20-second
 limit (20.006 s body). All three new toast-clearance cases passed. This is
 not a complete-suite pass or an established report-input performance fix.
 
-Accessibility, demo, build, title-budget and text-lint results are **PENDING**
-until the coordinator's exact closed runner report and logs arrive. Do not
-inherit their earlier source-52 passes. The same backend/Supabase trees retain
-the separately scoped 262 route/unit and 269 scratch-PostgreSQL results; there
-was no fresh full-backend run or live migration.
+The [closed runner report](final-commands-report.json) records all six commands
+from 22:59:48.635341 to 23:16:40.118952 UTC, overall exit **1**. The
+[complete runner log](final-commands-runner.log) preserves execution order.
+The source and all four application trees above remained frozen.
+
+| Final command / raw receipt | Exact result | Process time |
+|---|---|---:|
+| [`npm test -- --maxWorkers=1 --reporter=verbose`](frontend.log) | **FAIL:** 4,586 passed / one timeout; 420 files (419 passed / one failed), 554.53 s Vitest. | 555.61 s |
+| [`npm run test:a11y`](a11y.log) | **PASS:** 33 screens, `failures: []`, `errors: []`. | 359.22 s |
+| [`npm run test:demo`](demo.log) | **PASS:** 34 checks, `errors: []`, `external: []`; [original journey record](demo-captures/journey.json). | 91.97 s |
+| [`npm run build`](build.log) | **PASS:** spoiler guard `244 text files, 12 protected lines, no suspect elimination data`. | 1.88 s |
+| [`node scripts/report-budget.js --check`](budget.log) | **PASS:** title-asset limits; this does not close the separate 8MiB world-art effort target. | 0.37 s |
+| [`node ../scripts/text-lint/index.mjs`](text-lint.log) | **PASS:** `4549 candidate strings in 533 source files; 0 errors, 8 report-only findings`. | 2.40 s |
+
+The same backend/Supabase trees retain separately scoped 262 route/unit and
+269 scratch-PostgreSQL passes plus Ruff. Those selected-file results are not a
+fresh full-backend run; no live migration was applied. The final twelve-image
+comparison document's [native check](../../reference-village-comparison-browser/latest-v2-stage09/README.md)
+**PASSED** for the unchanged HTML `f65e5020…` / streaming checker `d3d59405…`: twelve
+original images, three tablists and 33 real actions at each viewport, zero page
+errors/external requests and exact browser-response bytes. Two prior cache-read
+failures remain archived. This is document verification, not another app run.
 
 The known upstream multiplayer musket-pose failure remains source-52 evidence,
 not a passing final-source rerun. [VIS53 issue #421](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/421)

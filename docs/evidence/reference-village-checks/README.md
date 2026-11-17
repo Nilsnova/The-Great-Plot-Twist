@@ -14,7 +14,9 @@ source-specific results do not rewrite the historical failures below.
 The later [final e874 review](source-e874-review/README.md) uses a new UI tree
 after measured Goals/toast clearance: 21 measured layout rows pass (three
 wave-hint rows skipped), and frontend has 4,586 passes / one 20-second timeout.
-The remaining five final commands/native document proof are still pending.
+Final a11y 33/demo 34/build/budget/text pass; overall exit remains 1 because
+the frontend timeout stays open. Native document proof passes separately with twelve original images / 33 real
+actions at each viewport; both inspector-cache failures remain archived.
 Stage-nine actual images and source-52 history retain separate boundaries. The [manifest](sha256.json) records each copied file's
 original archive name, byte count and SHA-256. No application/browser run was
 performed to package these records.

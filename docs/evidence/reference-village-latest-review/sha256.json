@@ -257,11 +257,9 @@
     },
     {
       "file": "verify-comparison.mjs",
-      "bytes": 12036,
-      "sha256": "dbdb2dc8e443d4414f206a31575344b1020a4586a1f10130d4d8f1df4ef3b789",
-      "originalRevision": "07d0c14649ae7d1fb6a3503012d8941bee4e6a42",
-      "originalRepositoryPath": "docs/evidence/reference-village-latest-review/verify-comparison.mjs",
-      "note": "Unchanged portable strict checker retained from the reviewed documentation checkpoint."
+      "bytes": 15324,
+      "sha256": "d3d59405be7c7eb20106c6af7cd911ac35b8caeaae4b186e2a8c4da2c137adc6",
+      "note": "Bounded same-navigation response streaming correction; exact byte proof and all native assertions retained. Third native run passed; both earlier cache-read failures/checkers are archived."
     }
   ],
   "captureStats": [
@@ -299,7 +297,8 @@
     "defaultHtml": "comparison.html beside the checker",
     "defaultOutput": "captures/review-document relative to the command working directory",
     "optionalPackageOverride": "REVIEW_FRONTEND_PACKAGE",
-    "requires": "existing locked frontend playwright-core and installed Chromium"
+    "requires": "existing locked frontend playwright-core and installed Chromium",
+    "bodyTransport": "owned CDP Network session enabled before navigation; resource buffer4xHTML bytes,total16x; streamResourceContent starts on owned Document responseReceived, bufferedData prefix plus same-request ordered dataReceived.data through loadingFinished; original-size bound and exact original-byte comparison"
   },
   "comparison": {
     "file": "comparison.html",
@@ -455,7 +454,7 @@
   "completedVerificationHistory": {
     "source": "52f6bb158b03188b57260c1872e273391598debf",
     "path": "../reference-village-checks/source-52-completed/README.md",
-    "status": "mixed; frontend timeout, layout overlap and upstream multiplayer pose failures remain recorded; later candidate pending"
+    "status": "historical mixed source-52 results preserved unchanged; final e874 results have their own exact source record"
   },
   "priorStageEightPackage": {
     "immutableDocsHead": "267405eafbc9241d3bce9aaca8e1aeac9efa28bc",
@@ -467,12 +466,22 @@
     "source": "e874023f27fff1a7bf5b21787e1ecd5c55a75a9f",
     "frontendTree": "d76918ec05735c46c9cda4a55cc495e28bfa0d5a",
     "changeAfterStageEight": "VIS52 measured Goals/toast clearance; keyboard-activated test variant also present; old stage-eight images are not asserted to depict the new UI source.",
-    "finalSixCommandVerification": "PENDING",
-    "strictNativeComparisonCheck": "PENDING"
+    "finalSixCommandVerification": "closed mixed: frontend 4586 passed/1 timeout; a11y33/demo34/build/title-budget/text passed; overall exit1",
+    "strictNativeComparisonCheck": "passed both viewports:12 original PNGs,3 tablists,33 real actions each,zero errors/external,exact browser response bytes"
   },
   "reviewReadme": {
     "file": "README.md",
-    "bytes": 11767,
-    "sha256": "df321512f8624265f70ae405128f5c8cd1bb2e547c20ae120b72e7d4f7af92fe"
+    "bytes": 12914,
+    "sha256": "dcb9affac672d3b5a17ac5795e12d9d048c87c1ddf3da17bb854e08e7453dea9"
+  },
+  "nativeComparisonAttempts": {
+    "failedAttempt": "../reference-village-comparison-browser/latest-v2-stage09/attempt-01-cache-failed",
+    "status": "attempts1/2 failed before native assertions from inspector-cache eviction; attempt3 same-navigation streaming passed all unchanged native assertions",
+    "htmlSha256": "f65e50207d375c2b594c872e403dbff5a308e1d1809a54eabc0feda33d067e76",
+    "oldCheckerSha256": "dbdb2dc8e443d4414f206a31575344b1020a4586a1f10130d4d8f1df4ef3b789",
+    "newCheckerSha256": "d3d59405be7c7eb20106c6af7cd911ac35b8caeaae4b186e2a8c4da2c137adc6",
+    "secondFailedAttempt": "../reference-village-comparison-browser/latest-v2-stage09/attempt-02-cache-failed",
+    "passedAttempt": "../reference-village-comparison-browser/latest-v2-stage09/passed-stream",
+    "checkerSha256": "d3d59405be7c7eb20106c6af7cd911ac35b8caeaae4b186e2a8c4da2c137adc6"
   }
 }

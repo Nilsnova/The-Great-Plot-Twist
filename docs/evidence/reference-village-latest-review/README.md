@@ -9,10 +9,20 @@ Open [comparison.html](comparison.html) for a self-contained before/after page.
 It embeds **twelve exact original PNG streams**: whole-village, combat and
 selected-wall comparisons at desktop and phone viewports. Three tablists have
 2 / 3 / 3 choices and support click, Arrow, Home and End navigation. No image
-was edited, cropped or re-encoded. The final document's native browser check is
-**PENDING** until its own source/hash-specific report is supplied; the older
-[eight-image document proof](../reference-village-comparison-browser/README.md)
-does not validate this new twelve-image page.
+was edited, cropped or re-encoded. The final document's [native browser proof](../reference-village-comparison-browser/latest-v2-stage09/README.md)
+**PASSED** at both viewports: twelve exact original images, three tablists and
+33 real actions each, with zero page errors/external requests. Exact same-navigation
+browser-response bytes match this unchanged HTML. The older eight-image proof
+retains its separate historical boundary.
+
+The [two initial twelve-image native attempts](../reference-village-comparison-browser/latest-v2-stage09/README.md)
+failed before browser image/tab assertions: Chromium evicted the 10.52 MB HTML
+response from inspector cache, including a scoped buffered-read attempt. Both
+failures and their exact checkers are preserved. The revised checker streams
+this navigation's actual response through its own bounded CDP Network session,
+retaining the original-size bound and exact browser-response byte comparison.
+Syntax and independent source review pass. The third native stream run passed
+all checks; HTML bytes remain unchanged and both failed attempts stay preserved.
 
 ## Exact application and capture boundary
 
@@ -28,7 +38,8 @@ does not validate this new twelve-image page.
 
 Capture, passing full-game layout audit and final six-command checks use the
 **same frozen source** and all four application trees above. The final command
-sequence is still being completed; capture success does not imply it passed.
+sequence is closed with one failed frontend timing case; capture success does
+not turn it into a complete-suite pass.
 The [manifest](sha256.json) records the exact source boundary. The
 [execution record](execution.json) identifies the actual helper checkout and
 three helper hashes. The [raw report](report.json) retains the exact declared
@@ -119,9 +130,12 @@ The [final exact-source evidence](../reference-village-checks/source-e874-review
 records **21 measured full-game layout checks passed** in 86.77 s, with three
 wave-hint rows explicitly skipped. The final frontend run has **4,586 passed /
 one 20-second timeout** across 420 files (419 pass / one fail), 554.53 s Vitest /
-555.61 s process; all three toast-clearance cases passed. The other five commands
-(accessibility, demo, build, title budget and text lint) remain **PENDING** until
-their exact closed report arrives. This document's native check remains pending.
+555.61 s process; all three toast-clearance cases passed. The closed six-command sequence also passes accessibility **33 screens**
+(359.22 s), demo **34 checks** (91.97 s, errors/external empty), build/spoiler
+guard (1.88 s), title budget (0.37 s) and text lint (2.40 s: 0 errors / eight
+report-only findings). Overall exit is **1** because the frontend timeout remains.
+The separate native document proof also passes with HTML hash `f65e5020…` and
+checker `d3d59405…`; it does not turn the application timing failure into a pass.
 
 The [completed historical source-52 sequence](../reference-village-checks/source-52-completed/README.md)
 retains 4,583 frontend passes / one timeout, 33 accessibility screens and 34 demo
