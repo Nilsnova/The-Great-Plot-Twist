@@ -1,8 +1,8 @@
 // T21: no v3 screen (title, intro, front door, How to play) asks for a painted or pixel picture. The
-// title, every cutscene and the How to play sprites are cartoon art drawn in code (GAME-V3.md §7);
-// the old pictures stay in public/ (nothing is deleted) and the build leaves them out of dist.
+// title, every cutscene and the How to play sprites remain code-drawn (GAME-V3.md §7/D063).
+// Approved world-only raster manifests are allowed, but must stay outside the cold import graph.
 import {existsSync, readFileSync, readdirSync, statSync} from 'node:fs';
-import {join} from 'node:path';
+import {dirname, join, normalize} from 'node:path';
 import {describe, expect, it} from 'vitest';
 import {UNSHIPPED, unshipped} from '../scripts/unshipped-art.js';
 import {scenes} from '../src/cutscenes/scenes.js';
@@ -25,11 +25,39 @@ const ALLOWED = {
   'src/cutscenes/art.js': 'old generated registry, imported by nothing',
 };
 const RASTER = /(?:cutscenes|places|pixel)\/[\w.${}-]*\.(?:png|webp|jpe?g)|['"`](?:cutscenes|places|pixel)\/(?:\$\{|['"`])|\.(?:png|webp)['"`]/;
+const WORLD_IMAGE = /village\/[\w./${}-]+\.(?:png|webp|jpe?g)/;
+// This named world-only boundary is deliberate, not an exception for all shared art.
+const worldRasterModule = path => path.startsWith('src/art/village/') ||
+  path.startsWith('src/art/village-raster') || path === 'src/art/village-families.js';
+function staticClosure(roots) {
+  const pending = [...roots], visited = new Set();
+  while (pending.length) {
+    const path = pending.pop();
+    if (visited.has(path) || !existsSync(path)) continue;
+    visited.add(path);
+    if (!path.endsWith('.js')) continue;
+    const source = readFileSync(path, 'utf8');
+    const imports = /\b(?:import|export)\s+(?:[^'";]*?\s+from\s*)?(['"])(\.[^'"]+)\1/g;
+    for (const match of source.matchAll(imports)) pending.push(normalize(join(dirname(path), match[2])));
+  }
+  return [...visited];
+}
 
 describe('v3 screens draw their pictures in code', () => {
   it('no title, intro, front door or How to play source names a /cutscenes, /places or /pixel picture', () => {
-    const found = V3_SCREENS.filter(path => !ALLOWED[path] && RASTER.test(readFileSync(path, 'utf8')));
+    const found = V3_SCREENS.filter(path => {
+      if (ALLOWED[path] || worldRasterModule(path)) return false;
+      const source = readFileSync(path, 'utf8');
+      return RASTER.test(source) || WORLD_IMAGE.test(source);
+    });
     expect(found).toEqual([]);
+  });
+
+  it('cold-screen static imports cannot reach approved world raster loaders or manifests', () => {
+    // Every cold screen is a root, including dynamically opened title/help/cutscene chunks.
+    // The game entry remains a deliberate dynamic boundary; build/network budgets verify it.
+    const roots = V3_SCREENS.filter(path => !path.startsWith('src/art/'));
+    expect(staticClosure(roots).filter(worldRasterModule)).toEqual([]);
   });
 
   it('nothing imports the old cutscene picture registry', () => {
