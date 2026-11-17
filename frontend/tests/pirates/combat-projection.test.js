@@ -81,12 +81,44 @@ describe('shared combat ground projection', () => {
     expect(JSON.stringify({event, state, defenses})).toBe(before);
     const boarder = {id: 'b', x: 2, z: 4, hp: 10, maxHp: 10, state: 'walking', facing: 1};
     renderer.update({state: {...empty(), boarders: [boarder]}});
-    renderer.update({state: {...empty(), boarders: [{...boarder, x: 2.1, z: 2}]}});
-    const band = renderer.root.children.find(child => child.name.startsWith('pirates:boarders:') && child.geometry.instanceCount);
-    closePoint(position(band), projectGround(2.1, 2));
-    const facingUv = band.geometry.getAttribute('iUv').array;
+    const moved = {...empty(), boarders: [{...boarder, x: 2.1, z: 2}]};
+    const band = () => renderer.root.children.find(child => child.name.startsWith('pirates:boarders:') && child.geometry.instanceCount);
+    renderer.update({state: moved});
+    closePoint(position(band()), projectGround(2, 4)); // Main's smoother starts at the previous drawn foot.
+    renderer.update({state: moved, dt: .03});
+    closePoint(position(band()), projectGround(2.05, 3));
+    renderer.update({state: moved, dt: .03});
+    closePoint(position(band()), projectGround(2.1, 2));
+    const facingUv = band().geometry.getAttribute('iUv').array;
     expect(facingUv[0]).toBeGreaterThan(facingUv[2]); // displayed movement is left despite logical +x
     renderer.dispose();
+  });
+
+  it('projects smoothed ship feet and facing without mutating simulation coordinates, and prunes old wave positions', () => {
+    const pack = packAtlas(), scene = new THREE.Scene();
+    const renderer = createWaveRenderer({scene, atlas: {texture: new THREE.Texture(), ...pack}, reducedMotion: () => true, fx: () => null});
+    const ship = Object.freeze({id: 'smooth-ship', kind: 'sloop', x: 0, z: 7, hp: 100, maxHp: 100, state: 'anchored'});
+    const first = {...empty(), ships: [ship]}, next = {...empty(), ships: [Object.freeze({...ship, x: .5, z: 8})]};
+    const original = JSON.stringify({first, next});
+    const sea = renderer.root.children.find(child => child.name === 'pirates:near-sea');
+    renderer.update({state: first, dt: .1});
+    closePoint(position(sea), projectGround(0, 7));
+    // The logical x is zero, but shear puts the hull right of center. Metadata needs z to face left.
+    const facing = sea.geometry.getAttribute('iUv').array;
+    expect(facing[0]).toBeGreaterThan(facing[2]);
+    renderer.update({state: next});
+    closePoint(position(sea), projectGround(0, 7));
+    renderer.update({state: next, dt: .03});
+    closePoint(position(sea), projectGround(.25, 7.5));
+    renderer.update({state: next, dt: .03});
+    closePoint(position(sea), projectGround(.5, 8));
+    expect(JSON.stringify({first, next})).toBe(original);
+    renderer.update({state: empty()});
+    expect(sea.geometry.instanceCount).toBe(0);
+    renderer.update({state: {...empty(), ships: [{...ship, x: -1, z: 6}]}});
+    closePoint(position(sea), projectGround(-1, 6)); // Reused IDs must not glide from a previous lifetime.
+    renderer.dispose();
+    expect(scene.children).toHaveLength(0);
   });
 
   it('transforms guide ground centers AND local lane corners while keeping air badges upright', () => {
