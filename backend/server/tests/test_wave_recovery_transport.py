@@ -144,6 +144,53 @@ def test_event_page_reader_forwards_both_fixed_frontier_values():
     ]
 
 
+def test_input_reader_does_not_expose_the_internal_repeat_marker():
+    token = UUID("22222222-2222-4222-8222-222222222222")
+
+    class Admin:
+        async def call_function(self, name, arguments):
+            assert name == "recovery_wave_inputs"
+            return {
+                "status": "accepted",
+                "accepted": [
+                    {
+                        "serverSeq": 1,
+                        "effectiveTick": 5,
+                        "type": "captain_input",
+                        "participantToken": str(token),
+                        "payload": {
+                            "inputUid": "input_123",
+                            "actorCounter": 1,
+                            "participantToken": str(token),
+                            "command": {"type": "captain_move", "x": 1, "z": 2},
+                            "captain": {"level": 1, "skills": [], "weapon": "musket"},
+                        },
+                    }
+                ],
+                "headSeq": 1,
+                "repeat": True,
+            }
+
+    result = asyncio.run(
+        wave_recovery.append_inputs(
+            Admin(),
+            "player",
+            UUID("11111111-1111-4111-8111-111111111111"),
+            [
+                RecoveryInput(
+                    inputUid="input_123",
+                    actorCounter=1,
+                    tick=5,
+                    command={"type": "captain_move", "x": 1, "z": 2},
+                )
+            ],
+        )
+    )
+
+    assert result.head_seq == 1
+    assert len(result.accepted) == 1
+
+
 def test_snapshot_template_captures_server_sim_inputs_and_exact_hp_rate(monkeypatch):
     world = World()
     built = [

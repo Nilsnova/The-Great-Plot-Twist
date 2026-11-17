@@ -524,7 +524,7 @@ async def append_inputs(
     if not isinstance(reply, dict) or reply.get("status") != "accepted":
         raise SupabaseRejected("The wave inputs could not be accepted.")
     return RecoveryInputResult.model_validate(
-        {key: value for key, value in reply.items() if key != "status"}
+        {key: value for key, value in reply.items() if key in {"accepted", "headSeq"}}
     )
 
 
