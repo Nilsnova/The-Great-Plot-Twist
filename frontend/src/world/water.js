@@ -97,19 +97,20 @@ void main(){
   float shallow=1.0-smoothstep(.0,4.2,d+sin(p.x*.8+p.y*.5+t*.6)*.25);
   colour=mix(colour,uShallow,shallow*.85);
   colour=mix(colour,uShallow2,(1.0-smoothstep(.0,1.3,d))*.9);
-  // Crossing, warped ripples read as a surface, rather than parallel drawn lines.
+  // Domain-warped, broken ripples avoid a regular grid of standing highlights.
   // The entire extra material branch is disabled by the existing low-quality uniform.
   if(uDetail>.5){
-    vec2 drift=vec2(t*(.08+uWind*.08),-t*.055);
-    vec2 q=p*.9+vec2(sin(p.y*.42+t*.2),cos(p.x*.38-t*.17))*.35;
-    float ripple=sin(q.x*2.7+q.y*.85-t*.65)*.55+sin(q.y*3.4-q.x*.72+t*.48)*.35;
-    float crest=smoothstep(.2,.85,ripple)*pxNoise(q*.6+drift);
-    float hollow=1.0-smoothstep(-.65,-.1,ripple);
-    colour=mix(colour,uDeep,hollow*.09);
-    colour=mix(colour,uStroke,crest*.22);
-    float cells=pxNoise(q*1.15+drift)+pxNoise(q*2.35-drift)*.22;
-    float caustic=(1.0-band(abs(cells-.61),.028))*smoothstep(.7,1.4,d)*(1.0-smoothstep(3.0,6.0,d));
-    colour=mix(colour,uGlint,caustic*.1);
+    vec2 drift=vec2(t*(.06+uWind*.06),-t*.045);
+    float broad=pxNoise(p*.72+drift);
+    float ripple=sin(p.y*4.0+p.x*.15+broad*5.0-t*(.4+uWind*.2));
+    float broken=smoothstep(.35,.75,pxNoise(p*vec2(1.7,.65)-drift));
+    float crest=(1.0-band(abs(ripple),.15))*broken*smoothstep(.5,2.0,d);
+    colour=mix(colour,uDeep,(1.0-broad)*.065);
+    colour=mix(colour,uStroke,crest*.24);
+    vec2 q=p*2.6+vec2(broad,pxNoise(p*.8-drift))*.7;
+    float cells=pxNoise(q+drift)+pxNoise(q*1.95-drift)*.2;
+    float caustic=(1.0-band(abs(cells-.6),.02))*smoothstep(.6,1.2,d)*(1.0-smoothstep(1.5,3.0,d));
+    colour=mix(colour,uShallow2,caustic*.055);
   }
   // The close edge is still in low quality; its extra movement and broken surf are high-only.
   float foamTime=uDetail>.5?t:0.0;
