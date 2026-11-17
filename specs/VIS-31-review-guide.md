@@ -86,3 +86,26 @@ pairs and three tablists. Extracted comparison JavaScript passed `node --check`;
 75 changed relative links/anchors and 43 public Draft branch/head snapshot rows
 passed. Whitespace checks passed. This is static/packaging verification, not a
 browser/assistive-technology interaction audit or an application-suite rerun.
+
+## Failed verification provenance and active transport correction
+
+Preserved the exact 6e2 complete failure: 4,463 pass/1 fail, 409 files
+(408 pass/1 fail), 563.22s, remaining defense-report20s ownership timeout.
+VIS46 candidate 4844's new sole-owner assertion also failed in 18.375 s; its app
+source/public/backend trees match 6e2. Accessibility on 6e2 failed lobby keyboard
+only across 33 screens in 382.39 s, with no browser/external errors. VIS46/47 stay
+Draft and diagnosis/retry stay open; no assertion,24 rAF/high-quality or20 s bound
+is relaxed by this docs task.
+
+Corrected active production art transport from the historical 13,608,302-byte
+checkpoint to VIS30 f6bbc967/VIS18 e54b0f46: all 13 active compiled hashes match
+candidate public 9306942;9,871,501+2,683,357=12,554,858 bytes. The 8MiB miss
+remains. Cliffs/scenery detail and phone tree occlusion are explicit visual
+limitations. Raw captures/reports remain unchanged; no app/Chrome run occurred.
+
+Latest documentation checks passed 75 changed relative links/anchors and 45
+public Draft branch/head rows, retained all 21 copied records/20 dimensions and
+all 8 embedded original PNG hashes, and verified the HTML output hash/JavaScript
+syntax. All 13 active compiled hashes matched the candidate public tree. The exact
+failed-run metrics and unresolved visual/size/device/balance/land limits remain
+explicit. No new application/browser test or final-preview edit was performed.

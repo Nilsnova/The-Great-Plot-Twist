@@ -1,5 +1,5 @@
 {
-  "status": "rendered review capture; final visual/device/balance acceptance and fresh complete checks pending",
+  "status": "rendered review capture; full/a11y retries not green, diagnostics unresolved; final visual/device/balance acceptance open",
   "captureRuntime": "9f47c14277c801d10f2c504799a72fe059b52171",
   "frozenCandidate": "6e2c3e8b3437ba7302870adb59e2351c2fa74f5e",
   "applicationTrees": {
@@ -181,8 +181,8 @@
   ],
   "comparison": {
     "file": "comparison.html",
-    "bytes": 6680852,
-    "sha256": "1b013663f890355679a4a0005dea7f01dee3f9d07c113ee1c140cbe77e9e0dd8",
+    "bytes": 6681124,
+    "sha256": "ee507bf458ece37811f748d8896cf46f19bbea7f53d0264be62fd4f7f4569de7",
     "embeddedOriginals": [
       {
         "file": "docs/evidence/VIS-33-working-composition/before-fit-1280x720.png",
@@ -250,5 +250,17 @@
       }
     ],
     "note": "Self-contained optional documentation artifact. Eight embedded PNG byte streams are unchanged originals, not re-encoded images."
+  },
+  "activeArtTransport": {
+    "vis30Commit": "f6bbc967a3676257660dbdc4028708e8810809d8",
+    "vis18Activation": "e54b0f463aeb21b5a740aa77b6a4b8b6719692ff",
+    "publicTree": "9306942db1050d728799cee2fbdc8e8960f14ad2",
+    "compiledFiles": 13,
+    "compiledBytes": 9871501,
+    "terrainBytes": 2683357,
+    "totalBytes": 12554858,
+    "targetBytes": 8388608,
+    "targetMet": false,
+    "verification": "All13 active compiled file hashes match VIS30 report at frozen candidate6e2c3e8b."
   }
 }
