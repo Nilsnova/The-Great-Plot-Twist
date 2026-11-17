@@ -43,6 +43,9 @@ export async function createSettlement(ctx) {
     });
     const foliage = trees.map(([x, z], i) => {
       const mesh = placeArt(group, art, ['oak', 'pine', 'birch'][i % 3], x, z);
+      // Smaller home canopies reveal walls; house growth multiplies this visual baseline.
+      // The ground foot, radius-.48 blocker and painter order remain unchanged.
+      if (id === 'home_islet') mesh.scale.setScalar(.7);
       mesh.material = swayMaterial(mesh.material.clone(), mesh.userData.asset); return mesh;
     });
     trees.forEach(([x, z], i) => {
