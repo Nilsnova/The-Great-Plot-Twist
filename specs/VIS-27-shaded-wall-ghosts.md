@@ -38,3 +38,7 @@ Batching changes the number of meshes, so proof must compare ordered semantic ce
 1. Why can an unpaid preview borrow the paid renderer without granting a purchase?
 2. Which real positions determine whether two ghost pieces connect?
 3. Why does clearing a draft dispose its buffers but not the world's atlas texture?
+
+## Implemented checkpoint
+
+The world atlas now activates the same shaded wall renderer in its unpaid draft. Read-only ordered-cell diagnostics and exact paid/preview position/UV/index parity are covered by tests, including half-grid movement, turns/gaps, state tint, clear/cancel and texture ownership. Six focused files / 32 tests passed in 3.26s; build, spoiler guard, cold-title transfer and text lint pass. Actual integrated captures and broader UI acceptance remain with the coordinator; no browser or performance pass is claimed here.

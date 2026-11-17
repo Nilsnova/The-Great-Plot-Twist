@@ -81,7 +81,13 @@ export function makeWallConnections(root) {
     return current;
   }
   return {show, get links() { return readLinks(); },
+    get root() { return group; },
+    get posts() { return group.wallPosts; },
     hasPost: id => !!art && posts.has(id),
+    setTint(color, opacity = 1) {
+      if (disposed) return;
+      material.color.setHex(color); material.opacity = Math.max(0, Math.min(1, opacity));
+    },
     setArt(value) {
       if (disposed || !value) return false;
       if (value === art) return true;

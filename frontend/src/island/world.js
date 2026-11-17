@@ -413,6 +413,7 @@ export function decorateIsland(place, ctx = {}) {
       if (disposed || !wallConnections.setArt(value)) { if (value.ownsTexture) value.texture.dispose(); return; }
       textures.wall.texture.image = wallPreviewCanvas(value); textures.wall.texture.needsUpdate = true;
       const frame = value.rects['island-wall']; wallDraft.setFrame({size: [frame.w, frame.h], anchor: frame.anchor});
+      wallDraft.setWallArt(value);
       apply(state);
     }).catch(error => {
       if (!disposed) { root.userData.wallArtError = String(error?.message ?? 'Wall artwork unavailable'); ctx.onArtError?.(error); }
