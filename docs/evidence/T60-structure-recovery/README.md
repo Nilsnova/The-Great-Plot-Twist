@@ -14,6 +14,8 @@ canonical snapshot fixtures; assertions and server limits were left intact.
 `f16a46a1` and `0dbfcae5`, mutation hooks `3b9c289e` and `cc519114`; T56 paid repair `a4d4fe5a`;
 T57 replay modules `80b79c22` and fixed-seal reader `aad93866`; T55 contract notes `704f7ea5`,
 stateless SQL paging `db9cd0d4`, HTTP page adapter `081f5e1b`, and input response contract `583b9802`;
+T55 stateless contract documentation `d260bfd6`; T58 integrated UI/evidence `a3ae783b`; T59
+integrated card/indicator UI `ba0d6cae`; and T60 HTTP reconnect regression `d6b686e6`.
 T60 API/PG/replay harness base commit `5ebbd657` with expiry/flag-off coverage and release docs in
 `825d2c56` and `9e2e55b8`.
 
