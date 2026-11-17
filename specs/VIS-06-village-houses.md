@@ -35,7 +35,8 @@ prices, unlock, footprint, collision, Move rule or recovery behavior is added.
   and normalize to the same fixed ground point without stretching.
 - No opaque matte, labels, checkerboard, grid lines or unrelated scenery ships.
 - The family is loaded through the actual agreed provider, with bounded density,
-  failure/lifetime behavior and the original code-art fallback.
+  failure/lifetime behavior. Unregistered families keep code art; registered image
+  failures reject clearly for retry instead of a silent painter substitute.
 - Actual game images, not generated sheets, decide final visual acceptance.
 
 At claim time no implementation, test pass or runtime proof is claimed. No new
