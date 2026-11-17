@@ -364,6 +364,36 @@ def test_coop_member_without_wave_participant_token_can_pay_and_event_has_no_pri
     )
 
 
+def test_paid_repair_event_includes_only_the_server_mapped_participant_token(database):
+    epoch, wave_id = seed_recovery(database, active=True)
+    token = UUID(int=969)
+    as_server(database)
+    database.execute(
+        "insert into public.recovery_wave_participants "
+        "(wave_id,player_id,participant_token) values (%s,%s,%s)",
+        (wave_id, OWNER, token),
+    )
+
+    done = repair(
+        database,
+        epoch=epoch,
+        wave_id=wave_id,
+        window="reserved_wave",
+    )
+
+    assert done["event"]["participantToken"] == str(token)
+    assert done["event"]["payload"]["chargedPrice"] == 10
+    assert "payer" not in done["event"] and "balanceAtCommit" not in done["event"]
+    assert (
+        call(
+            database,
+            "select actor_id from public.recovery_wave_events where wave_id=%s and seq=1",
+            wave_id,
+        )
+        is None
+    )
+
+
 def test_old_success_uid_after_new_damage_returns_receipt_without_healing_or_charging(database):
     epoch, wave_id = seed_recovery(database, active=True)
     first = repair(
@@ -410,6 +440,33 @@ def test_old_success_uid_after_new_damage_returns_receipt_without_healing_or_cha
             database,
             "select paid_used from public.recovery_wave_states where wave_id=%s",
             wave_id,
+        )
+        == 1
+    )
+
+
+def test_old_success_uid_stays_replayable_after_the_target_is_demolished(database):
+    seed_recovery(database)
+    original = repair(database, action_uid="repair-0007")
+    coins = balance(database, OWNER)
+    target_instance = instance(database)
+    as_server(database)
+    database.execute(
+        "delete from public.islet_buildings where player_id=%s and plot='wall_1'",
+        (OWNER,),
+    )
+
+    replay = repair(database, action_uid="repair-0007", instance_id=target_instance)
+
+    assert replay["repeat"] is True
+    assert replay["receipt"] == original["receipt"]
+    assert balance(database, OWNER) == coins
+    assert (
+        call(
+            database,
+            "select count(*) from public.structure_repair_receipts where payer_id=%s "
+            "and action_uid='repair-0007'",
+            OWNER,
         )
         == 1
     )

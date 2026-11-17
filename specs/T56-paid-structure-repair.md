@@ -4,9 +4,10 @@
 >
 > **Who uses it:** Ianno, the T56 agent and recovery API/client implementers.
 
-- **Status:** in progress; isolated contracts/tests first, transaction integration follows T55.
+- **Status:** implementation and focused verification complete on the task branch; human review remains.
 - **Branch:** `feat/t56-paid-structure-repair`
 - **Issue:** [#122](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/122)
+- **Dependency:** [T55 PR #136](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/136); its pinned state/schema and read adapter are integrated on this task branch.
 
 ## Why
 
@@ -14,12 +15,12 @@ The approved [T54 plan](T54-recovery-implementation-plan.md), merged in [PR #135
 
 ## What
 
-- Implement fixed incremental current-base-level pricing, request validation and stable intent/receipt semantics against T54's contract.
-- Integrate one service-only transaction committing payer wallet debit, full target HP, durable event, immutable receipt and shared quota together, using T55's canonical state and lock order.
-- Permit unlimited paid repair between reservations; exactly three successful actions per island reservation UUID, shared from accepted bell through preparation and combat until canonical finish/expiry.
-- Same UID returns its original receipt plus current state, never re-heals later damage or charges/uses a slot again. Invalid/intact/unaffordable/stale/exhausted actions have no side effects.
+- Fixed incremental current-base-level pricing, request validation and stable intent/receipt semantics follow T54's contract.
+- A service-only transaction commits the payer wallet debit, full target HP, durable event, immutable receipt and shared quota together, using T55's canonical state and lock order.
+- Paid repair is unlimited between reservations; exactly three successful actions share each island reservation UUID from accepted bell through preparation and combat until canonical finish/expiry.
+- Same UID returns its original receipt plus current state, never re-heals later damage or charges/uses a slot again. Invalid/intact/unaffordable/stale/exhausted actions do not commit a paid repair.
 
-**Files likely to change:** isolated paid-repair models/rules/services, a coordinated additive migration after T55, focused API/real-SQL tests and the owning contract documentation. T55 owns shared state/schema and task-board/INTERFACES edits; agree exact integration handoffs first.
+**Implementation files:** paid-repair request/receipt models, fixed-price rules, service, POST route, additive migration `20261117030000_paid_structure_repair.sql`, and focused HTTP/real-SQL tests. T55 owns shared state/schema and its canonical read API.
 
 ## Out of scope
 
@@ -27,13 +28,13 @@ No parallel rewrite of T55 state, legacy simulation, Captain policy or UI. No ne
 
 ## Done when (acceptance checks)
 
-- [ ] All six kinds/levels use server catalogue price independent of damage/payer; wall levels cost 10/20/40/80/160.
-- [ ] API and disposable PostgreSQL tests prove atomic rollback, shared last-use race, both phases, fresh-wave quota, same/changed UID, old receipt after new damage, stale quote/instance/reset/finish/upgrade races and history retention.
-- [ ] Backend pytest/Ruff and SQL parse/apply/reapply/grant checks pass; exact contract and remaining trust/integration limits are documented. Ianno reviews; a different human approves the current revision before merge.
+- [x] All six kinds/levels use server catalogue price independent of damage/payer; wall levels cost 10/20/40/80/160.
+- [x] API and disposable PostgreSQL tests prove atomic rollback, shared last-use race, both phases, fresh-wave quota, same/changed UID, old receipt after new damage or demolition, stale quote/instance/reset/finish/expiry/upgrade refusals and history retention.
+- [x] Focused backend tests and Ruff pass; full-chain disposable PostgreSQL applies/reapplies the migrations and checks the service grant. Ianno reviews; a different human approves the current revision before merge.
 
-## Tests to write first
+## Verification completed
 
-Pure fixed-price and stable-intent cases; validation/auth/refusal APIs; real SQL transaction/idempotency/concurrency, including paid repair racing automatic completion and old UID after new damage. Follow issue #122 and T54's full acceptance matrix.
+Pure price/fingerprint validation, HTTP success/stale responses, authorization-before-UID and retry handling, disposable PostgreSQL rollback/race/quota/phase/price/refusal behavior, and stale-quote rejection after reset/demolition/upgrade/finish/expiry. The automatic-healing test confirms a full-health target is refused without charging or consuming quota.
 
 ## Contracts touched
 
@@ -44,4 +45,4 @@ T54's `/api/island/structures/repair`, caller wallet versus immutable receipt ba
 - **Responsible teammate:** Ianno (@Iannomh123456).
 - **Coding agent:** `gpt-6-luna`, high reasoning.
 - **Human reviewer:** Franz (@frcola), after Ianno's manual review and explicit publication confirmation.
-- **Last updated:** 2026-11-16.
+- **Last updated:** 2026-11-17.
