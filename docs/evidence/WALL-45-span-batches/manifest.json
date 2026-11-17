@@ -1,0 +1,92 @@
+{
+  "task": "WALL-45",
+  "runtimeBefore": "b1755351b07e5c7e76c22de199ab5ddb70068d0c",
+  "runtimeAfter": "74d895b1f9bdf85cedc877a58f066dd596fe038d",
+  "qaHelper": "250f9824937e7170ac827e3b698dd1c9273528bd",
+  "fixture": "Same declared8000coins/best40/seven paid buildings/102 paid ring/one wall upgrade; no-reload public-controller preparation",
+  "savedStateEqualWithinEachPair": true,
+  "captureMode": "high quality after existing preference refresh; native pixel ratio1; no DOM/canvas hiding or repaint",
+  "scope": "Actual local-game settled-frame draw/resource measurements, not production durability, sustained FPS or physical-device acceptance",
+  "captures": [
+    {
+      "label": "before-desktop",
+      "source": "b1755351b07e5c7e76c22de199ab5ddb70068d0c",
+      "report": "before-desktop.json",
+      "reportSha256": "1d4c1ead8d7e7e416b63940b0d6c314a4d61c90badf9fd5947e804a4a4054401",
+      "screenshot": "before-desktop.png",
+      "screenshotSha256": "f8baac0c646de012187fa15531c256532b56960846f3de3ad2d32f01936d975c",
+      "viewport": [
+        1280,
+        720
+      ],
+      "pixelRatio": 1,
+      "logicalLinks": 106,
+      "spanMeshes": 106,
+      "drawCalls": 375,
+      "geometries": 330,
+      "textures": 38,
+      "pageErrors": [],
+      "externalRequests": []
+    },
+    {
+      "label": "after-desktop",
+      "source": "74d895b1f9bdf85cedc877a58f066dd596fe038d",
+      "report": "after-desktop.json",
+      "reportSha256": "5dd8b43a36bb3d4135f6b2fca5a23cba444804d1579545fa58ab42d38d043a37",
+      "screenshot": "after-desktop.png",
+      "screenshotSha256": "55c41ab3c5928c8a774c3cecc9a938f73be4ec9c68ec53b8af9ee322c71d792b",
+      "viewport": [
+        1280,
+        720
+      ],
+      "pixelRatio": 1,
+      "logicalLinks": 106,
+      "spanMeshes": 36,
+      "drawCalls": 235,
+      "geometries": 260,
+      "textures": 38,
+      "pageErrors": [],
+      "externalRequests": []
+    },
+    {
+      "label": "before-phone",
+      "source": "b1755351b07e5c7e76c22de199ab5ddb70068d0c",
+      "report": "before-phone.json",
+      "reportSha256": "669761d43991ac482568b2750ff7487f7065538cd15b128d61b4932804a563be",
+      "screenshot": "before-phone.png",
+      "screenshotSha256": "d816c560939c4b2d75b66d2e4b3375bde9b5cde44803748bed121e2b90c53205",
+      "viewport": [
+        375,
+        812
+      ],
+      "pixelRatio": 1,
+      "logicalLinks": 106,
+      "spanMeshes": 106,
+      "drawCalls": 375,
+      "geometries": 330,
+      "textures": 38,
+      "pageErrors": [],
+      "externalRequests": []
+    },
+    {
+      "label": "after-phone",
+      "source": "74d895b1f9bdf85cedc877a58f066dd596fe038d",
+      "report": "after-phone.json",
+      "reportSha256": "bad3615b1a19866fc62947b2ca6a905e3f5a268e50dab43cf24238bc1561b09d",
+      "screenshot": "after-phone.png",
+      "screenshotSha256": "b71597ff58a199c15ada4f71c3fe1361e679a48330646615ea5a14588c6e4ea9",
+      "viewport": [
+        375,
+        812
+      ],
+      "pixelRatio": 1,
+      "logicalLinks": 106,
+      "spanMeshes": 36,
+      "drawCalls": 235,
+      "geometries": 260,
+      "textures": 38,
+      "pageErrors": [],
+      "externalRequests": []
+    }
+  ]
+}
