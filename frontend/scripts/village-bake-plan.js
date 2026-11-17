@@ -1,6 +1,7 @@
 // Build-time inputs only. Generated baked.js is deliberately never discovered as a raw family.
 export const RAW_FAMILIES = Object.freeze(['buildings', 'houses', 'landmarks', 'services', 'nature', 'cannons', 'walls', 'core', 'progress']);
 export const BAKE_DENSITY = 4, GUTTER = 4, MAX_WIDTH = 1024, MAX_HEIGHT = 2048;
+export const PROOF_DENSITIES = Object.freeze([4, 2.5, 2, 1.5]);
 export function validateBakedPng(bytes, sheet) {
   if (bytes.length < 24 || bytes.length > 8 * 2 ** 20) throw new Error('Compiled PNG exceeds encoded decoder limits.');
   const header = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);

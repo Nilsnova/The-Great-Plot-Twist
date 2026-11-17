@@ -1,6 +1,6 @@
 // Offline texture compilation/proof, never imported by the game or title.
 import {collectRasterFrames, createRasterCache, normalizeRasterFrame} from '../src/art/village-raster.js';
-import {BAKE_DENSITY, GUTTER, pixelDifference} from './village-bake-plan.js';
+import {BAKE_DENSITY, GUTTER, pixelDifference, PROOF_DENSITIES} from './village-bake-plan.js';
 export async function compileFamily(plan, frames) {
   const cache = createRasterCache(), canvases = plan.pages.map(page => Object.assign(document.createElement('canvas'), {width: page.width, height: page.height}));
   const bySheet = new Map(); let peakSourceBytes = 0, largestTemporaryCanvasBytes = 0;
@@ -35,7 +35,7 @@ export async function verifyFamily(plan, raw) {
     const lease = await cache.acquire(frame.sheet); peakSourceBytes = Math.max(peakSourceBytes, cache.stats().bytes);
     try { return normalizeRasterFrame(lease.image, frame, density); } finally { lease.release(); }
   };
-  for (const id of Object.keys(raw)) for (const density of [4, 2, 1.5]) {
+  for (const id of Object.keys(raw)) for (const density of PROOF_DENSITIES) {
     const a = await render(raw[id], density), b = await render(baked[id], density);
     try {
       const read = canvas => canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
