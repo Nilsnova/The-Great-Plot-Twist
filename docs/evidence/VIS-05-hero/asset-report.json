@@ -1,0 +1,46 @@
+{
+  "sourceFile": "frontend/public/village/buildings-hero-v1.png",
+  "generatedBy": "OpenAI image_gen, 17 November 2026",
+  "sha256": "b5fb1350f511718b901f8f8ecd2291e7e5ca7b13dce5b7376d1e1353ede1fc75",
+  "bytes": 1624431,
+  "nativeSize": [
+    1254,
+    1254
+  ],
+  "mode": "RGBA",
+  "logicalFrame": [
+    96,
+    96,
+    12
+  ],
+  "sourceFoot": [
+    627,
+    1124
+  ],
+  "alpha": {
+    "corners": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "nonzeroBounds": [
+      0,
+      9,
+      1232,
+      1216
+    ],
+    "solidThreshold": 240,
+    "solidBounds": [
+      89,
+      52,
+      1170,
+      1128
+    ]
+  },
+  "limits": [
+    "Generated asset only; actual game proof is coordinated separately.",
+    "Faint alpha below16 includes peripheral generation noise; the solid silhouette is inside the logical frame.",
+    "No image edits or offline cropping were used; bytes are copied from the generated source."
+  ]
+}
