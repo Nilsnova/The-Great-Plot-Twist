@@ -76,7 +76,7 @@ export function normalizeRasterFrame(image, frame, density = 2) {
   const scale = Math.min(limit(lw / 2, fx), limit(lw / 2, w - fx), limit(lh - anchor, fy), limit(anchor, h - fy));
   if (!(scale > 0) || !Number.isFinite(scale) || !(density >= 1 && density <= 4)) throw new Error('World-art frame cannot fit its logical ground foot.');
   const canvas = document.createElement('canvas'); canvas.width = Math.ceil(lw * density); canvas.height = Math.ceil(lh * density);
-  const context = canvas.getContext('2d'); context.setTransform(density, 0, 0, density, 0, 0); context.imageSmoothingEnabled = true;
+  const context = canvas.getContext('2d'); context.setTransform(density, 0, 0, density, 0, 0); context.imageSmoothingEnabled = true; context.imageSmoothingQuality = 'high';
   context.drawImage(image, x, y, w, h, lw / 2 - fx * scale, lh - anchor - fy * scale, w * scale, h * scale);
   return canvas;
 }
