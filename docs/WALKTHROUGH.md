@@ -1770,3 +1770,7 @@ Focused checks: `cd frontend && npm exec vitest -- run tests/tutorial-pages.test
 The [evidence README](evidence/T58-captain-repair/README.md) records screenshot fixtures and the exact scope. These
 checks do not prove persisted production state, live recovery, payments, multiplayer or release activation; combined
 dependency review and release acceptance remain pending.
+
+## VIS-30. Original world-art compilation — Johannes
+
+The offline compiler reads explicit original image families, uses the game's own normalizer at maximum density and packs those pixels into bounded PNG sources. Generated frame metadata keeps each ID, logical size and exact ground foot. Incremental compilation validates prior sources/proof before adding raw families; it never treats a compiled picture as original art. A separate Node codec reduces PNG compression bytes while proving unchanged filtered scanlines, metadata and CRC integrity. [Evidence](evidence/VIS-30-world-art/README.md) separates transfer, temporary decode/canvas and final GPU costs, and records the unmet 8MiB target. Explain why native image resolution does not change placement, why temporary image release differs from GPU disposal, and why lower-density filtering is a different question from lossless PNG compression.
