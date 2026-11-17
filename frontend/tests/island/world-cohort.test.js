@@ -9,8 +9,9 @@ vi.mock('../../src/island/structure-recovery-indicators.js',()=>({createStructur
 const paid=(id='wall_13',fields={})=>({id,kind:'wall',built:true,level:3,x:-4,z:-17.5,...fields});
 const start=(loaded=false)=>{
   const place={group:new THREE.Group(),colliders:[],zones:[]};
-  const drawing=decorateIsland(place,{loadArt:loaded?async names=>Object.fromEntries(names.map(id=>[id,new THREE.MeshBasicMaterial()])):()=>new Promise(()=>{}),reducedMotion:true});
-  return{drawing,place};
+  const loadArt=vi.fn(loaded?async names=>Object.fromEntries(names.map(id=>[id,new THREE.MeshBasicMaterial()])):()=>new Promise(()=>{}));
+  const drawing=decorateIsland(place,{loadArt,reducedMotion:true});
+  return{drawing,place,loadArt};
 };
 
 describe('paid positioned perimeter walls in the village scene',()=>{
@@ -44,10 +45,17 @@ describe('paid positioned perimeter walls in the village scene',()=>{
     expect(drawing.root.getObjectByName('island-wall:wall_13').userData.art).toBe('island-wall-l3');
     const state={recoveryVersion:1,islandEpoch:'epoch',displayPhase:'between_waves',structures:[{spot:'wall_13',kind:'wall',level:3,instanceId:'instance',hpUnits:0,maxHP:200}]};
     drawing.setRecoveryState(state);expect(drawing.wallJoins).toHaveLength(0);
-    expect(drawing.root.getObjectByName('island-wall:wall_13').userData.art).toBe('island-wall-broken');
+    expect(drawing.root.getObjectByName('island-wall:wall_13').userData.art).toBe('island-wall-l3-broken');
     drawing.setRecoveryState({...state,structures:[{...state.structures[0],hpUnits:1_000_000}]});expect(drawing.wallJoins).toHaveLength(1);
     drawing.apply({spots:rows,battle:true});expect(drawing.wallJoins).toHaveLength(0);
     expect(drawing.root.getObjectByName('island-wall:wall_13')).toBeUndefined();drawing.dispose();
+  });
+  it('requests every canonical wall damage frame for the nonbatch recovery fallback',async()=>{
+    const{drawing,loadArt}=start();
+    await Promise.resolve();await Promise.resolve();
+    const requested=loadArt.mock.calls.flatMap(([ids])=>ids);
+    for(let level=1;level<=5;level++)for(const look of ['damaged','broken'])expect(requested).toContain(`island-wall-l${level}-${look}`);
+    drawing.dispose();
   });
 });
 
