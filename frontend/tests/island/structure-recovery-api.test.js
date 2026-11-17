@@ -1,6 +1,6 @@
 // The recovery API client validates the server view and preserves retry-safe repair quotes.
 import {describe, expect, it} from 'vitest';
-import {createIslandApi, isStructureRecovery, PATHS} from '../../src/island/api.js';
+import {createIslandApi, isStructureRecovery, isWave, PATHS} from '../../src/island/api.js';
 
 const waveId = '12345678-1234-4234-8234-123456789abc';
 const epoch = '22345678-1234-4234-8234-123456789abc';
@@ -11,8 +11,50 @@ const state = (overrides = {}) => ({serverNow: '2026-11-17T12:00:00Z', islandEpo
     maxHP: 60, rateUnitsPerSecond: 1_666.67, estimatedFreeSeconds: 150, fixedPrice: 10, repairSeq: 0}], ...overrides});
 const quote = {spot: 'wall_1', instanceId, expectedEpoch: epoch, expectedWindow: 'between_waves', expectedLevel: 1,
   expectedRepairSeq: 0, quotedPrice: 10, waveProtocol: 2};
+const token = '7165d60f-14f5-4b9e-96a0-2ed457b4c219';
+const snapshot = waveId => ({recoveryVersion: 1, waveProtocol: 2, configVersion: 1, waveId, islandEpoch: epoch, seed: 42,
+  startsAt: '2026-11-17T12:00:03Z', weather: {kind: 'clear'}, rules: ['structure_recovery'],
+  createWave: {defenses: [{id: 'wall_1', kind: 'wall', x: 0, z: 0}]},
+  structures: [{spot: 'wall_1', instanceId, kind: 'wall', level: 1, x: 0, z: 0, hpUnits: 750_000, maxHP: 60, repairSeq: 0}],
+  participants: [{participantToken: token, captain: {level: 1, skills: [], weapon: 'musket'}}]});
+const recoveryWave = waveId => ({waveId, wave: 1, seed: 42, startsAt: '2026-11-17T12:00:03Z', weather: {kind: 'clear'},
+  flagship: false, recoveryVersion: 1, waveProtocol: 2, initialSnapshot: snapshot(waveId), participantToken: token,
+  lastActorCounter: 0});
 
 describe('structure recovery API', () => {
+  it('requests protocol two from the persisted policy and preserves the entire recovery wave DTO', async () => {
+    const sent = [];
+    const waveId = '62345678-1234-4234-8234-123456789abc';
+    const data = recoveryWave(waveId);
+    const api = createIslandApi({waveProtocol: () => 2, makeUid: () => 'wave-action-1', transport: {
+      get: async path => { sent.push({method: 'get', path}); return {ok: true, data}; },
+      post: async (path, body) => { sent.push({method: 'post', path, body}); return {ok: true, data}; },
+    }});
+    expect(isWave(data)).toBe(true);
+    expect((await api.startWave({where: 'own'})).data).toEqual(data);
+    expect(sent[0]).toMatchObject({method: 'post', path: PATHS.start,
+      body: {where: 'own', actionUid: 'wave-action-1', waveProtocol: 2}});
+    expect((await api.joinWave({waveId})).data.initialSnapshot).toEqual(data.initialSnapshot);
+    expect(sent[1]).toEqual({method: 'post', path: PATHS.join, body: {waveId, waveProtocol: 2}});
+    expect((await api.currentWave({where: 'own'})).data.participantToken).toBe(token);
+    expect(sent[2].path).toBe('/api/waves/current?where=own&waveProtocol=2');
+    expect(isWave({...data, participantToken: 'profile-id'})).toBe(false);
+    expect(isWave({...data, initialSnapshot: {...data.initialSnapshot, configVersion: 9}})).toBe(false);
+  });
+
+  it('advertises protocol two for first-wave admission while accepting a frozen legacy reply', async () => {
+    const legacy = {waveId: '72345678-1234-4234-8234-123456789abc', wave: 1, seed: 42,
+      startsAt: '2026-11-17T12:00:03Z', weather: {kind: 'clear'}, flagship: false, recoveryVersion: 0, waveProtocol: 1};
+    let sent;
+    const api = createIslandApi({waveProtocol: () => 2, makeUid: () => 'new-island-wave', transport: {
+      get: async () => ({ok: true, data: null}),
+      post: async (path, body) => { sent = {path, body}; return {ok: true, status: 200, data: legacy}; },
+    }});
+    expect(isWave(legacy)).toBe(true);
+    expect((await api.startWave({where: 'own'})).data).toEqual(legacy);
+    expect(sent).toEqual({path: PATHS.start, body: {where: 'own', actionUid: 'new-island-wave', waveProtocol: 2}});
+  });
+
   it('accepts only the canonical versioned state and requests it for the selected island', async () => {
     expect(isStructureRecovery(state())).toBe(true);
     expect(isStructureRecovery(state({structures: [{...state().structures[0], hpUnits: 1.5}]}))).toBe(false);

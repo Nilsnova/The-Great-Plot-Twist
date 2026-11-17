@@ -49,11 +49,13 @@ import {localSpotId} from './spots.js';
 import {SKILL_BY_ID, WEAPON_BY_ID, isRole} from '../pirates/captain-ids.js';
 import {BRANCH_BY_ID, SPECS, optionsOf} from '../campaign/tech.js';
 import {isRole as isHouseRole} from '../campaign/houses.js';
+import {readRecoverySnapshot} from '../pirates/recovery-snapshot.js';
+import {isParticipantToken} from '../pirates/recovery-policy.js';
 
 export const PATHS = Object.freeze({
   leaderboard: '/api/island/leaderboard', island: '/api/island', build: '/api/island/build', visit: code => `/api/island/visit/${code}`,
   start: '/api/waves/start', join: '/api/waves/join', finish: '/api/waves/finish', revive: '/api/waves/revive',
-  current: where => `/api/waves/current?where=${encodeURIComponent(where)}`,
+  current: (where, waveProtocol = 1) => `/api/waves/current?where=${encodeURIComponent(where)}${waveProtocol === 2 ? '&waveProtocol=2' : ''}`,
   upgrade: '/api/island/upgrade', hire: '/api/island/hire', captain: '/api/island/captain', inviteJoin: '/api/island/invite/join',
   skill: '/api/island/skill', role: '/api/island/role', respec: '/api/island/respec', weaponBuy: '/api/island/weapon/buy', weaponEquip: '/api/island/weapon/equip',
   point: '/api/pirate-point', pointBuild: '/api/pirate-point/build', pointUpgrade: '/api/pirate-point/upgrade',
@@ -191,9 +193,15 @@ export function wallHealthBody(walls) {
   return Object.keys(out).length ? out : null;
 }
 export function isWave(data) {
-  return !!data && isText(data.waveId) && Number.isSafeInteger(data.wave) && data.wave >= 1 && isCount(data.seed)
+  const base = !!data && isText(data.waveId) && Number.isSafeInteger(data.wave) && data.wave >= 1 && isCount(data.seed)
     && typeof data.startsAt === 'string' && Number.isFinite(Date.parse(data.startsAt))
     && !!data.weather && typeof data.weather.kind === 'string' && typeof data.flagship === 'boolean';
+  if (!base) return false;
+  if (data.waveProtocol === undefined && (data.recoveryVersion === undefined || data.recoveryVersion === 0)) return true;
+  if (data.waveProtocol === 1 && (data.recoveryVersion === undefined || data.recoveryVersion === 0)) return true;
+  return data.waveProtocol === 2 && data.recoveryVersion === 1
+    && readRecoverySnapshot(data.initialSnapshot, data.waveId) !== null && isParticipantToken(data.participantToken)
+    && Number.isSafeInteger(data.lastActorCounter) && data.lastActorCounter >= 0;
 }
 // Captain health (GAME-V3.md §3): what the revive cost you and your coins after it.
 export const isRevive = data => !!data && isCount(data.price) && isCount(data.coins) && typeof data.repeat === 'boolean';
@@ -239,11 +247,17 @@ export function readFailure(result) {
 // No answer, a timeout or a server-side failure: the write may or may not have happened.
 export const outcomeUnknown = failure => !failure.ok && (failure.status === 0 || failure.status >= 500);
 
-export function createIslandApi({transport, makeUid = makeActionUid} = {}) {
+export function createIslandApi({transport, makeUid = makeActionUid, waveProtocol = () => 1} = {}) {
   if (!transport || typeof transport.get !== 'function' || typeof transport.post !== 'function') {
     throw new TypeError('createIslandApi needs a transport with get and post.');
   }
   const held = new Map(); // 'build:cannon_1' or 'start:own' -> the click id of an unknown outcome
+  const protocolFor = where => {
+    try {
+      const value = typeof waveProtocol === 'function' ? waveProtocol(where) : waveProtocol;
+      return value === 2 ? 2 : 1;
+    } catch { return 1; }
+  };
 
   async function ask(send, accept) {
     let result;
@@ -481,19 +495,23 @@ export function createIslandApi({transport, makeUid = makeActionUid} = {}) {
       if (!symbols) return refuse(422, 'validation_error', MESSAGES.badCode);
       return askSpots(() => transport.get(PATHS.visit(displayIslandCode(symbols))), isVisit);
     },
-    startWave({where: place = 'own'} = {}) {
+    startWave({where: place = 'own', waveProtocol: askedProtocol = null} = {}) {
       const target = where(place);
       if (!target) return refuse(422, 'validation_error', MESSAGES.badCode);
-      return write(`start:${target}`, actionUid => transport.post(PATHS.start, {where: target, actionUid}), isWave);
+      const version = askedProtocol === 2 ? 2 : protocolFor(target);
+      return write(`start:${target}`, actionUid => transport.post(PATHS.start,
+        {where: target, actionUid, ...(version === 2 ? {waveProtocol: 2} : {})}), isWave);
     },
-    joinWave({waveId} = {}) {
+    joinWave({waveId, waveProtocol: askedProtocol = null} = {}) {
       if (!isText(waveId)) return refuse(404, 'no_such_wave', MESSAGES.badWave);
-      return ask(() => transport.post(PATHS.join, {waveId}), isWave);
+      const version = askedProtocol === 2 ? 2 : protocolFor();
+      return ask(() => transport.post(PATHS.join, {waveId, ...(version === 2 ? {waveProtocol: 2} : {})}), isWave);
     },
-    currentWave({where: place = 'own'} = {}) {
+    currentWave({where: place = 'own', waveProtocol: askedProtocol = null} = {}) {
       const target = where(place);
       if (!target) return refuse(422, 'validation_error', MESSAGES.badCode);
-      return ask(() => transport.get(PATHS.current(target)), data => data === null || isWave(data));
+      const version = askedProtocol === 2 ? 2 : protocolFor(target);
+      return ask(() => transport.get(PATHS.current(target, version)), data => data === null || isWave(data));
     },
     finishWave({waveId, survived, shipsSunk = 0, bonuses, rescued, walls} = {}) {
       if (!isText(waveId)) return refuse(404, 'no_such_wave', MESSAGES.badWave);

@@ -4,7 +4,7 @@
 >
 > **Who uses it:** Ianno, the T59 agent and the recovery API/simulation implementers.
 
-- **Status:** in progress; server-backed cards and the active-wave replay hook are wired on this branch, with integrated lifecycle and two-client evidence still pending.
+- **Status:** in progress; server-backed card wiring, protocol negotiation, replay checkpoint guard and between-wave/preparation world indicators are in progress on this branch. Combat indicator and live lifecycle/two-client evidence remain pending.
 - **Branch:** `feat/t59-repair-feedback`
 - **Issue:** [#125](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/125)
 
@@ -16,11 +16,14 @@ Players need to distinguish waiting for free recovery from buying an immediate r
 
 - Start isolated pure presentation models and tests against T54's agreed API shape: exact HP, fixed server-quoted price, eligible free ETA, paused preparation/combat state and shared quota.
 - Add proportional health-bar helpers/components for damaged supported structures: hide full HP, preserve tiny positive HP, empty bar and small `!` on destroyed ruins.
+- Place a small damaged-structure indicator above every supported world structure between waves and during preparation; the wave renderer owns the equivalent replay-state indicator during combat.
 - Show `Repair now — pay N coins` versus `Or wait about Y for free repair` between waves; waiting needs no action. During reservations show paused automatic repair and remaining uses, without a running ETA.
 - Consume the canonical T55 structure view and the T56 repair route through the authenticated island API. Reject stale island/reset/instance responses, read the current wallet after refusals, and never fabricate a paid heal locally.
 - During a reserved wave, use T57's replayed HP only for matching island epoch, wave UUID and structure instance; never patch active-wave HP from a Repair HTTP response. Between waves, use the canonical server projection and ETA.
+- Discover persisted recovery policy from the canonical structure view independent of the new-admission flag, so saved v1 islands keep their cards and paid-repair path when admission is off. Island-wave requests advertise protocol-2 client capability; the server returns the frozen legacy or v1 policy. Pirate Point remains protocol 1.
+- Before a combat paid repair, await T57's accepted replay-health checkpoint. If it fails, do not call the T56 paid-repair route.
 
-**Files likely to change:** isolated recovery UI modules/tests, then structure cards, API adapter/fake API and health-bar rendering by agreed handoff. T58 owns Captain skill UI; T57 owns simulation/controller/interactions. T55 owns shared task boards and contract index during this parallel batch.
+**Files likely to change:** recovery models, indicators, structure cards, island API/controller and focused tests/captures. T58 owns Captain skill UI; T57 owns simulation/controller and combat renderer; T55 owns backend policy and contract index.
 
 ## Out of scope
 

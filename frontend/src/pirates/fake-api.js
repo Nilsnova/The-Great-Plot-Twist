@@ -1031,6 +1031,7 @@ const BODY_KEYS = Object.freeze({ '/api/island/build': ['spot', 'kind', 'actionU
   '/api/island/arsenal/buy': ['weapon', 'actionUid'], '/api/island/arsenal/take': ['copy', 'actionUid'], '/api/island/arsenal/return': ['actionUid'] });
 // Keys a body may also carry: `code` builds, upgrades, researches, picks a skill or mends the wreck on a game's island.
 const OPTIONAL_KEYS = Object.freeze({ '/api/waves/finish': ['bonuses', 'rescued', 'walls'], '/api/island/repair': ['code'], '/api/island/build': ['code'], '/api/island/upgrade': ['code'], '/api/games': ['actionUid'],
+  '/api/waves/start': ['waveProtocol'], '/api/waves/join': ['waveProtocol'],
   '/api/island/research': ['code', 'tier', 'choice', 'change'], '/api/island/tower-skill': ['code', 'actionUid'], '/api/island/tower-tree': ['code'], '/api/island/wreck': ['code'], '/api/island/demolish': ['code'], '/api/island/move': ['code'],
   '/api/island/arsenal/buy': ['code'], '/api/island/arsenal/take': ['code'], '/api/island/arsenal/return': ['code'] });
 const ACTION_UID = /^[A-Za-z0-9_-]{8,64}$/;
@@ -1122,6 +1123,10 @@ export function createFakeIslandTransport({ coins = ISLAND_RULES.startingCoins, 
       const keys = BODY_KEYS[pathname];
       if (keys && (!exactKeys(body, keys, OPTIONAL_KEYS[pathname]) || (keys.includes('actionUid') && !ACTION_UID.test(String(body.actionUid))))) {
         return fail(422, 'validation_error', `The request must hold exactly ${keys.join(', ')}.`);
+      }
+      if (['/api/waves/start', '/api/waves/join'].includes(pathname)
+          && body?.waveProtocol !== undefined && body.waveProtocol !== 2) {
+        return fail(422, 'validation_error', 'Version must be 2 when supplied.');
       }
     }
     try {

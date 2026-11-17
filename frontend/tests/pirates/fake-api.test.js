@@ -12,6 +12,17 @@ async function refusal(promise) {
 }
 
 describe('fake island API', () => {
+  it('accepts protocol-two capability and keeps the legacy policy for a legacy island', async () => {
+    const transport = createFakeIslandTransport();
+    const started = await transport.post('/api/waves/start', {where: 'own', actionUid: 'capability-1', waveProtocol: 2});
+    expect(started.ok).toBe(true);
+    expect(started.data.waveProtocol).toBeUndefined();
+    const current = await transport.get('/api/waves/current?where=own&waveProtocol=2');
+    expect(current.data.waveId).toBe(started.data.waveId);
+    const joined = await transport.post('/api/waves/join', {waveId: started.data.waveId, waveProtocol: 2});
+    expect(joined.data.waveId).toBe(started.data.waveId);
+  });
+
   it('keeps tower obstacles off unless both pathing and tower health are enabled', async () => {
     const partial = createFakeIslandApi({flags: {tower_obstacles: true, pathing: true}});
     expect((await partial.startWave({where: 'own', actionUid: 'partial'})).rules).toEqual(['pathing']);
