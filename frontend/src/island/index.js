@@ -1273,7 +1273,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   return {
     decorate(place, art, cleanups, adapters = {}) {
       world?.dispose();
-      const deco = decorateIsland(place, {art, reducedMotion, quality: () => preferences().quality, canvas: adapters.canvas, camera: adapters.camera,
+      const deco = decorateIsland(place, {container, art, reducedMotion, quality: () => preferences().quality, canvas: adapters.canvas, camera: adapters.camera,
         isActive: adapters.isActive, onPick: pick, range: houseRange, player: adapters.player, onFar: adapters.onFar,
         placing: () => wallBuilder.active || moving.active, onGround: (x, z) => wallBuilder.active ? wallBuilder.tap(x, z) : moving.tap(x, z),
         canPickRemote: id => village.active && !!spotById(id)});
@@ -1285,7 +1285,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     // Pirate Point's shared build spots on lighthouse_isle (factory.js); its bell and lamps stay lane P's.
     decoratePoint(place, adapters = {}) {
       pointWorld?.dispose();
-      const deco = decorateIsland(place, {reducedMotion, quality: () => preferences().quality, canvas: adapters.canvas, camera: adapters.camera, isActive: adapters.isActive, onPick: pick, player: adapters.player, onFar: adapters.onFar,
+      const deco = decorateIsland(place, {container, reducedMotion, quality: () => preferences().quality, canvas: adapters.canvas, camera: adapters.camera, isActive: adapters.isActive, onPick: pick, player: adapters.player, onFar: adapters.onFar,
         layout: {spots: PP_SPOTS, zones: pointZones, bell: false, cabin: false, name: 'pirate-point-spots'}});
       pointWorld = deco; applyWorld();
       const original = place.update, dispose = place.dispose;
