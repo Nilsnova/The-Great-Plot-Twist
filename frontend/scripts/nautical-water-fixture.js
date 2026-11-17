@@ -57,6 +57,7 @@ export async function createWaterFixture({width, height}) {
       times.sort((a, b) => a - b);
       return {name, quality, reduced, rain, hash: firstHash, laterHash, unchangedWhenReduced: reduced ? firstHash === laterHash : null,
         drawCalls: renderer.info.render.calls, geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures,
+        groundMatrix: ground.matrixWorld.toArray(), envelope: {min: bounds.min.toArray(), max: bounds.max.toArray()},
         gpuSynchronizedMilliseconds: {median: (times[3] + times[4]) / 2, max: times.at(-1)}, backend, shaderErrors: [...shaderErrors]};
     },
     mask() {
