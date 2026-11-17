@@ -13,11 +13,21 @@ const shot = async (name, selector) => {
   console.log(path);
 };
 const assertSingleCard = async (selector, title) => {
+  for (let index = 0; index < 8; index++) {
+    const cutscene = page.locator('dialog.cutscene[open] .cutscene-skip');
+    const tutorial = page.locator('dialog.tutorial-card[open]').getByRole('button', {name: 'Skip', exact: true});
+    if (await cutscene.count()) await cutscene.click();
+    else if (await tutorial.count()) await tutorial.click();
+    else break;
+    await page.waitForTimeout(100);
+  }
   const card = page.locator(selector);
   await card.waitFor();
   const actual = (await card.locator('.kit-heading').textContent())?.trim();
-  if (actual !== title || await page.locator('dialog[open]').count() !== 1)
-    throw new Error(`Expected only the ${title} card to be open; found ${actual ?? 'no title'}.`);
+  const openDialogs = await page.locator('dialog[open]').evaluateAll(dialogs => dialogs.map(dialog =>
+    `${dialog.className}: ${dialog.querySelector('.kit-heading')?.textContent?.trim() ?? ''}`));
+  if (actual !== title || openDialogs.length !== 1)
+    throw new Error(`Expected only the ${title} card to be open; found ${actual ?? 'no title'}; open dialogs: ${openDialogs.join(' | ')}.`);
 };
 
 try {
