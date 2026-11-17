@@ -25,6 +25,9 @@ export function makeWallConnections(root) {
   const group = new THREE.Group(); group.name = 'island-wall-connections'; root.add(group);
   const material = new THREE.MeshBasicMaterial({vertexColors: true, transparent: true, side: THREE.DoubleSide, depthTest: false, depthWrite: false, toneMapped: false});
   let key = null, disposed = false, current = {links: [], connected: new Set()};
+  const readLinks = () => current.links.map(link => ({...link}));
+  // Diagnostics inspect logical contacts independently of how many painter-layer meshes draw them.
+  Object.defineProperty(group, 'wallLinks', {get: readLinks});
   const clear = () => { for (const mesh of [...group.children]) { mesh.geometry.dispose(); group.remove(mesh); } };
   function show(spots = []) {
     if (disposed) return current;
@@ -32,12 +35,17 @@ export function makeWallConnections(root) {
     const next = JSON.stringify(current.links);
     if (key === next) return current;
     key = next; clear();
+    const layers = new Map();
     for (const link of current.links) {
+      // Transparent posts interleave at their exact z order; batch only spans that already share it.
+      const order = 100 + (link.z0 + link.z1) / 2 - .02;
+      if (!layers.has(order)) layers.set(order, {positions: [], colours: [], indices: []});
+      const {positions, colours, indices} = layers.get(order);
       const height = link.level === 1 ? .95 : link.level === 2 ? 1.15 : 1.45;
       const vertical = link.x0 === link.x1, half = .28;
       const x0 = Math.min(link.x0, link.x1) - (vertical ? half : 0), x1 = Math.max(link.x0, link.x1) + (vertical ? half : 0);
       const z0 = Math.min(link.z0, link.z1) - (vertical ? 0 : half), z1 = Math.max(link.z0, link.z1) + (vertical ? 0 : half);
-      const positions = [], colours = [], indices = [], colour = new THREE.Color(COLOURS[link.level - 1]);
+      const colour = new THREE.Color(COLOURS[link.level - 1]);
       const quad = (points, lift, shade) => {
         const start = positions.length / 3, tint = colour.clone().multiplyScalar(shade);
         for (const [x, z, raised = lift] of points) { const p = projectPoint(x, z); positions.push(p.x, p.y + raised, 0); colours.push(tint.r, tint.g, tint.b); }
@@ -48,13 +56,15 @@ export function makeWallConnections(root) {
       quad([[x1,z0,0],[x1,z1,0],[x1,z1,height],[x1,z0,height]], 0, .82);
       // A dark upper rail/course keeps the joins readable at phone size without more textures.
       quad([[x0,z1],[x1,z1],[x1,z1-.07],[x0,z1-.07]], height + .01, .45);
+    }
+    for (const [order, {positions, colours, indices}] of layers) {
       const geometry = new THREE.BufferGeometry(); geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
       geometry.setAttribute('color', new THREE.Float32BufferAttribute(colours, 3)); geometry.setIndex(indices);
-      const mesh = new THREE.Mesh(geometry, material); mesh.name = `wall-join:${link.a}:${link.b}`;
-      mesh.renderOrder = 100 + (link.z0 + link.z1) / 2 - .02; mesh.frustumCulled = false; group.add(mesh);
+      const mesh = new THREE.Mesh(geometry, material); mesh.name = `wall-join-layer:${order}`;
+      mesh.renderOrder = order; mesh.frustumCulled = false; group.add(mesh);
     }
     return current;
   }
-  return {show, get links() { return current.links.map(link => ({...link})); },
+  return {show, get links() { return readLinks(); },
     dispose() { if (disposed) return; disposed = true; clear(); material.dispose(); root.remove(group); }};
 }
