@@ -40,8 +40,8 @@ for `fake-wave-1` with `survived:false`, then a `done:true`/`ended` state and co
 `pause:true` or break state was observed. The smoke flow's unconditional wait for a break after that
 lost-wave outcome explains this timeout; it is not evidence of a recovery or break regression. The
 second page's `survived` value was not retained as a separate artifact, so no claim is made about
-its outcome. The multiplayer check remains failed, and the diagnostic does not establish why the
-host lost. No gameplay behavior, seed, timeout or test assertion was changed. Passive failure
+its outcome. At that checkpoint the multiplayer check remained failed, and the diagnostic did not establish why the
+host lost; the later browser follow-up below is a separate result. No gameplay behavior, seed, timeout or test assertion was changed. Passive failure
 logging was syntax-checked with `node --check scripts/check-multiplayer.js`; it is not included in
 the full frontend test result above.
 
@@ -249,7 +249,7 @@ From `frontend/`, with dependencies installed from the repository lockfile:
 env -u TEST_URL CHROME_PATH=/tmp/t60-local-chromium npm run test:mp -- /tmp/t60-browser-final-41e8df74
 ```
 
-The command exited 0; the full output is `/tmp/t60-browser-final-41e8df74.log`. The run retained
+The command exited 0; the [saved full output](browser-followup/full-run-output.txt) is copied unchanged from `/tmp/t60-browser-final-41e8df74.log`. The run retained
 the original seed, game rules, timeouts and assertions. It passed cooperative build/upgrade/research/
 demolish, captain fall/revive and shared health, a held eight-second break, cross-page loot and
 upgrade state, ship-fire/militia/event samples, mid-wave joins, own and teammate musket poses at
@@ -260,8 +260,8 @@ The harness repairs the local fixture's defense and observation sequence using n
 controls: it resumes auto-blade after the deliberate fall/revive assertion, defends the first wave,
 uses contextual fire during later ship encounters so close boarders still receive normal cutlass
 defense, and arms the existing pose observation before firing. It does not force simulation health,
-victory, clocks or acceptance. The pose observer retains the original three-second bound, fresh
-actor/target event requirement, exact mesh assertions and both viewport checks. A separate focused
+victory, clocks or acceptance. The pose observer retains the original three-second bound, exact mesh assertions and both viewport
+checks, and additionally requires a fresh event from the expected actor to the selected target. A separate focused
 four-page late-wave-4 pose run at the same source revision also passed, including the desktop/phone
 screenshot workloads. Pose success is established by the runtime event and mesh assertions; the
 screenshots are taken after observation and may miss the short-lived pose. Earlier failures at
@@ -270,10 +270,29 @@ diagnostic failures and were not relabeled as passes.
 
 Selected full-run captures are in
 [`browser-followup/full-run/`](browser-followup/full-run/): paused break, four-member mid-wave
-roster, own and teammate phone poses, finisher haul, and shared finisher outcome. The focused
+game view after joining, own and teammate phone context following pose observation, finisher haul, and game view after the shared outcome. The focused
 four-page late-wave pose captures are in
 [`browser-followup/targeted-pose/four-page-late-wave4/`](browser-followup/targeted-pose/four-page-late-wave4/).
 These local browser screenshots and fake-room assertions do not prove hosted realtime delivery,
 authenticated protocol-2 transport, database persistence, physical-device behavior or release
-readiness. The T60 availability flag remains off; the saved-v1 D060/culverin compatibility and
-operating-budget/retention decisions remain open.
+readiness. No feature flag was activated. The saved-v1 D060/culverin compatibility outcome is approved,
+but its implementation [PR #238](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/238) is closed
+without merging. Operating-budget/retention and release decisions remain open.
+
+
+### Review evidence and synchronization
+
+| Capture | What it shows |
+|---|---|
+| [Held break](browser-followup/full-run/04-paused-break-me.png) | The local host has paused the eight-second break. |
+| [Running wave](browser-followup/full-run/05-four-captains-mid-wave-me.png) | Wave 4 after the visitors join; roster membership is asserted in the output, not displayed in this image. |
+| [Phone context](browser-followup/full-run/05b-musket-pose-own-375x812.png) | Phone layout after the runtime musket observation; this image alone does not prove a short animation. |
+| [Finisher task](browser-followup/full-run/07-finisher-haul-mid-task-me.png) | The local haul task after the midpoint state was recorded. |
+| [After the finisher](browser-followup/full-run/07-finisher-outcome-me.png) | The game view after the task; the output records all four pages reporting `finisher_won`, 244/224. |
+
+After the full browser run, `main` at `2f81f276` was merged into this task branch. Its new Tab overview
+is inactive unless Tab is held; the browser harness, default camera path and recovery code were not
+changed by this synchronization. All committed STATUS lines from both parents were preserved.
+`node --check scripts/check-multiplayer.js` passed, and the incoming Tab/tutorial checks passed
+19 tests across three files in 7.43 seconds. The unchanged long browser journey was not rerun solely
+for that synchronization. No full-suite or settings-matrix rerun is claimed for this harness/docs follow-up.
