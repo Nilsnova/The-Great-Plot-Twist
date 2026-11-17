@@ -62,7 +62,18 @@ export async function hitButtons(locator) {
       hit: n.contains(document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2))};
   }));
   assert.ok(buttons.length > 0 && buttons.every(b => b.width >= 44 && b.height >= 44), 'visible enabled controls have 44px targets');
+  assert.ok(buttons.every(b => b.hit), 'visible enabled control centers are unobscured in the actual game');
   return buttons;
+}
+export async function workspaceBounds(page, selector) {
+  return page.evaluate(async selector => {
+    const g = window.__island, {cliffProfile} = await import('/src/art/coast-cliffs.js'), {surfaces} = await import('/src/world/places/surfaces.js');
+    const canvas = g.renderer.domElement.getBoundingClientRect(), bar = document.querySelector(selector).getBoundingClientRect();
+    const ys = cliffProfile(surfaces.home_islet).map(p => {
+      const v = g.player.position.clone().set(p.x, -p.y, 0).project(g.camera); return canvas.y + (1 - v.y) * canvas.height / 2;
+    });
+    return {canonicalLandTop: Math.min(...ys), canonicalLandBottom: Math.max(...ys), barTop: bar.top, barHeight: bar.height, barBottom: bar.bottom};
+  }, selector);
 }
 export async function capture(page, out, name) {
   const before = await page.evaluate(() => ({...window.__island.renderer.userData}));
@@ -72,7 +83,8 @@ export async function capture(page, out, name) {
     const g = window.__island; return {camera: g.camera.position.toArray(), zoom: g.camera.zoom, captain: g.player.position.toArray(),
       contextLost: g.renderer.getContext().isContextLost(), drawCalls: g.renderer.info.render.calls, rendering: {...g.renderer.userData},
       pixelRatio: g.renderer.getPixelRatio(), drawingSize: [g.renderer.domElement.width, g.renderer.domElement.height], memory: {...g.renderer.info.memory},
-      worldLinks: g.world.current.group.getObjectByName('island-wall-connections')?.children.length ?? 0};
+      worldLinks: g.world.current.group.getObjectByName('island-wall-connections')?.wallLinks?.length ?? g.world.current.group.getObjectByName('island-wall-connections')?.children.length ?? 0,
+      worldWallDrawMeshes: g.world.current.group.getObjectByName('island-wall-connections')?.children.length ?? 0};
   });
   assert.equal(state.contextLost, false); assert.ok(state.drawCalls > 0);
   await page.screenshot({path: join(out, name)}); return {name, qualityBefore: before, ...state};

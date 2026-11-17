@@ -8,7 +8,7 @@ import {execFileSync} from 'node:child_process';
 import {createServer} from 'vite';
 import {chromium} from 'playwright-core';
 import {stubOfflineApi} from './api-browser-fixture.js';
-import {boot, builder, capture, groundPoint, hitButtons, manage, openBuilder, settleCards, village, wallet} from './perimeter-game-ui.mjs';
+import {boot, builder, capture, groundPoint, hitButtons, manage, openBuilder, settleCards, village, wallet, workspaceBounds} from './perimeter-game-ui.mjs';
 import {capturePerimeterWave} from './perimeter-game-wave.mjs';
 const root = resolve(process.argv[2]), out = resolve(process.argv[3]), qaRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 await mkdir(out, {recursive: true});
@@ -63,6 +63,10 @@ try {
     await builder(page).getByRole('button', {name: 'Shift draft one square east', exact: true}).click();
     assert.deepEqual(await page.evaluate(() => window.__island.island.wallBuilder.state.cells), cells.slice(0, 2).map(p => ({...p, x: p.x + .5})));
     await builder(page).getByRole('button', {name: 'Shift draft one square west', exact: true}).click();
+    await page.waitForTimeout(1300);
+    record.builderWorkspace = await workspaceBounds(page, '.island-wall-builder:not([hidden])');
+    if (width === 375) assert.ok(record.builderWorkspace.barHeight <= 360, 'expanded phone workspace stays within its accepted 360px height budget');
+    assert.ok(record.builderWorkspace.canonicalLandBottom < record.builderWorkspace.barTop - 4, 'actual canonical shore clears expanded builder controls');
     record.builderButtons = await hitButtons(builder(page));
     record.preview = await page.evaluate(() => {
       const group = window.__island.world.current.group.getObjectByName('island-wall-draft');
@@ -145,14 +149,7 @@ async function lateRefusal(page) {
   const before = await bar.boundingBox(); await bar.getByRole('button', {name: 'Place here', exact: true}).click();
   await page.waitForFunction(() => document.querySelector('.island-move-bar:not(.island-wall-builder).is-refused')?.textContent.includes('Controlled local refusal'));
   await page.waitForTimeout(1300); const after = await bar.boundingBox(); assert.ok(after.y < before.y, 'late longer refusal updates the measured camera inset');
-  const inset = await page.evaluate(async () => {
-    const g = window.__island, {cliffProfile} = await import('/src/art/coast-cliffs.js'), {surfaces} = await import('/src/world/places/surfaces.js');
-    const r = g.renderer.domElement.getBoundingClientRect(), barTop = document.querySelector('.island-move-bar:not(.island-wall-builder):not([hidden])').getBoundingClientRect().top;
-    const topBottom = Math.max(...cliffProfile(surfaces.home_islet).map(p => {
-      const v = g.player.position.clone().set(p.x, -p.y, 0).project(g.camera); return r.y + (1 - v.y) * r.height / 2;
-    }));
-    return {canonicalLandBottom: topBottom, barTop};
-  });
+  const inset = await workspaceBounds(page, '.island-move-bar:not(.island-wall-builder):not([hidden])');
   assert.ok(inset.canonicalLandBottom < inset.barTop - 4, 'actual Fit camera keeps the canonical shore above the late-refusal inset');
   assert.deepEqual(await wallet(page), old); const buttons = await hitButtons(bar);
   await page.evaluate(() => { window.__island.island.api.move = window.__perimeterSavedMove; delete window.__perimeterSavedMove; });

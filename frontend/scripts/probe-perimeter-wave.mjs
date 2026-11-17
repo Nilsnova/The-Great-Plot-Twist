@@ -7,9 +7,9 @@ import {execFileSync} from 'node:child_process';
 import {createServer} from 'vite';
 import {chromium} from 'playwright-core';
 import {stubOfflineApi} from './api-browser-fixture.js';
-import {boot, manage, settleCards} from './perimeter-game-ui.mjs';
+import {boot, builder, capture, groundPoint, hitButtons, manage, openBuilder, settleCards, wallet, workspaceBounds} from './perimeter-game-ui.mjs';
 import {capturePerimeterWave} from './perimeter-game-wave.mjs';
-const root = resolve(process.argv[2]), out = resolve(process.argv[3]); await mkdir(out, {recursive: true});
+const root = resolve(process.argv[2]), out = resolve(process.argv[3]), workspace = process.argv[4] === 'workspace'; await mkdir(out, {recursive: true});
 const source = execFileSync('git', ['rev-parse', 'HEAD'], {cwd: root, encoding: 'utf8'}).trim();
 const fixture = JSON.parse(await readFile(join(root, 'tests/pirates/fixtures/perimeter-ring.json'), 'utf8'));
 const cells = (fixture.cells ?? fixture.ring).map(([x, z]) => ({x, z}));
@@ -19,7 +19,7 @@ let browser, page; const errors = [], external = [];
 try {
   await server.listen(); const base = `http://127.0.0.1:${server.httpServer.address().port}`;
   browser = await chromium.launch({executablePath: process.env.CHROME_PATH || '/usr/bin/chromium', headless: true});
-  page = await browser.newPage({viewport: {width: 1280, height: 720}});
+  page = await browser.newPage({viewport: workspace ? {width: 375, height: 812} : {width: 1280, height: 720}});
   page.on('pageerror', error => errors.push(error.message));
   await page.route('**/*', route => route.request().url().startsWith(base) ? route.continue() : (external.push(route.request().url()), route.abort()));
   await stubOfflineApi(page); await page.addInitScript(() => {
@@ -32,6 +32,25 @@ try {
     g.settings.hour = 11; g.settings.fastTime = false; g.player.position.set(8.5, 1.03, 12.8); g.view.setPlace('home_islet', g.player.position);
   });
   await settleCards(page); await manage(page);
+  if (workspace) {
+    const before = await wallet(page); await openBuilder(page);
+    const p = await groundPoint(page, [-18.5, 2]); await page.mouse.click(p.x, p.y); await page.keyboard.press('ArrowUp');
+    await builder(page).getByText('Fine position', {exact: true}).click();
+    await builder(page).getByRole('button', {name: 'Shift draft one square east', exact: true}).click();
+    await builder(page).getByRole('button', {name: 'Shift draft one square west', exact: true}).click();
+    const states = [];
+    for (const phase of ['unquoted', 'quoted']) {
+      if (phase === 'quoted') { await builder(page).getByRole('button', {name: 'Get price', exact: true}).click(); await page.waitForFunction(() => window.__island.island.wallBuilder.state?.phase === 'ready'); }
+      await page.waitForTimeout(1300); const bounds = await workspaceBounds(page, '.island-wall-builder:not([hidden])');
+      assert.ok(bounds.barHeight <= 360, `${phase}: expanded phone panel <=360px`);
+      assert.ok(bounds.canonicalLandBottom < bounds.barTop - 4, `${phase}: actual canonical shore clears builder`);
+      states.push({phase, bounds, buttons: await hitButtons(builder(page)), frame: await capture(page, out, `workspace-${phase}-375x812.png`)});
+    }
+    await builder(page).getByRole('button', {name: 'Cancel', exact: true}).click(); assert.deepEqual(await wallet(page), before);
+    assert.deepEqual(errors, []); assert.deepEqual(external, []);
+    await writeFile(join(out, 'workspace-report.json'), JSON.stringify({source, fixture: 'declared funded/progressed fake; actual pointer/keys/fine/quote/cancel; no paid save injection', states, errors, external}, null, 2) + '\n');
+    console.log('PASS: actual phone expanded builder unquoted/quoted <=360px, canonical shore clear,44px controls and unpaid cancel');
+  } else {
   await page.evaluate(async cells => {
     const i = window.__island.island;
     for (let start = 0; start < cells.length; start += 32) {
@@ -47,6 +66,7 @@ try {
   await writeFile(join(out, 'probe-report.json'), JSON.stringify({source, fixture: 'public-controller paid preparation; actual nearby-captain normal bell; fast diagnostic only',
     wave, cannon: cannon.results, pageErrors: errors, externalRequests: external}, null, 2) + '\n');
   console.log('PASS: normal bell preserved frozen102-wall demo, actual live joins breached correctly and40 shared cannon frames passed');
+  }
 } catch (error) {
   const observed = await page?.evaluate(() => {
     const g = window.__island, w = g?.waves?.island?.wave;
