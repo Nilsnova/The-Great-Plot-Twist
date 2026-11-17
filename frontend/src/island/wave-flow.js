@@ -130,7 +130,8 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
     const number = current?.wave.waveId === waveId ? current.wave.wave : undefined;
     if (number !== undefined) { current.finished = true; stopTimers(); banner(null); current = null; }
     if (data) {
-      if (data.survived) notify(lootText(data), 'success');
+      if (data.away) notify('This wave ended while you were away. The bell is free again.', 'info');
+      else if (data.survived) notify(lootText(data), 'success');
       else if (Number.isSafeInteger(data.coins)) notify(`The pirates broke through. You have ${coinText(data.coins)}.`, 'error');
       emit({type: WAVE_FINISHED, survived: data.survived === true, waveId, ...(number ? {wave: number} : {}), ...data});
     }

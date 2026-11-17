@@ -103,7 +103,15 @@ export function createWaveReplay() {
     return most;
   }
 
+  // Participants who joined after the start (participant_joined events): their tokens.
+  function participantTokens() {
+    const tokens = new Set();
+    for (const event of events.values()) if (event.type === 'participant_joined' && typeof event.participantToken === 'string') tokens.add(event.participantToken);
+    return tokens;
+  }
+
   return {
+    participantTokens,
     addPage,
     complete,
     canAdvanceThrough,
@@ -144,10 +152,15 @@ export function createReplayDriver(replay) {
 
 /** Fetch every page through one fixed head; resume partial pages before opening a newer head. */
 // onRefusal: told about an answer that is a refusal ({refused: true, ...}) instead of a page.
-export async function fetchSealedEvents(replay, readPage, after, onRefusal = null) {
+// onPage: told about every accepted page (for fields the replay does not keep, such as closed).
+export async function fetchSealedEvents(replay, readPage, after, onRefusal = null, onPage = null) {
   if (typeof readPage !== 'function' || !replay || !Number.isInteger(replay.contiguousSeq)) return false;
   const alreadyComplete = replay.complete();
-  const refused = answer => { if (answer?.refused) onRefusal?.(answer); return !!answer?.refused; };
+  const refused = answer => {
+    if (answer?.refused) { onRefusal?.(answer); return true; }
+    if (answer && typeof answer === 'object') onPage?.(answer);
+    return false;
+  };
   const cursor = after ?? replay.contiguousSeq;
   if (!validWatermark(cursor) || cursor !== replay.contiguousSeq) return false;
   let page;

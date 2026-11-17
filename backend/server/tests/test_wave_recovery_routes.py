@@ -340,3 +340,19 @@ def test_too_early_without_a_usable_wait_still_asks_for_one_second():
         wave_recovery._refusal({"status": "refused", "reason": "too_early", "waitSeconds": True})
     assert (raised.value.status_code, raised.value.code) == (409, "wave_too_early")
     assert raised.value.headers == {"Retry-After": "1"}
+
+
+def test_event_page_passes_the_closed_flag_through_and_stays_without_it_on_older_sql():
+    # 20261118030000 adds closed to every page; the client ends a wave closed while it was away.
+    page = wave_recovery.RecoveryEventPage.model_validate(
+        {"headSeq": 3, "sealedThroughTick": 40, "through": None, "events": [], "closed": True}
+    )
+    assert page.model_dump(by_alias=True, exclude_none=True)["closed"] is True
+    older = wave_recovery.RecoveryEventPage.model_validate(
+        {"headSeq": 3, "sealedThroughTick": 40, "through": None, "events": []}
+    )
+    assert "closed" not in older.model_dump(by_alias=True, exclude_none=True)
+    with pytest.raises(ValueError):
+        wave_recovery.RecoveryEventPage.model_validate(
+            {"headSeq": 3, "sealedThroughTick": 40, "events": [], "closed": "yes"}
+        )

@@ -69,6 +69,27 @@ const MAX_TICKS_PER_FRAME = 600;      // a friend joining late catches up 30 s o
 // they compute. It covers a slow 450 ms round trip plus the gap between polls (recovery-transport.js),
 // so a wave reads the journal about twice a second instead of back to back.
 export const RECOVERY_PLAYOUT_MS = 1000;
+// The playout follows the measured round trip (feat/recovery-teammate-instant) instead of a fixed second.
+// A read answers the seal of about half a round trip earlier, and recoveryPollDue starts the next read when
+// the sealed ticks left fall under max(LEAD, round trip + MARGIN); a playout P then reads every
+// P + rtt/2 - that, so P = RECOVERY_POLL_GAP_MS + that - rtt/2 reads about twice a second (fed, and no more
+// load than that), with RECOVERY_POLL_MIN_MS + 0.75 x rtt + 150 ms as the floor that never starves.
+// Never under RECOVERY_PLAYOUT_MIN_MS nor over the configured RECOVERY_PLAYOUT_MS; it moves by at most
+// PLAYOUT_SLEW_MS a second (a few ticks faster, or a short wait), so motion stays smooth.
+export const RECOVERY_PLAYOUT_MIN_MS = 600;
+const RECOVERY_POLL_GAP_MS = 500, PLAYOUT_SLEW_MS = 100;
+export function recoveryPlayoutTarget(rttMs, ceilingMs = RECOVERY_PLAYOUT_MS) {
+  const rtt = Number.isFinite(rttMs) ? Math.max(0, rttMs) : 300;
+  const trigger = Math.max(RECOVERY_POLL_LEAD_MS, rtt + RECOVERY_POLL_MARGIN_MS);
+  const wanted = Math.max(RECOVERY_POLL_MIN_MS + 0.75 * rtt + 150, RECOVERY_POLL_GAP_MS + trigger - rtt / 2);
+  return Math.min(Math.max(0, ceilingMs), Math.max(RECOVERY_PLAYOUT_MIN_MS, Math.round(wanted)));
+}
+// Cosmetic messages (shots and swings drawn on teammates' screens before the journal replays them): at
+// most this many a second from one sender, sent and accepted.
+export const COSMETIC_PER_SECOND = 8;
+const PREDICTION_TIMEOUT_MS = 4000;  // a drawn action the journal never replays is forgotten after this
+const CATCH_UP_TICKS = 40;           // two seconds behind the playout: "Catching up…"
+
 const RECOVERY_RTT_START_MS = 300;     // the round-trip guess before the first read has answered
 const SHOWN_LATE_SECONDS = 1;         // events older than this (catching up) are not drawn or heard
 const canonicalJson = value => Array.isArray(value) ? `[${value.map(canonicalJson).join(',')}]`
@@ -402,7 +423,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       recoveryLastRepairSeq: 0, recoveryInvalid: false, recoveryFinishPending: false, recoveryFinishing: false,
       recoveryFinishAnswered: false, recoveryFinishFailed: false, recoveryFinishRequest: null, recoveryFinishRetryAt: -Infinity,
       recoveryFinishAttempts: 0, recoveryInputRetryAt: -Infinity, recoveryInputAttempts: 0, recoveryPollRetryAt: -Infinity,
-      recoveryPollAttempts: 0, recoveryCounterResync: false,
+      recoveryPollAttempts: 0, recoveryCounterResync: false, recoveryPlayoutMs: Math.max(0, recoveryPlayoutMs),
+      recoveryClosed: false, cosmeticHeard: new Map(), cosmeticSent: [], catchingUp: false,
       // v3 waves: the event's id and drawing, the finisher's scene and this player's recorder of its samples.
       eventId: first.event?.id ?? null, eventArt: null, finisher: null };
     emit({ type: 'wave_controller_started', waveId: info.waveId, wave: info.wave, flagship: info.flagship });
@@ -453,6 +475,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       try { inputUid = makeActionUid(); } catch { return false; }
       const tick = Math.max(0, wave.ticks + lead, (wave.recoveryReplay.sealedThroughTick ?? -1) + 1);
       wave.recoveryPending.push({ inputUid, actorCounter: ++wave.actorCounter, tick, command });
+      // An attack goes out in this frame, not at the next 250 ms flush: it lands sooner in the journal.
+      if (attack) wave.recoveryFlushNow = true;
       return true;
     }
     const entry = { by: actorId(wave), seq: ++wave.seq, tick: wave.ticks + lead, input };
@@ -465,9 +489,10 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   function pumpRecovery(current, at) {
     if (!current.recoveryReplay || !recoveryTransport) return;
     const waveId = current.info.waveId;
-    if (!current.recoverySending && current.recoveryPending.length && at - current.recoveryLastFlushAt >= RECOVERY_FLUSH_MS
-      && at >= current.recoveryInputRetryAt) {
+    if (!current.recoverySending && current.recoveryPending.length
+      && (at - current.recoveryLastFlushAt >= RECOVERY_FLUSH_MS || current.recoveryFlushNow) && at >= current.recoveryInputRetryAt) {
       current.recoveryLastFlushAt = at;
+      current.recoveryFlushNow = false;
       // The body's size grows by each item and a comma: {"waveProtocol":2,"inputs":[a,b,...]}.
       const batch = [], encoder = new TextEncoder();
       let bytes = encoder.encode(JSON.stringify({ waveProtocol: 2, inputs: [] })).length;
@@ -489,7 +514,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     }
     if (recoveryPollDue(current, at)) void fetchRecoveryFrontier(current);
     // The health vector and its signature only when a checkpoint could go out (not every frame).
-    if (!current.done && !current.recoveryInvalid && !current.recoveryHealthCheckpointPromise
+    if (!current.done && !current.recoveryInvalid && !current.recoveryHealthCheckpointPromise && !current.catchingUp
       && at - current.recoveryHealthLastAttemptAt >= HEALTH_CHECKPOINT_COALESCE_MS) {
       const vector = current.sim.recoveryHealthVector();
       const signature = vector ? canonicalJson(vector) : null;
@@ -511,7 +536,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     // The ended wave waits for its close (fresh seals for the finish); no seal yet: read.
     if (current.done || !Number.isInteger(sealed)) return true;
     // How long the sealed ticks still last under the playout clock, against the time a read takes.
-    const playoutAt = at + current.offset - current.info.startsAtMs - Math.max(0, recoveryPlayoutMs);
+    const playoutAt = at + current.offset - current.info.startsAtMs - current.recoveryPlayoutMs;
     const headroomMs = (sealed + 1) * TICK_SECONDS * 1000 - playoutAt;
     return headroomMs < Math.max(RECOVERY_POLL_LEAD_MS, current.recoveryRttMs + RECOVERY_POLL_MARGIN_MS);
   }
@@ -522,7 +547,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     const startedAt = current.recoveryLastPollAt = now();
     let polling, refusal = null;
     polling = Promise.resolve().then(() => fetchSealedEvents(current.recoveryReplay,
-      request => recoveryTransport.readEvents({ waveId: current.info.waveId, ...request }), undefined, page => { refusal = page; }))
+      request => recoveryTransport.readEvents({ waveId: current.info.waveId, ...request }), undefined, page => { refusal = page; },
+      page => { if (page.closed === true) current.recoveryClosed = true; }))
       .catch(error => { console.error(error); refusal = recoveryRefusal(null); return false; }).then(complete => {
         if (current.recoveryPollPromise !== polling) return complete;
         if (complete) {
@@ -735,6 +761,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
           if (JSON.stringify(expected) !== JSON.stringify(after.basisRepairSeq)) current.recoveryInvalid = true;
           else current.recoveryLastRepairSeq += repairs;
         }
+        tagActors(out, journal);
         emitted.push(...out); fresh.push(...out);
         if (simTick !== tick) current.recoveryInvalid = true;
       });
@@ -834,12 +861,12 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     }).finally(() => { current.recoveryFinishing = false; });
     return true;
   }
-  const emitRecoveryFinish = (waveId, data, survived) => emit({ type: 'wave_finish_answered', waveId, loot: data.loot ?? null, runLoot,
-    recovery: data.recovery, coins: data.coins, waveBest: data.waveBest, flags: data.flags, survived: survived === true });
+  const emitRecoveryFinish = (waveId, data, survived, extra = {}) => emit({ type: 'wave_finish_answered', waveId, loot: data.loot ?? null, runLoot,
+    recovery: data.recovery, coins: data.coins, waveBest: data.waveBest, flags: data.flags, survived: survived === true, ...extra });
   // A friend rang the next wave before this recovery wave ended on this screen: the server closed it already
   // (a bell is refused while one runs), so our part goes in now with what this sim has; the server pays the
   // outcome of the first close. Retried under the refusal policy, never longer than a few tries.
-  function handOffRecoveryFinish(current, tries = 5) {
+  function handOffRecoveryFinish(current, tries = 5, extra = {}) {
     if (!current.recoveryReplay || current.recoveryFinishAnswered || current.recoveryFinishFailed || current.recoveryFinishing) return;
     const vector = current.sim.recoveryHealthVector();
     if (!vector) return;
@@ -854,7 +881,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       if (answer?.ok === true && validCanonicalClose(answer.data?.recovery, current)) {
         current.recoveryFinishAnswered = true;
         if (Number.isFinite(answer.data.loot)) runLoot += answer.data.loot;
-        emitRecoveryFinish(current.info.waveId, answer.data, answer.data.survived ?? result.survived);
+        emitRecoveryFinish(current.info.waveId, answer.data, answer.data.survived ?? result.survived, extra);
         return;
       }
       const refusal = answer == null ? recoveryRefusal(null) : recoveryRefusal(answer);
@@ -865,7 +892,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   }
   function receive(type, payload) {
     if (!wave || wave.done) return;
-    if (wave.info.recoveryVersion === 1) return; // Recovery v1 accepts commands only from durable replay.
+    // Recovery v1 accepts commands only from durable replay; the room only draws teammates' actions sooner.
+    if (wave.info.recoveryVersion === 1) { if (wave.recoveryReplay) receiveCosmetic(wave, type, payload); return; }
     const entry = readMessage(type, payload, wave.info.waveId);
     if (!entry || entry.by === actorId(wave)) return;
     if (entry.input.type === 'lamps_lit') wave.lampsSent = true; // somebody else lit them first
@@ -905,30 +933,107 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     if (wave.recoveryReplay && stats.mode !== 'area' && stats.mode !== 'cone') {
       const toX = target?.x ?? point.x, toZ = target?.z ?? point.z, reach = Math.hypot(toX - player.x, toZ - player.z);
       predict(wave, { type: 'captain_fired', t, by: actorId(wave), level: stats.level, weapon: stats.weapon, mode: stats.mode,
-        x: player.x, z: player.z, toX, toZ, impactAt: t + reach / stats.shotSpeed, targets: [] }, 'pirate-musket');
+        x: player.x, z: player.z, toX, toZ, impactAt: t + reach / stats.shotSpeed, targets: [] }, 'pirate-musket', input);
     }
     return true;
   }
   // Recovery waves run their sim a playout behind real time and an input lands a few ticks ahead, so your own
   // shot or swing would show about a second after the press. It is drawn and heard at once instead (drawing
   // only: hits and damage still come from the replayed journal), and the replayed copy of it is not drawn again.
-  function predict(current, event, sound) {
+  // A recovery wave behind its playout (a tab that was hidden, a slow first read): say so instead of a frozen
+  // picture while the replay runs 30 s of wave a frame. A wave the server closed while we were away (its seal
+  // no longer moves, short of this sim's end) ends here: our finish gets the server's close, the bell is free.
+  function catchUp(current, behind) {
+    const catching = behind > CATCH_UP_TICKS && !current.recoveryClosed;
+    if (catching !== current.catchingUp) {
+      current.catchingUp = catching;
+      current.hud?.banner(catching ? 'Catching up…' : '', catching ? 'Playing back the wave since you were away.' : '');
+      emit({ type: 'recovery_catching_up', waveId: current.info.waveId, catching });
+    }
+    const replay = current.recoveryReplay;
+    if (!current.recoveryClosed || current.recoveryClosedAway || !replay.complete()
+      || current.recoveryDriver.nextTick <= replay.sealedThroughTick) return;
+    current.recoveryClosedAway = true;
+    current.hud?.banner('Wave over', 'This wave ended while you were away.');
+    emit({ type: 'recovery_closed_away', waveId: current.info.waveId });
+    handOffRecoveryFinish(current, 5, { away: true });
+    later(() => { if (wave === current) stop(); }, LOST_BEAT_MS);
+  }
+  // Your own: drawn here, and told to the room so teammates draw it at once too (input = the journal command).
+  function predict(current, event, sound, input = null) {
+    drawPredicted(current, event, sound, current.actorCounter);
+    if (!input || !room?.send) return;
+    const at = now(), sent = current.cosmeticSent;
+    while (sent.length && at - sent[0] > 1000) sent.shift();
+    if (sent.length >= COSMETIC_PER_SECOND) return;
+    const message = toMessage({ ...input, by: actorId(current) },
+      { by: actorId(current), seq: current.actorCounter, tick: current.ticks, waveId: current.info.waveId });
+    if (!message) return;
+    sent.push(at);
+    try { if (room.send(message.type, message.payload)) emit({ type: 'recovery_cosmetic_sent', kind: message.type }); }
+    catch (error) { console.error(error); }
+  }
+  function drawPredicted(current, event, sound, counter) {
     current.renderer?.events([event]); poses.note([event]);
     cue(sound);
     const queue = current.predicted ??= [];
-    queue.push({ type: event.type, at: now() });
-    while (queue.length > 8) queue.shift();
+    queue.push({ type: event.type, by: event.by, counter: Number.isSafeInteger(counter) ? counter : null, at: now() });
+    while (queue.length > 32) queue.shift();
   }
-  // The replayed copy of a predicted event: drop it from drawing (once per prediction, at most 3 s late).
+  // The replayed copy of a drawn action (by the same captain, the same journal input when the counter is
+  // known): not drawn again. A prediction the journal never replays is forgotten after a few seconds.
   function predictedCopy(current, event) {
     const queue = current.predicted;
-    if (!queue?.length || event.by !== actorId(current)) return false;
-    while (queue.length && now() - queue[0].at > 3000) queue.shift();
-    const index = queue.findIndex(item => item.type === event.type);
+    if (!queue?.length) return false;
+    while (queue.length && now() - queue[0].at > PREDICTION_TIMEOUT_MS) queue.shift();
+    let index = queue.findIndex(item => item.type === event.type && item.by === event.by
+      && item.counter !== null && item.counter === event.actorCounter);
+    if (index < 0) index = queue.findIndex(item => item.type === event.type && item.by === event.by
+      && (item.counter === null || !Number.isSafeInteger(event.actorCounter)));
     if (index < 0) return false;
     queue.splice(index, 1);
     return true;
   }
+  // The journal command behind a captain's shot or swing in one tick: its actor counter, for predictedCopy.
+  function tagActors(out, journal) {
+    for (const event of out) {
+      if (event.type !== 'captain_fired' && event.type !== 'captain_struck') continue;
+      const kind = event.type === 'captain_fired' ? 'captain_shot' : 'captain_strike';
+      const source = journal.find(item => item.participantToken === event.by && item.payload?.command?.type === kind);
+      if (Number.isSafeInteger(source?.payload?.actorCounter)) event.actorCounter = source.payload.actorCounter;
+    }
+  }
+  // A teammate's shot or swing from the room, drawn at once (drawing only: hits, damage, kills, HP and loot
+  // come from the replayed journal). Validated, from a participant of this wave, at most 8 a second each.
+  function receiveCosmetic(current, type, payload) {
+    if (type !== ROOM_EVENTS.captain_shot && type !== ROOM_EVENTS.captain_strike) return;
+    const entry = readMessage(type, payload, current.info.waveId);
+    if (!entry || entry.by === actorId(current) || !current.shown || current.state?.phase !== 'running') return;
+    if (!participantOf(current, entry.by)) return;
+    const at = now(), heard = current.cosmeticHeard.get(entry.by) ?? [];
+    while (heard.length && at - heard[0] > 1000) heard.shift();
+    if (heard.length >= COSMETIC_PER_SECOND) return;
+    heard.push(at); current.cosmeticHeard.set(entry.by, heard);
+    const input = entry.input, t = current.ticks * TICK_SECONDS, state = current.state;
+    if (input.type === 'captain_shot') {
+      const stats = captainStats(input.level, input.skills, input.weapon, { recoveryVersion: 1 });
+      if (stats.mode === 'area' || stats.mode === 'cone') return;
+      const target = pirateById(state, input.targetId);
+      if (!target) return;
+      const reach = Math.hypot(target.x - input.x, target.z - input.z);
+      drawPredicted(current, { type: 'captain_fired', t, by: entry.by, level: stats.level, weapon: stats.weapon, mode: stats.mode,
+        x: input.x, z: input.z, toX: target.x, toZ: target.z, impactAt: t + reach / stats.shotSpeed, targets: [] }, 'pirate-musket', entry.seq);
+    } else {
+      const boarder = pirateById(state, input.targetId);
+      if (!boarder) return;
+      const stats = captainStats(input.level, input.skills, 'musket', { recoveryVersion: 1 });
+      drawPredicted(current, { type: 'captain_struck', t, by: entry.by, targetId: boarder.id, level: input.level,
+        radius: stats.sweepRadius, x: input.x, z: input.z, toX: boarder.x, toZ: boarder.z }, 'pirate-slash', entry.seq);
+    }
+    emit({ type: 'recovery_cosmetic_drawn', by: entry.by, kind: type });
+  }
+  const participantOf = (current, token) => current.info.initialSnapshot?.participants?.some(item => item?.participantToken === token)
+    || current.recoveryReplay.participantTokens().has(token);
   // Free aim (owner, 11 Nov: "shooting when not pressing on something"): a click or tap anywhere fires
   // your gun that way. A single or piercing shot hits the ship or boarder tapped, else the one in range
   // nearest to the aim point (within AIM_RADIUS of it); with none there the shot is a visible miss on this
@@ -972,7 +1077,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     if (!submit(input)) return false;
     wave.bladeAt = t + INPUT_LEAD_TICKS * TICK_SECONDS;
     if (wave.recoveryReplay) predict(wave, { type: 'captain_struck', t, by: actorId(wave), targetId: boarder.id, level: myLevel(),
-      radius: myStats().sweepRadius, x: input.x, z: input.z, toX: boarder.x, toZ: boarder.z }, 'pirate-slash');
+      radius: myStats().sweepRadius, x: input.x, z: input.z, toX: boarder.x, toZ: boarder.z }, 'pirate-slash', input);
     return true;
   }
   // Close quarters (D052): with a boarder in cutlass reach and no attack of yours for AUTO_BLADE.after seconds, your
@@ -1185,7 +1290,11 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     current.hud?.setVisible(current.shown);
     const elapsed = (now() + current.offset - current.info.startsAtMs) / 1000;
     if (!current.done && elapsed >= 0) {
-      const playout = current.recoveryReplay ? Math.max(0, recoveryPlayoutMs) / 1000 : 0;
+      if (current.recoveryReplay) {
+        const target = recoveryPlayoutTarget(current.recoveryRttMs, recoveryPlayoutMs), step = PLAYOUT_SLEW_MS * Math.max(0, dt);
+        current.recoveryPlayoutMs += Math.max(-step, Math.min(step, target - current.recoveryPlayoutMs));
+      }
+      const playout = current.recoveryReplay ? current.recoveryPlayoutMs / 1000 : 0;
       const due = Math.floor((elapsed - playout) / TICK_SECONDS + 1e-6);
       let budget = MAX_TICKS_PER_FRAME;
       const events = [], recent = [];
@@ -1214,6 +1323,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
               if (JSON.stringify(expected) !== JSON.stringify(after.basisRepairSeq)) current.recoveryInvalid = true;
               else current.recoveryLastRepairSeq += repairs;
             }
+            tagActors(out, journal);
             events.push(...out); if (simTick >= due - lateTicks) recent.push(...out);
           });
           if (!advanced) break;
@@ -1226,6 +1336,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       current.state = current.sim.state();
       if (events.length) handle(events, current, recent);
       if (current.sim.done) end(current);
+      if (current.recoveryReplay && !current.done) catchUp(current, due - current.ticks);
     }
     if (wave !== current) return;
     // v3 waves: the event's banner and drawing, and a running finisher's scene.
