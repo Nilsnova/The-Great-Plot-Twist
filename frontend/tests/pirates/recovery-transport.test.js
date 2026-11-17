@@ -24,6 +24,8 @@ describe('recovery-v1 command transport', () => {
       by: TOKEN, level: 3, skills: ['steady_aim'], weapon: 'musket' });
     expect(simulationInputFromJournal({ ...event, type: 'captain_input', payload: { ...event.payload,
       participantToken: 'a7856e02-de9f-4e2d-b3cc-abc856524dac', inputUid: 'accepted-uid-1', actorCounter: 7 } })).toBeNull();
+    expect(simulationInputFromJournal({ ...event, type: 'captain_input', payload: { ...event.payload,
+      inputUid: 'accepted-uid-1', actorCounter: 7 } })).toBeNull();
     expect(simulationInputFromJournal({ serverSeq: 5, effectiveTick: 10, type: 'participant_joined', participantToken: TOKEN,
       payload: { captain: { level: 3, skills: [], weapon: 'musket' } } })).toBeNull();
   });

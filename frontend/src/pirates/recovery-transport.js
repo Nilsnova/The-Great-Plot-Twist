@@ -55,11 +55,12 @@ export function simulationInputFromJournal(event) {
   if (event.type === 'structure_repaired') return { type: 'structure_repaired', event };
   if (event.type === 'participant_joined') return null;
   const command = event.payload.command;
-  const token = event.participantToken ?? event.payload.participantToken;
+  const token = event.participantToken;
   if (!isObject(command) || typeof command.type !== 'string' || !isParticipantToken(token)
-    || (event.participantToken && event.payload.participantToken && event.participantToken !== event.payload.participantToken)
+    || (event.payload.participantToken !== undefined && event.payload.participantToken !== token)
     || (event.type !== 'captain_input' && event.type !== command.type)) return null;
-  if (event.type === 'captain_input' && (typeof event.payload.inputUid !== 'string' || !event.payload.inputUid
+  if (event.type === 'captain_input' && (!isParticipantToken(event.payload.participantToken)
+    || typeof event.payload.inputUid !== 'string' || !event.payload.inputUid
     || !Number.isSafeInteger(event.payload.actorCounter) || event.payload.actorCounter < 1)) return null;
   const normalized = commandForJournal(command);
   if (!normalized) return null;
