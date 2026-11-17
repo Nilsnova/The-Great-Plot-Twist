@@ -4,7 +4,7 @@
 >
 > **Who uses it:** Players constructing a full perimeter or internal wall compartments.
 
-- **Status:** in progress; controller tests already exist, visible/runtime checks follow.
+- **Status:** real controls and component checks implemented; integrated game/server/perimeter proof and human review remain.
 - **Responsible teammate:** Johannes Franz Lang (`frcola`).
 - **Issue:** [WALL-27 #281](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/281).
 - **Branch:** `feat/wall-27-builder-controls`, stacked on WALL-26 and retaining the camera's final fixes.
@@ -24,3 +24,13 @@ Explain-back: UI drafts only propose geometry; the authoritative quote supplies 
 Questions: What does green mean? Why keep an unknown purchase after closing? Which resources and input handlers must disappear on exit?
 
 No new dependency, live migration application, activation, main push, force push or merge. Human walkthrough/review remain pending.
+
+## Executed component evidence
+
+[Draft PR #296](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/296) stacks on WALL-26. The camera's final source/evidence commits are retained as normal cherry-picks; its roadmap handover and WALL-26's handover were both preserved during the documentation conflict resolution.
+
+`npm --prefix frontend test -- --maxWorkers=1 tests/island/wall-builder-preview.test.js tests/island/wall-builder.test.js tests/island/move-mode.test.js tests/island/village-mode.test.js` passed **56 tests / 4 files**, duration **1.33s**, exit 0. Geometry checks cover exact projection/half-grid footprints, bounded reuse, quote color and owned-resource cleanup without disposing the borrowed wall texture.
+
+With the coordinated Chromium slot: `CHROME_PATH=/usr/bin/chromium npm --prefix frontend test -- --maxWorkers=1 tests/island/wall-builder-dom.test.js` passed **2 tests / 1 file**, duration **3.54s**, exit 0. Real DOM controls fit 1280×720 and 375×812 with 44px targets and an accessible unknown/retry state. A real canvas click plus ArrowRight reached index/world/controller, drafted exact cells, obtained an ordered quote, confirmed it and restored village controls. This uses a declared local construction transport, not production SQL or full-game screenshots. The browser slot was released immediately.
+
+Integrated server/fake/cohort behavior, full suite/build/budget/text/a11y/demo/overlap checks, actual-game before/after captures and full-ring save/reload/breach/gap evidence remain the coordinated integration owner's work. No production/Safari/physical-device result or merge is claimed.
