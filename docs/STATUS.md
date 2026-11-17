@@ -906,3 +906,6 @@ Ianno / 16 Nov 2026 — T54 technical proposal reviewed and refined by the orche
 
 
 Ianno / 16 Nov 2026 — Reconciled T54 planning with main eba53be0 (D060 extra tower spots and route-badge cleanup) on docs/t54-repair-contracts only. All collaborator changes and the entire current-main STATUS prefix were retained; all prior branch log entries remain unchanged and in order. The proposal covers the additional tower spots, preserves D060, and distinguishes approved gameplay from unapproved transport/authority recommendations. Documentation review passed for the eight-file scope, local destinations, anchors, whitespace and append-only log preservation; no application or live checks are claimed. The concrete proposal is prepared for Ianno review before publication, implementation assignment or any merge request.
+
+
+Ianno / 2026-11-17 - T55 legacy wave lock compatibility slice started on fix/t55-legacy-wave-locks from main a09787c0, within the approved T54/T55 scope. Responsible teammate: Ianno (@Iannomh123456); coding agent: gpt-6-luna, high reasoning. This separate branch/draft covers six existing SQL bodies only so new lifecycle APIs can proceed independently. No implementation verification, live migration, activation or deployment is claimed. Historical log bytes are unchanged; task #121 remains open until all T55 slices are complete.
