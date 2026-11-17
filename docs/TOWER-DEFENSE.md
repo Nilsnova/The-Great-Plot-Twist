@@ -2,6 +2,8 @@
 
 > **What this file is:** the binding contract for three parallel builds on Wed 11 Nov evening (owner's request: "really increase the tower-defense aspect, keep it simple, play with my brother tonight"). Backend (B), simulation and battle (S), interface (I) build against exactly this. If a build must deviate, it changes this file in the same commit and says so in its report.
 
+> **Recovery version status (17 Nov 2026):** The manual E repair/rebuild and in-wave Carpenter rules in the older sections below describe legacy protocol-1 waves. For recovery-v1/protocol-2 waves, the approved [D059](DECISIONS.md#d059--shared-gradual-hp-recovery-and-paid-instant-repair--2026-11-16) and [T54 implementation plan](../specs/T54-recovery-implementation-plan.md) override only structure-repair behavior; other combat rules follow the wave's frozen protocol and rules. The new behavior is in open draft PRs, is not shipped, and its recovery flag remains off. Frozen protocol-1 waves keep the behavior described in their saved rules.
+
 ## 1. The loop
 
 Fight pirate waves → earn 🪙 loot → build and upgrade towers, hire crew → fight harder waves. Waves go up to **100**; every **5th wave is a boss wave** (a warship); every **10th** brings two. After a won wave an **8-second break** (faster pace, owner 11 Nov; the bell's countdown is 5 s) with a big "Next wave" button (or it starts by itself when the break ends, if "Auto next wave" is on). A lost wave ends the run: you keep your buildings and coins, and the next bell restarts at your best wave minus 2 (at least 1).
