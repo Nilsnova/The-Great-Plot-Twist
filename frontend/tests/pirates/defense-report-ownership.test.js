@@ -2,10 +2,47 @@ import {expect, it} from 'vitest';
 import {browserHarness} from '../g20-browser.js';
 const browser = browserHarness();
 
+const clearOwners = {report: false, island: false, village: false, tutorial: false, guide: false, queued: 0,
+  classDemo: false, shell: false, market: false, sports: false, chart: false, sailing: false, worldBusy: false,
+  captainDown: false, dialogs: 0, quality: 'high'};
+const inputOwners = page => page.evaluate(() => {
+  const g = window.__island, t = g.tutorials;
+  return {report: g.waves.reportActive, island: g.island.active, village: g.island.managing,
+    tutorial: t.active, guide: t.guide !== null, queued: t.queue.length, classDemo: !!g.classDemo?.active,
+    shell: !!g.shell.blocked, market: !!g.marketUi?.active, sports: !!g.sportsUi.active,
+    chart: !!g.chart.open, sailing: !!g.sailing.active, worldBusy: !!g.world.busy,
+    captainDown: !!g.waves.island.captainDown, dialogs: document.querySelectorAll('dialog[open]').length, quality: g.settings.quality};
+});
+
+async function settleUnlocks(page) {
+  // Consume the real campaign change before testing calm: an empty old queue is not readiness.
+  await page.evaluate(() => window.__island.tutorials.update(0));
+  await page.waitForFunction(() => {
+    const t = window.__island.tutorials, memory = JSON.parse(localStorage.getItem('tgpt:tutorials:v1'));
+    return memory?.games?.[t.code]?.wave === 30;
+  });
+  while (await page.evaluate(() => { const t = window.__island.tutorials; return t.active || t.queue.length > 0; })) {
+    // active includes cardLoading; wait for its real modal instead of hiding a pending import.
+    const card = page.locator('dialog.unlock-card[open]'); await card.waitFor();
+    const skip = card.getByRole('button', {name: /^Skip all \d+$/});
+    if (await skip.count()) await skip.click();
+    else await card.getByRole('button', {name: 'Got it', exact: true}).click();
+    await page.waitForFunction(() => {
+      const t = window.__island.tutorials, open = !!document.querySelector('dialog.unlock-card[open]');
+      return open || (!t.active && t.queue.length === 0);
+    });
+  }
+  await page.waitForFunction(() => {
+    const t = window.__island.tutorials;
+    return !t.active && t.queue.length === 0 && !document.querySelector('dialog.unlock-card[open]');
+  });
+}
+
 it('the actual game blocks keyboard and gamepad movement while the report owns input', async () => {
   await browser.withPage(async (page, base) => {
     await page.addInitScript(() => {
       localStorage.setItem('plot_twist_front_door_v1', '1'); localStorage.setItem('plot_twist_island_arrival_v1', '1');
+      localStorage.setItem('tgpt:tutorials:v1', JSON.stringify({version: 1, guided: true, seen: [], games: {}}));
       window.reportPad = {id: 'report-pad', connected: true, mapping: 'standard', axes: [0, 0], buttons: Array.from({length: 16}, () => ({pressed: false}))};
       Object.defineProperty(navigator, 'getGamepads', {value: () => [window.reportPad]});
     });
@@ -23,6 +60,11 @@ it('the actual game blocks keyboard and gamepad movement while the report owns i
       await g.island.load();
       const {setWaveFinisher} = await window.g20Import('/src/island/wave-hooks.js');
       setWaveFinisher(async () => ({ok: true, data: {loot: 0}})); // No backend payout in this input fixture.
+    });
+    await settleUnlocks(page);
+    expect(await inputOwners(page)).toEqual(clearOwners);
+    await page.evaluate(() => {
+      const g = window.__island;
       g.emit({type: 'wave_started_server', waveId: 'input-report', wave: 1, seed: 77, startsAt: new Date(Date.now() - 300000).toISOString()});
       for (let i = 0; i < 100 && !g.waves.island.wave?.done; i++) g.waves.pirates.update(.1);
       const zone = g.world.current.zones.find(item => item.id === 'cannon_3'); g.player.position.set(zone.x, zone.y, zone.z);
@@ -38,12 +80,16 @@ it('the actual game blocks keyboard and gamepad movement while the report owns i
     }));
     const position = () => page.evaluate(() => { const p = window.__island.player.position; return {x: p.x, z: p.z}; });
     expect(await page.evaluate(() => window.__island.waves.reportActive)).toBe(true);
+    expect(await inputOwners(page)).toEqual({...clearOwners, report: true, dialogs: 1});
+    expect(await page.getByRole('dialog', {name: 'Last defense report', exact: true}).count()).toBe(1);
     const before = await position();
     await page.evaluate(() => { window.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyA'})); window.reportPad.axes[0] = -1; });
     await frames(); expect(await position()).toEqual(before);
     await page.getByRole('button', {name: 'Close dialog', exact: true}).click();
     expect(await page.evaluate(() => window.__island.waves.reportActive)).toBe(false);
+    expect(await inputOwners(page)).toEqual(clearOwners);
     await frames(); expect((await position()).x).toBeLessThan(before.x - .01);
     await page.evaluate(() => { window.reportPad.axes[0] = 0; window.dispatchEvent(new KeyboardEvent('keyup', {code: 'KeyA'})); });
+    expect(await inputOwners(page)).toEqual(clearOwners);
   });
 });
