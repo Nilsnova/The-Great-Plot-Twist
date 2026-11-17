@@ -91,6 +91,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   const worldBlocked=()=>!!(harbor?.active||island?.active||classDemo?.active||shortcuts.active||tutorial.active||!!tutorials?.active||shell?.blocked||isAppBlocked?.()||marketUi?.active||sportsUi.active);
   function resetControls(){mapTouch?.cancel();input.reset();}
   const outsideBlocked=()=>externalOverlay()||world.busy;
+  const captainBlocked=()=>outsideBlocked()||island?.managing===true;
   const sportsUi=createSportsEntry({container,getToken:session.getToken,onSessionChange:session.onChange,resetInput:resetControls,focusGame:()=>graphics.renderer.domElement.focus(),onSignIn:()=>{sportsUi.close();openAccount?.();}},{load:loadMatchCard});
   // No prediction market in the game (D035, 11 Nov): the fortune teller and its desk are gone.
   function panelLabel(zone){return island?.label(zone);}
@@ -270,13 +271,13 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   function screenAt(id){const a=island?.anchor?.(id);if(!a)return null;projected.set(a.x,-a.z*.72+a.lift,0).project(view.camera);
     return Math.abs(projected.x)<=1.2&&Math.abs(projected.y)<=1.2?{x:(projected.x+1)/2,y:(1-projected.y)/2}:null;}
   canvas.setAttribute('aria-label','Island exploration. Tap a clear path or drag the movement stick to walk. Arrow keys and WASD also move.');
-  mapTouch=createMapTouch({canvas,input,container,position:()=>controller.player.position,place:()=>world.current?.id,enabled:()=>active&&!disposed&&!outsideBlocked(),
+  mapTouch=createMapTouch({canvas,input,container,position:()=>controller.player.position,place:()=>world.current?.id,enabled:()=>active&&!disposed&&!captainBlocked(),
     canStand:(x,z)=>canStand(x,z,world.current?.colliders??[],world.current?.groundHeight),
     project(x,y,target){const rect=canvas.getBoundingClientRect();if(!rect.width||!rect.height)return null;
       if(target){projected.set(target.x,-target.y*.72,0).project(view.camera);return {x:rect.left+(projected.x+1)*rect.width/2,y:rect.top+(1-projected.y)*rect.height/2};}
       projected.set((x-rect.left)/rect.width*2-1,1-(y-rect.top)/rect.height*2,0).unproject(view.camera);return {x:projected.x,z:-projected.y/.72};
     }});
-  const deviceActions={onManualMove:()=>mapTouch.cancel(),chart:()=>showChart(),menu:()=>shell.show('pause'),isPlaying:()=>active&&!outsideBlocked()};
+  const deviceActions={onManualMove:()=>mapTouch.cancel(),chart:()=>showChart(),menu:()=>shell.show('pause'),isPlaying:()=>active&&!captainBlocked()};
   const touch=createTouchControls(container,input,deviceActions),gamepad=createGamepad(input,deviceActions);
   const stopLiveWeather=startLiveWeather({setWeather,onUpdate(answer){
     weatherAnswer=answer;emit({type:'weather_updated',source:answer.source,fetchedAt:answer.fetchedAt});
@@ -298,7 +299,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     const captainDown=isCaptainDown();controller.player.visible=!captainDown;
     // A shot or a cutlass blow poses your own body (and a teammate's figure), never a second captain (pirates/poses.js).
     const poses=waves?.poses?.()??null;character.pose(poses?.own??null);
-    const speed=captainDown?controller.update(delta,false):controller.update(delta, active && !outsideBlocked());
+    const speed=captainDown?controller.update(delta,false):controller.update(delta, active && !captainBlocked());
     const state = weather.update(reducedMotion()?0:delta, controller.player.position, settings.quality);
     const night = sky.update(settings.hour, state, reducedMotion()?0:time); lightPools.update(reducedMotion()?0:time, night); pixelFx.update(delta);
     audio.update(delta,{weather:state,weatherAnswer,isletBuilt:isletState.getBuilt(),speed,night,active:active&&!isAppBlocked?.()&&!world.busy&&!(marketUi?.active||sportsUi.active)&&!chart.open,place:world.current?.id});
@@ -309,11 +310,11 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     view.update(delta, controller.player.position);
     // A captain down in the wave lies in the wave's drawing: their standing presence figure hides (pirates/figures.js).
     experience.update(delta,{speed,hide:waves?.figures?.(experience.figures())??null,poses:poses?.figures??null});
-    const zone = active&&!outsideBlocked()&&!captainDown ? findZone(controller.player.position, world.current?.zones ?? []) : null;
+    const zone = active&&!captainBlocked()&&!captainDown ? findZone(controller.player.position, world.current?.zones ?? []) : null;
     // During a wave E belongs to the wave's own prompt (fire, repair, rebuild, help up: TOWER-DEFENSE.md §12, GAME-V3.md §3) when it
     // has one, so a building's card never opens instead, and the phone's Use button hides while the wave owns E.
     const waveAction=currentWaveAction();
-    touch.update(zone&&!waveAction?zone:null,active&&!outsideBlocked(),zone&&!waveAction?panelLabel(zone):'');
+    touch.update(zone&&!waveAction?zone:null,active&&!captainBlocked(),zone&&!waveAction?panelLabel(zone):'');
     classDemo?.update(delta,{blocked:!active||outsideBlocked(),zoneActive:!!zone});
     const reviving=!!(waves?.island.revive||waves?.point?.controller.revive);
     if(input.consume('KeyE')&&eDecision({zone,waveAction,reviving})==='open')world.interact(zone);

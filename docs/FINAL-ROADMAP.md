@@ -146,3 +146,9 @@ The unified-recovery follow-up T54–T60 is claimed by Ianno. The technical prop
 Planning handover (14 Nov): roadmap/task expansion drafted by Ianno Hollensteiner; documentation checks completed. Implementation tasks remain proposed, not done. Peer review and explain-back are pending.
 
 - [x] **B3 current-v3 feedback pass:** implemented by Johannes in drafts [#31](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/31) and [#32](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/32). [Audit, screenshots and limits](B3-FEEDBACK-AUDIT.md). This scoped pass does not claim the historical mystery/email workflows or live provider/multiplayer proof. Human review remains.
+
+COC-49, optional own-island village management: bounded implementation in draft
+[PR #192](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/192), tracked by
+[issue #190](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/190).
+Not released or marked complete: focused evidence, Johannes's explain-back and
+independent human review remain. No change to the existing freeze or merge rules.

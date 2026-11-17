@@ -1647,3 +1647,25 @@ runs against disposable local PostgreSQL with every migration applied twice.
 
 **Limits.** This fence protects a paid restore from a report belonging to a wave that started earlier.
 It does not validate the health a modified client reports or order arbitrary stale reports from other waves.
+
+## COC-49 — Optional village management — Johannes Franz Lang
+
+Draft implementation in [PR #192](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/192),
+following the bounded [policy and state table](../specs/COC-49-village-mode.md).
+Johannes requested this direction; independent human review is still required.
+
+The new [local controller](../frontend/src/island/village-mode.js) holds only whether
+management is active and the original island code. It refuses entry on visits or
+reserved waves and releases placement/input once on context loss. The separate
+[bar](../frontend/src/island/village-bar.js) makes leaving visible. Existing build,
+upgrade and Move cards still send their original authenticated server requests.
+
+In `game.js`, captain movement is blocked separately from the world's picking
+permission. Otherwise the new mode would block all building selection too.
+`world.js` bypasses distance only for a structure explicitly allowed by that local
+own-island mode; Explore and other landmarks keep the old reach rule. The mode
+neither pauses combat nor changes a price, capacity, level or HP.
+
+Explain-back questions: Why separate movement from picking? Which checks still
+belong to the server? What happens to placement when a wave is accepted? The
+three questions are prepared, not a claim Johannes has already answered them.

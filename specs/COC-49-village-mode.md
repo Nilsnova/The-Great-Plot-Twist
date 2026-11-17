@@ -23,12 +23,42 @@ existing card and the captain does not walk. Other landmarks retain walk-up inpu
   fences; this feature does not invent a new persistent island epoch.
 - Text inputs keep their keys. Map tap-to-walk, movement sticks and nearby Use
   prompts are inactive while managing; world picking remains available.
+- The management bar sits below the map content, clear of the goals strip. Move
+  temporarily replaces it with the existing placement bar; Cancel/Escape returns
+  to management. Enter on a focused Cancel button keeps the button's meaning.
+  The existing narrator-height variable lifts the bar above captions, so Exit
+  remains visible instead of being hidden by narration.
 
 ## First-slice limits
 
 No independent editor camera, new catalogue, group placement, undo history,
 layout snapshots, new capacities, HP/recovery logic or backend endpoint is added.
 COC-02/03/06 remain separate follow-ups. Ianno's T55–T59 draft work is unchanged.
+
+## State and input table
+
+| Context / action | Result | Authority |
+|---|---|---|
+| Explore, click a distant structure | Existing Walk closer behavior | Existing reach check |
+| Own loaded island, no reservation, choose Manage village | Enter; reset held controls; show a visible Exit | Local mode only |
+| Managing, click a structure | Open its existing build/upgrade card | Existing card/API checks |
+| Managing, choose Move | Existing ghost and Move controller | Existing placement/API checks |
+| Arrow key in a text input | Text/cursor keeps the key | Input-target guard |
+| Escape with a card or Move open | Close/cancel that layer, stay managing | Existing UI/Move lifecycle |
+| Escape with no card or Move | Exit, reset controls | Local mode lifecycle |
+| Visiting, island missing, or a reserved wave | Entry refused | Current island/phase context |
+| Travel, visit, reset or accepted wave start | Exit and cancel unconfirmed placement | Existing context events |
+
+The `managing` getter is intentionally separate from the island's `active` overlay
+getter. `game.js` uses `captainBlocked` for walking, map-touch and Use prompts;
+the world's active/picking gate stays available. Treating management as a global
+overlay would disable the very building selection this feature adds. The mode
+checks its own island code and phase again when read, rather than granting
+selection permanently after the initial menu click.
+
+No new transaction is submitted by the mode controller. Existing asynchronous
+Move cancellation still discards a late view update after cancel; it cannot undo
+a server operation that already committed on the original island.
 
 ## Evidence required before completion
 

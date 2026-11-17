@@ -30,6 +30,8 @@ import {createIslandUi} from './ui.js';
 import {decorateIsland} from './world.js';
 import {createMoveMode} from './move-mode.js';
 import {createMoveBar} from './move-bar.js';
+import {createVillageMode, isTextEntry} from './village-mode.js';
+import {createVillageBar} from './village-bar.js';
 import {SPOTS, KINDS, BELL, CABIN, ISLAND_PLACE, POINT_PLACE, PP_SPOTS, isIslandZone, isPointSpot, spotById, ppSpotById, pointZones, defenses, slotName,
   campaignBuilding, placedSpot, ARSENAL} from './spots.js';
 import {createArsenal} from './arsenal.js';
@@ -169,10 +171,20 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const api = createIslandApi({transport: transport ?? live});
   const ui = createIslandUi({container, focus, resetInput});
   // T36, flexible placement: Move mode (move-mode.js) with its bar (move-bar.js) and the preview on the island.
-  const moving = createMoveMode({api, render: model => moveBar.render(model), preview: cell => world?.preview(cell),
+  const moving = createMoveMode({api, render: model => { moveBar.render(model); villageBar.render(village.active && !model); }, preview: cell => world?.preview(cell),
     spots: () => target()?.spots ?? [], code: () => (visiting ? visiting.code : null), onMoved: (answer, spotId) => void moved(answer, spotId)});
   const moveBar = createMoveBar({container, handlers: {nudge: (dx, dz) => moving.nudge(dx, dz), place: () => void moving.confirm(), cancel: () => moving.cancel()}});
-  const moveKeys = event => { if (moving.active && !ui.active) moving.handleKey(event); };
+  const villageBar = createVillageBar({container, onLeave: () => village.leave()});
+  const village = createVillageMode({
+    context: () => ({ready: !!own?.code && !!world, own: !visiting && !visitCode, code: own?.code,
+      reserved: !!flow.current || (battle && !waveOver)}),
+    render: active => villageBar.render(active),
+    onLeave: () => { moving.cancel(); ui.close(); openSpot = null; resetInput(); focus(); },
+  });
+  const moveKeys = event => {
+    const buttonEnter = event.key === 'Enter' && event.target?.tagName === 'BUTTON';
+    if (moving.active && !ui.active && !event.defaultPrevented && !buttonEnter && !isTextEntry(event.target)) moving.handleKey(event);
+  };
   globalThis.addEventListener?.('keydown', moveKeys, true);
   // The arsenal (T41, D042): only while the server's flag "arsenal" is on; off, the old weapon shop stays.
   const arsenal = createArsenal({api: createArsenalApi({transport: transport ?? live}), ui, emit, enabled: () => arsenalOn() === true,
@@ -201,6 +213,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   });
   // The musket hint (§10), once per device, when the first wave starts.
   const stopStarted = on(WAVE_STARTED, () => {
+    village.leave();
     if (!disposed && firstTime('musket')) ui.toast('Tap a ship to fire your musket (F).', 'info');
   });
   // Every landing on home_islet loads the island shown there: your own, or the one you visit.
@@ -212,6 +225,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const stopPoint = on('arrived', event => { if (event.place === POINT_PLACE) void loadPoint(); });
   // Leaving the island closes its card and ends a visit (the next landing is your own island).
   const stopTravel = on('travel', event => {
+    village.leave();
     ui.close(); flow.reset(); openSpot = null; moving.cancel();
     if (visiting && event.to !== ISLAND_PLACE) endVisit();
   });
@@ -458,6 +472,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   }
   function refreshCard() {
     if (disposed) return;
+    village.refresh();
     applyWorld();
     if (ui.open === 'build' && openSpot) ui.buildCard(buildModel(openSpot), handlers);
     else if (ui.open === 'bell') ui.bellCard(bell(), bellAction);
@@ -732,6 +747,13 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     refreshCard();
   }
   // The reach of the open house card's role, for the ring on the ground (world.js), or null.
+  function toggleVillage() {
+    if (village.active) return village.leave();
+    ui.close(); moving.cancel(); openSpot = null; resetInput(); focus();
+    if (village.enter()) return true;
+    ui.toast('Manage your village between waves on your own island.', 'info');
+    return false;
+  }
   // T36: Move closes the card and lets the player pick the new square (between waves only; the server checks).
   function startMove(spotId) {
     if (disposed || isPointSpot(spotId) || (battle && !waveOver) || target()?.layout?.movable !== true) return false;
@@ -903,6 +925,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const stopMenu = menu(() => [
     {label: 'Players and invite', onSelect: () => openLobby()},
     ...(visiting || visitCode ? [{label: 'Leave this game', onSelect: () => void leaveGame()}] : []),
+    ...(!visiting && !visitCode ? [{label: village.active ? 'Exit village mode' : 'Manage village', onSelect: toggleVillage}] : []),
     {label: 'Leaderboard', onSelect: () => void openLeaderboard()},
     {label: 'Crew', onSelect: () => openCrew()},
     {label: 'Captain and skills', onSelect: () => openCaptain()},
@@ -917,6 +940,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       ...(Number.isSafeInteger(own.startingCoins) ? {startingCoins: own.startingCoins} : {})};
   }
   async function resetIsland(typed) {
+    village.leave();
     const answer = await api.freshStart({confirmCode: typed});
     if (disposed || !answer.ok) return answer;
     const code = islandCode(own?.code ?? '') || islandCode(typed);
@@ -961,6 +985,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   function visit(code) {
     const symbols = storeVisit(code, visitStorage);
     if (!symbols) return false;
+    village.leave();
     visitCode = symbols; visiting = null; flow.reset(); ui.close();
     return true;
   }
@@ -980,11 +1005,13 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   function enterGame({code, role = 'member', joined: already = true} = {}) {
     const symbols = islandCode(code ?? '');
     if (!symbols) return false;
+    village.leave();
     if (already) joined.add(symbols);
     if (role === 'host') { if (visiting || visitCode) endVisit(); flow.reset(); ui.close(); return true; }
     return visit(symbols);
   }
   async function sailHome() {
+    village.leave();
     endVisit(); flow.reset(); ui.close(); applyWorld();
     await load();
   }
@@ -994,7 +1021,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       world?.dispose();
       const deco = decorateIsland(place, {art, reducedMotion, canvas: adapters.canvas, camera: adapters.camera,
         isActive: adapters.isActive, onPick: pick, range: houseRange, player: adapters.player, onFar: adapters.onFar,
-        placing: () => moving.active, onGround: (x, z) => moving.tap(x, z)});
+        placing: () => moving.active, onGround: (x, z) => moving.tap(x, z),
+        canPickRemote: id => village.active && !!spotById(id)});
       world = deco; applyWorld();
       const original = place.update;
       place.update = (dt, frame) => { original(dt, frame); deco.update(dt, frame?.time ?? 0); };
@@ -1086,7 +1114,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       if (!disposed && answer.ok) tookCoins(answer.data.coins);
       return answer;
     },
-    setBattle(value) { battle = value === true; if (battle) { waveOver = false; moving.cancel(); } applyWorld(); refreshCardIfBuild(); if (['captain', 'tech'].includes(ui.open)) refreshCard(); },
+    setBattle(value) { battle = value === true; if (battle) { village.leave(); waveOver = false; moving.cancel(); } applyWorld(); refreshCardIfBuild(); if (['captain', 'tech'].includes(ui.open)) refreshCard(); },
     // A Pirate Point battle: its built walls, cannons and mortars are drawn by the wave renderer meanwhile.
     setPointBattle(value) { pointBattle = value === true; applyWorld(); },
     // The bell again, for the wave's break ("Next wave", TOWER-DEFENSE.md §1): the start route where the
@@ -1109,6 +1137,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     get dev() { return transport?.dev ?? null; },
     get ui() { return ui; },
     get active() { return ui.active || !!cutscene || !!boatGame; }, // D057: a boat round holds the keys too
+    get managing() { return village.active; },
+    toggleVillage,
     startMove,
     get moving() { return moving.state; },
     get moveMode() { return moving; },
@@ -1116,10 +1146,11 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       if (boatGame) { boatGame.close(); return true; }
       if (cutscene) { cutscene.skip(); return true; }
       if (moving.active && !ui.active) { moving.cancel(); return true; }
-      return ui.close();
+      return ui.close() || village.leave();
     },
     dispose() {
       if (disposed) return; disposed = true;
+      village.dispose(); villageBar.dispose();
       stopFinished(); stopStarted(); stopArrived(); stopPoint(); stopInteract(); stopTravel(); stopMenu?.(); stopSettings?.(); stopStartedGame(); stopGame(); clearTimeout(syncSoon);
       boatGame?.dispose(); boatGame = null;
       flow.dispose(); ui.dispose(); moveBar.dispose(); globalThis.removeEventListener?.('keydown', moveKeys, true); cutscene?.dispose?.(); world?.dispose(); world = null; pointWorld?.dispose(); pointWorld = null;

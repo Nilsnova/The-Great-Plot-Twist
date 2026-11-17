@@ -278,3 +278,14 @@ and [results, screenshots and manual checkpoints](evidence/T28/README.md).
 | The admin script [fresh_start.sql](../scripts/admin/fresh_start.sql) resets the island game, but it forgot the two old weapon columns, so players kept bought weapons after a fresh start. Now it puts every island back to the musket (`weapons_owned`, `weapon_equipped`) and counts those islands | The two fresh-start tests in [test_islands_and_waves_sql.py](../backend/server/tests/island_sql/test_islands_and_waves_sql.py); from `backend/`: `CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql` | One test island with pistols: the dry run only counts (`island weapons reset: 1`) and the pistols stay; the real run, twice, leaves only the musket, and the second run changes nothing | The real Supabase database (the tests use a throwaway test database), so not what the real players' data looks like; no test with many weapons at once |
 
 [Walkthrough part](WALKTHROUGH.md#74--fresh-start-resets-the-old-personal-weapons--nicolas-radomski).
+
+## COC-49 — Johannes Franz Lang — Village management
+
+| What I built / why | Where and command | Covers | Misses |
+|---|---|---|---|
+| Explicit own-island management lets players select distant structures while keeping captain controls still | `frontend/tests/island/village-mode.test.js`, `frontend/tests/island/village-game.test.js`; `cd frontend && npm test -- --maxWorkers=1 tests/island/village-mode.test.js tests/island/village-game.test.js` | Controller entry/context/disposal; real game picking and movement with existing fake API at 1280×720/375×812; Move Escape/text-focus and reservation exit | Live login/API/database authority, Ianno's future repair behavior, real phones/Safari, independent camera/catalogue, and runtime performance beyond the focused browser runner |
+
+Exact executed results and screenshots belong to [PR #192](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/192).
+A listed check is not a claim that every run passed; an initial desktop timeout is
+recorded in the PR and must be resolved or remain explicit. No assertions or
+shared runner timeouts were weakened.

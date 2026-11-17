@@ -729,6 +729,7 @@ examples
 exchange
 exist
 existing
+exit
 expected
 expired
 expiry
@@ -2560,6 +2561,7 @@ very
 victory
 video
 view
+village
 visible
 vision
 visit
