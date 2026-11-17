@@ -58,6 +58,7 @@ import { POSE_IDS } from './pirates/poses.js';
 import { createController } from './player/controller.js';
 import { createCamera } from './player/camera.js';
 import {createVillageNavigation} from './player/village-navigation.js';
+import {createVillagePlacementFocus} from './player/village-placement-focus.js';
 import { createHud } from './ui/hud.js';
 import {startDiagnostics,noteUiAction,noteAdapterView,disposeDiagnostics} from './diagnostics/runtime.js';
 import {createNarrator} from './narrator/index.js';
@@ -275,18 +276,18 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     return wavesLoad;
   }
   const projected=new THREE.Vector3(),canvas=graphics.renderer.domElement;
-  const villageNavigation=createVillageNavigation({canvas, view, enabled:()=>active&&!disposed&&island?.managing===true&&!island?.moving&&!outsideBlocked()});
+  const villageNavigation=createVillageNavigation({canvas, view, enabled:()=>active&&!disposed&&!inBattle&&island?.managing===true&&!outsideBlocked()});
+  const focusPlacement=createVillagePlacementFocus(view);
   let villageLayoutKey='',villageViewport=null,villageQuests=null,villageBar=null,villagePlacing=null;
   function updateVillageView(){
     villageNavigation.refresh();
     const managing=island?.managing===true&&!inBattle;
-    if(!managing){villageLayoutKey='';villageBar=null;view.setVillageView(false);return;}
+    if(!managing){villageLayoutKey='';villageBar=null;focusPlacement(null);view.setVillageView(false);return;}
     const width=parseFloat(canvas.style.width)||window.innerWidth,height=parseFloat(canvas.style.height)||window.innerHeight;
     villageQuests??=container.querySelector('.quest-strip');
     const caption=document.documentElement.style.getPropertyValue('--narrator-card-height');
     const placing=!!island.moving;
-    if(placing&&villagePlacing!==placing)view.villageControl('fit');
-    if(!villageBar?.isConnected||villagePlacing!==placing){
+    if(!villageBar?.isConnected||villageBar.hidden||villagePlacing!==placing){
       villageBar=container.querySelector(placing?'.island-move-bar:not([hidden])':'.island-village-mode:not([hidden])');villagePlacing=placing;
     }
     const key=`${width}:${height}:${caption}:${villageQuests?.textContent}:${villageQuests?.className}:${placing}:${villageBar?.textContent}:${villageBar?.className}:${document.documentElement.className}:${document.body.className}`;
@@ -297,6 +298,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
       villageLayoutKey=key;
     }
     view.setVillageView(true,villageViewport);
+    if(active&&!outsideBlocked()&&height>villageViewport.top+villageViewport.bottom)focusPlacement(island.moving);
   }
   // Where a world point hangs on screen, as fractions of the canvas (the floating E prompt and the "Walk closer" hint).
   function screenAt(id){const a=island?.anchor?.(id);if(!a)return null;projected.set(a.x,-a.z*.72+a.lift,0).project(view.camera);
