@@ -39,13 +39,13 @@ The capture checks visible repair controls at phone widths and verifies the one-
 
 ### Bell-pause estimate wording refresh
 
-The card screenshots above were refreshed from source commit `14805efe99e194e3b91b57502ec9df4bc30d14c9` on 17 Nov 2026 with:
+The card screenshots above were refreshed from source commit `3ce09753` on 17 Nov 2026 with:
 
 ```sh
 cd frontend && npm run capture:recovery:card
 ```
 
-The production card now tells players that free repair pauses when the bell rings and that the displayed estimate counts only time between waves. The fixture still provides offline DTOs; the button emits a local intent and does not call an API. At desktop and phone sizes the text wraps without clipping. The preparation phone capture correctly shows paused status and remaining uses with no ETA.
+The production card now tells players that free repair pauses when the bell rings and that the displayed estimate counts only time between waves. The fixture derives build and next-level upgrade costs from `BUILDINGS` for each sample's kind and level; capture assertions check Wall 20, Cannon 60, and Harpoon 80. The fixture still provides offline DTOs; the button emits a local intent and does not call an API. At desktop and phone sizes the text wraps without clipping. The preparation phone capture correctly shows paused status and remaining uses with no ETA.
 
 The focused model check also passed from this revision:
 
