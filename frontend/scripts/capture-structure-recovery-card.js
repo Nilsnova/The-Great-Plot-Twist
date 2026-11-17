@@ -22,6 +22,7 @@ try {
   const page = await browser.newPage({viewport: {width: 1440, height: 900}});
 
   await show(page, baseUrl, 'wall', {width: 1440, height: 900});
+  await page.getByText('Level 2 · 🪙 20').waitFor();
   await page.getByText('45 / 60 HP').waitFor();
   await page.getByRole('button', {name: 'Repair now: pay 10 coins'}).waitFor();
   await page.getByText('Or wait about 2 min 30 sec for free repair').waitFor();
@@ -31,6 +32,7 @@ try {
   await page.getByText('Fixture emitted a repair intent; no API call was made.').waitFor();
 
   await show(page, baseUrl, 'cannon', {width: 390, height: 844});
+  await page.getByRole('button', {name: 'Upgrade · 🪙 60'}).waitFor();
   await scrollCardToRecovery(page);
   await page.getByText('0 / 80 HP').waitFor();
   await page.getByText('2 Repair now uses left this wave').waitFor();
@@ -40,6 +42,7 @@ try {
   await page.screenshot({path: path.join(captureDirectory, 't59-structure-card-preparation-phone.png'), fullPage: true});
 
   await show(page, baseUrl, 'harpoon', {width: 375, height: 812});
+  await page.getByRole('button', {name: 'Upgrade · 🪙 80'}).waitFor();
   await scrollCardToRecovery(page);
   await page.getByText('0.00006 / 60 HP').waitFor();
   assert.ok(await page.locator('.health-fill').evaluate(element => element.getBoundingClientRect().width >= 1));

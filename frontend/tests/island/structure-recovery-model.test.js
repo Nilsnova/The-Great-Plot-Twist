@@ -47,6 +47,7 @@ describe('structure recovery presentation', () => {
       hpLabel: '100 / 200 HP',
       repairLabel: 'Repair now: pay 40 coins',
       freeRepairLabel: 'Or wait about 5 min for free repair',
+      helperLabel: 'Free repair pauses when the bell rings. This estimate counts only time between waves.',
       automaticRepairPaused: false,
       remainingPaidUses: null,
     });
