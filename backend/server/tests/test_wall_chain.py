@@ -134,3 +134,9 @@ def test_measured_full_perimeter_is_constructible_in_four_real_bounded_quote_run
             wall_rule_version=1,
             wall_capacity=128,
         )
+
+
+def test_flag_off_moved_d060_tower_position_remains_reserved():
+    with pytest.raises(ApiError) as error:
+        quote(stored={"cannon_8": tuple(RING[0])}, catalogue=load_island())
+    assert error.value.code == "place_taken"
