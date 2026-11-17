@@ -20,6 +20,8 @@ The immutable review base is actual combined commit `0d047bd2`, not its earlier 
 | Guard plus initial tests e118f87d | `11830183e3c73fa26fb90579d598d64144ada396` | `6e52a63b87028291127dbae8c344c9f49a73896d` |
 | Final stronger progress checks733cced0 | `c785196095edef4f5416744b46435ab564da4e9c` | `6e52a63b87028291127dbae8c344c9f49a73896d` |
 
+The initial external diagnostic ran during the uncommitted integration: its Git HEAD was claim `096d04e2`, while the working migration files already included incoming main and the perimeter foundation. Its result records the three incoming migration hashes; it is not a committed full-tree proof. The later regression and compatibility runs use the committed combined parent and source revisions listed above.
+
 The Python runtime and frontend are unchanged by VIS50. The backend tree changes because it includes the new PostgreSQL test. Exact source/commands and limitations are in [provenance](provenance.json) and each result file.
 
 ## Red and green checks
