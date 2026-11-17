@@ -2,7 +2,8 @@ import {describe, expect, it, vi} from 'vitest';
 import {checkMove, positionsOf, onWallLane} from '../../src/island/placement.js';
 import {wallPolicy} from '../../src/island/wall-policy.js';
 import {createMoveMode} from '../../src/island/move-mode.js';
-const policy = {wallRuleVersion: 1, wallCapacity: 128};
+import {EXTRA_SPOTS} from '../../src/island/spots.js';
+const policy = {wallRuleVersion: 1, wallCapacity: 128, reservedPositions: Object.fromEntries(EXTRA_SPOTS.map(({id,x,z}) => [id,{x,z}]))};
 const placed = positionsOf();
 
 describe('exact trusted wall preview policy', () => {
@@ -55,5 +56,22 @@ describe('Move uses its current response metadata and context', () => {
     const pending=mode.confirm();code='ISLE-FR3ND';resolve({ok:true,data:{}});await pending;
     expect(onMoved).not.toHaveBeenCalled();expect(mode.active).toBe(false);
     mode.start('wall_1');mode.tap(4,-19.5);code=null;expect(await mode.confirm()).toBeNull();expect(api.move).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('unoffered D060 occupancy stays protected', () => {
+  it('reserves actual moved hidden tower coordinates without creating a purchase offer', () => {
+    const hidden = {...policy, reservedPositions: {...policy.reservedPositions, cannon_8: {x:-4,z:-9}}};
+    expect(positionsOf().cannon_8).toBeUndefined();
+    expect(checkMove('wall_13',-4,-9,placed,hidden)).toMatchObject({code:'place_taken'});
+    expect(checkMove('wall_13',-2,-9,placed,hidden)).toEqual({ok:true});
+  });
+  it.each([undefined,null,[],{}, {cannon_8:{x:NaN,z:0}}, {unknown:{x:0,z:0}}])('fails closed when missing hidden coordinates cannot be read: %j', reservedPositions => {
+    expect(checkMove('wall_13',4,-19.5,placed,{...policy,reservedPositions})).toMatchObject({code:'layout_unavailable'});
+  });
+  it('accepts an empty reservation map when all four sites are already offered at actual positions', () => {
+    const all={...placed,...policy.reservedPositions};
+    expect(checkMove('wall_13',4,-19.5,all,{...policy,reservedPositions:{}})).toEqual({ok:true});
+    expect(checkMove('wall_13',4,-19.5,all,{...policy,reservedPositions:{cannon_8:{x:-4,z:-9}}})).toMatchObject({code:'layout_unavailable'});
   });
 });

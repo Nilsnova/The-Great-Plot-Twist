@@ -23,3 +23,5 @@ I changed one preview permission: an exact supported wall policy removes the old
 1. Why does layout.version 2 not authorize free-grid walls?
 2. What still makes an off-lane cell invalid under policy 1/128?
 3. Why capture the island code before an asynchronous move instead of reading it after the reply?
+
+Safety follow-up: policy 1 preview also reserves all four D060 sites even when purchases are unoffered. The server supplies readonly `layout.reservedPositions` with actual/default hidden coordinates; missing/malformed required rows fail closed, and contradictory offered/reserved coordinates do not guess a location. These positions do not offer tower purchases. A moved hidden cannon_8 regression and malformed-map cases are included.
