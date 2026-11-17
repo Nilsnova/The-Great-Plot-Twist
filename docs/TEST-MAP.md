@@ -278,3 +278,10 @@ and [results, screenshots and manual checkpoints](evidence/T28/README.md).
 | The admin script [fresh_start.sql](../scripts/admin/fresh_start.sql) resets the island game, but it forgot the two old weapon columns, so players kept bought weapons after a fresh start. Now it puts every island back to the musket (`weapons_owned`, `weapon_equipped`) and counts those islands | The two fresh-start tests in [test_islands_and_waves_sql.py](../backend/server/tests/island_sql/test_islands_and_waves_sql.py); from `backend/`: `CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql` | One test island with pistols: the dry run only counts (`island weapons reset: 1`) and the pistols stay; the real run, twice, leaves only the musket, and the second run changes nothing | The real Supabase database (the tests use a throwaway test database), so not what the real players' data looks like; no test with many weapons at once |
 
 [Walkthrough part](WALKTHROUGH.md#74--fresh-start-resets-the-old-personal-weapons--nicolas-radomski).
+
+
+## COC-31 — Johannes: base overview
+
+| What / where | Evidence | Coverage and limits |
+|---|---|---|
+| Read-only model and actual menu/card integration; `src/island/upgrade-overview*.js` | `tests/island/upgrade-overview.test.js`, `upgrade-overview-dom.test.js`; [capture report](evidence/COC-31-base-overview/README.md) | Extra offered plots, duplicate/unknown entries, server prices, affordability, loading/locks/roles, filters, accepted refresh, focus, 375px overflow and zero overview POST writes. Local fake transport + Chromium; no live backend, Safari or physical phone proof. Focused four-file run: 40 tests passed; broader parent checks reported separately. |

@@ -1647,3 +1647,8 @@ runs against disposable local PostgreSQL with every migration applied twice.
 
 **Limits.** This fence protects a paid restore from a report belonging to a wave that started earlier.
 It does not validate the health a modified client reports or order arbitrary stale reports from other waves.
+
+
+## COC-31 — Base overview (Johannes Franz Lang)
+
+My menu overview reads the existing accepted island answer, groups built buildings and reuses the normal building-card model for prices and lock reasons. Its type and next-level filters only change local rows; there are no purchase callbacks. The normal island modal owns focus, Escape and disposal, and accepted data reloads redraw the list. A top building level does not mean all tower paths are finished. [Code, trace examples, limits and three practice questions](../specs/COC-31-base-overview.md); [test and screenshot evidence](evidence/COC-31-base-overview/README.md). This text is explain-back preparation, not proof that my rehearsal or independent review has happened.

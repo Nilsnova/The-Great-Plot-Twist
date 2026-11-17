@@ -14,6 +14,7 @@ import {toasts as gameToasts} from '../ui/toasts.js';
 import {crewLabel, progressLines} from './progression.js';
 import {drawArsenal} from './arsenal-ui.js';
 import {drawSkills, drawTech, drawTowerTree, iconOf} from './skill-tree.js';
+import {drawUpgradeOverview} from './upgrade-overview-view.js';
 
 // The cards of the island's buildings: a spot's build or upgrade card (houses too), the wreck, the Harbor and
 // the arsenal. They dock at the right side on a desktop and come up as a bottom sheet on a phone
@@ -31,6 +32,7 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
   let modal = null, kind = null, render = null, disposed = false, lastToast = null;
   // The Tech hub tile the player tapped (kept while the page lives); the tree shows its detail.
   let techPicked = null;
+  let overviewKind = 'all', overviewState = 'all';
   const banner = node('div', 'island-banner'); banner.setAttribute('role', 'status'); banner.setAttribute('aria-live', 'polite'); banner.hidden = true;
   const bannerEyebrow = node('span', 'island-banner-eyebrow', 'Harbor bell'), bannerText = node('strong', 'island-banner-text');
   bannerEyebrow.setAttribute('aria-hidden', 'true');
@@ -545,8 +547,13 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
       return model.start.show && !model.start.disabled ? go : model.url ? copy : done;
     });
   }
+  function overviewCard(model) {
+    if (overviewKind !== 'all' && !model.kinds.some(item => item.id === overviewKind)) overviewKind = 'all';
+    open('overview', model.title, body => drawUpgradeOverview(body, model, {kind: overviewKind, state: overviewState,
+      choose: (kind, state) => { overviewKind = kind; overviewState = state; overviewCard(model); }}));
+  }
   return {
-    leaderboardCard, buildCard, bellCard, inviteCard, lobbyCard, crewCard, captainCard, captainsCard, harborCard, techCard, wreckCard, arsenalCard, demolishCard, close, copyLink,
+    overviewCard, leaderboardCard, buildCard, bellCard, inviteCard, lobbyCard, crewCard, captainCard, captainsCard, harborCard, techCard, wreckCard, arsenalCard, demolishCard, close, copyLink,
     // Re-draw the open card from fresh models (the island controller calls this on every change).
     get open() { return kind; },
     get active() { return !!modal; },
