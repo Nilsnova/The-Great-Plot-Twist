@@ -529,7 +529,12 @@ async def append_inputs(
 
 
 async def read_events(
-    admin: SupabaseAdmin, player_id: str, wave_id: UUID, after: int, through: int | None
+    admin: SupabaseAdmin,
+    player_id: str,
+    wave_id: UUID,
+    after: int,
+    through: int | None,
+    sealed_through_tick: int | None = None,
 ) -> RecoveryEventPage:
     reply = await admin.call_function(
         "recovery_wave_events_page",
@@ -538,6 +543,7 @@ async def read_events(
             "p_wave_id": str(wave_id),
             "p_after": after,
             "p_through": through,
+            "p_sealed_through_tick": sealed_through_tick,
         },
     )
     _refusal(reply)

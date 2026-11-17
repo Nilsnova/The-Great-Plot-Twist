@@ -60,9 +60,18 @@ async def get_events(
     request: Request,
     after: Annotated[int, Query(ge=0)] = 0,
     through: Annotated[int | None, Query(ge=0)] = None,
+    sealed_through_tick: Annotated[int | None, Query(alias="sealedThroughTick", ge=-1)] = None,
 ) -> wave_recovery.RecoveryEventPage:
+    if (through is None) != (sealed_through_tick is None):
+        raise ApiError(
+            422,
+            "validation_error",
+            "through and sealedThroughTick must be provided together for a fixed event page.",
+        )
     request.app.state.recovery_read_budget.spend(player.id)
-    return await wave_recovery.read_events(admin, player.id, wave_id, after, through)
+    return await wave_recovery.read_events(
+        admin, player.id, wave_id, after, through, sealed_through_tick
+    )
 
 
 @router.post("/waves/{wave_id}/health", response_model=HealthOut)

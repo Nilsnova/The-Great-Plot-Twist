@@ -24,6 +24,94 @@ def test_recovery_transport_routes_are_registered_and_authenticated():
     )
 
 
+def test_first_event_page_omits_fixed_frontier_and_keeps_the_response_shape(monkeypatch):
+    world = World()
+    calls = []
+    frontiers = [(2, 12), (3, 16)]
+
+    async def read_events(admin, player_id, wave_id, after, through, sealed_through_tick):
+        calls.append((player_id, wave_id, after, through, sealed_through_tick))
+        head_seq, sealed_tick = frontiers[len(calls) - 1]
+        return wave_recovery.RecoveryEventPage(
+            headSeq=head_seq, sealedThroughTick=sealed_tick, through=None, events=[]
+        )
+
+    monkeypatch.setattr(wave_recovery, "read_events", read_events)
+    # Simulate losing the first HTTP response, then retrying the initial request as the same actor.
+    response = world.client.get(f"/api/waves/{WAVE}/events", headers=PLAYER)
+    retry = world.client.get(f"/api/waves/{WAVE}/events?after=0", headers=PLAYER)
+
+    assert response.status_code == 200, response.text
+    assert response.json() == {"headSeq": 2, "sealedThroughTick": 12, "events": []}
+    assert retry.status_code == 200, retry.text
+    assert retry.json() == {"headSeq": 3, "sealedThroughTick": 16, "events": []}
+    assert len(calls) == 2
+    assert all(call[1:] == (WAVE, 0, None, None) for call in calls)
+
+
+def test_event_page_retries_send_the_complete_fixed_frontier(monkeypatch):
+    world = World()
+    calls = []
+
+    async def read_events(admin, player_id, wave_id, after, through, sealed_through_tick):
+        calls.append((player_id, wave_id, after, through, sealed_through_tick))
+        return wave_recovery.RecoveryEventPage(
+            headSeq=3, sealedThroughTick=40, through=through, events=[]
+        )
+
+    monkeypatch.setattr(wave_recovery, "read_events", read_events)
+    response = world.client.get(
+        f"/api/waves/{WAVE}/events?after=0&through=3&sealedThroughTick=40",
+        headers=PLAYER,
+    )
+
+    assert response.status_code == 200, response.text
+    assert response.json() == {
+        "headSeq": 3,
+        "sealedThroughTick": 40,
+        "through": 3,
+        "events": [],
+    }
+    assert calls[0][1:] == (WAVE, 0, 3, 40)
+
+
+def test_event_page_accepts_the_empty_sealed_frontier(monkeypatch):
+    world = World()
+
+    async def read_events(admin, player_id, wave_id, after, through, sealed_through_tick):
+        assert (after, through, sealed_through_tick) == (0, 0, -1)
+        return wave_recovery.RecoveryEventPage(
+            headSeq=0, sealedThroughTick=-1, through=0, events=[]
+        )
+
+    monkeypatch.setattr(wave_recovery, "read_events", read_events)
+    response = world.client.get(
+        f"/api/waves/{WAVE}/events?through=0&sealedThroughTick=-1", headers=PLAYER
+    )
+
+    assert response.status_code == 200, response.text
+    assert response.json() == {
+        "headSeq": 0,
+        "sealedThroughTick": -1,
+        "through": 0,
+        "events": [],
+    }
+
+
+@pytest.mark.parametrize(
+    "query",
+    [
+        "through=3",
+        "sealedThroughTick=40",
+        "through=3&sealedThroughTick=-2",
+        "through=-1&sealedThroughTick=40",
+    ],
+)
+def test_event_page_requires_bounded_paired_frontier(query):
+    response = World().client.get(f"/api/waves/{WAVE}/events?{query}", headers=PLAYER)
+    assert response.status_code == 422
+
+
 def test_input_route_returns_accepted_events_as_direct_response(monkeypatch):
     world = World()
 

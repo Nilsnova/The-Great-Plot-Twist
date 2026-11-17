@@ -1,5 +1,6 @@
 import asyncio
 from types import SimpleNamespace
+from uuid import UUID
 
 import pytest
 
@@ -104,6 +105,43 @@ def test_recovery_write_bucket_allows_burst_then_refills():
     assert error.value.status_code == 429
     now[0] += 0.125
     bucket.spend("player")
+
+
+def test_event_page_reader_forwards_both_fixed_frontier_values():
+    calls = []
+
+    class Admin:
+        async def call_function(self, name, arguments):
+            calls.append((name, arguments))
+            return {
+                "status": "ok",
+                "headSeq": 4,
+                "sealedThroughTick": 32,
+                "through": 4,
+                "events": [],
+            }
+
+    page = asyncio.run(
+        wave_recovery.read_events(
+            Admin(), "player", UUID("11111111-1111-4111-8111-111111111111"), 2, 4, 32
+        )
+    )
+
+    assert page.head_seq == 4
+    assert page.sealed_through_tick == 32
+    assert page.through == 4
+    assert calls == [
+        (
+            "recovery_wave_events_page",
+            {
+                "p_player_id": "player",
+                "p_wave_id": "11111111-1111-4111-8111-111111111111",
+                "p_after": 2,
+                "p_through": 4,
+                "p_sealed_through_tick": 32,
+            },
+        )
+    ]
 
 
 def test_snapshot_template_captures_server_sim_inputs_and_exact_hp_rate(monkeypatch):
