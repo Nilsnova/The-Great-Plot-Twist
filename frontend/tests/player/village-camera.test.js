@@ -45,6 +45,17 @@ describe('village camera overview', () => {
     expect(view.camera.zoom).toBe(oldZoom);
   });
 
+  it.each([[1280,720,90,240],[375,812,180,310]])('keeps the island between real overlay insets at %s × %s', (width,height,top,bottom) => {
+    const {view}=viewAt(width,height);
+    view.setVillageView(true,{height,top,bottom});view.update(.05,player);
+    for(let x=-24;x<=24;x++)for(let z=-26;z<=26;z++){
+      if(!surfaceClass('home_islet',x,z))continue;
+      const y=(1-onScreen(view.camera,x,z).y)*height/2;
+      expect(y).toBeGreaterThan(top);expect(y).toBeLessThan(height-bottom);
+    }
+    expect((1-onScreen(view.camera,0,-22,6).y)*height/2).toBeGreaterThan(top);
+  });
+
   it('keeps combat and guided-tour camera requests in control', () => {
     const {view} = viewAt(); view.setVillageView(true);
     view.camera.userData.battleZoom = .7; view.update(.05, player);

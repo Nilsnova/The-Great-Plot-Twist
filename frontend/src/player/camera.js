@@ -7,11 +7,15 @@ import {surfaces} from '../world/places/surfaces.js';
 
 // Fit today's whole island, including its wavy shore, tall buildings and HUD space.
 // This is a village overview, not an alternate battle zoom or a future land-growth rule.
-export function villageFrame(camera, placeId) {
+export function villageFrame(camera, placeId, viewport = null) {
   const land = placeId === 'home_islet' ? surfaces[placeId] : null;
   const width = camera.right - camera.left, height = camera.top - camera.bottom;
   if (!land || !Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) return null;
-  return {x: 0, y: 2.5, zoom: Math.min(1, width / (2 * (land.rx * 1.1 + 2)), height / (2 * (land.rz * .72 * 1.1 + 10)))};
+  const fraction = value => Number.isFinite(viewport?.height) && viewport.height > 0 && Number.isFinite(value)
+    ? Math.max(0, Math.min(.6, value / viewport.height)) : 0;
+  const top = fraction(viewport?.top), bottom = fraction(viewport?.bottom), free = Math.max(.1, 1 - top - bottom);
+  const zoom = Math.min(1, width / (2 * (land.rx * 1.1 + 2)), height * free / (2 * (land.rz * .72 * 1.1 + 4.5)));
+  return {x: 0, y: 3 - (bottom - top) * height / (2 * zoom), zoom};
 }
 
 export function createCamera(input) {
@@ -19,7 +23,7 @@ export function createCamera(input) {
   const start = projectPoint(-1, 10);
   camera.position.set(start.x, start.y + 3.1, 100); camera.lookAt(camera.position.x, camera.position.y, 0);
   camera.userData.viewHeight = 22; // world units tall at zoom 1 (at least 16 wide on a phone)
-  let exploring = false, targetZoom = 1, placeId = 'lighthouse_isle', reduce = false, zoom = 1, village = false;
+  let exploring = false, targetZoom = 1, placeId = 'lighthouse_isle', reduce = false, zoom = 1, village = false, villageViewport = null;
   const follow = new THREE.Vector2(camera.position.x, camera.position.y);
   function place(x, y) { follow.set(x, y); camera.position.set(x, y, 100); }
   function applyZoom(value) {
@@ -35,12 +39,12 @@ export function createCamera(input) {
     pause() { exploring = false; },
     overview() { exploring = false; targetZoom = 1; applyZoom(1); },
     start(reducedMotion = false) { exploring = true; reduce = reducedMotion === true; },
-    setVillageView(active) { village = active === true; },
+    setVillageView(active, viewport = null) { village = active === true; villageViewport = viewport; },
     update(delta, player) {
       if (!exploring || !Number.isFinite(delta) || delta <= 0) return;
       const dt = Math.min(delta, .1);
       const tour = camera.userData.tour, touring = Number.isFinite(tour?.x) && Number.isFinite(tour?.z);
-      const frame = village && !touring && !Number.isFinite(camera.userData.battleZoom) ? villageFrame(camera, placeId) : null;
+      const frame = village && !touring && !Number.isFinite(camera.userData.battleZoom) ? villageFrame(camera, placeId, villageViewport) : null;
       if (frame) {
         const blend = reduce ? 1 : 1 - Math.exp(-dt * 5);
         place(follow.x + (frame.x - follow.x) * blend, follow.y + (frame.y - follow.y) * blend);

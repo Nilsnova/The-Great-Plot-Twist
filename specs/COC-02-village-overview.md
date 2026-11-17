@@ -18,11 +18,19 @@ returns to the captain and the player's previous exploration zoom on exit.
 ## Boundaries
 
 - `game.js` reads the optional `island.managing` getter and disables the request
-  during an actual battle. On main without PR #192, the missing getter is false.
+  while a wave controller is active, including its local result break. On main
+  without PR #192, the missing getter is false.
 - `player/camera.js` owns the camera position and zoom. `setVillageView(bool)` is
   a local display request, not a server command or a wave pause.
 - `villageFrame()` reads today's existing `home_islet` radii from `surfaces.js`.
   It includes the existing wavy coast and space for buildings and screen UI.
+- The game measures the visible management/move bar and phone quest strip when
+  the layout key changes. Caption-height changes, resize, quest content/folding
+  and entering placement invalidate that key. The camera fits and centers the
+  base in the remaining vertical viewport rather than behind these overlays.
+- Reading the existing inline caption-height signal and canvas dimensions avoids
+  measuring DOM rectangles every frame. No resize observer or new global UI
+  service is introduced.
 - No positions, footprints, coins, upgrades, HP, wave state or ownership change.
 - No use or mutation of `battleZoom`, `battleFocus` or tutorial `tour` as a
   village control. Existing combat zoom and valid tutorial focus take precedence.
@@ -51,6 +59,7 @@ view. The existing input end-of-frame handling clears that wheel delta normally.
 
 - The actual current coastline's sampled land cells fit inside both 1280 × 720
   and 375 × 812 camera views, with a separate tall-building check.
+- Land cells and the tall-building point also fit between measured UI insets.
 - Entering the view leaves the captain position unchanged.
 - Exiting restores the prior exploration zoom and follow position.
 - Combat and tutorial requests still work and are not overwritten.
@@ -64,18 +73,18 @@ fixture was corrected without loosening the screen-bound assertions.
 
 ## Verification record
 
-Executed on this branch:
+Executed on this branch after the overlay-aware follow-up:
 
 ```text
 npx vitest run tests/player/village-camera.test.js --maxWorkers=1
 Test Files  1 passed (1)
-Tests       6 passed (6)
-Duration    504ms
+Tests       8 passed (8)
+Duration    516ms
 ```
 
-Combined game screenshots, build, budget and broader regression results are
-recorded in `docs/evidence/COC-02/README.md` after the integration preview is run.
-They must not be inferred from the six unit tests. Safari, production, physical
+Combined game screenshots are recorded in `docs/evidence/COC-02/README.md`.
+Build, budget and broader regression results are recorded there after they run;
+they must not be inferred from the eight unit tests. Safari, production, physical
 phones and future expanded land are not verified by this branch.
 
 ## Explain-back
@@ -83,7 +92,8 @@ phones and future expanded land are not verified by this branch.
 The existing camera already owns following and zooming, so I added one explicit
 display request there. Management asks for an overview; it does not move the
 captain or pretend that a battle has started. The normal zoom stays saved in its
-existing variable while management is active. The first version uses today's
+existing variable while management is active. The measured overlay area keeps
+the map clear of captions and the management bar. The first version uses today's
 island surface bounds. Later I could accept versioned land bounds and add an
 independent pan controller without changing the money or combat rules.
 

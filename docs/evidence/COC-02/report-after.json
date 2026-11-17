@@ -1,0 +1,59 @@
+{
+  "mode": "after",
+  "root": "/workspace/coc-overnight/preview/frontend",
+  "fixture": "real game / local fake transport, not production",
+  "screens": [
+    {
+      "width": 1280,
+      "height": 720,
+      "name": "after-1280x720.png",
+      "managing": true,
+      "zoom": 0.26754765760326404,
+      "position": [
+        -0.00020943652434229717,
+        -5.685223249983383,
+        100
+      ],
+      "captain": [
+        -7,
+        1.03,
+        -11
+      ],
+      "built": 19,
+      "contextLost": false,
+      "drawCalls": 88,
+      "landTop": 118.98625072778322,
+      "landBottom": 442.6118973646914,
+      "safeTop": 80,
+      "safeBottom": 487.90625,
+      "pageErrors": [],
+      "externalRequests": 0
+    },
+    {
+      "width": 375,
+      "height": 812,
+      "name": "after-375x812.png",
+      "managing": true,
+      "zoom": 0.31970047204979374,
+      "position": [
+        -0.0002095412687883996,
+        -6.6820661061943625,
+        100
+      ],
+      "captain": [
+        -7,
+        1.03,
+        -11
+      ],
+      "built": 19,
+      "contextLost": false,
+      "drawCalls": 88,
+      "landTop": 192.28473442220874,
+      "landBottom": 469.22526833534255,
+      "safeTop": 157.1875,
+      "safeBottom": 509.71875,
+      "pageErrors": [],
+      "externalRequests": 0
+    }
+  ]
+}
