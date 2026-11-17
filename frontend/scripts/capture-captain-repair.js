@@ -16,8 +16,8 @@ const assertSingleCard = async (selector, title) => {
   for (let index = 0; index < 8; index++) {
     const cutscene = page.locator('dialog.cutscene[open] .cutscene-skip');
     const tutorial = page.locator('dialog.tutorial-card[open]').getByRole('button', {name: 'Skip', exact: true});
-    if (await cutscene.count()) await cutscene.click();
-    else if (await tutorial.count()) await tutorial.click();
+    if (await cutscene.count()) await cutscene.evaluate(button => button.click());
+    else if (await tutorial.count()) await tutorial.evaluate(button => button.click());
     else break;
     await page.waitForTimeout(100);
   }
