@@ -1,0 +1,193 @@
+Using CPython 3.12.14 interpreter at: /opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3.12
+Creating virtual environment at: .venv
+Installed 26 packages in 29ms
+FFFFFF...                                                                [100%]
+=================================== FAILURES ===================================
+___ test_first_malformed_vector_cannot_close_pay_or_change_progress[missing] ___
+
+database = <psycopg.Connection [INTRANS] (database=postgres) at 0x7f69b4d3c1a0>
+bad = 'missing'
+
+    @pytest.mark.parametrize("bad", ["missing", "extra", "foreign", "fractional", "healing", "basis"] )
+    def test_first_malformed_vector_cannot_close_pay_or_change_progress(database, bad):
+        wave, epoch, instance, page = start_wall_wave(database)
+        hp, basis = {instance: 200000}, {instance: 0}
+        if bad == "missing": hp = {}
+        elif bad == "extra": hp["00000000-0000-0000-0000-000000000050"] = 0
+        elif bad == "foreign": hp = {"00000000-0000-0000-0000-000000000050": 0}
+        elif bad == "fractional": hp[instance] = 1.5
+        elif bad == "healing": hp[instance] = 400001
+        else: basis[instance] = 0.5
+        before = state(database, wave)
+        assert before[2] == (None, None, None)
+>       assert finish(database, wave, epoch, page, hp, basis) == {"status": "refused", "reason": "checkpoint_divergence"}
+E       AssertionError: assert {'boss': Fals...lags': 1, ...} == {'status': 'r...t_divergence'}
+E         
+E         Differing items:
+E         {'status': 'done'} != {'status': 'refused'}
+E         Left contains 10 more items:
+E         {'balance': 105,
+E          'boss': False,
+E          'expired': False,...
+E         
+E         ...Full output truncated, use '-vv' to show
+
+server/tests/island_sql/test_recovery_finish_checkpoint_guard_sql.py:69: AssertionError
+____ test_first_malformed_vector_cannot_close_pay_or_change_progress[extra] ____
+
+database = <psycopg.Connection [INTRANS] (database=postgres) at 0x7f69b4d3eea0>
+bad = 'extra'
+
+    @pytest.mark.parametrize("bad", ["missing", "extra", "foreign", "fractional", "healing", "basis"] )
+    def test_first_malformed_vector_cannot_close_pay_or_change_progress(database, bad):
+        wave, epoch, instance, page = start_wall_wave(database)
+        hp, basis = {instance: 200000}, {instance: 0}
+        if bad == "missing": hp = {}
+        elif bad == "extra": hp["00000000-0000-0000-0000-000000000050"] = 0
+        elif bad == "foreign": hp = {"00000000-0000-0000-0000-000000000050": 0}
+        elif bad == "fractional": hp[instance] = 1.5
+        elif bad == "healing": hp[instance] = 400001
+        else: basis[instance] = 0.5
+        before = state(database, wave)
+        assert before[2] == (None, None, None)
+>       assert finish(database, wave, epoch, page, hp, basis) == {"status": "refused", "reason": "checkpoint_divergence"}
+E       AssertionError: assert {'boss': Fals...lags': 1, ...} == {'status': 'r...t_divergence'}
+E         
+E         Differing items:
+E         {'status': 'done'} != {'status': 'refused'}
+E         Left contains 10 more items:
+E         {'balance': 105,
+E          'boss': False,
+E          'expired': False,...
+E         
+E         ...Full output truncated, use '-vv' to show
+
+server/tests/island_sql/test_recovery_finish_checkpoint_guard_sql.py:69: AssertionError
+___ test_first_malformed_vector_cannot_close_pay_or_change_progress[foreign] ___
+
+database = <psycopg.Connection [INTRANS] (database=postgres) at 0x7f69b4d3d160>
+bad = 'foreign'
+
+    @pytest.mark.parametrize("bad", ["missing", "extra", "foreign", "fractional", "healing", "basis"] )
+    def test_first_malformed_vector_cannot_close_pay_or_change_progress(database, bad):
+        wave, epoch, instance, page = start_wall_wave(database)
+        hp, basis = {instance: 200000}, {instance: 0}
+        if bad == "missing": hp = {}
+        elif bad == "extra": hp["00000000-0000-0000-0000-000000000050"] = 0
+        elif bad == "foreign": hp = {"00000000-0000-0000-0000-000000000050": 0}
+        elif bad == "fractional": hp[instance] = 1.5
+        elif bad == "healing": hp[instance] = 400001
+        else: basis[instance] = 0.5
+        before = state(database, wave)
+        assert before[2] == (None, None, None)
+>       assert finish(database, wave, epoch, page, hp, basis) == {"status": "refused", "reason": "checkpoint_divergence"}
+E       AssertionError: assert {'boss': Fals...lags': 1, ...} == {'status': 'r...t_divergence'}
+E         
+E         Differing items:
+E         {'status': 'done'} != {'status': 'refused'}
+E         Left contains 10 more items:
+E         {'balance': 105,
+E          'boss': False,
+E          'expired': False,...
+E         
+E         ...Full output truncated, use '-vv' to show
+
+server/tests/island_sql/test_recovery_finish_checkpoint_guard_sql.py:69: AssertionError
+_ test_first_malformed_vector_cannot_close_pay_or_change_progress[fractional] __
+
+database = <psycopg.Connection [INTRANS] (database=postgres) at 0x7f69b4d6cbc0>
+bad = 'fractional'
+
+    @pytest.mark.parametrize("bad", ["missing", "extra", "foreign", "fractional", "healing", "basis"] )
+    def test_first_malformed_vector_cannot_close_pay_or_change_progress(database, bad):
+        wave, epoch, instance, page = start_wall_wave(database)
+        hp, basis = {instance: 200000}, {instance: 0}
+        if bad == "missing": hp = {}
+        elif bad == "extra": hp["00000000-0000-0000-0000-000000000050"] = 0
+        elif bad == "foreign": hp = {"00000000-0000-0000-0000-000000000050": 0}
+        elif bad == "fractional": hp[instance] = 1.5
+        elif bad == "healing": hp[instance] = 400001
+        else: basis[instance] = 0.5
+        before = state(database, wave)
+        assert before[2] == (None, None, None)
+>       assert finish(database, wave, epoch, page, hp, basis) == {"status": "refused", "reason": "checkpoint_divergence"}
+E       AssertionError: assert {'boss': Fals...lags': 1, ...} == {'status': 'r...t_divergence'}
+E         
+E         Differing items:
+E         {'status': 'done'} != {'status': 'refused'}
+E         Left contains 10 more items:
+E         {'balance': 105,
+E          'boss': False,
+E          'expired': False,...
+E         
+E         ...Full output truncated, use '-vv' to show
+
+server/tests/island_sql/test_recovery_finish_checkpoint_guard_sql.py:69: AssertionError
+___ test_first_malformed_vector_cannot_close_pay_or_change_progress[healing] ___
+
+database = <psycopg.Connection [INTRANS] (database=postgres) at 0x7f69b4d6eff0>
+bad = 'healing'
+
+    @pytest.mark.parametrize("bad", ["missing", "extra", "foreign", "fractional", "healing", "basis"] )
+    def test_first_malformed_vector_cannot_close_pay_or_change_progress(database, bad):
+        wave, epoch, instance, page = start_wall_wave(database)
+        hp, basis = {instance: 200000}, {instance: 0}
+        if bad == "missing": hp = {}
+        elif bad == "extra": hp["00000000-0000-0000-0000-000000000050"] = 0
+        elif bad == "foreign": hp = {"00000000-0000-0000-0000-000000000050": 0}
+        elif bad == "fractional": hp[instance] = 1.5
+        elif bad == "healing": hp[instance] = 400001
+        else: basis[instance] = 0.5
+        before = state(database, wave)
+        assert before[2] == (None, None, None)
+>       assert finish(database, wave, epoch, page, hp, basis) == {"status": "refused", "reason": "checkpoint_divergence"}
+E       AssertionError: assert {'boss': Fals...lags': 1, ...} == {'status': 'r...t_divergence'}
+E         
+E         Differing items:
+E         {'status': 'done'} != {'status': 'refused'}
+E         Left contains 10 more items:
+E         {'balance': 105,
+E          'boss': False,
+E          'expired': False,...
+E         
+E         ...Full output truncated, use '-vv' to show
+
+server/tests/island_sql/test_recovery_finish_checkpoint_guard_sql.py:69: AssertionError
+____ test_first_malformed_vector_cannot_close_pay_or_change_progress[basis] ____
+
+database = <psycopg.Connection [INTRANS] (database=postgres) at 0x7f69b4d6fc80>
+bad = 'basis'
+
+    @pytest.mark.parametrize("bad", ["missing", "extra", "foreign", "fractional", "healing", "basis"] )
+    def test_first_malformed_vector_cannot_close_pay_or_change_progress(database, bad):
+        wave, epoch, instance, page = start_wall_wave(database)
+        hp, basis = {instance: 200000}, {instance: 0}
+        if bad == "missing": hp = {}
+        elif bad == "extra": hp["00000000-0000-0000-0000-000000000050"] = 0
+        elif bad == "foreign": hp = {"00000000-0000-0000-0000-000000000050": 0}
+        elif bad == "fractional": hp[instance] = 1.5
+        elif bad == "healing": hp[instance] = 400001
+        else: basis[instance] = 0.5
+        before = state(database, wave)
+        assert before[2] == (None, None, None)
+>       assert finish(database, wave, epoch, page, hp, basis) == {"status": "refused", "reason": "checkpoint_divergence"}
+E       AssertionError: assert {'boss': Fals...lags': 1, ...} == {'status': 'r...t_divergence'}
+E         
+E         Differing items:
+E         {'status': 'done'} != {'status': 'refused'}
+E         Left contains 10 more items:
+E         {'balance': 105,
+E          'boss': False,
+E          'expired': False,...
+E         
+E         ...Full output truncated, use '-vv' to show
+
+server/tests/island_sql/test_recovery_finish_checkpoint_guard_sql.py:69: AssertionError
+=========================== short test summary info ============================
+FAILED server/tests/island_sql/test_recovery_finish_checkpoint_guard_sql.py::test_first_malformed_vector_cannot_close_pay_or_change_progress[missing]
+FAILED server/tests/island_sql/test_recovery_finish_checkpoint_guard_sql.py::test_first_malformed_vector_cannot_close_pay_or_change_progress[extra]
+FAILED server/tests/island_sql/test_recovery_finish_checkpoint_guard_sql.py::test_first_malformed_vector_cannot_close_pay_or_change_progress[foreign]
+FAILED server/tests/island_sql/test_recovery_finish_checkpoint_guard_sql.py::test_first_malformed_vector_cannot_close_pay_or_change_progress[fractional]
+FAILED server/tests/island_sql/test_recovery_finish_checkpoint_guard_sql.py::test_first_malformed_vector_cannot_close_pay_or_change_progress[healing]
+FAILED server/tests/island_sql/test_recovery_finish_checkpoint_guard_sql.py::test_first_malformed_vector_cannot_close_pay_or_change_progress[basis]
+6 failed, 3 passed in 5.58s

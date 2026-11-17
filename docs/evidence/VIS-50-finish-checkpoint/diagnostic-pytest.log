@@ -1,0 +1,73 @@
+Using CPython 3.12.14 interpreter at: /opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3.12
+Creating virtual environment at: .venv
+Installed 26 packages in 54ms
+Installed 7 packages in 92ms
+VIS50_OBSERVED {"directHealth": {"reason": "checkpoint_divergence", "status": "refused"}, "minimumSeconds": 15, "elapsedSeconds": 20, "snapshotStructures": 1, "prefix": {"closed": false, "events": [], "status": "ok", "headSeq": 0, "through": null, "sealedThroughTick": 399}, "before": {"balance": 90, "run": [false, null, null, false], "recovery": [false, null, null], "lootRows": 0}, "incomingFinish": {"boss": false, "loot": 15, "wave": 1, "flags": 1, "repeat": false, "status": "done", "balance": 105, "expired": false, "recovery": {"waveId": "73cd3b07-8f92-4898-9dce-2ffa9fca3014", "closedAt": "2026-11-17T21:39:55.934654+00:00", "closedHp": {"980f032d-4f9e-4549-a987-e6c7a46a6cbe": 1000000}, "islandEpoch": "eb735629-6dce-4602-861d-65a70b59dc3c", "throughTick": 399, "inputHeadSeq": 0, "checkpointUid": null, "lastRepairSeq": 0, "basisRepairSeq": {}}, "survived": true, "waveBest": 1}, "afterIncoming": {"balance": 105, "run": [true, true, 15, false], "recovery": [true, null, {"980f032d-4f9e-4549-a987-e6c7a46a6cbe": 1000000}], "lootRows": 1}, "previousFinish": {"reason": "checkpoint_divergence", "status": "refused"}, "afterPrevious": {"balance": 90, "run": [false, null, null, false], "recovery": [false, null, null], "lootRows": 0}}
+F
+=================================== FAILURES ===================================
+_______________ test_malformed_first_vector_cannot_close_or_pay ________________
+
+database = <psycopg.Connection [INTRANS] (database=postgres) at 0x7fcaff7469f0>
+
+    def test_malformed_first_vector_cannot_close_or_pay(database):
+        add_players(database, OWNER)
+        open_island(database, OWNER, 'K7Q2M')
+        as_server(database)
+        built = call(database, "select public.island_build(%s,%s,'wall_1','wall','vis50-wall-001',10)", OWNER, OWNER)
+        assert built['status'] == 'done', built
+        current = template((('wall_1','wall'),))
+        current['expectedRevision'] = call(database, 'select revision from public.island_recovery_state where island_owner=%s', OWNER)
+        started = call(database, START, OWNER, 'vis50-wave-001', OWNER, ['structure_recovery'], json.dumps(current))
+        assert started['status'] == 'started', started
+        wave = UUID(started['waveId'])
+        frozen = started['initialSnapshot']
+        assert len(frozen['structures']) == 1 and frozen['structures'][0]['spot'] == 'wall_1'
+        move_start(database, wave, 20)
+        page = call(database, PAGE, OWNER, wave)
+        epoch = UUID(frozen['islandEpoch'])
+        assert page['status'] == 'ok'
+        before = state(database, wave)
+        assert before['run'][0] is False and before['recovery'][:2] == (False, None)
+        assert before['lootRows'] == 0
+        health = call(
+            database,
+            "select public.recovery_wave_report_health(%s,%s,%s,'vis50-health-001',%s,%s,0,'{}'::jsonb,'{}'::jsonb)",
+            OWNER,wave,epoch,page['sealedThroughTick'],page['headSeq'],
+        )
+        assert health == {'status':'refused','reason':'checkpoint_divergence'}, health
+        database.execute('savepoint before_finish')
+        args = (OWNER,wave,epoch,'vis50-finish-001',page['sealedThroughTick'],page['headSeq'])
+        incoming = call(database, FINISH, *args)
+        after_incoming = state(database,wave)
+        database.execute('rollback to savepoint before_finish')
+        as_owner(database)
+        source = (MIGRATIONS/'20261117040000_structure_recovery_api.sql').read_text()
+        legacy_finish = re.search(r'create or replace function public\.recovery_wave_finish\([\s\S]*?\$\$;',source).group()
+        database.execute(legacy_finish)
+        as_server(database)
+        previous = call(database, FINISH, *args)
+        after_previous = state(database,wave)
+        assert previous == {'status':'refused','reason':'checkpoint_divergence'}, previous
+        assert after_previous == before
+        record = {'directHealth':health,'minimumSeconds':15,'elapsedSeconds':20,
+            'snapshotStructures':len(frozen['structures']),'prefix':page,'before':before,
+            'incomingFinish':incoming,'afterIncoming':after_incoming,
+            'previousFinish':previous,'afterPrevious':after_previous}
+        Path('/workspace/reference-village-work/vis50-pg-diagnostic/observed.json').write_text(json.dumps(record,indent=2)+'\n')
+        print('VIS50_OBSERVED',json.dumps(record))
+>       assert incoming == {'status':'refused','reason':'checkpoint_divergence'}
+E       AssertionError: assert {'boss': Fals...lags': 1, ...} == {'status': 'r...t_divergence'}
+E         
+E         Differing items:
+E         {'status': 'done'} != {'status': 'refused'}
+E         Left contains 10 more items:
+E         {'balance': 105,
+E          'boss': False,
+E          'expired': False,...
+E         
+E         ...Full output truncated, use '-vv' to show
+
+../../vis50-pg-diagnostic/test_finish_first_vector_diagnostic.py:90: AssertionError
+=========================== short test summary info ============================
+FAILED ../../vis50-pg-diagnostic/test_finish_first_vector_diagnostic.py::test_malformed_first_vector_cannot_close_or_pay
+1 failed in 4.03s
