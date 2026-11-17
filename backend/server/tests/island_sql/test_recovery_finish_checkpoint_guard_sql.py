@@ -83,7 +83,9 @@ def state(db, wave):
             "where island_owner=%s and spot='wall_1'",
             (OWNER,),
         ).fetchone(),
-        call(db, "select wave_best,flags,next_wave from public.islands where player_id=%s", OWNER),
+        db.execute(
+            "select wave_best,flags,next_wave from public.islands where player_id=%s", (OWNER,)
+        ).fetchone(),
         call(
             db,
             "select count(*) from public.wallet_transactions "
