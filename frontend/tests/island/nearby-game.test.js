@@ -11,6 +11,8 @@ async function openGame(page, base, phone) {
     if (phone) Object.defineProperty(navigator, 'maxTouchPoints', {get: () => 1});
   }, phone);
   await page.goto(`${base}/?islands=fake&fakeplayer=t19-test`);
+  await page.addScriptTag({type: 'module', content: 'window.g20Import = path => import(path);'});
+  await page.waitForFunction(() => typeof window.g20Import === 'function');
   await page.locator('#play').click();
   await page.locator('.games-card[open]').getByRole('button', {name: 'Create a game', exact: true}).click();
   await page.locator('.island-card-lobby[open]').getByRole('button', {name: 'Start', exact: true}).click();
