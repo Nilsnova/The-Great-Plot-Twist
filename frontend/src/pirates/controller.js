@@ -187,7 +187,9 @@ export function readWaveInfo(info) {
     boss: typeof info.boss === 'boolean' ? info.boss : undefined, walls: readWalls(info.walls), rules,
     recoveryVersion, waveProtocol, ...(snapshot ? { initialSnapshot: snapshot, participantToken: info.participantToken,
       lastActorCounter: info.lastActorCounter } : {}),
-    serverTimeMs: Number.isFinite(parseTime(info.serverTime)) ? parseTime(info.serverTime) : null };
+    serverTimeMs: Number.isFinite(parseTime(info.serverTime)) ? parseTime(info.serverTime) : null,
+    // The browser's clock offset to the server, measured when the wave answer arrived (island/api.js clockOffset).
+    clockOffsetMs: Number.isSafeInteger(info.clockOffsetMs) && Math.abs(info.clockOffsetMs) <= 86_400_000 ? info.clockOffsetMs : null };
 }
 
 /** How long to wait before finishing again, from a 409 wave_too_early refusal; null for other errors. */
@@ -358,7 +360,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     // the rule it is left out here too, so the screen does not show a gun that never fires.
     const sourceDefenses = snapshot ? recoveryWaveDefenses(snapshot) : withHealth(getDefenses() ?? [], info.walls);
     const defenses = (sourceDefenses ?? []).filter(item => item?.kind !== 'culverin' || info.rules?.defensesV2 === true);
-    const offset = info.serverTimeMs !== null ? info.serverTimeMs - now() : serverOffset();
+    const offset = info.clockOffsetMs ?? (info.serverTimeMs !== null ? info.serverTimeMs - now() : serverOffset());
     // v3 waves: the event from the wave's seed and number (the server repeats it for the galleon's bonus), and
     // the boss finishers with the room's wave gap (their grace time). simOptions may name an event (the demo).
     const event = info.flagship ? null : eventFor(info.wave, info.seed);

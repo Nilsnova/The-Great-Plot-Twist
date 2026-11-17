@@ -56,6 +56,7 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
       ...(wave.initialSnapshot && typeof wave.initialSnapshot === 'object' ? {initialSnapshot: wave.initialSnapshot} : {}),
       ...(typeof wave.participantToken === 'string' ? {participantToken: wave.participantToken} : {}),
       ...(Number.isSafeInteger(wave.lastActorCounter) ? {lastActorCounter: wave.lastActorCounter} : {}),
+      ...(Number.isSafeInteger(wave.clockOffsetMs) ? {clockOffsetMs: wave.clockOffsetMs} : {}), // api.js clockOffset
       ...(Array.isArray(wave.rules) ? {rules: wave.rules} : {})}); // the wave's sim rules (tower_health, …) from the server
     countdown(wave, fresh);
     changed();
