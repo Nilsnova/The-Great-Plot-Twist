@@ -268,6 +268,8 @@ Nobody has decided these yet. Until they are decided, the plan in ROADMAP.md sta
 
 ## Next steps per lane
 
+**Johannes / WALL-19:** verify [Draft #275](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/275) with the preceding wall-policy migration in the coordinated scratch-SQL lane, then rehearse the spec and obtain independent human review. Do not apply live or merge.
+
 - **Ianno / #82:** ask for independent human review of [draft PR #86](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/86), including the additive migration and timestamp boundary; migration application remains a separate follow-up.
 **Ianno / shared defense recovery:** decide the captain-skill replacement effects, support range and multiplayer stacking, then review the final plan against current main before authorizing implementation of [#85](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/85). The second-destruction choice is settled: restart the lifecycle.
 
