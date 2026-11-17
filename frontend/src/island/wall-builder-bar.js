@@ -4,12 +4,13 @@ import './wall-builder.css';
 export function createWallBuilderBar({container, handlers}) {
   let current = null;
   const bar = node('section', 'island-move-bar island-wall-builder'); bar.hidden = true; bar.setAttribute('aria-label', 'Build walls');
-  const title = node('strong', 'island-move-title', 'Build walls'), hint = node('p', 'island-move-line');
+  const title = node('strong', 'island-move-title', 'Build walls'), hint = node('p', 'island-move-line wall-builder-hint');
   const status = node('p', 'island-move-status'); status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite');
-  const price = node('p', 'island-move-line'), actions = node('div', 'wall-builder-actions');
+  const price = node('p', 'island-move-line wall-builder-price'), actions = node('div', 'wall-builder-actions');
   const button = (label, action, quiet = true) => { const item = node('button', `kit-button${quiet ? ' kit-quiet' : ''}`, label);
     item.type = 'button'; item.addEventListener('click', action); return item; };
-  const undo = button('Remove last', () => handlers.undo()), clear = button('Clear', () => handlers.clear());
+  const undo = button('Undo', () => handlers.undo()), clear = button('Clear', () => handlers.clear());
+  undo.setAttribute('aria-label', 'Remove last');
   const close = button('Cancel', () => handlers.cancel());
   const submit = button('Get price', () => current?.phase === 'enable_failed' ? handlers.open()
     : ['ready', 'unknown'].includes(current?.phase) ? handlers.confirm() : handlers.quote(), false);
@@ -32,9 +33,16 @@ export function createWallBuilderBar({container, handlers}) {
     render(model) {
       const opening = bar.hidden && !!model; current = model; bar.hidden = !model; if (!model) { fine.open = false; bar.classList.remove('has-fine-position'); return; }
       title.textContent = `Build walls · ${model.cells.length} ${model.cells.length === 1 ? 'wall' : 'walls'}`;
-      hint.textContent = ['building', 'unknown'].includes(model.phase) ? 'Closing does not cancel a purchase already sent.' : 'Tap to start, then add walls or turn. Arrow keys add one wall.';
+      const warning = ['building', 'unknown'].includes(model.phase);
+      hint.textContent = warning ? 'Closing does not cancel a purchase already sent.' : 'Tap to start, then add walls or turn. Arrow keys add one wall.';
+      hint.hidden = !warning && model.cells.length > 0 && !!model.status;
       status.textContent = model.status; bar.classList.toggle('is-refused', ['refused', 'enable_failed'].includes(model.phase));
       price.textContent = model.quote ? `Total: ${model.quote.totalCost} coins · Wall slots remaining: ${model.quote.remaining}` : 'Get the price to check these positions.';
+      price.hidden = !model.quote; // The unquoted status and Get price action already explain the next step.
+      // The game camera caches insets using classes as well as text; each reflow is explicit.
+      bar.classList.toggle('has-wall-warning', warning);
+      bar.classList.toggle('has-wall-instructions', !hint.hidden);
+      bar.classList.toggle('has-wall-quote', !price.hidden);
       const editable = ['draft', 'ready', 'refused'].includes(model.phase) && !model.busy;
       undo.disabled = clear.disabled = !editable || !model.cells.length;
       fineButtons.forEach(item => { item.disabled = !editable || !model.cells.length; });

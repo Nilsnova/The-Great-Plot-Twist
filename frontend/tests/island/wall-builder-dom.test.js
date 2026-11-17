@@ -39,7 +39,7 @@ it('keeps actual quote/retry controls accessible and within both viewport widths
         const expanded = bar.element.getBoundingClientRect().toJSON();
         const buttons = [...bar.element.querySelectorAll('button')].filter(button => button.getClientRects().length).map(button => { const r = button.getBoundingClientRect(); return {width: r.width, height: r.height, inside: r.left >= 0 && r.right <= innerWidth,
           hit: button.contains(document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2))}; });
-        bar.render({...model, phase: 'unknown'}); const undo = [...bar.element.querySelectorAll('button')].find(button => button.textContent === 'Remove last');
+        bar.render({...model, phase: 'unknown'}); const undo = bar.element.querySelector('[aria-label="Remove last"]');
         const unknown = {label: submit.textContent, disabled: undo.disabled, live: bar.element.querySelector('[role=status]').getAttribute('aria-live')};
         const copy = bar.element.textContent; bar.dispose(); return {calls, buttons, unknown, copy, closed, expanded};
       });
@@ -134,7 +134,8 @@ it('fine-positions an unpaid draft with visible 44px phone controls and a new qu
         hit: button.contains(document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2))};});
       return {height: r.height, top: r.top, bottom: r.bottom, buttons};
     });
-    expect(geometry.height).toBeGreaterThan(before.height); expect(geometry.top).toBeGreaterThanOrEqual(0); expect(geometry.bottom).toBeLessThanOrEqual(812 - 120);
+    expect(geometry.height).toBeGreaterThan(before.height); expect(geometry.height).toBeLessThanOrEqual(340);
+    expect(geometry.top).toBeGreaterThanOrEqual(0); expect(geometry.bottom).toBeLessThanOrEqual(812 - 120);
     expect(geometry.buttons.every(button => button.width >= 44 && button.height >= 44 && button.inside && button.hit)).toBe(true);
     await page.getByRole('button', {name: 'Shift draft one square east', exact: true}).click();
     expect(await page.evaluate(() => window.wallComponent.island.wallBuilder.state)).toMatchObject({cells: [{x: -13.5, z: -8}, {x: -11.5, z: -8}], phase: 'draft', quote: null});
@@ -147,5 +148,58 @@ it('fine-positions an unpaid draft with visible 44px phone controls and a new qu
     await page.evaluate(() => window.wallComponent.island.handleEscape());
     await page.getByRole('button', {name: 'Build walls', exact: true}).click();
     expect(await details.evaluate(element => element.open)).toBe(false); await page.evaluate(() => window.wallComponent.cleanup());
+  });
+});
+
+it('retains phone quote/refusal/pending information with scrollable tools and land above the measured panel', async () => {
+  await browser.withPage(async page => {
+    for (const size of [{width: 375, height: 812}, {width: 320, height: 568}]) {
+      await page.setViewportSize(size);
+      await page.evaluate(async () => {
+        await window.g20Import('/src/island/island.css');
+        const {createWallBuilderBar} = await window.g20Import('/src/island/wall-builder-bar.js');
+        document.documentElement.style.setProperty('--narrator-card-height', '120px');
+        const bar = createWallBuilderBar({container: document.body, handlers: {cancel() {}}});
+        window.workspaceBar = bar;
+      });
+      for (const phase of ['draft', 'ready', 'refused', 'building', 'unknown']) {
+        const result = await page.evaluate(async phase => {
+          const bar = window.workspaceBar, quoted = ['ready', 'building', 'unknown'].includes(phase);
+          const status = phase === 'refused' ? 'That position overlaps another building. Move the draft, then get the price again.'
+            : phase === 'unknown' ? 'Build outcome unknown. Retry the same build to check it.' : 'Draft moved. Get the price to check these positions.';
+          bar.render({cells: [{x: -18.5, z: 2}, {x: -18.5, z: 0}], phase, busy: phase === 'building', status,
+            quote: quoted ? {totalCost: 20, remaining: 126} : null});
+          bar.element.querySelector('details').open = true;
+          const rect = bar.element.getBoundingClientRect();
+          const THREE = await window.g20Import('/node_modules/three/build/three.module.js');
+          const {createCamera} = await window.g20Import('/src/player/camera.js'), {worldViewport} = await window.g20Import('/src/pixel/display.js');
+          const {cliffProfile} = await window.g20Import('/src/art/coast-cliffs.js'), {surfaces} = await window.g20Import('/src/world/places/surfaces.js');
+          const view = createCamera({pointer: {wheel: 0}}), player = {x: 0, z: 2};
+          Object.assign(view.camera, worldViewport(innerWidth, innerHeight, 22, 16)); view.camera.updateProjectionMatrix();
+          view.setPlace('home_islet', player); view.start(true);
+          view.setVillageView(true, {height: innerHeight, top: 100, bottom: innerHeight - rect.top + 12}); view.update(.05, player);
+          view.camera.updateMatrixWorld();
+          const landBottom = Math.max(...cliffProfile(surfaces.home_islet).map(p => (1 - new THREE.Vector3(p.x, -p.z * .72, 0).project(view.camera).y) * innerHeight / 2));
+          return {height: rect.height, bottom: rect.bottom, top: rect.top, landBottom, status: bar.element.querySelector('[role=status]').textContent,
+            hint: bar.element.querySelector('.wall-builder-hint').hidden, price: bar.element.querySelector('.wall-builder-price').hidden,
+            quoted: bar.element.querySelector('.wall-builder-price').textContent, classes: bar.element.className};
+        }, phase);
+        expect(result.height).toBeLessThanOrEqual(340); expect(result.top).toBeGreaterThanOrEqual(100);
+        expect(result.bottom).toBeLessThanOrEqual(size.height - 120); expect(result.landBottom).toBeLessThan(result.top - 12);
+        expect(result.hint).toBe(!['building', 'unknown'].includes(phase)); expect(result.price).toBe(!['ready', 'building', 'unknown'].includes(phase));
+        if (!result.price) {expect(result.quoted).toContain('Total: 20 coins'); expect(result.classes).toContain('has-wall-quote');}
+        if (!result.hint) {expect(await page.locator('.wall-builder-hint').textContent()).toContain('Closing does not cancel'); expect(result.classes).toContain('has-wall-warning');}
+        if (phase === 'refused') expect(result.status).toContain('overlaps another building');
+        const buttons = page.locator('.island-wall-builder button:enabled');
+        for (let i = 0; i < await buttons.count(); i++) {
+          const button = buttons.nth(i); await button.scrollIntoViewIfNeeded();
+          const hit = await button.evaluate(element => {const r = element.getBoundingClientRect(); return {width: r.width, height: r.height,
+            inside: r.left >= 0 && r.right <= innerWidth && r.top >= 0 && r.bottom <= innerHeight - 120,
+            hit: element.contains(document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2))};});
+          expect(hit.width).toBeGreaterThanOrEqual(44); expect(hit.height).toBeGreaterThanOrEqual(44); expect(hit.inside && hit.hit).toBe(true);
+        }
+      }
+      await page.evaluate(() => window.workspaceBar.dispose());
+    }
   });
 });
