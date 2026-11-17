@@ -1241,6 +1241,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     defenses: () => defenses(target()?.spots ?? [], campaign()?.research?.tiers),
     get api() { return api; },
     get recoveryTransport() { return recoveryTransport; },
+    get recoveryVersion() { return recoveryPolicyOn() ? recoveryState.recoveryVersion : 0; },
     roomPlace: () => islandRoom(visiting?.code ?? visitCode ?? own?.code ?? '') || null,
     async joinRunningWave() {
       if (disposed || !target()) return null;

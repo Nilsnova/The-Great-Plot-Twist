@@ -33,7 +33,8 @@ it('keeps saved recovery cards when admission is off, while legacy islands stay 
     if (!island.island.spots.find(spot => spot.id === 'wall_1')?.built) await island.build('wall_1', 'wall');
     island.pick('wall_1');
     const persisted = {hp: document.querySelector('.recovery-hp')?.textContent ?? '',
-      repair: document.querySelector('.recovery-repair')?.textContent ?? '', read: calls.includes('/api/island/structures')};
+      repair: document.querySelector('.recovery-repair')?.textContent ?? '', read: calls.includes('/api/island/structures'),
+      recoveryVersion: island.recoveryVersion};
     await island.api.startWave({where: 'own'});
     persisted.waveProtocol = startBody?.waveProtocol ?? null;
     island.dispose();
@@ -41,12 +42,15 @@ it('keeps saved recovery cards when admission is off, while legacy islands stay 
     const legacy = createIsland({container: document.body, emit, on, mode: 'fake', transport: base, storage: null,
       structureRecoveryOn: () => false, menu: () => () => {}});
     await legacy.load(); legacy.pick('wall_1');
-    const old = {health: !!document.querySelector('.recovery-hp'), card: document.querySelector('.island-card-build')?.innerText ?? ''};
+    const old = {health: !!document.querySelector('.recovery-hp'), card: document.querySelector('.island-card-build')?.innerText ?? '',
+      recoveryVersion: legacy.recoveryVersion};
     legacy.dispose();
     return {persisted, old};
   }));
-  expect(result.persisted).toEqual({hp: '30 / 60 HP', repair: 'Repair now: pay 10 coins', read: true, waveProtocol: 2});
+  expect(result.persisted).toEqual({hp: '30 / 60 HP', repair: 'Repair now: pay 10 coins', read: true,
+    recoveryVersion: 1, waveProtocol: 2});
   expect(result.old.health).toBe(false);
+  expect(result.old.recoveryVersion).toBe(0);
   expect(result.old.card).toContain('Level 2: Opens after wave 2.');
 });
 
