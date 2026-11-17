@@ -37,6 +37,24 @@ Environment: Linux, Node.js `v24.22.1`, Chromium `156.0.8078.79` (`/usr/bin/chro
 
 The capture checks visible repair controls at phone widths and verifies the one-pixel positive HP fill. It does not show live service responses or an actual repair. Runtime evidence remains pending for real between-wave healing, preparation/combat pause and quota, zero/partial/full HP, and two actual clients.
 
+### Bell-pause estimate wording refresh
+
+The card screenshots above were refreshed from source commit `14805efe99e194e3b91b57502ec9df4bc30d14c9` on 17 Nov 2026 with:
+
+```sh
+cd frontend && npm run capture:recovery:card
+```
+
+The production card now tells players that free repair pauses when the bell rings and that the displayed estimate counts only time between waves. The fixture still provides offline DTOs; the button emits a local intent and does not call an API. At desktop and phone sizes the text wraps without clipping. The preparation phone capture correctly shows paused status and remaining uses with no ETA.
+
+The focused model check also passed from this revision:
+
+```sh
+cd frontend && npx vitest run tests/island/structure-recovery-model.test.js
+```
+
+Result: 1 file, 24 tests passed. The refreshed image paths are the three rows in the production island card preview table above; no live service, payment, database, or multiplayer behavior is demonstrated.
+
 ## Integrated UI with offline signed-shape adapter
 
 **These captures run the production island card, world scene, `wireWaves`, controller, and replay code with a local offline API fixture. It returns API-shaped DTOs but makes no authenticated request and uses no live account, charge, database, or second client.** They show production UI and replay wiring, not actual server acceptance.
