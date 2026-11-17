@@ -80,6 +80,16 @@ The narrow adapter allowlists only the local tables and RPCs needed by these cal
 read environment credentials, connect to a hosted Supabase instance, or create a network client.
 No screenshot is applicable because the tested slice has no browser UI path.
 
+**Known compatibility limit outside this fixture:** on a saved v1 island, a built `cannon_8` or
+`culverin` may be filtered from the snapshot template when `more_tower_spots` or `defenses_v2` is
+off. The database then rejects the incomplete snapshot with `recovery_snapshot_structure_mismatch`;
+it does not silently omit the built structure. This fixture uses one wall and does not prove that
+flag combination. The all-built D060 capability behavior remains T55 work.
+
+For separate deterministic simulator-only repair balance coverage, see the
+[T57 diagnostic report](../T57-wave-recovery/README.md); it does not prove API, SQL or multiplayer
+authority.
+
 ## Lifecycle draft probe
 
 Before the SQL owner committed the lifecycle work, I copied read-only draft snapshots into the
