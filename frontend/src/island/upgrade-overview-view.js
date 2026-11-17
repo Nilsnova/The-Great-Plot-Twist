@@ -16,7 +16,7 @@ export function drawUpgradeOverview(body, model, {kind = 'all', state = 'all', c
   const first = select('Building type', 'overview-kind', kind,
     [['all', 'All building types'], ...model.kinds.map(item => [item.id, item.name])], next => choose(next, state));
   select('Next building level', 'overview-state', state,
-    [['all', 'All levels'], ['ready', 'Affordable now'], ['blocked', 'Not ready yet'], ['top', 'Highest building level']], next => choose(kind, next));
+    [['all', 'All levels'], ['ready', 'Within budget'], ['blocked', 'Not ready yet'], ['top', 'Highest building level']], next => choose(kind, next));
   const rows = overviewRows(model, kind, state), count = node('p', 'base-overview-count', `${rows.length} shown`);
   count.setAttribute('role', 'status');
   const list = node('ul', 'base-overview-list'); list.setAttribute('aria-label', 'Your buildings');

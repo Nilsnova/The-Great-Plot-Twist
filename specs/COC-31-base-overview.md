@@ -10,7 +10,7 @@ This is the first independently useful COC-31 slice. It is read-only: there are 
 
 The overview describes current building levels, not effective combat damage or range. It intentionally does not repeat house-loot statistics while their separate UI/server discrepancy is unresolved. `Highest building level` means the normal level trunk is complete; tower paths and house roles can still exist.
 
-`Affordable now` is a planning comparison of the known wallet, quoted level price and existing wave unlocks. This slice does not read structure-health endpoints or prove repair eligibility. A damaged wall can require its normal repair action before an upgrade; the actual building card and server remain the authority. The overview therefore labels its purpose as building-level planning and never offers an Upgrade button.
+`Within budget` is a planning comparison of the known wallet, quoted level price and existing wave unlocks. This slice does not read structure-health endpoints or prove repair eligibility. A damaged wall can require its normal repair action before an upgrade; the actual building card and server remain the authority. The overview therefore labels its purpose as building-level planning and never offers an Upgrade button.
 
 ## Data flow and authority
 
@@ -44,7 +44,7 @@ npm test -- --maxWorkers=1 tests/island/upgrade-overview.test.js tests/island/up
 
 Initial focused result: **4 passed files; 40 passed tests**, 6.43 seconds. After the building-level wording refinement, the non-browser model/card/tree run passed **3 files; 38 tests**, 1.39 seconds. A final DOM/capture rerun is coordinated with the parent agent's exclusive browser slot. Model cases cover extra plots, duplicate IDs, unbuilt/unknown entries, server prices, exact affordability boundary, unknown coins, wave locks, top levels, roles/paths and source immutability. Real Chromium DOM cases use the actual menu provider, confirm zero POST writes during overview use, retain filters/focus across accepted updates and wave state, and check 375-pixel overflow plus an empty filter result.
 
-Text lint: **4322 candidate strings in 472 source files; 0 errors, 8 report-only findings**. The five added ordinary words (`affordable`, `approach`, `base`, `filters`, `plan`) were manually checked for spelling. Existing report-only findings are unrelated.
+Text lint: **4322 candidate strings in 472 source files; 0 errors, 8 report-only findings**. The four added ordinary words (`approach`, `base`, `filters`, `plan`) were manually checked for spelling. Existing report-only findings are unrelated.
 
 `node scripts/capture-base-overview.js ../docs/evidence/COC-31-base-overview` captures the real integrated game with local fake island data. The old single-building detail card is the before comparison; the new read-only aggregate is the after comparison. Seven buildings at the same fixture state are used at 1280 × 720 and 375 × 812. Preliminary captures exist, but show an unrelated arrival-cutscene backdrop. The stricter clean-capture assertion exposed that condition; the returning-player fixture now seeds the existing arrival-seen key, and its final rerun is pending. See the [evidence report](../docs/evidence/COC-31-base-overview/README.md).
 

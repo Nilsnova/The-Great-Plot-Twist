@@ -2783,7 +2783,6 @@ tutorials
 tutorial
 guided
 swing
-affordable
 approach
 base
 filters
