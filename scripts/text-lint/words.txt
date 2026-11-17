@@ -2784,3 +2784,7 @@ tutorials
 tutorial
 guided
 swing
+approach
+base
+filters
+plan

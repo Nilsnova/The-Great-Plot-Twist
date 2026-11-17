@@ -233,3 +233,7 @@ T55–T60 remain reserved and dependency-blocked pending explicit T54 technical-
 ## COC-39 claimed local report slice
 
 [Issue #180](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/180) is being implemented by Johannes Franz Lang (`frcola`) on `feat/coc-39-defense-report`: bounded event aggregation plus an actual read-only pause-menu report. [Specification and verification](../specs/COC-39-defense-report.md). COC-40 tactical navigation stays open; Ianno's recovery tasks remain with Ianno. Do not mark the wider package finished. Four component screenshots and focused results are recorded. Final central checks, Johannes's explain-back and independent human review remain before readiness; no merge.
+
+## COC-31 — base overview first slice (17 Nov, Johannes)
+
+[Issue #172](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/172), [draft PR #196](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/196), branch `feat/coc-31-base-overview`: read-only built-building overview with existing prices/locks and local filters. [Scope/evidence](../specs/COC-31-base-overview.md). No purchase endpoint or remote building selection; the larger COC-31 task is not done. Draft PR, explain-back and independent review remain.

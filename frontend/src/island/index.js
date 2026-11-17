@@ -50,6 +50,7 @@ import {GAME_STARTED, captainColours, lobbyModel} from './lobby.js';
 import {resolvePeer} from '../net/live-extras.js';
 import {travelAllowed, visitChip, visitName} from './one-island.js';
 import {progressSummary} from './progression.js';
+import {upgradeOverviewModel} from './upgrade-overview.js';
 import {withWallRecovery} from './wall-recovery.js';
 import {createResetSection} from './reset.js';
 import {addSettingsSection} from '../shell/settings-extras.js';
@@ -471,6 +472,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     else if (ui.open === 'wreck') ui.wreckCard(wreck(), wreckHandlers);
     else if (ui.open === 'demolish') ui.demolishCard(demolishCardModel(), demolishHandlers);
     else if (ui.open === 'arsenal') arsenal.redraw();
+    else if (ui.open === 'overview') ui.overviewCard(overview());
   }
   // The Tear down button follows the wave on screen (off while it runs, on again in its break).
   function refreshCardIfBuild() { if (ui.open === 'build' && openSpot) refreshCard(); }
@@ -485,6 +487,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     return answer;
   }
   function openCrew() { openSpot = null; cardMessage = ''; ui.crewCard(crew(), hire); void freshOwn(); }
+  const overview = () => upgradeOverviewModel({island: own, battle: battle && !waveOver, message: ownMessage});
+  function openOverview() { openSpot = null; cardMessage = ''; ui.overviewCard(overview()); void freshOwn(); }
   function openCaptain(tab = null) {
     openSpot = null; cardMessage = ''; if (['captain', 'skills', 'weapons'].includes(tab)) captainTab = tab;
     ui.captainCard(captain(), captainHandlers); void freshOwn();
@@ -904,6 +908,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     {label: 'Players and invite', onSelect: () => openLobby()},
     ...(visiting || visitCode ? [{label: 'Leave this game', onSelect: () => void leaveGame()}] : []),
     {label: 'Leaderboard', onSelect: () => void openLeaderboard()},
+    ...(!visiting && !visitCode ? [{label: 'Base overview', onSelect: () => openOverview()}] : []),
     {label: 'Crew', onSelect: () => openCrew()},
     {label: 'Captain and skills', onSelect: () => openCaptain()},
     ...(here.size ? [{label: `Captains here (${here.size})`, onSelect: () => openCaptains()}] : []),
@@ -1048,7 +1053,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     arsenal,
     // Captain colours (GAME-V3.md §7): each member's 0-9 by join order, and your own (src/island/lobby.js).
     colourOf, captainColour,
-    openLeaderboard, openInvite, openCrew, openCaptain, openCaptains, openLobby, enterGame, leaveGame, openHarbor, openTechHub, openWreck,
+    openOverview, openLeaderboard, openInvite, openCrew, openCaptain, openCaptains, openLobby, enterGame, leaveGame, openHarbor, openTechHub, openWreck,
     specialise, research, giveWreck, askDemolish, confirmDemolish, heardDemolish, buyTree,
     // The campaign of the island on screen (GAME-V3.md §4): {wave, open, locked, later, research, wreck}.
     get campaign() { return campaign(); },
@@ -1086,7 +1091,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       if (!disposed && answer.ok) tookCoins(answer.data.coins);
       return answer;
     },
-    setBattle(value) { battle = value === true; if (battle) { waveOver = false; moving.cancel(); } applyWorld(); refreshCardIfBuild(); if (['captain', 'tech'].includes(ui.open)) refreshCard(); },
+    setBattle(value) { battle = value === true; if (battle) { waveOver = false; moving.cancel(); } applyWorld(); refreshCardIfBuild(); if (['captain', 'tech', 'overview'].includes(ui.open)) refreshCard(); },
     // A Pirate Point battle: its built walls, cannons and mortars are drawn by the wave renderer meanwhile.
     setPointBattle(value) { pointBattle = value === true; applyWorld(); },
     // The bell again, for the wave's break ("Next wave", TOWER-DEFENSE.md §1): the start route where the

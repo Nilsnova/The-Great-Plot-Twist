@@ -306,3 +306,9 @@ and [results, screenshots and manual checkpoints](evidence/T28/README.md).
 [Exact run results and remaining central checks](../specs/COC-39-defense-report.md). Full replay authority, production multi-client completeness and COC-40 tactical navigation are not covered by this bounded report slice.
 
 COC-39 ownership follow-up: `frontend/tests/pirates/defense-report-ownership.test.js` uses the actual running game with a local fake island and standard-mapped gamepad. Window-level keyboard state and analog input cannot move the captain while `waves.reportActive` owns both global overlay guards; closing restores motion. Isolated result:1 passed /14.34s. The report still does not pause canonical wave ticking.
+
+## COC-31 — Johannes: base overview
+
+| What / where | Evidence | Coverage and limits |
+|---|---|---|
+| Read-only model and actual menu/card integration; `src/island/upgrade-overview*.js` | `tests/island/upgrade-overview.test.js`, `upgrade-overview-dom.test.js`; [capture report](evidence/COC-31-base-overview/README.md) | Extra offered plots, duplicate/unknown entries, server prices, affordability, loading/locks/roles, filters, accepted refresh, focus, 375px overflow and zero overview POST writes. Local fake transport + Chromium; no live backend, Safari or physical phone proof. Focused four-file run: 40 tests passed; broader parent checks reported separately. |
