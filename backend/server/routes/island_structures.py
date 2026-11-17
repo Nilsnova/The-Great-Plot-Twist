@@ -20,7 +20,5 @@ async def get_structures(
     code: Annotated[str | None, Query(max_length=CODE_MAX_LENGTH)] = None,
 ) -> structure_recovery.StructureRecoveryView:
     """Return shared v1 state for the caller's island or a member island named by code."""
-    island = await structure_recovery.resolve_target_island(
-        admin, catalogue, player.id, code
-    )
+    island = await structure_recovery.resolve_target_island(admin, catalogue, player.id, code)
     return await structure_recovery.read_state(admin, catalogue, island.owner)

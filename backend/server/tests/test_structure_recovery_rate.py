@@ -17,12 +17,8 @@ def test_rate_supports_each_approved_wall_choice() -> None:
     assert recovery_rate_factor(0, 0, "wall", None, None, True) == Fraction(1, 1)
     assert recovery_rate_factor(0, 0, "wall", "quick_mend", None, True) == Fraction(2, 1)
     assert recovery_rate_factor(0, 0, "wall", "bastion", None, True) == Fraction(3, 1)
-    assert recovery_rate_factor(2, 10, "wall", "quick_mend", "mason_drill", True) == Fraction(
-        27, 2
-    )
-    assert recovery_rate_factor(2, 10, "wall", "bastion", "mason_drill", True) == Fraction(
-        81, 4
-    )
+    assert recovery_rate_factor(2, 10, "wall", "quick_mend", "mason_drill", True) == Fraction(27, 2)
+    assert recovery_rate_factor(2, 10, "wall", "bastion", "mason_drill", True) == Fraction(81, 4)
 
 
 @pytest.mark.parametrize(

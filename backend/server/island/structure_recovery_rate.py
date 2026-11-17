@@ -10,9 +10,7 @@ WALL_SPEC_RATE_FACTORS = {
     "bastion": Fraction(3, 1),
 }
 WALL_RESEARCH_RATE_FACTORS = {"mason_drill": Fraction(3, 2)}
-SUPPORTED_STRUCTURE_KINDS = frozenset(
-    {"wall", "cannon", "mortar", "harpoon", "culverin", "swivel"}
-)
+SUPPORTED_STRUCTURE_KINDS = frozenset({"wall", "cannon", "mortar", "harpoon", "culverin", "swivel"})
 WALL_SPEC_IDS = frozenset({"quick_mend", "bastion", "stone", "spiked", "thorns"})
 WALL_RESEARCH_IDS = frozenset({"mason_drill", "thick_walls"})
 
