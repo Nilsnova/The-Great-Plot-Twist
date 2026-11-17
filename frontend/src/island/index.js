@@ -207,9 +207,11 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const moving = createMoveMode({api, render: model => { moveBar.render(model); villageBar.render(village.active && !model && !wallBuilder.active); }, preview: cell => world?.preview(cell),
     spots: () => target()?.spots ?? [], code: () => (visiting ? visiting.code : null), onMoved: (answer, spotId) => void moved(answer, spotId)});
   const moveBar = createMoveBar({container, handlers: {nudge: (dx, dz) => moving.nudge(dx, dz), place: () => void moving.confirm(), cancel: () => moving.cancel()}});
+  // Legacy island answers omit an epoch; confirmed resets still start a new local construction scope.
+  let wallResetGeneration = 0;
   const wallBuilder = createWallBuilder({api: createWallBuilderApi({transport: islandTransport}),
     context: () => ({allowed: village.active && !disposed && !visiting && !visitCode && !flow.busy && !flow.current && !(battle && !waveOver),
-      code: own?.code, epoch: own?.islandEpoch ?? recoveryState?.islandEpoch ?? null}),
+      code: own?.code, epoch: own?.islandEpoch ?? recoveryState?.islandEpoch ?? null, generation: wallResetGeneration}),
     render: model => { wallBar.render(model); villageBar.render(village.active && !model && !moving.active); },
     preview: model => world?.wallDraft(model), onIsland: data => { wrote('own'); setOwn(data); applyWorld(); refreshCard(); emit({type: SPOTS_CHANGED, place: 'own'}); }});
   const wallBar = createWallBuilderBar({container, handlers: {open: () => void startWalls(), quote: () => void wallBuilder.quote(),
@@ -1192,6 +1194,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     village.leave();
     const answer = await api.freshStart({confirmCode: typed});
     if (disposed || !answer.ok) return answer;
+    wallResetGeneration++; wrote('own'); wallBuilder.cancel();
     const code = islandCode(own?.code ?? '') || islandCode(typed);
     // This page's memory of the old island goes too: its campaign, walls and tree picks.
     campaignSeen.delete(code);

@@ -1,5 +1,5 @@
 /* Keep construction controls measurable by the existing village camera and clear of narration. */
-.island-wall-builder {grid-template-columns:1fr;bottom:calc(max(12px,env(safe-area-inset-bottom)) + var(--narrator-card-height,0px) + 12px);max-height:calc(100dvh - 120px);overflow-y:auto}
+.island-wall-builder {grid-template-columns:1fr;bottom:calc(max(12px,env(safe-area-inset-bottom)) + var(--narrator-card-height,0px) + 12px);max-height:calc(100dvh - var(--narrator-card-height,0px) - 180px);overflow-y:auto}
 .island-wall-builder .wall-builder-actions,.wall-builder-camera {display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .island-wall-builder button {min-width:44px;min-height:44px}
 .wall-builder-actions>button:last-child {flex:1 1 150px}
