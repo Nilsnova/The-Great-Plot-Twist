@@ -65,6 +65,7 @@ from server.routes import (
     island_boat,
     island_layout,
     island_reset,
+    island_structures,
     islet,
     keepalive,
     lock,
@@ -75,6 +76,7 @@ from server.routes import (
     predictions,
     save,
     sports,
+    structure_repair,
     wall_recovery,
     waves,
     weather,
@@ -305,6 +307,8 @@ def create_app(
     app.include_router(crew_orders.router, prefix="/api")
     app.include_router(islet.router, prefix="/api")
     app.include_router(island.router, prefix="/api")
+    app.include_router(island_structures.router, prefix="/api")
+    app.include_router(structure_repair.router, prefix="/api")
     app.include_router(island_layout.router, prefix="/api")
     app.include_router(island_boat.router, prefix="/api")
     app.include_router(island_reset.router, prefix="/api")

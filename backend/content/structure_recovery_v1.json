@@ -1,0 +1,22 @@
+{
+  "about": "Versioned base health and maximum-health modifiers for structure recovery v1. Keep in parity with frontend/src/pirates/structure-recovery-config.js.",
+  "recoveryVersion": 1,
+  "waveProtocol": 2,
+  "fullHpUnits": 1000000,
+  "baseRecoveryMilliseconds": 600000,
+  "structureMaxHp": {
+    "wall": [60, 120, 200, 300, 420],
+    "cannon": [80, 130, 200, 290, 400],
+    "mortar": [70, 115, 180, 260, 360],
+    "harpoon": [60, 100, 155, 230, 320],
+    "culverin": [56, 91, 140, 203, 280],
+    "swivel": [72, 117, 180, 261, 360]
+  },
+  "wallSkillMaxHpFactors": {
+    "stone": [2, 1],
+    "bastion": [3, 2]
+  },
+  "wallResearchMaxHpFactors": {
+    "thick_walls": [23, 20]
+  }
+}
