@@ -37,9 +37,9 @@ async function audit(name,selector,context='gameplay'){
  }
  await page.setViewportSize({width:1280,height:900});
  const isDialog=await root.evaluate(root=>root.matches('dialog,[role="dialog"]'));
- const focus=await root.evaluate(async root=>{const h=await import('/scripts/a11y-helpers.js');const candidates=h.focusCandidatesForAudit(root),controls=h.tabbableForAudit(root);root.querySelectorAll('[data-a11y-order]').forEach(el=>delete el.dataset.a11yOrder);controls.forEach((el,i)=>el.dataset.a11yOrder=String(i));controls[0]?.focus();return {count:controls.length,positiveTabindex:candidates.some(el=>el.tabIndex>0),order:controls.map(el=>({tag:el.tagName,class:el.className,dataFocus:el.dataset.focus??null,order:el.dataset.a11yOrder})),steps:[]};});
+ const focus=await root.evaluate(async root=>{const h=await import('/scripts/a11y-helpers.js');const snapshot=h.snapshotFocusForAudit(root);h.tabbableForAudit(root)[0]?.focus();return snapshot;});
  const steps=isDialog?focus.count-1:Math.min(1,focus.count-1);
- for(let i=1;i<=steps;i++){await page.keyboard.press('Tab');focus.steps.push(await root.evaluate(async(root,i)=>{const h=await import('/scripts/a11y-helpers.js');const el=document.activeElement;return {domOrder:el.dataset.a11yOrder===String(i),inside:root.contains(el),visible:h.visibleFocusForAudit(el),expectedOrder:String(i),actual:{tag:el.tagName,class:el.className,dataFocus:el.dataset.focus??null,order:el.dataset.a11yOrder??null}};},i));}
+ for(let i=1;i<=steps;i++){await page.keyboard.press('Tab');focus.steps.push(await root.evaluate(async(root,{snapshot,index})=>{const h=await import('/scripts/a11y-helpers.js');return h.focusStepForAudit(root,snapshot,index);},{snapshot:focus,index:i}));}
  if(isDialog){await root.evaluate(async root=>{const h=await import('/scripts/a11y-helpers.js');h.tabbableForAudit(root).at(-1)?.focus();});await page.keyboard.press('Tab');focus.trapped=await root.evaluate(root=>root.contains(document.activeElement));focus.trapTarget=await root.evaluate(()=>{const el=document.activeElement;return {tag:el.tagName,class:el.className,dataFocus:el.dataset.focus??null,order:el.dataset.a11yOrder??null};});}
  report.screens.push({name,sizes,focus});console.log('Audited '+name);await writeFile(prefix+'-Checks.json',JSON.stringify(report,null,2));
 }
