@@ -128,3 +128,19 @@ credential-format scan found no match in the newly preserved receipts. The stale
 stage-five evidence wording now points to the available stage-six package while
 keeping visual acceptance open. No app/browser run or final-preview write was
 performed by this documentation task.
+
+## Actual standalone-document browser evidence
+
+Preserved the coordinator's original managed-browser file-URI failure and later
+owned-loopback HTTP success, with exact report/log/screenshot/checker hashes.
+The failed file attempt did not load HTML or exercise tabs/images. Loopback on
+Chromium 156.0.8078.79 passed both viewports, all eight original images, three
+tablists and 27 real actions each, with zero page errors/external requests.
+These results apply only to the HTML hash ee507bf4 and documentation page; they
+do not capture or validate a new application runtime. Packaging ran no browser
+or app suite and did not edit the screenshot bytes.
+
+Packaging checks passed seven exact copied files, two full-document screenshot
+dimensions, both 27-action browser reports, the zero-assertion failed-file record,
+HTML source hash identity and 106 relative links/anchors. The copied checker
+passes `node --check`. Final latest-main gameplay evidence remains separate.

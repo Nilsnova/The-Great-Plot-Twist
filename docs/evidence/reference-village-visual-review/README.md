@@ -14,6 +14,12 @@ distinguish their sources and 102-wall/6,660-coin fixture from the new arranged
 pixel-matched isolated benchmarks. Generated concepts remain
 [separate design references](../../design/reference-village/approved-2026-11-17/README.md).
 
+The [actual comparison-page browser proof](../reference-village-comparison-browser/README.md)
+verified these exact HTML/image bytes over an owned loopback HTTP server at both
+viewports. Direct file navigation in the managed browser was blocked by policy
+before assertions; physical Safari and phone behavior were not tested. This
+documentation-page proof is separate from game runtime acceptance.
+
 ## Capture source and later frozen candidate
 
 | Identity | Exact value |

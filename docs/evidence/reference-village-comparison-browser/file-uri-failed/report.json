@@ -1,0 +1,26 @@
+{
+  "started": "2026-11-17T21:39:53.431Z",
+  "source": "/workspace/reference-village-work/visual-handover/docs/evidence/reference-village-visual-review/comparison.html",
+  "bytes": 6681124,
+  "sha256": "ee507bf458ece37811f748d8896cf46f19bbea7f53d0264be62fd4f7f4569de7",
+  "status": "failed",
+  "viewports": [
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "status": "running",
+      "pageErrors": [],
+      "externalRequests": [],
+      "checks": []
+    }
+  ],
+  "embeddedOriginalHashes": "8 exact matches",
+  "browserVersion": "156.0.8078.79",
+  "error": {
+    "name": "Error",
+    "message": "page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at file:///workspace/reference-village-work/visual-handover/docs/evidence/reference-village-visual-review/comparison.html\nCall log:\n\u001b[2m  - navigating to \"file:///workspace/reference-village-work/visual-handover/docs/evidence/reference-village-visual-review/comparison.html\", waiting until \"load\"\u001b[22m\n"
+  },
+  "finished": "2026-11-17T21:39:54.894Z"
+}
