@@ -18,7 +18,7 @@ describe('approved cabin source', () => {
   });
 
   it('keeps the real cabin geometry while selecting a bounded native source', () => {
-    const {rect, sourceFoot, logical} = frames.cabin;
+    const {rect, sourceFoot, logical, fitBounds} = frames.cabin;
     expect(logical).toEqual(islandFrame('cabin').slice(0, 3));
     expect(frames.cabin.sheet in sheets).toBe(true);
     expect(rect[0] + rect[2]).toBeLessThanOrEqual(sheets.buildingsHero.width);
@@ -27,12 +27,15 @@ describe('approved cabin source', () => {
     expect(sourceFoot[0]).toBeLessThan(rect[2]);
     expect(sourceFoot[1]).toBeGreaterThan(0);
     expect(sourceFoot[1]).toBeLessThan(rect[3]);
-    const scale = Math.min(logical[0] / rect[2], logical[1] / rect[3]);
+    expect([rect[0] + sourceFoot[0], rect[1] + sourceFoot[1]]).toEqual(report.nativeGroundFoot);
+    const [leftSpace, topSpace, rightSpace, bottomSpace] = fitBounds;
+    const scale = Math.min(logical[0] / 2 / leftSpace, (logical[1] - logical[2]) / topSpace,
+      logical[0] / 2 / rightSpace, logical[2] / bottomSpace);
     const shift = [logical[0] / 2 - sourceFoot[0] * scale, logical[1] - logical[2] - sourceFoot[1] * scale];
     const [left, top, right, bottom] = report.alpha.solidBounds;
-    expect(left * scale + shift[0]).toBeGreaterThanOrEqual(0);
-    expect(top * scale + shift[1]).toBeGreaterThanOrEqual(0);
-    expect(right * scale + shift[0]).toBeLessThanOrEqual(logical[0]);
-    expect(bottom * scale + shift[1]).toBeLessThanOrEqual(logical[1]);
+    expect((left - rect[0]) * scale + shift[0]).toBeGreaterThanOrEqual(0);
+    expect((top - rect[1]) * scale + shift[1]).toBeGreaterThanOrEqual(0);
+    expect((right - rect[0]) * scale + shift[0]).toBeLessThanOrEqual(logical[0]);
+    expect((bottom - rect[1]) * scale + shift[1]).toBeLessThanOrEqual(logical[1]);
   });
 });
