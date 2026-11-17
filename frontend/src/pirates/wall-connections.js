@@ -14,21 +14,31 @@ export function standingCombatWalls(posts = [], walls = [], inBreak = false) {
     .sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 }
 
-export function makeCombatWallConnections(root) {
+export function makeCombatWallConnections(root, art = null) {
   const group = new THREE.Group(); group.name = 'pirates:wall-connections'; root.add(group);
   const drawing = makeWallConnections(group);
+  if (art) drawing.setArt(art);
   let key = null, disposed = false, connected = new Set();
   return {
     show(posts, walls, {visible = true, inBreak = false} = {}) {
       if (disposed) return;
       group.visible = visible;
-      const standing = standingCombatWalls(posts, walls, inBreak), next = JSON.stringify(standing);
+      const standing = standingCombatWalls(posts, walls, inBreak);
+      const live = new Map(walls.map(wall => [wall.id, wall])), standingIds = new Set(standing.map(post => post.id));
+      const rows = art ? posts.filter(post => post.kind === 'wall').map(post => {
+        const wall = live.get(post.id), share = inBreak && Number.isFinite(post.rest) ? post.rest
+          : Number.isFinite(wall?.hp) && wall?.maxHp > 0 ? wall.hp / wall.maxHp : 1;
+        return {id: post.id, kind: 'wall', x: post.x, z: post.z, level: post.level, built: true,
+          standing: standingIds.has(post.id), broken: share <= 0, look: share > .6 ? 'intact' : share > 0 ? 'damaged' : 'broken'};
+      }) : standing;
+      const next = JSON.stringify(rows);
       if (key === next) return;
-      key = next; connected = drawing.show(standing).connected;
+      key = next; connected = drawing.show(rows).connected;
       // Joins are decoration, never a second target, interaction zone or pathing collider.
       group.traverse(object => { if (object.isMesh) object.raycast = () => {}; });
     },
     get links() { return drawing.links; },
+    hasPost: id => drawing.hasPost(id),
     isJoined(id) { return connected.has(id); },
     dispose() {
       if (disposed) return; disposed = true;

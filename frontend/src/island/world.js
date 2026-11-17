@@ -23,6 +23,7 @@ import {decorateProgress} from './decorations.js';
 import {makeWallConnections} from './wall-connections.js';
 import {createStructureRecoveryIndicators} from './structure-recovery-indicators.js';
 import {towerStateFrame} from '../art/tower-states.js';
+import {loadWallAtlas, wallPreviewCanvas} from '../art/wall-atlas.js';
 
 const UNIT = 16;
 const FULL_HP_UNITS = 1_000_000;
@@ -297,6 +298,7 @@ export function decorateIsland(place, ctx = {}) {
   };
   function showSpot(spot, answer, hidden) {
     const built = answer?.built === true, kind = built ? (kindsOf(spot).includes(answer.kind) ? answer.kind : kindsOf(spot)[0]) : null;
+    if (kind === 'wall' && wallConnections.hasPost(spot.id)) { clear(spot.id); return; }
     const level = Number.isSafeInteger(answer?.level) && answer.level > 0 ? answer.level : 1;
     const recoveryRow = recoveryState?.structures?.find(item => item.spot === spot.id);
     const appearance = structureRecoveryAppearance(answer, recoveryRow, recoveryState);
@@ -341,7 +343,7 @@ export function decorateIsland(place, ctx = {}) {
     joinedWalls = wallConnections.show(battle ? [] : spots.map(item => {
       const spot = SPOTS.find(entry => entry.id === item.id);
       const appearance = structureRecoveryAppearance(item, recoveryState?.structures?.find(row => row.spot === item.id), recoveryState);
-      return spot ? {...item, ...whereOf(spot), ...(appearance?.look === 'broken' ? {broken: true} : {}),
+      return spot ? {...item, ...whereOf(spot), look: appearance?.look ?? 'intact', ...(appearance?.look === 'broken' ? {broken: true} : {}),
         ...(preview?.spotId === item.id && !preview.ok ? {built: false} : {})} : item;
     })).connected;
     const known = spots.length > 0;
@@ -368,7 +370,7 @@ export function decorateIsland(place, ctx = {}) {
       const hidden = battle && BATTLE_KINDS.includes(answer?.kind ?? spot.kind);
       for (const kind of kindsOf(spot)) {
         buildings.get(`${spot.id}:${kind}`).visible = !art && built && (answer.kind === kind || (kindsOf(spot).length === 1))
-          && !(battle && BATTLE_KINDS.includes(kind));
+          && !(battle && BATTLE_KINDS.includes(kind)) && !(kind === 'wall' && wallConnections.hasPost(spot.id));
         if (kind === 'wall') buildings.get(`${spot.id}:${kind}`).scale.x = joinedWalls.has(spot.id) ? .62 : 1;
       }
       if (art) showSpot(spot, answer, hidden);
@@ -399,6 +401,25 @@ export function decorateIsland(place, ctx = {}) {
     for (const mesh of buildings.values()) releaseStandin(mesh);
     apply(state);
   }).catch(() => { /* The drawn sprites stay. */ });
+
+  let wallArtLoading = null;
+  function retryWallArt() {
+    if (disposed || wallArtLoading) return wallArtLoading;
+    root.userData.wallArtError = null;
+    wallArtLoading = Promise.resolve().then(() => (ctx.loadWallAtlas ?? loadWallAtlas)({
+      quality: typeof ctx.quality === 'function' ? ctx.quality() : ctx.quality ?? 'high',
+    })).then(value => {
+      if (!value) return;
+      if (disposed || !wallConnections.setArt(value)) { if (value.ownsTexture) value.texture.dispose(); return; }
+      textures.wall.texture.image = wallPreviewCanvas(value); textures.wall.texture.needsUpdate = true;
+      const frame = value.rects['island-wall']; wallDraft.setFrame({size: [frame.w, frame.h], anchor: frame.anchor});
+      apply(state);
+    }).catch(error => {
+      if (!disposed) { root.userData.wallArtError = String(error?.message ?? 'Wall artwork unavailable'); ctx.onArtError?.(error); }
+    }).finally(() => { wallArtLoading = null; });
+    return wallArtLoading;
+  }
+  retryWallArt();
 
   // The nearest pickable thing to a ground point (a tap), or null.
   function pickAt(x, z) {
@@ -493,6 +514,7 @@ export function decorateIsland(place, ctx = {}) {
     },
     get root() { return root; },
     get wallJoins() { return wallConnections.links; },
+    retryWallArt,
     dispose() {
       if (disposed) return; disposed = true; cleanups.splice(0).forEach(stop => stop());
       progress?.dispose(); recoveryIndicators.dispose();
