@@ -113,6 +113,7 @@ export function isSpot(spot) {
 }
 export function isIsland(data) {
   return !!data && isText(data.code) && isCount(data.coins) && isCount(data.waveBest) && isCount(data.flags)
+    && (data.recoveryVersion === undefined || data.recoveryVersion === 0 || data.recoveryVersion === 1)
     && Array.isArray(data.spots) && data.spots.every(isSpot);
 }
 export function isVisit(data) {
