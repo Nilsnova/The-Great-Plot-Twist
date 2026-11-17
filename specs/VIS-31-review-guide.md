@@ -44,3 +44,22 @@ a separate checkout pinned to the compiled-compatible VIS36 helper `ad0894bb`,
 while labeling its failed stage-three journey. No app code or test was changed.
 Actor/effect IDs outside the supplied 164-frame set retain their existing
 renderers. Final acceptance still needs the final helper/runtime hashes.
+
+## Stage-four evidence packaging
+
+Copied the raw report and all twenty original PNGs from the coordinator's passed
+stage-four functional run, without editing or re-encoding. The evidence README
+and hash manifest preserve runtime `414559fb`, source tree `b765286c`, helper `074a4675`
+and identical frontend source/public/backend trees at main-ancestry candidate `59181376`.
+Both viewport camera/paid-selection/Move/ghost/arranged-local-wave observations
+remain intermediate functionality. Breach 152/151 still misses under 150; later
+VIS39/HUD/stage-five, complete-suite, device and human gates stay open. Earlier
+WALL24/VIS33 actual baselines and generated concept references remain distinct.
+Packaging ran only byte/hash/dimension, helper/tree identity and documentation
+checks; it reran no application suite or browser session.
+
+Packaging verification passed 21 exact copied byte/hash records, 20 native PNG
+dimensions, three helper hashes, three application-tree identities and raw-report
+action/wallet/error/count extraction checks. Changed documentation links/anchors:
+79 passed; public branch/head/Draft snapshot rows: 37 matched; whitespace and
+intermediate-scope/three-question checks passed. No app rerun was performed.
