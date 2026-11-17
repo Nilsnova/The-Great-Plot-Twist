@@ -9,7 +9,7 @@ import {isExtraSpot} from './extra-spots.js';
 import {opensText, spotWave, waveOf, isOpen, tierItem, tierWave} from '../campaign/index.js';
 import {BRANCH_BY_ID, SPECS, TOP_TIER, isCapstone, optionLine, optionName, optionsOf, readSpec, readTier, skillPrice} from '../campaign/tech.js';
 import {BOAT, GAME_TEXT as BOAT_TEXT, coinsFor} from '../pirates/boat/rules.js';
-import {ROLES as HOUSE_ROLES, ROLE_IDS, ROLE_LEVEL as HOUSE_ROLE_LEVEL, readRole} from '../campaign/houses.js';
+import {ROLES as HOUSE_ROLES, ROLE_IDS, ROLE_LEVEL as HOUSE_ROLE_LEVEL, readRole, roleLine} from '../campaign/houses.js';
 import {towerTreeModel} from './tree-model.js';
 import {nextWaveNumber} from './preparation-model.js';
 import {buildStructureRecoveryView} from './structure-recovery-model.js';
@@ -111,7 +111,7 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
   // Built: its tower skill (GAME-V3.md §5), then the next level, if any; and a way to tear it down (§4.2).
   if (!point && campaign && BRANCH_BY_ID[shown]) model.skills = skillsOf(shown, spot, campaign, busy, coins, prices, recoveryVersion);
   // GAME-V3.md "Houses": a house keeps its loot and, from level 2, picks a role (free, changeable between waves).
-  if (!point && shown === 'house') model.skills = rolesOf(spot, level, busy);
+  if (!point && shown === 'house') model.skills = rolesOf(spot, level, busy, recoveryVersion);
   if (!point) model.demolish = {label: busy === 'demolish' ? 'Checking…' : 'Tear down', disabled: battle || !!busy,
     reason: battle ? 'You can tear it down between waves.' : ''};
   const recoveryRow = recoveryState?.recoveryVersion === 1
@@ -169,12 +169,12 @@ function skillChoice(kind, id, current, busy, coins, prices, recoveryVersion = 0
 
 // The roles of a built house (GAME-V3.md "Houses"): below level 2 one line says what comes; from level 2 the
 // three roles with one plain line each, the active one marked. In the shape of skillsOf (the same card box).
-function rolesOf(spot, level, busy) {
+function rolesOf(spot, level, busy, recoveryVersion = 0) {
   const current = level >= HOUSE_ROLE_LEVEL ? readRole('house', spot?.spec) : null;
   const title = current ? `Role: ${HOUSE_ROLES[current].name}` : 'House role';
   if (level < HOUSE_ROLE_LEVEL) return {title, line: `Level ${HOUSE_ROLE_LEVEL}: choose ${ROLE_IDS.map(id => HOUSE_ROLES[id].name).join(', ').replace(/, (?=[^,]*$)/, ' or ')}.`, choices: [], current, role: true};
   return {title, line: current ? 'Pick another one for the next wave if you like.' : 'Pick one role for this house. It costs nothing.', current, role: true,
-    choices: ROLE_IDS.map(id => ({id, name: HOUSE_ROLES[id].name, line: HOUSE_ROLES[id].line, active: id === current,
+    choices: ROLE_IDS.map(id => ({id, name: HOUSE_ROLES[id].name, line: roleLine(id, recoveryVersion), active: id === current,
       disabled: id === current || busy === `spec:${id}`, busy: busy === `spec:${id}`}))};
 }
 

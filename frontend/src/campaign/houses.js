@@ -11,6 +11,10 @@ export const ROLES = Object.freeze({
   workshop: Object.freeze({name: 'Workshop', line: 'Walls near it repair and rebuild 30% faster, and a broken one mends by itself.'}),
 });
 export const ROLE_IDS = Object.freeze(Object.keys(ROLES));
+// Recovery v1 gives every nearby supported structure the same between-wave rate bonus.
+export const roleLine = (id, recoveryVersion = 0) => id === 'workshop' && recoveryVersion === 1
+  ? 'Each nearby Workshop within 10 units adds 30% to between-wave recovery, up to 50% total.'
+  : ROLES[id]?.line ?? '';
 // How far each role reaches from its house, in world units: the Barracks' guard, the Tavern's healing, the
 // Workshop's walls. The sim reads these (CONFIG.houses); the card's range ring shows them.
 export const ROLE_RADIUS = Object.freeze({barracks: 8, tavern: 6, workshop: 10});
