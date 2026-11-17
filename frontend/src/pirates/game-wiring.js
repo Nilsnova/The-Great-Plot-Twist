@@ -28,6 +28,7 @@ import {figurePositions, hiddenFigures, matchFigures} from './figures.js';
 import {figurePoses} from './poses.js';
 import {mountDefenseReport} from './defense-report-feature.js';
 import {createRecoveryTransport} from './recovery-transport.js';
+import {createCorePublisher} from './core-display.js';
 
 const ISLAND_PLACE = 'home_islet';
 export const SPOTS_CHANGED = 'island_spots_changed'; // src/island/index.js
@@ -93,6 +94,7 @@ export function wireWaves(ctx) {
   // The game's room state: Start, Pause and who is online, on the island's room (game_hello, game_state).
   const game = island ? createGameRoom({room: islandRoom, emit: ctx.emit ?? (() => {}), later, every, onChange: () => island.refreshLobby?.()}) : null;
   if (game) island.attachGame?.(game);
+  let publishCore = () => {};
   const pirates = mountPirates({...ctx, getDefenses: () => withLevels(island?.defenses() ?? [], defended()), finishWave, api, openRoom, notify,
     getPerimeterWalls: () => {
       if (!island) return false;
@@ -101,7 +103,8 @@ export function wireWaves(ctx) {
       if (layout?.wallRuleVersion === 1 && layout?.wallCapacity === 128) return true;
       return null; // Missing or contradictory owner metadata cannot select a preview geometry.
     },
-    onIslandEvents: events => noteReport(() => defenseReport?.events(events)),
+    getManaging: () => island?.managing === true,
+    onIslandEvents: events => { noteReport(() => defenseReport?.events(events)); noteReport(publishCore); },
     recoveryTransport,
     practiceIdentity: () => ({player: practicePlayer(ctx.getPracticeToken?.()) ?? ctx.practicePlayer ?? null, island: island?.gameCode ?? roomTopic}),
     islandRoom, islandPlace: ISLAND_PLACE,
@@ -120,8 +123,11 @@ export function wireWaves(ctx) {
     // The room-wide Pause between waves: the break stays open and Auto next waits (GAME-V3.md §2).
     holdBreak: game ? () => game.hold() : null, toggleHold: game ? () => game.togglePause() : null});
   island?.setRecoveryCheckpointHandler?.(() => pirates.island.checkpointBeforeRepair());
+  publishCore = createCorePublisher({controller: () => pirates.island, context: () => island?.coreContext,
+    publish: snapshot => island?.setCoreCombatState?.(snapshot)});
   function publishRecoveryState() {
     try { island?.setRecoveryCombatState?.(pirates.island.recoveryCombatState ?? null); } catch { /* The display cache cannot stop the wave. */ }
+    noteReport(publishCore);
   }
 
   function followRoom() {
@@ -251,6 +257,7 @@ export function wireWaves(ctx) {
       for (const cancel of [...timers]) cancel(); timers.clear();
       try { island?.setRecoveryCombatState?.(null); } catch { /* Cleanup is best effort. */ }
       try { island?.setRecoveryCheckpointHandler?.(null); } catch { /* Cleanup is best effort. */ }
+      try { island?.setCoreCombatState?.(null); } catch { /* Cleanup is best effort. */ }
       defenseReport?.dispose(); stopRenderer(); pirates.dispose(); game?.dispose(); island?.attachGame?.(null); islandRoom.close(); realRoom?.close?.(); island?.setBattle(false);
     },
   };

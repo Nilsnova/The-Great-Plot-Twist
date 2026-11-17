@@ -61,6 +61,8 @@ import {createResetSection} from './reset.js';
 import {addSettingsSection} from '../shell/settings-extras.js';
 import {preparationModel} from './preparation-model.js';
 import {isCurrentStructureRecoveryResponse} from './structure-recovery-model.js';
+import {createCoreState} from './core-state.js';
+import {decorateCore} from './core-world.js';
 
 export const ARRIVAL_KEY = 'plot_twist_island_arrival_v1';
 // A build or upgrade went through: {place: 'own' | 'visit' | 'point', spot}. The wave wiring tells the
@@ -94,6 +96,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   defensesV2On = () => false} = {}) {
   let disposed = false, own = null, ownMessage = '', visiting = null, visitCode = readVisit(visitStorage), busySpot = null, cardMessage = '';
   let world = null, cutscene = null, openSpot = null, loadTicket = 0, battle = false;
+  const coreState = createCoreState();
+  let coreWorld = null, coreContextKey = null, coreTravelGeneration = 0;
   let pointBattle = false;
   // GAME-V3.md §4.2, tearing a building down: the wave on screen is over (its break), the spot whose
   // confirmation is open, the server's quote for it, and the tear-down on its way.
@@ -291,16 +295,33 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   // Leaving the island closes its card and ends a visit (the next landing is your own island).
   const stopTravel = on('travel', event => {
     village.leave();
+    coreTravelGeneration++; syncCoreContext();
     ui.close(); flow.reset(); openSpot = null; moving.cancel();
     if (visiting && event.to !== ISLAND_PLACE) endVisit();
   });
 
   function applyWorld() {
+    syncCoreContext();
     world?.apply({spots: target()?.spots ?? [], visitor: !!visiting, battle, unlocks: islandUnlocks(), crew: target()?.crew ?? null, campaign: campaign(),
       arsenal: arsenalOn() === true});
     const replaying = recoveryCombat && flow.current?.wave?.waveId === recoveryCombat.waveId;
     world?.setRecoveryState?.(recoveryState && recoveryPolicyOn() ? {...recoveryState, displayPhase: replaying ? 'combat' : recoveryState.displayPhase} : null);
     pointWorld?.apply({spots: point?.spots ?? [], visitor: false, battle: pointBattle, unlocks: unlocks()});
+  }
+  function syncCoreContext() {
+    const shown = target(), code = shown?.code ?? visitCode ?? null;
+    const epoch = shown?.islandEpoch ?? (recoveryIslandCode === code ? recoveryState?.islandEpoch : null) ?? null;
+    const key = code ? JSON.stringify([code, epoch, wallResetGeneration, coreTravelGeneration]) : null;
+    if (key !== coreContextKey) { coreContextKey = key; coreState.reset(key); coreWorld?.reset(); }
+    return {key, epoch};
+  }
+  function setCoreCombatState(snapshot) {
+    if (disposed) return;
+    const context = syncCoreContext();
+    if (!snapshot) { coreState.reset(context.key); coreWorld?.reset(); return; }
+    if (coreState.accept(snapshot, {waveId: flow.current?.wave?.waveId, contextKey: context.key, epoch: context.epoch})) {
+      coreWorld?.setHealth(coreState.current);
+    }
   }
   function endVisit() { visiting = null; visitCode = null; forgetVisit(visitStorage); ui.visit(null); }
   // The chip of a friend's game: the old "Visiting … · Sail home" only where travel still applies (one
@@ -1273,14 +1294,18 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   return {
     decorate(place, art, cleanups, adapters = {}) {
       world?.dispose();
+      coreWorld?.dispose();
+      const core = decorateCore(place);
       const deco = decorateIsland(place, {art, reducedMotion, quality: () => preferences().quality, canvas: adapters.canvas, camera: adapters.camera,
         isActive: adapters.isActive, onPick: pick, range: houseRange, player: adapters.player, onFar: adapters.onFar,
         placing: () => wallBuilder.active || moving.active, onGround: (x, z) => wallBuilder.active ? wallBuilder.tap(x, z) : moving.tap(x, z),
-        canPickRemote: id => village.active && !!spotById(id)});
-      world = deco; applyWorld();
+        canPickRemote: id => village.active && !!spotById(id),
+        retryAdditionalArt: () => deco.runArtTask('core', () => core.retryArt())});
+      world = deco; coreWorld = core; applyWorld(); core.setHealth(coreState.current);
+      deco.runArtTask('core', () => core.retryArt());
       const original = place.update;
       place.update = (dt, frame) => { original(dt, frame); deco.update(dt, frame?.time ?? 0); };
-      cleanups.push(() => { deco.dispose(); if (world === deco) world = null; place.update = original; });
+      cleanups.push(() => { deco.dispose(); core.dispose(); if (world === deco) world = null; if (coreWorld === core) coreWorld = null; place.update = original; });
     },
     // Pirate Point's shared build spots on lighthouse_isle (factory.js); its bell and lamps stay lane P's.
     decoratePoint(place, adapters = {}) {
@@ -1323,7 +1348,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       return islandRoom(visiting?.code ?? visitCode ?? own?.code ?? '');
     },
     load, loadPoint, playArrival, visit, sailHome, resetIsland, pick, build, upgrade, hire, upgradeCaptain, learnSkill, takeRole, respecCaptain, buyWeapon, equipWeapon, setPresence,
-    setRecoveryCombatState, setRecoveryCheckpointHandler,
+    setRecoveryCombatState, setRecoveryCheckpointHandler, setCoreCombatState,
+    get coreContext() { return syncCoreContext(); },
     // Your captain for the wave (src/pirates/game-wiring.js): level, learnt skills (§14), equipped weapon (§15).
     captainLoadout: () => ({level: own?.captain?.level ?? 1, skills: readSkills([...(own?.skills?.known ?? []), ...(isRole(own?.skills?.role) ? [own.skills.role] : [])]), weapon: arsenal.weapon() ?? readWeapon(own?.weapons?.equipped),
       colour: captainColour()}),
@@ -1414,7 +1440,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       stopRecoveryPoll(); recoveryReadId++;
       stopFinished(); stopStarted(); stopArrived(); stopPoint(); stopInteract(); stopTravel(); stopMenu?.(); stopSettings?.(); stopStartedGame(); stopGame(); clearTimeout(syncSoon);
       boatGame?.dispose(); boatGame = null;
-      flow.dispose(); ui.dispose(); moveBar.dispose(); globalThis.removeEventListener?.('keydown', moveKeys, true); cutscene?.dispose?.(); world?.dispose(); world = null; pointWorld?.dispose(); pointWorld = null;
+      flow.dispose(); ui.dispose(); moveBar.dispose(); globalThis.removeEventListener?.('keydown', moveKeys, true); cutscene?.dispose?.(); world?.dispose(); world = null; coreWorld?.dispose(); coreWorld = null; pointWorld?.dispose(); pointWorld = null;
     },
     spots: SPOTS,
   };
