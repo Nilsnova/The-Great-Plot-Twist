@@ -1,9 +1,11 @@
 // The island's ground in the clean cartoon style, painted at runtime instead of the old 1024 x 768
 // pixel backdrop: a warm sand beach, a soft-edged meadow with a darker rim, sandy paths where the
 // spots and the cabin stand (TOWER-DEFENSE.md §2), flowers and grass strokes. It covers the same
-// 64 x 48 world units as the backdrop, and its alpha is the coast the sea and the walker read.
+// 64 x 48 world units as the backdrop. Alpha is the decorative cliff-base/foam silhouette; walking
+// and placement retain the separate analytic top in surfaces.js (D062).
 import {surfaces} from '../world/places/surfaces.js';
 import {canvas, ellipse, line, stroke} from './paint.js';
+import {cliffProfile, paintCliffFaces, paintGrassRim} from './coast-cliffs.js';
 
 const SIZE = {width: 64, height: 48};
 // Paths of each island (logical x/z, a polyline each) and small clearings [x, z, radius].
@@ -34,11 +36,14 @@ export function paintGround(id, density = 28) {
     p.closePath(); return p;
   };
   const random = seeded(s.seed * 7919 + 17);
+  const rim = cliffProfile(s);
+  paintCliffFaces(c, rim);
   // Wet sand fading into the shallows (translucent, so the sea still reads it as water).
   c.fillStyle = '#e8cf8e70'; c.fill(coast(1.035));
   // The beach: warm sand, darker at the waterline, lighter towards the meadow.
   const beach = coast(1);
   c.fillStyle = '#f2d595'; c.fill(beach);
+  paintGrassRim(c, rim, beach);
   c.save(); c.clip(beach); c.lineWidth = .9; c.strokeStyle = '#ddb877'; c.stroke(beach); c.lineWidth = .3; c.strokeStyle = '#c99f5e'; c.stroke(beach);
   c.fillStyle = '#e2bf7e'; for (let i = 0; i < 260; i++) { const a = random() * Math.PI * 2, k = .86 + random() * .13; c.fill(ellipse(Math.cos(a) * s.rx * k, Math.sin(a) * s.rz * k * .72, .07 + random() * .08, .05)); }
   c.restore();
