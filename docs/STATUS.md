@@ -14,13 +14,7 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
-**17 Nov / Johannes — perimeter defense review candidate:** the [integration preview](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/chore/perimeter-integration-review) collects positioned wall construction, saved 1/128 policy, compatible recovery/combat and village controls. Start with the [implementation and review guide](contribute/PERIMETER-REVIEW.md) and [Wall Gameplay epic #241](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/241), not the older slice checkpoints below. Drafts remain unmerged; `perimeter_walls` defaults off, live migrations/flags/deployment are unchanged by this work. Integrated evidence and independent human acceptance are separate release gates.
-
-**17 Nov / Johannes — WALL-19:** [Draft #275](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/275) implements bounded perimeter-wall database identities and positioned-build/coordinate-release guards. SQL verification awaits the preceding wall-policy migration; scope and limits are in [the spec](../specs/WALL-19-cohort-constraints.md). No live application or merge.
-
-**17 Nov / Johannes — BASE-02 working village camera:** [Draft #270](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/270) adds local Zoom in/out, bounded drag pan and Fit, preserving exploration/battle precedence and returning Move to Fit. Focused camera/gesture tests: 16 passed; actual desktop/phone evidence and coordinated broader verification remain. No merge.
-
-**17 Nov / Johannes — BASE-02 working village camera:** [Draft #270](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/270) adds local Zoom in/out, bounded drag pan and Fit, preserving exploration/battle precedence and returning Move to Fit. Focused camera/gesture/mode tests: 30 passed; actual desktop/phone captures and interactions pass, while coordinated broader verification remains. No merge.
+**17 Nov / Johannes — perimeter defense review candidate:** the [integration preview](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/chore/perimeter-integration-review) collects positioned wall construction, saved 1/128 policy, compatible recovery/combat and village controls. Start with the [implementation and review guide](contribute/PERIMETER-REVIEW.md), [verified evidence](evidence/PERIMETER-VERIFICATION.md), [Draft workboard](contribute/PERIMETER-WORKBOARD.md) and [Wall Gameplay epic #241](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/241), not the older slice checkpoints below. Drafts remain unmerged; `perimeter_walls` defaults off, live migrations/flags/deployment are unchanged by this work. Integrated evidence and independent human acceptance are separate release gates.
 
 **16 Nov / Nils — slots and badges (D060):** branch `feat/slots-and-badges`: the orange 🪓 badges of the battle guide are gone; four extra tower spots (`cannon_8`..`cannon_11`, after waves 10/20/30/40) behind the off-by-default flag `more_tower_spots`. Migration `20261117010000_more_tower_spots.sql` is not applied (paste `docs/handoff/apply-2026-11-17.sql`, then switch the flag on).
 
@@ -275,12 +269,6 @@ Nobody has decided these yet. Until they are decided, the plan in ROADMAP.md sta
 ## Next steps per lane
 
 **Johannes / perimeter defense:** review the [guide](contribute/PERIMETER-REVIEW.md), source contracts and coordinated evidence, rehearse its three explain-back questions, then obtain a different human teammate’s review. Keep the preview/drafts unmerged; migration application, activation and release require separate authorization. The [planning roadmap Draft #239](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/239) remains distinct from completed runtime slices.
-
-**Johannes / WALL-19:** verify [Draft #275](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/275) with the preceding wall-policy migration in the coordinated scratch-SQL lane, then rehearse the spec and obtain independent human review. Do not apply live or merge.
-
-BASE-02 / U follow-up: capture actual working-camera before/after, run coordinated client checks and rehearse the three [explain-back questions](../specs/BASE-02-working-camera.md); future land bounds remain separate.
-
-BASE-02 / U follow-up: review captured working-camera before/after, run coordinated client checks and rehearse the three [explain-back questions](../specs/BASE-02-working-camera.md); future land bounds remain separate.
 
 - **Ianno / #82:** ask for independent human review of [draft PR #86](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/86), including the additive migration and timestamp boundary; migration application remains a separate follow-up.
 **Ianno / shared defense recovery:** decide the captain-skill replacement effects, support range and multiplayer stacking, then review the final plan against current main before authorizing implementation of [#85](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/85). The second-destruction choice is settled: restart the lifecycle.
@@ -637,6 +625,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+**17 Nov / Johannes — integrated perimeter verification:** the [verification record](evidence/PERIMETER-VERIFICATION.md) composes the full backend, private PostgreSQL, client and actual browser evidence; the [workboard](contribute/PERIMETER-WORKBOARD.md) records individual Draft heads and review order. The original checkout is preserved. Actual rendering improves from 375 to 235 calls, still above the unchanged under-150 gate. Drafts remain unmerged; live migrations, production flags and deployment remain unchanged.
 
 **17 Nov / Johannes — perimeter handover:** [Draft #332](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/332), [task #331](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/331), documents current API/policy/epoch, six migration additions and review/evidence boundaries. Documentation only; no live application, activation, deployment or merge.
 
