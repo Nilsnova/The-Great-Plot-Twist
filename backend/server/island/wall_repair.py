@@ -126,6 +126,12 @@ def restore_refusal(refusal: Refusal) -> ApiError:
         return ApiError(409, "intact", "This wall is whole already.")
     if refusal.reason == "wave_running":
         return ApiError(409, "wave_running", "Repair it between waves, or press E at it now.")
+    if refusal.reason == "client_update_required":
+        return ApiError(
+            409,
+            "client_update_required",
+            "Reload to repair a structure on this recovery wave.",
+        )
     if refusal.reason == "not_built":
         return ApiError(409, "not_built", "Build a wall on this spot first.")
     if refusal.reason == "wrong_kind":
