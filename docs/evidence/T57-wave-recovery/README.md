@@ -4,10 +4,10 @@ Reproduce the recorded 18-run matrix with:
 
 ```sh
 cd frontend
-npx vitest run --maxWorkers=1 tests/pirates/recovery-balance-diagnostic.test.js
+WRITE_RECOVERY_DIAGNOSTIC=1 npx vitest run --maxWorkers=1 tests/pirates/recovery-balance-diagnostic.test.js
 ```
 
-The test writes [`report.json`](report.json). It uses fixed seeds for wave 2 / early, wave 15 / mid, and wave 35 / late; each is run with the same level-2 wall, cannon, and workshop layout under a solo crew proxy (`gunner: 0, carpenter: 1`) and co-op crew proxy (`gunner: 1, carpenter: 2`). Weather is fixed at ships 1.0 and fog 0. Tower health, boarder pathing, and tower obstacles are on. Walls begin at 600,000/1,000,000 HP units; cannons begin full.
+With `WRITE_RECOVERY_DIAGNOSTIC=1`, the test writes [`report.json`](report.json). Without it, the normal test still runs all simulations and assertions but does not write evidence files. The test uses fixed seeds for wave 2 / early, wave 15 / mid, and wave 35 / late; each is run with the same level-2 wall, cannon, and workshop layout under a solo crew proxy (`gunner: 0, carpenter: 1`) and co-op crew proxy (`gunner: 1, carpenter: 2`). Weather is fixed at ships 1.0 and fog 0. Tower health, boarder pathing, and tower obstacles are on. Walls begin at 600,000/1,000,000 HP units; cannons begin full.
 
 Each crew/seed pair compares legacy behavior with recovery-v1 and zero journal restores, then recovery-v1 with three accepted `structure_repaired` fixture events at effective ticks 0, 100, and 200. The test checks repeatability, enforces that recovery-v1 structure HP never rises during combat without a journal restore, checks each restore reaches frozen full HP, and caps successful fixtures at three. It records duration, survival, ships sunk, island HP, tick count, and final HP for each structure.
 

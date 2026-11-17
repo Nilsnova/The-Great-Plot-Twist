@@ -129,8 +129,10 @@ it('records a fixed-seed legacy versus recovery-v1 runtime comparison', () => {
       'chargedPrice is fixture-only; no SQL pricing, authorization, or quota integration',
       'does not measure human fun, network races, or combat hit-report trust'],
   }, rows };
-  const outDir = new URL('../../../docs/evidence/T57-wave-recovery/', import.meta.url);
-  mkdirSync(outDir, { recursive: true });
-  writeFileSync(new URL('report.json', outDir), `${JSON.stringify(report, null, 2)}\n`);
+  if (process.env.WRITE_RECOVERY_DIAGNOSTIC === '1') {
+    const outDir = new URL('../../../docs/evidence/T57-wave-recovery/', import.meta.url);
+    mkdirSync(outDir, { recursive: true });
+    writeFileSync(new URL('report.json', outDir), `${JSON.stringify(report, null, 2)}\n`);
+  }
   assert.equal(rows.length, 18);
 });
