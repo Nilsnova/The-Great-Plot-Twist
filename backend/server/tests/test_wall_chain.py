@@ -3,6 +3,7 @@
 import json
 from dataclasses import replace
 from pathlib import Path
+from uuid import UUID
 
 import pytest
 
@@ -30,7 +31,13 @@ def snapshot(stored=None, version=1, capacity=128):
 
 def quote(cells=None, built=None, stored=None, role=None, wave=100, catalogue=CATALOGUE):
     return quote_chain(
-        catalogue, built or {}, snapshot(stored), cells or [tuple(RING[0])], role=role, wave=wave
+        catalogue,
+        built or {},
+        snapshot(stored),
+        cells or [tuple(RING[0])],
+        role=role,
+        wave=wave,
+        island_epoch=UUID(int=105),
     )
 
 
@@ -98,7 +105,13 @@ def test_other_paid_walls_remain_occupied_and_missing_coordinate_fails_closed():
 def test_no_free_grid_right_is_inferred_from_ordinary_layout_version():
     with pytest.raises(ApiError) as error:
         quote_chain(
-            CATALOGUE, {}, snapshot(version=0, capacity=12), [tuple(RING[0])], wave=100, role=None
+            CATALOGUE,
+            {},
+            snapshot(version=0, capacity=12),
+            [tuple(RING[0])],
+            wave=100,
+            role=None,
+            island_epoch=UUID(int=105),
         )
     assert error.value.code == "walls_not_ready"
 
