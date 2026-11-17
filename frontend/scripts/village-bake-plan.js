@@ -1,5 +1,5 @@
 // Build-time inputs only. Generated baked.js is deliberately never discovered as a raw family.
-export const RAW_FAMILIES = Object.freeze(['buildings', 'houses', 'landmarks', 'services', 'nature', 'cannons', 'walls', 'core', 'progress']);
+export const RAW_FAMILIES = Object.freeze(['buildings', 'houses', 'landmarks', 'services', 'nature', 'cannons', 'walls', 'core', 'progress', 'mortars']);
 export const BAKE_DENSITY = 4, GUTTER = 4, MAX_WIDTH = 1024, MAX_HEIGHT = 2048;
 export const PROOF_DENSITIES = Object.freeze([4, 2.5, 2, 1.5]);
 export function validateBakedPng(bytes, sheet) {
@@ -11,6 +11,12 @@ export function rawFamilyNames(value = RAW_FAMILIES) {
   const names = typeof value === 'string' ? value.split(',') : [...value];
   if (!names.length || new Set(names).size !== names.length || names.some(name => !/^[a-z][a-z0-9-]*$/.test(name) || /baked|compiled/.test(name))) throw new Error('Use unique explicit raw family names, never generated output.');
   return names;
+}
+export function appendFamilyNames(previous, names) {
+  const old = rawFamilyNames(previous.families), added = rawFamilyNames(names);
+  if (added.some(name => old.includes(name))) throw new Error('A family is already compiled; use a full rebake to replace it.');
+  if (JSON.stringify(previous.proofDensities) !== JSON.stringify(PROOF_DENSITIES) || previous.errors?.length !== 0 || previous.externalRequests?.length !== 0) throw new Error('Previous proof is incompatible or failed; use a full rebake.');
+  return [...old, ...added];
 }
 export function planFamily(name, frames) {
   rawFamilyNames([name]);

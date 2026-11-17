@@ -1,10 +1,15 @@
 import {expect, it} from 'vitest';
 import {collectRasterFrames} from '../../src/art/village-raster.js';
-import {BAKE_DENSITY, GUTTER, MAX_HEIGHT, MAX_WIDTH, planFamily, pixelDifference, rawFamilyNames, validateBakedPng} from '../../scripts/village-bake-plan.js';
+import {BAKE_DENSITY, GUTTER, MAX_HEIGHT, MAX_WIDTH, planFamily, pixelDifference, rawFamilyNames, validateBakedPng, appendFamilyNames, PROOF_DENSITIES} from '../../scripts/village-bake-plan.js';
 const frame = (width = 96, height = 96) => ({sheet: {file: 'village/source.png', width: 1254, height: 1254}, rect: [0, 0, 1254, 1254], logical: [width, height, 12], sourceFoot: [627, 1124], fitBounds: [627, 1124, 627, 130]});
 it('requires explicit raw names, rejects recursive/unsafe/duplicate inputs, and accepts a future raw core', () => {
   expect(rawFamilyNames('buildings,core')).toEqual(['buildings', 'core']);
   for (const input of [[], ['baked'], ['compiled-core'], ['../core'], ['core', 'core']]) expect(() => rawFamilyNames(input)).toThrow('raw family');
+});
+it('appends only new raw families to compatible successful proof and refuses recursive/replaced/failed inputs', () => {
+  const proof = {families: ['core'], proofDensities: [...PROOF_DENSITIES], errors: [], externalRequests: []};
+  expect(appendFamilyNames(proof, 'mortars')).toEqual(['core', 'mortars']);
+  for (const [previous, added] of [[proof, 'core'], [proof, 'baked'], [{...proof, errors: ['failed']}, 'mortars'], [{...proof, proofDensities: [4]}, 'mortars']]) expect(() => appendFamilyNames(previous, added)).toThrow();
 });
 it('prepares the nine explicit raw families including shared-fit core states before any browser work', async () => {
   const names = rawFamilyNames(); expect(names).toContain('core'); expect(names).toContain('progress');
