@@ -16,3 +16,9 @@ Main intentionally hides every non-current goal (`src/ui/hud.css`, owner change 
 6. Run the unchanged documented demo command with a local screenshot directory, in the coordinator's sole Chromium lane; inspect/report failures before expanding scope.
 
 No forced hidden-goal clicks, DOM hiding, fabricated progress, skipped assertions, timeout increases, runtime changes or new packages. Keep all existing goal/lock/wave/finale assertions; any newly exposed application failure must be reported separately. Existing unrelated duel fixture mechanics are not changed by this scope. No live writes, activation, migration application, deployment or merge. Keep Draft pending evidence, author understanding and independent human review.
+
+## Actual verification
+
+The documented default `npm run test:demo` completed with exit 0 on executed source `37be80880e91562b510d09796d62340c6fc76579`: 34 report checks, errors `[]`, external requests `[]`. [Exact source, command, untouched log/report and current-goal screenshots](../docs/evidence/BASE-51-demo-journey/README.md).
+
+All 34 original standalone assertion-helper calls are preserved verbatim; one current-Wave hint check is added. The unchanged optional performance assertion is outside this default run. An earlier count of 35 check-shaped call sites included the existing Playwright radio `.check(...)` method; it was not a count of standalone assertions. All explicit waits/timeouts remain unchanged. No application change was needed; human review and broader gates remain.
