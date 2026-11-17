@@ -37,6 +37,8 @@ The order of the tasks below follows this table: the walkthrough and the UX carr
 
 ## Task board
 
+**Perimeter defense progress, 17 Nov / Johannes:** bounded implementation drafts are collected in the [review preview](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/chore/perimeter-integration-review); the [implementation/review guide](contribute/PERIMETER-REVIEW.md) maps actual contracts, migrations, evidence and remaining gates to [epic #241](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/241). The broader [visual roadmap Draft #239](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/239) is separate. This records progress, not rollout completion: drafts remain unmerged, new offers default off, and human acceptance/live application/activation remain open.
+
 
 **V3 follow-up T19:** nearby building interactions implemented in [PR #7](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/7), with [visual evidence](evidence/T19/README.md) and Johannes's lane notes in [WALKTHROUGH.md](WALKTHROUGH.md). Human review is pending; the task row is in [OPEN-TODOS.md](OPEN-TODOS.md).
 
