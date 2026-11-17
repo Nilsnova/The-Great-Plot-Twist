@@ -460,13 +460,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     }
     if (!current.recoveryPolling && at - current.recoveryLastPollAt >= RECOVERY_POLL_MS) {
       current.recoveryLastPollAt = at;
-      current.recoveryPolling = true;
-      fetchSealedEvents(current.recoveryReplay, request => recoveryTransport.readEvents({ waveId, ...request }))
-        .catch(() => false).finally(() => {
-          current.recoveryPolling = false;
-          reconcileTerminalRecovery(current);
-          tryRecoveryFinish(current);
-        });
+      void fetchRecoveryFrontier(current);
     }
     if (!current.done && !current.recoveryInvalid) {
       const vector = current.sim.recoveryHealthVector();
@@ -477,10 +471,27 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       }
       if (signature && signature !== current.recoveryHealthPersistedSignature
         && at - current.recoveryHealthChangedAt >= HEALTH_CHECKPOINT_COALESCE_MS
-        && !current.recoveryHealthCheckpointPromise && !current.recoveryPolling) void checkpointBeforeRepair();
+        && !current.recoveryHealthCheckpointPromise) void checkpointBeforeRepair().catch(() => {});
     }
     reconcileTerminalRecovery(current);
     tryRecoveryFinish(current);
+  }
+
+  function fetchRecoveryFrontier(current) {
+    if (current.recoveryPolling) return current.recoveryPollPromise ?? Promise.resolve(false);
+    current.recoveryPolling = true;
+    let polling;
+    polling = Promise.resolve().then(() => fetchSealedEvents(current.recoveryReplay,
+      request => recoveryTransport.readEvents({ waveId: current.info.waveId, ...request })))
+      .catch(() => false).finally(() => {
+        if (current.recoveryPollPromise !== polling) return;
+        current.recoveryPolling = false;
+        current.recoveryPollPromise = null;
+        reconcileTerminalRecovery(current);
+        tryRecoveryFinish(current);
+      });
+    current.recoveryPollPromise = polling;
+    return polling;
   }
 
   function acceptedRecoveryInputs(events, batch, participantToken) {
@@ -522,9 +533,10 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
 
   function checkpointBeforeRepair() {
     const current = wave;
-    if (current?.recoveryHealthCheckpointPromise) return current.recoveryHealthCheckpointPromise;
     if (!current?.recoveryReplay) return Promise.resolve({ ok: false, code: 'recovery_unavailable' });
-    const running = checkpointRecovery(current).finally(() => {
+    const prior = current.recoveryHealthCheckpointPromise;
+    const running = (prior ? prior.then(result => result?.ok ? checkpointRecovery(current) : result)
+      : checkpointRecovery(current)).finally(() => {
       if (current.recoveryHealthCheckpointPromise === running) current.recoveryHealthCheckpointPromise = null;
     });
     current.recoveryHealthCheckpointPromise = running;
@@ -536,8 +548,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       || current.recoveryInvalid) return { ok: false, code: 'recovery_unavailable' };
     if (!await flushRecoveryInputs(current)) return { ok: false, code: 'input_sync_required' };
     let fetched = false;
-    try { fetched = await fetchSealedEvents(current.recoveryReplay,
-      request => recoveryTransport.readEvents({ waveId: current.info.waveId, ...request })); }
+    try { fetched = await fetchRecoveryFrontier(current); }
     catch { fetched = false; }
     if (!fetched || !current.recoveryReplay.complete()) return { ok: false, code: 'health_sync_required' };
     if (!current.done) {
