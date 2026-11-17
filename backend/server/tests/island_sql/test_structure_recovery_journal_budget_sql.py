@@ -192,9 +192,24 @@ def test_bounded_four_actor_journal_budget_and_fixed_head_pages(database):
         "theoretical_volume": {
             "one_command_per_client_per_4hz_for_900s": 4 * 4 * 900,
             "full_32_item_batch_per_client_per_4hz_for_900s": 4 * 4 * 900 * BATCH_SIZE,
+            "one_process_four_players_full_batch_at_8_write_tokens_per_second_for_900s": (
+                4 * (8 * 900 + 12) * BATCH_SIZE
+            ),
             "note": (
-                "The latter assumes client batching at the 4 Hz request rate; neither is a "
-                "server-enforced rate ceiling."
+                "The 4 Hz figures are representative client scenarios. The token-bucket scenario "
+                "is per-player in one process and assumes every write token is an input batch."
+            ),
+        },
+        "http_budgets": {
+            "write_tokens_per_second_per_player_per_process": 8,
+            "write_burst_capacity_per_player_per_process": 12,
+            "write_routes": ["inputs", "health"],
+            "event_read_tokens_per_second_per_player_per_process": 8,
+            "event_read_burst_capacity_per_player_per_process": 8,
+            "sql_diagnostic_bypasses_http_buckets": True,
+            "note": (
+                "Buckets are app-process local, not a durable global or per-wave journal cap; "
+                "additional workers have independent buckets."
             ),
         },
         "retention": {
@@ -215,8 +230,8 @@ def test_bounded_four_actor_journal_budget_and_fixed_head_pages(database):
             ),
             "The 10k bounded workload is a diagnostic sample, not a production-capacity guarantee.",
             (
-                "No server request-rate limiter exists, so the 4 Hz input model is "
-                "representative client behavior rather than a hard upper bound."
+                "Local PostgreSQL RPC measurements bypass the per-process HTTP token buckets; "
+                "they do not measure HTTP throttling or cross-worker aggregate capacity."
             ),
         ],
     }

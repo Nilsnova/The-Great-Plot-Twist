@@ -114,20 +114,27 @@ To explicitly regenerate `journal-budget.json`, run the same command with
 
 **Measured result:** 1 passed. PostgreSQL 16.2 stored 2,840,450 bytes of JSON payload columns and
 4,120,768 bytes of event tuples for this wave. The scratch database reported 4,317,184 bytes for the
-event table and 6,397,952 bytes for the table plus indexes/TOAST. The three named event indexes
-reported 2,048,000 bytes; the fixed head was 10,003. In this run, mean page time was 4.364 ms
-(maximum 7.675 ms); mean batch RPC time was 5.030 ms (p95 6.921 ms). These in-process timings
+event table and 6,529,024 bytes for the table plus indexes/TOAST. The three named event indexes
+reported 2,179,072 bytes; the fixed head was 10,003. In this run, mean page time was 11.169 ms
+(maximum 22.467 ms); mean batch RPC time was 7.460 ms (p95 14.727 ms). These in-process timings
 exclude network latency. Relation and index sizes are global scratch-database allocated bytes, not
 isolated per-wave index attribution. The full measured record is in
 [journal-budget.json](journal-budget.json).
 
-At one command per client for each assumed 4 Hz request over the 900-second maximum wave, the
-representative volume is 14,400 input events. A full 32-command batch at that same request rate
-would be 460,800 events. This is an arithmetic scenario, not a server-enforced bound: the current
-API has no request-rate limiter. The migrations keep the event journal append-only; there is no
-automatic journal cleanup or retention cap. Wave-history growth therefore has no measured
-production budget or retention policy yet. This local diagnostic does not establish production
-capacity, and activation should wait for an explicit operating-budget and retention decision.
+The API has per-player, per-process HTTP token buckets: input and health writes share a refill rate
+of 8 requests/second with a burst capacity of 12; event reads refill at 8 requests/second with a
+burst capacity of 8. The four-client, 4 Hz one-command scenario is 14,400 input events over 900
+seconds; filling each 4 Hz request with the maximum 32 inputs gives 460,800. For comparison, one
+process serving four players at the full 8 write tokens/second, with every write token used for a
+32-input batch for 900 seconds, could admit up to 923,136 input rows including each player's
+12-token initial burst. These are scenarios, not a durable global bound: input and health share the
+write bucket, each application process has its own buckets, and this SQL diagnostic bypasses the
+HTTP buckets entirely. It does not measure HTTP throttling, multiple-worker behavior or production
+capacity.
+
+The migrations keep the event journal append-only; there is no automatic journal cleanup or
+retention cap. Wave-history growth therefore has no durable global per-wave journal cap or retention
+policy yet. Activation should wait for an explicit operating-budget and retention decision.
 
 ## Lifecycle draft probe
 
