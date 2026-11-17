@@ -3,7 +3,7 @@
 // landing mid-wave, co-op builds reaching every defender, and a break that never keeps the input blocked.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createWaveController } from '../../src/pirates/controller.js';
-import { wireWaves } from '../../src/pirates/game-wiring.js';
+import { pointApiFrom, wireWaves } from '../../src/pirates/game-wiring.js';
 import { createWaveFlow } from '../../src/island/wave-flow.js';
 import { WAVE_STARTED } from '../../src/island/wave-hooks.js';
 import { createFakeIslandApi } from '../island/fake.js';
@@ -130,6 +130,19 @@ function wiringHarness({ visiting = null } = {}) {
 }
 
 describe('the island room for every defender', () => {
+  it('keeps Pirate Point waves on protocol 1 when island recovery is enabled', async () => {
+    const startWave = vi.fn(async () => ({ ok: true, data: { waveId: 'point-wave' } }));
+    const joinWave = vi.fn(async () => ({ ok: true, data: { waveId: 'point-wave' } }));
+    const currentWave = vi.fn(async () => ({ ok: true, data: null }));
+    const api = pointApiFrom({ startWave, joinWave, currentWave });
+    await api.startWave({ where: 'pirate_point' });
+    await api.joinWave({ waveId: 'point-wave' });
+    await api.currentWave('pirate_point');
+    expect(startWave).toHaveBeenCalledWith({ where: 'pirate_point', waveProtocol: 1 });
+    expect(joinWave).toHaveBeenCalledWith({ waveId: 'point-wave', waveProtocol: 1 });
+    expect(currentWave).toHaveBeenCalledWith({ where: 'pirate_point', waveProtocol: 1 });
+  });
+
   it('publishes and clears replayed structure health through the island setter', () => {
     const h = wiringHarness(), state = { waveId: 'wave-a', islandEpoch: 'epoch-a', structures: [
       { spot: 'wall_1', instanceId: 'instance-a', hpUnits: 500_000, maxHP: 60, repairSeq: 2 },
