@@ -9,3 +9,9 @@ The current mutation returns old receipts before checking membership or owner/pl
 Evidence uses actual scratch SQL: new boundary IDs quote/refund/retry, old receipt after rebuild, no second refund, ex-member rejection and cross-island/plot UID conflicts. Existing demolition and recovery-mutation tests remain required. Root owns the new `action_uid_conflict` Python error mapping and coordinated SQL lane. No UI screenshots apply to this database slice.
 
 Explain-back: Why are refunds split by payer? Why does a previously valid receipt not authorize a former member? Why does replay leave a replacement building untouched? A different human must review the current draft before release.
+
+## Implemented boundary
+
+The static migration is 288 lines: the current quote and final recovery-aware mutation with bounded identity admission, current permission before cached disclosure, an owner lock on the read-only replay path, and owner/plot intent checks on both replay returns. Fresh mutations keep their original wallet lock order and exact refund/recovery operations. The focused test file is 133 lines, slightly above the approximate combined target because the current two functions form one refund lifecycle boundary.
+
+Ruff check/format, Python test compilation and `git diff --check` pass. Actual PostgreSQL execution remains pending the root-coordinated integrated lane. No runtime pass is inferred from source comparison or test presence.
