@@ -47,8 +47,10 @@ The shader refinement and focused regressions are implemented. From `frontend/`:
 npm test -- --maxWorkers=1 tests/art/coast-water.test.js tests/g20-weather-wiring.test.js tests/weather.test.js
 ```
 
-Actual result: **3 files passed, 71 tests passed in 1.02s**, exit0. This checks
+Final corrected-style result: **3 files passed, 71 tests passed in 867ms**, exit 0. This checks
 distance/orientation, travel/reset/fallback, shared beam/weather/quality state,
-the existing paced/reduced-motion clock and owned-resource disposal. Actual GPU
-compilation, rendered coast/quality/motion checks and combined scene captures are
-still pending; the unit result is not visual acceptance.
+the existing paced/reduced-motion clock and owned-resource disposal.
+[Actual GPU component captures and exact remaining boundaries](../docs/evidence/VIS-23-water/README.md)
+now record successful rendering, coast/motion/resource checks and the rejected
+first material. New presentation-projection and whole-game acceptance remain
+with the coordinator; the component proof is not final reference acceptance.
