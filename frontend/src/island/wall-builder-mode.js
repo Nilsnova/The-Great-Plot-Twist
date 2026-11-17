@@ -11,10 +11,10 @@ function extend(cells, x, z) {
   const axis = Math.abs(target.x - last.x) >= Math.abs(target.z - last.z) ? 'x' : 'z';
   const steps = Math.round((target[axis] - last[axis]) / 2), length = Math.abs(steps);
   if (!length) return {message: 'Tap farther away to add another wall.'};
-  if (cells.length + length > 32) return {message: 'Build up to 32 wall pieces at a time.'};
+  if (cells.length + length > 32) return {message: 'Build up to 32 walls at a time.'};
   const added = Array.from({length}, (_, i) => ({...last, [axis]: last[axis] + Math.sign(steps) * (i + 1) * 2}));
   if (added.some(cell => !onGrid(cell.x) || !onGrid(cell.z))) return {message: 'Pick a square of the build grid.'};
-  if (added.some(cell => cells.some(old => old.x === cell.x && old.z === cell.z))) return {message: 'A drafted wall already stands there.'};
+  if (added.some(cell => cells.some(old => old.x === cell.x && old.z === cell.z))) return {message: 'This draft already has a wall there.'};
   return {cells: [...cells, ...added]};
 }
 export function createWallBuilder({api, context, render = () => {}, preview = () => {}, onIsland = () => {}, makeUid = makeActionUid}) {
@@ -39,14 +39,14 @@ export function createWallBuilder({api, context, render = () => {}, preview = ()
     const key = scopeKey(context()), intent = held.get(key), ticket = ++serial;
     view = {key, scope: {...context()}, cells: intent ? intent.body.placements.map(({x, z}) => ({x, z})) : [],
       quote: intent?.quote ?? null, intent, enabled: !!intent, busy: !!intent?.pending, phase: intent ? 'unknown' : 'enabling',
-      status: intent ? 'Check the previous build before starting another.' : 'Opening wall construction…'};
+      status: intent ? 'Check the previous build before starting another.' : 'Opening wall controls…'};
     show(); if (intent) return true;
     view.busy = true; show(); const answer = await api.enableWalls({code: view.scope.code});
     if (!current(ticket, key)) { refresh(); return false; }
     view.busy = false;
     if (!answer.ok) { view.phase = 'enable_failed'; view.status = answer.message; show(); return false; }
     onIsland(answer.data); view.scope = {...context()}; view.key = scopeKey(view.scope); view.enabled = true;
-    view.phase = 'draft'; view.status = 'Tap to start a wall, then tap to extend or turn.'; show(); return true;
+    view.phase = 'draft'; view.status = 'Tap to start a wall, then tap to add walls or turn.'; show(); return true;
   }
   async function quote() {
     if (!editable() || !view.cells.length) return null;
