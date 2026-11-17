@@ -8,7 +8,8 @@ describe('base overview planning model', () => {
   it('includes offered extra spots exactly once and does not invent empty or unknown buildings', () => {
     const model = upgradeOverviewModel({island: island([
       building('cannon_8', 'mortar', 2), building('wall_2', 'wall'), building('cannon_8', 'mortar', 2),
-      {id: 'house_1', kind: 'house', built: false}, building('invalid', 'unknown'), building('wall_1', 'wall')])});
+      {id: 'house_1', kind: 'house', built: false}, {id: 'not-built', kind: 'wall', built: 'yes'},
+      building('invalid', 'unknown'), building('wall_1', 'wall')])});
     expect(model.rows.map(row => row.id)).toEqual(['cannon_8', 'wall_1', 'wall_2']);
     expect(model.lead).toBe('3 built buildings · 🪙 500');
     expect(overviewRows(model, 'wall').map(row => row.id)).toEqual(['wall_1', 'wall_2']);

@@ -8,7 +8,7 @@ export function upgradeOverviewModel({island = null, battle = false, message = '
   const coins = Number.isSafeInteger(island?.coins) ? island.coins : null;
   const seen = new Set(), rows = [], campaign = campaignOf(island);
   for (const spot of island?.spots ?? []) {
-    if (!spot?.built || typeof spot.id !== 'string' || seen.has(spot.id) || !BUILDINGS[spot.kind]) continue;
+    if (spot?.built !== true || typeof spot.id !== 'string' || seen.has(spot.id) || !BUILDINGS[spot.kind]) continue;
     seen.add(spot.id);
     const card = buildCardModel({spotId: spot.id, kind: spot.kind, spot, coins,
       unlocks: readUnlocks(island), prices: island.prices, campaign, battle});
