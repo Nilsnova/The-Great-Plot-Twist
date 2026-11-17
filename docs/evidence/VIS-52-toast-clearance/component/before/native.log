@@ -1,0 +1,69 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run --maxWorkers=1 tests/ui/toast-clearance.test.js --reporter=verbose
+
+
+ RUN  v5.1.0 /workspace/reference-village-work/toast-before-52/frontend
+
+ × tests/ui/toast-clearance.test.js > keeps the real two-row purse Goals and island toast clear at the failing and review sizes 3914ms
+   → expected -11.296875 to be greater than or equal to 9.5
+ × tests/ui/toast-clearance.test.js > follows a wrapped Goal hint and folding without a window resize or hidden Goal substitution 1442ms
+   → expected -126.453125 to be greater than or equal to 9.5
+ × tests/ui/toast-clearance.test.js > reserves visibility-hidden geometry, resets removed Goals, and ignores a queued disposed observer 1411ms
+   → expected -11.296875 to be greater than or equal to 9.5
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/ui/toast-clearance.test.js > keeps the real two-row purse Goals and island toast clear at the failing and review sizes
+AssertionError: expected -11.296875 to be greater than or equal to 9.5
+ ❯ tests/ui/toast-clearance.test.js:53:67
+     51|     for (const {width, height, value} of results) {
+     52|       expect(value.inside, `${width}×${height}`).toBe(true); expect(va…
+     53|       if (width <= 900) expect(value.toastTop - value.goalBottom).toBe…
+       |                                                                   ^
+     54|       else expect(value.toastTop).toBe(16); // The wide-screen middle …
+     55|     }
+ ❯ evaluate tests/g20-browser.js:44:24
+ ❯ tests/ui/toast-clearance.test.js:41:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/ui/toast-clearance.test.js > follows a wrapped Goal hint and folding without a window resize or hidden Goal substitution
+AssertionError: expected -126.453125 to be greater than or equal to 9.5
+ ❯ tests/ui/toast-clearance.test.js:70:45
+     68|     const hint = await geometry(page);
+     69|     expect(hint.goalBottom).toBeGreaterThan(wrapped.goalBottom);
+     70|     expect(hint.toastTop - hint.goalBottom).toBeGreaterThanOrEqual(9.5…
+       |                                             ^
+     71|     await page.locator('.quest-fold').click();
+     72|     const folded = await geometry(page);
+ ❯ evaluate tests/g20-browser.js:44:24
+ ❯ tests/ui/toast-clearance.test.js:61:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  tests/ui/toast-clearance.test.js > reserves visibility-hidden geometry, resets removed Goals, and ignores a queued disposed observer
+AssertionError: expected -11.296875 to be greater than or equal to 9.5
+ ❯ tests/ui/toast-clearance.test.js:92:53
+     90|     const restored = await geometry(page);
+     91|     expect(restored.goalBottom).toBe(before.goalBottom);
+     92|     expect(restored.toastTop - restored.goalBottom).toBeGreaterThanOrE…
+       |                                                     ^
+     93|     for (const mode of ['managing', 'bare']) {
+     94|       await page.evaluate(mode => mode === 'managing' ? window.clearan…
+ ❯ evaluate tests/g20-browser.js:44:24
+ ❯ tests/ui/toast-clearance.test.js:81:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed (3)
+   Start at  22:45:29
+   Duration  9.00s (tests 87%, import 9%, transform 3%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice
