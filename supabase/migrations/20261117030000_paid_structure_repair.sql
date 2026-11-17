@@ -43,6 +43,7 @@ declare
   v_building public.islet_buildings;
   v_health public.island_structure_health;
   v_wave public.recovery_wave_states;
+  v_snapshot_structure jsonb;
   v_receipt public.structure_repair_receipts;
   v_price integer;
   v_ordinal smallint;
@@ -51,6 +52,8 @@ declare
   v_effective_tick integer;
   v_participant_token uuid;
   v_repair_seq bigint;
+  v_event_max_hp numeric;
+  v_target_hp integer;
   v_balance bigint;
   v_event jsonb;
   v_receipt_json jsonb;
@@ -221,8 +224,42 @@ begin
   if v_price <> p_quoted_price then
     return jsonb_build_object('status', 'refused', 'reason', 'stale_recovery_quote', 'price', v_price);
   end if;
-  if v_health.hp_units = 1000000 then
+  -- During a reservation, accepted checkpoints and subsequent paid events are
+  -- authoritative. The health row can still contain its bell-time or last-paid
+  -- value until canonical closure; consulting it would reject newly damaged
+  -- targets or charge a target the shared journal has already restored.
+  v_target_hp := v_health.hp_units;
+  if v_current_window = 'reserved_wave' then
+    v_target_hp := coalesce(
+      (public.structure_recovery_wave_hp(v_current_wave) ->> p_instance_id::text)::integer,
+      v_target_hp
+    );
+  end if;
+  if v_target_hp = 1000000 then
     return jsonb_build_object('status', 'refused', 'reason', 'intact');
+  end if;
+
+  if v_current_window = 'reserved_wave' then
+    if jsonb_typeof(v_wave.initial_snapshot -> 'structures') is distinct from 'array' then
+      return jsonb_build_object('status', 'refused', 'reason', 'recovery_unavailable');
+    end if;
+    select item.value into v_snapshot_structure
+      from jsonb_array_elements(v_wave.initial_snapshot -> 'structures') as item(value)
+     where item.value ->> 'instanceId' = p_instance_id::text
+       and item.value ->> 'spot' = p_spot
+       and item.value ->> 'kind' = v_building.building_type
+       and item.value ->> 'level' = v_building.level::text
+     limit 1;
+    if not found then
+      return jsonb_build_object('status', 'refused', 'reason', 'stale_recovery_quote');
+    end if;
+    if jsonb_typeof(v_snapshot_structure -> 'maxHP') is distinct from 'number' then
+      return jsonb_build_object('status', 'refused', 'reason', 'recovery_unavailable');
+    end if;
+    v_event_max_hp := (v_snapshot_structure ->> 'maxHP')::numeric;
+    if v_event_max_hp not between 0.01 and 9999999999.99 then
+      return jsonb_build_object('status', 'refused', 'reason', 'recovery_unavailable');
+    end if;
   end if;
 
   -- Exactly three successful repairs share the reserved wave across all players
@@ -275,7 +312,7 @@ begin
         'spot', p_spot,
         'instanceId', p_instance_id,
         'hpUnits', 1000000,
-        'maxHP', v_health.max_hp,
+        'maxHP', v_event_max_hp,
         'repairSeq', v_repair_seq,
         'chargedPrice', v_price
       )
