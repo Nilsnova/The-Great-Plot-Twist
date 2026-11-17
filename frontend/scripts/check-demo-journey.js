@@ -69,6 +69,7 @@ try{
   const waveGoal=page.locator('.quest-item[data-quest=wave][data-current=true]');
   await waveGoal.click();
   check((await page.locator('.quest-hint').textContent()).includes('Walk up to another captain'),'The actual current Wave goal opens its hint');
+  await shot('03b-current-wave-hint');
   await waveGoal.click();
   await teleport(6.2,15.3);await page.locator('.demo-prompt button').waitFor();await shot('04-lock-prompt');
   await page.keyboard.press('KeyE');await page.locator('.lock-modal[open] .lock-choice').first().waitFor();
@@ -133,6 +134,7 @@ try{
   await page.locator('.quest-strip').waitFor();await unfoldGoals();
   await page.locator('.quest-item[data-quest=lamp][data-current=true]').click();
   check((await page.locator('.quest-hint').textContent()).includes('lamps by the lighthouse'),'Tapping a goal shows its one-line hint');
+  await shot('28b-current-lamp-hint');
   await page.locator('.quest-item[data-quest=lamp][data-current=true]').click();
   await teleport(-5,16.9);await page.locator('.lamp-hold').waitFor();await shot('24-lamp-prompt');
   await page.keyboard.down('KeyE');await page.waitForTimeout(2300);await page.keyboard.up('KeyE');
