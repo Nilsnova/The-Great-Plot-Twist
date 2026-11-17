@@ -640,6 +640,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 
 **17 Nov / Johannes — BASE-02 working village camera:** [Draft #270](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/270) adds local Zoom in/out, bounded drag pan and Fit, preserving exploration/battle precedence and returning Move to Fit. Focused camera/gesture/mode tests: 30 passed; actual desktop/phone captures and interactions pass, while coordinated broader verification remains. No merge.
 
+- **Nicolas / 2026-11-17 / hold Tab for the whole island.** In the game view, holding Tab eases the camera out to the whole home island (the existing village fit view), also during a wave; letting go eases back to the captain. Tab keeps its normal job on buttons and inside cards, and Shift+Tab still leaves the game view. Hint added to the How to play controls page, Settings, the canvas label and HOW-TO-PLAY. Test: `frontend/tests/player/tab-overview.test.js`; evidence `docs/evidence/tab-overview/`. No phone or gamepad version yet.
+
 - **Nicolas / 2026-11-16 / small demo polish (playtest finds).** Signed out, the HUD no longer shows an endless "🪙 …" (the chip waits for coins) and Settings/Account say only "Signed out" instead of "Signed out, Captain pending"; the title lighthouse windows are square with a cross bar, so they no longer read as "0 0". Test: `frontend/tests/signed-out-polish.test.js`; evidence `docs/evidence/demo-polish/`. Not checked on a real phone.
 
 - **Ianno / 2026-11-16 / task-board reconciliation.** Updated this task branch with main `937b1b56`, whose two new commits affect only OPEN-TODOS: presenter rehearsal and the owner’s claimed T50–T53 tasks. Application source and prior verification are unchanged. Every existing committed log entry remains.
