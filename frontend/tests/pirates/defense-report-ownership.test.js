@@ -15,6 +15,15 @@ const inputOwners = page => page.evaluate(() => {
     captainDown: !!g.waves.island.captainDown, dialogs: document.querySelectorAll('dialog[open]').length, quality: g.settings.quality};
 });
 
+async function activate(button) {
+  // Use the real keyboard route for this keyboard/gamepad ownership test.
+  await button.waitFor({state: 'visible'});
+  await expect.poll(() => button.isEnabled()).toBe(true);
+  await button.focus();
+  expect(await button.evaluate(element => document.activeElement === element)).toBe(true);
+  await button.press('Enter');
+}
+
 async function settleUnlocks(page) {
   // Consume the real campaign change before testing calm: an empty old queue is not readiness.
   await page.evaluate(() => window.__island.tutorials.update(0));
@@ -36,9 +45,9 @@ it('the actual game blocks keyboard and gamepad movement while the report owns i
       Object.defineProperty(navigator, 'getGamepads', {value: () => [window.reportPad]});
     }, CARDS.filter(card => card.wave <= 30).map(card => card.id));
     await page.goto(`${base}/?islands=fake&fakeplayer=coc39-input`);
-    await page.locator('#play').click();
-    await page.locator('.games-card[open]').getByRole('button', {name: 'Create a game', exact: true}).click();
-    await page.locator('.island-card-lobby[open]').getByRole('button', {name: 'Start', exact: true}).click();
+    await activate(page.locator('#play'));
+    await activate(page.locator('.games-card[open]').getByRole('button', {name: 'Create a game', exact: true}));
+    await activate(page.locator('.island-card-lobby[open]').getByRole('button', {name: 'Start', exact: true}));
     await page.waitForFunction(() => window.__island?.waves && !document.querySelector('dialog[open]'));
     await page.addScriptTag({type: 'module', content: 'window.g20Import = path => import(path);'});
     await page.waitForFunction(() => !!window.g20Import);
@@ -75,7 +84,7 @@ it('the actual game blocks keyboard and gamepad movement while the report owns i
     const before = await position();
     await page.evaluate(() => { window.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyA'})); window.reportPad.axes[0] = -1; });
     await frames(); expect(await position()).toEqual(before);
-    await page.getByRole('button', {name: 'Close dialog', exact: true}).click();
+    await activate(page.getByRole('button', {name: 'Close dialog', exact: true}));
     expect(await page.evaluate(() => window.__island.waves.reportActive)).toBe(false);
     expect(await inputOwners(page)).toEqual(clearOwners);
     await frames(); expect((await position()).x).toBeLessThan(before.x - .01);
