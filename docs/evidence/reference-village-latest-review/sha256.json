@@ -270,8 +270,8 @@
     },
     {
       "file": "verify-comparison.mjs",
-      "bytes": 11829,
-      "sha256": "1c1f813b391114861b495503dd7b507f6886a199926c79eafd2e747a648ca0fc",
+      "bytes": 12036,
+      "sha256": "dbdb2dc8e443d4414f206a31575344b1020a4586a1f10130d4d8f1df4ef3b789",
       "original": "verify-comparison.mjs"
     }
   ],
@@ -428,8 +428,8 @@
   },
   "reviewReadme": {
     "file": "README.md",
-    "bytes": 9176,
-    "sha256": "d4cf9281dfd5c36ec7ba3066d8969555526d4b825cdc3b554dbd958b5a859581"
+    "bytes": 9896,
+    "sha256": "79fceeeb716e05c53c820b7f9a64ef8b6446355d3233f6aa708be1ad2eba10b9"
   },
   "focusedReportInputBeforeLatest": {
     "source": "5e3dd6ccb3597617e67a8b720525d3add78c3704",
@@ -460,5 +460,12 @@
     "sha256": "aea30d81394b0cde849d77f98e756cfa109aa14a59ff539b3d08c55fb3a10d59",
     "rows": 49,
     "allDraft": true
+  },
+  "checkerPortability": {
+    "defaultFrontendPackage": "../../../frontend/package.json relative to the checker file",
+    "defaultHtml": "comparison.html beside the checker",
+    "defaultOutput": "captures/review-document relative to the command working directory",
+    "optionalPackageOverride": "REVIEW_FRONTEND_PACKAGE",
+    "requires": "existing locked frontend playwright-core and installed Chromium"
   }
 }

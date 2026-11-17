@@ -7,10 +7,13 @@ import {createServer} from 'node:http';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 
-const require = createRequire('/workspace/reference-village-work/final-preview/frontend/package.json');
+const checkoutPackage = fileURLToPath(new URL('../../../frontend/package.json', import.meta.url));
+const frontendPackage = process.env.REVIEW_FRONTEND_PACKAGE
+  ? path.resolve(process.env.REVIEW_FRONTEND_PACKAGE) : checkoutPackage;
+const require = createRequire(frontendPackage);
 const {chromium} = require('playwright-core');
-const source = path.resolve(process.argv[2] ?? '/workspace/reference-village-work/visual-handover/docs/evidence/reference-village-latest-review/comparison.html');
-const out = path.resolve(process.argv[3] ?? '/workspace/reference-village-work/comparison-browser-checks');
+const source = path.resolve(process.argv[2] ?? fileURLToPath(new URL('comparison.html', import.meta.url)));
+const out = path.resolve(process.argv[3] ?? 'captures/review-document');
 await mkdir(out, {recursive: true});
 const bytes = await readFile(source);
 const checkerPath = fileURLToPath(import.meta.url);
@@ -18,6 +21,7 @@ const checkerBytes = await readFile(checkerPath);
 const report = {started: new Date().toISOString(), source, bytes: bytes.length,
   sha256: createHash('sha256').update(bytes).digest('hex'), validationVersion: 'latest-review-v2',
   checkerSource: checkerPath, checkerSha256: createHash('sha256').update(checkerBytes).digest('hex'),
+  frontendPackage, dependencyResolution: process.env.REVIEW_FRONTEND_PACKAGE ? 'explicit-package' : 'checkout-relative',
   expectedImages: 12, expectedTabCounts: [2, 3, 3], status: 'running', viewports: []};
 const save = () => writeFile(path.join(out, 'report.json'), JSON.stringify(report, null, 2) + '\n');
 await save();

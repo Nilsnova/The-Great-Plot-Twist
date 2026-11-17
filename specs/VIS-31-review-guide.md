@@ -204,3 +204,25 @@ embedded original hashes, eight tab/panel pairs, the four application-tree
 identities, checker/inline JavaScript syntax and the 49-row public Draft snapshot.
 The exact HTML hash is recorded before the pending native document check. Source
 branches that advanced beyond the frozen composition are labeled explicitly.
+
+## Portable document-checker correction
+
+Removed coordinator-specific workspace paths from the latest packaged checker.
+Its installed frontend dependency path is resolved relative to the checker in
+the repository, the default HTML is its sibling and output defaults to
+captures/review-document in the command working directory. An explicit
+REVIEW_FRONTEND_PACKAGE override supports an extracted checker with an existing
+locked frontend installation. The README distinguishes the standalone static
+HTML from the dependency-requiring checker; no package is installed.
+
+All twelve-image, exact 2/3/3-tab, native-dimension, focus/visibility/order,
+overflow, origin and cleanup assertions are unchanged. The generator and
+manifest carry the portable defaults and updated checker hash. Native version
+two remains unrun pending the coordinator's Chrome lease; packaging did not
+edit the frozen application checkout.
+
+Static portability checks resolved the actual checkout's frontend package and
+existing locked Playwright, the sibling HTML and an independently relocated
+checkout URL correctly. Syntax checks and an independent source review passed;
+the packaged checker matches its template exactly. No browser was launched and
+all native assertions are retained.
