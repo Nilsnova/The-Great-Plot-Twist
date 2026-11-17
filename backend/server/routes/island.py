@@ -299,6 +299,8 @@ class LayoutOut(BaseModel):
     version: int
     grid: float
     movable: bool
+    wallRuleVersion: int = 0
+    wallCapacity: int = 12
 
 
 class CrewOut(BaseModel):
@@ -622,7 +624,13 @@ def spots_out(spots: tuple[SpotView, ...]) -> list[SpotOut]:
 
 
 def layout_out(info: LayoutInfo) -> LayoutOut:
-    return LayoutOut(version=info.version, grid=info.grid, movable=info.movable)
+    return LayoutOut(
+        version=info.version,
+        grid=info.grid,
+        movable=info.movable,
+        wallRuleVersion=info.wall_rule_version,
+        wallCapacity=info.wall_capacity,
+    )
 
 
 def tier_out(tier: ResearchTier | None) -> TierOut:

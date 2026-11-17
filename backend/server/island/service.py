@@ -33,7 +33,7 @@ How a paid action is made, in one place:
 Used by: routes/island.py, waves.py, pirate_point.py and app.py (which keeps the catalogue).
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Annotated
 
 from fastapi import Depends, Request
@@ -47,11 +47,16 @@ from server.island.captain_recovery_policy import (
     STRUCTURE_RECOVERY_VERSION,
     is_retired_recovery_skill,
 )
-from server.island.catalogue import IslandCatalogue
+from server.island.catalogue import IslandCatalogue, with_wall_capacity
 from server.island.codes import read_code, shown
 from server.island.layout import LayoutInfo, Position
 from server.island.rules import Built, ResearchTier, SpotView
 from server.island.store import Demolished, Island, Paid, Progress, Refusal
+from server.island.wall_cohort import (
+    LEGACY_WALL_CAPACITY,
+    PERIMETER_WALL_CAPACITY,
+    is_inventory_wall_id,
+)
 from server.supabase_admin import AlreadyApplied, InsufficientFunds, SupabaseAdmin, SupabaseRejected
 from server.wallet import validate_transaction
 
@@ -205,7 +210,7 @@ def view_of(
     progress: Progress,
     personal: Progress | None = None,
     research: dict[str, ResearchTier] | tuple[str, ...] = (),
-    stored: dict[str, Position] | None = None,
+    stored: dict[str, Position] | layout_store.LayoutSnapshot | None = None,
     recovery_version: int = LEGACY_RECOVERY_VERSION,
 ) -> IslandView:
     """The island of `progress` (its spots, best and next wave, campaign) with the personal part
@@ -213,14 +218,14 @@ def view_of(
     visitor after a co-op build or upgrade on a friend's island. `stored`: the island's moved
     spots (layout_store.read_layout); None shows the fixed spots and no moving."""
     mine = progress if personal is None else personal
-    grid = layout.island_layout(catalogue.more_tower_spots)
+    spots, layout_info = placed_view(catalogue, built, stored, mine.role)
     return IslandView(
         code=shown(island.code),
         coins=coins,
         wave_best=progress.wave_best,
         flags=island.flags,
         next_wave=rules.next_wave(catalogue, progress.wave_best, progress.next_wave),
-        spots=layout.place_spots(grid, rules.plan_spots(catalogue, built, role=mine.role), stored),
+        spots=spots,
         crew=mine.crew,
         captain_level=mine.captain_level,
         captain_next_price=rules.captain_next_price(catalogue, mine.captain_level),
@@ -228,9 +233,51 @@ def view_of(
         skills=skills_of(catalogue, mine),
         weapons=weapons_of(catalogue, mine),
         campaign=campaign_of(catalogue, progress.wave_best, research, progress.wreck_paid),
-        layout=layout.info_of(grid, stored),
+        layout=layout_info,
         recovery_version=recovery_version,
     )
+
+
+def placed_view(
+    catalogue: IslandCatalogue,
+    built: dict[str, Built],
+    stored: dict[str, Position] | layout_store.LayoutSnapshot | None,
+    role: str | None = None,
+) -> tuple[tuple[SpotView, ...], LayoutInfo]:
+    """Show the owner's paid pieces; additional empty inventory has no spatial view."""
+    snapshot = stored if isinstance(stored, layout_store.LayoutSnapshot) else None
+    version, capacity = (
+        (snapshot.rule_version, snapshot.capacity) if snapshot else (0, LEGACY_WALL_CAPACITY)
+    )
+    positions = layout_store.positions_from(snapshot.rows) if snapshot else stored
+    if snapshot and version == 0 and not catalogue.placement:
+        positions = None  # Preserve the old flag-off presentation only for legacy policy.
+    for spot_id, item in built.items():
+        if is_inventory_wall_id(spot_id) and (
+            capacity != PERIMETER_WALL_CAPACITY
+            or item.kind != "wall"
+            or positions is None
+            or spot_id not in positions
+        ):
+            raise SupabaseRejected("A built wall has no supported saved position.")
+    owned = with_wall_capacity(catalogue, capacity)
+    planned = rules.plan_spots(owned, built, role=role)
+    visible = tuple(spot for spot in planned if spot.built or not is_inventory_wall_id(spot.id))
+    grid = layout.island_layout(catalogue.more_tower_spots)
+    policy = {"wall_rule_version": version, "wall_capacity": capacity}
+    spots = layout.place_spots(grid, visible, positions, **policy)
+    info = layout.info_of(grid, positions, **policy)
+    return spots, replace(info, movable=False) if snapshot and not catalogue.placement else info
+
+
+async def catalogue_for_owner(
+    admin: SupabaseAdmin, catalogue: IslandCatalogue, owner: str, spot_id: str
+) -> IslandCatalogue:
+    """Existing single-piece actions recognize additional IDs only for an admitted owner."""
+    if is_inventory_wall_id(spot_id):
+        snapshot = await layout_store.read_snapshot(admin, owner)
+        return with_wall_capacity(catalogue, snapshot.capacity)
+    return catalogue
 
 
 def skills_of(catalogue: IslandCatalogue, progress: Progress) -> SkillsView:
@@ -257,12 +304,10 @@ def weapons_of(catalogue: IslandCatalogue, progress: Progress) -> WeaponsView:
 
 async def read_stored(
     admin: SupabaseAdmin, catalogue: IslandCatalogue, owner: str
-) -> dict[str, Position] | None:
-    """The island's moved spots (T36), or None (the fixed spots, no moving) while the flag
-    "placement" is off: then the layout table is never asked."""
-    if not catalogue.placement:
-        return None
-    return await layout_store.read_layout(admin, owner)
+) -> layout_store.LayoutSnapshot:
+    """Read policy even with offers/placement paused; never hide an owned paid cohort."""
+    del catalogue
+    return await layout_store.read_snapshot(admin, owner)
 
 
 async def look(admin: SupabaseAdmin, catalogue: IslandCatalogue, player_id: str) -> IslandView:
@@ -407,6 +452,8 @@ async def build(
     """
     ref = f"{REF_PREFIX}{action_uid}"
     island, payer = await target_island(admin, catalogue, player_id, code)
+    if is_inventory_wall_id(spot_id):
+        raise ApiError(409, "position_required", "Choose a position when building this wall.")
     if payer is not None:
         return await build_with_friend(admin, catalogue, island, payer, spot_id, kind, action_uid)
     if await islet_store.build_exists(admin, player_id, ref):
@@ -447,6 +494,8 @@ async def build_with_friend(
 ) -> IslandView:
     """The co-op build on a friend's island through island_build(). Same refusals; the friend's
     island's best won wave decides what is open there (GAME-V3 section 4)."""
+    if is_inventory_wall_id(spot_id):
+        raise ApiError(409, "position_required", "Choose a position when building this wall.")
     if not await store.ledger_has(admin, payer, "building_purchase", REF_PREFIX + action_uid):
         built = await store.read_built_spots(admin, island.owner)
         progress = await store.read_progress(admin, island.owner)
@@ -483,6 +532,7 @@ async def upgrade(
     409 needs_repair. A repeated actionUid charges nothing."""
     ref = f"{UPGRADE_PREFIX}{action_uid}"
     island, payer = await target_island(admin, catalogue, player_id, code, permissions.UPGRADE)
+    catalogue = await catalogue_for_owner(admin, catalogue, island.owner, spot_id)
     if not await store.ledger_has(admin, player_id, "building_purchase", ref):
         built = await store.read_built_spots(admin, island.owner)
         progress = await store.read_progress(admin, island.owner)
@@ -822,6 +872,7 @@ async def specialise(
     paid pick without an actionUid: a tab from before the prices). A repeated actionUid charges
     nothing."""
     island, payer = await target_island(admin, catalogue, player_id, code, permissions.TOWER_SKILL)
+    catalogue = await catalogue_for_owner(admin, catalogue, island.owner, spot_id)
     built = await store.read_built_spots(admin, island.owner)
     done = await store.read_research(admin, island.owner)
     spot, branch = rules.check_specialise(catalogue, spot_id, spec, built, done)
@@ -1014,6 +1065,10 @@ def demolish_refusal(refusal: Refusal) -> ApiError:
         return ApiError(409, "wave_running", "A wave is under way. Tear it down between waves.")
     if reason == "busy":
         return ApiError(409, "busy", "Somebody changed this building just now. Try again.")
+    if reason == "action_uid_conflict":
+        return ApiError(
+            409, "action_uid_conflict", "That action was already used. Refresh and try again."
+        )
     return SupabaseRejected()
 
 
@@ -1048,8 +1103,9 @@ async def demolish_quote(
     """What tearing down the building on `spot_id` would give back, per payer, worked out by the
     database (island_demolish_quote): for the confirmation card. Changes nothing. 409 protected,
     404 no_such_spot, 404 no_such_island, 403 not_member, 409 not_built, 409 wave_running."""
-    spot = rules.check_demolish(catalogue, spot_id)
     island, _payer = await target_island(admin, catalogue, player_id, code, permissions.DEMOLISH)
+    catalogue = await catalogue_for_owner(admin, catalogue, island.owner, spot_id)
+    spot = rules.check_demolish(catalogue, spot_id)
     arguments = {
         "p_player_id": player_id,
         "p_island_owner": island.owner,
@@ -1076,8 +1132,9 @@ async def demolish(
     again and its tower skill is gone. A repeated actionUid pays nothing and answers the same
     refunds. 409 protected, 404 no_such_spot, 404 no_such_island, 403 not_member, 409 not_built,
     409 wave_running, 409 busy."""
-    spot = rules.check_demolish(catalogue, spot_id)
     island, payer = await target_island(admin, catalogue, player_id, code, permissions.DEMOLISH)
+    catalogue = await catalogue_for_owner(admin, catalogue, island.owner, spot_id)
+    spot = rules.check_demolish(catalogue, spot_id)
     arguments = {
         "p_player_id": player_id,
         "p_island_owner": island.owner,
@@ -1122,8 +1179,7 @@ async def visit(
     owner_name = await store.read_display_name(admin, island.owner)
     built = await store.read_built_spots(admin, island.owner)
     stored = await read_stored(admin, catalogue, island.owner)
-    grid = layout.island_layout(catalogue.more_tower_spots)
-    spots = layout.place_spots(grid, rules.plan_spots(catalogue, built), stored)
+    spots, layout_info = placed_view(catalogue, built, stored)
     progress = await store.read_progress(admin, island.owner)
     research = await store.read_research(admin, island.owner)
     campaign = campaign_of(catalogue, progress.wave_best, research, progress.wreck_paid)
@@ -1134,7 +1190,7 @@ async def visit(
         spots,
         progress.crew,
         campaign,
-        layout.info_of(grid, stored),
+        layout_info,
     )
 
 

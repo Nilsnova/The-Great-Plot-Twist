@@ -264,6 +264,9 @@ class FakeIslandDatabase:
         # T36: the island_layout rows of every island ({"plot", "x_half", "z_half"}), one list;
         # layout_missing pretends the migration is not applied (the database answers 404).
         self.layout_rows: list[dict] = []
+        self.layout_rows_by_owner: dict[str, list[dict]] = {}
+        self.wall_policies: dict[str, dict] = {}
+        self.wall_policy_read_reply: dict | httpx.Response | None = None
         self.layout_missing = False
         self.move_replies: list[dict] = []
         self.requests: list[httpx.Request] = []
@@ -307,6 +310,8 @@ class FakeIslandDatabase:
             "GET /island_research": lambda _: httpx.Response(200, json=self.research),
             "GET /island_layout": self.read_layout,
             "POST /rpc/island_move": self.move,
+            "POST /rpc/island_wall_layout_read": self.read_wall_layout,
+            "POST /rpc/island_wall_move": self.wall_move,
             "POST /rpc/island_specialise": lambda _: self.answer(
                 self.paid_replies.get("island_specialise", SPECIALISED)
             ),
@@ -484,9 +489,36 @@ class FakeIslandDatabase:
             return httpx.Response(200, json=self.move_replies.pop(0))
         body = json.loads(request.content)
         row = {"plot": body["p_plot"], "x_half": body["p_x_half"], "z_half": body["p_z_half"]}
-        self.layout_rows = [item for item in self.layout_rows if item["plot"] != row["plot"]]
-        self.layout_rows.append(row)
+        owner = body["p_island_owner"]
+        rows = self.layout_rows_by_owner.get(owner, self.layout_rows)
+        moved = [item for item in rows if item["plot"] != row["plot"]] + [row]
+        if owner in self.layout_rows_by_owner:
+            self.layout_rows_by_owner[owner] = moved
+        else:
+            self.layout_rows = moved
         return httpx.Response(200, json={"status": "done"})
+
+    def read_wall_layout(self, request: httpx.Request) -> httpx.Response:
+        if self.layout_missing:
+            return httpx.Response(404, json={"code": "PGRST202", "message": "no such function"})
+        if self.wall_policy_read_reply is not None:
+            return self.answer(self.wall_policy_read_reply)
+        owner = json.loads(request.content)["p_island_owner"]
+        policy = self.wall_policies.get(owner, {"ruleVersion": 0, "capacity": 12})
+        rows = self.layout_rows_by_owner.get(owner, self.layout_rows)
+        return httpx.Response(200, json={**policy, "rows": rows})
+
+    def wall_move(self, request: httpx.Request) -> httpx.Response:
+        body = json.loads(request.content)
+        policy = self.wall_policies.get(body["p_island_owner"], {"ruleVersion": 0, "capacity": 12})
+        rows = self.layout_rows_by_owner.get(body["p_island_owner"], self.layout_rows)
+        if (
+            body["p_expected_rule_version"] != policy["ruleVersion"]
+            or body["p_expected_capacity"] != policy["capacity"]
+            or body["p_seen"] != sorted(rows, key=lambda item: item["plot"])
+        ):
+            return httpx.Response(200, json={"status": "refused", "reason": "busy"})
+        return self.move(request)
 
     def read_name(self, request: httpx.Request) -> httpx.Response:
         player = request.url.params["id"].removeprefix("eq.")

@@ -40,25 +40,33 @@ def move_calls(world: World) -> list[dict]:
     return [
         json.loads(request.content)
         for request in world.database.requests
-        if request.url.path.endswith("/rpc/island_move")
+        if request.url.path.endswith("/rpc/island_wall_move")
     ]
 
 
 def layout_reads(world: World) -> int:
     return sum(
-        1 for request in world.database.requests if request.url.path.endswith("/island_layout")
+        1
+        for request in world.database.requests
+        if request.url.path.endswith("/rpc/island_wall_layout_read")
     )
 
 
 # --- the flag off: everything as before ---
 
 
-def test_with_the_flag_off_the_island_shows_the_fixed_spots_and_never_asks_the_layout():
+def test_legacy_flag_off_keeps_fixed_spots_but_reads_policy_to_find_paid_cohorts():
     world = World()  # islands on, placement off
     answer = world.island().json()
     assert spot(answer, "wall_1") | {"x": -18.5, "z": -1.0} == spot(answer, "wall_1")
-    assert answer["layout"] == {"version": 1, "grid": 0.5, "movable": False}
-    assert layout_reads(world) == 0
+    assert answer["layout"] == {
+        "version": 1,
+        "grid": 0.5,
+        "movable": False,
+        "wallRuleVersion": 0,
+        "wallCapacity": 12,
+    }
+    assert layout_reads(world) == 1
 
 
 def test_with_the_flag_off_a_move_is_404_feature_off_and_nothing_is_stored():
@@ -75,7 +83,13 @@ def test_with_the_flag_off_a_move_is_404_feature_off_and_nothing_is_stored():
 def test_an_old_save_shows_its_fixed_spots_as_grid_cells_and_may_move(world):
     answer = world.island().json()
     assert (spot(answer, "tower_1")["x"], spot(answer, "tower_1")["z"]) == (0.0, -14.0)
-    assert answer["layout"] == {"version": 1, "grid": 0.5, "movable": True}
+    assert answer["layout"] == {
+        "version": 1,
+        "grid": 0.5,
+        "movable": True,
+        "wallRuleVersion": 0,
+        "wallCapacity": 12,
+    }
 
 
 def test_a_stored_cell_replaces_the_fixed_spot_and_the_layout_is_version_2(world):
@@ -85,14 +99,14 @@ def test_a_stored_cell_replaces_the_fixed_spot_and_the_layout_is_version_2(world
     assert answer["layout"]["version"] == 2
 
 
-def test_a_missing_layout_table_keeps_the_island_working_with_the_fixed_spots(world):
+def test_missing_policy_rpc_fails_closed_instead_of_hiding_paid_coordinates(world):
     world.database.layout_missing = True
     response = world.island()
-    assert response.status_code == 200
-    assert response.json()["layout"]["movable"] is False
+    assert response.status_code == 502
+    assert response.json()["error"]["code"] == "database_error"
     refused = move(world)
-    assert refused.status_code == 503
-    assert refused.json()["error"]["code"] == "layout_unavailable"
+    assert refused.status_code == 502
+    assert refused.json()["error"]["code"] == "database_error"
 
 
 def test_a_legal_move_is_stored_in_half_units_and_answers_the_island(world):
@@ -106,6 +120,8 @@ def test_a_legal_move_is_stored_in_half_units_and_answers_the_island(world):
             "p_x_half": -20,
             "p_z_half": -21,
             "p_seen": [],
+            "p_expected_rule_version": 0,
+            "p_expected_capacity": 12,
         }
     ]
     moved = spot(response.json(), "cannon_1")

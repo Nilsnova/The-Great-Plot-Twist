@@ -15,4 +15,24 @@ Owned files: service.py, only LayoutOut/layout_out route hunks, shared island_he
 
 ## Status
 
-Claimed; implementation/checks pending. Migration-first deployment is required; no broad missing-RPC downgrade is allowed. No live migration application, activation, deployment or merge.
+Implemented in Draft [#285](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/285). API island/visit/action views use owner capacity and accepted positions, hide unbuilt added inventory, and fail if a built added piece has no saved coordinate. Pausing placement retains paid coordinates while the Move control follows its flag. Existing upgrades, wall skills and demolition use the owner cohort; the old unpositioned build refuses added IDs before charging.
+
+`service.placed_view` shares the same owner layout semantics across own and visit responses. `catalogue_for_owner` adapts existing additional-piece actions only after permission/owner resolution. The shared HTTP fake now models atomic read and expected-policy/raw-row Move fences; exact route assertions include the new CAS fields. Missing policy RPC fails closed, so migration-first deployment is required.
+
+Executed from backend with the existing project environment and workspace uv cache:
+
+```sh
+uv run --frozen --no-env-file pytest -q server/tests/test_owner_wall_policy_routes.py server/tests/test_island_move_routes.py server/tests/test_island_routes.py server/tests/test_demolish_routes.py server/tests/test_tech_hub_routes.py server/tests/test_tower_skill_price_routes.py
+uv run --frozen --no-env-file ruff check server/island/service.py server/routes/island.py server/tests/island_helpers.py server/tests/test_island_move_routes.py server/tests/test_owner_wall_policy_routes.py
+uv run --frozen --no-env-file ruff format --check server/island/service.py server/routes/island.py server/tests/island_helpers.py server/tests/test_island_move_routes.py server/tests/test_owner_wall_policy_routes.py
+```
+
+Results: **109 passed in 7.52s**; Ruff **All checks passed!**; format **5 files already formatted**. The first new-action test used an incorrect route path; it was corrected to the actual existing tower-skill endpoint, preserving the behavior assertion. No assertion was weakened, test removed or test skipped. `git diff --check` passed.
+
+The HTTP fake is API wiring evidence, not proof of actual SQL effects, payments, concurrency, live rollback or a running builder. No UI code was changed by this slice; real desktop/phone lifecycle screenshots remain an integration gate.
+
+Explain-back: I use the island owner policy rather than the visiting player policy. A paid wall must retain its real coordinate even when new offers are paused. I leave new empty pieces out of the spatial view, and let the existing five-level rules quote upgrades after the owner cohort is selected.
+
+Questions: Why is the owner policy used during a visit? Why must missing coordinates fail instead of placing a wall at the origin? Why does a larger catalogue not make the old unpositioned build safe?
+
+Remaining: real SQL mutation/concurrency proof, positioned construction, actual builder and full perimeter lifecycle. No live migration application, activation, deployment or merge.
