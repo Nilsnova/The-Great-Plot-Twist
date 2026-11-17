@@ -22,7 +22,7 @@ describe('complete bounded perimeter health reads',()=>{
   it('passes the last paid wall from a complete API read to the real world appearance rule',async()=>{
     const data=recovery(),answer=await client(data).structureRecovery(),row=answer.data.structures.find(row=>row.spot==='wall_128');
     expect(structureRecoveryAppearance({id:'wall_128',kind:'wall',level:1,built:true},row,answer.data))
-      .toEqual({look:'broken',frame:'island-wall-broken',suppressPips:false});
+      .toEqual({look:'broken',frame:'island-wall-l1-broken',suppressPips:false});
   });
   it.each(['wall_0','wall_01','wall_129','wall_128\n','cannon_1','pp_wall_1'])('refuses noncanonical wall health identity %j',async spot=>{
     const data={coins:500,walls:[{...walls()[0],spot}]};expect(isWalls(data)).toBe(false);
