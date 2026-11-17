@@ -573,7 +573,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       if (!askedCode || !recoveryState || recoveryIslandCode !== askedCode) return;
       const askedEpoch = quote.expectedEpoch, askedInstance = quote.instanceId;
       busySpot = spotId; busyKind = 'structure-repair'; recoveryPendingSpot = spotId; recoveryError = null; refreshCard();
-      if (quote.expectedWindow === 'reserved_wave' && recoveryState.displayPhase === 'combat') {
+      if (quote.expectedWindow === 'reserved_wave') {
         let checkpoint;
         try { checkpoint = await recoveryCheckpointHandler?.(); } catch { checkpoint = null; }
         if (checkpoint?.ok) release = checkpoint.release;

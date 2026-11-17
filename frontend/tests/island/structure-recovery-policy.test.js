@@ -97,6 +97,57 @@ it('requires the replayed combat health checkpoint to succeed before submitting 
   expect(result).toEqual({repairPosts: 0, checkpoints: 1, error: 'Battle damage is still being checked. Refresh and try again.'});
 });
 
+it('allows preparation repair after the wave checkpoint gate succeeds', async () => {
+  const result = await browser.withPage(page => page.evaluate(async () => {
+    const {createIsland} = await window.g20Import('/src/island/index.js');
+    const {createFakeIslandTransport} = await window.g20Import('/src/pirates/fake-api.js');
+    const {on, emit} = await window.g20Import('/src/core/events.js');
+    const waveId = '92345678-1234-4234-8234-123456789abc', epoch = '22345678-1234-4234-8234-123456789abc';
+    const instanceId = '32345678-1234-4234-8234-123456789abc', token = '7165d60f-14f5-4b9e-96a0-2ed457b4c219';
+    const base = createFakeIslandTransport();
+    let checkpoints = 0, repairPosts = 0, postedBody = null;
+    let state = {serverNow: '2026-11-17T12:00:00Z', islandEpoch: epoch, revision: 4, recoveryVersion: 1, waveProtocol: 2,
+      displayPhase: 'preparing', repairWindow: 'reserved_wave', waveId, remainingPaidUses: 3,
+      structures: [{spot: 'wall_1', instanceId, kind: 'wall', level: 1, hpUnits: 500000, maxHP: 60,
+        rateUnitsPerSecond: 0, estimatedFreeSeconds: null, fixedPrice: 10, repairSeq: 0}]};
+    const initialSnapshot = {recoveryVersion: 1, waveProtocol: 2, configVersion: 1, waveId, islandEpoch: epoch, seed: 7,
+      startsAt: '2026-11-17T12:00:10Z', weather: {kind: 'clear'}, rules: ['structure_recovery'],
+      createWave: {defenses: [{id: 'wall_1', kind: 'wall', x: 0, z: 0}]},
+      structures: [{spot: 'wall_1', instanceId, kind: 'wall', level: 1, x: 0, z: 0, hpUnits: 500000, maxHP: 60, repairSeq: 0}],
+      participants: [{participantToken: token, captain: {level: 1, skills: [], weapon: 'musket'}}]};
+    const wave = {waveId, wave: 1, seed: 7, startsAt: initialSnapshot.startsAt, weather: {kind: 'clear'}, flagship: false,
+      recoveryVersion: 1, waveProtocol: 2, initialSnapshot, participantToken: token, lastActorCounter: 0};
+    const full = {...state, revision: 5, remainingPaidUses: 2,
+      structures: [{...state.structures[0], hpUnits: 1_000_000, repairSeq: 1}]};
+    const receipt = {actionUid: 'action00001', spot: 'wall_1', instanceId, kind: 'wall', level: 1,
+      chargedPrice: 10, balanceAtCommit: 90, waveId, useOrdinal: 1, eventSeq: 1, repairSeq: 1};
+    const transport = {...base,
+      get: async path => path.startsWith('/api/island/structures') ? {ok: true, status: 200, data: state} : base.get(path),
+      post: async (path, body) => {
+        if (path === '/api/waves/start') return {ok: true, status: 200, data: wave};
+        if (path === '/api/island/structures/repair') {
+          repairPosts++; postedBody = body; state = full;
+          return {ok: true, status: 200, data: {receipt: {...receipt, actionUid: body.actionUid}, currentState: full, coins: 90}};
+        }
+        return base.post(path, body);
+      }};
+    const island = createIsland({container: document.body, emit, on, mode: 'fake', transport, storage: null,
+      structureRecoveryOn: () => false, menu: () => () => {}});
+    await island.load();
+    if (!island.island.spots.find(spot => spot.id === 'wall_1')?.built) await island.build('wall_1', 'wall');
+    await island.flow.ring('own');
+    island.pick('wall_1');
+    island.setRecoveryCheckpointHandler(async () => { checkpoints++; return {ok: true}; });
+    document.querySelector('.recovery-repair')?.click();
+    await new Promise(resolve => setTimeout(resolve, 120));
+    const answer = {checkpoints, repairPosts, expectedWindow: postedBody?.expectedWindow,
+      expectedWaveId: postedBody?.expectedWaveId, fullHealthHidden: !document.querySelector('.recovery-hp')};
+    island.dispose(); return answer;
+  }));
+  expect(result).toEqual({checkpoints: 1, repairPosts: 1, expectedWindow: 'reserved_wave',
+    expectedWaveId: '92345678-1234-4234-8234-123456789abc', fullHealthHidden: true});
+});
+
 it('advertises protocol two for a first wave when admission is enabled on a legacy island', async () => {
   const result = await browser.withPage(page => page.evaluate(async () => {
     const {createIsland} = await window.g20Import('/src/island/index.js');
