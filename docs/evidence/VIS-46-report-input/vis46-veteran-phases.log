@@ -1,0 +1,37 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run --maxWorkers=1 --reporter=verbose tests/pirates/defense-report-ownership.test.js
+
+
+ RUN  v5.1.0 /workspace/reference-village-work/report-veteran-timing/frontend
+
+ × tests/pirates/defense-report-ownership.test.js > the actual game blocks keyboard and gamepad movement while the report owns input 20004ms
+   → Test timed out in 20000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/pirates/defense-report-ownership.test.js > the actual game blocks keyboard and gamepad movement while the report owns input
+Error: Test timed out in 20000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ tests/pirates/defense-report-ownership.test.js:34:1
+     32| }
+     33|
+     34| it('the actual game blocks keyboard and gamepad movement while the rep…
+       | ^
+     35|   started = performance.now(); phase('test entered');
+     36|   await browser.withPage(async (page, base) => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  21:20:26
+   Duration  21.86s (tests 96%, import 3%, transform 1%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice

@@ -1,0 +1,8 @@
+Source:52f6bb158b03188b57260c1872e273391598debf
+Frontend tree:6e0c6b27b717a7b8eedcde498d7372de6f0942cb
+Command:npm test -- --maxWorkers=1 --reporter=verbose
+Scope:test-specific excerpt from an in-progress full run; no final suite result is claimed.
+
+ × tests/pirates/defense-report-ownership.test.js > the actual game blocks keyboard and gamepad movement while the report owns input 20042ms
+   → Test timed out in 20000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".

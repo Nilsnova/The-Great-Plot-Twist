@@ -1,0 +1,17 @@
+{"label":"test entered","milliseconds":0.02728700000011486}
+{"label":"harness callback","milliseconds":481.09198500000025}
+{"label":"navigation complete","milliseconds":792.053913}
+{"label":"Play clicked","milliseconds":1013.8383850000002}
+{"label":"Create clicked","milliseconds":6057.0511670000005}
+{"label":"Start clicked","milliseconds":12308.479037}
+{"label":"game ready no dialog","milliseconds":12938.165912999999}
+{"label":"module importer ready","milliseconds":13590.093702999999}
+{"label":"API setup done","milliseconds":14129.478779}
+{"label":"campaign update ready","milliseconds":14609.47386}
+{"label":"owners clear","milliseconds":14871.474008000001}
+{"label":"wave emit complete","milliseconds":15088.112178}
+{"label":"report opened","milliseconds":15501.723038}
+{"label":"report active","milliseconds":15634.981674999999}
+{"label":"initial position read","milliseconds":16107.579982}
+{"label":"input held","milliseconds":16272.084696999998}
+{"label":"blocked twelve frames and position pass","milliseconds":19007.566228}
