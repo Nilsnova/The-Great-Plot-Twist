@@ -1074,8 +1074,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     if (seconds !== current.lastCount) { current.lastCount = seconds; if (seconds > 0 && seconds <= 3) cue('pirate-tick'); }
     current.hud?.countdown(current.done ? 0 : Math.min(seconds, 99));
     current.hud?.boss?.(current.boss && !current.done && elapsed < BOSS_WARNING_SECONDS ? current.boss : '');
-    // The first-wave hint (guide on): the three pictures for HINT_SECONDS of the first wave this device plays.
-    if (guideOn && current.hud && current.hintShown === undefined) { current.hintShown = !readHint(); if (current.hintShown) writeHint(); }
+    // Only actual wave one consumes the device's first-wave hint, for its existing HINT_SECONDS window.
+    if (guideOn && current.info.wave === 1 && current.hud && current.hintShown === undefined) { current.hintShown = !readHint(); if (current.hintShown) writeHint(); }
     current.hud?.goalHint?.(current.hintShown === true && !current.done && elapsed > -3 && elapsed < HINT_SECONDS);
     current.hud?.loot?.(startNextWave || runLoot > 0 ? runLoot : null);
     if (current.pause) updatePause(current);
