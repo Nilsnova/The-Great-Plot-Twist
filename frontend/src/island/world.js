@@ -361,6 +361,7 @@ export function decorateIsland(place, ctx = {}) {
   function apply({spots = [], visitor = false, battle = false, unlocks = null, crew = null, campaign = null, arsenal = false} = {}) {
     if (disposed) return;
     state = {spots, visitor, battle, unlocks, crew, campaign, arsenal: arsenal === true};
+    if (visitor || battle) wallConnections.select(null);
     syncInventory(spots);
     joinedWalls = wallConnections.show(battle ? [] : spots.map(item => {
       const spot = SPOTS.find(entry => entry.id === item.id);
@@ -512,6 +513,7 @@ export function decorateIsland(place, ctx = {}) {
     preview(next) {
       if (disposed) return;
       preview = next && Number.isFinite(next.x) && Number.isFinite(next.z) ? {...next} : null;
+      if (preview) wallConnections.select(null);
       footprint.show(preview);
       wallLanes?.show(preview && preview.wallRuleVersion !== 1 && SPOTS.find(spot => spot.id === preview.spotId)?.slot === 'wall');
       apply(state);
@@ -523,7 +525,9 @@ export function decorateIsland(place, ctx = {}) {
     update(dt, time = 0) {
       if (disposed) return;
       notice.update();
-      selectionBracket.show(preview ? null : ctx.selection?.());
+      const selection = preview ? null : ctx.selection?.();
+      selectionBracket.show(selection);
+      wallConnections.select(state.battle || state.visitor ? null : selection?.spotId);
       recoveryIndicators.update();
       rangeRing.show(ctx.range?.() ?? null, reduced() ? 0 : time);
       const still = reduced();
