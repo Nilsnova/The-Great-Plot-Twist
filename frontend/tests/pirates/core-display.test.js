@@ -46,6 +46,41 @@ describe('the readonly core health publisher', () => {
     expect(h.publish).toHaveBeenLastCalledWith(expect.objectContaining({contextKey: 'home:epoch-a:0', epoch: 'epoch-a'}));
   });
 
+  it('rebinds a retained wave only after server-confirmed return to its original island identity', () => {
+    const h = harness(), model = createCoreState();
+    let expected = {waveId: 'wave-a', contextKey: 'home:epoch-a:0', epoch: 'epoch-a'};
+    h.setTarget({key: expected.contextKey, epoch: expected.epoch, islandIdentity: 'home:epoch-a:reset-0'});
+    model.reset(expected.contextKey);
+    h.publish.mockImplementation(snapshot => model.accept(snapshot, expected));
+    h.send(); const oldSnapshot = h.publish.mock.calls.at(-1)[0];
+    expected = {...expected, contextKey: 'home:epoch-a:travel-1'};
+    model.reset(expected.contextKey);
+    const returned = {key: expected.contextKey, epoch: expected.epoch, islandIdentity: 'home:epoch-a:reset-0'};
+    h.setTarget(returned); h.source.state.islandHp = 30; h.wave.ticks++;
+    h.send(); expect(model.current).toBeNull();
+    h.setTarget({...returned, rejoin: {contextKey: returned.key, waveId: 'wave-a'}});
+    h.send();
+    expect(model.current).toMatchObject({hp: 30, frame: 'island_core_damaged', contextKey: returned.key});
+    expect(model.accept(oldSnapshot, expected)).toBe(false);
+    expect(h.source.wave).toBe(h.wave);
+  });
+
+  it.each([
+    {islandIdentity: 'friend:epoch-a:reset-0'},
+    {islandIdentity: 'home:epoch-a:reset-1'},
+    {epoch: 'epoch-b'},
+    {islandIdentity: null},
+    {rejoin: {contextKey: 'old-context', waveId: 'wave-a'}},
+    {rejoin: {contextKey: 'returned-context', waveId: 'wave-old'}},
+  ])('refuses a rejoin whose original identity, epoch, context or server wave differs: %j', change => {
+    const h = harness();
+    h.setTarget({key: 'original-context', epoch: 'epoch-a', islandIdentity: 'home:epoch-a:reset-0'}); h.send();
+    h.setTarget({key: 'returned-context', epoch: 'epoch-a', islandIdentity: 'home:epoch-a:reset-0',
+      rejoin: {contextKey: 'returned-context', waveId: 'wave-a'}, ...change});
+    h.send();
+    expect(h.publish).toHaveBeenLastCalledWith(expect.objectContaining({contextKey: 'original-context'}));
+  });
+
   it('captures the new target for a new wave object, even when its ID is reused in a test or local reset', () => {
     const h = harness(); h.send();
     h.setTarget({key: 'friend:epoch-b:1', epoch: 'epoch-b'});

@@ -98,7 +98,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   let disposed = false, own = null, ownMessage = '', visiting = null, visitCode = readVisit(visitStorage), busySpot = null, cardMessage = '';
   let world = null, cutscene = null, openSpot = null, loadTicket = 0, battle = false;
   const coreState = createCoreState();
-  let coreWorld = null, coreContextKey = null, coreTravelGeneration = 0;
+  let coreWorld = null, coreContextKey = null, coreTravelGeneration = 0, coreRejoin = null;
   let pointBattle = false;
   // GAME-V3.md §4.2, tearing a building down: the wave on screen is over (its break), the spot whose
   // confirmation is open, the server's quote for it, and the tear-down on its way.
@@ -314,8 +314,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     const shown = target(), code = shown?.code ?? visitCode ?? null;
     const epoch = shown?.islandEpoch ?? (recoveryIslandCode === code ? recoveryState?.islandEpoch : null) ?? null;
     const key = code ? JSON.stringify([code, epoch, wallResetGeneration, coreTravelGeneration]) : null;
-    if (key !== coreContextKey) { coreContextKey = key; coreState.reset(key); coreWorld?.reset(); }
-    return {key, epoch};
+    if (key !== coreContextKey) { coreContextKey = key; coreRejoin = null; coreState.reset(key); coreWorld?.reset(); }
+    return {key, epoch, islandIdentity: code ? JSON.stringify([code, epoch, wallResetGeneration]) : null};
   }
   function setCoreCombatState(snapshot) {
     if (disposed) return;
@@ -362,6 +362,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   }
   async function load() {
     const ticket = ++loadTicket;
+    const travelGeneration = coreTravelGeneration;
+    let loadedTarget = null;
     if (visitCode && !(await joinFirst(visitCode))) {
       if (disposed || ticket !== loadTicket) return {ok: false};
       endVisit();
@@ -372,7 +374,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       const answer = await api.visit(visitCode);
       if (disposed || ticket !== loadTicket) return answer;
       if (answer.ok) {
-        if (current() || !visiting) { visiting = {...answer.data, code: islandCode(answer.data.code)}; noteCampaign(visiting); }
+        if (current() || !visiting) { visiting = {...answer.data, code: islandCode(answer.data.code)}; loadedTarget = visiting; noteCampaign(visiting); }
         showVisit();
       } else {
         endVisit(); ui.toast(answer.message, 'error');
@@ -383,13 +385,27 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       const current = reading('own');
       const answer = await api.getIsland();
       if (disposed || ticket !== loadTicket) return answer;
-      if (answer.ok) { if (current()) setOwn(answer.data); ownMessage = ''; } else ownMessage = answer.message;
+      if (answer.ok) {
+        if (current()) { setOwn(answer.data); if (!visiting) loadedTarget = own; }
+        ownMessage = '';
+      } else ownMessage = answer.message;
     }
     await readStructureRecovery();
     applyWorld(); refreshCard();
     void syncGame();
     void arsenal.refresh();
-    if (target()) await flow.look(where());
+    if (target()) {
+      const context = syncCoreContext();
+      const answer = await flow.look(where());
+      // A retained controller may resume only after this landing confirms its actual server wave.
+      // Reject a late load across travel, another load, target change or reset.
+      if (!disposed && ticket === loadTicket && travelGeneration === coreTravelGeneration && loadedTarget === target()
+          && context.key && context.key === syncCoreContext().key && answer?.ok
+          && typeof answer.data?.waveId === 'string' && answer.data.waveId
+          && flow.current?.wave?.waveId === answer.data.waveId) {
+        coreRejoin = {contextKey: context.key, waveId: answer.data.waveId};
+      }
+    }
     return {ok: true};
   }
   // --- the game: its lobby and room state ----------------------------------------------------------
@@ -1361,7 +1377,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     },
     load, loadPoint, playArrival, visit, sailHome, resetIsland, pick, build, upgrade, hire, upgradeCaptain, learnSkill, takeRole, respecCaptain, buyWeapon, equipWeapon, setPresence,
     setRecoveryCombatState, setRecoveryCheckpointHandler, setCoreCombatState,
-    get coreContext() { return syncCoreContext(); },
+    get coreContext() { return {...syncCoreContext(), rejoin: coreRejoin ? {...coreRejoin} : null}; },
     // Your captain for the wave (src/pirates/game-wiring.js): level, learnt skills (§14), equipped weapon (§15).
     captainLoadout: () => ({level: own?.captain?.level ?? 1, skills: readSkills([...(own?.skills?.known ?? []), ...(isRole(own?.skills?.role) ? [own.skills.role] : [])]), weapon: arsenal.weapon() ?? readWeapon(own?.weapons?.equipped),
       colour: captainColour()}),

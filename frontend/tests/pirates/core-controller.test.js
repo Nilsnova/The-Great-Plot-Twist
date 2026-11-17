@@ -21,6 +21,35 @@ function harness(options = {}) {
 }
 
 describe('core display through the actual wave controller', () => {
+  it('resumes actual HP after an authorized same-wave return and still rejects another island', async () => {
+    let place = 'home_islet';
+    const h = harness({place: 'home_islet', world: {scene: {}, container: {}, place: () => place}});
+    const model = createCoreState();
+    let context = {key: 'home:epoch-a:travel-0', epoch: 'epoch-a', islandIdentity: 'home:epoch-a:reset-0'};
+    let expected = {waveId: INFO.waveId, contextKey: context.key, epoch: context.epoch};
+    model.reset(context.key);
+    const send = createCorePublisher({controller: () => h.controller, context: () => context,
+      publish: snapshot => model.accept(snapshot, expected)});
+    const wave = h.controller.start(INFO); await flush(); send();
+    place = 'saltreach_harbor';
+    context = {...context, key: 'home:epoch-a:travel-1'};
+    model.reset(context.key); expected = {...expected, contextKey: context.key};
+    for (let i = 0; i < 600 && h.controller.state.islandHp === h.controller.state.maxIslandHp; i++) h.step();
+    expect(h.controller.state.islandHp).toBeGreaterThan(0);
+    expect(h.controller.state.islandHp).toBeLessThan(h.controller.state.maxIslandHp);
+    expect(wave.shown).toBe(false); send(); expect(model.current).toBeNull();
+    place = 'home_islet';
+    expect(h.controller.start(INFO)).toBe(wave);
+    context = {...context, rejoin: {contextKey: context.key, waveId: INFO.waveId}};
+    send();
+    expect(model.current).toMatchObject({hp: h.controller.state.islandHp, tick: wave.ticks});
+    context = {...context, key: 'friend:epoch-a:travel-2', islandIdentity: 'friend:epoch-a:reset-0',
+      rejoin: {contextKey: 'friend:epoch-a:travel-2', waveId: INFO.waveId}};
+    expected = {...expected, contextKey: context.key}; model.reset(context.key); send();
+    expect(model.current).toBeNull();
+    h.controller.dispose(); expect(h.timers.size).toBe(0);
+  });
+
   it('publishes real final zero from onEvents before finishWave and keeps rubble after a late finish response', async () => {
     const model = createCoreState(), context = {key: 'home:legacy:0', epoch: null};
     const expected = {waveId: INFO.waveId, contextKey: context.key, epoch: null};
