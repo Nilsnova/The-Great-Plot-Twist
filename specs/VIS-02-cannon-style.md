@@ -26,3 +26,17 @@ No gameplay, footprint, selection, prices, projection, atlas registration, recov
 ## Risks and remaining decisions
 
 Detail can disappear at Fit zoom, and the original 48×32 frame bounds limit silhouette height. Canvas gradients must remain compatible with low quality, damage wrappers and the combat atlas. A successful registration test is not visual acceptance. Broader art or geometry changes require explicit later contracts; no runtime image downloads or new packages are introduced.
+
+## Implementation evidence and handoff
+
+The bounded cannon painter and shared-route browser helper are implemented. `frontend/scripts/cannon-style-fixture.js` exports `verifyCannonStyle()` for the coordinated browser lane: twenty real registered frames through world materials and combat atlas, both requested densities, state/tier identity and no firing from ruins. Its returned sheets are supplementary family raster proof, not actual-game screenshots.
+
+Executed from `frontend/`:
+
+```sh
+npm test -- --maxWorkers=1 tests/cartoon-art.test.js tests/tower-damage-art.test.js tests/pirates/art.test.js tests/island/world-art.test.js
+```
+
+Result: `Test Files  4 passed (4)`, `Tests  21 passed (21)`, `Duration  1.28s`, exit 0. The first run exposed a missing CanvasGradient API in the recording context; the recorder now supports `addColorStop`, with existing assertions preserved. The corrected run passed.
+
+Actual browser route checks, paired game captures, combined build/budget/UI verification, phone composition and human visual acceptance remain pending in the coordinated verification lane. No broader target-style quality or full VIS-02 completion is claimed.

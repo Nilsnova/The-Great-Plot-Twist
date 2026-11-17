@@ -163,3 +163,5 @@ Not released or marked complete: focused evidence, Johannes's explain-back and
 independent human review remain. No change to the existing freeze or merge rules.
 
 COC-02 follow-up (Johannes, draft): current-base management fit view is a bounded implementation slice for issue #143 and depends on COC-49/PR #192. The parent camera task remains open; see [specification](../specs/COC-02-village-overview.md). No merge or full editor-camera completion is claimed.
+
+VIS-02 bounded cannon-material trial (Johannes): original code-painted stone/wood/metal detail and a shared world/combat Canvas verification fixture are implemented in [Draft PR #269](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/269). [Scope, checks and limits](../specs/VIS-02-cannon-style.md). Four focused files / 21 tests passed; actual browser captures, camera/terrain composition, visual acceptance, explain-back and independent human review remain. This does not mark the whole reference trial or visual roadmap complete. No merge.
