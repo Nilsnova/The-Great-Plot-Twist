@@ -51,6 +51,11 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
     emit({type: WAVE_STARTED, waveId: wave.waveId, wave: wave.wave, seed: wave.seed, startsAt: wave.startsAt,
       weather: wave.weather, flagship: wave.flagship, ...(typeof wave.boss === 'boolean' ? {boss: wave.boss} : {}), where, defenses: defensesOf(),
       ...(wave.walls ? {walls: wave.walls} : {}), // D039: each wall's health from the server (flag wall_recovery)
+      ...(Number.isInteger(wave.recoveryVersion) ? {recoveryVersion: wave.recoveryVersion} : {}),
+      ...(Number.isInteger(wave.waveProtocol) ? {waveProtocol: wave.waveProtocol} : {}),
+      ...(wave.initialSnapshot && typeof wave.initialSnapshot === 'object' ? {initialSnapshot: wave.initialSnapshot} : {}),
+      ...(typeof wave.participantToken === 'string' ? {participantToken: wave.participantToken} : {}),
+      ...(Number.isSafeInteger(wave.lastActorCounter) ? {lastActorCounter: wave.lastActorCounter} : {}),
       ...(Array.isArray(wave.rules) ? {rules: wave.rules} : {})}); // the wave's sim rules (tower_health, …) from the server
     countdown(wave, fresh);
     changed();
