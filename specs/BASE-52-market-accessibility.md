@@ -68,3 +68,16 @@ still fails. I also keep the muted limit button readable and preserve its action
 Before marking ready, explain why matching only a key is insufficient, why matching
 only the current index is insufficient, and how a real refresh test differs from
 manually replacing some test nodes.
+
+## Verified handover
+
+Implementation `3135da36993aa3292dc751bcad24739b6edeedfc`: the only application
+change is Harbor CSS. The focused helper/native-control/Harbor command passes
+133 tests in 10 files, 43.51s. The full existing accessibility script passes
+33 screens with no failures, errors, browser errors, external requests or skips.
+The threshold stays 4.5; measured minimum contrast rises from 3.9664 to 5.6064.
+
+[Before/after images, exact identities and commands](../docs/evidence/BASE-52-market-accessibility/README.md)
+preserve the pre-existing failure and scope. Chrome is released to BASE-51.
+The coordinator owns the next combined frontend run; no prior complete-suite result
+is silently transferred to this revision. This PR remains Draft for human review.
