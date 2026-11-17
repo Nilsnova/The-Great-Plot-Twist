@@ -234,8 +234,8 @@ def test_f4_an_abandoned_wave_is_not_offered_and_the_next_bell_ends_it(database)
         )["status"]
         == "running"
     )
-    # Nobody has read the journal for more than a minute.
-    move_start(database, wave_id, 200, activity=90)
+    # Nobody has read the journal for more than three minutes (20261118030000; was one).
+    move_start(database, wave_id, 300, activity=200)
     assert call(
         database, "select public.recovery_wave_current(%s,'island',%s,2::smallint)", OWNER, OWNER
     ) == {"status": "empty"}
@@ -256,7 +256,7 @@ def test_f4_an_abandoned_wave_is_not_offered_and_the_next_bell_ends_it(database)
 
 def test_f4_a_build_after_an_abandoned_wave_is_not_refused_wave_running(database):
     wave_id, _ = two_player_wave(database, join=False)
-    move_start(database, wave_id, 200, activity=120)
+    move_start(database, wave_id, 300, activity=200)
     began = call(database, "select public.structure_recovery_mutation_begin(%s)", OWNER)
     assert began["settlement"]["status"] == "settled"
     assert database.execute(
@@ -315,8 +315,9 @@ def test_f5_a_late_join_lands_after_the_seal_so_earlier_prefixes_stay_complete(d
 
 def test_f10_nothing_is_sealed_or_appended_past_the_last_tick(database):
     wave_id, _ = two_player_wave(database)
-    # 899.9 s in: a command now would land at tick 18003 (now + 5), after the last tick 17999.
-    move_start(database, wave_id, 899.9)
+    # 899.99 s in: a command now would land at tick 18000 (now + 1, 20261118030000), after the last
+    # tick 17999.
+    move_start(database, wave_id, 899.99)
     late = call(database, INPUTS, OWNER, wave_id, move("lastsecond01", 1, 17995))
     assert late == {"status": "refused", "reason": "wave_over"}
     page = call(database, PAGE, OWNER, wave_id, 0)

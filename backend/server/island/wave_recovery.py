@@ -9,7 +9,7 @@ import re
 from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr
 
 from server.errors import ApiError
 from server.island import layout, service, store, wall_health, wave_events
@@ -67,6 +67,8 @@ class RecoveryEventPage(BaseModel):
     sealed_through_tick: StrictInt = Field(alias="sealedThroughTick", ge=-1)
     through: StrictInt | None = Field(default=None, ge=0)
     events: list[RecoveryEvent] = Field(max_length=MAX_PAGE)
+    # 20261118030000: whether the wave is closed (its seal no longer moves); older SQL omits it.
+    closed: StrictBool | None = None
 
 
 class RecoveryHealthRequest(BaseModel):

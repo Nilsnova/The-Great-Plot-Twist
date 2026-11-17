@@ -222,7 +222,7 @@ export function wireWaves(ctx) {
     stops.push(on('wave_finish_answered', event => {
       if (!event?.recovery || typeof event.waveId !== 'string') return;
       try { island.recoveryWaveEnded?.(event.waveId, {survived: event.survived === true, loot: event.loot ?? 0, coins: event.coins,
-        waveBest: event.waveBest, flags: event.flags}); } catch (error) { console.error(error); }
+        waveBest: event.waveBest, flags: event.flags, ...(event.away === true ? {away: true} : {})}); } catch (error) { console.error(error); }
     }), on('wave_controller_stopped', event => {
       if (event?.recovery !== true || typeof event.waveId !== 'string') return;
       try { island.recoveryWaveEnded?.(event.waveId); } catch (error) { console.error(error); }

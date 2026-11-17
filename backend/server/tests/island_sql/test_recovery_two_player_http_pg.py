@@ -168,6 +168,7 @@ def test_two_players_late_join_both_finish_tab_closed_and_timeout(database):
         wave_id = started["waveId"]
         shift(database, wave_id, 30)
         owner_first = page(client, "owner", wave_id)
+        assert owner_first["closed"] is False
         assert owner_first["sealedThroughTick"] > 0
         joined = join(client, wave_id)
         assert joined["participantToken"] != started["participantToken"]
@@ -209,6 +210,7 @@ def test_two_players_late_join_both_finish_tab_closed_and_timeout(database):
         owner_done = finish(client, "owner", started, owner_second, "owner-close-01")
         assert owner_done.status_code == 200, f"{owner_done.text}; {admin.last_database_error}"
         member_after = page(client, "member", wave_id)
+        assert member_after["closed"] is True  # 20261118030000: the page says the wave is closed
         assert member_after["sealedThroughTick"] >= owner_second["sealedThroughTick"]
         late_input = client.post(
             f"/api/waves/{wave_id}/inputs",
@@ -235,7 +237,7 @@ def test_two_players_late_join_both_finish_tab_closed_and_timeout(database):
         # 2. Both players close the tab: no journal read for over a minute.
         second = ring(client, admin, "twoplayer-02")
         join(client, second["waveId"])
-        shift(database, second["waveId"], 120, activity=70)
+        shift(database, second["waveId"], 300, activity=200)
         gone = client.get(
             f"/api/waves/current?where={WHERE}&waveProtocol=2", headers=HEADERS["member"]
         )
