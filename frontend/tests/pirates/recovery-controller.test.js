@@ -185,7 +185,7 @@ describe('recovery-v1 controller replay', () => {
       if (finishCalls.length === 1) {
         expect(controller.state.walls.find(item => item.id === 'wall_1').hp).toBe(0);
         paidEvent = { serverSeq: 1, effectiveTick: body.checkpoint.throughTick + 1, type: 'structure_repaired', participantToken: null,
-          payload: { spot: 'wall_1', instanceId: 'wall-instance', hpUnits: 1_000_000, maxHP: 60, repairSeq: 1, chargedPrice: 50 } };
+          payload: { spot: 'wall_1', instanceId: 'wall-instance', hpUnits: 1_000_000, maxHP: 60, repairSeq: 6, chargedPrice: 50 } };
         return { ok: false, status: 409, code: 'health_sync_required' };
       }
       if (body.checkpoint.throughTick < paidEvent.effectiveTick) return { ok: false, status: 409, code: 'health_sync_required' };
@@ -200,6 +200,7 @@ describe('recovery-v1 controller replay', () => {
       finishWave: legacyFinish, world: {}, getDefenses: () => [], createRenderer: () => null, createHud: () => null,
       setTimer: () => ({}), clearTimer: () => {}, accept: () => true });
     const snapshot = makeSnapshot();
+    snapshot.structures[0].repairSeq = 5; // Per-instance sequence predates this wave's global repair counter.
     bus.emit({ type: 'wave_started_server', waveId: 'wave-r', wave: 1, seed: 77, startsAt: snapshot.startsAt,
       weather: snapshot.weather, flagship: false, rules: snapshot.rules, recoveryVersion: 1, waveProtocol: 2,
       initialSnapshot: snapshot, participantToken: TOKEN, lastActorCounter: 0 });
@@ -218,7 +219,7 @@ describe('recovery-v1 controller replay', () => {
     expect(finishCalls[0].shipsSunk).toBe(finishCalls[1].shipsSunk);
     const terminal = finishCalls.at(-1).checkpoint;
     expect(terminal.hpUnits['wall-instance']).toBe(1_000_000);
-    expect(terminal.basisRepairSeq['wall-instance']).toBe(1);
+    expect(terminal.basisRepairSeq['wall-instance']).toBe(6);
     expect(terminal.lastRepairSeq).toBe(1);
     expect(terminal.throughTick).toBeGreaterThan(paidEvent.effectiveTick);
     expect(legacyFinish).not.toHaveBeenCalled();
