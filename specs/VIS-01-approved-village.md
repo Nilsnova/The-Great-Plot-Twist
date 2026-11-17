@@ -22,3 +22,13 @@ rules remain authoritative. No new app package or external service is needed.
 No merge, deployment, live migration or production activation is performed.
 Documentation link/content checks and exact implementation evidence will be
 recorded before this handover is complete. Human review and explain-back remain.
+
+## Recorded policy checks
+
+The original no-raster cold-screen checks remain. World-only manifest/loader
+modules have an explicit D063 boundary plus a new recursive static-import guard
+from every cold screen root. No asset filename is concealed and no cold transfer
+limit is increased. On this policy revision, `npm test -- --maxWorkers=1
+tests/v3-raster-free.test.js tests/hires-art.test.js` passed2files/11tests in1.06s.
+The integrated provider must run the same guards and actual cold network/budget
+checks again; this pre-provider result is not an acceptance of future source.
