@@ -6,6 +6,7 @@
 import {surfaces} from '../world/places/surfaces.js';
 import {canvas, ellipse, line, stroke} from './paint.js';
 import {cliffProfile, paintCliffFaces, paintGrassRim} from './coast-cliffs.js';
+import {meadowScale, paintMaterial, pathMaterialMask} from './village/terrain-materials.js';
 
 const SIZE = {width: 64, height: 48};
 // Paths of each island (logical x/z, a polyline each) and small clearings [x, z, radius].
@@ -19,7 +20,7 @@ const seeded = seed => () => { seed = (seed * 16807) % 2147483647; return (seed 
 export const hasGround = id => Object.hasOwn(PATHS, id) && Object.hasOwn(surfaces, id);
 
 /** Paints the ground of a place at density texels per world unit; returns the canvas. */
-export function paintGround(id, density = 28) {
+export function paintGround(id, density = 28, materials = null) {
   const s = surfaces[id], paths = PATHS[id];
   const art = canvas(Math.round(SIZE.width * density), Math.round(SIZE.height * density)), c = art.getContext('2d');
   // World x/z to the canvas: x across, the drawn y = -z * 0.72 down from the top edge.
@@ -30,35 +31,40 @@ export function paintGround(id, density = 28) {
     for (let i = 0; i <= 180; i++) {
       const a = i / 180 * Math.PI * 2, edge = 1 + .055 * Math.sin(a * 5 + s.seed) + .035 * Math.cos(a * 7);
       const extra = 1 + wobble * (Math.sin(a * 13 + seed) * .6 + Math.sin(a * 23 + seed * 2) * .4);
-      const [x, y] = at(Math.cos(a) * s.rx * k * edge * extra, Math.sin(a) * s.rz * k * edge * extra);
+      const scale = typeof k === 'function' ? k(a) : k;
+      const [x, y] = at(Math.cos(a) * s.rx * scale * edge * extra, Math.sin(a) * s.rz * scale * edge * extra);
       if (i) p.lineTo(x, y); else p.moveTo(x, y);
     }
     p.closePath(); return p;
   };
   const random = seeded(s.seed * 7919 + 17);
   const rim = cliffProfile(s);
-  paintCliffFaces(c, rim);
+  paintCliffFaces(c, rim, materials);
   // Wet sand fading into the shallows (translucent, so the sea still reads it as water).
   c.fillStyle = '#e8cf8e70'; c.fill(coast(1.035));
   // The beach: warm sand, darker at the waterline, lighter towards the meadow.
   const beach = coast(1);
   c.fillStyle = '#f2d595'; c.fill(beach);
+  if (materials) { c.save(); c.clip(beach); paintMaterial(c, materials, 'sand', {alpha: .9}); c.restore(); }
   c.save(); c.clip(beach); c.lineWidth = .9; c.strokeStyle = '#ddb877'; c.stroke(beach); c.lineWidth = .3; c.strokeStyle = '#c99f5e'; c.stroke(beach);
   c.fillStyle = '#e2bf7e'; for (let i = 0; i < 260; i++) { const a = random() * Math.PI * 2, k = .86 + random() * .13; c.fill(ellipse(Math.cos(a) * s.rx * k, Math.sin(a) * s.rz * k * .72, .07 + random() * .08, .05)); }
   c.restore();
-  paintGrassRim(c, rim, beach);
+  if (!materials) paintGrassRim(c, rim, beach);
   // The meadow: a soft edge, a darker rim and a lighter heart.
-  const meadow = coast(.85, .012, 3);
+  const meadow = coast(materials ? meadowScale : .85, .012, 3);
   c.save(); c.translate(.05, .3); c.fillStyle = '#c9ab6a'; c.fill(meadow); c.restore();
   c.fillStyle = '#6fc155'; c.fill(meadow);
   c.save(); c.clip(meadow);
   const glow = c.createRadialGradient(-4, -6, 2, 0, 0, s.rx); glow.addColorStop(0, '#93d968'); glow.addColorStop(.6, '#7cc95a'); glow.addColorStop(1, '#5fb24c');
   c.fillStyle = glow; c.fill(meadow);
+  if (materials) paintMaterial(c, materials, 'grass', {alpha: .82});
   c.lineWidth = .7; c.strokeStyle = '#4f9c41'; c.stroke(meadow);
   // Soft patches of darker and lighter grass.
+  c.globalAlpha = materials ? .3 : 1;
   for (let i = 0; i < 26; i++) { const x = (random() - .5) * s.rx * 1.6, z = (random() - .5) * s.rz * 1.6; c.fillStyle = random() > .5 ? '#86cf5e66' : '#63b34f55'; c.fill(ellipse(x, z * .72, 1.2 + random() * 2.2, .7 + random() * 1.2)); }
   c.restore();
   c.lineWidth = .16; c.strokeStyle = '#3d7f36'; c.stroke(meadow);
+  if (materials) { c.save(); c.clip(beach); c.lineWidth = .055; c.strokeStyle = '#d2e58b'; c.stroke(meadow); c.restore(); }
   // Paths: a sandy band with a darker edge and a soft inner light.
   if (paths) {
     const trail = new Path2D(); for (const points of paths.lines) points.forEach(([x, z], i) => (i ? trail.lineTo(...at(x, z)) : trail.moveTo(...at(x, z))));
@@ -67,6 +73,8 @@ export function paintGround(id, density = 28) {
       c.lineWidth = width; c.strokeStyle = colour; c.stroke(trail);
       for (const [x, z, r] of paths.clearings) { c.fillStyle = colour; c.fill(ellipse(...at(x, z), r + (width - 2.2) / 2, (r + (width - 2.2) / 2) * .72)); }
     }
+    if (materials) { c.save(); c.clip(pathMaterialMask(paths)); paintMaterial(c, materials, 'path'); c.restore(); }
+    c.globalAlpha = materials ? .25 : 1;
     c.fillStyle = '#d7b273'; for (let i = 0; i < 120; i++) { const [points] = [paths.lines[Math.floor(random() * paths.lines.length)]], t = random(), j = Math.floor(t * (points.length - 1)), f = t * (points.length - 1) - j;
       const [x0, z0] = points[j], [x1, z1] = points[Math.min(points.length - 1, j + 1)]; c.fill(ellipse(...at(x0 + (x1 - x0) * f + (random() - .5) * 1.4, z0 + (z1 - z0) * f + (random() - .5) * 1.4), .09, .06)); }
     c.restore();
