@@ -64,7 +64,7 @@ def move(db, plot="wall_1", x=-10, z=20, snapshot=None, actor=OWNER):
 
 def test_empty_island_is_explicitly_legacy_and_browser_cannot_read_or_admit(database):
     ready(database)
-    assert read(database) == {"ruleVersion": 0, "capacity": 12, "rows": []}
+    assert read(database) == {"ruleVersion": 0, "capacity": 12, "rows": [], "islandEpoch": None}
     as_owner(database)
     assert database.execute(
         "select has_table_privilege('authenticated',"
@@ -86,7 +86,12 @@ def test_admission_materializes_effective_legacy_layout_once_without_drift(datab
     old = read(database)
     expected = effective({"wall_1": (0.0, -18.0)})
     assert admit(database, old["rows"], expected) == {"status": "done", "repeat": False}
-    assert read(database) == {"ruleVersion": 1, "capacity": 128, "rows": expected}
+    assert read(database) == {
+        "ruleVersion": 1,
+        "capacity": 128,
+        "rows": expected,
+        "islandEpoch": old["islandEpoch"],
+    }
     assert admit(database) == {"status": "done", "repeat": True}
     assert read(database)["rows"] == expected
 
@@ -137,7 +142,7 @@ def test_invalid_effective_rows_roll_back_admission(database):
         database.transaction(),
     ):
         admit(database, cells=cells)
-    assert read(database) == {"ruleVersion": 0, "capacity": 12, "rows": []}
+    assert read(database) == {"ruleVersion": 0, "capacity": 12, "rows": [], "islandEpoch": None}
 
 
 def test_v1_admission_preserves_instance_health_and_repair_sequence(database):
