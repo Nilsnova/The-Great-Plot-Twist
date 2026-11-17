@@ -1,6 +1,6 @@
 {
   "scope": "offline normalized PNG source compilation; runtime activation/build exclusion and actual-game acceptance remain separate",
-  "sourceCommit": "eb157fc82bd7e1192f65d7cca439fc166bc2fed1",
+  "sourceCommit": "f635640ec959c08c7cc57856db1bf83533973b9d",
   "browser": "156.0.8078.79",
   "families": [
     "buildings",
@@ -11,25 +11,26 @@
     "cannons",
     "walls",
     "core",
-    "progress"
+    "progress",
+    "mortars"
   ],
-  "frames": 84,
+  "frames": 104,
   "initialTransfer": {
     "unchangedTerrainBytes": 2683357,
-    "rawPlusTerrainBytes": 20926216,
-    "compiledPlusTerrainBytes": 9341864,
+    "rawPlusTerrainBytes": 22947185,
+    "compiledPlusTerrainBytes": 10353548,
     "targetBytes": 8388608,
     "targetMet": false
   },
-  "originalEncoded": 18242859,
-  "compiledEncoded": 6658507,
-  "originalDecoded": 62911688,
-  "compiledDecoded": 23695104,
+  "originalEncoded": 20263828,
+  "compiledEncoded": 7670191,
+  "originalDecoded": 69203144,
+  "compiledDecoded": 27407104,
   "largestCompiledDecoded": 5541888,
   "density": [
     {
       "density": 4,
-      "cases": 84,
+      "cases": 104,
       "maxRgb": 0,
       "maxAlpha": 0,
       "worstAlphaWeightedMeanRgb": 0,
@@ -38,29 +39,29 @@
     },
     {
       "density": 2.5,
-      "cases": 84,
+      "cases": 104,
       "maxRgb": 255,
       "maxAlpha": 52,
       "worstAlphaWeightedMeanRgb": 3.487071865886311,
-      "differingPixels": 818843,
+      "differingPixels": 935661,
       "minVisiblePixels": 1505
     },
     {
       "density": 2,
-      "cases": 84,
+      "cases": 104,
       "maxRgb": 255,
       "maxAlpha": 59,
       "worstAlphaWeightedMeanRgb": 5.190346129254299,
-      "differingPixels": 527889,
+      "differingPixels": 602528,
       "minVisiblePixels": 953
     },
     {
       "density": 1.5,
-      "cases": 84,
+      "cases": 104,
       "maxRgb": 255,
       "maxAlpha": 74,
       "worstAlphaWeightedMeanRgb": 5.549814298425998,
-      "differingPixels": 319122,
+      "differingPixels": 363828,
       "minVisiblePixels": 556
     }
   ],
