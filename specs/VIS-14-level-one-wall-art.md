@@ -14,9 +14,9 @@ Responsible teammate: Johannes Franz Lang (`frcola`), assisted by one wall-metad
 - Preserve generic damaged/broken legacy aliases as level three for existing callers.
 - Give level-one damaged/broken canonical frames unambiguous IDs; keep intact and levels two through five unchanged.
 - Keep all five tiers, three damage states, native source crops, feet, logical dimensions, footprints and gameplay rules.
-- Change only wall family metadata, focused coverage and task documentation. Coordinate any discovered consumer changes with the integration owner.
+- Change wall family metadata, the coordinator-delegated nonbatch recovery fallback, focused coverage and task documentation. Preserve every other shared-world hunk.
 
-Expected files: `frontend/src/art/village/walls.js`, focused wall metadata/atlas coverage tests, and a bounded spec.
+Expected files: `frontend/src/art/village/walls.js`, `frontend/src/island/world.js` (only canonical recovery selection/loading), focused wall metadata/atlas/recovery coverage tests, and a bounded spec.
 
 ## Acceptance
 
@@ -89,10 +89,52 @@ checks; the tier/state and actual consumer UV assertions were retained.
 
 Not verified here: final baked asset output, combined screenshots, live
 recovery behavior, full frontend suite, a11y/demo or production. A separate
-integration finding remains: `structureRecoveryAppearance` in `world.js`
-uses generic wall state IDs in its nonbatch fallback. The coordinator owns
-that shared-file correction and its recovery tests. This metadata PR does
-not claim to resolve it. Overall wall visual acceptance remains open.
+integration finding at that checkpoint was the generic nonbatch recovery
+fallback. The coordinator subsequently delegated its correction to this
+branch; the completed followup is recorded below. Overall wall visual
+acceptance remains open.
+
+## Completed nonbatch recovery followup
+
+The coordinator delegated only the recovery selection/loading hunk of
+`world.js` to this writer. Source `9ad06ffb7ee6f8842713e11469e8267ace996b30`
+now selects `wallFrame(row.level, look)` from a matching v1 row. Its art
+request includes all ten canonical damaged/broken frames, so the fallback
+can actually draw the selected frame while the wall atlas is unavailable.
+The existing version, accepted-phase, identity, HP and level guards remain.
+Legacy version-zero states still return no v1 override. CORE, projection,
+retry, scene ownership and gameplay rules were not changed by this hunk.
+
+Tests first reproduced generic-ID selection in the rule, a complete API
+read, and the actual scene fallback. A separate async loading assertion
+confirmed that the real request omitted explicit L1 damage before the fix.
+After correction, from `frontend/`:
+
+```text
+npx vitest run tests/island/structure-recovery-world.test.js tests/island/perimeter-health-api.test.js tests/island/world-cohort.test.js tests/art/wall-tier-identity.test.js tests/art/wall-atlas.test.js tests/art/village-activation.test.js tests/island/wall-shaded-preview.test.js
+Test Files  7 passed (7)
+Tests       76 passed (76)
+Duration    3.81s
+
+npm run build
+Built in 1.14s
+Spoiler guard: 244 text files, 12 protected lines, no suspect elimination data.
+
+node scripts/report-budget.js --check
+Exit 0; cold-title JavaScript 18,825 bytes, CSS 9,410 bytes.
+```
+
+The recovery rule checks all five levels, both damaged/broken states, both
+accepted phases, half/full-HP restoration and version-zero refusal. The
+complete client read still selects the correct L1 rubble for `wall_128`,
+and the actual scene test retains L3 rubble and breach/restore behavior.
+The loading assertion covers every canonical damage ID rather than just
+checking that one frame is available.
+
+Text lint from the root exited 0 again: `4538 candidate strings in 528
+source files; 0 errors, 8 report-only findings.` No Chrome was launched.
+Final bake, composed screenshots, full suite, a11y/demo and live behavior
+remain outside this lane's verification.
 
 ## Explain-back
 
