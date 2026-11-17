@@ -15,9 +15,10 @@ canonical snapshot fixtures; assertions and server limits were left intact.
 T57 replay modules `80b79c22` and fixed-seal reader `aad93866`; T55 contract notes `704f7ea5`,
 stateless SQL paging `db9cd0d4`, HTTP page adapter `081f5e1b`, and input response contract `583b9802`;
 T55 stateless contract documentation `d260bfd6`; T58 integrated UI/evidence `a3ae783b`; T59
-integrated card/indicator UI `ba0d6cae`; and T60 HTTP reconnect regression `d6b686e6`.
+integrated card/indicator UI `ba0d6cae`; T55 version compatibility notes `097029f0`; and T60 HTTP
+reconnect regression `d6b686e6`.
 T60 API/PG/replay harness base commit `5ebbd657` with expiry/flag-off coverage and release docs in
-`825d2c56` and `9e2e55b8`.
+`825d2c56` and `9e2e55b8`; final integrated branch verification at `795eaf47`.
 
 **Strict API/replay command** (from `backend/`):
 
@@ -65,14 +66,12 @@ UV_CACHE_DIR=/tmp/t60-uv-cache CASE_PG_SCRATCH=1 uv run --with pgserver --with '
   server/tests/island_sql/test_structure_recovery_http_pg.py
 ```
 
-**Historical result:** 71 passed in 14.42 seconds before stateless fixed-seal paging. The current
-stateless SQL migration/full-chain slice passed 44 SQL checks; the direct journal-budget diagnostic
-passed 1 check with the new five-argument RPC; and the actual HTTP reconnect/input/replay case above
-passed 1 check. These focused results supplement the historical combined run.
+**Historical result:** the earlier combined focused SQL/API command passed 71 tests in 14.42 seconds
+before stateless fixed-seal paging.
 
 **Full island SQL sweep:** the complete `server/tests/island_sql` folder passed 367 tests in 33.98
-seconds on code commit `fafd000f`, before the stateless page SQL/API changes. That historical count
-does not represent the current migration chain; see the focused current results above.
+seconds on code commit `fafd000f`, before the stateless page SQL/API changes. The current full sweep
+on `795eaf47` passed 368 in 34.59 seconds.
 
 **Focused Python route/transport command** (from `backend/`):
 
@@ -83,9 +82,8 @@ uv run --frozen pytest -q server/tests/test_wave_recovery_routes.py \
   server/tests/test_structure_recovery_manifest.py server/tests/test_captain_skills_routes.py
 ```
 
-**Historical result:** 138 passed in 15.75 seconds on the earlier T55 route contract. The current
-T55 route and transport suites separately passed 31 focused tests after stateless page support and
-the input response fix. The actual API-to-Postgres path is the dedicated HTTP fixture above.
+**Result:** 140 passed in 24.60 seconds. These are request/model/transport tests with local fakes;
+the actual API-to-Postgres path is the dedicated HTTP fixture above.
 
 The narrow adapter allowlists only the local tables and RPCs needed by these calls. It does not
 read environment credentials, connect to a hosted Supabase instance, or create a network client.
