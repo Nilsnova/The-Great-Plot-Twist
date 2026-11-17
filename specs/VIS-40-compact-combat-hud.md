@@ -6,7 +6,7 @@ Bounded battle UI correction for Johannes Franz Lang (`frcola`, `83476@novasbe.p
 
 The approved reference review found a first-wave pictogram on wave 41 and the phone battle bar overlapping the actual two-line coin purse. Keep every health, threat, loot, down/boss and weather state truthful while making the bar readable. No simulation, purchase, art, game/index or rendering change. The coordinator explicitly authorized the single controller first-wave guard so playing wave 41 cannot consume the first-wave device hint.
 
-Pin the immutable review base `review/vis-40-preview-414559fb` at `414559fb` (the coordinator's runtime-equivalent integration source; requested `59181376` is unavailable in fetched GitHub history). Preserve teammate playout and core publisher code. Draft only; independent human review and explain-back remain required.
+Pin the immutable review base `review/vis-40-main-59181376` at `591813762a11fa29dee9097a79811831982eb0ef`, fetched from the coordinator's reconciled `current-main` clone. Normal ancestry reconciliation retained the earlier specification commit and all current-main code; the reviewed runtime starts byte-identical to the coordinator's visual preview. Preserve teammate playout and core publisher code. Draft only; independent human review and explain-back remain required.
 
 ## Plan and contracts
 
@@ -36,4 +36,6 @@ Before readiness: Why must wave 41 not write the hint flag? Why measure the real
 
 ## Verification
 
-Pending focused implementation and checks. No browser or full-suite pass is claimed by this initial specification.
+`cd frontend && npx --no-install vitest run tests/pirates/first-wave-hint.test.js tests/pirates/controller.test.js`: 2 files, 6 tests passed (2.05 s). The new storage regression failed on the original condition because wave 41 displayed and consumed the hint, then passed after the one-condition correction. `git diff --check` and `node --check frontend/src/pirates/hud.js`: exit 0.
+
+Native real-header/disclosure tests are written but await the coordinator's exclusive Chrome lane. No browser, full-suite or integrated screenshot pass is claimed in this source checkpoint.
