@@ -92,7 +92,13 @@ try {
     const saved = await wallet(page), storedReceipts = await receipts(page); assert.equal(storedReceipts.length, 4);
     assert.equal(new Set(storedReceipts.map(r => r.actionUid)).size, 4); record.receipts = storedReceipts;
     await boot(page, null, true); assert.deepEqual(await wallet(page), saved, 'actual reload retains paid positions, levels and wallet');
-    assert.deepEqual(await receipts(page), storedReceipts); await manage(page);
+    assert.deepEqual(await receipts(page), storedReceipts);
+    // Reload intentionally restores the ordinary entry spawn/time; reapply only the declared view fixture.
+    await page.evaluate(() => {
+      const g = window.__island; g.settings.hour = 11; g.settings.fastTime = false;
+      g.player.position.set(8.5, 1.03, 12.8); g.view.setPlace('home_islet', g.player.position);
+    });
+    await manage(page);
     console.log(`${width}x${height}: actual reload retained four receipts, exact positions and wallet`);
     const p = await groundPoint(page, [paid[0].x, paid[0].z], .6); await page.mouse.click(p.x, p.y);
     const card = page.locator('.island-card-build[open]'); await card.waitFor();
@@ -117,7 +123,7 @@ try {
     for (const sheet of cannon.sheets) await writeFile(join(out, `supplementary-cannon-${width}-${sheet.density}.png`), Buffer.from(sheet.dataUrl.split(',')[1], 'base64'));
     assert.deepEqual(errors, []); assert.deepEqual(external, []); record.pageErrors = errors; record.consoleErrors = consoleErrors; record.externalRequests = external;
     checks.push(record); await writeFile(join(out, 'report.json'), JSON.stringify({source, fixtureSource, root,
-      fixture: 'Funded/progressed local shared fake transport; real pointer/keyboard cancel proof, public-controller long drafts, real quote/pay/upgrade/reload and frozen local-demo bell. Time acceleration is browser clock only. No production claim.', checks}, null, 2) + '\n');
+      fixture: 'Funded/progressed local shared fake transport; noon/captain beside bell reapplied for each new page only. Real pointer/keyboard cancel proof, public-controller long drafts, real quote/pay/upgrade/reload and frozen local-demo bell. Time acceleration is browser clock only. No production claim.', checks}, null, 2) + '\n');
     await context.close(); active = null;
   }
   assert.equal(head(root), source, 'runtime HEAD remained frozen for both actual viewport captures');
