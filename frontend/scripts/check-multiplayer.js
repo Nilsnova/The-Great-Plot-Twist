@@ -257,20 +257,21 @@ async function compare(a, b, waveId) {
 
 // The musket fires from the captain's own body (owner, 12 Nov): the owner's character and, on the friend's
 // page, the owner's figure switch to the musket pose; no second captain is drawn where the shot was fired.
-// poseSeen waits for the new shared shot and its musket mesh ({x, y} in px), or returns null after 3 s.
-const poseSeen = (page, figure, shot) => page.waitForFunction(({figure, count, by, target}) => { let at = null;
+// Register before the shot attempt so the short pose cannot finish before observation begins.
+const poseSeen = (page, figure, shot, token) => page.waitForFunction(({figure, count, by, target, token}) => {
+  if (window.__mp.poseCancelled?.[token]) return {cancelled: true};
   const fired = window.__mp.shots.slice(count).some(item => item.by === by && item.targetId === target);
   if (!fired) return false;
-  const g = window.__island, {innerWidth: w, innerHeight: h} = window;
+  let at = null; const g = window.__island, {innerWidth: w, innerHeight: h} = window;
   g.scene.traverse(item => { if (at || item.name !== 'captain-pose' || !item.visible || !item.userData.pose?.includes('musket')
       || (item.parent?.parent?.name === 'other-captains') !== figure) return;
     const p = item.getWorldPosition(item.position.clone()).project(g.camera); at = {x: (p.x + 1) / 2 * w, y: (1 - p.y) / 2 * h, frame: item.userData.pose}; });
-  return at; }, {figure, ...shot}, {timeout: 3000, polling: 16}).then(handle => handle.jsonValue(), () => null);
+  return at; }, {figure, ...shot, token}, {timeout: 3000, polling: 'raf'}).then(handle => handle.jsonValue(), () => null);
 // A close crop around the pose (the screenshots' "zoomed in" view), as wide as a third of the page.
 const zoomClip = (page, at) => { const {width, height} = page.viewportSize(), w = Math.round(width / 3), h = Math.round(w * .7);
   return {x: Math.max(0, Math.min(width - w, at.x - w / 2)), y: Math.max(0, Math.min(height - h, at.y - h * .65)), width: w, height: h}; };
 async function musketPose(host, ben) {
-  const sizes = [[1280, 720], [375, 812]], seen = {own: [], figure: []};
+  const sizes = [[1280, 720], [375, 812]], seen = {own: [], figure: []}, attempts = [];
   const shooter = await myCaptain(host), shooterId = shooter.id;
   const presenceId = host.playerId;
   const shooterColour = shooter.party.find(hero => hero.id === shooterId)?.colour;
@@ -296,12 +297,33 @@ async function musketPose(host, ben) {
         [spot.x, spot.z, presenceId, shooterColour]);
       await host.page.waitForTimeout(1500); // the friend's page hears where the owner stands
       const before = await Promise.all([host, ben].map(captain => captain.page.evaluate(() => window.__mp.shots.length)));
-      let fired = false;
+      let fired = false, mine = null, theirs = null;
       // At the ship by its id: the gun, never the cutlass (with no id a boarder in reach gets the blade).
-      for (let i = 0; i < 20 && !fired; i++) { fired = await host.page.evaluate(id => window.__island.waves.island.shoot(id), spot.id); if (!fired) await host.page.waitForTimeout(300); }
+      for (let i = 0; i < 20 && !fired; i++) {
+        const targetState = await host.page.evaluate(({id, actorId}) => {
+          const waves = window.__island.waves.island, wave = waves.wave;
+          const target = wave?.state?.ships?.find(ship => ship.id === id), actor = wave?.state?.party?.find(hero => hero.id === actorId);
+          return {waveId: wave?.info.waveId ?? null, ticks: wave?.ticks ?? null, done: !!wave?.done,
+            target: target ? {id: target.id, hp: target.hp, boss: !!target.boss} : null,
+            actor: actor ? {id: actor.id, hp: actor.hp, down: !!actor.down} : null};
+        }, {id: spot.id, actorId: shooterId});
+        if (!targetState.target) { if (attempts.length < 8) attempts.push({size, attempt, try: i, fired: false, reason: 'named target no longer alive', ...targetState}); break; }
+        const token = `${width}x${height}-${attempt}-${i}-${Date.now()}`;
+        const watches = Promise.all([poseSeen(host.page, false, {count: before[0], by: shooterId, target: spot.id}, token),
+          poseSeen(ben.page, true, {count: before[1], by: shooterId, target: spot.id}, token)]);
+        fired = await host.page.evaluate(id => window.__island.waves.island.shoot(id), spot.id);
+        if (fired) {
+          [mine, theirs] = await watches;
+          if (mine?.cancelled) mine = null; if (theirs?.cancelled) theirs = null;
+        }
+        else {
+          await Promise.all([host, ben].map(captain => captain.page.evaluate(key => { window.__mp.poseCancelled ??= Object.create(null); window.__mp.poseCancelled[key] = true; }, token)));
+          await watches; await host.page.waitForTimeout(300);
+        }
+        if ((!fired || !mine || !theirs) && attempts.length < 8) attempts.push({size, attempt, try: i, fired, targetState, ownPose: !!mine, teammatePose: !!theirs,
+          newShots: await host.page.evaluate(count => window.__mp.shots.slice(count), before[0])});
+      }
       if (!fired) continue;
-      const [mine, theirs] = await Promise.all([poseSeen(host.page, false, {count: before[0], by: shooterId, target: spot.id}),
-        poseSeen(ben.page, true, {count: before[1], by: shooterId, target: spot.id})]);
       if (mine && !own) {
         await host.page.screenshot({path: `${out}/05b-musket-pose-own-zoom-${size}.png`, clip: zoomClip(host.page, mine)});
         await host.page.screenshot({path: `${out}/05b-musket-pose-own-${size}.png`});
@@ -319,7 +341,7 @@ async function musketPose(host, ben) {
   }
   await ben.page.evaluate(() => window.__island.experience.simulate(null));
   for (const captain of [host, ben]) await captain.page.setViewportSize({width: 960, height: 600});
-  return {seen, probe};
+  return {seen, probe, attempts};
 }
 const results = [];
 const captainShots = [];
@@ -784,9 +806,10 @@ try {
   await host.page.waitForTimeout(3000);
   await shot('05-four-captains-mid-wave');
   {
-    const {seen, probe} = await musketPose(host, ben);
+    const {seen, probe, attempts} = await musketPose(host, ben);
     results.push(`musket pose: the owner's own body posed at ${seen.own.join(', ') || 'no size'}, his figure on the friend's page at ${seen.figure.join(', ') || 'no size'}`);
     if (probe) results.push(`musket pose probe on the friend's page: ${JSON.stringify(probe)}`);
+    if (seen.own.length < 2 || seen.figure.length < 1) results.push(`musket pose failed attempts: ${JSON.stringify(attempts)}`);
     assert.equal(seen.own.length, 2, "the owner's own character takes the musket pose when he fires (both sizes)");
     assert.ok([...seen.own, ...seen.figure].every(item => /musket-[12](?:-(?:front|back))?$/.test(item)), `the poses are the musket's: ${[...seen.own, ...seen.figure]}`);
     assert.ok(seen.figure.length >= 1, "the owner's figure on the friend's page takes the musket pose");
