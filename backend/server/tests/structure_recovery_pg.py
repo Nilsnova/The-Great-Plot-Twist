@@ -37,6 +37,7 @@ FUNCTIONS = frozenset(
         "structure_recovery_read_state",
         "island_structure_repair",
         "recovery_wave_start",
+        "perimeter_wave_start",
         "recovery_wave_join",
         "recovery_wave_current",
         "recovery_wave_inputs",
