@@ -82,15 +82,13 @@ function validCanonicalClose(receipt, current) {
   const ids = rows.map(row => row.instanceId);
   if (new Set(ids).size !== ids.length || ids.length !== Object.keys(receipt.closedHp).length
     || ids.length !== Object.keys(receipt.basisRepairSeq).length) return false;
-  let maxRepairSeq = 0;
   for (const id of ids) {
     const hp = receipt.closedHp[id], sequence = receipt.basisRepairSeq[id];
     if (!Object.hasOwn(receipt.closedHp, id) || !Object.hasOwn(receipt.basisRepairSeq, id)
       || !Number.isInteger(hp) || hp < 0 || hp > 1_000_000
       || !Number.isSafeInteger(sequence) || sequence < 0) return false;
-    maxRepairSeq = Math.max(maxRepairSeq, sequence);
   }
-  return receipt.lastRepairSeq >= maxRepairSeq;
+  return true;
 }
 const END_BEAT_MS = 1800;             // the last ship sinks on screen before the cutscene
 const LOST_BEAT_MS = 4500;            // a lost run's result stays up a little longer
