@@ -1,0 +1,130 @@
+{
+  "beforeSource": "52f6bb158b03188b57260c1872e273391598debf",
+  "beforeFrontendTree": "6e0c6b27b717a7b8eedcde498d7372de6f0942cb",
+  "implementationSource": "ea87f88283dc999670e45f7c98bb0535d21c3c7a",
+  "scope": "Actual unchanged full-game before audit plus identical-helper native component red/green. Full-game after/combined gates remain separate and pending.",
+  "files": {
+    "before/island-toast-1280x720.png": {
+      "bytes": 1326788,
+      "sha256": "50ccc35623b401d64439a34fa38237ed7fea3417217a0d1e2b09682403e497b4",
+      "dimensions": [
+        1280,
+        720
+      ]
+    },
+    "before/island-toast-390x844.png": {
+      "bytes": 377635,
+      "sha256": "1177a97a1403bccad6ac8b53d28aaf5c2ffae1a350ebd979e1098c78dda20e6a",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    "before/island-toast-844x390.png": {
+      "bytes": 478698,
+      "sha256": "75dd85dbbeff67e26bde388aede800dade4f1e48a2931753669976554a85d66c",
+      "dimensions": [
+        844,
+        390
+      ]
+    },
+    "before/report.json": {
+      "bytes": 6474,
+      "sha256": "09b500e89c103961d5c77a9ffcbbbff4d10d6f50cd137ceeb9d28b1483e37253"
+    },
+    "overlap-command.log": {
+      "bytes": 6279,
+      "sha256": "6a7d6fa804d2c799218b571d85153049773c668a422610c4eadb3309b950b10d"
+    },
+    "coordinator-checks-52.json": {
+      "bytes": 2161,
+      "sha256": "bd835a593a735ab9bcd21189bc91614718f1b0b3dc2d4fd9a1e95565e39e18f5"
+    },
+    "component/before/island-toast-375x812.png": {
+      "bytes": 40701,
+      "sha256": "65bcfcb65c90d57999896f43b700b2e6d3e9a9f9e3b39fb3c68a5d3cbab2edfc",
+      "dimensions": [
+        375,
+        812
+      ]
+    },
+    "component/before/island-toast-1280x720.png": {
+      "bytes": 42733,
+      "sha256": "5d5c4d7f4d55986bcd4ec4d1d59e8ddec6be2665775830f87219b050a85b2e08",
+      "dimensions": [
+        1280,
+        720
+      ]
+    },
+    "component/before/island-toast-390x844.png": {
+      "bytes": 41029,
+      "sha256": "975b40f0c21ca34d18d4d7149a968818f22c967698099063cd6502ff63179880",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    "component/before/island-toast-844x390.png": {
+      "bytes": 39928,
+      "sha256": "ba09c03569ed6990a379e1f7f92011eb0dc71ff2f605960f426bd161f4936ceb",
+      "dimensions": [
+        844,
+        390
+      ]
+    },
+    "component/before/native.log": {
+      "bytes": 3621,
+      "sha256": "2c0b9fed5544d1c3fc919b7ea15d29739bb64a720b03af05d5b61196bae6d9cc"
+    },
+    "component/before/result.json": {
+      "bytes": 654,
+      "sha256": "c091cae6961ceb914ad34e8186e1f7219793f4d80d3fafd6f4e721ff05c0659c"
+    },
+    "component/after/island-toast-375x812.png": {
+      "bytes": 41125,
+      "sha256": "ac4373a78701bc00dc863b46103c5ce92b62e4fb4c48a0a4e19e807dd4aaa36d",
+      "dimensions": [
+        375,
+        812
+      ]
+    },
+    "component/after/island-toast-1280x720.png": {
+      "bytes": 42733,
+      "sha256": "5d5c4d7f4d55986bcd4ec4d1d59e8ddec6be2665775830f87219b050a85b2e08",
+      "dimensions": [
+        1280,
+        720
+      ]
+    },
+    "component/after/island-toast-390x844.png": {
+      "bytes": 41166,
+      "sha256": "534890ce247ea5c19788d0818b7b3b42a559b27c1371446f72e8c014393035c6",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    "component/after/island-toast-844x390.png": {
+      "bytes": 40348,
+      "sha256": "83c74dc9375b7542d63845b64bbd5e5c411fc71e76e46e991dba71a451c49efe",
+      "dimensions": [
+        844,
+        390
+      ]
+    },
+    "component/after/native.log": {
+      "bytes": 951,
+      "sha256": "3cec93c4689696a1a706547a3fa33204a0f3f36f807518f293aba51494ca1c56"
+    },
+    "component/after/result.json": {
+      "bytes": 607,
+      "sha256": "e6e95cf75d0b850ad8e5a5bafc4528b2c74721ed1772bf819e2163cbb6054221"
+    },
+    "component/toast-clearance.test.js": {
+      "bytes": 6811,
+      "sha256": "02d4a240d44b96dce9e01ec23408bdce8e741b77c37981117f27238512ec862b"
+    }
+  },
+  "afterFrontendTree": "d76918ec05735c46c9cda4a55cc495e28bfa0d5a",
+  "helperSha256": "02d4a240d44b96dce9e01ec23408bdce8e741b77c37981117f27238512ec862b"
+}

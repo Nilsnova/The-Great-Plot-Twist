@@ -1,0 +1,23 @@
+{
+  "source": "5e3dd6ccb3597617e67a8b720525d3add78c3704",
+  "helperHead": "12fe7ab781b2223de191485170aa48f664e4b91e",
+  "helperCodeEquivalentTo": "074a4675b99c68a41604bb1658943f5dfb1ee067",
+  "started": "2026-11-17T21:43:56.038035+00:00",
+  "helperHashes": {
+    "capture-village-composition.mjs": "0ffcefb64fd6a32f6348e6c35542bd54887e07b8fe8aed0eb85f904e427dbda8",
+    "perimeter-game-ui.mjs": "8f47d596ea378800b89e88171ab58aa37477faf892658cd7aca7c20f327a8ffb",
+    "perimeter-game-wave.mjs": "9c2f3a1951a1a57154c93e7cc113a33fc3b6dd16eb895126eac5eb5adb7547af"
+  },
+  "command": [
+    "node",
+    "scripts/capture-village-composition.mjs",
+    "/workspace/reference-village-work/latest-main-preview/frontend",
+    "/workspace/reference-village-work/stage-07-latest-main",
+    "reference",
+    "--arranged",
+    "--wave"
+  ],
+  "exitCode": 0,
+  "seconds": 208.25,
+  "finished": "2026-11-17T21:47:24.287976+00:00"
+}

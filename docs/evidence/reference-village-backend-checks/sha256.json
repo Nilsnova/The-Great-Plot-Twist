@@ -1,0 +1,55 @@
+{
+  "scope": "targeted backend routes/unit and disposable PostgreSQL; not full backend",
+  "backendTree": "c785196095edef4f5416744b46435ab564da4e9c",
+  "supabaseTree": "6e52a63b87028291127dbae8c344c9f49a73896d",
+  "files": [
+    {
+      "file": "initial/report.json",
+      "original": "latest-backend-checks/report.json",
+      "bytes": 2713,
+      "sha256": "69c57f100ff0c65832c032dde88227da7c3af7f47e2848ab9b3f181a5ce8256e"
+    },
+    {
+      "file": "initial/runner.log",
+      "original": "latest-backend-checks/runner.log",
+      "bytes": 1946,
+      "sha256": "97245f1c79f4fd217ff57cd1e41f9344096ca93e7f77d38d1666fa15668763dc"
+    },
+    {
+      "file": "initial/sync.log",
+      "original": "latest-backend-checks/sync.log",
+      "bytes": 27,
+      "sha256": "88237c65f73e2b4b2393f3b5ab30f1644105f212a3bc26e012d949bfa5870113"
+    },
+    {
+      "file": "initial/postgres-and-routes.log",
+      "original": "latest-backend-checks/postgres-and-routes.log",
+      "bytes": 674,
+      "sha256": "339d340332691467d0e2c40b967e17e12da38c285a0869ca2eff5e4af9a2e902"
+    },
+    {
+      "file": "initial/ruff.log",
+      "original": "latest-backend-checks/ruff.log",
+      "bytes": 19,
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    {
+      "file": "scratch-postgres/report.json",
+      "original": "latest-backend-pg-checks/report.json",
+      "bytes": 1797,
+      "sha256": "b2a422fada5aad921b4a7db7f86fbf8150d1719fa533f2758f309a2604e62530"
+    },
+    {
+      "file": "scratch-postgres/runner.log",
+      "original": "latest-backend-pg-checks/runner.log",
+      "bytes": 1198,
+      "sha256": "b5904f58fb9cec0007c51dba1403bcce033fd6d3a0fc90ec16319e9f402a9840"
+    },
+    {
+      "file": "scratch-postgres/postgres.log",
+      "original": "latest-backend-pg-checks/postgres.log",
+      "bytes": 341,
+      "sha256": "6d02e3c20e406dda9d057b0cd071983e942030b23cc8b05eccb5e2b59a3b106e"
+    }
+  ]
+}

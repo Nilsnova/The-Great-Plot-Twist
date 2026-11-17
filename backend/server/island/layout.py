@@ -19,11 +19,16 @@ The browser repeats these rules for its preview in frontend/src/island/placement
 import json
 import math
 from collections import deque
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from functools import cache
 from pathlib import Path
 
 from server.errors import ApiError
+from server.island.wall_cohort import (
+    LEGACY_WALL_CAPACITY,
+    PERIMETER_WALL_CAPACITY,
+    is_inventory_wall_id,
+)
 
 # backend/server/island/layout.py -> parents[2] is backend/
 CONTENT_FILE = Path(__file__).resolve().parents[2] / "content" / "island_layout.json"
@@ -87,6 +92,9 @@ class LayoutInfo:
     version: int  # 1: the fixed spots of an old save, 2: something was placed on the grid
     grid: float
     movable: bool  # False while the layout table cannot be read (before its migration)
+    wall_rule_version: int = 0  # Separate trusted policy; version above still means fixed/stored.
+    wall_capacity: int = LEGACY_WALL_CAPACITY
+    reserved_positions: dict[str, Position] = field(default_factory=dict)
 
 
 def read_spot(row: list) -> LayoutSpot:
@@ -164,14 +172,38 @@ def spot_named(rules: LayoutRules, spot_id: str) -> LayoutSpot | None:
     return None
 
 
-def positions_of(rules: LayoutRules, stored: dict[str, Position]) -> dict[str, Position]:
+def check_wall_policy(wall_rule_version: int, wall_capacity: int) -> None:
+    """Never interpret an unknown persisted policy as permission or as a legacy downgrade."""
+    if (
+        type(wall_rule_version) is not int
+        or type(wall_capacity) is not int
+        or (wall_rule_version, wall_capacity)
+        not in {(0, LEGACY_WALL_CAPACITY), (1, PERIMETER_WALL_CAPACITY)}
+    ):
+        raise ValueError("Unsupported wall placement policy.")
+
+
+def positions_of(
+    rules: LayoutRules,
+    stored: dict[str, Position],
+    *,
+    wall_rule_version: int = 0,
+    wall_capacity: int = LEGACY_WALL_CAPACITY,
+) -> dict[str, Position]:
     """Every spot's place: the stored one if any, else its fixed spot. An old save stores
     nothing, so it is converted to the grid as it was (every fixed spot is a grid cell).
     Then settle_walls() puts a wall that stands on no pirate path (D056) on a lane."""
+    check_wall_policy(wall_rule_version, wall_capacity)
     placed = {}
     for spot in rules.spots:
         placed[spot.spot] = stored.get(spot.spot, (spot.x, spot.z))
-    return settle_walls(rules, placed, stored)
+    if wall_rule_version == 0:
+        return settle_walls(rules, placed, stored)
+    # Added pieces have no spatial default and reserve nothing until accepted construction.
+    placed.update(
+        (spot, where) for spot, where in stored.items() if is_inventory_wall_id(spot, wall_capacity)
+    )
+    return placed
 
 
 def settle_walls(
@@ -234,28 +266,50 @@ def nearest_lane_cell(
     return None
 
 
-def place_spots(rules: LayoutRules, spots: tuple, stored: dict[str, Position] | None) -> tuple:
+def place_spots(
+    rules: LayoutRules,
+    spots: tuple,
+    stored: dict[str, Position] | None,
+    *,
+    wall_rule_version: int = 0,
+    wall_capacity: int = LEGACY_WALL_CAPACITY,
+) -> tuple:
     """The spot views (rules.SpotView) with the x and z of where each one stands."""
-    placed = positions_of(rules, stored or {})
+    placed = positions_of(
+        rules, stored or {}, wall_rule_version=wall_rule_version, wall_capacity=wall_capacity
+    )
     return tuple(
         replace(spot, x=placed[spot.id][0], z=placed[spot.id][1]) if spot.id in placed else spot
         for spot in spots
     )
 
 
-def info_of(rules: LayoutRules, stored: dict[str, Position] | None) -> LayoutInfo:
+def info_of(
+    rules: LayoutRules,
+    stored: dict[str, Position] | None,
+    *,
+    wall_rule_version: int = 0,
+    wall_capacity: int = LEGACY_WALL_CAPACITY,
+) -> LayoutInfo:
     """stored is None when the layout could not be read: the fixed spots, no moving."""
+    check_wall_policy(wall_rule_version, wall_capacity)
     version = 2 if stored else 1
-    return LayoutInfo(version, rules.grid, stored is not None)
+    return LayoutInfo(version, rules.grid, stored is not None, wall_rule_version, wall_capacity)
 
 
-def footprint_of(rules: LayoutRules, spot_id: str) -> float:
+def footprint_of(
+    rules: LayoutRules, spot_id: str, *, wall_capacity: int = LEGACY_WALL_CAPACITY
+) -> float:
     spot = spot_named(rules, spot_id)
-    return rules.footprints[spot.slot] if spot else 0.0
+    if spot is not None:
+        return rules.footprints[spot.slot]
+    return rules.footprints[WALL_SLOT] if is_inventory_wall_id(spot_id, wall_capacity) else 0.0
 
 
-def box_of(rules: LayoutRules, spot_id: str, where: Position) -> Box:
-    size = footprint_of(rules, spot_id)
+def box_of(
+    rules: LayoutRules, spot_id: str, where: Position, *, wall_capacity: int = LEGACY_WALL_CAPACITY
+) -> Box:
+    size = footprint_of(rules, spot_id, wall_capacity=wall_capacity)
     return Box(spot_id, "another building", where[0], where[1], size, size)
 
 
@@ -285,25 +339,37 @@ def overlaps(a: Box, b: Box) -> bool:
 
 
 def check_move(
-    rules: LayoutRules, positions: dict[str, Position], spot_id: str, x: float, z: float
+    rules: LayoutRules,
+    positions: dict[str, Position],
+    spot_id: str,
+    x: float,
+    z: float,
+    *,
+    wall_rule_version: int = 0,
+    wall_capacity: int = LEGACY_WALL_CAPACITY,
 ) -> None:
     """Raise MoveRefused when `spot_id` may not stand at (x, z). The first failing rule wins:
     404 no_such_spot, 422 off_grid, 409 not_on_land, 409 off_path (a wall off every pirate
     path, D056), 409 place_taken, 409 blocks_route."""
-    if spot_named(rules, spot_id) is None:
+    check_wall_policy(wall_rule_version, wall_capacity)
+    spot = spot_named(rules, spot_id)
+    inventory = wall_rule_version == 1 and is_inventory_wall_id(spot_id, wall_capacity)
+    if spot is None and not inventory:
         raise MoveRefused(404, "no_such_spot", "There is no such build spot.")
     if not (on_grid(rules, x) and on_grid(rules, z)):
         raise MoveRefused(422, "off_grid", "Pick a square of the build grid.")
     if surface_class(rules, x, z) == SEA:
         raise MoveRefused(409, "not_on_land", "Buildings stand on land, not in the sea.")
-    if spot_named(rules, spot_id).slot == WALL_SLOT and not on_wall_lane(rules, x, z):
+    if wall_rule_version == 0 and spot.slot == WALL_SLOT and not on_wall_lane(rules, x, z):
         raise MoveRefused(409, "off_path", "Walls go on a pirate path.")
-    moved = box_of(rules, spot_id, (x, z))
+    moved = box_of(rules, spot_id, (x, z), wall_capacity=wall_capacity)
     for other in rules.keep_out:
         if overlaps(moved, other):
             raise MoveRefused(409, "place_taken", f"That is too close to {other.name}.")
     for other_id, where in positions.items():
-        if other_id != spot_id and overlaps(moved, box_of(rules, other_id, where)):
+        if other_id != spot_id and overlaps(
+            moved, box_of(rules, other_id, where, wall_capacity=wall_capacity)
+        ):
             raise MoveRefused(409, "place_taken", "Another building stands there.")
     if not route_open(rules, {**positions, spot_id: (x, z)}):
         raise MoveRefused(

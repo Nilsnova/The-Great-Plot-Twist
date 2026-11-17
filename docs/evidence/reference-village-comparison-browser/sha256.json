@@ -1,0 +1,52 @@
+{
+  "scope": "historical actual browser proof of standalone HTML; not new game/runtime acceptance",
+  "htmlSha256": "ee507bf458ece37811f748d8896cf46f19bbea7f53d0264be62fd4f7f4569de7",
+  "files": [
+    {
+      "file": "file-uri-failed/report.json",
+      "original": "comparison-browser-baseline/report.json",
+      "bytes": 1048,
+      "sha256": "4d0f650951ca388967a340ed9b971ee8f0300c9dcbe32b58a843030850d80d8a"
+    },
+    {
+      "file": "file-uri-failed/run.log",
+      "original": "comparison-browser-baseline/run.log",
+      "bytes": 422,
+      "sha256": "17076c879fd9e74bccdfc4b5bd27e189ffbf60063f67c2a16b38d3ba69c23250"
+    },
+    {
+      "file": "owned-loopback-passed/report.json",
+      "original": "comparison-browser-baseline-http/report.json",
+      "bytes": 69427,
+      "sha256": "4651cd19d3fd033c0d19eddef3dfda3d71652ab6e77fd44517e609b53a832474"
+    },
+    {
+      "file": "owned-loopback-passed/run.log",
+      "original": "comparison-browser-baseline-http/run.log",
+      "bytes": 277,
+      "sha256": "a56068aa7aa8bf51f94552428013593277097a884c35ab7d4bd454b1cb69f2ac"
+    },
+    {
+      "file": "owned-loopback-passed/comparison-1280x720.png",
+      "original": "comparison-browser-baseline-http/comparison-1280x720.png",
+      "bytes": 696375,
+      "sha256": "3ff2d2002b433c68f3698f7899f970b73fc56a7d159073d5eb83f226f3e05ba1",
+      "width": 1280,
+      "height": 1429
+    },
+    {
+      "file": "owned-loopback-passed/comparison-375x812.png",
+      "original": "comparison-browser-baseline-http/comparison-375x812.png",
+      "bytes": 769600,
+      "sha256": "6c8f7934a4d6d95a947a5885dd737cb76b99d98ebb1e92d8c1b8831ae4a521fc",
+      "width": 375,
+      "height": 3791
+    },
+    {
+      "file": "verify-comparison.mjs",
+      "original": "verify-comparison.mjs",
+      "bytes": 11051,
+      "sha256": "f708ffcf6d2518acea207bd3f2cc08ba0b4cbd6f70d9c0daf5e201641b6b3057"
+    }
+  ]
+}

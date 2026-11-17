@@ -79,9 +79,11 @@ function layoutKey(walls) {
 /**
  * The wall layout on the grid: for every cell the wall standing on it (or -1), and each wall's breach
  * cost. Walls are read in id order; where two overlap, the lower id owns the cell. A wall with hp 0 is
- * rubble: it owns its cells but costs nothing to cross. `pace` is {hackPerSecond, speed} of a boarder.
+ * rubble: it owns its cells but costs nothing to cross. Perimeter body-clearance masks can overlap:
+ * preferStanding keeps rubble from hiding a standing neighbor. Legacy ownership stays unchanged.
+ * `pace` is {hackPerSecond, speed} of a boarder.
  */
-export function buildLayout(grid, walls, pace) {
+export function buildLayout(grid, walls, pace, { preferStanding = false } = {}) {
   const sorted = [...walls].filter(wall => wall && typeof wall.id === 'string')
     .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   const owner = new Int32Array(grid.cols * grid.rows).fill(-1);
@@ -90,7 +92,9 @@ export function buildLayout(grid, walls, pace) {
     return { id: wall.id, kind: wall.obstacleKind ?? 'wall', hp: wall.hp, maxHp, standing, cost: standing ? breachCost({ hp: wall.hp, maxHp }, grid, pace) : 0,
       cells: wallCells(grid, wall) };
   });
-  list.forEach((wall, i) => { for (const index of wall.cells) if (owner[index] === -1) owner[index] = i; });
+  list.forEach((wall, i) => { for (const index of wall.cells) {
+    if (owner[index] === -1 || (preferStanding && wall.standing && !list[owner[index]].standing)) owner[index] = i;
+  } });
   return { owner, walls: list, key: layoutKey(list) };
 }
 

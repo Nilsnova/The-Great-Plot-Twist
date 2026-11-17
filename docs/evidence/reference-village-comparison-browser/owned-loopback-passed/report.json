@@ -1,0 +1,2037 @@
+{
+  "started": "2026-11-17T21:41:48.829Z",
+  "source": "/workspace/reference-village-work/visual-handover/docs/evidence/reference-village-visual-review/comparison.html",
+  "bytes": 6681124,
+  "sha256": "ee507bf458ece37811f748d8896cf46f19bbea7f53d0264be62fd4f7f4569de7",
+  "status": "passed",
+  "viewports": [
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "status": "passed",
+      "pageErrors": [],
+      "externalRequests": [],
+      "ownedRequests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:42209/"
+        }
+      ],
+      "checks": [
+        {
+          "label": "Viewport",
+          "steps": [
+            {
+              "action": "click desktop-tab",
+              "state": {
+                "focused": "desktop-tab",
+                "tabs": [
+                  {
+                    "id": "desktop-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "desktop-panel",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-tab",
+                    "hidden": false,
+                    "visible": true
+                  },
+                  {
+                    "id": "phone-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "phone-panel",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-tab",
+                    "hidden": true,
+                    "visible": false
+                  }
+                ],
+                "width": 1280,
+                "documentWidth": 1280,
+                "bodyWidth": 1280
+              }
+            },
+            {
+              "action": "End",
+              "state": {
+                "focused": "phone-tab",
+                "tabs": [
+                  {
+                    "id": "desktop-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "desktop-panel",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-tab",
+                    "hidden": true,
+                    "visible": false
+                  },
+                  {
+                    "id": "phone-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "phone-panel",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-tab",
+                    "hidden": false,
+                    "visible": true
+                  }
+                ],
+                "width": 1280,
+                "documentWidth": 1280,
+                "bodyWidth": 1280
+              }
+            },
+            {
+              "action": "ArrowRight",
+              "state": {
+                "focused": "desktop-tab",
+                "tabs": [
+                  {
+                    "id": "desktop-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "desktop-panel",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-tab",
+                    "hidden": false,
+                    "visible": true
+                  },
+                  {
+                    "id": "phone-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "phone-panel",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-tab",
+                    "hidden": true,
+                    "visible": false
+                  }
+                ],
+                "width": 1280,
+                "documentWidth": 1280,
+                "bodyWidth": 1280
+              }
+            },
+            {
+              "action": "ArrowLeft",
+              "state": {
+                "focused": "phone-tab",
+                "tabs": [
+                  {
+                    "id": "desktop-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "desktop-panel",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-tab",
+                    "hidden": true,
+                    "visible": false
+                  },
+                  {
+                    "id": "phone-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "phone-panel",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-tab",
+                    "hidden": false,
+                    "visible": true
+                  }
+                ],
+                "width": 1280,
+                "documentWidth": 1280,
+                "bodyWidth": 1280
+              }
+            },
+            {
+              "action": "Home",
+              "state": {
+                "focused": "desktop-tab",
+                "tabs": [
+                  {
+                    "id": "desktop-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "desktop-panel",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-tab",
+                    "hidden": false,
+                    "visible": true
+                  },
+                  {
+                    "id": "phone-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "phone-panel",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-tab",
+                    "hidden": true,
+                    "visible": false
+                  }
+                ],
+                "width": 1280,
+                "documentWidth": 1280,
+                "bodyWidth": 1280
+              }
+            },
+            {
+              "action": "ArrowRight",
+              "state": {
+                "focused": "phone-tab",
+                "tabs": [
+                  {
+                    "id": "desktop-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "desktop-panel",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-tab",
+                    "hidden": true,
+                    "visible": false
+                  },
+                  {
+                    "id": "phone-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "phone-panel",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-tab",
+                    "hidden": false,
+                    "visible": true
+                  }
+                ],
+                "width": 1280,
+                "documentWidth": 1280,
+                "bodyWidth": 1280
+              }
+            },
+            {
+              "action": "ArrowLeft",
+              "state": {
+                "focused": "desktop-tab",
+                "tabs": [
+                  {
+                    "id": "desktop-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "desktop-panel",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-tab",
+                    "hidden": false,
+                    "visible": true
+                  },
+                  {
+                    "id": "phone-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "phone-panel",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-tab",
+                    "hidden": true,
+                    "visible": false
+                  }
+                ],
+                "width": 1280,
+                "documentWidth": 1280,
+                "bodyWidth": 1280
+              }
+            },
+            {
+              "action": "click phone-tab",
+              "state": {
+                "focused": "phone-tab",
+                "tabs": [
+                  {
+                    "id": "desktop-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "desktop-panel",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-tab",
+                    "hidden": true,
+                    "visible": false
+                  },
+                  {
+                    "id": "phone-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "phone-panel",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-tab",
+                    "hidden": false,
+                    "visible": true
+                  }
+                ],
+                "width": 1280,
+                "documentWidth": 1280,
+                "bodyWidth": 1280
+              }
+            },
+            {
+              "action": "click desktop-tab",
+              "state": {
+                "focused": "desktop-tab",
+                "tabs": [
+                  {
+                    "id": "desktop-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "desktop-panel",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-tab",
+                    "hidden": false,
+                    "visible": true
+                  },
+                  {
+                    "id": "phone-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "phone-panel",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-tab",
+                    "hidden": true,
+                    "visible": false
+                  }
+                ],
+                "width": 1280,
+                "documentWidth": 1280,
+                "bodyWidth": 1280
+              }
+            }
+          ]
+        },
+        {
+          "label": "Desktop scene",
+          "steps": [
+            {
+              "action": "click desktop-village-tab",
+              "state": {
+                "focused": "desktop-village-tab",
+                "tabs": [
+                  {
+                    "id": "desktop-village-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "desktop-village",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-village-tab",
+                    "hidden": false,
+                    "visible": true
+                  },
+                  {
+                    "id": "desktop-combat-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "desktop-combat",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-combat-tab",
+                    "hidden": true,
+                    "visible": false
+                  }
+                ],
+                "width": 1280,
+                "documentWidth": 1280,
+                "bodyWidth": 1280
+              }
+            },
+            {
+              "action": "End",
+              "state": {
+                "focused": "desktop-combat-tab",
+                "tabs": [
+                  {
+                    "id": "desktop-village-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "desktop-village",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-village-tab",
+                    "hidden": true,
+                    "visible": false
+                  },
+                  {
+                    "id": "desktop-combat-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "desktop-combat",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-combat-tab",
+                    "hidden": false,
+                    "visible": true
+                  }
+                ],
+                "width": 1280,
+                "documentWidth": 1280,
+                "bodyWidth": 1280
+              }
+            },
+            {
+              "action": "ArrowRight",
+              "state": {
+                "focused": "desktop-village-tab",
+                "tabs": [
+                  {
+                    "id": "desktop-village-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "desktop-village",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-village-tab",
+                    "hidden": false,
+                    "visible": true
+                  },
+                  {
+                    "id": "desktop-combat-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "desktop-combat",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-combat-tab",
+                    "hidden": true,
+                    "visible": false
+                  }
+                ],
+                "width": 1280,
+                "documentWidth": 1280,
+                "bodyWidth": 1280
+              }
+            },
+            {
+              "action": "ArrowLeft",
+              "state": {
+                "focused": "desktop-combat-tab",
+                "tabs": [
+                  {
+                    "id": "desktop-village-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "desktop-village",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-village-tab",
+                    "hidden": true,
+                    "visible": false
+                  },
+                  {
+                    "id": "desktop-combat-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "desktop-combat",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-combat-tab",
+                    "hidden": false,
+                    "visible": true
+                  }
+                ],
+                "width": 1280,
+                "documentWidth": 1280,
+                "bodyWidth": 1280
+              }
+            },
+            {
+              "action": "Home",
+              "state": {
+                "focused": "desktop-village-tab",
+                "tabs": [
+                  {
+                    "id": "desktop-village-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "desktop-village",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-village-tab",
+                    "hidden": false,
+                    "visible": true
+                  },
+                  {
+                    "id": "desktop-combat-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "desktop-combat",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-combat-tab",
+                    "hidden": true,
+                    "visible": false
+                  }
+                ],
+                "width": 1280,
+                "documentWidth": 1280,
+                "bodyWidth": 1280
+              }
+            },
+            {
+              "action": "ArrowRight",
+              "state": {
+                "focused": "desktop-combat-tab",
+                "tabs": [
+                  {
+                    "id": "desktop-village-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "desktop-village",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-village-tab",
+                    "hidden": true,
+                    "visible": false
+                  },
+                  {
+                    "id": "desktop-combat-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "desktop-combat",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-combat-tab",
+                    "hidden": false,
+                    "visible": true
+                  }
+                ],
+                "width": 1280,
+                "documentWidth": 1280,
+                "bodyWidth": 1280
+              }
+            },
+            {
+              "action": "ArrowLeft",
+              "state": {
+                "focused": "desktop-village-tab",
+                "tabs": [
+                  {
+                    "id": "desktop-village-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "desktop-village",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-village-tab",
+                    "hidden": false,
+                    "visible": true
+                  },
+                  {
+                    "id": "desktop-combat-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "desktop-combat",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-combat-tab",
+                    "hidden": true,
+                    "visible": false
+                  }
+                ],
+                "width": 1280,
+                "documentWidth": 1280,
+                "bodyWidth": 1280
+              }
+            },
+            {
+              "action": "click desktop-combat-tab",
+              "state": {
+                "focused": "desktop-combat-tab",
+                "tabs": [
+                  {
+                    "id": "desktop-village-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "desktop-village",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-village-tab",
+                    "hidden": true,
+                    "visible": false
+                  },
+                  {
+                    "id": "desktop-combat-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "desktop-combat",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-combat-tab",
+                    "hidden": false,
+                    "visible": true
+                  }
+                ],
+                "width": 1280,
+                "documentWidth": 1280,
+                "bodyWidth": 1280
+              }
+            },
+            {
+              "action": "click desktop-village-tab",
+              "state": {
+                "focused": "desktop-village-tab",
+                "tabs": [
+                  {
+                    "id": "desktop-village-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "desktop-village",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-village-tab",
+                    "hidden": false,
+                    "visible": true
+                  },
+                  {
+                    "id": "desktop-combat-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "desktop-combat",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-combat-tab",
+                    "hidden": true,
+                    "visible": false
+                  }
+                ],
+                "width": 1280,
+                "documentWidth": 1280,
+                "bodyWidth": 1280
+              }
+            }
+          ]
+        },
+        {
+          "label": "Phone scene",
+          "steps": [
+            {
+              "action": "click phone-village-tab",
+              "state": {
+                "focused": "phone-village-tab",
+                "tabs": [
+                  {
+                    "id": "phone-village-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "phone-village",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-village-tab",
+                    "hidden": false,
+                    "visible": true
+                  },
+                  {
+                    "id": "phone-combat-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "phone-combat",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-combat-tab",
+                    "hidden": true,
+                    "visible": false
+                  }
+                ],
+                "width": 1280,
+                "documentWidth": 1280,
+                "bodyWidth": 1280
+              }
+            },
+            {
+              "action": "End",
+              "state": {
+                "focused": "phone-combat-tab",
+                "tabs": [
+                  {
+                    "id": "phone-village-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "phone-village",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-village-tab",
+                    "hidden": true,
+                    "visible": false
+                  },
+                  {
+                    "id": "phone-combat-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "phone-combat",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-combat-tab",
+                    "hidden": false,
+                    "visible": true
+                  }
+                ],
+                "width": 1280,
+                "documentWidth": 1280,
+                "bodyWidth": 1280
+              }
+            },
+            {
+              "action": "ArrowRight",
+              "state": {
+                "focused": "phone-village-tab",
+                "tabs": [
+                  {
+                    "id": "phone-village-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "phone-village",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-village-tab",
+                    "hidden": false,
+                    "visible": true
+                  },
+                  {
+                    "id": "phone-combat-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "phone-combat",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-combat-tab",
+                    "hidden": true,
+                    "visible": false
+                  }
+                ],
+                "width": 1280,
+                "documentWidth": 1280,
+                "bodyWidth": 1280
+              }
+            },
+            {
+              "action": "ArrowLeft",
+              "state": {
+                "focused": "phone-combat-tab",
+                "tabs": [
+                  {
+                    "id": "phone-village-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "phone-village",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-village-tab",
+                    "hidden": true,
+                    "visible": false
+                  },
+                  {
+                    "id": "phone-combat-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "phone-combat",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-combat-tab",
+                    "hidden": false,
+                    "visible": true
+                  }
+                ],
+                "width": 1280,
+                "documentWidth": 1280,
+                "bodyWidth": 1280
+              }
+            },
+            {
+              "action": "Home",
+              "state": {
+                "focused": "phone-village-tab",
+                "tabs": [
+                  {
+                    "id": "phone-village-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "phone-village",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-village-tab",
+                    "hidden": false,
+                    "visible": true
+                  },
+                  {
+                    "id": "phone-combat-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "phone-combat",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-combat-tab",
+                    "hidden": true,
+                    "visible": false
+                  }
+                ],
+                "width": 1280,
+                "documentWidth": 1280,
+                "bodyWidth": 1280
+              }
+            },
+            {
+              "action": "ArrowRight",
+              "state": {
+                "focused": "phone-combat-tab",
+                "tabs": [
+                  {
+                    "id": "phone-village-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "phone-village",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-village-tab",
+                    "hidden": true,
+                    "visible": false
+                  },
+                  {
+                    "id": "phone-combat-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "phone-combat",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-combat-tab",
+                    "hidden": false,
+                    "visible": true
+                  }
+                ],
+                "width": 1280,
+                "documentWidth": 1280,
+                "bodyWidth": 1280
+              }
+            },
+            {
+              "action": "ArrowLeft",
+              "state": {
+                "focused": "phone-village-tab",
+                "tabs": [
+                  {
+                    "id": "phone-village-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "phone-village",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-village-tab",
+                    "hidden": false,
+                    "visible": true
+                  },
+                  {
+                    "id": "phone-combat-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "phone-combat",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-combat-tab",
+                    "hidden": true,
+                    "visible": false
+                  }
+                ],
+                "width": 1280,
+                "documentWidth": 1280,
+                "bodyWidth": 1280
+              }
+            },
+            {
+              "action": "click phone-combat-tab",
+              "state": {
+                "focused": "phone-combat-tab",
+                "tabs": [
+                  {
+                    "id": "phone-village-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "phone-village",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-village-tab",
+                    "hidden": true,
+                    "visible": false
+                  },
+                  {
+                    "id": "phone-combat-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "phone-combat",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-combat-tab",
+                    "hidden": false,
+                    "visible": true
+                  }
+                ],
+                "width": 1280,
+                "documentWidth": 1280,
+                "bodyWidth": 1280
+              }
+            },
+            {
+              "action": "click phone-village-tab",
+              "state": {
+                "focused": "phone-village-tab",
+                "tabs": [
+                  {
+                    "id": "phone-village-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "phone-village",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-village-tab",
+                    "hidden": false,
+                    "visible": true
+                  },
+                  {
+                    "id": "phone-combat-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "phone-combat",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-combat-tab",
+                    "hidden": true,
+                    "visible": false
+                  }
+                ],
+                "width": 1280,
+                "documentWidth": 1280,
+                "bodyWidth": 1280
+              }
+            }
+          ]
+        }
+      ],
+      "htmlResponse": {
+        "status": 200,
+        "bytes": 6681124,
+        "sha256": "ee507bf458ece37811f748d8896cf46f19bbea7f53d0264be62fd4f7f4569de7"
+      },
+      "images": [
+        {
+          "alt": "VIS33 original-art Fit view. Declared progressed fixture: 102 paid walls; 6,660 coins. Earlier projection/camera/art.",
+          "embeddedPng": true,
+          "complete": true,
+          "width": 1280,
+          "height": 720,
+          "declaredWidth": 1280,
+          "declaredHeight": 720
+        },
+        {
+          "alt": "Final review capture, arranged village. Actual API arrangement: 123 paid walls; 5,150 coins. Later frozen candidate 6e2c3e8b has nonvisual fixes.",
+          "embeddedPng": true,
+          "complete": true,
+          "width": 1280,
+          "height": 720,
+          "declaredWidth": 1280,
+          "declaredHeight": 720
+        },
+        {
+          "alt": "WALL24 local-wave breach. Pre-wave declared fixture: 102 paid walls; 6,660 coins. Earlier source/renderer.",
+          "embeddedPng": true,
+          "complete": true,
+          "width": 1280,
+          "height": 720,
+          "declaredWidth": 1280,
+          "declaredHeight": 720
+        },
+        {
+          "alt": "Final review capture, local-wave breach. Pre-wave arranged fixture: 123 paid walls; 5,150 coins. Legacy local demo; clock accelerated.",
+          "embeddedPng": true,
+          "complete": true,
+          "width": 1280,
+          "height": 720,
+          "declaredWidth": 1280,
+          "declaredHeight": 720
+        },
+        {
+          "alt": "VIS33 original-art Fit view. Declared progressed fixture: 102 paid walls; 6,660 coins. Earlier projection/camera/art.",
+          "embeddedPng": true,
+          "complete": true,
+          "width": 375,
+          "height": 812,
+          "declaredWidth": 375,
+          "declaredHeight": 812
+        },
+        {
+          "alt": "Final review capture, arranged village. Actual API arrangement: 123 paid walls; 5,150 coins. Later frozen candidate 6e2c3e8b has nonvisual fixes.",
+          "embeddedPng": true,
+          "complete": true,
+          "width": 375,
+          "height": 812,
+          "declaredWidth": 375,
+          "declaredHeight": 812
+        },
+        {
+          "alt": "WALL24 local-wave breach. Pre-wave declared fixture: 102 paid walls; 6,660 coins. Earlier source/renderer.",
+          "embeddedPng": true,
+          "complete": true,
+          "width": 375,
+          "height": 812,
+          "declaredWidth": 375,
+          "declaredHeight": 812
+        },
+        {
+          "alt": "Final review capture, local-wave breach. Pre-wave arranged fixture: 123 paid walls; 5,150 coins. Legacy local demo; clock accelerated.",
+          "embeddedPng": true,
+          "complete": true,
+          "width": 375,
+          "height": 812,
+          "declaredWidth": 375,
+          "declaredHeight": 812
+        }
+      ],
+      "finalSelectedViewportTab": "desktop-tab",
+      "screenshot": "comparison-1280x720.png"
+    },
+    {
+      "viewport": {
+        "width": 375,
+        "height": 812
+      },
+      "status": "passed",
+      "pageErrors": [],
+      "externalRequests": [],
+      "ownedRequests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:42209/"
+        }
+      ],
+      "checks": [
+        {
+          "label": "Viewport",
+          "steps": [
+            {
+              "action": "click desktop-tab",
+              "state": {
+                "focused": "desktop-tab",
+                "tabs": [
+                  {
+                    "id": "desktop-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "desktop-panel",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-tab",
+                    "hidden": false,
+                    "visible": true
+                  },
+                  {
+                    "id": "phone-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "phone-panel",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-tab",
+                    "hidden": true,
+                    "visible": false
+                  }
+                ],
+                "width": 375,
+                "documentWidth": 375,
+                "bodyWidth": 375
+              }
+            },
+            {
+              "action": "End",
+              "state": {
+                "focused": "phone-tab",
+                "tabs": [
+                  {
+                    "id": "desktop-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "desktop-panel",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-tab",
+                    "hidden": true,
+                    "visible": false
+                  },
+                  {
+                    "id": "phone-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "phone-panel",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-tab",
+                    "hidden": false,
+                    "visible": true
+                  }
+                ],
+                "width": 375,
+                "documentWidth": 375,
+                "bodyWidth": 375
+              }
+            },
+            {
+              "action": "ArrowRight",
+              "state": {
+                "focused": "desktop-tab",
+                "tabs": [
+                  {
+                    "id": "desktop-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "desktop-panel",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-tab",
+                    "hidden": false,
+                    "visible": true
+                  },
+                  {
+                    "id": "phone-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "phone-panel",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-tab",
+                    "hidden": true,
+                    "visible": false
+                  }
+                ],
+                "width": 375,
+                "documentWidth": 375,
+                "bodyWidth": 375
+              }
+            },
+            {
+              "action": "ArrowLeft",
+              "state": {
+                "focused": "phone-tab",
+                "tabs": [
+                  {
+                    "id": "desktop-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "desktop-panel",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-tab",
+                    "hidden": true,
+                    "visible": false
+                  },
+                  {
+                    "id": "phone-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "phone-panel",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-tab",
+                    "hidden": false,
+                    "visible": true
+                  }
+                ],
+                "width": 375,
+                "documentWidth": 375,
+                "bodyWidth": 375
+              }
+            },
+            {
+              "action": "Home",
+              "state": {
+                "focused": "desktop-tab",
+                "tabs": [
+                  {
+                    "id": "desktop-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "desktop-panel",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-tab",
+                    "hidden": false,
+                    "visible": true
+                  },
+                  {
+                    "id": "phone-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "phone-panel",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-tab",
+                    "hidden": true,
+                    "visible": false
+                  }
+                ],
+                "width": 375,
+                "documentWidth": 375,
+                "bodyWidth": 375
+              }
+            },
+            {
+              "action": "ArrowRight",
+              "state": {
+                "focused": "phone-tab",
+                "tabs": [
+                  {
+                    "id": "desktop-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "desktop-panel",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-tab",
+                    "hidden": true,
+                    "visible": false
+                  },
+                  {
+                    "id": "phone-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "phone-panel",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-tab",
+                    "hidden": false,
+                    "visible": true
+                  }
+                ],
+                "width": 375,
+                "documentWidth": 375,
+                "bodyWidth": 375
+              }
+            },
+            {
+              "action": "ArrowLeft",
+              "state": {
+                "focused": "desktop-tab",
+                "tabs": [
+                  {
+                    "id": "desktop-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "desktop-panel",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-tab",
+                    "hidden": false,
+                    "visible": true
+                  },
+                  {
+                    "id": "phone-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "phone-panel",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-tab",
+                    "hidden": true,
+                    "visible": false
+                  }
+                ],
+                "width": 375,
+                "documentWidth": 375,
+                "bodyWidth": 375
+              }
+            },
+            {
+              "action": "click phone-tab",
+              "state": {
+                "focused": "phone-tab",
+                "tabs": [
+                  {
+                    "id": "desktop-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "desktop-panel",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-tab",
+                    "hidden": true,
+                    "visible": false
+                  },
+                  {
+                    "id": "phone-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "phone-panel",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-tab",
+                    "hidden": false,
+                    "visible": true
+                  }
+                ],
+                "width": 375,
+                "documentWidth": 375,
+                "bodyWidth": 375
+              }
+            },
+            {
+              "action": "click desktop-tab",
+              "state": {
+                "focused": "desktop-tab",
+                "tabs": [
+                  {
+                    "id": "desktop-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "desktop-panel",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-tab",
+                    "hidden": false,
+                    "visible": true
+                  },
+                  {
+                    "id": "phone-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "phone-panel",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-tab",
+                    "hidden": true,
+                    "visible": false
+                  }
+                ],
+                "width": 375,
+                "documentWidth": 375,
+                "bodyWidth": 375
+              }
+            }
+          ]
+        },
+        {
+          "label": "Desktop scene",
+          "steps": [
+            {
+              "action": "click desktop-village-tab",
+              "state": {
+                "focused": "desktop-village-tab",
+                "tabs": [
+                  {
+                    "id": "desktop-village-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "desktop-village",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-village-tab",
+                    "hidden": false,
+                    "visible": true
+                  },
+                  {
+                    "id": "desktop-combat-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "desktop-combat",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-combat-tab",
+                    "hidden": true,
+                    "visible": false
+                  }
+                ],
+                "width": 375,
+                "documentWidth": 375,
+                "bodyWidth": 375
+              }
+            },
+            {
+              "action": "End",
+              "state": {
+                "focused": "desktop-combat-tab",
+                "tabs": [
+                  {
+                    "id": "desktop-village-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "desktop-village",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-village-tab",
+                    "hidden": true,
+                    "visible": false
+                  },
+                  {
+                    "id": "desktop-combat-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "desktop-combat",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-combat-tab",
+                    "hidden": false,
+                    "visible": true
+                  }
+                ],
+                "width": 375,
+                "documentWidth": 375,
+                "bodyWidth": 375
+              }
+            },
+            {
+              "action": "ArrowRight",
+              "state": {
+                "focused": "desktop-village-tab",
+                "tabs": [
+                  {
+                    "id": "desktop-village-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "desktop-village",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-village-tab",
+                    "hidden": false,
+                    "visible": true
+                  },
+                  {
+                    "id": "desktop-combat-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "desktop-combat",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-combat-tab",
+                    "hidden": true,
+                    "visible": false
+                  }
+                ],
+                "width": 375,
+                "documentWidth": 375,
+                "bodyWidth": 375
+              }
+            },
+            {
+              "action": "ArrowLeft",
+              "state": {
+                "focused": "desktop-combat-tab",
+                "tabs": [
+                  {
+                    "id": "desktop-village-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "desktop-village",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-village-tab",
+                    "hidden": true,
+                    "visible": false
+                  },
+                  {
+                    "id": "desktop-combat-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "desktop-combat",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-combat-tab",
+                    "hidden": false,
+                    "visible": true
+                  }
+                ],
+                "width": 375,
+                "documentWidth": 375,
+                "bodyWidth": 375
+              }
+            },
+            {
+              "action": "Home",
+              "state": {
+                "focused": "desktop-village-tab",
+                "tabs": [
+                  {
+                    "id": "desktop-village-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "desktop-village",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-village-tab",
+                    "hidden": false,
+                    "visible": true
+                  },
+                  {
+                    "id": "desktop-combat-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "desktop-combat",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-combat-tab",
+                    "hidden": true,
+                    "visible": false
+                  }
+                ],
+                "width": 375,
+                "documentWidth": 375,
+                "bodyWidth": 375
+              }
+            },
+            {
+              "action": "ArrowRight",
+              "state": {
+                "focused": "desktop-combat-tab",
+                "tabs": [
+                  {
+                    "id": "desktop-village-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "desktop-village",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-village-tab",
+                    "hidden": true,
+                    "visible": false
+                  },
+                  {
+                    "id": "desktop-combat-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "desktop-combat",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-combat-tab",
+                    "hidden": false,
+                    "visible": true
+                  }
+                ],
+                "width": 375,
+                "documentWidth": 375,
+                "bodyWidth": 375
+              }
+            },
+            {
+              "action": "ArrowLeft",
+              "state": {
+                "focused": "desktop-village-tab",
+                "tabs": [
+                  {
+                    "id": "desktop-village-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "desktop-village",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-village-tab",
+                    "hidden": false,
+                    "visible": true
+                  },
+                  {
+                    "id": "desktop-combat-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "desktop-combat",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-combat-tab",
+                    "hidden": true,
+                    "visible": false
+                  }
+                ],
+                "width": 375,
+                "documentWidth": 375,
+                "bodyWidth": 375
+              }
+            },
+            {
+              "action": "click desktop-combat-tab",
+              "state": {
+                "focused": "desktop-combat-tab",
+                "tabs": [
+                  {
+                    "id": "desktop-village-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "desktop-village",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-village-tab",
+                    "hidden": true,
+                    "visible": false
+                  },
+                  {
+                    "id": "desktop-combat-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "desktop-combat",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-combat-tab",
+                    "hidden": false,
+                    "visible": true
+                  }
+                ],
+                "width": 375,
+                "documentWidth": 375,
+                "bodyWidth": 375
+              }
+            },
+            {
+              "action": "click desktop-village-tab",
+              "state": {
+                "focused": "desktop-village-tab",
+                "tabs": [
+                  {
+                    "id": "desktop-village-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "desktop-village",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-village-tab",
+                    "hidden": false,
+                    "visible": true
+                  },
+                  {
+                    "id": "desktop-combat-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "desktop-combat",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "desktop-combat-tab",
+                    "hidden": true,
+                    "visible": false
+                  }
+                ],
+                "width": 375,
+                "documentWidth": 375,
+                "bodyWidth": 375
+              }
+            }
+          ]
+        },
+        {
+          "label": "Phone scene",
+          "steps": [
+            {
+              "action": "click phone-village-tab",
+              "state": {
+                "focused": "phone-village-tab",
+                "tabs": [
+                  {
+                    "id": "phone-village-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "phone-village",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-village-tab",
+                    "hidden": false,
+                    "visible": true
+                  },
+                  {
+                    "id": "phone-combat-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "phone-combat",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-combat-tab",
+                    "hidden": true,
+                    "visible": false
+                  }
+                ],
+                "width": 375,
+                "documentWidth": 375,
+                "bodyWidth": 375
+              }
+            },
+            {
+              "action": "End",
+              "state": {
+                "focused": "phone-combat-tab",
+                "tabs": [
+                  {
+                    "id": "phone-village-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "phone-village",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-village-tab",
+                    "hidden": true,
+                    "visible": false
+                  },
+                  {
+                    "id": "phone-combat-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "phone-combat",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-combat-tab",
+                    "hidden": false,
+                    "visible": true
+                  }
+                ],
+                "width": 375,
+                "documentWidth": 375,
+                "bodyWidth": 375
+              }
+            },
+            {
+              "action": "ArrowRight",
+              "state": {
+                "focused": "phone-village-tab",
+                "tabs": [
+                  {
+                    "id": "phone-village-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "phone-village",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-village-tab",
+                    "hidden": false,
+                    "visible": true
+                  },
+                  {
+                    "id": "phone-combat-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "phone-combat",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-combat-tab",
+                    "hidden": true,
+                    "visible": false
+                  }
+                ],
+                "width": 375,
+                "documentWidth": 375,
+                "bodyWidth": 375
+              }
+            },
+            {
+              "action": "ArrowLeft",
+              "state": {
+                "focused": "phone-combat-tab",
+                "tabs": [
+                  {
+                    "id": "phone-village-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "phone-village",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-village-tab",
+                    "hidden": true,
+                    "visible": false
+                  },
+                  {
+                    "id": "phone-combat-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "phone-combat",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-combat-tab",
+                    "hidden": false,
+                    "visible": true
+                  }
+                ],
+                "width": 375,
+                "documentWidth": 375,
+                "bodyWidth": 375
+              }
+            },
+            {
+              "action": "Home",
+              "state": {
+                "focused": "phone-village-tab",
+                "tabs": [
+                  {
+                    "id": "phone-village-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "phone-village",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-village-tab",
+                    "hidden": false,
+                    "visible": true
+                  },
+                  {
+                    "id": "phone-combat-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "phone-combat",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-combat-tab",
+                    "hidden": true,
+                    "visible": false
+                  }
+                ],
+                "width": 375,
+                "documentWidth": 375,
+                "bodyWidth": 375
+              }
+            },
+            {
+              "action": "ArrowRight",
+              "state": {
+                "focused": "phone-combat-tab",
+                "tabs": [
+                  {
+                    "id": "phone-village-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "phone-village",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-village-tab",
+                    "hidden": true,
+                    "visible": false
+                  },
+                  {
+                    "id": "phone-combat-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "phone-combat",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-combat-tab",
+                    "hidden": false,
+                    "visible": true
+                  }
+                ],
+                "width": 375,
+                "documentWidth": 375,
+                "bodyWidth": 375
+              }
+            },
+            {
+              "action": "ArrowLeft",
+              "state": {
+                "focused": "phone-village-tab",
+                "tabs": [
+                  {
+                    "id": "phone-village-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "phone-village",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-village-tab",
+                    "hidden": false,
+                    "visible": true
+                  },
+                  {
+                    "id": "phone-combat-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "phone-combat",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-combat-tab",
+                    "hidden": true,
+                    "visible": false
+                  }
+                ],
+                "width": 375,
+                "documentWidth": 375,
+                "bodyWidth": 375
+              }
+            },
+            {
+              "action": "click phone-combat-tab",
+              "state": {
+                "focused": "phone-combat-tab",
+                "tabs": [
+                  {
+                    "id": "phone-village-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "phone-village",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-village-tab",
+                    "hidden": true,
+                    "visible": false
+                  },
+                  {
+                    "id": "phone-combat-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "phone-combat",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-combat-tab",
+                    "hidden": false,
+                    "visible": true
+                  }
+                ],
+                "width": 375,
+                "documentWidth": 375,
+                "bodyWidth": 375
+              }
+            },
+            {
+              "action": "click phone-village-tab",
+              "state": {
+                "focused": "phone-village-tab",
+                "tabs": [
+                  {
+                    "id": "phone-village-tab",
+                    "selected": "true",
+                    "tabIndex": 0,
+                    "controls": "phone-village",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-village-tab",
+                    "hidden": false,
+                    "visible": true
+                  },
+                  {
+                    "id": "phone-combat-tab",
+                    "selected": "false",
+                    "tabIndex": -1,
+                    "controls": "phone-combat",
+                    "panelExists": true,
+                    "role": "tabpanel",
+                    "labelledBy": "phone-combat-tab",
+                    "hidden": true,
+                    "visible": false
+                  }
+                ],
+                "width": 375,
+                "documentWidth": 375,
+                "bodyWidth": 375
+              }
+            }
+          ]
+        }
+      ],
+      "htmlResponse": {
+        "status": 200,
+        "bytes": 6681124,
+        "sha256": "ee507bf458ece37811f748d8896cf46f19bbea7f53d0264be62fd4f7f4569de7"
+      },
+      "images": [
+        {
+          "alt": "VIS33 original-art Fit view. Declared progressed fixture: 102 paid walls; 6,660 coins. Earlier projection/camera/art.",
+          "embeddedPng": true,
+          "complete": true,
+          "width": 1280,
+          "height": 720,
+          "declaredWidth": 1280,
+          "declaredHeight": 720
+        },
+        {
+          "alt": "Final review capture, arranged village. Actual API arrangement: 123 paid walls; 5,150 coins. Later frozen candidate 6e2c3e8b has nonvisual fixes.",
+          "embeddedPng": true,
+          "complete": true,
+          "width": 1280,
+          "height": 720,
+          "declaredWidth": 1280,
+          "declaredHeight": 720
+        },
+        {
+          "alt": "WALL24 local-wave breach. Pre-wave declared fixture: 102 paid walls; 6,660 coins. Earlier source/renderer.",
+          "embeddedPng": true,
+          "complete": true,
+          "width": 1280,
+          "height": 720,
+          "declaredWidth": 1280,
+          "declaredHeight": 720
+        },
+        {
+          "alt": "Final review capture, local-wave breach. Pre-wave arranged fixture: 123 paid walls; 5,150 coins. Legacy local demo; clock accelerated.",
+          "embeddedPng": true,
+          "complete": true,
+          "width": 1280,
+          "height": 720,
+          "declaredWidth": 1280,
+          "declaredHeight": 720
+        },
+        {
+          "alt": "VIS33 original-art Fit view. Declared progressed fixture: 102 paid walls; 6,660 coins. Earlier projection/camera/art.",
+          "embeddedPng": true,
+          "complete": true,
+          "width": 375,
+          "height": 812,
+          "declaredWidth": 375,
+          "declaredHeight": 812
+        },
+        {
+          "alt": "Final review capture, arranged village. Actual API arrangement: 123 paid walls; 5,150 coins. Later frozen candidate 6e2c3e8b has nonvisual fixes.",
+          "embeddedPng": true,
+          "complete": true,
+          "width": 375,
+          "height": 812,
+          "declaredWidth": 375,
+          "declaredHeight": 812
+        },
+        {
+          "alt": "WALL24 local-wave breach. Pre-wave declared fixture: 102 paid walls; 6,660 coins. Earlier source/renderer.",
+          "embeddedPng": true,
+          "complete": true,
+          "width": 375,
+          "height": 812,
+          "declaredWidth": 375,
+          "declaredHeight": 812
+        },
+        {
+          "alt": "Final review capture, local-wave breach. Pre-wave arranged fixture: 123 paid walls; 5,150 coins. Legacy local demo; clock accelerated.",
+          "embeddedPng": true,
+          "complete": true,
+          "width": 375,
+          "height": 812,
+          "declaredWidth": 375,
+          "declaredHeight": 812
+        }
+      ],
+      "finalSelectedViewportTab": "phone-tab",
+      "screenshot": "comparison-375x812.png"
+    }
+  ],
+  "embeddedOriginalHashes": "8 exact matches",
+  "mode": "owned-loopback-http",
+  "ownedHttpRequests": [
+    {
+      "method": "GET",
+      "path": "/",
+      "status": 200,
+      "bytes": 6681124
+    },
+    {
+      "method": "GET",
+      "path": "/",
+      "status": 200,
+      "bytes": 6681124
+    }
+  ],
+  "origin": "http://127.0.0.1:42209",
+  "browserVersion": "156.0.8078.79",
+  "httpServerClosed": true,
+  "finished": "2026-11-17T21:41:54.183Z"
+}

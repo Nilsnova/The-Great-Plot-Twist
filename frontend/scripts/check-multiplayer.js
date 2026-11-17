@@ -95,6 +95,8 @@ async function openCaptain(name, playerId, visit = null, {create = false, join =
   // A visit link or a joined code: wait until the host's island has answered (the join's visit read).
   await page.waitForFunction(joined => window.__island.waves && (!(joined || new URLSearchParams(location.search).get('visit')) || window.__island.island.visiting?.ownerName), !!join, {timeout: 30000});
   if (!pages.includes(captain)) pages.push(captain);
+  await page.addScriptTag({type: 'module', content: "import {observeMultiplayerMap} from '/scripts/multiplayer-map-observer.js'; window.__mpMap = observeMultiplayerMap;"});
+  await page.waitForFunction(() => typeof window.__mpMap === 'function');
   // What every page heard: the sim's musket shots, the loot answers, and a ship list per frame.
   await page.evaluate(() => {
     const g = window.__island; g.settings.hour = 12;
@@ -173,16 +175,9 @@ const spotBuilt = (captain, spot) => captain.page.evaluate(spot => {
   const i = window.__island.island, target = i.visiting?.spots ? i.visiting : i.island;
   return !!target?.spots?.find(item => item.id === spot)?.built;
 }, spot);
-// What a page shows of one spot: the level art on the map (island-cannon:<spot>, its brass pips) and the card's
+// What a page shows of one spot: current textured wall buffers or legacy sprite/pips, and the card's
 // "Level n of m" with the price of the next level. The card is opened and closed again unless `keep`.
-const mapOf = (captain, spot) => captain.page.evaluate(spot => {
-  let level = 0, pips = 0;
-  window.__island.scene.traverse(object => {
-    if (/^island-(wall|cannon|mortar|watchtower|house):/.test(object.name) && object.name.endsWith(`:${spot}`)) level = object.userData.level ?? 0;
-    if (object.name.startsWith(`island-pip:${spot}:`)) pips++;
-  });
-  return {level, pips};
-}, spot);
+const mapOf = (captain, spot) => captain.page.evaluate(spot => window.__mpMap(window.__island.scene, spot), spot);
 const cardOf = (captain, spot, keep = false) => captain.page.evaluate(async ([spot, keep]) => {
   const game = window.__island.island;
   game.pick(spot); await new Promise(resolve => setTimeout(resolve, 80));
@@ -191,10 +186,11 @@ const cardOf = (captain, spot, keep = false) => captain.page.evaluate(async ([sp
   if (!keep) game.ui.close();
   return read;
 }, [spot, keep]);
-// Waits (at most 2 s) until the map shows `level` with that many pips, then reads the card; answers the ms it took.
+// Waits at most 2 s for the actual tier (batch geometry/UVs, or legacy sprite and pips), then reads the card.
 async function shows(captain, spot, level, what) {
   const began = Date.now();
-  const ok = async () => { const map = await mapOf(captain, spot); return map.level === level && map.pips === level; }; // a wall shows pips from level 2
+  const ok = async () => { const map = await mapOf(captain, spot); return map.level === level
+    && (map.mode === 'wall-batch' ? map.pips === 0 : map.mode === 'sprite' && map.pips === level); };
   while (Date.now() - began < 2000 && !await ok()) await captain.page.waitForTimeout(100);
   assert.ok(await ok(), `${captain.name}'s map shows ${what} as level ${level}: ${JSON.stringify(await mapOf(captain, spot))}`);
   const card = await cardOf(captain, spot);
@@ -567,7 +563,7 @@ try {
   await island(ben, async i => { i.dev.setWaveBest(5); i.dev.setCoins(900); await i.load(); });
   // The inner wall ring opens after wave 5 (GAME-V3.md §4): the owner raises it now, for the wave further down.
   await island(host, async i => { for (const id of ['wall_7', 'wall_8', 'wall_9', 'wall_10', 'wall_11', 'wall_12']) await i.build(id, 'wall'); });
-  assert.deepEqual(await mapOf(ben, 'wall_2'), {level: 1, pips: 0});
+  assert.deepEqual(await mapOf(ben, 'wall_2'), {level: 1, pips: 0, mode: 'wall-batch'});
   await island(host, async i => i.upgrade('wall_2'));
   const ownerUpgrade = await shows(ben, 'wall_2', 2, 'the owner\'s wall');
   results.push(`owner upgrade to level 2 on the friend's map and card after ${ownerUpgrade} ms`);
@@ -675,8 +671,8 @@ try {
   await ben.page.waitForFunction(() => /^Nils tore down the Wall\. You got back 🪙 25\.$/.test(window.__island.island.ui.toastText), null, {timeout: 3000, polling: 50});
   const benToast = await ben.page.evaluate(() => window.__island.island.ui.toastText);
   await ben.page.waitForFunction(before => window.__island.island.island?.coins === before + 25, benBefore, {timeout: 3000, polling: 100});
-  assert.deepEqual(await mapOf(ben, 'wall_2'), {level: 0, pips: 0}, "the friend's map shows no wall on wall_2");
-  assert.deepEqual(await mapOf(host, 'wall_2'), {level: 0, pips: 0}, "the owner's map shows no wall on wall_2");
+  assert.deepEqual(await mapOf(ben, 'wall_2'), {level: 0, pips: 0, mode: 'none'}, "the friend's map shows no wall on wall_2");
+  assert.deepEqual(await mapOf(host, 'wall_2'), {level: 0, pips: 0, mode: 'none'}, "the owner's map shows no wall on wall_2");
   results.push(`tear down: the owner's confirmation "${confirmation.question}" ${confirmation.lines.join(' ')}; the friend's island showed the empty spot after ${emptyAfter} ms, his toast "${benToast}", his coins ${benBefore} → ${benBefore + 25}`);
   await sized('02f-teardown-after', [host, ben]);
   await island(host, async i => { await i.build('wall_2', 'wall'); await i.upgrade('wall_2'); await i.upgrade('wall_2'); });

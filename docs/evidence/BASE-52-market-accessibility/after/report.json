@@ -1,0 +1,87 @@
+{
+  "source": "3135da36993aa3292dc751bcad24739b6edeedfc",
+  "mode": "after",
+  "fixture": "Production market entry with declared 100-coin calls fixture; actual 10-coin call; real 15-second refresh under browser clock.",
+  "initial": {
+    "key": "tidewright-works:less",
+    "name": "Less by 5 coins, Ether",
+    "index": 11,
+    "reads": 2
+  },
+  "refresh": {
+    "replaced": true,
+    "key": "tidewright-works:less",
+    "oldMarker": null,
+    "reads": 3
+  },
+  "tab": {
+    "domOrder": true,
+    "inside": true,
+    "visible": true,
+    "countMatches": true,
+    "identitiesMatch": true,
+    "duplicateKeys": [],
+    "positiveTabindex": false,
+    "expectedOrder": "12",
+    "actual": {
+      "tag": "BUTTON",
+      "type": "button",
+      "class": "kit-choice harbor-choice harbor-step",
+      "dataFocus": null,
+      "order": null,
+      "key": "tidewright-works:more",
+      "name": "More by 5 coins, Ether"
+    }
+  },
+  "minimumAmountUnchanged": "🪙 5",
+  "placeRequests": 1,
+  "contrast": [
+    {
+      "width": 1280,
+      "key": "tidewright-works:less",
+      "name": "Less by 5 coins, Ether",
+      "ariaDisabled": "true",
+      "opacity": "0.65",
+      "colour": "rgb(251, 242, 220)",
+      "background": {
+        "a": 1,
+        "r": 18,
+        "g": 58,
+        "b": 66
+      },
+      "ratio": 5.606368149075574
+    },
+    {
+      "width": 375,
+      "key": "tidewright-works:less",
+      "name": "Less by 5 coins, Ether",
+      "ariaDisabled": "true",
+      "opacity": "0.65",
+      "colour": "rgb(251, 242, 220)",
+      "background": {
+        "a": 1,
+        "r": 18,
+        "g": 58,
+        "b": 66
+      },
+      "ratio": 5.606368149075574
+    },
+    {
+      "width": 320,
+      "key": "tidewright-works:less",
+      "name": "Less by 5 coins, Ether",
+      "ariaDisabled": "true",
+      "opacity": "0.65",
+      "colour": "rgb(251, 242, 220)",
+      "background": {
+        "a": 1,
+        "r": 18,
+        "g": 58,
+        "b": 66
+      },
+      "ratio": 5.606368149075574
+    }
+  ],
+  "pageErrors": [],
+  "external": []
+}

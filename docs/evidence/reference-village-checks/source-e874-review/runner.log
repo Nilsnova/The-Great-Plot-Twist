@@ -1,0 +1,4 @@
+START overlaps
+DONE {"name": "overlaps", "command": ["npm", "run", "test:overlaps", "--", "--shots", "/workspace/reference-village-work/final-toast-smoke/overlap-captures"], "exitCode": 0, "seconds": 86.77, "log": "overlaps.log"}
+START capture
+DONE {"name": "capture", "command": ["python", "/workspace/reference-village-work/capture-candidate.py", "--repo", "/workspace/reference-village-work/latest-main-preview", "--out", "/workspace/reference-village-work/stage-09-final-toast"], "exitCode": 0, "seconds": 199.85, "log": "capture.log"}

@@ -1,0 +1,2 @@
+START report-input
+DONE {"name": "report-input", "command": ["npm", "test", "--", "--maxWorkers=1", "tests/pirates/defense-report-ownership.test.js", "--reporter=verbose"], "exitCode": 1, "seconds": 23.09, "log": "report-input.log"}

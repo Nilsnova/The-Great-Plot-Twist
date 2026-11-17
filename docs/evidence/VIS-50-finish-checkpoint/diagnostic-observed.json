@@ -1,0 +1,93 @@
+{
+  "directHealth": {
+    "reason": "checkpoint_divergence",
+    "status": "refused"
+  },
+  "minimumSeconds": 15,
+  "elapsedSeconds": 20,
+  "snapshotStructures": 1,
+  "prefix": {
+    "closed": false,
+    "events": [],
+    "status": "ok",
+    "headSeq": 0,
+    "through": null,
+    "sealedThroughTick": 399
+  },
+  "before": {
+    "balance": 90,
+    "run": [
+      false,
+      null,
+      null,
+      false
+    ],
+    "recovery": [
+      false,
+      null,
+      null
+    ],
+    "lootRows": 0
+  },
+  "incomingFinish": {
+    "boss": false,
+    "loot": 15,
+    "wave": 1,
+    "flags": 1,
+    "repeat": false,
+    "status": "done",
+    "balance": 105,
+    "expired": false,
+    "recovery": {
+      "waveId": "73cd3b07-8f92-4898-9dce-2ffa9fca3014",
+      "closedAt": "2026-11-17T21:39:55.934654+00:00",
+      "closedHp": {
+        "980f032d-4f9e-4549-a987-e6c7a46a6cbe": 1000000
+      },
+      "islandEpoch": "eb735629-6dce-4602-861d-65a70b59dc3c",
+      "throughTick": 399,
+      "inputHeadSeq": 0,
+      "checkpointUid": null,
+      "lastRepairSeq": 0,
+      "basisRepairSeq": {}
+    },
+    "survived": true,
+    "waveBest": 1
+  },
+  "afterIncoming": {
+    "balance": 105,
+    "run": [
+      true,
+      true,
+      15,
+      false
+    ],
+    "recovery": [
+      true,
+      null,
+      {
+        "980f032d-4f9e-4549-a987-e6c7a46a6cbe": 1000000
+      }
+    ],
+    "lootRows": 1
+  },
+  "previousFinish": {
+    "reason": "checkpoint_divergence",
+    "status": "refused"
+  },
+  "afterPrevious": {
+    "balance": 90,
+    "run": [
+      false,
+      null,
+      null,
+      false
+    ],
+    "recovery": [
+      false,
+      null,
+      null
+    ],
+    "lootRows": 0
+  }
+}

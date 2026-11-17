@@ -1,0 +1,20 @@
+{
+  "started": "2026-11-17T20:33:13.812589+00:00",
+  "source": "6e2c3e8b3437ba7302870adb59e2351c2fa74f5e",
+  "frontendTree": "8365d88e76889e68f5e1aa1d6aa9a858d3afaea3",
+  "checks": [
+    {
+      "name": "frontend",
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "--maxWorkers=1",
+        "--reporter=verbose"
+      ],
+      "exitCode": 1,
+      "seconds": 564.04,
+      "log": "frontend.log"
+    }
+  ]
+}

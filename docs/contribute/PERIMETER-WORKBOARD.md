@@ -1,0 +1,137 @@
+# Perimeter village implementation workboard
+
+Snapshot: **2026-11-17T15:35:57.016583+00:00**. Responsible teammate: **Johannes Franz Lang (`frcola`)**.
+
+**44 current Draft PRs; all unmerged.** Read the [implementation/review guide (Draft #332)](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/332), [approved full-perimeter contract (Draft #273)](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/273) and [wall epic #241](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/241) before reviewing a component.
+
+The candidate offer remains **off by default**, with no live activation or merge. The approved target is **128 canonical wall IDs** with explicit paid positions for new inventory. The actual measured closed island fixture uses **102 walls**. Original twelve-ID islands remain regression controls; they do not independently complete the approved target. Existing levels, prices, health rules and single-wall upgrades remain authoritative. Batch upgrades remain optional.
+
+## Verified and still open
+
+| Area | Current evidence | Remaining acceptance |
+|---|---|---|
+| Full normal backend | **536956 passed, 303 skipped in 941.81s (0:15:41)**; actual exit 0. Verification backend tree `e8d128f1` is identical to the final candidate. | Current human code review and explain-back. |
+| Private database folder | **609 passed in 25.19s**, including original wallet/home/wave/demolition regressions and actual perimeter HTTP, concurrency and composed lifecycle cases. | Human rollout decision; no live database application claimed. |
+| Static migration contracts | **494 passed in 4.75s**; W21 contract-test Ruff passed. Exact migration history and latest payment/refund/permission parity remain enforced. | No reduced monetary or lifecycle guarantees. |
+| Full combined frontend | **354 files / 4051 tests passed in 509.97s**, exit 0, on `9f240158`; frontend source tree `52716c`. | Independent human review, physical devices and final product acceptance. |
+| Accessibility / default demo | **33-screen accessibility exit 0** (BASE-52) and **34 default demo checks exit 0** (BASE-51), on their recorded sources. | Optional demo performance mode was not run; physical assistive-technology/Safari/device acceptance remains open. |
+| Actual phone workspace | **316.1px unquoted /335.0px quoted**, with **34.6px /33.2px canonical-shore clearance**, respectively; enabled controls retain real **44px** targets. | Physical Safari/device and final art/playability acceptance. |
+| Controlled rendering comparison | Matching desktop/phone fixtures: **375→235 actual WebGL calls**, 106→36 span meshes, unchanged 106 logical links; 330→260 geometries, 38 textures unchanged. | **Below 150 total calls remains unmet at 235**; sustained real-device frame time remains open. |
+
+These are separate verification runs and are **not summed**. Chromium viewport evidence does not establish physical-device or production acceptance. See [actual game evidence](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/d9caace7e8288bd8791042640a7978fc3d2fa0fc/docs/evidence/WALL-24/README.md) and [paired rendering evidence](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/bfb0efe3c39b297d7c8e3f882ad774504cc23923/docs/evidence/WALL-45-span-batches/README.md). The quoted workspace probe has its own smaller declared fixture; it is separate from the full paid-wall journey.
+
+Backend provenance: full verification commit `e11d6a8910bc638bd9b58156f8f841c7ae56350e` uses backend **tree** `e8d128f1`; the earlier SQL run records backend **tree** `51b566b4`, not an integration commit. Their island-SQL subtree is identical (`d09ffcdf`) and the recorded migration tree is `9dced252`. Only two static backend test files differ; production backend sources are unchanged.
+
+## Review sequence and current heads
+
+Every row is a current **Draft**. Head and review-base links resolve to the exact observed commits. Fixed dependency branch names are shown for immutable component review; main/stacked branch rows record their observed base commit without claiming that those branch names cannot advance. Later owner commits require review of the new revision. These baselines are not automatic release targets.
+
+### Contracts and foundation
+
+| Task / Draft | Own scope | Observed review base | Observed head |
+|---|---|---|---|
+| [VIS-00 #239](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/239) | Reference-led visual roadmap, neutral task inventory and delivery gates; planning only. | [`main · 569d8fda`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/569d8fda3474cb84af36af190853d1a0e02b7abf) | [`e80948c4`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/e80948c45ad25fa56d30cabdb78abac6647d275a) |
+| [WALL-01 #273](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/273) | Define the required full-perimeter wall contract, capacity and compatibility gates. | [`main · 569d8fda`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/569d8fda3474cb84af36af190853d1a0e02b7abf) | [`28f9863a`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/28f9863a41a59c8b408fa983b0ea47eaf12b0a94) |
+| [WALL-06 #271](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/271) | Validate canonical, snapped wall positions using trusted server grid rules. | [`main · 569d8fda`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/569d8fda3474cb84af36af190853d1a0e02b7abf) | [`7e7430c0`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/7e7430c0741f4bd19925636f8b682c276fb69283) |
+| [WALL-03 #276](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/276) | Recognize the bounded wall cohort in server catalogue, stored state and browser IDs. | [`feat/wall-06-free-grid-validation · 7e7430c0`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/7e7430c0741f4bd19925636f8b682c276fb69283) | [`a3556076`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/a355607687ac274a3af131a19f479839a088bfa1) |
+| [WALL-07 #277](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/277) | Read policy, layout and epoch atomically and fence stale Move requests. | [`feat/wall-06-free-grid-validation · 7e7430c0`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/7e7430c0741f4bd19925636f8b682c276fb69283) | [`1e5e2ebe`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/1e5e2ebe2042f6fa8fe5cb0890301c51a78d827d) |
+| [WALL-25 #279](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/279) | Persist and admit policy 1/capacity 128 atomically without rewriting legacy saves. | [`main · 569d8fda`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/569d8fda3474cb84af36af190853d1a0e02b7abf) | [`d36e79fc`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/d36e79fcc2ce7c66045f98284b1492927d2f8e81) |
+
+### Paid construction, reads and lifecycle
+
+| Task / Draft | Own scope | Observed review base | Observed head |
+|---|---|---|---|
+| [WALL-19 #275](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/275) | Admit exact wall IDs 1–128; require persisted policy, position and paid-build authority; release new-ID coordinates on demolition. | [`main · 569d8fda`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/569d8fda3474cb84af36af190853d1a0e02b7abf) | [`67abf3fa`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/67abf3faa195a3f2da41549c8e72b0c64fedd534) |
+| [WALL-20 #283](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/283) | Admit new wall IDs to the existing paid-repair transaction without changing health, price or quota rules. | [`feat/wall-19-cohort-constraints · 67abf3fa`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/67abf3faa195a3f2da41549c8e72b0c64fedd534) | [`51887c52`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/51887c52f4f53925724864af914560f8d6b57b24) |
+| [WALL-21 #291](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/291) | Preserve original-payer demolition refunds and recovery hooks; authorize and scope receipt replay. | [`feat/wall-20-cohort-repair · 51887c52`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/51887c52f4f53925724864af914560f8d6b57b24) | [`79ea3aa8`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/79ea3aa8388ada2e062cff051d07a5fb86b4e27e) |
+| [WALL-05 #294](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/294) | Quote connected snapped runs against current owner, terrain, unlock, catalogue and epoch state. | [`chore/wall-05-quote-review-base · 727e8c71`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/727e8c7149f61e1d348058e61d68d68187fc83ac) | [`b614ccfc`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/b614ccfcb9607e465b96aafaf472f59d167ea2f5) |
+| [WALL-12 #300](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/300) | Atomically debit and position an entire paid wall run with immutable epoch-fenced receipts. | [`chore/wall-12-review-a75540cb · a75540cb`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/a75540cb18249ce12b3970779884762c6d24336e) | [`f339235d`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/f339235d845b6c53c30ee603d6bad60ccce9cc67) |
+| [WALL-33 #302](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/302) | Expose gated policy admission and authoritative wall-run quotes through the API. | [`chore/wall-33-review-5affabae · 5affabae`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/5affabae3e02bc85a7796f4c4276deb61a99ad1b) | [`bc8809a4`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/bc8809a45c01113de585f8b61e6ec23d1f7ce334) |
+| [WALL-33 #308](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/308) | Reconcile historical receipts before validating and committing the next paid construction intent. | [`feat/wall-33-enable-quote-api · bc8809a4`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/bc8809a45c01113de585f8b61e6ec23d1f7ce334) | [`5fe99328`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/5fe99328cee3a110dbf9bd21d2548110e080b8ec) |
+| [WALL-28 #285](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/285) | Carry the owner wall policy through island views and existing actions. | [`chore/wall-28-view-dependencies · 3eda28b8`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/3eda28b867b68b6c4fbbe74de090f4889f26b32e) | [`9901dad5`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/9901dad525e61c1908840205c2fa37a57c43da10) |
+| [WALL-39 #318](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/318) | Read the full canonical wall health cohort without clipping to the original twelve slots. | [`chore/wall-39-review-dc6f80ef · dc6f80ef`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/dc6f80efb6f2811b0fee1b8cd1b475b8ae5e0dba) | [`542424aa`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/542424aa407cdf44ae6afc9bc883636e86882783) |
+| [WALL-40 #321](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/321) | Parse the complete canonical perimeter health cohort in the browser. | [`chore/wall-40-review-dc6f80ef · dc6f80ef`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/dc6f80efb6f2811b0fee1b8cd1b475b8ae5e0dba) | [`d25fced6`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/d25fced63abf3e02bfd5bf893805c88d00359da7) |
+
+### Village camera and real controls
+
+| Task / Draft | Own scope | Observed review base | Observed head |
+|---|---|---|---|
+| [BASE-02 #270](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/270) | Use zoom, pan and a bounded village view with usable desktop and phone controls. | [`main · 569d8fda`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/569d8fda3474cb84af36af190853d1a0e02b7abf) | [`7725b12f`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/7725b12fb43ef6206bd9d9bb324efb968be63821) |
+| [WALL-26 #282](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/282) | Keep wall-run quotes, immutable intents and safe retry/reconciliation state. | [`feat/base-02-working-camera · c5af53a5`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/c5af53a56c01168f31295721cc749d5b6be8a529) | [`56e865c8`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/56e865c8821c52ea18dd2d08b12efa5b10f59426) |
+| [WALL-27 #296](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/296) | Connect quotes to actual village controls, unpaid ghosts, placement and reset/travel guards. | [`chore/wall-27-review-11e5b4c5 · 11e5b4c5`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/11e5b4c5ae3578f34bddee0705035a6e6174d7bd) | [`ec617b96`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/ec617b9616825679ad3d27317192fd74589838f7) |
+| [WALL-37 #316](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/316) | Add accessible half-grid touch adjustments to unpaid wall drafts. | [`feat/wall-27-builder-controls · ec617b96`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/ec617b9616825679ad3d27317192fd74589838f7) | [`605b42e3`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/605b42e31b381ad6e6eace7d36b7164a6db7aced) |
+| [WALL-42 #330](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/330) | Compact the real wall builder while preserving accessible controls and touch hit targets. | [`chore/wall-42-pinned-base · ce719a3e`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/ce719a3e0d1b878300cd230afc42d338a92319e0) | [`7e66f6d8`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/7e66f6d8dba2c589b627dc4951d1cd7ff1776354) |
+| [WALL-44 #336](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/336) | Preserve a usable phone construction workspace with real camera insets and full-size controls. | [`chore/wall-44-pinned-base · b1755351`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/b1755351b07e5c7e76c22de199ab5ddb70068d0c) | [`5180f3a3`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/5180f3a375b0e0d436008354e0b406dfe99d724a) |
+| [WALL-08 #289](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/289) | Show Move previews that obey the authoritative free-grid and reserved-site policy. | [`feat/wall-03-perimeter-catalogue · a3556076`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/a355607687ac274a3af131a19f479839a088bfa1) | [`6e22afe7`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/6e22afe724b40e618bd443d6b1f04d9795c5cf96) |
+| [WALL-31 #298](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/298) | Exercise paid-style positioned wall runs in the local in-memory transport. | [`chore/wall-31-review-625bdd3f · 625bdd3f`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/625bdd3f56de493b6521cf669d287ed0152e72d8) | [`bd43ad24`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/bd43ad247f83f1a251fed5ce59ba0d898ed2449a) |
+| [WALL-30 #307](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/307) | Render and inspect the accepted paid wall cohort in the actual village world. | [`feat/wall-31-local-transport · bd43ad24`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/bd43ad247f83f1a251fed5ce59ba0d898ed2449a) | [`767c3005`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/767c30053e460a509f9b5a4afc857c410722c189) |
+| [WALL-41 #327](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/327) | Keep temporary overview separate from working camera and village control state. | [`chore/wall-41-tab-review-base · 9daf8e59`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/9daf8e59ec6153334d45e978b7ea5d9ebb2099e8) | [`bf6889b2`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/bf6889b298607b7d6eb16f9118c4cc5a18635c19) |
+
+### Frozen waves, live barriers and routing
+
+| Task / Draft | Own scope | Observed review base | Observed head |
+|---|---|---|---|
+| [WALL-16 #268](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/268) | Invalidate guide routes when a wall or tower durability changes. | [`main · 569d8fda`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/569d8fda3474cb84af36af190853d1a0e02b7abf) | [`c5255c34`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/c5255c342b02a70e5680dbdb1dc3e447ec960913) |
+| [WALL-23 #278](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/278) | Draw joined combat wall spans from currently standing barriers. | [`main · 569d8fda`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/569d8fda3474cb84af36af190853d1a0e02b7abf) | [`547fe602`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/547fe6024e21e3ce8aacb98f76df38ac6541c964) |
+| [WALL-29 #290](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/290) | Choose perimeter-wave landing cells outside standing wall barriers. | [`main · 569d8fda`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/569d8fda3474cb84af36af190853d1a0e02b7abf) | [`b61cc39a`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/b61cc39a49075117f1cc5b66b0f548409aca2fae) |
+| [WALL-22 #297](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/297) | Freeze complete perimeter positions and structure health for recovery-aware deterministic waves. | [`feat/wall-28-owner-policy-view · fbcb0fdb`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/fbcb0fdb5bdd98f43cf92d7c4a473f0884bb2081) | [`949d7c5c`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/949d7c5c56ad984862e4ae628cc5f7121b505318) |
+| [WALL-32 #304](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/304) | Serialize perimeter wave admission against policy and epoch under the owner lock; refuse unsupported clients. | [`feat/wall-22-frozen-perimeter · 949d7c5c`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/949d7c5c56ad984862e4ae628cc5f7121b505318) | [`4cbb9c24`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/4cbb9c24cf5d3ebe999f8d22caae8d7fa30bcab5) |
+| [WALL-35 #310](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/310) | Freeze explicit local perimeter demo state through the same deterministic combat contract. | [`chore/wall-35-review-fc30bff3 · fc30bff3`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/fc30bff3ea84c291f3804b46d9255e95aa4f8004) | [`e7506f8e`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/e7506f8e0d729cc1398f975aed6db5df41ec99f4) |
+| [WALL-13 #323](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/323) | Make perimeter routing and body clearance agree on snapped half-grid wall geometry. | [`chore/wall-13-review-8913fa7f · 8913fa7f`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/8913fa7f2ca139b4c40bf8786e1f035bea5f950d) | [`e02712e6`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/e02712e693bad419221314d1a817878a91f0070e) |
+| [WALL-43 #334](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/334) | Preserve frozen local perimeter inputs through the actual normal bell/start/join event boundary. | [`chore/wall-43-wave-events-base · 2661ed09`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/2661ed095e27834486922f21b47ddf5d80176a05) | [`f7d72f8a`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/f7d72f8a8491a6a4e2bff501730919557c9d3955) |
+
+### Composed verification and review guide
+
+| Task / Draft | Own scope | Observed review base | Observed head |
+|---|---|---|---|
+| [WALL-34 #306](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/306) | Prove two-session contention, replay, bounds, context restoration and all-or-nothing rollback in real private SQL. | [`feat/wall-12-atomic-construction · f339235d`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/f339235d845b6c53c30ee603d6bad60ccce9cc67) | [`1ddf3712`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/1ddf3712d713b409e43fc7e0065488a1cbc0fafd) |
+| [WALL-36 #313](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/313) | Compose original V1 template, actual paid new IDs, health, upgrade, repair, refund and historical receipt replay. | [`chore/wall-36-review-dc6f80ef · dc6f80ef`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/dc6f80efb6f2811b0fee1b8cd1b475b8ae5e0dba) | [`b1a740f1`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/b1a740f135243455b8239576bb44c4f044246ee0) |
+| [WALL-38 #319](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/319) | Verify actual HTTP admission, full-ring paid construction, reads, retry and frozen wave start against disposable PostgreSQL. | [`chore/wall-38-review-72a36282 · 72a36282`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/72a362826695f1b7f69b620fadc2fb7c68e38285) | [`55b2df95`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/55b2df9589d7206c9fb618cd9a183ae5b972a2da) |
+| [WALL-24 #322](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/322) | Capture and verify the playable wall lifecycle in the real game rather than a separate mock. | [`chore/wall-24-review-dc6f80ef · dc6f80ef`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/dc6f80efb6f2811b0fee1b8cd1b475b8ae5e0dba) | [`d9caace7`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/d9caace7e8288bd8791042640a7978fc3d2fa0fc) |
+| [WALL #332](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/332) | Explain the implemented contracts, dependencies and review sequence in the contributor guide. | [`chore/perimeter-review-docs-base · f8a22d90`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/f8a22d904dfd3518d9e47793ff46108e1612b6e6) | [`e90aa05b`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/e90aa05b3413cf4ec0af2aa85fcacd3c19d383ae) |
+
+### Visual trials and rendering
+
+| Task / Draft | Own scope | Observed review base | Observed head |
+|---|---|---|---|
+| [VIS-02 #269](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/269) | Trial a richer cannon through the existing shared procedural art painter. | [`main · 569d8fda`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/569d8fda3474cb84af36af190853d1a0e02b7abf) | [`c1f6861d`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/c1f6861d137796d721f9869f2bc6f531299fde69) |
+| [VIS-19 #299](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/299) | Trial raised rock cliffs while retaining the existing walkable island top and geometry. | [`main · 2f81f276`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/2f81f2761b2d89da1ec70eb681a98c5f9874a4d0) | [`ca6632c2`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/ca6632c2fe0f3db809c74a3e215e1319bbd527c9) |
+| [WALL-45 #338](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/338) | Batch wall spans within their existing painter layers while preserving exact geometry, occlusion and gameplay. | [`chore/wall-45-span-review-base · b1755351`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/b1755351b07e5c7e76c22de199ab5ddb70068d0c) | [`bfb0efe3`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/bfb0efe3c39b297d7c8e3f882ad774504cc23923) |
+
+### Browser acceptance follow-ups
+
+| Task / Draft | Own scope | Observed review base | Observed head |
+|---|---|---|---|
+| [BASE-52 #340](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/340) | Correct Harbor limit contrast and stable semantic focus auditing across real refreshes; browser acceptance is scoped separately. | [`review/base-52-1fd16f1 · 1fd16f1f`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/1fd16f1fc0055edc832f3a849b6959e77e78ca2b) | [`b33b7d8d`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/b33b7d8d67cebc76253cf7606d9cdbd1ba54b76c) |
+| [BASE-51 #342](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/342) | Adapt the existing class-demo QA journey to the current-goal HUD while preserving original assertions. | [`chore/base-51-review-1fd16f1 · 1fd16f1f`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/1fd16f1fc0055edc832f3a849b6959e77e78ca2b) | [`323d4bef`](https://github.com/Nilsnova/The-Great-Plot-Twist/commit/323d4bef3a6d9a8e858142c3629b63ecd2468683) |
+
+### Browser verification order
+
+BASE-52 and BASE-51 share the frozen candidate dependency commit `1fd16f1` but have separate scopes. Review the Harbor contrast/semantic-focus correction and its actual refresh regressions under BASE-52; review the normal goal-aware Wave → Defend → Lamp QA flow under BASE-51. The coordinator sequences their shared browser lane, then runs the combined unit checks on the integrated source. A prior candidate run does not accept either new slice.
+
+### Final browser evidence
+
+**Browser gates passed on their recorded sources:** BASE-52 full accessibility: **33 screens, failures/errors/browserErrors/externalRequests/skipped all empty, exit 0** (source 3135da36, evidence head b33b7d8d). Its focused set is **133 tests in 10 files passed in 43.51s**, including the earlier 35-test subset rather than adding it. BASE-51 full default demo: **34 executed checks, errors [] / external [], exit 0** (executed source 37be8088, evidence head 323d4bef). Optional performance mode was not run (`perf: null`); physical Safari/device/production acceptance remains open. Immutable published evidence: [BASE-52 accessibility](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/b33b7d8d67cebc76253cf7606d9cdbd1ba54b76c/docs/evidence/BASE-52-market-accessibility/README.md) and [BASE-51 default demo](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/323d4bef3a6d9a8e858142c3629b63ecd2468683/docs/evidence/BASE-51-demo-journey/README.md).
+
+**Final combined frontend unit run passed:** **354 files / 4051 tests passed in 509.97s, process exit 0**, at source `9f2401581d2c827888313b9459b8052abc4698f2`, frontend source **tree** `52716c98798a4956fcd34a609af276451be87e7b`. No assertion was weakened and no timeout was raised. This is separate from the accessibility/demo runs and does not close human, physical-device or 235>150 rendering-budget acceptance.
+
+## Required database order
+
+After the existing recovery mutation baseline, the source migrations sort in this order. This is a review/dependency map; agents have not applied them to production.
+
+| Order | Source migration | Component |
+|---:|---|---|
+| 1 | `20261117140000_wall_policy.sql` | [Draft #279](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/279) |
+| 2 | `20261117141000_wall_cohort.sql` | [Draft #275](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/275) |
+| 3 | `20261117142000_wall_repair_cohort.sql` | [Draft #283](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/283) |
+| 4 | `20261117143000_wall_demolition_cohort.sql` | [Draft #291](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/291) |
+| 5 | `20261117144000_perimeter_wave_start.sql` | [Draft #304](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/304) |
+| 6 | `20261117145000_wall_chain_build.sql` | [Draft #300](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/300) |
+
+## Scope and human handover
+
+- WALL-03/19/20/21/22 are **required** for the approved 128-piece target. Their original issues and epic now consistently say so; original unchecked acceptance gates remain open.
+- WALL-25–45 are actual native children of [epic 241](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/241), linked there to their Draft implementations. The detailed guide is [Draft #332](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/332).
+- [WALL-04/#245](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/245) and [WALL-18/#259](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/259) remain independently unclaimed/open. Partial component evidence does not close them.
+- All 44 PRs remain Draft pending final acceptance, Johannes’s explain-back and an independent human review. No merge, feature activation, live migration application or deployment is implied.
+- Next: complete author explain-back and independent review, track the remaining draw/device/art gates and make a separate rollout decision.

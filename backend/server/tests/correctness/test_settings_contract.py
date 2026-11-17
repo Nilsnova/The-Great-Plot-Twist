@@ -33,7 +33,14 @@ FLAGS = (
     "pathing",
 )
 # Kept out of FLAGS so the every-combination test below does not double for each new flag.
-ALL_FLAGS = (*FLAGS, "tower_obstacles", "ship_fire", "more_tower_spots", "structure_recovery")
+ALL_FLAGS = (
+    *FLAGS,
+    "tower_obstacles",
+    "ship_fire",
+    "more_tower_spots",
+    "structure_recovery",
+    "perimeter_walls",
+)
 VARIABLES = {
     "APP_ENV": " PrEvIeW ",
     "SUPABASE_URL": " https://g21-fixture.supabase.co/// ",
@@ -133,6 +140,13 @@ def test_tower_obstacles_flag_round_trips_without_expanding_the_existing_subset_
 def test_structure_recovery_flag_round_trips_without_expanding_the_subset_matrix(enabled):
     flags = "structure_recovery" if enabled else ""
     assert module.load_settings({"FEATURE_FLAGS": flags}).flags["structure_recovery"] is enabled
+
+
+@pytest.mark.parametrize("enabled", [False, True])
+def test_perimeter_walls_flag_round_trips_without_expanding_the_subset_matrix(enabled):
+    flags = "perimeter_walls" if enabled else ""
+    loaded = module.load_settings({"FEATURE_FLAGS": flags})
+    assert loaded.flags == {name: enabled and name == "perimeter_walls" for name in ALL_FLAGS}
 
 
 @pytest.mark.parametrize("name", ALL_FLAGS)

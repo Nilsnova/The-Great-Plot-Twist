@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import { placeArt } from '../art.js';
 import { homeBuildings } from './layouts.js';
+import {LEGACY_DEPTH, projectGround} from '../projection.js';
 
 const FOOTPRINTS = Object.freeze({
   cabin: { width: 4.8, depth: 3.6 }, workshop: { width: 5.4, depth: 3.7 },
@@ -9,6 +10,8 @@ const FOOTPRINTS = Object.freeze({
   'islet-signal-station': { width: 3.3, depth: 3.2 },
 });
 const isReduced = value => typeof value === 'function' ? value() : !!value;
+// Keep the existing upright click box in displayed units; projection changes only its foot.
+const PLOT_PICK = {halfWidth: 4.5, height: 7 * LEGACY_DEPTH, below: .7 * LEGACY_DEPTH};
 
 function addDust(group, x, z) {
   const geometry = new THREE.BufferGeometry();
@@ -17,7 +20,8 @@ function addDust(group, x, z) {
   const material = new THREE.PointsMaterial({ color: '#c9b78a', size: 1.4, transparent: true,
     opacity: .82, depthTest: false, depthWrite: false, toneMapped: false });
   const points = new THREE.Points(geometry, material);
-  points.position.set(x, -z * .72 + 2, 0); points.renderOrder = 119; points.visible = false; group.add(points);
+  const base = projectGround(x, z); points.userData.baseY = base.y + 2;
+  points.position.set(base.x, points.userData.baseY, 0); points.renderOrder = 119; points.visible = false; group.add(points);
   return points;
 }
 
@@ -63,7 +67,7 @@ export function decorateHome(place, art, cleanups, ctx) {
       if (isBuilt && !wasBuilt && allowRaise) {
         if (!isReduced(ctx.reducedMotion)) {
           const cloud = dust.get(item.plot); cloud.visible = true; cloud.userData.age = 0;
-          cloud.material.opacity = .82; cloud.position.y = -item.z * .72 + 2;
+          cloud.material.opacity = .82; cloud.position.y = cloud.userData.baseY;
           for (const mesh of group.meshes) mesh.position.y = baseY.get(mesh) + 5;
           animating = true;
         }
@@ -91,7 +95,7 @@ export function decorateHome(place, art, cleanups, ctx) {
       for (const item of homeBuildings) {
         const cloud = dust.get(item.plot), group = buildings.get(item.plot);
         if (cloud.userData.age === undefined) continue;
-        delete cloud.userData.age; cloud.visible = false; cloud.position.y = -item.z * .72 + 2; cloud.material.opacity = .82;
+        delete cloud.userData.age; cloud.visible = false; cloud.position.y = cloud.userData.baseY; cloud.material.opacity = .82;
         group.meshes.forEach(mesh => { mesh.position.y = baseY.get(mesh); });
       }
       animating = false;
@@ -128,8 +132,10 @@ export function decorateHome(place, art, cleanups, ctx) {
     const rect = ctx.canvas.getBoundingClientRect();
     const point = new THREE.Vector3((event.clientX - rect.left) / rect.width * 2 - 1,
       1 - (event.clientY - rect.top) / rect.height * 2, 0).unproject(ctx.camera);
-    const z = -point.y / .72;
-    const plot = homeBuildings.find(item => Math.abs(item.x - point.x) <= 4.5 && z >= item.z - 7 && z <= item.z + .7);
+    const plot = homeBuildings.find(item => {
+      const foot = projectGround(item.x, item.z), dy = point.y - foot.y;
+      return Math.abs(point.x - foot.x) <= PLOT_PICK.halfWidth && dy >= -PLOT_PICK.below && dy <= PLOT_PICK.height;
+    });
     if (plot) choose(plot.plot);
   };
   ctx.canvas.addEventListener('pointerdown', start); ctx.canvas.addEventListener('pointerup', click);

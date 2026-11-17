@@ -1,0 +1,54 @@
+{
+  "started": "2026-11-17T23:22:03.598Z",
+  "source": "/workspace/reference-village-work/visual-handover/docs/evidence/reference-village-latest-review/comparison.html",
+  "bytes": 10522733,
+  "sha256": "f65e50207d375c2b594c872e403dbff5a308e1d1809a54eabc0feda33d067e76",
+  "validationVersion": "latest-review-v2",
+  "checkerSource": "/workspace/reference-village-work/visual-handover/docs/evidence/reference-village-latest-review/verify-comparison.mjs",
+  "checkerSha256": "b2ecab8eadd8d57629b3b02461abb1b1e1e586e2fd2b52b57e0b114da033a9dc",
+  "frontendPackage": "/workspace/reference-village-work/visual-handover/frontend/package.json",
+  "dependencyResolution": "checkout-relative",
+  "expectedImages": 12,
+  "expectedTabCounts": [
+    2,
+    3,
+    3
+  ],
+  "status": "failed",
+  "viewports": [
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "status": "running",
+      "pageErrors": [],
+      "externalRequests": [],
+      "ownedRequests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:35495/"
+        }
+      ],
+      "checks": []
+    }
+  ],
+  "embeddedOriginalHashes": "12 exact matches",
+  "mode": "owned-loopback-http",
+  "ownedHttpRequests": [
+    {
+      "method": "GET",
+      "path": "/",
+      "status": 200,
+      "bytes": 10522733
+    }
+  ],
+  "origin": "http://127.0.0.1:35495",
+  "browserVersion": "156.0.8078.79",
+  "error": {
+    "name": "Error",
+    "message": "cdpSession.send: Protocol error (Network.getResponseBody): Request content was evicted from inspector cache"
+  },
+  "httpServerClosed": true,
+  "finished": "2026-11-17T23:22:05.599Z"
+}

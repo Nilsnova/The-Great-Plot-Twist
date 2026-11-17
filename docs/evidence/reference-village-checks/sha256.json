@@ -1,0 +1,107 @@
+{
+  "scope": "unchanged failed-check receipts; no replacement pass or acceptance claimed",
+  "files": [
+    {
+      "file": "frontend-01-9f47/frontend.log",
+      "archive": "verification-attempt-01-9f47/frontend.log",
+      "bytes": 629855,
+      "sha256": "3a17187a2a760e08d1c2bb33ecf8be8d3edd98adabe405d9fd2bc1994d9716f4"
+    },
+    {
+      "file": "frontend-01-9f47/runner.log",
+      "archive": "verification-attempt-01-9f47/runner.log",
+      "bytes": 181,
+      "sha256": "035b04a596027d023c663bd36fcc2425fcb4fc7f5a749bb6a0cdb23245037517"
+    },
+    {
+      "file": "frontend-01-9f47/report.json",
+      "archive": "verification-attempt-01-9f47/report.json",
+      "bytes": 429,
+      "sha256": "a5689af13d0959eeafc3bc40348b884a15bc0bf06644e51ed9323c9659302113"
+    },
+    {
+      "file": "frontend-02-6e2/frontend.log",
+      "archive": "verification-attempt-02-6e2/frontend.log",
+      "bytes": 613973,
+      "sha256": "164b500dad93d0ee1c261d2aabf8bc07b8607bdb94151f6aeeff2494b3f7b139"
+    },
+    {
+      "file": "frontend-02-6e2/runner.log",
+      "archive": "verification-attempt-02-6e2/runner.log",
+      "bytes": 181,
+      "sha256": "cada96da3ba2432252f6ebe83e1ebe193ab63c74fa5cd1f549746f853df37748"
+    },
+    {
+      "file": "frontend-02-6e2/report.json",
+      "archive": "verification-attempt-02-6e2/report.json",
+      "bytes": 429,
+      "sha256": "1bdcffa6afc60be8bf7e6a78925b87c5c8c2ca0b387d5ec1e760d447ca692452"
+    },
+    {
+      "file": "a11y-01-6e2/a11y.log",
+      "archive": "verification-a11y-attempt-01-6e2/a11y.log",
+      "bytes": 884,
+      "sha256": "1ea317417ce082f7b86feaf24f6e74ea4928fa9adbbdb228df1fd3cff01baab9"
+    },
+    {
+      "file": "a11y-01-6e2/runner.log",
+      "archive": "verification-a11y-attempt-01-6e2/runner.log",
+      "bytes": 131,
+      "sha256": "cfd911750617c892ca7aabd0b6d83c44e042d47c31b274359c1709b2f5d31282"
+    },
+    {
+      "file": "a11y-01-6e2/report.json",
+      "archive": "verification-a11y-attempt-01-6e2/report.json",
+      "bytes": 371,
+      "sha256": "547113b3caae5bf35a828bb29bf7a170fdef5097794c4b7d67a9a926baa41041"
+    },
+    {
+      "file": "report-46/vis46-corrected.log",
+      "archive": "report-fixture-qa-checks/vis46-corrected.log",
+      "bytes": 57194,
+      "sha256": "62e1fc0488f86826629b2d6d0f658aa417d4891d2a3db13618123a36a4a9696f"
+    },
+    {
+      "file": "report-46/vis46-corrected-result.json",
+      "archive": "report-fixture-qa-checks/vis46-corrected-result.json",
+      "bytes": 1606,
+      "sha256": "8cdaa17377c37fd951b88a45135d79c25755949bc3bf8ee40871d75b60f61249"
+    },
+    {
+      "file": "report-46/vis46-derived-corrected.log",
+      "archive": "report-fixture-qa-checks/vis46-derived-corrected.log",
+      "bytes": 1405,
+      "sha256": "86cd359b3fa22f864edaa75fe9549e0e5384cb4279f23f1abf6c33e8704ad682"
+    },
+    {
+      "file": "report-46/vis46-derived-corrected-result.json",
+      "archive": "report-fixture-qa-checks/vis46-derived-corrected-result.json",
+      "bytes": 2479,
+      "sha256": "c72f5ae26cf94095f18ffcd2a1625d966c4b8c6ad7332e3d215c94bfa60fbeb4"
+    },
+    {
+      "file": "report-46/vis46-veteran.log",
+      "archive": "report-fixture-qa-checks/vis46-veteran.log",
+      "bytes": 1432,
+      "sha256": "5b5dc8df0d78d0567e01516a81d86792bd19531d681f18809405c5c4d10a03d3"
+    },
+    {
+      "file": "report-46/vis46-veteran-result.json",
+      "archive": "report-fixture-qa-checks/vis46-veteran-result.json",
+      "bytes": 2485,
+      "sha256": "0d37ecabba7012ccd95085d0e87955dce6014fd347a560087675c1152b0a238f"
+    },
+    {
+      "file": "multiplayer-01-8db/check-multiplayer.log",
+      "archive": "multiplayer-baseline-8db/check-multiplayer.log",
+      "bytes": 1803,
+      "sha256": "dddc024b8f77df387c4a07ba1e8b663ce3345fb0be9318e4127981d523671325"
+    },
+    {
+      "file": "multiplayer-01-8db/result.json",
+      "archive": "multiplayer-baseline-8db/result.json",
+      "bytes": 328,
+      "sha256": "6093f03d7fb7369883c42e95bdea0072b954efa72647344f85184c5d825719d7"
+    }
+  ]
+}

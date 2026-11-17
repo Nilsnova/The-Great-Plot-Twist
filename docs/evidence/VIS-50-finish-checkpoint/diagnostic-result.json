@@ -1,0 +1,29 @@
+{
+  "started": "2026-11-17T21:39:50.214920+00:00",
+  "command": [
+    "uv",
+    "run",
+    "--frozen",
+    "--no-env-file",
+    "--with",
+    "pgserver",
+    "--with",
+    "psycopg[binary]",
+    "pytest",
+    "-q",
+    "-s",
+    "/workspace/reference-village-work/vis50-pg-diagnostic/test_finish_first_vector_diagnostic.py",
+    "--basetemp",
+    "/workspace/reference-village-work/vis50-pg-diagnostic/scratch-20261117T2140"
+  ],
+  "gitHead": "096d04e20ff93634c9e7050653541624aed7b027",
+  "migrationSha256": {
+    "20261118010000_recovery_current_for_joiners.sql": "0fb3d07efdb4822e4c5964333d0a26618ec178c89b8a3bbb29a96d1f96e86768",
+    "20261118020000_recovery_wave_end.sql": "d51b78a359501aefa35d2dad992cca9a180a6731f115c8a4781f867860c2bb35",
+    "20261118030000_recovery_away.sql": "0db7fbef8ff711f91bec9d5e856ebb5383e3011c8cc46765ab1927b7a7b1144f"
+  },
+  "scope": "One local Unix-socket disposable PostgreSQL desired-behavior diagnostic; no URLs/.env/live migration.",
+  "exitCode": 1,
+  "seconds": 6.19,
+  "finished": "2026-11-17T21:39:56.412827+00:00"
+}

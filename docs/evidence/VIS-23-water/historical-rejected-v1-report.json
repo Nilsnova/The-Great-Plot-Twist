@@ -1,0 +1,209 @@
+{
+  "source": "10ee56251b07da2fe983b846108441cc94f0a425",
+  "oldSource": "9dc1bea505fe3b26bd56d6ad02c21a2db8bd8be9",
+  "scope": "Actual GPU water/terrain components; not full gameplay or physical-device FPS",
+  "reports": [
+    {
+      "width": 1280,
+      "height": 720,
+      "frames": [
+        {
+          "name": "before",
+          "quality": "high",
+          "reduced": false,
+          "rain": 0,
+          "hash": "01c73ea3435c221415eb3b3cdaedde7aaea435687ab70b8357140365e18b6416",
+          "laterHash": "785e8192cd927be74588f08570e913d6c085eda432079788c021c2d79b6164e3",
+          "unchangedWhenReduced": null,
+          "drawCalls": 2,
+          "geometries": 2,
+          "textures": 2,
+          "gpuSynchronizedMilliseconds": {
+            "median": 0.30000000447034836,
+            "max": 0.8999999985098839
+          },
+          "backend": {
+            "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+            "vendor": "Google Inc. (Google)",
+            "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+          },
+          "shaderErrors": []
+        },
+        {
+          "name": "after",
+          "quality": "high",
+          "reduced": false,
+          "rain": 0,
+          "hash": "5c9c61c6c094f5120afe18599888e0ac049e6adaf843ed5358dedbd75c56103b",
+          "laterHash": "168fbf8e4f8095dc08c14f8e1da1d15bae592a124c91b57621c23a6180f3a748",
+          "unchangedWhenReduced": null,
+          "drawCalls": 2,
+          "geometries": 2,
+          "textures": 2,
+          "gpuSynchronizedMilliseconds": {
+            "median": 0.10000000149011612,
+            "max": 0.3999999985098839
+          },
+          "backend": {
+            "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+            "vendor": "Google Inc. (Google)",
+            "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+          },
+          "shaderErrors": []
+        },
+        {
+          "name": "low",
+          "quality": "low",
+          "reduced": false,
+          "rain": 0,
+          "hash": "ea6250ff5c0a36506b1466301f38074513517deb2465533bf8bcb5676ffee809",
+          "laterHash": "3c625bdc23f99ef44b0eaeec130c049700551a54482485597b37230fdb5064b5",
+          "unchangedWhenReduced": null,
+          "drawCalls": 2,
+          "geometries": 2,
+          "textures": 2,
+          "gpuSynchronizedMilliseconds": {
+            "median": 0.10000000149011612,
+            "max": 0.10000000149011612
+          },
+          "backend": {
+            "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+            "vendor": "Google Inc. (Google)",
+            "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+          },
+          "shaderErrors": []
+        },
+        {
+          "name": "reduced",
+          "quality": "high",
+          "reduced": true,
+          "rain": 0,
+          "hash": "376dcf4e14cb2dc870265a050d439bda785efb31094af438102883507756a16e",
+          "laterHash": "376dcf4e14cb2dc870265a050d439bda785efb31094af438102883507756a16e",
+          "unchangedWhenReduced": true,
+          "drawCalls": 2,
+          "geometries": 2,
+          "textures": 2,
+          "gpuSynchronizedMilliseconds": {
+            "median": 0.10000000149011612,
+            "max": 0.5999999940395355
+          },
+          "backend": {
+            "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+            "vendor": "Google Inc. (Google)",
+            "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+          },
+          "shaderErrors": []
+        }
+      ],
+      "mask": {
+        "waterDrawnInsideOpaqueTerrain": [],
+        "rockSamples": 4,
+        "transparentFallback": 0,
+        "shaderErrors": []
+      }
+    },
+    {
+      "width": 375,
+      "height": 812,
+      "frames": [
+        {
+          "name": "before",
+          "quality": "high",
+          "reduced": false,
+          "rain": 0,
+          "hash": "e671a7391ef3d3fadd1fb02605d2d373bef015a3e933bf786b14e3f109f94291",
+          "laterHash": "8b8773c700dd333549d26aba4c86b0ca49ee44d01a4e2355879b869fba16809c",
+          "unchangedWhenReduced": null,
+          "drawCalls": 2,
+          "geometries": 2,
+          "textures": 2,
+          "gpuSynchronizedMilliseconds": {
+            "median": 0.4000000022351742,
+            "max": 0.6000000014901161
+          },
+          "backend": {
+            "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+            "vendor": "Google Inc. (Google)",
+            "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+          },
+          "shaderErrors": []
+        },
+        {
+          "name": "after",
+          "quality": "high",
+          "reduced": false,
+          "rain": 0,
+          "hash": "63cef70abbef736ad58fbf20e3c359144a79bca05296f769d5fde8af526698b3",
+          "laterHash": "b9cae49e881546a879dc1b63311e745e528bca44290207a4c80a627279d6c3e6",
+          "unchangedWhenReduced": null,
+          "drawCalls": 2,
+          "geometries": 2,
+          "textures": 2,
+          "gpuSynchronizedMilliseconds": {
+            "median": 0.05000000074505806,
+            "max": 0.10000000149011612
+          },
+          "backend": {
+            "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+            "vendor": "Google Inc. (Google)",
+            "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+          },
+          "shaderErrors": []
+        },
+        {
+          "name": "low",
+          "quality": "low",
+          "reduced": false,
+          "rain": 0,
+          "hash": "40aa19b15b56aef16afad04837a4bc3a047ac7ab571bab48e2ec0b5435edaba6",
+          "laterHash": "febf52aafd8c82911db67927ad9c4ff2db23d511a6e50fa5aa68799bf65dfbed",
+          "unchangedWhenReduced": null,
+          "drawCalls": 2,
+          "geometries": 2,
+          "textures": 2,
+          "gpuSynchronizedMilliseconds": {
+            "median": 0,
+            "max": 0.10000000149011612
+          },
+          "backend": {
+            "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+            "vendor": "Google Inc. (Google)",
+            "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+          },
+          "shaderErrors": []
+        },
+        {
+          "name": "reduced",
+          "quality": "high",
+          "reduced": true,
+          "rain": 0,
+          "hash": "42553d56d0db64ffb900f76b25eefa288ae4f0ddff37f59cff659cc02a7e5080",
+          "laterHash": "42553d56d0db64ffb900f76b25eefa288ae4f0ddff37f59cff659cc02a7e5080",
+          "unchangedWhenReduced": true,
+          "drawCalls": 2,
+          "geometries": 2,
+          "textures": 2,
+          "gpuSynchronizedMilliseconds": {
+            "median": 0,
+            "max": 0.10000000149011612
+          },
+          "backend": {
+            "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+            "vendor": "Google Inc. (Google)",
+            "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+          },
+          "shaderErrors": []
+        }
+      ],
+      "mask": {
+        "waterDrawnInsideOpaqueTerrain": [],
+        "rockSamples": 4,
+        "transparentFallback": 0,
+        "shaderErrors": []
+      }
+    }
+  ],
+  "errors": [],
+  "external": []
+}

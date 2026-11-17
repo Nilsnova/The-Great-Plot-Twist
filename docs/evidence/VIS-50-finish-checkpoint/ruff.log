@@ -1,0 +1,4 @@
+Command: UV_CACHE_DIR=/workspace/.cache/uv uv run --frozen --no-env-file ruff check .
+Working directory: backend/ at733cced0
+Exit:0
+All checks passed!

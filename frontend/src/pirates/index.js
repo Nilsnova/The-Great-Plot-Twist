@@ -29,36 +29,46 @@ import { createWaveController } from './controller.js';
 import { createPiratePoint } from './pirate-point.js';
 import { startLoop } from '../core/loop.js';
 import * as THREE from 'three';
+import {projectGround, unprojectGround} from '../world/projection.js';
 
-export function mountPirates(ctx) {
-  const { scene, camera, canvas, container, player, world: places, audio, on, emit } = ctx;
-  const bus = ctx.bus ?? { on, emit };
+/** Combat input and overlay projection share the ground inverse; lift stays in display units. */
+export function createCombatProjection({camera, canvas, container}) {
   const projected = new THREE.Vector3();
-  const world = {
-    scene, camera, canvas, container, player,
-    place: () => places?.current?.id ?? null,
-    isBlocked: () => !!ctx.isBlocked?.(),
+  return {
     unproject(clientX, clientY) {
       if (!canvas || !camera) return null;
       const rect = canvas.getBoundingClientRect();
       if (!rect.width || !rect.height) return null;
       projected.set((clientX - rect.left) / rect.width * 2 - 1, 1 - (clientY - rect.top) / rect.height * 2, 0).unproject(camera);
-      return { x: projected.x, z: -projected.y / .72 };
+      return unprojectGround(projected.x, projected.y);
     },
     // The other way: island units (lifted `lift` drawn units) to px inside the container, or null.
     project(x, z, lift = 0) {
       if (!canvas || !camera) return null;
       const rect = canvas.getBoundingClientRect(), box = container?.getBoundingClientRect?.() ?? rect;
       if (!rect.width || !rect.height) return null;
-      projected.set(x, -z * .72 + lift, 0).project(camera);
+      const at = projectGround(x, z);
+      projected.set(at.x, at.y + lift, 0).project(camera);
       return { x: rect.left - box.left + (projected.x + 1) / 2 * rect.width, y: rect.top - box.top + (1 - projected.y) / 2 * rect.height };
     },
+  };
+}
+
+export function mountPirates(ctx) {
+  const { scene, camera, canvas, container, player, world: places, audio, on, emit } = ctx;
+  const bus = ctx.bus ?? { on, emit };
+  const world = {
+    scene, camera, canvas, container, player,
+    place: () => places?.current?.id ?? null,
+    isBlocked: () => !!ctx.isBlocked?.(),
+    ...createCombatProjection({camera, canvas, container}),
   };
   const shared = { bus, world, sound: audio, reducedMotion: ctx.reducedMotion ?? (() => false), quality: ctx.quality ?? (() => 'high'),
     playerId: ctx.playerId, captainLevel: ctx.captainLevel ?? (() => 1), captainSkills: ctx.captainSkills ?? (() => []),
     captainWeapon: ctx.captainWeapon ?? (() => 'musket'), captainColour: ctx.captainColour ?? (() => 0),
     reviveCaptain: ctx.reviveCaptain ?? null };
-  const island = createWaveController({ ...shared, getDefenses: ctx.getDefenses ?? (() => []), finishWave: ctx.finishWave,
+  const island = createWaveController({ ...shared, getDefenses: ctx.getDefenses ?? (() => []),
+    getPerimeterWalls: ctx.getPerimeterWalls ?? (() => false), getManaging: ctx.getManaging ?? (() => false), finishWave: ctx.finishWave,
     practiceIdentity: ctx.practiceIdentity, room: ctx.islandRoom ?? null, place: ctx.islandPlace ?? 'home_islet', simOptions: ctx.islandSimOptions ?? {},
     getCrew: ctx.getCrew ?? (() => null), startNextWave: ctx.startNextWave ?? null,
     holdBreak: ctx.holdBreak ?? null, toggleHold: ctx.toggleHold ?? null, guide: ctx.battleGuide !== false,

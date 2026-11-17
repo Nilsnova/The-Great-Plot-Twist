@@ -1,0 +1,650 @@
+{
+  "scope": "Exact selected subtrees and error arrays extracted from the original coordinator report; metadata formatting is derived, PNG bytes are unchanged.",
+  "rawReport": {
+    "sha256": "00448fbef0491405266a93e421158db99e2e11f803f6de60c9704003f2605063",
+    "bytes": 4530391,
+    "origin": "stage-08-selected-wall/report.json"
+  },
+  "source": "91c1f9d57c1edd957d26588b99fbb1489e575127",
+  "frontendTree": "6e0c6b27b717a7b8eedcde498d7372de6f0942cb",
+  "checks": [
+    {
+      "width": 1280,
+      "height": 720,
+      "selected": {
+        "frame": {
+          "viewport": {
+            "height": 720,
+            "top": 92,
+            "bottom": 138
+          },
+          "fit": {
+            "x": -0.40567364706499554,
+            "y": -1.8236341535516192,
+            "zoom": 0.5040359734203214,
+            "centerX": -0.40567364706499554,
+            "centerY": -0.4293333202027192,
+            "bounds": {
+              "minX": -28.058060774947585,
+              "maxX": 27.246713480817593,
+              "minY": -14.88166828413665,
+              "maxY": 14.023001643731211
+            }
+          },
+          "phone": false
+        },
+        "foot": {
+          "x": 237.39701335274873,
+          "y": 350.34843083222887
+        },
+        "portrait": {
+          "id": "island-wall-l3",
+          "file": "village/compiled/walls-4x-1-cf3e4db5982f.png",
+          "logical": [
+            48,
+            32,
+            6
+          ],
+          "source": "png",
+          "composition": "wall-segment",
+          "components": [
+            {
+              "id": "island-wall-l3",
+              "file": "village/compiled/walls-4x-1-cf3e4db5982f.png",
+              "logical": [
+                48,
+                32,
+                6
+              ],
+              "source": "png"
+            },
+            {
+              "id": "village-wall-front-l3",
+              "file": "village/compiled/walls-4x-1-cf3e4db5982f.png",
+              "logical": [
+                32,
+                32,
+                0
+              ],
+              "source": "png"
+            },
+            {
+              "id": "village-wall-top-l3",
+              "file": "village/compiled/walls-4x-1-cf3e4db5982f.png",
+              "logical": [
+                32,
+                32,
+                0
+              ],
+              "source": "png"
+            },
+            {
+              "id": "village-wall-side-l3",
+              "file": "village/compiled/walls-4x-1-cf3e4db5982f.png",
+              "logical": [
+                32,
+                32,
+                0
+              ],
+              "source": "png"
+            }
+          ]
+        },
+        "bracket": {
+          "visible": true,
+          "spotId": "wall_1",
+          "vertices": 32,
+          "indices": 48,
+          "color": [
+            0.1878207722902346,
+            1,
+            0.05612849004241121
+          ],
+          "order": 201,
+          "bounds": {
+            "minX": -19.50000003973643,
+            "maxX": -17.499999960263573,
+            "minZ": 0.9999999602635701,
+            "maxZ": 3.0000000397364297
+          }
+        },
+        "buttons": [
+          {
+            "label": "Move",
+            "visibleText": "Move",
+            "fontSize": "17px",
+            "width": 73.9375,
+            "height": 46.09375,
+            "textFits": true,
+            "textBounds": {
+              "left": 687.328125,
+              "right": 733.265625,
+              "top": 632.953125,
+              "bottom": 655.953125
+            },
+            "paddingBounds": {
+              "left": 675.328125,
+              "right": 745.265625,
+              "top": 623.953125,
+              "bottom": 666.046875
+            },
+            "contentBounds": {
+              "left": 687.328125,
+              "right": 733.265625,
+              "top": 633.953125,
+              "bottom": 656.046875
+            },
+            "scrollWidth": 70,
+            "clientWidth": 70,
+            "rect": {
+              "left": 673.328125,
+              "right": 747.265625,
+              "top": 621.953125,
+              "bottom": 668.046875
+            },
+            "insideClosedDetails": false,
+            "topmost": {
+              "tag": "BUTTON",
+              "className": "kit-button kit-quiet",
+              "label": null,
+              "text": "Move"
+            },
+            "hit": true
+          },
+          {
+            "label": "Upgrade \u00b7 \ud83e\ude99 80",
+            "visibleText": "Upgrade \u00b7 \ud83e\ude99 80",
+            "fontSize": "17px",
+            "width": 159.59375,
+            "height": 46.09375,
+            "textFits": true,
+            "textBounds": {
+              "left": 769.265625,
+              "right": 900.859375,
+              "top": 632.953125,
+              "bottom": 655.953125
+            },
+            "paddingBounds": {
+              "left": 757.265625,
+              "right": 912.859375,
+              "top": 623.953125,
+              "bottom": 666.046875
+            },
+            "contentBounds": {
+              "left": 769.265625,
+              "right": 900.859375,
+              "top": 633.953125,
+              "bottom": 656.046875
+            },
+            "scrollWidth": 156,
+            "clientWidth": 156,
+            "rect": {
+              "left": 755.265625,
+              "right": 914.859375,
+              "top": 621.953125,
+              "bottom": 668.046875
+            },
+            "insideClosedDetails": false,
+            "topmost": {
+              "tag": "BUTTON",
+              "className": "kit-button",
+              "label": null,
+              "text": "Upgrade \u00b7 \ud83e\ude99 80"
+            },
+            "hit": true
+          },
+          {
+            "label": "Details",
+            "visibleText": "Details",
+            "fontSize": "17px",
+            "width": 87.09375,
+            "height": 46.09375,
+            "textFits": true,
+            "textBounds": {
+              "left": 936.859375,
+              "right": 995.953125,
+              "top": 632.953125,
+              "bottom": 655.953125
+            },
+            "paddingBounds": {
+              "left": 924.859375,
+              "right": 1007.953125,
+              "top": 623.953125,
+              "bottom": 666.046875
+            },
+            "contentBounds": {
+              "left": 936.859375,
+              "right": 995.953125,
+              "top": 633.953125,
+              "bottom": 656.046875
+            },
+            "scrollWidth": 83,
+            "clientWidth": 83,
+            "rect": {
+              "left": 922.859375,
+              "right": 1009.953125,
+              "top": 621.953125,
+              "bottom": 668.046875
+            },
+            "insideClosedDetails": false,
+            "topmost": {
+              "tag": "BUTTON",
+              "className": "kit-button kit-quiet",
+              "label": null,
+              "text": "Details"
+            },
+            "hit": true
+          },
+          {
+            "label": "Close",
+            "visibleText": "Close",
+            "fontSize": "17px",
+            "width": 73.046875,
+            "height": 46.09375,
+            "textFits": true,
+            "textBounds": {
+              "left": 1031.953125,
+              "right": 1077,
+              "top": 632.953125,
+              "bottom": 655.953125
+            },
+            "paddingBounds": {
+              "left": 1019.953125,
+              "right": 1089,
+              "top": 623.953125,
+              "bottom": 666.046875
+            },
+            "contentBounds": {
+              "left": 1031.953125,
+              "right": 1077,
+              "top": 633.953125,
+              "bottom": 656.046875
+            },
+            "scrollWidth": 69,
+            "clientWidth": 69,
+            "rect": {
+              "left": 1017.953125,
+              "right": 1091,
+              "top": 621.953125,
+              "bottom": 668.046875
+            },
+            "insideClosedDetails": false,
+            "topmost": {
+              "tag": "BUTTON",
+              "className": "kit-button kit-quiet",
+              "label": null,
+              "text": "Close"
+            },
+            "hit": true
+          }
+        ],
+        "capture": {
+          "name": "reference-selected-level3-1280x720.png",
+          "qualityBefore": {
+            "pixelRatio": 0.5,
+            "drawingWidth": 640,
+            "drawingHeight": 360,
+            "quality": "high",
+            "densityScale": 0.5
+          },
+          "camera": [
+            -0.4056736470649984,
+            -1.7572378199765641,
+            100
+          ],
+          "zoom": 0.5292370163172903,
+          "captain": [
+            8.5,
+            1.03,
+            12.8
+          ],
+          "contextLost": false,
+          "drawCalls": 119,
+          "rendering": {
+            "pixelRatio": 1,
+            "drawingWidth": 1280,
+            "drawingHeight": 720,
+            "quality": "high",
+            "densityScale": 1
+          },
+          "pixelRatio": 1,
+          "drawingSize": [
+            1280,
+            720
+          ],
+          "memory": {
+            "geometries": 181,
+            "textures": 37
+          },
+          "worldLinks": 106,
+          "worldWallDrawMeshes": 58
+        }
+      },
+      "beforeSelectedDrawCalls": 118,
+      "pageErrors": [],
+      "externalRequests": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+      ]
+    },
+    {
+      "width": 375,
+      "height": 812,
+      "selected": {
+        "frame": {
+          "viewport": {
+            "height": 812,
+            "top": 93.390625,
+            "bottom": 264.28125
+          },
+          "fit": {
+            "x": -0.40567364706499554,
+            "y": -13.213039904271549,
+            "zoom": 0.28518072146695933,
+            "centerX": -0.40567364706499554,
+            "centerY": -0.4293333202027192,
+            "bounds": {
+              "minX": -28.058060774947585,
+              "maxX": 27.246713480817593,
+              "minY": -14.88166828413665,
+              "maxY": 14.023001643731211
+            }
+          },
+          "phone": true
+        },
+        "foot": {
+          "x": 187.4409359750822,
+          "y": 341.63657779760433
+        },
+        "portrait": {
+          "id": "island-wall-l3",
+          "file": "village/compiled/walls-4x-1-cf3e4db5982f.png",
+          "logical": [
+            48,
+            32,
+            6
+          ],
+          "source": "png",
+          "composition": "wall-segment",
+          "components": [
+            {
+              "id": "island-wall-l3",
+              "file": "village/compiled/walls-4x-1-cf3e4db5982f.png",
+              "logical": [
+                48,
+                32,
+                6
+              ],
+              "source": "png"
+            },
+            {
+              "id": "village-wall-front-l3",
+              "file": "village/compiled/walls-4x-1-cf3e4db5982f.png",
+              "logical": [
+                32,
+                32,
+                0
+              ],
+              "source": "png"
+            },
+            {
+              "id": "village-wall-top-l3",
+              "file": "village/compiled/walls-4x-1-cf3e4db5982f.png",
+              "logical": [
+                32,
+                32,
+                0
+              ],
+              "source": "png"
+            },
+            {
+              "id": "village-wall-side-l3",
+              "file": "village/compiled/walls-4x-1-cf3e4db5982f.png",
+              "logical": [
+                32,
+                32,
+                0
+              ],
+              "source": "png"
+            }
+          ]
+        },
+        "bracket": {
+          "visible": true,
+          "spotId": "wall_1",
+          "vertices": 32,
+          "indices": 48,
+          "color": [
+            0.1878207722902346,
+            1,
+            0.05612849004241121
+          ],
+          "order": 201,
+          "bounds": {
+            "minX": -19.50000003973643,
+            "maxX": -17.499999960263573,
+            "minZ": 0.9999999602635701,
+            "maxZ": 3.0000000397364297
+          }
+        },
+        "buttons": [
+          {
+            "label": "Move",
+            "visibleText": "Move",
+            "fontSize": "17px",
+            "width": 156.5,
+            "height": 68.1875,
+            "textFits": true,
+            "textBounds": {
+              "left": 82.28125,
+              "right": 128.21875,
+              "top": 674.765625,
+              "bottom": 697.765625
+            },
+            "paddingBounds": {
+              "left": 29,
+              "right": 181.5,
+              "top": 654.71875,
+              "bottom": 718.90625
+            },
+            "contentBounds": {
+              "left": 41,
+              "right": 169.5,
+              "top": 664.71875,
+              "bottom": 708.90625
+            },
+            "scrollWidth": 153,
+            "clientWidth": 153,
+            "rect": {
+              "left": 27,
+              "right": 183.5,
+              "top": 652.71875,
+              "bottom": 720.90625
+            },
+            "insideClosedDetails": false,
+            "topmost": {
+              "tag": "BUTTON",
+              "className": "kit-button kit-quiet",
+              "label": null,
+              "text": "Move"
+            },
+            "hit": true
+          },
+          {
+            "label": "Upgrade \u00b7 \ud83e\ude99 80",
+            "visibleText": "Upgrade \u00b7 \ud83e\ude99 80",
+            "fontSize": "17px",
+            "width": 156.5,
+            "height": 68.1875,
+            "textFits": true,
+            "textBounds": {
+              "left": 215.875,
+              "right": 323.609375,
+              "top": 663.71875,
+              "bottom": 708.8125
+            },
+            "paddingBounds": {
+              "left": 193.5,
+              "right": 346,
+              "top": 654.71875,
+              "bottom": 718.90625
+            },
+            "contentBounds": {
+              "left": 205.5,
+              "right": 334,
+              "top": 664.71875,
+              "bottom": 708.90625
+            },
+            "scrollWidth": 153,
+            "clientWidth": 153,
+            "rect": {
+              "left": 191.5,
+              "right": 348,
+              "top": 652.71875,
+              "bottom": 720.90625
+            },
+            "insideClosedDetails": false,
+            "topmost": {
+              "tag": "BUTTON",
+              "className": "kit-button",
+              "label": null,
+              "text": "Upgrade \u00b7 \ud83e\ude99 80"
+            },
+            "hit": true
+          },
+          {
+            "label": "Details",
+            "visibleText": "Details",
+            "fontSize": "17px",
+            "width": 156.5,
+            "height": 46.09375,
+            "textFits": true,
+            "textBounds": {
+              "left": 75.703125,
+              "right": 134.796875,
+              "top": 739.90625,
+              "bottom": 762.90625
+            },
+            "paddingBounds": {
+              "left": 29,
+              "right": 181.5,
+              "top": 730.90625,
+              "bottom": 773
+            },
+            "contentBounds": {
+              "left": 41,
+              "right": 169.5,
+              "top": 740.90625,
+              "bottom": 763
+            },
+            "scrollWidth": 153,
+            "clientWidth": 153,
+            "rect": {
+              "left": 27,
+              "right": 183.5,
+              "top": 728.90625,
+              "bottom": 775
+            },
+            "insideClosedDetails": false,
+            "topmost": {
+              "tag": "BUTTON",
+              "className": "kit-button kit-quiet",
+              "label": null,
+              "text": "Details"
+            },
+            "hit": true
+          },
+          {
+            "label": "Close",
+            "visibleText": "Close",
+            "fontSize": "17px",
+            "width": 156.5,
+            "height": 46.09375,
+            "textFits": true,
+            "textBounds": {
+              "left": 247.21875,
+              "right": 292.265625,
+              "top": 739.90625,
+              "bottom": 762.90625
+            },
+            "paddingBounds": {
+              "left": 193.5,
+              "right": 346,
+              "top": 730.90625,
+              "bottom": 773
+            },
+            "contentBounds": {
+              "left": 205.5,
+              "right": 334,
+              "top": 740.90625,
+              "bottom": 763
+            },
+            "scrollWidth": 153,
+            "clientWidth": 153,
+            "rect": {
+              "left": 191.5,
+              "right": 348,
+              "top": 728.90625,
+              "bottom": 775
+            },
+            "insideClosedDetails": false,
+            "topmost": {
+              "tag": "BUTTON",
+              "className": "kit-button kit-quiet",
+              "label": null,
+              "text": "Close"
+            },
+            "hit": true
+          }
+        ],
+        "capture": {
+          "name": "reference-selected-level3-375x812.png",
+          "qualityBefore": {
+            "pixelRatio": 0.75,
+            "drawingWidth": 281,
+            "drawingHeight": 609,
+            "quality": "high",
+            "densityScale": 0.75
+          },
+          "camera": [
+            -23.649724804261762,
+            -4.250820615186263,
+            100
+          ],
+          "zoom": 0.8999927383892312,
+          "captain": [
+            8.5,
+            1.03,
+            12.8
+          ],
+          "contextLost": false,
+          "drawCalls": 116,
+          "rendering": {
+            "pixelRatio": 1,
+            "drawingWidth": 375,
+            "drawingHeight": 812,
+            "quality": "high",
+            "densityScale": 1
+          },
+          "pixelRatio": 1,
+          "drawingSize": [
+            375,
+            812
+          ],
+          "memory": {
+            "geometries": 181,
+            "textures": 37
+          },
+          "worldLinks": 106,
+          "worldWallDrawMeshes": 58
+        }
+      },
+      "beforeSelectedDrawCalls": 115,
+      "pageErrors": [],
+      "externalRequests": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+      ]
+    }
+  ]
+}

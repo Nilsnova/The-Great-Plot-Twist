@@ -1,0 +1,1763 @@
+{
+  "mode": "after",
+  "source": "f117a446013309ac8c7002ecf6b763b911a07cce",
+  "sourceTree": "c69e07572bd4b538e6cf3f02974ee99182eb7939",
+  "scope": "actual old-art camera regression, not new-look acceptance; explicit focus is a public camera API diagnostic until consuming UI hooks land",
+  "fixture": "declared8000coins/best40/seven paid buildings/102paid ring/one20coin upgrade; long drafts use public builder; entry/Fit/Tab/drag/pick use real controls",
+  "checks": [
+    {
+      "width": 1280,
+      "height": 720,
+      "paid": {
+        "coins": 6660,
+        "code": "ISLE-K7Q2M",
+        "walls": [
+          {
+            "id": "wall_1",
+            "x": -18.5,
+            "z": 2,
+            "level": 2
+          },
+          {
+            "id": "wall_2",
+            "x": -18.5,
+            "z": 0,
+            "level": 1
+          },
+          {
+            "id": "wall_3",
+            "x": -18.5,
+            "z": -2,
+            "level": 1
+          },
+          {
+            "id": "wall_4",
+            "x": -18.5,
+            "z": -4,
+            "level": 1
+          },
+          {
+            "id": "wall_5",
+            "x": -18.5,
+            "z": -6,
+            "level": 1
+          },
+          {
+            "id": "wall_6",
+            "x": -18.5,
+            "z": -8,
+            "level": 1
+          },
+          {
+            "id": "wall_7",
+            "x": -18.5,
+            "z": -10,
+            "level": 1
+          },
+          {
+            "id": "wall_8",
+            "x": -16.5,
+            "z": -10,
+            "level": 1
+          },
+          {
+            "id": "wall_9",
+            "x": -16.5,
+            "z": -12,
+            "level": 1
+          },
+          {
+            "id": "wall_10",
+            "x": -14.5,
+            "z": -12,
+            "level": 1
+          },
+          {
+            "id": "wall_11",
+            "x": -12.5,
+            "z": -12,
+            "level": 1
+          },
+          {
+            "id": "wall_12",
+            "x": -10.5,
+            "z": -12,
+            "level": 1
+          },
+          {
+            "id": "wall_13",
+            "x": -10.5,
+            "z": -14,
+            "level": 1
+          },
+          {
+            "id": "wall_14",
+            "x": -10.5,
+            "z": -16,
+            "level": 1
+          },
+          {
+            "id": "wall_15",
+            "x": -8.5,
+            "z": -16,
+            "level": 1
+          },
+          {
+            "id": "wall_16",
+            "x": -8.5,
+            "z": -18,
+            "level": 1
+          },
+          {
+            "id": "wall_17",
+            "x": -6.5,
+            "z": -18,
+            "level": 1
+          },
+          {
+            "id": "wall_18",
+            "x": -6.5,
+            "z": -20,
+            "level": 1
+          },
+          {
+            "id": "wall_19",
+            "x": -4.5,
+            "z": -20,
+            "level": 1
+          },
+          {
+            "id": "wall_20",
+            "x": -4.5,
+            "z": -22,
+            "level": 1
+          },
+          {
+            "id": "wall_21",
+            "x": -2.5,
+            "z": -22,
+            "level": 1
+          },
+          {
+            "id": "wall_22",
+            "x": -0.5,
+            "z": -22,
+            "level": 1
+          },
+          {
+            "id": "wall_23",
+            "x": 1.5,
+            "z": -22,
+            "level": 1
+          },
+          {
+            "id": "wall_24",
+            "x": 1.5,
+            "z": -20,
+            "level": 1
+          },
+          {
+            "id": "wall_25",
+            "x": 3.5,
+            "z": -20,
+            "level": 1
+          },
+          {
+            "id": "wall_26",
+            "x": 5.5,
+            "z": -20,
+            "level": 1
+          },
+          {
+            "id": "wall_27",
+            "x": 5.5,
+            "z": -18,
+            "level": 1
+          },
+          {
+            "id": "wall_28",
+            "x": 7.5,
+            "z": -18,
+            "level": 1
+          },
+          {
+            "id": "wall_29",
+            "x": 9.5,
+            "z": -18,
+            "level": 1
+          },
+          {
+            "id": "wall_30",
+            "x": 9.5,
+            "z": -16,
+            "level": 1
+          },
+          {
+            "id": "wall_31",
+            "x": 7.5,
+            "z": -16,
+            "level": 1
+          },
+          {
+            "id": "wall_32",
+            "x": 5.5,
+            "z": -16,
+            "level": 1
+          },
+          {
+            "id": "wall_33",
+            "x": 3.5,
+            "z": -16,
+            "level": 1
+          },
+          {
+            "id": "wall_34",
+            "x": 3.5,
+            "z": -14,
+            "level": 1
+          },
+          {
+            "id": "wall_35",
+            "x": 3.5,
+            "z": -12,
+            "level": 1
+          },
+          {
+            "id": "wall_36",
+            "x": 3.5,
+            "z": -10,
+            "level": 1
+          },
+          {
+            "id": "wall_37",
+            "x": 5.5,
+            "z": -10,
+            "level": 1
+          },
+          {
+            "id": "wall_38",
+            "x": 7.5,
+            "z": -10,
+            "level": 1
+          },
+          {
+            "id": "wall_39",
+            "x": 9.5,
+            "z": -10,
+            "level": 1
+          },
+          {
+            "id": "wall_40",
+            "x": 9.5,
+            "z": -8,
+            "level": 1
+          },
+          {
+            "id": "wall_41",
+            "x": 9.5,
+            "z": -6,
+            "level": 1
+          },
+          {
+            "id": "wall_42",
+            "x": 11.5,
+            "z": -6,
+            "level": 1
+          },
+          {
+            "id": "wall_43",
+            "x": 13.5,
+            "z": -6,
+            "level": 1
+          },
+          {
+            "id": "wall_44",
+            "x": 13.5,
+            "z": -8,
+            "level": 1
+          },
+          {
+            "id": "wall_45",
+            "x": 13.5,
+            "z": -10,
+            "level": 1
+          },
+          {
+            "id": "wall_46",
+            "x": 13.5,
+            "z": -12,
+            "level": 1
+          },
+          {
+            "id": "wall_47",
+            "x": 15.5,
+            "z": -12,
+            "level": 1
+          },
+          {
+            "id": "wall_48",
+            "x": 15.5,
+            "z": -10,
+            "level": 1
+          },
+          {
+            "id": "wall_49",
+            "x": 17.5,
+            "z": -10,
+            "level": 1
+          },
+          {
+            "id": "wall_50",
+            "x": 17.5,
+            "z": -8,
+            "level": 1
+          },
+          {
+            "id": "wall_51",
+            "x": 17.5,
+            "z": -6,
+            "level": 1
+          },
+          {
+            "id": "wall_52",
+            "x": 19.5,
+            "z": -6,
+            "level": 1
+          },
+          {
+            "id": "wall_53",
+            "x": 19.5,
+            "z": -4,
+            "level": 1
+          },
+          {
+            "id": "wall_54",
+            "x": 19.5,
+            "z": -2,
+            "level": 1
+          },
+          {
+            "id": "wall_55",
+            "x": 19.5,
+            "z": 0,
+            "level": 1
+          },
+          {
+            "id": "wall_56",
+            "x": 19.5,
+            "z": 2,
+            "level": 1
+          },
+          {
+            "id": "wall_57",
+            "x": 17.5,
+            "z": 2,
+            "level": 1
+          },
+          {
+            "id": "wall_58",
+            "x": 17.5,
+            "z": 4,
+            "level": 1
+          },
+          {
+            "id": "wall_59",
+            "x": 15.5,
+            "z": 4,
+            "level": 1
+          },
+          {
+            "id": "wall_60",
+            "x": 13.5,
+            "z": 4,
+            "level": 1
+          },
+          {
+            "id": "wall_61",
+            "x": 11.5,
+            "z": 4,
+            "level": 1
+          },
+          {
+            "id": "wall_62",
+            "x": 9.5,
+            "z": 4,
+            "level": 1
+          },
+          {
+            "id": "wall_63",
+            "x": 9.5,
+            "z": 6,
+            "level": 1
+          },
+          {
+            "id": "wall_64",
+            "x": 9.5,
+            "z": 8,
+            "level": 1
+          },
+          {
+            "id": "wall_65",
+            "x": 9.5,
+            "z": 10,
+            "level": 1
+          },
+          {
+            "id": "wall_66",
+            "x": 11.5,
+            "z": 10,
+            "level": 1
+          },
+          {
+            "id": "wall_67",
+            "x": 13.5,
+            "z": 10,
+            "level": 1
+          },
+          {
+            "id": "wall_68",
+            "x": 15.5,
+            "z": 10,
+            "level": 1
+          },
+          {
+            "id": "wall_69",
+            "x": 15.5,
+            "z": 12,
+            "level": 1
+          },
+          {
+            "id": "wall_70",
+            "x": 13.5,
+            "z": 12,
+            "level": 1
+          },
+          {
+            "id": "wall_71",
+            "x": 13.5,
+            "z": 14,
+            "level": 1
+          },
+          {
+            "id": "wall_72",
+            "x": 13.5,
+            "z": 16,
+            "level": 1
+          },
+          {
+            "id": "wall_73",
+            "x": 13.5,
+            "z": 18,
+            "level": 1
+          },
+          {
+            "id": "wall_74",
+            "x": 11.5,
+            "z": 18,
+            "level": 1
+          },
+          {
+            "id": "wall_75",
+            "x": 11.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_76",
+            "x": 9.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_77",
+            "x": 7.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_78",
+            "x": 5.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_79",
+            "x": 3.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_80",
+            "x": 1.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_81",
+            "x": -0.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_82",
+            "x": -2.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_83",
+            "x": -4.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_84",
+            "x": -6.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_85",
+            "x": -8.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_86",
+            "x": -8.5,
+            "z": 18,
+            "level": 1
+          },
+          {
+            "id": "wall_87",
+            "x": -10.5,
+            "z": 18,
+            "level": 1
+          },
+          {
+            "id": "wall_88",
+            "x": -10.5,
+            "z": 16,
+            "level": 1
+          },
+          {
+            "id": "wall_89",
+            "x": -12.5,
+            "z": 16,
+            "level": 1
+          },
+          {
+            "id": "wall_90",
+            "x": -12.5,
+            "z": 14,
+            "level": 1
+          },
+          {
+            "id": "wall_91",
+            "x": -12.5,
+            "z": 12,
+            "level": 1
+          },
+          {
+            "id": "wall_92",
+            "x": -14.5,
+            "z": 12,
+            "level": 1
+          },
+          {
+            "id": "wall_93",
+            "x": -16.5,
+            "z": 12,
+            "level": 1
+          },
+          {
+            "id": "wall_94",
+            "x": -16.5,
+            "z": 10,
+            "level": 1
+          },
+          {
+            "id": "wall_95",
+            "x": -16.5,
+            "z": 8,
+            "level": 1
+          },
+          {
+            "id": "wall_96",
+            "x": -14.5,
+            "z": 8,
+            "level": 1
+          },
+          {
+            "id": "wall_97",
+            "x": -12.5,
+            "z": 8,
+            "level": 1
+          },
+          {
+            "id": "wall_98",
+            "x": -12.5,
+            "z": 6,
+            "level": 1
+          },
+          {
+            "id": "wall_99",
+            "x": -12.5,
+            "z": 4,
+            "level": 1
+          },
+          {
+            "id": "wall_100",
+            "x": -12.5,
+            "z": 2,
+            "level": 1
+          },
+          {
+            "id": "wall_101",
+            "x": -14.5,
+            "z": 2,
+            "level": 1
+          },
+          {
+            "id": "wall_102",
+            "x": -16.5,
+            "z": 2,
+            "level": 1
+          }
+        ]
+      },
+      "entry": {
+        "name": "after-entry-1280x720.png",
+        "qualityBefore": {
+          "pixelRatio": 0.5,
+          "drawingWidth": 640,
+          "drawingHeight": 360,
+          "quality": "high",
+          "densityScale": 0.5
+        },
+        "camera": [
+          -3.99770623207727,
+          2.3992773131971528,
+          100
+        ],
+        "zoom": 0.9998752654077692,
+        "captain": [
+          8.5,
+          1.03,
+          12.8
+        ],
+        "contextLost": false,
+        "drawCalls": 233,
+        "rendering": {
+          "pixelRatio": 1,
+          "drawingWidth": 1280,
+          "drawingHeight": 720,
+          "quality": "high",
+          "densityScale": 1
+        },
+        "pixelRatio": 1,
+        "drawingSize": [
+          1280,
+          720
+        ],
+        "memory": {
+          "geometries": 260,
+          "textures": 38
+        },
+        "worldLinks": 106,
+        "worldWallDrawMeshes": 36
+      },
+      "buttons": [
+        {
+          "label": "Zoom out",
+          "visibleText": "−",
+          "fontSize": "17px",
+          "width": 44,
+          "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 615.3125,
+            "right": 625.25,
+            "top": 637.265625,
+            "bottom": 660.265625
+          },
+          "paddingBounds": {
+            "left": 600.28125,
+            "right": 640.28125,
+            "top": 629.3125,
+            "bottom": 669.3125
+          },
+          "contentBounds": {
+            "left": 608.28125,
+            "right": 632.28125,
+            "top": 637.3125,
+            "bottom": 661.3125
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
+          "hit": true
+        },
+        {
+          "label": "Zoom in",
+          "visibleText": "+",
+          "fontSize": "17px",
+          "width": 44,
+          "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 663.40625,
+            "right": 673.140625,
+            "top": 637.265625,
+            "bottom": 660.265625
+          },
+          "paddingBounds": {
+            "left": 648.28125,
+            "right": 688.28125,
+            "top": 629.3125,
+            "bottom": 669.3125
+          },
+          "contentBounds": {
+            "left": 656.28125,
+            "right": 680.28125,
+            "top": 637.3125,
+            "bottom": 661.3125
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
+          "hit": true
+        },
+        {
+          "label": "Fit village",
+          "visibleText": "Fit",
+          "fontSize": "17px",
+          "width": 44,
+          "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 705.328125,
+            "right": 727.234375,
+            "top": 637.265625,
+            "bottom": 660.265625
+          },
+          "paddingBounds": {
+            "left": 696.28125,
+            "right": 736.28125,
+            "top": 629.3125,
+            "bottom": 669.3125
+          },
+          "contentBounds": {
+            "left": 704.28125,
+            "right": 728.28125,
+            "top": 637.3125,
+            "bottom": 661.3125
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
+          "hit": true
+        },
+        {
+          "label": "Build walls",
+          "visibleText": "Build walls",
+          "fontSize": "17px",
+          "width": 131.796875,
+          "height": 46.09375,
+          "textFits": true,
+          "textBounds": {
+            "left": 770.28125,
+            "right": 862.078125,
+            "top": 637.265625,
+            "bottom": 660.265625
+          },
+          "paddingBounds": {
+            "left": 752.28125,
+            "right": 880.078125,
+            "top": 628.265625,
+            "bottom": 670.359375
+          },
+          "contentBounds": {
+            "left": 770.28125,
+            "right": 862.078125,
+            "top": 638.265625,
+            "bottom": 660.359375
+          },
+          "scrollWidth": 128,
+          "clientWidth": 128,
+          "hit": true
+        },
+        {
+          "label": "Exit village mode",
+          "visibleText": "Exit",
+          "fontSize": "17px",
+          "width": 71.921875,
+          "height": 46.09375,
+          "textFits": true,
+          "textBounds": {
+            "left": 914.078125,
+            "right": 946,
+            "top": 637.265625,
+            "bottom": 660.265625
+          },
+          "paddingBounds": {
+            "left": 896.078125,
+            "right": 964,
+            "top": 628.265625,
+            "bottom": 670.359375
+          },
+          "contentBounds": {
+            "left": 914.078125,
+            "right": 946,
+            "top": 638.265625,
+            "bottom": 660.359375
+          },
+          "scrollWidth": 68,
+          "clientWidth": 68,
+          "hit": true
+        }
+      ],
+      "dragged": {
+        "camera": [
+          -5.8283675627456795,
+          3.0101155760354503,
+          100
+        ],
+        "zoom": 0.9999992944740896
+      },
+      "peek": {
+        "camera": [
+          -0.030896290327927702,
+          1.6441578738722054,
+          100
+        ],
+        "zoom": 0.3550852423943167
+      },
+      "fit": {
+        "name": "after-fit-1280x720.png",
+        "qualityBefore": {
+          "pixelRatio": 0.5,
+          "drawingWidth": 640,
+          "drawingHeight": 360,
+          "quality": "high",
+          "densityScale": 0.5
+        },
+        "camera": [
+          -0.020364895899442122,
+          1.6416778027732124,
+          100
+        ],
+        "zoom": 0.3539122896529546,
+        "captain": [
+          8.5,
+          1.03,
+          12.8
+        ],
+        "contextLost": false,
+        "drawCalls": 235,
+        "rendering": {
+          "pixelRatio": 1,
+          "drawingWidth": 1280,
+          "drawingHeight": 720,
+          "quality": "high",
+          "densityScale": 1
+        },
+        "pixelRatio": 1,
+        "drawingSize": [
+          1280,
+          720
+        ],
+        "memory": {
+          "geometries": 260,
+          "textures": 38
+        },
+        "worldLinks": 106,
+        "worldWallDrawMeshes": 36
+      },
+      "focusApiDiagnostic": true,
+      "pick": {
+        "x": 646.381123991676,
+        "y": 349.4353082579687
+      },
+      "pageErrors": [],
+      "externalRequests": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+      ]
+    },
+    {
+      "width": 375,
+      "height": 812,
+      "paid": {
+        "coins": 6660,
+        "code": "ISLE-K7Q2M",
+        "walls": [
+          {
+            "id": "wall_1",
+            "x": -18.5,
+            "z": 2,
+            "level": 2
+          },
+          {
+            "id": "wall_2",
+            "x": -18.5,
+            "z": 0,
+            "level": 1
+          },
+          {
+            "id": "wall_3",
+            "x": -18.5,
+            "z": -2,
+            "level": 1
+          },
+          {
+            "id": "wall_4",
+            "x": -18.5,
+            "z": -4,
+            "level": 1
+          },
+          {
+            "id": "wall_5",
+            "x": -18.5,
+            "z": -6,
+            "level": 1
+          },
+          {
+            "id": "wall_6",
+            "x": -18.5,
+            "z": -8,
+            "level": 1
+          },
+          {
+            "id": "wall_7",
+            "x": -18.5,
+            "z": -10,
+            "level": 1
+          },
+          {
+            "id": "wall_8",
+            "x": -16.5,
+            "z": -10,
+            "level": 1
+          },
+          {
+            "id": "wall_9",
+            "x": -16.5,
+            "z": -12,
+            "level": 1
+          },
+          {
+            "id": "wall_10",
+            "x": -14.5,
+            "z": -12,
+            "level": 1
+          },
+          {
+            "id": "wall_11",
+            "x": -12.5,
+            "z": -12,
+            "level": 1
+          },
+          {
+            "id": "wall_12",
+            "x": -10.5,
+            "z": -12,
+            "level": 1
+          },
+          {
+            "id": "wall_13",
+            "x": -10.5,
+            "z": -14,
+            "level": 1
+          },
+          {
+            "id": "wall_14",
+            "x": -10.5,
+            "z": -16,
+            "level": 1
+          },
+          {
+            "id": "wall_15",
+            "x": -8.5,
+            "z": -16,
+            "level": 1
+          },
+          {
+            "id": "wall_16",
+            "x": -8.5,
+            "z": -18,
+            "level": 1
+          },
+          {
+            "id": "wall_17",
+            "x": -6.5,
+            "z": -18,
+            "level": 1
+          },
+          {
+            "id": "wall_18",
+            "x": -6.5,
+            "z": -20,
+            "level": 1
+          },
+          {
+            "id": "wall_19",
+            "x": -4.5,
+            "z": -20,
+            "level": 1
+          },
+          {
+            "id": "wall_20",
+            "x": -4.5,
+            "z": -22,
+            "level": 1
+          },
+          {
+            "id": "wall_21",
+            "x": -2.5,
+            "z": -22,
+            "level": 1
+          },
+          {
+            "id": "wall_22",
+            "x": -0.5,
+            "z": -22,
+            "level": 1
+          },
+          {
+            "id": "wall_23",
+            "x": 1.5,
+            "z": -22,
+            "level": 1
+          },
+          {
+            "id": "wall_24",
+            "x": 1.5,
+            "z": -20,
+            "level": 1
+          },
+          {
+            "id": "wall_25",
+            "x": 3.5,
+            "z": -20,
+            "level": 1
+          },
+          {
+            "id": "wall_26",
+            "x": 5.5,
+            "z": -20,
+            "level": 1
+          },
+          {
+            "id": "wall_27",
+            "x": 5.5,
+            "z": -18,
+            "level": 1
+          },
+          {
+            "id": "wall_28",
+            "x": 7.5,
+            "z": -18,
+            "level": 1
+          },
+          {
+            "id": "wall_29",
+            "x": 9.5,
+            "z": -18,
+            "level": 1
+          },
+          {
+            "id": "wall_30",
+            "x": 9.5,
+            "z": -16,
+            "level": 1
+          },
+          {
+            "id": "wall_31",
+            "x": 7.5,
+            "z": -16,
+            "level": 1
+          },
+          {
+            "id": "wall_32",
+            "x": 5.5,
+            "z": -16,
+            "level": 1
+          },
+          {
+            "id": "wall_33",
+            "x": 3.5,
+            "z": -16,
+            "level": 1
+          },
+          {
+            "id": "wall_34",
+            "x": 3.5,
+            "z": -14,
+            "level": 1
+          },
+          {
+            "id": "wall_35",
+            "x": 3.5,
+            "z": -12,
+            "level": 1
+          },
+          {
+            "id": "wall_36",
+            "x": 3.5,
+            "z": -10,
+            "level": 1
+          },
+          {
+            "id": "wall_37",
+            "x": 5.5,
+            "z": -10,
+            "level": 1
+          },
+          {
+            "id": "wall_38",
+            "x": 7.5,
+            "z": -10,
+            "level": 1
+          },
+          {
+            "id": "wall_39",
+            "x": 9.5,
+            "z": -10,
+            "level": 1
+          },
+          {
+            "id": "wall_40",
+            "x": 9.5,
+            "z": -8,
+            "level": 1
+          },
+          {
+            "id": "wall_41",
+            "x": 9.5,
+            "z": -6,
+            "level": 1
+          },
+          {
+            "id": "wall_42",
+            "x": 11.5,
+            "z": -6,
+            "level": 1
+          },
+          {
+            "id": "wall_43",
+            "x": 13.5,
+            "z": -6,
+            "level": 1
+          },
+          {
+            "id": "wall_44",
+            "x": 13.5,
+            "z": -8,
+            "level": 1
+          },
+          {
+            "id": "wall_45",
+            "x": 13.5,
+            "z": -10,
+            "level": 1
+          },
+          {
+            "id": "wall_46",
+            "x": 13.5,
+            "z": -12,
+            "level": 1
+          },
+          {
+            "id": "wall_47",
+            "x": 15.5,
+            "z": -12,
+            "level": 1
+          },
+          {
+            "id": "wall_48",
+            "x": 15.5,
+            "z": -10,
+            "level": 1
+          },
+          {
+            "id": "wall_49",
+            "x": 17.5,
+            "z": -10,
+            "level": 1
+          },
+          {
+            "id": "wall_50",
+            "x": 17.5,
+            "z": -8,
+            "level": 1
+          },
+          {
+            "id": "wall_51",
+            "x": 17.5,
+            "z": -6,
+            "level": 1
+          },
+          {
+            "id": "wall_52",
+            "x": 19.5,
+            "z": -6,
+            "level": 1
+          },
+          {
+            "id": "wall_53",
+            "x": 19.5,
+            "z": -4,
+            "level": 1
+          },
+          {
+            "id": "wall_54",
+            "x": 19.5,
+            "z": -2,
+            "level": 1
+          },
+          {
+            "id": "wall_55",
+            "x": 19.5,
+            "z": 0,
+            "level": 1
+          },
+          {
+            "id": "wall_56",
+            "x": 19.5,
+            "z": 2,
+            "level": 1
+          },
+          {
+            "id": "wall_57",
+            "x": 17.5,
+            "z": 2,
+            "level": 1
+          },
+          {
+            "id": "wall_58",
+            "x": 17.5,
+            "z": 4,
+            "level": 1
+          },
+          {
+            "id": "wall_59",
+            "x": 15.5,
+            "z": 4,
+            "level": 1
+          },
+          {
+            "id": "wall_60",
+            "x": 13.5,
+            "z": 4,
+            "level": 1
+          },
+          {
+            "id": "wall_61",
+            "x": 11.5,
+            "z": 4,
+            "level": 1
+          },
+          {
+            "id": "wall_62",
+            "x": 9.5,
+            "z": 4,
+            "level": 1
+          },
+          {
+            "id": "wall_63",
+            "x": 9.5,
+            "z": 6,
+            "level": 1
+          },
+          {
+            "id": "wall_64",
+            "x": 9.5,
+            "z": 8,
+            "level": 1
+          },
+          {
+            "id": "wall_65",
+            "x": 9.5,
+            "z": 10,
+            "level": 1
+          },
+          {
+            "id": "wall_66",
+            "x": 11.5,
+            "z": 10,
+            "level": 1
+          },
+          {
+            "id": "wall_67",
+            "x": 13.5,
+            "z": 10,
+            "level": 1
+          },
+          {
+            "id": "wall_68",
+            "x": 15.5,
+            "z": 10,
+            "level": 1
+          },
+          {
+            "id": "wall_69",
+            "x": 15.5,
+            "z": 12,
+            "level": 1
+          },
+          {
+            "id": "wall_70",
+            "x": 13.5,
+            "z": 12,
+            "level": 1
+          },
+          {
+            "id": "wall_71",
+            "x": 13.5,
+            "z": 14,
+            "level": 1
+          },
+          {
+            "id": "wall_72",
+            "x": 13.5,
+            "z": 16,
+            "level": 1
+          },
+          {
+            "id": "wall_73",
+            "x": 13.5,
+            "z": 18,
+            "level": 1
+          },
+          {
+            "id": "wall_74",
+            "x": 11.5,
+            "z": 18,
+            "level": 1
+          },
+          {
+            "id": "wall_75",
+            "x": 11.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_76",
+            "x": 9.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_77",
+            "x": 7.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_78",
+            "x": 5.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_79",
+            "x": 3.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_80",
+            "x": 1.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_81",
+            "x": -0.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_82",
+            "x": -2.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_83",
+            "x": -4.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_84",
+            "x": -6.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_85",
+            "x": -8.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_86",
+            "x": -8.5,
+            "z": 18,
+            "level": 1
+          },
+          {
+            "id": "wall_87",
+            "x": -10.5,
+            "z": 18,
+            "level": 1
+          },
+          {
+            "id": "wall_88",
+            "x": -10.5,
+            "z": 16,
+            "level": 1
+          },
+          {
+            "id": "wall_89",
+            "x": -12.5,
+            "z": 16,
+            "level": 1
+          },
+          {
+            "id": "wall_90",
+            "x": -12.5,
+            "z": 14,
+            "level": 1
+          },
+          {
+            "id": "wall_91",
+            "x": -12.5,
+            "z": 12,
+            "level": 1
+          },
+          {
+            "id": "wall_92",
+            "x": -14.5,
+            "z": 12,
+            "level": 1
+          },
+          {
+            "id": "wall_93",
+            "x": -16.5,
+            "z": 12,
+            "level": 1
+          },
+          {
+            "id": "wall_94",
+            "x": -16.5,
+            "z": 10,
+            "level": 1
+          },
+          {
+            "id": "wall_95",
+            "x": -16.5,
+            "z": 8,
+            "level": 1
+          },
+          {
+            "id": "wall_96",
+            "x": -14.5,
+            "z": 8,
+            "level": 1
+          },
+          {
+            "id": "wall_97",
+            "x": -12.5,
+            "z": 8,
+            "level": 1
+          },
+          {
+            "id": "wall_98",
+            "x": -12.5,
+            "z": 6,
+            "level": 1
+          },
+          {
+            "id": "wall_99",
+            "x": -12.5,
+            "z": 4,
+            "level": 1
+          },
+          {
+            "id": "wall_100",
+            "x": -12.5,
+            "z": 2,
+            "level": 1
+          },
+          {
+            "id": "wall_101",
+            "x": -14.5,
+            "z": 2,
+            "level": 1
+          },
+          {
+            "id": "wall_102",
+            "x": -16.5,
+            "z": 2,
+            "level": 1
+          }
+        ]
+      },
+      "entry": {
+        "name": "after-entry-375x812.png",
+        "qualityBefore": {
+          "pixelRatio": 0.55,
+          "drawingWidth": 206,
+          "drawingHeight": 446,
+          "quality": "high",
+          "densityScale": 0.55
+        },
+        "camera": [
+          -3.9959826891594363,
+          1.075443543501347,
+          100
+        ],
+        "zoom": 0.9997480966582845,
+        "captain": [
+          8.5,
+          1.03,
+          12.8
+        ],
+        "contextLost": false,
+        "drawCalls": 235,
+        "rendering": {
+          "pixelRatio": 1,
+          "drawingWidth": 375,
+          "drawingHeight": 812,
+          "quality": "high",
+          "densityScale": 1
+        },
+        "pixelRatio": 1,
+        "drawingSize": [
+          375,
+          812
+        ],
+        "memory": {
+          "geometries": 260,
+          "textures": 38
+        },
+        "worldLinks": 106,
+        "worldWallDrawMeshes": 36
+      },
+      "buttons": [
+        {
+          "label": "Zoom out",
+          "visibleText": "−",
+          "fontSize": "17px",
+          "width": 44,
+          "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 43.03125,
+            "right": 52.96875,
+            "top": 657.671875,
+            "bottom": 680.671875
+          },
+          "paddingBounds": {
+            "left": 28,
+            "right": 68,
+            "top": 649.71875,
+            "bottom": 689.71875
+          },
+          "contentBounds": {
+            "left": 36,
+            "right": 60,
+            "top": 657.71875,
+            "bottom": 681.71875
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
+          "hit": true
+        },
+        {
+          "label": "Zoom in",
+          "visibleText": "+",
+          "fontSize": "17px",
+          "width": 44,
+          "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 91.125,
+            "right": 100.859375,
+            "top": 657.671875,
+            "bottom": 680.671875
+          },
+          "paddingBounds": {
+            "left": 76,
+            "right": 116,
+            "top": 649.71875,
+            "bottom": 689.71875
+          },
+          "contentBounds": {
+            "left": 84,
+            "right": 108,
+            "top": 657.71875,
+            "bottom": 681.71875
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
+          "hit": true
+        },
+        {
+          "label": "Fit village",
+          "visibleText": "Fit",
+          "fontSize": "17px",
+          "width": 44,
+          "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 133.046875,
+            "right": 154.953125,
+            "top": 657.671875,
+            "bottom": 680.671875
+          },
+          "paddingBounds": {
+            "left": 124,
+            "right": 164,
+            "top": 649.71875,
+            "bottom": 689.71875
+          },
+          "contentBounds": {
+            "left": 132,
+            "right": 156,
+            "top": 657.71875,
+            "bottom": 681.71875
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
+          "hit": true
+        },
+        {
+          "label": "Build walls",
+          "visibleText": "Build walls",
+          "fontSize": "17px",
+          "width": 112,
+          "height": 68.1875,
+          "textFits": true,
+          "textBounds": {
+            "left": 271.125,
+            "right": 314.859375,
+            "top": 658.71875,
+            "bottom": 703.8125
+          },
+          "paddingBounds": {
+            "left": 239,
+            "right": 347,
+            "top": 649.71875,
+            "bottom": 713.90625
+          },
+          "contentBounds": {
+            "left": 257,
+            "right": 329,
+            "top": 659.71875,
+            "bottom": 703.90625
+          },
+          "scrollWidth": 108,
+          "clientWidth": 108,
+          "hit": true
+        },
+        {
+          "label": "Exit village mode",
+          "visibleText": "Exit",
+          "fontSize": "17px",
+          "width": 71.921875,
+          "height": 46.09375,
+          "textFits": true,
+          "textBounds": {
+            "left": 46,
+            "right": 77.921875,
+            "top": 734.90625,
+            "bottom": 757.90625
+          },
+          "paddingBounds": {
+            "left": 28,
+            "right": 95.921875,
+            "top": 725.90625,
+            "bottom": 768
+          },
+          "contentBounds": {
+            "left": 46,
+            "right": 77.921875,
+            "top": 735.90625,
+            "bottom": 758
+          },
+          "scrollWidth": 68,
+          "clientWidth": 68,
+          "hit": true
+        }
+      ],
+      "dragged": {
+        "camera": [
+          -6.552623625040369,
+          1.9288745264025047,
+          100
+        ],
+        "zoom": 0.9999995374286903
+      },
+      "peek": {
+        "camera": [
+          -0.05843436419365708,
+          -2.36734830137252,
+          100
+        ],
+        "zoom": 0.339276785677959
+      },
+      "fit": {
+        "name": "after-fit-375x812.png",
+        "qualityBefore": {
+          "pixelRatio": 0.7,
+          "drawingWidth": 262,
+          "drawingHeight": 568,
+          "quality": "high",
+          "densityScale": 0.7
+        },
+        "camera": [
+          -0.025340241692471257,
+          -2.389245567776487,
+          100
+        ],
+        "zoom": 0.3359085611673971,
+        "captain": [
+          8.5,
+          1.03,
+          12.8
+        ],
+        "contextLost": false,
+        "drawCalls": 235,
+        "rendering": {
+          "pixelRatio": 1,
+          "drawingWidth": 375,
+          "drawingHeight": 812,
+          "quality": "high",
+          "densityScale": 1
+        },
+        "pixelRatio": 1,
+        "drawingSize": [
+          375,
+          812
+        ],
+        "memory": {
+          "geometries": 260,
+          "textures": 38
+        },
+        "worldLinks": 106,
+        "worldWallDrawMeshes": 36
+      },
+      "focusApiDiagnostic": true,
+      "pick": {
+        "x": 188.67631489239847,
+        "y": 369.76643503112325
+      },
+      "pageErrors": [],
+      "externalRequests": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,496 @@
+{
+  "at": "2026-11-17T22:12:15.414482+00:00",
+  "rows": [
+    {
+      "pr": 349,
+      "expectedBranch": "docs/vis-01-approved-mockups",
+      "expectedHeadPrefix": "9eb08530",
+      "branch": "docs/vis-01-approved-mockups",
+      "head": "9eb085304b6a0fd52a1e00a97eec09704019af35",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 352,
+      "expectedBranch": "feat/vis-32-world-raster",
+      "expectedHeadPrefix": "bfc7f08c",
+      "branch": "feat/vis-32-world-raster",
+      "head": "bfc7f08c4b7aa28d20c9f5fe65cfb94adae555c5",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 351,
+      "expectedBranch": "feat/vis-33-village-composition",
+      "expectedHeadPrefix": "9b55460e",
+      "branch": "feat/vis-33-village-composition",
+      "head": "9b55460e16ddac70cdeaed4c54be9fe809bacba5",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 363,
+      "expectedBranch": "feat/vis-34-shared-projection",
+      "expectedHeadPrefix": "8cb47237",
+      "branch": "feat/vis-34-shared-projection",
+      "head": "8cb4723719aaabbf32214a68d8591da3e7127e79",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 367,
+      "expectedBranch": "feat/vis-34-world-anchors",
+      "expectedHeadPrefix": "7a0d70dc",
+      "branch": "feat/vis-34-world-anchors",
+      "head": "7a0d70dcd5aed2d44bf8a3c78eeb2e1d23b488a6",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 366,
+      "expectedBranch": "feat/vis-34-combat-projection",
+      "expectedHeadPrefix": "be6a9e9e",
+      "branch": "feat/vis-34-combat-projection",
+      "head": "be6a9e9effb5fa608685b3993ba3d4f835a43dbd",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 368,
+      "expectedBranch": "feat/vis-34-ground-camera",
+      "expectedHeadPrefix": "28cce29e",
+      "branch": "feat/vis-34-ground-camera",
+      "head": "28cce29ede8f500d023761127e48a6918c648ffd",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 386,
+      "expectedBranch": "fix/vis-37-cold-coast-binding",
+      "expectedHeadPrefix": "635b1114",
+      "branch": "fix/vis-37-cold-coast-binding",
+      "head": "635b11149f900d45cbafbcecf24868d858839d5c",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 371,
+      "expectedBranch": "perf/vis-30-baked-world-art",
+      "expectedHeadPrefix": "f6bbc967",
+      "branch": "perf/vis-30-baked-world-art",
+      "head": "f6bbc967a3676257660dbdc4028708e8810809d8",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 396,
+      "expectedBranch": "fix/vis-40-compact-combat-hud",
+      "expectedHeadPrefix": "0a4ece50",
+      "branch": "fix/vis-40-compact-combat-hud",
+      "head": "0a4ece5099bdc7a27c85d10204dabc031262da10",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 398,
+      "expectedBranch": "fix/vis-41-wave-look-fence",
+      "expectedHeadPrefix": "0b9938da",
+      "branch": "fix/vis-41-wave-look-fence",
+      "head": "0b9938da290ee83e2d0bdfc2a1e10ebcf672f181",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 400,
+      "expectedBranch": "test/vis-42-runtime-projection",
+      "expectedHeadPrefix": "03cc6c5b",
+      "branch": "test/vis-42-runtime-projection",
+      "head": "03cc6c5bb745b1ff2dfc545e8654bfecc4ebc088",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 402,
+      "expectedBranch": "test/vis-43-art-readiness",
+      "expectedHeadPrefix": "25bbcf1a",
+      "branch": "test/vis-43-art-readiness",
+      "head": "25bbcf1a2397c1cdc87d9d0c4e512280cc0d52e8",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 404,
+      "expectedBranch": "test/vis-45-wall-projection-qa",
+      "expectedHeadPrefix": "82e8078e",
+      "branch": "test/vis-45-wall-projection-qa",
+      "head": "82e8078ed8917c569633026e6646cd34bd1246cc",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 406,
+      "expectedBranch": "test/vis-44-art-provider-contracts",
+      "expectedHeadPrefix": "8431f059",
+      "branch": "test/vis-44-art-provider-contracts",
+      "head": "8431f05965b4026c617a1ca87f7e2db740f5331e",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 412,
+      "expectedBranch": "test/vis-48-multiplayer-wall-observer",
+      "expectedHeadPrefix": "1b4065d5",
+      "branch": "test/vis-48-multiplayer-wall-observer",
+      "head": "1b4065d55fc658580c5860c2863729779cbc2f45",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 414,
+      "expectedBranch": "chore/vis-49-latest-main",
+      "expectedHeadPrefix": "52f6bb15",
+      "branch": "chore/vis-49-latest-main",
+      "head": "52f6bb158b03188b57260c1872e273391598debf",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 416,
+      "expectedBranch": "fix/vis-50-finish-checkpoint-guard",
+      "expectedHeadPrefix": "455c8387",
+      "branch": "fix/vis-50-finish-checkpoint-guard",
+      "head": "455c8387c8e90d0d945a683c11f76e04077eef5d",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 418,
+      "expectedBranch": "fix/vis-51-selected-wall-visibility",
+      "expectedHeadPrefix": "cd41fd2f",
+      "branch": "fix/vis-51-selected-wall-visibility",
+      "head": "cd41fd2fbad72b54cf2b82d84d8eef0baa88a69e",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 408,
+      "expectedBranch": "test/vis-46-report-input-owners",
+      "expectedHeadPrefix": "5cdc9b17",
+      "branch": "test/vis-46-report-input-owners",
+      "head": "5cdc9b17b1e73d153d588ff7ec1a1661bbc25152",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 410,
+      "expectedBranch": "test/vis-47-lobby-refresh-identity",
+      "expectedHeadPrefix": "397ab17a",
+      "branch": "test/vis-47-lobby-refresh-identity",
+      "head": "397ab17a6fab3ce9e844c4c565aa4251b2c9552b",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 392,
+      "expectedBranch": "chore/reference-village-current-main",
+      "expectedHeadPrefix": "59181376",
+      "branch": "chore/reference-village-current-main",
+      "head": "591813762a11fa29dee9097a79811831982eb0ef",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 381,
+      "expectedBranch": "perf/vis-18-compiled-activation",
+      "expectedHeadPrefix": "e54b0f46",
+      "branch": "perf/vis-18-compiled-activation",
+      "head": "e54b0f463aeb21b5a740aa77b6a4b8b6719692ff",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 346,
+      "expectedBranch": "feat/vis-05-village-hero",
+      "expectedHeadPrefix": "4bd02615",
+      "branch": "feat/vis-05-village-hero",
+      "head": "4bd02615a631ce0b375ea8d1856486629d49837b",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 353,
+      "expectedBranch": "feat/vis-06-house-family",
+      "expectedHeadPrefix": "6f495947",
+      "branch": "feat/vis-06-house-family",
+      "head": "6f495947953ebabfe899b3a193568750adcd90b7",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 354,
+      "expectedBranch": "feat/vis-07-shaded-cannons",
+      "expectedHeadPrefix": "752d6d09",
+      "branch": "feat/vis-07-shaded-cannons",
+      "head": "752d6d092300c3d47c33c09a04dbe6e3928b2908",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 375,
+      "expectedBranch": "feat/vis-08-shaded-mortars",
+      "expectedHeadPrefix": "8451e9eb",
+      "branch": "feat/vis-08-shaded-mortars",
+      "head": "8451e9eb6d48796244eb0abb607494abf04f732f",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 382,
+      "expectedBranch": "feat/vis-09-shaded-harpoons",
+      "expectedHeadPrefix": "9d3e65df",
+      "branch": "feat/vis-09-shaded-harpoons",
+      "head": "9d3e65df4262bcaf4965bb3f59a636b58c384680",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 384,
+      "expectedBranch": "feat/vis-10-shaded-culverins",
+      "expectedHeadPrefix": "77cb303c",
+      "branch": "feat/vis-10-shaded-culverins",
+      "head": "77cb303ccbde9766c6d694235359e8e0985d4aa8",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 383,
+      "expectedBranch": "feat/vis-11-shaded-swivels",
+      "expectedHeadPrefix": "dbc015f3",
+      "branch": "feat/vis-11-shaded-swivels",
+      "head": "dbc015f39e5a2c6a4147ad5cb8a98c4f19c36e09",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 355,
+      "expectedBranch": "feat/vis-12-village-landmarks",
+      "expectedHeadPrefix": "41aea46a",
+      "branch": "feat/vis-12-village-landmarks",
+      "head": "41aea46a6adc3996865589f67f247791cc538dea",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 356,
+      "expectedBranch": "feat/vis-13-village-services",
+      "expectedHeadPrefix": "71dcf3e1",
+      "branch": "feat/vis-13-village-services",
+      "head": "71dcf3e1381abf0beaa2a217dea94358a07c87b4",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 350,
+      "expectedBranch": "feat/vis-21-lush-nature",
+      "expectedHeadPrefix": "0cb484c0",
+      "branch": "feat/vis-21-lush-nature",
+      "head": "0cb484c0af55ed79b62e04c555dbacab3a1e06bd",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 348,
+      "expectedBranch": "feat/vis-20-village-terrain",
+      "expectedHeadPrefix": "c78ec638",
+      "branch": "feat/vis-20-village-terrain",
+      "head": "c78ec63863927a99f204337d8c2230b93a87e17b",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 358,
+      "expectedBranch": "feat/vis-23-nautical-water",
+      "expectedHeadPrefix": "32f492b6",
+      "branch": "feat/vis-23-nautical-water",
+      "head": "32f492b64bf91f5bd6c9428359427ac1bfc2e361",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 347,
+      "expectedBranch": "feat/vis-14-dimensional-walls",
+      "expectedHeadPrefix": "fd87981e",
+      "branch": "feat/vis-14-dimensional-walls",
+      "head": "fd87981ee40809ed3bee1aebff7a09189e8728e1",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 377,
+      "expectedBranch": "fix/vis-14-level-one-wall-art",
+      "expectedHeadPrefix": "b84eadfc",
+      "branch": "fix/vis-14-level-one-wall-art",
+      "head": "b84eadfcabb82435c9862f5a88f0424968f60b53",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 359,
+      "expectedBranch": "feat/vis-27-shaded-wall-ghosts",
+      "expectedHeadPrefix": "2d9bc491",
+      "branch": "feat/vis-27-shaded-wall-ghosts",
+      "head": "2d9bc4917eaeb5b9016e4a398d03c33ae219e61e",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 360,
+      "expectedBranch": "feat/vis-28-reference-controls",
+      "expectedHeadPrefix": "5199ced6",
+      "branch": "feat/vis-28-reference-controls",
+      "head": "5199ced621943401acdf2882276fffebc9351986",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 365,
+      "expectedBranch": "feat/base-06-selection-dock",
+      "expectedHeadPrefix": "aefc942f",
+      "branch": "feat/base-06-selection-dock",
+      "head": "aefc942f6a3dc93861f60845697312271d13657b",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 394,
+      "expectedBranch": "fix/vis-39-combat-wall-tiers",
+      "expectedHeadPrefix": "01a50bab",
+      "branch": "fix/vis-39-combat-wall-tiers",
+      "head": "01a50bab82f471bcb6272e63c510d74efdd8dacd",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 390,
+      "expectedBranch": "fix/vis-38-wall-selection-clarity",
+      "expectedHeadPrefix": "192e009a",
+      "branch": "fix/vis-38-wall-selection-clarity",
+      "head": "192e009a3926596a4cba4a9d114260d9995e5f48",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 370,
+      "expectedBranch": "feat/base-05-reference-hud",
+      "expectedHeadPrefix": "0729faf5",
+      "branch": "feat/base-05-reference-hud",
+      "head": "0729faf528d6b138ea0bfb6cf467907180dc35e4",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 369,
+      "expectedBranch": "feat/vis-35-core-landmarks",
+      "expectedHeadPrefix": "baca3a1e",
+      "branch": "feat/vis-35-core-landmarks",
+      "head": "baca3a1e12f5ee5e9a3f0efe315e54652f8ab847",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 379,
+      "expectedBranch": "fix/vis-35-core-travel-rejoin",
+      "expectedHeadPrefix": "f52a05c5",
+      "branch": "fix/vis-35-core-travel-rejoin",
+      "head": "f52a05c527c0d3ae6aba8c052506b80acd212e78",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 357,
+      "expectedBranch": "feat/vis-18-material-activation",
+      "expectedHeadPrefix": "3593da52",
+      "branch": "feat/vis-18-material-activation",
+      "head": "3593da526056bcdcadbc487366fd6190685a7f2d",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 362,
+      "expectedBranch": "fix/vis-18-static-art-retry",
+      "expectedHeadPrefix": "97054f3c",
+      "branch": "fix/vis-18-static-art-retry",
+      "head": "97054f3c9d5c9ddec566f970e700450bd7081646",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 372,
+      "expectedBranch": "feat/vis-18-full-family-activation",
+      "expectedHeadPrefix": "7477dea2",
+      "branch": "feat/vis-18-full-family-activation",
+      "head": "7477dea2b10a39ecf0795ebf885cef7156c859c5",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    },
+    {
+      "pr": 374,
+      "expectedBranch": "test/vis-36-d064-captures",
+      "expectedHeadPrefix": "12fe7ab7",
+      "branch": "test/vis-36-d064-captures",
+      "head": "12fe7ab781b2223de191485170aa48f664e4b91e",
+      "draft": true,
+      "state": "open",
+      "matches": true
+    }
+  ],
+  "scope": "live Draft branch/head snapshot only; composition is determined by frozen52f6 source, including documented later uncomposed variants"
+}

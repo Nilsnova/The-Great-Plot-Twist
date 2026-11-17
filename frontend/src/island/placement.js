@@ -7,9 +7,11 @@
 //   checkMove(spotId, x, z, positions)  {ok: true} or {ok: false, code, message} (the server's codes)
 //   routeOpen(positions)                a way from the heart to the beach (towers, houses block)
 //   onWallLane(x, z)                    a wall centred here stands on a pirate path (D056, wall-lanes.js)
-import {ALL_SPOTS, offeredSpots, spotById, ISLAND_PLACE} from './spots.js';
+import {ALL_SPOTS, EXTRA_SPOTS, offeredSpots, spotById, ISLAND_PLACE} from './spots.js';
 import {surfaceClass} from '../world/places/surfaces.js';
 import {WALL_LANE_ROWS} from './wall-lanes.js';
+import {isInventoryWallId} from './wall-cohort.js';
+import {wallPolicy} from './wall-policy.js';
 
 export const GRID = 0.5;
 export const MAX_UNITS = 30;
@@ -58,11 +60,27 @@ export function onWallLane(x, z) {
 }
 export const OFF_PATH = 'Walls go on a pirate path.';
 
-export function checkMove(spotId, x, z, positions = positionsOf()) {
-  if (!spotById(spotId)) return refuse('no_such_spot', 'There is no such build spot.');
+function reservedOccupancy(positions, options) {
+  const sent = Object.hasOwn(options, 'reservedPositions') ? options.reservedPositions : {};
+  if (!sent || typeof sent !== 'object' || Array.isArray(sent) || Object.keys(sent).some(id => !EXTRA_SPOTS.some(spot => spot.id === id))) return null;
+  const occupied = {...positions};
+  for (const spot of EXTRA_SPOTS) {
+    const at = sent[spot.id] ?? positions[spot.id];
+    if (!at || !onGrid(at.x) || !onGrid(at.z) || (Object.hasOwn(sent, spot.id) && Object.keys(at).sort().join() !== 'x,z')) return null;
+    if (positions[spot.id] && (positions[spot.id].x !== at.x || positions[spot.id].z !== at.z)) return null;
+    occupied[spot.id] = {x: at.x, z: at.z};
+  }
+  return occupied;
+}
+
+export function checkMove(spotId, x, z, positions = positionsOf(), options = {}) {
+  const policy = wallPolicy(options);
+  if (policy?.wallRuleVersion === 1) positions = reservedOccupancy(positions, options);
+  if (!policy || !positions) return refuse('layout_unavailable', 'Wall placement rules could not be read. Reload the island.');
+  if (!spotById(spotId) || (isInventoryWallId(spotId) && policy.wallCapacity === 12)) return refuse('no_such_spot', 'There is no such build spot.');
   if (!onGrid(x) || !onGrid(z)) return refuse('off_grid', 'Pick a square of the build grid.');
   if (land(x, z) === SEA) return refuse('not_on_land', 'Buildings stand on land, not in the sea.');
-  if (spotById(spotId).slot === 'wall' && !onWallLane(x, z)) return refuse('off_path', OFF_PATH);
+  if (spotById(spotId).slot === 'wall' && policy.wallRuleVersion === 0 && !onWallLane(x, z)) return refuse('off_path', OFF_PATH);
   const moved = boxOf(spotId, {x, z});
   const fixed = KEEP_OUT.find(item => overlaps(moved, item));
   if (fixed) return refuse('place_taken', `That is too close to ${fixed.name}.`);

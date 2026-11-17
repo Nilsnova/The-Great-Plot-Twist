@@ -42,14 +42,15 @@ from server.errors import ApiError
 from server.game.islet_store import player_not_set_up
 from server.island.codes import CODE_FORMAT, new_code
 from server.island.rules import Built, ResearchTier
+from server.island.wall_cohort import PERIMETER_WALL_CAPACITY
 from server.supabase_admin import SupabaseAdmin, SupabaseRejected
 
 logger = logging.getLogger(__name__)
 
 # A new code collides with an existing one about once in 28.6 million; five tries are plenty.
 CODE_TRIES = 5
-# One player has at most 26 building rows (4 home islet plots and 22 island spots).
-MAX_BUILDING_ROWS = 50
+# Full perimeter cohort plus 11 towers, watchtower, two houses and four home-islet plots.
+MAX_BUILDING_ROWS = PERIMETER_WALL_CAPACITY + 18
 PROGRESS_COLUMNS = (
     "wave_best,next_wave,crew_gunner,crew_carpenter,crew_lookout,crew_guard,captain_level,won_wave_best,"
     "captain_skills,weapons_owned,weapon_equipped,wreck_paid,captain_role"
@@ -311,12 +312,16 @@ async def read_built_spots(admin: SupabaseAdmin, player_id: str) -> dict[str, Bu
         "select": "plot,building_type,level,spec,tree_a,tree_b",
         "player_id": f"eq.{player_id}",
         "order": "plot.asc",
-        "limit": str(MAX_BUILDING_ROWS),
+        "limit": str(MAX_BUILDING_ROWS + 1),  # A sentinel detects overflow instead of truncation.
     }
     rows = await admin.select_rows("islet_buildings", query)
+    if len(rows) > MAX_BUILDING_ROWS:
+        raise unreadable()
     built = {}
     for row in rows:
         checked = read_model(BuildingRow, row)
+        if checked.plot in built:
+            raise unreadable()
         built[checked.plot] = Built(
             checked.building_type, checked.level, checked.spec, checked.tree_a, checked.tree_b
         )

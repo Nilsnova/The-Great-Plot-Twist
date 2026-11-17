@@ -4,6 +4,7 @@
 // Original designs. Boxes and anchors are the old atlas's, so every renderer keeps its numbers.
 import {INK, ellipse, line, mix, part, poly, radial, rect, shadow, stroke} from './paint.js';
 import {TOWER_KINDS, drawBroken, drawDamaged, towerState} from './tower-states.js';
+import {paintReferenceCannon} from './reference-cannon.js';
 
 const WOOD = '#a8693a', WOOD_LIGHT = '#c98a4e', WOOD_DARK = '#7a4a2a', STONE = '#a9a39a', STONE_LIGHT = '#cfc8bb';
 const IRON = '#3e4250', BRASS = '#f2c14e', ROOF = '#d4553e', LEAF = '#5cb84a', LEAF_DARK = '#3d8f3c', PINE = '#2f8f5a';
@@ -193,35 +194,12 @@ function wallBroken(c, {w, h}) {
     part(c, ellipse(x, y, rw, rh), cl, {depth: 1.6, width: 1.2});
   part(c, poly([[24, g - 13], [28, g - 20], [33, g - 18], [31, g - 11]], 1), WOOD, {depth: .8, width: .9});
 }
-// A cannon by level, facing right on the ground line: a wheeled carriage (1), on a stone pad with
-// brass rings (2), on a round bastion with a gold-trimmed long barrel (3), a gilded muzzle, a gold-edged
-// pad and the island's banner behind it (4), a longer, wholly gilded barrel and the starred banner (5).
-// Firing kicks the barrel back.
+// Cannon material trial: the existing levels and frame contract, richer stone/wood/metal planes.
+// Firing recoils the barrel; the existing upper-tier banner stays an island-owned detail.
 function cannon(level, firing = false) {
-  return (c, {w, h}) => {
-    const g = h - 5, cx = 22; shadow(c, cx, g, 18, 3.6);
-    if (level >= 2) part(c, rect(4, g - 6, 38, 7, 3), level >= 3 ? STONE_LIGHT : STONE, {depth: 2, width: 1.2, gloss: rect(7, g - 5.4, 26, 1.2, .6)});
-    if (level >= 3) for (let x = 8; x < 40; x += 8) stroke(c, line([[x, g - 5], [x, g + 1]]), mix(STONE, INK, .4), .8);
-    if (level >= 4) stroke(c, line([[5.5, g - 6], [40.5, g - 6]]), GOLD, 1.3);
-    const base = level >= 2 ? g - 6 : g, kick = firing ? -3 : 0;
-    part(c, poly([[cx - 12, base - 2], [cx - 9, base - 9], [cx + 8, base - 9], [cx + 10, base - 2]], 1.4), WOOD, {depth: 1.6, width: 1.2});
-    const length = [22, 25, 28, 28, 30][level - 1] ?? 22, thick = [7, 7.6, 8.4, 8.6, 9][level - 1] ?? 7;
-    c.save(); c.translate(cx - 8 + kick, base - 11); c.rotate(-.12);
-    const barrel = new Path2D(); barrel.moveTo(-1, -thick / 2 - .6); barrel.lineTo(length - 2, -thick / 2 + .8); barrel.lineTo(length, -thick / 2 + .4);
-    barrel.lineTo(length, thick / 2 - .4); barrel.lineTo(length - 2, thick / 2 - .8); barrel.lineTo(-1, thick / 2 + .6); barrel.arc(-1, 0, thick / 2 + .6, Math.PI / 2, Math.PI * 1.5); barrel.closePath();
-    part(c, barrel, level >= 5 ? GOLD : IRON, level >= 5 ? {depth: 2, width: 1.3, shade: GOLD_DARK, gloss: rect(1, -thick / 2 + .8, length - 6, 1.3, .6), light: '#fff1b8'}
-      : {depth: 2, width: 1.3, gloss: rect(1, -thick / 2 + .8, length - 6, 1.3, .6), light: '#7b8296'});
-    if (level >= 2) for (const x of level >= 3 ? [3, 11, length - 3] : [4, length - 3]) part(c, rect(x - 1, -thick / 2 - .3, 2.4, thick + .6, .8), level >= 5 ? IRON : BRASS, {width: .7, shade: false});
-    if (level === 4) part(c, rect(length - 4.6, -thick / 2 - .5, 4.6, thick + 1, 1), GOLD, {width: .8, shade: GOLD_DARK});
-    part(c, ellipse(length, 0, 1.4, thick / 2 - .2), '#14161c', {width: .8, shade: false});
-    c.restore();
-    for (const x of [cx - 7, cx + 6]) { part(c, ellipse(x, base - 2.4, 4.6), WOOD_DARK, {depth: 1, width: 1.2}); part(c, ellipse(x, base - 2.4, 1.6), level >= 2 ? BRASS : '#c9a06a', {width: .8, shade: false}); }
-    if (level >= 4) banner(c, 4.5, base - 1, level >= 5 ? 19 : 17, level, .8);
-    if (firing) {
-      const mx = cx - 8 + kick + length * Math.cos(.12) + 2, my = base - 11 - length * Math.sin(.12);
-      part(c, ellipse(mx + 4, my, 5.2, 4), '#fff3c4', {line: '#f29e38', width: 1, shade: false});
-      part(c, ellipse(mx + 3, my, 3, 2.4), '#ffffff', {line: false, shade: false});
-    }
+  return (c, size) => {
+    paintReferenceCannon(c, size, level, firing);
+    if (level >= 4) banner(c, 4.5, size.h - 12, level >= 5 ? 18 : 16, level, .8);
   };
 }
 // A mortar by level: a squat iron pot on a wooden bed aimed at the sky (1), banded in brass (2), on a

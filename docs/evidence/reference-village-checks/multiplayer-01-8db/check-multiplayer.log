@@ -1,0 +1,38 @@
+Nils is on the island (me)
+Ben is on the island (ben)
+screenshots 01-lobby-two-captains
+screenshots 01b-lobby-role-icons
+screenshots 01-two-captains
+screenshots 02-coop-wall
+
+RESULTS SO FAR
+  lobbies: host Nils (you):online, Ben:online (Start on); friend Nils:online, Ben (you):online (Start off)
+  captain tree: the friend's lobby shows 🩹 Medic on Nils
+  Start: both lobbies closed, game_started true (first) on both pages
+  co-op wall on the owner's island after 518 ms
+Nils multiplayer failure diagnostic {"place":"home_islet","own":true,"visiting":null,"wave":null,"inBreak":false,"breakPanel":null,"waveFinishAnswers":[],"reviveInputs":[],"revived":[],"lifecycle":[{"at":15532.09999999404,"type":"state","phase":null,"inBreak":false}],"waveStarted":[{"type":"game_started","first":true,"code":"K7Q2M"}],"tailSamples":[],"dialogs":["kit-modal unlock-card"]}
+Ben multiplayer failure diagnostic {"place":"home_islet","own":true,"visiting":{"code":"K7Q2M","waveBest":5},"wave":null,"inBreak":false,"breakPanel":null,"waveFinishAnswers":[],"reviveInputs":[],"revived":[],"lifecycle":[{"at":8014.100000008941,"type":"state","phase":null,"inBreak":false}],"waveStarted":[{"type":"game_started","first":true,"code":"K7Q2M"}],"tailSamples":[],"dialogs":["kit-modal unlock-card"]}
+errors: []
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
++ actual - expected
+
+  {
++   level: 0,
+-   level: 1,
+    pips: 0
+  }
+
+    at file:///workspace/reference-village-work/final-preview/frontend/scripts/check-multiplayer.js:570:10 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: { level: 0, pips: 0 },
+  expected: { level: 1, pips: 0 },
+  operator: 'deepStrictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.22.1

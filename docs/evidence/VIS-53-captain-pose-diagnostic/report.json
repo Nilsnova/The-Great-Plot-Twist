@@ -1,0 +1,1857 @@
+{
+  "kind": "passive diagnostic; not multiplayer acceptance",
+  "source": "52f6bb158b03188b57260c1872e273391598debf",
+  "frontendTree": "6e0c6b27b717a7b8eedcde498d7372de6f0942cb",
+  "started": "2026-11-17T22:50:25.386Z",
+  "world": "posemwlacqui",
+  "deadlineSeconds": 90,
+  "scriptSha256": "715dda1f9b0a9d949431e2595ea2d641c5350a5130e9a84b8d716a3de1af875f",
+  "pages": [
+    {
+      "name": "Nils",
+      "id": "me",
+      "errors": [],
+      "trace": {
+        "active": true,
+        "rows": [
+          {
+            "at": 48207.90000000596,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-921compe",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 48220.09999999404,
+            "hidden": false,
+            "type": "raf",
+            "gap": null,
+            "meshes": [],
+            "ticks": 80
+          },
+          {
+            "at": 49201.40000000596,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-921compe",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 49223.29999999702,
+            "hidden": false,
+            "type": "raf",
+            "gap": 1016.5999999999985,
+            "meshes": [],
+            "ticks": 100
+          },
+          {
+            "at": 50264.70000000298,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-921compe",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 50296,
+            "hidden": false,
+            "type": "raf",
+            "gap": 1066.7000000000044,
+            "meshes": [],
+            "ticks": 122
+          },
+          {
+            "at": 51317.5,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-921compe",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 51344.40000000596,
+            "hidden": false,
+            "type": "raf",
+            "gap": 1050,
+            "meshes": [],
+            "ticks": 142
+          },
+          {
+            "at": 52380.79999999702,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-921compe",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 52400.5,
+            "hidden": false,
+            "type": "raf",
+            "gap": 1066.5999999999985,
+            "meshes": [],
+            "ticks": 164
+          }
+        ],
+        "lastFrame": 52380
+      }
+    },
+    {
+      "name": "Ben",
+      "id": "ben",
+      "errors": [],
+      "trace": {
+        "active": true,
+        "rows": [
+          {
+            "at": 40906,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-vwhkxgmu",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 41135.89999999106,
+            "hidden": false,
+            "type": "raf",
+            "gap": null,
+            "meshes": [],
+            "ticks": 88
+          },
+          {
+            "at": 41691.5,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-vwhkxgmu",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 41719.5,
+            "hidden": false,
+            "type": "raf",
+            "gap": 1016.6000000000058,
+            "meshes": [],
+            "ticks": 100
+          },
+          {
+            "at": 42756.19999998808,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-vwhkxgmu",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 42776.69999998808,
+            "hidden": false,
+            "type": "raf",
+            "gap": 1066.5999999999985,
+            "meshes": [],
+            "ticks": 121
+          },
+          {
+            "at": 43808.79999999702,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-vwhkxgmu",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 43808.89999999106,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-921compe",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 43830.5,
+            "hidden": false,
+            "type": "raf",
+            "gap": 1050,
+            "meshes": [],
+            "ticks": 142
+          },
+          {
+            "at": 44874.79999999702,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-vwhkxgmu",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 44874.79999999702,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-921compe",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 44902,
+            "hidden": false,
+            "type": "raf",
+            "gap": 1066.5999999999985,
+            "meshes": [],
+            "ticks": 164
+          }
+        ],
+        "lastFrame": 44871
+      }
+    },
+    {
+      "name": "Ana",
+      "id": "ana",
+      "errors": [],
+      "trace": {
+        "active": true,
+        "rows": [
+          {
+            "at": 40296.29999999702,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-xoel994i",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 40305.5,
+            "hidden": false,
+            "type": "raf",
+            "gap": null,
+            "meshes": [],
+            "ticks": 72
+          },
+          {
+            "at": 41346.39999999106,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-xoel994i",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 41356.69999998808,
+            "hidden": false,
+            "type": "raf",
+            "gap": 1050,
+            "meshes": [],
+            "ticks": 93
+          },
+          {
+            "at": 42414.69999998808,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-xoel994i",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 42459.69999998808,
+            "hidden": false,
+            "type": "raf",
+            "gap": 1066.5999999999985,
+            "meshes": [],
+            "ticks": 115
+          },
+          {
+            "at": 43467.69999998808,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-xoel994i",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 43481.59999999404,
+            "hidden": false,
+            "type": "raf",
+            "gap": 1050,
+            "meshes": [],
+            "ticks": 136
+          },
+          {
+            "at": 44512.89999999106,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-xoel994i",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 44521.69999998808,
+            "hidden": false,
+            "type": "raf",
+            "gap": 1049.9000000000015,
+            "meshes": [],
+            "ticks": 157
+          },
+          {
+            "at": 44649.5,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-xoel994i",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 44657.5,
+            "hidden": false,
+            "type": "raf",
+            "gap": 133.40000000000146,
+            "meshes": [],
+            "ticks": 159
+          }
+        ],
+        "lastFrame": 44645.4
+      }
+    },
+    {
+      "name": "Max",
+      "id": "max",
+      "errors": [],
+      "trace": {
+        "active": true,
+        "rows": [
+          {
+            "at": 39928.30000001192,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 39933,
+            "hidden": false,
+            "type": "raf",
+            "gap": null,
+            "meshes": [],
+            "ticks": 65
+          },
+          {
+            "at": 39959.80000001192,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 39969.5,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.39999999999418,
+            "meshes": [],
+            "ticks": 66
+          },
+          {
+            "at": 39995.20000000298,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 40002,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.400000000001455,
+            "meshes": [],
+            "ticks": 67
+          },
+          {
+            "at": 40032.10000000894,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 40036.40000000596,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.30000000000291,
+            "meshes": [],
+            "ticks": 67
+          },
+          {
+            "at": 40063.10000000894,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 40067,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.299999999995634,
+            "meshes": [],
+            "ticks": 68
+          },
+          {
+            "at": 40095.30000001192,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 40098.70000000298,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.30000000000291,
+            "meshes": [],
+            "ticks": 69
+          },
+          {
+            "at": 40123.10000000894,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 40126.30000001192,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.30000000000291,
+            "meshes": [],
+            "ticks": 69
+          },
+          {
+            "at": 40151.40000000596,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 40154.40000000596,
+            "hidden": false,
+            "type": "raf",
+            "gap": 16.69999999999709,
+            "meshes": [],
+            "ticks": 70
+          },
+          {
+            "at": 40176.70000000298,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 40180.30000001192,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.30000000000291,
+            "meshes": [],
+            "ticks": 70
+          },
+          {
+            "at": 40208.90000000596,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 40211.80000001192,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.39999999999418,
+            "meshes": [],
+            "ticks": 71
+          },
+          {
+            "at": 40237.5,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 40240.5,
+            "hidden": false,
+            "type": "raf",
+            "gap": 16.700000000004366,
+            "meshes": [],
+            "ticks": 71
+          },
+          {
+            "at": 40265.10000000894,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 40268.40000000596,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.299999999995634,
+            "meshes": [],
+            "ticks": 72
+          },
+          {
+            "at": 40298.20000000298,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 40301.80000001192,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.30000000000291,
+            "meshes": [],
+            "ticks": 73
+          },
+          {
+            "at": 40409.30000001192,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 40412.10000000894,
+            "hidden": false,
+            "type": "raf",
+            "gap": 116.69999999999709,
+            "meshes": [],
+            "ticks": 75
+          },
+          {
+            "at": 40449.90000000596,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 40453.30000001192,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.30000000000291,
+            "meshes": [],
+            "ticks": 76
+          },
+          {
+            "at": 40477.60000000894,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 40481.20000000298,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.400000000001455,
+            "meshes": [],
+            "ticks": 76
+          },
+          {
+            "at": 40505.80000001192,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 40508.90000000596,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.299999999995634,
+            "meshes": [],
+            "ticks": 77
+          },
+          {
+            "at": 40533.60000000894,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 40535.90000000596,
+            "hidden": false,
+            "type": "raf",
+            "gap": 16.60000000000582,
+            "meshes": [],
+            "ticks": 77
+          },
+          {
+            "at": 40559,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 40563.30000001192,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.39999999999418,
+            "meshes": [],
+            "ticks": 78
+          },
+          {
+            "at": 40586.5,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 40589,
+            "hidden": false,
+            "type": "raf",
+            "gap": 16.700000000004366,
+            "meshes": [],
+            "ticks": 78
+          },
+          {
+            "at": 40617.10000000894,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 40619.70000000298,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.299999999995634,
+            "meshes": [],
+            "ticks": 79
+          },
+          {
+            "at": 40648.40000000596,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 40651,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.30000000000291,
+            "meshes": [],
+            "ticks": 80
+          },
+          {
+            "at": 40718.40000000596,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 40721.70000000298,
+            "hidden": false,
+            "type": "raf",
+            "gap": 66.69999999999709,
+            "meshes": [],
+            "ticks": 81
+          },
+          {
+            "at": 40871.5,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 40875.20000000298,
+            "hidden": false,
+            "type": "raf",
+            "gap": 166.70000000000437,
+            "meshes": [],
+            "ticks": 84
+          },
+          {
+            "at": 40902,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 40905.80000001192,
+            "hidden": false,
+            "type": "raf",
+            "gap": 16.599999999998545,
+            "meshes": [],
+            "ticks": 85
+          },
+          {
+            "at": 41086.90000000596,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 41089.80000001192,
+            "hidden": false,
+            "type": "raf",
+            "gap": 183.3000000000029,
+            "meshes": [],
+            "ticks": 88
+          },
+          {
+            "at": 41119.30000001192,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 41122.5,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.299999999995634,
+            "meshes": [],
+            "ticks": 89
+          },
+          {
+            "at": 41212.10000000894,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 41220.60000000894,
+            "hidden": false,
+            "type": "raf",
+            "gap": 100.09999999999854,
+            "meshes": [],
+            "ticks": 91
+          },
+          {
+            "at": 41252.70000000298,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 41261,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.30000000000291,
+            "meshes": [],
+            "ticks": 92
+          },
+          {
+            "at": 41358.20000000298,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 41361.40000000596,
+            "hidden": false,
+            "type": "raf",
+            "gap": 99.90000000000146,
+            "meshes": [],
+            "ticks": 94
+          },
+          {
+            "at": 41469.20000000298,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 41473,
+            "hidden": false,
+            "type": "raf",
+            "gap": 116.79999999999563,
+            "meshes": [],
+            "ticks": 96
+          },
+          {
+            "at": 41496.80000001192,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 41499.60000000894,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.30000000000291,
+            "meshes": [],
+            "ticks": 97
+          },
+          {
+            "at": 41534.70000000298,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 41539.10000000894,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.30000000000291,
+            "meshes": [],
+            "ticks": 97
+          },
+          {
+            "at": 41563.90000000596,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 41568.80000001192,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.39999999999418,
+            "meshes": [],
+            "ticks": 98
+          },
+          {
+            "at": 41592.80000001192,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 41596.40000000596,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.30000000000291,
+            "meshes": [],
+            "ticks": 99
+          },
+          {
+            "at": 41619.70000000298,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 41623.60000000894,
+            "hidden": false,
+            "type": "raf",
+            "gap": 16.69999999999709,
+            "meshes": [],
+            "ticks": 99
+          },
+          {
+            "at": 41652.90000000596,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 41657,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.200000000004366,
+            "meshes": [],
+            "ticks": 100
+          },
+          {
+            "at": 41702.20000000298,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 41710.70000000298,
+            "hidden": false,
+            "type": "raf",
+            "gap": 50.099999999998545,
+            "meshes": [],
+            "ticks": 101
+          },
+          {
+            "at": 42039.90000000596,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 42051.30000001192,
+            "hidden": false,
+            "type": "raf",
+            "gap": 349.90000000000146,
+            "meshes": [],
+            "ticks": 108
+          },
+          {
+            "at": 42078.40000000596,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 42083.5,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.400000000001455,
+            "meshes": [],
+            "ticks": 108
+          },
+          {
+            "at": 42110.5,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 42115.30000001192,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.299999999995634,
+            "meshes": [],
+            "ticks": 109
+          },
+          {
+            "at": 42140.20000000298,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 42144.40000000596,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.30000000000291,
+            "meshes": [],
+            "ticks": 110
+          },
+          {
+            "at": 42170.80000001192,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 42174.5,
+            "hidden": false,
+            "type": "raf",
+            "gap": 16.799999999995634,
+            "meshes": [],
+            "ticks": 110
+          },
+          {
+            "at": 42198.20000000298,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 42202.70000000298,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.30000000000291,
+            "meshes": [],
+            "ticks": 111
+          },
+          {
+            "at": 42230.30000001192,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 42233.20000000298,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.19999999999709,
+            "meshes": [],
+            "ticks": 111
+          },
+          {
+            "at": 42262,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 42265.80000001192,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.400000000001455,
+            "meshes": [],
+            "ticks": 112
+          },
+          {
+            "at": 42291.80000001192,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 42294.60000000894,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.30000000000291,
+            "meshes": [],
+            "ticks": 113
+          },
+          {
+            "at": 42318.60000000894,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 42321.80000001192,
+            "hidden": false,
+            "type": "raf",
+            "gap": 16.69999999999709,
+            "meshes": [],
+            "ticks": 113
+          },
+          {
+            "at": 42352,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 42354.90000000596,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.30000000000291,
+            "meshes": [],
+            "ticks": 114
+          },
+          {
+            "at": 42386.40000000596,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 42389,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.400000000001455,
+            "meshes": [],
+            "ticks": 114
+          },
+          {
+            "at": 42415.80000001192,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 42427.70000000298,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.299999999995634,
+            "meshes": [],
+            "ticks": 115
+          },
+          {
+            "at": 42533.60000000894,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 42547.20000000298,
+            "hidden": false,
+            "type": "raf",
+            "gap": 116.59999999999854,
+            "meshes": [],
+            "ticks": 118
+          },
+          {
+            "at": 42636.90000000596,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 42640.30000001192,
+            "hidden": false,
+            "type": "raf",
+            "gap": 100,
+            "meshes": [],
+            "ticks": 119
+          },
+          {
+            "at": 42737.80000001192,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 42752,
+            "hidden": false,
+            "type": "raf",
+            "gap": 100,
+            "meshes": [],
+            "ticks": 122
+          },
+          {
+            "at": 43057.20000000298,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 43063.10000000894,
+            "hidden": false,
+            "type": "raf",
+            "gap": 333.3000000000029,
+            "meshes": [],
+            "ticks": 128
+          },
+          {
+            "at": 43158.20000000298,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 43165.70000000298,
+            "hidden": false,
+            "type": "raf",
+            "gap": 100.09999999999854,
+            "meshes": [],
+            "ticks": 130
+          },
+          {
+            "at": 43193.30000001192,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 43197.5,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.30000000000291,
+            "meshes": [],
+            "ticks": 131
+          },
+          {
+            "at": 43224.70000000298,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 43228.30000001192,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.299999999995634,
+            "meshes": [],
+            "ticks": 131
+          },
+          {
+            "at": 43259.40000000596,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 43264.60000000894,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.30000000000291,
+            "meshes": [],
+            "ticks": 132
+          },
+          {
+            "at": 43297.5,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 43301.80000001192,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.400000000001455,
+            "meshes": [],
+            "ticks": 133
+          },
+          {
+            "at": 43329.70000000298,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 43333.70000000298,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.400000000001455,
+            "meshes": [],
+            "ticks": 133
+          },
+          {
+            "at": 43358.90000000596,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 43362.5,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.299999999995634,
+            "meshes": [],
+            "ticks": 134
+          },
+          {
+            "at": 43390,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 43394,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.30000000000291,
+            "meshes": [],
+            "ticks": 135
+          },
+          {
+            "at": 43425.90000000596,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 43429.80000001192,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.299999999995634,
+            "meshes": [],
+            "ticks": 135
+          },
+          {
+            "at": 43469.20000000298,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 43481.60000000894,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.400000000001455,
+            "meshes": [],
+            "ticks": 136
+          },
+          {
+            "at": 43600.60000000894,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 43605.60000000894,
+            "hidden": false,
+            "type": "raf",
+            "gap": 133.3000000000029,
+            "meshes": [],
+            "ticks": 139
+          },
+          {
+            "at": 43633.60000000894,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 43636.30000001192,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.400000000001455,
+            "meshes": [],
+            "ticks": 139
+          },
+          {
+            "at": 43665.10000000894,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 43671.60000000894,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.299999999995634,
+            "meshes": [],
+            "ticks": 140
+          },
+          {
+            "at": 43705.5,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 43710.10000000894,
+            "hidden": false,
+            "type": "raf",
+            "gap": 50,
+            "meshes": [],
+            "ticks": 141
+          },
+          {
+            "at": 43736.90000000596,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 43740.70000000298,
+            "hidden": false,
+            "type": "raf",
+            "gap": 16.599999999998545,
+            "meshes": [],
+            "ticks": 141
+          },
+          {
+            "at": 43768.40000000596,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 43772,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.30000000000291,
+            "meshes": [],
+            "ticks": 142
+          },
+          {
+            "at": 43815.5,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 43831.60000000894,
+            "hidden": false,
+            "type": "raf",
+            "gap": 50.099999999998545,
+            "meshes": [],
+            "ticks": 143
+          },
+          {
+            "at": 44128.60000000894,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 44135.10000000894,
+            "hidden": false,
+            "type": "raf",
+            "gap": 316.59999999999854,
+            "meshes": [],
+            "ticks": 149
+          },
+          {
+            "at": 44166.70000000298,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 44170.30000001192,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.400000000001455,
+            "meshes": [],
+            "ticks": 150
+          },
+          {
+            "at": 44198.80000001192,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 44202.70000000298,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.30000000000291,
+            "meshes": [],
+            "ticks": 151
+          },
+          {
+            "at": 44246.40000000596,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 44249.60000000894,
+            "hidden": false,
+            "type": "raf",
+            "gap": 50,
+            "meshes": [],
+            "ticks": 152
+          },
+          {
+            "at": 44275,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 44281.5,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.299999999995634,
+            "meshes": [],
+            "ticks": 152
+          },
+          {
+            "at": 44310.80000001192,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 44314.70000000298,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.30000000000291,
+            "meshes": [],
+            "ticks": 153
+          },
+          {
+            "at": 44340.80000001192,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 44344,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.30000000000291,
+            "meshes": [],
+            "ticks": 154
+          },
+          {
+            "at": 44370.40000000596,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 44375.20000000298,
+            "hidden": false,
+            "type": "raf",
+            "gap": 16.69999999999709,
+            "meshes": [],
+            "ticks": 154
+          },
+          {
+            "at": 44404.30000001192,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 44411.90000000596,
+            "hidden": false,
+            "type": "raf",
+            "gap": 33.400000000001455,
+            "meshes": [],
+            "ticks": 155
+          },
+          {
+            "at": 44474.80000001192,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 44509.20000000298,
+            "hidden": false,
+            "type": "raf",
+            "gap": 83.29999999999563,
+            "meshes": [],
+            "ticks": 156
+          },
+          {
+            "at": 44620.60000000894,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 44624.5,
+            "hidden": false,
+            "type": "raf",
+            "gap": 133.3000000000029,
+            "meshes": [],
+            "ticks": 159
+          },
+          {
+            "at": 44671.60000000894,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 44696.20000000298,
+            "hidden": false,
+            "type": "raf",
+            "gap": 50,
+            "meshes": [],
+            "ticks": 160
+          },
+          {
+            "at": 44780.90000000596,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 44784.70000000298,
+            "hidden": false,
+            "type": "raf",
+            "gap": 116.59999999999854,
+            "meshes": [],
+            "ticks": 162
+          },
+          {
+            "at": 44832.30000001192,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 44838.5,
+            "hidden": false,
+            "type": "raf",
+            "gap": 50,
+            "meshes": [],
+            "ticks": 163
+          },
+          {
+            "at": 44903,
+            "hidden": false,
+            "type": "actual-pose-get",
+            "by": "p-v2zte7t2",
+            "pose": null,
+            "shown": true,
+            "finished": false
+          },
+          {
+            "at": 44911.90000000596,
+            "hidden": false,
+            "type": "raf",
+            "gap": 66.80000000000291,
+            "meshes": [],
+            "ticks": 165
+          }
+        ],
+        "lastFrame": 44887.4
+      }
+    }
+  ],
+  "phases": [
+    {
+      "name": "browser-ready",
+      "at": 1794955826795
+    },
+    {
+      "name": "four-lobbies",
+      "at": 1794955847115
+    },
+    {
+      "name": "declared-initial-fixture-ready",
+      "at": 1794955861125
+    },
+    {
+      "name": "one-shot",
+      "at": 1794955874288
+    },
+    {
+      "name": "observation-finished",
+      "at": 1794955879305
+    }
+  ],
+  "aim": {
+    "id": "ship_1",
+    "x": -13.970333847641886,
+    "z": 0.9109183198462422,
+    "by": "p-921compe",
+    "colour": 0
+  },
+  "accepted": false,
+  "closed": true,
+  "failure": null,
+  "finished": "2026-11-17T22:51:19.803Z"
+}

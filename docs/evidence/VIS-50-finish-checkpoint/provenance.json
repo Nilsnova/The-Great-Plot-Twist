@@ -1,0 +1,14 @@
+{
+  "reviewBase": "0d047bd2",
+  "guardCommit": "e118f87dbc2ac167a6193fbef44e08c7b999352c",
+  "progressAssertionsCommit": "733cced0af1c80b1a798c11e1459c4519e8aef11",
+  "beforeBackend": "e61fa1b8f6bcd02bb357b17b530b427acf5abee2",
+  "beforeSupabase": "4ca440d8800397f01e241eb2728c483f29bbc3a5",
+  "afterBackend": "c785196095edef4f5416744b46435ab564da4e9c",
+  "afterSupabase": "6e52a63b87028291127dbae8c344c9f49a73896d",
+  "redSourceBoundary": "Claim94301e57 with new uncommitted regression test before forward migration; later test formatting and full progress-tuple assertion strengthen the same six malformed-vector cases. Do not treat the claim SHA as a committed red-test file.",
+  "fullCompatibilityCheck": "43 passed in 8.97s at e118f87d; progress tuple subsequently strengthened, production SQL unchanged.",
+  "finalGuardCheck": "9 passed in 3.18s at733cced0; exact final test andSQL tree.",
+  "sqlSourceSha256": "651e50530d86cd1ecb63f3c08a77afb98b8f60ea12f34b1d2c4bbbeabc88dc25",
+  "diagnosticSourceBoundary": "Initial external diagnostic ran at claim096d04e2 with uncommitted combined migration files; result records incoming migration hashes. Later red/green regressions use the committed0d047bd2-derived branch. The claim alone is not a full-tree diagnostic pin."
+}
