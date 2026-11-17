@@ -26,7 +26,7 @@ The original actual-game image is the reproduction, not a generated mock. The fu
 
 ## Implemented behavior
 
-At phone widths up to 480px, all four fine arrows occupy one horizontal row. Camera controls and Undo/Clear/Cancel share a touch-size row; purchase keeps a full row. At widths up to 360px the camera uses a separate row so no touch target or label must shrink. The bar stays at most 340px tall and remains scrollable inside existing safe-area/narration bounds; typography is unchanged. Undo retains the accessible name `Remove last`, while Clear still removes the entire draft.
+At phone widths up to 480px, all four fine arrows occupy one horizontal row. Camera controls and Undo/Clear/Cancel share a touch-size row; purchase keeps a full row. At widths below 375px the camera uses a separate row so no touch target or label must shrink. The bar stays at most 340px tall and remains scrollable inside existing safe-area/narration bounds; typography is unchanged. Undo retains the accessible name `Remove last`, while Clear still removes the entire draft.
 
 Initial instructions remain for an empty draft. A nonempty draft with its own status does not repeat the initial tap instructions. An unquoted price paragraph is omitted because the status and Get price action already explain that step. Actual quoted totals/capacity and the full pending/unknown warning remain. Explicit `has-wall-instructions`, `has-wall-warning` and `has-wall-quote` classes make reflows visible to the game's existing camera inset cache. Disclosure's existing class signal remains unchanged.
 
@@ -61,3 +61,17 @@ WALL-24 must run the bounded actual-game 375px ghost/refusal probe on the integr
 In Johannes's words: I stopped repeating instructions once the draft already explains its next action, kept paid-build warnings and real prices, and arranged touch controls to leave more room for the island. The camera now fits the space that actually exists. If there is no space, it keeps a stable view until the controls or captions leave room again.
 
 Questions: Why must a pending purchase keep its warning after closing? Why does the camera need actual overlay heights rather than a percentage cap? Why can a scrollable panel be more usable than shrinking touch targets?
+
+## Visible-label follow-up
+
+The WALL-24 actual-game quoted phone image prompted a text-fit audit. A read-only 375×812 probe loaded the real game `kit.css`, including its 700-weight 17px system font. Before correction, Cancel's Range advance was 56.25px inside only 48.33px of content: button width 60.33px, clientWidth 56 / scrollWidth 60, with its text reaching 3.92px beyond the inner border. The previous component fixture did not load those global kit styles, so its touch-box checks had not detected this clipping.
+
+The three text columns now use intrinsic `min-content` minima, preserving unbroken labels while allowing spanning draft text to wrap. Two pixels of horizontal panel padding per side are reclaimed; the font, buttons, panel width and 340px cap stay unchanged. Phones below 375px use the separate camera row. `max-content` was considered but rejected by the same bounds checks because it also expanded spanning draft content; it is absent from the final change.
+
+The existing quote/retry DOM case now imports the real kit styles and checks each visible button's Range bounds against its content padding plus scrollWidth≤clientWidth, in addition to all original 44px/hit/viewport/desktop checks. The focused regression first failed specifically `Visible label: Cancel`. After correction, the complete unchanged 10-case file passed:
+
+`cd frontend && npx vitest run --maxWorkers=1 tests/island/wall-builder-dom.test.js`
+
+**Test Files 1 passed (1); Tests 10 passed (10); Duration 17.62s; exit 0.** No timeout, existing assertion, font size or touch target was weakened. `git diff --check` passed. Chrome was released immediately after this file; no database, render metrics or full capture journey was rerun for this CSS correction.
+
+Post-correction read-only probe with actual kit font: Cancel button 68.25px / text 56.25px / content 56.25px, clientWidth 64 / scrollWidth 64; Undo and Clear each 58.375px with text 45.31/44.06px inside 46.375px content. Quoted expanded bar height remains 334.953px. Root owns the affected actual-game workspace probe/snapshots on the final aggregate; this component evidence is not substituted for that final image.

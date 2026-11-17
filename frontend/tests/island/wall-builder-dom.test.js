@@ -30,6 +30,7 @@ it('keeps actual quote/retry controls accessible and within both viewport widths
     for (const size of [{width: 1280, height: 720}, {width: 375, height: 812}]) {
       await page.setViewportSize(size);
       const result = await page.evaluate(async () => {
+        await window.g20Import('/src/ui/kit/kit.css'); // Match the game's real 17px button font/tokens.
         await window.g20Import('/src/island/island.css'); const {createWallBuilderBar} = await window.g20Import('/src/island/wall-builder-bar.js');
         const calls = [], handlers = Object.fromEntries(['open', 'quote', 'confirm', 'undo', 'clear', 'cancel', 'camera'].map(key => [key, () => calls.push(key)]));
         const bar = createWallBuilderBar({container: document.body, handlers});
@@ -37,7 +38,12 @@ it('keeps actual quote/retry controls accessible and within both viewport widths
         bar.render(model); const submit = [...bar.element.querySelectorAll('button')].find(button => button.textContent === 'Build for 10 coins'); submit.click();
         const closed = bar.element.getBoundingClientRect().toJSON(); bar.element.querySelector('details').open = true;
         const expanded = bar.element.getBoundingClientRect().toJSON();
-        const buttons = [...bar.element.querySelectorAll('button')].filter(button => button.getClientRects().length).map(button => { const r = button.getBoundingClientRect(); return {width: r.width, height: r.height, inside: r.left >= 0 && r.right <= innerWidth,
+        const buttons = [...bar.element.querySelectorAll('button')].filter(button => button.getClientRects().length).map(button => {
+          const r = button.getBoundingClientRect(), style = getComputedStyle(button), range = document.createRange(); range.selectNodeContents(button);
+          const text = range.getBoundingClientRect(), left = r.left + parseFloat(style.borderLeftWidth) + parseFloat(style.paddingLeft),
+            right = r.right - parseFloat(style.borderRightWidth) - parseFloat(style.paddingRight);
+          return {label: button.textContent, textFits: text.left >= left - .5 && text.right <= right + .5 && button.scrollWidth <= button.clientWidth,
+            width: r.width, height: r.height, inside: r.left >= 0 && r.right <= innerWidth,
           hit: button.contains(document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2))}; });
         bar.render({...model, phase: 'unknown'}); const undo = bar.element.querySelector('[aria-label="Remove last"]');
         const unknown = {label: submit.textContent, disabled: undo.disabled, live: bar.element.querySelector('[role=status]').getAttribute('aria-live')};
@@ -45,6 +51,7 @@ it('keeps actual quote/retry controls accessible and within both viewport widths
       });
       expect(result.calls).toEqual(['confirm']); expect(result.buttons.every(button => button.inside && button.width >= 44 && button.height >= 44)).toBe(true);
       expect(result.buttons.every(button => button.hit)).toBe(true);
+      for (const button of result.buttons) expect(button.textFits, `Visible label: ${button.label}`).toBe(true);
       if (size.width === 1280) {
         expect(result.closed.width).toBeGreaterThanOrEqual(800); expect(result.closed.width).toBeLessThanOrEqual(1000);
         expect(result.closed.height).toBeLessThanOrEqual(200); expect(result.expanded.height).toBeLessThanOrEqual(250);

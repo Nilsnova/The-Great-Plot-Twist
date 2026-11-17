@@ -14,9 +14,10 @@
 .fine-north {grid-area:1/2}.fine-west {grid-area:2/1}.fine-south {grid-area:2/2}.fine-east {grid-area:2/3}
 .wall-builder-anchors {margin:0;font-size:12px;max-width:100%;overflow-wrap:anywhere}
 
-/* Six touch-size columns share a row for camera and editing; purchase remains a separate full row. */
+/* Intrinsic label minima keep the compact text buttons readable; purchase has its own full row. */
 @media(max-width:480px) {
-  .island-wall-builder {width:calc(100vw - 16px);grid-template-columns:repeat(3,44px) minmax(44px,1fr) minmax(44px,1fr) minmax(56px,1fr);
+  .island-wall-builder {width:calc(100vw - 16px);padding-inline:8px;
+    grid-template-columns:repeat(3,44px) minmax(min-content,1fr) minmax(min-content,1fr) minmax(min-content,1fr);
     grid-template-areas:"title title title title title title" "hint hint hint hint hint hint" "status status status status status status"
       "price price price price price price" "fine fine fine fine fine fine" "camera camera camera undo clear cancel" "submit submit submit submit submit submit";
     gap:4px;max-height:min(340px,calc(100dvh - var(--narrator-card-height,0px) - 200px))}
@@ -30,7 +31,7 @@
   .wall-builder-fine-layout {gap:8px}.wall-builder-fine-pad {grid-template-columns:repeat(4,44px);gap:4px}
   .wall-builder-fine-pad button {grid-area:auto}
 }
-@media(max-width:360px) {
+@media(max-width:374px) {
   .island-wall-builder {grid-template-columns:repeat(3,minmax(44px,1fr));
     grid-template-areas:"title title title" "hint hint hint" "status status status" "price price price" "fine fine fine"
       "camera camera camera" "undo clear cancel" "submit submit submit"}
