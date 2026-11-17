@@ -27,7 +27,7 @@ describe('village navigation gestures', () => {
     expect(view.panVillage.mock.calls).toEqual([[20, 0, 800, 600], [-20, 0, 800, 600]]);
     expect(send('pointerup').defaultPrevented).toBe(true); nav.dispose();
   });
-  it('does not resume an interrupted drag after Move, a dialog or pause closes', () => {
+  it('does not resume an interrupted drag after a dialog, pause or battle closes', () => {
     const {send, view, nav, enable} = setup();
     send('pointerdown'); enable(false); nav.refresh(); enable(true);
     send('pointermove', {clientX: 120});
@@ -35,6 +35,15 @@ describe('village navigation gestures', () => {
     expect(send('pointerup').defaultPrevented).toBe(true);
     send('pointerdown'); send('pointermove', {clientX: 120});
     expect(view.panVillage).toHaveBeenCalledOnce(); nav.dispose();
+  });
+  it('allows placing-mode pan without delivering a drag as a ground placement, including return to origin', () => {
+    const {send, view, nav} = setup(), place = vi.fn();
+    // Same boundary as world.js: the earlier capture listener cancels a drag before ground dispatch.
+    const canvasPick = event => { if (!event.defaultPrevented) place(); };
+    const click = extra => { const event = send('pointerup', extra); canvasPick(event); };
+    send('pointerdown'); send('pointermove', {clientX: 130}); send('pointermove'); click();
+    expect(view.panVillage).toHaveBeenCalledTimes(2); expect(place).not.toHaveBeenCalled();
+    send('pointerdown'); click(); expect(place).toHaveBeenCalledOnce(); nav.dispose();
   });
   it('cancels multi-touch and blur and clears ended pointer state', () => {
     const {send, events, view, nav} = setup();
