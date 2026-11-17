@@ -36,10 +36,10 @@ No new dependency, gameplay/HP/breach change, source-image editing, main push, f
 `island-wall-l1-damaged` and `island-wall-l1-broken`. Level-one intact and
 all level-two through level-five selectors retain their previous IDs. The
 generic damaged/broken aliases retain the existing level-three source crops.
-All canonical frames still share logical48×32 dimensions and anchor6; no
+All canonical frames still share logical 48×32 dimensions and anchor 6; no
 PNG bytes, coordinates, source feet or gameplay data changed.
 
-The32 metadata entries now represent30 canonical atlas frames and two
+The 32 metadata entries now represent 30 canonical atlas frames and two
 separate legacy aliases. Both world and combat already import the same
 canonical selector/list, so the correction reaches their batched UVs without
 another renderer implementation. The final asset compiler must include this
@@ -49,7 +49,7 @@ metadata; its previous bake predates the two distinct L1 state entries.
 
 Verified runtime source: `813a08673c2f2159cb41612d1af784d157552800`.
 
-Before the fix, `npx vitest run tests/art/wall-tier-identity.test.js` exited1
+Before the fix, `npx vitest run tests/art/wall-tier-identity.test.js` exited 1
 with **3 failed tests**. It reproduced the wrong canonical L1 selector and
 wrong actual world and combat UV rectangles for level-one damage. After the
 fix, from `frontend/`:
@@ -68,14 +68,14 @@ node scripts/report-budget.js --check
 Exit 0; cold-title JavaScript 18,825 bytes, CSS 9,410 bytes.
 ```
 
-From the repository root, `node scripts/text-lint/index.mjs` exited0:
+From the repository root, `node scripts/text-lint/index.mjs` exited 0:
 `4538 candidate strings in 528 source files; 0 errors, 8 report-only findings.`
 The existing report-only findings were not modified.
 
-The regression checks all15 canonical tier/state crops against the authored
+The regression checks all 15 canonical tier/state crops against the authored
 five-column/three-row source layout, their shared metrics, registration and
 unique canonical atlas coverage. Separate actual Three.js buffer checks use
-both world and combat consumers for all15 states and inspect the post UVs;
+both world and combat consumers for all 15 states and inspect the post UVs;
 these are pure geometry checks, not GPU screenshot acceptance. No Chrome
 process was launched by this lane.
 
