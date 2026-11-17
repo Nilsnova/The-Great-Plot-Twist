@@ -114,7 +114,7 @@ function validRecoveryFinishBody(body) {
     || !Number.isSafeInteger(checkpoint.lastRepairSeq) || checkpoint.lastRepairSeq < 0
     || !isObject(checkpoint.basisRepairSeq) || !isObject(checkpoint.hpUnits)) return false;
   const ids = Object.keys(checkpoint.hpUnits);
-  return ids.length > 0 && ids.length === Object.keys(checkpoint.basisRepairSeq).length
+  return ids.length === Object.keys(checkpoint.basisRepairSeq).length
     && ids.every(id => Object.hasOwn(checkpoint.basisRepairSeq, id)
       && Number.isInteger(checkpoint.hpUnits[id]) && checkpoint.hpUnits[id] >= 0 && checkpoint.hpUnits[id] <= 1_000_000
       && Number.isSafeInteger(checkpoint.basisRepairSeq[id]) && checkpoint.basisRepairSeq[id] >= 0);

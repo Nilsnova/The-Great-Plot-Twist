@@ -65,6 +65,7 @@ describe('recovery-v1 command transport', () => {
       post: vi.fn(async () => ({ loot: 5, recovery: { waveId: 'wave-a' } })) });
     expect(await direct.readEvents({ waveId: 'wave-a' })).toMatchObject({ sealedThroughTick: -1 });
     expect(await direct.finishWave(body)).toMatchObject({ ok: true, data: { loot: 5 } });
+    expect(await transport.finishWave({ ...body, checkpoint: { ...body.checkpoint, basisRepairSeq: {}, hpUnits: {} } })).toMatchObject({ ok: true });
   });
 
   it('rejects overlarge batches before making an HTTP request', async () => {
