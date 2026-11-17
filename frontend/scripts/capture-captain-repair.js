@@ -56,6 +56,8 @@ try {
     const captain = captainModel({captain: {level: 3}, coins: 2000, unlocks: {captain: 5}});
     const skills = skillsModel({skills: {known: retired, points: 0, role: 'engineer'}, wonWave: 20,
       picked: 'steady_aim', captainLevel: 3, coins: 2000, recoveryVersion: 1});
+    const legacySkills = skillsModel({skills: {known: retired, points: 0, role: 'engineer'}, wonWave: 20,
+      picked: 'quick_fix', captainLevel: 3, coins: 2000, recoveryVersion: 0});
     const tech = techModel({campaign: research, coins: 2000, recoveryVersion: 1});
     const wallCard = spec => buildCardModel({spotId: 'wall_1', slot: 'wall',
       spot: {id: 'wall_1', kind: 'wall', built: true, level: 1, cost: 10, upgradeCost: 20, spec},
@@ -67,19 +69,22 @@ try {
           rateUnitsPerSecond: spec === 'quick_mend' ? 5000 : 7500,
           estimatedFreeSeconds: spec === 'quick_mend' ? 50 : 34, fixedPrice: 10, repairSeq: 0}]},
       recoveryStatus: 'ready', recoveryVersion: 1});
-    window.__t58RecoveryCapture = {ui, captain, skills, tech, wallCard};
+    window.__t58RecoveryCapture = {ui, captain, skills, legacySkills, tech, wallCard};
   });
 
-  const captureCaptain = async (width, height, name) => {
+  const captureCaptain = async (width, height, name, recoveryVersion = 1) => {
     await page.setViewportSize({width, height});
-    await page.evaluate(() => window.__t58RecoveryCapture.ui.captainCard({tab: 'skills',
-      captain: window.__t58RecoveryCapture.captain, skills: window.__t58RecoveryCapture.skills, weapons: null}, {}));
+    await page.evaluate(version => window.__t58RecoveryCapture.ui.captainCard({tab: 'skills',
+      captain: window.__t58RecoveryCapture.captain,
+      skills: version === 0 ? window.__t58RecoveryCapture.legacySkills : window.__t58RecoveryCapture.skills,
+      weapons: null}, {}), recoveryVersion);
     await assertSingleCard('.island-card-captain[open]', 'Captain and skills');
     await page.locator('.island-card-captain[open] .island-tree').waitFor();
     await shot(name, '.island-card-captain[open]');
     await page.evaluate(() => window.__t58RecoveryCapture.ui.close());
     await page.waitForFunction(() => !document.querySelector('dialog[open]'));
   };
+  await captureCaptain(1280, 800, 'captain-legacy-desktop', 0);
   await captureCaptain(1280, 800, 'captain-desktop');
   await captureCaptain(375, 812, 'captain-phone');
 
