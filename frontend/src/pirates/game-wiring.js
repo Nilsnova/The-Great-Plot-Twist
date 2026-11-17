@@ -94,6 +94,13 @@ export function wireWaves(ctx) {
   const game = island ? createGameRoom({room: islandRoom, emit: ctx.emit ?? (() => {}), later, every, onChange: () => island.refreshLobby?.()}) : null;
   if (game) island.attachGame?.(game);
   const pirates = mountPirates({...ctx, getDefenses: () => withLevels(island?.defenses() ?? [], defended()), finishWave, api, openRoom, notify,
+    getPerimeterWalls: () => {
+      if (!island) return false;
+      const layout = defended()?.layout;
+      if (layout?.wallRuleVersion === 0 && layout?.wallCapacity === 12) return false;
+      if (layout?.wallRuleVersion === 1 && layout?.wallCapacity === 128) return true;
+      return null; // Missing or contradictory owner metadata cannot select a preview geometry.
+    },
     onIslandEvents: events => noteReport(() => defenseReport?.events(events)),
     recoveryTransport,
     practiceIdentity: () => ({player: practicePlayer(ctx.getPracticeToken?.()) ?? ctx.practicePlayer ?? null, island: island?.gameCode ?? roomTopic}),

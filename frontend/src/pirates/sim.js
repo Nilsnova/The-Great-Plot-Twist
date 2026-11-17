@@ -609,7 +609,7 @@ export function createWave(options = {}) {
   // T35: the routes over the walls (null without the option: today's fixed routes). No dice.
   const towerBlocking = options?.towerObstacles === true && options?.pathing === true && towerHealth.enabled;
   const paths = options?.pathing === true ? createBoarderPaths({ coast: readCoast(options?.coast), heart, walls,
-    towers, towerBlocking,
+    towers, towerBlocking, perimeterWalls: options?.perimeterWalls === true,
     pace: { hackPerSecond: B.hack * curve.damage / B.hackEvery, speed: B.speed * curve.speed } }) : null;
 
   // Where a gunboat anchors (CONFIG.gunboat): the first point of its course where the nearest tower is as
