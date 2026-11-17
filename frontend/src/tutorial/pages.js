@@ -69,7 +69,7 @@ export const TUTORIAL_PAGES = Object.freeze([
   {id: 'controls', title: 'Controls',
     text: ['Walk up close to open a building. From far away, a click only says "Walk closer".', 'On a phone, use the joystick and the Use button.'],
     keys: [['WASD or arrows', 'Walk'], ['E', 'Walk up, then build, use, repair, help up'], ['F', 'Fire your musket'], ['Click', 'Aim and fire'],
-      ['M', 'Sea chart'], ['Mouse wheel', 'Zoom']],
+      ['M', 'Sea chart'], ['Mouse wheel', 'Zoom'], ['Hold Tab', 'See the whole island']],
     alt: 'A brass compass',
     art: [art('compass', 32, 32, 3)]},
 ].map(freezePage));
