@@ -68,7 +68,8 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   const shortcuts=createShortcutsHost(container);
   // Menu › How to play (src/tutorial/): the paged card, loaded on first use; the one-island pages while the
   // sea chart is closed (travelOpen below, read when the card opens).
-  const tutorial=createTutorialHost(container,{onClose:()=>graphics.renderer.domElement.focus({preventScroll:true}),one:()=>!travelOpen()});
+  const tutorial=createTutorialHost(container,{onClose:()=>graphics.renderer.domElement.focus({preventScroll:true}),one:()=>!travelOpen(),
+    recoveryVersion:()=>island?.recoveryVersion??0});
   const scene = new THREE.Scene();
   // Your captain: the explorer frames and the ten captain colours (GAME-V3.md §7; painted on first use).
   const art = await loadArt([...pixelArtIds.filter(id => id.startsWith('explorer')),

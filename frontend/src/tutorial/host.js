@@ -7,7 +7,8 @@ import {createModal} from '../ui/kit/modal.js';
 import {createButton} from '../ui/kit/button.js';
 import './loading.css';
 
-export function createTutorialHost(container, {load = () => import('./card.js'), onClose = () => {}, one = () => oneIsland()} = {}) {
+export function createTutorialHost(container, {load = () => import('./card.js'), onClose = () => {}, one = () => oneIsland(),
+  recoveryVersion = () => 0} = {}) {
   let card = null, disposed = false, request = 0, loading = false;
   let feedback = null, message = null, retry = null;
   function clearFeedback() { feedback?.dispose(); feedback = message = retry = null; }
@@ -35,6 +36,7 @@ export function createTutorialHost(container, {load = () => import('./card.js'),
     else if (hadFeedback) onClose('closed');
   }
   const readOne = () => { try { return one() !== false; } catch { return true; } };
+  const readRecoveryVersion = () => { try { return recoveryVersion() === 1 ? 1 : 0; } catch { return 0; } };
   async function open() {
     if (disposed || loading) return null;
     if (card?.isOpen) return card;
@@ -45,7 +47,7 @@ export function createTutorialHost(container, {load = () => import('./card.js'),
       if (disposed || token !== request) return null;
       clearFeedback();
       card?.dispose();
-      const current = card = createTutorialCard({mode: 'menu', pages: tutorialPages(readOne())});
+      const current = card = createTutorialCard({mode: 'menu', pages: tutorialPages(readOne(), readRecoveryVersion())});
       current.open(container);
       void current.done.then(reason => { if (card === current) { card = null; current.dispose(); if (reason !== 'disposed') onClose(reason); } });
       return current;

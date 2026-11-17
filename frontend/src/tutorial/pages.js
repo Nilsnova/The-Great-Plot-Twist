@@ -88,8 +88,44 @@ export const ONE_ISLAND_PAGES = Object.freeze(TUTORIAL_PAGES.map(page => {
   if (page.id === 'controls') return freezePage({...page, keys: page.keys.filter(([key]) => key !== 'M')});
   return page;
 }));
-// The pages for this game: the one-island pages while the flag is on (src/island/one-island.js).
-export const tutorialPages = (one = true) => (one ? ONE_ISLAND_PAGES : TUTORIAL_PAGES);
+
+const RECOVERY_COPY = Object.freeze({
+  ashore: {
+    text: ['Pirates that reach the shore climb out and attack on foot: the heart of the island and any captain nearby.',
+      'Between waves, structures mend automatically; healing pauses from bell acceptance through the wave.',
+      'Walk up to a damaged or broken structure to see its health and Repair now option.'],
+  },
+  crew: {
+    text: ['Spend skill points in Menu › Captain and skills on Marksman, Brawler or Shipwright.',
+      'Repair-only choices are hidden; saved skills still count as spent points; no special refund or free respec.',
+      'Engineer keeps a 10% build and upgrade discount; level 3 offers Medic, Engineer or Gunner.'],
+  },
+});
+
+function recoveryPages(pages) {
+  const current = pages.map(page => {
+    if (page.id === 'controls') {
+      const keys = page.keys.map(([key, action]) => [key, key === 'E' ? 'Walk up, then build or open a card' : action]);
+      return freezePage({...page, keys});
+    }
+    return RECOVERY_COPY[page.id] ? freezePage({...page, ...RECOVERY_COPY[page.id]}) : page;
+  });
+  current.push(freezePage({id: 'repair', title: 'Structure recovery',
+    text: ['Between waves, structures recover gradually; accepted bell starts a pause through preparation and the wave.',
+      'Repair now restores full health at a fixed current-level catalogue price, whatever the damage.',
+      'Three successful uses are shared across the island from bell acceptance through finish or expiry.'],
+    alt: 'A damaged island wall', art: [art('island-wall-damaged', 48, 48, 2)]}));
+  return Object.freeze(current);
+}
+
+const RECOVERY_TUTORIAL_PAGES = recoveryPages(TUTORIAL_PAGES);
+const RECOVERY_ONE_ISLAND_PAGES = recoveryPages(ONE_ISLAND_PAGES);
+
+// The pages for this game: one-island pages while that setting is on, plus persisted recovery-v1 help.
+export const tutorialPages = (one = true, recoveryVersion = 0) => {
+  if (recoveryVersion === 1) return one ? RECOVERY_ONE_ISLAND_PAGES : RECOVERY_TUTORIAL_PAGES;
+  return one ? ONE_ISLAND_PAGES : TUTORIAL_PAGES;
+};
 
 // The pages a first Play shows: island, build, bell and captain.
 export const firstRunPages = (pages = TUTORIAL_PAGES) => pages.slice(0, FIRST_RUN_PAGES);
