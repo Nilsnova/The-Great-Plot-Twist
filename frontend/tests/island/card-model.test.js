@@ -297,6 +297,16 @@ describe('the campaign buildings (GAME-V3.md §4, §5)', () => {
     const house = buildCardModel({spotId: 'house_1', slot: 'house', spot: {id: 'house_1', kind: 'house', built: true, level: 2}, coins: 0, campaign: atWave(3)}).skills;
     expect(house.choices.map(choice => [choice.id, choice.price ?? '', choice.disabled])).toEqual([['barracks', '', false], ['tavern', '', false], ['workshop', '', false]]);
   });
+  it('describes the Workshop recovery policy only on recovery-v1 island cards', () => {
+    const house = recoveryVersion => buildCardModel({spotId: 'house_1', slot: 'house',
+      spot: {id: 'house_1', kind: 'house', built: true, level: 2, spec: 'workshop'},
+      coins: 0, campaign: atWave(3), recoveryVersion}).skills;
+
+    expect(house(0).choices.find(choice => choice.id === 'workshop').line)
+      .toBe('Walls near it repair and rebuild 30% faster, and a broken one mends by itself.');
+    expect(house(1).choices.find(choice => choice.id === 'workshop').line)
+      .toBe('Walls and towers within 10 units recover 30% faster between waves; Workshops add up to 50%.');
+  });
   it('the wreck: locked before wave 6, gifts cut to what is left, repaired at 100% and waiting for wave 30', () => {
     expect(wreckModel({campaign: atWave(5)})).toMatchObject({open: false, line: 'Opens after wave 6.', gifts: []});
     const half = wreckModel({campaign: atWave(6, {wreck: {paid: 450, goal: 500, gifts: [25, 100]}}), coins: 30});

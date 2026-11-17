@@ -4,8 +4,8 @@
 >
 > **Who uses it:** Ianno, the T58 agent and the recovery-state/simulation implementers.
 
-- **Status:** policy models, persisted-version UI wiring, versioned help copy and focused integration evidence are implemented on this draft branch. T55/T57/T59/T60 combined review and release checks remain pending; no activation or live behavior is claimed.
-- **Branch:** `refactor/t58-captain-repair`
+- **Status:** the original policy implementation merged through PR #203. This follow-up corrects the version-aware Workshop role wording and adds desktop/phone fixture evidence; human review and separate T60 integration/release gates remain. No activation or live behavior is claimed.
+- **Branch:** `test/t58-captain-recovery-followup`
 - **Issue:** [#124](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/124)
 
 ## Why
@@ -25,6 +25,8 @@ Captain repair skills and independent wall regeneration conflict with the approv
 The frontend has an isolated version-aware policy module at `frontend/src/campaign/captain-repair-policy.js`. `recoveryRateFactor()` accepts the island owner's Carpenter count, nearby Workshop count, supported structure kind, one wall's equipped `wallSpec`, island `wallResearch` and a between-wave boolean. It returns 0 during a reservation, applies Quick Mend or equipped Bastion only to walls, applies Mason Drill only to walls, and leaves other valid wall choices neutral. `isRetiredCaptainSkill()` and `captainBranchesForPolicy()` retain legacy behavior by default; under recovery v1 they hide the seven repair-only Captain choices without deleting stored ids or changing spent points. Captain stats accept an explicit `{recoveryVersion}` option so existing callers remain legacy by default. `skillsModel()` and `techModel()` also accept a `recoveryVersion`, defaulting to legacy 0.
 
 The canonical GET `/api/island/structures` getter provides the saved recovery version, and the island integration passes it into Captain and Tech models. Tutorial help now selects a recovery-v1 copy from that same persisted version while preserving the original version-0 pages. In recovery v1, damaged/reserved structure cards disable level upgrades, and the raw catalogue wall value is labelled base strength so it is not confused with recovery-modified maximum HP. Focused model, integration and help tests plus production-UI fixture captures are documented in [T58 evidence](../docs/evidence/T58-captain-repair/README.md). The captures use controlled fixture data and do not demonstrate live API state, multiplayer, a deployed feature flag, or production activation. T55/T57/T59/T60 combined review, full acceptance checks and release checks remain pending.
+
+The house-role card also uses this saved version: legacy islands retain the frozen Workshop repair/rebuild wording, while recovery v1 says that walls and towers within 10 units recover 30% faster between waves and nearby Workshops add up to 50%. This keeps the displayed policy aligned with the recovery projection for every supported structure. Desktop and phone captures of the selected Workshop row are in the [T58 evidence](../docs/evidence/T58-captain-repair/README.md); they use a local fake-island fixture and crop the production card to that row.
 
 ## Out of scope
 
