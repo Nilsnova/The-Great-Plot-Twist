@@ -4,8 +4,8 @@
 >
 > **Who uses it:** Ianno, the T59 agent and the recovery API/simulation implementers.
 
-- **Status:** in progress; server-backed card wiring, protocol negotiation, replay checkpoint guard and between-wave/preparation world indicators are in progress on this branch. Combat indicator and live lifecycle/two-client evidence remain pending.
-- **Branch:** `feat/t59-repair-feedback`
+- **Status:** recovery card models, server adapters, protocol negotiation, replay checkpoint guard and phase-specific world/combat indicators are present in the integrated source. This follow-up makes the between-wave ETA caveat explicit in player wording. The existing zero-HP combat marker already uses an empty track and a red `!`; no renderer change was needed. Existing screenshots and browser fixtures use offline data; live service and two-client evidence remain T60/human work.
+- **Branch:** `test/t59-repair-feedback-followup`
 - **Issue:** [#125](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/125)
 
 ## Why
@@ -31,9 +31,9 @@ No backend transaction or simulation edits, Captain skill redesign or live activ
 
 ## Done when (acceptance checks)
 
-- [ ] Tests cover full/partial/zero/tiny-positive HP, every supported kind, both phases, dynamic ETA and fixed price, failed/stale/retried actions and quota exhaustion.
-- [ ] Integrated API/card behavior handles automatic completion racing paid repair, current wallet versus old receipts, phase changes, late join and reconnect.
-- [ ] Frontend tests/build and relevant two-client checks pass; desktop/phone screenshots or demo show the actual integrated UI. Player docs/tutorials match implemented behavior.
+- [ ] Focused tests cover full/partial/zero/tiny-positive HP, all six supported kinds, between-wave and reserved-wave display, server-supplied ETA/price, refusal and stale/retried request feedback, and shared-quota display. See the T59 evidence README for exact checks; fixture results do not prove server behavior.
+- [ ] Integrated signed-shape adapter coverage exercises card refresh, stale island/instance responses, the checkpoint-before-repair guard and the rule that a combat HTTP response does not patch replay HP. Automatic completion races, current wallet versus old receipts, late join and reconnect still need the T60 service/two-client evidence path.
+- [ ] Focused frontend checks and a build pass; desktop/phone captures show production UI with offline fixture data. Live service and two-client checks are not claimed. Player docs/tutorials must match the reviewed release before activation.
 - [ ] Complete diff is reviewed, remaining integration limits explicit, no secrets/unrelated files included and a different human approves before merge.
 
 ## Tests to write first
@@ -49,4 +49,4 @@ Consume T54's server-owned state and paid-action API shapes, versions, epochs, i
 - **Responsible teammate:** Ianno (@Iannomh123456).
 - **Coding agent:** `gpt-6-luna`, high reasoning.
 - **Human reviewer:** Franz (@frcola), after Ianno's manual review and publication confirmation.
-- **Last updated:** 2026-11-16.
+- **Last updated:** 2026-11-17.

@@ -37,6 +37,24 @@ Environment: Linux, Node.js `v24.22.1`, Chromium `156.0.8078.79` (`/usr/bin/chro
 
 The capture checks visible repair controls at phone widths and verifies the one-pixel positive HP fill. It does not show live service responses or an actual repair. Runtime evidence remains pending for real between-wave healing, preparation/combat pause and quota, zero/partial/full HP, and two actual clients.
 
+### Bell-pause estimate wording refresh
+
+The card screenshots above were refreshed from source commit `3ce09753` on 17 Nov 2026 with:
+
+```sh
+cd frontend && npm run capture:recovery:card
+```
+
+The production card now tells players that free repair pauses when the bell rings and that the displayed estimate counts only time between waves. The fixture derives build and next-level upgrade costs from `BUILDINGS` for each sample's kind and level; capture assertions check Wall 20, Cannon 60, and Harpoon 80. The fixture still provides offline DTOs; the button emits a local intent and does not call an API. At desktop and phone sizes the text wraps without clipping. The preparation phone capture correctly shows paused status and remaining uses with no ETA.
+
+The focused model check also passed from this revision:
+
+```sh
+cd frontend && npx vitest run tests/island/structure-recovery-model.test.js
+```
+
+Result: 1 file, 24 tests passed. The refreshed image paths are the three rows in the production island card preview table above; no live service, payment, database, or multiplayer behavior is demonstrated.
+
 ## Integrated UI with offline signed-shape adapter
 
 **These captures run the production island card, world scene, `wireWaves`, controller, and replay code with a local offline API fixture. It returns API-shaped DTOs but makes no authenticated request and uses no live account, charge, database, or second client.** They show production UI and replay wiring, not actual server acceptance.
@@ -65,3 +83,7 @@ The fixture asserts canonical response shapes and request flow, exact card HP/qu
 | 390 × 844 phone | Full structure hides recovery display | [Full HP on phone](../../../frontend/captures/t59-integrated-full-phone.png) |
 
 The latest capture completed with 103 calls to the offline API fixture. It does not prove SQL behavior, real signed-in transport, or two-client synchronization. The separate disposable PostgreSQL/API/replay evidence is documented by T60.
+
+### Independent follow-up verification
+
+On 17 Nov 2026, `npm exec vitest -- run tests/island/structure-recovery-model.test.js tests/island/structure-recovery-card-dom.test.js --maxWorkers=1` from `frontend/` passed 25 tests across 2 files. `npm run build` passed in 1.12 seconds and the spoiler guard passed across 241 text files. The corrected desktop/phone captures were inspected: Wall level-2 upgrade is 20 coins and Harpoon level-2 upgrade is 80 coins, with the existing current-level repair prices unchanged. The bell-pause explanation wraps legibly. These remain offline fixture screenshots and do not prove API/payment/database/multiplayer behavior.

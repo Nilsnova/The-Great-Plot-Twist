@@ -62,6 +62,11 @@ import { commandForJournal, MAX_INPUT_BATCH, MAX_INPUT_BATCH_BYTES, RECOVERY_FLU
 import { makeActionUid } from '../screens/islet/action-uid.js';
 
 const MAX_TICKS_PER_FRAME = 600;      // a friend joining late catches up 30 s of wave per frame
+// Recovery waves (structure_recovery) may only run ticks the server has sealed, and the seal moves on
+// each poll (RECOVERY_POLL_MS plus the round trip). Run them this far behind real time, like a video
+// buffer, so ships and shots move every frame instead of freezing and jumping after each poll (#324).
+// Only when ticks run changes, never what they compute.
+export const RECOVERY_PLAYOUT_MS = 750;
 const SHOWN_LATE_SECONDS = 1;         // events older than this (catching up) are not drawn or heard
 const canonicalJson = value => Array.isArray(value) ? `[${value.map(canonicalJson).join(',')}]`
   : value && typeof value === 'object' ? `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${canonicalJson(value[key])}`).join(',')}}`
@@ -238,7 +243,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   playCutscene = defaultCutscene(world, reducedMotion), createRenderer = defaultRenderer, createHud = defaultHud,
   setTimer = (run, ms) => setTimeout(run, ms), clearTimer = id => clearTimeout(id), onEvents = null,
   getCrew = () => null, captainLevel = () => 1, captainSkills = () => [], captainWeapon = () => 'musket', captainColour = () => 0,
-  startNextWave = null, breakSeconds = BREAK_SECONDS,
+  startNextWave = null, breakSeconds = BREAK_SECONDS, recoveryPlayoutMs = RECOVERY_PLAYOUT_MS,
   loadAuto = readAuto, saveAuto = writeAuto, holdBreak = null, toggleHold = null, reviveCaptain = null,
   createEventArt = defaultEventArt, createFinisherScene = defaultFinisherScene, easyFinishers = readEasy, practiceIdentity = () => null,
   guide: guideOn = false, createGuide = defaultGuide, recoveryTransport = null } = {}) {
@@ -551,14 +556,16 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     try { fetched = await fetchRecoveryFrontier(current); }
     catch { fetched = false; }
     if (!fetched || !current.recoveryReplay.complete()) return { ok: false, code: 'health_sync_required' };
-    if (!current.done) {
+    // The periodic health checkpoint (force false) saves the ticks already shown, which the server accepts
+    // while they are sealed; only a checkpoint before a paid repair catches the wave up to the seal.
+    if (!current.done && force) {
       const serverTick = Math.floor((((now() + current.offset) - current.info.startsAtMs) / 1000) / TICK_SECONDS);
       // A server seal may arrive between render frames. Catch up only through time that has actually elapsed.
       if (!Number.isInteger(serverTick) || current.recoveryReplay.sealedThroughTick > serverTick
         || !advanceRecoveryThrough(current, current.recoveryReplay.sealedThroughTick)) {
         return { ok: false, code: 'health_sync_required' };
       }
-    } else if (!reconcileTerminalRecovery(current)) {
+    } else if (current.done && !reconcileTerminalRecovery(current)) {
       return { ok: false, code: 'health_sync_required' };
     }
     const replay = current.recoveryReplay, vector = current.sim.recoveryHealthVector();
@@ -991,7 +998,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     current.hud?.setVisible(current.shown);
     const elapsed = (now() + current.offset - current.info.startsAtMs) / 1000;
     if (!current.done && elapsed >= 0) {
-      const due = Math.floor(elapsed / TICK_SECONDS + 1e-6);
+      const playout = current.recoveryReplay ? Math.max(0, recoveryPlayoutMs) / 1000 : 0;
+      const due = Math.floor((elapsed - playout) / TICK_SECONDS + 1e-6);
       let budget = MAX_TICKS_PER_FRAME;
       const events = [], recent = [];
       // v3 waves: an event is fresh by the tick it came from, not by its sim time (a finisher freezes the

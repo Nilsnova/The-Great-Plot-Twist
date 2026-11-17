@@ -4,8 +4,8 @@
 >
 > **Who uses it:** Ianno, the T57 agent and recovery state/payment/UI implementers.
 
-- **Status:** in progress; isolated policy/replay tests first, integration follows T55/T56.
-- **Branch:** `feat/t57-wave-recovery`
+- **Status:** the original implementation merged through PR #203. This follow-up adds a paid-event replay regression and records its limits; human review and separate T60 integration/release gates remain.
+- **Branch:** `test/t57-wave-recovery-followup`
 - **Issue:** [#123](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/123)
 
 ## Why
@@ -44,4 +44,20 @@ Recovery version 1 / wave protocol 2, immutable snapshots, durable journal/event
 - **Responsible teammate:** Ianno (@Iannomh123456).
 - **Coding agent:** `gpt-6-luna`, high reasoning.
 - **Human reviewer:** Franz (@frcola), after Ianno's manual review and explicit publication confirmation.
-- **Last updated:** 2026-11-16.
+- **Last updated:** 2026-11-17.
+
+## Follow-up audit · 2026-11-17
+
+The T57 client simulation and replay criteria were checked against the integrated source and focused regressions on `test/t57-wave-recovery-followup`. No production defect was fixed. A combined regression was added in `frontend/tests/pirates/recovery-tower-replay.test.js`: with a zero-HP cannon allowing boarders through, the test waits until one occupies its footprint, then sends a synthetic sealed paid event through `createWaveReplay`, `simulationInputFromJournal` and the combat sim. It verifies full HP restoration, renewed firing, later boarder damage, and that HP falls below full without rising again. The test does not assert an outside position after restoration, so paid-restore egress remains unverified. The fixture is not an authenticated server event.
+
+| Acceptance area | Current evidence | Limit |
+|---|---|---|
+| Pause free healing in the recovery-v1 sim | `wall-recovery.test.js` checks Captain E, two Carpenters, Workshop and Bastion; `tower-health.test.js` checks tower E repair/rebuild; the 18-run diagnostic contrasts legacy Carpenter/Workshop healing against v1. | Does not prove backend clock settlement or every owner/offline interval. Tech policy and skill removals are owned by T58. |
+| Preserve frozen legacy behavior | `recovery-policy.test.js`, legacy wall-recovery tests and ordinary tower E tests cover the version dispatch and legacy sim paths. | This follow-up's focused command did not include `recovery-policy.test.js`; full integrated verification is a separate gate. |
+| Snapshot and ordered journal replay | `recovery-snapshot.test.js`, `wave-replay.test.js` and `recovery-controller.test.js` cover frozen instance identity, single-application, fixed head/seal pagination, ordered replay, stale/conflicting event rejection, checkpoints and finish catch-up. | Tests use deterministic fixtures, not a live authenticated multiplayer session. |
+| Destroyed/positive HP operation and safe tower movement | Snapshot tests retain one positive HP unit and current-instance restores; the new replay-to-sim test covers firing and verifies that later damage lowers HP without regrowth. | This test does not assert an outside position after a paid restore. Egress and all six structure kinds remain T60 verification work. |
+| Late join, reconnect, finish and offline lifecycle | Controller tests cover terminal catch-up and replay transport tests cover interrupted page retries; backend lifecycle evidence is recorded by T55/T60. | This T57 follow-up did not run an authenticated two-browser protocol-2 scenario or independently verify canonical expiry/offline settlement. |
+
+Focused verification run on this branch: `cd frontend && npx vitest run --maxWorkers=1 tests/pirates/recovery-tower-replay.test.js tests/pirates/recovery-controller.test.js tests/pirates/wave-replay.test.js tests/pirates/recovery-snapshot.test.js tests/pirates/wall-recovery.test.js tests/pirates/tower-health.test.js tests/pirates/recovery-balance-diagnostic.test.js` — **7 files, 58 tests passed**. The later HP monotonicity assertions were verified with a rerun of the changed test alone: **1/1 passed**. These are targeted client checks, not a full frontend suite or protocol-2 two-browser coverage. Canonical server state and paid-event ordering do not make client-reported combat hits a full server-verified combat record.
+
+T57 remains in progress for integrated human review: T60 owns the authenticated multiplayer/browser and broader lifecycle matrix; T56 owns paid transaction/quota coverage; T58 owns Captain/Tech policy; T59 owns health cards and visual feedback. No flag, migration, deployment or live data changed.

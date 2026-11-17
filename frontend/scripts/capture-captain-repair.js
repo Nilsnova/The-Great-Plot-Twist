@@ -3,7 +3,8 @@
 import {mkdir} from 'node:fs/promises';
 import {openWorldBrowser, settle} from './world-browser-tools.js';
 
-const out = process.argv[2] ?? '../docs/evidence/T58-captain-repair';
+const workshopOnly = process.argv.includes('--workshop-only');
+const out = process.argv.slice(2).find(argument => !argument.startsWith('--')) ?? '../docs/evidence/T58-captain-repair';
 await mkdir(out, {recursive: true});
 const env = await openWorldBrowser(), {page} = env;
 const shot = async (name, selector) => {
@@ -90,7 +91,10 @@ try {
           rateUnitsPerSecond: spec === 'quick_mend' ? 5000 : 7500,
           estimatedFreeSeconds: spec === 'quick_mend' ? 50 : 34, fixedPrice: 10, repairSeq: 0}]},
       recoveryStatus: 'ready', recoveryVersion: 1});
-    window.__t58RecoveryCapture = {ui, captain, skills, legacySkills, tech, wallCard};
+    const houseCard = recoveryVersion => buildCardModel({spotId: 'house_1', slot: 'house',
+      spot: {id: 'house_1', kind: 'house', built: true, level: 2, cost: 100, spec: 'workshop'},
+      coins: 2000, campaign: research, recoveryVersion});
+    window.__t58RecoveryCapture = {ui, captain, skills, legacySkills, tech, wallCard, recoveryHouseCard: houseCard(1)};
   });
 
   const captureCaptain = async (width, height, name, recoveryVersion = 1) => {
@@ -105,9 +109,11 @@ try {
     await page.evaluate(() => window.__t58RecoveryCapture.ui.close());
     await page.waitForFunction(() => !document.querySelector('dialog[open]'));
   };
-  await captureCaptain(1280, 800, 'captain-legacy-desktop', 0);
-  await captureCaptain(1280, 800, 'captain-desktop');
-  await captureCaptain(375, 812, 'captain-phone');
+  if (!workshopOnly) {
+    await captureCaptain(1280, 800, 'captain-legacy-desktop', 0);
+    await captureCaptain(1280, 800, 'captain-desktop');
+    await captureCaptain(375, 812, 'captain-phone');
+  }
 
   const captureTech = async (width, height, option, name) => {
     await page.setViewportSize({width, height});
@@ -121,8 +127,10 @@ try {
     await page.evaluate(() => window.__t58RecoveryCapture.ui.close());
     await page.waitForFunction(() => !document.querySelector('dialog[open]'));
   };
-  await captureTech(1280, 800, 'mason_drill', 'tech-mason-drill-desktop');
-  await captureTech(375, 812, 'bastion', 'tech-bastion-phone');
+  if (!workshopOnly) {
+    await captureTech(1280, 800, 'mason_drill', 'tech-mason-drill-desktop');
+    await captureTech(375, 812, 'bastion', 'tech-bastion-phone');
+  }
 
   const captureWall = async (spec, width, height, name) => {
     await page.setViewportSize({width, height});
@@ -134,8 +142,22 @@ try {
     await page.evaluate(() => window.__t58RecoveryCapture.ui.close());
     await page.waitForFunction(() => !document.querySelector('dialog[open]'));
   };
-  await captureWall('quick_mend', 1280, 800, 'wall-quick-mend-desktop');
-  await captureWall('bastion', 375, 812, 'wall-bastion-phone');
+  if (!workshopOnly) {
+    await captureWall('quick_mend', 1280, 800, 'wall-quick-mend-desktop');
+    await captureWall('bastion', 375, 812, 'wall-bastion-phone');
+  }
+  const captureWorkshop = async (width, height, name) => {
+    await page.setViewportSize({width, height});
+    await page.evaluate(() => window.__t58RecoveryCapture.ui.buildCard(
+      window.__t58RecoveryCapture.recoveryHouseCard, {}));
+    await assertSingleCard('.island-card-build[open]', 'House');
+    await page.locator('.island-card-build[open] [data-spec="workshop"]').waitFor();
+    await shot(name, '.island-card-build[open] [data-spec="workshop"]');
+    await page.evaluate(() => window.__t58RecoveryCapture.ui.close());
+    await page.waitForFunction(() => !document.querySelector('dialog[open]'));
+  };
+  await captureWorkshop(1280, 800, 'workshop-card-desktop');
+  await captureWorkshop(375, 812, 'workshop-card-phone');
   await page.evaluate(() => window.__t58RecoveryCapture.ui.dispose());
 } catch (error) {
   await page.screenshot({path: `${out}/failure.png`}).catch(() => {});
