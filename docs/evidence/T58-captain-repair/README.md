@@ -59,4 +59,6 @@ Result: 2 files, 30 tests passed. The DOM check verifies the disabled Upgrade co
 
 The tutorial host uses the read-only `island.recoveryVersion` value derived from canonical saved island state; the admission flag does not select the help copy. Version 0 retains the historical help, including manual E repair and Shipwright choices. Version 1 uses player-facing wording: buildings mend between waves and pause when the bell is rung; Repair now uses the current level's catalog price; up to three successful Repair now uses are shared for a wave. It also keeps the E help-up and F firing controls and the Engineer discount.
 
+The recovery-aware house-card model preserves the legacy Workshop line for version 0 and describes the approved nearby +30% between-wave recovery bonus, 10-unit range and +50% combined cap for version 1. The focused `card-model.test.js` regression checks both strings. This wording check is a model test; it is not a new screenshot or a live-island observation.
+
 **Limits:** fixture screenshots are not persisted-API or live-game proof; they do not exercise a real wave, physical phone, multiplayer delivery, SQL transaction, payment, or runtime recovery. The combined T55/T57/T59/T60 review and full release checks are tracked separately; this draft evidence does not authorize activation or deployment.

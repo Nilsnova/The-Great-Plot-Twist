@@ -26,6 +26,8 @@ The frontend has an isolated version-aware policy module at `frontend/src/campai
 
 The canonical GET `/api/island/structures` getter provides the saved recovery version, and the island integration passes it into Captain and Tech models. Tutorial help now selects a recovery-v1 copy from that same persisted version while preserving the original version-0 pages. In recovery v1, damaged/reserved structure cards disable level upgrades, and the raw catalogue wall value is labelled base strength so it is not confused with recovery-modified maximum HP. Focused model, integration and help tests plus production-UI fixture captures are documented in [T58 evidence](../docs/evidence/T58-captain-repair/README.md). The captures use controlled fixture data and do not demonstrate live API state, multiplayer, a deployed feature flag, or production activation. T55/T57/T59/T60 combined review, full acceptance checks and release checks remain pending.
 
+The house-role card also uses this saved version: legacy islands retain the frozen Workshop repair/rebuild wording, while recovery v1 explains its +30% nearby between-wave bonus, 10-unit range and +50% combined cap. This keeps the displayed policy aligned with the recovery projection for every supported structure.
+
 ## Out of scope
 
 No compensation/refund/respec subsystem, balance retune, paid transactions, broad simulation rewrites or T59 structure-card/renderer changes. No AGENTS/setup/instruction edits, live migration, activation or deployment. Preserve current behavior while the new policy is inactive.
