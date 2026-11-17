@@ -729,6 +729,7 @@ examples
 exchange
 exist
 existing
+exit
 expected
 expired
 expiry
@@ -936,6 +937,7 @@ grab
 graphics
 gray
 great
+greater
 green
 greenhouse
 grey
@@ -2560,6 +2562,7 @@ very
 victory
 video
 view
+village
 visible
 vision
 visit
@@ -2783,3 +2786,7 @@ tutorials
 tutorial
 guided
 swing
+approach
+base
+filters
+plan

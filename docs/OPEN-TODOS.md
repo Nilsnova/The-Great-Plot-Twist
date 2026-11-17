@@ -228,3 +228,18 @@ T55 owns persistence/snapshots/history; T56 owns paid action and quota after the
 Test immediate automatic-repair start/resume after canonical finish/expiry, pause at accepted bell before `startsAt` (including preparation/countdown), and offline/reload paths; all Carpenter, Workshop and Tech variants; wall/tower upgrade rejection across reservation/preparation/combat until finish/expiry; wave end and stale payment bypasses; all six kinds and levels; 50→60→50 HP after damage; destroyed zero-HP gating and next-wave positive-HP start; all fixed prices and no payer discounts; three successful repairs, fourth rejection, two clients racing for last slot during preparation/countdown and combat, shared reset and quota history; outside-window unlimited use; retries before and after new damage, distinct UID restore, stale phase/level quotes; wallet/HP/event/quota atomicity; two-client late join/reconnect/replay; immutable snapshots, finish reconciliation and reset; restored tower firing, safe obstacle closure/egress; exact visual bars including low positive HP; dynamic displayed price and ETA across actual HP and bonus changes; paid repair concurrent with free healing; intact-target no-charge rejection; ETA switches to paused at bell acceptance and recomputes from actual HP/current bonuses after canonical finish/expiry; consistent card/state display across two clients. Confirm legitimate new construction still works. The server is not a full combat verifier, and results must state that limit. Run code/migration/UI checks only for implementation tasks and record actual results; this documentation pass has no runtime test results.
 
 T55–T60 remain reserved and dependency-blocked pending explicit T54 technical-plan approval. The feature freeze and existing human review rules still apply. Use additive migrations and preserve legacy frozen waves. No migration application, flag activation or deployment is authorized here.
+
+
+## COC-39 claimed local report slice
+
+[Issue #180](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/180) is being implemented by Johannes Franz Lang (`frcola`) on `feat/coc-39-defense-report`: bounded event aggregation plus an actual read-only pause-menu report. [Specification and verification](../specs/COC-39-defense-report.md). COC-40 tactical navigation stays open; Ianno's recovery tasks remain with Ianno. Do not mark the wider package finished. Four component screenshots and focused results are recorded. Final central checks, Johannes's explain-back and independent human review remain before readiness; no merge.
+
+## COC-31 — base overview first slice (17 Nov, Johannes)
+
+[Issue #172](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/172), [draft PR #196](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/196), branch `feat/coc-31-base-overview`: read-only built-building overview with existing prices/locks and local filters. [Scope/evidence](../specs/COC-31-base-overview.md). No purchase endpoint or remote building selection; the larger COC-31 task is not done. Draft PR, explain-back and independent review remain.
+
+COC-49 / Johannes (@frcola): optional own-island management slice is claimed in
+[draft PR #192](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/192),
+[issue #190](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/190).
+Existing cards/server authority are reused; no catalogue, editor camera or
+recovery work is claimed. Checks and human review remain on the draft, not done.

@@ -1,0 +1,31 @@
+{
+  "transport": "existing local fake island API; not live backend/login",
+  "managing": true,
+  "root": "/workspace/coc-overnight/village-mode/frontend",
+  "screens": [
+    {
+      "width": 1280,
+      "height": 720,
+      "name": "after-1280x720.png",
+      "modeName": "mode-1280x720.png",
+      "state": {
+        "managing": true,
+        "card": true
+      },
+      "errors": [],
+      "externalRequests": 0
+    },
+    {
+      "width": 375,
+      "height": 812,
+      "name": "after-375x812.png",
+      "modeName": "mode-375x812.png",
+      "state": {
+        "managing": true,
+        "card": true
+      },
+      "errors": [],
+      "externalRequests": 0
+    }
+  ]
+}

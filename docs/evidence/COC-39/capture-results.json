@@ -1,0 +1,89 @@
+{
+  "kind": "controlled-component-evidence",
+  "liveBackend": false,
+  "browserErrors": [],
+  "results": [
+    {
+      "size": {
+        "width": 1280,
+        "height": 720
+      },
+      "report": {
+        "waveId": "fixture-wave",
+        "wave": 12,
+        "context": "fixture",
+        "ended": true,
+        "partial": true,
+        "reason": "island_lost",
+        "heartDamage": 40,
+        "payout": {
+          "status": "pending",
+          "coins": null
+        },
+        "structures": [
+          {
+            "id": "wall_1",
+            "kind": "wall",
+            "x": 0,
+            "z": 20,
+            "taken": 60,
+            "dealt": 0,
+            "breaks": 1,
+            "broken": true
+          },
+          {
+            "id": "cannon_1",
+            "kind": "cannon",
+            "x": 0,
+            "z": 10,
+            "taken": 0,
+            "dealt": 111.2,
+            "breaks": 0,
+            "broken": false
+          }
+        ]
+      }
+    },
+    {
+      "size": {
+        "width": 375,
+        "height": 812
+      },
+      "report": {
+        "waveId": "fixture-wave",
+        "wave": 12,
+        "context": "fixture",
+        "ended": true,
+        "partial": true,
+        "reason": "island_lost",
+        "heartDamage": 40,
+        "payout": {
+          "status": "pending",
+          "coins": null
+        },
+        "structures": [
+          {
+            "id": "wall_1",
+            "kind": "wall",
+            "x": 0,
+            "z": 20,
+            "taken": 60,
+            "dealt": 0,
+            "breaks": 1,
+            "broken": true
+          },
+          {
+            "id": "cannon_1",
+            "kind": "cannon",
+            "x": 0,
+            "z": 10,
+            "taken": 0,
+            "dealt": 111.2,
+            "breaks": 0,
+            "broken": false
+          }
+        ]
+      }
+    }
+  ]
+}

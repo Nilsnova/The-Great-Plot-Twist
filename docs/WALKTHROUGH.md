@@ -1647,3 +1647,56 @@ runs against disposable local PostgreSQL with every migration applied twice.
 
 **Limits.** This fence protects a paid restore from a report belonging to a wave that started earlier.
 It does not validate the health a modified client reports or order arbitrary stale reports from other waves.
+
+
+## COC-07 — Visible house levels — Johannes Franz Lang
+
+A level-2 house now gains a side room; level 3 adds a taller main building and upper windows. Barracks, Tavern and Workshop keep their existing role signs. The small parameter in `house(role, level)` reuses the current painter; `buildingArt()` selects from the confirmed kind, level and active role. The existing frame boxes and ground anchor remain unchanged, so the drawing does not change building placement or role effects.
+
+[Scope, implementation, exact focused results, limits and three explain-back questions](../specs/COC-07-house-levels.md). [Before/after art fixtures](evidence/COC-07-house-levels/README.md) show all valid combinations at 1280 × 720 and 375 × 812. The new real-Chromium tests check different opaque silhouettes, loaded role frames and the upgrade/disposal lifecycle. These fixtures do not establish full-game, physical-phone or Safari acceptance. Draft review and the coordinated integration checks remain.
+
+## COC-13 — Between-wave wall joins — Johannes Franz Lang
+
+The first COC-13 slice makes full-side neighboring built walls look connected in the normal island and valid Move preview. [Spec and Explain-back](../specs/COC-13-wall-connections.md) explain the geometry, lower-level spans, cache lifetime and the intentional battle handoff. The pure `wallTopology` function and `makeWallConnections` renderer are in [wall-connections.js](../frontend/src/island/wall-connections.js); the playable integration is [world.js](../frontend/src/island/world.js).
+
+**Why:** players can read a line, corner or T instead of unrelated broad wall icons. **Limits:** existing placement, HP and collision rules are unchanged; the battle renderer still owns damage and ruins. A base-art connection is not proof of canonical full health. **How it could change:** a future coordinated slice could use the same pure geometry with the accepted battle-health state.
+
+**Evidence:** [before/after and raw browser reports](evidence/COC-13/README.md). Focused tests passed 17/17 across two files; broad integration checks and human quiz/review are separately pending.
+
+## Johannes: COC-39 local defense report (draft)
+
+Issue [#180](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/180), branch `feat/coc-39-defense-report`. The existing island controller's event batches reach a bounded pure aggregate in [`defense-report.js`](../frontend/src/pirates/defense-report.js), through a small `onIslandEvents` handoff in `pirates/index.js` and `game-wiring.js`. [`defense-report-feature.js`](../frontend/src/pirates/defense-report-feature.js) offers the completed report through the existing pause-menu provider and modal. It never submits combat results or changes money/HP. The old finish adapter confirms only the report's displayed loot.
+
+The report is deliberately local/incomplete: current messages do not prove full multiplayer history. Identical legitimate hits count, repainting does not; a future replay explicitly clears/rebuilds rather than hashing hit content. Travel/reset clears context and a new wave hides the old report. [Specification, actual checks, limits and three rehearsal questions](../specs/COC-39-defense-report.md). The richer COC-40 navigation remains a separate task. Draft, no merge; personal explain-back and independent human review are still pending.
+
+COC-39 input ownership: native dialog inertness does not stop global keyboard state or gamepad polling. The report feature exposes `active`, `wireWaves` exposes `reportActive`, and both `game.js` overlay guards plus `hasOverlay` read that value. The actual-game regression proves immobility while open and resumed movement after close, without changing wave ticking.
+
+## COC-31 — Base overview (Johannes Franz Lang)
+
+My menu overview reads the existing accepted island answer, groups built buildings and reuses the normal building-card model for prices and lock reasons. Its type and next-level filters only change local rows; there are no purchase callbacks. The normal island modal owns focus, Escape and disposal, and accepted data reloads redraw the list. A top building level does not mean all tower paths are finished. [Code, trace examples, limits and three practice questions](../specs/COC-31-base-overview.md); [test and screenshot evidence](evidence/COC-31-base-overview/README.md). This text is explain-back preparation, not proof that my rehearsal or independent review has happened.
+
+## COC-49 — Optional village management — Johannes Franz Lang
+
+Draft implementation in [PR #192](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/192),
+following the bounded [policy and state table](../specs/COC-49-village-mode.md).
+Johannes requested this direction; independent human review is still required.
+
+The new [local controller](../frontend/src/island/village-mode.js) holds only whether
+management is active and the original island code. It refuses entry on visits or
+reserved waves and releases placement/input once on context loss. The separate
+[bar](../frontend/src/island/village-bar.js) makes leaving visible. Existing build,
+upgrade and Move cards still send their original authenticated server requests.
+
+In `game.js`, captain movement is blocked separately from the world's picking
+permission. Otherwise the new mode would block all building selection too.
+`world.js` bypasses distance only for a structure explicitly allowed by that local
+own-island mode; Explore and other landmarks keep the old reach rule. The mode
+neither pauses combat nor changes a price, capacity, level or HP.
+
+Explain-back questions: Why separate movement from picking? Which checks still
+belong to the server? What happens to placement when a wave is accepted? The
+three questions are prepared, not a claim Johannes has already answered them.
+
+## Johannes — COC-02 current-base overview
+
+The camera accepts a local management-view request and fits the current home island. It preserves normal zoom and gives combat/tutorial focus precedence. Runtime: `frontend/src/player/camera.js`, with one `game.js` handoff from optional `island.managing`. See [the specification](../specs/COC-02-village-overview.md) for why, limits, future land bounds and three questions. This is a draft dependent on PR #192, not a merged feature.

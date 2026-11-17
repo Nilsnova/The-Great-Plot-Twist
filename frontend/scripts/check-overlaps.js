@@ -25,7 +25,8 @@ const TARGETS = [
   ['wave-bar', '.pirate-bar'], ['goal-hint', '.pirate-goal-hint'], ['countdown', '.pirate-countdown'], ['boss', '.pirate-boss'],
   ['action', '.pirate-hud>.pirate-musket'], ['prompt', '.pirate-hud>.pirate-prompt'], ['banner', '.pirate-banner'],
   ['break', '.pirate-break'], ['next-mini', '.pirate-next-mini'], ['hold', '.pirate-hold'],
-  ['island-banner', '.island-banner'], ['visit-chip', '.island-visit'], ['move-bar', '.move-bar'],
+  ['island-banner', '.island-banner'], ['visit-chip', '.island-visit'], ['move-bar', '.move-bar,.island-move-bar'],
+  ['village-bar', '.island-village-mode'],
   ['narrator', '.narrator-card'], ['caption', '.sound-caption'], ['connection', '.connection-banner'], ['touch', '.touch-controls>*,.touch-stick,.touch-button'],
   ['card', 'dialog[open]'],
 ];
@@ -168,8 +169,15 @@ try {
   const toast = () => island(i => i.ui.toast('The match board is up at the Harbor. Pick a stake and sail over to play.', 'info', 'Walk to the Harbor sign.'));
   await audit('island-toast', {prepare: toast, keep: () => page.locator('.u-toast').count().then(n => n > 0)});
 
+  // COC-49/COC-02: village mode's bar over the fitted base view (and with a toast).
+  const managing = () => island(i => i.managing === true);
+  await audit('village-mode', {prepare: async () => { if (!(await managing())) await island(i => i.toggleVillage()); }, keep: managing});
+  await audit('village-mode-toast', {prepare: toast, keep: managing});
+  await island(i => { if (i.managing) i.toggleVillage(); }); await wait(300);
+
   if (all) {
     for (const [state, open, selector] of [
+      ['base-overview', i => i.openOverview(), '.island-card[open]'],
       ['building-card', i => i.pick('cannon_1'), '.island-card[open]'],
       ['captain-skills', i => i.openCaptain('skills'), '.island-card-captain[open]'],
       ['tech-hub', i => i.openTechHub(), '.island-card[open]'],

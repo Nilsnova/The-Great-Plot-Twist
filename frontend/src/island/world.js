@@ -18,6 +18,7 @@ import {islandFrame} from '../art/registry.js';
 import {frameCanvas, smoothTexture, spriteMaterial} from '../art/textures.js';
 import {clickVerdict, WALK_CLOSER} from '../world/reach.js';
 import {decorateProgress} from './decorations.js';
+import {makeWallConnections} from './wall-connections.js';
 
 const UNIT = 16;
 // The first id the catalog knows wins; none known means the drawn sprite stays.
@@ -28,14 +29,14 @@ export const ART_CANDIDATES = Object.freeze({
 });
 export const catalogArt = (kind, sizes = pixelSizes) => (ART_CANDIDATES[kind] ?? []).find(id => Object.hasOwn(sizes, id)) ?? null;
 // Outside a wave a built spot shows its real kind and level: the art lane's level art (pirateLevels) for
-// walls, cannons and mortars, the watchtower and the house (one drawing each up to level 3; their pips tell
-// the level). Levels 4 and 5 (GAME-V3.md §4.1) have their own drawings, gold trim and the island's banner,
+// walls, cannons, mortars and houses; house levels retain their existing ground box and role signs.
+// Levels 4 and 5 (GAME-V3.md §4.1) have their own drawings, gold trim and the island's banner,
 // and gold stars on a teal disc as pips (PIP_TIER_ART).
 const tiered = kind => [...pirateLevels[kind], ...TIER_ART[kind]];
 export const LEVEL_ART = Object.freeze({wall: tiered('wall'), cannon: tiered('cannon'), mortar: tiered('mortar'), harpoon: HARPOON_ART.levels,
   culverin: CULVERIN_ART.levels, // T43 (D048 proposed): only an island answer with the flag defenses_v2 on has one
   swivel: SWIVEL_ART.levels, // D055: the swivel-gun nest
-  watchtower: ['island-watchtower', 'island-watchtower', 'island-watchtower', 'island-watchtower-l4', 'island-watchtower-l5'], house: ['island-house']});
+  watchtower: ['island-watchtower', 'island-watchtower', 'island-watchtower', 'island-watchtower-l4', 'island-watchtower-l5'], house: ['island-house', 'island-house-l2', 'island-house-l3']});
 export const PIP_ART = 'fx-level-pip';
 export const PIP_TIER_ART = 'fx-level-pip-gold';
 export const pipArt = level => (level >= 4 ? PIP_TIER_ART : PIP_ART);
@@ -47,7 +48,7 @@ export function buildingArt(kind, level = 1, spec = null) {
   if (!list) return null;
   const n = Number.isSafeInteger(level) && level > 0 ? level : 1;
   const role = activeRole({kind, level: n, spec});
-  if (role) return ROLE_ART[role];
+  if (role) return `${ROLE_ART[role]}${n >= 3 ? '-l3' : ''}`;
   return list[Math.min(list.length, n) - 1];
 }
 // The kinds that stand on a tower spot and that the wave's renderer draws during a battle (so the island hides
@@ -224,6 +225,8 @@ export function decorateIsland(place, ctx = {}) {
   // The reach of a house's role while its card is open (GAME-V3.md "Houses"): a soft disc with a bright rim on
   // the ground, in the role's colour. ctx.range() says which ({x, z, radius, role} or null), read every frame.
   const rangeRing = makeRangeRing(root);
+  const wallConnections = makeWallConnections(root);
+  let joinedWalls = new Set();
   const baseColliders = [...place.colliders];
   let state = {spots: [], visitor: false, battle: false, unlocks: null, crew: null, campaign: null, arsenal: false}, disposed = false;
   let preview = null;
@@ -246,11 +249,13 @@ export function decorateIsland(place, ctx = {}) {
     const built = answer?.built === true, kind = built ? (kindsOf(spot).includes(answer.kind) ? answer.kind : kindsOf(spot)[0]) : null;
     const level = Number.isSafeInteger(answer?.level) && answer.level > 0 ? answer.level : 1;
     const id = kind ? buildingArt(kind, level, answer?.spec) : null, pips = kind ? pipCount(kind, level) : 0;
-    const where = whereOf(spot), key = !id || hidden ? '' : `${id}:${pips}@${where.x},${where.z}`;
+    const joined = kind === 'wall' && joinedWalls.has(spot.id);
+    const where = whereOf(spot), key = !id || hidden ? '' : `${id}:${pips}:${joined}@${where.x},${where.z}`;
     if (shown.get(spot.id)?.key === key) return;
     clear(spot.id);
     if (!key) return;
     const mesh = put(id, where.x, where.z); mesh.name = `island-${kind}:${spot.id}`; mesh.userData.level = level;
+    if (joined) mesh.scale.x = .62; // Keep the original level art as posts; the join draws the span.
     mesh.userData.role = activeRole({kind, level, spec: answer?.spec}); mesh.userData.art = id;
     const meshes = [mesh], [, height, anchor] = artSizes[id], top = height * (1 - anchor) + .15;
     // One row (pipRow): 4 and 5 smaller and spaced wider than a disc, so the gold stars never overlap.
@@ -276,6 +281,10 @@ export function decorateIsland(place, ctx = {}) {
   function apply({spots = [], visitor = false, battle = false, unlocks = null, crew = null, campaign = null, arsenal = false} = {}) {
     if (disposed) return;
     state = {spots, visitor, battle, unlocks, crew, campaign, arsenal: arsenal === true};
+    joinedWalls = wallConnections.show(battle ? [] : spots.map(item => {
+      const spot = SPOTS.find(entry => entry.id === item.id);
+      return spot ? {...item, ...whereOf(spot), ...(preview?.spotId === item.id && !preview.ok ? {built: false} : {})} : item;
+    })).connected;
     const known = spots.length > 0;
     const shownArsenal = showArsenal(known && state.arsenal);
     if (shownArsenal) shownArsenal.visible = known && state.arsenal;
@@ -299,6 +308,7 @@ export function decorateIsland(place, ctx = {}) {
       for (const kind of kindsOf(spot)) {
         buildings.get(`${spot.id}:${kind}`).visible = !art && built && (answer.kind === kind || (kindsOf(spot).length === 1))
           && !(battle && BATTLE_KINDS.includes(kind));
+        if (kind === 'wall') buildings.get(`${spot.id}:${kind}`).scale.x = joinedWalls.has(spot.id) ? .62 : 1;
       }
       if (art) showSpot(spot, answer, hidden);
       marker.visible = !built && known && !battle && open; // a visitor builds too, with their own coins
@@ -318,7 +328,7 @@ export function decorateIsland(place, ctx = {}) {
   apply(state);
 
   // The real art (every level, the pips and the crew) replaces the drawn sprites once it has loaded.
-  const wanted = [...new Set([...SPOTS.flatMap(kindsOf).flatMap(kind => LEVEL_ART[kind] ?? []), ...Object.values(ROLE_ART), PIP_ART, PIP_TIER_ART, ...Object.values(crewArt)])]
+  const wanted = [...new Set([...SPOTS.flatMap(kindsOf).flatMap(kind => LEVEL_ART[kind] ?? []), ...Object.values(ROLE_ART).flatMap(id => [id, `${id}-l3`]), PIP_ART, PIP_TIER_ART, ...Object.values(crewArt)])]
     .filter(id => Object.hasOwn(artSizes, id));
   (ctx.loadArt ?? loadArt)(wanted).then(loaded => {
     if (disposed) { Object.values(loaded).forEach(material => { material.map?.dispose(); material.dispose(); }); return; }
@@ -357,6 +367,7 @@ export function decorateIsland(place, ctx = {}) {
       if (ctx.placing?.()) { ctx.onGround?.(point.x, -point.y / .72); return; }
       const picked = pickAt(point.x, -point.y / .72);
       if (!picked) return;
+      if (ctx.canPickRemote?.(picked)) { ctx.onPick?.(picked); return; }
       // Walk up first: a click on something out of reach only says so (ctx.player is the player's position).
       const position = ctx.player?.(), verdict = clickVerdict(position, place.zones, picked);
       // An installed position adapter must have a position before it can open a building.
@@ -401,9 +412,11 @@ export function decorateIsland(place, ctx = {}) {
       else bell.rotation.z = 0;
     },
     get root() { return root; },
+    get wallJoins() { return wallConnections.links; },
     dispose() {
       if (disposed) return; disposed = true; cleanups.splice(0).forEach(stop => stop());
       progress?.dispose();
+      wallConnections.dispose();
       for (const id of [...shown.keys()]) clear(id);
       for (const item of lockTextures.values()) item.texture.dispose(); // the padlocks a spot no longer shows
       if (art) Object.values(art).forEach(material => { material.map?.dispose(); material.dispose(); });

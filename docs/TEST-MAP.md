@@ -278,3 +278,59 @@ and [results, screenshots and manual checkpoints](evidence/T28/README.md).
 | The admin script [fresh_start.sql](../scripts/admin/fresh_start.sql) resets the island game, but it forgot the two old weapon columns, so players kept bought weapons after a fresh start. Now it puts every island back to the musket (`weapons_owned`, `weapon_equipped`) and counts those islands | The two fresh-start tests in [test_islands_and_waves_sql.py](../backend/server/tests/island_sql/test_islands_and_waves_sql.py); from `backend/`: `CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql` | One test island with pistols: the dry run only counts (`island weapons reset: 1`) and the pistols stay; the real run, twice, leaves only the musket, and the second run changes nothing | The real Supabase database (the tests use a throwaway test database), so not what the real players' data looks like; no test with many weapons at once |
 
 [Walkthrough part](WALKTHROUGH.md#74--fresh-start-resets-the-old-personal-weapons--nicolas-radomski).
+
+
+## COC-07 — Johannes Franz Lang — Visible house levels
+
+| What / why | Files and command | Covers | Does not establish |
+|---|---|---|---|
+| Distinct house silhouettes with the same role and placement contract | [Painter](../frontend/src/art/island.js), [mapping](../frontend/src/island/world.js), [new cases](../frontend/tests/island/house-level-art.test.js); `cd frontend && npm test -- --maxWorkers=1 tests/island/house-level-art.test.js tests/island/world-art.test.js tests/pirates/houses.test.js tests/cartoon-art.test.js` | Actual Chromium alpha masks, all valid neutral/role frame boxes and anchors, invalid-state fallback, required lazy frame loading, replaced geometry disposal, stable refresh; **4 files / 32 tests passed, 18.46s** | Whole-game layouts, new economy/recovery behavior, physical touchscreens, Safari; full frontend/build/budget/a11y/demo integration is coordinated separately |
+
+[Capture runner and fixture results](evidence/COC-07-house-levels/README.md); [explanation and limitations](../specs/COC-07-house-levels.md).
+
+## COC-13 — Johannes Franz Lang — between-wave wall joins
+
+| What / why | Where and command | Covers | Does not cover |
+|---|---|---|---|
+| Connect genuine full shared wall sides while arranging the base; retain actual level art and visible gaps | [wall-connections.test.js](../frontend/tests/island/wall-connections.test.js), existing [world-art.test.js](../frontend/tests/island/world-art.test.js); `cd frontend && npm test -- --maxWorkers=1 tests/island/wall-connections.test.js tests/island/world-art.test.js` | Line/L/T adjacency; gaps, partial/diagonal/overlapping contacts; unbuilt/broken/non-wall rows; nonmutation; mixed levels; cache invalidation and disposal. Actual result: 2 files / 17 tests passed | New placement policy, canonical HP persistence, combat connection art, server payments and production state |
+| Real application browser fixture at two sizes | [capture-wall-connections.js](../frontend/scripts/capture-wall-connections.js), [screenshots and reports](evidence/COC-13/README.md) | Normal builds and valid Moves form a T; before/after 1280×720 and 375×812; unchanged position/level data; normal bell hides base joins | Safari, physical devices, broad UI audit, full frontend/build/budget results before central integration |
+
+## COC-39: local defense-report slice
+
+| Coverage | Evidence / limits |
+|---|---|
+| Bounded event aggregation, identical hits, rebuilding, payout guards | `frontend/tests/pirates/defense-report.test.js`; real local simulation forwarding and actual gameplay menu wiring are exercised; no live API/payment proof |
+| Reachable menu, copied report, focus/escape, stale result, travel, mobile overflow | `frontend/tests/pirates/defense-report-dom.test.js` at 1280×720 and 375×812; controlled browser component data, not a production account |
+| Screenshot reproduction | `frontend/scripts/capture-defense-report.js`; four controlled component images and JSON in docs/evidence/COC-39, zero API writes |
+
+[Exact run results and remaining central checks](../specs/COC-39-defense-report.md). Full replay authority, production multi-client completeness and COC-40 tactical navigation are not covered by this bounded report slice.
+
+COC-39 ownership follow-up: `frontend/tests/pirates/defense-report-ownership.test.js` uses the actual running game with a local fake island and standard-mapped gamepad. Window-level keyboard state and analog input cannot move the captain while `waves.reportActive` owns both global overlay guards; closing restores motion. Isolated result:1 passed /14.34s. The report still does not pause canonical wave ticking.
+
+## COC-31 — Johannes: base overview
+
+| What / where | Evidence | Coverage and limits |
+|---|---|---|
+| Read-only model and actual menu/card integration; `src/island/upgrade-overview*.js` | `tests/island/upgrade-overview.test.js`, `upgrade-overview-dom.test.js`; [capture report](evidence/COC-31-base-overview/README.md) | Extra offered plots, duplicate/unknown entries, server prices, affordability, loading/locks/roles, filters, accepted refresh, focus, 375px overflow and zero overview POST writes. Local fake transport + Chromium; no live backend, Safari or physical phone proof. Focused four-file run: 40 tests passed; broader parent checks reported separately. |
+
+## COC-49 — Johannes Franz Lang — Village management
+
+| What I built / why | Where and command | Covers | Misses |
+|---|---|---|---|
+| Explicit own-island management lets players select distant structures while keeping captain controls still | `frontend/tests/island/village-mode.test.js`, `frontend/tests/island/village-game.test.js`; `cd frontend && npm test -- --maxWorkers=1 tests/island/village-mode.test.js tests/island/village-game.test.js` | Controller entry/context/disposal; real game picking and movement with existing fake API at 1280×720/375×812; Move Escape/text-focus and reservation exit | Live login/API/database authority, Ianno's future repair behavior, real phones/Safari, independent camera/catalogue, and runtime performance beyond the focused browser runner |
+
+Exact executed results and screenshots belong to [PR #192](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/192).
+A listed check is not a claim that every run passed; an initial desktop timeout is
+recorded in the PR and must be resolved or remain explicit. No assertions or
+shared runner timeouts were weakened.
+The reservation follow-up also holds the accepted-start preparation read and
+checks exit before the bell promise resolves; pending/refused start and join
+requests block re-entry without automatically resuming management after failure.
+Menu eligibility is queried without entering/rendering. Unavailable contexts do
+not offer a Manage action; after a reservation the full-game test checks both
+Manage and Exit Menu entries are absent. Existing islet-boundary tests preserve
+the outside-overlay/StopPlots assertions through the captain-blocking wrapper.
+
+## COC-02 — village overview camera (Johannes)
+
+`frontend/tests/player/village-camera.test.js`: eight tests cover real current-land and overlay-inset fit at both required viewport sizes, captain/zoom restoration, battle/tutorial precedence, resize/travel, motion preferences and invalid/paused updates. Run `cd frontend && npx vitest run tests/player/village-camera.test.js --maxWorkers=1`. Final focused result: 1 file / 8 tests passed, 516 ms. This does not prove production, Safari, expanded land or integrated UI; [evidence](evidence/COC-02/README.md) records later checks.
