@@ -18,6 +18,8 @@ describe('decorative cliffs and the unchanged walkable top', () => {
     expect(coast).toEqual(before);
   });
   it('bounds every decorative face within the existing backdrop without increasing its screen-X extent', () => {
+    expect(CLIFF_DEPTH).toBe(3.2); // Approved D063 facade envelope; not inferred from the painter.
+    expect(APPROACH_DEPTH).toBe(.35);
     const profile = cliffProfile(coast);
     for (const point of profile) {
       expect(Math.abs(point.x)).toBeLessThan(30);
@@ -36,8 +38,8 @@ describe('decorative cliffs and the unchanged walkable top', () => {
       const i = ((bearing + offset + 360) % 360) / 2;
       expect(profile[i].depth).toBeCloseTo(APPROACH_DEPTH, 12);
     }
-    expect(profile[30].depth).toBeCloseTo(CLIFF_DEPTH, 12);
-    expect(profile[60].depth).toBeCloseTo(CLIFF_DEPTH, 12);
+    expect(profile[30].depth).toBeCloseTo(3.2, 12);
+    expect(profile[60].depth).toBeCloseTo(3.2, 12);
     expect(profile[34].depth).toBeGreaterThan(APPROACH_DEPTH);
     expect(profile[34].depth).toBeLessThan(CLIFF_DEPTH);
   });
