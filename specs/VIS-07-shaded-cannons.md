@@ -18,3 +18,18 @@ Source assets are not runtime proof: capture the actual game at1280×720 and
 No dependency, service, live migration, flag activation, merge or deployment.
 Keep Draft for explain-back and different-human review. Commands and exact
 results follow as the source and integrated provider become available.
+
+## Source handover
+
+All20 existing names have original shaded artwork and explicit native source
+rectangles. The approved logical box is56×48/7, with no gameplay-footprint change.
+Per-level `fitBounds` keeps intact/firing/damaged/broken at one scale while clean
+broken crops exclude neighboring row pixels. VIS-32 owns the shared normalization.
+
+Source checks:29tests passed in528ms; a recording-canvas probe of the actual
+VIS-32 normalizer passed60 density/state cases. [Exact asset/probe evidence](../docs/evidence/VIS-07-cannons/README.md)
+distinguishes these checks from the still-required actual-game comparison.
+
+Explain-back: Why is the visual box separate from the2×2 footprint? Why does a
+broken pose need virtual fitting headroom? Why do source tests not prove that the
+actual renderer matches the approved mockup?
