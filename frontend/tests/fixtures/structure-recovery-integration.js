@@ -1,4 +1,17 @@
 import * as THREE from 'three';
+import '../../src/ui/base.css';
+import '../../src/ui/kit/kit.css';
+import '../../src/ui/shell.css';
+import '../../src/ui/styles.css';
+import '../../src/ui/travel.css';
+import '../../src/ui/readability.css';
+import '../../src/ui/kit/components.css';
+import '../../src/ui/devices.css';
+import '../../src/ui/open-panels.css';
+import '../../src/island/island.css';
+import '../../src/island/boat-card.css';
+import '../../src/island/structure-recovery.css';
+import '../../src/pirates/pirates.css';
 import {createIsland} from '../../src/island/index.js';
 import {spotById} from '../../src/island/spots.js';
 import {createFakeIslandTransport} from '../../src/pirates/fake-api.js';
@@ -12,14 +25,15 @@ const WAVE_ID = '62345678-1234-4234-8234-123456789abc';
 const instance = n => `32345678-1234-4234-8234-${String(n).padStart(12, '0')}`;
 const specs = [
   ['wall_1', 'wall', 750_000, 60, 10, 150],
-  ['cannon_1', 'cannon', 0, 80, 30, 600],
+  ['wall_2', 'wall', 0, 60, 10, 600],
+  ['cannon_1', 'cannon', 300_000, 80, 30, 450],
   ['cannon_2', 'mortar', 400_000, 70, 60, 360],
   ['cannon_3', 'harpoon', 1, 60, 40, 600],
   ['cannon_4', 'swivel', FULL, 72, 50, 0],
   ['cannon_5', 'culverin', 300_000, 56, 80, 420],
   ['cannon_8', 'cannon', 500_000, 80, 30, 300],
   ['cannon_9', 'cannon', 900_000, 80, 30, 60],
-  ['cannon_10', 'cannon', 0, 80, 30, 600],
+  ['cannon_10', 'cannon', 250_000, 80, 30, 450],
   ['cannon_11', 'cannon', 250_000, 80, 30, 450],
 ];
 let rows = specs.map(([spot, kind, hpUnits, maxHP, fixedPrice, estimatedFreeSeconds], index) => ({
@@ -165,7 +179,7 @@ const world = {current: null, isBlocked: () => false};
 let waveWiring = null, place = null, disposed = false;
 async function boot() {
   await island.load();
-  const builds = [['wall_1', 'wall'], ['cannon_1', 'cannon'], ['cannon_2', 'mortar'], ['cannon_3', 'harpoon'],
+  const builds = [['wall_1', 'wall'], ['wall_2', 'wall'], ['cannon_1', 'cannon'], ['cannon_2', 'mortar'], ['cannon_3', 'harpoon'],
     ['cannon_4', 'swivel'], ['cannon_5', 'culverin']];
   for (const [spot, kind] of builds) {
     const answer = await island.api.build({spot, kind});
@@ -213,6 +227,35 @@ window.recoveryFixture = {
   async readCanonical() { return island.api.structureRecovery(); },
   getState() { return {phase: currentPhase(), remainingPaidUses, rows: structuredClone(rows), waveStartedAt,
     recoveryVersion: island.recoveryVersion, recoveryCombatState: waveWiring?.island?.recoveryCombatState ?? null, lastCheckpointResult}; },
+  inspectRecoveryVisual(spot) {
+    const found = {indicator: null, building: null};
+    const kind = rows.find(row => row.spot === spot)?.kind;
+    place?.group?.traverse(object => {
+      if (object.name === `structure-recovery:${spot}`) found.indicator = {visible: object.visible, width: object.geometry?.parameters?.width ?? null};
+      if (object.name === `island-${kind}:${spot}`) {
+        found.building = {visible: object.visible, look: object.userData?.recoveryLook, art: object.userData?.art};
+      }
+    });
+    return found;
+  },
+  focusScene(spotId) {
+    let building = null;
+    const kind = rows.find(row => row.spot === spotId)?.kind;
+    place?.group?.traverse(object => {
+      if (object.name === `island-${kind}:${spotId}` && object.userData?.recoveryLook === 'broken') building = object;
+    });
+    if (!building) return false;
+    const point = building.getWorldPosition(new THREE.Vector3()), halfHeight = 11, aspect = innerWidth / innerHeight;
+    camera.left = -halfHeight * aspect; camera.right = halfHeight * aspect;
+    camera.top = halfHeight; camera.bottom = -halfHeight;
+    camera.position.set(point.x, point.y + 2, 50); camera.lookAt(point.x, point.y + 2, 0); camera.updateProjectionMatrix();
+    return true;
+  },
+  resetSceneCamera() {
+    const aspect = innerWidth / innerHeight;
+    camera.left = -22 * aspect; camera.right = 22 * aspect; camera.top = 22; camera.bottom = -22;
+    camera.position.set(0, 0, 50); camera.lookAt(0, 0, 0); camera.updateProjectionMatrix();
+  },
   dispose() { disposed = true; waveWiring?.dispose(); island.dispose(); place?.dispose?.(); renderer.dispose(); },
 };
 window.recoveryFixture.boot().catch(error => { window.recoveryFixture.error = error.message; console.error(error); });

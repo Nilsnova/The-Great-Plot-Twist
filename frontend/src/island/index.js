@@ -98,6 +98,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   // D039: the walls of the island on screen (spot -> {health, recoversAt, repairCost}), read when a wall card opens.
   let walls = new Map(), wallsFor = null; // wallsFor: the island code they belong to
   let recoveryState = null, recoveryIslandCode = null, recoveryStatus = 'disabled', recoveryError = null;
+  let recoveryErrorSource = null, recoveryErrorContext = null;
   let recoveryCheckpointHandler = null;
   let recoveryCombat = null, recoveryPendingSpot = null, recoveryReadId = 0, recoveryPollTimer = null, recoveryPollCode = null;
   let recoveryReadPromise = null, recoveryReadCode = null;
@@ -107,6 +108,22 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   // The games (GAME-V3.md §2): the room state from the wave wiring, the codes joined this page, the lobby.
   let game = null, gameCode = null, lobbyAnswer = null, lobbyProblem = '', lobbyBusy = false, lobbyRead = 0, stopGame = () => {};
   const joined = new Set();
+  function clearRecoveryError() { recoveryError = null; recoveryErrorSource = null; recoveryErrorContext = null; }
+  function setRecoveryReadError(code) {
+    if (recoveryErrorSource === 'action') return;
+    recoveryError = code; recoveryErrorSource = 'read'; recoveryErrorContext = null;
+  }
+  function setRecoveryActionError(code, spotId, quote) {
+    recoveryError = code; recoveryErrorSource = 'action';
+    recoveryErrorContext = {spot: spotId, instanceId: quote?.instanceId, islandEpoch: quote?.expectedEpoch,
+      waveId: quote?.expectedWaveId ?? null, repairWindow: quote?.expectedWindow};
+  }
+  function sameRecoveryErrorContext(state) {
+    const context = recoveryErrorContext, row = state?.structures?.find(item => item.spot === context?.spot);
+    return !!context && state?.islandEpoch === context.islandEpoch && state?.waveId === context.waveId
+      && state?.repairWindow === context.repairWindow
+      && row?.instanceId === context.instanceId;
+  }
   const tellCaptain = island => { const level = island?.captain?.level; if (!disposed && Number.isSafeInteger(level)) { try { onCaptain(level); } catch { /* The HUD cannot stop the island. */ } } };
   // Once-per-device lines (the first unlock explanation, the musket hint).
   const news = (() => { try { return new Set(JSON.parse(storage?.getItem(NEWS_KEY) ?? '[]')); } catch { return new Set(); } })();
@@ -140,6 +157,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     const before = own;
     if (before?.code !== next?.code || before?.recoveryVersion !== next?.recoveryVersion) {
       recoveryReadId++; recoveryState = null; recoveryIslandCode = next?.code ?? null; recoveryCombat = null; recoveryStatus = next?.code ? 'loading' : 'disabled';
+      clearRecoveryError();
     }
     own = next; tellCoins(next?.coins); tellCaptain(next);
     if (!visiting) noteCampaign(next);
@@ -535,7 +553,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     if (spotById(spotId)?.slot === 'wall') void readWalls();
     if (recoveryControlsOn() && !isPointSpot(spotId) && target()?.spots.find(item => item.id === spotId)?.built) {
       recoveryStatus = recoveryState && recoveryIslandCode === target()?.code ? 'ready' : 'loading';
-      recoveryError = null; refreshCard(); void readStructureRecovery(spotId);
+      clearRecoveryError(); refreshCard(); void readStructureRecovery(spotId);
     }
   }
   function stopRecoveryPoll() {
@@ -567,7 +585,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       if (disposed || askedCode !== target()?.code) return;
     }
     if (recoveryIslandCode !== askedCode) {
-      recoveryState = null; recoveryCombat = null; recoveryIslandCode = askedCode; recoveryStatus = 'loading'; recoveryError = null;
+      recoveryState = null; recoveryCombat = null; recoveryIslandCode = askedCode; recoveryStatus = 'loading'; clearRecoveryError();
     } else if (recoveryStatus !== 'ready') {
       recoveryStatus = 'loading';
     }
@@ -577,15 +595,16 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       if (disposed || askedId !== recoveryReadId || askedCode !== target()?.code) return;
       if (!answer.ok) {
         if (answer.code === 'feature_off') {
-          recoveryState = null; recoveryIslandCode = askedCode; recoveryStatus = 'disabled'; recoveryError = null;
+          recoveryState = null; recoveryIslandCode = askedCode; recoveryStatus = 'disabled'; clearRecoveryError();
         } else {
-          recoveryIslandCode = askedCode; recoveryStatus = 'error'; recoveryError = answer.code;
+          recoveryIslandCode = askedCode; recoveryStatus = 'error'; setRecoveryReadError(answer.code);
         }
       } else {
         const prior = recoveryState && recoveryIslandCode === askedCode ? recoveryState : null;
         if (prior && prior.islandEpoch === answer.data.islandEpoch
             && !isCurrentStructureRecoveryResponse({revision: prior.revision}, answer.data)) return;
-        recoveryState = answer.data; recoveryIslandCode = askedCode; recoveryStatus = 'ready'; recoveryError = null;
+        recoveryState = answer.data; recoveryIslandCode = askedCode; recoveryStatus = 'ready';
+        if (recoveryErrorSource === 'read' || recoveryErrorSource === 'action' && !sameRecoveryErrorContext(answer.data)) clearRecoveryError();
       }
       if (ui.open === 'build' && openSpot === spotId) refreshCard();
       else if (['bell', 'captain', 'tech'].includes(ui.open)) refreshCard();
@@ -602,7 +621,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     const askedCode = target()?.code;
     if (!askedCode || !recoveryState || recoveryIslandCode !== askedCode) return;
     const askedEpoch = quote.expectedEpoch, askedInstance = quote.instanceId;
-    busySpot = spotId; busyKind = 'structure-repair'; recoveryPendingSpot = spotId; recoveryError = null; refreshCard();
+    busySpot = spotId; busyKind = 'structure-repair'; recoveryPendingSpot = spotId; clearRecoveryError(); refreshCard();
     if (quote.expectedWindow === 'reserved_wave') {
       let checkpoint;
       try { checkpoint = await recoveryCheckpointHandler?.(); } catch { checkpoint = null; }
@@ -611,7 +630,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
         busySpot = null; busyKind = null; recoveryPendingSpot = null;
         const failureCode = checkpoint?.code ?? 'health_sync_required';
         await readStructureRecovery(spotId);
-        recoveryError = failureCode;
+        setRecoveryActionError(failureCode, spotId, quote);
         refreshCard();
         return;
       }
@@ -620,7 +639,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       if (askedCode !== target()?.code || currentRow?.instanceId !== askedInstance
           || recoveryState?.waveId !== quote.expectedWaveId) {
         busySpot = null; busyKind = null; recoveryPendingSpot = null;
-        recoveryError = 'stale_recovery_quote';
+        setRecoveryActionError('stale_recovery_quote', spotId, quote);
         refreshCard();
         return;
       }
@@ -632,17 +651,17 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     const currentInstance = recoveryState?.islandEpoch === askedEpoch
       ? recoveryState.structures.find(item => item.spot === spotId)?.instanceId : null;
     if (currentInstance !== askedInstance) {
-      recoveryError = null; recoveryStatus = 'loading'; refreshCard();
+      clearRecoveryError(); recoveryStatus = 'loading'; refreshCard();
       await readStructureRecovery(spotId);
       return;
     }
     if (answer.ok) {
       tookCoins(answer.data.coins);
-      recoveryError = null;
+      clearRecoveryError();
     } else {
       await reloadOwn();
       await readStructureRecovery(spotId);
-      recoveryError = answer.code;
+      setRecoveryActionError(answer.code, spotId, quote);
       refreshCard();
       return;
     }
@@ -665,6 +684,12 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     const structures = state.structures.filter(item => item && typeof item.spot === 'string'
       && typeof item.instanceId === 'string' && Number.isSafeInteger(item.hpUnits) && item.hpUnits >= 0 && item.hpUnits <= 1_000_000
       && Number.isFinite(item.maxHP) && item.maxHP > 0 && Number.isSafeInteger(item.repairSeq) && item.repairSeq >= 0);
+    const errorContext = recoveryErrorContext;
+    if (recoveryErrorSource === 'action' && errorContext
+        && (errorContext.islandEpoch !== state.islandEpoch || errorContext.waveId !== state.waveId
+          || errorContext.repairWindow !== 'reserved_wave' || structures.find(item => item.spot === errorContext.spot)?.instanceId !== errorContext.instanceId)) {
+      clearRecoveryError(); refreshCardIfBuild();
+    }
     const next = {waveId: state.waveId, islandEpoch: state.islandEpoch, structures};
     if (JSON.stringify(recoveryCombat) === JSON.stringify(next)) return;
     recoveryCombat = next;

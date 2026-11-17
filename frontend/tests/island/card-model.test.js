@@ -20,7 +20,7 @@ describe('build card (TOWER-DEFENSE.md §2, §9)', () => {
     const wallCard = (state, hpUnits) => buildCardModel({spotId: 'wall_1', slot: 'wall', spot: wall(true), coins: 1000,
       unlocks: wave3, recoveryState: recovery(state, state === 'between_waves' ? 'between_waves' : 'reserved_wave', hpUnits), recoveryStatus: 'ready'});
     const damagedBetween = wallCard('between_waves', 750_000);
-    expect(damagedBetween).toMatchObject({button: 'Upgrade', disabled: true, reason: 'Fully repair before upgrading.'});
+    expect(damagedBetween).toMatchObject({button: 'Upgrade', disabled: true, reason: 'Repair to full before an upgrade.'});
     expect(damagedBetween.stats).toMatch(/^Base strength /);
     expect(damagedBetween.upgrade.stats).toMatch(/^Base strength /);
     expect(wallCard('between_waves', 1_000_000)).toMatchObject({button: 'Upgrade', disabled: false, reason: ''});
