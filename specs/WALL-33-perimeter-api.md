@@ -16,3 +16,9 @@ Owned: new wall_build.py/routes/island_walls.py, narrow router/flag hooks and sh
 ## Status
 
 Claimed; implementation/checks pending. Source/test change stays bounded; the full task remains open until both API slices and their integration evidence are complete.
+
+## Trusted reset scope prerequisite
+
+The atomic layout read now carries `islandEpoch` from the same database snapshot. The adapter requires a canonical UUID for admitted rule 1 (legacy rule 0 may have no epoch yet). Quotes/build intents retain that scope so a quote cannot silently purchase on a reset island whose layout/role/wave happen to match. Original committed receipt lookup still precedes fresh epoch eligibility.
+
+Prerequisite focused check: `uv run --frozen --no-env-file pytest -q server/tests/test_wall_layout_snapshot.py server/tests/test_owner_wall_policy_routes.py server/tests/test_island_move_routes.py` -> **56 passed in 2.93s**; Ruff passed on the three changed files. This is transport evidence; real reset fencing remains separately verified in SQL.
