@@ -1,5 +1,5 @@
 // Actual camera regression and opt-in material checkpoint: paid layout and real entry/Fit/Tab/drag/pick.
-// node scripts/capture-village-composition.mjs <runtime-frontend> <output> <before|after|materials|reference>
+// node scripts/capture-village-composition.mjs <runtime-frontend> <output> <before|after|materials|reference> [--wave]
 import assert from 'node:assert/strict';
 import {mkdir,mkdtemp,readFile,writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
@@ -8,8 +8,10 @@ import {execFileSync} from 'node:child_process';
 import {createServer} from 'vite';
 import {chromium} from 'playwright-core';
 import {stubOfflineApi} from './api-browser-fixture.js';
+import {capturePerimeterWave} from './perimeter-game-wave.mjs';
 import {boot,builder,capture,groundPoint,hitButtons,manage,openBuilder,settleCards,village,villageFrameEvidence,wallet,wallRenderEvidence,workspaceBounds} from './perimeter-game-ui.mjs';
 const root=resolve(process.argv[2]),out=resolve(process.argv[3]),mode=process.argv[4];
+const withWave=process.argv.includes('--wave');
 assert.ok(['before','after','materials','reference'].includes(mode));await mkdir(out,{recursive:true});
 const head=()=>execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim(),source=head();
 const sourceTree=execFileSync('git',['rev-parse','HEAD:frontend/src'],{cwd:root,encoding:'utf8'}).trim();
@@ -127,11 +129,13 @@ try{
       details={selected,movement,ghost:ghostFrame,paidBeforeUpgrade:paid,paidAfterUpgrade:upgraded,extraPaidAction:'actual selected wall level2→3,40coins'};
     }
     assert.deepEqual(await page.evaluate(()=>window.__island.player.position.toArray()),entry.captain,'management preserves captain');
+    let wave=null;
+    if(withWave){await settleCards(page);wave=await capturePerimeterWave(page,out,width,height);}
     assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
-    checks.push({width,height,paid,entry,expectedWork,frame,buttons,dragged,peek,fit,workspace,focusApiDiagnostic:focus,pick,bindings,pngMeshes,rasterParity,details,pageErrors:errors,externalRequests:external,consoleErrors});
+    checks.push({width,height,paid,entry,expectedWork,frame,buttons,dragged,peek,fit,workspace,focusApiDiagnostic:focus,pick,bindings,pngMeshes,rasterParity,details,wave,pageErrors:errors,externalRequests:external,consoleErrors});
     await context.close();
   }
   assert.equal(head(),source,'runtime remained frozen');
   await writeFile(join(out,'report.json'),JSON.stringify({mode,source,sourceTree,scope:mode==='reference'?'actual registered paid-fixture PNGs and D064 camera/selection/Move/ghost checkpoint; compiled/raw binding receipts determine source files, not family counts; final visual/device acceptance remains separate':mode==='materials'?'historical cabin/houses/nature/watchtower material checkpoint; other active families are outside this scope':'actual camera regression, not new-look acceptance; explicit focus is a public camera API diagnostic',fixture:'declared8000coins/best40/seven paid buildings/102paid ring/one20coin upgrade leaves6660; reference selected wall level3 upgrade pays40more, leaves6620; real Move/ghost Cancel preserves this save',checks},null,2)+'\n');
-  console.log(`PASS: ${mode} actual-game camera/material checkpoint at1280x720/375x812;102walls/6660coins unchanged; entry/Fit/Tab/drag/ground pick;0page errors/external`);
+  console.log(`PASS: ${mode} actual-game checkpoint at1280x720/375x812; initial102walls/6660coins verified through camera; selected upgrades/previews and optional wave are separately recorded;0page errors/external`);
 }finally{await browser?.close();await server.close();}
