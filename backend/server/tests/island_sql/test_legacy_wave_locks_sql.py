@@ -43,20 +43,25 @@ def test_legacy_start_refuses_new_policy_and_wall_calls_cannot_write_it(database
     open_island(database, OWNER, "K7Q2M")
     build(database, OWNER, "wall_1", "wall", "island:click-0001")
     legacy_wave = start(database, OWNER, "bell-v0-0001", owner=OWNER)
-    mark_recovery_v1(database)
-
     assert start(database, OWNER, "bell-v0-0001", owner=OWNER) == {
         **legacy_wave,
         "repeat": True,
     }
-    assert join(database, FRIEND, legacy_wave["waveId"])["status"] == "joined"
+    mark_recovery_v1(database)
+    database.execute(
+        "insert into public.recovery_wave_states "
+        "(wave_id, island_owner, reset_epoch, recovery_version, wave_protocol, initial_snapshot) "
+        "select %s, %s, reset_epoch, 1, 2, '{}'::jsonb "
+        "from public.island_recovery_state where island_owner = %s",
+        (legacy_wave["waveId"], OWNER, OWNER),
+    )
 
     as_server(database)
     started = call(
         database,
         "select public.wave_start(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
         OWNER,
-        "bell-v1-0001",
+        "bell-v0-0001",
         "island",
         OWNER,
         123,

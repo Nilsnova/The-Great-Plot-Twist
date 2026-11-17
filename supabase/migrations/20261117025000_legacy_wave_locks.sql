@@ -67,19 +67,23 @@ begin
      where place = 'pirate_point' and flag_counted;
   end if;
 
-  -- Step 3: the same click again is the same wave.
+  -- Protocol 1 cannot answer any bell on a v1-policy island, including a UID
+  -- that already names a protocol-2 reservation.
   v_now := clock_timestamp();
+  if p_place = 'island' and v_recovery_version = 1 then
+    return jsonb_build_object(
+      'status', 'refused', 'reason', 'client_update_required',
+      'recoveryVersion', 1, 'waveProtocol', 2
+    );
+  end if;
+
+  -- Step 3: the same click again is the same legacy wave.
   select * into v_run
     from public.wave_runs
    where started_by = p_player_id and action_uid = p_action_uid;
 
   if found then
     v_repeat := true;
-  elsif p_place = 'island' and v_recovery_version = 1 then
-    return jsonb_build_object(
-      'status', 'refused', 'reason', 'client_update_required',
-      'recoveryVersion', 1, 'waveProtocol', 2
-    );
   else
     -- Step 4: a wave nobody finished is over after its maximum length.
     update public.wave_runs

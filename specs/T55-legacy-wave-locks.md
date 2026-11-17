@@ -37,7 +37,7 @@ Legacy start/join/finish parity, both live finish overloads, duplicate finish, u
 
 ## Contracts touched
 
-Final legacy RPC signatures and lock order from T54. Legacy `wave_start`, `wave_join`, both `wave_finish` overloads, and `island_wall_restore` return `{status: refused, reason: client_update_required, recoveryVersion: 1, waveProtocol: 2}` when the legacy call would enter or mutate a protocol-2 recovery wave/policy. The API mapper translates that reason to HTTP 409. `island_walls_record` returns its existing `{status: skipped}` shape when recovery-v1 owns island health. Existing legacy successful responses stay unchanged.
+Final legacy RPC signatures and lock order from T54. Legacy `wave_start` refuses a recovery-v1 island with `{status: refused, reason: client_update_required, recoveryVersion: 1, waveProtocol: 2}` before action-UID lookup, even when the UID names an existing protocol-2 reservation; normal v0 repeats still return the same wave. Legacy `wave_join`, both `wave_finish` overloads, and `island_wall_restore` return that refusal when the legacy call would enter or mutate a protocol-2 recovery wave/policy. The API mapper translates that reason to HTTP 409. `island_walls_record` returns its existing `{status: skipped}` shape when recovery-v1 owns island health. Existing legacy successful responses stay unchanged.
 
 ## Owner and reviewer
 
