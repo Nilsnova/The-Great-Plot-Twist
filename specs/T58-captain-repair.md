@@ -4,8 +4,8 @@
 >
 > **Who uses it:** Ianno, the T58 agent and the recovery-state/simulation implementers.
 
-- **Status:** policy models, persisted-version UI wiring, versioned help copy and focused integration evidence are implemented on this draft branch. T55/T57/T59/T60 combined review and release checks remain pending; no activation or live behavior is claimed.
-- **Branch:** `refactor/t58-captain-repair`
+- **Status:** the original policy implementation merged through PR #203. This follow-up corrects the version-aware Workshop role wording and adds desktop/phone fixture evidence; human review and separate T60 integration/release gates remain. No activation or live behavior is claimed.
+- **Branch:** `test/t58-captain-recovery-followup`
 - **Issue:** [#124](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/124)
 
 ## Why
