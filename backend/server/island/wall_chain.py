@@ -82,7 +82,9 @@ def quote_chain(
         raise ApiError(409, "walls_not_ready", "Open perimeter wall building first.")
     cells = chain_cells(cells)
     catalogue = with_wall_capacity(catalogue, snapshot.capacity)
-    geometry = layout.island_layout(catalogue.more_tower_spots)
+    geometry = layout.island_layout(
+        more=True
+    )  # Policy1 reserves all D060 sites, even paused offers.
     positions = layout.positions_of(
         geometry, positions_from(snapshot.rows), wall_rule_version=1, wall_capacity=128
     )
