@@ -1,6 +1,6 @@
 import {expect, it} from 'vitest';
 import {collectRasterFrames} from '../../src/art/village-raster.js';
-import {BAKE_DENSITY, GUTTER, MAX_HEIGHT, MAX_WIDTH, planFamily, pixelDifference, rawFamilyNames} from '../../scripts/village-bake-plan.js';
+import {BAKE_DENSITY, GUTTER, MAX_HEIGHT, MAX_WIDTH, planFamily, pixelDifference, rawFamilyNames, validateBakedPng} from '../../scripts/village-bake-plan.js';
 const frame = (width = 96, height = 96) => ({sheet: {file: 'village/source.png', width: 1254, height: 1254}, rect: [0, 0, 1254, 1254], logical: [width, height, 12], sourceFoot: [627, 1124], fitBounds: [627, 1124, 627, 130]});
 it('requires explicit raw names, rejects recursive/unsafe/duplicate inputs, and accepts a future raw core', () => {
   expect(rawFamilyNames('buildings,core')).toEqual(['buildings', 'core']);
@@ -29,4 +29,10 @@ it('reports lower-density differences, preserving alpha and ignoring invisible R
   expect(pixelDifference([255, 0, 0, 0], [0, 255, 0, 0])).toMatchObject({differingPixels: 0, maxVisibleDelta: 0});
   expect(pixelDifference([20, 30, 40, 255], [24, 30, 40, 254])).toMatchObject({differingPixels: 1, maxVisibleDelta: 4, maxAlphaDelta: 1});
   expect(() => pixelDifference([0], [0])).toThrow('dimensions');
+});
+it('rejects encoded outputs the existing decoder cannot load, including oversized and wrong-dimension PNGs', () => {
+  const bytes = new Uint8Array(24), header = new DataView(bytes.buffer), sheet = {width: 384, height: 384};
+  header.setUint32(0, 0x89504e47); header.setUint32(4, 0x0d0a1a0a); header.setUint32(16, 384); header.setUint32(20, 384);
+  expect(() => validateBakedPng(bytes, sheet)).not.toThrow(); expect(() => validateBakedPng(bytes, {...sheet, width: 385})).toThrow('dimensions');
+  expect(() => validateBakedPng(new Uint8Array(8 * 2 ** 20 + 1), sheet)).toThrow('encoded'); expect(() => validateBakedPng(new Uint8Array(2), sheet)).toThrow('encoded');
 });
