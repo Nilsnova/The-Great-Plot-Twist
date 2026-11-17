@@ -179,5 +179,29 @@
     "not_reopened": true
   },
   "runtime_features_implemented_by_this_planning_request": 0,
-  "merges_performed": 0
+  "merges_performed": 0,
+  "final_publication": {
+    "result": "PASS",
+    "finished_at_utc": "2026-11-17T11:11:56.681139+00:00",
+    "records_read_back": 108,
+    "leaf_tasks": 56,
+    "base_tasks": 50,
+    "native_visual_children_including_wall_epic": 33,
+    "native_wall_children": 24,
+    "state_assignments_labels_preserved": true,
+    "reference_commit": "a41db8140bcbef4c795b399bbecbc0e8ceeed945",
+    "draft_pr": 239,
+    "old_pr_204": "closed_unmerged",
+    "no_merges_performed": true,
+    "planning_reference_links_updated": 66
+  },
+  "content_checks": {
+    "result": "PASS",
+    "local_links_checked": 67,
+    "json_and_task_metrics": "PASS",
+    "neutral_visible_naming": "PASS",
+    "gfm_tables": "PASS",
+    "png_dimensions_and_target_byte_identity": "PASS",
+    "git_diff_check": "PASS"
+  }
 }

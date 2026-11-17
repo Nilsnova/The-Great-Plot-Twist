@@ -60,3 +60,5 @@ This branch contains planning documentation, a newly generated target concept an
 All GitHub issue/PR text and shared documentation for this work must be written in English, as requested by Johannes. The supplied reference image remains the original visual source.
 
 The complete execution plan is [ROADMAP.md](ROADMAP.md), including [WALL-ROADMAP.md](WALL-ROADMAP.md) and the [failure register](RISK-REGISTER.md). The functional wall gate and actual visual gate are separate.
+
+[Exact executed checks and remaining evidence](CHECKS.md).
