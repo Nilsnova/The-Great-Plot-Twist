@@ -278,3 +278,12 @@ and [results, screenshots and manual checkpoints](evidence/T28/README.md).
 | The admin script [fresh_start.sql](../scripts/admin/fresh_start.sql) resets the island game, but it forgot the two old weapon columns, so players kept bought weapons after a fresh start. Now it puts every island back to the musket (`weapons_owned`, `weapon_equipped`) and counts those islands | The two fresh-start tests in [test_islands_and_waves_sql.py](../backend/server/tests/island_sql/test_islands_and_waves_sql.py); from `backend/`: `CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql` | One test island with pistols: the dry run only counts (`island weapons reset: 1`) and the pistols stay; the real run, twice, leaves only the musket, and the second run changes nothing | The real Supabase database (the tests use a throwaway test database), so not what the real players' data looks like; no test with many weapons at once |
 
 [Walkthrough part](WALKTHROUGH.md#74--fresh-start-resets-the-old-personal-weapons--nicolas-radomski).
+
+
+## COC-07 — Johannes Franz Lang — Visible house levels
+
+| What / why | Files and command | Covers | Does not establish |
+|---|---|---|---|
+| Distinct house silhouettes with the same role and placement contract | [Painter](../frontend/src/art/island.js), [mapping](../frontend/src/island/world.js), [new cases](../frontend/tests/island/house-level-art.test.js); `cd frontend && npm test -- --maxWorkers=1 tests/island/house-level-art.test.js tests/island/world-art.test.js tests/pirates/houses.test.js tests/cartoon-art.test.js` | Actual Chromium alpha masks, all valid neutral/role frame boxes and anchors, invalid-state fallback, required lazy frame loading, replaced geometry disposal, stable refresh; **4 files / 32 tests passed, 18.46s** | Whole-game layouts, new economy/recovery behavior, physical touchscreens, Safari; full frontend/build/budget/a11y/demo integration is coordinated separately |
+
+[Capture runner and fixture results](evidence/COC-07-house-levels/README.md); [explanation and limitations](../specs/COC-07-house-levels.md).

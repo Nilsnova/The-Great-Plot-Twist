@@ -28,14 +28,14 @@ export const ART_CANDIDATES = Object.freeze({
 });
 export const catalogArt = (kind, sizes = pixelSizes) => (ART_CANDIDATES[kind] ?? []).find(id => Object.hasOwn(sizes, id)) ?? null;
 // Outside a wave a built spot shows its real kind and level: the art lane's level art (pirateLevels) for
-// walls, cannons and mortars, the watchtower and the house (one drawing each up to level 3; their pips tell
-// the level). Levels 4 and 5 (GAME-V3.md §4.1) have their own drawings, gold trim and the island's banner,
+// walls, cannons, mortars and houses; house levels retain their existing ground box and role signs.
+// Levels 4 and 5 (GAME-V3.md §4.1) have their own drawings, gold trim and the island's banner,
 // and gold stars on a teal disc as pips (PIP_TIER_ART).
 const tiered = kind => [...pirateLevels[kind], ...TIER_ART[kind]];
 export const LEVEL_ART = Object.freeze({wall: tiered('wall'), cannon: tiered('cannon'), mortar: tiered('mortar'), harpoon: HARPOON_ART.levels,
   culverin: CULVERIN_ART.levels, // T43 (D048 proposed): only an island answer with the flag defenses_v2 on has one
   swivel: SWIVEL_ART.levels, // D055: the swivel-gun nest
-  watchtower: ['island-watchtower', 'island-watchtower', 'island-watchtower', 'island-watchtower-l4', 'island-watchtower-l5'], house: ['island-house']});
+  watchtower: ['island-watchtower', 'island-watchtower', 'island-watchtower', 'island-watchtower-l4', 'island-watchtower-l5'], house: ['island-house', 'island-house-l2', 'island-house-l3']});
 export const PIP_ART = 'fx-level-pip';
 export const PIP_TIER_ART = 'fx-level-pip-gold';
 export const pipArt = level => (level >= 4 ? PIP_TIER_ART : PIP_ART);
@@ -47,7 +47,7 @@ export function buildingArt(kind, level = 1, spec = null) {
   if (!list) return null;
   const n = Number.isSafeInteger(level) && level > 0 ? level : 1;
   const role = activeRole({kind, level: n, spec});
-  if (role) return ROLE_ART[role];
+  if (role) return `${ROLE_ART[role]}${n >= 3 ? '-l3' : ''}`;
   return list[Math.min(list.length, n) - 1];
 }
 // The kinds that stand on a tower spot and that the wave's renderer draws during a battle (so the island hides
@@ -318,7 +318,7 @@ export function decorateIsland(place, ctx = {}) {
   apply(state);
 
   // The real art (every level, the pips and the crew) replaces the drawn sprites once it has loaded.
-  const wanted = [...new Set([...SPOTS.flatMap(kindsOf).flatMap(kind => LEVEL_ART[kind] ?? []), ...Object.values(ROLE_ART), PIP_ART, PIP_TIER_ART, ...Object.values(crewArt)])]
+  const wanted = [...new Set([...SPOTS.flatMap(kindsOf).flatMap(kind => LEVEL_ART[kind] ?? []), ...Object.values(ROLE_ART).flatMap(id => [id, `${id}-l3`]), PIP_ART, PIP_TIER_ART, ...Object.values(crewArt)])]
     .filter(id => Object.hasOwn(artSizes, id));
   (ctx.loadArt ?? loadArt)(wanted).then(loaded => {
     if (disposed) { Object.values(loaded).forEach(material => { material.map?.dispose(); material.dispose(); }); return; }

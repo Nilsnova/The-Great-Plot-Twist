@@ -345,15 +345,23 @@ function gear(c, x, y, r) {
   part(c, poly(teeth, .5), '#b8bec8', {depth: 1, width: 1, gloss: ellipse(x - r * .35, y - r * .4, r * .3, r * .18), light: '#e6eaf0'});
   part(c, ellipse(x, y, r * .34), '#5a6270', {width: .8, shade: false});
 }
-function house(role = null) {
+function house(role = null, level = 1) {
   const look = HOUSE_LOOKS[role] ?? HOUSE_LOOKS.plain;
   return (c, {w, h}) => {
     const g = h - 8, cx = w / 2; shadow(c, cx, g, role ? 31 : 27, 5);
+    const rise = level >= 3 ? 6 : 0;
+    // Level 2 gains a side room; level 3 grows upward. The frame, ground anchor and
+    // gameplay footprint stay the same, and the existing role signs remain in front.
+    if (level >= 2) {
+      part(c, rect(cx + 15, g - 21, 14, 21, 1.5), look.wall, {depth: 2, width: 1.1});
+      part(c, poly([[cx + 13, g - 20], [cx + 17, g - 30], [cx + 30, g - 22]], .8), look.roof, {depth: 2, width: 1.1});
+      part(c, rect(cx + 23, g - 14, 3.5, 6, .6), look.window, {width: .8});
+    }
     if (role === 'workshop') { // a saw leaning on the left wall
       part(c, poly([[cx - 27, g], [cx - 23, g - 15], [cx - 20, g - 14], [cx - 23, g]], .5), '#cfd5dc', {depth: .6, width: .9});
       part(c, rect(cx - 25, g - 19, 5, 5, 1.2), WOOD_DARK, {width: .9});
     }
-    part(c, rect(cx - 22, g - 26, 44, 26, 2), look.wall, {depth: 3, width: 1.3, gloss: rect(cx - 19, g - 24, 3, 20, 1), light: look.light});
+    part(c, rect(cx - 22, g - 26 - rise, 44, 26 + rise, 2), look.wall, {depth: 3, width: 1.3, gloss: rect(cx - 19, g - 24 - rise, 3, 20 + rise, 1), light: look.light});
     if (role === 'barracks') {
       for (let y = g - 21, row = 0; y < g; y += 5, row++) {
         stroke(c, line([[cx - 21, y], [cx + 21, y]]), look.seam, .8);
@@ -368,10 +376,17 @@ function house(role = null) {
       part(c, rect(x, g - 20, 8, 8, 1.6), look.window, {depth: 1, width: 1.1, gloss: rect(x + 1.4, g - 18.6, 2, 2.6, .6)}); stroke(c, line([[x + 4, g - 20], [x + 4, g - 12]]), INK, .8);
       if (role === 'tavern') { c.save(); c.globalAlpha = .35; c.fillStyle = radial(c, x + 4, g - 16, 7, [[0, '#ffe8a0'], [1, '#ffe8a000']]); c.fill(ellipse(x + 4, g - 16, 7, 6)); c.restore(); }
     }
-    part(c, rect(cx + 9, g - 46, 6, 14, 1), '#9e958a', {depth: 1, width: 1.1});
-    const roof = poly([[cx - 27, g - 24], [cx - 12, g - 44], [cx + 12, g - 44], [cx + 27, g - 24]], [2.4, 3, 3, 2.4]);
-    part(c, roof, look.roof, {depth: 3.4, dx: -1, width: 1.4, gloss: poly([[cx - 20, g - 27], [cx - 10, g - 41], [cx - 4, g - 41], [cx - 14, g - 27]], 1), light: look.roofLight});
-    c.save(); c.clip(roof); for (let y = g - 30; y > g - 44; y -= 6) stroke(c, line([[cx - 30, y], [cx + 30, y]]), mix(look.roof, INK, .35), .8); c.restore();
+    if (rise) {
+      stroke(c, line([[cx - 21, g - 21], [cx + 21, g - 21]]), WOOD_DARK, 1.5);
+      for (const x of [cx - 15, cx + 8]) {
+        part(c, rect(x, g - 29, 7, 6, 1), look.window, {depth: .8, width: .9});
+        stroke(c, line([[x + 3.5, g - 28], [x + 3.5, g - 24]]), INK, .7);
+      }
+    }
+    part(c, rect(cx + 9, g - 46 - rise, 6, 14, 1), '#9e958a', {depth: 1, width: 1.1});
+    const roof = poly([[cx - 27, g - 24 - rise], [cx - 12, g - 44 - rise], [cx + 12, g - 44 - rise], [cx + 27, g - 24 - rise]], [2.4, 3, 3, 2.4]);
+    part(c, roof, look.roof, {depth: 3.4, dx: -1, width: 1.4, gloss: poly([[cx - 20, g - 27 - rise], [cx - 10, g - 41 - rise], [cx - 4, g - 41 - rise], [cx - 14, g - 27 - rise]], 1), light: look.roofLight});
+    c.save(); c.clip(roof); for (let y = g - 30 - rise; y > g - 44 - rise; y -= 6) stroke(c, line([[cx - 30, y], [cx + 30, y]]), mix(look.roof, INK, .35), .8); c.restore();
     if (role === 'barracks') {
       // The island's flag on the ridge, and a shield with two crossed cutlasses on the roof.
       banner(c, cx - 7, g - 43, 14, 4, .9);
@@ -496,7 +511,6 @@ export function islandFrames() {
     rock: [48, 36, 4, rock], shrub: [40, 32, 4, shrub], flowers: [24, 24, 3, flowers], 'grass-tuft': [32, 32, 4, grassTuft],
     bench: [48, 32, 3, bench], barrel: [24, 32, 3, barrel], lantern: [16, 24, 2, lantern], crate: [24, 24, 3, crate], sign: [32, 40, 3, sign],
     cabin: [96, 96, 12, cabin], 'island-house': [64, 64, 8, house()], 'island-watchtower': [64, 128, 8, watchtower(1)],
-    'island-house-barracks': [80, 72, 8, house('barracks')], 'island-house-tavern': [80, 72, 8, house('tavern')], 'island-house-workshop': [80, 72, 8, house('workshop')],
     'island-watchtower-l4': [64, 128, 8, watchtower(4)], 'island-watchtower-l5': [64, 128, 8, watchtower(5)],
     'island-wall': [48, 48, 6, wall(1)], 'island-wall-l2': [48, 48, 6, wall(2)], 'island-wall-l3': [48, 48, 6, wall(3)],
     'island-wall-l4': [48, 48, 6, wall(4)], 'island-wall-l5': [48, 48, 6, wall(5)],
@@ -516,6 +530,11 @@ export function islandFrames() {
     'build-spot': [32, 32, 10, buildSpot(false)], 'build-spot-glow': [32, 32, 10, buildSpot(true)], 'fx-level-pip': [16, 16, 8, levelPip], 'fx-level-pip-gold': [16, 16, 8, tierPip],
     'island-bell': [24, 40, 0, bell], 'build-ring': [48, 24, 0, buildRing],
   };
+  for (const level of [2, 3]) {
+    frames[`island-house-l${level}`] = [64, 64, 8, house(null, level)];
+    for (const role of ['barracks', 'tavern', 'workshop'])
+      frames[`island-house-${role}${level === 3 ? '-l3' : ''}`] = [80, 72, 8, house(role, level)];
+  }
   // T33 art prep: the damaged and broken towers of every kind and level (the game does not request them yet).
   for (const kind of TOWER_KINDS) for (let n = 1; n <= 5; n++) for (const state of ['damaged', 'broken'])
     frames[`island-${kind}${n > 1 ? `-l${n}` : ''}-${state}`] = [48, 32, 5, drawTower(kind, n, state)];
