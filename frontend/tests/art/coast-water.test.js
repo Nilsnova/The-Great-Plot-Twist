@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
+import {legacyBackdrop, coastUvMatrix} from '../../src/world/ground-transform.js';
 
 let module, scene, water;
 beforeEach(async () => {
@@ -26,6 +27,23 @@ function backdrop(image, x = 0, y = 0) {
 }
 
 describe('the real decorative coast field', () => {
+  it('binds the cold manual affine backdrop before the first render or forced matrix update', () => {
+    maskReader((image, x, y) => x < 20 && y < 20 ? 255 : 0);
+    const group = new THREE.Group(); group.position.set(13, -7, 0); group.scale.set(1.2, .8, 1);
+    const mesh = legacyBackdrop(new THREE.Mesh(new THREE.PlaneGeometry(64, 48), new THREE.MeshBasicMaterial()));
+    mesh.material.map = {image: {width: 1024, height: 768}}; group.add(mesh);
+    // No renderer or updateMatrixWorld(true): this is the actual first setCoast ordering.
+    water.setCoast(group);
+    const expected = group.matrix.clone().multiply(mesh.matrix);
+    expect(mesh.matrixWorld.elements).toEqual(expected.elements);
+    expect(module.seaUniforms.uCoastUv.value.elements).toEqual(coastUvMatrix(expected).elements);
+    for (const [x, y] of [[0, 16], [-20, -14], [7, -10]]) {
+      const point = new THREE.Vector3(x, y, 0).applyMatrix4(expected); point.z = 1;
+      point.applyMatrix3(module.seaUniforms.uCoastUv.value);
+      expect(point.x).toBeCloseTo(x / 64 + .5, 10); expect(point.y).toBeCloseTo(y / 48 + .5, 10);
+    }
+    expect(module.seaUniforms.uCoastOn.value).toBe(1);
+  });
   it('keeps water clear, land zero-distance, native-distance scale and image-row orientation', () => {
     expect([...module.coastField(new Uint8Array(9), 3, 3)]).toEqual(Array(9).fill(255));
     expect([...module.coastField(new Uint8Array(9).fill(255), 3, 3)]).toEqual(Array(9).fill(0));
