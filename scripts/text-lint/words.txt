@@ -171,6 +171,7 @@ barge
 barnacle
 barracks
 barrel
+base
 basket
 basketball
 bastion
@@ -2298,6 +2299,7 @@ strip
 strong
 stronger
 strongest
+structures
 stuck
 student
 sturdy
@@ -2790,3 +2792,8 @@ approach
 base
 filters
 plan
+# T58: reviewed public terms in recovery help and card labels.
+catalog
+discount
+fully
+upgrading

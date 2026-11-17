@@ -14,6 +14,7 @@ export const RULE_OPTIONS = Object.freeze({
   rescue: 'rescue',            // T38 (D044, proposed): a lost wave first offers the last-chance rescue
   defenses_v2: 'defensesV2',   // T43 (D048, proposed): the culverins of the island fight (without it the sim ignores them)
   ship_fire: 'shipFire',       // T50: ships at anchor fire at a real wall, tower or the heart, and their hits count (ship-fire.js)
+  structure_recovery: 'structureRecovery', // T57: recovery v1 freezes the no-free-repair wave policy
 });
 
 /** The wave's rules as createWave() options, each true or false; anything that is not a known name is ignored. */

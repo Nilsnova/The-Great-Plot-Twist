@@ -301,7 +301,7 @@ export function wallShare(post, wall) {
 }
 
 export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion = () => false, quality = () => 'high',
-  beamFrom = null, fx = () => scene.userData?.pixelFx ?? null }) {
+  beamFrom = null, recoveryV1 = false, fx = () => scene.userData?.pixelFx ?? null }) {
   const owned = [], root = new THREE.Group(); root.name = 'pirate-wave'; scene.add(root);
   const rect = {};
   for (const [id, r] of Object.entries(atlas.rects)) {
@@ -925,6 +925,21 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     layers.air.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .3125, 0, 0, { ...DARK, a: .8 });
     layers.air.push(rect[WHITE], x - w / 2, top, w * share, .1875, 0, 0, { ...(share > .5 ? GREEN : share > .25 ? GOLD : RED), a: 1 });
   }
+  function drawRecoveryHealthBar(item) {
+    const { x, z, hp, maxHp } = item;
+    if (!Number.isFinite(x) || !Number.isFinite(z) || !Number.isFinite(hp) || !(maxHp > 0) || hp >= maxHp) return;
+    const w = 1.3, top = drawnY(z) + TOWER_BAR_LIFT * K();
+    layers.air.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .3125, 0, 0, { ...DARK, a: .8 });
+    if (hp <= 0) {
+      // A ruin needs a positive visual signal; a zero-width red bar disappears against its dark track.
+      layers.air.push(rect[WHITE], x - .055, top + .015, .11, .17, .5, 0, { ...RED, a: 1 });
+      layers.air.push(rect[WHITE], x - .055, top + .22, .11, .08, .5, 0, { ...RED, a: 1 });
+      return;
+    }
+    const share = Math.max(.08, Math.min(1, hp / maxHp)); // Keep a 1-unit positive structure visible at a pixel scale.
+    layers.air.push(rect[WHITE], x - w / 2, top, w * share, .1875, 0, 0,
+      { ...(share > .5 ? GREEN : share > .25 ? GOLD : RED), a: 1 });
+  }
   function drawDown(hero, x, z, reviving) {
     const y = drawnY(z), pulse = still() ? .8 : .55 + .35 * Math.abs(Math.sin(clock * 3)), k = K();
     for (let i = 0; i < 20; i++) {
@@ -1034,8 +1049,12 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       for (const item of strikes.items) drawSweep(item);
       drawCaptain();
       drawParty(state);
-      // T33: a bar over every tower with hp that has taken damage (none while the wave has no tower health).
-      for (const tower of state.towers ?? []) if (tower.maxHp > 0 && tower.hp > 0 && tower.hp < tower.maxHp) drawHealthBar(tower.x, tower.z, tower.hp, tower.maxHp, TOWER_BAR_LIFT);
+      if (recoveryV1) {
+        for (const structure of [...(state.walls ?? []), ...(state.towers ?? [])]) drawRecoveryHealthBar(structure);
+      } else {
+        // T33: a bar over every tower with hp that has taken damage (none while the wave has no tower health).
+        for (const tower of state.towers ?? []) if (tower.maxHp > 0 && tower.hp > 0 && tower.hp < tower.maxHp) drawHealthBar(tower.x, tower.z, tower.hp, tower.maxHp, TOWER_BAR_LIFT);
+      }
       // The lamps' beam: from the lighthouse lamp to an exposed flagship.
       const flagship = state.lampsLit && beamFrom ? state.ships.find(ship => ship.kind === 'flagship') : null;
       if (flagship) {

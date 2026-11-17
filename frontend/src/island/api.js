@@ -49,11 +49,13 @@ import {localSpotId} from './spots.js';
 import {SKILL_BY_ID, WEAPON_BY_ID, isRole} from '../pirates/captain-ids.js';
 import {BRANCH_BY_ID, SPECS, optionsOf} from '../campaign/tech.js';
 import {isRole as isHouseRole} from '../campaign/houses.js';
+import {readRecoverySnapshot} from '../pirates/recovery-snapshot.js';
+import {isParticipantToken} from '../pirates/recovery-policy.js';
 
 export const PATHS = Object.freeze({
   leaderboard: '/api/island/leaderboard', island: '/api/island', build: '/api/island/build', visit: code => `/api/island/visit/${code}`,
   start: '/api/waves/start', join: '/api/waves/join', finish: '/api/waves/finish', revive: '/api/waves/revive',
-  current: where => `/api/waves/current?where=${encodeURIComponent(where)}`,
+  current: (where, waveProtocol = 1) => `/api/waves/current?where=${encodeURIComponent(where)}${waveProtocol === 2 ? '&waveProtocol=2' : ''}`,
   upgrade: '/api/island/upgrade', hire: '/api/island/hire', captain: '/api/island/captain', inviteJoin: '/api/island/invite/join',
   skill: '/api/island/skill', role: '/api/island/role', respec: '/api/island/respec', weaponBuy: '/api/island/weapon/buy', weaponEquip: '/api/island/weapon/equip',
   point: '/api/pirate-point', pointBuild: '/api/pirate-point/build', pointUpgrade: '/api/pirate-point/upgrade',
@@ -62,6 +64,9 @@ export const PATHS = Object.freeze({
   demolish: '/api/island/demolish', move: '/api/island/move',
   // D039 (flag wall_recovery): the walls' health and the paid Repair/Rebuild.
   walls: code => `/api/island/walls${code ? `?code=${encodeURIComponent(code)}` : ''}`, repair: '/api/island/repair',
+  // T55/T56: canonical persistent health and the fixed-quote Repair now action.
+  structures: code => `/api/island/structures${code ? `?code=${encodeURIComponent(code)}` : ''}`,
+  structureRepair: '/api/island/structures/repair',
   demolishQuote: (spot, code) => `/api/island/demolish?spot=${encodeURIComponent(spot)}${code ? `&code=${encodeURIComponent(code)}` : ''}`,
   // D057: the island's own boat (after wave 30): whether she sails and which games paid, and one round's reward.
   boat: code => `/api/island/boat${code ? `?code=${encodeURIComponent(code)}` : ''}`, boatReward: '/api/island/boat',
@@ -108,6 +113,7 @@ export function isSpot(spot) {
 }
 export function isIsland(data) {
   return !!data && isText(data.code) && isCount(data.coins) && isCount(data.waveBest) && isCount(data.flags)
+    && (data.recoveryVersion === undefined || data.recoveryVersion === 0 || data.recoveryVersion === 1)
     && Array.isArray(data.spots) && data.spots.every(isSpot);
 }
 export function isVisit(data) {
@@ -141,6 +147,45 @@ const isWall = wall => !!wall && isText(wall.spot) && Number.isSafeInteger(wall.
   && (wall.repairCost === null || isCount(wall.repairCost));
 export const isWalls = data => !!data && isCount(data.coins) && Array.isArray(data.walls) && data.walls.length <= 50 && data.walls.every(isWall);
 const localWalls = answer => (answer.ok ? {...answer, data: {...answer.data, walls: answer.data.walls.map(wall => ({...wall, spot: localSpotId(wall.spot)}))}} : answer);
+const RECOVERY_KINDS = new Set(['wall', 'cannon', 'mortar', 'harpoon', 'culverin', 'swivel']);
+const RECOVERY_PHASES = new Set(['between_waves', 'preparing', 'combat']);
+const RECOVERY_WINDOWS = new Set(['between_waves', 'reserved_wave']);
+const isUuid = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+const isRecoveryItem = row => !!row && isText(row.spot) && isUuid(row.instanceId) && RECOVERY_KINDS.has(row.kind)
+  && Number.isSafeInteger(row.level) && row.level >= 1 && row.level <= 5
+  && Number.isSafeInteger(row.hpUnits) && row.hpUnits >= 0 && row.hpUnits <= 1_000_000
+  && Number.isFinite(row.maxHP) && row.maxHP > 0
+  && Number.isFinite(row.rateUnitsPerSecond) && row.rateUnitsPerSecond >= 0
+  && (row.estimatedFreeSeconds === null || (Number.isSafeInteger(row.estimatedFreeSeconds) && row.estimatedFreeSeconds >= 0))
+  && isCount(row.fixedPrice) && Number.isSafeInteger(row.repairSeq) && row.repairSeq >= 0;
+export function isStructureRecovery(data) {
+  return !!data && isDate(data.serverNow) && isUuid(data.islandEpoch) && isCount(data.revision)
+    && data.recoveryVersion === 1 && data.waveProtocol === 2 && RECOVERY_PHASES.has(data.displayPhase)
+    && RECOVERY_WINDOWS.has(data.repairWindow) && (data.waveId === null || isUuid(data.waveId))
+    && (data.remainingPaidUses === null || (Number.isSafeInteger(data.remainingPaidUses) && data.remainingPaidUses >= 0 && data.remainingPaidUses <= 3))
+    && Array.isArray(data.structures) && data.structures.length <= 50 && data.structures.every(isRecoveryItem)
+    && ((data.repairWindow === 'between_waves' && data.waveId === null)
+      || (data.repairWindow === 'reserved_wave' && data.waveId !== null));
+}
+const localRecovery = (data, onSpot = () => {}) => ({...data, structures: data.structures.map(row => {
+  const spot = localSpotId(row.spot);
+  if (spot !== row.spot) onSpot(spot, row.spot);
+  return {...row, spot};
+})});
+function isStructureRepair(data) {
+  const receipt = data?.receipt;
+  const waveReceiptFields = [receipt?.waveId, receipt?.useOrdinal, receipt?.eventSeq];
+  const hasWaveReceipt = waveReceiptFields.every(value => value !== null && value !== undefined);
+  const hasNoWaveReceipt = waveReceiptFields.every(value => value === null);
+  return !!receipt && isText(receipt.actionUid) && isText(receipt.spot) && isUuid(receipt.instanceId)
+    && RECOVERY_KINDS.has(receipt.kind) && Number.isSafeInteger(receipt.level) && receipt.level >= 1 && receipt.level <= 5
+    && Number.isSafeInteger(receipt.chargedPrice) && receipt.chargedPrice > 0 && isCount(receipt.balanceAtCommit)
+    && (receipt.waveId === null || isUuid(receipt.waveId))
+    && (receipt.useOrdinal === null || (Number.isSafeInteger(receipt.useOrdinal) && receipt.useOrdinal >= 1 && receipt.useOrdinal <= 3))
+    && (receipt.eventSeq === null || (Number.isSafeInteger(receipt.eventSeq) && receipt.eventSeq > 0))
+    && Number.isSafeInteger(receipt.repairSeq) && receipt.repairSeq > 0 && (hasWaveReceipt || hasNoWaveReceipt)
+    && isStructureRecovery(data.currentState) && isCount(data.coins);
+}
 // The walls part of a finish: wall_N -> a whole percent 0..100; null when there is nothing to send.
 export function wallHealthBody(walls) {
   if (!walls || typeof walls !== 'object') return null;
@@ -149,9 +194,15 @@ export function wallHealthBody(walls) {
   return Object.keys(out).length ? out : null;
 }
 export function isWave(data) {
-  return !!data && isText(data.waveId) && Number.isSafeInteger(data.wave) && data.wave >= 1 && isCount(data.seed)
+  const base = !!data && isText(data.waveId) && Number.isSafeInteger(data.wave) && data.wave >= 1 && isCount(data.seed)
     && typeof data.startsAt === 'string' && Number.isFinite(Date.parse(data.startsAt))
     && !!data.weather && typeof data.weather.kind === 'string' && typeof data.flagship === 'boolean';
+  if (!base) return false;
+  if (data.waveProtocol === undefined && (data.recoveryVersion === undefined || data.recoveryVersion === 0)) return true;
+  if (data.waveProtocol === 1 && (data.recoveryVersion === undefined || data.recoveryVersion === 0)) return true;
+  return data.waveProtocol === 2 && data.recoveryVersion === 1
+    && readRecoverySnapshot(data.initialSnapshot, data.waveId) !== null && isParticipantToken(data.participantToken)
+    && Number.isSafeInteger(data.lastActorCounter) && data.lastActorCounter >= 0;
 }
 // Captain health (GAME-V3.md §3): what the revive cost you and your coins after it.
 export const isRevive = data => !!data && isCount(data.price) && isCount(data.coins) && typeof data.repeat === 'boolean';
@@ -190,16 +241,24 @@ export function readFailure(result) {
     || (status === 0 ? MESSAGES.network : MESSAGES.unknown);
   const failure = {ok: false, status, code, message};
   if (isCount(result?.retryAfterSeconds) && result.retryAfterSeconds > 0) failure.retryAfterSeconds = result.retryAfterSeconds;
+  if (isStructureRecovery(result?.data?.currentState)) failure.currentState = localRecovery(result.data.currentState);
+  if (isCount(result?.data?.coins)) failure.coins = result.data.coins;
   return failure;
 }
 // No answer, a timeout or a server-side failure: the write may or may not have happened.
 export const outcomeUnknown = failure => !failure.ok && (failure.status === 0 || failure.status >= 500);
 
-export function createIslandApi({transport, makeUid = makeActionUid} = {}) {
+export function createIslandApi({transport, makeUid = makeActionUid, waveProtocol = () => 1} = {}) {
   if (!transport || typeof transport.get !== 'function' || typeof transport.post !== 'function') {
     throw new TypeError('createIslandApi needs a transport with get and post.');
   }
   const held = new Map(); // 'build:cannon_1' or 'start:own' -> the click id of an unknown outcome
+  const protocolFor = where => {
+    try {
+      const value = typeof waveProtocol === 'function' ? waveProtocol(where) : waveProtocol;
+      return value === 2 ? 2 : 1;
+    } catch { return 1; }
+  };
 
   async function ask(send, accept) {
     let result;
@@ -213,12 +272,13 @@ export function createIslandApi({transport, makeUid = makeActionUid} = {}) {
   async function write(key, send, accept) {
     const actionUid = held.get(key) ?? makeUid();
     held.set(key, actionUid);
-    const answer = await ask(() => send(actionUid), accept);
+    const answer = await ask(() => send(actionUid), data => accept(data, actionUid));
     if (answer.ok || !outcomeUnknown(answer)) held.delete(key);
     return answer;
   }
   // The server's own spelling of each spot id, learnt from its answers (spots.js SPOT_ALIASES).
   const serverIds = new Map();
+  const recoverySpots = data => localRecovery(data, (local, server) => serverIds.set(local, server));
   function readSpots(data) {
     if (!data || !Array.isArray(data.spots)) return data;
     return {...data, spots: data.spots.map(spot => {
@@ -372,6 +432,34 @@ export function createIslandApi({transport, makeUid = makeActionUid} = {}) {
       return write(`repair:${where}:${spot}`, actionUid => transport.post(PATHS.repair, {spot: sent(spot), actionUid, ...(where ? {code: where} : {})}), isWalls)
         .then(localWalls);
     },
+    // T55/T56: read canonical HP and quote context, then submit exactly that quote. The server owns
+    // all HP, price, quota and wallet decisions; unknown outcomes keep the same click UID for retry.
+    structureRecovery({code = null} = {}) {
+      const where = code ? displayIslandCode(code) : '';
+      if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
+      return ask(() => transport.get(PATHS.structures(where)), isStructureRecovery)
+        .then(answer => answer.ok ? {...answer, data: recoverySpots(answer.data)} : answer);
+    },
+    repairStructure({quote, code = null} = {}) {
+      const where = code ? displayIslandCode(code) : '';
+      if (code && !where) return refuse(422, 'validation_error', MESSAGES.badCode);
+      if (!quote || !isText(quote.spot) || !isUuid(quote.instanceId) || !isUuid(quote.expectedEpoch)
+          || !RECOVERY_WINDOWS.has(quote.expectedWindow) || (quote.expectedWindow === 'reserved_wave' ? !isUuid(quote.expectedWaveId) : quote.expectedWaveId != null)
+          || !Number.isSafeInteger(quote.expectedLevel) || quote.expectedLevel < 1 || quote.expectedLevel > 5
+          || !Number.isSafeInteger(quote.expectedRepairSeq) || quote.expectedRepairSeq < 0
+          || !Number.isSafeInteger(quote.quotedPrice) || quote.quotedPrice <= 0 || quote.waveProtocol !== 2) {
+        return refuse(422, 'validation_error', MESSAGES.unknown);
+      }
+      const key = `structure-repair:${where}:${quote.instanceId}`;
+      return write(key, actionUid => transport.post(PATHS.structureRepair, {
+        spot: sent(quote.spot), instanceId: quote.instanceId, actionUid, expectedEpoch: quote.expectedEpoch,
+        expectedWindow: quote.expectedWindow, ...(quote.expectedWindow === 'reserved_wave' ? {expectedWaveId: quote.expectedWaveId} : {}),
+        expectedLevel: quote.expectedLevel, expectedRepairSeq: quote.expectedRepairSeq, quotedPrice: quote.quotedPrice,
+        waveProtocol: quote.waveProtocol, ...(where ? {code: where} : {}),
+      }), (data, actionUid) => isStructureRepair(data) && data.receipt.actionUid === actionUid).then(answer => answer.ok
+        ? {...answer, data: {...answer.data, receipt: {...answer.data.receipt, spot: localSpotId(answer.data.receipt.spot)}, currentState: recoverySpots(answer.data.currentState)}}
+        : answer);
+    },
     piratePoint: () => askSpots(() => transport.get(PATHS.point), isPoint),
     pointBuild({spot, kind} = {}) {
       return writeSpots(`point-build:${spot}`, actionUid => transport.post(PATHS.pointBuild, {spot, kind, actionUid}), isPoint);
@@ -408,19 +496,23 @@ export function createIslandApi({transport, makeUid = makeActionUid} = {}) {
       if (!symbols) return refuse(422, 'validation_error', MESSAGES.badCode);
       return askSpots(() => transport.get(PATHS.visit(displayIslandCode(symbols))), isVisit);
     },
-    startWave({where: place = 'own'} = {}) {
+    startWave({where: place = 'own', waveProtocol: askedProtocol = null} = {}) {
       const target = where(place);
       if (!target) return refuse(422, 'validation_error', MESSAGES.badCode);
-      return write(`start:${target}`, actionUid => transport.post(PATHS.start, {where: target, actionUid}), isWave);
+      const version = askedProtocol === 2 ? 2 : protocolFor(target);
+      return write(`start:${target}`, actionUid => transport.post(PATHS.start,
+        {where: target, actionUid, ...(version === 2 ? {waveProtocol: 2} : {})}), isWave);
     },
-    joinWave({waveId} = {}) {
+    joinWave({waveId, waveProtocol: askedProtocol = null} = {}) {
       if (!isText(waveId)) return refuse(404, 'no_such_wave', MESSAGES.badWave);
-      return ask(() => transport.post(PATHS.join, {waveId}), isWave);
+      const version = askedProtocol === 2 ? 2 : protocolFor();
+      return ask(() => transport.post(PATHS.join, {waveId, ...(version === 2 ? {waveProtocol: 2} : {})}), isWave);
     },
-    currentWave({where: place = 'own'} = {}) {
+    currentWave({where: place = 'own', waveProtocol: askedProtocol = null} = {}) {
       const target = where(place);
       if (!target) return refuse(422, 'validation_error', MESSAGES.badCode);
-      return ask(() => transport.get(PATHS.current(target)), data => data === null || isWave(data));
+      const version = askedProtocol === 2 ? 2 : protocolFor(target);
+      return ask(() => transport.get(PATHS.current(target, version)), data => data === null || isWave(data));
     },
     finishWave({waveId, survived, shipsSunk = 0, bonuses, rescued, walls} = {}) {
       if (!isText(waveId)) return refuse(404, 'no_such_wave', MESSAGES.badWave);

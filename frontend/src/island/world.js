@@ -19,8 +19,31 @@ import {frameCanvas, smoothTexture, spriteMaterial} from '../art/textures.js';
 import {clickVerdict, WALK_CLOSER} from '../world/reach.js';
 import {decorateProgress} from './decorations.js';
 import {makeWallConnections} from './wall-connections.js';
+import {createStructureRecoveryIndicators} from './structure-recovery-indicators.js';
+import {towerStateFrame} from '../art/tower-states.js';
 
 const UNIT = 16;
+const FULL_HP_UNITS = 1_000_000;
+const RECOVERY_TOWERS = Object.freeze(['cannon', 'mortar', 'harpoon', 'culverin', 'swivel']);
+const RECOVERY_PHASES = new Set(['between_waves', 'preparing']);
+const RECOVERY_ART = Object.freeze(['island-wall-damaged', 'island-wall-broken', ...RECOVERY_TOWERS.flatMap(kind =>
+  Array.from({length: 5}, (_, index) => ['damaged', 'broken'].map(state => towerStateFrame(kind, index + 1, state))).flat())]);
+
+/** Return the existing world-art state for a matching canonical v1 row outside combat. */
+export function structureRecoveryAppearance(answer, row, state) {
+  if (!state || state.recoveryVersion !== 1 || !RECOVERY_PHASES.has(state.displayPhase)
+      || typeof state.islandEpoch !== 'string' || !answer?.built || !row
+      || row.spot !== answer.id || row.kind !== answer.kind || row.level !== (answer.level ?? 1)
+      || typeof row.instanceId !== 'string' || !Number.isInteger(row.hpUnits) || row.hpUnits < 0 || row.hpUnits > FULL_HP_UNITS
+      || !Number.isFinite(row.maxHP) || row.maxHP <= 0) return null;
+  if (row.hpUnits === FULL_HP_UNITS) return null;
+  const look = row.hpUnits === 0 ? 'broken' : row.hpUnits < FULL_HP_UNITS / 2 ? 'damaged' : null;
+  if (!look) return null;
+  const frame = row.kind === 'wall' ? `island-wall-${look}` : RECOVERY_TOWERS.includes(row.kind)
+    ? towerStateFrame(row.kind, row.level, look) : null;
+  return frame ? {look, frame, suppressPips: look === 'broken' && row.kind !== 'wall'} : null;
+}
+
 // The first id the catalog knows wins; none known means the drawn sprite stays.
 export const ART_CANDIDATES = Object.freeze({
   wall: ['wall', 'island-wall', 'wall-1'], cannon: ['cannon', 'island-cannon', 'cannon-1'], mortar: ['mortar', 'island-mortar', 'mortar-1'],
@@ -238,6 +261,11 @@ export function decorateIsland(place, ctx = {}) {
     if (preview?.spotId === spot.id) return {x: preview.x, z: preview.z};
     return layout.zones === islandZones ? placedSpot(spot.id, state.spots) ?? spot : spot;
   };
+  const recoveryIndicators = createStructureRecoveryIndicators({root, locate: id => {
+    const spot = SPOTS.find(item => item.id === id);
+    return spot ? whereOf(spot) : null;
+  }});
+  let recoveryState = null, recoveryStateKey = 'null';
   // The real art once it has loaded (null until then: the drawn sprites stand in), and what each spot shows.
   let art = null;
   const shown = new Map(); // spot id (or 'crew') -> {key, meshes}
@@ -248,8 +276,13 @@ export function decorateIsland(place, ctx = {}) {
   function showSpot(spot, answer, hidden) {
     const built = answer?.built === true, kind = built ? (kindsOf(spot).includes(answer.kind) ? answer.kind : kindsOf(spot)[0]) : null;
     const level = Number.isSafeInteger(answer?.level) && answer.level > 0 ? answer.level : 1;
-    const id = kind ? buildingArt(kind, level, answer?.spec) : null, pips = kind ? pipCount(kind, level) : 0;
-    const joined = kind === 'wall' && joinedWalls.has(spot.id);
+    const recoveryRow = recoveryState?.structures?.find(item => item.spot === spot.id);
+    const appearance = structureRecoveryAppearance(answer, recoveryRow, recoveryState);
+    const normalId = kind ? buildingArt(kind, level, answer?.spec) : null;
+    const id = appearance && art?.[appearance.frame] ? appearance.frame : normalId;
+    const pips = kind && !appearance?.suppressPips ? pipCount(kind, level) : 0;
+    // A recovery ruin frame stands alone; only the normal level art is drawn as posts of a joined wall.
+    const joined = kind === 'wall' && id === normalId && joinedWalls.has(spot.id);
     const where = whereOf(spot), key = !id || hidden ? '' : `${id}:${pips}:${joined}@${where.x},${where.z}`;
     if (shown.get(spot.id)?.key === key) return;
     clear(spot.id);
@@ -257,6 +290,7 @@ export function decorateIsland(place, ctx = {}) {
     const mesh = put(id, where.x, where.z); mesh.name = `island-${kind}:${spot.id}`; mesh.userData.level = level;
     if (joined) mesh.scale.x = .62; // Keep the original level art as posts; the join draws the span.
     mesh.userData.role = activeRole({kind, level, spec: answer?.spec}); mesh.userData.art = id;
+    mesh.userData.recoveryLook = appearance?.look ?? 'intact';
     const meshes = [mesh], [, height, anchor] = artSizes[id], top = height * (1 - anchor) + .15;
     // One row (pipRow): 4 and 5 smaller and spaced wider than a disc, so the gold stars never overlap.
     const row = pipCount(kind, level) ? pipRow(level, {step: .6}) : {offsets: []}, pipWidth = artSizes[PIP_ART][0];
@@ -329,6 +363,7 @@ export function decorateIsland(place, ctx = {}) {
 
   // The real art (every level, the pips and the crew) replaces the drawn sprites once it has loaded.
   const wanted = [...new Set([...SPOTS.flatMap(kindsOf).flatMap(kind => LEVEL_ART[kind] ?? []), ...Object.values(ROLE_ART).flatMap(id => [id, `${id}-l3`]), PIP_ART, PIP_TIER_ART, ...Object.values(crewArt)])]
+    .concat(RECOVERY_ART)
     .filter(id => Object.hasOwn(artSizes, id));
   (ctx.loadArt ?? loadArt)(wanted).then(loaded => {
     if (disposed) { Object.values(loaded).forEach(material => { material.map?.dispose(); material.dispose(); }); return; }
@@ -380,6 +415,16 @@ export function decorateIsland(place, ctx = {}) {
   let ringing = 0;
   return {
     apply, pickAt,
+    setRecoveryState(value) {
+      const accepted = value?.recoveryVersion === 1 && RECOVERY_PHASES.has(value.displayPhase)
+        && typeof value.islandEpoch === 'string' && Array.isArray(value.structures) ? value : null;
+      const key = accepted ? JSON.stringify(accepted) : 'null';
+      recoveryIndicators.setState(accepted);
+      recoveryIndicators.update();
+      if (key === recoveryStateKey) return;
+      recoveryState = accepted; recoveryStateKey = key;
+      apply(state);
+    },
     // T36: the cell a building is moved to ({spotId, x, z, size, ok}), or null when the move ends.
     preview(next) {
       if (disposed) return;
@@ -393,6 +438,7 @@ export function decorateIsland(place, ctx = {}) {
     ring() { ringing = 1.2; },
     update(dt, time = 0) {
       if (disposed) return;
+      recoveryIndicators.update();
       rangeRing.show(ctx.range?.() ?? null, reduced() ? 0 : time);
       const still = reduced();
       const glow = still ? 1 : .7 + .3 * Math.sin(time * 3.2), bob = still ? 0 : Math.sin(time * 2.4) * 2.4 / UNIT;
@@ -415,7 +461,7 @@ export function decorateIsland(place, ctx = {}) {
     get wallJoins() { return wallConnections.links; },
     dispose() {
       if (disposed) return; disposed = true; cleanups.splice(0).forEach(stop => stop());
-      progress?.dispose();
+      progress?.dispose(); recoveryIndicators.dispose();
       wallConnections.dispose();
       for (const id of [...shown.keys()]) clear(id);
       for (const item of lockTextures.values()) item.texture.dispose(); // the padlocks a spot no longer shows

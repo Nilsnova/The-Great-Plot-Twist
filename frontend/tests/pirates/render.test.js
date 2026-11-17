@@ -73,6 +73,19 @@ describe('pirate wave renderer', () => {
     renderer.dispose();
   });
 
+  it('shows damaged walls and zero or tiny-positive tower HP only in recovery v1', () => {
+    const scene = new THREE.Scene(), renderer = createWaveRenderer({ scene, atlas: atlas(), defenses: DEFENSES, recoveryV1: true, fx: () => null });
+    const state = { time: 0, ships: [], boarders: [], walls: [{ id: 'wall_1', x: 0, z: 1, hp: 0, maxHp: 60, broken: true }],
+      towers: [{ id: 'cannon_1', x: 1, z: 1, hp: 0.00008, maxHp: 80, broken: false }] };
+    renderer.update({ state, simTime: 0, dt: 0 });
+    const damaged = renderer.stats().instances;
+    expect(damaged).toBeGreaterThan(0); // Wall ruin and a one-unit-positive cannon each get a readable mark.
+    renderer.update({ state: { ...state, walls: [{ ...state.walls[0], hp: 60, broken: false }],
+      towers: [{ ...state.towers[0], hp: 80 }] }, simTime: 0, dt: 0 });
+    expect(renderer.stats().instances).toBeLessThan(damaged);
+    renderer.dispose();
+  });
+
   it('flashes ~250 ms at the muzzle, runs a tracer to the ship and puffs on the hit, with no second captain drawn', () => {
     const scene = new THREE.Scene(), pack = packAtlas(), renderer = createWaveRenderer({ scene, atlas: { texture: new THREE.Texture(), ...pack }, fx: () => null });
     const air = renderer.root.children.find(item => item.name === 'pirates:air');

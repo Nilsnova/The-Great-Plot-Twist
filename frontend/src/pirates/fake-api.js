@@ -982,6 +982,8 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
         if (route === 'POST /api/island/move') return reply(200, await api.move(body));
         if (route === 'GET /api/island/walls') return reply(200, await api.walls({ code: searchParams.get('code') }));
         if (route === 'POST /api/island/repair') return reply(200, await api.repairWall(body));
+        if (route === 'GET /api/island/structures') return reply(404, {error: {code: 'feature_off', message: 'This view is available online only.'}});
+        if (route === 'POST /api/island/structures/repair') return reply(404, {error: {code: 'feature_off', message: 'This repair needs the online server.'}});
         if (route === 'POST /api/island/invite/join') return reply(200, await api.inviteJoin(body));
         if (route === 'POST /api/games') return reply(200, await api.createGame(body));
         if (route === 'POST /api/games/join') return reply(200, await api.joinGame(body));
@@ -1029,6 +1031,7 @@ const BODY_KEYS = Object.freeze({ '/api/island/build': ['spot', 'kind', 'actionU
   '/api/island/arsenal/buy': ['weapon', 'actionUid'], '/api/island/arsenal/take': ['copy', 'actionUid'], '/api/island/arsenal/return': ['actionUid'] });
 // Keys a body may also carry: `code` builds, upgrades, researches, picks a skill or mends the wreck on a game's island.
 const OPTIONAL_KEYS = Object.freeze({ '/api/waves/finish': ['bonuses', 'rescued', 'walls'], '/api/island/repair': ['code'], '/api/island/build': ['code'], '/api/island/upgrade': ['code'], '/api/games': ['actionUid'],
+  '/api/waves/start': ['waveProtocol'], '/api/waves/join': ['waveProtocol'],
   '/api/island/research': ['code', 'tier', 'choice', 'change'], '/api/island/tower-skill': ['code', 'actionUid'], '/api/island/tower-tree': ['code'], '/api/island/wreck': ['code'], '/api/island/demolish': ['code'], '/api/island/move': ['code'],
   '/api/island/arsenal/buy': ['code'], '/api/island/arsenal/take': ['code'], '/api/island/arsenal/return': ['code'] });
 const ACTION_UID = /^[A-Za-z0-9_-]{8,64}$/;
@@ -1121,6 +1124,10 @@ export function createFakeIslandTransport({ coins = ISLAND_RULES.startingCoins, 
       if (keys && (!exactKeys(body, keys, OPTIONAL_KEYS[pathname]) || (keys.includes('actionUid') && !ACTION_UID.test(String(body.actionUid))))) {
         return fail(422, 'validation_error', `The request must hold exactly ${keys.join(', ')}.`);
       }
+      if (['/api/waves/start', '/api/waves/join'].includes(pathname)
+          && body?.waveProtocol !== undefined && body.waveProtocol !== 2) {
+        return fail(422, 'validation_error', 'Version must be 2 when supplied.');
+      }
     }
     try {
       if (method === 'GET' && pathname === '/api/island/leaderboard') return fail(503, 'offline', 'Leaderboard results need an online game. Return to the title and sign in to play online.');
@@ -1155,6 +1162,8 @@ export function createFakeIslandTransport({ coins = ISLAND_RULES.startingCoins, 
       if (method === 'POST' && pathname === '/api/island/move') return ok(await api.move(body));
       if (method === 'GET' && pathname === '/api/island/walls') return ok(await api.walls({ code: new URLSearchParams(query).get('code') }));
       if (method === 'POST' && pathname === '/api/island/repair') return ok(await api.repairWall(body));
+      if (method === 'GET' && pathname === '/api/island/structures') return fail(404, 'feature_off', 'This view is available online only.');
+      if (method === 'POST' && pathname === '/api/island/structures/repair') return fail(404, 'feature_off', 'This repair needs the online server.');
       if (method === 'POST' && pathname === '/api/island/invite/join') return ok(await api.inviteJoin(body));
       if (method === 'POST' && pathname === '/api/games') return ok(await api.createGame(body));
       if (method === 'POST' && pathname === '/api/games/join') return ok(await api.joinGame(body));

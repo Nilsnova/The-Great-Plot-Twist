@@ -53,7 +53,8 @@ def test_tower_obstacles_is_allowed_and_the_combined_rule_set_is_frozen(database
 
 
 def test_every_server_rule_together_is_allowed_after_the_last_check_rule(database):
-    # 20261116160000_ship_fire_rule.sql is the last widening: it must keep tower_obstacles too.
+    # 20261117020000_structure_recovery.sql is the latest widening; the 20261116160000 check
+    # remains a historical six-rule subset and must keep tower_obstacles too.
     wave_id = a_wave(database)
     assert keep(database, wave_id, list(SIM_RULES)) == {"rules": list(SIM_RULES)}
 

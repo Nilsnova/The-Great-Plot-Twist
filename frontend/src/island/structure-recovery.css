@@ -1,0 +1,17 @@
+/* Small recovery feedback for damaged island structures; loaded by the structure-card view. */
+.recovery-card{display:grid;gap:8px;min-width:0;color:var(--u-ink,#34291f);font:600 15px/1.35 var(--u-font,system-ui)}
+.recovery-bar{position:relative;height:10px;box-sizing:border-box;overflow:hidden;border:2px solid #18241e;background:#18241e;box-shadow:inset 0 0 0 1px #455247}
+.health-fill{display:block;height:100%;max-width:100%;image-rendering:pixelated}
+.health-fill-green{background:#55bd62}
+.health-fill-gold{background:#efc84c}
+.health-fill-red{background:#d65343}
+.recovery-marker{position:absolute;right:1px;top:50%;transform:translateY(-50%);padding:0 2px;background:#18241e;color:#fff4d5;font:800 9px/1 var(--u-font,system-ui)}
+.recovery-hp,.recovery-free,.recovery-funds,.recovery-status,.recovery-helper,.recovery-quota,.recovery-error,.recovery-message{margin:0}
+.recovery-repair{justify-self:start;min-height:44px;padding:8px 12px;border:2px solid var(--u-brass,#8a6738);background:var(--u-parch,#efe0bb);color:var(--u-brown,#4b3524);font:700 15px/1.25 var(--u-font,system-ui);cursor:pointer}
+.recovery-repair:focus-visible{outline:3px solid var(--u-gold,#e3b447);outline-offset:2px}
+.recovery-repair:disabled{cursor:default;opacity:.6}
+.recovery-free{color:var(--u-ink,#34291f)}
+.recovery-status,.recovery-quota{font-weight:700;color:var(--u-brown,#4b3524)}
+.recovery-helper{color:var(--u-mute,#746b5c);font-size:13px}
+.recovery-error,.recovery-message{padding:8px 10px;border:2px solid #8a3b2a;background:#f3d9c8;color:#7a2e25}
+@media(max-width:600px){.recovery-card{gap:7px;font-size:14px}.recovery-repair{width:100%;min-height:48px;font-size:16px}.recovery-bar{height:12px}}

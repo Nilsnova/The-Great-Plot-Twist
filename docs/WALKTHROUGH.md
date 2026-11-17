@@ -1700,3 +1700,73 @@ three questions are prepared, not a claim Johannes has already answered them.
 ## Johannes — COC-02 current-base overview
 
 The camera accepts a local management-view request and fits the current home island. It preserves normal zoom and gives combat/tutorial focus precedence. Runtime: `frontend/src/player/camera.js`, with one `game.js` handoff from optional `island.managing`. See [the specification](../specs/COC-02-village-overview.md) for why, limits, future land bounds and three questions. This is a draft dependent on PR #192, not a merged feature.
+
+## 33. Durable structure recovery v1 — T55/T60
+
+Structure recovery records normalized health for walls and supported towers and freezes a versioned
+snapshot when the server accepts a wave start. That accepted bell starts the reservation: Carpenter,
+Workshop and Tech-based free healing pause through preparation and combat. Inactive elapsed time
+starts contributing again only after the canonical finish or expiry closes the wave. A returning
+client reads the saved wave version and snapshot, even if new v1 admission has since been switched
+off.
+
+The server owns the structure identity, maximum health, repair price, repair sequence, wallet
+transaction and shared quota. A successful paid Repair restores the selected structure to full HP at
+the base cost for its current level and appends a server-sequenced event. All island participants
+share three successful repairs for that wave. A repeated UID returns its original receipt and current
+health; it cannot heal later damage or spend a second use. A fresh accepted wave gets a fresh quota.
+
+Protocol-2 clients read journal pages through a fixed head and only advance across sealed ticks. A
+health checkpoint must identify the exact island epoch, tick, input head, repair sequence, per-structure
+repair basis and HP vector. The first canonical finish stores its close receipt; a late client cannot
+replace that HP vector or turn an expired wave into a win. The wave still trusts bounded client-reported
+combat health; this work does not run the full battle simulation on the server or compensate players
+for an interrupted wave.
+
+The database sequence is additive and timestamp ordered: normalized recovery state and history, legacy
+wave locks, paid repair, lifecycle/journal/checkpoint/finish APIs, then the island mutation hooks that
+keep saved HP and recovery rates aligned with builds, upgrades, research, moves and resets. The matching
+server feature flag `structure_recovery` is off by default. A capable backend and protocol-2 frontend
+still require the reviewed migration chain before deployment, even with new-v1 admission off. See the
+[release and rollback gate](RELEASE-CHECKLIST.md#t55t60-structure-recovery-release-gate) before a
+separately authorized release.
+
+**Evidence.** [T60's local API/database/replay test](evidence/T60-structure-recovery/README.md) sends
+real FastAPI requests to a disposable PostgreSQL fixture and passes the production snapshot and
+journal directly into two JavaScript replay consumers. Its SQL companions cover retries, quota races,
+expiry and mutation refresh. This does not exercise the browser transport adapter, hosted Supabase,
+live migration history or a physical device. The HTTP regression repeats a same-actor journal read
+from sequence zero, posts an input, then confirms a previously captured head/seal still returns its
+old prefix after the journal head advances. The feature has not been enabled or deployed by this work.
+The [bounded local journal-volume diagnostic](evidence/T60-structure-recovery/README.md#journal-volume-and-retention-diagnostic)
+measures fixed-head paging for 10,000 input events. It also found no automatic retention cap or
+durable global journal cap. HTTP writes and event reads have per-player, per-process token buckets;
+the direct SQL measurements bypass those route limits. Activation remains gated on an
+operating-budget and retention decision.
+
+The final local frontend suite passed 3,694 tests across 322 files; the backend suite excluding the
+unchanged settings matrix passed 12,461 with 293 skips, and that matrix passed 524,322. The complete
+island SQL sweep passed 368; the focused API/transport suite passed 140; build, spoiler guard, Ruff
+and changed-file Python formatting passed. `npm run test:mp` failed at the host-break wait on both
+the integrated revision and exact main `a09787c`. A passive diagnostic on the integrated run showed
+the host wave ended with `survived:false` and no break state, so this was not a missed winning break.
+The smoke flow waited for a break after losing; this is not evidence of a recovery or break
+regression. No multiplayer pass or cause for the host's lost wave is claimed. See the [full T60
+result](evidence/T60-structure-recovery/README.md#final-integrated-verification-and-multiplayer-result).
+
+
+## T58. Captain repair choices and shared wall Tech — Ianno Hollensteiner (#124)
+
+Recovery version 1 hides seven repair-only Captain choices while retaining their saved IDs as spent points.
+Engineer keeps the 10% build and upgrade discount. Wall recovery uses the equipped wall skill and island research:
+Quick Mend ×2 or Bastion ×3 plus 50% max HP, with Mason Drill ×1.5 stacking; researching Bastion does not equip it
+to every wall. Versioned tutorial pages preserve legacy instructions for version 0 and explain the shared between-wave
+recovery rules for version 1.
+
+Recovery-v1 structure cards keep level upgrades disabled during a reserved wave or while that structure is damaged;
+the card says to fully repair it first and labels catalogue strength separately from modified HP.
+
+Focused checks: `cd frontend && npm exec vitest -- run tests/tutorial-pages.test.js tests/tutorial/host.test.js tests/campaign/captain-repair-policy.test.js tests/island/captain-recovery-tree.test.js tests/island/card-model.test.js` (66 tests) and `cd frontend && npm run build`.
+The [evidence README](evidence/T58-captain-repair/README.md) records screenshot fixtures and the exact scope. These
+checks do not prove persisted production state, live recovery, payments, multiplayer or release activation; combined
+dependency review and release acceptance remain pending.

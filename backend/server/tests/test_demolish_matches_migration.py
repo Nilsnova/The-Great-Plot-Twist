@@ -20,6 +20,7 @@ DEMOLISH = MIGRATIONS / "20261112080000_demolish.sql"
 TOWER_DEFENSE = MIGRATIONS / "20261111030000_tower_defense.sql"
 TIERS = MIGRATIONS / "20261112070000_tower_tiers.sql"
 MORE_TOWER_SPOTS = MIGRATIONS / "20261117010000_more_tower_spots.sql"
+RECOVERY_MUTATIONS = MIGRATIONS / "20261117050000_structure_recovery_mutations.sql"
 
 REFUND_NOTE = (
     "  -- 20261112080000_demolish.sql: who paid for this {}, for a refund when it is torn down.\n"
@@ -40,6 +41,7 @@ UPGRADE_ADDITION = (
     (p_island_owner, p_plot, v_building.ref, v_building.level, p_player_id, v_price, v_ref);
 """
 )
+D060_PLOT_RULE = "'^(wall_([1-9]|1[0-2])|cannon_([1-9]|1[01])|tower_1|house_[12])$'"
 
 
 def body(text: str, name: str) -> str:
@@ -78,8 +80,25 @@ def test_no_later_migration_changes_the_build_or_upgrade_functions_again():
             r"function public\.(island_build|island_upgrade|island_demolish)\(", path.read_text()
         )
     ]
-    # D060: the extra tower spots copy island_demolish() with only its plot test widened.
-    assert later == [MORE_TOWER_SPOTS.name]
+    # D060 widens the demolish spots; T55 then adds recovery settlement/identity handling while
+    # preserving the payment/refund rows and all supported plots.
+    assert later == [MORE_TOWER_SPOTS.name, RECOVERY_MUTATIONS.name]
+
+
+def test_recovery_replacements_preserve_build_upgrade_payments_and_demolish_refunds():
+    build = body(RECOVERY_MUTATIONS.read_text(), "island_build")
+    upgrade = body(RECOVERY_MUTATIONS.read_text(), "island_upgrade")
+    demolish = body(RECOVERY_MUTATIONS.read_text(), "island_demolish")
+
+    assert BUILD_ADDITION in build
+    assert UPGRADE_ADDITION in upgrade
+    assert f"p_plot !~ {D060_PLOT_RULE}" in demolish
+    assert "public.island_refund_split(" in demolish
+    assert "'building_refund'" in demolish
+    assert "update public.building_payments" in demolish
+    assert "insert into public.building_demolitions" in demolish
+    assert "structure_recovery_mutation_begin(p_island_owner)" in demolish
+    assert "structure_recovery_mutation_finish(p_island_owner, v_recovery)" in demolish
 
 
 def test_the_extra_tower_spots_widen_only_the_plot_test_of_the_tear_down():

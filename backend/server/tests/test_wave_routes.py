@@ -67,6 +67,8 @@ def test_the_bell_on_your_own_island_answers_the_wave_of_the_contract():
         "weather": {"kind": "calm", "label": "Calm sea", "ships": 1.0, "fog": 0.0},
         "flagship": False,
         "boss": False,
+        "recoveryVersion": 0,
+        "waveProtocol": 1,
     }
 
 
@@ -92,6 +94,42 @@ def test_the_own_island_is_opened_and_its_owner_sent_with_the_numbers_of_the_fil
         "p_weather_ships": 1.0,
         "p_weather_fog": 0.0,
     }
+
+
+def test_start_negotiates_the_explicit_incoming_protocol_atomically():
+    world = World()
+
+    response = world.client.post(
+        "/api/waves/start",
+        headers=PLAYER,
+        json={"where": "own", "actionUid": "bell-0001"},
+    )
+
+    assert response.status_code == 200
+    (call,) = world.database.calls("recovery_wave_start")
+    assert call["p_protocol"] == 1
+    assert call["p_admit_v1"] is False
+
+
+def test_saved_recovery_v1_protocol2_start_builds_snapshot_when_admission_flag_is_off():
+    world = World()
+    world.database.recovery_policy_version = 1
+    world.database.recovery_policy_revision = 7
+    world.database.islands["K7Q2M"] = {
+        "player_id": PLAYER_ID,
+        "code": "K7Q2M",
+        "wave_best": 0,
+        "flags": 0,
+    }
+
+    response = world.start(waveProtocol=2)
+
+    assert response.status_code == 200, response.text
+    (call,) = world.database.calls("recovery_wave_start")
+    assert call["p_protocol"] == 2
+    assert call["p_admit_v1"] is False
+    assert call["p_snapshot_template"]["expectedRevision"] == 7
+    assert call["p_snapshot_template"]["configVersion"] == 1
 
 
 @pytest.mark.parametrize(

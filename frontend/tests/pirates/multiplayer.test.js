@@ -3,7 +3,7 @@
 // landing mid-wave, co-op builds reaching every defender, and a break that never keeps the input blocked.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createWaveController } from '../../src/pirates/controller.js';
-import { wireWaves } from '../../src/pirates/game-wiring.js';
+import { pointApiFrom, wireWaves } from '../../src/pirates/game-wiring.js';
 import { createWaveFlow } from '../../src/island/wave-flow.js';
 import { WAVE_STARTED } from '../../src/island/wave-hooks.js';
 import { createFakeIslandApi } from '../island/fake.js';
@@ -102,7 +102,7 @@ describe('the bell when two captains ring at once', () => {
 });
 
 const micro = async () => { for (let i = 0; i < 8; i++) await Promise.resolve(); };
-function wiringHarness({ visiting = null } = {}) {
+function wiringHarness({ visiting = null, recoveryTransport = null } = {}) {
   const handlers = new Map(), rooms = [], ticks = [], laters = [];
   const on = (type, handler) => { if (!handlers.has(type)) handlers.set(type, new Set()); handlers.get(type).add(handler); return () => handlers.get(type).delete(handler); };
   const emit = event => { for (const handler of [...(handlers.get(event.type) ?? [])]) handler(event); };
@@ -115,21 +115,70 @@ function wiringHarness({ visiting = null } = {}) {
     rooms.push(room); return room;
   };
   const state = { own: null, visiting };
+  let recoveryCheckpointHandler = null;
   const island = {
-    api: {}, get island() { return state.own; }, get visiting() { return state.visiting; },
+    api: {}, recoveryTransport, get island() { return state.own; }, get visiting() { return state.visiting; },
     defenses: () => [], roomPlace: () => (state.visiting ? `isle_${state.visiting.code.toLowerCase()}` : state.own ? 'isle_k7q2m' : null),
     joinRunningWave: vi.fn(async () => null), refreshDefended: vi.fn(async () => {}), loadPoint: vi.fn(async () => {}),
-    ringBell: vi.fn(async () => ({ ok: true })), setBattle() {}, setPointBattle() {}, point: null,
+    ringBell: vi.fn(async () => ({ ok: true })), setBattle() {}, setPointBattle() {}, setRecoveryCombatState: vi.fn(),
+    setRecoveryCheckpointHandler(handler) { recoveryCheckpointHandler = handler; }, point: null,
   };
   const world = { current: { id: 'home_islet' } };
   const waves = wireWaves({ island, on, emit, world, openRoom, loop: false, every: run => { ticks.push(run); return () => {}; },
     later: (run, ms) => { const item = { run, ms }; laters.push(item); return () => { laters.splice(laters.indexOf(item), 1); }; } });
   const tick = () => ticks.forEach(run => run());
   const flush = async () => { while (laters.length) { const item = laters.shift(); item.run(); await Promise.resolve(); } await Promise.resolve(); };
-  return { waves, island, state, rooms, emit, tick, flush, world };
+  return { waves, island, state, rooms, emit, tick, flush, world, recoveryCheckpointHandler: () => recoveryCheckpointHandler };
 }
 
 describe('the island room for every defender', () => {
+  it('wires authenticated recovery reads and checkpoints into the mounted island controller', async () => {
+    const get = vi.fn(async () => ({headSeq: 0, sealedThroughTick: 0, events: []}));
+    const post = vi.fn(async (_path, body) => ({accepted: true, throughTick: body.throughTick,
+      inputHeadSeq: body.inputHeadSeq, lastRepairSeq: body.lastRepairSeq, hpUnits: body.hpUnits}));
+    const h = wiringHarness({recoveryTransport: {get, post}});
+    const token = '7165d60f-14f5-4b9e-96a0-2ed457b4c219', startsAt = new Date(Date.now() - 100).toISOString();
+    const initialSnapshot = {recoveryVersion: 1, waveProtocol: 2, configVersion: 1, waveId: 'wave-wire', islandEpoch: 'epoch-wire',
+      seed: 42, startsAt, weather: {kind: 'clear'}, rules: ['structure_recovery'],
+      participants: [{participantToken: token, captain: {level: 1, skills: [], weapon: 'musket'}}],
+      createWave: {seed: 42, wave: 1, weather: {kind: 'clear'}, defenses: []}, structures: []};
+    h.waves.island.start({waveId: 'wave-wire', wave: 1, seed: 42, startsAt, weather: initialSnapshot.weather, flagship: false,
+      rules: initialSnapshot.rules, recoveryVersion: 1, waveProtocol: 2, initialSnapshot, participantToken: token, lastActorCounter: 0});
+    h.waves.island.update(.05);
+    const handler = h.recoveryCheckpointHandler();
+    expect(typeof handler).toBe('function');
+    expect(await handler()).toEqual({ok: true});
+    expect(get).toHaveBeenCalledWith('/api/waves/wave-wire/events?after=0');
+    expect(post).toHaveBeenCalledWith('/api/waves/wave-wire/health', expect.objectContaining({waveProtocol: 2,
+      islandEpoch: 'epoch-wire', throughTick: 0, inputHeadSeq: 0, hpUnits: {}, basisRepairSeq: {}}));
+    h.waves.dispose();
+    expect(h.recoveryCheckpointHandler()).toBeNull();
+  });
+
+  it('keeps Pirate Point waves on protocol 1 when island recovery is enabled', async () => {
+    const startWave = vi.fn(async () => ({ ok: true, data: { waveId: 'point-wave' } }));
+    const joinWave = vi.fn(async () => ({ ok: true, data: { waveId: 'point-wave' } }));
+    const currentWave = vi.fn(async () => ({ ok: true, data: null }));
+    const api = pointApiFrom({ startWave, joinWave, currentWave });
+    await api.startWave({ where: 'pirate_point' });
+    await api.joinWave({ waveId: 'point-wave' });
+    await api.currentWave('pirate_point');
+    expect(startWave).toHaveBeenCalledWith({ where: 'pirate_point', waveProtocol: 1 });
+    expect(joinWave).toHaveBeenCalledWith({ waveId: 'point-wave', waveProtocol: 1 });
+    expect(currentWave).toHaveBeenCalledWith({ where: 'pirate_point', waveProtocol: 1 });
+  });
+
+  it('publishes and clears replayed structure health through the island setter', () => {
+    const h = wiringHarness(), state = { waveId: 'wave-a', islandEpoch: 'epoch-a', structures: [
+      { spot: 'wall_1', instanceId: 'instance-a', hpUnits: 500_000, maxHP: 60, repairSeq: 2 },
+    ] };
+    Object.defineProperty(h.waves.island, 'recoveryCombatState', { configurable: true, get: () => state });
+    h.tick();
+    expect(h.island.setRecoveryCombatState).toHaveBeenLastCalledWith(state);
+    h.waves.dispose();
+    expect(h.island.setRecoveryCombatState).toHaveBeenLastCalledWith(null);
+  });
+
   it('the owner joins the island room as soon as the island answered (it is unknown at the landing)', () => {
     const h = wiringHarness();
     expect(h.rooms).toHaveLength(0);

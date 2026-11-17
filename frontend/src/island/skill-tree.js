@@ -8,6 +8,7 @@
 //   kit: {button(label, onClick, quiet), line(className, text, role)} from ui.js
 // On a phone (CSS, island.css) one branch shows at a time, chosen with the branch buttons above the tree.
 import {node} from '../ui/kit/dom.js';
+import {captainBranchesForPolicy, recoveryTechLine} from '../campaign/captain-repair-policy.js';
 
 const SVG = 'http://www.w3.org/2000/svg';
 // One glyph per tile. Only the look: names, lines and numbers stay in the data.
@@ -130,33 +131,55 @@ function detailPanel(className, {id, icon, state, name, sub, line: text, note, r
 // --- the captain's skills (§14, docs/GAME-V3.md "Captain tree and roles") ---
 export function drawSkills(model, on, kit) {
   const part = node('div', 'island-skills island-tree-card');
-  const current = model.branches.find(branch => branch.nodes.some(item => item.id === model.picked))?.id ?? model.branches[0]?.id;
+  const branches = captainBranchesForPolicy(model.branches, model.recoveryVersion);
+  const visibleSkills = branches.flatMap(branch => branch.nodes);
+  const selectedSkill = visibleSkills.find(item => item.id === model.detail.id)
+    ?? visibleSkills.find(item => item.state === 'ready')
+    ?? visibleSkills[0];
+  const pick = selectedSkill?.id === model.detail.id ? model.detail : selectedSkill ? {
+    ...selectedSkill,
+    costText: `${selectedSkill.cost} ${selectedSkill.cost === 1 ? 'point' : 'points'}`,
+    button: selectedSkill.state === 'learned' ? 'Learned' : selectedSkill.state === 'closed' ? 'Closed' : 'Learn',
+    disabled: selectedSkill.state !== 'ready',
+  } : model.detail;
+  const current = branches.find(branch => branch.nodes.some(item => item.id === pick.id))?.id ?? branches[0]?.id;
   const top = node('div', 'island-tree-top');
   // How to earn points only while there are none (a locked tile says it too).
   top.append(node('p', `island-points${model.points > 0 ? ' has-points' : ''}`, model.pointsText), kit.line('island-skills-how', model.points > 0 ? '' : model.line),
     legend({learned: 'Learned', ready: 'Can learn', locked: 'Locked'}));
   const icons = Object.fromEntries(model.role.choices.map(choice => [choice.id, choice.icon]));
   const tree = node('div', 'island-tree'); tree.setAttribute('role', 'group'); tree.setAttribute('aria-label', 'Skill tree');
-  for (const branch of model.branches) {
+  for (const branch of branches) {
     const tiers = branch.tiers.map((tier, index) => ({...tier, linked: index > 0 && branch.tiers[index - 1].nodes.some(item => item.state === 'learned'),
       group: tier.fork ? `Tier ${tier.tier}: choose one of two` : '', nodes: tier.nodes.map(item => ({...item, visual: item.state}))}));
     tree.append(branchTree({id: branch.id, className: `island-branch-${branch.id}${branch.id === current ? ' is-current' : ''}`, name: branch.name, icon: branch.icon,
       tiers, needs: item => item.needs ?? [],
       makeTile: skill => {
         const button = tile({id: skill.id, className: 'island-skill', state: skill.state, name: skill.name, cost: `${skill.cost} ⭐`, label: skill.label,
-          picked: skill.id === model.picked, capstone: skill.capstone, extra: skill.capstone ? icons[skill.role] : '', focus: `skill-${skill.id}`,
+          picked: skill.id === pick.id, capstone: skill.capstone, extra: skill.capstone ? icons[skill.role] : '', focus: `skill-${skill.id}`,
           onClick: () => on.pick?.(skill.id)});
         button.dataset.skill = skill.id;
         return button;
       }}));
   }
-  const tabs = branchTabs(model.branches, current, 'Skill branches', branch => on.pick?.(branch.start));
-  const pick = model.detail;
+  const tabs = branchTabs(branches, current, 'Skill branches', branch => on.pick?.(branch.start));
   const learn = kit.button(pick.button, () => on.learn?.(pick.id)); learn.dataset.focus = 'learn'; learn.disabled = pick.disabled;
   const detail = detailPanel('island-skill-pick', {id: pick.id, state: pick.state, name: pick.name, sub: `Tier ${pick.tier} · ${pick.costText}`,
     line: pick.line, note: '', reason: pick.state === 'locked' || pick.state === 'closed' ? pick.reason : ''}, learn, kit);
-  part.append(top, tabs, tree, detail, kit.line('island-message', model.message, 'alert'), rolePart(model.role, on, kit), respecPart(model.respec, on, kit));
+  part.append(top, tabs, tree, detail, kit.line('island-message', model.message, 'alert'), rolePart(roleForPolicy(model.role, model.recoveryVersion), on, kit), respecPart(model.respec, on, kit));
   return part;
+}
+
+function roleForPolicy(model, recoveryVersion) {
+  if (recoveryVersion !== 1) return model;
+  const retainedLine = 'Buildings and upgrades cost you 10% less.';
+  const choices = model.choices.map(choice => choice.id === 'engineer'
+    ? {...choice, line: retainedLine, capstone: ''}
+    : choice);
+  const detail = model.detail.id === 'engineer'
+    ? {...model.detail, line: retainedLine, capstone: ''}
+    : model.detail;
+  return {...model, choices, detail};
 }
 
 // The role: three role tiles side by side, the picked one's line and its button.
@@ -177,8 +200,9 @@ function rolePart(model, on, kit) {
   }
   const shown = model.detail, act = kit.button(shown.button, () => on.role?.(shown.id), true); act.dataset.focus = 'role'; act.disabled = shown.disabled;
   // Only the locked case needs words above the tiles; the rest is in the picked role's one line.
-  card.append(head, kit.line('island-role-lead', model.locked ? model.lead : ''), row, kit.line('island-role-line', shown.line),
-    kit.line('island-role-capstone', `Unlocks ${shown.capstone} (top of ${shown.branchName}).`), act);
+  card.append(head, kit.line('island-role-lead', model.locked ? model.lead : ''), row, kit.line('island-role-line', shown.line));
+  if (shown.capstone) card.append(kit.line('island-role-capstone', `Unlocks ${shown.capstone} (top of ${shown.branchName}).`));
+  card.append(act);
   return card;
 }
 
@@ -240,7 +264,8 @@ export function drawTech(body, model, view, kit) {
     if (go) act.setAttribute('aria-label', go.aria);
     const sub = `${row.short ?? row.name} · tier ${tier.tier}${tier.fork ? ' · pick one of two' : ''}`;
     part.append(detailPanel('island-tech-detail', {id: tier.tier === 1 ? row.branch : option.id, state: TECH_VISUAL[option.state] ?? 'locked', name: option.name, sub,
-      line: option.line, note: option.note, reason: go ? go.reason : option.state === 'locked' ? tier.reason : ''}, act, kit));
+      line: recoveryTechLine(option.id, option.line, model.recoveryVersion), note: option.note,
+      reason: go ? go.reason : option.state === 'locked' ? tier.reason : ''}, act, kit));
     focusable = !act.disabled && !go?.action.change ? act : null;
   }
   part.append(kit.line('island-message', model.message, 'alert'), kit.line('island-coins', model.coins));

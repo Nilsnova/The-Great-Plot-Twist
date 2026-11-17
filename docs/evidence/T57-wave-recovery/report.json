@@ -1,0 +1,551 @@
+{
+  "generatedBy": "recovery-balance-diagnostic.test.js",
+  "config": {
+    "tickSeconds": 0.05,
+    "weather": {
+      "ships": 1,
+      "fog": 0
+    },
+    "build": [
+      {
+        "id": "wall_1",
+        "kind": "wall",
+        "level": 2,
+        "x": 0,
+        "z": 11,
+        "health": 60
+      },
+      {
+        "id": "wall_2",
+        "kind": "wall",
+        "level": 2,
+        "x": 8,
+        "z": 8,
+        "health": 60
+      },
+      {
+        "id": "wall_3",
+        "kind": "wall",
+        "level": 2,
+        "x": -8,
+        "z": 8,
+        "health": 60
+      },
+      {
+        "id": "wall_4",
+        "kind": "wall",
+        "level": 2,
+        "x": 0,
+        "z": -12,
+        "health": 60
+      },
+      {
+        "id": "cannon_1",
+        "kind": "cannon",
+        "level": 2,
+        "x": -8,
+        "z": -3
+      },
+      {
+        "id": "cannon_2",
+        "kind": "cannon",
+        "level": 2,
+        "x": 8,
+        "z": -3
+      },
+      {
+        "id": "house_1",
+        "kind": "house",
+        "level": 2,
+        "spec": "workshop",
+        "x": 0,
+        "z": 9
+      }
+    ],
+    "towerHealth": true,
+    "pathing": true,
+    "towerObstacles": true,
+    "initialWallHpUnits": 600000,
+    "initialTowerHpUnits": 1000000,
+    "structureMaxHp": {
+      "wall_1": 120,
+      "wall_2": 120,
+      "wall_3": 120,
+      "wall_4": 120
+    },
+    "paidEvents": {
+      "type": "structure_repaired",
+      "effectiveTicks": [
+        0,
+        100,
+        200
+      ],
+      "maxSuccessfulCount": 3,
+      "hpUnits": 1000000,
+      "repairSeq": 1,
+      "chargedPrice": 0,
+      "chargedPriceIsFixtureOnly": true
+    },
+    "crewProfiles": [
+      {
+        "label": "solo proxy",
+        "crew": {
+          "gunner": 0,
+          "carpenter": 1
+        }
+      },
+      {
+        "label": "co-op proxy",
+        "crew": {
+          "gunner": 1,
+          "carpenter": 2
+        }
+      }
+    ],
+    "cases": [
+      {
+        "stage": "early",
+        "wave": 2,
+        "seed": 20261117
+      },
+      {
+        "stage": "mid",
+        "wave": 15,
+        "seed": 20261130
+      },
+      {
+        "stage": "late",
+        "wave": 35,
+        "seed": 20261217
+      }
+    ],
+    "limits": [
+      "pure deterministic combat sim only",
+      "solo/co-op are crew proxies, not distinct player-control simulations",
+      "chargedPrice is fixture-only; no SQL pricing, authorization, or quota integration",
+      "does not measure human fun, network races, or combat hit-report trust"
+    ]
+  },
+  "rows": [
+    {
+      "stage": "early",
+      "wave": 2,
+      "seed": 20261117,
+      "crew": "solo proxy",
+      "policy": "legacy",
+      "paidCount": 0,
+      "effectiveTicks": [],
+      "durationSeconds": 19.55,
+      "survived": true,
+      "shipsSunk": 5,
+      "islandHp": 100,
+      "structuresHp": {
+        "wall_1": 107.49,
+        "wall_2": 107.49,
+        "wall_3": 107.49,
+        "wall_4": 107.4,
+        "cannon_1": 130,
+        "cannon_2": 130
+      },
+      "simTicks": 391
+    },
+    {
+      "stage": "early",
+      "wave": 2,
+      "seed": 20261117,
+      "crew": "solo proxy",
+      "policy": "recovery-v1",
+      "paidCount": 0,
+      "effectiveTicks": [],
+      "durationSeconds": 19.55,
+      "survived": true,
+      "shipsSunk": 5,
+      "islandHp": 100,
+      "structuresHp": {
+        "wall_1": 72,
+        "wall_2": 72,
+        "wall_3": 72,
+        "wall_4": 72,
+        "cannon_1": 130,
+        "cannon_2": 130
+      },
+      "simTicks": 391
+    },
+    {
+      "stage": "early",
+      "wave": 2,
+      "seed": 20261117,
+      "crew": "solo proxy",
+      "policy": "recovery-v1",
+      "paidCount": 3,
+      "effectiveTicks": [
+        0,
+        100,
+        200
+      ],
+      "durationSeconds": 19.55,
+      "survived": true,
+      "shipsSunk": 5,
+      "islandHp": 100,
+      "structuresHp": {
+        "wall_1": 120,
+        "wall_2": 120,
+        "wall_3": 120,
+        "wall_4": 72,
+        "cannon_1": 130,
+        "cannon_2": 130
+      },
+      "simTicks": 391
+    },
+    {
+      "stage": "early",
+      "wave": 2,
+      "seed": 20261117,
+      "crew": "co-op proxy",
+      "policy": "legacy",
+      "paidCount": 0,
+      "effectiveTicks": [],
+      "durationSeconds": 19.3,
+      "survived": true,
+      "shipsSunk": 5,
+      "islandHp": 100,
+      "structuresHp": {
+        "wall_1": 120,
+        "wall_2": 120,
+        "wall_3": 120,
+        "wall_4": 120,
+        "cannon_1": 130,
+        "cannon_2": 130
+      },
+      "simTicks": 386
+    },
+    {
+      "stage": "early",
+      "wave": 2,
+      "seed": 20261117,
+      "crew": "co-op proxy",
+      "policy": "recovery-v1",
+      "paidCount": 0,
+      "effectiveTicks": [],
+      "durationSeconds": 19.3,
+      "survived": true,
+      "shipsSunk": 5,
+      "islandHp": 100,
+      "structuresHp": {
+        "wall_1": 72,
+        "wall_2": 72,
+        "wall_3": 72,
+        "wall_4": 72,
+        "cannon_1": 130,
+        "cannon_2": 130
+      },
+      "simTicks": 386
+    },
+    {
+      "stage": "early",
+      "wave": 2,
+      "seed": 20261117,
+      "crew": "co-op proxy",
+      "policy": "recovery-v1",
+      "paidCount": 3,
+      "effectiveTicks": [
+        0,
+        100,
+        200
+      ],
+      "durationSeconds": 19.3,
+      "survived": true,
+      "shipsSunk": 5,
+      "islandHp": 100,
+      "structuresHp": {
+        "wall_1": 120,
+        "wall_2": 120,
+        "wall_3": 120,
+        "wall_4": 72,
+        "cannon_1": 130,
+        "cannon_2": 130
+      },
+      "simTicks": 386
+    },
+    {
+      "stage": "mid",
+      "wave": 15,
+      "seed": 20261130,
+      "crew": "solo proxy",
+      "policy": "legacy",
+      "paidCount": 0,
+      "effectiveTicks": [],
+      "durationSeconds": 23.1,
+      "survived": false,
+      "shipsSunk": 1,
+      "islandHp": 0,
+      "structuresHp": {
+        "wall_1": 16.56,
+        "wall_2": 102.42,
+        "wall_3": 102.42,
+        "wall_4": 102.3,
+        "cannon_1": 82,
+        "cannon_2": 85
+      },
+      "simTicks": 462
+    },
+    {
+      "stage": "mid",
+      "wave": 15,
+      "seed": 20261130,
+      "crew": "solo proxy",
+      "policy": "recovery-v1",
+      "paidCount": 0,
+      "effectiveTicks": [],
+      "durationSeconds": 23.1,
+      "survived": false,
+      "shipsSunk": 1,
+      "islandHp": 0,
+      "structuresHp": {
+        "wall_1": 0,
+        "wall_2": 72,
+        "wall_3": 72,
+        "wall_4": 72,
+        "cannon_1": 82,
+        "cannon_2": 85
+      },
+      "simTicks": 462
+    },
+    {
+      "stage": "mid",
+      "wave": 15,
+      "seed": 20261130,
+      "crew": "solo proxy",
+      "policy": "recovery-v1",
+      "paidCount": 3,
+      "effectiveTicks": [
+        0,
+        100,
+        200
+      ],
+      "durationSeconds": 23.1,
+      "survived": false,
+      "shipsSunk": 1,
+      "islandHp": 0,
+      "structuresHp": {
+        "wall_1": 0,
+        "wall_2": 120,
+        "wall_3": 120,
+        "wall_4": 72,
+        "cannon_1": 82,
+        "cannon_2": 85
+      },
+      "simTicks": 462
+    },
+    {
+      "stage": "mid",
+      "wave": 15,
+      "seed": 20261130,
+      "crew": "co-op proxy",
+      "policy": "legacy",
+      "paidCount": 0,
+      "effectiveTicks": [],
+      "durationSeconds": 24.3,
+      "survived": false,
+      "shipsSunk": 2,
+      "islandHp": 0,
+      "structuresHp": {
+        "wall_1": 52.8,
+        "wall_2": 120,
+        "wall_3": 120,
+        "wall_4": 120,
+        "cannon_1": 73,
+        "cannon_2": 76
+      },
+      "simTicks": 486
+    },
+    {
+      "stage": "mid",
+      "wave": 15,
+      "seed": 20261130,
+      "crew": "co-op proxy",
+      "policy": "recovery-v1",
+      "paidCount": 0,
+      "effectiveTicks": [],
+      "durationSeconds": 24.15,
+      "survived": false,
+      "shipsSunk": 2,
+      "islandHp": 0,
+      "structuresHp": {
+        "wall_1": 0,
+        "wall_2": 72,
+        "wall_3": 72,
+        "wall_4": 72,
+        "cannon_1": 73,
+        "cannon_2": 76
+      },
+      "simTicks": 483
+    },
+    {
+      "stage": "mid",
+      "wave": 15,
+      "seed": 20261130,
+      "crew": "co-op proxy",
+      "policy": "recovery-v1",
+      "paidCount": 3,
+      "effectiveTicks": [
+        0,
+        100,
+        200
+      ],
+      "durationSeconds": 24.3,
+      "survived": false,
+      "shipsSunk": 2,
+      "islandHp": 0,
+      "structuresHp": {
+        "wall_1": 0,
+        "wall_2": 120,
+        "wall_3": 120,
+        "wall_4": 72,
+        "cannon_1": 73,
+        "cannon_2": 76
+      },
+      "simTicks": 486
+    },
+    {
+      "stage": "late",
+      "wave": 35,
+      "seed": 20261217,
+      "crew": "solo proxy",
+      "policy": "legacy",
+      "paidCount": 0,
+      "effectiveTicks": [],
+      "durationSeconds": 18.75,
+      "survived": false,
+      "shipsSunk": 0,
+      "islandHp": 0,
+      "structuresHp": {
+        "wall_1": 37.73,
+        "wall_2": 97.35,
+        "wall_3": 97.35,
+        "wall_4": 97.5,
+        "cannon_1": 63.4,
+        "cannon_2": 74.44
+      },
+      "simTicks": 375
+    },
+    {
+      "stage": "late",
+      "wave": 35,
+      "seed": 20261217,
+      "crew": "solo proxy",
+      "policy": "recovery-v1",
+      "paidCount": 0,
+      "effectiveTicks": [],
+      "durationSeconds": 18.75,
+      "survived": false,
+      "shipsSunk": 0,
+      "islandHp": 0,
+      "structuresHp": {
+        "wall_1": 0,
+        "wall_2": 72,
+        "wall_3": 72,
+        "wall_4": 72,
+        "cannon_1": 63.4,
+        "cannon_2": 74.44
+      },
+      "simTicks": 375
+    },
+    {
+      "stage": "late",
+      "wave": 35,
+      "seed": 20261217,
+      "crew": "solo proxy",
+      "policy": "recovery-v1",
+      "paidCount": 3,
+      "effectiveTicks": [
+        0,
+        100,
+        200
+      ],
+      "durationSeconds": 18.75,
+      "survived": false,
+      "shipsSunk": 0,
+      "islandHp": 0,
+      "structuresHp": {
+        "wall_1": 23.72,
+        "wall_2": 120,
+        "wall_3": 120,
+        "wall_4": 72,
+        "cannon_1": 63.4,
+        "cannon_2": 74.44
+      },
+      "simTicks": 375
+    },
+    {
+      "stage": "late",
+      "wave": 35,
+      "seed": 20261217,
+      "crew": "co-op proxy",
+      "policy": "legacy",
+      "paidCount": 0,
+      "effectiveTicks": [],
+      "durationSeconds": 19.95,
+      "survived": false,
+      "shipsSunk": 1,
+      "islandHp": 0,
+      "structuresHp": {
+        "wall_1": 45.14,
+        "wall_2": 120,
+        "wall_3": 120,
+        "wall_4": 120,
+        "cannon_1": 55.92,
+        "cannon_2": 56.87
+      },
+      "simTicks": 399
+    },
+    {
+      "stage": "late",
+      "wave": 35,
+      "seed": 20261217,
+      "crew": "co-op proxy",
+      "policy": "recovery-v1",
+      "paidCount": 0,
+      "effectiveTicks": [],
+      "durationSeconds": 19.95,
+      "survived": false,
+      "shipsSunk": 1,
+      "islandHp": 0,
+      "structuresHp": {
+        "wall_1": 0,
+        "wall_2": 72,
+        "wall_3": 72,
+        "wall_4": 72,
+        "cannon_1": 55.92,
+        "cannon_2": 56.87
+      },
+      "simTicks": 399
+    },
+    {
+      "stage": "late",
+      "wave": 35,
+      "seed": 20261217,
+      "crew": "co-op proxy",
+      "policy": "recovery-v1",
+      "paidCount": 3,
+      "effectiveTicks": [
+        0,
+        100,
+        200
+      ],
+      "durationSeconds": 19.95,
+      "survived": false,
+      "shipsSunk": 1,
+      "islandHp": 0,
+      "structuresHp": {
+        "wall_1": 0,
+        "wall_2": 120,
+        "wall_3": 120,
+        "wall_4": 72,
+        "cannon_1": 55.92,
+        "cannon_2": 56.87
+      },
+      "simTicks": 399
+    }
+  ]
+}
