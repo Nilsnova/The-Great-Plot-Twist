@@ -24,3 +24,21 @@ No simulation walking, wall-in-way egress, captain/projectile rules, HP, prices,
 The measured legacy defect must reproduce before implementation. Selected mode must have no newly spawned or normally walking boarder inside a standing ring piece; blocked exterior units should hack and progress when a breach opens. Real gaps and zero-health pieces are not barriers. Same seed/layout/inputs must replay exactly. An existing occupant can leave a restored footprint under the unchanged shared egress rule.
 
 Simulation fixtures are not paid persisted layouts, production, browser screenshots or whole-perimeter rollout proof. The selected option changes entry geometry, so it needs its frozen compatibility path and human review before activation. No new package, migration application, flag activation, deployment or merge.
+
+## Implementation and exact evidence
+
+`perimeter-landing.js` derives an exterior ray origin beyond all standing footprints plus BODY, reuses `wallInWay` and backs off immediately before its first hit. `sim.js` rejects unsupported selected mode and applies the helper only at new landings. Existing movement, repaired-occupant egress and random draws are untouched. The measured 102-position ring is a declared simulation fixture.
+
+Before implementation, the regression returned `Test Files  1 failed (1)`, `Tests  1 failed | 1 passed (2)`, `Duration  1.24s`. The selected-mode check found the same five boarders spawned in standing wall_2, including boarder_7. That red run established the defect rather than a speculative code change.
+
+Executed after the fix from `frontend/`:
+
+```sh
+npm test -- --maxWorkers=1 tests/pirates/perimeter-landing.test.js tests/pirates/wall-blocking.test.js tests/pirates/wall-recovery.test.js tests/pirates/recovery-snapshot.test.js
+```
+
+Result: `Test Files  4 passed (4)`, `Tests  40 passed (40)`, `Duration  3.52s`, exit 0. Four measured-ring seeds (7919, 15838, 23757, 31676) have no new spawn or normal movement inside a standing footprint and no walking stall of forty consecutive ticks. They still hack/breach and finish. Deliberate western gaps/rubble allow actual heart entry. Default/false traces match and selected repeats are deterministic. A real V1 event restores a wall around an already present unit, which leaves while that wall remains standing.
+
+Pure geometry also checks the outermost first hit, empty/gap/rubble preservation, degenerate ray handling and the unchanged occupant exception. JavaScript syntax and `git diff --check`: PASS. Repository text lint: `Text lint: 4413 candidate strings in 488 source files; 0 errors, 8 report-only findings.` No dictionary entries were added.
+
+W22's trusted frozen transport, combined full-suite/build/budget checks, persisted construction and deployment remain outside this branch's proof. No activation or merge was performed.

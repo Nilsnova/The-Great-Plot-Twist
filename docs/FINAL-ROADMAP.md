@@ -163,3 +163,5 @@ Not released or marked complete: focused evidence, Johannes's explain-back and
 independent human review remain. No change to the existing freeze or merge rules.
 
 COC-02 follow-up (Johannes, draft): current-base management fit view is a bounded implementation slice for issue #143 and depends on COC-49/PR #192. The parent camera task remains open; see [specification](../specs/COC-02-village-overview.md). No merge or full editor-camera completion is claimed.
+
+WALL-29 perimeter-entry correctness (Johannes): [issue #287](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/287), [Draft PR #290](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/290). The selected frozen perimeter-wave option now starts new boarders exterior to standing wall footprints, preserving actual repaired-occupant egress and absent/false legacy behavior. [Reproduction, scope and exact checks](../specs/WALL-29-exterior-landing.md): measured 102-piece ring regression observed red, then four focused files / 40 tests passed. Trusted W22 transport, combined integration checks, explain-back and independent human review remain. No rollout or merge.
