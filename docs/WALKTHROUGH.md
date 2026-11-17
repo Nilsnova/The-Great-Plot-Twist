@@ -1683,3 +1683,7 @@ real FastAPI requests to a disposable PostgreSQL fixture and passes the producti
 journal directly into two JavaScript replay consumers. Its SQL companions cover retries, quota races,
 expiry and mutation refresh. This does not exercise the browser transport adapter, hosted Supabase,
 live migration history or a physical device. The feature has not been enabled or deployed by this work.
+The [bounded local journal-volume diagnostic](evidence/T60-structure-recovery/README.md#journal-volume-and-retention-diagnostic)
+measures fixed-head paging for 10,000 input events. It also found no automatic retention cap or
+request-rate limiter in the current design; activation remains gated on an operating-budget and
+retention decision.

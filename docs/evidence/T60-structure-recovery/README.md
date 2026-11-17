@@ -90,6 +90,45 @@ For separate deterministic simulator-only repair balance coverage, see the
 [T57 diagnostic report](../T57-wave-recovery/README.md); it does not prove API, SQL or multiplayer
 authority.
 
+## Journal volume and retention diagnostic
+
+The bounded diagnostic uses the real `recovery_wave_join`, `recovery_wave_inputs` and
+`recovery_wave_events_page` PostgreSQL functions from the disposable local Unix-socket fixture.
+Four synthetic clients each append 2,500 commands (10,000 total) in valid batches of up to 32;
+three participant-join events bring the fixed journal head to 10,003. It then drains that captured
+head in 40 pages of at most 256 events, checking sequence continuity and an unchanged sealed-tick
+watermark.
+
+**Source:** `backend/server/tests/island_sql/test_structure_recovery_journal_budget_sql.py`, using
+`20261117020000_structure_recovery.sql` and `20261117040000_structure_recovery_api.sql`.
+
+**Reproduce (from `backend/`):**
+
+```bash
+UV_CACHE_DIR=/tmp/t60-uv-cache CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' \
+  pytest -q server/tests/island_sql/test_structure_recovery_journal_budget_sql.py
+```
+
+To explicitly regenerate `journal-budget.json`, run the same command with
+`WRITE_RECOVERY_DIAGNOSTIC=1`. Regular test runs do not write artifacts.
+
+**Measured result:** 1 passed. PostgreSQL 16.2 stored 2,840,450 bytes of JSON payload columns and
+4,120,768 bytes of event tuples for this wave. The scratch database reported 4,317,184 bytes for the
+event table and 6,397,952 bytes for the table plus indexes/TOAST. The three named event indexes
+reported 2,048,000 bytes; the fixed head was 10,003. In this run, mean page time was 4.364 ms
+(maximum 7.675 ms); mean batch RPC time was 5.030 ms (p95 6.921 ms). These in-process timings
+exclude network latency. Relation and index sizes are global scratch-database allocated bytes, not
+isolated per-wave index attribution. The full measured record is in
+[journal-budget.json](journal-budget.json).
+
+At one command per client for each assumed 4 Hz request over the 900-second maximum wave, the
+representative volume is 14,400 input events. A full 32-command batch at that same request rate
+would be 460,800 events. This is an arithmetic scenario, not a server-enforced bound: the current
+API has no request-rate limiter. The migrations keep the event journal append-only; there is no
+automatic journal cleanup or retention cap. Wave-history growth therefore has no measured
+production budget or retention policy yet. This local diagnostic does not establish production
+capacity, and activation should wait for an explicit operating-budget and retention decision.
+
 ## Lifecycle draft probe
 
 Before the SQL owner committed the lifecycle work, I copied read-only draft snapshots into the

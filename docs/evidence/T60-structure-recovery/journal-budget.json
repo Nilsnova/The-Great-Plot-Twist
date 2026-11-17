@@ -1,0 +1,55 @@
+{
+  "source": {
+    "api_rpc_migration": "supabase/migrations/20261117040000_structure_recovery_api.sql",
+    "journal_schema_migration": "supabase/migrations/20261117020000_structure_recovery.sql",
+    "test": "backend/server/tests/island_sql/test_structure_recovery_journal_budget_sql.py",
+    "postgres": "PostgreSQL 16.2 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 10.2.1 20210130 (Red Hat 10.2.1-11), 64-bit"
+  },
+  "workload": {
+    "synthetic_clients": 4,
+    "input_commands": 10000,
+    "inputs_per_synthetic_client": 2500,
+    "assumed_client_command_rate_hz": 4,
+    "frozen_maximum_wave_seconds": 900,
+    "input_rpc_batch_limit": 32,
+    "page_event_limit": 256,
+    "input_rpc_calls": 316,
+    "joined_participant_events": 3,
+    "journal_events": 10003
+  },
+  "storage_bytes": {
+    "wave_payload_pg_column_size_sum": 2840450,
+    "wave_event_tuple_pg_column_size_sum": 4120768,
+    "event_table_plus_indexes_allocated_bytes_scratch_database_wide": 6397952,
+    "allocated_relation_bytes_scratch_database_wide": {
+      "recovery_wave_events": 4317184,
+      "recovery_wave_events_actor_uid_unique": 974848,
+      "recovery_wave_events_pkey": 425984,
+      "recovery_wave_events_replay_order_idx": 647168
+    }
+  },
+  "paging": {
+    "captured_head_seq": 10003,
+    "sealed_through_tick": 231,
+    "fixed_head_page_count": 40,
+    "mean_page_ms_local": 4.364,
+    "max_page_ms_local": 7.675,
+    "mean_input_batch_rpc_ms_local": 5.03,
+    "p95_input_batch_rpc_ms_local": 6.921
+  },
+  "theoretical_volume": {
+    "one_command_per_client_per_4hz_for_900s": 14400,
+    "full_32_item_batch_per_client_per_4hz_for_900s": 460800,
+    "note": "The latter assumes client batching at the 4 Hz request rate; neither is a server-enforced rate ceiling."
+  },
+  "retention": {
+    "automatic_journal_cleanup": false,
+    "behavior": "Journal rows are append-only and retained with wave history; no automatic cleanup or retention cap was found in the current migrations."
+  },
+  "limits": [
+    "Timing is in-process against disposable local Unix-socket PostgreSQL and excludes internet/network latency.",
+    "Allocated relation/index sizes are scratch-database-wide PostgreSQL relation sizes, not isolated per-wave index attribution.",
+    "The 10k bounded workload is a diagnostic sample, not a production-capacity guarantee.",
+    "No server request-rate limiter exists, so the 4 Hz input model is representative client behavior rather than a hard upper bound."
+  ]
+}
