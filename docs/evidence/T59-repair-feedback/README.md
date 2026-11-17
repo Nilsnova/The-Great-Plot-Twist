@@ -83,3 +83,7 @@ The fixture asserts canonical response shapes and request flow, exact card HP/qu
 | 390 × 844 phone | Full structure hides recovery display | [Full HP on phone](../../../frontend/captures/t59-integrated-full-phone.png) |
 
 The latest capture completed with 103 calls to the offline API fixture. It does not prove SQL behavior, real signed-in transport, or two-client synchronization. The separate disposable PostgreSQL/API/replay evidence is documented by T60.
+
+### Independent follow-up verification
+
+On 17 Nov 2026, `npm exec vitest -- run tests/island/structure-recovery-model.test.js tests/island/structure-recovery-card-dom.test.js --maxWorkers=1` from `frontend/` passed 25 tests across 2 files. `npm run build` passed in 1.12 seconds and the spoiler guard passed across 241 text files. The corrected desktop/phone captures were inspected: Wall level-2 upgrade is 20 coins and Harpoon level-2 upgrade is 80 coins, with the existing current-level repair prices unchanged. The bell-pause explanation wraps legibly. These remain offline fixture screenshots and do not prove API/payment/database/multiplayer behavior.
