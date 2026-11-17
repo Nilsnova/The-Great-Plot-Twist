@@ -170,7 +170,12 @@ def test_incapable_perimeter_start_refuses_before_start_rpc(monkeypatch, protoco
     response = world.client.post(
         "/api/waves/start",
         headers=PLAYER,
-        json={"where": "own", "actionUid": "perimeter-001", "waveProtocol": protocol},
+        json={
+            "where": "own",
+            "actionUid": "perimeter-001",
+            "waveProtocol": protocol,
+            "wallClientVersion": 1,
+        },
     )
     assert_error(response, 409, code)
     assert world.database.calls("recovery_wave_start") == []

@@ -501,7 +501,7 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
       if (!target) return refuse(422, 'validation_error', MESSAGES.badCode);
       const version = askedProtocol === 2 ? 2 : protocolFor(target);
       return write(`start:${target}`, actionUid => transport.post(PATHS.start,
-        {where: target, actionUid, ...(version === 2 ? {waveProtocol: 2} : {})}), isWave);
+        {where: target, actionUid, ...(version === 2 ? {waveProtocol: 2, wallClientVersion: 1} : {})}), isWave);
     },
     joinWave({waveId, waveProtocol: askedProtocol = null} = {}) {
       if (!isText(waveId)) return refuse(404, 'no_such_wave', MESSAGES.badWave);

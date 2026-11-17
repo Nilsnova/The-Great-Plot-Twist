@@ -175,6 +175,8 @@ WALL-19 perimeter follow-up (Johannes): [Draft PR #275](https://github.com/Nilsn
 
 WALL-22 recovery/wire slice (Johannes): complete bounded 139-instance vectors, trusted perimeter snapshot inputs and public geometry-version compatibility are implemented in [Draft #297](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/297), stacked on #285. [Checks, internal/public version distinction and remaining SQL/start/lifecycle gates](../specs/WALL-22-perimeter-wave-state.md). No production acceptance, migration application or merge is claimed.
 
+WALL-32 start fence (Johannes): the service-only owner-locked perimeter wrapper and explicit browser capability are implemented in [Draft #304](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/304), tracking [#303](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/303). [Scope, exact checks and remaining SQL/lifecycle gates](../specs/WALL-32-wave-admission.md). This does not activate or release the feature; independent human review remains.
+
 
 WALL-28 owner integration (Johannes): [Draft #285](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/285), [issue #284](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/284), integrates trusted wall policy in own/visited/action views and existing additional-wall actions. [Exact checks and limits](../specs/WALL-28-owner-policy-view.md). Empty added inventory has no spatial view; paid positions survive paused placement. SQL/browser lifecycle and independent human review remain; no migration application or merge.
 
