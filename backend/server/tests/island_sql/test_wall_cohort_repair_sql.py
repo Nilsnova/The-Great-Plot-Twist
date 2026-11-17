@@ -20,7 +20,8 @@ from server.tests.island_sql.test_structure_repair_sql import (  # noqa: E402
 def test_added_piece_repairs_once_and_retry_never_charges_twice(database, spot):
     seed_recovery(database)
     database.execute(
-        "insert into public.island_wall_policy (island_owner,rule_version,capacity) values (%s,1,128)",
+        "insert into public.island_wall_policy (island_owner,rule_version,capacity) "
+        "values (%s,1,128)",
         (OWNER,),
     )
     database.execute(
