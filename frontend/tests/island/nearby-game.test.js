@@ -27,7 +27,8 @@ async function clickBuilding(page) {
   const at = await page.evaluate(async () => {
     const g = window.__island, box = g.renderer.domElement.getBoundingClientRect();
     const {projectGround} = await import('/src/world/projection.js');
-    const spot = g.island.island.spots.find(item => item.id === 'cannon_3'), foot = projectGround(spot.x, spot.z);
+    const {placedSpot} = await import('/src/island/spots.js');
+    const spot = placedSpot('cannon_3', g.island.island.spots), foot = projectGround(spot.x, spot.z);
     const point = g.player.position.clone().set(foot.x, foot.y, 0).project(g.camera);
     return {x: box.left + (point.x + 1) * box.width / 2, y: box.top + (1 - point.y) * box.height / 2};
   });
