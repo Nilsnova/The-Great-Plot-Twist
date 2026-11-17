@@ -80,10 +80,17 @@ export function simulationInputFromJournal(event) {
 export function createRecoveryTransport({ get, post } = {}) {
   if (typeof get !== 'function' || typeof post !== 'function') return null;
   return {
-    readEvents({ waveId, after = 0, through } = {}) {
+    readEvents({ waveId, after = 0, through, sealedThroughTick } = {}) {
       if (typeof waveId !== 'string' || !Number.isInteger(after) || after < 0) return Promise.resolve(null);
+      const hasHead = through !== undefined, hasSeal = sealedThroughTick !== undefined;
+      const fixedHead = Number.isInteger(through) && through >= 0;
+      const fixedSeal = Number.isInteger(sealedThroughTick) && sealedThroughTick >= -1;
+      if (hasHead !== hasSeal || hasHead && (!fixedHead || !fixedSeal)) return Promise.resolve(null);
       const query = new URLSearchParams({ after: String(after) });
-      if (Number.isInteger(through) && through >= 0) query.set('through', String(through));
+      if (fixedHead) {
+        query.set('through', String(through));
+        query.set('sealedThroughTick', String(sealedThroughTick));
+      }
       return Promise.resolve(get(`/api/waves/${encodeURIComponent(waveId)}/events?${query}`))
         .then(successData, () => null);
     },

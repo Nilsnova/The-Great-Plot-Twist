@@ -137,11 +137,13 @@ export async function fetchSealedEvents(replay, readPage, after) {
   const cursor = after ?? replay.contiguousSeq;
   if (!validWatermark(cursor) || cursor !== replay.contiguousSeq) return false;
   let page;
-  let fixedHead;
+  let fixedHead, fixedSeal;
 
   if (replay.headSeq !== null && !alreadyComplete) {
     fixedHead = replay.headSeq;
-    page = await readPage({ after: cursor, through: fixedHead });
+    fixedSeal = replay.sealedThroughTick;
+    if (!validWatermark(fixedHead) || !validSeal(fixedSeal)) return false;
+    page = await readPage({ after: cursor, through: fixedHead, sealedThroughTick: fixedSeal });
     if (!page || page.through !== fixedHead || !Array.isArray(page.events) || !page.events.length
       || !advanceCursor(page.events, cursor, fixedHead) || !replay.addPage(page)) return false;
   } else {
@@ -151,11 +153,12 @@ export async function fetchSealedEvents(replay, readPage, after) {
       || page.headSeq < requestAfter || !Array.isArray(page.events) || !advanceCursor(page.events, requestAfter, page.headSeq)
       || !replay.addPage(page)) return false;
     fixedHead = page.headSeq;
+    fixedSeal = page.sealedThroughTick;
   }
 
   let next = page.events.at(-1)?.serverSeq ?? cursor;
   while (next < fixedHead) {
-    page = await readPage({ after: next, through: fixedHead });
+    page = await readPage({ after: next, through: fixedHead, sealedThroughTick: fixedSeal });
     if (!page || page.through !== fixedHead || !Array.isArray(page.events) || page.events.length === 0
       || !advanceCursor(page.events, next, fixedHead) || !replay.addPage(page)) return false;
     next = page.events.at(-1).serverSeq;

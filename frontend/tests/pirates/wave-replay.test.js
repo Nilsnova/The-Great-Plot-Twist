@@ -88,7 +88,7 @@ describe('sealed recovery wave replay', () => {
     ];
     const ready = await fetchSealedEvents(replay, async cursor => { calls.push(cursor); return pages[calls.length - 1]; });
     expect(ready).toBe(true);
-    expect(calls).toEqual([{ after: 0 }, { after: 2, through: 3 }]);
+    expect(calls).toEqual([{ after: 0 }, { after: 2, through: 3, sealedThroughTick: 8 }]);
     expect(replay.canAdvanceThrough(8)).toBe(true);
   });
 
@@ -122,9 +122,72 @@ describe('sealed recovery wave replay', () => {
       requests.push(request);
       return { headSeq: 4, sealedThroughTick: 6, events: [{ serverSeq: 4, effectiveTick: 6, type: 'captain_move', payload: {} }] };
     })).toBe(true);
-    expect(requests).toEqual([{ after: 0 }, { after: 2, through: 3 }, { after: 2, through: 3 }, { after: 3 }]);
+    expect(requests).toEqual([{ after: 0 }, { after: 2, through: 3, sealedThroughTick: 5 },
+      { after: 2, through: 3, sealedThroughTick: 5 }, { after: 3 }]);
     expect(replay.headSeq).toBe(4);
     expect(replay.contiguousSeq).toBe(4);
+  });
+
+  it('retries a lost first-page response from zero without relying on a remembered server cursor', async () => {
+    const replay = createWaveReplay(), requests = [];
+    expect(await fetchSealedEvents(replay, async request => { requests.push(request); return null; })).toBe(false);
+    expect(replay.headSeq).toBeNull();
+    expect(replay.contiguousSeq).toBe(0);
+    expect(await fetchSealedEvents(replay, async request => {
+      requests.push(request);
+      if (request.through === undefined) return { headSeq: 3, sealedThroughTick: 4, events: [
+        { serverSeq: 1, effectiveTick: 1, type: 'captain_move', payload: {} },
+        { serverSeq: 2, effectiveTick: 2, type: 'captain_move', payload: {} },
+      ] };
+      return { through: 3, events: [{ serverSeq: 3, effectiveTick: 4, type: 'captain_move', payload: {} }] };
+    })).toBe(true);
+    expect(requests).toEqual([{ after: 0 }, { after: 0 }, { after: 2, through: 3, sealedThroughTick: 4 }]);
+    expect(replay.complete()).toBe(true);
+    expect(replay.canAdvanceThrough(4)).toBe(true);
+    const reloaded = createWaveReplay();
+    const reloadRequests = [];
+    expect(await fetchSealedEvents(reloaded, async request => {
+      reloadRequests.push(request);
+      return { headSeq: 0, sealedThroughTick: -1, events: [] };
+    })).toBe(true);
+    expect(reloadRequests).toEqual([{ after: 0 }]);
+  });
+
+  it('keeps interleaved old and new replay frontiers independent with their original seals', async () => {
+    const oldFrontier = createWaveReplay(), newFrontier = createWaveReplay(), calls = [];
+    let oldFirst = true;
+    expect(await fetchSealedEvents(oldFrontier, async request => {
+      calls.push(['old', request]);
+      if (request.through === undefined) return { headSeq: 3, sealedThroughTick: 4, events: [
+        { serverSeq: 1, effectiveTick: 1, type: 'captain_move', payload: {} },
+        { serverSeq: 2, effectiveTick: 2, type: 'captain_move', payload: {} },
+      ] };
+      if (oldFirst) { oldFirst = false; return null; }
+      return { through: 3, events: [{ serverSeq: 3, effectiveTick: 4, type: 'captain_move', payload: {} }] };
+    })).toBe(false);
+    expect(await fetchSealedEvents(newFrontier, async request => {
+      calls.push(['new', request]);
+      if (request.through === undefined) return { headSeq: 4, sealedThroughTick: 6, events: [
+        { serverSeq: 1, effectiveTick: 1, type: 'captain_move', payload: {} },
+        { serverSeq: 2, effectiveTick: 2, type: 'captain_move', payload: {} },
+      ] };
+      return { through: 4, events: [
+        { serverSeq: 3, effectiveTick: 4, type: 'captain_move', payload: {} },
+        { serverSeq: 4, effectiveTick: 6, type: 'captain_move', payload: {} },
+      ] };
+    })).toBe(true);
+    expect(await fetchSealedEvents(oldFrontier, async request => {
+      calls.push(['old', request]);
+      return { through: 3, events: [{ serverSeq: 3, effectiveTick: 4, type: 'captain_move', payload: {} }] };
+    })).toBe(true);
+    expect(oldFrontier.headSeq).toBe(3);
+    expect(oldFrontier.sealedThroughTick).toBe(4);
+    expect(oldFrontier.canAdvanceThrough(5)).toBe(false);
+    expect(newFrontier.headSeq).toBe(4);
+    expect(newFrontier.sealedThroughTick).toBe(6);
+    expect(newFrontier.canAdvanceThrough(6)).toBe(true);
+    expect(calls).toContainEqual(['old', { after: 2, through: 3, sealedThroughTick: 4 }]);
+    expect(calls).toContainEqual(['new', { after: 2, through: 4, sealedThroughTick: 6 }]);
   });
 
   it('owns a deeply frozen JSON copy and rejects a malformed page without partial ingestion', () => {

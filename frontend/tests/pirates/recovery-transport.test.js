@@ -40,11 +40,22 @@ describe('recovery-v1 command transport', () => {
     const get = vi.fn(async path => ({ ok: true, data: { headSeq: 0, sealedThroughTick: 0, events: [] } }));
     const post = vi.fn(async (path, body) => ({ ok: true, data: body }));
     const transport = createRecoveryTransport({ get, post });
-    expect(await transport.readEvents({ waveId: 'wave/a', after: 4, through: 8 })).toEqual({ headSeq: 0, sealedThroughTick: 0, events: [] });
+    expect(await transport.readEvents({ waveId: 'wave/a', after: 4, through: 8, sealedThroughTick: 6 })).toEqual({ headSeq: 0, sealedThroughTick: 0, events: [] });
     expect(await transport.sendInputs({ waveId: 'wave/a', inputs: [{ inputUid: 'uid-1', actorCounter: 1, tick: 8,
       command: { type: 'captain_move', x: 1, z: 2 } }] })).toMatchObject({ waveProtocol: 2 });
-    expect(get).toHaveBeenCalledWith('/api/waves/wave%2Fa/events?after=4&through=8');
+    expect(get).toHaveBeenCalledWith('/api/waves/wave%2Fa/events?after=4&through=8&sealedThroughTick=6');
     expect(post).toHaveBeenCalledWith('/api/waves/wave%2Fa/inputs', { waveProtocol: 2, inputs: [expect.objectContaining({ actorCounter: 1 })] });
+  });
+
+  it('requires both fixed-page watermarks while allowing the preparation seal -1', async () => {
+    const get = vi.fn(async () => ({ headSeq: 0, sealedThroughTick: -1, events: [] }));
+    const transport = createRecoveryTransport({ get, post: vi.fn() });
+    expect(await transport.readEvents({ waveId: 'wave-a', after: 0, through: 2 })).toBeNull();
+    expect(await transport.readEvents({ waveId: 'wave-a', after: 0, sealedThroughTick: -1 })).toBeNull();
+    expect(await transport.readEvents({ waveId: 'wave-a', after: 0, through: 2, sealedThroughTick: -1 }))
+      .toMatchObject({ sealedThroughTick: -1 });
+    expect(get).toHaveBeenCalledTimes(1);
+    expect(get).toHaveBeenCalledWith('/api/waves/wave-a/events?after=0&through=2&sealedThroughTick=-1');
   });
 
   it('treats failed authenticated responses as uncertain outcomes', async () => {
