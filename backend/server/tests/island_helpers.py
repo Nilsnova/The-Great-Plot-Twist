@@ -269,6 +269,7 @@ class FakeIslandDatabase:
         self.wall_policies: dict[str, dict] = {}
         self.wall_epochs: dict[str, str] = {}
         self.wall_policy_read_reply: dict | httpx.Response | None = None
+        self.wall_admit_reply: dict | httpx.Response | None = None
         self.layout_missing = False
         self.move_replies: list[dict] = []
         self.requests: list[httpx.Request] = []
@@ -314,6 +315,7 @@ class FakeIslandDatabase:
             "GET /island_layout": self.read_layout,
             "POST /rpc/island_move": self.move,
             "POST /rpc/island_wall_layout_read": self.read_wall_layout,
+            "POST /rpc/island_wall_policy_admit": self.admit_wall_policy,
             "POST /rpc/island_wall_move": self.wall_move,
             "POST /rpc/island_specialise": lambda _: self.answer(
                 self.paid_replies.get("island_specialise", SPECIALISED)
@@ -525,6 +527,22 @@ class FakeIslandDatabase:
         ):
             return httpx.Response(200, json={"status": "refused", "reason": "busy"})
         return self.move(request)
+
+    def admit_wall_policy(self, request: httpx.Request) -> httpx.Response:
+        if self.wall_admit_reply is not None:
+            return self.answer(self.wall_admit_reply)
+        body = json.loads(request.content)
+        owner = body["p_island_owner"]
+        if owner != body["p_player_id"]:
+            return self.answer({"status": "refused", "reason": "owner_only"})
+        if self.wall_policies.get(owner, {}).get("ruleVersion") == 1:
+            return self.answer({"status": "done", "repeat": True})
+        rows = self.layout_rows_by_owner.get(owner, self.layout_rows)
+        if sorted(rows, key=lambda item: item["plot"]) != body["p_seen"]:
+            return self.answer({"status": "refused", "reason": "busy"})
+        self.wall_policies[owner] = {"ruleVersion": 1, "capacity": 128}
+        self.layout_rows_by_owner[owner] = body["p_effective"]
+        return self.answer({"status": "done", "repeat": False})
 
     def read_name(self, request: httpx.Request) -> httpx.Response:
         player = request.url.params["id"].removeprefix("eq.")

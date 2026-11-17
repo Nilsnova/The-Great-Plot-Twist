@@ -52,6 +52,7 @@ FLAG_NAMES = (
     # T55/T54: protocol-2 persistent structure HP and recovery state. Keep off until separately
     # reviewed and authorized for activation; adding the registry entry does not enable it.
     "structure_recovery",
+    "perimeter_walls",  # New offers only; owned wall policy survives flag-off. Migration first.
 )
 
 

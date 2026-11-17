@@ -173,3 +173,6 @@ WALL-03 bounded cohort slice (Johannes): the 128-piece catalogue adapter, comple
 
 
 WALL-28 owner integration (Johannes): [Draft #285](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/285), [issue #284](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/284), integrates trusted wall policy in own/visited/action views and existing additional-wall actions. [Exact checks and limits](../specs/WALL-28-owner-policy-view.md). Empty added inventory has no spatial view; paid positions survive paused placement. SQL/browser lifecycle and independent human review remain; no migration application or merge.
+
+
+WALL-33 enable/quote API (Johannes): [Draft #302](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/302), [issue #301](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/301), adds owner-only monotonic admission, an off-by-default offer flag, canonical bounded quotes and trusted reset-epoch scope. [Exact checks/limits](../specs/WALL-33-perimeter-api.md). Paid construction/reconciliation and real SQL/browser lifecycle remain; no activation, live migration application or merge.
