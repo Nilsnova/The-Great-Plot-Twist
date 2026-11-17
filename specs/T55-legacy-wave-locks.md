@@ -37,7 +37,7 @@ Legacy start/join/finish parity, both live finish overloads, duplicate finish, u
 
 ## Contracts touched
 
-Final legacy RPC signatures and lock order from T54. Return structured new-policy refusal codes agreed with the T55 API mapper; do not change existing successful legacy responses.
+Final legacy RPC signatures and lock order from T54. Legacy `wave_start`, `wave_join`, both `wave_finish` overloads, and `island_wall_restore` return `{status: refused, reason: client_update_required, recoveryVersion: 1, waveProtocol: 2}` when the legacy call would enter or mutate a protocol-2 recovery wave/policy. The API mapper translates that reason to HTTP 409. `island_walls_record` returns its existing `{status: skipped}` shape when recovery-v1 owns island health. Existing legacy successful responses stay unchanged.
 
 ## Owner and reviewer
 
