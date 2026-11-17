@@ -32,6 +32,19 @@ alter table public.islet_buildings
 comment on constraint islet_buildings_plot_fits_building on public.islet_buildings is
   'Current home and D060 tower pairs, plus canonical wall_1..128; new inventory builds additionally require positioned transaction authority.';
 
+-- A positioned batch has a distinct construction contribution per piece.
+-- Preserve old single-build/upgrade refs; only the exact bounded new namespace
+-- may use a suffix, and it must identify this level-one building instance.
+alter table public.building_payments
+  drop constraint if exists building_payments_ref_format,
+  add constraint building_payments_ref_format check (
+    ref ~ '^(island|upgrade):[A-Za-z0-9_-]{8,64}$'
+    or (ref ~ '^island:[A-Za-z0-9_-]{8,64}:wall_[1-9][0-9]{0,2}$'
+      and public.island_wall_number(split_part(ref, ':', 3)) is not null
+      and split_part(ref, ':', 3) = plot and ref = building_ref and level = 1));
+comment on constraint building_payments_ref_format on public.building_payments is
+  'Legacy island/upgrade UIDs, or an exact positioned level-one per-piece ref with canonical wall identity and matching building/plot; UID bounds remain8..64.';
+
 -- New pieces have coordinates only once placed by the authoritative transaction.
 alter table public.island_layout
   drop constraint if exists island_layout_plot_known,

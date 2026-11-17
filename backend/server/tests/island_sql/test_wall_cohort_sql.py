@@ -228,3 +228,63 @@ def test_browser_roles_cannot_write_tables_or_set_build_authority_through_helper
             "has_function_privilege(%s,'public.island_inventory_wall_build_guard()','execute')",
             (role,) * 3,
         ).fetchone() == (False, False, False)
+
+
+def contribution(database, ref, *, plot="wall_128", building_ref=None, level=1):
+    database.execute(
+        "insert into public.building_payments "
+        "(island_owner,plot,building_ref,level,payer,coins,ref) values (%s,%s,%s,%s,%s,10,%s)",
+        (OWNER, plot, ref if building_ref is None else building_ref, level, OWNER, ref),
+    )
+
+
+@pytest.mark.parametrize(
+    "ref",
+    [
+        "island:legacy01",
+        "upgrade:legacy01",
+        "island:" + "x" * 64,
+        "island:" + "x" * 64 + ":wall_128",
+    ],
+)
+def test_contribution_refs_keep_legacy_and_maximum_positioned_uid(database, ref):
+    ready(database)
+    if ":wall_" in ref:
+        coordinate(database, "wall_128")
+        context(database, actionUid="x" * 64, plots=["wall_128"])
+        insert(database, "wall_128", ref=ref)
+        call(
+            database,
+            "select public.apply_wallet_transaction(%s,-10,'building_purchase',%s)",
+            OWNER,
+            ref,
+        )
+    contribution(database, ref)
+    assert len(ref) <= 120
+
+
+@pytest.mark.parametrize(
+    "ref",
+    [
+        "island:short01:wall_128",
+        "island:" + "x" * 65 + ":wall_128",
+        "island:piece001:wall_012",
+        "island:piece001:wall_129",
+        "island:piece001:cannon_1",
+        "island:piece001:wall_128:extra",
+        "upgrade:piece001:wall_128",
+    ],
+)
+def test_contribution_ref_cannot_expand_the_namespace_or_uid_bounds(database, ref):
+    ready(database)
+    with pytest.raises(psycopg.errors.CheckViolation), database.transaction():
+        contribution(database, ref)
+
+
+@pytest.mark.parametrize(
+    "change", [{"plot": "wall_13"}, {"building_ref": "island:other001"}, {"level": 2}]
+)
+def test_positioned_contribution_ref_must_pair_with_its_exact_level_one_piece(database, change):
+    ready(database)
+    with pytest.raises(psycopg.errors.CheckViolation), database.transaction():
+        contribution(database, "island:piece001:wall_128", **change)
