@@ -21,32 +21,20 @@ from server.island.structure_repair_rules import (
 
 
 @pytest.mark.parametrize(
-    ("kind", "level", "expected"),
+    ("kind", "expected"),
     [
-        ("wall", 1, 10),
-        ("wall", 2, 20),
-        ("wall", 3, 40),
-        ("wall", 4, 80),
-        ("wall", 5, 160),
-        ("cannon", 1, 30),
-        ("cannon", 5, 480),
-        ("mortar", 1, 60),
-        ("harpoon", 3, 160),
-        ("swivel", 5, 800),
+        ("wall", [10, 20, 40, 80, 160]),
+        ("cannon", [30, 60, 120, 240, 480]),
+        ("mortar", [60, 120, 240, 480, 960]),
+        ("harpoon", [40, 80, 160, 320, 640]),
+        ("swivel", [50, 100, 200, 400, 800]),
+        ("culverin", [80, 160, 320, 640, 1280]),
     ],
 )
-def test_repair_price_is_the_catalogue_increment_for_the_current_base_level(kind, level, expected):
-    catalogue = load_island()
-
-    assert repair_price(catalogue, kind, level) == expected
-
-
-def test_culverin_price_comes_from_the_flagged_catalogue():
+def test_all_repair_prices_are_catalogue_increments_for_the_current_base_level(kind, expected):
     catalogue = catalogue_for_flags(load_island(), {"defenses_v2": True})
-    culverin = next(entry for entry in catalogue.kinds if entry.kind == "culverin")
 
-    assert repair_price(catalogue, "culverin", 1) == culverin.prices[0]
-    assert repair_price(catalogue, "culverin", 5) == culverin.prices[4]
+    assert [repair_price(catalogue, kind, level) for level in range(1, 6)] == expected
 
 
 def test_wave_repair_uses_the_price_schedule_frozen_in_its_snapshot():

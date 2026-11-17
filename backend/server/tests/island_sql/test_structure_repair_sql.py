@@ -223,6 +223,30 @@ def test_between_wave_repair_restores_full_health_and_never_refunds_as_build_con
     )
 
 
+def test_between_wave_repairs_are_unlimited_by_the_reserved_wave_quota(database):
+    seed_recovery(database)
+    repair_sequences = []
+
+    for index in range(4):
+        done = repair(
+            database,
+            action_uid=f"repair-{index + 1:04d}",
+            repair_seq=index,
+        )
+        repair_sequences.append(done["receipt"]["repairSeq"])
+        if index < 3:
+            as_server(database)
+            database.execute(
+                "update public.island_structure_health set hp_units=500000 "
+                "where island_owner=%s and spot='wall_1'",
+                (OWNER,),
+            )
+
+    assert repair_sequences == [1, 2, 3, 4]
+    assert balance(database, OWNER) == 50
+    assert hp(database) == (1_000_000, 4)
+
+
 def test_intact_unaffordable_and_changed_uid_requests_have_no_paid_side_effects(database):
     seed_recovery(database)
     as_server(database)
@@ -579,6 +603,65 @@ def test_target_and_global_repair_sequences_do_not_alias_across_targets(database
         (1_000_000, 2),
         (1_000_000, 1),
     ]
+
+
+def test_fresh_reserved_wave_uuid_starts_a_new_three_use_quota(database):
+    epoch, prior_wave_id = seed_recovery(database, active=True, paid_used=3)
+    target_instance = instance(database)
+    as_server(database)
+    database.execute(
+        "update public.recovery_wave_states set closed_at=clock_timestamp()-interval '1 second', "
+        "closed_hp=jsonb_build_object(%s::text,500000) where wave_id=%s",
+        (str(target_instance), prior_wave_id),
+    )
+    snapshot = call(
+        database,
+        "select initial_snapshot from public.recovery_wave_states where wave_id=%s",
+        prior_wave_id,
+    )
+    next_wave_id = UUID(int=968)
+    snapshot["waveId"] = str(next_wave_id)
+    reserve_at = call(database, "select clock_timestamp() - interval '10 seconds'")
+    start_at = call(database, "select clock_timestamp() - interval '5 seconds'")
+    expires_at = call(database, "select clock_timestamp() + interval '10 minutes'")
+    database.execute(
+        "insert into public.recovery_wave_states "
+        "(wave_id,island_owner,reset_epoch,recovery_version,wave_protocol,initial_snapshot) "
+        "values (%s,%s,%s,1,2,%s::jsonb)",
+        (next_wave_id, OWNER, epoch, json.dumps(snapshot)),
+    )
+    database.execute(
+        "update public.island_recovery_state set current_wave_id=%s, reserved_at=%s, "
+        "starts_at=%s, expires_at=%s where island_owner=%s",
+        (next_wave_id, reserve_at, start_at, expires_at, OWNER),
+    )
+
+    accepted = repair(
+        database,
+        action_uid="repair-0006",
+        epoch=epoch,
+        wave_id=next_wave_id,
+        window="reserved_wave",
+    )
+
+    assert accepted["status"] == "done"
+    assert accepted["receipt"]["useOrdinal"] == 1
+    assert (
+        call(
+            database,
+            "select paid_used from public.recovery_wave_states where wave_id=%s",
+            prior_wave_id,
+        )
+        == 3
+    )
+    assert (
+        call(
+            database,
+            "select paid_used from public.recovery_wave_states where wave_id=%s",
+            next_wave_id,
+        )
+        == 1
+    )
 
 
 def test_legacy_policy_without_saved_recovery_has_no_repair_admission_or_charge(database):
