@@ -6,6 +6,7 @@
 import {Vector3} from 'three';
 import {SPOTS} from '../island/spots.js';
 import {onIsland, waitForIsland} from './gate.js';
+import {projectGround} from '../world/projection.js';
 
 const TOWER_SPOTS = SPOTS.filter(spot => spot.slot === 'tower').map(spot => spot.id);
 
@@ -35,7 +36,8 @@ export function createTutorialHooks({island = () => null, place = () => null, pl
     }
     const point = isle()?.anchor?.(id);
     if (!point || !camera || !canvas) return null;
-    projected.set(point.x, -point.z * .72 + point.lift * .45, 0).project(camera);
+    const foot = projectGround(point.x, point.z);
+    projected.set(foot.x, foot.y + point.lift * .45, 0).project(camera);
     const rect = canvas.getBoundingClientRect();
     const x = rect.left + (projected.x + 1) / 2 * rect.width, y = rect.top + (1 - projected.y) / 2 * rect.height;
     const inside = Math.abs(projected.x) <= .92 && Math.abs(projected.y) <= .92;
