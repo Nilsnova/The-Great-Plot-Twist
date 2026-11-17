@@ -14,6 +14,8 @@
 
 **17 Nov perimeter candidate:** the [Draft workboard](contribute/PERIMETER-WORKBOARD.md), [implementation/explain-back guide](contribute/PERIMETER-REVIEW.md) and [integrated verification](evidence/PERIMETER-VERIFICATION.md) supersede older slice-only evidence checkpoints below. Functional implementation, the remaining under-150 rendering gate and independent human acceptance are recorded separately. This candidate does not close the full visual or land-expansion programme.
 
+**17 Nov bounded VIS-35 follow-up:** same-wave core HP after optional travel ([#378](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/378)) is implemented in [Draft #379](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/379), with [focused evidence and limits](handoff/vis35-core-travel-rejoin.md). The parent visual task #364 remains open; this is not a merged or browser-accepted release.
+
 ## Where we stand against the grading criteria
 
 | Criterion (weight) | Today | What "excellent" means for us |
