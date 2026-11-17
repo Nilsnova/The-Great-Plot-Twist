@@ -1,0 +1,39 @@
+{
+  "source": "Generated original PNG; unchanged original bytes; read-only alpha/crop measurement using Pillow. No offline image editing.",
+  "sha256": "6c61d30dd35419312568d98e66f80b4d54f5885fc4302475b3a6435fc102719f",
+  "encodedBytes": 2020969,
+  "decodedBytes": 6291456,
+  "dimensions": [
+    1536,
+    1024
+  ],
+  "alphaZeroPixels": 968800,
+  "cornerAlpha": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "frames": {
+    "island-mortar": {"nativeBounds":[110,111,135,134],"sourceFoot":[69,128],"edgeAlphaMaximum":1,"solidPixels":10796,"band":[0,256]},
+    "island-mortar-fire": {"nativeBounds":[111,339,134,167],"sourceFoot":[68,161],"edgeAlphaMaximum":2,"solidPixels":11414,"band":[256,512]},
+    "island-mortar-damaged": {"nativeBounds":[111,600,136,137],"sourceFoot":[68,131],"edgeAlphaMaximum":2,"solidPixels":10713,"band":[512,768]},
+    "island-mortar-broken": {"nativeBounds":[78,854,180,118],"sourceFoot":[101,112],"edgeAlphaMaximum":2,"solidPixels":10404,"band":[768,1024]},
+    "island-mortar-l2": {"nativeBounds":[392,100,151,144],"sourceFoot":[77,138],"edgeAlphaMaximum":2,"solidPixels":12999,"band":[0,256]},
+    "island-mortar-fire-l2": {"nativeBounds":[393,330,149,173],"sourceFoot":[76,167],"edgeAlphaMaximum":2,"solidPixels":13774,"band":[256,512]},
+    "island-mortar-l2-damaged": {"nativeBounds":[394,585,147,151],"sourceFoot":[75,145],"edgeAlphaMaximum":2,"solidPixels":13210,"band":[512,768]},
+    "island-mortar-l2-broken": {"nativeBounds":[370,845,193,128],"sourceFoot":[99,122],"edgeAlphaMaximum":3,"solidPixels":14425,"band":[768,1024]},
+    "island-mortar-l3": {"nativeBounds":[674,84,177,164],"sourceFoot":[90,158],"edgeAlphaMaximum":2,"solidPixels":17750,"band":[0,256]},
+    "island-mortar-fire-l3": {"nativeBounds":[675,323,176,186],"sourceFoot":[89,180],"edgeAlphaMaximum":3,"solidPixels":17620,"band":[256,512]},
+    "island-mortar-l3-damaged": {"nativeBounds":[675,573,176,165],"sourceFoot":[89,159],"edgeAlphaMaximum":2,"solidPixels":17616,"band":[512,768]},
+    "island-mortar-l3-broken": {"nativeBounds":[657,839,203,134],"sourceFoot":[107,128],"edgeAlphaMaximum":2,"solidPixels":16027,"band":[768,1024]},
+    "island-mortar-l4": {"nativeBounds":[974,79,179,169],"sourceFoot":[91,163],"edgeAlphaMaximum":2,"solidPixels":18877,"band":[0,256]},
+    "island-mortar-fire-l4": {"nativeBounds":[975,321,178,190],"sourceFoot":[90,184],"edgeAlphaMaximum":2,"solidPixels":18362,"band":[256,512]},
+    "island-mortar-l4-damaged": {"nativeBounds":[975,570,177,173],"sourceFoot":[90,164],"edgeAlphaMaximum":1,"solidPixels":18448,"band":[512,768]},
+    "island-mortar-l4-broken": {"nativeBounds":[955,841,205,134],"sourceFoot":[110,128],"edgeAlphaMaximum":2,"solidPixels":16503,"band":[768,1024]},
+    "island-mortar-l5": {"nativeBounds":[1266,67,192,183],"sourceFoot":[101,177],"edgeAlphaMaximum":2,"solidPixels":21709,"band":[0,256]},
+    "island-mortar-fire-l5": {"nativeBounds":[1269,317,190,192],"sourceFoot":[98,186],"edgeAlphaMaximum":4,"solidPixels":20608,"band":[256,512]},
+    "island-mortar-l5-damaged": {"nativeBounds":[1265,567,193,173],"sourceFoot":[102,167],"edgeAlphaMaximum":3,"solidPixels":20312,"band":[512,768]},
+    "island-mortar-l5-broken": {"nativeBounds":[1257,838,212,139],"sourceFoot":[110,133],"edgeAlphaMaximum":2,"solidPixels":18392,"band":[768,1024]}
+  }
+}
