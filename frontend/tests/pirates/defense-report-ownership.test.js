@@ -80,7 +80,8 @@ it('the actual game blocks keyboard and gamepad movement while the report owns i
     }));
     const position = () => page.evaluate(() => { const p = window.__island.player.position; return {x: p.x, z: p.z}; });
     expect(await page.evaluate(() => window.__island.waves.reportActive)).toBe(true);
-    expect(await inputOwners(page)).toEqual({...clearOwners, report: true, dialogs: 1});
+    // world.busy includes isBlocked(); it is a derived report-blocking flag, not another owner.
+    expect(await inputOwners(page)).toEqual({...clearOwners, report: true, worldBusy: true, dialogs: 1});
     expect(await page.getByRole('dialog', {name: 'Last defense report', exact: true}).count()).toBe(1);
     const before = await position();
     await page.evaluate(() => { window.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyA'})); window.reportPad.axes[0] = -1; });
