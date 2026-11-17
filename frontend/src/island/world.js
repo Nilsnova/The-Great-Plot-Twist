@@ -10,6 +10,7 @@ import {ALL_SPOTS as ISLAND_SPOTS, CABIN, BELL, CAMPAIGN_BUILDINGS, ARSENAL, isl
 import {isExtraSpot} from './extra-spots.js';
 import {isInventoryWallId, offeredInventoryWalls} from './wall-cohort.js';
 import {makeFootprint, makeWallLanes} from './move-preview.js';
+import {createWallBuilderPreview} from './wall-builder-preview.js';
 import {isOpen, spotWave, waveOf} from '../campaign/index.js';
 import {LOCK_WAVES} from '../art/campaign.js';
 import {SLOT_KINDS} from './td-rules.js';
@@ -256,6 +257,7 @@ export function decorateIsland(place, ctx = {}) {
   let state = {spots: [], visitor: false, battle: false, unlocks: null, crew: null, campaign: null, arsenal: false}, disposed = false;
   let preview = null;
   const footprint = makeFootprint(root);
+  const wallDraft = createWallBuilderPreview({root, wall: textures.wall});
   // D056: while a wall is moved, the cells where a wall stops pirates glow (home island only).
   const wallLanes = layout.zones === islandZones ? makeWallLanes(root) : null;
   // Where a spot stands now: the cell of a move under way, the answer's x/z, else its fixed spot (Pirate Point's stay).
@@ -464,6 +466,7 @@ export function decorateIsland(place, ctx = {}) {
       wallLanes?.show(preview && preview.wallRuleVersion !== 1 && SPOTS.find(spot => spot.id === preview.spotId)?.slot === 'wall');
       apply(state);
     },
+    wallDraft: model => wallDraft.show(model),
     get previewing() { return preview ? {...preview} : null; },
     get wallLanesShown() { return !!wallLanes?.shown; },
     ring() { ringing = 1.2; },
@@ -493,7 +496,7 @@ export function decorateIsland(place, ctx = {}) {
     dispose() {
       if (disposed) return; disposed = true; cleanups.splice(0).forEach(stop => stop());
       progress?.dispose(); recoveryIndicators.dispose();
-      wallConnections.dispose();
+      wallConnections.dispose(); wallDraft.dispose();
       for (const id of [...shown.keys()]) clear(id);
       for (const [key, mesh] of buildings) if (isInventoryWallId(key.split(':')[0])) releaseStandin(mesh);
       for (const item of lockTextures.values()) item.texture.dispose(); // the padlocks a spot no longer shows

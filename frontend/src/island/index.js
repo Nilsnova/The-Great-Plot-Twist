@@ -32,6 +32,9 @@ import {createMoveMode} from './move-mode.js';
 import {createMoveBar} from './move-bar.js';
 import {createVillageMode, isTextEntry} from './village-mode.js';
 import {createVillageBar} from './village-bar.js';
+import {createWallBuilderApi} from './wall-builder-api.js';
+import {createWallBuilder} from './wall-builder-mode.js';
+import {createWallBuilderBar} from './wall-builder-bar.js';
 import {SPOTS, KINDS, BELL, CABIN, ISLAND_PLACE, POINT_PLACE, PP_SPOTS, isIslandZone, isPointSpot, spotById, ppSpotById, pointZones, defenses, slotName,
   campaignBuilding, placedSpot, ARSENAL} from './spots.js';
 import {createArsenal} from './arsenal.js';
@@ -201,20 +204,34 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const recoveryTransport = Object.freeze({get: path => islandTransport.get(path), post: (path, body) => islandTransport.post(path, body)});
   const ui = createIslandUi({container, focus, resetInput});
   // T36, flexible placement: Move mode (move-mode.js) with its bar (move-bar.js) and the preview on the island.
-  const moving = createMoveMode({api, render: model => { moveBar.render(model); villageBar.render(village.active && !model); }, preview: cell => world?.preview(cell),
+  const moving = createMoveMode({api, render: model => { moveBar.render(model); villageBar.render(village.active && !model && !wallBuilder.active); }, preview: cell => world?.preview(cell),
     spots: () => target()?.spots ?? [], code: () => (visiting ? visiting.code : null), layout: () => target()?.layout, onMoved: (answer, spotId) => void moved(answer, spotId)});
   const moveBar = createMoveBar({container, handlers: {nudge: (dx, dz) => moving.nudge(dx, dz), place: () => void moving.confirm(), cancel: () => moving.cancel()}});
-  const villageBar = createVillageBar({container, onLeave: () => village.leave(), onCamera: villageCamera});
+  const wallBuilder = createWallBuilder({api: createWallBuilderApi({transport: islandTransport}),
+    context: () => ({allowed: village.active && !disposed && !visiting && !visitCode && !flow.busy && !flow.current && !(battle && !waveOver),
+      code: own?.code, epoch: own?.islandEpoch ?? recoveryState?.islandEpoch ?? null}),
+    render: model => { wallBar.render(model); villageBar.render(village.active && !model && !moving.active); },
+    preview: model => world?.wallDraft(model), onIsland: data => { wrote('own'); setOwn(data); applyWorld(); refreshCard(); emit({type: SPOTS_CHANGED, place: 'own'}); }});
+  const wallBar = createWallBuilderBar({container, handlers: {open: () => void startWalls(), quote: () => void wallBuilder.quote(),
+    confirm: () => void wallBuilder.confirm(), undo: () => wallBuilder.undo(), clear: () => wallBuilder.clear(),
+    cancel: () => { wallBuilder.cancel(); focus(); }, camera: villageCamera}});
+  const villageBar = createVillageBar({container, onLeave: () => village.leave(), onCamera: villageCamera, onBuildWalls: () => void startWalls()});
   const village = createVillageMode({
     context: () => ({ready: !!own?.code && !!world, own: !visiting && !visitCode, code: own?.code,
       // A successful start/join awaits preparation before flow.current is set.
       reserved: flow.busy || !!flow.current || (battle && !waveOver)}),
-    render: active => villageBar.render(active),
-    onLeave: () => { moving.cancel(); ui.close(); openSpot = null; resetInput(); focus(); },
+    render: active => villageBar.render(active && !wallBuilder.active),
+    onLeave: () => { wallBuilder.cancel(); moving.cancel(); ui.close(); openSpot = null; resetInput(); focus(); },
   });
   const moveKeys = event => {
     const buttonEnter = event.key === 'Enter' && event.target?.tagName === 'BUTTON';
-    if (moving.active && !ui.active && !event.defaultPrevented && !buttonEnter && !isTextEntry(event.target)) moving.handleKey(event);
+    if (ui.active || event.defaultPrevented || buttonEnter || isTextEntry(event.target)) return;
+    if (!wallBuilder.active) { if (moving.active) moving.handleKey(event); return; }
+    const step = {ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1]}[event.key];
+    if (step) { const last = wallBuilder.state.cells.at(-1); if (last) wallBuilder.tap(last.x + step[0] * 2, last.z + step[1] * 2); }
+    else if (event.key === 'Enter') void (['ready', 'unknown'].includes(wallBuilder.state.phase) ? wallBuilder.confirm() : wallBuilder.quote());
+    else return;
+    event.preventDefault(); event.stopPropagation();
   };
   globalThis.addEventListener?.('keydown', moveKeys, true);
   // The arsenal (T41, D042): only while the server's flag "arsenal" is on; off, the old weapon shop stays.
@@ -545,7 +562,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   }
   function refreshCard() {
     if (disposed) return;
-    village.refresh();
+    village.refresh(); wallBuilder.refresh();
     applyWorld();
     if (ui.open === 'build' && openSpot) ui.buildCard(buildModel(openSpot), handlers);
     else if (ui.open === 'bell') ui.bellCard(bell(), bellAction);
@@ -980,10 +997,15 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     ui.toast('Manage your village between waves on your own island.', 'info');
     return false;
   }
+  async function startWalls() {
+    if (!village.active) return false;
+    ui.close(); moving.cancel(); openSpot = null; resetInput();
+    return wallBuilder.start();
+  }
   // T36: Move closes the card and lets the player pick the new square (between waves only; the server checks).
   function startMove(spotId) {
     if (disposed || isPointSpot(spotId) || (battle && !waveOver) || target()?.layout?.movable !== true) return false;
-    ui.close(); openSpot = null;
+    wallBuilder.cancel(); ui.close(); openSpot = null;
     return moving.start(spotId);
   }
   async function moved(answer, spotId) {
@@ -1249,7 +1271,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       world?.dispose();
       const deco = decorateIsland(place, {art, reducedMotion, canvas: adapters.canvas, camera: adapters.camera,
         isActive: adapters.isActive, onPick: pick, range: houseRange, player: adapters.player, onFar: adapters.onFar,
-        placing: () => moving.active, onGround: (x, z) => moving.tap(x, z),
+        placing: () => wallBuilder.active || moving.active, onGround: (x, z) => wallBuilder.active ? wallBuilder.tap(x, z) : moving.tap(x, z),
         canPickRemote: id => village.active && !!spotById(id)});
       world = deco; applyWorld();
       const original = place.update;
@@ -1371,17 +1393,20 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     get managing() { return village.active; },
     toggleVillage,
     startMove,
-    get moving() { return moving.state; },
+    startWalls,
+    get wallBuilder() { return wallBuilder; },
+    get moving() { return wallBuilder.state ?? moving.state; },
     get moveMode() { return moving; },
     handleEscape() {
       if (boatGame) { boatGame.close(); return true; }
       if (cutscene) { cutscene.skip(); return true; }
+      if (wallBuilder.active && !ui.active) { wallBuilder.cancel(); return true; }
       if (moving.active && !ui.active) { moving.cancel(); return true; }
       return ui.close() || village.leave();
     },
     dispose() {
       if (disposed) return; disposed = true;
-      village.dispose(); villageBar.dispose();
+      village.dispose(); wallBuilder.dispose(); wallBar.dispose(); villageBar.dispose();
       stopRecoveryPoll(); recoveryReadId++;
       stopFinished(); stopStarted(); stopArrived(); stopPoint(); stopInteract(); stopTravel(); stopMenu?.(); stopSettings?.(); stopStartedGame(); stopGame(); clearTimeout(syncSoon);
       boatGame?.dispose(); boatGame = null;
