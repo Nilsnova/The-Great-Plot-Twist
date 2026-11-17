@@ -1,0 +1,32 @@
+{
+  "beforeSource": "1fd16f1fc0055edc832f3a849b6959e77e78ca2b",
+  "afterSource": "3135da36993aa3292dc751bcad24739b6edeedfc",
+  "qaSource": "3135da36993aa3292dc751bcad24739b6edeedfc",
+  "applicationChange": "frontend/src/harbor/harbor.css: ARIA-disabled opacity only",
+  "files": [
+    {
+      "path": "after/market-1280x720.png",
+      "sha256": "464c404946572e5d91f5a0967324383e28b68e737cd8d4bb302cfc1cd8505237"
+    },
+    {
+      "path": "after/market-375x812.png",
+      "sha256": "0cef09f2921618d0d9cae0fe5555989b362e738ee6e5b994052010e48d354c52"
+    },
+    {
+      "path": "after/report.json",
+      "sha256": "93d9ea1749d7a69018dbbb7184ecd07cbe954ffcc6231bb4844f7cfe52944125"
+    },
+    {
+      "path": "before/market-1280x720.png",
+      "sha256": "cea3d776f771db4029e09087abb24a70e57198b99514199a7b925e43bbe9470e"
+    },
+    {
+      "path": "before/market-375x812.png",
+      "sha256": "cd388d3a5b98f9e114f31d020a3614de7d2fec7ff036a1574caf9fcf3c23e9ed"
+    },
+    {
+      "path": "before/report.json",
+      "sha256": "6fc182a40d138fae7b15150c1ca7c5ea86ca9ab36d6eae77569351f823811aa0"
+    }
+  ]
+}
