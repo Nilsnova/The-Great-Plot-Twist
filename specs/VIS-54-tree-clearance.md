@@ -39,13 +39,18 @@ player fade and painter order. Other destinations retain their existing scale.
    including the house-growth states. These native captures and composed-build
    checks are separate from this agent's pure tests and remain pending here.
 
-## Explain-back
+## Code map for explain-back
 
-"I reduced the size of the tree pictures on our home island. The trees still stand
-at the same places and block the same small circles, so walking and building rules
-do not change. Houses still make trees a little larger, but they now grow from a
-smaller starting size. I kept the existing wind and player fading because the
-change only sets each mesh's initial visual scale."
+`createSettlement()` places each tree at its existing foot, then sets only home
+tree mesh scale. `decorateProgress()` later captures that original scale and
+multiplies it when houses appear or disappear; disposal restores the baseline.
+Player fading and wind still use the existing material and update path. Collision
+continues to use the separate fixed radius-0.48 scene data.
+
+The agent drafted this code and explanation. Johannes still needs to review the
+actual diff and explain it himself; this document is not a completed rehearsal or
+a personal exam answer. Keep personal practice notes local as described in
+[the explain-back guide](../docs/contribute/EXPLAIN-YOUR-CODE.md).
 
 Limits: this does not remove every possible canopy overlap or move trees outside a
 player's chosen wall layout. Actual screenshots must confirm the scale still looks
