@@ -2,8 +2,14 @@
 
 Responsible human: Johannes Franz Lang (`frcola`). These are unchanged diagnostic
 receipts supplied by the coordinator, preserved by documentation Draft #388.
-**Every run below failed. None is a complete-suite, input-resume, multiplayer or
-accessibility pass.** The [manifest](sha256.json) records each copied file's
+**The historical attempts in the table below failed. None is a complete-suite,
+input-resume, multiplayer or accessibility pass.**
+
+The later [source-52 completed sequence](source-52-completed/README.md) is
+archived separately: 4,583 frontend tests passed / one timed out; accessibility
+33 and demo 34 passed; two layout overlaps and a known upstream multiplayer
+firing-pose check failed. Its later keyboard variant also timed out. Those
+source-specific results do not rewrite the historical failures below. The [manifest](sha256.json) records each copied file's
 original archive name, byte count and SHA-256. No application/browser run was
 performed to package these records.
 

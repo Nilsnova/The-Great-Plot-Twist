@@ -1,0 +1,42 @@
+
+> the-great-plot-twist@0.1.0 test:a11y
+> node scripts/check-a11y.js
+
+Audited title
+Audited join
+Audited settings
+Audited credits
+Audited cutscene
+Audited tutorial
+Audited goal-card
+Audited world
+Audited world-quest-hint
+Audited account
+Audited account-signing_in
+Audited account-signed_in
+Audited account-expired
+Audited account-error
+Audited account-delete
+Audited request-loading
+Audited request-slow
+Audited request-empty
+Audited request-error
+Audited request-offline
+Audited request-expired
+Audited request-sign_in_required
+Audited request-rate_limited
+Audited request-online
+Audited islet-world
+Audited islet-panel
+Audited islet-built
+Audited market-hotspot
+Audited market-prices
+Audited market-confirm
+Audited market-placed
+Audited games-card
+Audited lobby
+{
+  "screens": 33,
+  "failures": [],
+  "errors": []
+}

@@ -34,11 +34,16 @@ three helper hashes. The [raw report](report.json) retains the exact declared
 fixture, camera/selection/placement/wave observations and diagnostics.
 The capture completed successfully in **200.36 seconds**.
 
-The [49-component Draft snapshot](pr-snapshot.json) records public branch heads
+The [50-component Draft snapshot](pr-snapshot.json) records public branch heads
 at its stated observation time. It is a review map, not a composition manifest:
 the exact frozen source above determines which code/tests were checked. Later
-branch variants remain separate until reconciled; in particular, the frozen
-report-input test retains its original UI button clicks.
+branch variants remain separate until reconciled; source 52 retains its original
+UI button clicks and excludes VIS52. The separately recorded b9da2783 keyboard
+variant failed too; the current branch index is not an application test result.
+
+The original stage-eight package is preserved at immutable documentation head
+[`07d0c146`](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/07d0c14649ae7d1fb6a3503012d8941bee4e6a42/docs/evidence/reference-village-latest-review);
+its prior manifest/snapshot are also in the source-52 archive.
 
 This is a separate later package. The historical
 [stage-six package](../reference-village-visual-review/README.md) and
@@ -104,8 +109,13 @@ remains **12,554,858 bytes**, above the unchanged **8MiB** effort target. The
 existing analytic coast and manual/server upgrade rules remain authoritative;
 automatic island expansion is not implemented here.
 
-The source-specific complete frontend/a11y/demo/overlap/build/budget/text/
-multiplayer sequence is **PENDING** in this document until exact logs arrive.
+The [completed source-52 sequence](../reference-village-checks/source-52-completed/README.md)
+has exact mixed results: 4,583 frontend passes / one 20-second timeout; 33
+accessibility screens and 34 demo checks passed; two Goals/toast overlaps and
+the known upstream firing-pose multiplayer assertion failed. Build/budget/text
+lint exited 0. The later keyboard-activation test also timed out. VIS52 Draft
+#420 addresses the real overlap; its final composed capture/checks and this
+document's native check remain **PENDING** until their own receipts arrive.
 The [targeted backend record](../reference-village-backend-checks/README.md)
 separately proves 262 route/unit checks and 269 actual disposable-PostgreSQL
 checks on the matching backend/Supabase trees; it is not a new full-backend pass.
