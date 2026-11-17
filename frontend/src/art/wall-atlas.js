@@ -8,7 +8,8 @@ export async function loadWallAtlas({quality = 'high', density} = {}) {
   const {cartoonAtlas, smoothTexture} = await import('./textures.js');
   const atlas = await cartoonAtlas(WALL_ATLAS_IDS, {width: 256, quality, ...(density ? {density} : {})});
   if (atlas.missing.length || !WALL_ATLAS_IDS.every(id => atlas.rects[id])) return null;
-  return wallAtlasView({...atlas, texture: smoothTexture(atlas.image)}, true);
+  return wallAtlasView({...atlas, texture: smoothTexture(atlas.image),
+    width: atlas.image.width / atlas.density, height: atlas.image.height / atlas.density}, true);
 }
 
 /** Refresh the already-owned draft texture from the same normalized atlas post. */
