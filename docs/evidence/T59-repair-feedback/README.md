@@ -88,7 +88,7 @@ The latest capture completed with 103 calls to the offline API fixture. It does 
 
 Issue [#344](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/344) tracks a UI fallback bug: a `feature_off` answer from the structure endpoint must not downgrade a persisted recovery-v1 island to legacy wall repair and upgrades. The focused browser regression uses local fake-island/API-shaped responses. It covers `feature_off` on the first canonical read, `feature_off` after a successful v1 read, retry recovery, the legacy wall-action guard, and disabled tower upgrades while health is unavailable.
 
-The optional screenshot mode renders the production DOM card with the production base, kit and island styles. It reuses the local browser fixture and makes no authenticated or live API request.
+The optional screenshot mode renders the production DOM card with the production base, kit and island styles. It reuses the local browser fixture and makes no authenticated or live API request. Source: UI fix commit `f0fa4df7`; capture-only test helper commit `bb9a2382`. The screenshots crop the card from 1440 × 900 desktop and 375 × 812 phone viewports.
 
 | Viewport | State | Screenshot |
 |---|---|---|
