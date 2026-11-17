@@ -39,6 +39,23 @@ describe('the bell and the wave', () => {
     expect(test.events.find(event => event.type === WAVE_FINISHED)).toMatchObject({survived: true, loot: 15, coins: 115, waveBest: 1});
     expect(flow.current).toBe(null);
   });
+  it('forwards the immutable v2 snapshot and assigned participant identity to the controller event', async () => {
+    const test = setup(); flow = test.flow;
+    const token = '7165d60f-14f5-4b9e-96a0-2ed457b4c219';
+    const initialSnapshot = {recoveryVersion: 1, waveProtocol: 2, configVersion: 1, waveId: 'wave-v2', islandEpoch: 'epoch-a',
+      seed: 42, startsAt: '2026-11-11T10:00:10Z', weather: {kind: 'calm'}, rules: ['structure_recovery'],
+      participants: [{participantToken: token, captain: {level: 1, skills: [], weapon: 'musket'}}],
+      createWave: {seed: 42, wave: 1, defenses: []}, structures: []};
+    const wave = {waveId: 'wave-v2', wave: 1, seed: 42, startsAt: initialSnapshot.startsAt,
+      weather: initialSnapshot.weather, flagship: false, rules: initialSnapshot.rules,
+      recoveryVersion: 1, waveProtocol: 2, initialSnapshot, participantToken: token, lastActorCounter: 7};
+    test.api.startWave = vi.fn(async () => ({ok: true, data: wave}));
+    const answer = await test.flow.ring('own');
+    expect(answer.ok).toBe(true);
+    expect(test.events.find(event => event.type === WAVE_STARTED)).toMatchObject({
+      waveId: wave.waveId, recoveryVersion: 1, waveProtocol: 2, initialSnapshot, participantToken: token, lastActorCounter: 7,
+    });
+  });
   it('waits for the wave lane when a renderer is registered, and finishes through the hook', async () => {
     const stop = registerWaveRenderer({name: 'test'});
     try {
