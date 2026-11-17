@@ -98,6 +98,8 @@ describe('versioned recovery help',()=>{
     expect(current.find(page=>page.id==='ashore').text.join(' ')).not.toMatch(/press E.*repair|repair it|rebuild it/i);
     expect(current.find(page=>page.id==='ashore').text.join(' ')).toContain('mend on their own but stop when you ring the bell');
     expect(current.find(page=>page.id==='crew').text.join(' ')).not.toMatch(/saved skills|refund|respec/i);
+    expect(current.find(page=>page.id==='crew').text.join(' ')).toContain('Marksman or Brawler');
+    expect(current.find(page=>page.id==='crew').text.join(' ')).not.toContain('Shipwright');
     expect(current.find(page=>page.id==='crew').text.join(' ')).toContain('10% build and upgrade discount');
 
     const repair=current.find(page=>page.id==='repair').text.join(' ');
