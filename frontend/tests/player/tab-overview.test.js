@@ -86,7 +86,7 @@ describe('Tab with a saved village working view', () => {
     view.setVillageView(false); view.camera.userData.battleZoom = .9; view.update(.05, player);
     const fit = villageFrame(view.camera, 'home_islet'); input.held.add('Tab'); view.update(.05, player);
     expect(view.camera.position.x).toBe(fit.x); expect(view.camera.position.y).toBe(fit.y); expect(view.camera.zoom).toBe(fit.zoom);
-    input.held.delete('Tab'); view.update(.05, player); expect(view.camera.zoom).toBe(.9); expect(view.camera.position.x).toBe(14);
+    input.held.delete('Tab'); view.update(.05, player); expect(view.camera.zoom).toBe(.9); expect(view.camera.position.x).toBe(1.3 * 12 - .2 * 8);
     delete view.camera.userData.battleZoom; view.update(.05, player); expect(view.camera.zoom).toBe(1.4);
   });
 
