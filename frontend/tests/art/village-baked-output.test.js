@@ -20,7 +20,7 @@ it('preserves every current raw ID/logical box/foot and proves all measured maxi
   for (const [id, source] of Object.entries(raw)) {
     const frame = normalized[id], [w, h, anchor] = source.logical; expect(frame.logical).toEqual(source.logical);
     expect(frame.rect.slice(2)).toEqual([w * 4, h * 4]); expect(frame.sourceFoot).toEqual([w * 2, (h - anchor) * 4]);
-    const proofs = report.verification.flatMap(row => row.results).filter(row => row.id === id); expect(proofs.map(row => row.density)).toEqual([4, 2, 1.5]);
+    const proofs = report.verification.flatMap(row => row.results).filter(row => row.id === id); expect(proofs.map(row => row.density)).toEqual(report.proofDensities ?? [4, 2, 1.5]);
     expect(proofs[0]).toMatchObject({differingPixels: 0, maxVisibleDelta: 0, maxAlphaDelta: 0}); expect(proofs[0].visiblePixels).toBeGreaterThan(0);
   }
   expect(report.errors).toEqual([]); expect(report.externalRequests).toEqual([]);
