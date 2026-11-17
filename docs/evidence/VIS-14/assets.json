@@ -1,0 +1,32 @@
+{
+  "origin": "Original image_gen artwork from approved reference; image_gen background-removal edit on posts. Native originals copied unchanged.",
+  "reference": "exec-a07561c7-7dbd-4f08-b8f4-55ebaa15ab65.png",
+  "files": [
+    {
+      "file": "frontend/public/village/walls-posts-v1.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGBA",
+      "bytes": 2145071,
+      "sha256": "38347e0c44d75b59a3fc07748e90bc6d2df769e10de34d2a1376ded6187dc18a",
+      "alphaRange": [
+        0,
+        254
+      ],
+      "zeroAlphaPixels": 957516,
+      "totalPixels": 1572864
+    },
+    {
+      "file": "frontend/public/village/walls-surfaces-v1.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "mode": "RGB",
+      "bytes": 2348350,
+      "sha256": "459a08817a8f9c1a29603dde25655b36287e71e723111739dea6a465e6081ca8"
+    }
+  ]
+}

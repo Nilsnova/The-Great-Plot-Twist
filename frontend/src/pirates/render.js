@@ -28,6 +28,8 @@ import { towerLook } from './tower-health.js';
 import { pixelGlsl, toScreen } from '../world/pixel-glsl.js';
 import { CHARACTER_SCALE } from './character-scale.js';
 import {makeCombatWallConnections} from './wall-connections.js';
+import {WALL_ATLAS_IDS} from '../art/village/walls.js';
+import {wallAtlasView} from '../art/wall-atlas.js';
 
 const UNIT = 16, Y = .72;
 // Characters on foot (boarders, the cutlass swing, the musket pose) are drawn larger in a wave, so they read
@@ -161,14 +163,15 @@ export async function loadAtlas({ quality = 'high', colour = 0, towerStates = fa
   const { cartoonAtlas, smoothTexture } = await import('../art/textures.js');
   const { setPoseColour } = await import('../art/people.js');
   setPoseColour(colour); // your captain's musket and cutlass poses in your lobby colour
-  const ids = [...new Set([...ATLAS_IDS.filter(id => !PIXEL_ONLY_IDS.includes(id)), ...CARTOON_EXTRA_IDS, ...TIER_IDS, ...FIRE_LEVEL_IDS, ...HARPOON_IDS, ...GUNBOAT_IDS,
+  const ids = [...new Set([...ATLAS_IDS.filter(id => !PIXEL_ONLY_IDS.includes(id)), ...CARTOON_EXTRA_IDS, ...TIER_IDS, ...WALL_ATLAS_IDS, ...FIRE_LEVEL_IDS, ...HARPOON_IDS, ...GUNBOAT_IDS,
     ...(towerStates ? TOWER_STATE_IDS : []), ...(culverins ? CULVERIN_IDS : []), ...(culverins && towerStates ? CULVERIN_STATE_IDS : []),
     ...(swivels ? SWIVEL_IDS : []), ...(swivels && towerStates ? SWIVEL_STATE_IDS : [])])];
   const atlas = await cartoonAtlas(ids, { quality, extra: [[WHITE, 8, 8]] });
   const white = atlas.rects[WHITE], context = atlas.image.getContext('2d');
   context.fillStyle = '#fff'; context.fillRect(white.x * atlas.density, white.y * atlas.density, white.w * atlas.density, white.h * atlas.density);
-  return { texture: smoothTexture(atlas.image), width: atlas.image.width / atlas.density, height: atlas.image.height / atlas.density,
-    rects: atlas.rects, density: atlas.density };
+  const result = {texture: smoothTexture(atlas.image), width: atlas.image.width / atlas.density, height: atlas.image.height / atlas.density,
+    rects: atlas.rects, density: atlas.density};
+  result.wallArt = wallAtlasView(result); return result;
 }
 
 const spriteVertex = /* glsl */`
@@ -335,7 +338,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     return { ...item, level: levelOf(item), layer, flip: false };
   };
   const posts = defenses.filter(hasPost).map(makePost);
-  const wallConnections = makeCombatWallConnections(root);
+  const wallConnections = makeCombatWallConnections(root, atlas.wallArt);
   let inBreak = false;
   let cannonsList = defenses.filter(item => item.kind === 'cannon' || item.kind === 'mortar');
   const fogUniforms = { uCannons: { value: Array.from({ length: 8 }, (_, i) => new THREE.Vector2(cannonsList[i]?.x ?? 0, cannonsList[i]?.z ?? 0)) },
@@ -1095,7 +1098,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         const repairing = post.kind === 'wall' && (walls.get(post.id)?.repairing || walls.get(post.id)?.crew);
         const grow = 1, x = post.x, y = drawnY(post.z);
         // Match the world renderer's healthy junction posts; damaged/ruin frames remain full width.
-        post.layer.push(r, x, y, r.w * (joinedWall ? .62 : 1), r.h, .5, r.anchor, { flip: post.kind !== 'wall' && post.flip, flashing,
+        if (!wallConnections.hasPost(post.id)) post.layer.push(r, x, y, r.w * (joinedWall ? .62 : 1), r.h, .5, r.anchor, { flip: post.kind !== 'wall' && post.flip, flashing,
           g: repairing && !still() ? 1 + Math.sin(clock * 10) * .15 : 1 });
         if (smoking) {
           const puff = rect[pirateFrames.smoke[(still() ? 0 : Math.floor(clock * 5)) % 3]];

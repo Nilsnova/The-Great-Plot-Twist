@@ -45,3 +45,7 @@ A thicker silhouette can obscure a captain or shift perceived ground contact. Ba
 1. Which authoritative rule decides whether two walls share a visual span?
 2. Why does a thicker rendered wall not increase its collision footprint or breach cost?
 3. How do world, combat and repair preserve the same wall identity and honest opening?
+
+## Implemented checkpoint
+
+Core art, source rectangles, registered48×32presentation metrics, depth-layer post/face batching and world/combat hooks are implemented in this Draft. Eight focused files/47tests pass; build, cold-title transfer check and text lint pass. The coordinator still owns central family registration, integrated runtime captures, visible asset-error presentation and the unchanged rendering-budget acceptance. Source sheets and fake-texture tests do not close visual acceptance.

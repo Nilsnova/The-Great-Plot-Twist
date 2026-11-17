@@ -5,12 +5,18 @@ import {spriteMaterial} from '../art/textures.js';
 export function createWallBuilderPreview({root, wall}) {
   const group = new THREE.Group(); group.name = 'island-wall-draft'; group.visible = false; root.add(group);
   const ghostMaterial = spriteMaterial(wall.texture); ghostMaterial.opacity = .55;
-  const geometry = new THREE.PlaneGeometry(wall.size[0] / 16, wall.size[1] / 16);
+  let geometry = new THREE.PlaneGeometry(wall.size[0] / 16, wall.size[1] / 16);
   geometry.translate(0, (wall.size[1] / 2 - (wall.anchor ?? 0)) / 16, 0);
   const gridMaterial = new THREE.LineBasicMaterial({transparent: true, opacity: .8, depthTest: false, depthWrite: false, toneMapped: false});
   const grid = new THREE.LineSegments(new THREE.BufferGeometry(), gridMaterial); grid.name = 'wall-draft-grid'; grid.renderOrder = 98; group.add(grid);
   const ghosts = []; let disposed = false, key = '';
   return {
+    setFrame({size: [width, height], anchor = 0}) {
+      if (disposed) return;
+      const previous = geometry; geometry = new THREE.PlaneGeometry(width / 16, height / 16);
+      geometry.translate(0, (height / 2 - anchor) / 16, 0);
+      ghosts.forEach(mesh => { mesh.geometry = geometry; }); previous.dispose();
+    },
     show(model) {
       if (disposed) return;
       const cells = (model?.cells ?? []).slice(0, 32); group.visible = cells.length > 0;
