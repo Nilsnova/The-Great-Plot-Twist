@@ -392,9 +392,10 @@ export function decorateIsland(place, ctx = {}) {
   if (ctx.canvas && ctx.camera) {
     let down = null;
     const start = event => { if (event.button === 0) down = [event.clientX, event.clientY]; };
+    const cancelPick = () => { down = null; };
     const click = event => {
       if (!down || event.button !== 0 || Math.hypot(event.clientX - down[0], event.clientY - down[1]) > 6) { down = null; return; }
-      down = null; if (!ctx.isActive?.()) return;
+      down = null; if (event.defaultPrevented || !ctx.isActive?.()) return;
       const rect = ctx.canvas.getBoundingClientRect();
       const point = new THREE.Vector3((event.clientX - rect.left) / rect.width * 2 - 1,
         1 - (event.clientY - rect.top) / rect.height * 2, 0).unproject(ctx.camera);
@@ -410,7 +411,11 @@ export function decorateIsland(place, ctx = {}) {
       if (verdict.open) ctx.onPick?.(picked); else ctx.onFar?.(picked, verdict);
     };
     ctx.canvas.addEventListener('pointerdown', start); ctx.canvas.addEventListener('pointerup', click);
-    cleanups.push(() => { ctx.canvas.removeEventListener('pointerdown', start); ctx.canvas.removeEventListener('pointerup', click); });
+    for (const type of ['pointercancel', 'lostpointercapture']) ctx.canvas.addEventListener(type, cancelPick);
+    cleanups.push(() => {
+      ctx.canvas.removeEventListener('pointerdown', start); ctx.canvas.removeEventListener('pointerup', click);
+      for (const type of ['pointercancel', 'lostpointercapture']) ctx.canvas.removeEventListener(type, cancelPick);
+    });
   }
   let ringing = 0;
   return {

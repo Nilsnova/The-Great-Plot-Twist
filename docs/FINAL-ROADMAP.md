@@ -163,3 +163,6 @@ Not released or marked complete: focused evidence, Johannes's explain-back and
 independent human review remain. No change to the existing freeze or merge rules.
 
 COC-02 follow-up (Johannes, draft): current-base management fit view is a bounded implementation slice for issue #143 and depends on COC-49/PR #192. The parent camera task remains open; see [specification](../specs/COC-02-village-overview.md). No merge or full editor-camera completion is claimed.
+
+
+BASE-02 working-camera slice (Johannes): bounded Zoom in/out, drag pan and Fit are implemented in [Draft #270](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/270), with [scope and evidence](../specs/BASE-02-working-camera.md). Focused camera/gesture tests pass; actual before/after and coordinated broader checks remain. This does not complete the full parent, future land bounds or physical-device testing. No merge.

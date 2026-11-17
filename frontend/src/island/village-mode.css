@@ -1,6 +1,6 @@
 .island-village-mode {
   position: absolute; z-index: 35; bottom: calc(max(18px, env(safe-area-inset-bottom)) + var(--narrator-card-height, 0px) + 12px); left: 50%; transform: translateX(-50%);
-  box-sizing: border-box; width: min(520px, calc(100% - 24px)); display: flex; align-items: center; gap: 12px;
+  box-sizing: border-box; width: min(680px, calc(100% - 24px)); display: flex; align-items: center; gap: 12px;
   padding: 10px 12px; border: 2px solid #6b5132; border-radius: 10px;
   background: #f4e7cb; color: #30271d; box-shadow: 0 3px 0 #30271d55;
 }
@@ -11,4 +11,12 @@
 @media (max-width: 480px) {
   .island-village-mode { align-items: flex-start; gap: 8px; }
   .island-village-mode button { max-width: 112px; white-space: normal; }
+}
+
+.island-village-camera { display: flex; gap: 4px; flex: none; }
+.island-village-camera button { min-width: 44px; padding: 8px; }
+@media (max-width: 480px) {
+  .island-village-mode { flex-wrap: wrap; }
+  .island-village-copy { flex-basis: 100%; }
+  .island-village-camera { flex: 1; }
 }

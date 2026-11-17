@@ -15,4 +15,18 @@ Likely files: `frontend/src/player/camera.js`, a small village input adapter, vi
 
 ## Status
 
-Claimed; implementation and verification pending. This bounded slice does not complete the broader BASE-02 task, future island-growth bounds, physical-phone or Safari testing. Draft and human explain-back/review remain required. No merge or deployment.
+Implementation is present; focused camera/gesture checks pass 16/16. Entering Move deliberately restores Fit and suspends gestures, preserving the existing whole-island placement/refusal flow. Browser evidence and coordinated broader verification are pending. This bounded slice does not complete the broader BASE-02 task, future island-growth bounds, physical-phone or Safari testing. Draft and human explain-back/review remain required. No merge or deployment.
+
+## Explain-back
+
+I kept village navigation in the existing camera because it already owns projection and easing. Its separate zoom and pan values do not overwrite exploration zoom. A thresholded gesture adapter cancels picking after dragging, including when a finger returns to its starting point. The controls affect only presentation; building positions and payments stay on their existing paths. Today the bounds are the current static island. Land growth must provide new accepted bounds.
+
+1. Why are village zoom and exploration zoom separate values?
+2. Why does a dragged pointerup need cancellation even if it ends near its start?
+3. Why does Move return to Fit, and what would be needed to support simultaneous camera/placement gestures?
+
+## Executed checks
+
+`npm test -- --maxWorkers=1 tests/player/village-camera.test.js tests/player/village-navigation.test.js` from frontend: `Test Files 2 passed (2)`, `Tests 16 passed (16)`, duration 681ms. These are current source tests, not live-device evidence. An initial new-test run caught listener-removal behavior and floating-point drift in reduced-motion snapping; both were fixed in source, with assertions retained.
+
+`node scripts/text-lint/index.mjs`: `Text lint: 4419 candidate strings in 488 source files; 0 errors, 8 report-only findings.` The reports are outside this slice. `git diff --check`: clean.
