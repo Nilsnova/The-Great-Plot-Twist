@@ -80,3 +80,15 @@ it('keeps weather accessible after its genuine intro, preserves manual expansion
     expect(cleanup).toEqual({hud: false, space: ''});
   });
 });
+
+it('names the actual first-wave instructions and allows keyboard dismissal without reopening on the next update', async () => {
+  await evaluate.withPage(async page => {
+    await mount(page, 1);
+    const hint = page.locator('.pirate-goal-hint'), name = await hint.getAttribute('aria-label');
+    for (const instruction of ['Land', 'Block', 'Protect', 'Dismiss first-wave hint']) expect(name).toContain(instruction);
+    await hint.focus(); await page.keyboard.press('Enter');
+    await page.evaluate(() => {battle.goalHint(true); battle.bar(battleState);});
+    expect((await bounds(page)).hint).toBe(false);
+    await page.evaluate(() => {battle.dispose(); playHud.dispose();});
+  });
+});
