@@ -30,7 +30,7 @@ describe('recovery-v1 controller replay', () => {
     const checkpoint = vi.fn(async ({ checkpoint: body }) => ({ accepted: true, throughTick: body.throughTick,
       inputHeadSeq: body.inputHeadSeq, lastRepairSeq: body.lastRepairSeq, hpUnits: body.hpUnits }));
     let now = START;
-    const controller = createWaveController({ bus, now: () => now, recoveryTransport: { readEvents, sendInputs, checkpoint, finishWave: vi.fn() },
+    const controller = createWaveController({ recoveryPlayoutMs: 0, bus, now: () => now, recoveryTransport: { readEvents, sendInputs, checkpoint, finishWave: vi.fn() },
       world: {}, getDefenses: () => [{ id: 'wall_1', kind: 'wall', level: 1, x: 0, z: 1 }],
       createRenderer: () => null, createHud: () => null, setTimer: () => ({}), clearTimer: () => {} });
     bus.emit({ type: 'wave_started_server', waveId: 'wave-r', wave: 1, seed: 77,
@@ -74,7 +74,7 @@ describe('recovery-v1 controller replay', () => {
       events: paidEvent ? [paidEvent] : [] }));
     const checkpoint = vi.fn(async ({ checkpoint: body }) => ({ accepted: true, throughTick: body.throughTick,
       inputHeadSeq: body.inputHeadSeq, lastRepairSeq: body.lastRepairSeq, hpUnits: body.hpUnits }));
-    const controller = createWaveController({ bus, now: () => now,
+    const controller = createWaveController({ recoveryPlayoutMs: 0, bus, now: () => now,
       recoveryTransport: { readEvents, sendInputs: vi.fn(async () => ({ accepted: [] })), checkpoint, finishWave: vi.fn() },
       world: {}, getDefenses: () => [], createRenderer: () => null, createHud: () => null,
       setTimer: () => ({}), clearTimer: () => {} });
@@ -136,7 +136,7 @@ describe('recovery-v1 controller replay', () => {
       return { accepted: true, throughTick: body.throughTick, inputHeadSeq: body.inputHeadSeq,
         lastRepairSeq: body.lastRepairSeq, hpUnits: body.hpUnits };
     });
-    const controller = createWaveController({ bus, now: () => now,
+    const controller = createWaveController({ recoveryPlayoutMs: 0, bus, now: () => now,
       recoveryTransport: { readEvents, sendInputs: vi.fn(async () => ({ accepted: [] })), checkpoint,
         finishWave: () => new Promise(() => {}) },
       world: {}, getDefenses: () => [], createRenderer: () => null, createHud: () => null,
@@ -177,7 +177,7 @@ describe('recovery-v1 controller replay', () => {
       emit(event) { for (const fn of listeners.get(event.type) ?? []) fn(event); },
     };
     let now = START;
-    const controller = createWaveController({ bus, now: () => now, recoveryTransport: {
+    const controller = createWaveController({ recoveryPlayoutMs: 0, bus, now: () => now, recoveryTransport: {
       readEvents: async () => ({ headSeq: 0, sealedThroughTick: -1, events: [] }),
       sendInputs: async () => ({ accepted: [] }), checkpoint: async () => null, finishWave: vi.fn(),
     }, world: {}, getDefenses: () => [], createRenderer: () => null, createHud: () => null,
@@ -215,7 +215,7 @@ describe('recovery-v1 controller replay', () => {
     const transport = { sendInputs, readEvents: async () => ({ headSeq: 0, sealedThroughTick: 0, events: [] }),
       checkpoint: async ({ checkpoint: body }) => ({ accepted: true, throughTick: body.throughTick,
         inputHeadSeq: body.inputHeadSeq, lastRepairSeq: body.lastRepairSeq, hpUnits: body.hpUnits }), finishWave: vi.fn() };
-    const controller = createWaveController({ bus, now: () => now, room: { send: (...message) => roomMessages.push(message) },
+    const controller = createWaveController({ recoveryPlayoutMs: 0, bus, now: () => now, room: { send: (...message) => roomMessages.push(message) },
       recoveryTransport: transport, world: {}, getDefenses: () => [], createRenderer: () => null, createHud: () => null,
       accept: () => true, setTimer: () => ({}), clearTimer: () => {} });
     const snapshot = makeSnapshot();
@@ -267,7 +267,7 @@ describe('recovery-v1 controller replay', () => {
         throughTick: body.checkpoint.throughTick, inputHeadSeq: body.checkpoint.inputHeadSeq,
         lastRepairSeq: body.checkpoint.lastRepairSeq, basisRepairSeq: body.checkpoint.basisRepairSeq } } };
     });
-    controller = createWaveController({ bus, now: () => now, recoveryTransport: { readEvents, sendInputs: async () => ({ accepted: [] }),
+    controller = createWaveController({ recoveryPlayoutMs: 0, bus, now: () => now, recoveryTransport: { readEvents, sendInputs: async () => ({ accepted: [] }),
       checkpoint: async ({ checkpoint: body }) => ({ accepted: true, throughTick: body.throughTick,
         inputHeadSeq: body.inputHeadSeq, lastRepairSeq: body.lastRepairSeq, hpUnits: body.hpUnits }), finishWave },
       finishWave: legacyFinish, world: {}, getDefenses: () => [], createRenderer: () => null, createHud: () => null,
