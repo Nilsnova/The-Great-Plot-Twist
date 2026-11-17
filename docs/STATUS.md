@@ -14,6 +14,8 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
+**17 Nov / Johannes — reference-village visual review:** the [visual review guide](contribute/REFERENCE-VILLAGE-REVIEW.md) maps the approved concepts, component Draft PRs, actual intermediate checks and open final gates. It preserves the rejected first stage and the separate earlier perimeter-suite results. Final all-defense compiled captures, a fresh complete visual suite, explain-back and current-head human review remain open; no merge or rollout is claimed.
+
 **17 Nov / Johannes — perimeter defense review candidate:** the [integration preview](https://github.com/Nilsnova/The-Great-Plot-Twist/tree/chore/perimeter-integration-review) collects positioned wall construction, saved 1/128 policy, compatible recovery/combat and village controls. Start with the [implementation and review guide](contribute/PERIMETER-REVIEW.md), [verified evidence](evidence/PERIMETER-VERIFICATION.md), [Draft workboard](contribute/PERIMETER-WORKBOARD.md) and [Wall Gameplay epic #241](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/241), not the older slice checkpoints below. Drafts remain unmerged; `perimeter_walls` defaults off, live migrations/flags/deployment are unchanged by this work. Integrated evidence and independent human acceptance are separate release gates.
 
 **16 Nov / Nils — slots and badges (D060):** branch `feat/slots-and-badges`: the orange 🪓 badges of the battle guide are gone; four extra tower spots (`cannon_8`..`cannon_11`, after waves 10/20/30/40) behind the off-by-default flag `more_tower_spots`. Migration `20261117010000_more_tower_spots.sql` is not applied (paste `docs/handoff/apply-2026-11-17.sql`, then switch the flag on).
@@ -267,6 +269,8 @@ Nobody has decided these yet. Until they are decided, the plan in ROADMAP.md sta
 6. **Pick a package.** Take your lane's next package below, or one from "Start today" in ROADMAP.md. Open an issue with the goal, acceptance checks, scope, responsible teammate and likely files. Create your branch from `main` (`git switch main`, `git pull`, then for example `git switch -c feat/l1-live-weather`). Paste the agent brief below and open a draft pull request early.
 
 ## Next steps per lane
+
+**Johannes / village visuals:** finish the composed provider/production-copy handoff and actual selected-wall/placement/combat captures, run the fresh applicable checks, then use the [review order and three explain-back questions](contribute/REFERENCE-VILLAGE-REVIEW.md). Keep the current component PRs Draft until the remaining evidence and independent human review are complete.
 
 **Johannes / perimeter defense:** review the [guide](contribute/PERIMETER-REVIEW.md), source contracts and coordinated evidence, rehearse its three explain-back questions, then obtain a different human teammate’s review. Keep the preview/drafts unmerged; migration application, activation and release require separate authorization. The [planning roadmap Draft #239](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/239) remains distinct from completed runtime slices.
 
@@ -625,6 +629,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+- **17 Nov / Johannes:** added [VIS31 visual review documentation](contribute/REFERENCE-VILLAGE-REVIEW.md), [Draft #388](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/388), with source-specific evidence, real component branches/PRs, dependencies and pending gates. Documentation-only checks; no app test, final visual acceptance, merge or rollout claimed.
 
 **17 Nov / Johannes — integrated perimeter verification:** the [verification record](evidence/PERIMETER-VERIFICATION.md) composes the full backend, private PostgreSQL, client and actual browser evidence; the [workboard](contribute/PERIMETER-WORKBOARD.md) records individual Draft heads and review order. The original checkout is preserved. Actual rendering improves from 375 to 235 calls, still above the unchanged under-150 gate. Drafts remain unmerged; live migrations, production flags and deployment remain unchanged.
 
