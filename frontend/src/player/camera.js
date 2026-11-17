@@ -70,11 +70,14 @@ export function createCamera(input) {
       const frame = !touring && (peek || (village && !Number.isFinite(camera.userData.battleZoom)))
         ? villageFrame(camera, placeId, village ? villageViewport : null) : null;
       if (frame) {
-        const baseZoom = frame.zoom;
-        frame.zoom = Math.min(2, frame.zoom * villageScale);
-        // Keep the working center in the measured free area as captions and bars reflow.
-        frame.x = villageX;
-        frame.y = 3 + villageY + (frame.y - 3) * baseZoom / frame.zoom;
+        // Tab borrows the whole-island frame without consuming the saved working view.
+        if (village && !peek) {
+          const baseZoom = frame.zoom;
+          frame.zoom = Math.min(2, frame.zoom * villageScale);
+          // Keep the working center in the measured free area as captions and bars reflow.
+          frame.x = villageX;
+          frame.y = 3 + villageY + (frame.y - 3) * baseZoom / frame.zoom;
+        }
         const blend = reduce ? 1 : 1 - Math.exp(-dt * 5);
         if (reduce) place(frame.x, frame.y);
         else place(follow.x + (frame.x - follow.x) * blend, follow.y + (frame.y - follow.y) * blend);
