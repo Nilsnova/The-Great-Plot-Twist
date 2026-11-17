@@ -19,8 +19,12 @@ export async function createWaterFixture({width, height}) {
   document.body.style.cssText = 'margin:0;background:#092e37'; document.body.append(renderer.domElement);
   const label = document.createElement('div'); label.style.cssText = 'position:absolute;top:12px;left:12px;right:12px;padding:8px 12px;background:#123b3eee;border:1px solid #e9bf5b;border-radius:8px;color:#fff1cf;font:14px system-ui;pointer-events:none';
   document.body.append(label);
-  const span = Math.max(42, 44 / (width / height)), camera = new THREE.OrthographicCamera(-span * width / height / 2, span * width / height / 2, span / 2, -span / 2, .1, 100);
-  camera.position.z = 10;
+  ground.updateWorldMatrix(true, false);
+  const envelope = cliffProfile(surfaces.home_islet).flatMap(p => [p.y, p.baseY].map(y => ground.localToWorld(new THREE.Vector3(p.x, -y, 0))));
+  const bounds = new THREE.Box3().setFromPoints(envelope), size = bounds.getSize(new THREE.Vector3()), centre = bounds.getCenter(new THREE.Vector3());
+  const span = Math.max(size.y * 1.22, size.x * 1.22 / (width / height));
+  const camera = new THREE.OrthographicCamera(-span * width / height / 2, span * width / height / 2, span / 2, -span / 2, .1, 100);
+  camera.position.set(centre.x, centre.y, 10);
   const shaderErrors = [];
   renderer.debug.onShaderError = (gl, program, vertex, fragment) => shaderErrors.push([gl.getProgramInfoLog(program), gl.getShaderInfoLog(vertex), gl.getShaderInfoLog(fragment)].join('\n'));
   const candidate = water.mesh.material.fragmentShader;
@@ -57,13 +61,17 @@ export async function createWaterFixture({width, height}) {
     },
     mask() {
       group.visible = false; render(); const data = pixels(), hidden = [];
-      for (const [x, z] of [[0, 0], [-8, 0], [8, 0], [0, -8], [0, 8]]) if (alphaAt(data, x, -z * .72) !== 0) hidden.push({x, z});
+      for (const [x, z] of [[0, 0], [-8, 0], [8, 0], [0, -8], [0, 8]]) {
+        const point = ground.localToWorld(new THREE.Vector3(x, -z * .72, 0));
+        if (alphaAt(data, point.x, point.y) !== 0) hidden.push({x, z});
+      }
       const source = texture.image.getContext('2d'), density = texture.image.width / 64;
       let rockSamples = 0;
       for (const index of [15, 30, 60, 75]) {
         const p = cliffProfile(surfaces.home_islet)[index], y = p.y + p.depth * .7;
         if (source.getImageData(Math.round((p.x + 32) * density), Math.round((y + 24) * density), 1, 1).data[3] < 250) continue;
-        rockSamples++; if (alphaAt(data, p.x, -y) !== 0) hidden.push({x: p.x, cliffY: y});
+        const point = ground.localToWorld(new THREE.Vector3(p.x, -y, 0));
+        rockSamples++; if (alphaAt(data, point.x, point.y) !== 0) hidden.push({x: p.x, cliffY: y});
       }
       water.setCoast(new THREE.Group()); render(); const fallback = pixels();
       let transparentFallback = 0; for (let i = 3; i < fallback.length; i += 4) if (fallback[i] < 255) transparentFallback++;
