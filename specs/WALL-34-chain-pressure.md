@@ -15,3 +15,25 @@ This changes only the new pressure test module and this spec. Terrain, unlocks a
 1. Why does observing actual database lock waits prove more than starting two threads?
 2. Why does a duplicate UID return a receipt while a different stale intent must refuse?
 3. How does restoring the previous authority context protect later work in the same transaction?
+
+## Executed verification
+
+On the actual epoch-fenced WALL-12 source `f339235d`, with the strict WALL-19 contribution-reference fix and its dependencies, the coordinated private SQL command returned **`265 passed in 14.00s`**, exit **0**. It includes all **8 new pressure cases**, the 12 WALL-12 cases, cohort/repair/refund/policy tests and existing repair/mutation/layout regressions. The fixture applied the complete local migration chain twice. Both concurrency cases observed the two real worker PIDs blocked before the held row was released; worker errors cannot pass silently.
+
+Executed from this clone's `backend/`:
+
+```sh
+CASE_PG_SCRATCH=1 UV_CACHE_DIR=/workspace/.cache/uv uv run --frozen --no-env-file \
+  --with pgserver --with 'psycopg[binary]' pytest -q \
+  server/tests/island_sql/test_wall_chain_concurrency_sql.py \
+  server/tests/island_sql/test_wall_chain_build_sql.py \
+  server/tests/island_sql/test_wall_cohort_sql.py \
+  server/tests/island_sql/test_wall_cohort_repair_sql.py \
+  server/tests/island_sql/test_wall_cohort_demolition_sql.py \
+  server/tests/island_sql/test_structure_repair_sql.py \
+  server/tests/island_sql/test_structure_recovery_mutations_sql.py \
+  server/tests/island_sql/test_island_layout_sql.py \
+  server/tests/island_sql/test_wall_policy_sql.py
+```
+
+The test module is 298 lines. Python compilation, Ruff check (`All checks passed!`), Ruff format and `git diff --check` also pass. No production SQL was edited by this slice. This evidence establishes transaction boundaries on the declared private source; it does not establish legal terrain, actual browser placement, balance, the complete recovery rollout, live production or physical-device behavior. The PR stays Draft for author explain-back and independent human review.
