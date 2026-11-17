@@ -4,7 +4,22 @@
   "frontendTree": "6e0c6b27b717a7b8eedcde498d7372de6f0942cb",
   "reviewBase": "5e3dd6ccb3597617e67a8b720525d3add78c3704",
   "beforeCaptureSource": "5e3dd6ccb3597617e67a8b720525d3add78c3704",
-  "nativeAfter": "pending coordinator capture",
+  "nativeAfter": {
+    "source": "91c1f9d57c1edd957d26588b99fbb1489e575127",
+    "frontendTree": "6e0c6b27b717a7b8eedcde498d7372de6f0942cb",
+    "publicTree": "9306942db1050d728799cee2fbdc8e8960f14ad2",
+    "backendTree": "c785196095edef4f5416744b46435ab564da4e9c",
+    "supabaseTree": "6e52a63b87028291127dbae8c344c9f49a73896d",
+    "exitCode": 0,
+    "seconds": 200.36,
+    "scope": "Coordinator actual local/offline legacy-version-0 capture; selected after PNGs at native DPR1/high quality. No production HP or physical-device claim.",
+    "rawReport": {
+      "sha256": "00448fbef0491405266a93e421158db99e2e11f803f6de60c9704003f2605063",
+      "bytes": 4530391,
+      "origin": "stage-08-selected-wall/report.json"
+    },
+    "metadataExtraction": "after/selected-report.json"
+  },
   "files": [
     {
       "file": "before/reference-selected-level3-1280x720.png",
@@ -44,6 +59,36 @@
       "file": "logs/vis51-final-green.log",
       "sha256": "87497710d7614d7fc2ac48541043bdef1545c0feaabd691f4b799b34f72600ef",
       "bytes": 9489
+    },
+    {
+      "file": "before/execution.json",
+      "sha256": "7eed4c1aaf93a7f2a3766ba0bf0676054f4a491f4c9e2c011aea535064e9fd8b",
+      "bytes": 914
+    },
+    {
+      "file": "after/execution.json",
+      "sha256": "9c12151dc7c478b0a627f30eece674d18aa5bedeb6e4a15f72ffb71e8fc72d88",
+      "bytes": 1161
+    },
+    {
+      "file": "after/selected-report.json",
+      "sha256": "0d86bddb205ad9b826ac99b2b130d3c58d730386f18674758001314dc8957d45",
+      "bytes": 18307,
+      "derivedMetadata": true
+    },
+    {
+      "file": "after/reference-selected-level3-1280x720.png",
+      "sha256": "d45eb56c9cd79ad31ccb0a3e80b349705dd2bfed4a700a938900814bc5e60ecd",
+      "bytes": 1135318,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "after/reference-selected-level3-375x812.png",
+      "sha256": "4d0493b01f9c93891562f75282f17baa292e47d99cee317c93ca450c76e1b2a0",
+      "bytes": 305577,
+      "width": 375,
+      "height": 812
     }
   ]
 }

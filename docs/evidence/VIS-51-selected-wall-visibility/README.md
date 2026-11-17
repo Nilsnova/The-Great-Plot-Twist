@@ -10,15 +10,41 @@ The existing textured-wall builder has an optional ID filter. It retains the com
 
 The foreground mesh owns only its geometry. Selection changes, accepted level/position/damage updates and successful atlas replacement rebuild that subset. Repeated frames retain it. Close, Move, battle, visitor transition, removal and disposal clear it. HP zero uses actual rubble and removes standing connections. Missing artwork gets no healthy fallback. The normal wall meshes and their exact position/UV/index bytes remain unchanged by selection.
 
-## Before: actual composed game
+## Actual before and after
 
-| 1280×720 | 375×812 |
+| Viewport | Before: stage seven | After: stage eight |
+|---|---|---|
+| 1280×720 | [Desktop before](before/reference-selected-level3-1280x720.png) | [Desktop after](after/reference-selected-level3-1280x720.png) |
+| 375×812 | [Phone viewport before](before/reference-selected-level3-375x812.png) | [Phone viewport after](after/reference-selected-level3-375x812.png) |
+
+All four are unchanged actual browser PNGs. Stage seven shows the wall largely covered by foliage while its green corners identify the paid tile. Stage eight paints the same current post and incident spans above foliage. Mixed-level neighbors keep their actual connecting material; selection does not change their level or topology. The [before execution receipt](before/execution.json) and [after execution receipt](after/execution.json) name each source, helper identity, command and completed capture.
+
+The coordinator's full stage-eight capture exited **0 in 200.36s**. Its exact [selected-state metadata](after/selected-report.json) retains both original selected JSON subtrees, original error arrays and the full source report's hash/size. This bounded metadata extraction is derived JSON; the image bytes are untouched.
+
+| Selected-state measurement | Desktop | Phone viewport |
+|---|---:|---:|
+| Stage-seven drawing calls | 118 | 115 |
+| Stage-eight drawing calls | 119 | 116 |
+| Added selected-wall drawing calls | 1 | 1 |
+| JavaScript page errors | 0 | 0 |
+| External requests | 0 | 0 |
+| Expected offline 503 console diagnostics | 1 | 1 |
+
+The native images were captured at screenshot pixel ratio 1/high quality; prior adaptive drawing ratios remain in the raw selected metadata rather than being hidden. These samples preserve the under-150 target and establish one added draw in this scenario. Sustained performance and final human appearance acceptance remain open. This writing agent ran no Chrome; the coordinator supplied the original native receipts.
+
+### Composed capture boundary
+
+| Identity | Exact value |
 |---|---|
-| [Desktop selected shore wall](before/reference-selected-level3-1280x720.png) | [Phone viewport selected shore wall](before/reference-selected-level3-375x812.png) |
+| Stage-eight actual runtime | `91c1f9d57c1edd957d26588b99fbb1489e575127` |
+| Frontend source tree, identical to VIS51 source | `6e0c6b27b717a7b8eedcde498d7372de6f0942cb` |
+| Public artwork tree, unchanged | `9306942db1050d728799cee2fbdc8e8960f14ad2` |
+| Composed backend tree | `c785196095edef4f5416744b46435ab564da4e9c` |
+| Composed Supabase tree | `6e52a63b87028291127dbae8c344c9f49a73896d` |
 
-These are unchanged stage-seven browser PNGs. The wall is largely covered by foliage, while its green corners show the selected paid tile. The [original capture execution receipt](before/execution.json) names its source, helper identity, command and completed capture. This is the existing declared local/offline fixture, not a live account or production recovery session. Its unknown health is truthfully labeled unavailable.
+The capture includes the separate VIS50 recovery-checkpoint guard, whereas this focused branch retains its pre-VIS50 backend. The only backend/Supabase differences are that task's new SQL regression file and forward migration. Frontend source and public artwork are byte-identical; this task does not claim its own backend tree is the newer composed tree.
 
-After screenshots, actual scene drawing counts and native visibility acceptance are **pending the coordinator's composed capture**. This task used no Chrome. One extra mesh is bounded to the current selection by construction; that is not a measured sustained-performance claim and does not raise the under-150 scene target.
+The scenario remains the declared local/offline **legacy recovery version 0** fixture. It pays for the wall and its actual level-three upgrade and shows the same 6,620 remaining coins. Unknown health stays truthfully labeled unavailable. These images do not establish live production HP, rollout, a physical phone or Safari behavior.
 
 ## Pure verification and retained history
 
@@ -41,10 +67,10 @@ The test compares selected position/UV quads directly against independently obse
 
 The unchanged [raw logs](logs/vis51-final-green.log) retain the result lines. Earlier [feature-red](logs/vis51-red.log) recorded 13 failures before implementation. The [first implementation run](logs/vis51-green.log) recorded 39 passed / 3 failed because `it.each` spread the array fixture into separate arguments; wrapping each row fixed the fixture without removing assertions, and the [next run](logs/vis51-green-02.log) passed 42 checks. A supplemental [visitor-transition regression](logs/vis51-visitor-red.log) then failed 1 / passed 12 before the immediate visitor/battle gate was added. The final seven-file run above includes the stronger exact-byte and hidden-group checks.
 
-[manifest.json](manifest.json) records the copied files' original hashes, sizes and native image dimensions. Two independent source reviews found no concrete blocker. They ran no additional application/browser checks, and their review does not replace a different human's approval.
+[manifest.json](manifest.json) records the original hashes/sizes and native dimensions of all four PNGs, the original execution receipts, raw pure logs and the explicitly derived selected metadata. Two independent source reviews found no concrete blocker. They ran no additional application/browser checks, and their review does not replace a different human's approval.
 
 ## Explain-back and remaining work
 
 In my walkthrough I can say: "The wall already exists in the confirmed island drawing. Selecting it redraws those same pieces above trees so I can see what I am editing. It uses the same material and current damage state, and cannot create a wall, charge coins, move it or heal it. I own the extra geometry, and release it when selection ends; the ordinary wall owner still owns the shared texture."
 
-Before Ready, explain why full neighbors are retained while drawing only a subset, which resources selection may dispose, and how broken or removed walls avoid becoming healthy. Native after captures, the combined full/build/UI checks, sustained device performance and final human appearance approval remain open. No PR merge to main, deployment, live migration or production flag change.
+Before Ready, explain why full neighbors are retained while drawing only a subset, which resources selection may dispose, and how broken or removed walls avoid becoming healthy. Native before/after captures and selected-state counts are now recorded above. The combined full/frontend/UI/build checks are **pending** on the coordinator's later frozen candidate; this document claims no complete-suite pass. Sustained device performance, explain-back and final human appearance approval remain open. No PR merge to main, deployment, live migration or production flag change.
