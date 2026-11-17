@@ -51,7 +51,8 @@ export function mergeArt(...sources) {
     ownKeys: () => [...new Set(list.flatMap(source => Reflect.ownKeys(source)))],
   });
 }
-export function projectPoint(x, z) { return { x, y: -z * 0.72 }; }
+export {projectGround as projectPoint} from './projection.js';
+import {projectGround as projectPoint} from './projection.js';
 export function placeArt(scene, art, name, x, z, scale = 1) {
   if (!Object.hasOwn(artSizes, name) || !Object.hasOwn(art, name)) throw new Error(`Load drawing before placing it: ${name}`);
   if (pixelById[name] && !islandFrame(name)) scale = Math.max(1, Math.round(scale));

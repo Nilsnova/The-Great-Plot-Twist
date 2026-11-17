@@ -4,6 +4,9 @@
 import * as THREE from 'three';
 import {projectPoint} from '../world/art.js';
 import {surfaces} from '../world/places/surfaces.js';
+import {cliffProfile} from '../art/coast-cliffs.js';
+import {projectedCoastBounds} from '../world/projection.js';
+const COAST_BOUNDS = projectedCoastBounds(cliffProfile(surfaces.home_islet));
 
 // Real overlay insets describe usable room independently of the chosen working zoom.
 function villageSpace(camera, viewport = null) {
@@ -16,13 +19,14 @@ function villageSpace(camera, viewport = null) {
   return {width, height, top, bottom, free};
 }
 
-// Fit today's whole island, including its wavy shore, tall buildings and HUD space.
+// Fit the actual painted shore and cliff base; upright ornamental crowns may extend above this frame.
 export function villageFrame(camera, placeId, viewport = null) {
-  const land = placeId === 'home_islet' ? surfaces[placeId] : null, space = villageSpace(camera, viewport);
-  if (!land || !space) return null;
-  const {width, height, top, bottom, free} = space;
-  const zoom = Math.min(1, width / (2 * (land.rx * 1.1 + 2)), height * free / (2 * (land.rz * .72 * 1.1 + 4.5)));
-  return {x: 0, y: 3 - (bottom - top) * height / (2 * zoom), zoom};
+  const space = villageSpace(camera, viewport);
+  if (placeId !== 'home_islet' || !space) return null;
+  const {width, height, top, bottom, free} = space, bounds = COAST_BOUNDS, margin = .4;
+  const zoom = Math.min(1, width / (bounds.maxX - bounds.minX + margin * 2), height * free / (bounds.maxY - bounds.minY + margin * 2));
+  const centerX = (bounds.minX + bounds.maxX) / 2, centerY = (bounds.minY + bounds.maxY) / 2;
+  return {x: centerX, y: centerY - (bottom - top) * height / (2 * zoom), zoom, centerX, centerY, bounds};
 }
 
 export function createCamera(input) {
@@ -35,7 +39,13 @@ export function createCamera(input) {
   let villageFit = true, villageZoom = 1, villageX = 0, villageY = 0;
   const fitVillage = () => { villageFit = true; villageZoom = 1; villageX = villageY = 0; };
   // The cabin/left-house/heart district is useful on a narrow screen; outskirts remain pannable.
-  const workVillage = () => { villageFit = false; villageZoom = 1; villageX = -4; villageY = projectPoint(-4, -4).y - 3; };
+  const workVillage = () => {
+    const frame = villageBase(); if (!frame) return;
+    const phone = (camera.right - camera.left) / (camera.top - camera.bottom) < .8;
+    const center = phone ? projectPoint(-4, -4) : {x: frame.centerX, y: frame.centerY};
+    villageFit = false; villageZoom = phone ? Math.max(frame.zoom, .9) : frame.zoom * 1.05;
+    villageX = center.x; villageY = center.y;
+  };
   const villageBase = () => villageFrame(camera, placeId, villageViewport);
   const workingZoom = frame => Math.max(frame.zoom, Math.min(2, villageZoom));
   function place(x, y) { follow.set(x, y); camera.position.set(x, y, 100); }
@@ -64,16 +74,17 @@ export function createCamera(input) {
       if (action === 'work') { workVillage(); return; }
       if (!['in', 'out'].includes(action)) return;
       const factor = action === 'in' ? 1.4 : 1 / 1.4;
+      if (villageFit) { villageX = frame.centerX; villageY = frame.centerY; }
       villageZoom = Math.max(frame.zoom, Math.min(2, (villageFit ? frame.zoom : workingZoom(frame)) * factor));
       villageFit = villageZoom === frame.zoom;
       if (villageFit) villageX = villageY = 0;
     },
     panVillage(dx, dy, width, height) {
-      const frame = exploring && village && villageBase(), land = surfaces[placeId];
+      const frame = exploring && village && villageBase();
       if (!frame || villageFit || ![dx, dy, width, height].every(Number.isFinite) || width <= 0 || height <= 0) return;
       const at = workingZoom(frame);
-      villageX = THREE.MathUtils.clamp(villageX - dx * (camera.right - camera.left) / (width * at), -land.rx, land.rx);
-      villageY = THREE.MathUtils.clamp(villageY + dy * (camera.top - camera.bottom) / (height * at), -land.rz * .72, land.rz * .72);
+      villageX = THREE.MathUtils.clamp(villageX - dx * (camera.right - camera.left) / (width * at), frame.bounds.minX, frame.bounds.maxX);
+      villageY = THREE.MathUtils.clamp(villageY + dy * (camera.top - camera.bottom) / (height * at), frame.bounds.minY, frame.bounds.maxY);
     },
     focusVillage(anchor) {
       const frame = exploring && village && villageBase(), space = frame && villageSpace(camera, villageViewport);
@@ -85,10 +96,9 @@ export function createCamera(input) {
       const point = projectPoint(anchor.x, anchor.z), at = workingZoom(frame), y = point.y + lift;
       // Retain the player's working view while the selected anchor fits a one-unit inner margin.
       if (Math.abs(point.x - villageX) <= Math.max(0, space.width / (2 * at) - 1)
-        && Math.abs(y - (3 + villageY)) <= Math.max(0, space.height * space.free / (2 * at) - 1)) return wasFit;
-      const land = surfaces[placeId];
-      villageX = THREE.MathUtils.clamp(point.x, -land.rx, land.rx);
-      villageY = THREE.MathUtils.clamp(y - 3, -land.rz * .72, land.rz * .72);
+        && Math.abs(y - villageY) <= Math.max(0, space.height * space.free / (2 * at) - 1)) return wasFit;
+      villageX = THREE.MathUtils.clamp(point.x, frame.bounds.minX, frame.bounds.maxX);
+      villageY = THREE.MathUtils.clamp(y, frame.bounds.minY, frame.bounds.maxY);
       return true;
     },
     update(delta, player) {
@@ -109,7 +119,7 @@ export function createCamera(input) {
           frame.zoom = workingZoom(frame);
           // Keep the working center in the measured free area as captions and bars reflow.
           frame.x = villageX;
-          frame.y = 3 + villageY + (frame.y - 3) * baseZoom / frame.zoom;
+          frame.y = villageY + (frame.y - frame.centerY) * baseZoom / frame.zoom;
         }
         const blend = reduce ? 1 : 1 - Math.exp(-dt * 5);
         if (reduce) place(frame.x, frame.y);

@@ -4,12 +4,15 @@
 // Everything is added under place.group, so the place's own
 // lifetime (resources.js) releases every texture, material and geometry when the player leaves.
 import * as THREE from 'three';
+import {unprojectGround} from '../world/projection.js';
+import {groundGeometry} from '../world/ground-transform.js';
 import {artSizes, loadArt, placeArt, projectPoint} from '../world/art.js';
 import {pixelSizes} from '../pixel/catalog.js';
 import {ALL_SPOTS as ISLAND_SPOTS, CABIN, BELL, CAMPAIGN_BUILDINGS, ARSENAL, islandZones, placedSpot} from './spots.js';
 import {isExtraSpot} from './extra-spots.js';
 import {isInventoryWallId, offeredInventoryWalls} from './wall-cohort.js';
 import {makeFootprint, makeWallLanes} from './move-preview.js';
+import {makeSelectionBracket} from './selection-bracket.js';
 import {createWallBuilderPreview} from './wall-builder-preview.js';
 import {isOpen, spotWave, waveOf} from '../campaign/index.js';
 import {LOCK_WAVES} from '../art/campaign.js';
@@ -145,11 +148,11 @@ export function moveSprite(mesh, x, z) {
 }
 
 // A house role's reach on the ground (GAME-V3.md "Houses"): one unit disc and one unit rim, scaled to the radius
-// and squashed like the ground (projectPoint's 0.72), under everything that stands. Pure Three.js, no art.
+// and transformed by the shared ground projection, under everything that stands. Pure Three.js, no art.
 export const ROLE_COLOURS = Object.freeze({barracks: 0xe2463b, tavern: 0x3fa04d, workshop: 0xf2c14e});
 export function makeRangeRing(root) {
-  const disc = new THREE.Mesh(new THREE.CircleGeometry(1, 64), new THREE.MeshBasicMaterial({transparent: true, opacity: .14, depthTest: false, depthWrite: false}));
-  const rim = new THREE.Mesh(new THREE.RingGeometry(.975, 1, 96), new THREE.MeshBasicMaterial({transparent: true, opacity: .85, depthTest: false, depthWrite: false}));
+  const disc = new THREE.Mesh(groundGeometry(new THREE.CircleGeometry(1, 64)), new THREE.MeshBasicMaterial({transparent: true, opacity: .14, depthTest: false, depthWrite: false}));
+  const rim = new THREE.Mesh(groundGeometry(new THREE.RingGeometry(.975, 1, 96)), new THREE.MeshBasicMaterial({transparent: true, opacity: .85, depthTest: false, depthWrite: false}));
   for (const [mesh, order] of [[disc, 97], [rim, 98]]) { mesh.renderOrder = order; mesh.frustumCulled = false; mesh.visible = false; root.add(mesh); }
   disc.name = 'island-range'; rim.name = 'island-range-rim';
   let shown = null;
@@ -159,7 +162,7 @@ export function makeRangeRing(root) {
       disc.visible = rim.visible = on;
       if (!on) { shown = null; return; }
       const point = projectPoint(range.x, range.z), colour = ROLE_COLOURS[range.role] ?? 0xffffff;
-      for (const mesh of [disc, rim]) { mesh.position.set(point.x, point.y, 0); mesh.scale.set(range.radius, range.radius * .72, 1); mesh.material.color.setHex(colour); }
+      for (const mesh of [disc, rim]) { mesh.position.set(point.x, point.y, 0); mesh.scale.set(range.radius, range.radius, 1); mesh.material.color.setHex(colour); }
       disc.material.opacity = .12 + .04 * Math.sin(time * 2.4);
       disc.userData = {range: {...range}}; shown = range;
     },
@@ -273,7 +276,7 @@ export function decorateIsland(place, ctx = {}) {
   let joinedWalls = new Set();
   const baseColliders = [...place.colliders];
   let preview = null;
-  const footprint = makeFootprint(root);
+  const footprint = makeFootprint(root), selectionBracket = makeSelectionBracket(root);
   const wallDraft = createWallBuilderPreview({root, wall: textures.wall});
   // D056: while a wall is moved, the cells where a wall stops pirates glow (home island only).
   const wallLanes = layout.zones === islandZones ? makeWallLanes(root) : null;
@@ -451,8 +454,9 @@ export function decorateIsland(place, ctx = {}) {
       ...(state.visitor || layout.cabin === false ? [] : [{id: CABIN.id, x: CABIN.x, z: CABIN.z, w: 3, h: 6}])];
     let best = null, bestScore = Infinity;
     for (const item of candidates) {
-      if (Math.abs(item.x - x) > item.w || z < item.z - item.h / .72 || z > item.z + .9) continue;
-      const score = Math.hypot(item.x - x, item.z - z);
+      const tap = projectPoint(x, z), foot = projectPoint(item.x, item.z);
+      if (Math.abs(foot.x - tap.x) > item.w || tap.y > foot.y + item.h || tap.y < foot.y - .54) continue;
+      const score = Math.hypot(foot.x - tap.x, foot.y - tap.y);
       if (score < bestScore) { best = item.id; bestScore = score; }
     }
     return best;
@@ -469,8 +473,9 @@ export function decorateIsland(place, ctx = {}) {
       const point = new THREE.Vector3((event.clientX - rect.left) / rect.width * 2 - 1,
         1 - (event.clientY - rect.top) / rect.height * 2, 0).unproject(ctx.camera);
       // Moving a building (T36): the tap chooses a cell of the ground instead of a building.
-      if (ctx.placing?.()) { ctx.onGround?.(point.x, -point.y / .72); return; }
-      const picked = pickAt(point.x, -point.y / .72);
+      const logical = unprojectGround(point.x, point.y);
+      if (ctx.placing?.()) { ctx.onGround?.(logical.x, logical.z); return; }
+      const picked = pickAt(logical.x, logical.z);
       if (!picked) return;
       if (ctx.canPickRemote?.(picked)) { ctx.onPick?.(picked); return; }
       // Walk up first: a click on something out of reach only says so (ctx.player is the player's position).
@@ -514,6 +519,7 @@ export function decorateIsland(place, ctx = {}) {
     update(dt, time = 0) {
       if (disposed) return;
       notice.update();
+      selectionBracket.show(preview ? null : ctx.selection?.());
       recoveryIndicators.update();
       rangeRing.show(ctx.range?.() ?? null, reduced() ? 0 : time);
       const still = reduced();
@@ -540,7 +546,7 @@ export function decorateIsland(place, ctx = {}) {
       if (disposed) return; disposed = true; cleanups.splice(0).forEach(stop => stop());
       tasks.dispose(); notice.dispose(); staticArt.dispose();
       progress?.dispose(); recoveryIndicators.dispose();
-      wallConnections.dispose(); wallDraft.dispose();
+      wallConnections.dispose(); wallDraft.dispose(); selectionBracket.dispose();
       for (const id of [...shown.keys()]) clear(id);
       for (const [key, mesh] of buildings) if (isInventoryWallId(key.split(':')[0])) releaseStandin(mesh);
       for (const item of lockTextures.values()) item.texture.dispose(); // the padlocks a spot no longer shows

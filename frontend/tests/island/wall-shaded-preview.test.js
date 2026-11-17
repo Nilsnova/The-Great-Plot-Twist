@@ -43,7 +43,7 @@ describe('shared shaded wall previews', () => {
     expect(after).toHaveLength(before.length);
     after.forEach((batch, index) => {
       expect(batch.order - before[index].order).toBeCloseTo(.5);
-      batch.positions.forEach((value, n) => expect(value - before[index].positions[n]).toBeCloseTo(n % 3 === 0 ? .5 : n % 3 === 1 ? -.36 : 0));
+      batch.positions.forEach((value, n) => expect(value - before[index].positions[n]).toBeCloseTo(n % 3 === 0 ? .75 : n % 3 === 1 ? -.3 : 0));
     });
     preview.dispose();
   });
