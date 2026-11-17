@@ -80,6 +80,9 @@ try {
     assert.deepEqual(result.released, {bytes: 0, entries: 0, queued: 0, decodes: 0});
   }
   assert.deepEqual(errors, []); assert.deepEqual(external, []);
-  await writeFile(join(out, 'report.json'), JSON.stringify({source, scope: 'Actual Canvas terrain components and source decode; no full-gameplay, hull or final-quality claim', reports, errors, external}, null, 2) + '\n');
+  await writeFile(join(out, 'report.json'), JSON.stringify({source,
+    scope: 'Actual Canvas terrain components and source decode; no full-gameplay, hull or final-quality claim',
+    comparison: 'Same candidate facade geometry: procedural fallback before versus decoded materials after; not an old-software comparison',
+    reports, errors, external}, null, 2) + '\n');
   console.log('PASS: actual16/32 terrain materials, clipping, analytic top, real naval anchors and decoded-source release; 0 page errors/external requests');
 } finally {await browser?.close(); await server.close();}
