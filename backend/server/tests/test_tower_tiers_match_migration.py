@@ -17,6 +17,7 @@ from server.island.catalogue import MAX_LEVEL, load_island
 MIGRATIONS = Path(__file__).resolve().parents[3] / "supabase" / "migrations"
 TIERS = MIGRATIONS / "20261112070000_tower_tiers.sql"
 TOWER_DEFENSE = MIGRATIONS / "20261111030000_tower_defense.sql"
+RECOVERY_MUTATIONS = MIGRATIONS / "20261117050000_structure_recovery_mutations.sql"
 
 
 def function(text: str, name: str) -> str:
@@ -66,13 +67,25 @@ def test_the_upgrade_functions_change_only_the_length_of_the_price_list():
 
 
 def test_the_migration_is_the_last_word_on_the_upgrade_functions():
-    # 20261112080000_demolish.sql replaces island_upgrade() once more, with one addition only (its
-    # payment row); test_demolish_matches_migration.py checks that against this file.
+    # Demolish adds payment/refund accounting; T55 adds reservation settlement and repair guards.
+    # Historical function-body comparisons above stay pinned to the original migrations.
     later = {
         path.name: re.findall(r"function public\.(island_upgrade|pp_upgrade)\(", path.read_text())
         for path in sorted(MIGRATIONS.glob("*.sql"))
         if path.name > TIERS.name
     }
     assert {name: found for name, found in later.items() if found} == {
-        "20261112080000_demolish.sql": ["island_upgrade"] * 4
+        "20261112080000_demolish.sql": ["island_upgrade"] * 4,
+        RECOVERY_MUTATIONS.name: ["island_upgrade"] * 3,
     }
+    latest = re.search(
+        r"create or replace function public\.island_upgrade\(.*?\n\$\$;",
+        RECOVERY_MUTATIONS.read_text(),
+        re.DOTALL,
+    ).group(0)
+    assert "structure_recovery_mutation_begin(p_island_owner)" in latest
+    assert "'reason', 'wave_running'" in latest
+    assert "'reason', 'needs_repair'" in latest
+    assert (
+        "p_prices is null or coalesce(array_length(p_prices, 1), 0) not between 1 and 5" in latest
+    )

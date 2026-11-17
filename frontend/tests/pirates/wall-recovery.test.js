@@ -38,6 +38,28 @@ describe('a wall starts the wave with the health its last wave left it', () => {
     expect(wallOf(wave.state()).hp).toBe(48);
   });
 
+  it('recovery v1 pauses Captain E, Carpenter, Workshop and Bastion wall healing for the whole sim', () => {
+    const defenses = [
+      ...oneWall({ health: 50, spec: 'bastion' }),
+      { id: 'workshop_1', kind: 'house', level: 2, spec: 'workshop', x: 1, z: .86 },
+    ];
+    const wave = createWave({ seed: 1, wave: 1, defenses, crew: { carpenter: 2 }, island: { hp: 1000 },
+      recoveryVersion: 1, waveProtocol: 2 });
+    const before = wallOf(wave.state()).hp;
+    for (let i = 0; i < 400; i++) {
+      wave.step(.05, [{ type: 'repair', wallId: 'w' }]);
+    }
+    expect(wallOf(wave.state()).hp).toBe(before);
+    expect(wallOf(wave.state()).repairing).toBe(false);
+  });
+
+  it('recovery v1 leaves destroyed walls inactive and rejects the old E rebuild', () => {
+    const wave = createWave({ seed: 1, wave: 1, defenses: oneWall({ health: 0 }), crew: { carpenter: 2 }, island: { hp: 1000 },
+      recoveryVersion: 1, waveProtocol: 2 });
+    for (let i = 0; i < 400; i++) wave.step(.05, [{ type: 'rebuild', wallId: 'w' }]);
+    expect(wallOf(wave.state())).toMatchObject({ hp: 0, broken: true });
+  });
+
   it('a bad health counts as whole, so a broken answer never breaks a wall', () => {
     for (const health of [-1, 101, 2.5, '40', null]) {
       expect(wallOf(createWave({ seed: 1, wave: 2, defenses: oneWall({ health }) }).state()).hp).toBe(120);

@@ -56,8 +56,13 @@ Command pattern (from `backend/`):
 | [group3_sql/](../backend/server/tests/group3_sql/) | 1 | 3 | Schema, wallet directions, server-only grants | none |
 | `abuse/test_scratch_postgres.py` | 1 | 26 | Abuse cases on real SQL | run without `CASE_PG_SCRATCH`: `uv run --frozen --with pgserver --with 'psycopg[binary]' pytest -q server/tests/abuse/test_scratch_postgres.py` |
 | `test_local_server_pg.py`, `test_festival_api_pg.py`, `test_host_console_api_pg.py` | 3 | 5 | The API on top of the real SQL chain | same pattern, give the file path |
+| T60 structure recovery integration | [recovery API, mutation, schema, paid-repair and HTTP/PG tests](../backend/server/tests/island_sql/) | Full island SQL suite 368 passed; route/transport suite 140 passed; strict HTTP/replay path 1 passed | Actual FastAPI route → disposable PostgreSQL RPC → production snapshot/replay modules, prep/combat healing pause, same-actor reconnect from `after=0`, fixed `(headSeq,sealedThroughTick)` read after a newer event, dual production replay, sealed journal checkpoints, immutable UID retry, finish/expiry, resumed healing and next-wave quota; saved-v1 next wave still starts when admission is off | The API fixture does not invoke the browser/T59 transport adapter, hosted Supabase, live migration history, physical devices or saved v1 `cannon_8`/culverin while their availability flags are off; see the fail-closed limit in the evidence README |
+
+The bounded journal volume diagnostic is [test_structure_recovery_journal_budget_sql.py](../backend/server/tests/island_sql/test_structure_recovery_journal_budget_sql.py). From `backend/`, run `CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql/test_structure_recovery_journal_budget_sql.py`; add `WRITE_RECOVERY_DIAGNOSTIC=1` to explicitly regenerate the report. It measures local append/page volume and relation allocation through SQL, bypassing HTTP token buckets; the [release gate](RELEASE-CHECKLIST.md#t55t60-structure-recovery-release-gate) requires an operating-budget and retention decision before activation.
 
 **Do not cover:** Supabase itself (Auth, the hosted Data API, Realtime policies under real tokens), the live project's applied migration history, and settings in the Supabase dashboard. The manual plan for those is in [supabase/README.md](../supabase/README.md#manual-test-plan).
+
+The T60 command and exact fixture limitations are recorded in [its evidence README](evidence/T60-structure-recovery/README.md). The focused API/replay command is run from `backend/`: `CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql/test_structure_recovery_http_pg.py`.
 
 ## 3. Frontend unit tests (Vitest)
 
@@ -102,6 +107,14 @@ Size: 193 test files in [frontend/tests/](../frontend/tests/), about 1,830 `it`/
 | `test:host` | `check-host-console.js` | Host console against fake responses |
 | others | `test:art` (`check-pixel.js`), `test:weather:wiring`, `test:harbor:life`, `test:lifecycle`, `test:living`, `test:title-start`, `test:settings:visuals`, `test:build-stamp`, `test:problem-report`, `test:islet:world`, `test:festival` | See the first line of each script |
 | no npm script | `check-islet.js`, `check-local-dev.js`, `check-redesign-hud.js`, `check-redesign-movement.js`, `check-sports.js`, `check-sports-hotspot.js`, `capture-integrated.js` (the first 3 minutes with `?islands=fake`, screenshots) | Run with `node scripts/<name>` |
+
+The final local frontend suite passed 3,694 tests across 322 files. The separate `npm run test:mp`
+smoke test did not pass: it timed out waiting for the host's wave break with `wave=null`. The same
+failure reproduced on exact main `a09787c`. A passive retry recorded the host wave ending with
+`survived:false` and no break state, so the flow's unconditional break wait does not account for a
+lost wave. This is not evidence of a recovery/break regression; it did not change multiplayer
+assertions or gameplay. See the
+[T60 evidence](evidence/T60-structure-recovery/README.md#final-integrated-verification-and-multiplayer-result).
 
 **Do not cover:** physical phones and their browsers, real audio output (headless Chrome has no real audio device), real sign-in, the live API and Realtime, and slow class Wi-Fi.
 
@@ -334,3 +347,11 @@ the outside-overlay/StopPlots assertions through the captain-blocking wrapper.
 ## COC-02 — village overview camera (Johannes)
 
 `frontend/tests/player/village-camera.test.js`: eight tests cover real current-land and overlay-inset fit at both required viewport sizes, captain/zoom restoration, battle/tutorial precedence, resize/travel, motion preferences and invalid/paused updates. Run `cd frontend && npx vitest run tests/player/village-camera.test.js --maxWorkers=1`. Final focused result: 1 file / 8 tests passed, 516 ms. This does not prove production, Safari, expanded land or integrated UI; [evidence](evidence/COC-02/README.md) records later checks.
+
+## T58 — Versioned Captain and Tech recovery policy
+
+| Part | Checks and command | Covers | Misses |
+|---|---|---|---|
+| Recovery-v1 Captain choices, persisted-version tutorial help, and shared wall Tech copy | [Focused tests](../frontend/tests/campaign/captain-repair-policy.test.js), [Captain tree](../frontend/tests/island/captain-recovery-tree.test.js), [card model](../frontend/tests/island/card-model.test.js), [structure upgrade DOM gate](../frontend/tests/island/structure-recovery-upgrade-dom.test.js), [tutorial pages](../frontend/tests/tutorial-pages.test.js) and [tutorial host](../frontend/tests/tutorial/host.test.js); `cd frontend && npm exec vitest -- run tests/tutorial-pages.test.js tests/tutorial/host.test.js tests/campaign/captain-repair-policy.test.js tests/island/captain-recovery-tree.test.js tests/island/card-model.test.js`; recovery views: `cd frontend && npm exec vitest -- run tests/island/structure-recovery-policy.test.js tests/island/structure-recovery-model.test.js`; backend rate: `cd backend && uv run pytest -q server/tests/test_structure_recovery_rate.py`; build: `cd frontend && npm run build`; [fixture capture](../frontend/scripts/capture-captain-repair.js) | Legacy-vs-v1 page selection, stable first four pages, E help-up/F fire controls, retired saved IDs and spent-point display, Engineer discount, Quick Mend/Bastion exclusivity, Mason stacking, paused recovery factor, no level upgrades when v1 HP is damaged/reserved, base-strength label, Tech copy and production island UI presentation at 1280×800 and 375×812 | Fixture data is supplied directly to UI models, not fetched from a saved island; no live API, server transaction, wave runtime, payment, multiplayer, physical phone or release activation. Combined dependency/release checks are pending. |
+
+See the [T58 evidence README](evidence/T58-captain-repair/README.md) for fixture values, screenshots and reproducible commands.

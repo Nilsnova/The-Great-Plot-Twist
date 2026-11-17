@@ -24,13 +24,13 @@ Used by: routes/waves.py and the tests.
 
 import secrets
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
 from uuid import UUID
 
 from server.errors import ApiError
 from server.game.islet_store import player_not_set_up
-from server.island import games, permissions, rescue, store, wave_events
+from server.island import games, permissions, rescue, store, wave_events, wave_recovery
 from server.island.catalogue import IslandCatalogue, Weather
 from server.island.codes import read_code
 from server.island.rules import is_boss, loot_rates, weather_for
@@ -55,6 +55,11 @@ class WaveStart:
     weather: Weather
     flagship: bool  # True on Pirate Point: the flagship only the three lamps can sink
     boss: bool  # every 5th wave (islands.json bossEvery): a warship, and the loot pays twice
+    recovery_version: int = 0
+    wave_protocol: int = 1
+    initial_snapshot: dict | None = None
+    participant_token: UUID | None = None
+    last_actor_counter: int | None = None
 
 
 @dataclass(frozen=True)
@@ -101,6 +106,12 @@ def start_refusal(refusal: Refusal) -> ApiError:
         return no_such_island()
     if refusal.reason == "wave_running":
         return ApiError(409, "wave_running", "A wave is already under way on this island.")
+    if refusal.reason == "client_update_required":
+        return ApiError(
+            409,
+            "client_update_required",
+            "Reload to ring the bell with the recovery update.",
+        )
     return SupabaseRejected()
 
 
@@ -136,6 +147,49 @@ async def start(
     return wave_of(catalogue, reply)
 
 
+async def start_protocol2(
+    admin: SupabaseAdmin,
+    catalogue: IslandCatalogue,
+    weather: Weather,
+    player_id: str,
+    where: str,
+    action_uid: str,
+    snapshot_template: dict | None,
+    rules: list[str],
+    admit_v1: bool,
+    protocol: int = 2,
+    resolved: tuple[str, str | None] | None = None,
+    make_seed: Callable[[int], int] = secrets.randbelow,
+) -> WaveStart:
+    """Start or replay a wave using capability-aware, atomic v1 admission."""
+    place, owner = resolved or await find_place(
+        admin, catalogue, player_id, where, members_only=True
+    )
+    timing = catalogue.waves
+    arguments = {
+        "p_player_id": player_id,
+        "p_action_uid": action_uid,
+        "p_place": place,
+        "p_island_owner": owner,
+        "p_seed": make_seed(SEED_LIMIT),
+        "p_countdown_seconds": timing.countdown_seconds,
+        "p_minimum_seconds": timing.minimum_seconds,
+        "p_maximum_seconds": timing.maximum_seconds,
+        "p_highest_wave": timing.highest_wave,
+        "p_weather_kind": weather.kind,
+        "p_weather_ships": weather.ships,
+        "p_weather_fog": weather.fog,
+        "p_rules": rules,
+        "p_snapshot_template": snapshot_template,
+        "p_admit_v1": admit_v1 and place == "island",
+        "p_protocol": protocol,
+    }
+    reply = await wave_recovery.call_lifecycle_rpc(
+        admin, "recovery_wave_start", arguments, statuses={"started"}
+    )
+    return recovery_wave_of(catalogue, reply)
+
+
 def wave_of(catalogue: IslandCatalogue, row: WaveRow) -> WaveStart:
     """The wave of a database answer, with the weather stored with it (which may differ from the
     weather now)."""
@@ -144,6 +198,48 @@ def wave_of(catalogue: IslandCatalogue, row: WaveRow) -> WaveStart:
     flagship = row.place == PIRATE_POINT
     boss = is_boss(catalogue, row.wave)
     return WaveStart(row.waveId, row.wave, row.seed, row.startsAt, weather, flagship, boss)
+
+
+def recovery_wave_of(catalogue: IslandCatalogue, reply: object) -> WaveStart:
+    """Validate a versioned lifecycle reply while retaining the legacy wave metadata parser."""
+    if not isinstance(reply, dict):
+        raise SupabaseRejected("The database sent an unreadable recovery wave.")
+    row = store.read_model(
+        WaveRow,
+        {key: value for key, value in reply.items() if key in WaveRow.model_fields},
+    )
+    version = reply.get("recoveryVersion")
+    protocol = reply.get("waveProtocol")
+    if (
+        isinstance(version, bool)
+        or version not in (0, 1)
+        or isinstance(protocol, bool)
+        or protocol not in (1, 2)
+        or (version, protocol) not in {(0, 1), (1, 2)}
+    ):
+        raise SupabaseRejected("The database sent an incoherent recovery wave version.")
+    snapshot = reply.get("initialSnapshot")
+    token = reply.get("participantToken")
+    counter = reply.get("lastActorCounter")
+    if version == 1 and not isinstance(snapshot, dict):
+        raise SupabaseRejected("The database sent an incomplete recovery snapshot.")
+    if token is not None:
+        try:
+            token = UUID(str(token))
+        except ValueError as error:
+            raise SupabaseRejected("The database sent an invalid participant token.") from error
+    if counter is not None and (
+        isinstance(counter, bool) or not isinstance(counter, int) or counter < 0
+    ):
+        raise SupabaseRejected("The database sent an invalid actor counter.")
+    return replace(
+        wave_of(catalogue, row),
+        recovery_version=version,
+        wave_protocol=protocol,
+        initial_snapshot=snapshot,
+        participant_token=token,
+        last_actor_counter=counter,
+    )
 
 
 async def join(
@@ -175,6 +271,31 @@ async def join(
     return wave_of(catalogue, reply)
 
 
+async def join_protocol2(
+    admin: SupabaseAdmin,
+    catalogue: IslandCatalogue,
+    player_id: str,
+    wave_id: UUID,
+    protocol: int = 2,
+) -> WaveStart:
+    """Join either a frozen protocol-1 or protocol-2 wave and create token mapping atomically."""
+    where = await store.read_wave_place(admin, str(wave_id))
+    if where is None:
+        raise no_such_wave()
+    if where.place == "island" and where.island_owner is not None:
+        await permissions.require_action(
+            admin, where.island_owner, player_id, permissions.WAVE_JOIN
+        )
+    await store.open_island(admin, player_id, catalogue.starting_coins)
+    reply = await wave_recovery.call_lifecycle_rpc(
+        admin,
+        "recovery_wave_join",
+        {"p_player_id": player_id, "p_wave_id": str(wave_id), "p_protocol": protocol},
+        statuses={"joined"},
+    )
+    return recovery_wave_of(catalogue, reply)
+
+
 async def current(
     admin: SupabaseAdmin, catalogue: IslandCatalogue, player_id: str, where: str
 ) -> WaveStart | None:
@@ -182,6 +303,31 @@ async def current(
     place, owner = await find_place(admin, catalogue, player_id, where)
     row = await store.current_wave(admin, place, owner)
     return None if row is None else wave_of(catalogue, row)
+
+
+async def current_protocol2(
+    admin: SupabaseAdmin,
+    catalogue: IslandCatalogue,
+    player_id: str,
+    where: str,
+    protocol: int = 2,
+) -> WaveStart | None:
+    """Read the current wave with the caller's capability and private participant mapping."""
+    place, owner = await find_place(admin, catalogue, player_id, where)
+    reply = await wave_recovery.call_lifecycle_rpc(
+        admin,
+        "recovery_wave_current",
+        {
+            "p_player_id": player_id,
+            "p_place": place,
+            "p_island_owner": owner,
+            "p_protocol": protocol,
+        },
+        statuses={"running", "empty"},
+    )
+    if reply["status"] == "empty":
+        return None
+    return recovery_wave_of(catalogue, reply)
 
 
 def no_such_wave() -> ApiError:
@@ -199,6 +345,12 @@ def finish_refusal(refusal: Refusal) -> ApiError:
         wait = max(1, refusal.wait_seconds)
         message = f"The wave is not over yet. Try again in {wait} seconds."
         return ApiError(409, "wave_too_early", message, headers={"Retry-After": str(wait)})
+    if refusal.reason == "client_update_required":
+        return ApiError(
+            409,
+            "client_update_required",
+            "Reload to finish this recovery wave.",
+        )
     return SupabaseRejected()
 
 
@@ -254,6 +406,62 @@ async def finish(
     if isinstance(reply, Refusal):
         raise finish_refusal(reply)
     return WaveFinish(reply.loot, reply.balance, reply.waveBest, reply.flags, reply.boss)
+
+
+async def finish_protocol2(
+    admin: SupabaseAdmin,
+    catalogue: IslandCatalogue,
+    player_id: str,
+    wave_id: UUID,
+    survived: bool,
+    ships_sunk: int,
+    bonuses: list[str] | None,
+    rescued: bool,
+    checkpoint: dict,
+) -> dict:
+    """Atomically validate the recovery checkpoint, close canonical HP and settle loot."""
+    loot = catalogue.loot
+    base, per_wave, point_base = loot.base, loot.per_wave, loot.pirate_point_base
+    back = catalogue.waves.restart_back
+    where = await store.read_wave_place(admin, str(wave_id))
+    if where is not None and where.wave is not None:
+        if loot.late_from:
+            base, per_wave, point_base = loot_rates(loot, where.wave)
+        allowed = wave_events.allowed_bonuses(
+            bonuses,
+            place=where.place,
+            wave=where.wave,
+            seed=where.seed,
+            boss_every=catalogue.waves.boss_every,
+        )
+        base += wave_events.bonus_base(allowed, where.wave)
+        counts = rescue.rescue_counts(rescued, survived, where.place, where.wave)
+        back = rescue.restart_back(back, counts)
+    arguments = {
+        "p_player_id": player_id,
+        "p_wave_id": str(wave_id),
+        "p_survived": survived,
+        "p_ships_sunk": ships_sunk,
+        "p_loot_base": base,
+        "p_loot_per_wave": per_wave,
+        "p_loot_per_house": loot.per_house,
+        "p_point_loot_base": point_base,
+        "p_boss_every": catalogue.waves.boss_every,
+        "p_boss_multiplier": loot.boss_multiplier,
+        "p_restart_back": back,
+        "p_island_epoch": str(checkpoint["islandEpoch"]),
+        "p_checkpoint_uid": checkpoint["checkpointUid"],
+        "p_through_tick": checkpoint["throughTick"],
+        "p_input_head_seq": checkpoint["inputHeadSeq"],
+        "p_last_repair_seq": checkpoint["lastRepairSeq"],
+        "p_basis_repair_seq": {
+            str(key): value for key, value in checkpoint["basisRepairSeq"].items()
+        },
+        "p_hp_units": {str(key): value for key, value in checkpoint["hpUnits"].items()},
+    }
+    return await wave_recovery.call_lifecycle_rpc(
+        admin, "recovery_wave_finish", arguments, statuses={"done"}
+    )
 
 
 def revive_refusal(refusal: Refusal) -> ApiError:

@@ -67,11 +67,15 @@ const INERT = Object.freeze({
  * hit(tower, damage, by, events) returns true when that blow broke the tower (once: a broken tower
  * takes no more blows), so the caller can let go of it.
  */
-export function createTowerHealth({ enabled = false, towers = [], now = () => 0, tick = .05 } = {}) {
+export function createTowerHealth({ enabled = false, towers = [], now = () => 0, tick = .05, recoveryVersion = 0 } = {}) {
   if (!enabled) return INERT;
   const healthy = towers.filter(tower => towerMaxHp(tower.kind, tower.level) > 0);
   for (const tower of healthy) {
-    tower.maxHp = towerMaxHp(tower.kind, tower.level); tower.hp = tower.maxHp;
+    const configuredMax = towerMaxHp(tower.kind, tower.level);
+    const snapshotMax = recoveryVersion === 1 && Number.isFinite(tower.maxHP) && tower.maxHP > 0 ? tower.maxHP : configuredMax;
+    tower.maxHp = snapshotMax;
+    tower.hp = recoveryVersion === 1 && Number.isInteger(tower.hpUnits) && tower.hpUnits >= 0 && tower.hpUnits <= 1_000_000
+      ? snapshotMax * tower.hpUnits / 1_000_000 : snapshotMax;
     tower.repairLeft = 0; tower.repairRate = TOWER_HEALTH.repairRate; tower.rebuildAt = -Infinity;
   }
   const has = tower => tower?.maxHp > 0;

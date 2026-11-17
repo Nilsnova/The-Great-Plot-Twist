@@ -98,9 +98,19 @@ Open **Menu**, then **Captain and skills**. There you raise your captain's level
 Ships that reach the shore let **boarders** climb out. They walk to the heart of the island and attack any captain nearby.
 
 - A standing wall stops them until they break it.
-- Press **E** at a damaged wall to repair it, and at a broken one to rebuild it.
-- When wall repairs are switched on (being tested): a wall keeps its damage into the next wave. Between waves its card offers **Repair** or **Rebuild** for a few coins instead of Upgrade, or it mends by itself 10 minutes later. Upgrade it once it is whole.
+- **Legacy recovery v0:** press **E** at a damaged wall to repair it, and at a broken one to rebuild it.
+- **Legacy wall recovery v0:** a wall keeps its damage into the next wave. Between waves its card offers **Repair** or **Rebuild** for a few coins instead of Upgrade, or it mends by itself 10 minutes later. Upgrade it once it is whole. The versioned recovery v1 preview below describes the replacement behavior for an island served with that policy.
 - Your gun and your cutlass beat them.
+
+## Structure health · recovery v1 preview
+
+**Preview only, not a claim that recovery v1 is enabled or released.** When the server serves an island with recovery version 1, these are the intended player rules. Legacy recovery v0 remains described above.
+
+- Damaged **walls, cannons, mortars, harpoons, culverins and swivels** show a small health bar and exact HP in the structure card. Houses and watchtowers have no structure HP and are excluded. Full-health bars and repair offers are hidden. A destroyed structure shows an empty bar, a small **!** and its broken appearance; during a reserved wave it stays inactive until a paid repair succeeds. Between waves, free repair can bring it back from zero and it becomes active once HP is positive. Any positive HP can enter the next wave, but a partly damaged structure is fragile. Base level upgrades require full HP and are available between waves.
+- Between waves, eligible structures heal automatically from their actual missing HP, including while you are offline. The card offers **Repair now: pay N coins** or **Or wait about Y for free repair**. Waiting takes no action; healing continues while the card is open or ignored. The ETA uses current HP and current repair rate, so a new wave can pause it.
+- Free repair pauses as soon as the server accepts the bell, including preparation and countdown, and stays paused through combat. It resumes when the server confirms the wave has finished or expired. During that reserved wave the card shows the paused status and shared remaining paid uses, with no free-repair ETA.
+- A successful **Repair now** restores one structure immediately. Its server-quoted price is the current level's catalogue price, independent of damage or who pays. The team shares three successful repairs per island and wave, including preparation/countdown; repairs outside the reserved wave are unlimited. Failed requests do not charge coins or use a slot.
+- Captain **E** repair/rebuild and repair-only Captain skills are removed in recovery v1. The hired Carpenters on the island owner's crew speed up free repair between waves: up to two count island-wide, even when the owner is offline. Nearby Workshops add a capped bonus. The selected wall's **Quick Mend** or **Bastion** spec and island **Mason Drill** research further affect wall repair; Quick Mend and Bastion are exclusive, and only the wall's equipped spec applies. These bonuses pause during a reserved wave. See [D059](DECISIONS.md#d059--shared-gradual-hp-recovery-and-paid-instant-repair--2026-11-16) for the full rules and figures.
 
 ## The heart of the island
 
@@ -119,7 +129,7 @@ The heart stands in the middle of the island. Its ♥ shows in the wave bar. Boa
 Open **Menu**, then **Crew**. You hire crew once and keep them.
 
 - **Gunner** (🪙 40, up to 2): your strongest tower reloads faster. After wave 3.
-- **Carpenter** (🪙 30, up to 2): repairs your most damaged wall during a wave. After wave 5.
+- **Carpenter** (🪙 30, up to 2): under legacy recovery v0, repairs your most damaged wall during a wave. In recovery v1, Carpenters instead add to the island-wide between-wave free-repair rate; see the recovery v1 preview above. After wave 5.
 - **Lookout** (🪙 25, one): sees further in fog. Ships show 3 seconds earlier. After wave 8.
 
 ## What opens when

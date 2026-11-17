@@ -36,6 +36,7 @@ from server.host_console_cache import HostConsoleHeaders
 from server.island.catalogue import IslandCatalogue, catalogue_for_flags, island_or_none
 from server.lock.limits import PlayerBudget
 from server.lock.places import PlaceSearch
+from server.lock.recovery_budget import TokenBucket
 from server.lock.weather import PlaceWeather
 from server.market.exchange import MarketService, market_or_none
 from server.predictions.desk import PredictionDesk, desk_or_none
@@ -65,6 +66,7 @@ from server.routes import (
     island_boat,
     island_layout,
     island_reset,
+    island_structures,
     islet,
     keepalive,
     lock,
@@ -75,7 +77,9 @@ from server.routes import (
     predictions,
     save,
     sports,
+    structure_repair,
     wall_recovery,
+    wave_recovery,
     waves,
     weather,
     world,
@@ -285,6 +289,10 @@ def create_app(
     app.state.wave_read_budget = PlayerBudget(
         WAVE_READS_PER_MINUTE, 60, clock=clock, message="Too many wave checks. Wait a moment."
     )
+    # Protocol-2 journal traffic has a separate short-window allowance from the
+    # low-frequency bell/finish endpoints.
+    app.state.recovery_write_budget = TokenBucket(8, 12)
+    app.state.recovery_read_budget = TokenBucket(8, 8)
 
     register_error_handlers(app)
     app.include_router(health.router, prefix="/api")
@@ -305,12 +313,15 @@ def create_app(
     app.include_router(crew_orders.router, prefix="/api")
     app.include_router(islet.router, prefix="/api")
     app.include_router(island.router, prefix="/api")
+    app.include_router(island_structures.router, prefix="/api")
+    app.include_router(structure_repair.router, prefix="/api")
     app.include_router(island_layout.router, prefix="/api")
     app.include_router(island_boat.router, prefix="/api")
     app.include_router(island_reset.router, prefix="/api")
     app.include_router(arsenal.router, prefix="/api")
     app.include_router(games.router, prefix="/api")
     app.include_router(waves.router, prefix="/api")
+    app.include_router(wave_recovery.router, prefix="/api")
     app.include_router(wall_recovery.router, prefix="/api")
     app.include_router(pirate_point.router, prefix="/api")
     app.include_router(predictions.router, prefix="/api")

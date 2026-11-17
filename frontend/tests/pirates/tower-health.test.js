@@ -153,6 +153,18 @@ describe('towers in a wave', () => {
     expect(towerOf(wave, broken.towerId).hp).toBeLessThanOrEqual(max);
   });
 
+  it('recovery v1 keeps a destroyed tower at zero after Captain E repair and rebuild inputs', () => {
+    const wave = createWave({ seed: 5, wave: 3, defenses: NEAR_HEART, island: { hp: 5000 }, towerHealth: true,
+      recoveryVersion: 1, waveProtocol: 2 });
+    let broken = null;
+    for (let i = 0; i < 4000 && !broken && !wave.done; i++) broken = wave.step(.05).find(event => event.type === 'tower_broken') ?? null;
+    expect(broken).not.toBeNull();
+    for (let i = 0; i < 220; i++) {
+      wave.step(.05, [{ type: 'rebuild', wallId: broken.towerId }, { type: 'repair', wallId: broken.towerId }]);
+    }
+    expect(towerOf(wave, broken.towerId)).toMatchObject({ hp: 0, broken: true, repairing: false });
+  });
+
   it('the same seed and inputs give the same wave with tower health on', () => {
     expect(run({ towerHealth: true }).events).toEqual(run({ towerHealth: true }).events);
   });

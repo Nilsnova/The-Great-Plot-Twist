@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>T59 structure recovery component preview</title>
+    <link rel="stylesheet" href="../../src/island/structure-recovery.css">
+    <style>
+      :root{font-family:system-ui,sans-serif;color:#34291f;background:#e7ddc6}
+      body{max-width:980px;margin:0 auto;padding:24px}
+      h1{font-size:24px}
+      .preview-note{padding:10px;background:#fff4d5;border:2px solid #8a6738}
+      .preview-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:18px}
+      .preview-card{display:grid;gap:10px;padding:16px;background:#f4e7c8;border:3px solid #4b3524;box-shadow:4px 4px #8a6738}
+      @media(max-width:600px){body{padding:12px}.preview-card{padding:12px}}
+    </style>
+  </head>
+  <body>
+    <h1>Repair feedback · component preview</h1>
+    <p class="preview-note">Standalone component only. Buttons emit an intent to this fixture; no API or repair action is called.</p>
+    <div class="preview-grid">
+      <section class="preview-card">
+        <h2>Wall level 1, between waves</h2>
+        <div id="wall-recovery"></div>
+      </section>
+      <section class="preview-card">
+        <h2>Cannon level 1, preparation</h2>
+        <div id="cannon-recovery"></div>
+      </section>
+      <section class="preview-card">
+        <h2>Harpoon level 1, low health</h2>
+        <div id="harpoon-recovery"></div>
+      </section>
+    </div>
+    <p id="intent-note" aria-live="polite"></p>
+    <script type="module" src="./structure-recovery-preview.js"></script>
+  </body>
+</html>
