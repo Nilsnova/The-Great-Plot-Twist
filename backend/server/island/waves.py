@@ -219,6 +219,28 @@ def recovery_wave_of(catalogue: IslandCatalogue, reply: object) -> WaveStart:
     ):
         raise SupabaseRejected("The database sent an incoherent recovery wave version.")
     snapshot = reply.get("initialSnapshot")
+    create = snapshot.get("createWave") if isinstance(snapshot, dict) else None
+    create = create if isinstance(create, dict) else {}
+    if isinstance(snapshot, dict) and (
+        snapshot.get("wallRuleVersion") == 1
+        or snapshot.get("wallCapacity") == 128
+        or create.get("perimeterWalls") is True
+    ):
+        if (
+            type(snapshot.get("wallRuleVersion")) is not int
+            or snapshot.get("wallRuleVersion") != 1
+            or type(snapshot.get("wallCapacity")) is not int
+            or snapshot.get("wallCapacity") != 128
+            or type(snapshot.get("configVersion")) is not int
+            or snapshot.get("configVersion") != 1
+            or create.get("perimeterWalls") is not True
+            or create.get("pathing") is not True
+            or not isinstance(snapshot.get("rules"), list)
+            or "pathing" not in snapshot.get("rules", [])
+        ):
+            raise SupabaseRejected("The frozen perimeter wave configuration is incomplete.")
+        # SQL health configuration remains v1; public geometry v2 fences older sim clients.
+        snapshot = {**snapshot, "configVersion": 2}
     token = reply.get("participantToken")
     counter = reply.get("lastActorCounter")
     if version == 1 and not isinstance(snapshot, dict):
