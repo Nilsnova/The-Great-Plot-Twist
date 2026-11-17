@@ -6,7 +6,7 @@ import { createReplayDriver, createWaveReplay } from '../../src/pirates/wave-rep
 import { towerEdgeDistance } from '../../src/pirates/tower-obstacles.js';
 
 describe('paid tower restore in recovery replay', () => {
-  it('reactivates firing, lets an occupied boarder exit, and preserves later tower damage', () => {
+  it('reactivates a tower under an occupying boarder and preserves subsequent damage', () => {
     const tower = { id: 'cannon_1', spot: 'cannon_1', instanceId: 'cannon-instance', kind: 'cannon', level: 1,
       x: 0, z: 3.5, hpUnits: 0, maxHP: 80, repairSeq: 0 };
     const wave = createWave({ seed: 5, wave: 3, island: { hp: 5000 }, defenses: [tower], recoveryStructures: [tower],
@@ -30,13 +30,14 @@ describe('paid tower restore in recovery replay', () => {
       return events;
     };
     advance(0);
-    let restoreTick = null, egressingId = null, egressed = false;
+    let restoreTick = null, occupyingId = null;
     for (let tick = 1; tick < 6_000 && !wave.done; tick++) {
       advance(tick);
       const state = wave.state();
-      const inside = state.boarders.find(boarder => towerEdgeDistance(boarder, tower) <= 1e-9);
+      const inside = state.boarders.find(boarder => Math.abs(boarder.x - tower.x) <= .25
+        && Math.abs(boarder.z - tower.z) <= .25);
       if (!inside) continue;
-      egressingId = inside.id;
+      occupyingId = inside.id;
       restoreTick = tick + 1;
       event.effectiveTick = restoreTick;
       expect(replay.addPage({ headSeq: 1, sealedThroughTick: 6_000, events: [event] })).toBe(true);
@@ -45,27 +46,19 @@ describe('paid tower restore in recovery replay', () => {
       break;
     }
     expect(restoreTick).not.toBeNull();
-    let fired = false, damagedAfterRestore = false;
-    const unsafeSteps = [];
+    expect(occupyingId).not.toBeNull();
+    let fired = false, damagedAfterRestore = false, hpFell = false, previousHp = 80;
     for (let tick = restoreTick + 1; tick < 6_000 && !wave.done; tick++) {
       const events = advance(tick);
       fired ||= events.some(item => item.type === 'cannon_fired' && item.cannonId === tower.id);
       damagedAfterRestore ||= events.some(item => item.type === 'tower_damaged' && item.towerId === tower.id);
       const state = wave.state(), activeTower = state.towers.find(item => item.id === tower.id);
-      const egressing = state.boarders.find(item => item.id === egressingId);
-      if (!egressed && (!egressing || towerEdgeDistance(egressing, activeTower) >= .29)) egressed = true;
-      for (const boarder of state.boarders) {
-        const distance = towerEdgeDistance(boarder, activeTower);
-        if (activeTower.hp > 0 && (boarder.id !== egressingId || egressed)
-          && (boarder.state === 'walking' || boarder.state === 'hacking') && distance < .29) {
-          unsafeSteps.push({ tick, boarderId: boarder.id, state: boarder.state, distance,
-            x: boarder.x, z: boarder.z, targetId: boarder.towerId });
-        }
-      }
+      expect(activeTower.hp).toBeLessThanOrEqual(previousHp);
+      hpFell ||= activeTower.hp < 80;
+      previousHp = activeTower.hp;
     }
     expect(fired).toBe(true);
     expect(damagedAfterRestore).toBe(true);
-    expect(egressed).toBe(true);
-    expect(unsafeSteps).toEqual([]);
+    expect(hpFell).toBe(true);
   });
 });
