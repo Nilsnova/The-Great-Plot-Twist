@@ -1,0 +1,15 @@
+--- 1802-finish
++++ 1804-finish
+@@ -148,8 +148,11 @@
+     v_checkpoint := public.recovery_wave_report_health_locked(
+       p_player_id,p_wave_id,p_island_epoch,p_checkpoint_uid,p_through_tick,
+       p_input_head_seq,p_last_repair_seq,p_basis_repair_seq,p_hp_units,v_server_now);
++    -- A stale/divergent report may use only a checkpoint the validator already accepted.
++    -- Without that receipt, malformed first vectors must not close initial HP or pay loot.
+     if v_checkpoint ->> 'status'<>'accepted'
+-       and coalesce(v_checkpoint ->> 'reason','') not in ('checkpoint_stale','checkpoint_divergence') then
++       and (coalesce(v_checkpoint ->> 'reason','') not in ('checkpoint_stale','checkpoint_divergence')
++            or v_wave.checkpoint_uid is null or v_wave.checkpoint_accepted_at is null) then
+       return v_checkpoint;
+     end if;
+     select * into v_wave from public.recovery_wave_states where wave_id=p_wave_id for update;

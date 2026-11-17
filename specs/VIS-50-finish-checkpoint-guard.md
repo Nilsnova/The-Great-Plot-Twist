@@ -10,9 +10,9 @@ Responsible teammate: Johannes Franz Lang (`frcola`). Parent: VIS-31 #236; indep
 
 ## Observed regression
 
-A disposable PostgreSQL run applied the complete migration chain twice, built a real paid wall and started a recovery wave with a 15-second minimum. At a declared 20-second test clock, seal399/head0, no accepted checkpoint and one frozen structure, the direct empty-vector health report correctly refused `checkpoint_divergence`. The same first finish returned `done`, paid15 coins (90→105), closed initial full HP and kept `checkpointUid:null`. Replacing only the finish function with the previous version inside a rollbackable transaction refused the same arguments without changes. No live database, credentials, `.env` or migration application was involved.
+A disposable PostgreSQL run applied the complete migration chain twice, built a real paid wall and started a recovery wave with a 15-second minimum. At a declared 20-second test clock, sealed tick 399/head 0, no accepted checkpoint and one frozen structure, the direct empty-vector health report correctly refused `checkpoint_divergence`. The same first finish returned `done`, paid 15 coins (90→105), closed initial full HP and kept `checkpointUid:null`. Replacing only the finish function with the previous version inside a rollbackable transaction refused the same arguments without changes. No live database, credentials, `.env` or migration application was involved.
 
-The November18 finish implementation tolerates all `checkpoint_divergence` refusals. That reason also covers missing/extra instance keys, fractional HP and healing, not only disagreement with an existing accepted checkpoint.
+The November 18 finish implementation tolerates all `checkpoint_divergence` refusals. That reason also covers missing/extra instance keys, fractional HP and healing, not only disagreement with an existing accepted checkpoint.
 
 ## Scope and likely files
 
@@ -30,3 +30,9 @@ No frontend/runtime dependency, service, public signature, flag, production sett
 - Current main's authoritative close, teammate outcome, expiry/away handling and grants remain intact.
 - Existing perimeter start capability, immutable old-template bridge and selected128-ID bounds remain compatible.
 - Run only ephemeral Unix-socket PostgreSQL through the existing scratch fixture. Record exact results; keep Draft for human review and explain-back.
+
+## Implementation and exact verification
+
+Implemented in [Draft #416](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/416), on immutable actual combined review base `0d047bd2`. The forward 18040000 migration preserves the current finish function except for requiring an existing accepted checkpoint UID and timestamp before tolerating stale/divergent refusal. Missing first health returns the original validator refusal.
+
+The [detailed evidence](../docs/evidence/VIS-50-finish-checkpoint/README.md) records the independently controlled red reproduction, six failing malformed-vector cases before correction, 43 passing lifecycle/perimeter cases after correction, and 9 passing final guard cases with all progress fields asserted. Whole backend Ruff passes. No frontend/Python runtime, old migration, signature, grants, flag, live database or production setting changed. Final coordinator composition, human review and owner-applied rollout remain open.

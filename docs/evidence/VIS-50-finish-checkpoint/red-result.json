@@ -1,0 +1,23 @@
+{
+  "source": "94301e57cf930fb831cf0709d48a352faede383c",
+  "started": "2026-11-17T21:44:24.328106+00:00",
+  "command": [
+    "uv",
+    "run",
+    "--frozen",
+    "--no-env-file",
+    "--with",
+    "pgserver",
+    "--with",
+    "psycopg[binary]",
+    "pytest",
+    "-q",
+    "server/tests/island_sql/test_recovery_finish_checkpoint_guard_sql.py",
+    "--basetemp",
+    "/workspace/reference-village-work/vis50-pg-checks/scratch-red"
+  ],
+  "scope": "New desired-behavior regression tests before forward migration; disposable Unix-socket PostgreSQL.",
+  "exitCode": 1,
+  "seconds": 6.86,
+  "finished": "2026-11-17T21:44:31.183612+00:00"
+}
