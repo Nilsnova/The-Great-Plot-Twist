@@ -390,7 +390,9 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
         thin = !!sparse();
         clock += Math.max(0, Math.min(.1, view.dt || 0));
         const live = view.mode === 'wave', alpha = live ? .95 : GUIDE.previewAlpha;
-        if (!live && view.wallLanes !== false) drawLanes(); else laneBoxes = 0; // D056: under everything else
+        // Village management already shows its precise grid. Combat still draws useful live guidance.
+        if (!live && view.managing === true) { laneBoxes = 0; ground.end(); air.end(); return; }
+        if (!live && view.perimeterWalls !== true && view.wallLanes !== false) drawLanes(); else laneBoxes = 0;
         k = live ? Math.max(1, Math.min(2, Number(characterScale()) || 1)) : 1;
         const landings = view.lanes?.length ? waveLandings(view.lanes) : laneLandings();
         const walls = guideWalls(view.defenses ?? [], view.stateWalls ?? null), attacked = attackedWalls(view.boarders);

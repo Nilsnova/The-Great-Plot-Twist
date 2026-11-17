@@ -68,7 +68,7 @@ export function mountPirates(ctx) {
     captainWeapon: ctx.captainWeapon ?? (() => 'musket'), captainColour: ctx.captainColour ?? (() => 0),
     reviveCaptain: ctx.reviveCaptain ?? null };
   const island = createWaveController({ ...shared, getDefenses: ctx.getDefenses ?? (() => []),
-    getPerimeterWalls: ctx.getPerimeterWalls ?? (() => false), finishWave: ctx.finishWave,
+    getPerimeterWalls: ctx.getPerimeterWalls ?? (() => false), getManaging: ctx.getManaging ?? (() => false), finishWave: ctx.finishWave,
     practiceIdentity: ctx.practiceIdentity, room: ctx.islandRoom ?? null, place: ctx.islandPlace ?? 'home_islet', simOptions: ctx.islandSimOptions ?? {},
     getCrew: ctx.getCrew ?? (() => null), startNextWave: ctx.startNextWave ?? null,
     holdBreak: ctx.holdBreak ?? null, toggleHold: ctx.toggleHold ?? null, guide: ctx.battleGuide !== false,

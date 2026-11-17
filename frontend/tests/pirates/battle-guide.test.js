@@ -225,6 +225,19 @@ describe('drawing', () => {
     expect(guide.stats().lanes).toBe(0);
     guide.dispose();
   });
+  it('omits obsolete lane rows for the trusted perimeter policy and restores live guidance from management', () => {
+    const guide = createBattleGuide({scene: scene()});
+    const view = {mode: 'preview', defenses: RING, perimeterWalls: true, wave: 4, dt: .016};
+    guide.update(view);
+    expect(guide.stats().lanes).toBe(0);
+    expect(guide.stats().ground).toBeGreaterThan(0);
+    guide.update({...view, managing: true});
+    expect(guide.stats()).toMatchObject({ground: 0, air: 0, lanes: 0});
+    guide.update({...view, managing: true, mode: 'wave', stateWalls: [], boarders: [], heart: HEART});
+    expect(guide.stats().ground).toBeGreaterThan(0);
+    expect(guide.stats().air).toBeGreaterThan(0);
+    guide.dispose();
+  });
   it('previews swivel nests as damageable obstacles and reads their live hp', () => {
     const ring = RING.map((wall, i) => ({ ...wall, id: `swivel_${i + 1}`, kind: 'swivel', level: 1 }));
     const route = guideRoute({ from: { x: 15, z: 2 }, walls: [], towers: guideTowers(ring), towerBlocking: true, wave: 3 });
