@@ -1,0 +1,18 @@
+{
+  "before_source": "724bbc41de5754007a9bcc27a5e84758540b540b",
+  "after_source": "145fff66f76fb2bbe976f2648768b2339114d811",
+  "fixture": "Actual local fake API, not production",
+  "viewports": [
+    "1280x720",
+    "375x812"
+  ],
+  "focused_files": 3,
+  "focused_tests": 30,
+  "text_lint_errors": 0,
+  "text_lint_report_only": 8,
+  "page_errors": 0,
+  "external_requests": 0,
+  "full_suite_build_budget_a11y_demo": "Deferred to root integration lane",
+  "physical_device_safari": "Not verified",
+  "merges": 0
+}

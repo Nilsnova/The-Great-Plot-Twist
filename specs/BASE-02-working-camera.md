@@ -15,7 +15,7 @@ Likely files: `frontend/src/player/camera.js`, a small village input adapter, vi
 
 ## Status
 
-Implementation is present; focused camera/gesture checks pass 16/16. Entering Move deliberately restores Fit and suspends gestures, preserving the existing whole-island placement/refusal flow. Browser evidence and coordinated broader verification are pending. This bounded slice does not complete the broader BASE-02 task, future island-growth bounds, physical-phone or Safari testing. Draft and human explain-back/review remain required. No merge or deployment.
+Implementation is present; focused camera/gesture checks pass 16/16. Entering Move deliberately restores Fit and suspends gestures, preserving the existing whole-island placement/refusal flow. Actual paired browser evidence passes at both required sizes; coordinated broader verification remains with the integration lane. This bounded slice does not complete the broader BASE-02 task, future island-growth bounds, physical-phone or Safari testing. Draft and human explain-back/review remain required. No merge or deployment.
 
 ## Explain-back
 
@@ -30,3 +30,5 @@ I kept village navigation in the existing camera because it already owns project
 `npm test -- --maxWorkers=1 tests/player/village-camera.test.js tests/player/village-navigation.test.js` from frontend: `Test Files 2 passed (2)`, `Tests 16 passed (16)`, duration 681ms. These are current source tests, not live-device evidence. An initial new-test run caught listener-removal behavior and floating-point drift in reduced-motion snapping; both were fixed in source, with assertions retained.
 
 `node scripts/text-lint/index.mjs`: `Text lint: 4419 candidate strings in 488 source files; 0 errors, 8 report-only findings.` The reports are outside this slice. `git diff --check`: clean.
+
+Final focused command adds `tests/island/village-mode.test.js`: `Test Files 3 passed (3)`, `Tests 30 passed (30)`, duration 1.81s. Final text lint: `Text lint: 4420 candidate strings in 488 source files; 0 errors, 8 report-only findings.` [Paired actual captures and provenance](../docs/evidence/BASE-02-working-camera/README.md): both sizes pass actual Zoom/pan/wheel/Fit/Exit and 44px hit targets, with 0 page errors and 0 external requests.
