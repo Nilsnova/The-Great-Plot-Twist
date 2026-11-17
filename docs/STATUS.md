@@ -18,6 +18,8 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 **17 Nov / Johannes — BASE-02 working village camera:** [Draft #270](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/270) adds local Zoom in/out, bounded drag pan and Fit, preserving exploration/battle precedence and returning Move to Fit. Focused camera/gesture tests: 16 passed; actual desktop/phone evidence and coordinated broader verification remain. No merge.
 
+**17 Nov / Johannes — BASE-02 working village camera:** [Draft #270](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/270) adds local Zoom in/out, bounded drag pan and Fit, preserving exploration/battle precedence and returning Move to Fit. Focused camera/gesture/mode tests: 30 passed; actual desktop/phone captures and interactions pass, while coordinated broader verification remains. No merge.
+
 **16 Nov / Nils — slots and badges (D060):** branch `feat/slots-and-badges`: the orange 🪓 badges of the battle guide are gone; four extra tower spots (`cannon_8`..`cannon_11`, after waves 10/20/30/40) behind the off-by-default flag `more_tower_spots`. Migration `20261117010000_more_tower_spots.sql` is not applied (paste `docs/handoff/apply-2026-11-17.sql`, then switch the flag on).
 
 **16 Nov / Ianno — wall-record race:** [PR #86](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/86) is reconciled with main `a9386656`, preserving both status and walkthrough additions. The SQL fence is unchanged; on the new baseline 250 scratch PostgreSQL tests and 30 wall-route tests pass, Ruff is clean, and all 50 migrations parse. Ianno reviews the PR; Franz (@frcola) must approve its current revision before a human merge. Migration application remains separate.
@@ -273,6 +275,8 @@ Nobody has decided these yet. Until they are decided, the plan in ROADMAP.md sta
 **Johannes / WALL-19:** verify [Draft #275](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/275) with the preceding wall-policy migration in the coordinated scratch-SQL lane, then rehearse the spec and obtain independent human review. Do not apply live or merge.
 
 BASE-02 / U follow-up: capture actual working-camera before/after, run coordinated client checks and rehearse the three [explain-back questions](../specs/BASE-02-working-camera.md); future land bounds remain separate.
+
+BASE-02 / U follow-up: review captured working-camera before/after, run coordinated client checks and rehearse the three [explain-back questions](../specs/BASE-02-working-camera.md); future land bounds remain separate.
 
 - **Ianno / #82:** ask for independent human review of [draft PR #86](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/86), including the additive migration and timestamp boundary; migration application remains a separate follow-up.
 **Ianno / shared defense recovery:** decide the captain-skill replacement effects, support range and multiplayer stacking, then review the final plan against current main before authorizing implementation of [#85](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/85). The second-destruction choice is settled: restart the lifecycle.
@@ -633,6 +637,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 **17 Nov / Johannes — WALL-19:** [Draft #275](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/275) implements bounded perimeter-wall database identities and positioned-build/coordinate-release guards. SQL verification awaits the preceding wall-policy migration; scope and limits are in [the spec](../specs/WALL-19-cohort-constraints.md). No live application or merge.
 
 **17 Nov / Johannes — BASE-02 working village camera:** [Draft #270](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/270) adds local Zoom in/out, bounded drag pan and Fit, preserving exploration/battle precedence and returning Move to Fit. Focused camera/gesture tests: 16 passed; actual desktop/phone evidence and coordinated broader verification remain. No merge.
+
+**17 Nov / Johannes — BASE-02 working village camera:** [Draft #270](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/270) adds local Zoom in/out, bounded drag pan and Fit, preserving exploration/battle precedence and returning Move to Fit. Focused camera/gesture/mode tests: 30 passed; actual desktop/phone captures and interactions pass, while coordinated broader verification remains. No merge.
 
 - **Nicolas / 2026-11-16 / small demo polish (playtest finds).** Signed out, the HUD no longer shows an endless "🪙 …" (the chip waits for coins) and Settings/Account say only "Signed out" instead of "Signed out, Captain pending"; the title lighthouse windows are square with a cross bar, so they no longer read as "0 0". Test: `frontend/tests/signed-out-polish.test.js`; evidence `docs/evidence/demo-polish/`. Not checked on a real phone.
 
