@@ -93,8 +93,8 @@ POST /api/island/upgrade  {"spot": "cannon_1", "actionUid": "...", "code"?: "ISL
     -> the island. One level up (ledger ref upgrade:<actionUid>); the kind stays. "code" works
     as for a build (co-op on a friend's island).
     Errors: 404 no_such_island (a code that names no island), 404 no_such_spot, 409 not_built,
-            409 max_level, 409 locked, 409 insufficient_funds, and with the flag wall_recovery
-            on 409 needs_repair (a damaged or destroyed wall: repair it first, D039)
+            409 max_level, 409 locked, 409 insufficient_funds, 409 wave_running (upgrade only
+            between waves), and 409 needs_repair (repair a damaged structure before upgrading)
 
 POST /api/island/hire  {"crew": "gunner" | "carpenter" | "lookout" | "guard", "actionUid": "..."}
     -> the island. One crew member, kept (ledger ref crew:<actionUid>). Always your own island.
