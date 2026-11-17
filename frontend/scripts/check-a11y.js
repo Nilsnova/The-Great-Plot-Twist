@@ -6,7 +6,7 @@ import {auditIsletPanel} from './a11y-islet.js';
 import {auditMarketPanel} from './a11y-market.js';
 const env=await openWorldBrowser({hmr:false}),{page}=env,prefix='captures/20261106_G8-A11y';
 const report={checked:new Date().toISOString(),screens:[],errors:[],skipped:[],manual:['VoiceOver','Physical phone','Image/canvas contrast and flash analysis','Other browser engines']};
-async function audit(name,selector,context='gameplay'){
+async function audit(name,selector,context='gameplay',{refreshKey='key'}={}){
  const root=page.locator(selector).last();await root.waitFor({state:'visible'});const sizes=[];
  for(const width of [1280,375,320]){
   await page.setViewportSize({width,height:900});
@@ -37,7 +37,7 @@ async function audit(name,selector,context='gameplay'){
  }
  await page.setViewportSize({width:1280,height:900});
  const isDialog=await root.evaluate(root=>root.matches('dialog,[role="dialog"]'));
- const focus=await root.evaluate(async root=>{const h=await import('/scripts/a11y-helpers.js');const snapshot=h.snapshotFocusForAudit(root);h.tabbableForAudit(root)[0]?.focus();return snapshot;});
+ const focus=await root.evaluate(async(root,refreshKey)=>{const h=await import('/scripts/a11y-helpers.js');const snapshot=h.snapshotFocusForAudit(root,undefined,{refreshKey});h.tabbableForAudit(root)[0]?.focus();return snapshot;},refreshKey);
  const steps=isDialog?focus.count-1:Math.min(1,focus.count-1);
  for(let i=1;i<=steps;i++){await page.keyboard.press('Tab');focus.steps.push(await root.evaluate(async(root,{snapshot,index})=>{const h=await import('/scripts/a11y-helpers.js');return h.focusStepForAudit(root,snapshot,index);},{snapshot:focus,index:i}));}
  if(isDialog){await root.evaluate(async root=>{const h=await import('/scripts/a11y-helpers.js');h.tabbableForAudit(root).at(-1)?.focus();});await page.keyboard.press('Tab');focus.trapped=await root.evaluate(root=>root.contains(document.activeElement));focus.trapTarget=await root.evaluate(()=>{const el=document.activeElement;return {tag:el.tagName,class:el.className,dataFocus:el.dataset.focus??null,order:el.dataset.a11yOrder??null};});}
@@ -84,7 +84,7 @@ try{
  await audit('games-card','.games-card[open]');
  await page.locator('.games-card[open]').getByRole('button',{name:'Create a game',exact:true}).click();
  await page.locator('.island-card-lobby[open] .island-lobby-player').first().waitFor({timeout:60000});
- await audit('lobby','.island-card-lobby[open]');
+ await audit('lobby','.island-card-lobby[open]','gameplay',{refreshKey:'focus'});
 }catch(error){report.errors.push(error.stack);}
 finally{
  report.browserErrors=env.errors;report.externalRequests=env.external;

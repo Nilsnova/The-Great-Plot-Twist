@@ -204,11 +204,16 @@ export function visibleFocusForAudit(element, styleOf = el => globalThis.getComp
   return [...(element.labels ?? [])].some(label => label.control === element && outlined(label));
 }
 
-function focusIdentity(element) {
-  const key = element?.dataset?.key;
+function focusIdentity(element, refreshKey = 'key') {
+  const value = element?.dataset?.[refreshKey];
+  const label = refreshKey === 'focus' && element?.tagName === 'INPUT' && element.readOnly === true
+    ? element.getAttribute('aria-label') : null;
+  // Namespaces keep an action key from impersonating the lobby's named readonly field.
+  const key = typeof value === 'string' && value.trim() ? (refreshKey === 'focus' ? `focus:${value}` : value)
+    : typeof label === 'string' && label.trim() ? `readonly-input:${label}` : null;
   return {tag: element?.tagName ?? null, type: element?.type ?? null, class: element?.className ?? null,
     dataFocus: element?.dataset?.focus ?? null, order: element?.dataset?.a11yOrder ?? null,
-    key: typeof key === 'string' && key.trim() ? key : null,
+    key,
     name: element?.getAttribute('aria-label') ?? element?.textContent?.trim() ?? null};
 }
 
@@ -217,19 +222,21 @@ function repeatedFocusKeys(identities) {
   return [...new Set(keys.filter((key, index) => keys.indexOf(key) !== index))];
 }
 
-// Stamp original nodes once. Refreshed keyed nodes must prove their identity, never inherit a stamp.
-export function snapshotFocusForAudit(root, styleOf) {
+// Stamp original nodes once. Lobby refreshes opt into existing actions/named readonly inputs;
+// all other screens retain data-key identity. Replacement nodes never inherit an audit stamp.
+export function snapshotFocusForAudit(root, styleOf, {refreshKey = 'key'} = {}) {
+  if (!['key', 'focus'].includes(refreshKey)) throw new RangeError('Refresh identity must use data-key or data-focus');
   const controls = tabbableForAudit(root, styleOf);
   root.querySelectorAll('[data-a11y-order]').forEach(element => delete element.dataset.a11yOrder);
   controls.forEach((element, index) => { element.dataset.a11yOrder = String(index); });
-  const order = controls.map(focusIdentity);
-  return {count: controls.length, order, duplicateKeys: repeatedFocusKeys(order), steps: [],
+  const order = controls.map(element => focusIdentity(element, refreshKey));
+  return {refreshKey, count: controls.length, order, duplicateKeys: repeatedFocusKeys(order), steps: [],
     positiveTabindex: focusCandidatesForAudit(root, styleOf).some(element => element.tabIndex > 0)};
 }
 
 // Both the original semantic route and the current native position must match after a real Tab.
 export function focusStepForAudit(root, snapshot, index, styleOf) {
-  const controls = tabbableForAudit(root, styleOf), identities = controls.map(focusIdentity);
+  const controls = tabbableForAudit(root, styleOf), identities = controls.map(element => focusIdentity(element, snapshot.refreshKey));
   const active = root.ownerDocument.activeElement;
   const countMatches = controls.length === snapshot.count;
   const duplicateKeys = repeatedFocusKeys(identities);
@@ -242,5 +249,5 @@ export function focusStepForAudit(root, snapshot, index, styleOf) {
   return {domOrder: identitiesMatch && !snapshot.positiveTabindex && !positiveTabindex
       && !snapshot.duplicateKeys.length && !duplicateKeys.length && controls[index] === active,
     inside: root.contains(active), visible: visibleFocusForAudit(active, styleOf),
-    countMatches, identitiesMatch, duplicateKeys, positiveTabindex, expectedOrder: String(index), actual: focusIdentity(active)};
+    countMatches, identitiesMatch, duplicateKeys, positiveTabindex, expectedOrder: String(index), actual: focusIdentity(active, snapshot.refreshKey)};
 }
