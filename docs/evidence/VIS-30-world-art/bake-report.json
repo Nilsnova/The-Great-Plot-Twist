@@ -1,7 +1,7 @@
 {
   "scope": "offline normalized PNG source compilation; runtime activation/build exclusion and actual-game acceptance remain separate",
-  "sourceCommit": "eb157fc82bd7e1192f65d7cca439fc166bc2fed1",
-  "compilerDirtyPaths": "M src/art/village/baked.js\n?? public/village/compiled/core-4x-1-daa09d51a079.png\n?? public/village/compiled/progress-4x-1-d783d3b573f4.png\n?? public/village/compiled/walls-4x-1-da339745c863.png",
+  "sourceCommit": "f635640ec959c08c7cc57856db1bf83533973b9d",
+  "compilerDirtyPaths": "M src/art/village/baked.js\n?? public/village/compiled/mortars-4x-1-96d5d33beed9.png",
   "browser": "156.0.8078.79",
   "families": [
     "buildings",
@@ -12,7 +12,8 @@
     "cannons",
     "walls",
     "core",
-    "progress"
+    "progress",
+    "mortars"
   ],
   "proofDensities": [
     4,
@@ -20,6 +21,23 @@
     2,
     1.5
   ],
+  "proofOrigins": {
+    "buildings": "eb157fc82bd7e1192f65d7cca439fc166bc2fed1",
+    "houses": "eb157fc82bd7e1192f65d7cca439fc166bc2fed1",
+    "landmarks": "eb157fc82bd7e1192f65d7cca439fc166bc2fed1",
+    "services": "eb157fc82bd7e1192f65d7cca439fc166bc2fed1",
+    "nature": "eb157fc82bd7e1192f65d7cca439fc166bc2fed1",
+    "cannons": "eb157fc82bd7e1192f65d7cca439fc166bc2fed1",
+    "walls": "eb157fc82bd7e1192f65d7cca439fc166bc2fed1",
+    "core": "eb157fc82bd7e1192f65d7cca439fc166bc2fed1",
+    "progress": "eb157fc82bd7e1192f65d7cca439fc166bc2fed1",
+    "mortars": "f635640ec959c08c7cc57856db1bf83533973b9d"
+  },
+  "reusedReportSha256": "dc9375a91a39e7db0c69cecee0593cce3dae943e9a0d0314609ea1dc64cc302a",
+  "normalizerHashes": {
+    "src/art/village-raster.js": "ec35729ea275655317c3802fc9d1fe45470fb31ec04ca551450382b1a0dbe3d9",
+    "src/art/village-decode.js": "123ea0cbe2a59d6d62e5e6bec7e11a575a1f2cd0cbfec7f09d4f47c78896054f"
+  },
   "original": {
     "files": [
       {
@@ -91,10 +109,17 @@
         "sha256": "e1bb8a1679dd6e0d53ff50b515f6e849f6f2cb93637d775827b4ebe023183636",
         "width": 1774,
         "height": 887
+      },
+      {
+        "file": "village/mortars-v1.png",
+        "bytes": 2020969,
+        "sha256": "6c61d30dd35419312568d98e66f80b4d54f5885fc4302475b3a6435fc102719f",
+        "width": 1536,
+        "height": 1024
       }
     ],
-    "encodedBytes": 18242859,
-    "summedDecodedBytes": 62911688
+    "encodedBytes": 20263828,
+    "summedDecodedBytes": 69203144
   },
   "compiled": {
     "files": [
@@ -160,16 +185,23 @@
         "sha256": "d783d3b573f4cfbf15aef99fc966cecff6719e8e110351b0bece0951b4042789",
         "width": 840,
         "height": 232
+      },
+      {
+        "file": "village/compiled/mortars-4x-1-96d5d33beed9.png",
+        "bytes": 1011684,
+        "sha256": "96d5d33beed980a0aea46b69f50e252af2d465cffee49f9385aa836f79887d21",
+        "width": 928,
+        "height": 1000
       }
     ],
-    "encodedBytes": 6658507,
-    "summedDecodedBytes": 23695104,
+    "encodedBytes": 7670191,
+    "summedDecodedBytes": 27407104,
     "peakSingleDecodedBytes": 5541888
   },
   "initialTransfer": {
     "unchangedTerrainBytes": 2683357,
-    "rawPlusTerrainBytes": 20926216,
-    "compiledPlusTerrainBytes": 9341864,
+    "rawPlusTerrainBytes": 22947185,
+    "compiledPlusTerrainBytes": 10353548,
     "targetBytes": 8388608,
     "targetMet": false
   },
@@ -2591,6 +2623,573 @@
             526,
             209,
             20
+          ]
+        }
+      }
+    },
+    {
+      "name": "mortars",
+      "module": "src/art/village/mortars.js",
+      "sha256": "30a123c6220f9df8693211aa3d46ea31f1e699d8cc9b06da418dedd500e64a6d",
+      "frames": {
+        "island-mortar": {
+          "sheet": {
+            "file": "village/mortars-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            110,
+            111,
+            135,
+            134
+          ],
+          "sourceFoot": [
+            69,
+            128
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            101,
+            161,
+            79,
+            6
+          ]
+        },
+        "island-mortar-fire": {
+          "sheet": {
+            "file": "village/mortars-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            111,
+            339,
+            134,
+            167
+          ],
+          "sourceFoot": [
+            68,
+            161
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            101,
+            161,
+            79,
+            6
+          ]
+        },
+        "island-mortar-damaged": {
+          "sheet": {
+            "file": "village/mortars-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            111,
+            600,
+            136,
+            137
+          ],
+          "sourceFoot": [
+            68,
+            131
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            101,
+            161,
+            79,
+            6
+          ]
+        },
+        "island-mortar-broken": {
+          "sheet": {
+            "file": "village/mortars-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            78,
+            854,
+            180,
+            118
+          ],
+          "sourceFoot": [
+            101,
+            112
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            101,
+            161,
+            79,
+            6
+          ]
+        },
+        "island-mortar-l2": {
+          "sheet": {
+            "file": "village/mortars-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            392,
+            100,
+            151,
+            144
+          ],
+          "sourceFoot": [
+            77,
+            138
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            99,
+            167,
+            94,
+            6
+          ]
+        },
+        "island-mortar-fire-l2": {
+          "sheet": {
+            "file": "village/mortars-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            393,
+            330,
+            149,
+            173
+          ],
+          "sourceFoot": [
+            76,
+            167
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            99,
+            167,
+            94,
+            6
+          ]
+        },
+        "island-mortar-l2-damaged": {
+          "sheet": {
+            "file": "village/mortars-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            394,
+            585,
+            147,
+            151
+          ],
+          "sourceFoot": [
+            75,
+            145
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            99,
+            167,
+            94,
+            6
+          ]
+        },
+        "island-mortar-l2-broken": {
+          "sheet": {
+            "file": "village/mortars-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            370,
+            845,
+            193,
+            128
+          ],
+          "sourceFoot": [
+            99,
+            122
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            99,
+            167,
+            94,
+            6
+          ]
+        },
+        "island-mortar-l3": {
+          "sheet": {
+            "file": "village/mortars-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            674,
+            84,
+            177,
+            164
+          ],
+          "sourceFoot": [
+            90,
+            158
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            107,
+            180,
+            96,
+            6
+          ]
+        },
+        "island-mortar-fire-l3": {
+          "sheet": {
+            "file": "village/mortars-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            675,
+            323,
+            176,
+            186
+          ],
+          "sourceFoot": [
+            89,
+            180
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            107,
+            180,
+            96,
+            6
+          ]
+        },
+        "island-mortar-l3-damaged": {
+          "sheet": {
+            "file": "village/mortars-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            675,
+            573,
+            176,
+            165
+          ],
+          "sourceFoot": [
+            89,
+            159
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            107,
+            180,
+            96,
+            6
+          ]
+        },
+        "island-mortar-l3-broken": {
+          "sheet": {
+            "file": "village/mortars-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            657,
+            839,
+            203,
+            134
+          ],
+          "sourceFoot": [
+            107,
+            128
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            107,
+            180,
+            96,
+            6
+          ]
+        },
+        "island-mortar-l4": {
+          "sheet": {
+            "file": "village/mortars-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            974,
+            79,
+            179,
+            169
+          ],
+          "sourceFoot": [
+            91,
+            163
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            110,
+            184,
+            95,
+            9
+          ]
+        },
+        "island-mortar-fire-l4": {
+          "sheet": {
+            "file": "village/mortars-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            975,
+            321,
+            178,
+            190
+          ],
+          "sourceFoot": [
+            90,
+            184
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            110,
+            184,
+            95,
+            9
+          ]
+        },
+        "island-mortar-l4-damaged": {
+          "sheet": {
+            "file": "village/mortars-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            975,
+            570,
+            177,
+            173
+          ],
+          "sourceFoot": [
+            90,
+            164
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            110,
+            184,
+            95,
+            9
+          ]
+        },
+        "island-mortar-l4-broken": {
+          "sheet": {
+            "file": "village/mortars-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            955,
+            841,
+            205,
+            134
+          ],
+          "sourceFoot": [
+            110,
+            128
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            110,
+            184,
+            95,
+            9
+          ]
+        },
+        "island-mortar-l5": {
+          "sheet": {
+            "file": "village/mortars-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            1266,
+            67,
+            192,
+            183
+          ],
+          "sourceFoot": [
+            101,
+            177
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            110,
+            186,
+            102,
+            6
+          ]
+        },
+        "island-mortar-fire-l5": {
+          "sheet": {
+            "file": "village/mortars-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            1269,
+            317,
+            190,
+            192
+          ],
+          "sourceFoot": [
+            98,
+            186
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            110,
+            186,
+            102,
+            6
+          ]
+        },
+        "island-mortar-l5-damaged": {
+          "sheet": {
+            "file": "village/mortars-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            1265,
+            567,
+            193,
+            173
+          ],
+          "sourceFoot": [
+            102,
+            167
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            110,
+            186,
+            102,
+            6
+          ]
+        },
+        "island-mortar-l5-broken": {
+          "sheet": {
+            "file": "village/mortars-v1.png",
+            "width": 1536,
+            "height": 1024
+          },
+          "rect": [
+            1257,
+            838,
+            212,
+            139
+          ],
+          "sourceFoot": [
+            110,
+            133
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "fitBounds": [
+            110,
+            186,
+            102,
+            6
           ]
         }
       }
@@ -5035,6 +5634,567 @@
           ]
         }
       }
+    },
+    {
+      "name": "mortars",
+      "pages": [
+        {
+          "file": "village/compiled/mortars-4x-1-96d5d33beed9.png",
+          "width": 928,
+          "height": 1000,
+          "items": [
+            {
+              "id": "island-mortar",
+              "rect": [
+                4,
+                4,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-mortar-broken",
+              "rect": [
+                236,
+                4,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-mortar-damaged",
+              "rect": [
+                468,
+                4,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-mortar-fire",
+              "rect": [
+                700,
+                4,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-mortar-fire-l2",
+              "rect": [
+                4,
+                204,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-mortar-fire-l3",
+              "rect": [
+                236,
+                204,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-mortar-fire-l4",
+              "rect": [
+                468,
+                204,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-mortar-fire-l5",
+              "rect": [
+                700,
+                204,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-mortar-l2",
+              "rect": [
+                4,
+                404,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-mortar-l2-broken",
+              "rect": [
+                236,
+                404,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-mortar-l2-damaged",
+              "rect": [
+                468,
+                404,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-mortar-l3",
+              "rect": [
+                700,
+                404,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-mortar-l3-broken",
+              "rect": [
+                4,
+                604,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-mortar-l3-damaged",
+              "rect": [
+                236,
+                604,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-mortar-l4",
+              "rect": [
+                468,
+                604,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-mortar-l4-broken",
+              "rect": [
+                700,
+                604,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-mortar-l4-damaged",
+              "rect": [
+                4,
+                804,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-mortar-l5",
+              "rect": [
+                236,
+                804,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-mortar-l5-broken",
+              "rect": [
+                468,
+                804,
+                224,
+                192
+              ]
+            },
+            {
+              "id": "island-mortar-l5-damaged",
+              "rect": [
+                700,
+                804,
+                224,
+                192
+              ]
+            }
+          ]
+        }
+      ],
+      "sheets": {
+        "mortarsBaked1": {
+          "file": "village/compiled/mortars-4x-1-96d5d33beed9.png",
+          "width": 928,
+          "height": 1000
+        }
+      },
+      "frames": {
+        "island-mortar": {
+          "sheet": "mortarsBaked1",
+          "rect": [
+            4,
+            4,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-mortar-fire": {
+          "sheet": "mortarsBaked1",
+          "rect": [
+            700,
+            4,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-mortar-damaged": {
+          "sheet": "mortarsBaked1",
+          "rect": [
+            468,
+            4,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-mortar-broken": {
+          "sheet": "mortarsBaked1",
+          "rect": [
+            236,
+            4,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-mortar-l2": {
+          "sheet": "mortarsBaked1",
+          "rect": [
+            4,
+            404,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-mortar-fire-l2": {
+          "sheet": "mortarsBaked1",
+          "rect": [
+            4,
+            204,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-mortar-l2-damaged": {
+          "sheet": "mortarsBaked1",
+          "rect": [
+            468,
+            404,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-mortar-l2-broken": {
+          "sheet": "mortarsBaked1",
+          "rect": [
+            236,
+            404,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-mortar-l3": {
+          "sheet": "mortarsBaked1",
+          "rect": [
+            700,
+            404,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-mortar-fire-l3": {
+          "sheet": "mortarsBaked1",
+          "rect": [
+            236,
+            204,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-mortar-l3-damaged": {
+          "sheet": "mortarsBaked1",
+          "rect": [
+            236,
+            604,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-mortar-l3-broken": {
+          "sheet": "mortarsBaked1",
+          "rect": [
+            4,
+            604,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-mortar-l4": {
+          "sheet": "mortarsBaked1",
+          "rect": [
+            468,
+            604,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-mortar-fire-l4": {
+          "sheet": "mortarsBaked1",
+          "rect": [
+            468,
+            204,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-mortar-l4-damaged": {
+          "sheet": "mortarsBaked1",
+          "rect": [
+            4,
+            804,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-mortar-l4-broken": {
+          "sheet": "mortarsBaked1",
+          "rect": [
+            700,
+            604,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-mortar-l5": {
+          "sheet": "mortarsBaked1",
+          "rect": [
+            236,
+            804,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-mortar-fire-l5": {
+          "sheet": "mortarsBaked1",
+          "rect": [
+            700,
+            204,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-mortar-l5-damaged": {
+          "sheet": "mortarsBaked1",
+          "rect": [
+            700,
+            804,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        },
+        "island-mortar-l5-broken": {
+          "sheet": "mortarsBaked1",
+          "rect": [
+            468,
+            804,
+            224,
+            192
+          ],
+          "logical": [
+            56,
+            48,
+            7
+          ],
+          "sourceFoot": [
+            112,
+            164
+          ]
+        }
+      }
     }
   ],
   "compilerMemory": [
@@ -5100,6 +6260,13 @@
       "retainedDecodedAfterRelease": 0,
       "canvasBytes": 779520,
       "largestTemporaryCanvasBytes": 143360
+    },
+    {
+      "family": "mortars",
+      "peakSourceBytes": 6291456,
+      "retainedDecodedAfterRelease": 0,
+      "canvasBytes": 3712000,
+      "largestTemporaryCanvasBytes": 172032
     }
   ],
   "verification": [
@@ -8524,6 +9691,813 @@
         }
       ],
       "peakSourceBytes": 6294152,
+      "retainedDecodedAfterRelease": 0
+    },
+    {
+      "family": "mortars",
+      "results": [
+        {
+          "id": "island-mortar",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 14063,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-mortar",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 5532,
+          "differingPixels": 4497,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 27,
+          "alphaWeightedMeanRgbDelta": 1.88945149430201
+        },
+        {
+          "id": "island-mortar",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 3499,
+          "differingPixels": 2847,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 20,
+          "alphaWeightedMeanRgbDelta": 1.5812647395822665
+        },
+        {
+          "id": "island-mortar",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 1972,
+          "differingPixels": 1724,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 41,
+          "alphaWeightedMeanRgbDelta": 2.5547080866071283
+        },
+        {
+          "id": "island-mortar-fire",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 18268,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-mortar-fire",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 7179,
+          "differingPixels": 5288,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 32,
+          "alphaWeightedMeanRgbDelta": 1.8274730798738597
+        },
+        {
+          "id": "island-mortar-fire",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4413,
+          "differingPixels": 3447,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 14,
+          "alphaWeightedMeanRgbDelta": 1.6878653126374816
+        },
+        {
+          "id": "island-mortar-fire",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2468,
+          "differingPixels": 2004,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 39,
+          "alphaWeightedMeanRgbDelta": 2.62035581043995
+        },
+        {
+          "id": "island-mortar-damaged",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 15180,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-mortar-damaged",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 5974,
+          "differingPixels": 4600,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 31,
+          "alphaWeightedMeanRgbDelta": 1.983073656472332
+        },
+        {
+          "id": "island-mortar-damaged",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 3724,
+          "differingPixels": 2950,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 19,
+          "alphaWeightedMeanRgbDelta": 1.811415319423409
+        },
+        {
+          "id": "island-mortar-damaged",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2103,
+          "differingPixels": 1761,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 45,
+          "alphaWeightedMeanRgbDelta": 2.836874260904944
+        },
+        {
+          "id": "island-mortar-broken",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 16547,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-mortar-broken",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 6536,
+          "differingPixels": 4882,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 28,
+          "alphaWeightedMeanRgbDelta": 2.348017397961269
+        },
+        {
+          "id": "island-mortar-broken",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4015,
+          "differingPixels": 3141,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 16,
+          "alphaWeightedMeanRgbDelta": 2.3282681434142556
+        },
+        {
+          "id": "island-mortar-broken",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2261,
+          "differingPixels": 1856,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 27,
+          "alphaWeightedMeanRgbDelta": 3.833561077520553
+        },
+        {
+          "id": "island-mortar-l2",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 16242,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-mortar-l2",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 6338,
+          "differingPixels": 5060,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 27,
+          "alphaWeightedMeanRgbDelta": 2.0512777870614034
+        },
+        {
+          "id": "island-mortar-l2",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 3981,
+          "differingPixels": 3150,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 16,
+          "alphaWeightedMeanRgbDelta": 1.8044340855066572
+        },
+        {
+          "id": "island-mortar-l2",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2249,
+          "differingPixels": 1923,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 24,
+          "alphaWeightedMeanRgbDelta": 2.742438232868337
+        },
+        {
+          "id": "island-mortar-fire-l2",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 20622,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-mortar-fire-l2",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 8063,
+          "differingPixels": 5783,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 25,
+          "alphaWeightedMeanRgbDelta": 1.9073265371963526
+        },
+        {
+          "id": "island-mortar-fire-l2",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4973,
+          "differingPixels": 3678,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 23,
+          "alphaWeightedMeanRgbDelta": 1.7008790048845568
+        },
+        {
+          "id": "island-mortar-fire-l2",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2809,
+          "differingPixels": 2229,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 40,
+          "alphaWeightedMeanRgbDelta": 2.5844372303497716
+        },
+        {
+          "id": "island-mortar-l2-damaged",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 17110,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-mortar-l2-damaged",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 6642,
+          "differingPixels": 5236,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 33,
+          "alphaWeightedMeanRgbDelta": 2.037925425127155
+        },
+        {
+          "id": "island-mortar-l2-damaged",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4179,
+          "differingPixels": 3313,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 18,
+          "alphaWeightedMeanRgbDelta": 1.8390918007978005
+        },
+        {
+          "id": "island-mortar-l2-damaged",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2380,
+          "differingPixels": 2011,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 22,
+          "alphaWeightedMeanRgbDelta": 2.8358583801389576
+        },
+        {
+          "id": "island-mortar-l2-broken",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 19025,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-mortar-l2-broken",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 7457,
+          "differingPixels": 5929,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 43,
+          "alphaWeightedMeanRgbDelta": 2.4822736226238344
+        },
+        {
+          "id": "island-mortar-l2-broken",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4705,
+          "differingPixels": 3769,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 22,
+          "alphaWeightedMeanRgbDelta": 2.06190860638062
+        },
+        {
+          "id": "island-mortar-l2-broken",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2632,
+          "differingPixels": 2228,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 34,
+          "alphaWeightedMeanRgbDelta": 3.2688122648782247
+        },
+        {
+          "id": "island-mortar-l3",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 18932,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-mortar-l3",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 7441,
+          "differingPixels": 5976,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 31,
+          "alphaWeightedMeanRgbDelta": 2.118821686562457
+        },
+        {
+          "id": "island-mortar-l3",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4674,
+          "differingPixels": 3817,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 23,
+          "alphaWeightedMeanRgbDelta": 2.134802877574117
+        },
+        {
+          "id": "island-mortar-l3",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2626,
+          "differingPixels": 2326,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 39,
+          "alphaWeightedMeanRgbDelta": 3.300267076302138
+        },
+        {
+          "id": "island-mortar-fire-l3",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 22364,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-mortar-fire-l3",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 8824,
+          "differingPixels": 6438,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 32,
+          "alphaWeightedMeanRgbDelta": 1.9635771506522017
+        },
+        {
+          "id": "island-mortar-fire-l3",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 5477,
+          "differingPixels": 4175,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 21,
+          "alphaWeightedMeanRgbDelta": 2.0632257790604305
+        },
+        {
+          "id": "island-mortar-fire-l3",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 3078,
+          "differingPixels": 2488,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 42,
+          "alphaWeightedMeanRgbDelta": 3.0536094914325975
+        },
+        {
+          "id": "island-mortar-l3-damaged",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 19187,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-mortar-l3-damaged",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 7573,
+          "differingPixels": 6092,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 32,
+          "alphaWeightedMeanRgbDelta": 2.1259386978996715
+        },
+        {
+          "id": "island-mortar-l3-damaged",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4657,
+          "differingPixels": 3849,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 18,
+          "alphaWeightedMeanRgbDelta": 2.2591703680669033
+        },
+        {
+          "id": "island-mortar-l3-damaged",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2632,
+          "differingPixels": 2282,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 35,
+          "alphaWeightedMeanRgbDelta": 3.2994234709313295
+        },
+        {
+          "id": "island-mortar-l3-broken",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 18469,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-mortar-l3-broken",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 7321,
+          "differingPixels": 5861,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 35,
+          "alphaWeightedMeanRgbDelta": 2.2082701022774205
+        },
+        {
+          "id": "island-mortar-l3-broken",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4506,
+          "differingPixels": 3700,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 29,
+          "alphaWeightedMeanRgbDelta": 2.2569211717013458
+        },
+        {
+          "id": "island-mortar-l3-broken",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2564,
+          "differingPixels": 2232,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 42,
+          "alphaWeightedMeanRgbDelta": 3.425868397763984
+        },
+        {
+          "id": "island-mortar-l4",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 18877,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-mortar-l4",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 7409,
+          "differingPixels": 6058,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 30,
+          "alphaWeightedMeanRgbDelta": 2.2571855406452728
+        },
+        {
+          "id": "island-mortar-l4",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4664,
+          "differingPixels": 3910,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 21,
+          "alphaWeightedMeanRgbDelta": 2.5378779894520545
+        },
+        {
+          "id": "island-mortar-l4",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2634,
+          "differingPixels": 2310,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 29,
+          "alphaWeightedMeanRgbDelta": 3.6617271384662695
+        },
+        {
+          "id": "island-mortar-fire-l4",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 21978,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-mortar-fire-l4",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 8626,
+          "differingPixels": 6506,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 27,
+          "alphaWeightedMeanRgbDelta": 2.3520074670661972
+        },
+        {
+          "id": "island-mortar-fire-l4",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 5299,
+          "differingPixels": 4127,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 28,
+          "alphaWeightedMeanRgbDelta": 2.338943698862517
+        },
+        {
+          "id": "island-mortar-fire-l4",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2985,
+          "differingPixels": 2521,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 38,
+          "alphaWeightedMeanRgbDelta": 3.3891562017217196
+        },
+        {
+          "id": "island-mortar-l4-damaged",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 18888,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-mortar-l4-damaged",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 7405,
+          "differingPixels": 6077,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 29,
+          "alphaWeightedMeanRgbDelta": 2.5379375955490846
+        },
+        {
+          "id": "island-mortar-l4-damaged",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4606,
+          "differingPixels": 3854,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 25,
+          "alphaWeightedMeanRgbDelta": 2.6899339252415198
+        },
+        {
+          "id": "island-mortar-l4-damaged",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2617,
+          "differingPixels": 2329,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 35,
+          "alphaWeightedMeanRgbDelta": 3.984183630791982
+        },
+        {
+          "id": "island-mortar-l4-broken",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 18306,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-mortar-l4-broken",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 7186,
+          "differingPixels": 5671,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 42,
+          "alphaWeightedMeanRgbDelta": 2.571412941539893
+        },
+        {
+          "id": "island-mortar-l4-broken",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4496,
+          "differingPixels": 3690,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 32,
+          "alphaWeightedMeanRgbDelta": 2.670017459670029
+        },
+        {
+          "id": "island-mortar-l4-broken",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2535,
+          "differingPixels": 2211,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 36,
+          "alphaWeightedMeanRgbDelta": 3.849928202315845
+        },
+        {
+          "id": "island-mortar-l5",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 21769,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-mortar-l5",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 8546,
+          "differingPixels": 6920,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 27,
+          "alphaWeightedMeanRgbDelta": 2.2741913685465667
+        },
+        {
+          "id": "island-mortar-l5",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 5368,
+          "differingPixels": 4424,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 24,
+          "alphaWeightedMeanRgbDelta": 2.4102806993188493
+        },
+        {
+          "id": "island-mortar-l5",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 3003,
+          "differingPixels": 2652,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 34,
+          "alphaWeightedMeanRgbDelta": 3.432401283405618
+        },
+        {
+          "id": "island-mortar-fire-l5",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 22731,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-mortar-fire-l5",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 8925,
+          "differingPixels": 6998,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 36,
+          "alphaWeightedMeanRgbDelta": 2.1828348210245236
+        },
+        {
+          "id": "island-mortar-fire-l5",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 5572,
+          "differingPixels": 4543,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 26,
+          "alphaWeightedMeanRgbDelta": 2.372673304692753
+        },
+        {
+          "id": "island-mortar-fire-l5",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 3118,
+          "differingPixels": 2688,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 40,
+          "alphaWeightedMeanRgbDelta": 3.485497730135125
+        },
+        {
+          "id": "island-mortar-l5-damaged",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 21282,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-mortar-l5-damaged",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 8299,
+          "differingPixels": 6753,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 33,
+          "alphaWeightedMeanRgbDelta": 2.530293618705886
+        },
+        {
+          "id": "island-mortar-l5-damaged",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 5174,
+          "differingPixels": 4275,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 28,
+          "alphaWeightedMeanRgbDelta": 2.891709320447868
+        },
+        {
+          "id": "island-mortar-l5-damaged",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2927,
+          "differingPixels": 2577,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 43,
+          "alphaWeightedMeanRgbDelta": 4.091497851387735
+        },
+        {
+          "id": "island-mortar-l5-broken",
+          "density": 4,
+          "pixels": 43008,
+          "visiblePixels": 19461,
+          "differingPixels": 0,
+          "maxVisibleDelta": 0,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 0
+        },
+        {
+          "id": "island-mortar-l5-broken",
+          "density": 2.5,
+          "pixels": 16800,
+          "visiblePixels": 7633,
+          "differingPixels": 6193,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 24,
+          "alphaWeightedMeanRgbDelta": 2.65051562095671
+        },
+        {
+          "id": "island-mortar-l5-broken",
+          "density": 2,
+          "pixels": 10752,
+          "visiblePixels": 4812,
+          "differingPixels": 3980,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 29,
+          "alphaWeightedMeanRgbDelta": 2.8950579599265738
+        },
+        {
+          "id": "island-mortar-l5-broken",
+          "density": 1.5,
+          "pixels": 6048,
+          "visiblePixels": 2677,
+          "differingPixels": 2354,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 43,
+          "alphaWeightedMeanRgbDelta": 4.042217458382614
+        }
+      ],
+      "peakSourceBytes": 6291456,
       "retainedDecodedAfterRelease": 0
     }
   ],
