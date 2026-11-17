@@ -85,11 +85,11 @@ const startShare = health => (Number.isInteger(health) && health >= 0 && health 
  * A wall on the way is treated as broken once reached, so the line goes on through the gap it will make.
  * wave: the wave number (the boarders' hack and walk speed set what a breach costs against a detour).
  */
-export function guideRoute({ from, heart = CONFIG.boarding.heart, walls = [], towers = [], towerBlocking = false, coast = CONFIG.coast, wave = 1 }) {
+export function guideRoute({ from, heart = CONFIG.boarding.heart, walls = [], towers = [], towerBlocking = false, perimeterWalls = false, coast = CONFIG.coast, wave = 1 }) {
   const curve = curveFor(Math.max(1, wave || 1)), B = CONFIG.boarding;
   const copies = walls.map(wall => ({ id: wall.id, x: wall.x, z: wall.z, hp: wall.hp, maxHp: wall.maxHp }));
   const towerCopies = towers.map(tower => ({...tower}));
-  const paths = createBoarderPaths({ coast, heart, walls: copies, towers: towerCopies, towerBlocking,
+  const paths = createBoarderPaths({ coast, heart, walls: copies, towers: towerCopies, towerBlocking, perimeterWalls,
     pace: { hackPerSecond: B.hack * curve.damage / B.hackEvery, speed: B.speed * curve.speed } });
   paths.refresh();
   const walker = { x: from.x, z: from.z }, points = [{ x: from.x, z: from.z }], breaches = [];
@@ -118,15 +118,15 @@ export function guideRoute({ from, heart = CONFIG.boarding.heart, walls = [], to
 }
 
 /** A route per landing: [{id, landing, points, breaches, reachable}]. */
-export function guideRoutes({ landings = [], heart, walls = [], towers = [], towerBlocking = false, coast, wave }) {
-  return landings.map(landing => ({ id: landing.id, landing, ...guideRoute({ from: landing, heart, walls, towers, towerBlocking, coast, wave }) }));
+export function guideRoutes({ landings = [], heart, walls = [], towers = [], towerBlocking = false, perimeterWalls = false, coast, wave }) {
+  return landings.map(landing => ({ id: landing.id, landing, ...guideRoute({ from: landing, heart, walls, towers, towerBlocking, perimeterWalls, coast, wave }) }));
 }
 
 /** Route identity includes absolute durability: the same quarter of a stronger obstacle costs more to breach. */
-export function routeKey(landings, walls, wave, towers = [], towerBlocking = false) {
+export function routeKey(landings, walls, wave, towers = [], towerBlocking = false, perimeterWalls = false) {
   const band = wall => (wall.hp > 0 ? Math.ceil(wall.hp / wall.maxHp * 4) : 0);
   const obstacleKey = item => `${item.id}:${item.x},${item.z}:${item.maxHp}:${band(item)}`;
-  return `${wave}|${towerBlocking ? 1 : 0}|${landings.map(item => `${item.id}:${item.x},${item.z}`).join(';')}|${walls.map(obstacleKey).join(';')}|${towers.map(obstacleKey).join(';')}`;
+  return `${perimeterWalls ? 'perimeter|' : ''}${wave}|${towerBlocking ? 1 : 0}|${landings.map(item => `${item.id}:${item.x},${item.z}`).join(';')}|${walls.map(obstacleKey).join(';')}|${towers.map(obstacleKey).join(';')}`;
 }
 
 /**
@@ -385,11 +385,11 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
         k = live ? Math.max(1, Math.min(2, Number(characterScale()) || 1)) : 1;
         const landings = view.lanes?.length ? waveLandings(view.lanes) : laneLandings();
         const walls = guideWalls(view.defenses ?? [], view.stateWalls ?? null), attacked = attackedWalls(view.boarders);
-        const towerBlocking = view.towerObstacles === true;
+        const towerBlocking = view.towerObstacles === true, perimeterWalls = view.perimeterWalls === true;
         const towers = towerBlocking ? guideTowers(view.defenses ?? [], view.stateTowers ?? null) : [];
         const heart = view.heart ?? CONFIG.boarding.heart;
-        const next = `${heart.x},${heart.z}|${routeKey(landings, walls, view.wave ?? 1, towers, towerBlocking)}`;
-        if (next !== key) { key = next; routes = guideRoutes({ landings, heart, walls, towers, towerBlocking, wave: view.wave ?? 1 }); }
+        const next = `${heart.x},${heart.z}|${routeKey(landings, walls, view.wave ?? 1, towers, towerBlocking, perimeterWalls)}`;
+        if (next !== key) { key = next; routes = guideRoutes({ landings, heart, walls, towers, towerBlocking, perimeterWalls, wave: view.wave ?? 1 }); }
         for (const route of routes) drawRoute(route, alpha, live);
         for (const route of routes) drawLanding(route.landing, alpha, live, heart, walls);
         drawHeart(heart, live);

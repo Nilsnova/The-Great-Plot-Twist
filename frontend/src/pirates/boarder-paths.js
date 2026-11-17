@@ -88,16 +88,39 @@ export function footprintPoints(wall) {
   return points;
 }
 
+// Perimeter placement uses half units. Mark node centers inside the same body-expanded square
+// as obstacleInWay; legacy footprint sampling keeps its original one-unit routing behavior.
+function clearancePoints(grid, obstacle, size) {
+  const half = size / 2 + BODY, points = [];
+  const first = cellOf(grid, obstacle.x - half, obstacle.z - half);
+  const last = cellOf(grid, obstacle.x + half, obstacle.z + half);
+  if (first < 0 || last < 0) return points;
+  for (let row = Math.floor(first / grid.cols); row <= Math.floor(last / grid.cols); row++) {
+    for (let col = first % grid.cols; col <= last % grid.cols; col++) {
+      const point = centreOf(grid, row * grid.cols + col);
+      if (Math.abs(point.x - obstacle.x) < half && Math.abs(point.z - obstacle.z) < half) points.push(point);
+    }
+  }
+  return points;
+}
+
 /**
  * The routes of one wave. walls: the sim's wall objects (their hp changes in the wave; read on refresh).
  * pace: {hackPerSecond, speed} of a boarder this wave, for the breach cost.
+ * perimeterWalls: trusted frozen geometry mode; half-unit nodes with continuous body clearance.
  */
-export function createBoarderPaths({ coast, heart, walls, towers = [], towerBlocking = false, pace }) {
+export function createBoarderPaths({ coast, heart, walls, towers = [], towerBlocking = false, perimeterWalls = false, pace }) {
   const reach = Math.ceil(Math.max(coast.rx, coast.rz) * MARGIN);
-  const grid = createGrid({ minX: -reach, minZ: -reach, maxX: reach, maxZ: reach, isWalkable: (x, z) => isOnLand(x, z, coast) });
+  // The quarter-unit origin makes half-unit cell centers align with every legal placement node.
+  const edge = reach + (perimeterWalls ? .25 : 0);
+  const grid = createGrid({ minX: -edge, minZ: -edge, maxX: edge, maxZ: edge, cell: perimeterWalls ? .5 : 1,
+    isWalkable: (x, z) => isOnLand(x, z, coast) });
   const cache = createFieldCache(grid), towerShapes = towerBlocking ? towerObstacles(towers) : [];
-  const shapes = [...walls.map(wall => ({ obstacle: wall, cells: footprintPoints(wall), kind: 'wall' })),
-    ...towerShapes.map(tower => ({ obstacle: tower.source, cells: tower.cells, kind: 'tower' }))];
+  const shapes = [...walls.map(wall => ({ obstacle: wall,
+    cells: perimeterWalls ? clearancePoints(grid, wall, WALL_FOOTPRINT) : footprintPoints(wall), kind: 'wall' })),
+    ...towerShapes.map(tower => ({ obstacle: tower.source,
+      cells: perimeterWalls ? clearancePoints(grid, tower.source, TOWER_FOOTPRINT) : tower.cells, kind: 'tower' }))];
+  const blockingObjects = shapes.map(shape => shape.obstacle);
   let layout = buildLayout(grid, [], pace), field = cache.fieldFor(layout, heart), seen = null;
 
   function refresh() {
@@ -106,7 +129,7 @@ export function createBoarderPaths({ coast, heart, walls, towers = [], towerBloc
     if (hps === seen) return;
     seen = hps;
     layout = buildLayout(grid, shapes.map(({ obstacle, cells, kind }) => ({ id: obstacle.id, hp: obstacle.hp,
-      maxHp: obstacle.maxHp, obstacleKind: kind, cells })), pace);
+      maxHp: obstacle.maxHp, obstacleKind: kind, cells })), pace, {preferStanding: perimeterWalls});
     field = cache.fieldFor(layout, heart);
   }
   // A boarder off the walking grid (pushed into the surf): back to the cheapest land cell next to it.
@@ -144,7 +167,7 @@ export function createBoarderPaths({ coast, heart, walls, towers = [], towerBloc
     const index = cellOf(grid, boarder.x, boarder.z);
     if (index >= 0 && index === field.goalIndex) return { kind: 'heart' };
     const occupied = index >= 0 ? standingWallAt(layout, index) : null;
-    if (occupied?.kind === 'tower') {
+    if (occupied?.kind === 'tower' || (perimeterWalls && occupied)) {
       let best = null;
       for (const step of neighbours(grid, layout, index)) {
         if (standingWallAt(layout, step.index)) continue;
@@ -155,6 +178,7 @@ export function createBoarderPaths({ coast, heart, walls, towers = [], towerBloc
       const escape = nextStep(grid, layout, field, index);
       if (!escape) return {kind: 'none'};
       if (escape.towerId === occupied.id) return {kind: 'step', ...centreOf(grid, escape.index)};
+      if (perimeterWalls && escape.wallId === occupied.id) return {kind: 'step', ...centreOf(grid, escape.index)};
       if (escape.towerId) return {kind: 'tower', towerId: escape.towerId};
       if (escape.wallId) return {kind: 'wall', wallId: escape.wallId};
       return {kind: 'step', ...centreOf(grid, escape.index)};
@@ -173,7 +197,8 @@ export function createBoarderPaths({ coast, heart, walls, towers = [], towerBloc
   }
   return {
     refresh, next,
-    canReach: (a, b) => lineIsClear(grid, layout, a, b),
+    canReach: (a, b) => lineIsClear(grid, layout, a, b) && (!perimeterWalls
+      || !obstacleInWay(a, b, blockingObjects)),
     get builds() { return cache.builds; },
     get grid() { return grid; },
     get layout() { return layout; },
