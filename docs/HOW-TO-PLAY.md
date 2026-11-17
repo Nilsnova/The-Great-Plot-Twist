@@ -194,6 +194,7 @@ The Harbor is a building on the east beach. Walk up to it and press **E** (or **
 | Cutlass | F next to a pirate on foot | The musket button next to a pirate | No separate button |
 | Close a card / pause | Escape | Close button / Menu | B in a menu; Menu closes or pauses |
 | Zoom | Mouse wheel over the world | No separate zoom button | No separate zoom button |
+| Whole island | Hold Tab | Not yet | Not yet |
 | Menus | Tab / Shift+Tab; Enter or Space on buttons | Tap the labeled control | D-pad to focus, A to activate |
 
 Cards open only when you stand close. A click or tap on a building from far away shows "Walk closer" next to it. During a wave a fallen teammate next to you always comes first: E helps them up, and it never opens a building.

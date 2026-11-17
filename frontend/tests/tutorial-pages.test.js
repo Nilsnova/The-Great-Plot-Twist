@@ -33,7 +33,7 @@ describe('How to play pages',()=>{
   });
   it('lists the controls as keys on the last page',()=>{
     const controls=TUTORIAL_PAGES.at(-1);
-    expect(controls.keys.map(([key])=>key)).toEqual(['WASD or arrows','E','F','Click','M','Mouse wheel']);
+    expect(controls.keys.map(([key])=>key)).toEqual(['WASD or arrows','E','F','Click','M','Mouse wheel','Hold Tab']);
   });
   it('reuses the cartoon drawings in their own boxes, at scales that fit a 320 px card',async()=>{
     const frames=await drawings();
