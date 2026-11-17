@@ -239,7 +239,7 @@ export const EVENT_ICONS = Object.freeze({ fog_bank: '☁', storm: '⛈', night_
   siege_barge: '💣', treasure_galleon: '💰', smugglers: '🛶', kraken: '🐙' });
 const readEasy = () => { try { return getPreferences()?.easyFinishers === true; } catch { return false; } };
 
-export function createWaveController({ bus, world = {}, getDefenses = () => [], getPerimeterWalls = () => false, finishWave = async () => null, room = null,
+export function createWaveController({ bus, world = {}, getDefenses = () => [], getPerimeterWalls = () => false, getManaging = () => false, finishWave = async () => null, room = null,
   sound = null, reducedMotion = () => false, quality = () => 'high', playerId = `p-${Math.random().toString(36).slice(2, 10)}`,
   now = () => Date.now(), serverOffset = () => 0, place = null, accept = info => info.flagship !== true, listen = true,
   simOptions = {}, beamFrom = null, cutsceneFor = (result, summary) => (summary.lampsRelit ? 'lamps_relit' : result.survived ? 'wave_won' : 'wave_lost'),
@@ -299,7 +299,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       const perimeterWalls = read(getPerimeterWalls, null);
       if (perimeterWalls !== true && perimeterWalls !== false) { guide.update(null); return; }
       guide.update({ mode: 'preview', lanes: null, defenses, stateWalls: null, stateTowers: null,
-        perimeterWalls,
+        perimeterWalls, managing: read(getManaging, false) === true,
         towerObstacles: current?.info.rules?.towerObstacles ?? lastTowerObstacles, boarders: [], heart: null,
         wave: (current?.info.wave ?? lastWave) + 1, dt });
     }
