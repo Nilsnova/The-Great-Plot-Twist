@@ -28,6 +28,7 @@ import {createStructureRecoveryIndicators} from './structure-recovery-indicators
 import {towerStateFrame} from '../art/tower-states.js';
 import {loadWallAtlas, wallPreviewCanvas} from '../art/wall-atlas.js';
 import {getRasterFrame} from '../art/village-raster.js';
+import {wallFrame, WALL_POST_IDS} from '../art/village/walls.js';
 import {createArtworkTasks, createStaticVillageArt} from './static-village-art.js';
 import {createVillageArtNotice} from '../ui/village-art-notice.js';
 
@@ -35,7 +36,7 @@ const UNIT = 16;
 const FULL_HP_UNITS = 1_000_000;
 const RECOVERY_TOWERS = Object.freeze(['cannon', 'mortar', 'harpoon', 'culverin', 'swivel']);
 const RECOVERY_PHASES = new Set(['between_waves', 'preparing']);
-const RECOVERY_ART = Object.freeze(['island-wall-damaged', 'island-wall-broken', ...RECOVERY_TOWERS.flatMap(kind =>
+const RECOVERY_ART = Object.freeze([...WALL_POST_IDS.filter(id => /-(damaged|broken)$/.test(id)), ...RECOVERY_TOWERS.flatMap(kind =>
   Array.from({length: 5}, (_, index) => ['damaged', 'broken'].map(state => towerStateFrame(kind, index + 1, state))).flat())]);
 
 /** Return the existing world-art state for a matching canonical v1 row outside combat. */
@@ -48,7 +49,7 @@ export function structureRecoveryAppearance(answer, row, state) {
   if (row.hpUnits === FULL_HP_UNITS) return null;
   const look = row.hpUnits === 0 ? 'broken' : row.hpUnits < FULL_HP_UNITS / 2 ? 'damaged' : null;
   if (!look) return null;
-  const frame = row.kind === 'wall' ? `island-wall-${look}` : RECOVERY_TOWERS.includes(row.kind)
+  const frame = row.kind === 'wall' ? wallFrame(row.level, look) : RECOVERY_TOWERS.includes(row.kind)
     ? towerStateFrame(row.kind, row.level, look) : null;
   return frame ? {look, frame, suppressPips: look === 'broken' && row.kind !== 'wall'} : null;
 }
