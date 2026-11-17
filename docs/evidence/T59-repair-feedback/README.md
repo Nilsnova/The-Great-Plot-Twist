@@ -88,6 +88,19 @@ The latest capture completed with 103 calls to the offline API fixture. It does 
 
 Issue [#344](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/344) tracks a UI fallback bug: a `feature_off` answer from the structure endpoint must not downgrade a persisted recovery-v1 island to legacy wall repair and upgrades. The focused browser regression uses local fake-island/API-shaped responses. It covers `feature_off` on the first canonical read, `feature_off` after a successful v1 read, retry recovery, the legacy wall-action guard, and disabled tower upgrades while health is unavailable.
 
+The optional screenshot mode renders the production DOM card with the production base, kit and island styles. It reuses the local browser fixture and makes no authenticated or live API request.
+
+| Viewport | State | Screenshot |
+|---|---|---|
+| 1440 × 900 desktop | Saved-v1 Wall; health endpoint unavailable; legacy Repair is hidden | [Wall health error](../../../frontend/captures/t59-policy-fallback-wall-error-desktop.png) |
+| 375 × 812 phone | Saved-v1 Cannon; health endpoint unavailable; upgrade is disabled | [Cannon upgrade guard](../../../frontend/captures/t59-policy-fallback-cannon-phone.png) |
+
+Captured with:
+
+```sh
+cd frontend && RECOVERY_POLICY_CAPTURE_DIR=captures ./node_modules/.bin/vitest run --maxWorkers=1 tests/island/structure-recovery-policy.test.js -t 'does not downgrade a persisted v1 island'
+```
+
 Before the fix, the first-read fixture produced no recovery error and exposed the legacy wall Repair action. The cached-v1 case also allowed a tower upgrade after a later `feature_off` response. After the fix, both cases retain recovery v1 and display the health-load error; a later successful read restores the card.
 
 Verified with:
@@ -96,7 +109,7 @@ Verified with:
 cd frontend && ./node_modules/.bin/vitest run --maxWorkers=1 tests/island/structure-recovery-policy.test.js tests/island/structure-recovery-upgrade-dom.test.js tests/island/structure-recovery-card.test.js tests/island/structure-recovery-card-dom.test.js tests/island/card-model.test.js tests/island/structure-recovery-model.test.js tests/island/structure-recovery-api.test.js tests/island/captain-recovery-tree.test.js tests/campaign/captain-repair-policy.test.js
 ```
 
-Result: 103 tests passed across 9 files. This is fixture evidence only, not live service, wallet, database, multiplayer, activation or deployment evidence; no screenshot was needed for this state-policy regression.
+The capture command passed its selected browser regression (1 passed; 9 skipped by the test-name filter). The focused nine-file suite passed 103 tests. These screenshots and checks use a local fake-island transport; they do not demonstrate live service, wallet, database, multiplayer, activation or deployment behavior.
 
 ### Independent follow-up verification
 

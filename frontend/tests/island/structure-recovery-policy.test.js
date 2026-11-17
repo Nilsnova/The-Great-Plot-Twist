@@ -108,7 +108,9 @@ it('keeps an island with unavailable canonical health fail closed, then discover
 });
 
 it('does not downgrade a persisted v1 island when the structure endpoint says feature_off', async () => {
-  const result = await browser.withPage(page => page.evaluate(async () => {
+  const captureDir = process.env.RECOVERY_POLICY_CAPTURE_DIR;
+  const result = await browser.withPage(async page => {
+    const fixture = await page.evaluate(async ({retainForCapture}) => {
     const {createIsland} = await window.g20Import('/src/island/index.js');
     const {createFakeIslandTransport} = await window.g20Import('/src/pirates/fake-api.js');
     const {on, emit} = await window.g20Import('/src/core/events.js');
@@ -141,13 +143,38 @@ it('does not downgrade a persisted v1 island when the structure endpoint says fe
     await new Promise(resolve => setTimeout(resolve, 100));
     const wall = {message: document.querySelector('.recovery-message')?.textContent ?? '',
       legacyRepair: !!document.querySelector('.island-card[open] [data-focus="repair"]'), policyVersion: island.recoveryVersion};
+    if (retainForCapture) {
+      window.recoveryPolicyCaptureIsland = island;
+      return {wall};
+    }
     island.pick('cannon_1');
     await new Promise(resolve => setTimeout(resolve, 50));
     const upgrade = document.querySelector('.island-card[open] [data-focus="upgrade"]');
     const tower = {message: document.querySelector('.recovery-message')?.textContent ?? '', upgradeDisabled: upgrade?.disabled ?? null};
     island.dispose();
     return {wall, tower};
-  }));
+    }, {retainForCapture: !!captureDir});
+    if (!captureDir) return fixture;
+    const {mkdir, readFile} = await import('node:fs/promises');
+    const {join} = await import('node:path');
+    await mkdir(captureDir, {recursive: true});
+    for (const stylesheet of ['../../src/ui/base.css', '../../src/ui/kit/kit.css']) {
+      await page.addStyleTag({content: await readFile(new URL(stylesheet, import.meta.url), 'utf8')});
+    }
+    await page.setViewportSize({width: 1440, height: 900});
+    await page.locator('.island-card[open]').screenshot({path: join(captureDir, 't59-policy-fallback-wall-error-desktop.png')});
+    const tower = await page.evaluate(async () => {
+      const island = window.recoveryPolicyCaptureIsland;
+      island.pick('cannon_1');
+      await new Promise(resolve => setTimeout(resolve, 50));
+      const upgrade = document.querySelector('.island-card[open] [data-focus="upgrade"]');
+      return {message: document.querySelector('.recovery-message')?.textContent ?? '', upgradeDisabled: upgrade?.disabled ?? null};
+    });
+    await page.setViewportSize({width: 375, height: 812});
+    await page.locator('.island-card[open]').screenshot({path: join(captureDir, 't59-policy-fallback-cannon-phone.png')});
+    await page.evaluate(() => { window.recoveryPolicyCaptureIsland.dispose(); delete window.recoveryPolicyCaptureIsland; });
+    return {...fixture, tower};
+  });
   expect(result.wall).toEqual({message: 'Building health could not be loaded.', legacyRepair: false, policyVersion: 1});
   expect(result.tower).toEqual({message: 'Building health could not be loaded.', upgradeDisabled: true});
 });
