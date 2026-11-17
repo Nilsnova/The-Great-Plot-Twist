@@ -26,10 +26,12 @@ def test_participant_mutability_is_column_scoped(database):
         "has_column_privilege('service_role','public.recovery_wave_participants',"
         "'last_actor_counter','UPDATE'), "
         "has_column_privilege('service_role','public.recovery_wave_participants',"
-        "'page_head_seq','UPDATE'), "
-        "has_column_privilege('service_role','public.recovery_wave_participants',"
         "'participant_token','UPDATE')"
-    ).fetchone() == (False, True, True, False)
+    ).fetchone() == (False, True, False)
+    assert database.execute(
+        "select to_regprocedure('public.recovery_wave_events_page(uuid,uuid,bigint,bigint)'), "
+        "to_regprocedure('public.recovery_wave_events_page(uuid,uuid,bigint,bigint,integer)')"
+    ).fetchone() == (None, "recovery_wave_events_page(uuid,uuid,bigint,bigint,integer)")
 
 
 def seed_recovery_wave(database):
@@ -119,7 +121,10 @@ def test_v2_input_append_is_idempotent_and_event_page_fixes_watermark(database):
     assert repeat["repeat"] is True
 
     first_page = call(
-        database, "select public.recovery_wave_events_page(%s,%s,0,null)", OWNER, wave_id
+        database,
+        "select public.recovery_wave_events_page(%s,%s,0,null,null)",
+        OWNER,
+        wave_id,
     )
     assert first_page["status"] == "ok"
     assert first_page["headSeq"] == 1
@@ -127,10 +132,11 @@ def test_v2_input_append_is_idempotent_and_event_page_fixes_watermark(database):
     assert first_page["events"] == [event]
     page = call(
         database,
-        "select public.recovery_wave_events_page(%s,%s,0,%s)",
+        "select public.recovery_wave_events_page(%s,%s,0,%s,%s)",
         OWNER,
         wave_id,
-        1,
+        first_page["headSeq"],
+        first_page["sealedThroughTick"],
     )
     assert page["through"] == 1
     assert page["headSeq"] == 1
@@ -184,7 +190,7 @@ def test_v2_input_uid_reuse_with_different_command_is_refused(database):
     )
 
 
-def test_v2_page_requires_reading_previous_fixed_head_before_next_watermark(database):
+def test_v2_pages_are_stateless_across_reconnect_and_interleaved_readers(database):
     wave_id, _ = seed_recovery_wave(database)
     call(
         database,
@@ -204,32 +210,95 @@ def test_v2_page_requires_reading_previous_fixed_head_before_next_watermark(data
     )
     first_page = call(
         database,
-        "select public.recovery_wave_events_page(%s,%s,0,null)",
+        "select public.recovery_wave_events_page(%s,%s,0,null,null)",
         OWNER,
         wave_id,
     )
     assert first_page["through"] is None
-    refused = call(
+    completed_frontier_page = call(
         database,
-        "select public.recovery_wave_events_page(%s,%s,0,null)",
+        "select public.recovery_wave_events_page(%s,%s,0,%s,%s)",
+        OWNER,
+        wave_id,
+        first_page["headSeq"],
+        first_page["sealedThroughTick"],
+    )
+    assert completed_frontier_page["events"] == first_page["events"]
+    # Retry after losing the first response and read it again after another reader
+    # has independently advanced the wave's global head and seal.
+    lost_response_retry = call(
+        database,
+        "select public.recovery_wave_events_page(%s,%s,0,null,null)",
         OWNER,
         wave_id,
     )
-    assert refused == {"status": "refused", "reason": "page_incomplete"}
-    page = call(database, "select public.recovery_wave_events_page(%s,%s,0,1)", OWNER, wave_id)
-    assert page["through"] == 1
-    next_page = call(
-        database, "select public.recovery_wave_events_page(%s,%s,1,null)", OWNER, wave_id
+    assert lost_response_retry["status"] == "ok"
+    old_frontier_page = call(
+        database,
+        "select public.recovery_wave_events_page(%s,%s,0,%s,%s)",
+        OWNER,
+        wave_id,
+        first_page["headSeq"],
+        first_page["sealedThroughTick"],
     )
-    assert next_page["status"] == "ok"
-    assert next_page["headSeq"] == 1
+    assert old_frontier_page["status"] == "ok"
+    assert old_frontier_page["headSeq"] == first_page["headSeq"]
+    assert old_frontier_page["sealedThroughTick"] == first_page["sealedThroughTick"]
+    assert old_frontier_page["events"] == first_page["events"]
+
+    second_input = call(
+        database,
+        "select public.recovery_wave_inputs(%s,%s,%s::jsonb)",
+        OWNER,
+        wave_id,
+        json.dumps(
+            [
+                {
+                    "inputUid": "captain004",
+                    "actorCounter": 2,
+                    "tick": 0,
+                    "command": {"type": "captain_move", "x": 3, "z": 4},
+                }
+            ]
+        ),
+    )
+    assert second_input["status"] == "accepted"
+    second_reader_page = call(
+        database,
+        "select public.recovery_wave_events_page(%s,%s,0,null,null)",
+        OWNER,
+        wave_id,
+    )
+    assert second_reader_page["headSeq"] == 2
+    assert second_reader_page["headSeq"] > first_page["headSeq"]
+    replay_old_frontier = call(
+        database,
+        "select public.recovery_wave_events_page(%s,%s,0,%s,%s)",
+        OWNER,
+        wave_id,
+        first_page["headSeq"],
+        first_page["sealedThroughTick"],
+    )
+    assert replay_old_frontier["status"] == "ok"
+    assert replay_old_frontier["headSeq"] == first_page["headSeq"]
+    assert [event["serverSeq"] for event in replay_old_frontier["events"]] == [1]
+
+    new_frontier_page = call(
+        database,
+        "select public.recovery_wave_events_page(%s,%s,0,%s,%s)",
+        OWNER,
+        wave_id,
+        second_reader_page["headSeq"],
+        second_reader_page["sealedThroughTick"],
+    )
+    assert new_frontier_page["events"] == second_reader_page["events"]
 
 
 def test_v2_health_checkpoint_accepts_complete_empty_snapshot_and_detects_divergence(database):
     wave_id, _ = seed_recovery_wave(database)
     first_page = call(
         database,
-        "select public.recovery_wave_events_page(%s,%s,0,null)",
+        "select public.recovery_wave_events_page(%s,%s,0,null,null)",
         OWNER,
         wave_id,
     )
@@ -295,7 +364,7 @@ def test_health_checkpoint_rejects_omitted_applicable_journal_event(database):
     as_server(database)
     page = call(
         database,
-        "select public.recovery_wave_events_page(%s,%s,0,null)",
+        "select public.recovery_wave_events_page(%s,%s,0,null,null)",
         OWNER,
         wave_id,
     )
@@ -305,6 +374,14 @@ def test_health_checkpoint_rejects_omitted_applicable_journal_event(database):
         (wave_id,),
     ).fetchone()[0]
     assert event <= page["sealedThroughTick"]
+    forged_prefix = call(
+        database,
+        "select public.recovery_wave_events_page(%s,%s,0,0,%s)",
+        OWNER,
+        wave_id,
+        page["sealedThroughTick"],
+    )
+    assert forged_prefix == {"status": "refused", "reason": "page_incomplete"}
     epoch = database.execute(
         "select reset_epoch from public.recovery_wave_states where wave_id=%s", (wave_id,)
     ).fetchone()[0]
@@ -425,7 +502,7 @@ def test_recovery_start_freezes_v1_and_repeat_reads_same_token_and_snapshot(data
     ).fetchone() == (1,)
     page = call(
         database,
-        "select public.recovery_wave_events_page(%s,%s,0,null)",
+        "select public.recovery_wave_events_page(%s,%s,0,null,null)",
         OWNER,
         first["waveId"],
     )
@@ -682,7 +759,7 @@ def test_recovery_start_snapshots_db_wall_identity_and_legacy_effective_hp(datab
     as_server(database)
     first_page = call(
         database,
-        "select public.recovery_wave_events_page(%s,%s,0,null)",
+        "select public.recovery_wave_events_page(%s,%s,0,null,null)",
         OWNER,
         wave_id,
     )
@@ -708,13 +785,14 @@ def test_recovery_start_snapshots_db_wall_identity_and_legacy_effective_hp(datab
     assert paid["status"] == "done"
     call(
         database,
-        "select public.recovery_wave_events_page(%s,%s,0,0)",
+        "select public.recovery_wave_events_page(%s,%s,0,0,%s)",
         OWNER,
         wave_id,
+        first_page["sealedThroughTick"],
     )
     current_page = call(
         database,
-        "select public.recovery_wave_events_page(%s,%s,0,null)",
+        "select public.recovery_wave_events_page(%s,%s,0,null,null)",
         OWNER,
         wave_id,
     )
@@ -869,7 +947,9 @@ def test_recovery_finish_preserves_first_close_receipt_and_pays_each_actor_once(
     as_server(database)
     joined = call(database, "select public.recovery_wave_join(%s,%s,2::smallint)", FRIEND, wave_id)
     assert joined["status"] == "joined"
-    page = call(database, "select public.recovery_wave_events_page(%s,%s,0,null)", OWNER, wave_id)
+    page = call(
+        database, "select public.recovery_wave_events_page(%s,%s,0,null,null)", OWNER, wave_id
+    )
     epoch = database.execute(
         "select reset_epoch from public.recovery_wave_states where wave_id=%s", (wave_id,)
     ).fetchone()[0]
@@ -1017,7 +1097,7 @@ def test_late_registered_finisher_expires_without_rewriting_normal_close(databas
     assert joined["status"] == "joined"
     page = call(
         database,
-        "select public.recovery_wave_events_page(%s,%s,0,null)",
+        "select public.recovery_wave_events_page(%s,%s,0,null,null)",
         OWNER,
         wave_id,
     )

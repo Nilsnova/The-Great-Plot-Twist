@@ -4,27 +4,12 @@ alter table public.recovery_wave_events
   add column if not exists actor_counter bigint,
   add column if not exists requested_tick integer;
 
-alter table public.recovery_wave_participants
-  add column if not exists page_head_seq bigint,
-  add column if not exists page_sealed_tick integer;
-
-alter table public.recovery_wave_participants
-  drop constraint if exists recovery_wave_participants_page_pair,
-  add constraint recovery_wave_participants_page_pair check (
-    (page_head_seq is null and page_sealed_tick is null)
-    or (page_head_seq >= 0 and page_sealed_tick >= -1)
-  );
-
 comment on column public.recovery_wave_events.actor_counter is
   'Actor-local monotonic input counter, distinct from global serverSeq. Null on server-authored events.';
 comment on column public.recovery_wave_events.requested_tick is
   'Client-requested input tick retained privately for stable retry fingerprints; accepted effective_tick is server-clamped.';
-comment on column public.recovery_wave_participants.page_head_seq is
-  'Private read watermark for this participant current event page; the matching sealed tick stays fixed across pages.';
-comment on column public.recovery_wave_participants.page_sealed_tick is
-  'Sealed frontier paired with page_head_seq until this participant opens its next watermark.';
 
-grant update (last_actor_counter, page_head_seq, page_sealed_tick)
+grant update (last_actor_counter)
   on table public.recovery_wave_participants to service_role;
 
 -- Keep retry fingerprints immutable when account deletion anonymizes event actors.
@@ -247,11 +232,14 @@ begin
 end;
 $$;
 
+drop function if exists public.recovery_wave_events_page(uuid,uuid,bigint,bigint);
+
 create or replace function public.recovery_wave_events_page(
   p_player_id uuid,
   p_wave_id uuid,
   p_after bigint,
-  p_through bigint default null
+  p_through bigint default null,
+  p_sealed_through_tick integer default null
 )
 returns jsonb
 language plpgsql
@@ -261,7 +249,6 @@ as $$
 declare
   v_island_state public.island_recovery_state;
   v_wave public.recovery_wave_states;
-  v_part public.recovery_wave_participants;
   v_run public.wave_runs;
   v_owner uuid;
   v_now timestamptz;
@@ -271,7 +258,9 @@ declare
   v_page jsonb;
 begin
   if p_player_id is null or p_wave_id is null or p_after is null or p_after < 0
-     or (p_through is not null and p_through < 0) then
+     or (p_through is not null and p_through < 0)
+     or (p_sealed_through_tick is not null and p_sealed_through_tick < -1)
+     or ((p_through is null) <> (p_sealed_through_tick is null)) then
     raise exception 'bad_recovery_page';
   end if;
   select island_owner into v_owner from public.recovery_wave_states where wave_id = p_wave_id;
@@ -280,9 +269,10 @@ begin
   select * into v_island_state from public.island_recovery_state
    where island_owner=v_owner for update;
   select * into v_wave from public.recovery_wave_states where wave_id = p_wave_id for update;
-  select * into v_part from public.recovery_wave_participants
-   where wave_id = p_wave_id and player_id = p_player_id for update;
-  if not found or not exists (
+  if not exists (
+    select 1 from public.recovery_wave_participants
+     where wave_id=p_wave_id and player_id=p_player_id
+  ) or not exists (
     select 1 from public.wave_participants where wave_id=p_wave_id and player_id=p_player_id
   ) then return jsonb_build_object('status','refused','reason','not_in_wave'); end if;
   if v_wave.wave_protocol <> 2 then
@@ -290,29 +280,32 @@ begin
   end if;
   v_now := clock_timestamp();
   if p_through is null then
-    if v_part.page_head_seq is not null and p_after < v_part.page_head_seq then
-      return jsonb_build_object('status','refused','reason','page_incomplete');
-    end if;
     select * into v_run from public.wave_runs where id=p_wave_id;
     v_head := v_wave.journal_head;
+    if p_after > v_head then
+      return jsonb_build_object('status','refused','reason','bad_recovery_page');
+    end if;
     v_sealed := case when v_now < v_run.starts_at then -1 else
       greatest(v_wave.sealed_through_tick, floor(extract(epoch from (v_now - v_run.starts_at)) * 20)::integer - 1) end;
     update public.recovery_wave_states set sealed_through_tick = greatest(sealed_through_tick, v_sealed)
-     where wave_id=p_wave_id;
-    v_sealed := greatest(v_wave.sealed_through_tick, v_sealed);
-    update public.recovery_wave_participants
-       set page_head_seq=v_head, page_sealed_tick=v_sealed
-     where wave_id=p_wave_id and player_id=p_player_id;
+     where wave_id=p_wave_id returning sealed_through_tick into v_sealed;
     v_through := v_head;
   else
-    if v_part.page_head_seq is distinct from p_through or v_part.page_sealed_tick is null then
+    if p_through > v_wave.journal_head or p_sealed_through_tick > v_wave.sealed_through_tick then
       return jsonb_build_object('status','refused','reason','page_watermark_invalid');
     end if;
-    v_head := v_part.page_head_seq;
-    v_sealed := v_part.page_sealed_tick;
+    if exists (select 1 from public.recovery_wave_events
+      where wave_id=p_wave_id and seq>p_through
+        and effective_tick<=p_sealed_through_tick) then
+      return jsonb_build_object('status','refused','reason','page_incomplete');
+    end if;
+    v_head := p_through;
+    v_sealed := p_sealed_through_tick;
     v_through := p_through;
+    if p_after > v_through then
+      return jsonb_build_object('status','refused','reason','bad_recovery_page');
+    end if;
   end if;
-  if p_after > v_through then return jsonb_build_object('status','refused','reason','bad_recovery_page'); end if;
   select coalesce(jsonb_agg(jsonb_build_object(
       'serverSeq',seq,'effectiveTick',effective_tick,'type',event_kind,
       'participantToken',participant_token,'payload',payload) order by seq),'[]'::jsonb)
@@ -329,13 +322,13 @@ $$;
 
 revoke all on function public.recovery_wave_inputs(uuid, uuid, jsonb) from public, anon, authenticated, service_role;
 grant execute on function public.recovery_wave_inputs(uuid, uuid, jsonb) to service_role;
-revoke all on function public.recovery_wave_events_page(uuid, uuid, bigint, bigint) from public, anon, authenticated, service_role;
-grant execute on function public.recovery_wave_events_page(uuid, uuid, bigint, bigint) to service_role;
+revoke all on function public.recovery_wave_events_page(uuid, uuid, bigint, bigint, integer) from public, anon, authenticated, service_role;
+grant execute on function public.recovery_wave_events_page(uuid, uuid, bigint, bigint, integer) to service_role;
 
 comment on function public.recovery_wave_inputs(uuid, uuid, jsonb) is
   'Atomically validates and appends authenticated protocol-2 Captain commands; actor identity and Captain stats are server-derived, counters and UIDs are idempotent, and the journal assigns global commit order.';
-comment on function public.recovery_wave_events_page(uuid, uuid, bigint, bigint) is
-  'Returns an authenticated participant a bounded journal page under a fixed per-participant head and sealed-tick watermark. A new watermark opens only after the previous head is fetched.';
+comment on function public.recovery_wave_events_page(uuid, uuid, bigint, bigint, integer) is
+  'Returns bounded journal pages under caller-supplied fixed head and seal watermarks; reconnects and concurrent readers can replay any complete prefix without per-participant cursors.';
 
 -- Accepts a complete health vector only for a sealed, replayable journal prefix.
 create or replace function public.recovery_wave_report_health_locked(
