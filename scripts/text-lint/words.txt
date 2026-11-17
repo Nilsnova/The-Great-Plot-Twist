@@ -2797,3 +2797,13 @@ catalog
 discount
 fully
 upgrading
+
+# WALL-05: reviewed American English for grid quotes and connected wall construction.
+placement
+construction
+perimeter
+piece
+pieces
+square
+squares
+quote
