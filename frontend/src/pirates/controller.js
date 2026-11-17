@@ -62,12 +62,12 @@ import { createReplayDriver, createWaveReplay, fetchSealedEvents } from './wave-
 import { commandForJournal, MAX_INPUT_BATCH, MAX_INPUT_BATCH_BYTES, RECOVERY_FLUSH_MS, RECOVERY_POLL_MS, simulationInputFromJournal } from './recovery-transport.js';
 import { makeActionUid } from '../screens/islet/action-uid.js';
 
-const MAX_TICKS_PER_FRAME = 600;
+const MAX_TICKS_PER_FRAME = 600;      // a friend joining late catches up 30 s of wave per frame
 // Recovery waves (structure_recovery) may only run ticks the server has sealed, and the seal moves on
 // each poll (RECOVERY_POLL_MS plus the round trip). Run them this far behind real time, like a video
 // buffer, so ships and shots move every frame instead of freezing and jumping after each poll (#324).
 // Only when ticks run changes, never what they compute.
-export const RECOVERY_PLAYOUT_MS = 750;      // a friend joining late catches up 30 s of wave per frame
+export const RECOVERY_PLAYOUT_MS = 750;
 const SHOWN_LATE_SECONDS = 1;         // events older than this (catching up) are not drawn or heard
 const canonicalJson = value => Array.isArray(value) ? `[${value.map(canonicalJson).join(',')}]`
   : value && typeof value === 'object' ? `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${canonicalJson(value[key])}`).join(',')}}`
