@@ -10,7 +10,9 @@ export async function capturePerimeterWave(page, out, width, height) {
   const bell = page.locator('.island-card-bell[open]'); await bell.waitFor();
   await bell.getByRole('button', {name: 'Ring the bell', exact: true}).click();
   await page.waitForFunction(() => window.__island.waves.island?.wave?.renderer && !window.__island.island.managing);
-  const initial = await inspect(page); assert.equal(initial.perimeterDemo.version, 1);
+  const initial = await inspect(page);
+  assert.ok(initial.perimeterDemo, 'normal bell must forward the accepted frozen perimeter demo to the actual controller');
+  assert.equal(initial.perimeterDemo.version, 1);
   assert.equal(initial.perimeterDemo.pathing, true); assert.equal(initial.perimeterDemo.perimeterWalls, true);
   assert.equal(initial.perimeterDemo.defenses.filter(w => w.kind === 'wall').length, 102);
   assert.equal(initial.recoveryVersion, 0, 'explicit legacy local demo, never production recovery proof');
