@@ -37,7 +37,7 @@
 //   await api.leaveGame({code});                 // POST /api/games/leave          (409 host_cannot_leave)
 // In a fresh world your captain ("me") is already a member of the friends' games (ISLE-FR3ND), so Continue
 // shows two games; another captain joins first, as on the server.
-// Waves (§1, §4): numbers to 100, every 5th a boss wave (`boss: true`, loot × 2), houses pay by level, and the
+// Waves (§1, §4): numbers to 100, every 5th a boss wave (`boss: true`, loot × 3, wave 40 × 5), houses pay by level, and the
 // next bell carries on after a win and restarts at best − 2 (at least 1) after a loss (`nextWave`).
 // Spot ids: the island's tower spots are cannon_1…cannon_7; tower_s1…tower_s7 are accepted as the same spots.
 // The locks of §9 (409 locked) follow your best wave (your island or a Pirate Point wave you fought in):
@@ -72,7 +72,10 @@ export const ISLAND_RULES = Object.freeze({
     'cannon_5', 'cannon_6', 'cannon_7', 'tower_1', 'house_1', 'house_2', 'wall_7', 'wall_8', 'wall_9', 'wall_10', 'wall_11', 'wall_12']),
   pointSpots: Object.freeze(['pp_wall_1', 'pp_wall_2', 'pp_wall_3', 'pp_wall_4', 'pp_tower_1', 'pp_tower_2', 'pp_tower_3', 'pp_tower_4', 'pp_tower_5', 'pp_tower_6']),
   // lateFrom, latePerWave: from wave lateFrom on, each wave adds latePerWave instead of perWave (islands.json).
-  loot: Object.freeze({ base: 10, perWave: 5, perHouse: 5, piratePointBase: 20, lateFrom: 30, latePerWave: 2 }),
+  // bossMultiplier, bossMultiplierByWave, raiseFrom, raiseTimes: the server's named loot values (islands.json,
+  // fix/playtest-1117): a boss wave 3 times, the boss wave 40 5 times, island waves above 40 half again.
+  loot: Object.freeze({ base: 10, perWave: 5, perHouse: 5, piratePointBase: 20, lateFrom: 30, latePerWave: 2,
+    bossMultiplier: 3, bossMultiplierByWave: Object.freeze({ 40: 5 }), raiseFrom: 40, raiseTimes: 1.5 }),
   waves: Object.freeze({ countdownSeconds: 10, minimumSeconds: 10, maximumSeconds: 900, highestWave: 100 }),
   // GAME-V3.md §4 and §5: the wreck's repair and the Tech hub's research (the server's numbers, islands.json).
   wreck: Object.freeze({ goal: 500, gifts: Object.freeze([25, 100]) }),
@@ -180,10 +183,13 @@ export function readIslandCode(text) {
 export const wantsFakeIslands = (search = '') => new URLSearchParams(search).get('islands') === 'fake';
 export const islandRoom = code => `live:place:isle_${readIslandCode(code)?.toLowerCase()}:1`;
 export function lootFor(wave, houses, piratePoint = false) {
-  const { base, perWave, perHouse, piratePointBase, lateFrom, latePerWave } = ISLAND_RULES.loot;
+  const { base, perWave, perHouse, piratePointBase, lateFrom, latePerWave, raiseFrom, raiseTimes } = ISLAND_RULES.loot;
   const waves = perWave * Math.min(wave, lateFrom) + latePerWave * Math.max(0, wave - lateFrom);
-  return piratePoint ? piratePointBase + waves : base + waves + perHouse * houses;
+  if (piratePoint) return piratePointBase + waves;
+  const normal = base + waves + perHouse * houses;
+  return wave > raiseFrom ? Math.floor(normal * raiseTimes) : normal;
 }
+export const bossMultiplierFor = wave => ISLAND_RULES.loot.bossMultiplierByWave[wave] ?? ISLAND_RULES.loot.bossMultiplier;
 // D039 (wall_health.py): the price of a whole rebuild (30% of the wall's levels, rounded up: 3, 9, 21, 45, 93) and of a
 // Repair (the missing share of it, rounded up, at least 1); the finish's walls body ({wall_N: 0..100}, at most 50).
 const WALL_RECOVERY_MS = 600 * 1000;
@@ -889,13 +895,13 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
         refuse(409, 'wave_too_early', `The wave is not over yet. Try again in ${wait} seconds.`, wait);
       }
       const late = elapsed > ISLAND_RULES.waves.maximumSeconds;
-      // §4: houses pay 5 a level (5, 10, 15), a boss wave pays double.
+      // §4: houses pay 5 a level (5, 10, 15), a boss wave pays bossMultiplierFor(wave) times (3; wave 40: 5).
       const houseBonus = run.island ? [...run.island.built].filter(id => id.startsWith('house_'))
         .reduce((sum, id) => sum + 5 * (run.island.levels?.get(id) ?? 1), 0) : 0;
       // v3 waves: the bonuses the wave allows (wave_events.py): the galleon on a galleon wave, a finisher on a boss wave.
       const allowed = run.island ? [...new Set(bonuses ?? [])].filter(kind => (kind === 'galleon' ? eventFor(run.wave, run.seed) === 'treasure_galleon' : isBoss(run))) : [];
       const extra = allowed.reduce((sum, kind) => sum + bonusLoot(kind, run.wave), 0);
-      const loot = survived && !late ? (lootFor(run.wave, 0, !run.island) + houseBonus + extra) * (isBoss(run) ? 2 : 1) : 0;
+      const loot = survived && !late ? (lootFor(run.wave, 0, !run.island) + houseBonus + extra) * (isBoss(run) ? bossMultiplierFor(run.wave) : 1) : 0;
       if (survived && !late && !run.island) player.pointBest = Math.max(player.pointBest ?? 0, run.wave);
       if (survived && !late) player.wonBest = Math.max(player.wonBest ?? 0, run.wave); // won_wave_best: any wave you fought and won
       if (!run.finishedAt) { run.finishedAt = nowMs(); run.expired = late; }

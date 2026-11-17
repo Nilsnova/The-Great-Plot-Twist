@@ -440,8 +440,10 @@ async def post_finish(
     )
     # D039: the first finish of an island wave keeps its walls' health for the next wave. The
     # finish above is already paid, so this is best effort: a failure is logged, never a 5xx.
+    # The owner's rule (fix/playtest-1117): a finished wave leaves every wall of the island whole;
+    # the first finish records them all at 100 % (clearing damage left from before the rule).
     if is_enabled("wall_recovery", settings.flags):
-        await wall_repair.record_after_finish(admin, player.id, body.waveId, body.walls)
+        await wall_repair.record_after_finish(admin, player.id, body.waveId, body.walls, whole=True)
     return FinishResponse(
         loot=finished.loot,
         coins=finished.coins,

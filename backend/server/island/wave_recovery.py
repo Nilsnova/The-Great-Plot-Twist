@@ -14,7 +14,7 @@ from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, Strict
 from server.errors import ApiError
 from server.island import layout, service, store, wall_health, wave_events
 from server.island import rules as island_rules
-from server.island.catalogue import IslandCatalogue, Weather
+from server.island.catalogue import RESEARCH_CAPSTONES, IslandCatalogue, Weather
 from server.island.store import Island, IslandRow
 from server.island.structure_recovery_manifest import (
     MANIFEST_FILE,
@@ -124,11 +124,12 @@ _COMMAND_FIELDS: dict[str, set[str]] = {
         "z",
         "ax",
         "az",
+        "seen",
         "level",
         "skills",
         "weapon",
     },
-    "captain_strike": {"type", "targetId", "x", "z", "level", "skills"},
+    "captain_strike": {"type", "targetId", "x", "z", "seen", "level", "skills"},
     "captain_move": {"type", "x", "z", "colour", "away"},
     "captain_revive": {"type", "targetId", "x", "z", "skills"},
     "finisher_ready": {"type", "shipId"},
@@ -192,6 +193,13 @@ def validate_command(command: dict[str, Any]) -> dict[str, Any]:
             "ax" in command and not (_number(command["ax"]) and _number(command["az"]))
         ):
             raise ApiError(422, "validation_error", "Captain aim is invalid.")
+    if "seen" in command and (
+        not isinstance(command["seen"], int)
+        or isinstance(command["seen"], bool)
+        or not 0 <= command["seen"] <= 18_000
+    ):
+        # The tick the shooter saw (fix/playtest-1117): reach is checked there, 2 s back at most.
+        raise ApiError(422, "validation_error", "The seen tick is invalid.")
     if kind == "captain_move":
         if "colour" in command and (
             not isinstance(command["colour"], int)
@@ -380,10 +388,24 @@ async def build_snapshot_template(
             "x": spot.x,
             "z": spot.z,
         }
-        if spot.spec is not None:
-            item["spec"] = spot.spec
+        # The defense in the legacy client's shape (frontend island/spots.js defenses()), so both
+        # wave systems fight the same island (fix/playtest-1117): a capstone counts only while it is
+        # the island's tier-3 pick, the tier-2 pick of the kind rides as `bonus`, and the upgrade
+        # tree is {a, b} (it was [a, b], which the sim's readTree read as no tree at all).
+        tier = view.campaign.tiers.get(spot.kind)
+        spec = spot.spec
+        if (
+            spec is not None
+            and spec in RESEARCH_CAPSTONES.get(spot.kind, ())
+            and (tier is None or tier.choice_3 != spec)
+        ):
+            spec = None
+        if spec is not None:
+            item["spec"] = spec
+        if tier is not None and tier.choice_2 is not None:
+            item["bonus"] = tier.choice_2
         if spot.tree is not None:
-            item["tree"] = list(spot.tree)
+            item["tree"] = {"a": spot.tree[0], "b": spot.tree[1]}
         defenses.append(item)
         if spot.kind in SUPPORTED_KINDS:
             nearby_workshops = sum(
@@ -395,7 +417,7 @@ async def build_snapshot_template(
                 and spot.z is not None
                 and (house.x - spot.x) ** 2 + (house.z - spot.z) ** 2 <= 10**2
             )
-            selected_wall_spec = spot.spec if spot.kind == "wall" else None
+            selected_wall_spec = spec if spot.kind == "wall" else None
             selected_wall_research = wall_research if spot.kind == "wall" else None
             max_hp = max_structure_hp(
                 spot.kind, spot.level, selected_wall_spec, selected_wall_research
@@ -514,8 +536,15 @@ async def read_owner_island(admin: SupabaseAdmin, owner: str) -> Island:
 
 
 async def append_inputs(
-    admin: SupabaseAdmin, player_id: str, wave_id: UUID, inputs: list[RecoveryInput]
+    admin: SupabaseAdmin,
+    player_id: str,
+    wave_id: UUID,
+    inputs: list[RecoveryInput],
+    *,
+    arsenal: bool = False,
 ) -> RecoveryInputResult:
+    """Append commands; `arsenal` (the flag) makes the journal carry the arsenal copy the shooter
+    carries on the defended island, the gun their own screen uses (20261118040000)."""
     body = [
         {
             "inputUid": item.inputUid,
@@ -530,7 +559,12 @@ async def append_inputs(
         raise ApiError(422, "validation_error", "The input batch is too large.")
     reply = await admin.call_function(
         "recovery_wave_inputs",
-        {"p_player_id": player_id, "p_wave_id": str(wave_id), "p_inputs": body},
+        {
+            "p_player_id": player_id,
+            "p_wave_id": str(wave_id),
+            "p_inputs": body,
+            "p_arsenal": arsenal,
+        },
     )
     _refusal(reply)
     if not isinstance(reply, dict) or reply.get("status") != "accepted":

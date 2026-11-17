@@ -56,6 +56,8 @@ export function refusalDelayMs(refusal, attempt = 0) {
 const dataOrRefusal = answer => successData(answer) ?? recoveryRefusal(answer);
 const thrownRefusal = () => recoveryRefusal(null);
 
+// The tick the shooter saw (fix/playtest-1117): the sim checks a blow's reach and a shot's range there.
+const seenOf = input => (Number.isInteger(input.seen) && input.seen >= 0 && input.seen <= MAX_TICK ? { seen: input.seen } : {});
 /** Reduce a local simulation action to an intent; the server adds actor identity and Captain stats. */
 export function commandForJournal(input) {
   if (!isObject(input) || typeof input.type !== 'string') return null;
@@ -66,10 +68,10 @@ export function commandForJournal(input) {
   }
   if (type === 'captain_shot' && (input.targetId == null || isWireId(input.targetId)) && isCoordinate(input.x) && isCoordinate(input.z)) {
     return { type, targetId: input.targetId ?? null, x: input.x, z: input.z,
-      ...(isCoordinate(input.ax) && isCoordinate(input.az) ? { ax: input.ax, az: input.az } : {}) };
+      ...(isCoordinate(input.ax) && isCoordinate(input.az) ? { ax: input.ax, az: input.az } : {}), ...seenOf(input) };
   }
   if (type === 'captain_strike' && isWireId(input.targetId) && isCoordinate(input.x) && isCoordinate(input.z)) {
-    return { type, targetId: input.targetId, x: input.x, z: input.z };
+    return { type, targetId: input.targetId, x: input.x, z: input.z, ...seenOf(input) };
   }
   if (type === 'captain_move' && isCoordinate(input.x) && isCoordinate(input.z)) {
     return { type, x: input.x, z: input.z,

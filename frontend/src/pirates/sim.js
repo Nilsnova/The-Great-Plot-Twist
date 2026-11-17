@@ -510,6 +510,7 @@ export function createWave(options = {}) {
   const C = CONFIG, B = C.boarding, random = createRandom(options?.seed);
   // Recovery v1 pauses every free structure repair path. An unknown version pair fails closed.
   const recoveryPolicy = readRecoveryPolicy(options);
+  const REWIND_TICKS = 40, seenAt = new Map(); // recovery waves: where each ship and boarder was, per tick
   const freeStructureRepair = canFreeStructureRepair(recoveryPolicy);
   const captainStatsFor = (level, skills, weapon) => captainStats(level, skills, weapon,
     { recoveryVersion: recoveryPolicy === 'structure-recovery-v1' ? 1 : 0 });
@@ -893,7 +894,8 @@ export function createWave(options = {}) {
       return;
     }
     // single and pierce: the ship or boarder named, in range.
-    if (!named || distance(x, z, named.x, named.z) > stats.range) return;
+    const seen = named ? seenPlace(input, named) : null;
+    if (!named || distance(x, z, seen.x, seen.z) > stats.range) return;
     captains.set(by, t);
     const impactAt = shotAt(named);
     hit(named, impactAt);
@@ -918,6 +920,25 @@ export function createWave(options = {}) {
   // slack: boarders walk on during its lead), all at full damage, with its own short reload. The named boarder
   // (else the nearest) is the one the swing faces. The striker's skills scale it (captain-stats.js): damage ×
   // strikeMultiplier (Cutlass), reload × strikeReloadMultiplier (Second wind), radius + 1 with Sweep. No dice.
+  // Recovery waves (fix/playtest-1117): a captain's command lands about a second after the shooter saw the
+  // target, which has walked on meanwhile, so a blow at a boarder that stood in reach on screen missed. A shot or
+  // blow carries `seen` (the tick the shooter saw); its reach and range are checked against the target's place
+  // at that tick, at most REWIND_TICKS (2 s) back, the same on every replay. Damage still lands now; no other
+  // check changes (the reload, standing, the shooter's own place), so no client can claim more than a hit it
+  // could have made in the last 2 s. Other waves ignore `seen`.
+  function recordSeen() {
+    if (recoveryPolicy !== 'structure-recovery-v1') return;
+    const at = new Map();
+    for (const item of boarders) at.set(item.id, { x: item.x, z: item.z });
+    for (const item of ships) at.set(item.id, { x: item.x, z: item.z });
+    seenAt.set(ticks, at);
+    for (const key of seenAt.keys()) if (key < ticks - REWIND_TICKS) seenAt.delete(key);
+  }
+  function seenPlace(input, target) {
+    if (recoveryPolicy !== 'structure-recovery-v1' || !Number.isInteger(input.seen) || input.seen > ticks
+      || input.seen < ticks - REWIND_TICKS) return target;
+    return seenAt.get(input.seen)?.get(target.id) ?? target;
+  }
   function captainStrike(input, events) {
     const by = captainBy(input);
     if (!by || !finite(input.x) || !finite(input.z) || !standing(by, input)) return;
@@ -926,7 +947,7 @@ export function createWave(options = {}) {
     const reload = round2(blade.reload * stats.strikeReloadMultiplier);
     if (t - (blades.get(by) ?? -Infinity) < reload - 1e-9) return;
     // Everyone in the circle, chosen before a blow lands (a boarder killed first never shifts the rest); in landing order.
-    const hit = boarders.filter(boarder => distance(input.x, input.z, boarder.x, boarder.z) <= reach + 1e-9);
+    const hit = boarders.filter(boarder => { const at = seenPlace(input, boarder); return distance(input.x, input.z, at.x, at.z) <= reach + 1e-9; });
     if (!hit.length) return;
     let target = hit.find(boarder => boarder.id === input.targetId) ?? null;
     if (!target) {
@@ -1520,6 +1541,7 @@ export function createWave(options = {}) {
         events.push({ type: 'militia_out', t: 0, militiaId: id, houseId: null, guard: true, hp, x, z });
       }
     }
+    recordSeen();
     for (const input of queued) applyInput(input, events);
     queued = [];
     if (done) return;

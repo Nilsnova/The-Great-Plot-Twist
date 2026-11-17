@@ -115,7 +115,7 @@ def test_event_page_requires_bounded_paired_frontier(query):
 def test_input_route_returns_accepted_events_as_direct_response(monkeypatch):
     world = World()
 
-    async def append(admin, player_id, wave_id, inputs):
+    async def append(admin, player_id, wave_id, inputs, *, arsenal=False):
         assert player_id
         assert wave_id == WAVE
         assert inputs[0].command == {"type": "captain_move", "x": 1, "z": 2}

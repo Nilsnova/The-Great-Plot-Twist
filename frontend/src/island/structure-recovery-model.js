@@ -88,6 +88,8 @@ function buildStructureRecoveryView(state, structure, options = {}) {
   }
 
   const reserved = state.repairWindow === 'reserved_wave';
+  // The owner's rule (fix/playtest-1117): the server makes every structure whole when a wave ends, so a damaged
+  // card between waves only shows for an island whose last wave closed before that rule (its next close fixes it).
   const fixedPrice = Number.isSafeInteger(structure.fixedPrice) && structure.fixedPrice > 0
     ? structure.fixedPrice
     : null;
@@ -123,9 +125,9 @@ function buildStructureRecoveryView(state, structure, options = {}) {
     repairReasonLabel: fundsReason,
     quotedPrice: fixedPrice,
     freeRepairLabel,
-    helperLabel: reserved ? null : 'Free repair pauses when the bell rings. This estimate counts only time between waves.',
+    helperLabel: reserved ? null : 'Every building is repaired when a wave ends.',
     automaticRepairPaused: reserved,
-    statusLabel: reserved ? 'Automatic repair paused during waves' : null,
+    statusLabel: reserved ? 'Repaired for free when the wave ends' : null,
     remainingPaidUses: remainingUses,
     remainingUsesLabel: reserved && remainingUses !== null
       ? `${remainingUses === 0 ? 'No' : remainingUses} Repair now use${remainingUses === 1 ? '' : 's'} left this wave`

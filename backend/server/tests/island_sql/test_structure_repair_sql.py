@@ -728,7 +728,8 @@ def test_reserved_quote_crossing_finish_or_expiry_is_stale_without_charge(databa
 
     assert refused["reason"] == "stale_recovery_quote"
     assert balance(database, OWNER) == 90
-    assert hp(database) == (500_000, 0)
+    # fix/playtest-1117 (owner): the finish or expiry made every structure whole, unpaid.
+    assert hp(database) == (1_000_000, 0)
     assert (
         call(
             database,
@@ -737,6 +738,10 @@ def test_reserved_quote_crossing_finish_or_expiry_is_stale_without_charge(databa
         )
         == 0
     )
+    # Nothing left to pay for between waves: Repair now is refused intact, nothing is charged.
+    between = repair(database, epoch=epoch, action_uid="repair-0002")
+    assert between["reason"] == "intact"
+    assert balance(database, OWNER) == 90
 
 
 def test_receipt_failure_rolls_back_wallet_health_quota_and_event(database):

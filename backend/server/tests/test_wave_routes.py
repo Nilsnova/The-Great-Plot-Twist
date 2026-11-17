@@ -302,7 +302,7 @@ def test_a_finished_wave_answers_the_loot_the_coins_the_best_wave_and_the_flags(
         "p_loot_per_house": 10,
         "p_point_loot_base": 40,
         "p_boss_every": 5,
-        "p_boss_multiplier": 2,
+        "p_boss_multiplier": 3,
         "p_restart_back": 2,
     }
 
