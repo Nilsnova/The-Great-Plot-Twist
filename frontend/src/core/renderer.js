@@ -10,7 +10,7 @@ export function createRenderer(container) {
   renderer.setClearColor('#2a93b5'); renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.NoToneMapping;
   const canvas = renderer.domElement;
-  canvas.setAttribute('aria-label', 'Saltreach Isles. Use WASD to walk, E to interact, M for the sea chart, and the wheel to zoom.');
+  canvas.setAttribute('aria-label', 'Saltreach Isles. Use WASD to walk, E to interact, M for the sea chart, the wheel to zoom, and hold Tab to see the whole island.');
   canvas.tabIndex = 0; canvas.style.imageRendering = 'auto'; container.append(canvas);
   let quality = 'high', currentCamera = null, dimensions = '';
   const budget = createFrameBudget();

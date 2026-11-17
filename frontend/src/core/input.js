@@ -12,6 +12,10 @@ export function createInput(canvas) {
     const editing = event.target instanceof HTMLElement && event.target.closest('input, select, button, textarea, [contenteditable=true]');
     if (editing && event.code !== 'Escape') return;
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(event.code)) event.preventDefault();
+    // Hold Tab in the game view: the camera shows the whole island (player/camera.js). Only from the game
+    // itself (the canvas or the page), so Tab still moves between buttons and inside open cards, and
+    // Shift+Tab still leaves the game view for the HUD buttons.
+    if (event.code === 'Tab' && !event.shiftKey && (event.target === canvas || event.target === globalThis.document?.body)) event.preventDefault();
     if (!held.has(event.code)) pressed.add(event.code);
     held.add(event.code);
   });
