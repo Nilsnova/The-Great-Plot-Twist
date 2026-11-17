@@ -239,6 +239,7 @@ class FakeIslandDatabase:
         self.paid_replies: dict[str, dict | httpx.Response] = {}
         self.recovery_state_reply: dict | httpx.Response = {"status": "missing"}
         self.recovery_policy_version = 0
+        self.recovery_policy_revision = 0
         self.repair_reply: dict | httpx.Response = {
             "status": "refused",
             "reason": "recovery_unavailable",
@@ -452,6 +453,7 @@ class FakeIslandDatabase:
                 {
                     "recovery_version": self.recovery_policy_version,
                     "wave_protocol": 2 if self.recovery_policy_version == 1 else 1,
+                    "revision": self.recovery_policy_revision,
                 }
             ],
         )

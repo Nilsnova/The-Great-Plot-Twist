@@ -115,7 +115,7 @@ from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt
 
 from server.errors import ApiError
 from server.flags import is_enabled
-from server.island import wall_repair, wave_rules, waves
+from server.island import service, wall_repair, wave_rules, waves
 from server.island import wave_recovery as recovery
 from server.island.service import IslandCatalogueDep
 from server.island.wave_weather import wave_weather
@@ -304,16 +304,18 @@ async def post_start(
     seed = randbelow(waves.SEED_LIMIT)
     admit_v1 = is_enabled("structure_recovery", settings.flags)
     template = None
-    if owner is not None and body.waveProtocol == 2 and admit_v1:
-        island = await recovery.read_owner_island(admin, owner)
-        template = await recovery.build_snapshot_template(
-            admin,
-            catalogue,
-            island,
-            weather,
-            seed,
-            wave_rules.wanted_rules(settings),
-        )
+    if owner is not None and body.waveProtocol == 2:
+        persisted_version = await service.read_recovery_version(admin, owner)
+        if admit_v1 or persisted_version == 1:
+            island = await recovery.read_owner_island(admin, owner)
+            template = await recovery.build_snapshot_template(
+                admin,
+                catalogue,
+                island,
+                weather,
+                seed,
+                wave_rules.wanted_rules(settings),
+            )
     started = await waves.start_protocol2(
         admin,
         catalogue,
