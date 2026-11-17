@@ -364,6 +364,98 @@ def test_coop_member_without_wave_participant_token_can_pay_and_event_has_no_pri
     )
 
 
+def test_reserved_repair_event_max_hp_comes_from_the_frozen_wave_snapshot(database):
+    epoch, wave_id = seed_recovery(database, active=True)
+    assert hp(database) == (500_000, 0)
+    as_server(database)
+    database.execute(
+        "update public.island_structure_health set max_hp=120 "
+        "where island_owner=%s and spot='wall_1'",
+        (OWNER,),
+    )
+
+    done = repair(
+        database,
+        epoch=epoch,
+        wave_id=wave_id,
+        window="reserved_wave",
+    )
+
+    assert done["status"] == "done"
+    assert done["receipt"]["chargedPrice"] == 10
+    assert done["event"]["payload"]["maxHP"] == MAX_HP["wall"]
+    assert hp(database) == (1_000_000, 1)
+    assert (
+        call(
+            database,
+            "select max_hp from public.island_structure_health "
+            "where island_owner=%s and spot='wall_1'",
+            OWNER,
+        )
+        == 120
+    )
+
+
+def test_post_bell_target_is_intact_then_unsupported_damage_is_refused_without_charge(database):
+    epoch, wave_id = seed_recovery(database, active=True)
+    build(database, OWNER, "wall_2", "wall", "postbell-0001", coins=10)
+    target_instance = instance(database, "wall_2")
+    as_server(database)
+    database.execute(
+        "insert into public.island_structure_health "
+        "(island_owner,spot,instance_id,building_kind,level,hp_units,max_hp,config_version,"
+        "settled_at,rate_numerator,rate_denominator,repair_seq) "
+        "values (%s,'wall_2',%s,'wall',1,1000000,60,1,clock_timestamp(),0,1,0)",
+        (OWNER, target_instance),
+    )
+    coins = balance(database, OWNER)
+
+    intact = repair(
+        database,
+        spot="wall_2",
+        action_uid="repair-0008",
+        epoch=epoch,
+        wave_id=wave_id,
+        window="reserved_wave",
+        instance_id=target_instance,
+    )
+    assert intact["reason"] == "intact"
+    as_server(database)
+    database.execute(
+        "update public.island_structure_health set hp_units=500000 "
+        "where island_owner=%s and spot='wall_2'",
+        (OWNER,),
+    )
+    refused = repair(
+        database,
+        spot="wall_2",
+        action_uid="repair-0009",
+        epoch=epoch,
+        wave_id=wave_id,
+        window="reserved_wave",
+        instance_id=target_instance,
+    )
+
+    assert refused["reason"] == "stale_recovery_quote"
+    assert balance(database, OWNER) == coins
+    assert hp(database, "wall_2") == (500_000, 0)
+    assert (
+        call(
+            database,
+            "select paid_used from public.recovery_wave_states where wave_id=%s",
+            wave_id,
+        )
+        == 0
+    )
+    assert (
+        call(
+            database,
+            "select count(*) from public.structure_repair_receipts where spot='wall_2'",
+        )
+        == 0
+    )
+
+
 def test_paid_repair_event_includes_only_the_server_mapped_participant_token(database):
     epoch, wave_id = seed_recovery(database, active=True)
     token = UUID(int=969)
