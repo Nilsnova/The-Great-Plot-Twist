@@ -297,6 +297,14 @@ def test_historical_paid_receipts_do_not_reconstruct_or_heal_the_replacement(dat
     before = balance(database, OWNER)
     assert call(database, BUILD_SQL, *original_build)["receipt"]["repeat"] is True
     assert call(database, REPAIR_SQL, *repair_args)["receipt"] == paid["receipt"]
+    refunded = call(
+        database,
+        "select public.island_demolish(%s,%s,'wall_13','v1-demolish-001',%s::jsonb)",
+        OWNER,
+        OWNER,
+        json.dumps(rules.price_table(catalogue)),
+    )
+    assert refunded["repeat"] is True
     assert balance(database, OWNER) == before
     assert health(database, "wall_13")[0:2] == (current_instance, 250000)
     assert history(database) == old
