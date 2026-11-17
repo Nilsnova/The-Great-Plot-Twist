@@ -29,9 +29,9 @@ describe('exact trusted wall preview policy', () => {
     expect(checkMove(id,x,z,placed,policy)).toMatchObject({ok:false,code});
   });
   it('uses real paid coordinates for new occupancy and allows edge sharing', () => {
-    const at=positionsOf([{id:'wall_13',kind:'wall',built:true,level:1,x:-4,z:-9}]);
-    expect(checkMove('wall_128',-3.5,-9,at,policy)).toMatchObject({code:'place_taken'});
-    expect(checkMove('wall_128',-2,-9,at,policy)).toEqual({ok:true});
+    const at=positionsOf([{id:'wall_13',kind:'wall',built:true,level:1,x:-4,z:-17.5}]);
+    expect(checkMove('wall_128',-3.5,-17.5,at,policy)).toMatchObject({code:'place_taken'});
+    expect(checkMove('wall_128',-2,-17.5,at,policy)).toEqual({ok:true});
     expect(positionsOf([{id:'wall_128',kind:'wall',built:false}]).wall_128).toBeUndefined();
   });
 });
@@ -40,9 +40,9 @@ describe('Move uses its current response metadata and context', () => {
   it('previews a paid new wall off legacy lanes and uses a truthful hint', async () => {
     const api={move:vi.fn(async()=>({ok:true,data:{}}))},render=vi.fn();
     const mode=createMoveMode({api,render,layout:()=>policy,spots:()=>[{id:'wall_13',kind:'wall',built:true,x:4,z:-19.5}]});
-    expect(mode.start('wall_13')).toBe(true); mode.tap(-4,-9);
+    expect(mode.start('wall_13')).toBe(true); mode.tap(-4,-17.5);
     expect(mode.state.ok).toBe(true); expect(render.mock.lastCall[0].line).not.toContain('pirate path');
-    await mode.confirm(); expect(api.move).toHaveBeenCalledWith({spot:'wall_13',x:-4,z:-9,code:null});
+    await mode.confirm(); expect(api.move).toHaveBeenCalledWith({spot:'wall_13',x:-4,z:-17.5,code:null});
   });
   it('never starts default-less unbuilt inventory or trusts a cohort row without the policy', () => {
     const rows=[{id:'wall_128',kind:'wall',built:false}];
@@ -61,10 +61,10 @@ describe('Move uses its current response metadata and context', () => {
 
 describe('unoffered D060 occupancy stays protected', () => {
   it('reserves actual moved hidden tower coordinates without creating a purchase offer', () => {
-    const hidden = {...policy, reservedPositions: {...policy.reservedPositions, cannon_8: {x:-4,z:-9}}};
+    const hidden = {...policy, reservedPositions: {...policy.reservedPositions, cannon_8: {x:-4,z:-17.5}}};
     expect(positionsOf().cannon_8).toBeUndefined();
-    expect(checkMove('wall_13',-4,-9,placed,hidden)).toMatchObject({code:'place_taken'});
-    expect(checkMove('wall_13',-2,-9,placed,hidden)).toEqual({ok:true});
+    expect(checkMove('wall_13',-4,-17.5,placed,hidden)).toMatchObject({code:'place_taken'});
+    expect(checkMove('wall_13',-2,-17.5,placed,hidden)).toEqual({ok:true});
   });
   it.each([undefined,null,[],{}, {cannon_8:{x:NaN,z:0}}, {unknown:{x:0,z:0}}])('fails closed when missing hidden coordinates cannot be read: %j', reservedPositions => {
     expect(checkMove('wall_13',4,-19.5,placed,{...policy,reservedPositions})).toMatchObject({code:'layout_unavailable'});
@@ -72,6 +72,6 @@ describe('unoffered D060 occupancy stays protected', () => {
   it('accepts an empty reservation map when all four sites are already offered at actual positions', () => {
     const all={...placed,...policy.reservedPositions};
     expect(checkMove('wall_13',4,-19.5,all,{...policy,reservedPositions:{}})).toEqual({ok:true});
-    expect(checkMove('wall_13',4,-19.5,all,{...policy,reservedPositions:{cannon_8:{x:-4,z:-9}}})).toMatchObject({code:'layout_unavailable'});
+    expect(checkMove('wall_13',4,-19.5,all,{...policy,reservedPositions:{cannon_8:{x:-4,z:-17.5}}})).toMatchObject({code:'layout_unavailable'});
   });
 });
