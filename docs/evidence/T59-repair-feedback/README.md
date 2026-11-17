@@ -111,6 +111,18 @@ cd frontend && ./node_modules/.bin/vitest run --maxWorkers=1 tests/island/struct
 
 The capture command passed its selected browser regression (1 passed; 9 skipped by the test-name filter). The focused nine-file suite passed 103 tests. These screenshots and checks use a local fake-island transport; they do not demonstrate live service, wallet, database, multiplayer, activation or deployment behavior.
 
+### Independent policy-fallback verification
+
+On 17 Nov 2026, the two new regression cases were independently rerun on source revision `111a8b4a`:
+
+```sh
+# frontend/
+./node_modules/.bin/vitest run --maxWorkers=1 tests/island/structure-recovery-policy.test.js -t 'does not downgrade a persisted|keeps a previously discovered'
+npm run build
+```
+
+Both selected cases passed in 5.97 seconds; the other eight cases were excluded by the test-name filter. The build passed in 1.45 seconds and the spoiler guard passed across 241 text files. The nine-file 103-test result above is the worker's focused verification; these independent results are separate. The desktop Wall and phone Cannon crops were inspected: error text and disabled upgrade are legible, and no legacy Repair action is shown. The source change preserves cached world damage while blocking repair/upgrade decisions until canonical health is ready. These remain local component/fixture checks, not authenticated two-client or live server evidence.
+
 ### Independent follow-up verification
 
 On 17 Nov 2026, `npm exec vitest -- run tests/island/structure-recovery-model.test.js tests/island/structure-recovery-card-dom.test.js --maxWorkers=1` from `frontend/` passed 25 tests across 2 files. `npm run build` passed in 1.12 seconds and the spoiler guard passed across 241 text files. The corrected desktop/phone captures were inspected: Wall level-2 upgrade is 20 coins and Harpoon level-2 upgrade is 80 coins, with the existing current-level repair prices unchanged. The bell-pause explanation wraps legibly. These remain offline fixture screenshots and do not prove API/payment/database/multiplayer behavior.
