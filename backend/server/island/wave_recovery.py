@@ -131,6 +131,15 @@ _COMMAND_FIELDS: dict[str, set[str]] = {
     "finisher_ready": {"type", "shipId"},
     "finisher_input": {"type", "from", "marks", "easy"},
 }
+_REQUIRED_COMMAND_FIELDS = {
+    "fire": {"cannonId", "targetId"},
+    "captain_shot": {"targetId", "x", "z"},
+    "captain_strike": {"targetId", "x", "z"},
+    "captain_move": {"x", "z"},
+    "captain_revive": {"targetId", "x", "z"},
+    "finisher_ready": {"shipId"},
+    "finisher_input": {"from", "marks"},
+}
 UUID_TEXT = re.compile(r"^[0-9a-fA-F-]{36}$")
 
 
@@ -144,8 +153,18 @@ def validate_command(command: dict[str, Any]) -> dict[str, Any]:
         raise ApiError(422, "validation_error", "A wave command needs a known type.")
     kind = command["type"]
     allowed = _COMMAND_FIELDS.get(kind)
-    if allowed is None or set(command) - allowed:
+    if (
+        allowed is None
+        or set(command) - allowed
+        or not _REQUIRED_COMMAND_FIELDS.get(kind, {"type"}) <= set(command)
+    ):
         raise ApiError(422, "validation_error", "The wave command contains unknown fields.")
+    try:
+        raw_client = json.dumps(command, separators=(",", ":"), ensure_ascii=True).encode()
+    except (TypeError, ValueError) as error:
+        raise ApiError(422, "validation_error", "The wave command is invalid.") from error
+    if len(raw_client) > MAX_BODY_BYTES:
+        raise ApiError(422, "validation_error", "The wave command is too large.")
     for key in ("cannonId", "wallId", "shipId"):
         if key in command and (not isinstance(command[key], str) or not ID.fullmatch(command[key])):
             raise ApiError(422, "validation_error", f"The {key} is invalid.")
@@ -190,6 +209,7 @@ def validate_command(command: dict[str, Any]) -> dict[str, Any]:
             or any(
                 not isinstance(x, int) or isinstance(x, bool) or not -1 <= x <= 100 for x in marks
             )
+            or ("easy" in command and not isinstance(command["easy"], bool))
         ):
             raise ApiError(422, "validation_error", "Finisher samples are invalid.")
     # Existing clients may send Captain stats beside an action. Keep

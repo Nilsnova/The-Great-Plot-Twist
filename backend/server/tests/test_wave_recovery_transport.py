@@ -36,6 +36,23 @@ def test_v2_captain_stats_are_removed_from_client_command():
     }
 
 
+def test_v2_rejects_malformed_required_fields_and_unbounded_untrusted_stats():
+    with pytest.raises(ApiError):
+        validate_command({"type": "fire", "targetId": "ship_1"})
+    with pytest.raises(ApiError):
+        validate_command({"type": "finisher_input", "from": 1, "marks": [1], "easy": 1})
+    with pytest.raises(ApiError):
+        validate_command(
+            {
+                "type": "captain_shot",
+                "targetId": "ship_1",
+                "x": 0,
+                "z": 0,
+                "skills": ["legacy"] * 5_000,
+            }
+        )
+
+
 def test_captain_revive_accepts_uuid_gameplay_token():
     target = "5a3d1d79-0d5c-4cd6-bb55-b48294b47511"
     command = {"type": "captain_revive", "targetId": target, "x": 1, "z": 2}
