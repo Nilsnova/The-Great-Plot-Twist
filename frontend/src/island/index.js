@@ -589,7 +589,12 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       recoveryPollTimer = null;
       recoveryPollCode = null;
       if (disposed || target()?.code !== askedCode || !recoveryControlsOn()) return;
-      await readStructureRecovery();
+      // Nobody looks (a hidden tab), or a wave runs with no card that shows structure health open (its
+      // replay is the live HP; the wave's start and finish and every card opening read on their own):
+      // skip this read, keep the timer.
+      const unseen = globalThis.document?.visibilityState === 'hidden'
+        || (battle && !waveOver && !(ui.open === 'build' && openSpot) && !['bell', 'captain', 'tech'].includes(ui.open));
+      if (!unseen) await readStructureRecovery();
       scheduleRecoveryPoll();
     }, 5000);
   }
