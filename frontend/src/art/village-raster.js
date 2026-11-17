@@ -62,7 +62,9 @@ export function collectRasterFrames(families) {
         || x + w > sheet.width || y + h > sheet.height) throw new Error(`Invalid world-art frame: ${id}`);
     const foot = frame.sourceFoot ?? [w / 2, h * (1 - anchor / lh)];
     if (!foot.every(Number.isFinite) || foot.length !== 2 || foot[0] < 0 || foot[0] > w || foot[1] < 0 || foot[1] > h) throw new Error(`Invalid world-art foot: ${id}`);
-    result[id] = Object.freeze({...frame, rect: Object.freeze([...frame.rect]), logical: Object.freeze([...frame.logical]), sourceFoot: Object.freeze([...foot]), sheet: Object.freeze({...sheet})});
+    const extents = [foot[0], foot[1], w - foot[0], h - foot[1]], bounds = frame.fitBounds ?? extents;
+    if (!Array.isArray(bounds) || bounds.length !== 4 || !bounds.every((n, i) => Number.isFinite(n) && n >= extents[i])) throw new Error(`Invalid world-art fit bounds: ${id}`);
+    result[id] = Object.freeze({...frame, rect: Object.freeze([...frame.rect]), logical: Object.freeze([...frame.logical]), sourceFoot: Object.freeze([...foot]), fitBounds: Object.freeze([...bounds]), sheet: Object.freeze({...sheet})});
   }
   return Object.freeze(result);
 }
@@ -72,8 +74,9 @@ export const rasterFrameSizes = () => Object.fromEntries(Object.entries(frames).
 /** Fit every side around the ground foot, including transparent margins, without aspect distortion. */
 export function normalizeRasterFrame(image, frame, density = 2) {
   const [x, y, w, h] = frame.rect, [lw, lh, anchor] = frame.logical, [fx, fy] = frame.sourceFoot ?? [w / 2, h * (1 - anchor / lh)];
+  const [left, top, right, bottom] = frame.fitBounds ?? [fx, fy, w - fx, h - fy];
   const limit = (space, extent) => extent > 0 ? space / extent : Infinity;
-  const scale = Math.min(limit(lw / 2, fx), limit(lw / 2, w - fx), limit(lh - anchor, fy), limit(anchor, h - fy));
+  const scale = Math.min(limit(lw / 2, left), limit(lw / 2, right), limit(lh - anchor, top), limit(anchor, bottom));
   if (!(scale > 0) || !Number.isFinite(scale) || !(density >= 1 && density <= 4)) throw new Error('World-art frame cannot fit its logical ground foot.');
   const canvas = document.createElement('canvas'); canvas.width = Math.ceil(lw * density); canvas.height = Math.ceil(lh * density);
   const context = canvas.getContext('2d'); context.setTransform(density, 0, 0, density, 0, 0); context.imageSmoothingEnabled = true; context.imageSmoothingQuality = 'high';

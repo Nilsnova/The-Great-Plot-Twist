@@ -59,4 +59,20 @@ describe('native-to-logical normalization', () => {
     expect(dx + dw / 2).toBeCloseTo(48); expect(dy + dh * 1124 / 1254).toBeCloseTo(84);
     expect(() => normalizeRasterFrame(img, frame, 5)).toThrow('fit');
   });
+  it('keeps scale and feet identical across clean state crops with virtual transparent fit bounds', () => {
+    const fitBounds = [50, 80, 50, 20], family = {sheets: {one: {file: 'village/states.png', width: 100, height: 200}}, frames: {
+      intact: {sheet: 'one', rect: [0, 0, 100, 100], logical: [60, 60, 10], sourceFoot: [50, 80], fitBounds},
+      broken: {sheet: 'one', rect: [0, 100, 100, 60], logical: [60, 60, 10], sourceFoot: [50, 40], fitBounds},
+    }}, frames = collectRasterFrames([family]), draws = [];
+    vi.stubGlobal('document', {createElement: () => ({getContext: () => ({setTransform() {}, drawImage: (...args) => draws.push(args)})})});
+    for (const frame of Object.values(frames)) normalizeRasterFrame({}, frame, 2);
+    for (const [i, frame] of Object.values(frames).entries()) {
+      const [dx, dy, dw, dh] = draws[i].slice(5); expect(dw / frame.rect[2]).toBe(.5); expect(dh / frame.rect[3]).toBe(.5);
+      expect(dx + frame.sourceFoot[0] * .5).toBe(30); expect(dy + frame.sourceFoot[1] * .5).toBe(50);
+    }
+    fitBounds[0] = 999; expect(frames.intact.fitBounds).toEqual([50, 80, 50, 20]); expect(Object.isFrozen(frames.intact.fitBounds)).toBe(true);
+    for (const bad of [[49, 80, 50, 20], [50, 79, 50, 20], [50, 80, 49, 20], [50, 80, 50, 19], [50, Infinity, 50, 20], [50, 80, 50]]) {
+      expect(() => collectRasterFrames([{...family, frames: {bad: {...family.frames.intact, fitBounds: bad}}}])).toThrow('fit bounds');
+    }
+  });
 });

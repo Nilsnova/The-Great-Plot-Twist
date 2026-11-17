@@ -28,7 +28,7 @@ export async function verifyVillageRasterFrames(ids = Object.keys(rasterFrameSiz
         }
         check(visible > 0 && maxDelta <= 2, `${id}: visible world/atlas PNG pixels match (delta ${maxDelta}).`);
         results.push({id, file: frame.sheet.file, nativeSheet: [frame.sheet.width, frame.sheet.height], rect: [...frame.rect],
-          logical: [...frame.logical], sourceFoot: [...frame.sourceFoot], quality: request.quality, requestedDensity: request.density,
+          logical: [...frame.logical], sourceFoot: [...frame.sourceFoot], fitBounds: [...frame.fitBounds], quality: request.quality, requestedDensity: request.density,
           effectiveDensity: density, rasterSize: [image.width, image.height], logicalFoot: [w / 2, h - anchor], visiblePixels: visible, maxDelta});
       }
     } finally { for (const material of Object.values(world)) { material.map?.dispose(); material.dispose(); } }
