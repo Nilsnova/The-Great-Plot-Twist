@@ -294,3 +294,15 @@ and [results, screenshots and manual checkpoints](evidence/T28/README.md).
 |---|---|---|---|
 | Connect genuine full shared wall sides while arranging the base; retain actual level art and visible gaps | [wall-connections.test.js](../frontend/tests/island/wall-connections.test.js), existing [world-art.test.js](../frontend/tests/island/world-art.test.js); `cd frontend && npm test -- --maxWorkers=1 tests/island/wall-connections.test.js tests/island/world-art.test.js` | Line/L/T adjacency; gaps, partial/diagonal/overlapping contacts; unbuilt/broken/non-wall rows; nonmutation; mixed levels; cache invalidation and disposal. Actual result: 2 files / 17 tests passed | New placement policy, canonical HP persistence, combat connection art, server payments and production state |
 | Real application browser fixture at two sizes | [capture-wall-connections.js](../frontend/scripts/capture-wall-connections.js), [screenshots and reports](evidence/COC-13/README.md) | Normal builds and valid Moves form a T; before/after 1280×720 and 375×812; unchanged position/level data; normal bell hides base joins | Safari, physical devices, broad UI audit, full frontend/build/budget results before central integration |
+
+## COC-39: local defense-report slice
+
+| Coverage | Evidence / limits |
+|---|---|
+| Bounded event aggregation, identical hits, rebuilding, payout guards | `frontend/tests/pirates/defense-report.test.js`; real local simulation forwarding and actual gameplay menu wiring are exercised; no live API/payment proof |
+| Reachable menu, copied report, focus/escape, stale result, travel, mobile overflow | `frontend/tests/pirates/defense-report-dom.test.js` at 1280×720 and 375×812; controlled browser component data, not a production account |
+| Screenshot reproduction | `frontend/scripts/capture-defense-report.js`; four controlled component images and JSON in docs/evidence/COC-39, zero API writes |
+
+[Exact run results and remaining central checks](../specs/COC-39-defense-report.md). Full replay authority, production multi-client completeness and COC-40 tactical navigation are not covered by this bounded report slice.
+
+COC-39 ownership follow-up: `frontend/tests/pirates/defense-report-ownership.test.js` uses the actual running game with a local fake island and standard-mapped gamepad. Window-level keyboard state and analog input cannot move the captain while `waves.reportActive` owns both global overlay guards; closing restores motion. Isolated result:1 passed /14.34s. The report still does not pause canonical wave ticking.

@@ -26,6 +26,7 @@ import {finishWave as finishIslandWave, registerWaveRenderer} from '../island/wa
 import {defenses as spotDefenses} from '../island/spots.js';
 import {figurePositions, hiddenFigures, matchFigures} from './figures.js';
 import {figurePoses} from './poses.js';
+import {mountDefenseReport} from './defense-report-feature.js';
 
 const ISLAND_PLACE = 'home_islet';
 export const SPOTS_CHANGED = 'island_spots_changed'; // src/island/index.js
@@ -69,17 +70,29 @@ export function wireWaves(ctx) {
   let realRoom = null, roomTopic = null, disposed = false;
   let figureMatches = new Map(); // sim captain id -> presence figure, from the last figures() (poses())
   const stopRenderer = island ? registerWaveRenderer({name: 'pirates'}) : () => {};
-  const finishWave = async body => throwRefusal(await finishIslandWave(body));
+  let defenseReport = null;
+  // A read-only report failure must not change a successful payment or stop combat.
+  const noteReport = run => { try { run(); } catch { /* The wave remains authoritative. */ } };
+  const finishWave = async body => {
+    try {
+      const answer = throwRefusal(await finishIslandWave(body));
+      noteReport(() => defenseReport?.confirmed(body.waveId, answer?.loot));
+      return answer;
+    } catch (error) { noteReport(() => defenseReport?.refused(body.waveId, error)); throw error; }
+  };
   const api = island ? pointApiFrom(island.api) : ctx.fakeApi ?? null;
   // Tower defense v2 (TOWER-DEFENSE.md): levels come with the defenses, crew and captain from GET /api/island,
   // and the break's "Next wave" rings the island's bell again (own island, or the friend's we are visiting).
   // Host and visitors must feed the sim the same island, so both read the defended island's answer (a
   // visitor's comes from the visit route and needs its levels and crew too).
   const own = () => island?.island ?? null, defended = () => island?.visiting ?? own();
+  if (island) defenseReport = mountDefenseReport({on, container: ctx.container, context: () => defended()?.code ?? null,
+    defenses: () => withLevels(island.defenses() ?? [], defended()), focus: () => ctx.canvas?.focus?.({preventScroll: true}), resetInput: () => ctx.input?.reset?.()});
   // The game's room state: Start, Pause and who is online, on the island's room (game_hello, game_state).
   const game = island ? createGameRoom({room: islandRoom, emit: ctx.emit ?? (() => {}), later, every, onChange: () => island.refreshLobby?.()}) : null;
   if (game) island.attachGame?.(game);
   const pirates = mountPirates({...ctx, getDefenses: () => withLevels(island?.defenses() ?? [], defended()), finishWave, api, openRoom, notify,
+    onIslandEvents: events => noteReport(() => defenseReport?.events(events)),
     practiceIdentity: () => ({player: practicePlayer(ctx.getPracticeToken?.()) ?? ctx.practicePlayer ?? null, island: island?.gameCode ?? roomTopic}),
     islandRoom, islandPlace: ISLAND_PLACE,
     getCrew: () => defended()?.crew ?? null,
@@ -189,6 +202,7 @@ export function wireWaves(ctx) {
   }
   return {
     pirates,
+    get reportActive() { return defenseReport?.active === true; },
     get point() { return pirates.point; },
     get island() { return pirates.island; },
     get game() { return game; },
@@ -219,7 +233,7 @@ export function wireWaves(ctx) {
       if (disposed) return; disposed = true;
       for (const stop of stops.splice(0)) stop?.();
       for (const cancel of [...timers]) cancel(); timers.clear();
-      stopRenderer(); pirates.dispose(); game?.dispose(); island?.attachGame?.(null); islandRoom.close(); realRoom?.close?.(); island?.setBattle(false);
+      defenseReport?.dispose(); stopRenderer(); pirates.dispose(); game?.dispose(); island?.attachGame?.(null); islandRoom.close(); realRoom?.close?.(); island?.setBattle(false);
     },
   };
 }
