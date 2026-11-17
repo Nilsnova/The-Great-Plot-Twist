@@ -4,7 +4,11 @@ const invalid = reason => ({accepted: false, reason, message: 'Check this action
 function validSignIn(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
   const keys = Object.keys(value);
-  if (!keys.every(key => ['provider', 'guest', 'upgrade', 'email', 'code'].includes(key))) return false;
+  if (!keys.every(key => ['provider', 'guest', 'upgrade', 'email', 'code', 'island'].includes(key))) return false;
+  // island: a friend's invite link (shell/invite.js, guestIslandSignIn): only a guest start, alone, as
+  // an island code like ISLE-K7Q2M; the server still checks that the island exists.
+  if (value.island !== undefined && !(value.guest === true && typeof value.island === 'string'
+    && /^[A-Za-z0-9\s-]{5,16}$/.test(value.island) && value.code === undefined)) return false;
   if (value.provider !== undefined && !['github', 'email'].includes(value.provider)) return false;
   if (value.guest !== undefined && value.guest !== true) return false;
   if (value.upgrade !== undefined && value.upgrade !== true) return false;
