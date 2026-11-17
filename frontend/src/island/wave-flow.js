@@ -54,6 +54,8 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
       ...(Number.isInteger(wave.recoveryVersion) ? {recoveryVersion: wave.recoveryVersion} : {}),
       ...(Number.isInteger(wave.waveProtocol) ? {waveProtocol: wave.waveProtocol} : {}),
       ...(wave.initialSnapshot && typeof wave.initialSnapshot === 'object' ? {initialSnapshot: wave.initialSnapshot} : {}),
+      // Preserve supplied invalid demo data too: the strict controller must refuse it, never fall back.
+      ...(Object.hasOwn(wave, 'perimeterDemo') ? {perimeterDemo: wave.perimeterDemo} : {}),
       ...(typeof wave.participantToken === 'string' ? {participantToken: wave.participantToken} : {}),
       ...(Number.isSafeInteger(wave.lastActorCounter) ? {lastActorCounter: wave.lastActorCounter} : {}),
       ...(Array.isArray(wave.rules) ? {rules: wave.rules} : {})}); // the wave's sim rules (tower_health, …) from the server
