@@ -17,11 +17,16 @@ from server.tests.island_sql.test_islands_and_waves_sql import (  # noqa: E402
 )
 
 MEMBER = UUID(int=99002)
+READ_EPOCH = UUID(int=99003)
 
 
 def ready(db):
     add_players(db, OWNER, MEMBER)
     open_island(db, OWNER, "K7Q2M")
+    db.execute(
+        "update public.island_recovery_state set reset_epoch=%s where island_owner=%s",
+        (READ_EPOCH, OWNER),
+    )
 
 
 def read(db):
@@ -64,7 +69,12 @@ def move(db, plot="wall_1", x=-10, z=20, snapshot=None, actor=OWNER):
 
 def test_empty_island_is_explicitly_legacy_and_browser_cannot_read_or_admit(database):
     ready(database)
-    assert read(database) == {"ruleVersion": 0, "capacity": 12, "rows": [], "islandEpoch": None}
+    assert read(database) == {
+        "ruleVersion": 0,
+        "capacity": 12,
+        "rows": [],
+        "islandEpoch": str(READ_EPOCH),
+    }
     as_owner(database)
     assert database.execute(
         "select has_table_privilege('authenticated',"
@@ -142,7 +152,12 @@ def test_invalid_effective_rows_roll_back_admission(database):
         database.transaction(),
     ):
         admit(database, cells=cells)
-    assert read(database) == {"ruleVersion": 0, "capacity": 12, "rows": [], "islandEpoch": None}
+    assert read(database) == {
+        "ruleVersion": 0,
+        "capacity": 12,
+        "rows": [],
+        "islandEpoch": str(READ_EPOCH),
+    }
 
 
 def test_v1_admission_preserves_instance_health_and_repair_sequence(database):
