@@ -19,6 +19,7 @@ import logging
 from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Literal
+from uuid import UUID
 
 from pydantic import BaseModel, StrictInt, StrictStr
 
@@ -51,16 +52,30 @@ class LayoutSnapshot:
     rule_version: int
     capacity: int
     rows: tuple[LayoutRow, ...]
+    island_epoch: str | None = None
 
 
 async def read_snapshot(admin: SupabaseAdmin, owner: str) -> LayoutSnapshot:
     """Require the policy RPC; a failed read cannot silently downgrade a paid island."""
     reply = await admin.call_function("island_wall_layout_read", {"p_island_owner": owner})
     message = "The island wall layout could not be read."
-    if not isinstance(reply, dict) or set(reply) != {"ruleVersion", "capacity", "rows"}:
+    if not isinstance(reply, dict) or set(reply) != {
+        "ruleVersion",
+        "capacity",
+        "rows",
+        "islandEpoch",
+    }:
         raise SupabaseRejected(message)
     try:
         check_wall_policy(reply["ruleVersion"], reply["capacity"])
+    except ValueError as error:
+        raise SupabaseRejected(message) from error
+    epoch = reply["islandEpoch"]
+    try:
+        if (epoch is None and reply["ruleVersion"] == 1) or (
+            epoch is not None and (not isinstance(epoch, str) or str(UUID(epoch)) != epoch)
+        ):
+            raise ValueError("Invalid island epoch.")
     except ValueError as error:
         raise SupabaseRejected(message) from error
     geometry = island_layout(more=True)
@@ -83,7 +98,7 @@ async def read_snapshot(admin: SupabaseAdmin, owner: str) -> LayoutSnapshot:
         seen.add(row.plot)
         rows.append(row)
     return LayoutSnapshot(
-        reply["ruleVersion"], reply["capacity"], tuple(sorted(rows, key=lambda r: r.plot))
+        reply["ruleVersion"], reply["capacity"], tuple(sorted(rows, key=lambda r: r.plot)), epoch
     )
 
 

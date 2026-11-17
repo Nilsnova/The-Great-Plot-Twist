@@ -48,6 +48,7 @@ Used by: test_island_routes.py and test_wave_routes.py.
 import json
 from dataclasses import replace
 from types import SimpleNamespace
+from uuid import NAMESPACE_URL, uuid5
 
 import httpx
 from fastapi.testclient import TestClient
@@ -266,6 +267,7 @@ class FakeIslandDatabase:
         self.layout_rows: list[dict] = []
         self.layout_rows_by_owner: dict[str, list[dict]] = {}
         self.wall_policies: dict[str, dict] = {}
+        self.wall_epochs: dict[str, str] = {}
         self.wall_policy_read_reply: dict | httpx.Response | None = None
         self.layout_missing = False
         self.move_replies: list[dict] = []
@@ -506,7 +508,10 @@ class FakeIslandDatabase:
         owner = json.loads(request.content)["p_island_owner"]
         policy = self.wall_policies.get(owner, {"ruleVersion": 0, "capacity": 12})
         rows = self.layout_rows_by_owner.get(owner, self.layout_rows)
-        return httpx.Response(200, json={**policy, "rows": rows})
+        epoch = self.wall_epochs.setdefault(
+            owner, str(uuid5(NAMESPACE_URL, "wall-fixture:" + owner))
+        )
+        return httpx.Response(200, json={**policy, "rows": rows, "islandEpoch": epoch})
 
     def wall_move(self, request: httpx.Request) -> httpx.Response:
         body = json.loads(request.content)

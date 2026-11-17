@@ -13,11 +13,17 @@ from server.island.store import Island, Refusal
 from server.supabase_admin import SupabaseRejected
 
 ISLAND = Island("owner", "K7Q2M", 0, 0)
+EPOCH = "11111111-2222-4333-8444-555555555555"
 
 
 class Admin:
     def __init__(self, version=1, capacity=128, rows=()):
-        self.snapshot = {"ruleVersion": version, "capacity": capacity, "rows": list(rows)}
+        self.snapshot = {
+            "ruleVersion": version,
+            "capacity": capacity,
+            "rows": list(rows),
+            "islandEpoch": EPOCH,
+        }
         self.calls = []
         self.moves = [{"status": "done"}]
 
@@ -38,6 +44,7 @@ def test_snapshot_reads_complete_cohort_and_nonwalls_in_canonical_cas_order():
     assert len(snapshot.rows) == 142
     assert [r.plot for r in snapshot.rows] == sorted(ids)
     assert (snapshot.rule_version, snapshot.capacity) == (1, 128)
+    assert snapshot.island_epoch == EPOCH
     assert admin.calls == [("island_wall_layout_read", {"p_island_owner": "owner"})]
 
 
@@ -61,10 +68,24 @@ def test_snapshot_reads_complete_cohort_and_nonwalls_in_canonical_cas_order():
 )
 def test_bad_or_incomplete_policy_state_never_downgrades_or_writes(snapshot):
     admin = Admin()
-    admin.snapshot = snapshot
+    admin.snapshot = {**snapshot, "islandEpoch": EPOCH} if isinstance(snapshot, dict) else snapshot
     with pytest.raises(SupabaseRejected):
         asyncio.run(layout_store.read_snapshot(admin, ISLAND.owner))
     assert len(admin.calls) == 1
+
+
+@pytest.mark.parametrize("epoch", [None, True, "not-an-epoch", EPOCH.upper().replace("-", "")])
+def test_perimeter_snapshot_requires_its_current_canonical_reset_epoch(epoch):
+    admin = Admin()
+    admin.snapshot["islandEpoch"] = epoch
+    with pytest.raises(SupabaseRejected):
+        asyncio.run(layout_store.read_snapshot(admin, ISLAND.owner))
+
+
+def test_legacy_policy_may_have_no_recovery_epoch_yet():
+    admin = Admin(0, 12)
+    admin.snapshot["islandEpoch"] = None
+    assert asyncio.run(layout_store.read_snapshot(admin, ISLAND.owner)).island_epoch is None
 
 
 def test_unavailable_policy_rpc_is_not_replaced_with_legacy_coordinates():
