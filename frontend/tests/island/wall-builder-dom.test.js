@@ -4,8 +4,8 @@ import {browserHarness} from '../g20-browser.js';
 const browser = browserHarness();
 async function wallPoint(page, x, z) {
   return page.evaluate(async ([x, z]) => {
-    const {projectGround} = await import('/src/world/projection.js');
-    const {Vector3} = await import('/node_modules/three/build/three.module.js');
+    const {projectGround} = await window.g20Import('/src/world/projection.js');
+    const {Vector3} = await window.g20Import('/node_modules/three/build/three.module.js');
     const {canvas, camera} = window.wallComponent, box = canvas.getBoundingClientRect(), foot = projectGround(x, z);
     const point = new Vector3(foot.x, foot.y, 0).project(camera);
     return {x: box.left + (point.x + 1) * box.width / 2, y: box.top + (1 - point.y) * box.height / 2};

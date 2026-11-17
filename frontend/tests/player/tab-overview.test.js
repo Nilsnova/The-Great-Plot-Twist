@@ -20,7 +20,7 @@ describe('hold Tab for the whole island', () => {
     const near = {x: view.camera.position.x, zoom: view.camera.zoom};
     input.held.add('Tab'); view.update(.05, player);
     expect(view.camera.zoom).toBeLessThan(near.zoom);
-    expect(view.camera.position.x).toBe(0);
+    expect(view.camera.position.x).toBe(villageFrame(view.camera, 'home_islet').x);
     input.held.delete('Tab'); view.update(.05, player);
     expect(view.camera.position.x).toBe(projectPoint(player.x, player.z).x);
     expect(view.camera.zoom).toBe(near.zoom);
@@ -31,7 +31,7 @@ describe('hold Tab for the whole island', () => {
     view.camera.userData.battleZoom = .9; view.update(.05, player);
     input.held.add('Tab'); view.update(.05, player);
     expect(view.camera.zoom).toBeLessThan(.9);
-    expect(view.camera.position.x).toBe(0);
+    expect(view.camera.position.x).toBe(villageFrame(view.camera, 'home_islet').x);
   });
 
   it('does nothing away from the home island', () => {
@@ -86,7 +86,7 @@ describe('Tab with a saved village working view', () => {
     view.setVillageView(false); view.camera.userData.battleZoom = .9; view.update(.05, player);
     const fit = villageFrame(view.camera, 'home_islet'); input.held.add('Tab'); view.update(.05, player);
     expect(view.camera.position.x).toBe(fit.x); expect(view.camera.position.y).toBe(fit.y); expect(view.camera.zoom).toBe(fit.zoom);
-    input.held.delete('Tab'); view.update(.05, player); expect(view.camera.zoom).toBe(.9); expect(view.camera.position.x).toBe(player.x);
+    input.held.delete('Tab'); view.update(.05, player); expect(view.camera.zoom).toBe(.9); expect(view.camera.position.x).toBe(14);
     delete view.camera.userData.battleZoom; view.update(.05, player); expect(view.camera.zoom).toBe(1.4);
   });
 
@@ -94,8 +94,8 @@ describe('Tab with a saved village working view', () => {
     const {view, input} = viewAt(); view.setVillageView(true); view.villageControl('in'); view.panVillage(-120, 60, 1280, 720); view.update(.05, player);
     const working = {zoom: view.camera.zoom, position: view.camera.position.clone()};
     input.held.add('Tab'); view.camera.userData.tour = {x: -7, z: 4}; view.update(.05, player);
-    expect(view.camera.position.x).toBeCloseTo(-7, 12);
-    delete view.camera.userData.tour; view.update(.05, player); expect(view.camera.position.x).toBe(0);
+    expect(view.camera.position.x).toBeCloseTo(-8.3, 12); // 1.3*(-7) + 0.2*4; the tour still wins over Tab.
+    delete view.camera.userData.tour; view.update(.05, player); expect(view.camera.position.x).toBe(villageFrame(view.camera, 'home_islet').x);
     input.held.delete('Tab'); view.update(.05, player); expect(view.camera.position).toEqual(working.position); expect(view.camera.zoom).toBe(working.zoom);
   });
 });
