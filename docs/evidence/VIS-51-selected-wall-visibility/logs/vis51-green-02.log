@@ -1,0 +1,63 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run --maxWorkers=1 tests/island/wall-selection.test.js tests/island/wall-textured-batches.test.js tests/island/wall-connections.test.js tests/island/selection-bracket.test.js tests/island/world-cohort.test.js --reporter=verbose
+
+
+ RUN  v5.1.0 /workspace/reference-village-work/selected-wall-visibility/frontend
+
+ ✓ tests/island/wall-selection.test.js > current selected wall above decorative foliage > reuses exactly the current straight post and incident spans in one nonpickable foreground draw 8ms
+ ✓ tests/island/wall-selection.test.js > current selected wall above decorative foliage > rebuilds on accepted current-ID level/damage/position changes and keeps HP-zero rubble without joins 3ms
+ ✓ tests/island/wall-selection.test.js > current selected wall above decorative foliage > selects before art readiness, refreshes an accepted retry, and never disposes borrowed resources 2ms
+ ✓ tests/island/wall-selection.test.js > current selected wall above decorative foliage > clears invalid or closed selection "missing" without altering ordinary batches 1ms
+ ✓ tests/island/wall-selection.test.js > current selected wall above decorative foliage > clears invalid or closed selection "" without altering ordinary batches 1ms
+ ✓ tests/island/wall-selection.test.js > current selected wall above decorative foliage > clears invalid or closed selection null without altering ordinary batches 1ms
+ ✓ tests/island/wall-selection.test.js > current selected wall above decorative foliage > clears invalid or closed selection undefined without altering ordinary batches 1ms
+ ✓ tests/island/wall-selection.test.js > current selected wall above decorative foliage > clears removed/battle/unbuilt/invalid state [] 1ms
+ ✓ tests/island/wall-selection.test.js > current selected wall above decorative foliage > clears removed/battle/unbuilt/invalid state [ [Object] ] 1ms
+ ✓ tests/island/wall-selection.test.js > current selected wall above decorative foliage > clears removed/battle/unbuilt/invalid state [ [Object] ] 1ms
+ ✓ tests/island/wall-selection.test.js > current selected wall above decorative foliage > clears removed/battle/unbuilt/invalid state [ [Object] ] 1ms
+ ✓ tests/island/wall-selection.test.js > current selected wall above decorative foliage > switches IDs without changing normal buffers and rejects missing artwork instead of inventing fallback 5ms
+ ✓ tests/island/wall-selection.test.js > the actual world update clears selected art on Move, Close, battle, and removal 42ms
+ ✓ tests/island/world-cohort.test.js > paid positioned perimeter walls in the village scene > renders first/last owned pieces and their pick/zone/indicator anchors, with no empty inventory markers 56ms
+ ✓ tests/island/world-cohort.test.js > paid positioned perimeter walls in the village scene > does not invent a site or sprite for an unusable paid row: {"built":false} 22ms
+ ✓ tests/island/world-cohort.test.js > paid positioned perimeter walls in the village scene > does not invent a site or sprite for an unusable paid row: {"x":null} 12ms
+ ✓ tests/island/world-cohort.test.js > paid positioned perimeter walls in the village scene > does not invent a site or sprite for an unusable paid row: {"z":null} 5ms
+ ✓ tests/island/world-cohort.test.js > paid positioned perimeter walls in the village scene > does not invent a site or sprite for an unusable paid row: {"kind":"cannon"} 15ms
+ ✓ tests/island/world-cohort.test.js > paid positioned perimeter walls in the village scene > removes disappeared pieces without disposing a borrowed family texture or double-releasing geometry 18ms
+ ✓ tests/island/world-cohort.test.js > paid positioned perimeter walls in the village scene > keeps ordinary legacy lane glow and hides it for an accepted free-grid preview 17ms
+ ✓ tests/island/world-cohort.test.js > paid positioned perimeter walls in the village scene > uses loaded level/ruin art and real breach/restore connection state for new IDs 16ms
+ ✓ tests/island/world-cohort.test.js > paid positioned perimeter walls in the village scene > requests every canonical wall damage frame for the nonbatch recovery fallback 8ms
+ ✓ tests/island/world-cohort.test.js > releases still-pending added stand-ins once on world disposal while leaving shared texture ownership intact 16ms
+ ✓ tests/island/wall-textured-batches.test.js > dimensional wall artwork contract > keeps every authored crop and foot inside the real sheet, retaining all five materials and ruin IDs 5ms
+ ✓ tests/island/wall-textured-batches.test.js > dimensional wall artwork contract > places the post baseline at its authoritative foot and never moves source coordinates 2ms
+ ✓ tests/island/wall-textured-batches.test.js > dimensional wall artwork contract > batches the measured 102 posts while retaining all106 real joins and their exact depth orders 6ms
+ ✓ tests/island/wall-textured-batches.test.js > dimensional wall artwork contract > preserves the actual old span position/index buffers under the new material and post batches 15ms
+ ✓ tests/island/wall-textured-batches.test.js > dimensional wall artwork contract > rebuilds real buffers for a breach, retains its ruin post and restores exactly the original contacts 3ms
+ ✓ tests/island/wall-textured-batches.test.js > dimensional wall artwork contract > updates every draft ghost to the registered frame height without moving its ground foot or owning its borrowed texture 3ms
+ ✓ tests/island/wall-textured-batches.test.js > dimensional wall artwork contract > uses accepted combat HP and break restoration without leaking stale starting-health or making unknown links 1ms
+ ✓ tests/island/wall-connections.test.js > full-side wall connections > joins a line and a corner without depending on array order or changing positions 3ms
+ ✓ tests/island/wall-connections.test.js > full-side wall connections > forms a T from three real contacts and keeps the surrounding gaps open 0ms
+ ✓ tests/island/wall-connections.test.js > full-side wall connections > does not turn a 2.5,0 gap into a full connection 0ms
+ ✓ tests/island/wall-connections.test.js > full-side wall connections > does not turn a 2,0.5 partial side into a full connection 0ms
+ ✓ tests/island/wall-connections.test.js > full-side wall connections > does not turn a 2,2 diagonal point into a full connection 0ms
+ ✓ tests/island/wall-connections.test.js > full-side wall connections > does not turn a 1.5,0 overlap into a full connection 0ms
+ ✓ tests/island/wall-connections.test.js > full-side wall connections > does not bridge an unbuilt, explicitly broken, invalid or non-wall neighbour 1ms
+ ✓ tests/island/wall-connections.test.js > full-side wall connections > uses the lower level for the shared span while leaving both original levels intact 0ms
+ ✓ tests/island/wall-connections.test.js > join drawing lifetime > reuses unchanged geometry and clears old spans when a move opens a gap 5ms
+ ✓ tests/island/wall-connections.test.js > join drawing lifetime > removes every span for a battle handoff and disposes owned resources only once 1ms
+ ✓ tests/island/selection-bracket.test.js > portable selected wall corners > fills the exact projected 2×2 tile corners with thick positive-winding strips 8ms
+ ✓ tests/island/selection-bracket.test.js > portable selected wall corners > reuses both buffers during selection updates and releases them exactly once 3ms
+
+ Test Files  5 passed (5)
+      Tests  42 passed (42)
+   Start at  21:56:22
+   Duration  1.95s (import 51%, tests 27%, transform 19%, worker 2%)
+
+    Isolate  5 workers spawned · ~137ms startup each (spawn + environment, per file)
+             at least ~547ms faster with isolate: false — reuses workers across files instead of one per file
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice
