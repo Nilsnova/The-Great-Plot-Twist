@@ -1,4 +1,6 @@
 // Validate and adapt a frozen recovery-v1 wave snapshot. Used by controller.js, never by local island reads.
+import { WEAPON_BY_ID } from './captain-ids.js';
+import { isParticipantToken } from './recovery-policy.js';
 
 const FULL_HP_UNITS = 1_000_000;
 const SUPPORTED_KINDS = new Set(['wall', 'cannon', 'mortar', 'harpoon', 'culverin', 'swivel']);
@@ -25,6 +27,15 @@ function readStructure(row) {
     && isPoint(row.maxHP) && row.maxHP > 0;
 }
 
+function readParticipant(row) {
+  const captain = row?.captain;
+  return isObject(row) && isParticipantToken(row.participantToken)
+    && !['id', 'actorId', 'accountId', 'playerId', 'profileId'].some(key => Object.hasOwn(row, key))
+    && isObject(captain) && Number.isInteger(captain.level) && captain.level >= 1 && captain.level <= 5
+    && Array.isArray(captain.skills) && captain.skills.length <= 32 && captain.skills.every(skill => typeof skill === 'string')
+    && typeof captain.weapon === 'string' && Object.hasOwn(WEAPON_BY_ID, captain.weapon);
+}
+
 /** Return an owned, frozen snapshot only when its version and every structure row are valid. */
 export function readRecoverySnapshot(snapshot, waveId) {
   const copy = cloneJson(snapshot);
@@ -33,9 +44,11 @@ export function readRecoverySnapshot(snapshot, waveId) {
     || !Number.isFinite(copy.seed) || typeof copy.startsAt !== 'string' || !Number.isFinite(Date.parse(copy.startsAt))
     || !isObject(copy.weather) || !Array.isArray(copy.rules)
     || !isObject(copy.createWave) || !Array.isArray(copy.createWave.defenses)
-    || !Array.isArray(copy.structures) || !copy.structures.every(readStructure)) return null;
+    || !Array.isArray(copy.structures) || !copy.structures.every(readStructure)
+    || !Array.isArray(copy.participants) || !copy.participants.length || !copy.participants.every(readParticipant)) return null;
   if (new Set(copy.structures.map(row => row.spot)).size !== copy.structures.length
-    || new Set(copy.structures.map(row => row.instanceId)).size !== copy.structures.length) return null;
+    || new Set(copy.structures.map(row => row.instanceId)).size !== copy.structures.length
+    || new Set(copy.participants.map(row => row.participantToken)).size !== copy.participants.length) return null;
   const rules = new Set(copy.rules);
   if (!rules.has('structure_recovery')) return null;
   const rows = new Map(copy.structures.map(row => [row.spot, row]));

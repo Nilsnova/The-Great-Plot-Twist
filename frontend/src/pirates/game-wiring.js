@@ -96,6 +96,9 @@ export function wireWaves(ctx) {
     startNextWave: island ? () => island.ringBell() : null,
     // The room-wide Pause between waves: the break stays open and Auto next waits (GAME-V3.md §2).
     holdBreak: game ? () => game.hold() : null, toggleHold: game ? () => game.togglePause() : null});
+  function publishRecoveryState() {
+    try { island?.setRecoveryCombatState?.(pirates.island.recoveryCombatState ?? null); } catch { /* The display cache cannot stop the wave. */ }
+  }
 
   function followRoom() {
     const place = island && world.current?.id === ISLAND_PLACE ? island.roomPlace() : null;
@@ -149,6 +152,8 @@ export function wireWaves(ctx) {
     stops.push(on('arrived', event => { if (event?.place === ISLAND_PLACE) landed = true; followRoom(); }),
       on('travel', () => { landed = false; islandRoom.attach(null); realRoom?.close?.(); realRoom = null; roomTopic = null; }));
     stops.push(every(tick, 1000));
+    stops.push(every(publishRecoveryState, 250));
+    publishRecoveryState();
     // A wave we are in (rung here or joined): tell the island's room, so the other defenders join too;
     // again a little later for a friend whose room was still joining (a repeat changes nothing).
     stops.push(on('wave_started_server', event => {
@@ -219,6 +224,7 @@ export function wireWaves(ctx) {
       if (disposed) return; disposed = true;
       for (const stop of stops.splice(0)) stop?.();
       for (const cancel of [...timers]) cancel(); timers.clear();
+      try { island?.setRecoveryCombatState?.(null); } catch { /* Cleanup is best effort. */ }
       stopRenderer(); pirates.dispose(); game?.dispose(); island?.attachGame?.(null); islandRoom.close(); realRoom?.close?.(); island?.setBattle(false);
     },
   };

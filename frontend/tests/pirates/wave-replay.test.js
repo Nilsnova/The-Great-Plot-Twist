@@ -143,9 +143,9 @@ describe('sealed recovery wave replay', () => {
     const token = '7165d60f-14f5-4b9e-96a0-2ed457b4c219';
     const journal = [
       { serverSeq: 1, effectiveTick: 1, type: 'captain_input', participantToken: token,
-        payload: { command: { type: 'captain_move', x: 2, z: 3 }, captain: { level: 2, skills: [], weapon: 'musket' } } },
+        payload: { inputUid: 'input-a', actorCounter: 1, participantToken: token, command: { type: 'captain_move', x: 2, z: 3 }, captain: { level: 2, skills: [], weapon: 'musket' } } },
       { serverSeq: 2, effectiveTick: 5, type: 'captain_input', participantToken: token,
-        payload: { command: { type: 'captain_shot', targetId: 'ship_1' }, captain: { level: 2, skills: [], weapon: 'musket' } } },
+        payload: { inputUid: 'input-b', actorCounter: 2, participantToken: token, command: { type: 'captain_shot', targetId: 'ship_1' }, captain: { level: 2, skills: [], weapon: 'musket' } } },
     ];
     const reconstruct = events => {
       const replay = createWaveReplay(), seen = [];

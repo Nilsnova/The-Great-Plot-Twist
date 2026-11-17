@@ -511,6 +511,8 @@ export function createWave(options = {}) {
   // Recovery v1 pauses every free structure repair path. An unknown version pair fails closed.
   const recoveryPolicy = readRecoveryPolicy(options);
   const freeStructureRepair = canFreeStructureRepair(recoveryPolicy);
+  const captainStatsFor = (level, skills, weapon) => captainStats(level, skills, weapon,
+    { recoveryVersion: recoveryPolicy === 'structure-recovery-v1' ? 1 : 0 });
   const recoveryStructureState = new Map((recoveryPolicy === 'structure-recovery-v1' && Array.isArray(options?.recoveryStructures)
     ? options.recoveryStructures : []).filter(item => typeof item?.instanceId === 'string').map(item => [item.instanceId, { ...item }]));
   // The boarders draw from their own stream, so the fleet and the cannons' rolls do not depend on them.
@@ -853,7 +855,7 @@ export function createWave(options = {}) {
   function captainShot(input, events) {
     const by = captainBy(input);
     if (!by || !finite(input.x) || !finite(input.z) || !standing(by, input)) return;
-    const level = captainLevel(input), skills = readSkills(input.skills), stats = captainStats(level, skills, input.weapon), t = ticks * C.tick;
+    const level = captainLevel(input), skills = readSkills(input.skills), stats = captainStatsFor(level, skills, input.weapon), t = ticks * C.tick;
     // The named target: a ship or a boarder on foot (§12); every gun hits both where it makes sense.
     const named = findTarget(input.targetId);
     const aimed = finite(input.ax) && finite(input.az) ? { x: input.ax, z: input.az } : named ? { x: named.x, z: named.z } : null;
@@ -919,7 +921,7 @@ export function createWave(options = {}) {
   function captainStrike(input, events) {
     const by = captainBy(input);
     if (!by || !finite(input.x) || !finite(input.z) || !standing(by, input)) return;
-    const level = captainLevel(input), stats = captainStats(level, readSkills(input.skills));
+    const level = captainLevel(input), stats = captainStatsFor(level, readSkills(input.skills));
     const blade = C.captain.cutlass, reach = stats.sweepRadius + blade.slack, t = ticks * C.tick;
     const reload = round2(blade.reload * stats.strikeReloadMultiplier);
     if (t - (blades.get(by) ?? -Infinity) < reload - 1e-9) return;
@@ -973,7 +975,7 @@ export function createWave(options = {}) {
     if (!helper || helper.down || !hero || hero === helper || !hero.down) return;
     if (distance(input.x, input.z, hero.x, hero.z) > R.reach + R.slack) return;
     helper.seen = ticks * C.tick; helper.away = false; helper.x = input.x; helper.z = input.z;
-    hero.down = false; hero.downAt = null; hero.hp = Math.max(1, Math.round(hero.maxHp * captainStats(1, input.skills).reviveShare)); // a medic's help-up gives more hp (captain-stats.js)
+    hero.down = false; hero.downAt = null; hero.hp = Math.max(1, Math.round(hero.maxHp * captainStatsFor(1, input.skills).reviveShare)); // a medic's help-up gives more hp (captain-stats.js)
     events.push({ type: 'captain_revived', t: now(), captainId: hero.id, by, hp: hero.hp, x: round2(hero.x), z: round2(hero.z) });
   }
   // A boarder's blow at a militia fighter (the Barracks): at 0 hp it falls, and every boarder on it walks on.
@@ -1098,21 +1100,21 @@ export function createWave(options = {}) {
       if (!freeStructureRepair) return;
       const wall = typeof input.wallId === 'string' ? wallById.get(input.wallId) : undefined;
       // T33: with tower health the same message repairs a tower (wallId names it).
-      if (!wall && towerHealth.enabled) { towerHealth.repair(towerById.get(input.wallId), captainStats(1, input.skills)); return; }
+      if (!wall && towerHealth.enabled) { towerHealth.repair(towerById.get(input.wallId), captainStatsFor(1, input.skills)); return; }
       if (!wall || wall.hp <= 0 || wall.hp >= wall.maxHp) return; // a broken wall is rebuilt, not repaired
       if (wall.repairLeft <= 0) wall.repaired = 0;
       wall.repairLeft = C.wall.repairSeconds;
       // The repairer's own skills (Quick fix, Master shipwright) set how fast this repair goes; a Workshop nearby too.
-      const stats = captainStats(1, input.skills);
+      const stats = captainStatsFor(1, input.skills);
       wall.repairRate = round2(C.wall.repairRate * stats.repairMultiplier * wall.repairBoost * wall.boost);
       boostWall(wall, stats); // an engineer's repair raises the wall's strength by 25% (once)
     } else if (input.type === 'rebuild') {
       if (!freeStructureRepair) return;
       const wall = typeof input.wallId === 'string' ? wallById.get(input.wallId) : undefined;
-      if (!wall && towerHealth.enabled) { towerHealth.rebuild(towerById.get(input.wallId), captainStats(1, input.skills), ticks * C.tick, events); return; }
+      if (!wall && towerHealth.enabled) { towerHealth.rebuild(towerById.get(input.wallId), captainStatsFor(1, input.skills), ticks * C.tick, events); return; }
       if (!wall || wall.hp > 0 || ticks * C.tick - wall.rebuildAt < wall.cooldown - 1e-9) return;
       // The rebuilder's own skills: Master shipwright brings the wall back at 60% instead of 40%.
-      const stats = captainStats(1, input.skills);
+      const stats = captainStatsFor(1, input.skills);
       boostWall(wall, stats);
       rebuild(wall, 'player', events, stats.rebuildShare);
     } else if (input.type === 'lamps_lit') {
