@@ -153,7 +153,7 @@ def test_membership_precedes_private_replay(database):
     current = setup(database)
     member = UUID(int=2201)
     add_players(database, member)
-    open_island(database, member, "OTH32")
+    open_island(database, member, "NTH32")
     database.execute(
         "insert into public.island_members(island_owner,player_id,role) values(%s,%s,'member')",
         (OWNER, member),
