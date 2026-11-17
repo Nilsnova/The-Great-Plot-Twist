@@ -1,0 +1,3737 @@
+{
+  "mode": "materials",
+  "source": "54c7f6137c94a250a395c6fb86319b1a8ddd8a1b",
+  "sourceTree": "1c5f0e839b5d8bc9ead4188624d2fafb6190f15a",
+  "scope": "stage1 actual game: registered cabin/houses/nature/watchtower plus textured raised terrain; walls/defenses/water/static-landmark refresh and final reference acceptance remain",
+  "fixture": "declared8000coins/best40/seven paid buildings/102paid ring/one20coin upgrade; long drafts use public builder; entry/Fit/Tab/drag/pick use real controls",
+  "checks": [
+    {
+      "width": 1280,
+      "height": 720,
+      "paid": {
+        "coins": 6660,
+        "code": "ISLE-K7Q2M",
+        "walls": [
+          {
+            "id": "wall_1",
+            "x": -18.5,
+            "z": 2,
+            "level": 2
+          },
+          {
+            "id": "wall_2",
+            "x": -18.5,
+            "z": 0,
+            "level": 1
+          },
+          {
+            "id": "wall_3",
+            "x": -18.5,
+            "z": -2,
+            "level": 1
+          },
+          {
+            "id": "wall_4",
+            "x": -18.5,
+            "z": -4,
+            "level": 1
+          },
+          {
+            "id": "wall_5",
+            "x": -18.5,
+            "z": -6,
+            "level": 1
+          },
+          {
+            "id": "wall_6",
+            "x": -18.5,
+            "z": -8,
+            "level": 1
+          },
+          {
+            "id": "wall_7",
+            "x": -18.5,
+            "z": -10,
+            "level": 1
+          },
+          {
+            "id": "wall_8",
+            "x": -16.5,
+            "z": -10,
+            "level": 1
+          },
+          {
+            "id": "wall_9",
+            "x": -16.5,
+            "z": -12,
+            "level": 1
+          },
+          {
+            "id": "wall_10",
+            "x": -14.5,
+            "z": -12,
+            "level": 1
+          },
+          {
+            "id": "wall_11",
+            "x": -12.5,
+            "z": -12,
+            "level": 1
+          },
+          {
+            "id": "wall_12",
+            "x": -10.5,
+            "z": -12,
+            "level": 1
+          },
+          {
+            "id": "wall_13",
+            "x": -10.5,
+            "z": -14,
+            "level": 1
+          },
+          {
+            "id": "wall_14",
+            "x": -10.5,
+            "z": -16,
+            "level": 1
+          },
+          {
+            "id": "wall_15",
+            "x": -8.5,
+            "z": -16,
+            "level": 1
+          },
+          {
+            "id": "wall_16",
+            "x": -8.5,
+            "z": -18,
+            "level": 1
+          },
+          {
+            "id": "wall_17",
+            "x": -6.5,
+            "z": -18,
+            "level": 1
+          },
+          {
+            "id": "wall_18",
+            "x": -6.5,
+            "z": -20,
+            "level": 1
+          },
+          {
+            "id": "wall_19",
+            "x": -4.5,
+            "z": -20,
+            "level": 1
+          },
+          {
+            "id": "wall_20",
+            "x": -4.5,
+            "z": -22,
+            "level": 1
+          },
+          {
+            "id": "wall_21",
+            "x": -2.5,
+            "z": -22,
+            "level": 1
+          },
+          {
+            "id": "wall_22",
+            "x": -0.5,
+            "z": -22,
+            "level": 1
+          },
+          {
+            "id": "wall_23",
+            "x": 1.5,
+            "z": -22,
+            "level": 1
+          },
+          {
+            "id": "wall_24",
+            "x": 1.5,
+            "z": -20,
+            "level": 1
+          },
+          {
+            "id": "wall_25",
+            "x": 3.5,
+            "z": -20,
+            "level": 1
+          },
+          {
+            "id": "wall_26",
+            "x": 5.5,
+            "z": -20,
+            "level": 1
+          },
+          {
+            "id": "wall_27",
+            "x": 5.5,
+            "z": -18,
+            "level": 1
+          },
+          {
+            "id": "wall_28",
+            "x": 7.5,
+            "z": -18,
+            "level": 1
+          },
+          {
+            "id": "wall_29",
+            "x": 9.5,
+            "z": -18,
+            "level": 1
+          },
+          {
+            "id": "wall_30",
+            "x": 9.5,
+            "z": -16,
+            "level": 1
+          },
+          {
+            "id": "wall_31",
+            "x": 7.5,
+            "z": -16,
+            "level": 1
+          },
+          {
+            "id": "wall_32",
+            "x": 5.5,
+            "z": -16,
+            "level": 1
+          },
+          {
+            "id": "wall_33",
+            "x": 3.5,
+            "z": -16,
+            "level": 1
+          },
+          {
+            "id": "wall_34",
+            "x": 3.5,
+            "z": -14,
+            "level": 1
+          },
+          {
+            "id": "wall_35",
+            "x": 3.5,
+            "z": -12,
+            "level": 1
+          },
+          {
+            "id": "wall_36",
+            "x": 3.5,
+            "z": -10,
+            "level": 1
+          },
+          {
+            "id": "wall_37",
+            "x": 5.5,
+            "z": -10,
+            "level": 1
+          },
+          {
+            "id": "wall_38",
+            "x": 7.5,
+            "z": -10,
+            "level": 1
+          },
+          {
+            "id": "wall_39",
+            "x": 9.5,
+            "z": -10,
+            "level": 1
+          },
+          {
+            "id": "wall_40",
+            "x": 9.5,
+            "z": -8,
+            "level": 1
+          },
+          {
+            "id": "wall_41",
+            "x": 9.5,
+            "z": -6,
+            "level": 1
+          },
+          {
+            "id": "wall_42",
+            "x": 11.5,
+            "z": -6,
+            "level": 1
+          },
+          {
+            "id": "wall_43",
+            "x": 13.5,
+            "z": -6,
+            "level": 1
+          },
+          {
+            "id": "wall_44",
+            "x": 13.5,
+            "z": -8,
+            "level": 1
+          },
+          {
+            "id": "wall_45",
+            "x": 13.5,
+            "z": -10,
+            "level": 1
+          },
+          {
+            "id": "wall_46",
+            "x": 13.5,
+            "z": -12,
+            "level": 1
+          },
+          {
+            "id": "wall_47",
+            "x": 15.5,
+            "z": -12,
+            "level": 1
+          },
+          {
+            "id": "wall_48",
+            "x": 15.5,
+            "z": -10,
+            "level": 1
+          },
+          {
+            "id": "wall_49",
+            "x": 17.5,
+            "z": -10,
+            "level": 1
+          },
+          {
+            "id": "wall_50",
+            "x": 17.5,
+            "z": -8,
+            "level": 1
+          },
+          {
+            "id": "wall_51",
+            "x": 17.5,
+            "z": -6,
+            "level": 1
+          },
+          {
+            "id": "wall_52",
+            "x": 19.5,
+            "z": -6,
+            "level": 1
+          },
+          {
+            "id": "wall_53",
+            "x": 19.5,
+            "z": -4,
+            "level": 1
+          },
+          {
+            "id": "wall_54",
+            "x": 19.5,
+            "z": -2,
+            "level": 1
+          },
+          {
+            "id": "wall_55",
+            "x": 19.5,
+            "z": 0,
+            "level": 1
+          },
+          {
+            "id": "wall_56",
+            "x": 19.5,
+            "z": 2,
+            "level": 1
+          },
+          {
+            "id": "wall_57",
+            "x": 17.5,
+            "z": 2,
+            "level": 1
+          },
+          {
+            "id": "wall_58",
+            "x": 17.5,
+            "z": 4,
+            "level": 1
+          },
+          {
+            "id": "wall_59",
+            "x": 15.5,
+            "z": 4,
+            "level": 1
+          },
+          {
+            "id": "wall_60",
+            "x": 13.5,
+            "z": 4,
+            "level": 1
+          },
+          {
+            "id": "wall_61",
+            "x": 11.5,
+            "z": 4,
+            "level": 1
+          },
+          {
+            "id": "wall_62",
+            "x": 9.5,
+            "z": 4,
+            "level": 1
+          },
+          {
+            "id": "wall_63",
+            "x": 9.5,
+            "z": 6,
+            "level": 1
+          },
+          {
+            "id": "wall_64",
+            "x": 9.5,
+            "z": 8,
+            "level": 1
+          },
+          {
+            "id": "wall_65",
+            "x": 9.5,
+            "z": 10,
+            "level": 1
+          },
+          {
+            "id": "wall_66",
+            "x": 11.5,
+            "z": 10,
+            "level": 1
+          },
+          {
+            "id": "wall_67",
+            "x": 13.5,
+            "z": 10,
+            "level": 1
+          },
+          {
+            "id": "wall_68",
+            "x": 15.5,
+            "z": 10,
+            "level": 1
+          },
+          {
+            "id": "wall_69",
+            "x": 15.5,
+            "z": 12,
+            "level": 1
+          },
+          {
+            "id": "wall_70",
+            "x": 13.5,
+            "z": 12,
+            "level": 1
+          },
+          {
+            "id": "wall_71",
+            "x": 13.5,
+            "z": 14,
+            "level": 1
+          },
+          {
+            "id": "wall_72",
+            "x": 13.5,
+            "z": 16,
+            "level": 1
+          },
+          {
+            "id": "wall_73",
+            "x": 13.5,
+            "z": 18,
+            "level": 1
+          },
+          {
+            "id": "wall_74",
+            "x": 11.5,
+            "z": 18,
+            "level": 1
+          },
+          {
+            "id": "wall_75",
+            "x": 11.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_76",
+            "x": 9.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_77",
+            "x": 7.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_78",
+            "x": 5.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_79",
+            "x": 3.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_80",
+            "x": 1.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_81",
+            "x": -0.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_82",
+            "x": -2.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_83",
+            "x": -4.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_84",
+            "x": -6.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_85",
+            "x": -8.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_86",
+            "x": -8.5,
+            "z": 18,
+            "level": 1
+          },
+          {
+            "id": "wall_87",
+            "x": -10.5,
+            "z": 18,
+            "level": 1
+          },
+          {
+            "id": "wall_88",
+            "x": -10.5,
+            "z": 16,
+            "level": 1
+          },
+          {
+            "id": "wall_89",
+            "x": -12.5,
+            "z": 16,
+            "level": 1
+          },
+          {
+            "id": "wall_90",
+            "x": -12.5,
+            "z": 14,
+            "level": 1
+          },
+          {
+            "id": "wall_91",
+            "x": -12.5,
+            "z": 12,
+            "level": 1
+          },
+          {
+            "id": "wall_92",
+            "x": -14.5,
+            "z": 12,
+            "level": 1
+          },
+          {
+            "id": "wall_93",
+            "x": -16.5,
+            "z": 12,
+            "level": 1
+          },
+          {
+            "id": "wall_94",
+            "x": -16.5,
+            "z": 10,
+            "level": 1
+          },
+          {
+            "id": "wall_95",
+            "x": -16.5,
+            "z": 8,
+            "level": 1
+          },
+          {
+            "id": "wall_96",
+            "x": -14.5,
+            "z": 8,
+            "level": 1
+          },
+          {
+            "id": "wall_97",
+            "x": -12.5,
+            "z": 8,
+            "level": 1
+          },
+          {
+            "id": "wall_98",
+            "x": -12.5,
+            "z": 6,
+            "level": 1
+          },
+          {
+            "id": "wall_99",
+            "x": -12.5,
+            "z": 4,
+            "level": 1
+          },
+          {
+            "id": "wall_100",
+            "x": -12.5,
+            "z": 2,
+            "level": 1
+          },
+          {
+            "id": "wall_101",
+            "x": -14.5,
+            "z": 2,
+            "level": 1
+          },
+          {
+            "id": "wall_102",
+            "x": -16.5,
+            "z": 2,
+            "level": 1
+          }
+        ]
+      },
+      "entry": {
+        "name": "materials-entry-1280x720.png",
+        "qualityBefore": {
+          "pixelRatio": 0.5,
+          "drawingWidth": 640,
+          "drawingHeight": 360,
+          "quality": "high",
+          "densityScale": 0.5
+        },
+        "camera": [
+          -3.9999999999936047,
+          2.400659722218315,
+          100
+        ],
+        "zoom": 0.9999993328896417,
+        "captain": [
+          8.5,
+          1.03,
+          12.8
+        ],
+        "contextLost": false,
+        "drawCalls": 233,
+        "rendering": {
+          "pixelRatio": 1,
+          "drawingWidth": 1280,
+          "drawingHeight": 720,
+          "quality": "high",
+          "densityScale": 1
+        },
+        "pixelRatio": 1,
+        "drawingSize": [
+          1280,
+          720
+        ],
+        "memory": {
+          "geometries": 260,
+          "textures": 38
+        },
+        "worldLinks": 106,
+        "worldWallDrawMeshes": 36
+      },
+      "buttons": [
+        {
+          "label": "Zoom out",
+          "visibleText": "−",
+          "fontSize": "17px",
+          "width": 44,
+          "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 615.3125,
+            "right": 625.25,
+            "top": 637.265625,
+            "bottom": 660.265625
+          },
+          "paddingBounds": {
+            "left": 600.28125,
+            "right": 640.28125,
+            "top": 629.3125,
+            "bottom": 669.3125
+          },
+          "contentBounds": {
+            "left": 608.28125,
+            "right": 632.28125,
+            "top": 637.3125,
+            "bottom": 661.3125
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
+          "hit": true
+        },
+        {
+          "label": "Zoom in",
+          "visibleText": "+",
+          "fontSize": "17px",
+          "width": 44,
+          "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 663.40625,
+            "right": 673.140625,
+            "top": 637.265625,
+            "bottom": 660.265625
+          },
+          "paddingBounds": {
+            "left": 648.28125,
+            "right": 688.28125,
+            "top": 629.3125,
+            "bottom": 669.3125
+          },
+          "contentBounds": {
+            "left": 656.28125,
+            "right": 680.28125,
+            "top": 637.3125,
+            "bottom": 661.3125
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
+          "hit": true
+        },
+        {
+          "label": "Fit village",
+          "visibleText": "Fit",
+          "fontSize": "17px",
+          "width": 44,
+          "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 705.328125,
+            "right": 727.234375,
+            "top": 637.265625,
+            "bottom": 660.265625
+          },
+          "paddingBounds": {
+            "left": 696.28125,
+            "right": 736.28125,
+            "top": 629.3125,
+            "bottom": 669.3125
+          },
+          "contentBounds": {
+            "left": 704.28125,
+            "right": 728.28125,
+            "top": 637.3125,
+            "bottom": 661.3125
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
+          "hit": true
+        },
+        {
+          "label": "Build walls",
+          "visibleText": "Build walls",
+          "fontSize": "17px",
+          "width": 131.796875,
+          "height": 46.09375,
+          "textFits": true,
+          "textBounds": {
+            "left": 770.28125,
+            "right": 862.078125,
+            "top": 637.265625,
+            "bottom": 660.265625
+          },
+          "paddingBounds": {
+            "left": 752.28125,
+            "right": 880.078125,
+            "top": 628.265625,
+            "bottom": 670.359375
+          },
+          "contentBounds": {
+            "left": 770.28125,
+            "right": 862.078125,
+            "top": 638.265625,
+            "bottom": 660.359375
+          },
+          "scrollWidth": 128,
+          "clientWidth": 128,
+          "hit": true
+        },
+        {
+          "label": "Exit village mode",
+          "visibleText": "Exit",
+          "fontSize": "17px",
+          "width": 71.921875,
+          "height": 46.09375,
+          "textFits": true,
+          "textBounds": {
+            "left": 914.078125,
+            "right": 946,
+            "top": 637.265625,
+            "bottom": 660.265625
+          },
+          "paddingBounds": {
+            "left": 896.078125,
+            "right": 964,
+            "top": 628.265625,
+            "bottom": 670.359375
+          },
+          "contentBounds": {
+            "left": 914.078125,
+            "right": 946,
+            "top": 638.265625,
+            "bottom": 660.359375
+          },
+          "scrollWidth": 68,
+          "clientWidth": 68,
+          "hit": true
+        }
+      ],
+      "dragged": {
+        "camera": [
+          -5.826978363096603,
+          3.009652510432744,
+          100
+        ],
+        "zoom": 0.9999993328896417
+      },
+      "peek": {
+        "camera": [
+          -0.044275589319029196,
+          1.6473095187253672,
+          100
+        ],
+        "zoom": 0.3565743476421648
+      },
+      "fit": {
+        "name": "materials-fit-1280x720.png",
+        "qualityBefore": {
+          "pixelRatio": 0.5,
+          "drawingWidth": 640,
+          "drawingHeight": 360,
+          "quality": "high",
+          "densityScale": 0.5
+        },
+        "camera": [
+          -0.03544961423581645,
+          1.6452332095177988,
+          100
+        ],
+        "zoom": 0.35558889456588944,
+        "captain": [
+          8.5,
+          1.03,
+          12.8
+        ],
+        "contextLost": false,
+        "drawCalls": 235,
+        "rendering": {
+          "pixelRatio": 1,
+          "drawingWidth": 1280,
+          "drawingHeight": 720,
+          "quality": "high",
+          "densityScale": 1
+        },
+        "pixelRatio": 1,
+        "drawingSize": [
+          1280,
+          720
+        ],
+        "memory": {
+          "geometries": 260,
+          "textures": 38
+        },
+        "worldLinks": 106,
+        "worldWallDrawMeshes": 36
+      },
+      "focusApiDiagnostic": true,
+      "pick": {
+        "x": 643.0154340119344,
+        "y": 351.91216363644
+      },
+      "pngMeshes": [
+        {
+          "name": "",
+          "source": {
+            "id": "oak",
+            "file": "village/nature-v1.png",
+            "logical": [
+              80,
+              104,
+              8
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": -15,
+            "z": 6
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "pine",
+            "file": "village/nature-v1.png",
+            "logical": [
+              80,
+              112,
+              8
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": -16,
+            "z": 0
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "birch",
+            "file": "village/nature-v1.png",
+            "logical": [
+              80,
+              104,
+              8
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": -13,
+            "z": -12
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "oak",
+            "file": "village/nature-v1.png",
+            "logical": [
+              80,
+              104,
+              8
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": -9,
+            "z": -17
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "pine",
+            "file": "village/nature-v1.png",
+            "logical": [
+              80,
+              112,
+              8
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": 9,
+            "z": -17
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "birch",
+            "file": "village/nature-v1.png",
+            "logical": [
+              80,
+              104,
+              8
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": 15,
+            "z": -8
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "oak",
+            "file": "village/nature-v1.png",
+            "logical": [
+              80,
+              104,
+              8
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": 16,
+            "z": 2
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "pine",
+            "file": "village/nature-v1.png",
+            "logical": [
+              80,
+              112,
+              8
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": 14,
+            "z": 11
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "birch",
+            "file": "village/nature-v1.png",
+            "logical": [
+              80,
+              104,
+              8
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": -12,
+            "z": 13
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "grass-tuft",
+            "file": "village/nature-v1.png",
+            "logical": [
+              32,
+              32,
+              4
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": -13,
+            "z": 7
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "flowers",
+            "file": "village/nature-v1.png",
+            "logical": [
+              24,
+              24,
+              3
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": -16.6,
+            "z": 7
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "grass-tuft",
+            "file": "village/nature-v1.png",
+            "logical": [
+              32,
+              32,
+              4
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": -14,
+            "z": 1
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "grass-tuft",
+            "file": "village/nature-v1.png",
+            "logical": [
+              32,
+              32,
+              4
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": -11,
+            "z": -11
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "flowers",
+            "file": "village/nature-v1.png",
+            "logical": [
+              24,
+              24,
+              3
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": -14.6,
+            "z": -11
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "grass-tuft",
+            "file": "village/nature-v1.png",
+            "logical": [
+              32,
+              32,
+              4
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": -7,
+            "z": -16
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "grass-tuft",
+            "file": "village/nature-v1.png",
+            "logical": [
+              32,
+              32,
+              4
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": 11,
+            "z": -16
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "flowers",
+            "file": "village/nature-v1.png",
+            "logical": [
+              24,
+              24,
+              3
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": 7.4,
+            "z": -16
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "grass-tuft",
+            "file": "village/nature-v1.png",
+            "logical": [
+              32,
+              32,
+              4
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": 17,
+            "z": -7
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "grass-tuft",
+            "file": "village/nature-v1.png",
+            "logical": [
+              32,
+              32,
+              4
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": 18,
+            "z": 3
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "flowers",
+            "file": "village/nature-v1.png",
+            "logical": [
+              24,
+              24,
+              3
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": 14.4,
+            "z": 3
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "grass-tuft",
+            "file": "village/nature-v1.png",
+            "logical": [
+              32,
+              32,
+              4
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": 16,
+            "z": 12
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "grass-tuft",
+            "file": "village/nature-v1.png",
+            "logical": [
+              32,
+              32,
+              4
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": -10,
+            "z": 14
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "flowers",
+            "file": "village/nature-v1.png",
+            "logical": [
+              24,
+              24,
+              3
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": -13.6,
+            "z": 14
+          }
+        },
+        {
+          "name": "island-bell",
+          "source": {
+            "id": "island-bell",
+            "file": "village/landmarks-v1.png",
+            "logical": [
+              56,
+              72,
+              8
+            ],
+            "source": "unprepared-placeholder"
+          },
+          "ground": {
+            "x": 8.5,
+            "z": 12
+          }
+        },
+        {
+          "name": "island-cabin",
+          "source": {
+            "id": "cabin",
+            "file": "village/buildings-hero-v1.png",
+            "logical": [
+              96,
+              96,
+              12
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": -8,
+            "z": 6
+          }
+        },
+        {
+          "name": "island-watchtower:tower_1",
+          "source": {
+            "id": "island-watchtower",
+            "file": "village/landmarks-v1.png",
+            "logical": [
+              64,
+              128,
+              8
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": 0,
+            "z": -14
+          }
+        },
+        {
+          "name": "island-house:house_1",
+          "source": {
+            "id": "island-house",
+            "file": "village/houses-v1.png",
+            "logical": [
+              64,
+              64,
+              8
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": 7,
+            "z": -6
+          }
+        },
+        {
+          "name": "island-house:house_2",
+          "source": {
+            "id": "island-house",
+            "file": "village/houses-v1.png",
+            "logical": [
+              64,
+              64,
+              8
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": -8,
+            "z": -6
+          }
+        }
+      ],
+      "rasterParity": {
+        "scope": "supplementary real browser Canvas/world-material/combat-atlas PNG parity; not a gameplay screenshot or sustained performance claim",
+        "results": [
+          {
+            "id": "cabin",
+            "file": "village/buildings-hero-v1.png",
+            "nativeSheet": [
+              1254,
+              1254
+            ],
+            "rect": [
+              0,
+              0,
+              1254,
+              1254
+            ],
+            "logical": [
+              96,
+              96,
+              12
+            ],
+            "sourceFoot": [
+              627,
+              1124
+            ],
+            "fitBounds": [
+              627,
+              1124,
+              627,
+              130
+            ],
+            "quality": "low",
+            "requestedDensity": 1.5,
+            "effectiveDensity": 1.5,
+            "rasterSize": [
+              144,
+              144
+            ],
+            "logicalFoot": [
+              48,
+              84
+            ],
+            "visiblePixels": 9572,
+            "maxDelta": 0
+          },
+          {
+            "id": "island-house",
+            "file": "village/houses-v1.png",
+            "nativeSheet": [
+              1254,
+              1254
+            ],
+            "rect": [
+              0,
+              0,
+              418,
+              418
+            ],
+            "logical": [
+              64,
+              64,
+              8
+            ],
+            "sourceFoot": [
+              209,
+              373
+            ],
+            "fitBounds": [
+              209,
+              373,
+              209,
+              45
+            ],
+            "quality": "low",
+            "requestedDensity": 1.5,
+            "effectiveDensity": 1.5,
+            "rasterSize": [
+              96,
+              96
+            ],
+            "logicalFoot": [
+              32,
+              56
+            ],
+            "visiblePixels": 2905,
+            "maxDelta": 0
+          },
+          {
+            "id": "oak",
+            "file": "village/nature-v1.png",
+            "nativeSheet": [
+              1536,
+              1024
+            ],
+            "rect": [
+              24,
+              132,
+              418,
+              431
+            ],
+            "logical": [
+              80,
+              104,
+              8
+            ],
+            "sourceFoot": [
+              197,
+              420
+            ],
+            "fitBounds": [
+              197,
+              420,
+              221,
+              11
+            ],
+            "quality": "low",
+            "requestedDensity": 1.5,
+            "effectiveDensity": 1.5,
+            "rasterSize": [
+              120,
+              156
+            ],
+            "logicalFoot": [
+              40,
+              96
+            ],
+            "visiblePixels": 7785,
+            "maxDelta": 0
+          },
+          {
+            "id": "island-watchtower",
+            "file": "village/landmarks-v1.png",
+            "nativeSheet": [
+              1254,
+              1254
+            ],
+            "rect": [
+              760,
+              8,
+              325,
+              558
+            ],
+            "logical": [
+              64,
+              128,
+              8
+            ],
+            "sourceFoot": [
+              161,
+              543
+            ],
+            "fitBounds": [
+              161,
+              543,
+              164,
+              15
+            ],
+            "quality": "low",
+            "requestedDensity": 1.5,
+            "effectiveDensity": 1.5,
+            "rasterSize": [
+              96,
+              192
+            ],
+            "logicalFoot": [
+              32,
+              120
+            ],
+            "visiblePixels": 8173,
+            "maxDelta": 0
+          },
+          {
+            "id": "cabin",
+            "file": "village/buildings-hero-v1.png",
+            "nativeSheet": [
+              1254,
+              1254
+            ],
+            "rect": [
+              0,
+              0,
+              1254,
+              1254
+            ],
+            "logical": [
+              96,
+              96,
+              12
+            ],
+            "sourceFoot": [
+              627,
+              1124
+            ],
+            "fitBounds": [
+              627,
+              1124,
+              627,
+              130
+            ],
+            "quality": "high",
+            "requestedDensity": 2,
+            "effectiveDensity": 2,
+            "rasterSize": [
+              192,
+              192
+            ],
+            "logicalFoot": [
+              48,
+              84
+            ],
+            "visiblePixels": 16996,
+            "maxDelta": 0
+          },
+          {
+            "id": "island-house",
+            "file": "village/houses-v1.png",
+            "nativeSheet": [
+              1254,
+              1254
+            ],
+            "rect": [
+              0,
+              0,
+              418,
+              418
+            ],
+            "logical": [
+              64,
+              64,
+              8
+            ],
+            "sourceFoot": [
+              209,
+              373
+            ],
+            "fitBounds": [
+              209,
+              373,
+              209,
+              45
+            ],
+            "quality": "high",
+            "requestedDensity": 2,
+            "effectiveDensity": 2,
+            "rasterSize": [
+              128,
+              128
+            ],
+            "logicalFoot": [
+              32,
+              56
+            ],
+            "visiblePixels": 5185,
+            "maxDelta": 0
+          },
+          {
+            "id": "oak",
+            "file": "village/nature-v1.png",
+            "nativeSheet": [
+              1536,
+              1024
+            ],
+            "rect": [
+              24,
+              132,
+              418,
+              431
+            ],
+            "logical": [
+              80,
+              104,
+              8
+            ],
+            "sourceFoot": [
+              197,
+              420
+            ],
+            "fitBounds": [
+              197,
+              420,
+              221,
+              11
+            ],
+            "quality": "high",
+            "requestedDensity": 2,
+            "effectiveDensity": 2,
+            "rasterSize": [
+              160,
+              208
+            ],
+            "logicalFoot": [
+              40,
+              96
+            ],
+            "visiblePixels": 13839,
+            "maxDelta": 0
+          },
+          {
+            "id": "island-watchtower",
+            "file": "village/landmarks-v1.png",
+            "nativeSheet": [
+              1254,
+              1254
+            ],
+            "rect": [
+              760,
+              8,
+              325,
+              558
+            ],
+            "logical": [
+              64,
+              128,
+              8
+            ],
+            "sourceFoot": [
+              161,
+              543
+            ],
+            "fitBounds": [
+              161,
+              543,
+              164,
+              15
+            ],
+            "quality": "high",
+            "requestedDensity": 2,
+            "effectiveDensity": 2,
+            "rasterSize": [
+              128,
+              256
+            ],
+            "logicalFoot": [
+              32,
+              120
+            ],
+            "visiblePixels": 14603,
+            "maxDelta": 0
+          },
+          {
+            "id": "cabin",
+            "file": "village/buildings-hero-v1.png",
+            "nativeSheet": [
+              1254,
+              1254
+            ],
+            "rect": [
+              0,
+              0,
+              1254,
+              1254
+            ],
+            "logical": [
+              96,
+              96,
+              12
+            ],
+            "sourceFoot": [
+              627,
+              1124
+            ],
+            "fitBounds": [
+              627,
+              1124,
+              627,
+              130
+            ],
+            "quality": "high",
+            "requestedDensity": 4,
+            "effectiveDensity": 4,
+            "rasterSize": [
+              384,
+              384
+            ],
+            "logicalFoot": [
+              48,
+              84
+            ],
+            "visiblePixels": 67826,
+            "maxDelta": 0
+          },
+          {
+            "id": "island-house",
+            "file": "village/houses-v1.png",
+            "nativeSheet": [
+              1254,
+              1254
+            ],
+            "rect": [
+              0,
+              0,
+              418,
+              418
+            ],
+            "logical": [
+              64,
+              64,
+              8
+            ],
+            "sourceFoot": [
+              209,
+              373
+            ],
+            "fitBounds": [
+              209,
+              373,
+              209,
+              45
+            ],
+            "quality": "high",
+            "requestedDensity": 4,
+            "effectiveDensity": 4,
+            "rasterSize": [
+              256,
+              256
+            ],
+            "logicalFoot": [
+              32,
+              56
+            ],
+            "visiblePixels": 20702,
+            "maxDelta": 0
+          },
+          {
+            "id": "oak",
+            "file": "village/nature-v1.png",
+            "nativeSheet": [
+              1536,
+              1024
+            ],
+            "rect": [
+              24,
+              132,
+              418,
+              431
+            ],
+            "logical": [
+              80,
+              104,
+              8
+            ],
+            "sourceFoot": [
+              197,
+              420
+            ],
+            "fitBounds": [
+              197,
+              420,
+              221,
+              11
+            ],
+            "quality": "high",
+            "requestedDensity": 4,
+            "effectiveDensity": 4,
+            "rasterSize": [
+              320,
+              416
+            ],
+            "logicalFoot": [
+              40,
+              96
+            ],
+            "visiblePixels": 55407,
+            "maxDelta": 0
+          },
+          {
+            "id": "island-watchtower",
+            "file": "village/landmarks-v1.png",
+            "nativeSheet": [
+              1254,
+              1254
+            ],
+            "rect": [
+              760,
+              8,
+              325,
+              558
+            ],
+            "logical": [
+              64,
+              128,
+              8
+            ],
+            "sourceFoot": [
+              161,
+              543
+            ],
+            "fitBounds": [
+              161,
+              543,
+              164,
+              15
+            ],
+            "quality": "high",
+            "requestedDensity": 4,
+            "effectiveDensity": 4,
+            "rasterSize": [
+              256,
+              512
+            ],
+            "logicalFoot": [
+              32,
+              120
+            ],
+            "visiblePixels": 58201,
+            "maxDelta": 0
+          }
+        ]
+      },
+      "pageErrors": [],
+      "externalRequests": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+      ]
+    },
+    {
+      "width": 375,
+      "height": 812,
+      "paid": {
+        "coins": 6660,
+        "code": "ISLE-K7Q2M",
+        "walls": [
+          {
+            "id": "wall_1",
+            "x": -18.5,
+            "z": 2,
+            "level": 2
+          },
+          {
+            "id": "wall_2",
+            "x": -18.5,
+            "z": 0,
+            "level": 1
+          },
+          {
+            "id": "wall_3",
+            "x": -18.5,
+            "z": -2,
+            "level": 1
+          },
+          {
+            "id": "wall_4",
+            "x": -18.5,
+            "z": -4,
+            "level": 1
+          },
+          {
+            "id": "wall_5",
+            "x": -18.5,
+            "z": -6,
+            "level": 1
+          },
+          {
+            "id": "wall_6",
+            "x": -18.5,
+            "z": -8,
+            "level": 1
+          },
+          {
+            "id": "wall_7",
+            "x": -18.5,
+            "z": -10,
+            "level": 1
+          },
+          {
+            "id": "wall_8",
+            "x": -16.5,
+            "z": -10,
+            "level": 1
+          },
+          {
+            "id": "wall_9",
+            "x": -16.5,
+            "z": -12,
+            "level": 1
+          },
+          {
+            "id": "wall_10",
+            "x": -14.5,
+            "z": -12,
+            "level": 1
+          },
+          {
+            "id": "wall_11",
+            "x": -12.5,
+            "z": -12,
+            "level": 1
+          },
+          {
+            "id": "wall_12",
+            "x": -10.5,
+            "z": -12,
+            "level": 1
+          },
+          {
+            "id": "wall_13",
+            "x": -10.5,
+            "z": -14,
+            "level": 1
+          },
+          {
+            "id": "wall_14",
+            "x": -10.5,
+            "z": -16,
+            "level": 1
+          },
+          {
+            "id": "wall_15",
+            "x": -8.5,
+            "z": -16,
+            "level": 1
+          },
+          {
+            "id": "wall_16",
+            "x": -8.5,
+            "z": -18,
+            "level": 1
+          },
+          {
+            "id": "wall_17",
+            "x": -6.5,
+            "z": -18,
+            "level": 1
+          },
+          {
+            "id": "wall_18",
+            "x": -6.5,
+            "z": -20,
+            "level": 1
+          },
+          {
+            "id": "wall_19",
+            "x": -4.5,
+            "z": -20,
+            "level": 1
+          },
+          {
+            "id": "wall_20",
+            "x": -4.5,
+            "z": -22,
+            "level": 1
+          },
+          {
+            "id": "wall_21",
+            "x": -2.5,
+            "z": -22,
+            "level": 1
+          },
+          {
+            "id": "wall_22",
+            "x": -0.5,
+            "z": -22,
+            "level": 1
+          },
+          {
+            "id": "wall_23",
+            "x": 1.5,
+            "z": -22,
+            "level": 1
+          },
+          {
+            "id": "wall_24",
+            "x": 1.5,
+            "z": -20,
+            "level": 1
+          },
+          {
+            "id": "wall_25",
+            "x": 3.5,
+            "z": -20,
+            "level": 1
+          },
+          {
+            "id": "wall_26",
+            "x": 5.5,
+            "z": -20,
+            "level": 1
+          },
+          {
+            "id": "wall_27",
+            "x": 5.5,
+            "z": -18,
+            "level": 1
+          },
+          {
+            "id": "wall_28",
+            "x": 7.5,
+            "z": -18,
+            "level": 1
+          },
+          {
+            "id": "wall_29",
+            "x": 9.5,
+            "z": -18,
+            "level": 1
+          },
+          {
+            "id": "wall_30",
+            "x": 9.5,
+            "z": -16,
+            "level": 1
+          },
+          {
+            "id": "wall_31",
+            "x": 7.5,
+            "z": -16,
+            "level": 1
+          },
+          {
+            "id": "wall_32",
+            "x": 5.5,
+            "z": -16,
+            "level": 1
+          },
+          {
+            "id": "wall_33",
+            "x": 3.5,
+            "z": -16,
+            "level": 1
+          },
+          {
+            "id": "wall_34",
+            "x": 3.5,
+            "z": -14,
+            "level": 1
+          },
+          {
+            "id": "wall_35",
+            "x": 3.5,
+            "z": -12,
+            "level": 1
+          },
+          {
+            "id": "wall_36",
+            "x": 3.5,
+            "z": -10,
+            "level": 1
+          },
+          {
+            "id": "wall_37",
+            "x": 5.5,
+            "z": -10,
+            "level": 1
+          },
+          {
+            "id": "wall_38",
+            "x": 7.5,
+            "z": -10,
+            "level": 1
+          },
+          {
+            "id": "wall_39",
+            "x": 9.5,
+            "z": -10,
+            "level": 1
+          },
+          {
+            "id": "wall_40",
+            "x": 9.5,
+            "z": -8,
+            "level": 1
+          },
+          {
+            "id": "wall_41",
+            "x": 9.5,
+            "z": -6,
+            "level": 1
+          },
+          {
+            "id": "wall_42",
+            "x": 11.5,
+            "z": -6,
+            "level": 1
+          },
+          {
+            "id": "wall_43",
+            "x": 13.5,
+            "z": -6,
+            "level": 1
+          },
+          {
+            "id": "wall_44",
+            "x": 13.5,
+            "z": -8,
+            "level": 1
+          },
+          {
+            "id": "wall_45",
+            "x": 13.5,
+            "z": -10,
+            "level": 1
+          },
+          {
+            "id": "wall_46",
+            "x": 13.5,
+            "z": -12,
+            "level": 1
+          },
+          {
+            "id": "wall_47",
+            "x": 15.5,
+            "z": -12,
+            "level": 1
+          },
+          {
+            "id": "wall_48",
+            "x": 15.5,
+            "z": -10,
+            "level": 1
+          },
+          {
+            "id": "wall_49",
+            "x": 17.5,
+            "z": -10,
+            "level": 1
+          },
+          {
+            "id": "wall_50",
+            "x": 17.5,
+            "z": -8,
+            "level": 1
+          },
+          {
+            "id": "wall_51",
+            "x": 17.5,
+            "z": -6,
+            "level": 1
+          },
+          {
+            "id": "wall_52",
+            "x": 19.5,
+            "z": -6,
+            "level": 1
+          },
+          {
+            "id": "wall_53",
+            "x": 19.5,
+            "z": -4,
+            "level": 1
+          },
+          {
+            "id": "wall_54",
+            "x": 19.5,
+            "z": -2,
+            "level": 1
+          },
+          {
+            "id": "wall_55",
+            "x": 19.5,
+            "z": 0,
+            "level": 1
+          },
+          {
+            "id": "wall_56",
+            "x": 19.5,
+            "z": 2,
+            "level": 1
+          },
+          {
+            "id": "wall_57",
+            "x": 17.5,
+            "z": 2,
+            "level": 1
+          },
+          {
+            "id": "wall_58",
+            "x": 17.5,
+            "z": 4,
+            "level": 1
+          },
+          {
+            "id": "wall_59",
+            "x": 15.5,
+            "z": 4,
+            "level": 1
+          },
+          {
+            "id": "wall_60",
+            "x": 13.5,
+            "z": 4,
+            "level": 1
+          },
+          {
+            "id": "wall_61",
+            "x": 11.5,
+            "z": 4,
+            "level": 1
+          },
+          {
+            "id": "wall_62",
+            "x": 9.5,
+            "z": 4,
+            "level": 1
+          },
+          {
+            "id": "wall_63",
+            "x": 9.5,
+            "z": 6,
+            "level": 1
+          },
+          {
+            "id": "wall_64",
+            "x": 9.5,
+            "z": 8,
+            "level": 1
+          },
+          {
+            "id": "wall_65",
+            "x": 9.5,
+            "z": 10,
+            "level": 1
+          },
+          {
+            "id": "wall_66",
+            "x": 11.5,
+            "z": 10,
+            "level": 1
+          },
+          {
+            "id": "wall_67",
+            "x": 13.5,
+            "z": 10,
+            "level": 1
+          },
+          {
+            "id": "wall_68",
+            "x": 15.5,
+            "z": 10,
+            "level": 1
+          },
+          {
+            "id": "wall_69",
+            "x": 15.5,
+            "z": 12,
+            "level": 1
+          },
+          {
+            "id": "wall_70",
+            "x": 13.5,
+            "z": 12,
+            "level": 1
+          },
+          {
+            "id": "wall_71",
+            "x": 13.5,
+            "z": 14,
+            "level": 1
+          },
+          {
+            "id": "wall_72",
+            "x": 13.5,
+            "z": 16,
+            "level": 1
+          },
+          {
+            "id": "wall_73",
+            "x": 13.5,
+            "z": 18,
+            "level": 1
+          },
+          {
+            "id": "wall_74",
+            "x": 11.5,
+            "z": 18,
+            "level": 1
+          },
+          {
+            "id": "wall_75",
+            "x": 11.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_76",
+            "x": 9.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_77",
+            "x": 7.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_78",
+            "x": 5.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_79",
+            "x": 3.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_80",
+            "x": 1.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_81",
+            "x": -0.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_82",
+            "x": -2.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_83",
+            "x": -4.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_84",
+            "x": -6.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_85",
+            "x": -8.5,
+            "z": 20,
+            "level": 1
+          },
+          {
+            "id": "wall_86",
+            "x": -8.5,
+            "z": 18,
+            "level": 1
+          },
+          {
+            "id": "wall_87",
+            "x": -10.5,
+            "z": 18,
+            "level": 1
+          },
+          {
+            "id": "wall_88",
+            "x": -10.5,
+            "z": 16,
+            "level": 1
+          },
+          {
+            "id": "wall_89",
+            "x": -12.5,
+            "z": 16,
+            "level": 1
+          },
+          {
+            "id": "wall_90",
+            "x": -12.5,
+            "z": 14,
+            "level": 1
+          },
+          {
+            "id": "wall_91",
+            "x": -12.5,
+            "z": 12,
+            "level": 1
+          },
+          {
+            "id": "wall_92",
+            "x": -14.5,
+            "z": 12,
+            "level": 1
+          },
+          {
+            "id": "wall_93",
+            "x": -16.5,
+            "z": 12,
+            "level": 1
+          },
+          {
+            "id": "wall_94",
+            "x": -16.5,
+            "z": 10,
+            "level": 1
+          },
+          {
+            "id": "wall_95",
+            "x": -16.5,
+            "z": 8,
+            "level": 1
+          },
+          {
+            "id": "wall_96",
+            "x": -14.5,
+            "z": 8,
+            "level": 1
+          },
+          {
+            "id": "wall_97",
+            "x": -12.5,
+            "z": 8,
+            "level": 1
+          },
+          {
+            "id": "wall_98",
+            "x": -12.5,
+            "z": 6,
+            "level": 1
+          },
+          {
+            "id": "wall_99",
+            "x": -12.5,
+            "z": 4,
+            "level": 1
+          },
+          {
+            "id": "wall_100",
+            "x": -12.5,
+            "z": 2,
+            "level": 1
+          },
+          {
+            "id": "wall_101",
+            "x": -14.5,
+            "z": 2,
+            "level": 1
+          },
+          {
+            "id": "wall_102",
+            "x": -16.5,
+            "z": 2,
+            "level": 1
+          }
+        ]
+      },
+      "entry": {
+        "name": "materials-entry-375x812.png",
+        "qualityBefore": {
+          "pixelRatio": 0.65,
+          "drawingWidth": 243,
+          "drawingHeight": 527,
+          "quality": "high",
+          "densityScale": 0.65
+        },
+        "camera": [
+          -3.999999998732347,
+          1.0779999991570057,
+          100
+        ],
+        "zoom": 0.9999991332065363,
+        "captain": [
+          8.5,
+          1.03,
+          12.8
+        ],
+        "contextLost": false,
+        "drawCalls": 235,
+        "rendering": {
+          "pixelRatio": 1,
+          "drawingWidth": 375,
+          "drawingHeight": 812,
+          "quality": "high",
+          "densityScale": 1
+        },
+        "pixelRatio": 1,
+        "drawingSize": [
+          375,
+          812
+        ],
+        "memory": {
+          "geometries": 260,
+          "textures": 38
+        },
+        "worldLinks": 106,
+        "worldWallDrawMeshes": 36
+      },
+      "buttons": [
+        {
+          "label": "Zoom out",
+          "visibleText": "−",
+          "fontSize": "17px",
+          "width": 44,
+          "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 43.03125,
+            "right": 52.96875,
+            "top": 657.671875,
+            "bottom": 680.671875
+          },
+          "paddingBounds": {
+            "left": 28,
+            "right": 68,
+            "top": 649.71875,
+            "bottom": 689.71875
+          },
+          "contentBounds": {
+            "left": 36,
+            "right": 60,
+            "top": 657.71875,
+            "bottom": 681.71875
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
+          "hit": true
+        },
+        {
+          "label": "Zoom in",
+          "visibleText": "+",
+          "fontSize": "17px",
+          "width": 44,
+          "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 91.125,
+            "right": 100.859375,
+            "top": 657.671875,
+            "bottom": 680.671875
+          },
+          "paddingBounds": {
+            "left": 76,
+            "right": 116,
+            "top": 649.71875,
+            "bottom": 689.71875
+          },
+          "contentBounds": {
+            "left": 84,
+            "right": 108,
+            "top": 657.71875,
+            "bottom": 681.71875
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
+          "hit": true
+        },
+        {
+          "label": "Fit village",
+          "visibleText": "Fit",
+          "fontSize": "17px",
+          "width": 44,
+          "height": 44,
+          "textFits": true,
+          "textBounds": {
+            "left": 133.046875,
+            "right": 154.953125,
+            "top": 657.671875,
+            "bottom": 680.671875
+          },
+          "paddingBounds": {
+            "left": 124,
+            "right": 164,
+            "top": 649.71875,
+            "bottom": 689.71875
+          },
+          "contentBounds": {
+            "left": 132,
+            "right": 156,
+            "top": 657.71875,
+            "bottom": 681.71875
+          },
+          "scrollWidth": 40,
+          "clientWidth": 40,
+          "hit": true
+        },
+        {
+          "label": "Build walls",
+          "visibleText": "Build walls",
+          "fontSize": "17px",
+          "width": 112,
+          "height": 68.1875,
+          "textFits": true,
+          "textBounds": {
+            "left": 271.125,
+            "right": 314.859375,
+            "top": 658.71875,
+            "bottom": 703.8125
+          },
+          "paddingBounds": {
+            "left": 239,
+            "right": 347,
+            "top": 649.71875,
+            "bottom": 713.90625
+          },
+          "contentBounds": {
+            "left": 257,
+            "right": 329,
+            "top": 659.71875,
+            "bottom": 703.90625
+          },
+          "scrollWidth": 108,
+          "clientWidth": 108,
+          "hit": true
+        },
+        {
+          "label": "Exit village mode",
+          "visibleText": "Exit",
+          "fontSize": "17px",
+          "width": 71.921875,
+          "height": 46.09375,
+          "textFits": true,
+          "textBounds": {
+            "left": 46,
+            "right": 77.921875,
+            "top": 734.90625,
+            "bottom": 757.90625
+          },
+          "paddingBounds": {
+            "left": 28,
+            "right": 95.921875,
+            "top": 725.90625,
+            "bottom": 768
+          },
+          "contentBounds": {
+            "left": 46,
+            "right": 77.921875,
+            "top": 735.90625,
+            "bottom": 758
+          },
+          "scrollWidth": 68,
+          "clientWidth": 68,
+          "hit": true
+        }
+      ],
+      "dragged": {
+        "camera": [
+          -6.551716320760167,
+          1.9285721056843808,
+          100
+        ],
+        "zoom": 0.9999991332065363
+      },
+      "peek": {
+        "camera": [
+          -0.03320816635668145,
+          -2.384033113993144,
+          100
+        ],
+        "zoom": 0.3367113547921072
+      },
+      "fit": {
+        "name": "materials-fit-375x812.png",
+        "qualityBefore": {
+          "pixelRatio": 0.8,
+          "drawingWidth": 300,
+          "drawingHeight": 649,
+          "quality": "high",
+          "densityScale": 0.8
+        },
+        "camera": [
+          -0.020727611351602768,
+          -2.3922953414439623,
+          100
+        ],
+        "zoom": 0.3354397979248308,
+        "captain": [
+          8.5,
+          1.03,
+          12.8
+        ],
+        "contextLost": false,
+        "drawCalls": 235,
+        "rendering": {
+          "pixelRatio": 1,
+          "drawingWidth": 375,
+          "drawingHeight": 812,
+          "quality": "high",
+          "densityScale": 1
+        },
+        "pixelRatio": 1,
+        "drawingSize": [
+          375,
+          812
+        ],
+        "memory": {
+          "geometries": 260,
+          "textures": 38
+        },
+        "worldLinks": 106,
+        "worldWallDrawMeshes": 36
+      },
+      "focusApiDiagnostic": true,
+      "pick": {
+        "x": 188.67041966917495,
+        "y": 369.77153827548767
+      },
+      "pngMeshes": [
+        {
+          "name": "",
+          "source": {
+            "id": "oak",
+            "file": "village/nature-v1.png",
+            "logical": [
+              80,
+              104,
+              8
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": -15,
+            "z": 6
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "pine",
+            "file": "village/nature-v1.png",
+            "logical": [
+              80,
+              112,
+              8
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": -16,
+            "z": 0
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "birch",
+            "file": "village/nature-v1.png",
+            "logical": [
+              80,
+              104,
+              8
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": -13,
+            "z": -12
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "oak",
+            "file": "village/nature-v1.png",
+            "logical": [
+              80,
+              104,
+              8
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": -9,
+            "z": -17
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "pine",
+            "file": "village/nature-v1.png",
+            "logical": [
+              80,
+              112,
+              8
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": 9,
+            "z": -17
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "birch",
+            "file": "village/nature-v1.png",
+            "logical": [
+              80,
+              104,
+              8
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": 15,
+            "z": -8
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "oak",
+            "file": "village/nature-v1.png",
+            "logical": [
+              80,
+              104,
+              8
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": 16,
+            "z": 2
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "pine",
+            "file": "village/nature-v1.png",
+            "logical": [
+              80,
+              112,
+              8
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": 14,
+            "z": 11
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "birch",
+            "file": "village/nature-v1.png",
+            "logical": [
+              80,
+              104,
+              8
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": -12,
+            "z": 13
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "grass-tuft",
+            "file": "village/nature-v1.png",
+            "logical": [
+              32,
+              32,
+              4
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": -13,
+            "z": 7
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "flowers",
+            "file": "village/nature-v1.png",
+            "logical": [
+              24,
+              24,
+              3
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": -16.6,
+            "z": 7
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "grass-tuft",
+            "file": "village/nature-v1.png",
+            "logical": [
+              32,
+              32,
+              4
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": -14,
+            "z": 1
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "grass-tuft",
+            "file": "village/nature-v1.png",
+            "logical": [
+              32,
+              32,
+              4
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": -11,
+            "z": -11
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "flowers",
+            "file": "village/nature-v1.png",
+            "logical": [
+              24,
+              24,
+              3
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": -14.6,
+            "z": -11
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "grass-tuft",
+            "file": "village/nature-v1.png",
+            "logical": [
+              32,
+              32,
+              4
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": -7,
+            "z": -16
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "grass-tuft",
+            "file": "village/nature-v1.png",
+            "logical": [
+              32,
+              32,
+              4
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": 11,
+            "z": -16
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "flowers",
+            "file": "village/nature-v1.png",
+            "logical": [
+              24,
+              24,
+              3
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": 7.4,
+            "z": -16
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "grass-tuft",
+            "file": "village/nature-v1.png",
+            "logical": [
+              32,
+              32,
+              4
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": 17,
+            "z": -7
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "grass-tuft",
+            "file": "village/nature-v1.png",
+            "logical": [
+              32,
+              32,
+              4
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": 18,
+            "z": 3
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "flowers",
+            "file": "village/nature-v1.png",
+            "logical": [
+              24,
+              24,
+              3
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": 14.4,
+            "z": 3
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "grass-tuft",
+            "file": "village/nature-v1.png",
+            "logical": [
+              32,
+              32,
+              4
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": 16,
+            "z": 12
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "grass-tuft",
+            "file": "village/nature-v1.png",
+            "logical": [
+              32,
+              32,
+              4
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": -10,
+            "z": 14
+          }
+        },
+        {
+          "name": "",
+          "source": {
+            "id": "flowers",
+            "file": "village/nature-v1.png",
+            "logical": [
+              24,
+              24,
+              3
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": -13.6,
+            "z": 14
+          }
+        },
+        {
+          "name": "island-bell",
+          "source": {
+            "id": "island-bell",
+            "file": "village/landmarks-v1.png",
+            "logical": [
+              56,
+              72,
+              8
+            ],
+            "source": "unprepared-placeholder"
+          },
+          "ground": {
+            "x": 8.5,
+            "z": 12
+          }
+        },
+        {
+          "name": "island-cabin",
+          "source": {
+            "id": "cabin",
+            "file": "village/buildings-hero-v1.png",
+            "logical": [
+              96,
+              96,
+              12
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": -8,
+            "z": 6
+          }
+        },
+        {
+          "name": "island-watchtower:tower_1",
+          "source": {
+            "id": "island-watchtower",
+            "file": "village/landmarks-v1.png",
+            "logical": [
+              64,
+              128,
+              8
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": 0,
+            "z": -14
+          }
+        },
+        {
+          "name": "island-house:house_1",
+          "source": {
+            "id": "island-house",
+            "file": "village/houses-v1.png",
+            "logical": [
+              64,
+              64,
+              8
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": 7,
+            "z": -6
+          }
+        },
+        {
+          "name": "island-house:house_2",
+          "source": {
+            "id": "island-house",
+            "file": "village/houses-v1.png",
+            "logical": [
+              64,
+              64,
+              8
+            ],
+            "source": "png"
+          },
+          "ground": {
+            "x": -8,
+            "z": -6
+          }
+        }
+      ],
+      "rasterParity": {
+        "scope": "supplementary real browser Canvas/world-material/combat-atlas PNG parity; not a gameplay screenshot or sustained performance claim",
+        "results": [
+          {
+            "id": "cabin",
+            "file": "village/buildings-hero-v1.png",
+            "nativeSheet": [
+              1254,
+              1254
+            ],
+            "rect": [
+              0,
+              0,
+              1254,
+              1254
+            ],
+            "logical": [
+              96,
+              96,
+              12
+            ],
+            "sourceFoot": [
+              627,
+              1124
+            ],
+            "fitBounds": [
+              627,
+              1124,
+              627,
+              130
+            ],
+            "quality": "low",
+            "requestedDensity": 1.5,
+            "effectiveDensity": 1.5,
+            "rasterSize": [
+              144,
+              144
+            ],
+            "logicalFoot": [
+              48,
+              84
+            ],
+            "visiblePixels": 9572,
+            "maxDelta": 0
+          },
+          {
+            "id": "island-house",
+            "file": "village/houses-v1.png",
+            "nativeSheet": [
+              1254,
+              1254
+            ],
+            "rect": [
+              0,
+              0,
+              418,
+              418
+            ],
+            "logical": [
+              64,
+              64,
+              8
+            ],
+            "sourceFoot": [
+              209,
+              373
+            ],
+            "fitBounds": [
+              209,
+              373,
+              209,
+              45
+            ],
+            "quality": "low",
+            "requestedDensity": 1.5,
+            "effectiveDensity": 1.5,
+            "rasterSize": [
+              96,
+              96
+            ],
+            "logicalFoot": [
+              32,
+              56
+            ],
+            "visiblePixels": 2905,
+            "maxDelta": 0
+          },
+          {
+            "id": "oak",
+            "file": "village/nature-v1.png",
+            "nativeSheet": [
+              1536,
+              1024
+            ],
+            "rect": [
+              24,
+              132,
+              418,
+              431
+            ],
+            "logical": [
+              80,
+              104,
+              8
+            ],
+            "sourceFoot": [
+              197,
+              420
+            ],
+            "fitBounds": [
+              197,
+              420,
+              221,
+              11
+            ],
+            "quality": "low",
+            "requestedDensity": 1.5,
+            "effectiveDensity": 1.5,
+            "rasterSize": [
+              120,
+              156
+            ],
+            "logicalFoot": [
+              40,
+              96
+            ],
+            "visiblePixels": 7785,
+            "maxDelta": 0
+          },
+          {
+            "id": "island-watchtower",
+            "file": "village/landmarks-v1.png",
+            "nativeSheet": [
+              1254,
+              1254
+            ],
+            "rect": [
+              760,
+              8,
+              325,
+              558
+            ],
+            "logical": [
+              64,
+              128,
+              8
+            ],
+            "sourceFoot": [
+              161,
+              543
+            ],
+            "fitBounds": [
+              161,
+              543,
+              164,
+              15
+            ],
+            "quality": "low",
+            "requestedDensity": 1.5,
+            "effectiveDensity": 1.5,
+            "rasterSize": [
+              96,
+              192
+            ],
+            "logicalFoot": [
+              32,
+              120
+            ],
+            "visiblePixels": 8173,
+            "maxDelta": 0
+          },
+          {
+            "id": "cabin",
+            "file": "village/buildings-hero-v1.png",
+            "nativeSheet": [
+              1254,
+              1254
+            ],
+            "rect": [
+              0,
+              0,
+              1254,
+              1254
+            ],
+            "logical": [
+              96,
+              96,
+              12
+            ],
+            "sourceFoot": [
+              627,
+              1124
+            ],
+            "fitBounds": [
+              627,
+              1124,
+              627,
+              130
+            ],
+            "quality": "high",
+            "requestedDensity": 2,
+            "effectiveDensity": 2,
+            "rasterSize": [
+              192,
+              192
+            ],
+            "logicalFoot": [
+              48,
+              84
+            ],
+            "visiblePixels": 16996,
+            "maxDelta": 0
+          },
+          {
+            "id": "island-house",
+            "file": "village/houses-v1.png",
+            "nativeSheet": [
+              1254,
+              1254
+            ],
+            "rect": [
+              0,
+              0,
+              418,
+              418
+            ],
+            "logical": [
+              64,
+              64,
+              8
+            ],
+            "sourceFoot": [
+              209,
+              373
+            ],
+            "fitBounds": [
+              209,
+              373,
+              209,
+              45
+            ],
+            "quality": "high",
+            "requestedDensity": 2,
+            "effectiveDensity": 2,
+            "rasterSize": [
+              128,
+              128
+            ],
+            "logicalFoot": [
+              32,
+              56
+            ],
+            "visiblePixels": 5185,
+            "maxDelta": 0
+          },
+          {
+            "id": "oak",
+            "file": "village/nature-v1.png",
+            "nativeSheet": [
+              1536,
+              1024
+            ],
+            "rect": [
+              24,
+              132,
+              418,
+              431
+            ],
+            "logical": [
+              80,
+              104,
+              8
+            ],
+            "sourceFoot": [
+              197,
+              420
+            ],
+            "fitBounds": [
+              197,
+              420,
+              221,
+              11
+            ],
+            "quality": "high",
+            "requestedDensity": 2,
+            "effectiveDensity": 2,
+            "rasterSize": [
+              160,
+              208
+            ],
+            "logicalFoot": [
+              40,
+              96
+            ],
+            "visiblePixels": 13839,
+            "maxDelta": 0
+          },
+          {
+            "id": "island-watchtower",
+            "file": "village/landmarks-v1.png",
+            "nativeSheet": [
+              1254,
+              1254
+            ],
+            "rect": [
+              760,
+              8,
+              325,
+              558
+            ],
+            "logical": [
+              64,
+              128,
+              8
+            ],
+            "sourceFoot": [
+              161,
+              543
+            ],
+            "fitBounds": [
+              161,
+              543,
+              164,
+              15
+            ],
+            "quality": "high",
+            "requestedDensity": 2,
+            "effectiveDensity": 2,
+            "rasterSize": [
+              128,
+              256
+            ],
+            "logicalFoot": [
+              32,
+              120
+            ],
+            "visiblePixels": 14603,
+            "maxDelta": 0
+          },
+          {
+            "id": "cabin",
+            "file": "village/buildings-hero-v1.png",
+            "nativeSheet": [
+              1254,
+              1254
+            ],
+            "rect": [
+              0,
+              0,
+              1254,
+              1254
+            ],
+            "logical": [
+              96,
+              96,
+              12
+            ],
+            "sourceFoot": [
+              627,
+              1124
+            ],
+            "fitBounds": [
+              627,
+              1124,
+              627,
+              130
+            ],
+            "quality": "high",
+            "requestedDensity": 4,
+            "effectiveDensity": 4,
+            "rasterSize": [
+              384,
+              384
+            ],
+            "logicalFoot": [
+              48,
+              84
+            ],
+            "visiblePixels": 67826,
+            "maxDelta": 0
+          },
+          {
+            "id": "island-house",
+            "file": "village/houses-v1.png",
+            "nativeSheet": [
+              1254,
+              1254
+            ],
+            "rect": [
+              0,
+              0,
+              418,
+              418
+            ],
+            "logical": [
+              64,
+              64,
+              8
+            ],
+            "sourceFoot": [
+              209,
+              373
+            ],
+            "fitBounds": [
+              209,
+              373,
+              209,
+              45
+            ],
+            "quality": "high",
+            "requestedDensity": 4,
+            "effectiveDensity": 4,
+            "rasterSize": [
+              256,
+              256
+            ],
+            "logicalFoot": [
+              32,
+              56
+            ],
+            "visiblePixels": 20702,
+            "maxDelta": 0
+          },
+          {
+            "id": "oak",
+            "file": "village/nature-v1.png",
+            "nativeSheet": [
+              1536,
+              1024
+            ],
+            "rect": [
+              24,
+              132,
+              418,
+              431
+            ],
+            "logical": [
+              80,
+              104,
+              8
+            ],
+            "sourceFoot": [
+              197,
+              420
+            ],
+            "fitBounds": [
+              197,
+              420,
+              221,
+              11
+            ],
+            "quality": "high",
+            "requestedDensity": 4,
+            "effectiveDensity": 4,
+            "rasterSize": [
+              320,
+              416
+            ],
+            "logicalFoot": [
+              40,
+              96
+            ],
+            "visiblePixels": 55407,
+            "maxDelta": 0
+          },
+          {
+            "id": "island-watchtower",
+            "file": "village/landmarks-v1.png",
+            "nativeSheet": [
+              1254,
+              1254
+            ],
+            "rect": [
+              760,
+              8,
+              325,
+              558
+            ],
+            "logical": [
+              64,
+              128,
+              8
+            ],
+            "sourceFoot": [
+              161,
+              543
+            ],
+            "fitBounds": [
+              161,
+              543,
+              164,
+              15
+            ],
+            "quality": "high",
+            "requestedDensity": 4,
+            "effectiveDensity": 4,
+            "rasterSize": [
+              256,
+              512
+            ],
+            "logicalFoot": [
+              32,
+              120
+            ],
+            "visiblePixels": 58201,
+            "maxDelta": 0
+          }
+        ]
+      },
+      "pageErrors": [],
+      "externalRequests": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+      ]
+    }
+  ]
+}
