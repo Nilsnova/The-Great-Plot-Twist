@@ -9,7 +9,7 @@ export async function capturePerimeterWave(page, out, width, height) {
   const point = await groundPoint(page, [8.5, 12]); await page.mouse.click(point.x, point.y);
   const bell = page.locator('.island-card-bell[open]'); await bell.waitFor();
   await bell.getByRole('button', {name: 'Ring the bell', exact: true}).click();
-  await page.waitForFunction(() => window.__island.waves.wave?.renderer && !window.__island.island.managing);
+  await page.waitForFunction(() => window.__island.waves.island?.wave?.renderer && !window.__island.island.managing);
   const initial = await inspect(page); assert.equal(initial.perimeterDemo.version, 1);
   assert.equal(initial.perimeterDemo.pathing, true); assert.equal(initial.perimeterDemo.perimeterWalls, true);
   assert.equal(initial.perimeterDemo.defenses.filter(w => w.kind === 'wall').length, 102);
@@ -32,7 +32,7 @@ export async function capturePerimeterWave(page, out, width, height) {
 }
 async function inspect(page) {
   return page.evaluate(async () => {
-    const g = window.__island, w = g.waves.wave, {wallTopology} = await import('/src/island/wall-connections.js');
+    const g = window.__island, w = g.waves.island.wave, {wallTopology} = await import('/src/island/wall-connections.js');
     const hp = new Map(w.state.walls.map(wall => [wall.id, wall.hp]));
     const standing = w.defenses.filter(p => p.kind === 'wall' && hp.get(p.id) > 0).map(p => ({...p, built: true}));
     const layer = w.renderer.root.getObjectByName('pirates:wall-connections')?.getObjectByName('island-wall-connections');
