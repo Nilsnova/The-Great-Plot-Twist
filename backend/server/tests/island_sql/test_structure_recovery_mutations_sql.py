@@ -60,6 +60,7 @@ DEFAULT_POSITIONS = {
 
 def template(structures=()):
     return {
+        "configVersion": 1,
         "createWave": {"defenses": []},
         "priceSchedule": {"wall": [10, 20, 40, 80, 160]},
         "structureConfigBySpot": {

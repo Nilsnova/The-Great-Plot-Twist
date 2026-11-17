@@ -967,3 +967,9 @@ Ianno / 2026-11-17 — T55 mutation-hook integration check: merged the tested 04
 
 Ianno / 2026-11-17 — T55 mutation-hook atomicity regression: forced the v1 refresh helper to fail after the build transaction had entered its charge/write path, then verified rollback restored the wallet balance, building set, revision and history row. The focused SQL suite passed all 12 cases on the full disposable migration chain with migrations reapplied twice; the failure case first exposed a test fixture using service-role direct-delete permissions, which was corrected to use the fixture’s owner role for setup. No migration, flag or deployment was applied outside the scratch fixture.
 
+
+
+Ianno / 2026-11-17 — T55 mutation slice claimed on `feat/t55-recovery-mutations`: implement atomic island-change recovery hooks and real PostgreSQL regressions under issue #121. Coding agent: gpt-6-luna, high reasoning. Tracking draft only; integration and human review remain pending.
+
+Ianno / 2026-11-17 — T60 integration fixture correction: added the required `configVersion: 1` to the shared mutation-test recovery template after merge of expiry-safe SQL revision `9d4d4b6`. The exact full-chain disposable migration fixture and focused mutation suite then passed all 12 cases, with migrations applied twice. Runtime SQL remains strict; only the versioned test fixture changed.
+
