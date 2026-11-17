@@ -725,6 +725,24 @@ def test_recovery_start_snapshots_db_wall_identity_and_legacy_effective_hp(datab
     ).fetchone()[0]
     assert current_page["headSeq"] == 1
     assert event_tick > current_page["sealedThroughTick"]
+    stale_finish = call(
+        database,
+        "select public.recovery_wave_finish(%s,%s,true,0,10,5,5,20,5,2,2,%s,"
+        "'paidfinish00',%s,%s,0,%s::jsonb,%s::jsonb)",
+        OWNER,
+        wave_id,
+        epoch,
+        current_page["sealedThroughTick"],
+        current_page["headSeq"],
+        json.dumps({str(instance_id): 0}),
+        json.dumps({str(instance_id): 400000}),
+    )
+    assert stale_finish == {"status": "refused", "reason": "health_sync_required"}
+    assert database.execute(
+        "select count(*) from public.recovery_health_checkpoints "
+        "where wave_id=%s and actor_id=%s and checkpoint_uid='paidfinish00'",
+        (wave_id, OWNER),
+    ).fetchone() == (0,)
     checkpoint = call(
         database,
         "select public.recovery_wave_report_health(%s,%s,%s,'futurehp01',%s,%s,0,"
@@ -889,23 +907,13 @@ def test_recovery_finish_preserves_first_close_receipt_and_pays_each_actor_once(
         epoch,
         "friendcheck01",
         page["sealedThroughTick"] + 3,
-        0,
-        json.dumps({}),
-        json.dumps({}),
+        99,
+        json.dumps({"late-instance": 99}),
+        json.dumps({"late-instance": 1}),
     )
     as_owner(database)
     database.execute(
         "update public.island_members set left_at=now() where island_owner=%s and player_id=%s",
-        (OWNER, FRIEND),
-    )
-    as_server(database)
-    assert call(database, finish_sql, *second_args) == {
-        "status": "refused",
-        "reason": "not_member",
-    }
-    as_owner(database)
-    database.execute(
-        "update public.island_members set left_at=null where island_owner=%s and player_id=%s",
         (OWNER, FRIEND),
     )
     as_server(database)
@@ -946,3 +954,134 @@ def test_recovery_finish_preserves_first_close_receipt_and_pays_each_actor_once(
         "select closed_at is not null from public.recovery_wave_states where wave_id=%s",
         (wave_id,),
     ).fetchone() == (True,)
+
+
+def test_late_registered_finisher_expires_without_rewriting_normal_close(database):
+    add_players(database, OWNER, FRIEND)
+    open_island(database, OWNER, "K7Q2M")
+    open_island(database, FRIEND, "M8P3N")
+    as_server(database)
+    template = {
+        "configVersion": 1,
+        "createWave": {"defenses": []},
+        "priceSchedule": {},
+        "structureConfigBySpot": {},
+        "legacyWallRecoverSeconds": 600,
+        "recoveryConfig": {
+            "recoveryVersion": 1,
+            "waveProtocol": 2,
+            "structureMaxHp": {},
+            "recoveryRateFactors": {"carpenterMaximumWorkers": 2},
+        },
+        "defaultPositions": {},
+        "eventByWave": {"1": None},
+        "bossByWave": {"1": False},
+    }
+    template["expectedRevision"] = database.execute(
+        "select revision from public.island_recovery_state where island_owner=%s", (OWNER,)
+    ).fetchone()[0]
+    started = call(
+        database,
+        "select public.recovery_wave_start(%s,%s,'island',%s,4242,0,0,900,50,"
+        "'calm',1,0,%s::text[],%s::jsonb,true,2::smallint)",
+        OWNER,
+        "latefinish01",
+        OWNER,
+        ["structure_recovery"],
+        json.dumps(template),
+    )
+    wave_id = started["waveId"]
+    epoch = UUID(started["initialSnapshot"]["islandEpoch"])
+    as_owner(database)
+    database.execute(
+        "update public.wave_runs set starts_at=now()-interval '20 seconds' where id=%s",
+        (wave_id,),
+    )
+    database.execute(
+        "update public.island_recovery_state set starts_at=now()-interval '20 seconds',"
+        "reserved_at=now()-interval '20 seconds',expires_at=now()+interval '880 seconds' "
+        "where island_owner=%s",
+        (OWNER,),
+    )
+    database.execute(
+        "insert into public.island_members(island_owner,player_id,role) values (%s,%s,'member')",
+        (OWNER, FRIEND),
+    )
+    as_server(database)
+    joined = call(
+        database,
+        "select public.recovery_wave_join(%s,%s,2::smallint)",
+        FRIEND,
+        wave_id,
+    )
+    assert joined["status"] == "joined"
+    page = call(
+        database,
+        "select public.recovery_wave_events_page(%s,%s,0,null)",
+        OWNER,
+        wave_id,
+    )
+    finish_sql = (
+        "select public.recovery_wave_finish(%s,%s,true,7,10,5,5,20,5,2,2,%s,%s,"
+        "%s,%s,0,%s::jsonb,%s::jsonb)"
+    )
+    owner_finish = call(
+        database,
+        finish_sql,
+        OWNER,
+        wave_id,
+        epoch,
+        "ownerlate01",
+        page["sealedThroughTick"],
+        page["headSeq"],
+        json.dumps({}),
+        json.dumps({}),
+    )
+    assert owner_finish["loot"] == 15
+    canonical = owner_finish["recovery"]
+    first_run = database.execute(
+        "select finished_at,survived,loot,expired from public.wave_runs where id=%s",
+        (wave_id,),
+    ).fetchone()
+    first_owner_balance = database.execute(
+        "select balance from public.wallets where player_id=%s", (OWNER,)
+    ).fetchone()[0]
+    as_owner(database)
+    database.execute(
+        "update public.wave_runs set starts_at=now()-interval '901 seconds' where id=%s",
+        (wave_id,),
+    )
+    as_server(database)
+    late = call(
+        database,
+        finish_sql,
+        FRIEND,
+        wave_id,
+        epoch,
+        "friendlate01",
+        page["sealedThroughTick"],
+        page["headSeq"],
+        json.dumps({}),
+        json.dumps({}),
+    )
+    assert late["status"] == "done"
+    assert late["expired"] is True
+    assert late["loot"] == 0
+    assert late["recovery"] == canonical
+    assert (
+        database.execute(
+            "select finished_at,survived,loot,expired from public.wave_runs where id=%s",
+            (wave_id,),
+        ).fetchone()
+        == first_run
+    )
+    assert database.execute(
+        "select loot,expired from public.wave_participants where wave_id=%s and player_id=%s",
+        (wave_id, FRIEND),
+    ).fetchone() == (0, True)
+    assert (
+        database.execute(
+            "select balance from public.wallets where player_id=%s", (OWNER,)
+        ).fetchone()[0]
+        == first_owner_balance
+    )
