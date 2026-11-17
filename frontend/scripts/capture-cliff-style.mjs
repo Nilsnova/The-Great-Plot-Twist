@@ -76,7 +76,8 @@ try {
       });
       if (!image?.getContext) throw new Error('actual home backdrop is not the Canvas terrain');
       const alpha = (x, y) => image.getContext('2d').getImageData(Math.round((x + 32) / 64 * image.width), Math.round((y + 24) / 48 * image.height), 1, 1).data[3];
-      const feet = g.island.island.spots.filter(spot => spot.built && spot.kind === 'wall').map(spot => ({id: spot.id, x: spot.x, z: spot.z}));
+      const placed = (await import('/src/island/placement.js')).positionsOf(g.island.island.spots);
+      const feet = g.island.island.spots.filter(spot => spot.built && spot.kind === 'wall').map(spot => ({id: spot.id, ...placed[spot.id]}));
       feet.push({id: 'captain', x: g.player.position.x, z: g.player.position.z});
       const supportedFeet = feet.map(p => ({...p, onTop: surfaceClass('home_islet', p.x, p.z) > 0, opaqueTop: alpha(p.x, p.z * .72) >= 250}));
       let decorativeOutside = [], foamAtBase = 0;
