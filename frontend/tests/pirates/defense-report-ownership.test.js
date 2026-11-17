@@ -1,5 +1,6 @@
 import {expect, it} from 'vitest';
 import {browserHarness} from '../g20-browser.js';
+import {CARDS} from '../../src/tutorial/unlock-cards.js';
 const browser = browserHarness();
 
 const clearOwners = {report: false, island: false, village: false, tutorial: false, guide: false, queued: 0,
@@ -19,33 +20,21 @@ async function settleUnlocks(page) {
   await page.evaluate(() => window.__island.tutorials.update(0));
   await page.waitForFunction(() => {
     const t = window.__island.tutorials, memory = JSON.parse(localStorage.getItem('tgpt:tutorials:v1'));
-    return memory?.games?.[t.code]?.wave === 30;
-  });
-  while (await page.evaluate(() => { const t = window.__island.tutorials; return t.active || t.queue.length > 0; })) {
-    // active includes cardLoading; wait for its real modal instead of hiding a pending import.
-    const card = page.locator('dialog.unlock-card[open]'); await card.waitFor();
-    const skip = card.getByRole('button', {name: /^Skip all \d+$/});
-    if (await skip.count()) await skip.click();
-    else await card.getByRole('button', {name: 'Got it', exact: true}).click();
-    await page.waitForFunction(() => {
-      const t = window.__island.tutorials, open = !!document.querySelector('dialog.unlock-card[open]');
-      return open || (!t.active && t.queue.length === 0);
-    });
-  }
-  await page.waitForFunction(() => {
-    const t = window.__island.tutorials;
-    return !t.active && t.queue.length === 0 && !document.querySelector('dialog.unlock-card[open]');
+    // active includes cardLoading, so a late card import cannot count as ready.
+    return memory?.games?.[t.code]?.wave === 30 && !t.active && t.queue.length === 0
+      && !document.querySelector('dialog.unlock-card[open]');
   });
 }
 
 it('the actual game blocks keyboard and gamepad movement while the report owns input', async () => {
   await browser.withPage(async (page, base) => {
-    await page.addInitScript(() => {
+    // A veteran device has seen actual cards through wave30, including previous flag variants.
+    await page.addInitScript(seen => {
       localStorage.setItem('plot_twist_front_door_v1', '1'); localStorage.setItem('plot_twist_island_arrival_v1', '1');
-      localStorage.setItem('tgpt:tutorials:v1', JSON.stringify({version: 1, guided: true, seen: [], games: {}}));
+      localStorage.setItem('tgpt:tutorials:v1', JSON.stringify({version: 1, guided: true, seen, games: {}}));
       window.reportPad = {id: 'report-pad', connected: true, mapping: 'standard', axes: [0, 0], buttons: Array.from({length: 16}, () => ({pressed: false}))};
       Object.defineProperty(navigator, 'getGamepads', {value: () => [window.reportPad]});
-    });
+    }, CARDS.filter(card => card.wave <= 30).map(card => card.id));
     await page.goto(`${base}/?islands=fake&fakeplayer=coc39-input`);
     await page.locator('#play').click();
     await page.locator('.games-card[open]').getByRole('button', {name: 'Create a game', exact: true}).click();
