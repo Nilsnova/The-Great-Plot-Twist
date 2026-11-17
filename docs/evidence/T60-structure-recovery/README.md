@@ -12,7 +12,7 @@ as passing coverage and no assertions were weakened.
 **Source revisions:** T60 baseline `76c9764b`; T55 foundation `72996af7`, API revision fence
 `81171490`, snapshot schema/API `941703df`, finish response `cb181055`, lifecycle SQL `9d4d4b6c`,
 mutation hooks `3b9c289e` and `cc519114`; T56 paid repair `a4d4fe5a`; T57 replay modules
-`80b79c22`; T60 owned harness edits are uncommitted at the time of this evidence entry.
+`80b79c22`; T60 API/PG/replay harness commit `5ebbd657`.
 
 **Strict API/replay command** (from `backend/`):
 
