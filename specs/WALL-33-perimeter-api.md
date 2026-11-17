@@ -15,7 +15,13 @@ Owned: new wall_build.py/routes/island_walls.py, narrow router/flag hooks and sh
 
 ## Status
 
-Claimed; implementation/checks pending. Source/test change stays bounded; the full task remains open until both API slices and their integration evidence are complete.
+Enable/quote implemented in Draft [#302](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/302). `perimeter_walls` is registered off by default. Owner-only admission materializes all 26 effective old positions; repeated admission is safe after offers pause. Quote uses the owner cohort, actual payer role, canonical connected cells and the trusted reset epoch. Paid build/receipt reconciliation is the dependent second API slice; the full task remains open.
+
+Focused command from backend: `uv run --frozen --no-env-file pytest -q server/tests/test_wall_offer_routes.py server/tests/test_wall_layout_snapshot.py server/tests/test_owner_wall_policy_routes.py server/tests/test_wall_chain.py` -> **71 passed in 4.23s**. Backend Ruff check passed; ten changed/dependency Python files passed format check. No live migration application, activation, deployment or merge.
+
+Explain-back: opening perimeter construction is an explicit owner action. The server chooses the available pieces and prices from current island progress and the person paying. A quote includes the reset epoch so it cannot authorize a purchase in a later reset.
+
+Questions: Why is admission owner-only? Why does a quoted price not authorize payment? Why must the epoch come from the same trusted snapshot as coordinates?
 
 ## Trusted reset scope prerequisite
 
