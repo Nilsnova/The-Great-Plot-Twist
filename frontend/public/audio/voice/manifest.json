@@ -425,6 +425,34 @@
     "narrator-unlock_gunboat": {
       "file": "narrator-unlock_gunboat.mp3",
       "seconds": 11.49
+    },
+    "narrator-guide_shoot": {
+      "file": "narrator-guide_shoot.mp3",
+      "seconds": 5.69
+    },
+    "narrator-guide_cutlass": {
+      "file": "narrator-guide_cutlass.mp3",
+      "seconds": 5.41
+    },
+    "narrator-unlock_swivel": {
+      "file": "narrator-unlock_swivel.mp3",
+      "seconds": 5.88
+    },
+    "narrator-unlock_research_3": {
+      "file": "narrator-unlock_research_3.mp3",
+      "seconds": 5.54
+    },
+    "narrator-unlock_tree_2": {
+      "file": "narrator-unlock_tree_2.mp3",
+      "seconds": 5.36
+    },
+    "narrator-unlock_tree_3": {
+      "file": "narrator-unlock_tree_3.mp3",
+      "seconds": 4.94
+    },
+    "narrator-unlock_final_battle": {
+      "file": "narrator-unlock_final_battle.mp3",
+      "seconds": 5.96
     }
   }
 }
