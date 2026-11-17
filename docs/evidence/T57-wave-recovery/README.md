@@ -35,3 +35,5 @@ The isolated T57 regression run on `test/t57-wave-recovery-followup` passed **58
 The test does not assert an outside position after restoration, so it does not prove paid-restore egress. The changed test was rerun alone with explicit HP monotonicity assertions and passed **1/1**. Egress remains an integration gap.
 
 This is deterministic client-sim evidence only. The synthetic journal row is not server-authenticated, and this run did not use two signed-in browsers or a live API/database. T60 owns the protocol-2 authenticated multiplayer and full lifecycle verification; paid transaction/quota evidence belongs to T56. The replay test does not establish server verification of every combat hit.
+
+Independent review on 17 Nov ran `npm exec vitest -- run tests/pirates/recovery-tower-replay.test.js tests/pirates/pathing-wiring.test.js --maxWorkers=1` from `frontend/`: 11 tests across 2 files passed in 4.32 seconds. This includes the new paid-event damage/firing regression and existing generic obstacle-exit tests. It does not turn the generic path tests into evidence of an authenticated paid-restore egress scenario.

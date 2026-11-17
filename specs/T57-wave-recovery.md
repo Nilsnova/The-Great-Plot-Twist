@@ -4,8 +4,8 @@
 >
 > **Who uses it:** Ianno, the T57 agent and recovery state/payment/UI implementers.
 
-- **Status:** in progress; isolated policy/replay tests first, integration follows T55/T56.
-- **Branch:** `feat/t57-wave-recovery`
+- **Status:** the original implementation merged through PR #203. This follow-up adds a paid-event replay regression and records its limits; human review and separate T60 integration/release gates remain.
+- **Branch:** `test/t57-wave-recovery-followup`
 - **Issue:** [#123](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/123)
 
 ## Why
@@ -44,7 +44,7 @@ Recovery version 1 / wave protocol 2, immutable snapshots, durable journal/event
 - **Responsible teammate:** Ianno (@Iannomh123456).
 - **Coding agent:** `gpt-6-luna`, high reasoning.
 - **Human reviewer:** Franz (@frcola), after Ianno's manual review and explicit publication confirmation.
-- **Last updated:** 2026-11-16.
+- **Last updated:** 2026-11-17.
 
 ## Follow-up audit · 2026-11-17
 
