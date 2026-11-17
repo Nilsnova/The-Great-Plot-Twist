@@ -166,3 +166,6 @@ COC-02 follow-up (Johannes, draft): current-base management fit view is a bounde
 
 
 WALL-06 pure validation slice (Johannes): trusted free-grid rules and inventory footprints are implemented in [Draft #271](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/271), with [scope and exact checks](../specs/WALL-06-free-grid-validation.md). Existing-policy behavior remains the default. Atomic admission/Move transport, service/wave integration and the real perimeter builder remain; the wider task is not marked complete. No migration application, activation or merge.
+
+
+WALL-07 transport slice (Johannes): atomic wall-policy/layout reads and policy-fenced Move are implemented in [Draft #277](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/277), stacked on WALL-06. [Scope and exact checks](../specs/WALL-07-policy-snapshot.md). Direct transport tests passed; shared HTTP/view integration, real SQL and the actual perimeter lifecycle remain. No migration application, activation or merge.
