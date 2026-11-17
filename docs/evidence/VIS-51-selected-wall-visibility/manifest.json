@@ -1,0 +1,49 @@
+{
+  "task": "VIS51",
+  "source": "acc37240cba4c22fca903210d233ae2beae6e4f7",
+  "frontendTree": "6e0c6b27b717a7b8eedcde498d7372de6f0942cb",
+  "reviewBase": "5e3dd6ccb3597617e67a8b720525d3add78c3704",
+  "beforeCaptureSource": "5e3dd6ccb3597617e67a8b720525d3add78c3704",
+  "nativeAfter": "pending coordinator capture",
+  "files": [
+    {
+      "file": "before/reference-selected-level3-1280x720.png",
+      "sha256": "986df84cd3ab8c4bc2688ffa4acae326e1f66bab26270b375a307ae9844ce511",
+      "bytes": 1135309,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "before/reference-selected-level3-375x812.png",
+      "sha256": "3c41ace725c11cec97460c43f0e19933dcb3c0e5c858b271afc692e6b8e65590",
+      "bytes": 306665,
+      "width": 375,
+      "height": 812
+    },
+    {
+      "file": "logs/vis51-red.log",
+      "sha256": "051556e45c471080a8087e2443fa2ec357c7aae613f5c7d867233f0748fcff4b",
+      "bytes": 10271
+    },
+    {
+      "file": "logs/vis51-green.log",
+      "sha256": "0b968fcfd987189381a570b77e4ebb91cafcdbc3651b062e6d97ca0e90699d41",
+      "bytes": 9565
+    },
+    {
+      "file": "logs/vis51-green-02.log",
+      "sha256": "bea88dc55963102dd2b6466a78eeac98e5636e63a22ac0258696b39e2dccb1ec",
+      "bytes": 8004
+    },
+    {
+      "file": "logs/vis51-visitor-red.log",
+      "sha256": "a413a436903ba1b4e64c0d19ff9bfea212c6c2137676e835a5a6b056e9c4fb01",
+      "bytes": 103769
+    },
+    {
+      "file": "logs/vis51-final-green.log",
+      "sha256": "87497710d7614d7fc2ac48541043bdef1545c0feaabd691f4b799b34f72600ef",
+      "bytes": 9489
+    }
+  ]
+}

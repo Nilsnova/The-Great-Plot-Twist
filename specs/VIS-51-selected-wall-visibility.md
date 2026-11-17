@@ -17,4 +17,6 @@ Normal unselected batches remain unchanged. The extra mesh owns its geometry and
 5. Verify exact actual quad/UV subset, states, topology, switching and resource cleanup with pure tests.
 6. Coordinator captures before/after at 1280×720 and 375×812 and checks scene drawing counts without changing the under-150 target.
 
-Implementation, pure checks and native visual acceptance are pending at this claim. No Chrome/full-suite/build check has run for this task. It stays Draft until the composed runtime is verified, Johannes completes explain-back and a different human reviews the current revision. No PR merge to main, live migration, deployment or production flag change.
+Implementation source `acc37240` uses one foreground mesh borrowing the current wall material. Exact ordinary buffers remain unchanged. Pure checks: **50 passed across 7 files, 2.68s**, with retained feature/visitor red evidence and actual world lifecycle coverage. [Detailed source, before PNGs, raw logs and limits](../docs/evidence/VIS-51-selected-wall-visibility/README.md).
+
+Native after captures, scene drawing counts and combined full/build/UI checks remain pending. No Chrome/full-suite/build check has run for this task. It stays Draft until the composed runtime is verified, Johannes completes explain-back and a different human reviews the current revision. No PR merge to main, live migration, deployment or production flag change.

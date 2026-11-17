@@ -1,0 +1,137 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run --maxWorkers=1 tests/island/wall-selection.test.js --reporter=verbose
+
+
+ RUN  v5.1.0 /workspace/reference-village-work/selected-wall-visibility/frontend
+
+ × tests/island/wall-selection.test.js > current selected wall above decorative foliage > reuses exactly the current straight post and incident spans in one nonpickable foreground draw 12ms
+   → drawing.select is not a function
+ × tests/island/wall-selection.test.js > current selected wall above decorative foliage > rebuilds on accepted current-ID level/damage/position changes and keeps HP-zero rubble without joins 2ms
+   → drawing.select is not a function
+ × tests/island/wall-selection.test.js > current selected wall above decorative foliage > selects before art readiness, refreshes an accepted retry, and never disposes borrowed resources 2ms
+   → drawing.select is not a function
+ × tests/island/wall-selection.test.js > current selected wall above decorative foliage > clears invalid or closed selection "missing" without altering ordinary batches 1ms
+   → drawing.select is not a function
+ × tests/island/wall-selection.test.js > current selected wall above decorative foliage > clears invalid or closed selection "" without altering ordinary batches 1ms
+   → drawing.select is not a function
+ × tests/island/wall-selection.test.js > current selected wall above decorative foliage > clears invalid or closed selection null without altering ordinary batches 1ms
+   → drawing.select is not a function
+ × tests/island/wall-selection.test.js > current selected wall above decorative foliage > clears invalid or closed selection undefined without altering ordinary batches 1ms
+   → drawing.select is not a function
+ × tests/island/wall-selection.test.js > current selected wall above decorative foliage > clears removed/battle/unbuilt/invalid state undefined 1ms
+   → drawing.select is not a function
+ × tests/island/wall-selection.test.js > current selected wall above decorative foliage > clears removed/battle/unbuilt/invalid state {"id":"a","x":0,"z":0,"level":3,"kind":"wall","built":false} 1ms
+   → drawing.select is not a function
+ × tests/island/wall-selection.test.js > current selected wall above decorative foliage > clears removed/battle/unbuilt/invalid state {"id":"a","x":0,"z":0,"level":3,"kind":"house","built":true} 1ms
+   → drawing.select is not a function
+ × tests/island/wall-selection.test.js > current selected wall above decorative foliage > clears removed/battle/unbuilt/invalid state {"id":"a","x":null,"z":0,"level":3,"kind":"wall","built":true} 1ms
+   → drawing.select is not a function
+ × tests/island/wall-selection.test.js > current selected wall above decorative foliage > switches IDs without changing normal buffers and rejects missing artwork instead of inventing fallback 2ms
+   → drawing.select is not a function
+ × tests/island/wall-selection.test.js > the actual world update clears selected art on Move, Close, battle, and removal 37ms
+   → expected undefined to be defined
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 13 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/island/wall-selection.test.js > current selected wall above decorative foliage > reuses exactly the current straight post and incident spans in one nonpickable foreground draw
+TypeError: drawing.select is not a function
+ ❯ tests/island/wall-selection.test.js:38:13
+     36|     // The ordinary batch independently supplies two real spans and B'…
+     37|     const expected = [...quads(spans.geometry), quads(posts.geometry)[…
+     38|     drawing.select('b'); const mesh = selected(root);
+       |             ^
+     39|     expect(quads(mesh.geometry)).toEqual(expected); expect(expected).t…
+     40|     expect(mesh.material).toBe(normal[0].material); expect(mesh.materi…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/13]⎯
+
+ FAIL  tests/island/wall-selection.test.js > current selected wall above decorative foliage > rebuilds on accepted current-ID level/damage/position changes and keeps HP-zero rubble without joins
+TypeError: drawing.select is not a function
+ ❯ tests/island/wall-selection.test.js:51:76
+     49|   it('rebuilds on accepted current-ID level/damage/position changes an…
+     50|     const root = new THREE.Group(), drawing = makeWallConnections(root…
+     51|     const rows = [wall('a', 0), wall('b', 2)]; drawing.show(rows); dra…
+       |                                                                            ^
+     52|     const first = selected(root), released = vi.spyOn(first.geometry, …
+     53|     drawing.show([{...rows[0], level: 5, look: 'damaged', x: .5}, rows…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/13]⎯
+
+ FAIL  tests/island/wall-selection.test.js > current selected wall above decorative foliage > selects before art readiness, refreshes an accepted retry, and never disposes borrowed resources
+TypeError: drawing.select is not a function
+ ❯ tests/island/wall-selection.test.js:67:43
+     65|     const root = new THREE.Group(), drawing = makeWallConnections(root…
+     66|     const borrowed = vi.spyOn(first.texture, 'dispose'), owned = vi.sp…
+     67|     drawing.show([wall('a', 0)]); drawing.select('a'); expect(selected…
+       |                                           ^
+     68|     drawing.setArt(first); const mesh = selected(root), geometry = vi.…
+     69|     drawing.setArt(next); expect(geometry).toHaveBeenCalledOnce(); exp…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/13]⎯
+
+ FAIL  tests/island/wall-selection.test.js > current selected wall above decorative foliage > clears invalid or closed selection "missing" without altering ordinary batches
+ FAIL  tests/island/wall-selection.test.js > current selected wall above decorative foliage > clears invalid or closed selection "" without altering ordinary batches
+ FAIL  tests/island/wall-selection.test.js > current selected wall above decorative foliage > clears invalid or closed selection null without altering ordinary batches
+ FAIL  tests/island/wall-selection.test.js > current selected wall above decorative foliage > clears invalid or closed selection undefined without altering ordinary batches
+TypeError: drawing.select is not a function
+ ❯ tests/island/wall-selection.test.js:79:137
+     77|
+     78|   it.each(['missing', '', null, undefined])('clears invalid or closed …
+     79|     const root = new THREE.Group(), drawing = makeWallConnections(root…
+       |                                                                                                                                         ^
+     80|     const normal = [...drawing.root.children], mesh = selected(root), …
+     81|     drawing.select(id); expect(selected(root)).toBeUndefined(); expect…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/13]⎯
+
+ FAIL  tests/island/wall-selection.test.js > current selected wall above decorative foliage > clears removed/battle/unbuilt/invalid state undefined
+ FAIL  tests/island/wall-selection.test.js > current selected wall above decorative foliage > clears removed/battle/unbuilt/invalid state {"id":"a","x":0,"z":0,"level":3,"kind":"wall","built":false}
+ FAIL  tests/island/wall-selection.test.js > current selected wall above decorative foliage > clears removed/battle/unbuilt/invalid state {"id":"a","x":0,"z":0,"level":3,"kind":"house","built":true}
+ FAIL  tests/island/wall-selection.test.js > current selected wall above decorative foliage > clears removed/battle/unbuilt/invalid state {"id":"a","x":null,"z":0,"level":3,"kind":"wall","built":true}
+TypeError: drawing.select is not a function
+ ❯ tests/island/wall-selection.test.js:85:137
+     83|
+     84|   it.each([[], [{...wall('a', 0), built: false}], [{...wall('a', 0), k…
+     85|     const root = new THREE.Group(), drawing = makeWallConnections(root…
+       |                                                                                                                                         ^
+     86|     const released = vi.spyOn(selected(root).geometry, 'dispose'); dra…
+     87|     expect(selected(root)).toBeUndefined(); expect(released).toHaveBee…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/13]⎯
+
+ FAIL  tests/island/wall-selection.test.js > current selected wall above decorative foliage > switches IDs without changing normal buffers and rejects missing artwork instead of inventing fallback
+TypeError: drawing.select is not a function
+ ❯ tests/island/wall-selection.test.js:92:13
+     90|   it('switches IDs without changing normal buffers and rejects missing…
+     91|     const root = new THREE.Group(), drawing = makeWallConnections(root…
+     92|     drawing.select('a'); const released = vi.spyOn(selected(root).geom…
+       |             ^
+     93|     expect(released).toHaveBeenCalledOnce(); expect(selected(root).use…
+     94|     drawing.setArt({...atlas(), rects: {}}); expect(selected(root)).to…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/13]⎯
+
+ FAIL  tests/island/wall-selection.test.js > the actual world update clears selected art on Move, Close, battle, and removal
+AssertionError: expected undefined to be defined
+ ❯ tests/island/wall-selection.test.js:102:34
+    100|   const drawing = decorateIsland(place, {reducedMotion: true, loadArt:…
+    101|   const rows = [wall('wall_13', -4, -17.5)]; drawing.apply({spots: row…
+    102|   expect(selected(drawing.root)).toBeDefined(); const zones = place.zo…
+       |                                  ^
+    103|   drawing.preview({spotId: 'wall_13', x: -2, z: -17.5, size: 2, ok: tr…
+    104|   drawing.preview(null); drawing.update(0); expect(selected(drawing.ro…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/13]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  13 failed (13)
+   Start at  21:54:00
+   Duration  888ms (transform 68%, import 21%, tests 10%, worker 1%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice
