@@ -31,9 +31,9 @@ def test_wall_max_hp_uses_equipped_spec_and_research_modifiers() -> None:
     assert max_structure_hp("wall", 1, wall_spec="stone") == Decimal("120.00")
     assert max_structure_hp("wall", 1, wall_spec="bastion") == Decimal("90.00")
     assert max_structure_hp("wall", 1, wall_research="thick_walls") == Decimal("69.00")
-    assert max_structure_hp(
-        "wall", 1, wall_spec="bastion", wall_research="thick_walls"
-    ) == Decimal("103.50")
+    assert max_structure_hp("wall", 1, wall_spec="bastion", wall_research="thick_walls") == Decimal(
+        "103.50"
+    )
 
 
 def test_wall_rate_specs_do_not_change_max_hp() -> None:

@@ -47,9 +47,7 @@ def load_recovery_manifest(path: Path = MANIFEST_FILE) -> RecoveryManifest:
         recovery_version=_read_positive_integer(data.get("recoveryVersion")),
         wave_protocol=_read_positive_integer(data.get("waveProtocol")),
         full_hp_units=_read_positive_integer(data.get("fullHpUnits")),
-        base_recovery_milliseconds=_read_positive_integer(
-            data.get("baseRecoveryMilliseconds")
-        ),
+        base_recovery_milliseconds=_read_positive_integer(data.get("baseRecoveryMilliseconds")),
         max_hp=max_hp,
         wall_skill_max_hp_factors=_read_factors(data.get("wallSkillMaxHpFactors")),
         wall_research_max_hp_factors=_read_factors(data.get("wallResearchMaxHpFactors")),
@@ -75,12 +73,8 @@ def max_structure_hp(
     if wall_research is not None and wall_research not in WALL_RESEARCH:
         raise ValueError("unknown wall research")
 
-    multiplier = RECOVERY_MANIFEST.wall_skill_max_hp_factors.get(
-        wall_spec, Fraction(1, 1)
-    )
-    multiplier *= RECOVERY_MANIFEST.wall_research_max_hp_factors.get(
-        wall_research, Fraction(1, 1)
-    )
+    multiplier = RECOVERY_MANIFEST.wall_skill_max_hp_factors.get(wall_spec, Fraction(1, 1))
+    multiplier *= RECOVERY_MANIFEST.wall_research_max_hp_factors.get(wall_research, Fraction(1, 1))
     exact_hp = Fraction(levels[level - 1], 1) * multiplier
     decimal_hp = Decimal(exact_hp.numerator) / Decimal(exact_hp.denominator)
     return decimal_hp.quantize(HP_CENTI, rounding=ROUND_HALF_UP)
@@ -89,9 +83,7 @@ def max_structure_hp(
 def _read_levels(value: object) -> tuple[int, ...]:
     if not isinstance(value, list) or len(value) != 5:
         raise ValueError("each structure kind must have five HP levels")
-    if any(
-        isinstance(item, bool) or not isinstance(item, int) or item < 1 for item in value
-    ):
+    if any(isinstance(item, bool) or not isinstance(item, int) or item < 1 for item in value):
         raise ValueError("max HP levels must be positive whole numbers")
     return tuple(value)
 

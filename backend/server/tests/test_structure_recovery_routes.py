@@ -69,9 +69,7 @@ def test_owned_structure_state_uses_canonical_wire_fields_without_wallet() -> No
         "remainingPaidUses",
         "structures",
     ]
-    assert body["structures"][0] == {
-        key: value for key, value in VIEW["structures"][0].items()
-    }
+    assert body["structures"][0] == {key: value for key, value in VIEW["structures"][0].items()}
     assert "coins" not in body
     assert world.database.calls("structure_recovery_read_state") == [
         {"p_island_owner": PLAYER_ID, "p_prices": rules.price_table(world.app.state.island)}
