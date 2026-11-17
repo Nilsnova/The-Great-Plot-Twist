@@ -61,7 +61,8 @@ export function mountPirates(ctx) {
   const island = createWaveController({ ...shared, getDefenses: ctx.getDefenses ?? (() => []), finishWave: ctx.finishWave,
     practiceIdentity: ctx.practiceIdentity, room: ctx.islandRoom ?? null, place: ctx.islandPlace ?? 'home_islet', simOptions: ctx.islandSimOptions ?? {},
     getCrew: ctx.getCrew ?? (() => null), startNextWave: ctx.startNextWave ?? null,
-    holdBreak: ctx.holdBreak ?? null, toggleHold: ctx.toggleHold ?? null, guide: ctx.battleGuide !== false });
+    holdBreak: ctx.holdBreak ?? null, toggleHold: ctx.toggleHold ?? null, guide: ctx.battleGuide !== false,
+    recoveryTransport: ctx.recoveryTransport ?? null });
   const point = ctx.api ? createPiratePoint({ ...shared, api: ctx.api, openRoom: ctx.openRoom, input: ctx.input, getDefenses: ctx.getPointDefenses,
     rehearsal: ctx.rehearsal === true, host: ctx.host === true, notify: ctx.notify, beforeStart: ctx.beforePointWave ?? null }) : null;
   const update = dt => { island.update(dt); point?.update(dt); };

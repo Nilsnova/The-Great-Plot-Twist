@@ -66,6 +66,31 @@ const SHOWN_LATE_SECONDS = 1;         // events older than this (catching up) ar
 const canonicalJson = value => Array.isArray(value) ? `[${value.map(canonicalJson).join(',')}]`
   : value && typeof value === 'object' ? `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${canonicalJson(value[key])}`).join(',')}}`
     : JSON.stringify(value);
+function validCanonicalClose(receipt, current) {
+  const rows = current?.info?.initialSnapshot?.structures;
+  if (!receipt || receipt.waveId !== current?.info?.waveId
+    || receipt.islandEpoch !== current?.info?.initialSnapshot?.islandEpoch
+    || !Number.isFinite(Date.parse(receipt.closedAt))
+    || typeof receipt.checkpointUid !== 'string' || !/^[A-Za-z0-9_-]{8,64}$/.test(receipt.checkpointUid)
+    || !Number.isInteger(receipt.throughTick) || receipt.throughTick < 0 || receipt.throughTick > 18_000
+    || !Number.isSafeInteger(receipt.inputHeadSeq) || receipt.inputHeadSeq < 0
+    || !Number.isSafeInteger(receipt.lastRepairSeq) || receipt.lastRepairSeq < 0
+    || !receipt.closedHp || typeof receipt.closedHp !== 'object' || Array.isArray(receipt.closedHp)
+    || !receipt.basisRepairSeq || typeof receipt.basisRepairSeq !== 'object' || Array.isArray(receipt.basisRepairSeq)
+    || !Array.isArray(rows)) return false;
+  const ids = rows.map(row => row.instanceId);
+  if (new Set(ids).size !== ids.length || ids.length !== Object.keys(receipt.closedHp).length
+    || ids.length !== Object.keys(receipt.basisRepairSeq).length) return false;
+  let maxRepairSeq = 0;
+  for (const id of ids) {
+    const hp = receipt.closedHp[id], sequence = receipt.basisRepairSeq[id];
+    if (!Object.hasOwn(receipt.closedHp, id) || !Object.hasOwn(receipt.basisRepairSeq, id)
+      || !Number.isInteger(hp) || hp < 0 || hp > 1_000_000
+      || !Number.isSafeInteger(sequence) || sequence < 0) return false;
+    maxRepairSeq = Math.max(maxRepairSeq, sequence);
+  }
+  return receipt.lastRepairSeq >= maxRepairSeq;
+}
 const END_BEAT_MS = 1800;             // the last ship sinks on screen before the cutscene
 const LOST_BEAT_MS = 4500;            // a lost run's result stays up a little longer
 const DEFAULT_WAIT_SECONDS = 5;
@@ -300,7 +325,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     if (recoveryPolicy === 'structure-recovery-v1' && !isParticipantToken(info.participantToken)) return null;
     if (recoveryPolicy === 'structure-recovery-v1' && (!recoveryTransport
       || typeof recoveryTransport.sendInputs !== 'function' || typeof recoveryTransport.readEvents !== 'function'
-      || typeof recoveryTransport.finishWave !== 'function')) return null;
+      || typeof recoveryTransport.checkpoint !== 'function' || typeof recoveryTransport.finishWave !== 'function')) return null;
     const snapshot = recoveryPolicy === 'structure-recovery-v1' ? readRecoverySnapshot(info.initialSnapshot, info.waveId) : null;
     if (recoveryPolicy === 'structure-recovery-v1' && !snapshot) return null;
     lastTowerObstacles = info.rules?.towerObstacles === true;
@@ -350,6 +375,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     if (world.scene) {
       Promise.resolve(createRenderer({ scene: world.scene, defenses, reducedMotion, quality, beamFrom, colour: read(captainColour, 0),
         towerStates: info.rules?.towerHealth === true || !!snapshot, culverins: defenses.some(item => item.kind === 'culverin'),
+        recoveryV1: !!snapshot,
         swivels: defenses.some(item => item.kind === 'swivel') })).then(renderer => {
         if (disposed || wave !== current || current.finished) renderer?.dispose(); else current.renderer = renderer;
       }).catch(error => console.error(error));
@@ -415,13 +441,16 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       }
       if (batch.length) {
         current.recoverySending = true;
-        Promise.resolve().then(() => recoveryTransport.sendInputs({ waveId, inputs: batch }))
+        const sending = Promise.resolve().then(() => recoveryTransport.sendInputs({ waveId, inputs: batch }));
+        current.recoverySendPromise = sending;
+        sending
           .then(answer => {
             if (wave !== current || !Array.isArray(answer?.accepted)) return;
-            const accepted = new Set(answer.accepted);
+            const accepted = acceptedRecoveryInputs(answer.accepted, batch, current.info.participantToken);
+            if (!accepted) return;
             current.recoveryPending = current.recoveryPending.filter(item => !accepted.has(item.inputUid));
           }).catch(() => {})
-          .finally(() => { current.recoverySending = false; tryRecoveryFinish(current); });
+          .finally(() => { current.recoverySending = false; current.recoverySendPromise = null; tryRecoveryFinish(current); });
       }
     }
     if (!current.recoveryPolling && at - current.recoveryLastPollAt >= RECOVERY_POLL_MS) {
@@ -436,6 +465,121 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     }
     reconcileTerminalRecovery(current);
     tryRecoveryFinish(current);
+  }
+
+  function acceptedRecoveryInputs(events, batch, participantToken) {
+    const expected = new Map(batch.map(item => [item.inputUid, item]));
+    const accepted = new Set();
+    for (const event of events) {
+      const payload = event?.payload;
+      const item = expected.get(payload?.inputUid);
+      if (!item || event.type !== 'captain_input' || event.participantToken !== participantToken
+        || payload.participantToken !== participantToken || payload.actorCounter !== item.actorCounter
+        || canonicalJson(payload.command) !== canonicalJson(item.command)
+        || !simulationInputFromJournal(event)) return null;
+      accepted.add(item.inputUid);
+    }
+    return accepted;
+  }
+
+  async function flushRecoveryInputs(current) {
+    while (current.recoverySending) {
+      const pending = current.recoverySendPromise;
+      if (!pending) return false;
+      await pending;
+    }
+    while (current.recoveryPending.length) {
+      const batch = current.recoveryPending.slice(0, MAX_INPUT_BATCH);
+      current.recoverySending = true;
+      const pending = Promise.resolve().then(() => recoveryTransport.sendInputs({ waveId: current.info.waveId, inputs: batch }));
+      current.recoverySendPromise = pending;
+      let answer;
+      try { answer = await pending; } catch { answer = null; }
+      current.recoverySending = false;
+      current.recoverySendPromise = null;
+      const accepted = acceptedRecoveryInputs(answer?.accepted, batch, current.info.participantToken);
+      if (!accepted?.size) return false;
+      current.recoveryPending = current.recoveryPending.filter(item => !accepted.has(item.inputUid));
+    }
+    return true;
+  }
+
+  async function checkpointBeforeRepair() {
+    const current = wave;
+    if (!current?.recoveryReplay || !recoveryTransport?.checkpoint || current.recoveryFinishAnswered
+      || current.recoveryInvalid) return { ok: false, code: 'recovery_unavailable' };
+    if (!await flushRecoveryInputs(current)) return { ok: false, code: 'input_sync_required' };
+    let fetched = false;
+    try { fetched = await fetchSealedEvents(current.recoveryReplay,
+      request => recoveryTransport.readEvents({ waveId: current.info.waveId, ...request })); }
+    catch { fetched = false; }
+    if (!fetched || !current.recoveryReplay.complete()) return { ok: false, code: 'health_sync_required' };
+    if (!current.done) {
+      const serverTick = Math.floor((((now() + current.offset) - current.info.startsAtMs) / 1000) / TICK_SECONDS);
+      // A server seal may arrive between render frames. Catch up only through time that has actually elapsed.
+      if (!Number.isInteger(serverTick) || current.recoveryReplay.sealedThroughTick > serverTick
+        || !advanceRecoveryThrough(current, current.recoveryReplay.sealedThroughTick)) {
+        return { ok: false, code: 'health_sync_required' };
+      }
+    } else if (!reconcileTerminalRecovery(current)) {
+      return { ok: false, code: 'health_sync_required' };
+    }
+    const replay = current.recoveryReplay, vector = current.sim.recoveryHealthVector();
+    if (!vector || replay.sealedThroughTick < 0) return { ok: false, code: 'health_sync_required' };
+    const throughTick = Math.min(replay.sealedThroughTick, current.recoveryDriver.nextTick - 1);
+    if (throughTick < 0) return { ok: false, code: 'health_sync_required' };
+    let checkpoint = current.recoveryHealthRequest;
+    if (!checkpoint || checkpoint.throughTick !== throughTick || checkpoint.inputHeadSeq !== replay.headSeq
+      || checkpoint.lastRepairSeq !== current.recoveryLastRepairSeq
+      || canonicalJson(checkpoint.hpUnits) !== canonicalJson(vector.hpUnits)
+      || canonicalJson(checkpoint.basisRepairSeq) !== canonicalJson(vector.basisRepairSeq)) {
+      checkpoint = { islandEpoch: current.info.initialSnapshot.islandEpoch, checkpointUid: makeActionUid(), throughTick,
+        inputHeadSeq: replay.headSeq, lastRepairSeq: current.recoveryLastRepairSeq,
+        basisRepairSeq: { ...vector.basisRepairSeq }, hpUnits: { ...vector.hpUnits } };
+      current.recoveryHealthRequest = checkpoint;
+    }
+    let answer;
+    try { answer = await recoveryTransport.checkpoint({ waveId: current.info.waveId, checkpoint }); }
+    catch { answer = null; }
+    const accepted = answer?.accepted === true && answer.throughTick === checkpoint.throughTick
+      && answer.inputHeadSeq === checkpoint.inputHeadSeq && answer.lastRepairSeq === checkpoint.lastRepairSeq
+      && canonicalJson(answer.hpUnits) === canonicalJson(checkpoint.hpUnits);
+    return accepted ? { ok: true } : { ok: false, code: answer?.reason ?? 'health_sync_required' };
+  }
+
+  function advanceRecoveryThrough(current, throughTick) {
+    if (!Number.isInteger(throughTick) || throughTick < current.recoveryDriver.nextTick
+      || !current.recoveryReplay.canAdvanceThrough(throughTick)) return current.recoveryDriver.nextTick > throughTick;
+    const emitted = [], fresh = [];
+    while (current.recoveryDriver.nextTick <= throughTick && !current.sim.done) {
+      const tick = current.recoveryDriver.nextTick;
+      const advanced = current.recoveryDriver.advanceThrough(tick, (simTick, journal) => {
+        const inputs = journal.map(simulationInputFromJournal).filter(Boolean);
+        const before = current.sim.recoveryHealthVector();
+        const out = current.sim.step(TICK_SECONDS, inputs);
+        const after = current.sim.recoveryHealthVector();
+        if (!before || !after) current.recoveryInvalid = true;
+        else {
+          const expected = { ...before.basisRepairSeq };
+          let repairs = 0;
+          for (const event of journal) if (event.type === 'structure_repaired') {
+            const id = event.payload?.instanceId, sequence = event.payload?.repairSeq;
+            if (!Object.hasOwn(expected, id) || !Number.isInteger(sequence) || sequence !== expected[id] + 1) current.recoveryInvalid = true;
+            else { expected[id] = sequence; repairs++; }
+          }
+          if (JSON.stringify(expected) !== JSON.stringify(after.basisRepairSeq)) current.recoveryInvalid = true;
+          else current.recoveryLastRepairSeq += repairs;
+        }
+        emitted.push(...out); fresh.push(...out);
+        if (simTick !== tick) current.recoveryInvalid = true;
+      });
+      if (!advanced || current.recoveryInvalid) return false;
+      current.ticks = tick + 1;
+    }
+    current.state = current.sim.state();
+    if (emitted.length) handle(emitted, current, fresh);
+    if (current.sim.done) end(current);
+    return current.recoveryDriver.nextTick > throughTick;
   }
 
   function reconcileTerminalRecovery(current) {
@@ -489,15 +633,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     Promise.resolve().then(() => recoveryTransport.finishWave(body)).then(answer => {
       if (wave !== current) return;
       const recovered = answer?.data?.recovery;
-      const completeClose = answer?.ok === true && recovered?.waveId === current.info.waveId
-        && recovered.islandEpoch === current.info.initialSnapshot.islandEpoch
-        && Number.isFinite(Date.parse(recovered.closedAt))
-        && recovered.checkpointUid === body.checkpoint.checkpointUid
-        && recovered.throughTick === body.checkpoint.throughTick
-        && recovered.inputHeadSeq === body.checkpoint.inputHeadSeq
-        && recovered.lastRepairSeq === body.checkpoint.lastRepairSeq
-        && canonicalJson(recovered.closedHp) === canonicalJson(body.checkpoint.hpUnits)
-        && canonicalJson(recovered.basisRepairSeq) === canonicalJson(body.checkpoint.basisRepairSeq);
+      const completeClose = answer?.ok === true && validCanonicalClose(recovered, current);
       if (completeClose) {
         current.answer = answer.data;
         current.recoveryFinishAnswered = true;
@@ -1049,6 +1185,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       return structures.some(row => !row) ? null : { waveId: current.info.waveId,
         islandEpoch: current.info.initialSnapshot.islandEpoch, structures };
     },
+    checkpointBeforeRepair,
     fire: (cannonId, targetId) => submit({ type: 'fire', cannonId, targetId }),
     shoot, aim: point => aimAt(point, null), next, setAuto,
     get auto() { return auto; },

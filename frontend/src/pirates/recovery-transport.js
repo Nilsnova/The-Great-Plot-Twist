@@ -11,6 +11,7 @@ const MAX_TICK = 18_000;
 
 const isObject = value => !!value && typeof value === 'object' && !Array.isArray(value);
 const isCoordinate = value => typeof value === 'number' && Number.isFinite(value) && Math.abs(value) < 500;
+const isWireId = value => typeof value === 'string' && /^[A-Za-z0-9_-]{1,32}$/.test(value);
 const successData = answer => answer?.ok === true && isObject(answer.data) ? answer.data
   : answer?.ok === undefined && answer?.status === undefined && !answer?.error && isObject(answer) ? answer : null;
 
@@ -19,15 +20,14 @@ export function commandForJournal(input) {
   if (!isObject(input) || typeof input.type !== 'string') return null;
   const { type } = input;
   if (type === 'repair' || type === 'rebuild') return null;
-  if (type === 'fire' && typeof input.cannonId === 'string' && typeof input.targetId === 'string') {
+  if (type === 'fire' && isWireId(input.cannonId) && isWireId(input.targetId)) {
     return { type, cannonId: input.cannonId, targetId: input.targetId };
   }
-  if (type === 'lamps_lit') return { type };
-  if (type === 'captain_shot' && isCoordinate(input.x) && isCoordinate(input.z)) {
-    return { type, targetId: typeof input.targetId === 'string' ? input.targetId : null, x: input.x, z: input.z,
+  if (type === 'captain_shot' && (input.targetId == null || isWireId(input.targetId)) && isCoordinate(input.x) && isCoordinate(input.z)) {
+    return { type, targetId: input.targetId ?? null, x: input.x, z: input.z,
       ...(isCoordinate(input.ax) && isCoordinate(input.az) ? { ax: input.ax, az: input.az } : {}) };
   }
-  if (type === 'captain_strike' && typeof input.targetId === 'string' && isCoordinate(input.x) && isCoordinate(input.z)) {
+  if (type === 'captain_strike' && isWireId(input.targetId) && isCoordinate(input.x) && isCoordinate(input.z)) {
     return { type, targetId: input.targetId, x: input.x, z: input.z };
   }
   if (type === 'captain_move' && isCoordinate(input.x) && isCoordinate(input.z)) {
@@ -35,10 +35,10 @@ export function commandForJournal(input) {
       ...(Number.isInteger(input.colour) && input.colour >= 0 && input.colour <= 9 ? { colour: input.colour } : {}),
       ...(input.away === true ? { away: true } : {}) };
   }
-  if (type === 'captain_revive' && typeof input.targetId === 'string' && isCoordinate(input.x) && isCoordinate(input.z)) {
+  if (type === 'captain_revive' && isParticipantToken(input.targetId) && isCoordinate(input.x) && isCoordinate(input.z)) {
     return { type, targetId: input.targetId, x: input.x, z: input.z };
   }
-  if (type === 'finisher_ready' && typeof input.shipId === 'string') return { type, shipId: input.shipId };
+  if (type === 'finisher_ready' && isWireId(input.shipId)) return { type, shipId: input.shipId };
   if (type === 'finisher_input' && Number.isInteger(input.from) && Array.isArray(input.marks)
     && input.from >= 0 && input.from <= 3000 && input.marks.length > 0 && input.marks.length <= 24
     && input.marks.every(mark => Number.isInteger(mark) && mark >= -1 && mark <= 100)) {
@@ -94,6 +94,12 @@ export function createRecoveryTransport({ get, post } = {}) {
       return Promise.resolve(post(`/api/waves/${encodeURIComponent(waveId)}/inputs`, body))
         .then(successData, () => null);
     },
+    checkpoint({ waveId, checkpoint } = {}) {
+      if (typeof waveId !== 'string' || !waveId || !validCheckpoint(checkpoint)) return Promise.resolve(null);
+      const body = { waveProtocol: 2, ...checkpoint };
+      return Promise.resolve(post(`/api/waves/${encodeURIComponent(waveId)}/health`, body))
+        .then(successData, () => null);
+    },
     finishWave(body) {
       if (!validRecoveryFinishBody(body)) return Promise.resolve(null);
       return Promise.resolve(post('/api/waves/finish', body)).then(answer => {
@@ -108,7 +114,12 @@ export function createRecoveryTransport({ get, post } = {}) {
 function validRecoveryFinishBody(body) {
   const checkpoint = body?.checkpoint;
   if (!isObject(body) || body.waveProtocol !== 2 || typeof body.waveId !== 'string' || !body.waveId
-    || !isObject(checkpoint) || typeof checkpoint.islandEpoch !== 'string' || !checkpoint.islandEpoch
+    || !validCheckpoint(checkpoint)) return false;
+  return true;
+}
+
+function validCheckpoint(checkpoint) {
+  if (!isObject(checkpoint) || typeof checkpoint.islandEpoch !== 'string' || !checkpoint.islandEpoch
     || typeof checkpoint.checkpointUid !== 'string' || checkpoint.checkpointUid.length < 8
     || !Number.isInteger(checkpoint.throughTick) || checkpoint.throughTick < 0 || checkpoint.throughTick > MAX_TICK
     || !Number.isSafeInteger(checkpoint.inputHeadSeq) || checkpoint.inputHeadSeq < 0
