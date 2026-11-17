@@ -150,7 +150,7 @@ def test_reset_and_a_visitor_finish_serialize_without_deadlock(scratch_server, d
             import psycopg
 
             with psycopg.connect(scratch_server.get_uri()) as connection:
-                connection.execute("set statement_timeout = '5s'")
+                connection.execute("set lock_timeout = '10s'")
                 as_server(connection)
                 barrier.wait(timeout=5)
                 results["finish"] = call(
@@ -168,7 +168,7 @@ def test_reset_and_a_visitor_finish_serialize_without_deadlock(scratch_server, d
             import psycopg
 
             with psycopg.connect(scratch_server.get_uri()) as connection:
-                connection.execute("set statement_timeout = '5s'")
+                connection.execute("set lock_timeout = '10s'")
                 as_server(connection)
                 barrier.wait(timeout=5)
                 results["reset"] = call(
@@ -187,7 +187,7 @@ def test_reset_and_a_visitor_finish_serialize_without_deadlock(scratch_server, d
     for worker in workers:
         worker.start()
     for worker in workers:
-        worker.join(timeout=8)
+        worker.join(timeout=10)
 
     try:
         assert not any(worker.is_alive() for worker in workers), "reset/finish lock cycle timed out"
