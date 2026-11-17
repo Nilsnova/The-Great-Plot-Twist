@@ -96,6 +96,32 @@ describe('wall construction controller', () => {
     t.api.quoteWalls.mockReturnValueOnce(pending.promise); const asked = t.mode.quote(); t.mode.cancel();
     pending.resolve(success(quoteFor([{x: 1.5, z: 6}]))); await asked; expect(t.mode.active).toBe(false);
   });
+  it.each([[1, 0], [-1, 0], [0, 1], [0, -1]])('shifts every unpaid cell by one half-grid step (%i,%i) and requotes', async (dx, dz) => {
+    const t = setup(); await ready(t); t.mode.tap(5.5, 6); t.mode.tap(5.5, 10); await t.mode.quote();
+    const before = t.mode.state.cells, expected = before.map(cell => ({x: cell.x + dx * .5, z: cell.z + dz * .5}));
+    expect(t.mode.shift(dx, dz)).toBe(true); expect(t.mode.state.cells).toEqual(expected);
+    expect(t.mode.state).toMatchObject({phase: 'draft', quote: null}); expect(await t.mode.confirm()).toBeNull();
+    expect(t.api.buildWalls).not.toHaveBeenCalled(); await t.mode.quote();
+    expect(t.api.quoteWalls.mock.calls.at(-1)[0].cells).toEqual(expected); await t.mode.confirm();
+    expect(t.api.buildWalls.mock.calls[0][0].placements.map(({x, z}) => ({x, z}))).toEqual(expected);
+  });
+  it('refuses the whole shift if one cell would leave the grid and ignores empty drafts', async () => {
+    const t = setup(); await t.mode.start(); expect(t.mode.shift(1, 0)).toBe(false);
+    t.mode.tap(28, 0); t.mode.tap(30, 0); const before = t.mode.state.cells;
+    expect(t.mode.shift(1, 0)).toBe(false); expect(t.mode.state.cells).toEqual(before); expect(t.mode.state.status).toMatch(/grid/);
+    t.mode.clear(); expect(t.mode.shift(-1, 0)).toBe(false); t.mode.dispose(); expect(t.mode.shift(0, 1)).toBe(false);
+  });
+  it.each([[0, 0], [1, 1], [.5, 0], [NaN, 0]])('rejects a non-cardinal shift (%s,%s) without changing the quote', async (dx, dz) => {
+    const t = setup(); await ready(t); const before = t.mode.state;
+    expect(t.mode.shift(dx, dz)).toBe(false); expect(t.mode.state).toEqual(before);
+  });
+  it('never shifts a pending or unknown intent, including after closing and reopening', async () => {
+    const t = setup(), pending = deferred(); await ready(t); t.api.buildWalls.mockReturnValueOnce(pending.promise);
+    const first = t.mode.confirm(), body = structuredClone(t.api.buildWalls.mock.calls[0][0]);
+    expect(t.mode.shift(1, 0)).toBe(false); pending.resolve({ok: false, status: 503, message: 'Try again.'}); await first;
+    expect(t.mode.shift(0, 1)).toBe(false); t.mode.cancel(); await t.mode.start(); expect(t.mode.shift(-1, 0)).toBe(false);
+    await t.mode.confirm(); expect(t.api.buildWalls.mock.calls[1][0]).toEqual(body); expect(t.makeUid).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('wall builder transport', () => {

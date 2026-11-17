@@ -1,7 +1,7 @@
 // Wall drafting lifecycle for the real island controls. Quotes authorize the exact immutable purchase intent.
 import {makeActionUid} from '../screens/islet/action-uid.js';
 import {outcomeUnknown} from './api.js';
-import {onGrid, snap} from './placement.js';
+import {GRID, onGrid, snap} from './placement.js';
 const copyCells = cells => cells.map(cell => ({...cell}));
 const scopeKey = scope => `${scope?.code ?? ''}|${scope?.epoch ?? ''}|${scope?.generation ?? 0}`;
 function extend(cells, x, z) {
@@ -93,6 +93,12 @@ export function createWallBuilder({api, context, render = () => {}, preview = ()
     start, quote, confirm, cancel, refresh,
     tap(x, z) { if (!editable()) return false; const next = extend(view.cells, x, z);
       if (!next.cells) { view.status = next.message; show(); return false; } edited(next.cells); return true; },
+    shift(dx, dz) {
+      if (!editable() || !view.cells.length || !Number.isInteger(dx) || !Number.isInteger(dz) || Math.abs(dx) + Math.abs(dz) !== 1) return false;
+      const cells = view.cells.map(cell => ({x: cell.x + dx * GRID, z: cell.z + dz * GRID}));
+      if (cells.some(cell => !onGrid(cell.x) || !onGrid(cell.z))) { view.status = 'The draft would leave the build grid.'; show(); return false; }
+      edited(cells, 'Draft moved. Get the price to check these positions.'); return true;
+    },
     undo() { if (!editable()) return false; edited(view.cells.slice(0, -1)); return true; },
     clear() { if (!editable()) return false; edited([]); return true; },
     get state() { refresh(); return model(); }, get active() { refresh(); return !!view; },

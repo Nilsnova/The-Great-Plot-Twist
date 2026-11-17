@@ -17,16 +17,29 @@ export function createWallBuilderBar({container, handlers}) {
   for (const [label, action, name] of [['−', 'out', 'Zoom out'], ['+', 'in', 'Zoom in'], ['Fit', 'fit', 'Fit village']]) {
     const item = button(label, () => handlers.camera?.(action)); item.setAttribute('aria-label', name); camera.append(item);
   }
-  actions.append(undo, clear, close, submit); bar.append(title, hint, status, price, camera, actions); container.append(bar);
+  const fine = node('details', 'wall-builder-fine'), summary = node('summary', '', 'Fine position');
+  const layout = node('div', 'wall-builder-fine-layout'), pad = node('div', 'wall-builder-fine-pad'), anchors = node('p', 'wall-builder-anchors');
+  pad.setAttribute('role', 'group'); pad.setAttribute('aria-label', 'Move draft one square');
+  const fineButtons = [];
+  for (const [label, direction, dx, dz] of [['←', 'west', -1, 0], ['↑', 'north', 0, -1], ['↓', 'south', 0, 1], ['→', 'east', 1, 0]]) {
+    const item = button(label, () => handlers.shift?.(dx, dz)); item.classList.add(`fine-${direction}`);
+    item.setAttribute('aria-label', `Shift draft one square ${direction}`); fineButtons.push(item); pad.append(item);
+  }
+  layout.append(pad, anchors); fine.append(summary, layout);
+  fine.addEventListener('toggle', () => bar.classList.toggle('has-fine-position', fine.open)); // Existing camera cache watches bar classes.
+  actions.append(undo, clear, close, submit); bar.append(title, hint, status, price, fine, camera, actions); container.append(bar);
   return {
     render(model) {
-      const opening = bar.hidden && !!model; current = model; bar.hidden = !model; if (!model) return;
+      const opening = bar.hidden && !!model; current = model; bar.hidden = !model; if (!model) { fine.open = false; bar.classList.remove('has-fine-position'); return; }
       title.textContent = `Build walls · ${model.cells.length} ${model.cells.length === 1 ? 'wall' : 'walls'}`;
       hint.textContent = ['building', 'unknown'].includes(model.phase) ? 'Closing does not cancel a purchase already sent.' : 'Tap to start, then add walls or turn. Arrow keys add one wall.';
       status.textContent = model.status; bar.classList.toggle('is-refused', ['refused', 'enable_failed'].includes(model.phase));
       price.textContent = model.quote ? `Total: ${model.quote.totalCost} coins · Remaining after building: ${model.quote.remaining}` : 'Get the price to check these positions.';
       const editable = ['draft', 'ready', 'refused'].includes(model.phase) && !model.busy;
       undo.disabled = clear.disabled = !editable || !model.cells.length;
+      fineButtons.forEach(item => { item.disabled = !editable || !model.cells.length; });
+      const first = model.cells[0], last = model.cells.at(-1);
+      anchors.textContent = first ? `First: ${first.x}, ${first.z} · Last: ${last.x}, ${last.z} · One square = 0.5` : 'Tap a square first.';
       close.textContent = ['building', 'unknown'].includes(model.phase) ? 'Close' : 'Cancel';
       submit.disabled = model.busy || model.phase === 'enabling' || (!model.cells.length && model.phase !== 'enable_failed');
       submit.textContent = model.busy ? 'Please wait…' : model.phase === 'ready' ? `Build for ${model.quote.totalCost} coins`

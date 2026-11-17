@@ -2797,3 +2797,6 @@ catalog
 discount
 fully
 upgrading
+# WALL-37: reviewed American English for precise adjustment and the native summary element.
+fine
+summary

@@ -5,3 +5,11 @@
 .wall-builder-actions>button:last-child {flex:1 1 150px}
 .wall-builder-camera {justify-content:flex-end}
 @media(max-width:480px) {.island-wall-builder{padding:9px 10px;gap:5px}.island-wall-builder .island-move-title{font-size:18px}.wall-builder-actions>button{flex:1}.wall-builder-actions>button:last-child{flex-basis:100%}}
+
+.wall-builder-fine {border-top:1px solid #6c492b55}
+.wall-builder-fine summary {min-height:44px;line-height:44px;cursor:pointer}
+.wall-builder-fine-layout {display:flex;align-items:center;flex-wrap:wrap;gap:12px}
+.wall-builder-fine-pad {display:grid;grid-template-columns:repeat(3,44px);gap:6px;flex:none}
+.wall-builder-fine-pad button {padding:4px}
+.fine-north {grid-area:1/2}.fine-west {grid-area:2/1}.fine-south {grid-area:2/2}.fine-east {grid-area:2/3}
+.wall-builder-anchors {margin:0;font-size:12px;max-width:100%;overflow-wrap:anywhere}

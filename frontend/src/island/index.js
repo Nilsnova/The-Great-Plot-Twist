@@ -215,7 +215,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     render: model => { wallBar.render(model); villageBar.render(village.active && !model && !moving.active); },
     preview: model => world?.wallDraft(model), onIsland: data => { wrote('own'); setOwn(data); applyWorld(); refreshCard(); emit({type: SPOTS_CHANGED, place: 'own'}); }});
   const wallBar = createWallBuilderBar({container, handlers: {open: () => void startWalls(), quote: () => void wallBuilder.quote(),
-    confirm: () => void wallBuilder.confirm(), undo: () => wallBuilder.undo(), clear: () => wallBuilder.clear(),
+    confirm: () => void wallBuilder.confirm(), shift: (dx, dz) => wallBuilder.shift(dx, dz), undo: () => wallBuilder.undo(), clear: () => wallBuilder.clear(),
     cancel: () => { wallBuilder.cancel(); focus(); }, camera: villageCamera}});
   const villageBar = createVillageBar({container, onLeave: () => village.leave(), onCamera: villageCamera, onBuildWalls: () => void startWalls(),
     showWalls: () => perimeterWallsOn() === true || own?.layout?.wallRuleVersion === 1});
@@ -227,7 +227,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     onLeave: () => { wallBuilder.cancel(); moving.cancel(); ui.close(); openSpot = null; resetInput(); focus(); },
   });
   const moveKeys = event => {
-    const buttonEnter = event.key === 'Enter' && event.target?.tagName === 'BUTTON';
+    const buttonEnter = event.key === 'Enter' && ['BUTTON', 'SUMMARY'].includes(event.target?.tagName);
     if (ui.active || event.defaultPrevented || buttonEnter || isTextEntry(event.target)) return;
     if (!wallBuilder.active) { if (moving.active) moving.handleKey(event); return; }
     const step = {ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1]}[event.key];
