@@ -171,3 +171,6 @@ WALL-26 (Johannes): [Draft PR #282](https://github.com/Nilsnova/The-Great-Plot-T
 
 
 WALL-27 (Johannes): actual construction entry, quote/build/retry controls, keyboard/pointer routing and snapped wall/grid ghosts are implemented in [Draft PR #296](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/296) for [#281](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/281). [Scope and component evidence](../specs/WALL-27-builder-controls.md). Focused checks and a real Chromium DOM/index/pointer component pass are recorded; integrated server/fake/cohort behavior, actual-game paired captures, full perimeter lifecycle and human review remain. No merge.
+
+
+WALL-37 (Johannes): optional fine positioning for the whole unpaid wall draft is implemented in [Draft #316](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/316), tracking [#315](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/315). [Contract and exact evidence](../specs/WALL-37-fine-position.md). Successful half-grid shifts require a fresh quote; unknown paid intents stay frozen. Focused and actual-phone component checks pass; combined full-game/capture/SQL evidence and human review remain. No merge.

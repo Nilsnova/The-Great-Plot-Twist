@@ -35,7 +35,7 @@ it('keeps actual quote/retry controls accessible and within both viewport widths
         const bar = createWallBuilderBar({container: document.body, handlers});
         const model = {cells: [{x: 1, z: 6}], phase: 'ready', busy: false, status: 'Positions checked.', quote: {totalCost: 10, remaining: 127}};
         bar.render(model); const submit = [...bar.element.querySelectorAll('button')].find(button => button.textContent === 'Build for 10 coins'); submit.click();
-        const buttons = [...bar.element.querySelectorAll('button')].map(button => { const r = button.getBoundingClientRect(); return {width: r.width, height: r.height, inside: r.left >= 0 && r.right <= innerWidth}; });
+        const buttons = [...bar.element.querySelectorAll('button')].filter(button => button.getClientRects().length).map(button => { const r = button.getBoundingClientRect(); return {width: r.width, height: r.height, inside: r.left >= 0 && r.right <= innerWidth}; });
         bar.render({...model, phase: 'unknown'}); const undo = [...bar.element.querySelectorAll('button')].find(button => button.textContent === 'Remove last');
         const unknown = {label: submit.textContent, disabled: undo.disabled, live: bar.element.querySelector('[role=status]').getAttribute('aria-live')};
         const copy = bar.element.textContent; bar.dispose(); return {calls, buttons, unknown, copy};
@@ -101,5 +101,43 @@ it.each([{offers: false, admitted: false, shown: false}, {offers: true, admitted
     expect(await page.getByRole('button', {name: 'Build walls', exact: true}).count()).toBe(setup.shown ? 1 : 0);
     expect(await page.evaluate(() => window.wallPosted.length)).toBe(0);
     await page.evaluate(() => window.wallComponent.cleanup());
+  });
+});
+
+it('fine-positions an unpaid draft with visible 44px phone controls and a new quote', async () => {
+  await browser.withPage(async page => {
+    await page.setViewportSize({width: 375, height: 812});
+    await page.evaluate(() => document.documentElement.style.setProperty('--narrator-card-height', '120px'));
+    await installIsland(page); await page.getByRole('button', {name: 'Build walls', exact: true}).click();
+    await page.waitForFunction(() => window.wallComponent.island.wallBuilder.state?.phase === 'draft');
+    const point = await page.evaluate(() => {const r = window.wallComponent.canvas.getBoundingClientRect(); return {x: (1 - 14 / 30) * r.width / 2, y: (1 - 5.76 / 20) * r.height / 2};});
+    await page.mouse.click(point.x, point.y); await page.keyboard.press('ArrowRight');
+    await page.getByRole('button', {name: 'Get price', exact: true}).click();
+    const details = page.locator('.wall-builder-fine'), summary = details.locator('summary');
+    expect(await details.evaluate(element => element.open)).toBe(false);
+    const before = await page.locator('.island-wall-builder').boundingBox();
+    await summary.focus(); await page.keyboard.press('Enter');
+    await page.waitForFunction(() => document.querySelector('.island-wall-builder').classList.contains('has-fine-position'));
+    expect(await page.evaluate(() => window.wallPosted.length)).toBe(0); // native summary Enter never confirms a ready purchase
+    const geometry = await page.evaluate(() => {
+      const bar = document.querySelector('.island-wall-builder'), r = bar.getBoundingClientRect();
+      const buttons = [...bar.querySelectorAll('.wall-builder-fine-pad button')].map(button => {const box = button.getBoundingClientRect(); return {
+        width: box.width, height: box.height, inside: box.left >= 0 && box.right <= innerWidth,
+        hit: button.contains(document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2))};});
+      return {height: r.height, top: r.top, bottom: r.bottom, buttons};
+    });
+    expect(geometry.height).toBeGreaterThan(before.height); expect(geometry.top).toBeGreaterThanOrEqual(0); expect(geometry.bottom).toBeLessThanOrEqual(812 - 120);
+    expect(geometry.buttons.every(button => button.width >= 44 && button.height >= 44 && button.inside && button.hit)).toBe(true);
+    await page.getByRole('button', {name: 'Shift draft one square east', exact: true}).click();
+    expect(await page.evaluate(() => window.wallComponent.island.wallBuilder.state)).toMatchObject({cells: [{x: -13.5, z: -8}, {x: -11.5, z: -8}], phase: 'draft', quote: null});
+    expect(await page.locator('.wall-builder-anchors').textContent()).toContain('First: -13.5, -8');
+    expect(await page.locator('.island-wall-builder [role=status]').textContent()).toContain('Draft moved.');
+    expect(await page.getByRole('button', {name: 'Get price', exact: true}).count()).toBe(1);
+    await page.getByRole('button', {name: 'Clear', exact: true}).click();
+    expect(await page.locator('.wall-builder-anchors').textContent()).toBe('Tap a square first.');
+    expect(await page.getByRole('button', {name: 'Shift draft one square east', exact: true}).isDisabled()).toBe(true);
+    await page.evaluate(() => window.wallComponent.island.handleEscape());
+    await page.getByRole('button', {name: 'Build walls', exact: true}).click();
+    expect(await details.evaluate(element => element.open)).toBe(false); await page.evaluate(() => window.wallComponent.cleanup());
   });
 });
