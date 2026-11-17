@@ -42,6 +42,15 @@ try {
   await page.getByText('45 / 60 HP').waitFor();
   await page.getByText('Or wait about 2 min 30 sec for free repair').waitFor();
   await page.getByRole('button', {name: 'Repair now: pay 10 coins'}).waitFor();
+  const desktopCardStyle = await page.locator('.island-card').evaluate(element => {
+    const style = getComputedStyle(element), button = getComputedStyle(element.querySelector('.kit-button'));
+    return {fontFamily: style.fontFamily, backgroundImage: style.backgroundImage,
+      borderRadius: style.borderRadius, buttonRadius: button.borderRadius};
+  });
+  assert.match(desktopCardStyle.fontFamily, /system-ui/);
+  assert.notEqual(desktopCardStyle.backgroundImage, 'none');
+  assert.notEqual(desktopCardStyle.borderRadius, '0px');
+  assert.notEqual(desktopCardStyle.buttonRadius, '0px');
   await save('t59-integrated-between-desktop.png');
 
   await page.evaluate(() => window.recoveryFixture.setRepairMode('insufficient_funds'));
@@ -55,11 +64,19 @@ try {
   assert.equal(refused.hpUnits, 750_000, 'refusal keeps exact server HP');
   await save('t59-integrated-refusal-desktop.png');
 
-  await page.evaluate(() => window.recoveryFixture.pick('cannon_1'));
-  await page.getByText('0 / 80 HP').waitFor();
+  await page.evaluate(() => window.recoveryFixture.pick('wall_2'));
+  await page.getByText('0 / 60 HP').waitFor();
   await page.locator('.recovery-bar[aria-valuenow="0"]').waitFor();
   await page.locator('.recovery-marker').waitFor();
+  await page.waitForFunction(() => {
+    const visual = window.recoveryFixture.inspectRecoveryVisual('wall_2');
+    return visual.indicator?.visible && visual.building?.visible && visual.building?.look === 'broken';
+  });
+  await page.evaluate(() => window.recoveryFixture.close());
+  await page.waitForFunction(() => document.querySelectorAll('.island-card').length === 0);
+  await page.evaluate(() => window.recoveryFixture.focusScene('wall_2'));
   await save('t59-integrated-zero-ruin-desktop.png');
+  await page.evaluate(() => window.recoveryFixture.resetSceneCamera());
 
   await page.evaluate(() => window.recoveryFixture.setRepairMode('success'));
   await page.evaluate(() => window.recoveryFixture.pick('wall_1'));
@@ -71,6 +88,12 @@ try {
 
   await pick('cannon_3', {width: 375, height: 812});
   await page.getByText('0.00006 / 60 HP').waitFor();
+  const phoneCardStyle = await page.locator('.island-card').evaluate(element => ({
+    fontFamily: getComputedStyle(element).fontFamily,
+    backgroundImage: getComputedStyle(element).backgroundImage,
+  }));
+  assert.match(phoneCardStyle.fontFamily, /system-ui/);
+  assert.notEqual(phoneCardStyle.backgroundImage, 'none');
   const tinyBar = await page.locator('.health-fill').first().evaluate(element => element.getBoundingClientRect().width);
   assert.ok(tinyBar >= 1, `tiny positive bar must be visible: ${tinyBar}px`);
   await save('t59-integrated-tiny-phone.png');
@@ -79,8 +102,8 @@ try {
   const callsBeforePreparation = await page.evaluate(() => window.recoveryFixture.getCalls().filter(call => call.path.endsWith('/health')).length);
   await page.evaluate(() => window.recoveryFixture.startWave());
   await page.waitForFunction(() => window.recoveryFixture.getState().phase === 'preparing');
-  await pick('cannon_1', {width: 390, height: 844});
-  await page.getByText('0 / 80 HP').waitFor();
+  await pick('wall_2', {width: 390, height: 844});
+  await page.getByText('0 / 60 HP').waitFor();
   await page.getByText('3 Repair now uses left this wave').waitFor();
   const preparationButton = await page.locator('.recovery-repair').evaluate(element => ({disabled: element.disabled,
     label: element.textContent, card: element.closest('.island-card-build')?.innerText ?? element.parentElement?.parentElement?.innerText ?? '',
@@ -104,6 +127,7 @@ try {
   await page.getByText('28 / 70 HP').waitFor();
   await page.getByText('2 Repair now uses left this wave').waitFor();
   await page.getByText('Automatic repair paused during waves').first().waitFor();
+  await page.locator('.island-card').evaluate(element => { element.scrollTop = element.scrollHeight; });
   await save('t59-integrated-preparation-phone.png');
 
   const combat = await page.evaluate(() => window.recoveryFixture.waitForCombat());

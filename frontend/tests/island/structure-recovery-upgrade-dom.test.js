@@ -36,6 +36,6 @@ it('shows the repair requirement and sends no upgrade from the damaged recovery 
   }));
   expect(result.disabled).toBe(true);
   expect(result.hp).toBe('45 / 60 HP');
-  expect(result.reason).toBe('Fully repair before upgrading.');
+  expect(result.reason).toBe('Repair to full before an upgrade.');
   expect(result).toMatchObject({upgradesBefore: 0, upgradesAfter: 0});
 });

@@ -171,6 +171,7 @@ barge
 barnacle
 barracks
 barrel
+base
 basket
 basketball
 bastion

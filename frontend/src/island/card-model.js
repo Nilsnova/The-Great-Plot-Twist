@@ -121,7 +121,7 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
   const upgradeBlockedReason = recoveryUnavailable ? 'Building health is unavailable. Try again.'
     : recoveryRow && recoveryState.recoveryVersion === 1
     ? recoveryState.repairWindow === 'reserved_wave' ? 'Upgrades are available between waves.'
-      : recoveryRow.hpUnits < 1_000_000 ? 'Fully repair before upgrading.' : ''
+      : recoveryRow.hpUnits < 1_000_000 ? 'Repair to full before an upgrade.' : ''
     : '';
   if (!point) model.tree = towerTreeModel({kind: shown, spot, coins, prices, wave: campaignWave, unlocks, busy,
     picked: treePicked, upgradeBlockedReason});
