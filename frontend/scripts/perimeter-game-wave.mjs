@@ -5,10 +5,8 @@ export async function capturePerimeterWave(page, out, width, height) {
   await village(page).getByRole('button', {name: 'Exit village mode', exact: true}).click();
   await page.waitForFunction(() => !window.__island.island.managing && window.__island.camera.zoom > .98);
   const before = await page.evaluate(() => ({captain: window.__island.player.position.toArray(), zoom: window.__island.camera.zoom}));
-  // Bring the ordinary bell into the working overview, then select its actual sprite and real card.
-  await page.keyboard.press('Escape'); await page.getByRole('button', {name: 'Manage village', exact: true}).click();
-  await page.waitForTimeout(1300);
-  const point = await groundPoint(page, [8.5, 12], 1); await page.mouse.click(point.x, point.y);
+  // The declared initial fixture captain stands beside the bell; its ordinary reach rule still applies.
+  const point = await groundPoint(page, [8.5, 12]); await page.mouse.click(point.x, point.y);
   const bell = page.locator('.island-card-bell[open]'); await bell.waitFor();
   await bell.getByRole('button', {name: 'Ring the bell', exact: true}).click();
   await page.waitForFunction(() => window.__island.waves.wave?.renderer && !window.__island.island.managing);

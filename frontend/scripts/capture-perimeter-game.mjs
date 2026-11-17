@@ -44,7 +44,7 @@ try {
       const g = window.__island, i = g.island; g.settings.hour = 11; g.settings.fastTime = false;
       await i.dev.setCoins(8000); await i.dev.setWaveBest(40); await i.load();
       for (const [id, kind] of [['cannon_1', 'cannon'], ['cannon_2', 'mortar'], ['cannon_3', 'cannon'], ['cannon_4', 'harpoon'], ['tower_1', 'watchtower'], ['house_1', 'house'], ['house_2', 'house']]) await i.build(id, kind);
-      g.player.position.set(-7, 1.03, -11); g.view.setPlace('home_islet', g.player.position);
+      g.player.position.set(8.5, 1.03, 12.8); g.view.setPlace('home_islet', g.player.position);
     });
     await settleCards(page); await manage(page);
     const initial = await wallet(page); assert.equal(initial.walls.length, 0);
