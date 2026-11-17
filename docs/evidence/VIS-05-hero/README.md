@@ -25,7 +25,8 @@ the delivered native image is measured separately below.
 | Native size / format | 1254×1254, RGBA PNG |
 | Encoded bytes | 1,624,431 |
 | SHA-256 | `b5fb1350f511718b901f8f8ecd2291e7e5ca7b13dce5b7376d1e1353ede1fc75` |
-| Source foot | (627,1124), front center of the foundation |
+| Native ground foot | (627,1124), front center of the foundation |
+| Runtime source rectangle / relative foot | (75,39,1108,1103) / (552,1085) |
 | Solid alpha bounds (threshold240) | (89,52)–(1170,1128) |
 | Corner alpha | 0 /0 /0 /0 |
 | Existing logical frame | 96×96; anchor12 from the bottom |
@@ -34,6 +35,12 @@ the delivered native image is measured separately below.
 peripheral generation noise. The solid roof, flag, foundation and contact region
 fit the logical frame after aspect-preserving source-foot normalization. Native
 resolution controls material detail; it changes no world position or collider.
+
+The actual stage-one checkpoint showed excessive blank source margins. The
+coordinator approved the tight rectangle above, preserving the original PNG,
+native ground point and 96×96/anchor12 logical box. The rectangle retains all
+alpha≥16 plus12px margin; lower-alpha peripheral noise stays in the original
+file. The next combined runtime capture decides visual acceptance.
 
 ## Integration boundary
 
