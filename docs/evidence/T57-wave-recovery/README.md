@@ -27,3 +27,11 @@ The early-wave runs show legacy carpenter/workshop free healing raising the four
 ## Limits
 
 This is a pure `createWave()` combat-simulation harness. The solo/co-op labels are crew-loadout proxies, not separate Captain/player-control simulations. The fixture `chargedPrice` is not a price quote; this diagnostic does not exercise SQL, authorization, shared quota, paid-repair races, transport, persistence, or offline clients. It isolates the changed free-repair gate and replayed full-HP events; it does not validate end-to-end payment correctness or client-reported hit trust. No gameplay tuning was changed.
+
+## T57 follow-up verification · 17 Nov 2026
+
+The isolated T57 regression run on `test/t57-wave-recovery-followup` passed **58 tests across 7 files** with one Vitest worker. It included the existing balance diagnostic plus replay, controller, snapshot, legacy wall recovery and tower health suites. The new `recovery-tower-replay.test.js` runs a zero-HP cannon until a boarder is inside its footprint, then sends a synthetic sealed `structure_repaired` event through the production replay driver and journal-to-sim adapter. It verifies that the tower becomes operational and fires, the boarder exits, later boarder damage remains possible, and other moving/hacking boarders respect the obstacle while it has positive HP.
+
+After the final assertion was tightened to keep checking the egressing boarder after its first exit, the changed test was rerun alone and passed **1/1**.
+
+This is deterministic client-sim evidence only. The synthetic journal row is not server-authenticated, and this run did not use two signed-in browsers or a live API/database. T60 owns the protocol-2 authenticated multiplayer and full lifecycle verification; paid transaction/quota evidence belongs to T56. The replay test does not establish server verification of every combat hit.
