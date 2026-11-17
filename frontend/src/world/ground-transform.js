@@ -10,6 +10,7 @@ export function groundGeometry(geometry) { return geometry.applyMatrix4(groundSh
 export function legacyBackdrop(mesh) {
   // MatrixAutoUpdate must stay off: quaternion/scale decomposition cannot preserve affine shear.
   mesh.matrixAutoUpdate = false; mesh.matrix.copy(basisMatrix(projectLegacyGround));
+  mesh.matrixWorldNeedsUpdate = true; // The first unforced coast read must see this manual affine matrix.
   mesh.userData.legacyGround = true; return mesh;
 }
 export function coastUvMatrix(matrixWorld, width = 64, height = 48) {
