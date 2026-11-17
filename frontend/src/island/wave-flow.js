@@ -82,13 +82,20 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
   // joinRunning: the break's "Next wave" (two friends may press it at once): when the other one's
   // wave already runs there, join it instead of saying no.
   const ring = (where = 'own', {joinRunning = false} = {}) => run(async () => {
-    const generation = contextFor(where);
+    const generation = contextFor(where), before = current;
+    lookupGeneration++;
     const answer = await api.startWave({where});
     if (disposed || generation !== contextGeneration) return answer;
-    if (answer.ok) { await ready(); if (!disposed && generation === contextGeneration) begin(answer.data, where, {fresh: true}); }
-    else if (answer.code === 'wave_running') {
+    if (answer.ok) {
+      await ready();
+      // A fresh same-target read may confirm another wave while start/prepare is pending.
+      if (!disposed && generation === contextGeneration
+          && (!current || current === before || current.wave.waveId === answer.data.waveId)) begin(answer.data, where, {fresh: true});
+    } else if (answer.code === 'wave_running') {
+      const lookup = lookupGeneration + 1;
       await look(where);
-      if (joinRunning && !disposed && generation === contextGeneration && current && !current.joined) return joinNow(where);
+      if (joinRunning && !disposed && generation === contextGeneration && lookup === lookupGeneration
+          && current && !current.joined) return joinNow(where);
     }
     return answer;
   });
@@ -96,6 +103,7 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
     const generation = contextFor(where);
     const waveId = current?.wave.waveId;
     if (!waveId || current.where !== where) return {ok: false, status: 404, code: 'no_such_wave', message: 'There is no wave to join.'};
+    lookupGeneration++;
     const stillCurrent = () => !disposed && generation === contextGeneration && current?.where === where && current?.wave.waveId === waveId;
     const answer = await api.joinWave({waveId});
     if (!stillCurrent()) return answer;

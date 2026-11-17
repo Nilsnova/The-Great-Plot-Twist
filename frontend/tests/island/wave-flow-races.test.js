@@ -66,6 +66,31 @@ describe('current-wave lookup and admission ordering', () => {
     expect(h.flow.current).toMatchObject({joined: true, wave: {waveId: 'accepted-wave'}});
   });
 
+  it('a newer confirmed same-target wave during preparation cannot be overwritten by the older accepted start', async () => {
+    const preparation = deferred(), h = harness({prepare: () => preparation.promise});
+    const ringing = h.flow.ring(); await settle();
+    const newer = h.flow.look(); h.reads[0].resolve(ok(wave('newer-wave'))); await newer;
+    preparation.resolve(); await ringing;
+    expect(h.flow.current).toMatchObject({joined: false, wave: {waveId: 'newer-wave'}});
+    expect(h.emit).not.toHaveBeenCalled();
+  });
+
+  it('a newer confirmed same-target wave before the start response cannot be overwritten either', async () => {
+    const admission = deferred(), h = harness({api: {startWave: () => admission.promise}});
+    const ringing = h.flow.ring(), newer = h.flow.look();
+    h.reads[0].resolve(ok(wave('newer-wave'))); await newer;
+    admission.resolve(ok(wave('accepted-wave'))); await ringing;
+    expect(h.flow.current.wave.waveId).toBe('newer-wave'); expect(h.emit).not.toHaveBeenCalled();
+  });
+
+  it('starting admission invalidates an older read before it can interfere with preparation', async () => {
+    const preparation = deferred(), h = harness({prepare: () => preparation.promise});
+    const old = h.flow.look(), ringing = h.flow.ring(); await settle();
+    h.reads[0].resolve(ok(wave('stale'))); await old;
+    expect(h.flow.current).toBeNull(); preparation.resolve(); await ringing;
+    expect(h.flow.current).toMatchObject({joined: true, wave: {waveId: 'accepted-wave'}});
+  });
+
   it.each(['ring', 'join'])('reset cancels a pending %s admission before it begins', async action => {
     const admission = deferred(), h = harness({api: {[action === 'ring' ? 'startWave' : 'joinWave']: () => admission.promise}});
     if (action === 'join') { const shown = h.flow.look(); h.reads[0].resolve(ok(wave('accepted-wave'))); await shown; }
@@ -91,6 +116,16 @@ describe('current-wave lookup and admission ordering', () => {
     const ringing = h.flow.ring('own'), newer = h.flow.look('ISLE-FR3ND');
     h.reads[0].resolve(ok(wave('wave-b'))); await newer; admission.resolve(ok(wave('accepted-wave'))); await ringing;
     expect(h.flow.current).toMatchObject({where: 'ISLE-FR3ND', wave: {waveId: 'wave-b'}});
+  });
+
+  it('a superseded ring fallback lookup cannot auto-join cached state or cancel a newer same-target read', async () => {
+    const h = harness({api: {startWave: async () => ({ok: false, code: 'wave_running'})}});
+    const known = h.flow.look(); h.reads[0].resolve(ok(wave('cached-wave'))); await known;
+    const ringing = h.flow.ring('own', {joinRunning: true}); await settle();
+    const fresh = h.flow.look(); h.reads[1].resolve(ok(wave('stale'))); await ringing;
+    expect(h.api.joinWave).not.toHaveBeenCalled();
+    h.reads[2].resolve(ok(wave('newer-wave'))); await fresh;
+    expect(h.flow.current.wave.waveId).toBe('newer-wave');
   });
 
   it.each([ok(wave('wave-a')), {ok: false, code: 'wave_over'}])('a late join outcome cannot replace/clear the newer target: %j', async answer => {
