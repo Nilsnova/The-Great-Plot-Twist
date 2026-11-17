@@ -12,14 +12,14 @@ const settle = async () => { for (let i = 0; i < 8; i++) await Promise.resolve()
 const flows = [];
 afterEach(() => { for (const flow of flows.splice(0)) flow.dispose(); });
 function harness(options = {}) {
-  const reads = [], timers = new Map(), emit = vi.fn(), changed = vi.fn();
+  const reads = [], timers = new Map(), emit = vi.fn(), changed = vi.fn(), banner = vi.fn();
   const api = {currentWave: vi.fn(() => { const read = deferred(); reads.push(read); return read.promise; }),
     startWave: vi.fn(async () => ok(wave('accepted-wave'))), joinWave: vi.fn(async ({waveId}) => ok(wave(waveId))),
     finishWave: vi.fn(async () => ok({loot: 0, coins: 100})), ...options.api};
-  const flow = createWaveFlow({api, emit, onChange: changed, hasRenderer: () => true, now: () => START,
+  const flow = createWaveFlow({api, emit, banner, onChange: changed, hasRenderer: () => true, now: () => START,
     setTimer: run => { const id = Symbol(); timers.set(id, run); return id; }, clearTimer: id => timers.delete(id),
     ...options, api});
-  flows.push(flow); return {flow, reads, api, emit, changed};
+  flows.push(flow); return {flow, reads, api, emit, changed, timers, banner};
 }
 
 describe('current-wave lookup and admission ordering', () => {
@@ -150,6 +150,23 @@ describe('current-wave lookup and admission ordering', () => {
     expect(h.flow.current.joined).toBe(true);
     const next = h.flow.look(); h.reads[1].resolve(ok(wave('next-wave'))); await next;
     expect(h.flow.current).toMatchObject({joined: false, wave: {waveId: 'next-wave'}});
+  });
+
+  it('a confirmed empty different target clears the joined old wave and its countdown timers', async () => {
+    const h = harness({hasRenderer: () => false}); await h.flow.ring('own'); expect(h.timers.size).toBeGreaterThan(0);
+    expect(h.banner.mock.calls.at(-1)[0]).toContain('Pirates in 10 s!');
+    const empty = h.flow.look('ISLE-FR3ND'); h.reads[0].resolve(ok(null)); await empty;
+    expect(h.flow.current).toBeNull(); expect(h.timers.size).toBe(0); expect(h.banner).toHaveBeenLastCalledWith(null);
+  });
+
+  it('a same-target empty refresh preserves the joined wave and its countdown', async () => {
+    const h = harness({hasRenderer: () => false}); await h.flow.ring('own'); const count = h.timers.size;
+    const bannerCount = h.banner.mock.calls.length, text = h.banner.mock.calls.at(-1)[0];
+    expect(text).toContain('Pirates in 10 s!');
+    const empty = h.flow.look('own'); h.reads[0].resolve(ok(null)); await empty;
+    expect(h.flow.current).toMatchObject({where: 'own', joined: true, wave: {waveId: 'accepted-wave'}});
+    expect(h.timers.size).toBe(count); expect(count).toBeGreaterThan(0);
+    expect(h.banner).toHaveBeenCalledTimes(bannerCount); expect(h.banner).toHaveBeenLastCalledWith(text);
   });
 
   it('finishing/clearing a wave invalidates a lookup that would revive it', async () => {
