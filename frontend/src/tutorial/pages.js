@@ -96,7 +96,7 @@ const RECOVERY_COPY = Object.freeze({
       'Walk up to a damaged or broken building to see its health and Repair now option.'],
   },
   crew: {
-    text: ['Spend skill points in Menu › Captain and skills on Marksman, Brawler or Shipwright.',
+    text: ['Spend skill points in Menu › Captain and skills on Marksman or Brawler.',
       'Engineer keeps a 10% build and upgrade discount; level 3 offers Medic, Engineer or Gunner.'],
   },
 });
