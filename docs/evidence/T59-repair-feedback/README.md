@@ -36,3 +36,32 @@ Environment: Linux, Node.js `v24.22.1`, Chromium `156.0.8078.79` (`/usr/bin/chro
 | 375 × 812 phone | Harpoon, 0.00006/60 HP, 40 coins, one-pixel bar, 600-second free ETA | [Tiny-positive card](../../../frontend/captures/t59-structure-card-tiny-phone.png) |
 
 The capture checks visible repair controls at phone widths and verifies the one-pixel positive HP fill. It does not show live service responses or an actual repair. Runtime evidence remains pending for real between-wave healing, preparation/combat pause and quota, zero/partial/full HP, and two actual clients.
+
+## Integrated UI with offline signed-shape adapter
+
+**These captures run the production island card, world scene, `wireWaves`, controller, and replay code with a local offline transport fixture. The fixture returns API-shaped DTOs but makes no authenticated request and uses no live account, charge, database, or second client.** They show production UI and replay wiring, not actual server acceptance.
+
+Captured from source commit `1aa33a9f` with:
+
+```sh
+cd frontend && node scripts/capture-structure-recovery-integration.js
+```
+
+Environment: Linux, Node.js `v24.22.1`, Chromium `156.0.8078.79` (`/usr/bin/chromium` by default; `CHROME_PATH` may override it), headless with SwiftShader WebGL. The script uses Vite and Playwright. Desktop viewport is 1440 × 900; phone viewports are 390 × 844 and 375 × 812.
+
+The fixture asserts canonical response shapes and request flow, exact card HP/quotes, refusal behavior, preparation quota, and combat checkpoint-before-repair. It holds the paid-repair event outside the visible journal frontier to verify that the HTTP success does not locally heal combat HP; after the event is released to replay, HP updates from the journal. It also checks a tiny positive phone bar is at least one pixel wide and full health hides the recovery UI.
+
+| Viewport | Scenario | Screenshot |
+|---|---|---|
+| 1440 × 900 desktop | Between-wave wall at 45/60 HP; 10 coins; 150-second free ETA | [Between-wave partial wall](../../../frontend/captures/t59-integrated-between-desktop.png) |
+| 1440 × 900 desktop | Destroyed cannon card with empty bar and `!`; broken structure visible in scene | [Zero HP and ruin](../../../frontend/captures/t59-integrated-zero-ruin-desktop.png) |
+| 1440 × 900 desktop | Insufficient-funds refusal retains server HP | [Refused repair](../../../frontend/captures/t59-integrated-refusal-desktop.png) |
+| 1440 × 900 desktop | Accepted between-wave repair reaches full HP and hides offer | [Full between-wave repair](../../../frontend/captures/t59-integrated-full-between-desktop.png) |
+| 375 × 812 phone | Harpoon at 0.00006/60 HP with visible minimum fill | [Tiny positive HP](../../../frontend/captures/t59-integrated-tiny-phone.png) |
+| 390 × 844 phone | Preparation state shows paused automatic repair and shared quota; paid prep repair succeeds | [Preparation and quota](../../../frontend/captures/t59-integrated-preparation-phone.png) |
+| 1440 × 900 desktop | Combat replay damage shown with automatic repair paused | [Combat partial HP](../../../frontend/captures/t59-integrated-combat-desktop.png) |
+| 1440 × 900 desktop | Health checkpoint and repair HTTP success returned, journal event still held; combat HP remains partial | [HTTP response held](../../../frontend/captures/t59-integrated-combat-http-response-held.png) |
+| 1440 × 900 desktop | Journal event replayed; HP heals and recovery display hides | [Journal event applied](../../../frontend/captures/t59-integrated-combat-journal-applied.png) |
+| 390 × 844 phone | Full structure hides recovery display | [Full HP on phone](../../../frontend/captures/t59-integrated-full-phone.png) |
+
+The capture completed with 90 calls to the offline signed-shape adapter. It does not prove SQL behavior, real signed-in transport, or two-client synchronization. The separate disposable PostgreSQL/API/replay evidence is documented by T60.
