@@ -628,9 +628,12 @@ def test_finish_normalizes_expiry_closed_by_settlement_without_late_credit(datab
         "select closed_at is not null from public.recovery_wave_states where wave_id=%s",
         (wave_id,),
     ).fetchone() == (True,)
+    # 20261118020000: the settlement that closes an expired wave also finishes its run without
+    # credit, so the bell is no longer refused wave_running by a run nobody will finish.
     assert database.execute(
-        "select finished_at,expired from public.wave_runs where id=%s", (wave_id,)
-    ).fetchone() == (None, False)
+        "select finished_at is not null,expired,survived,loot from public.wave_runs where id=%s",
+        (wave_id,),
+    ).fetchone() == (True, True, False, 0)
     result = call(
         database,
         "select public.recovery_wave_finish(%s,%s,true,7,10,5,5,20,5,2,2,%s,"
@@ -803,7 +806,12 @@ def test_recovery_start_snapshots_db_wall_identity_and_legacy_effective_hp(datab
     ).fetchone()[0]
     assert current_page["headSeq"] == 1
     assert event_tick > current_page["sealedThroughTick"]
-    stale_finish = call(
+    # 20261118020000: the server owns the end. A finish names its own complete prefix (the seal it
+    # read, the head it read); a paid repair committed after that seal is not in the prefix and is
+    # merged into the close instead of refusing the finish (which a teammate's poll could repeat
+    # forever). Tried in a savepoint so the rest of the check still sees the open wave.
+    database.execute("savepoint own_prefix_finish")
+    own_prefix_finish = call(
         database,
         "select public.recovery_wave_finish(%s,%s,true,0,10,5,5,20,5,2,2,%s,"
         "'paidfinish00',%s,%s,0,%s::jsonb,%s::jsonb)",
@@ -815,10 +823,26 @@ def test_recovery_start_snapshots_db_wall_identity_and_legacy_effective_hp(datab
         json.dumps({str(instance_id): 0}),
         json.dumps({str(instance_id): 400000}),
     )
-    assert stale_finish == {"status": "refused", "reason": "health_sync_required"}
+    assert own_prefix_finish["status"] == "done"
+    assert own_prefix_finish["recovery"]["checkpointUid"] == "paidfinish00"
+    assert own_prefix_finish["recovery"]["closedHp"] == {str(instance_id): 1000000}
+    database.execute("rollback to savepoint own_prefix_finish")
+    # A prefix past the seal (ticks no participant can have run yet) is still refused.
+    missing = call(
+        database,
+        "select public.recovery_wave_finish(%s,%s,true,0,10,5,5,20,5,2,2,%s,"
+        "'paidfinish02',%s,0,0,%s::jsonb,%s::jsonb)",
+        OWNER,
+        wave_id,
+        epoch,
+        event_tick,
+        json.dumps({str(instance_id): 0}),
+        json.dumps({str(instance_id): 400000}),
+    )
+    assert missing == {"status": "refused", "reason": "health_sync_required"}
     assert database.execute(
         "select count(*) from public.recovery_health_checkpoints "
-        "where wave_id=%s and actor_id=%s and checkpoint_uid='paidfinish00'",
+        "where wave_id=%s and actor_id=%s and checkpoint_uid like 'paidfinish%%'",
         (wave_id, OWNER),
     ).fetchone() == (0,)
     checkpoint = call(
@@ -834,19 +858,6 @@ def test_recovery_start_snapshots_db_wall_identity_and_legacy_effective_hp(datab
         json.dumps({str(instance_id): 400000}),
     )
     assert checkpoint["status"] == "accepted"
-    refused = call(
-        database,
-        "select public.recovery_wave_finish(%s,%s,true,0,10,5,5,20,5,2,2,%s,"
-        "'paidfinish01',%s,%s,0,%s::jsonb,%s::jsonb)",
-        OWNER,
-        wave_id,
-        epoch,
-        current_page["sealedThroughTick"],
-        current_page["headSeq"],
-        json.dumps({str(instance_id): 0}),
-        json.dumps({str(instance_id): 400000}),
-    )
-    assert refused == {"status": "refused", "reason": "health_sync_required"}
     assert database.execute(
         "select closed_at from public.recovery_wave_states where wave_id=%s", (wave_id,)
     ).fetchone() == (None,)
@@ -1165,3 +1176,100 @@ def test_late_registered_finisher_expires_without_rewriting_normal_close(databas
         ).fetchone()[0]
         == first_owner_balance
     )
+
+
+def test_recovery_current_lets_a_member_find_and_join_but_still_refuses_outsiders(database):
+    outsider = UUID(int=924)
+    add_players(database, OWNER, FRIEND, outsider)
+    open_island(database, OWNER, "K7Q2M")
+    open_island(database, FRIEND, "M8P3N")
+    open_island(database, outsider, "P9R4S")
+    as_owner(database)
+    database.execute(
+        "insert into public.island_members (island_owner,player_id,role) values (%s,%s,'member')",
+        (OWNER, FRIEND),
+    )
+    as_server(database)
+    template = {
+        "configVersion": 1,
+        "createWave": {"defenses": []},
+        "priceSchedule": {},
+        "structureConfigBySpot": {},
+        "legacyWallRecoverSeconds": 600,
+        "recoveryConfig": {
+            "recoveryVersion": 1,
+            "waveProtocol": 2,
+            "structureMaxHp": {},
+            "recoveryRateFactors": {"carpenterMaximumWorkers": 2},
+        },
+        "defaultPositions": {},
+        "eventByWave": {"1": None},
+        "bossByWave": {"1": False},
+        "expectedRevision": database.execute(
+            "select revision from public.island_recovery_state where island_owner=%s", (OWNER,)
+        ).fetchone()[0],
+    }
+    started = call(
+        database,
+        "select public.recovery_wave_start(%s,%s,'island',%s,4242,0,15,900,50,"
+        "'calm',1,0,%s::text[],%s::jsonb,true,2::smallint)",
+        OWNER,
+        "joiners01",
+        OWNER,
+        ["structure_recovery"],
+        json.dumps(template),
+    )
+    assert started["status"] == "started"
+    current_sql = "select public.recovery_wave_current(%s,'island',%s,%s::smallint)"
+
+    joinable = call(database, current_sql, FRIEND, OWNER, 2)
+    assert joinable["status"] == "running"
+    assert joinable["waveId"] == started["waveId"]
+    assert joinable["seed"] == 4242 and joinable["wave"] == started["wave"]
+    assert joinable["startsAt"] == started["startsAt"]
+    assert (joinable["recoveryVersion"], joinable["waveProtocol"]) == (1, 2)
+    assert joinable["joined"] is False
+    # Nothing private: no token, no counter, and no snapshot (it lists the owner's token).
+    for private in ("participantToken", "lastActorCounter", "initialSnapshot"):
+        assert private not in joinable
+    assert started["participantToken"] not in json.dumps(joinable)
+    assert call(database, current_sql, FRIEND, OWNER, 1) == {
+        "status": "refused",
+        "reason": "client_update_required",
+    }
+
+    joined = call(
+        database,
+        "select public.recovery_wave_join(%s,%s,2::smallint)",
+        FRIEND,
+        joinable["waveId"],
+    )
+    assert joined["status"] == "joined"
+    assert joined["participantToken"] != started["participantToken"]
+    member_current = call(database, current_sql, FRIEND, OWNER, 2)
+    assert member_current["joined"] is True
+    assert member_current["participantToken"] == joined["participantToken"]
+    assert member_current["lastActorCounter"] == 0
+    assert member_current["initialSnapshot"] == joined["initialSnapshot"]
+    owner_current = call(database, current_sql, OWNER, OWNER, 2)
+    assert owner_current["participantToken"] == started["participantToken"]
+    assert owner_current["joined"] is True
+
+    assert call(database, current_sql, outsider, OWNER, 2) == {
+        "status": "refused",
+        "reason": "not_in_wave",
+    }
+    leaver = UUID(int=925)
+    add_players(database, leaver)
+    open_island(database, leaver, "Q2T5V")
+    as_owner(database)
+    database.execute(
+        "insert into public.island_members (island_owner,player_id,role,left_at) "
+        "values (%s,%s,'member',now())",
+        (OWNER, leaver),
+    )
+    as_server(database)
+    assert call(database, current_sql, leaver, OWNER, 2) == {
+        "status": "refused",
+        "reason": "not_in_wave",
+    }

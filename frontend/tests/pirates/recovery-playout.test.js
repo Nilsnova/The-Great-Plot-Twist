@@ -3,6 +3,7 @@
 // With the playout buffer it runs a steady tick or so per frame, a little behind real time.
 import { describe, expect, it } from 'vitest';
 import { createWaveController, RECOVERY_PLAYOUT_MS } from '../../src/pirates/controller.js';
+import { RECOVERY_POLL_MIN_MS } from '../../src/pirates/recovery-transport.js';
 
 const START = Date.UTC(2026, 10, 14, 12, 0, 0), STARTS = START + 1000, TICK_MS = 50, FRAME_MS = 16, ROUND_TRIP_MS = 150;
 const TOKEN = '7165d60f-14f5-4b9e-96a0-2ed457b4c219';
@@ -48,7 +49,8 @@ describe('recovery waves play out smoothly (#324)', () => {
   });
 
   it('with the default buffer it advances at most two ticks a frame, like the local clock', async () => {
-    expect(RECOVERY_PLAYOUT_MS).toBeGreaterThan(250 + 150); // longer than one poll plus a round trip
+    // Longer than the gap between two reads plus a slow (450 ms) round trip, so a wave never reads back to back.
+    expect(RECOVERY_PLAYOUT_MS).toBeGreaterThan(RECOVERY_POLL_MIN_MS + 450);
     const smooth = await ticksPerFrame(RECOVERY_PLAYOUT_MS);
     expect(smooth.moved).toBeGreaterThan(100);
     expect(smooth.max).toBeLessThanOrEqual(2);

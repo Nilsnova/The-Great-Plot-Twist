@@ -122,9 +122,23 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
     changed();
     return answer;
   }
+  // A recovery wave finishes through its own journal transport, not finish() above: when it is over on this
+  // screen (answered, or ended without an answer) it lets go of the bell here, and an answered close tells
+  // the island like finish() does (loot toast, coins, wave_finished).
+  function ended(waveId, data = null) {
+    const number = current?.wave.waveId === waveId ? current.wave.wave : undefined;
+    if (number !== undefined) { current.finished = true; stopTimers(); banner(null); current = null; }
+    if (data) {
+      if (data.survived) notify(lootText(data), 'success');
+      else if (Number.isSafeInteger(data.coins)) notify(`The pirates broke through. You have ${coinText(data.coins)}.`, 'error');
+      emit({type: WAVE_FINISHED, survived: data.survived === true, waveId, ...(number ? {wave: number} : {}), ...data});
+    }
+    if (number !== undefined || data) changed();
+    return number !== undefined;
+  }
   const stopFinisher = setWaveFinisher(args => finish(args, {retry: false}));
   return {
-    ring, join, look, finish,
+    ring, join, look, finish, ended,
     get busy() { return busy; },
     get current() { return current ? {...current} : null; },
     secondsLeft: () => (current ? Math.max(0, Math.ceil((current.startAt - now()) / 1000)) : null),
