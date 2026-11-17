@@ -238,6 +238,11 @@ class FakeIslandDatabase:
         self.skill_refs: set[str] = set()
         self.paid_replies: dict[str, dict | httpx.Response] = {}
         self.recovery_state_reply: dict | httpx.Response = {"status": "missing"}
+        self.repair_reply: dict | httpx.Response = {
+            "status": "refused",
+            "reason": "recovery_unavailable",
+        }
+        self.repair_receipts: list[dict] = []
         # The island arsenal (T40): the answer of each arsenal_* function.
         self.arsenal_replies: dict[str, dict | httpx.Response] = {}
         self.point_buildings: list[dict] = []
@@ -315,9 +320,13 @@ class FakeIslandDatabase:
         handlers["POST /rpc/island_walls_record"] = lambda request: self.answer(
             self.paid_replies.get("island_walls_record", {"status": "recorded"})
         )
+        handlers["POST /rpc/island_structure_repair"] = lambda request: self.answer(
+            self.repair_reply
+        )
         handlers["POST /rpc/structure_recovery_read_state"] = lambda request: self.answer(
             self.recovery_state_reply
         )
+        handlers["GET /structure_repair_receipts"] = self.read_repair_receipts
         handlers["POST /rpc/island_demolish"] = lambda request: self.answer(
             self.paid_replies.get("island_demolish", DEMOLISHED)
         )
@@ -343,6 +352,9 @@ class FakeIslandDatabase:
 
     def read_wallet(self, request: httpx.Request) -> httpx.Response:
         return httpx.Response(200, json=[{"balance": self.balance}] if self.has_wallet else [])
+
+    def read_repair_receipts(self, request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=self.repair_receipts)
 
     def read_buildings(self, request: httpx.Request) -> httpx.Response:
         ref = request.url.params.get("ref")
