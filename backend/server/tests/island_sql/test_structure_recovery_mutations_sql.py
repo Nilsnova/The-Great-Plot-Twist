@@ -402,6 +402,32 @@ def test_demolition_removes_only_current_health_and_keeps_wave_history(database)
         WAVE) == 1
 
 
+def test_failed_v1_refresh_rolls_back_build_wallet_revision_and_history(database):
+    seed_v1(database)
+    as_server(database)
+    before_balance = balance(database, OWNER)
+    before_revision = call(database,
+        "select revision from public.island_recovery_state where island_owner=%s", OWNER)
+    database.execute("savepoint invalid_manifest_probe")
+    as_owner(database)
+    database.execute("delete from public.recovery_wave_states where wave_id=%s", (WAVE,))
+    as_server(database)
+    with pytest.raises(psycopg.errors.RaiseException, match="recovery_config_missing"):
+        call(database,
+            "select public.island_build(%s,%s,'wall_2','wall','rollback-0001',10)",
+            OWNER, OWNER)
+    database.execute("rollback to savepoint invalid_manifest_probe")
+    as_owner(database)
+    assert balance(database, OWNER) == before_balance
+    assert call(database,
+        "select count(*) from public.islet_buildings where player_id=%s and plot='wall_2'",
+        OWNER) == 0
+    assert call(database,
+        "select revision from public.island_recovery_state where island_owner=%s", OWNER) == before_revision
+    assert call(database,
+        "select count(*) from public.recovery_wave_states where wave_id=%s", WAVE) == 1
+
+
 def test_reset_advances_epoch_clears_current_health_and_keeps_wave_history(database):
     seed_v1(database)
     as_server(database)
