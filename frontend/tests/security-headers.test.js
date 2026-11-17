@@ -2,7 +2,7 @@
 import {describe,it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
-import {buildSecurityHeaders,toVercelHeaders} from '../scripts/security-headers.js';
+import {buildSecurityHeaders,toVercelHeaders,securityBlocks,ASSET_CACHE_SOURCE,ASSET_CACHE_CONTROL} from '../scripts/security-headers.js';
 
 const address='https://example-project.supabase.co';
 const basePolicy=[
@@ -86,7 +86,22 @@ describe('security headers',()=>{
   it('matches actual platform headers when present and otherwise uses the explicit proposal',()=>{
     const config=JSON.parse(readFileSync(new URL('../../vercel.json',import.meta.url),'utf8'));
     const headers=buildSecurityHeaders(undefined,{platformConfig:config});
-    if(Object.hasOwn(config,'headers'))expect(toVercelHeaders(headers).headers).toEqual(config.headers);
+    if(Object.hasOwn(config,'headers'))expect(toVercelHeaders(headers).headers).toEqual(securityBlocks(config.headers));
     else expect(headers).toEqual(base);
+  });
+  it('accepts only the exact immutable cache block for hashed assets beside the security block',()=>{
+    const block=toVercelHeaders(base).headers[0];
+    const cache={source:ASSET_CACHE_SOURCE,headers:[{key:'Cache-Control',value:ASSET_CACHE_CONTROL}]};
+    expect(buildSecurityHeaders(undefined,{platformConfig:{headers:[block,cache]}})).toEqual(base);
+    for(const headers of [[cache],[block,cache,cache],
+      [block,{...cache,source:'/(.*)'}],[block,{...cache,source:'/assets/game.js'}],
+      [block,{...cache,headers:[{key:'Cache-Control',value:'public, max-age=60'}]}],
+      [block,{...cache,headers:[...cache.headers,{key:'X-Frame-Options',value:'SAMEORIGIN'}]}],
+      [block,{...cache,has:[{type:'query',key:'x'}]}],
+    ])expect(()=>buildSecurityHeaders(undefined,{platformConfig:{headers}})).toThrow(TypeError);
+  });
+  it('keeps the hashed-asset cache block in the deployed vercel.json',()=>{
+    const config=JSON.parse(readFileSync(new URL('../../vercel.json',import.meta.url),'utf8'));
+    expect(config.headers).toContainEqual({source:ASSET_CACHE_SOURCE,headers:[{key:'Cache-Control',value:ASSET_CACHE_CONTROL}]});
   });
 });
