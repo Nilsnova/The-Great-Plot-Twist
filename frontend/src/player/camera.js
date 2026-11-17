@@ -44,7 +44,10 @@ export function createCamera(input) {
       if (!exploring || !Number.isFinite(delta) || delta <= 0) return;
       const dt = Math.min(delta, .1);
       const tour = camera.userData.tour, touring = Number.isFinite(tour?.x) && Number.isFinite(tour?.z);
-      const frame = village && !touring && !Number.isFinite(camera.userData.battleZoom) ? villageFrame(camera, placeId, villageViewport) : null;
+      // Holding Tab looks at the whole island for a moment, also during a wave; letting go eases back.
+      const peek = input?.held?.has?.('Tab') === true;
+      const frame = !touring && (peek || (village && !Number.isFinite(camera.userData.battleZoom)))
+        ? villageFrame(camera, placeId, village ? villageViewport : null) : null;
       if (frame) {
         const blend = reduce ? 1 : 1 - Math.exp(-dt * 5);
         place(follow.x + (frame.x - follow.x) * blend, follow.y + (frame.y - follow.y) * blend);
