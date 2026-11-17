@@ -176,3 +176,5 @@ WALL-28 owner integration (Johannes): [Draft #285](https://github.com/Nilsnova/T
 
 
 WALL-33 enable/quote API (Johannes): [Draft #302](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/302), [issue #301](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/301), adds owner-only monotonic admission, an off-by-default offer flag, canonical bounded quotes and trusted reset-epoch scope. [Exact checks/limits](../specs/WALL-33-perimeter-api.md). Paid construction/reconciliation and real SQL/browser lifecycle remain; no activation, live migration application or merge.
+
+WALL-33 paid-build API (Johannes): [Draft #308](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/308), stacked on #302, adds permission-first receipt reconciliation and current-state/epoch validation before atomic positioned construction. [Exact checks/limits](../specs/WALL-33-paid-build-api.md). API fake evidence is separate from SQL/browser lifecycle acceptance. Existing receipts do not reconstruct reset/demolished pieces. No live migration application, activation or merge.
