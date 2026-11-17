@@ -166,3 +166,6 @@ COC-02 follow-up (Johannes, draft): current-base management fit view is a bounde
 
 
 WALL-19 perimeter follow-up (Johannes): [Draft PR #275](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/275) adds bounded database identities and positioned-build/lifecycle guards for the 128-piece target. [Scope, dependencies and evidence](../specs/WALL-19-cohort-constraints.md). This is one required slice; it does not complete the perimeter wall feature, apply a migration or authorize release.
+
+
+WALL-20 perimeter follow-up (Johannes): [Draft #283](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/283) admits the selected wall cohort to the existing paid-repair transaction. [Scope and exact private SQL evidence](../specs/WALL-20-cohort-repair.md). This is one verified database slice; the complete perimeter feature, live migration and release remain separate.

@@ -14,6 +14,8 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
+**17 Nov / Johannes — WALL-20:** [Draft #283](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/283) extends only paid-repair ID admission, preserving its transaction rules. The source-identical private SQL set passed 265 checks; [scope and limits](../specs/WALL-20-cohort-repair.md). No live application or merge.
+
 **17 Nov / Johannes — WALL-19:** [Draft #275](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/275) implements bounded perimeter-wall database identities and positioned-build/coordinate-release guards. The source-identical coordinated private SQL set passed 265 checks; scope and limits are in [the spec](../specs/WALL-19-cohort-constraints.md). No live application or merge.
 
 **16 Nov / Nils — slots and badges (D060):** branch `feat/slots-and-badges`: the orange 🪓 badges of the battle guide are gone; four extra tower spots (`cannon_8`..`cannon_11`, after waves 10/20/30/40) behind the off-by-default flag `more_tower_spots`. Migration `20261117010000_more_tower_spots.sql` is not applied (paste `docs/handoff/apply-2026-11-17.sql`, then switch the flag on).
@@ -267,6 +269,8 @@ Nobody has decided these yet. Until they are decided, the plan in ROADMAP.md sta
 6. **Pick a package.** Take your lane's next package below, or one from "Start today" in ROADMAP.md. Open an issue with the goal, acceptance checks, scope, responsible teammate and likely files. Create your branch from `main` (`git switch main`, `git pull`, then for example `git switch -c feat/l1-live-weather`). Paste the agent brief below and open a draft pull request early.
 
 ## Next steps per lane
+
+**Johannes / WALL-20:** rehearse [Draft #283](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/283) and seek independent human review of the current guard and SQL evidence; full perimeter activation stays separate.
 
 **Johannes / WALL-19:** rehearse [Draft #275](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/275) after its 265-check private SQL verification, then obtain independent human review. Do not apply live or merge.
 
@@ -625,6 +629,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+**17 Nov / Johannes — WALL-20:** [Draft #283](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/283) extends only paid-repair ID admission, preserving its transaction rules. The source-identical private SQL set passed 265 checks; [scope and limits](../specs/WALL-20-cohort-repair.md). No live application or merge.
 
 **17 Nov / Johannes — WALL-19:** [Draft #275](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/275) implements bounded perimeter-wall database identities and positioned-build/coordinate-release guards. The source-identical coordinated private SQL set passed 265 checks; scope and limits are in [the spec](../specs/WALL-19-cohort-constraints.md). No live application or merge.
 
