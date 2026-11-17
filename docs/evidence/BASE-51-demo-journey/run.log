@@ -1,0 +1,77 @@
+
+> the-great-plot-twist@0.1.0 test:demo
+> node scripts/check-demo-journey.js
+
+{
+  "checked": "2026-11-17T15:22:05.524Z",
+  "checks": [
+    "The quest strip is visible in the harbor",
+    "Before joining, the strip shows the first-3-minutes goals",
+    "The harbor shows the demo layer and no Journal or case tools",
+    "Join the class harbor remembers the class harbor",
+    "The strip lists wave, defend Pirate Point and a lamp",
+    "A joined player announces the class harbor place",
+    "The actual current Wave goal opens its hint",
+    "The lock asks about the sky over the player’s place",
+    "Five big sky choices with icons",
+    "After a wrong answer the hint path is offered",
+    "The lock opens with the cutscene \"lock opens\"",
+    "After the cutscene a reward line shows",
+    "The Keeper’s Lock still opens in the harbor, no longer as a class goal",
+    "Every answer carries a valid action id",
+    "Two answers, two action ids",
+    "Simulated captains are drawn in the harbor",
+    "The rehearsal shows no highlights-tour presenter panel over the class harbor",
+    "Waving to a captain ticks the wave goal",
+    "A friendly duel still reaches the spotlight reveal (no longer a class goal)",
+    "J shows the projector panel with the QR canvas for the practice class code HARBOR-TESTS",
+    "The projector has the host button Ring the Pirate Point bell",
+    "Joining the Pirate Point battle ticks the defend goal",
+    "Tapping a goal shows its one-line hint",
+    "Holding E for 2 s lights the lamp",
+    "Lighting a lamp ticks the lamp goal",
+    "All three lamps within 20 s relight the lighthouse with the cutscene",
+    "The relit lighthouse shows one caption, not three",
+    "Simulated captains defend Pirate Point with you during the battle",
+    "At the lamps moment Pirate Point shows at most one caption",
+    "The three lamps sink the flagship",
+    "The rehearsal sends no server writes",
+    "The pause menu offers no Full mystery or Lighthouse prologue entry",
+    "Resume returns to the harbor with the quest strip",
+    "No JavaScript errors and no outside requests"
+  ],
+  "lockRequests": [
+    {
+      "method": "GET",
+      "path": "/api/lock",
+      "query": "",
+      "body": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/lock/answer",
+      "query": "",
+      "body": {
+        "answer": "fog",
+        "actionUid": "b231eac6-3256-45c6-9d8b-baabb390ba0d"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/lock/answer",
+      "query": "",
+      "body": {
+        "answer": "clear",
+        "actionUid": "52095704-9899-4dd9-9092-41b95f0ab3e6"
+      }
+    }
+  ],
+  "perf": null,
+  "errors": [],
+  "external": []
+}
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice
