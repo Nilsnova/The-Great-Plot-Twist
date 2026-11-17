@@ -26,6 +26,7 @@ import {finishWave as finishIslandWave, registerWaveRenderer} from '../island/wa
 import {defenses as spotDefenses} from '../island/spots.js';
 import {figurePositions, hiddenFigures, matchFigures} from './figures.js';
 import {figurePoses} from './poses.js';
+import {createRecoveryTransport} from './recovery-transport.js';
 
 const ISLAND_PLACE = 'home_islet';
 export const SPOTS_CHANGED = 'island_spots_changed'; // src/island/index.js
@@ -45,9 +46,9 @@ export function throwRefusal(answer) {
 }
 export function pointApiFrom(islandApi) {
   return {
-    startWave: async ({where}) => throwRefusal(await islandApi.startWave({where})),
-    joinWave: async ({waveId}) => throwRefusal(await islandApi.joinWave({waveId})),
-    currentWave: async where => throwRefusal(await islandApi.currentWave({where})),
+    startWave: async ({where}) => throwRefusal(await islandApi.startWave({where, waveProtocol: 1})),
+    joinWave: async ({waveId}) => throwRefusal(await islandApi.joinWave({waveId, waveProtocol: 1})),
+    currentWave: async where => throwRefusal(await islandApi.currentWave({where, waveProtocol: 1})),
     finishWave: async body => throwRefusal(await islandApi.finishWave(body)),
   };
 }
@@ -71,6 +72,7 @@ export function wireWaves(ctx) {
   const stopRenderer = island ? registerWaveRenderer({name: 'pirates'}) : () => {};
   const finishWave = async body => throwRefusal(await finishIslandWave(body));
   const api = island ? pointApiFrom(island.api) : ctx.fakeApi ?? null;
+  const recoveryTransport = island?.recoveryTransport ? createRecoveryTransport(island.recoveryTransport) : null;
   // Tower defense v2 (TOWER-DEFENSE.md): levels come with the defenses, crew and captain from GET /api/island,
   // and the break's "Next wave" rings the island's bell again (own island, or the friend's we are visiting).
   // Host and visitors must feed the sim the same island, so both read the defended island's answer (a
@@ -80,6 +82,7 @@ export function wireWaves(ctx) {
   const game = island ? createGameRoom({room: islandRoom, emit: ctx.emit ?? (() => {}), later, every, onChange: () => island.refreshLobby?.()}) : null;
   if (game) island.attachGame?.(game);
   const pirates = mountPirates({...ctx, getDefenses: () => withLevels(island?.defenses() ?? [], defended()), finishWave, api, openRoom, notify,
+    recoveryTransport,
     practiceIdentity: () => ({player: practicePlayer(ctx.getPracticeToken?.()) ?? ctx.practicePlayer ?? null, island: island?.gameCode ?? roomTopic}),
     islandRoom, islandPlace: ISLAND_PLACE,
     getCrew: () => defended()?.crew ?? null,
@@ -96,6 +99,10 @@ export function wireWaves(ctx) {
     startNextWave: island ? () => island.ringBell() : null,
     // The room-wide Pause between waves: the break stays open and Auto next waits (GAME-V3.md §2).
     holdBreak: game ? () => game.hold() : null, toggleHold: game ? () => game.togglePause() : null});
+  island?.setRecoveryCheckpointHandler?.(() => pirates.island.checkpointBeforeRepair());
+  function publishRecoveryState() {
+    try { island?.setRecoveryCombatState?.(pirates.island.recoveryCombatState ?? null); } catch { /* The display cache cannot stop the wave. */ }
+  }
 
   function followRoom() {
     const place = island && world.current?.id === ISLAND_PLACE ? island.roomPlace() : null;
@@ -149,6 +156,8 @@ export function wireWaves(ctx) {
     stops.push(on('arrived', event => { if (event?.place === ISLAND_PLACE) landed = true; followRoom(); }),
       on('travel', () => { landed = false; islandRoom.attach(null); realRoom?.close?.(); realRoom = null; roomTopic = null; }));
     stops.push(every(tick, 1000));
+    stops.push(every(publishRecoveryState, 250));
+    publishRecoveryState();
     // A wave we are in (rung here or joined): tell the island's room, so the other defenders join too;
     // again a little later for a friend whose room was still joining (a repeat changes nothing).
     stops.push(on('wave_started_server', event => {
@@ -219,6 +228,8 @@ export function wireWaves(ctx) {
       if (disposed) return; disposed = true;
       for (const stop of stops.splice(0)) stop?.();
       for (const cancel of [...timers]) cancel(); timers.clear();
+      try { island?.setRecoveryCombatState?.(null); } catch { /* Cleanup is best effort. */ }
+      try { island?.setRecoveryCheckpointHandler?.(null); } catch { /* Cleanup is best effort. */ }
       stopRenderer(); pirates.dispose(); game?.dispose(); island?.attachGame?.(null); islandRoom.close(); realRoom?.close?.(); island?.setBattle(false);
     },
   };
