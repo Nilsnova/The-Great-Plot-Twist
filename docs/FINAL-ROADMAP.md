@@ -146,3 +146,6 @@ The unified-recovery follow-up T54–T60 is claimed by Ianno. The technical prop
 Planning handover (14 Nov): roadmap/task expansion drafted by Ianno Hollensteiner; documentation checks completed. Implementation tasks remain proposed, not done. Peer review and explain-back are pending.
 
 - [x] **B3 current-v3 feedback pass:** implemented by Johannes in drafts [#31](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/31) and [#32](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/32). [Audit, screenshots and limits](B3-FEEDBACK-AUDIT.md). This scoped pass does not claim the historical mystery/email workflows or live provider/multiplayer proof. Human review remains.
+
+
+COC-02 follow-up (Johannes, draft): current-base management fit view is a bounded implementation slice for issue #143 and depends on COC-49/PR #192. The parent camera task remains open; see [specification](../specs/COC-02-village-overview.md). No merge or full editor-camera completion is claimed.

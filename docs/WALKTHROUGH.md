@@ -1647,3 +1647,8 @@ runs against disposable local PostgreSQL with every migration applied twice.
 
 **Limits.** This fence protects a paid restore from a report belonging to a wave that started earlier.
 It does not validate the health a modified client reports or order arbitrary stale reports from other waves.
+
+
+## Johannes — COC-02 current-base overview
+
+The camera accepts a local management-view request and fits the current home island. It preserves normal zoom and gives combat/tutorial focus precedence. Runtime: `frontend/src/player/camera.js`, with one `game.js` handoff from optional `island.managing`. See [the specification](../specs/COC-02-village-overview.md) for why, limits, future land bounds and three questions. This is a draft dependent on PR #192, not a merged feature.

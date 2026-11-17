@@ -306,6 +306,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     world.update(delta, { player: controller.player.position, time:reducedMotion()?0:time, night, weather: state,weatherAnswer });
     characterScale=inBattle?characterScaleFor(view.camera.zoom):1;scene.userData.characterScale=characterScale;
     character.setColour(island?.game?island.captainColour():null);character.setScale(characterScale);
+    view.setVillageView(island?.managing === true && !inBattle);
     view.update(delta, controller.player.position);
     // A captain down in the wave lies in the wave's drawing: their standing presence figure hides (pirates/figures.js).
     experience.update(delta,{speed,hide:waves?.figures?.(experience.figures())??null,poses:poses?.figures??null});
