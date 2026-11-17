@@ -15,6 +15,7 @@ GUARDS = MIGRATIONS / "20261113010000_respec_and_wave_guards.sql"
 DEMOLISH = MIGRATIONS / "20261112080000_demolish.sql"
 RESEARCH = MIGRATIONS / "20261112100000_research_tiers.sql"
 TREE = MIGRATIONS / "20261112120000_captain_tree.sql"
+RECOVERY_MUTATIONS = MIGRATIONS / "20261117050000_structure_recovery_mutations.sql"
 
 WAVE_TEST = re.compile(
     r"from public\.wave_runs\s+where island_owner = (\w+) and finished_at is null\s+"
@@ -33,7 +34,7 @@ def latest_definition(name: str) -> tuple[str, str]:
 
 
 def test_the_latest_definitions_are_in_the_guards_migration():
-    assert latest_definition("island_research")[0] == GUARDS.name
+    assert latest_definition("island_research")[0] == RECOVERY_MUTATIONS.name
     assert latest_definition("island_respec_at_level")[0] == GUARDS.name
 
 
@@ -44,7 +45,11 @@ def test_both_use_the_wave_test_of_island_demolish():
         ("island_research", "p_island_owner"),
         ("island_respec_at_level", "p_player_id"),
     ):
-        _, body = latest_definition(name)
+        # These checks pin the reviewed pre-recovery guard migration. T55 replaces research
+        # later to add canonical v1 settlement while preserving this v0 boundary.
+        body = re.search(
+            rf"create or replace function public\.{name}\(.*?\n\$\$;", GUARDS.read_text(), re.S
+        ).group(0)
         found = WAVE_TEST.search(body)
         assert found and found.group(1) == owner, name
         assert "'wave_running'" in body, name
@@ -53,7 +58,11 @@ def test_both_use_the_wave_test_of_island_demolish():
 
 
 def test_research_keeps_everything_else_of_research_tiers():
-    _, now = latest_definition("island_research")
+    now = re.search(
+        r"create or replace function public\.island_research\(.*?\n\$\$;",
+        GUARDS.read_text(),
+        re.S,
+    ).group(0)
     before = RESEARCH.read_text()
     old = re.search(r"create function public\.island_research\(.*?\n\$\$;", before, re.S).group(0)
     stripped = re.sub(
@@ -63,6 +72,20 @@ def test_research_keeps_everything_else_of_research_tiers():
         flags=re.S,
     )
     assert stripped.replace("create or replace function", "create function") == old
+
+
+def test_recovery_research_replacement_keeps_the_legacy_guard_and_adds_v1_settlement():
+    _, body = latest_definition("island_research")
+    assert "structure_recovery_mutation_begin(p_island_owner)" in body
+    assert "structure_recovery_mutation_finish(p_island_owner, v_recovery)" in body
+    assert "if (v_recovery ->> 'recoveryVersion')::integer = 1 then" in body
+    assert "v_recovery #>> '{settlement,status}' = 'reserved'" in body
+    assert "elsif exists (" in body
+    assert (
+        "finished_at is null and starts_at + make_interval(secs => maximum_seconds) >= now()"
+        in body
+    )
+    assert "'wave_running'" in body
 
 
 def test_respec_is_priced_per_level_under_the_island_lock():
