@@ -5,16 +5,22 @@ import * as THREE from 'three';
 import {projectPoint} from '../world/art.js';
 import {surfaces} from '../world/places/surfaces.js';
 
-// Fit today's whole island, including its wavy shore, tall buildings and HUD space.
-// This is a village overview, not an alternate battle zoom or a future land-growth rule.
-export function villageFrame(camera, placeId, viewport = null) {
-  const land = placeId === 'home_islet' ? surfaces[placeId] : null;
+// Real overlay insets describe usable room independently of the chosen working zoom.
+function villageSpace(camera, viewport = null) {
   const width = camera.right - camera.left, height = camera.top - camera.bottom;
-  if (!land || !Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) return null;
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) return null;
   const fraction = value => Number.isFinite(viewport?.height) && viewport.height > 0 && Number.isFinite(value)
     ? Math.max(0, value / viewport.height) : 0;
   const top = fraction(viewport?.top), bottom = fraction(viewport?.bottom), free = 1 - top - bottom;
   if (free <= 0) return null; // There is no honest island fit when overlays occupy the whole view.
+  return {width, height, top, bottom, free};
+}
+
+// Fit today's whole island, including its wavy shore, tall buildings and HUD space.
+export function villageFrame(camera, placeId, viewport = null) {
+  const land = placeId === 'home_islet' ? surfaces[placeId] : null, space = villageSpace(camera, viewport);
+  if (!land || !space) return null;
+  const {width, height, top, bottom, free} = space;
   const zoom = Math.min(1, width / (2 * (land.rx * 1.1 + 2)), height * free / (2 * (land.rz * .72 * 1.1 + 4.5)));
   return {x: 0, y: 3 - (bottom - top) * height / (2 * zoom), zoom};
 }
@@ -26,9 +32,12 @@ export function createCamera(input) {
   camera.userData.viewHeight = 22; // world units tall at zoom 1 (at least 16 wide on a phone)
   let exploring = false, targetZoom = 1, placeId = 'lighthouse_isle', reduce = false, zoom = 1, village = false, villageViewport = null;
   const follow = new THREE.Vector2(camera.position.x, camera.position.y);
-  let villageScale = 1, villageX = 0, villageY = 0;
-  const fitVillage = () => { villageScale = 1; villageX = villageY = 0; };
+  let villageFit = true, villageZoom = 1, villageX = 0, villageY = 0;
+  const fitVillage = () => { villageFit = true; villageZoom = 1; villageX = villageY = 0; };
+  // The cabin/left-house/heart district is useful on a narrow screen; outskirts remain pannable.
+  const workVillage = () => { villageFit = false; villageZoom = 1; villageX = -4; villageY = projectPoint(-4, -4).y - 3; };
   const villageBase = () => villageFrame(camera, placeId, villageViewport);
+  const workingZoom = frame => Math.max(frame.zoom, Math.min(2, villageZoom));
   function place(x, y) { follow.set(x, y); camera.position.set(x, y, 100); }
   function applyZoom(value) {
     zoom = value;
@@ -44,23 +53,43 @@ export function createCamera(input) {
     overview() { exploring = false; targetZoom = 1; applyZoom(1); },
     start(reducedMotion = false) { exploring = true; reduce = reducedMotion === true; },
     setVillageView(active, viewport = null) {
-      if (active === true && !village) fitVillage();
+      const entering = active === true && !village;
       village = active === true; villageViewport = viewport;
+      if (entering) workVillage();
     },
     villageControl(action) {
       const frame = exploring && village && villageBase();
       if (!frame) return;
       if (action === 'fit') { fitVillage(); return; }
-      const factor = action === 'in' ? 1.4 : action === 'out' ? 1 / 1.4 : 1;
-      villageScale = Math.max(1, Math.min(2 / frame.zoom, villageScale * factor));
-      if (villageScale === 1) villageX = villageY = 0;
+      if (action === 'work') { workVillage(); return; }
+      if (!['in', 'out'].includes(action)) return;
+      const factor = action === 'in' ? 1.4 : 1 / 1.4;
+      villageZoom = Math.max(frame.zoom, Math.min(2, (villageFit ? frame.zoom : workingZoom(frame)) * factor));
+      villageFit = villageZoom === frame.zoom;
+      if (villageFit) villageX = villageY = 0;
     },
     panVillage(dx, dy, width, height) {
       const frame = exploring && village && villageBase(), land = surfaces[placeId];
-      if (!frame || villageScale <= 1 || ![dx, dy, width, height].every(Number.isFinite) || width <= 0 || height <= 0) return;
-      const at = Math.min(2, frame.zoom * villageScale);
+      if (!frame || villageFit || ![dx, dy, width, height].every(Number.isFinite) || width <= 0 || height <= 0) return;
+      const at = workingZoom(frame);
       villageX = THREE.MathUtils.clamp(villageX - dx * (camera.right - camera.left) / (width * at), -land.rx, land.rx);
       villageY = THREE.MathUtils.clamp(villageY + dy * (camera.top - camera.bottom) / (height * at), -land.rz * .72, land.rz * .72);
+    },
+    focusVillage(anchor) {
+      const frame = exploring && village && villageBase(), space = frame && villageSpace(camera, villageViewport);
+      const lift = anchor?.lift === undefined ? 0 : anchor.lift, tour = camera.userData.tour;
+      if (!space || ![anchor?.x, anchor?.z, lift].every(Number.isFinite) || lift < 0 || lift > 12
+        || Number.isFinite(camera.userData.battleZoom) || (Number.isFinite(tour?.x) && Number.isFinite(tour?.z))) return false;
+      const wasFit = villageFit;
+      if (wasFit) workVillage();
+      const point = projectPoint(anchor.x, anchor.z), at = workingZoom(frame), y = point.y + lift;
+      // Retain the player's working view while the selected anchor fits a one-unit inner margin.
+      if (Math.abs(point.x - villageX) <= Math.max(0, space.width / (2 * at) - 1)
+        && Math.abs(y - (3 + villageY)) <= Math.max(0, space.height * space.free / (2 * at) - 1)) return wasFit;
+      const land = surfaces[placeId];
+      villageX = THREE.MathUtils.clamp(point.x, -land.rx, land.rx);
+      villageY = THREE.MathUtils.clamp(y - 3, -land.rz * .72, land.rz * .72);
+      return true;
     },
     update(delta, player) {
       if (!exploring || !Number.isFinite(delta) || delta <= 0) return;
@@ -75,9 +104,9 @@ export function createCamera(input) {
       if (!frame && village && placeId === 'home_islet' && !peek && !touring && !Number.isFinite(camera.userData.battleZoom)) return;
       if (frame) {
         // Tab borrows the whole-island frame without consuming the saved working view.
-        if (village && !peek) {
+        if (village && !peek && !villageFit) {
           const baseZoom = frame.zoom;
-          frame.zoom = Math.min(2, frame.zoom * villageScale);
+          frame.zoom = workingZoom(frame);
           // Keep the working center in the measured free area as captions and bars reflow.
           frame.x = villageX;
           frame.y = 3 + villageY + (frame.y - 3) * baseZoom / frame.zoom;

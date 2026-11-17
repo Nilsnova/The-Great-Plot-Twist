@@ -22,7 +22,7 @@ const onScreen = (camera, x, z, lift = 0) => {
 describe('village camera overview', () => {
   it.each([[1280, 720], [375, 812]])('fits actual land cells at %s × %s without moving the captain', (width, height) => {
     const {view} = viewAt(width, height), before = {...player};
-    view.setVillageView(true); view.update(.05, player);
+    view.setVillageView(true); view.villageControl('fit'); view.update(.05, player);
     for (let x = -24; x <= 24; x++) for (let z = -26; z <= 26; z++) {
       if (!surfaceClass('home_islet', x, z)) continue;
       const point = onScreen(view.camera, x, z);
@@ -39,7 +39,7 @@ describe('village camera overview', () => {
     const {view, input} = viewAt();
     input.pointer.wheel = -500; view.update(.05, player); input.pointer.wheel = 0;
     const oldZoom = view.camera.zoom;
-    view.setVillageView(true); input.pointer.wheel = 900; view.update(.05, player);
+    view.setVillageView(true); view.villageControl('fit'); input.pointer.wheel = 900; view.update(.05, player);
     expect(view.camera.position.x).toBe(0);
     input.pointer.wheel = 0; view.setVillageView(false); view.update(.05, player);
     expect(view.camera.position.x).toBe(projectPoint(player.x, player.z).x);
@@ -48,7 +48,7 @@ describe('village camera overview', () => {
 
   it.each([[1280,720,90,240],[375,812,180,310]])('keeps the island between real overlay insets at %s × %s', (width,height,top,bottom) => {
     const {view}=viewAt(width,height);
-    view.setVillageView(true,{height,top,bottom});view.update(.05,player);
+    view.setVillageView(true,{height,top,bottom});view.villageControl('fit');view.update(.05,player);
     for(let x=-24;x<=24;x++)for(let z=-26;z<=26;z++){
       if(!surfaceClass('home_islet',x,z))continue;
       const y=(1-onScreen(view.camera,x,z).y)*height/2;
@@ -59,7 +59,7 @@ describe('village camera overview', () => {
 
   it('fits the canonical coastline above a real panel exceeding sixty percent of the phone', () => {
     const {view} = viewAt(375, 812), top = 180, bottom = 516;
-    view.setVillageView(true, {height: 812, top, bottom}); view.update(.05, player);
+    view.setVillageView(true, {height: 812, top, bottom}); view.villageControl('fit'); view.update(.05, player);
     for (const point of cliffProfile(surfaces.home_islet)) {
       const y = (1 - onScreen(view.camera, point.x, point.z).y) * 812 / 2;
       expect(y).toBeGreaterThan(top); expect(y).toBeLessThan(812 - bottom);
@@ -80,7 +80,7 @@ describe('village camera overview', () => {
   });
 
   it('keeps combat and guided-tour camera requests in control', () => {
-    const {view} = viewAt(); view.setVillageView(true);
+    const {view} = viewAt(); view.setVillageView(true); view.villageControl('fit');
     view.camera.userData.battleZoom = .7; view.update(.05, player);
     expect(view.camera.zoom).toBe(.7);
     expect(view.camera.position.x).toBe(player.x);
@@ -93,7 +93,7 @@ describe('village camera overview', () => {
   });
 
   it('recalculates fit after resize and resets overview on travel', () => {
-    const {view} = viewAt(); view.setVillageView(true); view.update(.05, player);
+    const {view} = viewAt(); view.setVillageView(true); view.villageControl('fit'); view.update(.05, player);
     const wide = view.camera.zoom;
     Object.assign(view.camera, worldViewport(375, 812, 22, 16)); view.camera.updateProjectionMatrix(); view.update(.05, player);
     expect(view.camera.zoom).toBeLessThan(wide);
@@ -105,7 +105,7 @@ describe('village camera overview', () => {
   });
 
   it('eases normally, snaps for reduced motion and leaves invalid or paused updates alone', () => {
-    const {view} = viewAt(1280, 720, false); view.setVillageView(true);
+    const {view} = viewAt(1280, 720, false); view.setVillageView(true); view.villageControl('fit');
     const start = view.camera.position.x; view.update(.05, player);
     expect(view.camera.position.x).toBeGreaterThan(0); expect(view.camera.position.x).toBeLessThan(start);
     for (let i = 0; i < 60; i++) view.update(.1, player);
@@ -119,7 +119,7 @@ describe('village camera overview', () => {
 
 describe('working village zoom and pan', () => {
   it.each([[1280,720],[375,812]])('zooms, pans within land bounds and returns to exact Fit at %s×%s', (width,height) => {
-    const {view} = viewAt(width,height); view.setVillageView(true,{height,top:150,bottom:220}); view.update(.05,player);
+    const {view} = viewAt(width,height); view.setVillageView(true,{height,top:150,bottom:220}); view.villageControl('fit'); view.update(.05,player);
     const fit = {zoom: view.camera.zoom, position: view.camera.position.clone()};
     view.villageControl('in'); view.update(.05,player); expect(view.camera.zoom).toBeCloseTo(fit.zoom * 1.4);
     view.panVillage(-100000,100000,width,height); view.update(.05,player);
@@ -139,8 +139,8 @@ describe('working village zoom and pan', () => {
     expect(view.camera.position.x).toBe(x); expect(Number.isFinite(view.camera.position.y)).toBe(true);
     view.panVillage(NaN,10,0,720); view.update(.05,player); expect(view.camera.position.x).toBe(x);
     view.setVillageView(false); view.update(.05,player); expect(view.camera.zoom).toBe(1.4);
-    view.setVillageView(true); view.update(.05,player); expect(view.camera.position.x).toBe(0);
-    view.setPlace('home_islet',player); view.setVillageView(true); view.update(.05,player);
+    view.setVillageView(true); view.villageControl('fit'); view.update(.05,player); expect(view.camera.position.x).toBe(0);
+    view.setPlace('home_islet',player); view.setVillageView(true); view.villageControl('fit'); view.update(.05,player);
     expect(view.camera.zoom).toBe(villageFrame(view.camera,'home_islet').zoom);
   });
 });
