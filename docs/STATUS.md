@@ -622,6 +622,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 
 ## Log
 
+- **Nicolas / 2026-11-17 / guests can join from a link again (#141).** `validSignIn` in `frontend/src/online/adapter/validate.js` refused the `island` field, so "Join as guest" on an invite link and Join with a game code failed in the browser with "Check this action and try again." for every signed-out player. It now accepts `island` only with `guest: true`, alone, as an island-code string; the server still checks the island. Test: `frontend/tests/online-guest-island-signin.test.js` (11). Not tried on the live site.
+
 - **Nicolas / 2026-11-17 / hold Tab for the whole island.** In the game view, holding Tab eases the camera out to the whole home island (the existing village fit view), also during a wave; letting go eases back to the captain. Tab keeps its normal job on buttons and inside cards, and Shift+Tab still leaves the game view. Hint added to the How to play controls page, Settings, the canvas label and HOW-TO-PLAY. Test: `frontend/tests/player/tab-overview.test.js`; evidence `docs/evidence/tab-overview/`. No phone or gamepad version yet.
 
 - **Nicolas / 2026-11-16 / small demo polish (playtest finds).** Signed out, the HUD no longer shows an endless "🪙 …" (the chip waits for coins) and Settings/Account say only "Signed out" instead of "Signed out, Captain pending"; the title lighthouse windows are square with a cross bar, so they no longer read as "0 0". Test: `frontend/tests/signed-out-polish.test.js`; evidence `docs/evidence/demo-polish/`. Not checked on a real phone.
