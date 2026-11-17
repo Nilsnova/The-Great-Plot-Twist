@@ -47,7 +47,7 @@ describe('structure recovery presentation', () => {
       hpLabel: '100 / 200 HP',
       repairLabel: 'Repair now: pay 40 coins',
       freeRepairLabel: 'Or wait about 5 min for free repair',
-      helperLabel: 'Free repair pauses when the bell rings. This estimate counts only time between waves.',
+      helperLabel: 'Every building is repaired when a wave ends.',
       automaticRepairPaused: false,
       remainingPaidUses: null,
     });
@@ -114,7 +114,7 @@ describe('structure recovery presentation', () => {
     expect(view).toMatchObject({
       automaticRepairPaused: true,
       freeRepairLabel: null,
-      statusLabel: 'Automatic repair paused during waves',
+      statusLabel: 'Repaired for free when the wave ends',
       helperLabel: null,
       remainingUsesLabel: '2 Repair now uses left this wave',
     });

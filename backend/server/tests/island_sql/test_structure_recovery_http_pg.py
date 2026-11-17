@@ -445,14 +445,8 @@ def test_accepted_bell_member_join_and_paid_repair_match_committed_state(databas
         between = between_response.json()
         assert between["repairWindow"] == "between_waves"
         assert between["remainingPaidUses"] is None
-        hp_at_finish = between["structures"][0]["hpUnits"]
-        time.sleep(1.05)
-        resumed_response = client.get(
-            f"/api/island/structures?code=ISLE-{ISLAND_CODE}", headers=HEADERS["member"]
-        )
-        assert resumed_response.status_code == 200, resumed_response.text
-        resumed = resumed_response.json()
-        assert resumed["structures"][0]["hpUnits"] > hp_at_finish
+        # fix/playtest-1117 (owner): the finish made every structure whole at once.
+        assert between["structures"][0]["hpUnits"] == 1_000_000
 
         # Saved v1 islands remain readable and can ring the next bell with admission off.
         client.app.state.settings = replace(settings, flags=parse_flags("islands"))

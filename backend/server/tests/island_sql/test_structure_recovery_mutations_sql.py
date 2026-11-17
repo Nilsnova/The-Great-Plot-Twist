@@ -450,14 +450,9 @@ def test_v1_in_wave_hire_keeps_snapshot_paused_hp_and_resumes_after_expiry(datab
         "from public.island_structure_health where island_owner=%s and spot='wall_1'",
         (OWNER,),
     ).fetchone()
-    expected_at_finish = call(
-        database,
-        "select public.structure_recovery_project_hp(500000,"
-        "floor(extract(epoch from (%s::timestamptz-%s::timestamptz))*1000)::bigint,200,100)",
-        after_expiry[1],
-        expired_at,
-    )
-    assert after_expiry[0] == expected_at_finish
+    # fix/playtest-1117 (owner): the wave's end repairs every structure at once.
+    assert expired_at is not None
+    assert after_expiry[0] == 1_000_000
     assert after_expiry[2:] == (200, 100)
 
     millis_to_full = call(

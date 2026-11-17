@@ -38,7 +38,7 @@ Fight pirate waves → earn 🪙 loot → build and upgrade towers, hire crew �
 
 ## 4. Loot
 
-Won wave *n*: `25 + 10n` + 10 per house (Pirate Point `40 + 10n`); a boss wave pays ×2 (more money, owner 11 Nov; new players start with 🪙 200). Every participant gets their own loot (as today). A lost wave pays 0.
+Won wave *n*: `25 + 10n` + 10 per house (Pirate Point `40 + 10n`); from wave 41 an island wave pays ×1.5 of that, rounded down (`islands.json` `loot.raiseFrom`, `raiseTimes`); a boss wave pays ×3 and the boss wave 40 ×5 (`loot.bossMultiplier`, `bossMultiplierByWave`; owner 18 Nov, was ×2 since 11 Nov; new players start with 🪙 200). Every participant gets their own loot (as today). A lost wave pays 0.
 
 ## 5. Pirate Point (the joint island)
 

@@ -78,6 +78,8 @@ export const ISLAND_RESET = 'island_reset';
 export const CHART_NAMES = Object.freeze({home_islet: 'Your island', saltreach_harbor: 'The Harbor', lighthouse_isle: 'Pirate Point'});
 const notReady = () => Promise.resolve({ok: false, status: 503, code: 'not_ready',
   message: 'Sign in to build on your island. You can keep exploring.'});
+// The break after a wave: everything is whole again (the server repaired it as the wave closed).
+export const ALL_REPAIRED = 'All buildings repaired.';
 const safeLocal = () => { try { return globalThis.localStorage ?? null; } catch { return null; } };
 // An island read that failed for a reason that may pass (no answer, 429, a 5xx): worth reading again.
 const mayPass = answer => !answer.ok && answer.code !== 'not_ready' && (answer.status === 0 || answer.status === 429 || answer.status >= 500);
@@ -253,6 +255,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     if (!visiting && Number.isSafeInteger(event.coins)) own = {...own, coins: event.coins, flags: event.flags ?? own.flags};
     refreshCard();
     void readStructureRecovery();
+    // The owner's rule (fix/playtest-1117): the server repairs every building when a wave ends.
+    if (Number.isSafeInteger(event.coins)) ui.toast(ALL_REPAIRED, 'info');
     // A won wave may open something (GAME-V3.md §4): read the island again; setOwn (or the visit) tells what is new.
     if (event.survived === true) {
       const current = reading('own'); void api.getIsland().then(fresh => { if (!disposed && fresh.ok && current()) { setOwn(fresh.data); refreshCard(); } });
@@ -686,6 +690,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     if (answer.ok) {
       tookCoins(answer.data.coins);
       clearRecoveryError();
+      // The wave on screen draws the structure whole at once; its replayed repair event confirms it later.
+      if (quote.expectedWindow === 'reserved_wave') emit({type: 'structure_repair_paid', spot: spotId, waveId: quote.expectedWaveId});
     } else {
       await reloadOwn();
       await readStructureRecovery(spotId);

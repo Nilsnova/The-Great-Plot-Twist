@@ -20,6 +20,7 @@
 // Captain health (GAME-V3.md §3): a small hp bar over every captain in the wave (yours where you stand), a
 // fallen captain lies in their lobby colour (captain-down-1…10, src/art/people.js) inside a pulsing red ring
 // on the ground, and the ring fills with gold dots while you hold E to help them up.
+import { createSmoother } from './smoothing.js';
 import * as THREE from 'three';
 import { CULVERIN_ART, FIRE_ART, HARPOON_ART, SWIVEL_ART, TIER_ART, crewArt, fireArt, levelArt, pipRow, pirateDimensions, pirateFrames, pirateLevels } from '../pixel/pirate-catalog.js';
 // T33 (D049, proposed): the damaged and broken tower drawings, used only while the wave has tower health.
@@ -351,6 +352,8 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   let captain = null, revive = null, figures = null;
   const fire = new Map(), wallFlash = new Map();
   let clock = 0, simNow = 0, latest = null, visible = true, disposed = false;
+  // Ships and boarders glide between sim ticks instead of stepping (src/pirates/smoothing.js); drawing only.
+  const smooth = createSmoother(() => clock);
   const still = () => !!reducedMotion();
   const low = () => quality() === 'low';
   const drawnY = z => -z * Y;
@@ -1022,8 +1025,8 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         const a = Math.min(1, age / .5) * Math.min(1, Math.max(0, (WRECK_SECONDS - age) / 2.5)), r = rect['pirate-wreck'];
         (wreck.z < 0 ? layers.far : layers.near).push(r, wreck.x, drawnY(wreck.z), r.w * (wreck.big ? 1.25 : 1), r.h * (wreck.big ? 1.25 : 1), .5, r.anchor, { flip: wreck.facing < 0, a: a * .9 });
       }
-      for (const ship of state.ships) drawShip(ship, shipMeta(ship.id, ship.kind, ship.x));
-      for (const boarder of state.boarders ?? []) drawBoarder(boarder);
+      for (const ship of state.ships) { const at = smooth(ship); drawShip(at, shipMeta(ship.id, ship.kind, at.x)); }
+      for (const boarder of state.boarders ?? []) drawBoarder(smooth(boarder));
       for (const unit of state.militia ?? []) drawMilitia(unit);
       for (const item of fallen.items) drawFallen(item);
       for (const sinker of sinkers.items) {
@@ -1126,6 +1129,10 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       wrecks.sweep(item => clock - item.at < WRECK_SECONDS);
       if (latest) { const alive = new Set(latest.ships.map(ship => ship.id)); for (const id of ships.keys()) if (!alive.has(id)) ships.delete(id); }
       if (latest?.boarders) { const alive = new Set(latest.boarders.map(item => item.id)); for (const id of crew.keys()) if (!alive.has(id)) crew.delete(id); }
+      if (latest) {
+        const alive = new Set([...latest.ships, ...(latest.boarders ?? [])].map(item => item.id));
+        smooth.prune(alive);
+      }
       draw();
     },
     setVisible(value) { visible = value !== false; root.visible = visible; },

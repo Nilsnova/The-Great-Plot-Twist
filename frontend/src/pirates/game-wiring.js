@@ -218,6 +218,8 @@ export function wireWaves(ctx) {
     if (pirates.point?.room?.on) stops.push(pirates.point.room.on('island_changed', () => { if (!disposed) void Promise.resolve(island.loadPoint()).then(relevel).catch(() => {}); }));
     stops.push(on('wave_controller_started', event => { if (event?.flagship === true) island.setPointBattle(true); else island.setBattle(true); }));
     stops.push(on('wave_controller_stopped', event => { island.setBattle(false); island.setPointBattle(false); island.waveStopped?.(event?.waveId); }));
+    // A paid Repair now during the wave: drawn whole at once (the journal's replay confirms it a playout later).
+    stops.push(on('structure_repair_paid', event => { if (typeof event?.spot === 'string') pirates.island.repairedNow?.(event.spot); }));
     // Recovery waves finish over their own journal transport: their end frees the island's bell and village.
     stops.push(on('wave_finish_answered', event => {
       if (!event?.recovery || typeof event.waveId !== 'string') return;

@@ -1077,6 +1077,8 @@ The harpoon tower and the culverin have no skills, so no price. The numbers live
 
 <a id="d060--more-tower-spots-over-time--2026-11-16"></a>
 
+
+**Owner change, 18 Nov 2026 (fix/playtest-1117):** "Once a round is done, instantly repair all buildings; the waiting makes no sense." When an island wave ends (won or lost, finished, expired or abandoned, both wave systems) every wall and tower of the island is at full health at once: `structure_recovery_settle_locked` sets the health rows full as the recovery wave closes (migration `20261118040000_playtest.sql`), and the legacy finish records every wall at 100. Between-wave gradual recovery and its ETA no longer apply; paid Repair now stays for during a wave (between waves it is refused `intact`). The closed HP vector stays in the wave history; the rate data model is kept.
 ## D060 · More tower spots over time · 2026-11-16
 
 - **Status:** accepted by Nils (owner), 16 Nov 2026, from his playtest ("from time to time enable more slots for additional towers or cannons"). Implemented behind the server flag `more_tower_spots` (off by default); the database rule is `supabase/migrations/20261117010000_more_tower_spots.sql`, not applied yet.
