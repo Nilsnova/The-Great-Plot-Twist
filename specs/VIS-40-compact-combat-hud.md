@@ -42,4 +42,6 @@ Before readiness: Why must wave 41 not write the hint flag? Why measure the real
 
 Both native harness browser/server instances closed through their normal cleanup. A process readback found no live Chrome/Chromium; the slot was explicitly released to the coordinator. No timeout, existing assertion, test or copy was weakened or skipped.
 
+Accessibility follow-up `f4f04422` retains the actual Land/Block/Protect instruction in the hint button's accessible name alongside its dismissal purpose. `cd frontend && npx --no-install vitest run tests/ui/combat-hud.test.js`: 1 file, 3 tests passed (5.40 s), including actual keyboard Enter dismissal followed by repeated controller updates. The previous tap, weather, layout and cleanup cases also passed in this focused rerun. Visible layout is unchanged.
+
 Full frontend/build/demo/a11y and integrated before/after screenshots remain with the coordinator's final combined lane. Keep this PR Draft until that evidence, a human's current review and the three explain-back answers are complete. No merge or deployment was performed.
