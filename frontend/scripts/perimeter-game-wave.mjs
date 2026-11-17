@@ -41,7 +41,8 @@ async function inspect(page) {
     return {waveId: w.info.waveId, wave: w.info.wave, seed: w.info.seed, startsAtMs: w.info.startsAtMs,
       recoveryVersion: w.info.recoveryVersion, perimeterDemo: w.info.perimeterDemo, ticks: w.ticks, done: w.done,
       broken: w.state.walls.filter(p => p.hp === 0).map(p => p.id),
-      actualLinks: layer?.children.map(mesh => mesh.name) ?? [], expectedLinks: wallTopology(standing).links.map(l => `wall-join:${l.a}:${l.b}`),
-      worldLinks: g.world.current.group.getObjectByName('island-wall-connections')?.children.length ?? 0};
+      actualLinks: layer?.wallLinks ? layer.wallLinks.map(l => `wall-join:${l.a}:${l.b}`) : layer?.children.map(mesh => mesh.name) ?? [],
+      wallDrawMeshes: layer?.children.length ?? 0, expectedLinks: wallTopology(standing).links.map(l => `wall-join:${l.a}:${l.b}`),
+      worldLinks: g.world.current.group.getObjectByName('island-wall-connections')?.wallLinks?.length ?? g.world.current.group.getObjectByName('island-wall-connections')?.children.length ?? 0};
   });
 }
