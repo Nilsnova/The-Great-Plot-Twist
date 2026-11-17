@@ -10,6 +10,8 @@
 import {ALL_SPOTS, offeredSpots, spotById, ISLAND_PLACE} from './spots.js';
 import {surfaceClass} from '../world/places/surfaces.js';
 import {WALL_LANE_ROWS} from './wall-lanes.js';
+import {isInventoryWallId} from './wall-cohort.js';
+import {wallPolicy} from './wall-policy.js';
 
 export const GRID = 0.5;
 export const MAX_UNITS = 30;
@@ -58,11 +60,13 @@ export function onWallLane(x, z) {
 }
 export const OFF_PATH = 'Walls go on a pirate path.';
 
-export function checkMove(spotId, x, z, positions = positionsOf()) {
-  if (!spotById(spotId)) return refuse('no_such_spot', 'There is no such build spot.');
+export function checkMove(spotId, x, z, positions = positionsOf(), options = {}) {
+  const policy = wallPolicy(options);
+  if (!policy) return refuse('layout_unavailable', 'Wall placement rules could not be read. Reload the island.');
+  if (!spotById(spotId) || (isInventoryWallId(spotId) && policy.wallCapacity === 12)) return refuse('no_such_spot', 'There is no such build spot.');
   if (!onGrid(x) || !onGrid(z)) return refuse('off_grid', 'Pick a square of the build grid.');
   if (land(x, z) === SEA) return refuse('not_on_land', 'Buildings stand on land, not in the sea.');
-  if (spotById(spotId).slot === 'wall' && !onWallLane(x, z)) return refuse('off_path', OFF_PATH);
+  if (spotById(spotId).slot === 'wall' && policy.wallRuleVersion === 0 && !onWallLane(x, z)) return refuse('off_path', OFF_PATH);
   const moved = boxOf(spotId, {x, z});
   const fixed = KEEP_OUT.find(item => overlaps(moved, item));
   if (fixed) return refuse('place_taken', `That is too close to ${fixed.name}.`);

@@ -202,7 +202,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const ui = createIslandUi({container, focus, resetInput});
   // T36, flexible placement: Move mode (move-mode.js) with its bar (move-bar.js) and the preview on the island.
   const moving = createMoveMode({api, render: model => { moveBar.render(model); villageBar.render(village.active && !model); }, preview: cell => world?.preview(cell),
-    spots: () => target()?.spots ?? [], code: () => (visiting ? visiting.code : null), onMoved: (answer, spotId) => void moved(answer, spotId)});
+    spots: () => target()?.spots ?? [], code: () => (visiting ? visiting.code : null), layout: () => target()?.layout, onMoved: (answer, spotId) => void moved(answer, spotId)});
   const moveBar = createMoveBar({container, handlers: {nudge: (dx, dz) => moving.nudge(dx, dz), place: () => void moving.confirm(), cancel: () => moving.cancel()}});
   const villageBar = createVillageBar({container, onLeave: () => village.leave()});
   const village = createVillageMode({

@@ -9,3 +9,17 @@ For Johannes Franz Lang (`frcola`), tracking [WALL-08 #249](https://github.com/N
 5. Prove ID boundaries, legacy/perimeter parity, unsupported metadata, normal occupancy and stale-context cancellation with focused tests.
 
 Files: placement.js, move-mode.js, narrow index callback hook and focused tests. Root owns server/SQL; another writer owns builder UI. The fake perimeter transport and world drawing are separate WALL-31/WALL-30 slices. No new dependencies, env edits, live migration/activation or merge.
+
+## Evidence and limits
+
+Focused command from frontend: `npm test -- --maxWorkers=1 tests/island/wall-policy-preview.test.js tests/island/placement.test.js tests/island/move-mode.test.js tests/island/wall-cohort.test.js`: `Test Files 4 passed (4)`, `Tests 67 passed (67)`, duration 1.62s. Exact 1/128 metadata admits off-lane movement; malformed metadata and out-of-capacity IDs fail closed. New cohort occupancy comes only from positioned paid rows. Existing layout.version 2 alone cannot grant free-grid authority.
+
+Existing Move captures its original code/policy context and ignores a late response after that context changes. Own-island reset lifecycle cancellation remains the controller's existing responsibility; this small key is not a new island epoch. The metadata callback is wired in index.js; world lane-art and cohort drawing are separate WALL-30 work. Actual UI/browser, full suite/build/budget/text and production/Safari/device evidence remain for the coordinated integration lane.
+
+## Explain-back
+
+I changed one preview permission: an exact supported wall policy removes the old lane restriction. Grid, land, overlaps and route rules still run. Layout version 1/2 already means fixed versus stored coordinates, so it cannot also mean free placement. New pieces have no default coordinate, so only a paid positioned response row lets Move start.
+
+1. Why does layout.version 2 not authorize free-grid walls?
+2. What still makes an off-lane cell invalid under policy 1/128?
+3. Why capture the island code before an asynchronous move instead of reading it after the reply?
