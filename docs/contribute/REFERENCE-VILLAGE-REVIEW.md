@@ -5,41 +5,40 @@ Responsible human: **Johannes Franz Lang (`frcola`)**. Documentation child
 [VIS31 acceptance #236](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/236);
 [documentation Draft #388](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/388).
 
-**Coordinator update: 17 November 2026, 19:47 Lisbon.** Main-ancestry candidate
-`591813762a11fa29dee9097a79811831982eb0ef` is collected in
-[Draft #392](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/392).
-Stage-four actual gameplay used runtime
-`414559fba3efade531de71acd7f24593f65b006d`, frontend source tree
-`b765286c950b39405ebfd2767ad5c45e2af9ba4d`. Frontend source, public assets and
-backend trees are identical between those commits; the
-[stage-four manifest](../evidence/VIS-31-stage-04/sha256.json) records the check.
-The documentation review base remains `a88db370` (initial 19:13 snapshot);
-relative foundation-code links follow that base, while component PR heads
-identify later changes. Fresh complete-suite and final acceptance results are
-still pending. A passing check does not approve a later source revision.
+**Frozen candidate: `6e2c3e8b3437ba7302870adb59e2351c2fa74f5e`.** Its frontend
+source tree is `8365d88e76889e68f5e1aa1d6aa9a858d3afaea3`. Fresh complete
+checks are running; their result lines remain **PENDING** in this guide.
 
-All thirteen original frame families are now compiled: **164 IDs**, including
-cannon, mortar, harpoon, culverin and swivel defenses. This count describes the
-supplied frame families; actor and transient-effect IDs outside that set retain
-their existing renderers. Artifact `6a04dbed` totals
-**13,608,302 bytes including unchanged terrain**, compared with 29,819,059 raw
-bytes. The 8,388,608-byte effort target is **not met**; the Node codec follow-up
-remains in progress and no further size result is claimed.
+The [final rendered review capture](../evidence/reference-village-visual-review/README.md)
+contains twenty unchanged actual PNGs/report, source boundary/hashes and a
+[self-contained before/after page](../evidence/reference-village-visual-review/comparison.html).
+It used runtime `9f47c14277c801d10f2c504799a72fe059b52171`, frontend tree
+`ff56655849b11e8f0acaa3b4e0aa2b68192b9984`. The candidate's later changes are
+first-wave hint accessibility wording and the current-wave lookup fence;
+visible rendering/CSS/assets in this scenario are unchanged. The source trees
+are **not identical** and this is not a fresh capture of the later candidate.
+Public/backend trees match; the manifest names the exact two source changes.
 
-Compiled activation [Draft #381](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/381)
-at `e54b0f46` has focused build/binding/shipping evidence.
-[Stage four](../evidence/VIS-31-stage-04/README.md) now preserves twenty actual
-screenshots and the passed camera/selection/Move/ghost/arranged-local-wave
-checks at both required sizes. This is an **intermediate functional pass**,
-not final visual, device or complete-suite acceptance. The earlier stage-three
-ghost-toolbar visibility failure remains in its historical ledger.
+The final capture samples standing/firing/breach at **117/119/129 desktop** and
+**116/120/129 phone draw calls**, with zero page errors/external requests and
+one offline 503 console message per viewport. These samples are below 150, while
+sustained performance, balance, physical-device/Safari coverage and final human
+visual acceptance remain open. Stage-four's earlier 152/151 breach miss and the
+stage-three ghost-toolbar failure remain separate historical results.
 
-Breach samples still measure **152 desktop / 151 phone draw calls**, so the
-unchanged under-150 combat target remains unmet.
-[VIS39 #393](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/393) /
-[Draft #394](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/394) removes
-redundant wall stars; its later runtime still needs composition/measurement.
-VIS40 compact combat-HUD work and final stage-five evidence are in progress.
+All thirteen supplied original frame families are compiled: **164 IDs**,
+including all five defenses. Other actor/effect IDs retain existing renderers.
+Artifact checkpoint `6a04dbed` totals **13,608,302 bytes including terrain** vs
+29,819,059 raw bytes; the 8MiB effort target is **not met**. Codec follow-up is
+not a production transfer result until activated and measured. Land expansion
+and automatic island growth are not implemented by this visual phase.
+
+The documentation review base remains `a88db370`; relative foundation-code links
+follow it, while current component PR heads identify later changes. All PRs stay
+Draft. The first complete run at 9f47 recorded **4,402 passed / 27 failed in 609.82 s**
+and is archived as `verification-attempt-01-9f47`. The coordinator reports focused
+green corrections for all thirteen failing files without weakening assertions
+or timeouts; the fresh complete candidate run must supply its own exact result.
 
 The reviewed product direction is a readable pirate village with movable grid
 buildings, defensive perimeter walls and the existing wave/high-score progression.
@@ -146,6 +145,12 @@ checks. Do not merge the aggregate preview wholesale.
 | VIS34 ground [#368](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/368) | `feat/vis-34-ground-camera@28cce29e` | #363 and consuming slices | Affine backdrop, water inverse, Fit/Work, movement previews and pointer inverse; include #386. |
 | VIS37 [#386](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/386) | `fix/vis-37-cold-coast-binding@635b1114` | #368 and water | Mark the assigned manual matrix dirty before first coast read; actual GPU before/after proves the narrow shoreline fix. |
 | VIS30 [#371](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/371) | `perf/vis-30-baked-world-art@f6bbc967` | Exact raw metadata and #377 | All thirteen families / 164 IDs compiled. Current full asset target miss is recorded; codec follow-up and whole-scene costs remain open. |
+| VIS40 [#396](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/396) | `fix/vis-40-compact-combat-hud@0a4ece50` | Combat source/HUD | Compact battle HUD and header clearance; actual final images preserve visible layout, later candidate changes only hint accessible wording here. |
+| VIS41 [#398](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/398) | `fix/vis-41-wave-look-fence@0b9938da` | Actual full-run race finding | Fence obsolete current-wave reads before mutation/admission; later nonvisual candidate change. Fresh complete verification pending. |
+| VIS42 [#400](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/400) | `test/vis-42-runtime-projection@03cc6c5b` | D064 runtime geometry | Native test pointers follow actual projection; existing assertions/timeouts retained. |
+| VIS43 [#402](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/402) | `test/vis-43-art-readiness@25bbcf1a` | Registered asynchronous art | Await real artwork before lifecycle assertions; readiness is not fabricated success. |
+| VIS45 [#404](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/404) | `test/vis-45-wall-projection-qa@82e8078e` | D064/canonical wall receipts | Wall test pointers/receipt expectations follow the actual shared projection and declared context, preserving meaningful assertions. |
+| VIS44 [#406](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/406) | `test/vis-44-art-provider-contracts@8431f059` | Native painter plus raster provider contracts | Preserve native source checks while checking registered provider dimensions separately; no skip or timeout relaxation. |
 | VIS31 ancestry [#392](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/392) | `chore/reference-village-current-main@59181376` | Current main and composed source | Real ancestry candidate; frontend source/public/backend trees match stage four runtime 414559fb. Documentation/QA changes do not imply a new visual pass. |
 | VIS18 compiled [#381](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/381) | `perf/vis-18-compiled-activation@e54b0f46` | Complete artifact outputs | Configured provider, original-source copy exclusion and shipped-file assertions implemented; 35 focused tests plus build/budget proof exist. Final combined scene/full-suite gate remains pending. |
 
@@ -179,7 +184,7 @@ Use each PR's exact prompt/hash audit to trace the original bytes.
 | VIS27 [#359](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/359) | `feat/vis-27-shaded-wall-ghosts@2d9bc491` | #347 and paid builder | Same wall geometry/atlas for unpaid previews; compare semantic cells, logical links and indexed buffers, not one mesh per cell. |
 | VIS28 [#360](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/360) | `feat/vis-28-reference-controls@5199ced6` | Camera and source portraits | Work/Fit, Move/placement controls, intent focus and guarded panning; actual combined input still needs final proof. |
 | BASE06 [#365](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/365) | `feat/base-06-selection-dock@aefc942f` | World/portraits | Nonmodal owned-wall dock, Details, current HP and pending-action ownership; stage three desktop selection progressed, final combined selected-wall gate remains open. Include #390. |
-| VIS39 [#394](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/394) | `fix/vis-39-combat-wall-tiers@01a50bab` | Actual stage four breach budget finding | Runtime 1bf8 removes redundant combat wall stars; pending composition/measurement. Stage four still exceeds the target. |
+| VIS39 [#394](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/394) | `fix/vis-39-combat-wall-tiers@01a50bab` | Actual stage four breach budget finding | Redundant wall stars removed; stage5/6 reported combat samples improve. Stage4 miss remains historical; final performance/device acceptance stays open. |
 | VIS38 [#390](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/390) | `fix/vis-38-wall-selection-clarity@192e009a` | #365, #377 and actual stage three finding | Implemented corners and true-tier segment portraits; stage four actual visible bracket/four-component PNG evidence exists. Final polish/visual gate remains open. |
 | BASE05 [#370](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/370) | `feat/base-05-reference-hud@0729faf5` | Existing controller progress | Real Best wave/current wave, captain in Menu, reversible Goals hiding and camera insets. Native HUD cases do not prove complete scene framing. |
 | VIS35 [#369](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/369) | `feat/vis-35-core-landmarks@baca3a1e` | VIS32 and D064 consumers | Core state/publisher/renderer, record/statue and quieter planning guide; not headquarters progression. |
@@ -187,7 +192,7 @@ Use each PR's exact prompt/hash audit to trace the original bytes.
 | VIS18 first stage [#357](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/357) | `feat/vis-18-material-activation@3593da52` | First four raw families | Historical actual checkpoint, explicitly visually rejected. Preserve its source/evidence. |
 | VIS18 static [#362](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/362) | `fix/vis-18-static-art-retry@97054f3c` | Shared loader and static families | Refresh real static textures/geometry and expose registered loading failure/Retry. |
 | VIS18 full raw [#372](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/372) | `feat/vis-18-full-family-activation@7477dea2` | Nine raw families, core/HUD composition | Raw registration plus core/progress task/retry bridge; later compiled activation is separate. |
-| VIS36 [#374](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/374) | `test/vis-36-d064-captures@12fe7ab7` | Actual target runtime | Compiled-compatible capture; stage four helper 074a4675 matches all 3 recorded hashes. Both viewport functional journeys passed; final stage five/visual/device acceptance remains open. |
+| VIS36 [#374](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/374) | `test/vis-36-d064-captures@12fe7ab7` | Actual target runtime | Compiled-compatible capture; stage four helper 074a4675 matches all 3 recorded hashes. Both viewport functional journeys passed; final capture/helper hashes are preserved, while visual/device/full-suite acceptance stays open. |
 
 ## Evidence ledger: keep the source boundaries
 
@@ -206,6 +211,8 @@ from overlapping commands must not be added together.
 | Compiled-provider activation | [Draft #381](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/381), `e54b0f46`: 9 files / 35 tests passed in 3.28 s; build 1.11 s; spoiler guard 244 text files/12 protected lines clean | Cold title 18,825 JS/9,410 CSS bytes, no title image; unshipped originals in production: 0. Text lint 4,538 strings / 532 files, 0 errors / 8 report-only findings. These focused results do not constitute the new complete visual suite. |
 | Historical stage-three attempt | Partial coordinator run in `stage-03-compiled/` | Desktop level-three upgrade/selection and Move/Cancel passed before a **failed ghost-toolbar visibility assertion**. Those partial PNGs never became a combined PASS. The later stage four run has separate source/evidence. |
 | Stage four actual compiled game | [Twenty raw PNGs/report/manifest](../evidence/VIS-31-stage-04/README.md), runtime `414559fb`, helper `074a4675`; source/public/backend trees match main-ancestry candidate `59181376` | Both 1280×720 and 375×812 journeys passed entry/Fit/Tab/drag, paid L3 selection/Move Cancel, three-cell ghost/indexed buffers/Fine shore clearance, four real API moves, 21 paid walls / 42 upgrades and local legacy frozen-wave projectiles/breach. End 123 walls / 5,150 coins. Zero page errors/external requests; one offline 503 console message per viewport. Breach calls 152 / 151 still miss under 150; no full-suite/device/final visual pass. |
+| Final rendered review capture | [Twenty actual PNGs/report/manifest and comparison](../evidence/reference-village-visual-review/README.md), capture `9f47` / helper `074a4675`; later frozen candidate `6e2c3e8b` has only the documented post-capture source changes | Both viewport functional journeys pass their declared paid camera/selection/Move/ghost/arranged-local-wave scope. Standing/firing/breach: 117/119/129 desktop, 116/120/129 phone; zero page errors/external requests, one offline 503 console each. Visible render/CSS/assets unchanged after capture; not a fresh later-candidate screenshot or full-suite/device/balance pass. |
+| First new complete-suite attempt | Runtime `9f47`; coordinator archive `verification-attempt-01-9f47` | 4,402 passed / 27 failed in 609.82 s. Preserve this failed attempt. Thirteen failing files have focused green corrections with assertions/timeouts retained; fresh frozen-candidate complete checks remain **PENDING**. |
 | HUD focused proof | [BASE05 spec](../../specs/BASE-05-reference-hud.md), runtime `60573698` / final doc head `0729faf5`: 5 native HUD cases, 3 selected legacy coin cases, 20 model cases passed in separate commands | Desktop/phone/320px HUD semantics and controls, Goals restoration and coin compatibility. No final combined scene, a11y/demo or live-account claim. |
 | Wall tier correction | [Correction spec](../../specs/VIS-14-level-one-wall-art.md), head `b84eadfc`: 7 files / 76 tests passed in 3.81s | All canonical damage tiers, world/combat UV buffers, fallback/API/scene/preload cases. No combined final visual or live recovery acceptance. |
 | Core optional travel correction | [Handover](../handoff/vis35-core-travel-rejoin.md), `f52a05c5`: 6 files / 49 tests passed, build/spoiler guard passed | Guarded rejoin, actual controller and island-load behavior; browser travel/full-suite/live cases remain unverified. |
@@ -232,10 +239,12 @@ keeps the 12MiB decode pool, two-decode cap, 8MiB encoded-source cap and existin
 |---|---|---|
 | Complete defense appearance | All thirteen source families/ 164 IDs compiled and configured, including all five defenses; final appearance acceptance open | Exact source/provenance, all supported levels/states and configured world/combat/portrait receipts for all supplied families. |
 | Production asset handoff | Draft #381 implemented/focused checks passed; 13,608,302-byte compiled+terrain checkpoint still misses 8MiB target; codec follow-up in progress | Every active compiled source is shipped and exists; inactive originals stay on disk and out of downloads; actual build/cold results and final whole-world bytes are recorded. |
-| Final visual acceptance, VIS31 | Open | Actual 1280×720 and 375×812 comparison with the approved reference, full village and selected wall, no hidden/clipped controls; document remaining differences honestly. |
+| Final visual acceptance, VIS31 | Rendered review package exists; human visual acceptance remains open | Review actual desktop/phone village, wall actions and battle against separately labeled concepts; keep source/fixture differences visible. |
 | Playable placement/upgrade proof | Stage four both-viewport functional journey passed selection, actual 40-coin upgrade, Move/Cancel, semantic/indexed ghost and arranged paid layout; final visual review remains open | Real upgrade price/wallet, current level/HP, Move/cancel, exact valid/invalid snapped cells, semantic draft cells and rendered indexed buffers agree. |
 | New visual full-suite gate | **Pending** | Fresh `npm test`, build/spoiler guard, budget, a11y, demo, overlap and text lint on the exact final visual source, with actual result lines. |
-| Combat and failure/quality gate | Stage four normal-bell frozen legacy local wave shows projectiles/breach; 152 / 151 breach calls still miss under 150, VIS39/VIS40 in progress | Final measured battle budget/HUD, actual damage/muzzle/HP alignment and phase/quality/failure evidence. Local legacy demo does not prove production V1 durability or live multiplayer. |
+| Combat and failure/quality gate | Final capture samples 117/119/129 and 116/120/129 are below 150; broader acceptance stays open | Sustained/worst-case performance, quality/failure/device evidence and actual damage/muzzle/HP alignment. Local legacy demo does not prove production V1 durability or live multiplayer. |
+| Balance | Not signed off | Progressed local seed and rendering/breach proof do not establish multi-seed/multi-wave difficulty or economy balance. |
+| Land expansion / growth | Not implemented by this visual phase | D064 preserves the existing analytic coast and paid footprints. Separate expansion/progression tasks need their own implementation and review; decorative pixels grant no territory. |
 | Browser/device coverage | Chromium component/local evidence only | Safari and physical touch hardware are unverified. A Linux Chromium screenshot is not a Safari or real-phone test. |
 | Human explanation/review | Pending | Johannes rehearses the code route and three questions below; a different human reviews the current head. AI review does not satisfy that approval. |
 | Live rollout | Not performed/authorized by this document | Separate human migration/flag/deployment sequence from the existing runbook. Draft readiness is not rollout completion. |
@@ -277,14 +286,13 @@ git -C /absolute/path/to/helper-checkout checkout --detach \
 cd /absolute/path/to/helper-checkout/frontend
 npm ci --include=dev --no-audit --no-fund
 node scripts/capture-village-composition.mjs \
-  /absolute/path/to/runtime-at-414559fb/frontend /absolute/path/to/output reference --arranged --wave
+  /absolute/path/to/runtime-at-9f47c142/frontend /absolute/path/to/output reference --arranged --wave
 ~~~
 
-This reproduces the intermediate stage four helper and declared arranged/local-wave
-scope. Its functional journey passed, while breach calls still exceed the
-target. Final stage five acceptance must record and use its final helper revision
-and file hashes; an older raw-family-count assertion cannot establish compiled
-acceptance.
+This uses the preserved helper and final capture runtime with declared arranged/
+local-wave scope. The later frozen candidate has the explicit source boundary
+above. A new capture must record its new source/helper hashes; an older raw-
+family-count assertion cannot establish compiled acceptance.
 The current source list and exact bake invocation are in the artifact record.
 No app command above was run by this docs task. Backend/SQL results stay attached
 to their earlier source unless backend changes justify another run. Capture
@@ -330,11 +338,11 @@ not merge from this guide.
 - **Verified:** documentation links/content, copied file hashes/dimensions and
   source/helper tree identity. Quoted stage four functional and 35-test component
   results keep their own sources; this docs task reran no app suite/browser.
-- **Not verified:** final all-defense compiled scene, new visual full suite,
-  Safari/physical devices, sustained performance, live deployment or human
-  understanding/approval.
-- **Remaining:** compose/measure VIS39 and compact combat HUD, finish codec and
-  final stage five/full-suite evidence, then the coordinator closes the
+- **Not verified:** the fresh complete candidate checks, Safari/physical devices,
+  sustained performance, balance, land expansion, live deployment and human
+  understanding/visual approval.
+- **Remaining:** add exact fresh complete-check results, resolve remaining codec/
+  performance/visual/device/balance work, then the coordinator addresses the
   acceptance gates above and hands the current revision to an independent human.
 - **Branch/PR:** `docs/reference-village-handover`,
   [Draft #388](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/388).

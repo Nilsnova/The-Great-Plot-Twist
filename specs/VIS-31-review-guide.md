@@ -63,3 +63,26 @@ dimensions, three helper hashes, three application-tree identities and raw-repor
 action/wallet/error/count extraction checks. Changed documentation links/anchors:
 79 passed; public branch/head/Draft snapshot rows: 37 matched; whitespace and
 intermediate-scope/three-question checks passed. No app rerun was performed.
+
+## Final visual-only package
+
+Preserved stage-six source 9f47: twenty byte-identical actual PNGs/report and
+explicit manifest. Frozen candidate 6e2c3e8b has the same public/backend trees but
+a different frontend source tree: only hint aria-label wording and wave lookup
+fencing changed after capture. This is not a fresh later-candidate screenshot.
+A standalone optional HTML comparison embeds eight unchanged old/new PNGs with
+keyboard desktop/phone and village/combat tabs, source/fixture labels and
+separate generated references. No package, app source or final-preview change.
+
+The guide adds VIS39–45 Draft mappings, preserves the first 4402-pass/27-fail
+complete attempt (609.82s), and leaves fresh complete results PENDING. Sampled
+final combat calls 117/119/129 and 116/120/129 are recorded without claiming device,
+balance, land expansion, 8MiB or human visual acceptance. Packaging does not rerun
+the application or browser.
+
+Visual-only packaging verification: 21 exact copied byte/hash records, 20 native
+PNG dimensions, eight embedded original PNG byte streams, six semantic tab/panel
+pairs and three tablists. Extracted comparison JavaScript passed `node --check`;
+75 changed relative links/anchors and 43 public Draft branch/head snapshot rows
+passed. Whitespace checks passed. This is static/packaging verification, not a
+browser/assistive-technology interaction audit or an application-suite rerun.
