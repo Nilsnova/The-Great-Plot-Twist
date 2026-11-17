@@ -434,32 +434,60 @@ async function captainHealth(host, ben, wave) {
 }
 // After the fall/revive proof, each captain uses the normal named-target gun control against ships
 // until the wave ends. The player positions are set at the same firing-range radius used by musket().
-async function defendHeart(captains, waveId) {
+async function defendHeart(captains, waveId, {stopAtFinisher = false, requireEach = true, contextual = false, preferBoss = false} = {}) {
   const fire = async captain => {
-    let shots = 0;
+    let attacks = 0;
     const deadline = Date.now() + 220000;
     while (Date.now() < deadline) {
-      const target = await captain.page.evaluate(id => {
+      const target = await captain.page.evaluate(({waveId, stopAtFinisher, preferBoss}) => {
         const waves = window.__island.waves.island, wave = waves.wave;
-        if (!wave || wave.info.waveId !== id || wave.done || wave.pause) return {ended: true};
+        if (!wave || wave.info.waveId !== waveId || wave.done || wave.pause || (stopAtFinisher && waves.state?.finisher)) return {ended: true};
         const ships = wave.state.ships ?? [];
         if (!ships.length) return {ended: false, target: null};
-        const ship = ships.reduce((nearest, next) => Math.hypot(next.x, next.z) < Math.hypot(nearest.x, nearest.z) ? next : nearest);
+        const ship = (preferBoss ? ships.find(item => item.boss) : null)
+          ?? ships.reduce((nearest, next) => Math.hypot(next.x, next.z) < Math.hypot(nearest.x, nearest.z) ? next : nearest);
         const distance = Math.hypot(ship.x, ship.z) || 1;
         return {ended: false, target: {id: ship.id, x: ship.x * 14 / distance, z: ship.z * 14 / distance}};
-      }, waveId);
+      }, {waveId, stopAtFinisher, preferBoss});
       if (target.ended) break;
       if (target.target) {
         await stand(captain, target.target);
-        if (await captain.page.evaluate(id => window.__island.waves.island.shoot(id), target.target.id)) shots++;
+        // The normal contextual input leaves nearby boarders eligible for the captain's cutlass.
+        if (await captain.page.evaluate(({id, contextual}) => contextual
+          ? window.__island.waves.island.shoot() : window.__island.waves.island.shoot(id), {id: target.target.id, contextual})) attacks++;
       }
       await captain.page.waitForTimeout(200);
     }
-    return shots;
+    return attacks;
   };
   const counts = await Promise.all(captains.map(fire));
-  assert.ok(counts.every(count => count > 0), `each captain fired at a ship after the revive (${counts.join(', ')})`);
+  const action = contextual ? 'normal attacks' : 'named-target shots';
+  if (stopAtFinisher) assert.ok(counts.some(count => count > 0), `captains defended with ${action} before the boss finisher (${counts.join(', ')})`);
+  else if (requireEach) assert.ok(counts.every(count => count > 0), `each captain fired at a ship after the revive (${counts.join(', ')})`);
   return counts;
+}
+// Keep the original 200 s boss-preparation bound while reporting an earlier wave loss directly.
+async function waitForBossPreparation(captains, waveId) {
+  const deadline = Date.now() + 200000;
+  let states = [];
+  while (Date.now() < deadline) {
+    states = await Promise.all(captains.map(captain => captain.page.evaluate(id => {
+      const waves = window.__island.waves.island, wave = waves.wave;
+      const finish = window.__mp.lifecycle.findLast(item => item.type === 'wave_finished' && item.waveId === id) ?? null;
+      return {playerId: waves.playerId, phase: waves.state?.finisher?.phase ?? null,
+        wave: wave ? {id: wave.info.waveId, done: wave.done, ticks: wave.ticks, ships: wave.state.ships.length,
+          heart: wave.state.islandHp, bosses: wave.state.ships.filter(ship => ship.boss).map(ship => ({id: ship.id, kind: ship.kind, hp: ship.hp, boss: ship.boss}))} : null,
+        party: (waves.state?.party ?? []).map(hero => ({id: hero.id, hp: hero.hp, down: hero.down, present: hero.present})),
+        finish: finish ? {survived: finish.survived, at: finish.at} : null,
+        lifecycle: window.__mp.lifecycle.slice(-8)};
+    }, waveId)));
+    if (states.every(state => state.phase === 'prepare')) return states;
+    const ended = states.find(state => state.finish);
+    if (ended) throw new Error(`boss wave ${waveId} ended before finisher preparation: ${JSON.stringify(states)}`);
+    await captains[0].page.waitForTimeout(100);
+  }
+  assert.ok(states.every(state => state.phase === 'prepare'), `boss wave ${waveId} reaches finisher preparation within 200 s: ${JSON.stringify(states)}`);
+  return states;
 }
 const lobbyOf = captain => captain.page.evaluate(() => ({open: window.__island.island.ui.open === 'lobby',
   rows: [...document.querySelectorAll('.island-card-lobby[open] .island-lobby-player')].map(row => `${row.querySelector('.island-lobby-name').textContent}:${row.classList.contains('is-online') ? 'online' : 'away'}`),
@@ -768,7 +796,10 @@ try {
     results.push(`wave 2 sync owner/${captain.name}: ${sync.same}/${sync.checked} same ships, ${sync.sameBoarders}/${sync.checked} same boarders, worst count gap ${sync.worst} / ${sync.worstBoarders}`);
     assert.ok(sync.checked >= 3 && sync.worst <= 1 && sync.worstBoarders <= 1, `${captain.name} runs the owner's wave 2`);
   }
+  const waveFourDefense = defendHeart(pages, second.waveId, {requireEach: false, contextual: true});
   for (const captain of pages) await until(captain, state => !state || state.pause || state.done, 'the end of wave 2', 240000);
+  const waveFourShots = await waveFourDefense;
+  results.push(`wave 4 defense: four captains used ${waveFourShots.join(', ')} normal contextual attacks before the wave ended`);
   await shot('06-wave2-end');
   // 7 v3 waves (GAME-V3.md §4.3): the wave-5 boss finisher on four pages. Every captain plays the haul through real
   // key events; every page must hear every captain's samples and decide the same scores and the same outcome.
@@ -780,6 +811,13 @@ try {
   // "Next wave" together with the host in step 5, too (T22: that race once left his join marked in progress).
   for (const captain of pages) await until(captain, state => state?.waveId === boss.waveId, `${captain.name} joining the boss wave on their own`, 30000);
   results.push(`boss wave ${boss.wave} (${boss.waveId}): all ${pages.length} captains joined on their own`);
+  const bossDefensePending = defendHeart(pages, boss.waveId, {stopAtFinisher: true, contextual: true, preferBoss: true})
+    .then(value => ({value}), error => ({error}));
+  await waitForBossPreparation(pages, boss.waveId);
+  const bossDefenseResult = await bossDefensePending;
+  if (bossDefenseResult.error) throw bossDefenseResult.error;
+  const bossDefense = bossDefenseResult.value;
+  results.push(`boss defense: captains used ${bossDefense.join(', ')} contextual attacks before the finisher began`);
   for (const captain of pages) {
     await stand(captain, SAFE);
     await captain.page.evaluate(async () => {
@@ -799,7 +837,6 @@ try {
     return f ? {kind: f.kind, phase: f.phase, players: f.players, heard: f.heard, outcome: f.outcome, scores: f.tasks.map(t => t.players)} : null; });
   const ids = await Promise.all(pages.map(captain => captain.page.evaluate(() => window.__island.waves.island.playerId)));
   // T28: three captains skip; the fourth practices privately while every scored clock waits.
-  for (const captain of pages) await captain.page.waitForFunction(() => window.__island.waves.island.state?.finisher?.phase === 'prepare', null, {timeout: 200000, polling: 100});
   for (const captain of pages.slice(1)) await captain.page.getByRole('button', {name: 'Skip practice', exact: true}).click();
   await pages[0].page.getByRole('button', {name: 'Practice', exact: true}).click();
   await pages[0].page.waitForTimeout(1000);
