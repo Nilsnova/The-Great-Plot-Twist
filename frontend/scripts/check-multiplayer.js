@@ -92,7 +92,7 @@ async function openCaptain(name, playerId, visit = null, {create = false, join =
   // What every page heard: the sim's musket shots, the loot answers, and a ship list per frame.
   await page.evaluate(() => {
     const g = window.__island; g.settings.hour = 12;
-    window.__mp = {shots: [], loot: [], samples: [], heard: [], started: [], fell: [], revived: [], events: [], finishers: [], shipFire: [], heartHits: []};
+    window.__mp = {shots: [], loot: [], samples: [], heard: [], started: [], fell: [], revived: [], events: [], finishers: [], shipFire: [], heartHits: [], lifecycle: []};
     // T50: every ship shot (when, which ship, at what) and every ball that landed on the heart, as this page's sim had them.
     g.on('ship_fired', event => window.__mp.shipFire.push(`${event.t}:${event.shipId}:${event.target}:${event.targetId ?? ''}`));
     g.on('island_damaged', event => { if (event.shipId && event.landed) window.__mp.heartHits.push(`${event.t}:${event.shipId}:${event.damage}:${event.hp}`); });
@@ -103,13 +103,24 @@ async function openCaptain(name, playerId, visit = null, {create = false, join =
     g.on('captain_fell', event => window.__mp.fell.push({captainId: event.captainId, t: event.t}));
     g.on('captain_revived', event => window.__mp.revived.push({captainId: event.captainId, by: event.by, t: event.t, hp: event.hp}));
     g.on('game_started', event => window.__mp.started.push(event));
+    g.on('wave_finished', event => window.__mp.lifecycle.push({at: performance.now(), type: 'wave_finished', waveId: event.waveId, survived: event.survived}));
+    g.on('wave_controller_stopped', event => window.__mp.lifecycle.push({at: performance.now(), type: 'wave_controller_stopped', waveId: event.waveId}));
     // What crossed the island room from the other tabs (the raw BroadcastChannel of pirates/room.js).
     const channel = new BroadcastChannel('tgpt:live:place:isle_k7q2m:1');
     channel.onmessage = event => window.__mp.heard.push(event.data?.type);
     g.on('captain_fired', event => window.__mp.shots.push({by: event.by, targetId: event.targetId}));
     g.on('wave_finish_answered', event => window.__mp.loot.push({waveId: event.waveId, loot: event.loot}));
+    let lastLifecycle = null;
     const sample = () => {
       const wave = g.waves?.island.wave;
+      const phase = wave ? {waveId: wave.info.waveId, wave: wave.info.wave, done: !!wave.done,
+        pause: !!wave.pause, ticks: wave.ticks, phase: wave.state.phase} : null;
+      const signature = JSON.stringify({phase, inBreak: !!g.waves?.island.inBreak});
+      if (signature !== lastLifecycle) {
+        window.__mp.lifecycle.push({at: performance.now(), type: 'state', phase, inBreak: !!g.waves?.island.inBreak});
+        lastLifecycle = signature;
+        if (window.__mp.lifecycle.length > 200) window.__mp.lifecycle.splice(0, 100);
+      }
       if (wave && !wave.done && wave.ticks > 0) {
         const last = window.__mp.samples.at(-1);
         if (!last || last.ticks !== wave.ticks) window.__mp.samples.push({waveId: wave.info.waveId, ticks: wave.ticks,
@@ -752,8 +763,26 @@ try {
   log('\nRESULTS SO FAR'); for (const line of results) log(`  ${line}`);
   for (const captain of pages) {
     await captain.page.screenshot({path: `${out}/failure-${captain.playerId}.png`}).catch(() => {});
-    log(captain.name, JSON.stringify(await waveOf(captain).catch(() => null)), JSON.stringify(await captain.page.evaluate(() => ({place: window.__island?.world.current?.id,
-      own: !!window.__island?.island?.island, visiting: window.__island?.island?.visiting, dialogs: [...document.querySelectorAll('dialog[open]')].map(d => d.className)})).catch(error => error.message)));
+    const state = await captain.page.evaluate(() => {
+      const game = window.__island, wave = game?.waves?.island?.wave;
+      const panel = document.querySelector('.pirate-break');
+      return {
+        place: game?.world.current?.id,
+        own: !!game?.island?.island,
+        visiting: game?.island?.visiting,
+        wave: wave ? {waveId: wave.info.waveId, wave: wave.info.wave, done: wave.done,
+          pause: !!wave.pause, ticks: wave.ticks, phase: wave.state.phase, ships: wave.state.ships.length} : null,
+        inBreak: game?.waves?.island?.inBreak ?? null,
+        breakPanel: panel ? {hidden: panel.hidden, visible: panel.getClientRects().length > 0,
+          text: panel.innerText} : null,
+        waveFinishAnswers: window.__mp?.loot ?? null,
+        lifecycle: window.__mp?.lifecycle ?? null,
+        waveStarted: window.__mp?.started ?? null,
+        tailSamples: window.__mp?.samples?.slice(-3) ?? null,
+        dialogs: [...document.querySelectorAll('dialog[open]')].map(dialog => dialog.className),
+      };
+    }).catch(error => ({diagnosticError: error.message}));
+    log(captain.name, 'multiplayer failure diagnostic', JSON.stringify(state));
   }
   log('errors:', env.errors);
   throw error;
