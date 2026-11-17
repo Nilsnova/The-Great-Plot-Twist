@@ -51,6 +51,9 @@ POST /api/waves/join  {"waveId": "6f1c..."}
 
 GET /api/waves/current?where=own | ISLE-K7Q2M | pirate_point
     -> the running wave there, or null. Errors: 404 no_such_island
+    A recovery (protocol-2) wave the caller may join but has not joined yet (the owner or an active
+    member; migration 20261118010000) answers without initialSnapshot, participantToken and
+    lastActorCounter: join it with its waveId, the join answers those. 403 not_in_wave otherwise.
 
 POST /api/waves/finish  {"waveId": "6f1c...", "survived": true, "shipsSunk": 7,
                          "bonuses": ["galleon"], "walls": {"wall_1": 40, "wall_2": 0}}

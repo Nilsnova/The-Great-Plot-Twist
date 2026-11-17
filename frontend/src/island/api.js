@@ -193,17 +193,22 @@ export function wallHealthBody(walls) {
   for (const [id, value] of Object.entries(walls)) if (/^wall_[0-9]{1,2}$/.test(id) && Number.isInteger(value) && value >= 0 && value <= 100) out[id] = value;
   return Object.keys(out).length ? out : null;
 }
+const isWaveRow = data => !!data && isText(data.waveId) && Number.isSafeInteger(data.wave) && data.wave >= 1 && isCount(data.seed)
+  && typeof data.startsAt === 'string' && Number.isFinite(Date.parse(data.startsAt))
+  && !!data.weather && typeof data.weather.kind === 'string' && typeof data.flagship === 'boolean';
 export function isWave(data) {
-  const base = !!data && isText(data.waveId) && Number.isSafeInteger(data.wave) && data.wave >= 1 && isCount(data.seed)
-    && typeof data.startsAt === 'string' && Number.isFinite(Date.parse(data.startsAt))
-    && !!data.weather && typeof data.weather.kind === 'string' && typeof data.flagship === 'boolean';
-  if (!base) return false;
+  if (!isWaveRow(data)) return false;
   if (data.waveProtocol === undefined && (data.recoveryVersion === undefined || data.recoveryVersion === 0)) return true;
   if (data.waveProtocol === 1 && (data.recoveryVersion === undefined || data.recoveryVersion === 0)) return true;
   return data.waveProtocol === 2 && data.recoveryVersion === 1
     && readRecoverySnapshot(data.initialSnapshot, data.waveId) !== null && isParticipantToken(data.participantToken)
     && Number.isSafeInteger(data.lastActorCounter) && data.lastActorCounter >= 0;
 }
+// GET /api/waves/current of a recovery wave you may join but have not joined yet (a teammate's bell): the
+// public wave (recoveryVersion 1, waveProtocol 2) without snapshot, participant token or counter. Only a
+// join (POST /api/waves/join) answers those, so such a wave is shown and joined, never started from.
+export const isJoinableWave = data => isWaveRow(data) && data.recoveryVersion === 1 && data.waveProtocol === 2
+  && data.initialSnapshot == null && data.participantToken == null && data.lastActorCounter == null;
 // Captain health (GAME-V3.md §3): what the revive cost you and your coins after it.
 export const isRevive = data => !!data && isCount(data.price) && isCount(data.coins) && typeof data.repeat === 'boolean';
 // A tear-down's quote (GAME-V3.md §4.2): {spot, kind, name, level, refunds: [{id, name, coins, you}]}.
@@ -512,7 +517,7 @@ export function createIslandApi({transport, makeUid = makeActionUid, waveProtoco
       const target = where(place);
       if (!target) return refuse(422, 'validation_error', MESSAGES.badCode);
       const version = askedProtocol === 2 ? 2 : protocolFor(target);
-      return ask(() => transport.get(PATHS.current(target, version)), data => data === null || isWave(data));
+      return ask(() => transport.get(PATHS.current(target, version)), data => data === null || isWave(data) || isJoinableWave(data));
     },
     finishWave({waveId, survived, shipsSunk = 0, bonuses, rescued, walls} = {}) {
       if (!isText(waveId)) return refuse(404, 'no_such_wave', MESSAGES.badWave);
