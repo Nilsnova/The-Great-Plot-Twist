@@ -21,3 +21,19 @@ presentation revision and owns the world/camera/water consumers.
 
 Likely files: `frontend/src/pirates/{render,battle-guide,index,interact,poses}.js`
 and focused pirate tests. No new dependencies, environment changes or merge.
+
+## Component handover
+
+Combat feet and event anchors now project logical XZ before display-relative
+offsets. Direction/mirroring uses the projected vector. Pointer input uses the
+shared inverse; lifted hull/body hit centers are compared in display units.
+Guide ground centers and local vertices transform together with positive winding;
+air badges and bars keep their dimensions. The two guide materials share one
+owned icon texture. Existing particle shapes remain display-relative artwork.
+
+Focused verification: nine test files, 112 tests passed, including real instance
+buffers, midpoint trajectory/beam geometry, projected actor facing, pan/zoom
+pointer roundtrips, lifted hit centers, guide lane corners/winding, upright badges,
+event/state immutability, existing renderer lifecycle and deterministic simulation.
+Actual GPU shader compilation, composed world/combat captures and full frontend
+build remain with the coordinator. This component alone does not complete #361.
