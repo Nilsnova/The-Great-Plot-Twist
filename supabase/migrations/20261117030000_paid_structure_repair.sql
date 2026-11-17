@@ -61,6 +61,7 @@ begin
      or p_instance_id is null
      or p_action_uid is null or p_action_uid !~ '^[A-Za-z0-9_-]{8,64}$'
      or p_expected_epoch is null
+     or p_expected_window is null
      or p_expected_window not in ('between_waves', 'reserved_wave')
      or (p_expected_window = 'between_waves' and p_expected_wave_id is not null)
      or (p_expected_window = 'reserved_wave' and p_expected_wave_id is null)
