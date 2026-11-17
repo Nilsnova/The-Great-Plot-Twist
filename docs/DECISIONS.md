@@ -1087,3 +1087,11 @@ The harpoon tower and the culverin have no skills, so no price. The numbers live
 - **Database:** the migration re-adds `islet_buildings_plot_fits_building` with the full list plus the 20 new pairs, widens `island_layout_plot_known`, and replaces `island_demolish_quote()` / `island_demolish()` with only their plot test widened (`cannon_([1-9]|1[01])`). Apply it first, then switch the flag on.
 - **Also (same playtest, "the orange flags do not really make sense"):** the battle guide no longer draws the orange 🪓 badge beside each wall the route hacks (§16); the wall's hp bar shows a wall under attack and a broken wall keeps its red gap and rubble badge.
 
+
+## D062 — Decorative cliff base and unchanged walkable island top — 2026-11-17
+
+- **Status:** approved bounded implementation trial for Johannes Franz Lang's reference-village request; final visual quality still needs actual-game evidence and human acceptance. [VIS-19 #224](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/224).
+- **Decision:** keep the analytic home-islet coast, projection, saved coordinates, placement, walking, colliders and naval/landing routes unchanged. Draw an original downward rock facade before the existing beach/top fill, so valid ground and building/captain feet stay on the same top polygon.
+- **Two boundaries:** the analytic surface is the **walkable top**; backdrop alpha is the **decorative cliff-body/base silhouette** used by water/foam. New opaque decorative pixels do not grant land or walking/building rights. No second mask texture is needed because walking already uses analytic `surfaces.js`.
+- **Bounds:** retain the 64×48 backdrop and .72 projection. Trial face depth is at most 1.4 projected world units, tapering to .35 at the southern naval/beach approach, with soft transitions. Camera and actual ship/captain/shore-wall checks must include the new decorative foot. Existing backdrop resources own the drawing; no new material/mesh lifetime.
+- **Limits:** no terrain elevation physics, new dock, island growth, route/collision change, imported runtime images or new dependency. This approves the small rendering seam, not the full reference appearance or rollout. No merge or deployment.
