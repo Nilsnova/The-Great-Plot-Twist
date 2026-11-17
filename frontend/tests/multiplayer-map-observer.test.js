@@ -1,0 +1,81 @@
+// QA must inspect a rendered level, including stale-buffer and missing-art failures.
+import {describe, expect, it} from 'vitest';
+import * as THREE from 'three';
+import {observeMultiplayerMap, WALL_AUDIT_ATLAS} from '../scripts/multiplayer-map-observer.js';
+import {makeWallConnections} from '../src/island/wall-connections.js';
+import {WALL_ATLAS_IDS, frames} from '../src/art/village/walls.js';
+
+const wall = (id = 'wall_2', x = 4, z = 3, level = 1) => ({id, x, z, level, kind: 'wall', built: true});
+function drawing(rows = [wall()]) {
+  const scene = new THREE.Scene(), walls = makeWallConnections(scene);
+  const texture = new THREE.Texture({width: WALL_AUDIT_ATLAS.width * 2, height: WALL_AUDIT_ATLAS.height * 2});
+  texture.userData.villageArt = WALL_ATLAS_IDS.map(id => ({id, logical: frames[id].logical, source: 'png', file: 'village/compiled.png'}));
+  walls.setArt({...WALL_AUDIT_ATLAS, texture}); walls.show(rows);
+  return {scene, walls, texture, group: walls.root, mesh: walls.root.children.at(-1)};
+}
+const read = state => observeMultiplayerMap(state.scene, 'wall_2');
+const invalid = state => expect(read(state).mode).toBe('invalid-wall-batch');
+
+describe('actual multiplayer map observer', () => {
+  it.each([1, 2, 3, 4, 5])('observes tier %i in real indexed wall buffers without inventing pips', level => {
+    const state = drawing([wall('wall_2', 4, 3, level)]);
+    expect(read(state)).toEqual({level, pips: 0, mode: 'wall-batch'}); state.walls.dispose();
+  });
+  it('observes the actual cap of a straight same-level wall, and changed level after repaint', () => {
+    const rows = [wall('a', 2, 3, 3), wall('wall_2', 4, 3, 3), wall('c', 6, 3, 3)], state = drawing(rows);
+    expect(read(state)).toEqual({level: 3, pips: 0, mode: 'wall-batch'});
+    state.walls.show(rows.map(row => row.id === 'wall_2' ? {...row, level: 4} : row));
+    expect(read(state)).toEqual({level: 4, pips: 0, mode: 'wall-batch'}); state.walls.dispose();
+  });
+  it('does not trust a fresh diagnostic level over stale drawn UVs', () => {
+    const rows = [wall()], state = drawing(rows);
+    rows[0].level = 2; // The public diagnostic reads the new row; drawn buffers still contain tier one.
+    invalid(state); state.walls.dispose();
+  });
+  it.each(['position', 'uv', 'index'])('rejects a corrupted actual %s buffer', attribute => {
+    const state = drawing(), geometry = state.mesh.geometry;
+    if (attribute === 'index') geometry.index.array[geometry.index.array.length - 1] = 0;
+    else geometry.getAttribute(attribute).array[geometry.getAttribute(attribute).array.length - 1] += .25;
+    invalid(state); state.walls.dispose();
+  });
+  it.each(['missing mesh', 'hidden mesh', 'hidden ancestor', 'moved mesh', 'moved scene', 'manual matrix', 'scaled group', 'empty draw range', 'excluded post', 'no texture', 'transparent material', 'wrong texture size', 'placeholder receipt', 'empty metrics', 'missing receipt'])('rejects %s', fault => {
+    const state = drawing();
+    if (fault === 'missing mesh') state.group.remove(...state.group.children);
+    if (fault === 'hidden mesh') state.mesh.visible = false;
+    if (fault === 'hidden ancestor') state.scene.visible = false;
+    if (fault === 'moved mesh') state.mesh.position.x = 1;
+    if (fault === 'moved scene') state.scene.position.y = 1;
+    if (fault === 'manual matrix') {state.group.matrixAutoUpdate = false; state.group.matrix.makeTranslation(1,0,0);}
+    if (fault === 'scaled group') state.group.scale.x = .5;
+    if (fault === 'empty draw range') state.mesh.geometry.setDrawRange(0, 0);
+    if (fault === 'excluded post') state.mesh.geometry.setDrawRange(0, state.mesh.geometry.index.count - 6);
+    if (fault === 'no texture') state.mesh.material.map = null;
+    if (fault === 'transparent material') state.mesh.material.opacity = 0;
+    if (fault === 'wrong texture size') state.texture.image.height += 9;
+    if (fault === 'placeholder receipt') state.texture.userData.villageArt[0].source = 'unprepared-placeholder';
+    if (fault === 'empty metrics') state.texture.userData.villageArt[0].logical = [];
+    if (fault === 'missing receipt') state.texture.userData.villageArt.pop();
+    invalid(state); state.walls.dispose();
+  });
+  it('does not report a torn-down row from another wall in the same layer', () => {
+    const state = drawing([wall('other')]);
+    expect(read(state)).toEqual({level: 0, pips: 0, mode: 'unobserved-wall'}); state.walls.dispose();
+  });
+  it('refuses teardown success when fresh rows disappear but the last observed quad is still drawn', () => {
+    const rows = [wall()], state = drawing(rows);
+    expect(read(state).mode).toBe('wall-batch');
+    rows.splice(0); // Diagnostic rows now say absent, without replacing the old indexed geometry.
+    invalid(state);
+    state.walls.show(rows);
+    expect(read(state)).toEqual({level: 0, pips: 0, mode: 'none'}); state.walls.dispose();
+  });
+  it('preserves legacy walls, towers and real pip counts, refusing duplicate renderers', () => {
+    const scene = new THREE.Scene(), mesh = new THREE.Group(); mesh.name = 'island-wall:wall_2'; mesh.userData.level = 3; scene.add(mesh);
+    for (let n = 1; n <= 3; n++) {const pip = new THREE.Group(); pip.name = `island-pip:wall_2:${n}`; scene.add(pip);}
+    expect(observeMultiplayerMap(scene, 'wall_2')).toEqual({level: 3, pips: 3, mode: 'sprite'});
+    mesh.name = 'island-cannon:wall_2';
+    expect(observeMultiplayerMap(scene, 'wall_2')).toEqual({level: 3, pips: 3, mode: 'sprite'});
+    const state = drawing(); state.scene.add(mesh);
+    invalid(state); state.walls.dispose();
+  });
+});
