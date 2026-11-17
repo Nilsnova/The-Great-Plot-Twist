@@ -173,4 +173,7 @@ WALL-03 bounded cohort slice (Johannes): the 128-piece catalogue adapter, comple
 
 WALL-19 perimeter follow-up (Johannes): [Draft PR #275](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/275) adds bounded database identities and positioned-build/lifecycle guards for the 128-piece target. [Scope, dependencies and evidence](../specs/WALL-19-cohort-constraints.md). This is one required slice; it does not complete the perimeter wall feature, apply a migration or authorize release.
 
+WALL-22 recovery/wire slice (Johannes): complete bounded 139-instance vectors, trusted perimeter snapshot inputs and public geometry-version compatibility are implemented in [Draft #297](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/297), stacked on #285. [Checks, internal/public version distinction and remaining SQL/start/lifecycle gates](../specs/WALL-22-perimeter-wave-state.md). No production acceptance, migration application or merge is claimed.
+
+
 WALL-28 owner integration (Johannes): [Draft #285](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/285), [issue #284](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/284), integrates trusted wall policy in own/visited/action views and existing additional-wall actions. [Exact checks and limits](../specs/WALL-28-owner-policy-view.md). Empty added inventory has no spatial view; paid positions survive paused placement. SQL/browser lifecycle and independent human review remain; no migration application or merge.
