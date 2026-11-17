@@ -32,7 +32,7 @@ export function mountDefenseReport({on, container, context, defenses, menu = add
         node('p', '', `Hit damage: ${item.taken} · Damage done: ${item.dealt} · Breaks: ${item.breaks}`));
       list.append(row);
     }
-    body.append(list.childElementCount ? list : node('p', '', 'No damage was recorded.'));
+    body.append(list.childElementCount ? list : node('p', '', 'No building hits were recorded.'));
     if (!modal) { resetInput(); modal = createModal({title: 'Last defense report', onCancel: close}); }
     modal.setContent(body); modal.open(container);
   }
@@ -51,6 +51,7 @@ export function mountDefenseReport({on, container, context, defenses, menu = add
       if (modal) draw();
     },
     read: () => report.read(context()),
+    get active() { return !!modal; },
     dispose() { for (const stop of stops) stop?.(); clear(); },
   };
 }

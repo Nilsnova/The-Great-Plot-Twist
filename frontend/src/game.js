@@ -87,8 +87,8 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   let tutorials=null,tutorialHooks=null,islandFlags={},introUntil=0;
   let classDemo=null,classDemoLoad=null,island=null,islandLoad=null,islandsMode=null,pirates=null,waves=null,wavesLoad=null;
   let harbor=null, farHint=null, active = false, disposed=false, hud, chart, perf, marketUi=null, marketLoad=null, experience,beginRequest=0, fpsFrames = 0, fpsStart = performance.now(), fps = 0,weatherAnswer=null;
-  const externalOverlay=()=>!!(harbor?.active||island?.active||classDemo?.active||shortcuts.active||tutorial.active||!!tutorials?.active||shell?.blocked||isAppBlocked?.()||marketUi?.active||sportsUi.active||chart?.open||sailing.active||stopPlots?.active);
-  const worldBlocked=()=>!!(harbor?.active||island?.active||classDemo?.active||shortcuts.active||tutorial.active||!!tutorials?.active||shell?.blocked||isAppBlocked?.()||marketUi?.active||sportsUi.active);
+  const externalOverlay=()=>!!(harbor?.active||island?.active||waves?.reportActive||classDemo?.active||shortcuts.active||tutorial.active||!!tutorials?.active||shell?.blocked||isAppBlocked?.()||marketUi?.active||sportsUi.active||chart?.open||sailing.active||stopPlots?.active);
+  const worldBlocked=()=>!!(harbor?.active||island?.active||waves?.reportActive||classDemo?.active||shortcuts.active||tutorial.active||!!tutorials?.active||shell?.blocked||isAppBlocked?.()||marketUi?.active||sportsUi.active);
   function resetControls(){mapTouch?.cancel();input.reset();}
   const outsideBlocked=()=>externalOverlay()||world.busy;
   const sportsUi=createSportsEntry({container,getToken:session.getToken,onSessionChange:session.onChange,resetInput:resetControls,focusGame:()=>graphics.renderer.domElement.focus(),onSignIn:()=>{sportsUi.close();openAccount?.();}},{load:loadMatchCard});
@@ -346,7 +346,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     event.preventDefault(); dispose();
     captions.show('Graphics paused. Reload the page to restore the island.');
   }, { once: true });
-  return {dispose,resetInput:resetControls,hasOverlay:()=>!!harbor?.active||!!island?.active||!!tutorials?.active||!!classDemo?.active||shortcuts.active||tutorial.active||chart.open||sailing.active||(marketUi?.active||sportsUi.active)||stopPlots.active,
+  return {dispose,resetInput:resetControls,hasOverlay:()=>!!harbor?.active||!!island?.active||!!waves?.reportActive||!!tutorials?.active||!!classDemo?.active||shortcuts.active||tutorial.active||chart.open||sailing.active||(marketUi?.active||sportsUi.active)||stopPlots.active,
     setMode(mode){mapTouch?.cancel();if(mode!=='playing'){harbor?.close();marketUi?.close();sportsUi.close();beginRequest++;}audio.setScreen(mode);input.reset();if(mode==='playing')view.start(reducedMotion());else view.pause();},
     handleEscape(){
       if(shortcuts.active){shortcuts.close();return true;}

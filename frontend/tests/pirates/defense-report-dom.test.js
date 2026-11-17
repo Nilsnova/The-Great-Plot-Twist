@@ -41,9 +41,11 @@ it.each([{width: 1280, height: 720}, {width: 375, height: 812}])('the real menu 
     await page.evaluate(() => window.reportEmit({type: 'wave_controller_started', waveId: 'w2', wave: 3}));
     expect(await page.locator('dialog[open]').count()).toBe(0);
     expect(await page.evaluate(() => window.reportMenu().some(item => item.label === 'Last defense report'))).toBe(false);
-    await page.evaluate(() => window.reportFeature.events([{type: 'wave_ended', reason: 'all_sunk'}]));
+    await page.evaluate(() => window.reportFeature.events([{type: 'island_damaged', damage: 5}, {type: 'wave_ended', reason: 'all_sunk'}]));
     expect(await page.evaluate(() => window.reportMenu().some(item => item.label === 'Last defense report'))).toBe(true);
     await page.evaluate(() => window.reportOpen());
+    expect(await report.textContent()).toContain('Heart damage: 5');
+    expect(await report.textContent()).toContain('No building hits were recorded.');
     await page.evaluate(() => window.reportEmit({type: 'travel'}));
     expect(await page.locator('dialog[open]').count()).toBe(0);
     expect(await page.evaluate(() => window.reportMenu().some(item => item.label === 'Last defense report'))).toBe(false);

@@ -289,3 +289,5 @@ and [results, screenshots and manual checkpoints](evidence/T28/README.md).
 | Screenshot reproduction | `frontend/scripts/capture-defense-report.js`; four controlled component images and JSON in docs/evidence/COC-39, zero API writes |
 
 [Exact run results and remaining central checks](../specs/COC-39-defense-report.md). Full replay authority, production multi-client completeness and COC-40 tactical navigation are not covered by this bounded report slice.
+
+COC-39 ownership follow-up: `frontend/tests/pirates/defense-report-ownership.test.js` uses the actual running game with a local fake island and standard-mapped gamepad. Window-level keyboard state and analog input cannot move the captain while `waves.reportActive` owns both global overlay guards; closing restores motion. Isolated result:1 passed /14.34s. The report still does not pause canonical wave ticking.

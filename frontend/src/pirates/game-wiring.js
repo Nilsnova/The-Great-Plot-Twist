@@ -202,6 +202,7 @@ export function wireWaves(ctx) {
   }
   return {
     pirates,
+    get reportActive() { return defenseReport?.active === true; },
     get point() { return pirates.point; },
     get island() { return pirates.island; },
     get game() { return game; },

@@ -38,9 +38,19 @@ Identical real hit events both count. The current event format has no global eve
 
 Report payout updates match a retained wave UUID and cannot confirm a different wave. A confirmed amount is immutable to later failure/double-answer updates. A late answer for an evicted wave is ignored. Travel/reset clears state and closes the modal; ordinary UI redraw reads copied data. Starting another wave closes the old report and removes its menu entry during active combat.
 
+## Input ownership
+
+The report is an input-owning modal, not merely a native top-layer dialog. `mountDefenseReport.active` is exposed as `wireWaves.reportActive`; both `externalOverlay` and `worldBlocked` in `game.js`, plus the game's public overlay query, include it. This stops world movement, touch paths and the gamepad's gameplay branch while report controls own input. Native dialog inertness alone does not gate window-level input state or controller polling.
+
+Closing clears the report modal, resets input and returns focus to the canvas; normal movement resumes. Opening/closing does not stop the wave clock or change reservations. The report entry remains hidden during an active island wave and a new controller start closes the old report. The zero-building-hit message is explicit even if the heart was damaged, rather than falsely saying no damage happened anywhere.
+
+A dedicated actual-game fake-server browser regression is added for this boundary: it reaches a real completed-wave report through the existing controller hook/menu, injects window-level keyboard state plus a standard-mapped gamepad axis, checks an unchanged captain position while open, and checks movement resumes after close. The isolated actual-game regression passed: **1 passed file / 1 passed test / 14.34 s**. Its first setup attempts used the wrong fake-helper property and lost the harness import helper after full-page navigation; those fixture issues were corrected without weakening the movement assertions. The initial mixed run's two DOM cases passed while that ownership fixture failed. No production gamepad or live payout is claimed.
+
 ## Verification
 
 Actual focused runs so far:
+
+- `npm test -- --maxWorkers=1 tests/pirates/defense-report-ownership.test.js`: **1 passed, 1 file, 14.34 s**. Actual game/world with local fake state, real keyboard/gamepad input paths and close-to-resume movement.
 
 - `npm test -- --maxWorkers=1 tests/pirates/defense-report.test.js tests/pirates/multiplayer.test.js`: **25 passed, 2 files, 935 ms**, including the observer boundary and recorded-hit/overkill case.
 - `npm test -- --maxWorkers=1 tests/pirates/defense-report-dom.test.js`: **2 passed, 1 file, 2.83 s** on the final view, including active-wave hiding and recorded-hit wording.
@@ -48,7 +58,7 @@ Actual focused runs so far:
 
 An independent read-only source review found the raw-wall-hit/overkill ambiguity; the label and an explicit warning were corrected without changing combat. No other concrete defect was found in that review.
 
-The tests cover identical legitimate hits, zero-HP transitions and rebuilding, explicit replay rebuilding, payout guards, memory bounds, copied snapshots, actual `mountPirates` event forwarding and the actual running-game wiring's reachable menu provider. DOM cases at 1280×720 and 375×812 exercise end reason, amounts, stale payout, Escape/focus, travel cleanup and overflow.
+The tests cover identical legitimate hits, zero-HP transitions and rebuilding, explicit replay rebuilding, payout guards, memory bounds, copied snapshots, actual `mountPirates` event forwarding and the actual running-game wiring's reachable menu provider. DOM cases at 1280×720 and 375×812 exercise end reason, amounts, stale payout, Escape/focus, travel cleanup and overflow. The later mixed run also passed both DOM cases including positive heart damage with zero building hits; its overall command failed on the ownership fixture setup before that separate test was corrected and passed.
 
 `node frontend/scripts/capture-defense-report.js` completed: **4 screenshots saved; 2 viewports; browser errors: 0; no API writes.** All four were visually inspected. It renders the existing real pause menu and the branch's real report component using a controlled `createWave` event stream. This is component evidence, not a production backend run. The screenshot JSON records actual event-derived values. Full-suite/build/budget/a11y/demo validation is coordinated centrally by Root and is not claimed here.
 
