@@ -29,7 +29,7 @@ Shared modal, cold-title and global styles remain outside this slice.
 2. Add an explicit best/current wave model with unknown-state handling.
 3. Keep captain level discoverable and confirmed coins unchanged.
 4. Suppress Goals only while managing; restore preferences and normal state.
-5. Keep desktop/phone text legible and enabled targets at least44px.
+5. Keep desktop/phone text legible and enabled targets at least 44px.
 6. Verify actual source state, focused DOM/model checks and before/after captures.
 
 - [x] Actual best/current wave is distinct from captain level and next wave.
@@ -37,7 +37,7 @@ Shared modal, cold-title and global styles remain outside this slice.
 - [x] Goals progress and fold preference survive management entry/updates/Exit.
 - [x] Known coins, unknown coins and confirmed animation retain their rules.
 - [ ] No stale hidden-Goals camera inset or phone/Menu collision.
-- [ ] Actual1280×720/375×812 evidence and applicable exact checks recorded.
+- [ ] Actual 1280×720/375×812 evidence and applicable exact checks recorded.
 
 ## Explain-back
 
@@ -48,9 +48,9 @@ deployment, live flag/database action or new app dependency.
 
 ## First source handover
 
-Pure source/model checks:20tests passed in262ms. Build passed in1.19s with
-spoiler guard242text files/12protected lines; cold-title transfer passed at
-18,734JavaScript bytes and9,410CSS bytes. Native HUD/Goals/layout tests are
+Pure source/model checks:20 tests passed in 262ms. Build passed in 1.19s with
+spoiler guard 242 text files/12 protected lines; cold-title transfer passed at
+18,734 JavaScript bytes and 9,410 CSS bytes. Native HUD/Goals/layout tests are
 written and await the coordinated sole browser lane; no DOM pass is inferred.
 
 The game bridge applies `hud.setManaging(managing)` before measuring Goals,
@@ -85,12 +85,12 @@ Tests       20 passed (20)
 Duration    222ms
 ```
 
-Both commands exited0. The11 skipped cases were deliberately excluded by the
+All three commands exited 0. The 11 skipped cases were deliberately excluded by the
 selection filter; this is not a pass claim for the full legacy HUD file. The
-tests used actual Chromium DOM at1280×720,375×812 and320×568, including
-7,180 and2,147,483,647 coin balances. They verify best/current labels, captain
+native cases used actual Chromium DOM at 1280×720, 375×812 and 320×568, including
+7,180 and 2,147,483,647 coin balances. They verify best/current labels, captain
 Menu context, unknown versus real zero, Goals progress/fold/hint restoration,
-focus leaving suppressed Goals,17px wave text,44px Menu targets and no
+focus leaving suppressed Goals, 17px wave text, 44px Menu targets and no
 horizontal overflow or header/Menu/Goals overlap. The legacy cases verify
 wallet-source isolation, exact coin-only text and confirmed balance animation.
 After process exit, `/proc` showed zero live, non-zombie Chrome/Chromium
@@ -99,6 +99,6 @@ processes and the coordinated browser lane was explicitly released.
 These are focused HUD checks. They do not prove the final composed village
 camera insets, visual resemblance to the reference, full-suite success, live
 account behavior or screenshot acceptance. Root still owns the combined scene
-and before/after1280×720 and375×812 captures. The broader BASE-05 budget
+and before/after 1280×720 and 375×812 captures. The broader BASE-05 budget
 preview remains open. Keep Draft until Johannes explains the code and a
 different human reviews the current revision.
