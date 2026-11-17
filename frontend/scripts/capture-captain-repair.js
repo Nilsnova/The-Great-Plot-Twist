@@ -16,8 +16,10 @@ const assertSingleCard = async (selector, title) => {
   for (let index = 0; index < 8; index++) {
     const cutscene = page.locator('dialog.cutscene[open] .cutscene-skip');
     const tutorial = page.locator('dialog.tutorial-card[open]').getByRole('button', {name: 'Skip', exact: true});
+    const lobbyClose = page.locator('dialog.island-card-lobby[open] button[aria-label="Close dialog"]');
     if (await cutscene.count()) await cutscene.evaluate(button => button.click());
     else if (await tutorial.count()) await tutorial.evaluate(button => button.click());
+    else if (await lobbyClose.count()) await lobbyClose.evaluate(button => button.click());
     else break;
     await page.waitForTimeout(100);
   }
