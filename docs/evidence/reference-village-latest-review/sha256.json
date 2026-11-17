@@ -428,8 +428,8 @@
   },
   "reviewReadme": {
     "file": "README.md",
-    "bytes": 9896,
-    "sha256": "79fceeeb716e05c53c820b7f9a64ef8b6446355d3233f6aa708be1ad2eba10b9"
+    "bytes": 10704,
+    "sha256": "e8b393886ca57ab28b56b2e7933e666111ebdbca85e6d9ff0186195ca479dab6"
   },
   "focusedReportInputBeforeLatest": {
     "source": "5e3dd6ccb3597617e67a8b720525d3add78c3704",
@@ -456,9 +456,9 @@
   },
   "componentSnapshot": {
     "file": "pr-snapshot.json",
-    "bytes": 14870,
-    "sha256": "aea30d81394b0cde849d77f98e756cfa109aa14a59ff539b3d08c55fb3a10d59",
-    "rows": 49,
+    "bytes": 15283,
+    "sha256": "b293e79ee9ccb69f942c0d8447159c9262c9a2ef6edf7ee9b10dd9323e5ea3db",
+    "rows": 50,
     "allDraft": true
   },
   "checkerPortability": {
@@ -467,5 +467,10 @@
     "defaultOutput": "captures/review-document relative to the command working directory",
     "optionalPackageOverride": "REVIEW_FRONTEND_PACKAGE",
     "requires": "existing locked frontend playwright-core and installed Chromium"
+  },
+  "completedVerificationHistory": {
+    "source": "52f6bb158b03188b57260c1872e273391598debf",
+    "path": "../reference-village-checks/source-52-completed/README.md",
+    "status": "mixed; frontend timeout, layout overlap and upstream multiplayer pose failures remain recorded; later candidate pending"
   }
 }

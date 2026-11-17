@@ -1,5 +1,5 @@
 {
-  "at": "2026-11-17T22:12:15.414482+00:00",
+  "at": "2026-11-17T22:49:56.716469+00:00",
   "rows": [
     {
       "pr": 349,
@@ -194,9 +194,9 @@
     {
       "pr": 408,
       "expectedBranch": "test/vis-46-report-input-owners",
-      "expectedHeadPrefix": "5cdc9b17",
+      "expectedHeadPrefix": "40798f09",
       "branch": "test/vis-46-report-input-owners",
-      "head": "5cdc9b17b1e73d153d588ff7ec1a1661bbc25152",
+      "head": "40798f09b269cc4ba344ca0a18912ba90efbafb5",
       "draft": true,
       "state": "open",
       "matches": true
@@ -490,7 +490,17 @@
       "draft": true,
       "state": "open",
       "matches": true
+    },
+    {
+      "pr": 420,
+      "expectedBranch": "fix/vis-52-toast-goal-clearance",
+      "expectedHeadPrefix": "46fe08ab",
+      "branch": "fix/vis-52-toast-goal-clearance",
+      "head": "46fe08ab4c622234086350b269138834f6286c38",
+      "draft": true,
+      "state": "open",
+      "matches": true
     }
   ],
-  "scope": "live Draft branch/head snapshot only; composition is determined by frozen52f6 source, including documented later uncomposed variants"
+  "scope": "50 live Draft branch/head snapshot only; source-52 completed checks and stage-eight capture have separate immutable boundaries. VIS52 and later keyboard activation are outside source 52. Pending final candidate is not verified by this index."
 }

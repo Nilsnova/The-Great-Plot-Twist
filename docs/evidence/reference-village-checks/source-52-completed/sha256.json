@@ -1,0 +1,146 @@
+{
+  "status": "completed mixed result; three failed checks, later keyboard timeout also failed",
+  "sequenceSource": "52f6bb158b03188b57260c1872e273391598debf",
+  "keyboardSource": "b9da278390ac4f63c580ab34d7ba369e71a4a36a",
+  "applicationTrees": {
+    "frontend/src": "6e0c6b27b717a7b8eedcde498d7372de6f0942cb",
+    "frontend/public": "9306942db1050d728799cee2fbdc8e8960f14ad2",
+    "backend": "c785196095edef4f5416744b46435ab564da4e9c",
+    "supabase": "6e52a63b87028291127dbae8c344c9f49a73896d"
+  },
+  "copyMethod": "unchanged original bytes; no edited or re-encoded images",
+  "stageEightImmutableDocsHead": "07d0c14649ae7d1fb6a3503012d8941bee4e6a42",
+  "sequenceImagePublication": "Only the two failed island-toast overlap originals are copied; all other sequence PNGs remain workspace-only. Stage-eight full actual-game PNGs are in the separately pinned review package.",
+  "files": [
+    {
+      "file": "sequence/report.json",
+      "original": "final-latest-checks/report.json",
+      "bytes": 2161,
+      "sha256": "bd835a593a735ab9bcd21189bc91614718f1b0b3dc2d4fd9a1e95565e39e18f5"
+    },
+    {
+      "file": "sequence/runner.log",
+      "original": "final-latest-checks/runner.log",
+      "bytes": 1320,
+      "sha256": "92bb6745bf17fe1544c40a1420dd0fc973cc2177b7d4da81e78278faf36d8cc6"
+    },
+    {
+      "file": "sequence/frontend.log",
+      "original": "final-latest-checks/frontend.log",
+      "bytes": 637013,
+      "sha256": "4269003aaefbbff243f1f3a236cc5ab5d5d9a94745b4d7c6dbe50fb9e54bed86"
+    },
+    {
+      "file": "sequence/a11y.log",
+      "original": "final-latest-checks/a11y.log",
+      "bytes": 818,
+      "sha256": "a966f2a7f04a2795da2f363d4f6fffaf2c78ac4dfa9ad6cb0b6c61e0175945de"
+    },
+    {
+      "file": "sequence/demo.log",
+      "original": "final-latest-checks/demo.log",
+      "bytes": 2692,
+      "sha256": "bec14d6f217bef269b42b08be156622320aa0d37dc3ac3fc4de98c7160a2cd90"
+    },
+    {
+      "file": "sequence/overlaps.log",
+      "original": "final-latest-checks/overlaps.log",
+      "bytes": 6279,
+      "sha256": "6a7d6fa804d2c799218b571d85153049773c668a422610c4eadb3309b950b10d"
+    },
+    {
+      "file": "sequence/build.log",
+      "original": "final-latest-checks/build.log",
+      "bytes": 17404,
+      "sha256": "cc2f926009ad98b3906d3fd9b8951ee1bf6bb0c260a4f5e805234a63e6927877"
+    },
+    {
+      "file": "sequence/budget.log",
+      "original": "final-latest-checks/budget.log",
+      "bytes": 83560,
+      "sha256": "ecf715ffc25dd79872d063a3c86ec1b5ec424543b49c9580e500c6b00811d6cf"
+    },
+    {
+      "file": "sequence/text-lint.log",
+      "original": "final-latest-checks/text-lint.log",
+      "bytes": 1037,
+      "sha256": "b5cf05cd71da1e3d4b824e499509fd61efca5ccf5dbb8f1049fd0ce659f341f3"
+    },
+    {
+      "file": "sequence/multiplayer.log",
+      "original": "final-latest-checks/multiplayer.log",
+      "bytes": 14480,
+      "sha256": "cfc81e54e01bbfb66ec261a0475786cd7445cf85236d15c6b930e65a47e57dd3"
+    },
+    {
+      "file": "sequence/overlap-captures/report.json",
+      "original": "final-latest-checks/overlap-captures/report.json",
+      "bytes": 6474,
+      "sha256": "09b500e89c103961d5c77a9ffcbbbff4d10d6f50cd137ceeb9d28b1483e37253"
+    },
+    {
+      "file": "sequence/overlap-captures/island-toast-390x844.png",
+      "original": "final-latest-checks/overlap-captures/island-toast-390x844.png",
+      "bytes": 377635,
+      "sha256": "1177a97a1403bccad6ac8b53d28aaf5c2ffae1a350ebd979e1098c78dda20e6a",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "file": "sequence/overlap-captures/island-toast-844x390.png",
+      "original": "final-latest-checks/overlap-captures/island-toast-844x390.png",
+      "bytes": 478698,
+      "sha256": "75dd85dbbeff67e26bde388aede800dade4f1e48a2931753669976554a85d66c",
+      "width": 844,
+      "height": 390
+    },
+    {
+      "file": "sequence/demo-captures/journey.json",
+      "original": "final-latest-checks/demo-captures/journey.json",
+      "bytes": 2614,
+      "sha256": "dc4b37d8d51c3379f403e634f7da1b6fd0cbbd9610b6630477f866878a34eb54"
+    },
+    {
+      "file": "keyboard-follow-up/report.json",
+      "original": "keyboard-report-input/report.json",
+      "bytes": 682,
+      "sha256": "dc448bdb72d9d75384b53961ceb06df00f5fb80ed56d42775f9017619d6c4281"
+    },
+    {
+      "file": "keyboard-follow-up/runner.log",
+      "original": "keyboard-report-input/runner.log",
+      "bytes": 233,
+      "sha256": "d920c3b80e154943b38083372f7c6fa2dec57235d3258d7aee2c7ce56f86c24c"
+    },
+    {
+      "file": "keyboard-follow-up/report-input.log",
+      "original": "keyboard-report-input/report-input.log",
+      "bytes": 1368,
+      "sha256": "1bc7c79a039a9ef4bce071c9b9ba4322ca8214ec8a04a38a0ec7febf6164cd1f"
+    },
+    {
+      "file": "stage-eight-pr-snapshot.json",
+      "original": "visual-handover/docs/evidence/reference-village-latest-review/pr-snapshot.json",
+      "bytes": 14870,
+      "sha256": "aea30d81394b0cde849d77f98e756cfa109aa14a59ff539b3d08c55fb3a10d59",
+      "originalRevision": "07d0c14649ae7d1fb6a3503012d8941bee4e6a42",
+      "originalRepositoryPath": "docs/evidence/reference-village-latest-review/pr-snapshot.json"
+    },
+    {
+      "file": "stage-eight-sha256.json",
+      "original": "visual-handover/docs/evidence/reference-village-latest-review/sha256.json",
+      "bytes": 18370,
+      "sha256": "9d8dbedebd17ad6f622438bc2ac777a745c22e8d6e280d4c95398c6af66d3fdc",
+      "originalRevision": "07d0c14649ae7d1fb6a3503012d8941bee4e6a42",
+      "originalRepositoryPath": "docs/evidence/reference-village-latest-review/sha256.json"
+    },
+    {
+      "file": "stage-eight-readme.txt",
+      "original": "visual-handover/docs/evidence/reference-village-latest-review/README.md",
+      "bytes": 9896,
+      "sha256": "79fceeeb716e05c53c820b7f9a64ef8b6446355d3233f6aa708be1ad2eba10b9",
+      "originalRevision": "07d0c14649ae7d1fb6a3503012d8941bee4e6a42",
+      "originalRepositoryPath": "docs/evidence/reference-village-latest-review/README.md"
+    }
+  ]
+}

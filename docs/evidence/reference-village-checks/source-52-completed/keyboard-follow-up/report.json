@@ -1,0 +1,25 @@
+{
+  "started": "2026-11-17T22:41:30.495568+00:00",
+  "source": "b9da278390ac4f63c580ab34d7ba369e71a4a36a",
+  "frontendTree": "6e0c6b27b717a7b8eedcde498d7372de6f0942cb",
+  "publicTree": "9306942db1050d728799cee2fbdc8e8960f14ad2",
+  "backendTree": "c785196095edef4f5416744b46435ab564da4e9c",
+  "checks": [
+    {
+      "name": "report-input",
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "--maxWorkers=1",
+        "tests/pirates/defense-report-ownership.test.js",
+        "--reporter=verbose"
+      ],
+      "exitCode": 1,
+      "seconds": 23.09,
+      "log": "report-input.log"
+    }
+  ],
+  "finished": "2026-11-17T22:41:53.607150+00:00",
+  "exitCode": 1
+}
