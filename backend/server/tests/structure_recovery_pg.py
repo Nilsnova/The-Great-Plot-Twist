@@ -11,7 +11,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
 
-from psycopg import sql
+from psycopg import Error, sql
 from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
 
@@ -21,6 +21,7 @@ TABLES = frozenset(
     {
         "islands",
         "island_members",
+        "island_recovery_state",
         "islet_buildings",
         "island_research",
         "islets",
@@ -32,6 +33,7 @@ TABLES = frozenset(
 FUNCTIONS = frozenset(
     {
         "island_open",
+        "wave_rules_keep",
         "structure_recovery_read_state",
         "island_structure_repair",
         "recovery_wave_start",
@@ -60,11 +62,17 @@ class ScratchRecoveryAdmin(SupabaseAdmin):
 
     def __init__(self, connection):
         self.connection = connection
+        self.last_database_error = None
 
     async def call_function(self, name, params):
         if name not in FUNCTIONS or not isinstance(params, dict):
             raise SupabaseRejected()
-        return await asyncio.to_thread(self._call, name, params)
+        try:
+            return await asyncio.to_thread(self._call, name, params)
+        except Error as error:
+            # Synthetic scratch data only; retain the SQLSTATE and primary label for assertions.
+            self.last_database_error = (error.sqlstate, error.diag.message_primary)
+            raise
 
     def _call(self, name, params):
         self.connection.execute("set local role service_role")
@@ -85,9 +93,7 @@ class ScratchRecoveryAdmin(SupabaseAdmin):
             if not IDENTIFIER.fullmatch(key):
                 raise SupabaseRejected()
             kind = kinds[names.index(key)]
-            arguments.append(
-                sql.SQL("{} => %s::{}").format(sql.Identifier(key), sql.SQL(kind))
-            )
+            arguments.append(sql.SQL("{} => %s::{}").format(sql.Identifier(key), sql.SQL(kind)))
             values.append(
                 Jsonb(value) if kind in {"json", "jsonb"} and value is not None else value
             )
@@ -132,9 +138,7 @@ class ScratchRecoveryAdmin(SupabaseAdmin):
                 name, _, direction = part.partition(".")
                 if not IDENTIFIER.fullmatch(name) or direction not in {"asc", "desc"}:
                     raise SupabaseRejected()
-                ordering.append(
-                    sql.SQL("{} {}").format(sql.Identifier(name), sql.SQL(direction))
-                )
+                ordering.append(sql.SQL("{} {}").format(sql.Identifier(name), sql.SQL(direction)))
             statement += sql.SQL(" order by ") + sql.SQL(", ").join(ordering)
         limit = query.get("limit")
         if limit is not None:

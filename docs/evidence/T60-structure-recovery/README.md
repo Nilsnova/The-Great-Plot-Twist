@@ -1,48 +1,67 @@
-# T60 shared recovery integration evidence
+# T60 shared recovery integrated regression evidence
 
-This folder records local evidence for issue #126. It is not a claim that the integrated
-feature is complete. No live database, browser account, deployment or feature activation is
-used by the checks here.
+This folder records local evidence for issue #126. No live database, browser account, deployment,
+feature activation or real credentials are used.
 
-## Current checkpoint
+## Current integrated checkpoint
 
-**Source revisions:** T60 baseline `76c9764b`; T55 recovery-state/API foundation `72996af7`;
-T56 paid repair `457621d2`; integrated branch `a5135fb9`.
+The strict API-to-PostgreSQL-to-production-replay test passes on the integrated branch. The larger
+focused SQL slice has two fixture-contract failures described below; those failures are not counted
+as passing coverage and no assertions were weakened.
 
-**Command** (from `backend/`):
+**Source revisions:** T60 baseline `76c9764b`; T55 foundation `72996af7`, API revision fence
+`81171490`, snapshot schema/API `941703df`, finish response `cb181055`, lifecycle SQL `9d4d4b6c`,
+mutation hooks `3b9c289e` and `cc519114`; T56 paid repair `a4d4fe5a`; T57 replay modules
+`80b79c22`; T60 owned harness edits are uncommitted at the time of this evidence entry.
+
+**Strict API/replay command** (from `backend/`):
 
 ```bash
 UV_CACHE_DIR=/tmp/t60-uv-cache CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' \
-  pytest -q server/tests/island_sql/test_structure_recovery_schema_sql.py \
+  pytest -q server/tests/island_sql/test_structure_recovery_http_pg.py
+```
+
+**Result:** 1 passed in 10.35 seconds. It applies the full repository migration chain twice to the
+existing disposable Unix-socket PostgreSQL fixture. A synthetic owner and member authenticate
+through a fake verifier; actual FastAPI route services call the local SupabaseAdmin adapter over
+the same scratch connection used by the fixture. Local flags are `islands,structure_recovery`.
+
+The route sequence starts a v1 wave, joins the member, reads the owner’s current wave, and checks
+that structure HP stays fixed through preparation and combat. It confirms a health checkpoint is
+rejected before the paid event is sealed, pays one repair through the actual route, reads the sealed
+journal page, accepts a checkpoint, and runs the unmodified production `recovery-snapshot.js` and
+`wave-replay.js` modules in two independent Node replay consumers. After a later sealed tick, it
+submits damage, retries the old repair UID and verifies the immutable original receipt, unchanged
+wallet/use count, and no healing. It finishes through the API with canonical closed HP of 750,000,
+checks between-wave healing resumes, starts another wave and checks its fresh three-use quota.
+
+Only disposable timestamps are moved to put the synthetic wave into combat and to cross the
+minimum finish time. Short real sleeps verify pause and resume behavior. No product timeouts,
+assertions or server thresholds are changed. The JavaScript check imports the production snapshot
+and replay modules directly; it does not run the browser or the T59 authenticated frontend transport.
+The HTTP path repairs one wall. Broader SQL regressions exercise the other paid quota, old-UID,
+final-slot race and mutation cases.
+
+**Combined focused SQL/API command** (from `backend/`):
+
+```bash
+UV_CACHE_DIR=/tmp/t60-uv-cache CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' \
+  pytest -q server/tests/island_sql/test_structure_recovery_api_sql.py \
+  server/tests/island_sql/test_structure_recovery_mutations_sql.py \
+  server/tests/island_sql/test_structure_recovery_schema_sql.py \
   server/tests/island_sql/test_structure_repair_sql.py \
   server/tests/island_sql/test_structure_recovery_http_pg.py
 ```
 
-**Result:** 45 passed in 14.37 seconds. The existing opt-in `case_sql` fixture started a private
-Unix-socket PostgreSQL instance under pytest's temporary directory, applied the repository's
-full migration chain twice, and removed the instance after the session. The tests exercised the
-recovery schema and paid-repair SQL, including atomic wallet/HP/quota changes, UID retries,
-shared use limits and concurrent transactions. The added HTTP test seeded a synthetic owner and
-member, authenticated the member through a fake login verifier, read the shared canonical state
-through the real FastAPI route, sent a paid repair through the real route and SQL RPC, and matched
-its receipt to committed HP, wallet, quota and journal rows. The reservation itself was seeded
-through the existing SQL test helper, so this does not yet verify the accepted-bell HTTP path or
-finish endpoint.
+**Result:** 68 passed, 2 failed. The two failures are fixture contract mismatches: the new mutation
+suite’s start template omits required `configVersion: 1` (`bad_recovery_snapshot`), and an older
+schema test hand-builds a minimal active v1 snapshot without `recoveryConfig`, so the real mutation
+refresh hook refuses it (`recovery_config_missing`). The API owner is updating the snapshot fixtures;
+the hook remains strict. This combined command is not a clean pass.
 
-**Flags and seed:** SQL tests use fixed synthetic UUIDs in
-`backend/server/tests/island_sql/test_structure_repair_sql.py`; no app feature flag is set by
-this SQL-only command. No secrets or external connection strings are read.
-
-**Limits:** accepted bell lifecycle, canonical finish, multi-client API reads and production
-JavaScript journal replay have not yet been verified by this checkpoint. It does not capture UI
-screenshots because this slice has no browser UI path. The current branch does not claim those
-acceptance checks.
-
-**Harness corrections:** the first HTTP attempt exposed that the local adapter needed to convert
-PostgreSQL UUID values to the string shape Supabase returns. A second assertion initially read an
-event `type` from the payload even though the persisted schema stores it in `event_kind`; both
-were corrected from the observed database/API response, with no product assertion or timeout
-relaxed. The final combined command above passes.
+The narrow adapter allowlists only the local tables and RPCs needed by these calls. It does not
+read environment credentials, connect to a hosted Supabase instance, or create a network client.
+No screenshot is applicable because the tested slice has no browser UI path.
 
 ## Lifecycle draft probe
 
