@@ -36,6 +36,9 @@ SWIVEL_RULE = REPO_ROOT / "supabase" / "migrations" / "20261116020100_swivel_spo
 WAVE_RULES = REPO_ROOT / "supabase" / "migrations" / "20261114130500_wave_rules.sql"
 TOWER_OBSTACLES = REPO_ROOT / "supabase" / "migrations" / "20261115160000_tower_obstacles.sql"
 SHIP_FIRE_RULE = REPO_ROOT / "supabase" / "migrations" / "20261116160000_ship_fire_rule.sql"
+STRUCTURE_RECOVERY_RULES = (
+    REPO_ROOT / "supabase" / "migrations" / "20261117020000_structure_recovery.sql"
+)
 # The md5 of 20261110010000 as applied live (a checksum, not a secret).
 APPLIED_MD5 = "79278156e4925b2d39076722c11d2f00"  # pragma: allowlist secret
 
@@ -378,19 +381,25 @@ def test_the_culverin_migration_changes_only_the_spot_rule_and_the_rule_names():
 
 
 def rule_names(text: str) -> list[str]:
-    check = re.search(r"constraint wave_rules_known_names\s+check \(rules <@ array\[(.*?)\]", text)
+    check = re.search(
+        r"constraint wave_rules_known_names\s+check \(rules <@ array\[(.*?)\]", text, re.DOTALL
+    )
     return re.findall(r"'([a-z0-9_]+)'", check.group(1))
 
 
 def test_the_wave_rule_names_in_the_database_are_the_servers():
     first, culverin = rule_names(WAVE_RULES.read_text()), rule_names(CULVERIN.read_text())
     obstacles = rule_names(TOWER_OBSTACLES.read_text())
-    assert rule_names(SHIP_FIRE_RULE.read_text()) == list(SIM_RULES)  # the latest check rule
+    ship_fire = rule_names(SHIP_FIRE_RULE.read_text())
+    recovery = rule_names(STRUCTURE_RECOVERY_RULES.read_text())
+    assert ship_fire == [name for name in SIM_RULES if name != "structure_recovery"]
+    assert recovery == list(SIM_RULES)  # the latest check rule adds the versioned v1 policy
     # every name a kept wave may hold stays allowed by each later check rule
-    assert set(first) <= set(culverin) <= set(obstacles) <= set(SIM_RULES)
+    assert set(first) <= set(culverin) <= set(obstacles) <= set(ship_fire) <= set(recovery)
     assert set(culverin) - set(first) == {"defenses_v2"}
     assert set(obstacles) - set(culverin) == {"tower_obstacles"}
-    assert set(SIM_RULES) - set(obstacles) == {"ship_fire"}
+    assert set(ship_fire) - set(obstacles) == {"ship_fire"}
+    assert set(recovery) - set(ship_fire) == {"structure_recovery"}
 
 
 def test_the_ship_fire_migration_changes_only_the_rule_names():

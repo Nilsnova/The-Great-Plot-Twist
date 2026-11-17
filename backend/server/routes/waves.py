@@ -106,14 +106,17 @@ too_many_requests, 502 database_error, 503 database_unavailable.
 Used by: the bell, the wave bar and the Pirate Point battle of the game client (lane P).
 """
 
+from secrets import randbelow
 from typing import Annotated, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Query, Request
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt
 
+from server.errors import ApiError
 from server.flags import is_enabled
 from server.island import wall_repair, wave_rules, waves
+from server.island import wave_recovery as recovery
 from server.island.service import IslandCatalogueDep
 from server.island.wave_weather import wave_weather
 from server.island.waves import WaveStart
@@ -142,18 +145,22 @@ class StartRequest(BaseModel):
 
     where: str = Field(pattern=WHERE_PATTERN)
     actionUid: str = Field(pattern=ACTION_UID_PATTERN)
+    waveProtocol: StrictInt = Field(default=1, ge=1, le=2)
 
 
 class JoinRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     waveId: UUID
+    waveProtocol: StrictInt = Field(default=1, ge=1, le=2)
 
 
 class FinishRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     waveId: UUID
+    waveProtocol: StrictInt = Field(default=1, ge=1, le=2)
+    checkpoint: recovery.RecoveryCheckpoint | None = None
     survived: StrictBool
     shipsSunk: StrictInt = Field(ge=0, le=MAX_SHIPS_SUNK)
     # v3 waves: the treasure galleon sunk, a boss finisher won (paid only where the wave allows it).
@@ -195,10 +202,29 @@ class WaveResponse(BaseModel):
     weather: WeatherOut
     flagship: bool
     boss: bool
+    recoveryVersion: StrictInt = 0
+    waveProtocol: StrictInt = 1
+    initialSnapshot: dict | None = None
+    participantToken: UUID | None = None
+    lastActorCounter: StrictInt | None = Field(default=None, ge=0)
     # D039: {wall spot: health percent} the wave's walls start with; null on Pirate Point.
     walls: dict[str, int] | None = None
     # The simulation rules this wave keeps (SIM_RULES); null when it keeps none.
     rules: list[str] | None = None
+
+
+class RecoveryFinishResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    waveId: UUID
+    islandEpoch: UUID
+    closedAt: str
+    closedHp: dict[str, StrictInt]
+    checkpointUid: str | None
+    throughTick: StrictInt
+    inputHeadSeq: StrictInt
+    lastRepairSeq: StrictInt
+    basisRepairSeq: dict[str, StrictInt]
 
 
 class FinishResponse(BaseModel):
@@ -207,6 +233,7 @@ class FinishResponse(BaseModel):
     waveBest: int
     flags: int
     boss: bool
+    recovery: RecoveryFinishResponse | None = None
 
 
 async def start_walls(
@@ -235,9 +262,23 @@ def wave_out(
         ),
         flagship=wave.flagship,
         boss=wave.boss,
+        recoveryVersion=wave.recovery_version,
+        waveProtocol=wave.wave_protocol,
+        initialSnapshot=wave.initial_snapshot,
+        participantToken=wave.participant_token,
+        lastActorCounter=wave.last_actor_counter,
         walls=walls,
         rules=rules,
     )
+
+
+def require_protocol2(wave: WaveStart, protocol: int) -> None:
+    if wave.recovery_version == 1 and protocol < 2:
+        raise ApiError(
+            409,
+            "client_update_required",
+            "Reload to join this wave. It needs the recovery update.",
+        )
 
 
 @router.post("/waves/start", response_model_exclude_none=True)
@@ -257,7 +298,36 @@ async def post_start(
     weather = await wave_weather(
         catalogue, source, state_rules, request.app.state.lock_weather, area
     )
-    started = await waves.start(admin, catalogue, weather, player.id, body.where, body.actionUid)
+    place, owner = await waves.find_place(
+        admin, catalogue, player.id, body.where, members_only=True
+    )
+    seed = randbelow(waves.SEED_LIMIT)
+    admit_v1 = is_enabled("structure_recovery", settings.flags)
+    template = None
+    if owner is not None and body.waveProtocol == 2 and admit_v1:
+        island = await recovery.read_owner_island(admin, owner)
+        template = await recovery.build_snapshot_template(
+            admin,
+            catalogue,
+            island,
+            weather,
+            seed,
+            wave_rules.wanted_rules(settings),
+        )
+    started = await waves.start_protocol2(
+        admin,
+        catalogue,
+        weather,
+        player.id,
+        body.where,
+        body.actionUid,
+        template,
+        wave_rules.wanted_rules(settings),
+        admit_v1,
+        protocol=body.waveProtocol,
+        resolved=(place, owner),
+        make_seed=lambda _limit: seed,
+    )
     walls = await start_walls(admin, settings, started)
     return wave_out(started, walls, await wave_rules.rules_for_wave(admin, settings, started))
 
@@ -272,7 +342,10 @@ async def post_join(
     request: Request,
 ) -> WaveResponse:
     request.app.state.wave_budget.spend(player.id)
-    joined = await waves.join(admin, catalogue, player.id, body.waveId)
+    joined = await waves.join_protocol2(
+        admin, catalogue, player.id, body.waveId, protocol=body.waveProtocol
+    )
+    require_protocol2(joined, body.waveProtocol)
     walls = await start_walls(admin, settings, joined)
     return wave_out(joined, walls, await wave_rules.rules_for_wave(admin, settings, joined))
 
@@ -285,16 +358,20 @@ async def get_current(
     admin: AdminDep,
     settings: SettingsDep,
     request: Request,
+    wave_protocol: Annotated[int, Query(alias="waveProtocol", ge=1, le=2)] = 1,
 ) -> WaveResponse | None:
     request.app.state.wave_read_budget.spend(player.id)
-    running = await waves.current(admin, catalogue, player.id, where)
+    running = await waves.current_protocol2(
+        admin, catalogue, player.id, where, protocol=wave_protocol
+    )
     if running is None:
         return None
+    require_protocol2(running, wave_protocol)
     walls = await start_walls(admin, settings, running)
     return wave_out(running, walls, await wave_rules.rules_for_wave(admin, settings, running))
 
 
-@router.post("/waves/finish")
+@router.post("/waves/finish", response_model_exclude_none=True)
 async def post_finish(
     body: FinishRequest,
     player: IslandPlayerDep,
@@ -304,6 +381,35 @@ async def post_finish(
     request: Request,
 ) -> FinishResponse:
     request.app.state.wave_budget.spend(player.id)
+    if body.checkpoint is not None:
+        if body.waveProtocol != 2:
+            raise ApiError(
+                409,
+                "client_update_required",
+                "A recovery checkpoint needs the protocol-2 client.",
+            )
+        reply = await waves.finish_protocol2(
+            admin,
+            catalogue,
+            player.id,
+            body.waveId,
+            body.survived,
+            body.shipsSunk,
+            sorted(set(body.bonuses or [])),
+            rescued=body.rescued and is_enabled("rescue", settings.flags),
+            checkpoint=body.checkpoint.model_dump(mode="json", by_alias=True),
+        )
+        recovery_state = reply.get("recovery")
+        if not isinstance(recovery_state, dict):
+            raise ApiError(502, "database_error", "The recovery finish answer could not be read.")
+        return FinishResponse(
+            loot=reply["loot"],
+            coins=reply["balance"],
+            waveBest=reply["waveBest"],
+            flags=reply["flags"],
+            boss=reply["boss"],
+            recovery=recovery_state,
+        )
     finished = await waves.finish(
         admin,
         catalogue,

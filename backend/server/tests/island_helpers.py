@@ -237,6 +237,8 @@ class FakeIslandDatabase:
         self.ledger_refs: set[tuple[str, str]] = set()
         self.skill_refs: set[str] = set()
         self.paid_replies: dict[str, dict | httpx.Response] = {}
+        self.recovery_state_reply: dict | httpx.Response = {"status": "missing"}
+        self.recovery_policy_version = 0
         # The island arsenal (T40): the answer of each arsenal_* function.
         self.arsenal_replies: dict[str, dict | httpx.Response] = {}
         self.point_buildings: list[dict] = []
@@ -269,11 +271,15 @@ class FakeIslandDatabase:
             "GET /islet_buildings": self.read_buildings,
             "POST /rpc/islet_build": lambda _: self.answer(self.build_reply),
             "GET /islands": self.read_island,
+            "GET /island_recovery_state": self.read_recovery_state,
             "GET /profiles": self.read_name,
             "POST /rpc/wave_start": lambda _: self.answer(self.start_reply),
+            "POST /rpc/recovery_wave_start": self.recovery_start,
             "POST /rpc/wave_finish": lambda _: self.answer(self.finish_reply),
             "POST /rpc/wave_join": lambda _: self.answer(self.join_reply),
+            "POST /rpc/recovery_wave_join": self.recovery_join,
             "POST /rpc/wave_current": lambda _: httpx.Response(200, json=self.current_reply),
+            "POST /rpc/recovery_wave_current": self.recovery_current,
             "POST /rpc/wave_revive": lambda _: self.answer(self.revive_reply),
             "GET /wallet_transactions": self.read_ledger,
             "GET /captain_skill_learns": lambda request: httpx.Response(
@@ -314,6 +320,9 @@ class FakeIslandDatabase:
         handlers["POST /rpc/island_walls_record"] = lambda request: self.answer(
             self.paid_replies.get("island_walls_record", {"status": "recorded"})
         )
+        handlers["POST /rpc/structure_recovery_read_state"] = lambda request: self.answer(
+            self.recovery_state_reply
+        )
         handlers["POST /rpc/island_demolish"] = lambda request: self.answer(
             self.paid_replies.get("island_demolish", DEMOLISHED)
         )
@@ -331,6 +340,50 @@ class FakeIslandDatabase:
     @staticmethod
     def answer(reply: dict | httpx.Response) -> httpx.Response:
         return reply if isinstance(reply, httpx.Response) else httpx.Response(200, json=reply)
+
+    def recovery_start(self, _request: httpx.Request) -> httpx.Response:
+        reply = self.start_reply
+        if isinstance(reply, httpx.Response) or reply.get("status") == "refused":
+            return self.answer(reply)
+        return self.answer(
+            {
+                **reply,
+                "recoveryVersion": 0,
+                "waveProtocol": 1,
+                "initialSnapshot": None,
+                "participantToken": None,
+                "lastActorCounter": None,
+            }
+        )
+
+    def recovery_join(self, _request: httpx.Request) -> httpx.Response:
+        reply = self.join_reply
+        if isinstance(reply, httpx.Response) or reply.get("status") == "refused":
+            return self.answer(reply)
+        return self.answer(
+            {
+                **reply,
+                "recoveryVersion": 0,
+                "waveProtocol": 1,
+                "initialSnapshot": None,
+                "participantToken": None,
+                "lastActorCounter": None,
+            }
+        )
+
+    def recovery_current(self, _request: httpx.Request) -> httpx.Response:
+        if self.current_reply is None:
+            return httpx.Response(200, json={"status": "empty"})
+        return self.answer(
+            {
+                **self.current_reply,
+                "recoveryVersion": 0,
+                "waveProtocol": 1,
+                "initialSnapshot": None,
+                "participantToken": None,
+                "lastActorCounter": None,
+            }
+        )
 
     def open_island(self, request: httpx.Request) -> httpx.Response:
         if self.open_replies:
@@ -363,6 +416,13 @@ class FakeIslandDatabase:
         return httpx.Response(200, json=[{"id": 1}] if key in self.ledger_refs else [])
 
     def read_island(self, request: httpx.Request) -> httpx.Response:
+        if (
+            request.url.params.get("select") == "player_id,code,wave_best,flags"
+            and "player_id" in request.url.params
+        ):
+            player = request.url.params.get("player_id", "").removeprefix("eq.")
+            rows = [row for row in self.islands.values() if row.get("player_id") == player]
+            return httpx.Response(200, json=rows[:1])
         if request.url.params.get("player_id", "").startswith("in."):
             ids = request.url.params["player_id"].removeprefix("in.(").removesuffix(")").split(",")
             rows = [{"player_id": who, "captain_role": self.captain_roles.get(who)} for who in ids]
@@ -372,6 +432,17 @@ class FakeIslandDatabase:
         code = request.url.params["code"].removeprefix("eq.")
         row = self.islands.get(code)
         return httpx.Response(200, json=[row] if row else [])
+
+    def read_recovery_state(self, request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            json=[
+                {
+                    "recovery_version": self.recovery_policy_version,
+                    "wave_protocol": 2 if self.recovery_policy_version == 1 else 1,
+                }
+            ],
+        )
 
     def keep_wave_rules(self, request: httpx.Request) -> httpx.Response:
         """wave_rules_keep(): the first call for a wave keeps its rules; every call answers them."""
@@ -409,7 +480,43 @@ class FakeIslandDatabase:
 
     def calls(self, name: str) -> list[dict]:
         """The JSON arguments of every call to the database function `name`."""
-        return [json.loads(r.content) for r in self.requests if r.url.path.endswith(f"/rpc/{name}")]
+        negotiated = {
+            "wave_start": "recovery_wave_start",
+            "wave_join": "recovery_wave_join",
+            "wave_current": "recovery_wave_current",
+        }.get(name, name)
+        rows = [
+            json.loads(r.content)
+            for r in self.requests
+            if r.url.path.endswith(f"/rpc/{negotiated}")
+        ]
+        # Existing route tests assert the unchanged legacy arguments; capability plumbing is
+        # covered separately by assertions on the negotiated RPC request.
+        if name == "wave_start":
+            legacy = {
+                "p_player_id",
+                "p_action_uid",
+                "p_place",
+                "p_island_owner",
+                "p_seed",
+                "p_countdown_seconds",
+                "p_minimum_seconds",
+                "p_maximum_seconds",
+                "p_highest_wave",
+                "p_weather_kind",
+                "p_weather_ships",
+                "p_weather_fog",
+            }
+            return [{key: value for key, value in row.items() if key in legacy} for row in rows]
+        if name == "wave_join":
+            return [
+                {key: value for key, value in row.items() if key in {"p_player_id", "p_wave_id"}}
+                for row in rows
+            ]
+        if name == "wave_current":
+            legacy = {"p_place", "p_island_owner"}
+            return [{key: value for key, value in row.items() if key in legacy} for row in rows]
+        return rows
 
     def paths(self) -> list[str]:
         return [f"{r.method} {r.url.path.removeprefix('/rest/v1')}" for r in self.requests]

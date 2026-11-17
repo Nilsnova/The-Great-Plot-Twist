@@ -67,6 +67,8 @@ def test_the_bell_on_your_own_island_answers_the_wave_of_the_contract():
         "weather": {"kind": "calm", "label": "Calm sea", "ships": 1.0, "fog": 0.0},
         "flagship": False,
         "boss": False,
+        "recoveryVersion": 0,
+        "waveProtocol": 1,
     }
 
 
@@ -92,6 +94,21 @@ def test_the_own_island_is_opened_and_its_owner_sent_with_the_numbers_of_the_fil
         "p_weather_ships": 1.0,
         "p_weather_fog": 0.0,
     }
+
+
+def test_start_negotiates_the_explicit_incoming_protocol_atomically():
+    world = World()
+
+    response = world.client.post(
+        "/api/waves/start",
+        headers=PLAYER,
+        json={"where": "own", "actionUid": "bell-0001"},
+    )
+
+    assert response.status_code == 200
+    (call,) = world.database.calls("recovery_wave_start")
+    assert call["p_protocol"] == 1
+    assert call["p_admit_v1"] is False
 
 
 @pytest.mark.parametrize(
