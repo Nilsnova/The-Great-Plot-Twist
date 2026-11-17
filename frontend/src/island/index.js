@@ -84,7 +84,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   search = globalThis.location?.search ?? '', focus = () => {}, resetInput = () => {}, reducedMotion = () => false,
   preferences = () => ({}), storage = safeLocal(), visitStorage = undefined, loadCutscenes = () => import('../cutscenes/player.js'),
   onCoins = () => {}, onCaptain = () => {}, menu = addMenuExtras, settings = addSettingsSection, now, setTimer, clearTimer, openHarborStall = () => {},
-  travel = () => travelAllowed({islandsMode: mode}),
+  travel = () => travelAllowed({islandsMode: mode}), villageCamera = () => {},
   // D039 (proposed): whether /api/config says the flag wall_recovery is on (lasting wall damage, Repair/Rebuild).
   wallRecovery = () => false, structureRecoveryOn = () => false, arsenalOn = () => false,
   // T43 (D048 proposed): whether /api/config says the flag defenses_v2 is on (a tower spot then offers the culverin).
@@ -204,7 +204,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const moving = createMoveMode({api, render: model => { moveBar.render(model); villageBar.render(village.active && !model); }, preview: cell => world?.preview(cell),
     spots: () => target()?.spots ?? [], code: () => (visiting ? visiting.code : null), onMoved: (answer, spotId) => void moved(answer, spotId)});
   const moveBar = createMoveBar({container, handlers: {nudge: (dx, dz) => moving.nudge(dx, dz), place: () => void moving.confirm(), cancel: () => moving.cancel()}});
-  const villageBar = createVillageBar({container, onLeave: () => village.leave()});
+  const villageBar = createVillageBar({container, onLeave: () => village.leave(), onCamera: villageCamera});
   const village = createVillageMode({
     context: () => ({ready: !!own?.code && !!world, own: !visiting && !visitCode, code: own?.code,
       // A successful start/join awaits preparation before flow.current is set.

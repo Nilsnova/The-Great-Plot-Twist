@@ -25,6 +25,9 @@ export function createCamera(input) {
   camera.userData.viewHeight = 22; // world units tall at zoom 1 (at least 16 wide on a phone)
   let exploring = false, targetZoom = 1, placeId = 'lighthouse_isle', reduce = false, zoom = 1, village = false, villageViewport = null;
   const follow = new THREE.Vector2(camera.position.x, camera.position.y);
+  let villageScale = 1, villageX = 0, villageY = 0;
+  const fitVillage = () => { villageScale = 1; villageX = villageY = 0; };
+  const villageBase = () => villageFrame(camera, placeId, villageViewport);
   function place(x, y) { follow.set(x, y); camera.position.set(x, y, 100); }
   function applyZoom(value) {
     zoom = value;
@@ -32,24 +35,48 @@ export function createCamera(input) {
   }
   return {camera, get yaw() { return 0; },
     setPlace(id, player) {
-      placeId = id; village = false; targetZoom = 1; const point = projectPoint(player.x, player.z);
+      placeId = id; village = false; fitVillage(); targetZoom = 1; const point = projectPoint(player.x, player.z);
       place(point.x, point.y + 3.1); zoom = 1;
       camera.zoom = 1; camera.updateProjectionMatrix();
     },
     pause() { exploring = false; },
     overview() { exploring = false; targetZoom = 1; applyZoom(1); },
     start(reducedMotion = false) { exploring = true; reduce = reducedMotion === true; },
-    setVillageView(active, viewport = null) { village = active === true; villageViewport = viewport; },
+    setVillageView(active, viewport = null) {
+      if (active === true && !village) fitVillage();
+      village = active === true; villageViewport = viewport;
+    },
+    villageControl(action) {
+      const frame = exploring && village && villageBase();
+      if (!frame) return;
+      if (action === 'fit') { fitVillage(); return; }
+      const factor = action === 'in' ? 1.4 : action === 'out' ? 1 / 1.4 : 1;
+      villageScale = Math.max(1, Math.min(2 / frame.zoom, villageScale * factor));
+      if (villageScale === 1) villageX = villageY = 0;
+    },
+    panVillage(dx, dy, width, height) {
+      const frame = exploring && village && villageBase(), land = surfaces[placeId];
+      if (!frame || villageScale <= 1 || ![dx, dy, width, height].every(Number.isFinite) || width <= 0 || height <= 0) return;
+      const at = Math.min(2, frame.zoom * villageScale);
+      villageX = THREE.MathUtils.clamp(villageX - dx * (camera.right - camera.left) / (width * at), -land.rx, land.rx);
+      villageY = THREE.MathUtils.clamp(villageY + dy * (camera.top - camera.bottom) / (height * at), -land.rz * .72, land.rz * .72);
+    },
     update(delta, player) {
       if (!exploring || !Number.isFinite(delta) || delta <= 0) return;
       const dt = Math.min(delta, .1);
       const tour = camera.userData.tour, touring = Number.isFinite(tour?.x) && Number.isFinite(tour?.z);
       const frame = village && !touring && !Number.isFinite(camera.userData.battleZoom) ? villageFrame(camera, placeId, villageViewport) : null;
       if (frame) {
+        const baseZoom = frame.zoom;
+        frame.zoom = Math.min(2, frame.zoom * villageScale);
+        // Keep the working center in the measured free area as captions and bars reflow.
+        frame.x = villageX;
+        frame.y = 3 + villageY + (frame.y - 3) * baseZoom / frame.zoom;
         const blend = reduce ? 1 : 1 - Math.exp(-dt * 5);
-        place(follow.x + (frame.x - follow.x) * blend, follow.y + (frame.y - follow.y) * blend);
-        applyZoom(zoom + (frame.zoom - zoom) * blend);
-        return; // Preserve the player's exploration zoom; a fit view owns no movement input.
+        if (reduce) place(frame.x, frame.y);
+        else place(follow.x + (frame.x - follow.x) * blend, follow.y + (frame.y - follow.y) * blend);
+        applyZoom(reduce ? frame.zoom : zoom + (frame.zoom - zoom) * blend);
+        return; // Village controls never alter the player's exploration zoom.
       }
       const wheel = input.pointer.wheel;
       if (Number.isFinite(wheel) && wheel) targetZoom = Math.max(1, Math.min(2, targetZoom - wheel / 1000));

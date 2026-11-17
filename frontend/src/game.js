@@ -57,6 +57,7 @@ import { createCharacter } from './player/character.js';
 import { POSE_IDS } from './pirates/poses.js';
 import { createController } from './player/controller.js';
 import { createCamera } from './player/camera.js';
+import {createVillageNavigation} from './player/village-navigation.js';
 import { createHud } from './ui/hud.js';
 import {startDiagnostics,noteUiAction,noteAdapterView,disposeDiagnostics} from './diagnostics/runtime.js';
 import {createNarrator} from './narrator/index.js';
@@ -235,7 +236,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
         // The Harbor building (GAME-V3.md §4) opens the same stalls as the old Harbor overview.
         openHarborStall:id=>void(id==='weather'?harbor.openWeather():id==='market'?openMarket():id==='match'?sportsUi.open().catch(()=>{}):null),
         // The visit chip: the old "Visiting … · Sail home" only where travel applies (src/island/one-island.js).
-        travel:()=>travelOpen(),
+        travel:()=>travelOpen(),villageCamera:action=>view.villageControl(action),
         // D039 (proposed): lasting wall damage and the paid Repair/Rebuild, only while the server's flag is on.
         // In fake mode (?islands=fake) the fake server's own flags decide (?fakeflags=wall_recovery, fake-api.js).
         wallRecovery:()=>{if(fakeTransport)return fakeTransport.flags.wall_recovery===true;
@@ -271,14 +272,17 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     return wavesLoad;
   }
   const projected=new THREE.Vector3(),canvas=graphics.renderer.domElement;
+  const villageNavigation=createVillageNavigation({canvas, view, enabled:()=>active&&!disposed&&island?.managing===true&&!island?.moving&&!outsideBlocked()});
   let villageLayoutKey='',villageViewport=null,villageQuests=null,villageBar=null,villagePlacing=null;
   function updateVillageView(){
+    villageNavigation.refresh();
     const managing=island?.managing===true&&!inBattle;
     if(!managing){villageLayoutKey='';villageBar=null;view.setVillageView(false);return;}
     const width=parseFloat(canvas.style.width)||window.innerWidth,height=parseFloat(canvas.style.height)||window.innerHeight;
     villageQuests??=container.querySelector('.quest-strip');
     const caption=document.documentElement.style.getPropertyValue('--narrator-card-height');
     const placing=!!island.moving;
+    if(placing&&villagePlacing!==placing)view.villageControl('fit');
     if(!villageBar?.isConnected||villagePlacing!==placing){
       villageBar=container.querySelector(placing?'.island-move-bar:not([hidden])':'.island-village-mode:not([hidden])');villagePlacing=placing;
     }
@@ -364,7 +368,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   function dispose() {
     if(disposed)return;disposed=true;tutorials?.dispose();narrator.dispose();container.removeEventListener('close',panelClosed,true);classDemo?.dispose();classDemo=null;waves?.dispose();waves=null;island?.dispose();island=null;void pirates?.then(harness=>harness?.dispose());
     harbor?.dispose();mapTouch?.dispose();touch.dispose();gamepad.dispose();marketUi?.dispose();sportsUi.dispose();stopLiveWeather();stopPreferences();stopMotion();stop();stopView();stopListening();for(const stopOne of stopScale)stopOne?.(); stopArrivals(); stopVisitNamed(); stopPlots(); world.dispose(); chart.dispose(); sailing.dispose(); hud.dispose(); input.dispose();
-    window.removeEventListener('resize', resize); createLifetime(scene, art)();
+    villageNavigation.dispose();window.removeEventListener('resize', resize); createLifetime(scene, art)();
     setMenuTravel(null);disposeDiagnostics();character.dispose();graphics.renderer.dispose();graphics.renderer.domElement.remove(); delete window.__island;
   }
   if (import.meta.hot) import.meta.hot.dispose(dispose);

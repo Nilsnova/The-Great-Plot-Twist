@@ -93,3 +93,31 @@ describe('village camera overview', () => {
     expect(villageFrame(view.camera, 'unknown')).toBeNull();
   });
 });
+
+describe('working village zoom and pan', () => {
+  it.each([[1280,720],[375,812]])('zooms, pans within land bounds and returns to exact Fit at %s×%s', (width,height) => {
+    const {view} = viewAt(width,height); view.setVillageView(true,{height,top:150,bottom:220}); view.update(.05,player);
+    const fit = {zoom: view.camera.zoom, position: view.camera.position.clone()};
+    view.villageControl('in'); view.update(.05,player); expect(view.camera.zoom).toBeCloseTo(fit.zoom * 1.4);
+    view.panVillage(-100000,100000,width,height); view.update(.05,player);
+    expect(view.camera.position.x).toBe(20); expect(view.camera.position.y).toBeLessThan(3 + 22 * .72 + 1);
+    for (let i = 0; i < 20; i++) view.villageControl('in');
+    view.update(.05,player); expect(view.camera.zoom).toBe(2);
+    view.villageControl('fit'); view.update(.05,player);
+    expect(view.camera.zoom).toBe(fit.zoom); expect(view.camera.position).toEqual(fit.position);
+    view.villageControl('out'); view.panVillage(300,200,width,height); view.update(.05,player);
+    expect(view.camera.zoom).toBe(fit.zoom); expect(view.camera.position).toEqual(fit.position);
+  });
+  it('preserves exploration zoom, safe-area centering and valid state across travel and resize', () => {
+    const {view,input} = viewAt(); input.pointer.wheel = -400; view.update(.05,player); input.pointer.wheel = 0;
+    view.setVillageView(true,{height:720,top:90,bottom:200}); view.villageControl('in'); view.villageControl('in'); view.update(.05,player);
+    view.panVillage(70,40,1280,720); view.update(.05,player); const x = view.camera.position.x;
+    view.setVillageView(true,{height:720,top:90,bottom:300}); view.update(.05,player);
+    expect(view.camera.position.x).toBe(x); expect(Number.isFinite(view.camera.position.y)).toBe(true);
+    view.panVillage(NaN,10,0,720); view.update(.05,player); expect(view.camera.position.x).toBe(x);
+    view.setVillageView(false); view.update(.05,player); expect(view.camera.zoom).toBe(1.4);
+    view.setVillageView(true); view.update(.05,player); expect(view.camera.position.x).toBe(0);
+    view.setPlace('home_islet',player); view.setVillageView(true); view.update(.05,player);
+    expect(view.camera.zoom).toBe(villageFrame(view.camera,'home_islet').zoom);
+  });
+});
