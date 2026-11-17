@@ -6,6 +6,7 @@ import * as THREE from 'three';
 import {paint} from './paint.js';
 import {islandFrame, framesFor} from './registry.js';
 import {NO_OUTLINE} from './island.js';
+import {acquireRasterSheet, getRasterFrame, normalizeRasterFrame} from './village-raster.js';
 
 const CAP = {high: 4, low: 2};
 // Logical px per screen height at zoom 1 (the camera frames about 20 units = 320 logical px).
@@ -35,6 +36,7 @@ export function smoothTexture(image) {
   texture.colorSpace = THREE.SRGBColorSpace; texture.premultiplyAlpha = true;
   texture.magFilter = THREE.LinearFilter; texture.minFilter = THREE.LinearMipmapLinearFilter;
   texture.generateMipmaps = true; texture.anisotropy = 4;
+  if (image.villageArt) texture.userData.villageArt = image.villageArt;
   return texture;
 }
 // Materials for premultiplied textures: the blend is ONE / ONE_MINUS_SRC_ALPHA (three's premultiplied
@@ -55,9 +57,32 @@ export function spriteMaterial(texture) {
 }
 const options = (name, frame) => ({outline: NO_OUTLINE.has(name) ? 0 : frame?.[4]?.outline ?? .9});
 /** Paints one frame (an island frame synchronously, or a frame already resolved) to a canvas. */
-export function frameCanvas(name, density = screenDensity(), frame = islandFrame(name)) {
-  if (!frame) return null;
-  return paint(frame[3], [frame[0], frame[1]], density, options(name, frame));
+export function paintId(name, density = screenDensity(), frame = islandFrame(name), image = null) {
+  const raster = getRasterFrame(name); let canvas;
+  if (raster && image) canvas = normalizeRasterFrame(image, raster, density);
+  else {
+    if (!frame) return null;
+    canvas = paint(frame[3], [frame[0], frame[1]], density, options(name, frame));
+    // Synchronous stand-ins/cold-screen art keep procedural art until world preparation is invoked.
+    if (raster) canvas = normalizeRasterFrame(canvas, {rect: [0, 0, canvas.width, canvas.height], logical: raster.logical,
+      sourceFoot: [canvas.width / 2, canvas.height * (1 - frame[2] / frame[1])]}, density);
+  }
+  if (raster) canvas.villageArt = {id: name, file: raster.sheet.file, logical: [...raster.logical], source: image ? 'png' : 'unprepared-placeholder'};
+  return canvas;
+}
+export const frameCanvas = paintId;
+/** Copy each decoded sheet into owned canvases before releasing it; never acquire all families at once. */
+export async function paintIds(ids, density, visit, {frames = null, acquire = acquireRasterSheet} = {}) {
+  frames ??= await framesFor(ids); const groups = new Map();
+  for (const id of ids) {
+    const raster = getRasterFrame(id);
+    if (!raster) { visit(id, paintId(id, density, frames[id])); continue; }
+    const key = raster.sheet.file; if (!groups.has(key)) groups.set(key, {sheet: raster.sheet, ids: []}); groups.get(key).ids.push(id);
+  }
+  for (const {sheet, ids: names} of groups.values()) {
+    const lease = await acquire(sheet);
+    try { for (const id of names) visit(id, paintId(id, density, frames[id], lease.image)); } finally { lease.release(); }
+  }
 }
 
 /**
@@ -84,7 +109,8 @@ export function lazyMaterials(names, density = screenDensity()) {
  */
 export async function cartoonAtlas(ids, {width = 640, pad = 3, quality = 'high', density = screenDensity(quality), extra = []} = {}) {
   const frames = await framesFor(ids);
-  const items = [...ids.filter(id => frames[id]).map(id => [id, frames[id][0], frames[id][1], frames[id][2]]), ...extra.map(([id, w, h]) => [id, w, h, 0])];
+  const metrics = id => getRasterFrame(id)?.logical ?? frames[id];
+  const items = [...ids.filter(id => metrics(id)).map(id => [id, ...metrics(id).slice(0, 3)]), ...extra.map(([id, w, h]) => [id, w, h, 0])];
   items.sort((a, b) => b[2] - a[2]);
   const rects = {};
   let x = pad, y = pad, shelf = 0;
@@ -95,9 +121,12 @@ export async function cartoonAtlas(ids, {width = 640, pad = 3, quality = 'high',
   const height = y + shelf + pad, scale = fitDensity(width * height, density, ATLAS_BUDGET[quality] ?? ATLAS_BUDGET.high);
   const image = document.createElement('canvas'); image.width = Math.ceil(width * scale); image.height = Math.ceil(height * scale);
   const context = image.getContext('2d');
-  for (const id of ids) {
-    const frame = frames[id], r = rects[id]; if (!frame) continue;
-    context.drawImage(paint(frame[3], [frame[0], frame[1]], scale, options(id, frame)), Math.round(r.x * scale), Math.round(r.y * scale));
-  }
-  return {image, width, height, density: scale, rects, missing: ids.filter(id => !frames[id])};
+  const sources = [];
+  await paintIds(ids, scale, (id, canvas) => {
+    const r = rects[id]; if (!r || !canvas) return;
+    context.drawImage(canvas, Math.round(r.x * scale), Math.round(r.y * scale));
+    if (canvas.villageArt) sources.push(canvas.villageArt);
+  }, {frames});
+  image.villageArt = sources;
+  return {image, width, height, density: scale, rects, missing: ids.filter(id => !metrics(id))};
 }
