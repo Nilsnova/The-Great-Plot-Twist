@@ -14,7 +14,7 @@ const islands = [];
 afterEach(() => { for (const island of islands.splice(0)) island.dispose(); });
 function harness() {
   const listeners = new Map(), base = createFakeIslandTransport();
-  let readWave = () => Promise.resolve({ok: true, data: INFO}), failIsland = false;
+  let readWave = () => Promise.resolve({ok: true, data: INFO}), failIsland = false, failVisit = false;
   const on = (name, fn) => {
     if (!listeners.has(name)) listeners.set(name, new Set());
     listeners.get(name).add(fn); return () => listeners.get(name).delete(fn);
@@ -22,10 +22,12 @@ function harness() {
   const emit = event => { for (const fn of listeners.get(event.type) ?? []) fn(event); };
   const island = createIsland({container: {}, emit, on, storage: null, visitStorage: null,
     transport: {...base, get: path => path.startsWith('/api/waves/current?') ? readWave()
+      : path.startsWith('/api/island/visit/') && failVisit ? {ok: false, status: 404, code: 'no_such_island'}
       : path === '/api/island' && failIsland ? {ok: false, status: 503, code: 'unavailable'} : base.get(path)},
     menu: () => () => {}, settings: () => () => {}});
   islands.push(island);
   return {island, travel: () => emit({type: 'travel', to: 'saltreach_harbor'}), failIsland: () => { failIsland = true; },
+    failVisit: () => { failVisit = true; },
     defer() {
       let resolve, started;
       const pending = new Promise(done => { resolve = done; });
@@ -75,6 +77,15 @@ describe('actual returned-island current-wave authority', () => {
     expect(h.island.coreContext.rejoin).toEqual(proof);
     expect(proof.waveId).toBe('newer-wave');
     expect(h.island.flow.current.wave.waveId).toBe('newer-wave');
+  });
+
+  it('clears a joined friend wave when a failed visit reload falls back to an empty own island', async () => {
+    const h = harness(); h.island.visit('ISLE-FR3ND'); await h.island.load();
+    await h.island.flow.ring('ISLE-FR3ND');
+    expect(h.island.flow.current).toMatchObject({where: 'ISLE-FR3ND', joined: true});
+    h.failVisit(); const reply = h.defer(), loading = h.island.load(); await reply.asked;
+    reply.resolve({ok: true, data: null}); await loading;
+    expect(h.island.visiting).toBeNull(); expect(h.island.flow.current).toBeNull();
   });
 
   it.each([{ok: true, data: null}, {ok: false, status: 503, code: 'unavailable'},

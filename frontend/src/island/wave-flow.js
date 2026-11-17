@@ -19,7 +19,7 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
   let busy = false, disposed = false;
   let contextWhere = null, contextGeneration = 0, lookupGeneration = 0;
   // Reads may overlap preparation. Target/reset changes cancel admission; a join also keeps its wave ID.
-  // a newer read, accepted begin or clear invalidates older read responses before they mutate current.
+  // A newer read, accepted begin or clear invalidates older read responses before they mutate current.
   const contextFor = where => {
     if (where !== contextWhere) { contextWhere = where; contextGeneration++; lookupGeneration++; }
     return contextGeneration;
@@ -120,7 +120,9 @@ export function createWaveFlow({api, emit, notify = () => {}, banner = () => {},
     if (disposed || generation !== contextGeneration || lookup !== lookupGeneration || !answer.ok) return answer;
     if (answer.data && current?.wave.waveId !== answer.data.waveId) {
       stopTimers(); current = {wave: answer.data, where, joined: false, finished: false, startAt: now()};
-    } else if (!answer.data && current && !current.joined) current = null;
+    } else if (!answer.data && current && (!current.joined || current.where !== where)) {
+      stopTimers(); current = null; banner(null);
+    }
     changed();
     return answer;
   }
