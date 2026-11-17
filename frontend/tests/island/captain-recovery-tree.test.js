@@ -8,7 +8,9 @@ it('switches a saved retired skill selection to a visible new-policy choice', as
   const result = await evaluate(async () => {
     const {skillsModel} = await window.g20Import('/src/island/card-model.js');
     const {drawSkills} = await window.g20Import('/src/island/skill-tree.js');
-    const model = skillsModel({skills: {known: ['quick_fix'], points: 2, role: 'engineer'}, wonWave: 10, picked: 'quick_fix', pickedRole: 'engineer'});
+    const input = {skills: {known: ['quick_fix'], points: 2, role: 'engineer'}, wonWave: 10, picked: 'quick_fix', pickedRole: 'engineer'};
+    const legacyModel = skillsModel({...input, recoveryVersion: 0});
+    const currentModel = skillsModel({...input, recoveryVersion: 1});
     const click = [];
     const kit = {
       line(className, text) {
@@ -18,11 +20,11 @@ it('switches a saved retired skill selection to a visible new-policy choice', as
         const element = document.createElement('button'); element.textContent = label; element.addEventListener('click', onClick); return element;
       },
     };
-    const legacy = drawSkills({...model, recoveryVersion: 0}, {learn: id => click.push(id)}, kit);
+    const legacy = drawSkills(legacyModel, {learn: id => click.push(id)}, kit);
     const legacyPicked = legacy.querySelector('.island-node.is-picked')?.dataset.skill;
     const legacyRoleLine = legacy.querySelector('.island-role-line')?.textContent;
     const legacyCapstone = legacy.querySelector('.island-role-capstone')?.textContent;
-    const current = drawSkills({...model, recoveryVersion: 1}, {learn: id => click.push(id)}, kit);
+    const current = drawSkills(currentModel, {learn: id => click.push(id)}, kit);
     const currentPicked = current.querySelector('.island-node.is-picked')?.dataset.skill;
     const currentDetail = current.querySelector('.island-skill-detail strong')?.textContent;
     const currentRoleLine = current.querySelector('.island-role-line')?.textContent;

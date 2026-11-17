@@ -216,6 +216,21 @@ describe('the campaign buildings (GAME-V3.md §4, §5)', () => {
     expect(late.branches[0].tiers[2].nodes.map(node => [node.id, node.state])).toEqual([['broadside', 'closed'], ['grapeshot', 'chosen']]);
     expect(late.branches[0].tiers[2].nodes[0].button).toMatchObject({disabled: true, reason: 'Not enough 🪙: you need 🪙 630 more.'});
   });
+  it('shows recovery-v1 Mason and Bastion wording only for the persisted new policy', () => {
+    const research = {done: ['wall'], tiers: {wall: {tier: 3, tier2: 'mason_drill', tier3: 'bastion'}}};
+    const campaign = atWave(25, {research});
+    const legacy = techModel({campaign, coins: 5000, recoveryVersion: 0});
+    const current = techModel({campaign, coins: 5000, recoveryVersion: 1});
+    const wall = model => model.branches.find(branch => branch.branch === 'wall');
+    const option = (model, tier, id) => wall(model).tiers[tier - 1].nodes.find(item => item.id === id);
+
+    expect(legacy.recoveryVersion).toBe(0);
+    expect(option(legacy, 2, 'mason_drill').line).toBe('Repairs on every wall go 50% faster.');
+    expect(option(legacy, 3, 'bastion').line).toBe('50% more strength, and it mends itself slowly.');
+    expect(current.recoveryVersion).toBe(1);
+    expect(option(current, 2, 'mason_drill').line).toBe('Automatic wall repair for this island runs 50% faster.');
+    expect(option(current, 3, 'bastion').line).toBe('Bastion adds 50% more HP and repairs it three times faster between waves when equipped.');
+  });
   it('a built tower shows its skills: locked, research first, then a free pick', () => {
     const built = {...tower(true), level: 2};
     expect(buildCardModel({spotId: 'cannon_1', slot: 'tower', spot: built, coins: 100, unlocks: wave5, campaign: atWave(5)}).skills)
