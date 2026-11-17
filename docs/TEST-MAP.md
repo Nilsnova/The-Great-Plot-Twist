@@ -289,3 +289,6 @@ Exact executed results and screenshots belong to [PR #192](https://github.com/Ni
 A listed check is not a claim that every run passed; an initial desktop timeout is
 recorded in the PR and must be resolved or remain explicit. No assertions or
 shared runner timeouts were weakened.
+The reservation follow-up also holds the accepted-start preparation read and
+checks exit before the bell promise resolves; pending/refused start and join
+requests block re-entry without automatically resuming management after failure.

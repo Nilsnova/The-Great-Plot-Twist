@@ -177,7 +177,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const villageBar = createVillageBar({container, onLeave: () => village.leave()});
   const village = createVillageMode({
     context: () => ({ready: !!own?.code && !!world, own: !visiting && !visitCode, code: own?.code,
-      reserved: !!flow.current || (battle && !waveOver)}),
+      // A successful start/join awaits preparation before flow.current is set.
+      reserved: flow.busy || !!flow.current || (battle && !waveOver)}),
     render: active => villageBar.render(active),
     onLeave: () => { moving.cancel(); ui.close(); openSpot = null; resetInput(); focus(); },
   });

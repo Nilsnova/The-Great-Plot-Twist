@@ -16,6 +16,11 @@ existing card and the captain does not walk. Other landmarks retain walk-up inpu
   permissions, building limits, phase guards and payment outcomes.
 - Entry requires a loaded own island and no accepted wave reservation. It does
   not add visitor rights or pause a server wave/countdown.
+- The first slice conservatively exits as soon as a start/join request is
+  outstanding (`flow.busy`), before an accepted reservation can wait for its
+  defended-island preparation read. Entry stays blocked throughout that gap.
+  A failed request leaves Explore active; returning to Village mode is an
+  explicit choice once no reservation is known. No payment is undone or added.
 - A visible Exit action returns to Explore. Escape first closes a card or cancels
   placement, then exits the mode. Existing committed purchases are never undone.
 - Travel, visit/game changes, reset and an accepted bell reservation exit the mode
@@ -47,6 +52,7 @@ COC-02/03/06 remain separate follow-ups. Ianno's T55–T59 draft work is unchang
 | Escape with a card or Move open | Close/cancel that layer, stay managing | Existing UI/Move lifecycle |
 | Escape with no card or Move | Exit, reset controls | Local mode lifecycle |
 | Visiting, island missing, or a reserved wave | Entry refused | Current island/phase context |
+| Outstanding start/join, including accepted but preparing | Exit; re-entry refused | Existing flow busy/current state |
 | Travel, visit, reset or accepted wave start | Exit and cancel unconfirmed placement | Existing context events |
 
 The `managing` getter is intentionally separate from the island's `active` overlay
@@ -73,6 +79,13 @@ a server operation that already committed on the original island.
    are labelled fake and do not claim live database or Safari verification.
 5. Root coordinates the full suite, build, budget, a11y and demo checks; this lane
    reports only its actually executed focused checks.
+
+The reservation regression holds the actual `prepare` read after a successful
+start response. Before `ringBell()` settles or `flow.current` is populated, it
+checks that management has left, placement is cancelled, the bar is hidden and
+both re-entry and remote-only picking are unavailable. Refused pending start and
+join requests have separate model/flow coverage; neither automatically resumes
+management after failure.
 
 ## Explain-back
 

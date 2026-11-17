@@ -1,5 +1,6 @@
 import {describe, expect, it, vi} from 'vitest';
 import {createVillageMode} from '../../src/island/village-mode.js';
+import {createWaveFlow} from '../../src/island/wave-flow.js';
 
 function setup(change = {}) {
   let value = {ready: true, own: true, code: 'ISLE-OWN', reserved: false, ...change};
@@ -34,5 +35,38 @@ describe('own-island village mode', () => {
     const {mode, onLeave} = setup(); mode.enter(); mode.dispose();
     expect(mode.active).toBe(false); expect(mode.enter()).toBe(false);
     expect(onLeave).toHaveBeenCalledTimes(1);
+  });
+  it('leaves before a pending start resolves and stays in Explore after refusal', async () => {
+    let resolveStart, flow;
+    const refused = {ok: false, status: 503, code: 'unavailable', message: 'Try again.'};
+    const startWave = vi.fn(() => new Promise(resolve => { resolveStart = resolve; }));
+    const onLeave = vi.fn(), mode = createVillageMode({onLeave,
+      context: () => ({ready: true, own: true, code: 'ISLE-OWN', reserved: flow.busy || !!flow.current})});
+    flow = createWaveFlow({api: {startWave}, emit: vi.fn(), onChange: () => mode.refresh()});
+    try {
+      mode.enter();
+      const pending = flow.ring();
+      expect(mode.active).toBe(false); expect(mode.enter()).toBe(false);
+      resolveStart(refused);
+      expect(await pending).toEqual(refused);
+      expect(mode.active).toBe(false); expect(onLeave).toHaveBeenCalledTimes(1);
+      expect(mode.enter()).toBe(true); // an explicit choice is needed after the failed request
+      expect(startWave).toHaveBeenCalledTimes(1);
+    } finally { flow.dispose(); mode.dispose(); }
+  });
+  it('does not reenter while joining a known reservation or automatically after a refused join', async () => {
+    let resolveJoin, flow, current = {waveId: 'held-wave', wave: 1};
+    const mode = createVillageMode({context: () => ({ready: true, own: true, code: 'ISLE-OWN', reserved: flow.busy || !!flow.current})});
+    flow = createWaveFlow({api: {currentWave: async () => ({ok: true, data: current}),
+      joinWave: () => new Promise(resolve => { resolveJoin = resolve; })}, emit: vi.fn(), onChange: () => mode.refresh()});
+    try {
+      mode.enter(); await flow.look();
+      const pending = flow.join();
+      expect(flow.busy).toBe(true); expect(mode.enter()).toBe(false);
+      resolveJoin({ok: false, status: 503, code: 'unavailable'}); await pending;
+      expect(mode.active).toBe(false); expect(mode.enter()).toBe(false);
+      current = null; await flow.look();
+      expect(mode.active).toBe(false); expect(mode.enter()).toBe(true);
+    } finally { flow.dispose(); mode.dispose(); }
   });
 });

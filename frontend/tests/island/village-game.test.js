@@ -70,8 +70,27 @@ it.each([false, true])('explicit management selects remotely, holds captain inpu
     await page.keyboard.press('Escape');
     expect(await page.evaluate(() => window.__island.island.managing)).toBe(false);
     await manage(page);
-    await page.evaluate(() => window.__island.island.ringBell());
-    await page.waitForFunction(() => !window.__island.island.managing);
+    await page.evaluate(() => {
+      const island = window.__island.island, read = island.api.getIsland, start = island.api.startWave;
+      const held = new Promise(resolve => { window.coc49ReleasePrepare = resolve; });
+      window.coc49Accepted = false; window.coc49Preparing = false; window.coc49RingDone = false;
+      island.api.startWave = async args => { const answer = await start(args); window.coc49Accepted = answer.ok; return answer; };
+      island.api.getIsland = async () => { window.coc49Preparing = true; await held; return read(); };
+      island.startMove('cannon_1');
+      window.coc49Ring = island.ringBell().then(answer => { window.coc49RingDone = true; return answer; });
+      window.coc49RestoreRead = () => { island.api.getIsland = read; };
+    });
+    await page.waitForFunction(() => window.coc49Accepted && window.coc49Preparing);
+    expect(await page.evaluate(() => ({active: window.__island.island.managing, done: window.coc49RingDone,
+      moving: window.__island.island.moving, current: window.__island.island.flow.current})))
+      .toEqual({active: false, done: false, moving: null, current: null});
     expect(await page.locator('.island-village-mode:not([hidden])').count()).toBe(0);
+    expect(await page.evaluate(() => window.__island.island.toggleVillage())).toBe(false);
+    await pickCannon(page);
+    expect(await page.locator('.island-card-build[open]').count()).toBe(0);
+    expect(await page.evaluate(() => window.coc49RingDone)).toBe(false);
+    const answer = await page.evaluate(async () => { window.coc49RestoreRead(); window.coc49ReleasePrepare(); return window.coc49Ring; });
+    expect(answer.ok).toBe(true);
+    expect(await page.evaluate(() => window.__island.island.managing)).toBe(false);
   });
 });

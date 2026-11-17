@@ -34,10 +34,19 @@ setup and observations. The baseline has no village mode property.
 npm test -- --maxWorkers=1 tests/island/village-mode.test.js tests/island/village-game.test.js
 ```
 
-Final run: `Test Files 2 passed (2)`, `Tests 13 passed (13)`, duration `28.26s`.
+Original implementation run: `Test Files 2 passed (2)`, `Tests 13 passed (13)`, duration `28.26s`.
 It covers own-only entry, reservation/context/disposal, Explore's reach rule,
 remote selection, held captain movement, text-input arrows, Enter on Cancel,
 Escape placement/mode hierarchy and accepted bell exit at both viewport sizes.
+
+The follow-up reservation regression held a successful start's defended-island
+prepare read before `ringBell()` resolved. It proved that mode/bar/placement were
+already cleared, `flow.current` was still null, and re-entry/remote picking were
+blocked. That full mode/browser batch reported `2 passed (2)` files and
+`14 passed (14)` tests in `30.41s`. One further pending/refused-join model case
+was then added and the final pure controller/flow file reported `13 passed (13)`;
+the two browser cases were unchanged by that extra model-only test. Root's
+combined validation remains separate.
 
 Two initial runs reached the first desktop test's existing 20-second runner
 limit; the phone case and controller cases passed. A quiet run with the original
