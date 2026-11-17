@@ -13,9 +13,9 @@
       "docs/DECISIONS.md"
     ],
     "baseline": [
-      "docs/GAME-V3.md:270–277 specifies code-drawn smooth cartoon art, unchanged angle and no runtime image downloads.",
-      "frontend/src/world/art.js:47–58 uses fixed-view plane projection; frontend/src/art/textures.js:46–54 uses unlit sprite materials.",
-      "frontend/src/world/places/surfaces.js:2–18 defines playable land while frontend/src/world/water.js:153–163 derives foam from backdrop alpha."
+      "docs/GAME-V3.md:270\u2013277 specifies code-drawn smooth cartoon art, unchanged angle and no runtime image downloads.",
+      "frontend/src/world/art.js:47\u201358 uses fixed-view plane projection; frontend/src/art/textures.js:46\u201354 uses unlit sprite materials.",
+      "frontend/src/world/places/surfaces.js:2\u201318 defines playable land while frontend/src/world/water.js:153\u2013163 derives foam from backdrop alpha."
     ],
     "goal": "Turn the supplied concept into a measurable, original maritime art direction and a small shared rendering contract before agents redraw different parts of the game.",
     "plan": [
@@ -86,7 +86,7 @@
     "title": "Prove the richer pirate-village style in one runtime vertical slice",
     "kind": "runtime investigation and visual decision",
     "priority": "P1",
-    "size": "S–M, one cannon and a small terrain sample; split further if the source/test change would exceed approximately 400 lines.",
+    "size": "S\u2013M, one cannon and a small terrain sample; split further if the source/test change would exceed approximately 400 lines.",
     "files": [
       "specs/vis-01-style-contract.md",
       "frontend/src/art/reference-slice.js",
@@ -94,13 +94,13 @@
       "docs/DECISIONS.md"
     ],
     "baseline": [
-      "GAME-V3.md:270–277 already specifies code-authored clean cartoon art at the existing angle.",
-      "world/art.js:47–58 uses flat planes; art/textures.js:46–54 uses MeshBasicMaterial, so Three lights do not shade the drawn buildings."
+      "GAME-V3.md:270\u2013277 already specifies code-authored clean cartoon art at the existing angle.",
+      "world/art.js:47\u201358 uses flat planes; art/textures.js:46\u201354 uses MeshBasicMaterial, so Three lights do not shade the drawn buildings."
     ],
     "goal": "Prove a bounded runtime slice with one newly styled cannon, a small grass/cliff/contact-shadow sample and the existing Move preview. Keep the current cabin as scale context; do not redraw the whole village in this prototype.",
     "plan": [
       "Inspect current frames, actual consumers and the agreed reference contract; record the bounded change in a small spec.",
-      "Implement only this task’s approved art/presentation change using existing helpers and authoritative state.",
+      "Implement only this task\u2019s approved art/presentation change using existing helpers and authoritative state.",
       "Check normal, failure and phase/quality cases listed below without changing gameplay rules.",
       "Capture the actual game at both required sizes and run the applicable documented checks.",
       "Update the walkthrough/test map and hand over the exact branch, evidence and remaining limits."
@@ -131,7 +131,7 @@
       }
     ],
     "checks": [
-      "Actual renderer before/after at 1280×720 and 375×812 with the same canonical fixture; the generated concept is reference only.",
+      "Actual renderer before/after at 1280\u00d7720 and 375\u00d7812 with the same canonical fixture; the generated concept is reference only.",
       "Run the relevant actual checks plus build/budget; report exact results and browser/device limits."
     ],
     "risks": [
@@ -183,7 +183,7 @@
       "frontend/tests/materials.test.js"
     ],
     "baseline": [
-      "paint.js:39–55 provides two-tone shading and an outline; :64–66 provides elliptical shadows; :68–72 already supports gradients."
+      "paint.js:39\u201355 provides two-tone shading and an outline; :64\u201366 provides elliptical shadows; :68\u201372 already supports gradients."
     ],
     "goal": "Add only the painter primitives demonstrated by the accepted slice: stone bevels, wood planes, metal rim light and soft contact shadows.",
     "plan": [
@@ -219,7 +219,7 @@
       }
     ],
     "checks": [
-      "Actual renderer before/after at 1280×720 and 375×812 with the same canonical fixture; the generated concept is reference only.",
+      "Actual renderer before/after at 1280\u00d7720 and 375\u00d7812 with the same canonical fixture; the generated concept is reference only.",
       "Run the relevant actual checks plus build/budget; report exact results and browser/device limits."
     ],
     "risks": [
@@ -270,12 +270,12 @@
     ],
     "baseline": [
       "world/art.js:12 merges pixelSizes after islandSizes.",
-      "island/world.js:375–389 selects with hardcoded widths/heights and distance from the ground point; :392–410 unprojects using the current 0.72 factor."
+      "island/world.js:375\u2013389 selects with hardcoded widths/heights and distance from the ground point; :392\u2013410 unprojects using the current 0.72 factor."
     ],
     "goal": "Define only the visual bounds and pick regions needed by richer roofs and bases, while keeping gameplay footprints independent.",
     "plan": [
       "Inspect current frames, actual consumers and the agreed reference contract; record the bounded change in a small spec.",
-      "Implement only this task’s approved art/presentation change using existing helpers and authoritative state.",
+      "Implement only this task\u2019s approved art/presentation change using existing helpers and authoritative state.",
       "Check normal, failure and phase/quality cases listed below without changing gameplay rules.",
       "Capture the actual game at both required sizes and run the applicable documented checks.",
       "Update the walkthrough/test map and hand over the exact branch, evidence and remaining limits."
@@ -305,7 +305,7 @@
       }
     ],
     "checks": [
-      "Actual renderer before/after at 1280×720 and 375×812 with the same canonical fixture; the generated concept is reference only.",
+      "Actual renderer before/after at 1280\u00d7720 and 375\u00d7812 with the same canonical fixture; the generated concept is reference only.",
       "Run the relevant actual checks plus build/budget; report exact results and browser/device limits."
     ],
     "risks": [
@@ -353,12 +353,12 @@
       "frontend/tests/cabin-art.test.js"
     ],
     "baseline": [
-      "island.js:426 draws the existing cabin; island/world.js:382 selects it and :358–359 retains its existing collider."
+      "island.js:426 draws the existing cabin; island/world.js:382 selects it and :358\u2013359 retains its existing collider."
     ],
     "goal": "Give the existing cabin a deep navy roof, stone plinth, gold brackets, warm windows and a readable central entrance.",
     "plan": [
       "Inspect current frames, actual consumers and the agreed reference contract; record the bounded change in a small spec.",
-      "Implement only this task’s approved art/presentation change using existing helpers and authoritative state.",
+      "Implement only this task\u2019s approved art/presentation change using existing helpers and authoritative state.",
       "Check normal, failure and phase/quality cases listed below without changing gameplay rules.",
       "Capture the actual game at both required sizes and run the applicable documented checks.",
       "Update the walkthrough/test map and hand over the exact branch, evidence and remaining limits."
@@ -388,7 +388,7 @@
       }
     ],
     "checks": [
-      "Actual renderer before/after at 1280×720 and 375×812 with the same canonical fixture; the generated concept is reference only.",
+      "Actual renderer before/after at 1280\u00d7720 and 375\u00d7812 with the same canonical fixture; the generated concept is reference only.",
       "Run the relevant actual checks plus build/budget; report exact results and browser/device limits."
     ],
     "risks": [
@@ -442,12 +442,12 @@
     ],
     "baseline": [
       "BASE-07 already supplies L1/L2/L3 silhouettes and role-specific L2/L3 frames.",
-      "island/world.js:69–75 chooses a frame from the real building level and specialization."
+      "island/world.js:69\u201375 chooses a frame from the real building level and specialization."
     ],
     "goal": "Restyle neutral houses, Barracks, Tavern and Workshop with the accepted roof volume, stone base and warm window detail, preserving the implemented level system.",
     "plan": [
       "Inspect current frames, actual consumers and the agreed reference contract; record the bounded change in a small spec.",
-      "Implement only this task’s approved art/presentation change using existing helpers and authoritative state.",
+      "Implement only this task\u2019s approved art/presentation change using existing helpers and authoritative state.",
       "Check normal, failure and phase/quality cases listed below without changing gameplay rules.",
       "Capture the actual game at both required sizes and run the applicable documented checks.",
       "Update the walkthrough/test map and hand over the exact branch, evidence and remaining limits."
@@ -477,7 +477,7 @@
       }
     ],
     "checks": [
-      "Actual renderer before/after at 1280×720 and 375×812 with the same canonical fixture; the generated concept is reference only.",
+      "Actual renderer before/after at 1280\u00d7720 and 375\u00d7812 with the same canonical fixture; the generated concept is reference only.",
       "Run the relevant actual checks plus build/budget; report exact results and browser/device limits."
     ],
     "risks": [
@@ -529,13 +529,13 @@
       "frontend/tests/cannon-art.test.js"
     ],
     "baseline": [
-      "Level 1–5, intact and firing frames already exist in art/island.js, art/defenses-v2.js or art/swivel.js.",
+      "Level 1\u20135, intact and firing frames already exist in art/island.js, art/defenses-v2.js or art/swivel.js.",
       "World and combat atlas rendering read the same identifiers and logical ground anchors."
     ],
     "goal": "Redraw the cannon family with clear material depth and function, retaining the existing level and effect identity.",
     "plan": [
       "Inspect current frames, actual consumers and the agreed reference contract; record the bounded change in a small spec.",
-      "Implement only this task’s approved art/presentation change using existing helpers and authoritative state.",
+      "Implement only this task\u2019s approved art/presentation change using existing helpers and authoritative state.",
       "Check normal, failure and phase/quality cases listed below without changing gameplay rules.",
       "Capture the actual game at both required sizes and run the applicable documented checks.",
       "Update the walkthrough/test map and hand over the exact branch, evidence and remaining limits."
@@ -565,7 +565,7 @@
       }
     ],
     "checks": [
-      "Actual renderer before/after at 1280×720 and 375×812 with the same canonical fixture; the generated concept is reference only.",
+      "Actual renderer before/after at 1280\u00d7720 and 375\u00d7812 with the same canonical fixture; the generated concept is reference only.",
       "Run the relevant actual checks plus build/budget; report exact results and browser/device limits."
     ],
     "risks": [
@@ -614,13 +614,13 @@
       "frontend/tests/mortar-art.test.js"
     ],
     "baseline": [
-      "Level 1–5, intact and firing frames already exist in art/island.js, art/defenses-v2.js or art/swivel.js.",
+      "Level 1\u20135, intact and firing frames already exist in art/island.js, art/defenses-v2.js or art/swivel.js.",
       "World and combat atlas rendering read the same identifiers and logical ground anchors."
     ],
     "goal": "Redraw the mortar family with clear material depth and function, retaining the existing level and effect identity.",
     "plan": [
       "Inspect current frames, actual consumers and the agreed reference contract; record the bounded change in a small spec.",
-      "Implement only this task’s approved art/presentation change using existing helpers and authoritative state.",
+      "Implement only this task\u2019s approved art/presentation change using existing helpers and authoritative state.",
       "Check normal, failure and phase/quality cases listed below without changing gameplay rules.",
       "Capture the actual game at both required sizes and run the applicable documented checks.",
       "Update the walkthrough/test map and hand over the exact branch, evidence and remaining limits."
@@ -650,7 +650,7 @@
       }
     ],
     "checks": [
-      "Actual renderer before/after at 1280×720 and 375×812 with the same canonical fixture; the generated concept is reference only.",
+      "Actual renderer before/after at 1280\u00d7720 and 375\u00d7812 with the same canonical fixture; the generated concept is reference only.",
       "Run the relevant actual checks plus build/budget; report exact results and browser/device limits."
     ],
     "risks": [
@@ -699,13 +699,13 @@
       "frontend/tests/harpoon-art.test.js"
     ],
     "baseline": [
-      "Level 1–5, intact and firing frames already exist in art/island.js, art/defenses-v2.js or art/swivel.js.",
+      "Level 1\u20135, intact and firing frames already exist in art/island.js, art/defenses-v2.js or art/swivel.js.",
       "World and combat atlas rendering read the same identifiers and logical ground anchors."
     ],
     "goal": "Redraw the harpoon family with clear material depth and function, retaining the existing level and effect identity.",
     "plan": [
       "Inspect current frames, actual consumers and the agreed reference contract; record the bounded change in a small spec.",
-      "Implement only this task’s approved art/presentation change using existing helpers and authoritative state.",
+      "Implement only this task\u2019s approved art/presentation change using existing helpers and authoritative state.",
       "Check normal, failure and phase/quality cases listed below without changing gameplay rules.",
       "Capture the actual game at both required sizes and run the applicable documented checks.",
       "Update the walkthrough/test map and hand over the exact branch, evidence and remaining limits."
@@ -735,7 +735,7 @@
       }
     ],
     "checks": [
-      "Actual renderer before/after at 1280×720 and 375×812 with the same canonical fixture; the generated concept is reference only.",
+      "Actual renderer before/after at 1280\u00d7720 and 375\u00d7812 with the same canonical fixture; the generated concept is reference only.",
       "Run the relevant actual checks plus build/budget; report exact results and browser/device limits."
     ],
     "risks": [
@@ -784,13 +784,13 @@
       "frontend/tests/culverin-art.test.js"
     ],
     "baseline": [
-      "Level 1–5, intact and firing frames already exist in art/island.js, art/defenses-v2.js or art/swivel.js.",
+      "Level 1\u20135, intact and firing frames already exist in art/island.js, art/defenses-v2.js or art/swivel.js.",
       "World and combat atlas rendering read the same identifiers and logical ground anchors."
     ],
     "goal": "Redraw the culverin family with clear material depth and function, retaining the existing level and effect identity.",
     "plan": [
       "Inspect current frames, actual consumers and the agreed reference contract; record the bounded change in a small spec.",
-      "Implement only this task’s approved art/presentation change using existing helpers and authoritative state.",
+      "Implement only this task\u2019s approved art/presentation change using existing helpers and authoritative state.",
       "Check normal, failure and phase/quality cases listed below without changing gameplay rules.",
       "Capture the actual game at both required sizes and run the applicable documented checks.",
       "Update the walkthrough/test map and hand over the exact branch, evidence and remaining limits."
@@ -820,7 +820,7 @@
       }
     ],
     "checks": [
-      "Actual renderer before/after at 1280×720 and 375×812 with the same canonical fixture; the generated concept is reference only.",
+      "Actual renderer before/after at 1280\u00d7720 and 375\u00d7812 with the same canonical fixture; the generated concept is reference only.",
       "Run the relevant actual checks plus build/budget; report exact results and browser/device limits."
     ],
     "risks": [
@@ -868,13 +868,13 @@
       "frontend/tests/swivel-art.test.js"
     ],
     "baseline": [
-      "Level 1–5, intact and firing frames already exist in art/island.js, art/defenses-v2.js or art/swivel.js.",
+      "Level 1\u20135, intact and firing frames already exist in art/island.js, art/defenses-v2.js or art/swivel.js.",
       "World and combat atlas rendering read the same identifiers and logical ground anchors."
     ],
     "goal": "Redraw the swivel family with clear material depth and function, retaining the existing level and effect identity.",
     "plan": [
       "Inspect current frames, actual consumers and the agreed reference contract; record the bounded change in a small spec.",
-      "Implement only this task’s approved art/presentation change using existing helpers and authoritative state.",
+      "Implement only this task\u2019s approved art/presentation change using existing helpers and authoritative state.",
       "Check normal, failure and phase/quality cases listed below without changing gameplay rules.",
       "Capture the actual game at both required sizes and run the applicable documented checks.",
       "Update the walkthrough/test map and hand over the exact branch, evidence and remaining limits."
@@ -904,7 +904,7 @@
       }
     ],
     "checks": [
-      "Actual renderer before/after at 1280×720 and 375×812 with the same canonical fixture; the generated concept is reference only.",
+      "Actual renderer before/after at 1280\u00d7720 and 375\u00d7812 with the same canonical fixture; the generated concept is reference only.",
       "Run the relevant actual checks plus build/budget; report exact results and browser/device limits."
     ],
     "risks": [
@@ -953,12 +953,12 @@
       "frontend/tests/landmarks.test.js"
     ],
     "baseline": [
-      "The watchtower has a 64×128 frame and anchor 8; the bell is already an interactive harbor landmark."
+      "The watchtower has a 64\u00d7128 frame and anchor 8; the bell is already an interactive harbor landmark."
     ],
     "goal": "Give the watchtower timber bracing, stone feet and a navy canopy, and the bell warm shaped metal, while keeping both landmarks readable.",
     "plan": [
       "Inspect current frames, actual consumers and the agreed reference contract; record the bounded change in a small spec.",
-      "Implement only this task’s approved art/presentation change using existing helpers and authoritative state.",
+      "Implement only this task\u2019s approved art/presentation change using existing helpers and authoritative state.",
       "Check normal, failure and phase/quality cases listed below without changing gameplay rules.",
       "Capture the actual game at both required sizes and run the applicable documented checks.",
       "Update the walkthrough/test map and hand over the exact branch, evidence and remaining limits."
@@ -987,7 +987,7 @@
       }
     ],
     "checks": [
-      "Actual renderer before/after at 1280×720 and 375×812 with the same canonical fixture; the generated concept is reference only.",
+      "Actual renderer before/after at 1280\u00d7720 and 375\u00d7812 with the same canonical fixture; the generated concept is reference only.",
       "Run the relevant actual checks plus build/budget; report exact results and browser/device limits."
     ],
     "risks": [
@@ -1041,7 +1041,7 @@
     "goal": "Bring the existing research and weapons-store buildings into the same material, perspective and detail language as the cabin.",
     "plan": [
       "Inspect current frames, actual consumers and the agreed reference contract; record the bounded change in a small spec.",
-      "Implement only this task’s approved art/presentation change using existing helpers and authoritative state.",
+      "Implement only this task\u2019s approved art/presentation change using existing helpers and authoritative state.",
       "Check normal, failure and phase/quality cases listed below without changing gameplay rules.",
       "Capture the actual game at both required sizes and run the applicable documented checks.",
       "Update the walkthrough/test map and hand over the exact branch, evidence and remaining limits."
@@ -1071,7 +1071,7 @@
       }
     ],
     "checks": [
-      "Actual renderer before/after at 1280×720 and 375×812 with the same canonical fixture; the generated concept is reference only.",
+      "Actual renderer before/after at 1280\u00d7720 and 375\u00d7812 with the same canonical fixture; the generated concept is reference only.",
       "Run the relevant actual checks plus build/budget; report exact results and browser/device limits."
     ],
     "risks": [
@@ -1124,19 +1124,19 @@
       "frontend/tests/island/wall-connections.test.js"
     ],
     "baseline": [
-      "frontend/src/art/island.js:147–197 already paints wall levels and damaged/broken appearances.",
+      "frontend/src/art/island.js:147\u2013197 already paints wall levels and damaged/broken appearances.",
       "frontend/src/island/wall-connections.js already draws full-side joins between waves; this is not a new barrier/pathfinding feature."
     ],
     "goal": "Give the existing wall family and supported connections the same stone/wood/brass depth as the village while retaining actual gaps, level identity and state truth.",
     "plan": [
       "Inspect current frames, actual consumers and the agreed reference contract; record the bounded change in a small spec.",
-      "Implement only this task’s approved art/presentation change using existing helpers and authoritative state.",
+      "Implement only this task\u2019s approved art/presentation change using existing helpers and authoritative state.",
       "Check normal, failure and phase/quality cases listed below without changing gameplay rules.",
       "Capture the actual game at both required sizes and run the applicable documented checks.",
       "Update the walkthrough/test map and hand over the exact branch, evidence and remaining limits."
     ],
     "acceptance": [
-      "Keep existing wall IDs, five level mappings, ground anchors and logical 2×2 footprints; style changes do not retire D056.",
+      "Keep existing wall IDs, five level mappings, ground anchors and logical 2\u00d72 footprints; style changes do not retire D056.",
       "Use consistent material faces and contact shadows; joined spans match the existing weaker-neighbor level rule without hiding posts or gaps.",
       "Keep damaged and zero-health appearances identifiable; do not paint a solid intact-looking join across a supported broken gap.",
       "Prove isolated, straight, corner, T, mixed-level, partial-contact and real-gap examples at actual game scale.",
@@ -1162,7 +1162,7 @@
     "checks": [
       "Run relevant focused art/world/phase/input tests for the changed consumers; exact new test filenames are proposed until implemented.",
       "Run frontend build, budget and text lint. For UI changes run current documented browser/overlap checks and report exact results, including existing failures.",
-      "Provide actual before/after game evidence at 1280×720 and 375×812; a concept or isolated renderer sheet alone is not completion."
+      "Provide actual before/after game evidence at 1280\u00d7720 and 375\u00d7812; a concept or isolated renderer sheet alone is not completion."
     ],
     "risks": [
       "Larger detail can clip, shift an anchor or reduce legibility at phone village zoom.",
@@ -1207,12 +1207,12 @@
       "frontend/tests/people-art.test.js"
     ],
     "baseline": [
-      "people.js:9–21 defines ten captain palettes; :103–158 has aiming, cutlass and fallen poses; :169–277 has crew, boarders and militia."
+      "people.js:9\u201321 defines ten captain palettes; :103\u2013158 has aiming, cutlass and fallen poses; :169\u2013277 has crew, boarders and militia."
     ],
     "goal": "Improve volume, clothing, boot contact and shared line weight without changing movement, aiming or captain identity.",
     "plan": [
       "Inspect current frames, actual consumers and the agreed reference contract; record the bounded change in a small spec.",
-      "Implement only this task’s approved art/presentation change using existing helpers and authoritative state.",
+      "Implement only this task\u2019s approved art/presentation change using existing helpers and authoritative state.",
       "Check normal, failure and phase/quality cases listed below without changing gameplay rules.",
       "Capture the actual game at both required sizes and run the applicable documented checks.",
       "Update the walkthrough/test map and hand over the exact branch, evidence and remaining limits."
@@ -1242,7 +1242,7 @@
       }
     ],
     "checks": [
-      "Actual renderer before/after at 1280×720 and 375×812 with the same canonical fixture; the generated concept is reference only.",
+      "Actual renderer before/after at 1280\u00d7720 and 375\u00d7812 with the same canonical fixture; the generated concept is reference only.",
       "Run the relevant actual checks plus build/budget; report exact results and browser/device limits."
     ],
     "risks": [
@@ -1292,13 +1292,13 @@
       "frontend/src/pirates/render.js (registration handoff only)"
     ],
     "baseline": [
-      "frontend/src/art/fleet.js:1–6 already defines original ships, three bobbing frames, waterline anchors and effect art.",
+      "frontend/src/art/fleet.js:1\u20136 already defines original ships, three bobbing frames, waterline anchors and effect art.",
       "The same fleet module supports recognizable sloop, brig, flagship, warship and gunboat families."
     ],
     "goal": "Make the existing fleet belong beside the richer village through coherent wood, cloth, metal and water contact while preserving enemy identification, animation and targeting.",
     "plan": [
       "Inspect current frames, actual consumers and the agreed reference contract; record the bounded change in a small spec.",
-      "Implement only this task’s approved art/presentation change using existing helpers and authoritative state.",
+      "Implement only this task\u2019s approved art/presentation change using existing helpers and authoritative state.",
       "Check normal, failure and phase/quality cases listed below without changing gameplay rules.",
       "Capture the actual game at both required sizes and run the applicable documented checks.",
       "Update the walkthrough/test map and hand over the exact branch, evidence and remaining limits."
@@ -1330,7 +1330,7 @@
     "checks": [
       "Run relevant focused art/world/phase/input tests for the changed consumers; exact new test filenames are proposed until implemented.",
       "Run frontend build, budget and text lint. For UI changes run current documented browser/overlap checks and report exact results, including existing failures.",
-      "Provide actual before/after game evidence at 1280×720 and 375×812; a concept or isolated renderer sheet alone is not completion."
+      "Provide actual before/after game evidence at 1280\u00d7720 and 375\u00d7812; a concept or isolated renderer sheet alone is not completion."
     ],
     "risks": [
       "Larger detail can clip, shift an anchor or reduce legibility at phone village zoom.",
@@ -1374,13 +1374,13 @@
       "frontend/tests/style-structure-states.test.js"
     ],
     "baseline": [
-      "island/world.js:25–44 already reads the legacy and Recovery V1 appearance; :418–426 accepts a canonical recovery context.",
-      "pirates/render.js:159–170 selectively packs damage-state frames when relevant."
+      "island/world.js:25\u201344 already reads the legacy and Recovery V1 appearance; :418\u2013426 accepts a canonical recovery context.",
+      "pirates/render.js:159\u2013170 selectively packs damage-state frames when relevant."
     ],
     "goal": "Carry the accepted materials and silhouettes through intact, damaged, broken and partially recovered structures in both world and combat rendering.",
     "plan": [
       "Inspect current frames, actual consumers and the agreed reference contract; record the bounded change in a small spec.",
-      "Implement only this task’s approved art/presentation change using existing helpers and authoritative state.",
+      "Implement only this task\u2019s approved art/presentation change using existing helpers and authoritative state.",
       "Check normal, failure and phase/quality cases listed below without changing gameplay rules.",
       "Capture the actual game at both required sizes and run the applicable documented checks.",
       "Update the walkthrough/test map and hand over the exact branch, evidence and remaining limits."
@@ -1410,7 +1410,7 @@
       }
     ],
     "checks": [
-      "Actual renderer before/after at 1280×720 and 375×812 with the same canonical fixture; the generated concept is reference only.",
+      "Actual renderer before/after at 1280\u00d7720 and 375\u00d7812 with the same canonical fixture; the generated concept is reference only.",
       "Run the relevant actual checks plus build/budget; report exact results and browser/device limits."
     ],
     "risks": [
@@ -1431,7 +1431,7 @@
     ],
     "not_in_scope": [],
     "parent_tasks": [
-      "T55–T60",
+      "T55\u2013T60",
       "BASE-13"
     ],
     "parallel_owner": "One writer owns the bounded family/helper on a separate branch/clone. Coordinate shared art registration, world, combat, ground and resource hooks with the integration owner; do not overwrite a concurrent writer.",
@@ -1472,7 +1472,7 @@
     "goal": "Resolve style-induced depth/anchor problems and prove the world-to-combat handoff with dense valid layouts.",
     "plan": [
       "Inspect current frames, actual consumers and the agreed reference contract; record the bounded change in a small spec.",
-      "Implement only this task’s approved art/presentation change using existing helpers and authoritative state.",
+      "Implement only this task\u2019s approved art/presentation change using existing helpers and authoritative state.",
       "Check normal, failure and phase/quality cases listed below without changing gameplay rules.",
       "Capture the actual game at both required sizes and run the applicable documented checks.",
       "Update the walkthrough/test map and hand over the exact branch, evidence and remaining limits."
@@ -1502,7 +1502,7 @@
       }
     ],
     "checks": [
-      "Actual renderer before/after at 1280×720 and 375×812 with the same canonical fixture; the generated concept is reference only.",
+      "Actual renderer before/after at 1280\u00d7720 and 375\u00d7812 with the same canonical fixture; the generated concept is reference only.",
       "Run the relevant actual checks plus build/budget; report exact results and browser/device limits."
     ],
     "risks": [
@@ -1605,7 +1605,7 @@
       "How does the painter keep the current coast and saved positions?"
     ],
     "notes": [
-      "The new appearance is still the current island: it does not implement BASE-19–27 land growth, relocate saves or copy the concept’s rectangle as new legal land."
+      "The new appearance is still the current island: it does not implement BASE-19\u201327 land growth, relocate saves or copy the concept\u2019s rectangle as new legal land."
     ],
     "not_in_scope": [],
     "parent_tasks": [
@@ -2035,7 +2035,7 @@
       "The contract explicitly avoids the frontend dock-class3/build-preview mismatch. Dock walking does not expand surfaceClass used by placement or the server's ellipse.",
       "One-island travel restrictions and existing Harbor/boat unlock/payment rules remain intact. The user gets a real existing service, not a nonfunctional menu label.",
       "Phase policy is explicit, including occupants at wave acceptance, visitors, death/revive if allowed, reset/travel and legacy scenes. No unapproved teleport or shared-wave cancellation.",
-      "Existing coast radii/seed, naval spawn/landing points, route geometry, building counts and saves do not change. If later dock tiles become buildable or owned, reuse COC20/22/26 contracts instead."
+      "Existing coast radii/seed, naval spawn/landing points, route geometry, building counts and saves do not change. If later dock tiles become buildable or owned, reuse BASE-20/22/26 contracts instead."
     ],
     "scenarios": [
       {
@@ -2205,10 +2205,10 @@
       "docs/evidence/visual-task-id/"
     ],
     "baseline": [
-      "frontend/src/island/move-preview.js:13–31 creates only a red/green fill and rim, with no grid, corner brackets or check/cross glyph.",
-      "frontend/src/island/world.js:259–262 uses the candidate position for the existing building art while a move is open; world.js:429–434 owns the preview handoff.",
-      "frontend/src/island/move-mode.js:37–44 already supplies snapped coordinates, logical footprint size and the current checkMove verdict.",
-      "frontend/src/island/placement.js:61–72 is the actual client verdict source, including D056 wall lanes, keep-outs, overlap and route openness; server authority remains separate."
+      "frontend/src/island/move-preview.js:13\u201331 creates only a red/green fill and rim, with no grid, corner brackets or check/cross glyph.",
+      "frontend/src/island/world.js:259\u2013262 uses the candidate position for the existing building art while a move is open; world.js:429\u2013434 owns the preview handoff.",
+      "frontend/src/island/move-mode.js:37\u201344 already supplies snapped coordinates, logical footprint size and the current checkMove verdict.",
+      "frontend/src/island/placement.js:61\u201372 is the actual client verdict source, including D056 wall lanes, keep-outs, overlap and route openness; server authority remains separate."
     ],
     "goal": "Make a candidate position look like the reference: a faint terrain-aligned tile grid, a translucent preview of the real selected structure, bright footprint corners and a visible check/cross; the player can understand validity without relying on green/red alone.",
     "plan": [
@@ -2250,14 +2250,14 @@
         "expected": "Ghost/grid/corners disappear, the confirmed art is restored, and no stale preview survives into combat or another island."
       },
       {
-        "input": "375×812 with narrator text, long refusal and the Move panel",
+        "input": "375\u00d7812 with narrator text, long refusal and the Move panel",
         "action": "Inspect and tap both glyph/ground and controls",
         "expected": "The candidate and actionable controls remain visible and usable; decorative overlays do not intercept pointer or keyboard input."
       }
     ],
     "checks": [
       "Focused helper assertions verify snap-to-overlay alignment, verdict glyph, clipping bounds, hide/restore and resource reuse/disposal.",
-      "Before/after real local-game captures at 1280×720 and 375×812, with a declared fake-API fixture; generated art concepts are not counted as runtime evidence.",
+      "Before/after real local-game captures at 1280\u00d7720 and 375\u00d7812, with a declared fake-API fixture; generated art concepts are not counted as runtime evidence.",
       "Run the relevant existing Move/world/village ownership tests, frontend build, budget and text lint; apply the current documented a11y/demo/overlap checks and report exact outcomes."
     ],
     "risks": [
@@ -2307,16 +2307,16 @@
       "docs/evidence/visual-task-id/"
     ],
     "baseline": [
-      "frontend/src/island/move-bar.js:16–35 renders title, hint, status, inline arrow pad and Cancel/Place here; no building thumbnail is present.",
-      "frontend/src/island/island.css:408–420 supplies the existing parchment panel, red/green status and a single-row arrow pad, already with 44px controls.",
-      "frontend/src/island/move-mode.js:16–28 knows the selected confirmed building through spots and creates the presentation model; existing button/input semantics live at 55–74.",
-      "frontend/src/ui/kit/kit.css:1–10 already supplies rounded navy, brass, parchment and beveled gold/quiet buttons; a new global UI theme is unnecessary."
+      "frontend/src/island/move-bar.js:16\u201335 renders title, hint, status, inline arrow pad and Cancel/Place here; no building thumbnail is present.",
+      "frontend/src/island/island.css:408\u2013420 supplies the existing parchment panel, red/green status and a single-row arrow pad, already with 44px controls.",
+      "frontend/src/island/move-mode.js:16\u201328 knows the selected confirmed building through spots and creates the presentation model; existing button/input semantics live at 55\u201374.",
+      "frontend/src/ui/kit/kit.css:1\u201310 already supplies rounded navy, brass, parchment and beveled gold/quiet buttons; a new global UI theme is unnecessary."
     ],
     "goal": "Bring the already functional Move strip close to the concept composition: a current building portrait and concise title on the left, one clear status line, a directional cross, teal Cancel and gold Place here; on phones the same semantics stack without covering the island.",
     "plan": [
       "Expose read-only portrait identity from the existing move presentation model, retaining the actual confirmed kind, level and specialization or a neutral empty-slot fallback.",
       "Use the approved cached art portrait with stable intrinsic bounds and an appropriate accessible label; do not generate a new texture on every nudge.",
-      "Lay out the four existing arrow buttons as a cross with their current semantic labels and at least 44×44 targets.",
+      "Lay out the four existing arrow buttons as a cross with their current semantic labels and at least 44\u00d744 targets.",
       "Reuse existing brass/parchment/gold/teal kit tokens and make the primary/secondary action distinction match the reference.",
       "Keep status/refusal/loading text readable at 375px and permit long text to reflow; preserve the camera's existing usable-area measurement contract.",
       "Exercise actual pointer, keyboard, cancel, refusal and unknown-art states, then capture both required sizes."
@@ -2346,7 +2346,7 @@
         "expected": "Existing disabled/busy rules and status remain correct; a gold-looking button never implies an allowed or successful move."
       },
       {
-        "input": "375×812, narrator visible, deliberately long server refusal",
+        "input": "375\u00d7812, narrator visible, deliberately long server refusal",
         "action": "Let the text wrap and then hit Cancel",
         "expected": "All controls and the actual topmost Cancel target are visible; camera refit responds to changed panel height; cancel restores the original confirmed position."
       },
@@ -2358,7 +2358,7 @@
     ],
     "checks": [
       "Model/DOM checks cover real portrait identity, fallback, labels, button state and the existing nudge actions.",
-      "Real-game before/after screenshots at 1280×720 and 375×812, including a long-refusal overlap/hit-target check; label test data and local transport honestly.",
+      "Real-game before/after screenshots at 1280\u00d7720 and 375\u00d7812, including a long-refusal overlap/hit-target check; label test data and local transport honestly.",
       "Run affected Move/village/camera tests and the current documented frontend build/budget/text/a11y/demo/overlap checks as appropriate; report failed checks rather than claiming a blanket pass."
     ],
     "risks": [
@@ -2414,7 +2414,7 @@
     "goal": "Carry the accepted style into existing powder flash, smoke, splash and impact art without adding false attacks, longer state timers or visual clutter.",
     "plan": [
       "Inspect current frames, actual consumers and the agreed reference contract; record the bounded change in a small spec.",
-      "Implement only this task’s approved art/presentation change using existing helpers and authoritative state.",
+      "Implement only this task\u2019s approved art/presentation change using existing helpers and authoritative state.",
       "Check normal, failure and phase/quality cases listed below without changing gameplay rules.",
       "Capture the actual game at both required sizes and run the applicable documented checks.",
       "Update the walkthrough/test map and hand over the exact branch, evidence and remaining limits."
@@ -2446,7 +2446,7 @@
     "checks": [
       "Run relevant focused art/world/phase/input tests for the changed consumers; exact new test filenames are proposed until implemented.",
       "Run frontend build, budget and text lint. For UI changes run current documented browser/overlap checks and report exact results, including existing failures.",
-      "Provide actual before/after game evidence at 1280×720 and 375×812; a concept or isolated renderer sheet alone is not completion."
+      "Provide actual before/after game evidence at 1280\u00d7720 and 375\u00d7812; a concept or isolated renderer sheet alone is not completion."
     ],
     "risks": [
       "Larger detail can clip, shift an anchor or reduce legibility at phone village zoom.",
@@ -2493,7 +2493,7 @@
     ],
     "baseline": [
       "The atlas budget is 40 MiB high / 12 MiB low, with density caps of 4 / 2.",
-      "resources.js:17–29 releases maps, materials and geometries; display.js:1–44 bounds the framebuffer and adaptive density."
+      "resources.js:17\u201329 releases maps, materials and geometries; display.js:1\u201344 bounds the framebuffer and adaptive density."
     ],
     "goal": "Measure and control the richer assets within existing loading, atlas, frame and lifecycle constraints, without increasing budgets or adding packages.",
     "plan": [
@@ -2528,7 +2528,7 @@
       }
     ],
     "checks": [
-      "Actual renderer before/after at 1280×720 and 375×812 with the same canonical fixture; the generated concept is reference only.",
+      "Actual renderer before/after at 1280\u00d7720 and 375\u00d7812 with the same canonical fixture; the generated concept is reference only.",
       "Run the relevant actual checks plus build/budget; report exact results and browser/device limits."
     ],
     "risks": [
@@ -2592,7 +2592,7 @@
       "Publish the source/evidence matrix and human acceptance decision without claiming optional or unimplemented features."
     ],
     "acceptance": [
-      "Use a declared deterministic current-game fixture for paired real captures at 1280×720 and 375×812, recording commit, quality, density, state and transport.",
+      "Use a declared deterministic current-game fixture for paired real captures at 1280\u00d7720 and 375\u00d7812, recording commit, quality, density, state and transport.",
       "Compare material volume, light/contact consistency, island/cliff/waterline composition, foliage, path clarity, selection accuracy, grid/ghost feedback and HUD clearance against the reference checklist.",
       "Exercise actual selection, valid and invalid Move, Cancel, Place, long refusal, captions, wave preparation, combat, damage and recovery in supported flag paths; no painted UI overlay substitutes for controls.",
       "Prove confirmed coins and correctly labeled wave/captain-level state. Existing base-building HUD/action-dock/camera slices must supply the agreed visible behavior; this child does not duplicate their implementations.",
@@ -2672,7 +2672,7 @@
     "goal": "Provide a small, explicit alternative texture path only if the reviewed playable slice shows code-painted art cannot meet the accepted reference quality.",
     "plan": [
       "Inspect current frames, actual consumers and the agreed reference contract; record the bounded change in a small spec.",
-      "Implement only this task’s approved art/presentation change using existing helpers and authoritative state.",
+      "Implement only this task\u2019s approved art/presentation change using existing helpers and authoritative state.",
       "Check normal, failure and phase/quality cases listed below without changing gameplay rules.",
       "Capture the actual game at both required sizes and run the applicable documented checks.",
       "Update the walkthrough/test map and hand over the exact branch, evidence and remaining limits."
@@ -2711,7 +2711,7 @@
     "checks": [
       "Run relevant focused art/world/phase/input tests for the changed consumers; exact new test filenames are proposed until implemented.",
       "Run frontend build, budget and text lint. For UI changes run current documented browser/overlap checks and report exact results, including existing failures.",
-      "Provide actual before/after game evidence at 1280×720 and 375×812; a concept or isolated renderer sheet alone is not completion."
+      "Provide actual before/after game evidence at 1280\u00d7720 and 375\u00d7812; a concept or isolated renderer sheet alone is not completion."
     ],
     "risks": [
       "Larger detail can clip, shift an anchor or reduce legibility at phone village zoom.",

@@ -1,0 +1,2256 @@
+[
+  {
+    "id": "WALL-01",
+    "title": "Define the versioned free-grid wall and actor contract",
+    "kind": "design",
+    "priority": "P1",
+    "size": "S\u2013M, one reviewed gameplay/version contract; no runtime implementation",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "goal": "Resolve the exact gameplay change needed for useful wall lines and compartments, rather than only coloring additional permitted lanes.",
+    "files": [
+      "docs/DECISIONS.md D056 compatibility entry",
+      "specs/wall-free-grid-contract.md (proposed)",
+      "frontend/GRAPHICS.md",
+      "docs/INTERFACES.md"
+    ],
+    "baseline": [
+      "frontend/src/island/placement.js:55\u201366 restricts walls to derived pirate lanes.",
+      "backend/server/island/layout.py:167\u2013196 auto-settles off-lane wall coordinates on every read.",
+      "frontend/src/island/world.js:356\u2013359 restores only static/cabin captain colliders; enemy wall collision is separate."
+    ],
+    "parent_tasks": [
+      "BASE-10",
+      "BASE-50"
+    ],
+    "dependencies": [],
+    "conditional_dependencies": [],
+    "acceptance": [
+      "Choose the initial wall footprint and chain step explicitly. Recommended first implementation retains existing 2\u00d72 world-unit segments on the 0.5 grid; changing density needs a separate legacy/value/balance decision.",
+      "State whether a new layout/rule version retires D056 for new placements while preserving old waves and effective legacy positions.",
+      "Provide an actor matrix for boarders, captains, ships and projectiles, plus standing/broken/restored segments, actual gaps and closed compartments. Do not imply walls block every projectile or friendly captain.",
+      "State whether enclosed friendly access remains the current pass-through policy or requires a separately approved gate/exit rule; do not silently add captain colliders.",
+      "Define activation/rollback and unsupported-version behavior before any live migration or flag change.",
+      "Name a distinct persisted wall-geometry/allowance carrier and its frozen wave representation. Existing LayoutInfo.version 1/2, RecoveryVersion and WaveProtocol are different concepts and cannot silently grant free-grid permission.",
+      "Define unsupported-client/version, rollback and no-mid-wave activation behavior. Do not hide paid walls or rewrite an old immutable snapshot when a new rule/cohort is selected.",
+      "The permissive rule/cohort is selected from trusted persisted server state, not granted by a client-supplied version field. Record the supported geometry/inventory/recovery/wave-protocol combinations without overloading existing version numbers.",
+      "Record the coastal support rule explicitly: current Move checks the center for land, not all footprint corners. A stricter new-placement rule needs explicit legacy-value treatment; do not silently invalidate current shore layouts.",
+      "Define whether unlocked unbuilt sites reserve positions or are nonspatial inventory. Recommended first release can preserve existing reservations; an inventory-only choice must also protect every legacy/default single-build entry path and match browser/server occupancy."
+    ],
+    "scenarios": [
+      {
+        "input": "A valid compartment outside today\u2019s wall lanes",
+        "action": "Review the chosen placement and actor matrix",
+        "expected": "Its validity, boarder breach path, captain access and broken/restored behavior are explicitly defined."
+      },
+      {
+        "input": "An old save whose visible wall differs from raw stored off-lane coordinates",
+        "action": "Review the version transition policy",
+        "expected": "The chosen effective layout/value preservation rule is explicit; no read silently chooses a new arrangement."
+      },
+      {
+        "input": "A wall between a ship/tower/captain projectile and its target",
+        "action": "Review the actor matrix",
+        "expected": "Only approved collision/cover effects are promised; no universal-cover rule is inferred from art."
+      }
+    ],
+    "questions": [
+      "What exactly changes when D056 is retired?",
+      "Why are boarder blocking and friendly captain access separate?",
+      "Which frozen or saved versions must retain their existing behavior?"
+    ],
+    "risks": [
+      "An incomplete version/identity transition can silently drop or relocate paid structures.",
+      "A client preview or stale receipt must not grant price, ownership, health or phase authority.",
+      "Shared SQL, recovery and renderer hooks require one active integration owner and explicit source-version evidence."
+    ],
+    "notes": [
+      "All GitHub text and shared documentation for this work is English and uses neutral Base Building / Village Visuals / Wall Gameplay naming. Existing technical source paths remain exact."
+    ],
+    "parallel_owner": "One writer owns this bounded helper or transaction in a separate clone. Coordinate shared layout, recovery, route/controller and database hooks with the integration owner.",
+    "optional": false,
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "checks": [
+      "Source, contract, diagram and dependency review only; no runtime check is required or claimed for this design task."
+    ],
+    "not_in_scope": [
+      "No new online-play requirement, package, service or account.",
+      "No migration application, production flag activation, deployment, main push, force push or agent merge.",
+      "Do not add a second wall upgrade economy or silently retune legacy highscore difficulty.",
+      "This work does not make the current server a full combat verifier or silently change leaderboard/reward policy."
+    ],
+    "plan": [
+      "Inspect current lane, normalizer, actor collision and frozen-version contracts.",
+      "Record the selected free-grid footprint, connection step and version transition, including legacy-effective positions.",
+      "Fill the standing/broken/restored actor matrix and friendly access policy.",
+      "Specify activation/rollback and unsupported-input behavior without applying any migration or flag.",
+      "Review the bounded contract and handoffs with the responsible human."
+    ],
+    "github_issue": 242,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/242"
+  },
+  {
+    "id": "WALL-02",
+    "title": "Specify a bounded wall allowance and stable segment identities",
+    "kind": "design",
+    "priority": "P1",
+    "size": "S, one bounded allowance/version table",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "goal": "Choose enough wall pieces for approved practical layouts without introducing unlimited walls or invalidating current paid pieces.",
+    "files": [
+      "backend/content/islands.json spots/campaign references",
+      "backend/content/campaign.json spot groups",
+      "specs/wall-allowance-contract.md (proposed)",
+      "docs/INTERFACES.md"
+    ],
+    "baseline": [
+      "The island currently offers wall_1..wall_12; wall_7..wall_12 open after wave 5.",
+      "backend/server/island/layout_store.py:25\u201326 limits layout reads to 30 rows; store.py:52 caps building reads at 50.",
+      "Recovery health constraints and mutation guards currently enumerate wall IDs only through 12."
+    ],
+    "parent_tasks": [
+      "BASE-03",
+      "BASE-11",
+      "BASE-50"
+    ],
+    "dependencies": [
+      "WALL-01"
+    ],
+    "conditional_dependencies": [],
+    "acceptance": [
+      "Record exact supported counts/unlock stages and stable IDs if a larger allowance is selected; keep current IDs, levels, payments and ownership intact.",
+      "Distinguish built, unlocked-unbuilt, locked and total supported pieces. Existing 12 pieces may remain the first release while larger cohorts are a separate selected step.",
+      "Enumerate every affected source: catalogue, layout, UI spot registry, read caps, SQL guards, health/recovery rows, snapshots, receipts, demolition/refunds and reset.",
+      "Define how new pieces are priced/unlocked using current economy rules; capacity is not additional owned land.",
+      "If no larger allowance is selected, record that explicit outcome rather than implementing unused capacity infrastructure.",
+      "The target illustration is not a countable inventory or legal placement fixture. Validate intended compartments on actual logical footprints and choose an explicit allowance; the initial twelve-piece release and any selected larger target cohort are separate.",
+      "The optional larger cohort requires all of WALL-03/19/20/21/22 plus its measured rollout gates before it is advertised as fully supported. Current read caps and health-vector26 limit apply to the whole supported structure set, including D060 extras."
+    ],
+    "scenarios": [
+      {
+        "input": "A new island before wave 5 and the same island afterward",
+        "action": "Count advertised wall inventory",
+        "expected": "Unlocked, locked, built and remaining counts are unambiguous and preserve existing campaign behavior."
+      },
+      {
+        "input": "A current wall with paid upgrades and an active recovery instance",
+        "action": "Review the larger-cohort plan",
+        "expected": "Its ID, purchase history, health and layout are not replaced or reset."
+      },
+      {
+        "input": "The proposed maximum exceeds an existing layout/building read cap",
+        "action": "Review the full affected-source inventory",
+        "expected": "No plan can truncate pieces or silently drop their recovery/snapshot records."
+      }
+    ],
+    "questions": [
+      "Why are allowance and owned land different?",
+      "Which fixed read/ID guards must change before new wall IDs are usable?",
+      "What remains untouched if the first release keeps twelve pieces?"
+    ],
+    "risks": [
+      "An incomplete version/identity transition can silently drop or relocate paid structures.",
+      "A client preview or stale receipt must not grant price, ownership, health or phase authority.",
+      "Shared SQL, recovery and renderer hooks require one active integration owner and explicit source-version evidence."
+    ],
+    "notes": [
+      "All GitHub text and shared documentation for this work is English and uses neutral Base Building / Village Visuals / Wall Gameplay naming. Existing technical source paths remain exact."
+    ],
+    "parallel_owner": "One writer owns this bounded helper or transaction in a separate clone. Coordinate shared layout, recovery, route/controller and database hooks with the integration owner.",
+    "optional": false,
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "checks": [
+      "Contract/source/fixture review only. No actual new capacity is granted by this design task."
+    ],
+    "not_in_scope": [
+      "No new online-play requirement, package, service or account.",
+      "No migration application, production flag activation, deployment, main push, force push or agent merge.",
+      "Do not add a second wall upgrade economy or silently retune legacy highscore difficulty.",
+      "This work does not make the current server a full combat verifier or silently change leaderboard/reward policy."
+    ],
+    "plan": [
+      "Inventory current offered IDs, campaign locks, read caps and SQL/recovery guards.",
+      "Choose the selected bounded allowance and stable cohort IDs, or explicitly retain twelve for the initial release.",
+      "Define built, unlocked-unbuilt, locked and total capacity plus actual price/unlock rules.",
+      "Map read/build/upgrade/refund/reset/snapshot compatibility and migration boundaries.",
+      "Review the table before granting new IDs or money."
+    ],
+    "github_issue": 243,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/243"
+  },
+  {
+    "id": "WALL-03",
+    "title": "Register an approved wall cohort and complete bounded reads",
+    "kind": "implementation",
+    "priority": "P1",
+    "size": "One or two focused sessions; split at the stated pure-rule, transaction or adapter boundary before claiming if source/test/capture changes exceed about 400 lines.",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "goal": "Implement only the selected cohort catalogue, default-position/read manifest and complete bounded server/client offer; database admission and recovery/refund RPC work are separate tasks.",
+    "files": [
+      "backend/content/islands.json",
+      "backend/content/island_layout.json",
+      "backend/server/island/catalogue.py",
+      "backend/server/island/layout_store.py",
+      "backend/server/island/store.py",
+      "frontend/src/island/spots.js (registration handoff only)",
+      "backend/server/tests/test_island_layout_rules.py"
+    ],
+    "baseline": [
+      "Current catalogue/layout contain twelve wall IDs; SQL structure-health constraints and demolition/repair guards hardcode the current supported range.",
+      "MAX_LAYOUT_ROWS30 and MAX_BUILDING_ROWS50 are bounded assumptions, not an unlimited inventory service."
+    ],
+    "parent_tasks": [
+      "BASE-03",
+      "BASE-50"
+    ],
+    "dependencies": [
+      "WALL-02"
+    ],
+    "conditional_dependencies": [],
+    "acceptance": [
+      "Add only the exact WALL-02 stable IDs, unlocks and defaults; keep all old IDs and paid value intact.",
+      "Replace the fixed 30-layout/50-building assumptions only with reviewed complete bounds covering the selected whole island, all non-wall families and D060 extras. Do not remove limits or truncate the tail.",
+      "The canonical server/client offer and default-position manifest agree; WALL-04 owns inventory presentation rather than another capacity counter here.",
+      "Keep the new cohort gated until WALL-19/20/21/22 admission, recovery, receipt/refund and lifecycle evidence is ready. This task alone cannot advertise fully working new pieces.",
+      "Do not copy build/upgrade/move/reset SQL functions that need no identity change. SQL CHECK admission, paid repair, demolition and recovery/vector/template work belong to their explicit separate tasks."
+    ],
+    "scenarios": [
+      {
+        "input": "A fixture containing the entire selected cohort, non-wall families and D060 extras",
+        "action": "Read the catalogue/layout/building offer to the final supported ID",
+        "expected": "Every supported row is returned exactly once with stable identity; the response does not claim mutation readiness before the other cohort gates."
+      },
+      {
+        "input": "An unsupported wall ID or locked cohort",
+        "action": "Submit the existing relevant mutation intent",
+        "expected": "Server refuses without payment or new health/layout rows."
+      },
+      {
+        "input": "Existing paid/leveled current IDs and the selected cohort disabled",
+        "action": "Read/continue the old island and evaluate offers",
+        "expected": "Old value and data remain intact; no phantom new piece or capacity is advertised."
+      }
+    ],
+    "questions": [
+      "Why does adding a wall ID affect recovery and receipts?",
+      "How are bounded reads kept complete at the approved maximum?",
+      "Which deployment/migration step is deliberately not performed by this task?"
+    ],
+    "risks": [
+      "An incomplete version/identity transition can silently drop or relocate paid structures.",
+      "A client preview or stale receipt must not grant price, ownership, health or phase authority.",
+      "Shared SQL, recovery and renderer hooks require one active integration owner and explicit source-version evidence."
+    ],
+    "notes": [
+      "Selected only if WALL-02 approves a larger allowance. The initial twelve-piece free-grid route must not wait for an unselected extra cohort.",
+      "All GitHub text and shared documentation for this work is English and uses neutral Base Building / Village Visuals / Wall Gameplay naming. Existing technical source paths remain exact."
+    ],
+    "parallel_owner": "One writer owns this bounded helper or transaction in a separate clone. Coordinate shared layout, recovery, route/controller and database hooks with the integration owner.",
+    "optional": true,
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "checks": [
+      "Run meaningful focused rules/transaction/input cases for the changed scope; exact new test filenames are proposed until implementation.",
+      "For frontend work run applicable existing tests, build, budget and text/UI checks; for backend work use relevant pytest/Ruff and scratch SQL tests when SQL changes. Report exact results; none were run for this planning audit.",
+      "For visible changes provide actual-game before/after at 1280\u00d7720 and 375\u00d7812 with source, fixture, quality and limitations."
+    ],
+    "not_in_scope": [
+      "No new online-play requirement, package, service or account.",
+      "No migration application, production flag activation, deployment, main push, force push or agent merge.",
+      "Do not add a second wall upgrade economy or silently retune legacy highscore difficulty.",
+      "This work does not make the current server a full combat verifier or silently change leaderboard/reward policy."
+    ],
+    "plan": [
+      "Use the reviewed exact cohort/unlock/default table from WALL-02.",
+      "Update canonical catalogue/registration and complete bounded read limits, retaining every existing family.",
+      "Add end-of-range and combined-extra-spot read/offer fixtures.",
+      "Expose the cohort only behind its reviewed readiness/version gate; coordinate WALL-04 presentation.",
+      "Hand off the exact identity manifest to WALL-19\u201322; do not bundle their SQL bodies."
+    ],
+    "github_issue": 244,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/244"
+  },
+  {
+    "id": "WALL-04",
+    "title": "Expose truthful wall allowance and remaining pieces to the builder",
+    "kind": "implementation",
+    "priority": "P1",
+    "size": "One or two focused sessions; split at the stated pure-rule, transaction or adapter boundary before claiming if source/test/capture changes exceed about 400 lines.",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "goal": "Provide a truthful wall-inventory model for existing wall cards and the planned catalogue/chain UI so drafts cannot exceed the available segment IDs.",
+    "files": [
+      "frontend/src/island/spots.js",
+      "frontend/src/island/extra-spots.js or a small wall-inventory helper (proposed)",
+      "frontend/src/island/card-model.js",
+      "frontend/tests/island/<wall-inventory>.test.js (proposed)"
+    ],
+    "baseline": [
+      "Current spot registry is a fixed table of twelve walls with campaign group locks; empty spots already exist independently of built structures.",
+      "BASE-03 and BASE-11 own the catalogue and chain workflow; this child supplies wall inventory data, not a second catalogue."
+    ],
+    "parent_tasks": [
+      "BASE-03",
+      "BASE-11"
+    ],
+    "dependencies": [
+      "WALL-02"
+    ],
+    "conditional_dependencies": [
+      "WALL-03 only if a larger cohort is selected",
+      "WALL-03/19/20/21/22 only if the larger wall cohort is selected; otherwise exercise the existing 12-piece allowance."
+    ],
+    "acceptance": [
+      "Read actual advertised/approved wall IDs and campaign locks; never infer an arbitrary capacity from visible grid cells.",
+      "Expose built, available-unbuilt, locked and total counts with stable selection IDs and actual prices.",
+      "A draft longer than remaining capacity is clearly invalid before confirmation without hiding which segments fail.",
+      "Support the legacy twelve-piece state and only selected new cohorts; never display unavailable phantom pieces.",
+      "Do not alter purchase, placement, upgrade or land ownership authority."
+    ],
+    "scenarios": [
+      {
+        "input": "Six unlocked wall sites, some built, plus six campaign-locked sites",
+        "action": "Open the wall drafting inventory",
+        "expected": "The remaining usable count and locked count are distinct; the UI cannot spend locked IDs."
+      },
+      {
+        "input": "A chain needs more pieces than remain",
+        "action": "Extend its endpoint",
+        "expected": "Excess demand is visibly invalid and no purchase is sent."
+      },
+      {
+        "input": "A refreshed response unlocks or consumes an offered piece",
+        "action": "Reconcile the draft",
+        "expected": "Stable IDs and eligibility refresh honestly without duplicating a wall or inventing a balance."
+      }
+    ],
+    "questions": [
+      "Why is a free grass tile not a free wall piece?",
+      "Which response/model owns the remaining count?",
+      "How do locked and unbuilt walls differ?"
+    ],
+    "risks": [
+      "An incomplete version/identity transition can silently drop or relocate paid structures.",
+      "A client preview or stale receipt must not grant price, ownership, health or phase authority.",
+      "Shared SQL, recovery and renderer hooks require one active integration owner and explicit source-version evidence."
+    ],
+    "notes": [
+      "All GitHub text and shared documentation for this work is English and uses neutral Base Building / Village Visuals / Wall Gameplay naming. Existing technical source paths remain exact."
+    ],
+    "parallel_owner": "One writer owns this bounded helper or transaction in a separate clone. Coordinate shared layout, recovery, route/controller and database hooks with the integration owner.",
+    "optional": false,
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "checks": [
+      "Run meaningful focused rules/transaction/input cases for the changed scope; exact new test filenames are proposed until implementation.",
+      "For frontend work run applicable existing tests, build, budget and text/UI checks; for backend work use relevant pytest/Ruff and scratch SQL tests when SQL changes. Report exact results; none were run for this planning audit.",
+      "For visible changes provide actual-game before/after at 1280\u00d7720 and 375\u00d7812 with source, fixture, quality and limitations."
+    ],
+    "not_in_scope": [
+      "No new online-play requirement, package, service or account.",
+      "No migration application, production flag activation, deployment, main push, force push or agent merge.",
+      "Do not add a second wall upgrade economy or silently retune legacy highscore difficulty.",
+      "This work does not make the current server a full combat verifier or silently change leaderboard/reward policy."
+    ],
+    "plan": [
+      "Derive a pure wall-inventory model from actual offered IDs and campaign state.",
+      "Expose separate built, available and locked counts to the existing builder.",
+      "Reject over-capacity drafts without inventing future pieces or spending.",
+      "Reconcile refreshes and test old/twelve-piece plus selected-cohort states.",
+      "Hand the model to BASE-03/11 without creating a second catalogue."
+    ],
+    "github_issue": 245,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/245"
+  },
+  {
+    "id": "WALL-05",
+    "title": "Canonicalize a wall-chain intent and authoritative quote",
+    "kind": "pure rules and contract implementation",
+    "priority": "P1",
+    "size": "One or two focused sessions; split at the stated pure-rule, transaction or adapter boundary before claiming if source/test/capture changes exceed about 400 lines.",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "goal": "Prepare one bounded validated chain intent for atomic purchase, including exact IDs, positions, cost and version expectations.",
+    "files": [
+      "backend/server/island/<wall_chain_rules>.py (proposed)",
+      "backend/server/island/layout.py",
+      "backend/server/island/rules.py",
+      "backend/server/island/permissions.py",
+      "backend/server/tests/<wall_chain_rules>.py (proposed)",
+      "docs/INTERFACES.md"
+    ],
+    "baseline": [
+      "Current build chooses a fixed spot then may be moved separately; there is no atomic positioned chain intent.",
+      "BASE-11 owns drafting and BASE-12 owns the complete atomic-chain flow; this is its pure validation/quote slice."
+    ],
+    "parent_tasks": [
+      "BASE-11",
+      "BASE-12"
+    ],
+    "dependencies": [
+      "WALL-01",
+      "WALL-02",
+      "WALL-06",
+      "WALL-07"
+    ],
+    "conditional_dependencies": [],
+    "acceptance": [
+      "Bound segment count and coordinates, canonicalize stable IDs/order and reject duplicate IDs, overlap, invalid land, locked pieces or unsupported versions.",
+      "Use the approved two-unit segment/connection step unless the reviewed contract explicitly changes it; do not draw overlapping half-unit ghosts.",
+      "Derive actual payer/Engineer prices and total from server state; a quote is neither a charge nor a reservation.",
+      "Define same-action/same-intent replay versus same-action/different-intent conflict and immutable receipt versus separately current island/balance.",
+      "Define how wave acceptance, stale layout/epoch, insufficient funds and another purchase invalidate the whole intent without partial work.",
+      "Define one immutable batch receipt AND distinct stable per-piece building refs/instances/contribution provenance. islet_buildings UNIQUE(player_id,ref) prevents sharing one ref across all pieces.",
+      "Choose compatible namespaces and bounded reference lengths: building_payments accepts island:/upgrade: contribution refs; maximum-length UIDs plus piece suffixes must not exceed existing 64/120 bounds or collide with build/upgrade/repair action types. No new wallet reason is assumed merely because this is a batch.",
+      "Canonical identity retains ID-position pairings, not only an unordered set of points. Current membership/target permission is checked before any private old-receipt replay.",
+      "Canonicalize finite bounded integer grid cells and ID-position pairs; equivalent numeric spellings/order have one intent. Reject booleans, non-finite/huge coordinates, oversized lists and unsupported identity/version data before expensive work.",
+      "A construction intent requires each selected ID to remain unlocked and unbuilt. It cannot replace, move, downgrade, upgrade or heal an already-built piece by reusing its ID.",
+      "Validate the simultaneous final ID-position map, excluding only selected prior template positions under the approved reservation policy; do not self-collide with a moved draft or silently ignore unselected reserved sites."
+    ],
+    "scenarios": [
+      {
+        "input": "A legal bent chain within unlocked inventory",
+        "action": "Canonicalize and quote it",
+        "expected": "Exact unique IDs/coordinates and server-derived total are stable; no funds or rows change."
+      },
+      {
+        "input": "One invalid or duplicate segment in an otherwise valid chain",
+        "action": "Validate the complete intent",
+        "expected": "The whole intent is rejected with the offending reason and no partial quote presented as purchasable success."
+      },
+      {
+        "input": "The same action UID with a reordered equivalent intent versus different positions",
+        "action": "Compare canonical intents",
+        "expected": "Equivalent replay is defined; conflicting reuse is refused rather than buying a different chain."
+      },
+      {
+        "input": "A maximum-length UID and two pieces with distinct ID-position pairs",
+        "action": "Derive refs, canonical fingerprint and contribution identities",
+        "expected": "All derived identifiers are distinct, stable and within approved bounds; reordering equivalent pairs differs from swapping which ID owns which position."
+      }
+    ],
+    "questions": [
+      "Why is canonical order important for retry identity?",
+      "Which values are re-derived rather than trusted from the preview?",
+      "What does the quote deliberately not reserve?"
+    ],
+    "risks": [
+      "An incomplete version/identity transition can silently drop or relocate paid structures.",
+      "A client preview or stale receipt must not grant price, ownership, health or phase authority.",
+      "Shared SQL, recovery and renderer hooks require one active integration owner and explicit source-version evidence."
+    ],
+    "notes": [
+      "For failure tests freeze the server instant or compare with the same canonical old-policy settlement. No action-induced heal or new purchase instance is allowed, but independently earned automatic recovery may materialize.",
+      "All GitHub text and shared documentation for this work is English and uses neutral Base Building / Village Visuals / Wall Gameplay naming. Existing technical source paths remain exact."
+    ],
+    "parallel_owner": "One writer owns this bounded helper or transaction in a separate clone. Coordinate shared layout, recovery, route/controller and database hooks with the integration owner.",
+    "optional": false,
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "checks": [
+      "Run meaningful focused rules/transaction/input cases for the changed scope; exact new test filenames are proposed until implementation.",
+      "For frontend work run applicable existing tests, build, budget and text/UI checks; for backend work use relevant pytest/Ruff and scratch SQL tests when SQL changes. Report exact results; none were run for this planning audit.",
+      "For visible changes provide actual-game before/after at 1280\u00d7720 and 375\u00d7812 with source, fixture, quality and limitations."
+    ],
+    "not_in_scope": [
+      "No new online-play requirement, package, service or account.",
+      "No migration application, production flag activation, deployment, main push, force push or agent merge.",
+      "Do not add a second wall upgrade economy or silently retune legacy highscore difficulty.",
+      "This work does not make the current server a full combat verifier or silently change leaderboard/reward policy."
+    ],
+    "plan": [
+      "Define the bounded canonical chain request and immutable action identity.",
+      "Reuse approved server geometry, inventory and payer pricing to validate the whole chain.",
+      "Return per-piece reasons and an exact non-reserving quote/expectation.",
+      "Specify replay, conflicting UID, stale layout/phase and insufficient-funds outcomes.",
+      "Hand pure intent/quote fixtures to WALL-12 and the existing BASE-11 preview."
+    ],
+    "external_dependency_events": {
+      "BASE-11": "The bounded chain-draft intent and submission model is agreed with its UI owner; WALL-05/12 own server canonicalization and atomic commit, not a duplicate editor."
+    },
+    "github_issue": 246,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/246"
+  },
+  {
+    "id": "WALL-06",
+    "title": "Validate free-grid wall moves on the server under the approved version",
+    "kind": "implementation",
+    "priority": "P1",
+    "size": "One or two focused sessions; split at the stated pure-rule, transaction or adapter boundary before claiming if source/test/capture changes exceed about 400 lines.",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "goal": "Permit contract-valid off-lane positions through server authority while retaining legacy rules for old versions.",
+    "files": [
+      "backend/server/island/layout.py:287\u2013310",
+      "backend/server/island/placement.py",
+      "backend/server/routes/island_layout.py",
+      "backend/content/island_layout.json",
+      "backend/server/tests/test_island_layout_rules.py"
+    ],
+    "baseline": [
+      "check_move currently rejects an off-lane wall with off_path even on otherwise free land.",
+      "Single Move is free, between waves, compare-and-swap against checked layout rows; unchanged positions are safe to repeat."
+    ],
+    "parent_tasks": [
+      "BASE-50"
+    ],
+    "dependencies": [
+      "WALL-01",
+      "WALL-13"
+    ],
+    "conditional_dependencies": [],
+    "acceptance": [
+      "Under the new approved version, at least one valid compartment wall outside D056 lanes is accepted; invalid grid, footprint/coast, fixed keep-out and overlap cases remain refused.",
+      "Legacy versions retain their reviewed exact behavior; remove no restriction globally without its selected compatibility route.",
+      "Preserve permissions, reserved-wave refusal, bounded coordinates and compare-and-swap conflict checks.",
+      "No hidden default-coordinate settlement makes the returned move differ from what the server accepted. Coordinate activation with WALL-07.",
+      "A modified browser cannot build/move onto forbidden area by bypassing the client preview.",
+      "Settle existing recovery at one database instant under the OLD effective coordinates/rate before changing positions or rule interpretation, then use the new layout only for future time. Preserve hpUnits, instance and repair sequence; no retroactive Workshop benefit.",
+      "Derive actual admission from trusted island state; an expected-version request is a concurrency check, not a way to opt into a permissive rule.",
+      "Apply the selected center/full-footprint coastal rule exactly and preserve the explicitly grandfathered legacy cases; do not claim current validation already requires every corner on land."
+    ],
+    "scenarios": [
+      {
+        "input": "A contract-valid off-lane wall position and a legacy-version request",
+        "action": "Run server move validation",
+        "expected": "The selected new version permits it; the documented legacy path remains exact."
+      },
+      {
+        "input": "A half-grid candidate that violates the selected coastal rule or overlaps a keep-out/another spot",
+        "action": "Submit a move intent",
+        "expected": "The server rejects consistently with geometry fixtures, without changing any layout row."
+      },
+      {
+        "input": "A wave reservation or competing layout write after the initial read",
+        "action": "Attempt the move",
+        "expected": "Existing phase/CAS rules refuse or safely retry; no active frozen arrangement changes."
+      },
+      {
+        "input": "A damaged wall moved into or out of a Workshop radius at a controlled DB instant",
+        "action": "Apply the approved move and advance future time",
+        "expected": "Past healing uses the old rate; only future time uses the new rate, with the same health instance and no action-induced free heal."
+      }
+    ],
+    "questions": [
+      "Why must the server change as well as the green preview?",
+      "How is D056 retirement versioned?",
+      "Which concurrency check prevents a stale layout from being stored?"
+    ],
+    "risks": [
+      "An incomplete version/identity transition can silently drop or relocate paid structures.",
+      "A client preview or stale receipt must not grant price, ownership, health or phase authority.",
+      "Shared SQL, recovery and renderer hooks require one active integration owner and explicit source-version evidence."
+    ],
+    "notes": [
+      "All GitHub text and shared documentation for this work is English and uses neutral Base Building / Village Visuals / Wall Gameplay naming. Existing technical source paths remain exact."
+    ],
+    "parallel_owner": "One writer owns this bounded helper or transaction in a separate clone. Coordinate shared layout, recovery, route/controller and database hooks with the integration owner.",
+    "optional": false,
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "checks": [
+      "Run meaningful focused rules/transaction/input cases for the changed scope; exact new test filenames are proposed until implementation.",
+      "For frontend work run applicable existing tests, build, budget and text/UI checks; for backend work use relevant pytest/Ruff and scratch SQL tests when SQL changes. Report exact results; none were run for this planning audit.",
+      "For visible changes provide actual-game before/after at 1280\u00d7720 and 375\u00d7812 with source, fixture, quality and limitations."
+    ],
+    "not_in_scope": [
+      "No new online-play requirement, package, service or account.",
+      "No migration application, production flag activation, deployment, main push, force push or agent merge.",
+      "Do not add a second wall upgrade economy or silently retune legacy highscore difficulty.",
+      "This work does not make the current server a full combat verifier or silently change leaderboard/reward policy."
+    ],
+    "plan": [
+      "Introduce the selected version branch in pure server validation without global rule removal.",
+      "Allow approved off-lane positions and preserve all selected invalid-area/refusal cases.",
+      "Retain owner/phase/CAS guarantees and unchanged legacy behavior.",
+      "Run common geometry and stale/concurrent move cases after implementation.",
+      "Coordinate activation with stable reads from WALL-07."
+    ],
+    "github_issue": 247,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/247"
+  },
+  {
+    "id": "WALL-07",
+    "title": "Preserve effective legacy wall layouts during the version transition",
+    "kind": "implementation",
+    "priority": "P1",
+    "size": "One or two focused sessions; split at the stated pure-rule, transaction or adapter boundary before claiming if source/test/capture changes exceed about 400 lines.",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "goal": "Stop new valid walls from being silently relocated by the old read-time lane normalizer while preserving paid legacy layouts and state.",
+    "files": [
+      "backend/server/island/layout.py:167\u2013243",
+      "backend/server/island/layout_store.py",
+      "backend/server/island/service.py:258\u2013287",
+      "supabase/migrations/<wall_layout_version>.sql (proposed if required; do not apply)",
+      "backend/server/tests/test_island_layout_rules.py"
+    ],
+    "baseline": [
+      "positions_of always calls settle_walls; old off-lane raw rows can be displayed at a different effective lane position without writing that position.",
+      "The same old rows currently produce deterministic read-time normalization."
+    ],
+    "parent_tasks": [
+      "BASE-50"
+    ],
+    "dependencies": [
+      "WALL-01",
+      "WALL-06"
+    ],
+    "conditional_dependencies": [],
+    "acceptance": [
+      "Implement the reviewed transition policy explicitly: preserve the chosen currently effective legacy layout/value rather than accidentally reverting raw old coordinates or re-settling new legal positions.",
+      "A confirmed new off-lane position survives read, reload, continue and the next wave without lane snapping.",
+      "Preserve stable IDs, building/level, payment history, health fraction and recovery instance/epoch rules; a geometry migration is not a free repair.",
+      "Malformed/unsupported legacy data follows a documented bounded fallback; do not drop paid rows or silently choose random cells.",
+      "Keep owner reset semantics and unrelated best-score/reward policy unchanged; write/apply boundaries remain explicit.",
+      "Settle existing recovery at one database instant under the OLD effective coordinates/rate before changing positions or rule interpretation, then use the new layout only for future time. Preserve hpUnits, instance and repair sequence; no retroactive Workshop benefit.",
+      "Transition the selected effective legacy positions and the distinct new rule marker atomically; no read observes a mixed interpretation. Existing stored-layout version2 alone is not proof of free-grid admission."
+    ],
+    "scenarios": [
+      {
+        "input": "A legacy raw row that D056 currently displays at another effective cell",
+        "action": "Transition according to the approved policy",
+        "expected": "The explicitly selected visible layout is preserved with no surprise shift or lost upgrade value."
+      },
+      {
+        "input": "A newly confirmed valid off-lane wall",
+        "action": "Reload, continue and prepare the next wave",
+        "expected": "Its exact saved coordinate and state persist; settle_walls does not move it back."
+      },
+      {
+        "input": "A damaged upgraded wall and old receipt during reset/transition fixtures",
+        "action": "Read and reconcile the selected epoch/version",
+        "expected": "No free heal, duplicate refund or stale old instance is attached to a new structure."
+      }
+    ],
+    "questions": [
+      "Why are raw stored coordinates not always the layout the player currently sees?",
+      "What makes normalization unsafe for newly legal walls?",
+      "Which paid and recovery values must survive unchanged?"
+    ],
+    "risks": [
+      "An incomplete version/identity transition can silently drop or relocate paid structures.",
+      "A client preview or stale receipt must not grant price, ownership, health or phase authority.",
+      "Shared SQL, recovery and renderer hooks require one active integration owner and explicit source-version evidence."
+    ],
+    "notes": [
+      "All GitHub text and shared documentation for this work is English and uses neutral Base Building / Village Visuals / Wall Gameplay naming. Existing technical source paths remain exact."
+    ],
+    "parallel_owner": "One writer owns this bounded helper or transaction in a separate clone. Coordinate shared layout, recovery, route/controller and database hooks with the integration owner.",
+    "optional": false,
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "checks": [
+      "Run meaningful focused rules/transaction/input cases for the changed scope; exact new test filenames are proposed until implementation.",
+      "For frontend work run applicable existing tests, build, budget and text/UI checks; for backend work use relevant pytest/Ruff and scratch SQL tests when SQL changes. Report exact results; none were run for this planning audit.",
+      "For visible changes provide actual-game before/after at 1280\u00d7720 and 375\u00d7812 with source, fixture, quality and limitations."
+    ],
+    "not_in_scope": [
+      "No new online-play requirement, package, service or account.",
+      "No migration application, production flag activation, deployment, main push, force push or agent merge.",
+      "Do not add a second wall upgrade economy or silently retune legacy highscore difficulty.",
+      "This work does not make the current server a full combat verifier or silently change leaderboard/reward policy."
+    ],
+    "plan": [
+      "Capture the current effective legacy layout, including read-time lane normalization.",
+      "Implement the explicit selected preservation/version policy rather than choosing raw or displayed positions accidentally.",
+      "Keep new legal stored positions stable across reads and wave preparation.",
+      "Verify identity, payment and recovery-instance preservation plus malformed data/reset boundaries.",
+      "Keep migration application and rollout separate."
+    ],
+    "github_issue": 248,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/248"
+  },
+  {
+    "id": "WALL-08",
+    "title": "Use the server\u2019s free-grid wall verdicts in existing Move and chain previews",
+    "kind": "implementation",
+    "priority": "P1",
+    "size": "One or two focused sessions; split at the stated pure-rule, transaction or adapter boundary before claiming if source/test/capture changes exceed about 400 lines.",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "goal": "Make existing client preview rules match the approved server version without changing the visual editor or adding purchase authority.",
+    "files": [
+      "frontend/src/island/placement.js:55\u201372",
+      "frontend/src/island/move-mode.js",
+      "frontend/src/island/move-preview.js",
+      "frontend/tests/island/placement.test.js",
+      "backend/server/tests/test_island_layout_rules.py shared fixture mapping"
+    ],
+    "baseline": [
+      "The client separately implements onWallLane and rejects off_path; current movement preview already snaps by 0.5.",
+      "VIS-27 owns the grid/ghost/check-cross presentation. This task changes versioned verdict inputs only."
+    ],
+    "parent_tasks": [
+      "BASE-50",
+      "BASE-11"
+    ],
+    "dependencies": [
+      "WALL-06",
+      "WALL-07",
+      "WALL-13"
+    ],
+    "conditional_dependencies": [],
+    "acceptance": [
+      "The exact approved geometry fixtures have matching browser/server allowed/refused results and reason order.",
+      "Do not display the old derived-lane restriction as the only legal region under the new version; retain it on the legacy path.",
+      "Sea, footprint/keep-out/overlap, capacity and unsupported-version errors remain explicit; a visually green grid is not universal permission.",
+      "Unknown or stale layout versions disable committing safely and refresh actual state instead of guessing free placement.",
+      "Keep actual snap/nudge/input/phase/confirm semantics; VIS-27 supplies appearance rather than another validator.",
+      "Mirror the approved built/unbuilt reservation policy. Explain a reserved empty site honestly; do not call it a built building or show an illegal new-default single build as valid."
+    ],
+    "scenarios": [
+      {
+        "input": "A new-version legal off-lane wall and the same coordinate under legacy rules",
+        "action": "Open Move and inspect both verdicts",
+        "expected": "Each matches its server rule and honest reason; no blanket lane overlay contradicts the new contract."
+      },
+      {
+        "input": "The shared half-grid/coast/keep-out fixture matrix",
+        "action": "Evaluate client and server results",
+        "expected": "No green preview can submit an area the server considers forbidden."
+      },
+      {
+        "input": "An unknown version or wave reservation while a draft is visible",
+        "action": "Attempt confirmation or allow the normal handoff",
+        "expected": "Commit is blocked/cleared under existing rules; no stale ghost becomes a persisted wall."
+      }
+    ],
+    "questions": [
+      "Why must the browser consume the selected layout version?",
+      "Which layer remains authoritative after a green preview?",
+      "How does this differ from the visual grid task?"
+    ],
+    "risks": [
+      "An incomplete version/identity transition can silently drop or relocate paid structures.",
+      "A client preview or stale receipt must not grant price, ownership, health or phase authority.",
+      "Shared SQL, recovery and renderer hooks require one active integration owner and explicit source-version evidence."
+    ],
+    "notes": [
+      "All GitHub text and shared documentation for this work is English and uses neutral Base Building / Village Visuals / Wall Gameplay naming. Existing technical source paths remain exact."
+    ],
+    "parallel_owner": "One writer owns this bounded helper or transaction in a separate clone. Coordinate shared layout, recovery, route/controller and database hooks with the integration owner.",
+    "optional": false,
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "checks": [
+      "Run meaningful focused rules/transaction/input cases for the changed scope; exact new test filenames are proposed until implementation.",
+      "For frontend work run applicable existing tests, build, budget and text/UI checks; for backend work use relevant pytest/Ruff and scratch SQL tests when SQL changes. Report exact results; none were run for this planning audit.",
+      "For visible changes provide actual-game before/after at 1280\u00d7720 and 375\u00d7812 with source, fixture, quality and limitations."
+    ],
+    "not_in_scope": [
+      "No new online-play requirement, package, service or account.",
+      "No migration application, production flag activation, deployment, main push, force push or agent merge.",
+      "Do not add a second wall upgrade economy or silently retune legacy highscore difficulty.",
+      "This work does not make the current server a full combat verifier or silently change leaderboard/reward policy."
+    ],
+    "plan": [
+      "Consume the actual selected layout version in pure client rules.",
+      "Match server fixtures and refusal order for off-lane, coast, overlap and keep-out cases.",
+      "Update only lane-validity presentation inputs; reuse VIS-27 for appearance.",
+      "Clear/block stale unsupported and reserved-wave drafts under existing input rules.",
+      "Verify client/server parity and real Move feedback."
+    ],
+    "github_issue": 249,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/249"
+  },
+  {
+    "id": "WALL-09",
+    "title": "Quote a selected wall upgrade batch without inventing new upgrade rules",
+    "kind": "implementation",
+    "priority": "P2",
+    "size": "One or two focused sessions; split at the stated pure-rule, transaction or adapter boundary before claiming if source/test/capture changes exceed about 400 lines.",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "goal": "Prepare an authoritative all-or-nothing quote for upgrading a bounded selected set using the existing levels, prices and recovery eligibility.",
+    "files": [
+      "backend/server/island/rules.py:293\u2013329,479\u2013483",
+      "backend/server/island/service.py:471\u2013504",
+      "backend/server/island/<wall_upgrade_batch_rules>.py (proposed)",
+      "backend/server/tests/<wall_upgrade_batch_rules>.py (proposed)",
+      "docs/INTERFACES.md",
+      "backend/server/island/structure_recovery_manifest.py:max_structure_hp"
+    ],
+    "baseline": [
+      "Walls already have levels 1\u20135, prices 10/20/40/80/160 and HP 60/120/200/300/420 before modifiers.",
+      "Single upgrades already use island progress, payer Engineer discount, idempotent action UID and reserved/full-health Recovery V1 guards."
+    ],
+    "parent_tasks": [
+      "BASE-35",
+      "BASE-14"
+    ],
+    "dependencies": [
+      "WALL-01",
+      "WALL-02"
+    ],
+    "conditional_dependencies": [],
+    "acceptance": [
+      "Define an explicit selected set, one next level per piece and an all-or-nothing intent; do not silently buy an arbitrary affordable subset.",
+      "Quote exact current/next level, effective maxHP, current eligible state, payer price/discount, total and per-piece refusal.",
+      "Respect highest level, campaign locks, current phase and approved needs_repair policy. No second wall progression, timer, free heal or new stat table is introduced.",
+      "Use bounded canonical IDs and expected instance/level/version inputs; quote never charges, reserves funds or grants action-induced health; ordinary elapsed recovery is compared at the same controlled server instant.",
+      "Define stale quote/changed role/recovery/wave behavior and immutable same-intent retry semantics before the commit task.",
+      "Effective next maxHP follows the actual legacy/Recovery V1 policy and existing skill/research modifiers; do not display only the raw base HP table when a modifier applies.",
+      "Sum existing per-piece rounded Engineer prices, not one rounded discounted aggregate. Revalidate role, instance, level, phase and exact total at commit under the recorded stale-price policy.",
+      "Recovery V1 repair-first/full-health eligibility is protocol-specific. Keep legacy single-upgrade behavior explicit rather than imposing a new global damage restriction."
+    ],
+    "scenarios": [
+      {
+        "input": "Mixed-level selected walls including one max-level or damaged Recovery V1 piece",
+        "action": "Request the batch quote",
+        "expected": "Each reason is explicit and the all-or-nothing batch is not presented as fully eligible."
+      },
+      {
+        "input": "An eligible selection with an Engineer payer",
+        "action": "Compare the quote to existing single-upgrade pricing and HP functions",
+        "expected": "Per-piece rounding, unlocks and total agree exactly with current authoritative rules."
+      },
+      {
+        "input": "Same UID with changed selection/levels or a wave accepted after quote",
+        "action": "Validate the proposed commit identity",
+        "expected": "The conflict/stale-phase policy is explicit; no quote itself reserves money or upgrades anything."
+      }
+    ],
+    "questions": [
+      "Which existing upgrade rules are reused?",
+      "Why cannot an ineligible piece be silently skipped?",
+      "Which values can change between quote and commit?"
+    ],
+    "risks": [
+      "An incomplete version/identity transition can silently drop or relocate paid structures.",
+      "A client preview or stale receipt must not grant price, ownership, health or phase authority.",
+      "Shared SQL, recovery and renderer hooks require one active integration owner and explicit source-version evidence."
+    ],
+    "notes": [
+      "A usability extension for larger wall sets. Existing single-wall upgrades remain usable; this does not block initial useful free-grid placement.",
+      "For failure tests freeze the server instant or compare with the same canonical old-policy settlement. No action-induced heal or new purchase instance is allowed, but independently earned automatic recovery may materialize.",
+      "All GitHub text and shared documentation for this work is English and uses neutral Base Building / Village Visuals / Wall Gameplay naming. Existing technical source paths remain exact."
+    ],
+    "parallel_owner": "One writer owns this bounded helper or transaction in a separate clone. Coordinate shared layout, recovery, route/controller and database hooks with the integration owner.",
+    "optional": true,
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "checks": [
+      "Run meaningful focused rules/transaction/input cases for the changed scope; exact new test filenames are proposed until implementation.",
+      "For frontend work run applicable existing tests, build, budget and text/UI checks; for backend work use relevant pytest/Ruff and scratch SQL tests when SQL changes. Report exact results; none were run for this planning audit.",
+      "For visible changes provide actual-game before/after at 1280\u00d7720 and 375\u00d7812 with source, fixture, quality and limitations."
+    ],
+    "not_in_scope": [
+      "No new online-play requirement, package, service or account.",
+      "No migration application, production flag activation, deployment, main push, force push or agent merge.",
+      "Do not add a second wall upgrade economy or silently retune legacy highscore difficulty.",
+      "This work does not make the current server a full combat verifier or silently change leaderboard/reward policy."
+    ],
+    "plan": [
+      "Define one bounded selected-set upgrade intent and all-or-nothing eligibility.",
+      "Reuse current per-piece unlock, pricing/discount and version-appropriate health functions.",
+      "Return actual current/next values and explicit reasons without reserving funds.",
+      "Define stale/changed-identity and same-UID retry behavior.",
+      "Hand the quote to atomic commit and the selected-run inspector."
+    ],
+    "github_issue": 250,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/250"
+  },
+  {
+    "id": "WALL-10",
+    "title": "Commit a wall upgrade batch atomically with preserved payment history",
+    "kind": "implementation",
+    "priority": "P2",
+    "size": "One or two focused sessions; split at the stated pure-rule, transaction or adapter boundary before claiming if source/test/capture changes exceed about 400 lines.",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "goal": "Upgrade and charge the eligible selected set exactly once, or perform no action-induced level/payment/health change; independently earned canonical recovery may still be settled.",
+    "files": [
+      "supabase/migrations/<wall_upgrade_batch>.sql (proposed; do not apply)",
+      "backend/server/island/<wall_upgrade_batch>.py (proposed adapter)",
+      "backend/server/routes/<wall_upgrade_batch>.py (proposed narrow route)",
+      "backend/server/tests/island_sql/<wall_upgrade_batch>.py (proposed)"
+    ],
+    "baseline": [
+      "Current island_upgrade charges building_purchase and writes one building_payments row per payer/level for later refunds.",
+      "The recovery mutation locks/guards reserved state and full canonical health before applying a single upgrade."
+    ],
+    "parent_tasks": [
+      "BASE-35",
+      "BASE-14"
+    ],
+    "dependencies": [
+      "WALL-09"
+    ],
+    "conditional_dependencies": [],
+    "acceptance": [
+      "Revalidate the whole bounded selection under the current documented global lock order across wallet, island/recovery and building records; quote values are not trusted authority.",
+      "Charge/update all selected next levels and per-piece payer/payment rows in one transaction or none. Preserve correct refund provenance.",
+      "Same UID/same canonical intent replays the original immutable result without another charge; different intent conflicts. Return current state separately.",
+      "A piece ineligible under the selected protocol, a lock/stale/max-level condition, insufficient funds or the approved wave restriction refuses the entire action without partial upgrades or action-induced healing. V1 needs_repair is not silently imposed on legacy.",
+      "Use current recovery HP/maxHP rules; do not reset a damaged piece by upgrading or modify an active frozen wave.",
+      "Write migration and scratch concurrency proof only. Split database transaction and API reconciliation before claiming if combined diff is oversized.",
+      "Check current authenticated target permission before receipt lookup; test ex-member retry and cross-island/action UID reuse.",
+      "After reset or demolition/rebuild, replay only the immutable past receipt plus separately current state; never apply old levels, positions or HP to a new instance/epoch.",
+      "Keep exact per-piece/per-payer contribution records for refunds. Paid repair is separate, consumes no implicit upgrade action and never becomes refundable upgrade spending."
+    ],
+    "scenarios": [
+      {
+        "input": "Two eligible walls and funds for only one batch",
+        "action": "Race two commits or duplicate the same UID",
+        "expected": "At most one independent batch spends; a duplicate same intent replays and no wall is upgraded twice."
+      },
+      {
+        "input": "One piece changes level, instance or repair eligibility after quote",
+        "action": "Commit the batch",
+        "expected": "The transaction refuses coherently with no partial charges, levels or payment rows."
+      },
+      {
+        "input": "A committed batch response is lost, then one wall is demolished",
+        "action": "Retry the same UID and inspect existing refund provenance",
+        "expected": "No second payment occurs; receipts and per-payer/per-level refund history stay correct."
+      }
+    ],
+    "questions": [
+      "Which lock order and revalidation prevent a stale batch?",
+      "Why must payment history remain per piece and payer?",
+      "What distinguishes an immutable retry receipt from current island state?"
+    ],
+    "risks": [
+      "An incomplete version/identity transition can silently drop or relocate paid structures.",
+      "A client preview or stale receipt must not grant price, ownership, health or phase authority.",
+      "Shared SQL, recovery and renderer hooks require one active integration owner and explicit source-version evidence."
+    ],
+    "notes": [
+      "For failure tests freeze the server instant or compare with the same canonical old-policy settlement. No action-induced heal or new purchase instance is allowed, but independently earned automatic recovery may materialize.",
+      "All GitHub text and shared documentation for this work is English and uses neutral Base Building / Village Visuals / Wall Gameplay naming. Existing technical source paths remain exact."
+    ],
+    "parallel_owner": "One writer owns this bounded helper or transaction in a separate clone. Coordinate shared layout, recovery, route/controller and database hooks with the integration owner.",
+    "optional": true,
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "checks": [
+      "Run meaningful focused rules/transaction/input cases for the changed scope; exact new test filenames are proposed until implementation.",
+      "For frontend work run applicable existing tests, build, budget and text/UI checks; for backend work use relevant pytest/Ruff and scratch SQL tests when SQL changes. Report exact results; none were run for this planning audit.",
+      "For visible changes provide actual-game before/after at 1280\u00d7720 and 375\u00d7812 with source, fixture, quality and limitations."
+    ],
+    "not_in_scope": [
+      "No new online-play requirement, package, service or account.",
+      "No migration application, production flag activation, deployment, main push, force push or agent merge.",
+      "Do not add a second wall upgrade economy or silently retune legacy highscore difficulty.",
+      "This work does not make the current server a full combat verifier or silently change leaderboard/reward policy."
+    ],
+    "plan": [
+      "Use the reviewed batch intent and existing lock order for all affected records.",
+      "Revalidate every selected piece, phase, health and payer before any mutation.",
+      "Commit all levels, wallet entries, per-piece payment history and immutable receipt atomically.",
+      "Prove concurrent, duplicate, stale and lost-response behavior in scratch transactions.",
+      "Wire a bounded adapter or split that boundary before implementation if oversized; do not apply migrations."
+    ],
+    "github_issue": 251,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/251"
+  },
+  {
+    "id": "WALL-11",
+    "title": "Show a selected wall run\u2019s real level, health and upgrade action",
+    "kind": "implementation",
+    "priority": "P2",
+    "size": "One or two focused sessions; split at the stated pure-rule, transaction or adapter boundary before claiming if source/test/capture changes exceed about 400 lines.",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "goal": "Make a connected selection practical to inspect and upgrade while clearly distinguishing existing single upgrades from the optional supported batch action.",
+    "files": [
+      "frontend/src/island/<wall-selection-model>.js (proposed; shared with BASE-14 selection)",
+      "frontend/src/island/card-model.js",
+      "frontend/src/island/ui.js or a narrow wall inspector (proposed)",
+      "frontend/src/island/structure-recovery-model.js read-only reuse",
+      "frontend/tests/island/<wall-upgrade-inspector>.test.js (proposed)"
+    ],
+    "baseline": [
+      "Current buildCardModel already exposes wall level, stats, price, upgrade locks and recovery feedback.",
+      "BASE-14 owns connected-group selection/move; this child consumes that shared selection rather than introducing a second group tool."
+    ],
+    "parent_tasks": [
+      "BASE-14",
+      "BASE-35",
+      "BASE-08"
+    ],
+    "dependencies": [
+      "WALL-09",
+      "WALL-10"
+    ],
+    "conditional_dependencies": [],
+    "acceptance": [
+      "Display selected count and mixed levels/health truthfully; compare each real next level/HP/cost and show why any piece is ineligible.",
+      "Keep single-wall Upgrade working through its existing route; expose a batch action only when the approved backend quote/commit contract is actually supported.",
+      "Confirm the exact selected eligible intent and total; never label a skipped/partial selection as the whole run.",
+      "Retain repair-first and wave/unknown/pending feedback, focus/input ownership and actual 44px controls at 375px.",
+      "Use VIS-14\u2019s approved wall art/level identity and actual damaged/ruin state; pictures do not invent available upgrades."
+    ],
+    "scenarios": [
+      {
+        "input": "A connected line with level 1, level 3 and level 5 pieces",
+        "action": "Select and inspect the run",
+        "expected": "Mixed levels and exact available next steps are explicit; no single fake level or universal Upgrade button is shown."
+      },
+      {
+        "input": "A partially damaged Recovery V1 run or unsupported batch backend",
+        "action": "Open its actions",
+        "expected": "Existing repair/phase constraints remain; unsupported batch purchase is not offered as functional."
+      },
+      {
+        "input": "A valid batch with a long stale/insufficient-funds reply at 375\u00d7812",
+        "action": "Confirm, retry or cancel using actual controls",
+        "expected": "Selection, total, state and focus stay honest; no duplicate request or hidden primary control."
+      }
+    ],
+    "questions": [
+      "Why does a selected run not necessarily have one shared level?",
+      "Which backend capability enables the batch button?",
+      "How are repair and upgrade kept distinct?"
+    ],
+    "risks": [
+      "An incomplete version/identity transition can silently drop or relocate paid structures.",
+      "A client preview or stale receipt must not grant price, ownership, health or phase authority.",
+      "Shared SQL, recovery and renderer hooks require one active integration owner and explicit source-version evidence."
+    ],
+    "notes": [
+      "Consume the bounded selection component from BASE-14; do not wait for every group-move acceptance criterion if that component is independently ready.",
+      "All GitHub text and shared documentation for this work is English and uses neutral Base Building / Village Visuals / Wall Gameplay naming. Existing technical source paths remain exact."
+    ],
+    "parallel_owner": "One writer owns this bounded helper or transaction in a separate clone. Coordinate shared layout, recovery, route/controller and database hooks with the integration owner.",
+    "optional": true,
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "checks": [
+      "Run meaningful focused rules/transaction/input cases for the changed scope; exact new test filenames are proposed until implementation.",
+      "For frontend work run applicable existing tests, build, budget and text/UI checks; for backend work use relevant pytest/Ruff and scratch SQL tests when SQL changes. Report exact results; none were run for this planning audit.",
+      "For visible changes provide actual-game before/after at 1280\u00d7720 and 375\u00d7812 with source, fixture, quality and limitations."
+    ],
+    "not_in_scope": [
+      "No new online-play requirement, package, service or account.",
+      "No migration application, production flag activation, deployment, main push, force push or agent merge.",
+      "Do not add a second wall upgrade economy or silently retune legacy highscore difficulty.",
+      "This work does not make the current server a full combat verifier or silently change leaderboard/reward policy."
+    ],
+    "plan": [
+      "Consume the shared BASE-14 selection model rather than add a competing group tool.",
+      "Show mixed levels/health and actual current/next stat and cost details.",
+      "Keep the existing single Upgrade path and reveal batch action only with real supported backend capability.",
+      "Handle repair-first, locked, pending/unknown and long-refusal states with actual accessible controls.",
+      "Capture real desktop/phone input and preserve VIS-14 appearance identity."
+    ],
+    "external_dependency_events": {
+      "BASE-14": "The independently ready bounded connected-selection component, without requiring the entire group-move parent to close."
+    },
+    "github_issue": 252,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/252"
+  },
+  {
+    "id": "WALL-12",
+    "title": "Commit a positioned wall chain atomically and reconcile its receipt",
+    "kind": "implementation",
+    "priority": "P1",
+    "size": "One or two focused sessions; split at the stated pure-rule, transaction or adapter boundary before claiming if source/test/capture changes exceed about 400 lines.",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "goal": "Bind the BASE-12 transaction to real free-grid positions, approved inventory and immutable purchase identity, without per-segment partial buys or moves.",
+    "files": [
+      "supabase/migrations/<atomic_wall_chain>.sql (proposed; do not apply)",
+      "backend/server/island/<wall_chain_store>.py (proposed small adapter)",
+      "backend/server/routes/<wall_chain>.py (proposed narrow route)",
+      "backend/server/tests/island_sql/<wall_chain>.py (proposed)"
+    ],
+    "baseline": [
+      "Existing build and move are separate actions. Current single Move uses a whole-layout compare-and-swap and refuses active-wave changes.",
+      "BASE-12 is the rollup owner for atomic chain purchase; BASE-11 supplies the one draft/confirm interaction."
+    ],
+    "parent_tasks": [
+      "BASE-12"
+    ],
+    "dependencies": [
+      "WALL-05",
+      "WALL-06",
+      "WALL-07",
+      "WALL-08"
+    ],
+    "conditional_dependencies": [
+      "WALL-03/19/20/21/22 only if the larger wall cohort is selected; otherwise exercise the existing 12-piece allowance."
+    ],
+    "acceptance": [
+      "Validate and commit all requested wall IDs, positions, build rows, recovery instances and payer charges together or not at all.",
+      "Lock/recheck current layout/version, allowance, reservation and wallet before commit; no client total or green ghost is trusted.",
+      "Same UID/same intent returns an immutable purchase receipt, with separately refreshed balance/island. Same UID/different intent is refused.",
+      "Any invalid piece, occupied cell, changed allowance, insufficient funds or concurrent wave causes no paid partial chain.",
+      "Two overlapping buyers or two affordable-only-once requests cannot both win; preserve per-piece payment/refund history.",
+      "Keep additive migration/application and rollout boundaries explicit. If SQL plus route/reconciliation exceeds review scope, split at that boundary before implementation; never hide partial failure behind a UI success.",
+      "Use a stable batch receipt plus distinct per-piece refs/instances and valid contribution records; one ref per batch cannot be reused as every building ref.",
+      "Check current target permission before receipt replay. A former member cannot use a known UID to retrieve private results.",
+      "A lost reply keeps the same pending action/intent. Closing a panel is not cancellation of a committed transaction; reconcile before generating a new UID.",
+      "After reset, demolition or rebuild, an old same-UID receipt remains immutable history and cannot rebuild, heal, reallocate or refund a new instance.",
+      "At a controlled server instant, refusal creates no purchase-induced rows or healing. Legitimate settlement of elapsed existing recovery is not prohibited or mislabeled as a failed-action side effect.",
+      "Recheck the trusted persisted rule/cohort, exact epoch/instances, canonical ID-position pairs and per-piece rounded price under the existing lock order; client totals/version claims never grant authority.",
+      "A late committed reply after leaving/resetting/replacing the active island context cannot repaint another context or attach old health/layout to a new epoch. Reconcile the original action; closing its panel does not undo a committed purchase.",
+      "Recheck every construction ID is still unlocked/unbuilt and the simultaneous final occupancy is legal. If the selected inventory policy releases old default reservations, route or refuse legacy/default single-build calls safely; no stale default may construct on an occupied cell."
+    ],
+    "scenarios": [
+      {
+        "input": "A valid bent chain with one cell taken after preview",
+        "action": "Confirm the exact canonical intent",
+        "expected": "The whole transaction refuses; no wall, layout, health or coin row is partially committed."
+      },
+      {
+        "input": "Two overlapping purchases or one same-UID retry after lost response",
+        "action": "Race/retry against scratch transactions",
+        "expected": "One applicable independent result or one immutable replay; no double charge, duplicate segment or reallocation of its IDs."
+      },
+      {
+        "input": "Wave reservation accepted or inventory unlocked/changed during confirmation",
+        "action": "Revalidate and return the outcome",
+        "expected": "The approved phase/version contract decides atomically; local draft never mutates the active wave or presents an unknown result as failure/success."
+      },
+      {
+        "input": "Two pieces with different payers/upgrade histories, then one demolition and an old-UID retry after reset",
+        "action": "Inspect contribution/refund history and replay the old batch receipt",
+        "expected": "Existing per-piece/per-payer refund rules remain correct, paid repair stays non-refundable and old actions do not reattach to new instances."
+      }
+    ],
+    "questions": [
+      "Why is build-then-Move per segment unsafe for a chain?",
+      "Which state is locked and revalidated at payment time?",
+      "How does a lost response differ from a rejected purchase?"
+    ],
+    "risks": [
+      "An incomplete version/identity transition can silently drop or relocate paid structures.",
+      "A client preview or stale receipt must not grant price, ownership, health or phase authority.",
+      "Shared SQL, recovery and renderer hooks require one active integration owner and explicit source-version evidence."
+    ],
+    "notes": [
+      "Exclusive slice under BASE-12: this is transaction/receipt execution, while BASE-11 owns drafting and WALL-05 owns canonical validation. Do not claim the whole parent as a competing duplicate implementation.",
+      "For failure tests freeze the server instant or compare with the same canonical old-policy settlement. No action-induced heal or new purchase instance is allowed, but independently earned automatic recovery may materialize.",
+      "All GitHub text and shared documentation for this work is English and uses neutral Base Building / Village Visuals / Wall Gameplay naming. Existing technical source paths remain exact."
+    ],
+    "parallel_owner": "One writer owns this bounded helper or transaction in a separate clone. Coordinate shared layout, recovery, route/controller and database hooks with the integration owner.",
+    "optional": false,
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "checks": [
+      "Run meaningful focused rules/transaction/input cases for the changed scope; exact new test filenames are proposed until implementation.",
+      "For frontend work run applicable existing tests, build, budget and text/UI checks; for backend work use relevant pytest/Ruff and scratch SQL tests when SQL changes. Report exact results; none were run for this planning audit.",
+      "For visible changes provide actual-game before/after at 1280\u00d7720 and 375\u00d7812 with source, fixture, quality and limitations."
+    ],
+    "not_in_scope": [
+      "No new online-play requirement, package, service or account.",
+      "No migration application, production flag activation, deployment, main push, force push or agent merge.",
+      "Do not add a second wall upgrade economy or silently retune legacy highscore difficulty.",
+      "This work does not make the current server a full combat verifier or silently change leaderboard/reward policy."
+    ],
+    "plan": [
+      "Accept WALL-05 canonical intent and lock current island/layout/inventory/wallet state in the existing reviewed global lock order.",
+      "Validate every ID and positioned footprint under the selected version before committing.",
+      "Write complete chain, positions, health instances and per-piece payment provenance in one transaction.",
+      "Persist and replay the immutable receipt independently of current island/balance refresh.",
+      "Prove overlap races, duplicate/conflicting UIDs, lost responses, insufficient funds and wave-reservation failure; do not apply migrations."
+    ],
+    "github_issue": 253,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/253"
+  },
+  {
+    "local_id": "COMBAT-01",
+    "title": "Make half-grid wall footprints agree with continuous boarder clearance",
+    "kind": "implementation",
+    "parent_tasks": [
+      "BASE-50"
+    ],
+    "size": "M, one geometry adapter and focused regression cases",
+    "goal": "Prove every approved free-grid offset uses the same wall shape in placement, route occupancy and continuous movement; fix only demonstrated disagreements.",
+    "files": [
+      "frontend/src/pirates/boarder-paths.js:21\u201322,48\u2013109",
+      "frontend/src/pirates/path-grid.js:15\u201336,51\u201357",
+      "frontend/tests/pirates/pathing-wiring.test.js",
+      "frontend/tests/pirates/wall-blocking.test.js",
+      "backend/content/island_layout.json footprint contract",
+      "backend/server/tests/test_island_layout_rules.py shared geometry fixtures"
+    ],
+    "baseline": [
+      "The current wall footprint is 2\u00d72 world units and uses sixteen samples on a 1-unit path grid; placement supports 0.5-unit snapped positions.",
+      "wallInWay already blocks continuous steps and permits an occupant to leave a wall rebuilt around it."
+    ],
+    "dependencies": [
+      "WALL-01"
+    ],
+    "acceptance": [
+      "Use the approved existing/legacy footprint contract; this task does not silently resize every saved wall.",
+      "Check integer and half-grid translations, full shared edges, narrow legal gaps, corner contacts and coast-adjacent placements.",
+      "A route grid must not advertise a corridor that continuous wall clearance then blocks forever, or allow passage through a standing wall.",
+      "Keep stable-ID tie-breaking and existing no-corner-cutting behavior. If a fix changes existing simulation outputs, record the reviewed compatibility/rule decision instead of silently changing old waves.",
+      "Use one explicit shared fixture/manifest for the approved shape values and body-clearance edge cases; do not maintain an undocumented second wall shape in the route adapter."
+    ],
+    "scenarios": [
+      {
+        "input": "An edge-to-edge straight or corner wall chain shifted by 0.5 world units",
+        "action": "Trace boarders through the current route and continuous-step paths",
+        "expected": "A standing chain stays closed and a wall is breached before crossing; no boarder oscillates against a rasterization disagreement."
+      },
+      {
+        "input": "Two walls with an approved open gap and the same layout with the gap closed",
+        "action": "Trace the same initial boarder state",
+        "expected": "The genuine gap is usable according to body clearance; closing it changes the required breach rather than merely the illustration."
+      },
+      {
+        "input": "A legacy saved layout at its unchanged coordinates",
+        "action": "Build the new approved occupancy adapter",
+        "expected": "Legacy footprint/position behavior is preserved or explicitly versioned under the reviewed contract."
+      }
+    ],
+    "risks": [
+      "A 1-unit route grid can disagree with half-grid continuous bounds.",
+      "Changing footprint sampling globally can alter previously frozen wave behavior."
+    ],
+    "questions": [
+      "Why is placement snap size different from path-grid resolution?",
+      "What proves a visible gap is actually traversable?",
+      "When does a geometry correction need a compatibility decision?"
+    ],
+    "id": "WALL-13",
+    "source_proposal": "COMBAT-01",
+    "priority": "P1",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "conditional_dependencies": [],
+    "optional": false,
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "notes": [
+      "All GitHub text and shared documentation for this work is English and uses neutral Base Building / Village Visuals / Wall Gameplay naming. Existing technical source paths remain exact."
+    ],
+    "parallel_owner": "One combat integration owner coordinates geometry/snapshot/recovery hooks. The route-preview cache fix can be owned separately; preserve frozen active-wave behavior.",
+    "checks": [
+      "Run the relevant existing and new focused geometry, snapshot, routing or scratch-state cases; record actual results.",
+      "For visible guide/gap changes provide actual game before/after at 1280\u00d7720 and 375\u00d7812.",
+      "No runtime test, browser or balance result was executed by creation of this proposal."
+    ],
+    "not_in_scope": [
+      "No new online-play requirement, package, service or account.",
+      "No migration application, production flag activation, deployment, main push, force push or agent merge.",
+      "Do not add a second wall upgrade economy or silently retune legacy highscore difficulty.",
+      "This work does not make the current server a full combat verifier or silently change leaderboard/reward policy."
+    ],
+    "plan": [
+      "Build shared approved shape/clearance fixtures for integer and half-grid offsets.",
+      "Compare path-grid occupancy with continuous wall/body bounds and selected server geometry.",
+      "Fix only demonstrated disagreement while retaining deterministic ties and corner protection.",
+      "Verify open gaps, closed chains, legacy shapes and unchanged frozen-version behavior."
+    ],
+    "github_issue": 254,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/254"
+  },
+  {
+    "local_id": "COMBAT-02",
+    "title": "Carry approved wall identities and geometry through frozen wave inputs",
+    "kind": "integration",
+    "parent_tasks": [
+      "BASE-50"
+    ],
+    "size": "M, bounded snapshot/input integration",
+    "goal": "Ensure newly permitted positions or wall IDs enter combat through the accepted immutable snapshot, not a later local island read.",
+    "files": [
+      "frontend/src/pirates/recovery-snapshot.js:20\u201327,40\u201379",
+      "frontend/src/pirates/controller.js:162\u2013185",
+      "frontend/src/pirates/wave-rules.js:10\u201325",
+      "frontend/src/pirates/sim.js:584\u2013608",
+      "frontend/tests/pirates/recovery-snapshot.test.js",
+      "frontend/tests/pirates/wave-rules.test.js"
+    ],
+    "baseline": [
+      "Existing wave rules and Recovery V1 version pairs are already frozen and validated.",
+      "createBoarderPaths computes shape cells at construction; its HP refresh is not a general live editor for moving a wall mid-wave."
+    ],
+    "dependencies": [
+      "WALL-01",
+      "WALL-02",
+      "WALL-06",
+      "WALL-07",
+      "WALL-08",
+      "WALL-13"
+    ],
+    "acceptance": [
+      "Use actual accepted positions, kind, level, maxHP and instance IDs for every supported wall, including newly allowed IDs.",
+      "Do not reread a mutable village layout to replace a reserved wave snapshot during preparation, combat or reconnect.",
+      "Preserve legacy rule/version behavior. Add a geometry/rule version only if the reviewed simulation compatibility decision actually requires one.",
+      "Pending Move/upgrade requests cannot mutate the reserved wall arrangement. A later fresh wave may use the confirmed new state.",
+      "Reject unknown/mismatched snapshots honestly instead of substituting a default wall or granting free health."
+    ],
+    "scenarios": [
+      {
+        "input": "A reserved wave followed by a later village read with changed wall positions",
+        "action": "Prepare or reconnect the wave",
+        "expected": "Combat keeps the accepted frozen positions; the local read does not rewrite the active wave."
+      },
+      {
+        "input": "A newly approved wall ID with a canonical instance and HP row",
+        "action": "Read the snapshot and build defenses",
+        "expected": "It appears exactly once with correct state, without being dropped by a fixed-id browser list."
+      },
+      {
+        "input": "A legacy wave or unsupported geometry/version combination",
+        "action": "Join or resume",
+        "expected": "The documented legacy path remains exact; unsupported input fails explicitly rather than changing the simulation silently."
+      }
+    ],
+    "risks": [
+      "Dynamic wall inventories can be omitted by fixed spot lists.",
+      "Reusing a local post-upgrade row may change active maxHP and routing cost."
+    ],
+    "questions": [
+      "Which snapshot owns active wall positions?",
+      "Why can an HP refresh not also act as a live Move operation?",
+      "When is an additional version necessary rather than adding a new flag automatically?"
+    ],
+    "id": "WALL-14",
+    "source_proposal": "COMBAT-02",
+    "priority": "P1",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "conditional_dependencies": [
+      "WALL-03 only if a larger wall-ID cohort is selected",
+      "WALL-03/19/20/21/22 only if the larger wall cohort is selected; otherwise exercise the existing 12-piece allowance."
+    ],
+    "optional": false,
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "notes": [
+      "WALL-02 supplies the approved identity contract. A larger implementation cohort is conditional; current twelve-piece snapshots still require complete explicit coverage.",
+      "All GitHub text and shared documentation for this work is English and uses neutral Base Building / Village Visuals / Wall Gameplay naming. Existing technical source paths remain exact."
+    ],
+    "parallel_owner": "One combat integration owner coordinates geometry/snapshot/recovery hooks. The route-preview cache fix can be owned separately; preserve frozen active-wave behavior.",
+    "checks": [
+      "Run the relevant existing and new focused geometry, snapshot, routing or scratch-state cases; record actual results.",
+      "For visible guide/gap changes provide actual game before/after at 1280\u00d7720 and 375\u00d7812.",
+      "No runtime test, browser or balance result was executed by creation of this proposal."
+    ],
+    "not_in_scope": [
+      "No new online-play requirement, package, service or account.",
+      "No migration application, production flag activation, deployment, main push, force push or agent merge.",
+      "Do not add a second wall upgrade economy or silently retune legacy highscore difficulty.",
+      "This work does not make the current server a full combat verifier or silently change leaderboard/reward policy."
+    ],
+    "plan": [
+      "Map approved current IDs and positions to the exact accepted wave snapshot.",
+      "Carry actual level, maxHP, health and instance identity through preparation/reconnect.",
+      "Refuse unsupported combinations and retain exact legacy paths.",
+      "Prove later village reads and pending edits cannot replace reserved inputs."
+    ],
+    "github_issue": 255,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/255"
+  },
+  {
+    "local_id": "COMBAT-03",
+    "title": "Prove useful compartments, gaps and mixed-level breach choices",
+    "kind": "verification and bounded simulation fixes",
+    "parent_tasks": [
+      "BASE-47",
+      "BASE-50"
+    ],
+    "size": "M, representative fixtures and any small demonstrated correction",
+    "goal": "Show that valid free-grid walls create real defensive choices under existing detour/breach rules, rather than promising that every legal wall is always attacked.",
+    "files": [
+      "frontend/src/pirates/pathing.js:19\u201382",
+      "frontend/src/pirates/path-grid.js:60\u201376",
+      "frontend/src/pirates/boarder-paths.js:123\u2013172",
+      "frontend/tests/pirates/pathing.test.js",
+      "frontend/tests/pirates/pathing-wiring.test.js"
+    ],
+    "baseline": [
+      "Detours, closed rings, diagonal corner protection, breach cost and deterministic ties already exist.",
+      "WALL_ENGAGE=3 deliberately makes a nearby wall across the way to the heart attractive; routing is not simply pure globally shortest path."
+    ],
+    "dependencies": [
+      "WALL-06",
+      "WALL-08",
+      "WALL-13",
+      "WALL-14"
+    ],
+    "acceptance": [
+      "Use valid buildable fixtures with equal wall budget and explicit approved wall capacity.",
+      "Cover an open gap, one closed compartment, two compartments, a short weak breach versus a longer detour, mixed wall levels and an irrelevant isolated wall.",
+      "Normal boarder entry cannot cross an intact standing wall. Retain the explicitly approved already-inside repaired-footprint egress exception; friendly captain/projectile behavior follows WALL-01. A real breach changes reachability and the next route.",
+      "Record the existing WALL_ENGAGE policy and any measured undesirable edge case. Do not remove the bias, retune HP or require every wall to be hacked without a separate reviewed balance decision.",
+      "Keep identical seed/input runs deterministic and leave unchanged legacy fixtures intact unless a reviewed versioned change is selected."
+    ],
+    "scenarios": [
+      {
+        "input": "Equal-budget closed compartment and the same arrangement with one real gap",
+        "action": "Run identical seeds and inputs",
+        "expected": "The closed layout requires a breach; the open one may use the gap when appropriate, with measured time/heart consequences."
+      },
+      {
+        "input": "Mixed-level route with a weak wall and a long alternative path",
+        "action": "Inspect the actual target/route choices",
+        "expected": "The chosen behavior matches approved breach costs plus the explicit engage policy, not an invented decorative arrow."
+      },
+      {
+        "input": "A legal wall well beside every useful route",
+        "action": "Run the same encounter",
+        "expected": "It may be bypassed; the roadmap explains useful planning rather than falsely guaranteeing every legal tile is strategically good."
+      }
+    ],
+    "risks": [
+      "Arbitrary free placement exposes corner cases never covered by the 955 derived lane cells.",
+      "A balance retune hidden in a routing test can invalidate highscore comparisons."
+    ],
+    "questions": [
+      "What makes a wall legal but strategically unhelpful?",
+      "How does absolute HP affect breach-versus-detour cost?",
+      "Why must the engage bias be stated explicitly?"
+    ],
+    "id": "WALL-15",
+    "source_proposal": "COMBAT-03",
+    "priority": "P1",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "conditional_dependencies": [],
+    "optional": false,
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "notes": [
+      "All GitHub text and shared documentation for this work is English and uses neutral Base Building / Village Visuals / Wall Gameplay naming. Existing technical source paths remain exact."
+    ],
+    "parallel_owner": "One combat integration owner coordinates geometry/snapshot/recovery hooks. The route-preview cache fix can be owned separately; preserve frozen active-wave behavior.",
+    "checks": [
+      "Run the relevant existing and new focused geometry, snapshot, routing or scratch-state cases; record actual results.",
+      "For visible guide/gap changes provide actual game before/after at 1280\u00d7720 and 375\u00d7812.",
+      "No runtime test, browser or balance result was executed by creation of this proposal."
+    ],
+    "not_in_scope": [
+      "No new online-play requirement, package, service or account.",
+      "No migration application, production flag activation, deployment, main push, force push or agent merge.",
+      "Do not add a second wall upgrade economy or silently retune legacy highscore difficulty.",
+      "This work does not make the current server a full combat verifier or silently change leaderboard/reward policy."
+    ],
+    "plan": [
+      "Create actually valid equal-budget sparse, gap, compartment and mixed-level fixtures.",
+      "Run identical explicit rules/seeds/inputs and inspect real targets, hacks, routes and outcomes.",
+      "Check standing barriers, real breaches and useful versus irrelevant legal placements.",
+      "Document the engage bias and any bounded bug separately from a balance retune."
+    ],
+    "github_issue": 256,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/256"
+  },
+  {
+    "local_id": "COMBAT-04",
+    "title": "Refresh route previews after durability-changing wall upgrades",
+    "kind": "bug fix and focused regression",
+    "parent_tasks": [
+      "BASE-11",
+      "BASE-47"
+    ],
+    "size": "S, a small key correction plus tests",
+    "goal": "Make the existing route guide recompute when an upgrade or skill changes real breach durability while the wall remains in the same relative health band.",
+    "files": [
+      "frontend/src/pirates/battle-guide.js:61\u201368,125\u2013127,385\u2013390",
+      "frontend/src/pirates/path-grid.js:65\u201369",
+      "frontend/tests/pirates/battle-guide.test.js"
+    ],
+    "baseline": [
+      "guideWalls derives absolute maxHp from level/skill or live state.",
+      "routeKey currently contains ID, position and relative quarter-HP band, but not absolute maxHp or equivalent breach cost. A full-health level upgrade can therefore change cost without changing the key. This is a source-inspection finding, not an executed reproduction."
+    ],
+    "dependencies": [],
+    "acceptance": [
+      "First reproduce the same-position/full-band upgrade key omission in a meaningful regression.",
+      "Include the minimal cost-affecting durability input in the guide key so a changed route is recomputed.",
+      "Keep quarter-band caching for frequent damage/healing; do not rebuild the entire route on every HP unit or render frame.",
+      "Check towers when the same shared key carries their durability; do not broaden into a renderer redesign.",
+      "Do not claim the active simulation cache is broken: its maxHP is normally frozen during a wave."
+    ],
+    "scenarios": [
+      {
+        "input": "One wall before and after a full-health level 1\u21925 upgrade, same ID and position",
+        "action": "Build guide inputs and cache keys",
+        "expected": "The cost-affecting change invalidates the old preview even though both shares are 100%."
+      },
+      {
+        "input": "A maxHP-changing skill or research outcome under the same health band",
+        "action": "Refresh the actual guide model",
+        "expected": "The guide uses the approved resulting durability and recomputes when needed."
+      },
+      {
+        "input": "Small HP changes within one unchanged cost band",
+        "action": "Advance several frames",
+        "expected": "No unnecessary full route recomputation is introduced."
+      }
+    ],
+    "risks": [
+      "A visible upgrade can otherwise leave a stale strategic preview.",
+      "Using raw continuously changing HP as a key would defeat deliberate cache bands."
+    ],
+    "questions": [
+      "Why is a health percentage insufficient to describe breach cost?",
+      "Which minimal key input changes after an upgrade?",
+      "Why should the active-wave cache remain governed by its frozen-input contract?"
+    ],
+    "id": "WALL-16",
+    "source_proposal": "COMBAT-04",
+    "priority": "P1",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "conditional_dependencies": [],
+    "optional": false,
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "notes": [
+      "All GitHub text and shared documentation for this work is English and uses neutral Base Building / Village Visuals / Wall Gameplay naming. Existing technical source paths remain exact."
+    ],
+    "parallel_owner": "One combat integration owner coordinates geometry/snapshot/recovery hooks. The route-preview cache fix can be owned separately; preserve frozen active-wave behavior.",
+    "checks": [
+      "Run the relevant existing and new focused geometry, snapshot, routing or scratch-state cases; record actual results.",
+      "For visible guide/gap changes provide actual game before/after at 1280\u00d7720 and 375\u00d7812.",
+      "No runtime test, browser or balance result was executed by creation of this proposal."
+    ],
+    "not_in_scope": [
+      "No new online-play requirement, package, service or account.",
+      "No migration application, production flag activation, deployment, main push, force push or agent merge.",
+      "Do not add a second wall upgrade economy or silently retune legacy highscore difficulty.",
+      "This work does not make the current server a full combat verifier or silently change leaderboard/reward policy."
+    ],
+    "plan": [
+      "Write a focused reproduction for same-position/full-band absolute durability changes.",
+      "Add only the minimal cost-affecting guide-key input.",
+      "Check level/skill/research changes and shared tower inputs if applicable.",
+      "Retain deliberate band caching and distinguish preview behavior from frozen active simulation."
+    ],
+    "github_issue": 257,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/257"
+  },
+  {
+    "local_id": "COMBAT-05",
+    "title": "Keep free-grid breaches and repaired-wall egress truthful",
+    "kind": "integration verification",
+    "parent_tasks": [
+      "BASE-13",
+      "BASE-50"
+    ],
+    "size": "M, focused compartment/state cases and small handoff fixes",
+    "goal": "Verify actual zero-health gaps, paid restoration and safe egress in newly legal compartments without reimplementing recovery.",
+    "files": [
+      "frontend/src/pirates/sim.js:1257\u20131335,1749\u20131787",
+      "frontend/src/pirates/boarder-paths.js:48\u201372,143\u2013172",
+      "frontend/src/pirates/battle-guide.js:131\u2013142,385\u2013394",
+      "frontend/tests/pirates/recovery-controller.test.js",
+      "frontend/tests/pirates/wall-blocking.test.js"
+    ],
+    "baseline": [
+      "Existing movement blocks standing walls and skips their continuous collision when a unit already stands inside a wall rebuilt around it.",
+      "Recovery V1 paid restoration is instance/sequence checked and applied as an ordered event; no art timer is authoritative."
+    ],
+    "dependencies": [
+      "WALL-13",
+      "WALL-14"
+    ],
+    "acceptance": [
+      "At actual zero HP, passage and ruin/gap feedback agree with the actual route; positive HP restores only the approved barrier state.",
+      "A refused/stale repair creates no wall, health or blocked gap. Accepted paid repair updates the correct instance and route at its ordered tick.",
+      "A boarder enclosed by a repaired wall has the approved egress behavior and does not remain permanently stuck or teleport.",
+      "Preserve existing Captain/boarder passability distinctions; do not add player-wall collision or new gates under a combat feedback ticket.",
+      "Keep legacy and Recovery V1 cases explicit; preserve quota, phase pause, price and health accounting."
+    ],
+    "scenarios": [
+      {
+        "input": "A real compartment segment is hacked to zero",
+        "action": "Advance routing and render feedback",
+        "expected": "Boarders can use the actual breach and the scene no longer appears solid there."
+      },
+      {
+        "input": "A boarder occupies a broken wall footprint when canonical paid repair succeeds",
+        "action": "Apply the ordered event and step the existing simulation",
+        "expected": "No duplicate heal or unsafe trap; the unit follows reviewed egress rules and the repaired wall blocks subsequent normal crossing."
+      },
+      {
+        "input": "A refused or duplicate repair receipt for a stale instance",
+        "action": "Refresh the wall and route guide",
+        "expected": "No free health, new blocker or stale restored appearance is invented."
+      }
+    ],
+    "risks": [
+      "Free-grid compartments create more enclosed egress configurations.",
+      "Visual join continuity can hide an actual gap or imply a free restored barrier."
+    ],
+    "questions": [
+      "Which event can restore a wall during a reserved wave?",
+      "Why must a unit already inside a repaired footprint be treated separately?",
+      "Which current player/boarder passability rules are deliberately unchanged?"
+    ],
+    "id": "WALL-17",
+    "source_proposal": "COMBAT-05",
+    "priority": "P1",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "conditional_dependencies": [
+      "WALL-03/19/20/21/22 only if the larger wall cohort is selected; otherwise exercise the existing 12-piece allowance."
+    ],
+    "optional": false,
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "notes": [
+      "All GitHub text and shared documentation for this work is English and uses neutral Base Building / Village Visuals / Wall Gameplay naming. Existing technical source paths remain exact."
+    ],
+    "parallel_owner": "One combat integration owner coordinates geometry/snapshot/recovery hooks. The route-preview cache fix can be owned separately; preserve frozen active-wave behavior.",
+    "checks": [
+      "Run the relevant existing and new focused geometry, snapshot, routing or scratch-state cases; record actual results.",
+      "For visible guide/gap changes provide actual game before/after at 1280\u00d7720 and 375\u00d7812.",
+      "No runtime test, browser or balance result was executed by creation of this proposal."
+    ],
+    "not_in_scope": [
+      "No new online-play requirement, package, service or account.",
+      "No migration application, production flag activation, deployment, main push, force push or agent merge.",
+      "Do not add a second wall upgrade economy or silently retune legacy highscore difficulty.",
+      "This work does not make the current server a full combat verifier or silently change leaderboard/reward policy."
+    ],
+    "plan": [
+      "Use real zero-health and canonical paid-restoration events in new compartment fixtures.",
+      "Check actual passage, barrier restoration and existing occupied-footprint egress.",
+      "Verify refused/stale/duplicate repair behavior cannot create health or blockers.",
+      "Compare route feedback and visual gaps without changing player collision or recovery authority."
+    ],
+    "github_issue": 258,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/258"
+  },
+  {
+    "local_id": "COMBAT-06",
+    "title": "Measure approved wall capacity and layout value under real rule versions",
+    "kind": "verification and bounded performance fixes",
+    "parent_tasks": [
+      "BASE-47",
+      "BASE-48"
+    ],
+    "size": "M, one focused supported-capacity benchmark and comparison report",
+    "goal": "Measure real layout tradeoffs and bounded route work at the actual approved allowance: the initial twelve pieces or a separately selected expanded cohort, with honest solo/highscore interpretation.",
+    "files": [
+      "frontend/scripts/balance-rules.mjs:81\u2013170",
+      "frontend/tests/pirates/pathing-performance.test.js:1\u2013100",
+      "frontend/tests/pirates/recovery-balance-diagnostic.test.js",
+      "frontend/src/pirates/path-grid.js:72\u201394",
+      "frontend/src/pirates/pathing.js:110\u2013127"
+    ],
+    "baseline": [
+      "Existing performance coverage uses 300 boarders and today\u2019s twelve wall spots/short segments, with rebuild-count assertions.",
+      "The legacy balance-rules Carpenter policy emits E repair/rebuild inputs; it is not automatically Recovery V1 evidence."
+    ],
+    "dependencies": [
+      "WALL-02",
+      "WALL-15",
+      "WALL-17"
+    ],
+    "acceptance": [
+      "Benchmark the actual approved maximum wall allowance, representative compartments and legal mixed-level arrangements; do not choose an arbitrary unlimited stress target.",
+      "Compare equal spending, identical towers/captains, seeds and inputs; report route choice, wall hacks/breaches, survival/heart damage and frame/tick work.",
+      "Report legacy versus Recovery V1 separately with explicit frozen versions and supported repair policy. Do not credit removed free Captain repairs to the new policy.",
+      "Rebuild fields on cost-relevant layout/health-band transitions, not every tick; preserve deterministic output and stable-ID ties.",
+      "No stuck boarders, infinite routes or highscore reset/change is concealed. Any balance adjustment becomes a separate reviewed task rather than changing the success threshold to pass."
+    ],
+    "scenarios": [
+      {
+        "input": "Approved-capacity equal-budget ring, compartment and sparse layouts",
+        "action": "Run the same explicit rules/seeds and Captain inputs",
+        "expected": "The report measures real benefits and drawbacks; it does not assert every layout should win or that art changed difficulty."
+      },
+      {
+        "input": "Many supported walls with repeated break/repair transitions and 300 boarders",
+        "action": "Measure ticks, cache builds and forward progress",
+        "expected": "Work remains within an agreed measured budget, cache rebuilds remain event/band driven and no unit is permanently stuck."
+      },
+      {
+        "input": "The same encounter under legacy and Recovery V1 rules",
+        "action": "Use their correct distinct repair input policies",
+        "expected": "Results and limitations are labeled separately; unchanged highscore/reward/reset semantics remain untouched."
+      }
+    ],
+    "risks": [
+      "A benchmark using retired free repairs gives misleading strategic conclusions.",
+      "Increasing allowed wall count can change both CPU cost and campaign difficulty."
+    ],
+    "questions": [
+      "Why must layout comparisons use equal cost and identical seeds?",
+      "Which repair policy does the benchmark actually exercise?",
+      "What distinguishes a performance result from a balance or highscore policy decision?"
+    ],
+    "id": "WALL-18",
+    "source_proposal": "COMBAT-06",
+    "priority": "P1",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "conditional_dependencies": [
+      "WALL-03 only if a larger wall-ID cohort is selected",
+      "WALL-03/19/20/21/22 only if the larger wall cohort is selected; otherwise exercise the existing 12-piece allowance."
+    ],
+    "optional": false,
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "notes": [
+      "All GitHub text and shared documentation for this work is English and uses neutral Base Building / Village Visuals / Wall Gameplay naming. Existing technical source paths remain exact."
+    ],
+    "parallel_owner": "One combat integration owner coordinates geometry/snapshot/recovery hooks. The route-preview cache fix can be owned separately; preserve frozen active-wave behavior.",
+    "checks": [
+      "Run the relevant existing and new focused geometry, snapshot, routing or scratch-state cases; record actual results.",
+      "For visible guide/gap changes provide actual game before/after at 1280\u00d7720 and 375\u00d7812.",
+      "No runtime test, browser or balance result was executed by creation of this proposal."
+    ],
+    "not_in_scope": [
+      "No new online-play requirement, package, service or account.",
+      "No migration application, production flag activation, deployment, main push, force push or agent merge.",
+      "Do not add a second wall upgrade economy or silently retune legacy highscore difficulty.",
+      "This work does not make the current server a full combat verifier or silently change leaderboard/reward policy."
+    ],
+    "plan": [
+      "Assemble the actual approved maximum allowance and representative equal-cost layouts.",
+      "Choose explicit legacy and Recovery V1 versions and their correct distinct repair input policies.",
+      "Measure deterministic progress, route choice, hacks/breaches, survival, tick/frame work and cache rebuilds.",
+      "Report limits and any separate balance decision instead of weakening thresholds or changing highscore policy."
+    ],
+    "github_issue": 259,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/259"
+  },
+  {
+    "priority": "P1",
+    "size": "One or two focused sessions; split at the stated pure-rule, transaction or adapter boundary before claiming if source/test/capture changes exceed about 400 lines.",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "risks": [
+      "An incomplete version/identity transition can silently drop or relocate paid structures.",
+      "A client preview or stale receipt must not grant price, ownership, health or phase authority.",
+      "Shared SQL, recovery and renderer hooks require one active integration owner and explicit source-version evidence."
+    ],
+    "parallel_owner": "One writer owns this bounded helper or transaction in a separate clone. Coordinate shared layout, recovery, route/controller and database hooks with the integration owner.",
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "checks": [
+      "Run meaningful focused rules/transaction/input cases for the changed scope; exact new test filenames are proposed until implementation.",
+      "For frontend work run applicable existing tests, build, budget and text/UI checks; for backend work use relevant pytest/Ruff and scratch SQL tests when SQL changes. Report exact results; none were run for this planning audit.",
+      "For visible changes provide actual-game before/after at 1280\u00d7720 and 375\u00d7812 with source, fixture, quality and limitations."
+    ],
+    "not_in_scope": [
+      "No new online-play requirement, package, service or account.",
+      "No migration application, production flag activation, deployment, main push, force push or agent merge.",
+      "Do not add a second wall upgrade economy or silently retune legacy highscore difficulty.",
+      "This work does not make the current server a full combat verifier or silently change leaderboard/reward policy."
+    ],
+    "id": "WALL-19",
+    "title": "Admit the approved wall cohort in database identity constraints",
+    "goal": "Widen only the reviewed table identity admission for the selected cohort, keeping existing IDs, type pairs and access controls exact.",
+    "files": [
+      "supabase/migrations/<wall_cohort_constraints>.sql (proposed; do not apply)",
+      "supabase/migrations/20261117010000_more_tower_spots.sql:62\u2013156 (current constraint evidence)",
+      "supabase/migrations/20261117020000_structure_recovery.sql:147 (health guard evidence)",
+      "backend/server/tests/island_sql/<wall_cohort_constraints>.py (proposed)"
+    ],
+    "baseline": [
+      "Current building/layout CHECK lists and canonical health spot checks have explicit admitted IDs.",
+      "The selected cohort is optional; widening a constraint does not by itself activate a supported new building offer."
+    ],
+    "dependencies": [
+      "WALL-03"
+    ],
+    "acceptance": [
+      "Admit exactly the approved new IDs and preserve every existing valid building/slot pair.",
+      "Retain rejection of arbitrary/unknown IDs and wrong-kind rows; no RLS/grant or membership privilege change.",
+      "Write additive admission without deleting paid legacy rows. Before any new IDs exist, rollback may remove unused admission; afterward pause new offers while retaining read/mutation/recovery/snapshot compatibility, unless an explicit value-preserving rollback is approved. Narrowing old CHECKs or hiding owned IDs is not automatically reversible. Owner application/activation stays separate.",
+      "Keep this task to identity constraints and parity cases; do not copy repair, demolition, move or recovery RPC bodies."
+    ],
+    "scenarios": [
+      {
+        "input": "Every existing ID plus each selected new ID and a wrong-kind pair",
+        "action": "Exercise CHECK admission in scratch SQL",
+        "expected": "Only the exact approved set/type pairs pass; existing valid rows stay valid."
+      },
+      {
+        "input": "An unknown future wall ID or malformed identifier",
+        "action": "Attempt direct constraint admission under controlled test roles",
+        "expected": "It remains rejected with no broader permissions."
+      },
+      {
+        "input": "Constraint migration present but cohort readiness gate off",
+        "action": "Read advertised offers",
+        "expected": "No unsupported new piece is presented as fully usable."
+      },
+      {
+        "input": "New offers are paused after a player owns a paid new-cohort wall",
+        "action": "Exercise the approved rollback/deactivation path",
+        "expected": "The owned wall remains readable, usable and included in snapshots/recovery/refunds; no narrow old CHECK, invisible paid piece or lost value is introduced."
+      }
+    ],
+    "questions": [
+      "Which table checks need the new IDs?",
+      "Why is identity admission different from activation?",
+      "Which RLS and existing type restrictions must remain unchanged?"
+    ],
+    "parent_tasks": [
+      "BASE-03",
+      "BASE-50"
+    ],
+    "optional": true,
+    "kind": "implementation",
+    "notes": [
+      "All GitHub text and shared documentation for this work is English and uses neutral Base Building / Village Visuals / Wall Gameplay naming. Existing technical source paths remain exact."
+    ],
+    "conditional_dependencies": [],
+    "plan": [
+      "Inspect the named current source and record the bounded contract/compatibility change.",
+      "Implement only this task\u2019s selected admission, appearance or evidence slice.",
+      "Exercise the normal and failure cases below with controlled inputs/clock where needed.",
+      "Run applicable focused checks and record exact results and remaining limits.",
+      "Hand over the scoped branch and evidence without applying migrations, activating flags or merging."
+    ],
+    "github_issue": 260,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/260"
+  },
+  {
+    "priority": "P1",
+    "size": "One or two focused sessions; split at the stated pure-rule, transaction or adapter boundary before claiming if source/test/capture changes exceed about 400 lines.",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "risks": [
+      "An incomplete version/identity transition can silently drop or relocate paid structures.",
+      "A client preview or stale receipt must not grant price, ownership, health or phase authority.",
+      "Shared SQL, recovery and renderer hooks require one active integration owner and explicit source-version evidence."
+    ],
+    "parallel_owner": "One writer owns this bounded helper or transaction in a separate clone. Coordinate shared layout, recovery, route/controller and database hooks with the integration owner.",
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "checks": [
+      "Run meaningful focused rules/transaction/input cases for the changed scope; exact new test filenames are proposed until implementation.",
+      "For frontend work run applicable existing tests, build, budget and text/UI checks; for backend work use relevant pytest/Ruff and scratch SQL tests when SQL changes. Report exact results; none were run for this planning audit.",
+      "For visible changes provide actual-game before/after at 1280\u00d7720 and 375\u00d7812 with source, fixture, quality and limitations."
+    ],
+    "not_in_scope": [
+      "No new online-play requirement, package, service or account.",
+      "No migration application, production flag activation, deployment, main push, force push or agent merge.",
+      "Do not add a second wall upgrade economy or silently retune legacy highscore difficulty.",
+      "This work does not make the current server a full combat verifier or silently change leaderboard/reward policy."
+    ],
+    "id": "WALL-20",
+    "title": "Extend paid-repair admission for the selected wall cohort",
+    "goal": "Update only paid-repair identity admission for new walls while retaining exact receipt, permission, price, quota and instance behavior.",
+    "files": [
+      "supabase/migrations/<wall_cohort_paid_repair>.sql (proposed; do not apply)",
+      "supabase/migrations/20261117030000_paid_structure_repair.sql:14\u2013369 (current function evidence)",
+      "backend/server/tests/island_sql/<wall_cohort_paid_repair>.py (proposed)"
+    ],
+    "baseline": [
+      "Current island_structure_repair is 356 lines before tests and contains its own admitted wall-ID boundary.",
+      "Paid repair checks current membership before replay and writes no refundable building_payments row."
+    ],
+    "dependencies": [
+      "WALL-19",
+      "WALL-22"
+    ],
+    "acceptance": [
+      "Extend only the exact supported cohort guard; preserve all current lock/order, authorization, UID conflict/replay, price, quota and exact-instance rules.",
+      "Test the final new ID, current IDs, an unsupported ID and a stale instance under the supported protocols.",
+      "No extra paid use, refund credit, free heal or old-receipt application to a rebuilt/reset wall.",
+      "This one 356-line inherited RPC is already near the approximate review cap: isolate it from all other SQL function copies, and use a deliberate tested decomposition if required. Never dynamically rewrite function text."
+    ],
+    "scenarios": [
+      {
+        "input": "A damaged last-in-cohort wall with a matching canonical instance",
+        "action": "Pay once and retry the same request at a controlled instant",
+        "expected": "One accepted restoration/charge/use and immutable replay with separately current state."
+      },
+      {
+        "input": "Former member, unsupported ID or stale instance/epoch",
+        "action": "Submit or retry a known receipt",
+        "expected": "Current permission/identity guards refuse with no private receipt disclosure or action-induced heal."
+      },
+      {
+        "input": "A repaired new wall is later demolished",
+        "action": "Inspect contribution and refund data",
+        "expected": "Repair spending did not become a refundable building payment."
+      }
+    ],
+    "questions": [
+      "Which guard changes while payment semantics stay the same?",
+      "Why does current access precede receipt replay?",
+      "Why is a paid repair not refundable building value?"
+    ],
+    "parent_tasks": [
+      "BASE-50"
+    ],
+    "optional": true,
+    "kind": "implementation",
+    "notes": [
+      "All GitHub text and shared documentation for this work is English and uses neutral Base Building / Village Visuals / Wall Gameplay naming. Existing technical source paths remain exact."
+    ],
+    "conditional_dependencies": [],
+    "plan": [
+      "Inspect the named current source and record the bounded contract/compatibility change.",
+      "Implement only this task\u2019s selected admission, appearance or evidence slice.",
+      "Exercise the normal and failure cases below with controlled inputs/clock where needed.",
+      "Run applicable focused checks and record exact results and remaining limits.",
+      "Hand over the scoped branch and evidence without applying migrations, activating flags or merging."
+    ],
+    "github_issue": 261,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/261"
+  },
+  {
+    "priority": "P1",
+    "size": "One or two focused sessions; split at the stated pure-rule, transaction or adapter boundary before claiming if source/test/capture changes exceed about 400 lines.",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "risks": [
+      "An incomplete version/identity transition can silently drop or relocate paid structures.",
+      "A client preview or stale receipt must not grant price, ownership, health or phase authority.",
+      "Shared SQL, recovery and renderer hooks require one active integration owner and explicit source-version evidence."
+    ],
+    "parallel_owner": "One writer owns this bounded helper or transaction in a separate clone. Coordinate shared layout, recovery, route/controller and database hooks with the integration owner.",
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "checks": [
+      "Run meaningful focused rules/transaction/input cases for the changed scope; exact new test filenames are proposed until implementation.",
+      "For frontend work run applicable existing tests, build, budget and text/UI checks; for backend work use relevant pytest/Ruff and scratch SQL tests when SQL changes. Report exact results; none were run for this planning audit.",
+      "For visible changes provide actual-game before/after at 1280\u00d7720 and 375\u00d7812 with source, fixture, quality and limitations."
+    ],
+    "not_in_scope": [
+      "No new online-play requirement, package, service or account.",
+      "No migration application, production flag activation, deployment, main push, force push or agent merge.",
+      "Do not add a second wall upgrade economy or silently retune legacy highscore difficulty.",
+      "This work does not make the current server a full combat verifier or silently change leaderboard/reward policy."
+    ],
+    "id": "WALL-21",
+    "title": "Preserve demolition and payer refunds for the selected wall cohort",
+    "goal": "Extend only the actual demolition quote/commit identity boundaries and prove existing per-building/per-payer refunds for new IDs.",
+    "files": [
+      "supabase/migrations/<wall_cohort_demolition>.sql (proposed; do not apply)",
+      "supabase/migrations/20261117010000_more_tower_spots.sql:164\u2013231 (quote evidence)",
+      "supabase/migrations/20261117050000_structure_recovery_mutations.sql:809\u2013993 (commit evidence)",
+      "backend/server/tests/island_sql/<wall_cohort_demolition>.py (proposed)"
+    ],
+    "baseline": [
+      "Current demolition quote and commit are 68 and 185 lines and contain their own ID guards.",
+      "Existing refunds group paid contributions by payer for one building; repair spending is separate."
+    ],
+    "dependencies": [
+      "WALL-19",
+      "WALL-22"
+    ],
+    "acceptance": [
+      "Admit exact selected IDs without changing the existing refund formula, recipient, phase/permission or lock behavior.",
+      "Keep each piece\u2019s stable build ref and per-level/per-payer history through single and chain construction.",
+      "Quote then commit handles competing changes or demolished/rebuilt instances safely; no refund to the wrong/new instance.",
+      "Do not copy unrelated reset/build/upgrade/move functions or activate the cohort merely because these guards accept it."
+    ],
+    "scenarios": [
+      {
+        "input": "A new-cohort wall whose levels were paid by different users",
+        "action": "Quote and demolish it once, then retry",
+        "expected": "Current exact payer refunds occur once and remain tied to that building\u2019s actual contributions."
+      },
+      {
+        "input": "A paid repair before demolition",
+        "action": "Inspect refund provenance",
+        "expected": "Repair cost remains non-refundable and no fake contribution row appears."
+      },
+      {
+        "input": "Stale quote after rebuild/reset or a competing demolition",
+        "action": "Attempt commit",
+        "expected": "Approved instance/phase/idempotency rules prevent double or misdirected refunds."
+      }
+    ],
+    "questions": [
+      "Which two ID guards need extension?",
+      "How are refunds tied to one piece and its payers?",
+      "What prevents a stale quote from refunding a new instance?"
+    ],
+    "parent_tasks": [
+      "BASE-50"
+    ],
+    "optional": true,
+    "kind": "implementation",
+    "notes": [
+      "All GitHub text and shared documentation for this work is English and uses neutral Base Building / Village Visuals / Wall Gameplay naming. Existing technical source paths remain exact."
+    ],
+    "conditional_dependencies": [],
+    "plan": [
+      "Inspect the named current source and record the bounded contract/compatibility change.",
+      "Implement only this task\u2019s selected admission, appearance or evidence slice.",
+      "Exercise the normal and failure cases below with controlled inputs/clock where needed.",
+      "Run applicable focused checks and record exact results and remaining limits.",
+      "Hand over the scoped branch and evidence without applying migrations, activating flags or merging."
+    ],
+    "github_issue": 262,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/262"
+  },
+  {
+    "priority": "P1",
+    "size": "One or two focused sessions; split at the stated pure-rule, transaction or adapter boundary before claiming if source/test/capture changes exceed about 400 lines.",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "risks": [
+      "An incomplete version/identity transition can silently drop or relocate paid structures.",
+      "A client preview or stale receipt must not grant price, ownership, health or phase authority.",
+      "Shared SQL, recovery and renderer hooks require one active integration owner and explicit source-version evidence."
+    ],
+    "parallel_owner": "One writer owns this bounded helper or transaction in a separate clone. Coordinate shared layout, recovery, route/controller and database hooks with the integration owner.",
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "checks": [
+      "Run meaningful focused rules/transaction/input cases for the changed scope; exact new test filenames are proposed until implementation.",
+      "For frontend work run applicable existing tests, build, budget and text/UI checks; for backend work use relevant pytest/Ruff and scratch SQL tests when SQL changes. Report exact results; none were run for this planning audit.",
+      "For visible changes provide actual-game before/after at 1280\u00d7720 and 375\u00d7812 with source, fixture, quality and limitations."
+    ],
+    "not_in_scope": [
+      "No new online-play requirement, package, service or account.",
+      "No migration application, production flag activation, deployment, main push, force push or agent merge.",
+      "Do not add a second wall upgrade economy or silently retune legacy highscore difficulty.",
+      "This work does not make the current server a full combat verifier or silently change leaderboard/reward policy."
+    ],
+    "id": "WALL-22",
+    "title": "Carry the selected cohort through recovery manifests and bounded wave reports",
+    "goal": "Resolve complete recovery positions/state and protocol bounds for each new wall, including the first piece before a later wave updates any template.",
+    "files": [
+      "backend/server/island/wave_recovery.py:560\u2013561",
+      "backend/server/island/structure_recovery_manifest.py",
+      "supabase/migrations/<wall_cohort_recovery_manifest>.sql (proposed only if required; do not apply)",
+      "supabase/migrations/20261117040000_structure_recovery_api.sql:1072\u20131117 (current template/position evidence)",
+      "frontend/src/pirates/recovery-snapshot.js",
+      "backend/server/tests/island_sql/<wall_cohort_manifest>.py (proposed)"
+    ],
+    "baseline": [
+      "Health/basisRepairSeq vectors currently reject more than 26 entries.",
+      "Recovery refresh can reuse an old wave template whose defaultPositions omit a newly admitted wall, raising recovery_position_missing.",
+      "Existing owner reset already deletes rows generically and rotates the epoch; test it rather than copying it without a needed behavior change."
+    ],
+    "dependencies": [
+      "WALL-19"
+    ],
+    "acceptance": [
+      "Derive a bounded complete supported structure set, including non-walls and D060 extras; update compatible vector/decoder limits without accepting arbitrary/unbounded client IDs.",
+      "The first admitted new piece resolves position/maxHP/state before another wave supplies a newer template. If unpositioned/default single-build is supported, cover its missing-row fallback; if the contract requires explicit placement, reject the unsupported unpositioned path before charging. Positioned chains must work in either selected route.",
+      "Do not edit an old immutable wave snapshot/template to insert new pieces. Define a reviewed current manifest/default-position source and exact unsupported/legacy behavior.",
+      "Every supported new ID survives recovery initialization, damage/repair reports, frozen snapshots, demolition/rebuild and reset without dropped health or stale instance attachment.",
+      "Preserve earned-time settlement and rate/epoch/repair-sequence accounting. No blanket reset-function rewrite or new free recovery."
+    ],
+    "scenarios": [
+      {
+        "input": "The first selected new ID is constructed before any later wave; separately try an unpositioned/default build with no layout row",
+        "action": "Use the approved positioned/default admission policy and read canonical recovery",
+        "expected": "Every admitted piece resolves correct state immediately without editing old snapshots. An unsupported missing-position route refuses before charge rather than reaching recovery_position_missing."
+      },
+      {
+        "input": "The full cohort with D060 extras exceeds26structure reports",
+        "action": "Validate/read/round-trip bounded health and repair-sequence vectors",
+        "expected": "All exact supported IDs are included once under compatible limits; unsupported IDs and versions still fail."
+      },
+      {
+        "input": "A new wall with damage and an old receipt is reset/rebuilt",
+        "action": "Refresh recovery and current epoch",
+        "expected": "Generic cleanup is complete and no old HP/repair sequence attaches to the new instance."
+      }
+    ],
+    "questions": [
+      "Why is the first new wall before a wave a special case?",
+      "Which current 26-entry limits must remain bounded but complete?",
+      "Why must old wave snapshots remain immutable?"
+    ],
+    "parent_tasks": [
+      "BASE-50"
+    ],
+    "optional": true,
+    "kind": "implementation",
+    "notes": [
+      "All GitHub text and shared documentation for this work is English and uses neutral Base Building / Village Visuals / Wall Gameplay naming. Existing technical source paths remain exact."
+    ],
+    "conditional_dependencies": [],
+    "plan": [
+      "Inspect the named current source and record the bounded contract/compatibility change.",
+      "Implement only this task\u2019s selected admission, appearance or evidence slice.",
+      "Exercise the normal and failure cases below with controlled inputs/clock where needed.",
+      "Run applicable focused checks and record exact results and remaining limits.",
+      "Hand over the scoped branch and evidence without applying migrations, activating flags or merging."
+    ],
+    "github_issue": 263,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/263"
+  },
+  {
+    "priority": "P1",
+    "size": "One or two focused sessions; split at the stated pure-rule, transaction or adapter boundary before claiming if source/test/capture changes exceed about 400 lines.",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "risks": [
+      "An incomplete version/identity transition can silently drop or relocate paid structures.",
+      "A client preview or stale receipt must not grant price, ownership, health or phase authority.",
+      "Shared SQL, recovery and renderer hooks require one active integration owner and explicit source-version evidence."
+    ],
+    "parallel_owner": "One writer owns this bounded helper or transaction in a separate clone. Coordinate shared layout, recovery, route/controller and database hooks with the integration owner.",
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "checks": [
+      "Run meaningful focused rules/transaction/input cases for the changed scope; exact new test filenames are proposed until implementation.",
+      "For frontend work run applicable existing tests, build, budget and text/UI checks; for backend work use relevant pytest/Ruff and scratch SQL tests when SQL changes. Report exact results; none were run for this planning audit.",
+      "For visible changes provide actual-game before/after at 1280\u00d7720 and 375\u00d7812 with source, fixture, quality and limitations."
+    ],
+    "not_in_scope": [
+      "No new online-play requirement, package, service or account.",
+      "No migration application, production flag activation, deployment, main push, force push or agent merge.",
+      "Do not add a second wall upgrade economy or silently retune legacy highscore difficulty.",
+      "This work does not make the current server a full combat verifier or silently change leaderboard/reward policy."
+    ],
+    "id": "WALL-23",
+    "title": "Draw combat wall connections from actual live barrier state",
+    "goal": "Make supported wall runs visually continuous during combat while preserving real gaps and zero-health breaches; VIS-14 remains the art-family owner.",
+    "files": [
+      "frontend/src/island/wall-connections.js shared topology handoff",
+      "frontend/src/pirates/render.js",
+      "frontend/src/pirates/<wall-connections>.js (proposed small combat renderer helper)",
+      "frontend/tests/pirates/<wall-connections>.test.js (proposed)"
+    ],
+    "baseline": [
+      "Current world connectors are hidden when combat owns defenses; they do not already prove live combat joins.",
+      "The actual simulation has standing/broken wall state and ordered repair transitions, which must drive any combat connection layer."
+    ],
+    "dependencies": [
+      "WALL-13",
+      "WALL-14",
+      "VIS-14"
+    ],
+    "acceptance": [
+      "Reuse one reviewed neighbor/footprint contract; no new collision or target/path authority is introduced by the mesh.",
+      "Draw a supported standing join and correct corner/material ordering, including mixed levels, without sealing a real gap or pretending a partial/diagonal contact is a full barrier.",
+      "At actual zero HP remove the corresponding solid span and show the real breach; restore it only after an accepted positive barrier state.",
+      "Keep world-to-combat feet/style and selected HP/gap feedback coherent, with no double layer or opaque terrain overlay.",
+      "Cache/update topology only for relevant state/layout changes; do not allocate geometry every health tick. Dispose it with the owning scene."
+    ],
+    "scenarios": [
+      {
+        "input": "A full-side connected mixed-level run and separate partial/diagonal/gap cases",
+        "action": "Enter combat at the same confirmed coordinates",
+        "expected": "The actual standing barrier and honest openings stay readable with correct materials."
+      },
+      {
+        "input": "A segment breaks to zero then receives a refused and an accepted repair event",
+        "action": "Advance the existing ordered state",
+        "expected": "The span opens at the real breach and returns only for the accepted restored barrier."
+      },
+      {
+        "input": "Travel/end/recreate the same wave view",
+        "action": "Inspect resources and phase ownership",
+        "expected": "No duplicate connector layer, leaked mesh or ghost solid gap remains."
+      }
+    ],
+    "questions": [
+      "Which actual state decides whether the span exists?",
+      "How is visual continuity different from collision geometry?",
+      "What changes require a topology rebuild?"
+    ],
+    "parent_tasks": [
+      "BASE-13",
+      "BASE-50"
+    ],
+    "optional": false,
+    "kind": "implementation",
+    "notes": [
+      "This is the missing bounded combat-join implementation. Do not re-claim VIS-14\u2019s material art or BASE-13\u2019s whole parent as parallel duplicate work.",
+      "All GitHub text and shared documentation for this work is English and uses neutral Base Building / Village Visuals / Wall Gameplay naming. Existing technical source paths remain exact."
+    ],
+    "conditional_dependencies": [],
+    "plan": [
+      "Inspect the named current source and record the bounded contract/compatibility change.",
+      "Implement only this task\u2019s selected admission, appearance or evidence slice.",
+      "Exercise the normal and failure cases below with controlled inputs/clock where needed.",
+      "Run applicable focused checks and record exact results and remaining limits.",
+      "Hand over the scoped branch and evidence without applying migrations, activating flags or merging."
+    ],
+    "github_issue": 264,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/264"
+  },
+  {
+    "priority": "P1",
+    "size": "One or two focused sessions; split at the stated pure-rule, transaction or adapter boundary before claiming if source/test/capture changes exceed about 400 lines.",
+    "baseline_commit": "724bbc41de5754007a9bcc27a5e84758540b540b",
+    "risks": [
+      "An incomplete version/identity transition can silently drop or relocate paid structures.",
+      "A client preview or stale receipt must not grant price, ownership, health or phase authority.",
+      "Shared SQL, recovery and renderer hooks require one active integration owner and explicit source-version evidence."
+    ],
+    "parallel_owner": "One writer owns this bounded helper or transaction in a separate clone. Coordinate shared layout, recovery, route/controller and database hooks with the integration owner.",
+    "status": "proposed_unassigned",
+    "responsible_human": "Johannes Franz Lang (frcola)",
+    "checks": [
+      "Run meaningful focused rules/transaction/input cases for the changed scope; exact new test filenames are proposed until implementation.",
+      "For frontend work run applicable existing tests, build, budget and text/UI checks; for backend work use relevant pytest/Ruff and scratch SQL tests when SQL changes. Report exact results; none were run for this planning audit.",
+      "For visible changes provide actual-game before/after at 1280\u00d7720 and 375\u00d7812 with source, fixture, quality and limitations."
+    ],
+    "not_in_scope": [
+      "No new online-play requirement, package, service or account.",
+      "No migration application, production flag activation, deployment, main push, force push or agent merge.",
+      "Do not add a second wall upgrade economy or silently retune legacy highscore difficulty.",
+      "This work does not make the current server a full combat verifier or silently change leaderboard/reward policy."
+    ],
+    "id": "WALL-24",
+    "title": "Verify the complete playable wall lifecycle against the reference",
+    "goal": "Prove the core wall journey in the actual game and authoritative transaction fixtures, with saved layout, real upgrades, enemy breaches and truthful recovery.",
+    "files": [
+      "frontend/scripts/capture-wall-lifecycle.mjs (proposed)",
+      "frontend/tests/island/<wall-lifecycle>.test.js (proposed)",
+      "backend/server/tests/island_sql/<wall-lifecycle>.py (proposed)",
+      "docs/evidence/wall-gameplay/README.md (proposed)",
+      "docs/TEST-MAP.md",
+      "docs/WALKTHROUGH.md"
+    ],
+    "baseline": [
+      "Single upgrades and enemy wall blocking already exist; this gate combines the approved free-grid and transaction work rather than inventing them.",
+      "BASE-11 owns chain drafting, BASE-14 owns bounded group selection/move, and BASE-45 owns broader highscore/reset continuity."
+    ],
+    "dependencies": [
+      "WALL-08",
+      "WALL-12",
+      "WALL-14",
+      "WALL-15",
+      "WALL-16",
+      "WALL-17",
+      "WALL-23",
+      "WALL-04",
+      "WALL-18"
+    ],
+    "acceptance": [
+      "Use actual current-game controls plus clearly labeled backend scratch transaction evidence; a generated wall image or static overlay does not pass.",
+      "Load a representative old paid/damaged layout; build a legal off-lane chain under the approved rule, cancel safely, confirm once, lose/retry its reply and reload the exact saved result.",
+      "Perform an eligible EXISTING single-wall upgrade with its real level/HP/price/permission guards; single upgrades cannot depend on optional batch upgrade work.",
+      "Start a wave with a frozen layout; show actual detour/breach/gap and supported paid restoration/egress without an art-induced free heal, level, charge or safe-location promise.",
+      "Capture 1280\u00d7720 and 375\u00d7812 with invalid/capacity/stale/pending/refusal/caption states and actual topmost controls. Match the accepted visual family; record source, quality, fixture/transport and device limits.",
+      "Preserve existing score/reward semantics. Record the separately outstanding BASE-45 reset policy rather than claiming these walls fixed score continuity.",
+      "Report selected optional capacity/batch routes separately. The core twelve-piece/single-upgrade journey can pass independently, but a claimed larger target layout requires all cohort gates and its measured fixtures.",
+      "Require the real BASE-11 drafting/confirmation/reconciliation component handoff, WALL-04 inventory and WALL-18 measured supported-capacity results. Backend-only chain tests cannot close this playable gate."
+    ],
+    "scenarios": [
+      {
+        "input": "An old saved paid wall layout and a valid off-lane chain draft",
+        "action": "Cancel once, then confirm, lose the response, reconcile and reload",
+        "expected": "No partial buy/double charge or lane resettling; exact paid identities/coordinates and legitimate current health persist."
+      },
+      {
+        "input": "An eligible healthy wall plus a V1 damaged or campaign-locked wall",
+        "action": "Use the existing single Upgrade control and its refusal path",
+        "expected": "Actual eligible price/next stats apply once; ineligible state cannot heal or bypass a lock, and legacy follows its selected protocol."
+      },
+      {
+        "input": "A supported compartment during combat, then break/repair and finish",
+        "action": "Observe real routing, standing spans, breaches, egress and result",
+        "expected": "Visuals and actual barrier state agree; real current gameplay decides outcomes, with no fabricated victory or new score/reset policy."
+      },
+      {
+        "input": "A chain confirmation is pending while the active island context is disposed, replaced or reset",
+        "action": "Deliver a late accepted or unknown response and reconcile its original identity",
+        "expected": "No unrelated/new context is overwritten, no second UID is generated automatically and any real payment remains attached to the original action."
+      }
+    ],
+    "questions": [
+      "What proves the wall loop works beyond a concept picture?",
+      "Which existing single-upgrade and recovery rules remain authoritative?",
+      "Which optional or highscore features are outside this core gate?"
+    ],
+    "parent_tasks": [
+      "BASE-48",
+      "BASE-50"
+    ],
+    "optional": false,
+    "kind": "verification",
+    "notes": [
+      "All GitHub text and shared documentation for this work is English and uses neutral Base Building / Village Visuals / Wall Gameplay naming. Existing technical source paths remain exact."
+    ],
+    "conditional_dependencies": [
+      "WALL-03/19/20/21/22 only if the larger wall cohort is selected; otherwise exercise the existing 12-piece allowance."
+    ],
+    "plan": [
+      "Assemble the accepted core slices and bounded BASE-11/14 interface handoffs.",
+      "Prepare declared legacy/new-version fixtures, controlled server time and source/quality metadata.",
+      "Run the actual draft/cancel/atomic-confirm/retry/reload/single-upgrade journey.",
+      "Exercise the supported frozen-wave breach/repair/egress and true result states.",
+      "Capture desktop/phone and compare every stated criterion; route defects back to their owning task.",
+      "Publish exact results, selected routes and unresolved BASE-45/device/production limits; do not apply or deploy anything."
+    ],
+    "external_dependency_events": {
+      "BASE-11": "Real chain drafting/confirmation/reconciliation UI integrated with WALL-05/12. Do not declare the end-to-end gate complete without the actual user interface.",
+      "BASE-02": "Usable working zoom/pan plus Fit/return behavior where needed for precise placement; current automatic whole-island fit alone is not proof of touch readability.",
+      "BASE-14": "The selected group/move slice only if that behavior is claimed by the delivered journey.",
+      "VIS-31": "Final product readiness also requires the separate actual visual-quality gate; a functional wall pass alone is not reference-style acceptance."
+    },
+    "github_issue": 265,
+    "github_url": "https://github.com/Nilsnova/The-Great-Plot-Twist/issues/265"
+  }
+]

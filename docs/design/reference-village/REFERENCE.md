@@ -53,8 +53,10 @@ No new packages/services, database migration application, deployment or merge is
 
 ## Planning status
 
-This branch contains documentation and the unchanged reference image only. Task creation, dependency validation and read-back evidence are recorded in the accompanying roadmap. No target-style application code, new runtime screenshot or passing runtime check is claimed by this document.
+This branch contains planning documentation, a newly generated target concept and fresh actual-game baseline captures. Task creation, dependency validation and read-back evidence are recorded in the accompanying roadmap. Existing-behavior test/capture results are scoped in the comparison; no target-style application code or proof of the proposed runtime features is claimed.
 
 [Published issue roadmap](ROADMAP.md) · [Parallel work](PARALLEL-WORK.md) · [Current-code audit](SOURCE-AUDIT.md) · [Publication/content checks](VERIFICATION.json).
 
 All GitHub issue/PR text and shared documentation for this work must be written in English, as requested by Johannes. The supplied reference image remains the original visual source.
+
+The complete execution plan is [ROADMAP.md](ROADMAP.md), including [WALL-ROADMAP.md](WALL-ROADMAP.md) and the [failure register](RISK-REGISTER.md). The functional wall gate and actual visual gate are separate.
