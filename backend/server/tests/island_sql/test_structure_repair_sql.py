@@ -16,6 +16,7 @@ psycopg = pytest.importorskip("psycopg")
 from server.tests.island_sql.test_game_rooms_sql import join  # noqa: E402
 from server.tests.island_sql.test_islands_and_waves_sql import (  # noqa: E402
     add_players,
+    as_owner,
     as_server,
     balance,
     build,
@@ -375,6 +376,62 @@ def test_old_success_uid_after_new_damage_returns_receipt_without_healing_or_cha
             wave_id,
         )
         == 1
+    )
+
+
+def test_receipt_failure_rolls_back_wallet_health_quota_and_event(database):
+    epoch, wave_id = seed_recovery(database, active=True)
+    before = balance(database, OWNER)
+    as_owner(database)
+    database.execute(
+        "create function public.test_repair_receipt_failure() returns trigger "
+        "language plpgsql as $$ begin raise exception 'test_receipt_failure'; end $$"
+    )
+    database.execute(
+        "create trigger test_repair_receipt_failure before insert "
+        "on public.structure_repair_receipts for each row "
+        "execute function public.test_repair_receipt_failure()"
+    )
+    database.execute("savepoint before_repair_failure")
+    as_server(database)
+    with pytest.raises(psycopg.Error, match="test_receipt_failure"):
+        repair(
+            database,
+            action_uid="repair-0006",
+            epoch=epoch,
+            wave_id=wave_id,
+            window="reserved_wave",
+        )
+    database.execute("rollback to savepoint before_repair_failure")
+    as_owner(database)
+    database.execute("drop trigger test_repair_receipt_failure on public.structure_repair_receipts")
+    database.execute("drop function public.test_repair_receipt_failure()")
+
+    assert balance(database, OWNER) == before
+    assert hp(database) == (500_000, 0)
+    assert (
+        call(
+            database,
+            "select paid_used from public.recovery_wave_states where wave_id=%s",
+            wave_id,
+        )
+        == 0
+    )
+    assert (
+        call(
+            database,
+            "select count(*) from public.recovery_wave_events where wave_id=%s",
+            wave_id,
+        )
+        == 0
+    )
+    assert (
+        call(
+            database,
+            "select count(*) from public.structure_repair_receipts where island_owner=%s",
+            OWNER,
+        )
+        == 0
     )
 
 
