@@ -6,7 +6,8 @@ export const sheets = {
 const rows = [[0, 370, 350], [370, 420, 364], [790, 234, 192]];
 const feet = [166, 461, 764, 1064, 1358];
 export const wallFrame = (level = 1, look = 'intact') =>
-  `island-wall${level > 1 ? `-l${level}` : ''}${look === 'intact' ? '' : `-${look}`}`;
+  // Generic damaged/broken IDs are legacy L3 aliases, so L1 damage needs an explicit tier.
+  `island-wall${level > 1 || look !== 'intact' ? `-l${level}` : ''}${look === 'intact' ? '' : `-${look}`}`;
 export const wallSurfaceFrame = (level, face) => `village-wall-${face}-l${level}`;
 export const frames = {};
 for (let level = 1; level <= 5; level++) {
