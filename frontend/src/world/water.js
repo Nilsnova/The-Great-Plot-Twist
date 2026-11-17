@@ -4,6 +4,7 @@
 // catch the wave crests it crosses. Low quality draws no glints, rings or moving foam.
 import * as THREE from 'three';
 import { QUALITY } from '../config.js';
+import {coastUvMatrix} from './ground-transform.js';
 import { pixelGlsl, worldVertex, toScreen } from './pixel-glsl.js';
 
 const FIELD_W = 256, FIELD_H = 192, FIELD_PX = 4; // one texel = 4 native pixels of a 64 x 48 backdrop
@@ -22,15 +23,15 @@ let seaPace = 1, seaClock = null, lastTime = null;
 export function setSeaPace(value) { seaPace = Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : 1; }
 export const seaUniforms = {
   uSeaTime: { value: 0 }, uWind: { value: .2 }, uRain: { value: 0 }, uDetail: { value: 1 },
-  uCoast: { value: coastTexture }, uCoastOn: { value: 0 },
+  uCoast: { value: coastTexture }, uCoastOn: { value: 0 }, uCoastUv: {value: new THREE.Matrix3()},
   uCoastRect: { value: new THREE.Vector4(-BACKDROP.width / 2, -BACKDROP.height / 2, BACKDROP.width, BACKDROP.height) },
 };
 // Distance to the nearest land in native pixels (255 = open sea), for any fragment shader.
 export const seaGlsl = /* glsl */`
-uniform float uSeaTime,uWind,uRain,uDetail,uCoastOn;uniform sampler2D uCoast;uniform vec4 uCoastRect;
+uniform float uSeaTime,uWind,uRain,uDetail,uCoastOn;uniform sampler2D uCoast;uniform vec4 uCoastRect;uniform mat3 uCoastUv;
 float coastDistance(vec2 p){
   if(uCoastOn<.5)return 255.0;
-  vec2 uv=(p-uCoastRect.xy)/uCoastRect.zw;
+  vec2 uv=(uCoastUv*vec3(p,1.0)).xy;
   if(uv.x<0.0||uv.y<0.0||uv.x>1.0||uv.y>1.0)return 255.0;
   return texture2D(uCoast,uv).r*255.0;
 }`;
@@ -168,6 +169,7 @@ export function createWater(scene) {
         coastTexture.image.data.set(readField(backdrop.material.map.image));
         backdrop.updateWorldMatrix(true, false);
         const origin = new THREE.Vector3().setFromMatrixPosition(backdrop.matrixWorld);
+        seaUniforms.uCoastUv.value.copy(coastUvMatrix(backdrop.matrixWorld, BACKDROP.width, BACKDROP.height));
         seaUniforms.uCoastRect.value.set(origin.x - BACKDROP.width / 2, origin.y - BACKDROP.height / 2, BACKDROP.width, BACKDROP.height);
         seaUniforms.uCoastOn.value = 1;
       } catch { coastTexture.image.data.fill(255); seaUniforms.uCoastOn.value = 0; }

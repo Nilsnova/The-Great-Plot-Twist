@@ -1,5 +1,6 @@
 // Connects place lifetime, the explorer, weather and the frame loop. No story rules.
 import * as THREE from 'three';
+import {projectGround, unprojectGround} from './world/projection.js';
 import './ui/styles.css';
 import './ui/travel.css';
 import './ui/readability.css';
@@ -215,7 +216,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
         rehearsal:query.get('demo')==='1',present:query.get('present')==='1',send:(name,...args)=>sendIntent(adapter,name,...args),
         canStand:(x,z)=>canStand(x,z,world.current?.colliders??[],world.current?.groundHeight),simulate:presence=>experience.simulate(presence),quests:view=>showQuests(view),
         focus:()=>graphics.renderer.domElement.focus({preventScroll:true}),resetInput:resetControls,cancelWalk:()=>mapTouch?.cancel(),
-        isBlocked:()=>!active||outsideBlocked(),project:(x,z)=>{const rect=graphics.renderer.domElement.getBoundingClientRect();projected.set(x,-z*.72,0).project(view.camera);return {x:rect.left+(projected.x+1)*rect.width/2,y:rect.top+(1-projected.y)*rect.height/2};}});
+        isBlocked:()=>!active||outsideBlocked(),project:(x,z)=>{const rect=graphics.renderer.domElement.getBoundingClientRect();const point=projectGround(x,z);projected.set(point.x,point.y,0).project(view.camera);return {x:rect.left+(projected.x+1)*rect.width/2,y:rect.top+(1-projected.y)*rect.height/2};}});
       const current=adapter?.read?.();if(current)classDemo.apply(current);
       return classDemo;
     }).catch(error=>{console.error(error);classDemoLoad=null;return null;});
@@ -277,20 +278,21 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
   }
   const projected=new THREE.Vector3(),canvas=graphics.renderer.domElement;
   const villageNavigation=createVillageNavigation({canvas, view, enabled:()=>active&&!disposed&&!inBattle&&island?.managing===true&&!outsideBlocked()});
-  const focusPlacement=createVillagePlacementFocus(view);
+  const focusPlacement=createVillagePlacementFocus(view),focusSelection=createVillagePlacementFocus(view);
   let villageLayoutKey='',villageViewport=null,villageQuests=null,villageBar=null,villagePlacing=null;
   function updateVillageView(){
     villageNavigation.refresh();
     const managing=island?.managing===true&&!inBattle;
-    if(!managing){villageLayoutKey='';villageBar=null;focusPlacement(null);view.setVillageView(false);return;}
+    if(!managing){villageLayoutKey='';villageBar=null;focusPlacement(null);focusSelection(null);view.setVillageView(false);return;}
     const width=parseFloat(canvas.style.width)||window.innerWidth,height=parseFloat(canvas.style.height)||window.innerHeight;
     villageQuests??=container.querySelector('.quest-strip');
     const caption=document.documentElement.style.getPropertyValue('--narrator-card-height');
-    const placing=!!island.moving;
-    if(!villageBar?.isConnected||villageBar.hidden||villagePlacing!==placing){
+    const placing=!!island.moving,selectionBar=!placing?island.ui?.selectionElement??island.selectionElement:null;
+    if(selectionBar){villageBar=selectionBar;villagePlacing=placing;}
+    else if(!villageBar?.isConnected||villageBar.hidden||villagePlacing!==placing||villageBar.classList.contains('island-selection-dock')){
       villageBar=container.querySelector(placing?'.island-move-bar:not([hidden])':'.island-village-mode:not([hidden])');villagePlacing=placing;
     }
-    const key=`${width}:${height}:${caption}:${villageQuests?.textContent}:${villageQuests?.className}:${placing}:${villageBar?.textContent}:${villageBar?.className}:${document.documentElement.className}:${document.body.className}`;
+    const key=`${width}:${height}:${caption}:${villageQuests?.textContent}:${villageQuests?.className}:${villageQuests?.hidden}:${placing}:${villageBar?.textContent}:${villageBar?.className}:${document.documentElement.className}:${document.body.className}`;
     if(key!==villageLayoutKey){
       const bar=villageBar;
       const top=width<640?villageQuests?.getBoundingClientRect().bottom??80:80;
@@ -298,17 +300,19 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
       villageLayoutKey=key;
     }
     view.setVillageView(true,villageViewport);
-    if(active&&!outsideBlocked()&&height>villageViewport.top+villageViewport.bottom)focusPlacement(island.moving);
+    if(active&&!outsideBlocked()&&height>villageViewport.top+villageViewport.bottom){
+      focusPlacement(island.moving);focusSelection(placing?null:island.selection);
+    }
   }
   // Where a world point hangs on screen, as fractions of the canvas (the floating E prompt and the "Walk closer" hint).
-  function screenAt(id){const a=island?.anchor?.(id);if(!a)return null;projected.set(a.x,-a.z*.72+a.lift,0).project(view.camera);
+  function screenAt(id){const a=island?.anchor?.(id);if(!a)return null;const point=projectGround(a.x,a.z);projected.set(point.x,point.y+a.lift,0).project(view.camera);
     return Math.abs(projected.x)<=1.2&&Math.abs(projected.y)<=1.2?{x:(projected.x+1)/2,y:(1-projected.y)/2}:null;}
   canvas.setAttribute('aria-label','Island exploration. Tap a clear path or drag the movement stick to walk. Arrow keys and WASD also move. Hold Tab to see the whole island.');
   mapTouch=createMapTouch({canvas,input,container,position:()=>controller.player.position,place:()=>world.current?.id,enabled:()=>active&&!disposed&&!captainBlocked(),
     canStand:(x,z)=>canStand(x,z,world.current?.colliders??[],world.current?.groundHeight),
     project(x,y,target){const rect=canvas.getBoundingClientRect();if(!rect.width||!rect.height)return null;
-      if(target){projected.set(target.x,-target.y*.72,0).project(view.camera);return {x:rect.left+(projected.x+1)*rect.width/2,y:rect.top+(1-projected.y)*rect.height/2};}
-      projected.set((x-rect.left)/rect.width*2-1,1-(y-rect.top)/rect.height*2,0).unproject(view.camera);return {x:projected.x,z:-projected.y/.72};
+      if(target){const point=projectGround(target.x,target.y);projected.set(point.x,point.y,0).project(view.camera);return {x:rect.left+(projected.x+1)*rect.width/2,y:rect.top+(1-projected.y)*rect.height/2};}
+      projected.set((x-rect.left)/rect.width*2-1,1-(y-rect.top)/rect.height*2,0).unproject(view.camera);return unprojectGround(projected.x,projected.y);
     }});
   const deviceActions={onManualMove:()=>mapTouch.cancel(),chart:()=>showChart(),menu:()=>shell.show('pause'),isPlaying:()=>active&&!captainBlocked()};
   const touch=createTouchControls(container,input,deviceActions),gamepad=createGamepad(input,deviceActions);
@@ -359,7 +363,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
     }
     const info = graphics.renderer.info.render;
     hud.update(waveAction?null:zone, { fps, calls: info.calls, triangles: info.triangles, night,interactionLabel:waveAction?undefined:panelLabel(zone),promptAt:zone&&!waveAction?screenAt(zone):null,
-      hint:farHint?{text:WALK_CLOSER,at:screenAt(farHint.id)}:null,speed,blocked:!active||outsideBlocked()||!!waves?.island.wave||!!waves?.point?.controller.wave }); tutorials?.update(delta); input.endFrame();
+      hint:farHint?{text:WALK_CLOSER,at:screenAt(farHint.id)}:null,speed,managing:island?.managing===true,blocked:!active||outsideBlocked()||!!waves?.island.wave||!!waves?.point?.controller.wave }); tutorials?.update(delta); input.endFrame();
   }, () => {
     const draw=shell.mode!=='title';
     if(draw)graphics.renderer.render(scene,view.camera);

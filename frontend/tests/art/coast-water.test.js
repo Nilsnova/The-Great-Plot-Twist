@@ -56,7 +56,7 @@ describe('sea ownership and existing effect controls', () => {
   it('shares weather/coast/quality/time references with the existing lighthouse beam', async () => {
     const {createBeam} = await import('../../src/world/beam.js');
     const beam = createBeam(scene, 2, 3), uniforms = water.mesh.material.uniforms;
-    for (const name of ['uSeaTime', 'uWind', 'uRain', 'uDetail', 'uCoast', 'uCoastOn', 'uCoastRect']) {
+    for (const name of ['uSeaTime', 'uWind', 'uRain', 'uDetail', 'uCoast', 'uCoastOn', 'uCoastRect', 'uCoastUv']) {
       expect(uniforms[name]).toBe(module.seaUniforms[name]);
       expect(beam.mesh.material.uniforms[name]).toBe(module.seaUniforms[name]);
     }

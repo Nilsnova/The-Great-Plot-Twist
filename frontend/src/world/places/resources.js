@@ -1,5 +1,6 @@
 // A place owns its root, textures, materials, geometry and explicit subscriptions.
 import * as THREE from 'three';
+import {legacyBackdrop} from '../ground-transform.js';
 import { loadTexture } from '../texture.js';
 import { hasGround, paintGround } from '../../art/ground.js';
 import { premultiply, screenDensity, smoothTexture } from '../../art/textures.js';
@@ -39,6 +40,6 @@ export function backdrop(group, texture) {
     map: texture, transparent: true, premultipliedAlpha: !!texture.premultiplyAlpha, depthTest: false, depthWrite: false, toneMapped: false,
   });
   if (texture.premultiplyAlpha) material.onBeforeCompile = premultiply;
-  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(64, 48), material);
+  const mesh = legacyBackdrop(new THREE.Mesh(new THREE.PlaneGeometry(64, 48), material));
   mesh.renderOrder = 4; group.add(mesh); return mesh;
 }
