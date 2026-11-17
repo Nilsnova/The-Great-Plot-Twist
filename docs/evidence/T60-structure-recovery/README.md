@@ -10,9 +10,10 @@ canonical snapshot fixtures; assertions and server limits were left intact.
 
 **Source revisions:** T60 baseline `76c9764b`; T55 foundation `72996af7`, API revision fence
 `81171490`, snapshot schema/API `941703df`, finish response `cb181055`, lifecycle/expiry SQL
-`9d4d4b6c` and `14a1841f`, saved-v1 flag-off start `22026006`, mutation hooks `3b9c289e` and
-`cc519114`; T56 paid repair `a4d4fe5a`; T57 replay modules `80b79c22`; T60 API/PG/replay harness
-base commit `5ebbd657` with expiry/flag-off coverage and release docs in `825d2c56`.
+`9d4d4b6c` and `14a1841f`, saved-v1 flag-off start `22026006`, canonical mutation fixtures
+`f16a46a1` and `0dbfcae5`, mutation hooks `3b9c289e` and `cc519114`; T56 paid repair `a4d4fe5a`;
+T57 replay modules `80b79c22`; T55 contract notes `704f7ea5`; T60 API/PG/replay harness base commit
+`5ebbd657` with expiry/flag-off coverage and release docs in `825d2c56` and `9e2e55b8`.
 
 **Strict API/replay command** (from `backend/`):
 
@@ -39,8 +40,8 @@ wave expires settles the wave without charge; its later API finish returns zero 
 closed HP, with no owner credit.
 
 Only disposable timestamps are moved to put the synthetic wave into combat, cross the minimum finish
-time and place a second wave just beyond expiry. Short real sleeps verify pause and resume behavior. No product timeouts,
-assertions or server thresholds are changed. The JavaScript check imports the production snapshot
+time and place a second wave just beyond expiry. Short real sleeps verify pause and resume behavior.
+No product timeouts, assertions or server thresholds are changed. The JavaScript check imports the production snapshot
 and replay modules directly; it does not run the browser or the T59 authenticated frontend transport.
 The HTTP path repairs one wall. Broader SQL regressions exercise the other paid quota, old-UID,
 final-slot race and mutation cases.
@@ -58,6 +59,22 @@ UV_CACHE_DIR=/tmp/t60-uv-cache CASE_PG_SCRATCH=1 uv run --with pgserver --with '
 
 **Result:** 71 passed in 14.42 seconds. The suite includes lifecycle/checkpoint/finish SQL, the full
 mutation hook slice, schema and paid repair suites, and the actual API/replay integration case above.
+
+**Full island SQL sweep:** the complete `server/tests/island_sql` folder passed 367 tests in 33.98
+seconds on code commit `fafd000f`. Later commits through this evidence update change documentation
+only; no SQL or API code changed after that sweep.
+
+**Focused Python route/transport command** (from `backend/`):
+
+```bash
+uv run --frozen pytest -q server/tests/test_wave_recovery_routes.py \
+  server/tests/test_wave_routes.py server/tests/test_structure_recovery_routes.py \
+  server/tests/test_wave_recovery_transport.py server/tests/test_structure_repair_routes.py \
+  server/tests/test_structure_recovery_manifest.py server/tests/test_captain_skills_routes.py
+```
+
+**Result:** 138 passed in 15.75 seconds. These are request/model/transport tests with local fakes;
+the actual API-to-Postgres path is the dedicated HTTP fixture above.
 
 The narrow adapter allowlists only the local tables and RPCs needed by these calls. It does not
 read environment credentials, connect to a hosted Supabase instance, or create a network client.
