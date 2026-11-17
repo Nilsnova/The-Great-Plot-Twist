@@ -1,0 +1,372 @@
+{
+  "mode": "after",
+  "source": "445a5a0694826f9f35f215a2a65d007382ca7a8f",
+  "root": "/workspace/village-perimeter-work/vis-19/frontend",
+  "fixture": "actual local Chromium game; fake API, declared progression/builds/captain view; high quality via existing preference",
+  "checks": [
+    {
+      "width": 1280,
+      "height": 720,
+      "overview": {
+        "width": 1280,
+        "height": 720,
+        "name": "after-overview-1280x720.png",
+        "view": "overview",
+        "qualityBefore": {
+          "pixelRatio": 0.5,
+          "drawingWidth": 640,
+          "drawingHeight": 360,
+          "quality": "high",
+          "densityScale": 0.5
+        },
+        "camera": [
+          -0.000209646065619817,
+          2.146359898967462,
+          100
+        ],
+        "zoom": 0.3595293557123721,
+        "captain": [
+          -7,
+          1.03,
+          -11
+        ],
+        "contextLost": false,
+        "drawCalls": 83,
+        "rendering": {
+          "pixelRatio": 1,
+          "drawingWidth": 1280,
+          "drawingHeight": 720,
+          "quality": "high",
+          "densityScale": 1
+        },
+        "memory": {
+          "geometries": 118,
+          "textures": 36
+        }
+      },
+      "detail": {
+        "width": 1280,
+        "height": 720,
+        "name": "after-shore-1280x720.png",
+        "view": "shore",
+        "qualityBefore": {
+          "pixelRatio": 0.55,
+          "drawingWidth": 704,
+          "drawingHeight": 396,
+          "quality": "high",
+          "densityScale": 0.55
+        },
+        "camera": [
+          -10,
+          -9.14,
+          100
+        ],
+        "zoom": 1,
+        "captain": [
+          -10,
+          1.03,
+          17
+        ],
+        "contextLost": false,
+        "drawCalls": 81,
+        "rendering": {
+          "pixelRatio": 1,
+          "drawingWidth": 1280,
+          "drawingHeight": 720,
+          "quality": "high",
+          "densityScale": 1
+        },
+        "memory": {
+          "geometries": 118,
+          "textures": 36
+        }
+      },
+      "terrain": {
+        "supportedFeet": [
+          {
+            "id": "wall_1",
+            "x": -18.5,
+            "z": -1,
+            "onTop": true,
+            "opaqueTop": true
+          },
+          {
+            "id": "wall_2",
+            "x": 19,
+            "z": 1,
+            "onTop": true,
+            "opaqueTop": true
+          },
+          {
+            "id": "wall_3",
+            "x": 19,
+            "z": -1,
+            "onTop": true,
+            "opaqueTop": true
+          },
+          {
+            "id": "wall_4",
+            "x": -1,
+            "z": 17,
+            "onTop": true,
+            "opaqueTop": true
+          },
+          {
+            "id": "wall_5",
+            "x": 1,
+            "z": 17,
+            "onTop": true,
+            "opaqueTop": true
+          },
+          {
+            "id": "wall_6",
+            "x": -18.5,
+            "z": -3,
+            "onTop": true,
+            "opaqueTop": true
+          },
+          {
+            "id": "wall_7",
+            "x": 8.5,
+            "z": 2,
+            "onTop": true,
+            "opaqueTop": true
+          },
+          {
+            "id": "wall_8",
+            "x": 0.5,
+            "z": 9.5,
+            "onTop": true,
+            "opaqueTop": true
+          },
+          {
+            "id": "wall_9",
+            "x": -1.5,
+            "z": 9.5,
+            "onTop": true,
+            "opaqueTop": true
+          },
+          {
+            "id": "wall_10",
+            "x": -9.5,
+            "z": -1,
+            "onTop": true,
+            "opaqueTop": true
+          },
+          {
+            "id": "wall_11",
+            "x": -9.5,
+            "z": 1,
+            "onTop": true,
+            "opaqueTop": true
+          },
+          {
+            "id": "wall_12",
+            "x": 8.5,
+            "z": 0,
+            "onTop": true,
+            "opaqueTop": true
+          },
+          {
+            "id": "captain",
+            "x": -10,
+            "z": 17,
+            "onTop": true,
+            "opaqueTop": true
+          }
+        ],
+        "decorativeOutsideCount": 101,
+        "decorativeAllUnwalkable": true,
+        "foamAtDecorativeBaseCount": 101,
+        "image": [
+          1280,
+          960
+        ]
+      },
+      "pageErrors": [],
+      "externalRequests": 0
+    },
+    {
+      "width": 375,
+      "height": 812,
+      "overview": {
+        "width": 375,
+        "height": 812,
+        "name": "after-overview-375x812.png",
+        "view": "overview",
+        "qualityBefore": {
+          "pixelRatio": 0.85,
+          "drawingWidth": 318,
+          "drawingHeight": 690,
+          "quality": "high",
+          "densityScale": 0.85
+        },
+        "camera": [
+          -0.00019285154711936377,
+          3.8261981962899974,
+          100
+        ],
+        "zoom": 0.3333517001473447,
+        "captain": [
+          -7,
+          1.03,
+          -11
+        ],
+        "contextLost": false,
+        "drawCalls": 83,
+        "rendering": {
+          "pixelRatio": 1,
+          "drawingWidth": 375,
+          "drawingHeight": 812,
+          "quality": "high",
+          "densityScale": 1
+        },
+        "memory": {
+          "geometries": 118,
+          "textures": 36
+        }
+      },
+      "detail": {
+        "width": 375,
+        "height": 812,
+        "name": "after-shore-375x812.png",
+        "view": "shore",
+        "qualityBefore": {
+          "pixelRatio": 0.85,
+          "drawingWidth": 318,
+          "drawingHeight": 690,
+          "quality": "high",
+          "densityScale": 0.85
+        },
+        "camera": [
+          -10,
+          -9.14,
+          100
+        ],
+        "zoom": 1,
+        "captain": [
+          -10,
+          1.03,
+          17
+        ],
+        "contextLost": false,
+        "drawCalls": 81,
+        "rendering": {
+          "pixelRatio": 1,
+          "drawingWidth": 375,
+          "drawingHeight": 812,
+          "quality": "high",
+          "densityScale": 1
+        },
+        "memory": {
+          "geometries": 118,
+          "textures": 36
+        }
+      },
+      "terrain": {
+        "supportedFeet": [
+          {
+            "id": "wall_1",
+            "x": -18.5,
+            "z": -1,
+            "onTop": true,
+            "opaqueTop": true
+          },
+          {
+            "id": "wall_2",
+            "x": 19,
+            "z": 1,
+            "onTop": true,
+            "opaqueTop": true
+          },
+          {
+            "id": "wall_3",
+            "x": 19,
+            "z": -1,
+            "onTop": true,
+            "opaqueTop": true
+          },
+          {
+            "id": "wall_4",
+            "x": -1,
+            "z": 17,
+            "onTop": true,
+            "opaqueTop": true
+          },
+          {
+            "id": "wall_5",
+            "x": 1,
+            "z": 17,
+            "onTop": true,
+            "opaqueTop": true
+          },
+          {
+            "id": "wall_6",
+            "x": -18.5,
+            "z": -3,
+            "onTop": true,
+            "opaqueTop": true
+          },
+          {
+            "id": "wall_7",
+            "x": 8.5,
+            "z": 2,
+            "onTop": true,
+            "opaqueTop": true
+          },
+          {
+            "id": "wall_8",
+            "x": 0.5,
+            "z": 9.5,
+            "onTop": true,
+            "opaqueTop": true
+          },
+          {
+            "id": "wall_9",
+            "x": -1.5,
+            "z": 9.5,
+            "onTop": true,
+            "opaqueTop": true
+          },
+          {
+            "id": "wall_10",
+            "x": -9.5,
+            "z": -1,
+            "onTop": true,
+            "opaqueTop": true
+          },
+          {
+            "id": "wall_11",
+            "x": -9.5,
+            "z": 1,
+            "onTop": true,
+            "opaqueTop": true
+          },
+          {
+            "id": "wall_12",
+            "x": 8.5,
+            "z": 0,
+            "onTop": true,
+            "opaqueTop": true
+          },
+          {
+            "id": "captain",
+            "x": -10,
+            "z": 17,
+            "onTop": true,
+            "opaqueTop": true
+          }
+        ],
+        "decorativeOutsideCount": 101,
+        "decorativeAllUnwalkable": true,
+        "foamAtDecorativeBaseCount": 101,
+        "image": [
+          1536,
+          1152
+        ]
+      },
+      "pageErrors": [],
+      "externalRequests": 0
+    }
+  ]
+}
