@@ -850,10 +850,11 @@ try {
   await pages[0].page.getByRole('button', {name: 'Finish practice', exact: true}).click();
   for (const captain of pages) await captain.page.waitForFunction(() => window.__island.waves.island.state?.finisher?.phase === 'task', null, {timeout: 200000, polling: 200});
   await host.page.waitForTimeout(4000);
-  await shot('07-finisher-haul-mid-task');
   const midway = await Promise.all(pages.map(finisherOf));
+  assert.ok(midway[0], 'the host still has a live finisher task after 4 s');
   results.push(`finisher: ${midway[0].kind} for ${midway[0].players.join(', ')}; heard so far ${midway.map(item => item.heard.length).join(' / ')}`);
   for (const item of midway) assert.deepEqual([...item.players].sort(), [...ids].sort(), 'every captain in the wave is in the finisher');
+  await shot('07-finisher-haul-mid-task');
   for (const captain of pages) await captain.page.waitForFunction(() => window.__mp.finishers.length > 0, null, {timeout: 60000, polling: 100});
   const outcomes = await Promise.all(pages.map(captain => captain.page.evaluate(() => window.__mp.finishers[0])));
   results.push(`finisher outcome on the four pages: ${outcomes.map(item => `${item.type} ${item.scores}/${item.goals}`).join(' · ')}`);
