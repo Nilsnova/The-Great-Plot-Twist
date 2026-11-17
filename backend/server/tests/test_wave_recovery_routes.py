@@ -3,6 +3,7 @@ from uuid import UUID
 import pytest
 
 from server.island import wave_recovery
+from server.island import waves as wave_service
 from server.tests.helpers import assert_error
 from server.tests.island_helpers import PLAYER, World
 
@@ -97,3 +98,45 @@ def test_input_route_requires_explicit_protocol2(wave_protocol):
         json={"waveProtocol": wave_protocol, "inputs": []},
     )
     assert response.status_code == 422
+
+
+def test_protocol2_finish_maps_the_rpc_balance_to_the_legacy_coins_field(monkeypatch):
+    world = World()
+
+    async def finish(*args, **kwargs):
+        return {
+            "loot": 15,
+            "balance": 115,
+            "waveBest": 1,
+            "flags": 1,
+            "boss": False,
+            "recovery": {
+                "waveId": str(WAVE),
+                "islandEpoch": "33333333-3333-4333-8333-333333333333",
+                "closedAt": "2026-11-17T02:00:00Z",
+                "closedHp": {"instance-1": 987654},
+                "checkpointUid": "checkpoint_001",
+                "throughTick": 30,
+                "inputHeadSeq": 4,
+                "lastRepairSeq": 1,
+                "basisRepairSeq": {"instance-1": 1},
+            },
+        }
+
+    monkeypatch.setattr(wave_service, "finish_protocol2", finish)
+    response = world.finish(
+        waveProtocol=2,
+        checkpoint={
+            "islandEpoch": "33333333-3333-4333-8333-333333333333",
+            "checkpointUid": "checkpoint_001",
+            "throughTick": 30,
+            "inputHeadSeq": 4,
+            "lastRepairSeq": 1,
+            "basisRepairSeq": {"33333333-3333-4333-8333-333333333333": 1},
+            "hpUnits": {"33333333-3333-4333-8333-333333333333": 987654},
+        },
+    )
+
+    assert response.status_code == 200, response.text
+    assert response.json()["coins"] == 115
+    assert response.json()["recovery"]["closedHp"] == {"instance-1": 987654}
