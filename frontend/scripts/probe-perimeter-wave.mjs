@@ -9,7 +9,7 @@ import {chromium} from 'playwright-core';
 import {stubOfflineApi} from './api-browser-fixture.js';
 import {boot, builder, capture, groundPoint, hitButtons, manage, openBuilder, settleCards, wallet, workspaceBounds} from './perimeter-game-ui.mjs';
 import {capturePerimeterWave} from './perimeter-game-wave.mjs';
-const root = resolve(process.argv[2]), out = resolve(process.argv[3]), workspace = process.argv[4] === 'workspace'; await mkdir(out, {recursive: true});
+const root = resolve(process.argv[2]), out = resolve(process.argv[3]), workspace = process.argv[4] === 'workspace', metrics = process.argv[4]?.startsWith('metrics'); await mkdir(out, {recursive: true});
 const source = execFileSync('git', ['rev-parse', 'HEAD'], {cwd: root, encoding: 'utf8'}).trim();
 const fixture = JSON.parse(await readFile(join(root, 'tests/pirates/fixtures/perimeter-ring.json'), 'utf8'));
 const cells = (fixture.cells ?? fixture.ring).map(([x, z]) => ({x, z}));
@@ -19,7 +19,7 @@ let browser, page; const errors = [], external = [];
 try {
   await server.listen(); const base = `http://127.0.0.1:${server.httpServer.address().port}`;
   browser = await chromium.launch({executablePath: process.env.CHROME_PATH || '/usr/bin/chromium', headless: true});
-  page = await browser.newPage({viewport: workspace ? {width: 375, height: 812} : {width: 1280, height: 720}});
+  page = await browser.newPage({viewport: workspace || process.argv[4] === 'metrics-phone' ? {width: 375, height: 812} : {width: 1280, height: 720}});
   page.on('pageerror', error => errors.push(error.message));
   await page.route('**/*', route => route.request().url().startsWith(base) ? route.continue() : (external.push(route.request().url()), route.abort()));
   await stubOfflineApi(page); await page.addInitScript(() => {
@@ -27,10 +27,11 @@ try {
     localStorage.setItem('tgpt:tutorials:v1', JSON.stringify({version: 1, guided: true, seen: [], games: {}}));
   });
   await page.clock.install(); await boot(page, `${base}/?islands=fake&fakeworld=perimeter_probe&fakeplayer=me&fakeflags=perimeter_walls,wall_recovery`);
-  await page.evaluate(async () => {
-    const g = window.__island; await g.island.dev.setCoins(5000); await g.island.dev.setWaveBest(7); await g.island.load();
+  await page.evaluate(async metrics => {
+    const g = window.__island; await g.island.dev.setCoins(metrics ? 8000 : 5000); await g.island.dev.setWaveBest(metrics ? 40 : 7); await g.island.load();
+    if (metrics) for (const [id, kind] of [['cannon_1', 'cannon'], ['cannon_2', 'mortar'], ['cannon_3', 'cannon'], ['cannon_4', 'harpoon'], ['tower_1', 'watchtower'], ['house_1', 'house'], ['house_2', 'house']]) await g.island.build(id, kind);
     g.settings.hour = 11; g.settings.fastTime = false; g.player.position.set(8.5, 1.03, 12.8); g.view.setPlace('home_islet', g.player.position);
-  });
+  }, metrics);
   await settleCards(page); await manage(page);
   if (workspace) {
     const before = await wallet(page); await openBuilder(page);
@@ -60,12 +61,21 @@ try {
       const built = await i.wallBuilder.confirm(); if (!built?.ok) throw new Error(`probe payment refused: ${built?.message}`);
     }
   }, cells);
+  if (metrics) {
+    await page.evaluate(async () => { await window.__island.island.upgrade('wall_1'); }); await page.waitForTimeout(1300);
+    const saved = await wallet(page), frame = await capture(page, out, 'metrics.png');
+    assert.equal(saved.walls.length, 102); assert.equal(saved.coins, 6660); assert.equal(frame.worldLinks, 106);
+    assert.deepEqual(errors, []); assert.deepEqual(external, []);
+    await writeFile(join(out, 'metrics-report.json'), JSON.stringify({source, fixture: 'same declared8000/best40/seven paid buildings/102 paid ring/one upgrade; public-controller metric preparation', saved, frame, errors, external}, null, 2) + '\n');
+    console.log(`PASS: metrics ${source.slice(0, 8)}: ${frame.worldLinks} logical links / ${frame.worldWallDrawMeshes} draw meshes / ${frame.drawCalls} calls / ${frame.memory.geometries} geometries / ${frame.memory.textures} textures`);
+  } else {
   const wave = await capturePerimeterWave(page, out, 1280, 720);
   const cannon = await page.evaluate(async () => (await import('/scripts/cannon-style-fixture.js')).verifyCannonStyle());
   assert.equal(cannon.results.length, 40); assert.deepEqual(errors, []); assert.deepEqual(external, []);
   await writeFile(join(out, 'probe-report.json'), JSON.stringify({source, fixture: 'public-controller paid preparation; actual nearby-captain normal bell; fast diagnostic only',
     wave, cannon: cannon.results, pageErrors: errors, externalRequests: external}, null, 2) + '\n');
   console.log('PASS: normal bell preserved frozen102-wall demo, actual live joins breached correctly and40 shared cannon frames passed');
+  }
   }
 } catch (error) {
   const observed = await page?.evaluate(() => {
