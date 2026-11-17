@@ -28,7 +28,7 @@ UID = "positioned-0001"
 
 def ready(database, *, admitted=True):
     add_players(database, OWNER, OTHER)
-    open_island(database, OWNER, "WLC19")
+    open_island(database, OWNER, "WLC29")
     as_server(database)
     if admitted:
         database.execute(
