@@ -24,10 +24,13 @@ describe('recovery-v1 controller replay', () => {
     };
     const repair = { serverSeq: 1, effectiveTick: 0, type: 'structure_repaired', participantToken: null,
       payload: { spot: 'wall_1', instanceId: 'wall-instance', hpUnits: 1_000_000, maxHP: 60, repairSeq: 1, chargedPrice: 20 } };
-    const readEvents = vi.fn(async () => ({ headSeq: 1, sealedThroughTick: 0, events: [repair] }));
+    const readEvents = vi.fn(async ({ after = 0 } = {}) => ({ headSeq: 1, sealedThroughTick: 0,
+      events: after === 0 ? [repair] : [] }));
     const sendInputs = vi.fn(async () => ({ accepted: [] }));
+    const checkpoint = vi.fn(async ({ checkpoint: body }) => ({ accepted: true, throughTick: body.throughTick,
+      inputHeadSeq: body.inputHeadSeq, lastRepairSeq: body.lastRepairSeq, hpUnits: body.hpUnits }));
     let now = START;
-    const controller = createWaveController({ bus, now: () => now, recoveryTransport: { readEvents, sendInputs, finishWave: vi.fn() },
+    const controller = createWaveController({ bus, now: () => now, recoveryTransport: { readEvents, sendInputs, checkpoint, finishWave: vi.fn() },
       world: {}, getDefenses: () => [{ id: 'wall_1', kind: 'wall', level: 1, x: 0, z: 1 }],
       createRenderer: () => null, createHud: () => null, setTimer: () => ({}), clearTimer: () => {} });
     bus.emit({ type: 'wave_started_server', waveId: 'wave-r', wave: 1, seed: 77,
@@ -47,7 +50,81 @@ describe('recovery-v1 controller replay', () => {
     expect(controller.recoveryCombatState).toEqual({ waveId: 'wave-r', islandEpoch: 'epoch-r', structures: [
       { spot: 'wall_1', instanceId: 'wall-instance', hpUnits: 1_000_000, maxHP: 60, repairSeq: 1 },
     ] });
+    now += 1050; controller.update(.05); await new Promise(resolve => setTimeout(resolve, 0));
+    now += 1; controller.update(.05); await new Promise(resolve => setTimeout(resolve, 0));
+    now += 1050; controller.update(.05); await new Promise(resolve => setTimeout(resolve, 0));
+    now += 1; controller.update(.05); await new Promise(resolve => setTimeout(resolve, 0));
+    expect(checkpoint).toHaveBeenCalledWith(expect.objectContaining({ waveId: 'wave-r', checkpoint: expect.objectContaining({
+      hpUnits: { 'wall-instance': 1_000_000 }, basisRepairSeq: { 'wall-instance': 1 }, lastRepairSeq: 1,
+    }) })); // Changed health is coalesced to a periodic durable checkpoint.
     expect(sendInputs).not.toHaveBeenCalled();
+    controller.dispose();
+  });
+
+  it('posts a complete damaged HP checkpoint before a repair request can proceed', async () => {
+    const listeners = new Map(), bus = {
+      on(type, fn) { if (!listeners.has(type)) listeners.set(type, new Set()); listeners.get(type).add(fn); return () => listeners.get(type).delete(fn); },
+      emit(event) { for (const fn of listeners.get(event.type) ?? []) fn(event); },
+    };
+    let now = START + 1050, paidEvent = null;
+    const readEvents = vi.fn(async () => ({ headSeq: paidEvent ? 1 : 0, sealedThroughTick: paidEvent ? 1 : 0,
+      events: paidEvent ? [paidEvent] : [] }));
+    const checkpoint = vi.fn(async ({ checkpoint: body }) => ({ accepted: true, throughTick: body.throughTick,
+      inputHeadSeq: body.inputHeadSeq, lastRepairSeq: body.lastRepairSeq, hpUnits: body.hpUnits }));
+    const controller = createWaveController({ bus, now: () => now,
+      recoveryTransport: { readEvents, sendInputs: vi.fn(async () => ({ accepted: [] })), checkpoint, finishWave: vi.fn() },
+      world: {}, getDefenses: () => [], createRenderer: () => null, createHud: () => null,
+      setTimer: () => ({}), clearTimer: () => {} });
+    const snapshot = makeSnapshot();
+    bus.emit({ type: 'wave_started_server', waveId: 'wave-r', wave: 1, seed: 77, startsAt: snapshot.startsAt,
+      weather: snapshot.weather, rules: snapshot.rules, recoveryVersion: 1, waveProtocol: 2,
+      initialSnapshot: snapshot, participantToken: TOKEN, lastActorCounter: 0 });
+    controller.update(.05);
+    const gate = await controller.checkpointBeforeRepair();
+    expect(gate).toEqual({ ok: true });
+    expect(checkpoint).toHaveBeenCalledTimes(1);
+    expect(checkpoint.mock.calls[0][0].checkpoint).toMatchObject({ throughTick: 0, inputHeadSeq: 0,
+      hpUnits: { 'wall-instance': 0 }, basisRepairSeq: { 'wall-instance': 0 } });
+    expect(controller.state.walls[0]).toMatchObject({ hp: 0, broken: true }); // HTTP acceptance itself never heals locally.
+
+    paidEvent = { serverSeq: 1, effectiveTick: 1, type: 'structure_repaired', participantToken: null,
+      payload: { spot: 'wall_1', instanceId: 'wall-instance', hpUnits: 1_000_000, maxHP: 60, repairSeq: 1, chargedPrice: 20 } };
+    now += 300;
+    controller.update(.05);
+    await new Promise(resolve => setTimeout(resolve, 0));
+    controller.update(.05);
+    await new Promise(resolve => setTimeout(resolve, 0));
+    expect(controller.state.walls[0].hp).toBeGreaterThan(0);
+    controller.dispose();
+  });
+
+  it('keeps one HP unit positive through the public controller state and display vector', () => {
+    const listeners = new Map(), bus = {
+      on(type, fn) { if (!listeners.has(type)) listeners.set(type, new Set()); listeners.get(type).add(fn); return () => listeners.get(type).delete(fn); },
+      emit(event) { for (const fn of listeners.get(event.type) ?? []) fn(event); },
+    };
+    let now = START;
+    const controller = createWaveController({ bus, now: () => now, recoveryTransport: {
+      readEvents: async () => ({ headSeq: 0, sealedThroughTick: -1, events: [] }),
+      sendInputs: async () => ({ accepted: [] }), checkpoint: async () => null, finishWave: vi.fn(),
+    }, world: {}, getDefenses: () => [], createRenderer: () => null, createHud: () => null,
+    setTimer: () => ({}), clearTimer: () => {} });
+    const snapshot = makeSnapshot();
+    snapshot.createWave.defenses.push({ id: 'cannon_1', kind: 'cannon', level: 1, x: 2, z: 1 });
+    snapshot.structures = [
+      { spot: 'wall_1', instanceId: 'wall-tiny', kind: 'wall', level: 1, x: 0, z: 1, hpUnits: 1, maxHP: 60, repairSeq: 0 },
+      { spot: 'cannon_1', instanceId: 'tower-tiny', kind: 'cannon', level: 1, x: 2, z: 1, hpUnits: 1, maxHP: 80, repairSeq: 0 },
+    ];
+    bus.emit({ type: 'wave_started_server', waveId: 'wave-r', wave: 1, seed: 77, startsAt: snapshot.startsAt,
+      weather: snapshot.weather, rules: snapshot.rules, recoveryVersion: 1, waveProtocol: 2,
+      initialSnapshot: snapshot, participantToken: TOKEN, lastActorCounter: 0 });
+    expect(controller.state.walls[0].hp).toBeGreaterThan(0);
+    expect(controller.state.walls[0].broken).toBe(false);
+    expect(controller.state.towers.find(row => row.id === 'cannon_1').hp).toBeGreaterThan(0);
+    expect(controller.state.towers.find(row => row.id === 'cannon_1').broken).toBe(false);
+    now = START + 1050;
+    controller.update(.05);
+    expect(controller.recoveryCombatState.structures.map(row => row.hpUnits)).toEqual([1, 1]);
     controller.dispose();
   });
 
@@ -57,8 +134,14 @@ describe('recovery-v1 controller replay', () => {
       emit(event) { for (const fn of listeners.get(event.type) ?? []) fn(event); },
     };
     let now = START, attempt = 0;
-    const sendInputs = vi.fn(async (_request) => ++attempt === 1 ? null : ({ accepted: [_request.inputs[0].inputUid] }));
-    const transport = { sendInputs, readEvents: async () => ({ headSeq: 0, sealedThroughTick: 0, events: [] }), finishWave: vi.fn() };
+    const sendInputs = vi.fn(async (_request) => ++attempt === 1 ? null : ({ accepted: _request.inputs.map(item => ({
+      serverSeq: 1, effectiveTick: item.tick, type: 'captain_input', participantToken: TOKEN,
+      payload: { inputUid: item.inputUid, actorCounter: item.actorCounter, participantToken: TOKEN, command: item.command,
+        captain: { level: 1, skills: [], weapon: 'musket' } },
+    })) }));
+    const transport = { sendInputs, readEvents: async () => ({ headSeq: 0, sealedThroughTick: 0, events: [] }),
+      checkpoint: async ({ checkpoint: body }) => ({ accepted: true, throughTick: body.throughTick,
+        inputHeadSeq: body.inputHeadSeq, lastRepairSeq: body.lastRepairSeq, hpUnits: body.hpUnits }), finishWave: vi.fn() };
     const controller = createWaveController({ bus, now: () => now, room: { send: (...message) => roomMessages.push(message) },
       recoveryTransport: transport, world: {}, getDefenses: () => [], createRenderer: () => null, createHud: () => null,
       accept: () => true, setTimer: () => ({}), clearTimer: () => {} });
@@ -74,7 +157,7 @@ describe('recovery-v1 controller replay', () => {
     controller.update(.05);
     expect(controller.state.phase).toBe('running');
     expect(controller.wave.info.flagship).toBe(true);
-    expect(controller.lampsLit()).toBe(true);
+    expect(controller.fire('cannon_1', 'ship_1')).toBe(true);
     now += 200;
     controller.update(.05);
     await new Promise(resolve => setTimeout(resolve, 0));
@@ -83,7 +166,7 @@ describe('recovery-v1 controller replay', () => {
     await new Promise(resolve => setTimeout(resolve, 0));
     expect(sendInputs).toHaveBeenCalledTimes(2);
     expect(sendInputs.mock.calls[0][0].inputs).toEqual(sendInputs.mock.calls[1][0].inputs);
-    expect(sendInputs.mock.calls[0][0].inputs[0]).toMatchObject({ actorCounter: 5, command: { type: 'lamps_lit' } });
+    expect(sendInputs.mock.calls[0][0].inputs[0]).toMatchObject({ actorCounter: 5, command: { type: 'fire', cannonId: 'cannon_1', targetId: 'ship_1' } });
     expect(roomMessages).toEqual([]);
     controller.dispose();
   });
@@ -107,11 +190,13 @@ describe('recovery-v1 controller replay', () => {
       }
       if (body.checkpoint.throughTick < paidEvent.effectiveTick) return { ok: false, status: 409, code: 'health_sync_required' };
       return { ok: true, data: { loot: 10, recovery: { waveId: body.waveId, islandEpoch: body.checkpoint.islandEpoch,
-        closedAt: new Date(now).toISOString(), closedHp: body.checkpoint.hpUnits, checkpointUid: body.checkpoint.checkpointUid,
+        closedAt: new Date(now).toISOString(), closedHp: body.checkpoint.hpUnits, checkpointUid: 'canonical-close-uid1',
         throughTick: body.checkpoint.throughTick, inputHeadSeq: body.checkpoint.inputHeadSeq,
         lastRepairSeq: body.checkpoint.lastRepairSeq, basisRepairSeq: body.checkpoint.basisRepairSeq } } };
     });
-    controller = createWaveController({ bus, now: () => now, recoveryTransport: { readEvents, sendInputs: async () => ({ accepted: [] }), finishWave },
+    controller = createWaveController({ bus, now: () => now, recoveryTransport: { readEvents, sendInputs: async () => ({ accepted: [] }),
+      checkpoint: async ({ checkpoint: body }) => ({ accepted: true, throughTick: body.throughTick,
+        inputHeadSeq: body.inputHeadSeq, lastRepairSeq: body.lastRepairSeq, hpUnits: body.hpUnits }), finishWave },
       finishWave: legacyFinish, world: {}, getDefenses: () => [], createRenderer: () => null, createHud: () => null,
       setTimer: () => ({}), clearTimer: () => {}, accept: () => true });
     const snapshot = makeSnapshot();
@@ -137,6 +222,7 @@ describe('recovery-v1 controller replay', () => {
     expect(terminal.lastRepairSeq).toBe(1);
     expect(terminal.throughTick).toBeGreaterThan(paidEvent.effectiveTick);
     expect(legacyFinish).not.toHaveBeenCalled();
+    expect(controller.wave.recoveryFinishAnswered).toBe(true); // Canonical first-close UID can differ from this finisher's UID.
     controller.dispose();
   });
 });

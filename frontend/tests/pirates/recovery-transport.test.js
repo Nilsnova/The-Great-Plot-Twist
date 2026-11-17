@@ -70,6 +70,17 @@ describe('recovery-v1 command transport', () => {
     expect(await transport.finishWave({ ...body, checkpoint: { ...body.checkpoint, basisRepairSeq: {}, hpUnits: {} } })).toMatchObject({ ok: true });
   });
 
+  it('posts the accepted complete health vector to the active wave checkpoint endpoint', async () => {
+    const checkpoint = { islandEpoch: 'epoch-a', checkpointUid: 'checkpointuid1234', throughTick: 8, inputHeadSeq: 3,
+      lastRepairSeq: 1, basisRepairSeq: { 'instance-a': 1 }, hpUnits: { 'instance-a': 450_000 } };
+    const post = vi.fn(async () => ({ accepted: true, repeated: false, throughTick: 8, inputHeadSeq: 3,
+      lastRepairSeq: 1, hpUnits: { 'instance-a': 450_000 } }));
+    const transport = createRecoveryTransport({ get: vi.fn(), post });
+    expect(await transport.checkpoint({ waveId: 'wave-a', checkpoint })).toMatchObject({ accepted: true, hpUnits: checkpoint.hpUnits });
+    expect(post).toHaveBeenCalledWith('/api/waves/wave-a/health', { waveProtocol: 2, ...checkpoint });
+    expect(await transport.checkpoint({ waveId: 'wave-a', checkpoint: { ...checkpoint, hpUnits: {} } })).toBeNull();
+  });
+
   it('rejects overlarge batches before making an HTTP request', async () => {
     const post = vi.fn();
     const transport = createRecoveryTransport({ get: vi.fn(), post });
