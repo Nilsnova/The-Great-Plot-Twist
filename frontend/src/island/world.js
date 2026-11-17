@@ -210,8 +210,10 @@ export function decorateIsland(place, ctx = {}) {
   }, error => ctx.onArtError?.(error));
   const staticArt = createStaticVillageArt({root, load: ctx.loadArt ?? loadArt, sizes: artSizes, registered: getRasterFrame, tasks});
   notice = createVillageArtNotice({container: ctx.container, isActive: ctx.isActive,
-    retry: () => Promise.all([retryArt(), staticArt.retry(), retryWallArt()]), focus: () => ctx.canvas?.focus({preventScroll: true})});
+    retry: () => Promise.all([retryArt(), staticArt.retry(), retryWallArt(), retryProgressArt(), ctx.retryAdditionalArt?.()]), focus: () => ctx.canvas?.focus({preventScroll: true})});
   const progress = layout.zones === islandZones ? decorateProgress(place) : null;
+  function retryProgressArt() { return progress?.retryArt ? tasks.run('progress', () => progress.retryArt()) : Promise.resolve(); }
+  retryProgressArt();
   const baseZones = [...(place.zones ?? [])];
   const reduced = () => (typeof ctx.reducedMotion === 'function' ? ctx.reducedMotion() : !!ctx.reducedMotion);
   const textures = Object.fromEntries(Object.entries(DRAWN).map(([kind, name]) => [kind, drawn(name)]));
@@ -493,7 +495,8 @@ export function decorateIsland(place, ctx = {}) {
   }
   let ringing = 0;
   return {
-    apply, pickAt, retryArt: () => Promise.all([retryArt(), staticArt.retry(), retryWallArt()]),
+    runArtTask: (key, operation) => tasks.run(key, operation),
+    apply, pickAt, retryArt: () => Promise.all([retryArt(), staticArt.retry(), retryWallArt(), retryProgressArt(), ctx.retryAdditionalArt?.()]),
     setRecoveryState(value) {
       const accepted = value?.recoveryVersion === 1 && RECOVERY_PHASES.has(value.displayPhase)
         && typeof value.islandEpoch === 'string' && Array.isArray(value.structures) ? value : null;
