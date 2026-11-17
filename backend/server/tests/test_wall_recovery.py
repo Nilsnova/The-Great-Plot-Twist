@@ -146,6 +146,7 @@ def test_a_repair_sends_the_full_price_and_the_timer_to_the_database():
     [
         ("intact", 409, "intact"),
         ("wave_running", 409, "wave_running"),
+        ("client_update_required", 409, "client_update_required"),
         ("not_built", 409, "not_built"),
         ("wrong_kind", 422, "wrong_kind"),
         ("insufficient_funds", 409, "insufficient_funds"),
