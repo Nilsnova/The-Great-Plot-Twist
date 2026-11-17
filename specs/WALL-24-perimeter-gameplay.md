@@ -1,6 +1,6 @@
 # WALL-24: actual-game perimeter verification
 
-Responsible teammate: Johannes Franz Lang (`frcola`). [WALL-24 #265](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/265). Branch `test/wall-24-perimeter-gameplay` starts from unmerged preview aggregate `dc6f80ef`; this QA-only PR is stacked against `chore/perimeter-preview-base` so its diff contains verification rather than duplicating the implementation PRs.
+Responsible teammate: Johannes Franz Lang (`frcola`). [WALL-24 #265](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/265). Branch `test/wall-24-perimeter-gameplay` starts from unmerged preview aggregate `dc6f80ef`; this QA-only PR is stacked against `chore/wall-24-review-dc6f80ef` so its diff contains verification rather than duplicating the implementation PRs.
 
 ## Scope and execution contract
 
