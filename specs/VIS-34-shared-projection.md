@@ -6,7 +6,7 @@ For Johannes Franz Lang (`frcola`), assisted by the projection/wall-art agent. [
 
 The actual material checkpoint shows richer source art but fails the approved composition: the old near-circular ground fit makes a close view crop too much, and zero-shear north/south wall sides are edge-on. The approved follow-up introduces one invertible visual ground transform, while preserving all saved logical XZ, walk/build rights, colliders, payments and seeded simulation.
 
-The starting candidate is display X = 1.4×logical x + 0.2×logical z, display Y = −0.55×logical z. Sprite images remain upright and keep independent visual size/height; ground feet use the transform. A small pure module owns forward/inverse, legacy-backdrop conversion, projected directions and measured land/decorative bounds. The old .72 convention is retained only as an explicitly named legacy texture coordinate contract. Root records the explicit D064 policy revision.
+The selected starting contract is display X = 1.3×logical x + 0.2×logical z, display Y = −0.60×logical z. Sprite images remain upright and keep independent visual size/height; ground feet use the transform. A small pure module owns forward/inverse, legacy-backdrop conversion, projected directions and measured land/decorative bounds. The old .72 convention is retained only as an explicitly named legacy texture coordinate contract. Root records the explicit D064 policy revision.
 
 ## Scope and ownership
 
@@ -43,3 +43,7 @@ A partial transform would break clicking, aim, masks and occlusion. Source audit
 1. Why can a new visual projection preserve the same saved island and deterministic battle?
 2. Why must a mouse click use the exact inverse of the ground transform?
 3. Why are sprite height and the old backdrop's texture coordinates different from logical ground XZ?
+
+## Pure contract checkpoint
+
+The shared forward/inverse, vector, positive-winding local ground basis, legacy-plane conversion and measured coast/decorative bounds are implemented. Four focused tests pass in 352ms, including sampled half-grid/naval roundtrips, unchanged input/coast data and actual top/base containment. The current painted home profile measures about55.305×28.905 displayed units (ratio1.913), including its asymmetric decorative depth. This first component is unused until the coordinated consumer component lands; no active game or actual screenshot acceptance is claimed.
