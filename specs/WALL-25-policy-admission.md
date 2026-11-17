@@ -1,38 +1,23 @@
-# WALL-01: full-perimeter wall implementation contract
+# WALL-25: trusted perimeter policy and admission
 
-For Johannes Franz Lang (`frcola`), authorized for draft implementation on 17 November 2026. This updates the reference-village target; independent human review and release remain separate. No merge or live migration application is authorized.
+For Johannes Franz Lang (`frcola`), implementing issue #274. Used by the new free-grid read/Move transport and later positioned construction. Draft only: no live migration, activation or merge.
 
-## Requested behavior
+## What changes
 
-Players can purchase, place, move and upgrade connected defensive walls around the island's buildable perimeter, and create internal compartments. This is a strategy system using real saved pieces and existing coin/health rules. Walls block hostile boarder entry until breached; they do not prevent naval/projectile attacks or silently change friendly captain collision.
+A private owner policy records rule 1/capacity 128; absence remains legacy 0/12. One SQL statement reads policy plus every ordered layout row. Owner-only admission checks the old raw rows and active wave, settles old recovery, materializes server-computed effective D056 coordinates, then changes interpretation. Both old/new Move validations are fenced by policy and complete raw rows under the owner lock.
 
-A measured candidate has 102 edge-sharing pieces on the current half-unit grid. The bounded allowance is **128 stable IDs (`wall_1` through `wall_128`)**, leaving room for internal defenses. The measure uses today's center-on-land rule and all fixed keep-outs/default non-wall sites, including D060. Fixed coastal services may remain outside an inset enclosure; movable buildings can be relocated. This does not promise every shoreline object can be enclosed without a coastal/land contract change. The closed ring and an opened-gap variant must be demonstrated using actual placement, save/reload and hostile movement.
+The original 12 IDs and empty-site behavior remain. New unbuilt inventory IDs cannot reserve ground through Move. Permission, no-active-wave and bounded IDs/coordinates are checked again in SQL. Service role can read/insert policy, but cannot update/delete it back to legacy. Added-cohort constraints and positioned payments are separate drafts.
 
-## Coordinates, inventory and old saves
+## Verification and limits
 
-- Keep the existing 0.5-unit grid and 2×2 wall footprint. Edge sharing is valid; overlap is not. Keep existing center-on-land semantics and fixed services. Walls are destructible, so a closed ring remains legal; non-wall reachability rules remain.
-- Preserve the twelve existing IDs, purchases, levels, payer contributions and effective D056 positions. Admission materializes their effective coordinates before changing interpretation; it does not silently reposition paid walls.
-- The additional 116 IDs are inventory, not 116 reserved empty build sites. An added piece gets its position atomically with its paid construction. An unpositioned old single-build route must refuse a new ID before charging. Existing original unbuilt reservations remain compatible.
-- Admission is between waves, owner-only, and monotonic. Pausing new offers must retain read/move/recovery/refund support for owned pieces.
+Private Unix-socket PostgreSQL tests cover legacy read, private grants, effective old-position materialization/repeat, stale policy/layout rejection, outsider/admission permissions, active wave, unplaced/out-of-range inventory, malformed rows, V1 instance/health/repair-sequence preservation, monotonic grants, and a separate-connection stale Move against committed admission. The fixture executes every available migration twice and rolls test data back; the concurrency case explicitly cleans up its synthetic owner.
 
-## Trusted policy and transport
+These functions trust server-computed placement/effective cells, like the existing Move RPC. They do not independently duplicate Python terrain/collision logic. The Python caller must validate the final geometry, and dependent deployment requires this migration first. Future paid cohort, UI and complete ring acceptance are not proved here.
 
-Persist `island_wall_policy(island_owner, rule_version, capacity)`. Absence means rule 0 / capacity 12. Rule 1 / capacity 128 enables reviewed free-grid placement; existing layout.version 1/2 retains its original stored/fixed meaning. `LayoutOut` adds `wallRuleVersion` and `wallCapacity`; requests cannot grant themselves either value.
+## Explain-back
 
-`island_wall_layout_read(p_island_owner)` returns `{ruleVersion, capacity, rows:[{plot,x_half,z_half}]}` from one database snapshot. New mutation CAS compares both the expected policy and ordered raw layout rows. Malformed/unsupported state fails closed. The migration must precede deploying dependent server paths; a missing new RPC is not permission to present stale coordinates or omit paid pieces.
+“I separate the saved wall policy from whether anything has moved. I read that policy and the coordinates together, then check both again while holding the island lock. When switching an old island, I first preserve what the player actually saw and settle recovery under the old rules.”
 
-Admission and moves use the existing owner lock and recovery mutation begin/finish hooks at one database instant. Settle the old effective coordinates/rate first, then change future geometry. Preserve instance IDs, repair sequences and health units. A refused action may materialize ordinary time recovery, but adds no action-induced healing or spending.
-
-## Payments, concurrency and combat
-
-A positioned run validates all selected IDs/cells against one canonical final layout. Bounded batch size, exact identity-position pairing, actual per-piece rounded prices, existing payer permissions/unlocks, distinct per-piece payment references and the existing UID bounds are mandatory. One atomic receipt reconciles lost replies; retries cannot charge twice, disclose private receipts after membership ends or reconstruct a demolished/reset instance. No partial paid chain is accepted.
-
-Widen the full selected cohort consistently in catalogue/read bounds, database identity checks, repair/demolition paths, recovery manifests/vectors and first-new-ID/default-position handling. New default-less pieces cannot enter recovery without their authoritative stored coordinate. Frozen wave geometry must include the approved full wall set. Arbitrary geometry requires the actual pathing rule; unsupported protocol/rule combinations refuse admission/start clearly rather than fighting an unrelated layout.
-
-Single-wall upgrades retain existing levels 1–5, unlocks, prices and selected recovery eligibility. Batch upgrades remain a separate convenience. Breaches and accepted restoration update both the real barrier and live connection drawing, with the existing already-inside egress exception.
-
-## Execution and proof
-
-Implement small linked drafts: trusted layout rules/transport, cohort and bounded reads, database admission/guard slices, atomic construction, real builder UI, frozen-wave/recovery compatibility, working camera/art prototype, then integrated lifecycle/perimeter checks. One writer per branch in a separate clone; shared hooks have one owner.
-
-Required evidence: authoritative full-ring and gap placement; current-save admission/reload without drift; exact funds/receipts/retries/concurrent stale layout; all selected ID boundaries including the first added wall; upgrade/damage/repair/demolition/reset; actual exterior-boarder breach/gap movement and frozen start/join state; before/after desktop 1280×720 and phone375×812; applicable focused/full/build/budget/text/browser checks with exact results. Generated target art does not prove these behaviors.
+1. Why is layout.version 1/2 insufficient to authorize free-grid walls?
+2. How can a legacy Move race admission, and why does checking just the layout rows fail?
+3. Why does new inventory not get default coordinates until construction?
