@@ -163,3 +163,5 @@ Not released or marked complete: focused evidence, Johannes's explain-back and
 independent human review remain. No change to the existing freeze or merge rules.
 
 COC-02 follow-up (Johannes, draft): current-base management fit view is a bounded implementation slice for issue #143 and depends on COC-49/PR #192. The parent camera task remains open; see [specification](../specs/COC-02-village-overview.md). No merge or full editor-camera completion is claimed.
+
+VIS-19 raised-edge trial (Johannes): D062 keeps the analytic island top fixed while a bounded decorative rock base drives visual foam. [Draft PR #299](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/299), [specification](../specs/VIS-19-raised-cliffs.md), [actual desktop/phone before/after and limits](evidence/VIS-19/README.md). Seven focused files / 42 tests passed; corrected raster bounds, current wall/captain feet, decorative-base field and 38 ship-anchor centers passed. Combined build/UI checks and final visual/human acceptance remain. No land-growth, collision, saved-position, economy or naval-rule change; no merge.

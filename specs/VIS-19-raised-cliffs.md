@@ -25,3 +25,19 @@ Decorative depth is bounded to about 1.4 projected world units, tapered to .35 a
 A decorative-alpha change is intentional and must never be called island growth. Main risks are misleading apparent walking support, a face covering a legal foot point, shifted foam, approaching ships intersecting the facade, camera clipping and extra retained texture resources. Keep one existing backdrop texture and no new mesh/material lifetime.
 
 The first trial is bounded original code-authored material work. No imported/generated runtime image, new package, new geometry authority, database migration, activation, deployment or merge. Full terrain composition, new pier, land growth and final visual acceptance stay separate.
+
+## Current implementation and evidence
+
+The facade/rim and unchanged top now run through the existing single backdrop texture. Material detail is clipped to the declared base silhouette. A world-unit radius error in the first material pass was rejected using actual captures; a new real-Canvas bounds check reproduced 296,818 stray opaque pixels before the correction. Explicit zero-radius facets and clipping corrected it. A closest east-anchor overlap then extended the shallow coves to all three current lanes; their bearings are checked against actual simulation config.
+
+Executed from `frontend/`:
+
+```sh
+npm test -- --maxWorkers=1 tests/art/coast-cliffs.test.js tests/cartoon-art.test.js tests/island/placement.test.js tests/island/world-art.test.js tests/player/village-camera.test.js tests/places.test.js tests/place-lifetime.test.js
+```
+
+Exact result: `Test Files  7 passed (7)`, `Tests  42 passed (42)`, `Duration  2.88s`, exit 0.
+
+The corrected browser capture from `445a5a06` passed both viewports, wall/captain top support, outside-alpha unwalkability, decorative-base sea-field alignment and 0 page errors/external requests. The real-Canvas guard reports 0 out-of-bounds opaque pixels; 17 actual simulation anchors and 21 minimum-distance anchors stay in visual water. [Actual before/after, exact reports and limitations](../docs/evidence/VIS-19/README.md).
+
+Full build/budget/UI checks remain coordinated with root. Five actual browser travel cycles, complete hull rendering and final reference-quality acceptance were not verified here. This is an observable raised-edge prototype, not the entire terrain/style roadmap or island growth. Keep Draft for explain-back and independent human review.
