@@ -29,3 +29,7 @@ Not verified here: physical devices, Safari, actual browser interaction/performa
 Explain-back: I used the same API routes the app calls with a real disposable database, so wrong arguments or database constraints cannot hide behind a fake reply. I bought the ring in four runs because each quote/build is bounded to 32 pieces. Then I checked that the first wave and the client actually receive every paid piece. These are test funds and declared progress, not a production account.
 
 Questions: What does this catch that a fake RPC test cannot? Why test added IDs before another wave/template exists? Why does the private migration fixture not authorize a production migration?
+
+## Combined Node graph follow-up
+
+The later aggregate client graph imports campaign JSON in the Vite style. Plain Node 24 requires JSON import attributes, so the combined check exposed ERR_IMPORT_ATTRIBUTE_MISSING before it could run the unchanged decoder assertions. The test now uses the same registerHooks JSON-attribute pattern as frontend/scripts/balance-rules.mjs and dynamically imports production modules after hook registration. No assertion, actual HTTP action or actual health payload is removed/replaced. The full aggregate decoder graph import smoke passed; the coordinated owner reruns the combined HTTP/SQL lane. This writer's prior 2-test result remains scoped to its stated base rather than being relabeled as a new aggregate pass.

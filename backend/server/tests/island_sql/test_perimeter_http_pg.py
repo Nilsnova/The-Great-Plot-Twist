@@ -196,9 +196,16 @@ def test_actual_http_buys_full_ring_then_freezes_the_first_public_perimeter_wave
         # Exercise the actual browser's pure decoder without another browser/QA platform.
         script = """
           import {readFileSync} from 'node:fs';
-          import {readRecoverySnapshot,recoveryWaveDefenses}
-            from './frontend/src/pirates/recovery-snapshot.js';
-          import {createIslandApi,isStructureRecovery} from './frontend/src/island/api.js';
+          import {registerHooks} from 'node:module';
+          registerHooks({load(url,context,nextLoad){
+            if(url.endsWith('.json')){
+              return nextLoad(url,{...context,importAttributes:{type:'json'}});
+            }
+            return nextLoad(url,context);
+          }});
+          const {readRecoverySnapshot,recoveryWaveDefenses}=
+            await import('./frontend/src/pirates/recovery-snapshot.js');
+          const {createIslandApi,isStructureRecovery}=await import('./frontend/src/island/api.js');
           const {snapshot,waveId,health}=JSON.parse(readFileSync(0,'utf8'));
           const frozen=readRecoverySnapshot(snapshot,waveId);
           if(!frozen)throw new Error('perimeter snapshot rejected');
