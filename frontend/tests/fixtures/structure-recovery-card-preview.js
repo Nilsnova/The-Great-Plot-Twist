@@ -25,7 +25,10 @@ const samples = {
 const which = new URLSearchParams(location.search).get('case') ?? 'wall';
 const sample = samples[which];
 if (!sample) throw new Error('Unknown structure card preview case.');
-const spot = {id: sample.row.spot, kind: sample.row.kind, built: true, level: sample.row.level, cost: 30, upgradeCost: 60};
+const catalogue = BUILDINGS[sample.row.kind];
+const levelIndex = sample.row.level - 1;
+const spot = {id: sample.row.spot, kind: sample.row.kind, built: true, level: sample.row.level,
+  cost: catalogue.price[levelIndex], upgradeCost: catalogue.price[levelIndex + 1]};
 const model = buildCardModel({spotId: spot.id, slot: spot.kind === 'wall' ? 'wall' : 'tower', spot, coins: 100,
   recoveryState: {...sample.state, structures: [sample.row]}, recoveryStatus: 'ready', recoveryVersion: 1});
 const ui = createIslandUi({container: document.getElementById('mount')});
