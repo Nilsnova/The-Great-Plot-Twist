@@ -7,6 +7,7 @@ const out = process.argv[2] ?? '../docs/evidence/T58-captain-repair';
 await mkdir(out, {recursive: true});
 const env = await openWorldBrowser(), {page} = env;
 const shot = async (name, selector) => {
+  await page.evaluate(async () => { const {toasts} = await import('/src/ui/toasts.js'); toasts().clear(); });
   await settle(page);
   const path = `${out}/${name}.png`;
   await page.locator(selector).screenshot({path});
@@ -33,6 +34,14 @@ const assertSingleCard = async (selector, title) => {
 };
 
 try {
+  await page.addInitScript(() => {
+    const saved = JSON.parse(localStorage.getItem('plot_twist_preferences_v1') || '{}');
+    const preferences = saved.version === 1 && saved.preferences && typeof saved.preferences === 'object'
+      ? saved.preferences : {};
+    localStorage.setItem('plot_twist_preferences_v1', JSON.stringify({version: 1, preferences: {
+      ...preferences, hintsEnabled: false, tutorials: false, narrator: false, captions: false,
+    }}));
+  });
   await page.setViewportSize({width: 1280, height: 800});
   await page.goto(`${env.url}/?islands=fake&fakeplayer=t58_fixture&fakename=Ianno`);
   await page.locator('.shell-screen[open]').waitFor();
