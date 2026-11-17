@@ -1,0 +1,254 @@
+{
+  "status": "rendered review capture; final visual/device/balance acceptance and fresh complete checks pending",
+  "captureRuntime": "9f47c14277c801d10f2c504799a72fe059b52171",
+  "frozenCandidate": "6e2c3e8b3437ba7302870adb59e2351c2fa74f5e",
+  "applicationTrees": {
+    "capture": {
+      "frontend/src": "ff56655849b11e8f0acaa3b4e0aa2b68192b9984",
+      "frontend/public": "9306942db1050d728799cee2fbdc8e8960f14ad2",
+      "backend": "e8d128f1ed1830a052aa1407858d8d899d3cb2d8"
+    },
+    "candidate": {
+      "frontend/src": "8365d88e76889e68f5e1aa1d6aa9a858d3afaea3",
+      "frontend/public": "9306942db1050d728799cee2fbdc8e8960f14ad2",
+      "backend": "e8d128f1ed1830a052aa1407858d8d899d3cb2d8"
+    }
+  },
+  "postCaptureApplicationChanges": [
+    {
+      "file": "frontend/src/island/wave-flow.js",
+      "scope": "wave lookup admission/context fence; no visible rendering change in this captured scenario"
+    },
+    {
+      "file": "frontend/src/pirates/hud.js",
+      "scope": "first-wave hint aria-label wording only; visible hint markup/CSS unchanged"
+    }
+  ],
+  "boundary": "Frontend source trees differ. Captured rendering/CSS/assets are unchanged by the two later nonvisual corrections; no fresh candidate capture is claimed.",
+  "helperCommit": "074a4675b99c68a41604bb1658943f5dfb1ee067",
+  "helperSha256": {
+    "capture-village-composition.mjs": "0ffcefb64fd6a32f6348e6c35542bd54887e07b8fe8aed0eb85f904e427dbda8",
+    "perimeter-game-ui.mjs": "8f47d596ea378800b89e88171ab58aa37477faf892658cd7aca7c20f327a8ffb",
+    "perimeter-game-wave.mjs": "9c2f3a1951a1a57154c93e7cc113a33fc3b6dd16eb895126eac5eb5adb7547af"
+  },
+  "copyMethod": "byte-for-byte from stage-06-final; no image editing or re-encoding",
+  "files": [
+    {
+      "file": "report.json",
+      "bytes": 4530391,
+      "sha256": "1a808d5a2543d6926127b8178b060570cea2bf91aa1d6250454eff805e123dca"
+    },
+    {
+      "file": "reference-arranged-1280x720.png",
+      "bytes": 1175855,
+      "sha256": "75ec8de4b518b126e40b9684efb1cef6cc76626b830e76cc928ada94e1906f01",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "reference-arranged-375x812.png",
+      "bytes": 443203,
+      "sha256": "68e831aea270c87930ba7c54222b7c145ff75f92f8d8ee8ab79f90e12763ba69",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "file": "reference-entry-1280x720.png",
+      "bytes": 1174402,
+      "sha256": "f5a96876c14ffdf1fff3e175e9576231b4514a010f0e28d780710bb839d2d539",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "reference-entry-375x812.png",
+      "bytes": 441537,
+      "sha256": "2576f69a8ada62aa84ea2126eb0035faa1636570d5be0324f29304f3509f9c39",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "file": "reference-fit-1280x720.png",
+      "bytes": 1131635,
+      "sha256": "e52fb326672eb1363bb4a69b5b3b052f9408341919172d1f3f7d6381b7d78648",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "reference-fit-375x812.png",
+      "bytes": 311121,
+      "sha256": "136ad80df32fb656e73cb393d07b9f460aa6db11daec16004f4adaaa3589f03b",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "file": "reference-move-level3-1280x720.png",
+      "bytes": 1113809,
+      "sha256": "3cf74056113e01b0318a032f55eba7beccc783bbfb354ca7d570f60f0eed5ec4",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "reference-move-level3-375x812.png",
+      "bytes": 334191,
+      "sha256": "ea4b6d011b5117cfb1e45caed71d30d6bc1a0e21c4c596ccc952ebe1f7a89288",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "file": "reference-selected-level3-1280x720.png",
+      "bytes": 1134567,
+      "sha256": "8190595e4fc11cabf5fff7dba6ca94d4b431a7ee5d70933dfa1c9134ac6a4378",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "reference-selected-level3-375x812.png",
+      "bytes": 306424,
+      "sha256": "7afe90605200e6cfba87c54828b8415c0dddd098c481a1bc863d7943b713093e",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "file": "reference-wall-draft-1280x720.png",
+      "bytes": 922912,
+      "sha256": "9046ae855804872a907e4892ddd33633cff04fc6a14d3ff9078fcc55bcd6f9b4",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "reference-wall-draft-375x812.png",
+      "bytes": 362331,
+      "sha256": "45a158e81f3c4d900fb6c100019c20e19303a706fb1bbbd6fb4b21b9ce7ad747",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "file": "reference-wall-draft-fine-1280x720.png",
+      "bytes": 895419,
+      "sha256": "5018340f72cefb3be464b23a5e976253e000011cf750ad2c31db07f82344d75a",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "reference-wall-draft-fine-375x812.png",
+      "bytes": 273567,
+      "sha256": "b6d72014dc4934f53231109f7708a8df0c8c52bd3f724a66c1f98a85f2c319e3",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "file": "wave-breach-1280x720.png",
+      "bytes": 1164544,
+      "sha256": "8d67a1925e33ffc092c409d3b1089b5483631fdd5abb7d540f13a1aa47a926dd",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "wave-breach-375x812.png",
+      "bytes": 307308,
+      "sha256": "c6bb1d3834a525d503e04fde61e15fc096714cdb629028edd1357653b45f63a3",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "file": "wave-projectiles-1280x720.png",
+      "bytes": 1039602,
+      "sha256": "9d051f58d67757d20aa17b7e1f5f75586a0c9fa349958b836ddfc34f084a1c48",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "wave-projectiles-375x812.png",
+      "bytes": 257949,
+      "sha256": "6ac8082418ada02ed15b2fed52f9fbe27428e154edc74f2964c7b1a8a1d0c4c3",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "file": "wave-standing-1280x720.png",
+      "bytes": 1055115,
+      "sha256": "b917fd3f25ea7f975214ff632047fb1f4028f595212e5aa2ba49aa027ca1b12d",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "file": "wave-standing-375x812.png",
+      "bytes": 260884,
+      "sha256": "9181f8d9c2316e03825eedb51bc51ef4de360f3af16eaa65867d5aaee5080567",
+      "width": 375,
+      "height": 812
+    }
+  ],
+  "comparison": {
+    "file": "comparison.html",
+    "bytes": 6680614,
+    "sha256": "57a9db84eec90d942387d7d75439a691038099e0d0f35842009068f6f491915c",
+    "embeddedOriginals": [
+      {
+        "file": "docs/evidence/VIS-33-working-composition/before-fit-1280x720.png",
+        "label": "VIS33 original-art Fit view",
+        "bytes": 580168,
+        "sha256": "cee4a182f13a1cc45b3f6854e3fd675c73efbd1d05bf67876592f9e37141c655",
+        "width": 1280,
+        "height": 720
+      },
+      {
+        "file": "docs/evidence/reference-village-visual-review/reference-arranged-1280x720.png",
+        "label": "Final review capture, arranged village",
+        "bytes": 1175855,
+        "sha256": "75ec8de4b518b126e40b9684efb1cef6cc76626b830e76cc928ada94e1906f01",
+        "width": 1280,
+        "height": 720
+      },
+      {
+        "file": "docs/evidence/WALL-24/wave-breach-1280x720.png",
+        "label": "WALL24 local-wave breach",
+        "bytes": 831409,
+        "sha256": "b00b5cbeaa8526feecca43276037171faf4902de3ac2ce8c232f9d3fd2b8a438",
+        "width": 1280,
+        "height": 720
+      },
+      {
+        "file": "docs/evidence/reference-village-visual-review/wave-breach-1280x720.png",
+        "label": "Final review capture, local-wave breach",
+        "bytes": 1164544,
+        "sha256": "8d67a1925e33ffc092c409d3b1089b5483631fdd5abb7d540f13a1aa47a926dd",
+        "width": 1280,
+        "height": 720
+      },
+      {
+        "file": "docs/evidence/VIS-33-working-composition/before-fit-375x812.png",
+        "label": "VIS33 original-art Fit view",
+        "bytes": 235580,
+        "sha256": "8cb06060ea18ccb37ff06629ff85e1ac19da7bf8a5490d0976ce0dedc57619e0",
+        "width": 375,
+        "height": 812
+      },
+      {
+        "file": "docs/evidence/reference-village-visual-review/reference-arranged-375x812.png",
+        "label": "Final review capture, arranged village",
+        "bytes": 443203,
+        "sha256": "68e831aea270c87930ba7c54222b7c145ff75f92f8d8ee8ab79f90e12763ba69",
+        "width": 375,
+        "height": 812
+      },
+      {
+        "file": "docs/evidence/WALL-24/wave-breach-375x812.png",
+        "label": "WALL24 local-wave breach",
+        "bytes": 265121,
+        "sha256": "855b864d70d1784ccf43023d2dc9fa02a94b2b04ab0908ec13cbf31b79e1ccd5",
+        "width": 375,
+        "height": 812
+      },
+      {
+        "file": "docs/evidence/reference-village-visual-review/wave-breach-375x812.png",
+        "label": "Final review capture, local-wave breach",
+        "bytes": 307308,
+        "sha256": "c6bb1d3834a525d503e04fde61e15fc096714cdb629028edd1357653b45f63a3",
+        "width": 375,
+        "height": 812
+      }
+    ],
+    "note": "Self-contained optional documentation artifact. Eight embedded PNG byte streams are unchanged originals, not re-encoded images."
+  }
+}
