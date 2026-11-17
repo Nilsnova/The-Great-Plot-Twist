@@ -1,7 +1,7 @@
 import {node} from '../ui/kit/dom.js';
 import './village-mode.css';
 
-export function createVillageBar({container, onLeave, onCamera = () => {}, onBuildWalls = () => {}}) {
+export function createVillageBar({container, onLeave, onCamera = () => {}, onBuildWalls = () => {}, showWalls = () => false}) {
   const bar = node('section', 'island-village-mode');
   bar.hidden = true; bar.setAttribute('aria-label', 'Village mode');
   const copy = node('div', 'island-village-copy');
@@ -15,5 +15,5 @@ export function createVillageBar({container, onLeave, onCamera = () => {}, onBui
   }
   const build = node('button', 'kit-button', 'Build walls'); build.type = 'button'; build.addEventListener('click', onBuildWalls);
   bar.append(copy, tools, build, leave); container.append(bar);
-  return {render(active) { bar.hidden = !active; }, dispose() { bar.remove(); }};
+  return {render(active) { bar.hidden = !active; build.hidden = !showWalls(); }, dispose() { bar.remove(); }};
 }

@@ -2,11 +2,11 @@
 import {expect, it} from 'vitest';
 import {browserHarness} from '../g20-browser.js';
 const browser = browserHarness();
-async function installIsland(page, holdBuild = false) {
-  await page.evaluate(async holdBuild => {
+async function installIsland(page, holdBuild = false, {offers = true, admitted = false} = {}) {
+  await page.evaluate(async ({holdBuild, offers, admitted}) => {
       const THREE = await window.g20Import('/node_modules/three/build/three.module.js');
       const {createIsland} = await window.g20Import('/src/island/index.js'), {createFakeIslandTransport} = await window.g20Import('/src/pirates/fake-api.js');
-      const fake = createFakeIslandTransport({version: 2}); let current = null, epoch = '11111111-1111-4111-8111-111111111111'; window.wallPosted = [];
+      const fake = createFakeIslandTransport({version: 2}); let current = admitted ? {...(await fake.get('/api/island')).data, layout: {movable: true, version: 2, wallRuleVersion: 1, wallCapacity: 128}} : null, epoch = '11111111-1111-4111-8111-111111111111'; window.wallPosted = [];
       const transport = {dev: fake.dev, get: path => path === '/api/island' && current ? Promise.resolve({ok: true, data: current}) : fake.get(path),
         async post(path, body) {
           if (path === '/api/island/walls/enable') { current ??= (await fake.get('/api/island')).data; current = {...current, layout: {...current.layout, wallRuleVersion: 1, wallCapacity: 128}}; return {ok: true, data: current}; }
@@ -18,12 +18,12 @@ async function installIsland(page, holdBuild = false) {
       const canvas = document.createElement('canvas'); canvas.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh'; document.body.append(canvas);
       const container = document.createElement('div'); document.body.append(container);
       const listeners = new Map();
-      const island = createIsland({container, mode: 'fake', transport, on: (name, handler) => {listeners.set(name, handler); return () => listeners.delete(name);}, emit: () => {}, storage: null, search: ''});
+      const island = createIsland({container, mode: 'fake', transport, perimeterWallsOn: () => offers, on: (name, handler) => {listeners.set(name, handler); return () => listeners.delete(name);}, emit: () => {}, storage: null, search: ''});
       await island.load(); const camera = new THREE.OrthographicCamera(-30, 30, 20, -20, .1, 1000); camera.position.z = 100; camera.updateMatrixWorld();
       const cleanups = [], place = {group: new THREE.Group(), zones: [], colliders: [], update() {}};
       island.decorate(place, {}, cleanups, {canvas, camera, isActive: () => true}); island.toggleVillage();
       window.wallComponent = {island, canvas, camera, place, travel: () => listeners.get('travel')?.({to: 'saltreach_harbor'}), cleanup: () => {cleanups.forEach(stop => stop()); island.dispose(); canvas.remove(); container.remove();}};
-  }, holdBuild);
+  }, {holdBuild, offers, admitted});
 }
 it('keeps actual quote/retry controls accessible and within both viewport widths', async () => {
   await browser.withPage(async page => {
@@ -91,5 +91,15 @@ it.each(['travel', 'dispose'])('prevents an old pending reply from reopening the
       return {active: island.wallBuilder.active, paintedOldWall: island.island.spots.find(spot => spot.id === 'wall_1')?.built === true};
     }, action);
     expect(result).toEqual({active: false, paintedOldWall: false}); await page.evaluate(() => window.wallComponent.cleanup());
+  });
+});
+
+it.each([{offers: false, admitted: false, shown: false}, {offers: true, admitted: false, shown: true},
+  {offers: false, admitted: true, shown: true}])('shows wall entry only for real offers or an admitted island: %j', async setup => {
+  await browser.withPage(async page => {
+    await installIsland(page, false, setup);
+    expect(await page.getByRole('button', {name: 'Build walls', exact: true}).count()).toBe(setup.shown ? 1 : 0);
+    expect(await page.evaluate(() => window.wallPosted.length)).toBe(0);
+    await page.evaluate(() => window.wallComponent.cleanup());
   });
 });

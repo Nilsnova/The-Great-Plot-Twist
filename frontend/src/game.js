@@ -244,6 +244,9 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
         // T55/T59: only show persistent structure recovery once the server enables its versioned rules.
         structureRecoveryOn:()=>{if(fakeTransport)return fakeTransport.flags.structure_recovery===true;
           const services=findPanelServices(session);return services?.isReady()?services.getFlags()?.structure_recovery===true:false;},
+        // New perimeter-wall offers follow actual configuration; admitted islands retain history access.
+        perimeterWallsOn:()=>{if(fakeTransport)return fakeTransport.flags.perimeter_walls===true;
+          const services=findPanelServices(session);return services?.isReady()?services.getFlags()?.perimeter_walls===true:false;},
         // The arsenal (T41, D042): the server's flag "arsenal"; in the dev fake ?fakeflags=arsenal (or ?arsenal=1).
         arsenalOn:islandFlags.arsenal=()=>fakeTransport?(fakeTransport.flags.arsenal===true||new URLSearchParams(location.search).get('arsenal')==='1')
           :findPanelServices(session)?.getFlags?.()?.arsenal===true,
