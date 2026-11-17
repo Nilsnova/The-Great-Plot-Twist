@@ -2,9 +2,11 @@
 
 Planning and visual acceptance for Johannes Franz Lang (`frcola`). Used by the visual task issues and future coding agents. Baseline inspected: `724bbc41de5754007a9bcc27a5e84758540b540b` on 17 November 2026.
 
-![AI concept: target direction, not implemented gameplay](concept-build-mode.png)
+![AI concept: target direction, not implemented gameplay](target-wall-village.png)
 
-This is the unchanged earlier AI-generated concept supplied again by Johannes as the target direction. Its visible “KI-KONZEPT · NICHT IMPLEMENTIERT” label is retained. It is documentation, not an application texture or a screenshot of a running feature. Coins, wave, building locations and the long pier are illustrative; the implementation must show real state and respect actual geometry.
+This is a newly generated English target concept derived from Johannes's supplied pirate-village reference, now illustrating connected and upgradable walls. It is labeled “TARGET CONCEPT — NOT IMPLEMENTED.” It is documentation, not an application texture or a screenshot of a running feature. The exact allowance, cell layout and functional pier still require their reviewed contracts. The supplied original remains preserved in the earlier reference commit and the local source archive.
+
+See [the current-game / target comparison](COMPARISON.md) for the actual browser baseline and screenshot provenance. The example healthy level-3 wall and eligible undiscounted level-4 upgrade use existing base values; real actions still use current authoritative quotes and state.
 
 ## What the image asks us to achieve
 
@@ -39,7 +41,7 @@ The first proof must compare named traits: object volume, stone/metal/wood separ
 - Current home has no walkable dock rectangle. A usable new pier needs an explicit walking/building/naval/phase contract, including whether it creates a safe combat firing location. Do not draw an apparently usable off-shore route and leave it nonfunctional.
 - The top-left swords number currently means captain level. The concept's “Wave 14” must use actual wave/campaign state, not relabel the captain level.
 - Locked buildings, damage, zero health, gradual recovery and paid repair must remain truthful. Art does not grant buildings, money, health, land or a new headquarters progression.
-- Island growth, free wall placement, catalogue purchases and highscore behavior remain in their existing COC tasks. Visual work does not complete those features.
+- Island growth, free wall placement, catalogue purchases and highscore behavior remain in their existing base-building tasks. Visual work does not complete those features.
 
 ## Delivery and verification
 
@@ -52,3 +54,7 @@ No new packages/services, database migration application, deployment or merge is
 ## Planning status
 
 This branch contains documentation and the unchanged reference image only. Task creation, dependency validation and read-back evidence are recorded in the accompanying roadmap. No target-style application code, new runtime screenshot or passing runtime check is claimed by this document.
+
+[Published issue roadmap](ROADMAP.md) · [Parallel work](PARALLEL-WORK.md) · [Current-code audit](SOURCE-AUDIT.md) · [Publication/content checks](VERIFICATION.json).
+
+All GitHub issue/PR text and shared documentation for this work must be written in English, as requested by Johannes. The supplied reference image remains the original visual source.
