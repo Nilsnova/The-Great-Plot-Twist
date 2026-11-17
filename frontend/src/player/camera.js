@@ -12,8 +12,9 @@ export function villageFrame(camera, placeId, viewport = null) {
   const width = camera.right - camera.left, height = camera.top - camera.bottom;
   if (!land || !Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) return null;
   const fraction = value => Number.isFinite(viewport?.height) && viewport.height > 0 && Number.isFinite(value)
-    ? Math.max(0, Math.min(.6, value / viewport.height)) : 0;
-  const top = fraction(viewport?.top), bottom = fraction(viewport?.bottom), free = Math.max(.1, 1 - top - bottom);
+    ? Math.max(0, value / viewport.height) : 0;
+  const top = fraction(viewport?.top), bottom = fraction(viewport?.bottom), free = 1 - top - bottom;
+  if (free <= 0) return null; // There is no honest island fit when overlays occupy the whole view.
   const zoom = Math.min(1, width / (2 * (land.rx * 1.1 + 2)), height * free / (2 * (land.rz * .72 * 1.1 + 4.5)));
   return {x: 0, y: 3 - (bottom - top) * height / (2 * zoom), zoom};
 }
@@ -69,6 +70,9 @@ export function createCamera(input) {
       const peek = input?.held?.has?.('Tab') === true;
       const frame = !touring && (peek || (village && !Number.isFinite(camera.userData.battleZoom)))
         ? villageFrame(camera, placeId, village ? villageViewport : null) : null;
+      // Fully obstructed management holds its last finite view until scrolling/layout restores room.
+      // It must not fall through to captain zoom or consume exploration wheel input.
+      if (!frame && village && placeId === 'home_islet' && !peek && !touring && !Number.isFinite(camera.userData.battleZoom)) return;
       if (frame) {
         // Tab borrows the whole-island frame without consuming the saved working view.
         if (village && !peek) {

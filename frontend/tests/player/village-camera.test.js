@@ -3,7 +3,8 @@ import * as THREE from 'three';
 import {createCamera, villageFrame} from '../../src/player/camera.js';
 import {worldViewport} from '../../src/pixel/display.js';
 import {projectPoint} from '../../src/world/art.js';
-import {surfaceClass} from '../../src/world/places/surfaces.js';
+import {surfaceClass, surfaces} from '../../src/world/places/surfaces.js';
+import {cliffProfile} from '../../src/art/coast-cliffs.js';
 
 const player = {x: 12, z: -8};
 function viewAt(width = 1280, height = 720, reduced = true) {
@@ -54,6 +55,28 @@ describe('village camera overview', () => {
       expect(y).toBeGreaterThan(top);expect(y).toBeLessThan(height-bottom);
     }
     expect((1-onScreen(view.camera,0,-22,6).y)*height/2).toBeGreaterThan(top);
+  });
+
+  it('fits the canonical coastline above a real panel exceeding sixty percent of the phone', () => {
+    const {view} = viewAt(375, 812), top = 180, bottom = 516;
+    view.setVillageView(true, {height: 812, top, bottom}); view.update(.05, player);
+    for (const point of cliffProfile(surfaces.home_islet)) {
+      const y = (1 - onScreen(view.camera, point.x, point.z).y) * 812 / 2;
+      expect(y).toBeGreaterThan(top); expect(y).toBeLessThan(812 - bottom);
+    }
+  });
+
+  it('declines an impossible fit, holds a finite view and recovers without consuming wheel input', () => {
+    const {view, input} = viewAt(375, 812);
+    view.setVillageView(true, {height: 812, top: 180, bottom: 340}); view.update(.05, player);
+    const before = {position: view.camera.position.clone(), zoom: view.camera.zoom};
+    const blocked = {height: 812, top: 300, bottom: 600};
+    expect(villageFrame(view.camera, 'home_islet', blocked)).toBeNull();
+    view.setVillageView(true, blocked); input.pointer.wheel = -500; view.update(.05, player);
+    expect(view.camera.position).toEqual(before.position); expect(view.camera.zoom).toBe(before.zoom);
+    view.setVillageView(true, {height: 812, top: 180, bottom: 340}); input.pointer.wheel = 0; view.update(.05, player);
+    expect(view.camera.position).toEqual(before.position); expect(view.camera.zoom).toBe(before.zoom);
+    view.setVillageView(false); view.update(.05, player); expect(view.camera.zoom).toBe(1);
   });
 
   it('keeps combat and guided-tour camera requests in control', () => {
