@@ -369,6 +369,18 @@ def test_old_success_uid_after_new_damage_returns_receipt_without_healing_or_cha
     assert old["repeat"] is True and old["receipt"] == first["receipt"]
     assert old["balance"] == coins
     assert hp(database) == (400_000, 1)
+    conflict = repair(
+        database,
+        action_uid="repair-0001",
+        epoch=epoch,
+        wave_id=wave_id,
+        window="reserved_wave",
+        repair_seq=1,
+        price=20,
+    )
+    assert conflict["reason"] == "action_uid_conflict"
+    assert balance(database, OWNER) == coins
+    assert hp(database) == (400_000, 1)
     assert (
         call(
             database,
@@ -376,6 +388,80 @@ def test_old_success_uid_after_new_damage_returns_receipt_without_healing_or_cha
             wave_id,
         )
         == 1
+    )
+
+
+@pytest.mark.parametrize("change", ["reset", "demolition", "upgrade"])
+def test_reset_demolition_and_upgrade_quotes_refuse_without_paid_side_effects(database, change):
+    epoch, _ = seed_recovery(database)
+    target_instance = instance(database)
+    as_server(database)
+    if change == "reset":
+        database.execute(
+            "update public.island_recovery_state set reset_epoch=%s where island_owner=%s",
+            (UUID(int=967), OWNER),
+        )
+    elif change == "demolition":
+        database.execute(
+            "delete from public.islet_buildings where player_id=%s and plot='wall_1'",
+            (OWNER,),
+        )
+    else:
+        database.execute(
+            "update public.islet_buildings set level=2 where player_id=%s and plot='wall_1'",
+            (OWNER,),
+        )
+
+    refused = repair(database, epoch=epoch, instance_id=target_instance)
+
+    assert refused["reason"] == "stale_recovery_quote"
+    assert balance(database, OWNER) == 90
+    assert (
+        call(
+            database,
+            "select count(*) from public.structure_repair_receipts where island_owner=%s",
+            OWNER,
+        )
+        == 0
+    )
+
+
+@pytest.mark.parametrize("boundary", ["finish", "expiry"])
+def test_reserved_quote_crossing_finish_or_expiry_is_stale_without_charge(database, boundary):
+    epoch, wave_id = seed_recovery(database, active=True)
+    as_server(database)
+    if boundary == "finish":
+        database.execute(
+            "update public.recovery_wave_states "
+            "set closed_at=clock_timestamp()-interval '1 second', "
+            "closed_hp=jsonb_build_object(%s::text,500000) where wave_id=%s",
+            (str(instance(database)), wave_id),
+        )
+    else:
+        database.execute(
+            "update public.island_recovery_state "
+            "set expires_at=clock_timestamp()-interval '1 second' "
+            "where island_owner=%s",
+            (OWNER,),
+        )
+
+    refused = repair(
+        database,
+        epoch=epoch,
+        wave_id=wave_id,
+        window="reserved_wave",
+    )
+
+    assert refused["reason"] == "stale_recovery_quote"
+    assert balance(database, OWNER) == 90
+    assert hp(database) == (500_000, 0)
+    assert (
+        call(
+            database,
+            "select paid_used from public.recovery_wave_states where wave_id=%s",
+            wave_id,
+        )
+        == 0
     )
 
 
