@@ -42,3 +42,18 @@ and separate display lifts prevent that. A partial projection rollout can still
 misalign this component with the main world until integration. Browser, a11y and
 demo checks are intentionally deferred to the root-owned browser lane. This PR
 stays Draft; no merge, main push, deployment, live migration or flag activation.
+
+## Component evidence
+
+The original nine new consumer checks failed against the pre-change consumers,
+then passed after implementation. A tenth check covers milestone feet and painter
+order. The focused command is:
+
+`cd frontend && npm test -- --maxWorkers=1 tests/world-anchor-projection.test.js tests/harbor-life.test.js tests/place-lifetime.test.js tests/places.test.js`
+
+The tests exercise real Three.js scene objects and pointer events, with local
+texture adapters and a canvas-only stub for the class-demo artwork. They cover
+pan/zoom visual plot clicks, normal/reduced-motion effects, light/camera/tutorial
+anchors and unchanged logical zones, colliders and travel. They do not render
+WebGL, fetch production images, prove the combined appearance or exercise live
+services. Parent integration still owns screenshots and visual acceptance.

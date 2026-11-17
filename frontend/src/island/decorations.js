@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import {paint} from '../art/paint.js';
 import {drawWaveBadge, drawWaveStatue, statueStage, waveRank} from '../art/milestones.js';
 import {screenDensity, smoothTexture, spriteMaterial} from '../art/textures.js';
+import {projectGround} from '../world/projection.js';
 
 export function decorationState(campaign = null, spots = []) {
   const wave = Number.isSafeInteger(campaign?.wave) && campaign.wave >= 0 ? campaign.wave : 0;
@@ -17,7 +18,7 @@ function milestone(root, name, width, height, x, z) {
   const geometry = new THREE.PlaneGeometry(width / 16, height / 16);
   geometry.translate(0, (height / 2 - 4) / 16, 0);
   const mesh = new THREE.Mesh(geometry, spriteMaterial(null));
-  mesh.name = name; mesh.position.set(x, -z * .72, 0);
+  const foot = projectGround(x, z); mesh.name = name; mesh.position.set(foot.x, foot.y, 0);
   mesh.renderOrder = 100 + z; mesh.frustumCulled = false; mesh.visible = false;
   root.add(mesh); return mesh;
 }
