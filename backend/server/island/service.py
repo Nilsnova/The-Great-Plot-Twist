@@ -41,7 +41,7 @@ from fastapi import Depends, Request
 from server.errors import ApiError
 from server.game import islet_store
 from server.game.building_catalogue import Cost
-from server.island import games, layout, layout_store, permissions, rules, store
+from server.island import games, layout, layout_store, permissions, rules, store, wall_purchase
 from server.island.captain_recovery_policy import (
     LEGACY_RECOVERY_VERSION,
     STRUCTURE_RECOVERY_VERSION,
@@ -403,12 +403,16 @@ def refusal_error(
         return islet_store.player_not_set_up()
     if outcome.reason == "plot_occupied":
         return rules.spot_taken(catalogue, outcome.standing or kind)
+    if outcome.reason in {"busy", "place_taken"}:
+        return ApiError(409, outcome.reason, "The wall position changed. Reload and try again.")
     return SupabaseRejected()  # not_enough_timber cannot happen with a timber price of 0
 
 
 def paid_refusal(refusal: Refusal, name: str) -> ApiError:
     """The error for a paid action that its database function refused. Nothing was changed."""
     reason = refusal.reason
+    if reason in {"busy", "place_taken"}:
+        return ApiError(409, reason, "The wall position changed. Reload and try again.")
     if reason == "player_not_set_up":
         return islet_store.player_not_set_up()
     if reason == "insufficient_funds":
@@ -467,7 +471,9 @@ async def build(
         raise ApiError(409, "position_required", "Choose a position when building this wall.")
     if payer is not None:
         return await build_with_friend(admin, catalogue, island, payer, spot_id, kind, action_uid)
-    if await islet_store.build_exists(admin, player_id, ref):
+    if await islet_store.build_exists(admin, player_id, ref) or (
+        kind == "wall" and await store.ledger_has(admin, player_id, "building_purchase", ref)
+    ):
         return await look_open(admin, catalogue, island)
 
     built = await store.read_built_spots(admin, player_id)
@@ -479,6 +485,10 @@ async def build(
     arguments = islet_store.build_arguments(
         player_id, spot.id, kind, Cost(price, NO_TIMBER), NO_TIMBER, ref
     )
+    if kind == "wall":
+        arguments.update(await wall_purchase.checked_layout(
+            admin, island.owner, spot.id, catalogue.more_tower_spots
+        ))
     name = rules.kind_of(catalogue, kind).name
     try:
         outcome = await islet_store.run_build(admin, arguments)
@@ -522,6 +532,10 @@ async def build_with_friend(
             "p_action_uid": action_uid,
             "p_price": price,
         }
+        if kind == "wall":
+            arguments.update(await wall_purchase.checked_layout(
+                admin, island.owner, spot.id, catalogue.more_tower_spots
+            ))
         await paid(
             admin, "island_build", arguments, f"A {rules.kind_of(catalogue, kind).name.lower()}"
         )
