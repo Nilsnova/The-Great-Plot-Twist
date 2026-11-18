@@ -1,0 +1,41 @@
+{
+  "source": "fbed69c241c05b05e2fde6fa128a42d36dff22fd",
+  "firstPhaseManifestUnchanged": true,
+  "firstPhaseOriginalArtifactsByteVerified": 7,
+  "localLinksChecked": 10,
+  "files": {
+    "focused.log": {
+      "bytes": 558,
+      "sha256": "e62b4f08cd42396fe091e63813389821f47c592c752636f73b9c0c4440eab091"
+    },
+    "checks.json": {
+      "bytes": 970,
+      "sha256": "f3bd78a4775a7665e49729ea61ad146aa2b80bc1bd3d2d6d5c15699bc128c59e"
+    },
+    "text-lint.log": {
+      "bytes": 1037,
+      "sha256": "0bd57d6d550948e699d856e152bbf467c4db241616037473b19f8625d782ba40"
+    },
+    "build.log": {
+      "bytes": 17686,
+      "sha256": "41793070888c2809bdf9ab0a0bc350397f78e8142687477193beeb20a210ab88"
+    },
+    "source-boundaries.json": {
+      "bytes": 561,
+      "sha256": "01a3b25019635e6db81a40e71462e17ae83ebaf40afb6940e7d33e9caf8bbbc3"
+    },
+    "README.md": {
+      "bytes": 6177,
+      "sha256": "cba241be8ca6d967d0faed4021b3782849452effb746b2a5465994945b260dab"
+    },
+    "focused-first.log": {
+      "bytes": 558,
+      "sha256": "0d332e1decd176cf88b65c4f913768cce7d419405c2c92f9bd3f860212077bf3"
+    },
+    "budget.log": {
+      "bytes": 83682,
+      "sha256": "b7da7c837d2ebc80c879a8794b50b87e7032f1d832bd28c4737d4757e6536850"
+    }
+  },
+  "scope": "Writer receipts only; actual native comparison remains the coordinator responsibility."
+}

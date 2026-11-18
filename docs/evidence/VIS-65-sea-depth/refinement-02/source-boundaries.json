@@ -1,0 +1,12 @@
+{
+  "firstPhase": "7e768d0e0c33438bc29d0c6b07d19f4efcf28775",
+  "refinementSource": "fbed69c241c05b05e2fde6fa128a42d36dff22fd",
+  "unchangedLowQualityAndPalette": true,
+  "unchangedCoastShoreWeatherClockResources": true,
+  "shoreBroadWeightedInputsPreserved": true,
+  "oldReflectionNoiseCalls": 3,
+  "newReflectionNoiseCalls": 3,
+  "opaquePeriodicCrossingCrestsRemoved": true,
+  "testsAssetsBackendMigrationsDependenciesUnchanged": true,
+  "scope": "Static identity and formula checks; native GLSL, appearance and GPU cost require coordinator browser proof."
+}

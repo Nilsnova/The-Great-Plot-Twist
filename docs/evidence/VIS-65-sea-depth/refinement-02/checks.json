@@ -1,0 +1,52 @@
+{
+  "source": "fbed69c241c05b05e2fde6fa128a42d36dff22fd",
+  "focused": {
+    "command": [
+      "npm",
+      "test",
+      "--",
+      "tests/art/coast-water.test.js",
+      "tests/world/ground-transform.test.js",
+      "--maxWorkers=1"
+    ],
+    "exitCode": 0,
+    "testFilesPassed": 2,
+    "testsPassed": 11,
+    "vitestSeconds": 1.02,
+    "log": "focused.log"
+  },
+  "checks": [
+    {
+      "name": "build",
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "exitCode": 0,
+      "seconds": 2.68,
+      "log": "build.log"
+    },
+    {
+      "name": "budget",
+      "command": [
+        "node",
+        "scripts/report-budget.js",
+        "--check"
+      ],
+      "exitCode": 0,
+      "seconds": 0.36,
+      "log": "budget.log"
+    },
+    {
+      "name": "text-lint",
+      "command": [
+        "node",
+        "../scripts/text-lint/index.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 1.78,
+      "log": "text-lint.log"
+    }
+  ]
+}
