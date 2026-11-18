@@ -41,246 +41,40 @@
 //   isBlocked(): an overlay is open, unproject(clientX, clientY): logical {x, z}, project(x, z, lift): the
 //   point on screen {x, y} in px of the container (the timers over fallen captains)}; every field optional.
 // room: {send(type, payload), on(type, handler) -> unsubscribe}, the island's or Pirate Point's live room.
+//
+// This file builds the controller: its options, its mutable state (one object `ctl` shared by the parts), the key
+// and pointer wiring, start() and the public API. The parts live beside it, one job each, each a closure over ctl:
+//   controller-shared.js     the module-level constants and pure helpers (readWaveInfo, captainTarget, battleLean, ...)
+//   controller-transport.js  inputs out and in: submit() and the room's messages (legacy waves), the recovery
+//                            journal (flush, poll, replay, checkpoints, the terminal close and its finish)
+//   controller-predict.js    recovery waves' own and teammates' shots and swings drawn at once, and catching up
+//   controller-captain.js    the captain's gun, aim and cutlass, position, revive, and the break's buttons
+//   controller-frame.js      every frame: update(), the events of a tick (sound, narrator), the HUD, the guide
+//   controller-finish.js     a wave's end: settle, the finish call and its retries, the cutscene, stop
 import { createPoses } from './poses.js';
-import { CONFIG, createWave, hasTavern, revivePrice } from './sim.js';
+import { createWave } from './sim.js';
 import { waveGapMs } from '../net/live-rules.js';
 import { captainStats, readSkills, readWeapon } from './captain-stats.js';
-import { INPUT_LEAD_TICKS, ROOM_EVENTS, TICK_SECONDS, createInputSchedule, readMessage, toMessage } from './sync.js';
-import { actionAt, boarderAt, inputFor, promptText, shipAt, tapInput } from './interact.js';
-// v3 waves (GAME-V3.md §4.2, §4.3): the wave's event (its banner, art and narrator line) and the boss finisher.
-import { EVENT_TEXT, eventFor } from './wave-events.js';
-import { createFinisherRecorder } from './finisher/input.js';
-import { getPreferences } from '../settings/preferences.js';
-// D039 (proposed): the walls start with the server's health and the finish reports it (wall-health.js).
-import { healthReport, readWalls, withHealth } from './wall-health.js';
-// The wave's simulation rules from the server (tower health, …), the same on every client of the wave.
-import { readRules } from './wave-rules.js';
+import { ROOM_EVENTS, createInputSchedule } from './sync.js';
+import { eventFor } from './wave-events.js';
+import { withHealth } from './wall-health.js';
 import { isParticipantToken, readRecoveryPolicy } from './recovery-policy.js';
 import { readRecoverySnapshot, recoveryWaveDefenses } from './recovery-snapshot.js';
-import { createReplayDriver, createWaveReplay, fetchSealedEvents } from './wave-replay.js';
-import { commandForJournal, MAX_INPUT_BATCH, MAX_INPUT_BATCH_BYTES, RECOVERY_FLUSH_MS, RECOVERY_POLL_LEAD_MS, RECOVERY_POLL_MARGIN_MS,
-  RECOVERY_POLL_MIN_MS, RECOVERY_POLL_MS, recoveryRefusal, refusalDelayMs, refusalKind, simulationInputFromJournal } from './recovery-transport.js';
-import { makeActionUid } from '../screens/islet/action-uid.js';
+import { createReplayDriver, createWaveReplay } from './wave-replay.js';
+import { RECOVERY_PLAYOUT_MS, RECOVERY_RTT_START_MS, canonicalJson, bossText, BREAK_SECONDS, readAuto, writeAuto,
+  readWaveInfo, defaultCutscene, defaultRenderer, defaultHud, defaultGuide, defaultEventArt, defaultFinisherScene,
+  readEasy } from './controller-shared.js';
+import { createTransport } from './controller-transport.js';
+import { createPrediction } from './controller-predict.js';
+import { createCaptainActions } from './controller-captain.js';
+import { createFrame } from './controller-frame.js';
+import { createFinish } from './controller-finish.js';
 
-const MAX_TICKS_PER_FRAME = 600;      // a friend joining late catches up 30 s of wave per frame
-// Recovery waves (structure_recovery) may only run ticks the server has sealed, and the seal moves on
-// each poll. Run them this far behind real time, like a video buffer, so ships and shots move every
-// frame instead of freezing and jumping after each poll (#324). Only when ticks run changes, never what
-// they compute. It covers a slow 450 ms round trip plus the gap between polls (recovery-transport.js),
-// so a wave reads the journal about twice a second instead of back to back.
-export const RECOVERY_PLAYOUT_MS = 1000;
-// The playout follows the measured round trip (feat/recovery-teammate-instant) instead of a fixed second.
-// A read answers the seal of about half a round trip earlier, and recoveryPollDue starts the next read when
-// the sealed ticks left fall under max(LEAD, round trip + MARGIN); a playout P then reads every
-// P + rtt/2 - that, so P = RECOVERY_POLL_GAP_MS + that - rtt/2 reads about twice a second (fed, and no more
-// load than that), with RECOVERY_POLL_MIN_MS + 0.75 x rtt + 150 ms as the floor that never starves.
-// Never under RECOVERY_PLAYOUT_MIN_MS nor over the configured RECOVERY_PLAYOUT_MS; it moves by at most
-// PLAYOUT_SLEW_MS a second (a few ticks faster, or a short wait), so motion stays smooth.
-export const RECOVERY_PLAYOUT_MIN_MS = 600;
-const RECOVERY_POLL_GAP_MS = 500, PLAYOUT_SLEW_MS = 100;
-export function recoveryPlayoutTarget(rttMs, ceilingMs = RECOVERY_PLAYOUT_MS) {
-  const rtt = Number.isFinite(rttMs) ? Math.max(0, rttMs) : 300;
-  const trigger = Math.max(RECOVERY_POLL_LEAD_MS, rtt + RECOVERY_POLL_MARGIN_MS);
-  const wanted = Math.max(RECOVERY_POLL_MIN_MS + 0.75 * rtt + 150, RECOVERY_POLL_GAP_MS + trigger - rtt / 2);
-  return Math.min(Math.max(0, ceilingMs), Math.max(RECOVERY_PLAYOUT_MIN_MS, Math.round(wanted)));
-}
-// Cosmetic messages (shots and swings drawn on teammates' screens before the journal replays them): at
-// most this many a second from one sender, sent and accepted.
-export const COSMETIC_PER_SECOND = 8;
-const PREDICTION_TIMEOUT_MS = 4000;  // a drawn action the journal never replays is forgotten after this
-const CATCH_UP_TICKS = 40;
-// Drawn at once for your own (and a teammate's) action; their replayed copies are not drawn again.
-const PREDICTED_KINDS = new Set(['captain_fired', 'captain_struck', 'captain_blast', 'boarder_hit', 'ship_hit']);           // two seconds behind the playout: "Catching up…"
-
-const RECOVERY_RTT_START_MS = 300;     // the round-trip guess before the first read has answered
-const SHOWN_LATE_SECONDS = 1;         // events older than this (catching up) are not drawn or heard
-const canonicalJson = value => Array.isArray(value) ? `[${value.map(canonicalJson).join(',')}]`
-  : value && typeof value === 'object' ? `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${canonicalJson(value[key])}`).join(',')}}`
-    : JSON.stringify(value);
-function validCanonicalClose(receipt, current) {
-  const rows = current?.info?.initialSnapshot?.structures;
-  if (!receipt || receipt.waveId !== current?.info?.waveId
-    || receipt.islandEpoch !== current?.info?.initialSnapshot?.islandEpoch
-    || !Number.isFinite(Date.parse(receipt.closedAt))
-    || (receipt.checkpointUid !== null && (typeof receipt.checkpointUid !== 'string'
-      || !/^[A-Za-z0-9_-]{8,64}$/.test(receipt.checkpointUid)))
-    || !Number.isInteger(receipt.throughTick) || receipt.throughTick < 0 || receipt.throughTick > 18_000
-    || !Number.isSafeInteger(receipt.inputHeadSeq) || receipt.inputHeadSeq < 0
-    || !Number.isSafeInteger(receipt.lastRepairSeq) || receipt.lastRepairSeq < 0
-    || !receipt.closedHp || typeof receipt.closedHp !== 'object' || Array.isArray(receipt.closedHp)
-    || !receipt.basisRepairSeq || typeof receipt.basisRepairSeq !== 'object' || Array.isArray(receipt.basisRepairSeq)
-    || !Array.isArray(rows)) return false;
-  const ids = rows.map(row => row.instanceId);
-  if (new Set(ids).size !== ids.length || ids.length !== Object.keys(receipt.closedHp).length
-    || ids.length !== Object.keys(receipt.basisRepairSeq).length) return false;
-  for (const id of ids) {
-    const hp = receipt.closedHp[id], sequence = receipt.basisRepairSeq[id];
-    if (!Object.hasOwn(receipt.closedHp, id) || !Object.hasOwn(receipt.basisRepairSeq, id)
-      || !Number.isInteger(hp) || hp < 0 || hp > 1_000_000
-      || !Number.isSafeInteger(sequence) || sequence < 0) return false;
-  }
-  return true;
-}
-const END_BEAT_MS = 1800;             // the last ship sinks on screen before the cutscene
-const LOST_BEAT_MS = 4500;            // a lost run's result stays up a little longer
-const DEFAULT_WAIT_SECONDS = 5;
-// A changed health vector is saved at most this often (a paid repair or the end saves at once).
-const HEALTH_CHECKPOINT_COALESCE_MS = 3000;
-const AIM_RADIUS = 8;                 // free aim: a ship this close to the aim point is hit
-const SETTLE_TICKS = 20000;           // more than the longest wave (900 s)
-const BREAK_GRACE_MS = 10000;         // with Auto next on, the break waits this long for the loot answer
-export const MOVE_EVERY_MS = 500;     // captain health: your position at most this often (or 2 × the room's wave gap)
-export const HEARD_EVERY_MS = 3000;   // and at least this often while you stand still (the sim's stale is 8 s)
-// A recovery wave journals every move: standing still, the position goes out this often instead (an input
-// lands within about 1.5 s of being sent, so a captain is heard again well inside the sim's 8 s stale).
-export const RECOVERY_HEARD_EVERY_MS = 5000;
-const MOVE_STEP = .4;                 // units: a smaller move waits for the next HEARD_EVERY_MS
-const NOTE_MS = 3000;                 // a refused revive's words stay this long
-export const LOST_FALLEN = 'Every captain fell.';
-export const bossText = warships => (warships >= 2 ? '⚠ Boss wave: two warships!' : '⚠ Boss wave: a warship!');
-export const BREAK_SECONDS = 8;       // the break after a won wave (TOWER-DEFENSE.md §1; faster pace, owner 11 Nov)
-const BOSS_WARNING_SECONDS = 6;       // the boss warning stays this long after the wave starts
-export const AUTO_KEY = 'tgpt:pirates:auto-next';
-export const HINT_KEY = 'tgpt:pirates:goal-hint';   // the first-wave hint (🏝️ → 🧱 → ❤️) shows once per device
-export const HINT_SECONDS = 9;
-const readHint = () => { try { return globalThis.localStorage?.getItem(HINT_KEY) === '1'; } catch { return false; } };
-const writeHint = () => { try { globalThis.localStorage?.setItem(HINT_KEY, '1'); } catch { /* private mode: shown again next visit */ } };
-export const LOST_TITLE = 'The pirates broke through';
-export const LOST_LINE = 'Rebuild and ring the bell again.';
-// The coins this player got for this wave (the server's finish answer), the same number as the HUD's "+".
-export const roundLootText = loot => `Loot this wave: 🪙 ${Math.max(0, Math.round(loot) || 0)}`;
-const readAuto = () => { try { return globalThis.localStorage?.getItem(AUTO_KEY) === '1'; } catch { return false; } };
-const writeAuto = value => { try { globalThis.localStorage?.setItem(AUTO_KEY, value ? '1' : '0'); } catch { /* private mode: kept for this visit */ } };
-/** The nearest ship or boarder within the captain's range of (x, z), or null. range: the gun's (captainStats). */
-export function captainTarget(player, state, level = 1, range = captainStats(level).range) {
-  let best = null, bestDistance = range;
-  for (const item of [...(state?.boarders ?? []), ...(state?.ships ?? [])]) {
-    const d = Math.hypot(item.x - player.x, item.z - player.z);
-    if (d <= bestDistance) { best = item; bestDistance = d; }
-  }
-  return best;
-}
-/** The nearest boarder within cutlass reach of (x, z), or null: close quarters (TOWER-DEFENSE.md §12). */
-export function bladeTarget(player, state, reach = CONFIG.captain.cutlass.reach) {
-  let best = null, bestDistance = reach;
-  for (const boarder of state?.boarders ?? []) {
-    const d = Math.hypot(boarder.x - player.x, boarder.z - player.z);
-    if (d <= bestDistance) { best = boarder; bestDistance = d; }
-  }
-  return best;
-}
-// The automatic cutlass (D052): after this many seconds without an attack of yours, a boarder in cutlass reach
-// gets a blow every `reload` seconds (the hand-swung cutlass reloads in CONFIG.captain.cutlass.reload, 0.5 s).
-export const AUTO_BLADE = Object.freeze({ after: 1, reload: 1.5 });
-const pirateById = (state, id) => state?.boarders?.find(item => item.id === id) ?? state?.ships?.find(item => item.id === id) ?? null;
-let atlasPromise = null, atlasKey = null;
-// The heart's share below which the narrator hears heart_changed (its HEART_LOW).
-export const HEART_WARN = 0.3;
-
-// The wider view during a wave: cannons reach about 28 units, ships appear about 40 units out, so the
-// camera shows about 34 units either side of the player (half zoom on a 16:9 screen, 0.4 on a phone).
-export const battleZoom = camera => {
-  const half = Number.isFinite(camera.right - camera.left) ? (camera.right - camera.left) / 2 : 17.8;
-  return Math.max(.4, Math.min(.85, half / 34));
-};
-// Where the camera leans during a wave: from the player a little towards the ships (or the lanes they
-// will come in on), at most 14 units across and 9 units up or down, so the player stays on screen.
-export function battleLean(player, state, lanes = []) {
-  if (!player) return { x: 0, z: 0 };
-  const pirates = [...(state?.ships ?? []), ...(state?.boarders ?? [])];
-  const points = pirates.length ? pirates : lanes;
-  if (!points?.length) return { x: 0, z: 0 };
-  let x = 0, z = 0;
-  for (const point of points) { x += point.x; z += point.z; }
-  x = x / points.length - player.x; z = z / points.length - player.z;
-  return { x: Math.max(-14, Math.min(14, x * .5)), z: Math.max(-9, Math.min(9, z * .5)) };
-}
-const parseTime = value => (typeof value === 'number' ? value : Date.parse(value));
-export function readWaveInfo(info) {
-  if (!info || typeof info !== 'object' || typeof info.waveId !== 'string' || !info.waveId) return null;
-  const startsAtMs = parseTime(info.startsAt);
-  if (!Number.isFinite(startsAtMs) || !Number.isFinite(Number(info.seed))) return null;
-  const recoveryVersion = info.recoveryVersion ?? 0, waveProtocol = info.waveProtocol ?? 1;
-  const recoveryPolicy = readRecoveryPolicy({ recoveryVersion, waveProtocol });
-  if (!recoveryPolicy) return null;
-  const snapshot = recoveryPolicy === 'structure-recovery-v1' ? readRecoverySnapshot(info.initialSnapshot, info.waveId) : null;
-  if (recoveryPolicy === 'structure-recovery-v1' && (!snapshot || !isParticipantToken(info.participantToken)
-    || !Number.isSafeInteger(info.lastActorCounter) || info.lastActorCounter < 0
-    || snapshot.seed !== Number(info.seed)
-    || Date.parse(snapshot.startsAt) !== startsAtMs
-    || snapshot.createWave.seed !== snapshot.seed
-    || snapshot.createWave.wave !== info.wave)) return null;
-  const rules = readRules(info.rules);
-  if ((recoveryPolicy === 'structure-recovery-v1') !== rules.structureRecovery) return null;
-  if (snapshot && JSON.stringify(readRules(snapshot.rules)) !== JSON.stringify(rules)) return null;
-  const wave = Number.isInteger(info.wave) && info.wave > 0 ? info.wave : 1;
-  const weather = info.weather && typeof info.weather === 'object' ? info.weather : {};
-  return { waveId: info.waveId, wave, seed: Number(info.seed), startsAtMs, weather, flagship: info.flagship === true,
-    boss: typeof info.boss === 'boolean' ? info.boss : undefined, walls: readWalls(info.walls), rules,
-    recoveryVersion, waveProtocol, ...(snapshot ? { initialSnapshot: snapshot, participantToken: info.participantToken,
-      lastActorCounter: info.lastActorCounter } : {}),
-    serverTimeMs: Number.isFinite(parseTime(info.serverTime)) ? parseTime(info.serverTime) : null,
-    // The browser's clock offset to the server, measured when the wave answer arrived (island/api.js clockOffset).
-    clockOffsetMs: Number.isSafeInteger(info.clockOffsetMs) && Math.abs(info.clockOffsetMs) <= 86_400_000 ? info.clockOffsetMs : null };
-}
-
-/** How long to wait before finishing again, from a 409 wave_too_early refusal; null for other errors. */
-export function tooEarlyWait(error) {
-  const code = error?.code ?? error?.body?.error?.code ?? error?.error?.code;
-  if (code !== 'wave_too_early') return null;
-  const seconds = Number(error.waitSeconds ?? error.retryAfter ?? error.body?.error?.waitSeconds ?? error.headers?.get?.('retry-after'));
-  return Number.isFinite(seconds) && seconds > 0 ? Math.min(60, seconds) : DEFAULT_WAIT_SECONDS;
-}
-// A legacy finish whose outcome is unknown (no answer, 429, a 5xx such as 503 database_unavailable) is sent
-// again, byte for byte: the server answers a repeat with the stored result and pays nothing twice. Without it
-// one failed request left the wave open on the server (the bell "under way" until its 900 s ran out).
-export const FINISH_RETRY_SECONDS = Object.freeze([2, 5, 10, 20]);
-export function finishRetryWait(error, attempt) {
-  const status = error?.status;
-  if (error?.code === 'not_ready' || !Number.isInteger(status) || !(status === 0 || status === 429 || status >= 500)) return null;
-  const wait = FINISH_RETRY_SECONDS[attempt];
-  if (wait === undefined) return null;
-  const asked = Number(error.retryAfter);
-  return Number.isFinite(asked) && asked > wait ? Math.min(60, asked) : wait;
-}
-
-const defaultCutscene = (world, reducedMotion) => async id => {
-  if (!world.container) return { status: 'skipped' };
-  const module = await import('../cutscenes/player.js');
-  return module.playCutscene({ container: world.container, id, reducedMotion }).done;
-};
-const defaultRenderer = async options => {
-  const module = await import('./render.js');
-  // One atlas at a time, painted again when your lobby colour (the musket and cutlass poses) changes.
-  // T33: a wave with tower health also paints the damaged and broken towers (another atlas, another key).
-  // T43: a wave that fights with a culverin also paints the culverin (another atlas, another key).
-  // D055: a wave with a swivel-gun nest paints the nest too, the same way.
-  const key = `${options.quality?.() === 'low' ? 'low' : 'high'}:${options.colour ?? 0}${options.towerStates ? ':towers' : ''}${options.culverins ? ':culverins' : ''}${options.swivels ? ':swivels' : ''}`;
-  if (atlasKey !== key) { atlasPromise = null; atlasKey = key; }
-  atlasPromise ??= module.loadAtlas({ quality: key.split(':')[0], colour: options.colour ?? 0, towerStates: options.towerStates === true,
-    culverins: options.culverins === true, swivels: options.swivels === true })
-    .catch(error => { atlasPromise = null; throw error; });
-  return module.createWaveRenderer({ ...options, atlas: await atlasPromise });
-};
-const defaultHud = async options => (await import('./hud.js')).createWaveHud(options);
-// The battle guide (battle-guide.js): where pirates land, the way they walk, the heart and the walls' bars. Drawing only.
-const defaultGuide = async options => (await import('./battle-guide.js')).createBattleGuide(options);
-// v3 waves: the event's drawing and the finisher's scene load with their first wave; the finisher slows the sea.
-const defaultEventArt = async options => (typeof document === 'undefined' ? null : (await import('./wave-events-art.js')).createEventArt(options));
-const defaultFinisherScene = async options => {
-  if (typeof document === 'undefined') return null; // no page (a headless test): the sim alone
-  const [module, water] = await Promise.all([import('./finisher/introduction.js'), import('../world/water.js').catch(() => null)]);
-  const scene = module.createFinisherIntroduction(options);
-  if (!options.reducedMotion?.()) water?.setSeaPace?.(.25);
-  const dispose = scene.dispose;
-  scene.dispose = () => { water?.setSeaPace?.(1); dispose(); };
-  return scene;
-};
-export const FINISHER_FRAME_Z = 7;     // units: the camera looks this far south of the boss, so it shows above the panel
-export const EVENT_BANNER_SECONDS = 8;   // the event's line shows this long under the wave bar, then its title alone
-export const EVENT_ICONS = Object.freeze({ fog_bank: '☁', storm: '⛈', night_raid: '🌙', fire_ships: '🔥', pincer: '⚔', armada: '⛵',
-  siege_barge: '💣', treasure_galleon: '💰', smugglers: '🛶', kraken: '🐙' });
-const readEasy = () => { try { return getPreferences()?.easyFinishers === true; } catch { return false; } };
+export { RECOVERY_PLAYOUT_MS, RECOVERY_PLAYOUT_MIN_MS, recoveryPlayoutTarget, COSMETIC_PER_SECOND, MOVE_EVERY_MS,
+  HEARD_EVERY_MS, RECOVERY_HEARD_EVERY_MS, LOST_FALLEN, bossText, BREAK_SECONDS, AUTO_KEY, HINT_KEY, HINT_SECONDS,
+  LOST_TITLE, LOST_LINE, roundLootText, captainTarget, bladeTarget, AUTO_BLADE, HEART_WARN, battleZoom, battleLean,
+  readWaveInfo, tooEarlyWait, FINISH_RETRY_SECONDS, finishRetryWait, FINISHER_FRAME_Z, EVENT_BANNER_SECONDS,
+  EVENT_ICONS } from './controller-shared.js';
 
 export function createWaveController({ bus, world = {}, getDefenses = () => [], getManaging = () => false, finishWave = async () => null, room = null,
   sound = null, reducedMotion = () => false, quality = () => 'high', playerId = `p-${Math.random().toString(36).slice(2, 10)}`,
@@ -295,56 +89,43 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   guide: guideOn = false, createGuide = defaultGuide, recoveryTransport = null } = {}) {
   // The captains' poses (src/pirates/poses.js): your character and the teammates' figures fire in their own body.
   const poses = createPoses({ now: () => now() / 1000 });
-  let wave = null, disposed = false, pressed = false, shootPressed = false, shootHeld = false, down = null, shake = 0;
-  let holdE = false, holdPrompt = false; // E or the prompt held down (a revive)
-  let figures = null; // the presence figures' positions of the other captains (setFigures)
-  let runLoot = 0, auto = !!loadAuto(), level = null, skills = null, weapon = null;
-  const myLevel = () => { const value = Number(level ?? captainLevel()); return Number.isInteger(value) ? Math.min(5, Math.max(1, value)) : 1; };
+  // The controller's mutable state, shared by its parts (controller-*.js) as ctl.wave, ctl.runLoot, ...: the wave on
+  // screen, the keys held, the run's loot, the overrides of the captain's level, skills and weapon, the guide.
+  const ctl = { wave: null, disposed: false, pressed: false, shootPressed: false, shootHeld: false, down: null, shake: 0,
+    holdE: false, holdPrompt: false, // E or the prompt held down (a revive)
+    figures: null, // the presence figures' positions of the other captains (setFigures)
+    runLoot: 0, auto: !!loadAuto(), level: null, skills: null, weapon: null,
+    guide: null, guideLoading: false, lastWave: 0, lastTowerObstacles: false,
+    autoBlade: true }; // the browser checks turn it off to let a captain fall on purpose (controller.autoBlade)
+  const myLevel = () => { const value = Number(ctl.level ?? captainLevel()); return Number.isInteger(value) ? Math.min(5, Math.max(1, value)) : 1; };
   const read = (get, fallback) => { try { return get(); } catch { return fallback; } };
-  const mySkills = () => readSkills(skills ?? read(captainSkills, []));
-  const myWeapon = () => readWeapon(weapon ?? read(captainWeapon, 'musket'));
+  const mySkills = () => readSkills(ctl.skills ?? read(captainSkills, []));
+  const myWeapon = () => readWeapon(ctl.weapon ?? read(captainWeapon, 'musket'));
   // "Me" in the sim: a recovery wave names its captains by participant token, every other wave by playerId.
   const actorId = current => current?.info?.recoveryVersion === 1 ? current.info.participantToken : playerId;
   // Your gun's numbers now: level, skills and the equipped weapon (captain-stats.js).
   const myStats = () => captainStats(myLevel(), mySkills(), myWeapon(),
-    { recoveryVersion: wave?.info.recoveryVersion === 1 ? 1 : 0 });
+    { recoveryVersion: ctl.wave?.info.recoveryVersion === 1 ? 1 : 0 });
   const timers = new Set(), stops = [];
-  const later = (run, ms) => { const id = setTimer(() => { timers.delete(id); if (!disposed) run(); }, ms); timers.add(id); return id; };
+  const later = (run, ms) => { const id = setTimer(() => { timers.delete(id); if (!ctl.disposed) run(); }, ms); timers.add(id); return id; };
   const emit = event => { try { bus?.emit?.(event); } catch (error) { console.error(error); } };
-  const cue = name => { if (wave?.shown) sound?.cue?.(name); };
+  const cue = name => { if (ctl.wave?.shown) sound?.cue?.(name); };
   // No place on screen (null: the front door's open water) is not here; a world without place() always is.
   const here = () => !place || (world.place ? world.place() : place) === place;
   const blocked = () => !!world.isBlocked?.();
-
-  // The battle guide (guide: true, the island's controller only): landings, routes, the heart and the walls' bars;
-  // faintly between waves on this island, in full during a wave. Drawing only: it reads the state, never the sim.
-  let guide = null, guideLoading = false, lastWave = 0, lastTowerObstacles = false;
-  function updateGuide(dt) {
-    if (!guideOn || !world.scene || disposed) return;
-    if (!guide) {
-      if (!guideLoading) {
-        guideLoading = true;
-        Promise.resolve(createGuide({ scene: world.scene, reducedMotion, characterScale: () => world.scene?.userData?.characterScale ?? 1 }))
-          .then(made => { if (disposed) made?.dispose(); else guide = made; }).catch(error => console.error(error));
-      }
-      return;
-    }
-    const current = wave, running = current && !current.done && !current.pause;
-    const show = here() && (!current || current.pause || running);
-    guide.setVisible?.(show);
-    if (!show) { guide.update(null); return; }
-    if (running) {
-      guide.update({ mode: 'wave', lanes: current.lanes?.length ? current.lanes : null, defenses: current.defenses, stateWalls: current.state.walls,
-        stateTowers: current.state.towers, towerObstacles: current.info.rules?.towerObstacles === true,
-        boarders: current.state.boarders, heart: current.state.heart, wave: current.info.wave, dt });
-    } else {
-      const defenses = read(getDefenses, []) ?? [];
-      guide.update({ mode: 'preview', lanes: null, defenses, stateWalls: null, stateTowers: null,
-        managing: read(getManaging, false) === true,
-        towerObstacles: current?.info.rules?.towerObstacles ?? lastTowerObstacles, boarders: [], heart: null,
-        wave: (current?.info.wave ?? lastWave) + 1, dt });
-    }
-  }
+  Object.assign(ctl, { bus, world, getDefenses, getManaging, finishWave, room, sound, reducedMotion, quality,
+    playerId, now, serverOffset, place, accept, listen, simOptions, beamFrom, cutsceneFor, playCutscene,
+    createRenderer, createHud, setTimer, clearTimer, onEvents, getCrew, captainLevel, captainSkills, captainWeapon,
+    captainColour, startNextWave, breakSeconds, recoveryPlayoutMs, loadAuto, saveAuto, holdBreak, toggleHold,
+    reviveCaptain, createEventArt, createFinisherScene, easyFinishers, practiceIdentity, guideOn, createGuide,
+    recoveryTransport, poses, myLevel, read, mySkills, myWeapon, actorId, myStats, timers, stops, later, emit, cue,
+    here, blocked });
+  // The parts, each a closure over ctl; they call each other through names linked once all exist.
+  const parts = [createTransport, createPrediction, createCaptainActions, createFrame, createFinish].map(create => create(ctl));
+  for (const { link, ...part } of parts) Object.assign(ctl, part);
+  for (const part of parts) part.link?.();
+  const { submit, checkpointBeforeRepair, handOffRecoveryFinish, receive, shoot, aimAt, meIn, isDown, setAuto, held,
+    next, act, tap, update, settle, stop } = ctl;
 
   if (listen && bus?.on) stops.push(bus.on('wave_started_server', event => { const info = readWaveInfo(event); if (info && accept(info)) start(info); }));
   if (room?.on) for (const type of Object.values(ROOM_EVENTS)) {
@@ -356,21 +137,21 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     if (event.code !== 'KeyE' && event.code !== 'KeyF') return;
     const target = event.target;
     if (target instanceof HTMLElement && target.closest('input, select, textarea, button, [contenteditable=true]')) return;
-    if (event.code === 'KeyF') { shootHeld = true; if (!event.repeat) shootPressed = true; } else { holdE = true; if (!event.repeat) pressed = true; }
+    if (event.code === 'KeyF') { ctl.shootHeld = true; if (!event.repeat) ctl.shootPressed = true; } else { ctl.holdE = true; if (!event.repeat) ctl.pressed = true; }
   };
-  const keyup = event => { if (event.code === 'KeyF') shootHeld = false; if (event.code === 'KeyE') holdE = false; };
-  const letGo = () => { shootHeld = false; holdE = false; holdPrompt = false; };
-  const pointerdown = event => { if (event.button === 0) down = [event.clientX, event.clientY]; };
+  const keyup = event => { if (event.code === 'KeyF') ctl.shootHeld = false; if (event.code === 'KeyE') ctl.holdE = false; };
+  const letGo = () => { ctl.shootHeld = false; ctl.holdE = false; ctl.holdPrompt = false; };
+  const pointerdown = event => { if (event.button === 0) ctl.down = [event.clientX, event.clientY]; };
   const pointerup = event => {
-    if (!down || event.button !== 0 || Math.hypot(event.clientX - down[0], event.clientY - down[1]) > 8) { down = null; return; }
-    down = null; tap(event.clientX, event.clientY);
+    if (!ctl.down || event.button !== 0 || Math.hypot(event.clientX - ctl.down[0], event.clientY - ctl.down[1]) > 8) { ctl.down = null; return; }
+    ctl.down = null; tap(event.clientX, event.clientY);
   };
   if (typeof window !== 'undefined') { window.addEventListener('keydown', keydown); window.addEventListener('keyup', keyup); window.addEventListener('blur', letGo); }
   world.canvas?.addEventListener('pointerdown', pointerdown);
   world.canvas?.addEventListener('pointerup', pointerup);
 
   function start(raw) {
-    if (disposed) return null;
+    if (ctl.disposed) return null;
     const info = raw?.startsAtMs !== undefined ? raw : readWaveInfo(raw);
     if (!info) return null;
     const recoveryPolicy = readRecoveryPolicy(info);
@@ -381,15 +162,15 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       || typeof recoveryTransport.checkpoint !== 'function' || typeof recoveryTransport.finishWave !== 'function')) return null;
     const snapshot = recoveryPolicy === 'structure-recovery-v1' ? readRecoverySnapshot(info.initialSnapshot, info.waveId) : null;
     if (recoveryPolicy === 'structure-recovery-v1' && !snapshot) return null;
-    lastTowerObstacles = info.rules?.towerObstacles === true;
-    if (wave?.info.waveId === info.waveId) return wave;
+    ctl.lastTowerObstacles = info.rules?.towerObstacles === true;
+    if (ctl.wave?.info.waveId === info.waveId) return ctl.wave;
     // A friend rang the next wave while ours still runs here (a ship that sinks a moment later on this
     // client): play ours to its end at once, so our part is finished and paid, then start the new one.
-    if (wave && !wave.done) settle(wave);
-    if (wave?.recoveryReplay && !wave.recoveryFinishAnswered) handOffRecoveryFinish(wave);
+    if (ctl.wave && !ctl.wave.done) settle(ctl.wave);
+    if (ctl.wave?.recoveryReplay && !ctl.wave.recoveryFinishAnswered) handOffRecoveryFinish(ctl.wave);
     // A wave that starts in the break of a won one continues the run (and its loot).
-    if (!wave?.pause) runLoot = 0;
-    if (wave) stop();
+    if (!ctl.wave?.pause) ctl.runLoot = 0;
+    if (ctl.wave) stop();
     // D039: with the flag wall_recovery on the server sends each wall's health after its last wave.
     // T43: a culverin fights only in a wave whose rules say defenses_v2 (every client of the wave alike); without
     // the rule it is left out here too, so the screen does not show a gun that never fires.
@@ -414,7 +195,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     const recoveryReplay = snapshot ? createWaveReplay() : null;
     const initialRecoveryHealth = recoveryReplay ? sim.recoveryHealthVector() : null;
     const initialRecoverySignature = initialRecoveryHealth ? canonicalJson(initialRecoveryHealth) : null;
-    const current = wave = { info, sim, defenses, offset, ticks: 0, seq: 0, schedule: createInputSchedule(), done: false, finished: false,
+    const current = ctl.wave = { info, sim, defenses, offset, ticks: 0, seq: 0, schedule: createInputSchedule(), done: false, finished: false,
       pause: null, boss: first.boss ? bossText(first.warships) : '', captainAt: -Infinity, bladeAt: -Infinity, handAt: -Infinity,
       result: null, renderer: null, hud: null, shown: false, lampsSent: false, lampsRelit: false, flagshipSunk: false,
       splashesAt: [], lastCount: null, state: sim.state(), action: null, lanes: [], lean: { x: 0, z: 0 },
@@ -438,21 +219,21 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
         towerStates: info.rules?.towerHealth === true || !!snapshot, culverins: defenses.some(item => item.kind === 'culverin'),
         recoveryV1: !!snapshot,
         swivels: defenses.some(item => item.kind === 'swivel') })).then(renderer => {
-        if (disposed || wave !== current || current.finished) renderer?.dispose(); else current.renderer = renderer;
+        if (ctl.disposed || ctl.wave !== current || current.finished) renderer?.dispose(); else current.renderer = renderer;
       }).catch(error => console.error(error));
     }
     if (world.container) {
       Promise.resolve(createHud({ container: world.container, onAction: () => act(), onNext: () => next(), onAuto: value => setAuto(value),
-        onPromptHold: held => { holdPrompt = held === true; },
+        onPromptHold: held => { ctl.holdPrompt = held === true; },
         onHold: () => { try { toggleHold?.(); } catch (error) { console.error(error); } },
-        onShoot: held => { shootHeld = held === true; if (held) shootPressed = true; },
+        onShoot: held => { ctl.shootHeld = held === true; if (held) ctl.shootPressed = true; },
         reducedMotion })).then(hud => {
-        if (disposed || wave !== current || current.finished) hud?.dispose(); else current.hud = hud;
+        if (ctl.disposed || ctl.wave !== current || current.finished) hud?.dispose(); else current.hud = hud;
       }).catch(error => console.error(error));
     }
     if (current.eventId && world.container) {
       Promise.resolve(createEventArt({ container: world.container, canvas: world.canvas, project: (x, z, lift) => world.project?.(x, z, lift) ?? null,
-        reducedMotion, quality })).then(art => { if (disposed || wave !== current || current.finished) art?.dispose(); else current.eventArt = art; })
+        reducedMotion, quality })).then(art => { if (ctl.disposed || ctl.wave !== current || current.finished) art?.dispose(); else current.eventArt = art; })
         .catch(error => console.error(error));
     }
     current.shown = here();
@@ -460,1154 +241,13 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     return current;
   }
 
-  function settle(current) {
-    if (current.recoveryReplay) return;
-    for (let i = 0; i < SETTLE_TICKS && !current.sim.done; i++) { current.sim.step(TICK_SECONDS, current.schedule.take(current.ticks)); current.ticks++; }
-    current.state = current.sim.state();
-    if (current.sim.done) end(current);
-  }
-  // v3 waves: a boss finisher is running (the battle stands still: no shots, repairs or prompts meanwhile).
-  const finishing = current => current?.state?.finisher?.active === true;
-  function submit(input, lead = INPUT_LEAD_TICKS) {
-    if (!wave || wave.done || wave.state.phase !== 'running') return false;
-    if (wave.recoveryReplay) {
-      const command = commandForJournal(input);
-      if (!command) return false;
-      const attack = ['captain_shot', 'captain_strike', 'fire', 'finisher_ready', 'finisher_input', 'lamps_lit'].includes(command.type);
-      const elapsed = (now() + wave.offset - wave.info.startsAtMs) / 1000;
-      if (attack && elapsed < 0) return false;
-      let inputUid;
-      try { inputUid = makeActionUid(); } catch { return false; }
-      const tick = Math.max(0, wave.ticks + lead, (wave.recoveryReplay.sealedThroughTick ?? -1) + 1);
-      wave.recoveryPending.push({ inputUid, actorCounter: ++wave.actorCounter, tick, command });
-      // An attack goes out in this frame, not at the next 250 ms flush: it lands sooner in the journal.
-      if (attack) wave.recoveryFlushNow = true;
-      return true;
-    }
-    const entry = { by: actorId(wave), seq: ++wave.seq, tick: wave.ticks + lead, input };
-    wave.schedule.add(entry, wave.ticks);
-    const message = toMessage(input, { ...entry, waveId: wave.info.waveId });
-    if (message) try { room?.send?.(message.type, message.payload); } catch (error) { console.error(error); }
-    return true;
-  }
-
-  function pumpRecovery(current, at) {
-    if (!current.recoveryReplay || !recoveryTransport) return;
-    const waveId = current.info.waveId;
-    if (!current.recoverySending && current.recoveryPending.length
-      && (at - current.recoveryLastFlushAt >= RECOVERY_FLUSH_MS || current.recoveryFlushNow) && at >= current.recoveryInputRetryAt) {
-      current.recoveryLastFlushAt = at;
-      current.recoveryFlushNow = false;
-      // The body's size grows by each item and a comma: {"waveProtocol":2,"inputs":[a,b,...]}.
-      const batch = [], encoder = new TextEncoder();
-      let bytes = encoder.encode(JSON.stringify({ waveProtocol: 2, inputs: [] })).length;
-      for (const item of current.recoveryPending) {
-        const size = encoder.encode(JSON.stringify(item)).length + (batch.length ? 1 : 0);
-        if (batch.length >= MAX_INPUT_BATCH || bytes + size > MAX_INPUT_BATCH_BYTES) break;
-        bytes += size;
-        batch.push(item);
-      }
-      if (batch.length) {
-        current.recoverySending = true;
-        const sending = Promise.resolve().then(() => recoveryTransport.sendInputs({ waveId, inputs: batch }));
-        current.recoverySendPromise = sending;
-        sending
-          .then(answer => { if (wave === current) applyInputAnswer(current, batch, answer); })
-          .catch(error => { console.error(error); if (wave === current) applyInputAnswer(current, batch, null); })
-          .finally(() => { current.recoverySending = false; current.recoverySendPromise = null; tryRecoveryFinish(current); });
-      }
-    }
-    if (recoveryPollDue(current, at)) void fetchRecoveryFrontier(current);
-    // The health vector and its signature only when a checkpoint could go out (not every frame).
-    if (!current.done && !current.recoveryInvalid && !current.recoveryHealthCheckpointPromise && !current.catchingUp
-      && at - current.recoveryHealthLastAttemptAt >= HEALTH_CHECKPOINT_COALESCE_MS) {
-      const vector = current.sim.recoveryHealthVector();
-      const signature = vector ? canonicalJson(vector) : null;
-      if (signature && signature !== current.recoveryHealthPersistedSignature) void checkpointBeforeRepair({ force: false }).catch(error => console.error(error));
-    }
-    reconcileTerminalRecovery(current);
-    tryRecoveryFinish(current);
-  }
-
-  // The next regular journal read (fetchRecoveryFrontier keeps one in flight at a time). A closed,
-  // refused or diverged wave reads nothing more on its own: the break can stay open for minutes.
-  function recoveryPollDue(current, at) {
-    if (current.recoveryPolling || current.recoveryFinishing || current.recoveryInvalid || current.recoveryFinishAnswered
-      || current.recoveryFinishFailed || at < current.recoveryPollRetryAt) return false;
-    const since = at - current.recoveryLastPollAt;
-    if (since >= RECOVERY_POLL_MS) return true;
-    if (since < RECOVERY_POLL_MIN_MS) return false;
-    const sealed = current.recoveryReplay.sealedThroughTick;
-    // The ended wave waits for its close (fresh seals for the finish); no seal yet: read.
-    if (current.done || !Number.isInteger(sealed)) return true;
-    // How long the sealed ticks still last under the playout clock, against the time a read takes.
-    const playoutAt = at + current.offset - current.info.startsAtMs - current.recoveryPlayoutMs;
-    const headroomMs = (sealed + 1) * TICK_SECONDS * 1000 - playoutAt;
-    return headroomMs < Math.max(RECOVERY_POLL_LEAD_MS, current.recoveryRttMs + RECOVERY_POLL_MARGIN_MS);
-  }
-
-  function fetchRecoveryFrontier(current) {
-    if (current.recoveryPolling) return current.recoveryPollPromise ?? Promise.resolve(false);
-    current.recoveryPolling = true;
-    const startedAt = current.recoveryLastPollAt = now();
-    let polling, refusal = null;
-    polling = Promise.resolve().then(() => fetchSealedEvents(current.recoveryReplay,
-      request => recoveryTransport.readEvents({ waveId: current.info.waveId, ...request }), undefined, page => { refusal = page; },
-      page => { if (page.closed === true) current.recoveryClosed = true; }))
-      .catch(error => { console.error(error); refusal = recoveryRefusal(null); return false; }).then(complete => {
-        if (current.recoveryPollPromise !== polling) return complete;
-        if (complete) {
-          current.recoveryPollAttempts = 0;
-          resyncActorCounter(current);
-        } else if (refusal) {
-          const kind = refusalKind(refusal);
-          if (kind === 'terminal') endRecoveryWave(current, refusal.code);
-          else current.recoveryPollRetryAt = now() + (kind === 'later' ? refusalDelayMs(refusal, current.recoveryPollAttempts++) : 0);
-        }
-        // A slow answer counts at once; a fast one lowers the estimate gradually.
-        const took = Math.max(0, now() - startedAt);
-        current.recoveryRttMs = took >= current.recoveryRttMs ? took : current.recoveryRttMs + (took - current.recoveryRttMs) / 4;
-        current.recoveryPolling = false;
-        current.recoveryPollPromise = null;
-        reconcileTerminalRecovery(current);
-        tryRecoveryFinish(current);
-        return complete;
-      });
-    current.recoveryPollPromise = polling;
-    return polling;
-  }
-
-  function acceptedRecoveryInputs(events, batch, participantToken) {
-    if (!Array.isArray(events)) return null;
-    const expected = new Map(batch.map(item => [item.inputUid, item]));
-    const accepted = new Set();
-    for (const event of events) {
-      const payload = event?.payload;
-      const item = expected.get(payload?.inputUid);
-      if (!item || event.type !== 'captain_input' || event.participantToken !== participantToken
-        || payload.participantToken !== participantToken || payload.actorCounter !== item.actorCounter
-        || canonicalJson(payload.command) !== canonicalJson(item.command)
-        || !simulationInputFromJournal(event)) return null;
-      accepted.add(item.inputUid);
-    }
-    return accepted;
-  }
-
-  // One input answer under the refusal policy: accepted inputs leave the queue; 'later' waits and sends the
-  // same batch again; a counter conflict drops the queue and renumbers from the journal; any other refusal
-  // drops the batch (the whole queue once the wave is over for this player). Answers true when it progressed.
-  function applyInputAnswer(current, batch, answer) {
-    if (Array.isArray(answer?.accepted)) {
-      const accepted = acceptedRecoveryInputs(answer.accepted, batch, current.info.participantToken);
-      current.recoveryInputAttempts = 0;
-      if (accepted?.size) {
-        current.recoveryPending = current.recoveryPending.filter(item => !accepted.has(item.inputUid));
-        return true;
-      }
-      console.error('Recovery inputs were answered with other commands; they are dropped.');
-      dropInputs(current, batch);
-      return false;
-    }
-    // No answer at all is an unknown outcome: the same batch again later (same UIDs, same counters).
-    const refusal = answer?.refused ? answer : recoveryRefusal(answer);
-    const kind = refusalKind(refusal);
-    if (kind === 'later') {
-      current.recoveryInputRetryAt = now() + refusalDelayMs(refusal, current.recoveryInputAttempts++);
-      return false;
-    }
-    current.recoveryInputAttempts = 0;
-    if (refusal.code === 'input_counter_conflict' || ['wave_over', 'not_in_wave', 'no_such_wave'].includes(refusal.code)) {
-      current.recoveryPending = [];
-      if (refusal.code === 'input_counter_conflict') current.recoveryCounterResync = true;
-    } else dropInputs(current, batch);
-    console.warn(`Recovery inputs refused (${refusal.code}); dropped.`);
-    return false;
-  }
-  function dropInputs(current, batch) {
-    const sent = new Set(batch.map(item => item.inputUid));
-    current.recoveryPending = current.recoveryPending.filter(item => !sent.has(item.inputUid));
-  }
-  // After a counter conflict: number the next commands after the last one the journal accepted from us.
-  function resyncActorCounter(current) {
-    if (!current.recoveryCounterResync || current.recoverySending) return;
-    let counter = current.recoveryReplay.maxActorCounter(current.info.participantToken);
-    for (const item of current.recoveryPending) item.actorCounter = ++counter;
-    current.actorCounter = counter;
-    current.recoveryCounterResync = false;
-  }
-  // A terminal refusal of the wave itself (not in it, no such wave, a client update needed): stop reading
-  // and finishing it; the screen says so and the wave ends here like a refused finish.
-  function endRecoveryWave(current, code) {
-    if (current.recoveryFinishFailed || current.recoveryFinishAnswered) return;
-    console.warn(`Recovery wave ended by the server (${code}).`);
-    current.recoveryFinishFailed = true;
-    current.recoveryFinishPending = false;
-    current.recoveryPending = [];
-    if (current.pause) current.pause.failed = true;
-    if (!current.done) {
-      current.hud?.banner('Wave over', 'This wave ended on the server.');
-      later(() => { if (wave === current) stop(); }, END_BEAT_MS);
-    }
-  }
-
-  async function flushRecoveryInputs(current) {
-    while (current.recoverySending) {
-      const pending = current.recoverySendPromise;
-      if (!pending) return false;
-      await pending;
-    }
-    while (current.recoveryPending.length) {
-      const batch = current.recoveryPending.slice(0, MAX_INPUT_BATCH);
-      current.recoverySending = true;
-      const pending = Promise.resolve().then(() => recoveryTransport.sendInputs({ waveId: current.info.waveId, inputs: batch }));
-      current.recoverySendPromise = pending;
-      let answer;
-      try { answer = await pending; } catch (error) { console.error(error); answer = recoveryRefusal(null); }
-      current.recoverySending = false;
-      current.recoverySendPromise = null;
-      if (!applyInputAnswer(current, batch, answer)) return false;
-    }
-    return true;
-  }
-
-  function checkpointBeforeRepair({ force = true } = {}) {
-    const current = wave;
-    if (!current?.recoveryReplay) return Promise.resolve({ ok: false, code: 'recovery_unavailable' });
-    if (now() + current.offset < current.info.startsAtMs && current.info.initialSnapshot?.waveId === current.info.waveId) {
-      // During preparation the frozen bell snapshot is canonical; accepted paid repairs replay at tick zero.
-      return Promise.resolve({ ok: true });
-    }
-    const prior = current.recoveryHealthCheckpointPromise;
-    const running = (prior ? prior.then(result => result?.ok ? checkpointRecovery(current, { force }) : result)
-      : checkpointRecovery(current, { force })).finally(() => {
-      if (current.recoveryHealthCheckpointPromise === running) current.recoveryHealthCheckpointPromise = null;
-    });
-    current.recoveryHealthCheckpointPromise = running;
-    return running;
-  }
-
-  async function checkpointRecovery(current, { force = true } = {}) {
-    if (!current?.recoveryReplay || !recoveryTransport?.checkpoint || current.recoveryFinishAnswered
-      || current.recoveryInvalid) return { ok: false, code: 'recovery_unavailable' };
-    // A paid repair needs the server to know this screen's damage. When the last accepted checkpoint already holds
-    // exactly the HP on screen, it does: no flush, read or checkpoint round trips before the repair goes out.
-    if (force && !current.done && current.recoveryReplay.complete()) {
-      const vector = current.sim.recoveryHealthVector();
-      if (vector && canonicalJson(vector) === current.recoveryHealthPersistedSignature) return { ok: true, reused: true };
-    }
-    // The periodic checkpoint of a running wave saves ticks already shown, so a complete frontier from the
-    // regular reads is enough: every later journal event lands after its seal (the server clamps effective
-    // ticks past it), and a waiting command does too. Only a paid repair or the end reads afresh.
-    const reuse = !force && !current.done && current.recoveryReplay.complete();
-    if (!reuse) {
-      if (!await flushRecoveryInputs(current)) return { ok: false, code: 'input_sync_required' };
-      let fetched = false;
-      try { fetched = await fetchRecoveryFrontier(current); }
-      catch (error) { console.error(error); fetched = false; }
-      if (!fetched || !current.recoveryReplay.complete()) return { ok: false, code: 'health_sync_required' };
-    }
-    // The periodic health checkpoint (force false) saves the ticks already shown, which the server accepts
-    // while they are sealed; only a checkpoint before a paid repair catches the wave up to the seal.
-    if (!current.done && force) {
-      const serverTick = Math.floor((((now() + current.offset) - current.info.startsAtMs) / 1000) / TICK_SECONDS);
-      // A server seal may arrive between render frames. Catch up only through time that has actually elapsed.
-      if (!Number.isInteger(serverTick) || current.recoveryReplay.sealedThroughTick > serverTick
-        || !advanceRecoveryThrough(current, current.recoveryReplay.sealedThroughTick)) {
-        return { ok: false, code: 'health_sync_required' };
-      }
-    } else if (current.done && !reconcileTerminalRecovery(current)) {
-      return { ok: false, code: 'health_sync_required' };
-    }
-    const replay = current.recoveryReplay, vector = current.sim.recoveryHealthVector();
-    if (!vector || replay.sealedThroughTick < 0) return { ok: false, code: 'health_sync_required' };
-    const throughTick = Math.min(replay.sealedThroughTick, current.recoveryDriver.nextTick - 1);
-    if (throughTick < 0) return { ok: false, code: 'health_sync_required' };
-    let checkpoint = current.recoveryHealthRequest;
-    if (!checkpoint || checkpoint.throughTick !== throughTick || checkpoint.inputHeadSeq !== replay.headSeq
-      || checkpoint.lastRepairSeq !== current.recoveryLastRepairSeq
-      || canonicalJson(checkpoint.hpUnits) !== canonicalJson(vector.hpUnits)
-      || canonicalJson(checkpoint.basisRepairSeq) !== canonicalJson(vector.basisRepairSeq)) {
-      checkpoint = { islandEpoch: current.info.initialSnapshot.islandEpoch, checkpointUid: makeActionUid(), throughTick,
-        inputHeadSeq: replay.headSeq, lastRepairSeq: current.recoveryLastRepairSeq,
-        basisRepairSeq: { ...vector.basisRepairSeq }, hpUnits: { ...vector.hpUnits } };
-      current.recoveryHealthRequest = checkpoint;
-    }
-    const attemptAt = now();
-    if (!force && attemptAt - current.recoveryHealthLastAttemptAt < HEALTH_CHECKPOINT_COALESCE_MS) {
-      return { ok: false, code: 'checkpoint_throttled' };
-    }
-    current.recoveryHealthLastAttemptAt = attemptAt;
-    let answer;
-    try { answer = await recoveryTransport.checkpoint({ waveId: current.info.waveId, checkpoint }); }
-    catch (error) { console.error(error); answer = recoveryRefusal(null); }
-    const accepted = answer?.accepted === true && answer.throughTick === checkpoint.throughTick
-      && answer.inputHeadSeq === checkpoint.inputHeadSeq && answer.lastRepairSeq === checkpoint.lastRepairSeq
-      && canonicalJson(answer.hpUnits) === canonicalJson(checkpoint.hpUnits);
-    if (accepted) current.recoveryHealthPersistedSignature = canonicalJson({ hpUnits: checkpoint.hpUnits,
-      basisRepairSeq: checkpoint.basisRepairSeq });
-    return accepted ? { ok: true } : { ok: false, code: answer?.reason ?? answer?.code ?? 'health_sync_required' };
-  }
-
-  function advanceRecoveryThrough(current, throughTick) {
-    if (!Number.isInteger(throughTick) || throughTick < current.recoveryDriver.nextTick
-      || !current.recoveryReplay.canAdvanceThrough(throughTick)) return current.recoveryDriver.nextTick > throughTick;
-    const emitted = [], fresh = [];
-    while (current.recoveryDriver.nextTick <= throughTick && !current.sim.done) {
-      const tick = current.recoveryDriver.nextTick;
-      const advanced = current.recoveryDriver.advanceThrough(tick, (simTick, journal) => {
-        const inputs = journal.map(simulationInputFromJournal).filter(Boolean);
-        const repairing = journal.some(event => event.type === 'structure_repaired');
-        const before = repairing ? current.sim.recoveryHealthVector() : null;
-        const out = current.sim.step(TICK_SECONDS, inputs);
-        const after = repairing ? current.sim.recoveryHealthVector() : null;
-        if (!repairing) { /* nothing to check */ } else if (!before || !after) current.recoveryInvalid = true;
-        else {
-          const expected = { ...before.basisRepairSeq };
-          let repairs = 0;
-          for (const event of journal) if (event.type === 'structure_repaired') {
-            const id = event.payload?.instanceId, sequence = event.payload?.repairSeq;
-            if (!Object.hasOwn(expected, id) || !Number.isInteger(sequence) || sequence !== expected[id] + 1) current.recoveryInvalid = true;
-            else { expected[id] = sequence; repairs++; }
-          }
-          if (JSON.stringify(expected) !== JSON.stringify(after.basisRepairSeq)) current.recoveryInvalid = true;
-          else current.recoveryLastRepairSeq += repairs;
-        }
-        tagActors(out, journal);
-        emitted.push(...out); fresh.push(...out);
-        if (simTick !== tick) current.recoveryInvalid = true;
-      });
-      if (!advanced || current.recoveryInvalid) return false;
-      current.ticks = tick + 1;
-    }
-    current.state = current.sim.state();
-    if (emitted.length) handle(emitted, current, fresh);
-    if (current.sim.done) end(current);
-    return current.recoveryDriver.nextTick > throughTick;
-  }
-
-  function reconcileTerminalRecovery(current) {
-    const replay = current?.recoveryReplay;
-    if (!current?.done || !replay?.complete() || !Number.isInteger(replay.sealedThroughTick)
-      || replay.sealedThroughTick < current.recoveryDriver.nextTick) return false;
-    const through = Math.min(replay.sealedThroughTick, current.recoveryDriver.nextTick + MAX_TICKS_PER_FRAME - 1);
-    let changed = false;
-    const advanced = current.recoveryDriver.advanceThrough(through, (_tick, journal) => {
-      const vector = current.sim.recoveryHealthVector();
-      if (!vector) { current.recoveryInvalid = true; return; }
-      for (const event of journal) {
-        if (event.type !== 'structure_repaired') continue;
-        const id = event.payload?.instanceId, seq = event.payload?.repairSeq;
-        if (!Object.hasOwn(vector.basisRepairSeq, id) || !Number.isInteger(seq) || seq !== vector.basisRepairSeq[id] + 1
-          || !current.sim.applyRecoveryEvent(event)) { current.recoveryInvalid = true; return; }
-        vector.basisRepairSeq[id] = seq;
-        current.recoveryLastRepairSeq++;
-        changed = true;
-      }
-    });
-    if (changed) current.state = current.sim.state();
-    return advanced;
-  }
-
-  function tryRecoveryFinish(current) {
-    if (!current?.recoveryFinishPending || current.recoveryFinishing || current.recoveryFinishAnswered
-      || current.recoveryFinishFailed || !current.done || current.recoveryInvalid || current.recoverySending
-      || current.recoveryPolling || !current.recoveryReplay?.complete()
-      || now() < current.recoveryFinishRetryAt) return false;
-    const replay = current.recoveryReplay;
-    // The server owns the end: it takes our own complete prefix (the ticks this sim ran, the head it read),
-    // not the seal of the moment, which every poll of a teammate moves on.
-    const throughTick = current.recoveryDriver.nextTick - 1;
-    if (!Number.isInteger(replay.sealedThroughTick) || throughTick < 0 || throughTick > replay.sealedThroughTick) return false;
-    const vector = current.sim.recoveryHealthVector();
-    const structures = current.info.initialSnapshot.structures;
-    if (!vector || structures.length !== Object.keys(vector.hpUnits).length
-      || structures.some(row => !Object.hasOwn(vector.hpUnits, row.instanceId) || !Object.hasOwn(vector.basisRepairSeq, row.instanceId))) {
-      current.recoveryInvalid = true; return false;
-    }
-    const existing = current.recoveryFinishRequest;
-    const checkpointUid = existing?.checkpoint.throughTick === throughTick && existing.checkpoint.inputHeadSeq === replay.headSeq
-      && existing.checkpoint.lastRepairSeq === current.recoveryLastRepairSeq ? existing.checkpoint.checkpointUid : makeActionUid();
-    const body = { waveId: current.info.waveId, survived: current.result.survived, shipsSunk: current.result.shipsSunk,
-      ...(current.result.bonuses?.length ? { bonuses: [...current.result.bonuses] } : {}),
-      ...(current.result.rescued === true ? { rescued: true } : {}), waveProtocol: 2,
-      checkpoint: { islandEpoch: current.info.initialSnapshot.islandEpoch, checkpointUid, throughTick,
-        inputHeadSeq: replay.headSeq, lastRepairSeq: current.recoveryLastRepairSeq,
-        basisRepairSeq: vector.basisRepairSeq, hpUnits: vector.hpUnits } };
-    current.recoveryFinishRequest = body;
-    current.recoveryFinishing = true;
-    Promise.resolve().then(() => recoveryTransport.finishWave(body)).then(answer => {
-      const recovered = answer?.data?.recovery;
-      const completeClose = answer?.ok === true && validCanonicalClose(recovered, current);
-      // A close answered after the next wave started still pays (and says so); a refusal then no longer matters.
-      if (wave !== current && !completeClose) return;
-      if (completeClose) {
-        current.answer = answer.data;
-        current.recoveryFinishAnswered = true;
-        current.recoveryFinishPending = false;
-        roundLoot(current, answer.data.loot);
-        emitRecoveryFinish(current.info.waveId, answer.data, current.result.survived);
-        return;
-      }
-      const refusal = answer?.ok === true ? { refused: true, status: 502, code: 'unreadable' }
-        : answer == null ? recoveryRefusal(null) : recoveryRefusal(answer);
-      const kind = refusalKind(refusal);
-      const delay = refusalDelayMs(refusal, current.recoveryFinishAttempts++);
-      if (kind === 'refresh') {
-        // Read the journal again, then a new checkpoint; paced, so a refusal loop cannot use up the budget.
-        current.recoveryFinishRequest = null;
-        current.recoveryLastPollAt = -Infinity;
-        current.recoveryPollRetryAt = -Infinity;
-        current.recoveryFinishRetryAt = now() + delay;
-      } else if (kind === 'later') {
-        // An unknown outcome retries byte-for-byte with the same checkpoint UID.
-        current.recoveryFinishRetryAt = now() + delay;
-      } else {
-        console.warn(`Recovery finish refused (${refusal.code}).`);
-        current.recoveryFinishFailed = true;
-        if (current.pause) current.pause.failed = true;
-      }
-    }).catch(error => {
-      console.error(error);
-      current.recoveryFinishRetryAt = now() + refusalDelayMs(null, current.recoveryFinishAttempts++);
-    }).finally(() => { current.recoveryFinishing = false; });
-    return true;
-  }
-  const emitRecoveryFinish = (waveId, data, survived, extra = {}) => emit({ type: 'wave_finish_answered', waveId, loot: data.loot ?? null, runLoot,
-    recovery: data.recovery, coins: data.coins, waveBest: data.waveBest, flags: data.flags, survived: survived === true, ...extra });
-  // A friend rang the next wave before this recovery wave ended on this screen: the server closed it already
-  // (a bell is refused while one runs), so our part goes in now with what this sim has; the server pays the
-  // outcome of the first close. Retried under the refusal policy, never longer than a few tries.
-  function handOffRecoveryFinish(current, tries = 5, extra = {}) {
-    if (!current.recoveryReplay || current.recoveryFinishAnswered || current.recoveryFinishFailed || current.recoveryFinishing) return;
-    const vector = current.sim.recoveryHealthVector();
-    if (!vector) return;
-    const result = current.result ?? current.sim.result();
-    const body = { waveId: current.info.waveId, survived: result.survived === true, shipsSunk: result.shipsSunk ?? 0, waveProtocol: 2,
-      checkpoint: { islandEpoch: current.info.initialSnapshot.islandEpoch, checkpointUid: makeActionUid(),
-        throughTick: Math.max(0, current.recoveryDriver.nextTick - 1), inputHeadSeq: current.recoveryReplay.headSeq ?? 0,
-        lastRepairSeq: current.recoveryLastRepairSeq, basisRepairSeq: vector.basisRepairSeq, hpUnits: vector.hpUnits } };
-    current.recoveryFinishing = true;
-    let attempt = 0;
-    const send = () => Promise.resolve().then(() => recoveryTransport.finishWave(body)).then(answer => {
-      if (answer?.ok === true && validCanonicalClose(answer.data?.recovery, current)) {
-        current.recoveryFinishAnswered = true;
-        // The old wave's loot is its own round (the island's toast says it), never the new wave's chip.
-        if (Number.isFinite(answer.data.loot)) current.roundLoot = answer.data.loot;
-        emitRecoveryFinish(current.info.waveId, answer.data, answer.data.survived ?? result.survived, extra);
-        return;
-      }
-      const refusal = answer == null ? recoveryRefusal(null) : recoveryRefusal(answer);
-      if (refusalKind(refusal) === 'terminal' || ++attempt >= tries) { current.recoveryFinishFailed = true; return; }
-      later(send, refusalDelayMs(refusal, attempt));
-    }, error => { console.error(error); if (++attempt < tries) later(send, refusalDelayMs(null, attempt)); });
-    void send();
-  }
-  function receive(type, payload) {
-    if (!wave || wave.done) return;
-    // Recovery v1 accepts commands only from durable replay; the room only draws teammates' actions sooner.
-    if (wave.info.recoveryVersion === 1) { if (wave.recoveryReplay) receiveCosmetic(wave, type, payload); return; }
-    const entry = readMessage(type, payload, wave.info.waveId);
-    if (!entry || entry.by === actorId(wave)) return;
-    if (entry.input.type === 'lamps_lit') wave.lampsSent = true; // somebody else lit them first
-    wave.schedule.add(entry, wave.ticks);
-  }
-
-  // The captain's gun: at a ship or boarder (a tap) or the nearest in range (F), from where the player
-  // stands. A boarder within cutlass reach gets the cutlass instead (close quarters, §12). A spray
-  // (blunderbuss) and a bomb (fire bombs) also carry the aim point: the target's place.
-  // The guided start (T52) waits for your own attack: captain_attack {weapon: 'gun' | 'cutlass'} (not the automatic blade).
-  const attacked = (weapon, ok) => { if (ok) emit({ type: 'captain_attack', weapon }); return ok; };
-  function shoot(targetId = null) {
-    const player = world.player?.position;
-    if (!wave || wave.done || !player || !here() || isDown(wave) || finishing(wave)) return false;
-    const stats = myStats(), state = wave.state;
-    const named = targetId ? pirateById(state, targetId) : null;
-    wave.handAt = wave.ticks * TICK_SECONDS; // an attack of yours: the automatic cutlass waits (D052)
-    // Close quarters: the named boarder in reach, else (F, or a tap on a boarder further away) the nearest boarder
-    // in reach. A musket at point blank is no use with a pirate in your face.
-    const isBoarder = named?.id?.startsWith('boarder_');
-    const close = isBoarder && Math.hypot(named.x - player.x, named.z - player.z) <= stats.sweepRadius
-      ? named : !targetId || isBoarder ? bladeTarget(player, state, myStats().sweepRadius) : null;
-    if (close) return attacked('cutlass', strike(close));
-    const target = targetId ? named : captainTarget(player, state, myLevel(), stats.range);
-    if (!target || Math.hypot(target.x - player.x, target.z - player.z) > stats.range) return false;
-    return attacked('gun', fireAt(stats, player, target, { x: target.x, z: target.z }));
-  }
-  function fireAt(stats, player, target, point) {
-    const t = wave.ticks * TICK_SECONDS;
-    if (t - wave.captainAt < stats.reload) return false;
-    const round = value => Math.round(value * 100) / 100;
-    const aimed = stats.mode === 'cone' || stats.mode === 'area' ? { ax: round(point.x), az: round(point.z) } : {};
-    const input = { type: 'captain_shot', by: playerId, targetId: target?.id ?? null, level: stats.level, skills: mySkills(), weapon: stats.weapon,
-      x: round(player.x), z: round(player.z), ...aimed, ...seenTick(wave) };
-    if (!submit(input)) return false;
-    wave.captainAt = t + INPUT_LEAD_TICKS * TICK_SECONDS;
-    if (wave.recoveryReplay) {
-      const event = cosmeticShot(wave, actorId(wave), stats, input, target, t);
-      if (event) predict(wave, event, stats.mode === 'area' ? null : 'pirate-musket', input);
-    }
-    return true;
-  }
-  // The tick the shooter sees (recovery waves): the sim checks reach and range at it (sim.js seenPlace).
-  const seenTick = current => (current.recoveryReplay && Number.isFinite(current.state?.time)
-    ? { seen: Math.max(0, Math.round(current.state.time / TICK_SECONDS)) } : {});
-  // The drawing of a captain's shot before the journal replays it, for every gun: a ball at the target (single,
-  // pierce), a spray over the cone, a bomb on its arc with its burst where it lands (a bomb's burst and a ball's
-  // hit flash are drawn at their landing time too). Drawing only; the replayed copies are not drawn again.
-  function cosmeticShot(current, by, stats, input, target, t) {
-    const x = input.x, z = input.z, base = { type: 'captain_fired', t, by, level: stats.level, weapon: stats.weapon, mode: stats.mode, x, z };
-    const aim = Number.isFinite(input.ax) && Number.isFinite(input.az) ? { x: input.ax, z: input.az } : target ? { x: target.x, z: target.z } : null;
-    if (!aim) return null;
-    if (stats.mode === 'area') {
-      const d = Math.hypot(aim.x - x, aim.z - z), reach = Math.min(d, stats.range), k = d > 0 ? reach / d : 0;
-      const toX = x + (aim.x - x) * k, toZ = z + (aim.z - z) * k, flight = stats.flight + reach * stats.flightPerUnit;
-      later(() => drawPredicted(current, { type: 'captain_blast', t: t + flight, by: `captain:${by}`, x: toX, z: toZ, radius: stats.radius, hits: 0 },
-        'pirate-splash', null), flight * 1000);
-      return { ...base, toX, toZ, impactAt: t + flight, radius: stats.radius, targets: [] };
-    }
-    if (stats.mode === 'cone') {
-      const heading = Math.atan2(aim.z - z, aim.x - x);
-      return { ...base, toX: x + Math.cos(heading) * stats.range, toZ: z + Math.sin(heading) * stats.range,
-        impactAt: t + stats.range / stats.shotSpeed, cone: stats.cone, heading, targets: [] };
-    }
-    if (!target) return null;
-    const reach = Math.hypot(target.x - x, target.z - z), flight = reach / stats.shotSpeed;
-    // The hit itself, flashed at its landing (the sim may still refuse it; the journal's damage is the truth).
-    later(() => {
-      const now2 = pirateById(current.state, target.id);
-      if (!now2 || wave !== current) return;
-      drawPredicted(current, target.id.startsWith('boarder_')
-        ? { type: 'boarder_hit', t: t + flight, boarderId: target.id, by: `captain:${by}`, x: now2.x, z: now2.z }
-        : { type: 'ship_hit', t: t + flight, shipId: target.id, kind: now2.kind, by: `captain:${by}`, x: now2.x, z: now2.z }, null, null);
-    }, flight * 1000);
-    return { ...base, toX: target.x, toZ: target.z, impactAt: t + flight, targets: [] };
-  }
-  // Recovery waves run their sim a playout behind real time and an input lands a few ticks ahead, so your own
-  // shot or swing would show about a second after the press. It is drawn and heard at once instead (drawing
-  // only: hits and damage still come from the replayed journal), and the replayed copy of it is not drawn again.
-  // A recovery wave behind its playout (a tab that was hidden, a slow first read): say so instead of a frozen
-  // picture while the replay runs 30 s of wave a frame. A wave the server closed while we were away (its seal
-  // no longer moves, short of this sim's end) ends here: our finish gets the server's close, the bell is free.
-  function catchUp(current, behind) {
-    const catching = behind > CATCH_UP_TICKS && !current.recoveryClosed;
-    if (catching !== current.catchingUp) {
-      current.catchingUp = catching;
-      current.hud?.banner(catching ? 'Catching up…' : '', catching ? 'Playing back the wave since you were away.' : '');
-      emit({ type: 'recovery_catching_up', waveId: current.info.waveId, catching });
-    }
-    const replay = current.recoveryReplay;
-    if (!current.recoveryClosed || current.recoveryClosedAway || !replay.complete()
-      || current.recoveryDriver.nextTick <= replay.sealedThroughTick) return;
-    current.recoveryClosedAway = true;
-    current.hud?.banner('Wave over', 'This wave ended while you were away.');
-    emit({ type: 'recovery_closed_away', waveId: current.info.waveId });
-    handOffRecoveryFinish(current, 5, { away: true });
-    later(() => { if (wave === current) stop(); }, LOST_BEAT_MS);
-  }
-  // Your own: drawn here, and told to the room so teammates draw it at once too (input = the journal command).
-  function predict(current, event, sound, input = null) {
-    drawPredicted(current, event, sound, current.actorCounter);
-    if (!input || !room?.send) return;
-    const at = now(), sent = current.cosmeticSent;
-    while (sent.length && at - sent[0] > 1000) sent.shift();
-    if (sent.length >= COSMETIC_PER_SECOND) return;
-    const message = toMessage({ ...input, by: actorId(current) },
-      { by: actorId(current), seq: current.actorCounter, tick: current.ticks, waveId: current.info.waveId });
-    if (!message) return;
-    sent.push(at);
-    try { if (room.send(message.type, message.payload)) emit({ type: 'recovery_cosmetic_sent', kind: message.type }); }
-    catch (error) { console.error(error); }
-  }
-  function drawPredicted(current, event, sound, counter) {
-    current.renderer?.events([event]); poses.note([event]);
-    if (sound) cue(sound);
-    const queue = current.predicted ??= [];
-    queue.push({ type: event.type, by: event.by, target: event.boarderId ?? event.shipId ?? null,
-      counter: Number.isSafeInteger(counter) ? counter : null, at: now() });
-    while (queue.length > 32) queue.shift();
-  }
-  // The replayed copy of a drawn action (by the same captain, the same journal input when the counter is
-  // known): not drawn again. A prediction the journal never replays is forgotten after a few seconds.
-  function predictedCopy(current, event) {
-    const queue = current.predicted;
-    if (!queue?.length) return false;
-    while (queue.length && now() - queue[0].at > PREDICTION_TIMEOUT_MS) queue.shift();
-    const target = event.boarderId ?? event.shipId ?? null;
-    const same = item => item.type === event.type && item.by === event.by && (item.target ?? null) === target;
-    let index = queue.findIndex(item => same(item) && item.counter !== null && item.counter === event.actorCounter);
-    if (index < 0) index = queue.findIndex(item => same(item) && (item.counter === null || !Number.isSafeInteger(event.actorCounter)));
-    if (index < 0) return false;
-    queue.splice(index, 1);
-    return true;
-  }
-  // The journal command behind a captain's shot or swing in one tick: its actor counter, for predictedCopy.
-  function tagActors(out, journal) {
-    for (const event of out) {
-      if (event.type !== 'captain_fired' && event.type !== 'captain_struck') continue;
-      const kind = event.type === 'captain_fired' ? 'captain_shot' : 'captain_strike';
-      const source = journal.find(item => item.participantToken === event.by && item.payload?.command?.type === kind);
-      if (Number.isSafeInteger(source?.payload?.actorCounter)) event.actorCounter = source.payload.actorCounter;
-    }
-  }
-  // A teammate's shot or swing from the room, drawn at once (drawing only: hits, damage, kills, HP and loot
-  // come from the replayed journal). Validated, from a participant of this wave, at most 8 a second each.
-  function receiveCosmetic(current, type, payload) {
-    if (type !== ROOM_EVENTS.captain_shot && type !== ROOM_EVENTS.captain_strike) return;
-    const entry = readMessage(type, payload, current.info.waveId);
-    if (!entry || entry.by === actorId(current) || !current.shown || current.state?.phase !== 'running') return;
-    if (!participantOf(current, entry.by)) return;
-    const at = now(), heard = current.cosmeticHeard.get(entry.by) ?? [];
-    while (heard.length && at - heard[0] > 1000) heard.shift();
-    if (heard.length >= COSMETIC_PER_SECOND) return;
-    heard.push(at); current.cosmeticHeard.set(entry.by, heard);
-    const input = entry.input, t = current.ticks * TICK_SECONDS, state = current.state;
-    if (input.type === 'captain_shot') {
-      const stats = captainStats(input.level, input.skills, input.weapon, { recoveryVersion: 1 });
-      const event = cosmeticShot(current, entry.by, stats, input, pirateById(state, input.targetId), t);
-      if (!event) return;
-      drawPredicted(current, event, stats.mode === 'area' ? null : 'pirate-musket', entry.seq);
-    } else {
-      const boarder = pirateById(state, input.targetId);
-      if (!boarder) return;
-      const stats = captainStats(input.level, input.skills, 'musket', { recoveryVersion: 1 });
-      drawPredicted(current, { type: 'captain_struck', t, by: entry.by, targetId: boarder.id, level: input.level,
-        radius: stats.sweepRadius, x: input.x, z: input.z, toX: boarder.x, toZ: boarder.z }, 'pirate-slash', entry.seq);
-    }
-    emit({ type: 'recovery_cosmetic_drawn', by: entry.by, kind: type });
-  }
-  const participantOf = (current, token) => current.info.initialSnapshot?.participants?.some(item => item?.participantToken === token)
-    || current.recoveryReplay.participantTokens().has(token);
-  // Free aim (owner, 11 Nov: "shooting when not pressing on something"): a click or tap anywhere fires
-  // your gun that way. A single or piercing shot hits the ship or boarder tapped, else the one in range
-  // nearest to the aim point (within AIM_RADIUS of it); with none there the shot is a visible miss on this
-  // screen only (nothing to sync). A spray and a bomb always fly towards the aim point (the sim finds the
-  // hits, ships and boarders alike).
-  function aimAt(point, target) {
-    const player = world.player?.position;
-    if (!wave || wave.done || !point || !player || !here() || wave.state.phase !== 'running' || isDown(wave) || finishing(wave)) return false;
-    const stats = myStats();
-    wave.handAt = wave.ticks * TICK_SECONDS; // an attack of yours: the automatic cutlass waits (D052)
-    if (stats.mode === 'cone' || stats.mode === 'area') return attacked('gun', fireAt(stats, player, target ?? null, target ?? point));
-    const inRange = item => Math.hypot(item.x - player.x, item.z - player.z) <= stats.range;
-    let hit = target && inRange(target) ? target : null;
-    if (!hit) {
-      let best = AIM_RADIUS;
-      for (const item of [...(wave.state.boarders ?? []), ...wave.state.ships]) {
-        const d = Math.hypot(item.x - point.x, item.z - point.z);
-        if (d <= best && inRange(item)) { best = d; hit = item; }
-      }
-    }
-    if (hit) return shoot(hit.id);
-    const t = wave.ticks * TICK_SECONDS;
-    if (t - wave.captainAt < stats.reload) return false;
-    wave.captainAt = t;
-    const dx = point.x - player.x, dz = point.z - player.z, length = Math.hypot(dx, dz) || 1, reach = Math.min(length, stats.range);
-    const toX = player.x + dx / length * reach, toZ = player.z + dz / length * reach;
-    const shot = [{ type: 'captain_fired', t, by: actorId(wave), level: stats.level, weapon: stats.weapon, mode: stats.mode,
-      x: player.x, z: player.z, toX, toZ, impactAt: t + reach / stats.shotSpeed, miss: true, targets: [] }];
-    wave.renderer?.events(shot); poses.note(shot);
-    cue('pirate-musket');
-    return attacked('gun', true);
-  }
-  // The cutlass: one blow at a boarder within reach, synced as captain_strike with your skills (Brawler:
-  // the sim scales damage and reload and sweeps with them; the reload here matches it).
-  const bladeReload = () => CONFIG.captain.cutlass.reload * myStats().strikeReloadMultiplier;
-  function strike(boarder, reload = bladeReload()) {
-    const player = world.player?.position, t = wave.ticks * TICK_SECONDS;
-    if (t - wave.bladeAt < reload - 1e-9) return false;
-    const input = { type: 'captain_strike', by: playerId, targetId: boarder.id, level: myLevel(), skills: mySkills(),
-      x: Math.round(player.x * 100) / 100, z: Math.round(player.z * 100) / 100, ...seenTick(wave) };
-    if (!submit(input)) return false;
-    wave.bladeAt = t + INPUT_LEAD_TICKS * TICK_SECONDS;
-    if (wave.recoveryReplay) {
-      predict(wave, { type: 'captain_struck', t, by: actorId(wave), targetId: boarder.id, level: myLevel(),
-        radius: myStats().sweepRadius, x: input.x, z: input.z, toX: boarder.x, toZ: boarder.z }, 'pirate-slash', input);
-      // The blade's hit next to you, at once (the replayed boarder_hit is not flashed again).
-      drawPredicted(wave, { type: 'boarder_hit', t, boarderId: boarder.id, by: `captain:${actorId(wave)}`, blade: true, x: boarder.x, z: boarder.z },
-        null, null);
-    }
-    return true;
-  }
-  // Close quarters (D052): with a boarder in cutlass reach and no attack of yours for AUTO_BLADE.after seconds, your
-  // captain swings by themself every AUTO_BLADE.reload seconds (slower than your own F). The same captain_strike.
-  let autoBlade = true; // the browser checks turn it off to let a captain fall on purpose (controller.autoBlade)
-  function autoStrike(current, player) {
-    const t = current.ticks * TICK_SECONDS, target = bladeTarget(player, current.state, myStats().sweepRadius);
-    if (!target || t - (current.handAt ?? -Infinity) < AUTO_BLADE.after - 1e-9) return false;
-    return strike(target, Math.max(bladeReload(), AUTO_BLADE.reload));
-  }
-  function captainShare(current) {
-    const reload = myStats().reload, t = current.ticks * TICK_SECONDS;
-    return Math.max(0, Math.min(1, (t - current.captainAt) / reload));
-  }
-  function bladeShare(current) {
-    const t = current.ticks * TICK_SECONDS;
-    return Math.max(0, Math.min(1, (t - current.bladeAt) / bladeReload()));
-  }
-
-  // Captain health (GAME-V3.md §3).
-  const meIn = current => current?.state?.party?.find(hero => hero.id === actorId(current)) ?? null;
-  const isDown = current => !!current && !current.done && meIn(current)?.down === true;
-  const colourNow = () => { const value = Number(read(captainColour, 0)); return Number.isInteger(value) && value >= 0 && value <= 9 ? value : 0; };
-  const roomSize = current => Math.max(1, current.state.party?.length ?? 1);
-  // A position may wait in the room's send queue for one gap, so it is stamped that much further ahead:
-  // it still arrives before its tick on every screen.
-  const moveLead = current => INPUT_LEAD_TICKS + Math.ceil(waveGapMs(roomSize(current)) / 1000 / TICK_SECONDS);
-  // Your position for the sims: after a move (MOVE_STEP) once the gap passed, else at least every
-  // HEARD_EVERY_MS; once `away` when the island is no longer on screen (another place) during the wave.
-  function sendPosition(current, player) {
-    if (current.done || current.state.phase !== 'running' || finishing(current)) return; // v3 waves: no moves while the battle stands still
-    if (!current.shown || !player) {
-      if (current.moveSent && !current.awaySent && submit({ type: 'captain_move', by: playerId, ...current.moveSent, away: true }, moveLead(current))) current.awaySent = true;
-      return;
-    }
-    const t = now(), gap = Math.max(MOVE_EVERY_MS, 2 * waveGapMs(roomSize(current)));
-    const at = current.pin ?? player; // a fallen captain lies where they fell
-    const moved = !current.moveSent || current.awaySent || Math.hypot(at.x - current.moveSent.x, at.z - current.moveSent.z) >= MOVE_STEP;
-    const heard = current.recoveryReplay ? RECOVERY_HEARD_EVERY_MS : HEARD_EVERY_MS;
-    if (t - current.moveSentAt < (moved ? gap : Math.max(gap, heard))) return;
-    const round = value => Math.round(value * 100) / 100, x = round(at.x), z = round(at.z);
-    if (!submit({ type: 'captain_move', by: playerId, x, z, colour: colourNow() }, moveLead(current))) return;
-    current.moveSentAt = t; current.moveSent = { x, z }; current.awaySent = false;
-  }
-  // The fallen teammate within revive reach of where you stand (never yourself), or null.
-  function fallenNear(current, player) {
-    let best = null, near = CONFIG.health.revive.reach;
-    for (const hero of current.state.party ?? []) {
-      if (!hero.down || !hero.present || hero.id === actorId(current)) continue;
-      const d = Math.hypot(hero.x - player.x, hero.z - player.z);
-      if (d <= near) { best = hero; near = d; }
-    }
-    return best;
-  }
-  // Holding E (or the prompt) next to a fallen teammate: after revive.hold seconds the server charges you
-  // (reviveCaptain), then the revive goes to the room. Let go or walk off and it starts over; after a
-  // refusal, let go before trying again.
-  function holdRevive(current, target, player) {
-    const holding = (holdE || holdPrompt) && !blocked();
-    if (!holding) current.reviveWait = false;
-    if (current.revive?.paying) return;
-    if (!target || !holding || current.reviveWait) { current.revive = null; return; }
-    const t = now();
-    if (current.revive?.targetId !== target.id) current.revive = { targetId: target.id, since: t, share: 0, paying: false };
-    current.revive.share = Math.min(1, (t - current.revive.since) / (myStats().reviveHold * 1000)); // a medic holds 1.2 s, not 2
-    if (current.revive.share < 1) return;
-    current.revive.paying = true; current.reviveWait = true;
-    const round = value => Math.round(value * 100) / 100, at = { x: round(player.x), z: round(player.z) };
-    // The tick of the fall: the sim keeps it in seconds of 50 ms ticks, the same on every screen.
-    const downAt = Math.max(0, Math.round((target.downAt ?? 0) / TICK_SECONDS));
-    Promise.resolve().then(() => (reviveCaptain ? reviveCaptain({ waveId: current.info.waveId, fallen: target.id, downAt }) : null)).then(() => {
-      if (wave !== current) return;
-      current.revive = null;
-      submit({ type: 'captain_revive', by: playerId, targetId: target.id, skills: mySkills(), ...at });
-    }).catch(error => {
-      if (wave !== current) return;
-      current.revive = null;
-      current.reviveNote = { text: error?.message || 'That did not work. Try again.', until: now() + NOTE_MS };
-    });
-  }
-  function revivePrompt(current) {
-    if (current.reviveNote && now() < current.reviveNote.until) return current.reviveNote.text;
-    current.reviveNote = null;
-    if (current.revive?.paying) return 'Helping up…';
-    return `Hold to help up · 🪙 ${helpPrice(current)}`;
-  }
-  // A Tavern on the island (GAME-V3.md "Houses") takes 25% off; the server checks the island's buildings as
-  // they are now, so the island's latest answer decides, else the wave's own defenses.
-  const helpPrice = current => revivePrice(current.info.wave, { tavern: hasTavern(getDefenses() ?? current.defenses) });
-  // The timers over fallen captains (yours where you lie, a teammate's where their sim has them).
-  function fallenMarks(current, player) {
-    if (!world.project || current.done || !current.shown) return [];
-    const marks = [];
-    for (const hero of current.state.party ?? []) {
-      if (!hero.down || !hero.present) continue;
-      const mine = hero.id === actorId(current), at = mine && current.pin ? current.pin : hero;
-      const point = world.project(at.x, at.z, 2.6);
-      if (point) marks.push({ id: hero.id, x: point.x, y: point.y, seconds: Math.max(0, Math.floor(current.state.time - (hero.downAt ?? current.state.time))), mine });
-    }
-    return marks;
-  }
-
-  // The break after a won wave.
-  function setAuto(value) { auto = value === true; saveAuto(auto); }
-  const held = () => { try { return holdBreak?.() ?? null; } catch { return null; } };
-  function next() {
-    const current = wave;
-    if (current?.recoveryReplay && !current.recoveryFinishAnswered && !current.recoveryFinishFailed) return false;
-    if (!current?.pause || !current.pause.ready || current.pause.requested || !startNextWave) return false;
-    if (held()?.paused) return false; // the room paused the break: Resume first
-    current.pause.requested = true;
-    Promise.resolve().then(() => startNextWave({ wave: current.info.wave + 1, waveId: current.info.waveId })).then(answer => {
-      if (wave !== current || answer?.ok !== false) return;
-      // Refused (a wave already runs there, the server is away): say so and let the player try again.
-      current.pause.requested = false; current.pause.note = answer.message || 'That did not work. Try again.';
-    }).catch(error => {
-      if (wave !== current) return;
-      current.pause.requested = false; current.pause.note = error?.message || 'That did not work. Try again.';
-    });
-    return true;
-  }
-
-  function act() {
-    if (!wave || blocked() || !here() || isDown(wave) || finishing(wave)) return;
-    const input = inputFor(wave.action);
-    // A repair or a rebuild carries your skills (Shipwright: faster repairs, Master shipwright rebuilds to 60%).
-    if (input) submit(input.type === 'repair' || input.type === 'rebuild' ? { ...input, skills: mySkills() } : input);
-  }
-  function tap(clientX, clientY) {
-    if (!wave || wave.done || blocked() || !here() || !world.unproject || isDown(wave) || finishing(wave)) return;
-    const point = world.unproject(clientX, clientY), boarder = point && boarderAt(point, wave.state);
-    if (boarder) { if (!shoot(boarder.id)) aimAt(point, boarder); return; } // a boarder: cutlass or musket
-    const ship = point && shipAt(point, wave.state);
-    const input = wave.action?.kind === 'fire' ? tapInput(wave.action, ship, wave.state) : null;
-    if (input) submit(input);
-    else aimAt(point, ship); // not manning a cannon (or out of its reach): your gun
-  }
-
-  function handle(events, current, fresh) {
-    if (current.predicted?.length) {
-      fresh = fresh.filter(event => !(PREDICTED_KINDS.has(event.type) && predictedCopy(current, event)));
-    }
-    for (const event of events) {
-      emit(event);
-      if (event.type === 'wave_started') current.lanes = event.lanes ?? [];
-      // For the narrator (GAME-V3.md §6): the first boarders ashore in this wave, and the heart crossing
-      // below 30% (once each per wave; narrator/index.js decides what it says).
-      if (event.type === 'boarder_landed' && !current.ashoreTold) {
-        current.ashoreTold = true;
-        emit({ type: 'boarders_ashore', wave: current.info.wave, count: Math.max(1, current.sim.state().boarders?.length ?? 1) });
-      }
-      if (event.type === 'island_damaged' && !current.heartTold && Number.isFinite(event.hp)) {
-        const max = current.state?.maxIslandHp ?? current.sim.state().maxIslandHp;
-        if (max > 0 && event.hp / max < HEART_WARN) { current.heartTold = true; emit({ type: 'heart_changed', hp: event.hp, max }); }
-      }
-      if (event.type === 'ship_sunk' && event.kind === 'flagship') { current.flagshipSunk = true; current.lampsRelit = event.by === 'lamps'; }
-    }
-    if (current.shown) { current.renderer?.events(fresh); poses.note(fresh); }
-    if (current.shown) current.eventArt?.events(fresh);
-    // v3 waves, for the narrator: the wave's event (its line the first time in this game) and a boss finisher.
-    for (const event of fresh) {
-      if (event.type === 'wave_event') emit({ type: 'wave_event_announced', event: event.event, wave: event.wave });
-      else if (event.type === 'finisher_started') { emit({ type: 'finisher_moment', kind: event.kind, phase: 'start' }); cue('pirate-bell'); }
-      else if (event.type === 'finisher_won') { emit({ type: 'finisher_moment', kind: event.kind, phase: 'won' }); cue('pirate-victory'); }
-      else if (event.type === 'ship_spawned' && event.boss) cue('pirate-horn');
-      else if (event.type === 'finisher_failed') { emit({ type: 'finisher_moment', kind: event.kind, phase: 'failed' }); cue('pirate-wall'); }
-    }
-    // Captain health for the narrator (GAME-V3.md §6): only what happens now, not a late joiner's catching up.
-    for (const event of fresh) {
-      if (event.type === 'captain_fell') emit({ type: 'player_fell', playerId: event.captainId, self: event.captainId === actorId(current) });
-      else if (event.type === 'captain_revived') emit({ type: 'player_revived', playerId: event.captainId, self: event.captainId === actorId(current), by: event.by });
-      else if (event.type === 'wave_ended' && event.reason === 'captains_fallen') emit({ type: 'captains_all_fallen' });
-    }
-    for (const event of fresh) {
-      if (event.type === 'cannon_fired') {
-        cue(event.manual ? 'pirate-cannon-manual' : 'pirate-cannon');
-        if (!event.hit) current.splashesAt.push(event.impactAt);
-      } else if (event.type === 'mortar_fired') cue('pirate-mortar');
-      else if (event.type === 'harpoon_thrown') cue('pirate-harpoon'); // T4's harpoon twang
-      else if (event.type === 'culverin_fired') { cue('pirate-culverin'); kick(.05); } // T43: the long gun's deep boom
-      else if (event.type === 'swivel_fired') cue('pirate-musket'); // D055: the swivel nest's short crack
-      else if (event.type === 'mortar_impact') { cue('pirate-mortar-impact'); cue(event.hits ? 'pirate-hit' : 'pirate-splash'); kick(.08); }
-      else if (event.type === 'captain_fired') cue('pirate-musket');
-      else if (event.type === 'captain_blast') { cue(event.hits ? 'pirate-hit' : 'pirate-splash'); kick(.06); } else if (event.type === 'ship_hit' && !event.blocked) cue('pirate-hit');
-      else if (event.type === 'captain_struck') cue('pirate-slash'); // melee: a blade's whoosh, not the musket's crack
-      else if (event.type === 'boarder_killed') cue('pirate-hit');
-      else if (event.type === 'ship_sunk') { cue('pirate-sunk'); if (event.kind === 'flagship') kick(.5); }
-      else if (event.type === 'wall_damaged') cue('pirate-wall');
-      else if (event.type === 'island_damaged') { cue('pirate-wall'); kick(.18); }
-    }
-    onEvents?.(events);
-  }
-
-  function kick(amount) { if (!reducedMotion() && wave?.shown) shake = Math.max(shake, amount); }
-
-  function update(dt = 0) {
-    updateGuide(dt);
-    if (disposed || !wave) return;
-    const current = wave;
-    pumpRecovery(current, now());
-    // The island's display of structure health follows the replay, at most 4 times a second, and only while
-    // a recovery wave is on (no timer outside one).
-    if (current.recoveryReplay && now() - (current.recoveryPublishedAt ?? -Infinity) >= 250) {
-      current.recoveryPublishedAt = now();
-      emit({ type: 'recovery_combat_changed', waveId: current.info.waveId });
-    }
-    lastWave = current.info.wave;
-    current.shown = here();
-    current.renderer?.setVisible(current.shown);
-    current.hud?.setVisible(current.shown);
-    const elapsed = (now() + current.offset - current.info.startsAtMs) / 1000;
-    if (!current.done && elapsed >= 0) {
-      if (current.recoveryReplay) {
-        const target = recoveryPlayoutTarget(current.recoveryRttMs, recoveryPlayoutMs), step = PLAYOUT_SLEW_MS * Math.max(0, dt);
-        current.recoveryPlayoutMs += Math.max(-step, Math.min(step, target - current.recoveryPlayoutMs));
-      }
-      const playout = current.recoveryReplay ? current.recoveryPlayoutMs / 1000 : 0;
-      const due = Math.floor((elapsed - playout) / TICK_SECONDS + 1e-6);
-      let budget = MAX_TICKS_PER_FRAME;
-      const events = [], recent = [];
-      // v3 waves: an event is fresh by the tick it came from, not by its sim time (a finisher freezes the
-      // sim's clock while real time runs on, so its outcome's t lies seconds behind).
-      const lateTicks = Math.round(SHOWN_LATE_SECONDS / TICK_SECONDS);
-      while (current.ticks < due && budget-- > 0 && !current.sim.done) {
-        if (current.recoveryReplay) {
-          const tick = current.ticks;
-          const advanced = current.recoveryDriver.advanceThrough(tick, (simTick, journal) => {
-            const inputs = journal.map(simulationInputFromJournal).filter(Boolean);
-            // The health vector checks a paid repair's fence; a tick without one needs neither.
-            const repairing = journal.some(event => event.type === 'structure_repaired');
-            const before = repairing ? current.sim.recoveryHealthVector() : null;
-            const out = current.sim.step(TICK_SECONDS, inputs);
-            const after = repairing ? current.sim.recoveryHealthVector() : null;
-            if (!repairing) { /* nothing to check */ } else if (!before || !after) current.recoveryInvalid = true;
-            else {
-              const expected = { ...before.basisRepairSeq };
-              let repairs = 0;
-              for (const event of journal) if (event.type === 'structure_repaired') {
-                const id = event.payload?.instanceId, sequence = event.payload?.repairSeq;
-                if (!Object.hasOwn(expected, id) || !Number.isInteger(sequence) || sequence !== expected[id] + 1) current.recoveryInvalid = true;
-                else { expected[id] = sequence; repairs++; }
-              }
-              if (JSON.stringify(expected) !== JSON.stringify(after.basisRepairSeq)) current.recoveryInvalid = true;
-              else current.recoveryLastRepairSeq += repairs;
-            }
-            tagActors(out, journal);
-            events.push(...out); if (simTick >= due - lateTicks) recent.push(...out);
-          });
-          if (!advanced) break;
-        } else {
-          const out = current.sim.step(TICK_SECONDS, current.schedule.take(current.ticks));
-          events.push(...out); if (current.ticks >= due - lateTicks) recent.push(...out);
-        }
-        current.ticks++;
-      }
-      current.state = current.sim.state();
-      if (events.length) handle(events, current, recent);
-      if (current.sim.done) end(current);
-      if (current.recoveryReplay && !current.done) catchUp(current, due - current.ticks);
-    }
-    if (wave !== current) return;
-    // v3 waves: the event's banner and drawing, and a running finisher's scene.
-    current.hud?.event?.(current.eventId && !current.done ? { id: current.eventId, icon: EVENT_ICONS[current.eventId], ...EVENT_TEXT[current.eventId],
-      open: current.state.time < EVENT_BANNER_SECONDS } : null);
-    current.eventArt?.setVisible(current.shown && !current.done);
-    current.eventArt?.update({ state: current.state, dt });
-    updateFinisher(current, dt);
-    const boss = finishing(current) ? current.state.finisher : null, standing = world.player?.position;
-    if (world.camera?.userData && boss && current.shown && standing) {
-      // The camera pushes in on the boss (the camera eases there; with reduced motion it simply goes).
-      world.camera.userData.battleZoom = 1; world.camera.userData.battleFocus = { x: boss.x - standing.x, z: boss.z - standing.z + FINISHER_FRAME_Z };
-    } else if (world.camera?.userData) {
-      const data = world.camera.userData;
-      if (current.shown && !current.finished) {
-        data.battleZoom = battleZoom(world.camera);
-        const goal = battleLean(world.player?.position, current.state, current.lanes), k = reducedMotion() ? 1 : 1 - Math.exp(-dt * 1.2);
-        current.lean.x += (goal.x - current.lean.x) * k; current.lean.z += (goal.z - current.lean.z) * k;
-        data.battleFocus = current.lean;
-      } else { delete data.battleZoom; delete data.battleFocus; }
-    }
-    // After the wave ends the sim stops, but its shells, bombs and balls in flight still land on screen: the
-    // drawing clock goes on in real time instead of freezing them in the air through the break.
-    const stepped = Math.max(0, Math.min(elapsed, current.ticks * TICK_SECONDS + TICK_SECONDS));
-    const simTime = current.done ? (current.doneSimTime = (current.doneSimTime ?? stepped) + Math.max(0, dt)) : stepped;
-    for (let i = current.splashesAt.length - 1; i >= 0; i--) if (current.splashesAt[i] <= simTime) { current.splashesAt.splice(i, 1); cue('pirate-splash'); }
-    const seconds = elapsed < 0 ? Math.ceil(-elapsed) : 0;
-    if (seconds !== current.lastCount) { current.lastCount = seconds; if (seconds > 0 && seconds <= 3) cue('pirate-tick'); }
-    current.hud?.countdown(current.done ? 0 : Math.min(seconds, 99));
-    current.hud?.boss?.(current.boss && !current.done && elapsed < BOSS_WARNING_SECONDS ? current.boss : '');
-    // Only actual wave one consumes the device's first-wave hint, for its existing HINT_SECONDS window.
-    if (guideOn && current.info.wave === 1 && current.hud && current.hintShown === undefined) { current.hintShown = !readHint(); if (current.hintShown) writeHint(); }
-    current.hud?.goalHint?.(current.hintShown === true && !current.done && elapsed > -3 && elapsed < HINT_SECONDS);
-    // "+coins" is this round's: the server's loot for this wave and this player, shown once it answered.
-    current.hud?.loot?.(Number.isFinite(current.roundLoot) ? current.roundLoot : null);
-    if (current.pause) updatePause(current);
-    current.hud?.bar(current.done && !current.finished ? current.state : current.state.phase === 'countdown' ? countdownBar(current) : current.state);
-    const player = world.player?.position;
-    const stats = myStats();
-    // Captain health: fallen, you lie where you fell (no walking: game.js asks captainDown too).
-    const fallen = isDown(current), me = meIn(current);
-    if (fallen && player) { current.pin ??= { x: player.x, z: player.z }; player.x = current.pin.x; player.z = current.pin.z; } else current.pin = null;
-    sendPosition(current, player);
-    const running = player && current.shown && !current.done && current.state.phase === 'running';
-    const reviveTarget = running && !fallen && !blocked() ? fallenNear(current, player) : null;
-    holdRevive(current, reviveTarget, player);
-    current.action = !current.done && current.shown && !blocked() && player && !fallen && !finishing(current)
-      ? (reviveTarget ? { kind: 'revive', targetId: reviveTarget.id, price: helpPrice(current), x: reviveTarget.x, z: reviveTarget.z }
-        : withoutFreeRepair(current, actionAt({ x: player.x, z: player.z }, current.defenses, current.state, { repairReach: stats.repairReach }))) : null;
-    if (current.action?.kind === 'revive') current.hud?.prompt(revivePrompt(current), true, current.revive?.share ?? 0);
-    else current.hud?.prompt(promptText(current.action), !!inputFor(current.action));
-    if (pressed) { pressed = false; act(); }
-    if (shootPressed || shootHeld) { shootPressed = false; if (!blocked()) shoot(); }
-    else if (autoBlade && running && !fallen && !blocked() && !finishing(current)) autoStrike(current, player);
-    // The button: "F: Slash" (the cutlass) with a boarder in strike reach, else the equipped weapon's name (none while fallen).
-    const blade = running && !!bladeTarget(player, current.state, stats.sweepRadius);
-    current.hud?.musket?.(running && !fallen && !finishing(current) ? { share: blade ? bladeShare(current) : captainShare(current),
-      ready: blade || !!captainTarget(player, current.state, myLevel(), stats.range), blade, label: stats.name } : null);
-    current.hud?.health?.(me && !current.done && current.shown ? { hp: me.hp, maxHp: me.maxHp, down: me.down } : null);
-    current.hud?.down?.(fallen && current.shown ? { seconds: Math.max(0, Math.floor(current.state.time - (me.downAt ?? current.state.time))),
-      alone: !(current.state.party ?? []).some(hero => hero.id !== actorId(current) && hero.present && !hero.down) } : null);
-    current.hud?.marks?.(fallenMarks(current, player));
-    const captain = player && current.shown && !current.done ? { id: actorId(current), x: player.x, z: player.z, share: captainShare(current), down: fallen } : null;
-    current.renderer?.update({ state: drawnState(current), simTime, dt, captain, figures,
-      revive: current.revive && !current.revive.paying ? { targetId: current.revive.targetId, share: current.revive.share } : null });
-    if (shake > 0 && world.camera) {
-      const t = now() / 1000;
-      world.camera.position.x += Math.sin(t * 61) * shake * .35; world.camera.position.y += Math.cos(t * 53) * shake * .25;
-      shake = Math.max(0, shake - dt * 1.6);
-    }
-  }
-  // A running finisher: the scene (loaded once per finisher), this player's samples to the room in windows.
-  function updateFinisher(current, dt) {
-    const f = current.state.finisher, key = f?.active ? `${f.shipId}:${f.kind}` : null;
-    if (current.finisher && current.finisher.key !== key) { current.finisher.scene?.dispose(); current.finisher = null; }
-    if (!key) return;
-    if (!current.finisher) {
-      const players = f.players.length;
-      const entry = current.finisher = { key, scene: null, recorder: createFinisherRecorder({ players, gapMs: waveGapMs(players) }) };
-      if (world.container) {
-        Promise.resolve(createFinisherScene({ container: world.container, me: actorId(current), easy: () => !!easyFinishers(), reducedMotion, recorder: entry.recorder,
-          practiceIdentity: practiceIdentity(), onReady: () => { entry.ready = true; } }))
-          .then(scene => { if (disposed || current.finisher !== entry || current.finished) scene?.dispose(); else entry.scene = scene; })
-          // A scene that cannot load must not hold the whole crew in the preparation phase: say ready anyway.
-          .catch(error => { console.error(error); entry.ready = true; });
-      }
-    }
-    const entry = current.finisher;
-    if (entry.scene) {
-      entry.scene.element && (entry.scene.element.hidden = !current.shown);
-      entry.scene.update({ finisher: f, dt, boss: world.project?.(f.x, f.z, 1.5) ?? null });
-    }
-    const me = actorId(current);
-    if (f.phase === 'prepare' && f.players.includes(me) && (entry.ready || !world.container)
-      && !f.ready.includes(me) && now() - (entry.readyAt ?? -Infinity) >= 1000) {
-      entry.readyAt = now(); submit({type: 'finisher_ready', by: playerId, shipId: f.shipId});
-    }
-    if (!f.players.includes(me) || f.outcome || !(f.phase === 'task' || f.phase === 'grace')) return;
-    const easy = !!easyFinishers();
-    for (const { from, marks } of entry.recorder.take(now(), f.sample, f.tasks, { force: f.sample >= f.taskEnd })) {
-      submit({ type: 'finisher_input', by: playerId, from, marks, ...(easy ? { easy: true } : {}) });
-    }
-  }
-  const countdownBar = current => ({ wave: current.info.wave, shipsLeft: current.state.total, islandHp: current.state.islandHp, maxIslandHp: current.state.maxIslandHp });
-
-  function updatePause(current) {
-    const pause = current.pause, hold = held();
-    // Paused by the room: the break keeps its full length until Resume.
-    if (hold?.paused) pause.until = Math.max(pause.until, now() + breakSeconds * 1000);
-    const left = Math.max(0, Math.ceil((pause.until - now()) / 1000 - 1e-9));
-    pause.ready = current.answer !== undefined || pause.failed === true || current.recoveryFinishFailed === true;
-    if (left <= 0 && !pause.requested && !hold?.paused) {
-      if (auto && pause.ready && !pause.note) next();
-      // The break is over: ring the bell again for the next wave. With Auto next on, a refused try (note)
-      // or a loot answer that never came must not keep the break (and the blocked input) forever.
-      else if (!auto || pause.note || now() > pause.until + BREAK_GRACE_MS) { stop(); return; }
-    }
-    const loot = Number.isFinite(current.answer?.loot) ? ` · 🪙 +${current.answer.loot}` : '';
-    current.hud?.pause?.({ title: `Wave ${current.info.wave} won!`, line: hold?.paused ? hold.line : pause.note ?? `${current.result.shipsSunk} ${current.result.shipsSunk === 1 ? 'ship' : 'ships'} sunk${loot}`,
-      seconds: hold?.paused ? 0 : left, auto, ready: pause.ready && !pause.requested && !hold?.paused, paused: !!hold?.paused,
-      hold: hold && toggleHold ? { label: hold.label, enabled: hold.canToggle === true } : null });
-  }
-
-  // What the wave renderer draws: the sim's state, with every wall and tower whole once an island wave is over
-  // (the owner's rule of 18 Nov: the server repairs everything at the wave's end) and a paid repair the server
-  // just accepted shown at once (the replayed structure_repaired confirms it a playout later).
-  function drawnState(current) {
-    const state = current.state;
-    const ended = current.done && place !== 'pirate_point';
-    const repaired = current.repairedNow;
-    if (repaired) for (const [spot, at] of repaired) if (now() - at > PREDICTION_TIMEOUT_MS) repaired.delete(spot);
-    if (!state || (!ended && !repaired?.size)) return state;
-    const whole = item => (ended || repaired?.has(item.id)) && Number.isFinite(item.maxHp) && item.hp < item.maxHp
-      ? { ...item, hp: item.maxHp, broken: false, repairing: false } : item;
-    return { ...state, walls: (state.walls ?? []).map(whole), towers: (state.towers ?? []).map(whole) };
-  }
-  // A recovery wave changes structure HP only through the paid Repair now (D059): no E prompt that does nothing.
-  const withoutFreeRepair = (current, action) => current.recoveryReplay && (action?.kind === 'repair' || action?.kind === 'rebuild') ? null : action;
-  // This wave's loot, from the server's finish answer: the HUD chip, the lost banner and the run total.
-  function roundLoot(current, loot) {
-    if (!Number.isFinite(loot) || Number.isFinite(current.roundLoot)) return;
-    current.roundLoot = loot;
-    runLoot += loot;
-    if (current.done && !current.pause && current.result && !current.result.survived && typeof startNextWave === 'function' && wave === current) {
-      const fallenAll = current.sim.endReason === 'captains_fallen';
-      current.hud?.banner(LOST_TITLE, `${fallenAll ? `${LOST_FALLEN} ` : ''}${LOST_LINE} ${roundLootText(loot)}`);
-    }
-  }
-  function end(current) {
-    if (current.done) return;
-    current.done = true;
-    const result = current.result = current.sim.result();
-    const run = typeof startNextWave === 'function', fallenAll = current.sim.endReason === 'captains_fallen';
-    current.revive = null; current.pin = null;
-    current.hud?.down?.(null); current.hud?.health?.(null); current.hud?.marks?.([]);
-    if (run && result.survived) current.pause = { until: now() + breakSeconds * 1000, ready: false, requested: false, note: null };
-    else if (run) current.hud?.banner(LOST_TITLE, `${fallenAll ? `${LOST_FALLEN} ` : ''}${LOST_LINE}`);
-    else current.hud?.banner(result.survived ? 'Wave won!' : 'The island fell', fallenAll ? LOST_FALLEN : `${result.shipsSunk} ${result.shipsSunk === 1 ? 'ship' : 'ships'} sunk`);
-    cue(result.survived ? 'pirate-victory' : 'pirate-defeat');
-    emit({ type: 'wave_finished', waveId: current.info.waveId, survived: result.survived, shipsSunk: result.shipsSunk });
-    // Queued commands land after the last sealed tick, so after this sim's end: they cannot change it.
-    if (current.recoveryReplay) current.recoveryPending = [];
-    void submitFinish(current);
-    if (current.pause) return; // the break runs from update(); the next wave (or its end) cleans up
-    const summary = { lampsRelit: current.lampsRelit, flagshipSunk: current.flagshipSunk, flagship: current.info.flagship, wave: current.info.wave };
-    const cleanup = async () => {
-      if (wave !== current) return;
-      if (current.recoveryReplay && !current.recoveryFinishAnswered && !current.recoveryFinishFailed) { later(cleanup, RECOVERY_FLUSH_MS); return; }
-      current.hud?.banner('');
-      const id = current.shown ? cutsceneFor(result, summary) : null;
-      try { if (id) await playCutscene(id); } catch { /* The cutscene is a bonus: the banner already said it. */ }
-      if (wave === current) stop();
-    };
-    later(cleanup, run ? LOST_BEAT_MS : END_BEAT_MS);
-  }
-
-  async function submitFinish(current) {
-    if (current.finishing) return;
-    current.finishing = true;
-    if (current.recoveryReplay) {
-      current.recoveryFinishPending = true;
-      tryRecoveryFinish(current);
-      return;
-    }
-    // v3 waves: the bonuses the sim saw (the galleon sunk, a finisher won); the server pays them only where the wave allows.
-    const body = { waveId: current.info.waveId, survived: current.result.survived, shipsSunk: current.result.shipsSunk,
-      ...(current.result.bonuses?.length ? { bonuses: [...current.result.bonuses] } : {}),
-      ...(current.result.rescued === true ? { rescued: true } : {}), // T38: a won last-chance rescue (rescue.js)
-      // D039: only a wave that came with walls (the flag on) reports them back, every wall's percent.
-      ...(current.info.walls ? { walls: healthReport(current.sim.state().walls) } : {}) };
-    let unknown = 0; // finishes sent again after an unknown outcome
-    const attempt = async () => {
-      try {
-        current.answer = (await finishWave(body)) ?? null;
-        roundLoot(current, current.answer?.loot);
-        emit({ type: 'wave_finish_answered', waveId: body.waveId, loot: current.answer?.loot ?? null, runLoot });
-      } catch (error) {
-        const early = tooEarlyWait(error), retry = early === null ? finishRetryWait(error, unknown) : null;
-        if (retry !== null) unknown++;
-        const wait = early ?? retry;
-        if (wait !== null && !disposed) later(attempt, wait * 1000);
-        else { console.error(error); if (current.pause) current.pause.failed = true; }
-      }
-    };
-    await attempt();
-  }
-
-  function stop() {
-    const current = wave;
-    if (!current) return;
-    wave = null; current.finished = true;
-    if (world.camera?.userData) { delete world.camera.userData.battleZoom; delete world.camera.userData.battleFocus; }
-    current.renderer?.dispose(); current.hud?.dispose(); current.schedule.clear(); poses.clear();
-    current.eventArt?.dispose(); current.finisher?.scene?.dispose(); current.finisher = null;
-    emit({ type: 'wave_controller_stopped', waveId: current.info.waveId, ...(current.recoveryReplay ? { recovery: true } : {}) });
-  }
 
   return {
     start, update,
-    get wave() { return wave; },
-    get state() { return wave?.state ?? null; },
+    get wave() { return ctl.wave; },
+    get state() { return ctl.wave?.state ?? null; },
     get recoveryCombatState() {
-      const current = wave;
+      const current = ctl.wave;
       if (!current?.recoveryReplay || current.recoveryFinishAnswered || !current.info.initialSnapshot?.structures
         || now() + current.offset < current.info.startsAtMs) return null;
       const vector = current.sim.recoveryHealthVector();
@@ -1623,48 +263,48 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     checkpointBeforeRepair,
     fire: (cannonId, targetId) => submit({ type: 'fire', cannonId, targetId }),
     shoot, aim: point => aimAt(point, null), next, setAuto,
-    get auto() { return auto; },
-    get runLoot() { return runLoot; },
-    get inBreak() { return !!wave?.pause; },
+    get auto() { return ctl.auto; },
+    get runLoot() { return ctl.runLoot; },
+    get inBreak() { return !!ctl.wave?.pause; },
     // Captain health (GAME-V3.md §3): your captain in the sim ({id, x, z, hp, maxHp, down, ...} or null),
     // whether you are down (no walking, shooting or building), and the revive you hold ({targetId, share}).
-    get captain() { return meIn(wave); },
-    get captainDown() { return isDown(wave); },
+    get captain() { return meIn(ctl.wave); },
+    get captainDown() { return isDown(ctl.wave); },
     // D052: the automatic cutlass (on by default). scripts/check-multiplayer.js turns it off for a captain who must fall.
-    get autoBlade() { return autoBlade; },
-    set autoBlade(on) { autoBlade = on !== false; },
-    get revive() { return wave?.revive ? { targetId: wave.revive.targetId, share: wave.revive.share, paying: wave.revive.paying } : null; },
+    get autoBlade() { return ctl.autoBlade; },
+    set autoBlade(on) { ctl.autoBlade = on !== false; },
+    get revive() { return ctl.wave?.revive ? { targetId: ctl.wave.revive.targetId, share: ctl.wave.revive.share, paying: ctl.wave.revive.paying } : null; },
     // Your captain's id in the wave on screen (the participant token in a recovery wave).
-    get playerId() { return actorId(wave); },
+    get playerId() { return actorId(ctl.wave); },
     // A paid repair the server accepted for `spot` (game-wiring.js): drawn whole until the replay catches up.
-    repairedNow(spot) { if (wave?.recoveryReplay && typeof spot === 'string') (wave.repairedNow ??= new Map()).set(spot, now()); },
+    repairedNow(spot) { if (ctl.wave?.recoveryReplay && typeof spot === 'string') (ctl.wave.repairedNow ??= new Map()).set(spot, now()); },
     // The pose of a captain of the wave on screen ({kind, flip, age} from poses.js, or null): your own by
     // playerId, a teammate's by their sim id. Drawing only.
-    pose(by) { return wave && !wave.finished && wave.shown ? poses.get(by) : null; },
+    pose(by) { return ctl.wave && !ctl.wave.finished && ctl.wave.shown ? poses.get(by) : null; },
     // Where the presence draws the other captains (src/pirates/figures.js figurePositions: sim id -> {x, z}),
     // so their hp bars sit over the figures; null draws them where the sim has them.
-    setFigures(value) { figures = value instanceof Map ? value : null; },
+    setFigures(value) { ctl.figures = value instanceof Map ? value : null; },
     // The island changed (an upgrade or a new building, ours or a friend's): once the wave is decided, in the
     // break, its posts show the new levels. A wave under way keeps the defenses it started with.
     // walls ({spot: percent}, optional): fresh wall health from a paid repair or rebuild (D039).
     refreshDefenses(walls = null) {
-      if (!wave?.done || !wave.renderer) return false;
-      wave.renderer.setDefenses?.(withHealth(getDefenses() ?? [], walls)); return true;
+      if (!ctl.wave?.done || !ctl.wave.renderer) return false;
+      ctl.wave.renderer.setDefenses?.(withHealth(getDefenses() ?? [], walls)); return true;
     },
-    setCaptainLevel(value) { level = Number.isInteger(value) ? value : null; },
+    setCaptainLevel(value) { ctl.level = Number.isInteger(value) ? value : null; },
     // Override the getters (tests, the dev harness): null goes back to captainSkills() / captainWeapon().
-    setCaptainSkills(value) { skills = Array.isArray(value) ? readSkills(value) : null; },
-    setCaptainWeapon(value) { weapon = typeof value === 'string' ? readWeapon(value) : null; },
+    setCaptainSkills(value) { ctl.skills = Array.isArray(value) ? readSkills(value) : null; },
+    setCaptainWeapon(value) { ctl.weapon = typeof value === 'string' ? readWeapon(value) : null; },
     get captainStats() { return myStats(); },
     repair: wallId => submit({ type: 'repair', wallId, skills: mySkills() }),
     lampsLit() {
-      if (!wave || !wave.info.flagship || wave.lampsSent) return false;
+      if (!ctl.wave || !ctl.wave.info.flagship || ctl.wave.lampsSent) return false;
       if (!submit({ type: 'lamps_lit' })) return false;
-      wave.lampsSent = true; return true;
+      ctl.wave.lampsSent = true; return true;
     },
     dispose() {
-      if (disposed) return;
-      stop(); disposed = true; guide?.dispose(); guide = null;
+      if (ctl.disposed) return;
+      stop(); ctl.disposed = true; ctl.guide?.dispose(); ctl.guide = null;
       for (const id of timers) clearTimer(id);
       timers.clear(); stops.splice(0).forEach(stopListening => stopListening());
       if (typeof window !== 'undefined') { window.removeEventListener('keydown', keydown); window.removeEventListener('keyup', keyup); window.removeEventListener('blur', letGo); }
