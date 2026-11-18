@@ -1,4 +1,4 @@
-// Live presence with the REAL supabase-js library, talking to a pretend Realtime server. The fakes in
+// Live presence with the REAL Supabase library (src/online/supabase-sdk.js over realtime-js and postgrest-js), talking to a pretend Realtime server. The fakes in
 // tests/realtime-fakes.js are our idea of what the library does. This file checks that idea: the real
 // library creates the rooms, sends the login token and the private flag, builds the presence state,
 // delivers broadcasts and reports a refused join, all as realtime.js expects. There is no network: the
@@ -10,7 +10,7 @@
 // The pretend server speaks the plain-text form of the Realtime protocol (version 1.0.0). The library's
 // default is a binary form for broadcasts; that is its own business and not what we are checking.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createClient } from '@supabase/supabase-js';
+import { createRealtimeClient as createClient } from '../src/online/supabase-sdk.js';
 import { startRealtime } from '../src/online/realtime.js';
 import { playerId, worldOf } from './realtime-fakes.js';
 

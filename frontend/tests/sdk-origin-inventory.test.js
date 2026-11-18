@@ -2,18 +2,17 @@
 import {describe,it,expect} from 'vitest';
 import {assertProductionHtmlInventory,createSdkOriginInventory,literalOrigins,reviewedSdkVersion,sdkManifestEntry} from '../scripts/sdk-origin-inventory.js';
 
-const file='assets/dist-fixture.js';
+const file='assets/supabase-sdk-fixture.js';
 const manifest={[sdkManifestEntry]:{src:sdkManifestEntry,file,isDynamicEntry:true}};
-const versions={'@supabase/supabase-js':reviewedSdkVersion,'@supabase/auth-js':reviewedSdkVersion,
+const versions={'@supabase/auth-js':reviewedSdkVersion,'@supabase/postgrest-js':reviewedSdkVersion,
   '@supabase/realtime-js':reviewedSdkVersion};
 const source=[
   'http://localhost:9999',
   'https://developer.mozilla.org/en-US/docs/Web/API/LockManager/request',
   'https://github.com/supabase/supabase-js/blob/master/packages/core/realtime-js/migrations/httpsend-server-version.md',
   'https://github.com/supabase/supabase-js/blob/master/packages/core/auth-js/migrations/lockless-coordination.md',
-  'https://github.com/orgs/supabase/discussions/45715',
 ].map(value=>JSON.stringify(value)).join(';');
-const create=overrides=>createSdkOriginInventory({manifest,declaredVersion:reviewedSdkVersion,
+const create=overrides=>createSdkOriginInventory({manifest,declaredVersions:versions,
   installedVersions:versions,...overrides});
 
 describe('reviewed SDK origin inventory',()=>{
@@ -47,8 +46,10 @@ describe('reviewed SDK origin inventory',()=>{
     expect(()=>create().classify({file,origin:'http://localhost:9999',
       source:source.replace('http://localhost:9999','http://localhost:9999/new-default')})).toThrow('original string boundary');
   });
-  it.each(['^2.118.0','2.118.1','2.119.0',undefined])('requires the exact reviewed dependency pin: %s',declaredVersion=>{
-    expect(()=>create({declaredVersion})).toThrow('exact approved dependency pin');
+  it.each(['^2.118.0','2.118.1','2.119.0',undefined])('requires the exact reviewed dependency pin: %s',version=>{
+    for(const name of Object.keys(versions)){
+      expect(()=>create({declaredVersions:{...versions,[name]:version}})).toThrow('exact approved dependency pin');
+    }
   });
   it.each(Object.keys(versions))('requires the reviewed installed %s version',name=>{
     expect(()=>create({installedVersions:{...versions,[name]:'2.119.0'}})).toThrow('installed version needs a new SDK origin review');

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readdir,readFile,mkdir,writeFile} from 'node:fs/promises';
 import {join,relative} from 'node:path';
 import {previewSecurityHeaders} from '../vite.config.js';
-import {assertProductionHtmlInventory,createSdkOriginInventory,literalOrigins} from './sdk-origin-inventory.js';
+import {assertProductionHtmlInventory,createSdkOriginInventory,literalOrigins,sdkPackages} from './sdk-origin-inventory.js';
 const proposedCsp=previewSecurityHeaders['Content-Security-Policy']??previewSecurityHeaders['Content-Security-Policy-Report-Only'];
 async function files(root){const result=[];for(const item of await readdir(root,{withFileTypes:true})){const path=join(root,item.name);if(item.isDirectory())result.push(...await files(path));else result.push(path);}return result;}
 // Google sign-in was dropped (G29 email), so accounts.google.com is no longer a reviewed target. Email
@@ -18,10 +18,10 @@ try{
   const manifest=JSON.parse(await readFile('dist/.vite/manifest.json','utf8'));
   const declared=JSON.parse(await readFile('package.json','utf8'));
   const installedVersions={};
-  for(const name of ['@supabase/supabase-js','@supabase/auth-js','@supabase/realtime-js']){
+  for(const name of sdkPackages){
     installedVersions[name]=JSON.parse(await readFile(join('node_modules',name,'package.json'),'utf8')).version;
   }
-  const sdk=createSdkOriginInventory({manifest,declaredVersion:declared.dependencies?.['@supabase/supabase-js'],installedVersions});
+  const sdk=createSdkOriginInventory({manifest,declaredVersions:declared.dependencies,installedVersions});
   report.sdkVersion=sdk.version;
   for(const path of built.filter(path=>/\.(?:html|js|css|svg)$/.test(path))){
     const source=await readFile(path,'utf8'),clean=source.replace(/<!--[\s\S]*?-->/g,'');
