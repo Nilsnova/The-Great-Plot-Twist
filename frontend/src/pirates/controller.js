@@ -570,10 +570,10 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     const startedAt = current.recoveryLastPollAt = now();
     let polling, refusal = null;
     polling = Promise.resolve().then(() => fetchSealedEvents(current.recoveryReplay,
-      request => recoveryTransport.readEvents({ waveId: current.info.waveId, ...request }), undefined, page => { refusal = page; },
+      request => disposed ? null : recoveryTransport.readEvents({ waveId: current.info.waveId, ...request }), undefined, page => { refusal = page; },
       page => { if (page.closed === true) current.recoveryClosed = true; }))
       .catch(error => { console.error(error); refusal = recoveryRefusal(null); return false; }).then(complete => {
-        if (current.recoveryPollPromise !== polling) return complete;
+        if (disposed || current.recoveryPollPromise !== polling) return complete;
         if (complete) {
           current.recoveryPollAttempts = 0;
           resyncActorCounter(current);
@@ -587,8 +587,10 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
         current.recoveryRttMs = took >= current.recoveryRttMs ? took : current.recoveryRttMs + (took - current.recoveryRttMs) / 4;
         current.recoveryPolling = false;
         current.recoveryPollPromise = null;
-        reconcileTerminalRecovery(current);
-        tryRecoveryFinish(current);
+        if (!current.recoveryDetached) {
+          reconcileTerminalRecovery(current);
+          tryRecoveryFinish(current);
+        }
         return complete;
       });
     current.recoveryPollPromise = polling;
@@ -766,7 +768,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     return accepted ? { ok: true } : { ok: false, code: answer?.reason ?? answer?.code ?? 'health_sync_required' };
   }
 
-  function advanceRecoveryThrough(current, throughTick) {
+  function advanceRecoveryThrough(current, throughTick, { publish = true } = {}) {
     if (!Number.isInteger(throughTick) || throughTick < current.recoveryDriver.nextTick
       || !current.recoveryReplay.canAdvanceThrough(throughTick)) return current.recoveryDriver.nextTick > throughTick;
     const emitted = [], fresh = [];
@@ -790,16 +792,17 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
           if (JSON.stringify(expected) !== JSON.stringify(after.basisRepairSeq)) current.recoveryInvalid = true;
           else current.recoveryLastRepairSeq += repairs;
         }
-        tagActors(out, journal);
-        emitted.push(...out); fresh.push(...out);
+        if (publish) { tagActors(out, journal); emitted.push(...out); fresh.push(...out); }
         if (simTick !== tick) current.recoveryInvalid = true;
       });
       if (!advanced || current.recoveryInvalid) return false;
       current.ticks = tick + 1;
     }
     current.state = current.sim.state();
-    if (emitted.length) handle(emitted, current, fresh);
-    if (current.sim.done) end(current);
+    if (publish) {
+      if (emitted.length) handle(emitted, current, fresh);
+      if (current.sim.done) end(current);
+    }
     return current.recoveryDriver.nextTick > throughTick;
   }
 
@@ -852,6 +855,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
         inputHeadSeq: replay.headSeq, lastRepairSeq: current.recoveryLastRepairSeq,
         basisRepairSeq: vector.basisRepairSeq, hpUnits: vector.hpUnits } };
     current.recoveryFinishRequest = body;
+    current.recoveryFinishNeedsRefresh = false;
     sendRecoveryFinish(current, body);
     return true;
   }
@@ -879,13 +883,15 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
         : answer == null ? recoveryRefusal(null) : recoveryRefusal(answer);
       const kind = refusalKind(refusal);
       const delay = refusalDelayMs(refusal, current.recoveryFinishAttempts++);
-      if (kind === 'refresh' && !current.recoveryDetached) {
+      if (kind === 'refresh') {
         // Read the journal again, then a new checkpoint; paced, so a refusal loop cannot use up the budget.
         current.recoveryFinishRequest = null;
+        current.recoveryFinishNeedsRefresh = true;
+        current.recoveryFinishFrontierReady = false;
         current.recoveryLastPollAt = -Infinity;
         current.recoveryPollRetryAt = -Infinity;
         current.recoveryFinishRetryAt = now() + delay;
-      } else if (kind === 'later' || kind === 'refresh') {
+      } else if (kind === 'later') {
         // An unknown outcome retries byte-for-byte with the same checkpoint UID.
         current.recoveryFinishRetryAt = now() + delay;
       } else {
@@ -897,11 +903,49 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       current.recoveryFinishRetryAt = now() + refusalDelayMs(null, current.recoveryFinishAttempts++);
     }).finally(() => {
       current.recoveryFinishing = false;
-      if (!disposed && current.recoveryDetached && !current.recoveryFinishAnswered && !current.recoveryFinishFailed) {
-        current.recoveryFinishRequest ??= body; // A refresh can clear it just before the next wave's handoff.
-        later(() => sendRecoveryFinish(current, current.recoveryFinishRequest), Math.max(0, current.recoveryFinishRetryAt - now()));
-      }
+      scheduleDetachedFinish(current, body);
     });
+  }
+
+  function scheduleDetachedFinish(current, body = current.recoveryFinishRequest) {
+    if (disposed || !current.recoveryDetached || current.recoveryFinishAnswered || current.recoveryFinishFailed) return;
+    if (!current.recoveryFinishNeedsRefresh) current.recoveryFinishRequest ??= body;
+    later(() => current.recoveryFinishNeedsRefresh ? refreshDetachedFinish(current)
+      : sendRecoveryFinish(current, current.recoveryFinishRequest), Math.max(0, current.recoveryFinishRetryAt - now()));
+  }
+
+  // Catch up only the old simulation, with one normal replay budget per timer turn and no gameplay output.
+  function advanceDetachedFinish(current) {
+    const through = Math.min(current.recoveryReplay.sealedThroughTick, current.recoveryDriver.nextTick + MAX_TICKS_PER_FRAME - 1);
+    if (current.done) reconcileTerminalRecovery(current);
+    else {
+      advanceRecoveryThrough(current, through, { publish: false });
+      if (current.sim.done) { current.done = true; current.result = current.sim.result(); }
+    }
+    if (current.recoveryInvalid) endRecoveryWave(current, 'checkpoint_divergence');
+    return current.recoveryDriver.nextTick > current.recoveryReplay.sealedThroughTick;
+  }
+
+  async function refreshDetachedFinish(current) {
+    if (disposed || current.recoveryFinishing || current.recoveryFinishAnswered || current.recoveryFinishFailed) return;
+    current.recoveryFinishing = true;
+    let ready = false;
+    try {
+      if (!current.recoveryFinishFrontierReady) current.recoveryFinishFrontierReady = await fetchRecoveryFrontier(current);
+      if (disposed || current.recoveryFinishFailed) return;
+      ready = current.recoveryFinishFrontierReady && advanceDetachedFinish(current);
+      const delay = current.recoveryFinishFrontierReady ? RECOVERY_FLUSH_MS : refusalDelayMs(null, current.recoveryFinishAttempts++);
+      current.recoveryFinishRetryAt = Math.max(now() + delay, current.recoveryPollRetryAt);
+    } catch (error) {
+      console.error(error);
+      current.recoveryFinishRetryAt = now() + refusalDelayMs(null, current.recoveryFinishAttempts++);
+    } finally {
+      current.recoveryFinishing = false;
+      if (!disposed && ready) {
+        current.recoveryFinishNeedsRefresh = false;
+        handOffRecoveryFinish(current, current.recoveryFinishExtra);
+      } else scheduleDetachedFinish(current);
+    }
   }
   const emitRecoveryFinish = (waveId, data, extra = {}) => emit({ type: 'wave_finish_answered', waveId, loot: data.loot ?? null, runLoot,
     recovery: data.recovery, coins: data.coins, waveBest: data.waveBest, flags: data.flags, survived: data.survived, ...extra });
@@ -913,6 +957,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     current.recoveryDetached = true;
     current.recoveryFinishExtra = extra;
     if (current.recoveryFinishing) return;
+    if (current.recoveryFinishNeedsRefresh) { scheduleDetachedFinish(current); return; }
     const vector = current.sim.recoveryHealthVector();
     if (!vector) return;
     const result = current.result ?? current.sim.result();

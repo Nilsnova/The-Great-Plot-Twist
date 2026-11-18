@@ -243,7 +243,7 @@ describe('the end of a recovery wave (controller.js)', () => {
     h.controller.dispose(); flow.dispose();
   });
 
-  it('keeps its request if the next wave starts between a refresh refusal and its finalizer', async () => {
+  it('refreshes its request if the next wave starts between a refresh refusal and its finalizer', async () => {
     let resolveOld;
     const finishWave = vi.fn(body => finishWave.mock.calls.length === 1
       ? new Promise(resolve => { resolveOld = resolve; }) : Promise.resolve(closeAnswer(body)));
@@ -253,9 +253,12 @@ describe('the end of a recovery wave (controller.js)', () => {
     const old = h.controller.wave;
     resolveOld({ ok: false, status: 409, code: 'health_sync_required' });
     queueMicrotask(() => queueMicrotask(() => h.begin('wave-new')));
-    await tick(); await h.step(1000); await h.flushTimers();
+    await tick();
+    for (let i = 0; i < 10 && !old.recoveryFinishAnswered; i++) { await h.step(500); await h.flushTimers(); }
     expect(h.controller.wave.info.waveId).toBe('wave-new');
-    expect(finishWave.mock.calls[1][0]).toEqual(finishWave.mock.calls[0][0]);
+    const requests = finishWave.mock.calls.map(([body]) => body).filter(body => body.waveId === 'wave-old');
+    expect(requests).toHaveLength(2);
+    expect(requests[1].checkpoint.checkpointUid).not.toBe(requests[0].checkpoint.checkpointUid);
     expect(old.recoveryFinishAnswered).toBe(true);
     h.controller.dispose();
   });
