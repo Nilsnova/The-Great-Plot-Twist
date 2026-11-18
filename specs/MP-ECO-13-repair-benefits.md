@@ -4,7 +4,7 @@
 >
 > **Who uses it:** the island crew, Captain progression, repair, conversion and UI implementations.
 
-- **Status:** Carpenter purchase retirement agreed; other repair-only benefits, conversion and implementation remain open.
+- **Status:** repair-only offer retirement agreed in D059; runtime integration and verification remain open.
 - **Branch:** `docs/mp-eco-13-repair-benefits`.
 - **Issue:** [MP-ECO-13 #496](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/496), under [epic #492](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/492).
 - **Planning baseline:** [#491](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/491); integration must match its final accepted rules.
@@ -55,32 +55,32 @@ Existing Carpenter counts, payment provenance and crew history remain intact for
 
 The shared crew purchase service must reject Carpenter intents before charging, and shared-mode cards must not present an actionable Carpenter hire. Gunner, Guard and Lookout purchases retain their own island-wide counts, unlocks and configured prices.
 
-The other repair-only offers in the inventory still need a consistent policy before their shared-mode offers are enabled. A bounded retirement approach would stop Workshop selection, Quick Mend and Mason Drill while preserving the house/loot asset, the acquired research tier and access to later tiers. Keep Bastion's +50% max HP, Tavern healing, Barracks, Medic effects and Engineer's retained discount/commitment. This broader retirement and each existing paid asset's replacement/refund treatment remain explicit conversion decisions; no new multiplier or automatic refund is specified here.
+The updated [D059](../docs/DECISIONS.md#d059--shared-gradual-hp-recovery-and-paid-instant-repair--2026-11-16), merged on 18 Nov, also retires new Workshop selection, Quick Mend and Mason Drill offers under recovery v1. Reject new requests before spending or progression changes. Preserve the house/loot asset, acquired research tier and access to later tiers. Remove Bastion's repair multiplier while keeping its +50% max HP. Preserve Tavern healing, Barracks, Medic effects and Engineer's discount/commitment. Existing saved retired choices and identifiers remain decodable and must not block ordinary mutations or wave admission. Introduce no replacement effect, automatic replacement role, refund, respec token or compensation subsystem.
 
 ## Existing purchase and point conversion
 
-The monetary conversion policy is specified by MP-ECO-17. Conversion must not infer every historical price from today's catalogue or assign a personal buyer's old payment to multiple islands. Keep immutable contribution/payment receipts; distinguish a per-wall skill payment from branch research, research switching and an unpriced house role. No refund may be paid privately and into the island again. An island with unresolved obsolete paid state is not admitted on the assumption that its value can simply disappear.
+The monetary conversion policy is specified by MP-ECO-17. Conversion must not infer every historical price from today's catalogue or assign a personal buyer's old payment to multiple islands. Keep immutable contribution/payment receipts; distinguish a per-wall skill payment from branch research, research switching and an unpriced house role. No refund may be paid privately and into the island again. Retired identifiers remain stored under D059; their presence alone is not an admission blocker and creates no compensation claim.
 
-For retired personal skills, the preferred bounded mechanism is to preserve earned points, remove retired IDs from the new active allocation under a versioned conversion, and recompute spent points from the retained valid allocation. Return exactly the retired allocation's actual point cost to availability; do not raise the earned total or add a coin reward. Repeat conversion must do nothing extra. Preserve old frozen-wave snapshots and history, do not mutate a reserved Captain's active stats, and use the MP-ECO-07/17 profile-transition contract. Ordinary free respec remains an alternative explicit transition, subject to the Engineer role commitment; no path may clear that commitment.
+Preserve retired personal skill IDs, earned totals and ordinary spent-point accounting. The seven retired choices have no active repair effect under v1. Ordinary free respec uses the actual saved allocation, returns only its normal point value and remains subject to the personal assignment and Engineer role commitment; it grants no extra points or coins. Preserve old frozen-wave snapshots and history. No automatic compensation migration is required by the selected policy.
 
-If Quick Mend/Mason Drill are retired, a no-coin replacement choice at the same already acquired tier is a possible conversion policy, not a rule selected here. Preserve the research tier and access to later tiers; replacing a retired choice must not charge for the same tier again or issue both a replacement and a refund for the same paid value. Bastion remains useful and is not refunded merely because its obsolete rate clause is removed.
+Preserve the acquired tier and access to later research when Quick Mend or Mason Drill is stored. Existing choices do not require an automatic replacement or a refund. Normal supported switching and unrelated management remain available under their ordinary rules; do not charge for acquiring the same tier again. Bastion remains useful with its retained HP benefit.
 
 ## Implementation boundaries
 
-This branch changes only this spec. It does not change runtime helpers, catalogue prices, stats, SQL, UI offers, a feature flag or a live deployment. Preserve legacy version-0 islands and frozen legacy waves until an explicit versioned admission chooses otherwise. Do not rewrite T54–T60 history or claim their remaining authenticated-client/egress/balance checks are complete.
+This branch changes this spec and aligns the shared-economy decision/planning text with D059. It does not change runtime helpers, catalogue prices, stats, SQL, UI offers, a feature flag or a live deployment. Preserve legacy version-0 islands and frozen legacy waves until an explicit versioned admission chooses otherwise. Do not rewrite T54–T60 history or claim their remaining authenticated-client/egress/balance checks are complete.
 
 Future implementation is likely to touch `backend/content/islands.json`, `backend/content/campaign.json` and their existing browser copies; `backend/server/island/captain_recovery_policy.py` and recovery/snapshot helpers; `frontend/src/campaign/{captain-repair-policy,houses,tech}.js`; `frontend/src/pirates/{captain-stats,sim}.js`; Captain/Tech/house/crew cards and their focused tests. Dependencies are the MP-ECO-06 shared-crew mutation contract, 07 personal progression/Engineer commitment, 12 repair payments/quota, 17 conversion and 18 scoped UI. Do not change the fixed repair-price rule as a side effect of a benefit redesign.
 
 ## Done when and future checks
 
-The design contribution is complete when this inventory, selected Carpenter rule and remaining compatibility requirements are reviewed, every local link resolves, the point-cost arithmetic matches the catalogue, and `git diff --check` passes. Runtime completion requires the remaining benefit/conversion decisions and the affected implementation contracts.
+The design contribution is complete when this inventory, selected retirement policy and compatibility requirements are reviewed, every local link resolves, the point-cost arithmetic matches the catalogue, and `git diff --check` passes. Runtime completion requires the affected implementation contracts and their verification.
 
 - [x] New Carpenter purchases are removed from shared-mode scope, with no replacement effect.
 - [ ] The shared purchase service refuses Carpenter before any charge and the shared UI has no active hire offer; existing counts and history are retained.
 - [ ] New-mode offers and wording never sell obsolete between-wave repair speed or a discount on free revival; legacy policy text/behavior remains scoped correctly.
 - [ ] Bastion +50% max HP, Tavern healing, Medic hold/HP and Engineer 10% plus one-wave binding remain intact.
-- [ ] Actual saved retired allocations return their point value once, preserve earned total/unrelated skills and do not clear an Engineer commitment. Include a valid 13-point Shipwright path, a partial path and repeated conversion.
-- [ ] Paid asset conversion has explicit provenance/replacement/refund rules; house construction, branch research and per-wall skill payments are not conflated.
+- [ ] Retired allocations retain normal accounting; ordinary free respec preserves earned totals and unrelated skills without clearing an Engineer commitment. Include a valid 13-point Shipwright path, a partial path and repeated respec.
+- [ ] Stored retired choices preserve identifiers, house assets, acquired tiers and ordinary management without automatic replacement or compensation.
 - [ ] Run relevant backend/frontend tests and build for the eventual code; include real client evidence for changed cards. Do not count a design document as runtime or balance evidence.
 - [ ] A different human teammate reviews the current eventual implementation before merge.
 

@@ -1176,7 +1176,7 @@ Role/skill reassignment is free only while the player has no reserved/live comba
 
 Each Engineer commitment has a distinct personal identity captured in the qualifying wave snapshot/completion receipt. A receipt can satisfy only that matching commitment: a delayed or repeated completion of an earlier wave cannot clear a newer obligation created by another discounted purchase. This identity is separate from the island run epoch, because the role obligation follows the player.
 
-Hiring on island A charges island A and changes island A's crew. Crew counts and caps are island-wide and remain effective when the buyer or host is offline. Visitor-local crew must not replace or add to the defended island's crew. Carpenter effects need the separate recovery decision below.
+Hiring on island A charges island A and changes island A's crew. Crew counts and caps are island-wide and remain effective when the buyer or host is offline. Visitor-local crew must not replace or add to the defended island's crew. New Carpenter hires are unavailable under recovery v1, with no replacement effect; preserve existing counts and history.
 
 ### Arsenal and lifecycle
 
@@ -1188,7 +1188,7 @@ Count carried and stored copies toward the new total inventory limit so returns 
 
 Keep the 18 Nov full-repair-at-wave-end revision recorded under [D059](#d059--shared-gradual-hp-recovery-and-paid-instant-repair--2026-11-16): eligible structures return to full health when the wave ends, including loss and canonical expiry/abandonment. Between waves there is no repair bill, timer or recovery ETA. During a reserved wave, paid instant repair uses island money and the existing three-success team quota from accepted bell reservation through finish/expiry; failed requests consume neither coins nor a use. Keep repair event ordering and replay safeguards. Helping a fallen Captain up takes time but no coins.
 
-Carpenter, Workshop and repair-rate-only Captain/research effects cannot continue selling faster between-wave healing under this rule. Their replacement effects or retirement are an explicit open product decision in MP-ECO-13. Do not invent multipliers or remove unrelated benefits; this blocks those offers and their balance acceptance, not treasury foundation work. The old gradual-recovery text remains historical and does not override the 18 Nov target rule.
+Apply D059's selected retirement under recovery v1: no new Carpenter hires, Workshop selection, Quick Mend or Mason Drill offers, and no active repair-only Shipwright effects. Remove Bastion's repair multiplier but retain its +50% maximum wall HP, Tavern healing, Medic effects and Engineer's construction discount/commitment. Preserve stored identifiers, counts, acquired tiers, earned points and normal point accounting; existing retired choices cannot block ordinary management or wave admission. There is no replacement effect, automatic role replacement, refund, respec token or compensation subsystem. MP-ECO-13 coordinates this implementation with the shared economy. The old gradual-recovery text remains historical and does not override the 18 Nov rule.
 
 ### Harbor and ship rewards
 
