@@ -31,6 +31,9 @@ SOURCES = (
     "backend/server/island/wave_events.py",
     "supabase/migrations/20261117025000_legacy_wave_locks.sql",
     "frontend/src/pirates/sim.js",
+    "frontend/src/pirates/sim-config.js",
+    "frontend/src/pirates/sim-fleet.js",
+    "frontend/src/pirates/sim-setup.js",
     "frontend/tests/pirates/balance-fixture.js",
 )
 

@@ -90,6 +90,12 @@ def test_invalid_spots_and_skipped_levels_are_refused(purchase):
         simulate_plan(load_island(), [purchase], last_wave=1)
 
 
+def test_plan_cannot_change_the_kind_of_a_standing_tower():
+    queue = [Purchase("cannon_1", "cannon", 1), Purchase("cannon_1", "mortar", 2)]
+    with pytest.raises(ValueError, match="kind"):
+        simulate_plan(load_island(), queue, last_wave=3)
+
+
 def test_ship_payments_only_improve_each_game_record():
     assert ship_improvements(30, [1, 3, 3, 2, 0]) == [12, 24, 0, 0, 0]
     assert ship_improvements(100, [3, 1]) == [78, 0]

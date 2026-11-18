@@ -12,7 +12,10 @@
     "backend/server/island/boat.py": "9b4d9693f6314a660a08115e9227d11bba721db72631da355e78314ff00a3b68",
     "backend/server/island/wave_events.py": "9fede25cc0d6a950ee379314449ea6b113ecf98a4eed0fe58c60e55713803450",
     "supabase/migrations/20261117025000_legacy_wave_locks.sql": "2572253fbb3b7cc09381719a897eb8b8970cabd984c184139611c7f62e105009",
-    "frontend/src/pirates/sim.js": "d8b3ada47a6f7399fb1b7fe477ff14b3c7bd989f5e419546410c71d9ffef2098",
+    "frontend/src/pirates/sim.js": "bc53f949dc8fefb4d3c183a18f6ee778a9ac0a7dc4eea4af84a310745c0b6481",
+    "frontend/src/pirates/sim-config.js": "4fdb726520bc2d2cb6c5489d820fa498f925c94673be4cedff75747724b3351c",
+    "frontend/src/pirates/sim-fleet.js": "421ce45b208ba4ac89c4927e4f7ac109c49121a87a57e5cc0a9d2eac36b5a7cc",
+    "frontend/src/pirates/sim-setup.js": "656b26d21a5fd0ddf75d9f83de48d1f5dc6cf4af5f69dc86b6219abfe417aa92",
     "frontend/tests/pirates/balance-fixture.js": "d184d0151503dc33f122a3fbba11b017ed5cc81096455b1ede4c9e4e453fd029"
   },
   "assumptions": [

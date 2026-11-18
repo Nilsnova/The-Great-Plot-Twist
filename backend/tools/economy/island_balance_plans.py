@@ -42,6 +42,8 @@ def buy_available(
         purchase = queue[0]
         price, unlock = quote(catalogue, purchase)
         previous = buildings.get(purchase.plot)
+        if previous is not None and previous.kind != purchase.kind:
+            raise ValueError("The plan changes a standing building's kind.")
         if purchase.level != (previous.level + 1 if previous else 1):
             raise ValueError("The plan skips a building level.")
         if best < unlock or coins - price < reserve:
