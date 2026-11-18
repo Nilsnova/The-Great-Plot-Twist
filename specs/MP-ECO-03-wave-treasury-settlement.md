@@ -118,6 +118,12 @@ The branch includes published treasury dependency `feca459f` as an ancestor and 
 
 The same eight-module PostgreSQL command above now gives **137 passed in 50.51s**, including current recovery compatibility. The same eleven-module Python command plus `server/tests/test_migration_versions.py` gives **411 passed in 18.99s**. Backend-wide Ruff and all **71 migration parses with 71 unique versions** pass. Wave-accounting runtime, migration and test contents were unchanged by the treasury/main integration; canonical lifecycle, deletion and authenticated multi-client gates remain open.
 
+### Final personal prerequisite and bounded review scope
+
+The branch includes actual personal Captain dependency `4005fb53` and published treasury `feca459f` as ancestors. Relative to `4005fb53`, the final change is exactly the eight MP-ECO-03 files: two accounting modules, two test modules, migration `20261118050200`, this spec and the accounting sections in INTERFACES/Supabase README. Incoming personal/global-operation changes are prerequisites; the MP-ECO-03 source, migration and test semantics were not rewritten.
+
+The current nine-module PostgreSQL run (the previous command plus `server/tests/island_sql/test_personal_captain_operations_sql.py`) gives **152 passed in 37.26s**. The current twelve-module Python command gives **415 passed in 13.13s**. Backend-wide Ruff, **72 migration parses with 72 unique versions**, and own diff checks pass. No complete browser or authenticated shared-session acceptance was added; the canonical lifecycle and deletion integration gates remain unchanged.
+
 ## Reviewer
 
 A different human teammate, to be named before publication. Last updated: 2026-11-18.
