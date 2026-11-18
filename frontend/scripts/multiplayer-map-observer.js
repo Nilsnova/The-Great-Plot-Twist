@@ -49,7 +49,7 @@ function expectedPost(post, group) {
     && neighbors[0].x + neighbors[1].x === post.x * 2 && neighbors[0].z + neighbors[1].z === post.z * 2;
   // Every third two-unit cell retains its authored post; this includes negative/half-grid runs.
   const buttress = straight && Math.floor((neighbors[0].x === neighbors[1].x ? post.z : post.x) / 2) % 3 === 0;
-  if (straight && !buttress) {
+  if (straight && !buttress && group.wallSelectedId !== post.id) {
     const height = CAP_HEIGHTS[post.level - 1];
     return {id: wallSurfaceFrame(post.level, 'top'), points: [[-.40,-.40],[.40,-.40],[.40,.40],[-.40,.40]].map(([dx,dz]) => {
       const p = projectGround(post.x + dx, post.z + dz); return [p.x, p.y + height + .02, 0];
