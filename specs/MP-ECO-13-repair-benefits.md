@@ -15,16 +15,16 @@ The 18 November revision of [D059](../docs/DECISIONS.md#d059--shared-gradual-hp-
 
 The agreed economy retains three successful paid instant repairs per reserved wave, their fixed current-level catalogue price, free end-of-wave healing and time-only teammate revival. Captain development and respec consume no coins. Engineer retains the separate 10% construction/upgrade discount and its next-personal-wave role commitment. None of these rules is changed by this proposal.
 
-## Current affected offers and effects
+## Legacy and retired offer inventory
 
-Amounts and effects below describe this checkout's catalogue and policy code, not new approved balance values or a live deployment audit. Sources are [islands.json](../backend/content/islands.json), [campaign.json](../backend/content/campaign.json), the [shared rate helper](../backend/server/island/structure_recovery_rate.py), [house roles](../frontend/src/campaign/houses.js), [Captain policy](../backend/server/island/captain_recovery_policy.py), [Captain stats](../frontend/src/pirates/captain-stats.js) and [Tech definitions](../frontend/src/campaign/tech.js).
+Amounts and identifiers below inventory stored catalogue values and earlier gradual-recovery clauses for compatibility. They are not currently available recovery-v1 offers or newly approved balance values. Main already retires these rate-only offers under v1; the shared economy preserves their history and unrelated benefits. Sources are [islands.json](../backend/content/islands.json), [campaign.json](../backend/content/campaign.json), the [shared rate helper](../backend/server/island/structure_recovery_rate.py), [house roles](../frontend/src/campaign/houses.js), [Captain policy](../backend/server/island/captain_recovery_policy.py), [Captain stats](../frontend/src/pirates/captain-stats.js) and [Tech definitions](../frontend/src/campaign/tech.js).
 
-| Offer | Current acquisition | Existing effect | What survives full wave-end healing |
+| Offer | Historical acquisition | Earlier effect | What survives full wave-end healing |
 |---|---|---|---|
 | Carpenter | 30 coins each, maximum 2; island unlock after wave 5 | Legacy: 6 HP/s on damaged walls, rebuild work 8 s. Recovery v1: each adds +100% between-wave rate, capped at a combined ×3. | No useful between-wave rate benefit; legacy in-wave repair must not leak into the shared recovery policy. |
 | Workshop house role | Free selection on a house from level 2; switching is free between waves. House construction/levels are separate paid assets. | Recovery v1: structures within 10 units gain +30% rate per Workshop, capped +50%. Legacy also has wall rebuild/automatic-mend paths. | House and its loot bonus remain; the Workshop role's repair-only effect has no regular between-wave value. |
-| Quick Mend wall skill | Wall research tier 1 costs 120 coins for the branch; equipping a tier-1 wall skill costs 40 coins per wall. | Equipped wall recovers ×2 faster between waves. | Rate-only skill needs retirement or a chosen replacement. Do not refund the whole branch research: Stone/Spiked and later research still have uses. |
-| Mason Drill wall research | Wall tier 2 costs 240 coins; choice is exclusive with Thick Walls. | Every wall recovers ×1.5 faster between waves. | Rate-only tier-2 choice needs retirement/replacement; preserve the acquired tier and later progression. |
+| Quick Mend wall skill | Wall research tier 1 costs 120 coins for the branch; equipping a tier-1 wall skill costs 40 coins per wall. | Equipped wall recovers ×2 faster between waves. | Retired under v1. Do not refund the whole branch research: Stone/Spiked and later research still have uses. |
+| Mason Drill wall research | Wall tier 2 costs 240 coins; choice is exclusive with Thick Walls. | Every wall recovers ×1.5 faster between waves. | Retired under v1; preserve the acquired tier and later progression. |
 | Bastion wall capstone | Wall tier 3 costs 420 coins to research its choice; equipping its capstone costs 160 coins per wall. | Equipped wall gets +50% max HP and recovery ×3; legacy has separate in-wave self-mend. | Keep the +50% max HP. Remove obsolete rate/self-mend promises only under the selected new policy; do not erase a useful paid HP effect. |
 | Tavern revive-price clause | Free house-role selection; house also keeps its loot bonus. | Nearby Captains heal 2 HP/s per Tavern, with the existing healing cap; a Tavern also reduces revive coin cost by 25%. | Keep healing and its cap. The price-reduction clause becomes meaningless when revive costs zero. |
 | Engineer repair-triggered wall HP | Role choice; old recovery-v0 stat path only | Legacy repair-triggered +25% wall HP. Recovery v1 already removes it. | Do not restore it as a repair replacement. The retained construction/upgrade discount is independently useful. |
@@ -49,7 +49,7 @@ A legal complete fork path spends 13 points (`1 + 2 + 3 + 3 + 4`); all seven cat
 
 ## Selected Carpenter policy
 
-New Carpenter hires are unavailable in the shared island economy. No fortification bonus, automatic paid-repair behavior or other replacement effect is introduced. The legacy economy retains its existing scoped behavior.
+New Carpenter hires are unavailable under recovery v1, including the shared island economy. No fortification bonus, automatic paid-repair behavior or replacement effect is introduced. Preserve recovery-v0 decoding and scoped legacy behavior; legacy money does not restore a retired v1 offer.
 
 Existing Carpenter counts, payment provenance and crew history remain intact for explicit conversion. Removing a new-purchase offer does not authorize deletion of an existing asset or a refund calculated from today's catalogue. Existing Carpenter-only repair effects cannot bypass the new reserved-wave repair rules.
 
