@@ -7,7 +7,12 @@ State, membership, phase, price and idempotency are checked together in PostgreS
 from pydantic import TypeAdapter, ValidationError
 
 from server.errors import ApiError
-from server.island.catalogue import HOUSE_ROLES, RESEARCH_TIER_ITEMS, IslandCatalogue
+from server.island.catalogue import (
+    HOUSE_ROLES,
+    RESEARCH_TIER_ITEMS,
+    IslandCatalogue,
+    catalogue_for_existing_structures,
+)
 from server.island.economy_operations import root_action_uid
 from server.island.economy_progression_models import (
     ProgressionIntent,
@@ -18,7 +23,7 @@ from server.island.economy_progression_models import (
     TreeIntent,
     WreckIntent,
 )
-from server.island.rules import branch_of_spec, find_spot, research_named
+from server.island.rules import Built, branch_of_spec, find_spot, research_named
 from server.island.treasury import EconomyContext, amount, operation, scope
 from server.island.treasury_store import REFUSALS, read_envelope
 from server.supabase_admin import SupabaseAdmin, SupabaseRejected
@@ -167,6 +172,12 @@ async def mutate(
     operation(action_uid, "progression")
     root_action_uid(action_uid)
     intent = parse_intent(value)
+    if isinstance(intent, (SpecialiseIntent, TreeIntent)):
+        # This restores known saved options, not ownership. SQL proves the exact
+        # current instance, kind, level and revision before any charge or change.
+        catalogue = catalogue_for_existing_structures(
+            catalogue, {intent.spot: Built(intent.expected.kind, intent.expected.level)}
+        )
     try:
         rule = catalogue_rule(catalogue, intent)
     except ApiError:
