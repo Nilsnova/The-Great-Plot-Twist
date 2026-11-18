@@ -1,0 +1,21 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run tests/pirates/range-feedback.test.js tests/pirates/combat-feedback-controller.test.js tests/pirates/danger-feedback.test.js tests/pirates/combat-overlay.test.js tests/pirates/render.test.js tests/pirates/td-flow.test.js tests/ui/combat-feedback.test.js tests/battle-sounds.test.js tests/text-lint.test.js
+
+
+ RUN  v5.1.0 /workspace/captain-combat-feedback/frontend
+
+
+ Test Files  9 passed (9)
+      Tests  87 passed (87)
+   Start at  11:47:17
+   Duration  7.42s (tests 76%, import 16%, transform 7%, worker 1%)
+
+    Isolate  9 workers spawned · ~108ms startup each (spawn + environment, per file)
+             at least ~863ms faster with isolate: false — reuses workers across files instead of one per file
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice

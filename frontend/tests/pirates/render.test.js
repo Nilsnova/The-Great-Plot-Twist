@@ -47,7 +47,7 @@ describe('pirate wave renderer', () => {
     for (const seed of [1, 2, 3]) {
       const renderer = createWaveRenderer({ scene, atlas: shared, defenses: DEFENSES, fx: () => null });
       const layers = renderer.root.children.length;
-      expect(layers).toBe(3 + BOARDER_BANDS + 5 + 1 + 1); // sea/air, boarder bands, defense posts, fog, owned wall connections
+      expect(layers).toBe(3 + BOARDER_BANDS + 5 + 1 + 1 + 1); // sea/air, bands, posts, fog, wall connections, captain feedback
       expect(renderer.root.children.filter(child => child.name === 'pirates:wall-connections')).toHaveLength(1);
       const run = play(renderer, seed);
       expect(run.state.total).toBe(CONFIG.fleet.max);
@@ -72,6 +72,29 @@ describe('pirate wave renderer', () => {
     renderer.setVisible(false); renderer.update({ state: sim.state(), simTime: 15, dt: .05 });
     expect(renderer.stats().instances).toBe(0);
     expect(renderer.root.visible).toBe(false);
+    renderer.dispose();
+  });
+  it.each([false, true])('throws fire bombs without a muzzle flash or bloom (reduced motion: %s)', reducedMotion => {
+    const blooms = [], scene = new THREE.Scene(), shared = atlas();
+    scene.userData.characterScale = 1.4;
+    const renderer = createWaveRenderer({scene, atlas: shared, reducedMotion: () => reducedMotion, fx: () => ({bloom: (...args) => blooms.push(args)})});
+    renderer.events([{type: 'captain_fired', weapon: 'fire_bombs', t: 1, impactAt: 2, by: 'me', x: 2, z: 3, toX: 8, toZ: -2}]);
+    renderer.update({state: {ships: [], walls: [], towers: [], fog: 0, sight: 28}, simTime: 1, dt: .01});
+    expect(blooms).toEqual([]);
+    const air = renderer.root.children.find(item => item.name === 'pirates:air'), uv = air.geometry.getAttribute('iUv').array;
+    const flash = shared.rects['fx-musket-flash'];
+    for (let i = 0; i < air.geometry.instanceCount; i++)
+      expect(Math.min(uv[i * 4], uv[i * 4 + 2])).not.toBeCloseTo((flash.x + .01) / shared.width, 6);
+    expect(renderer.stats().shells).toBe(1);
+    for (const progress of [0, .5]) {
+      renderer.update({state: {ships: [], walls: [], towers: [], fog: 0, sight: 28}, simTime: 1 + progress, dt: .01});
+      const ball = shared.rects['pirate-cannonball'], positions = air.geometry.getAttribute('iPos').array;
+      const ballIndex = Array.from({length: air.geometry.instanceCount}, (_, i) => i)
+        .find(i => Math.abs(Math.min(uv[i * 4], uv[i * 4 + 2]) - (ball.x + .01) / shared.width) < 1e-6);
+      expect(ballIndex).toBeDefined();
+      // The hand offset is a display distance, added after projecting the logical flight.
+      expect(positions[ballIndex * 4]).toBeCloseTo(projectGround(2 + 6 * progress, 3 - 5 * progress).x + .6 * 1.4 * (1 - progress));
+    }
     renderer.dispose();
   });
 

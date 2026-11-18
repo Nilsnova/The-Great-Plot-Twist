@@ -1,0 +1,115 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run
+
+
+ RUN  v5.1.0 /workspace/captain-combat-feedback/frontend
+
+ ❯ tests/pirates/defense-report-ownership.test.js (1 test | 1 failed) 20790ms
+   × the actual game blocks keyboard and gamepad movement while the report owns input 20004ms
+ ❯ tests/island/nearby-game.test.js (2 tests | 1 failed) 35405ms
+   × nearby E/Use works and a reported revive blocks building input (phone=false) 20009ms
+
+[recovery-load] 60 s wave, 200 ms round trip: {"events":125,"inputs":83,"emptyInputs":0,"health":12,"finish":0,"maxFlight":{"events":1,"inputs":1,"health":1,"finish":0},"maxStep":1,"longestFreezeMs":48,"endedAt":null}
+
+[recovery-load] 60 s wave, 450 ms round trip: {"events":125,"inputs":83,"emptyInputs":0,"health":12,"finish":0,"maxFlight":{"events":1,"inputs":1,"health":1,"finish":0},"maxStep":1,"longestFreezeMs":48}
+
+[recovery-load] won wave, held break: {"events":31,"inputs":17,"emptyInputs":0,"health":0,"finish":1,"endedAt":13160,"finishAnswered":true}
+
+[recovery-load] two players, 200 ms round trip, no room: {"players":[{"readsPerSecond":2.1321961620469083,"inputsPerSecond":1.1253257521914237,"healthPerSecond":0.059227671167969675,"presses":18,"pressToVisibleMs":0,"neverDrawn":0,"teammatePressToVisibleMs":1024,"teammateDrawn":14,"teammatePresses":14,"journalEffectMs":1024,"afterClose":0,"ended":true,"waveDone":null,"finishes":1},{"readsPerSecond":2.1321961620469083,"inputsPerSecond":1.0068704098554844,"healthPerSecond":0.059227671167969675,"presses":14,"pressToVisibleMs":0,"neverDrawn":0,"teammatePressToVisibleMs":1024,"teammateDrawn":17,"teammatePresses":18,"journalEffectMs":1024,"afterClose":0,"ended":true,"waveDone":null,"finishes":1}],"closedAt":33768,"roomPerSecond":0,"journal":72,"controllers":null}
+
+[recovery-load] two players, 200 ms round trip, 100 ms room: {"players":[{"readsPerSecond":2.1321961620469083,"inputsPerSecond":1.1253257521914237,"healthPerSecond":0.059227671167969675,"presses":18,"pressToVisibleMs":0,"neverDrawn":0,"teammatePressToVisibleMs":112,"teammateDrawn":14,"teammatePresses":14,"journalEffectMs":1024,"afterClose":0,"ended":true,"waveDone":null,"finishes":1},{"readsPerSecond":2.1321961620469083,"inputsPerSecond":1.0068704098554844,"healthPerSecond":0.059227671167969675,"presses":14,"pressToVisibleMs":0,"neverDrawn":0,"teammatePressToVisibleMs":112,"teammateDrawn":18,"teammatePresses":18,"journalEffectMs":1024,"afterClose":0,"ended":true,"waveDone":null,"finishes":1}],"closedAt":33768,"roomPerSecond":0.9476427386875148,"journal":72,"controllers":null}
+
+[recovery-load] hidden 1 min: {"shown":true,"caughtUpAt":250,"closedAt":null}
+
+[recovery-load] hidden 3 min: {"shown":true,"caughtUpAt":200,"closedAt":150900}
+
+[recovery-load] hidden 10 min: {"shown":true,"caughtUpAt":200,"closedAt":150900}
+
+[playtest] musket shots at a walking boarder just inside range where drawn, landing 1 s later: {"hits":{"seen":6,"unseen":0},"tries":{"seen":15,"unseen":15}}
+ ❯ tests/tutorial-pages.test.js (10 tests | 3 failed) 39ms
+   ❯ How to play pages (7)
+     × has 8 to 11 pages with one idea each: a unique id and title, 1 to 3 short sentences 7ms
+   ❯ one island only (GAME-V3.md §2) (1)
+     × the Harbor page says it is a building that opens after wave 4, without Pirate Point or the sea chart 1ms
+   ❯ versioned recovery help (2)
+     × keeps recovery copy frozen and short for the full map too 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/tutorial-pages.test.js > How to play pages > has 8 to 11 pages with one idea each: a unique id and title, 1 to 3 short sentences
+AssertionError: captain: expected 5 to be less than or equal to 3
+ ❯ tests/tutorial-pages.test.js:17:89
+     15|     for(const page of TUTORIAL_PAGES){
+     16|       const said=sentences(page.text);
+     17|       expect(said.length,page.id).toBeGreaterThanOrEqual(1);expect(sai…
+       |                                                                                         ^
+     18|       for(const sentence of said)expect(sentence.length,sentence).toBe…
+     19|       expect(page.title.length).toBeLessThanOrEqual(30);expect(page.al…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  tests/tutorial-pages.test.js > one island only (GAME-V3.md §2) > the Harbor page says it is a building that opens after wave 4, without Pirate Point or the sea chart
+AssertionError: expected 118 to be less than or equal to 110
+ ❯ tests/tutorial-pages.test.js:85:124
+     83|     const all=ONE_ISLAND_PAGES.map(page=>[page.title,...page.text,...(…
+     84|     expect(all).not.toContain('Pirate Point');expect(all).not.toContai…
+     85|     for(const page of ONE_ISLAND_PAGES){expect(Object.isFrozen(page)).…
+       |                                                                                                                            ^
+     86|   });
+     87| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  tests/tutorial-pages.test.js > versioned recovery help > keeps recovery copy frozen and short for the full map too
+AssertionError: captain: expected 5 to be less than or equal to 3
+ ❯ tests/tutorial-pages.test.js:122:51
+    120|     expect(pages.every(page=>Object.isFrozen(page)&&Object.isFrozen(pa…
+    121|     for(const page of pages){
+    122|       expect(sentences(page.text).length,page.id).toBeLessThanOrEqual(…
+       |                                                   ^
+    123|       for(const sentence of sentences(page.text))expect(sentence.lengt…
+    124|     }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  tests/island/nearby-game.test.js > nearby E/Use works and a reported revive blocks building input (phone=false)
+Error: Test timed out in 20000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ tests/island/nearby-game.test.js:35:23
+     33| }
+     34|
+     35| it.each([false, true])('nearby E/Use works and a reported revive block…
+       |                       ^
+     36|   await evaluate.withPage(async (page, base) => {
+     37|     await openGame(page, base, phone);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  tests/pirates/defense-report-ownership.test.js > the actual game blocks keyboard and gamepad movement while the report owns input
+Error: Test timed out in 20000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ tests/pirates/defense-report-ownership.test.js:5:1
+      3| const browser = browserHarness();
+      4|
+      5| it('the actual game blocks keyboard and gamepad movement while the rep…
+       | ^
+      6|   await browser.withPage(async (page, base) => {
+      7|     await page.addInitScript(() => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  3 failed | 349 passed (352)
+      Tests  5 failed | 3864 passed (3869)
+   Start at  11:38:25
+   Duration  626.63s (tests 91%, import 8%, transform 1%)
+
+    Isolate  352 workers spawned · ~110ms startup each (spawn + environment, per file)
+             at least ~38.54s faster with isolate: false — reuses workers across files instead of one per file
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice

@@ -1,0 +1,82 @@
+
+ RUN  v5.1.0 /workspace/captain-combat-feedback/frontend
+
+ ❯ tests/pirates/combat-feedback-controller.test.js (5 tests | 1 failed) 106ms
+   × keeps musket range and aim after targeting a ship beside a boarder 38ms
+ ❯ tests/pirates/range-feedback.test.js (7 tests | 1 failed) 21ms
+   ❯ contextual captain range (7)
+     × shows the explicit gun attempt before a nearby enemy’s ambient cutlass hint 10ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/pirates/combat-feedback-controller.test.js > keeps musket range and aim after targeting a ship beside a boarder
+AssertionError: expected { x: -19.53, z: 2.61, …(7) } to match object { radius: 14, …(3) }
+(5 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "label": "Musket range",
+-   "melee": false,
++   "label": "Cutlass reach",
++   "melee": true,
+    "point": {
+      "x": -20.63,
+      "z": 2.75,
+    },
+-   "radius": 14,
++   "radius": 2.2,
+  }
+
+ ❯ tests/pirates/combat-feedback-controller.test.js:76:21
+     74|     expect(h.events.some(event => event.type === 'captain_fired' && ev…
+     75|       && event.targetId === pair.ship.id)).toBe(true);
+     76|     expect(h.range).toMatchObject({ radius: 14, label: 'Musket range',…
+       |                     ^
+     77|       point: { x: pair.ship.x, z: pair.ship.z } });
+     78|     expect(h.latest.combatFeedback.range).toMatchObject({ radius: 14, …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/pirates/range-feedback.test.js > contextual captain range > shows the explicit gun attempt before a nearby enemy’s ambient cutlass hint
+AssertionError: expected { x: 2, z: 3, radius: 2.2, …(6) } to match object { label: 'Musket range', …(3) }
+(5 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "label": "Musket range",
+-   "melee": false,
++   "label": "Cutlass reach",
++   "melee": true,
+    "point": {
+      "x": 12,
+      "z": 3,
+    },
+-   "radius": 14,
++   "radius": 2.2,
+  }
+
+ ❯ tests/pirates/range-feedback.test.js:39:45
+     37|     expect(view(feedback, { preview: true, blade: true })).toMatchObje…
+     38|     feedback.attempt({ nowMs: 1000, message: 'Shot fired', point, blad…
+     39|     expect(view(feedback, { blade: true })).toMatchObject({ label: 'Mu…
+       |                                             ^
+     40|     expect(view(feedback, { nowMs: 2500, preview: true, blade: true })…
+     41|     expect(view(feedback, { nowMs: 2600, preview: true, blade: true })…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  2 failed | 10 passed (12)
+   Start at  18:03:12
+   Duration  947ms (transform 44%, import 33%, tests 21%, worker 2%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice
