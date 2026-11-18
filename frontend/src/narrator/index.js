@@ -75,6 +75,7 @@ export function createNarrator({container = globalThis.document?.body, on, audio
   let voices = null, voicesLoad = null;
 
   const settings = () => preferences() ?? {};
+  let subtitleSize = settings().subtitleSize;
   const enabled = () => settings().narrator !== false;
   const captions = () => settings().captions !== false;
   const audible = () => { const value = settings(); return (value.master ?? 1) > 0 && (value.voice ?? 1) > 0; };
@@ -241,10 +242,13 @@ export function createNarrator({container = globalThis.document?.body, on, audio
   );
   // Narrator off: stop at once. Captions off: hide the card (the voice goes on).
   stops.push(onPreferences(() => {
+    const nextSize = settings().subtitleSize;
+    const leftLarge = subtitleSize === 'large' && nextSize !== 'large';
+    subtitleSize = nextSize;
     if (!enabled()) hush();
     else if (!captions()) card.hide();
     else if (speaking && !card.visible) card.show(speaking.line);
-    else if (!speaking && settings().subtitleSize !== 'large') card.hide();
+    else if (!speaking && leftLarge) card.hide();
   }) ?? (() => {}));
 
   return {
