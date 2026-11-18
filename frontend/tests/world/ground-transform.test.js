@@ -38,6 +38,15 @@ describe('projected ground buffers and coast sampling',()=>{
       const displayed=new THREE.Vector3().fromBufferAttribute(vertices,i).applyMatrix4(mesh.matrixWorld),logical=unprojectGround(displayed.x,displayed.y);
       expect(Math.abs(logical.x-7.5)).toBeCloseTo(1,6);expect(Math.abs(logical.z+.5)).toBeCloseTo(1,6);
     }
+    const rim=root.getObjectByName('island-move-footprint-rim'), validColour=rim.material.color.getHex();
+    const rimEdges=Array.from({length:rim.geometry.attributes.position.count},(_,i)=>{
+      const p=new THREE.Vector3().fromBufferAttribute(rim.geometry.attributes.position,i).applyMatrix4(rim.matrixWorld);
+      return Math.abs(unprojectGround(p.x,p.y).x-7.5);
+    });
+    expect((Math.min(...rimEdges)+Math.max(...rimEdges))/2).toBeCloseTo(1,6);
+    preview.show({x:7.5,z:-.5,size:2,ok:false});
+    expect(rim.material.color.getHex()).not.toBe(validColour);
+    expect(preview.shown).toEqual({x:7.5,z:-.5,size:2,ok:false});
     makeWallLanes(root,[[2,-1,1]]);const lane=root.getObjectByName('island-wall-lanes'),p=lane.geometry.attributes.position;
     expect([...lane.geometry.index.array]).toEqual([0,1,2,0,2,3]);
     for(const [i,expected]of[[-1.25,2.25],[1.25,2.25],[1.25,1.75],[-1.25,1.75]].entries()){

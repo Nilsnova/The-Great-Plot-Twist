@@ -137,17 +137,17 @@ describe('independent current cap and buttress contract', () => {
   });
 });
 
-// VIS67 retains the earlier 151 cases above byte-for-byte. These independent replacements
-// prove that old presentation buffers cannot satisfy a fresh upright-wall diagnostic row.
-const uprightHeights = [1.45, 1.70, 1.95, 2.10, 2.20];
-const oldHeights = [.95, 1.15, 1.25, 1.35, 1.43];
+// VIS73 retains the earlier 151 cases above byte-for-byte and the following 40 rejection/selection cases.
+// Independent geometry replacements prove that the former tall profile cannot satisfy current rows.
+const uprightHeights = [.85, .95, 1.10, 1.20, 1.30];
+const oldHeights = [1.45, 1.70, 1.95, 2.10, 2.20];
 function capPoints(post, height, half) {
   return [[-half,-half],[half,-half],[half,half],[-half,half]].flatMap(([dx,dz]) => [
     1.3 * (post.x + dx) + .2 * (post.z + dz), -.6 * (post.z + dz) + height + .02, 0,
   ]);
 }
 function replaceActualCap(state, post, points) {
-  const expected = capPoints(post, uprightHeights[post.level - 1], .40);
+  const expected = capPoints(post, uprightHeights[post.level - 1], .28);
   for (const mesh of state.group.children) {
     const position = mesh.geometry.getAttribute('position');
     for (let first = 0; first + 12 <= position.array.length; first += 12) {
@@ -166,7 +166,7 @@ describe('upright wall profile rejection', () => {
     const rows = straightRows({...profile,form:'cap'}), post = rows[1], state = drawing(rows);
     expect(read(state)).toEqual({level:post.level,pips:0,mode:'wall-batch'});
     const wrong = capPoints(post, fault === 'old height' ? oldHeights[post.level - 1] : uprightHeights[post.level - 1],
-      fault === 'old width' ? .28 : .40);
+      fault === 'old width' ? .40 : .28);
     const changed = replaceActualCap(state, post, wrong);
     invalid(state);
     changed.position.array.set(changed.original, changed.first);
@@ -176,8 +176,8 @@ describe('upright wall profile rejection', () => {
 });
 
 function replaceCapWithAuthoredPost(state, post) {
-  const x = 1.3 * post.x + .2 * post.z, bottom = -.6 * post.z - 6 / 16, top = bottom + 48 / 16;
-  const changed = replaceActualCap(state, post, [x-1.125,bottom,0,x+1.125,bottom,0,x+1.125,top,0,x-1.125,top,0]);
+  const x = 1.3 * post.x + .2 * post.z, bottom = -.6 * post.z - 6 / 16 * .65, top = bottom + 48 / 16 * .65;
+  const changed = replaceActualCap(state, post, [x-.9,bottom,0,x+.9,bottom,0,x+.9,top,0,x-.9,top,0]);
   const id = post.level === 1 ? 'island-wall' : `island-wall-l${post.level}`, frame = WALL_AUDIT_ATLAS.rects[id];
   const u0 = (frame.x+.5)/256, u1 = (frame.x+frame.w-.5)/256;
   const v0 = 1-(frame.y+frame.h-.5)/WALL_AUDIT_ATLAS.height, v1 = 1-(frame.y+.5)/WALL_AUDIT_ATLAS.height;
@@ -207,6 +207,68 @@ describe('known ordinary-depth wall selection', () => {
     invalid(state);
     state.walls.select('wall_2');
     expect(read(state)).toEqual({level:profile.level,pips:0,mode:'wall-batch'});
+    state.walls.dispose();
+  });
+});
+
+const postStates = [1, 2, 3, 4, 5].flatMap(level => ['intact', 'damaged', 'broken'].map(look => ({level, look})));
+function postRows({level, look}, form = 'end') {
+  const center = {...wall('wall_2', 4, 3, level), look};
+  if (form === 'isolated') return [center];
+  const rows = [wall('a', 2, 3, level), center];
+  if (form === 'corner') rows.push(wall('b', 4, 1, level));
+  if (form === 'selected') rows.push(wall('c', 6, 3, level));
+  return rows;
+}
+const postPoints = (post, widthScale = .60, heightScale = .65) => {
+  // Fixed projection and 48×48/anchor6 source box; independent of the renderer and observer.
+  const x = 1.3 * post.x + .2 * post.z, half = 48 / 16 * widthScale / 2;
+  const bottom = -.6 * post.z - 6 / 16 * heightScale, top = bottom + 48 / 16 * heightScale;
+  return [x-half,bottom,0,x+half,bottom,0,x+half,top,0,x-half,top,0];
+};
+function replacePostGeometry(state, post, points) {
+  const expected = postPoints(post);
+  for (const mesh of state.group.children) {
+    const position = mesh.geometry.getAttribute('position');
+    for (let first = 0; first + 12 <= position.array.length; first += 12) {
+      if (!expected.every((value, at) => Math.abs(position.array[first + at] - value) < 1e-5)) continue;
+      position.array.set(points, first);
+      return {position, first, original: expected};
+    }
+  }
+  throw Error('The actual post must exist before its scale can be challenged.');
+}
+
+describe('independent coherent post scales', () => {
+  const forms = postStates.flatMap(state => ['isolated', 'end', 'corner', 'selected'].map(form => ({...state, form})));
+  it.each(forms)('observes tier $level $look $form at its ordinary depth and unchanged source foot', ({form, ...profile}) => {
+    const state = drawing(postRows(profile, form));
+    if (form === 'selected') state.walls.select('wall_2');
+    expect(read(state)).toEqual({level: profile.level, pips: 0, mode: 'wall-batch'});
+    expect(state.scene.getObjectByName('island-selected-wall')).toBeUndefined();
+    state.walls.dispose();
+  });
+
+  const faults = postStates.flatMap(state => ['former intact width', 'former damaged width', 'former height'].map(fault => ({...state, fault})));
+  it.each(faults)('rejects $fault on tier $level $look despite current diagnostic rows', ({fault, ...profile}) => {
+    const rows = postRows(profile), post = rows[1], state = drawing(rows);
+    expect(read(state)).toEqual({level: profile.level, pips: 0, mode: 'wall-batch'});
+    const changed = replacePostGeometry(state, post, postPoints(post,
+      fault === 'former intact width' ? .75 : fault === 'former damaged width' ? 1 : .60,
+      fault === 'former height' ? 1 : .65));
+    invalid(state);
+    changed.position.array.set(changed.original, changed.first);
+    expect(read(state)).toEqual({level: profile.level, pips: 0, mode: 'wall-batch'});
+    state.walls.dispose();
+  });
+
+  it.each(postStates)('rejects stale damage artwork for tier $level $look after diagnostic state changes', profile => {
+    const rows = postRows(profile), post = rows[1], state = drawing(rows);
+    expect(read(state)).toEqual({level: profile.level, pips: 0, mode: 'wall-batch'});
+    post.look = {intact: 'damaged', damaged: 'broken', broken: 'intact'}[post.look];
+    invalid(state);
+    state.walls.show(rows);
+    expect(read(state)).toEqual({level: profile.level, pips: 0, mode: 'wall-batch'});
     state.walls.dispose();
   });
 });

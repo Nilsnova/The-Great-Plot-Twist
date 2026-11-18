@@ -6,9 +6,10 @@ const plus = (a, b) => Math.round((a + b) * 100) / 100;
 
 export function createDefenseReport() {
   let current = null, last = null;
-  function begin({waveId, wave, context} = {}, defenses = []) {
+  function begin({waveId, wave, context, recovery = false} = {}, defenses = []) {
     if (typeof waveId !== 'string' || !waveId || current?.waveId === waveId) return;
-    current = {waveId, wave, context, ended: false, partial: true, reason: null, heartDamage: 0,
+    if (current && !current.ended) { current.ended = true; last = current; }
+    current = {waveId, wave, context, recovery, ended: false, partial: true, reason: null, heartDamage: 0,
       payout: {status: 'pending', coins: null}, structures: new Map()};
     for (const item of defenses) {
       if (current.structures.size >= REPORT_STRUCTURE_LIMIT) break;
@@ -38,10 +39,15 @@ export function createDefenseReport() {
       }
     }
   }
-  function payout(waveId, {status, coins = null}) {
+  function payout(waveId, {status, coins = null, survived}) {
     const report = current?.waveId === waveId ? current : last?.waveId === waveId ? last : null;
     if (!report || report.payout.status === 'confirmed') return;
     if (status === 'confirmed' && (!Number.isSafeInteger(coins) || coins < 0)) return;
+    if (status === 'confirmed' && typeof survived === 'boolean') {
+      report.survived = survived;
+      report.ended = true;
+      if (report === current) last = report;
+    }
     report.payout = {status, coins: status === 'confirmed' ? coins : null};
   }
   return {begin, events, payout,

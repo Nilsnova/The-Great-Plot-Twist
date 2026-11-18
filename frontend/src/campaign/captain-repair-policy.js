@@ -1,5 +1,5 @@
-// New recovery policy gates Captain repair skills and calculates the approved between-wave rate factor.
-// Used by Captain stats, Tech UI and the recovery policy parity tests; it does not heal structures.
+// Recovery v1 gates retired Captain repair skills. The retained rate helper below is historical parity
+// math; wave-end healing does not use it.
 
 export const RETIRED_CAPTAIN_SKILL_IDS = Object.freeze([
   'quick_fix', 'long_reach', 'sturdy_planks', 'master_shipwright', 'swift_hammer', 'wide_arc', 'grand_engineer',
@@ -10,9 +10,9 @@ const STRUCTURE_KINDS = new Set(['wall', 'cannon', 'mortar', 'harpoon', 'culveri
 const WALL_SPEC_FACTORS = Object.freeze({stone: 1, spiked: 1, quick_mend: 2, bastion: 3, thorns: 1});
 const WALL_RESEARCH_FACTORS = Object.freeze({mason_drill: 1.5, thick_walls: 1});
 const RECOVERY_RESEARCH_LINES = Object.freeze({
-  quick_mend: 'This wall mends twice as fast between waves.',
-  mason_drill: 'Automatic wall repair for this island runs 50% faster.',
-  bastion: 'Bastion adds 50% more HP and repairs it three times faster between waves when equipped.',
+  quick_mend: 'This saved Quick Mend choice is retired and no longer affects repair.',
+  mason_drill: 'Mason Drill remains in saved research but no longer affects repair.',
+  bastion: 'Bastion adds 50% max HP when equipped.',
 });
 const MAX_CARPENTERS = 2;
 const MAX_WORKSHOP_BONUS_PERCENT = 50;
@@ -47,7 +47,7 @@ export function isAllowedWallRecoveryChoice({wallSpec = null, wallResearch = nul
   return validSpec && validResearch;
 }
 
-/** The approved rate factor applies between waves; Wall Tech only affects walls, never towers. */
+/** Historical compatibility/parity helper; current wave-end healing does not use this rate factor. */
 export function recoveryRateFactor({ownerCarpenters = 0, nearbyWorkshops = 0, structureKind, wallSpec = null,
   wallResearch = null, isBetweenWaves = true} = {}) {
   if (!Number.isSafeInteger(ownerCarpenters) || !Number.isSafeInteger(nearbyWorkshops)
