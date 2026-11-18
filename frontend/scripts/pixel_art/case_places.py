@@ -2,24 +2,109 @@
 from common import canvas, shadow, poly
 from buildings import boathouse
 INK='#343d32'
-def cave(gate=False,raid=False):
-    w,h=112,112 if raid else 96;im,d=canvas(w,h);shadow(d,56,h-10,49,6);base=h-13
-    pts=[(7,base),(11,base-30),(20,base-50),(38,base-67),(70,base-69),(94,base-51),(104,base-21),(101,base)]
-    poly(d,pts,'#53634b',INK)
-    poly(d,[(12,base-5),(16,base-29),(27,base-47),(39,base-60),(50,base-61),(43,base-42),(32,base-28),(28,base-5)],'#829074')
-    poly(d,[(72,base-62),(92,base-45),(100,base-22),(96,base-4),(82,base-6),(79,base-36)],'#3e5040')
-    d.ellipse((30,base-51,82,base+11),fill=INK);d.rectangle((30,base-24,82,base+2),fill=INK)
-    d.ellipse((36,base-44,76,base+7),fill='#233b32');d.rectangle((36,base-23,76,base+2),fill='#233b32')
-    for x,y in [(17,base-19),(21,base-42),(38,base-58),(61,base-64),(85,base-48),(94,base-27)]:
-        d.line((x,y,x+12,y-2),fill='#9ba084');d.line((x+2,y+3,x+10,y+2),fill='#42583f')
-    d.line((30,base+1,82,base+1),fill='#a29e76');d.line((38,base+4,75,base+4),fill='#b7ac7e')
-    if gate:
-        for x in range(36,77,8):d.rectangle((x,base-35,x+4,base),fill='#8a7350');d.line((x+1,base-33,x+1,base-2),fill='#b09969')
-        d.line((34,base-27,79,base-27),fill=INK,width=3);d.line((34,base-10,79,base-10),fill=INK,width=3)
-    if raid:
-        for x in [20,88]:d.rectangle((x,base-61,x+5,base-12),fill=INK);d.rectangle((x+1,base-60,x+4,base-13),fill='#738069')
-        poly(d,[(24,base-57),(39,base-52),(24,base-39)],'#9d7253');poly(d,[(89,base-57),(75,base-52),(89,base-39)],'#9d7253')
-    for x in [14,91]:d.line((x,base,x-3,base-10),fill='#819659');d.line((x,base,x+3,base-13),fill='#9aa66b')
+
+def cave():
+    im, d = canvas(112, 96)
+    shadow(d, 56, 86, 49, 6)
+    # Sloping slate caps and wet, irregular feet distinguish an eroded opening from masonry.
+    poly(d, [(7, 81), (13, 69), (16, 51), (27, 46), (35, 27), (51, 17), (63, 14),
+             (77, 23), (91, 25), (100, 44), (103, 67), (106, 80), (98, 85), (13, 85)], '#566957', INK)
+    poly(d, [(18, 51), (37, 29), (53, 19), (63, 16), (72, 23), (63, 31),
+             (45, 34), (34, 47), (30, 58), (17, 64)], '#879480')
+    poly(d, [(45, 34), (63, 31), (72, 23), (89, 27), (97, 42), (80, 38), (64, 40), (43, 49)], '#657864')
+    poly(d, [(89, 28), (99, 45), (102, 66), (104, 79), (94, 82), (88, 69), (82, 45)], '#3e5349')
+    poly(d, [(28, 82), (31, 63), (35, 54), (44, 49), (52, 43), (67, 40),
+             (77, 44), (83, 53), (87, 64), (89, 81), (83, 85), (35, 87)], '#32463d')
+    poly(d, [(37, 81), (38, 65), (43, 58), (52, 51), (65, 47), (74, 50),
+             (79, 57), (83, 69), (84, 82), (73, 85), (44, 86)], '#223b35')
+    poly(d, [(35, 82), (49, 81), (65, 84), (82, 81), (89, 84), (77, 88), (46, 89), (34, 86)], '#576b58')
+    d.line([(19, 65), (23, 54), (32, 50)], fill='#a4ad8a', width=2)
+    d.line([(41, 27), (56, 23), (60, 18)], fill='#a4ad8a', width=2)
+    d.line([(72, 33), (83, 31), (92, 35)], fill='#8b9b81', width=2)
+    d.line([(39, 50), (47, 46), (61, 43)], fill='#9ba68a', width=2)
+    d.line([(51, 85), (64, 86), (79, 84)], fill='#859d84', width=2)
+    poly(d, [(9, 82), (12, 75), (20, 73), (25, 77), (22, 84), (13, 86)], '#6f836b', INK)
+    poly(d, [(92, 83), (95, 74), (102, 73), (106, 79), (105, 85), (99, 87)], '#61785e', INK)
+    d.line([(13, 78), (18, 77), (21, 78)], fill='#a0ab85', width=2)
+    d.line([(93, 81), (98, 79), (102, 79)], fill='#91a372', width=2)
+    return im
+
+
+def arena_gate():
+    im, d = canvas(112, 96)
+    shadow(d, 56, 86, 49, 6)
+    # A square lintel, dressed stone piers and two visibly closed timber doors.
+    poly(d, [(12, 85), (12, 32), (18, 23), (21, 17), (88, 17), (97, 21),
+             (101, 33), (100, 82), (106, 88), (100, 90), (12, 90), (7, 88)], '#657761', INK)
+    poly(d, [(17, 24), (84, 24), (92, 29), (92, 84), (15, 84), (15, 31)], '#858b72', INK)
+    poly(d, [(89, 29), (98, 32), (97, 83), (104, 87), (90, 87)], '#526554', INK)
+    d.rectangle((25, 36, 84, 83), fill=INK)
+    d.rectangle((30, 40, 79, 83), fill='#735b43')
+    for x in (30, 38, 46, 56, 64, 72):
+        d.rectangle((x, 41, x + 5, 81), fill='#8d704e')
+        d.line((x, 43, x, 78), fill='#ad9165')
+    d.rectangle((53, 39, 57, 84), fill=INK)
+    for points in [((30, 48), (51, 69)), ((59, 69), (79, 48))]:
+        d.line(points, fill='#4d4939', width=6)
+        d.line([(x, y - 1) for x, y in points], fill='#a68d62', width=2)
+    for x in (34, 76):
+        for y in (47, 75):
+            d.rectangle((x - 4, y, x + 3, y + 3), fill='#46574b')
+            d.point((x, y + 1), fill='#b8bc98')
+    d.rectangle((46, 65, 50, 69), fill='#3c5045')
+    d.rectangle((60, 65, 64, 69), fill='#3c5045')
+    for y in (41, 53, 65, 76):
+        d.line((17, y, 23, y), fill='#aca98a', width=2)
+        d.line((85, y + 2, 92, y + 2), fill='#637763', width=2)
+    poly(d, [(14, 29), (17, 21), (91, 21), (99, 25), (96, 32),
+             (15, 32)], '#9c9e82', INK)
+    d.line((21, 22, 88, 22), fill='#b7b596', width=2)
+    poly(d, [(48, 15), (62, 15), (64, 23), (56, 31), (47, 24)], '#6c5946', INK)
+    poly(d, [(50, 17), (61, 17), (61, 22), (56, 27), (50, 23)], '#a47e59')
+    poly(d, [(12, 83), (24, 83), (28, 86), (83, 86), (88, 83), (99, 83),
+             (104, 87), (101, 90), (10, 90), (8, 87)], '#76816a', INK)
+    poly(d, [(28, 85), (83, 85), (89, 91), (83, 94), (26, 94), (21, 91)], '#6b7761', INK)
+    poly(d, [(30, 86), (81, 86), (85, 90), (25, 90)], '#95977a')
+    d.line((27, 90, 84, 90), fill='#b0aa87', width=2)
+    return im
+
+
+def raid_arch():
+    im, d = canvas(112, 112)
+    shadow(d, 56, 102, 49, 6)
+    # Chiseled voussoirs frame a tall, deep opening. Uneven parapet stones and cloth give the ruin its profile.
+    poly(d, [(8, 99), (13, 86), (13, 65), (17, 54), (16, 44), (22, 43), (22, 37),
+             (33, 37), (36, 30), (49, 32), (55, 27), (69, 30), (77, 34), (87, 36),
+             (94, 47), (97, 62), (99, 90), (106, 99), (101, 102), (11, 103)], '#566a5a', INK)
+    poly(d, [(16, 89), (16, 64), (22, 46), (29, 43), (37, 34), (49, 36), (57, 30),
+             (71, 34), (85, 41), (92, 57), (93, 93), (83, 99), (18, 99)], '#7d8972')
+    poly(d, [(85, 42), (94, 53), (97, 71), (99, 91), (104, 98), (94, 101),
+             (87, 94), (86, 64), (80, 49)], '#4e6356')
+    poly(d, [(29, 99), (29, 72), (34, 61), (42, 49), (52, 45), (64, 45),
+             (76, 50), (84, 61), (87, 72), (87, 99)], '#384f43', INK)
+    poly(d, [(37, 98), (37, 73), (42, 62), (50, 55), (57, 52), (65, 54),
+             (75, 62), (81, 73), (81, 98)], '#233b33')
+    poly(d, [(44, 98), (48, 91), (66, 91), (75, 98)], '#41584a')
+    for pts, color in [
+        ([(21, 64), (27, 52), (34, 45), (42, 52), (35, 62), (31, 69)], '#9ca488'),
+        ([(34, 45), (44, 38), (55, 36), (55, 46), (46, 49), (42, 52)], '#8e9a81'),
+        ([(55, 36), (63, 34), (73, 40), (69, 50), (63, 46), (55, 46)], '#a6aa8b'),
+        ([(73, 40), (83, 46), (90, 57), (81, 64), (76, 54), (69, 50)], '#7f8e76'),
+        ([(90, 57), (94, 70), (94, 78), (85, 78), (84, 69), (81, 64)], '#748171'),
+    ]:
+        poly(d, pts, color, '#566b58')
+    for y in (75, 86, 94):
+        d.line((18, y, 27, y), fill='#a5a98a', width=2)
+        d.line((87, y + 3, 96, y + 3), fill='#5d7763', width=2)
+    poly(d, [(17, 48), (19, 48), (19, 84), (16, 84)], '#56614d', INK)
+    poly(d, [(93, 52), (96, 51), (96, 86), (93, 87)], '#56614d', INK)
+    poly(d, [(20, 52), (32, 55), (31, 71), (25, 67), (20, 74)], '#a07558', INK)
+    poly(d, [(92, 55), (82, 57), (83, 73), (89, 69), (92, 76)], '#896b52', INK)
+    d.line([(22, 54), (22, 67)], fill='#b89973', width=2)
+    d.line([(90, 57), (90, 68)], fill='#a58c69', width=2)
+    poly(d, [(11, 98), (22, 94), (31, 97), (31, 101), (11, 103)], '#6b8168', INK)
+    poly(d, [(87, 97), (99, 93), (105, 99), (100, 103), (87, 102)], '#627662', INK)
+    d.line((32, 101, 83, 101), fill='#9c9e7a', width=2)
     return im
 
 def ruin():
@@ -65,5 +150,5 @@ def fog():
     return im
 
 def assets():
-    return {'fog-bank':fog(),'back-room':boathouse(),'low-tide-cave':cave(),'arena-gate':cave(True),'raid-arch':cave(raid=True),
+    return {'fog-bank':fog(),'back-room':boathouse(),'low-tide-cave':cave(),'arena-gate':arena_gate(),'raid-arch':raid_arch(),
             'watchtower-ruin':ruin(),'reef':reef(),'salvage-yard':salvage()}
