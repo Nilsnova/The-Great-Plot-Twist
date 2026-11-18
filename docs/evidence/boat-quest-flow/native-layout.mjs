@@ -9,7 +9,8 @@ import {openWorldBrowser} from '../../../frontend/scripts/world-browser-tools.js
 const root=fileURLToPath(new URL('../../../',import.meta.url));
 const out=process.argv[2]??'/tmp/boat-notice-layout-probe';
 await mkdir(out,{recursive:true});
-const files=['frontend/src/island/ui.js','frontend/src/island/boat-card.css','frontend/src/pirates/pirates.css','frontend/src/pirates/hud.js','frontend/src/ui/toasts.js'];
+const files=['frontend/src/island/ui.js','frontend/src/island/boat-card.css','frontend/src/pirates/pirates.css','frontend/src/pirates/hud.js','frontend/src/ui/toasts.js',
+  'frontend/src/ui/hud.js','frontend/src/island/index.js','frontend/src/island/wave-flow.js','frontend/src/game.js'];
 const hashes=async()=>Object.fromEntries(await Promise.all(files.map(async name=>[name,createHash('sha256').update(await readFile(`${root}${name}`)).digest('hex')])));
 const before=await hashes();
 const env=await openWorldBrowser({hmr:false}),page=env.page,results=[];

@@ -100,6 +100,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   // ownRetry: your own island's read failed for a passing reason, so the next reread (the wave wiring's
   // 15 s timer, the bell or a build card) reads it again instead of leaving the island empty for good.
   let disposed = false, own = null, ownMessage = '', ownRetry = false, visiting = null, visitCode = readVisit(visitStorage), busySpot = null, cardMessage = '';
+  let pendingWallet = null, walletGeneration = 0;
   let world = null, cutscene = null, openSpot = null, loadTicket = 0, battle = false;
   const coreState = createCoreState();
   let coreWorld = null, coreContextKey = null, coreTravelGeneration = 0, coreRejoin = null;
@@ -168,8 +169,12 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     }
   }
   // A fresh island answer: coins and captain to the HUD, and the campaign of your own island (§4).
-  const setOwn = next => {
+  const setOwn = (next, {fromRead = false} = {}) => {
     const before = own;
+    if (!fromRead) {
+      if (pendingWallet) wrote('own');
+      pendingWallet = null; walletGeneration++;
+    }
     if (before?.code !== next?.code || before?.recoveryVersion !== next?.recoveryVersion) {
       recoveryReadId++; recoveryState = null; recoveryIslandCode = next?.code ?? null; recoveryCombat = null; recoveryStatus = next?.code ? 'loading' : 'disabled';
       clearRecoveryError();
@@ -206,9 +211,21 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     return () => { if (mine < turn.used || turn.wrote !== wrote) return false; turn.used = mine; return true; };
   };
   const wrote = kind => { turns[kind].wrote++; };
+  const setOwnRead = next => {
+    // Only reads already in flight when the fresh account balance arrived may hold older coins.
+    if (pendingWallet && turns.own.used <= pendingWallet.through) next = {...next, coins: pendingWallet.coins};
+    // Consuming the highest covered read fences every smaller ID; earlier reads must keep the guard.
+    if (pendingWallet && turns.own.used >= pendingWallet.through) pendingWallet = null;
+    setOwn(next, {fromRead: true});
+  };
   // Coins that another answer carries (the arsenal's): stale once an island read asked later was shown or a
   // write answered. Unlike reading('own') it does not use the turn, so a load's island read still lands.
-  const coinsAsked = () => { const turn = turns.own, asked = turn.asked, wrote = turn.wrote; return () => turn.used <= asked && turn.wrote === wrote; };
+  const coinsAsked = () => {
+    const turn = turns.own, asked = turn.asked, wrote = turn.wrote, wallet = walletGeneration;
+    const fresh = () => turn.used <= asked && turn.wrote === wrote && walletGeneration === wallet;
+    fresh.through = asked;
+    return fresh;
+  };
   // The fake answers at once; the live transport is the signed-in session's, read at every call.
   const live = {get: path => (getTransport()?.get?.(path) ?? notReady()), post: (path, body) => (getTransport()?.post?.(path, body) ?? notReady())};
   const islandTransport = transport ?? live;
@@ -266,16 +283,18 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const stopFinished = on(WAVE_FINISHED, event => {
     if (disposed) return;
     tellCoins(event.coins, {tick: true}); // the loot counts up in the HUD
-    waveOver = true; // its break: buildings may come down again
+    const activeWaveId = flow.current?.wave.waveId;
+    const endedHere = !activeWaveId || activeWaveId === event.waveId;
+    if (endedHere) waveOver = true; // An old receipt must not open the next wave's break.
     if (!own) return;
     if (!visiting && Number.isSafeInteger(event.coins)) own = {...own, coins: event.coins, flags: event.flags ?? own.flags};
     refreshCard();
     void readStructureRecovery();
     // The owner's rule (fix/playtest-1117): the server repairs every building when a wave ends.
-    if (Number.isSafeInteger(event.coins)) ui.toast(ALL_REPAIRED, 'info');
+    if (endedHere && Number.isSafeInteger(event.coins)) ui.toast(ALL_REPAIRED, 'info');
     // A won wave may open something (GAME-V3.md §4): read the island again; setOwn (or the visit) tells what is new.
     if (event.survived === true) {
-      const current = reading('own'); void api.getIsland().then(fresh => { if (!disposed && fresh.ok && current()) { setOwn(fresh.data); refreshCard(); } });
+      const current = reading('own'); void api.getIsland().then(fresh => { if (!disposed && fresh.ok && current()) { setOwnRead(fresh.data); refreshCard(); } });
       if (visiting) void reloadVisit().then(() => { if (!disposed) refreshCard(); });
     }
   });
@@ -386,7 +405,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       const answer = await api.getIsland();
       if (disposed || ticket !== loadTicket) return answer;
       if (answer.ok) {
-        if (current()) { setOwn(answer.data); if (!visiting) loadedTarget = shownIsland(); }
+        if (current()) { setOwnRead(answer.data); if (!visiting) loadedTarget = shownIsland(); }
         ownMessage = ''; ownRetry = false;
       } else { ownMessage = answer.message; ownRetry = mayPass(answer); }
     }
@@ -482,7 +501,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     const answer = await api.piratePoint();
     if (disposed) return answer;
     if (answer.ok) { if (current()) { point = answer.data; tookCoins(answer.data.coins); } pointMessage = ''; } else pointMessage = answer.message;
-    if (!own) { const check = reading('own'), mine = await api.getIsland(); if (!disposed && mine.ok && check()) setOwn(mine.data); }
+    if (!own) { const check = reading('own'), mine = await api.getIsland(); if (!disposed && mine.ok && check()) setOwnRead(mine.data); }
     applyWorld(); refreshCard();
     return answer;
   }
@@ -822,7 +841,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   async function freshOwn() {
     if (own) return null;
     const current = reading('own'), answer = await api.getIsland();
-    if (!disposed && answer.ok && current()) { setOwn(answer.data); refreshCard(); }
+    if (!disposed && answer.ok && current()) { setOwnRead(answer.data); refreshCard(); }
     return answer;
   }
   function openCrew() { openSpot = null; cardMessage = ''; ui.crewCard(crew(), hire); void freshOwn(); }
@@ -877,11 +896,20 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   // The answer of a write: the island, or (on Pirate Point) the shared spots plus your fresh coins.
   // Where a build goes: Pirate Point's shared spots, the friend's island you visit, or your own.
   const placeOf = spotId => (isPointSpot(spotId) ? 'point' : visiting ? 'visit' : 'own');
-  const tookCoins = coins => { if (own && Number.isSafeInteger(coins)) setOwn({...own, coins}); else tellCoins(coins); };
+  const tookCoins = coins => {
+    if (own && Number.isSafeInteger(coins)) setOwn({...own, coins});
+    else {
+      if (Number.isSafeInteger(coins)) pendingWallet = {coins, through: turns.own.asked};
+      tellCoins(coins);
+    }
+  };
   // The arsenal's coins go into the island object as it is: replacing it would make a load still waiting for
   // its wave answer take the island for another one and drop a returning player's rejoin proof.
   const arsenalCoins = (coins, fresh = () => true) => {
-    if (!Number.isSafeInteger(coins) || own?.coins === coins || !fresh()) return;
+    if (!Number.isSafeInteger(coins) || !fresh()) return;
+    // An arsenal read confirms coins after these own reads started, while later own reads stay authoritative.
+    if (fresh.through > turns.own.used) pendingWallet = {coins, through: fresh.through};
+    if (own?.coins === coins) return;
     if (own) own.coins = coins;
     tellCoins(coins);
   };
@@ -893,7 +921,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   async function reloadOwn() {
     const current = reading('own'), mine = await api.getIsland();
     if (disposed) return;
-    if (mine.ok) { ownRetry = false; ownMessage = ''; if (current()) setOwn(mine.data); } else if (!own) { ownMessage = mine.message; ownRetry = mayPass(mine); }
+    if (mine.ok) { ownRetry = false; ownMessage = ''; if (current()) setOwnRead(mine.data); } else if (!own) { ownMessage = mine.message; ownRetry = mayPass(mine); }
   }
   // The island being defended, read again: after a friend built or upgraded there (island_changed in
   // the island's room, src/pirates/game-wiring.js) and before every wave, so all defenders agree.
@@ -1281,7 +1309,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   async function bellAction(action) {
     cardMessage = '';
     const answer = action === 'join' ? await flow.join(where()) : action === 'ring' ? await flow.ring(where()) : null;
-    if (disposed || !answer) return;
+    if (disposed || !answer || answer.ignored) return;
     if (answer.ok) { world?.ring(); ui.close(); return; }
     cardMessage = answer.message; refreshCard();
   }
@@ -1427,6 +1455,14 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     // for Pirate Point, the island's room place (isle_<code>), joining a running wave, and the battle look.
     defenses: () => defenses(target()?.spots ?? [], campaign()?.research?.tiers),
     get api() { return api; },
+    // A fresh account read after background reward settlement, guarded by its service owner and write order.
+    setWalletCoins(value) {
+      if (disposed || !Number.isSafeInteger(value) || value < 0) return;
+      if (own) wrote('own');
+      else walletGeneration++;
+      tookCoins(value); refreshCard();
+    },
+    resetWalletRecovery() { pendingWallet = null; walletGeneration++; wrote('own'); },
     get recoveryTransport() { return recoveryTransport; },
     get recoveryVersion() { return recoveryModelVersion(); },
     roomPlace: () => islandRoom(visiting?.code ?? visitCode ?? own?.code ?? '') || null,
@@ -1446,8 +1482,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     },
     refreshDefended,
     // Captain health (GAME-V3.md §3): you stand a fallen teammate up and pay for it (your coins follow).
-    async reviveCaptain({waveId, fallen, downAt} = {}) {
-      const answer = await api.reviveCaptain({waveId, fallen, downAt});
+    async reviveCaptain(body = {}) {
+      const answer = await api.reviveCaptain(body);
       if (!disposed && answer.ok) tookCoins(answer.data.coins);
       return answer;
     },
@@ -1461,7 +1497,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     async ringBell() {
       if (disposed || !target()) return {ok: false, status: 0, code: 'not_ready', message: 'Your island is still loading.'};
       const answer = await flow.ring(where(), {joinRunning: true});
-      if (!disposed && answer.ok) world?.ring();
+      if (!disposed && answer.ok && !answer.ignored) world?.ring();
       return answer;
     },
     chartVisible: id => Object.hasOwn(CHART_NAMES, id),

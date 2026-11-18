@@ -500,15 +500,22 @@ class RevivedRow(BaseModel):
     price: StrictInt
     balance: StrictInt
     repeat: StrictBool
+    journaled: StrictBool | None = None
 
 
-async def revive_captain(admin: SupabaseAdmin, arguments: dict[str, Any]) -> RevivedRow | Refusal:
-    """Run wave_revive (captain health). A refusal changed nothing."""
-    reply = await admin.call_function("wave_revive", arguments)
+async def revive_captain(
+    admin: SupabaseAdmin, arguments: dict[str, Any], *, protocol: int = 1
+) -> RevivedRow | Refusal:
+    """Run the protocol's paid revival RPC. Recovery success includes its durable event."""
+    function = "recovery_wave_revive" if protocol == 2 else "wave_revive"
+    reply = await admin.call_function(function, arguments)
     if isinstance(reply, dict) and reply.get("status") == "refused":
         refused = read_model(PaidRefusedRow, reply)
         return Refusal(refused.reason, price=refused.price)
-    return read_model(RevivedRow, reply)
+    revived = read_model(RevivedRow, reply)
+    if protocol == 2 and revived.journaled is not True:
+        raise SupabaseRejected("The paid revival was not confirmed in the journal.")
+    return revived
 
 
 async def finish_wave(admin: SupabaseAdmin, arguments: dict[str, Any]) -> FinishedRow | Refusal:

@@ -1,6 +1,6 @@
 # Quest and boat flow evidence
 
-Review evidence for issue #462 and [PR #467](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/467), used by Ianno and the peer reviewer. Prerequisite #481 has merged. Main `03e660fe` is integrated by `a1416e00`; the notice-layout follow-up is `d7a25731`. Current native evidence and checks are in [the review follow-up](review-2026-11-18/README.md). Earlier results below retain their original source boundaries.
+Review evidence for issue #462 and [PR #467](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/467), used by Ianno and the peer reviewer. Prerequisite #481 has merged. [Latest main-merge evidence](merge-0a639631/README.md) covers the HUD/reward integration with main `0a639631`; the boat decision is now D068, preserving main's reward decision D067. Earlier [notice-layout review evidence](review-2026-11-18/README.md) and results below retain their original source boundaries.
 
 ## Earlier component browser evidence
 

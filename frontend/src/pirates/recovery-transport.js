@@ -79,7 +79,9 @@ export function commandForJournal(input) {
       ...(input.away === true ? { away: true } : {}) };
   }
   if (type === 'captain_revive' && isParticipantToken(input.targetId) && isCoordinate(input.x) && isCoordinate(input.z)) {
-    return { type, targetId: input.targetId, x: input.x, z: input.z };
+    if (input.downAt !== undefined && (!Number.isInteger(input.downAt) || input.downAt < 0 || input.downAt > MAX_TICK)) return null;
+    return { type, targetId: input.targetId, x: input.x, z: input.z,
+      ...(input.downAt !== undefined ? { downAt: input.downAt } : {}) };
   }
   if (type === 'finisher_ready' && isWireId(input.shipId)) return { type, shipId: input.shipId };
   if (type === 'finisher_input' && Number.isInteger(input.from) && Array.isArray(input.marks)

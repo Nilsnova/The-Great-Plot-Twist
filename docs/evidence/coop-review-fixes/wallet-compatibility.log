@@ -1,0 +1,21 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run tests/island/arsenal.test.js tests/island/arsenal-context.test.js tests/panel-wallet.test.js --maxWorkers=1
+
+
+ RUN  v5.1.0 /workspace/wave-review-wallet/frontend
+
+
+ Test Files  3 passed (3)
+      Tests  67 passed (67)
+   Start at  18:11:35
+   Duration  1.28s (import 42%, transform 33%, tests 23%, worker 2%)
+
+    Isolate  3 workers spawned · ~130ms startup each (spawn + environment, per file)
+             at least ~261ms faster with isolate: false — reuses workers across files instead of one per file
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice
