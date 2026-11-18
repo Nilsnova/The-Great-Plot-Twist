@@ -6,6 +6,8 @@ The user requests multiple visual passes, working wall placement, a maximum of t
 
 Parent task: [VIS69 #469](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/469).
 
+The local follow-up includes the revised rendering, purchase feedback, collision fix and matched Chrome journeys. [Local review and screenshots](../evidence/VIS-69-local-walls/README.md)
+
 ## Local Mac handover checkpoint
 
 The user requested moving execution to their local Mac before further cloud implementation or browser work. The review branch contains a saved checkpoint, not an accepted visual result. No new before/after screenshots have been captured for this revision.
@@ -63,6 +65,6 @@ Then perform multiple visual passes across all five wall tiers and intact/damage
 
 Twenty-five redundant original Draft PRs were closed reversibly, without merging or deleting branches: #342, #346, #349, #350, #353, #354, #355, #356, #363, #375, #382, #383, #384, #390, #392, #402, #406, #410, #414, #420, #426, #427, #431, #432 and #446. Twenty-one have exact current-main parity for all changed non-documentation files; four older assembled reviews are exact ancestors of retained historical #445. Original descriptions remain with an appended closure explanation. Unique perimeter work and teammate PRs were preserved. This is a conservative cleanup, not a claim that the entire queue is now empty.
 
-## Remaining review gates
+## Current review gates
 
-No new native screenshot, combined application pass, final visual acceptance, Safari result, sustained-performance result, deployment or live migration is claimed. The animation task is not implemented. Keep all new tasks open and the PR Draft. Complete the actual local checks and final overview before user review; a different human teammate must approve the current code before any merge under `CONTRIBUTING.md`.
+The local checks and screenshots are ready for user review in Draft #474. A different human teammate must approve the current code before a merge under `CONTRIBUTING.md`. The review evidence records the browser and device scope.
