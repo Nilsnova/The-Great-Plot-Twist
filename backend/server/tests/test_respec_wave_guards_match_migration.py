@@ -16,6 +16,7 @@ DEMOLISH = MIGRATIONS / "20261112080000_demolish.sql"
 RESEARCH = MIGRATIONS / "20261112100000_research_tiers.sql"
 TREE = MIGRATIONS / "20261112120000_captain_tree.sql"
 RECOVERY_MUTATIONS = MIGRATIONS / "20261117050000_structure_recovery_mutations.sql"
+PROGRESSION_GUARDS = MIGRATIONS / "20261118050501_island_progression_legacy_guards.sql"
 
 WAVE_TEST = re.compile(
     r"from public\.wave_runs\s+where island_owner = (\w+) and finished_at is null\s+"
@@ -34,7 +35,7 @@ def latest_definition(name: str) -> tuple[str, str]:
 
 
 def test_the_latest_definitions_are_in_the_guards_migration():
-    assert latest_definition("island_research")[0] == RECOVERY_MUTATIONS.name
+    assert latest_definition("island_research")[0] == PROGRESSION_GUARDS.name
     assert latest_definition("island_respec_at_level")[0] == GUARDS.name
 
 
@@ -75,7 +76,12 @@ def test_research_keeps_everything_else_of_research_tiers():
 
 
 def test_recovery_research_replacement_keeps_the_legacy_guard_and_adds_v1_settlement():
-    _, body = latest_definition("island_research")
+    # The shared wrapper preserves this body as its private personal-mode alias.
+    body = re.search(
+        r"create or replace function public\.island_research\(.*?\n\$\$;",
+        RECOVERY_MUTATIONS.read_text(),
+        re.S,
+    ).group(0)
     assert "structure_recovery_mutation_begin(p_island_owner)" in body
     assert "structure_recovery_mutation_finish(p_island_owner, v_recovery)" in body
     assert "if (v_recovery ->> 'recoveryVersion')::integer = 1 then" in body
@@ -86,6 +92,25 @@ def test_recovery_research_replacement_keeps_the_legacy_guard_and_adds_v1_settle
         in body
     )
     assert "'wave_running'" in body
+
+
+def test_shared_research_wrapper_guards_before_delegating_to_the_preserved_alias():
+    name, body = latest_definition("island_research")
+    assert name == PROGRESSION_GUARDS.name
+    assert (
+        body.index("island_treasury_lock_scope(p_island_owner)")
+        < body.index("from public.island_economy_state")
+        < body.index("'economy_context_required'")
+        < body.index("return public.island_research_legacy_personal(")
+    )
+    text = PROGRESSION_GUARDS.read_text()
+    assert "to_regprocedure('public.'||v_item.name||'_legacy_personal('" in text
+    assert "pg_get_functiondef(to_regprocedure('public.'||v_item.name||'('" in text
+    assert "position(v_item.name||'_legacy_personal' in v_definition) > 0" in text
+    assert (
+        "revoke all on function public.%I(%s) from public, anon, authenticated, service_role"
+        in text
+    )
 
 
 def test_respec_is_priced_per_level_under_the_island_lock():
