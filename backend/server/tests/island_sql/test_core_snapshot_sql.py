@@ -184,6 +184,8 @@ def wait_for_lock(observer, pid):
     as_owner(observer)
     deadline = monotonic() + 5
     while monotonic() < deadline:
+        # Each poll needs fresh activity rather than this transaction's cached statistics.
+        observer.execute("select pg_stat_clear_snapshot()")
         if observer.execute(
             "select wait_event_type from pg_stat_activity where pid=%s", (pid,)
         ).fetchone() == ("Lock",):
