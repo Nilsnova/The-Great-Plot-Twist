@@ -34,7 +34,7 @@ Migration `20261118050600_island_economy_crew.sql` adds private history and serv
 
 ## Dependencies and limits
 
-Requires MP-ECO-02 treasury accounts/child effects (`ba05448d`) and the global operation registry (`de6ac1b8` with cutover correction `8a35a58e`), plus MP-ECO-04's canonical `island_economy_require_idle_locked` helper (`bf557e6d`, with its MP-ECO-07 prerequisites). No expiry is inferred or settled by a crew purchase. MP-ECO-08 authority, wave snapshot adoption, HTTP route wiring, save conversion and simulation fixture/profile integration remain separate activation gates. This package does not apply live migrations or admit old saves.
+Requires MP-ECO-02 treasury accounts, child effects and the corrected global operation registry (`feca459f`), plus MP-ECO-04's canonical `island_economy_require_idle_locked` helper (`42f1b880`, including personal Captain prerequisite `4005fb53`). The treasury schema uses unique migration version `20261118050050`; `20261118050000` remains the retired recovery-options migration. No expiry is inferred or settled by a crew purchase. MP-ECO-08 authority, wave snapshot adoption, HTTP route wiring, save conversion and simulation fixture/profile integration remain separate activation gates. This package does not apply live migrations or admit old saves.
 
 ## Acceptance checks
 
@@ -74,3 +74,23 @@ uv run ruff check .
 The four new cases replace the financial helper only inside a rolled-back private savepoint. They inject a missing repeat flag, a string repeat flag, another existing receipt and an altered action identity. Every malformed success leaves crew, root claims, domain receipts and treasury unchanged, including cases that made a real debit before the malformed reply. Rolling back the stub restores the original helper, and the same action then succeeds normally.
 
 No HTTP routes were registered, live migrations applied, old saves admitted or full multiplayer simulation activated. Backend tests outside the affected domain/dependency suites and browser journeys were not run for this backend-only package.
+
+## Current dependency verification
+
+The dependency stack contains actual construction parent `42f1b880`, treasury parent `feca459f`, personal Captain parent `4005fb53` and main `b357b522`. Earlier copied dependency history is reconciled with those actual parents. Both independent migration documentation sections are retained, and the current-main timestamp uniqueness check remains intact.
+
+The crew modules, domain tests and two crew migrations are byte-identical to the hardening revision `811d7b79`. No crew behavior changed during this alignment. The old treasury file was removed only after verifying its bytes equal the canonical `20261118050050_island_treasury.sql`; the distinct retired-options migration remains.
+
+The affected checks on this integration tree passed:
+
+```sh
+cd backend
+uv run pytest -q server/tests/test_shared_crew.py server/tests/test_migration_versions.py
+# 20 passed: 19 crew domain/service checks and the timestamp uniqueness check.
+CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql/test_shared_crew_sql.py server/tests/island_sql/test_guard_crew_sql.py server/tests/island_sql/test_economy_operations_cutover_sql.py
+# 42 passed: 22 crew, 7 legacy guard and 13 registry cutover checks.
+uv run ruff check .
+# All checks passed.
+```
+
+All 78 SQL migrations also parse successfully, every timestamp is unique, and the disposable PostgreSQL fixture reapplies the complete chain. Whitespace checks pass for the seven feature-owned paths. Incoming main evidence files retain their existing whitespace; no unrelated artifacts are reformatted. HTTP activation, live migration/admission and multiplayer simulation remain unverified by this backend-only increment.
