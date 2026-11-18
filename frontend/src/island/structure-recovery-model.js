@@ -104,8 +104,8 @@ function buildStructureRecoveryView(state, structure, options = {}) {
     repairLabel: canQuote ? `Repair now: pay ${fixedPrice} coins` : null,
     repairReasonLabel: fundsReason,
     quotedPrice: fixedPrice,
-    helperLabel: reserved ? null : 'All buildings are fully repaired when a wave ends.',
-    statusLabel: reserved ? 'No free repair during this wave. Full HP is restored when it ends.' : null,
+    helperLabel: null,
+    statusLabel: null,
     remainingPaidUses: remainingUses,
     remainingUsesLabel: reserved && remainingUses !== null
       ? `${remainingUses === 0 ? 'No' : remainingUses} shared Repair now use${remainingUses === 1 ? '' : 's'} left this wave`

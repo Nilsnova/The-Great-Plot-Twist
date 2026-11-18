@@ -293,3 +293,19 @@ The card capture passed its wave-end repair, reserved quota, loading-upgrade and
 Current focused frontend checks passed 158 tests across 16 files, including card model, dock, recovery API/model/DOM/policy/indicator, narrator, tutorial and lazy-part tests. `npm run build` passed (541 modules) with the spoiler guard (250 text files, 12 protected lines). Text lint reported zero errors and 10 report-only findings. The earlier full frontend result (4,623 passed, 3 failed), 398 disposable SQL tests, village isolated result and pristine-main timeout remain historical evidence from their recorded source revisions; no full frontend or SQL suite was rerun for this UI-only sync. Backend and migration trees match current main exactly. No live migration, activation, deployment or PR publication occurred.
 
 The task-side diff against main has no whitespace warnings. The merge comparison against the prior UI branch reports nine warnings in incoming-main files: seven extra blank lines at EOF across existing captured output logs and two trailing-whitespace lines in `docs/evidence/sea-perf/probe-logs/sea-ab-bench.mjs`. They are preserved with the incoming evidence/source and were not edited by this UI task.
+
+## Simplified repair card presentation · 18 Nov
+
+Following the latest presentation choice, the building repair card shows its current HP and fixed Repair now price, plus shared remaining uses during a reservation. It does not announce full recovery at wave end or show a countdown. This is a display-only change: canonical wave closure still restores full HP; prices, shared quota, receipts, guards and phase rules are unchanged. D059, T54, T59 and How to Play now describe this card presentation; broader descriptions of the full wave-end gameplay rule remain.
+
+Final-source captures are in new directories below; the earlier `sync-03e660fe` images and all historical images remain unchanged. From `frontend/`:
+
+```sh
+RECOVERY_CAPTURE_DIRECTORY=../docs/evidence/T59-repair-feedback/clean-card-20261118 node scripts/capture-structure-recovery-card.js
+RECOVERY_CAPTURE_DIRECTORY=../docs/evidence/T59-repair-feedback/clean-card-20261118-component npm run test:recovery:component
+RECOVERY_CAPTURE_DIRECTORY=../docs/evidence/T59-repair-feedback/clean-card-20261118-integration node scripts/capture-structure-recovery-integration.js
+```
+
+The production card and standalone component captures passed no-countdown/no-wave-end-copy, HP, fixed price, shared-use, disabled loading Upgrade, zero marker, tiny-positive fill and viewport checks. The production island integration capture passed with 76 signed-shape offline adapter requests covering between-wave, preparation, combat, refusal, full, tiny and replay states. It uses a local fixture only; it does not prove an authenticated service request, payment, database transaction, canonical live closure or second client.
+
+The focused repair-card/card-model/dock/API/model/DOM/upgrade suite passed 77 tests across seven files. The production build and spoiler guard passed (541 modules; 250 text files and 12 protected lines). No full frontend or SQL suite was rerun for this display-only follow-up.

@@ -42,7 +42,7 @@ try {
 
   await pick('wall_1');
   await page.getByText('45 / 60 HP').waitFor();
-  await page.getByText('All buildings are fully repaired when a wave ends.').waitFor();
+  assert.equal(await page.locator('.recovery-helper, .recovery-status').count(), 0, 'card must omit wave-end explanatory copy');
   assert.equal(await page.locator('.recovery-free').count(), 0, 'between-wave card must not show a gradual-repair estimate');
   await page.getByRole('button', {name: 'Repair now: pay 10 coins'}).waitFor();
   const desktopCardStyle = await page.locator('.island-card').evaluate(element => {
@@ -107,7 +107,7 @@ try {
   await page.waitForFunction(() => window.recoveryFixture.getState().phase === 'preparing');
   await pick('wall_2', {width: 390, height: 844});
   await page.getByText('0 / 60 HP').waitFor();
-  await page.getByText('No free repair during this wave. Full HP is restored when it ends.').waitFor();
+  assert.equal(await page.locator('.recovery-helper, .recovery-status').count(), 0, 'reserved card must omit wave-end explanatory copy');
   await page.getByText('3 shared Repair now uses left this wave').waitFor();
   await page.getByRole('button', {name: 'Repair now: pay 10 coins'}).waitFor();
   await page.locator('.island-card').evaluate(element => { element.scrollTop = 0; });
@@ -136,7 +136,7 @@ try {
   await pick('cannon_2');
   await page.getByText('28 / 70 HP').waitFor();
   await page.getByText('2 shared Repair now uses left this wave').waitFor();
-  await page.getByText('No free repair during this wave. Full HP is restored when it ends.').first().waitFor();
+  assert.equal(await page.locator('.recovery-helper, .recovery-status').count(), 0, 'reserved card must omit wave-end explanatory copy');
   await page.locator('.island-card').evaluate(element => { element.scrollTop = element.scrollHeight; });
   await save('t59-integrated-preparation-phone.png');
 
@@ -144,7 +144,7 @@ try {
   assert.equal(combat, true, 'controller enters recovery combat from its frozen wave snapshot');
   await pick('cannon_2', {width: 1440, height: 900});
   await page.getByText('28 / 70 HP').waitFor();
-  await page.getByText('No free repair during this wave. Full HP is restored when it ends.').first().waitFor();
+  assert.equal(await page.locator('.recovery-helper, .recovery-status').count(), 0, 'reserved card must omit wave-end explanatory copy');
   await save('t59-integrated-combat-desktop.png');
 
   await page.evaluate(() => window.recoveryFixture.holdEvents());

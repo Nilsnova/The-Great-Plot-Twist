@@ -45,7 +45,7 @@ describe('structure recovery presentation', () => {
       maxHP: 200,
       hpLabel: '100 / 200 HP',
       repairLabel: 'Repair now: pay 40 coins',
-      helperLabel: 'All buildings are fully repaired when a wave ends.',
+      helperLabel: null,
       remainingPaidUses: null,
     });
     expect(view.healthBar).toMatchObject({ visible: true, fill: 0.5, border: 'dark', color: 'gold', destroyed: false });
@@ -95,7 +95,7 @@ describe('structure recovery presentation', () => {
     expect(view.healthBar.minimumVisibleWidthPx).toBe(1);
   });
 
-  it('shows paused automatic repair and shared remaining uses during preparation', () => {
+  it('shows the paid repair and shared remaining uses during preparation without explanatory status copy', () => {
     const damaged = structure();
     const view = buildStructureRecoveryView(
       state({
@@ -109,7 +109,10 @@ describe('structure recovery presentation', () => {
     );
 
     expect(view).toMatchObject({
-      statusLabel: 'No free repair during this wave. Full HP is restored when it ends.',
+      hpLabel: '100 / 200 HP',
+      repairLabel: 'Repair now: pay 40 coins',
+      quotedPrice: 40,
+      statusLabel: null,
       helperLabel: null,
       remainingUsesLabel: '2 shared Repair now uses left this wave',
     });
@@ -122,7 +125,8 @@ describe('structure recovery presentation', () => {
       damaged,
     );
 
-    expect(view.statusLabel).toBe('No free repair during this wave. Full HP is restored when it ends.');
+    expect(view.statusLabel).toBeNull();
+    expect(view.helperLabel).toBeNull();
     expect(view.remainingUsesLabel).toBe('No shared Repair now uses left this wave');
   });
 

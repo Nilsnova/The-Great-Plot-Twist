@@ -27,7 +27,7 @@ try {
   await page.getByText('Level 2 · 🪙 20').waitFor();
   await page.getByText('45 / 60 HP').waitFor();
   await page.getByRole('button', {name: 'Repair now: pay 10 coins'}).waitFor();
-  await page.getByText('All buildings are fully repaired when a wave ends.').waitFor();
+  assert.equal(await page.locator('.recovery-helper, .recovery-status').count(), 0, 'repair card must omit wave-end explanatory copy');
   assert.equal(await page.locator('.recovery-free').count(), 0);
   await page.screenshot({path: path.join(captureDirectory, 't59-wave-end-20261118-between-desktop.png'), fullPage: true});
   await page.getByRole('button', {name: 'Repair now: pay 10 coins'}).click();

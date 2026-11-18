@@ -14,7 +14,7 @@ describe('structure recovery card model', () => {
     const model = buildCardModel({spotId: 'wall_1', slot: 'wall', spot: {id: 'wall_1', kind: 'wall', built: true, level: 1},
       recoveryState: recoveryState(wall), recoveryStatus: 'ready'});
     expect(model.recovery).toMatchObject({visible: true, hpLabel: '45 / 60 HP',
-      repairLabel: 'Repair now: pay 10 coins', helperLabel: 'All buildings are fully repaired when a wave ends.'});
+      repairLabel: 'Repair now: pay 10 coins', helperLabel: null});
     expect(model.mode).toBe('upgrade');
   });
 
@@ -22,7 +22,8 @@ describe('structure recovery card model', () => {
     const model = buildCardModel({spotId: 'wall_1', slot: 'wall', spot: {id: 'wall_1', kind: 'wall', built: true, level: 1},
       recoveryState: recoveryState({...wall, hpUnits: 0}, {displayPhase: 'preparing', repairWindow: 'reserved_wave', waveId: '12345678-1234-4234-8234-123456789abc', remainingPaidUses: 2}),
       recoveryStatus: 'ready'});
-    expect(model.recovery).toMatchObject({statusLabel: 'No free repair during this wave. Full HP is restored when it ends.', remainingUsesLabel: '2 shared Repair now uses left this wave'});
+    expect(model.recovery).toMatchObject({hpLabel: '0 / 60 HP', repairLabel: 'Repair now: pay 10 coins', quotedPrice: 10,
+      statusLabel: null, helperLabel: null, remainingUsesLabel: '2 shared Repair now uses left this wave'});
     expect(model.recovery.repairIntent.expectedWaveId).toBe('12345678-1234-4234-8234-123456789abc');
   });
 
