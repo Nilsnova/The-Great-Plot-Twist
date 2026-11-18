@@ -21,7 +21,8 @@ tracks the published PR and its status. Independent human peer review and merge 
 ## What the player sees
 
 Hover or focus the fire button, hold F, or attempt a shot to reveal the current
-weapon's reach. Refused attempts reveal it too. The display uses twelve short parchment arcs with large gaps, following the captain,
+weapon's reach. In multiplayer each browser shows only its own captain's range,
+using its own position and loadout; teammate attacks never reveal their range. Refused attempts reveal it too. The display uses twelve short parchment arcs with large gaps, following the captain,
 level, weapon and range skills, then fades after 1.2 seconds plus a 0.4-second fade.
 The last manual slash can briefly show cutlass reach. Bomb reach describes throw
 distance; the blast and a rifle's secondary pierce can extend beyond the circle.
@@ -94,6 +95,30 @@ is retained only as superseded review history; it is absent from the current gam
   it disposes all geometry/materials on stop.
 - `audio/pirates.js` plays the alert on the existing effects bus. It does not add
   another caption over the warning or change other audio preferences.
+
+## Own-captain range in multiplayer
+
+Ianno explicitly requires each player to see only their own captain's range. The
+existing controller already creates range intent from local fire/preview input,
+uses the local world player and loadout, and never takes range intent from room
+messages, presence figures or the replay journal. No runtime behavior change was
+needed; `a93b140f` adds regression coverage and clarifies this in the helper header.
+
+[Focused verification](own-captain/focused-tests.txt): **31 tests pass across 6 files**.
+Two connected host/visitor controllers have distinct positions and weapons: shared
+shots still reach the other renderer, while range preview, origin, radius and
+expiry remain private. Recovery coverage checks local participant identity,
+teammate cosmetics and durable journal attacks, ignored remote presence positions,
+and no fallback to a teammate when the local position is absent. Independent
+read-only review found no ownership leak or blocking issue.
+
+Two initial test-authoring runs used incorrect catalog expectations ([rifle](own-captain/initial-rifle-expectation.txt),
+[bombs](own-captain/initial-bomb-expectation.txt)): level-one Long rifle is 22 and
+Fire bombs is 14. Only those new expectations were corrected; combat stats did not change.
+
+The latest screenshots remain valid because presentation and runtime behavior are
+unchanged. No new build, native-browser, full-suite or live-multiplayer run is
+claimed for this test/comment-only follow-up. Current human peer review remains pending.
 
 ## Range visibility follow-up
 

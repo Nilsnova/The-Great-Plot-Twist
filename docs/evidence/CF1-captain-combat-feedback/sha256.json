@@ -1,5 +1,5 @@
 {
-  "README.md": "8eb402a0a9fbb58652cb39a6d61a10e25b53a6658715c5aa24f62ea111018dc9",
+  "README.md": "3df5df523b56c8b16530f0d2e2711f7fac536f36bc59f653e65d72c0ae7ad068",
   "accessibility-summary.json": "b696683eeb81861d1174ed35e8232792b45c45ddc04b4fc983a40f5c7661eae2",
   "after-danger-1280x720.png": "ee8b6ba128b37784d2568e8496dce8f9eb03f9c0ed2bfd5e2ededfc1c2151357",
   "after-danger-375x812.png": "1127cbafc6175f8c418487d596d369e0f6c7a446f05e0635d25ee0bf293bd754",
@@ -49,6 +49,9 @@
   "native-feedback.txt": "64a4606794c348d7f4f9171281a0bb67c5e9585e0c5e6369faaf8155c8630538",
   "overlaps-after.txt": "5a91cf49fbbb1fa24c1795fef21c2d95208fa43682e27296bd198caf3e59f23b",
   "overlaps-before.txt": "fe80e7a59e0bf1e0e670c9a3db90794a33f9af30b2228037ce56e5d6fad880cb",
+  "own-captain/focused-tests.txt": "4a4d0b59f2e8ea0c44af9789f157420fde7dfce560b3492795244f9a6d99e059",
+  "own-captain/initial-bomb-expectation.txt": "b861b7f4c64215284fad825d4090ecd2a6ba2cbdd4d7d054b9b85439cf58868e",
+  "own-captain/initial-rifle-expectation.txt": "c2b904348e178cd912fb795286da6a37b5e219f6778c95dd3efc4d12258dfe6c",
   "redesign/after-danger-1280x720.png": "f363f943444ea69bce0f2a8bb0b62e71e2ab588e58057892ea4d081a013b83fc",
   "redesign/after-danger-375x812.png": "5449569c3afccd1979620f002f9f34c18894dc655f251e46ff9bf1a6d9648e36",
   "redesign/after-impact-1280x720.png": "2f4e019687e04506f95e241ec26926e7f2f3135f1ef8458093720d8d82e4a836",

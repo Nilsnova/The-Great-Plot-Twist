@@ -1178,3 +1178,8 @@ In active waves at widths 600–900px and heights at most 500px, reserve the rig
 ### CF1 parchment visibility refinement · 2026-11-18
 
 Ianno found the current parchment arcs barely visible and requested a slight increase in prominence. Increase stroke width inward from the same exact outer range, use a lighter warm parchment with a darker backing and a modestly stronger direction cap. Keep twelve short arcs, large gaps, contextual timing and one-sound warning episodes. Refresh desktop/phone screenshots in PR #475. This is an authorized refinement of the existing task; the three completed questions are not restarted. Current human peer review remains required; no merge or deployment.
+
+
+### CF1 range visibility is private to the local captain · 2026-11-18
+
+Ianno explicitly requires each multiplayer browser to show only its own captain's weapon range. Range intent comes from that browser's fire/preview actions and uses its own position and weapon/skill stats. Teammate room, presence and journal events continue to draw shooting/impact effects without showing or changing range. The current implementation already follows this rule; add host/visitor and recovery regressions rather than duplicate ownership state. Current screenshots and completed explain-back answers remain valid. No merge or deployment is authorized.
