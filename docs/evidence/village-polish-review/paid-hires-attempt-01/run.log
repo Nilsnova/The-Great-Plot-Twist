@@ -1,0 +1,14 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+page.evaluate: TypeError: Cannot read properties of null (reading 'spotId')
+    at eval (eval at evaluate (:370:30), <anonymous>:2:48)
+    at UtilityScript.evaluate (<anonymous>:372:16)
+    at UtilityScript.<anonymous> (<anonymous>:1:44)
+    at screenshot (/workspace/reference-village-work/polish-runtime-03/frontend/scripts/capture-paid-wall-tiers.mjs:229:29)
+    at /workspace/reference-village-work/polish-runtime-03/frontend/scripts/capture-paid-wall-tiers.mjs:105:44 {
+  log: []
+}
+
+Node.js v24.22.1

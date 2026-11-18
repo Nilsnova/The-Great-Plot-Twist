@@ -1,0 +1,14 @@
+{
+  "source": "9fa154940cbc9dab29ece4d15bba7efa8778a520",
+  "command": [
+    "node",
+    "scripts/capture-paid-wall-tiers.mjs",
+    "/workspace/reference-village-work/polish-runtime-02/frontend",
+    "/workspace/reference-village-work/polish-paid-tiers",
+    ".7"
+  ],
+  "started": "2026-11-18T00:13:23.240797+00:00",
+  "exitCode": 0,
+  "seconds": 223.56,
+  "finished": "2026-11-18T00:17:06.799238+00:00"
+}

@@ -1,0 +1,68 @@
+{
+  "status": "collecting_coordinator_evidence",
+  "responsibleHuman": "Johannes Franz Lang",
+  "github": "frcola",
+  "beforeRuntime": "6c87b8dcd2d7a1bb5376c3b64bbede27a144479e",
+  "historicalIterationRuntime": "65bda4fd750e4a2001fecc6d99b03ff287727e10",
+  "correctedCandidateRuntime": "9fa154940cbc9dab29ece4d15bba7efa8778a520",
+  "parentDocumentationBase": "13c10cdc2789829eacd9d71cfd8d5e16072be88b",
+  "candidateTrees": {
+    "frontend/src": "e191d9290088908ee27e82e03a15847d4a73a38e",
+    "frontend/public": "9306942db1050d728799cee2fbdc8e8960f14ad2",
+    "backend": "3956a73d76f537fd7c85259afa4bf9280a6e0ecd",
+    "supabase/migrations": "ae31ac50221be83070e7f46580d66a70eedbad20",
+    "frontend/scripts": "b5c4837c92361163c3eced4d20509004ddcf80a4",
+    "frontend/tests": "07944eef575e72984a899e31c34b9f5afea024f7"
+  },
+  "identityBoundary": "The parent documentation base has matching frontend/src, frontend/public, backend and complete supabase/migrations subtrees. Top-level supabase differs through README only; build stamps follow the actual HEAD.",
+  "results": {
+    "beforeActualGame": "passed_215.30_seconds_20_original_pngs",
+    "historicalIterationActualGame": "passed_188.05_seconds_not_final",
+    "nativeLandscape": "passed_exact_alpha_coast_profile_source_and_fallback_rgb_changed",
+    "paidTierWalkthrough": "passed_223.56_seconds_both_viewports_492_receipts_each_adaptive_density",
+    "nativeMatrix": "initial_pass_22_sheets_100_bindings_12.29_seconds_final_caption_fix_followup_pending",
+    "correctedActualGame": "passed_192.03_seconds_wrapper192.13_20_original_pngs_high_density1_DPR1",
+    "freshApplicationChecks": "running_known_input_timeout_20.027_seconds_final_counts_pending",
+    "documentationStaticChecks": "passed_interim_109_original_artifacts_20_before_inventory_12_html_images_aria_syntax_links_json",
+    "highDensityPaidTierWalkthrough": "passed_305.36_seconds_18_original_pngs_984_receipts_total_density1_exact_drawing_dimensions",
+    "highDensityAttempt01": "failed_helper_null_selection_before_first_intended_capture_26.70_seconds",
+    "comparisonDocumentBrowser": "pending"
+  },
+  "finalRuntime": "7fab8866b83e27c6102df6b123ffdf2eb96619d0",
+  "finalScriptTree": "0ee76841b7c32c629a1b139b5477088c16126897",
+  "paidScreenshotDensityBoundary": {
+    "functionalSource": "9fa154940cbc9dab29ece4d15bba7efa8778a520",
+    "highSetting": true,
+    "adaptiveDensity": {
+      "1280x720": 0.5,
+      "375x812": 0.55
+    },
+    "nativeResolutionClaim": false,
+    "highDensityFollowup": "passed_real_viewport_resize_restore_high_quality_density1_exact_drawing_dimensions_selection_preserved"
+  },
+  "highDensityAttempt01": {
+    "source": "b844407065cfc9cb3a974c11224050c6186e6bc6",
+    "exitCode": 1,
+    "seconds": 26.7,
+    "scope": "capture helper bug, not a product regression",
+    "acceptedHighDensityPass": false
+  },
+  "highDensityPaidSource": "7fab8866b83e27c6102df6b123ffdf2eb96619d0",
+  "ordinaryCaptureMethod": {
+    "existingHelper": "Low-to-High quality reset before each snapshot",
+    "beforeAndAfterSnapshots": "High quality, densityScale1, DPR1",
+    "performanceClaim": false
+  },
+  "beforeTrees": {
+    "frontend/src": "16116fe9ad058eef1d4e27c98c288d637e07ee6c",
+    "frontend/public": "9306942db1050d728799cee2fbdc8e8960f14ad2",
+    "backend": "3956a73d76f537fd7c85259afa4bf9280a6e0ecd",
+    "supabase": "c3319eb968d7ac28624ecb8434909f37ca00edf2"
+  },
+  "actualAfterTrees": {
+    "frontend/src": "e191d9290088908ee27e82e03a15847d4a73a38e",
+    "frontend/public": "9306942db1050d728799cee2fbdc8e8960f14ad2",
+    "backend": "3956a73d76f537fd7c85259afa4bf9280a6e0ecd",
+    "supabase": "5dfb7a3d506568b2e344c795360a562580854c33"
+  }
+}

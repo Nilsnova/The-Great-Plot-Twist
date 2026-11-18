@@ -1,0 +1,16 @@
+{
+  "source": "7fab8866b83e27c6102df6b123ffdf2eb96619d0",
+  "name": "actual-capture",
+  "command": [
+    "python",
+    "/workspace/reference-village-work/capture-candidate.py",
+    "--repo",
+    "/workspace/reference-village-work/polish-runtime-04",
+    "--out",
+    "/workspace/reference-village-work/polish-final-captures"
+  ],
+  "started": "2026-11-18T00:30:24.940855+00:00",
+  "exitCode": 0,
+  "seconds": 192.13,
+  "finished": "2026-11-18T00:33:37.074229+00:00"
+}

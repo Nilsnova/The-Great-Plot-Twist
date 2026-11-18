@@ -1,0 +1,6 @@
+{
+  "source": "b844407065cfc9cb3a974c11224050c6186e6bc6",
+  "sourceTree": "e191d9290088908ee27e82e03a15847d4a73a38e",
+  "helperHash": "50b994eeb7dd9c3acd08c1efd45ad98672587a3df20df20b654f31dbe6f98b52",
+  "message": "page.evaluate: TypeError: Cannot read properties of null (reading 'spotId')\n    at eval (eval at evaluate (:370:30), <anonymous>:2:48)\n    at UtilityScript.evaluate (<anonymous>:372:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)"
+}

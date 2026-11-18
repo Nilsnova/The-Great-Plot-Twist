@@ -1,0 +1,13 @@
+{
+  "status": "interim_final_matrix_and_application_receipts_pending",
+  "originalArtifactsByteVerified": 109,
+  "allBeforePngInventoryHashesVerified": 20,
+  "comparisonImages": 12,
+  "tablists": 3,
+  "tabs": 8,
+  "relativeLinkTargetsChecked": 50,
+  "jsonParse": "passed",
+  "htmlKeyboardScriptSyntax": "passed",
+  "nativeCheckerSyntax": "passed",
+  "nativeBrowserRun": "not_run_by_documentation_writer"
+}
