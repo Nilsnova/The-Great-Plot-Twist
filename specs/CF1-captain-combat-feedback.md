@@ -3,7 +3,7 @@
 What this is: contextual weapon range, confirmed damage and urgent battle warnings.
 Who uses it: Ianno, the frontend implementation agent and the human reviewer.
 
-- Status: in progress; manual review, explain-back and publication confirmation pending.
+- Status: implemented and scoped checks verified; manual review, explain-back and publication confirmation pending.
 - Responsible teammate: Ianno (`Iannomh123456`); agent assistance: Codex.
 - Task: [#453](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/453).
 - Branch: `feat/captain-combat-feedback`, from main `48aee0e7`.

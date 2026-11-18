@@ -140,7 +140,7 @@ describe('brief danger sound', () => {
     expect(cue('pirate-danger')).toBe(true);
     expect(synth.tone).toHaveBeenCalledTimes(2);
     expect(synth.tone.mock.calls.every(call => call[0] === effects && call[2] < .3)).toBe(true);
-    expect(caption).toHaveBeenCalledWith('Danger nearby');
+    expect(caption).not.toHaveBeenCalled(); // CF1's persistent warning already supplies accessible words
     expect(cue('pirate-danger')).toBe(false);
     time = 6;
     expect(cue('pirate-danger')).toBe(true);
