@@ -1,0 +1,16 @@
+{
+  "limits": {
+    "titleJavaScript": 21080,
+    "titleCss": 12000,
+    "titleImage": 0
+  },
+  "initial": {
+    "javaScript": 18959,
+    "javaScriptGzip": 8919,
+    "css": 9248,
+    "cssGzip": 3451,
+    "titleImage": null
+  },
+  "unshippedInDist": [],
+  "command": "node scripts/report-budget.js --check"
+}
