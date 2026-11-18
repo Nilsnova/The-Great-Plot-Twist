@@ -148,3 +148,12 @@ cd frontend && RECOVERY_POLICY_CAPTURE_DIR=../docs/evidence/T59-repair-feedback/
 [Desktop Wall error](policy-main-db573347/t59-policy-fallback-wall-error-desktop.png) and [375 × 812 phone Cannon guard](policy-main-db573347/t59-policy-fallback-cannon-phone.png) were visually inspected. These crop the production-styled card from offline fake-island fixtures, make no authenticated request and prove no live wallet, database or multiplayer outcome. The earlier captures remain unchanged. [Exact capture output](policy-main-db573347/capture.txt).
 
 The local four-branch candidate `35f91e0e` passed 232 focused frontend tests across 23 files, production build/spoiler checks, and text lint (zero errors, eight unchanged report-only findings). It retains the target island's saved policy, blocks legacy fallback and stale-level health rows, and keeps HP-less houses/watchtowers outside the health-loading guard. This is combined-source evidence rather than an isolated-branch full-suite result. No PR, live migration, deployment or activation.
+
+
+### Current selection-dock compatibility
+
+The full combined-source run on `35f91e0e` exposed an incoming selection-dock expectation for the former helper text. The guard itself remains intact: stale-level health cannot label the new level or enable another upgrade. Only the expected helper wording was aligned to the agreed “Wait until building health has loaded.” The isolated selection-dock command passed all four tests on this branch; no production code, assertion coverage, timer or bound was weakened.
+
+```sh
+cd frontend && ./node_modules/.bin/vitest run --maxWorkers=1 tests/island/selection-dock.test.js
+```
