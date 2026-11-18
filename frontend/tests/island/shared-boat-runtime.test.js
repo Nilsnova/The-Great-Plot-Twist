@@ -89,3 +89,41 @@ it('a bell-time phase refusal keeps the score and UID across reload for the next
   expect(w.calls.at(-1).body).toEqual(original);expect(w.storage.length).toBe(0);
   expect(w.calls.filter(call=>call.path.endsWith('start'))).toHaveLength(1);
 });
+
+it.each(['actor', 'epoch'])('does not start a new round when %s changes during deferred recovery', async change => {
+  const w=world(),previous=w.session();await previous.begin('dash');w.loseClaim();await previous.finish(1);
+  const claim=w.api.claim;let release,entered;
+  const enteredGate=new Promise(resolve=>{entered=resolve;}),gate=new Promise(resolve=>{release=resolve;});
+  w.api.claim=async input=>{const reply=await claim(input);entered();await gate;return reply;};
+  const next=w.session().begin('dash');await enteredGate;
+  if(change==='actor')w.actor=id(99);else w.current={...ORIGIN,accountId:id(98),runEpoch:id(99)};
+  release();const reply=await next;
+  expect(reply.code).toBe(change==='actor'?'session_expired':'economy_epoch_mismatch');
+  expect(w.calls.filter(call=>call.path.endsWith('start'))).toHaveLength(1);
+});
+it('rechecks the initiating actor immediately before a new start is sent', async () => {
+  const w=world(),setItem=w.storage.setItem;
+  w.storage.setItem=(key,value)=>{setItem(key,value);w.actor=id(99);};
+  expect((await w.session().begin('dash')).code).toBe('session_expired');
+  expect(w.calls).toHaveLength(0);
+});
+
+it('a queued start retains its click actor and refuses a later signed-in identity', async () => {
+  const w=world();let actor=ACTOR,release,entered;
+  const gate=new Promise(resolve=>{release=resolve;}),queued=new Promise(resolve=>{entered=resolve;});
+  const session=createBoatRoundSession({api:w.api,getEconomy:()=>ORIGIN,getActorId:()=>actor,
+    storage:w.storage,makeUid:()=> 'queued-boat-0001',lock:{async request(name,work){entered();await gate;return work();}}});
+  const pending=session.begin('dash');await queued;actor=id(99);release();
+  expect((await pending).code).toBe('session_expired');expect(w.calls).toHaveLength(0);
+  expect(w.storage.length).toBe(0);
+});
+
+it('keeps an earned score through a sign-in challenge and retries it after reauthentication', async () => {
+  const w=world(),session=w.session();await session.begin('dash');
+  const claim=w.api.claim;w.api.claim=async()=>({ok:false,status:401,code:'unauthorized'});
+  expect((await session.finish(2)).status).toBe(401);expect(w.storage.length).toBe(1);
+  const saved=JSON.parse(w.storage.getItem(w.storage.key(0)));w.api.claim=claim;
+  expect((await w.session().recover()).ok).toBe(true);
+  expect(w.calls.at(-1).body.actionUid).toBe(saved.claimUid);
+  expect(w.calls.at(-1).body.stars).toBe(2);expect(w.storage.length).toBe(0);
+});

@@ -105,3 +105,12 @@ server/tests/island_sql/test_boat_runtime_http_pg.py server/tests/test_boat_rout
 passed **14 tests in 23.02s**; backend Ruff passed. These HTTP tests still use injected
 verification responses and real domain SQL, not provider-issued sessions. Historical old
 receipts and pending scores keep their original context throughout these checks.
+
+The round session also captures the initiating actor and origin before entering its local
+queue/Web Lock. It checks that captured identity at queue entry, after completion recovery,
+immediately before sending a start, and after its response. Identity changes while waiting
+cannot silently become a new player's start intent. An authentication challenge keeps the
+original completed score pending until the same player can retry it.
+
+After these queue/reauthentication corrections, the durable client suite passed **13 tests**;
+the actual Chromium component suite was rerun and passed **4 tests in 14.74s**.
