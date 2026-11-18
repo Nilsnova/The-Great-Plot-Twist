@@ -18,7 +18,7 @@ const REFRESH_ON = new Set(['taken', 'arsenal_full', 'no_such_copy', 'wave_runni
 const nameOf = (data, id) => { const copy = data.copies.find(item => item.id === id); return copy ? `${WEAPON_BY_ID[copy.weapon].name} #${copy.no}` : 'The weapon'; };
 
 export function createArsenal(options = {}) {
-  const {api, ui, emit = () => {}, enabled = () => false, code = () => null, place = () => 'own',
+  const {api, ui, emit = () => {}, enabled = () => false, readEnabled = enabled, code = () => null, place = () => 'own',
     level = () => 1, skills = () => [], onCoins = () => {}, asking = () => () => true,
     getEconomy, getActorId = () => null, onEconomy = () => {}} = options;
   const legacyFactory = !('getEconomy' in options);
@@ -63,14 +63,14 @@ export function createArsenal(options = {}) {
     return true;
   }
   async function refresh() {
-    if (!enabled()) { answer = null; answeredFor = null; return null; }
+    if (!readEnabled()) { answer = null; answeredFor = null; return null; }
     const mine = ++ticket, asked = key(), fresh = asking();
     loading = true; redraw();
     const result = await api.state(code());
     if (mine !== ticket) return result;
     loading = false;
-    if (asked !== key() || !enabled()) return result;
-    if (result.ok) { take(result.data, fresh, result.expectedOrigin); if (loadFailed) { message = ''; loadFailed = false; } }
+    if (asked !== key() || !readEnabled()) return result;
+    if (result.ok) { if (enabled()) take(result.data, fresh, result.expectedOrigin); if (loadFailed) { message = ''; loadFailed = false; } }
     else if (!result.ok && !current()) { message = result.message; loadFailed = true; }
     redraw();
     return result;

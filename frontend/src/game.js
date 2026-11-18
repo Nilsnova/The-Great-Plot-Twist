@@ -28,6 +28,7 @@ import {attachIsletPanel} from './screens/islet/host.js';
 import {createIsletHost} from './online/islet-host.js';
 import {createMarketHost} from './online/market-host.js';
 import {createSharedWagerHost} from './harbor/shared-wager-host.js';
+import {createIslandHudFunding} from './island/hud-funding.js';
 import {createHarbor,loadMarketCard,loadMatchCard} from './harbor/host.js';
 import {findPanelServices} from './online/panel-services.js';
 import {createWaveRewardRecovery} from './online/wave-reward-recovery.js';
@@ -281,8 +282,9 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
       const fakeTransport=fake?fake.createFakeIslandTransport():null;
       island=module.createIsland({container,emit,on,mode:islandsMode,transport:fakeTransport,
         getActorId:()=>findPanelServices(session)?.getActorId()??null,
-        getTransport:()=>findPanelServices(session)?.request,resetInput:resetControls,reducedMotion,preferences:getPreferences,
-        focus:()=>graphics.renderer.domElement.focus({preventScroll:true}),onCoins:(value,options)=>{hud.setCoinSource('island');hud.setCoins(value,options);},onCaptain:level=>hud.setCaptainLevel(level),onQuestIsland:value=>hud.setQuestIsland(value),
+        getTransport:()=>findPanelServices(session)?.request,authGeneration:()=>session.getScope?.()??session,
+        onAuthGenerationChange:listener=>session.onChange(listener),resetInput:resetControls,reducedMotion,preferences:getPreferences,
+        focus:()=>graphics.renderer.domElement.focus({preventScroll:true}),onCoins:createIslandHudFunding(hud),onCaptain:level=>hud.setCaptainLevel(level),onQuestIsland:value=>hud.setQuestIsland(value),
         // The Harbor building (GAME-V3.md §4) opens the same stalls as the old Harbor overview.
         openHarborStall:id=>void(['weather','market','match'].includes(id)&&openIslandHarborStall(id)),
         // The visit chip: the old "Visiting … · Sail home" only where travel applies (src/island/one-island.js).

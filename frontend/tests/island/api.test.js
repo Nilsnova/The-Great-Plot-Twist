@@ -23,13 +23,15 @@ const expectRefusal = (answer, status, code) => {
 describe('island api: accepted answers', () => {
   it('advertises shared capability on island discovery before an epoch is known', async () => {
     const base = createFakeIslandTransport(), calls = [];
-    const api = createIslandApi({transport: {
+    const api = createIslandApi({negotiateEconomy:true,transport: {
       async get(path, options) {
         calls.push({path, options});
         if (options?.headers?.['X-Island-Economy-Version'] !== '1') {
           return {ok: false, status: 409, code: 'economy_context_required', message: 'Reload this island.'};
         }
-        return base.get(path);
+        const answer=await base.get(path);
+        return answer.ok?{...answer,data:{...answer.data,economy:{mode:'personal_legacy',version:0,
+          islandOwner:'11111111-1111-4111-8111-111111111111',accountId:null,runEpoch:null,revision:null,treasury:null}}}:answer;
       },
       post: (path, body) => base.post(path, body),
     }});
@@ -216,7 +218,8 @@ describe('island api: one click id per build and per bell', () => {
   });
   it('the function-level fake has the same names', () => {
     const api = createFakeIslandApi();
-    expect(Object.keys(api).sort()).toEqual(['boatReward', 'boatStatus', 'build', 'createGame', 'currentWave', 'demolish', 'demolishQuote', 'dev', 'finishWave', 'freshStart', 'games', 'getIsland',
+    expect(Object.keys(api).sort()).toEqual(['boatReward', 'boatStatus', 'build', 'createGame', 'currentWave', 'demolish', 'demolishQuote', 'dev', 'finishWave', 'freshStart', 'games', 'getCaptain', 'getIsland',
+
       'heldActionUid', 'hire', 'joinGame', 'joinInvite', 'joinWave', 'leaderboard', 'learnSkill', 'leaveGame', 'lobby', 'move', 'pickRole', 'piratePoint', 'pointBuild', 'pointUpgrade',
       'repairStructure', 'repairWall', 'repairWreck', 'research', 'respec', 'reviveCaptain', 'specialise', 'startWave', 'structureRecovery', 'towerTree', 'upgrade', 'upgradeCaptain', 'visit', 'walls']);
   });

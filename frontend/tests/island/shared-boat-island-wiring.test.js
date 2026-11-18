@@ -32,6 +32,7 @@ async function mountSharedIsland(page, withContext, delayScene = false) {
     await page.evaluate(async ({withContext, delayScene}) => {
       const {createIsland} = await window.g20Import('/src/island/index.js');
       const {createFakeIslandTransport} = await window.g20Import('/src/pirates/fake-api.js');
+      const {sharedProjection} = await window.g20Import('/tests/island/shared-core-fixture.js');
       const {on, emit} = await window.g20Import('/src/core/events.js');
       const actor = '12222222-2222-4222-8222-222222222222';
       window.sharedBoatActor = actor;
@@ -52,7 +53,10 @@ async function mountSharedIsland(page, withContext, delayScene = false) {
             }};
           }
           const answer = await base.get(path);
-          return path === '/api/island' && withContext ? {...answer, data: {...answer.data, economy}} : answer;
+          if(path === '/api/island' && answer.ok) return {...answer,data:withContext
+            ?sharedProjection(answer.data,{actorId:actor,economy})
+            :{...answer.data,economy:{mode:'personal_legacy',version:0,islandOwner:actor,accountId:null,runEpoch:null,revision:null,treasury:null}}};
+          return answer;
         },
         async post(path, body, options) {
           if (!path.startsWith('/api/island/boat')) return base.post(path, body);

@@ -13,6 +13,7 @@ it('wires the viewed canonical treasury and verified actor through the actual is
     await page.evaluate(async fixture => {
       const {createIsland} = await window.g20Import('/src/island/index.js');
       const {createFakeIslandTransport} = await window.g20Import('/src/pirates/fake-api.js');
+      const {sharedProjection} = await window.g20Import('/tests/island/shared-core-fixture.js');
       const {on, emit} = await window.g20Import('/src/core/events.js');
       const base = createFakeIslandTransport(); base.dev.setWaveBest(4);
       window.wiredArsenalRequests = [];
@@ -20,7 +21,8 @@ it('wires the viewed canonical treasury and verified actor through the actual is
         async get(path) {
           if (path === '/api/island/arsenal') return {ok: true, data: fixture};
           const answer = await base.get(path);
-          return path === '/api/island' ? {...answer, data: {...answer.data, economy: fixture.economy}} : answer;
+          return path === '/api/island' ? {...answer, data: sharedProjection(answer.data, {actorId:fixture.copies[0].holder,economy:fixture.economy,
+            capabilities:Object.fromEntries(['arsenal','session','move','repair','reset','market','match'].map(key=>[key,{available:key==='arsenal',reason:key==='arsenal'?null:'economy_path_unavailable'}]))})} : answer;
         },
         async post(path, body, options) {
           if (path !== '/api/island/arsenal/buy') return base.post(path, body);

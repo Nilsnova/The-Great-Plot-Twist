@@ -13,8 +13,9 @@ import {BUILDINGS, maxLevel, priceFor, statLine, lockedWave} from './td-rules.js
 import {opensText, waveOf} from '../campaign/index.js';
 import {formatCoins} from '../lib/coins.js';
 import {TOWER_TREES, TREE_LEVEL, TREE_PATHS, TREE_STEPS, TREE_TIERS, treeStats, treeStep} from '../pirates/tower-trees.js';
+import {canAffordCoins, exactCoinText, missingCoins} from './economy-view.js';
 
-const coinText = n => (Number.isSafeInteger(n) ? formatCoins(n) : '🪙 ?');
+const coinText = n => (Number.isSafeInteger(n) ? formatCoins(n) : exactCoinText(n));
 const NUMERAL = ['', 'I', 'II', 'III'];
 // The tower's own glyph on the trunk tile.
 export const KIND_ICONS = Object.freeze({cannon: '💣', mortar: '☄️', harpoon: '🏹', culverin: '🔭', swivel: '🔫'});
@@ -56,7 +57,7 @@ export function towerTreeModel({kind, spot = null, coins = null, prices = null, 
   if (!info || !spot?.built) return null;
   const top = maxLevel(kind), level = Number.isSafeInteger(spot.level) && spot.level > 0 ? Math.min(spot.level, top) : 1;
   const tiers = readTiers(spot.tree), allowed = unlocks ? unlocks.levels?.[kind] ?? 0 : top;
-  const short = price => (coins === null ? 'Your coins are still loading.' : coins < price ? `Need ${coinText(price - coins)} more.` : '');
+  const short = price => (coins === null ? 'Your coins are still loading.' : !canAffordCoins(coins, price) ? `Need ${coinText(missingCoins(coins, price))} more.` : '');
   const name = BUILDINGS[kind]?.name ?? kind;
 
   // The trunk: the tower's levels.

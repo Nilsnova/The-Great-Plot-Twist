@@ -7,6 +7,7 @@ vi.mock('../../src/island/village-bar.js', () => ({createVillageBar: () => ({ren
 vi.mock('../../src/island/wall-builder-bar.js', () => ({createWallBuilderBar: () => ({render() {}, dispose() {}})}));
 import {createIsland} from '../../src/island/index.js';
 import {createFakeIslandTransport} from '../../src/pirates/fake-api.js';
+import {sharedProjection} from './shared-core-fixture.js';
 
 const INFO = {waveId: 'return-wave', wave: 2, seed: 77, startsAt: '2026-11-17T12:00:00Z',
   weather: {kind: 'calm'}, flagship: false};
@@ -19,7 +20,7 @@ function harness({getActorId = () => null} = {}) {
   base.get = async path => {
     const answer = await legacyRead(path);
     return answer.ok && (path === '/api/island' || path.startsWith('/api/island/visit/'))
-      ? {...answer, data: {...answer.data, economy: {mode: 'personal_legacy', version: 0}}} : answer;
+      ? {...answer, data: {...answer.data, economy: {mode: 'personal_legacy', version: 0,islandOwner:'11111111-1111-4111-8111-111111111111',accountId:null,runEpoch:null,revision:null,treasury:null}}} : answer;
   };
   let readWave = () => Promise.resolve({ok: true, data: INFO}), failIsland = false, failVisit = false;
   const on = (name, fn) => {
@@ -66,11 +67,11 @@ describe('actual returned-island current-wave authority', () => {
     const reply = h.hold(path), loading = h.island.load();
     await reply.asked;
     actor = '44444444-4444-4444-8444-444444444444';
-    reply.resolve(answer => ({...answer, data: {...answer.data, economy: {
+    reply.resolve(answer => ({...answer, data: sharedProjection(answer.data, {actorId:actor,economy: {
       mode: 'island_shared', version: 1, islandOwner: '11111111-1111-4111-8111-111111111111',
       accountId: '22222222-2222-4222-8222-222222222222', runEpoch: '33333333-3333-4333-8333-333333333333',
       revision: '1', treasury: {balanceCoins: '100', committedCoins: '0', availableCoins: '100'},
-    }}}));
+    }})}));
     await loading;
     expect(h.island.economy).toBeNull();
     expect(h.island.island).toBeNull();
@@ -84,32 +85,34 @@ describe('actual returned-island current-wave authority', () => {
     const path = place === 'visit' ? '/api/island/visit/ISLE-FR3ND' : '/api/island';
     if (place === 'visit') h.island.visit('ISLE-FR3ND');
     const initial = h.hold(path), loading = h.island.load();
-    initial.resolve(answer => ({...answer, data: {...answer.data, economy}}));
+    initial.resolve(answer => ({...answer, data: sharedProjection(answer.data, {actorId:actor,economy})}));
     await loading;
     expect(h.island.economy.revision).toBe('1');
     const reply = h.hold(path), newer = {...economy, revision: '2'};
     h.island.refreshEconomy(newer, economy);
     await reply.asked;
     actor = '44444444-4444-4444-8444-444444444444';
-    reply.resolve(answer => ({...answer, data: {...answer.data, economy: newer}}));
+    reply.resolve(answer => ({...answer, data: sharedProjection(answer.data, {actorId:actor,economy: newer})}));
     await new Promise(resolve => setTimeout(resolve, 0));
-    expect(h.island.economy.revision).toBe('1');
+    expect(h.island.economy.revision).toBe('2');
   });
   it('does not spend the own shared treasury while a different visit is unresolved', async () => {
     const actor = '11111111-1111-4111-8111-111111111111', saved = new Map();
     vi.stubGlobal('sessionStorage', {getItem: key => saved.get(key) ?? null,
       setItem: (key, value) => saved.set(key, value), removeItem: key => saved.delete(key)});
     const h = harness({getActorId: () => actor}), own = h.hold('/api/island'), loading = h.island.load();
-    own.resolve(answer => ({...answer, data: {...answer.data, economy: {
+    own.resolve(answer => ({...answer, data: sharedProjection(answer.data, {actorId:actor,economy: {
       mode: 'island_shared', version: 1, islandOwner: actor,
       accountId: '22222222-2222-4222-8222-222222222222', runEpoch: '33333333-3333-4333-8333-333333333333',
       revision: '1', treasury: {balanceCoins: '100', committedCoins: '0', availableCoins: '100'},
-    }}}));
+    }})}));
     await loading;
     expect(h.island.visit('ISLE-FR3ND')).toBe(true);
+    expect(h.island.economy).toBeNull();
+    await h.island.build('wall_1','wall');
     h.island.arsenal.handlers.buy('pistols');
     await vi.waitFor(() => expect(h.island.arsenal.answer).toBeNull());
-    expect(h.posts.filter(request => request.path === '/api/island/arsenal/buy')).toEqual([]);
+    expect(h.posts.filter(request => ['/api/island/arsenal/buy','/api/island/build'].includes(request.path))).toEqual([]);
   });
   it('clears proof on travel and authorizes the new context only after a successful same-target server read', async () => {
     const h = harness(); await h.island.load();

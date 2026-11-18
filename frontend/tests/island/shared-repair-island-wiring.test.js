@@ -9,6 +9,7 @@ vi.mock('../../src/island/wall-builder-bar.js', () => ({createWallBuilderBar: ()
 import {createIsland} from '../../src/island/index.js';
 import {buildCardModel} from '../../src/island/card-model.js';
 import {createFakeIslandTransport} from '../../src/pirates/fake-api.js';
+import {sharedProjection} from './shared-core-fixture.js';
 
 const actor = '11111111-1111-4111-8111-111111111111';
 const id = digit => `${digit.repeat(8)}-${digit.repeat(4)}-4${digit.repeat(3)}-8${digit.repeat(3)}-${digit.repeat(12)}`;
@@ -43,7 +44,12 @@ it('does not predict a current heal from an archived shared receipt', async () =
   const transport = {...base, async get(path) {
     if (path === '/api/island/structures') return {ok: true, data: state()};
     const answer = await base.get(path);
-    return path === '/api/island' ? {...answer, data: {...answer.data, recoveryVersion: 1, economy: economy()}} : answer;
+    if(path === '/api/island') {
+      const snapshot=sharedProjection(answer.data,{actorId:actor,economy:economy(),recoveryVersion:1});
+      snapshot.spots=snapshot.spots.map(row=>row.built?{...row,instanceId:id('6')}:row);
+      return {...answer,data:snapshot};
+    }
+    return answer;
   }};
   const island = createIsland({container: {}, on, emit, transport, getActorId: () => actor,
     storage: null, visitStorage: null, structureRecoveryOn: () => true, menu: () => () => {}, settings: () => () => {}});
