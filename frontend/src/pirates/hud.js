@@ -42,7 +42,8 @@ export const healthText = ({ hp, maxHp }) => `Captain ${Math.max(0, Math.ceil(hp
 export const clockText = seconds => { const s = Math.max(0, Math.floor(seconds) || 0); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
 export const DOWN_TITLE = 'You have fallen';
 export const downLine = alone => (alone ? 'every captain is down' : 'a teammate can hold E next to you');
-const shortTouchPortrait = () => matchMedia('(max-width:600px) and (max-height:640px) and (orientation:portrait) and (pointer:coarse)').matches;
+const shortTouchPortrait = () => innerWidth <= 600 && innerHeight <= 640
+  && innerWidth <= innerHeight && matchMedia('(pointer:coarse)').matches;
 
 export function createWaveHud({ container, onAction = () => {}, onNext = () => {}, onAuto = () => {}, onShoot = () => {}, onHold = () => {},
   onPromptHold = () => {}, onRangePreview = () => {}, inspectDefenses = null, reducedMotion = () => false }) {
