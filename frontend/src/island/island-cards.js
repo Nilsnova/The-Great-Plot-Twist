@@ -1,0 +1,228 @@
+// The island's cards (index.js): the build card's model and handlers, the bell, crew, captain, overview,
+// leaderboard, captains and invite cards, the campaign's harbor, tech hub, wreck and boat games, refreshCard()
+// and pick(), which opens the card of a tapped zone. A closure over the island's state `isl`.
+
+import {canDockSelection, holdOtherBuildingAction} from './selection-dock.js';
+import {BELL, CABIN, isPointSpot, spotById, ppSpotById, placedSpot, ARSENAL} from './spots.js';
+import {buildCardModel, bellModel, inviteModel, crewModel, captainModel, captainsModel, skillsModel, coinText,
+  harborModel, techModel, wreckModel, demolishModel} from './card-model.js';
+import {isOpen} from '../campaign/index.js';
+import {displayIslandCode} from './codes.js';
+import {ISLAND_INVITE_OPENED} from '../ui/quest-events.js';
+import {progressSummary} from './progression.js';
+import {upgradeOverviewModel} from './upgrade-overview.js';
+import {withWallRecovery} from './wall-recovery.js';
+import {preparationModel} from './preparation-model.js';
+
+export function createCards(isl) {
+  const {emit, on, focus, reducedMotion, preferences, openHarborStall, wallRecovery, defensesV2On} = isl;
+  // From the other parts (island-*.js), linked once every part exists.
+  let clearRecoveryError, recoveryPolicyOn, recoveryControlsOn, recoveryModelVersion, readStructureRecovery,
+    repairStructure, tellCoins, unlocks, islandUnlocks, campaign, target, where, applyWorld, freshOwn, reloadOwn,
+    refreshDefended, lobby, startGame, openLobby, bellAction, build, readWalls, repairWall, upgrade, askDemolish,
+    confirmDemolish, placeCode, specialise, buyTree, startMove, research, giveWreck, hire, upgradeCaptain, learnSkill,
+    takeRole, respecCaptain;
+  // --- cards ---------------------------------------------------------------------------------
+  function buildModel(spotId) {
+    if (isPointSpot(spotId)) {
+      const spot = isl.point?.spots.find(item => item.id === spotId) ?? null;
+      return buildCardModel({spotId, slot: ppSpotById(spotId).slot, spot, coins: isl.own?.coins ?? null, busy: isl.busySpot === spotId ? isl.busyKind : false,
+        message: isl.cardMessage || (!isl.point ? isl.pointMessage : ''), point: true, prices: isl.own?.prices ?? null,
+        // The server holds you to your own unlocks at Pirate Point too (a level you have not won is refused).
+        unlocks: isl.own ? unlocks() : null});
+    }
+    // On a friend's island you build with your own coins (and your own unlocks); it stays theirs.
+    const island = target(), spot = island?.spots.find(item => item.id === spotId) ?? null;
+    const recoveryEnabled = recoveryControlsOn() && !!spot?.built && ['wall', 'cannon', 'mortar', 'harpoon', 'culverin', 'swivel'].includes(spot.kind);
+    const recoveryReady = recoveryEnabled && recoveryPolicyOn() && isl.recoveryIslandCode === island?.code && !!isl.recoveryState;
+    const recoveryRow = recoveryReady ? isl.recoveryState.structures.find(item => item.spot === spotId) : null;
+    const replayActive = !!isl.recoveryCombat && isl.flow.current?.wave?.waveId === isl.recoveryCombat.waveId;
+    const live = recoveryReady && replayActive
+      && isl.recoveryState.islandEpoch === isl.recoveryCombat.islandEpoch ? isl.recoveryCombat.structures.find(item => item.spot === spotId) : null;
+    const recoveryViewState = recoveryReady ? isl.recoveryState : null;
+    const recoveryViewRow = live && recoveryRow?.instanceId === live.instanceId ? {...recoveryRow, hpUnits: live.hpUnits,
+      maxHP: live.maxHP, repairSeq: live.repairSeq} : recoveryRow;
+    const recoveryView = recoveryViewState && recoveryRow ? {...recoveryViewState,
+      structures: [recoveryViewRow],
+      displayPhase: replayActive ? 'combat' : recoveryViewState.displayPhase,
+      repairWindow: replayActive ? 'reserved_wave' : recoveryViewState.repairWindow,
+      waveId: replayActive ? isl.recoveryCombat.waveId : recoveryViewState.waveId,
+    } : recoveryViewState;
+    const model = buildCardModel({spotId, slot: spotById(spotId)?.slot, spot, coins: isl.own?.coins ?? null,
+      visitor: !!isl.visiting, ownerName: isl.visiting?.ownerName, busy: isl.busySpot === spotId ? isl.busyKind : false, message: isl.cardMessage || (!island ? isl.ownMessage : ''),
+      unlocks: isl.own ? islandUnlocks() : null, prices: isl.own?.prices ?? null, campaign: campaign(), battle: isl.battle && !isl.waveOver,
+      movable: island?.layout?.movable === true, flags: {defenses_v2: defensesV2On() === true}, treePicked: isl.treePicked.get(spotId) ?? null,
+      recoveryState: recoveryView, recoveryStatus: recoveryEnabled ? (recoveryReady ? 'ready' : isl.recoveryStatus) : 'disabled',
+      recoveryError: isl.recoveryError, recoveryPending: isl.recoveryPendingSpot === spotId, recoveryVersion: recoveryModelVersion()});
+    if (recoveryEnabled && isl.recoveryState?.displayPhase === 'combat' && !live) {
+      model.recovery = {visible: false, status: 'error', message: 'Battle health is still loading.'};
+    }
+    // D039: a damaged or destroyed wall shows Repair or Rebuild instead of Upgrade (flag wall_recovery).
+    const shown = isl.wallsFor !== null && isl.wallsFor === island?.code ? isl.walls.get(spotId) ?? null : null;
+    return holdOtherBuildingAction(recoveryControlsOn() ? model : withWallRecovery(model, {wall: shown, coins: isl.own?.coins ?? null,
+      busy: isl.busySpot === spotId ? isl.busyKind : false, battle: isl.battle && !isl.waveOver}), isl.busySpot);
+  }
+  const crew = () => crewModel({crew: isl.own?.crew ?? {}, coins: isl.own?.coins ?? null, unlocks: isl.own ? unlocks() : null, busy: isl.busyCrew, message: isl.cardMessage || (!isl.own ? isl.ownMessage : ''), prices: isl.own?.prices});
+  const captain = () => {
+    const message = isl.cardMessage || (!isl.own ? isl.ownMessage : ''), wonWave = isl.own ? unlocks().wonWave : 0;
+    return {tab: isl.captainTab,
+      captain: captainModel({captain: isl.own?.captain ?? null, coins: isl.own?.coins ?? null, unlocks: isl.own ? unlocks() : null, busy: isl.busyCaptain, message: isl.captainTab === 'captain' ? message : ''}),
+      skills: skillsModel({skills: isl.own?.skills ?? null, wonWave, picked: isl.pickedSkill, busy: isl.busySkill, message: isl.captainTab === 'skills' ? message : '',
+        coins: isl.own?.coins ?? null, captainLevel: isl.own?.captain?.level ?? 1, pickedRole: isl.pickedRole, busyRole: isl.busyRole, respecAsk: isl.respecAsk, busyRespec: isl.busyRespec,
+        battle: isl.battle && !isl.waveOver, recoveryVersion: recoveryModelVersion()})};
+  };
+  const captainHandlers = {upgrade: () => void upgradeCaptain(), tab: id => { isl.captainTab = id; },
+    pick: id => { isl.pickedSkill = id; isl.cardMessage = ''; refreshCard(); }, learn: id => void learnSkill(id),
+    pickRole: id => { isl.pickedRole = id; isl.cardMessage = ''; refreshCard(); }, role: id => void takeRole(id),
+    respec: () => void respecCaptain(), respecCancel: () => { isl.respecAsk = false; refreshCard(); }};
+  const handlers = {build: (spotId, kind) => void build(spotId, kind), upgrade: spotId => void upgrade(spotId), repair: spotId => void repairWall(spotId),
+    repairStructure: (spotId, quote) => void repairStructure(spotId, quote), hire: () => openCrew(),
+    specialise: (spotId, spec) => void specialise(spotId, spec), demolish: spotId => void askDemolish(spotId), move: spotId => startMove(spotId),
+    treeSelect: (spotId, id) => { isl.treePicked.set(spotId, id); isl.cardMessage = ''; refreshCard(); }, tree: (spotId, path, tier) => void buyTree(spotId, path, tier)};
+  const demolishHandlers = {confirm: () => void confirmDemolish(), keep: () => { const spot = isl.demolishSpot; isl.demolishSpot = null; if (spot) openBuild(spot); }};
+  const demolishCardModel = () => demolishModel({quote: isl.demolishQuote, busy: isl.busyDemolish, message: isl.cardMessage});
+  const harbor = () => harborModel({campaign: campaign()});
+  const tech = () => techModel({campaign: campaign(), coins: isl.own?.coins ?? null, busy: isl.busyResearch, battle: isl.battle && !isl.waveOver,
+    message: isl.cardMessage || (!target() ? isl.ownMessage : ''), recoveryVersion: recoveryModelVersion()});
+  const wreck = () => wreckModel({campaign: campaign(), coins: isl.own?.coins ?? null, busy: isl.busyGift, message: isl.cardMessage || (!target() ? isl.ownMessage : ''),
+    boat: isl.boatStatus, battle: isl.battle && !isl.waveOver});
+  const harborHandlers = {open: id => { isl.ui.close(); try { openHarborStall(id); } catch { /* The stall answers on its own. */ } }};
+  const techHandlers = {research: step => void research(step)};
+  const wreckHandlers = {give: amount => void giveWreck(amount), sail: game => void sail(game)};
+  async function readBoat() {
+    if (!isOpen(campaign(), 'ship')) { isl.boatStatus = null; return; }
+    const ticket = ++isl.boatTicket, answer = await isl.api.boatStatus(placeCode());
+    if (isl.disposed || ticket !== isl.boatTicket) return;
+    isl.boatStatus = answer.ok ? answer.data : null;
+    if (isl.ui.open === 'wreck') refreshCard();
+  }
+  async function sail(game) {
+    if (isl.boatGame || isl.boatLoading || (isl.battle && !isl.waveOver)) return;
+    isl.boatLoading = true;
+    const at = campaign(), code = target()?.code ?? '', where = placeCode();
+    let scene;
+    try { scene = await import('../pirates/boat/scene.js'); } catch { isl.boatLoading = false; isl.ui.toast('The boat could not load. Try again.', 'info'); return; }
+    isl.boatLoading = false;
+    if (isl.disposed) return;
+    isl.ui.close();
+    isl.boatGame = scene.createBoatGame({container: document.body, game, wave: at?.wave ?? 0, code, reducedMotion,
+      easy: () => preferences()?.easyFinishers === true,
+      onFinish: async ({stars}) => {
+        if (stars < 1) return {line: 'No stars this time. Try again!', coins: 0};
+        const answer = await isl.api.boatReward({game, stars, ...where});
+        if (isl.disposed) return null;
+        if (!answer.ok) return {line: answer.message, coins: 0};
+        if (answer.data.paid) {
+          tellCoins(answer.data.balance);
+          void readBoat(); void reloadOwn();
+          return {line: `+${coinText(answer.data.coins)}!`, coins: answer.data.coins};
+        }
+        return {line: answer.data.already ? 'Paid already this wave. Win a wave to sail for coins again.' : 'No coins this time.', coins: 0};
+      },
+      onClose: () => { isl.boatGame = null; focus(); openWreck(); }});
+  }
+  function bell() {
+    const wave = isl.flow.current, island = target();
+    return bellModel({wave: wave?.wave ?? null, joined: wave?.joined === true, countdown: isl.flow.secondsLeft(), busy: isl.flow.busy,
+      visitor: !!isl.visiting, ownerName: isl.visiting?.ownerName, waveBest: island?.waveBest ?? 0, nextWave: island?.nextWave,
+      preparation: preparationModel({island, wallRecovery: wallRecovery() && !recoveryControlsOn(),
+        wallState: {code: isl.wallsFor, rows: [...isl.walls.values()]}}), message: isl.cardMessage});
+  }
+  function refreshCard() {
+    if (isl.disposed) return;
+    isl.village.refresh();
+    applyWorld();
+    if (isl.ui.open === 'build' && isl.openSpot) showBuild(isl.openSpot);
+    else if (isl.ui.open === 'bell') isl.ui.bellCard(bell(), bellAction);
+    else if (isl.ui.open === 'invite') isl.ui.inviteCard(inviteModel(isl.own?.code));
+    else if (isl.ui.open === 'lobby') isl.ui.lobbyCard(lobby(), {start: startGame});
+    else if (isl.ui.open === 'crew') isl.ui.crewCard(crew(), hire);
+    else if (isl.ui.open === 'captain') isl.ui.captainCard(captain(), captainHandlers);
+    else if (isl.ui.open === 'captains') isl.ui.captainsCard(captainsModel([...isl.here.values()]));
+    else if (isl.ui.open === 'harbor') isl.ui.harborCard(harbor(), harborHandlers);
+    else if (isl.ui.open === 'tech') isl.ui.techCard(tech(), techHandlers);
+    else if (isl.ui.open === 'wreck') isl.ui.wreckCard(wreck(), wreckHandlers);
+    else if (isl.ui.open === 'demolish') isl.ui.demolishCard(demolishCardModel(), demolishHandlers);
+    else if (isl.ui.open === 'arsenal') isl.arsenal.redraw();
+    else if (isl.ui.open === 'overview') isl.ui.overviewCard(overview());
+  }
+  // The Tear down button follows the wave on screen (off while it runs, on again in its break).
+  function refreshCardIfBuild() { if (isl.ui.open === 'build' && isl.openSpot) refreshCard(); }
+  function openHarbor() { isl.openSpot = null; isl.cardMessage = ''; isl.ui.harborCard(harbor(), harborHandlers); }
+  function openTechHub() { isl.openSpot = null; isl.cardMessage = ''; isl.ui.techCard(tech(), techHandlers); void freshOwn(); }
+  function openWreck() { isl.openSpot = null; isl.cardMessage = ''; isl.ui.wreckCard(wreck(), wreckHandlers); void freshOwn(); void readBoat(); }
+  function openBuild(spotId) {
+    isl.openSpot = spotId; isl.cardMessage = ''; showBuild(spotId);
+    if (!isl.own && isl.ownRetry) void refreshDefended();
+    if (spotById(spotId)?.slot === 'wall') void readWalls();
+    if (recoveryControlsOn() && !isPointSpot(spotId) && target()?.spots.find(item => item.id === spotId)?.built) {
+      isl.recoveryStatus = isl.recoveryState && isl.recoveryIslandCode === target()?.code ? 'ready' : 'loading';
+      clearRecoveryError(); refreshCard(); void readStructureRecovery(spotId);
+    }
+  }
+  function showBuild(spotId) {
+    const model = buildModel(spotId);
+    if (isl.ui.selectionElement && !model.built) { isl.ui.close(); isl.openSpot = null; return; }
+    isl.ui.buildCard(model, handlers, {dock: isl.village.active && !isl.visiting && !isPointSpot(spotId) && canDockSelection(model)});
+  }
+  function selectedAnchor() {
+    const at = isl.ui.selectionElement && isl.village.active && isl.openSpot ? placedSpot(isl.openSpot, target()?.spots) : null;
+    return at && Number.isFinite(at.x) && Number.isFinite(at.z) ? {spotId: isl.openSpot, x: at.x, z: at.z, lift: 1} : null;
+  }
+  function openCrew() { isl.openSpot = null; isl.cardMessage = ''; isl.ui.crewCard(crew(), hire); void freshOwn(); }
+  const overview = () => upgradeOverviewModel({island: isl.own, battle: isl.battle && !isl.waveOver, message: isl.ownMessage});
+  function openOverview() { isl.openSpot = null; isl.cardMessage = ''; isl.ui.overviewCard(overview()); void freshOwn(); }
+  function openCaptain(tab = null) {
+    isl.openSpot = null; isl.cardMessage = ''; if (['captain', 'skills'].includes(tab)) isl.captainTab = tab;
+    isl.ui.captainCard(captain(), captainHandlers); void freshOwn();
+  }
+  async function openLeaderboard(scope = isl.leaderboardScope) {
+    const request = ++isl.leaderboardRequest;
+    isl.openSpot = null; isl.leaderboardScope = scope;
+    const shown = campaign(); // the island on screen, as its statue and shield show it
+    const base = {scope, progress: shown ? progressSummary(shown.wave) : null};
+    const actions = {retry: () => void openLeaderboard(), choose: next => void openLeaderboard(next)};
+    isl.ui.leaderboardCard({...base, loading: true}, actions);
+    const answer = await isl.api.leaderboard(scope);
+    if (isl.disposed || request !== isl.leaderboardRequest || isl.ui.open !== 'leaderboard') return;
+    isl.ui.leaderboardCard(answer.ok ? {...base, data: answer.data} : {...base, message: answer.message}, actions);
+  }
+  function openCaptains() { isl.openSpot = null; isl.cardMessage = ''; isl.ui.captainsCard(captainsModel([...isl.here.values()])); }
+  async function openBell() {
+    isl.openSpot = null; isl.cardMessage = ''; isl.ui.bellCard(bell(), bellAction);
+    if (!isl.own && isl.ownRetry) void refreshDefended();
+    void readWalls();
+    if (target()) await isl.flow.look(where());
+  }
+  function openInvite() {
+    isl.openSpot = null; isl.cardMessage = '';
+    isl.ui.inviteCard(inviteModel(isl.own?.code));
+    emit({type: ISLAND_INVITE_OPENED, code: isl.own?.code ? displayIslandCode(isl.own.code) : null});
+    if (!isl.own) void freshOwn().then(answer => {
+      if (isl.disposed || isl.own || !answer || answer.ok || isl.ui.open !== 'invite') return;
+      const problem = answer.status === 401 || answer.code === 'not_ready' ? 'signin'
+        : (answer.message || 'Your island could not be loaded.');
+      isl.ui.inviteCard(inviteModel(null, undefined, problem));
+    });
+  }
+  function pick(id) {
+    if (isl.disposed) return;
+    if (id === BELL.id) void openBell();
+    else if (id === CABIN.id) openLobby();
+    else if (id === 'island_harbor') openHarbor();
+    else if (id === 'island_techhub') openTechHub();
+    else if (id === 'island_wreck') openWreck();
+    else if (id === ARSENAL.id) { isl.openSpot = null; isl.arsenal.open(); }
+    else if (spotById(id) || isPointSpot(id)) openBuild(id);
+  }
+  function link() { // the names of the other parts, once every part exists (index.js)
+    ({clearRecoveryError, recoveryPolicyOn, recoveryControlsOn, recoveryModelVersion, readStructureRecovery,
+      repairStructure, tellCoins, unlocks, islandUnlocks, campaign, target, where, applyWorld, freshOwn, reloadOwn,
+      refreshDefended, lobby, startGame, openLobby, bellAction, build, readWalls, repairWall, upgrade, askDemolish,
+      confirmDemolish, placeCode, specialise, buyTree, startMove, research, giveWreck, hire, upgradeCaptain,
+      learnSkill, takeRole, respecCaptain} = isl);
+  }
+  return {demolishHandlers, demolishCardModel, readBoat, bell, refreshCard, refreshCardIfBuild, openHarbor,
+    openTechHub, openWreck, selectedAnchor, openCrew, openOverview, openCaptain, openLeaderboard, openCaptains,
+    openInvite, pick, link};
+}
