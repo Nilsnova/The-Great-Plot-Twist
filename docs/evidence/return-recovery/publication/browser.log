@@ -1,0 +1,455 @@
+{
+  "label": "publication",
+  "moduleSha256": {
+    "frontend/src/online/wave-reward-recovery.js": "37e5c79c644d84bf3f1b2db30ffe13564b921f8d5bbc347360d93dac38f897a7",
+    "frontend/src/online/panel-services.js": "425f64dd87e3ef01592f44b11c548289e088c384b18cd4208bacbb1c838a5827",
+    "frontend/src/online/adapter/panel-wallet.js": "6d2ecde44dbb544217c1c13b0912ba83878a8305ee4ff7280fb07a9171c3b939",
+    "frontend/src/online/adapter/store.js": "d9b5fc2da28eb0a671214b5b0596a78d298e0ac7a97d3d5df5a6b850673330a4",
+    "frontend/src/online/adapter/transport.js": "4a3a9075c45a01f1fed19a5cb6a68a116f95912a81b17306e99387bdcd70f05f",
+    "frontend/src/online/adapter/read-monitor.js": "bbeb956b9e80acef1942f359c087b11e9ba9fa1c29392fd5f5501230b24a86ff",
+    "frontend/src/ui/hud.js": "600492568bfbc62d1de88caef68512a3261d0cc22db01cfe2c62617c9ec24975",
+    "frontend/src/ui/quest-events.js": "a31af3b9e01e551bf6ec09009d401794cebca647d1bca2cef523c5aa475fc176",
+    "frontend/src/pirates/controller.js": "fd5d3f51db7aed4c14282fef19dcfbc67a0f55bbe7dd0e6c71a4168ef8c7a0d8",
+    "frontend/src/pirates/hud.js": "2057492aceea180ee50464fe21c5e804e93be12def4cd76c42623a31649ebb96",
+    "frontend/src/narrator/index.js": "ca661ecfc02a119260b5a481c9557512b91133d2421f24a9bab9eb9c89a0ef4f"
+  },
+  "comparison": "Before and after recovery on the same client source; not an old-code baseline.",
+  "source": "/workspace/wave-publish",
+  "sourceHead": "898ee21e1f350b2e36df750c0970c3643dbec936",
+  "trackedDiffSha256": "55f1afe977ac2572bf1b18e5173c8f0464eb4dd2ba40401d1306abda0789d30e",
+  "scriptSha256": "cf8b830118e21bda39afd38c83358d49fd49d425579216dfcb48375aed00585d",
+  "browser": "156.0.8078.79",
+  "limits": "Real production recovery host, private panel-service lease, panel-wallet, account adapter/read monitor, HUD, active controller and narrator. Persistent loopback HTTP server is a synthetic fixture; no live account/database, real refund SQL, 3D island or physical-device claim.",
+  "reports": [
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "before": {
+        "hudCoins": 100,
+        "accountCoins": 100,
+        "quests": {
+          "done": 1,
+          "view": {
+            "kind": "first",
+            "title": "Goals",
+            "progress": "1 of 10",
+            "items": [
+              {
+                "id": "wave",
+                "label": "Ring the bell and win a wave",
+                "hint": "Ring the bell by your cabin. Your cannon fires on its own; stay close to help.",
+                "step": 2,
+                "done": false,
+                "current": true
+              },
+              {
+                "id": "wall",
+                "label": "Build a wall",
+                "hint": "Walls stop the ships at the shore. Tap a wall spot on the beach and build one for 10 🪙.",
+                "step": 3,
+                "done": false,
+                "current": false
+              },
+              {
+                "id": "wave3",
+                "label": "Win wave 3",
+                "hint": "Ring the bell again after each win. Wave 3 opens the mortar and the watchtower.",
+                "step": 4,
+                "done": false,
+                "current": false
+              }
+            ],
+            "doneCount": 1,
+            "total": 10,
+            "allDone": false,
+            "finale": "",
+            "current": {
+              "id": "wave",
+              "label": "Ring the bell and win a wave",
+              "hint": "Ring the bell by your cabin. Your cannon fires on its own; stay close to help.",
+              "event": "wave_finished"
+            }
+          }
+        },
+        "deliveredWallet": [],
+        "calls": [],
+        "events": [
+          {
+            "type": "wave_controller_started",
+            "waveId": "62345678-1234-4234-8234-123456789abc",
+            "wave": 6,
+            "flagship": false,
+            "recovery": true
+          }
+        ],
+        "before": {
+          "waveId": "62345678-1234-4234-8234-123456789abc",
+          "done": false,
+          "queued": [
+            "event_fog_bank"
+          ],
+          "speaking": null,
+          "lowProbe": []
+        },
+        "battle": {
+          "waveId": "62345678-1234-4234-8234-123456789abc",
+          "done": false,
+          "ticks": 20
+        },
+        "narrator": {
+          "queued": [
+            "event_fog_bank"
+          ],
+          "speaking": null,
+          "lowProbe": []
+        },
+        "hudText": "🪙 100\nMenu\n\nYour island",
+        "activeHud": "Wave 6 · 13 ships left · ♥ 100\n❤️\n100\n🌊\n6\n⛵\n13\n☁Fog bank\nShips show up late and towers see 20% less. Near the watchtower the fog clears."
+      },
+      "after": {
+        "hudCoins": 115,
+        "accountCoins": 115,
+        "quests": {
+          "done": 2,
+          "view": {
+            "kind": "first",
+            "title": "Goals",
+            "progress": "2 of 10",
+            "items": [
+              {
+                "id": "wall",
+                "label": "Build a wall",
+                "hint": "Walls stop the ships at the shore. Tap a wall spot on the beach and build one for 10 🪙.",
+                "step": 3,
+                "done": false,
+                "current": true
+              },
+              {
+                "id": "wave3",
+                "label": "Win wave 3",
+                "hint": "Ring the bell again after each win. Wave 3 opens the mortar and the watchtower.",
+                "step": 4,
+                "done": false,
+                "current": false
+              },
+              {
+                "id": "invite",
+                "label": "Invite a friend",
+                "hint": "Open the Menu, choose Players and invite, and send the link to a friend.",
+                "step": 5,
+                "done": false,
+                "current": false
+              }
+            ],
+            "doneCount": 2,
+            "total": 10,
+            "allDone": false,
+            "finale": "",
+            "current": {
+              "id": "wall",
+              "label": "Build a wall",
+              "hint": "Walls stop the ships at the shore. Tap a wall spot on the beach and build one for 10 🪙.",
+              "event": "island_built"
+            }
+          }
+        },
+        "deliveredWallet": [
+          115
+        ],
+        "calls": [
+          {
+            "method": "POST",
+            "path": "/api/waves/recover"
+          },
+          {
+            "method": "GET",
+            "path": "/api/me"
+          }
+        ],
+        "events": [
+          {
+            "type": "wave_controller_started",
+            "waveId": "62345678-1234-4234-8234-123456789abc",
+            "wave": 6,
+            "flagship": false,
+            "recovery": true
+          },
+          {
+            "type": "wave_rewards_recovered",
+            "wonWaveBest": 5,
+            "recovered": []
+          }
+        ],
+        "before": {
+          "waveId": "62345678-1234-4234-8234-123456789abc",
+          "done": false,
+          "queued": [
+            "event_fog_bank"
+          ],
+          "speaking": null,
+          "lowProbe": []
+        },
+        "battle": {
+          "waveId": "62345678-1234-4234-8234-123456789abc",
+          "done": false,
+          "ticks": 20
+        },
+        "narrator": {
+          "queued": [
+            "event_fog_bank"
+          ],
+          "speaking": null,
+          "lowProbe": []
+        },
+        "hudText": "🪙 115\nMenu\n\nYour island",
+        "activeHud": "Wave 6 · 13 ships left · ♥ 100\n❤️\n100\n🌊\n6\n⛵\n13\n☁Fog bank\nShips show up late and towers see 20% less. Near the watchtower the fog clears."
+      },
+      "server": {
+        "coins": 115,
+        "wonWaveBest": 5,
+        "pending": false,
+        "applied": 1,
+        "lost": 1,
+        "recoverCalls": 3,
+        "meReads": 2,
+        "recoverBodies": [
+          {},
+          {},
+          {}
+        ],
+        "replies": [
+          {
+            "coins": 115,
+            "wonWaveBest": 5,
+            "recovered": [],
+            "hasMore": false
+          },
+          {
+            "coins": 115,
+            "wonWaveBest": 5,
+            "recovered": [],
+            "hasMore": false
+          }
+        ]
+      },
+      "pageErrors": []
+    },
+    {
+      "viewport": {
+        "width": 375,
+        "height": 812
+      },
+      "before": {
+        "hudCoins": 100,
+        "accountCoins": 100,
+        "quests": {
+          "done": 1,
+          "view": {
+            "kind": "first",
+            "title": "Goals",
+            "progress": "1 of 10",
+            "items": [
+              {
+                "id": "wave",
+                "label": "Ring the bell and win a wave",
+                "hint": "Ring the bell by your cabin. Your cannon fires on its own; stay close to help.",
+                "step": 2,
+                "done": false,
+                "current": true
+              },
+              {
+                "id": "wall",
+                "label": "Build a wall",
+                "hint": "Walls stop the ships at the shore. Tap a wall spot on the beach and build one for 10 🪙.",
+                "step": 3,
+                "done": false,
+                "current": false
+              },
+              {
+                "id": "wave3",
+                "label": "Win wave 3",
+                "hint": "Ring the bell again after each win. Wave 3 opens the mortar and the watchtower.",
+                "step": 4,
+                "done": false,
+                "current": false
+              }
+            ],
+            "doneCount": 1,
+            "total": 10,
+            "allDone": false,
+            "finale": "",
+            "current": {
+              "id": "wave",
+              "label": "Ring the bell and win a wave",
+              "hint": "Ring the bell by your cabin. Your cannon fires on its own; stay close to help.",
+              "event": "wave_finished"
+            }
+          }
+        },
+        "deliveredWallet": [],
+        "calls": [],
+        "events": [
+          {
+            "type": "wave_controller_started",
+            "waveId": "62345678-1234-4234-8234-123456789abc",
+            "wave": 6,
+            "flagship": false,
+            "recovery": true
+          }
+        ],
+        "before": {
+          "waveId": "62345678-1234-4234-8234-123456789abc",
+          "done": false,
+          "queued": [
+            "event_fog_bank"
+          ],
+          "speaking": null,
+          "lowProbe": []
+        },
+        "battle": {
+          "waveId": "62345678-1234-4234-8234-123456789abc",
+          "done": false,
+          "ticks": 20
+        },
+        "narrator": {
+          "queued": [
+            "event_fog_bank"
+          ],
+          "speaking": null,
+          "lowProbe": []
+        },
+        "hudText": "🪙 100\nMenu\n\nYour island",
+        "activeHud": "Wave 6 · 13 ships left · ♥ 100\n❤️\n100\n🌊\n6\n⛵\n13\n☁Fog bank\nShips show up late and towers see 20% less. Near the watchtower the fog clears."
+      },
+      "after": {
+        "hudCoins": 115,
+        "accountCoins": 115,
+        "quests": {
+          "done": 2,
+          "view": {
+            "kind": "first",
+            "title": "Goals",
+            "progress": "2 of 10",
+            "items": [
+              {
+                "id": "wall",
+                "label": "Build a wall",
+                "hint": "Walls stop the ships at the shore. Tap a wall spot on the beach and build one for 10 🪙.",
+                "step": 3,
+                "done": false,
+                "current": true
+              },
+              {
+                "id": "wave3",
+                "label": "Win wave 3",
+                "hint": "Ring the bell again after each win. Wave 3 opens the mortar and the watchtower.",
+                "step": 4,
+                "done": false,
+                "current": false
+              },
+              {
+                "id": "invite",
+                "label": "Invite a friend",
+                "hint": "Open the Menu, choose Players and invite, and send the link to a friend.",
+                "step": 5,
+                "done": false,
+                "current": false
+              }
+            ],
+            "doneCount": 2,
+            "total": 10,
+            "allDone": false,
+            "finale": "",
+            "current": {
+              "id": "wall",
+              "label": "Build a wall",
+              "hint": "Walls stop the ships at the shore. Tap a wall spot on the beach and build one for 10 🪙.",
+              "event": "island_built"
+            }
+          }
+        },
+        "deliveredWallet": [
+          115
+        ],
+        "calls": [
+          {
+            "method": "POST",
+            "path": "/api/waves/recover"
+          },
+          {
+            "method": "GET",
+            "path": "/api/me"
+          }
+        ],
+        "events": [
+          {
+            "type": "wave_controller_started",
+            "waveId": "62345678-1234-4234-8234-123456789abc",
+            "wave": 6,
+            "flagship": false,
+            "recovery": true
+          },
+          {
+            "type": "wave_rewards_recovered",
+            "wonWaveBest": 5,
+            "recovered": []
+          }
+        ],
+        "before": {
+          "waveId": "62345678-1234-4234-8234-123456789abc",
+          "done": false,
+          "queued": [
+            "event_fog_bank"
+          ],
+          "speaking": null,
+          "lowProbe": []
+        },
+        "battle": {
+          "waveId": "62345678-1234-4234-8234-123456789abc",
+          "done": false,
+          "ticks": 20
+        },
+        "narrator": {
+          "queued": [
+            "event_fog_bank"
+          ],
+          "speaking": null,
+          "lowProbe": []
+        },
+        "hudText": "🪙 115\nMenu\n\nYour island",
+        "activeHud": "Wave 6 · 13 ships left · ♥ 100\n❤️\n100\n🌊\n6\n⛵\n13\n☁Fog bank\nShips show up late and towers see 20% less. Near the watchtower the fog clears."
+      },
+      "server": {
+        "coins": 115,
+        "wonWaveBest": 5,
+        "pending": false,
+        "applied": 1,
+        "lost": 1,
+        "recoverCalls": 3,
+        "meReads": 2,
+        "recoverBodies": [
+          {},
+          {},
+          {}
+        ],
+        "replies": [
+          {
+            "coins": 115,
+            "wonWaveBest": 5,
+            "recovered": [],
+            "hasMore": false
+          },
+          {
+            "coins": 115,
+            "wonWaveBest": 5,
+            "recovered": [],
+            "hasMore": false
+          }
+        ]
+      },
+      "pageErrors": []
+    }
+  ]
+}

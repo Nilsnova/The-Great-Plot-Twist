@@ -1144,3 +1144,20 @@ Nilsnova (agent) / 2026-11-18 — Playtest fixes on `fix/playtest-1117` (owner's
 Nilsnova (agent) / 2026-11-18 — Behaviour-preserving slimming pass on `refactor/slim` (from main 840549a5), with a measured, ranked plan in [SIMPLIFICATION-PLAN.md](SIMPLIFICATION-PLAN.md). Done: deleted 3 dead client files, 31 unused exports, the test-only kit `formatCoins`, 7 unused imports, 78 unused CSS selectors and the dead `backend/server/cache.py`; four private DOM node helpers now use `ui/kit/dom.js`; the pirate wave renderer reuses its per-frame sets, maps and tint objects. A shared `clamp` was tried and reverted (it split `core/math.js` into an extra chunk). Net 53 files, +81/−320 lines; title CSS 9,410 → 9,248 B, all built CSS −6.3 KB, title JS and chunk count unchanged; no measurable frame-time change. Not done (see the plan): always-on flag removal (every test world and the fake API default those flags to off, so it means rewriting tests), the Supabase sub-package imports (~100 KB), lazy islands-off/narrator code, test-only exports and unreferenced scripts/routes. Checks: frontend 4,609 passed (`shortcuts-loading` env timeout); build, spoiler guard and budget check pass; `test:overlaps`, `test:walls`, `test:rules`, `test:recovery:component`, `test:art` pass; ruff clean; backend 12,494 passed / 299 skipped (settings contract excluded). Not tried live.
 
 Nilsnova (agent) / 2026-11-18 — Village art download cut on `perf/art-size` (on top of the Franz integration, now main 840549a5). `scripts/ship-village-art.mjs` ships each proved 4× PNG master as a same-size lossy WebP (quality 0.9, alpha exact, mean RGB error 2.6–4.8/255) and the terrain atlas resampled to what the ground ever paints. Masters and the authored terrain PNG stay in the repository, out of the build. Frame metadata is unchanged, the decoder reads PNG or WebP headers, and ship-report.json plus a new art test bind the files. World art 12,950,770 → 2,868,430 bytes, images in the build 13.78 → 3.69 MB, build 19.31 → 9.23 MB. Frame time is unchanged by this (same runtime textures, same draw calls) and still above main; the sea pass is the largest measured cost. Evidence: docs/evidence/franz-1118/size/.
+
+Ianno / 2026-11-18 — Co-op consistency publication: core fixes are in draft
+[#485](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/485), saved reward return in draft
+[#486](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/486), with historical reconciliation
+on the next stacked review branch `fix/historical-revive-reconciliation-review`. Main base is
+`db573347`; merged VIS-41 and WebP changes remain intact. Core publication checks passed
+95 frontend / 552 backend-SQL tests; reward checks passed 125 frontend / 584 backend-SQL tests.
+Current-source synthetic Chromium reload checks pass at desktop/phone sizes, and build/budget
+checks pass. Shared final results and the reproduced unchanged-main Group3 guard failure are
+in [the handover](handoff/return-recovery-2026-11-18.md). Different human approval remains
+pending; no merge, live database operation, migration, refund or deployment was performed.
+
+Final publication verification on that stack: **4,659 frontend tests / 424 files passed**;
+backend with optional PostgreSQL tools and the unchanged exhaustive settings suite excluded:
+**13,236 passed / 1 failed**. The sole Group3 fixture assertion fails identically on clean main;
+no setup errors or skipped selected tests. Full logs, old-development versus current-source
+provenance, and the untouched live-operation boundary are in the linked handover.
