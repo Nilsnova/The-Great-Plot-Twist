@@ -35,6 +35,8 @@ FakeIslandDatabase answers exactly the calls the island and wave routes make, an
                                              wave runs (wave_places, by id)
   * POST rpc/arsenal_state, arsenal_buy, arsenal_take, arsenal_return
                                              arsenal_replies[name] (default: ARSENAL_DONE)
+  * POST rpc/island_economy_context            explicit legacy fixture by default;
+                                             economy_context_replies[owner] injects shared/errors
   * POST rpc/game_join, game_leave, game_list, game_members, GET island_members
                                              the games of GAME-V3 section 2 (FakeGames below:
                                              the SQL rules of 20261112040000_game_rooms.sql,
@@ -252,6 +254,7 @@ class FakeIslandDatabase:
         self.repair_receipts: list[dict] = []
         # The island arsenal (T40): the answer of each arsenal_* function.
         self.arsenal_replies: dict[str, dict | httpx.Response] = {}
+        self.economy_context_replies: dict[str, dict | httpx.Response] = {}
         self.point_buildings: list[dict] = []
         self.point_best: list[dict] = []
         # Where each wave runs (GET wave_runs?id=): WAVE_ID is on PLAYER's island by default.
@@ -278,6 +281,7 @@ class FakeIslandDatabase:
         route = f"{request.method} {request.url.path.removeprefix('/rest/v1')}"
         handlers = {
             "POST /rpc/island_open": self.open_island,
+            "POST /rpc/island_economy_context": self.economy_context,
             "GET /wallets": self.read_wallet,
             "GET /islet_buildings": self.read_buildings,
             "POST /rpc/islet_build": lambda _: self.answer(self.build_reply),
@@ -352,6 +356,13 @@ class FakeIslandDatabase:
     def arsenal(self, request: httpx.Request) -> httpx.Response:
         name = request.url.path.rsplit("/", 1)[-1]
         return self.answer(self.arsenal_replies.get(name, ARSENAL_DONE))
+
+    def economy_context(self, request: httpx.Request) -> httpx.Response:
+        """Known test-only context seam; unknown RPCs still fail through the dispatch table."""
+        owner = json.loads(request.content)["p_island_owner"]
+        return self.answer(self.economy_context_replies.get(
+            owner, {"status": "legacy", "islandOwner": owner},
+        ))
 
     @staticmethod
     def answer(reply: dict | httpx.Response) -> httpx.Response:
