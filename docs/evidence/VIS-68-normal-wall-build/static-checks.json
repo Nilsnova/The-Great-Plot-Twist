@@ -2,7 +2,7 @@
   "migrationVersionsUnique": 72,
   "frozenFrontendTreeMatches": true,
   "originalArtifactsByteVerified": 25,
-  "relativeTargetsChecked": 6,
+  "relativeTargetsChecked": 8,
   "unchangedRuntimeAndDependencyPaths": [
     "frontend/public",
     "frontend/package.json",
@@ -32,5 +32,6 @@
     "skips": 0,
     "sameBackendAndMigrationTrees": true,
     "notCompleteBackendSuite": true
-  }
+  },
+  "finalIntegrity": "All29manifestfiles and25originalreceipts verified after final coordinator archive; code remains670402d6."
 }
