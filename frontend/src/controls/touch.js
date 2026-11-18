@@ -18,10 +18,11 @@ export function createTouchControls(container,input,actions) {
   interact.onclick=()=>input.press('KeyE');
   const blur=()=>release();window.addEventListener('blur',blur);
   return {get active(){return pointer!==null;},update(zone,active,label='',combatPrompt=false){
-    const show=active&&(matchMedia('(pointer:coarse)').matches||navigator.maxTouchPoints>0);
+    const coarse=matchMedia('(pointer:coarse)').matches;
+    const show=active&&(coarse||navigator.maxTouchPoints>0);
     if(!show&&!element.hidden)release();
     element.hidden=!show;interact.disabled=!zone;interact.hidden=!zone;
-    const contextual=!!zone&&!!label&&combatPrompt;
+    const contextual=!!zone&&!!label&&combatPrompt&&coarse;
     interact.classList.toggle('touch-context-action',contextual);
     const text=contextual?label:'Use';
     if(interact.textContent!==text)interact.textContent=text;
