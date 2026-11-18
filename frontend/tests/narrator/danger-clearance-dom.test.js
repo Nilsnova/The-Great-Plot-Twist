@@ -27,9 +27,12 @@ async function withPhone(width, height, run) {
   });
 }
 
-it.each([[375, 812, false], [320, 568, false], [320, 568, true]])('keeps the post-wave caption and Use reachable at %s×%s (large: %s)', async (width, height, large) => {
+it.each([
+  [375, 812, false, 1], [320, 568, false, 1], [320, 568, true, 1],
+  [375, 812, true, 1], [320, 568, true, 15],
+])('keeps the post-wave caption and Use reachable at %s×%s (large: %s, wave: %s)', async (width, height, large, waveNumber) => {
   await withPhone(width, height, async page => {
-    await page.evaluate(async large => {
+    const {line, milestone} = await page.evaluate(async ({large, waveNumber}) => {
       for (const sheet of ['/src/ui/base.css', '/src/ui/kit/kit.css', '/src/ui/shell.css', '/src/ui/devices.css']) await window.g20Import(sheet);
       const {createTouchControls} = await window.g20Import('/src/controls/touch.js');
       const {createWaveHud} = await window.g20Import('/src/pirates/hud.js');
@@ -39,20 +42,23 @@ it.each([[375, 812, false], [320, 568, false], [320, 568, true]])('keeps the pos
       const {createNarratorCard} = await window.g20Import('/src/narrator/card.js');
       const {default: lines} = await window.g20Import('/src/narrator/lines.json');
       const game = document.createElement('main'); document.body.append(game);
+      const canvas = document.createElement('canvas'); canvas.tabIndex = 0; game.append(canvas);
       window.inputs = []; window.skips = 0;
       window.touch = createTouchControls(game, {setVirtual() {}, press: code => inputs.push(code)}, {});
       window.narration = createNarratorCard(game, {large: () => large, onSkip: () => window.skips++});
       const wave = createWaveHud({container: game});
-      wave.bar({wave: 1, shipsLeft: 0, boardersLeft: 0, islandHp: 100, maxIslandHp: 100});
-      wave.pause({title: 'Wave 1 won!', line: '3 ships sunk · +15', ready: true, seconds: 8, hold: {label: 'Pause', enabled: true}});
+      wave.bar({wave: waveNumber, shipsLeft: 0, boardersLeft: 0, islandHp: 100, maxIslandHp: 100});
+      wave.pause({title: `Wave ${waveNumber} won!`, line: '3 ships sunk · +15', ready: true, seconds: 8, hold: {label: 'Pause', enabled: true}});
       createCaptionsView(game).show('Victory: the island holds');
-      if (!large) {
-        const unlock = campaign.steps.find(step => step.wave === 1);
-        createToasts({parent: game}).show({text: unlock.title, next: unlock.line, tone: 'success', context: 'first-wave-unlock'});
-      }
+      const unlock = campaign.steps.find(step => step.wave === waveNumber);
+      createToasts({parent: game}).show({text: unlock.title, next: unlock.line, tone: 'success',
+        context: waveNumber === 1 ? 'first-wave-unlock' : 'campaign-unlock'});
+      const line = lines.lines.find(line => line.id === (waveNumber === 1 ? 'unlock_captain' : 'unlock_gunboat'));
+      window.nextLine = lines.lines.find(line => line.id === 'unlock_houses');
       touch.update(null, true);
-      narration.show(lines.lines.find(line => line.id === 'unlock_captain'));
-    }, large);
+      narration.show(line);
+      return {line: line.text, milestone: unlock.line};
+    }, {large, waveNumber});
     await page.evaluate(() => touch.update('wall_1', true, 'Build here', true));
     const use = page.getByRole('button', {name: 'Use: Build here'});
     const skip = page.getByRole('button', {name: 'Skip the narrator'});
@@ -63,7 +69,7 @@ it.each([[375, 812, false], [320, 568, false], [320, 568, true]])('keeps the pos
       const separate = r.right <= b.left || r.left >= b.right || r.bottom <= b.top || r.top >= b.bottom;
       return {separate, useHit: centerHits(button, b), skipHit: centerHits(skip, s), skipSize: [s.width, s.height]};
     })).toEqual({separate: true, useHit: true, skipHit: true, skipSize: [44, 44]});
-    if (!large) expect(await use.evaluate(button => {
+    expect(await use.evaluate(button => {
       const rect = node => node.getBoundingClientRect();
       const intersects = (a, b) => a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
       const caption = rect(narration.element), cue = rect(document.querySelector('.sound-caption'));
@@ -76,10 +82,37 @@ it.each([[375, 812, false], [320, 568, false], [320, 568, true]])('keeps the pos
         soundGap: cue.top - toast.bottom >= 4,
       };
     })).toEqual({otherOverlaps: [false, false, false, false], toastClear: true, soundGap: true});
-    if (!large) expect(await page.locator('.u-toasts').ariaSnapshot()).toContain('Houses add loot after every won wave.');
-    await capture(page, `${width}x${height}-post-wave-touch${large ? '-large' : ''}`);
+    expect(await page.locator('.u-toasts').ariaSnapshot()).toContain(milestone);
+    await capture(page, `${width}x${height}-post-wave-touch${large ? '-large' : ''}-wave-${waveNumber}`);
     await use.tap(); await skip.tap();
     expect(await page.evaluate(() => ({inputs, skips}))).toEqual({inputs: ['KeyE'], skips: 1});
+    if (large) {
+      const reader = page.getByRole('region', {name: 'Narrator subtitles'});
+      expect(await reader.locator('[role=status]').textContent()).toBe(line);
+      expect(await reader.locator('[role=status]').evaluate(node => getComputedStyle(node).fontSize)).toBe('22px');
+      await page.locator('canvas').focus();
+      await reader.focus();
+      await page.keyboard.press('End');
+      await expect.poll(() => reader.evaluate(node => node.scrollTop + node.clientHeight >= node.scrollHeight - 2)).toBe(true);
+      await page.evaluate(() => { narration.hide({keepReading: true}); narration.show(nextLine); narration.hide({keepReading: true}); });
+      expect(await reader.locator('.narrator-history').textContent()).toBe(line);
+      expect(await reader.locator('[role=status]').textContent()).toBe(await page.evaluate(() => nextLine.text));
+      if (width === 320 && waveNumber === 1) {
+        await page.setViewportSize({width: 568, height: 320});
+        await expect.poll(() => reader.count()).toBe(0);
+        expect(await page.evaluate(() => document.activeElement.tagName)).toBe('CANVAS');
+        await page.setViewportSize({width, height});
+        await reader.waitFor();
+        expect(await reader.locator('.narrator-history').textContent()).toBe(line);
+        expect(await reader.evaluate(node => node.scrollTop)).toBeGreaterThan(0);
+        await reader.focus();
+      }
+      await page.keyboard.press('Tab');
+      expect(await page.evaluate(() => document.activeElement.getAttribute('aria-label'))).toBe('Close narrator subtitles');
+      await page.keyboard.press('Enter');
+      expect(await reader.count()).toBe(0);
+      expect(await page.evaluate(() => document.activeElement.tagName)).toBe('CANVAS');
+    }
   });
 });
 
@@ -150,17 +183,24 @@ it.each([false, true])('gives the actual acute instruction priority over overlap
     await page.waitForTimeout(80);
     await capture(page, `320x568-${large ? 'large' : 'normal'}-warning`);
     const current = await measure(page);
-    expect(current, JSON.stringify(current)).toMatchObject({obscured: false, drawn: false, inert: true, ariaHidden: 'true', activeLine: true, sameLine: true, skipPresent: true});
+    expect(current, JSON.stringify(current)).toMatchObject({obscured: false, activeLine: true, sameLine: true, skipPresent: true});
+    expect(current).toMatchObject(large ? {drawn: true, inert: false, ariaHidden: null} : {drawn: false, inert: true, ariaHidden: 'true'});
     expect(current.warning).toContain('Slash nearby pirates or move away.');
     expect(current.font).toBeGreaterThanOrEqual(large ? 22 : 14);
     expect(current, JSON.stringify(current)).toMatchObject({fireClear: true, fireWithin: true, stickClear: true, rangeFits: true});
     expect(await page.locator('.pirate-musket').isEnabled()).toBe(true);
     expect(await page.locator('.touch-stick').isEnabled()).toBe(true);
+    if (large) {
+      const placement = await page.addStyleTag({content: '.pirate-bar{transform:none!important}.pirate-bar>.pirate-danger{position:fixed;inset:auto 6px 8px}'});
+      await page.evaluate(() => dispatchEvent(new Event('resize')));
+      await expect.poll(async () => (await measure(page)).drawn).toBe(false);
+      expect(await measure(page)).toMatchObject({obscured: false, inert: true, ariaHidden: 'true', sameLine: true});
+      await placement.evaluate(node => node.remove());
+    }
     await page.evaluate(() => battle.danger(null));
     await page.waitForTimeout(80);
     expect(await measure(page)).toMatchObject({drawn: true, inert: false, ariaHidden: null, sameLine: true, skipPresent: true});
-    // Large captions already extend above this short viewport; verify the retained Skip at a roomy size.
-    if (large) { await page.setViewportSize({width: 375, height: 812}); await page.waitForTimeout(80); }
+    expect((await measure(page)).caption.top).toBeGreaterThanOrEqual(0);
     await page.locator('.narrator-skip').click();
     expect(await page.evaluate(() => skips)).toBe(1);
   });
