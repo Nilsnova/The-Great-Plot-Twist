@@ -63,7 +63,7 @@ export function createPrediction(ctl) {
     current.recoveryClosedAway = true;
     current.hud?.banner('Wave over', 'This wave ended while you were away.');
     emit({ type: 'recovery_closed_away', waveId: current.info.waveId });
-    handOffRecoveryFinish(current, 5, { away: true });
+    handOffRecoveryFinish(current, { away: true });
     later(() => { if (ctl.wave === current) stop(); }, LOST_BEAT_MS);
   }
   // Your own: drawn here, and told to the room so teammates draw it at once too (input = the journal command).

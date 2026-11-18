@@ -62,6 +62,8 @@ import { withHealth } from './wall-health.js';
 import { isParticipantToken, readRecoveryPolicy } from './recovery-policy.js';
 import { readRecoverySnapshot, recoveryWaveDefenses } from './recovery-snapshot.js';
 import { createReplayDriver, createWaveReplay } from './wave-replay.js';
+import { createRangeFeedback } from './range-feedback.js';
+import { createDangerFeedback } from './danger-feedback.js';
 import { RECOVERY_PLAYOUT_MS, RECOVERY_RTT_START_MS, canonicalJson, bossText, BREAK_SECONDS, readAuto, writeAuto,
   readWaveInfo, defaultCutscene, defaultRenderer, defaultHud, defaultGuide, defaultEventArt, defaultFinisherScene,
   readEasy } from './controller-shared.js';
@@ -87,9 +89,10 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   startNextWave = null, breakSeconds = BREAK_SECONDS, recoveryPlayoutMs = RECOVERY_PLAYOUT_MS,
   loadAuto = readAuto, saveAuto = writeAuto, holdBreak = null, toggleHold = null, reviveCaptain = null,
   createEventArt = defaultEventArt, createFinisherScene = defaultFinisherScene, easyFinishers = readEasy, practiceIdentity = () => null,
-  guide: guideOn = false, createGuide = defaultGuide, recoveryTransport = null } = {}) {
+  guide: guideOn = false, createGuide = defaultGuide, recoveryTransport = null, inspectDefenses = false } = {}) {
   // The captains' poses (src/pirates/poses.js): your character and the teammates' figures fire in their own body.
   const poses = createPoses({ now: () => now() / 1000 });
+  const rangeFeedback = createRangeFeedback(), dangerFeedback = createDangerFeedback();
   // The controller's mutable state, shared by its parts (controller-*.js) as ctl.wave, ctl.runLoot, ...: the wave on
   // screen, the keys held, the run's loot, the overrides of the captain's level, skills and weapon, the guide.
   const ctl = { wave: null, disposed: false, pressed: false, shootPressed: false, shootHeld: false, down: null, shake: 0,
@@ -97,7 +100,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     figures: null, // the presence figures' positions of the other captains (setFigures)
     runLoot: 0, auto: !!loadAuto(), level: null, skills: null, weapon: null,
     guide: null, guideLoading: false, lastWave: 0, lastTowerObstacles: false,
-    autoBlade: true }; // the browser checks turn it off to let a captain fall on purpose (controller.autoBlade)
+    autoBlade: true, rangePreview: false }; // the browser checks turn it off to let a captain fall on purpose (controller.autoBlade)
   const myLevel = () => { const value = Number(ctl.level ?? captainLevel()); return Number.isInteger(value) ? Math.min(5, Math.max(1, value)) : 1; };
   const read = (get, fallback) => { try { return get(); } catch { return fallback; } };
   const mySkills = () => readSkills(ctl.skills ?? read(captainSkills, []));
@@ -114,7 +117,34 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   // No place on screen (null: the front door's open water) is not here; a world without place() always is.
   const here = () => !place || (world.place ? world.place() : place) === place;
   const blocked = () => !!world.isBlocked?.();
+  const canInspect = current => inspectDefenses && current?.shown && here() && !current.done
+    && current.state.phase === 'running' && !isDown(current) && !finishing(current)
+    && !current.catchingUp && !current.recoveryInvalid && current.state.towers.length > 0;
+  const focusCanvas = () => world.canvas?.focus?.({preventScroll: true});
+  function closeDefenseInspection(current, restoreFocus = false) {
+    if (!current?.defenseSelection) return false;
+    current.defenseSelection = null;
+    current.hud?.inspectDefense?.(null);
+    if (restoreFocus) focusCanvas();
+    return true;
+  }
+  function openDefenseInspection() {
+    const current = ctl.wave;
+    if (!canInspect(current)) return false;
+    const options = current.state.towers.map(({id,kind,level}) => ({id,kind,level}));
+    current.defenseSelection = {id: options[0].id, options};
+    return true;
+  }
+  function updateDefenseInspection(current, active, danger) {
+    const selected = current.defenseSelection;
+    if (!selected) return null;
+    const coverage = active && !danger?.critical && canInspect(current) ? current.sim.attackCoverage(selected.id) : null;
+    if (!coverage) { closeDefenseInspection(current); return null; }
+    current.hud?.inspectDefense?.({options: selected.options, coverage});
+    return coverage;
+  }
   function clearLiveFeedback(){
+    closeDefenseInspection(ctl.wave);
     if(ctl.wave){ctl.wave.liveFeedback.clear();ctl.wave.feedbackReady=false;}
     poses.clear();
   }
@@ -133,14 +163,15 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     createRenderer, createHud, setTimer, clearTimer, onEvents, getCrew, captainLevel, captainSkills, captainWeapon,
     captainColour, startNextWave, breakSeconds, recoveryPlayoutMs, loadAuto, saveAuto, holdBreak, toggleHold,
     reviveCaptain, createEventArt, createFinisherScene, easyFinishers, practiceIdentity, guideOn, createGuide,
-    recoveryTransport, poses, myLevel, read, mySkills, myWeapon, actorId, myStats, timers, stops, later, emit, cue,
-    here, blocked, clearLiveFeedback, noteLiveInput });
+    recoveryTransport, inspectDefenses, poses, myLevel, read, mySkills, myWeapon, actorId, myStats, timers, stops,
+    later, emit, cue, here, blocked, rangeFeedback, dangerFeedback, canInspect, focusCanvas, closeDefenseInspection,
+    openDefenseInspection, updateDefenseInspection, clearLiveFeedback, noteLiveInput });
   // The parts, each a closure over ctl; they call each other through names linked once all exist.
   const parts = [createTransport, createPrediction, createCaptainActions, createFrame, createFinish].map(create => create(ctl));
   for (const { link, ...part } of parts) Object.assign(ctl, part);
   for (const part of parts) part.link?.();
   const { submit, checkpointBeforeRepair, handOffRecoveryFinish, receive, shoot, aimAt, meIn, isDown, setAuto, held,
-    next, act, tap, update, settle, stop } = ctl;
+    next, act, tap, update, settle, finishing, stop } = ctl;
 
   if (listen && bus?.on) stops.push(bus.on('wave_started_server', event => { const info = readWaveInfo(event); if (info && accept(info)) start(info); }));
   if (room?.on) for (const type of Object.values(ROOM_EVENTS)) {
@@ -155,7 +186,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     if (event.code === 'KeyF') { ctl.shootHeld = true; if (!event.repeat) ctl.shootPressed = true; } else { ctl.holdE = true; if (!event.repeat) ctl.pressed = true; }
   };
   const keyup = event => { if (event.code === 'KeyF') ctl.shootHeld = false; if (event.code === 'KeyE') ctl.holdE = false; };
-  const letGo = () => { ctl.shootHeld = false; ctl.holdE = false; ctl.holdPrompt = false; };
+  const letGo = () => { ctl.shootHeld = false; ctl.holdE = false; ctl.holdPrompt = false; ctl.rangePreview = false; };
   const pointerdown = event => { if (event.button === 0) ctl.down = [event.clientX, event.clientY]; };
   const pointerup = event => {
     if (!ctl.down || event.button !== 0 || Math.hypot(event.clientX - ctl.down[0], event.clientY - ctl.down[1]) > 8) { ctl.down = null; return; }
@@ -229,7 +260,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       recoveryClosed: false, cosmeticHeard: new Map(), cosmeticSent: [], catchingUp: false,
       // v3 waves: the event's id and drawing, the finisher's scene and this player's recorder of its samples.
       eventId: first.event?.id ?? null, eventArt: null, finisher: null };
-    emit({ type: 'wave_controller_started', waveId: info.waveId, wave: info.wave, flagship: info.flagship });
+    emit({ type: 'wave_controller_started', waveId: info.waveId, wave: info.wave, flagship: info.flagship,
+      ...(recoveryReplay ? { recovery: true } : {}) });
     if (world.scene) {
       Promise.resolve(createRenderer({ scene: world.scene, defenses, reducedMotion, quality, beamFrom, colour: read(captainColour, 0),
         towerStates: info.rules?.towerHealth === true || !!snapshot, culverins: defenses.some(item => item.kind === 'culverin'),
@@ -243,6 +275,16 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
         onPromptHold: held => { ctl.holdPrompt = held === true; },
         onHold: () => { try { toggleHold?.(); } catch (error) { console.error(error); } },
         onShoot: held => { ctl.shootHeld = held === true; if (held) ctl.shootPressed = true; },
+        onRangePreview: value => { ctl.rangePreview = value === true; },
+        ...(inspectDefenses ? {inspectDefenses: {
+          onSelect: id => {
+            const selected = current.defenseSelection;
+            if (ctl.wave !== current || !selected?.options.some(option => option.id === id)) return;
+            selected.id = id;
+            focusCanvas();
+          },
+          onClose: () => { if (ctl.wave === current) closeDefenseInspection(current, true); },
+        }} : {}),
         reducedMotion })).then(hud => {
         if (ctl.disposed || ctl.wave !== current || current.finished) hud?.dispose(); else current.hud = hud;
       }).catch(error => console.error(error));
@@ -260,6 +302,9 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
 
   return {
     start, update,
+    openDefenseInspection,
+    closeDefenseInspection: () => closeDefenseInspection(ctl.wave, true),
+    get canInspectDefense() { return !!canInspect(ctl.wave); },
     get wave() { return ctl.wave; },
     get state() { return ctl.wave?.state ?? null; },
     get recoveryCombatState() {
@@ -320,7 +365,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     },
     dispose() {
       if (ctl.disposed) return;
-      stop(); ctl.disposed = true; ctl.guide?.dispose(); ctl.guide = null;
+      ctl.disposed = true; stop(); ctl.guide?.dispose(); ctl.guide = null;
       for (const id of timers) clearTimer(id);
       timers.clear(); stops.splice(0).forEach(stopListening => stopListening());
       if (typeof window !== 'undefined') { window.removeEventListener('keydown', keydown); window.removeEventListener('keyup', keyup); window.removeEventListener('blur', letGo); }

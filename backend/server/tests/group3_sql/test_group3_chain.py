@@ -35,11 +35,13 @@ def test_the_complete_chain_has_the_reviewed_objects_and_rls(group3_database):
     ).fetchone() == (24,)
 
 
-def test_the_database_wallet_reasons_equal_the_exact_python_pairs(group3_database):
+def test_frozen_wallet_reasons_equal_the_original_python_pairs(group3_database):
     database = group3_database
     rows = database.execute("select reason, direction from public.wallet_reasons").fetchall()
     assert len(rows) == 17
-    assert dict(rows) == dict(WALLET_REASONS)
+    # This fixture stops at the first 17 reasons; later migrations append new vocabulary.
+    # The complete chronological SQL/Python equality is checked in test_wallet_matches_migration.
+    assert dict(rows) == dict(WALLET_REASONS[:17])
     # The old reasons stay in the ledger vocabulary after v2 removes the old trading tables.
     assert dict(rows)["market_buy"] == "spend"
     assert dict(rows)["market_sell"] == "earn"

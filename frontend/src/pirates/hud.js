@@ -8,6 +8,7 @@
 // DOM only, built with the kit's safe text helpers; the controller decides what to show.
 import './pirates.css';
 import { node } from '../ui/kit/dom.js';
+import { createDefenseInspector } from './defense-inspector.js';
 
 // Boarders on land (TOWER-DEFENSE.md §12) show between the ships and the heart while there are any.
 export const waveBarText = ({ wave, shipsLeft, islandHp, maxIslandHp, boardersLeft = 0 }) =>
@@ -41,9 +42,11 @@ export const healthText = ({ hp, maxHp }) => `Captain ${Math.max(0, Math.ceil(hp
 export const clockText = seconds => { const s = Math.max(0, Math.floor(seconds) || 0); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
 export const DOWN_TITLE = 'You have fallen';
 export const downLine = alone => (alone ? 'every captain is down' : 'a teammate can hold E next to you');
+const shortTouchPortrait = () => innerWidth <= 600 && innerHeight <= 640
+  && innerWidth <= innerHeight && matchMedia('(pointer:coarse)').matches;
 
 export function createWaveHud({ container, onAction = () => {}, onNext = () => {}, onAuto = () => {}, onShoot = () => {}, onHold = () => {},
-  onPromptHold = () => {}, reducedMotion = () => false }) {
+  onPromptHold = () => {}, onRangePreview = () => {}, inspectDefenses = null, reducedMotion = () => false }) {
   const layer = node('div', 'pirate-hud');
   const bar = node('div', 'pirate-bar'); bar.setAttribute('role', 'status');
   const label = node('span', 'pirate-bar-text'), meter = node('span', 'pirate-bar-meter'), fill = node('span', 'pirate-bar-fill');
@@ -98,12 +101,30 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
   const eventSummary = node('summary', 'pirate-event-summary');
   const eventIcon = node('span', 'pirate-event-icon'), eventTitle = node('strong', 'pirate-event-title'), eventLine = node('span', 'pirate-event-line');
   eventIcon.setAttribute('aria-hidden', 'true'); eventSummary.append(eventIcon, eventTitle); event.append(eventSummary, eventLine); bar.append(event);
-  event.addEventListener('toggle', () => measureBar());
+  event.addEventListener('toggle', () => {
+    if (event.open && defenseInspector && !defenseInspector.element.hidden && shortTouchPortrait()) inspectDefenses.onClose();
+    measureBar();
+  });
   // The captain's musket (§10): a big button, held to keep firing at the nearest ship in range (or F).
   const musket = node('button', 'kit-button pirate-musket'); musket.type = 'button'; musket.hidden = true;
   const musketLabel = node('span', 'pirate-musket-label', musketText(true)), musketMeter = node('span', 'pirate-musket-meter');
   const musketFill = node('span', 'pirate-musket-fill'); musketMeter.append(musketFill); musketMeter.setAttribute('aria-hidden', 'true');
   musket.append(node('kbd', 'pirate-musket-key', 'F'), musketLabel, musketMeter);
+  const rangePanel = node('span', 'pirate-range-feedback'); rangePanel.hidden = true;
+  const rangeAnnouncement = node('span', 'pirate-quiet'); rangeAnnouncement.setAttribute('role', 'status');
+  rangeAnnouncement.setAttribute('aria-live', 'polite'); rangeAnnouncement.setAttribute('aria-atomic', 'true');
+  layer.append(rangeAnnouncement);
+  const rangeLabel = node('span', 'pirate-range-label'), rangeStatus = node('span', 'pirate-range-status');
+  rangePanel.append(rangeLabel, rangeStatus); musket.append(rangePanel);
+  let hovering = false, focused = false, lastRange = '', lastDanger = '';
+  const preview = () => onRangePreview(hovering || focused);
+  musket.addEventListener('pointerenter', event => { if (event.pointerType !== 'touch') { hovering = true; preview(); } });
+  musket.addEventListener('pointerleave', () => { hovering = false; preview(); });
+  musket.addEventListener('focus', () => { focused = true; preview(); });
+  musket.addEventListener('blur', () => { focused = false; hovering = false; preview(); onShoot(false); });
+  const danger = node('div', 'pirate-danger'); danger.hidden = true; danger.setAttribute('role', 'alert');
+  danger.setAttribute('aria-atomic', 'true');
+  const dangerTitle = node('strong'), dangerLine = node('span'); danger.append(dangerTitle, dangerLine); bar.append(danger);
   musket.setAttribute('aria-label', 'Fire your musket (F)');
   const release = () => onShoot(false);
   musket.addEventListener('pointerdown', event => { event.preventDefault(); try { musket.setPointerCapture(event.pointerId); } catch { /* old browsers */ } onShoot(true); });
@@ -139,6 +160,8 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
   // The first-wave hint sits inside the bar, under the goal row (overlap audit, 15 Nov): never over the heart,
   // the bar or the toasts, which line up under the bar's measured bottom (--pirate-bar-bottom, pirates.css).
   bar.append(hint);
+  const defenseInspector = inspectDefenses ? createDefenseInspector(inspectDefenses) : null;
+  if (defenseInspector) bar.append(defenseInspector.element);
   layer.append(edge, marks, bar, countdown, warning, prompt, musket, banner, pause, mini); container.append(layer);
   const root = document.documentElement;
   let disposed = false;
@@ -176,6 +199,12 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
 
   return {
     element: layer,
+    inspectDefense(model) {
+      if (!defenseInspector) return;
+      // The two optional details panes share the space above the touch controls on short screens.
+      if (model && defenseInspector.element.hidden && event.open && shortTouchPortrait()) event.open = false;
+      defenseInspector.render(model);
+    },
     setVisible(value) { if (layer.hidden === !value) return; layer.hidden = !value; measureBar(); },
     countdown(seconds, words = 'Pirates in') {
       const text = seconds > 0 ? String(seconds) : '';
@@ -266,6 +295,27 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
       musket.title = info.ready === true || blade ? '' : OUT_OF_RANGE;
       musket.classList.toggle('pirate-musket-idle', info.ready !== true);
       musketFill.style.width = `${Math.round(share * 100)}%`;
+    },
+    rangeFeedback(info) {
+      rangePanel.hidden = !info;
+      if (!info) { lastRange = ''; rangeAnnouncement.textContent = ''; musket.removeAttribute('aria-description'); return; }
+      rangePanel.style.opacity = String(reducedMotion() ? 1 : info.alpha);
+      const key = `${info.label}|${info.radius}|${info.status}`;
+      if (key === lastRange) return;
+      lastRange = key;
+      rangeLabel.textContent = `${info.label} · ${info.radius}`;
+      rangeStatus.textContent = info.status;
+      const spoken = `${rangeLabel.textContent}. ${info.status}.`;
+      musket.setAttribute('aria-description', spoken); rangeAnnouncement.textContent = spoken;
+    },
+    danger(info) {
+      const key = info ? `${info.key}|${info.title}|${info.line}` : '';
+      if (key === lastDanger) return;
+      lastDanger = key; danger.hidden = !info;
+      if (info) { dangerTitle.textContent = `⚠ ${info.title}`; dangerLine.textContent = info.line;
+        danger.dataset.critical = String(info.critical); }
+      else { dangerTitle.textContent = ''; dangerLine.textContent = ''; }
+      measureBar();
     },
     // Loot this run, under the bar; null hides it.
     loot(amount) {

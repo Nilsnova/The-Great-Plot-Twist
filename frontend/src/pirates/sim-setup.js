@@ -5,7 +5,7 @@
 
 import { CONFIG } from './sim-config.js';
 import { finite, clamp, round2, distance, createRandom, seedNumber, coastPoint, readDefenses, skillOf, bonusOf,
-  readCoast, readLanes, readHeart, readCrew } from './sim-read.js';
+  readCoast, readLanes, readHeart, readCrew, isAttackTower, lookoutsOf, lookoutsWith, reach, attackRanges } from './sim-read.js';
 import { houseRoles, fleetOf, curveFor, shuffle } from './sim-fleet.js';
 import { captainStats } from './captain-stats.js';
 import { createEventRules } from './wave-events.js';
@@ -48,28 +48,20 @@ export function setupWave(options = {}) {
   // T38: a lost wave from wave 4 (not Pirate Point) first offers the captains still on the island one co-op haul.
   const rescue = createRescue({ wave: waveNumber, seed: options?.seed, enabled: options?.rescue === true && !withFlagship,
     preparation: options?.finisherPreparation === true, gapMs: typeof options?.gapMs === 'function' ? options.gapMs : null });
-  const lookouts = defenses.filter(item => item.kind === 'watchtower'), watchtowers = lookouts.map(item => C.levels.watchtower[item.level - 1]);
-  // High tower (tier 2): the watchtower lends more range.
-  const towerBonus = Math.max(0, ...lookouts.map((item, i) => round2(watchtowers[i].range * bonusOf(item, 'range', C)))), boost = Math.max(1, ...watchtowers.map(item => item.boost ?? 1));
-  const S = C.specs, near = spec => lookouts.filter(item => item.spec === spec).map(item => ({ ...item, skill: skillOf(item, C) }));
-  const spotters = near('spotter'), eagles = near('eagle_eye'), drummers = near('war_drums');
+  const lookouts = lookoutsOf(defenses), { towerBonus, rangeFor } = attackRanges(lookouts);
+  const boost = Math.max(1, ...lookouts.map(item => C.levels.watchtower[item.level - 1].boost ?? 1));
+  const S = C.specs, near = spec => lookoutsWith(lookouts, spec);
+  const spotters = near('spotter'), drummers = near('war_drums');
   const signal = Math.max(0, ...near('signal_fire').map(item => item.skill.warn));
-  const reach = (list, item) => list.find(tower => distance(tower.x, tower.z, item.x, item.z) <= tower.skill.radius);
   let fogShare = waveNumber === 1 ? Math.max(1 - fog, C.fog.firstWaveSight) : 1 - fog;
   if (crew.lookout && fog > 0) fogShare = Math.min(1, fogShare * C.crew.lookout.sight);
   const warnLead = (crew.lookout ? C.crew.lookout.warn : 0) + signal;
   const coast = readCoast(options?.coast), laneList = readLanes(options?.lanes);
   // Cannons, mortars, harpoons, culverins and swivel nests, in id order; the gunners man the strongest (damage per second, then level).
-  const isTower = kind => kind === 'cannon' || kind === 'mortar' || kind === 'harpoon' || kind === 'culverin' || kind === 'swivel';
   const firstReload = { mortar: C.mortar.firstReload, harpoon: C.harpoon.firstReload, culverin: C.culverin.firstReload, swivel: C.swivel.firstReload };
-  const towers = defenses.filter(item => isTower(item.kind)).map(item => {
+  const towers = defenses.filter(item => isAttackTower(item.kind)).map(item => {
     const stats = C.levels[item.kind][item.level - 1], spec = skillOf(item, C);
-    // Long guns (tier 2) and Eagle eye (a watchtower's capstone in reach) stretch the range; Long range adds to it.
-    const eagle = reach(eagles, item)?.skill.range ?? 1;
-    // T43: a watchtower's range bonus does not reach a culverin (it would cover the whole sea), nor a swivel nest
-    // (D055: it would make a short gun a long one); Eagle eye does.
-    const range = item.kind === 'culverin' || item.kind === 'swivel' ? round2(stats.range * eagle + (spec.range ?? 0))
-      : round2(((item.kind === 'cannon' ? stats.range * bonusOf(item, 'range', C) : stats.range) + towerBonus) * eagle + (spec.range ?? 0));
+    const range = rangeFor(item, stats.range, spec.range ?? 0);
     // A spotter watchtower in reach adds its share of damage (GAME-V3.md §5); the skill's own numbers on top.
     const spotted = reach(spotters, item)?.skill.damage ?? 1, drums = reach(drummers, item)?.skill.reload ?? 1;
     // D055: the tower's upgrade tree. A tower without one keeps the old sums exactly (no factor is applied at all).

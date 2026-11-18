@@ -9,21 +9,47 @@ import {BRANCH_BY_ID, SPECS, optionName} from '../campaign/tech.js';
 import {TOWER_TREES} from '../pirates/tower-trees.js';
 import {ROLES, activeRole, roleRadius} from '../campaign/houses.js';
 import {ROLE_BY_ID, SKILL_BY_ID, isRole} from '../pirates/captain-ids.js';
+import {islandCode} from './codes.js';
 import {ISLAND_BUILT, ISLAND_UPGRADED, CREW_HIRED} from '../ui/quest-events.js';
 import {CREW, BUILDINGS} from './td-rules.js';
 import {SPOTS_CHANGED, TOWER_SPECIALISED, TOWER_TREE_BOUGHT, HOUSE_ROLE_PICKED} from './island-shared.js';
 
 export function createActions(isl) {
-  const {emit, focus, resetInput, now, wallRecovery} = isl;
+  const {emit, focus, resetInput, reducedMotion, now, wallRecovery} = isl;
   // From the other parts (island-*.js), linked once every part exists.
-  let recoveryControlsOn, readStructureRecovery, setOwn, campaign, wrote, target, where, placeOf, tookCoins,
-    reloadVisit, reloadOwn, refreshDefended, took, refused, lobby, colours, bellAction, demolishHandlers,
-    demolishCardModel, readBoat, bell, refreshCard, refreshCardIfBuild;
+  let recoveryControlsOn, recoveryModelVersion, readStructureRecovery, setOwn, campaign, wrote, target, where,
+    placeOf, tookCoins, reloadVisit, reloadOwn, refreshDefended, took, refused, lobby, colours, bellAction,
+    demolishHandlers, demolishCardModel, readBoat, bell, refreshCard, refreshCardIfBuild;
   const onWhere = place => (place === 'point' ? ' for Pirate Point' : place === 'visit' ? ` on ${isl.visiting?.ownerName ? `${isl.visiting.ownerName}'s` : 'this'} island` : '');
+  function invalidateWallFeedback() {
+    isl.wallFeedbackGeneration++;
+    isl.world?.clearWallFeedback();
+  }
+  function wallFeedbackScope() {
+    const code = islandCode(target()?.code ?? '');
+    return code && (!isl.visitCode || code === isl.visitCode) ? `${code}:${isl.wallFeedbackGeneration}` : null;
+  }
+  function wallPurchaseAt(spot, upgrading) {
+    if (!isl.world || isl.battle || spot?.slot !== 'wall') return null;
+    const scope = wallFeedbackScope();
+    const before = target()?.spots.find(item => item.id === spot.id);
+    if (!scope || !before || before.built !== upgrading || (upgrading && before.kind !== 'wall')) return null;
+    return {scope, world: isl.world, spotId: spot.id, level: upgrading ? before.level + 1 : 1};
+  }
+  function showWallPurchase(action, answer, receipt = '') {
+    if (!action || !answer.ok || answer.reconciled || action.world !== isl.world || action.scope !== wallFeedbackScope()
+        || islandCode(answer.data.code ?? '') !== islandCode(target()?.code ?? '')) return;
+    const confirmed = answer.data.spots.find(spot => spot.id === action.spotId);
+    if (confirmed?.built === true && confirmed.kind === 'wall' && confirmed.level === action.level) {
+      isl.world.showWallFeedback(action.spotId, action.level);
+      return receipt && isl.ui.showWallReceipt(action.spotId, receipt, reducedMotion());
+    }
+  }
   async function build(spotId, kind) {
     const place = placeOf(spotId), spot = place === 'point' ? ppSpotById(spotId) : spotById(spotId);
     const choice = kind ?? spot?.kind;
     if (!spot || isl.busySpot || !BUILDINGS[choice]) return;
+    const action = choice === 'wall' && place !== 'point' ? wallPurchaseAt(spot, false) : null;
     isl.busySpot = spotId; isl.busyKind = choice; isl.cardMessage = ''; refreshCard();
     const answer = place === 'point' ? await isl.api.pointBuild({spot: spotId, kind: choice})
       : await isl.api.build({spot: spotId, kind: choice, ...(place === 'visit' ? {code: isl.visiting.code} : {})});
@@ -39,6 +65,7 @@ export function createActions(isl) {
       isl.ui.toast(`${BUILDINGS[choice].name} built${onWhere(place)} · ${coinText(isl.own?.coins)}`, 'success');
     } else await refused(answer, place, spotId);
     refreshCard();
+    showWallPurchase(action, answer);
   }
   // D039 (flag wall_recovery): the walls' health of the island on screen; nothing at all while the flag is off.
   async function readWalls() {
@@ -74,6 +101,8 @@ export function createActions(isl) {
   async function upgrade(spotId) {
     const place = placeOf(spotId);
     if (isl.busySpot) return;
+    const action = wallPurchaseAt(spotById(spotId), true);
+    let wallReceipt = '';
     isl.busySpot = spotId; isl.busyKind = 'upgrade'; isl.cardMessage = ''; refreshCard();
     const answer = place === 'point' ? await isl.api.pointUpgrade({spot: spotId})
       : await isl.api.upgrade({spot: spotId, ...(place === 'visit' ? {code: isl.visiting.code} : {})});
@@ -87,10 +116,13 @@ export function createActions(isl) {
       const name = BUILDINGS[now?.kind]?.name ?? 'Building';
       if (place === 'own') emit({type: ISLAND_UPGRADED, kind: now?.kind, spot: spotId, level: now?.level});
       emit({type: SPOTS_CHANGED, place, spot: spotId});
-      isl.ui.toast(`${name} level ${now?.level ?? '?'}${onWhere(place)} · ${coinText(isl.own?.coins)}`, 'success');
+      const receipt = `${name} level ${now?.level ?? '?'}${onWhere(place)} · ${coinText(isl.own?.coins)}`;
+      if (action) wallReceipt = receipt;
+      else isl.ui.toast(receipt, 'success');
       if (recoveryControlsOn()) void readStructureRecovery(spotId);
     } else await refused(answer, place, spotId);
     refreshCard();
+    if (!showWallPurchase(action, answer, wallReceipt) && wallReceipt) isl.ui.toast(wallReceipt, 'success');
   }
   // GAME-V3.md §4.2: Tear down asks the server who gets what back, then the confirmation card; Tear down there
   // takes the building down (between waves), every payer gets half of what they paid, and the room hears it.
@@ -214,6 +246,7 @@ export function createActions(isl) {
   function houseRange() {
     if (isl.ui.open !== 'build' || !isl.openSpot) return null;
     const where = placedSpot(isl.openSpot, target()?.spots), role = activeRole((target()?.spots ?? []).find(item => item.id === isl.openSpot));
+    if (recoveryModelVersion() === 1 && role === 'workshop') return null;
     return where && role ? {x: where.x, z: where.z, radius: roleRadius(role), role} : null;
   }
   // GAME-V3.md §5.1: one research step: tier 1 of a branch, or one of the two options of tier 2 or 3 (change:
@@ -320,11 +353,11 @@ export function createActions(isl) {
     refreshCard();
   }
   function link() { // the names of the other parts, once every part exists (index.js)
-    ({recoveryControlsOn, readStructureRecovery, setOwn, campaign, wrote, target, where, placeOf, tookCoins,
-      reloadVisit, reloadOwn, refreshDefended, took, refused, lobby, colours, bellAction, demolishHandlers,
-      demolishCardModel, readBoat, bell, refreshCard, refreshCardIfBuild} = isl);
+    ({recoveryControlsOn, recoveryModelVersion, readStructureRecovery, setOwn, campaign, wrote, target, where,
+      placeOf, tookCoins, reloadVisit, reloadOwn, refreshDefended, took, refused, lobby, colours, bellAction,
+      demolishHandlers, demolishCardModel, readBoat, bell, refreshCard, refreshCardIfBuild} = isl);
   }
-  return {build, readWalls, repairWall, upgrade, askDemolish, confirmDemolish, heardDemolish, placeCode, specialise,
-    buyTree, toggleVillage, startMove, moved, houseRange, research, giveWreck, hire, upgradeCaptain, learnSkill,
-    takeRole, respecCaptain, link};
+  return {invalidateWallFeedback, wallFeedbackScope, build, readWalls, repairWall, upgrade, askDemolish,
+    confirmDemolish, heardDemolish, placeCode, specialise, buyTree, toggleVillage, startMove, moved, houseRange,
+    research, giveWreck, hire, upgradeCaptain, learnSkill, takeRole, respecCaptain, link};
 }

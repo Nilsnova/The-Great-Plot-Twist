@@ -16,7 +16,8 @@ import { MAX_TICKS_PER_FRAME, PLAYOUT_SLEW_MS, recoveryPlayoutTarget, PREDICTION
 export function createFrame(ctl) {
   const { world, getDefenses, getManaging, reducedMotion, playerId, now, place, onEvents, startNextWave, breakSeconds,
     recoveryPlayoutMs, toggleHold, createFinisherScene, easyFinishers, practiceIdentity, guideOn, createGuide, poses,
-    myLevel, read, actorId, myStats, emit, cue, here, blocked, clearLiveFeedback } = ctl;
+    myLevel, read, actorId, myStats, emit, cue, here, blocked, rangeFeedback, dangerFeedback, updateDefenseInspection,
+    clearLiveFeedback } = ctl;
   // From the other parts (controller-*.js), linked once every part exists.
   let submit, pumpRecovery, catchUp, predictedCopy, tagActors, shoot, autoStrike, captainShare, bladeShare, meIn,
     isDown, sendPosition, fallenNear, holdRevive, revivePrompt, helpPrice, fallenMarks, held, next, act, finishing,
@@ -51,6 +52,9 @@ export function createFrame(ctl) {
   }
 
   function handle(events, current, fresh, liveAttacks=[]) {
+    if (current.shown && !blocked() && !current.catchingUp) {
+      dangerFeedback.note(fresh, actorId(current), now());
+    }
     if (current.predicted?.length) {
       fresh = fresh.filter(event => !(PREDICTED_KINDS.has(event.type) && predictedCopy(current, event)));
     }
@@ -238,12 +242,25 @@ export function createFrame(ctl) {
     const blade = running && !!bladeTarget(player, current.state, stats.sweepRadius);
     current.hud?.musket?.(running && !fallen && !finishing(current) ? { share: blade ? bladeShare(current) : captainShare(current),
       ready: blade || !!captainTarget(player, current.state, myLevel(), stats.range), blade, label: stats.name } : null);
+    const activeFeedback = !!running && !fallen && !blocked() && !finishing(current) && !current.catchingUp;
+    if (!activeFeedback) ctl.rangePreview = false;
+    const range = rangeFeedback.update({ active: activeFeedback, nowMs: now(), stats, player,
+      preview: ctl.rangePreview, held: ctl.shootHeld, blade,
+      ready: !!player && !!captainTarget(player, current.state, myLevel(), stats.range) });
+    const danger = dangerFeedback.update({ active: activeFeedback, state: current.state, player,
+      actorId: actorId(current), nowMs: now() });
+    current.hud?.rangeFeedback?.(range);
+    current.hud?.danger?.(danger.warning);
+    const defenseCoverage = updateDefenseInspection(current, activeFeedback, danger.warning);
+    if (danger.sound) cue('pirate-danger');
     current.hud?.health?.(me && !current.done && current.shown ? { hp: me.hp, maxHp: me.maxHp, down: me.down } : null);
     current.hud?.down?.(fallen && current.shown ? { seconds: Math.max(0, Math.floor(current.state.time - (me.downAt ?? current.state.time))),
       alone: !(current.state.party ?? []).some(hero => hero.id !== actorId(current) && hero.present && !hero.down) } : null);
     current.hud?.marks?.(fallenMarks(current, player));
     const captain = player && current.shown && !current.done ? { id: actorId(current), x: player.x, z: player.z, share: captainShare(current), down: fallen } : null;
     current.renderer?.update({ state: drawnState(current), simTime, dt, captain, figures: ctl.figures,
+      combatFeedback: { range, danger: danger.warning, player },
+      defenseCoverage,
       revive: current.revive && !current.revive.paying ? { targetId: current.revive.targetId, share: current.revive.share } : null });
     if (ctl.shake > 0 && world.camera) {
       const t = now() / 1000;

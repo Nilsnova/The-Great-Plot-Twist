@@ -1,0 +1,18 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run tests/island/wallet-watermark.test.js tests/ui/recovered-rewards.test.js tests/island/core-rejoin-load.test.js --maxWorkers=1
+
+
+ RUN  v5.1.0 /workspace/wave-review-wallet/frontend
+
+
+ Test Files  3 passed (3)
+      Tests  33 passed (33)
+   Start at  18:12:46
+   Duration  7.50s (tests 85%, import 12%, transform 3%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice

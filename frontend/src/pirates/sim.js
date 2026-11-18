@@ -29,11 +29,11 @@ import { createCaptains } from './sim-captains.js';
 import { createBoarders } from './sim-boarders.js';
 import { createTick } from './sim-tick.js';
 import { createShipFire } from './ship-fire.js';
-import { finite, round2 } from './sim-read.js';
+import { finite, round2, coverageProfile } from './sim-read.js';
 
 // The public API, unchanged: CONFIG and the pure helpers live in their own files now.
 export { CONFIG } from './sim-config.js';
-export { createRandom, coastPoint, skillOf } from './sim-read.js';
+export { createRandom, coastPoint, skillOf, previewDefenseCoverage } from './sim-read.js';
 export { crewFor, warshipsFor, revivePrice, houseRoles, hasTavern, tierShare, tierFor, fleetOf, threatOf, fleetSize,
   curveFor } from './sim-fleet.js';
 
@@ -73,7 +73,7 @@ export function createWave(options = {}) {
   // The wave's state and parts, shared by the modules below as one object (sim-setup.js): its counters and flags
   // (sim.ticks, sim.islandHp and the like) and everything built at the start (the towers, the walls, the fleet plan, ...).
   const sim = setupWave(options);
-  const { C, heart, waveNumber, fog, maxHp, boss, crew, happening, finisher, rescue, towers, cannons, sight, roles,
+  const { C, towerById, heart, waveNumber, fog, maxHp, boss, crew, happening, finisher, rescue, towers, cannons, sight, roles,
     walls, towerHealth, jammed, bosses, plan, ships, wrecks, balls, shells, captains, blades, boarders, fires, party,
     militia, now, flagshipAfloat, statsOf } = sim;
   function end(reason, events) {
@@ -92,7 +92,7 @@ export function createWave(options = {}) {
   Object.assign(sim, { end, result });
   // The wave's parts, each a closure over `sim`, in the order they use each other (each one adds its functions).
   Object.assign(sim, createWeapons(sim));
-  const { damageShip, hitWall, hurtIsland, fire, slowedUntil } = sim;
+  const { damageShip, hitWall, hurtIsland, fire, slowedUntil, litSight } = sim;
   Object.assign(sim, createStructures(sim));
   const { applyRecoveryEvent, recoveryHealthVector } = sim;
   Object.assign(sim, createCaptains(sim));
@@ -113,6 +113,18 @@ export function createWave(options = {}) {
   return {
     applyRecoveryEvent,
     recoveryHealthVector,
+    // Raw sight and reload from this wave's frozen defenses. `litRange` is only available to lit targets at night.
+    attackCoverage(id) {
+      const tower = towerById.get(id);
+      if (sim.done || !tower) return null;
+      const t = sim.ticks * C.tick;
+      let status = 'ready';
+      if (!towerHealth.canFire(tower)) status = 'destroyed';
+      else if (jammed(tower, t)) status = 'jammed';
+      else if (happening.silenced(tower, t)) status = 'silenced';
+      return { ...coverageProfile(tower, tower.sight),
+        litRange: happening.id === 'night_raid' ? litSight(tower) : null, status, reload: tower.reload };
+    },
     step(dt, inputs = []) {
       const events = [];
       if (sim.done) return events;

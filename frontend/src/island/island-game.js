@@ -12,7 +12,8 @@ import {ARRIVAL_KEY, SPOTS_CHANGED, ISLAND_RESET} from './island-shared.js';
 export function createGames(isl) {
   const {container, emit, reducedMotion, preferences, storage, visitStorage, loadCutscenes} = isl;
   // From the other parts (island-*.js), linked once every part exists.
-  let campaignSeen, campaignTold, where, applyWorld, endVisit, load, refreshCard;
+  let campaignSeen, campaignTold, where, applyWorld, endVisit, load, interruptBoat, refreshCard,
+    invalidateWallFeedback;
   // --- the game: its lobby and room state ----------------------------------------------------------
   const currentCode = () => islandCode(isl.visiting?.code ?? isl.visitCode ?? isl.own?.code ?? '');
   // The lobby answer once per game and landing (and when somebody new turns up in the room).
@@ -103,6 +104,7 @@ export function createGames(isl) {
     const answer = await isl.api.freshStart({confirmCode: typed});
     if (isl.disposed || !answer.ok) return answer;
     isl.resetGeneration++;
+    invalidateWallFeedback();
     const code = islandCode(isl.own?.code ?? '') || islandCode(typed);
     // This page's memory of the old island goes too: its campaign, walls and tree picks.
     campaignSeen.delete(code);
@@ -121,7 +123,7 @@ export function createGames(isl) {
   async function bellAction(action) {
     isl.cardMessage = '';
     const answer = action === 'join' ? await isl.flow.join(where()) : action === 'ring' ? await isl.flow.ring(where()) : null;
-    if (isl.disposed || !answer) return;
+    if (isl.disposed || !answer || answer.ignored) return;
     if (answer.ok) { isl.world?.ring(); isl.ui.close(); return; }
     isl.cardMessage = answer.message; refreshCard();
   }
@@ -144,7 +146,9 @@ export function createGames(isl) {
   function visit(code) {
     const symbols = storeVisit(code, visitStorage);
     if (!symbols) return false;
+    interruptBoat();
     isl.village.leave();
+    invalidateWallFeedback();
     isl.visitCode = symbols; isl.visiting = null; isl.flow.reset(); isl.ui.close();
     return true;
   }
@@ -170,12 +174,14 @@ export function createGames(isl) {
     return visit(symbols);
   }
   async function sailHome() {
+    interruptBoat();
     isl.village.leave();
     endVisit(); isl.flow.reset(); isl.ui.close(); applyWorld();
     await load();
   }
   function link() { // the names of the other parts, once every part exists (index.js)
-    ({campaignSeen, campaignTold, where, applyWorld, endVisit, load, refreshCard} = isl);
+    ({campaignSeen, campaignTold, where, applyWorld, endVisit, load, interruptBoat, refreshCard,
+      invalidateWallFeedback} = isl);
   }
   return {currentCode, syncGame, wantSync, lobby, colours, colourOf, captainColour, startGame, openLobby, setPresence,
     resetState, resetIsland, bellAction, playArrival, visit, leaveGame, enterGame, sailHome, link};

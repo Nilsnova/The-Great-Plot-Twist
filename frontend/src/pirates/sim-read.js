@@ -7,6 +7,14 @@ import { readHealth } from './wall-health.js';
 import { readTree } from './tower-trees.js';
 
 const KINDS = new Set(['wall', 'cannon', 'mortar', 'harpoon', 'culverin', 'swivel', 'watchtower', 'house']);
+const PRIMARY_TARGETS = {
+  cannon: ['ships', 'boarders'],
+  mortar: ['ships', 'boarders'],
+  harpoon: ['sailing-ships'],
+  culverin: ['ships'],
+  swivel: ['boarders'],
+};
+export const isAttackTower = kind => Object.hasOwn(PRIMARY_TARGETS, kind);
 export const finite = value => typeof value === 'number' && Number.isFinite(value);
 export const clamp = (value, low, high) => Math.min(high, Math.max(low, value));
 export const round2 = value => Math.round(value * 100) / 100;
@@ -66,6 +74,37 @@ export function skillOf(item, C = CONFIG) {
   return { ...(C.specs[item?.spec] ?? {}), ...(C.research[item?.bonus]?.[item?.spec] ?? {}) };
 }
 export const bonusOf = (item, key, C = CONFIG) => C.research[item?.bonus]?.[key] ?? 1;
+
+export const lookoutsOf = defenses => defenses.filter(item => item.kind === 'watchtower');
+export const lookoutsWith = (lookouts, spec) => lookouts.filter(item => item.spec === spec).map(item => ({ ...item, skill: skillOf(item) }));
+export const reach = (list, item) => list.find(tower => distance(tower.x, tower.z, item.x, item.z) <= tower.skill.radius);
+
+export function attackRanges(lookouts) {
+  const towerBonus = Math.max(0, ...lookouts.map(item => round2(CONFIG.levels.watchtower[item.level - 1].range * bonusOf(item, 'range'))));
+  const eagles = lookoutsWith(lookouts, 'eagle_eye');
+  return { towerBonus, rangeFor(item, baseRange, specRange) {
+    const eagle = reach(eagles, item)?.skill.range ?? 1;
+    // Culverins and swivels receive nearby Eagle eye but omit the global Watchtower bonus.
+    if (item.kind === 'culverin' || item.kind === 'swivel') return round2(baseRange * eagle + specRange);
+    const upgraded = item.kind === 'cannon' ? baseRange * bonusOf(item, 'range') : baseRange;
+    return round2((upgraded + towerBonus) * eagle + specRange);
+  } };
+}
+
+export function coverageProfile({ id, kind, level, x, z }, range) {
+  return { id, kind, level, x, z, range, minRange: CONFIG[kind]?.minRange ?? 0, targets: [...PRIMARY_TARGETS[kind]] };
+}
+
+/** The selected defense's clear-weather primary acquisition geometry. Actual sight and target eligibility are wave rules. */
+export function previewDefenseCoverage(defenses, selectedId, { defensesV2 = false } = {}) {
+  const items = readDefenses(defenses, { culverin: defensesV2 === true });
+  const item = items.find(row => row.id === selectedId && isAttackTower(row.kind));
+  if (!item) return null;
+  const { kind, level } = item;
+  const { rangeFor } = attackRanges(lookoutsOf(items));
+  const range = rangeFor(item, CONFIG.levels[kind][level - 1].range, skillOf(item).range ?? 0);
+  return coverageProfile(item, range);
+}
 
 // Another island's coast (Pirate Point on lighthouse_isle): {rx, rz, seed}, else the home_islet coast.
 export function readCoast(coast) {

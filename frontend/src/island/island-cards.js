@@ -3,7 +3,9 @@
 // and pick(), which opens the card of a tapped zone. A closure over the island's state `isl`.
 
 import {canDockSelection, holdOtherBuildingAction} from './selection-dock.js';
-import {BELL, CABIN, isPointSpot, spotById, ppSpotById, placedSpot, ARSENAL} from './spots.js';
+import {footprintOf} from './placement.js';
+import {previewDefenseCoverage} from '../pirates/sim.js';
+import {BELL, CABIN, isPointSpot, spotById, ppSpotById, defenses, placedSpot, ARSENAL} from './spots.js';
 import {buildCardModel, bellModel, inviteModel, crewModel, captainModel, captainsModel, skillsModel, coinText,
   harborModel, techModel, wreckModel, demolishModel} from './card-model.js';
 import {isOpen} from '../campaign/index.js';
@@ -15,7 +17,8 @@ import {withWallRecovery} from './wall-recovery.js';
 import {preparationModel} from './preparation-model.js';
 
 export function createCards(isl) {
-  const {emit, on, focus, reducedMotion, preferences, openHarborStall, wallRecovery, defensesV2On} = isl;
+  const {emit, on, focus, resetInput, reducedMotion, preferences, loadBoatScene, openHarborStall, villageCamera,
+    wallRecovery, defensesV2On} = isl;
   // From the other parts (island-*.js), linked once every part exists.
   let clearRecoveryError, recoveryPolicyOn, recoveryControlsOn, recoveryModelVersion, readStructureRecovery,
     repairStructure, tellCoins, unlocks, islandUnlocks, campaign, target, where, applyWorld, freshOwn, reloadOwn,
@@ -63,7 +66,10 @@ export function createCards(isl) {
     return holdOtherBuildingAction(recoveryControlsOn() ? model : withWallRecovery(model, {wall: shown, coins: isl.own?.coins ?? null,
       busy: isl.busySpot === spotId ? isl.busyKind : false, battle: isl.battle && !isl.waveOver}), isl.busySpot);
   }
-  const crew = () => crewModel({crew: isl.own?.crew ?? {}, coins: isl.own?.coins ?? null, unlocks: isl.own ? unlocks() : null, busy: isl.busyCrew, message: isl.cardMessage || (!isl.own ? isl.ownMessage : ''), prices: isl.own?.prices});
+  // Hiring still changes the caller's own island when they are visiting.
+  const crew = () => crewModel({crew: isl.own?.crew ?? {}, coins: isl.own?.coins ?? null, unlocks: isl.own ? unlocks() : null,
+    busy: isl.busyCrew, message: isl.cardMessage || (!isl.own ? isl.ownMessage : ''), prices: isl.own?.prices,
+    recoveryVersion: isl.visiting ? isl.own?.recoveryVersion ?? 0 : recoveryModelVersion()});
   const captain = () => {
     const message = isl.cardMessage || (!isl.own ? isl.ownMessage : ''), wonWave = isl.own ? unlocks().wonWave : 0;
     return {tab: isl.captainTab,
@@ -79,6 +85,7 @@ export function createCards(isl) {
   const handlers = {build: (spotId, kind) => void build(spotId, kind), upgrade: spotId => void upgrade(spotId), repair: spotId => void repairWall(spotId),
     repairStructure: (spotId, quote) => void repairStructure(spotId, quote), hire: () => openCrew(),
     specialise: (spotId, spec) => void specialise(spotId, spec), demolish: spotId => void askDemolish(spotId), move: spotId => startMove(spotId),
+    camera: action => villageCamera(action, action === 'work' ? selectedAnchor() : null),
     treeSelect: (spotId, id) => { isl.treePicked.set(spotId, id); isl.cardMessage = ''; refreshCard(); }, tree: (spotId, path, tier) => void buyTree(spotId, path, tier)};
   const demolishHandlers = {confirm: () => void confirmDemolish(), keep: () => { const spot = isl.demolishSpot; isl.demolishSpot = null; if (spot) openBuild(spot); }};
   const demolishCardModel = () => demolishModel({quote: isl.demolishQuote, busy: isl.busyDemolish, message: isl.cardMessage});
@@ -90,6 +97,18 @@ export function createCards(isl) {
   const harborHandlers = {open: id => { isl.ui.close(); try { openHarborStall(id); } catch { /* The stall answers on its own. */ } }};
   const techHandlers = {research: step => void research(step)};
   const wreckHandlers = {give: amount => void giveWreck(amount), sail: game => void sail(game)};
+  const boatBlocked = () => (isl.battle && !isl.waveOver) || isl.flow.busy || (!!isl.flow.current && !isl.waveOver);
+  // Dispose directly: normal Close opens the wreck card and would keep captain input blocked.
+  function interruptBoat(waveStarting = false) {
+    isl.boatLaunch++;
+    if (!isl.boatGame && !isl.boatLoading) return;
+    const completed = isl.boatGame?.phase === 'result';
+    isl.boatGame?.dispose();isl.boatGame = null;isl.boatLoading = false;
+    isl.ui.close();resetInput();focus();
+    if (waveStarting) isl.ui.boatNotice(completed
+      ? 'Your completed round keeps any coins earned. Boat attempts cost no coins.'
+      : 'Boat round interrupted. No coins were spent and this attempt did not use a reward.');
+  }
   async function readBoat() {
     if (!isOpen(campaign(), 'ship')) { isl.boatStatus = null; return; }
     const ticket = ++isl.boatTicket, answer = await isl.api.boatStatus(placeCode());
@@ -98,29 +117,39 @@ export function createCards(isl) {
     if (isl.ui.open === 'wreck') refreshCard();
   }
   async function sail(game) {
-    if (isl.boatGame || isl.boatLoading || (isl.battle && !isl.waveOver)) return;
+    if (isl.boatGame || isl.boatLoading || boatBlocked()) return;
     isl.boatLoading = true;
+    const launch = ++isl.boatLaunch;
     const at = campaign(), code = target()?.code ?? '', where = placeCode();
     let scene;
-    try { scene = await import('../pirates/boat/scene.js'); } catch { isl.boatLoading = false; isl.ui.toast('The boat could not load. Try again.', 'info'); return; }
+    try { scene = await loadBoatScene(); } catch {
+      if (!isl.disposed && launch === isl.boatLaunch) { isl.boatLoading = false; isl.ui.toast('The boat could not load. Try again.', 'info'); }
+      return;
+    }
+    if (isl.disposed || launch !== isl.boatLaunch) return;
     isl.boatLoading = false;
-    if (isl.disposed) return;
+    if (boatBlocked() || code !== target()?.code || at?.wave !== campaign()?.wave) return;
     isl.ui.close();
-    isl.boatGame = scene.createBoatGame({container: document.body, game, wave: at?.wave ?? 0, code, reducedMotion,
+    const round = scene.createBoatGame({container: document.body, game, wave: at?.wave ?? 0, code, reducedMotion,
       easy: () => preferences()?.easyFinishers === true,
       onFinish: async ({stars}) => {
         if (stars < 1) return {line: 'No stars this time. Try again!', coins: 0};
         const answer = await isl.api.boatReward({game, stars, ...where});
         if (isl.disposed) return null;
-        if (!answer.ok) return {line: answer.message, coins: 0};
+        if (!answer.ok) {
+          if (isl.boatGame !== round) isl.ui.toast(answer.message, 'error');
+          return {line: answer.message, coins: 0};
+        }
         if (answer.data.paid) {
           tellCoins(answer.data.balance);
           void readBoat(); void reloadOwn();
+          if (isl.boatGame !== round) isl.ui.toast(`Boat reward: +${coinText(answer.data.coins)}!`, 'success');
           return {line: `+${coinText(answer.data.coins)}!`, coins: answer.data.coins};
         }
         return {line: answer.data.already ? 'Paid already this wave. Win a wave to sail for coins again.' : 'No coins this time.', coins: 0};
       },
       onClose: () => { isl.boatGame = null; focus(); openWreck(); }});
+    isl.boatGame = round;
   }
   function bell() {
     const wave = isl.flow.current, island = target();
@@ -163,12 +192,23 @@ export function createCards(isl) {
   }
   function showBuild(spotId) {
     const model = buildModel(spotId);
-    if (isl.ui.selectionElement && !model.built) { isl.ui.close(); isl.openSpot = null; return; }
-    isl.ui.buildCard(model, handlers, {dock: isl.village.active && !isl.visiting && !isPointSpot(spotId) && canDockSelection(model)});
+    if (isl.ui.selectionSpot === spotId && !model.built) { isl.ui.close(); isl.openSpot = null; return; }
+    const dock = isl.village.active && !isl.visiting && !isPointSpot(spotId) && canDockSelection(model);
+    const destroyed = model.recovery?.actualHp === 0 && model.recoveryLevel === model.level;
+    if (dock && model.slot === 'tower' && !destroyed) {
+      const installed = defenses(target()?.spots ?? [], campaign()?.research?.tiers);
+      // Keep coverage for an installed recovery-v1 Culverin when new purchases are disabled.
+      model.coverage = previewDefenseCoverage(installed, spotId, {defensesV2: defensesV2On() === true || recoveryPolicyOn()});
+    }
+    isl.ui.buildCard(model, handlers, {dock});
   }
   function selectedAnchor() {
-    const at = isl.ui.selectionElement && isl.village.active && isl.openSpot ? placedSpot(isl.openSpot, target()?.spots) : null;
-    return at && Number.isFinite(at.x) && Number.isFinite(at.z) ? {spotId: isl.openSpot, x: at.x, z: at.z, lift: 1} : null;
+    if (!isl.ui.selectionElement || !isl.village.active || !isl.openSpot) return null;
+    const spots = target()?.spots, spot = spots?.find(item => item.id === isl.openSpot);
+    const at = placedSpot(isl.openSpot, spots);
+    if (!at || !Number.isFinite(at.x) || !Number.isFinite(at.z)) return null;
+    return {spotId: isl.openSpot, kind: spot?.kind, level: spot?.level, x: at.x, z: at.z,
+      size: footprintOf(isl.openSpot), lift: 1, keepFit: spot?.kind !== 'wall'};
   }
   function openCrew() { isl.openSpot = null; isl.cardMessage = ''; isl.ui.crewCard(crew(), hire); void freshOwn(); }
   const overview = () => upgradeOverviewModel({island: isl.own, battle: isl.battle && !isl.waveOver, message: isl.ownMessage});
@@ -223,7 +263,7 @@ export function createCards(isl) {
       confirmDemolish, placeCode, specialise, buyTree, startMove, research, giveWreck, hire, upgradeCaptain,
       learnSkill, takeRole, respecCaptain} = isl);
   }
-  return {demolishHandlers, demolishCardModel, readBoat, bell, refreshCard, refreshCardIfBuild, openHarbor,
-    openTechHub, openWreck, selectedAnchor, openCrew, openOverview, openCaptain, openLeaderboard, openCaptains,
-    openInvite, pick, link};
+  return {demolishHandlers, demolishCardModel, interruptBoat, readBoat, bell, refreshCard, refreshCardIfBuild,
+    openHarbor, openTechHub, openWreck, selectedAnchor, openCrew, openOverview, openCaptain, openLeaderboard,
+    openCaptains, openInvite, pick, link};
 }

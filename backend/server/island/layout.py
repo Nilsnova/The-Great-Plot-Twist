@@ -24,6 +24,7 @@ from functools import cache
 from pathlib import Path
 
 from server.errors import ApiError
+from server.island.wall_rows import added_wall_row
 
 # backend/server/island/layout.py -> parents[2] is backend/
 CONTENT_FILE = Path(__file__).resolve().parents[2] / "content" / "island_layout.json"
@@ -304,7 +305,7 @@ def check_move(
 ) -> None:
     """Raise MoveRefused when `spot_id` may not stand at (x, z). The first failing rule wins:
     404 no_such_spot, 422 off_grid, 409 not_on_land, 409 off_path (a wall off every pirate
-    path, D056), 409 place_taken, 409 blocks_route."""
+    path, D056), 409 place_taken, 409 wall_rows, 409 blocks_route."""
     if spot_named(rules, spot_id) is None:
         raise MoveRefused(404, "no_such_spot", "There is no such build spot.")
     if not (on_grid(rules, x) and on_grid(rules, z)):
@@ -333,7 +334,17 @@ def check_move(
     for other_id, where in positions.items():
         if other_id != spot_id and overlaps(moved, box_of(rules, other_id, where)):
             raise MoveRefused(409, "place_taken", "Another building stands there.")
-    if not route_open(rules, {**positions, spot_id: (x, z)}):
+    final = {**positions, spot_id: (x, z)}
+    if spot_named(rules, spot_id).slot == WALL_SLOT:
+        wall_ids = [spot.spot for spot in rules.spots if spot.slot == WALL_SLOT]
+        before = [positions[id_] for id_ in wall_ids if id_ in positions]
+        after = [final[id_] for id_ in wall_ids if id_ in final]
+        if added_wall_row(before, after, rules.heart):
+            raise MoveRefused(
+                409, "wall_rows",
+                "Use at most three wall rows per approach. Align pieces to share a row.",
+            )
+    if not route_open(rules, final):
         raise MoveRefused(
             409, "blocks_route", "That would wall the heart in. Leave the pirates a way through."
         )

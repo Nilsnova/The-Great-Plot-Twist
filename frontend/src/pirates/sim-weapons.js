@@ -156,7 +156,8 @@ export function createWeapons(sim) {
   }
   const pending = target => balls.reduce((sum, ball) => sum + (ball.targetId === target.id && ball.hit ? ball.damage : 0), 0);
   // v3 waves: at night a lit target (near the heart, a fire, or burning) is seen at the full range.
-  const sees = (tower, target, d) => d <= tower.sight || (happening.lit(target, fires) && d <= tower.range * fogShare);
+  const litSight = tower => tower.range * fogShare;
+  const sees = (tower, target, d) => d <= tower.sight || (happening.lit(target, fires) && d <= litSight(tower));
   const visible = (cannon, target) => sees(cannon, target, distance(cannon.x, cannon.z, target.x, target.z));
   const armoured = ship => ship.kind === 'flagship' && !sim.lampsLit && ships.length > 1; // escorts first while armoured
   const shoreOrder = (a, b) => (a.state === 'attacking') !== (b.state === 'attacking') ? (a.state === 'attacking' ? -1 : 1) : a.left - b.left;
@@ -313,6 +314,6 @@ export function createWeapons(sim) {
       else if (target) fire(tower, target, false, events);
     }
   }
-  return { damageShip, gunboatFire, damageBoarder, hitWall, hurtIsland, findTarget, targetKey, fire, slowedUntil,
+  return { damageShip, gunboatFire, damageBoarder, hitWall, hurtIsland, findTarget, targetKey, fire, slowedUntil, litSight,
     visible, toHeart, landShots, fireTowers };
 }

@@ -8,9 +8,10 @@ import { RECOVERY_FLUSH_MS } from './recovery-transport.js';
 import { END_BEAT_MS, LOST_BEAT_MS, SETTLE_TICKS, LOST_FALLEN, LOST_TITLE, LOST_LINE, tooEarlyWait, finishRetryWait } from './controller-shared.js';
 
 export function createFinish(ctl) {
-  const { world, finishWave, now, cutsceneFor, playCutscene, startNextWave, breakSeconds, poses, later, emit, cue } = ctl;
+  const { world, finishWave, now, cutsceneFor, playCutscene, startNextWave, breakSeconds, poses, later, emit, cue,
+    rangeFeedback, dangerFeedback, closeDefenseInspection } = ctl;
   // From the other parts (controller-*.js), linked once every part exists.
-  let tryRecoveryFinish, roundLoot;
+  let tryRecoveryFinish, handOffRecoveryFinish, roundLoot;
   function settle(current) {
     if (current.recoveryReplay) return;
     for (let i = 0; i < SETTLE_TICKS && !current.sim.done; i++) { current.sim.step(TICK_SECONDS, current.schedule.take(current.ticks)); current.ticks++; }
@@ -22,18 +23,25 @@ export function createFinish(ctl) {
   function end(current) {
     if (current.done) return;
     current.done = true;
-    const result = current.result = current.sim.result();
-    const run = typeof startNextWave === 'function', fallenAll = current.sim.endReason === 'captains_fallen';
+    current.result = current.sim.result();
     current.revive = null; current.pin = null;
     current.hud?.down?.(null); current.hud?.health?.(null); current.hud?.marks?.([]);
+    if (current.recoveryReplay) {
+      current.recoveryPending = [];
+      current.hud?.banner('Wave over', 'Confirming the result…');
+    } else presentEnd(current);
+    void submitFinish(current);
+  }
+
+  function presentEnd(current) {
+    const result = current.result;
+    const run = typeof startNextWave === 'function', fallenAll = current.sim.endReason === 'captains_fallen';
     if (run && result.survived) current.pause = { until: now() + breakSeconds * 1000, ready: false, requested: false, note: null };
     else if (run) current.hud?.banner(LOST_TITLE, `${fallenAll ? `${LOST_FALLEN} ` : ''}${LOST_LINE}`);
     else current.hud?.banner(result.survived ? 'Wave won!' : 'The island fell', fallenAll ? LOST_FALLEN : `${result.shipsSunk} ${result.shipsSunk === 1 ? 'ship' : 'ships'} sunk`);
     cue(result.survived ? 'pirate-victory' : 'pirate-defeat');
-    emit({ type: 'wave_finished', waveId: current.info.waveId, survived: result.survived, shipsSunk: result.shipsSunk });
-    // Queued commands land after the last sealed tick, so after this sim's end: they cannot change it.
-    if (current.recoveryReplay) current.recoveryPending = [];
-    void submitFinish(current);
+    // Recovery quest/narrator events come once from wave-flow.ended, after wave_finish_answered.
+    if (!current.recoveryReplay) emit({ type: 'wave_finished', waveId: current.info.waveId, survived: result.survived, shipsSunk: result.shipsSunk });
     if (current.pause) return; // the break runs from update(); the next wave (or its end) cleans up
     const summary = { lampsRelit: current.lampsRelit, flagshipSunk: current.flagshipSunk, flagship: current.info.flagship, wave: current.info.wave };
     const cleanup = async () => {
@@ -81,14 +89,17 @@ export function createFinish(ctl) {
   function stop() {
     const current = ctl.wave;
     if (!current) return;
+    if (!ctl.disposed && current.recoveryFinishPending && !current.recoveryDetached) handOffRecoveryFinish(current);
     ctl.wave = null; current.finished = true;
+    closeDefenseInspection(current);
+    rangeFeedback.reset(); dangerFeedback.reset(); ctl.rangePreview = false;
     if (world.camera?.userData) { delete world.camera.userData.battleZoom; delete world.camera.userData.battleFocus; }
     current.renderer?.dispose(); current.hud?.dispose(); current.schedule.clear(); current.liveFeedback.clear(); poses.clear();
     current.eventArt?.dispose(); current.finisher?.scene?.dispose(); current.finisher = null;
     emit({ type: 'wave_controller_stopped', waveId: current.info.waveId, ...(current.recoveryReplay ? { recovery: true } : {}) });
   }
   function link() { // the names of the other parts, once every part exists (controller.js)
-    ({ tryRecoveryFinish, roundLoot } = ctl);
+    ({ tryRecoveryFinish, handOffRecoveryFinish, roundLoot } = ctl);
   }
-  return { settle, finishing, end, stop, link };
+  return { settle, finishing, end, presentEnd, stop, link };
 }

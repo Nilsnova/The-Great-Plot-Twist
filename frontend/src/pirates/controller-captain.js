@@ -11,7 +11,7 @@ import { AIM_RADIUS, MOVE_EVERY_MS, HEARD_EVERY_MS, RECOVERY_HEARD_EVERY_MS, MOV
 
 export function createCaptainActions(ctl) {
   const { world, getDefenses, playerId, now, captainColour, startNextWave, saveAuto, holdBreak, reviveCaptain, poses,
-    myLevel, read, mySkills, actorId, myStats, emit, cue, here, blocked } = ctl;
+    myLevel, read, mySkills, actorId, myStats, emit, cue, here, blocked, rangeFeedback } = ctl;
   // From the other parts (controller-*.js), linked once every part exists.
   let submit, seenTick, cosmeticShot, predict, drawPredicted, finishing;
   // The captain's gun: at a ship or boarder (a tap) or the nearest in range (F), from where the player
@@ -19,6 +19,8 @@ export function createCaptainActions(ctl) {
   // (blunderbuss) and a bomb (fire bombs) also carry the aim point: the target's place.
   // The guided start (T52) waits for your own attack: captain_attack {weapon: 'gun' | 'cutlass'} (not the automatic blade).
   const attacked = (weapon, ok) => { if (ok) emit({ type: 'captain_attack', weapon }); return ok; };
+  const rangeAttempt = (message, point = null, blade = false) => rangeFeedback.attempt({ nowMs: now(), message,
+    point: point ? { x: point.x, z: point.z } : null, blade });
   function shoot(targetId = null) {
     const player = world.player?.position;
     if (!ctl.wave || ctl.wave.done || !player || !here() || isDown(ctl.wave) || finishing(ctl.wave)) return false;
@@ -30,19 +32,29 @@ export function createCaptainActions(ctl) {
     const isBoarder = named?.id?.startsWith('boarder_');
     const close = isBoarder && Math.hypot(named.x - player.x, named.z - player.z) <= stats.sweepRadius
       ? named : !targetId || isBoarder ? bladeTarget(player, state, myStats().sweepRadius) : null;
-    if (close) return attacked('cutlass', strike(close));
+    if (close) {
+      const ok = strike(close);
+      rangeAttempt(ok ? 'Slash' : 'Reloading', close, true);
+      return attacked('cutlass', ok);
+    }
     const target = targetId ? named : captainTarget(player, state, myLevel(), stats.range);
-    if (!target || Math.hypot(target.x - player.x, target.z - player.z) > stats.range) return false;
+    if (!target || Math.hypot(target.x - player.x, target.z - player.z) > stats.range) {
+      rangeAttempt(target ? 'Out of range · move closer' : 'No enemy in range', target);
+      return false;
+    }
     return attacked('gun', fireAt(stats, player, target, { x: target.x, z: target.z }));
   }
   function fireAt(stats, player, target, point) {
     const t = ctl.wave.ticks * TICK_SECONDS;
-    if (t - ctl.wave.captainAt < stats.reload) return false;
+    if (t - ctl.wave.captainAt < stats.reload) { rangeAttempt('Reloading', point); return false; }
     const round = value => Math.round(value * 100) / 100;
     const aimed = stats.mode === 'cone' || stats.mode === 'area' ? { ax: round(point.x), az: round(point.z) } : {};
     const input = { type: 'captain_shot', by: playerId, targetId: target?.id ?? null, level: stats.level, skills: mySkills(), weapon: stats.weapon,
       x: round(player.x), z: round(player.z), ...aimed, ...seenTick(ctl.wave) };
-    if (!submit(input)) return false;
+    if (!submit(input)) { rangeAttempt('Shot not sent · try again', point); return false; }
+    const beyond = Math.hypot(point.x - player.x, point.z - player.z) > stats.range;
+    rangeAttempt(stats.mode === 'area' ? beyond ? 'Throw limited to ring' : 'Bomb thrown'
+      : stats.mode === 'cone' && beyond ? 'Spray limited to ring' : 'Shot fired', point);
     ctl.wave.captainAt = t + INPUT_LEAD_TICKS * TICK_SECONDS;
     if (ctl.wave.recoveryReplay) {
       const event = cosmeticShot(ctl.wave, actorId(ctl.wave), stats, input, target, t);
@@ -72,7 +84,9 @@ export function createCaptainActions(ctl) {
     }
     if (hit) return shoot(hit.id);
     const t = ctl.wave.ticks * TICK_SECONDS;
-    if (t - ctl.wave.captainAt < stats.reload) return false;
+    if (t - ctl.wave.captainAt < stats.reload) { rangeAttempt('Reloading', target ?? point); return false; }
+    rangeAttempt(Math.hypot(point.x - player.x, point.z - player.z) > stats.range
+      ? 'Out of range · move closer' : 'No target at aim point', target ?? point);
     ctl.wave.captainAt = t;
     const dx = point.x - player.x, dz = point.z - player.z, length = Math.hypot(dx, dz) || 1, reach = Math.min(length, stats.range);
     const toX = player.x + dx / length * reach, toZ = player.z + dz / length * reach;
@@ -153,7 +167,8 @@ export function createCaptainActions(ctl) {
     return best;
   }
   // Holding E (or the prompt) next to a fallen teammate: after revive.hold seconds the server charges you
-  // (reviveCaptain), then the revive goes to the room. Let go or walk off and it starts over; after a
+  // (reviveCaptain). Recovery payment includes its journal event; legacy revival goes to the room.
+  // Let go or walk off and it starts over; after a
   // refusal, let go before trying again.
   function holdRevive(current, target, player) {
     const holding = (ctl.holdE || ctl.holdPrompt) && !blocked();
@@ -168,10 +183,13 @@ export function createCaptainActions(ctl) {
     const round = value => Math.round(value * 100) / 100, at = { x: round(player.x), z: round(player.z) };
     // The tick of the fall: the sim keeps it in seconds of 50 ms ticks, the same on every screen.
     const downAt = Math.max(0, Math.round((target.downAt ?? 0) / TICK_SECONDS));
-    Promise.resolve().then(() => (reviveCaptain ? reviveCaptain({ waveId: current.info.waveId, fallen: target.id, downAt }) : null)).then(() => {
+    const recovery = current.recoveryReplay ? { waveProtocol: 2, ...at } : {};
+    Promise.resolve().then(() => (reviveCaptain ? reviveCaptain({ waveId: current.info.waveId, fallen: target.id, downAt, ...recovery }) : null)).then(answer => {
       if (ctl.wave !== current) return;
+      if (current.recoveryReplay && answer?.journaled !== true) throw new Error('The revival was not confirmed. Try again.');
       current.revive = null;
-      submit({ type: 'captain_revive', by: playerId, targetId: target.id, skills: mySkills(), ...at });
+      // A recovery payment already committed the journal effect. Replay applies it, including after reload.
+      if (!current.recoveryReplay) submit({ type: 'captain_revive', by: playerId, targetId: target.id, skills: mySkills(), ...at });
     }).catch(error => {
       if (ctl.wave !== current) return;
       current.revive = null;

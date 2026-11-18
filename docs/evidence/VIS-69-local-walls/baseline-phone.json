@@ -1,0 +1,838 @@
+{
+  "label": "phone",
+  "viewport": {
+    "width": 375,
+    "height": 812
+  },
+  "isMobile": true,
+  "reducedMotion": "reduce",
+  "browser": "157.0.8103.79",
+  "receipts": [
+    {
+      "spot": "wall_1",
+      "level": 1,
+      "paid": 10,
+      "balance": 399590,
+      "at": [
+        -18.5,
+        -1
+      ]
+    },
+    {
+      "spot": "wall_2",
+      "level": 1,
+      "paid": 10,
+      "balance": 399580,
+      "at": [
+        19,
+        1
+      ]
+    },
+    {
+      "spot": "wall_2",
+      "level": 2,
+      "paid": 20,
+      "balance": 399560,
+      "at": [
+        19,
+        1
+      ]
+    },
+    {
+      "spot": "wall_3",
+      "level": 1,
+      "paid": 10,
+      "balance": 399550,
+      "at": [
+        19,
+        -1
+      ]
+    },
+    {
+      "spot": "wall_3",
+      "level": 2,
+      "paid": 20,
+      "balance": 399530,
+      "at": [
+        19,
+        -1
+      ]
+    },
+    {
+      "spot": "wall_3",
+      "level": 3,
+      "paid": 40,
+      "balance": 399490,
+      "at": [
+        19,
+        -1
+      ]
+    },
+    {
+      "spot": "wall_4",
+      "level": 1,
+      "paid": 10,
+      "balance": 399480,
+      "at": [
+        -1,
+        17
+      ]
+    },
+    {
+      "spot": "wall_4",
+      "level": 2,
+      "paid": 20,
+      "balance": 399460,
+      "at": [
+        -1,
+        17
+      ]
+    },
+    {
+      "spot": "wall_4",
+      "level": 3,
+      "paid": 40,
+      "balance": 399420,
+      "at": [
+        -1,
+        17
+      ]
+    },
+    {
+      "spot": "wall_4",
+      "level": 4,
+      "paid": 80,
+      "balance": 399340,
+      "at": [
+        -1,
+        17
+      ]
+    },
+    {
+      "spot": "wall_5",
+      "level": 1,
+      "paid": 10,
+      "balance": 399330,
+      "at": [
+        1,
+        17
+      ]
+    },
+    {
+      "spot": "wall_5",
+      "level": 2,
+      "paid": 20,
+      "balance": 399310,
+      "at": [
+        1,
+        17
+      ]
+    },
+    {
+      "spot": "wall_5",
+      "level": 3,
+      "paid": 40,
+      "balance": 399270,
+      "at": [
+        1,
+        17
+      ]
+    },
+    {
+      "spot": "wall_5",
+      "level": 4,
+      "paid": 80,
+      "balance": 399190,
+      "at": [
+        1,
+        17
+      ]
+    },
+    {
+      "spot": "wall_5",
+      "level": 5,
+      "paid": 160,
+      "balance": 399030,
+      "at": [
+        1,
+        17
+      ]
+    },
+    {
+      "spot": "wall_6",
+      "level": 1,
+      "paid": 10,
+      "balance": 399020,
+      "at": [
+        -18.5,
+        -3
+      ]
+    },
+    {
+      "spot": "wall_7",
+      "level": 1,
+      "paid": 10,
+      "balance": 399010,
+      "at": [
+        8.5,
+        2
+      ]
+    },
+    {
+      "spot": "wall_7",
+      "level": 2,
+      "paid": 20,
+      "balance": 398990,
+      "at": [
+        8.5,
+        2
+      ]
+    },
+    {
+      "spot": "wall_8",
+      "level": 1,
+      "paid": 10,
+      "balance": 398980,
+      "at": [
+        0.5,
+        9.5
+      ]
+    },
+    {
+      "spot": "wall_8",
+      "level": 2,
+      "paid": 20,
+      "balance": 398960,
+      "at": [
+        0.5,
+        9.5
+      ]
+    },
+    {
+      "spot": "wall_8",
+      "level": 3,
+      "paid": 40,
+      "balance": 398920,
+      "at": [
+        0.5,
+        9.5
+      ]
+    },
+    {
+      "spot": "wall_9",
+      "level": 1,
+      "paid": 10,
+      "balance": 398910,
+      "at": [
+        -1.5,
+        9.5
+      ]
+    },
+    {
+      "spot": "wall_9",
+      "level": 2,
+      "paid": 20,
+      "balance": 398890,
+      "at": [
+        -1.5,
+        9.5
+      ]
+    },
+    {
+      "spot": "wall_9",
+      "level": 3,
+      "paid": 40,
+      "balance": 398850,
+      "at": [
+        -1.5,
+        9.5
+      ]
+    },
+    {
+      "spot": "wall_9",
+      "level": 4,
+      "paid": 80,
+      "balance": 398770,
+      "at": [
+        -1.5,
+        9.5
+      ]
+    },
+    {
+      "spot": "wall_10",
+      "level": 1,
+      "paid": 10,
+      "balance": 398760,
+      "at": [
+        -9.5,
+        -1
+      ]
+    },
+    {
+      "spot": "wall_10",
+      "level": 2,
+      "paid": 20,
+      "balance": 398740,
+      "at": [
+        -9.5,
+        -1
+      ]
+    },
+    {
+      "spot": "wall_10",
+      "level": 3,
+      "paid": 40,
+      "balance": 398700,
+      "at": [
+        -9.5,
+        -1
+      ]
+    },
+    {
+      "spot": "wall_10",
+      "level": 4,
+      "paid": 80,
+      "balance": 398620,
+      "at": [
+        -9.5,
+        -1
+      ]
+    },
+    {
+      "spot": "wall_10",
+      "level": 5,
+      "paid": 160,
+      "balance": 398460,
+      "at": [
+        -9.5,
+        -1
+      ]
+    },
+    {
+      "spot": "wall_11",
+      "level": 1,
+      "paid": 10,
+      "balance": 398450,
+      "at": [
+        -9.5,
+        1
+      ]
+    },
+    {
+      "spot": "wall_12",
+      "level": 1,
+      "paid": 10,
+      "balance": 398440,
+      "at": [
+        8.5,
+        0
+      ]
+    },
+    {
+      "spot": "wall_12",
+      "level": 2,
+      "paid": 20,
+      "balance": 398420,
+      "at": [
+        8.5,
+        0
+      ]
+    }
+  ],
+  "screens": [
+    {
+      "file": "baseline-phone-build-feedback.png",
+      "frame": {
+        "lost": false,
+        "zoom": 1,
+        "camera": [
+          -9.299999999999999,
+          3.7,
+          100
+        ],
+        "drawCalls": 83,
+        "triangles": 610,
+        "textures": 44,
+        "reducedMotion": "true",
+        "visible": true,
+        "pixelRatio": 1.5
+      }
+    },
+    {
+      "file": "baseline-phone-upgrade-feedback.png",
+      "frame": {
+        "lost": false,
+        "zoom": 0.9,
+        "camera": [
+          -6,
+          -1.650740740740741,
+          100
+        ],
+        "drawCalls": 83,
+        "triangles": 384,
+        "textures": 44,
+        "reducedMotion": "true",
+        "visible": true,
+        "pixelRatio": 1.5
+      }
+    },
+    {
+      "file": "baseline-phone-work.png",
+      "frame": {
+        "lost": false,
+        "zoom": 0.9,
+        "camera": [
+          -6,
+          0.27370370370370356,
+          100
+        ],
+        "drawCalls": 79,
+        "triangles": 380,
+        "textures": 44,
+        "reducedMotion": "true",
+        "visible": true,
+        "pixelRatio": 1.5
+      }
+    },
+    {
+      "file": "baseline-phone-fit.png",
+      "frame": {
+        "lost": false,
+        "zoom": 0.28518072146695933,
+        "camera": [
+          -0.40567364706499554,
+          -7.139698091084967,
+          100
+        ],
+        "drawCalls": 79,
+        "triangles": 380,
+        "textures": 44,
+        "reducedMotion": "true",
+        "visible": true,
+        "pixelRatio": 1.5
+      }
+    },
+    {
+      "file": "baseline-phone-selected.png",
+      "frame": {
+        "lost": false,
+        "zoom": 0.9,
+        "camera": [
+          -6,
+          -1.7644444444444445,
+          100
+        ],
+        "drawCalls": 81,
+        "triangles": 412,
+        "textures": 44,
+        "reducedMotion": "true",
+        "visible": true,
+        "pixelRatio": 1.5
+      }
+    },
+    {
+      "file": "baseline-phone-fourth-row.png",
+      "frame": {
+        "lost": false,
+        "zoom": 0.9,
+        "camera": [
+          -15.8,
+          -3.3488888888888897,
+          100
+        ],
+        "drawCalls": 79,
+        "triangles": 428,
+        "textures": 44,
+        "reducedMotion": "true",
+        "visible": true,
+        "pixelRatio": 1.5
+      }
+    },
+    {
+      "file": "baseline-phone-firing.png",
+      "frame": {
+        "lost": false,
+        "zoom": 0.4,
+        "camera": [
+          -1.5209583333333334,
+          -0.19399999999999995,
+          100
+        ],
+        "drawCalls": 67,
+        "triangles": 1824,
+        "textures": 45,
+        "reducedMotion": "true",
+        "visible": true,
+        "pixelRatio": 1.5
+      }
+    },
+    {
+      "file": "baseline-phone-breach.png",
+      "frame": {
+        "lost": false,
+        "zoom": 0.4,
+        "camera": [
+          -0.8915000000000002,
+          0.38954545454545464,
+          100
+        ],
+        "drawCalls": 73,
+        "triangles": 1946,
+        "textures": 45,
+        "reducedMotion": "true",
+        "visible": true,
+        "pixelRatio": 1.5
+      }
+    }
+  ],
+  "feedback": [],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "externalRequests": [],
+  "paid": {
+    "coins": 398420,
+    "walls": [
+      {
+        "id": "wall_1",
+        "built": true,
+        "x": -18.5,
+        "z": -1,
+        "level": 1
+      },
+      {
+        "id": "wall_2",
+        "built": true,
+        "x": 19,
+        "z": 1,
+        "level": 2
+      },
+      {
+        "id": "wall_3",
+        "built": true,
+        "x": 19,
+        "z": -1,
+        "level": 3
+      },
+      {
+        "id": "wall_4",
+        "built": true,
+        "x": -1,
+        "z": 17,
+        "level": 4
+      },
+      {
+        "id": "wall_5",
+        "built": true,
+        "x": 1,
+        "z": 17,
+        "level": 5
+      },
+      {
+        "id": "wall_6",
+        "built": true,
+        "x": -18.5,
+        "z": -3,
+        "level": 1
+      },
+      {
+        "id": "wall_7",
+        "built": true,
+        "x": 8.5,
+        "z": 2,
+        "level": 2
+      },
+      {
+        "id": "wall_8",
+        "built": true,
+        "x": 0.5,
+        "z": 9.5,
+        "level": 3
+      },
+      {
+        "id": "wall_9",
+        "built": true,
+        "x": -1.5,
+        "z": 9.5,
+        "level": 4
+      },
+      {
+        "id": "wall_10",
+        "built": true,
+        "x": -9.5,
+        "z": -1,
+        "level": 5
+      },
+      {
+        "id": "wall_11",
+        "built": true,
+        "x": -9.5,
+        "z": 1,
+        "level": 1
+      },
+      {
+        "id": "wall_12",
+        "built": true,
+        "x": 8.5,
+        "z": 0,
+        "level": 2
+      }
+    ]
+  },
+  "move": {
+    "from": {
+      "id": "wall_6",
+      "built": true,
+      "x": -18.5,
+      "z": -3,
+      "level": 1
+    },
+    "to": {
+      "id": "wall_6",
+      "built": true,
+      "x": -12,
+      "z": -1,
+      "level": 1
+    },
+    "charged": 0
+  },
+  "fourth": {
+    "refused": false,
+    "disabled": false,
+    "status": "This square is free."
+  },
+  "rejectedPurchases": [
+    {
+      "ok": false,
+      "status": 409,
+      "code": "spot_taken"
+    },
+    {
+      "ok": false,
+      "status": 404,
+      "code": "no_such_spot"
+    },
+    {
+      "ok": false,
+      "status": 409,
+      "code": "max_level"
+    }
+  ],
+  "combat": {
+    "wave": 31,
+    "seed": 25135766,
+    "ticks": 305,
+    "eventTypes": {
+      "wave_started": 1,
+      "cannon_fired": 14,
+      "culverin_fired": 4,
+      "mortar_fired": 6,
+      "boarder_landed": 16,
+      "ship_fired": 13,
+      "wall_damaged": 30
+    },
+    "firstFire": {
+      "type": "cannon_fired",
+      "t": 1.5,
+      "cannonId": "cannon_1",
+      "targetId": "ship_1",
+      "manual": false,
+      "hit": true,
+      "damage": 10,
+      "level": 1,
+      "x": -12.5,
+      "z": -14.5,
+      "toX": -33.64,
+      "toZ": 3.67,
+      "impactAt": 2.73
+    },
+    "firstBreach": {
+      "type": "wall_damaged",
+      "t": 15.25,
+      "wallId": "wall_1",
+      "damage": 7.95,
+      "hp": 0,
+      "broken": true,
+      "x": -18.5,
+      "z": -1,
+      "shipId": "ship_1",
+      "landed": true
+    },
+    "walls": [
+      {
+        "id": "wall_1",
+        "hp": 0,
+        "maxHp": 60
+      },
+      {
+        "id": "wall_10",
+        "hp": 420,
+        "maxHp": 420
+      },
+      {
+        "id": "wall_11",
+        "hp": 37.35,
+        "maxHp": 60
+      },
+      {
+        "id": "wall_12",
+        "hp": 120,
+        "maxHp": 120
+      },
+      {
+        "id": "wall_2",
+        "hp": 101.89,
+        "maxHp": 120
+      },
+      {
+        "id": "wall_3",
+        "hp": 114.88,
+        "maxHp": 200
+      },
+      {
+        "id": "wall_4",
+        "hp": 286.42,
+        "maxHp": 300
+      },
+      {
+        "id": "wall_5",
+        "hp": 420,
+        "maxHp": 420
+      },
+      {
+        "id": "wall_6",
+        "hp": 60,
+        "maxHp": 60
+      },
+      {
+        "id": "wall_7",
+        "hp": 120,
+        "maxHp": 120
+      },
+      {
+        "id": "wall_8",
+        "hp": 200,
+        "maxHp": 200
+      },
+      {
+        "id": "wall_9",
+        "hp": 300,
+        "maxHp": 300
+      }
+    ],
+    "defenses": [
+      {
+        "id": "wall_1",
+        "x": -18.5,
+        "z": -1,
+        "level": 1
+      },
+      {
+        "id": "wall_2",
+        "x": 19,
+        "z": 1,
+        "level": 2
+      },
+      {
+        "id": "wall_3",
+        "x": 19,
+        "z": -1,
+        "level": 3
+      },
+      {
+        "id": "wall_4",
+        "x": -1,
+        "z": 17,
+        "level": 4
+      },
+      {
+        "id": "wall_5",
+        "x": 1,
+        "z": 17,
+        "level": 5
+      },
+      {
+        "id": "wall_6",
+        "x": -12,
+        "z": -1,
+        "level": 1
+      },
+      {
+        "id": "wall_7",
+        "x": 8.5,
+        "z": 2,
+        "level": 2
+      },
+      {
+        "id": "wall_8",
+        "x": 0.5,
+        "z": 9.5,
+        "level": 3
+      },
+      {
+        "id": "wall_9",
+        "x": -1.5,
+        "z": 9.5,
+        "level": 4
+      },
+      {
+        "id": "wall_10",
+        "x": -9.5,
+        "z": -1,
+        "level": 5
+      },
+      {
+        "id": "wall_11",
+        "x": -9.5,
+        "z": 1,
+        "level": 1
+      },
+      {
+        "id": "wall_12",
+        "x": 8.5,
+        "z": 0,
+        "level": 2
+      }
+    ],
+    "art": {
+      "wall_1": 1,
+      "wall_2": 2,
+      "wall_3": 3,
+      "wall_4": 4,
+      "wall_5": 5,
+      "wall_6": 1,
+      "cannon_1": 1,
+      "cannon_2": 1,
+      "cannon_3": 1,
+      "cannon_4": 1,
+      "cannon_5": 1,
+      "tower_1": 1,
+      "wall_7": 2,
+      "wall_8": 3,
+      "wall_9": 4,
+      "wall_10": 5,
+      "wall_11": 1,
+      "wall_12": 2
+    },
+    "visibleMarks": {
+      "wall_1": [],
+      "wall_2": [],
+      "wall_3": [],
+      "wall_4": [],
+      "wall_5": [],
+      "wall_6": [],
+      "cannon_1": [],
+      "cannon_2": [],
+      "cannon_3": [],
+      "cannon_4": [],
+      "cannon_5": [],
+      "tower_1": [],
+      "wall_7": [],
+      "wall_8": [],
+      "wall_9": [],
+      "wall_10": [],
+      "wall_11": [],
+      "wall_12": []
+    }
+  },
+  "result": "passed"
+}

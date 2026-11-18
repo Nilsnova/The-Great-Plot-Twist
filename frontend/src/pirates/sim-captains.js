@@ -158,6 +158,8 @@ export function createCaptains(sim) {
     if (!by || !finite(input.x) || !finite(input.z) || typeof input.targetId !== 'string') return;
     const helper = party.get(by), hero = party.get(input.targetId);
     if (!helper || helper.down || !hero || hero === helper || !hero.down) return;
+    // A delayed paid event belongs to exactly one fall; it cannot revive a later fall.
+    if (input.downAt !== undefined && input.downAt !== Math.round(hero.downAt / C.tick)) return;
     if (distance(input.x, input.z, hero.x, hero.z) > R.reach + R.slack) return;
     helper.seen = sim.ticks * C.tick; helper.away = false; helper.x = input.x; helper.z = input.z;
     hero.down = false; hero.downAt = null; hero.hp = Math.max(1, Math.round(hero.maxHp * captainStatsFor(1, input.skills).reviveShare)); // a medic's help-up gives more hp (captain-stats.js)

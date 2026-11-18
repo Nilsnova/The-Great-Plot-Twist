@@ -75,7 +75,8 @@ export {ARRIVAL_KEY, SPOTS_CHANGED, NEWS_KEY, CAMPAIGN_UNLOCKED, TOWER_SPECIALIS
 export function createIsland({container, emit, on, mode = 'live', getTransport = () => null, transport = null,
   search = globalThis.location?.search ?? '', focus = () => {}, resetInput = () => {}, reducedMotion = () => false,
   preferences = () => ({}), storage = safeLocal(), visitStorage = undefined, loadCutscenes = () => import('../cutscenes/player.js'),
-  onCoins = () => {}, onCaptain = () => {}, menu = addMenuExtras, settings = addSettingsSection, now, setTimer, clearTimer, openHarborStall = () => {},
+  loadBoatScene = () => import('../pirates/boat/scene.js'),
+  onCoins = () => {}, onCaptain = () => {}, onQuestIsland = () => {}, menu = addMenuExtras, settings = addSettingsSection, now, setTimer, clearTimer, openHarborStall = () => {},
   travel = () => travelAllowed({islandsMode: mode}), villageCamera = () => {},
   // D039 (proposed): whether /api/config says the flag wall_recovery is on (lasting wall damage, Repair/Rebuild).
   wallRecovery = () => false, structureRecoveryOn = () => false,
@@ -84,26 +85,29 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   // The island's state, shared by its parts (island-*.js) as isl.own, isl.visiting, isl.ui, ...: every `let` of this
   // closure and the objects built below that the parts use; the options too.
   const isl = {container, emit, on, mode, getTransport, transport, search, focus, resetInput, reducedMotion,
-    preferences, storage, visitStorage, loadCutscenes, onCoins, onCaptain, menu, settings, now, setTimer, clearTimer,
-    openHarborStall, travel, villageCamera, wallRecovery, structureRecoveryOn, defensesV2On};
+    preferences, storage, visitStorage, loadCutscenes, loadBoatScene, onCoins, onCaptain, onQuestIsland, menu,
+    settings, now, setTimer, clearTimer, openHarborStall, travel, villageCamera, wallRecovery, structureRecoveryOn,
+    defensesV2On};
   // The parts, each a closure over isl; they call each other through names linked once all exist. They only
   // define functions here: everything that runs at the start stays below, in its order.
   const parts = [createRecovery, createLoading, createGames, createCards, createActions].map(create => create(isl));
   for (const {link, ...part} of parts) Object.assign(isl, part);
   for (const part of parts) part.link?.();
   const {recoveryPolicyOn, recoveryModelVersion, stopRecoveryPoll, readStructureRecovery, setRecoveryCombatState,
-    setRecoveryCheckpointHandler, firstTime, tellCoins, setOwn, campaign, reading, coinsAsked, target, where,
-    applyWorld, syncCoreContext, setCoreCombatState, endVisit, placeName, joinFirst, load, loadPoint, tookCoins,
-    arsenalCoins, reloadVisit, refreshDefended, currentCode, syncGame, wantSync, colourOf, captainColour, openLobby,
-    setPresence, resetState, resetIsland, playArrival, visit, leaveGame, enterGame, sailHome, refreshCard,
-    refreshCardIfBuild, openHarbor, openTechHub, openWreck, selectedAnchor, openCrew, openOverview, openCaptain,
-    openLeaderboard, openCaptains, openInvite, pick, build, upgrade, askDemolish, confirmDemolish, heardDemolish,
-    specialise, buyTree, toggleVillage, startMove, moved, houseRange, research, giveWreck, hire, upgradeCaptain,
-    learnSkill, takeRole, respecCaptain} = isl;
+    setRecoveryCheckpointHandler, firstTime, tellCoins, campaign, reading, wrote, setOwnRead, coinsAsked, target,
+    where, applyWorld, syncCoreContext, setCoreCombatState, endVisit, placeName, joinFirst, load, loadPoint,
+    tookCoins, arsenalCoins, reloadVisit, refreshDefended, currentCode, syncGame, wantSync, colourOf, captainColour,
+    openLobby, setPresence, resetState, resetIsland, playArrival, visit, leaveGame, enterGame, sailHome,
+    interruptBoat, refreshCard, refreshCardIfBuild, openHarbor, openTechHub, openWreck, selectedAnchor, openCrew,
+    openOverview, openCaptain, openLeaderboard, openCaptains, openInvite, pick, invalidateWallFeedback, build,
+    upgrade, askDemolish, confirmDemolish, heardDemolish, specialise, buyTree, toggleVillage, startMove, moved,
+    houseRange, research, giveWreck, hire, upgradeCaptain, learnSkill, takeRole, respecCaptain} = isl;
   // ownRetry: your own island's read failed for a passing reason, so the next reread (the wave wiring's
   // 15 s timer, the bell or a build card) reads it again instead of leaving the island empty for good.
   isl.disposed = false; isl.own = null; isl.ownMessage = ''; isl.ownRetry = false; isl.visiting = null; isl.visitCode = readVisit(visitStorage); isl.busySpot = null; isl.cardMessage = '';
+  isl.pendingWallet = null; isl.walletGeneration = 0;
   isl.world = null; isl.cutscene = null; isl.openSpot = null; isl.loadTicket = 0; isl.battle = false;
+  isl.wallFeedbackGeneration = 0;
   isl.coreState = createCoreState();
   isl.coreWorld = null; isl.coreContextKey = null; isl.coreTravelGeneration = 0; isl.coreRejoin = null;
   isl.pointBattle = false;
@@ -141,7 +145,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   isl.moveBar = createMoveBar({container, handlers: {nudge: (dx, dz) => isl.moving.nudge(dx, dz), place: () => void isl.moving.confirm(), cancel: () => isl.moving.cancel()}});
   // A confirmed fresh start begins a new island identity for the core display (VIS-35).
   isl.resetGeneration = 0;
-  isl.villageBar = createVillageBar({container, onLeave: () => isl.village.leave(), onCamera: villageCamera});
+  isl.villageBar = createVillageBar({container, onLeave: () => isl.village.leave(), onPick: pick, onCamera: villageCamera});
   isl.village = createVillageMode({
     context: () => ({ready: !!isl.own?.code && !!isl.world, own: !isl.visiting && !isl.visitCode, code: isl.own?.code,
       // A successful start/join awaits preparation before flow.current is set.
@@ -149,11 +153,17 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     render: active => isl.villageBar.render(active),
     onLeave: () => { isl.moving.cancel(); isl.ui.close(); isl.openSpot = null; resetInput(); focus(); },
   });
-  const moveKeys = event => {
+  const villageKeys = event => {
+    if (event.defaultPrevented || isTextEntry(event.target)) return;
+    const gameFocus = event.target?.matches?.('canvas') || event.target === globalThis.document?.body;
+    if (gameFocus && !isl.ui.active && !isl.moving.active && event.code === 'KeyE'
+      && !event.altKey && !event.ctrlKey && !event.metaKey && isl.villageBar.focusBuildings()) {
+      event.preventDefault(); event.stopPropagation(); return;
+    }
     const buttonEnter = event.key === 'Enter' && event.target?.tagName === 'BUTTON';
-    if (isl.moving.active && !isl.ui.active && !event.defaultPrevented && !buttonEnter && !isTextEntry(event.target)) isl.moving.handleKey(event);
+    if (isl.moving.active && !isl.ui.active && !buttonEnter) isl.moving.handleKey(event);
   };
-  globalThis.addEventListener?.('keydown', moveKeys, true);
+  globalThis.addEventListener?.('keydown', villageKeys, true);
   // The arsenal (T41, D042): the crew's weapons (the server's flag "arsenal" is always on; the old shop is gone).
   isl.arsenal = createArsenal({api: createArsenalApi({transport: transport ?? isl.live}), ui: isl.ui, emit, enabled: () => true,
     code: () => (isl.visiting ? displayIslandCode(isl.visiting.code) : isl.visitCode ? displayIslandCode(isl.visitCode) : null),
@@ -171,16 +181,18 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const stopFinished = on(WAVE_FINISHED, event => {
     if (isl.disposed) return;
     tellCoins(event.coins, {tick: true}); // the loot counts up in the HUD
-    isl.waveOver = true; // its break: buildings may come down again
+    const activeWaveId = isl.flow.current?.wave.waveId;
+    const endedHere = !activeWaveId || activeWaveId === event.waveId;
+    if (endedHere) isl.waveOver = true; // An old receipt must not open the next wave's break.
     if (!isl.own) return;
     if (!isl.visiting && Number.isSafeInteger(event.coins)) isl.own = {...isl.own, coins: event.coins, flags: event.flags ?? isl.own.flags};
     refreshCard();
     void readStructureRecovery();
     // The owner's rule (fix/playtest-1117): the server repairs every building when a wave ends.
-    if (Number.isSafeInteger(event.coins)) isl.ui.toast(ALL_REPAIRED, 'info');
+    if (endedHere && Number.isSafeInteger(event.coins)) isl.ui.toast(ALL_REPAIRED, 'info');
     // A won wave may open something (GAME-V3.md §4): read the island again; setOwn (or the visit) tells what is new.
     if (event.survived === true) {
-      const current = reading('own'); void isl.api.getIsland().then(fresh => { if (!isl.disposed && fresh.ok && current()) { setOwn(fresh.data); refreshCard(); } });
+      const current = reading('own'); void isl.api.getIsland().then(fresh => { if (!isl.disposed && fresh.ok && current()) { setOwnRead(fresh.data); refreshCard(); } });
       if (isl.visiting) void reloadVisit().then(() => { if (!isl.disposed) refreshCard(); });
     }
   });
@@ -189,6 +201,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     isl.village.leave();
     void readStructureRecovery();
     if (!isl.disposed && firstTime('musket')) isl.ui.toast('Tap a ship to fire your musket (F).', 'info');
+    interruptBoat(true);
   });
   // Every landing on home_islet loads the island shown there: your own, or the one you visit.
   const stopArrived = on('arrived', event => { if (event.place === ISLAND_PLACE) void load(); });
@@ -199,7 +212,9 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const stopPoint = on('arrived', event => { if (event.place === POINT_PLACE) void loadPoint(); });
   // Leaving the island closes its card and ends a visit (the next landing is your own island).
   const stopTravel = on('travel', event => {
+    interruptBoat();
     isl.village.leave();
+    invalidateWallFeedback();
     isl.coreTravelGeneration++; syncCoreContext();
     isl.ui.close(); isl.flow.reset(); isl.openSpot = null; isl.moving.cancel();
     if (isl.visiting && event.to !== ISLAND_PLACE) endVisit();
@@ -215,7 +230,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   isl.busyResearch = null; isl.busyGift = null;
   // D057: the island's own boat after wave 30. boatStatus: GET /api/island/boat of the island on screen (null while
   // it loads); boatGame: the round on screen (pirates/boat/scene.js, loaded on the first sail).
-  isl.boatStatus = null; isl.boatGame = null; isl.boatLoading = false; isl.boatTicket = 0;
+  isl.boatStatus = null; isl.boatGame = null; isl.boatLoading = false; isl.boatTicket = 0; isl.boatLaunch = 0;
   // T7/T45: the Leaderboard card. It remembers the chosen tab (this week or all time) while the game runs.
   isl.leaderboardRequest = 0; isl.leaderboardScope = 'week';
   // The Menu's island entries (shell/menu-extras.js).
@@ -238,14 +253,15 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       isl.coreWorld?.dispose();
       const core = decorateCore(place);
       const deco = decorateIsland(place, {container, art, reducedMotion, quality: () => preferences().quality, canvas: adapters.canvas, camera: adapters.camera,
-        isActive: adapters.isActive, onPick: pick, range: houseRange, selection: selectedAnchor, player: adapters.player, onFar: adapters.onFar,
+        isActive: adapters.isActive, onPick: pick, range: houseRange, selection: selectedAnchor, defenseRange: () => isl.ui.selectionRange,
+        player: adapters.player, onFar: adapters.onFar,
         placing: () => isl.moving.active, onGround: (x, z) => isl.moving.tap(x, z),
         canPickRemote: id => isl.village.active && !!spotById(id),
         retryAdditionalArt: () => deco.runArtTask('core', () => core.retryArt())});
       isl.world = deco; isl.coreWorld = core; applyWorld(); core.setHealth(isl.coreState.current);
       deco.runArtTask('core', () => core.retryArt());
       const original = place.update;
-      place.update = (dt, frame) => { original(dt, frame); deco.update(dt, frame?.time ?? 0); };
+      place.update = (dt, frame) => { original(dt, frame); deco.update(dt, frame?.time ?? 0, frame?.paused); };
       cleanups.push(() => { deco.dispose(); core.dispose(); if (isl.world === deco) isl.world = null; if (isl.coreWorld === core) isl.coreWorld = null; place.update = original; });
     },
     // Pirate Point's shared build spots on lighthouse_isle (factory.js); its bell and lamps stay lane P's.
@@ -321,6 +337,14 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     // for Pirate Point, the island's room place (isle_<code>), joining a running wave, and the battle look.
     defenses: () => defenses(target()?.spots ?? [], campaign()?.research?.tiers),
     get api() { return isl.api; },
+    // A fresh account read after background reward settlement, guarded by its service owner and write order.
+    setWalletCoins(value) {
+      if (isl.disposed || !Number.isSafeInteger(value) || value < 0) return;
+      if (isl.own) wrote('own');
+      else isl.walletGeneration++;
+      tookCoins(value); refreshCard();
+    },
+    resetWalletRecovery() { isl.pendingWallet = null; isl.walletGeneration++; wrote('own'); },
     get recoveryTransport() { return isl.recoveryTransport; },
     get recoveryVersion() { return recoveryModelVersion(); },
     roomPlace: () => islandRoom(isl.visiting?.code ?? isl.visitCode ?? isl.own?.code ?? '') || null,
@@ -340,14 +364,22 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     },
     refreshDefended,
     // Captain health (GAME-V3.md §3): you stand a fallen teammate up and pay for it (your coins follow).
-    async reviveCaptain({waveId, fallen, downAt} = {}) {
-      const answer = await isl.api.reviveCaptain({waveId, fallen, downAt});
+    async reviveCaptain(body = {}) {
+      const answer = await isl.api.reviveCaptain(body);
       if (!isl.disposed && answer.ok) tookCoins(answer.data.coins);
       return answer;
     },
     // The island's wave controller stopped this wave (src/pirates/game-wiring.js): a bell still holding it goes.
     waveStopped(waveId) { if (!isl.disposed && typeof waveId === 'string') isl.flow.release(waveId); },
-    setBattle(value) { isl.battle = value === true; if (isl.battle) { isl.village.leave(); isl.waveOver = false; isl.moving.cancel(); } applyWorld(); refreshCardIfBuild(); if (['captain', 'tech', 'overview'].includes(isl.ui.open)) refreshCard(); },
+    setBattle(value) {
+      if (value === true && !isl.battle) invalidateWallFeedback();
+      isl.battle = value === true;
+      if (isl.battle) {
+        isl.village.leave(); isl.waveOver = false; isl.moving.cancel(); interruptBoat(true);
+      }
+      applyWorld(); refreshCardIfBuild();
+      if (['captain', 'tech', 'overview'].includes(isl.ui.open)) refreshCard();
+    },
     // A Pirate Point battle: its built walls, cannons and mortars are drawn by the wave renderer meanwhile.
     setPointBattle(value) { isl.pointBattle = value === true; applyWorld(); },
     // The bell again, for the wave's break ("Next wave", TOWER-DEFENSE.md §1): the start route where the
@@ -355,7 +387,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     async ringBell() {
       if (isl.disposed || !target()) return {ok: false, status: 0, code: 'not_ready', message: 'Your island is still loading.'};
       const answer = await isl.flow.ring(where(), {joinRunning: true});
-      if (!isl.disposed && answer.ok) isl.world?.ring();
+      if (!isl.disposed && answer.ok && !answer.ignored) isl.world?.ring();
       return answer;
     },
     chartVisible: id => Object.hasOwn(CHART_NAMES, id),
@@ -388,8 +420,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       isl.village.dispose(); isl.villageBar.dispose();
       stopRecoveryPoll(); isl.recoveryReadId++;
       stopFinished(); stopStarted(); stopArrived(); stopPoint(); stopInteract(); stopTravel(); stopMenu?.(); stopSettings?.(); stopStartedGame(); isl.stopGame(); clearTimeout(isl.syncSoon);
-      isl.boatGame?.dispose(); isl.boatGame = null;
-      isl.flow.dispose(); isl.ui.dispose(); isl.moveBar.dispose(); globalThis.removeEventListener?.('keydown', moveKeys, true); isl.cutscene?.dispose?.(); isl.world?.dispose(); isl.world = null; isl.coreWorld?.dispose(); isl.coreWorld = null; isl.pointWorld?.dispose(); isl.pointWorld = null;
+      isl.boatLaunch++;isl.boatGame?.dispose(); isl.boatGame = null;
+      isl.flow.dispose(); isl.ui.dispose(); isl.moveBar.dispose(); globalThis.removeEventListener?.('keydown', villageKeys, true); isl.cutscene?.dispose?.(); isl.world?.dispose(); isl.world = null; isl.coreWorld?.dispose(); isl.coreWorld = null; isl.pointWorld?.dispose(); isl.pointWorld = null;
     },
     spots: SPOTS,
   };

@@ -993,6 +993,8 @@ All sprites of the island, people, buildings, ships and effects, and the title a
 4. The ships are in their own chunk, loaded only when a wave's atlas is drawn (`framesFor` in `registry.js`).
 5. `stage.js` draws full-screen scenes in layers with parallax. Still layers are painted once per size.
 
+The [fleet art pass](../specs/VIS-16-29-fleet-art.md) gives the five existing hulls directional cloth folds, layered timbers and waterline foam. The wave renderer applies the health and burning states to those frames. Smoke, splash and impact artwork use the same cached atlas, with the simulation controlling each event and its outcome.
+
 ### Why it was built this way
 - **The owner's decision on 11 Nov:** clean cartoon 2D, not pixel art ([GAME-V3.md §7](GAME-V3.md), commit `e1fcef4`).
 - **Drawn in code instead of image files:** no downloads, no new packages, original designs only, and the picture stays crisp at any density. The painted title and intro images looked AI-generated (the words of T21 in [OPEN-TODOS.md](OPEN-TODOS.md)), so they were replaced (commit `1d8bdb2`).
@@ -1772,3 +1774,9 @@ Focused checks: `cd frontend && npm exec vitest -- run tests/tutorial-pages.test
 The [evidence README](evidence/T58-captain-repair/README.md) records screenshot fixtures and the exact scope. These
 checks do not prove persisted production state, live recovery, payments, multiplayer or release activation; combined
 dependency review and release acceptance remain pending.
+
+## Village inspection and shoreline
+
+Select a built structure in Village Mode for its level, installed role or skill, and confirmed health when available. **E** opens the keyboard finder. **Range** shows the selected defense's clear-weather firing area between waves.
+
+The southwest mooring uses the existing walkable beach and paints the skiff on the sea. The skiff and rope clear the naval approach at countdown, while the beach bollard remains visible. The Harbor route still uses its own marked access point. [Desktop and phone evidence](evidence/village-polish/README.md)
