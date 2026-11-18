@@ -13,6 +13,37 @@ personal Captain/Engineer/assignment and lifecycle integration remain prerequisi
 No row below is a reported authenticated runtime pass. See [#505](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/505)
 and the [bounded specification](../../specs/MP-ECO-20-integration-acceptance.md).
 
+## Local database evidence
+
+The [database follow-up](../../specs/MP-ECO-20-database-acceptance.md) verifies
+guarded domain transactions against the published treasury and operation registry.
+Checks on code snapshot `f3177b061903c7b868df6eecb08ecb1a7b042c60` completed with:
+
+| Check | Actual result |
+|---|---|
+| Focused Python rules, adapters, permissions and affected legacy routes, 38 files | 1,043 passed in 51.88 seconds. |
+| Mixed disposable PostgreSQL domain, treasury/registry and related legacy suites, 17 files | 387 passed in 125.43 seconds; no skipped cases. |
+| Cross-domain cases, also included in the mixed SQL run | 8 passed in 6.46 seconds. |
+| Full backend Ruff; complete production migration parser | Passed; 72 migration files parsed. |
+
+The [cross-domain cases](../../backend/server/tests/island_sql/test_shared_domain_acceptance_sql.py)
+invoke actual arsenal, wager, ship and repair RPCs. They inspect committed
+roots/receipts/assets/ledger, compete for the last available funds, verify free
+versus paid intent collisions, roll back an injected post-effect failure and
+check historical receipt privacy. Run them from `backend/` with:
+
+```bash
+CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' --with pglast pytest -q --tb=short server/tests/island_sql/test_shared_domain_acceptance_sql.py
+```
+
+Reservation/leader/assignment authority and the repair wave's immutable economy
+binding are explicitly injected test fixtures. Real membership, domain functions,
+treasury, global operations, recovery rows and transaction locks execute in the
+disposable database. These results establish those database boundaries, not the
+missing production authority/producer, autonomous lifecycle workers, actual reset
+or deletion, public route admission, authenticated clients or physical devices.
+The complete matrix below remains a target rather than a completed runtime claim.
+
 ## Evidence layers
 
 - **Unit/fixture:** pure rules, fake authentication/database, simulated clients and
