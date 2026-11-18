@@ -1872,8 +1872,10 @@ The additive foundation in `backend/server/island/treasury.py`, `treasury_models
 `treasury_store.py` defines exact accounts per island/run. Contracts are in migrations
 `20261118050050_island_treasury.sql` / `20261118050100_island_treasury_functions.sql`,
 [database rights and checks](../supabase/README.md#shared-island-treasury-foundation-mp-eco-02)
-and [the package spec](../specs/MP-ECO-02-island-treasury.md). Existing HTTP routes do not call
-admission or these money functions; personal-wallet runtime remains unchanged.
+and [the package spec](../specs/MP-ECO-02-island-treasury.md). Arsenal, structure repair,
+Harbor wagers and boat HTTP adapters now consume the guarded domain transactions below.
+Admission remains explicit; complete shared gameplay still requires the canonical persisted
+authority, island projection and lifecycle integrations.
 
 `EconomyContext(mode,version,actor_id,island_owner,account_id,run_epoch,revision)` and
 `resolve_economy_context(admin,actor_id,island_owner,*,expected_epoch=None)` live in
@@ -1946,7 +1948,8 @@ receipt, with current projections null/omitted. Never display an old receipt bal
 
 Service-only arsenal, combat repair, wager and ship-game transaction functions
 consume the version-one treasury and common operation registry. Their exact
-SQL signatures, inactive Python adapters, receipt/replay rules, grants and
+SQL signatures, HTTP adapters, receipt/replay rules, grants and
 remaining authority/session gates are described in
 [Guarded shared economy transactions](economy/DOMAIN-TRANSACTIONS.md).
-No existing player route or feature is activated by these functions.
+The adapters require explicit accounting mode and the shared capability header;
+their presence does not admit existing islands or activate a deployment.

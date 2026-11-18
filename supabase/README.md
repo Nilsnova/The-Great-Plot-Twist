@@ -3479,7 +3479,28 @@ in the linked document exercise the same boundaries with explicit fixture author
    Each game/account/epoch/record bucket stays within the existing three-star cap.
    Direct account-retirement fixtures verify fencing, not the actual reset RPC.
 
+### Runtime adapters and additional migration rights
+
+The [domain runtime contracts](../docs/economy/DOMAIN-TRANSACTIONS.md#runtime-adapters-and-browser-controls)
+describe the registered HTTP routes and browser integration. Additional migrations
+remain additive and do not admit islands or activate a release:
+
+| Migration | Additional data and rights |
+| --- | --- |
+| `20261118180900_arsenal_runtime.sql` | `shared_arsenal_versions` has RLS and service SELECT only; definer functions advance the independent free-asset revision. Shared read/request entry points grant service execution. Legacy wrappers acquire scope guards; renamed internal legacy bodies have no direct role execution. |
+| `20261118181200_legacy_repair_mode_guard.sql` | Replaces the existing service-only legacy repair function with the same legacy behavior plus sorted scope guards before wallet locks and a shared-target refusal. No new table or browser right. |
+| `20261118181400_shared_wager_jobs.sql` | `island_wager_jobs` has RLS and service SELECT only. Triggers enqueue/complete work atomically with product changes. Service-only due/retry/page entry points do not grant direct queue writes. |
+| `20261118181500_shared_boat_runtime.sql` | Service-only status and legacy reward wrappers bind persisted accounting mode. No browser RPC execution or direct table rights. |
+| `20261118192007_legacy_revival_shared_mode_guard.sql` | Both existing paid-revival functions acquire sorted scope guards and refuse a shared defended island before wallet locks or debit. A shared actor's explicitly legacy defended island retains legacy behavior. No new tables or browser rights. |
+| `20261118192119_shared_island_realtime_membership.sql` | Replaces both existing place Broadcast policies. The non-exposed `island_realtime_private` schema grants authenticated callers only USAGE and execution of `may_access_place_topic(text)`, which derives its caller from `auth.uid()`. No direct membership, island or economy table rights are granted. |
+
+The Realtime predicate protects fresh authorization for active and paused shared
+islands. Supabase caches authorization for already connected subscribers; this
+migration does not evict them. Admission/departure revocation or topic rotation
+must be integrated and tested separately.
+
 Canonical authority/session/assignment storage, immutable wave economy binding,
-free revival hold/fall authority, lifecycle workers, holder deletion, legacy
-guards and actual reset/deletion integration remain release gates. Authenticated
-multiple-client and physical-device acceptance are still required separately.
+free revival hold/fall authority, lifecycle workers, holder deletion, remaining
+legacy guards and actual reset/deletion integration remain release gates.
+Authenticated integrated multiple-client and physical-device acceptance are
+still required separately.

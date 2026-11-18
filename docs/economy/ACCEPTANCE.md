@@ -4,13 +4,13 @@
 >
 > **Who uses it:** teammates validating the shared economy before release.
 
-**Status:** database integration preparation. Published draft dependencies now
+**Status:** guarded domain runtime integration; canonical lifecycle acceptance is incomplete. Published dependencies
 provide the [contract #515](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/515),
 [permission policy #516](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/516) and
 [treasury/operation registry #517](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/517).
 The permission RPC reader still lacks its production persistent authority provider;
 personal Captain/Engineer/assignment and lifecycle integration remain prerequisites.
-No row below is a reported authenticated runtime pass. See [#505](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/505)
+The required scenario matrix remains incomplete. See [#505](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/505)
 and the [bounded specification](../../specs/MP-ECO-20-integration-acceptance.md).
 
 ## Local database evidence
@@ -43,6 +43,33 @@ disposable database. These results establish those database boundaries, not the
 missing production authority/producer, autonomous lifecycle workers, actual reset
 or deletion, public route admission, authenticated clients or physical devices.
 The complete matrix below remains a target rather than a completed runtime claim.
+
+## Local authentication and Realtime evidence
+
+A separate disposable stack used official Auth, PostgreSQL, REST and Realtime
+services with verified local TLS. Its source was baseline
+`e3fc3a33acca9a4e9fcea9d7582f00775852f8ba` plus only
+`20261118192119_shared_island_realtime_membership.sql`: 76 applied migrations,
+not the complete later runtime migration set. No authority fixture was installed.
+
+Actual registered-user sign-in and the unmodified API token verifier accepted
+valid users and refused a forged JWT. Two distinct Chromium processes joined the
+same game through the existing UI and exchanged private WebSocket Broadcasts.
+Own-wallet visibility, cross-player isolation and direct browser money-write/RPC
+refusals were checked separately. These establish legacy authentication and
+transport boundaries, not completed shared gameplay.
+
+With the membership migration applied unchanged, fresh shared owner/member
+channels exchanged messages; outsiders and departed members were refused.
+Paused shared islands stayed private, and existing legacy Harbor access remained
+available. The private predicate schema was absent from REST exposure and browser
+table grants were unchanged.
+
+The cached-connection checks **failed**: a subscriber admitted while an island
+was legacy could still send and receive after shared admission, and an already
+connected member could still send and receive after leaving. Tightening the RLS
+predicate alone cannot satisfy those lifecycle gates. Canonical revocation or
+topic rotation and a new authenticated run on the complete source remain required.
 
 ## Evidence layers
 
