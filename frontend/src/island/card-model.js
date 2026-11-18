@@ -119,7 +119,7 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
     ? recoveryState.structures?.find(item => item.spot === spotId) : null;
   if (shown === 'wall' && recoveryRow) model.stats = model.stats.replace(/^Strength\b/, 'Base strength');
   const recoveryUnavailable = recoveryStatus === 'loading' || recoveryStatus === 'error' || (!!recoveryRow && recoveryRow.level !== level);
-  const upgradeBlockedReason = recoveryUnavailable ? 'Building health is unavailable. Try again.'
+  const upgradeBlockedReason = recoveryUnavailable ? 'Wait until building health has loaded.'
     : recoveryRow && recoveryState.recoveryVersion === 1
     ? recoveryState.repairWindow === 'reserved_wave' ? 'Upgrades are available between waves.'
       : recoveryRow.hpUnits < 1_000_000 ? 'Repair to full before an upgrade.' : ''

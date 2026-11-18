@@ -269,8 +269,8 @@ def test_snapshot_template_captures_server_sim_inputs_and_exact_hp_rate(monkeypa
         "kind": "wall",
         "level": 2,
         "maxHP": 180.0,
-        "rateNumerator": 351,
-        "rateDenominator": 20,
+        "rateNumerator": 1,
+        "rateDenominator": 1,
         "wallSpec": "bastion",
         "wallResearch": "mason_drill",
         "nearbyWorkshops": 1,
@@ -282,6 +282,15 @@ def test_snapshot_template_captures_server_sim_inputs_and_exact_hp_rate(monkeypa
     assert "recoveryConfigVersion" not in snapshot
     assert snapshot["weather"] == snapshot["createWave"]["weather"]
     assert snapshot["recoveryConfig"]["baseRateUnitsPerSecond"] == [5000, 3]
+    assert snapshot["recoveryConfig"]["recoveryRateFactors"] == {
+        "carpenterMultiplierPerWorker": 0,
+        "carpenterMaximumWorkers": 2,
+        "workshopPercentPerHouse": 0,
+        "workshopPercentCap": 0,
+        "workshopRadius": 10,
+        "wallSpecRateFactors": {"quick_mend": [1, 1], "bastion": [1, 1]},
+        "wallResearchRateFactors": {"mason_drill": [1, 1]},
+    }
     wall = next(kind for kind in catalogue.kinds if kind.kind == "wall")
     assert snapshot["priceSchedule"]["wall"] == list(wall.prices)
 

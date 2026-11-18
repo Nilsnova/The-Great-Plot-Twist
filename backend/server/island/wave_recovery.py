@@ -27,7 +27,6 @@ from server.island.structure_recovery_manifest import (
     SUPPORTED_KINDS,
     max_structure_hp,
 )
-from server.island.structure_recovery_rate import recovery_rate_factor
 from server.supabase_admin import SupabaseAdmin, SupabaseRejected
 
 UID = re.compile(r"^[A-Za-z0-9_-]{8,64}$")
@@ -429,20 +428,15 @@ async def build_snapshot_template(
             max_hp = max_structure_hp(
                 spot.kind, spot.level, selected_wall_spec, selected_wall_research
             )
-            rate = recovery_rate_factor(
-                view.crew.get("carpenter", 0),
-                nearby_workshops,
-                spot.kind,
-                selected_wall_spec,
-                selected_wall_research,
-                True,
-            )
+            # New protocol-2 snapshots keep the historical rate fields in their wire shape, but
+            # automatic healing no longer operates between or during waves. Saved snapshots keep
+            # their original rates; only new snapshots write a neutral multiplier.
             structure_config[spot.id] = {
                 "kind": spot.kind,
                 "level": spot.level,
                 "maxHP": float(max_hp),
-                "rateNumerator": rate.numerator,
-                "rateDenominator": rate.denominator,
+                "rateNumerator": 1,
+                "rateDenominator": 1,
                 "wallSpec": selected_wall_spec,
                 "wallResearch": selected_wall_research,
                 "nearbyWorkshops": nearby_workshops,
@@ -489,13 +483,13 @@ async def build_snapshot_template(
     recovery_config = json.loads(MANIFEST_FILE.read_text(encoding="utf-8"))
     recovery_config["baseRateUnitsPerSecond"] = [5000, 3]
     recovery_config["recoveryRateFactors"] = {
-        "carpenterMultiplierPerWorker": 1,
+        "carpenterMultiplierPerWorker": 0,
         "carpenterMaximumWorkers": 2,
-        "workshopPercentPerHouse": 30,
-        "workshopPercentCap": 50,
+        "workshopPercentPerHouse": 0,
+        "workshopPercentCap": 0,
         "workshopRadius": 10,
-        "wallSpecRateFactors": {"quick_mend": [2, 1], "bastion": [3, 1]},
-        "wallResearchRateFactors": {"mason_drill": [3, 2]},
+        "wallSpecRateFactors": {"quick_mend": [1, 1], "bastion": [1, 1]},
+        "wallResearchRateFactors": {"mason_drill": [1, 1]},
     }
     default_positions = {spot.spot: {"x": spot.x, "z": spot.z} for spot in complete_geometry.spots}
     return {
