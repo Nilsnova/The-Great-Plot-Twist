@@ -29,7 +29,9 @@
 //   the same tick, and the same hits on the heart.
 //   node scripts/check-multiplayer.js [folder]        (npm run test:mp)
 import assert from 'node:assert/strict';
-import {mkdir} from 'node:fs/promises';
+import {mkdir, writeFile} from 'node:fs/promises';
+import {execFileSync} from 'node:child_process';
+import {compareSyncSamples} from './multiplayer-sync-samples.js';
 import {openWorldBrowser, settle} from './world-browser-tools.js';
 import {stubOfflineApi} from './api-browser-fixture.js';
 import {stubWeather} from './weather-browser-fixture.js';
@@ -37,6 +39,10 @@ import {stubWeather} from './weather-browser-fixture.js';
 const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
 const out = process.argv[2] ?? `/Users/nilslenke/Developer/fri6-integration/td-shots/mp/check-${stamp}`;
 await mkdir(out, {recursive: true});
+const qaSource = execFileSync('git', ['rev-parse', 'HEAD'], {cwd: new URL('..', import.meta.url), encoding: 'utf8'}).trim();
+const syncReceipts = [];
+const saveSyncReceipts = () => writeFile(`${out}/sync-samples.json`, JSON.stringify({source: qaSource,
+  scope: 'Existing sampled histories from declared local fake players; no added collection frames.', comparisons: syncReceipts}, null, 2));
 const WORLD = `mp${Date.now().toString(36)}`;
 const env = await openWorldBrowser({hmr: false}), context = env.page.context();
 const pages = [];
@@ -220,19 +226,17 @@ async function musket(captain) {
 // ships and the same boarders ashore (boarding, TOWER-DEFENSE.md §12).
 async function compare(a, b, waveId) {
   const [left, right] = await Promise.all([a, b].map(captain => captain.page.evaluate(id => window.__mp.samples.filter(item => item.waveId === id), waveId)));
-  const byTick = new Map(right.map(item => [item.ticks, item]));
-  const size = list => list.split(',').filter(Boolean).length;
-  let checked = 0, same = 0, worst = 0, sameBoarders = 0, worstBoarders = 0, withBoarders = 0;
-  for (const sample of left.filter((_, index) => index % 10 === 0)) {
-    const other = byTick.get(sample.ticks) ?? byTick.get(sample.ticks - 1) ?? byTick.get(sample.ticks + 1);
-    if (!other) continue;
-    checked++;
-    if (other.ships === sample.ships) same++;
-    if (other.boarders === sample.boarders) sameBoarders++;
-    if (sample.boarders) withBoarders++;
-    worst = Math.max(worst, Math.abs(size(other.ships) - size(sample.ships)));
-    worstBoarders = Math.max(worstBoarders, Math.abs(size(other.boarders) - size(sample.boarders)));
+  const receipt = {waveId, leftPlayer: a.playerId, rightPlayer: b.playerId, left, right};
+  syncReceipts.push(receipt);
+  let observed;
+  try { observed = compareSyncSamples(left, right); }
+  catch (error) {
+    receipt.error = {name: error.name, message: error.message};
+    await saveSyncReceipts().catch(writeError => log('sync receipt write failed:', writeError.message));
+    throw error;
   }
+  const {pairs, ...comparison} = observed;
+  receipt.pairs = pairs;
   const landed = Math.max(0, ...left.map(item => item.landed));
   // T50: the heart's ♥ at exactly the same tick.
   let heartChecked = 0, sameHeart = 0;
@@ -248,7 +252,10 @@ async function compare(a, b, waveId) {
     if (other.militia === sample.militia) sameMilitia++;
     if (sample.militia.includes(':fighting')) fighting++;
   }
-  return {checked, same, worst, sameBoarders, worstBoarders, withBoarders, landed, militiaChecked, sameMilitia, fighting, heartChecked, sameHeart};
+  const metrics = {...comparison, landed, militiaChecked, sameMilitia, fighting, heartChecked, sameHeart};
+  receipt.metrics = metrics;
+  await saveSyncReceipts();
+  return metrics;
 }
 
 // The musket fires from the captain's own body (owner, 12 Nov): the owner's character and, on the friend's
@@ -892,6 +899,7 @@ try {
   log('\nRESULTS'); for (const line of results) log(`  ${line}`);
   log(`\ncheck-multiplayer: OK (${pages.length} pages), screenshots in ${out}`);
 } catch (error) {
+  await saveSyncReceipts().catch(writeError => log('sync receipt write failed:', writeError.message));
   log('\nRESULTS SO FAR'); for (const line of results) log(`  ${line}`);
   for (const captain of pages) {
     await captain.page.screenshot({path: `${out}/failure-${captain.playerId}.png`}).catch(() => {});
