@@ -1158,15 +1158,6 @@ The harpoon tower and the culverin have no skills, so no price. The numbers live
 - **Cleanup operation:** service-only audit/reconcile RPC and bounded operator SQL runner; dry-run is the default. Revalidate under the normal wallet/island/wave locks before applying. A verified missing closed-wave effect receives exactly its original debit once through `admin_adjust`, using a stable reference tied to that original payment. Preserve receipts and closed combat history. An original valid live request can still be repeated through the existing atomic revival API; no historical reconstruction is claimed.
 - **Release limits:** no new wallet reason, dependency or external service. No live database audit, compensation, migration, feature activation or deployment is implied by the local implementation. Affected-player counts are unknown until the reviewed audit is run. Human review and publication remain separate steps.
 
-<a id="d067--existing-wall-rows-and-coherent-presentation-trial--2026-11-18"></a>
-
-## D068 — Existing wall rows and coherent presentation trial — 2026-11-18
-
-- Johannes Franz Lang (`frcola`) explicitly confirmed a maximum of three defensive rows per existing attack approach, retaining twelve original wall sites and five upgrade tiers. [VIS69 #469](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/469), [PR #474](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/474). This does not activate the separate perimeter programme.
-- Count all reserved wall sites, matching existing placement occupancy and complete-layout Move CAS. Equal X shares an east/west row; equal Z shares a south row. Nearest east/south/west heart sector decides, with south owning 45-degree ties. Half-grid staggers count separately. Refuse only a prospective increase beyond three on an approach. Preserve existing reads, no-op actions and non-worsening corrections; no automatic movement/deletion/refund. No new SQL or public endpoint.
-- D065's taller wall presentation was reviewed in the actual desktop and touch-browser game. The proposed profiles use wider ground feet and lower spans with readable tier junctions, wall shadows and a short purchase effect on the affected segment. The move rules retain the existing footprint, topology and damage states. [Visual evidence](evidence/VIS-69-local-walls/reference-pass/README.md).
-- Local QA covered build and upgrade receipts, the third and fourth row, desktop and touch layouts and a combat breach. [Local handover](contribute/WALL-INTEGRATION-REVIEW.md) records the original checkpoint and the separate historical ordinary-purchase scenery gap. Ianno has been requested to review the current PR.
-
 <a id="shared-island-economy-2026-11-18"></a>
 
 ## Shared island economy and personal Captain progression
@@ -1286,3 +1277,13 @@ Ianno explicitly requires each multiplayer browser to show only its own captain'
 ### CF1 reviewer follow-up and current-main reconciliation · 2026-11-18
 
 The posted review of PR #475 found two presentation defects. Until a recent explicit attempt expires, use that attempt's gun/cutlass mode rather than the ambient nearby-boarder hint; keep current weapon/skill radius and the gun direction cap. Temporarily suppress only a narrator caption whose measured bounds cover a visible acute instruction, retaining its still-active text/Skip and accessibility state for restoration. Narration timers continue; no expired line replay is added. Keep portrait touch Fire below the measured bar and reserve the joystick column when range text expands. Preserve current-main pose/weapon/simulation work and both STATUS histories when resolving the task branch conflict with `03e660fe`. CF1 remains D068. The prior teammate review is historical; the updated fixes need current human approval. No quiz restart, merge into main or deployment is authorized.
+
+
+<a id="d067--existing-wall-rows-and-coherent-presentation-trial--2026-11-18"></a>
+
+## D069 — Existing wall rows and coherent presentation trial — 2026-11-18
+
+- Johannes Franz Lang (`frcola`) explicitly confirmed a maximum of three defensive rows per existing attack approach, retaining twelve original wall sites and five upgrade tiers. [VIS69 #469](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/469), [PR #474](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/474). This does not activate the separate perimeter programme.
+- Count all reserved wall sites, matching existing placement occupancy and complete-layout Move CAS. Equal X shares an east/west row; equal Z shares a south row. Nearest east/south/west heart sector decides, with south owning 45-degree ties. Half-grid staggers count separately. Refuse only a prospective increase beyond three on an approach. Preserve existing reads, no-op actions and non-worsening corrections; no automatic movement/deletion/refund. No new SQL or public endpoint.
+- D065's taller wall presentation was reviewed in the actual desktop and touch-browser game. The proposed profiles use wider ground feet and lower spans with readable tier junctions, wall shadows and a short purchase effect on the affected segment. The move rules retain the existing footprint, topology and damage states. [Visual evidence](evidence/VIS-69-local-walls/reference-pass/README.md).
+- Local QA covered build and upgrade receipts, the third and fourth row, desktop and touch layouts and a combat breach. [Local handover](contribute/WALL-INTEGRATION-REVIEW.md) records the original checkpoint and the separate historical ordinary-purchase scenery gap. Ianno has been requested to review the current PR.
