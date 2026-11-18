@@ -6,6 +6,8 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { placeIds, places } from '../src/world/places/registry.js';
 import { openWorldBrowser, settle, measure, explorerVisible } from './world-browser-tools.js';
 import { BOARD } from '../tests/sports/sample-answers.js';
+import { stubOfflineApi } from './api-browser-fixture.js';
+import { stubWeather } from './weather-browser-fixture.js';
 const env = await openWorldBrowser(), { page } = env;
 const report = { checked: new Date().toISOString(), browser: env.browser.version(), viewport: '1440 × 900, DPR 1', checks: [], places: {}, roundTrips: [],
   consoleErrors: env.consoleErrors, pageErrors: env.pageErrors };
@@ -18,6 +20,37 @@ const go = async id => { await page.evaluate(id => window.__island.world.goTo(id
 // it before dismissPanels looks once, or the panel opens late and swallows the next hotspot's E.
 const panels = { plot_1: '.islet-modal', plot_2: '.islet-modal', plot_3: '.islet-modal', plot_4: '.islet-modal', islet_signal_station: '.islet-modal', market_hall: '.market-modal', sports_pavilion: '.sports-modal' };
 const closePanel = async id => { const panel = page.locator(panels[id]); await panel.waitFor({ state: 'visible' }); await page.keyboard.press('Escape'); await panel.waitFor({ state: 'hidden' }); };
+async function checkPhoneChart() {
+  const context = await env.browser.newContext({ viewport: { width: 320, height: 568 },
+    hasTouch: true, isMobile: true, reducedMotion: 'reduce' });
+  try {
+    const phone = await context.newPage();
+    await stubOfflineApi(phone);
+    await stubWeather(phone);
+    await phone.goto(env.url + '?market=local&oneisland=0');
+    await startFromTitle(phone);
+    await phone.getByRole('button', { name: 'Menu', exact: true }).tap();
+    await phone.getByRole('button', { name: 'Sea chart', exact: true }).tap();
+    const chart = phone.locator('.sea-chart[open]');
+    await settle(phone);
+    const fullyVisible = await chart.evaluate((dialog, count) => {
+      const choices = [...dialog.querySelectorAll('[data-place]:not([hidden])')];
+      const map = dialog.querySelector('.chart-scroll');
+      return choices.length === count && map.scrollWidth === map.clientWidth && choices.every(choice => {
+        const { x, y, width, height, right, bottom } = choice.getBoundingClientRect();
+        const label = choice.querySelector('span').getBoundingClientRect();
+        const hit = document.elementFromPoint(x + width / 2, y + height / 2);
+        return width >= 44 && height >= 44 && x >= 0 && y >= 0 && right <= innerWidth && bottom <= innerHeight
+          && label.top >= y && label.bottom <= bottom && label.left >= x && label.right <= right && choice.contains(hit);
+      });
+    }, placeIds.length);
+    check(fullyVisible, 'Short phone chart shows every complete destination with a 44 px touch target');
+    await phone.screenshot({ path: `${captureRoot}/20261105_World-Sea-Chart-320.png` });
+    await chart.getByRole('button', { name: 'Your island', exact: true }).tap();
+    await phone.waitForFunction(() => window.__island.world.current?.id === 'home_islet');
+    check(await chart.isHidden(), 'A phone destination starts the existing voyage and closes the chart');
+  } finally { await context.close(); }
+}
 try {
   const sports = {...BOARD, source: 'recorded',
     fixtures: BOARD.fixtures.map(fixture => ({...fixture, source: 'recorded', canStake: false}))};
@@ -97,6 +130,7 @@ try {
   await page.evaluate(() => { window.__island.quality('high'); window.__island.setWeather({ wind: 1 }); window.__trip = window.__island.world.goTo('wreck_point'); });
   const passageStart = Date.now(); await page.waitForFunction(() => window.__island.world.current?.id === 'wreck_point'); report.windOnePassageMs = Date.now() - passageStart;
   check(report.windOnePassageMs > 3000 && report.windOnePassageMs < 7500, 'Unskipped wind-driven passage lasts about five seconds');
+  await checkPhoneChart();
   report.errors = env.errors; report.externalRequests = env.external;
   check(env.errors.length === 0, 'No browser errors'); check(env.external.length === 0, 'No external requests');
   console.log(JSON.stringify(report, null, 2));
