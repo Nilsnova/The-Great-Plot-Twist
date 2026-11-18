@@ -11,10 +11,11 @@ function memory() {
     setItem: (k, v) => map.set(k, v), removeItem: k => map.delete(k)};
 }
 function world() {
-  let current = {...ORIGIN}, actor = ACTOR, uid = 0, rounds = 0, loseStart = false, loseClaim = false;
+  let current = {...ORIGIN}, actor = ACTOR, uid = 0, rounds = 0, loseStart = false, loseClaim = false, waveRunning = false;
   const saved = new Map(), calls = [], applied = [], storage = memory();
   const transport = {async post(path, body, options) {
     calls.push({path, body: structuredClone(body), options});
+    if(path.endsWith('claim')&&waveRunning)return {ok:false,status:409,code:'wave_running',message:'Wait for the wave to end.'};
     const cacheKey = `${actor}:${body.actionUid}`;
     if (saved.has(cacheKey)) return {ok: true, status: 200, data: {...saved.get(cacheKey), repeat: true, ...(path.endsWith('claim') ? {currentEconomy: null} : {})}};
     const start = path.endsWith('start'), result = start ? {round: {id: id(20 + ++rounds), actorId: actor, ...ORIGIN, game: body.game, recordWave: 30, maximumCoins: '36'}}
@@ -29,7 +30,7 @@ function world() {
   const api = createSharedBoatApi({transport, getEconomy: () => current, onEconomy: (...args) => applied.push(args)});
   const session = () => createBoatRoundSession({api, getEconomy: () => current, getActorId: () => actor, storage, makeUid: () => `boat-${String(++uid).padStart(8, '0')}`});
   return {session, api, calls, applied, storage, set current(value) {current = value;}, set actor(value) {actor = value;},
-    loseStart() {loseStart = true;}, loseClaim() {loseClaim = true;}};
+    loseStart() {loseStart = true;}, loseClaim() {loseClaim = true;}, set waveRunning(value) {waveRunning = value;}};
 }
 it('keeps the original start UID after a lost reply and reload', async () => {
   const w = world();w.loseStart();
@@ -78,4 +79,13 @@ it('describes shared improvement and cap without a per-player allowance', () => 
   expect(sharedBoatPay({remainingCoins: '0'})).toContain('play for fun');
   const reply = {ok: true, data: {receipt: {result: {coins: '0', cumulativeCoins: '36', maximumCoins: '36'}}}};
   expect(sharedBoatResult(reply).line).toContain('Island cap reached');
+});
+
+it('a bell-time phase refusal keeps the score and UID across reload for the next break', async () => {
+  const w=world(),session=w.session();await session.begin('dash');w.waveRunning=true;
+  const refused=await session.finish(2);expect(refused.code).toBe('wave_running');
+  const original=w.calls.at(-1).body;expect(w.storage.length).toBe(1);
+  w.waveRunning=false;expect((await w.session().recover()).ok).toBe(true);
+  expect(w.calls.at(-1).body).toEqual(original);expect(w.storage.length).toBe(0);
+  expect(w.calls.filter(call=>call.path.endsWith('start'))).toHaveLength(1);
 });

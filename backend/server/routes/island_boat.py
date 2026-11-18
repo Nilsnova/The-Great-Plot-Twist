@@ -14,8 +14,9 @@ from fastapi import APIRouter, Query, Request
 from pydantic import BaseModel, ConfigDict, Field, StrictInt
 
 from server.island import boat, boat_runtime
-from server.island.economy_http import require_economy_capability
+from server.island.economy_http import ECONOMY_CAPABILITY_HEADER, require_economy_capability
 from server.island.shared_boat_store import ClaimRow, StartRow
+from server.island.treasury import resolve_economy_context
 from server.routes.island import CODE_MAX_LENGTH, ID_PATTERN, IslandPlayerDep
 from server.supabase_admin import AdminDep
 
@@ -37,6 +38,11 @@ async def get_boat(
     code: Annotated[str | None, Query(max_length=CODE_MAX_LENGTH)] = None,
 ) -> boat_runtime.BoatStatusOut | boat_runtime.SharedBoatStatusOut:
     request.app.state.island_build_budget.spend(player.id)
+    if request.headers.get(ECONOMY_CAPABILITY_HEADER) != "1":
+        owner = await boat_runtime.owner_for(admin, player.id, code)
+        context = await resolve_economy_context(admin, player.id, owner)
+        if context.mode == "island_shared":
+            require_economy_capability(request)
     view = await boat_runtime.status(admin, player.id, code)
     if isinstance(view, boat_runtime.SharedBoatStatusOut):
         require_economy_capability(request)
