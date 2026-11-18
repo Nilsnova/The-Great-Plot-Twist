@@ -3,10 +3,10 @@ import {browserHarness} from '../g20-browser.js';
 
 const browser = browserHarness();
 
-it('keeps every pre-wave guide action above the stick on a short phone', async () => {
+it.each([[320, 568], [360, 640], [375, 640]])('keeps every pre-wave guide action above the stick at %s×%s', async (width, height) => {
   await browser.withPage(async (initial, origin) => {
     const context = await initial.context().browser().newContext({
-      viewport: {width: 320, height: 568}, isMobile: true, hasTouch: true, reducedMotion: 'reduce',
+      viewport: {width, height}, isMobile: true, hasTouch: true, reducedMotion: 'reduce',
     });
     try {
       const page = await context.newPage();

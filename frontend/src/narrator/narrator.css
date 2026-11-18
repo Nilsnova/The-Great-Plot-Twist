@@ -35,7 +35,7 @@ body:has(.narrator-card.is-wave-footer:not([hidden],.is-danger-suppressed)) .sou
 }
 /* A reading strip uses the measured space below fixed portrait touch controls. */
 @media(max-width:420px) and (orientation:portrait) and (pointer:coarse){.narrator-card{--narrator-reader-enabled:1}}
-@media(min-width:320px) and (max-width:350px) and (min-height:560px) and (max-height:640px) and (orientation:portrait) and (pointer:coarse){
+@media(min-width:320px) and (max-width:375px) and (min-height:560px) and (max-height:640px) and (orientation:portrait) and (pointer:coarse){
   .narrator-card{--narrator-preparation-reader:1}
 }
 .narrator-card.is-large-touch-reader{

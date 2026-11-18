@@ -81,7 +81,7 @@ export function createCoach(container = document.body, {parent = null, onSkipSte
     if (!shown) return;
     const portrait = coarse.matches && innerWidth <= innerHeight;
     const compact = inCombat && portrait && innerWidth <= 420;
-    const preparation = !inCombat && !!parent && portrait && innerWidth <= 350 && innerHeight <= 640;
+    const preparation = !inCombat && !!parent && portrait && innerWidth <= 375 && innerHeight <= 640;
     const hadGuideFocus = document.activeElement === guide;
     const hadPanelFocus = panel.contains(document.activeElement);
     panel.classList.toggle('is-combat-guide', compact);
