@@ -153,6 +153,7 @@ declare
   v_existing public.island_progression_receipts;
   v_action text; v_branch text; v_spot text; v_spec text; v_choice text; v_before text; v_path text;
   v_tier integer; v_now integer; v_other integer; v_goal integer; v_member boolean;
+  v_recovery_version integer;
   v_price numeric; v_quote numeric; v_claim jsonb; v_finance jsonb; v_recovery jsonb;
   v_fingerprint jsonb; v_result jsonb; v_research jsonb; v_structure jsonb;
   v_id uuid; v_finance_id uuid; v_child_uid text; v_reason text; v_detail text;
@@ -182,23 +183,25 @@ begin
   v_member := p_actor_id = v_account.island_owner or exists (
     select 1 from public.island_members where island_owner = v_account.island_owner
       and player_id = p_actor_id and left_at is null);
+  select * into v_state from public.island_economy_state where island_owner = v_account.island_owner for update;
   if v_existing.id is not null then
     if v_existing.request_fingerprint <> v_fingerprint then
       return public.island_progression_refuse('action_conflict');
     end if;
-    return public.island_progression_result(v_existing.id,true,v_member);
+    return public.island_progression_result(v_existing.id,true,coalesce(
+      v_member and v_account.state = 'active' and v_state.current_account_id = p_account_id
+      and v_state.run_epoch = p_run_epoch and v_state.admission_state = 'active',false));
   end if;
   if v_claim ->> 'status' = 'replay' then raise exception 'progression_operation_unavailable'; end if;
   if not v_member then return public.island_progression_refuse('not_member'); end if;
   if v_account.run_epoch <> p_run_epoch then
     return public.island_progression_refuse('epoch_mismatch');
   end if;
-  select * into v_state from public.island_economy_state where island_owner = v_account.island_owner for update;
   if v_account.state <> 'active' or v_state.current_account_id is distinct from p_account_id
     or v_state.run_epoch is distinct from p_run_epoch or v_state.admission_state <> 'active' then
     return public.island_progression_refuse('path_unavailable');
   end if;
-  perform public.island_economy_require_idle_locked(v_account.island_owner);
+  v_recovery_version := public.island_economy_require_idle_locked(v_account.island_owner);
   if jsonb_typeof(p_rule -> 'unlockWave') is distinct from 'number'
     or (p_rule ->> 'unlockWave') !~ '^(0|[1-9][0-9]*)$' then
     return public.island_progression_refuse('invalid_progression');
@@ -245,6 +248,9 @@ begin
         return public.island_progression_refuse('closed');
       end if;
     end if;
+    if v_recovery_version = 1 and v_branch = 'wall' and v_tier = 2 and v_choice = 'mason_drill' then
+      return public.island_progression_refuse('recovery_option_retired');
+    end if;
   elsif v_action in ('specialise','tower_tree') then
     v_spot := p_intent ->> 'spot';
     select * into v_building from public.islet_buildings where player_id = v_account.island_owner and plot = v_spot for update;
@@ -268,7 +274,11 @@ begin
           return public.island_progression_refuse('not_researched');
         end if;
       end if;
-      if v_building.spec = v_spec then v_price := 0; end if;
+      if v_building.spec = v_spec then
+        v_price := 0;
+      elsif v_recovery_version = 1 and v_spec in ('workshop','quick_mend') then
+        return public.island_progression_refuse('recovery_option_retired');
+      end if;
     else
       v_tier := (p_intent ->> 'tier')::integer; v_path := p_intent ->> 'path';
       if v_price <= 0 or jsonb_typeof(p_rule -> 'level') is distinct from 'number'

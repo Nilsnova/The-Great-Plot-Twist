@@ -208,10 +208,11 @@ def test_malformed_or_other_origin_replies_are_never_accepted(change):
         asyncio.run(mutate(FakeAdmin(value), load_island(), context(), "research01", research()))
 
 
-def test_known_refusals_remain_typed_and_transport_failures_do_not_fall_back():
+@pytest.mark.parametrize("reason", ["stale_progression_quote", "recovery_option_retired"])
+def test_known_refusals_remain_typed_and_transport_failures_do_not_fall_back(reason):
     with pytest.raises(ApiError) as caught:
-        read_result({"status": "refused", "reason": "stale_progression_quote"})
-    assert caught.value.status_code == 409 and caught.value.code == "stale_progression_quote"
+        read_result({"status": "refused", "reason": reason})
+    assert caught.value.status_code == 409 and caught.value.code == reason
     with pytest.raises(SupabaseUnavailable):
         asyncio.run(
             mutate(
@@ -288,3 +289,18 @@ def test_removed_research_choice_reaches_sql_replay_before_current_catalogue_rej
         is True
     )
     assert admin.calls[0][1]["p_rule"] == {"unavailable": True}
+
+
+@pytest.mark.parametrize("action", ["specialise", "tower_tree"])
+def test_direct_spot_unlock_is_combined_with_campaign_and_tree_unlocks(action):
+    catalogue = load_island()
+    catalogue = replace(
+        catalogue,
+        spots=tuple(
+            replace(spot, unlock_wave=40) if spot.id == "cannon_1" else spot
+            for spot in catalogue.spots
+        ),
+    )
+    intent = {"action": action, "spot": "cannon_1", "expected": building(), "quotedCoins": "1"}
+    intent.update({"spec": "rapid"} if action == "specialise" else {"path": "a", "tier": 1})
+    assert catalogue_rule(catalogue, parse_intent(intent))["unlockWave"] == 40

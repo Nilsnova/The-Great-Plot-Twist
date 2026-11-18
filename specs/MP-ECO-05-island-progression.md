@@ -27,11 +27,22 @@ must not spend again, and a rejected payment must leave the island unchanged.
   remaining repair cost. A concurrent gift may reduce the charge, never increase a quote.
 - All prices are server catalogue prices, without an Engineer discount. Personal wallets,
   Captain levels and Engineer commitments are not involved.
+- Tower gates combine the direct spot unlock and campaign spot unlock; tree purchases also
+  include the selected tree tier's unlock. The locked target island record supplies progress.
 - The historical research total becomes a finite positive integral numeric value, preserving
   existing values while allowing repeated switches beyond the old lifetime total ceiling.
   Research totals and all new progression revisions are decimal strings in JSON.
 - Legacy research, tower and wreck RPCs fail closed for every admitted island before
   touching a personal wallet. Unadmitted islands retain their existing behavior.
+- Under the target island's saved recovery version 1, D059 retires new Workshop, Quick Mend
+  and Mason Drill selections. The SQL transaction reads that saved version under the common
+  idle guard. A caller's rule metadata cannot downgrade it. Rejection costs nothing and
+  retains no operation claim. Version 0 keeps its existing catalogue behavior.
+- Existing retired identifiers and research tiers remain readable. Committed receipts still
+  replay; an unchanged stored tower/house selection keeps its ordinary free no-op behavior.
+  A stored Mason Drill choice permits later research tiers and unrelated purchases. Tavern,
+  Barracks and Bastion's maximum-HP benefit remain available. There are no automatic
+  replacements or refunds.
 
 **Files:** `backend/server/island/economy_progression*.py`, focused Python and PostgreSQL
 tests, and additive migrations `20261118050500_*` and `20261118050501_*`.
@@ -73,7 +84,8 @@ historical personal payer identities. Mutations independently require the idle p
 `{status: 'done', repeat, currentEconomy, receipt}`. The immutable receipt has `receiptId`,
 `actorId`, `actionUid`, `action`, `origin` and `result`. Its result contains decimal-string
 `chargedCoins`, optional `treasuryReceiptId`, and the original research/building/wreck
-outcome. `currentEconomy` is null after the original actor leaves the island. A downstream
+outcome. `currentEconomy` is null after the original actor leaves the island or the origin
+stops being the current active admitted account/epoch. A downstream
 refusal rolls back the early operation claim as well as every financial or asset effect.
 
 ## Out of scope
@@ -97,7 +109,8 @@ refund basis.
 
 ## Verification and remaining integration
 
-Verified on the treasury operation, personal Captain and shared construction dependencies:
+The initial implementation was verified on the treasury operation, personal Captain and
+shared construction dependencies:
 
 - `cd backend && uv run ruff check .`: passed.
 - `uv run pytest -q --ignore=server/tests/correctness/test_settings_contract.py`:
@@ -110,6 +123,17 @@ Verified on the treasury operation, personal Captain and shared construction dep
   26.13 seconds. The 35 progression cases occur in both database groups.
 - All **73 migrations** parsed with `pglast` and applied **twice** in each scratch database.
   The new concurrency cases use separate disposable clusters and preserve other fixtures.
+
+After merging the updated main and implementing D059's saved-version retirement, the
+affected checks passed again: **89 passed** in 9.43 seconds, including **49 real PostgreSQL**
+cases, **26 domain/service Python** cases and **14 historical wrapper** checks. Full backend
+Ruff passed. These checks add retirement refusal with no effects, all three pre-v1 receipt
+replays after v1 admission, non-v1 preservation, saved-policy downgrade resistance, and a
+real health refresh that retains Bastion's 90 HP on a base-60-HP wall. Actual retirement,
+pointer replacement and admission pause checks retain the immutable own receipt while
+withholding the fresh projection. Updated direct spot unlocks reject new skill/tree charges
+without invalidating successful original receipts. The broad suites above
+precede this narrow policy follow-up; they are not claimed as fresh post-follow-up runs.
 
 The database groups were collected in separate fresh processes. Existing dependency race
 fixtures commit records; a single mixed collection can therefore fail unrelated tests that

@@ -65,7 +65,7 @@ def catalogue_rule(catalogue: IslandCatalogue, intent: ProgressionIntent) -> dic
             "price": amount(entry.pick_price(intent.spec), zero=True) if entry else "0",
             "branch": branch,
             "capstone": bool(entry and intent.spec in entry.options_of(3)),
-            "unlockWave": catalogue.campaign.spot_wave(intent.spot),
+            "unlockWave": max(spot.unlock_wave, catalogue.campaign.spot_wave(intent.spot)),
         }
     if isinstance(intent, TreeIntent):
         tree = catalogue.tree_of(intent.expected.kind)
@@ -75,7 +75,9 @@ def catalogue_rule(catalogue: IslandCatalogue, intent: ProgressionIntent) -> dic
             "price": amount(tree.prices[intent.tier - 1]),
             "level": tree.level,
             "unlockWave": max(
-                tree.waves[intent.tier - 1], catalogue.campaign.spot_wave(intent.spot)
+                tree.waves[intent.tier - 1],
+                spot.unlock_wave,
+                catalogue.campaign.spot_wave(intent.spot),
             ),
         }
     raise invalid()
@@ -92,6 +94,11 @@ PROGRESSION_ERRORS = {
         409,
         "economy_path_unavailable",
         "Island recovery state is unavailable.",
+    ),
+    "recovery_option_retired": (
+        409,
+        "recovery_option_retired",
+        "This repair-only choice is unavailable under this island's recovery policy.",
     ),
     **{
         code: (409, code, message)

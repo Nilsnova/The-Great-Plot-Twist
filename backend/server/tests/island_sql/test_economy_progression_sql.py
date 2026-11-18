@@ -3,6 +3,7 @@
 All migrations run twice. No configured database, credentials or live data are used.
 """
 
+from dataclasses import replace
 from pathlib import Path
 from uuid import uuid4
 
@@ -648,3 +649,276 @@ def test_unavailable_catalogue_allows_old_receipt_but_refuses_new_intent_without
         "reason": "invalid_progression",
     }
     assert count_claims(database, member, "newgift01") == 0
+
+
+def set_v1_policy(connection, owner):
+    """Use a valid immutable template and health rows for between-wave policy checks."""
+    from server.tests.island_sql.test_structure_recovery_mutations_sql import CONFIG, template
+
+    as_owner(connection)
+    connection.execute(
+        "update public.island_recovery_state set recovery_version=1,wave_protocol=2 "
+        "where island_owner=%s",
+        (owner,),
+    )
+    epoch = connection.execute(
+        "select reset_epoch from public.island_recovery_state where island_owner=%s", (owner,)
+    ).fetchone()[0]
+    rows = connection.execute(
+        "select plot,building_type,level,recovery_instance_id "
+        "from public.islet_buildings where player_id=%s",
+        (owner,),
+    ).fetchall()
+    structures = [row for row in rows if row[1] in CONFIG["structureMaxHp"]]
+    snapshot = template(tuple((row[0], row[1]) for row in structures))
+    for spot, kind, level, instance in structures:
+        maximum = CONFIG["structureMaxHp"][kind][level - 1]
+        connection.execute(
+            "insert into public.island_structure_health(island_owner,spot,instance_id,"
+            "building_kind,level,hp_units,max_hp,config_version,settled_at,"
+            "rate_numerator,rate_denominator,repair_seq) "
+            "values(%s,%s,%s,%s,%s,1000000,%s,1,clock_timestamp(),0,1,0)",
+            (owner, spot, instance, kind, level, maximum),
+        )
+    connection.execute(
+        "insert into public.recovery_wave_states(wave_id,island_owner,reset_epoch,"
+        "recovery_version,wave_protocol,initial_snapshot) values(%s,%s,%s,1,2,%s)",
+        (uuid4(), owner, epoch, Jsonb(snapshot)),
+    )
+    as_server(connection)
+
+
+def wall_research(connection, owner):
+    as_owner(connection)
+    connection.execute(
+        "insert into public.island_research(island_owner,branch,researched_by,coins_paid,ref) "
+        "values(%s,'wall',%s,100,'research:fixture1')",
+        (owner, owner),
+    )
+    as_server(connection)
+
+
+def repair_choice(connection, owner, selection):
+    if selection == "workshop":
+        expected = add_building(connection, owner, "house", 2, "house_1")
+        return skill(expected, "workshop", "house_1")
+    else:
+        wall_research(connection, owner)
+        if selection == "quick_mend":
+            expected = add_building(connection, owner, "wall", 1, "wall_1")
+            return skill(expected, "quick_mend", "wall_1")
+        else:
+            entry = next(entry for entry in CATALOGUE.research if entry.branch == "wall")
+            return research(
+                branch="wall",
+                tier=2,
+                choice="mason_drill",
+                expected=research_state(connection, owner, "wall"),
+                quotedCoins=str(entry.price_of(2)),
+            )
+
+
+@pytest.mark.parametrize("selection", ["workshop", "quick_mend", "mason_drill"])
+def test_saved_v1_policy_retires_new_repair_only_choices_without_any_effect(database, selection):
+    owner, member, _, initial = setup(database)
+    intent = repair_choice(database, owner, selection)
+    set_v1_policy(database, owner)
+    before = rpc(database, "island_economy_progression_state", member, *keys(initial))
+    assert mutate(database, member, initial, "retired01", intent) == {
+        "status": "refused",
+        "reason": "recovery_option_retired",
+    }
+    assert count_claims(database, member, "retired01") == 0
+    assert rpc(database, "island_economy_progression_state", member, *keys(initial)) == before
+
+
+@pytest.mark.parametrize("selection", ["workshop", "quick_mend", "mason_drill"])
+def test_non_v1_policy_keeps_existing_repair_choice_catalogue_behavior(database, selection):
+    owner, member, _, initial = setup(database)
+    intent = repair_choice(database, owner, selection)
+    original = mutate(database, member, initial, "legacyv01", intent)
+    assert original["status"] == "done"
+    set_v1_policy(database, owner)
+    replay = mutate(database, member, initial, "legacyv01", intent)
+    assert replay["repeat"] is True and replay["receipt"] == original["receipt"]
+    assert money(replay) == money(original)
+
+
+def test_v1_policy_preserves_old_workshop_receipt_stored_role_and_unrelated_progression(database):
+    owner, member, _, initial = setup(database)
+    expected = add_building(database, owner, "house", 2, "house_1")
+    intent = skill(expected, "workshop", "house_1")
+    original = mutate(database, member, initial, "workshop1", intent)
+    set_v1_policy(database, owner)
+    assert mutate(database, member, initial, "workshop1", intent)["receipt"] == original["receipt"]
+    assert building_state(database, owner, "house_1")["spec"] == "workshop"
+    assert (
+        mutate(
+            database,
+            member,
+            initial,
+            "unchanged1",
+            skill(building_state(database, owner, "house_1"), "workshop", "house_1"),
+        )["status"]
+        == "done"
+    )
+
+    assert (
+        mutate(
+            database,
+            member,
+            initial,
+            "tavern001",
+            skill(building_state(database, owner, "house_1"), "tavern", "house_1"),
+        )["status"]
+        == "done"
+    )
+    assert (
+        mutate(
+            database,
+            member,
+            initial,
+            "barracks1",
+            skill(building_state(database, owner, "house_1"), "barracks", "house_1"),
+        )["status"]
+        == "done"
+    )
+    assert (
+        mutate(
+            database,
+            member,
+            initial,
+            "wreck001",
+            {"action": "wreck", "amount": 25, "quotedCoins": "25"},
+        )["status"]
+        == "done"
+    )
+
+
+def test_existing_retired_wall_choices_allow_later_tiers_and_keep_bastion_hp(database):
+    owner, member, _, initial = setup(database)
+    wall_research(database, owner)
+    entry = next(entry for entry in CATALOGUE.research if entry.branch == "wall")
+    mason = research(
+        branch="wall",
+        tier=2,
+        choice="mason_drill",
+        expected=research_state(database, owner, "wall"),
+        quotedCoins=str(entry.price_of(2)),
+    )
+    original = mutate(database, member, initial, "oldmason1", mason)
+    add_building(database, owner, "wall", 1, "wall_1", "quick_mend")
+    set_v1_policy(database, owner)
+    assert mutate(database, member, initial, "oldmason1", mason)["receipt"] == original["receipt"]
+    assert building_state(database, owner, "wall_1")["spec"] == "quick_mend"
+    unchanged = mutate(
+        database,
+        member,
+        initial,
+        "unchanged1",
+        skill(building_state(database, owner, "wall_1"), "quick_mend", "wall_1"),
+    )
+    assert unchanged["receipt"]["result"]["chargedCoins"] == "0"
+    third = research(
+        branch="wall",
+        tier=3,
+        choice="bastion",
+        expected=research_state(database, owner, "wall"),
+        quotedCoins=str(entry.price_of(3)),
+    )
+    assert mutate(database, member, initial, "tierthree", third)["status"] == "done"
+    assert research_state(database, owner, "wall")["choice2"] == "mason_drill"
+    assert (
+        mutate(
+            database,
+            member,
+            initial,
+            "bastion01",
+            skill(building_state(database, owner, "wall_1"), "bastion", "wall_1"),
+        )["status"]
+        == "done"
+    )
+    assert database.execute(
+        "select max_hp from public.island_structure_health where island_owner=%s and spot='wall_1'",
+        (owner,),
+    ).fetchone() == (90,)
+
+
+def test_rule_metadata_cannot_downgrade_the_targets_saved_v1_policy(database):
+    owner, member, _, initial = setup(database)
+    intent = repair_choice(database, owner, "workshop")
+    set_v1_policy(database, owner)
+    rule = {**catalogue_rule(CATALOGUE, parse_intent(intent)), "recoveryVersion": 0}
+    assert mutate(database, member, initial, "downgrade1", intent, rule=rule) == {
+        "status": "refused",
+        "reason": "recovery_option_retired",
+    }
+    assert count_claims(database, member, "downgrade1") == 0
+
+
+@pytest.mark.parametrize("change", ["retired_replaced", "pointer_replaced", "paused"])
+def test_old_receipt_retry_exposes_no_current_state_after_origin_becomes_inactive(database, change):
+    owner, member, _, initial = setup(database)
+    original, intent = research_step(database, member, owner, initial, "research01")
+    account, _ = keys(initial)
+    as_owner(database)
+    if change == "paused":
+        database.execute(
+            "update public.island_economy_state set admission_state='paused' where island_owner=%s",
+            (owner,),
+        )
+    else:
+        if change == "retired_replaced":
+            database.execute(
+                "update public.island_economy_accounts set state='retired', "
+                "retired_at=clock_timestamp() where id=%s",
+                (account,),
+            )
+        replacement, epoch = uuid4(), uuid4()
+        database.execute(
+            "insert into public.island_economy_accounts(id,island_owner,run_epoch) "
+            "values(%s,%s,%s)",
+            (replacement, owner, epoch),
+        )
+        database.execute(
+            "update public.island_economy_state set current_account_id=%s,run_epoch=%s "
+            "where island_owner=%s",
+            (replacement, epoch, owner),
+        )
+    as_server(database)
+    retry = mutate(database, member, initial, "research01", intent)
+    assert retry["repeat"] is True and retry["receipt"] == original["receipt"]
+    assert retry["currentEconomy"] is None
+    assert rpc(database, "island_economy_progression_state", member, *keys(initial)) == {
+        "status": "refused",
+        "reason": "path_unavailable",
+    }
+
+
+@pytest.mark.parametrize("action", ["specialise", "tower_tree"])
+def test_current_direct_spot_unlock_blocks_new_charge_but_keeps_original_replay(database, action):
+    owner, member, _, initial = setup(database, wave=20)
+    research_step(database, member, owner, initial, "research01")
+    expected = add_building(database, owner)
+    intent = skill(expected) if action == "specialise" else tree(expected)
+    changed = replace(
+        CATALOGUE,
+        spots=tuple(
+            replace(spot, unlock_wave=40) if spot.id == "cannon_1" else spot
+            for spot in CATALOGUE.spots
+        ),
+    )
+    rule = catalogue_rule(changed, parse_intent(intent))
+    before = rpc(database, "island_economy_progression_state", member, *keys(initial))
+    assert mutate(database, member, initial, "locked001", intent, rule=rule) == {
+        "status": "refused",
+        "reason": "locked",
+    }
+    assert count_claims(database, member, "locked001") == 0
+    assert rpc(database, "island_economy_progression_state", member, *keys(initial)) == before
+    original = mutate(database, member, initial, "original1", intent)
+    assert original["status"] == "done"
+    assert (
+        mutate(database, member, initial, "original1", intent, rule=rule)["receipt"]
+        == original["receipt"]
+    )
