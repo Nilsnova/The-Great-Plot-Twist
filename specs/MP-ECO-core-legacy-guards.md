@@ -42,7 +42,7 @@ Private aliases are captured only if absent; a wrapper must never be captured as
 
 ## Dependencies and boundaries
 
-Use the current MP-ECO-02 treasury/scope primitives and MP-ECO-07 global personal guard. The tested dependency cut is published treasury `feca459f` (schema migration version `20261118050050`), personal Captain `ba351aa3`, construction `c6f9a47b` with its grant protection in `6646a842`, and main `3482c281`. MP-ECO-04 provides its self-contained `20261118050401` construction/kit guards and actor/target ordering protection; this migration does not define a kit wrapper or kit alias. This migration does not rewrite those functions or install the separate coherent snapshot migration.
+Use the current MP-ECO-02 treasury/scope primitives and MP-ECO-07 global personal guard. The tested dependency cut is published treasury `feca459f` (schema migration version `20261118050050`), personal Captain `4005fb53`, construction `9191a698` with its grant protection in `6646a842`, and main `3482c281`. MP-ECO-04 provides its self-contained `20261118050401` construction/kit guards and actor/target ordering protection; this migration does not define a kit wrapper or kit alias. This migration does not rewrite those functions or install the separate coherent snapshot migration.
 
 No wave, arsenal, paid-repair, deletion or historical completion API is invented. Their canonical session, frozen loadout, source settlement and retention integrations remain explicit gates. Unsupported legacy personal/reset actions may refuse after adoption while their stored historical receipts remain unchanged. Kit grants are ordinary original private-origin rewards and never transfer into a treasury.
 
@@ -57,29 +57,23 @@ No wave, arsenal, paid-repair, deletion or historical completion API is invented
 
 ## Verification
 
-The direct negative regression selection was first observed as **10 failed** against the unguarded database. The current **34 core PostgreSQL cases** pass within the combined checks below, including the required private construction-kit alias and absence of a core-kit alias. That dependency check was also observed failing before the construction grant protection was present. Races observe actual PostgreSQL advisory/transaction lock waits on separate connections; a timed future alone is not counted as proof of entering the gate. No test-only replacement grant, profile hook or construction function is installed.
+The direct negative regression selection was first observed as **10 failed** against the unguarded database. The current **34 core PostgreSQL cases** pass within the combined checks below, including the required private construction-kit alias and absence of a core-kit alias. That dependency check was observed failing before construction contained its grant protection. Races observe actual PostgreSQL advisory/transaction lock waits on separate connections; a timed future alone is not proof of entering the gate. No test-only replacement grant, profile hook or construction function is installed.
 
-Commands below ran from `backend/` with locked dependencies and a writable UV cache:
-
-```bash
-CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' --with pglast pytest -q server/tests/island_sql/test_economy_core_legacy_guards_sql.py server/tests/island_sql/test_economy_core_legacy_guard_races_sql.py server/tests/island_sql/test_island_treasury_sql.py server/tests/island_sql/test_economy_operations_sql.py server/tests/island_sql/test_economy_operations_cutover_sql.py server/tests/island_sql/test_personal_captain_sql.py server/tests/island_sql/test_personal_captain_operations_sql.py server/tests/island_sql/test_shared_construction_sql.py server/tests/island_sql/test_shared_construction_grant_races_sql.py
-```
-
-**182 passed in 38.72s.**
+Commands ran from `backend/` with locked dependencies and a writable UV cache:
 
 ```bash
-CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' --with pglast pytest -q server/tests/island_sql/test_tower_defense_sql.py server/tests/island_sql/test_captain_skills_sql.py server/tests/island_sql/test_captain_tree_sql.py server/tests/island_sql/test_respec_and_wave_guards_sql.py server/tests/island_sql/test_island_fresh_start_sql.py server/tests/island_sql/test_islands_and_waves_sql.py
+CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' --with pglast pytest -q server/tests/island_sql/test_economy_core_legacy_guards_sql.py server/tests/island_sql/test_economy_core_legacy_guard_races_sql.py server/tests/island_sql/test_island_treasury_sql.py server/tests/island_sql/test_economy_operations_sql.py server/tests/island_sql/test_economy_operations_cutover_sql.py server/tests/island_sql/test_personal_captain_sql.py server/tests/island_sql/test_personal_captain_operations_sql.py server/tests/island_sql/test_shared_construction_sql.py server/tests/island_sql/test_shared_construction_grant_races_sql.py server/tests/island_sql/test_tower_defense_sql.py server/tests/island_sql/test_captain_skills_sql.py server/tests/island_sql/test_captain_tree_sql.py server/tests/island_sql/test_respec_and_wave_guards_sql.py server/tests/island_sql/test_island_fresh_start_sql.py server/tests/island_sql/test_islands_and_waves_sql.py
 ```
 
-**79 passed in 4.89s.** These two invocations deliberately use fresh disposable processes. An earlier combined run produced 252 passes and two legacy global-count failures because existing Captain race fixtures retain committed synthetic rows in the shared cluster. Running the unchanged legacy assertions in their clean process passed; no production guard or assertion was weakened. Both new core modules register their own isolated race fixture.
+**261 passed in 39.35s in one process**, followed by backend-wide Ruff passing. This includes the unchanged legacy global-count assertions alongside committed financial/personal races. The personal dependency isolates its committed race fixtures per module; no global fixture or assertion was weakened. All 74 migrations apply twice.
 
-The construction dependency was also independently checked with `20261118050701` absent: `CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql/test_shared_construction_grant_races_sql.py` gave **7 passed in 5.31s**. These real intro/demo grant versus visiting build/upgrade cases, reverse ordering, first-ending replay and alias permissions establish that construction does not depend on a later core migration for its grant ordering.
+The construction dependency was also checked independently with `20261118050701` absent: `CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql/test_shared_construction_grant_races_sql.py` gave **7 passed in 5.31s**. These real intro/demo grant versus visiting build/upgrade cases, reverse ordering, first-ending replay and alias permissions establish that construction does not depend on a later core migration for its grant ordering.
 
 ```bash
 uv run pytest -q server/tests/test_island_routes.py server/tests/test_personal_captain.py server/tests/test_captain_progression_routes.py server/tests/test_referee.py server/tests/test_entry_kits.py server/tests/test_entry_profiles_match_migration.py server/tests/test_demo_join.py server/tests/test_demo_gate.py server/tests/test_islet_routes.py server/tests/test_islet_store.py server/tests/test_migration_versions.py
 uv run ruff check .
 ```
 
-**450 passed in 15.72s; backend-wide Ruff passed.** The documented PostgreSQL parser accepted all **74 migration files with 74 unique versions**. The scratch runner executes the complete chain twice. Own new files pass `git diff --check`; unrelated incoming evidence whitespace was not edited.
+**450 passed in 15.72s; backend-wide Ruff passed.** The PostgreSQL parser accepted **74 migration files with 74 unique versions**. The final personal dependency refresh changed only two SQL-test fixture imports and its verification text; the final construction refresh changed verification text only. No runtime or SQL source changed after the checks above. Own new files pass `git diff --check`; unrelated incoming evidence whitespace was not edited.
 
-No live credentials/database, Supabase migration-history application, complete browser suite or exhaustive unrelated backend matrix was used. Migration-version allocation and deployment readiness still require the release checks; direct execution of SQL files is not a test of Supabase migration-history bookkeeping. Core HTTP dispatch, canonical sessions/arsenal/repair/settlements and authenticated multi-client acceptance remain outside this guard foundation.
+No live credentials/database, Supabase migration-history application, complete browser suite or exhaustive unrelated backend matrix was used. Direct execution and unique filenames are not a test of Supabase migration-history bookkeeping. Core HTTP dispatch, canonical sessions/arsenal/repair/settlements and authenticated multi-client acceptance remain outside this guard foundation.
