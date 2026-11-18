@@ -4,7 +4,8 @@ What this is: review evidence and a code walkthrough for [task #453](https://git
 Who uses it: Ianno and the human peer reviewer, before publication and merge.
 
 Branch: `feat/captain-combat-feedback`. PR: [#475](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/475).
-Current screenshot source: `203c696a`; runtime integration: `c03b3eb8`, with main through `db573347`.
+Current screenshot source: `a881b551`; current-main reconciliation: `4fe16d9f`, including main `03e660fe`.
+The range correction is `9bd60e0c`; narrow touch layout is `580d07de`/`ea58fc8a`; narrator clearance is `a881b551`.
 Landscape control-column follow-up: `21440b26`; this affects neither desktop nor portrait capture dimensions.
 This revision follows Ianno's request to make the parchment range slightly easier to see.
 The earlier request for a quieter radius and visual-only shot confirmation still applies.
@@ -13,15 +14,17 @@ was reconciled with those changes. CF1's decision is D068 (main already owns D06
 The new village artwork and WebP shipping update come from main; this feature changes only combat feedback.
 The original blue design and previous parchment captures remain as historical evidence.
 The latest arcs have thicker warm parchment strokes with a darker backing so they remain legible over grass and paths.
-Ianno reviewed runtime `79bb6762` before publication; current projection-integration changes require human peer review.
+Ianno reviewed runtime `79bb6762` before publication; the latest reconciliation and reviewer fixes require renewed human peer approval.
 All three explain-back questions are completed. Ianno reviewed the changes and
 explicitly authorized PR publication on 18 November 2026. [Task #453](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/453)
-tracks the published PR and its status. Independent human peer review and merge remain pending.
+tracks the published PR and its status. A teammate review was reported by Ianno. The posted review identified two issues,
+now corrected; approval of the updated branch and merge remain pending.
 
 ## What the player sees
 
 Hover or focus the fire button, hold F, or attempt a shot to reveal the current
-weapon's reach. In multiplayer each browser shows only its own captain's range,
+weapon's reach. A recent explicit attempt chooses the gun or cutlass display until it expires,
+even if an enemy is within ambient cutlass reach. In multiplayer each browser shows only its own captain's range,
 using its own position and loadout; teammate attacks never reveal their range. Refused attempts reveal it too. The display uses twelve short parchment arcs with large gaps, following the captain,
 level, weapon and range skills, then fades after 1.2 seconds plus a 0.4-second fade.
 The last manual slash can briefly show cutlass reach. Bomb reach describes throw
@@ -57,26 +60,26 @@ before Play, preventing unrelated queued onboarding from intercepting combat inp
 The fixture hides the already-seen first-wave teaching hint. No HP, hit, victory,
 clock or simulation result is forced. Screenshots compare the same setup at live
 simulation times recorded in [before-report.json](before-report.json) and
-[current after-report.json](visibility/after-report.json); they are not identical paused frames.
+[current after-report.json](review-range/after-report.json); they are not identical paused frames.
 These reports also record source, browser, quality/DPR and any dirty files.
 
 | View | Previous blue design | Current parchment design |
 |---|---|---|
-| Range, 1280×720 | [Previous](after-range-1280x720.png) | [Current](visibility/after-range-1280x720.png) |
-| Range, 375×812 | [Previous](after-range-375x812.png) | [Current](visibility/after-range-375x812.png) |
-| Shot impact, 1280×720 | — | [Current, no damage label](visibility/after-impact-1280x720.png) |
-| Shot impact, 375×812 | — | [Current, no damage label](visibility/after-impact-375x812.png) |
-| Danger, 1280×720 | [Previous](after-danger-1280x720.png) | [Current](visibility/after-danger-1280x720.png) |
-| Danger, 375×812 | [Previous](after-danger-375x812.png) | [Current](visibility/after-danger-375x812.png) |
+| Range, 1280×720 | [Previous](after-range-1280x720.png) | [Current](review-range/after-range-1280x720.png) |
+| Range, 375×812 | [Previous](after-range-375x812.png) | [Current](review-range/after-range-375x812.png) |
+| Shot impact, 1280×720 | — | [Current, no damage label](review-range/after-impact-1280x720.png) |
+| Shot impact, 375×812 | — | [Current, no damage label](review-range/after-impact-375x812.png) |
+| Danger, 1280×720 | [Previous](after-danger-1280x720.png) | [Current](review-range/after-danger-1280x720.png) |
+| Danger, 375×812 | [Previous](after-danger-375x812.png) | [Current](review-range/after-danger-375x812.png) |
 
 Original main before this feature: [desktop range](before-range-1280x720.png),
 [phone range](before-range-375x812.png), [desktop danger](before-danger-1280x720.png),
 [phone danger](before-danger-375x812.png). The earlier [written confirmation](after-hit-1280x720.png)
 is retained only as superseded review history; it is absent from the current game.
 
-![Quiet contextual range on desktop](visibility/after-range-1280x720.png)
+![Quiet contextual range on desktop](review-range/after-range-1280x720.png)
 
-![Shot feedback on a phone without a written damage confirmation](visibility/after-impact-375x812.png)
+![Shot feedback on a phone without a written damage confirmation](review-range/after-impact-375x812.png)
 
 ## Code walkthrough
 
@@ -95,6 +98,41 @@ is retained only as superseded review history; it is absent from the current gam
   it disposes all geometry/materials on stop.
 - `audio/pirates.js` plays the alert on the existing effects bus. It does not add
   another caption over the warning or change other audio preferences.
+
+## Reviewer fixes and current-main reconciliation
+
+[The posted review](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/475#pullrequestreview-5959325841)
+found that a nearby boarder overrode an explicitly targeted musket shot, and a
+narrator fallback could hide the danger instruction on a small phone. Both are fixed.
+
+The recent firing attempt now determines range mode until expiry; a nearby enemy's
+ambient cutlass hint resumes afterward. An accepted ship shot with a real boarder
+within cutlass reach now keeps Musket range 14 and its direction point. Accepted
+and refused gun attempts are covered. [Two expected failures before the correction](review-range/range-before.txt)
+record the original unit and controller defect; combat inputs and pose handling were not changed.
+
+The narrator yields only when its measured rectangle covers a visible danger
+instruction. The same still-active line and Skip return when space is available;
+existing reading/audio timers continue, so expired lines are not replayed. Normal
+and large text use the same priority. Portrait touch Fire stays below the measured
+wave bar, and the expanded range panel reserves the joystick column.
+
+[Phone component reproductions and compatibility details](review-narrator/README.md)
+include normal/large 320×568, weather expansion at 375×812, and an explicit manual
+composition with open PR #489. That draft was not merged. These pictures are native
+production-component fixtures, distinct from the actual fake-game captures above.
+
+Main `03e660fe` was merged into the task branch after preserving the teammate's
+`79629587` reconciliation. The only conflict was STATUS. Both histories are kept,
+including six prior T55 entries that the upstream automatic merge removed. Upstream
+weapon art, poses, shot art, simulation and live-input feedback remain byte-identical
+to the merged main. CF1 is now D068; older branch-local decision labels remain history.
+
+- [Combined focused suite](review-range/combined-tests.txt): **224 tests pass across 21 files**, including real accepted-shot range, private multiplayer range, pose/render/replay, warnings/audio, native touch/narrator/HUD, and reviewed text.
+- [Actual-game check](review-range/native-feedback.txt): **14 checks pass**, six fresh desktop/phone captures, no uncaught browser errors. [Source and fixture report](review-range/after-report.json).
+- [Overlap audit](review-range/overlaps.txt): **21 state/viewport checks pass**; three later-wave first-hint states remain deliberately skipped under main's rule. Real touch 320×568 coverage is in the focused component regression.
+- [Build/spoiler guard](review-range/build.txt) and [budget](review-range/budget-summary.json) pass.
+- Independent read-only code/visual review found no blocking issue. No fresh full-suite, broad accessibility/demo, physical-device or live-multiplayer pass is claimed. Current human approval of these fixes and merge remain separate.
 
 ## Own-captain range in multiplayer
 

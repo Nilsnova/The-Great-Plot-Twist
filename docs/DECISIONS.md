@@ -1262,3 +1262,8 @@ Ianno found the current parchment arcs barely visible and requested a slight inc
 ### CF1 range visibility is private to the local captain · 2026-11-18
 
 Ianno explicitly requires each multiplayer browser to show only its own captain's weapon range. Range intent comes from that browser's fire/preview actions and uses its own position and weapon/skill stats. Teammate room, presence and journal events continue to draw shooting/impact effects without showing or changing range. The current implementation already follows this rule; add host/visitor and recovery regressions rather than duplicate ownership state. Current screenshots and completed explain-back answers remain valid. No merge or deployment is authorized.
+
+
+### CF1 reviewer follow-up and current-main reconciliation · 2026-11-18
+
+The posted review of PR #475 found two presentation defects. Until a recent explicit attempt expires, use that attempt's gun/cutlass mode rather than the ambient nearby-boarder hint; keep current weapon/skill radius and the gun direction cap. Temporarily suppress only a narrator caption whose measured bounds cover a visible acute instruction, retaining its still-active text/Skip and accessibility state for restoration. Narration timers continue; no expired line replay is added. Keep portrait touch Fire below the measured bar and reserve the joystick column when range text expands. Preserve current-main pose/weapon/simulation work and both STATUS histories when resolving the task branch conflict with `03e660fe`. CF1 remains D068. The prior teammate review is historical; the updated fixes need current human approval. No quiz restart, merge into main or deployment is authorized.

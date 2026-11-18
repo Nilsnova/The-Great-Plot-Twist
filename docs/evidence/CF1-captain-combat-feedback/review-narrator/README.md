@@ -33,3 +33,7 @@ Chromium headless on Linux, CSS viewports named below, real touch media, reduced
 | 375×812 current task source | [Caption covers the warning](375x812-current-before.png) | [Both fit without suppressing the caption](375x812-current-after.png) |
 
 Full game, full frontend/build and broader browser checks belong to the combined integration verification. No PR publication, main update, merge or deployment was performed by this fix writer.
+
+## Combined task-branch verification
+
+The integration owner cherry-picked this fix as `a881b551` and retained both source/control layout changes. The [recorded combined run](../review-range/combined-tests.txt) passes 224 tests across 21 files, including all current narrator/touch cases; [build](../review-range/build.txt), [actual-game checks](../review-range/native-feedback.txt) and [overlaps](../review-range/overlaps.txt) also pass. The isolated helper counts above came from retained tool output rather than saved raw files; the manually composed #489 check remains a bounded compatibility observation, not an automatic-merge or full-game claim.
