@@ -67,6 +67,49 @@ function readField(image) {
   if (key) fieldCache.set(key, field);
   return field;
 }
+// The sea's own outline. The shader discards every pixel the coast field calls land, but a discarded
+// pixel still runs the whole shader first, and the land fills most of the screen. So the sea is drawn
+// only over cells (1 x 1 backdrop unit, merged into runs per row) that hold at least one non-land
+// texel the bilinear lookup can reach (one texel of margin), plus a frame around the backdrop out to
+// the old 400 x 300 plane. Every pixel the old full plane kept is still drawn (same up to float rounding).
+const SEA_W = 400, SEA_H = 300, CELL = FIELD_PX; // one cell = 4 texels = 1 backdrop unit
+export function seaOutline(field, matrixWorld, width = FIELD_W, height = FIELD_H) {
+  const columns = width / CELL, rows = height / CELL, local = [], cellW = BACKDROP.width / columns, cellH = BACKDROP.height / rows;
+  const water = (x0, y0, x1, y1) => {
+    for (let y = Math.max(0, y0); y <= Math.min(height - 1, y1); y++)
+      for (let x = Math.max(0, x0); x <= Math.min(width - 1, x1); x++) if (field[y * width + x]) return true;
+    return false;
+  };
+  const quad = (x0, y0, x1, y1) => local.push(x0, y0, x1, y0, x1, y1, x0, y0, x1, y1, x0, y1);
+  const left = -BACKDROP.width / 2, bottom = -BACKDROP.height / 2;
+  for (let row = 0; row < rows; row++) {
+    let start = -1;
+    for (let column = 0; column <= columns; column++) {
+      const keep = column < columns && water(column * CELL - 2, row * CELL - 2, column * CELL + CELL + 1, row * CELL + CELL + 1);
+      if (keep && start < 0) start = column;
+      if (!keep && start >= 0) {
+        quad(left + start * cellW, bottom + row * cellH, left + column * cellW, bottom + (row + 1) * cellH); start = -1;
+      }
+    }
+  }
+  // The frame: the old plane's corners in backdrop coordinates bound it (the ground may be sheared).
+  const inverse = matrixWorld.clone().invert(), corner = new THREE.Vector3();
+  let minX = left, minY = bottom, maxX = -left, maxY = -bottom;
+  for (const [x, y] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
+    corner.set(x * SEA_W / 2, y * SEA_H / 2, 0).applyMatrix4(inverse);
+    minX = Math.min(minX, corner.x); maxX = Math.max(maxX, corner.x); minY = Math.min(minY, corner.y); maxY = Math.max(maxY, corner.y);
+  }
+  quad(minX, minY, left, maxY); quad(-left, minY, maxX, maxY); quad(left, minY, -left, bottom); quad(left, -bottom, -left, maxY);
+  const positions = new Float32Array(local.length / 2 * 3), point = new THREE.Vector3();
+  for (let i = 0; i < local.length / 2; i++) {
+    point.set(local[i * 2], local[i * 2 + 1], 0).applyMatrix4(matrixWorld);
+    positions[i * 3] = point.x; positions[i * 3 + 1] = point.y;
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  return geometry;
+}
+const openSea = () => new THREE.PlaneGeometry(SEA_W, SEA_H);
 // The place's ground plane: the 64 x 48 backdrop drawn under the scenery.
 function findBackdrop(group) {
   let found = null;
@@ -161,10 +204,11 @@ export function createWater(scene) {
   const uniforms = { ...seaUniforms };
   for (const [key, value] of Object.entries(colours)) uniforms[key] = { value: new THREE.Color(value) };
   const material = new THREE.ShaderMaterial({ uniforms, vertexShader: worldVertex, fragmentShader: fragment,
-    depthTest: false, depthWrite: false, toneMapped: false });
-  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(400, 300), material);
+    depthTest: false, depthWrite: false, toneMapped: false, side: THREE.DoubleSide }); // the outline follows the ground's own (maybe mirrored) frame
+  const mesh = new THREE.Mesh(openSea(), material);
   mesh.name = 'sea'; mesh.renderOrder = -10; mesh.frustumCulled = false; scene.add(mesh);
   let detail = 1;
+  const outline = geometry => { mesh.geometry.dispose(); mesh.geometry = geometry; };
   return {
     mesh,
     setQuality(name) { detail = QUALITY[name]?.waveMarks >= 160 ? 1 : 0; seaUniforms.uDetail.value = detail; },
@@ -173,13 +217,15 @@ export function createWater(scene) {
       const backdrop = findBackdrop(group);
       try {
         if (!backdrop) throw new Error('no backdrop');
-        coastTexture.image.data.set(readField(backdrop.material.map.image));
+        const field = readField(backdrop.material.map.image);
+        coastTexture.image.data.set(field);
         backdrop.updateWorldMatrix(true, false);
+        outline(seaOutline(field, backdrop.matrixWorld));
         const origin = new THREE.Vector3().setFromMatrixPosition(backdrop.matrixWorld);
         seaUniforms.uCoastUv.value.copy(coastUvMatrix(backdrop.matrixWorld, BACKDROP.width, BACKDROP.height));
         seaUniforms.uCoastRect.value.set(origin.x - BACKDROP.width / 2, origin.y - BACKDROP.height / 2, BACKDROP.width, BACKDROP.height);
         seaUniforms.uCoastOn.value = 1;
-      } catch { coastTexture.image.data.fill(255); seaUniforms.uCoastOn.value = 0; }
+      } catch { coastTexture.image.data.fill(255); seaUniforms.uCoastOn.value = 0; outline(openSea()); }
       coastTexture.needsUpdate = true;
     },
     update(time, weather) {

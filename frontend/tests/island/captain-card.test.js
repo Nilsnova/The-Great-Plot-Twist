@@ -1,18 +1,17 @@
-// Menu › Captain and skills in real Chromium with the fake server (TOWER-DEFENSE.md §10, §14, §15): the
-// three tabs, the skill tree's states and points, learning a skill, the tier order, and the weapon shop
-// (locked, buy, equip). The same shapes the real server answers.
+// Menu › Captain and skills in real Chromium with the fake server (TOWER-DEFENSE.md §10, §14): the two
+// tabs, the skill tree's states and points, learning a skill and the tier order (weapons are in the arsenal,
+// arsenal-dom.test.js). The same shapes the real server answers.
 import {expect, it} from 'vitest';
 import {browserHarness} from '../g20-browser.js';
 const evaluate = browserHarness();
 
-it('the skill tree: points from won waves, learn, tier order, no points; the weapon shop: locked, buy, equip', async () => {
+it('the skill tree: points from won waves, learn, tier order, no points', async () => {
   const result = await evaluate(async () => {
     const {createIsland} = await window.g20Import('/src/island/index.js');
     const {createFakeIslandTransport} = await window.g20Import('/src/pirates/fake-api.js');
     const {on, emit} = await window.g20Import('/src/core/events.js');
-    const learned = [], equipped = [];
+    const learned = [];
     on('captain_skill_learned', event => learned.push(event.skill));
-    on('captain_weapon_equipped', event => equipped.push(event.weapon));
     const transport = createFakeIslandTransport();
     const entries = [];
     const island = createIsland({container: document.body, emit, on, mode: 'fake', transport, storage: null,
@@ -51,21 +50,13 @@ it('the skill tree: points from won waves, learn, tier order, no points; the wea
     const linked = [...card().querySelectorAll('.island-branch-marksman .island-tier')].map(item => item.classList.contains('is-linked'));
     // The server refuses the tier order too.
     const refused = await island.api.learnSkill({skill: 'second_wind'});
-
-    // The weapon shop.
-    tab('weapons').click();
-    const rows = () => [...card().querySelectorAll('.island-weapon')].map(row => `${row.dataset.weapon}:${row.querySelector('.kit-button').textContent}:${row.querySelector('.kit-button').disabled}`);
-    const shop = rows();
-    card().querySelector('[data-weapon="pistols"] .kit-button').click(); await wait(40);
-    const bought = {rows: rows(), toast: island.ui.toastText, coins: island.island.coins, loadout: island.captainLoadout()};
-    card().querySelector('[data-weapon="musket"] .kit-button').click(); await wait(40);
-    const back = {rows: rows(), toast: island.ui.toastText, loadout: island.captainLoadout()};
+    const loadout = island.captainLoadout();
     island.dispose();
-    return {title, tabs, fresh, two, lockedDetail, focusKept, afterLearn, noPoints, linked, refused, shop, bought, back, learned, equipped, entries};
+    return {title, tabs, fresh, two, lockedDetail, focusKept, afterLearn, noPoints, linked, refused, loadout, learned, entries};
   });
   expect(result.entries).toContain('Captain and skills');
   expect(result.title).toBe('Captain and skills');
-  expect(result.tabs).toEqual(['Captain', 'Skills', 'Weapons']);
+  expect(result.tabs).toEqual(['Captain', 'Skills']);
   expect(result.fresh.points).toBe('Skill points: 0');
   expect(result.fresh.heads).toEqual(['Marksman', 'Brawler', 'Shipwright']);
   expect(result.fresh.tree).toEqual(['steady_aim', 'long_barrel', 'hot_shot', 'quick_hands', 'far_sight', 'heavy_shot', 'dead_eye',
@@ -83,13 +74,6 @@ it('the skill tree: points from won waves, learn, tier order, no points; the wea
   expect(result.noPoints).toMatchObject({name: 'Long barrel', disabled: true, reason: 'Win new waves to earn skill points.'});
   expect(result.linked).toEqual([false, true, false, false, false]);
   expect(result.refused).toMatchObject({ok: false, status: 409, code: 'locked', message: 'Learn Sweep or Heavy blade first.'});
-  expect(result.shop).toEqual(['musket:Equipped:true', 'pistols:Buy · 🪙 60:false', 'blunderbuss:Buy · 🪙 120:true', 'long_rifle:Locked:true', 'fire_bombs:Locked:true']);
-  expect(result.bought.toast).toBe('Pistols bought and equipped · 🪙 40');
-  expect(result.bought.coins).toBe(40);
-  expect(result.bought.rows.slice(0, 2)).toEqual(['musket:Equip:false', 'pistols:Equipped:true']);
-  expect(result.bought.loadout).toEqual({level: 1, skills: ['steady_aim'], weapon: 'pistols', colour: 0});
-  expect(result.back.toast).toBe('Musket equipped. Your captain shoots with it now.');
-  expect(result.back.loadout.weapon).toBe('musket');
+  expect(result.loadout).toEqual({level: 1, skills: ['steady_aim'], weapon: 'musket', colour: 0});
   expect(result.learned).toEqual(['steady_aim']);
-  expect(result.equipped).toEqual(['musket']);
 });
