@@ -134,6 +134,12 @@ The nine committed PostgreSQL suites in the preceding verification command, incl
 
 Main `f606412f` is integrated without changing the existing personal prerequisite source. This correction changes no reward, price, membership or participation rule; canonical lifecycle/authority, conversion and authenticated shared-mode acceptance remain separate gates.
 
+### Committed-race fixture isolation
+
+The wave SQL module now explicitly registers the existing module-local `scratch_server` fixture, matching the personal and construction race modules. Its committed concurrency cases previously shared the directory-level server with unrelated legacy tests. Running the complete wave module followed by `test_islands_and_waves_sql.py::test_the_fresh_start_dry_run_reports_the_counts_and_changes_nothing` and `::test_the_fresh_start_sets_every_wallet_to_100_and_clears_the_progress` reproduced **2 failed, 43 passed in 9.13s**: the unchanged legacy checks found four islands instead of two.
+
+After the local fixture import, the identical one-process selection passed **45 tests in 9.46s**. The complete migration chain still applies twice; backend-wide Ruff and scoped whitespace checks passed. No global fixture, original assertion, production SQL or gameplay behavior changed. The preceding 163-case result remains the broader baseline before this test-only isolation correction.
+
 ## Reviewer
 
 A different human teammate must review the current change before merge. Last updated: 2026-11-18.

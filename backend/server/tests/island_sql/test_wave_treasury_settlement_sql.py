@@ -18,6 +18,7 @@ from psycopg.types.json import Jsonb  # noqa: E402
 from server.island.catalogue import load_island  # noqa: E402
 from server.island.personal_captain import configuration  # noqa: E402
 from server.island.wave_economy import freeze_reward_basis  # noqa: E402
+from server.tests.case_sql.conftest import scratch_server as scratch_server  # noqa: E402
 from server.tests.island_sql.test_island_treasury_sql import keys, money, rpc  # noqa: E402
 from server.tests.island_sql.test_islands_and_waves_sql import (  # noqa: E402
     as_owner,
