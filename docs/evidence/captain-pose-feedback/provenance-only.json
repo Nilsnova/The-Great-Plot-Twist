@@ -1,0 +1,159 @@
+{
+  "source": "37eb70fa plus the recorded task patch at this stage",
+  "trace": {
+    "started": 35241.39999999851,
+    "events": [
+      {
+        "at": 42471.59999999963,
+        "event": {
+          "type": "captain_fired",
+          "by": "p-coc5fju4",
+          "level": 1,
+          "weapon": "musket",
+          "mode": "single",
+          "damage": 6,
+          "reload": 1.2,
+          "x": 14,
+          "z": 0.13,
+          "t": 7.45,
+          "targetId": "ship_1",
+          "toX": 21.75,
+          "toZ": 0.2,
+          "impactAt": 7.62,
+          "targets": [
+            {
+              "id": "ship_1",
+              "toX": 21.75,
+              "toZ": 0.2,
+              "impactAt": 7.62
+            }
+          ]
+        },
+        "ticks": 166,
+        "afterNoteAt": 42485,
+        "pose": {
+          "kind": "musket",
+          "flip": false,
+          "angle": 0.004162925699317514,
+          "age": 0.011999845504760742
+        }
+      }
+    ],
+    "reads": [
+      {
+        "at": 42459.199999999255,
+        "by": "p-coc5fju4",
+        "value": null
+      },
+      {
+        "at": 43515.09999999963,
+        "by": "p-coc5fju4",
+        "value": null
+      },
+      {
+        "at": 44542.29999999888,
+        "by": "p-coc5fju4",
+        "value": null
+      }
+    ],
+    "renders": [
+      {
+        "at": 42459.89999999851,
+        "meshes": []
+      },
+      {
+        "at": 43515.79999999888,
+        "meshes": []
+      },
+      {
+        "at": 44542.89999999851,
+        "meshes": []
+      }
+    ],
+    "updates": [
+      {
+        "at": 42460.89999999851,
+        "end": 42485,
+        "before": 145,
+        "after": 166
+      },
+      {
+        "at": 43533.39999999851,
+        "end": 43546.29999999888,
+        "before": 166,
+        "after": 187
+      },
+      {
+        "at": 44544.09999999963,
+        "end": 44554.39999999851,
+        "before": 187,
+        "after": 207
+      }
+    ],
+    "raf": [
+      {
+        "at": 36388.199999999255,
+        "gap": 1146.800000000745,
+        "hidden": false
+      },
+      {
+        "at": 37150.29999999888,
+        "gap": 762.0999999996275,
+        "hidden": false
+      },
+      {
+        "at": 38230.59999999963,
+        "gap": 1080.300000000745,
+        "hidden": false
+      },
+      {
+        "at": 39320.09999999963,
+        "gap": 1089.5,
+        "hidden": false
+      },
+      {
+        "at": 40371.29999999888,
+        "gap": 1051.199999999255,
+        "hidden": false
+      },
+      {
+        "at": 41418.59999999963,
+        "gap": 1047.300000000745,
+        "hidden": false
+      },
+      {
+        "at": 42485.199999999255,
+        "gap": 1066.5999999996275,
+        "hidden": false
+      },
+      {
+        "at": 43546.39999999851,
+        "gap": 1061.199999999255,
+        "hidden": false
+      },
+      {
+        "at": 44554.5,
+        "gap": 1008.1000000014901,
+        "hidden": false
+      }
+    ],
+    "eligible": {
+      "at": 41516.5,
+      "waveId": "fake-wave-1",
+      "protocol": 1,
+      "recoveryVersion": 0,
+      "by": "p-coc5fju4",
+      "targetId": "ship_1",
+      "targetHp": 24,
+      "actorHp": 100,
+      "down": false,
+      "distance": 7.750919520792677,
+      "range": 14,
+      "phase": "running"
+    },
+    "submitted": true,
+    "shotAt": 41516.5
+  },
+  "errors": [],
+  "stage": "provenance-only"
+}

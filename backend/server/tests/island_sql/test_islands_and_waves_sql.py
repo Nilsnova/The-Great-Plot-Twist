@@ -63,7 +63,8 @@ def balance(database, player):
 
 def ledger(database, player, reason):
     return database.execute(
-        "select delta, ref from public.wallet_transactions where player_id = %s and reason = %s",
+        "select delta, ref from public.wallet_transactions "
+        "where player_id = %s and reason = %s order by id",
         (player, reason),
     ).fetchall()
 
