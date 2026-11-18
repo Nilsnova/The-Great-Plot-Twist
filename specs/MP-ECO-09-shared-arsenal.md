@@ -11,14 +11,14 @@
 ## Scope
 
 Add immutable inventory transitions for buying, taking, swapping and returning
-copies, and a bell-time loadout snapshot. Count every copy toward an explicitly
-supplied total capacity; preserve stock above that capacity and allow every
+copies, and a bell-time loadout snapshot. Count every copy toward the total
+capacity of 20; preserve stock above that capacity and allow every
 return. A purchase uses the island's best won wave and the existing catalogue.
 Every holder change advances a copy generation so an obsolete holder command
 cannot affect a later tenure. No transition moves money or writes persistence.
 
-The numeric capacity remains a required trusted policy input pending the common
-contract's decision. No default changes the existing legacy capacity.
+The numeric capacity remains 20, now counting stored and carried copies together.
+Legacy storage-capacity rules remain unchanged until versioned integration.
 
 ## Integration requirements
 
