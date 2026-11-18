@@ -63,8 +63,8 @@ export function paintCliffFaces(c, rows, materials = null) {
       [middle.x + .38, middle.y + middle.depth * .61]]), materials ? '#e0cfab' : '#d2bf98', .035, .7);
   }
   for (const fraction of [.34, .72]) {
-    stroke(c, path(rows, fraction), '#746850', .055, materials ? .4 : .65);
-    c.save(); c.translate(0, -.055); stroke(c, path(rows, fraction), '#d5c29a', .04, materials ? .45 : .65); c.restore();
+    stroke(c, path(rows, fraction), materials ? '#8e7e63' : '#746850', .055, .65);
+    c.save(); c.translate(0, -.055); stroke(c, path(rows, fraction), materials ? '#bfad8d' : '#d5c29a', .04, .65); c.restore();
   }
   c.restore();
 }
