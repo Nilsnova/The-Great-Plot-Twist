@@ -3,6 +3,7 @@
 Uses the complete migration chain twice, synthetic members, and real Captain hooks.
 """
 
+import json
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from threading import Barrier
@@ -14,8 +15,9 @@ psycopg = pytest.importorskip("psycopg")
 
 from psycopg.types.json import Jsonb  # noqa: E402
 
-from server.island.catalogue import load_island  # noqa: E402
+from server.island.catalogue import CAMPAIGN_FILE, CONTENT_FILE, load_island  # noqa: E402
 from server.island.construction_rules import catalogue_manifest  # noqa: E402
+from server.island.economy_operations import system_uid  # noqa: E402
 from server.tests.island_sql.test_island_treasury_sql import (  # noqa: E402
     keys,
     money,
@@ -112,6 +114,81 @@ def test_discount_purchase_and_half_actual_refund_share_the_island_account(datab
     assert torn["receipt"]["result"]["refundedCoins"] == "45"
     assert standing(database, owner) is None
     assert [balance(database, player) for player in (owner, member)] == wallets
+    reconciles(database, keys(treasury)[0])
+
+
+def test_valid_catalogue_levels_can_exceed_old_cumulative_storage_ceiling(database, tmp_path):
+    data = json.loads(CONTENT_FILE.read_text())
+    for kind in data["kinds"]:
+        if kind["kind"] == "wall":
+            kind["prices"] = [700000] * len(kind["prices"])
+    path = tmp_path / "islands.json"
+    path.write_text(json.dumps(data))
+    manifest = catalogue_manifest(load_island(path, CAMPAIGN_FILE))
+    owner, _, _, treasury, _ = initialized(database)
+    as_server(database)
+    rpc(
+        database,
+        "island_treasury_credit",
+        owner,
+        *keys(treasury),
+        system_uid(str(uuid4()), "loot"),
+        "pirate_loot",
+        "fixture:canonical",
+        3000000,
+    )
+    private_balance = balance(database, owner)
+    first = construct(database, owner, treasury, intent(coins="630000"), manifest=manifest)
+    second = construct(
+        database, owner, treasury, target(first, "upgrade", "630000"), manifest=manifest
+    )
+    assert second["status"] == "done", second
+    assert standing(database, owner)[3] == 1260000
+    assert (
+        second["receipt"]["result"]["engineerCommitmentId"]
+        == first["receipt"]["result"]["engineerCommitmentId"]
+    )
+    removed = construct(
+        database, owner, treasury, target(second, "demolish", "630000"), manifest=manifest
+    )
+    assert removed["receipt"]["result"]["refundedCoins"] == "630000"
+    assert money(removed) == (2370200, 0, 2370200)
+    assert balance(database, owner) == private_balance
+    reconciles(database, keys(treasury)[0])
+
+
+@pytest.mark.parametrize("value", ["NaN", "Infinity", "-Infinity", "1.5", "-1"])
+def test_cumulative_storage_rejects_nonfinite_fractional_and_negative_values(database, value):
+    owner, _, _, treasury, _ = initialized(database)
+    construct(database, owner, treasury)
+    as_owner(database)
+    with pytest.raises(psycopg.errors.CheckViolation), database.transaction():
+        database.execute(
+            "update public.islet_buildings set coins_paid=%s::numeric "
+            "where player_id=%s and plot='wall_1'",
+            (value, owner),
+        )
+    assert standing(database, owner)[3] == 9
+    reconciles(database, keys(treasury)[0])
+
+
+def test_refund_uses_actual_ledger_basis_despite_wide_legacy_total_or_changed_catalogue(database):
+    owner, _, _, treasury, _ = initialized(database)
+    built = construct(database, owner, treasury)
+    as_owner(database)
+    database.execute(
+        "update public.islet_buildings set coins_paid=%s::numeric "
+        "where player_id=%s and plot='wall_1'",
+        (str(2**80), owner),
+    )
+    assert standing(database, owner)[3] == 2**80
+    manifest = deepcopy(MANIFEST)
+    manifest["kinds"]["wall"]["prices"] = ["999999"] * 5
+    removed = construct(
+        database, owner, treasury, target(built, "demolish", "4"), manifest=manifest
+    )
+    assert removed["receipt"]["result"]["refundedCoins"] == "4"
+    assert money(removed) == (195, 0, 195)
     reconciles(database, keys(treasury)[0])
 
 
@@ -225,6 +302,44 @@ def test_departed_actor_only_receives_their_original_receipt(database):
         construct(database, member, treasury, intent(spot="wall_2", coins="10"))["reason"]
         == "not_member"
     )
+
+
+@pytest.mark.parametrize("change", ["retired_replaced", "pointer_replaced", "paused"])
+def test_inactive_origin_retry_keeps_own_receipt_without_current_projection(database, change):
+    owner, _, _, treasury, _ = initialized(database)
+    original = construct(database, owner, treasury, uid="historical1")
+    account, _ = keys(treasury)
+    as_owner(database)
+    if change == "paused":
+        database.execute(
+            "update public.island_economy_state set admission_state='paused' where island_owner=%s",
+            (owner,),
+        )
+    else:
+        if change == "retired_replaced":
+            database.execute(
+                "update public.island_economy_accounts set state='retired',"
+                "retired_at=clock_timestamp() where id=%s",
+                (account,),
+            )
+        replacement, epoch = uuid4(), uuid4()
+        database.execute(
+            "insert into public.island_economy_accounts(id,island_owner,run_epoch) "
+            "values(%s,%s,%s)",
+            (replacement, owner, epoch),
+        )
+        database.execute(
+            "update public.island_economy_state set current_account_id=%s,run_epoch=%s "
+            "where island_owner=%s",
+            (replacement, epoch, owner),
+        )
+    again = construct(database, owner, treasury, uid="historical1")
+    assert again["repeat"] is True and again["receipt"] == original["receipt"]
+    assert again["currentEconomy"] is None
+    assert (
+        construct(database, owner, treasury, intent(spot="wall_2"))["reason"] == "path_unavailable"
+    )
+    reconciles(database, account)
 
 
 def test_a_build_action_cannot_be_retargeted_to_another_island_account(database):
