@@ -433,7 +433,7 @@ export function wreckModel({campaign = null, coins = null, busy = null, message 
   const percent = Math.floor(paid / wreck.goal * 100);
   const sail = sailModel({campaign, done, boat, battle});
   const model = {title: sail.open ? 'Your ship' : 'The wreck', open, done, paid, goal: wreck.goal, percent, progress: `${coinText(paid)} of ${coinText(wreck.goal)}`,
-    line: !open ? lockedLine('wreck') : sail.open ? 'Sail her out and play. ★★★ pays the most, once per game after every won wave.'
+    line: !open ? lockedLine('wreck') : sail.open ? 'Attempts are free. Each game pays only for your first round with at least 1 star after a won wave. Later rounds pay no extra coins for a higher score. Win another wave to earn again.'
       : done ? 'Her hull is whole again, thanks to the whole crew.' : 'Pay a few coins into her repair after every wave. Anyone in the game can help.',
     gifts: [], message, coins: coins === null ? '' : `You have ${coinText(coins)}`, sail};
   if (!open || done) return model;
