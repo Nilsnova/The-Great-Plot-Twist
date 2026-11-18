@@ -2799,6 +2799,15 @@ catalog
 discount
 fully
 upgrading
+# T59: manually reviewed repair-policy words; max is the usual maximum abbreviation.
+retired
+max
+inactive
+structure
+six
+restored
+heals
+
 # WALL-37: reviewed American English for precise adjustment and the native summary element.
 fine
 summary
@@ -2816,3 +2825,13 @@ quote
 slots
 # WALL-44: undo is the standard American English verb for reversing the last draft edit.
 undo
+# CF1: reviewed combat feedback terms.
+bullets
+attacking
+attacks
+bomb
+enemy
+fired
+incoming
+limited
+warnings

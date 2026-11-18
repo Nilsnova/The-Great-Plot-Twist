@@ -3,10 +3,10 @@
 // a whole battery firing at once stays one clean thump instead of a wall of noise.
 import { BATTLE_CUES } from './battle-sounds.js';
 const GAP = { 'pirate-cannon': .07, 'pirate-cannon-manual': .05, 'pirate-splash': .09, 'pirate-hit': .06, 'pirate-wall': .12,
-  'pirate-mortar': .12, 'pirate-mortar-impact': .12, 'pirate-musket': .04, 'pirate-gunboat': .06, 'pirate-harpoon': .08, 'pirate-culverin': .12, 'pirate-horn': 1, 'pirate-slash': .08 };
+  'pirate-mortar': .12, 'pirate-mortar-impact': .12, 'pirate-musket': .04, 'pirate-gunboat': .06, 'pirate-harpoon': .08, 'pirate-culverin': .12, 'pirate-horn': 1, 'pirate-slash': .08, 'pirate-danger': 6 };
 export const PIRATE_CUES = ['pirate-cannon', 'pirate-cannon-manual', 'pirate-splash', 'pirate-hit', 'pirate-wall',
   'pirate-sunk', 'pirate-bell', 'pirate-victory', 'pirate-defeat', 'pirate-tick',
-  'pirate-mortar', 'pirate-mortar-impact', 'pirate-musket', 'pirate-horn', 'pirate-harpoon', 'pirate-gunboat', 'pirate-culverin', 'pirate-slash'];
+  'pirate-mortar', 'pirate-mortar-impact', 'pirate-musket', 'pirate-horn', 'pirate-harpoon', 'pirate-gunboat', 'pirate-culverin', 'pirate-slash', 'pirate-danger'];
 const CAPTIONS = {
   'pirate-bell': 'The pirate bell rings',
   'pirate-victory': 'Victory: the island holds',
@@ -22,7 +22,7 @@ export function createPirateSound({ synth, effects, music, caption = () => {}, n
     if (battle && BATTLE_CUES.includes(name)) {
       if (isMuted(battle.busOf(name))) return true;
       const t = now(), gap = GAP[name];
-      if (gap && t - (last.get(name) ?? -1) < gap) return false;
+      if (gap && t - (last.get(name) ?? -Infinity) < gap) return false;
       last.set(name, t);
       if (!battle.play(name, { effects, music })) return false;
       if (CAPTIONS[name]) caption(CAPTIONS[name]);
@@ -30,7 +30,7 @@ export function createPirateSound({ synth, effects, music, caption = () => {}, n
     }
     if (isMuted(name === 'pirate-defeat' ? 'music' : 'effects')) return true;
     const t = now(), gap = GAP[name];
-    if (gap && t - (last.get(name) ?? -1) < gap) return false;
+    if (gap && t - (last.get(name) ?? -Infinity) < gap) return false;
     last.set(name, t);
     switch (name) {
       case 'pirate-splash': synth.noise(effects, .32, .028, 1900); synth.noise(effects, .5, .015, 700); break;
@@ -40,6 +40,10 @@ export function createPirateSound({ synth, effects, music, caption = () => {}, n
       // The cutlass sweep: a high whoosh of air and a short ring of steel (the musket is a crack, the hit a thud).
       case 'pirate-slash': synth.noise(effects, .16, .04, 2800); synth.noise(effects, .1, .03, 1500); synth.tone(effects, 1320, .12, .012, 'triangle', .03); break;
       case 'pirate-tick': synth.tone(effects, 990, .06, .03, 'square'); break;
+      case 'pirate-danger':
+        synth.tone(effects, 660, .16, .045, 'triangle');
+        synth.tone(effects, 880, .18, .045, 'triangle', .18);
+        break;
       case 'pirate-bell':
         for (const delay of [0, .55]) {
           synth.tone(effects, 784, 1.7, .06, 'sine', delay);

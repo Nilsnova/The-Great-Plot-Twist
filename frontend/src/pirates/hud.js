@@ -43,7 +43,7 @@ export const DOWN_TITLE = 'You have fallen';
 export const downLine = alone => (alone ? 'every captain is down' : 'a teammate can hold E next to you');
 
 export function createWaveHud({ container, onAction = () => {}, onNext = () => {}, onAuto = () => {}, onShoot = () => {}, onHold = () => {},
-  onPromptHold = () => {}, reducedMotion = () => false }) {
+  onPromptHold = () => {}, onRangePreview = () => {}, reducedMotion = () => false }) {
   const layer = node('div', 'pirate-hud');
   const bar = node('div', 'pirate-bar'); bar.setAttribute('role', 'status');
   const label = node('span', 'pirate-bar-text'), meter = node('span', 'pirate-bar-meter'), fill = node('span', 'pirate-bar-fill');
@@ -104,6 +104,21 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
   const musketLabel = node('span', 'pirate-musket-label', musketText(true)), musketMeter = node('span', 'pirate-musket-meter');
   const musketFill = node('span', 'pirate-musket-fill'); musketMeter.append(musketFill); musketMeter.setAttribute('aria-hidden', 'true');
   musket.append(node('kbd', 'pirate-musket-key', 'F'), musketLabel, musketMeter);
+  const rangePanel = node('span', 'pirate-range-feedback'); rangePanel.hidden = true;
+  const rangeAnnouncement = node('span', 'pirate-quiet'); rangeAnnouncement.setAttribute('role', 'status');
+  rangeAnnouncement.setAttribute('aria-live', 'polite'); rangeAnnouncement.setAttribute('aria-atomic', 'true');
+  layer.append(rangeAnnouncement);
+  const rangeLabel = node('span', 'pirate-range-label'), rangeStatus = node('span', 'pirate-range-status');
+  rangePanel.append(rangeLabel, rangeStatus); musket.append(rangePanel);
+  let hovering = false, focused = false, lastRange = '', lastDanger = '';
+  const preview = () => onRangePreview(hovering || focused);
+  musket.addEventListener('pointerenter', event => { if (event.pointerType !== 'touch') { hovering = true; preview(); } });
+  musket.addEventListener('pointerleave', () => { hovering = false; preview(); });
+  musket.addEventListener('focus', () => { focused = true; preview(); });
+  musket.addEventListener('blur', () => { focused = false; hovering = false; preview(); onShoot(false); });
+  const danger = node('div', 'pirate-danger'); danger.hidden = true; danger.setAttribute('role', 'alert');
+  danger.setAttribute('aria-atomic', 'true');
+  const dangerTitle = node('strong'), dangerLine = node('span'); danger.append(dangerTitle, dangerLine); bar.append(danger);
   musket.setAttribute('aria-label', 'Fire your musket (F)');
   const release = () => onShoot(false);
   musket.addEventListener('pointerdown', event => { event.preventDefault(); try { musket.setPointerCapture(event.pointerId); } catch { /* old browsers */ } onShoot(true); });
@@ -266,6 +281,27 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
       musket.title = info.ready === true || blade ? '' : OUT_OF_RANGE;
       musket.classList.toggle('pirate-musket-idle', info.ready !== true);
       musketFill.style.width = `${Math.round(share * 100)}%`;
+    },
+    rangeFeedback(info) {
+      rangePanel.hidden = !info;
+      if (!info) { lastRange = ''; rangeAnnouncement.textContent = ''; musket.removeAttribute('aria-description'); return; }
+      rangePanel.style.opacity = String(reducedMotion() ? 1 : info.alpha);
+      const key = `${info.label}|${info.radius}|${info.status}`;
+      if (key === lastRange) return;
+      lastRange = key;
+      rangeLabel.textContent = `${info.label} · ${info.radius}`;
+      rangeStatus.textContent = info.status;
+      const spoken = `${rangeLabel.textContent}. ${info.status}.`;
+      musket.setAttribute('aria-description', spoken); rangeAnnouncement.textContent = spoken;
+    },
+    danger(info) {
+      const key = info ? `${info.key}|${info.title}|${info.line}` : '';
+      if (key === lastDanger) return;
+      lastDanger = key; danger.hidden = !info;
+      if (info) { dangerTitle.textContent = `⚠ ${info.title}`; dangerLine.textContent = info.line;
+        danger.dataset.critical = String(info.critical); }
+      else { dangerTitle.textContent = ''; dangerLine.textContent = ''; }
+      measureBar();
     },
     // Loot this run, under the bar; null hides it.
     loot(amount) {
