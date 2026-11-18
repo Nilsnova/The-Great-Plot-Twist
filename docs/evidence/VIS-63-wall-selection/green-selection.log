@@ -1,0 +1,21 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run --maxWorkers=1 tests/island/wall-selection.test.js tests/island/selection-bracket.test.js tests/island/wall-batch-options.test.js tests/island/wall-textured-batches.test.js tests/island/wall-tier-detail.test.js tests/island/wall-connections.test.js tests/pirates/wall-connections.test.js
+
+
+ RUN  v5.1.0 /workspace/reference-village-work/clearance-selection/frontend
+
+
+ Test Files  7 passed (7)
+      Tests  64 passed (64)
+   Start at  10:01:52
+   Duration  2.92s (import 59%, transform 20%, tests 19%, worker 3%)
+
+    Isolate  7 workers spawned · ~156ms startup each (spawn + environment, per file)
+             at least ~938ms faster with isolate: false — reuses workers across files instead of one per file
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice

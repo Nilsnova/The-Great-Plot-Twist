@@ -1,0 +1,40 @@
+{
+  "checkedAt": "2026-11-18T10:02:40.479055+00:00",
+  "codeBase": "1bce43099cc4e78781faa0b74051d331bfe85e24",
+  "apiDependency": "bdf54f43",
+  "checks": [
+    {
+      "name": "build",
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "exitCode": 0,
+      "seconds": 2.32,
+      "log": "build.log"
+    },
+    {
+      "name": "budget",
+      "command": [
+        "node",
+        "scripts/report-budget.js",
+        "--check"
+      ],
+      "exitCode": 0,
+      "seconds": 0.42,
+      "log": "budget.log"
+    },
+    {
+      "name": "text-lint",
+      "command": [
+        "node",
+        "../scripts/text-lint/index.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 1.95,
+      "log": "text-lint.log"
+    }
+  ],
+  "browserChecks": "not run by selection writer; coordinator owns Chromium"
+}
