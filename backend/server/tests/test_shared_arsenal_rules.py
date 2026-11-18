@@ -135,3 +135,17 @@ def test_inventory_rejects_duplicate_copy_identity_or_holder(copies):
 def test_capacity_requires_explicit_positive_whole_policy(capacity):
     with pytest.raises(ValueError):
         buy(ArsenalInventory(()), capacity=capacity)
+
+
+def test_default_capacity_is_twenty_total_copies():
+    original = ArsenalInventory(tuple(ArsenalCopy(str(i), "pistols") for i in range(19)))
+    arguments = {
+        "catalogue": load_island(), "weapon": "pistols", "player_id": "member",
+        "copy_id": "twentieth", "island_best_wave": 100, "reservation_wave_id": None,
+    }
+    full = buy_copy(original, **arguments).inventory
+    assert len(full.copies) == 20
+    arguments["copy_id"] = "twenty-first"
+    with pytest.raises(ApiError) as error:
+        buy_copy(full, **arguments)
+    assert error.value.code == "arsenal_full"

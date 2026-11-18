@@ -1,6 +1,7 @@
 """Immutable shared-arsenal values. Used by isolated copy rules and future locked persistence."""
 
 from dataclasses import dataclass
+from datetime import datetime
 
 from server.island.catalogue import STARTING_WEAPON
 
@@ -11,6 +12,8 @@ class ArsenalCopy:
     weapon: str
     holder_id: str | None = None
     generation: int = 0
+    pending_wave_id: str | None = None
+    disconnected_until: datetime | None = None
 
     def __post_init__(self) -> None:
         if not self.id or not self.weapon or self.weapon == STARTING_WEAPON:
@@ -19,6 +22,16 @@ class ArsenalCopy:
             raise ValueError("A holder identity cannot be empty.")
         if type(self.generation) is not int or self.generation < 0:
             raise ValueError("A holder generation must be a nonnegative integer.")
+        if self.pending_wave_id == "":
+            raise ValueError("A pending return needs its original wave identity.")
+        if self.holder_id is None and (
+            self.pending_wave_id is not None or self.disconnected_until is not None
+        ):
+            raise ValueError("A stored copy has no holder lifecycle state.")
+        if self.pending_wave_id is not None and self.disconnected_until is not None:
+            raise ValueError("A withdrawn holder has no remaining reconnect grace.")
+        if self.disconnected_until is not None and self.disconnected_until.utcoffset() is None:
+            raise ValueError("A disconnect deadline needs a timezone.")
 
 
 @dataclass(frozen=True)

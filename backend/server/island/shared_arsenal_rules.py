@@ -7,6 +7,7 @@ The caller must fence the island/run, hold the common locks and commit money/cop
 from dataclasses import replace
 
 from server.errors import ApiError
+from server.island.arsenal_rules import CAPACITY as TOTAL_CAPACITY
 from server.island.arsenal_rules import check_buy
 from server.island.catalogue import STARTING_WEAPON, IslandCatalogue
 from server.island.shared_arsenal_state import (
@@ -43,7 +44,7 @@ def buy_copy(
     player_id: str,
     copy_id: str,
     island_best_wave: int,
-    capacity: int,
+    capacity: int = TOTAL_CAPACITY,
     reservation_wave_id: str | None,
 ) -> ArsenalChange:
     require_between_reservations(reservation_wave_id)
@@ -71,12 +72,17 @@ def take_copy(
     selected = copy_named(inventory, copy_id, generation)
     if selected.holder_id is not None:
         raise ApiError(409, "taken", "A Captain already holds that copy.")
+    current = held_by(inventory, player_id)
+    if current is not None and current.pending_wave_id is not None:
+        raise ApiError(409, "wave_running", "The withdrawn copy awaits canonical wave closure.")
     copies = []
     for copy in inventory.copies:
         if copy.id == selected.id:
             copy = replace(copy, holder_id=player_id, generation=copy.generation + 1)
         elif copy.holder_id == player_id:
-            copy = replace(copy, holder_id=None, generation=copy.generation + 1)
+            copy = replace(
+                copy, holder_id=None, generation=copy.generation + 1, disconnected_until=None
+            )
         copies.append(copy)
     return ArsenalChange(ArsenalInventory(tuple(copies)))
 
@@ -91,10 +97,10 @@ def return_copy(
 ) -> ArsenalChange:
     require_between_reservations(reservation_wave_id)
     selected = copy_named(inventory, copy_id, generation)
-    if selected.holder_id != player_id:
+    if selected.holder_id != player_id or selected.pending_wave_id is not None:
         raise ApiError(409, "nothing_held", "You no longer hold that copy.")
     copies = tuple(
-        replace(copy, holder_id=None, generation=copy.generation + 1)
+        replace(copy, holder_id=None, generation=copy.generation + 1, disconnected_until=None)
         if copy.id == selected.id else copy
         for copy in inventory.copies
     )
@@ -112,6 +118,6 @@ def freeze_loadouts(
         copy = held_by(inventory, player_id)
         loadouts.append(
             FrozenLoadout(player_id, copy.weapon, copy.id, copy.generation)
-            if copy else FrozenLoadout(player_id, STARTING_WEAPON)
+            if copy and copy.pending_wave_id is None else FrozenLoadout(player_id, STARTING_WEAPON)
         )
     return tuple(loadouts)
