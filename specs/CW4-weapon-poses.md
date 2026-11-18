@@ -1,6 +1,6 @@
 # CW4 · Show the captain's carried weapon
 
-Responsible teammate: Ianno Hollensteiner (`Iannomh123456`), assisted by Codex. Issue: [#461](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/461). Branch: `feat/cw4-weapon-poses`, based on `48aee0e7b34c879968c4bc606b543f911032adfa`. Local implementation; PR publication and independent human review remain.
+Responsible teammate: Ianno Hollensteiner (`Iannomh123456`), assisted by Codex. Issue: [#461](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/461). Branch: `feat/cw4-weapon-poses`, based on `48aee0e7b34c879968c4bc606b543f911032adfa`. Draft PR: [#464](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/464). Explain-back, manual review and independent human approval remain.
 
 ## Problem and result
 
@@ -29,9 +29,11 @@ Scope: `frontend/src/pirates/poses.js`, `shot-art.js`, `render.js`, the procedur
 - `node scripts/report-budget.js --check`: passed; initial JavaScript **18,899 / 21,080 bytes**, CSS **9,410 / 12,000 bytes**.
 - `SHOTS_DIR=/tmp/cw4-demo npm run test:demo`: failed at `check-demo-journey.js:63`, waiting to click the hidden lamp quest. The exact unchanged `48aee0e7` baseline reproduced the same failure. This does not prove the full demo journey.
 - `npm run test:a11y`: 33 screens audited, exit 1 with eight findings: market-placed contrast at 1280/375/320, plus keyboard findings on market-hotspot, market-prices, market-confirm, market-placed and lobby. An unchanged `48aee0e7` worktree reproduced the exact failure list; no new findings. Audit errors, browser errors and external requests are empty on both. [Baseline comparison](../docs/evidence/CW4-weapon-poses/accessibility-baseline.json).
-- Relative documentation destinations and `git diff --check` pass; full frontend suite belongs to the coordinator.
+- `npm test -- --maxWorkers=2`: **347 files / 3,846 tests passed** in **362.46 s**.
+- Independent agent review found no actionable issues and separately ran 3 files / 35 tests; final capture/safety review passed.
+- Relative documentation destinations, `git diff --check` and the committed-diff secret scan pass.
 
-No production deployment, signed-in multiplayer match or live device check was performed. The root coordinator is running the full frontend suite for this branch. Human review and merge remain outstanding.
+No production deployment, signed-in multiplayer match or live device check was performed. The full frontend suite passed for this branch. Human explain-back, manual review and independent approval remain outstanding; nothing is merged.
 
 ## Explain-back questions
 
