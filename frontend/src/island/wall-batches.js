@@ -2,8 +2,9 @@
 import {projectPoint} from '../world/art.js';
 import {wallFrame, wallSurfaceFrame} from '../art/village/walls.js';
 const UNIT = 16;
-// Include rear projection (.6*.28) and cap lift (.02): 1.43+.168+.02=1.618 < post top 1.625.
-const HEIGHTS = [.95, 1.15, 1.25, 1.35, 1.43];
+// Tight common-state post fitting leaves visible L5 artwork above 2.477 world units.
+// Rear rise and cap lift are included: 2.20+.6*.40+.02=2.46, below that real top.
+const HEIGHTS = [1.45, 1.70, 1.95, 2.10, 2.20], HALF = .40;
 export function wallVisualRows(spots = []) {
   return spots.filter(row => row?.built === true && row.kind === 'wall' && typeof row.id === 'string'
     && Number.isFinite(row.x) && Number.isFinite(row.z)).map(row => ({id: row.id, x: row.x, z: row.z,
@@ -29,7 +30,7 @@ export function texturedWallBatches(links, posts, art, {selectedId = null, selec
   }
   function span(link, layer) {
     const height = HEIGHTS[link.level - 1];
-    const vertical = link.x0 === link.x1, half = .28;
+    const vertical = link.x0 === link.x1, half = HALF;
     const x0 = Math.min(link.x0, link.x1) - (vertical ? half : 0), x1 = Math.max(link.x0, link.x1) + (vertical ? half : 0);
     const z0 = Math.min(link.z0, link.z1) - (vertical ? 0 : half), z1 = Math.max(link.z0, link.z1) + (vertical ? 0 : half);
     const face = (points, lift, name) => quad(layer, points.map(([x, z, raised = lift]) => {
@@ -62,7 +63,7 @@ export function texturedWallBatches(links, posts, art, {selectedId = null, selec
     const buttress = straight && Math.floor((neighbors[0].x === neighbors[1].x ? post.z : post.x) / 2) % 3 === 0;
     if (straight && !buttress && post.id !== selectedId) {
       const height = HEIGHTS[post.level - 1];
-      quad(layer, [[post.x-.28,post.z-.28],[post.x+.28,post.z-.28],[post.x+.28,post.z+.28],[post.x-.28,post.z+.28]]
+      quad(layer, [[post.x-HALF,post.z-HALF],[post.x+HALF,post.z-HALF],[post.x+HALF,post.z+HALF],[post.x-HALF,post.z+HALF]]
         .map(([x,z]) => {const point=projectPoint(x,z);return [point.x,point.y+height+.02];}), wallSurfaceFrame(post.level,'top'));
       continue;
     }
