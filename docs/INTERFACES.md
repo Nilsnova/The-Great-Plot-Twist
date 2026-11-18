@@ -1935,3 +1935,12 @@ The internal treasury result can contain its originating account projection. A p
 must expose fresh economy/assets only if that origin is still the active current account/epoch and
 the actor is a current member. A departed or retired-origin retry may return its authorized immutable
 receipt, with current projections null/omitted. Never display an old receipt balance as current funds.
+
+## Guarded shared economy domain transactions
+
+Service-only arsenal, combat repair, wager and ship-game transaction functions
+consume the version-one treasury and common operation registry. Their exact
+SQL signatures, inactive Python adapters, receipt/replay rules, grants and
+remaining authority/session gates are described in
+[Guarded shared economy transactions](economy/DOMAIN-TRANSACTIONS.md).
+No existing player route or feature is activated by these functions.
