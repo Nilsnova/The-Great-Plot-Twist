@@ -1,13 +1,13 @@
 {
-  "source": "ed9c0f14e723034da47e7a2dc6e91a4e590c887a",
+  "source": "670402d658bcba411df08e859ab88661587c8bc7",
   "actualBase": "7e60fe1addafaa5f62ad81f53db6d01fda78f0c5",
   "requestedAncestor": "c4ea1b633346cde8ef5f4524a625338b6033dfc8",
   "frozenFrontendSource": "0d745a26",
   "trees": {
     "frontend/src": "cf4837fbec45e9cace371878fd8459e2dfd9c24b",
     "frontend/public": "c21b9328134b71786fe733994cd27510d3839cc9",
-    "backend": "372f64f5c8e8291581e7a552307025a7437fa226",
-    "supabase/migrations": "41694662564db316a3b7abb24fd61672a6c70641",
+    "backend": "8232794a485d1b8a0dafe65519d9b9415f950090",
+    "supabase/migrations": "9b32d17cd66a6a8fcc2844b3fedf30c8461bf2ef",
     "frontend/tests": "8d7e5565b6a27a1f45b1881dba063e6ef89326e1"
   },
   "frozenFrontendTree": "cf4837fbec45e9cace371878fd8459e2dfd9c24b",
@@ -27,5 +27,8 @@
   "initialAtomicSource": "e57d9ac9583f477034e6b9f35ef8afa64ccfd96b",
   "strictSource": "ed9c0f14e723034da47e7a2dc6e91a4e590c887a",
   "rootFormattingAndDecisionDependency": "06036f4f (composed asf72310e2; parent already owns it)",
-  "scope": "Final original-wall fresh-proof source. No frontend runtime change after0d. SQL applied only to private disposable Unix-socket test servers. Live application/deployment not authorized."
+  "scope": "Final original-wall fresh-proof source. No frontend runtime change after0d. SQL applied only to private disposable Unix-socket test servers. Live application/deployment not authorized.",
+  "compatibleSource": "670402d658bcba411df08e859ab88661587c8bc7",
+  "compatibleNoWriteBoundary": "Skip layout writes when checked XY equals stored XY or absent canonical default; matching movement metadata and absent rows stay exact. True raw/effective differences alone materialize.",
+  "coordinatorInitialWideSource": "a76e9cccf128567c1f4f1841babba86ac56a42aa"
 }

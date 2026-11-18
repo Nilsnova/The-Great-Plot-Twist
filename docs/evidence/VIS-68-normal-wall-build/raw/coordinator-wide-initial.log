@@ -1,0 +1,1354 @@
+Using CPython 3.12.14 interpreter at: /opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3.12
+Creating virtual environment at: .venv
+Installed 26 packages in 75ms
+........................................................................ [  4%]
+........................................................................ [  8%]
+........................................................................ [ 12%]
+........................................................................ [ 16%]
+........................................................................ [ 20%]
+........................................................................ [ 24%]
+........................................................................ [ 28%]
+........................................................................ [ 32%]
+........................................................................ [ 36%]
+........................................................................ [ 40%]
+........................................................................ [ 44%]
+........................................................................ [ 48%]
+........................................................................ [ 52%]
+........................................................................ [ 56%]
+........................................................................ [ 60%]
+........................................................................ [ 64%]
+........................................................................ [ 68%]
+.......EEEEEEEEEEEEEEEEEEEEE............................................ [ 72%]
+.............................................FFF........................ [ 76%]
+........................................................................ [ 80%]
+........................................................................ [ 84%]
+........................................................................ [ 88%]
+........................................................................ [ 92%]
+............................................F........................... [ 96%]
+......................F.................................                 [100%]
+==================================== ERRORS ====================================
+__ ERROR at setup of test_the_owner_resets_their_island_and_the_members_stay ___
+
+database = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60b337a0>
+
+    @pytest.fixture
+    def islands(database):
+        add_players(database, OWNER, FRIEND, NEIGHBOUR, STRANGER)
+>       seed(database, OWNER, CODE, uid_tail="0001")
+
+server/tests/island_sql/test_island_fresh_start_sql.py:151: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_island_fresh_start_sql.py:88: in seed
+    database.execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60b337a0>
+query = "insert into public.island_layout (island_owner, plot, x_half, z_half) values (%s, 'wall_1', 4, 6)"
+params = (UUID('00000000-0000-0000-0000-000000000399'),), prepare = None
+binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.UniqueViolation: duplicate key value violates unique constraint "island_layout_pkey"
+E           DETAIL:  Key (island_owner, plot)=(00000000-0000-0000-0000-000000000399, wall_1) already exists.
+
+../../../.cache/uv/archive-v0/lZDskjYv8XT6nRkB/lib/python3.12/site-packages/psycopg/connection.py:304: UniqueViolation
+___ ERROR at setup of test_a_wallet_at_the_starting_coins_gets_no_ledger_row ___
+
+database = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60f9bce0>
+
+    @pytest.fixture
+    def islands(database):
+        add_players(database, OWNER, FRIEND, NEIGHBOUR, STRANGER)
+>       seed(database, OWNER, CODE, uid_tail="0001")
+
+server/tests/island_sql/test_island_fresh_start_sql.py:151: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_island_fresh_start_sql.py:88: in seed
+    database.execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60f9bce0>
+query = "insert into public.island_layout (island_owner, plot, x_half, z_half) values (%s, 'wall_1', 4, 6)"
+params = (UUID('00000000-0000-0000-0000-000000000399'),), prepare = None
+binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.UniqueViolation: duplicate key value violates unique constraint "island_layout_pkey"
+E           DETAIL:  Key (island_owner, plot)=(00000000-0000-0000-0000-000000000399, wall_1) already exists.
+
+../../../.cache/uv/archive-v0/lZDskjYv8XT6nRkB/lib/python3.12/site-packages/psycopg/connection.py:304: UniqueViolation
+_ ERROR at setup of test_a_player_without_an_island_or_with_a_friends_code_is_refused_not_owner _
+
+database = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60f9b410>
+
+    @pytest.fixture
+    def islands(database):
+        add_players(database, OWNER, FRIEND, NEIGHBOUR, STRANGER)
+>       seed(database, OWNER, CODE, uid_tail="0001")
+
+server/tests/island_sql/test_island_fresh_start_sql.py:151: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_island_fresh_start_sql.py:88: in seed
+    database.execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60f9b410>
+query = "insert into public.island_layout (island_owner, plot, x_half, z_half) values (%s, 'wall_1', 4, 6)"
+params = (UUID('00000000-0000-0000-0000-000000000399'),), prepare = None
+binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.UniqueViolation: duplicate key value violates unique constraint "island_layout_pkey"
+E           DETAIL:  Key (island_owner, plot)=(00000000-0000-0000-0000-000000000399, wall_1) already exists.
+
+../../../.cache/uv/archive-v0/lZDskjYv8XT6nRkB/lib/python3.12/site-packages/psycopg/connection.py:304: UniqueViolation
+____________ ERROR at setup of test_a_player_not_set_up_is_refused _____________
+
+database = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60f98470>
+
+    @pytest.fixture
+    def islands(database):
+        add_players(database, OWNER, FRIEND, NEIGHBOUR, STRANGER)
+>       seed(database, OWNER, CODE, uid_tail="0001")
+
+server/tests/island_sql/test_island_fresh_start_sql.py:151: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_island_fresh_start_sql.py:88: in seed
+    database.execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60f98470>
+query = "insert into public.island_layout (island_owner, plot, x_half, z_half) values (%s, 'wall_1', 4, 6)"
+params = (UUID('00000000-0000-0000-0000-000000000399'),), prepare = None
+binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.UniqueViolation: duplicate key value violates unique constraint "island_layout_pkey"
+E           DETAIL:  Key (island_owner, plot)=(00000000-0000-0000-0000-000000000399, wall_1) already exists.
+
+../../../.cache/uv/archive-v0/lZDskjYv8XT6nRkB/lib/python3.12/site-packages/psycopg/connection.py:304: UniqueViolation
+__ ERROR at setup of test_a_wrong_code_is_refused_and_changes_nothing[K7Q2X] ___
+
+database = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60cc0cb0>
+
+    @pytest.fixture
+    def islands(database):
+        add_players(database, OWNER, FRIEND, NEIGHBOUR, STRANGER)
+>       seed(database, OWNER, CODE, uid_tail="0001")
+
+server/tests/island_sql/test_island_fresh_start_sql.py:151: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_island_fresh_start_sql.py:88: in seed
+    database.execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60cc0cb0>
+query = "insert into public.island_layout (island_owner, plot, x_half, z_half) values (%s, 'wall_1', 4, 6)"
+params = (UUID('00000000-0000-0000-0000-000000000399'),), prepare = None
+binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.UniqueViolation: duplicate key value violates unique constraint "island_layout_pkey"
+E           DETAIL:  Key (island_owner, plot)=(00000000-0000-0000-0000-000000000399, wall_1) already exists.
+
+../../../.cache/uv/archive-v0/lZDskjYv8XT6nRkB/lib/python3.12/site-packages/psycopg/connection.py:304: UniqueViolation
+_ ERROR at setup of test_a_wrong_code_is_refused_and_changes_nothing[ISLE-NOPE2] _
+
+database = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60f987d0>
+
+    @pytest.fixture
+    def islands(database):
+        add_players(database, OWNER, FRIEND, NEIGHBOUR, STRANGER)
+>       seed(database, OWNER, CODE, uid_tail="0001")
+
+server/tests/island_sql/test_island_fresh_start_sql.py:151: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_island_fresh_start_sql.py:88: in seed
+    database.execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60f987d0>
+query = "insert into public.island_layout (island_owner, plot, x_half, z_half) values (%s, 'wall_1', 4, 6)"
+params = (UUID('00000000-0000-0000-0000-000000000399'),), prepare = None
+binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.UniqueViolation: duplicate key value violates unique constraint "island_layout_pkey"
+E           DETAIL:  Key (island_owner, plot)=(00000000-0000-0000-0000-000000000399, wall_1) already exists.
+
+../../../.cache/uv/archive-v0/lZDskjYv8XT6nRkB/lib/python3.12/site-packages/psycopg/connection.py:304: UniqueViolation
+_____ ERROR at setup of test_a_wrong_code_is_refused_and_changes_nothing[] _____
+
+database = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60f98350>
+
+    @pytest.fixture
+    def islands(database):
+        add_players(database, OWNER, FRIEND, NEIGHBOUR, STRANGER)
+>       seed(database, OWNER, CODE, uid_tail="0001")
+
+server/tests/island_sql/test_island_fresh_start_sql.py:151: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_island_fresh_start_sql.py:88: in seed
+    database.execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60f98350>
+query = "insert into public.island_layout (island_owner, plot, x_half, z_half) values (%s, 'wall_1', 4, 6)"
+params = (UUID('00000000-0000-0000-0000-000000000399'),), prepare = None
+binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.UniqueViolation: duplicate key value violates unique constraint "island_layout_pkey"
+E           DETAIL:  Key (island_owner, plot)=(00000000-0000-0000-0000-000000000399, wall_1) already exists.
+
+../../../.cache/uv/archive-v0/lZDskjYv8XT6nRkB/lib/python3.12/site-packages/psycopg/connection.py:304: UniqueViolation
+_ ERROR at setup of test_a_wrong_code_is_refused_and_changes_nothing[K7Q2M-EXTRA] _
+
+database = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60b32b10>
+
+    @pytest.fixture
+    def islands(database):
+        add_players(database, OWNER, FRIEND, NEIGHBOUR, STRANGER)
+>       seed(database, OWNER, CODE, uid_tail="0001")
+
+server/tests/island_sql/test_island_fresh_start_sql.py:151: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_island_fresh_start_sql.py:88: in seed
+    database.execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60b32b10>
+query = "insert into public.island_layout (island_owner, plot, x_half, z_half) values (%s, 'wall_1', 4, 6)"
+params = (UUID('00000000-0000-0000-0000-000000000399'),), prepare = None
+binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.UniqueViolation: duplicate key value violates unique constraint "island_layout_pkey"
+E           DETAIL:  Key (island_owner, plot)=(00000000-0000-0000-0000-000000000399, wall_1) already exists.
+
+../../../.cache/uv/archive-v0/lZDskjYv8XT6nRkB/lib/python3.12/site-packages/psycopg/connection.py:304: UniqueViolation
+___ ERROR at setup of test_the_code_is_read_like_the_server_reads_it[K7Q2M] ____
+
+database = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60cc09e0>
+
+    @pytest.fixture
+    def islands(database):
+        add_players(database, OWNER, FRIEND, NEIGHBOUR, STRANGER)
+>       seed(database, OWNER, CODE, uid_tail="0001")
+
+server/tests/island_sql/test_island_fresh_start_sql.py:151: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_island_fresh_start_sql.py:88: in seed
+    database.execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60cc09e0>
+query = "insert into public.island_layout (island_owner, plot, x_half, z_half) values (%s, 'wall_1', 4, 6)"
+params = (UUID('00000000-0000-0000-0000-000000000399'),), prepare = None
+binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.UniqueViolation: duplicate key value violates unique constraint "island_layout_pkey"
+E           DETAIL:  Key (island_owner, plot)=(00000000-0000-0000-0000-000000000399, wall_1) already exists.
+
+../../../.cache/uv/archive-v0/lZDskjYv8XT6nRkB/lib/python3.12/site-packages/psycopg/connection.py:304: UniqueViolation
+___ ERROR at setup of test_the_code_is_read_like_the_server_reads_it[k7q2m] ____
+
+database = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60f9ab10>
+
+    @pytest.fixture
+    def islands(database):
+        add_players(database, OWNER, FRIEND, NEIGHBOUR, STRANGER)
+>       seed(database, OWNER, CODE, uid_tail="0001")
+
+server/tests/island_sql/test_island_fresh_start_sql.py:151: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_island_fresh_start_sql.py:88: in seed
+    database.execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60f9ab10>
+query = "insert into public.island_layout (island_owner, plot, x_half, z_half) values (%s, 'wall_1', 4, 6)"
+params = (UUID('00000000-0000-0000-0000-000000000399'),), prepare = None
+binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.UniqueViolation: duplicate key value violates unique constraint "island_layout_pkey"
+E           DETAIL:  Key (island_owner, plot)=(00000000-0000-0000-0000-000000000399, wall_1) already exists.
+
+../../../.cache/uv/archive-v0/lZDskjYv8XT6nRkB/lib/python3.12/site-packages/psycopg/connection.py:304: UniqueViolation
+_ ERROR at setup of test_the_code_is_read_like_the_server_reads_it[ISLE-K7Q2M] _
+
+database = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60f9bb90>
+
+    @pytest.fixture
+    def islands(database):
+        add_players(database, OWNER, FRIEND, NEIGHBOUR, STRANGER)
+>       seed(database, OWNER, CODE, uid_tail="0001")
+
+server/tests/island_sql/test_island_fresh_start_sql.py:151: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_island_fresh_start_sql.py:88: in seed
+    database.execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60f9bb90>
+query = "insert into public.island_layout (island_owner, plot, x_half, z_half) values (%s, 'wall_1', 4, 6)"
+params = (UUID('00000000-0000-0000-0000-000000000399'),), prepare = None
+binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.UniqueViolation: duplicate key value violates unique constraint "island_layout_pkey"
+E           DETAIL:  Key (island_owner, plot)=(00000000-0000-0000-0000-000000000399, wall_1) already exists.
+
+../../../.cache/uv/archive-v0/lZDskjYv8XT6nRkB/lib/python3.12/site-packages/psycopg/connection.py:304: UniqueViolation
+_ ERROR at setup of test_the_code_is_read_like_the_server_reads_it[isle k7q-2m] _
+
+database = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60cc1520>
+
+    @pytest.fixture
+    def islands(database):
+        add_players(database, OWNER, FRIEND, NEIGHBOUR, STRANGER)
+>       seed(database, OWNER, CODE, uid_tail="0001")
+
+server/tests/island_sql/test_island_fresh_start_sql.py:151: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_island_fresh_start_sql.py:88: in seed
+    database.execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60cc1520>
+query = "insert into public.island_layout (island_owner, plot, x_half, z_half) values (%s, 'wall_1', 4, 6)"
+params = (UUID('00000000-0000-0000-0000-000000000399'),), prepare = None
+binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.UniqueViolation: duplicate key value violates unique constraint "island_layout_pkey"
+E           DETAIL:  Key (island_owner, plot)=(00000000-0000-0000-0000-000000000399, wall_1) already exists.
+
+../../../.cache/uv/archive-v0/lZDskjYv8XT6nRkB/lib/python3.12/site-packages/psycopg/connection.py:304: UniqueViolation
+_______ ERROR at setup of test_no_reset_while_a_wave_runs_on_the_island ________
+
+database = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60cc1880>
+
+    @pytest.fixture
+    def islands(database):
+        add_players(database, OWNER, FRIEND, NEIGHBOUR, STRANGER)
+>       seed(database, OWNER, CODE, uid_tail="0001")
+
+server/tests/island_sql/test_island_fresh_start_sql.py:151: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_island_fresh_start_sql.py:88: in seed
+    database.execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60cc1880>
+query = "insert into public.island_layout (island_owner, plot, x_half, z_half) values (%s, 'wall_1', 4, 6)"
+params = (UUID('00000000-0000-0000-0000-000000000399'),), prepare = None
+binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.UniqueViolation: duplicate key value violates unique constraint "island_layout_pkey"
+E           DETAIL:  Key (island_owner, plot)=(00000000-0000-0000-0000-000000000399, wall_1) already exists.
+
+../../../.cache/uv/archive-v0/lZDskjYv8XT6nRkB/lib/python3.12/site-packages/psycopg/connection.py:304: UniqueViolation
+_ ERROR at setup of test_a_repeated_click_answers_the_first_counts_and_resets_nothing_again _
+
+database = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60f9b2c0>
+
+    @pytest.fixture
+    def islands(database):
+        add_players(database, OWNER, FRIEND, NEIGHBOUR, STRANGER)
+>       seed(database, OWNER, CODE, uid_tail="0001")
+
+server/tests/island_sql/test_island_fresh_start_sql.py:151: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_island_fresh_start_sql.py:88: in seed
+    database.execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60f9b2c0>
+query = "insert into public.island_layout (island_owner, plot, x_half, z_half) values (%s, 'wall_1', 4, 6)"
+params = (UUID('00000000-0000-0000-0000-000000000399'),), prepare = None
+binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.UniqueViolation: duplicate key value violates unique constraint "island_layout_pkey"
+E           DETAIL:  Key (island_owner, plot)=(00000000-0000-0000-0000-000000000399, wall_1) already exists.
+
+../../../.cache/uv/archive-v0/lZDskjYv8XT6nRkB/lib/python3.12/site-packages/psycopg/connection.py:304: UniqueViolation
+______________ ERROR at setup of test_another_island_is_untouched ______________
+
+database = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60cc2ea0>
+
+    @pytest.fixture
+    def islands(database):
+        add_players(database, OWNER, FRIEND, NEIGHBOUR, STRANGER)
+>       seed(database, OWNER, CODE, uid_tail="0001")
+
+server/tests/island_sql/test_island_fresh_start_sql.py:151: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_island_fresh_start_sql.py:88: in seed
+    database.execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60cc2ea0>
+query = "insert into public.island_layout (island_owner, plot, x_half, z_half) values (%s, 'wall_1', 4, 6)"
+params = (UUID('00000000-0000-0000-0000-000000000399'),), prepare = None
+binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.UniqueViolation: duplicate key value violates unique constraint "island_layout_pkey"
+E           DETAIL:  Key (island_owner, plot)=(00000000-0000-0000-0000-000000000399, wall_1) already exists.
+
+../../../.cache/uv/archive-v0/lZDskjYv8XT6nRkB/lib/python3.12/site-packages/psycopg/connection.py:304: UniqueViolation
+______ ERROR at setup of test_starting_coins_outside_1_to_100000_raise[0] ______
+
+database = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60cc23c0>
+
+    @pytest.fixture
+    def islands(database):
+        add_players(database, OWNER, FRIEND, NEIGHBOUR, STRANGER)
+>       seed(database, OWNER, CODE, uid_tail="0001")
+
+server/tests/island_sql/test_island_fresh_start_sql.py:151: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_island_fresh_start_sql.py:88: in seed
+    database.execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60cc23c0>
+query = "insert into public.island_layout (island_owner, plot, x_half, z_half) values (%s, 'wall_1', 4, 6)"
+params = (UUID('00000000-0000-0000-0000-000000000399'),), prepare = None
+binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.UniqueViolation: duplicate key value violates unique constraint "island_layout_pkey"
+E           DETAIL:  Key (island_owner, plot)=(00000000-0000-0000-0000-000000000399, wall_1) already exists.
+
+../../../.cache/uv/archive-v0/lZDskjYv8XT6nRkB/lib/python3.12/site-packages/psycopg/connection.py:304: UniqueViolation
+_____ ERROR at setup of test_starting_coins_outside_1_to_100000_raise[-5] ______
+
+database = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60cc3530>
+
+    @pytest.fixture
+    def islands(database):
+        add_players(database, OWNER, FRIEND, NEIGHBOUR, STRANGER)
+>       seed(database, OWNER, CODE, uid_tail="0001")
+
+server/tests/island_sql/test_island_fresh_start_sql.py:151: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_island_fresh_start_sql.py:88: in seed
+    database.execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60cc3530>
+query = "insert into public.island_layout (island_owner, plot, x_half, z_half) values (%s, 'wall_1', 4, 6)"
+params = (UUID('00000000-0000-0000-0000-000000000399'),), prepare = None
+binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.UniqueViolation: duplicate key value violates unique constraint "island_layout_pkey"
+E           DETAIL:  Key (island_owner, plot)=(00000000-0000-0000-0000-000000000399, wall_1) already exists.
+
+../../../.cache/uv/archive-v0/lZDskjYv8XT6nRkB/lib/python3.12/site-packages/psycopg/connection.py:304: UniqueViolation
+___ ERROR at setup of test_starting_coins_outside_1_to_100000_raise[100001] ____
+
+database = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60f9af60>
+
+    @pytest.fixture
+    def islands(database):
+        add_players(database, OWNER, FRIEND, NEIGHBOUR, STRANGER)
+>       seed(database, OWNER, CODE, uid_tail="0001")
+
+server/tests/island_sql/test_island_fresh_start_sql.py:151: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_island_fresh_start_sql.py:88: in seed
+    database.execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60f9af60>
+query = "insert into public.island_layout (island_owner, plot, x_half, z_half) values (%s, 'wall_1', 4, 6)"
+params = (UUID('00000000-0000-0000-0000-000000000399'),), prepare = None
+binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.UniqueViolation: duplicate key value violates unique constraint "island_layout_pkey"
+E           DETAIL:  Key (island_owner, plot)=(00000000-0000-0000-0000-000000000399, wall_1) already exists.
+
+../../../.cache/uv/archive-v0/lZDskjYv8XT6nRkB/lib/python3.12/site-packages/psycopg/connection.py:304: UniqueViolation
+____ ERROR at setup of test_starting_coins_outside_1_to_100000_raise[None] _____
+
+database = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60cc1b50>
+
+    @pytest.fixture
+    def islands(database):
+        add_players(database, OWNER, FRIEND, NEIGHBOUR, STRANGER)
+>       seed(database, OWNER, CODE, uid_tail="0001")
+
+server/tests/island_sql/test_island_fresh_start_sql.py:151: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_island_fresh_start_sql.py:88: in seed
+    database.execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60cc1b50>
+query = "insert into public.island_layout (island_owner, plot, x_half, z_half) values (%s, 'wall_1', 4, 6)"
+params = (UUID('00000000-0000-0000-0000-000000000399'),), prepare = None
+binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.UniqueViolation: duplicate key value violates unique constraint "island_layout_pkey"
+E           DETAIL:  Key (island_owner, plot)=(00000000-0000-0000-0000-000000000399, wall_1) already exists.
+
+../../../.cache/uv/archive-v0/lZDskjYv8XT6nRkB/lib/python3.12/site-packages/psycopg/connection.py:304: UniqueViolation
+_ ERROR at setup of test_a_smaller_starting_amount_takes_coins_away_through_the_ledger _
+
+database = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60cc0620>
+
+    @pytest.fixture
+    def islands(database):
+        add_players(database, OWNER, FRIEND, NEIGHBOUR, STRANGER)
+>       seed(database, OWNER, CODE, uid_tail="0001")
+
+server/tests/island_sql/test_island_fresh_start_sql.py:151: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_island_fresh_start_sql.py:88: in seed
+    database.execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60cc0620>
+query = "insert into public.island_layout (island_owner, plot, x_half, z_half) values (%s, 'wall_1', 4, 6)"
+params = (UUID('00000000-0000-0000-0000-000000000399'),), prepare = None
+binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.UniqueViolation: duplicate key value violates unique constraint "island_layout_pkey"
+E           DETAIL:  Key (island_owner, plot)=(00000000-0000-0000-0000-000000000399, wall_1) already exists.
+
+../../../.cache/uv/archive-v0/lZDskjYv8XT6nRkB/lib/python3.12/site-packages/psycopg/connection.py:304: UniqueViolation
+__ ERROR at setup of test_a_bad_click_id_raises_and_the_browser_gets_nothing ___
+
+database = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60b1bd10>
+
+    @pytest.fixture
+    def islands(database):
+        add_players(database, OWNER, FRIEND, NEIGHBOUR, STRANGER)
+>       seed(database, OWNER, CODE, uid_tail="0001")
+
+server/tests/island_sql/test_island_fresh_start_sql.py:151: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_island_fresh_start_sql.py:88: in seed
+    database.execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [INERROR] (database=postgres) at 0x7fec60b1bd10>
+query = "insert into public.island_layout (island_owner, plot, x_half, z_half) values (%s, 'wall_1', 4, 6)"
+params = (UUID('00000000-0000-0000-0000-000000000399'),), prepare = None
+binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.UniqueViolation: duplicate key value violates unique constraint "island_layout_pkey"
+E           DETAIL:  Key (island_owner, plot)=(00000000-0000-0000-0000-000000000399, wall_1) already exists.
+
+../../../.cache/uv/archive-v0/lZDskjYv8XT6nRkB/lib/python3.12/site-packages/psycopg/connection.py:304: UniqueViolation
+=================================== FAILURES ===================================
+_ test_new_v1_piece_before_next_wave_retains_exact_paid_upgrade_repair_and_refund_value[None] _
+
+database = <psycopg.Connection [INTRANS] (database=postgres) at 0x7fec60c7e540>
+role = None
+
+    @pytest.mark.parametrize("role", [None, "engineer"])
+    def test_new_v1_piece_before_next_wave_retains_exact_paid_upgrade_repair_and_refund_value(
+        database, role
+    ):
+>       catalogue, stage, old, quote, _ = first_added_pieces(database, role)
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+server/tests/island_sql/test_perimeter_v1_lifecycle_sql.py:278: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_perimeter_v1_lifecycle_sql.py:159: in first_added_pieces
+    original, _ = buy(db, catalogue, LEGACY_CELLS, "v1-original-run-001", stage, role)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+server/tests/island_sql/test_perimeter_v1_lifecycle_sql.py:82: in buy
+    quote = quote_chain(
+server/island/wall_chain.py:128: in quote_chain
+    layout.check_move(geometry, final, p.spot, p.x, p.z, wall_rule_version=1, wall_capacity=128)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+rules = LayoutRules(version=2, grid=0.5, rx=20.0, rz=22.0, seed=3.0, heart=(0.0, 2.0), footprints={'wall': 2.0, 'tower': 2.0, ...-3.5, z=2.5, w=1.5, d=0.75, radius=0), WallObstacle(id='statue', name='the statue', x=4, z=5.5, w=2.5, d=1, radius=0)))
+positions = {'wall_1': (-18.5, -1.0), 'cannon_1': (-12.5, -14.5), 'cannon_2': (13.0, -15.0), 'cannon_3': (15.5, 14.0), ...}
+spot_id = 'wall_9', x = -12.5, z = -12.0, wall_rule_version = 1
+wall_capacity = 128
+
+    def check_move(
+        rules: LayoutRules,
+        positions: dict[str, Position],
+        spot_id: str,
+        x: float,
+        z: float,
+        *,
+        wall_rule_version: int = 0,
+        wall_capacity: int = LEGACY_WALL_CAPACITY,
+    ) -> None:
+        """Raise MoveRefused when `spot_id` may not stand at (x, z). The first failing rule wins:
+        404 no_such_spot, 422 off_grid, 409 not_on_land, 409 off_path (a wall off every pirate
+        path, D056), 409 place_taken, 409 blocks_route."""
+        check_wall_policy(wall_rule_version, wall_capacity)
+        spot = spot_named(rules, spot_id)
+        inventory = wall_rule_version == 1 and is_inventory_wall_id(spot_id, wall_capacity)
+        if spot is None and not inventory:
+            raise MoveRefused(404, "no_such_spot", "There is no such build spot.")
+        if not (on_grid(rules, x) and on_grid(rules, z)):
+            raise MoveRefused(422, "off_grid", "Pick a square of the build grid.")
+        if surface_class(rules, x, z) == SEA:
+            raise MoveRefused(409, "not_on_land", "Buildings stand on land, not in the sea.")
+        if wall_rule_version == 0 and spot.slot == WALL_SLOT and not on_wall_lane(rules, x, z):
+            raise MoveRefused(409, "off_path", "Walls go on a pirate path.")
+        moved = box_of(rules, spot_id, (x, z), wall_capacity=wall_capacity)
+        for other in rules.keep_out:
+            if overlaps(moved, other):
+                raise MoveRefused(409, "place_taken", f"That is too close to {other.name}.")
+        if inventory or spot.slot == WALL_SLOT:
+            for other in rules.wall_obstacles:
+                hit = (
+                    math.hypot(
+                        max(abs(x - other.x) - moved.w / 2, 0),
+                        max(abs(z - other.z) - moved.d / 2, 0),
+                    ) < other.radius
+                    if other.radius
+                    else overlaps(moved, other)
+                )
+                if hit:
+>                   raise MoveRefused(409, "place_taken", f"That is too close to {other.name}.")
+E                   server.island.layout.MoveRefused: That is too close to a tree.
+
+server/island/layout.py:395: MoveRefused
+_ test_new_v1_piece_before_next_wave_retains_exact_paid_upgrade_repair_and_refund_value[engineer] _
+
+database = <psycopg.Connection [INTRANS] (database=postgres) at 0x7fec623b0320>
+role = 'engineer'
+
+    @pytest.mark.parametrize("role", [None, "engineer"])
+    def test_new_v1_piece_before_next_wave_retains_exact_paid_upgrade_repair_and_refund_value(
+        database, role
+    ):
+>       catalogue, stage, old, quote, _ = first_added_pieces(database, role)
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+server/tests/island_sql/test_perimeter_v1_lifecycle_sql.py:278: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_perimeter_v1_lifecycle_sql.py:159: in first_added_pieces
+    original, _ = buy(db, catalogue, LEGACY_CELLS, "v1-original-run-001", stage, role)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+server/tests/island_sql/test_perimeter_v1_lifecycle_sql.py:82: in buy
+    quote = quote_chain(
+server/island/wall_chain.py:128: in quote_chain
+    layout.check_move(geometry, final, p.spot, p.x, p.z, wall_rule_version=1, wall_capacity=128)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+rules = LayoutRules(version=2, grid=0.5, rx=20.0, rz=22.0, seed=3.0, heart=(0.0, 2.0), footprints={'wall': 2.0, 'tower': 2.0, ...-3.5, z=2.5, w=1.5, d=0.75, radius=0), WallObstacle(id='statue', name='the statue', x=4, z=5.5, w=2.5, d=1, radius=0)))
+positions = {'wall_1': (-18.5, -1.0), 'cannon_1': (-12.5, -14.5), 'cannon_2': (13.0, -15.0), 'cannon_3': (15.5, 14.0), ...}
+spot_id = 'wall_9', x = -12.5, z = -12.0, wall_rule_version = 1
+wall_capacity = 128
+
+    def check_move(
+        rules: LayoutRules,
+        positions: dict[str, Position],
+        spot_id: str,
+        x: float,
+        z: float,
+        *,
+        wall_rule_version: int = 0,
+        wall_capacity: int = LEGACY_WALL_CAPACITY,
+    ) -> None:
+        """Raise MoveRefused when `spot_id` may not stand at (x, z). The first failing rule wins:
+        404 no_such_spot, 422 off_grid, 409 not_on_land, 409 off_path (a wall off every pirate
+        path, D056), 409 place_taken, 409 blocks_route."""
+        check_wall_policy(wall_rule_version, wall_capacity)
+        spot = spot_named(rules, spot_id)
+        inventory = wall_rule_version == 1 and is_inventory_wall_id(spot_id, wall_capacity)
+        if spot is None and not inventory:
+            raise MoveRefused(404, "no_such_spot", "There is no such build spot.")
+        if not (on_grid(rules, x) and on_grid(rules, z)):
+            raise MoveRefused(422, "off_grid", "Pick a square of the build grid.")
+        if surface_class(rules, x, z) == SEA:
+            raise MoveRefused(409, "not_on_land", "Buildings stand on land, not in the sea.")
+        if wall_rule_version == 0 and spot.slot == WALL_SLOT and not on_wall_lane(rules, x, z):
+            raise MoveRefused(409, "off_path", "Walls go on a pirate path.")
+        moved = box_of(rules, spot_id, (x, z), wall_capacity=wall_capacity)
+        for other in rules.keep_out:
+            if overlaps(moved, other):
+                raise MoveRefused(409, "place_taken", f"That is too close to {other.name}.")
+        if inventory or spot.slot == WALL_SLOT:
+            for other in rules.wall_obstacles:
+                hit = (
+                    math.hypot(
+                        max(abs(x - other.x) - moved.w / 2, 0),
+                        max(abs(z - other.z) - moved.d / 2, 0),
+                    ) < other.radius
+                    if other.radius
+                    else overlaps(moved, other)
+                )
+                if hit:
+>                   raise MoveRefused(409, "place_taken", f"That is too close to {other.name}.")
+E                   server.island.layout.MoveRefused: That is too close to a tree.
+
+server/island/layout.py:395: MoveRefused
+___ test_historical_paid_receipts_do_not_reconstruct_or_heal_the_replacement ___
+
+database = <psycopg.Connection [INTRANS] (database=postgres) at 0x7fec60dc71a0>
+
+    def test_historical_paid_receipts_do_not_reconstruct_or_heal_the_replacement(database):
+>       catalogue, stage, old, quote, original_build = first_added_pieces(database)
+                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+server/tests/island_sql/test_perimeter_v1_lifecycle_sql.py:286: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_perimeter_v1_lifecycle_sql.py:159: in first_added_pieces
+    original, _ = buy(db, catalogue, LEGACY_CELLS, "v1-original-run-001", stage, role)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+server/tests/island_sql/test_perimeter_v1_lifecycle_sql.py:82: in buy
+    quote = quote_chain(
+server/island/wall_chain.py:128: in quote_chain
+    layout.check_move(geometry, final, p.spot, p.x, p.z, wall_rule_version=1, wall_capacity=128)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+rules = LayoutRules(version=2, grid=0.5, rx=20.0, rz=22.0, seed=3.0, heart=(0.0, 2.0), footprints={'wall': 2.0, 'tower': 2.0, ...-3.5, z=2.5, w=1.5, d=0.75, radius=0), WallObstacle(id='statue', name='the statue', x=4, z=5.5, w=2.5, d=1, radius=0)))
+positions = {'wall_1': (-18.5, -1.0), 'cannon_1': (-12.5, -14.5), 'cannon_2': (13.0, -15.0), 'cannon_3': (15.5, 14.0), ...}
+spot_id = 'wall_9', x = -12.5, z = -12.0, wall_rule_version = 1
+wall_capacity = 128
+
+    def check_move(
+        rules: LayoutRules,
+        positions: dict[str, Position],
+        spot_id: str,
+        x: float,
+        z: float,
+        *,
+        wall_rule_version: int = 0,
+        wall_capacity: int = LEGACY_WALL_CAPACITY,
+    ) -> None:
+        """Raise MoveRefused when `spot_id` may not stand at (x, z). The first failing rule wins:
+        404 no_such_spot, 422 off_grid, 409 not_on_land, 409 off_path (a wall off every pirate
+        path, D056), 409 place_taken, 409 blocks_route."""
+        check_wall_policy(wall_rule_version, wall_capacity)
+        spot = spot_named(rules, spot_id)
+        inventory = wall_rule_version == 1 and is_inventory_wall_id(spot_id, wall_capacity)
+        if spot is None and not inventory:
+            raise MoveRefused(404, "no_such_spot", "There is no such build spot.")
+        if not (on_grid(rules, x) and on_grid(rules, z)):
+            raise MoveRefused(422, "off_grid", "Pick a square of the build grid.")
+        if surface_class(rules, x, z) == SEA:
+            raise MoveRefused(409, "not_on_land", "Buildings stand on land, not in the sea.")
+        if wall_rule_version == 0 and spot.slot == WALL_SLOT and not on_wall_lane(rules, x, z):
+            raise MoveRefused(409, "off_path", "Walls go on a pirate path.")
+        moved = box_of(rules, spot_id, (x, z), wall_capacity=wall_capacity)
+        for other in rules.keep_out:
+            if overlaps(moved, other):
+                raise MoveRefused(409, "place_taken", f"That is too close to {other.name}.")
+        if inventory or spot.slot == WALL_SLOT:
+            for other in rules.wall_obstacles:
+                hit = (
+                    math.hypot(
+                        max(abs(x - other.x) - moved.w / 2, 0),
+                        max(abs(z - other.z) - moved.d / 2, 0),
+                    ) < other.radius
+                    if other.radius
+                    else overlaps(moved, other)
+                )
+                if hit:
+>                   raise MoveRefused(409, "place_taken", f"That is too close to {other.name}.")
+E                   server.island.layout.MoveRefused: That is too close to a tree.
+
+server/island/layout.py:395: MoveRefused
+___________ test_legacy_pairs_and_all_d060_tower_kinds_are_preserved ___________
+
+database = <psycopg.Connection [INTRANS] (database=postgres) at 0x7fec621f0b00>
+
+    def test_legacy_pairs_and_all_d060_tower_kinds_are_preserved(database):
+        ready(database, admitted=False)
+        pairs = [
+            ("plot_2", "workshop"),
+            ("plot_3", "windmill"),
+            ("plot_4", "greenhouse"),
+            ("islet_signal_station", "signal_station"),
+            ("tower_1", "watchtower"),
+            ("house_1", "house"),
+            ("house_2", "house"),
+        ]
+        pairs += [(f"wall_{n}", "wall") for n in range(1, 13)]
+        pairs += [
+            (f"cannon_{n}", kind)
+            for n in range(1, 12)
+            for kind in ("cannon", "mortar", "harpoon", "culverin", "swivel")
+        ]
+        for plot, kind in pairs:
+            with database.transaction(force_rollback=True):
+>               insert(database, plot, kind)
+
+server/tests/island_sql/test_wall_cohort_sql.py:112: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_wall_cohort_sql.py:59: in insert
+    database.execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [INTRANS] (database=postgres) at 0x7fec621f0b00>
+query = 'insert into public.islet_buildings (player_id,plot,building_type,level,coins_paid,timber_paid,ref) values (%s,%s,%s,1,10,0,%s)'
+params = (UUID('00000000-0000-0000-0000-000000004a9d'), 'wall_1', 'wall', 'island:positioned-0001:wall_1')
+prepare = None, binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.CheckViolation: wall_position_check_required
+E           CONTEXT:  PL/pgSQL function public.island_original_wall_scenery_guard() line 8 at RAISE
+
+../../../.cache/uv/archive-v0/lZDskjYv8XT6nRkB/lib/python3.12/site-packages/psycopg/connection.py:304: CheckViolation
+_______ test_v1_admission_preserves_instance_health_and_repair_sequence ________
+
+database = <psycopg.Connection [INTRANS] (database=postgres) at 0x7fec6608a2a0>
+
+    def test_v1_admission_preserves_instance_health_and_repair_sequence(database):
+        from server.tests.island_sql.test_structure_recovery_mutations_sql import (
+            OWNER as V1_OWNER,
+        )
+        from server.tests.island_sql.test_structure_recovery_mutations_sql import (
+            seed_v1,
+        )
+    
+        seed_v1(database)
+        as_owner(database)
+        database.execute(
+            "update public.island_structure_health set rate_numerator=0 where island_owner=%s",
+            (V1_OWNER,),
+        )
+        before = database.execute(
+            "select instance_id,hp_units,repair_seq from public.island_structure_health "
+            "where island_owner=%s",
+            (V1_OWNER,),
+        ).fetchone()
+        result = call(
+            database,
+            "select public.island_wall_policy_admit(%s,%s,'[]'::jsonb,%s::jsonb)",
+            V1_OWNER,
+            V1_OWNER,
+            json.dumps(effective()),
+        )
+>       assert result == {"status": "done", "repeat": False}
+E       AssertionError: assert {'reason': 'b...s': 'refused'} == {'status': 'd...epeat': False}
+E         
+E         Differing items:
+E         {'status': 'refused'} != {'status': 'done'}
+E         Left contains 1 more item:
+E         {'reason': 'busy'}
+E         Right contains 1 more item:
+E         {'repeat': False}
+E         Use -v to get more diff
+
+server/tests/island_sql/test_wall_policy_sql.py:189: AssertionError
+5 failed, 1758 passed, 21 errors in 141.77s (0:02:21)
