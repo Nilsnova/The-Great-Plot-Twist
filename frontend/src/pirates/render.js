@@ -29,6 +29,7 @@ import { towerLook } from './tower-health.js';
 import { MARK_IDS, buildingMarks } from '../art/path-marks.js';
 import { pixelGlsl, toScreen } from '../world/pixel-glsl.js';
 import { CHARACTER_SCALE } from './character-scale.js';
+import {makeCombatWallConnections} from './wall-connections.js';
 
 const UNIT = 16, Y = .72;
 // Characters on foot (boarders, the cutlass swing, the musket pose) are drawn larger in a wave, so they read
@@ -347,6 +348,8 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     for (const mark of marks) { const r = rect[mark.art]; if (r) layer.push(r, x + mark.dx, y + mark.dy, r.w, r.h, .5, r.anchor); }
   }
   const posts = defenses.filter(hasPost).map(makePost);
+  const wallConnections = makeCombatWallConnections(root);
+  let inBreak = false;
   let cannonsList = defenses.filter(item => item.kind === 'cannon' || item.kind === 'mortar');
   const fogUniforms = { uCannons: { value: Array.from({ length: 8 }, (_, i) => new THREE.Vector2(cannonsList[i]?.x ?? 0, cannonsList[i]?.z ?? 0)) },
     uCount: { value: Math.min(8, cannonsList.length) }, uSight: { value: 28 }, uFog: { value: 0 }, uTime: { value: 0 } };
@@ -1081,6 +1084,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     }
     for (const layer of Object.values(layers)) layer.end();
     for (const layer of bands) layer.end();
+    wallConnections.show(posts, state?.walls ?? [], {visible, inBreak});
     const walls = new Map((state?.walls ?? []).map(wall => [wall.id, wall]));
     const towers = new Map((state?.towers ?? []).map(tower => [tower.id, tower]));
     const crew = state?.crew ?? {};
@@ -1091,11 +1095,12 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       } else if (visible) {
         let id;
         const level = post.level, suffix = level > 1 ? `-l${level}` : '';
-        let smoking = false, look = 'intact', share = 1;
+        let smoking = false, look = 'intact', share = 1, joinedWall = false;
         if (post.kind === 'wall') {
           share = wallShare(post, walls.get(post.id));
           id = share > .6 ? levelFrame('wall', level) : share > 0 ? pirateFrames.wall[1] : pirateFrames.wall[2];
           smoking = share <= .6;
+          joinedWall = share > .6 && wallConnections.isJoined(post.id);
         } else {
           // Each kind and level has its own art; firing shows that level's firing frame (a mortar stays a mortar).
           look = towerLook(towers.get(post.id)); // T33: intact unless the wave has tower health
@@ -1104,7 +1109,8 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         const r = rect[id], flashing = (wallFlash.get(post.id) ?? -1) > clock ? .7 : 0;
         const repairing = post.kind === 'wall' && (walls.get(post.id)?.repairing || walls.get(post.id)?.crew);
         const grow = 1, x = post.x, y = drawnY(post.z);
-        post.layer.push(r, x, y, r.w, r.h, .5, r.anchor, { flip: post.kind !== 'wall' && post.flip, flashing,
+        // Match the world renderer's healthy junction posts; damaged/ruin frames remain full width.
+        post.layer.push(r, x, y, r.w * (joinedWall ? .62 : 1), r.h, .5, r.anchor, { flip: post.kind !== 'wall' && post.flip, flashing,
           g: repairing && !still() ? 1 + Math.sin(clock * 10) * .15 : 1 });
         if (smoking) {
           const puff = rect[pirateFrames.smoke[(still() ? 0 : Math.floor(clock * 5)) % 3]];
@@ -1154,6 +1160,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     // touched; it fights with the defenses it started with.
     setDefenses(list) {
       if (disposed) return;
+      inBreak = true;
       // A building torn down in the break (GAME-V3.md §4.2) takes its post with it.
       for (const post of posts.filter(entry => !(list ?? []).some(item => item.id === entry.id))) {
         post.layer.mesh.visible = false; posts.splice(posts.indexOf(post), 1);
@@ -1185,6 +1192,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     },
     dispose() {
       if (disposed) return; disposed = true;
+      wallConnections.dispose();
       root.removeFromParent(); root.clear();
       for (const item of owned) item.dispose();
       owned.length = 0; ships.clear(); fire.clear(); wallFlash.clear(); crew.clear();

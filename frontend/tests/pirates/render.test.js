@@ -46,7 +46,8 @@ describe('pirate wave renderer', () => {
     for (const seed of [1, 2, 3]) {
       const renderer = createWaveRenderer({ scene, atlas: shared, defenses: DEFENSES, fx: () => null });
       const layers = renderer.root.children.length;
-      expect(layers).toBe(3 + BOARDER_BANDS + 5 + 1); // far sea, near sea, air, the boarders' z bands, one per wall or cannon, fog
+      expect(layers).toBe(3 + BOARDER_BANDS + 5 + 1 + 1); // sea/air, boarder bands, defense posts, fog, owned wall connections
+      expect(renderer.root.children.filter(child => child.name === 'pirates:wall-connections')).toHaveLength(1);
       const run = play(renderer, seed);
       expect(run.state.total).toBe(CONFIG.fleet.max);
       expect(run.peak.ships).toBeGreaterThanOrEqual(6);
