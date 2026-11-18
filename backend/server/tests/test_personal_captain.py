@@ -55,6 +55,13 @@ def test_personal_projection_separates_skill_respec_from_engineer_role_binding(a
         assert value["captain"]["roleLockedReason"] == "engineer_bound"
 
 
+def test_withdrawal_keeps_attached_generation_without_a_current_assignment():
+    value = reply(bound=True)
+    value["captain"]["engineerCommitment"].update(state="attached", waveId=PLAYER_WAVE)
+    assert read_profile(value) == value
+    assert value["captain"]["canRespec"] is True
+
+
 @pytest.mark.parametrize("change", [
     lambda value: value["captain"].update(revision=4),
     lambda value: value["captain"].update(level=True),
