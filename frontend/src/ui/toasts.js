@@ -73,6 +73,7 @@ export function createToasts({parent = document.body, limit = TOAST_LIMIT} = {})
     const nodes = stack.map(item => {
       if (item.node) return item.node;
       const box = item.node = node('div', 'u-toast');box.dataset.tone = item.tone;
+      if (item.context) box.dataset.context = item.context;
       box.append(node('span', 'u-toast-icon', item.tone === 'error' ? '!' : item.tone === 'success' ? '✓' : '✦'));
       const copy = node('p', 'u-toast-text', item.text);
       if (item.next) copy.append(node('span', 'u-toast-next', item.next));
@@ -105,7 +106,7 @@ export function createToasts({parent = document.body, limit = TOAST_LIMIT} = {})
     const text = String(data.text ?? '').trim();
     if (!text) return null;
     const tone = ['error', 'success'].includes(data.tone) ? data.tone : 'info';
-    const toast = {id: ++next, text, next: data.next ? String(data.next) : null, tone};
+    const toast = {id: ++next, text, next: data.next ? String(data.next) : null, tone, context: data.context};
     const kept = stackToasts(stack, toast, limit);
     if (!kept.includes(toast)) return null; // an error is still showing
     for (const item of stack) if (item.text === text) clearTimeout(item.timer);

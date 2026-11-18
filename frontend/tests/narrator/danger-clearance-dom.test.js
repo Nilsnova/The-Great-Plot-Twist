@@ -34,6 +34,8 @@ it.each([[375, 812, false], [320, 568, false], [320, 568, true]])('keeps the pos
       const {createTouchControls} = await window.g20Import('/src/controls/touch.js');
       const {createWaveHud} = await window.g20Import('/src/pirates/hud.js');
       const {default: createCaptionsView} = await window.g20Import('/src/audio/captions-view.js');
+      const {createToasts} = await window.g20Import('/src/ui/toasts.js');
+      const {default: campaign} = await window.g20Import('/src/campaign/campaign.json');
       const {createNarratorCard} = await window.g20Import('/src/narrator/card.js');
       const {default: lines} = await window.g20Import('/src/narrator/lines.json');
       const game = document.createElement('main'); document.body.append(game);
@@ -44,6 +46,10 @@ it.each([[375, 812, false], [320, 568, false], [320, 568, true]])('keeps the pos
       wave.bar({wave: 1, shipsLeft: 0, boardersLeft: 0, islandHp: 100, maxIslandHp: 100});
       wave.pause({title: 'Wave 1 won!', line: '3 ships sunk · +15', ready: true, seconds: 8, hold: {label: 'Pause', enabled: true}});
       createCaptionsView(game).show('Victory: the island holds');
+      if (!large) {
+        const unlock = campaign.steps.find(step => step.wave === 1);
+        createToasts({parent: game}).show({text: unlock.title, next: unlock.line, tone: 'success', context: 'first-wave-unlock'});
+      }
       touch.update(null, true);
       narration.show(lines.lines.find(line => line.id === 'unlock_captain'));
     }, large);
@@ -63,8 +69,14 @@ it.each([[375, 812, false], [320, 568, false], [320, 568, true]])('keeps the pos
       const caption = rect(narration.element), cue = rect(document.querySelector('.sound-caption'));
       const result = rect(document.querySelector('.pirate-break'));
       const stick = rect(document.querySelector('.touch-stick-group'));
-      return [intersects(caption, cue), intersects(caption, result), intersects(cue, rect(button)), intersects(cue, stick)];
-    })).toEqual([false, false, false, false]);
+      const toast = rect(document.querySelector('.u-toast'));
+      return {
+        otherOverlaps: [intersects(caption, cue), intersects(caption, result), intersects(cue, rect(button)), intersects(cue, stick)],
+        toastClear: [caption, cue, result, stick, rect(button)].every(box => !intersects(toast, box)),
+        soundGap: cue.top - toast.bottom >= 4,
+      };
+    })).toEqual({otherOverlaps: [false, false, false, false], toastClear: true, soundGap: true});
+    if (!large) expect(await page.locator('.u-toasts').ariaSnapshot()).toContain('Houses add loot after every won wave.');
     await capture(page, `${width}x${height}-post-wave-touch${large ? '-large' : ''}`);
     await use.tap(); await skip.tap();
     expect(await page.evaluate(() => ({inputs, skips}))).toEqual({inputs: ['KeyE'], skips: 1});

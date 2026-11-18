@@ -660,9 +660,9 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
       measureBoatNotice();
       boatNoticeTimer = setTimeout(() => { boatNotice.hidden = true; measureBoatNotice(); }, 7000);
     },
-    toast(text, tone = 'info', next = '') {
+    toast(text, tone = 'info', next = '', context = null) {
       if (disposed || !text) return;
-      const id = toasts().show(next ? {text, tone, next} : {text, tone});
+      const id = toasts().show({text, tone, next, context});
       lastToast = id === null ? null : {id, text};
     },
     get toastText() { return lastToast && toasts().shown.some(item => item.id === lastToast.id) ? lastToast.text : ''; },
