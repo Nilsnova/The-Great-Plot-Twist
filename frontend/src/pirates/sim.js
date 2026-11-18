@@ -363,15 +363,19 @@ function attackRanges(lookouts) {
   } };
 }
 
+function coverageProfile({ id, kind, level, x, z }, range) {
+  return { id, kind, level, x, z, range, minRange: CONFIG[kind]?.minRange ?? 0, targets: [...PRIMARY_TARGETS[kind]] };
+}
+
 /** The selected defense's clear-weather primary acquisition geometry. Actual sight and target eligibility are wave rules. */
 export function previewDefenseCoverage(defenses, selectedId, { defensesV2 = false } = {}) {
   const items = readDefenses(defenses, { culverin: defensesV2 === true });
   const item = items.find(row => row.id === selectedId && isAttackTower(row.kind));
   if (!item) return null;
-  const { id, kind, level, x, z } = item;
+  const { kind, level } = item;
   const { rangeFor } = attackRanges(lookoutsOf(items));
   const range = rangeFor(item, CONFIG.levels[kind][level - 1].range, skillOf(item).range ?? 0);
-  return { id, kind, level, x, z, range, minRange: CONFIG[kind]?.minRange ?? 0, targets: [...PRIMARY_TARGETS[kind]] };
+  return coverageProfile(item, range);
 }
 
 // Another island's coast (Pirate Point on lighthouse_isle): {rx, rz, seed}, else the home_islet coast.
@@ -869,7 +873,8 @@ export function createWave(options = {}) {
   }
   const pending = target => balls.reduce((sum, ball) => sum + (ball.targetId === target.id && ball.hit ? ball.damage : 0), 0);
   // v3 waves: at night a lit target (near the heart, a fire, or burning) is seen at the full range.
-  const sees = (tower, target, d) => d <= tower.sight || (happening.lit(target, fires) && d <= tower.range * fogShare);
+  const litSight = tower => tower.range * fogShare;
+  const sees = (tower, target, d) => d <= tower.sight || (happening.lit(target, fires) && d <= litSight(tower));
   const visible = (cannon, target) => sees(cannon, target, distance(cannon.x, cannon.z, target.x, target.z));
   const armoured = ship => ship.kind === 'flagship' && !lampsLit && ships.length > 1; // escorts first while armoured
   const shoreOrder = (a, b) => (a.state === 'attacking') !== (b.state === 'attacking') ? (a.state === 'attacking' ? -1 : 1) : a.left - b.left;
@@ -1854,6 +1859,18 @@ export function createWave(options = {}) {
   return {
     applyRecoveryEvent,
     recoveryHealthVector,
+    // Raw sight and reload from this wave's frozen defenses. `litRange` is only available to lit targets at night.
+    attackCoverage(id) {
+      const tower = towerById.get(id);
+      if (done || !tower) return null;
+      const t = ticks * C.tick;
+      let status = 'ready';
+      if (!towerHealth.canFire(tower)) status = 'destroyed';
+      else if (jammed(tower, t)) status = 'jammed';
+      else if (happening.silenced(tower, t)) status = 'silenced';
+      return { ...coverageProfile(tower, tower.sight),
+        litRange: happening.id === 'night_raid' ? litSight(tower) : null, status, reload: tower.reload };
+    },
     step(dt, inputs = []) {
       const events = [];
       if (done) return events;

@@ -8,6 +8,7 @@
 // DOM only, built with the kit's safe text helpers; the controller decides what to show.
 import './pirates.css';
 import { node } from '../ui/kit/dom.js';
+import { createDefenseInspector } from './defense-inspector.js';
 
 // Boarders on land (TOWER-DEFENSE.md §12) show between the ships and the heart while there are any.
 export const waveBarText = ({ wave, shipsLeft, islandHp, maxIslandHp, boardersLeft = 0 }) =>
@@ -43,7 +44,7 @@ export const DOWN_TITLE = 'You have fallen';
 export const downLine = alone => (alone ? 'every captain is down' : 'a teammate can hold E next to you');
 
 export function createWaveHud({ container, onAction = () => {}, onNext = () => {}, onAuto = () => {}, onShoot = () => {}, onHold = () => {},
-  onPromptHold = () => {}, onRangePreview = () => {}, reducedMotion = () => false }) {
+  onPromptHold = () => {}, onRangePreview = () => {}, inspectDefenses = null, reducedMotion = () => false }) {
   const layer = node('div', 'pirate-hud');
   const bar = node('div', 'pirate-bar'); bar.setAttribute('role', 'status');
   const label = node('span', 'pirate-bar-text'), meter = node('span', 'pirate-bar-meter'), fill = node('span', 'pirate-bar-fill');
@@ -154,6 +155,8 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
   // The first-wave hint sits inside the bar, under the goal row (overlap audit, 15 Nov): never over the heart,
   // the bar or the toasts, which line up under the bar's measured bottom (--pirate-bar-bottom, pirates.css).
   bar.append(hint);
+  const defenseInspector = inspectDefenses ? createDefenseInspector(inspectDefenses) : null;
+  if (defenseInspector) bar.append(defenseInspector.element);
   layer.append(edge, marks, bar, countdown, warning, prompt, musket, banner, pause, mini); container.append(layer);
   const root = document.documentElement;
   let disposed = false;
@@ -191,6 +194,7 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
 
   return {
     element: layer,
+    inspectDefense(model) { defenseInspector?.render(model); },
     setVisible(value) { if (layer.hidden === !value) return; layer.hidden = !value; measureBar(); },
     countdown(seconds, words = 'Pirates in') {
       const text = seconds > 0 ? String(seconds) : '';

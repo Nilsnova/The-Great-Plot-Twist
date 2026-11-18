@@ -439,6 +439,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
       if(stopPlots.active){stopPlots.close();input.reset();graphics.renderer.domElement.focus({preventScroll:true});return true;}
       if(hud.closeQuickPanels?.())return true;
       if(sportsUi.active&&!document.querySelector('.sports-modal[open]')){sportsUi.close();return true;}
+      if(waves?.island.closeDefenseInspection?.())return true;
       const panel=[...document.querySelectorAll('dialog[open]')].filter(node=>!node.classList.contains('cinematic-modal')&&!node.classList.contains('shell-screen')).at(-1);
       const debug=container.querySelector('.debug:not([hidden])');
       const action=escapePriority({panel:!!panel||!!debug,playing:!shell.blocked});

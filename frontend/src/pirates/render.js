@@ -34,6 +34,8 @@ import {makeCombatWallConnections} from './wall-connections.js';
 import {WALL_ATLAS_IDS} from '../art/village/walls.js';
 import {wallAtlasView} from '../art/wall-atlas.js';
 import {projectGround, projectGroundVector, projectLegacyGround, groundProjectionGlsl} from '../world/projection.js';
+import {makeDefenseRange} from '../island/defense-range.js';
+import {makeSelectionBracket} from '../island/selection-bracket.js';
 
 const UNIT = 16;
 const facingTo = item => projectGroundVector(item.toX - item.x, (item.toZ ?? item.z ?? 0) - (item.z ?? 0)).x < 0 ? -1 : 1;
@@ -325,7 +327,7 @@ export const BRUTE_LOOK = Object.freeze({ tint: Object.freeze({ r: 1, g: .7, b: 
  * createWaveRenderer({scene, atlas, defenses, reducedMotion, quality, beamFrom}) where atlas is
  * {texture, width, height, rects} from loadAtlas(), defenses [{id, kind, x, z}] in world units and
  * beamFrom an optional drawn point {x, y} the lamps' beam starts from (the lighthouse lamp).
- * update({state, simTime, dt}) every frame; events(list) with the wave's events; dispose() once.
+ * update({state, simTime, dt, defenseCoverage}) every frame; events(list) with the wave's events; dispose() once.
  */
 // How whole a wall is drawn (0 = rubble, 1 = whole): a health set in the break (a paid repair or rebuild,
 // D039) wins over the hp the wave ended with; otherwise the wave's own hp; a wall the wave does not know is whole.
@@ -398,6 +400,26 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   const frameWalls = new Map(), frameTowers = new Map(), aliveShips = new Set(), aliveBoarders = new Set();
   const aliveAny = { has: id => aliveShips.has(id) || aliveBoarders.has(id) };
   let clock = 0, simNow = 0, latest = null, visible = true, disposed = false;
+  let defenseSelection, defenseRange;
+  const defenseAnchor = {};
+  function showDefenseCoverage(coverage) {
+    if (coverage?.id == null || !Number.isFinite(coverage.x) || !Number.isFinite(coverage.z)) {
+      defenseSelection?.show(null);
+      defenseRange?.show(null);
+      return;
+    }
+    defenseSelection ??= makeSelectionBracket(root);
+    defenseAnchor.spotId = coverage.id;
+    defenseAnchor.kind = coverage.kind;
+    defenseAnchor.level = coverage.level;
+    defenseAnchor.x = coverage.x;
+    defenseAnchor.z = coverage.z;
+    defenseSelection.show(defenseAnchor);
+    if (coverage.status === 'ready') {
+      defenseRange ??= makeDefenseRange(root, {combat: true});
+      defenseRange.show(coverage);
+    } else defenseRange?.show(null);
+  }
   // Ships and boarders glide between sim ticks instead of stepping (src/pirates/smoothing.js); drawing only.
   const smooth = createSmoother(() => clock);
   const still = () => !!reducedMotion();
@@ -1185,7 +1207,8 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   return {
     root,
     events(list) { for (const event of list ?? []) onEvent(event); },
-    update({ state, simTime = simNow, dt = 0, captain: own = null, revive: helping = null, figures: drawnAt = null, combatFeedback = null } = {}) {
+    update({ state, simTime = simNow, dt = 0, captain: own = null, revive: helping = null, figures: drawnAt = null,
+      combatFeedback = null, defenseCoverage = null } = {}) {
       if (disposed) return;
       clock += Math.max(0, Math.min(.1, dt || 0)); simNow = simTime; latest = state ?? latest; captain = own; revive = helping;
       figures = drawnAt instanceof Map ? drawnAt : null;
@@ -1210,14 +1233,19 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       }
       draw();
       combatOverlay.update(combatFeedback ?? {});
+      showDefenseCoverage(visible ? defenseCoverage : null);
     },
-    setVisible(value) { visible = value !== false; root.visible = visible; },
+    setVisible(value) {
+      visible = value !== false; root.visible = visible;
+      if (!visible) showDefenseCoverage(null);
+    },
     // The island changed while this wave's posts stand (an upgrade or a new building in the break, or a
     // friend's): every post takes its new level, and a spot built since gets its post. The sim is not
     // touched; it fights with the defenses it started with.
     setDefenses(list) {
       if (disposed) return;
       inBreak = true;
+      showDefenseCoverage(null);
       // A building torn down in the break (GAME-V3.md §4.2) takes its post with it.
       for (const post of posts.filter(entry => !(list ?? []).some(item => item.id === entry.id))) {
         post.layer.mesh.visible = false; posts.splice(posts.indexOf(post), 1);
@@ -1251,6 +1279,8 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       if (disposed) return; disposed = true;
       wallConnections.dispose();
       combatOverlay.dispose();
+      defenseSelection?.dispose();
+      defenseRange?.dispose();
       root.removeFromParent(); root.clear();
       for (const item of owned) item.dispose();
       owned.length = 0; ships.clear(); fire.clear(); wallFlash.clear(); crew.clear();
