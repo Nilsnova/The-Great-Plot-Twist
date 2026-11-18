@@ -1,4 +1,4 @@
-# Shared island Realtime membership
+# MP-ECO-11: Shared island Realtime membership
 
 This bounded #501 security change protects fresh private-channel authorization for
 persisted shared islands. Responsible teammate: Ianno Hollensteiner. Existing
