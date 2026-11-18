@@ -44,6 +44,7 @@ from server.game.building_catalogue import Cost
 from server.island import games, layout, layout_store, permissions, rules, store
 from server.island.captain_recovery_policy import (
     LEGACY_RECOVERY_VERSION,
+    RETIRED_RECOVERY_OPTIONS,
     STRUCTURE_RECOVERY_VERSION,
     is_retired_recovery_skill,
 )
@@ -152,6 +153,7 @@ class VisitView:
     crew: dict[str, int]  # the owner's crew: every visitor simulates the same defenses
     campaign: CampaignView
     layout: LayoutInfo = FIXED_LAYOUT
+    recovery_version: int = LEGACY_RECOVERY_VERSION
 
 
 @dataclass(frozen=True)
@@ -560,6 +562,11 @@ async def hire(
     ref = f"{CREW_PREFIX}{action_uid}"
     island = await store.open_island(admin, player_id, catalogue.starting_coins)
     if not await store.ledger_has(admin, player_id, "crew_hire", ref):
+        if (
+            crew == "carpenter"
+            and await read_recovery_version(admin, player_id) == STRUCTURE_RECOVERY_VERSION
+        ):
+            raise retired_recovery_option()
         progress = await store.read_progress(admin, player_id)
         member = rules.check_hire(catalogue, crew, progress.crew[crew], progress.unlock_wave)
         arguments = {
@@ -809,6 +816,14 @@ async def research(
     if not await store.ledger_has(admin, player_id, "tech_research", ref):
         progress = await store.read_progress(admin, island.owner)
         done = await store.read_research(admin, island.owner)
+        existing = done.get(entry.branch)
+        if (
+            tier == 2
+            and choice == "mason_drill"
+            and (existing is None or existing.choice_2 != choice)
+            and await read_recovery_version(admin, island.owner) == STRUCTURE_RECOVERY_VERSION
+        ):
+            raise retired_recovery_option()
         entry, price = rules.check_research(
             catalogue, entry.branch, done, progress.wave_best, tier, choice, change
         )
@@ -877,6 +892,8 @@ async def specialise(
     if price > 0 and built[spot.id].spec == spec:
         # The skill it has already: nothing to pay, nothing to change (safe to repeat).
         return await look_open(admin, catalogue, island, payer)
+    if branch == "house" and built[spot.id].spec == spec:
+        return await look_open(admin, catalogue, island, payer)
     if price > 0 and action_uid is None:
         # An old tab that does not know the prices yet: never charge a click without its id.
         raise ApiError(
@@ -886,6 +903,12 @@ async def specialise(
         admin, player_id, "tower_skill", f"{TOWER_SKILL_PREFIX}{action_uid}"
     ):
         return await look_open(admin, catalogue, island, payer)
+    if (
+        spec in RETIRED_RECOVERY_OPTIONS
+        and built[spot.id].spec != spec
+        and await read_recovery_version(admin, island.owner) == STRUCTURE_RECOVERY_VERSION
+    ):
+        raise retired_recovery_option()
     arguments = {
         "p_player_id": player_id,
         "p_island_owner": island.owner,
@@ -920,6 +943,15 @@ def specialise_refusal(
     if refusal.reason == "insufficient_funds":
         return not_enough_coins(rules.spec_name(entry, spec), refusal.price)
     return campaign_refusal(refusal, catalogue, "tech_hub", entry.name)
+
+
+def retired_recovery_option() -> ApiError:
+    """The recovery-v1 island cannot newly buy or select a retired recovery option."""
+    return ApiError(
+        409,
+        "recovery_option_retired",
+        "That recovery option is no longer available on this island.",
+    )
 
 
 async def tower_tree(
@@ -1191,6 +1223,7 @@ async def visit(
     progress = await store.read_progress(admin, island.owner)
     research = await store.read_research(admin, island.owner)
     campaign = campaign_of(catalogue, progress.wave_best, research, progress.wreck_paid)
+    recovery_version = await read_recovery_version(admin, island.owner)
     return VisitView(
         shown(island.code),
         owner_name,
@@ -1199,6 +1232,7 @@ async def visit(
         progress.crew,
         campaign,
         layout.info_of(grid, stored),
+        recovery_version,
     )
 
 

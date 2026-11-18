@@ -46,6 +46,25 @@ def test_tier_two_opens_after_wave_fifteen_at_twice_the_price():
     }
 
 
+def test_recovery_v1_refuses_new_mason_drill_but_keeps_saved_choice_and_retry():
+    world = world_at(15)
+    researched(world, wall=(1, None, None))
+    world.database.recovery_policy_version = 1
+
+    retired = research(world, "wall", tier=2, choice="mason_drill")
+    assert_error(retired, 409, "recovery_option_retired")
+    assert world.database.calls("island_research") == []
+
+    world.database.ledger_refs.add(("tech_research", "research:click-0001"))
+    assert research(world, "wall", tier=2, choice="mason_drill").status_code == 200
+    assert world.database.calls("island_research") == []
+
+    saved = world_at(15)
+    researched(saved, wall=(2, "mason_drill", None))
+    saved.database.recovery_policy_version = 1
+    assert saved.island().status_code == 200
+
+
 def test_tier_three_opens_after_wave_twenty_five_at_three_and_a_half_times():
     assert_error(
         research(world_at(24), "wall", tier=3, choice="bastion"),
