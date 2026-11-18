@@ -57,7 +57,7 @@ No wave, arsenal, paid-repair, deletion or historical completion API is invented
 
 ## Verification
 
-The direct negative regression selection was first observed as **10 failed** against the unguarded database. The current **34 core PostgreSQL cases** pass within the combined checks below, including the required private construction-kit alias and absence of a core-kit alias. That dependency check was observed failing before construction contained its grant protection. Races observe actual PostgreSQL advisory/transaction lock waits on separate connections; a timed future alone is not proof of entering the gate. No test-only replacement grant, profile hook or construction function is installed.
+The direct negative regression selection was first observed as **10 failed** against the unguarded database. The original **34 core PostgreSQL cases** pass within the broad baseline below, including the required private construction-kit alias and absence of a core-kit alias. That dependency check was observed failing before construction contained its grant protection. Races observe actual PostgreSQL advisory/transaction lock waits on separate connections; a timed future alone is not proof of entering the gate. No test-only replacement grant, profile hook or construction function is installed.
 
 Commands ran from `backend/` with locked dependencies and a writable UV cache:
 
@@ -77,3 +77,15 @@ uv run ruff check .
 **450 passed in 15.72s; backend-wide Ruff passed.** The PostgreSQL parser accepted **74 migration files with 74 unique versions**. The final personal dependency refresh changed only two SQL-test fixture imports and its verification text; the final construction refresh changed verification text only. No runtime or SQL source changed after the checks above. Own new files pass `git diff --check`; unrelated incoming evidence whitespace was not edited.
 
 No live credentials/database, Supabase migration-history application, complete browser suite or exhaustive unrelated backend matrix was used. Direct execution and unique filenames are not a test of Supabase migration-history bookkeeping. Core HTTP dispatch, canonical sessions/arsenal/repair/settlements and authenticated multi-client acceptance remain outside this guard foundation.
+
+### Respec contract compatibility follow-up
+
+The existing `backend/server/tests/test_respec_wave_guards_match_migration.py` now accepts only the exact reviewed `50701` respec wrapper as latest, while retaining the original priced-under-island-lock assertions on the immutable `130100` body. Its complete reviewed body is pinned; the preceding definition, capture-once guard, exact refusal/delegation and execute revocations are checked explicitly. Research assertions remain unchanged in this follow-up. A new PostgreSQL case compares the private alias's entire native body with that historical body, reapplies `50701` twice and confirms the alias stays private.
+
+The original static failures were reproduced as **2 failed, 5 passed** before updating the contract checks. Current focused results:
+
+- `uv run pytest -q server/tests/test_respec_wave_guards_match_migration.py`: **10 passed in 0.06s**.
+- `CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql/test_economy_core_legacy_guards_sql.py server/tests/island_sql/test_economy_core_legacy_guard_races_sql.py server/tests/island_sql/test_respec_and_wave_guards_sql.py server/tests/island_sql/test_captain_tree_sql.py server/tests/island_sql/test_island_fresh_start_sql.py`: **68 passed in 7.27s**, including the new alias-body reapplication check (35 core cases).
+- Backend-wide Ruff and `git diff --check`: passed.
+
+This is a test-only compatibility follow-up; production code and migration contents are unchanged. The broad 261-case database run and 450-case Python run above remain the earlier baseline, not a claim that an exhaustive suite was rerun for this test update.
