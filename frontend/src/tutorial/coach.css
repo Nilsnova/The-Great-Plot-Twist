@@ -16,6 +16,20 @@
 .coach-button.is-quiet{color:var(--u-ink,#f6ecd2);background:transparent;border-color:var(--u-line,#5c8a86)}
 .coach-button:hover{filter:brightness(1.08)}.coach-button:focus-visible{outline:3px solid var(--u-gold,#f2c14e);outline-offset:3px}
 
+/* On short phones, the goals show progress and only the guide copy can scroll above the stick. */
+.coach-panel.is-preparation-guide:not([hidden]){display:flex;flex-direction:column;max-height:var(--coach-preparation-height,none);padding-block:5px 7px}
+.coach-panel.is-preparation-guide .coach-top{
+  position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap
+}
+.coach-panel.is-preparation-guide .coach-title{flex:none;margin-top:2px}
+.coach-panel.is-preparation-guide .coach-caption{
+  min-height:0;overflow:auto;overscroll-behavior:contain;touch-action:pan-y;scrollbar-width:thin;scrollbar-color:var(--u-brass) transparent
+}
+.coach-panel.is-preparation-guide .coach-caption:focus-visible{outline:2px solid var(--u-brass);outline-offset:1px}
+.coach-scroll-hint{flex:none;margin-top:3px;color:var(--u-mute);font:700 13px/1.15 var(--u-font)}
+.coach-scroll-hint[hidden]{display:none}
+.coach-panel.is-preparation-guide .coach-actions{flex:none;margin-top:8px}
+
 /* The short-phone combat disclosure keeps the guide in the lane left of the attack control. */
 .coach-disclosure{position:fixed;padding:0 4px;min-width:44px;min-height:44px;color:var(--u-ink);background:var(--u-sea);border-color:var(--u-brass);pointer-events:auto}
 .coach-panel.is-combat-guide{position:fixed;left:var(--coach-panel-left);top:var(--coach-panel-top);width:var(--coach-panel-width);max-height:var(--coach-panel-height);overflow:auto;overscroll-behavior:contain;touch-action:pan-y;scrollbar-width:thin;scrollbar-color:var(--u-brass) transparent;padding:6px 8px}
