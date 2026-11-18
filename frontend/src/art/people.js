@@ -101,10 +101,10 @@ function captainBody(c, pal, view, step, armed = false) {
 function captain(pal, view, step) { return c => captainBody(c, pal, view, step); }
 // The musket pose, facing right: the captain stands at the middle of a 48 px box, the long gun level.
 export function musketPose(pal, firing, angle = null) {
-  return weaponPose(pal, 'musket', firing, angle);
+  return approvedMusketPose(pal, firing, angle);
 }
-// Weapon silhouettes share the upright captain and projected aim, with a separate throwing arm for bombs.
-export function weaponPose(pal, weapon, firing, angle = null) {
+// The approved musket path stays isolated; its pixel fingerprints are checked in Chromium.
+function approvedMusketPose(pal, firing, angle = null) {
   return c => {
     // Keep the body upright; only the weapon and its arms turn toward the target.
     const tilt = Math.abs(angle ?? 0), back = angle < 0;
@@ -113,11 +113,10 @@ export function weaponPose(pal, weapon, firing, angle = null) {
     const body = () => { c.save(); c.translate(12, 0); captainBody(c, pal, view, '', true); c.restore(); };
     // Facing away: the captain occludes the musket. Facing toward us: the gun is in front.
     if (angle === null || angle >= 0) body();
-    const turn = angle ?? 0, reach = angle === null ? 1 : .6, kick = firing && weapon !== 'fire_bombs' ? -1 : 0;
+    const turn = angle ?? 0, reach = angle === null ? 1 : .6, kick = firing ? -1 : 0;
     const shoulder = 24 + (angle !== null && angle < 0 ? 8 * Math.abs(Math.sin(angle)) : 0);
     // Only these two sleeves/hands belong to the firing pose; the body's idle arms are omitted.
-    const hands = weapon === 'fire_bombs' ? [[19, 28, 23], [29, firing ? 35 : 31, firing ? 12 : 18]]
-      : weapon === 'pistols' ? [[19, 29, 16], [29, 34, 22]] : [[19, 26, 19.6], [29, 31.4, 19]];
+    const hands = [[19, 26, 19.6], [29, 31.4, 19]];
     for (const [from, x, y] of hands) {
       const dx = (x + kick - 24) * reach, dy = y - 18;
       const to = [shoulder + Math.cos(turn) * dx - Math.sin(turn) * dy,
@@ -131,27 +130,87 @@ export function weaponPose(pal, weapon, firing, angle = null) {
       c.translate(shoulder, 18); c.rotate(angle); c.scale(.6, 1); c.translate(-24, -18);
     }
     c.save(); c.translate(kick, 0);
-    if (weapon === 'fire_bombs') {
-      // The throwing hand is empty after release; the other hand holds the next round bomb.
-      part(c, ellipse(28, 23, 3), '#343a42', {depth: .8, gloss: ellipse(27, 22, .8)});
-      part(c, rect(27, 19, 2, 2, .5), '#a46e32', {depth: .5});
-      stroke(c, [[28, 19], [30, 17.5]], '#dcb772', 1.3);
-    } else if (weapon === 'pistols') {
-      for (const [x, y] of [[29, 16], [34, 22]]) {
-        part(c, rect(x - 1.5, y - 2, 3, 5, 1), '#8a5a36', {depth: .7});
-        part(c, rect(x - 1, y - 3, 8, 2.4, .8), '#3b3f4a', {depth: .6});
-      }
-    } else {
-      part(c, poly([[20, 17.2], [26, 16], [29, 18.6], [21.5, 20.6]], 1), '#8a5a36', {depth: .8});
-      const length = weapon === 'long_rifle' ? 22 : weapon === 'blunderbuss' ? 12 : 18.5;
-      part(c, rect(25, 15.6, length, 1.9, .9), '#3b3f4a', {depth: .6, gloss: rect(27, 15.9, length - 4, .5, .25)});
-      part(c, rect(28, 17.2, 7, 1.6, .6), '#8a5a36', {depth: .5, width: .8});
-      if (weapon === 'blunderbuss') part(c, poly([[33, 15.6], [40, 12.5], [40, 20.5], [33, 17.5]], 1), '#b8924f', {depth: .7});
-      if (weapon === 'long_rifle') part(c, rect(30, 13, 5, 1.6, .6), '#c8b47a', {depth: .6});
-    }
+    part(c, poly([[20, 17.2], [26, 16], [29, 18.6], [21.5, 20.6]], 1), '#8a5a36', {depth: .8});
+    part(c, rect(25, 15.6, 18.5, 1.9, .9), '#3b3f4a', {depth: .6, gloss: rect(27, 15.9, 14.5, .5, .25)});
+    part(c, rect(28, 17.2, 7, 1.6, .6), '#8a5a36', {depth: .5, width: .8});
     for (const [, x, y] of hands) part(c, ellipse(x, y, 1.5), SKIN, {depth: .6});
     c.restore(); c.restore();
     if (angle !== null && angle < 0) body();
+  };
+}
+// Authored bends in screen space: wrists and the weapon use the same projected local coordinates.
+export function weaponGripLayout(weapon, firing, angle = null) {
+  const turn = angle ?? 0, sine = Math.sin(turn), back = sine < 0, depth = Math.abs(sine);
+  const scale = angle === null ? 1 : .6, origin = [24 + (back ? 8 * depth : 0), 18];
+  const point = ([x, y], offset = 0) => {
+    const dx = (x - 24 - (firing && weapon !== 'fire_bombs' ? .6 : 0)) * scale, dy = y - 18;
+    return [origin[0] + Math.cos(turn) * dx - sine * dy + offset, origin[1] + sine * dx + Math.cos(turn) * dy];
+  };
+  const shoulders = [[23 + (back && weapon !== 'pistols' ? 2 : -4) * depth, 16.2], [26 + 3 * depth, 16.2]];
+  const locals = weapon === 'pistols' ? [[30, 18.5], [36, 20.5]] : [[27, 19], [35, 19.5]];
+  const hands = locals.map((local, i) => ({local, offset: weapon === 'pistols' && i === 0 && back ? -16 * depth : 0}));
+  if (weapon === 'fire_bombs') {
+    hands[0] = {point: [19 - 2 * depth, 23], local: null};
+    hands[1] = {local: firing ? [37, 20] : [30, 20], offset: 0};
+  }
+  for (const hand of hands) hand.point ??= point(hand.local, hand.offset);
+  const arms = hands.map((hand, i) => {
+    const shoulder = shoulders[i], wrist = hand.point;
+    const elbow = [(shoulder[0] + wrist[0]) / 2 - sine * (i ? 1.5 : .8),
+      (shoulder[1] + wrist[1]) / 2 + 2 + Math.abs(Math.cos(turn)) * (i ? 1.5 : 2)];
+    if (weapon === 'fire_bombs' && !firing && i === 1) {elbow[0] = shoulder[0] + 2.5 * Math.cos(turn); elbow[1] = 22;}
+    return {shoulder, elbow, wrist};
+  });
+  return {origin, turn, scale, back, hands, arms, bombs: weapon === 'fire_bombs' && !firing ? 1 : 0};
+}
+
+export function weaponPose(pal, weapon, firing, angle = null) {
+  if (weapon === 'musket') return approvedMusketPose(pal, firing, angle);
+  const pose = weaponGripLayout(weapon, firing, angle);
+  return c => {
+    const tilt = Math.abs(angle ?? 0), view = tilt < Math.PI / 8 ? '-side' : tilt > 3 * Math.PI / 8
+      ? (pose.back ? '-back' : '') : (pose.back ? '-back-diagonal' : '-front-diagonal');
+    const body = () => {c.save(); c.translate(12, 0); captainBody(c, pal, view, '', true); c.restore();};
+    const onWeapon = (draw, offset = 0) => {
+      c.save(); c.translate(pose.origin[0] + offset, pose.origin[1]); c.rotate(pose.turn); c.scale(pose.scale, 1);
+      c.translate(-24 - (firing && weapon !== 'fire_bombs' ? .6 : 0), -18); draw(); c.restore();
+    };
+    if (!pose.back) body();
+    for (const {shoulder, elbow, wrist} of pose.arms) {
+      stroke(c, [shoulder, elbow, wrist], INK, 4.1); stroke(c, [shoulder, elbow, wrist], pal.coat, 2.6);
+    }
+    if (weapon === 'pistols') for (const hand of pose.hands) onWeapon(() => {
+      const [x, y] = hand.local;
+      part(c, poly([[x - 1.5, y - 2.7], [x + 1.4, y - 2.4], [x + .7, y + 2], [x - 1.5, y + 1.6]], .7), '#8a5a36', {depth: .5});
+      part(c, rect(x - 1, y - 3.6, 10, 2.2, .7), '#3b3f4a', {depth: .5});
+      part(c, ellipse(x + 1.5, y - .7, 1.6, 1.2), '#b8924f', {width: .6, depth: .4});
+    }, hand.offset);
+    else if (weapon === 'fire_bombs' && pose.bombs) onWeapon(() => {
+      const [x, y] = pose.hands[1].local;
+      part(c, ellipse(x + .7, y - 2.1, 2.5), '#343a42', {depth: .6, gloss: ellipse(x, y - 3, .65)});
+      part(c, rect(x, y - 5, 1.6, 1.4, .4), '#a46e32', {depth: .4});
+      stroke(c, [[x + .8, y - 5], [x + 2.5, y - 6]], '#dcb772', 1);
+    });
+    else if (weapon !== 'fire_bombs') onWeapon(() => {
+      part(c, poly([[21, 16], [26, 16], [28.5, 18.5], [27, 20.5], [24.5, 18.5], [21, 19]], .7), '#8a5a36', {depth: .6});
+      const length = weapon === 'long_rifle' ? 21 : 14;
+      part(c, rect(25, 15.2, length, 2, .7), '#3b3f4a', {depth: .5});
+      part(c, rect(29, 17, 9, 1.3, .5), '#8a5a36', {depth: .4});
+      if (weapon === 'blunderbuss') part(c, poly([[34, 15.2], [40, 12.5], [40, 20], [34, 17.2]], .7), '#b8924f', {depth: .5});
+      else part(c, rect(30, 13, 5, 1.4, .5), '#c8b47a', {depth: .4});
+    });
+    for (const hand of pose.hands) {
+      const fingers = () => {
+        const [x, y] = hand.local;
+        part(c, ellipse(x, y, 1.4, 1.25), SKIN, {depth: .5});
+        if (weapon === 'fire_bombs' && firing) {
+          for (const dy of [-1.1, .3, 1.3]) stroke(c, [[x, y + dy], [x + 3, y + dy - .3]], SKIN, .9);
+        } else part(c, ellipse(x + 1, y - .9, .6, .8), SKIN, {depth: .3, width: .5});
+      };
+      if (hand.local) onWeapon(fingers, hand.offset);
+      else part(c, ellipse(hand.point[0], hand.point[1], 1.3, 1.5), SKIN, {depth: .5});
+    }
+    if (pose.back) body();
   };
 }
 // The cutlass swing (TOWER-DEFENSE.md §12), facing right in the musket's 48 px box: the blade out in

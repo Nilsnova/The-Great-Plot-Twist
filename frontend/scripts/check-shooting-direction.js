@@ -3,8 +3,10 @@
 // Run with --before to capture the unchanged baseline without asserting the new frame names.
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
-import {mkdir} from 'node:fs/promises';
+import {mkdir,readFile} from 'node:fs/promises';
 import {openWorldBrowser} from './world-browser-tools.js';
+import {musketPixels} from './weapon-pose-pixels.js';
+import {POSES} from '../src/pirates/poses.js';
 
 const before = process.argv.includes('--before');
 const galleryOnly = process.argv.includes('--gallery-only');
@@ -66,21 +68,24 @@ try {
       };
     }, index === 1);
   }
+  const approvedMusket=JSON.parse(await readFile(new URL('../tests/fixtures/cw4-musket-pixels.json',import.meta.url),'utf8'));
+  assert.deepEqual(await musketPixels(pages[0]),approvedMusket.hashes,'approved musket RGBA pixels stay identical');
   const snapshots = new Map(), ownShots = new Map();
   if(!galleryOnly) for (const weapon of ['musket','pistols','blunderbuss','long_rifle','fire_bombs'])
+  for(const [phase,age] of [['fire',0],['ready',POSES[weapon].fire+.01]])
   for (const [width,height] of [[1280,720],[375,812]]) for (const [direction,toX,toZ] of [['right',8,0],['left',-8,0],['up',0,-8],['down',0,8],['up-right',8,-8],['down-left',-8,8],['up-left',-8,-8],['down-right',8,8],['steep-up',2,-7],['shallow-up',7,-2]]) {
     const event={type:'captain_fired',weapon,by:'captain',x:0,z:0,toX,toZ};
     for (const [index,page] of pages.entries()) {
       await page.setViewportSize({width,height});
-      const visible=await page.evaluate(event=>window.t27.draw(event),event);
+      const visible=await page.evaluate(([event,age])=>window.t27.draw(event,age),[event,age]);
       assert.equal(visible.length,1,'one visible captain body');
       if(!before) {
-        assert.equal(visible[0].frame,`captain-3-${weapon}-2`);
+        assert.equal(visible[0].frame,`captain-3-${weapon}-${phase==='fire'?2:1}`);
         assert.ok(Math.abs(visible[0].angle-Math.atan2(toZ*.72,Math.abs(toX)))<1e-10,'exact projected aim');
         assert.equal(visible[0].flip,toX<0);
       }
-      const screenshot=await page.screenshot({path:`${out}/${weapon}-${width}x${height}-${direction}-${index?'remote':'own'}.png`});
-      if(width===375 && index===0 && weapon==='musket') ownShots.set(direction,screenshot.toString('base64'));
+      const screenshot=await page.screenshot({path:`${out}/${weapon}-${width}x${height}-${direction}-${phase}-${index?'remote':'own'}.png`});
+      if(width===375 && index===0 && weapon==='musket'&&phase==='fire') ownShots.set(direction,screenshot.toString('base64'));
       const key=`${weapon}:${width}:${index}`; if(!snapshots.has(key)) snapshots.set(key,new Set());
       snapshots.get(key).add(createHash('sha256').update(screenshot).digest('hex'));
       const idle=await page.evaluate(event=>window.t27.draw(event,1),event);
@@ -133,5 +138,5 @@ try {
   for(const page of pages) { const memory=await page.evaluate(()=>window.t27.close());
     if(!before&&!galleryOnly) { assert.ok(memory.before<=2,'one reused shot texture plus idle'); assert.equal(memory.after,memory.before-1,'shot texture released'); } }
   assert.deepEqual(env.errors,[]);
-  console.log(`check-shooting-direction: OK (${galleryOnly?'gallery fixture capture':'5 weapons, 2 pages, 10 shot angles'}, 2 viewports; ${before?'baseline':'after'}); ${out}`);
+  console.log(`check-shooting-direction: OK (220 unchanged musket pixels; ${galleryOnly?'gallery fixture capture':'5 weapons, 2 phases, 2 pages, 10 shot angles'}, 2 viewports; ${before?'baseline':'after'}); ${out}`);
 } finally { await env.close(); }

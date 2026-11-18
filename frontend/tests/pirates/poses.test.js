@@ -7,8 +7,42 @@ import { matchFigures } from '../../src/pirates/figures.js';
 import { createCharacter } from '../../src/player/character.js';
 import { islandFrame } from '../../src/art/registry.js';
 import { projectPoint } from '../../src/world/art.js';
+import {weaponGripLayout} from '../../src/art/people.js';
 
 const shot = (by, x = 0, toX = 8) => ({ type: 'captain_fired', t: 1, by, x, z: 0, toX, toZ: -2 });
+
+describe('drawn hands stay on their weapon grips', () => {
+  const angles = [null, 0, -Math.PI / 2, Math.PI / 2, -Math.PI / 4, Math.PI / 4, Math.atan2(-7 * .72, 2), Math.atan2(-2 * .72, 7)];
+  it.each(['pistols', 'blunderbuss', 'long_rifle', 'fire_bombs'])('keeps %s wrists attached through both phases and all aim directions', weapon => {
+    for (const angle of angles) for (const firing of [true, false]) {
+      const pose = weaponGripLayout(weapon, firing, angle);
+      for (const [i, hand] of pose.hands.entries()) {
+        const arm = pose.arms[i];
+        expect(arm.wrist).toEqual(hand.point);
+        for (const [a, b] of [[arm.shoulder, arm.elbow], [arm.elbow, arm.wrist]]) {
+          expect(Math.hypot(b[0] - a[0], b[1] - a[1])).toBeGreaterThan(.5);
+          expect(Math.hypot(b[0] - a[0], b[1] - a[1])).toBeLessThan(11);
+        }
+        if (hand.local) {
+          const dx = (hand.local[0] - 24 - (firing && weapon !== 'fire_bombs' ? .6 : 0)) * pose.scale;
+          const dy = hand.local[1] - 18;
+          expect(hand.point[0]).toBeCloseTo(pose.origin[0] + Math.cos(angle ?? 0) * dx - Math.sin(angle ?? 0) * dy + hand.offset);
+          expect(hand.point[1]).toBeCloseTo(pose.origin[1] + Math.sin(angle ?? 0) * dx + Math.cos(angle ?? 0) * dy);
+        }
+      }
+      if (weapon === 'fire_bombs') {
+        expect(pose.bombs).toBe(firing ? 0 : 1);
+        expect(pose.hands[0].local).toBeNull(); // balancing hand carries no spare bomb
+      } else if (weapon === 'pistols') {
+        expect(Math.hypot(...pose.hands[1].point.map((v, i) => v - pose.hands[0].point[i]))).toBeGreaterThan(3);
+      } else {
+        const [trigger, support] = pose.hands;
+        expect(support.local[0]).toBeGreaterThan(trigger.local[0]);
+        expect(support.local[1]).toBeGreaterThan(18.3); // palm supports the wooden fore-end from underneath
+      }
+    }
+  });
+});
 
 describe('the pose of a shot or a blow', () => {
   it('has every weapon and cutlass drawing in every lobby colour', () => {
