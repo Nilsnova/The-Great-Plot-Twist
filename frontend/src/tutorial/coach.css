@@ -16,6 +16,23 @@
 .coach-button.is-quiet{color:var(--u-ink,#f6ecd2);background:transparent;border-color:var(--u-line,#5c8a86)}
 .coach-button:hover{filter:brightness(1.08)}.coach-button:focus-visible{outline:3px solid var(--u-gold,#f2c14e);outline-offset:3px}
 
+/* The short-phone combat disclosure keeps the guide in the lane left of the attack control. */
+.coach-disclosure{position:fixed;padding:0 4px;min-width:44px;min-height:44px;color:var(--u-ink);background:var(--u-sea);border-color:var(--u-brass);pointer-events:auto}
+.coach-panel.is-combat-guide{position:fixed;left:var(--coach-panel-left);top:var(--coach-panel-top);width:var(--coach-panel-width);max-height:var(--coach-panel-height);overflow:auto;overscroll-behavior:contain;touch-action:pan-y;scrollbar-width:thin;scrollbar-color:var(--u-brass) transparent;padding:6px 8px}
+.coach-disclosure:focus-visible{outline-width:2px;outline-offset:2px}
+.coach-panel.is-combat-guide:not([hidden]){display:flex;flex-direction:column}
+.coach-panel.is-combat-guide>*{flex:none}
+.coach-panel.is-combat-guide>.coach-title{order:-2}
+.coach-panel.is-combat-guide>.coach-caption{order:-1}
+.coach-panel.is-combat-guide:focus-visible{outline:2px solid var(--u-brass);outline-offset:1px}
+.coach-panel.is-combat-guide .coach-step{font-size:12px;letter-spacing:.3px}
+.coach-panel.is-combat-guide .coach-key{min-width:22px;height:20px;font-size:13px}
+.coach-panel.is-combat-guide .coach-title{margin:2px 0;font-size:17px}
+.coach-panel.is-combat-guide .coach-caption{font-size:15px;line-height:1.3}
+.coach-panel.is-combat-guide .coach-actions{display:grid;gap:5px;margin-top:6px}
+.coach-panel.is-combat-guide .coach-actions[hidden]{display:none}
+.coach-panel.is-combat-guide .coach-button{padding-inline:5px}
+
 /* The highlight: a ring on the target, or an arrow on the edge of the screen. Never catches a click. */
 .coach-ring,.coach-arrow{position:fixed;z-index:39;pointer-events:none}
 .coach-ring[hidden],.coach-arrow[hidden]{display:none}
