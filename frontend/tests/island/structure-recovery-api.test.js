@@ -102,7 +102,7 @@ describe('structure recovery API', () => {
       transport: {get: () => held, post: async () => null}});
     const reading = api.structureRecovery(); actor = 'captain-b';
     release({ok: true, data: state()});
-    expect(await reading).toMatchObject({ok: false, code: 'economy_context_required'});
+    expect(await reading).toMatchObject({ok: false, status:0,code:'auth_context_changed'});
   });
   it('requests protocol two from the persisted policy and preserves the entire recovery wave DTO', async () => {
     const sent = [];
