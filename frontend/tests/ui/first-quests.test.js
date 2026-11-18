@@ -1,7 +1,7 @@
 // Lane U3: the first-3-minutes quest sequence, its storage, the 3-goal window and the idle hint.
 import {describe,expect,it} from 'vitest';
 import {QUEST_EVENTS,ISLAND_BUILT,WAVE_FINISHED,PLACE_ARRIVED,HARBOR_STAKE_PLACED,ISLAND_INVITE_OPENED,ISLAND_UPGRADED,CREW_HIRED} from '../../src/ui/quest-events.js';
-import {FIRST_QUESTS,TRAVEL_QUESTS,questsFor,FIRST_QUEST_KEY,IDLE_HINT_MS,applyQuestEvent,createIdleHint,firstQuestView,readFirstQuests,writeFirstQuests} from '../../src/ui/first-quests.js';
+import {FIRST_QUESTS,TRAVEL_QUESTS,questsFor,FIRST_QUEST_KEY,IDLE_HINT_MS,applyQuestEvent,reconcileFirstQuests,createIdleHint,firstQuestView,readFirstQuests,writeFirstQuests} from '../../src/ui/first-quests.js';
 
 const memory=()=>{const map=new Map();return {getItem:key=>map.get(key)??null,setItem:(key,value)=>map.set(key,String(value)),map};};
 const run=(events,state={done:0})=>events.reduce((current,event)=>applyQuestEvent(current,event).state,state);
@@ -62,6 +62,31 @@ describe('the first-3-minutes sequence',()=>{
     for(const event of [null,undefined,{},{type:ISLAND_BUILT,kind:{toString(){throw new Error('x');}}},{type:ISLAND_BUILT,get kind(){throw new Error('x');}}])
       expect(applyQuestEvent({done:0},event).changed).toBe(false);
     expect(applyQuestEvent(undefined,{type:ISLAND_BUILT,kind:'cannon'}).state).toEqual({done:1});
+  });
+});
+
+describe('already completed island goals',()=>{
+  const island = {waveBest:10,crew:{gunner:2},spots:[
+    {kind:'cannon',built:true,level:2},{kind:'wall',built:true,level:1},{kind:'mortar',built:true,level:1}]};
+  it('repairs an old save stuck at gunner without requiring a third hire',()=>{
+    const storage=memory();writeFirstQuests(storage,{done:8});
+    expect(reconcileFirstQuests(readFirstQuests(storage),island)).toEqual({done:10});
+  });
+  it('keeps the goal order and rechecks earlier achievements after an invite',()=>{
+    const before=reconcileFirstQuests({done:0},island);
+    expect(before).toEqual({done:4});
+    const invited=applyQuestEvent(before,{type:ISLAND_INVITE_OPENED}).state;
+    expect(reconcileFirstQuests(invited,island)).toEqual({done:10});
+    expect(reconcileFirstQuests({done:0},island,TRAVEL_QUESTS)).toEqual({done:2});
+  });
+  it('does not skip a missing prerequisite or rewind completed goals',()=>{
+    expect(reconcileFirstQuests({done:5},{...island,spots:island.spots.slice(0,2)})).toEqual({done:6});
+    expect(reconcileFirstQuests({done:8},{...island,crew:{carpenter:2}})).toEqual({done:8});
+    expect(reconcileFirstQuests({done:5},{...island,spots:[{kind:'cannon',built:true,level:1}]})).toEqual({done:5});
+    expect(reconcileFirstQuests({done:0},{...island,spots:[{kind:'cannon',built:false,level:2}]})).toEqual({done:0});
+    expect(reconcileFirstQuests({done:7},{...island,waveBest:4})).toEqual({done:7});
+    expect(reconcileFirstQuests({done:10},{waveBest:0,spots:[],crew:{}})).toEqual({done:10});
+    expect(reconcileFirstQuests({done:8},null)).toEqual({done:8});
   });
 });
 

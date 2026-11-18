@@ -1,0 +1,22 @@
+{
+  "about": "VIS71: east/west use x depth, south uses z depth. The south sector wins the 45-degree tie around the heart. Equal depth is one row, including unbuilt reserved sites; a half-unit stagger is another row.",
+  "heart": [0, 2],
+  "counts": [
+    {"name": "empty", "walls": [], "rows": {"east": 0, "south": 0, "west": 0}},
+    {"name": "east line", "walls": [[10,-2],[10,0],[10,2]], "rows": {"east": 1, "south": 0, "west": 0}},
+    {"name": "west line", "walls": [[-10,-2],[-10,0],[-10,2]], "rows": {"east": 0, "south": 0, "west": 1}},
+    {"name": "south line", "walls": [[-2,12],[0,12],[2,12]], "rows": {"east": 0, "south": 1, "west": 0}},
+    {"name": "half-grid stagger", "walls": [[10,0],[10.5,0],[11,0],[11.5,0]], "rows": {"east": 4, "south": 0, "west": 0}},
+    {"name": "sector boundaries", "walls": [[1,3],[-1,3],[1,1],[-1,1]], "rows": {"east": 1, "south": 1, "west": 1}}
+  ],
+  "changes": [
+    {"name": "third east row", "before": [[6,0],[8,0]], "after": [[6,0],[8,0],[10,0]], "refused": null},
+    {"name": "fourth east row", "before": [[6,0],[8,0],[10,0]], "after": [[6,0],[8,0],[10,0],[12,0]], "refused": "east"},
+    {"name": "fourth west row", "before": [[-6,0],[-8,0],[-10,0]], "after": [[-6,0],[-8,0],[-10,0],[-12,0]], "refused": "west"},
+    {"name": "fourth south row", "before": [[0,6],[0,8],[0,10]], "after": [[0,6],[0,8],[0,10],[0,12]], "refused": "south"},
+    {"name": "old excess stays readable and rearrangeable", "before": [[6,0],[8,0],[10,0],[12,0]], "after": [[6,0],[8,0],[10,0],[14,0]], "refused": null},
+    {"name": "correct old excess", "before": [[6,0],[8,0],[10,0],[12,0]], "after": [[6,0],[8,0],[10,0],[10,2]], "refused": null},
+    {"name": "cannot add fifth row to old excess", "before": [[6,0],[8,0],[10,0],[12,0]], "after": [[6,0],[8,0],[10,0],[12,0],[14,0]], "refused": "east"},
+    {"name": "no trade of one excess for another", "before": [[6,0],[8,0],[10,0],[-6,0],[-8,0],[-10,0],[-12,0]], "after": [[6,0],[8,0],[10,0],[12,0],[-6,0],[-8,0],[-10,0]], "refused": "east"}
+  ]
+}

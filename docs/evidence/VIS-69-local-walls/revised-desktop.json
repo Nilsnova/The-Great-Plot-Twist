@@ -1,0 +1,955 @@
+{
+  "label": "desktop",
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "isMobile": false,
+  "reducedMotion": "no-preference",
+  "browser": "157.0.8103.79",
+  "receipts": [
+    {
+      "spot": "wall_1",
+      "level": 1,
+      "paid": 10,
+      "balance": 399590,
+      "at": [
+        -18.5,
+        -1
+      ]
+    },
+    {
+      "spot": "wall_2",
+      "level": 1,
+      "paid": 10,
+      "balance": 399580,
+      "at": [
+        19,
+        1
+      ]
+    },
+    {
+      "spot": "wall_2",
+      "level": 2,
+      "paid": 20,
+      "balance": 399560,
+      "at": [
+        19,
+        1
+      ]
+    },
+    {
+      "spot": "wall_3",
+      "level": 1,
+      "paid": 10,
+      "balance": 399550,
+      "at": [
+        19,
+        -1
+      ]
+    },
+    {
+      "spot": "wall_3",
+      "level": 2,
+      "paid": 20,
+      "balance": 399530,
+      "at": [
+        19,
+        -1
+      ]
+    },
+    {
+      "spot": "wall_3",
+      "level": 3,
+      "paid": 40,
+      "balance": 399490,
+      "at": [
+        19,
+        -1
+      ]
+    },
+    {
+      "spot": "wall_4",
+      "level": 1,
+      "paid": 10,
+      "balance": 399480,
+      "at": [
+        -1,
+        17
+      ]
+    },
+    {
+      "spot": "wall_4",
+      "level": 2,
+      "paid": 20,
+      "balance": 399460,
+      "at": [
+        -1,
+        17
+      ]
+    },
+    {
+      "spot": "wall_4",
+      "level": 3,
+      "paid": 40,
+      "balance": 399420,
+      "at": [
+        -1,
+        17
+      ]
+    },
+    {
+      "spot": "wall_4",
+      "level": 4,
+      "paid": 80,
+      "balance": 399340,
+      "at": [
+        -1,
+        17
+      ]
+    },
+    {
+      "spot": "wall_5",
+      "level": 1,
+      "paid": 10,
+      "balance": 399330,
+      "at": [
+        1,
+        17
+      ]
+    },
+    {
+      "spot": "wall_5",
+      "level": 2,
+      "paid": 20,
+      "balance": 399310,
+      "at": [
+        1,
+        17
+      ]
+    },
+    {
+      "spot": "wall_5",
+      "level": 3,
+      "paid": 40,
+      "balance": 399270,
+      "at": [
+        1,
+        17
+      ]
+    },
+    {
+      "spot": "wall_5",
+      "level": 4,
+      "paid": 80,
+      "balance": 399190,
+      "at": [
+        1,
+        17
+      ]
+    },
+    {
+      "spot": "wall_5",
+      "level": 5,
+      "paid": 160,
+      "balance": 399030,
+      "at": [
+        1,
+        17
+      ]
+    },
+    {
+      "spot": "wall_6",
+      "level": 1,
+      "paid": 10,
+      "balance": 399020,
+      "at": [
+        -18.5,
+        -3
+      ]
+    },
+    {
+      "spot": "wall_7",
+      "level": 1,
+      "paid": 10,
+      "balance": 399010,
+      "at": [
+        8.5,
+        2
+      ]
+    },
+    {
+      "spot": "wall_7",
+      "level": 2,
+      "paid": 20,
+      "balance": 398990,
+      "at": [
+        8.5,
+        2
+      ]
+    },
+    {
+      "spot": "wall_8",
+      "level": 1,
+      "paid": 10,
+      "balance": 398980,
+      "at": [
+        0.5,
+        9.5
+      ]
+    },
+    {
+      "spot": "wall_8",
+      "level": 2,
+      "paid": 20,
+      "balance": 398960,
+      "at": [
+        0.5,
+        9.5
+      ]
+    },
+    {
+      "spot": "wall_8",
+      "level": 3,
+      "paid": 40,
+      "balance": 398920,
+      "at": [
+        0.5,
+        9.5
+      ]
+    },
+    {
+      "spot": "wall_9",
+      "level": 1,
+      "paid": 10,
+      "balance": 398910,
+      "at": [
+        -1.5,
+        9.5
+      ]
+    },
+    {
+      "spot": "wall_9",
+      "level": 2,
+      "paid": 20,
+      "balance": 398890,
+      "at": [
+        -1.5,
+        9.5
+      ]
+    },
+    {
+      "spot": "wall_9",
+      "level": 3,
+      "paid": 40,
+      "balance": 398850,
+      "at": [
+        -1.5,
+        9.5
+      ]
+    },
+    {
+      "spot": "wall_9",
+      "level": 4,
+      "paid": 80,
+      "balance": 398770,
+      "at": [
+        -1.5,
+        9.5
+      ]
+    },
+    {
+      "spot": "wall_10",
+      "level": 1,
+      "paid": 10,
+      "balance": 398760,
+      "at": [
+        -9.5,
+        -1
+      ]
+    },
+    {
+      "spot": "wall_10",
+      "level": 2,
+      "paid": 20,
+      "balance": 398740,
+      "at": [
+        -9.5,
+        -1
+      ]
+    },
+    {
+      "spot": "wall_10",
+      "level": 3,
+      "paid": 40,
+      "balance": 398700,
+      "at": [
+        -9.5,
+        -1
+      ]
+    },
+    {
+      "spot": "wall_10",
+      "level": 4,
+      "paid": 80,
+      "balance": 398620,
+      "at": [
+        -9.5,
+        -1
+      ]
+    },
+    {
+      "spot": "wall_10",
+      "level": 5,
+      "paid": 160,
+      "balance": 398460,
+      "at": [
+        -9.5,
+        -1
+      ]
+    },
+    {
+      "spot": "wall_11",
+      "level": 1,
+      "paid": 10,
+      "balance": 398450,
+      "at": [
+        -9.5,
+        1
+      ]
+    },
+    {
+      "spot": "wall_12",
+      "level": 1,
+      "paid": 10,
+      "balance": 398440,
+      "at": [
+        8.5,
+        0
+      ]
+    },
+    {
+      "spot": "wall_12",
+      "level": 2,
+      "paid": 20,
+      "balance": 398420,
+      "at": [
+        8.5,
+        0
+      ]
+    }
+  ],
+  "screens": [
+    {
+      "file": "revised-desktop-build-feedback.png",
+      "frame": {
+        "lost": false,
+        "zoom": 1,
+        "camera": [
+          -9.299999999999999,
+          3.7,
+          100
+        ],
+        "drawCalls": 85,
+        "triangles": 794,
+        "textures": 44,
+        "reducedMotion": "false",
+        "visible": true,
+        "pixelRatio": 1
+      }
+    },
+    {
+      "file": "revised-desktop-upgrade-feedback.png",
+      "frame": {
+        "lost": false,
+        "zoom": 0.5522698203232643,
+        "camera": [
+          -0.42432966672536515,
+          -1.4262945274163044,
+          100
+        ],
+        "drawCalls": 85,
+        "triangles": 568,
+        "textures": 44,
+        "reducedMotion": "false",
+        "visible": true,
+        "pixelRatio": 1
+      }
+    },
+    {
+      "file": "revised-desktop-work.png",
+      "frame": {
+        "lost": false,
+        "zoom": 0.551345969144646,
+        "camera": [
+          -0.4059655472740234,
+          -1.1370725599738332,
+          100
+        ],
+        "drawCalls": 80,
+        "triangles": 524,
+        "textures": 44,
+        "reducedMotion": "false",
+        "visible": true,
+        "pixelRatio": 1
+      }
+    },
+    {
+      "file": "revised-desktop-fit.png",
+      "frame": {
+        "lost": false,
+        "zoom": 0.5250766389470681,
+        "camera": [
+          -0.405673650021972,
+          -1.172652997387906,
+          100
+        ],
+        "drawCalls": 80,
+        "triangles": 524,
+        "textures": 44,
+        "reducedMotion": "false",
+        "visible": true,
+        "pixelRatio": 1
+      }
+    },
+    {
+      "file": "revised-desktop-selected.png",
+      "frame": {
+        "lost": false,
+        "zoom": 0.5165993851441123,
+        "camera": [
+          -0.40567364743330464,
+          -1.6778476220963445,
+          100
+        ],
+        "drawCalls": 82,
+        "triangles": 556,
+        "textures": 44,
+        "reducedMotion": "false",
+        "visible": true,
+        "pixelRatio": 1
+      }
+    },
+    {
+      "file": "revised-desktop-fourth-row.png",
+      "frame": {
+        "lost": false,
+        "zoom": 0.5002935903490063,
+        "camera": [
+          -0.40567364706501363,
+          -3.948305947933748,
+          100
+        ],
+        "drawCalls": 82,
+        "triangles": 628,
+        "textures": 45,
+        "reducedMotion": "false",
+        "visible": true,
+        "pixelRatio": 1
+      }
+    },
+    {
+      "file": "revised-desktop-firing.png",
+      "frame": {
+        "lost": false,
+        "zoom": 0.5751643124045931,
+        "camera": [
+          -1.5999751884715214,
+          -0.7673046978291881,
+          100
+        ],
+        "drawCalls": 68,
+        "triangles": 2160,
+        "textures": 46,
+        "reducedMotion": "false",
+        "visible": true,
+        "pixelRatio": 1
+      }
+    },
+    {
+      "file": "revised-desktop-breach.png",
+      "frame": {
+        "lost": false,
+        "zoom": 0.5751643124045931,
+        "camera": [
+          -0.7468979552375886,
+          0.4688646310154276,
+          100
+        ],
+        "drawCalls": 73,
+        "triangles": 2262,
+        "textures": 46,
+        "reducedMotion": "false",
+        "visible": true,
+        "pixelRatio": 1
+      }
+    }
+  ],
+  "feedback": [
+    {
+      "title": "build-feedback",
+      "samples": [
+        {
+          "visible": true,
+          "opacity": 0.801094444444444,
+          "radius": 0.94415,
+          "center": [
+            -12.549999999999999,
+            0.6,
+            0
+          ]
+        },
+        {
+          "visible": true,
+          "opacity": 0.7820749999999986,
+          "radius": 0.9483250000000002,
+          "center": [
+            -12.549999999999999,
+            0.6,
+            0
+          ]
+        },
+        {
+          "visible": true,
+          "opacity": 0.7630555555555555,
+          "radius": 0.9524999999999999,
+          "center": [
+            -12.549999999999999,
+            0.6,
+            0
+          ]
+        },
+        {
+          "visible": true,
+          "opacity": 0.7441499999999995,
+          "radius": 0.95665,
+          "center": [
+            -12.549999999999999,
+            0.6,
+            0
+          ]
+        },
+        {
+          "visible": true,
+          "opacity": 0.7251305555555543,
+          "radius": 0.9608250000000003,
+          "center": [
+            -12.549999999999999,
+            0.6,
+            0
+          ]
+        }
+      ],
+      "unobscured": true
+    },
+    {
+      "title": "upgrade-feedback",
+      "samples": [
+        {
+          "visible": true,
+          "opacity": 0.8009805555555547,
+          "radius": 0.9441750000000001,
+          "center": [
+            -12.549999999999999,
+            0.6,
+            0
+          ]
+        },
+        {
+          "visible": true,
+          "opacity": 0.7820749999999966,
+          "radius": 0.9483250000000006,
+          "center": [
+            -12.549999999999999,
+            0.6,
+            0
+          ]
+        },
+        {
+          "visible": true,
+          "opacity": 0.7630555555555555,
+          "radius": 0.9524999999999999,
+          "center": [
+            -12.549999999999999,
+            0.6,
+            0
+          ]
+        },
+        {
+          "visible": true,
+          "opacity": 0.7440361111111102,
+          "radius": 0.9566750000000002,
+          "center": [
+            -12.549999999999999,
+            0.6,
+            0
+          ]
+        },
+        {
+          "visible": true,
+          "opacity": 0.725016666666665,
+          "radius": 0.9608500000000003,
+          "center": [
+            -12.549999999999999,
+            0.6,
+            0
+          ]
+        }
+      ],
+      "unobscured": true
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "externalRequests": [],
+  "paid": {
+    "coins": 398420,
+    "walls": [
+      {
+        "id": "wall_1",
+        "built": true,
+        "x": -18.5,
+        "z": -1,
+        "level": 1
+      },
+      {
+        "id": "wall_2",
+        "built": true,
+        "x": 19,
+        "z": 1,
+        "level": 2
+      },
+      {
+        "id": "wall_3",
+        "built": true,
+        "x": 19,
+        "z": -1,
+        "level": 3
+      },
+      {
+        "id": "wall_4",
+        "built": true,
+        "x": -1,
+        "z": 17,
+        "level": 4
+      },
+      {
+        "id": "wall_5",
+        "built": true,
+        "x": 1,
+        "z": 17,
+        "level": 5
+      },
+      {
+        "id": "wall_6",
+        "built": true,
+        "x": -18.5,
+        "z": -3,
+        "level": 1
+      },
+      {
+        "id": "wall_7",
+        "built": true,
+        "x": 8.5,
+        "z": 2,
+        "level": 2
+      },
+      {
+        "id": "wall_8",
+        "built": true,
+        "x": 0.5,
+        "z": 9.5,
+        "level": 3
+      },
+      {
+        "id": "wall_9",
+        "built": true,
+        "x": -1.5,
+        "z": 9.5,
+        "level": 4
+      },
+      {
+        "id": "wall_10",
+        "built": true,
+        "x": -9.5,
+        "z": -1,
+        "level": 5
+      },
+      {
+        "id": "wall_11",
+        "built": true,
+        "x": -9.5,
+        "z": 1,
+        "level": 1
+      },
+      {
+        "id": "wall_12",
+        "built": true,
+        "x": 8.5,
+        "z": 0,
+        "level": 2
+      }
+    ]
+  },
+  "move": {
+    "from": {
+      "id": "wall_6",
+      "built": true,
+      "x": -18.5,
+      "z": -3,
+      "level": 1
+    },
+    "to": {
+      "id": "wall_6",
+      "built": true,
+      "x": -12,
+      "z": -1,
+      "level": 1
+    },
+    "charged": 0
+  },
+  "fourth": {
+    "refused": true,
+    "disabled": true,
+    "status": "Use at most three wall rows per approach. Align pieces to share a row.",
+    "transport": {
+      "status": 409,
+      "code": "wall_rows"
+    }
+  },
+  "rejectedPurchases": [
+    {
+      "ok": false,
+      "status": 409,
+      "code": "spot_taken"
+    },
+    {
+      "ok": false,
+      "status": 404,
+      "code": "no_such_spot"
+    },
+    {
+      "ok": false,
+      "status": 409,
+      "code": "max_level"
+    }
+  ],
+  "combat": {
+    "wave": 31,
+    "seed": 25135766,
+    "ticks": 306,
+    "eventTypes": {
+      "wave_started": 1,
+      "cannon_fired": 14,
+      "culverin_fired": 4,
+      "mortar_fired": 6,
+      "boarder_landed": 16,
+      "ship_fired": 13,
+      "wall_damaged": 31
+    },
+    "firstFire": {
+      "type": "cannon_fired",
+      "t": 1.5,
+      "cannonId": "cannon_1",
+      "targetId": "ship_1",
+      "manual": false,
+      "hit": true,
+      "damage": 10,
+      "level": 1,
+      "x": -12.5,
+      "z": -14.5,
+      "toX": -33.64,
+      "toZ": 3.67,
+      "impactAt": 2.73
+    },
+    "firstBreach": {
+      "type": "wall_damaged",
+      "t": 15.25,
+      "wallId": "wall_1",
+      "damage": 7.95,
+      "hp": 0,
+      "broken": true,
+      "x": -18.5,
+      "z": -1,
+      "shipId": "ship_1",
+      "landed": true
+    },
+    "walls": [
+      {
+        "id": "wall_1",
+        "hp": 0,
+        "maxHp": 60
+      },
+      {
+        "id": "wall_10",
+        "hp": 420,
+        "maxHp": 420
+      },
+      {
+        "id": "wall_11",
+        "hp": 37.35,
+        "maxHp": 60
+      },
+      {
+        "id": "wall_12",
+        "hp": 120,
+        "maxHp": 120
+      },
+      {
+        "id": "wall_2",
+        "hp": 101.89,
+        "maxHp": 120
+      },
+      {
+        "id": "wall_3",
+        "hp": 107.64,
+        "maxHp": 200
+      },
+      {
+        "id": "wall_4",
+        "hp": 286.42,
+        "maxHp": 300
+      },
+      {
+        "id": "wall_5",
+        "hp": 420,
+        "maxHp": 420
+      },
+      {
+        "id": "wall_6",
+        "hp": 60,
+        "maxHp": 60
+      },
+      {
+        "id": "wall_7",
+        "hp": 120,
+        "maxHp": 120
+      },
+      {
+        "id": "wall_8",
+        "hp": 200,
+        "maxHp": 200
+      },
+      {
+        "id": "wall_9",
+        "hp": 300,
+        "maxHp": 300
+      }
+    ],
+    "defenses": [
+      {
+        "id": "wall_1",
+        "x": -18.5,
+        "z": -1,
+        "level": 1
+      },
+      {
+        "id": "wall_2",
+        "x": 19,
+        "z": 1,
+        "level": 2
+      },
+      {
+        "id": "wall_3",
+        "x": 19,
+        "z": -1,
+        "level": 3
+      },
+      {
+        "id": "wall_4",
+        "x": -1,
+        "z": 17,
+        "level": 4
+      },
+      {
+        "id": "wall_5",
+        "x": 1,
+        "z": 17,
+        "level": 5
+      },
+      {
+        "id": "wall_6",
+        "x": -12,
+        "z": -1,
+        "level": 1
+      },
+      {
+        "id": "wall_7",
+        "x": 8.5,
+        "z": 2,
+        "level": 2
+      },
+      {
+        "id": "wall_8",
+        "x": 0.5,
+        "z": 9.5,
+        "level": 3
+      },
+      {
+        "id": "wall_9",
+        "x": -1.5,
+        "z": 9.5,
+        "level": 4
+      },
+      {
+        "id": "wall_10",
+        "x": -9.5,
+        "z": -1,
+        "level": 5
+      },
+      {
+        "id": "wall_11",
+        "x": -9.5,
+        "z": 1,
+        "level": 1
+      },
+      {
+        "id": "wall_12",
+        "x": 8.5,
+        "z": 0,
+        "level": 2
+      }
+    ],
+    "art": {
+      "wall_1": 1,
+      "wall_2": 2,
+      "wall_3": 3,
+      "wall_4": 4,
+      "wall_5": 5,
+      "wall_6": 1,
+      "cannon_1": 1,
+      "cannon_2": 1,
+      "cannon_3": 1,
+      "cannon_4": 1,
+      "cannon_5": 1,
+      "tower_1": 1,
+      "wall_7": 2,
+      "wall_8": 3,
+      "wall_9": 4,
+      "wall_10": 5,
+      "wall_11": 1,
+      "wall_12": 2
+    },
+    "visibleMarks": {
+      "wall_1": [],
+      "wall_2": [],
+      "wall_3": [],
+      "wall_4": [],
+      "wall_5": [],
+      "wall_6": [],
+      "cannon_1": [],
+      "cannon_2": [],
+      "cannon_3": [],
+      "cannon_4": [],
+      "cannon_5": [],
+      "tower_1": [],
+      "wall_7": [],
+      "wall_8": [],
+      "wall_9": [],
+      "wall_10": [],
+      "wall_11": [],
+      "wall_12": []
+    }
+  },
+  "result": "passed"
+}
