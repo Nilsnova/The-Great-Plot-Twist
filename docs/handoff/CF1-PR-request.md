@@ -18,25 +18,41 @@ After that onset, only visuals remain. Captain/heart priority changes, critical
 status, menus and unmuting do not replay the sound. A threat that clears during
 active play and later returns can start a new warning episode.
 
+## Current-main integration
+
+The published PR was reconciled with main `37eb70fa` after GitHub reported conflicts.
+The overlay now uses the shared ground projection; the danger row spans the new HUD
+and compacts in landscape. Main's renderer pooling, wall connections and native HUD
+behavior are retained. CF1 is D066 because main already owns D061–D065. Ianno reviewed
+runtime `79bb6762` before publication; these later integration changes need current
+human peer review. The PR remains unmerged.
+
 ## Screenshots
 
 Actual local fake-game captures: wave 1, level-one Musket, 1280×720 and 375×812.
-Position setup is scripted; the bell, F attacks and simulation remain real.
+Position setup and returning-device history are declared fixtures; the bell, F attacks and simulation remain real.
+The updated village artwork comes from current main, separately from this combat feedback feature.
 
-![Desktop weapon range](https://raw.githubusercontent.com/Nilsnova/The-Great-Plot-Twist/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/redesign/after-range-1280x720.png)
+![Desktop weapon range](https://raw.githubusercontent.com/Nilsnova/The-Great-Plot-Twist/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/main-integration/after-range-1280x720.png)
 
-![Phone danger warning](https://raw.githubusercontent.com/Nilsnova/The-Great-Plot-Twist/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/redesign/after-danger-375x812.png)
+![Phone danger warning](https://raw.githubusercontent.com/Nilsnova/The-Great-Plot-Twist/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/main-integration/after-danger-375x812.png)
 
 | View | Before | After |
 |---|---|---|
-| Desktop range | [Before](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/before-range-1280x720.png) | [After](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/redesign/after-range-1280x720.png) |
-| Phone range | [Before](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/before-range-375x812.png) | [After](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/redesign/after-range-375x812.png) |
-| Desktop danger | [Before](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/before-danger-1280x720.png) | [After](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/redesign/after-danger-1280x720.png) |
-| Phone danger | [Before](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/before-danger-375x812.png) | [After](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/redesign/after-danger-375x812.png) |
+| Desktop range | [Before](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/before-range-1280x720.png) | [After](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/main-integration/after-range-1280x720.png) |
+| Phone range | [Before](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/before-range-375x812.png) | [After](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/main-integration/after-range-375x812.png) |
+| Desktop danger | [Before](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/before-danger-1280x720.png) | [After](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/main-integration/after-danger-1280x720.png) |
+| Phone danger | [Before](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/before-danger-375x812.png) | [After](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/main-integration/after-danger-375x812.png) |
 
 [Shot/impact screenshots, full provenance, walkthrough and exact logs](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/README.md).
 
 ## Checks and evidence
+
+- Current-main integration: **89 tests / 12 files** plus **72 tests / 8 files** passed; a later landscape-layout rerun passed **10 tests / 3 files**.
+- Fresh native feedback: **14 checks**, six new screenshots; overlap audit: **21 checks pass** (later-wave hint states are skipped by current main's rule).
+- Current build/spoiler guard, budget and reviewed text checks pass. Projection and initial landscape failures plus fixes are retained in the linked evidence.
+
+Earlier verification, retained with its original scope:
 
 - Latest audio/core-wave regression suite: **77 tests pass across 6 files**. Build/spoiler/budget and text checks pass. Existing screenshots are preserved because this revision changes only sound triggering.
 - Earlier range redesign suite: **100 tests pass across 11 files**.
@@ -54,8 +70,9 @@ Position setup is scripted; the bell, F attacks and simulation remain real.
 
 ## Ready for peer review
 
-- [x] I reviewed the complete diff; the change stays within scope.
+- [x] Ianno reviewed the feature at runtime `79bb6762` and authorized publication.
+- [ ] Current integration changes have independent human peer review.
 - [x] Relevant verification and screenshots are included and reviewed.
 - [x] No credentials, private data or unrelated generated files are included.
 
-Ianno confirmed manual review and publication in this chat on 18 November 2026. A different human still reviews the published PR before merge.
+Ianno confirmed review of runtime `79bb6762` and publication in this chat on 18 November 2026. A different human must review the updated integration before merge.

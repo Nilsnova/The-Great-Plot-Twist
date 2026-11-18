@@ -3,9 +3,14 @@
 What this is: review evidence and a code walkthrough for [task #453](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/453).
 Who uses it: Ianno and the human peer reviewer, before publication and merge.
 
-Branch: `feat/captain-combat-feedback`. Current screenshot source: `72446cdd`.
+Branch: `feat/captain-combat-feedback`. PR: [#475](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/475).
+Current screenshot source: `e0db6e74`; runtime integration: `c03b3eb8`, with main `37eb70fa`.
 This revision follows Ianno's request for a quieter radius and visual-only shot confirmation.
-The original blue design, its reports and logs remain below as historical evidence.
+After publication, main introduced a new village projection and HUD; the task branch
+was reconciled with those changes. CF1's decision is D066 (main already owns D061–D065).
+The new village artwork comes from main; this feature changes only combat feedback.
+The original blue design and previous parchment captures remain as historical evidence.
+Ianno reviewed runtime `79bb6762` before publication; current projection-integration changes require human peer review.
 All three explain-back questions are completed. Ianno reviewed the changes and
 explicitly authorized PR publication on 18 November 2026. [Task #453](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/453)
 tracks the published PR and its status. Independent human peer review and merge remain pending.
@@ -43,29 +48,31 @@ These are Chromium 156.0.8078.79 captures of the local game, using its existing
 in-memory fake server: wave 1, a level-one Musket and no built defenses. Player
 position setup is scripted; attacks use native keyboard F and the real controller.
 Automatic slash is disabled in this fixture so waiting for danger remains observable.
+The device has completed front-door/arrival/tutorial history and tutorials are disabled
+before Play, preventing unrelated queued onboarding from intercepting combat input.
 The fixture hides the already-seen first-wave teaching hint. No HP, hit, victory,
 clock or simulation result is forced. Screenshots compare the same setup at live
 simulation times recorded in [before-report.json](before-report.json) and
-[current after-report.json](redesign/after-report.json); they are not identical paused frames.
+[current after-report.json](main-integration/after-report.json); they are not identical paused frames.
 These reports also record source, browser, quality/DPR and any dirty files.
 
 | View | Previous blue design | Current parchment design |
 |---|---|---|
-| Range, 1280×720 | [Previous](after-range-1280x720.png) | [Current](redesign/after-range-1280x720.png) |
-| Range, 375×812 | [Previous](after-range-375x812.png) | [Current](redesign/after-range-375x812.png) |
-| Shot impact, 1280×720 | — | [Current, no damage label](redesign/after-impact-1280x720.png) |
-| Shot impact, 375×812 | — | [Current, no damage label](redesign/after-impact-375x812.png) |
-| Danger, 1280×720 | [Previous](after-danger-1280x720.png) | [Current](redesign/after-danger-1280x720.png) |
-| Danger, 375×812 | [Previous](after-danger-375x812.png) | [Current](redesign/after-danger-375x812.png) |
+| Range, 1280×720 | [Previous](after-range-1280x720.png) | [Current](main-integration/after-range-1280x720.png) |
+| Range, 375×812 | [Previous](after-range-375x812.png) | [Current](main-integration/after-range-375x812.png) |
+| Shot impact, 1280×720 | — | [Current, no damage label](main-integration/after-impact-1280x720.png) |
+| Shot impact, 375×812 | — | [Current, no damage label](main-integration/after-impact-375x812.png) |
+| Danger, 1280×720 | [Previous](after-danger-1280x720.png) | [Current](main-integration/after-danger-1280x720.png) |
+| Danger, 375×812 | [Previous](after-danger-375x812.png) | [Current](main-integration/after-danger-375x812.png) |
 
 Original main before this feature: [desktop range](before-range-1280x720.png),
 [phone range](before-range-375x812.png), [desktop danger](before-danger-1280x720.png),
 [phone danger](before-danger-375x812.png). The earlier [written confirmation](after-hit-1280x720.png)
 is retained only as superseded review history; it is absent from the current game.
 
-![Quiet contextual range on desktop](redesign/after-range-1280x720.png)
+![Quiet contextual range on desktop](main-integration/after-range-1280x720.png)
 
-![Shot feedback on a phone without a written damage confirmation](redesign/after-impact-375x812.png)
+![Shot feedback on a phone without a written damage confirmation](main-integration/after-impact-375x812.png)
 
 ## Code walkthrough
 
@@ -85,7 +92,19 @@ is retained only as superseded review history; it is absent from the current gam
 - `audio/pirates.js` plays the alert on the existing effects bus. It does not add
   another caption over the warning or change other audio preferences.
 
-## Verification of the current revision
+## Verification after current-main integration
+
+- [Projection/renderer/HUD tests](main-integration/integration-tests.txt): **89 passed across 12 files**.
+- [Related CF1/projection tests](main-integration/additional-tests.txt): **72 passed across 8 files**.
+- [Layout rerun](main-integration/landscape-tests.txt): **10 passed across 3 files** after compacting the danger row on short landscape displays.
+- [Actual-game checks](main-integration/native-feedback.txt): **14 checks pass**, six fresh desktop/phone captures. [Report/provenance](main-integration/after-report.json).
+- [Overlap audit](main-integration/overlaps.txt): **21 state/viewport checks pass**; three first-wave-hint checks are skipped for a later wave under main's corrected hint rule. The first run found a landscape toast/action overlap, recorded [before the fix](main-integration/overlaps-before.txt); the compact warning row keeps all warning text visible.
+- [Build/spoiler guard](main-integration/build.txt), [budget summary](main-integration/budget-summary.json) and [reviewed text](main-integration/reviewed-text.txt) pass, with **0 text errors / 8 report-only findings**.
+- [Projection tests before adaptation](main-integration/projection-before.txt): three expected failures demonstrate the old hardcoded projection is rejected. Existing main renderer pooling, wall connections, projected muzzle tests and native HUD disclosures are preserved. The latest image helpers use declared returning-device history; earlier queued-onboarding failures are retained [here](main-integration/capture-setup-before.txt).
+
+No fresh full-suite, broad accessibility/demo, live multiplayer or physical-device pass is claimed for this integration. Earlier results and limits are below. The PR is open and awaits current human peer review; it remains unmerged.
+
+## Earlier visual and warning-audio verification
 
 - [Once-per-warning tests](warning-audio/focused-tests.txt): **77 tests pass across 6 files**, covering sustained warnings, critical/wording changes, priority switches, independent clearing, new episodes, menu hiding, mute/unmute and wave reset. [Tests before the fix](warning-audio/tests-before.txt) record five expected failures. [Build](warning-audio/build.txt), [budget summary](warning-audio/budget-summary.json) and [reviewed text](warning-audio/reviewed-text.txt) record the audio revision. This change has no visual effect, so the existing redesign screenshots are retained.
 - [Earlier range redesign suite](redesign/focused-tests.txt): **100 tests pass across 11 files**. Coverage includes genuine angular gaps, exact outer radius, diagonal/cardinal direction projection, cached resources/disposal, aim expiry, no written damage feedback, preserved firing/impact events, controller behavior, native keyboard/layout, sound and tutorial limits.

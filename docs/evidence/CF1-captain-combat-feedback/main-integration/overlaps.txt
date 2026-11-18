@@ -1,0 +1,341 @@
+
+> the-great-plot-twist@0.1.0 test:overlaps
+> node scripts/check-overlaps.js
+
+[
+ {
+  "state": "island-idle",
+  "width": 1280,
+  "height": 720,
+  "boxes": [
+   "coins [20,18,307,62]",
+   "menu [1152,18,1260,62]",
+   "goals [950,76,1260,185]",
+   "toast [518,16,762,64]",
+   "narrator [360,598,920,704]"
+  ],
+  "hits": [],
+  "clipped": [],
+  "covers": []
+ },
+ {
+  "state": "island-idle",
+  "width": 390,
+  "height": 844,
+  "boxes": [
+   "coins [12,12,166,82]",
+   "menu [270,12,378,56]",
+   "goals [12,94,378,183]",
+   "toast [73,193,317,241]",
+   "narrator [16,670,374,828]"
+  ],
+  "hits": [],
+  "clipped": [],
+  "covers": []
+ },
+ {
+  "state": "island-idle",
+  "width": 844,
+  "height": 390,
+  "boxes": [
+   "coins [12,12,166,83]",
+   "menu [724,12,832,56]",
+   "goals [12,95,832,185]",
+   "narrator [12,328,312,374]"
+  ],
+  "hits": [],
+  "clipped": [],
+  "covers": []
+ },
+ {
+  "state": "island-goals-folded",
+  "width": 1280,
+  "height": 720,
+  "boxes": [
+   "coins [20,18,307,62]",
+   "menu [1152,18,1260,62]",
+   "goals [950,76,1260,120]",
+   "narrator [360,598,920,704]"
+  ],
+  "hits": [],
+  "clipped": [],
+  "covers": []
+ },
+ {
+  "state": "island-goals-folded",
+  "width": 390,
+  "height": 844,
+  "boxes": [
+   "coins [12,12,166,82]",
+   "menu [270,12,378,56]",
+   "goals [12,94,378,133]",
+   "narrator [16,670,374,828]"
+  ],
+  "hits": [],
+  "clipped": [],
+  "covers": []
+ },
+ {
+  "state": "island-goals-folded",
+  "width": 844,
+  "height": 390,
+  "boxes": [
+   "coins [12,12,166,83]",
+   "menu [724,12,832,56]",
+   "goals [12,95,832,135]",
+   "narrator [12,328,312,374]"
+  ],
+  "hits": [],
+  "clipped": [],
+  "covers": []
+ },
+ {
+  "state": "island-toast",
+  "width": 1280,
+  "height": 720,
+  "boxes": [
+   "coins [20,18,307,62]",
+   "menu [1152,18,1260,62]",
+   "goals [950,76,1260,185]",
+   "toast [340,16,940,105]",
+   "narrator [360,624,920,704]"
+  ],
+  "hits": [],
+  "clipped": [],
+  "covers": []
+ },
+ {
+  "state": "island-toast",
+  "width": 390,
+  "height": 844,
+  "boxes": [
+   "coins [12,12,166,82]",
+   "menu [270,12,378,56]",
+   "goals [12,94,378,183]",
+   "toast [12,193,378,282]",
+   "narrator [16,696,374,828]"
+  ],
+  "hits": [],
+  "clipped": [],
+  "covers": []
+ },
+ {
+  "state": "island-toast",
+  "width": 844,
+  "height": 390,
+  "boxes": [
+   "coins [12,12,166,83]",
+   "menu [724,12,832,56]",
+   "goals [12,95,832,185]",
+   "toast [153,195,691,229]",
+   "narrator [12,328,312,374]"
+  ],
+  "hits": [],
+  "clipped": [],
+  "covers": []
+ },
+ {
+  "state": "village-mode",
+  "width": 1280,
+  "height": 720,
+  "boxes": [
+   "coins [20,18,307,62]",
+   "menu [1152,18,1260,62]",
+   "toast [340,16,940,105]",
+   "village-bar [170,534,1110,610]",
+   "narrator [360,624,920,704]"
+  ],
+  "hits": [],
+  "clipped": [],
+  "covers": []
+ },
+ {
+  "state": "village-mode",
+  "width": 390,
+  "height": 844,
+  "boxes": [
+   "coins [12,12,166,82]",
+   "menu [270,12,378,56]",
+   "village-bar [12,541,378,682]",
+   "narrator [16,696,374,828]"
+  ],
+  "hits": [],
+  "clipped": [],
+  "covers": []
+ },
+ {
+  "state": "village-mode",
+  "width": 844,
+  "height": 390,
+  "boxes": [
+   "coins [12,12,166,83]",
+   "menu [724,12,832,56]",
+   "village-bar [12,238,832,314]",
+   "narrator [12,328,312,374]"
+  ],
+  "hits": [],
+  "clipped": [],
+  "covers": []
+ },
+ {
+  "state": "village-mode-toast",
+  "width": 1280,
+  "height": 720,
+  "boxes": [
+   "coins [20,18,307,62]",
+   "menu [1152,18,1260,62]",
+   "toast [340,16,940,105]",
+   "village-bar [170,534,1110,610]",
+   "narrator [360,624,920,704]"
+  ],
+  "hits": [],
+  "clipped": [],
+  "covers": []
+ },
+ {
+  "state": "village-mode-toast",
+  "width": 390,
+  "height": 844,
+  "boxes": [
+   "coins [12,12,166,82]",
+   "menu [270,12,378,56]",
+   "toast [12,172,378,261]",
+   "village-bar [12,673,378,814]"
+  ],
+  "hits": [],
+  "clipped": [],
+  "covers": []
+ },
+ {
+  "state": "village-mode-toast",
+  "width": 844,
+  "height": 390,
+  "boxes": [
+   "coins [12,12,166,83]",
+   "menu [724,12,832,56]",
+   "toast [153,172,691,206]",
+   "village-bar [12,238,832,314]",
+   "narrator [12,328,312,374]"
+  ],
+  "hits": [],
+  "clipped": [],
+  "covers": []
+ },
+ {
+  "state": "wave-hint",
+  "width": 1280,
+  "height": 720,
+  "skipped": true
+ },
+ {
+  "state": "wave-hint",
+  "width": 390,
+  "height": 844,
+  "skipped": true
+ },
+ {
+  "state": "wave-hint",
+  "width": 844,
+  "height": 390,
+  "skipped": true
+ },
+ {
+  "state": "wave-boarders",
+  "width": 1280,
+  "height": 720,
+  "boxes": [
+   "coins [20,18,265,62]",
+   "menu [1152,18,1260,62]",
+   "wave-bar [390,16,890,132]",
+   "action [1084,632,1260,696]",
+   "narrator [410,617,870,704]"
+  ],
+  "hits": [],
+  "clipped": [],
+  "covers": []
+ },
+ {
+  "state": "wave-boarders",
+  "width": 390,
+  "height": 844,
+  "boxes": [
+   "coins [12,12,125,82]",
+   "menu [270,12,378,56]",
+   "wave-bar [12,95,378,235]",
+   "action [194,756,370,820]",
+   "narrator [16,634,374,744]"
+  ],
+  "hits": [],
+  "clipped": [],
+  "covers": []
+ },
+ {
+  "state": "wave-boarders",
+  "width": 844,
+  "height": 390,
+  "boxes": [
+   "coins [12,12,125,83]",
+   "menu [724,12,832,56]",
+   "wave-bar [172,96,672,247]",
+   "action [648,302,824,366]",
+   "narrator [12,328,312,374]"
+  ],
+  "hits": [],
+  "clipped": [],
+  "covers": []
+ },
+ {
+  "state": "wave-toast",
+  "width": 1280,
+  "height": 720,
+  "boxes": [
+   "coins [20,18,265,62]",
+   "menu [1152,18,1260,62]",
+   "toast [340,204,940,293]",
+   "wave-bar [390,16,890,194]",
+   "action [1084,632,1260,696]",
+   "narrator [410,617,870,704]"
+  ],
+  "hits": [],
+  "clipped": [],
+  "covers": []
+ },
+ {
+  "state": "wave-toast",
+  "width": 390,
+  "height": 844,
+  "boxes": [
+   "coins [12,12,125,82]",
+   "menu [270,12,378,56]",
+   "toast [12,306,378,395]",
+   "wave-bar [12,95,378,295]",
+   "action [194,756,370,820]"
+  ],
+  "hits": [],
+  "clipped": [],
+  "covers": []
+ },
+ {
+  "state": "wave-toast",
+  "width": 844,
+  "height": 390,
+  "boxes": [
+   "coins [12,12,125,83]",
+   "menu [724,12,832,56]",
+   "toast [153,257,691,291]",
+   "wave-bar [172,96,672,247]",
+   "action [648,302,824,366]",
+   "narrator [12,328,312,374]"
+  ],
+  "hits": [],
+  "clipped": [],
+  "covers": []
+ }
+]
+
+No overlaps in 21 state × viewport checks.
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice
