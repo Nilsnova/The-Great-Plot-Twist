@@ -124,7 +124,7 @@ The existing deletion response promises account data was removed. Do not answer 
 
 ## Verification and remaining work
 
-The feature additions are this spec, `island_lifecycle.py`, migration `20261118051600_island_economy_reset.sql` and focused Python/PostgreSQL tests. Local dependency integration uses main `77a9e34d`, treasury `c12407e9`, personal Captain `ba351aa3`, wave accounting `8645ba18` and construction phase/guard `9a9ada32`. Shared prerequisite conflicts retain the newer treasury registry/fixture and personal-protocol corrections together with the wave contract; no existing route or application registration is changed by this feature.
+The feature additions are this spec, `island_lifecycle.py`, migration `20261118051600_island_economy_reset.sql` and focused Python/PostgreSQL tests. Initial local dependency integration used main `77a9e34d`, treasury `c12407e9`, personal Captain `ba351aa3`, wave accounting `8645ba18` and construction phase/guard `9a9ada32`. Shared prerequisite conflicts retain the newer treasury registry/fixture and personal-protocol corrections together with the wave contract; no existing route or application registration is changed by this feature.
 
 The PostgreSQL tests use a synthetic owner-only transaction wrapper and a dummy asset row to prove atomic composition. This is deliberately not the missing production reset executor. They verify private treasury replacement, preservation of old obligations and personal tables, rollback and phase/idempotency/privilege boundaries, plus first/reapply/partial-barrier migration races on disposable databases. No complete asset reset, owner deletion, authenticated multiplayer, deployed schema, migration-tool invocation or live operation is claimed.
 
@@ -142,5 +142,11 @@ uv run ruff check .
 ```
 
 The complete pglast check parsed all 74 migrations. Initial receipt tests failed on the absent module; the corrected SQL harness then failed on the absent helper before its implementation. No full-backend, browser, hosted backup, provider, deployment or live database test was run. Documentation link/content and whitespace checks complete this bounded increment; independent review and full lifecycle integration remain required.
+
+### Large-value and migration-version follow-up
+
+Independent review reproduced Python's ordinary decimal-to-integer digit ceiling in retirement conservation and fresh-grant comparison. Both paths now use the existing exact `treasury_models.decimal_integer` conversion; no process-wide digit setting or economic cap is changed. Four regressions at 4,301 and 5,001 digits first failed, then passed for retired cash/held principal and configured capital. Incorrect huge conservation and mismatched capital remain rejected.
+
+After integrating main `64d59506` and treasury `feca459f`, the treasury schema filename is `20261118050050_island_treasury.sql`; its timestamp no longer collides with the existing `50000` migration. The same Python command above plus `server/tests/test_migration_versions.py` passed **197 tests in 4.12s**, including 21 reset-parser tests. The same combined PostgreSQL command passed **198 tests in 37.80s** on the updated complete chain. Full Ruff passed, and pglast parsed **78 migrations with 78 unique versions**. No live migration/tool invocation, route activation or additional publication is part of this follow-up.
 
 Last updated: 2026-11-18.
