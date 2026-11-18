@@ -9,7 +9,7 @@ from datetime import datetime
 from uuid import UUID
 
 from server.errors import ApiError
-from server.island.wave_session_state import ControlLease
+from server.island.wave_session_state import DISCONNECT_GRACE, ControlLease
 
 
 def same_controller(left: ControlLease, right: ControlLease) -> bool:
@@ -48,7 +48,8 @@ def set_connection(
     leases: tuple[ControlLease, ...],
     asked: ControlLease,
     *,
-    connected_at: datetime | None,
+    now: datetime,
+    is_connected: bool,
 ) -> tuple[ControlLease, ...]:
     """A reconnect starts a new continuous interval; repeated acknowledgments retain it."""
     if not any(
@@ -56,16 +57,18 @@ def set_connection(
         for lease in leases
     ):
         raise ApiError(403, "not_controller", "This session does not control that Captain.")
-    return tuple(
-        replace(
-            lease,
-            active_since=connected_at,
-            connection_generation=lease.connection_generation + int(connected_at is not None),
-        )
-        if same_controller(lease, asked) and (connected_at is None or lease.active_since is None)
-        else lease
-        for lease in leases
+    current = next(lease for lease in leases if same_controller(lease, asked))
+    if (current.active_since is not None) == is_connected:
+        return leases
+    if is_connected and current.grace_until is not None and now >= current.grace_until:
+        raise ApiError(409, "slot_expired", "This retained controller is no longer resumable.")
+    changed = replace(
+        current,
+        active_since=now if is_connected else None,
+        connection_generation=current.connection_generation + int(is_connected),
+        grace_until=None if is_connected else now + DISCONNECT_GRACE,
     )
+    return tuple(changed if same_controller(lease, asked) else lease for lease in leases)
 
 
 def select_leader(
@@ -73,17 +76,26 @@ def select_leader(
     island_owner: UUID,
     eligible_members: frozenset[UUID],
     current_leader: UUID | None,
+    *,
+    now: datetime,
 ) -> UUID | None:
-    """Retain an eligible leader; otherwise prefer longest continuous activity, then player ID."""
-    candidates = tuple(
+    """Keep the eligible leader through grace, then prefer longest activity and player ID."""
+    eligible = tuple(
         lease
         for lease in leases
-        if lease.island_owner == island_owner
-        and lease.player_id in eligible_members
-        and lease.active_since is not None
+        if lease.island_owner == island_owner and lease.player_id in eligible_members
     )
-    if any(lease.player_id == current_leader for lease in candidates):
+    if any(
+        lease.player_id == current_leader
+        and (
+            lease.active_since is not None
+            or lease.grace_until is not None
+            and now < lease.grace_until
+        )
+        for lease in eligible
+    ):
         return current_leader
+    candidates = tuple(lease for lease in eligible if lease.active_since is not None)
     if not candidates:
         return None
     return min(candidates, key=lambda lease: (lease.active_since, lease.player_id.int)).player_id
