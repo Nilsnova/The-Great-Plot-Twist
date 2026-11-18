@@ -23,8 +23,8 @@ function rangeArcs(innerRadius) {
 }
 export function createCombatOverlay(parent) {
   const root = new THREE.Group(); root.name = 'captain-combat-feedback'; parent.add(root);
-  const backingGeometry = rangeArcs(.981), ringGeometry = rangeArcs(.992);
-  const markerGeometry = new THREE.RingGeometry(.978, 1, 16, 1, -Math.PI / 24, Math.PI / 12);
+  const backingGeometry = rangeArcs(.963), ringGeometry = rangeArcs(.98);
+  const markerGeometry = new THREE.RingGeometry(.97, 1, 16, 1, -Math.PI / 24, Math.PI / 12);
   const arrowGeometry = new THREE.BufferGeometry();
   arrowGeometry.setAttribute('position', new THREE.Float32BufferAttribute([1, 0, 0, -.6, .65, 0, -.6, -.65, 0], 3));
   const make = (name, geometry, color, order) => {
@@ -33,9 +33,9 @@ export function createCombatOverlay(parent) {
     const mesh = new THREE.Mesh(geometry, material); mesh.name = name; mesh.renderOrder = order; mesh.frustumCulled = false;
     mesh.visible = false; root.add(mesh); return mesh;
   };
-  const shadow = make('captain-range-backing', backingGeometry, 0x514a3c, 92);
-  const ring = make('captain-range-arcs', ringGeometry, 0xd1c3a6, 93);
-  const target = make('captain-range-direction', markerGeometry, 0xede1c8, 94);
+  const shadow = make('captain-range-backing', backingGeometry, 0x40382a, 92);
+  const ring = make('captain-range-arcs', ringGeometry, 0xe8d7b1, 93);
+  const target = make('captain-range-direction', markerGeometry, 0xf6e5bd, 94);
   const pointer = make('captain-danger-pointer', arrowGeometry, 0xff765e, 936);
   const rotation = new THREE.Matrix4(), projection = groundShapeMatrix(), scale = new THREE.Vector3();
   const rangeMeshes = [shadow, ring];
@@ -49,7 +49,7 @@ export function createCombatOverlay(parent) {
           mesh.visible = true;
           mesh.matrix.copy(projection).scale(scale).setPosition(at.x, at.y, 0);
           mesh.matrixWorldNeedsUpdate = true;
-          mesh.material.opacity = range.alpha * (mesh === shadow ? .32 : .66);
+          mesh.material.opacity = range.alpha * (mesh === shadow ? .56 : .86);
         }
         if (range.point && !range.melee) {
           const dx = range.point.x - range.x, dz = range.point.z - range.z;
@@ -57,7 +57,7 @@ export function createCombatOverlay(parent) {
           // Rotate in logical ground coordinates before projecting, keeping the true world radius.
           target.matrix.copy(projection).scale(scale)
             .multiply(rotation.makeRotationZ(Math.atan2(-dz, dx))).setPosition(at.x, at.y, 0);
-          target.matrixWorldNeedsUpdate = true; target.material.opacity = range.alpha * .9;
+          target.matrixWorldNeedsUpdate = true; target.material.opacity = range.alpha * .94;
         }
       }
       if (danger && player) {
