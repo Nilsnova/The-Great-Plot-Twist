@@ -119,3 +119,70 @@ it('reveals the real Cannon #1 beneath its coastal tree and restores the tree on
     sameColliders: true, sameTreeResources: true,
   });
 });
+
+it('reveals only the foreground oak covering a confirmed wall on a legal Move cell', async () => {
+  const result = await browser(async () => {
+    const THREE = await window.g20Import('/node_modules/three/build/three.module.js');
+    const {createSettlement} = await window.g20Import('/src/world/places/settlement.js');
+    const {decorateIsland} = await window.g20Import('/src/island/world.js');
+    const {checkMove, positionsOf} = await window.g20Import('/src/island/placement.js');
+    const wall = {id: 'wall_1', kind: 'wall', built: true, level: 3};
+    const x = 16.5, z = -.5, moved = {...wall, x, z};
+    const anchor = {spotId: wall.id, kind: wall.kind, level: wall.level, x, z, size: 2};
+    let island, selection = null;
+    const place = await createSettlement({id: 'home_islet', loadBackdrop: async () => new THREE.Texture(), reducedMotion: true,
+      decorate(place, art, cleanups) {
+        island = decorateIsland(place, {art, selection: () => selection, reducedMotion: true});
+        cleanups.push(() => island.dispose());
+      }});
+    const trees = place.group.children.filter(mesh => ['oak', 'pine', 'birch'].includes(mesh.userData.asset));
+    const blockingOak = trees.find(mesh => mesh.userData.ground.x === 16 && mesh.userData.ground.z === 2);
+    const originalMaterial = blockingOak.material, player = {x: 0, z: 12};
+    const draw = () => {
+      place.update(1 / 60, {time: 0, player, night: 0, weather: {wind: 0}});
+      island.update(1 / 60);
+    };
+    const faded = () => trees.filter(mesh => mesh.material.opacity === .24).map(mesh => mesh.userData.ground);
+    try {
+      await island.retryArt();
+      const legal = checkMove(wall.id, x, z, positionsOf([wall])).ok;
+      island.apply({spots: [moved]});
+      draw();
+      const walls = island.root.getObjectByName('island-wall-connections');
+      const unselected = faded(), orders = walls.children.map(mesh => mesh.renderOrder);
+      const colliders = JSON.stringify(place.colliders);
+      selection = anchor;
+      draw();
+      const selected = faded(), selectedOrders = walls.children.map(mesh => mesh.renderOrder);
+      const post = walls.getObjectByName('wall-art-layer:99.5');
+      const geometry = post.geometry;
+      draw();
+      const resourcesReused = post.geometry === geometry && blockingOak.material === originalMaterial;
+      island.preview({...anchor, ok: true});
+      const moving = faded();
+      island.preview(null);
+      draw();
+      selection = null;
+      draw();
+      const closed = faded(), restoredOpacity = blockingOak.material.opacity;
+      selection = anchor;
+      draw();
+      island.apply({spots: [moved], visitor: true});
+      draw();
+      const visitor = faded();
+      island.apply({spots: [moved], battle: true});
+      draw();
+      const battle = faded();
+      island.apply({spots: [{...moved, built: false}]});
+      draw();
+      const removed = faded();
+      return {legal, unselected, selected, moving, closed, visitor, battle, removed, restoredOpacity, resourcesReused,
+        collidersUnchanged: JSON.stringify(place.colliders) === colliders, orders, selectedOrders, treeOrder: blockingOak.renderOrder};
+    } finally { place.dispose(); }
+  });
+  expect(result).toEqual({
+    legal: true, unselected: [], selected: [{x: 16, z: 2}], moving: [], closed: [], visitor: [], battle: [],
+    removed: [], restoredOpacity: 1, resourcesReused: true, collidersUnchanged: true,
+    orders: [99.5], selectedOrders: [99.5], treeOrder: 102,
+  });
+});

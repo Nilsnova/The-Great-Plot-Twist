@@ -571,8 +571,13 @@ export function decorateIsland(place, ctx = {}) {
       const selection = preview ? null : ctx.selection?.();
       selectionBracket.show(selection);
       wallConnections.select(state.battle || state.visitor ? null : selection?.spotId);
-      const focus = selection?.kind && selection.kind !== 'wall' && !state.battle && !state.visitor;
-      place.setSelectedCanopy?.(focus ? shown.get(selection.spotId)?.meshes[0] ?? null : null);
+      let canopyTarget = null;
+      if (selection?.kind && !state.battle && !state.visitor) {
+        canopyTarget = selection.kind === 'wall'
+          ? wallConnections.selectedCanopyTarget
+          : shown.get(selection.spotId)?.meshes[0] ?? null;
+      }
+      place.setSelectedCanopy?.(canopyTarget);
       recoveryIndicators.update();
       const still = reduced();
       const coverage = selection && !state.battle && !state.visitor ? ctx.defenseRange?.() : null;

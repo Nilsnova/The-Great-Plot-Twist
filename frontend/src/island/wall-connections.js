@@ -29,13 +29,16 @@ export function makeWallConnections(root, {purchaseLight = null} = {}) {
   const footing = makeWallFooting(root);
   let material = new THREE.MeshBasicMaterial({vertexColors: true, transparent: true, side: THREE.DoubleSide, depthTest: false, depthWrite: false, toneMapped: false});
   let key = null, disposed = false, art = null, lastSpots = [], posts = new Set(), current = {links: [], connected: new Set()};
-  let selectedId = null;
+  let selectedId = null, selectedCanopyTarget = null;
   const readLinks = () => current.links.map(link => ({...link}));
   // Diagnostics inspect logical contacts independently of how many painter-layer meshes draw them.
   Object.defineProperty(group, 'wallLinks', {get: readLinks});
   Object.defineProperty(group, 'wallPosts', {get: () => art ? wallVisualRows(lastSpots) : []});
   Object.defineProperty(group, 'wallSelectedId', {get: () => !disposed && posts.has(selectedId) ? selectedId : null});
-  const clear = () => { for (const mesh of [...group.children]) { mesh.geometry.dispose(); group.remove(mesh); } };
+  const clear = () => {
+    selectedCanopyTarget = null;
+    for (const mesh of [...group.children]) { mesh.geometry.dispose(); group.remove(mesh); }
+  };
   function show(spots = []) {
     if (disposed) return current;
     lastSpots = spots; current = wallTopology(spots);
@@ -47,7 +50,7 @@ export function makeWallConnections(root, {purchaseLight = null} = {}) {
     if (art) {
       footing.show(visual, current.links);
       // Selection retains its real tier post at the ordinary depth; the world owns the tile bracket.
-      for (const [order, {positions, ground, uvs, colors, indices}] of texturedWallBatches(current.links, visual, art, {selectedId})) {
+      for (const [order, {positions, ground, uvs, colors, indices, selectedPost}] of texturedWallBatches(current.links, visual, art, {selectedId})) {
         const geometry = new THREE.BufferGeometry();
         geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
         if (purchaseLight) geometry.setAttribute('wallGround', new THREE.Float32BufferAttribute(ground, 2));
@@ -55,6 +58,7 @@ export function makeWallConnections(root, {purchaseLight = null} = {}) {
         geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3)); geometry.setIndex(indices);
         const mesh = new THREE.Mesh(geometry, material); mesh.name = `wall-art-layer:${order}`;
         mesh.renderOrder = order; mesh.frustumCulled = false; mesh.raycast = () => {}; group.add(mesh);
+        if (selectedPost !== undefined) selectedCanopyTarget = {mesh, firstVertex: selectedPost};
       }
       return current;
     }
@@ -96,6 +100,7 @@ export function makeWallConnections(root, {purchaseLight = null} = {}) {
     }, get links() { return readLinks(); },
     get root() { return group; },
     get posts() { return group.wallPosts; },
+    get selectedCanopyTarget() { return selectedCanopyTarget; },
     hasPost: id => !!art && posts.has(id),
     setTint(color, opacity = 1) {
       if (disposed) return;

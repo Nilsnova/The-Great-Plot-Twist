@@ -1,4 +1,4 @@
-import {Box3} from 'three';
+import {Box3, Vector3} from 'three';
 
 const MASK_SIZE = 64, GRID_SIZE = 16, SOLID_ALPHA = 48, MIN_OVERLAP = 4;
 
@@ -6,6 +6,16 @@ function spriteBounds(mesh) {
   if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox();
   mesh.updateWorldMatrix(true, false);
   return new Box3().copy(mesh.geometry.boundingBox).applyMatrix4(mesh.matrixWorld);
+}
+
+// A wall post is one upright quad within a shared batch. Its first and opposite vertices
+// bound the exact drawn post and the corresponding source crop, including damaged or rubble art.
+function wallPost({mesh, firstVertex}) {
+  const {position, uv} = mesh.geometry.attributes, opposite = firstVertex + 2;
+  mesh.updateWorldMatrix(true, false);
+  const box = new Box3(new Vector3().fromBufferAttribute(position, firstVertex),
+    new Vector3().fromBufferAttribute(position, opposite)).applyMatrix4(mesh.matrixWorld);
+  return {box, crop: [uv.getX(firstVertex), uv.getY(firstVertex), uv.getX(opposite), uv.getY(opposite)]};
 }
 
 function alphaAt(mask, texture, box, x, y) {
@@ -44,10 +54,13 @@ export function makeSelectedCanopy(trees) {
   const masks = new WeakMap(), occluding = new Set();
   let context, selected = null, treeScale;
 
-  function maskFor(mesh) {
-    const image = mesh.material.map?.image;
+  function maskFor(texture, crop) {
+    const image = texture?.image;
     if (!image?.width || !image.height || typeof document === 'undefined') return null;
-    if (masks.has(image)) return masks.get(image);
+    let imageMasks = masks.get(image);
+    if (!imageMasks) { imageMasks = new Map(); masks.set(image, imageMasks); }
+    const key = crop ? crop.join(',') : '';
+    if (imageMasks.has(key)) return imageMasks.get(key);
     let mask = null;
     try {
       if (!context) {
@@ -57,32 +70,37 @@ export function makeSelectedCanopy(trees) {
       }
       if (context) {
         context.clearRect(0, 0, MASK_SIZE, MASK_SIZE);
-        context.drawImage(image, 0, 0, MASK_SIZE, MASK_SIZE);
+        if (crop) {
+          const [u0, v0, u1, v1] = crop, top = texture.flipY ? 1 - v1 : v0;
+          context.drawImage(image, u0 * image.width, top * image.height,
+            (u1 - u0) * image.width, (v1 - v0) * image.height, 0, 0, MASK_SIZE, MASK_SIZE);
+        } else context.drawImage(image, 0, 0, MASK_SIZE, MASK_SIZE);
         mask = context.getImageData(0, 0, MASK_SIZE, MASK_SIZE).data;
       }
     } catch {
       context = null;
     }
-    masks.set(image, mask);
+    imageMasks.set(key, mask);
     return mask;
   }
 
   return {
     has(tree) { return occluding.has(tree); },
-    show(building) {
+    show(target) {
       // House growth multiplies every home tree's base scale by the same value.
-      const scale = building ? trees[0]?.scale.x : undefined;
-      if (building === selected && scale === treeScale) return false;
-      selected = building;
+      const scale = target ? trees[0]?.scale.x : undefined;
+      if (target === selected && scale === treeScale) return false;
+      selected = target;
       treeScale = scale;
       occluding.clear();
+      const building = target?.mesh ?? target;
       if (!building?.visible) return true;
-      const bodyBox = spriteBounds(building);
+      const {box: bodyBox, crop} = target.mesh ? wallPost(target) : {box: spriteBounds(building)};
       for (const tree of trees) {
         if (!tree.visible || !drawsInFront(tree, building)) continue;
         const treeBox = spriteBounds(tree);
         if (!treeBox.intersectsBox(bodyBox)) continue;
-        const bodyMask = maskFor(building), treeMask = maskFor(tree);
+        const bodyMask = maskFor(building.material.map, crop), treeMask = maskFor(tree.material.map);
         if (bodyMask && treeMask && overlapsBody(tree, treeBox, treeMask, building, bodyBox, bodyMask)) occluding.add(tree);
       }
       return true;

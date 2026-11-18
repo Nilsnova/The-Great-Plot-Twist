@@ -2358,6 +2358,7 @@ taking
 talk
 tap
 target
+targets
 task
 tavern
 tea

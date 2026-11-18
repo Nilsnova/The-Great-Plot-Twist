@@ -83,3 +83,40 @@ it('draws a real projected band in Chrome and leaves the minimum-range hole clea
   expect(samples.across).not.toEqual(samples.hole);
   expect(samples.inner[1]).toBeGreaterThan(samples.across[1]);
 });
+
+it('renders a dashed conditional night edge without filling the extra area in Chrome', async () => {
+  const samples = await browser(async () => {
+    const THREE = await window.g20Import('/node_modules/three/build/three.module.js');
+    const {makeDefenseRange} = await window.g20Import('/src/island/defense-range.js');
+    const {projectGround} = await window.g20Import('/src/world/projection.js');
+    const scene = new THREE.Scene(), extent = 15, size = 768;
+    const camera = new THREE.OrthographicCamera(-extent, extent, extent, -extent, .1, 10);
+    camera.position.z = 1;
+    const renderer = new THREE.WebGLRenderer({preserveDrawingBuffer: true});
+    renderer.setSize(size, size);
+    renderer.setClearColor(0x263847);
+    const display = makeDefenseRange(scene, {combat: true});
+    const model = {id: 'mortar_1', x: 0, z: 0, range: 6, minRange: 2, litRange: 9};
+    const gl = renderer.getContext();
+    function read(radius, angle = 0) {
+      const {x, y} = projectGround(radius * Math.cos(angle), -radius * Math.sin(angle)), pixel = new Uint8Array(4);
+      gl.readPixels(Math.floor((x + extent) * size / (2 * extent)), Math.floor((y + extent) * size / (2 * extent)),
+        1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+      return [...pixel];
+    }
+    try {
+      display.show(model);
+      renderer.render(scene, camera);
+      const base = read(10), hole = read(1), fill = read(4), darkArea = read(7), dash = read(8.9), gap = read(8.9, Math.PI / 48);
+      display.show({...model, range: 1});
+      renderer.render(scene, camera);
+      return {base, hole, fill, darkArea, dash, gap, onlyConditional: {fill: read(4), dash: read(8.9)}};
+    } finally { display.dispose(); renderer.dispose(); }
+  });
+  expect(samples.hole).toEqual(samples.base);
+  expect(samples.darkArea).toEqual(samples.base);
+  expect(samples.gap).toEqual(samples.base);
+  expect(samples.fill[1]).toBeGreaterThan(samples.base[1]);
+  expect(samples.dash[0]).toBeGreaterThan(samples.fill[0]);
+  expect(samples.onlyConditional).toEqual({fill: samples.base, dash: samples.dash});
+});
