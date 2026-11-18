@@ -74,6 +74,64 @@ describe('pirate wave renderer', () => {
     expect(renderer.root.visible).toBe(false);
     renderer.dispose();
   });
+  it('pools one selected defense overlay below the captain range and clears it at every handoff', () => {
+    const scene = new THREE.Scene(), record = {id: 'mortar_1', kind: 'mortar', level: 3, x: 4, z: -6};
+    const renderer = createWaveRenderer({scene, atlas: atlas(), defenses: [record], fx: () => null});
+    const state = {ships: [], walls: [], towers: [], fog: .3, sight: 6};
+    const combatFeedback = {range: {x: 0, z: 0, radius: 5, alpha: 1}};
+    const coverage = {...record, status: 'ready', range: 6, minRange: 3, litRange: 8};
+    const ringName = 'pirates:defense-range', selectionName = 'island-selection-bracket';
+    renderer.update({state, combatFeedback});
+    expect(renderer.root.getObjectByName(ringName)).toBeUndefined();
+    expect(renderer.root.getObjectByName(selectionName)).toBeUndefined();
+
+    const draw = defenseCoverage => renderer.update({combatFeedback, defenseCoverage});
+    draw(coverage);
+    const ring = renderer.root.getObjectByName(ringName), marker = renderer.root.getObjectByName(selectionName);
+    const captain = renderer.root.getObjectByName('captain-range-arcs'), fog = renderer.root.getObjectByName('pirates:fog');
+    const resources = [ring.geometry, ring.material, ...marker.children.flatMap(mesh => [mesh.geometry, mesh.material])];
+    const release = new Map(resources.map(resource => [resource, 0]));
+    resources.forEach(resource => resource.addEventListener('dispose', () => release.set(resource, release.get(resource) + 1)));
+    expect([ring.visible, marker.visible, captain.visible, fog.visible]).toEqual([true, true, true, true]);
+    expect(ring.position.toArray()).toEqual(marker.position.toArray());
+    expect(marker.userData).toMatchObject({spotId: record.id, level: record.level});
+    expect(ring.renderOrder).toBeLessThan(marker.children[0].renderOrder);
+    expect(marker.children[1].renderOrder).toBeLessThan(captain.renderOrder);
+    expect(ring.material.uniforms.inner.value).toBeCloseTo(3 / 8);
+    expect(ring.material.uniforms.outer.value).toBeCloseTo(6 / 8);
+    expect(ring.material.uniforms.conditional.value).toBe(1);
+
+    draw({...coverage, range: 2, litRange: 3});
+    expect([ring.visible, marker.visible]).toEqual([false, true]);
+    draw({...coverage, range: 2});
+    expect([ring.visible, marker.visible]).toEqual([true, true]);
+    expect(ring.material.uniforms.outer.value).toBe(0);
+    for (const status of ['jammed', 'silenced', 'destroyed']) {
+      draw({...coverage, status});
+      expect([ring.visible, marker.visible, captain.visible]).toEqual([false, true, true]);
+    }
+    const next = {...coverage, id: 'cannon_2', kind: 'cannon', x: 2, z: 6, range: 9, minRange: 0, litRange: 9};
+    draw(next);
+    expect(renderer.root.getObjectByName(ringName)).toBe(ring);
+    expect(renderer.root.getObjectByName(selectionName)).toBe(marker);
+    expect(ring.material.uniforms.conditional.value).toBe(0);
+    expect([ring.userData.spotId, marker.userData.spotId]).toEqual([next.id, next.id]);
+    renderer.setVisible(false);
+    expect([ring.visible, marker.visible]).toEqual([false, false]);
+    draw(next);
+    renderer.setVisible(true);
+    expect([ring.visible, marker.visible]).toEqual([false, false]);
+    draw(coverage);
+    renderer.setDefenses([record]);
+    expect([ring.visible, marker.visible]).toEqual([false, false]);
+    draw(coverage);
+    draw(null);
+    expect([ring.visible, marker.visible]).toEqual([false, false]);
+    expect(captain.visible).toBe(true);
+    renderer.dispose();
+    renderer.dispose();
+    expect([...release.values()]).toEqual(resources.map(() => 1));
+  });
   it.each([false, true])('throws fire bombs without a muzzle flash or bloom (reduced motion: %s)', reducedMotion => {
     const blooms = [], scene = new THREE.Scene(), shared = atlas();
     scene.userData.characterScale = 1.4;

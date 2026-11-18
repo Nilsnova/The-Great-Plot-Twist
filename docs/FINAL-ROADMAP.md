@@ -80,6 +80,8 @@ Approved U addition: Optional skill-aware comparison against the carried weapon,
 Approved U addition: Local inventory filters and grouped rack rows, implemented in draft [PR #98](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/98) with [evidence](evidence/U-arsenal-filters/README.md). This completes only the approved addition; author and independent human review remain.
 Approved U addition: Preparation and upcoming unlocks before ringing the bell, implemented in draft [PR #94](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/94) with [evidence](evidence/U-wave-preparation/README.md). This completes only the approved addition; author and independent human review remain.
 
+The village polish review covers selected building identity, between-wave range and the decorative southwest mooring. [Review captures](evidence/village-polish/README.md)
+
 ### C. Simplify the code base (helps criteria 5 and 6)
 
 | ID | Value | Size | Task | Done when |
@@ -167,3 +169,6 @@ Not released or marked complete: focused evidence, Johannes's explain-back and
 independent human review remain. No change to the existing freeze or merge rules.
 
 COC-02 follow-up (Johannes, draft): current-base management fit view is a bounded implementation slice for issue #143 and depends on COC-49/PR #192. The parent camera task remains open; see [specification](../specs/COC-02-village-overview.md). No merge or full editor-camera completion is claimed.
+
+
+18 Nov / Johannes — VIS69 focused wall refinement: [parent #469](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/469), tasks [VIS70 #470](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/470), [VIS71 #471](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/471), [VIS72 #472](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/472), [VIS73 #473](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/473). [Draft #474](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/474) saves the local-Mac handover checkpoint. Tasks remain open: combined checks, feedback implementation, actual visual acceptance and different-human review are pending. Preserve the existing twelve-wall game; no merge or rollout.

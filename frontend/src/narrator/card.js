@@ -4,6 +4,7 @@ import './narrator.css';
 
 // The E prompt floating over a building (.interact.floating) moves with the world, so the card does not dodge it
 // (the overlap audit: dodging it pushed the card into the wave bar).
+const INSPECTION = '.pirate-hud:not([hidden]):has(.pirate-defense-inspector:not([hidden]))';
 const CONTROLS = '.bottom-bar,.interact:not([hidden]):not(.floating),.pirate-musket:not([hidden])';
 const WAVE_BAR = '.pirate-hud:not([hidden]) .pirate-bar:not([hidden])';
 const WARNING = `${WAVE_BAR} .pirate-danger:not([hidden])`;
@@ -46,7 +47,8 @@ export function createNarratorCard(container = document.body, {onSkip = () => {}
 
   function protectWarning() {
     const own = card.getBoundingClientRect();
-    const suppressed = [...container.querySelectorAll(WARNING)].some(warning => {
+    const protectedHud = `${WARNING},${INSPECTION} .pirate-defense-inspector,${INSPECTION} > .pirate-prompt:not([hidden])`;
+    const suppressed = [...container.querySelectorAll(protectedHud)].some(warning => {
       const bounds = warning.getBoundingClientRect();
       return bounds.width > 0 && bounds.height > 0 && own.left < bounds.right && own.right > bounds.left
         && own.top < bounds.bottom && own.bottom > bounds.top;

@@ -29,6 +29,7 @@ import {figurePoses} from './poses.js';
 import {mountDefenseReport} from './defense-report-feature.js';
 import {createRecoveryTransport} from './recovery-transport.js';
 import {createCorePublisher} from './core-display.js';
+import {addMenuExtras} from '../shell/menu-extras.js';
 
 const ISLAND_PLACE = 'home_islet';
 export const SPOTS_CHANGED = 'island_spots_changed'; // src/island/index.js
@@ -97,6 +98,7 @@ export function wireWaves(ctx) {
   let publishCore = () => {};
   const pirates = mountPirates({...ctx, getDefenses: () => withLevels(island?.defenses() ?? [], defended()), finishWave, api, openRoom, notify,
     getManaging: () => island?.managing === true,
+    inspectDefenses: !!island,
     onIslandEvents: events => { noteReport(() => defenseReport?.events(events)); noteReport(publishCore); },
     recoveryTransport,
     practiceIdentity: () => ({player: practicePlayer(ctx.getPracticeToken?.()) ?? ctx.practicePlayer ?? null, island: island?.gameCode ?? roomTopic}),
@@ -183,6 +185,8 @@ export function wireWaves(ctx) {
     after(() => { changedSoon = false; void readIsland(); }, CHANGED_DELAY_MS);
   }
   if (island) {
+    stops.push(addMenuExtras(() => pirates.island.canInspectDefense
+      ? [{label: 'Inspect defense range', onSelect: () => pirates.island.openDefenseInspection()}] : []));
     stops.push(on('arrived', event => { if (event?.place === ISLAND_PLACE) landed = true; followRoom(); }),
       on('travel', () => { landed = false; islandRoom.attach(null); realRoom?.close?.(); realRoom = null; roomTopic = null; }));
     stops.push(every(tick, 1000));

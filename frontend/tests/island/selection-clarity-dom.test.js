@@ -24,7 +24,7 @@ it('draws real-tier segment pixels and readable outlined GPU corners at desktop 
         const renderer = new THREE.WebGLRenderer({alpha: false, antialias: false, preserveDrawingBuffer: true});
         renderer.setSize(300, 200); renderer.domElement.style.cssText = 'display:block;margin:100px auto 0'; document.body.append(renderer.domElement);
         const base = new THREE.Mesh(new THREE.PlaneGeometry(3.3, 1.5), new THREE.MeshBasicMaterial({color: '#9c6b25', depthTest: false}));
-        base.renderOrder = 125; scene.add(base);
+        base.renderOrder = 90; scene.add(base);
         const bracket = makeSelectionBracket(scene); bracket.show({spotId: 'wall_1', x: 0, z: 0}); renderer.render(scene, camera);
         window.clarityFixture = {ui, renderer, bracket, base, cleanup() { ui.dispose(); bracket.dispose(); base.geometry.dispose(); base.material.dispose(); renderer.dispose(); renderer.domElement.remove(); }};
       });
@@ -37,15 +37,18 @@ it('draws real-tier segment pixels and readable outlined GPU corners at desktop 
         for (let i = 3; i < pixels.length; i += 4) if (pixels[i] > 128) { const x = ((i - 3) / 4) % portrait.width; minX = Math.min(minX, x); maxX = Math.max(maxX, x); opaque++; }
         const {renderer} = window.clarityFixture, copy = document.createElement('canvas'); copy.width = 300; copy.height = 200;
         const c = copy.getContext('2d'); c.drawImage(renderer.domElement, 0, 0); const gpu = c.getImageData(0, 0, 300, 200).data;
-        let green = 0, dark = 0;
-        for (let i = 0; i < gpu.length; i += 4) { if (gpu[i + 1] > 180 && gpu[i] < 170 && gpu[i + 2] < 150) green++; if (gpu[i] < 50 && gpu[i + 1] < 100 && gpu[i + 2] < 70) dark++; }
+        let brass = 0, dark = 0;
+        for (let i = 0; i < gpu.length; i += 4) {
+          if (gpu[i] > 230 && gpu[i + 1] > 180 && gpu[i + 2] > 120) brass++;
+          if (gpu[i] < 100 && gpu[i + 1] < 74 && gpu[i + 2] < 55) dark++;
+        }
         return {receipt, filesMatch: receipt.components.every(source => source.file === getRasterFrame(source.id).sheet.file && source.source === 'png'),
-          opaque, span: maxX - minX + 1, width: portrait.width, gpuGreen: green, gpuOutline: dark, calls: renderer.info.render.calls};
+          opaque, span: maxX - minX + 1, width: portrait.width, gpuBrass: brass, gpuOutline: dark, calls: renderer.info.render.calls};
       });
       expect(result.receipt).toMatchObject({id: 'island-wall-l3', source: 'png', composition: 'wall-segment'});
       expect(result.receipt.components.map(source => source.id)).toEqual(['island-wall-l3', 'village-wall-front-l3', 'village-wall-top-l3', 'village-wall-side-l3']);
       expect(result.filesMatch).toBe(true); expect(result.opaque).toBeGreaterThan(5000); expect(result.span).toBeGreaterThan(result.width * .6);
-      expect(result.gpuGreen).toBeGreaterThan(200); expect(result.gpuOutline).toBeGreaterThan(200); expect(result.calls).toBe(3);
+      expect(result.gpuBrass).toBeGreaterThan(200); expect(result.gpuOutline).toBeGreaterThan(200); expect(result.calls).toBe(3);
       if (process.env.VIS38_SHOTS) {
         await mkdir(process.env.VIS38_SHOTS, {recursive: true});
         await page.screenshot({path: join(process.env.VIS38_SHOTS, `vis38-component-${width}x${height}.png`)});

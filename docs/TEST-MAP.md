@@ -117,6 +117,8 @@ they do not exercise a hosted room or prove deployment. See [the CW1 spec](../sp
 | others | `test:art` (`check-pixel.js`), `test:weather:wiring`, `test:harbor:life`, `test:lifecycle`, `test:living`, `test:title-start`, `test:settings:visuals`, `test:build-stamp`, `test:problem-report`, `test:islet:world`, `test:festival` | See the first line of each script |
 | no npm script | `check-islet.js`, `check-local-dev.js`, `check-redesign-hud.js`, `check-redesign-movement.js`, `check-sports.js`, `check-sports-hotspot.js`, `capture-integrated.js` (the first 3 minutes with `?islands=fake`, screenshots) | Run with `node scripts/<name>` |
 
+Village checks cover keyboard and pointer selection, the shared range calculation, selected-tree fading, the decorative mooring and shore access. The browser captures add touch checks in Fit, Work and a live Treasure Galleon wave. [Village review evidence](evidence/village-polish/README.md)
+
 The final local frontend suite passed 3,694 tests across 322 files. The separate `npm run test:mp`
 smoke test did not pass: it timed out waiting for the host's wave break with `wave=null`. The same
 failure reproduced on exact main `a09787c`. A passive retry recorded the host wave ending with
