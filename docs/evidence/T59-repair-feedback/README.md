@@ -92,8 +92,8 @@ The optional screenshot mode renders the production DOM card with the production
 
 | Viewport | State | Screenshot |
 |---|---|---|
-| 1440 × 900 desktop | Saved-v1 Wall; health endpoint unavailable; legacy Repair is hidden | [Wall health error](../../../frontend/captures/t59-policy-fallback-wall-error-desktop.png) |
-| 375 × 812 phone | Saved-v1 Cannon; health endpoint unavailable; upgrade is disabled | [Cannon upgrade guard](../../../frontend/captures/t59-policy-fallback-cannon-phone.png) |
+| 1440 × 900 desktop | Saved-v1 Wall; health endpoint unavailable; Upgrade stays visible and disabled with the small wait helper; legacy Repair is hidden | [Wall health error](../../../frontend/captures/t59-policy-fallback-wall-error-desktop.png) |
+| 375 × 812 phone | Saved-v1 Cannon; health endpoint unavailable; visible Upgrade is disabled with “Wait until building health has loaded.” | [Cannon upgrade guard](../../../frontend/captures/t59-policy-fallback-cannon-phone.png) |
 
 Captured with:
 
@@ -101,7 +101,7 @@ Captured with:
 cd frontend && RECOVERY_POLICY_CAPTURE_DIR=captures ./node_modules/.bin/vitest run --maxWorkers=1 tests/island/structure-recovery-policy.test.js -t 'does not downgrade a persisted v1 island'
 ```
 
-Before the fix, the first-read fixture produced no recovery error and exposed the legacy wall Repair action. The cached-v1 case also allowed a tower upgrade after a later `feature_off` response. After the fix, both cases retain recovery v1 and display the health-load error; a later successful read restores the card.
+Before the fix, the first-read fixture produced no recovery error and exposed the legacy wall Repair action. The cached-v1 case also allowed a tower upgrade after a later `feature_off` response. After the fix, both cases retain recovery v1 and display the health-load error; an eligible Upgrade remains visible and disabled with the small wait helper until health loads. A later successful read restores normal eligibility.
 
 Verified with:
 

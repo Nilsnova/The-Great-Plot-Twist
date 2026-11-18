@@ -150,7 +150,8 @@ it('does not downgrade a persisted v1 island when the structure endpoint says fe
     island.pick('cannon_1');
     await new Promise(resolve => setTimeout(resolve, 50));
     const upgrade = document.querySelector('.island-card[open] [data-focus="upgrade"]');
-    const tower = {message: document.querySelector('.recovery-message')?.textContent ?? '', upgradeDisabled: upgrade?.disabled ?? null};
+    const tower = {message: document.querySelector('.recovery-message')?.textContent ?? '', upgradeDisabled: upgrade?.disabled ?? null,
+      upgradeReason: document.querySelector('.island-card[open] .island-reason')?.textContent ?? ''};
     island.dispose();
     return {wall, tower};
     }, {retainForCapture: !!captureDir});
@@ -168,7 +169,8 @@ it('does not downgrade a persisted v1 island when the structure endpoint says fe
       island.pick('cannon_1');
       await new Promise(resolve => setTimeout(resolve, 50));
       const upgrade = document.querySelector('.island-card[open] [data-focus="upgrade"]');
-      return {message: document.querySelector('.recovery-message')?.textContent ?? '', upgradeDisabled: upgrade?.disabled ?? null};
+      return {message: document.querySelector('.recovery-message')?.textContent ?? '', upgradeDisabled: upgrade?.disabled ?? null,
+        upgradeReason: document.querySelector('.island-card[open] .island-reason')?.textContent ?? ''};
     });
     await page.setViewportSize({width: 375, height: 812});
     await page.locator('.island-card[open]').screenshot({path: join(captureDir, 't59-policy-fallback-cannon-phone.png')});
@@ -176,7 +178,8 @@ it('does not downgrade a persisted v1 island when the structure endpoint says fe
     return {...fixture, tower};
   });
   expect(result.wall).toEqual({message: 'Building health could not be loaded.', legacyRepair: false, policyVersion: 1});
-  expect(result.tower).toEqual({message: 'Building health could not be loaded.', upgradeDisabled: true});
+  expect(result.tower).toEqual({message: 'Building health could not be loaded.', upgradeDisabled: true,
+    upgradeReason: 'Wait until building health has loaded.'});
 });
 
 it('keeps a previously discovered v1 policy when a later structure read says feature_off', async () => {
