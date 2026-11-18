@@ -41,6 +41,8 @@ The order of the tasks below follows this table: the walkthrough and the UX carr
 
 ## Task board
 
+**VIS59 wall-profile verification / Johannes:** implemented in [Draft #435](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/435), [issue #434](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/434). [Exact tests-first evidence](evidence/VIS-59-wall-profile-observer/README.md) retains the original failure; independent current cap/buttress expectations now pass 151 observer cases and 197 focused checks across seven files (5.13 s). All 31 original cases are unchanged; product/native/dependency trees are identical to the coordinator base. Native multiplayer, fresh full frontend, the separate input timeout and human review remain open. No product behavior change or merge.
+
 **VIS56 existing-level verification / Johannes:** helper implementation in [Draft #430](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/430), [scope, pure results and native boundary](evidence/VIS-56-level-matrix/README.md). Focused 10 files / 163 tests passed; the coordinator native matrix and actual-game visual acceptance remain pending. No product code or game rule changes; no merge or rollout.
 
 **VIS54 home-tree clearance / Johannes:** implementation in [Draft #427](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/427) starts home-island foliage at 0.70 visual scale, retaining existing house growth, every tree foot/radius-0.48 blocker and all gameplay rules. [Focused evidence](evidence/VIS-54-tree-clearance/README.md): expected red 2 failures / 7 passes, then 8 pure files / 67 tests passed (6.45s), build and title budget passed. Actual composed desktop/phone screenshots, full/native checks, visual acceptance and human review remain open; no merge or rollout.

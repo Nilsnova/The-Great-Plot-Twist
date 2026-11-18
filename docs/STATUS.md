@@ -14,6 +14,8 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
+**18 Nov / Johannes — VIS59 verifier:** [Draft #435](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/435) updates only the multiplayer observer to the independently specified five cap heights and sparse post rule. [Evidence](evidence/VIS-59-wall-profile-observer/README.md) preserves both red runs and the 197-pass/seven-file final pure selection (5.13 s); all original test cases and product/native/dependency identities remain unchanged. Coordinator native/full checks and different-human review are pending; the separate native input timeout remains open. No product change or PR merge.
+
 **18 Nov / Johannes — VIS57 review base:** [Draft #426](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/426) preserves main `66d29ea9` beside preview `e636ae75` for the next visual pass. [Evidence](evidence/VIS-57-playtest-base/README.md): 46 incoming paths / 19 overlaps, one renderer conflict; 71 unique migration versions with exact SQL retained; 236 focused frontend and 725 targeted route/unit/real-PostgreSQL checks passed, zero SQL skips, Ruff passed. No browser/full-suite pass is claimed here. Separate foliage/wall presentation branches and coordinator captures follow; keep existing unresolved failures open. No PR merge to main, live migration or rollout.
 
 **17 Nov / Johannes — reference-village visual review:** the [guide](contribute/REFERENCE-VILLAGE-REVIEW.md) maps 50 component Drafts. [Stage-nine actual images](evidence/reference-village-latest-review/README.md) and final checks share frozen e874023f / frontend d76918ec after VIS52 Goals/toast clearance. [Final-source evidence](evidence/reference-village-checks/source-e874-review/README.md): 21 measured overlap rows pass (three wave-hint rows skipped); full frontend is 4,586 pass / one unchanged 20-second timeout across 420 files. A11y 33, demo 34, build/spoiler guard, title budget and text lint pass on the same source; the overall run still fails that frontend timing case. Native twelve-image document proof passes: 33 real actions at each viewport, exact browser bytes and zero page errors/external requests; both earlier cache-read failures stay archived. Historical source-52 failures stay preserved; known upstream multiplayer pose failure is tracked by VIS53/#421, with a refused-shot native diagnostic explicitly INCONCLUSIVE and no runtime fix. Backend proof remains 262 route/unit plus 269 real-PG on matching trees, not a fresh full-backend run. Art/terrain 12,554,858 bytes still misses 8MiB; scenery, Safari/devices, balance, land expansion and human acceptance stay open. No PR merge to main or rollout.
@@ -271,6 +273,8 @@ Nobody has decided these yet. Until they are decided, the plan in ROADMAP.md sta
 6. **Pick a package.** Take your lane's next package below, or one from "Start today" in ROADMAP.md. Open an issue with the goal, acceptance checks, scope, responsible teammate and likely files. Create your branch from `main` (`git switch main`, `git pull`, then for example `git switch -c feat/l1-live-weather`). Paste the agent brief below and open a draft pull request early.
 
 ## Next steps per lane
+
+**Johannes / VIS59:** compose the focused observer/test commits, freeze the new QA source, rerun native multiplayer and the full frontend suite, and retain the old failures. Use [the exact profile-observer evidence](evidence/VIS-59-wall-profile-observer/README.md); this correction changes no game behavior and closes no unrelated timeout.
 
 **Johannes / VIS57 follow-up:** use the playtest-preserving [review base and exact checks](evidence/VIS-57-playtest-base/README.md) for separate foliage/wall presentation leaves. Keep current-main gameplay intact; coordinator verifies the resulting desktop/phone game, and a different human reviews before any readiness or merge action.
 
@@ -633,6 +637,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+- **18 Nov / Johannes:** fixed the stale [VIS59 wall-profile observer](evidence/VIS-59-wall-profile-observer/README.md) in Draft #435. Preserved all 31 existing cases unchanged, reproduced the original red and the expanded tests-first red, then passed all 151 observer cases plus the seven-file 197-check selection. Eight observer lines change; product/native/dependency identities remain exact. Coordinator native/full verification and human review remain pending; no merge or rollout.
 
 - **18 Nov / Johannes:** composed the [VIS57 playtest-preserving base](evidence/VIS-57-playtest-base/README.md), retaining both authored histories and all main changes. Relocated only the unmerged finish guard to free migration version 18050000, with exact SQL bytes retained. Focused frontend 236 passed; targeted route/unit and actual disposable-PG 725 passed, zero skips; Ruff passed. Preserved the initial zero-time projection fixture failure and strengthened its transition/facing checks. Independent AI review is clear; human/browser acceptance remains pending. Draft #426; no PR merge to main or rollout.
 
