@@ -229,10 +229,12 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     return fresh;
   };
   // The fake answers at once; the live transport is the signed-in session's, read at every call.
-  const live = {get: path => (getTransport()?.get?.(path) ?? notReady()), post: (path, body) => (getTransport()?.post?.(path, body) ?? notReady())};
+  const live = {get: (path, ...options) => (getTransport()?.get?.(path, ...options) ?? notReady()),
+    post: (path, body, ...options) => (getTransport()?.post?.(path, body, ...options) ?? notReady())};
   const islandTransport = transport ?? live;
   const api = createIslandApi({transport: islandTransport, waveProtocol: where => where === 'pirate_point' ? 1 : 2});
-  const recoveryTransport = Object.freeze({get: path => islandTransport.get(path), post: (path, body) => islandTransport.post(path, body)});
+  const recoveryTransport = Object.freeze({get: (path, ...options) => islandTransport.get(path, ...options),
+    post: (path, body, ...options) => islandTransport.post(path, body, ...options)});
   const ui = createIslandUi({container, focus, resetInput,
     onSelection: active => villageBar.render(village.active && !active && !moving.active)});
   // T36, flexible placement: Move mode (move-mode.js) with its bar (move-bar.js) and the preview on the island.

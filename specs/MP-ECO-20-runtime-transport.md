@@ -23,6 +23,8 @@ their behavior. Token renewal keeps the capability header and identical body.
 The existing deferred panel service forwards these optional request options to
 the authenticated transport. Its readiness and session checks still run before
 every call, and its existing public reads keep the anonymous client.
+The island's live and recovery wrappers forward the same optional arguments
+without choosing an economy mode or retaining a transport from an old session.
 
 Private feature adapters also receive the authenticated actor ID from the
 accepted `/api/me` response through the panel service. The existing scope-based
