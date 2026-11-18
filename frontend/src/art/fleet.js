@@ -166,9 +166,9 @@ function powderFlash(c, w, cy) {
   const burst = poly([[1, cy - 1.6], [w * .29, cy - 2.4], [w * .48, cy - w * .27],
     [w * .48, cy - 1.8], [w * .85, cy - .5], [w * .57, cy + 2], [w * .58, cy + w * .22],
     [w * .33, cy + 2.7], [1, cy + 1.6]], .42);
-  part(c, burst, linear(c, 1, cy, w * .85, cy, [[0, '#fff3b2'], [.52, '#ffbf54'], [1, '#ec7542']]),
+  part(c, burst, linear(c, 1, cy, w * .85, cy, [[0, '#ffef9b'], [.25, '#ffd476'], [.52, '#ffbf54'], [1, '#ec7542']]),
     {line: '#e68236', width: .7, shade: false});
-  part(c, poly([[1.5, cy], [w * .31, cy - 2.1], [w * .62, cy - .4], [w * .31, cy + 1.5]], .45),
+  part(c, poly([[1.6, cy], [w * .27, cy - 1.35], [w * .54, cy - .3], [w * .27, cy + .95]], .4),
     '#fffbe2', {line: false, shade: false});
   part(c, ellipse(w * .81, cy - w * .19, .92, .48, -.45), '#ffe095', {line: false, shade: false, alpha: .87});
 }
@@ -274,7 +274,7 @@ function explosion(frame) {
       const flash = [[-9, 1], [-3, -1.7], [-4.7, -7.9], [0, -3.2], [5.5, -8.6], [3.8, -1.7],
         [9.3, .7], [3.6, 2.6], [5.2, 7.2], [.3, 3.6], [-4.2, 7.1], [-3.4, 2.6]];
       part(c, poly(flash.map(([x, y]) => [cx + x, cy + y]), .55),
-        radial(c, cx, cy, 9.4, [[0, '#fffdec'], [.48, '#ffe599'], [1, '#ec8a3e']]),
+        radial(c, cx, cy, 9.4, [[0, '#fffdec'], [.22, '#ffecad'], [.52, '#ffd478'], [1, '#ec8a3e']]),
         {line: '#e99745', width: .72, shade: false});
       return;
     }
@@ -287,7 +287,7 @@ function explosion(frame) {
     const rim = cloudOutline([[cx - 1, cy, 7.6 + swell], [cx - 6.3, cy + 2.8, 4.7 + swell],
       [cx + 6.5, cy + 1.4, 5.1 + swell], [cx + 1.4, cy - 5.6, 5.1 + swell]]);
     part(c, rim, radial(c, cx - 1, cy - 1, 12.4, frame === 1
-      ? [[0, '#fff9c5'], [.38, '#ffd568'], [.75, '#f79748'], [1, '#b74e33']]
+      ? [[0, '#fff4bf'], [.23, '#ffda79'], [.75, '#f79748'], [1, '#b74e33']]
       : [[0, '#ffe7a2'], [.35, '#ffc062'], [.69, '#e9804c'], [1, '#ab4c3f59']]),
     {line: false, shade: false, alpha: frame === 1 ? .98 : .8});
     for (const [x, y] of [[-11.4, -5.2 - swell], [10.7, 7.5 + swell]])
