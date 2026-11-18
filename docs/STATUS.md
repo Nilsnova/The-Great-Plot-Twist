@@ -1189,3 +1189,38 @@ Ianno / 2026-11-18 / T54 documentation reconciliation / `docs/wave-end-repair-ru
 - **Ianno / 18 Nov 2026 / CW4 revision 2 (#461, draft #464):** replaced the rejected `0f6b966e` non-musket arm layout with projected grip coordinates and authored shoulder/elbow/wrist chains; pistols have separate grips, long guns have trigger/support palms, and bombs have an open release hand plus one held bomb in the later ready frame. The musket painter is isolated and matches 220 pre-recorded RGBA samples exactly. Current checks: 63 focused tests, build/spoiler/budget, both phases on own/peer renderers in ten directions at two sizes, and integrated synthetic bomb wave pass. Current demo repeats the unchanged-main hidden-lamp timeout; accessibility reports seven baseline findings and none new (the prior lobby finding did not reproduce). Current full frontend passed 347 files / 3,850 tests in 542.92 s, with painter/test hashes unchanged; independent code and visual reviews pass. Revised evidence is versioned separately; all previous log entries and first-pass pictures remain history. No balance, network or deployment changes; human review remains.
 
 - **Ianno / 18 Nov 2026 / CW4 ([draft PR #464](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/464), [#461](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/461), `feat/cw4-weapon-poses`):** weapon-specific procedural captain poses reuse existing shot events and one dynamic texture; bombs no longer create a muzzle bloom/flash. Tests first reproduced six failures; full frontend 347 files / 3,846 tests passed in 362.46 s; focused checks pass 59/59, independent agent review, build/spoiler guard and budgets pass. Chromium verifies five weapons, own/peer bodies, ten angles, two viewports, expiry and texture disposal. Before/after fixtures and a real integrated synthetic bomb wave are captured. Demo fails at the hidden lamp quest on this branch and unchanged `48aee0e7`; accessibility's eight findings exactly match that baseline, with no audit/browser errors or external requests. No balance/price/transport changes or production verification. [Evidence](evidence/CW4-weapon-poses/README.md); human review remains.
+
+Ianno / 2026-11-18 — Co-op consistency publication: core fixes are in draft
+[#485](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/485), saved reward return in draft
+[#486](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/486), with historical reconciliation
+in draft [#490](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/490),
+on branch `fix/historical-revive-reconciliation-review`. Main base is
+`db573347`; merged VIS-41 and WebP changes remain intact. Core publication checks passed
+95 frontend / 552 backend-SQL tests; reward checks passed 125 frontend / 584 backend-SQL tests.
+Current-source synthetic Chromium reload checks pass at desktop/phone sizes, and build/budget
+checks pass. Shared final results and the reproduced unchanged-main Group3 guard failure are
+in [the handover](handoff/return-recovery-2026-11-18.md). Different human approval remains
+pending; no merge, live database operation, migration, refund or deployment was performed.
+
+Final publication verification on that stack: **4,659 frontend tests / 424 files passed**;
+backend with optional PostgreSQL tools and the unchanged exhaustive settings suite excluded:
+**13,236 passed / 1 failed**. The sole Group3 fixture assertion fails identically on clean main;
+no setup errors or skipped selected tests. Full logs, old-development versus current-source
+provenance, and the untouched live-operation boundary are in the linked handover.
+
+Ianno / 2026-11-18 — Co-op review corrections in [#485](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/485):
+incorporated main `03e660fe`, preserved both lifecycle cleanup paths, main's arsenal/rejoin guards
+and both STATUS histories. Detached stale finishes refresh their old sealed journal silently;
+unknown outcomes retain the same checkpoint UID. Wallet watermarks cover multiple old reads,
+purchases, arsenal responses and account reset. The paid revival migration is uniquely
+`20261118051000` after main's retirement50000; SQL body unchanged. Recovery decision references
+use D067, preserving main D066. Full frontend **4,729 / 430 files passed**; broad backend with
+optional PostgreSQL tools and unchanged exhaustive settings matrix excluded **13,264 passed**.
+Three inherited backend expectation failures were reproduced on clean main and corrected without
+runtime changes. Build/budget/Ruff pass. Same-script desktop/phone captures show the old
+120→100 rollback fixed at120 while newer80 is accepted. The lifecycle smoke still times out
+identically on main before its assertions; no new native full-multiplayer/live/physical-device
+pass is claimed. [Exact handover/evidence](handoff/coop-review-fixes-2026-11-18.md).
+Different human re-review remains pending. No main merge, deployment, live migration or refund.
+
+Ianno / 2026-11-18 — Final #485 reconciliation incorporates main `3482c281` (MP-ECO-01 documentation only). Runtime and test files remain byte-identical to the verified source; all 25 runtime hashes match. Application suites were not repeated for this documentation-only merge. No main merge or live operation.

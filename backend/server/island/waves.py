@@ -67,6 +67,7 @@ class WaveRevive:
     price: int  # what the helper paid (also on a repeat: what the first click paid)
     coins: int  # the helper's coins after it
     repeat: bool
+    journaled: bool | None = None
 
 
 @dataclass(frozen=True)
@@ -486,6 +487,10 @@ async def finish_protocol2(
 
 
 def revive_refusal(refusal: Refusal) -> ApiError:
+    if refusal.reason == "client_update_required":
+        return ApiError(409, "client_update_required", "Reload to help this captain up safely.")
+    if refusal.reason == "action_conflict":
+        return ApiError(409, "action_conflict", "This revival request belongs to another fall.")
     if refusal.reason == "player_not_set_up":
         return player_not_set_up()
     if refusal.reason == "no_such_wave":
@@ -513,6 +518,10 @@ async def revive(
     fallen: str,
     down_at: int,
     action_uid: str,
+    *,
+    protocol: int = 1,
+    x: float | None = None,
+    z: float | None = None,
 ) -> WaveRevive:
     """Captain health (docs/GAME-V3.md section 3): the signed-in player helped a fallen captain
     up in this wave and pays catalogue.revive.base + per_wave x the wave number (the database
@@ -520,13 +529,15 @@ async def revive(
     checks the island's buildings: wave_revive() of 20261112090000_house_roles.sql). Only a
     member of the game (on an island; the owner always) who is in the wave and has not finished
     it, while it runs. A repeated actionUid pays nothing more and answers the same price. The
-    fall and the standing up are the browsers' (the wave's simulation); fallen and down_at (the
-    tick of the fall, the same in every browser) name one fall, which is paid for once: a second
-    helper of it is refused already_up."""
+    fall and the standing up are replayed by the browsers; fallen and down_at name one paid fall.
+    Protocol 2 commits its server-authored journal event with the payment. Protocol 1 keeps
+    its room input. A second helper of the same fall is refused already_up."""
     where = await store.read_wave_place(admin, str(wave_id))
     if where is None:
         raise no_such_wave()
-    if where.place == "island" and where.island_owner is not None:
+    # The recovery RPC checks membership after its durable repeat check, so a lost response
+    # stays repeatable after leaving the game. Legacy permission behavior stays the same.
+    if protocol != 2 and where.place == "island" and where.island_owner is not None:
         await permissions.require_action(
             admin, where.island_owner, player_id, permissions.WAVE_REVIVE
         )
@@ -539,7 +550,9 @@ async def revive(
         "p_base": catalogue.revive.base,
         "p_per_wave": catalogue.revive.per_wave,
     }
-    reply = await store.revive_captain(admin, arguments)
+    if protocol == 2:
+        arguments.update({"p_x": x, "p_z": z})
+    reply = await store.revive_captain(admin, arguments, protocol=protocol)
     if isinstance(reply, Refusal):
         raise revive_refusal(reply)
-    return WaveRevive(reply.price, reply.balance, reply.repeat)
+    return WaveRevive(reply.price, reply.balance, reply.repeat, reply.journaled)
