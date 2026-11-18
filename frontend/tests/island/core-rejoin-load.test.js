@@ -12,8 +12,9 @@ const INFO = {waveId: 'return-wave', wave: 2, seed: 77, startsAt: '2026-11-17T12
   weather: {kind: 'calm'}, flagship: false};
 const islands = [];
 afterEach(() => { for (const island of islands.splice(0)) island.dispose(); });
+// Production flags (arsenal on) unless a test says otherwise.
 function harness() {
-  const listeners = new Map(), base = createFakeIslandTransport();
+  const listeners = new Map(), base = createFakeIslandTransport(), coins = [], holds = new Map();
   let readWave = () => Promise.resolve({ok: true, data: INFO}), failIsland = false, failVisit = false;
   const on = (name, fn) => {
     if (!listeners.has(name)) listeners.set(name, new Set());
@@ -21,13 +22,25 @@ function harness() {
   };
   const emit = event => { for (const fn of listeners.get(event.type) ?? []) fn(event); };
   const island = createIsland({container: {}, emit, on, storage: null, visitStorage: null,
-    transport: {...base, get: path => path.startsWith('/api/waves/current?') ? readWave()
+    transport: {...base, get: path => holds.get(path.split('?')[0])?.(path)
+      ?? (path.startsWith('/api/waves/current?') ? readWave()
       : path.startsWith('/api/island/visit/') && failVisit ? {ok: false, status: 404, code: 'no_such_island'}
-      : path === '/api/island' && failIsland ? {ok: false, status: 503, code: 'unavailable'} : base.get(path)},
-    menu: () => () => {}, settings: () => () => {}});
+      : path === '/api/island' && failIsland ? {ok: false, status: 503, code: 'unavailable'} : base.get(path))},
+    onCoins: value => coins.push(value), menu: () => () => {}, settings: () => () => {}, arsenalOn: () => true});
   islands.push(island);
   return {island, travel: () => emit({type: 'travel', to: 'saltreach_harbor'}), failIsland: () => { failIsland = true; },
-    failVisit: () => { failVisit = true; },
+    failVisit: () => { failVisit = true; }, coins, emit,
+    // Holds the next GET of this path (any query); resolve(edit) answers it with edit(the fake's answer).
+    hold(prefix) {
+      let resolve, started;
+      const asked = new Promise(done => { started = done; });
+      const answered = new Promise(done => { resolve = done; });
+      holds.set(prefix, path => {
+        holds.delete(prefix); started();
+        return answered.then(async edit => { const answer = await base.get(path); return edit ? edit(answer) : answer; });
+      });
+      return {asked, resolve: (edit = null) => resolve(edit)};
+    },
     defer() {
       let resolve, started;
       const pending = new Promise(done => { resolve = done; });
@@ -94,5 +107,40 @@ describe('actual returned-island current-wave authority', () => {
     const reply = h.defer(), loading = h.island.load(); await reply.asked;
     reply.resolve(answer); await loading;
     expect(h.island.coreContext.rejoin).toBeNull();
+  });
+
+  describe('the arsenal coins answer crossing a load (flag arsenal on, as in production)', () => {
+    const withCoins = value => answer => ({...answer, data: {...answer.data, coins: value}});
+    it('keeps the rejoin proof when the arsenal answers after the island read, while the wave read is out', async () => {
+      const h = harness(); await h.island.load(); h.travel();
+      const arsenal = h.hold('/api/island/arsenal'), reply = h.defer(), loading = h.island.load();
+      await arsenal.asked; await reply.asked;
+      arsenal.resolve(withCoins(4321)); await vi.waitFor(() => expect(h.coins.at(-1)).toBe(4321));
+      const returned = h.island.coreContext;
+      reply.resolve({ok: true, data: INFO}); await loading;
+      expect(h.island.coreContext.rejoin).toEqual({contextKey: returned.key, waveId: INFO.waveId});
+      expect(h.island.flow.current.wave.waveId).toBe(INFO.waveId);
+    });
+
+    it('keeps the rejoin proof when the arsenal answers before the island read', async () => {
+      const h = harness(); await h.island.load(); h.travel();
+      const arsenal = h.hold('/api/island/arsenal'), refreshing = h.island.arsenal.refresh(); await arsenal.asked;
+      const own = h.hold('/api/island'), reply = h.defer(), loading = h.island.load(); await own.asked;
+      arsenal.resolve(withCoins(4321)); await refreshing;
+      expect(h.coins.at(-1)).toBe(4321);
+      own.resolve(withCoins(1234)); await reply.asked;
+      await vi.waitFor(() => expect(h.coins.at(-1)).toBe(1234));
+      reply.resolve({ok: true, data: INFO}); await loading;
+      expect(h.island.coreContext.rejoin).toMatchObject({waveId: INFO.waveId});
+    });
+
+    it('does not let an arsenal answer asked before a newer island read step the coins back', async () => {
+      const h = harness(); await h.island.load();
+      const arsenal = h.hold('/api/island/arsenal'), refreshing = h.island.arsenal.refresh(); await arsenal.asked;
+      const own = h.hold('/api/island'); h.emit({type: 'wave_finished', survived: true}); await own.asked;
+      own.resolve(withCoins(1234)); await vi.waitFor(() => expect(h.coins.at(-1)).toBe(1234));
+      arsenal.resolve(withCoins(4321)); await refreshing;
+      expect(h.coins.at(-1)).toBe(1234);
+    });
   });
 });

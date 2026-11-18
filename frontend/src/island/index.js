@@ -205,6 +205,9 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     return () => { if (mine < turn.used || turn.wrote !== wrote) return false; turn.used = mine; return true; };
   };
   const wrote = kind => { turns[kind].wrote++; };
+  // Coins that another answer carries (the arsenal's): stale once an island read asked later was shown or a
+  // write answered. Unlike reading('own') it does not use the turn, so a load's island read still lands.
+  const coinsAsked = () => { const turn = turns.own, asked = turn.asked, wrote = turn.wrote; return () => turn.used <= asked && turn.wrote === wrote; };
   // The fake answers at once; the live transport is the signed-in session's, read at every call.
   const live = {get: path => (getTransport()?.get?.(path) ?? notReady()), post: (path, body) => (getTransport()?.post?.(path, body) ?? notReady())};
   const islandTransport = transport ?? live;
@@ -235,7 +238,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const arsenal = createArsenal({api: createArsenalApi({transport: transport ?? live}), ui, emit, enabled: () => arsenalOn() === true,
     code: () => (visiting ? displayIslandCode(visiting.code) : visitCode ? displayIslandCode(visitCode) : null),
     place: () => (visiting ? 'visit' : 'own'), level: () => own?.captain?.level ?? 1,
-    skills: () => readSkills([...(own?.skills?.known ?? []), ...(isRole(own?.skills?.role) ? [own.skills.role] : [])]), onCoins: coins => tookCoins(coins)});
+    skills: () => readSkills([...(own?.skills?.known ?? []), ...(isRole(own?.skills?.role) ? [own.skills.role] : [])]),
+    asking: coinsAsked, onCoins: (coins, fresh) => arsenalCoins(coins, fresh)});
   const placeholder = mode === 'fake' || new URLSearchParams(search).get('wavedebug') === '1';
   const target = () => visiting ?? own;
   const recoveryPolicyOn = () => {
@@ -844,6 +848,13 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   // Where a build goes: Pirate Point's shared spots, the friend's island you visit, or your own.
   const placeOf = spotId => (isPointSpot(spotId) ? 'point' : visiting ? 'visit' : 'own');
   const tookCoins = coins => { if (own && Number.isSafeInteger(coins)) setOwn({...own, coins}); else tellCoins(coins); };
+  // The arsenal's coins go into the island object as it is: replacing it would make a load still waiting for
+  // its wave answer take the island for another one and drop a returning player's rejoin proof.
+  const arsenalCoins = (coins, fresh = () => true) => {
+    if (!Number.isSafeInteger(coins) || !fresh()) return;
+    if (own) own.coins = coins;
+    tellCoins(coins);
+  };
   async function reloadVisit() {
     if (!visiting) return;
     const current = reading('visit'), fresh = await api.visit(visiting.code);
