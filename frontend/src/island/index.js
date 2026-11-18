@@ -166,7 +166,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     isl.villageBar.setCoverage(value);
     if (!value) { approachCache = null; return; }
     if (recoveryControlsOn()) void readStructureRecovery();
-    else if (wallRecovery()) void readWalls();
+    else void readWalls();
   }
   function approachCoverage() {
     const {own, recoveryState, recoveryStatus, recoveryIslandCode, walls, wallsFor, ui, village} = isl;
@@ -175,18 +175,17 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     const recovery = needsRecovery && recoveryStatus === 'ready' && recoveryIslandCode === own.code
       && recoveryState?.recoveryVersion === 1 && recoveryState.displayPhase === 'between_waves'
       && (!own.islandEpoch || recoveryState.islandEpoch === own.islandEpoch) ? recoveryState : null;
-    const needsLegacyWalls = !needsRecovery && wallRecovery();
+    const needsLegacyWalls = !needsRecovery;
     const legacyWalls = needsLegacyWalls && wallsFor === own.code ? walls : null;
-    const defensesV2 = defensesV2On() === true || recoveryPolicyOn();
     // Accepted data and the local Move draft change independently. Stable frames reuse their snapshot.
     const cached = approachCache;
     if (cached?.island === own && cached.target === approachTarget && cached.draft === approachMove
       && cached.recovery === recovery && cached.legacyWalls === legacyWalls && cached.needsLegacyWalls === needsLegacyWalls
-      && cached.needsRecovery === needsRecovery && cached.defensesV2 === defensesV2) return cached.value;
+      && cached.needsRecovery === needsRecovery) return cached.value;
     const value = approachSnapshot({target: approachTarget, island: own, draft: approachMove,
-      recovery, needsRecovery, legacyWalls, needsLegacyWalls, defensesV2});
+      recovery, needsRecovery, legacyWalls, needsLegacyWalls, defensesV2: true});
     approachCache = {island: own, target: approachTarget, draft: approachMove, recovery,
-      legacyWalls, needsLegacyWalls, needsRecovery, defensesV2, value: cached?.value.version === value.version ? cached.value : value};
+      legacyWalls, needsLegacyWalls, needsRecovery, value: cached?.value.version === value.version ? cached.value : value};
     return approachCache.value;
   }
   const villageKeys = event => {
