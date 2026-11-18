@@ -1168,3 +1168,8 @@ After completing all three explain-back questions and reviewing the branch, Iann
 ### CF1 current-main integration · 2026-11-18
 
 PR #475 was explicitly authorized and opened, then GitHub reported conflicts with newer main `37eb70fa`. Reconcile the task branch with main while preserving the new native HUD, village projection, wall connections and renderer pooling. CF1 now uses the same `projectGround`/`projectGroundVector` and cached `groundShapeMatrix()` rather than its historical .72-only transform. Arcs, direction cap and danger pointer follow the saved logical coordinates under D064's shared display mapping. Add the danger strip to the HUD grid's full-width rows. Main already owns D061–D065, so the CF1 decision is renumbered D066; earlier CF1 STATUS entries citing D061 are historical branch-local labels. Refresh projection/native evidence and current peer review before any merge. No merge into main, live activation or deployment is authorized.
+
+
+### CF1 landscape control-column follow-up · 2026-11-18
+
+In active waves at widths 600–900px and heights at most 500px, reserve the rightmost 300px from toast placement. Expanding contextual range raises the bottom-anchored fire control, so vertical compacting alone does not ensure separation. The real toast/expanded Fire bombs browser regression requires an eight-pixel gap; modal placement retains its existing priority. Desktop and portrait captures are unaffected. Main through `db573347` and its WebP shipping are retained. No merge or deployment is authorized.

@@ -4,11 +4,12 @@ What this is: review evidence and a code walkthrough for [task #453](https://git
 Who uses it: Ianno and the human peer reviewer, before publication and merge.
 
 Branch: `feat/captain-combat-feedback`. PR: [#475](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/475).
-Current screenshot source: `e0db6e74`; runtime integration: `c03b3eb8`, with main `37eb70fa`.
+Current screenshot source: `29736a89`; runtime integration: `c03b3eb8`, with main through `db573347`.
+Landscape control-column follow-up: `21440b26`; this affects neither desktop nor portrait capture dimensions.
 This revision follows Ianno's request for a quieter radius and visual-only shot confirmation.
 After publication, main introduced a new village projection and HUD; the task branch
 was reconciled with those changes. CF1's decision is D066 (main already owns D061–D065).
-The new village artwork comes from main; this feature changes only combat feedback.
+The new village artwork and WebP shipping update come from main; this feature changes only combat feedback.
 The original blue design and previous parchment captures remain as historical evidence.
 Ianno reviewed runtime `79bb6762` before publication; current projection-integration changes require human peer review.
 All three explain-back questions are completed. Ianno reviewed the changes and
@@ -97,8 +98,10 @@ is retained only as superseded review history; it is absent from the current gam
 - [Projection/renderer/HUD tests](main-integration/integration-tests.txt): **89 passed across 12 files**.
 - [Related CF1/projection tests](main-integration/additional-tests.txt): **72 passed across 8 files**.
 - [Layout rerun](main-integration/landscape-tests.txt): **10 passed across 3 files** after compacting the danger row on short landscape displays.
+- [Expanded fire-control regression](main-integration/reserved-column-tests.txt): **11 passed across 3 files**. A real toast stays at least 8px left of expanded Fire bombs feedback at 844×390; its [expected failure before the fix](main-integration/reserved-column-before.txt) is retained. Short landscape layouts reserve the fire-control column even when the range panel grows.
+- [Upstream art-shipping follow-up](main-integration/art-shipping-tests.txt): **13 passed across 4 files**, including decode/shipped-output contracts and combat-overlay projection. These overlap earlier suites and are not added to their totals.
 - [Actual-game checks](main-integration/native-feedback.txt): **14 checks pass**, six fresh desktop/phone captures. [Report/provenance](main-integration/after-report.json).
-- [Overlap audit](main-integration/overlaps.txt): **21 state/viewport checks pass**; three first-wave-hint checks are skipped for a later wave under main's corrected hint rule. The first run found a landscape toast/action overlap, recorded [before the fix](main-integration/overlaps-before.txt); the compact warning row keeps all warning text visible.
+- [Overlap audit](main-integration/overlaps.txt): **21 state/viewport checks pass**; three first-wave-hint checks are skipped for a later wave under main's corrected hint rule. The first run found a landscape toast/action overlap, recorded [before the fix](main-integration/overlaps-before.txt); the compact warning row keeps all warning text visible, and the expanded fire-control regression additionally verifies horizontal toast separation.
 - [Build/spoiler guard](main-integration/build.txt), [budget summary](main-integration/budget-summary.json) and [reviewed text](main-integration/reviewed-text.txt) pass, with **0 text errors / 8 report-only findings**.
 - [Projection tests before adaptation](main-integration/projection-before.txt): three expected failures demonstrate the old hardcoded projection is rejected. Existing main renderer pooling, wall connections, projected muzzle tests and native HUD disclosures are preserved. The latest image helpers use declared returning-device history; earlier queued-onboarding failures are retained [here](main-integration/capture-setup-before.txt).
 

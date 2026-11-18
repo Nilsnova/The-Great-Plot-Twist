@@ -20,9 +20,10 @@ active play and later returns can start a new warning episode.
 
 ## Current-main integration
 
-The published PR was reconciled with main `37eb70fa` after GitHub reported conflicts.
+The published PR was reconciled with main through `db573347` after GitHub reported conflicts.
+This retains the upstream WebP art-shipping update. Fresh screenshots were captured from `29736a89`.
 The overlay now uses the shared ground projection; the danger row spans the new HUD
-and compacts in landscape. Main's renderer pooling, wall connections and native HUD
+and compacts in landscape. Short landscape toasts also reserve the expanded fire-control column (`21440b26`). Main's renderer pooling, wall connections and native HUD
 behavior are retained. CF1 is D066 because main already owns D061–D065. Ianno reviewed
 runtime `79bb6762` before publication; these later integration changes need current
 human peer review. The PR remains unmerged.
@@ -48,7 +49,7 @@ The updated village artwork comes from current main, separately from this combat
 
 ## Checks and evidence
 
-- Current-main integration: **89 tests / 12 files** plus **72 tests / 8 files** passed; a later landscape-layout rerun passed **10 tests / 3 files**.
+- Current-main integration: **89 tests / 12 files** plus **72 tests / 8 files** passed; a later landscape-layout rerun passed **10 tests / 3 files**. The expanded fire-control follow-up passed **11 tests / 3 files**; upstream art-shipping/overlay contracts passed **13 tests / 4 files** (overlapping suites, not additional unique totals).
 - Fresh native feedback: **14 checks**, six new screenshots; overlap audit: **21 checks pass** (later-wave hint states are skipped by current main's rule).
 - Current build/spoiler guard, budget and reviewed text checks pass. Projection and initial landscape failures plus fixes are retained in the linked evidence.
 

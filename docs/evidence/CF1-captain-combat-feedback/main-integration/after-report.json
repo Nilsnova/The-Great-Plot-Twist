@@ -1,6 +1,6 @@
 {
-  "source": "e0db6e74264aba019442ac2839282ff9e873fb85",
-  "dirty": "?? docs/evidence/CF1-captain-combat-feedback/main-integration/",
+  "source": "29736a89f4d2beb881189889824b248d5c8b09ce",
+  "dirty": "M docs/evidence/CF1-captain-combat-feedback/main-integration/after-danger-1280x720.png\n M docs/evidence/CF1-captain-combat-feedback/main-integration/after-danger-375x812.png\n M docs/evidence/CF1-captain-combat-feedback/main-integration/after-impact-1280x720.png\n M docs/evidence/CF1-captain-combat-feedback/main-integration/after-impact-375x812.png\n M docs/evidence/CF1-captain-combat-feedback/main-integration/after-range-1280x720.png\n M docs/evidence/CF1-captain-combat-feedback/main-integration/after-range-375x812.png",
   "browser": "156.0.8078.79",
   "fixture": "Local in-memory fake API; wave 1; no built defenses; level 1 Musket; scripted position setup; native F/mouse",
   "checks": [
@@ -26,7 +26,7 @@
       "height": 720,
       "path": "/workspace/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/main-integration/after-range-1280x720.png",
       "phase": "running",
-      "time": 1.25,
+      "time": 1.15,
       "player": {
         "x": 0,
         "z": 6
@@ -68,7 +68,7 @@
       "height": 812,
       "path": "/workspace/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/main-integration/after-range-375x812.png",
       "phase": "running",
-      "time": 3.15,
+      "time": 2.85,
       "player": {
         "x": 0,
         "z": 6
@@ -152,7 +152,7 @@
       "height": 812,
       "path": "/workspace/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/main-integration/after-impact-375x812.png",
       "phase": "running",
-      "time": 10.05,
+      "time": 10,
       "player": {
         "x": 11.847000000000001,
         "z": 0.7315000000000002
@@ -194,7 +194,7 @@
       "height": 720,
       "path": "/workspace/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/main-integration/after-danger-1280x720.png",
       "phase": "running",
-      "time": 11.05,
+      "time": 11.1,
       "player": {
         "x": 0,
         "z": 5
@@ -236,7 +236,7 @@
       "height": 812,
       "path": "/workspace/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/main-integration/after-danger-375x812.png",
       "phase": "running",
-      "time": 12.8,
+      "time": 12.75,
       "player": {
         "x": 0,
         "z": 5

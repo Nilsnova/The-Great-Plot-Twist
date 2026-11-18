@@ -1,7 +1,3 @@
-
-> the-great-plot-twist@0.1.0 test:overlaps
-> node scripts/check-overlaps.js
-
 [
  {
   "state": "island-idle",
@@ -97,8 +93,7 @@
    "coins [20,18,307,62]",
    "menu [1152,18,1260,62]",
    "goals [950,76,1260,185]",
-   "toast [340,16,940,105]",
-   "narrator [360,624,920,704]"
+   "toast [340,16,940,105]"
   ],
   "hits": [],
   "clipped": [],
@@ -156,6 +151,7 @@
   "boxes": [
    "coins [12,12,166,82]",
    "menu [270,12,378,56]",
+   "toast [12,172,378,261]",
    "village-bar [12,541,378,682]",
    "narrator [16,696,374,828]"
   ],
@@ -200,7 +196,8 @@
    "coins [12,12,166,82]",
    "menu [270,12,378,56]",
    "toast [12,172,378,261]",
-   "village-bar [12,673,378,814]"
+   "village-bar [12,541,378,682]",
+   "narrator [16,696,374,828]"
   ],
   "hits": [],
   "clipped": [],
@@ -276,7 +273,7 @@
   "boxes": [
    "coins [12,12,125,83]",
    "menu [724,12,832,56]",
-   "wave-bar [172,96,672,247]",
+   "wave-bar [172,96,672,212]",
    "action [648,302,824,366]",
    "narrator [12,328,312,374]"
   ],
@@ -322,10 +319,10 @@
   "boxes": [
    "coins [12,12,125,83]",
    "menu [724,12,832,56]",
-   "toast [153,257,691,291]",
+   "toast [12,257,544,307]",
    "wave-bar [172,96,672,247]",
    "action [648,302,824,366]",
-   "narrator [12,328,312,374]"
+   "narrator [12,333,312,379]"
   ],
   "hits": [],
   "clipped": [],
@@ -334,8 +331,3 @@
 ]
 
 No overlaps in 21 state × viewport checks.
-npm notice
-npm notice New major version of npm available! 11.9.0 -> 12.2.3
-npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
-npm notice To update run: npm install -g npm@12.2.3
-npm notice
