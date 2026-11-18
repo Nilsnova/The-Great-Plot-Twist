@@ -4,7 +4,7 @@
 >
 > **Who uses it:** Ianno and contributors validating the feature before human review.
 
-- **Status:** core integration merged through PR #203. This follow-up fixes the legacy local multiplayer browser journey and records its passing four-page run; broader authenticated recovery, balance and release gates remain open.
+- **Status:** core integration merged through PR #203; local fake-room browser follow-up #343 merged on 17 Nov. Its historical passing run does not prove the later full wave-end rule/option cleanup. Authenticated recovery, broader balance and release gates remain open.
 - **Responsible teammate:** Ianno (@Iannomh123456).
 - **Branch:** `test/t60-browser-recovery-followup`.
 - **Issue:** [#126](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/126).
@@ -12,7 +12,7 @@
 
 ## Scope
 
-Prepare and run a repeatable local integration harness using disposable PostgreSQL, the actual API services and the production replay/client modules. Test two participants, accepted-bell pause, shared paid-repair ordering and quota, reconnect, duplicate payment retries after new damage, canonical finish and immediate between-wave recovery. Reuse existing fixtures and test tools; never access live player data or introduce a new dependency without agreement.
+Prepare and run a repeatable local integration harness using disposable PostgreSQL, the actual API services and the production replay/client modules. Test two participants, accepted-bell pause, shared paid-repair ordering and quota, reconnect, duplicate payment retries after new damage, canonical finish/expiry/abandonment and immediate full restoration of every supported current structure, without altering the closed combat vector. Include obsolete-purchase refusal and preserved Bastion/Engineer/unrelated choices. Reuse existing fixtures and test tools; never access live player data or introduce a new dependency without agreement.
 
 Record exact commands, source revisions, seeds and results, including baseline failures and any limits. Collect game screenshots or a short demo at desktop and phone sizes where they substantiate UI behavior. A DTO fixture or mocked transport screenshot is not evidence of real database or multiplayer behavior.
 
@@ -31,7 +31,7 @@ T55 owns recovery state, Python lifecycle and SQL RPCs; T56 owns paid repair; T5
 ### Wider integration and release gates
 
 - [ ] Real database and actual API/replay paths agree on HP, identity, event order and shared remaining uses for two participants.
-- [ ] Accepted bell, preparation, combat, finish/expiry, offline settlement and the next reservation follow the approved boundaries.
+- [ ] Accepted bell, preparation, combat, finish/expiry, canonical offline closure and the next reservation follow the approved boundaries; no gradual timer/ETA or free reserved-wave repair remains.
 - [ ] Failed, repeated, stale and raced requests preserve wallets, quota and immutable history correctly.
 - [ ] Evidence covers the changed UI and states its fixture, browser and trust limits accurately.
 - [ ] Relevant documented checks pass; remaining failures or balance concerns are explicit.

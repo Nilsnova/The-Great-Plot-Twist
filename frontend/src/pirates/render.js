@@ -79,10 +79,12 @@ export const GUN_LOOKS = Object.freeze({
 const lookOf = weapon => GUN_LOOKS[weapon] ?? GUN_LOOKS.musket;
 // A damaged hull darkens (down to 62% at no hp left, a burning one a little more), so a ship under fire
 // stays a strong, readable shape at the battle zoom instead of a pale one. Pure.
-export function damageTint(base = {}, share = 1) {
+export function damageTint(base = {}, share = 1) { return damageInto({}, base, share); }
+function damageInto(out, base, share) {
   const left = Math.max(0, Math.min(1, Number.isFinite(share) ? share : 1));
   const k = left >= .66 ? 1 : 1 - .38 * (1 - left / .66) - (left < 1 / 3 ? .06 : 0);
-  return { r: (base.r ?? 1) * k, g: (base.g ?? 1) * k, b: (base.b ?? 1) * k };
+  out.r = (base?.r ?? 1) * k; out.g = (base?.g ?? 1) * k; out.b = (base?.b ?? 1) * k;
+  return out;
 }
 const BOMB_BURST = { r: 1, g: .5, b: .2 };
 
@@ -248,7 +250,7 @@ function createLayer(name, capacity, material, renderOrder, owned) {
     },
     end() {
       geometry.instanceCount = count; mesh.visible = count > 0;
-      for (const key of ['iPos', 'iSize', 'iUv', 'iTint', 'iFlash']) {
+      for (const key of ATTRIBUTES) {
         const attribute = geometry.getAttribute(key); attribute.needsUpdate = true;
         attribute.clearUpdateRanges?.(); attribute.addUpdateRange?.(0, count * attribute.itemSize);
       }
@@ -275,6 +277,22 @@ const BRASS = colour('#e0b04a'), TEAL = colour('#4fc3c9');
 // bars, shadows and pips drawn each frame need no new object each.
 const TINT = { r: 1, g: 1, b: 1, a: 1 };
 const tinted = (c, a) => { TINT.r = c.r; TINT.g = c.g; TINT.b = c.b; TINT.a = a; return TINT; };
+// The same for every other sprite: one reused option object with the alpha, colour (r, g, b; white
+// without one), flip, flash and angle, so no sprite drawn per frame makes a new object. Same defaults as push.
+const OPT = { flip: false, angle: 0, r: 1, g: 1, b: 1, a: 1, flashing: 0 };
+function opt(a = 1, c = null, flip = false, flashing = 0, angle = 0) {
+  OPT.a = a; OPT.r = c?.r ?? 1; OPT.g = c?.g ?? 1; OPT.b = c?.b ?? 1;
+  OPT.flip = flip; OPT.flashing = flashing; OPT.angle = angle;
+  return OPT;
+}
+const RGB = { r: 1, g: 1, b: 1 };
+const rgb = (r, g, b) => { RGB.r = r; RGB.g = g; RGB.b = b; return RGB; };
+const SMOKE = { r: .32, g: .28, b: .3 }, SPRAY = { r: .86, g: .73, b: .47 }, SHOT_TRAIL = { r: .95, g: .92, b: .82 };
+const SPARK_TRAIL = { r: 1, g: .94, b: .72 }, SHOT = { r: .36, g: .38, b: .44 }, CHAIN_TRAIL = { r: .9, g: .9, b: .85 };
+const ENEMY_BALL = { r: .55, g: .45, b: .4 }, BOMB_TRAIL = { r: .85, g: .82, b: .78 }, FIRE_BALL = { r: .5, g: .35, b: .3 };
+const STAR = { r: .95, g: .98, b: 1 }, TRACER = { r: 1, g: .97, b: .85 }, BEAM_CORE = { r: 1, g: 1, b: .95 }, ARMOURED = { r: .75, g: .78, b: .8 };
+const SHIP_DRAWN = { w: 0, h: 0, anchor: 0 }, SHIP_DRAWN_SIZE = { w: 0, h: 0 };
+const ATTRIBUTES = ['iPos', 'iSize', 'iUv', 'iTint', 'iFlash'];
 const SHIP_SIZE = Object.fromEntries(['sloop', 'brig', 'flagship'].map(kind => {
   const [w, h] = pirateDimensions[pirateFrames[kind][0]]; return [kind, { w: w / UNIT, h: h / UNIT }];
 }));
@@ -324,7 +342,6 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     rect[id] = { u0: (r.x + .01) / atlas.width, u1: (r.x + r.w - .01) / atlas.width,
       v0: 1 - (r.y + r.h - .01) / atlas.height, v1: 1 - (r.y + .01) / atlas.height, w: r.w / UNIT, h: r.h / UNIT, anchor: r.anchor / UNIT };
   }
-  const tintOf = r => (r?.tint ? { r: r.tint.r, g: r.tint.g, b: r.tint.b } : {});
   const K = () => { const k = Number(scene?.userData?.characterScale); return Number.isFinite(k) && k >= 1 && k <= 3 ? k : CHARACTER_SCALE; };
   const material = new THREE.ShaderMaterial({ vertexShader: spriteVertex, fragmentShader: spriteFragment,
     uniforms: { uMap: { value: atlas.texture } }, transparent: true, premultipliedAlpha: true, depthTest: false, depthWrite: false, toneMapped: false });
@@ -664,9 +681,10 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   function drawShip(ship, meta) {
     const variant = SHIP_VARIANTS[ship.kind] ?? null, kind = variant?.frames ?? ship.kind, k = variant?.scale ?? 1;
     if (variant?.hidden) return; // v3 waves: drawn by wave-events-art.js
-    const base = SHIP_SIZE[kind] ?? SHIP_SIZE.sloop, size = { w: base.w * k, h: base.h * k }, frame = frameOf(kind, meta.phase), drawn = rect[frame];
+    const base = SHIP_SIZE[kind] ?? SHIP_SIZE.sloop, frame = frameOf(kind, meta.phase), drawn = rect[frame];
     if (!drawn) return;
-    const r = k === 1 ? drawn : { ...drawn, w: drawn.w * k, h: drawn.h * k, anchor: drawn.anchor * k };
+    const size = SHIP_DRAWN_SIZE; size.w = base.w * k; size.h = base.h * k;
+    const r = k === 1 ? drawn : SHIP_DRAWN; if (k !== 1) { r.w = drawn.w * k; r.h = drawn.h * k; r.anchor = drawn.anchor * k; }
     const layer = ship.z < 0 ? layers.far : layers.near, {x, y} = projectGround(ship.x, ship.z);
     // A hit shows as a short warm flash, kept light so a ship under steady fire never turns white.
     const fadeIn = Math.min(1, (clock - meta.bornAt) / .6), flashing = clock < meta.flashUntil ? (ship.boss ? .2 : .3) : 0;
@@ -674,20 +692,20 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     // A wake behind a sailing ship: two pale strokes on the water.
     if (ship.state === 'sailing' && !low() && !still()) {
       const back = -meta.facing * size.w * .45, wob = Math.floor(clock * 6 + meta.phase) % 2;
-      layer.push(rect[WHITE], x + back, y - .05, size.w * .28, .06, .5, 0, { a: .45 * fadeIn });
-      layer.push(rect[WHITE], x + back * 1.35 - wob * .1, y + .08, size.w * .18, .06, .5, 0, { a: .3 * fadeIn });
+      layer.push(rect[WHITE], x + back, y - .05, size.w * .28, .06, .5, 0, opt(.45 * fadeIn));
+      layer.push(rect[WHITE], x + back * 1.35 - wob * .1, y + .08, size.w * .18, .06, .5, 0, opt(.3 * fadeIn));
     }
     // A ship a harpoon (or Chain shot) holds back (GAME-V3.md §5): foam rings on the water around the hull, swelling
     // a little, and a small coil of rope over it. Cartoon-only: a pixel atlas has neither frame.
     const slowedRipples = ship.slowed ? rect[HARPOON_ART.ripples] : null;
     if (slowedRipples) {
       const swell = still() ? 1 : 1 + Math.sin(clock * 4 + meta.phase) * .06, wide = Math.max(size.w * 1.05, 3) * swell;
-      layer.push(slowedRipples, x, y - .02, wide, wide * slowedRipples.h / slowedRipples.w, .5, slowedRipples.anchor * wide / slowedRipples.w, { a: .85 * fadeIn });
+      layer.push(slowedRipples, x, y - .02, wide, wide * slowedRipples.h / slowedRipples.w, .5, slowedRipples.anchor * wide / slowedRipples.w, opt(.85 * fadeIn));
     }
-    layer.push(drawn, x, y, r.w, r.h, .5, r.anchor, { flip: meta.facing < 0, a: fadeIn, flashing, ...damageTint(variant?.tint ?? tintOf(drawn), share) });
+    layer.push(drawn, x, y, r.w, r.h, .5, r.anchor, opt(fadeIn, damageInto(RGB, variant?.tint ?? (drawn.tint || null), share), meta.facing < 0, flashing));
     if (ship.slowed && rect[HARPOON_ART.rope]) {
       const mark = rect[HARPOON_ART.rope], bob = still() ? 0 : Math.sin(clock * 3 + meta.phase) * .06;
-      layers.air.push(mark, x - Math.min(1.5, size.w * .3), y + size.h - r.anchor + .55 + bob, mark.w * .85, mark.h * .85, .5, mark.anchor * .85, { a: fadeIn });
+      layers.air.push(mark, x - Math.min(1.5, size.w * .3), y + size.h - r.anchor + .55 + bob, mark.w * .85, mark.h * .85, .5, mark.anchor * .85, opt(fadeIn));
     }
     // A burning ship below a third of its hull: dark smoke rising and the fire on deck, drawn over the hull
     // and big enough to read at the battle zoom (bigger ships burn in two places).
@@ -697,16 +715,16 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       spots.forEach((at, i) => {
         const fx = x + meta.facing * size.w * at, fy = y + size.h * (i ? .42 : .34);
         const smoke = rect[pirateFrames.smoke[(step + i) % 3]];
-        if (smoke && !low()) layers.air.push(smoke, fx - meta.facing * .3, fy + 1.1 + (still() ? 0 : (clock * .8 + i * .5) % 1 * .6), smoke.w * 1.1, smoke.h * 1.1, .5, smoke.anchor * 1.1, { r: .32, g: .28, b: .3, a: .55 * fadeIn });
+        if (smoke && !low()) layers.air.push(smoke, fx - meta.facing * .3, fy + 1.1 + (still() ? 0 : (clock * .8 + i * .5) % 1 * .6), smoke.w * 1.1, smoke.h * 1.1, .5, smoke.anchor * 1.1, opt(.55 * fadeIn, SMOKE));
         const flame = rect[pirateFrames.fire[(step + i) % 3]];
-        if (flame) layers.air.push(flame, fx, fy, flame.w * 1.35, flame.h * 1.35, .5, flame.anchor * 1.35, { a: fadeIn });
+        if (flame) layers.air.push(flame, fx, fy, flame.w * 1.35, flame.h * 1.35, .5, flame.anchor * 1.35, opt(fadeIn));
       });
     }
     if (ship.hp < ship.maxHp || ship.boss) {
       const top = y + size.h - r.anchor + .15, w = Math.min(2.4, size.w * .5), share = Math.max(0, ship.hp / ship.maxHp);
-      const tint = ship.kind === 'flagship' && !ship.exposed ? { r: .75, g: .78, b: .8 } : ship.boss ? RED : share > .5 ? GREEN : share > .25 ? GOLD : RED;
+      const tint = ship.kind === 'flagship' && !ship.exposed ? ARMOURED : ship.boss ? RED : share > .5 ? GREEN : share > .25 ? GOLD : RED;
       layers.air.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .3125, 0, 0, tinted(DARK, .8));
-      layers.air.push(rect[WHITE], x - w / 2, top, w * share, .1875, 0, 0, { ...tint, a: 1 });
+      layers.air.push(rect[WHITE], x - w / 2, top, w * share, .1875, 0, 0, opt(1, tint));
     }
   }
 
@@ -730,11 +748,11 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     if (!r) return;
     // A brute (wave 20+) is bigger and redder than the rest of the crowd.
     const big = boarder.brute ? BRUTE_LOOK.scale : 1, look = boarder.brute ? BRUTE_LOOK.tint : {};
-    layer.push(r, x, y, r.w * K() * big, r.h * K() * big, .5, r.anchor * K() * big, { flip: meta.facing < 0, flashing: hit ? (rect[cartoon] ? .35 : .7) : 0, ...look });
+    layer.push(r, x, y, r.w * K() * big, r.h * K() * big, .5, r.anchor * K() * big, opt(1, look, meta.facing < 0, hit ? (rect[cartoon] ? .35 : .7) : 0));
     if (boarder.hp < boarder.maxHp) {
       const top = y + (r.h - r.anchor) * K() - .35, w = .9, share = Math.max(0, boarder.hp / boarder.maxHp);
       layer.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .25, 0, 0, tinted(DARK, .8));
-      layer.push(rect[WHITE], x - w / 2, top, w * share, .125, 0, 0, { ...(share > .5 ? GOLD : RED), a: 1 });
+      layer.push(rect[WHITE], x - w / 2, top, w * share, .125, 0, 0, opt(1, share > .5 ? GOLD : RED));
     }
   }
   function militiaMeta(id) {
@@ -754,11 +772,11 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     const id = hit ? 'militia-hit' : striking ? 'militia-strike' : unit.state === 'walking' && !still() ? MILITIA_IDS[1 + step] : 'militia';
     const r = rect[id];
     if (!r) return;
-    layer.push(r, x, y, r.w * K(), r.h * K(), .5, r.anchor * K(), { flip: meta.facing < 0, flashing: hit ? .35 : 0 });
+    layer.push(r, x, y, r.w * K(), r.h * K(), .5, r.anchor * K(), opt(1, null, meta.facing < 0, hit ? .35 : 0));
     if (unit.hp < unit.maxHp) {
       const top = y + (r.h - r.anchor) * K() - .35, w = .9, share = Math.max(0, unit.hp / unit.maxHp);
       layer.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .25, 0, 0, tinted(DARK, .8));
-      layer.push(rect[WHITE], x - w / 2, top, w * share, .125, 0, 0, { ...(share > .5 ? TEAL : share > .25 ? GOLD : RED), a: 1 });
+      layer.push(rect[WHITE], x - w / 2, top, w * share, .125, 0, 0, opt(1, share > .5 ? TEAL : share > .25 ? GOLD : RED));
     }
   }
   // A fallen boarder (or militia): the sprite sinks and fades under a puff of smoke.
@@ -775,9 +793,9 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   function drawFallen(item) {
     const p = Math.min(1, (clock - item.at) / FALL_SECONDS), layer = bands[bandOf(item.z)], {x, y} = projectGround(item.x, item.z);
     const r = (item.militia ? rect['militia-hit'] : null) ?? rect[BOARDER_ART.hit] ?? rect[FRAMES.boarder[0]], k = K();
-    if (r) layer.push(r, x, y, r.w * k, r.h * k * (1 - p * .5), .5, r.anchor * k, { flip: item.facing < 0, a: 1 - p, flashing: .5 * (1 - p) });
+    if (r) layer.push(r, x, y, r.w * k, r.h * k * (1 - p * .5), .5, r.anchor * k, opt(1 - p, null, item.facing < 0, .5 * (1 - p)));
     const puff = rect[pirateFrames.smoke[still() ? 0 : Math.min(2, Math.floor(p * 3))]];
-    if (puff) layer.push(puff, x, y - .1, puff.w * .6, puff.h * .6, .5, puff.anchor * .6, { a: 1 - p * p });
+    if (puff) layer.push(puff, x, y - .1, puff.w * .6, puff.h * .6, .5, puff.anchor * .6, opt(1 - p * p));
   }
 
   // A harpoon in flight: the barbed head turned along its path, a sagging rope from the tower to it, a shadow on the water.
@@ -787,11 +805,11 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     const at = projectGround(ball.x + (ball.toX - ball.x) * p, ball.z + (ball.toZ - ball.z) * p), {x} = at, y = at.y + lift(p);
     if (!still()) for (let k = 1; k <= 7; k++) {
       const q = p * k / 8, qx = ball.x + (ball.toX - ball.x) * q, qz = ball.z + (ball.toZ - ball.z) * q;
-      layers.air.push(rect[WHITE], drawnX(qx, qz), drawnY(qz) + lift(q) - .35 * Math.sin(Math.PI * k / 8) * p, .2, .2, .5, .1, { r: .86, g: .73, b: .47, a: .9 });
+      layers.air.push(rect[WHITE], drawnX(qx, qz), drawnY(qz) + lift(q) - .35 * Math.sin(Math.PI * k / 8) * p, .2, .2, .5, .1, opt(.9, SPRAY));
     }
     if (r) {
       const direction = projectGroundVector(ball.toX - ball.x, ball.toZ - ball.z), dx = direction.x, dy = direction.y + 1.4 * 4 * (1 - 2 * p) * .35; // along the path, a little nose-up early and nose-down late
-      layers.air.push(r, x, y, r.w, r.h, .5, r.anchor, { angle: Math.atan2(dy, dx || .001) });
+      layers.air.push(r, x, y, r.w, r.h, .5, r.anchor, opt(1, null, false, 0, Math.atan2(dy, dx || .001)));
     }
     if (!still()) layers.air.push(rect[WHITE], x, at.y - .05, .3, .1, .5, 0, tinted(DARK, .3));
   }
@@ -803,10 +821,10 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     const at = projectGround(ball.x + (ball.toX - ball.x) * p, ball.z + (ball.toZ - ball.z) * p), {x} = at, y = at.y + lift(p);
     if (!still() && p > .05) for (const back of [.05, .1, .16]) {
       const q = Math.max(0, p - back), tz = ball.z + (ball.toZ - ball.z) * q;
-      layers.air.push(rect[WHITE], drawnX(ball.x + (ball.toX - ball.x) * q, tz), drawnY(tz) + lift(q), .22, .22, .5, .11, { r: .95, g: .92, b: .82, a: .6 - back * 2.5 });
+      layers.air.push(rect[WHITE], drawnX(ball.x + (ball.toX - ball.x) * q, tz), drawnY(tz) + lift(q), .22, .22, .5, .11, opt(.6 - back * 2.5, SHOT_TRAIL));
     }
     const direction = projectGroundVector(ball.toX - ball.x, ball.toZ - ball.z);
-    if (r) layers.air.push(r, x, y, r.w, r.h, .5, r.anchor, { angle: Math.atan2(direction.y, direction.x || .001) });
+    if (r) layers.air.push(r, x, y, r.w, r.h, .5, r.anchor, opt(1, null, false, 0, Math.atan2(direction.y, direction.x || .001)));
     else layers.air.push(rect['pirate-cannonball'], x, y, rect['pirate-cannonball'].w, rect['pirate-cannonball'].h, .5, .55 * rect['pirate-cannonball'].h);
     if (!still()) layers.air.push(rect[WHITE], x, at.y - .05, .3, .1, .5, 0, tinted(DARK, .35));
   }
@@ -817,11 +835,11 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     const at = projectGround(ball.x + (ball.toX - ball.x) * p, ball.z + (ball.toZ - ball.z) * p), {x} = at, y = at.y + 1.2;
     if (!still() && p > .1) {
       const q = p - .1, tx = ball.x + (ball.toX - ball.x) * q, tz = ball.z + (ball.toZ - ball.z) * q;
-      layers.air.push(rect[WHITE], drawnX(tx, tz), drawnY(tz) + 1.2, .16, .16, .5, .08, { r: 1, g: .94, b: .72, a: .7 });
+      layers.air.push(rect[WHITE], drawnX(tx, tz), drawnY(tz) + 1.2, .16, .16, .5, .08, opt(.7, SPARK_TRAIL));
     }
     const direction = projectGroundVector(ball.toX - ball.x, ball.toZ - ball.z);
-    if (r) layers.air.push(r, x, y, r.w, r.h, .5, r.anchor, { angle: Math.atan2(direction.y, direction.x || .001) });
-    else layers.air.push(rect[WHITE], x, y, .2, .2, .5, .1, { r: .36, g: .38, b: .44, a: 1 });
+    if (r) layers.air.push(r, x, y, r.w, r.h, .5, r.anchor, opt(1, null, false, 0, Math.atan2(direction.y, direction.x || .001)));
+    else layers.air.push(rect[WHITE], x, y, .2, .2, .5, .1, opt(1, SHOT));
   }
 
   function drawBall(ball) {
@@ -837,9 +855,9 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     if (!still() && p > .08) for (const back of [.07, .14]) {
       const q = Math.max(0, p - back), tx = ball.x + (ball.toX - ball.x) * q, tz = ball.z + (ball.toZ - ball.z) * q;
       const tl = (ball.enemy ? .8 : 1.2) + 4 * (distance * (ball.enemy ? .03 : .07)) * q * (1 - q);
-      layers.air.push(rect[WHITE], drawnX(tx, tz), drawnY(tz) + tl, .25, .25, .5, .125, { r: .9, g: .9, b: .85, a: back < .1 ? .55 : .3 });
+      layers.air.push(rect[WHITE], drawnX(tx, tz), drawnY(tz) + tl, .25, .25, .5, .125, opt(back < .1 ? .55 : .3, CHAIN_TRAIL));
     }
-    layers.air.push(r, drawnX(x, z), drawnY(z) + lift, r.w * 1.1, r.h * 1.1, .5, .55 * r.h, ball.enemy ? { r: .55, g: .45, b: .4 } : undefined);
+    layers.air.push(r, drawnX(x, z), drawnY(z) + lift, r.w * 1.1, r.h * 1.1, .5, .55 * r.h, opt(1, ball.enemy ? ENEMY_BALL : null));
     // The ball's shadow on the water or the sand.
     if (!still()) layers.air.push(rect[WHITE], drawnX(x, z), drawnY(z) - .05, .3, .1, .5, 0, tinted(DARK, .35));
   }
@@ -854,9 +872,9 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     if (!still() && p > .05) for (const back of [.04, .09, .15]) {
       const q = Math.max(0, p - back), tx = shell.x + (shell.toX - shell.x) * q, tz = shell.z + (shell.toZ - shell.z) * q;
       const tl = 1.2 + (5 + distance * .18) * 4 * q * (1 - q);
-      layers.air.push(rect[WHITE], drawnX(tx, tz), drawnY(tz) + tl, .3, .3, .5, .15, { r: .85, g: .82, b: .78, a: .5 - back * 2 });
+      layers.air.push(rect[WHITE], drawnX(tx, tz), drawnY(tz) + tl, .3, .3, .5, .15, opt(.5 - back * 2, BOMB_TRAIL));
     }
-    layers.air.push(r, drawnX(x, z), drawnY(z) + lift, r.w, r.h, .5, .55 * r.h, tintOf(r));
+    layers.air.push(r, drawnX(x, z), drawnY(z) + lift, r.w, r.h, .5, .55 * r.h, opt(1, r?.tint || null));
     if (!still()) layers.air.push(rect[WHITE], drawnX(x, z), drawnY(z) - .05, .45 * (.6 + p * .6), .14, .5, 0, tinted(DARK, .3 + p * .2));
     // Where it will land: a faint target mark, so the player sees the area coming.
     if (p > .35) layers.air.push(rect[WHITE], drawnX(shell.toX, shell.toZ), drawnY(shell.toZ), 2.4 * p, .1, .5, 0, tinted(RED, .35 * p));
@@ -866,8 +884,8 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     const lift = still() ? 1 : 1 + (2 + distance * .12) * 4 * p * (1 - p), ball = rect['pirate-cannonball'];
     x = drawnX(x, z) + (shell.handX ?? 0) * (1 - p);
     const flame = rect[pirateFrames.fire[(still() ? 0 : Math.floor(clock * 10)) % 3]];
-    if (ball) layers.air.push(ball, x, drawnY(z) + lift, ball.w * .8, ball.h * .8, .5, .55 * ball.h * .8, { r: .5, g: .35, b: .3 });
-    if (flame) layers.air.push(flame, x, drawnY(z) + lift + .25, flame.w * .45, flame.h * .45, .5, flame.anchor * .45, { a: .95 });
+    if (ball) layers.air.push(ball, x, drawnY(z) + lift, ball.w * .8, ball.h * .8, .5, .55 * ball.h * .8, opt(1, FIRE_BALL));
+    if (flame) layers.air.push(flame, x, drawnY(z) + lift + .25, flame.w * .45, flame.h * .45, .5, flame.anchor * .45, opt(.95));
     if (!still()) layers.air.push(rect[WHITE], x, drawnY(z) - .05, .35 * (.6 + p * .6), .12, .5, 0, tinted(DARK, .3 + p * .2));
     if (p > .25) layers.air.push(rect[WHITE], drawnX(shell.toX, shell.toZ), drawnY(shell.toZ), (shell.radius ?? 3) * 2 * p, .1, .5, 0, tinted(BOMB_BURST, .45 * p));
   }
@@ -875,7 +893,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     const p = (clock - burst.at) / BURST_SECONDS, frame = EXPLOSION_FRAMES[Math.min(3, Math.floor(p * 4))], r = rect[frame];
     if (!r) return;
     const grow = 1.2, at = projectGround(burst.x, burst.z);
-    layers.air.push(r, at.x, at.y, r.w * grow, r.h * grow, .5, r.anchor * grow, { ...tintOf(r), a: 1 - Math.max(0, p - .6) * 2 });
+    layers.air.push(r, at.x, at.y, r.w * grow, r.h * grow, .5, r.anchor * grow, opt(1 - Math.max(0, p - .6) * 2, r?.tint || null));
     if (!burst.fire) return;
     // A fire bomb's flames: three tongues of the fire art around the blast, fading out.
     for (let i = 0; i < 3; i++) {
@@ -883,7 +901,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       if (!flame) continue;
       const a = i / 3 * Math.PI * 2 + .5, spread = burst.radius * .45;
       const at = projectGround(burst.x + Math.cos(a) * spread, burst.z - Math.sin(a) * spread);
-      layers.air.push(flame, at.x, at.y, flame.w * .7, flame.h * .7, .5, flame.anchor * .7, { a: 1 - p });
+      layers.air.push(flame, at.x, at.y, flame.w * .7, flame.h * .7, .5, flame.anchor * .7, opt(1 - p));
     }
   }
   // Burning ground (a Fire pot, or the wider Inferno of tier 3, GAME-V3.md §5.1): flames from the fire art in a
@@ -895,7 +913,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       if (!flame) continue;
       const a = i / count * Math.PI * 2 + patch.x, spread = patch.radius * (i % 2 ? .45 : .8);
       const at = projectGround(patch.x + Math.cos(a) * spread, patch.z - Math.sin(a) * spread);
-      layers.air.push(flame, at.x, at.y, flame.w * .6, flame.h * .6, .5, flame.anchor * .6, { a: .85 });
+      layers.air.push(flame, at.x, at.y, flame.w * .6, flame.h * .6, .5, flame.anchor * .6, opt(.85));
     }
   }
   // The shot: the firing pose with its flash, a short tracer from the muzzle to the ship, a puff on the hit.
@@ -921,23 +939,23 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     const tx = drawnX(tracer.toX, tracer.toZ), ty = drawnY(tracer.toZ) + .7, dx = tx - mx, dy = ty - my, length = Math.hypot(dx, dy) || 1;
     const flash = rect['fx-musket-flash'];
     if (flash && age < MUSKET.fire && tracer.pose !== false) {
-      layers.air.push(flash, mx + dir * .3, my, flash.w * look.flash, flash.h * look.flash, .5, flash.h * look.flash / 2, { flip: dir < 0, a: age < MUSKET.fire * .6 ? 1 : .6 });
+      layers.air.push(flash, mx + dir * .3, my, flash.w * look.flash, flash.h * look.flash, .5, flash.h * look.flash / 2, opt(age < MUSKET.fire * .6 ? 1 : .6, null, dir < 0));
     }
     const angle = Math.atan2(dy, dx) - Math.PI / 2;
     if (tracer.weapon === 'long_rifle' && age < tracer.flight + .18) {
       // The rifle: one thin, pale line from the muzzle through both ships, fading fast.
       const fade = Math.max(0, 1 - Math.max(0, age - tracer.flight) / .18);
-      layers.air.push(rect[WHITE], mx, my, look.width * 2.6, length, .5, 0, { r: look.r, g: look.g, b: look.b, angle, a: .25 * fade });
-      layers.air.push(rect[WHITE], mx, my, look.width, length, .5, 0, { r: look.r, g: look.g, b: look.b, angle, a: .95 * fade });
+      layers.air.push(rect[WHITE], mx, my, look.width * 2.6, length, .5, 0, opt(.25 * fade, look, false, 0, angle));
+      layers.air.push(rect[WHITE], mx, my, look.width, length, .5, 0, opt(.95 * fade, look, false, 0, angle));
     } else if (age < tracer.flight) {
       // Reduced motion: the whole line for a moment instead of a moving streak.
       const p = still() ? 1 : age / tracer.flight, head = Math.min(1, p), tail = still() ? 0 : Math.max(0, head - look.length / length);
       const x0 = mx + dx * tail, y0 = my + dy * tail, span = (head - tail) * length;
-      if (span > .05) layers.air.push(rect[WHITE], x0, y0, look.width, span, .5, 0, { r: look.r, g: look.g, b: look.b, angle, a: .95 });
+      if (span > .05) layers.air.push(rect[WHITE], x0, y0, look.width, span, .5, 0, opt(.95, look, false, 0, angle));
     }
     if (age >= tracer.flight && age < tracer.flight + MUSKET.puff) {
       const p = (age - tracer.flight) / MUSKET.puff, puff = rect[pirateFrames.smoke[still() ? 0 : Math.min(2, Math.floor(p * 3))]];
-      if (puff) layers.air.push(puff, tx, ty - .3, puff.w * look.puff, puff.h * look.puff, .5, puff.anchor * look.puff, { a: 1 - p * p });
+      if (puff) layers.air.push(puff, tx, ty - .3, puff.w * look.puff, puff.h * look.puff, .5, puff.anchor * look.puff, opt(1 - p * p));
     }
   }
   // The cutlass sweep: a bright arc that runs once round the captain (in the swing's direction) and fades, on the
@@ -951,7 +969,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       const lit = 1 - Math.min(1, (head - a) / (Math.PI * 1.5)), angle = item.dir * a - Math.PI / 2, size = (.4 + lit * .3) * k;
       const {x, y: groundY} = projectGround(item.x + Math.cos(angle) * r, item.z - Math.sin(angle) * r), y = groundY + .3;
       layers.air.push(rect[WHITE], x, y, size + .12 * k, size + .12 * k, .5, (size + .12 * k) / 2, tinted(DARK, .5 * fade));
-      layers.air.push(rect[WHITE], x, y, size, size, .5, size / 2, { r: .95, g: .98, b: 1, a: (.45 + lit * .55) * fade });
+      layers.air.push(rect[WHITE], x, y, size, size, .5, size / 2, opt((.45 + lit * .55) * fade, STAR));
     }
   }
   function drawCaptain() {
@@ -970,7 +988,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     x = drawnX(x, z);
     const share = Math.max(0, Math.min(1, hp / (maxHp || 1))), w = 1.3, top = drawnY(z) + lift * K();
     layers.air.push(rect[WHITE], x - w / 2 - .0625, top - .0625, w + .125, .3125, 0, 0, tinted(DARK, .8));
-    layers.air.push(rect[WHITE], x - w / 2, top, w * share, .1875, 0, 0, { ...(share > .5 ? GREEN : share > .25 ? GOLD : RED), a: 1 });
+    layers.air.push(rect[WHITE], x - w / 2, top, w * share, .1875, 0, 0, opt(1, share > .5 ? GREEN : share > .25 ? GOLD : RED));
   }
   function drawRecoveryHealthBar(item) {
     const { z, hp, maxHp } = item, x = drawnX(item.x, z);
@@ -985,7 +1003,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     }
     const share = Math.max(.08, Math.min(1, hp / maxHp)); // Keep a 1-unit positive structure visible at a pixel scale.
     layers.air.push(rect[WHITE], x - w / 2, top, w * share, .1875, 0, 0,
-      { ...(share > .5 ? GREEN : share > .25 ? GOLD : RED), a: 1 });
+      opt(1, share > .5 ? GREEN : share > .25 ? GOLD : RED));
   }
   function drawDown(hero, x, z, reviving) {
     x = drawnX(x, z);
@@ -1013,25 +1031,25 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     const age = clock - item.at, flash = rect['fx-gunboat-flash'];
     if (flash && age < .22) {
       const grow = still() ? 1 : .8 + Math.min(.4, age * 3);
-      layers.air.push(flash, item.x + item.facing * flash.w * .42 * grow, item.y, flash.w * grow, flash.h * grow, .5, flash.h * grow / 2, { flip: item.facing < 0, a: age < .12 ? 1 : .6 });
+      layers.air.push(flash, item.x + item.facing * flash.w * .42 * grow, item.y, flash.w * grow, flash.h * grow, .5, flash.h * grow / 2, opt(age < .12 ? 1 : .6, null, item.facing < 0));
     }
     if (age < .28) {
       const dx = item.toX - item.x, dy = item.toY - item.y, length = Math.hypot(dx, dy) || 1, angle = Math.atan2(dy, dx) - Math.PI / 2, fade = still() ? 1 : 1 - age / .28;
-      layers.air.push(rect[WHITE], item.x, item.y, .2, length, .5, 0, { ...GOLD, angle, a: .35 * fade });
-      layers.air.push(rect[WHITE], item.x, item.y, .07, length, .5, 0, { r: 1, g: .97, b: .85, angle, a: .9 * fade });
+      layers.air.push(rect[WHITE], item.x, item.y, .2, length, .5, 0, opt(.35 * fade, GOLD, false, 0, angle));
+      layers.air.push(rect[WHITE], item.x, item.y, .07, length, .5, 0, opt(.9 * fade, TRACER, false, 0, angle));
     }
   }
   // A tower a gunboat has jammed (GAME-V3.md §4.1): a broken gear with sparks over it, in the air layer so no tree
   // hides it, until the jam is over.
   function drawJamMark(tower) {
     const mark = rect[JAM_FRAMES[still() ? 0 : Math.floor(clock * 5) % 2]];
-    if (mark) layers.air.push(mark, drawnX(tower.x, tower.z), drawnY(tower.z) + 2.7 + (still() ? 0 : Math.sin(clock * 6) * .07), mark.w * 1.2, mark.h * 1.2, .5, mark.anchor * 1.2, { a: .97 });
+    if (mark) layers.air.push(mark, drawnX(tower.x, tower.z), drawnY(tower.z) + 2.7 + (still() ? 0 : Math.sin(clock * 6) * .07), mark.w * 1.2, mark.h * 1.2, .5, mark.anchor * 1.2, opt(.97));
   }
   function drawWarning(item) {
     const age = clock - item.at, blink = still() ? 1 : (Math.floor(age * 4) % 2 ? .4 : 1);
     const p = coastEdge(item), colourOf = item.boss ? RED : GOLD;
-    layers.air.push(rect[WHITE], p.x, p.y, .7, .7, .5, .35, { ...colourOf, angle: .785, a: blink });
-    layers.air.push(rect[WHITE], p.x, p.y, .4, .4, .5, .2, { ...DARK, angle: .785, a: blink * .8 });
+    layers.air.push(rect[WHITE], p.x, p.y, .7, .7, .5, .35, opt(blink, colourOf, false, 0, .785));
+    layers.air.push(rect[WHITE], p.x, p.y, .4, .4, .5, .2, opt(blink * .8, DARK, false, 0, .785));
   }
   // A warning sits a little inside the spawn point, so it is on screen before the ship.
   const coastEdge = item => ({ x: drawnX(item.x * .78, item.z * .78), y: drawnY(item.z * .78) + 1 });
@@ -1068,7 +1086,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       for (const wreck of wrecks.items) {
         const age = clock - wreck.at; if (age < 0) continue;
         const a = Math.min(1, age / .5) * Math.min(1, Math.max(0, (WRECK_SECONDS - age) / 2.5)), r = rect['pirate-wreck'];
-        (wreck.z < 0 ? layers.far : layers.near).push(r, drawnX(wreck.x, wreck.z), drawnY(wreck.z), r.w * (wreck.big ? 1.25 : 1), r.h * (wreck.big ? 1.25 : 1), .5, r.anchor, { flip: wreck.facing < 0, a: a * .9 });
+        (wreck.z < 0 ? layers.far : layers.near).push(r, drawnX(wreck.x, wreck.z), drawnY(wreck.z), r.w * (wreck.big ? 1.25 : 1), r.h * (wreck.big ? 1.25 : 1), .5, r.anchor, opt(a * .9, null, wreck.facing < 0));
       }
       for (const ship of state.ships) {
         const at = smooth(ship);
@@ -1082,7 +1100,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         if (!r) continue;
         const tilt = still() ? 0 : sinker.facing * p * .35;
         (sinker.z < 0 ? layers.far : layers.near).push(r, drawnX(sinker.x, sinker.z), drawnY(sinker.z) - p * r.h * .45, r.w, r.h, .5, r.anchor,
-          { flip: sinker.facing < 0, angle: tilt, a: 1 - p * p, r: 1 - p * .4, g: 1 - p * .35, b: 1 - p * .25 });
+          opt(1 - p * p, rgb(1 - p * .4, 1 - p * .35, 1 - p * .25), sinker.facing < 0, 0, tilt));
       }
       for (const splash of splashes.items) {
         const p = (clock - splash.at) / SPLASH_SECONDS, frame = pirateFrames.splash[Math.min(2, Math.floor(p * 3))], r = rect[frame];
@@ -1111,8 +1129,8 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
       if (flagship) {
         const tx = drawnX(flagship.x, flagship.z), ty = drawnY(flagship.z) + 3, dx = tx - beamFrom.x, dy = ty - beamFrom.y;
         const length = Math.hypot(dx, dy), angle = Math.atan2(dy, dx) - Math.PI / 2, pulse = still() ? .7 : .6 + Math.sin(clock * 9) * .15;
-        layers.air.push(rect[WHITE], beamFrom.x, beamFrom.y, 1.1, length, .5, 0, { ...BEAM, angle, a: pulse * .45 });
-        layers.air.push(rect[WHITE], beamFrom.x, beamFrom.y, .35, length, .5, 0, { r: 1, g: 1, b: .95, angle, a: pulse });
+        layers.air.push(rect[WHITE], beamFrom.x, beamFrom.y, 1.1, length, .5, 0, opt(pulse * .45, BEAM, false, 0, angle));
+        layers.air.push(rect[WHITE], beamFrom.x, beamFrom.y, .35, length, .5, 0, opt(pulse, BEAM_CORE, false, 0, angle));
       }
     }
     for (const layer of layerList) layer.end();
@@ -1145,11 +1163,10 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         const repairing = post.kind === 'wall' && (walls.get(post.id)?.repairing || walls.get(post.id)?.crew);
         const grow = 1, {x, y} = projectGround(post.x, post.z);
         // Match the world renderer's healthy junction posts; damaged/ruin frames remain full width.
-        if (!wallConnections.hasPost(post.id)) post.layer.push(r, x, y, r.w * (joinedWall ? .62 : 1), r.h, .5, r.anchor, { flip: post.kind !== 'wall' && post.flip, flashing,
-          g: repairing && !still() ? 1 + Math.sin(clock * 10) * .15 : 1 });
+        if (!wallConnections.hasPost(post.id)) post.layer.push(r, x, y, r.w * (joinedWall ? .62 : 1), r.h, .5, r.anchor, opt(1, rgb(1, repairing && !still() ? 1 + Math.sin(clock * 10) * .15 : 1, 1), post.kind !== 'wall' && post.flip, flashing));
         if (smoking) {
           const puff = rect[pirateFrames.smoke[(still() ? 0 : Math.floor(clock * 5)) % 3]];
-          post.layer.push(puff, x, y + r.h - r.anchor, puff.w, puff.h, .5, puff.anchor, { a: .85 });
+          post.layer.push(puff, x, y + r.h - r.anchor, puff.w, puff.h, .5, puff.anchor, opt(.85));
         }
         if (!(post.kind === 'wall' && wallConnections.hasPost(post.id)) && (level > 1 || post.kind !== 'wall') && look !== 'broken') drawPips(post.layer, x, y + (r.h - r.anchor) * grow + .2, level);
         if (look !== 'broken' && share > 0 && post.marks.length) drawMarks(post.layer, x, y, post.marks);

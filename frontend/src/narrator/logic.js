@@ -124,12 +124,7 @@ export const wonLineDue = wave => !Number.isSafeInteger(wave)
 export const readingMs = text => Math.max(3000, Math.min(11000, 1200 + String(text ?? '').length * 65));
 
 // The island game's key: ISLE-XXXXX from any spelling of a code, or the given fallback.
-export function gameKey(code, fallback = 'local') {
-  if (typeof code !== 'string') return fallback;
-  if (code === 'pirate_point') return code;
-  const symbols = code.replace(/[\s-]/g, '').toUpperCase().replace(/^ISLE(?=[A-Z0-9]{5}$)/, '');
-  return /^[A-Z0-9]{5}$/.test(symbols) ? `ISLE-${symbols}` : fallback;
-}
+export {gameKey} from './game-key.js';
 
 // What this device told on which island game, in localStorage under STORE_KEY:
 //   {version: 1, games: {"ISLE-K7Q2M": {told: ["opening_1", "game_opening", ...], at: 1731300000000}},
