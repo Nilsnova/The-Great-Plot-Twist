@@ -224,15 +224,28 @@ async function upgradeWalls(page, level, cost) {
   }, {level, cost});
 }
 async function screenshot(page, name) {
-  await page.waitForTimeout(250);
+  // The bulk fixture can trigger the normal adaptive density budget. A real viewport refresh
+  // restores full density without lowering graphics quality or changing game state.
+  const before = await page.evaluate(() => ({rendering: {...window.__island.renderer.userData},
+    selected: window.__island.island.selection.spotId}));
+  const viewport = page.viewportSize();
+  await page.setViewportSize({width: viewport.width + 1, height: viewport.height});
+  await page.waitForTimeout(16);
+  await page.setViewportSize(viewport);
+  await page.waitForTimeout(80);
   const frame = await page.evaluate(() => {
     const g = window.__island;
     return {camera: g.camera.position.toArray(), zoom: g.camera.zoom, captain: g.player.position.toArray(),
       drawCalls: g.renderer.info.render.calls, contextLost: g.renderer.getContext().isContextLost(),
-      quality: g.renderer.userData.quality, pixelRatio: g.renderer.getPixelRatio()};
+      quality: g.renderer.userData.quality, rendering: {...g.renderer.userData},
+      selected: g.island.selection.spotId, pixelRatio: g.renderer.getPixelRatio()};
   });
   assert.equal(frame.contextLost, false); assert.ok(frame.drawCalls > 0);
   assert.equal(frame.quality, 'high', 'proof retains high graphics quality');
+  assert.equal(before.rendering.quality, 'high', 'viewport refresh never lowers graphics quality');
+  assert.equal(frame.rendering.densityScale, 1, 'capture uses the full native drawing density');
+  assert.equal(frame.rendering.drawingWidth, viewport.width); assert.equal(frame.rendering.drawingHeight, viewport.height);
+  assert.equal(frame.selected, before.selected, 'viewport refresh retains the actual selection');
   await page.screenshot({path: join(out, name)});
-  return {name, sha256: sha(await readFile(join(out, name))), ...frame};
+  return {name, sha256: sha(await readFile(join(out, name))), beforeViewportRefresh: before, ...frame};
 }
