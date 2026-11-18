@@ -238,7 +238,7 @@ window.recoveryFixture = {
       }
       if (kind === 'wall' && object.name === 'island-wall-connections') {
         const post = object.wallPosts?.find(item => item.id === spot);
-        if (post) found.building = {visible: true, look: post.look, art: `wall-post-${post.level}-${post.look}`};
+        if (post) found.building = {visible: object.visible, look: post.look, art: `wall-post-${post.level}-${post.look}`};
       }
     });
     return found;
