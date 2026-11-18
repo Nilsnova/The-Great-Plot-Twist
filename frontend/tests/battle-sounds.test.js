@@ -66,6 +66,21 @@ describe('battle sounds', () => {
 });
 
 describe('pirate cues with the battle voices', () => {
+  it('limits rapid danger cue requests on the effects bus without a duplicate caption overlay', () => {
+    let time = 0, muted = false;
+    const effects = {}, tone = vi.fn(), caption = vi.fn();
+    const cue = createPirateSound({ synth: { tone }, effects, caption,
+      now: () => time, isMuted: bus => bus === 'effects' && muted });
+    expect(cue('pirate-danger')).toBe(true);
+    expect(tone).toHaveBeenCalledTimes(2);
+    expect(tone.mock.calls.every(args => args[0] === effects)).toBe(true);
+    expect(caption).not.toHaveBeenCalled(); // the existing persistent danger warning supplies the words
+    expect(cue('pirate-danger')).toBe(false);
+    time = 6; expect(cue('pirate-danger')).toBe(true);
+    expect(tone).toHaveBeenCalledTimes(4);
+    muted = true; time = 12; cue('pirate-danger');
+    expect(tone).toHaveBeenCalledTimes(4);
+  });
   const setup = (muted = {}) => {
     const context = fakeContext(), bus = buses(), battle = createBattleSounds(context), caption = vi.fn();
     const cue = createPirateSound({ synth: { tone: vi.fn(), noise: vi.fn() }, effects: bus.effects, music: bus.music, caption,

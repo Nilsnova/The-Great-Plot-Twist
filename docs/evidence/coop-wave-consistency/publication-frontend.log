@@ -1,0 +1,21 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run tests/island/wave-flow-races.test.js tests/island/wave-context-integration.test.js tests/island/wave-context-dom.test.js tests/island/wave-flow.test.js tests/pirates/paid-revive.test.js tests/pirates/recovery-wave-end.test.js tests/pirates/recovery-controller.test.js tests/pirates/defense-report.test.js tests/narrator/narrator.test.js tests/pirates/live-waves-finish.test.js
+
+
+ RUN  v5.1.0 /workspace/wave-publish/frontend
+
+
+ Test Files  10 passed (10)
+      Tests  95 passed (95)
+   Start at  15:02:58
+   Duration  8.52s (tests 66%, import 21%, transform 12%)
+
+    Isolate  10 workers spawned · ~95ms startup each (spawn + environment, per file)
+             at least ~856ms faster with isolate: false — reuses workers across files instead of one per file
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice
