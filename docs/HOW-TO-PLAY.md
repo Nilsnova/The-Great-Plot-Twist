@@ -182,7 +182,8 @@ The Harbor is a building on the east beach. Walk up to it and press **E** (or **
 - **Your ship** (after wave 30, once the wreck is repaired): walk to her on the west beach and press **E**. Between waves, pick one of her games. A round lasts 20 seconds and ends with 0 to 3 stars:
   - **💥 Broadside duel:** enemy ships sail across. Fire when one is inside the gold band: in its middle is a bullseye (+2), inside it a hit (+1), a miss costs 1. The guns reload after every shot. **Space**, **F**, a click or tap on the sea, or **Fire**.
   - **🪙 Treasure dash:** steer your boat left and right to grab coins (+1) and dodge cannonballs (−2; a red arrow shows where one lands). **← →** or **A D**, drag on the sea, or hold **◀ ▶**.
-  - Each game pays coins **once per won wave**: ★ × (6 + wave ÷ 5), so ★★★ is 🪙 36 at wave 30 and 🪙 78 at wave 100. After that you can keep playing for fun until your crew wins the next wave. Every player is paid into their own wallet. Settings › **Easier finishers** widens the gold band and the catch.
+  - Attempts are free. If a friend rings the bell, your unfinished boat round ends and you return to defend the island; an on-screen notice explains that no coins were spent and no reward was used. Completed rounds keep their earned coins.
+  - Only the first round with at least one star pays for each game at each won wave. A later better score pays nothing extra. Each game pays coins **once per won wave**: ★ × (6 + wave ÷ 5), so ★★★ is 🪙 36 at wave 30 and 🪙 78 at wave 100. After that you can keep playing for fun until your crew wins the next wave. Every player is paid into their own wallet. Settings › **Easier finishers** widens the gold band and the catch.
 
 ## Controls
 

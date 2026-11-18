@@ -31,7 +31,7 @@ function button(label, onClick, quiet = false) {
 }
 
 export function createIslandUi({container, focus = () => {}, resetInput = () => {}, toasts = gameToasts} = {}) {
-  let modal = null, kind = null, render = null, disposed = false, lastToast = null;
+  let modal = null, kind = null, render = null, disposed = false, lastToast = null, boatNoticeTimer = null;
   // The Tech hub tile the player tapped (kept while the page lives); the tree shows its detail.
   let techPicked = null;
   let overviewKind = 'all', overviewState = 'all';
@@ -40,7 +40,9 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
   bannerEyebrow.setAttribute('aria-hidden', 'true');
   banner.append(bannerEyebrow, bannerText);
   const visit = node('div', 'island-visit'); visit.hidden = true;
-  container.append(banner, visit);
+  const boatNotice = node('p', 'island-boat-notice');boatNotice.hidden = true;
+  boatNotice.setAttribute('role', 'status');boatNotice.setAttribute('aria-live', 'polite');boatNotice.setAttribute('aria-atomic', 'true');
+  container.append(banner, visit, boatNotice);
 
   function close() {
     if (!modal) return false;
@@ -576,6 +578,14 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
       visit.append(node('span', '', chip.text), go);
     },
     // tone: 'info', 'success' (a building, loot) or 'error' (the server's plain message).
+    // Independent of the one-toast queue: a pending payout or existing error must not hide why play stopped.
+    boatNotice(details) {
+      if (disposed) return;
+      clearTimeout(boatNoticeTimer);
+      boatNotice.replaceChildren(node('strong', '', 'Wave starting. Back to the island.'), node('span', '', details));
+      boatNotice.hidden = false;
+      boatNoticeTimer = setTimeout(() => { boatNotice.hidden = true; }, 7000);
+    },
     toast(text, tone = 'info', next = '') {
       if (disposed || !text) return;
       const id = toasts().show(next ? {text, tone, next} : {text, tone});
@@ -585,7 +595,7 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
     dispose() {
       if (disposed) return; disposed = true;
       if (modal) { const current = modal; modal = null; current.dispose(); }
-      banner.remove(); visit.remove();
+      clearTimeout(boatNoticeTimer);boatNotice.remove();banner.remove(); visit.remove();
     },
   };
 }

@@ -12,7 +12,7 @@ import {counterValue} from './coin-counter.js';
 import {addMenuExtras, addMenuStatus} from '../shell/menu-extras.js';
 import {createQuestStrip} from './quest-strip.js';
 import {QUEST_EVENTS, PLACE_ARRIVED, HUD_OPENED} from './quest-events.js';
-import {applyQuestEvent, createIdleHint, firstQuestView, questsFor, readFirstQuests, writeFirstQuests} from './first-quests.js';
+import {applyQuestEvent, reconcileFirstQuests, createIdleHint, firstQuestView, questsFor, readFirstQuests, writeFirstQuests} from './first-quests.js';
 import {showToast} from './toasts.js';
 import {coinsSpoken, formatCoins} from '../lib/coins.js';
 import './hud.css';
@@ -79,7 +79,7 @@ export function createHud(container, actions, {on = defaultOn, emit = defaultEmi
   drawCoins();
 
   // ---- quests: the first 3 minutes unless a part of the game (the class demo) shows its own ----
-  let first = readFirstQuests(storage), guide = null;
+  let first = readFirstQuests(storage), guide = null, questIsland = null;
   const idle = createIdleHint();
   // T52: the first-run goals show only on an island the player owns or joined (actions.hasIsland), never on the
   // front door or signed out; a part of the game with its own goals (the class demo) keeps its strip.
@@ -95,7 +95,7 @@ export function createHud(container, actions, {on = defaultOn, emit = defaultEmi
   function progress(event) {
     const result = applyQuestEvent(first, event, quests());
     if (!result.changed || disposed) return;
-    first = result.state;writeFirstQuests(storage, first);idle.progress();
+    first = reconcileFirstQuests(result.state, questIsland, quests());writeFirstQuests(storage, first);idle.progress();
     if (override) return;
     draw();
     if (guide) return; // the guided start says it itself
@@ -155,6 +155,13 @@ export function createHud(container, actions, {on = defaultOn, emit = defaultEmi
     },
     // 'island' (the island API sends setCoins) or 'wallet' (the default).
     setCoinSource(source) { coinSource = source === 'island' ? 'island' : 'wallet'; },
+    // Only the player's own island is supplied here, never the visited island's buildings or crew.
+    setQuestIsland(island) {
+      questIsland = island;
+      const next = reconcileFirstQuests(first, questIsland, quests());
+      if (disposed || next === first) return;
+      first = next;writeFirstQuests(storage, first);idle.progress();draw();
+    },
     get coins() { return coins; },
     // A part of the game with its own goals (the class demo) passes its view; null gives the strip back.
     setQuests(view) { override = view ?? null; draw(); },
