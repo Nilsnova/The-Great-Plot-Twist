@@ -117,6 +117,7 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
   function buildCard(model, handlers, {dock = false, details = false} = {}) {
     if (disposed) return;
     const on = typeof handlers === 'function' ? {build: handlers} : handlers ?? {};
+    if (selectionModel?.spotId !== model.spotId) returnToDock = null;
     selectionModel = model; selectionHandlers = on;
     if (!dock && !details) returnToDock = null;
     if (dock && returnToDock) returnToDock = () => buildCard(model, on, {dock: true});
@@ -619,6 +620,8 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
     overviewCard, leaderboardCard, buildCard, bellCard, inviteCard, lobbyCard, crewCard, captainCard, captainsCard, harborCard, techCard, wreckCard, arsenalCard, demolishCard, close, copyLink,
     cancel: () => close(true),
     get selectionElement() { return selection?.element ?? null; },
+    get selectionSpot() { return selection ? selectionModel.spotId : null; },
+    get selectionRange() { return selection?.coverage ?? null; },
     // Re-draw the open card from fresh models (the island controller calls this on every change).
     get open() { return kind; },
     get active() { return !!modal; },

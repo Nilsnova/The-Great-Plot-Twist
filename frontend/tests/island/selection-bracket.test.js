@@ -38,4 +38,30 @@ describe('portable selected wall corners', () => {
     expect(group.visible).toBe(false); expect(root.children).toEqual([]);
     for (const resource of resources) { expect(resource.geometryDisposed).toHaveBeenCalledOnce(); expect(resource.materialDisposed).toHaveBeenCalledOnce(); }
   });
+
+  it('adapts to a real building footprint and restores the original wall marker', () => {
+    const root = new THREE.Group(), bracket = makeSelectionBracket(root), group = root.children[0];
+    const [outline, brass] = group.children;
+    bracket.show({spotId: 'house_1', kind: 'house', x: 3, z: -5, size: 3, level: 2});
+    expect(group.scale.toArray()).toEqual([1.5, 1.5, 1]);
+    expect(group.userData).toMatchObject({spotId: 'house_1', level: 2});
+    expect(brass.renderOrder).toBeLessThan(80);
+    expect(brass.material.opacity).toBeLessThan(.98);
+    const vertices = brass.geometry.attributes.position;
+    const corners = Array.from({length: vertices.count}, (_, i) => {
+      const point = new THREE.Vector3().fromBufferAttribute(vertices, i).multiply(group.scale).add(group.position);
+      return unprojectGround(point.x, point.y);
+    });
+    expect(Math.max(...corners.map(point => point.x))).toBeCloseTo(4.5);
+    expect(Math.min(...corners.map(point => point.z))).toBeCloseTo(-6.5);
+
+    bracket.show({spotId: 'wall_1', kind: 'wall', x: 3, z: -5, size: 3});
+    expect(group.scale.toArray()).toEqual([1, 1, 1]);
+    expect([outline.renderOrder, brass.renderOrder]).toEqual([94, 95]);
+    expect([outline.material.opacity, brass.material.opacity]).toEqual([.86, .98]);
+    expect(group.userData.level).toBeNull();
+    bracket.show(null);
+    expect(group).toMatchObject({visible: false, userData: {spotId: null, level: null}});
+    bracket.dispose();
+  });
 });

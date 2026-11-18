@@ -33,6 +33,8 @@ import {createMoveBar} from './move-bar.js';
 import {createVillageMode, isTextEntry} from './village-mode.js';
 import {createVillageBar} from './village-bar.js';
 import {canDockSelection, holdOtherBuildingAction} from './selection-dock.js';
+import {footprintOf} from './placement.js';
+import {previewDefenseCoverage} from '../pirates/sim.js';
 import {SPOTS, KINDS, BELL, CABIN, ISLAND_PLACE, POINT_PLACE, PP_SPOTS, isIslandZone, isPointSpot, spotById, ppSpotById, pointZones, defenses, slotName,
   campaignBuilding, placedSpot, ARSENAL} from './spots.js';
 import {createArsenal} from './arsenal.js';
@@ -240,7 +242,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const moveBar = createMoveBar({container, handlers: {nudge: (dx, dz) => moving.nudge(dx, dz), place: () => void moving.confirm(), cancel: () => moving.cancel()}});
   // A confirmed fresh start begins a new island identity for the core display (VIS-35).
   let resetGeneration = 0;
-  const villageBar = createVillageBar({container, onLeave: () => village.leave(), onCamera: villageCamera});
+  const villageBar = createVillageBar({container, onLeave: () => village.leave(), onPick: pick, onCamera: villageCamera});
   const village = createVillageMode({
     context: () => ({ready: !!own?.code && !!world, own: !visiting && !visitCode, code: own?.code,
       // A successful start/join awaits preparation before flow.current is set.
@@ -248,11 +250,17 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     render: active => villageBar.render(active),
     onLeave: () => { moving.cancel(); ui.close(); openSpot = null; resetInput(); focus(); },
   });
-  const moveKeys = event => {
+  const villageKeys = event => {
+    if (event.defaultPrevented || isTextEntry(event.target)) return;
+    const gameFocus = event.target?.tagName === 'CANVAS' || event.target === globalThis.document?.body;
+    if (gameFocus && !ui.active && !moving.active && event.code === 'KeyE'
+      && !event.altKey && !event.ctrlKey && !event.metaKey && villageBar.focusBuildings()) {
+      event.preventDefault(); event.stopPropagation(); return;
+    }
     const buttonEnter = event.key === 'Enter' && event.target?.tagName === 'BUTTON';
-    if (moving.active && !ui.active && !event.defaultPrevented && !buttonEnter && !isTextEntry(event.target)) moving.handleKey(event);
+    if (moving.active && !ui.active && !buttonEnter) moving.handleKey(event);
   };
-  globalThis.addEventListener?.('keydown', moveKeys, true);
+  globalThis.addEventListener?.('keydown', villageKeys, true);
   // The arsenal (T41, D042): the crew's weapons (the server's flag "arsenal" is always on; the old shop is gone).
   const arsenal = createArsenal({api: createArsenalApi({transport: transport ?? live}), ui, emit, enabled: () => true,
     code: () => (visiting ? displayIslandCode(visiting.code) : visitCode ? displayIslandCode(visitCode) : null),
@@ -325,7 +333,9 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
 
   function applyWorld() {
     syncCoreContext();
-    world?.apply({spots: target()?.spots ?? [], visitor: !!visiting, battle, unlocks: islandUnlocks(), crew: target()?.crew ?? null, campaign: campaign(),
+    const spots = target()?.spots ?? [];
+    villageBar.setBuildings(spots);
+    world?.apply({spots, visitor: !!visiting, battle, unlocks: islandUnlocks(), crew: target()?.crew ?? null, campaign: campaign(),
       arsenal: true, feedbackScope: wallFeedbackScope()});
     const replaying = recoveryCombat && flow.current?.wave?.waveId === recoveryCombat.waveId;
     world?.setRecoveryState?.(recoveryState && recoveryPolicyOn() ? {...recoveryState, displayPhase: replaying ? 'combat' : recoveryState.displayPhase} : null);
@@ -568,6 +578,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const handlers = {build: (spotId, kind) => void build(spotId, kind), upgrade: spotId => void upgrade(spotId), repair: spotId => void repairWall(spotId),
     repairStructure: (spotId, quote) => void repairStructure(spotId, quote), hire: () => openCrew(),
     specialise: (spotId, spec) => void specialise(spotId, spec), demolish: spotId => void askDemolish(spotId), move: spotId => startMove(spotId),
+    camera: villageCamera,
     treeSelect: (spotId, id) => { treePicked.set(spotId, id); cardMessage = ''; refreshCard(); }, tree: (spotId, path, tier) => void buyTree(spotId, path, tier)};
   const demolishHandlers = {confirm: () => void confirmDemolish(), keep: () => { const spot = demolishSpot; demolishSpot = null; if (spot) openBuild(spot); }};
   const demolishCardModel = () => demolishModel({quote: demolishQuote, busy: busyDemolish, message: cardMessage});
@@ -679,12 +690,23 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   }
   function showBuild(spotId) {
     const model = buildModel(spotId);
-    if (ui.selectionElement && !model.built) { ui.close(); openSpot = null; return; }
-    ui.buildCard(model, handlers, {dock: village.active && !visiting && !isPointSpot(spotId) && canDockSelection(model)});
+    if (ui.selectionSpot === spotId && !model.built) { ui.close(); openSpot = null; return; }
+    const dock = village.active && !visiting && !isPointSpot(spotId) && canDockSelection(model);
+    const destroyed = model.recovery?.actualHp === 0 && model.recoveryLevel === model.level;
+    if (dock && model.slot === 'tower' && !destroyed) {
+      const installed = defenses(target()?.spots ?? [], campaign()?.research?.tiers);
+      // Keep coverage for an installed recovery-v1 Culverin when new purchases are disabled.
+      model.coverage = previewDefenseCoverage(installed, spotId, {defensesV2: defensesV2On() === true || recoveryPolicyOn()});
+    }
+    ui.buildCard(model, handlers, {dock});
   }
   function selectedAnchor() {
-    const at = ui.selectionElement && village.active && openSpot ? placedSpot(openSpot, target()?.spots) : null;
-    return at && Number.isFinite(at.x) && Number.isFinite(at.z) ? {spotId: openSpot, x: at.x, z: at.z, lift: 1} : null;
+    if (!ui.selectionElement || !village.active || !openSpot) return null;
+    const spots = target()?.spots, spot = spots?.find(item => item.id === openSpot);
+    const at = placedSpot(openSpot, spots);
+    if (!at || !Number.isFinite(at.x) || !Number.isFinite(at.z)) return null;
+    return {spotId: openSpot, kind: spot?.kind, level: spot?.level, x: at.x, z: at.z,
+      size: footprintOf(openSpot), lift: 1, keepFit: spot?.kind !== 'wall'};
   }
   function stopRecoveryPoll() {
     if (recoveryPollTimer === null) return;
@@ -1410,7 +1432,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       coreWorld?.dispose();
       const core = decorateCore(place);
       const deco = decorateIsland(place, {container, art, reducedMotion, quality: () => preferences().quality, canvas: adapters.canvas, camera: adapters.camera,
-        isActive: adapters.isActive, onPick: pick, range: houseRange, selection: selectedAnchor, player: adapters.player, onFar: adapters.onFar,
+        isActive: adapters.isActive, onPick: pick, range: houseRange, selection: selectedAnchor, defenseRange: () => ui.selectionRange,
+        player: adapters.player, onFar: adapters.onFar,
         placing: () => moving.active, onGround: (x, z) => moving.tap(x, z),
         canPickRemote: id => village.active && !!spotById(id),
         retryAdditionalArt: () => deco.runArtTask('core', () => core.retryArt())});
@@ -1577,7 +1600,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       stopRecoveryPoll(); recoveryReadId++;
       stopFinished(); stopStarted(); stopArrived(); stopPoint(); stopInteract(); stopTravel(); stopMenu?.(); stopSettings?.(); stopStartedGame(); stopGame(); clearTimeout(syncSoon);
       boatLaunch++;boatGame?.dispose(); boatGame = null;
-      flow.dispose(); ui.dispose(); moveBar.dispose(); globalThis.removeEventListener?.('keydown', moveKeys, true); cutscene?.dispose?.(); world?.dispose(); world = null; coreWorld?.dispose(); coreWorld = null; pointWorld?.dispose(); pointWorld = null;
+      flow.dispose(); ui.dispose(); moveBar.dispose(); globalThis.removeEventListener?.('keydown', villageKeys, true); cutscene?.dispose?.(); world?.dispose(); world = null; coreWorld?.dispose(); coreWorld = null; pointWorld?.dispose(); pointWorld = null;
     },
     spots: SPOTS,
   };

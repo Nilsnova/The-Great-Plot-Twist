@@ -11,6 +11,7 @@ import {ALL_SPOTS as ISLAND_SPOTS, CABIN, BELL, CAMPAIGN_BUILDINGS, ARSENAL, isl
 import {isExtraSpot} from './extra-spots.js';
 import {makeFootprint, makeWallLanes} from './move-preview.js';
 import {makeSelectionBracket} from './selection-bracket.js';
+import {makeDefenseRange} from './defense-range.js';
 import {makeWallFeedback} from './wall-feedback.js';
 import {isOpen, spotWave, waveOf} from '../campaign/index.js';
 import {LOCK_WAVES} from '../art/campaign.js';
@@ -267,6 +268,7 @@ export function decorateIsland(place, ctx = {}) {
   // The reach of a house's role while its card is open (GAME-V3.md "Houses"): a soft disc with a bright rim on
   // the ground, in the role's colour. ctx.range() says which ({x, z, radius, role} or null), read every frame.
   const rangeRing = makeRangeRing(root);
+  const defenseRange = typeof ctx.defenseRange === 'function' ? makeDefenseRange(root) : null;
   const homeWalls = layout.zones === islandZones;
   const purchaseLight = homeWalls ? makeWallPurchaseLight() : null;
   const wallConnections = makeWallConnections(root, {purchaseLight});
@@ -357,6 +359,10 @@ export function decorateIsland(place, ctx = {}) {
     if (disposed) return;
     if (battle || feedbackScope !== state.feedbackScope) clearWallFeedback();
     state = {spots, visitor, battle, unlocks, crew, campaign, arsenal: arsenal === true, feedbackScope};
+    if (battle || visitor) {
+      defenseRange?.show(null);
+      place.setSelectedCanopy?.(null);
+    }
     const pulse = wallFeedback?.current;
     if (pulse) {
       const anchor = builtWallAnchor(pulse.spotId, pulse.level);
@@ -447,7 +453,32 @@ export function decorateIsland(place, ctx = {}) {
   retryWallArt();
 
   // The nearest pickable thing to a ground point (a tap), or null.
+  // Built sprites can overlap legally. In village mode, give the opaque foreground art priority over
+  // the old nearest-foot box. The box still serves markers, service buildings and loading stand-ins.
+  function frontBuildingAt(tap) {
+    let front = null;
+    for (const [id, item] of shown) {
+      if (!ctx.canPickRemote?.(id)) continue;
+      const mesh = item.meshes[0];
+      if (!mesh?.visible || !mesh.userData.art || mesh.name.startsWith('island-wall:')
+        || (front && mesh.renderOrder < front.order)) continue;
+      const [width, height, anchor] = artSizes[mesh.userData.art], image = mesh.material.map?.image;
+      const u = .5 + (tap.x - mesh.position.x) / width;
+      const v = 1 - anchor - (tap.y - mesh.position.y) / height;
+      if (u < 0 || u >= 1 || v < 0 || v >= 1 || !image?.getContext) continue;
+      try {
+        const alpha = image.getContext('2d')?.getImageData(Math.floor(u * image.width), Math.floor(v * image.height), 1, 1).data[3];
+        if (alpha >= 128) front = {id, order: mesh.renderOrder};
+      } catch {
+        // Fall back to the logical boxes if this frame cannot be read back.
+        return null;
+      }
+    }
+    return front?.id ?? null;
+  }
   function pickAt(x, z) {
+    const tap = projectPoint(x, z), front = frontBuildingAt(tap);
+    if (front) return front;
     const candidates = [...SPOTS.filter(spot => !isExtraSpot(spot.id) || state.spots.some(item => item.id === spot.id))
         .map(spot => ({id: spot.id, ...whereOf(spot), w: 2.4, h: spot.kind === 'watchtower' ? 5 : 3})),
       ...(bell ? [{id: BELL.id, x: BELL.x, z: BELL.z, w: 1.6, h: 3.4}] : []),
@@ -456,7 +487,7 @@ export function decorateIsland(place, ctx = {}) {
       ...(state.visitor || layout.cabin === false ? [] : [{id: CABIN.id, x: CABIN.x, z: CABIN.z, w: 3, h: 6}])];
     let best = null, bestScore = Infinity;
     for (const item of candidates) {
-      const tap = projectPoint(x, z), foot = projectPoint(item.x, item.z);
+      const foot = projectPoint(item.x, item.z);
       if (Math.abs(foot.x - tap.x) > item.w || tap.y > foot.y + item.h || tap.y < foot.y - .54) continue;
       const score = Math.hypot(foot.x - tap.x, foot.y - tap.y);
       if (score < bestScore) { best = item.id; bestScore = score; }
@@ -511,7 +542,12 @@ export function decorateIsland(place, ctx = {}) {
     preview(next) {
       if (disposed) return;
       preview = next && Number.isFinite(next.x) && Number.isFinite(next.z) ? {...next} : null;
-      if (preview) { wallConnections.select(null); clearWallFeedback(); }
+      if (preview) {
+        wallConnections.select(null);
+        defenseRange?.show(null);
+        place.setSelectedCanopy?.(null);
+        clearWallFeedback();
+      }
       footprint.show(preview);
       wallLanes?.show(preview && SPOTS.find(spot => spot.id === preview.spotId)?.slot === 'wall');
       apply(state);
@@ -534,9 +570,14 @@ export function decorateIsland(place, ctx = {}) {
       const selection = preview ? null : ctx.selection?.();
       selectionBracket.show(selection);
       wallConnections.select(state.battle || state.visitor ? null : selection?.spotId);
+      const focus = selection?.kind && selection.kind !== 'wall' && !state.battle && !state.visitor;
+      place.setSelectedCanopy?.(focus ? shown.get(selection.spotId)?.meshes[0] ?? null : null);
       recoveryIndicators.update();
       const still = reduced();
-      rangeRing.show(ctx.range?.() ?? null, still ? 0 : time);
+      const coverage = selection && !state.battle && !state.visitor ? ctx.defenseRange?.() : null;
+      const current = coverage && coverage.id === selection.spotId && coverage.x === selection.x && coverage.z === selection.z;
+      defenseRange?.show(current ? coverage : null);
+      rangeRing.show(defenseRange?.shown ? null : ctx.range?.() ?? null, still ? 0 : time);
       if (wallFeedback) {
         wallFeedback.update(dt, paused, still);
         purchaseLight.show(wallFeedback.current, wallFeedback.light);
@@ -565,6 +606,8 @@ export function decorateIsland(place, ctx = {}) {
       tasks.dispose(); notice.dispose(); staticArt.dispose();
       progress?.dispose(); recoveryIndicators.dispose();
       wallConnections.dispose(); selectionBracket.dispose();
+      defenseRange?.dispose();
+      place.setSelectedCanopy?.(null);
       wallFeedback?.dispose();
       for (const id of [...shown.keys()]) clear(id);
       for (const item of lockTextures.values()) item.texture.dispose(); // the padlocks a spot no longer shows

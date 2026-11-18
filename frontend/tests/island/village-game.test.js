@@ -61,14 +61,27 @@ it.each([false, true])('explicit management selects remotely, holds captain inpu
     await pickCannon(page);
     expect(await page.locator('.island-card-build[open]').count()).toBe(0); // Explore still needs a walk up.
     await manage(page);
+    if (!phone) {
+      await page.evaluate(() => window.__island.renderer.domElement.focus());
+      await page.keyboard.press('KeyE');
+      const finder = page.getByRole('combobox', {name: 'Find building'});
+      expect(await finder.evaluate(node => document.activeElement === node)).toBe(true);
+      await page.keyboard.press('ArrowDown');
+      const close = page.getByRole('region', {name: 'Selected building'}).getByRole('button', {name: 'Close', exact: true});
+      await close.waitFor();
+      await page.keyboard.press('Enter');
+      await finder.waitFor();
+    }
     const before = await page.evaluate(() => ({x: window.__island.player.position.x, z: window.__island.player.position.z}));
     await page.keyboard.down('KeyD');
     await page.evaluate(() => new Promise(resolve => { let n = 0; function frame() { if (++n === 12) resolve(); else requestAnimationFrame(frame); } requestAnimationFrame(frame); }));
     await page.keyboard.up('KeyD');
     expect(await page.evaluate(() => ({x: window.__island.player.position.x, z: window.__island.player.position.z}))).toEqual(before);
     await pickCannon(page);
-    await page.locator('.island-card-build[open]').waitFor();
-    await page.locator('.island-card-build[open] .island-move').click();
+    const selected = page.getByRole('region', {name: 'Selected building'});
+    await selected.waitFor();
+    expect(await selected.locator('.island-selection-title').textContent()).toBe('Cannon');
+    await selected.getByRole('button', {name: 'Move', exact: true}).click();
     await page.locator('.island-move-bar:not([hidden])').waitFor();
     const cell = await page.evaluate(() => {
       const input = document.createElement('input'); input.id = 'coc49-focus-probe'; document.body.append(input); input.focus();
@@ -107,6 +120,7 @@ it.each([false, true])('explicit management selects remotely, holds captain inpu
     expect(await page.evaluate(() => window.__island.island.toggleVillage())).toBe(false);
     await pickCannon(page);
     expect(await page.locator('.island-card-build[open]').count()).toBe(0);
+    expect(await selected.count()).toBe(0);
     expect(await page.evaluate(() => window.coc49RingDone)).toBe(false);
     const answer = await page.evaluate(async () => { window.coc49RestoreRead(); window.coc49ReleasePrepare(); return window.coc49Ring; });
     expect(answer.ok).toBe(true);

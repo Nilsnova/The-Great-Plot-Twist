@@ -41,16 +41,43 @@ const wall = (id = 'wall_1') => buildCardModel({spotId: id, slot: 'wall', coins:
 beforeEach(() => vi.stubGlobal('document', {createElement: tag => new Element(tag), activeElement: null}));
 afterEach(() => vi.unstubAllGlobals());
 
-describe('management wall dock', () => {
-  it('keeps only simple walls compact and makes other pending actions a visible hold', () => {
+describe('village selection dock', () => {
+  it('opens built structures, keeps wall repair in its existing card and holds pending actions', () => {
     const model = wall(); expect(canDockSelection(model)).toBe(true); expect(model.upgradePrice).toBe('🪙 37');
-    for (const change of [{built: false}, {kind: 'cannon'}, {tree: {}}, {mode: 'repair'}, {recovery: {visible: true}}, {recovery: {actionPending: true}}])
+    for (const change of [{built: false}, {tree: {}}, {mode: 'repair'}, {recovery: {visible: true}}, {recovery: {actionPending: true}}])
       expect(canDockSelection({...model, ...change})).toBe(false);
+    for (const kind of ['cannon', 'harpoon', 'watchtower', 'house']) expect(canDockSelection({...model, kind})).toBe(true);
     const held = holdOtherBuildingAction(model, 'wall_2');
     expect(held).toMatchObject({disabled: true, reason: 'Another building action is in progress.', move: {disabled: true}, demolish: {disabled: true}});
     expect(holdOtherBuildingAction(model, model.spotId)).toBe(model); expect(model.disabled).toBe(false);
     const complex = holdOtherBuildingAction({...model, choices: [{disabled: false}], skills: {choices: [{disabled: false}]}, tree: {detail: {disabled: false}}}, 'wall_2');
     expect([complex.choices[0].disabled, complex.skills.choices[0].disabled, complex.tree.detail.disabled]).toEqual([true, true, true]);
+  });
+  it('shows the installed role and toggles a single defense range for the current selection', () => {
+    const ui = createIslandUi({container: new Element('div')});
+    const model = buildCardModel({spotId: 'cannon_1', coins: 1000, slot: 'tower',
+      spot: {id: 'cannon_1', built: true, kind: 'mortar', level: 2}});
+    const coverage = {id: 'cannon_1', kind: 'mortar', level: 2, x: 1, z: 2, range: 35, minRange: 8, targets: ['ships', 'boarders']};
+    const upgrade = vi.fn();
+    ui.buildCard({...model, coverage}, {upgrade}, {dock: true});
+    const first = ui.selectionElement, range = button(first, 'range');
+    expect(button(first, 'upgrade').hidden).toBe(true);
+    expect(range['aria-pressed']).toBe('false');
+    expect(ui.selectionRange).toBeNull();
+    range.click();
+    expect(ui.selectionRange).toBe(coverage);
+    expect(range['aria-pressed']).toBe('true');
+    expect(text(first)).toContain('Clear-weather range 35 units · ships and boarders · 8-unit inner gap');
+    ui.buildCard({...model, coverage: {...coverage, range: 36}}, {upgrade}, {dock: true});
+    expect(ui.selectionRange.range).toBe(36);
+    const house = buildCardModel({spotId: 'house_1', spot: {id: 'house_1', built: true, kind: 'house', level: 3, spec: 'barracks'}});
+    ui.buildCard(house, {}, {dock: true});
+    expect(ui.selectionElement).toBe(first);
+    expect(text(first)).toContain('Level 3 Barracks');
+    expect(range.hidden).toBe(true);
+    expect(ui.selectionRange).toBeNull();
+    expect(upgrade).not.toHaveBeenCalled();
+    ui.dispose();
   });
   it('uses actual health and price, allows A→B selection, preserves errors and calls only current handlers', () => {
     const container = new Element('div'), handlers = {move: vi.fn(), upgrade: vi.fn()}, ui = createIslandUi({container});

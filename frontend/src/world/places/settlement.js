@@ -10,6 +10,7 @@ import { places } from './registry.js';
 import { layouts, edgeTrees } from './layouts.js';
 import { placeGround } from './surfaces.js';
 import { backdrop, createLifetime, loadBackdrop } from './resources.js';
+import { makeSelectedCanopy } from './selected-canopy.js';
 import {projectGround} from '../projection.js';
 
 // Compose all art, colliders and cleanup under one place root for predictable travel disposal.
@@ -48,6 +49,14 @@ export async function createSettlement(ctx) {
       if (id === 'home_islet') mesh.scale.setScalar(.7);
       mesh.material = swayMaterial(mesh.material.clone(), mesh.userData.asset); return mesh;
     });
+    const selectedCanopy = id === 'home_islet' ? makeSelectedCanopy(foliage) : null;
+    let player = {x: data.spawn[0], z: data.spawn[1]};
+    function updateCanopyOpacity(mesh) {
+      const p = mesh.userData.ground;
+      const playerBehind = player.z < p.z && Math.abs(player.x - p.x) < 2.2 && p.z - player.z < 6;
+      // Each tree already owns its wind material. Selection and captain occlusion share one opacity writer.
+      mesh.material.opacity = selectedCanopy?.has(mesh) ? .24 : playerBehind ? .3 : 1;
+    }
     trees.forEach(([x, z], i) => {
       placeArt(group, art, 'grass-tuft', x + 2, z + 1);
       if (i % 2 === 0) placeArt(group, art, 'flowers', x - 1.6, z + 1);
@@ -77,11 +86,14 @@ export async function createSettlement(ctx) {
         ...placements.filter(placement => placement.collider).map(placement => placement.collider),
         ...trees.map(([x, z]) => ({ x, z, radius: .48 })),
       ],
+      setSelectedCanopy(building) {
+        if (selectedCanopy?.show(building)) foliage.forEach(updateCanopyOpacity);
+      },
       update(dt, state) {
         state = frameState(dt, state);
+        player = state.player;
         foliage.forEach(mesh => {
-          const p = mesh.userData.ground;
-          mesh.material.opacity = state.player.z < p.z && Math.abs(state.player.x - p.x) < 2.2 && p.z - state.player.z < 6 ? .3 : 1;
+          updateCanopyOpacity(mesh);
           updateSway(mesh.material, state.time, state.weather?.wind ?? 0);
         });
         if (windowGlow) windowGlow.material.opacity = state.night * .95;
