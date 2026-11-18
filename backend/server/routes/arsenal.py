@@ -48,19 +48,28 @@ POST /api/island/arsenal/return  {"actionUid": "...", "code"?: "..."}
 A repeated actionUid changes nothing and answers the arsenal as it is now.
 
 Used by: the arsenal building of the island client (frontend/src/island/arsenal*.js).
+
+Versioned shared islands resolve persisted mode before any legacy open/grant/sweep.
+GET requires X-Island-Economy-Version: 1 and returns the common economy envelope,
+arsenalVersion: 1, arsenalRevision, total inventory and exact decimal prices/tenures.
+POST adds economy:{mode,version,islandOwner,runEpoch}; take/return also carry copy
+and holderGeneration. The account and actor are server-resolved. The response is
+the common immutable receipt plus an independently authorized arsenal snapshot,
+or arsenal:null after departure/reset. Legacy payloads retain the contracts above.
 """
 
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, Request
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from server.auth import Player
 from server.errors import ApiError
 from server.flags import is_enabled
-from server.island import arsenal
+from server.island import shared_arsenal
 from server.island.arsenal import ArsenalView
 from server.island.service import IslandCatalogueDep
+from server.island.shared_arsenal_views import EconomyIntent
 from server.routes.island import ACTION_UID_PATTERN, CODE_MAX_LENGTH, IslandPlayerDep
 from server.settings import SettingsDep
 from server.supabase_admin import AdminDep
@@ -115,27 +124,32 @@ class ArsenalResponse(BaseModel):
     types: list[TypeOut]
 
 
-class BuyRequest(BaseModel):
+class ArsenalRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
+    actionUid: str = Field(pattern=ACTION_UID_PATTERN)
+    code: str | None = Field(default=None, max_length=CODE_MAX_LENGTH)
+    economy: EconomyIntent | None = None
+
+    @model_validator(mode="after")
+    def shared_target(self):
+        if self.economy is not None and "code" in self.model_fields_set:
+            raise ValueError("A shared arsenal action uses only its economy target.")
+        return self
+
+
+class BuyRequest(ArsenalRequest):
     weapon: str = Field(min_length=1, max_length=40)
-    actionUid: str = Field(pattern=ACTION_UID_PATTERN)
-    code: str | None = Field(default=None, max_length=CODE_MAX_LENGTH)
 
 
-class TakeRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
+class TakeRequest(ArsenalRequest):
     copy_id: str = Field(alias="copy", pattern=COPY_PATTERN)
-    actionUid: str = Field(pattern=ACTION_UID_PATTERN)
-    code: str | None = Field(default=None, max_length=CODE_MAX_LENGTH)
+    holderGeneration: str | None = Field(default=None, strict=True, pattern=r"^(0|[1-9][0-9]*)$")
 
 
-class ReturnRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    actionUid: str = Field(pattern=ACTION_UID_PATTERN)
-    code: str | None = Field(default=None, max_length=CODE_MAX_LENGTH)
+class ReturnRequest(ArsenalRequest):
+    copy_id: str | None = Field(default=None, alias="copy", pattern=COPY_PATTERN)
+    holderGeneration: str | None = Field(default=None, strict=True, pattern=r"^(0|[1-9][0-9]*)$")
 
 
 def arsenal_out(view: ArsenalView) -> ArsenalResponse:
@@ -174,6 +188,10 @@ def arsenal_out(view: ArsenalView) -> ArsenalResponse:
     )
 
 
+def versioned_out(view: ArsenalView | dict) -> ArsenalResponse | dict:
+    return arsenal_out(view) if isinstance(view, ArsenalView) else view
+
+
 @router.get("/island/arsenal")
 async def get_arsenal(
     player: ArsenalPlayerDep,
@@ -181,10 +199,10 @@ async def get_arsenal(
     admin: AdminDep,
     request: Request,
     code: Code = None,
-) -> ArsenalResponse:
+) -> ArsenalResponse | dict:
     # A code is looked up, so reads share the visit budget: guessing codes stays slow.
     request.app.state.island_visit_budget.spend(player.id)
-    return arsenal_out(await arsenal.look(admin, catalogue, player.id, code))
+    return versioned_out(await shared_arsenal.look(admin, catalogue, player.id, code, request))
 
 
 @router.post("/island/arsenal/buy")
@@ -194,10 +212,20 @@ async def post_arsenal_buy(
     catalogue: IslandCatalogueDep,
     admin: AdminDep,
     request: Request,
-) -> ArsenalResponse:
+) -> ArsenalResponse | dict:
     request.app.state.island_build_budget.spend(player.id)
-    view = await arsenal.buy(admin, catalogue, player.id, body.weapon, body.actionUid, body.code)
-    return arsenal_out(view)
+    view = await shared_arsenal.change(
+        admin,
+        catalogue,
+        player.id,
+        body.code,
+        request,
+        body.economy,
+        "buy",
+        body.actionUid,
+        weapon=body.weapon,
+    )
+    return versioned_out(view)
 
 
 @router.post("/island/arsenal/take")
@@ -207,10 +235,21 @@ async def post_arsenal_take(
     catalogue: IslandCatalogueDep,
     admin: AdminDep,
     request: Request,
-) -> ArsenalResponse:
+) -> ArsenalResponse | dict:
     request.app.state.island_build_budget.spend(player.id)
-    view = await arsenal.take(admin, catalogue, player.id, body.copy_id, body.actionUid, body.code)
-    return arsenal_out(view)
+    view = await shared_arsenal.change(
+        admin,
+        catalogue,
+        player.id,
+        body.code,
+        request,
+        body.economy,
+        "take",
+        body.actionUid,
+        copy_id=body.copy_id,
+        generation=body.holderGeneration,
+    )
+    return versioned_out(view)
 
 
 @router.post("/island/arsenal/return")
@@ -220,7 +259,18 @@ async def post_arsenal_return(
     catalogue: IslandCatalogueDep,
     admin: AdminDep,
     request: Request,
-) -> ArsenalResponse:
+) -> ArsenalResponse | dict:
     request.app.state.island_build_budget.spend(player.id)
-    view = await arsenal.give_back(admin, catalogue, player.id, body.actionUid, body.code)
-    return arsenal_out(view)
+    view = await shared_arsenal.change(
+        admin,
+        catalogue,
+        player.id,
+        body.code,
+        request,
+        body.economy,
+        "return",
+        body.actionUid,
+        copy_id=body.copy_id,
+        generation=body.holderGeneration,
+    )
+    return versioned_out(view)

@@ -9,37 +9,76 @@ import {makeActionUid} from '../screens/islet/action-uid.js';
 import {MESSAGES, outcomeUnknown, readFailure} from './api.js';
 import {displayIslandCode} from './codes.js';
 import {readArsenal} from './arsenal-model.js';
+import {ECONOMY_CAPABILITY_HEADERS} from '../online/api.js';
+import {arsenalOrigin, isArsenalEconomy, readArsenalReceipt, readSharedArsenal} from './arsenal-shared-state.js';
+import {defaultArsenalPendingStore, pendingArsenalIntent} from './arsenal-pending.js';
 
 export const ARSENAL_PATHS = Object.freeze({
   state: code => `/api/island/arsenal${code ? `?code=${encodeURIComponent(code)}` : ''}`,
   buy: '/api/island/arsenal/buy', take: '/api/island/arsenal/take', giveBack: '/api/island/arsenal/return',
 });
 
-export function createArsenalApi({transport, makeUid = makeActionUid} = {}) {
+export function createArsenalApi({transport, makeUid = makeActionUid, getEconomy = () => null,
+  getActorId = () => null, pendingStore = defaultArsenalPendingStore()} = {}) {
   const held = new Map();
-  async function ask(send) {
+  const knownShared = new Set(), capability = {headers: ECONOMY_CAPABILITY_HEADERS};
+  async function ask(send, valid = readArsenal) {
     let result;
     try { result = await send(); } catch { result = {ok: false, status: 0, code: 'network_error', message: MESSAGES.network}; }
     if (!result?.ok) return readFailure(result);
-    if (!readArsenal(result.data)) return {ok: false, status: 502, code: 'unreadable', message: MESSAGES.unreadable};
+    if (!valid(result.data)) return {ok: false, status: 502, code: 'unreadable', message: MESSAGES.unreadable};
     return {ok: true, status: result.status ?? 200, data: result.data};
   }
   async function write(key, send) {
     const actionUid = held.get(key) ?? makeUid();
     held.set(key, actionUid);
     const answer = await ask(() => send(actionUid));
-    if (answer.ok || !outcomeUnknown(answer)) held.delete(key);
+    if (answer.ok || (!outcomeUnknown(answer) && answer.status !== 429)) held.delete(key);
     return answer;
   }
   const where = code => (code ? displayIslandCode(code) : '');
   const withCode = code => (where(code) ? {code: where(code)} : {});
+  const blocked = () => ({ok: false, status: 409, code: 'economy_context_required', message: 'Wait for your island to load and try again.'});
+  async function change(kind, values, code) {
+    const economy = getEconomy(), actor = getActorId();
+    if (economy === null) {
+      if (knownShared.has(`${actor}:${where(code)}`)) return blocked();
+      const key = `${kind}:${where(code)}:${values.weapon ?? values.copy ?? ''}`;
+      return write(key, actionUid => transport.post(ARSENAL_PATHS[kind], {
+        ...(kind === 'giveBack' ? {} : {[(kind === 'buy' ? 'weapon' : 'copy')]: kind === 'buy' ? values.weapon : values.copy}),
+        actionUid, ...withCode(code),
+      }));
+    }
+    if (!isArsenalEconomy(economy)) return blocked();
+    if (kind !== 'buy' && (typeof values.copy !== 'string' || typeof values.holderGeneration !== 'string')) return blocked();
+    const body = {...(kind === 'buy' ? {weapon: values.weapon} : {copy: values.copy, holderGeneration: values.holderGeneration}),
+      economy: {mode: economy.mode, version: economy.version, islandOwner: economy.islandOwner, runEpoch: economy.runEpoch}};
+    const pending = pendingArsenalIntent(pendingStore, actor, economy, kind, body, makeUid);
+    if (!pending) return {ok: false, status: 0, code: 'action_not_saved', message: 'This action could not be saved. Try again.'};
+    const action = {buy: 'arsenal_buy', take: 'arsenal_withdraw', giveBack: 'arsenal_return'}[kind];
+    const answer = await ask(() => transport.post(ARSENAL_PATHS[kind], pending.body, capability), value => {
+      if (!readArsenalReceipt(value, actor, pending.origin, pending.body.actionUid) || value.receipt.action !== action) return false;
+      const effect = value.receipt.result;
+      return kind === 'buy' ? effect.weapon === pending.body.weapon : effect.copyId === pending.body.copy
+        && BigInt(effect.holderGeneration) === BigInt(pending.body.holderGeneration) + 1n;
+    });
+    if (answer.ok || (!outcomeUnknown(answer) && answer.status !== 429)) {
+      try { pendingStore.removeItem(pending.key); } catch { /* A retained UID can only replay its original effect. */ }
+    }
+    if (!answer.ok) return answer;
+    return {...answer, data: answer.data.arsenal, receipt: answer.data.receipt, repeat: answer.data.repeat,
+      economy: answer.data.currentEconomy, expectedOrigin: pending.origin};
+  }
   return {
-    state: code => ask(() => transport.get(ARSENAL_PATHS.state(where(code)))),
-    buy: ({weapon, code = null} = {}) => write(`buy:${where(code)}:${weapon}`,
-      actionUid => transport.post(ARSENAL_PATHS.buy, {weapon, actionUid, ...withCode(code)})),
-    take: ({copy, code = null} = {}) => write(`take:${where(code)}:${copy}`,
-      actionUid => transport.post(ARSENAL_PATHS.take, {copy, actionUid, ...withCode(code)})),
-    giveBack: ({code = null} = {}) => write(`return:${where(code)}`,
-      actionUid => transport.post(ARSENAL_PATHS.giveBack, {actionUid, ...withCode(code)})),
+    state: async code => {
+      const expectedOrigin = arsenalOrigin(getEconomy()), actor = getActorId();
+      const answer = await ask(() => transport.get(ARSENAL_PATHS.state(where(code)), capability));
+      if (answer.ok && expectedOrigin && !readSharedArsenal(answer.data)) return {ok: false, status: 502, code: 'unreadable', message: MESSAGES.unreadable};
+      if (answer.ok && readSharedArsenal(answer.data)) knownShared.add(`${actor}:${where(code)}`);
+      return {...answer, expectedOrigin};
+    },
+    buy: ({weapon, code = null} = {}) => change('buy', {weapon}, code),
+    take: ({copy, holderGeneration, code = null} = {}) => change('take', {copy, holderGeneration}, code),
+    giveBack: ({copy, holderGeneration, code = null} = {}) => change('giveBack', {copy, holderGeneration}, code),
   };
 }
