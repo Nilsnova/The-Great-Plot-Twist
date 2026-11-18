@@ -1,0 +1,12 @@
+
+ RUN  v5.1.0 /workspace/wave-end-repair-integration/frontend
+
+
+ Test Files  19 passed (19)
+      Tests  207 passed (207)
+   Start at  11:03:06
+   Duration  62.70s (tests 86%, import 12%, transform 1%, worker 1%)
+
+    Isolate  19 workers spawned · ~253ms startup each (spawn + environment, per file)
+             at least ~4.56s faster with isolate: false — reuses workers across files instead of one per file
+
