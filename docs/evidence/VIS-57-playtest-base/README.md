@@ -4,7 +4,7 @@ Used by Johannes Franz Lang (`frcola`) and the next visual component reviewers. 
 
 ## Result and source boundaries
 
-The review branch starts from current main `66d29ea9eeb6ac39523c6605c8379004277326fe`. Its local merge retains the existing preview `e636ae7578813d1aa45f05092fdacc8cfadcbfe5` and both authored histories. Integration code checkpoint: `6c87b8dcd2d7a1bb5376c3b64bbede27a144479e`. The later test-only checkpoint `392e65b7bb6e5ac1398c66f792f790c107efc365` has exactly the same four application trees; [code identity](code-identity.json) records their full hashes.
+The review branch starts from current main `66d29ea9eeb6ac39523c6605c8379004277326fe`. Its local merge retains the existing preview `e636ae7578813d1aa45f05092fdacc8cfadcbfe5` and both authored histories. Integration code checkpoint: `6c87b8dcd2d7a1bb5376c3b64bbede27a144479e`. The later test-only checkpoint `392e65b7bb6e5ac1398c66f792f790c107efc365` has exactly the same four application trees. The documentation snapshot `c52b9dc7` adds the migration-order note in `supabase/README.md`, changing the top-level Supabase tree only through that document. Its migration subtree and the frontend/public/backend trees remain exact to the code checkpoint; [code identity](code-identity.json) records each full hash and the one documentation-only path.
 
 This is an assembled **Draft review base**, not a request to merge all visual/perimeter branches wholesale. No GitHub PR merge to main, force push, deployment, live database migration or production flag change was performed. The original checkout and previous preview remain untouched. The next foliage and wall changes belong to separate focused branches.
 
