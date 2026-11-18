@@ -100,21 +100,21 @@ void main(){
   float shallow=1.0-smoothstep(.0,4.2,d+sin(p.x*.8+p.y*.5+t*.6)*.25);
   colour=mix(colour,uShallow,shallow*.85);
   colour=mix(colour,uShallow2,(1.0-smoothstep(.0,1.3,d))*.9);
-  // Two broad, broken reflection directions replace the repeating fine parallel strokes.
+  // Curled noise contours break up highlights without two crossing families of periodic lines.
   // The entire extra material branch is disabled by the existing low-quality uniform.
   if(uDetail>.5){
     vec2 drift=vec2(t*(.06+uWind*.06),-t*.045);
-    float broad=pxNoise(p*.42+drift)*.6+pxNoise(p*.19-drift)*.4;
-    float ripple=sin(p.y*2.4+p.x*.42+broad*5.0-t*(.4+uWind*.2));
-    float crossing=sin(p.x*1.4-p.y*1.15+broad*2.0+t*.26);
-    float broken=smoothstep(.25,.8,pxNoise(p*vec2(.95,.38)-drift));
+    float curl=pxNoise(p*.42+drift), coarse=pxNoise(p*.19-drift);
+    float broad=curl*.6+coarse*.4;
+    vec2 flow=p*vec2(.55,1.4)+vec2(coarse,curl)*2.4;
+    float ripple=pxNoise(flow+drift);
+    float broken=smoothstep(.32,.75,curl);
     float offshore=smoothstep(.5,2.0,d);
-    float crest=(1.0-band(abs(ripple),.12))*broken*offshore;
-    float crossCrest=(1.0-band(abs(crossing),.1))*smoothstep(.55,.8,broad)*offshore;
-    float sheen=smoothstep(.2,.9,ripple*.5+.5)*smoothstep(.1,.8,crossing*.5+.5);
+    float crest=(1.0-band(abs(ripple-.55),.025))*broken*offshore;
+    float sheen=smoothstep(.35,.85,ripple);
     colour=mix(colour,uDeep,(1.0-broad)*.09);
-    colour=mix(colour,uLight,sheen*.07);
-    colour=mix(colour,uStroke,crest*.28+crossCrest*.13);
+    colour=mix(colour,uLight,sheen*.05);
+    colour=mix(colour,uStroke,crest*.16);
     vec2 q=p*2.2+vec2(broad,pxNoise(p*.65-drift))*.8;
     float cells=pxNoise(q+drift)+pxNoise(q*1.95-drift)*.2;
     float caustic=(1.0-band(abs(cells-.6),.02))*smoothstep(.6,1.2,d)*(1.0-smoothstep(1.5,3.0,d));
