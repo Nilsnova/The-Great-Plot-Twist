@@ -620,8 +620,8 @@
       "sha256": "e105cc75a9642b0971b2536f7f8c5999243db94978d297a00a2d186c4357a5b7"
     },
     "static-checks.json": {
-      "bytes": 27797,
-      "sha256": "be4196a76a6ae4d06a675f8ca2ec9ebd987977ee8e9a6fee41fb6066b38335e6"
+      "bytes": 27813,
+      "sha256": "4c08905b9f3f2fbeeec8fa824cabedf7dc10aa4851b80348fcfb5d0e0e14bffb"
     }
   }
 }
