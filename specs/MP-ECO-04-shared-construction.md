@@ -45,6 +45,20 @@ Use `island_treasury_spend`/`island_treasury_credit` within the same SQL transac
 
 Legacy defaults and route payloads stay unchanged. Additive wrappers guard `island_build`, `island_upgrade`, `island_demolish` and `island_demolish_quote` before any old wallet/island locks. They acquire the same scope guard as admission and refuse every admitted shared mode, including a paused one. Original bodies remain private aliases with no browser or standalone service execute grant. Capture each original only once, then recreate public wrappers on reapplication; this prevents capturing a wrapper and recursing when the complete migration chain is applied twice. No admitted route may fall back to a personal wallet or catalogue-based private refund.
 
+Legacy `island_build` and `island_upgrade` also check the actor's global personal mode,
+even on a target island with legacy accounting. They lock the existing actor wallet before
+the personal profile anchor and refuse managed actors with `captain_context_required`
+before delegating to the old body. This prevents old role prices from avoiding the managed
+Engineer commitment. Unadopted actors keep legacy behavior. Unsupported managed-actor
+legacy retries fail closed rather than reconstructing an unrecorded domain receipt.
+
+Admission remains blocked until the own-island build path is dispatched or atomically
+guarded too: `service.build` currently calls `islet_store.run_build` / `islet_build` when
+there is no visiting payer. That generic RPC is not covered by these named island wrappers.
+The old Captain/session paths likewise require the global managed-profile guard. Existing
+route refusal mapping and those remaining mutation paths must be integrated before any
+new mode is activated; this package does not register or change route dispatch.
+
 The existing building/layout/health schema remains authoritative. Additional perimeter placement rules, if introduced by another accepted version, need a matching trusted manifest/guard before those new offers are enabled; this task does not grant land or invent placement rights.
 
 ## Checks and acceptance
@@ -94,3 +108,9 @@ pause, preserving the exact receipt while withholding current state. A valid cat
 loaded with 700,000-coin levels supports discounted 630,000-coin build and upgrade,
 stores the exact 1,260,000 total and refunds half the actual basis. Nonfinite, fractional
 and negative totals are rejected; a wide legacy bookkeeping total cannot inflate a refund.
+
+After the current-main compatibility merge, **135 real PostgreSQL checks** passed in
+10.35 seconds and **51 focused Python checks** passed. New cases cover managed actors on
+legacy build/upgrade targets, preserved unadopted legacy behavior, and actual blocked-lock
+interleavings with personal adoption and respec. New committed transition races use their
+own disposable cluster, so their records cannot change other tests' global counts.

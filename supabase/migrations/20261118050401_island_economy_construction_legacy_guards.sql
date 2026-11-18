@@ -26,6 +26,25 @@ begin
 end;
 $$;
 
+-- Serialize old construction with global personal adoption/respec. The wallet lock
+-- precedes the personal anchor, and the preserved alias only reenters those locks.
+create or replace function public.island_construction_legacy_actor_allowed_locked(p_actor_id uuid)
+returns boolean language plpgsql volatile security definer set search_path = '' as $$
+begin
+  perform 1 from public.wallets where player_id = p_actor_id for update;
+  if not found then return true; end if;
+  perform public.personal_captain_legacy_guard_locked(p_actor_id);
+  return true;
+exception when raise_exception then
+  if sqlerrm = 'personal_captain_managed' then return false; end if;
+  raise;
+end;
+$$;
+comment on function public.island_construction_legacy_actor_allowed_locked(uuid) is
+  'Private legacy-wallet then personal-anchor gate. Managed actors require an aware construction path; no old role price may bypass the global Engineer commitment.';
+revoke all on function public.island_construction_legacy_actor_allowed_locked(uuid)
+  from public, anon, authenticated, service_role;
+
 -- Admission and a legacy build serialize before the old wallet locks.
 create or replace function public.island_build(
   p_player_id uuid, p_island_owner uuid, p_plot text, p_building_type text,
@@ -35,6 +54,9 @@ begin
   perform public.island_treasury_lock_scope(p_island_owner);
   if exists (select 1 from public.island_economy_state where island_owner = p_island_owner) then
     return jsonb_build_object('status','refused','reason','economy_context_required');
+  end if;
+  if not public.island_construction_legacy_actor_allowed_locked(p_player_id) then
+    return jsonb_build_object('status','refused','reason','captain_context_required');
   end if;
   return public.island_build_legacy_personal(p_player_id,p_island_owner,p_plot,
     p_building_type,p_action_uid,p_price);
@@ -52,6 +74,9 @@ begin
   perform public.island_treasury_lock_scope(p_island_owner);
   if exists (select 1 from public.island_economy_state where island_owner = p_island_owner) then
     return jsonb_build_object('status','refused','reason','economy_context_required');
+  end if;
+  if not public.island_construction_legacy_actor_allowed_locked(p_player_id) then
+    return jsonb_build_object('status','refused','reason','captain_context_required');
   end if;
   return public.island_upgrade_legacy_personal(p_player_id,p_island_owner,p_plot,
     p_action_uid,p_prices,p_unlocked_level);
