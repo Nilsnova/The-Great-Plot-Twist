@@ -4,7 +4,7 @@ import {decodeRasterSheet} from './village-decode.js';
 export const DECODE_BUDGET = 12 * 2 ** 20;
 const positive = n => Number.isInteger(n) && n > 0;
 function validateSheet(sheet) {
-  if (!sheet || !/^village\/[a-z0-9][a-z0-9._/-]*\.png$/i.test(sheet.file ?? '') || sheet.file.split('/').includes('..')
+  if (!sheet || !/^village\/[a-z0-9][a-z0-9._/-]*\.(?:png|webp)$/i.test(sheet.file ?? '') || sheet.file.split('/').includes('..')
       || !positive(sheet.width) || !positive(sheet.height) || Math.max(sheet.width, sheet.height) > 2048) throw new Error('Invalid local world-art sheet.');
   return sheet.width * sheet.height * 4;
 }

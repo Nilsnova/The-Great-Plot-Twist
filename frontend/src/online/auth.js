@@ -23,7 +23,7 @@ async function finishSdkSignOut(record) {
 }
 
 export function createAuth({session = defaultSession, storage = createAuthStorage(),
-  createClient, loadClient = () => import('@supabase/supabase-js'),
+  createClient, loadClient = async () => ({createClient: (await import('./supabase-sdk.js')).createAuthClient}),
   supabaseUrl = import.meta.env.VITE_SUPABASE_URL,
   publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
   redirect = url => globalThis.location.assign(url), href = () => globalThis.location?.href,

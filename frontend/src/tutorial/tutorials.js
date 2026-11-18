@@ -29,7 +29,7 @@
 //   tutorials.active       an unlock card is open (the game pauses walking, like any card)
 import {GUIDE_STEPS, GUIDE_TITLE, applyGuideEvent, guideCaption, guideCurrent, guideStart, guideView, skipGuideStep} from '../ui/first-quests.js';
 import {GUIDE_EVENTS, BUILD_CARD_OPENED, HUD_OPENED, PLAYER_MOVED, WAVE_BEGAN} from '../ui/quest-events.js';
-import {gameKey} from '../narrator/logic.js';
+import {gameKey} from '../narrator/game-key.js';
 import {getPreferences, onPreferences as watchPreferences} from '../settings/preferences.js';
 import {cardById, cardsBetween, cardsOpenAt, cardText} from './unlock-cards.js';
 import {createTutorialMemory} from './memory.js';
