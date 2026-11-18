@@ -38,12 +38,15 @@ dispatch that identity to the arsenal lifecycle under the same transaction; cano
 releases pending copies even if every client is gone. Owner deletion remains separate scope.
 Retained slot and control leases also carry a connection generation: reconnect advances it,
 and old disconnect/input/withdrawal callbacks cannot affect the new connection. The future
-atomic adapter must keep both generations synchronized and resolve operation retries from
+atomic adapter must keep both generations synchronized, apply the same trusted disconnect
+clock/deadline to the controller and retained slot, and resolve operation retries from
 durable receipts before checking the current generation.
 
-The agreed disconnect grace is 60 seconds. Leadership stays with an eligible connected leader;
-when succession is necessary, choose the eligible connected member with the earliest start
-of their current continuous activity interval, breaking exact ties by stable player ID.
+The agreed disconnect grace is 60 seconds for both a retained Captain slot and session
+leadership. An eligible current leader retains leadership while connected or strictly before
+their trusted disconnect deadline. At the deadline, choose the eligible connected member
+with the earliest start of their current continuous activity interval, breaking exact ties
+by stable player ID. Explicit departure or lost membership revokes leadership immediately.
 Reconnection starts a new activity interval. These rules rely on trusted session state,
 not browser presence. A pause is a between-reservation session setting and never changes a
 wave clock, combat state or financial settlement deadline.
@@ -60,9 +63,10 @@ wave clock, combat state or financial settlement deadline.
 - Explicit leave immediately rejects old commands, including after another session is acquired.
 - Expiring the last retained Captain closes the wave as abandoned, including with no browser;
   canonical closure is immutable and late victory cannot reopen it.
-- Leader succession considers only connected sessions from the trusted eligible membership
-  set, ordered by continuous activity then player ID. Break/auto-next control never grants
-  reset or treasury authority.
+- Leader retention honors the 60-second absence boundary; explicit departure or membership
+  loss revokes immediately. Successors come only from connected eligible sessions, ordered
+  by continuous activity then player ID. Repeated disconnect messages cannot extend grace.
+  Break/auto-next control never grants reset or treasury authority.
 
 Run `cd backend && uv run pytest -q server/tests/test_wave_session_*.py`,
 `cd backend && uv run ruff check .` and `git diff --check`. Run existing relevant wave
@@ -73,7 +77,7 @@ until the prerequisite persistence and integration implementations exist.
 ## Actual local verification
 
 - Session domain tests: `uv run pytest -q server/tests/test_wave_session_lifecycle.py
-  server/tests/test_wave_session_control.py` — **35 passed**.
+  server/tests/test_wave_session_control.py` — **43 passed**, including leadership-grace boundaries.
 - Existing compatibility suites: `uv run pytest -q server/tests/test_wave_routes.py
   server/tests/test_wave_recovery_routes.py server/tests/test_wave_recovery_transport.py
   server/tests/test_wave_revive_routes.py server/tests/test_wave_rules.py
