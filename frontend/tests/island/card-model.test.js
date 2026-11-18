@@ -38,6 +38,22 @@ describe('build card (TOWER-DEFENSE.md §2, §9)', () => {
     expect(paths.tree.detail).toMatchObject({action: {type: 'tree', path: 'a', tier: 1}, disabled: false});
   });
 
+  it('keeps upgrades disabled with a health-load helper until canonical health is ready', () => {
+    const recovery = {recoveryVersion: 1, waveProtocol: 2, islandEpoch: '32345678-1234-4234-8234-123456789abc',
+      waveId: null, displayPhase: 'between_waves', repairWindow: 'between_waves', structures: [
+        {spot: 'cannon_1', instanceId: '22345678-1234-4234-8234-123456789abc', kind: 'cannon', level: 1,
+          hpUnits: 1_000_000, maxHP: 90, fixedPrice: 45, repairSeq: 0}]};
+    const card = recoveryStatus => buildCardModel({spotId: 'cannon_1', slot: 'tower', spot: tower(true), coins: 10_000,
+      unlocks: wave3, campaign: atWave(50), treePicked: 'level', recoveryState: recovery, recoveryStatus});
+
+    for (const status of ['loading', 'error']) {
+      expect(card(status)).toMatchObject({button: 'Upgrade', disabled: true, reason: 'Wait until building health has loaded.',
+        tree: {detail: {action: {type: 'upgrade'}, disabled: true, reason: 'Wait until building health has loaded.'}}});
+    }
+    expect(card('ready')).toMatchObject({button: 'Upgrade', disabled: false, reason: '',
+      tree: {detail: {action: {type: 'upgrade'}, disabled: false, reason: ''}}});
+  });
+
   it('an empty tower spot offers the unlocked kinds, one line and price each', () => {
     const start = buildCardModel({spotId: 'cannon_1', slot: 'tower', spot: tower(), coins: 100, unlocks: fresh});
     expect(start).toMatchObject({mode: 'choose', title: 'Tower spot', soon: '', coins: 'You have 🪙 100'});

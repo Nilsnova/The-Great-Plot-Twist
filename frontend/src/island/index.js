@@ -500,7 +500,8 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     // On a friend's island you build with your own coins (and your own unlocks); it stays theirs.
     const island = target(), spot = island?.spots.find(item => item.id === spotId) ?? null;
     const recoveryEnabled = recoveryControlsOn() && !!spot?.built && ['wall', 'cannon', 'mortar', 'harpoon', 'culverin', 'swivel'].includes(spot.kind);
-    const recoveryReady = recoveryEnabled && recoveryPolicyOn() && recoveryIslandCode === island?.code && !!recoveryState;
+    const recoveryReady = recoveryEnabled && recoveryStatus === 'ready' && recoveryPolicyOn()
+      && recoveryIslandCode === island?.code && !!recoveryState;
     const recoveryRow = recoveryReady ? recoveryState.structures.find(item => item.spot === spotId) : null;
     const replayActive = !!recoveryCombat && flow.current?.wave?.waveId === recoveryCombat.waveId;
     const live = recoveryReady && replayActive
@@ -684,7 +685,11 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       if (disposed || askedId !== recoveryReadId || askedCode !== target()?.code) return;
       if (!answer.ok) {
         if (answer.code === 'feature_off') {
-          recoveryState = null; recoveryIslandCode = askedCode; recoveryStatus = 'disabled'; clearRecoveryError();
+          const persistedV1 = (recoveryState?.recoveryVersion === 1 && recoveryIslandCode === askedCode)
+            || target()?.recoveryVersion === 1;
+          recoveryIslandCode = askedCode;
+          if (persistedV1) { recoveryStatus = 'error'; setRecoveryReadError(answer.code); }
+          else { recoveryState = null; recoveryStatus = 'disabled'; clearRecoveryError(); }
         } else {
           recoveryIslandCode = askedCode; recoveryStatus = 'error'; setRecoveryReadError(answer.code);
         }

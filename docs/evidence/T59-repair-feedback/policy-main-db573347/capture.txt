@@ -1,0 +1,9 @@
+
+ RUN  v5.1.0 /workspace/recovery-policy-fallback/frontend
+
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 9 skipped (10)
+   Start at  13:45:47
+   Duration  7.93s (tests 73%, import 23%, transform 4%)
+
