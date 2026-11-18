@@ -43,8 +43,10 @@ Hosted multiplayer and deployment verification remain separate human review work
   and 12 protected lines, with no suspect elimination data. Log: `/tmp/cw1-build.log`.
 - `cd frontend && node scripts/report-budget.js --check`: passed; initial
   JavaScript 18,899 / 21,080 bytes, CSS 9,410 / 12,000 bytes. Log: `/tmp/cw1-budget.log`.
-- `git diff --check` and local Markdown file-target checks passed. Root coordinates
-  the full frontend suite and independent review; neither is claimed here.
+- `cd frontend && npm test -- --maxWorkers=2`: **348 files / 3,853 tests passed** in **561.03 s**.
+- Independent agent review found no actionable issues and separately reran the 15 new regressions.
+- `git diff --check`, local Markdown file-target checks and the committed-diff secret scan passed.
+- Draft PR: [#463](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/463). Human explain-back, peer approval and hosted multiplayer/deployment verification remain.
 - The [before/after diagnostic screenshots](../docs/evidence/CW1-scattershot/README.md)
   at 1280 × 720 and 375 × 812 show the actual baseline/current simulator outputs
   from identical inputs. These are labeled reports, not the game UI.
