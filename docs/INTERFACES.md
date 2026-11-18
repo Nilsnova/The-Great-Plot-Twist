@@ -1970,6 +1970,35 @@ refusals. A missing/malformed receipt RPC is an error, never permission to charg
 again. Models and status mappings live in [the route](../backend/server/routes/island_walls.py)
 and [service](../backend/server/island/wall_build.py).
 
+### Fresh ordinary original-wall purchases (VIS68 candidate)
+
+The public `POST /api/island/build` shape is unchanged. Fresh purchases of
+`wall_1`–`wall_12`, on an own or shared island and under either saved wall policy,
+use the existing scenery clearance rule. The server derives the displayed
+effective coordinate from one trusted snapshot, validates it, then calls the
+guarded `islet_build` or `island_build` overload with five additional mandatory
+internal arguments: `p_x_half`, `p_z_half`, `p_seen`,
+`p_expected_rule_version`, `p_expected_capacity`. Non-wall calls retain their
+original signatures.
+
+The additive candidate migration
+`20261118060000_wall_single_build_clearance.sql` is required **before deploying
+that backend**; it has not been applied live by this work. Missing overloads are
+an error, with no fallback to an unchecked purchase. The service-only wrapper
+locks the payer wallet and then the owner island, revalidates membership and
+compares the complete raw layout and policy. A fresh purchase materializes only
+its checked effective cell and pays through the existing purchase function in
+one bounded subtransaction; a refusal rolls that cell change back too.
+
+A fresh original-wall INSERT requires exact transaction-local proof from this
+wrapper or the existing positioned-chain transaction, plus static scenery
+clearance. Calling the old service-only signatures for a **fresh** original wall
+without that proof intentionally fails closed. Old UID reconciliation,
+already-standing refusals, existing rows, upgrades and reads remain unchanged;
+they do not insert a fresh wall. Normal proof is restored after success and
+rolled back on refusal/error. The fourteen SQL reserves must remain identical
+to the Python catalogue and client data; disposable checks assert that parity.
+
 ### Wave capability and frozen state
 
 `POST /api/waves/start` adds strict integer `wallClientVersion` (0 or 1; missing

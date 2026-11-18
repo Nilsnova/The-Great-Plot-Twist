@@ -102,12 +102,6 @@ def test_sql_obstacle_catalogue_exactly_matches_the_trusted_source(database):
         )
     )
     assert actual_client == expected
-    defaults = {
-        row[0]: row[2:4]
-        for row in json.loads(layout.CONTENT_FILE.read_text())["spots"]
-        if row[1] == "wall"
-    }
-    assert call(database, "select public.island_wall_default_positions()") == defaults
 
 
 def test_guarded_overloads_are_service_only(database):
@@ -179,7 +173,7 @@ def test_original_unguarded_signatures_also_cannot_insert_a_fresh_overlapping_wa
 ):
     ready(database, 0, TREE)
     with (
-        pytest.raises(psycopg.errors.CheckViolation, match="wall_scenery_overlap"),
+        pytest.raises(psycopg.errors.CheckViolation, match="wall_position_check_required"),
         database.transaction(),
     ):
         if friend:
@@ -201,6 +195,34 @@ def test_original_unguarded_signatures_also_cannot_insert_a_fresh_overlapping_wa
 
 
 @pytest.mark.parametrize("friend", [False, True])
+def test_old_signature_cannot_bypass_effective_legacy_clearance(database, friend):
+    ready(database, 0, (-3.5, 4))
+    effective = layout.positions_of(layout.island_layout(), {"wall_1": (-3.5, 4)})["wall_1"]
+    assert effective == (-3, 3)
+    assert call(database, "select public.island_wall_scenery_clear(-3.5,4)") is True
+    assert call(database, "select public.island_wall_scenery_clear(-3,3)") is False
+    with (
+        pytest.raises(psycopg.errors.CheckViolation, match="wall_position_check_required"),
+        database.transaction(),
+    ):
+        if friend:
+            call(
+                database,
+                "select public.island_build(%s,%s,'wall_1','wall','direct-settled-01',10)",
+                FRIEND,
+                OWNER,
+            )
+        else:
+            call(
+                database,
+                "select public.islet_build(%s,'wall_1','wall',10::bigint,0,0,"
+                "'island:direct-settled-01')",
+                OWNER,
+            )
+    assert balance(database, FRIEND if friend else OWNER) == 100
+
+
+@pytest.mark.parametrize("friend", [False, True])
 def test_failed_payment_rolls_back_fresh_effective_coordinate_materialization(database, friend):
     # This old off-lane raw cell displays at a different canonical legacy lane site.
     ready(database, 0, (-13, -12))
@@ -209,6 +231,7 @@ def test_failed_payment_rolls_back_fresh_effective_coordinate_materialization(da
     as_owner(database)
     database.execute("update public.wallets set balance=5 where player_id=%s", (actor,))
     as_server(database)
+    call(database, "select set_config('app.wall_single_build','outer-context',true)")
     if friend:
         assert purchase(database, True)["reason"] == "insufficient_funds"
     else:
@@ -219,6 +242,89 @@ def test_failed_payment_rolls_back_fresh_effective_coordinate_materialization(da
             purchase(database)
     assert snapshot(database)["rows"] == before["rows"]
     assert balance(database, actor) == 5
+    assert call(database, "select current_setting('app.wall_single_build',true)") == "outer-context"
+
+
+@pytest.mark.parametrize("change", ["malformed", "owner", "plot", "xHalf", "ref"])
+def test_missing_or_mismatched_transaction_proof_cannot_authorize_a_fresh_wall(database, change):
+    ready(database)
+    proof = {
+        "owner": str(OWNER),
+        "payer": str(OWNER),
+        "plot": "wall_1",
+        "ref": "island:proof-wall-01",
+        "xHalf": -37,
+        "zHalf": -2,
+    }
+    if change == "malformed":
+        value = "not-json"
+    else:
+        proof[change] = {
+            "owner": str(FRIEND),
+            "plot": "wall_2",
+            "xHalf": -36,
+            "ref": "island:other-proof-01",
+        }[change]
+        value = json.dumps(proof)
+    call(database, "select set_config('app.wall_single_build',%s,true)", value)
+    with (
+        pytest.raises(psycopg.errors.CheckViolation, match="wall_position_check_required"),
+        database.transaction(),
+    ):
+        call(
+            database,
+            "select public.islet_build(%s,'wall_1','wall',10::bigint,0,0,'island:proof-wall-01')",
+            OWNER,
+        )
+    assert balance(database, OWNER) == 100
+
+
+def test_success_restores_prior_proof_and_cannot_authorize_a_later_old_signature(database):
+    ready(database)
+    call(database, "select set_config('app.wall_single_build','outer-context',true)")
+    assert purchase(database)["status"] == "done"
+    assert call(database, "select current_setting('app.wall_single_build',true)") == "outer-context"
+    with (
+        pytest.raises(psycopg.errors.CheckViolation, match="wall_position_check_required"),
+        database.transaction(),
+    ):
+        call(
+            database,
+            "select public.islet_build(%s,'wall_2','wall',10::bigint,0,0,'island:later-proof-01')",
+            OWNER,
+        )
+    assert balance(database, OWNER) == 90
+
+
+def test_existing_positioned_batch_context_still_authorizes_an_original_wall(database):
+    ready(database, 1)
+    epoch = UUID(int=16803)
+    database.execute(
+        "insert into public.island_recovery_state(island_owner,reset_epoch) values(%s,%s) "
+        "on conflict(island_owner) do update set reset_epoch=excluded.reset_epoch",
+        (OWNER, epoch),
+    )
+    before = snapshot(database)
+    call(database, "select set_config('app.wall_single_build','outer-context',true)")
+    intent = {
+        "placements": [{"spot": "wall_1", "x": SAFE[0], "z": SAFE[1]}],
+        "quotedTotal": 10,
+        "islandEpoch": str(epoch),
+    }
+    items = [{"spot": "wall_1", "x_half": -37, "z_half": -2, "price": 10}]
+    answer = call(
+        database,
+        "select public.island_wall_build(%s,%s,'normal-batch-01',%s::jsonb,"
+        "%s::jsonb,%s::jsonb,null,0)",
+        OWNER,
+        OWNER,
+        json.dumps(intent),
+        json.dumps(items),
+        json.dumps(before["rows"]),
+    )
+    assert answer["status"] == "done" and balance(database, OWNER) == 90
+    assert call(database, "select current_setting('app.wall_single_build',true)") == "outer-context"
+    assert call(database, "select current_setting('app.positioned_wall_build',true)") in (None, "")
 
 
 def test_checked_policy_and_complete_raw_layout_are_both_fenced(database):

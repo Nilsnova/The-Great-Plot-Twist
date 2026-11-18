@@ -22,14 +22,6 @@ returns jsonb language sql immutable security invoker set search_path = '' as $$
   ]$obstacles$::jsonb;
 $$;
 
-create or replace function public.island_wall_default_positions()
-returns jsonb language sql immutable security invoker set search_path = '' as $$
-  select '{"wall_1":[-18.5,-1],"wall_2":[19,1],"wall_3":[19,-1],
-    "wall_4":[-1,17],"wall_5":[1,17],"wall_6":[-18.5,-3],
-    "wall_7":[8.5,2],"wall_8":[0.5,9.5],"wall_9":[-1.5,9.5],
-    "wall_10":[-9.5,-1],"wall_11":[-9.5,1],"wall_12":[8.5,0]}'::jsonb;
-$$;
-
 create or replace function public.island_wall_scenery_clear(p_x numeric, p_z numeric)
 returns boolean language sql immutable strict security invoker set search_path = '' as $$
   select not exists (
@@ -48,16 +40,35 @@ $$;
 -- Do not acquire an owner lock here after legacy islet_build has taken its islet lock.
 create or replace function public.island_original_wall_scenery_guard()
 returns trigger language plpgsql security invoker set search_path = '' as $$
-declare v_x numeric; v_z numeric; v_default jsonb;
+declare v_x numeric; v_z numeric; v_single jsonb; v_chain jsonb; v_proven boolean;
 begin
   if new.building_type <> 'wall'
      or coalesce(public.island_wall_number(new.plot),0) not between 1 and 12 then return new; end if;
   select x_half/2.0,z_half/2.0 into v_x,v_z from public.island_layout
     where island_owner=new.player_id and plot=new.plot;
-  if not found then
-    v_default := public.island_wall_default_positions()->new.plot;
-    v_x := (v_default->>0)::numeric; v_z := (v_default->>1)::numeric;
-  end if;
+  if not found then raise check_violation using message='wall_position_check_required'; end if;
+  begin v_single := nullif(current_setting('app.wall_single_build',true),'')::jsonb;
+    exception when invalid_text_representation then v_single := null; end;
+  begin v_chain := nullif(current_setting('app.positioned_wall_build',true),'')::jsonb;
+    exception when invalid_text_representation then v_chain := null; end;
+  v_proven := coalesce(jsonb_typeof(v_single)='object'
+    and (v_single->>'payer') ~ '^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$'
+    and length(new.ref) between 1 and 120
+    and v_single=jsonb_build_object('owner',new.player_id::text,'payer',v_single->>'payer',
+      'plot',new.plot,'ref',new.ref,'xHalf',v_x*2,'zHalf',v_z*2),false);
+  v_proven := v_proven or coalesce(jsonb_typeof(v_chain)='object'
+    and v_chain->>'owner'=new.player_id::text
+    and v_chain=jsonb_build_object('owner',new.player_id::text,'payer',v_chain->>'payer',
+      'actionUid',v_chain->>'actionUid','plots',v_chain->'plots')
+    and (v_chain->>'payer') ~ '^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$'
+    and (v_chain->>'actionUid') ~ '^[A-Za-z0-9_-]{8,64}$'
+    and case when jsonb_typeof(v_chain->'plots')='array' then
+      jsonb_array_length(v_chain->'plots') between 1 and 32 and v_chain->'plots' ? new.plot
+      else false end
+    and new.ref='island:'||(v_chain->>'actionUid')||':'||new.plot
+    and exists(select 1 from public.island_wall_policy where island_owner=new.player_id
+      and rule_version=1 and capacity=128),false);
+  if not v_proven then raise check_violation using message='wall_position_check_required'; end if;
   if not public.island_wall_scenery_clear(v_x,v_z) then
     raise check_violation using message='wall_scenery_overlap';
   end if;
@@ -69,17 +80,18 @@ create trigger island_original_wall_scenery_guard before insert on public.islet_
   for each row execute function public.island_original_wall_scenery_guard();
 
 create or replace function public.island_wall_single_build(
-  p_player_id uuid,p_island_owner uuid,p_plot text,p_price bigint,p_action_uid text,
+  p_player_id uuid,p_island_owner uuid,p_plot text,p_price bigint,p_ref text,
   p_friend boolean,p_x_half integer,p_z_half integer,p_seen jsonb,
   p_expected_rule_version integer,p_expected_capacity integer
 )
 returns jsonb language plpgsql security invoker set search_path = '' as $$
-declare v_now jsonb; v_reply jsonb; v_detail text;
+declare v_now jsonb; v_reply jsonb; v_detail text; v_previous text;
 begin
   if p_player_id is null or p_island_owner is null or p_plot is null
      or p_plot !~ '^wall_([1-9]|1[0-2])$'
      or p_price is null or p_price not between 1 and 2147483647
-     or p_action_uid is null or p_action_uid !~ '^[A-Za-z0-9_-]{8,64}$'
+     or p_ref is null or length(p_ref) not between 1 and 120
+     or (p_friend and p_ref !~ '^island:[A-Za-z0-9_-]{8,64}$')
      or p_friend is null or (not p_friend and p_player_id<>p_island_owner)
      or p_x_half is null or p_z_half is null
      or abs(p_x_half::bigint)>60 or abs(p_z_half::bigint)>60
@@ -97,12 +109,12 @@ begin
   end if;
   -- Original replay and already-standing refusals precede today's geometry and CAS.
   if exists(select 1 from public.wallet_transactions where player_id=p_player_id
-       and reason='building_purchase' and ref='island:'||p_action_uid)
+       and reason='building_purchase' and ref=p_ref)
      or exists(select 1 from public.islet_buildings
        where player_id=p_island_owner and plot=p_plot) then
     return case when p_friend then
-      public.island_build(p_player_id,p_island_owner,p_plot,'wall',p_action_uid,p_price::integer)
-      else public.islet_build(p_player_id,p_plot,'wall',p_price,0,0,'island:'||p_action_uid) end;
+      public.island_build(p_player_id,p_island_owner,p_plot,'wall',substring(p_ref from 8),p_price::integer)
+      else public.islet_build(p_player_id,p_plot,'wall',p_price,0,0,p_ref) end;
   end if;
   v_now := public.island_wall_layout_read(p_island_owner);
   if (v_now->>'ruleVersion')::integer<>p_expected_rule_version
@@ -116,17 +128,21 @@ begin
   -- A legacy off-lane raw row may display at a different effective lane cell.
   -- Persist only this fresh purchase's checked cell. A refused JSON reply must
   -- roll that materialization back too, so use a bounded subtransaction.
+  v_previous := current_setting('app.wall_single_build',true);
   begin
+    perform set_config('app.wall_single_build',jsonb_build_object('owner',p_island_owner::text,
+      'payer',p_player_id::text,'plot',p_plot,'ref',p_ref,'xHalf',p_x_half,'zHalf',p_z_half)::text,true);
     insert into public.island_layout(island_owner,plot,x_half,z_half,moved_by)
       values(p_island_owner,p_plot,p_x_half,p_z_half,p_player_id)
       on conflict(island_owner,plot) do update set x_half=excluded.x_half,
         z_half=excluded.z_half,moved_by=excluded.moved_by,moved_at=now();
     v_reply := case when p_friend then
-      public.island_build(p_player_id,p_island_owner,p_plot,'wall',p_action_uid,p_price::integer)
-      else public.islet_build(p_player_id,p_plot,'wall',p_price,0,0,'island:'||p_action_uid) end;
+      public.island_build(p_player_id,p_island_owner,p_plot,'wall',substring(p_ref from 8),p_price::integer)
+      else public.islet_build(p_player_id,p_plot,'wall',p_price,0,0,p_ref) end;
     if v_reply->>'status' is distinct from 'done' then
       raise exception using errcode='P6801',message='wall_purchase_refused',detail=v_reply::text;
     end if;
+    perform set_config('app.wall_single_build',coalesce(v_previous,''),true);
     return v_reply;
   exception when sqlstate 'P6801' then
     get stacked diagnostics v_detail=pg_exception_detail;
@@ -145,12 +161,11 @@ create or replace function public.islet_build(
 returns jsonb language plpgsql security invoker set search_path = '' as $$
 begin
   if p_building_type is distinct from 'wall' or p_timber is distinct from 0
-    or p_starter_timber is distinct from 0 or p_ref is null
-    or p_ref !~ '^island:[A-Za-z0-9_-]{8,64}$' then
+    or p_starter_timber is distinct from 0 or p_ref is null then
     raise exception 'bad_wall_single_build';
   end if;
   return public.island_wall_single_build(p_player_id,p_player_id,p_plot,p_coins,
-    substring(p_ref from 8),false,p_x_half,p_z_half,p_seen,p_expected_rule_version,p_expected_capacity);
+    p_ref,false,p_x_half,p_z_half,p_seen,p_expected_rule_version,p_expected_capacity);
 end;
 $$;
 create or replace function public.island_build(
@@ -162,17 +177,17 @@ returns jsonb language plpgsql security invoker set search_path = '' as $$
 begin
   if p_building_type is distinct from 'wall' then raise exception 'bad_wall_single_build'; end if;
   return public.island_wall_single_build(p_player_id,p_island_owner,p_plot,p_price,
-    p_action_uid,true,p_x_half,p_z_half,p_seen,p_expected_rule_version,p_expected_capacity);
+    'island:'||p_action_uid,true,p_x_half,p_z_half,p_seen,p_expected_rule_version,p_expected_capacity);
 end;
 $$;
 
-revoke all on function public.island_wall_scenery_obstacles(),public.island_wall_default_positions(),
+revoke all on function public.island_wall_scenery_obstacles(),
   public.island_wall_scenery_clear(numeric,numeric),public.island_original_wall_scenery_guard(),
   public.island_wall_single_build(uuid,uuid,text,bigint,text,boolean,integer,integer,jsonb,integer,integer),
   public.islet_build(uuid,text,text,bigint,integer,integer,text,integer,integer,jsonb,integer,integer),
   public.island_build(uuid,uuid,text,text,text,integer,integer,integer,jsonb,integer,integer)
   from public,anon,authenticated,service_role;
-grant execute on function public.island_wall_scenery_obstacles(),public.island_wall_default_positions(),
+grant execute on function public.island_wall_scenery_obstacles(),
   public.island_wall_scenery_clear(numeric,numeric),public.island_original_wall_scenery_guard(),
   public.island_wall_single_build(uuid,uuid,text,bigint,text,boolean,integer,integer,jsonb,integer,integer),
   public.islet_build(uuid,text,text,bigint,integer,integer,text,integer,integer,jsonb,integer,integer),

@@ -13,6 +13,7 @@ from server.tests.island_sql.test_islands_and_waves_sql import (  # noqa: E402
     add_players,
     as_owner,
     as_server,
+    build_with_friend,
     call,
     open_island,
     start,
@@ -659,12 +660,7 @@ def test_recovery_start_snapshots_db_wall_identity_and_legacy_effective_hp(datab
     add_players(database, OWNER)
     open_island(database, OWNER, "K7Q2M")
     as_server(database)
-    call(
-        database,
-        "select public.island_build(%s,%s,'wall_1','wall','wallbuild01',10)",
-        OWNER,
-        OWNER,
-    )
+    build_with_friend(database, OWNER, OWNER, "wall_1", "wall", "wallbuild01")
     as_owner(database)
     database.execute(
         "update public.islet_buildings set wall_health=40,"
