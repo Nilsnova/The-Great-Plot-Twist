@@ -45,7 +45,8 @@ class Wave:
     basis: dict
 
 
-def ready_wave(connection, *, played=5, countdown=0, houses=False, engineer=False):
+def ready_wave(connection, *, played=5, countdown=0, houses=False, engineer=False,
+               snapshot_played=None):
     owner, member, outsider, treasury, _ = initialized(connection)
     as_server(connection)
     rpc(connection, "personal_captain_initialize", member, owner, keys(treasury)[1],
@@ -74,7 +75,8 @@ def ready_wave(connection, *, played=5, countdown=0, houses=False, engineer=Fals
         )
     roster = []
     for player in (owner, member):
-        frozen = private(connection, "personal_captain_attach_wave_locked", player, wave_id, played)
+        frozen = private(connection, "personal_captain_attach_wave_locked", player, wave_id,
+                         played if snapshot_played is None else snapshot_played)
         roster.append({"playerId": str(player), "controllingSessionId": str(uuid4()),
                        "engineerCommitmentId": frozen["engineerCommitmentId"]})
     basis = freeze_reward_basis(load_island(), played_wave=played, seed=42,
@@ -147,6 +149,46 @@ def test_two_participants_produce_one_house_boss_reward_and_separate_receipts(da
         "select count(*) from public.island_treasury_transactions "
         "where account_id=%s and reason='pirate_loot'", (keys(wave.treasury)[0],),
     ).fetchone() == (1,)
+
+
+def test_freeze_refuses_a_personal_snapshot_for_another_played_wave_atomically(database):
+    with pytest.raises(psycopg.Error, match="captain_snapshot_conflict"), database.transaction():
+        wave = ready_wave(database, played=5, snapshot_played=6, engineer=True)
+        freeze(database, wave)
+    assert database.execute("select count(*) from public.island_wave_accounting where wave_id=%s",
+                            (wave.id,)).fetchone() == (0,)
+    assert database.execute("select count(*) from public.personal_captain_wave_snapshots "
+                            "where wave_id=%s", (wave.id,)).fetchone() == (0,)
+    assert database.execute("select count(*) from public.wave_runs where id=%s",
+                            (wave.id,)).fetchone() == (0,)
+
+
+@pytest.mark.parametrize("expired", [False, True])
+def test_new_participation_after_a_legacy_terminal_cannot_satisfy_engineer(database, expired):
+    wave = ready_wave(database, engineer=True)
+    freeze(database, wave)
+    assert finish(database, wave.owner, wave.id, False)["loot"] == 0
+    as_owner(database)
+    database.execute("update public.wave_runs set expired=%s where id=%s", (expired, wave.id))
+    expect_error(database, "wave_closed", confirm, wave, wave.owner)
+    assert database.execute("select count(*) from public.island_wave_participation_receipts "
+                            "where wave_id=%s", (wave.id,)).fetchone() == (0,)
+    closure = close(database, wave, "expired" if expired else "lost")
+    assert all(not item["confirmedParticipation"] for item in closure["completions"])
+    profile = private(database, "personal_captain_snapshot_locked", wave.owner)
+    assert profile["captain"]["engineerCommitment"]["id"] == wave.roster[0]["engineerCommitmentId"]
+
+
+def test_existing_confirmation_replays_after_terminal_and_normal_completion_is_preserved(database):
+    wave = ready_wave(database, engineer=True)
+    freeze(database, wave)
+    confirmed = confirm(database, wave, wave.owner)
+    assert finish(database, wave.owner, wave.id, False)["loot"] == 0
+    assert confirm(database, wave, wave.owner) == {**confirmed, "repeat": True}
+    assert close(database, wave, "lost")["outcome"] == "lost"
+    profile = private(database, "personal_captain_snapshot_locked", wave.owner)
+    assert profile["captain"]["engineerCommitment"] is None
+    assert confirm(database, wave, wave.owner) == {**confirmed, "repeat": True}
 
 
 def test_the_played_low_wave_and_unchanged_wager_reserve_determine_the_credit(database):

@@ -48,6 +48,8 @@ An additive `wallet_transactions` insert trigger rejects only legacy `pirate_loo
 
 A no-loot legacy defeat/expiry does not insert a wallet row, so the money trigger cannot stop that terminal metadata write. Canonical settlement also rejects a conflicting already-closed `wave_runs` result; an expired row cannot be called a normal defeat to satisfy an Engineer commitment. The later route/lifecycle conversion must still reject stale legacy writers before any new-mode state change.
 
+Before inserting shared accounting, freeze requires each exact immutable personal snapshot to match the player, wave, actual played-wave number and frozen Engineer commitment. A mismatched personal snapshot cannot create an accounting attempt that its completion hook could never close. Participation confirmation checks the locked `wave_runs` terminal fields as well as the immutable accounting timing/closure: a first acknowledgement after a no-loot legacy loss or expiry is refused. An exact acknowledgement already stored during combat still replays after termination and retains its valid normal-completion effect. These are helper validation guarantees; canonical live-session and outcome authorization still require the lifecycle integration below.
+
 Transaction order remains sorted island advisory scopes, originating account row, sorted personal anchors/state, island/admission/recovery rows, wave/domain rows, then receipts. Profile anchors use `FOR NO KEY UPDATE` so an unrelated legacy foreign-key `KEY SHARE` check does not create a wallet/island/profile lock cycle; the dedicated personal state still uses `FOR UPDATE`. Callers must take earlier locks before creating/updating a wave; these helpers do not authorize taking an earlier lock after an unprepared legacy mutation. Context/roster reads and Python validation are not a replacement for the encompassing SQL transaction.
 
 ## First tests and acceptance
@@ -87,6 +89,18 @@ Verified with `origin/main` at `f0c64442` integrated. Commands ran from `backend
 The Python and SQL tests first failed on the missing module/schema. Terminal-consistency counterexamples were also observed failing before their guards were implemented. The legacy-finish/freeze concurrency regression uses real separate connections at READ COMMITTED and the corrected personal-anchor locks; no test-only progression hook substitutes for MP-ECO-07.
 
 No live database, credentials, admission or deployment was used. Canonical route/HP/session integration, authenticated multi-client behavior, background expiry and explicit deletion/retention disposition remain unverified. This foundation does not mark the complete multiplayer economy or finish integration done.
+
+### Snapshot and terminal-confirmation follow-up
+
+The focused regression was observed first as **3 failed, 1 passed** on disposable PostgreSQL: wrong played-wave snapshot acceptance and first confirmation after normal loss/expiry failed the new expectations, while existing confirmation replay remained valid. After the guards, all four cases passed. The rejected bell transaction rolls back its wave, personal snapshots and shared accounting together; a rejected late acknowledgement creates no participation receipt and cannot satisfy Engineer.
+
+With the treasury operation-registry cutover correction included, the affected checks are:
+
+- `CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' --with pglast pytest -q server/tests/island_sql/test_wave_treasury_settlement_sql.py server/tests/island_sql/test_island_treasury_sql.py server/tests/island_sql/test_personal_captain_sql.py server/tests/island_sql/test_economy_operations_sql.py server/tests/island_sql/test_economy_operations_cutover_sql.py server/tests/island_sql/test_wave_crews_sql.py server/tests/island_sql/test_recovery_wave_end_sql.py`: **130 passed in 24.96s**, including all 70 migrations applied twice, real concurrency and cutover writers.
+- `uv run pytest -q server/tests/test_wave_economy.py server/tests/test_personal_captain.py server/tests/test_economy_operations.py server/tests/test_island_treasury.py`: **91 passed in 0.50s**.
+- Full `uv run ruff check .`, all **70** migration parses and `git diff --check`: passed.
+
+The earlier broad backend run remains the recorded baseline; this bounded SQL validation follow-up reran the affected suites above. The unintegrated lifecycle/deletion gates are unchanged.
 
 ## Reviewer
 

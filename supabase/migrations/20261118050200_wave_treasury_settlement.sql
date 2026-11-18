@@ -223,6 +223,13 @@ begin
   if (p_reward_basis->>'houseLevels')::numeric <> v_houses then
     raise exception 'wave_reward_houses_changed'; end if;
   for v_slot in select value from jsonb_array_elements(v_roster) loop
+    -- Personal completion must be closable from this exact immutable bell snapshot.
+    if not exists (select 1 from public.personal_captain_wave_snapshots
+      where player_id=(v_slot->>'playerId')::uuid and wave_id=p_wave_id
+        and played_wave=v_run.wave
+        and engineer_commitment_id is not distinct from
+          (v_slot->>'engineerCommitmentId')::uuid) then
+      raise exception 'captain_snapshot_conflict'; end if;
     if (v_slot->>'playerId')::uuid <> v_account.island_owner and not exists (
       select 1 from public.island_members where island_owner=v_account.island_owner
         and player_id=(v_slot->>'playerId')::uuid and left_at is null) then
@@ -245,7 +252,7 @@ create or replace function public.island_wave_confirm_participation_locked(
   p_wave_id uuid,p_player_id uuid,p_controlling_session_id uuid
 ) returns jsonb language plpgsql volatile security definer set search_path = '' as $$
 declare v_attempt public.island_wave_accounting; v_old public.island_wave_participation_receipts;
-  v_slot jsonb; v_personal jsonb; v_now timestamptz;
+  v_run public.wave_runs; v_slot jsonb; v_personal jsonb; v_now timestamptz;
 begin
   select * into v_attempt from public.island_wave_accounting where wave_id=p_wave_id;
   if not found then raise exception 'wave_accounting_missing'; end if;
@@ -253,7 +260,7 @@ begin
   perform 1 from public.island_economy_accounts where id=v_attempt.account_id for update;
   v_personal := public.personal_captain_lock_state_locked(p_player_id);
   perform 1 from public.islands where player_id=v_attempt.island_owner for update;
-  perform 1 from public.wave_runs where id=p_wave_id for update;
+  select * into v_run from public.wave_runs where id=p_wave_id for update;
   select value into v_slot from jsonb_array_elements(v_attempt.roster)
     where (value->>'playerId')::uuid=p_player_id;
   if not found or (v_slot->>'controllingSessionId')::uuid is distinct from p_controlling_session_id
@@ -265,6 +272,9 @@ begin
       raise exception 'not_in_wave'; end if;
     return jsonb_build_object('status','confirmed','repeat',true,'id',v_old.id);
   end if;
+  -- A no-loot legacy loss/expiry writes no financial row for the exclusion trigger.
+  if v_run.id is null or v_run.finished_at is not null or v_run.expired then
+    raise exception 'wave_closed'; end if;
   if v_personal#>>'{captain,assignmentWaveId}' is distinct from p_wave_id::text then
     raise exception 'not_in_wave'; end if;
   if p_player_id <> v_attempt.island_owner and not exists (select 1 from public.island_members
