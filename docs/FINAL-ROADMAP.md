@@ -165,7 +165,7 @@ independent human review remain. No change to the existing freeze or merge rules
 COC-02 follow-up (Johannes, draft): current-base management fit view is a bounded implementation slice for issue #143 and depends on COC-49/PR #192. The parent camera task remains open; see [specification](../specs/COC-02-village-overview.md). No merge or full editor-camera completion is claimed.
 
 
-BASE-02 working-camera slice (Johannes): bounded Zoom in/out, drag pan and Fit are implemented in [Draft #270](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/270), with [scope and evidence](../specs/BASE-02-working-camera.md). Focused camera/gesture tests pass; actual before/after and coordinated broader checks remain. This does not complete the full parent, future land bounds or physical-device testing. No merge.
+BASE-02 working-camera slice (Johannes): bounded Zoom in/out, drag pan and Fit are implemented in [Draft #270](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/270), with [scope and evidence](../specs/BASE-02-working-camera.md). Focused camera/gesture/mode tests: 30 passed; actual before/after interaction checks pass at both sizes. Coordinated broader checks remain. This does not complete the full parent, future land bounds or physical-device testing. No merge.
 
 
 WALL-26 (Johannes): [Draft PR #282](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/282) implements the quoted-run client/controller and unknown-outcome reconciliation for [#280](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/280). [Scope and exact evidence boundaries](../specs/WALL-26-builder-controller.md). Actual controls/ghost integration is WALL-27 #281; full/browser checks, captures and human review remain. No full-perimeter completion or merge is claimed.
