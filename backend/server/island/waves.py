@@ -487,6 +487,8 @@ async def finish_protocol2(
 
 
 def revive_refusal(refusal: Refusal) -> ApiError:
+    if refusal.reason == "economy_context_required":
+        return ApiError(409, "economy_context_required", "Reload this island's revival rules.")
     if refusal.reason == "client_update_required":
         return ApiError(409, "client_update_required", "Reload to help this captain up safely.")
     if refusal.reason == "action_conflict":

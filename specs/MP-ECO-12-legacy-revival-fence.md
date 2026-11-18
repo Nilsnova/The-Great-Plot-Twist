@@ -4,7 +4,7 @@
 >
 > **Who uses it:** the existing wave revival endpoints and disposable database acceptance tests.
 
-- **Status:** transaction fence verified locally; shared HTTP refusal projection and canonical free revival remain separate integrations.
+- **Status:** transaction fence and HTTP refusal projection verified locally; canonical free revival remains a separate integration.
 - **Issue:** [#502](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/502).
 - **Responsible teammate:** Ianno Hollensteiner (`Iannomh123456`). Coding assistance: Codex.
 
@@ -37,6 +37,11 @@ entry point. This adds no receipt conversion, refund, common operation root, wal
 table, browser privilege or new paid path. Existing security-invoker functions retain empty
 search paths and explicit service-only execution grants.
 
+The existing HTTP refusal mapper returns `409 economy_context_required` for this
+transaction refusal, telling the client to reload the island's revival rules.
+It does not turn the refused paid operation into a free revival or read a fresh
+personal balance after the refusal.
+
 ## Tests before implementation
 
 Run actual disposable PostgreSQL checks for protocol-1, protocol-2 and direct service charge
@@ -58,13 +63,14 @@ one-payment-per-fall, Tavern prices, event rollback and HTTP regressions passed.
 migrations parsed and applied twice in the scratch database; Ruff and diff checks passed.
 
 No client code changed and no frontend build or complete repository test suite was repeated
-for this SQL-only follow-up. The HTTP layer still needs to map the new refusal to its shared
-409 response. These tests do not prove a canonical Captain producer or free revival.
+for this SQL-only follow-up. The subsequent HTTP refusal integration passed all 37
+existing revival route checks, including the new shared-mode 409 regression, plus
+Ruff. These tests do not prove a canonical Captain producer or free revival.
 
 ## Boundary
 
 This fence does not implement free timed revival, prove a canonical fall, or accept client
 timing/HP as authority. Accepted fall identity, target-bound uninterrupted server-clock hold,
 frozen Medic stats and exact-current-fall event/receipt persistence still require the actual
-canonical producer integration. No shared wave Python/JavaScript dispatch, paid reconciliation,
+canonical producer integration. No new shared wave Python/JavaScript dispatch, paid reconciliation,
 live migration, activation, deployment or publication is part of this package.
