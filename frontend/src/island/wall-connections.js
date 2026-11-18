@@ -5,7 +5,6 @@ import {projectPoint} from '../world/art.js';
 import {FOOTPRINTS} from './placement.js';
 import {texturedWallBatches, wallVisualRows} from './wall-batches.js';
 import {spriteMaterial} from '../art/textures.js';
-import {makeWallSelection} from './wall-selection.js';
 
 export function wallTopology(spots = []) {
   const walls = spots.filter(item => item?.built === true && item.kind === 'wall' && typeof item.id === 'string'
@@ -28,11 +27,7 @@ export function makeWallConnections(root) {
   const group = new THREE.Group(); group.name = 'island-wall-connections'; root.add(group);
   let material = new THREE.MeshBasicMaterial({vertexColors: true, transparent: true, side: THREE.DoubleSide, depthTest: false, depthWrite: false, toneMapped: false});
   let key = null, disposed = false, art = null, lastSpots = [], posts = new Set(), current = {links: [], connected: new Set()};
-  const selectedWall = makeWallSelection(root); let selectedId = null;
-  function drawSelection() {
-    const layers = art && posts.has(selectedId) ? texturedWallBatches(current.links, wallVisualRows(lastSpots), art, selectedId) : null;
-    selectedWall.show(layers, material, selectedId); selectedWall.visible(group.visible);
-  }
+  let selectedId = null;
   const readLinks = () => current.links.map(link => ({...link}));
   // Diagnostics inspect logical contacts independently of how many painter-layer meshes draw them.
   Object.defineProperty(group, 'wallLinks', {get: readLinks});
@@ -43,18 +38,18 @@ export function makeWallConnections(root) {
     lastSpots = spots; current = wallTopology(spots);
     const visual = art ? wallVisualRows(spots) : [];
     posts = new Set(visual.map(row => row.id));
-    const next = JSON.stringify([current.links, visual]);
+    const next = JSON.stringify([current.links, visual, selectedId]);
     if (key === next) return current;
     key = next; clear();
     if (art) {
-      for (const [order, {positions, uvs, indices}] of texturedWallBatches(current.links, visual, art)) {
+      // Selection retains its real tier post at the ordinary depth; the world owns the tile bracket.
+      for (const [order, {positions, uvs, indices}] of texturedWallBatches(current.links, visual, art, {selectedId})) {
         const geometry = new THREE.BufferGeometry();
         geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
         geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2)); geometry.setIndex(indices);
         const mesh = new THREE.Mesh(geometry, material); mesh.name = `wall-art-layer:${order}`;
         mesh.renderOrder = order; mesh.frustumCulled = false; mesh.raycast = () => {}; group.add(mesh);
       }
-      drawSelection();
       return current;
     }
     const layers = new Map();
@@ -90,8 +85,8 @@ export function makeWallConnections(root) {
   return {show, select(id) {
       if (disposed) return;
       const next = typeof id === 'string' && id ? id : null;
-      if (next === selectedId) { selectedWall.visible(group.visible); return; }
-      selectedId = next; drawSelection();
+      if (next === selectedId) return;
+      selectedId = next; show(lastSpots);
     }, get links() { return readLinks(); },
     get root() { return group; },
     get posts() { return group.wallPosts; },
@@ -108,5 +103,5 @@ export function makeWallConnections(root) {
       // These are camera-facing quads; a second transparent back-face pass adds no surface.
       material.forceSinglePass = true; key = null; show(lastSpots); return true;
     },
-    dispose() { if (disposed) return; disposed = true; selectedWall.dispose(); clear(); material.dispose(); if (art?.ownsTexture) art.texture.dispose(); root.remove(group); }};
+    dispose() { if (disposed) return; disposed = true; clear(); material.dispose(); if (art?.ownsTexture) art.texture.dispose(); root.remove(group); }};
 }

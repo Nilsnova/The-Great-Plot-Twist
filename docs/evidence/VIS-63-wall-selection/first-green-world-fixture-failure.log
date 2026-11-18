@@ -1,0 +1,62 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run --maxWorkers=1 tests/island/wall-selection.test.js tests/island/selection-bracket.test.js tests/island/wall-batch-options.test.js tests/island/wall-textured-batches.test.js tests/island/wall-tier-detail.test.js tests/island/wall-connections.test.js tests/pirates/wall-connections.test.js
+
+
+ RUN  v5.1.0 /workspace/reference-village-work/clearance-selection/frontend
+
+ ❯ tests/island/wall-selection.test.js (18 tests | 1 failed) 128ms
+   × the actual world reuses its one tile bracket through selection, Move, Close, visitor and battle lifecycle 78ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/island/wall-selection.test.js > the actual world reuses its one tile bracket through selection, Move, Close, visitor and battle lifecycle
+AssertionError: expected [ { id: 'wall_1', …(5) }, …(26) ] to deeply equal [ { id: 'wall_1', …(5) }, …(27) ]
+
+- Expected
++ Received
+
+@@ -174,18 +174,10 @@
+      "x": 7.5,
+      "y": 1.03,
+      "z": 0,
+    },
+    {
+-     "id": "wall_13",
+-     "name": "Wall",
+-     "radius": 2.6,
+-     "x": -3.7771751984978588,
+-     "y": 1.03,
+-     "z": -16.525141493428134,
+-   },
+-   {
+      "id": "island_bell",
+      "name": "Harbor bell",
+      "radius": 2.2,
+      "x": 8.5,
+      "y": 1.03,
+
+ ❯ tests/island/wall-selection.test.js:148:23
+    146|     drawing.apply(state); drawing.update(0); expect(obsoleteOverlay(dr…
+    147|   }
+    148|   expect(place.zones).toEqual(zones); expect(place.colliders).toEqual(…
+       |                       ^
+    149|   const resources = bracket.children.map(mesh=>({geometry:vi.spyOn(mes…
+    150|   drawing.dispose(); resources.forEach(({geometry,material})=>{expect(…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 6 passed (7)
+      Tests  1 failed | 63 passed (64)
+   Start at  10:01:14
+   Duration  3.55s (import 52%, transform 32%, tests 14%, worker 2%)
+
+    Isolate  7 workers spawned · ~199ms startup each (spawn + environment, per file)
+             at least ~1.19s faster with isolate: false — reuses workers across files instead of one per file
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice
