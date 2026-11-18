@@ -42,3 +42,17 @@ Destroyed towers keep their rubble and zero-health indicator. Level stars return
 The Controls labels use the existing parchment color. Their measured contrast rose from 6.70:1 to 7.96:1 on desktop and phone. The Settings audit covered five viewport sizes. The production startup check now follows the actual first-run panels before asserting world focus. The underlying app already returned focus correctly when those panels were dismissed.
 
 The documented legacy-travel check passed all 38 checks. After ten round trips, the same scene retained 95 draw calls, 101 geometries, 30 textures and one active scene root. The sample returned 60 browser frames per second on this Mac.
+
+## Keeping the active battle visible
+
+| View | Before | After |
+| --- | --- | --- |
+| Desktop 1280 × 720 | [Battle](combat-desktop-before.png) | [Smaller keyboard cue](combat-desktop-after.png) |
+| Touch phone 375 × 812 | [Battle](combat-phone-before.png) | [Context on the touch button](combat-phone-after.png) |
+| Short touch phone 320 × 568 | [Battle](combat-short-phone-before.png) | [Compact wave bar](combat-short-phone-after.png) |
+
+On touch, the existing in-world interaction appears on its action button during a battle, leaving the center clear. The keyboard cue stays over the same spot and shrinks from 150 × 50 to 110 × 32 CSS pixels. Its normal styling returns outside combat. A fine-primary hybrid still has the keyboard cue and the usual touch Use button. Wave-specific actions retain priority.
+
+On the 320 × 568 phone, the counts and captain health share a row. The measured wave bar is 159 CSS pixels tall, down from 186, with both danger lines and the event control visible. The named action remains 48 pixels tall. The extended short-screen probe confirmed space for wrapping loot and no horizontal scrolling.
+
+Friendly gunners use navy and teal with a brass cap detail. Enemy boarders keep their red headwear. The gunner's original silhouette, anchor and occupied pixels are unchanged. Native before and after used the same local island, Wave 9 seed 25135766 at tick 240, weather, positions and high-quality reduced-motion settings. Both recordings made 53 draw calls. Desktop E and the touch button opened the same existing card and left the wallet and layout intact. The screenshots are from `a15f5af3` and `98a4fe58` in Chrome on the Mac with touch emulation for the two phone sizes.
