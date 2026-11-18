@@ -1,0 +1,1024 @@
+FFFFFFFFFFFFFFFFFFF                                                      [100%]
+=================================== FAILURES ===================================
+________ test_sql_obstacle_catalogue_exactly_matches_the_trusted_source ________
+
+database = <psycopg.Connection [INERROR] (database=postgres) at 0x7f0170e6e960>
+
+    def test_sql_obstacle_catalogue_exactly_matches_the_trusted_source(database):
+        expected = json.loads(layout.CONTENT_FILE.read_text())["wallObstacles"]
+        as_server(database)
+>       assert call(database, "select public.island_wall_scenery_obstacles()") == expected
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+server/tests/island_sql/test_normal_wall_build_clearance_sql.py:54: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_islands_and_waves_sql.py:36: in call
+    return database.execute(sql, arguments).fetchone()[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [INERROR] (database=postgres) at 0x7f0170e6e960>
+query = 'select public.island_wall_scenery_obstacles()', params = ()
+prepare = None, binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.UndefinedFunction: function public.island_wall_scenery_obstacles() does not exist
+E           LINE 1: select public.island_wall_scenery_obstacles()
+E                          ^
+E           HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+../../../.cache/uv/archive-v0/lZDskjYv8XT6nRkB/lib/python3.12/site-packages/psycopg/connection.py:304: UndefinedFunction
+_ test_guarded_fresh_normal_purchase_refuses_without_changing_money_or_layout[at0-False-0] _
+
+database = <psycopg.Connection [INERROR] (database=postgres) at 0x7f0170e816a0>
+policy = 0, friend = False, at = (-16, 0)
+
+    @pytest.mark.parametrize("policy", [0, 1])
+    @pytest.mark.parametrize("friend", [False, True])
+    @pytest.mark.parametrize("at", [TREE, PROP])
+    def test_guarded_fresh_normal_purchase_refuses_without_changing_money_or_layout(database, policy, friend, at):
+        ready(database, policy, at)
+        before = snapshot(database)
+>       answer = purchase(database, friend)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+server/tests/island_sql/test_normal_wall_build_clearance_sql.py:64: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_normal_wall_build_clearance_sql.py:48: in purchase
+    return call(db, "select public.islet_build(%s,'wall_1','wall',10::bigint,0,0,%s,%s,%s,%s::jsonb,%s,%s)", owner, "island:" + uid, *fence)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+server/tests/island_sql/test_islands_and_waves_sql.py:36: in call
+    return database.execute(sql, arguments).fetchone()[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [INERROR] (database=postgres) at 0x7f0170e816a0>
+query = "select public.islet_build(%s,'wall_1','wall',10::bigint,0,0,%s,%s,%s,%s::jsonb,%s,%s)"
+params = (UUID('00000000-0000-0000-0000-0000000041a1'), 'island:normal-sql-0001', -32, 0, '[{"plot": "wall_1", "x_half": -32, "z_half": 0}]', 0, ...)
+prepare = None, binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.UndefinedFunction: function public.islet_build(uuid, unknown, unknown, bigint, integer, integer, unknown, smallint, smallint, jsonb, smallint, smallint) does not exist
+E           LINE 1: select public.islet_build($1,'wall_1','wall',10::bigint,0,0,...
+E                          ^
+E           HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+../../../.cache/uv/archive-v0/lZDskjYv8XT6nRkB/lib/python3.12/site-packages/psycopg/connection.py:304: UndefinedFunction
+_ test_guarded_fresh_normal_purchase_refuses_without_changing_money_or_layout[at0-False-1] _
+
+database = <psycopg.Connection [INERROR] (database=postgres) at 0x7f0170e83f20>
+policy = 1, friend = False, at = (-16, 0)
+
+    @pytest.mark.parametrize("policy", [0, 1])
+    @pytest.mark.parametrize("friend", [False, True])
+    @pytest.mark.parametrize("at", [TREE, PROP])
+    def test_guarded_fresh_normal_purchase_refuses_without_changing_money_or_layout(database, policy, friend, at):
+        ready(database, policy, at)
+        before = snapshot(database)
+>       answer = purchase(database, friend)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+server/tests/island_sql/test_normal_wall_build_clearance_sql.py:64: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_normal_wall_build_clearance_sql.py:48: in purchase
+    return call(db, "select public.islet_build(%s,'wall_1','wall',10::bigint,0,0,%s,%s,%s,%s::jsonb,%s,%s)", owner, "island:" + uid, *fence)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+server/tests/island_sql/test_islands_and_waves_sql.py:36: in call
+    return database.execute(sql, arguments).fetchone()[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [INERROR] (database=postgres) at 0x7f0170e83f20>
+query = "select public.islet_build(%s,'wall_1','wall',10::bigint,0,0,%s,%s,%s,%s::jsonb,%s,%s)"
+params = (UUID('00000000-0000-0000-0000-0000000041a1'), 'island:normal-sql-0001', -32, 0, '[{"plot": "wall_1", "x_half": -32, "z_half": 0}]', 1, ...)
+prepare = None, binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.UndefinedFunction: function public.islet_build(uuid, unknown, unknown, bigint, integer, integer, unknown, smallint, smallint, jsonb, smallint, smallint) does not exist
+E           LINE 1: select public.islet_build($1,'wall_1','wall',10::bigint,0,0,...
+E                          ^
+E           HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+../../../.cache/uv/archive-v0/lZDskjYv8XT6nRkB/lib/python3.12/site-packages/psycopg/connection.py:304: UndefinedFunction
+_ test_guarded_fresh_normal_purchase_refuses_without_changing_money_or_layout[at0-True-0] _
+
+database = <psycopg.Connection [INERROR] (database=postgres) at 0x7f0170e81af0>
+policy = 0, friend = True, at = (-16, 0)
+
+    @pytest.mark.parametrize("policy", [0, 1])
+    @pytest.mark.parametrize("friend", [False, True])
+    @pytest.mark.parametrize("at", [TREE, PROP])
+    def test_guarded_fresh_normal_purchase_refuses_without_changing_money_or_layout(database, policy, friend, at):
+        ready(database, policy, at)
+        before = snapshot(database)
+>       answer = purchase(database, friend)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+server/tests/island_sql/test_normal_wall_build_clearance_sql.py:64: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_normal_wall_build_clearance_sql.py:47: in purchase
+    return call(db, "select public.island_build(%s,%s,'wall_1','wall',%s,10,%s,%s,%s::jsonb,%s,%s)", FRIEND, owner, uid, *fence)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+server/tests/island_sql/test_islands_and_waves_sql.py:36: in call
+    return database.execute(sql, arguments).fetchone()[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [INERROR] (database=postgres) at 0x7f0170e81af0>
+query = "select public.island_build(%s,%s,'wall_1','wall',%s,10,%s,%s,%s::jsonb,%s,%s)"
+params = (UUID('00000000-0000-0000-0000-0000000041a2'), UUID('00000000-0000-0000-0000-0000000041a1'), 'normal-sql-0001', -32, 0, '[{"plot": "wall_1", "x_half": -32, "z_half": 0}]', ...)
+prepare = None, binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.UndefinedFunction: function public.island_build(uuid, uuid, unknown, unknown, unknown, integer, smallint, smallint, jsonb, smallint, smallint) does not exist
+E           LINE 1: select public.island_build($1,$2,'wall_1','wall',$3,10,$4,$5...
+E                          ^
+E           HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+../../../.cache/uv/archive-v0/lZDskjYv8XT6nRkB/lib/python3.12/site-packages/psycopg/connection.py:304: UndefinedFunction
+_ test_guarded_fresh_normal_purchase_refuses_without_changing_money_or_layout[at0-True-1] _
+
+database = <psycopg.Connection [INERROR] (database=postgres) at 0x7f0170e6f560>
+policy = 1, friend = True, at = (-16, 0)
+
+    @pytest.mark.parametrize("policy", [0, 1])
+    @pytest.mark.parametrize("friend", [False, True])
+    @pytest.mark.parametrize("at", [TREE, PROP])
+    def test_guarded_fresh_normal_purchase_refuses_without_changing_money_or_layout(database, policy, friend, at):
+        ready(database, policy, at)
+        before = snapshot(database)
+>       answer = purchase(database, friend)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+server/tests/island_sql/test_normal_wall_build_clearance_sql.py:64: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_normal_wall_build_clearance_sql.py:47: in purchase
+    return call(db, "select public.island_build(%s,%s,'wall_1','wall',%s,10,%s,%s,%s::jsonb,%s,%s)", FRIEND, owner, uid, *fence)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+server/tests/island_sql/test_islands_and_waves_sql.py:36: in call
+    return database.execute(sql, arguments).fetchone()[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [INERROR] (database=postgres) at 0x7f0170e6f560>
+query = "select public.island_build(%s,%s,'wall_1','wall',%s,10,%s,%s,%s::jsonb,%s,%s)"
+params = (UUID('00000000-0000-0000-0000-0000000041a2'), UUID('00000000-0000-0000-0000-0000000041a1'), 'normal-sql-0001', -32, 0, '[{"plot": "wall_1", "x_half": -32, "z_half": 0}]', ...)
+prepare = None, binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.UndefinedFunction: function public.island_build(uuid, uuid, unknown, unknown, unknown, integer, smallint, smallint, jsonb, smallint, smallint) does not exist
+E           LINE 1: select public.island_build($1,$2,'wall_1','wall',$3,10,$4,$5...
+E                          ^
+E           HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+../../../.cache/uv/archive-v0/lZDskjYv8XT6nRkB/lib/python3.12/site-packages/psycopg/connection.py:304: UndefinedFunction
+_ test_guarded_fresh_normal_purchase_refuses_without_changing_money_or_layout[at1-False-0] _
+
+database = <psycopg.Connection [INERROR] (database=postgres) at 0x7f0170ecf290>
+policy = 0, friend = False, at = (-2, 12)
+
+    @pytest.mark.parametrize("policy", [0, 1])
+    @pytest.mark.parametrize("friend", [False, True])
+    @pytest.mark.parametrize("at", [TREE, PROP])
+    def test_guarded_fresh_normal_purchase_refuses_without_changing_money_or_layout(database, policy, friend, at):
+        ready(database, policy, at)
+        before = snapshot(database)
+>       answer = purchase(database, friend)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+server/tests/island_sql/test_normal_wall_build_clearance_sql.py:64: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_normal_wall_build_clearance_sql.py:48: in purchase
+    return call(db, "select public.islet_build(%s,'wall_1','wall',10::bigint,0,0,%s,%s,%s,%s::jsonb,%s,%s)", owner, "island:" + uid, *fence)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+server/tests/island_sql/test_islands_and_waves_sql.py:36: in call
+    return database.execute(sql, arguments).fetchone()[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [INERROR] (database=postgres) at 0x7f0170ecf290>
+query = "select public.islet_build(%s,'wall_1','wall',10::bigint,0,0,%s,%s,%s,%s::jsonb,%s,%s)"
+params = (UUID('00000000-0000-0000-0000-0000000041a1'), 'island:normal-sql-0001', -4, 24, '[{"plot": "wall_1", "x_half": -4, "z_half": 24}]', 0, ...)
+prepare = None, binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.UndefinedFunction: function public.islet_build(uuid, unknown, unknown, bigint, integer, integer, unknown, smallint, smallint, jsonb, smallint, smallint) does not exist
+E           LINE 1: select public.islet_build($1,'wall_1','wall',10::bigint,0,0,...
+E                          ^
+E           HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+../../../.cache/uv/archive-v0/lZDskjYv8XT6nRkB/lib/python3.12/site-packages/psycopg/connection.py:304: UndefinedFunction
+_ test_guarded_fresh_normal_purchase_refuses_without_changing_money_or_layout[at1-False-1] _
+
+database = <psycopg.Connection [INERROR] (database=postgres) at 0x7f0170f02c00>
+policy = 1, friend = False, at = (-2, 12)
+
+    @pytest.mark.parametrize("policy", [0, 1])
+    @pytest.mark.parametrize("friend", [False, True])
+    @pytest.mark.parametrize("at", [TREE, PROP])
+    def test_guarded_fresh_normal_purchase_refuses_without_changing_money_or_layout(database, policy, friend, at):
+        ready(database, policy, at)
+        before = snapshot(database)
+>       answer = purchase(database, friend)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+server/tests/island_sql/test_normal_wall_build_clearance_sql.py:64: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_normal_wall_build_clearance_sql.py:48: in purchase
+    return call(db, "select public.islet_build(%s,'wall_1','wall',10::bigint,0,0,%s,%s,%s,%s::jsonb,%s,%s)", owner, "island:" + uid, *fence)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+server/tests/island_sql/test_islands_and_waves_sql.py:36: in call
+    return database.execute(sql, arguments).fetchone()[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [INERROR] (database=postgres) at 0x7f0170f02c00>
+query = "select public.islet_build(%s,'wall_1','wall',10::bigint,0,0,%s,%s,%s,%s::jsonb,%s,%s)"
+params = (UUID('00000000-0000-0000-0000-0000000041a1'), 'island:normal-sql-0001', -4, 24, '[{"plot": "wall_1", "x_half": -4, "z_half": 24}]', 1, ...)
+prepare = None, binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.UndefinedFunction: function public.islet_build(uuid, unknown, unknown, bigint, integer, integer, unknown, smallint, smallint, jsonb, smallint, smallint) does not exist
+E           LINE 1: select public.islet_build($1,'wall_1','wall',10::bigint,0,0,...
+E                          ^
+E           HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+../../../.cache/uv/archive-v0/lZDskjYv8XT6nRkB/lib/python3.12/site-packages/psycopg/connection.py:304: UndefinedFunction
+_ test_guarded_fresh_normal_purchase_refuses_without_changing_money_or_layout[at1-True-0] _
+
+database = <psycopg.Connection [INERROR] (database=postgres) at 0x7f0170ecc140>
+policy = 0, friend = True, at = (-2, 12)
+
+    @pytest.mark.parametrize("policy", [0, 1])
+    @pytest.mark.parametrize("friend", [False, True])
+    @pytest.mark.parametrize("at", [TREE, PROP])
+    def test_guarded_fresh_normal_purchase_refuses_without_changing_money_or_layout(database, policy, friend, at):
+        ready(database, policy, at)
+        before = snapshot(database)
+>       answer = purchase(database, friend)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+server/tests/island_sql/test_normal_wall_build_clearance_sql.py:64: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_normal_wall_build_clearance_sql.py:47: in purchase
+    return call(db, "select public.island_build(%s,%s,'wall_1','wall',%s,10,%s,%s,%s::jsonb,%s,%s)", FRIEND, owner, uid, *fence)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+server/tests/island_sql/test_islands_and_waves_sql.py:36: in call
+    return database.execute(sql, arguments).fetchone()[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [INERROR] (database=postgres) at 0x7f0170ecc140>
+query = "select public.island_build(%s,%s,'wall_1','wall',%s,10,%s,%s,%s::jsonb,%s,%s)"
+params = (UUID('00000000-0000-0000-0000-0000000041a2'), UUID('00000000-0000-0000-0000-0000000041a1'), 'normal-sql-0001', -4, 24, '[{"plot": "wall_1", "x_half": -4, "z_half": 24}]', ...)
+prepare = None, binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.UndefinedFunction: function public.island_build(uuid, uuid, unknown, unknown, unknown, integer, smallint, smallint, jsonb, smallint, smallint) does not exist
+E           LINE 1: select public.island_build($1,$2,'wall_1','wall',$3,10,$4,$5...
+E                          ^
+E           HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+../../../.cache/uv/archive-v0/lZDskjYv8XT6nRkB/lib/python3.12/site-packages/psycopg/connection.py:304: UndefinedFunction
+_ test_guarded_fresh_normal_purchase_refuses_without_changing_money_or_layout[at1-True-1] _
+
+database = <psycopg.Connection [INERROR] (database=postgres) at 0x7f0170e6f0b0>
+policy = 1, friend = True, at = (-2, 12)
+
+    @pytest.mark.parametrize("policy", [0, 1])
+    @pytest.mark.parametrize("friend", [False, True])
+    @pytest.mark.parametrize("at", [TREE, PROP])
+    def test_guarded_fresh_normal_purchase_refuses_without_changing_money_or_layout(database, policy, friend, at):
+        ready(database, policy, at)
+        before = snapshot(database)
+>       answer = purchase(database, friend)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+server/tests/island_sql/test_normal_wall_build_clearance_sql.py:64: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_normal_wall_build_clearance_sql.py:47: in purchase
+    return call(db, "select public.island_build(%s,%s,'wall_1','wall',%s,10,%s,%s,%s::jsonb,%s,%s)", FRIEND, owner, uid, *fence)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+server/tests/island_sql/test_islands_and_waves_sql.py:36: in call
+    return database.execute(sql, arguments).fetchone()[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [INERROR] (database=postgres) at 0x7f0170e6f0b0>
+query = "select public.island_build(%s,%s,'wall_1','wall',%s,10,%s,%s,%s::jsonb,%s,%s)"
+params = (UUID('00000000-0000-0000-0000-0000000041a2'), UUID('00000000-0000-0000-0000-0000000041a1'), 'normal-sql-0001', -4, 24, '[{"plot": "wall_1", "x_half": -4, "z_half": 24}]', ...)
+prepare = None, binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.UndefinedFunction: function public.island_build(uuid, uuid, unknown, unknown, unknown, integer, smallint, smallint, jsonb, smallint, smallint) does not exist
+E           LINE 1: select public.island_build($1,$2,'wall_1','wall',$3,10,$4,$5...
+E                          ^
+E           HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+../../../.cache/uv/archive-v0/lZDskjYv8XT6nRkB/lib/python3.12/site-packages/psycopg/connection.py:304: UndefinedFunction
+_ test_safe_purchase_and_original_uid_replay_preserve_old_built_overlap[False-0] _
+
+database = <psycopg.Connection [INERROR] (database=postgres) at 0x7f0170f03ad0>
+policy = 0, friend = False
+
+    @pytest.mark.parametrize("policy", [0, 1])
+    @pytest.mark.parametrize("friend", [False, True])
+    def test_safe_purchase_and_original_uid_replay_preserve_old_built_overlap(database, policy, friend):
+        ready(database, policy)
+>       answer = purchase(database, friend)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+server/tests/island_sql/test_normal_wall_build_clearance_sql.py:76: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_normal_wall_build_clearance_sql.py:48: in purchase
+    return call(db, "select public.islet_build(%s,'wall_1','wall',10::bigint,0,0,%s,%s,%s,%s::jsonb,%s,%s)", owner, "island:" + uid, *fence)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+server/tests/island_sql/test_islands_and_waves_sql.py:36: in call
+    return database.execute(sql, arguments).fetchone()[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [INERROR] (database=postgres) at 0x7f0170f03ad0>
+query = "select public.islet_build(%s,'wall_1','wall',10::bigint,0,0,%s,%s,%s,%s::jsonb,%s,%s)"
+params = (UUID('00000000-0000-0000-0000-0000000041a1'), 'island:normal-sql-0001', -37, -2, '[{"plot": "wall_1", "x_half": -37, "z_half": -2}]', 0, ...)
+prepare = None, binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.UndefinedFunction: function public.islet_build(uuid, unknown, unknown, bigint, integer, integer, unknown, smallint, smallint, jsonb, smallint, smallint) does not exist
+E           LINE 1: select public.islet_build($1,'wall_1','wall',10::bigint,0,0,...
+E                          ^
+E           HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+../../../.cache/uv/archive-v0/lZDskjYv8XT6nRkB/lib/python3.12/site-packages/psycopg/connection.py:304: UndefinedFunction
+_ test_safe_purchase_and_original_uid_replay_preserve_old_built_overlap[False-1] _
+
+database = <psycopg.Connection [INERROR] (database=postgres) at 0x7f0170f02ba0>
+policy = 1, friend = False
+
+    @pytest.mark.parametrize("policy", [0, 1])
+    @pytest.mark.parametrize("friend", [False, True])
+    def test_safe_purchase_and_original_uid_replay_preserve_old_built_overlap(database, policy, friend):
+        ready(database, policy)
+>       answer = purchase(database, friend)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+server/tests/island_sql/test_normal_wall_build_clearance_sql.py:76: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_normal_wall_build_clearance_sql.py:48: in purchase
+    return call(db, "select public.islet_build(%s,'wall_1','wall',10::bigint,0,0,%s,%s,%s,%s::jsonb,%s,%s)", owner, "island:" + uid, *fence)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+server/tests/island_sql/test_islands_and_waves_sql.py:36: in call
+    return database.execute(sql, arguments).fetchone()[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [INERROR] (database=postgres) at 0x7f0170f02ba0>
+query = "select public.islet_build(%s,'wall_1','wall',10::bigint,0,0,%s,%s,%s,%s::jsonb,%s,%s)"
+params = (UUID('00000000-0000-0000-0000-0000000041a1'), 'island:normal-sql-0001', -37, -2, '[{"plot": "wall_1", "x_half": -37, "z_half": -2}]', 1, ...)
+prepare = None, binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.UndefinedFunction: function public.islet_build(uuid, unknown, unknown, bigint, integer, integer, unknown, smallint, smallint, jsonb, smallint, smallint) does not exist
+E           LINE 1: select public.islet_build($1,'wall_1','wall',10::bigint,0,0,...
+E                          ^
+E           HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+../../../.cache/uv/archive-v0/lZDskjYv8XT6nRkB/lib/python3.12/site-packages/psycopg/connection.py:304: UndefinedFunction
+_ test_safe_purchase_and_original_uid_replay_preserve_old_built_overlap[True-0] _
+
+database = <psycopg.Connection [INERROR] (database=postgres) at 0x7f0170e6e8a0>
+policy = 0, friend = True
+
+    @pytest.mark.parametrize("policy", [0, 1])
+    @pytest.mark.parametrize("friend", [False, True])
+    def test_safe_purchase_and_original_uid_replay_preserve_old_built_overlap(database, policy, friend):
+        ready(database, policy)
+>       answer = purchase(database, friend)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+server/tests/island_sql/test_normal_wall_build_clearance_sql.py:76: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_normal_wall_build_clearance_sql.py:47: in purchase
+    return call(db, "select public.island_build(%s,%s,'wall_1','wall',%s,10,%s,%s,%s::jsonb,%s,%s)", FRIEND, owner, uid, *fence)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+server/tests/island_sql/test_islands_and_waves_sql.py:36: in call
+    return database.execute(sql, arguments).fetchone()[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [INERROR] (database=postgres) at 0x7f0170e6e8a0>
+query = "select public.island_build(%s,%s,'wall_1','wall',%s,10,%s,%s,%s::jsonb,%s,%s)"
+params = (UUID('00000000-0000-0000-0000-0000000041a2'), UUID('00000000-0000-0000-0000-0000000041a1'), 'normal-sql-0001', -37, -2, '[{"plot": "wall_1", "x_half": -37, "z_half": -2}]', ...)
+prepare = None, binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.UndefinedFunction: function public.island_build(uuid, uuid, unknown, unknown, unknown, integer, smallint, smallint, jsonb, smallint, smallint) does not exist
+E           LINE 1: select public.island_build($1,$2,'wall_1','wall',$3,10,$4,$5...
+E                          ^
+E           HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+../../../.cache/uv/archive-v0/lZDskjYv8XT6nRkB/lib/python3.12/site-packages/psycopg/connection.py:304: UndefinedFunction
+_ test_safe_purchase_and_original_uid_replay_preserve_old_built_overlap[True-1] _
+
+database = <psycopg.Connection [INERROR] (database=postgres) at 0x7f0170f02240>
+policy = 1, friend = True
+
+    @pytest.mark.parametrize("policy", [0, 1])
+    @pytest.mark.parametrize("friend", [False, True])
+    def test_safe_purchase_and_original_uid_replay_preserve_old_built_overlap(database, policy, friend):
+        ready(database, policy)
+>       answer = purchase(database, friend)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+server/tests/island_sql/test_normal_wall_build_clearance_sql.py:76: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_normal_wall_build_clearance_sql.py:47: in purchase
+    return call(db, "select public.island_build(%s,%s,'wall_1','wall',%s,10,%s,%s,%s::jsonb,%s,%s)", FRIEND, owner, uid, *fence)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+server/tests/island_sql/test_islands_and_waves_sql.py:36: in call
+    return database.execute(sql, arguments).fetchone()[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [INERROR] (database=postgres) at 0x7f0170f02240>
+query = "select public.island_build(%s,%s,'wall_1','wall',%s,10,%s,%s,%s::jsonb,%s,%s)"
+params = (UUID('00000000-0000-0000-0000-0000000041a2'), UUID('00000000-0000-0000-0000-0000000041a1'), 'normal-sql-0001', -37, -2, '[{"plot": "wall_1", "x_half": -37, "z_half": -2}]', ...)
+prepare = None, binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.UndefinedFunction: function public.island_build(uuid, uuid, unknown, unknown, unknown, integer, smallint, smallint, jsonb, smallint, smallint) does not exist
+E           LINE 1: select public.island_build($1,$2,'wall_1','wall',$3,10,$4,$5...
+E                          ^
+E           HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+../../../.cache/uv/archive-v0/lZDskjYv8XT6nRkB/lib/python3.12/site-packages/psycopg/connection.py:304: UndefinedFunction
+_ test_original_unguarded_signatures_also_cannot_insert_a_fresh_overlapping_wall[False] _
+
+database = <psycopg.Connection [INTRANS] (database=postgres) at 0x7f0170f020f0>
+friend = False
+
+    @pytest.mark.parametrize("friend", [False, True])
+    def test_original_unguarded_signatures_also_cannot_insert_a_fresh_overlapping_wall(database, friend):
+        ready(database, 0, TREE)
+>       with pytest.raises(psycopg.errors.CheckViolation, match="wall_scenery_overlap"), database.transaction():
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE CheckViolation
+
+server/tests/island_sql/test_normal_wall_build_clearance_sql.py:92: Failed
+_ test_original_unguarded_signatures_also_cannot_insert_a_fresh_overlapping_wall[True] _
+
+database = <psycopg.Connection [INTRANS] (database=postgres) at 0x7f0170f02150>
+friend = True
+
+    @pytest.mark.parametrize("friend", [False, True])
+    def test_original_unguarded_signatures_also_cannot_insert_a_fresh_overlapping_wall(database, friend):
+        ready(database, 0, TREE)
+>       with pytest.raises(psycopg.errors.CheckViolation, match="wall_scenery_overlap"), database.transaction():
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE CheckViolation
+
+server/tests/island_sql/test_normal_wall_build_clearance_sql.py:92: Failed
+_ test_failed_payment_rolls_back_fresh_effective_coordinate_materialization[False] _
+
+database = <psycopg.Connection [INTRANS] (database=postgres) at 0x7f0170ec2fc0>
+friend = False
+
+    @pytest.mark.parametrize("friend", [False, True])
+    def test_failed_payment_rolls_back_fresh_effective_coordinate_materialization(database, friend):
+        # This old off-lane raw cell displays at a different canonical legacy lane site.
+        ready(database, 0, (-13, -12))
+        before = snapshot(database)
+        actor = FRIEND if friend else OWNER
+        as_owner(database)
+        database.execute("update public.wallets set balance=5 where player_id=%s", (actor,))
+        as_server(database)
+        if friend:
+            assert purchase(database, True)["reason"] == "insufficient_funds"
+        else:
+            with pytest.raises(psycopg.errors.RaiseException, match="insufficient_funds"), database.transaction():
+>               purchase(database)
+
+server/tests/island_sql/test_normal_wall_build_clearance_sql.py:114: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_normal_wall_build_clearance_sql.py:48: in purchase
+    return call(db, "select public.islet_build(%s,'wall_1','wall',10::bigint,0,0,%s,%s,%s,%s::jsonb,%s,%s)", owner, "island:" + uid, *fence)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+server/tests/island_sql/test_islands_and_waves_sql.py:36: in call
+    return database.execute(sql, arguments).fetchone()[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [INTRANS] (database=postgres) at 0x7f0170ec2fc0>
+query = "select public.islet_build(%s,'wall_1','wall',10::bigint,0,0,%s,%s,%s,%s::jsonb,%s,%s)"
+params = (UUID('00000000-0000-0000-0000-0000000041a1'), 'island:normal-sql-0001', -29, -5, '[{"plot": "wall_1", "x_half": -26, "z_half": -24}]', 0, ...)
+prepare = None, binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.UndefinedFunction: function public.islet_build(uuid, unknown, unknown, bigint, integer, integer, unknown, smallint, smallint, jsonb, smallint, smallint) does not exist
+E           LINE 1: select public.islet_build($1,'wall_1','wall',10::bigint,0,0,...
+E                          ^
+E           HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+../../../.cache/uv/archive-v0/lZDskjYv8XT6nRkB/lib/python3.12/site-packages/psycopg/connection.py:304: UndefinedFunction
+_ test_failed_payment_rolls_back_fresh_effective_coordinate_materialization[True] _
+
+database = <psycopg.Connection [INERROR] (database=postgres) at 0x7f0170f017c0>
+friend = True
+
+    @pytest.mark.parametrize("friend", [False, True])
+    def test_failed_payment_rolls_back_fresh_effective_coordinate_materialization(database, friend):
+        # This old off-lane raw cell displays at a different canonical legacy lane site.
+        ready(database, 0, (-13, -12))
+        before = snapshot(database)
+        actor = FRIEND if friend else OWNER
+        as_owner(database)
+        database.execute("update public.wallets set balance=5 where player_id=%s", (actor,))
+        as_server(database)
+        if friend:
+>           assert purchase(database, True)["reason"] == "insufficient_funds"
+                   ^^^^^^^^^^^^^^^^^^^^^^^^
+
+server/tests/island_sql/test_normal_wall_build_clearance_sql.py:111: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_normal_wall_build_clearance_sql.py:47: in purchase
+    return call(db, "select public.island_build(%s,%s,'wall_1','wall',%s,10,%s,%s,%s::jsonb,%s,%s)", FRIEND, owner, uid, *fence)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+server/tests/island_sql/test_islands_and_waves_sql.py:36: in call
+    return database.execute(sql, arguments).fetchone()[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [INERROR] (database=postgres) at 0x7f0170f017c0>
+query = "select public.island_build(%s,%s,'wall_1','wall',%s,10,%s,%s,%s::jsonb,%s,%s)"
+params = (UUID('00000000-0000-0000-0000-0000000041a2'), UUID('00000000-0000-0000-0000-0000000041a1'), 'normal-sql-0001', -29, -5, '[{"plot": "wall_1", "x_half": -26, "z_half": -24}]', ...)
+prepare = None, binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.UndefinedFunction: function public.island_build(uuid, uuid, unknown, unknown, unknown, integer, smallint, smallint, jsonb, smallint, smallint) does not exist
+E           LINE 1: select public.island_build($1,$2,'wall_1','wall',$3,10,$4,$5...
+E                          ^
+E           HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+../../../.cache/uv/archive-v0/lZDskjYv8XT6nRkB/lib/python3.12/site-packages/psycopg/connection.py:304: UndefinedFunction
+_________ test_checked_policy_and_complete_raw_layout_are_both_fenced __________
+
+database = <psycopg.Connection [INERROR] (database=postgres) at 0x7f0170ecfd10>
+
+    def test_checked_policy_and_complete_raw_layout_are_both_fenced(database):
+        ready(database)
+        before = snapshot(database)
+        database.execute("insert into public.island_layout(island_owner,plot,x_half,z_half,moved_by) values(%s,'cannon_1',-20,-20,%s)", (OWNER, OWNER))
+>       assert purchase(database, seen=before)["reason"] == "busy"
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+server/tests/island_sql/test_normal_wall_build_clearance_sql.py:123: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+server/tests/island_sql/test_normal_wall_build_clearance_sql.py:48: in purchase
+    return call(db, "select public.islet_build(%s,'wall_1','wall',10::bigint,0,0,%s,%s,%s,%s::jsonb,%s,%s)", owner, "island:" + uid, *fence)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+server/tests/island_sql/test_islands_and_waves_sql.py:36: in call
+    return database.execute(sql, arguments).fetchone()[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Connection [INERROR] (database=postgres) at 0x7f0170ecfd10>
+query = "select public.islet_build(%s,'wall_1','wall',10::bigint,0,0,%s,%s,%s,%s::jsonb,%s,%s)"
+params = (UUID('00000000-0000-0000-0000-0000000041a1'), 'island:normal-sql-0001', -37, -2, '[{"plot": "wall_1", "x_half": -37, "z_half": -2}]', 0, ...)
+prepare = None, binary = False
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool = False,
+    ) -> Cursor[Row]:
+        """Execute a query and return a cursor to read its results."""
+        try:
+            cur = self.cursor()
+            if binary:
+                cur.format = BINARY
+    
+            if isinstance(query, Template):
+                if params is not None:
+                    raise TypeError(
+                        "'execute()' with string template query doesn't support parameters"
+                    )
+                return cur.execute(query, prepare=prepare)
+            else:
+                return cur.execute(query, params, prepare=prepare)
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.UndefinedFunction: function public.islet_build(uuid, unknown, unknown, bigint, integer, integer, unknown, smallint, smallint, jsonb, smallint, smallint) does not exist
+E           LINE 1: select public.islet_build($1,'wall_1','wall',10::bigint,0,0,...
+E                          ^
+E           HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+../../../.cache/uv/archive-v0/lZDskjYv8XT6nRkB/lib/python3.12/site-packages/psycopg/connection.py:304: UndefinedFunction
+__ test_real_owner_lock_wait_rechecks_the_snapshot_after_a_concurrent_change ___
+
+scratch_server = <pgserver.postgres_server.PostgresServer object at 0x7f017123e0c0>
+
+    def test_real_owner_lock_wait_rechecks_the_snapshot_after_a_concurrent_change(scratch_server):
+        with committed_game(scratch_server) as uri:
+            results, started = queue.Queue(), queue.Queue()
+            def worker():
+                try:
+                    with psycopg.connect(uri) as db:
+                        as_server(db); db.execute("set local statement_timeout='8s'")
+                        started.put(call(db, "select pg_backend_pid()"))
+                        result = purchase(db, seen={"rows": [], "ruleVersion": 1, "capacity": 128}, at=SAFE, owner=PRESSURE_OWNER)
+                    results.put(result)
+                except Exception as error:
+                    results.put(error)
+            thread = threading.Thread(target=worker)
+            with psycopg.connect(uri) as blocker:
+                blocker.execute("select 1 from public.islands where player_id=%s for update", (PRESSURE_OWNER,))
+                try:
+                    thread.start(); pid = started.get(timeout=5)
+                    with psycopg.connect(uri, autocommit=True) as probe:
+                        deadline = time.monotonic() + 5
+                        while time.monotonic() < deadline:
+>                           if call(probe, "select wait_event_type='Lock' from pg_stat_activity where pid=%s", pid):
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+server/tests/island_sql/test_normal_wall_build_clearance_sql.py:150: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+database = <psycopg.Connection [BAD] at 0x7f0170ec1bb0>
+sql = "select wait_event_type='Lock' from pg_stat_activity where pid=%s"
+arguments = (716734,)
+
+    def call(database, sql, *arguments):
+>       return database.execute(sql, arguments).fetchone()[0]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: 'NoneType' object is not subscriptable
+
+server/tests/island_sql/test_islands_and_waves_sql.py:36: TypeError
+=========================== short test summary info ============================
+FAILED server/tests/island_sql/test_normal_wall_build_clearance_sql.py::test_sql_obstacle_catalogue_exactly_matches_the_trusted_source
+FAILED server/tests/island_sql/test_normal_wall_build_clearance_sql.py::test_guarded_fresh_normal_purchase_refuses_without_changing_money_or_layout[at0-False-0]
+FAILED server/tests/island_sql/test_normal_wall_build_clearance_sql.py::test_guarded_fresh_normal_purchase_refuses_without_changing_money_or_layout[at0-False-1]
+FAILED server/tests/island_sql/test_normal_wall_build_clearance_sql.py::test_guarded_fresh_normal_purchase_refuses_without_changing_money_or_layout[at0-True-0]
+FAILED server/tests/island_sql/test_normal_wall_build_clearance_sql.py::test_guarded_fresh_normal_purchase_refuses_without_changing_money_or_layout[at0-True-1]
+FAILED server/tests/island_sql/test_normal_wall_build_clearance_sql.py::test_guarded_fresh_normal_purchase_refuses_without_changing_money_or_layout[at1-False-0]
+FAILED server/tests/island_sql/test_normal_wall_build_clearance_sql.py::test_guarded_fresh_normal_purchase_refuses_without_changing_money_or_layout[at1-False-1]
+FAILED server/tests/island_sql/test_normal_wall_build_clearance_sql.py::test_guarded_fresh_normal_purchase_refuses_without_changing_money_or_layout[at1-True-0]
+FAILED server/tests/island_sql/test_normal_wall_build_clearance_sql.py::test_guarded_fresh_normal_purchase_refuses_without_changing_money_or_layout[at1-True-1]
+FAILED server/tests/island_sql/test_normal_wall_build_clearance_sql.py::test_safe_purchase_and_original_uid_replay_preserve_old_built_overlap[False-0]
+FAILED server/tests/island_sql/test_normal_wall_build_clearance_sql.py::test_safe_purchase_and_original_uid_replay_preserve_old_built_overlap[False-1]
+FAILED server/tests/island_sql/test_normal_wall_build_clearance_sql.py::test_safe_purchase_and_original_uid_replay_preserve_old_built_overlap[True-0]
+FAILED server/tests/island_sql/test_normal_wall_build_clearance_sql.py::test_safe_purchase_and_original_uid_replay_preserve_old_built_overlap[True-1]
+FAILED server/tests/island_sql/test_normal_wall_build_clearance_sql.py::test_original_unguarded_signatures_also_cannot_insert_a_fresh_overlapping_wall[False]
+FAILED server/tests/island_sql/test_normal_wall_build_clearance_sql.py::test_original_unguarded_signatures_also_cannot_insert_a_fresh_overlapping_wall[True]
+FAILED server/tests/island_sql/test_normal_wall_build_clearance_sql.py::test_failed_payment_rolls_back_fresh_effective_coordinate_materialization[False]
+FAILED server/tests/island_sql/test_normal_wall_build_clearance_sql.py::test_failed_payment_rolls_back_fresh_effective_coordinate_materialization[True]
+FAILED server/tests/island_sql/test_normal_wall_build_clearance_sql.py::test_checked_policy_and_complete_raw_layout_are_both_fenced
+FAILED server/tests/island_sql/test_normal_wall_build_clearance_sql.py::test_real_owner_lock_wait_rechecks_the_snapshot_after_a_concurrent_change
+19 failed in 6.21s

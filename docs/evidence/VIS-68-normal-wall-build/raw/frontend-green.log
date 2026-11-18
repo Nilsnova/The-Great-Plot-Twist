@@ -1,0 +1,40 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run --maxWorkers=1 tests/island/normal-wall-scenery.test.js tests/island/scenery-clearance.test.js tests/island/move-mode.test.js tests/island/wall-policy-preview.test.js tests/island/wall-runs-fake.test.js
+
+
+ RUN  v5.1.0 /workspace/reference-village-work/clearance-normal-build/frontend
+
+ ❯ tests/island/normal-wall-scenery.test.js (14 tests | 2 failed) 129ms
+   × safe ordinary wall purchase and old UID replay survive: 0 / friend=false 27ms
+   × safe ordinary wall purchase and old UID replay survive: 0 / friend=true 14ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/island/normal-wall-scenery.test.js > safe ordinary wall purchase and old UID replay survive: 0 / friend=false
+ FAIL  tests/island/normal-wall-scenery.test.js > safe ordinary wall purchase and old UID replay survive: 0 / friend=true
+TypeError: Cannot read properties of undefined (reading 'set')
+ ❯ tests/island/normal-wall-scenery.test.js:37:22
+     35|   expect(t.player.coins).toBe(4990); expect(t.island.built.has('wall_1…
+     36|   // Existing paid state can later overlap scenery; a replay neither r…
+     37|   t.island.positions.set('wall_1', {x: -16, z: 0});
+       |                      ^
+     38|   await t.api.build({spot: 'wall_1', kind: 'wall', actionUid: 'normal-…
+     39|   expect(t.player.coins).toBe(4990);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+ Test Files  1 failed | 4 passed (5)
+      Tests  2 failed | 88 passed (90)
+   Start at  10:28:39
+   Duration  2.99s (tests 47%, import 28%, transform 23%, worker 1%)
+
+    Isolate  5 workers spawned · ~141ms startup each (spawn + environment, per file)
+             at least ~564ms faster with isolate: false — reuses workers across files instead of one per file
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice

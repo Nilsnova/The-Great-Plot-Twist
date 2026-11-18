@@ -1,0 +1,308 @@
+FFFFFFFFFFFFFF..FF.                                                      [100%]
+=================================== FAILURES ===================================
+__ test_fresh_ordinary_wall_refuses_tree_or_prop_before_paid_rpc[at0-False-0] __
+
+policy = 0, friend = False, at = (-16, 0)
+
+    @pytest.mark.parametrize("policy", [0, 1])
+    @pytest.mark.parametrize("friend", [False, True])
+    @pytest.mark.parametrize("at", [(-16, 0), (-2, 12)])
+    def test_fresh_ordinary_wall_refuses_tree_or_prop_before_paid_rpc(policy, friend, at):
+        game, _, code = game_at(policy, friend, *at)
+        response = game.build(spot="wall_1", kind="wall", **code)
+>       assert response.status_code == 409 and response.json()["error"]["code"] == "place_taken"
+E       assert (200 == 409)
+E        +  where 200 = <Response [200 OK]>.status_code
+
+server/tests/test_normal_wall_build_clearance.py:33: AssertionError
+------------------------------ Captured log call -------------------------------
+INFO     uvicorn.error.requests:request_policy.py:56 {"route": "/api/island/build", "status": 200, "duration_ms": 42.504}
+__ test_fresh_ordinary_wall_refuses_tree_or_prop_before_paid_rpc[at0-False-1] __
+
+policy = 1, friend = False, at = (-16, 0)
+
+    @pytest.mark.parametrize("policy", [0, 1])
+    @pytest.mark.parametrize("friend", [False, True])
+    @pytest.mark.parametrize("at", [(-16, 0), (-2, 12)])
+    def test_fresh_ordinary_wall_refuses_tree_or_prop_before_paid_rpc(policy, friend, at):
+        game, _, code = game_at(policy, friend, *at)
+        response = game.build(spot="wall_1", kind="wall", **code)
+>       assert response.status_code == 409 and response.json()["error"]["code"] == "place_taken"
+E       assert (200 == 409)
+E        +  where 200 = <Response [200 OK]>.status_code
+
+server/tests/test_normal_wall_build_clearance.py:33: AssertionError
+------------------------------ Captured log call -------------------------------
+INFO     uvicorn.error.requests:request_policy.py:56 {"route": "/api/island/build", "status": 200, "duration_ms": 41.023}
+__ test_fresh_ordinary_wall_refuses_tree_or_prop_before_paid_rpc[at0-True-0] ___
+
+policy = 0, friend = True, at = (-16, 0)
+
+    @pytest.mark.parametrize("policy", [0, 1])
+    @pytest.mark.parametrize("friend", [False, True])
+    @pytest.mark.parametrize("at", [(-16, 0), (-2, 12)])
+    def test_fresh_ordinary_wall_refuses_tree_or_prop_before_paid_rpc(policy, friend, at):
+        game, _, code = game_at(policy, friend, *at)
+        response = game.build(spot="wall_1", kind="wall", **code)
+>       assert response.status_code == 409 and response.json()["error"]["code"] == "place_taken"
+E       assert (200 == 409)
+E        +  where 200 = <Response [200 OK]>.status_code
+
+server/tests/test_normal_wall_build_clearance.py:33: AssertionError
+------------------------------ Captured log call -------------------------------
+INFO     uvicorn.error.requests:request_policy.py:56 {"route": "/api/island/build", "status": 200, "duration_ms": 37.747}
+__ test_fresh_ordinary_wall_refuses_tree_or_prop_before_paid_rpc[at0-True-1] ___
+
+policy = 1, friend = True, at = (-16, 0)
+
+    @pytest.mark.parametrize("policy", [0, 1])
+    @pytest.mark.parametrize("friend", [False, True])
+    @pytest.mark.parametrize("at", [(-16, 0), (-2, 12)])
+    def test_fresh_ordinary_wall_refuses_tree_or_prop_before_paid_rpc(policy, friend, at):
+        game, _, code = game_at(policy, friend, *at)
+        response = game.build(spot="wall_1", kind="wall", **code)
+>       assert response.status_code == 409 and response.json()["error"]["code"] == "place_taken"
+E       assert (200 == 409)
+E        +  where 200 = <Response [200 OK]>.status_code
+
+server/tests/test_normal_wall_build_clearance.py:33: AssertionError
+------------------------------ Captured log call -------------------------------
+INFO     uvicorn.error.requests:request_policy.py:56 {"route": "/api/island/build", "status": 200, "duration_ms": 42.165}
+__ test_fresh_ordinary_wall_refuses_tree_or_prop_before_paid_rpc[at1-False-0] __
+
+policy = 0, friend = False, at = (-2, 12)
+
+    @pytest.mark.parametrize("policy", [0, 1])
+    @pytest.mark.parametrize("friend", [False, True])
+    @pytest.mark.parametrize("at", [(-16, 0), (-2, 12)])
+    def test_fresh_ordinary_wall_refuses_tree_or_prop_before_paid_rpc(policy, friend, at):
+        game, _, code = game_at(policy, friend, *at)
+        response = game.build(spot="wall_1", kind="wall", **code)
+>       assert response.status_code == 409 and response.json()["error"]["code"] == "place_taken"
+E       assert (200 == 409)
+E        +  where 200 = <Response [200 OK]>.status_code
+
+server/tests/test_normal_wall_build_clearance.py:33: AssertionError
+------------------------------ Captured log call -------------------------------
+INFO     uvicorn.error.requests:request_policy.py:56 {"route": "/api/island/build", "status": 200, "duration_ms": 41.194}
+__ test_fresh_ordinary_wall_refuses_tree_or_prop_before_paid_rpc[at1-False-1] __
+
+policy = 1, friend = False, at = (-2, 12)
+
+    @pytest.mark.parametrize("policy", [0, 1])
+    @pytest.mark.parametrize("friend", [False, True])
+    @pytest.mark.parametrize("at", [(-16, 0), (-2, 12)])
+    def test_fresh_ordinary_wall_refuses_tree_or_prop_before_paid_rpc(policy, friend, at):
+        game, _, code = game_at(policy, friend, *at)
+        response = game.build(spot="wall_1", kind="wall", **code)
+>       assert response.status_code == 409 and response.json()["error"]["code"] == "place_taken"
+E       assert (200 == 409)
+E        +  where 200 = <Response [200 OK]>.status_code
+
+server/tests/test_normal_wall_build_clearance.py:33: AssertionError
+------------------------------ Captured log call -------------------------------
+INFO     uvicorn.error.requests:request_policy.py:56 {"route": "/api/island/build", "status": 200, "duration_ms": 36.12}
+__ test_fresh_ordinary_wall_refuses_tree_or_prop_before_paid_rpc[at1-True-0] ___
+
+policy = 0, friend = True, at = (-2, 12)
+
+    @pytest.mark.parametrize("policy", [0, 1])
+    @pytest.mark.parametrize("friend", [False, True])
+    @pytest.mark.parametrize("at", [(-16, 0), (-2, 12)])
+    def test_fresh_ordinary_wall_refuses_tree_or_prop_before_paid_rpc(policy, friend, at):
+        game, _, code = game_at(policy, friend, *at)
+        response = game.build(spot="wall_1", kind="wall", **code)
+>       assert response.status_code == 409 and response.json()["error"]["code"] == "place_taken"
+E       assert (200 == 409)
+E        +  where 200 = <Response [200 OK]>.status_code
+
+server/tests/test_normal_wall_build_clearance.py:33: AssertionError
+------------------------------ Captured log call -------------------------------
+INFO     uvicorn.error.requests:request_policy.py:56 {"route": "/api/island/build", "status": 200, "duration_ms": 40.013}
+__ test_fresh_ordinary_wall_refuses_tree_or_prop_before_paid_rpc[at1-True-1] ___
+
+policy = 1, friend = True, at = (-2, 12)
+
+    @pytest.mark.parametrize("policy", [0, 1])
+    @pytest.mark.parametrize("friend", [False, True])
+    @pytest.mark.parametrize("at", [(-16, 0), (-2, 12)])
+    def test_fresh_ordinary_wall_refuses_tree_or_prop_before_paid_rpc(policy, friend, at):
+        game, _, code = game_at(policy, friend, *at)
+        response = game.build(spot="wall_1", kind="wall", **code)
+>       assert response.status_code == 409 and response.json()["error"]["code"] == "place_taken"
+E       assert (200 == 409)
+E        +  where 200 = <Response [200 OK]>.status_code
+
+server/tests/test_normal_wall_build_clearance.py:33: AssertionError
+------------------------------ Captured log call -------------------------------
+INFO     uvicorn.error.requests:request_policy.py:56 {"route": "/api/island/build", "status": 200, "duration_ms": 110.975}
+_ test_safe_wall_purchase_sends_checked_coordinate_and_complete_snapshot[False-0] _
+
+policy = 0, friend = False
+
+    @pytest.mark.parametrize("policy", [0, 1])
+    @pytest.mark.parametrize("friend", [False, True])
+    def test_safe_wall_purchase_sends_checked_coordinate_and_complete_snapshot(policy, friend):
+        game, owner, code = game_at(policy, friend, -18.5, -1)
+        response = game.build(spot="wall_1", kind="wall", **code)
+        assert response.status_code == 200
+        (call,) = game.database.calls("island_build" if friend else "islet_build")
+>       assert (call["p_x_half"], call["p_z_half"]) == (-37, -2)
+                ^^^^^^^^^^^^^^^^
+E       KeyError: 'p_x_half'
+
+server/tests/test_normal_wall_build_clearance.py:45: KeyError
+------------------------------ Captured log call -------------------------------
+INFO     uvicorn.error.requests:request_policy.py:56 {"route": "/api/island/build", "status": 200, "duration_ms": 92.077}
+_ test_safe_wall_purchase_sends_checked_coordinate_and_complete_snapshot[False-1] _
+
+policy = 1, friend = False
+
+    @pytest.mark.parametrize("policy", [0, 1])
+    @pytest.mark.parametrize("friend", [False, True])
+    def test_safe_wall_purchase_sends_checked_coordinate_and_complete_snapshot(policy, friend):
+        game, owner, code = game_at(policy, friend, -18.5, -1)
+        response = game.build(spot="wall_1", kind="wall", **code)
+        assert response.status_code == 200
+        (call,) = game.database.calls("island_build" if friend else "islet_build")
+>       assert (call["p_x_half"], call["p_z_half"]) == (-37, -2)
+                ^^^^^^^^^^^^^^^^
+E       KeyError: 'p_x_half'
+
+server/tests/test_normal_wall_build_clearance.py:45: KeyError
+------------------------------ Captured log call -------------------------------
+INFO     uvicorn.error.requests:request_policy.py:56 {"route": "/api/island/build", "status": 200, "duration_ms": 31.527}
+_ test_safe_wall_purchase_sends_checked_coordinate_and_complete_snapshot[True-0] _
+
+policy = 0, friend = True
+
+    @pytest.mark.parametrize("policy", [0, 1])
+    @pytest.mark.parametrize("friend", [False, True])
+    def test_safe_wall_purchase_sends_checked_coordinate_and_complete_snapshot(policy, friend):
+        game, owner, code = game_at(policy, friend, -18.5, -1)
+        response = game.build(spot="wall_1", kind="wall", **code)
+        assert response.status_code == 200
+        (call,) = game.database.calls("island_build" if friend else "islet_build")
+>       assert (call["p_x_half"], call["p_z_half"]) == (-37, -2)
+                ^^^^^^^^^^^^^^^^
+E       KeyError: 'p_x_half'
+
+server/tests/test_normal_wall_build_clearance.py:45: KeyError
+------------------------------ Captured log call -------------------------------
+INFO     uvicorn.error.requests:request_policy.py:56 {"route": "/api/island/build", "status": 200, "duration_ms": 43.625}
+_ test_safe_wall_purchase_sends_checked_coordinate_and_complete_snapshot[True-1] _
+
+policy = 1, friend = True
+
+    @pytest.mark.parametrize("policy", [0, 1])
+    @pytest.mark.parametrize("friend", [False, True])
+    def test_safe_wall_purchase_sends_checked_coordinate_and_complete_snapshot(policy, friend):
+        game, owner, code = game_at(policy, friend, -18.5, -1)
+        response = game.build(spot="wall_1", kind="wall", **code)
+        assert response.status_code == 200
+        (call,) = game.database.calls("island_build" if friend else "islet_build")
+>       assert (call["p_x_half"], call["p_z_half"]) == (-37, -2)
+                ^^^^^^^^^^^^^^^^
+E       KeyError: 'p_x_half'
+
+server/tests/test_normal_wall_build_clearance.py:45: KeyError
+------------------------------ Captured log call -------------------------------
+INFO     uvicorn.error.requests:request_policy.py:56 {"route": "/api/island/build", "status": 200, "duration_ms": 34.175}
+__ test_old_uid_replay_is_answered_before_new_obstruction_validation[False-0] __
+
+policy = 0, friend = False
+
+    @pytest.mark.parametrize("policy", [0, 1])
+    @pytest.mark.parametrize("friend", [False, True])
+    def test_old_uid_replay_is_answered_before_new_obstruction_validation(policy, friend):
+        game, _, code = game_at(policy, friend)
+        game.database.ledger_refs.add(("building_purchase", "island:click-0001"))
+        response = game.build(spot="wall_1", kind="wall", **code)
+        assert response.status_code == 200
+>       assert game.database.calls("islet_build") == game.database.calls("island_build") == []
+E       AssertionError: assert [{'p_player_i...ns': 10, ...}] == []
+E         
+E         Left contains one more item: {'p_player_id': '11111111-2222-4333-8444-555555555555', 'p_plot': 'wall_1', 'p_building_type': 'wall', 'p_coins': 10, ...}
+E         Use -v to get more diff
+
+server/tests/test_normal_wall_build_clearance.py:58: AssertionError
+------------------------------ Captured log call -------------------------------
+INFO     uvicorn.error.requests:request_policy.py:56 {"route": "/api/island/build", "status": 200, "duration_ms": 37.367}
+__ test_old_uid_replay_is_answered_before_new_obstruction_validation[False-1] __
+
+policy = 1, friend = False
+
+    @pytest.mark.parametrize("policy", [0, 1])
+    @pytest.mark.parametrize("friend", [False, True])
+    def test_old_uid_replay_is_answered_before_new_obstruction_validation(policy, friend):
+        game, _, code = game_at(policy, friend)
+        game.database.ledger_refs.add(("building_purchase", "island:click-0001"))
+        response = game.build(spot="wall_1", kind="wall", **code)
+        assert response.status_code == 200
+>       assert game.database.calls("islet_build") == game.database.calls("island_build") == []
+E       AssertionError: assert [{'p_player_i...ns': 10, ...}] == []
+E         
+E         Left contains one more item: {'p_player_id': '11111111-2222-4333-8444-555555555555', 'p_plot': 'wall_1', 'p_building_type': 'wall', 'p_coins': 10, ...}
+E         Use -v to get more diff
+
+server/tests/test_normal_wall_build_clearance.py:58: AssertionError
+------------------------------ Captured log call -------------------------------
+INFO     uvicorn.error.requests:request_policy.py:56 {"route": "/api/island/build", "status": 200, "duration_ms": 31.292}
+______ test_racing_layout_refusal_is_plain_and_does_not_fall_back[False] _______
+
+friend = False
+
+    @pytest.mark.parametrize("friend", [False, True])
+    def test_racing_layout_refusal_is_plain_and_does_not_fall_back(friend):
+        game, _, code = game_at(1, friend, -18.5, -1)
+        refusal = {"status": "refused", "reason": "busy"}
+        if friend:
+            game.database.paid_replies["island_build"] = refusal
+        else:
+            game.database.build_reply = refusal
+        response = game.build(spot="wall_1", kind="wall", **code)
+>       assert response.status_code == 409 and response.json()["error"]["code"] == "busy"
+E       assert (502 == 409)
+E        +  where 502 = <Response [502 Bad Gateway]>.status_code
+
+server/tests/test_normal_wall_build_clearance.py:71: AssertionError
+------------------------------ Captured log call -------------------------------
+INFO     uvicorn.error.requests:request_policy.py:56 {"route": "/api/island/build", "status": 502, "duration_ms": 79.638}
+_______ test_racing_layout_refusal_is_plain_and_does_not_fall_back[True] _______
+
+friend = True
+
+    @pytest.mark.parametrize("friend", [False, True])
+    def test_racing_layout_refusal_is_plain_and_does_not_fall_back(friend):
+        game, _, code = game_at(1, friend, -18.5, -1)
+        refusal = {"status": "refused", "reason": "busy"}
+        if friend:
+            game.database.paid_replies["island_build"] = refusal
+        else:
+            game.database.build_reply = refusal
+        response = game.build(spot="wall_1", kind="wall", **code)
+>       assert response.status_code == 409 and response.json()["error"]["code"] == "busy"
+E       assert (502 == 409)
+E        +  where 502 = <Response [502 Bad Gateway]>.status_code
+
+server/tests/test_normal_wall_build_clearance.py:71: AssertionError
+------------------------------ Captured log call -------------------------------
+INFO     uvicorn.error.requests:request_policy.py:56 {"route": "/api/island/build", "status": 502, "duration_ms": 31.606}
+=========================== short test summary info ============================
+FAILED server/tests/test_normal_wall_build_clearance.py::test_fresh_ordinary_wall_refuses_tree_or_prop_before_paid_rpc[at0-False-0]
+FAILED server/tests/test_normal_wall_build_clearance.py::test_fresh_ordinary_wall_refuses_tree_or_prop_before_paid_rpc[at0-False-1]
+FAILED server/tests/test_normal_wall_build_clearance.py::test_fresh_ordinary_wall_refuses_tree_or_prop_before_paid_rpc[at0-True-0]
+FAILED server/tests/test_normal_wall_build_clearance.py::test_fresh_ordinary_wall_refuses_tree_or_prop_before_paid_rpc[at0-True-1]
+FAILED server/tests/test_normal_wall_build_clearance.py::test_fresh_ordinary_wall_refuses_tree_or_prop_before_paid_rpc[at1-False-0]
+FAILED server/tests/test_normal_wall_build_clearance.py::test_fresh_ordinary_wall_refuses_tree_or_prop_before_paid_rpc[at1-False-1]
+FAILED server/tests/test_normal_wall_build_clearance.py::test_fresh_ordinary_wall_refuses_tree_or_prop_before_paid_rpc[at1-True-0]
+FAILED server/tests/test_normal_wall_build_clearance.py::test_fresh_ordinary_wall_refuses_tree_or_prop_before_paid_rpc[at1-True-1]
+FAILED server/tests/test_normal_wall_build_clearance.py::test_safe_wall_purchase_sends_checked_coordinate_and_complete_snapshot[False-0]
+FAILED server/tests/test_normal_wall_build_clearance.py::test_safe_wall_purchase_sends_checked_coordinate_and_complete_snapshot[False-1]
+FAILED server/tests/test_normal_wall_build_clearance.py::test_safe_wall_purchase_sends_checked_coordinate_and_complete_snapshot[True-0]
+FAILED server/tests/test_normal_wall_build_clearance.py::test_safe_wall_purchase_sends_checked_coordinate_and_complete_snapshot[True-1]
+FAILED server/tests/test_normal_wall_build_clearance.py::test_old_uid_replay_is_answered_before_new_obstruction_validation[False-0]
+FAILED server/tests/test_normal_wall_build_clearance.py::test_old_uid_replay_is_answered_before_new_obstruction_validation[False-1]
+FAILED server/tests/test_normal_wall_build_clearance.py::test_racing_layout_refusal_is_plain_and_does_not_fall_back[False]
+FAILED server/tests/test_normal_wall_build_clearance.py::test_racing_layout_refusal_is_plain_and_does_not_fall_back[True]
+16 failed, 3 passed in 2.73s

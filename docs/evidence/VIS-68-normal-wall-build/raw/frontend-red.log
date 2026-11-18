@@ -1,0 +1,3678 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run --maxWorkers=1 tests/island/normal-wall-scenery.test.js
+
+
+ RUN  v5.1.0 /workspace/reference-village-work/clearance-normal-build/frontend
+
+ ❯ tests/island/normal-wall-scenery.test.js (14 tests | 9 failed) 185ms
+   × fresh normal wall purchase refuses scenery: 0 / friend=false / -16,0 56ms
+   × fresh normal wall purchase refuses scenery: 0 / friend=false / -2,12 19ms
+   × fresh normal wall purchase refuses scenery: 0 / friend=true / -16,0 12ms
+   × fresh normal wall purchase refuses scenery: 0 / friend=true / -2,12 10ms
+   × safe ordinary wall purchase and old UID replay survive: 0 / friend=false 2ms
+   × safe ordinary wall purchase and old UID replay survive: 0 / friend=true 2ms
+   × safe ordinary wall purchase and old UID replay survive: 1 / friend=false 46ms
+   × safe ordinary wall purchase and old UID replay survive: 1 / friend=true 8ms
+   × retains wrong-kind refusal and reads of old paid overlap on policy 1 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 9 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/island/normal-wall-scenery.test.js > fresh normal wall purchase refuses scenery: 0 / friend=false / -16,0
+AssertionError: promise resolved "{ code: 'ISLE-K7Q2M', …(13) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "campaign": {
++     "later": [],
++     "locked": {
++       "final_battle": 99,
++     },
++     "open": [
++       "wall:1",
++       "cannon:1",
++       "captain:1",
++       "captain:2",
++       "captain:3",
++       "house:1",
++       "wall:2",
++       "cannon:2",
++       "mortar:1",
++       "mortar:2",
++       "house:2",
++       "watchtower:1",
++       "watchtower:2",
++       "crew:gunner",
++       "harbor",
++       "market_calls",
++       "ring_walls",
++       "crew:carpenter",
++       "wall:3",
++       "cannon:3",
++       "mortar:3",
++       "house:3",
++       "wreck",
++       "crew:guard",
++       "football_board",
++       "tech_hub",
++       "crew:lookout",
++       "captain:4",
++       "captain:5",
++       "swivel:1",
++       "swivel:2",
++       "swivel:3",
++       "cannon:4",
++       "wall:4",
++       "watchtower:3",
++       "harpoon:1",
++       "harpoon:2",
++       "harpoon:3",
++       "tier_12",
++       "mortar:4",
++       "harpoon:4",
++       "swivel:4",
++       "watchtower:4",
++       "tier_15",
++       "research_2",
++       "cannon:5",
++       "mortar:5",
++       "harpoon:5",
++       "swivel:5",
++       "wall:5",
++       "watchtower:5",
++       "tier_20",
++       "tree_1",
++       "research_3",
++       "tier_30",
++       "ship",
++       "tree_2",
++       "tree_3",
++       "tier_50",
++     ],
++     "research": {
++       "branches": [
++         {
++           "branch": "cannon",
++           "name": "Cannon skills",
++           "price": 180,
++           "prices": [
++             180,
++             360,
++             630,
++           ],
++           "specs": [
++             {
++               "id": "rapid",
++               "name": "Rapid",
++             },
++             {
++               "id": "heavy",
++               "name": "Heavy shot",
++             },
++             {
++               "id": "chain",
++               "name": "Chain shot",
++             },
++           ],
++           "tier2": [
++             {
++               "id": "rapid_2",
++               "name": "Rapid II",
++             },
++             {
++               "id": "long_guns",
++               "name": "Long guns",
++             },
++           ],
++           "tier3": [
++             {
++               "id": "broadside",
++               "name": "Broadside",
++             },
++             {
++               "id": "grapeshot",
++               "name": "Grapeshot",
++             },
++           ],
++         },
++         {
++           "branch": "mortar",
++           "name": "Mortar skills",
++           "price": 220,
++           "prices": [
++             220,
++             440,
++             770,
++           ],
++           "specs": [
++             {
++               "id": "cluster",
++               "name": "Cluster",
++             },
++             {
++               "id": "fire_pot",
++               "name": "Fire pot",
++             },
++             {
++               "id": "long_range",
++               "name": "Long range",
++             },
++           ],
++           "tier2": [
++             {
++               "id": "quick_fuse",
++               "name": "Quick fuse",
++             },
++             {
++               "id": "heavy_shells",
++               "name": "Heavy shells",
++             },
++           ],
++           "tier3": [
++             {
++               "id": "shockwave",
++               "name": "Shockwave",
++             },
++             {
++               "id": "inferno",
++               "name": "Inferno",
++             },
++           ],
++         },
++         {
++           "branch": "wall",
++           "name": "Wall skills",
++           "price": 120,
++           "prices": [
++             120,
++             240,
++             420,
++           ],
++           "specs": [
++             {
++               "id": "stone",
++               "name": "Stone",
++             },
++             {
++               "id": "spiked",
++               "name": "Spiked",
++             },
++             {
++               "id": "quick_mend",
++               "name": "Quick mend",
++             },
++           ],
++           "tier2": [
++             {
++               "id": "mason_drill",
++               "name": "Mason drill",
++             },
++             {
++               "id": "thick_walls",
++               "name": "Thick walls",
++             },
++           ],
++           "tier3": [
++             {
++               "id": "bastion",
++               "name": "Bastion",
++             },
++             {
++               "id": "thorns",
++               "name": "Thorns",
++             },
++           ],
++         },
++         {
++           "branch": "watchtower",
++           "name": "Watchtower skills",
++           "price": 160,
++           "prices": [
++             160,
++             320,
++             560,
++           ],
++           "specs": [
++             {
++               "id": "spotter",
++               "name": "Spotter",
++             },
++             {
++               "id": "signal_fire",
++               "name": "Signal fire",
++             },
++           ],
++           "tier2": [
++             {
++               "id": "lookout_drill",
++               "name": "Lookout drill",
++             },
++             {
++               "id": "high_tower",
++               "name": "High tower",
++             },
++           ],
++           "tier3": [
++             {
++               "id": "eagle_eye",
++               "name": "Eagle eye",
++             },
++             {
++               "id": "war_drums",
++               "name": "War drums",
++             },
++           ],
++         },
++       ],
++       "done": [],
++       "tierWaves": [
++         8,
++         15,
++         25,
++       ],
++       "tiers": {
++         "cannon": {
++           "tier": 0,
++           "tier2": null,
++           "tier3": null,
++         },
++         "mortar": {
++           "tier": 0,
++           "tier2": null,
++           "tier3": null,
++         },
++         "wall": {
++           "tier": 0,
++           "tier2": null,
++           "tier3": null,
++         },
++         "watchtower": {
++           "tier": 0,
++           "tier2": null,
++           "tier3": null,
++         },
++       },
++     },
++     "wave": 50,
++     "wreck": {
++       "gifts": [
++         25,
++         100,
++       ],
++       "goal": 500,
++       "paid": 0,
++     },
++   },
++   "captain": {
++     "level": 1,
++     "nextPrice": 20,
++   },
++   "code": "ISLE-K7Q2M",
++   "coins": 4990,
++   "crew": {
++     "carpenter": 0,
++     "guard": 0,
++     "gunner": 0,
++     "lookout": 0,
++   },
++   "flags": 0,
++   "layout": {
++     "grid": 0.5,
++     "movable": true,
++     "version": 2,
++   },
++   "nextWave": 51,
++   "prices": {
++     "captain": [
++       0,
++       20,
++       40,
++       80,
++       160,
++     ],
++     "crew": {
++       "carpenter": {
++         "max": 2,
++         "price": 30,
++       },
++       "guard": {
++         "max": 3,
++         "price": 60,
++       },
++       "gunner": {
++         "max": 2,
++         "price": 40,
++       },
++       "lookout": {
++         "max": 1,
++         "price": 25,
++       },
++     },
++     "kinds": {
++       "cannon": [
++         30,
++         60,
++         120,
++         240,
++         480,
++       ],
++       "harpoon": [
++         40,
++         80,
++         160,
++         320,
++         640,
++       ],
++       "house": [
++         50,
++         100,
++         200,
++       ],
++       "mortar": [
++         60,
++         120,
++         240,
++         480,
++         960,
++       ],
++       "swivel": [
++         50,
++         100,
++         200,
++         400,
++         800,
++       ],
++       "wall": [
++         10,
++         20,
++         40,
++         80,
++         160,
++       ],
++       "watchtower": [
++         40,
++         80,
++         160,
++         320,
++         640,
++       ],
++     },
++     "towerSkills": {
++       "cannon": {
++         "capstone": 600,
++         "skill": 150,
++       },
++       "mortar": {
++         "capstone": 480,
++         "skill": 120,
++       },
++       "wall": {
++         "capstone": 160,
++         "skill": 40,
++       },
++       "watchtower": {
++         "capstone": 320,
++         "skill": 80,
++       },
++     },
++     "towerTrees": {
++       "cannon": {
++         "a": {
++           "id": "drill",
++           "name": "Drill",
++         },
++         "b": {
++           "id": "powder",
++           "name": "Powder",
++         },
++         "level": 5,
++         "prices": [
++           1000,
++           2200,
++           4800,
++         ],
++         "waves": [
++           20,
++           35,
++           45,
++         ],
++       },
++       "harpoon": {
++         "a": {
++           "id": "winch",
++           "name": "Winch",
++         },
++         "b": {
++           "id": "barbs",
++           "name": "Barbs",
++         },
++         "level": 5,
++         "prices": [
++           700,
++           1500,
++           3200,
++         ],
++         "waves": [
++           20,
++           35,
++           45,
++         ],
++       },
++       "mortar": {
++         "a": {
++           "id": "loaders",
++           "name": "Loaders",
++         },
++         "b": {
++           "id": "big_shells",
++           "name": "Big shells",
++         },
++         "level": 5,
++         "prices": [
++           1200,
++           2600,
++           5600,
++         ],
++         "waves": [
++           20,
++           35,
++           45,
++         ],
++       },
++       "swivel": {
++         "a": {
++           "id": "oiled",
++           "name": "Oiled",
++         },
++         "b": {
++           "id": "scatter",
++           "name": "Scatter",
++         },
++         "level": 5,
++         "prices": [
++           900,
++           2000,
++           4400,
++         ],
++         "waves": [
++           20,
++           35,
++           45,
++         ],
++       },
++     },
++   },
++   "skills": {
++     "known": [],
++     "points": 25,
++     "respecPrice": 100,
++     "role": null,
++     "roleLevel": 3,
++     "roles": [
++       {
++         "branch": "brawler",
++         "id": "medic",
++         "name": "Medic",
++       },
++       {
++         "branch": "shipwright",
++         "id": "engineer",
++         "name": "Engineer",
++       },
++       {
++         "branch": "marksman",
++         "id": "gunner",
++         "name": "Gunner",
++       },
++     ],
++     "spent": 0,
++     "tree": [
++       {
++         "branch": "marksman",
++         "cost": 1,
++         "excludes": null,
++         "id": "steady_aim",
++         "name": "Steady aim",
++         "needs": [],
++         "role": null,
++         "tier": 1,
++       },
++       {
++         "branch": "marksman",
++         "cost": 2,
++         "excludes": "hot_shot",
++         "id": "long_barrel",
++         "name": "Long barrel",
++         "needs": [
++           "steady_aim",
++         ],
++         "role": null,
++         "tier": 2,
++       },
++       {
++         "branch": "marksman",
++         "cost": 2,
++         "excludes": "long_barrel",
++         "id": "hot_shot",
++         "name": "Hot shot",
++         "needs": [
++           "steady_aim",
++         ],
++         "role": null,
++         "tier": 2,
++       },
++       {
++         "branch": "marksman",
++         "cost": 3,
++         "excludes": null,
++         "id": "quick_hands",
++         "name": "Quick hands",
++         "needs": [
++           "long_barrel",
++           "hot_shot",
++         ],
++         "role": null,
++         "tier": 3,
++       },
++       {
++         "branch": "marksman",
++         "cost": 3,
++         "excludes": "heavy_shot",
++         "id": "far_sight",
++         "name": "Far sight",
++         "needs": [
++           "quick_hands",
++         ],
++         "role": null,
++         "tier": 4,
++       },
++       {
++         "branch": "marksman",
++         "cost": 3,
++         "excludes": "far_sight",
++         "id": "heavy_shot",
++         "name": "Heavy shot",
++         "needs": [
++           "quick_hands",
++         ],
++         "role": null,
++         "tier": 4,
++       },
++       {
++         "branch": "marksman",
++         "cost": 4,
++         "excludes": null,
++         "id": "dead_eye",
++         "name": "Dead eye",
++         "needs": [
++           "far_sight",
++           "heavy_shot",
++         ],
++         "role": "gunner",
++         "tier": 5,
++       },
++       {
++         "branch": "brawler",
++         "cost": 1,
++         "excludes": null,
++         "id": "cutlass",
++         "name": "Cutlass",
++         "needs": [],
++         "role": null,
++         "tier": 1,
++       },
++       {
++         "branch": "brawler",
++         "cost": 2,
++         "excludes": "heavy_blade",
++         "id": "sweep",
++         "name": "Sweep",
++         "needs": [
++           "cutlass",
++         ],
++         "role": null,
++         "tier": 2,
++       },
++       {
++         "branch": "brawler",
++         "cost": 2,
++         "excludes": "sweep",
++         "id": "heavy_blade",
++         "name": "Heavy blade",
++         "needs": [
++           "cutlass",
++         ],
++         "role": null,
++         "tier": 2,
++       },
++       {
++         "branch": "brawler",
++         "cost": 3,
++         "excludes": null,
++         "id": "second_wind",
++         "name": "Second wind",
++         "needs": [
++           "sweep",
++           "heavy_blade",
++         ],
++         "role": null,
++         "tier": 3,
++       },
++       {
++         "branch": "brawler",
++         "cost": 3,
++         "excludes": "bruiser",
++         "id": "snap_shot",
++         "name": "Snap shot",
++         "needs": [
++           "second_wind",
++         ],
++         "role": null,
++         "tier": 4,
++       },
++       {
++         "branch": "brawler",
++         "cost": 3,
++         "excludes": "snap_shot",
++         "id": "bruiser",
++         "name": "Bruiser",
++         "needs": [
++           "second_wind",
++         ],
++         "role": null,
++         "tier": 4,
++       },
++       {
++         "branch": "brawler",
++         "cost": 4,
++         "excludes": null,
++         "id": "field_surgeon",
++         "name": "Field surgeon",
++         "needs": [
++           "snap_shot",
++           "bruiser",
++         ],
++         "role": "medic",
++         "tier": 5,
++       },
++       {
++         "branch": "shipwright",
++         "cost": 1,
++         "excludes": null,
++         "id": "quick_fix",
++         "name": "Quick fix",
++         "needs": [],
++         "role": null,
++         "tier": 1,
++       },
++       {
++         "branch": "shipwright",
++         "cost": 2,
++         "excludes": "sturdy_planks",
++         "id": "long_reach",
++         "name": "Long reach",
++         "needs": [
++           "quick_fix",
++         ],
++         "role": null,
++         "tier": 2,
++       },
++       {
++         "branch": "shipwright",
++         "cost": 2,
++         "excludes": "long_reach",
++         "id": "sturdy_planks",
++         "name": "Sturdy planks",
++         "needs": [
++           "quick_fix",
++         ],
++         "role": null,
++         "tier": 2,
++       },
++       {
++         "branch": "shipwright",
++         "cost": 3,
++         "excludes": null,
++         "id": "master_shipwright",
++         "name": "Master shipwright",
++         "needs": [
++           "long_reach",
++           "sturdy_planks",
++         ],
++         "role": null,
++         "tier": 3,
++       },
++       {
++         "branch": "shipwright",
++         "cost": 3,
++         "excludes": "wide_arc",
++         "id": "swift_hammer",
++         "name": "Swift hammer",
++         "needs": [
++           "master_shipwright",
++         ],
++         "role": null,
++         "tier": 4,
++       },
++       {
++         "branch": "shipwright",
++         "cost": 3,
++         "excludes": "swift_hammer",
++         "id": "wide_arc",
++         "name": "Wide arc",
++         "needs": [
++           "master_shipwright",
++         ],
++         "role": null,
++         "tier": 4,
++       },
++       {
++         "branch": "shipwright",
++         "cost": 4,
++         "excludes": null,
++         "id": "grand_engineer",
++         "name": "Grand engineer",
++         "needs": [
++           "swift_hammer",
++           "wide_arc",
++         ],
++         "role": "engineer",
++         "tier": 5,
++       },
++     ],
++   },
++   "spots": [
++     {
++       "built": true,
++       "cost": 10,
++       "id": "wall_1",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 1,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": 20,
++       "x": -16,
++       "z": 0,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_2",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_3",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_4",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_5",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_6",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 30,
++       "id": "cannon_1",
++       "kind": "cannon",
++       "kinds": [
++         "cannon",
++         "mortar",
++         "harpoon",
++         "swivel",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 30,
++       "id": "cannon_2",
++       "kind": "cannon",
++       "kinds": [
++         "cannon",
++         "mortar",
++         "harpoon",
++         "swivel",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 30,
++       "id": "cannon_3",
++       "kind": "cannon",
++       "kinds": [
++         "cannon",
++         "mortar",
++         "harpoon",
++         "swivel",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 30,
++       "id": "cannon_4",
++       "kind": "cannon",
++       "kinds": [
++         "cannon",
++         "mortar",
++         "harpoon",
++         "swivel",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 30,
++       "id": "cannon_5",
++       "kind": "cannon",
++       "kinds": [
++         "cannon",
++         "mortar",
++         "harpoon",
++         "swivel",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 30,
++       "id": "cannon_6",
++       "kind": "cannon",
++       "kinds": [
++         "cannon",
++         "mortar",
++         "harpoon",
++         "swivel",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 30,
++       "id": "cannon_7",
++       "kind": "cannon",
++       "kinds": [
++         "cannon",
++         "mortar",
++         "harpoon",
++         "swivel",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 40,
++       "id": "tower_1",
++       "kind": "watchtower",
++       "kinds": [
++         "watchtower",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 50,
++       "id": "house_1",
++       "kind": "house",
++       "kinds": [
++         "house",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 50,
++       "id": "house_2",
++       "kind": "house",
++       "kinds": [
++         "house",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_7",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_8",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_9",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_10",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_11",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_12",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++   ],
++   "unlocks": {
++     "locked": {},
++     "unlocked": [
++       "crew:gunner",
++       "crew:carpenter",
++       "crew:lookout",
++       "crew:guard",
++       "captain:1",
++       "captain:2",
++       "captain:3",
++       "captain:4",
++       "captain:5",
++       "wall:1",
++       "wall:2",
++       "wall:3",
++       "wall:4",
++       "wall:5",
++       "cannon:1",
++       "cannon:2",
++       "cannon:3",
++       "cannon:4",
++       "cannon:5",
++       "mortar:1",
++       "mortar:2",
++       "mortar:3",
++       "mortar:4",
++       "mortar:5",
++       "harpoon:1",
++       "harpoon:2",
++       "harpoon:3",
++       "harpoon:4",
++       "harpoon:5",
++       "swivel:1",
++       "swivel:2",
++       "swivel:3",
++       "swivel:4",
++       "swivel:5",
++       "watchtower:1",
++       "watchtower:2",
++       "watchtower:3",
++       "watchtower:4",
++       "watchtower:5",
++       "house:1",
++       "house:2",
++       "house:3",
++     ],
++     "wave": 50,
++   },
++   "waveBest": 50,
++   "weapons": {
++     "equipped": "musket",
++     "owned": [
++       "musket",
++     ],
++     "shop": [
++       {
++         "id": "musket",
++         "name": "Musket",
++         "price": 0,
++         "unlockWave": 0,
++       },
++       {
++         "id": "pistols",
++         "name": "Pistols",
++         "price": 60,
++         "unlockWave": 2,
++       },
++       {
++         "id": "blunderbuss",
++         "name": "Blunderbuss",
++         "price": 120,
++         "unlockWave": 4,
++       },
++       {
++         "id": "long_rifle",
++         "name": "Long rifle",
++         "price": 200,
++         "unlockWave": 6,
++       },
++       {
++         "id": "fire_bombs",
++         "name": "Fire bombs",
++         "price": 300,
++         "unlockWave": 10,
++       },
++     ],
++   },
+  }
+
+ ❯ tests/island/normal-wall-scenery.test.js:26:5
+     24|   t.island.positions = new Map([['wall_1', {x, z}]]);
+     25|   await expect(t.api.build({spot: 'wall_1', kind: 'wall', actionUid: '…
+     26|     .rejects.toMatchObject({code: 'place_taken'});
+       |     ^
+     27|   expect(t.player.coins).toBe(5000); expect(t.island.built.has('wall_1…
+     28|   expect(t.player.actions.has('build:normal-scenery-01')).toBe(false);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+ FAIL  tests/island/normal-wall-scenery.test.js > fresh normal wall purchase refuses scenery: 0 / friend=false / -2,12
+AssertionError: promise resolved "{ code: 'ISLE-K7Q2M', …(13) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "campaign": {
++     "later": [],
++     "locked": {
++       "final_battle": 99,
++     },
++     "open": [
++       "wall:1",
++       "cannon:1",
++       "captain:1",
++       "captain:2",
++       "captain:3",
++       "house:1",
++       "wall:2",
++       "cannon:2",
++       "mortar:1",
++       "mortar:2",
++       "house:2",
++       "watchtower:1",
++       "watchtower:2",
++       "crew:gunner",
++       "harbor",
++       "market_calls",
++       "ring_walls",
++       "crew:carpenter",
++       "wall:3",
++       "cannon:3",
++       "mortar:3",
++       "house:3",
++       "wreck",
++       "crew:guard",
++       "football_board",
++       "tech_hub",
++       "crew:lookout",
++       "captain:4",
++       "captain:5",
++       "swivel:1",
++       "swivel:2",
++       "swivel:3",
++       "cannon:4",
++       "wall:4",
++       "watchtower:3",
++       "harpoon:1",
++       "harpoon:2",
++       "harpoon:3",
++       "tier_12",
++       "mortar:4",
++       "harpoon:4",
++       "swivel:4",
++       "watchtower:4",
++       "tier_15",
++       "research_2",
++       "cannon:5",
++       "mortar:5",
++       "harpoon:5",
++       "swivel:5",
++       "wall:5",
++       "watchtower:5",
++       "tier_20",
++       "tree_1",
++       "research_3",
++       "tier_30",
++       "ship",
++       "tree_2",
++       "tree_3",
++       "tier_50",
++     ],
++     "research": {
++       "branches": [
++         {
++           "branch": "cannon",
++           "name": "Cannon skills",
++           "price": 180,
++           "prices": [
++             180,
++             360,
++             630,
++           ],
++           "specs": [
++             {
++               "id": "rapid",
++               "name": "Rapid",
++             },
++             {
++               "id": "heavy",
++               "name": "Heavy shot",
++             },
++             {
++               "id": "chain",
++               "name": "Chain shot",
++             },
++           ],
++           "tier2": [
++             {
++               "id": "rapid_2",
++               "name": "Rapid II",
++             },
++             {
++               "id": "long_guns",
++               "name": "Long guns",
++             },
++           ],
++           "tier3": [
++             {
++               "id": "broadside",
++               "name": "Broadside",
++             },
++             {
++               "id": "grapeshot",
++               "name": "Grapeshot",
++             },
++           ],
++         },
++         {
++           "branch": "mortar",
++           "name": "Mortar skills",
++           "price": 220,
++           "prices": [
++             220,
++             440,
++             770,
++           ],
++           "specs": [
++             {
++               "id": "cluster",
++               "name": "Cluster",
++             },
++             {
++               "id": "fire_pot",
++               "name": "Fire pot",
++             },
++             {
++               "id": "long_range",
++               "name": "Long range",
++             },
++           ],
++           "tier2": [
++             {
++               "id": "quick_fuse",
++               "name": "Quick fuse",
++             },
++             {
++               "id": "heavy_shells",
++               "name": "Heavy shells",
++             },
++           ],
++           "tier3": [
++             {
++               "id": "shockwave",
++               "name": "Shockwave",
++             },
++             {
++               "id": "inferno",
++               "name": "Inferno",
++             },
++           ],
++         },
++         {
++           "branch": "wall",
++           "name": "Wall skills",
++           "price": 120,
++           "prices": [
++             120,
++             240,
++             420,
++           ],
++           "specs": [
++             {
++               "id": "stone",
++               "name": "Stone",
++             },
++             {
++               "id": "spiked",
++               "name": "Spiked",
++             },
++             {
++               "id": "quick_mend",
++               "name": "Quick mend",
++             },
++           ],
++           "tier2": [
++             {
++               "id": "mason_drill",
++               "name": "Mason drill",
++             },
++             {
++               "id": "thick_walls",
++               "name": "Thick walls",
++             },
++           ],
++           "tier3": [
++             {
++               "id": "bastion",
++               "name": "Bastion",
++             },
++             {
++               "id": "thorns",
++               "name": "Thorns",
++             },
++           ],
++         },
++         {
++           "branch": "watchtower",
++           "name": "Watchtower skills",
++           "price": 160,
++           "prices": [
++             160,
++             320,
++             560,
++           ],
++           "specs": [
++             {
++               "id": "spotter",
++               "name": "Spotter",
++             },
++             {
++               "id": "signal_fire",
++               "name": "Signal fire",
++             },
++           ],
++           "tier2": [
++             {
++               "id": "lookout_drill",
++               "name": "Lookout drill",
++             },
++             {
++               "id": "high_tower",
++               "name": "High tower",
++             },
++           ],
++           "tier3": [
++             {
++               "id": "eagle_eye",
++               "name": "Eagle eye",
++             },
++             {
++               "id": "war_drums",
++               "name": "War drums",
++             },
++           ],
++         },
++       ],
++       "done": [],
++       "tierWaves": [
++         8,
++         15,
++         25,
++       ],
++       "tiers": {
++         "cannon": {
++           "tier": 0,
++           "tier2": null,
++           "tier3": null,
++         },
++         "mortar": {
++           "tier": 0,
++           "tier2": null,
++           "tier3": null,
++         },
++         "wall": {
++           "tier": 0,
++           "tier2": null,
++           "tier3": null,
++         },
++         "watchtower": {
++           "tier": 0,
++           "tier2": null,
++           "tier3": null,
++         },
++       },
++     },
++     "wave": 50,
++     "wreck": {
++       "gifts": [
++         25,
++         100,
++       ],
++       "goal": 500,
++       "paid": 0,
++     },
++   },
++   "captain": {
++     "level": 1,
++     "nextPrice": 20,
++   },
++   "code": "ISLE-K7Q2M",
++   "coins": 4990,
++   "crew": {
++     "carpenter": 0,
++     "guard": 0,
++     "gunner": 0,
++     "lookout": 0,
++   },
++   "flags": 0,
++   "layout": {
++     "grid": 0.5,
++     "movable": true,
++     "version": 2,
++   },
++   "nextWave": 51,
++   "prices": {
++     "captain": [
++       0,
++       20,
++       40,
++       80,
++       160,
++     ],
++     "crew": {
++       "carpenter": {
++         "max": 2,
++         "price": 30,
++       },
++       "guard": {
++         "max": 3,
++         "price": 60,
++       },
++       "gunner": {
++         "max": 2,
++         "price": 40,
++       },
++       "lookout": {
++         "max": 1,
++         "price": 25,
++       },
++     },
++     "kinds": {
++       "cannon": [
++         30,
++         60,
++         120,
++         240,
++         480,
++       ],
++       "harpoon": [
++         40,
++         80,
++         160,
++         320,
++         640,
++       ],
++       "house": [
++         50,
++         100,
++         200,
++       ],
++       "mortar": [
++         60,
++         120,
++         240,
++         480,
++         960,
++       ],
++       "swivel": [
++         50,
++         100,
++         200,
++         400,
++         800,
++       ],
++       "wall": [
++         10,
++         20,
++         40,
++         80,
++         160,
++       ],
++       "watchtower": [
++         40,
++         80,
++         160,
++         320,
++         640,
++       ],
++     },
++     "towerSkills": {
++       "cannon": {
++         "capstone": 600,
++         "skill": 150,
++       },
++       "mortar": {
++         "capstone": 480,
++         "skill": 120,
++       },
++       "wall": {
++         "capstone": 160,
++         "skill": 40,
++       },
++       "watchtower": {
++         "capstone": 320,
++         "skill": 80,
++       },
++     },
++     "towerTrees": {
++       "cannon": {
++         "a": {
++           "id": "drill",
++           "name": "Drill",
++         },
++         "b": {
++           "id": "powder",
++           "name": "Powder",
++         },
++         "level": 5,
++         "prices": [
++           1000,
++           2200,
++           4800,
++         ],
++         "waves": [
++           20,
++           35,
++           45,
++         ],
++       },
++       "harpoon": {
++         "a": {
++           "id": "winch",
++           "name": "Winch",
++         },
++         "b": {
++           "id": "barbs",
++           "name": "Barbs",
++         },
++         "level": 5,
++         "prices": [
++           700,
++           1500,
++           3200,
++         ],
++         "waves": [
++           20,
++           35,
++           45,
++         ],
++       },
++       "mortar": {
++         "a": {
++           "id": "loaders",
++           "name": "Loaders",
++         },
++         "b": {
++           "id": "big_shells",
++           "name": "Big shells",
++         },
++         "level": 5,
++         "prices": [
++           1200,
++           2600,
++           5600,
++         ],
++         "waves": [
++           20,
++           35,
++           45,
++         ],
++       },
++       "swivel": {
++         "a": {
++           "id": "oiled",
++           "name": "Oiled",
++         },
++         "b": {
++           "id": "scatter",
++           "name": "Scatter",
++         },
++         "level": 5,
++         "prices": [
++           900,
++           2000,
++           4400,
++         ],
++         "waves": [
++           20,
++           35,
++           45,
++         ],
++       },
++     },
++   },
++   "skills": {
++     "known": [],
++     "points": 25,
++     "respecPrice": 100,
++     "role": null,
++     "roleLevel": 3,
++     "roles": [
++       {
++         "branch": "brawler",
++         "id": "medic",
++         "name": "Medic",
++       },
++       {
++         "branch": "shipwright",
++         "id": "engineer",
++         "name": "Engineer",
++       },
++       {
++         "branch": "marksman",
++         "id": "gunner",
++         "name": "Gunner",
++       },
++     ],
++     "spent": 0,
++     "tree": [
++       {
++         "branch": "marksman",
++         "cost": 1,
++         "excludes": null,
++         "id": "steady_aim",
++         "name": "Steady aim",
++         "needs": [],
++         "role": null,
++         "tier": 1,
++       },
++       {
++         "branch": "marksman",
++         "cost": 2,
++         "excludes": "hot_shot",
++         "id": "long_barrel",
++         "name": "Long barrel",
++         "needs": [
++           "steady_aim",
++         ],
++         "role": null,
++         "tier": 2,
++       },
++       {
++         "branch": "marksman",
++         "cost": 2,
++         "excludes": "long_barrel",
++         "id": "hot_shot",
++         "name": "Hot shot",
++         "needs": [
++           "steady_aim",
++         ],
++         "role": null,
++         "tier": 2,
++       },
++       {
++         "branch": "marksman",
++         "cost": 3,
++         "excludes": null,
++         "id": "quick_hands",
++         "name": "Quick hands",
++         "needs": [
++           "long_barrel",
++           "hot_shot",
++         ],
++         "role": null,
++         "tier": 3,
++       },
++       {
++         "branch": "marksman",
++         "cost": 3,
++         "excludes": "heavy_shot",
++         "id": "far_sight",
++         "name": "Far sight",
++         "needs": [
++           "quick_hands",
++         ],
++         "role": null,
++         "tier": 4,
++       },
++       {
++         "branch": "marksman",
++         "cost": 3,
++         "excludes": "far_sight",
++         "id": "heavy_shot",
++         "name": "Heavy shot",
++         "needs": [
++           "quick_hands",
++         ],
++         "role": null,
++         "tier": 4,
++       },
++       {
++         "branch": "marksman",
++         "cost": 4,
++         "excludes": null,
++         "id": "dead_eye",
++         "name": "Dead eye",
++         "needs": [
++           "far_sight",
++           "heavy_shot",
++         ],
++         "role": "gunner",
++         "tier": 5,
++       },
++       {
++         "branch": "brawler",
++         "cost": 1,
++         "excludes": null,
++         "id": "cutlass",
++         "name": "Cutlass",
++         "needs": [],
++         "role": null,
++         "tier": 1,
++       },
++       {
++         "branch": "brawler",
++         "cost": 2,
++         "excludes": "heavy_blade",
++         "id": "sweep",
++         "name": "Sweep",
++         "needs": [
++           "cutlass",
++         ],
++         "role": null,
++         "tier": 2,
++       },
++       {
++         "branch": "brawler",
++         "cost": 2,
++         "excludes": "sweep",
++         "id": "heavy_blade",
++         "name": "Heavy blade",
++         "needs": [
++           "cutlass",
++         ],
++         "role": null,
++         "tier": 2,
++       },
++       {
++         "branch": "brawler",
++         "cost": 3,
++         "excludes": null,
++         "id": "second_wind",
++         "name": "Second wind",
++         "needs": [
++           "sweep",
++           "heavy_blade",
++         ],
++         "role": null,
++         "tier": 3,
++       },
++       {
++         "branch": "brawler",
++         "cost": 3,
++         "excludes": "bruiser",
++         "id": "snap_shot",
++         "name": "Snap shot",
++         "needs": [
++           "second_wind",
++         ],
++         "role": null,
++         "tier": 4,
++       },
++       {
++         "branch": "brawler",
++         "cost": 3,
++         "excludes": "snap_shot",
++         "id": "bruiser",
++         "name": "Bruiser",
++         "needs": [
++           "second_wind",
++         ],
++         "role": null,
++         "tier": 4,
++       },
++       {
++         "branch": "brawler",
++         "cost": 4,
++         "excludes": null,
++         "id": "field_surgeon",
++         "name": "Field surgeon",
++         "needs": [
++           "snap_shot",
++           "bruiser",
++         ],
++         "role": "medic",
++         "tier": 5,
++       },
++       {
++         "branch": "shipwright",
++         "cost": 1,
++         "excludes": null,
++         "id": "quick_fix",
++         "name": "Quick fix",
++         "needs": [],
++         "role": null,
++         "tier": 1,
++       },
++       {
++         "branch": "shipwright",
++         "cost": 2,
++         "excludes": "sturdy_planks",
++         "id": "long_reach",
++         "name": "Long reach",
++         "needs": [
++           "quick_fix",
++         ],
++         "role": null,
++         "tier": 2,
++       },
++       {
++         "branch": "shipwright",
++         "cost": 2,
++         "excludes": "long_reach",
++         "id": "sturdy_planks",
++         "name": "Sturdy planks",
++         "needs": [
++           "quick_fix",
++         ],
++         "role": null,
++         "tier": 2,
++       },
++       {
++         "branch": "shipwright",
++         "cost": 3,
++         "excludes": null,
++         "id": "master_shipwright",
++         "name": "Master shipwright",
++         "needs": [
++           "long_reach",
++           "sturdy_planks",
++         ],
++         "role": null,
++         "tier": 3,
++       },
++       {
++         "branch": "shipwright",
++         "cost": 3,
++         "excludes": "wide_arc",
++         "id": "swift_hammer",
++         "name": "Swift hammer",
++         "needs": [
++           "master_shipwright",
++         ],
++         "role": null,
++         "tier": 4,
++       },
++       {
++         "branch": "shipwright",
++         "cost": 3,
++         "excludes": "swift_hammer",
++         "id": "wide_arc",
++         "name": "Wide arc",
++         "needs": [
++           "master_shipwright",
++         ],
++         "role": null,
++         "tier": 4,
++       },
++       {
++         "branch": "shipwright",
++         "cost": 4,
++         "excludes": null,
++         "id": "grand_engineer",
++         "name": "Grand engineer",
++         "needs": [
++           "swift_hammer",
++           "wide_arc",
++         ],
++         "role": "engineer",
++         "tier": 5,
++       },
++     ],
++   },
++   "spots": [
++     {
++       "built": true,
++       "cost": 10,
++       "id": "wall_1",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 1,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": 20,
++       "x": -2,
++       "z": 12,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_2",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_3",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_4",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_5",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_6",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 30,
++       "id": "cannon_1",
++       "kind": "cannon",
++       "kinds": [
++         "cannon",
++         "mortar",
++         "harpoon",
++         "swivel",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 30,
++       "id": "cannon_2",
++       "kind": "cannon",
++       "kinds": [
++         "cannon",
++         "mortar",
++         "harpoon",
++         "swivel",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 30,
++       "id": "cannon_3",
++       "kind": "cannon",
++       "kinds": [
++         "cannon",
++         "mortar",
++         "harpoon",
++         "swivel",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 30,
++       "id": "cannon_4",
++       "kind": "cannon",
++       "kinds": [
++         "cannon",
++         "mortar",
++         "harpoon",
++         "swivel",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 30,
++       "id": "cannon_5",
++       "kind": "cannon",
++       "kinds": [
++         "cannon",
++         "mortar",
++         "harpoon",
++         "swivel",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 30,
++       "id": "cannon_6",
++       "kind": "cannon",
++       "kinds": [
++         "cannon",
++         "mortar",
++         "harpoon",
++         "swivel",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 30,
++       "id": "cannon_7",
++       "kind": "cannon",
++       "kinds": [
++         "cannon",
++         "mortar",
++         "harpoon",
++         "swivel",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 40,
++       "id": "tower_1",
++       "kind": "watchtower",
++       "kinds": [
++         "watchtower",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 50,
++       "id": "house_1",
++       "kind": "house",
++       "kinds": [
++         "house",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 50,
++       "id": "house_2",
++       "kind": "house",
++       "kinds": [
++         "house",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_7",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_8",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_9",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_10",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_11",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_12",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++   ],
++   "unlocks": {
++     "locked": {},
++     "unlocked": [
++       "crew:gunner",
++       "crew:carpenter",
++       "crew:lookout",
++       "crew:guard",
++       "captain:1",
++       "captain:2",
++       "captain:3",
++       "captain:4",
++       "captain:5",
++       "wall:1",
++       "wall:2",
++       "wall:3",
++       "wall:4",
++       "wall:5",
++       "cannon:1",
++       "cannon:2",
++       "cannon:3",
++       "cannon:4",
++       "cannon:5",
++       "mortar:1",
++       "mortar:2",
++       "mortar:3",
++       "mortar:4",
++       "mortar:5",
++       "harpoon:1",
++       "harpoon:2",
++       "harpoon:3",
++       "harpoon:4",
++       "harpoon:5",
++       "swivel:1",
++       "swivel:2",
++       "swivel:3",
++       "swivel:4",
++       "swivel:5",
++       "watchtower:1",
++       "watchtower:2",
++       "watchtower:3",
++       "watchtower:4",
++       "watchtower:5",
++       "house:1",
++       "house:2",
++       "house:3",
++     ],
++     "wave": 50,
++   },
++   "waveBest": 50,
++   "weapons": {
++     "equipped": "musket",
++     "owned": [
++       "musket",
++     ],
++     "shop": [
++       {
++         "id": "musket",
++         "name": "Musket",
++         "price": 0,
++         "unlockWave": 0,
++       },
++       {
++         "id": "pistols",
++         "name": "Pistols",
++         "price": 60,
++         "unlockWave": 2,
++       },
++       {
++         "id": "blunderbuss",
++         "name": "Blunderbuss",
++         "price": 120,
++         "unlockWave": 4,
++       },
++       {
++         "id": "long_rifle",
++         "name": "Long rifle",
++         "price": 200,
++         "unlockWave": 6,
++       },
++       {
++         "id": "fire_bombs",
++         "name": "Fire bombs",
++         "price": 300,
++         "unlockWave": 10,
++       },
++     ],
++   },
+  }
+
+ ❯ tests/island/normal-wall-scenery.test.js:26:5
+     24|   t.island.positions = new Map([['wall_1', {x, z}]]);
+     25|   await expect(t.api.build({spot: 'wall_1', kind: 'wall', actionUid: '…
+     26|     .rejects.toMatchObject({code: 'place_taken'});
+       |     ^
+     27|   expect(t.player.coins).toBe(5000); expect(t.island.built.has('wall_1…
+     28|   expect(t.player.actions.has('build:normal-scenery-01')).toBe(false);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+ FAIL  tests/island/normal-wall-scenery.test.js > fresh normal wall purchase refuses scenery: 0 / friend=true / -16,0
+AssertionError: promise resolved "{ code: 'ISLE-K7Q2M', …(6) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "campaign": {
++     "later": [],
++     "locked": {
++       "final_battle": 99,
++     },
++     "open": [
++       "wall:1",
++       "cannon:1",
++       "captain:1",
++       "captain:2",
++       "captain:3",
++       "house:1",
++       "wall:2",
++       "cannon:2",
++       "mortar:1",
++       "mortar:2",
++       "house:2",
++       "watchtower:1",
++       "watchtower:2",
++       "crew:gunner",
++       "harbor",
++       "market_calls",
++       "ring_walls",
++       "crew:carpenter",
++       "wall:3",
++       "cannon:3",
++       "mortar:3",
++       "house:3",
++       "wreck",
++       "crew:guard",
++       "football_board",
++       "tech_hub",
++       "crew:lookout",
++       "captain:4",
++       "captain:5",
++       "swivel:1",
++       "swivel:2",
++       "swivel:3",
++       "cannon:4",
++       "wall:4",
++       "watchtower:3",
++       "harpoon:1",
++       "harpoon:2",
++       "harpoon:3",
++       "tier_12",
++       "mortar:4",
++       "harpoon:4",
++       "swivel:4",
++       "watchtower:4",
++       "tier_15",
++       "research_2",
++       "cannon:5",
++       "mortar:5",
++       "harpoon:5",
++       "swivel:5",
++       "wall:5",
++       "watchtower:5",
++       "tier_20",
++       "tree_1",
++       "research_3",
++       "tier_30",
++       "ship",
++       "tree_2",
++       "tree_3",
++       "tier_50",
++     ],
++     "research": {
++       "branches": [
++         {
++           "branch": "cannon",
++           "name": "Cannon skills",
++           "price": 180,
++           "prices": [
++             180,
++             360,
++             630,
++           ],
++           "specs": [
++             {
++               "id": "rapid",
++               "name": "Rapid",
++             },
++             {
++               "id": "heavy",
++               "name": "Heavy shot",
++             },
++             {
++               "id": "chain",
++               "name": "Chain shot",
++             },
++           ],
++           "tier2": [
++             {
++               "id": "rapid_2",
++               "name": "Rapid II",
++             },
++             {
++               "id": "long_guns",
++               "name": "Long guns",
++             },
++           ],
++           "tier3": [
++             {
++               "id": "broadside",
++               "name": "Broadside",
++             },
++             {
++               "id": "grapeshot",
++               "name": "Grapeshot",
++             },
++           ],
++         },
++         {
++           "branch": "mortar",
++           "name": "Mortar skills",
++           "price": 220,
++           "prices": [
++             220,
++             440,
++             770,
++           ],
++           "specs": [
++             {
++               "id": "cluster",
++               "name": "Cluster",
++             },
++             {
++               "id": "fire_pot",
++               "name": "Fire pot",
++             },
++             {
++               "id": "long_range",
++               "name": "Long range",
++             },
++           ],
++           "tier2": [
++             {
++               "id": "quick_fuse",
++               "name": "Quick fuse",
++             },
++             {
++               "id": "heavy_shells",
++               "name": "Heavy shells",
++             },
++           ],
++           "tier3": [
++             {
++               "id": "shockwave",
++               "name": "Shockwave",
++             },
++             {
++               "id": "inferno",
++               "name": "Inferno",
++             },
++           ],
++         },
++         {
++           "branch": "wall",
++           "name": "Wall skills",
++           "price": 120,
++           "prices": [
++             120,
++             240,
++             420,
++           ],
++           "specs": [
++             {
++               "id": "stone",
++               "name": "Stone",
++             },
++             {
++               "id": "spiked",
++               "name": "Spiked",
++             },
++             {
++               "id": "quick_mend",
++               "name": "Quick mend",
++             },
++           ],
++           "tier2": [
++             {
++               "id": "mason_drill",
++               "name": "Mason drill",
++             },
++             {
++               "id": "thick_walls",
++               "name": "Thick walls",
++             },
++           ],
++           "tier3": [
++             {
++               "id": "bastion",
++               "name": "Bastion",
++             },
++             {
++               "id": "thorns",
++               "name": "Thorns",
++             },
++           ],
++         },
++         {
++           "branch": "watchtower",
++           "name": "Watchtower skills",
++           "price": 160,
++           "prices": [
++             160,
++             320,
++             560,
++           ],
++           "specs": [
++             {
++               "id": "spotter",
++               "name": "Spotter",
++             },
++             {
++               "id": "signal_fire",
++               "name": "Signal fire",
++             },
++           ],
++           "tier2": [
++             {
++               "id": "lookout_drill",
++               "name": "Lookout drill",
++             },
++             {
++               "id": "high_tower",
++               "name": "High tower",
++             },
++           ],
++           "tier3": [
++             {
++               "id": "eagle_eye",
++               "name": "Eagle eye",
++             },
++             {
++               "id": "war_drums",
++               "name": "War drums",
++             },
++           ],
++         },
++       ],
++       "done": [],
++       "tierWaves": [
++         8,
++         15,
++         25,
++       ],
++       "tiers": {
++         "cannon": {
++           "tier": 0,
++           "tier2": null,
++           "tier3": null,
++         },
++         "mortar": {
++           "tier": 0,
++           "tier2": null,
++           "tier3": null,
++         },
++         "wall": {
++           "tier": 0,
++           "tier2": null,
++           "tier3": null,
++         },
++         "watchtower": {
++           "tier": 0,
++           "tier2": null,
++           "tier3": null,
++         },
++       },
++     },
++     "wave": 50,
++     "wreck": {
++       "gifts": [
++         25,
++         100,
++       ],
++       "goal": 500,
++       "paid": 0,
++     },
++   },
++   "code": "ISLE-K7Q2M",
++   "coins": 4990,
++   "layout": {
++     "grid": 0.5,
++     "movable": true,
++     "version": 2,
++   },
++   "ownerName": "You",
++   "spots": [
++     {
++       "built": true,
++       "cost": 10,
++       "id": "wall_1",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 1,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": 20,
++       "x": -16,
++       "z": 0,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_2",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_3",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_4",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_5",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_6",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 30,
++       "id": "cannon_1",
++       "kind": "cannon",
++       "kinds": [
++         "cannon",
++         "mortar",
++         "harpoon",
++         "swivel",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 30,
++       "id": "cannon_2",
++       "kind": "cannon",
++       "kinds": [
++         "cannon",
++         "mortar",
++         "harpoon",
++         "swivel",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 30,
++       "id": "cannon_3",
++       "kind": "cannon",
++       "kinds": [
++         "cannon",
++         "mortar",
++         "harpoon",
++         "swivel",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 30,
++       "id": "cannon_4",
++       "kind": "cannon",
++       "kinds": [
++         "cannon",
++         "mortar",
++         "harpoon",
++         "swivel",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 30,
++       "id": "cannon_5",
++       "kind": "cannon",
++       "kinds": [
++         "cannon",
++         "mortar",
++         "harpoon",
++         "swivel",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 30,
++       "id": "cannon_6",
++       "kind": "cannon",
++       "kinds": [
++         "cannon",
++         "mortar",
++         "harpoon",
++         "swivel",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 30,
++       "id": "cannon_7",
++       "kind": "cannon",
++       "kinds": [
++         "cannon",
++         "mortar",
++         "harpoon",
++         "swivel",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 40,
++       "id": "tower_1",
++       "kind": "watchtower",
++       "kinds": [
++         "watchtower",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 50,
++       "id": "house_1",
++       "kind": "house",
++       "kinds": [
++         "house",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 50,
++       "id": "house_2",
++       "kind": "house",
++       "kinds": [
++         "house",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_7",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_8",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_9",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_10",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_11",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_12",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++   ],
++   "waveBest": 50,
+  }
+
+ ❯ tests/island/normal-wall-scenery.test.js:26:5
+     24|   t.island.positions = new Map([['wall_1', {x, z}]]);
+     25|   await expect(t.api.build({spot: 'wall_1', kind: 'wall', actionUid: '…
+     26|     .rejects.toMatchObject({code: 'place_taken'});
+       |     ^
+     27|   expect(t.player.coins).toBe(5000); expect(t.island.built.has('wall_1…
+     28|   expect(t.player.actions.has('build:normal-scenery-01')).toBe(false);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
+
+ FAIL  tests/island/normal-wall-scenery.test.js > fresh normal wall purchase refuses scenery: 0 / friend=true / -2,12
+AssertionError: promise resolved "{ code: 'ISLE-K7Q2M', …(6) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "campaign": {
++     "later": [],
++     "locked": {
++       "final_battle": 99,
++     },
++     "open": [
++       "wall:1",
++       "cannon:1",
++       "captain:1",
++       "captain:2",
++       "captain:3",
++       "house:1",
++       "wall:2",
++       "cannon:2",
++       "mortar:1",
++       "mortar:2",
++       "house:2",
++       "watchtower:1",
++       "watchtower:2",
++       "crew:gunner",
++       "harbor",
++       "market_calls",
++       "ring_walls",
++       "crew:carpenter",
++       "wall:3",
++       "cannon:3",
++       "mortar:3",
++       "house:3",
++       "wreck",
++       "crew:guard",
++       "football_board",
++       "tech_hub",
++       "crew:lookout",
++       "captain:4",
++       "captain:5",
++       "swivel:1",
++       "swivel:2",
++       "swivel:3",
++       "cannon:4",
++       "wall:4",
++       "watchtower:3",
++       "harpoon:1",
++       "harpoon:2",
++       "harpoon:3",
++       "tier_12",
++       "mortar:4",
++       "harpoon:4",
++       "swivel:4",
++       "watchtower:4",
++       "tier_15",
++       "research_2",
++       "cannon:5",
++       "mortar:5",
++       "harpoon:5",
++       "swivel:5",
++       "wall:5",
++       "watchtower:5",
++       "tier_20",
++       "tree_1",
++       "research_3",
++       "tier_30",
++       "ship",
++       "tree_2",
++       "tree_3",
++       "tier_50",
++     ],
++     "research": {
++       "branches": [
++         {
++           "branch": "cannon",
++           "name": "Cannon skills",
++           "price": 180,
++           "prices": [
++             180,
++             360,
++             630,
++           ],
++           "specs": [
++             {
++               "id": "rapid",
++               "name": "Rapid",
++             },
++             {
++               "id": "heavy",
++               "name": "Heavy shot",
++             },
++             {
++               "id": "chain",
++               "name": "Chain shot",
++             },
++           ],
++           "tier2": [
++             {
++               "id": "rapid_2",
++               "name": "Rapid II",
++             },
++             {
++               "id": "long_guns",
++               "name": "Long guns",
++             },
++           ],
++           "tier3": [
++             {
++               "id": "broadside",
++               "name": "Broadside",
++             },
++             {
++               "id": "grapeshot",
++               "name": "Grapeshot",
++             },
++           ],
++         },
++         {
++           "branch": "mortar",
++           "name": "Mortar skills",
++           "price": 220,
++           "prices": [
++             220,
++             440,
++             770,
++           ],
++           "specs": [
++             {
++               "id": "cluster",
++               "name": "Cluster",
++             },
++             {
++               "id": "fire_pot",
++               "name": "Fire pot",
++             },
++             {
++               "id": "long_range",
++               "name": "Long range",
++             },
++           ],
++           "tier2": [
++             {
++               "id": "quick_fuse",
++               "name": "Quick fuse",
++             },
++             {
++               "id": "heavy_shells",
++               "name": "Heavy shells",
++             },
++           ],
++           "tier3": [
++             {
++               "id": "shockwave",
++               "name": "Shockwave",
++             },
++             {
++               "id": "inferno",
++               "name": "Inferno",
++             },
++           ],
++         },
++         {
++           "branch": "wall",
++           "name": "Wall skills",
++           "price": 120,
++           "prices": [
++             120,
++             240,
++             420,
++           ],
++           "specs": [
++             {
++               "id": "stone",
++               "name": "Stone",
++             },
++             {
++               "id": "spiked",
++               "name": "Spiked",
++             },
++             {
++               "id": "quick_mend",
++               "name": "Quick mend",
++             },
++           ],
++           "tier2": [
++             {
++               "id": "mason_drill",
++               "name": "Mason drill",
++             },
++             {
++               "id": "thick_walls",
++               "name": "Thick walls",
++             },
++           ],
++           "tier3": [
++             {
++               "id": "bastion",
++               "name": "Bastion",
++             },
++             {
++               "id": "thorns",
++               "name": "Thorns",
++             },
++           ],
++         },
++         {
++           "branch": "watchtower",
++           "name": "Watchtower skills",
++           "price": 160,
++           "prices": [
++             160,
++             320,
++             560,
++           ],
++           "specs": [
++             {
++               "id": "spotter",
++               "name": "Spotter",
++             },
++             {
++               "id": "signal_fire",
++               "name": "Signal fire",
++             },
++           ],
++           "tier2": [
++             {
++               "id": "lookout_drill",
++               "name": "Lookout drill",
++             },
++             {
++               "id": "high_tower",
++               "name": "High tower",
++             },
++           ],
++           "tier3": [
++             {
++               "id": "eagle_eye",
++               "name": "Eagle eye",
++             },
++             {
++               "id": "war_drums",
++               "name": "War drums",
++             },
++           ],
++         },
++       ],
++       "done": [],
++       "tierWaves": [
++         8,
++         15,
++         25,
++       ],
++       "tiers": {
++         "cannon": {
++           "tier": 0,
++           "tier2": null,
++           "tier3": null,
++         },
++         "mortar": {
++           "tier": 0,
++           "tier2": null,
++           "tier3": null,
++         },
++         "wall": {
++           "tier": 0,
++           "tier2": null,
++           "tier3": null,
++         },
++         "watchtower": {
++           "tier": 0,
++           "tier2": null,
++           "tier3": null,
++         },
++       },
++     },
++     "wave": 50,
++     "wreck": {
++       "gifts": [
++         25,
++         100,
++       ],
++       "goal": 500,
++       "paid": 0,
++     },
++   },
++   "code": "ISLE-K7Q2M",
++   "coins": 4990,
++   "layout": {
++     "grid": 0.5,
++     "movable": true,
++     "version": 2,
++   },
++   "ownerName": "You",
++   "spots": [
++     {
++       "built": true,
++       "cost": 10,
++       "id": "wall_1",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 1,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": 20,
++       "x": -2,
++       "z": 12,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_2",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_3",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_4",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_5",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_6",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 30,
++       "id": "cannon_1",
++       "kind": "cannon",
++       "kinds": [
++         "cannon",
++         "mortar",
++         "harpoon",
++         "swivel",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 30,
++       "id": "cannon_2",
++       "kind": "cannon",
++       "kinds": [
++         "cannon",
++         "mortar",
++         "harpoon",
++         "swivel",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 30,
++       "id": "cannon_3",
++       "kind": "cannon",
++       "kinds": [
++         "cannon",
++         "mortar",
++         "harpoon",
++         "swivel",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 30,
++       "id": "cannon_4",
++       "kind": "cannon",
++       "kinds": [
++         "cannon",
++         "mortar",
++         "harpoon",
++         "swivel",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 30,
++       "id": "cannon_5",
++       "kind": "cannon",
++       "kinds": [
++         "cannon",
++         "mortar",
++         "harpoon",
++         "swivel",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 30,
++       "id": "cannon_6",
++       "kind": "cannon",
++       "kinds": [
++         "cannon",
++         "mortar",
++         "harpoon",
++         "swivel",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 30,
++       "id": "cannon_7",
++       "kind": "cannon",
++       "kinds": [
++         "cannon",
++         "mortar",
++         "harpoon",
++         "swivel",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 40,
++       "id": "tower_1",
++       "kind": "watchtower",
++       "kinds": [
++         "watchtower",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 50,
++       "id": "house_1",
++       "kind": "house",
++       "kinds": [
++         "house",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 50,
++       "id": "house_2",
++       "kind": "house",
++       "kinds": [
++         "house",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_7",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_8",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_9",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_10",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_11",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++     {
++       "built": false,
++       "cost": 10,
++       "id": "wall_12",
++       "kind": "wall",
++       "kinds": [
++         "wall",
++       ],
++       "level": 0,
++       "spec": null,
++       "tree": null,
++       "upgradeCost": null,
++     },
++   ],
++   "waveBest": 50,
+  }
+
+ ❯ tests/island/normal-wall-scenery.test.js:26:5
+     24|   t.island.positions = new Map([['wall_1', {x, z}]]);
+     25|   await expect(t.api.build({spot: 'wall_1', kind: 'wall', actionUid: '…
+     26|     .rejects.toMatchObject({code: 'place_taken'});
+       |     ^
+     27|   expect(t.player.coins).toBe(5000); expect(t.island.built.has('wall_1…
+     28|   expect(t.player.actions.has('build:normal-scenery-01')).toBe(false);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/9]⎯
+
+ FAIL  tests/island/normal-wall-scenery.test.js > safe ordinary wall purchase and old UID replay survive: 0 / friend=false
+ FAIL  tests/island/normal-wall-scenery.test.js > safe ordinary wall purchase and old UID replay survive: 0 / friend=true
+TypeError: Cannot read properties of undefined (reading 'set')
+ ❯ tests/island/normal-wall-scenery.test.js:37:22
+     35|   expect(t.player.coins).toBe(4990); expect(t.island.built.has('wall_1…
+     36|   // Existing paid state can later overlap scenery; a replay neither r…
+     37|   t.island.positions.set('wall_1', {x: -16, z: 0});
+       |                      ^
+     38|   await t.api.build({spot: 'wall_1', kind: 'wall', actionUid: 'normal-…
+     39|   expect(t.player.coins).toBe(4990);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/9]⎯
+
+ FAIL  tests/island/normal-wall-scenery.test.js > safe ordinary wall purchase and old UID replay survive: 1 / friend=false
+ FAIL  tests/island/normal-wall-scenery.test.js > safe ordinary wall purchase and old UID replay survive: 1 / friend=true
+FakeApiError: That is too close to a tree.
+ ❯ refuse src/pirates/fake-api.js:179:63
+    177|   }
+    178| }
+    179| const refuse = (status, code, message, retryAfter) => { throw new Fake…
+       |                                                               ^
+    180| const invalid = message => refuse(422, 'validation_error', message);
+    181|
+ ❯ Object.build src/pirates/fake-api.js:500:26
+ ❯ tests/island/normal-wall-scenery.test.js:41:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/9]⎯
+
+ FAIL  tests/island/normal-wall-scenery.test.js > retains wrong-kind refusal and reads of old paid overlap on policy 1
+AssertionError: expected FakeApiError: That is too close to a tree. { …(4) } to match object { code: 'wrong_kind' }
+(5 matching properties omitted from actual)
+
+- Expected
++ Received
+
+- {
+-   "code": "wrong_kind",
++ FakeApiError {
++   "code": "place_taken",
+  }
+
+ ❯ tests/island/normal-wall-scenery.test.js:47:92
+     45| it.each([0, 1])('retains wrong-kind refusal and reads of old paid over…
+     46|   const t = await setup(policy); t.island.positions = new Map([['wall_…
+     47|   await expect(t.api.build({spot: 'wall_1', kind: 'cannon', actionUid:…
+       |                                                                                            ^
+     48|   const old = vi.spyOn(placement, 'checkMove').mockReturnValue({ok: tr…
+     49|   try { await t.api.build({spot: 'wall_1', kind: 'wall', actionUid: 'h…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/9]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  9 failed | 5 passed (14)
+   Start at  10:28:15
+   Duration  1.09s (transform 61%, tests 22%, import 16%, worker 1%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice

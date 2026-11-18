@@ -1,0 +1,8 @@
+E501 Line too long (104 > 100)
+  --> server/tests/test_wall_chain.py:18:101
+   |
+17 | CATALOGUE = catalogue_for_flags(load_island(), {"more_tower_spots": True})
+18 | RING = json.loads((Path(__file__).parent / "fixtures/perimeter-scenery-ring.json").read_text())["cells"]
+   |                                                                                                     ^^^^
+
+Found 1 error.
