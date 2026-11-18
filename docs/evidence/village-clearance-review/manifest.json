@@ -1,11 +1,11 @@
 {
   "status": "interim_final_combined_evidence_pending",
-  "guideSha256": "7c2f733e3ef7e33e69965d2ae543f015700bf8eae72a0f7cb82f3c70d0f5a3f9",
+  "guideSha256": "44850e6cd5ad703744237d592440fab2c559e78cfc23b02cb22937868a10041a",
   "scope": "Original artifacts and review documents; manifest excludes itself. Source and result boundaries are recorded separately.",
   "files": {
     "README.md": {
-      "bytes": 3702,
-      "sha256": "788238288bd15a05123ecef57f22f078dd6585d65d1e77b47a428afab3f5f924"
+      "bytes": 4185,
+      "sha256": "6e238ee5b1ef00dbfca02d1ddab4c0721187b93c4955b89f77d6730d75a9ae01"
     },
     "before-paid/paid-level-1-1280x720.png": {
       "bytes": 1120341,
@@ -43,9 +43,25 @@
       "bytes": 9037,
       "sha256": "36a268806d11b03fe7e581211173b6137b1ac0583e099b7bbf72b0e61abc60e4"
     },
+    "integration-fixture-checks/checks.json": {
+      "bytes": 1660,
+      "sha256": "963166db766bada68decb2085372ffa0ff4dac060c2f3bbe1eca644d2e403ea5"
+    },
+    "integration-fixture-checks/fixture-backend.log": {
+      "bytes": 99,
+      "sha256": "d5321c7120d4a46b3aa806d204b8fc89d2425266898c863e7bb19370278806cf"
+    },
+    "integration-fixture-checks/fixture-frontend-corrected.log": {
+      "bytes": 992,
+      "sha256": "33182034e404d14ccffeca6096c6aaa6ff692047fcc7cfc5fd7315349278d532"
+    },
+    "integration-fixture-checks/fixture-frontend.log": {
+      "bytes": 3006,
+      "sha256": "a6ed557ed45980cd45ad851fcb4230703a0edc851896b181ef3758bb12c933d6"
+    },
     "originals.json": {
-      "bytes": 19222,
-      "sha256": "6f7f4182007a6c095f0ebde5f272f119076a0b5a8c9d3ec7e45a6943ec8b703e"
+      "bytes": 20050,
+      "sha256": "ffc096007365310639e24c6b74ffac6a1e087cfbc057048db5cd7f5b0db788e9"
     },
     "paid-final/execution.json": {
       "bytes": 454,
@@ -256,12 +272,12 @@
       "sha256": "db3018768c6e042d9fc3c9cc27cee42aebccdf786850577a97b5a2b71ba93a8f"
     },
     "source.json": {
-      "bytes": 6743,
-      "sha256": "5e522d3adfb49d7520c3fc90196d5c10b13c722268ec12253d11199f46e9a788"
+      "bytes": 8492,
+      "sha256": "118d77c8b8ff7313a81449d26e1c5fea34f56699a90006cdfbb8f8b181c85616"
     },
     "static-checks.json": {
-      "bytes": 10085,
-      "sha256": "c984faf65e8f4d1d1e819956424ed5da86b72200fb78a07af22b8b3e8a752861"
+      "bytes": 10389,
+      "sha256": "0f866e7f97352c33847b53b38b41ecd886488dad877b8292290da93273e40684"
     }
   }
 }

@@ -171,6 +171,20 @@ as well as revised drawing. They are not evidence that loading the new code
 automatically rearranges a player's save. Declared local fake funds and best-wave
 values are fixture setup, not a default save or production wallet.
 
+## What the integration checks caught
+
+Individual legal cells did not prove that the first inner-wall draft formed a
+continuous quoted chain. The actual client quote test rejected its discontinuity.
+The fixture was corrected rather than weakening the full-side chain contract.
+A second unchanged main test caught an upright path badge offset of `-0.62`
+being multiplied by the ground projection to `-0.806`. The badge now receives its
+screen-facing offset after its building foot is projected, matching combat.
+
+The [original selected-check logs](../evidence/village-clearance-review/integration-fixture-checks/checks.json)
+retain80passes/2failures and then82passes across eight files in11.63s, plus
+38targeted backend passes in3.75s. These working-tree checks precede the final
+frozen runtime and are not relabeled as complete application verification.
+
 ## Evidence and walkthrough
 
 [The evidence index](../evidence/village-clearance-review/README.md) records the

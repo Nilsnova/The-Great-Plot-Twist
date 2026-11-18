@@ -126,5 +126,35 @@
     "backendTree": "cc81737e8e84ede4a6d123b34e1fbfd07d3e57ec",
     "migrationsTree": "ae31ac50221be83070e7f46580d66a70eedbad20",
     "boundary": "These belong to the UI runtime fixture source. The final authoritative backend/SQL source is verified separately after the regular-build guard is complete."
+  },
+  "earlierIntegrationChecks": {
+    "scope": "Coordinator working-tree integration checks before final frozen runtime; not full-source acceptance. Original logs copied unchanged. Commands/results supplied by coordinator task record.",
+    "sourceBoundary": "Fixture wiring and current-main badge composition working files subsequently committed asb0f8723e; later health/diagnostic/backend changes are separately verified. No exact complete-runtime tree identity is inferred for these earlier commands.",
+    "frontendCommand": "npm test -- --maxWorkers=1 tests/island/arranged-fixture-validation.test.js tests/island/perimeter-wave-flow.test.js tests/island/wall-runs-fake.test.js tests/pirates/perimeter-demo.test.js tests/island/scenery-clearance.test.js tests/island/barrel-clearance.test.js tests/island/path-marks.test.js tests/island/path-marks-world.test.js",
+    "frontendBefore": {
+      "passed": 80,
+      "failed": 2,
+      "files": 8,
+      "seconds": 10.77,
+      "failureReasons": [
+        "New inner fixture cells were individually legal but did not form one continuous construction chain.",
+        "Main badge offset-.62 was accidentally scaled by the1.3groundprojection to-.806."
+      ]
+    },
+    "frontendAfter": {
+      "passed": 82,
+      "failed": 0,
+      "files": 8,
+      "seconds": 11.63,
+      "fixes": [
+        "Corrected inner fixture into one continuous paid chain.",
+        "Apply upright badge xoffset after ground projection. No assertion was weakened."
+      ]
+    },
+    "backendCommand": "/workspace/The-Great-Plot-Twist/backend/.venv/bin/python -m pytest -q server/tests/test_wall_chain.py server/tests/test_wall_scenery_clearance.py",
+    "backend": {
+      "passed": 38,
+      "seconds": 3.75
+    }
   }
 }
