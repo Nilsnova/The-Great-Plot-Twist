@@ -137,6 +137,46 @@ def test_saved_recovery_v1_protocol2_start_builds_snapshot_when_admission_flag_i
 
 
 @pytest.mark.parametrize(
+    ("recovery_version", "flags"),
+    [(0, "islands,structure_recovery"), (1, "islands")],
+)
+def test_gated_culverin_start_freezes_rule_with_snapshot_and_response(recovery_version, flags):
+    world = World(settings=replace(ISLAND_SETTINGS, flags=parse_flags(flags)))
+    world.database.recovery_policy_version = recovery_version
+    world.database.recovery_start_as_v1 = True
+    world.database.islands["K7Q2M"] = {
+        "player_id": PLAYER_ID,
+        "code": "K7Q2M",
+        "wave_best": 0,
+        "flags": 0,
+    }
+    world.database.buildings[PLAYER_ID] = [
+        {
+            "plot": "cannon_8",
+            "building_type": "culverin",
+            "level": 2,
+            "spec": None,
+            "tree_a": 1,
+            "tree_b": 0,
+        }
+    ]
+
+    response = world.start(waveProtocol=2)
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+    (call,) = world.database.calls("recovery_wave_start")
+    frozen_rules = body["rules"]
+    assert "defenses_v2" in frozen_rules
+    assert call["p_admit_v1"] is (recovery_version == 0)
+    assert call["p_snapshot_template"]["createWave"]["defensesV2"] is True
+    assert body["initialSnapshot"]["rules"] == frozen_rules
+    assert body["initialSnapshot"]["createWave"]["rules"] == frozen_rules
+    assert body["initialSnapshot"]["createWave"]["defensesV2"] is True
+    assert body["initialSnapshot"]["createWave"]["defenses"][0]["id"] == "cannon_8"
+
+
+@pytest.mark.parametrize(
     ("reading", "kind", "ships", "fog"),
     [(STORM, "storm", 1.5, 0.0), (FOG, "fog", 1.0, 0.4), (RAIN, "rain", 1.0, 0.0)],
 )

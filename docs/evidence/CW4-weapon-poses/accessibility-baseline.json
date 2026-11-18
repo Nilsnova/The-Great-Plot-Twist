@@ -1,0 +1,56 @@
+{
+  "baseSha": "48aee0e7b34c879968c4bc606b543f911032adfa",
+  "command": "npm run test:a11y",
+  "baselineScreens": 33,
+  "changedScreens": 33,
+  "exactlyEqualFields": [
+    "failures",
+    "errors",
+    "browserErrors",
+    "externalRequests"
+  ],
+  "newFailures": [],
+  "failures": [
+    {
+      "screen": "market-placed",
+      "width": 1280,
+      "check": "contrast",
+      "count": 1
+    },
+    {
+      "screen": "market-placed",
+      "width": 375,
+      "check": "contrast",
+      "count": 1
+    },
+    {
+      "screen": "market-placed",
+      "width": 320,
+      "check": "contrast",
+      "count": 1
+    },
+    {
+      "screen": "market-hotspot",
+      "check": "keyboard"
+    },
+    {
+      "screen": "market-prices",
+      "check": "keyboard"
+    },
+    {
+      "screen": "market-confirm",
+      "check": "keyboard"
+    },
+    {
+      "screen": "market-placed",
+      "check": "keyboard"
+    },
+    {
+      "screen": "lobby",
+      "check": "keyboard"
+    }
+  ],
+  "errors": [],
+  "browserErrors": [],
+  "externalRequests": []
+}
