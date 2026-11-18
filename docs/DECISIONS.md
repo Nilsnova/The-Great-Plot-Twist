@@ -1173,3 +1173,8 @@ PR #475 was explicitly authorized and opened, then GitHub reported conflicts wit
 ### CF1 landscape control-column follow-up · 2026-11-18
 
 In active waves at widths 600–900px and heights at most 500px, reserve the rightmost 300px from toast placement. Expanding contextual range raises the bottom-anchored fire control, so vertical compacting alone does not ensure separation. The real toast/expanded Fire bombs browser regression requires an eight-pixel gap; modal placement retains its existing priority. Desktop and portrait captures are unaffected. Main through `db573347` and its WebP shipping are retained. No merge or deployment is authorized.
+
+
+### CF1 parchment visibility refinement · 2026-11-18
+
+Ianno found the current parchment arcs barely visible and requested a slight increase in prominence. Increase stroke width inward from the same exact outer range, use a lighter warm parchment with a darker backing and a modestly stronger direction cap. Keep twelve short arcs, large gaps, contextual timing and one-sound warning episodes. Refresh desktop/phone screenshots in PR #475. This is an authorized refinement of the existing task; the three completed questions are not restarted. Current human peer review remains required; no merge or deployment.

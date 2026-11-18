@@ -11,6 +11,8 @@ Players could not tell whether Musket shots helped or enemies were out of reach.
 For [#453](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/453), show actual
 weapon/skill reach while using or focusing fire and briefly after attempts,
 including refusals. Use sparse parchment arcs and a short direction cap at the real boundary.
+Following the latest visual review, slightly thicker, brighter parchment strokes with
+a darker backing make the range easier to see over grass and paths.
 Explain reloads and out-of-range aims; use existing bullets and impact flashes for
 shot feedback, without a written confirmation or damage numbers. Immediate captain/heart threats get one actionable
 warning, a direction marker and a muted-aware sound attempted once per continuous warning.
@@ -21,11 +23,11 @@ active play and later returns can start a new warning episode.
 ## Current-main integration
 
 The published PR was reconciled with main through `db573347` after GitHub reported conflicts.
-This retains the upstream WebP art-shipping update. Fresh screenshots were captured from `29736a89`.
+This retains the upstream WebP art-shipping update. Latest range-visibility runtime: `203c696a`; fresh screenshots use that source.
 The overlay now uses the shared ground projection; the danger row spans the new HUD
 and compacts in landscape. Short landscape toasts also reserve the expanded fire-control column (`21440b26`). Main's renderer pooling, wall connections and native HUD
 behavior are retained. CF1 is D066 because main already owns D061–D065. Ianno reviewed
-runtime `79bb6762` before publication; these later integration changes need current
+runtime `79bb6762` before publication; the later integration and visibility changes need current
 human peer review. The PR remains unmerged.
 
 ## Screenshots
@@ -34,20 +36,22 @@ Actual local fake-game captures: wave 1, level-one Musket, 1280×720 and 375×81
 Position setup and returning-device history are declared fixtures; the bell, F attacks and simulation remain real.
 The updated village artwork comes from current main, separately from this combat feedback feature.
 
-![Desktop weapon range](https://raw.githubusercontent.com/Nilsnova/The-Great-Plot-Twist/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/main-integration/after-range-1280x720.png)
+![Desktop weapon range](https://raw.githubusercontent.com/Nilsnova/The-Great-Plot-Twist/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/visibility/after-range-1280x720.png)
 
-![Phone danger warning](https://raw.githubusercontent.com/Nilsnova/The-Great-Plot-Twist/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/main-integration/after-danger-375x812.png)
+![Phone weapon range](https://raw.githubusercontent.com/Nilsnova/The-Great-Plot-Twist/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/visibility/after-range-375x812.png)
 
 | View | Before | After |
 |---|---|---|
-| Desktop range | [Before](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/before-range-1280x720.png) | [After](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/main-integration/after-range-1280x720.png) |
-| Phone range | [Before](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/before-range-375x812.png) | [After](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/main-integration/after-range-375x812.png) |
-| Desktop danger | [Before](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/before-danger-1280x720.png) | [After](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/main-integration/after-danger-1280x720.png) |
-| Phone danger | [Before](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/before-danger-375x812.png) | [After](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/main-integration/after-danger-375x812.png) |
+| Desktop range | [Before](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/before-range-1280x720.png) | [After](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/visibility/after-range-1280x720.png) |
+| Phone range | [Before](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/before-range-375x812.png) | [After](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/visibility/after-range-375x812.png) |
+| Desktop danger | [Before](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/before-danger-1280x720.png) | [After](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/visibility/after-danger-1280x720.png) |
+| Phone danger | [Before](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/before-danger-375x812.png) | [After](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/visibility/after-danger-375x812.png) |
 
 [Shot/impact screenshots, full provenance, walkthrough and exact logs](https://github.com/Nilsnova/The-Great-Plot-Twist/blob/feat/captain-combat-feedback/docs/evidence/CF1-captain-combat-feedback/README.md).
 
 ## Checks and evidence
+
+- Latest visibility adjustment: **22 tests / 4 files**, build/spoiler and budget pass. Fresh native-game check: **14 passed**, with six new desktop/phone captures and no uncaught browser errors. Independent read-only visual review found no blocker. Full suite and broad audits were not repeated for this visual-only adjustment.
 
 - Current-main integration: **89 tests / 12 files** plus **72 tests / 8 files** passed; a later landscape-layout rerun passed **10 tests / 3 files**. The expanded fire-control follow-up passed **11 tests / 3 files**; upstream art-shipping/overlay contracts passed **13 tests / 4 files** (overlapping suites, not additional unique totals).
 - Fresh native feedback: **14 checks**, six new screenshots; overlap audit: **21 checks pass** (later-wave hint states are skipped by current main's rule).

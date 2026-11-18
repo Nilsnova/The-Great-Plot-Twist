@@ -4,13 +4,15 @@ What this is: review evidence and a code walkthrough for [task #453](https://git
 Who uses it: Ianno and the human peer reviewer, before publication and merge.
 
 Branch: `feat/captain-combat-feedback`. PR: [#475](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/475).
-Current screenshot source: `29736a89`; runtime integration: `c03b3eb8`, with main through `db573347`.
+Current screenshot source: `203c696a`; runtime integration: `c03b3eb8`, with main through `db573347`.
 Landscape control-column follow-up: `21440b26`; this affects neither desktop nor portrait capture dimensions.
-This revision follows Ianno's request for a quieter radius and visual-only shot confirmation.
+This revision follows Ianno's request to make the parchment range slightly easier to see.
+The earlier request for a quieter radius and visual-only shot confirmation still applies.
 After publication, main introduced a new village projection and HUD; the task branch
 was reconciled with those changes. CF1's decision is D066 (main already owns D061–D065).
 The new village artwork and WebP shipping update come from main; this feature changes only combat feedback.
 The original blue design and previous parchment captures remain as historical evidence.
+The latest arcs have thicker warm parchment strokes with a darker backing so they remain legible over grass and paths.
 Ianno reviewed runtime `79bb6762` before publication; current projection-integration changes require human peer review.
 All three explain-back questions are completed. Ianno reviewed the changes and
 explicitly authorized PR publication on 18 November 2026. [Task #453](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/453)
@@ -54,26 +56,26 @@ before Play, preventing unrelated queued onboarding from intercepting combat inp
 The fixture hides the already-seen first-wave teaching hint. No HP, hit, victory,
 clock or simulation result is forced. Screenshots compare the same setup at live
 simulation times recorded in [before-report.json](before-report.json) and
-[current after-report.json](main-integration/after-report.json); they are not identical paused frames.
+[current after-report.json](visibility/after-report.json); they are not identical paused frames.
 These reports also record source, browser, quality/DPR and any dirty files.
 
 | View | Previous blue design | Current parchment design |
 |---|---|---|
-| Range, 1280×720 | [Previous](after-range-1280x720.png) | [Current](main-integration/after-range-1280x720.png) |
-| Range, 375×812 | [Previous](after-range-375x812.png) | [Current](main-integration/after-range-375x812.png) |
-| Shot impact, 1280×720 | — | [Current, no damage label](main-integration/after-impact-1280x720.png) |
-| Shot impact, 375×812 | — | [Current, no damage label](main-integration/after-impact-375x812.png) |
-| Danger, 1280×720 | [Previous](after-danger-1280x720.png) | [Current](main-integration/after-danger-1280x720.png) |
-| Danger, 375×812 | [Previous](after-danger-375x812.png) | [Current](main-integration/after-danger-375x812.png) |
+| Range, 1280×720 | [Previous](after-range-1280x720.png) | [Current](visibility/after-range-1280x720.png) |
+| Range, 375×812 | [Previous](after-range-375x812.png) | [Current](visibility/after-range-375x812.png) |
+| Shot impact, 1280×720 | — | [Current, no damage label](visibility/after-impact-1280x720.png) |
+| Shot impact, 375×812 | — | [Current, no damage label](visibility/after-impact-375x812.png) |
+| Danger, 1280×720 | [Previous](after-danger-1280x720.png) | [Current](visibility/after-danger-1280x720.png) |
+| Danger, 375×812 | [Previous](after-danger-375x812.png) | [Current](visibility/after-danger-375x812.png) |
 
 Original main before this feature: [desktop range](before-range-1280x720.png),
 [phone range](before-range-375x812.png), [desktop danger](before-danger-1280x720.png),
 [phone danger](before-danger-375x812.png). The earlier [written confirmation](after-hit-1280x720.png)
 is retained only as superseded review history; it is absent from the current game.
 
-![Quiet contextual range on desktop](main-integration/after-range-1280x720.png)
+![Quiet contextual range on desktop](visibility/after-range-1280x720.png)
 
-![Shot feedback on a phone without a written damage confirmation](main-integration/after-impact-375x812.png)
+![Shot feedback on a phone without a written damage confirmation](visibility/after-impact-375x812.png)
 
 ## Code walkthrough
 
@@ -92,6 +94,21 @@ is retained only as superseded review history; it is absent from the current gam
   it disposes all geometry/materials on stop.
 - `audio/pirates.js` plays the alert on the existing effects bus. It does not add
   another caption over the warning or change other audio preferences.
+
+## Range visibility follow-up
+
+Ianno found the previous parchment arcs too faint. Runtime `203c696a` increases the
+stroke width inward, lightens the parchment and strengthens its dark backing. The
+outer weapon boundary, twelve short arcs, large gaps, contextual lifetime and
+warning audio behavior stay the same. The short direction cap receives the same
+small contrast adjustment. [Previous faint desktop](main-integration/after-range-1280x720.png)
+and [phone](main-integration/after-range-375x812.png) captures remain available.
+
+- [Focused tests](visibility/focused-tests.txt): **22 passed across 4 files** (overlay projection/radius/resources, range lifetime, renderer and native HUD).
+- [Build/spoiler guard](visibility/build.txt) and [budget](visibility/budget-summary.json) pass.
+- [Actual-game checks](visibility/native-feedback.txt): **14 pass**, six desktop/phone captures and no uncaught browser errors. [Report/provenance](visibility/after-report.json). Independent read-only screenshot review found the increase visible on both sizes without dominating the scene.
+
+No new full-suite, broad overlap/accessibility/demo, physical-device or live-multiplayer run is claimed for this visual-only adjustment. Current human review remains pending.
 
 ## Verification after current-main integration
 
