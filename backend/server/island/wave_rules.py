@@ -56,7 +56,7 @@ class KeptRules(BaseModel):
 
 
 # The rules every new wave plays whatever FEATURE_FLAGS says (their flags are retired, always on).
-ALWAYS_ON = ("tower_health",)
+ALWAYS_ON = ("tower_health", "pathing")
 
 
 def wanted_rules(settings: Settings) -> list[str]:

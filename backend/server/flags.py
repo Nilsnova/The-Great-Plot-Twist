@@ -39,7 +39,7 @@ FLAG_NAMES = (
     "arsenal",
     # T33 (D049): towers have hp in a wave (a wave rule). Retired: always on (wave_rules.ALWAYS_ON).
     "tower_health",
-    # T34/T35 (D040, proposed): boarders walk round or through the real walls (a wave rule).
+    # T34/T35 (D040): boarders walk round or through the real walls (a wave rule). Retired: always on.
     "pathing",
     # T35 combat towers block boarders; requires both pathing and tower_health.
     "tower_obstacles",
