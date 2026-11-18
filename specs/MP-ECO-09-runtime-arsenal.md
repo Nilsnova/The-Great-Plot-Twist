@@ -39,6 +39,14 @@ across reload, reject stale account/run/revision replies, use decimal shared
 available funds, show total capacity, allow full-inventory returns and display
 pending-return/grace state. Legacy/fake behavior remains explicitly legacy.
 
+The optional economy getter distinguishes old factory callers that omit it from
+integrated callers that supply it. Only omitted getters retain legacy factory
+compatibility. A supplied getter permits legacy actions and private snapshots
+only for an explicit `personal_legacy`/version `0` context; null or unknown
+contexts refuse mutations before transport. Read discovery still negotiates
+persisted mode, and a selected shared context never accepts a private snapshot.
+Regression checks cover explicit legacy success and supplied-null refusal.
+
 ## Shared boundaries
 
 The common capability checker/transport header is supplied by the existing
@@ -66,7 +74,7 @@ authority, invented assignment API or browser-dependent settlement is activated.
 ## Verification and activation gates
 
 The production frontend build and spoiler guard pass. The relevant arsenal,
-retry, scope, filter, comparison and Chromium component suites pass: 61 tests
+retry, scope, filter, comparison and Chromium component suites pass: 70 tests
 across ten files. Desktop 1280×720 and phone 375×812 fixture-based card checks
 exercise keyboard return, disabled full-inventory purchases and viewport fit.
 These captures do not claim an authenticated shared-island session.
