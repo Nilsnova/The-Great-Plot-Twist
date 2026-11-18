@@ -1,6 +1,6 @@
 # Overnight visual polish
 
-Follow-up to [playable scene acceptance](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/236). The review starts at `d98a21ce` and finishes at visual build `8bf8d65b`. Individual comparisons use the relevant earlier build and the same local island state and camera within each pair. The browser checks used a loopback game with the built-in fake island and weather. Desktop and touch viewports ran on the Mac. Physical-phone performance remains open.
+Follow-up to [playable scene acceptance](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/236). The scope starts at `d98a21ce`, and the final world art captures use `8bf8d65b`. Individual comparisons use the relevant earlier build and the same local island state and camera within each pair. The browser checks used a loopback game with the built-in fake island and weather. Desktop and touch viewports ran on the Mac. Physical-phone performance remains open.
 
 ## Island edge and touch controls
 
@@ -30,7 +30,7 @@ Village and combat now use the same compact badge with a visible fill for a tiny
 
 In short portrait, the 22 px caption keeps its own scrolling area below the game controls. The full authored line remains available while the player is reading. A focused reader can scroll with End and Close returns focus to the previous usable control. Rotation preserves the caption and its scroll position. During a live wave, urgent instructions still take priority. Shift+Tab reaches the reader using the browser’s normal focus order and plain Tab keeps the game's overview behavior.
 
-Paired 320 × 568 and 375 × 812 Chrome and WebKit fixtures completed the native Wave 1 win, map movement, paid wall and next countdown. Actual Chrome gameplay also reached a live warning and the Musket control with the complete caption available, and a real undefended loss with its separate defeat message. The full authored long Wave 15 caption and simultaneous Wave 2 briefing were exercised separately in the two-engine layout fixture. The keyboard and rotation checks passed independently on both engines. Physical-phone and VoiceOver acceptance remains open.
+Paired 320 × 568 and 375 × 812 Chrome and WebKit fixtures completed the native Wave 1 win, map movement, paid wall and next countdown. Actual Chrome gameplay also reached a live warning and the Musket control with the complete caption available, and a real undefended loss with its separate defeat message. The full authored long Wave 15 caption and simultaneous Wave 2 briefing were exercised separately in the two-engine layout fixture. In both engines, a reader reached through native keyboard input retained the same caption and exact scroll offset after rotating the phone twice. Focus returns to the active game or result dialog while the reader is unavailable. Physical-phone and VoiceOver acceptance remains open.
 
 When a long Standard caption cannot fit next to the live wave HUD, it moves below the touch controls. On the 320 × 568 Fog Bank run, the caption moved from the HUD’s y93–272 lane to y505–562. Both phone sizes and graphics modes exercised the expanded and collapsed event panel in Chrome and WebKit. The live Wave 1 warning still stays clear of the Musket and movement. At the Harbor bell, a defender already in the wave sees “View wave status,” which opens the existing status card. [Fog Bank at 320 × 568](fog-bank-standard-subtitles-before-after.jpg)
 
@@ -50,7 +50,7 @@ Smugglers’ Cove has a low slate cave and a closed timber arena gate. The Teeth
 
 [Desktop Sea Chart](chart-desktop.jpg) · [Short phone Sea Chart before and after](chart-compact.jpg)
 
-The Sea Chart uses the island menu colors. At 320 and 375 CSS pixels, the full illustrated world fits above all permitted destinations with the current island clearly marked. Every destination has at least a 44 px touch target. The three destinations in island play and all six in the retained multi-location mode were exercised in Chrome and WebKit. Keyboard travel and the ordinary and fast voyage choices still use the same routes. In short portrait, the arrival name sits beside the HUD and clears the walking route below it.
+The Sea Chart uses the island menu colors. At phone widths from 320 to 390 CSS pixels, the full illustrated world fits above all permitted destinations with the current island clearly marked. Every destination has at least a 44 px touch target. The three destinations in island play and all six in the retained multi-location mode were exercised in Chrome and WebKit. After a rotation and a voyage, keyboard focus starts on the current landing and Close returns focus to the game. Keyboard travel and the ordinary and fast voyage choices use the existing routes. In short portrait, the arrival name sits beside the HUD and clears the walking route below it.
 
 ## First-play controls
 
@@ -60,7 +60,7 @@ The title keeps the lighthouse and ship visible in both short orientations. Play
 
 The first guide now clears the movement stick and gives both Skip buttons their full targets. Longer instructions scroll inside the guide on the shortest portraits. The compact combat Guide stays accessible while the player shoots and reads. Its full instructions open on demand. At 320 and 375 CSS pixels in Chrome and WebKit, the actual onboarding and Wave 1 flows could walk, build, use the Menu, advance or dismiss the guide, and complete a paid wall without blocking Large subtitles or the danger warning.
 
-The first Cannon receipt now has room below the guide, and the actual touch button carries the nearby action label. The Standard and Large captions can be read below the touch controls on the shortest phone, including when the receipt and guide are both visible. [First purchase before and after](paid-cannon-phone-before-after.jpg) · [With both subtitle sizes](paid-cannon-with-subtitles-320.jpg)
+The first Cannon receipt now has room below the guide, and the actual touch button carries the nearby action label. Standard and Large captions can be read below the touch controls on short portrait screens, including when the receipt and guide are both visible. Chrome and WebKit exercised the 360 × 640 and 375 × 640 sizes as well as 320 × 568 and the taller phone layouts. [First purchase before and after](paid-cannon-phone-before-after.jpg) · [Both subtitle sizes at 320 px](paid-cannon-with-subtitles-320.jpg) · [First purchase at 360 px](guide-360-cannon-before-after.jpg)
 
 ## Confirmed construction feedback
 
