@@ -1,0 +1,18 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run tests/art/coast-water.test.js tests/world/ground-transform.test.js --maxWorkers=1
+
+
+ RUN  v5.1.0 /workspace/reference-village-work/clearance-sea/frontend
+
+
+ Test Files  2 passed (2)
+      Tests  11 passed (11)
+   Start at  10:24:25
+   Duration  1.02s (tests 40%, import 40%, transform 18%, worker 2%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice
