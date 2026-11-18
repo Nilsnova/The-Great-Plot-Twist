@@ -10,7 +10,7 @@ export const HARBOR_ID = 'saltreach_harbor';
 export const VISIBLE_GOALS = 3;
 export const IDLE_HINT_MS = 20000;
 // Each goal names the event (and payload test) that completes it. Goals complete strictly in order:
-// only the current goal listens, so standing in the Harbor at the start does not tick goal 3.
+// only the current goal listens to events. Saved island achievements are reconciled below.
 // TRAVEL_QUESTS are the goals with the sea chart (the Harbor and its stake); FIRST_QUESTS replace those two
 // with island goals while "one island" is on (docs/GAME-V3.md §2, src/island/one-island.js), at the same
 // places in the list, so a saved count of done goals means the same thing in both lists.
@@ -69,6 +69,19 @@ export function applyQuestEvent(state, event, quests = FIRST_QUESTS) {
   try { ok = current.matches(event) === true; } catch { ok = false; }
   if (!ok) return {state, changed: false, completed: null};
   return {state: {done: done + 1}, changed: true, completed: current};
+}
+
+// Purchases can happen before their goal unlocks. Recheck the owner's saved island on load and
+// after every goal, including old saves that already hired the maximum number of gunners.
+export function reconcileFirstQuests(state, island, quests = FIRST_QUESTS) {
+  if (!island) return state;
+  const built = (kind, level = 1) => (island.spots ?? []).some(spot => spot.built === true && spot.kind === kind && (spot.level ?? 1) >= level);
+  const wave = island.waveBest ?? 0;
+  const achieved = {cannon: built('cannon'), wall: built('wall'), mortar: built('mortar'), upgrade: built('cannon', 2),
+    wave: wave >= 1, wave3: wave >= 3, wave5: wave >= 5, wave10: wave >= 10, gunner: (island.crew?.gunner ?? 0) > 0};
+  let done = state?.done ?? 0;
+  while (quests[done] && achieved[quests[done].id] === true) done++;
+  return done === state?.done ? state : {done};
 }
 
 // What the strip shows: three goals from the current one (the last three once near the end).

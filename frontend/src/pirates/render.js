@@ -29,6 +29,7 @@ import { towerLook } from './tower-health.js';
 import { MARK_IDS, buildingMarks } from '../art/path-marks.js';
 import { pixelGlsl, toScreen } from '../world/pixel-glsl.js';
 import { CHARACTER_SCALE } from './character-scale.js';
+import { createCombatOverlay } from './combat-overlay.js';
 import {makeCombatWallConnections} from './wall-connections.js';
 import {WALL_ATLAS_IDS} from '../art/village/walls.js';
 import {wallAtlasView} from '../art/wall-atlas.js';
@@ -336,6 +337,7 @@ export function wallShare(post, wall) {
 export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion = () => false, quality = () => 'high',
   beamFrom = null, recoveryV1 = false, fx = () => scene.userData?.pixelFx ?? null }) {
   const owned = [], root = new THREE.Group(); root.name = 'pirate-wave'; scene.add(root);
+  const combatOverlay = createCombatOverlay(root);
   const rect = {};
   for (const [id, r] of Object.entries(atlas.rects)) {
     // A hair in from every edge so neighbours never bleed in.
@@ -1183,7 +1185,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
   return {
     root,
     events(list) { for (const event of list ?? []) onEvent(event); },
-    update({ state, simTime = simNow, dt = 0, captain: own = null, revive: helping = null, figures: drawnAt = null } = {}) {
+    update({ state, simTime = simNow, dt = 0, captain: own = null, revive: helping = null, figures: drawnAt = null, combatFeedback = null } = {}) {
       if (disposed) return;
       clock += Math.max(0, Math.min(.1, dt || 0)); simNow = simTime; latest = state ?? latest; captain = own; revive = helping;
       figures = drawnAt instanceof Map ? drawnAt : null;
@@ -1207,6 +1209,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
         smooth.prune(aliveAny);
       }
       draw();
+      combatOverlay.update(combatFeedback ?? {});
     },
     setVisible(value) { visible = value !== false; root.visible = visible; },
     // The island changed while this wave's posts stand (an upgrade or a new building in the break, or a
@@ -1247,6 +1250,7 @@ export function createWaveRenderer({ scene, atlas, defenses = [], reducedMotion 
     dispose() {
       if (disposed) return; disposed = true;
       wallConnections.dispose();
+      combatOverlay.dispose();
       root.removeFromParent(); root.clear();
       for (const item of owned) item.dispose();
       owned.length = 0; ships.clear(); fire.clear(); wallFlash.clear(); crew.clear();

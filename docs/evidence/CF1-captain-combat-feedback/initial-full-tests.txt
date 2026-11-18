@@ -1,0 +1,190 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run
+
+
+ RUN  v5.1.0 /workspace/captain-combat-feedback/frontend
+
+
+[recovery-load] 60 s wave, 200 ms round trip: {"events":125,"inputs":83,"emptyInputs":0,"health":12,"finish":0,"maxFlight":{"events":1,"inputs":1,"health":1,"finish":0},"maxStep":1,"longestFreezeMs":48,"endedAt":null}
+
+[recovery-load] 60 s wave, 450 ms round trip: {"events":125,"inputs":83,"emptyInputs":0,"health":12,"finish":0,"maxFlight":{"events":1,"inputs":1,"health":1,"finish":0},"maxStep":1,"longestFreezeMs":48}
+
+[recovery-load] won wave, held break: {"events":31,"inputs":17,"emptyInputs":0,"health":0,"finish":1,"endedAt":13160,"finishAnswered":true}
+
+[recovery-load] two players, 200 ms round trip, no room: {"players":[{"readsPerSecond":2.1321961620469083,"inputsPerSecond":1.1253257521914237,"healthPerSecond":0.059227671167969675,"presses":18,"pressToVisibleMs":0,"neverDrawn":0,"teammatePressToVisibleMs":1024,"teammateDrawn":14,"teammatePresses":14,"journalEffectMs":1024,"afterClose":0,"ended":true,"waveDone":null,"finishes":1},{"readsPerSecond":2.1321961620469083,"inputsPerSecond":1.0068704098554844,"healthPerSecond":0.059227671167969675,"presses":14,"pressToVisibleMs":0,"neverDrawn":0,"teammatePressToVisibleMs":1024,"teammateDrawn":17,"teammatePresses":18,"journalEffectMs":1024,"afterClose":0,"ended":true,"waveDone":null,"finishes":1}],"closedAt":33768,"roomPerSecond":0,"journal":72,"controllers":null}
+
+[recovery-load] two players, 200 ms round trip, 100 ms room: {"players":[{"readsPerSecond":2.1321961620469083,"inputsPerSecond":1.1253257521914237,"healthPerSecond":0.059227671167969675,"presses":18,"pressToVisibleMs":0,"neverDrawn":0,"teammatePressToVisibleMs":112,"teammateDrawn":14,"teammatePresses":14,"journalEffectMs":1024,"afterClose":0,"ended":true,"waveDone":null,"finishes":1},{"readsPerSecond":2.1321961620469083,"inputsPerSecond":1.0068704098554844,"healthPerSecond":0.059227671167969675,"presses":14,"pressToVisibleMs":0,"neverDrawn":0,"teammatePressToVisibleMs":112,"teammateDrawn":18,"teammatePresses":18,"journalEffectMs":1024,"afterClose":0,"ended":true,"waveDone":null,"finishes":1}],"closedAt":33768,"roomPerSecond":0.9476427386875148,"journal":72,"controllers":null}
+
+[recovery-load] hidden 1 min: {"shown":true,"caughtUpAt":250,"closedAt":null}
+
+[recovery-load] hidden 3 min: {"shown":true,"caughtUpAt":200,"closedAt":150900}
+
+[recovery-load] hidden 10 min: {"shown":true,"caughtUpAt":200,"closedAt":150900}
+ ❯ tests/pirates/td-flow.test.js (11 tests | 1 failed) 562ms
+   ❯ the v2 renderer (1)
+     × draws mortars, warships, levels, crew and the musket in the same few layers and leaves nothing behind 16ms
+
+[playtest] musket shots at a walking boarder just inside range where drawn, landing 1 s later: {"hits":{"seen":6,"unseen":0},"tries":{"seen":15,"unseen":15}}
+ ❯ tests/text-lint.test.js (18 tests | 1 failed) 1350ms
+   ❯ G24 player-facing text (18)
+     × runs the repository linter as part of ordinary npm test and rejects editable errors 1299ms
+ ❯ tests/pirates/range-feedback.test.js (6 tests | 1 failed) 34ms
+   ❯ contextual captain range (6)
+     × counts one enemy when several hits on the same target arrive together 23ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/text-lint.test.js > G24 player-facing text > runs the repository linter as part of ordinary npm test and rejects editable errors
+AssertionError: expected [ { line: 944, …(4) }, …(11) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   {
++     "detail": "Unreviewed word: enemy. Check spelling before adding to words.txt.",
++     "file": "frontend/src/pirates/controller.js",
++     "line": 944,
++     "reportOnly": false,
++     "rule": "spelling",
++   },
++   {
++     "detail": "Unreviewed word: limited. Check spelling before adding to words.txt.",
++     "file": "frontend/src/pirates/controller.js",
++     "line": 958,
++     "reportOnly": false,
++     "rule": "spelling",
++   },
++   {
++     "detail": "Unreviewed word: bomb. Check spelling before adding to words.txt.",
++     "file": "frontend/src/pirates/controller.js",
++     "line": 958,
++     "reportOnly": false,
++     "rule": "spelling",
++   },
++   {
++     "detail": "Unreviewed word: limited. Check spelling before adding to words.txt.",
++     "file": "frontend/src/pirates/controller.js",
++     "line": 959,
++     "reportOnly": false,
++     "rule": "spelling",
++   },
++   {
++     "detail": "Unreviewed word: fired. Check spelling before adding to words.txt.",
++     "file": "frontend/src/pirates/controller.js",
++     "line": 959,
++     "reportOnly": false,
++     "rule": "spelling",
++   },
++   {
++     "detail": "Unreviewed word: attacking. Check spelling before adding to words.txt.",
++     "file": "frontend/src/pirates/danger-feedback.js",
++     "line": 31,
++     "reportOnly": false,
++     "rule": "spelling",
++   },
++   {
++     "detail": "Use words, a comma, or a single hyphen instead of a long/double dash.",
++     "file": "frontend/src/pirates/danger-feedback.js",
++     "line": 33,
++     "reportOnly": false,
++     "rule": "dash",
++   },
++   {
++     "detail": "Unreviewed word: incoming. Check spelling before adding to words.txt.",
++     "file": "frontend/src/pirates/danger-feedback.js",
++     "line": 33,
++     "reportOnly": false,
++     "rule": "spelling",
++   },
++   {
++     "detail": "Unreviewed word: enemy. Check spelling before adding to words.txt.",
++     "file": "frontend/src/pirates/danger-feedback.js",
++     "line": 34,
++     "reportOnly": false,
++     "rule": "spelling",
++   },
++   {
++     "detail": "Unreviewed word: attacks. Check spelling before adding to words.txt.",
++     "file": "frontend/src/pirates/danger-feedback.js",
++     "line": 34,
++     "reportOnly": false,
++     "rule": "spelling",
++   },
++   {
++     "detail": "Unreviewed word: enemy. Check spelling before adding to words.txt.",
++     "file": "frontend/src/pirates/range-feedback.js",
++     "line": 28,
++     "reportOnly": false,
++     "rule": "spelling",
++   },
++   {
++     "detail": "Unreviewed word: enemy. Check spelling before adding to words.txt.",
++     "file": "frontend/src/pirates/range-feedback.js",
++     "line": 28,
++     "reportOnly": false,
++     "rule": "spelling",
++   },
++ ]
+
+ ❯ tests/text-lint.test.js:37:65
+     35|     const result = await lintRepository();
+     36|     expect(result.records).toBeGreaterThan(0); expect(result.files).to…
+     37|     expect(result.diagnostics.filter(issue=>!issue.reportOnly)).toEqua…
+       |                                                                 ^
+     38|   },30000); // the whole repository: about 2 s of work, longer on a bu…
+     39|   it('gates the live festival, sports and host copy while retaining pr…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/pirates/range-feedback.test.js > contextual captain range > counts one enemy when several hits on the same target arrive together
+AssertionError: expected 'Hit · 6 damage · 2 enemies' to be 'Hit · 6 damage' // Object.is equality
+
+Expected: "Hit · 6 damage"
+Received: "Hit · 6 damage · 2 enemies"
+
+ ❯ tests/pirates/range-feedback.test.js:51:32
+     49|     feedback.note([{ type: 'ship_hit', shipId: 's', by: 'captain:me', …
+     50|       { type: 'ship_hit', shipId: 's', by: 'captain:me', damage: 3 }],…
+     51|     expect(view(feedback).hit).toBe('Hit · 6 damage');
+       |                                ^
+     52|   });
+     53|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  tests/pirates/td-flow.test.js > the v2 renderer > draws mortars, warships, levels, crew and the musket in the same few layers and leaves nothing behind
+AssertionError: expected 51 to be 50 // Object.is equality
+
+- Expected
++ Received
+
+- 50
++ 51
+
+ ❯ tests/pirates/td-flow.test.js:187:43
+    185|     const renderer = createWaveRenderer({ scene, atlas: { texture: new…
+    186|     const posts = defenses.filter(item => item.kind !== 'house').lengt…
+    187|     expect(renderer.root.children.length).toBe(3 + BOARDER_BANDS + pos…
+       |                                           ^
+    188|     const sim = createWave({ seed: 3, wave: 10, weather: { ships: 2 },…
+    189|     const peak = { instances: 0, shells: 0, bursts: 0 };
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  3 failed | 347 passed (350)
+      Tests  3 failed | 3862 passed (3865)
+   Start at  11:26:36
+   Duration  503.02s (tests 85%, import 12%, transform 2%, worker 1%)
+
+    Isolate  350 workers spawned · ~169ms startup each (spawn + environment, per file)
+             at least ~58.84s faster with isolate: false — reuses workers across files instead of one per file
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice

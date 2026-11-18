@@ -41,7 +41,8 @@ function readFlags(getFlags) {
   return Object.freeze(Object.fromEntries(safely(() => Object.keys(raw ?? {}), [])
     .map(key => [key, safely(() => raw[key], false) === true])));
 }
-export function registerPanelServices(session, {api, publicApi, getFlags, isReady, getIdentity, getIslet: provideIslet} = {}) {
+export function registerPanelServices(session, {api, publicApi, getFlags, isReady, getIdentity, getIslet: provideIslet,
+  getWallet: provideWallet} = {}) {
   if (!weakKey(session)) throw new TypeError('Panel services need an explicit session.');
   const subscribers = new Set(), identities = new Set(), tickets = new WeakMap(), revisions = new Map();
   let closed = false, sampling = false, lifetime = 0, version = 0, stopSession = null;
@@ -118,6 +119,17 @@ export function registerPanelServices(session, {api, publicApi, getFlags, isRead
     if (registered) publishProvider(session);
   }
   const lease = {request, publicGet,
+    async reconcileWallet() {
+      refresh();
+      if (!usable(true) || typeof provideWallet !== 'function') return null;
+      const owner = lifetime, identity = snapshot.identity;
+      const wallet = await provideWallet();
+      const currentWallet = () => {
+        refresh();
+        return usable(true) && owner === lifetime && Object.is(identity, snapshot.identity) && wallet?.current() === true;
+      };
+      return currentWallet() ? {coins: wallet.coins, current: currentWallet} : null;
+    },
     isReady() { refresh(); return usable(false); },
     getLifetime() { refresh(); return owned() ? lifetime : null; },
     async getIslet() {

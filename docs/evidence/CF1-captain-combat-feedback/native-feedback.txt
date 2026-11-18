@@ -1,0 +1,8 @@
+Opening the local fake game.
+Ringing the normal fake-server bell.
+Captured range at 1280x720.
+Captured range at 375x812.
+Captured hit at 1280x720.
+Captured danger at 1280x720.
+Captured danger at 375x812.
+Captain feedback: 13 checks passed; 5 actual-game captures (after).
