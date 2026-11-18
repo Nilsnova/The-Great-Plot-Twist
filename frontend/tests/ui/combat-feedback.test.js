@@ -59,3 +59,25 @@ it('keeps long weapon and danger text within the fire control and wave bar', asy
     }
   });
 });
+
+it('reserves the expanded fire control column beside real toasts in short landscape', async () => {
+  await browser.withPage(async page => {
+    await page.setViewportSize({ width: 844, height: 390 });
+    await page.evaluate(async () => {
+      for (const css of ['/src/ui/base.css', '/src/ui/kit/kit.css']) await window.g20Import(css);
+      const { createWaveHud } = await window.g20Import('/src/pirates/hud.js');
+      const { createToasts } = await window.g20Import('/src/ui/toasts.js');
+      const hud = createWaveHud({ container: document.body, reducedMotion: () => true });
+      hud.bar({ wave: 7, islandHp: 90, maxIslandHp: 100, shipsLeft: 2 });
+      hud.musket({ ready: true, share: 1, label: 'Fire bombs' });
+      hud.rangeFeedback({ label: 'Fire bombs throw range', radius: 18, status: 'Out of range · move closer', alpha: 1 });
+      createToasts().show({ text: 'The island heart is taking damage. Defend it before the pirates break through!', ms: 10000 });
+    });
+    const boxes = await page.evaluate(() => {
+      const toast = document.querySelector('.u-toast').getBoundingClientRect();
+      const fire = document.querySelector('.pirate-musket').getBoundingClientRect();
+      return { toastRight: toast.right, fireLeft: fire.left };
+    });
+    expect(boxes.toastRight).toBeLessThanOrEqual(boxes.fireLeft - 8);
+  });
+});
