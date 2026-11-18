@@ -22,7 +22,6 @@ export function islandCode(value, {requirePrefix = false} = {}) {
 export const displayIslandCode = value => (islandCode(value) ? `${ISLAND_PREFIX}-${islandCode(value)}` : '');
 export const islandRoom = value => (islandCode(value) ? `isle_${islandCode(value).toLowerCase()}` : null);
 export const visitUrl = (value, base = GAME_URL) => (islandCode(value) ? `${base}?game=${displayIslandCode(value)}` : '');
-export const gameUrl = visitUrl;
 
 const safeSession = () => { try { return globalThis.sessionStorage ?? null; } catch { return null; } };
 // Remember ?game=ISLE-K7Q2M (or the older ?visit=) from the address. Anything that is not a code is ignored.

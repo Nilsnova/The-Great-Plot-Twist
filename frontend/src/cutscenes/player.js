@@ -5,6 +5,7 @@
 // the shot shows its plain sky colours. Loaded lazily (import('./cutscenes/player.js')); the cold
 // title never contains it.
 import './cutscenes.css';
+import {node as element} from '../ui/kit/dom.js';
 import scriptData from './scripts.json';
 import {scenes as sceneMap} from './scenes.js';
 import {findScript, normalizeManifest, buildTimeline, lineAt, shotOpacity, shotProgress} from './timeline.js';
@@ -24,13 +25,6 @@ export async function loadVoiceManifest({fetchImpl = globalThis.fetch?.bind(glob
     if (!response.ok) return {};
     return normalizeManifest(await response.json());
   } catch { return {}; } finally { clearTimeout(timer); }
-}
-
-function element(tag, className, text) {
-  const node = document.createElement(tag);
-  if (className) node.className = className;
-  if (text !== undefined) node.textContent = text;
-  return node;
 }
 
 export function playCutscene({container = document.body, id, data = scriptData, scenes = sceneMap,

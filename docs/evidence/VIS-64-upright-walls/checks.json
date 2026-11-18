@@ -1,0 +1,92 @@
+{
+  "source": "e5ad8a78dce3a37447bcd16af1fdfaa9a17298e5",
+  "checks": [
+    {
+      "name": "focused-final",
+      "command": [
+        "npx",
+        "vitest",
+        "run",
+        "tests/art/wall-rebake-integrity.test.js",
+        "tests/art/wall-upright-volume.test.js",
+        "tests/art/wall-tier-identity.test.js",
+        "tests/art/wall-atlas.test.js",
+        "tests/art/village-baked-output.test.js",
+        "tests/island/wall-batch-options.test.js",
+        "tests/island/wall-textured-batches.test.js",
+        "tests/island/wall-tier-detail.test.js",
+        "tests/island/wall-span-batches.test.js",
+        "tests/island/wall-builder-preview.test.js",
+        "tests/pirates/wall-connections.test.js",
+        "tests/island/wall-health-clearance.test.js",
+        "tests/pirates/battle-guide.test.js",
+        "tests/pirates/combat-projection.test.js",
+        "--maxWorkers=1"
+      ],
+      "exitCode": 0,
+      "seconds": 7.68,
+      "log": "focused-final.log",
+      "source": "27bc9920827ccdbc9b35944ef6631a56c7e8ddf3"
+    },
+    {
+      "name": "build",
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "exitCode": 0,
+      "seconds": 2.09,
+      "log": "build.log"
+    },
+    {
+      "name": "budget",
+      "command": [
+        "node",
+        "scripts/report-budget.js",
+        "--check"
+      ],
+      "exitCode": 0,
+      "seconds": 0.32,
+      "log": "budget.log"
+    },
+    {
+      "name": "text-lint",
+      "command": [
+        "node",
+        "../scripts/text-lint/index.mjs"
+      ],
+      "exitCode": 0,
+      "seconds": 1.42,
+      "log": "text-lint.log"
+    }
+  ],
+  "earlierFocusedReceipt": {
+    "name": "focused-final",
+    "command": [
+      "npx",
+      "vitest",
+      "run",
+      "tests/art/wall-rebake-integrity.test.js",
+      "tests/art/wall-upright-volume.test.js",
+      "tests/art/wall-tier-identity.test.js",
+      "tests/art/wall-atlas.test.js",
+      "tests/art/village-baked-output.test.js",
+      "tests/island/wall-batch-options.test.js",
+      "tests/island/wall-textured-batches.test.js",
+      "tests/island/wall-tier-detail.test.js",
+      "tests/island/wall-span-batches.test.js",
+      "tests/island/wall-builder-preview.test.js",
+      "tests/pirates/wall-connections.test.js",
+      "tests/island/wall-health-clearance.test.js",
+      "tests/pirates/battle-guide.test.js",
+      "tests/pirates/combat-projection.test.js",
+      "--maxWorkers=1"
+    ],
+    "exitCode": 0,
+    "seconds": 8.18,
+    "log": "focused-before-test-pin.log",
+    "note": "Same additional provenance-test bytes, before their dedicated test-only commit."
+  },
+  "scope": "Build/budget/text ran at source e5ad8a78; the later test-only commit retains exactly its application/public/backend/migrations trees. The focused final selection runs from its committed test revision."
+}
