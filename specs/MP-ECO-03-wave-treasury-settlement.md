@@ -102,6 +102,16 @@ With the treasury operation-registry cutover correction included, the affected c
 
 The earlier broad backend run remains the recorded baseline; this bounded SQL validation follow-up reran the affected suites above. The unintegrated lifecycle/deletion gates are unchanged.
 
+### Current-main verification
+
+Verified again after integrating main `77a9e34d`, including its existing gated-defense catalogue and recovery snapshot/route changes. No wave-accounting runtime change was required by that integration.
+
+- `uv run pytest -q server/tests/test_wave_economy.py server/tests/test_personal_captain.py server/tests/test_captain_progression_routes.py server/tests/test_economy_operations.py server/tests/test_island_treasury.py server/tests/test_island_treasury_store.py server/tests/test_wave_routes.py server/tests/test_wave_recovery_transport.py server/tests/test_island_routes.py server/tests/test_island_rules.py server/tests/test_structure_repair_rules.py`: **408 passed in 12.43s**.
+- `CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' --with pglast pytest -q server/tests/island_sql/test_wave_treasury_settlement_sql.py server/tests/island_sql/test_island_treasury_sql.py server/tests/island_sql/test_personal_captain_sql.py server/tests/island_sql/test_economy_operations_sql.py server/tests/island_sql/test_economy_operations_cutover_sql.py server/tests/island_sql/test_wave_crews_sql.py server/tests/island_sql/test_recovery_wave_end_sql.py server/tests/island_sql/test_structure_recovery_http_pg.py`: **134 passed in 27.88s**. The complete 70-migration chain applies twice; the added recovery HTTP/PostgreSQL scenarios exercise real replay modules.
+- Backend-wide `uv run ruff check .`, **70** migration parses and `git diff --check`: passed.
+
+The exhaustive unrelated settings matrix and complete browser suite were not rerun. The branch adds no canonical lifecycle route wiring, shared-mode activation, live database change or integrated multi-client gameplay claim.
+
 ## Reviewer
 
 A different human teammate, to be named before publication. Last updated: 2026-11-18.
