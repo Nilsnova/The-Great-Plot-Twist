@@ -28,7 +28,7 @@ Personal wallets cannot fund a persistent shared island without conflating the a
 
 `balanceCoins` includes held principal, `committedCoins` is open principal, and `availableCoins = balanceCoins - committedCoins`. A normal purchase of price `q` changes `(balance, committed)` by `(-q, 0)`. Opening principal `s` with fee `f` requires `available >= s + f` and changes `(-f, +s)`. Settlement with verified returned payout `p` changes `(+p-s, -s)`; loss has `p=0`, principal refund `p=s`. Returned payout includes returned principal and is already net of any closing fee. The product caller computes that fee exactly once; the treasury does not deduct it again. A fee refund is included only when the product contract grants it.
 
-Each ledger row binds account, run epoch, actor, operation UID, reason, immutable origin reference, request fingerprint, both deltas and balances/revision at commit. A reserve row holds principal and fee. A settle row uniquely resolves its source reserve; no mutable product row or second release can invent/reuse held principal. Retry returns the original receipt and fresh account state; altered payload for an existing key fails without mutation. Deterministic reason/reference uniqueness also protects canonical rewards under different request UIDs.
+Each ledger row binds account, run epoch, actor, operation UID, reason, immutable origin reference, request fingerprint, both deltas and balances/revision at commit. A reserve row holds principal and fee. A settle row uniquely resolves its source reserve; no mutable product row or second release can invent/reuse held principal. Retry returns the original receipt and fresh account state; altered payload for an existing key fails without mutation. Deterministic reason/reference uniqueness also protects canonical rewards under different request UIDs. Bet references identify the individual bet/reservation, not only its event: several affordable bets on one event must have distinct source references.
 
 The persisted mode pointer pins the current account/epoch and active/paused admission. Retired accounts reject new member spending/reservations but still accept checked server-origin credits/settlements against their original scope. The foundation does not decide reset with outstanding bets or personal-balance conversion policy; those remain MP-ECO-01/16/17 gates.
 
@@ -44,11 +44,11 @@ Game routes, feature flags/admission rollout, Captain/Engineer storage, wave rew
 
 ## Done when
 
-- [ ] Focused Python tests verify exact amounts above legacy/JavaScript limits, strict DTO parsing, context errors and retry/failure mapping.
-- [ ] Disposable full-chain PostgreSQL tests verify initial capital once, personal wallet preservation, read/write grants, atomic spend/reserve/settle, fingerprint mismatch, original-account settlement after departure/retirement, and simultaneous last-funds/duplicate operations.
-- [ ] Ledger cash/commitment sums reconcile to accounts; open principal reconciles to unresolved reserve rows.
-- [ ] Full additive migration chain parses and applies twice on the scratch database.
-- [ ] Relevant backend tests and Ruff pass; exact commands/results are recorded in the local handover.
+- [x] Focused Python tests verify exact amounts above legacy/JavaScript limits, strict DTO parsing, context errors and retry/failure mapping.
+- [x] Disposable full-chain PostgreSQL tests verify initial capital once, personal wallet preservation, read/write grants, atomic spend/reserve/settle, fingerprint mismatch, original-account settlement after departure/retirement, and simultaneous last-funds/duplicate operations.
+- [x] Ledger cash/commitment sums reconcile to accounts; open principal reconciles to unresolved reserve rows.
+- [x] Full additive migration chain parses and applies twice on the scratch database.
+- [x] Relevant backend tests and Ruff pass; verification results are recorded below.
 - [ ] A different human teammate reviews the change; the migration remains unapplied to production.
 
 ## Tests to write first
@@ -62,3 +62,22 @@ Game routes, feature flags/admission rollout, Captain/Engineer storage, wave rew
 ## Contracts touched
 
 New server-only account/RPC contracts are documented in migration comments and this spec. The common envelope follows MP-ECO-01. Runtime integration requires matching INTERFACES and Supabase policy-matrix documentation before any route or admission path is enabled.
+
+## Verification
+
+From `backend/`, with the project's locked dependencies installed:
+
+| Check | Result |
+|---|---|
+| `uv run --no-sync pytest -q` | 536,847 passed, 305 skipped in 629.57 seconds. SQL-only suites are opt-in or require test-only packages. |
+| Final focused `uv run --no-sync pytest -q server/tests/test_island_treasury.py server/tests/test_island_treasury_store.py` | 36 passed after the public error-code and returned-payout contract alignment. |
+| `CASE_PG_SCRATCH=1 uv run --no-sync --with pgserver --with 'psycopg[binary]' --with pglast pytest -q server/tests/island_sql/test_island_treasury_sql.py` | 19 passed; disposable full-chain PostgreSQL applies all migrations twice. |
+| `uv run --no-sync ruff check .` | Passed. |
+| Documented `pglast` parse of every migration | 66 files parsed. |
+| Added documentation links and `git diff --check` | Four local links resolve; no whitespace errors. |
+
+The final focused checks include exact 5,001-digit DTO values, reservation/purchase races,
+duplicate admission/settlement, cross-island UID conflict rollback and closing-fee accounting.
+No live database, authenticated browser flow or production shared-mode admission was exercised.
+HTTP/game-route conversion and the explicit reset/deletion/conversion policies remain separate
+integration prerequisites; this foundation alone must not enable existing-save admission.
