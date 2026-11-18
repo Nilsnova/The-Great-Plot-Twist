@@ -25,7 +25,7 @@ export function moveModel({spotId, spots, verdict, busy, message}) {
   const actual = spots?.find(item => item?.id === spotId);
   const portrait = actual?.built === true && Object.hasOwn(BUILDINGS, actual.kind) && Number.isSafeInteger(actual.level) && actual.level >= 1 && actual.level <= 5
     ? {kind: actual.kind, level: actual.level, spec: actual.spec ?? null} : null;
-  const line = spotById(spotId)?.slot === 'wall' ? 'Walls go on a pirate path: tap a glowing square.' : 'Tap the island where it should stand, or use the arrows.';
+  const line = spotById(spotId)?.slot === 'wall' ? 'Tap a glowing square. Up to three rows per approach.' : 'Tap the island where it should stand, or use the arrows.';
   return {title: moveTitle(spotId, spots), line, portrait,
     status: message || (verdict.ok ? 'This square is free.' : verdict.message), ok, refused: !verdict.ok || !!message,
     busy, placeLabel: busy ? 'Placing…' : 'Place here'};

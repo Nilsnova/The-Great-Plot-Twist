@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import {projectPoint} from '../world/art.js';
 import {FOOTPRINTS} from './placement.js';
 import {texturedWallBatches, wallVisualRows} from './wall-batches.js';
+import {makeWallFooting} from './wall-footing.js';
 import {spriteMaterial} from '../art/textures.js';
 
 export function wallTopology(spots = []) {
@@ -23,17 +24,21 @@ export function wallTopology(spots = []) {
 
 // Level colours match art/island.js. The original level/banner sprites remain as the junction posts.
 const COLOURS = [0xc98a4e, 0xcfc8bb, 0xa9a39a, 0xffcf3f, 0xffcf3f];
-export function makeWallConnections(root) {
+export function makeWallConnections(root, {purchaseLight = null} = {}) {
   const group = new THREE.Group(); group.name = 'island-wall-connections'; root.add(group);
+  const footing = makeWallFooting(root);
   let material = new THREE.MeshBasicMaterial({vertexColors: true, transparent: true, side: THREE.DoubleSide, depthTest: false, depthWrite: false, toneMapped: false});
   let key = null, disposed = false, art = null, lastSpots = [], posts = new Set(), current = {links: [], connected: new Set()};
-  let selectedId = null;
+  let selectedId = null, selectedCanopyTarget = null;
   const readLinks = () => current.links.map(link => ({...link}));
   // Diagnostics inspect logical contacts independently of how many painter-layer meshes draw them.
   Object.defineProperty(group, 'wallLinks', {get: readLinks});
   Object.defineProperty(group, 'wallPosts', {get: () => art ? wallVisualRows(lastSpots) : []});
   Object.defineProperty(group, 'wallSelectedId', {get: () => !disposed && posts.has(selectedId) ? selectedId : null});
-  const clear = () => { for (const mesh of [...group.children]) { mesh.geometry.dispose(); group.remove(mesh); } };
+  const clear = () => {
+    selectedCanopyTarget = null;
+    for (const mesh of [...group.children]) { mesh.geometry.dispose(); group.remove(mesh); }
+  };
   function show(spots = []) {
     if (disposed) return current;
     lastSpots = spots; current = wallTopology(spots);
@@ -43,13 +48,17 @@ export function makeWallConnections(root) {
     if (key === next) return current;
     key = next; clear();
     if (art) {
+      footing.show(visual, current.links);
       // Selection retains its real tier post at the ordinary depth; the world owns the tile bracket.
-      for (const [order, {positions, uvs, indices}] of texturedWallBatches(current.links, visual, art, {selectedId})) {
+      for (const [order, {positions, ground, uvs, colors, indices, selectedPost}] of texturedWallBatches(current.links, visual, art, {selectedId})) {
         const geometry = new THREE.BufferGeometry();
         geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-        geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2)); geometry.setIndex(indices);
+        if (purchaseLight) geometry.setAttribute('wallGround', new THREE.Float32BufferAttribute(ground, 2));
+        geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+        geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3)); geometry.setIndex(indices);
         const mesh = new THREE.Mesh(geometry, material); mesh.name = `wall-art-layer:${order}`;
         mesh.renderOrder = order; mesh.frustumCulled = false; mesh.raycast = () => {}; group.add(mesh);
+        if (selectedPost !== undefined) selectedCanopyTarget = {mesh, firstVertex: selectedPost};
       }
       return current;
     }
@@ -91,6 +100,7 @@ export function makeWallConnections(root) {
     }, get links() { return readLinks(); },
     get root() { return group; },
     get posts() { return group.wallPosts; },
+    get selectedCanopyTarget() { return selectedCanopyTarget; },
     hasPost: id => !!art && posts.has(id),
     setTint(color, opacity = 1) {
       if (disposed) return;
@@ -100,9 +110,10 @@ export function makeWallConnections(root) {
       if (disposed || !value) return false;
       if (value === art) return true;
       clear(); material.dispose(); if (art?.ownsTexture) art.texture.dispose();
-      art = value; material = spriteMaterial(art.texture); material.side = THREE.DoubleSide;
+      art = value; material = spriteMaterial(art.texture); material.side = THREE.DoubleSide; material.vertexColors = true;
+      purchaseLight?.install(material);
       // These are camera-facing quads; a second transparent back-face pass adds no surface.
       material.forceSinglePass = true; key = null; show(lastSpots); return true;
     },
-    dispose() { if (disposed) return; disposed = true; clear(); material.dispose(); if (art?.ownsTexture) art.texture.dispose(); root.remove(group); }};
+    dispose() { if (disposed) return; disposed = true; clear(); footing.dispose(); material.dispose(); if (art?.ownsTexture) art.texture.dispose(); root.remove(group); }};
 }

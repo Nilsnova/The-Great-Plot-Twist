@@ -96,6 +96,9 @@ export function createToasts({parent = document.body, limit = TOAST_LIMIT} = {})
     const height = stack.length && element.isConnected ? element.offsetHeight : 0;
     document.documentElement?.style.setProperty('--toast-stack-height', height > 0 ? `${height + 10}px` : '0px');
   }
+  // Wrapping and compact phone styles change on rotation even while the same toast remains on screen.
+  const stackSize = typeof ResizeObserver === 'function' ? new ResizeObserver(measureStack) : null;
+  stackSize?.observe(element);
   function remove(id) { const before = stack.length; stack = stack.filter(item => item.id !== id); if (stack.length !== before) render(); }
   function show(input) {
     const data = typeof input === 'string' ? {text: input} : input ?? {};
@@ -118,7 +121,7 @@ export function createToasts({parent = document.body, limit = TOAST_LIMIT} = {})
     hide(id) { const item = stack.find(entry => entry.id === id); if (item) clearTimeout(item.timer); remove(id); },
     clear() { for (const item of stack) clearTimeout(item.timer); stack = []; render(); },
     get shown() { return stack.map(({id, text, next: step, tone}) => ({id, text, next: step, tone})); },
-    dispose() { for (const item of stack) clearTimeout(item.timer); stack = []; watching?.disconnect(); watching = null; element.remove(); measureStack(); }};
+    dispose() { for (const item of stack) clearTimeout(item.timer); stack = []; watching?.disconnect(); watching = null; stackSize?.disconnect(); element.remove(); measureStack(); }};
 }
 
 // The game's one queue, created on first use inside #game (or the page body).

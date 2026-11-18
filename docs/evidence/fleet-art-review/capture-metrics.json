@@ -1,0 +1,60 @@
+{
+  "wave": 31,
+  "seed": 25135766,
+  "defenseCount": 16,
+  "eventCountThrough16Seconds": 200,
+  "eventSha256": "80e6e785042e33800b61a3d96cea1f6f9e30f20966f6168e69e0cddb33427dab",
+  "views": {
+    "desktop": {
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "quality": "high",
+      "reducedMotion": "false",
+      "touchPoints": 0,
+      "matchingStateSamples": 670,
+      "acceptedMusketTick": 340,
+      "peakDrawCallsBefore": 80,
+      "peakDrawCallsAfter": 80,
+      "medianFrameIntervalMsBefore": 16.7,
+      "medianFrameIntervalMsAfter": 16.7,
+      "matchedImagePairs": 7,
+      "adjacentArtPhases": 2
+    },
+    "phone": {
+      "viewport": {
+        "width": 375,
+        "height": 812
+      },
+      "quality": "high",
+      "reducedMotion": "false",
+      "touchPoints": 1,
+      "matchingStateSamples": 673,
+      "acceptedMusketTick": 340,
+      "peakDrawCallsBefore": 80,
+      "peakDrawCallsAfter": 80,
+      "medianFrameIntervalMsBefore": 16.7,
+      "medianFrameIntervalMsAfter": 16.7,
+      "matchedImagePairs": 7,
+      "adjacentArtPhases": 2
+    },
+    "phone-low-reduced": {
+      "viewport": {
+        "width": 375,
+        "height": 812
+      },
+      "quality": "low",
+      "reducedMotion": "true",
+      "touchPoints": 1,
+      "matchingStateSamples": 674,
+      "acceptedMusketTick": 340,
+      "peakDrawCallsBefore": 80,
+      "peakDrawCallsAfter": 80,
+      "medianFrameIntervalMsBefore": 16.7,
+      "medianFrameIntervalMsAfter": 16.7,
+      "matchedImagePairs": 7,
+      "adjacentArtPhases": 0
+    }
+  }
+}
