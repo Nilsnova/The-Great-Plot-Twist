@@ -1,5 +1,5 @@
 -- Atomic core legacy fences, used before shared HTTP/personal-v1 route integration.
--- Preserve unadopted bodies and kit outcomes; no admission or new mode is activated.
+-- Requires the MP-ECO-04 grant/build scope guards; no admission or new mode is activated.
 
 -- Capture each supported body once. The removed unchecked island_respec stays absent.
 do $$
@@ -12,8 +12,7 @@ begin
     ('island_pick_role','uuid,text,integer'),
     ('island_respec_at_level','uuid,text,integer'),
     ('island_open','uuid,text,bigint'),
-    ('island_fresh_start','uuid,text,text,integer'),
-    ('grant_entry_kit','uuid,text,text,boolean,text,text,bigint,integer,text')
+    ('island_fresh_start','uuid,text,text,integer')
   ) as functions(name, arguments) loop
     if to_regprocedure('public.'||v_item.name||'_core_legacy_personal('||v_item.arguments||')')
       is null then
@@ -177,20 +176,6 @@ $$;
 comment on function public.island_fresh_start(uuid,text,text,integer) is
   'Original reset only before island/global personal adoption. Stored historical reset receipts are not changed or deleted when a managed old call refuses.';
 
--- Both intro and demo use this outermost RPC. No SQL caller holds its profile first.
-create or replace function public.grant_entry_kit(
-  p_player_id uuid,p_ending text,p_decision text,p_read_log boolean,p_kit text,
-  p_start_place text,p_kit_coins bigint,p_move_count integer,p_story_sha256 text
-) returns jsonb language plpgsql volatile security definer set search_path = '' as $$
-begin
-  perform public.island_treasury_lock_scope(p_player_id);
-  return public.grant_entry_kit_core_legacy_personal(p_player_id,p_ending,p_decision,p_read_log,
-    p_kit,p_start_place,p_kit_coins,p_move_count,p_story_sha256);
-end;
-$$;
-comment on function public.grant_entry_kit(uuid,text,text,boolean,text,text,bigint,integer,text) is
-  'Ordering-only actor scope before the unchanged original profile-then-wallet kit transaction. Preserves intro/demo grants and stored first-ending replays; never mutates canonical personal-v1 state or imports funds to a treasury.';
-
 -- Only the trusted server may enter the guarded public wrappers.
 do $$
 declare v_item record;
@@ -202,8 +187,7 @@ begin
     ('island_pick_role','uuid,text,integer'),
     ('island_respec_at_level','uuid,text,integer'),
     ('island_open','uuid,text,bigint'),
-    ('island_fresh_start','uuid,text,text,integer'),
-    ('grant_entry_kit','uuid,text,text,boolean,text,text,bigint,integer,text')
+    ('island_fresh_start','uuid,text,text,integer')
   ) as functions(name, arguments) loop
     execute format('revoke all on function public.%I(%s) from public,anon,authenticated,service_role',
       v_item.name,v_item.arguments);
