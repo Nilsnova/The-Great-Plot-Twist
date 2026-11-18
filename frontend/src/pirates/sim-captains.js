@@ -258,6 +258,5 @@ export function createCaptains(sim) {
     else if (input.type === 'captain_move') captainMove(input, events);
     else if (input.type === 'captain_revive') captainRevive(input, events);
   }
-  return { captainBy, captainLevel, captainShot, recordSeen, seenPlace, captainStrike, presentAt, standing,
-    captainMove, captainRevive, hurtMilitia, hurtCaptain, woundCaptain, allFallen, tavernHeal, applyInput };
+  return { recordSeen, presentAt, hurtCaptain, woundCaptain, allFallen, tavernHeal, applyInput };
 }

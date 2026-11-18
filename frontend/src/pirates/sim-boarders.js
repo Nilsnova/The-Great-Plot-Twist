@@ -330,6 +330,5 @@ export function createBoarders(sim) {
     const step = Math.min(G.speed * C.tick, Math.max(0, d - (foe ? G.reach * .9 : 0)));
     if (d > 1e-9) { unit.x = round2(unit.x + dx / d * step); unit.z = round2(unit.z + dz / d * step); }
   }
-  return { foeOf, crowdOn, crowdOnTower, towerFoeOf, landBoarder, legPoint, pickBoarderTarget, pathTarget, stepClear,
-    blockAt, moveBoarder, moveMilitia };
+  return { landBoarder, moveBoarder, moveMilitia };
 }

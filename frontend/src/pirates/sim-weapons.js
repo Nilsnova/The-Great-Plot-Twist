@@ -313,7 +313,6 @@ export function createWeapons(sim) {
       else if (target) fire(tower, target, false, events);
     }
   }
-  return { damageShip, gunboatFire, damageBoarder, hitWall, hurtIsland, damageTarget, findTarget, ahead, targetKey,
-    fire, lob, roped, slowedUntil, throwHarpoon, fireCulverin, fireSwivel, pending, sees, visible, armoured,
-    shoreOrder, toHeart, aimTower, landShots, fireTowers };
+  return { damageShip, gunboatFire, damageBoarder, hitWall, hurtIsland, findTarget, targetKey, fire, slowedUntil,
+    visible, toHeart, landShots, fireTowers };
 }
