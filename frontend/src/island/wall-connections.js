@@ -32,6 +32,7 @@ export function makeWallConnections(root) {
   // Diagnostics inspect logical contacts independently of how many painter-layer meshes draw them.
   Object.defineProperty(group, 'wallLinks', {get: readLinks});
   Object.defineProperty(group, 'wallPosts', {get: () => art ? wallVisualRows(lastSpots) : []});
+  Object.defineProperty(group, 'wallSelectedId', {get: () => !disposed && posts.has(selectedId) ? selectedId : null});
   const clear = () => { for (const mesh of [...group.children]) { mesh.geometry.dispose(); group.remove(mesh); } };
   function show(spots = []) {
     if (disposed) return current;
