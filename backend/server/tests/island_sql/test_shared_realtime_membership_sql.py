@@ -21,10 +21,13 @@ from server.tests.island_sql.test_island_treasury_sql import (  # noqa: E402
 
 def room(database, owner):
     as_owner(database)
-    code = database.execute(
-        "select code from public.islands where player_id=%s", (owner,)
-    ).fetchone()[0]
-    return f"live:place:isle_{code.lower()}:1"
+    code, nonce = database.execute(
+        "select i.code,s.topic_nonce from public.islands i "
+        "left join public.shared_session_settings s on s.island_owner=i.player_id "
+        "where i.player_id=%s",
+        (owner,),
+    ).fetchone()
+    return f"live:place:isle_{code.lower()}{'_' + nonce if nonce else ''}:1"
 
 
 def allowed(database, actor, topic, operation, *, anonymous=False, extension="broadcast"):
@@ -47,9 +50,12 @@ def allowed(database, actor, topic, operation, *, anonymous=False, extension="br
     database.execute("select set_config('realtime.topic',%s,true)", (topic,))
     try:
         if operation == "select":
-            result = database.execute(
-                "select count(*) from realtime.messages where id=%s", (message_id,)
-            ).fetchone()[0] == 1
+            result = (
+                database.execute(
+                    "select count(*) from realtime.messages where id=%s", (message_id,)
+                ).fetchone()[0]
+                == 1
+            )
         else:
             database.execute(
                 "insert into realtime.messages(id,topic,extension,private) values(%s,%s,%s,true)",
@@ -93,6 +99,8 @@ def test_legacy_admission_changes_the_next_authorization_and_paused_stays_privat
     )
     database.execute("update public.islands set flags=0 where player_id=%s", (owner,))
     assert not allowed(database, outsider, topic, operation)
+    assert not allowed(database, owner, topic, operation)
+    topic = room(database, owner)
     assert allowed(database, owner, topic, operation)
     assert allowed(database, member, topic, operation)
 
