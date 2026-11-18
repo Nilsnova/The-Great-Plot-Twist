@@ -13,7 +13,7 @@ export function createGames(isl) {
   const {container, emit, reducedMotion, preferences, storage, visitStorage, loadCutscenes} = isl;
   // From the other parts (island-*.js), linked once every part exists.
   let campaignSeen, campaignTold, where, applyWorld, endVisit, load, interruptBoat, refreshCard,
-    invalidateWallFeedback;
+    invalidatePurchaseFeedback;
   // --- the game: its lobby and room state ----------------------------------------------------------
   const currentCode = () => islandCode(isl.visiting?.code ?? isl.visitCode ?? isl.own?.code ?? '');
   // The lobby answer once per game and landing (and when somebody new turns up in the room).
@@ -104,7 +104,7 @@ export function createGames(isl) {
     const answer = await isl.api.freshStart({confirmCode: typed});
     if (isl.disposed || !answer.ok) return answer;
     isl.resetGeneration++;
-    invalidateWallFeedback();
+    invalidatePurchaseFeedback();
     const code = islandCode(isl.own?.code ?? '') || islandCode(typed);
     // This page's memory of the old island goes too: its campaign, walls and tree picks.
     campaignSeen.delete(code);
@@ -149,7 +149,7 @@ export function createGames(isl) {
     interruptBoat();
     isl.village.leave();
     isl.reportVisitGeneration++;
-    invalidateWallFeedback();
+    invalidatePurchaseFeedback();
     isl.visitCode = symbols; isl.visiting = null; isl.flow.reset(); isl.ui.close();
     return true;
   }
@@ -182,7 +182,7 @@ export function createGames(isl) {
   }
   function link() { // the names of the other parts, once every part exists (index.js)
     ({campaignSeen, campaignTold, where, applyWorld, endVisit, load, interruptBoat, refreshCard,
-      invalidateWallFeedback} = isl);
+      invalidatePurchaseFeedback} = isl);
   }
   return {currentCode, syncGame, wantSync, lobby, colours, colourOf, captainColour, startGame, openLobby, setPresence,
     resetState, resetIsland, bellAction, playArrival, visit, leaveGame, enterGame, sailHome, link};

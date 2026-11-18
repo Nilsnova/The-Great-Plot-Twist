@@ -15,7 +15,7 @@ export function createLoading(isl) {
   const {emit, storage, visitStorage, onCoins, onCaptain, onQuestIsland, travel} = isl;
   // From the other parts (island-*.js), linked once every part exists.
   let clearRecoveryError, recoveryPolicyOn, readStructureRecovery, syncGame, openLobby, sailHome, refreshCard,
-    invalidateWallFeedback, wallFeedbackScope;
+    invalidatePurchaseFeedback, purchaseFeedbackScope;
   const tellCaptain = island => { const level = island?.captain?.level; if (!isl.disposed && Number.isSafeInteger(level)) { try { onCaptain(level); } catch { /* The HUD cannot stop the island. */ } } };
   function firstTime(id) {
     if (isl.news.has(id)) return false;
@@ -113,7 +113,7 @@ export function createLoading(isl) {
     const spots = target()?.spots ?? [];
     isl.villageBar.setBuildings(spots);
     isl.world?.apply({spots, visitor: !!isl.visiting, battle: isl.battle, unlocks: islandUnlocks(), crew: target()?.crew ?? null, campaign: campaign(),
-      arsenal: true, feedbackScope: wallFeedbackScope()});
+      arsenal: true, feedbackScope: purchaseFeedbackScope()});
     const replaying = isl.recoveryCombat && isl.flow.current?.wave?.waveId === isl.recoveryCombat.waveId;
     isl.world?.setRecoveryState?.(isl.recoveryState && recoveryPolicyOn() ? {...isl.recoveryState, displayPhase: replaying ? 'combat' : isl.recoveryState.displayPhase} : null);
     isl.pointWorld?.apply({spots: isl.point?.spots ?? [], visitor: false, battle: isl.pointBattle, unlocks: unlocks()});
@@ -134,7 +134,7 @@ export function createLoading(isl) {
     }
   }
   function endVisit() {
-    invalidateWallFeedback();
+    invalidatePurchaseFeedback();
     isl.visiting = null; isl.visitCode = null; forgetVisit(visitStorage); isl.ui.visit(null);
   }
   // The chip of a friend's game: the old "Visiting … · Sail home" only where travel still applies (one
@@ -295,7 +295,7 @@ export function createLoading(isl) {
   }
   function link() { // the names of the other parts, once every part exists (index.js)
     ({clearRecoveryError, recoveryPolicyOn, readStructureRecovery, syncGame, openLobby, sailHome, refreshCard,
-      invalidateWallFeedback, wallFeedbackScope} = isl);
+      invalidatePurchaseFeedback, purchaseFeedbackScope} = isl);
   }
   return {firstTime, tellCoins, campaignSeen, campaignTold, setOwn, unlocks, islandUnlocks, campaign, reading, wrote,
     setOwnRead, coinsAsked, target, shownIsland, researchIsland, where, applyWorld, syncCoreContext, setCoreCombatState, endVisit, placeName,
