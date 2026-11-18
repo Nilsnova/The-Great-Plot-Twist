@@ -1,0 +1,13 @@
+{
+  "source": "9fa154940cbc9dab29ece4d15bba7efa8778a520",
+  "command": [
+    "node",
+    "scripts/capture-visual-matrix.mjs",
+    "/workspace/reference-village-work/polish-runtime-02/frontend",
+    "/workspace/reference-village-work/polish-native-matrix"
+  ],
+  "started": "2026-11-18T00:19:04.459094+00:00",
+  "exitCode": 0,
+  "seconds": 12.29,
+  "finished": "2026-11-18T00:19:16.750784+00:00"
+}

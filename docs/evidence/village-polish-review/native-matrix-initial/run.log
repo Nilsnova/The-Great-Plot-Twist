@@ -1,0 +1,23 @@
+PASS art-cannon-1280x720.png
+PASS art-mortar-1280x720.png
+PASS art-harpoon-1280x720.png
+PASS art-culverin-1280x720.png
+PASS art-swivel-1280x720.png
+PASS art-buildings-1280x720.png
+PASS wall-1-1280x720.png
+PASS wall-2-1280x720.png
+PASS wall-3-1280x720.png
+PASS wall-4-1280x720.png
+PASS wall-5-1280x720.png
+PASS art-cannon-375x812.png
+PASS art-mortar-375x812.png
+PASS art-harpoon-375x812.png
+PASS art-culverin-375x812.png
+PASS art-swivel-375x812.png
+PASS art-buildings-375x812.png
+PASS wall-1-375x812.png
+PASS wall-2-375x812.png
+PASS wall-3-375x812.png
+PASS wall-4-375x812.png
+PASS wall-5-375x812.png
+PASS: 22 native visual fixture sheets; actual gameplay acceptance remains separate.
