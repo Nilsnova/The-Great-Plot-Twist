@@ -151,3 +151,18 @@ and grant suites passed **57 PostgreSQL cases** in 17.52 seconds. Construction, 
 version, entry, intro and demo Python checks passed **258 cases** in 23.63 seconds. Full
 Ruff passed, and all **72 migration versions** were unique and parsed successfully. The
 owned runtime source was unchanged by this dependency merge.
+
+
+### Final personal dependency alignment
+
+The branch includes the actual final personal Captain dependency `4005fb53`, including
+its global operation registry and isolated race fixtures. The review diff against that
+base contains only the 11 construction files. Duplicate foundation additions use the
+reviewed dependency source; the construction runtime source is unchanged by the merge.
+
+The two construction suites, both personal Captain suites and legacy islands/waves suite
+passed **120 PostgreSQL tests** in 14.82 seconds in one process. The focused construction,
+historical SQL-contract, personal Captain, personal-route and migration-version Python
+checks passed **100 tests** in 7.40 seconds. Full backend Ruff passed, and all **73
+migration versions** were unique and parsed. These checks use disposable local databases;
+no HTTP route, admission, live migration or browser feature is activated.
