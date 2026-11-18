@@ -361,13 +361,14 @@ function militiaFigure(step = '', {strike = false, hit = false} = {}) {
       part(c, rect(x, 23.2 - (up ? 1.2 : 0), 3.6, 5.8, 1.2), '#3b4466', {depth: .8});
       part(c, rect(x - .3, 26.6 - (up ? 1.2 : 0), 4.2, 2.6, 1.2), BOOT, {depth: .6});
     }
-    // The spear behind the body: upright while walking, thrust level when striking.
-    const spear = () => {
-      if (strike) { part(c, rect(cx - 2, 18.4, 15, 1.3, .6), '#8a5a36', {depth: .4, width: .8}); part(c, poly([[cx + 13, 17.4], [cx + 17.6, 19], [cx + 13, 20.6]], .4), '#dfe6ea', {depth: .4, width: .8}); return; }
-      part(c, rect(cx + 5.6, 3.6, 1.3, 24, .6), '#8a5a36', {depth: .4, width: .8});
-      part(c, poly([[cx + 4.8, 4.2], [cx + 6.25, -.2], [cx + 7.7, 4.2]], .4), '#dfe6ea', {depth: .4, width: .8});
-    };
-    spear();
+    // Give both spear poses room for the silhouette outline inside the existing frame.
+    if (strike) {
+      part(c, rect(cx - 2, 18.4, 11.8, 1.3, .6), '#8a5a36', {depth: .4, width: .8});
+      part(c, poly([[cx + 8.5, 16.8], [cx + 11.65, 19], [cx + 8.5, 21.2]], .35), '#dfe6ea', {depth: .4, width: .8});
+    } else {
+      part(c, rect(cx + 5.6, 5.6, 1.3, 22, .6), '#8a5a36', {depth: .4, width: .8});
+      part(c, poly([[cx + 4.55, 6.3], [cx + 6.25, 2.8], [cx + 7.95, 6.3]], .35), '#dfe6ea', {depth: .4, width: .8});
+    }
     const tunic = poly([[cx - 5, 15.4], [cx + 5, 15.4], [cx + 5.8, 24.6], [cx - 5.8, 24.6]], [3, 3, 1.6, 1.6]);
     part(c, tunic, MILITIA.tunic, {depth: 1.8, gloss: ellipse(cx - 2.6, 17.6, 1.2, 2), light: mix(MILITIA.tunic, '#ffffff', .3)});
     c.save(); c.clip(tunic); c.strokeStyle = MILITIA.belt; c.lineWidth = 1.5; c.beginPath(); c.moveTo(cx - 5, 15.6); c.lineTo(cx + 5.6, 23.6); c.stroke(); c.restore();
