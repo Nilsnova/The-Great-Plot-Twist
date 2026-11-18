@@ -2799,3 +2799,12 @@ catalog
 discount
 fully
 upgrading
+# CF1: reviewed combat feedback terms.
+attacking
+attacks
+bomb
+enemy
+fired
+incoming
+limited
+warnings

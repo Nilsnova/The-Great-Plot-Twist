@@ -31,6 +31,12 @@
 .pirate-musket kbd{grid-row:1/3;font-size:20px;padding:4px 9px}
 .pirate-musket-meter{display:block;height:6px;background:var(--u-deep);border:1px solid var(--u-line)}
 .pirate-musket-fill{display:block;height:100%;width:100%;background:var(--u-gold)}
+.pirate-range-feedback{grid-column:1/-1;display:flex;flex-direction:column;gap:3px;background:#163e46;border-radius:var(--u-radius-xs);padding:7px 8px;margin:2px -6px -1px;text-align:left;white-space:normal;max-width:230px;font:600 13px/1.25 var(--u-font);color:#e7f6f3;pointer-events:none}
+.pirate-musket:has(.pirate-range-feedback:not([hidden])){opacity:1}
+.pirate-range-feedback[hidden],.pirate-hit-confirmation[hidden],.pirate-danger[hidden]{display:none}
+.pirate-range-label{color:#a8ebed}.pirate-range-status{color:#ffdc9a}.pirate-hit-confirmation{color:#bceaa0}
+.pirate-danger{display:flex;flex-direction:column;gap:3px;padding:7px 9px;border:1px solid #efaa70;border-radius:var(--u-radius-xs);background:#4b3026;color:#ffe6bd;font:600 13px/1.3 var(--u-font)}
+.pirate-danger strong{font-size:15px}.pirate-danger[data-critical=true]{border-color:#ff8c78;background:#542b2c;color:#fff0e6}
 .pirate-musket.pirate-musket-idle{opacity:.72}.pirate-musket.pirate-musket-idle .pirate-musket-label{font-size:15px;font-weight:600}
 /* Close quarters (TOWER-DEFENSE.md §12): the same button swings the cutlass; its meter turns steel. */
 .pirate-musket.pirate-musket-blade .pirate-musket-fill{background:var(--u-line)}.pirate-musket.pirate-musket-blade{outline:2px solid var(--u-gold);outline-offset:1px}

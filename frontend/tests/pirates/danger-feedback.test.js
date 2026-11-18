@@ -79,7 +79,7 @@ describe('immediate battle dangers', () => {
     const result = createDangerFeedback().update(input({ state: state({ shipShots: [
       { shipId: 'ship_1', target: 'wall', toX: 8, toZ: 6, impactAt: 10.5 },
     ] }) }));
-    expect(result.warning).toMatchObject({ key: 'captain-threat', title: 'Incoming fire — move!', x: 8, z: 6 });
+    expect(result.warning).toMatchObject({ key: 'captain-threat', title: 'Incoming fire, move!', x: 8, z: 6 });
   });
 
   it('does not warn about a splash outside its real radius or after its impact time', () => {

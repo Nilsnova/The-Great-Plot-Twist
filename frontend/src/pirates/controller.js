@@ -61,6 +61,8 @@ import { createReplayDriver, createWaveReplay, fetchSealedEvents } from './wave-
 import { commandForJournal, MAX_INPUT_BATCH, MAX_INPUT_BATCH_BYTES, RECOVERY_FLUSH_MS, RECOVERY_POLL_LEAD_MS, RECOVERY_POLL_MARGIN_MS,
   RECOVERY_POLL_MIN_MS, RECOVERY_POLL_MS, recoveryRefusal, refusalDelayMs, refusalKind, simulationInputFromJournal } from './recovery-transport.js';
 import { makeActionUid } from '../screens/islet/action-uid.js';
+import { createRangeFeedback } from './range-feedback.js';
+import { createDangerFeedback } from './danger-feedback.js';
 
 const MAX_TICKS_PER_FRAME = 600;      // a friend joining late catches up 30 s of wave per frame
 // Recovery waves (structure_recovery) may only run ticks the server has sealed, and the seal moves on
@@ -295,6 +297,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   guide: guideOn = false, createGuide = defaultGuide, recoveryTransport = null } = {}) {
   // The captains' poses (src/pirates/poses.js): your character and the teammates' figures fire in their own body.
   const poses = createPoses({ now: () => now() / 1000 });
+  const rangeFeedback = createRangeFeedback(), dangerFeedback = createDangerFeedback();
+  let rangePreview = false;
   let wave = null, disposed = false, pressed = false, shootPressed = false, shootHeld = false, down = null, shake = 0;
   let holdE = false, holdPrompt = false; // E or the prompt held down (a revive)
   let figures = null; // the presence figures' positions of the other captains (setFigures)
@@ -358,7 +362,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     if (event.code === 'KeyF') { shootHeld = true; if (!event.repeat) shootPressed = true; } else { holdE = true; if (!event.repeat) pressed = true; }
   };
   const keyup = event => { if (event.code === 'KeyF') shootHeld = false; if (event.code === 'KeyE') holdE = false; };
-  const letGo = () => { shootHeld = false; holdE = false; holdPrompt = false; };
+  const letGo = () => { shootHeld = false; holdE = false; holdPrompt = false; rangePreview = false; };
   const pointerdown = event => { if (event.button === 0) down = [event.clientX, event.clientY]; };
   const pointerup = event => {
     if (!down || event.button !== 0 || Math.hypot(event.clientX - down[0], event.clientY - down[1]) > 8) { down = null; return; }
@@ -445,6 +449,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
         onPromptHold: held => { holdPrompt = held === true; },
         onHold: () => { try { toggleHold?.(); } catch (error) { console.error(error); } },
         onShoot: held => { shootHeld = held === true; if (held) shootPressed = true; },
+        onRangePreview: value => { rangePreview = value === true; },
         reducedMotion })).then(hud => {
         if (disposed || wave !== current || current.finished) hud?.dispose(); else current.hud = hud;
       }).catch(error => console.error(error));
@@ -916,6 +921,8 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   // (blunderbuss) and a bomb (fire bombs) also carry the aim point: the target's place.
   // The guided start (T52) waits for your own attack: captain_attack {weapon: 'gun' | 'cutlass'} (not the automatic blade).
   const attacked = (weapon, ok) => { if (ok) emit({ type: 'captain_attack', weapon }); return ok; };
+  const rangeAttempt = (message, point = null, blade = false) => rangeFeedback.attempt({ nowMs: now(), message,
+    point: point ? { x: point.x, z: point.z } : null, blade });
   function shoot(targetId = null) {
     const player = world.player?.position;
     if (!wave || wave.done || !player || !here() || isDown(wave) || finishing(wave)) return false;
@@ -927,19 +934,29 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     const isBoarder = named?.id?.startsWith('boarder_');
     const close = isBoarder && Math.hypot(named.x - player.x, named.z - player.z) <= stats.sweepRadius
       ? named : !targetId || isBoarder ? bladeTarget(player, state, myStats().sweepRadius) : null;
-    if (close) return attacked('cutlass', strike(close));
+    if (close) {
+      const ok = strike(close);
+      rangeAttempt(ok ? 'Slash' : 'Reloading', close, true);
+      return attacked('cutlass', ok);
+    }
     const target = targetId ? named : captainTarget(player, state, myLevel(), stats.range);
-    if (!target || Math.hypot(target.x - player.x, target.z - player.z) > stats.range) return false;
+    if (!target || Math.hypot(target.x - player.x, target.z - player.z) > stats.range) {
+      rangeAttempt(target ? 'Out of range · move closer' : 'No enemy in range', target);
+      return false;
+    }
     return attacked('gun', fireAt(stats, player, target, { x: target.x, z: target.z }));
   }
   function fireAt(stats, player, target, point) {
     const t = wave.ticks * TICK_SECONDS;
-    if (t - wave.captainAt < stats.reload) return false;
+    if (t - wave.captainAt < stats.reload) { rangeAttempt('Reloading', point); return false; }
     const round = value => Math.round(value * 100) / 100;
     const aimed = stats.mode === 'cone' || stats.mode === 'area' ? { ax: round(point.x), az: round(point.z) } : {};
     const input = { type: 'captain_shot', by: playerId, targetId: target?.id ?? null, level: stats.level, skills: mySkills(), weapon: stats.weapon,
       x: round(player.x), z: round(player.z), ...aimed, ...seenTick(wave) };
-    if (!submit(input)) return false;
+    if (!submit(input)) { rangeAttempt('Shot not sent · try again', point); return false; }
+    const beyond = Math.hypot(point.x - player.x, point.z - player.z) > stats.range;
+    rangeAttempt(stats.mode === 'area' ? beyond ? 'Throw limited to ring' : 'Bomb thrown'
+      : stats.mode === 'cone' && beyond ? 'Spray limited to ring' : 'Shot fired', point);
     wave.captainAt = t + INPUT_LEAD_TICKS * TICK_SECONDS;
     if (wave.recoveryReplay) {
       const event = cosmeticShot(wave, actorId(wave), stats, input, target, t);
@@ -1098,7 +1115,9 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     }
     if (hit) return shoot(hit.id);
     const t = wave.ticks * TICK_SECONDS;
-    if (t - wave.captainAt < stats.reload) return false;
+    if (t - wave.captainAt < stats.reload) { rangeAttempt('Reloading', target ?? point); return false; }
+    rangeAttempt(Math.hypot(point.x - player.x, point.z - player.z) > stats.range
+      ? 'Out of range · move closer' : 'No target at aim point', target ?? point);
     wave.captainAt = t;
     const dx = point.x - player.x, dz = point.z - player.z, length = Math.hypot(dx, dz) || 1, reach = Math.min(length, stats.range);
     const toX = player.x + dx / length * reach, toZ = player.z + dz / length * reach;
@@ -1264,6 +1283,10 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   }
 
   function handle(events, current, fresh) {
+    if (current.shown && !blocked() && !current.catchingUp) {
+      rangeFeedback.note(fresh, actorId(current), now());
+      dangerFeedback.note(fresh, actorId(current), now());
+    }
     if (current.predicted?.length) {
       fresh = fresh.filter(event => !(PREDICTED_KINDS.has(event.type) && predictedCopy(current, event)));
     }
@@ -1442,12 +1465,23 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     const blade = running && !!bladeTarget(player, current.state, stats.sweepRadius);
     current.hud?.musket?.(running && !fallen && !finishing(current) ? { share: blade ? bladeShare(current) : captainShare(current),
       ready: blade || !!captainTarget(player, current.state, myLevel(), stats.range), blade, label: stats.name } : null);
+    const activeFeedback = !!running && !fallen && !blocked() && !finishing(current) && !current.catchingUp;
+    if (!activeFeedback) rangePreview = false;
+    const range = rangeFeedback.update({ active: activeFeedback, nowMs: now(), stats, player,
+      preview: rangePreview, held: shootHeld, blade,
+      ready: !!player && !!captainTarget(player, current.state, myLevel(), stats.range) });
+    const danger = dangerFeedback.update({ active: activeFeedback, state: current.state, player,
+      actorId: actorId(current), nowMs: now() });
+    current.hud?.rangeFeedback?.(range);
+    current.hud?.danger?.(danger.warning);
+    if (danger.sound) cue('pirate-danger');
     current.hud?.health?.(me && !current.done && current.shown ? { hp: me.hp, maxHp: me.maxHp, down: me.down } : null);
     current.hud?.down?.(fallen && current.shown ? { seconds: Math.max(0, Math.floor(current.state.time - (me.downAt ?? current.state.time))),
       alone: !(current.state.party ?? []).some(hero => hero.id !== actorId(current) && hero.present && !hero.down) } : null);
     current.hud?.marks?.(fallenMarks(current, player));
     const captain = player && current.shown && !current.done ? { id: actorId(current), x: player.x, z: player.z, share: captainShare(current), down: fallen } : null;
     current.renderer?.update({ state: drawnState(current), simTime, dt, captain, figures,
+      combatFeedback: { range, danger: danger.warning, player },
       revive: current.revive && !current.revive.paying ? { targetId: current.revive.targetId, share: current.revive.share } : null });
     if (shake > 0 && world.camera) {
       const t = now() / 1000;
@@ -1595,6 +1629,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     const current = wave;
     if (!current) return;
     wave = null; current.finished = true;
+    rangeFeedback.reset(); dangerFeedback.reset(); rangePreview = false;
     if (world.camera?.userData) { delete world.camera.userData.battleZoom; delete world.camera.userData.battleFocus; }
     current.renderer?.dispose(); current.hud?.dispose(); current.schedule.clear(); poses.clear();
     current.eventArt?.dispose(); current.finisher?.scene?.dispose(); current.finisher = null;

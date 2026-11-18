@@ -30,7 +30,7 @@ function captainThreat(state, player, actorId, recent, shots) {
   const foe = nearest(foes, player);
   if (foe) return { title: 'Pirates attacking you', line: 'Slash nearby pirates or move away.', point: foe };
   const incoming = shots.find(shot => distance({ x: shot.toX, z: shot.toZ }, player) <= SHIP_FIRE.splash.radius);
-  if (incoming) return { title: 'Incoming fire — move!', line: 'Move out of the impact area.', point: { x: incoming.toX, z: incoming.toZ } };
+  if (incoming) return { title: 'Incoming fire, move!', line: 'Move out of the impact area.', point: { x: incoming.toX, z: incoming.toZ } };
   if (recent) return { title: 'You are taking damage', line: 'Move away from enemy attacks.', point: sourceOf(recent.event, state, player) };
   return null;
 }
