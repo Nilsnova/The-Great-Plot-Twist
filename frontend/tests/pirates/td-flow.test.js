@@ -184,7 +184,7 @@ describe('the v2 renderer', () => {
     const scene = new THREE.Scene(), defenses = [...ISLANDS.full.defenses];
     const renderer = createWaveRenderer({ scene, atlas: { texture: new THREE.Texture(), ...packAtlas() }, defenses, fx: () => null });
     const posts = defenses.filter(item => item.kind !== 'house').length;
-    expect(renderer.root.children.length).toBe(3 + BOARDER_BANDS + posts + 1 + 1); // sea/air, boarders, posts, fog, owned wall connections
+    expect(renderer.root.children.length).toBe(3 + BOARDER_BANDS + posts + 1 + 1 + 1); // sea/air, bands, posts, fog, wall connections, captain feedback
     expect(renderer.root.children.filter(child => child.name === 'pirates:wall-connections')).toHaveLength(1);
     const sim = createWave({ seed: 3, wave: 10, weather: { ships: 2 }, ...ISLANDS.full, crew: { gunner: 2, carpenter: 2, lookout: 1 } });
     const peak = { instances: 0, shells: 0, bursts: 0 };
