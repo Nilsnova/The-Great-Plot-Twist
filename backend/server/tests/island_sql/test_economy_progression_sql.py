@@ -3,6 +3,7 @@
 All migrations run twice. No configured database, credentials or live data are used.
 """
 
+import asyncio
 from dataclasses import replace
 from pathlib import Path
 from uuid import uuid4
@@ -12,9 +13,11 @@ import pytest
 psycopg = pytest.importorskip("psycopg")
 from psycopg.types.json import Jsonb  # noqa: E402
 
-from server.island.catalogue import load_island  # noqa: E402
+from server.island import economy_progression  # noqa: E402
+from server.island.catalogue import catalogue_for_flags, load_island  # noqa: E402
 from server.island.economy_progression import catalogue_rule, parse_intent, read_result  # noqa: E402
 from server.island.economy_progression_models import ProgressionSnapshot  # noqa: E402
+from server.island.treasury import EconomyContext  # noqa: E402
 from server.tests.case_sql import conftest as postgres_fixture  # noqa: E402
 from server.tests.island_sql.test_island_treasury_sql import (  # noqa: E402
     keys,
@@ -651,7 +654,7 @@ def test_unavailable_catalogue_allows_old_receipt_but_refuses_new_intent_without
     assert count_claims(database, member, "newgift01") == 0
 
 
-def set_v1_policy(connection, owner):
+def set_v1_policy(connection, owner, *, more=False):
     """Use a valid immutable template and health rows for between-wave policy checks."""
     from server.tests.island_sql.test_structure_recovery_mutations_sql import CONFIG, template
 
@@ -671,6 +674,13 @@ def set_v1_policy(connection, owner):
     ).fetchall()
     structures = [row for row in rows if row[1] in CONFIG["structureMaxHp"]]
     snapshot = template(tuple((row[0], row[1]) for row in structures))
+    if more:
+        from server.island import layout
+
+        snapshot["defaultPositions"] = {
+            entry.spot: {"x": entry.x, "z": entry.z}
+            for entry in layout.island_layout(more=True).spots
+        }
     for spot, kind, level, instance in structures:
         maximum = CONFIG["structureMaxHp"][kind][level - 1]
         connection.execute(
@@ -922,3 +932,98 @@ def test_current_direct_spot_unlock_blocks_new_charge_but_keeps_original_replay(
         mutate(database, member, initial, "original1", intent, rule=rule)["receipt"]
         == original["receipt"]
     )
+
+
+def through_progression_adapter(connection, actor, initial, uid, intent):
+    """Use real current catalogue selection and the same private database transaction."""
+
+    class Admin:
+        async def call_function(self, name, arguments):
+            assert name == "island_economy_progression"
+            as_server(connection)
+            return rpc(
+                connection, name, arguments["p_actor_id"], arguments["p_account_id"],
+                arguments["p_run_epoch"], arguments["p_action_uid"],
+                Jsonb(arguments["p_intent"]), Jsonb(arguments["p_rule"]),
+            )
+
+    origin = initial["currentEconomy"]
+    context = EconomyContext(
+        "island_shared", 1, str(actor), origin["islandOwner"], origin["accountId"],
+        origin["runEpoch"], int(origin["revision"]),
+    )
+    return asyncio.run(
+        economy_progression.mutate(Admin(), load_island(), context, uid, intent)
+    ).model_dump(mode="json")
+
+
+@pytest.mark.parametrize("kind,spot,action", [
+    ("cannon", "cannon_8", "specialise"),
+    ("cannon", "cannon_8", "tower_tree"),
+    ("culverin", "cannon_1", "tower_tree"),
+    ("culverin", "cannon_8", "tower_tree"),
+])
+def test_saved_v1_gated_structure_progresses_with_offers_off_and_replays(
+    database, kind, spot, action,
+):
+    owner, member, _, initial = setup(database)
+    expected = add_building(database, owner, kind, 5, spot)
+    if action == "specialise":
+        as_owner(database)
+        database.execute(
+            "insert into public.island_research(island_owner,branch,researched_by,coins_paid,ref) "
+            "values(%s,'cannon',%s,180,'research:gatedfixture1')", (owner, owner),
+        )
+        as_server(database)
+    set_v1_policy(database, owner, more=True)
+    enabled = catalogue_for_flags(CATALOGUE, {"defenses_v2": True, "more_tower_spots": True})
+    request = {"action": action, "spot": spot, "expected": expected, "quotedCoins": "0"}
+    request.update({"spec": "rapid"} if action == "specialise" else {"path": "a", "tier": 1})
+    price = catalogue_rule(enabled, parse_intent(request))["price"]
+    request["quotedCoins"] = price
+    personal_before = balance(database, member)
+    original = through_progression_adapter(database, member, initial, "savedgate1", request)
+    assert original["receipt"]["result"]["chargedCoins"] == price
+    result = original["receipt"]["result"]["building"]
+    assert result["spec"] == ("rapid" if action == "specialise" else None)
+    assert result["treeA"] == (1 if action == "tower_tree" else 0)
+    replay = through_progression_adapter(database, member, initial, "savedgate1", request)
+    assert replay["repeat"] is True and replay["receipt"] == original["receipt"]
+    assert money(replay) == (10000 - int(price), 0, 10000 - int(price))
+    assert balance(database, member) == personal_before
+    reconciles(database, keys(initial)[0])
+
+
+@pytest.mark.parametrize("mismatch", ["missing", "instance", "kind", "level", "revision"])
+def test_saved_catalogue_expansion_never_proves_ownership_or_changes_failed_quotes(
+    database, mismatch,
+):
+    from server.errors import ApiError
+
+    owner, member, _, initial = setup(database)
+    expected = add_building(
+        database, owner, "cannon", 5, "cannon_1" if mismatch == "missing" else "cannon_8"
+    )
+    set_v1_policy(database, owner, more=True)
+    changes = {
+        "instance": {"instanceId": str(uuid4())}, "kind": {"kind": "culverin"},
+        "level": {"level": 4}, "revision": {"revision": "1"},
+    }
+    expected.update(changes.get(mismatch, {}))
+    request = {
+        "action": "tower_tree", "spot": "cannon_8", "path": "a", "tier": 1,
+        "expected": expected, "quotedCoins": "0",
+    }
+    enabled = catalogue_for_flags(CATALOGUE, {"defenses_v2": True, "more_tower_spots": True})
+    request["quotedCoins"] = catalogue_rule(enabled, parse_intent(request))["price"]
+    before = rpc(database, "island_economy_progression_state", member, *keys(initial))
+    personal_before = balance(database, member)
+    with pytest.raises(ApiError) as caught:
+        through_progression_adapter(database, member, initial, "fakegate01", request)
+    assert caught.value.code == (
+        "not_built" if mismatch == "missing" else "stale_progression_quote"
+    )
+    assert rpc(database, "island_economy_progression_state", member, *keys(initial)) == before
+    assert count_claims(database, member, "fakegate01") == 0
+    assert balance(database, member) == personal_before
+    reconciles(database, keys(initial)[0])

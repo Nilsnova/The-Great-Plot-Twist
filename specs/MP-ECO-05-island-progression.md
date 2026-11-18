@@ -135,10 +135,10 @@ withholding the fresh projection. Updated direct spot unlocks reject new skill/t
 without invalidating successful original receipts. The broad suites above
 precede this narrow policy follow-up; they are not claimed as fresh post-follow-up runs.
 
-The database groups were collected in separate fresh processes. Existing dependency race
-fixtures commit records; a single mixed collection can therefore fail unrelated tests that
-assume globally empty tables. A passing ungrouped collection remains a test-isolation
-follow-up. Inline numeric checks preserve legacy invoker permissions, covered by an
+Those earlier database groups were collected in separate fresh processes because dependency
+race fixtures committed records into a shared test database. The dependencies now isolate
+those fixtures; the combined final integration run below passes without changing legacy
+count assertions. Inline numeric checks preserve legacy invoker permissions, covered by an
 explicit invoker-build regression test. Historical SQL text checks explicitly verify the
 shared wrapper and its preserved original body.
 
@@ -161,3 +161,36 @@ behavior are not verified here. No route, economy admission or feature flag is a
 - **Coding agent:** Codex; the responsible teammate reviews its output.
 - **Human reviewer:** pending
 - **Last updated:** 2026-11-18
+
+
+## Saved existing defenses with offers disabled
+
+Skill and tree intents for an existing structure may quote its known gated kind and spot
+after offer flags are disabled. The adapter uses the existing-structure catalogue helper
+for that exact expected kind and spot; PostgreSQL still proves the actual stored instance,
+kind, level and revision before spending. This grants no construction/rebuild availability
+and does not expand research or wreck offers. Removed offers continue through the existing
+unavailable-rule path so immutable authorized receipts can replay.
+
+
+## Final dependency and main integration checks
+
+The branch includes actual shared construction `9191a698` with personal Captain `4005fb53`
+and treasury `feca459f`, plus main `64d59506`. Incoming main changes retain saved-defense,
+recovery-option, wave-reward and revival fixes. Duplicate foundation additions use the
+reviewed dependency source; progression SQL is unchanged by the merges. Review the nine
+progression paths separately from incoming dependency and main files.
+
+The progression, two construction, personal-operation and legacy islands/waves suites
+passed **156 PostgreSQL tests** in 17.34 seconds in one process, applying the full migration
+chain twice. This includes **58 progression cases** and nine new adapter-to-SQL saved-defense
+checks. Saved v1 extra-slot skills and tree upgrades, including culverins, charge the exact
+current island price once and replay the original receipt. Missing structures and false
+instance/kind/level/revision expectations leave the coherent current snapshot, personal
+wallet and operation registry unchanged. Treasury ledger totals reconcile in every new case.
+
+Progression, both historical SQL-contract, construction and migration-version Python
+checks passed **81 tests** in 0.58 seconds. Full backend Ruff passed, and all **78 migration
+versions** were unique and parsed. Earlier broad backend results remain scoped to their
+recorded revisions. No browser flow, registered shared HTTP route, live migration or
+feature activation is claimed by this integration check.
