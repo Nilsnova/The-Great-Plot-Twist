@@ -287,7 +287,7 @@ Add short entries; keep the original rationale when superseding a decision.
 
 ## D023 · Live presence on Supabase Realtime · 2026-11-05
 
-**Status:** Decided by Nils on 5 Nov 2026 in its core: live multiplayer must exist, it must stay free, and the library `@supabase/supabase-js` is approved. The details marked "chosen here" are proposed in the A4 pull request (`feat/a4-live-presence`) and need a different teammate's review.
+**Status:** Decided by Nils on 5 Nov 2026 in its core: live multiplayer must exist, it must stay free, and the library `@supabase/supabase-js` is approved. The details marked "chosen here" are proposed in the A4 pull request (`feat/a4-live-presence`) and need a different teammate's review. On 18 Nov 2026 Nils approved replacing the umbrella package with the three parts the game uses, at the same pinned version (`@supabase/auth-js`, `@supabase/postgrest-js`, `@supabase/realtime-js` 2.118.0, wired in `frontend/src/online/supabase-sdk.js`), to shrink the lazy sign-in chunk (`refactor/slim-2`).
 
 **Decision:** Players see each other's captains move in real time and can send preset emotes, and the server can tell a crew the moment something changed. It runs on Supabase Realtime's free plan, in private rooms only (full design: [specs/A4-live-presence.md](../specs/A4-live-presence.md), contract: [INTERFACES.md, section 7](INTERFACES.md#7-realtime-budget)).
 

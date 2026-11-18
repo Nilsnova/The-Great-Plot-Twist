@@ -100,9 +100,10 @@ npm run test:csp
 npm run test:islet:world
 npm run test:harbor:life
 npm run test:a11y
+npm run test:intro
 ```
 
-`test:art:production`, `test:ui:production`, `test:loading`, `test:spoilers` and `test:csp` include a production build. `test:a11y` runs the accessibility browser checks. If a check opens Chrome and no Vite server is already running, it starts its own short-lived local server. For checks that accept a custom URL, set `TEST_URL`; do not run two GPU checks at once.
+`test:art:production`, `test:ui:production`, `test:loading`, `test:spoilers` and `test:csp` include a production build. `test:a11y` runs the accessibility browser checks; `test:intro` checks that re-entering an island explains nothing again. If a check opens Chrome and no Vite server is already running, it starts its own short-lived local server. For checks that accept a custom URL, set `TEST_URL`; do not run two GPU checks at once.
 
 ## A ten-file reading path
 
@@ -258,7 +259,7 @@ cutscenes stay silent until voices exist. Voices are fetched and decoded with We
 keeps `media-src 'none'`. Skip with the button, Escape or a tap.
 
 Guest play: when `/api/config` answers `demo.open: true`, Play calls the `signIn({guest: true})` intent,
-which signs in anonymously with supabase-js. Otherwise Play stays local and Settings offers one sign-in
+which signs in anonymously with Supabase auth (`online/supabase-sdk.js`). Otherwise Play stays local and Settings offers one sign-in
 button per OAuth provider in `auth.providers` (GitHub, also when the list is missing). When the list has
 `email`, Settings > Account and the account screen show the email code form (`screens/account/email-code.js`):
 `signIn({provider: 'email', email})` sends a 6-digit code (`signInWithOtp`), and

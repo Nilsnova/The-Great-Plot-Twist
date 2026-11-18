@@ -105,7 +105,7 @@ Shows the title (Play, Join, Settings), the pixel islands, the sea chart and sai
 
 ### Why it was built this way
 - Vite builds a plain static site, which Vercel serves for free and which moves easily ([D002](DECISIONS.md)).
-- Plain JavaScript, two runtime packages only: `three` and `@supabase/supabase-js`, both pinned exactly ([frontend/package.json](../frontend/package.json)).
+- Plain JavaScript, few runtime packages: `three` and three parts of Supabase (`@supabase/auth-js`, `@supabase/postgrest-js`, `@supabase/realtime-js`, wired in [online/supabase-sdk.js](../frontend/src/online/supabase-sdk.js)), all pinned exactly ([frontend/package.json](../frontend/package.json)).
 - Three.js draws the top-down 2D world on the GPU; the art is original, so no licence risk ([D005, D028](DECISIONS.md)).
 - Lazy loading: `main.js` paints the title first and loads the world with `import()` after the first paint ([shell/world-loader.js](../frontend/src/shell/world-loader.js)). Audio loads on the first tap ([audio/lazy.js](../frontend/src/audio/lazy.js)), the online adapter on demand ([adapter/lazy-online.js](../frontend/src/adapter/lazy-online.js)). Phones on class Wi-Fi see the title fast.
 - Budgets are enforced by [scripts/check-loading.js](../frontend/scripts/check-loading.js): cold title JavaScript at most 21,080 bytes, cold CSS under 12 kB, title image at most 350 kB.
