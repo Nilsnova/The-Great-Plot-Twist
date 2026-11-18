@@ -1,0 +1,318 @@
+{
+  "source": "3a9210602d33f8eac0387aaf5d59af110943f30a",
+  "htmlSha256": "9f002277a214a0d25d785c07a5dba514b8246193e39cd74d28a70d00537ff419",
+  "manifestSha256": "c96d8f70c21a5836ab5d60b0e6b28699e03f9de32f3082da9a5c9bc60cc5a919",
+  "helperSha256": "ef9671909e07f5101fbd6055ad85ce42923587ed3c649e8d187e39f7217cc2ee",
+  "scope": "Static comparison page with original PNGs, not another game or persistence test.",
+  "started": "2026-11-18T11:34:17.917Z",
+  "checks": [
+    {
+      "width": 1280,
+      "height": 720,
+      "decodedImages": 12,
+      "decoded": [
+        {
+          "src": "before-paid/paid-level-1-1280x720.png",
+          "width": 1280,
+          "height": 720,
+          "renderedWidth": 582
+        },
+        {
+          "src": "paid-final/paid-level-1-1280x720.png",
+          "width": 1280,
+          "height": 720,
+          "renderedWidth": 582
+        },
+        {
+          "src": "before-paid/paid-level-1-375x812.png",
+          "width": 375,
+          "height": 812,
+          "renderedWidth": 582
+        },
+        {
+          "src": "paid-final/paid-level-1-375x812.png",
+          "width": 375,
+          "height": 812,
+          "renderedWidth": 582
+        },
+        {
+          "src": "before-paid/paid-level-3-1280x720.png",
+          "width": 1280,
+          "height": 720,
+          "renderedWidth": 582
+        },
+        {
+          "src": "paid-final/paid-level-3-1280x720.png",
+          "width": 1280,
+          "height": 720,
+          "renderedWidth": 582
+        },
+        {
+          "src": "before-paid/paid-level-3-375x812.png",
+          "width": 375,
+          "height": 812,
+          "renderedWidth": 582
+        },
+        {
+          "src": "paid-final/paid-level-3-375x812.png",
+          "width": 375,
+          "height": 812,
+          "renderedWidth": 582
+        },
+        {
+          "src": "before-paid/paid-level-5-1280x720.png",
+          "width": 1280,
+          "height": 720,
+          "renderedWidth": 582
+        },
+        {
+          "src": "paid-final/paid-level-5-1280x720.png",
+          "width": 1280,
+          "height": 720,
+          "renderedWidth": 582
+        },
+        {
+          "src": "before-paid/paid-level-5-375x812.png",
+          "width": 375,
+          "height": 812,
+          "renderedWidth": 582
+        },
+        {
+          "src": "paid-final/paid-level-5-375x812.png",
+          "width": 375,
+          "height": 812,
+          "renderedWidth": 582
+        }
+      ],
+      "responses": [
+        {
+          "path": "comparison.html",
+          "status": 200,
+          "sha256": "9f002277a214a0d25d785c07a5dba514b8246193e39cd74d28a70d00537ff419"
+        },
+        {
+          "path": "before-paid/paid-level-1-375x812.png",
+          "status": 200,
+          "sha256": "4ec6d4fc73f589283af0ff50948b7acc9575a8c4d9ef169330de4d2c8b5a196b"
+        },
+        {
+          "path": "paid-final/paid-level-1-375x812.png",
+          "status": 200,
+          "sha256": "e14c6cca4421a60b603f2e68a5c9c72bc9a308fdc2337c0dfc126b0f2dfad878"
+        },
+        {
+          "path": "before-paid/paid-level-3-375x812.png",
+          "status": 200,
+          "sha256": "95cba6a2fefb1b962b83952c8083f29827a152b1215267806fbc4709eddcffbd"
+        },
+        {
+          "path": "paid-final/paid-level-3-375x812.png",
+          "status": 200,
+          "sha256": "f2b5129677bf3e49415303f151cab7db2d9580bd19eb5a7ba6082c304eebb401"
+        },
+        {
+          "path": "before-paid/paid-level-5-375x812.png",
+          "status": 200,
+          "sha256": "484c4f6012f013bec27298114b8048bbe676d92284e99dc5d1d05b02e6153efc"
+        },
+        {
+          "path": "paid-final/paid-level-5-375x812.png",
+          "status": 200,
+          "sha256": "35780b6590cca4c0390ceee8c1a2c4a446d03618909b7fbc97da3c85fca7b4ff"
+        },
+        {
+          "path": "before-paid/paid-level-1-1280x720.png",
+          "status": 200,
+          "sha256": "608d1aa61bce30a9208b7fe4927f2d59521f3b49550ed8fdcbcae2276d9bc240"
+        },
+        {
+          "path": "paid-final/paid-level-1-1280x720.png",
+          "status": 200,
+          "sha256": "3ddcf192efe632502271f19fc5b81d238dc28416628d59a00573d32d75b9b75a"
+        },
+        {
+          "path": "before-paid/paid-level-3-1280x720.png",
+          "status": 200,
+          "sha256": "3d9427c969ecdc458ff0e932241ab6504b04780f675d157f6446d63c0072f564"
+        },
+        {
+          "path": "paid-final/paid-level-3-1280x720.png",
+          "status": 200,
+          "sha256": "a54529d1d21c8ffeadf7b7161e0330b2cac7bf3db4a49163481efefd5463bc48"
+        },
+        {
+          "path": "before-paid/paid-level-5-1280x720.png",
+          "status": 200,
+          "sha256": "4aa299b362655da7624a9aa0aa54d42c349faf1b37c855a480af2c291a8a67a5"
+        },
+        {
+          "path": "paid-final/paid-level-5-1280x720.png",
+          "status": 200,
+          "sha256": "cecbc289d0c4da50e7f629b020d6a6fd1725d0f6537ee781e1ac2dea226e86e6"
+        }
+      ],
+      "layout": {
+        "innerWidth": 1280,
+        "scrollWidth": 1280
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "externalRequests": []
+    },
+    {
+      "width": 375,
+      "height": 812,
+      "decodedImages": 12,
+      "decoded": [
+        {
+          "src": "before-paid/paid-level-1-1280x720.png",
+          "width": 1280,
+          "height": 720,
+          "renderedWidth": 325
+        },
+        {
+          "src": "paid-final/paid-level-1-1280x720.png",
+          "width": 1280,
+          "height": 720,
+          "renderedWidth": 325
+        },
+        {
+          "src": "before-paid/paid-level-1-375x812.png",
+          "width": 375,
+          "height": 812,
+          "renderedWidth": 325
+        },
+        {
+          "src": "paid-final/paid-level-1-375x812.png",
+          "width": 375,
+          "height": 812,
+          "renderedWidth": 325
+        },
+        {
+          "src": "before-paid/paid-level-3-1280x720.png",
+          "width": 1280,
+          "height": 720,
+          "renderedWidth": 325
+        },
+        {
+          "src": "paid-final/paid-level-3-1280x720.png",
+          "width": 1280,
+          "height": 720,
+          "renderedWidth": 325
+        },
+        {
+          "src": "before-paid/paid-level-3-375x812.png",
+          "width": 375,
+          "height": 812,
+          "renderedWidth": 325
+        },
+        {
+          "src": "paid-final/paid-level-3-375x812.png",
+          "width": 375,
+          "height": 812,
+          "renderedWidth": 325
+        },
+        {
+          "src": "before-paid/paid-level-5-1280x720.png",
+          "width": 1280,
+          "height": 720,
+          "renderedWidth": 325
+        },
+        {
+          "src": "paid-final/paid-level-5-1280x720.png",
+          "width": 1280,
+          "height": 720,
+          "renderedWidth": 325
+        },
+        {
+          "src": "before-paid/paid-level-5-375x812.png",
+          "width": 375,
+          "height": 812,
+          "renderedWidth": 325
+        },
+        {
+          "src": "paid-final/paid-level-5-375x812.png",
+          "width": 375,
+          "height": 812,
+          "renderedWidth": 325
+        }
+      ],
+      "responses": [
+        {
+          "path": "comparison.html",
+          "status": 200,
+          "sha256": "9f002277a214a0d25d785c07a5dba514b8246193e39cd74d28a70d00537ff419"
+        },
+        {
+          "path": "before-paid/paid-level-1-375x812.png",
+          "status": 200,
+          "sha256": "4ec6d4fc73f589283af0ff50948b7acc9575a8c4d9ef169330de4d2c8b5a196b"
+        },
+        {
+          "path": "paid-final/paid-level-1-375x812.png",
+          "status": 200,
+          "sha256": "e14c6cca4421a60b603f2e68a5c9c72bc9a308fdc2337c0dfc126b0f2dfad878"
+        },
+        {
+          "path": "paid-final/paid-level-3-375x812.png",
+          "status": 200,
+          "sha256": "f2b5129677bf3e49415303f151cab7db2d9580bd19eb5a7ba6082c304eebb401"
+        },
+        {
+          "path": "before-paid/paid-level-1-1280x720.png",
+          "status": 200,
+          "sha256": "608d1aa61bce30a9208b7fe4927f2d59521f3b49550ed8fdcbcae2276d9bc240"
+        },
+        {
+          "path": "before-paid/paid-level-3-375x812.png",
+          "status": 200,
+          "sha256": "95cba6a2fefb1b962b83952c8083f29827a152b1215267806fbc4709eddcffbd"
+        },
+        {
+          "path": "paid-final/paid-level-1-1280x720.png",
+          "status": 200,
+          "sha256": "3ddcf192efe632502271f19fc5b81d238dc28416628d59a00573d32d75b9b75a"
+        },
+        {
+          "path": "before-paid/paid-level-3-1280x720.png",
+          "status": 200,
+          "sha256": "3d9427c969ecdc458ff0e932241ab6504b04780f675d157f6446d63c0072f564"
+        },
+        {
+          "path": "paid-final/paid-level-3-1280x720.png",
+          "status": 200,
+          "sha256": "a54529d1d21c8ffeadf7b7161e0330b2cac7bf3db4a49163481efefd5463bc48"
+        },
+        {
+          "path": "before-paid/paid-level-5-375x812.png",
+          "status": 200,
+          "sha256": "484c4f6012f013bec27298114b8048bbe676d92284e99dc5d1d05b02e6153efc"
+        },
+        {
+          "path": "before-paid/paid-level-5-1280x720.png",
+          "status": 200,
+          "sha256": "4aa299b362655da7624a9aa0aa54d42c349faf1b37c855a480af2c291a8a67a5"
+        },
+        {
+          "path": "paid-final/paid-level-5-1280x720.png",
+          "status": 200,
+          "sha256": "cecbc289d0c4da50e7f629b020d6a6fd1725d0f6537ee781e1ac2dea226e86e6"
+        },
+        {
+          "path": "paid-final/paid-level-5-375x812.png",
+          "status": 200,
+          "sha256": "35780b6590cca4c0390ceee8c1a2c4a446d03618909b7fbc97da3c85fca7b4ff"
+        }
+      ],
+      "layout": {
+        "innerWidth": 375,
+        "scrollWidth": 375
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "externalRequests": []
+    }
+  ],
+  "exitCode": 0,
+  "finished": "2026-11-18T11:34:22.090Z"
+}

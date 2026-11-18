@@ -1,10 +1,10 @@
 {
   "status": "static_integrity_checked_application_results_recorded_separately",
-  "originalArtifactsByteVerified": 143,
+  "originalArtifactsByteVerified": 148,
   "paidPngsBoundToOriginalCaptureReports": 52,
-  "pngFiles": 100,
+  "pngFiles": 102,
   "comparisonImages": 12,
-  "localLinkTargetsChecked": 86,
+  "localLinkTargetsChecked": 91,
   "jsonParse": "passed",
   "htmlTagBalanceAndLocalReferences": "passed",
   "authoredWhitespace": "passed; untouched original logs inspected separately",
@@ -399,6 +399,26 @@
     {
       "from": "docs/evidence/village-clearance-review/README.md",
       "target": "actual-final/wave-standing-375x812.png"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/README.md",
+      "target": "comparison-browser/report.json"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/README.md",
+      "target": "comparison-browser/helper-used.mjs"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/README.md",
+      "target": "comparison-browser/manifest-used.json"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/README.md",
+      "target": "comparison-browser/comparison-1280x720.png"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/README.md",
+      "target": "comparison-browser/comparison-375x812.png"
     },
     {
       "from": "docs/evidence/village-clearance-review/comparison.html",

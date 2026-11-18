@@ -1,11 +1,11 @@
 {
   "status": "final_review_package_complete_with_documented_application_failures",
-  "guideSha256": "b628b1bc1efc769eaba2dac617cb9721784c614ba91705bcbf608c5cb22e60e8",
+  "guideSha256": "af986b4d81dbff0b4e05ff335fe6d631d877fa681bc9168b6ecf580836709608",
   "scope": "Original artifacts and review documents; manifest excludes itself. Source and result boundaries are recorded separately.",
   "files": {
     "README.md": {
-      "bytes": 9679,
-      "sha256": "929c225c60c004448b87a1f23b5165a19ec7b7682131c7560a79fe057674f1aa"
+      "bytes": 10293,
+      "sha256": "d474d6cc0df96cfced813b86fa5bdae1a2c98ceb339f397a8e20ebb3a27dd006"
     },
     "actual-final/execution.json": {
       "bytes": 501,
@@ -255,6 +255,26 @@
       "bytes": 2829,
       "sha256": "e003909c0e3e42f21bc83e291107d6a35eff4e8f4b679e440032fde741db696d"
     },
+    "comparison-browser/comparison-1280x720.png": {
+      "bytes": 1040815,
+      "sha256": "9d9add43e9e96b0026877d964ddab05c8552a8fdfdaee8d797bbe7c46677fbe0"
+    },
+    "comparison-browser/comparison-375x812.png": {
+      "bytes": 268681,
+      "sha256": "5d05b0e235efe307ea66bb8b6219e3124f36d1d8fb80b1ca14a34cb908cc5780"
+    },
+    "comparison-browser/helper-used.mjs": {
+      "bytes": 4928,
+      "sha256": "ef9671909e07f5101fbd6055ad85ce42923587ed3c649e8d187e39f7217cc2ee"
+    },
+    "comparison-browser/manifest-used.json": {
+      "bytes": 24187,
+      "sha256": "c96d8f70c21a5836ab5d60b0e6b28699e03f9de32f3082da9a5c9bc60cc5a919"
+    },
+    "comparison-browser/report.json": {
+      "bytes": 9857,
+      "sha256": "7343c7f47de9d31861f6cb46a56c8742bb2b1714b4629392ac2bfd9367e0fb0b"
+    },
     "comparison.html": {
       "bytes": 8952,
       "sha256": "9f002277a214a0d25d785c07a5dba514b8246193e39cd74d28a70d00537ff419"
@@ -384,8 +404,8 @@
       "sha256": "1e839edd01760c6c1a1cdf6e1de36d30d8b1a7ddb69e6e4d88dd9c0c1b518ad8"
     },
     "originals.json": {
-      "bytes": 43854,
-      "sha256": "c35044e2aa9e410a8b16f77cf2138eaba6dad2bd85157d0b7af1f390f108510d"
+      "bytes": 45349,
+      "sha256": "12083e714d0608af1e60563fcbe429fbdf6cdbbe3032bf5ac9b71886c4af65a3"
     },
     "paid-final/execution.json": {
       "bytes": 454,
@@ -596,12 +616,12 @@
       "sha256": "db3018768c6e042d9fc3c9cc27cee42aebccdf786850577a97b5a2b71ba93a8f"
     },
     "source.json": {
-      "bytes": 32645,
-      "sha256": "944f9175b511c8677fa3278835887d54fa9dc1c78020c45610a88b656ddff5a5"
+      "bytes": 44348,
+      "sha256": "e105cc75a9642b0971b2536f7f8c5999243db94978d297a00a2d186c4357a5b7"
     },
     "static-checks.json": {
-      "bytes": 27123,
-      "sha256": "2f3e64114bae6d1d4db46c689d731a6d9f6f7da51545e0315f6585675158a723"
+      "bytes": 27797,
+      "sha256": "be4196a76a6ae4d06a675f8ca2ec9ebd987977ee8e9a6fee41fb6066b38335e6"
     }
   }
 }

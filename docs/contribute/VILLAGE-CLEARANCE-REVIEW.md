@@ -243,6 +243,7 @@ match the separate targeted PostgreSQL receipt. See the [source record](../evide
 | Actual game journey | Passed, **210.61s / 20 PNGs**; declared 8,000 coins end at **5,150**, 123 paid walls, selection, canceled Move, unpaid ghosts, firing and real breach. |
 | Native renderer matrix | Passed, **12.79s / 22 labeled sheets**; existing 100 defense poses and five wall tiers/states, real-buffer negative controls. These are fixtures, not gameplay/progression proof. |
 | Native multiplayer | **Failed after 371.10s**, own musket pose **0 versus 2**, `check-multiplayer.js:814`. Only `fake-wave-1` owner/Ben has **113 distinct matching ship/boarder pairs**, worst drift 0/0, 20 with boarders; heart/militia **84/84** each. Ana/Max joined, but later-wave comparisons, boss and finisher were not reached. |
+| Native review page | Passed **4.17s** at both sizes; 12 original images decoded and 13 exact HTTP response hashes per viewport, no overflow/page/console/external issues. The tested manifest/helper and page photos are retained; this proves the review page, not more game coverage. |
 | Targeted backend/SQL | **1,792 passed / zero skips**, 36 selected route/unit files plus all 51 island-SQL modules; **76.98s pytest / 78.38s process**. Whole-backend Ruff passed in **0.22s**. Private disposable PostgreSQL/HTTP only; not a complete-backend rerun. |
 
 The first wide backend attempt on `a76e9ccc` had **1,758 passes, five failures and
