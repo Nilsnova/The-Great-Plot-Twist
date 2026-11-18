@@ -231,7 +231,7 @@ def test_snapshot_template_captures_server_sim_inputs_and_exact_hp_rate(monkeypa
         campaign=SimpleNamespace(tiers={"wall": ResearchTier(3, "mason_drill", "bastion")}),
     )
 
-    async def read_view(*_):
+    async def read_view(*_, **__):
         return view
 
     async def read_revision(*_):
@@ -295,6 +295,54 @@ def test_snapshot_template_captures_server_sim_inputs_and_exact_hp_rate(monkeypa
     assert snapshot["priceSchedule"]["wall"] == list(wall.prices)
 
 
+def test_snapshot_preserves_existing_extra_culverin_when_availability_flags_are_off(monkeypatch):
+    world = World()
+    catalogue = world.app.state.island
+    built = SimpleNamespace(
+        id="cannon_8",
+        kind="culverin",
+        level=2,
+        x=-8.5,
+        z=12.0,
+        built=True,
+        spec=None,
+        tree=(1, 0),
+    )
+    view = SimpleNamespace(
+        spots=[built],
+        crew={"gunner": 0, "carpenter": 0, "lookout": 0, "guard": 0},
+        campaign=SimpleNamespace(tiers={}),
+    )
+
+    async def read_view(*_, **__):
+        return view
+
+    async def read_revision(*_):
+        return 7
+
+    monkeypatch.setattr(wave_recovery.service, "look_open", read_view)
+    monkeypatch.setattr(wave_recovery, "read_recovery_revision", read_revision)
+    snapshot = asyncio.run(
+        wave_recovery.build_snapshot_template(
+            world.app.state.admin,
+            catalogue,
+            Island("owner", "K7Q2M", 40, 0),
+            Weather("calm", "Calm sea", 1, 0),
+            42,
+            ["tower_health", "structure_recovery"],
+        )
+    )
+
+    defense = snapshot["createWave"]["defenses"][0]
+    assert defense["id"] == "cannon_8"
+    assert defense["kind"] == "culverin"
+    # Current main preserves bought upgrade paths as the production {a, b} shape.
+    assert defense["tree"] == {"a": 1, "b": 0}
+    assert snapshot["createWave"]["defensesV2"] is True
+    assert snapshot["structureConfigBySpot"]["cannon_8"]["kind"] == "culverin"
+    assert "cannon_8" in snapshot["defaultPositions"]
+
+
 def test_snapshot_template_retries_once_after_island_revision_changes(monkeypatch):
     world = World()
     view = SimpleNamespace(
@@ -305,7 +353,7 @@ def test_snapshot_template_retries_once_after_island_revision_changes(monkeypatc
     revisions = iter([4, 5, 5, 5])
     reads = []
 
-    async def read_view(*_):
+    async def read_view(*_, **__):
         reads.append(len(reads) + 1)
         return view
 
@@ -338,7 +386,7 @@ def test_snapshot_template_refuses_two_unstable_revision_reads(monkeypatch):
     )
     revisions = iter([4, 5, 5, 6])
 
-    async def read_view(*_):
+    async def read_view(*_, **__):
         return view
 
     async def read_revision(*_):
@@ -403,7 +451,7 @@ def test_snapshot_defenses_have_the_legacy_shape_tree_bonus_and_capstone_rule(mo
         campaign=SimpleNamespace(tiers={"cannon": ResearchTier(3, "long_guns", "broadside")}),
     )
 
-    async def read_view(*_):
+    async def read_view(*_, **__):
         return view
 
     async def read_revision(*_):

@@ -2,16 +2,17 @@
 import assert from 'node:assert/strict';
 
 export const reviewedSdkVersion='2.118.0';
-export const sdkManifestEntry='node_modules/@supabase/supabase-js/dist/index.mjs';
-const packages=['@supabase/supabase-js','@supabase/auth-js','@supabase/realtime-js'];
+// The game's one lazy SDK module (auth-js, postgrest-js and realtime-js, without the supabase-js umbrella).
+export const sdkManifestEntry='src/online/supabase-sdk.js';
+export const sdkPackages=['@supabase/auth-js','@supabase/postgrest-js','@supabase/realtime-js'];
 const reviewedOrigins={
   'http://localhost:9999':{
     classification:'dormant-default',
-    purpose:'GoTrue standalone fallback; SupabaseClient supplies the validated project auth/v1 URL.',
+    purpose:'GoTrue standalone fallback; src/online/supabase-sdk.js supplies the validated project auth/v1 URL.',
     urls:['http://localhost:9999'],
     evidence:['@supabase/auth-js/src/lib/constants.ts: GOTRUE_URL',
       '@supabase/auth-js/src/GoTrueClient.ts: DEFAULT_OPTIONS overridden by constructor options',
-      '@supabase/supabase-js/src/SupabaseClient.ts: _initSupabaseAuthClient supplies authUrl'],
+      'src/online/supabase-sdk.js: createAuthClient supplies the auth/v1 URL'],
   },
   'https://developer.mozilla.org':{
     classification:'documentation',
@@ -21,13 +22,11 @@ const reviewedOrigins={
   },
   'https://github.com':{
     classification:'documentation',
-    purpose:'SDK migration and Node support links in warning text; no request targets.',
+    purpose:'SDK migration links in warning text; no request targets.',
     urls:['https://github.com/supabase/supabase-js/blob/master/packages/core/realtime-js/migrations/httpsend-server-version.md',
-      'https://github.com/supabase/supabase-js/blob/master/packages/core/auth-js/migrations/lockless-coordination.md',
-      'https://github.com/orgs/supabase/discussions/45715'],
+      'https://github.com/supabase/supabase-js/blob/master/packages/core/auth-js/migrations/lockless-coordination.md'],
     evidence:['@supabase/realtime-js/src/RealtimeChannel.ts: server-version warning',
-      '@supabase/auth-js/src/GoTrueClient.ts: deprecated lock-option warning',
-      '@supabase/supabase-js/src/index.ts: Node support warning'],
+      '@supabase/auth-js/src/GoTrueClient.ts: deprecated lock-option warning'],
   },
 };
 export function literalOrigins(source){
@@ -45,15 +44,16 @@ export function assertProductionHtmlInventory({manifest,htmlFiles}){
     'Production build must contain exactly the four Vite entries and three approved public HTML pages');
   return true;
 }
-export function createSdkOriginInventory({manifest={},declaredVersion,installedVersions={}}={}){
-  assert.equal(declaredVersion,reviewedSdkVersion,'SDK origin review requires the exact approved dependency pin');
-  for(const name of packages)assert.equal(installedVersions[name],reviewedSdkVersion,
+export function createSdkOriginInventory({manifest={},declaredVersions={},installedVersions={}}={}){
+  for(const name of sdkPackages)assert.equal(declaredVersions[name],reviewedSdkVersion,
+    `${name}: SDK origin review requires the exact approved dependency pin`);
+  for(const name of sdkPackages)assert.equal(installedVersions[name],reviewedSdkVersion,
     `${name}: installed version needs a new SDK origin review`);
   const entry=manifest[sdkManifestEntry];
   let sdkFile=null;
   if(entry){
     assert.ok(entry.src===sdkManifestEntry&&entry.isDynamicEntry===true
-      &&/^assets\/dist-[A-Za-z0-9_-]+\.js$/.test(entry.file),
+      &&/^assets\/supabase-sdk-[A-Za-z0-9_-]+\.js$/.test(entry.file),
     'SDK literals require the exact declared dynamic SDK entry');
     assert.ok(Object.entries(manifest).every(([key,value])=>key===sdkManifestEntry||value.file!==entry.file),
       'SDK literal classification cannot cover a file shared with another manifest entry');

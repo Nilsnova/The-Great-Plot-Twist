@@ -14,7 +14,12 @@ from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, Strict
 from server.errors import ApiError
 from server.island import layout, service, store, wall_health, wave_events
 from server.island import rules as island_rules
-from server.island.catalogue import RESEARCH_CAPSTONES, IslandCatalogue, Weather
+from server.island.catalogue import (
+    RESEARCH_CAPSTONES,
+    IslandCatalogue,
+    Weather,
+    catalogue_for_existing_structures,
+)
 from server.island.store import Island, IslandRow
 from server.island.structure_recovery_manifest import (
     MANIFEST_FILE,
@@ -355,7 +360,7 @@ async def build_snapshot_template(
     view = None
     for _ in range(SNAPSHOT_READ_ATTEMPTS):
         before = await read_recovery_revision(admin, island.owner)
-        view = await service.look_open(admin, catalogue, island)
+        view = await service.look_open(admin, catalogue, island, include_existing_gated=True)
         after = await read_recovery_revision(admin, island.owner)
         if before == after:
             expected_revision = after
@@ -366,7 +371,9 @@ async def build_snapshot_template(
             "island_changed",
             "The island changed while the wave was being prepared. Retry the same request.",
         )
-    geometry = layout.island_layout(catalogue.more_tower_spots)
+    built_for_runtime = {spot.id: spot for spot in view.spots if spot.built}
+    runtime_catalogue = catalogue_for_existing_structures(catalogue, built_for_runtime)
+    geometry = layout.island_layout(runtime_catalogue.more_tower_spots)
     complete_geometry = layout.island_layout(more=True)
     defenses = []
     structure_config: dict[str, dict[str, Any]] = {}
@@ -461,7 +468,9 @@ async def build_snapshot_template(
         "finisherPreparation": True,
     }
     for rule_name, option_name in rule_options.items():
-        create_wave[option_name] = rule_name in kept_rules
+        create_wave[option_name] = rule_name in kept_rules or (
+            rule_name == "defenses_v2" and any(spot.kind == "culverin" for spot in view.spots)
+        )
 
     events = {
         str(number): wave_events.event_for(number, seed)
@@ -487,7 +496,7 @@ async def build_snapshot_template(
         "expectedRevision": expected_revision,
         "weather": dict(create_wave["weather"]),
         "createWave": create_wave,
-        "priceSchedule": island_rules.price_table(catalogue),
+        "priceSchedule": island_rules.price_table(runtime_catalogue),
         "eventByWave": events,
         "bossByWave": bosses,
         "recoveryConfig": recovery_config,

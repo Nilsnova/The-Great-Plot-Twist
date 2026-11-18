@@ -82,7 +82,7 @@ describe('the hook in game.js', () => {
   });
 
   it('keeps the explorer still while the panel is open, whatever pushes it', () => {
-    expect(game).toContain('controller.update(delta, active && !captainBlocked())');
+    expect(game).toContain('controller.update(delta,!captainDown&&active&&!captainBlocked(),combatAfterMove)');
     expect(game.match(/const externalOverlay=.*$/m)?.[0]).toContain('stopPlots?.active');
   });
   it('retains every outside overlay when village management also blocks the captain', () => {
