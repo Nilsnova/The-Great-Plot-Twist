@@ -1,7 +1,8 @@
-"""Narrow no-network SupabaseAdmin adapter for the T60 disposable-Postgres route test.
+"""Narrow no-network SupabaseAdmin adapter for disposable-Postgres route tests.
 
-It deliberately supports only the island tables and recovery RPCs needed by that check. The
-test passes its existing scratch-database connection, so fixture seeding, HTTP handlers and SQL
+It deliberately supports only the island tables and recovery/demolition RPCs needed by those
+checks. The test passes its existing scratch-database connection, so fixture seeding, HTTP handlers
+and SQL
 transactions share one rollbackable database transaction.
 """
 
@@ -26,6 +27,7 @@ TABLES = frozenset(
         "island_research",
         "islets",
         "wallets",
+        "profiles",
         "structure_repair_receipts",
         "wave_runs",
     }
@@ -36,6 +38,7 @@ FUNCTIONS = frozenset(
         "wave_rules_keep",
         "structure_recovery_read_state",
         "island_structure_repair",
+        "island_demolish",
         "recovery_wave_start",
         "recovery_wave_join",
         "recovery_wave_current",
@@ -74,7 +77,7 @@ class ScratchRecoveryAdmin(SupabaseAdmin):
             return await asyncio.to_thread(self._call, name, params)
         except Error as error:
             # Synthetic scratch data only; retain the SQLSTATE and primary label for assertions.
-            self.last_database_error = (error.sqlstate, error.diag.message_primary)
+            self.last_database_error = (name, error.sqlstate, error.diag.message_primary)
             raise
 
     def _call(self, name, params):

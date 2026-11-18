@@ -3245,6 +3245,18 @@ migrations/20261118030000_recovery_away.sql replaces recovery_wave_is_abandoned 
 
 migrations/20261118040000_playtest.sql (fix/playtest-1117): a new overload recovery_wave_inputs(uuid, uuid, jsonb, boolean) attaches the weapon the shooter's screen uses (with the arsenal flag the copy carried from the defended island's arsenal, else the musket; without it the equipped weapon), read at each input; the 3-argument form stays as a wrapper with p_arsenal false for an older backend. structure_recovery_settle_locked sets every health row of the island to full when a recovery wave closes (finish, expiry, abandonment), the owner's change of D059; the closed HP vector stays in the wave history. Boss and late-wave loot need no SQL (the server passes them as plain arguments). Opt-in checks: server/tests/island_sql/test_recovery_input_weapon_sql.py, test_boss_loot_sql.py and the updated recovery tests. Production apply file: docs/handoff/apply-2026-11-18-playtest.sql, before the backend deploy.
 
+### Repair-only option retirement · T58 follow-up #456 (pending review)
+
+The approved 18 Nov D059 cleanup is implemented on `fix/wave-end-repair-options` with additive `20261118050000_retired_recovery_options.sql`; it is not a live migration application. It keeps full wave-end restoration from `20261118040000_playtest.sql`, paid pricing/shared allowance/receipts, stored IDs and immutable wave/closed-health history. The original gradual-rate columns remain compatibility data rather than current gameplay bonuses.
+
+`guard_retired_recovery_option()` is a BEFORE-row trigger for new Carpenter-count increases on `islands`, new Workshop/Quick Mend `islet_buildings.spec` selections, and new wall Mason Drill `island_research.choice_2` selections. Existing service-only mutation RPCs hold the canonical wallet→owner→recovery locks before these writes; the guard reads that serialized persisted policy without introducing a child-row→recovery lock. Under v1 only new retired transitions raise `P0001/recovery_option_retired`, rolling back the RPC transaction including an earlier wallet debit. NULL tier-1 research choices and unchanged stored values are not retired transitions. The API maps the exact refusal to 409. The migration recreates triggers idempotently and adds no table write grant.
+
+| Function | Visitor (`anon`) | Signed-in player (`authenticated`) | Server (`service_role`) |
+|---|---|---|---|
+| `guard_retired_recovery_option()` | no execute | no execute | execute; used by existing service-only mutations |
+
+Disposable verification must reapply the complete migration chain, exercise obsolete requests without wallet/progression changes, successful old-UID replay, stored-ID/legacy preservation, permitted Bastion/other choices and a concurrent policy transition. Full wave-end tests must keep damaged/zero closed combat HP in history while current HP becomes full for won/lost/expired/abandoned waves. Do not apply this migration or activate/deploy the feature without separate authorization.
+
 ### Recovery implementation migration order and rollback boundary
 
 `migrations/20261118050000_paid_revive_journal.sql` fixes issue #466. The service-only
@@ -3261,6 +3273,8 @@ change is performed by this fix. Opt-in checks: `test_recovery_revive_sql.py` an
 `test_recovery_revive_http_pg.py` under `backend/server/tests/island_sql/`.
 
 For a backend/client candidate that contains T55/T60 recovery code, review and apply the required files in timestamp order: `20261117020000_structure_recovery.sql`, `20261117025000_legacy_wave_locks.sql`, `20261117030000_paid_structure_repair.sql`, `20261117040000_structure_recovery_api.sql`, then `20261117050000_structure_recovery_mutations.sql`. Include any earlier candidate prerequisite, such as `20261117010000_more_tower_spots.sql`, before this set. The integration tests only apply/reapply this chain in disposable Unix-socket PostgreSQL; no live application or activation is recorded here.
+
+A saved v1 island may retain already-built `cannon_8`–`cannon_11` plots and culverins after the `more_tower_spots` or `defenses_v2` availability flags are off. The application continues to expose and operate those existing buildings, includes their full catalogue repair prices, and freezes `defenses_v2` for a v1 wave containing a culverin. New builds remain gated. This compatibility is application behavior; it makes no migration or activation change.
 
 The recovery feature flag remains off by default and governs admission of new v1 waves on legacy islands. It does not make the migrations optional for a deployed server or protocol-2 client that can read or mutate a saved v1 island. If a release must stop admitting new v1 waves, turn the flag off and preserve saved v1 state. Admission off does not downgrade saved v1 policy, which persists between waves; no safe policy downgrade is implemented. Keep a v1-capable backend and protocol-2 client while any saved v1 island remains, even when no wave is active. Do not reverse the migrations or delete receipts to roll back. Fix forward with reviewed code and migrations; any future saved-policy data transition needs separate review. See the [release checklist](../docs/RELEASE-CHECKLIST.md#t55t60-structure-recovery-release-gate). No live migration, deployment or flag activation was performed by T60.
 

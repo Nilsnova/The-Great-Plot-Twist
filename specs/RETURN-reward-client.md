@@ -6,7 +6,7 @@ Publication branch: `fix/wave-return-recovery-review`, stacked on core draft [#4
 
 Development branch: `fix/reward-return-client`. Its prepared baseline was main `37eb70fa` plus the unchanged
 four-fix integration supplied by the coordinator. Export only this task's delta. The shared decision
-is D066; the coordinator owns its decision log and publication draft. The approved tracking issue
+is D067; the coordinator owns its decision log and publication draft. The approved tracking issue
 is [#483](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/483). Initial publication was blocked
 by automatic approval review and succeeded after Ianno explicitly approved the repository and issues.
 

@@ -38,7 +38,7 @@ review, merge and any live database operation or deployment remain separate.
    amount once. Successful, unlinked, unreadable, legacy, active, reset and incomplete cases
    are preserved as unresolved. No original receipt or closed journal is changed.
 
-The decision and limits are recorded in [D066](../DECISIONS.md#d066--recover-saved-rewards-and-confirmed-missing-revival-payments--2026-11-18).
+The decision and limits are recorded in [D067](../DECISIONS.md#d067--recover-saved-rewards-and-confirmed-missing-revival-payments--2026-11-18).
 API and event contracts are in [INTERFACES](../INTERFACES.md#your-island-and-the-pirate-waves-lane-0-tasks-02-and-03).
 
 ## Review locations

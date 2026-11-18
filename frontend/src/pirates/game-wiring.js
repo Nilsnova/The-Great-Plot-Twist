@@ -243,6 +243,7 @@ export function wireWaves(ctx) {
   }
   return {
     pirates,
+    update:delta=>pirates.update(delta),
     get reportActive() { return defenseReport?.active === true; },
     get point() { return pirates.point; },
     get island() { return pirates.island; },
