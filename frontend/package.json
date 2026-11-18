@@ -43,6 +43,7 @@
     "test:a11y": "node scripts/check-a11y.js",
     "test:festival": "node scripts/check-festival.js",
     "test:help": "node scripts/check-help.js",
+    "test:intro": "node scripts/check-no-repeat-intro.js",
     "test:build-stamp": "npm run build && node scripts/check-build-stamp.js",
     "test:problem-report": "npm run build && node scripts/check-problem-report.js",
     "test:csp:inventory": "npm run build && node scripts/check-csp-inventory.js",

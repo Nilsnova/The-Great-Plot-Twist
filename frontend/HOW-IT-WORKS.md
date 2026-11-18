@@ -100,9 +100,10 @@ npm run test:csp
 npm run test:islet:world
 npm run test:harbor:life
 npm run test:a11y
+npm run test:intro
 ```
 
-`test:art:production`, `test:ui:production`, `test:loading`, `test:spoilers` and `test:csp` include a production build. `test:a11y` runs the accessibility browser checks. If a check opens Chrome and no Vite server is already running, it starts its own short-lived local server. For checks that accept a custom URL, set `TEST_URL`; do not run two GPU checks at once.
+`test:art:production`, `test:ui:production`, `test:loading`, `test:spoilers` and `test:csp` include a production build. `test:a11y` runs the accessibility browser checks; `test:intro` checks that re-entering an island explains nothing again. If a check opens Chrome and no Vite server is already running, it starts its own short-lived local server. For checks that accept a custom URL, set `TEST_URL`; do not run two GPU checks at once.
 
 ## A ten-file reading path
 
