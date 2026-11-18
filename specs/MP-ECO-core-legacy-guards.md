@@ -42,7 +42,13 @@ Private aliases are captured only if absent; a wrapper must never be captured as
 
 ## Dependencies and boundaries
 
-Use the current MP-ECO-02 treasury/scope primitives and MP-ECO-07 global personal guard. The tested dependency cut is published treasury `feca459f` (schema migration version `20261118050050`), personal Captain `ba351aa3`, construction `c6f9a47b` with its grant protection in `6646a842`, and main `3482c281`. MP-ECO-04 provides its self-contained `20261118050401` construction/kit guards and actor/target ordering protection; this migration does not define a kit wrapper or kit alias. This migration does not rewrite those functions or install the separate coherent snapshot migration.
+Use the current MP-ECO-02 treasury/scope primitives and MP-ECO-07 global personal guard. The tested dependency cut is published treasury `feca459f` (schema migration version `20261118050050`), personal Captain `4005fb53`, construction `42f1b880` with its grant protection in `6646a842`, and main `3482c281`. MP-ECO-04 provides its self-contained `20261118050401` construction/kit guards and actor/target ordering protection; this migration does not define a kit wrapper or kit alias. This migration does not rewrite those functions or install the separate coherent snapshot migration.
+
+The current review base also includes [MP-ECO-05 progression](MP-ECO-05-island-progression.md).
+Its research wrapper and this component's respec wrapper share the historical migration
+contract tests, so both final definitions must be checked together. The latest research
+definition is exactly `20261118050501`; the latest checked respec is exactly `20261118050701`.
+The current combined dependency verification is recorded below.
 
 No wave, arsenal, paid-repair, deletion or historical completion API is invented. Their canonical session, frozen loadout, source settlement and retention integrations remain explicit gates. Unsupported legacy personal/reset actions may refuse after adoption while their stored historical receipts remain unchanged. Kit grants are ordinary original private-origin rewards and never transfer into a treasury.
 
@@ -57,29 +63,83 @@ No wave, arsenal, paid-repair, deletion or historical completion API is invented
 
 ## Verification
 
-The direct negative regression selection was first observed as **10 failed** against the unguarded database. The current **34 core PostgreSQL cases** pass within the combined checks below, including the required private construction-kit alias and absence of a core-kit alias. That dependency check was also observed failing before the construction grant protection was present. Races observe actual PostgreSQL advisory/transaction lock waits on separate connections; a timed future alone is not counted as proof of entering the gate. No test-only replacement grant, profile hook or construction function is installed.
+The direct negative regression selection was first observed as **10 failed** against the unguarded database. The original **34 core PostgreSQL cases** pass within the broad baseline below, including the required private construction-kit alias and absence of a core-kit alias. That dependency check was observed failing before construction contained its grant protection. Races observe actual PostgreSQL advisory/transaction lock waits on separate connections; a timed future alone is not proof of entering the gate. No test-only replacement grant, profile hook or construction function is installed.
 
-Commands below ran from `backend/` with locked dependencies and a writable UV cache:
-
-```bash
-CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' --with pglast pytest -q server/tests/island_sql/test_economy_core_legacy_guards_sql.py server/tests/island_sql/test_economy_core_legacy_guard_races_sql.py server/tests/island_sql/test_island_treasury_sql.py server/tests/island_sql/test_economy_operations_sql.py server/tests/island_sql/test_economy_operations_cutover_sql.py server/tests/island_sql/test_personal_captain_sql.py server/tests/island_sql/test_personal_captain_operations_sql.py server/tests/island_sql/test_shared_construction_sql.py server/tests/island_sql/test_shared_construction_grant_races_sql.py
-```
-
-**182 passed in 38.72s.**
+Commands ran from `backend/` with locked dependencies and a writable UV cache:
 
 ```bash
-CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' --with pglast pytest -q server/tests/island_sql/test_tower_defense_sql.py server/tests/island_sql/test_captain_skills_sql.py server/tests/island_sql/test_captain_tree_sql.py server/tests/island_sql/test_respec_and_wave_guards_sql.py server/tests/island_sql/test_island_fresh_start_sql.py server/tests/island_sql/test_islands_and_waves_sql.py
+CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' --with pglast pytest -q server/tests/island_sql/test_economy_core_legacy_guards_sql.py server/tests/island_sql/test_economy_core_legacy_guard_races_sql.py server/tests/island_sql/test_island_treasury_sql.py server/tests/island_sql/test_economy_operations_sql.py server/tests/island_sql/test_economy_operations_cutover_sql.py server/tests/island_sql/test_personal_captain_sql.py server/tests/island_sql/test_personal_captain_operations_sql.py server/tests/island_sql/test_shared_construction_sql.py server/tests/island_sql/test_shared_construction_grant_races_sql.py server/tests/island_sql/test_tower_defense_sql.py server/tests/island_sql/test_captain_skills_sql.py server/tests/island_sql/test_captain_tree_sql.py server/tests/island_sql/test_respec_and_wave_guards_sql.py server/tests/island_sql/test_island_fresh_start_sql.py server/tests/island_sql/test_islands_and_waves_sql.py
 ```
 
-**79 passed in 4.89s.** These two invocations deliberately use fresh disposable processes. An earlier combined run produced 252 passes and two legacy global-count failures because existing Captain race fixtures retain committed synthetic rows in the shared cluster. Running the unchanged legacy assertions in their clean process passed; no production guard or assertion was weakened. Both new core modules register their own isolated race fixture.
+**261 passed in 39.35s in one process**, followed by backend-wide Ruff passing. This includes the unchanged legacy global-count assertions alongside committed financial/personal races. The personal dependency isolates its committed race fixtures per module; no global fixture or assertion was weakened. All 74 migrations apply twice.
 
-The construction dependency was also independently checked with `20261118050701` absent: `CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql/test_shared_construction_grant_races_sql.py` gave **7 passed in 5.31s**. These real intro/demo grant versus visiting build/upgrade cases, reverse ordering, first-ending replay and alias permissions establish that construction does not depend on a later core migration for its grant ordering.
+The construction dependency was also checked independently with `20261118050701` absent: `CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql/test_shared_construction_grant_races_sql.py` gave **7 passed in 5.31s**. These real intro/demo grant versus visiting build/upgrade cases, reverse ordering, first-ending replay and alias permissions establish that construction does not depend on a later core migration for its grant ordering.
 
 ```bash
 uv run pytest -q server/tests/test_island_routes.py server/tests/test_personal_captain.py server/tests/test_captain_progression_routes.py server/tests/test_referee.py server/tests/test_entry_kits.py server/tests/test_entry_profiles_match_migration.py server/tests/test_demo_join.py server/tests/test_demo_gate.py server/tests/test_islet_routes.py server/tests/test_islet_store.py server/tests/test_migration_versions.py
 uv run ruff check .
 ```
 
-**450 passed in 15.72s; backend-wide Ruff passed.** The documented PostgreSQL parser accepted all **74 migration files with 74 unique versions**. The scratch runner executes the complete chain twice. Own new files pass `git diff --check`; unrelated incoming evidence whitespace was not edited.
+**450 passed in 15.72s; backend-wide Ruff passed.** The PostgreSQL parser accepted **74 migration files with 74 unique versions**. The final personal dependency refresh changed only two SQL-test fixture imports and its verification text; the final construction refresh changed verification text only. No runtime or SQL source changed after the checks above. Own new files pass `git diff --check`; unrelated incoming evidence whitespace was not edited.
 
-No live credentials/database, Supabase migration-history application, complete browser suite or exhaustive unrelated backend matrix was used. Migration-version allocation and deployment readiness still require the release checks; direct execution of SQL files is not a test of Supabase migration-history bookkeeping. Core HTTP dispatch, canonical sessions/arsenal/repair/settlements and authenticated multi-client acceptance remain outside this guard foundation.
+No live credentials/database, Supabase migration-history application, complete browser suite or exhaustive unrelated backend matrix was used. Direct execution and unique filenames are not a test of Supabase migration-history bookkeeping. Core HTTP dispatch, canonical sessions/arsenal/repair/settlements and authenticated multi-client acceptance remain outside this guard foundation.
+
+### Respec contract compatibility follow-up
+
+The existing `backend/server/tests/test_respec_wave_guards_match_migration.py` now accepts only the exact reviewed `50701` respec wrapper as latest, while retaining the original priced-under-island-lock assertions on the immutable `130100` body. Its complete reviewed body is pinned; the preceding definition, capture-once guard, exact refusal/delegation and execute revocations are checked explicitly. Research assertions remain unchanged in this follow-up. A new PostgreSQL case compares the private alias's entire native body with that historical body, reapplies `50701` twice and confirms the alias stays private.
+
+The original static failures were reproduced as **2 failed, 5 passed** before updating the contract checks. Current focused results:
+
+- `uv run pytest -q server/tests/test_respec_wave_guards_match_migration.py`: **10 passed in 0.06s**.
+- `CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql/test_economy_core_legacy_guards_sql.py server/tests/island_sql/test_economy_core_legacy_guard_races_sql.py server/tests/island_sql/test_respec_and_wave_guards_sql.py server/tests/island_sql/test_captain_tree_sql.py server/tests/island_sql/test_island_fresh_start_sql.py`: **68 passed in 7.27s**, including the new alias-body reapplication check (35 core cases).
+- Backend-wide Ruff and `git diff --check`: passed.
+
+This is a test-only compatibility follow-up; production code and migration contents are unchanged. The broad 261-case database run and 450-case Python run above remain the earlier baseline, not a claim that an exhaustive suite was rerun for this test update.
+
+## Current dependency verification
+
+Main `f606412f` and reviewed construction `58a66646` are integrated. The guard SQL and
+tests remain unchanged from the published component; construction now independently
+verifies each exact committed debit/refund child and its complete immutable receipt.
+
+Commands from `backend/`:
+
+```bash
+uv run --no-sync pytest -q server/tests/test_respec_wave_guards_match_migration.py server/tests/test_islet_routes.py server/tests/test_islet_store.py server/tests/test_entry_kits.py server/tests/test_entry_profiles_match_migration.py
+CASE_PG_SCRATCH=1 uv run --no-sync --with pgserver --with 'psycopg[binary]' --with pglast pytest -q server/tests/island_sql/test_economy_core_legacy_guards_sql.py server/tests/island_sql/test_economy_core_legacy_guard_races_sql.py server/tests/island_sql/test_shared_construction_sql.py server/tests/island_sql/test_shared_construction_grant_races_sql.py server/tests/island_sql/test_respec_and_wave_guards_sql.py server/tests/island_sql/test_captain_tree_sql.py server/tests/island_sql/test_island_fresh_start_sql.py --tb=short
+uv run --no-sync ruff check .
+```
+
+The focused Python selection passed **231 tests in 3.93 seconds**. The mixed PostgreSQL
+selection passed **133 tests in 16.87 seconds**, without skips, applying the full migration
+chain twice. It includes actual-connection adoption/grant/build ordering, original legacy
+behavior, exact child-proof refusal rollback and private alias execution checks. A separate
+initial source-review run of the two core PostgreSQL modules passed **35 tests in 6.66
+seconds**. No demonstrated guard defect was found in this review. These checks retain the
+same bounded scope; canonical session/HTTP integration, live schema and human approval
+remain separate.
+
+## Progression prerequisite verification
+
+The review base is `feat/mp-eco-05-research` at `b9723adc`, including construction
+`58a66646` and main `f606412f`. Production core-guard SQL is unchanged. The shared historical
+contract test retains every respec pricing/body/alias assertion and the original research
+recovery checks, and adds the progression wrapper's scope, refusal, private capture and
+delegation checks. It pins both latest wrappers without skipped or conditional assertions.
+
+Commands from `backend/`:
+
+```bash
+uv run --no-sync pytest -q server/tests/test_respec_wave_guards_match_migration.py server/tests/test_economy_progression.py server/tests/test_house_roles_match_migration.py server/tests/test_migration_versions.py server/tests/test_islet_routes.py server/tests/test_islet_store.py server/tests/test_entry_kits.py server/tests/test_entry_profiles_match_migration.py
+CASE_PG_SCRATCH=1 uv run --no-sync --with pgserver --with 'psycopg[binary]' --with pglast pytest -q server/tests/island_sql/test_economy_core_legacy_guards_sql.py server/tests/island_sql/test_economy_core_legacy_guard_races_sql.py server/tests/island_sql/test_economy_progression_sql.py server/tests/island_sql/test_shared_construction_sql.py server/tests/island_sql/test_shared_construction_grant_races_sql.py server/tests/island_sql/test_respec_and_wave_guards_sql.py server/tests/island_sql/test_captain_tree_sql.py server/tests/island_sql/test_island_fresh_start_sql.py --tb=short
+uv run --no-sync ruff check .
+```
+
+The Python selection passed **265 tests in 6.28 seconds**. The mixed PostgreSQL selection
+passed **196 tests in 30.84 seconds**, without skips, applying the full migration chain
+twice. This checks progression, legacy aliases, construction child-proof rollback and real
+admission/grant/build ordering in one process. Backend-wide Ruff passed; **79 migration
+files** parsed with unique versions. The complete comparison against the progression
+prerequisite contains only the five core component paths. Full backend/browser acceptance,
+registered shared HTTP/canonical lifecycle integration, live migration and human approval
+remain separate.

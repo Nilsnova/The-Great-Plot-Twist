@@ -306,10 +306,22 @@ begin
       v_reason,'progression:'||v_child_uid,v_price);
     if v_finance ->> 'status' is distinct from 'done'
       or v_finance -> 'repeat' is distinct from 'false'::jsonb
-      or jsonb_typeof(v_finance #> '{receipt,id}') is distinct from 'string' then
+      or jsonb_typeof(v_finance #> '{receipt,id}') is distinct from 'string'
+      or (v_finance #>> '{receipt,id}') !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then
       raise exception 'progression_financial_conflict';
     end if;
-    v_finance_id := (v_finance #>> '{receipt,id}')::uuid;
+    -- The reply must prove this exact committed child debit, not another receipt
+    -- from the same account or a successful-looking response with different fields.
+    select id into v_finance_id from public.island_treasury_transactions
+     where id = (v_finance #>> '{receipt,id}')::uuid and account_id = p_account_id
+       and run_epoch = p_run_epoch and actor_id = p_actor_id and action_uid = v_child_uid
+       and kind = 'spend' and reason = v_reason and reference = 'progression:'||v_child_uid
+       and balance_delta = -v_price and committed_delta = 0 and source_reservation_id is null;
+    if not found then raise exception 'progression_financial_conflict'; end if;
+    if v_finance -> 'receipt' is distinct from
+       (public.island_treasury_result(v_finance_id,false) -> 'receipt') then
+      raise exception 'progression_financial_conflict';
+    end if;
   end if;
   v_recovery := public.structure_recovery_mutation_begin(v_account.island_owner);
   if v_action = 'research' then
