@@ -14,6 +14,9 @@ through `island_economy_reset_treasury_locked`. Personal Captain progression sta
 personal. The replacement receives exactly the configured server starting grant;
 old cash, commitments, valid wagers and immutable receipts retain their original
 account and epoch. Exact historical retries do not replace the current run again.
+The public reset response always has `currentEconomy: null`: only a new canonical
+island GET may adopt the replacement. The private treasury helper retains its
+existing internal replacement projection; the public executor removes it.
 
 Account deletion remains one database transaction, including the established
 legacy crew handover and `auth.users` deletion. Deleting the owner of an admitted
@@ -85,6 +88,48 @@ checks passed in 4.93 seconds. The disposable runner applied all 95 migration
 files twice; the documented parser accepted those 95 files. These are schema and
 adapter checks, not an authenticated reset/deletion flow.
 
-Whole-backend Ruff currently reports two inherited duplicate declarations in the
-merged `server/tests/island_helpers.py` context fixture. This increment leaves
-that shared fixture to its owner and checks its own files separately.
+Whole-backend Ruff at the initial guard stage reported two inherited duplicate
+declarations in the merged `server/tests/island_helpers.py` context fixture.
+That increment left the shared fixture to its owner and checked its own files.
+
+## Executor checkpoint
+
+CLI-generated `20261118230046_shared_lifecycle_transactions.sql` composes the
+provided hooks. New service entries are `island_lifecycle_reset` and
+`island_lifecycle_delete_player`, plus the status guard. The established
+`delete_player(uuid)` enters the same private composition in legacy-only mode;
+it refuses shared-related actors. Its original crew handover/Auth implementation
+is retained privately, without a direct service grant.
+
+Deletion captures all held-copy owners, including legacy stock, actor-started
+legacy waves and authored checkpoint cleanup owners. Distinct signed Class 0
+keys precede account rows, the actor wallet, legacy crew/Auth rows and sorted
+personal anchors. A final actor `FOR UPDATE` fence prevents new FK references;
+changed discovery retries the whole guarded savepoint before domain effects.
+No lower-order scope is acquired late. Historical accounts, wave starters/owners,
+recovery owners and shared checkpoint actors retain their original UUIDs with
+live-parent checks on new records. Explicit legacy-only history purge preserves
+the original unadopted deletion semantics.
+
+The public reset result contains the original common receipt and
+`currentEconomy: null`. The immutable result retains the provided foundation's
+`newAccountId`, `newRunEpoch`, `retiredTreasury`, `startingCoins`, `grantReceiptId`,
+`grantPolicyVersion` and integer `effects`. Fresh canonical GET selects the
+replacement. Paused account deletion does not unpause; reset remains active-only.
+Pure legacy deletion adds no new permanent UUID disposition; missing Auth still
+fails the status guard immediately.
+
+The provided canonical controller, arsenal holder and paused-disposition fixes
+are local dependencies. The shared fixture duplicate noted above is resolved by
+its separately supplied integration fix. This checkpoint passed:
+
+- 64 lifecycle adapter, existing deletion-route and provided reset-parser checks
+  in 3.91 seconds.
+- 13 full-chain PostgreSQL lifecycle checks and 15 historical crew-version
+  regressions, **28 passed in 13.21 seconds**. The new checks use the actual
+  persisted authority without replacing it; seeded identities remain fixtures.
+- Whole-backend Ruff, 98-file migration parsing and whitespace checks.
+
+Actual native active-wave production/closure and the committed legacy-copy,
+wallet and inventory-expansion races remain follow-up checks. This checkpoint
+does not label those gates complete or imply provider-issued authentication.
