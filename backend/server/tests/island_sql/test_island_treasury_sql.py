@@ -33,7 +33,7 @@ def rpc(connection, name, *arguments):
 def ready(connection, coins=200, *, admitted=True):
     owner, member, outsider = uuid4(), uuid4(), uuid4()
     add_players(connection, owner, member, outsider)
-    alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
+    alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"  # pragma: allowlist secret (public code alphabet)
     number = owner.int
     code = "".join(alphabet[(number >> (5 * index)) % len(alphabet)] for index in range(5))
     open_island(connection, owner, code)

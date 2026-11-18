@@ -43,7 +43,9 @@ describe('wall tier identity across canonical artwork and consumers', () => {
       if (consumer === 'world') { drawing.setArt(art); drawing.show([row]); }
       else drawing.show([row], [{id: row.id, hp: {intact: 100, damaged: 40, broken: 0}[look], maxHp: 100}]);
       let uv;
-      root.traverse(mesh => { if (mesh.isMesh) uv = Array.from(mesh.geometry.getAttribute('uv').array).slice(-8); });
+      root.traverse(mesh => {
+        if (mesh.name.startsWith('wall-art-layer:')) uv = Array.from(mesh.geometry.getAttribute('uv').array).slice(-8);
+      });
       const frame = rects[canonical(level, look)];
       const u0 = (frame.x + .5) / 512, u1 = (frame.x + frame.w - .5) / 512;
       const v0 = 1 - (frame.y + frame.h - .5) / 512, v1 = 1 - (frame.y + .5) / 512;

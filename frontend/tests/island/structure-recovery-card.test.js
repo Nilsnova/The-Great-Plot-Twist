@@ -10,11 +10,11 @@ const wall = {spot: 'wall_1', instanceId, kind: 'wall', level: 1, hpUnits: 750_0
   rateUnitsPerSecond: 1_666.67, estimatedFreeSeconds: 150, fixedPrice: 10, repairSeq: 0};
 
 describe('structure recovery card model', () => {
-  it('shows server HP, free ETA and fixed price for a damaged built structure', () => {
+  it('shows server HP, wave-end full repair and fixed price for a damaged built structure', () => {
     const model = buildCardModel({spotId: 'wall_1', slot: 'wall', spot: {id: 'wall_1', kind: 'wall', built: true, level: 1},
       recoveryState: recoveryState(wall), recoveryStatus: 'ready'});
     expect(model.recovery).toMatchObject({visible: true, hpLabel: '45 / 60 HP',
-      repairLabel: 'Repair now: pay 10 coins', freeRepairLabel: 'Or wait about 2 min 30 sec for free repair'});
+      repairLabel: 'Repair now: pay 10 coins', helperLabel: null});
     expect(model.mode).toBe('upgrade');
   });
 
@@ -22,7 +22,8 @@ describe('structure recovery card model', () => {
     const model = buildCardModel({spotId: 'wall_1', slot: 'wall', spot: {id: 'wall_1', kind: 'wall', built: true, level: 1},
       recoveryState: recoveryState({...wall, hpUnits: 0}, {displayPhase: 'preparing', repairWindow: 'reserved_wave', waveId: '12345678-1234-4234-8234-123456789abc', remainingPaidUses: 2}),
       recoveryStatus: 'ready'});
-    expect(model.recovery).toMatchObject({automaticRepairPaused: true, freeRepairLabel: null, remainingUsesLabel: '2 Repair now uses left this wave'});
+    expect(model.recovery).toMatchObject({hpLabel: '0 / 60 HP', repairLabel: 'Repair now: pay 10 coins', quotedPrice: 10,
+      statusLabel: null, helperLabel: null, remainingUsesLabel: '2 shared Repair now uses left this wave'});
     expect(model.recovery.repairIntent.expectedWaveId).toBe('12345678-1234-4234-8234-123456789abc');
   });
 
@@ -35,10 +36,14 @@ describe('structure recovery card model', () => {
     expect(point.recovery).toBeUndefined();
   });
 
-  it('uses the recovery-v1 Quick Mend wording on a built wall card', () => {
+  it('hides retired Quick Mend as a new choice while keeping saved choices legible', () => {
     const campaign = {wave: 8, open: new Set(['tech_hub']), research: {done: new Set(['wall']), tiers: {}}};
     const model = buildCardModel({spotId: 'wall_1', slot: 'wall', spot: {id: 'wall_1', kind: 'wall', built: true, level: 1},
       campaign, coins: 500, recoveryVersion: 1});
-    expect(model.skills.choices.find(item => item.id === 'quick_mend').line).toBe('This wall mends twice as fast between waves.');
+    expect(model.skills.choices.map(item => item.id)).not.toContain('quick_mend');
+    const saved = buildCardModel({spotId: 'wall_1', slot: 'wall', spot: {id: 'wall_1', kind: 'wall', built: true, level: 1, spec: 'quick_mend'},
+      campaign, coins: 500, recoveryVersion: 1});
+    expect(saved.skills).toMatchObject({title: 'Stored skill: Quick mend', line: 'This saved choice remains recorded but no longer affects repair.'});
+    expect(saved.skills.choices.map(item => item.id)).not.toContain('quick_mend');
   });
 });

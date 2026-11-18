@@ -11,6 +11,7 @@ import {ALL_SPOTS, offeredSpots, spotById, ISLAND_PLACE} from './spots.js';
 import {surfaceClass} from '../world/places/surfaces.js';
 import {WALL_LANE_ROWS} from './wall-lanes.js';
 import {WALL_OBSTACLES} from './wall-obstacles.js';
+import {addedWallRow} from './wall-rows.js';
 export {WALL_OBSTACLES};
 
 export const GRID = 0.5;
@@ -76,7 +77,12 @@ export function checkMove(spotId, x, z, positions = positionsOf()) {
   }
   const other = Object.entries(positions).find(([id, where]) => id !== spotId && overlaps(moved, boxOf(id, where)));
   if (other) return refuse('place_taken', 'Another building stands there.');
-  if (!routeOpen({...positions, [spotId]: {x, z}})) return refuse('blocks_route', 'That would wall the heart in. Leave the pirates a way through.');
+  const final = {...positions, [spotId]: {x, z}};
+  if (spotById(spotId).slot === 'wall') {
+    const walls = placed => ALL_SPOTS.filter(spot => spot.slot === 'wall').map(spot => placed[spot.id]).filter(Boolean);
+    if (addedWallRow(walls(positions), walls(final), HEART)) return refuse('wall_rows', 'Use at most three wall rows per approach. Align pieces to share a row.');
+  }
+  if (!routeOpen(final)) return refuse('blocks_route', 'That would wall the heart in. Leave the pirates a way through.');
   return {ok: true};
 }
 

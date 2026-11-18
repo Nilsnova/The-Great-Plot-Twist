@@ -32,7 +32,7 @@ Remove manual Captain E repair/rebuild, repair-only Shipwright skills, and the E
 
 ## Visual and player-facing behavior for T59
 
-Reuse pixel-style proportional health bars for damaged supported structures; hide full bars. At zero show an empty bar, small `!` and existing ruin appearance. Preserve tiny positive HP accurately. Cards show exact HP, fixed price and shared remaining uses during reservations, explaining full free repair at wave end. Do not show a gradual-repair ETA or wait action. Full HP hides repair offers. While canonical health is unavailable, Upgrade stays visible, grey and disabled with a small loading explanation; ready health restores normal full-HP/phase guards. Ignore stale island/epoch/instance responses and refetch. UI captures must declare their fixture/transport limits.
+Reuse pixel-style proportional health bars for damaged supported structures; hide full bars. At zero show an empty bar, small `!` and existing ruin appearance. Preserve tiny positive HP accurately. Cards show exact HP and fixed price; during reservations they also show shared remaining uses. Do not show a countdown, wave-end explanatory sentence, gradual-repair ETA or wait action. Full HP hides repair offers. While canonical health is unavailable, Upgrade stays visible, grey and disabled with a small loading explanation; ready health restores normal full-HP/phase guards. Ignore stale island/epoch/instance responses and refetch. UI captures must declare their fixture/transport limits.
 
 ## Approved T54 technical contract
 
@@ -172,7 +172,7 @@ The issues remain claimed by Ianno. T54 is complete; T55–T60 are authorized an
 | T56 | Paid instant repair | Atomic Repair now, fixed incremental price, per-island-wave shared three-use quota, wallet and receipt idempotency. |
 | T57 | Repair behavior during waves | Enforce pause during waves, offline phase rules, destroyed gate, safe firing/obstacle behavior, legacy-wave parity. |
 | T58 | Captain skills and wall research | Retire obsolete repair-only purchases/roles; preserve Bastion HP, Engineer discount, stored history and unrelated progression. |
-| T59 | Repair cards and feedback | Health bars, exact HP, fixed price/quota, full wave-end restoration wording, obsolete-offer removal, loading/errors and accurate help. |
+| T59 | Repair cards and feedback | Health bars, exact HP, fixed price/quota, no card countdown or wave-end explanation, obsolete-offer removal, loading/errors and accurate help. |
 | T60 | Repair tests and balance | Lifecycle, persistence, concurrency, multiplayer, UI, migration and balance verification plus staged rollout readiness. |
 
 Coordinate unrelated T50 ship damage, T52 preparation/tutorial UI and T53 island reset. Each future implementation task has its own branch and review. No player guide is to be rewritten as though future behavior has shipped; update player-facing docs only with T59 after implementation.
@@ -184,7 +184,7 @@ Coordinate unrelated T50 ship damage, T52 preparation/tutorial UI and T53 island
 - Preserve fixed current-base-level prices across missing HP/payers, wall 10/20/40/80/160; no Engineer/Tech discount. Three successes shared per reservation UUID, racing fourth/last slot, failed actions with no charge/use and a fresh allowance next reservation. Normal between-wave intact targets refuse without charge.
 - Same-UID retry after new damage returns immutable receipt plus current state without a second heal/charge/use. Cover phase/level/instance/epoch boundaries, stale quote rejection, reset/demolition/finish/payment races, contribution accounting and retained history.
 - New v1 Carpenter/Workshop/Quick Mend/Mason Drill requests refuse before spending/progression; old stored IDs do not block unrelated actions or admission. Bastion +50% HP, Engineer discount, Captain/Tavern healing and other crew/house/research choices remain valid.
-- UI shows proportional damaged/zero/tiny-positive HP, price/shared allowance, full restoration at wave end and no obsolete ETA/rate offers. Full HP hides repair; unavailable canonical health keeps Upgrade visibly disabled. Preserve stale-response/retry handling and genuine screenshot limits.
+- UI shows proportional damaged/zero/tiny-positive HP and price/shared allowance, without a countdown, wave-end explanatory sentence or obsolete ETA/rate offers. Full HP hides repair; unavailable canonical health keeps Upgrade visibly disabled. Preserve stale-response/retry handling and genuine screenshot limits.
 - Two-client ordering, reconnect, late join, duplicate/reordered events and canonical close agree. Run documented relevant backend/frontend/SQL/browser checks and record exact results; historical evidence does not prove the revised rule or a production release.
 
 ## Known limits and gate

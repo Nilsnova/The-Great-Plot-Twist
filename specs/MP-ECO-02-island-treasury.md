@@ -92,3 +92,20 @@ After updating to main `77a9e34d`, the focused Python suite passed **62 tests in
 The new treasury schema uses `20261118050050_island_treasury.sql`. Main already contains `20261118050000_retired_recovery_options.sql`; Supabase identifies migrations by timestamp, so different suffixes do not make that old version reusable. Only this unmerged treasury migration was renamed; the main retirement migration and treasury SQL contents are unchanged. No live migration was applied.
 
 The new repository check reproduced the duplicate-version failure before the rename. Final checks against main `03e660fe`: **63 Python tests in 2.50s**, **89 mixed-order PostgreSQL tests in 24.04s**, full Ruff, and **68 unique migration versions parsed**. The full-chain fixture applies migrations twice. Documentation references and whitespace checks pass.
+
+After reconciling with `origin/main` `b357b522` on 18 Nov 2026, the current focused Python run
+passed **63 tests** (including the migration-version guard), the disposable mixed-order PostgreSQL
+run passed **89 tests** (54 treasury/registry/cutover and 35 legacy host-console/island cases),
+Ruff passed and `pglast` parsed **71 migrations**. The PostgreSQL fixture applies the complete
+chain twice using disposable Unix-socket clusters. Local Markdown links resolve in 28 changed
+Markdown files. No full-backend or frontend suite was repeated; these checks do not exercise a
+live database, runtime admission, deployment or feature activation. The two EOF blank-line
+findings from incoming main evidence files remain unchanged and are recorded in the branch handoff.
+
+The committed-diff entropy scanner initially flagged the deterministic public test alphabet used to
+make repeatable island codes. It is explicitly allowlisted at that one literal with its purpose; the
+committed-diff scan then reports zero findings. No credential is embedded.
+
+After the narrowly scoped allowlist annotation, `python3 scripts/check-diff-secrets.py` reported
+**0 findings** and Ruff passed on the annotated test file. This comment-only annotation did not
+change the fixture's alphabet; the functional suites above remain the results for that same code.
