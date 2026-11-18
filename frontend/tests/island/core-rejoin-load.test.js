@@ -174,4 +174,16 @@ describe('actual returned-island current-wave authority', () => {
     });
 
   });
+
+  it('a landing join whose wave read the load superseded asks to be tried again instead of never joining', async () => {
+    const h = harness(); await h.island.load(); h.travel();
+    const first = h.defer(), joining = h.island.joinRunningWave(); await first.asked;
+    const second = h.defer(), loading = h.island.load(); await second.asked;
+    first.resolve({ok: true, data: INFO});
+    expect(await joining).toMatchObject({ok: false, code: 'busy'});
+    second.resolve({ok: true, data: INFO}); await loading;
+    expect(h.island.flow.current).toMatchObject({joined: false, wave: {waveId: INFO.waveId}});
+    h.defer().resolve({ok: true, data: INFO});
+    expect(await h.island.joinRunningWave()).not.toBeNull(); // the retry asks the server to join
+  });
 });

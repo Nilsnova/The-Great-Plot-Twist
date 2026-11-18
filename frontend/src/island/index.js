@@ -1404,8 +1404,12 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       if (disposed || !target()) return null;
       if (visitCode && !(await joinFirst(visitCode))) return null; // a friend's wave: join the game first
       if (disposed || !target()) return null;
-      await flow.look(where());
-      return flow.current && !flow.current.joined ? flow.join(where()) : null;
+      const looked = await flow.look(where());
+      if (flow.current && !flow.current.joined) return flow.join(where());
+      // A newer read of the current wave (the landing's own, after a reload) made this answer stale before it
+      // was shown: 'busy' makes the wave wiring try again in a moment instead of never joining.
+      if (!flow.current && looked?.ok && looked.data) return {ok: false, status: 0, code: 'busy', message: 'The wave is still being read.'};
+      return null;
     },
     refreshDefended,
     // Captain health (GAME-V3.md §3): you stand a fallen teammate up and pay for it (your coins follow).
