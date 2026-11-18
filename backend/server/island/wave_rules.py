@@ -69,7 +69,12 @@ async def rules_for_wave(
     """The rules of this wave: kept by its first answer (an empty set too), the same for every
     later one whatever the flags say now. None when the wave keeps no rule (the key is then left
     out) or when keeping fails."""
-    arguments = {"p_wave_id": str(wave.wave_id), "p_rules": wanted_rules(settings)}
+    requested = wanted_rules(settings)
+    if wave.recovery_version == 1 and isinstance(wave.initial_snapshot, dict):
+        frozen = wave.initial_snapshot.get("rules")
+        if isinstance(frozen, list) and all(isinstance(name, str) for name in frozen):
+            requested = [name for name in SIM_RULES if name in frozen]
+    arguments = {"p_wave_id": str(wave.wave_id), "p_rules": requested}
     try:
         kept = read_model(KeptRules, await admin.call_function("wave_rules_keep", arguments))
     except ApiError as error:
