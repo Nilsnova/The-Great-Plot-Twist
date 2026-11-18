@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import {projectPoint} from '../world/art.js';
 import {FOOTPRINTS} from './placement.js';
 import {texturedWallBatches, wallVisualRows} from './wall-batches.js';
+import {makeWallFooting} from './wall-footing.js';
 import {spriteMaterial} from '../art/textures.js';
 
 export function wallTopology(spots = []) {
@@ -25,6 +26,7 @@ export function wallTopology(spots = []) {
 const COLOURS = [0xc98a4e, 0xcfc8bb, 0xa9a39a, 0xffcf3f, 0xffcf3f];
 export function makeWallConnections(root) {
   const group = new THREE.Group(); group.name = 'island-wall-connections'; root.add(group);
+  const footing = makeWallFooting(root);
   let material = new THREE.MeshBasicMaterial({vertexColors: true, transparent: true, side: THREE.DoubleSide, depthTest: false, depthWrite: false, toneMapped: false});
   let key = null, disposed = false, art = null, lastSpots = [], posts = new Set(), current = {links: [], connected: new Set()};
   let selectedId = null;
@@ -43,6 +45,7 @@ export function makeWallConnections(root) {
     if (key === next) return current;
     key = next; clear();
     if (art) {
+      footing.show(visual, current.links);
       // Selection retains its real tier post at the ordinary depth; the world owns the tile bracket.
       for (const [order, {positions, uvs, indices}] of texturedWallBatches(current.links, visual, art, {selectedId})) {
         const geometry = new THREE.BufferGeometry();
@@ -104,5 +107,5 @@ export function makeWallConnections(root) {
       // These are camera-facing quads; a second transparent back-face pass adds no surface.
       material.forceSinglePass = true; key = null; show(lastSpots); return true;
     },
-    dispose() { if (disposed) return; disposed = true; clear(); material.dispose(); if (art?.ownsTexture) art.texture.dispose(); root.remove(group); }};
+    dispose() { if (disposed) return; disposed = true; clear(); footing.dispose(); material.dispose(); if (art?.ownsTexture) art.texture.dispose(); root.remove(group); }};
 }

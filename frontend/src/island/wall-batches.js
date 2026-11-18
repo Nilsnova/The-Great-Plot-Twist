@@ -7,6 +7,9 @@ const UNIT = 16;
 // The tallest cap is 1.30+.6*.28+.02=1.488, below the scaled L5 solid post top.
 const HEIGHTS = [.85, .95, 1.10, 1.20, 1.30], HALF = .28;
 const POST_WIDTH = .60, POST_HEIGHT = .65;
+const END = .84;
+// The pale stone sheet starts another bright course at the bottom of the existing face samples.
+const PALE_STONE_BASE_INSET = {front: 1 / 12, side: 1 / 16};
 export function wallVisualRows(spots = []) {
   return spots.filter(row => row?.built === true && row.kind === 'wall' && typeof row.id === 'string'
     && Number.isFinite(row.x) && Number.isFinite(row.z)).map(row => ({id: row.id, x: row.x, z: row.z,
@@ -21,12 +24,13 @@ export function texturedWallBatches(links, posts, art, {selectedId = null, selec
     if (!layers.has(order)) layers.set(order, {positions: [], uvs: [], indices: []});
     return layers.get(order);
   };
-  function quad(layer, points, id) {
+  function quad(layer, points, id, baseInset = 0) {
     const frame = art.rects[id]; if (!frame) return;
     const first = layer.positions.length / 3;
     for (const [x, y] of points) layer.positions.push(x, y, 0);
     const u0 = (frame.x + .5) / art.width, u1 = (frame.x + frame.w - .5) / art.width;
-    const v0 = 1 - (frame.y + frame.h - .5) / art.height, v1 = 1 - (frame.y + .5) / art.height;
+    const v1 = 1 - (frame.y + .5) / art.height;
+    const v0 = 1 - (frame.y + frame.h - .5) / art.height + (frame.h - 1) * baseInset / art.height;
     layer.uvs.push(u0, v0, u1, v0, u1, v1, u0, v1);
     layer.indices.push(first, first + 1, first + 2, first, first + 2, first + 3);
   }
@@ -37,7 +41,7 @@ export function texturedWallBatches(links, posts, art, {selectedId = null, selec
     const z0 = Math.min(link.z0, link.z1) - (vertical ? 0 : half), z1 = Math.max(link.z0, link.z1) + (vertical ? 0 : half);
     const face = (points, lift, name) => quad(layer, points.map(([x, z, raised = lift]) => {
       const point = projectPoint(x, z); return [point.x, point.y + raised];
-    }), wallSurfaceFrame(link.level, name));
+    }), wallSurfaceFrame(link.level, name), link.level === 2 ? PALE_STONE_BASE_INSET[name] : 0);
     face([[x0,z0],[x1,z0],[x1,z1],[x0,z1]], height, 'top');
     face([[x0,z1,0],[x1,z1,0],[x1,z1,height],[x0,z1,height]], 0, 'front');
     face([[x1,z0,0],[x1,z1,0],[x1,z1,height],[x1,z0,height]], 0, 'side');
@@ -56,8 +60,10 @@ export function texturedWallBatches(links, posts, art, {selectedId = null, selec
       .map(link => byId.get(link.a === post.id ? link.b : link.a));
     if (post.look !== 'broken' && neighbors.length < 2) {
       const neighbor = neighbors[0];
-      span(neighbor ? {x0: post.x, z0: post.z, x1: post.x + (post.x-neighbor.x)/2, z1: post.z + (post.z-neighbor.z)/2, level: post.level}
-        : {x0: post.x-1, z0: post.z, x1: post.x+1, z1: post.z, level: post.level}, layer);
+      // The free ends leave a little air inside their tiles. Full contacts keep their exact join.
+      span(neighbor ? {x0: post.x, z0: post.z, x1: post.x + END * (post.x-neighbor.x)/2,
+        z1: post.z + END * (post.z-neighbor.z)/2, level: post.level}
+        : {x0: post.x-END, z0: post.z, x1: post.x+END, z1: post.z, level: post.level}, layer);
     }
     const straight = post.look === 'intact' && neighbors.length === 2 && neighbors.every(row => row.level === post.level)
       && neighbors[0].x + neighbors[1].x === post.x * 2 && neighbors[0].z + neighbors[1].z === post.z * 2;

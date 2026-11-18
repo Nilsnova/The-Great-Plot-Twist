@@ -118,7 +118,10 @@ describe('connected wall tier detail', () => {
       battle.show(rows,rows.map(({id})=>({id,hp,maxHp:100})));
       const buffers=group=>{const result=[];group.traverse(mesh=>{if(mesh.geometry)result.push([mesh.renderOrder,
         Array.from(mesh.geometry.attributes.position.array),Array.from(mesh.geometry.attributes.uv.array),Array.from(mesh.geometry.index.array)]);});return result;};
-      expect(buffers(battle.root??root.getObjectByName('pirates:wall-connections'))).toEqual(buffers(world.root));
+      const battleGroup = root.getObjectByName('pirates:wall-connections');
+      expect(buffers(battleGroup.getObjectByName('island-wall-connections'))).toEqual(buffers(world.root));
+      expect(Array.from(battleGroup.getObjectByName('wall-ground-contact').geometry.attributes.position.array))
+        .toEqual(Array.from(root.children.find(object => object.name === 'wall-ground-contact').geometry.attributes.position.array));
       world.dispose();battle.dispose();
     }
     art.texture.dispose();

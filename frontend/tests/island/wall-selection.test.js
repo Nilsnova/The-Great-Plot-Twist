@@ -61,7 +61,11 @@ describe('selected walls retain ordinary painter depth', () => {
     expect(postAt(drawing,art,wallFrame(3),2)).toHaveLength(0);
     const prop = new THREE.Mesh(new THREE.PlaneGeometry(3,5),new THREE.MeshBasicMaterial());
     prop.name = 'foreground-tree'; prop.renderOrder = 103; root.add(prop); drawing.select('b');
-    expect(obsoleteOverlay(root)).toBeUndefined(); expect(root.children).toEqual([drawing.root,prop]);
+    expect(obsoleteOverlay(root)).toBeUndefined();
+    const ground = root.getObjectByName('wall-ground-contact');
+    expect(root.children).toEqual([drawing.root,ground,prop]);
+    expect(ground.renderOrder).toBeLessThan(drawing.root.children[0].renderOrder);
+    expect(ground.material.depthWrite).toBe(false);
     expect(drawing.root.children.map(mesh => mesh.renderOrder)).toEqual(orders);
     expect(drawing.links).toEqual(topology); expect(rows).toEqual(before);
     const selectedPost = postAt(drawing,art,wallFrame(3),2);

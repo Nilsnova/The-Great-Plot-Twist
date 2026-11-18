@@ -37,6 +37,31 @@ describe('dimensional wall artwork contract', () => {
     expect(rows).toEqual(before); expect(batch.indices.slice(-6).map(value => value - batch.positions.length/3 + 4)).toEqual([0, 1, 2, 0, 2, 3]);
     expect(batch.uvs.every(value => value >= 0 && value <= 1)).toBe(true);
   });
+  it('insets free ends and keeps ground contact inside the accepted tile without extra picking targets', () => {
+    const root = new THREE.Group(), drawing = makeWallConnections(root);
+    drawing.setArt(art());
+    drawing.show([wall('a', 0, 0)]);
+    const facePositions = drawing.root.children[0].geometry.getAttribute('position');
+    for (let at = 0; at < 16; at++) expect(Math.abs(facePositions.getX(at))).toBeLessThan(1.2);
+    const ground = root.getObjectByName('wall-ground-contact'), original = ground.geometry;
+    const position = original.getAttribute('position'), colour = original.getAttribute('color');
+    const dispose = vi.spyOn(original, 'dispose');
+    for (let at = 0; at < position.count; at++) {
+      const z = -position.getY(at) / .6, x = (position.getX(at) - .2 * z) / 1.3;
+      expect(Math.max(Math.abs(x), Math.abs(z))).toBeLessThan(1);
+      expect(colour.getW(at)).toBeCloseTo(at === 0 ? .26 : 0);
+    }
+    const hits = [];
+    ground.raycast(new THREE.Raycaster(), hits);
+    expect(hits).toEqual([]);
+    drawing.select('a');
+    expect(ground.geometry).toBe(original);
+    drawing.show([]);
+    expect(ground.visible).toBe(false);
+    drawing.dispose();
+    expect(dispose).toHaveBeenCalledOnce();
+    expect(root.children).toHaveLength(0);
+  });
   it('batches the measured 102 posts while retaining all106 real joins and their exact depth orders', () => {
     const rows = ring.map(([x, z], i) => wall(`wall_${i+1}`, x, z, i % 5 + 1));
     const topology = wallTopology(rows), layers = texturedWallBatches(topology.links, wallVisualRows(rows), art());
