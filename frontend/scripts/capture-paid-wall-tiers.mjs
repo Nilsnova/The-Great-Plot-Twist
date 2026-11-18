@@ -227,7 +227,7 @@ async function screenshot(page, name) {
   // The bulk fixture can trigger the normal adaptive density budget. A real viewport refresh
   // restores full density without lowering graphics quality or changing game state.
   const before = await page.evaluate(() => ({rendering: {...window.__island.renderer.userData},
-    selected: window.__island.island.selection.spotId}));
+    selected: window.__island.island.selection?.spotId ?? null}));
   const viewport = page.viewportSize();
   await page.setViewportSize({width: viewport.width + 1, height: viewport.height});
   await page.waitForTimeout(16);
@@ -238,7 +238,7 @@ async function screenshot(page, name) {
     return {camera: g.camera.position.toArray(), zoom: g.camera.zoom, captain: g.player.position.toArray(),
       drawCalls: g.renderer.info.render.calls, contextLost: g.renderer.getContext().isContextLost(),
       quality: g.renderer.userData.quality, rendering: {...g.renderer.userData},
-      selected: g.island.selection.spotId, pixelRatio: g.renderer.getPixelRatio()};
+      selected: g.island.selection?.spotId ?? null, pixelRatio: g.renderer.getPixelRatio()};
   });
   assert.equal(frame.contextLost, false); assert.ok(frame.drawCalls > 0);
   assert.equal(frame.quality, 'high', 'proof retains high graphics quality');
