@@ -77,6 +77,7 @@ async def prepare_shared_wave(
         catalogue, spots, facts.crew.model_dump(), research, weather, seed, kept_rules, revision,
     )
     template["createWave"]["seed"] = seed
+    template["weatherLabel"] = weather.label
     template["expectedSource"] = expected_source(facts)
     played = rules.next_wave(catalogue, facts.waveBest, facts.nextWave)
     houses = sum(row.level for row in facts.buildings if row.kind == "house")

@@ -50,6 +50,7 @@ async def test_shared_static_template_and_cas_come_from_one_snapshot_without_wal
     assert template["expectedSource"] == expected_source(facts)
     assert template["expectedRevision"] == 3
     assert template["createWave"]["seed"] == 4242
+    assert template["weatherLabel"] == weather_for(load_island(), "calm").label
     assert template["createWave"]["crew"] == raw_snapshot()["crew"]
     assert (template["createWave"]["defenses"][0]["x"],
             template["createWave"]["defenses"][0]["z"]) == (-18, -1)
