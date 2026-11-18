@@ -1250,13 +1250,24 @@ export function createWave(options = {}) {
     const T = C.tiers.brutes, every = tier.brutes > 0 ? Math.max(1, Math.round(1 / tier.brutes)) : 0;
     const brute = every > 0 && nextBoarderId % every === 0;
     const hp = Math.round(B.hp * curve.hp * (brute ? T.hp : 1) * 10) / 10;
-    const startX = ship.x + (landing.x - ship.x) * .25, startZ = ship.z + (landing.z - ship.z) * .25;
-    const boarder = { id: `boarder_${nextBoarderId++}`, boarder: true, shipId: ship.id, x: startX, z: startZ, vx: 0, vz: 0,
+    const start = { x: ship.x + (landing.x - ship.x) * .25, z: ship.z + (landing.z - ship.z) * .25 };
+    // A coastal wall can cover the spawn before stepClear ever runs. Approach from offshore so even a
+    // ship anchored next to the wall puts its boarders on the seaward side.
+    if (paths && wallsInOrder.some(wall => wall.hp > 0 && edgeDistance(start, wall) === 0)) {
+      const offshore = coastPoint(ship.a, C.spawnRadius, coast);
+      const hit = wallInWay(offshore, start, wallsInOrder);
+      if (hit) {
+        const share = Math.max(0, hit.t - 1e-6);
+        start.x = offshore.x + (start.x - offshore.x) * share;
+        start.z = offshore.z + (start.z - offshore.z) * share;
+      }
+    }
+    const boarder = { id: `boarder_${nextBoarderId++}`, boarder: true, shipId: ship.id, x: start.x, z: start.z, vx: 0, vz: 0,
       hp, maxHp: hp, speed: round2(B.speed * curve.speed * (brute ? T.speed : 1)), hack: round2(B.hack * curve.damage * (brute ? T.hack : 1)),
       damage: round2(B.heartDamage * curve.damage * (brute ? T.heart : 1)),
       route, leg: 0, goal: null, side, state: 'walking', wallId: null, hackIn: 0, facing: landing.x < ship.x ? -1 : 1, ...(brute ? { brute: true } : {}) };
     boarders.push(boarder); landed++;
-    events.push({ type: 'boarder_landed', t: now(), boarderId: boarder.id, shipId: ship.id, hp, x: round2(startX), z: round2(startZ),
+    events.push({ type: 'boarder_landed', t: now(), boarderId: boarder.id, shipId: ship.id, hp, x: round2(start.x), z: round2(start.z),
       left: ship.crew });
   }
   // The point a boarder walks to for one leg: a wall's is just in front of it on the side the boarder comes
