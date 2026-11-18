@@ -44,6 +44,14 @@ test-only PostgreSQL support. No public routes, frontend, feature flags, account
 deletion, treasury implementation, shared INTERFACES or Supabase README edits.
 No live database, migration application, feature activation or deployment.
 
+Two existing structure-read route tests still expect the general construction
+price table. The version-one health manifest and read DTO support exactly wall,
+cannon, mortar, harpoon, swivel and culverin; house/watchtower are not repairable,
+and saved culverins retain their prices when new availability is disabled. Correct
+only those stale expectations to explicit catalogue increments for these six
+kinds. Preserve their membership, canonical wire and no-wallet assertions. Record
+the reproduced pre-existing failures separately from the corrected test run.
+
 ## Acceptance checks and tests first
 
 - A new 5,001-digit snapshot and signed-delta regression fails with the old `int`
