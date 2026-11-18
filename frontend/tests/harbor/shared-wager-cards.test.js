@@ -7,6 +7,7 @@ const evaluate = browserHarness();
 it('uses exact all-in above Number limits and publishes only the verified island origin', async () => {
   const result = await evaluate(async () => {
     const {createSharedMarketEntry} = await window.g20Import('/src/harbor/shared-market-card.js');
+    const {acceptedWager} = await window.g20Import('/tests/harbor/shared-wager-fixtures.js');
     const uuid = n => `00000000-0000-0000-0000-${String(n).padStart(12, '0')}`;
     let economy = {mode: 'island_shared', version: 1, islandOwner: uuid(1), accountId: uuid(3),
       runEpoch: uuid(4), revision: '1', treasury: {balanceCoins: '9007199254740993123', committedCoins: '0', availableCoins: '9007199254740993123'}};
@@ -16,8 +17,7 @@ it('uses exact all-in above Number limits and publishes only the verified island
     post: async (path, body, options) => {
       sent.push({path, body, options});
       const next = {...economy, revision: '2', treasury: {...economy.treasury, committedCoins: body.stake, availableCoins: '0'}};
-      return {ok: true, status: 200, data: {currentEconomy: next, receipt: {action: 'island_bet', actionUid: body.actionUid,
-        actorId: uuid(2), origin: economy, result: {wager: {product: 'market_call', eventId: body.asset, selection: body.direction, stake: body.stake}}}}};
+      return acceptedWager(body, economy, uuid(2), next);
     }};
     const card = createSharedMarketEntry({api, getEconomy: () => economy, getActorId: () => uuid(2),
       onEconomy(next, origin) { accepted.push(origin.accountId); economy = next; }});
@@ -47,7 +47,7 @@ it('keeps an unknown operation after closing and retries the exact body without 
       revision: '1', treasury: {balanceCoins: '100', committedCoins: '0', availableCoins: '100'}};
     const sent = [];
     const api = {get: async () => ({ok: true, data: {economy, product: 'football', items: [], nextCursor: null,
-      choices: [{id: 'fd-123', name: 'Home v Away', open: true, options: [{id: 'home', label: 'Home'}, {id: 'away', label: 'Away'}]}]}}),
+      choices: [{id: 'fd-123', name: 'Home v Away', open: true, options: [{id: 'home', label: 'Home'}, {id: 'draw', label: 'Draw'}, {id: 'away', label: 'Away'}]}]}}),
       post: async (_path, body) => { sent.push(structuredClone(body)); return {ok: false, status: 0}; }};
     const make = () => createSharedMatchEntry({api, getEconomy: () => economy, getActorId: () => id(2)});
     let card = make(); await card.open();

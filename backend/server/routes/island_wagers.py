@@ -88,7 +88,7 @@ async def choices(request: Request, product: str, admin) -> list[dict]:
                              {"id": "draw", "label": "Draw"},
                              {"id": "away", "label": match.away}]}
                 for match in board.matches
-                if match.sport == "football" and match.id.startswith("fd-")]
+                if match.sport == "football" and match.id.startswith("fd-")][:100]
     except ApiError:
         return []
 
@@ -102,6 +102,7 @@ async def get_wagers(
     cursor: Annotated[UUID | None, Query()] = None,
 ) -> dict:
     require_request(request, settings, product)
+    request.app.state.call_read_budget.spend(player.id)
     page = await wager_reads.read_page(admin, player.id, str(islandOwner), product,
                                       epoch=str(runEpoch) if runEpoch else None,
                                       cursor=str(cursor) if cursor else None)
@@ -115,6 +116,7 @@ async def post_market(
     admin: AdminDep,
 ) -> dict:
     require_request(request, settings, "market_call")
+    request.app.state.call_budget.spend(player.id)
     if body.economy is None:
         raise ApiError(409, "economy_context_required", "Reload this island's economy context.")
     root_action_uid(body.actionUid)
@@ -134,6 +136,7 @@ async def post_football(
     admin: AdminDep,
 ) -> dict:
     require_request(request, settings, "football")
+    request.app.state.call_budget.spend(player.id)
     if body.economy is None:
         raise ApiError(409, "economy_context_required", "Reload this island's economy context.")
     root_action_uid(body.actionUid)

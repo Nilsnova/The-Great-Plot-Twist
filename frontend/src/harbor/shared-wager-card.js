@@ -99,7 +99,7 @@ export function createSharedWagerCard(ctx = {}, product) {
       if (!page.choices.length) nodes.push(el('p', 'harbor-quiet', 'Live events are unavailable. Your existing stakes remain recorded.'));
       const activity = el('section', 'harbor-own'); activity.append(el('h3', 'harbor-own-title', 'Island stakes'));
       for (const item of items) activity.append(el('p', 'shared-harbor-activity',
-        `${item.actorName}: ${item.home && item.away ? `${item.home} v ${item.away}` : item.eventId} · ${item.selection} · ${coinsText(item.stake)} · ${item.status}${item.payout !== null ? ` · returned ${coinsText(item.payout)}` : ''}`));
+        `${item.actorName}: ${item.eventName ?? (item.home && item.away ? `${item.home} v ${item.away}` : 'Market call')} · ${item.selection} · ${coinsText(item.stake)} · ${item.status}${item.payout !== null ? ` · returned ${coinsText(item.payout)}` : ''}`));
       nodes.push(activity);
       if (page.nextCursor) nodes.push(button('More island activity', () => void refresh(page.nextCursor)));
     }
