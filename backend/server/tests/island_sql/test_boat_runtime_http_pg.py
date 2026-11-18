@@ -16,6 +16,7 @@ from psycopg import sql  # noqa: E402
 from server.app import create_app  # noqa: E402
 from server.auth import PlayerVerifier  # noqa: E402
 from server.flags import parse_flags  # noqa: E402
+from server.tests.economy_test_authority import configure_test_authority  # noqa: E402
 from server.tests.helpers import CONFIGURED_SETTINGS, FakeClock  # noqa: E402
 from server.tests.island_helpers import CALM, FakeWeather  # noqa: E402
 from server.tests.island_sql.test_boat_runtime_sql import (  # noqa: E402,F401
@@ -38,6 +39,7 @@ class LocalAdmin:
 
     async def call_function(self, name, parameters):
         assert name in {
+            "island_economy_context",
             "island_boat_runtime_status",
             "island_legacy_boat_reward",
             "island_shared_boat_start",
@@ -174,3 +176,56 @@ def test_http_capability_auth_strict_intent_and_legacy_fallback_guards(database)
             legacy.status_code == 409
             and legacy.json()["error"]["code"] == "economy_context_required"
         )
+
+
+def test_bell_during_completion_refuses_without_consuming_uid_and_same_score_can_retry(database):
+    owner, member, _, initial = setup(database, admitted=True)
+    headers = {"Authorization": "Bearer test.member.signature", "X-Island-Economy-Version": "1"}
+    with client_for(database, {"test.member.signature": member}) as client:
+        started = client.post(
+            "/api/island/boat/start",
+            headers=headers,
+            json={
+                "economy": context(initial),
+                "game": "dash",
+                "actionUid": "phasestart1",
+            },
+        )
+        assert started.status_code == 200
+        claim = {
+            "economy": context(initial),
+            "roundId": started.json()["receipt"]["result"]["round"]["id"],
+            "stars": 2,
+            "actionUid": "phaseclaim1",
+        }
+        configure_test_authority(database, member, owner, reservation_id=UUID(int=100))
+        refused = client.post("/api/island/boat/claim", headers=headers, json=claim)
+        assert refused.status_code == 409 and refused.json()["error"]["code"] == "wave_running"
+        assert (
+            database.execute(
+                "select count(*) from public.island_economy_operations "
+                "where actor_id=%s and action_uid='phaseclaim1'",
+                (member,),
+            ).fetchone()[0]
+            == 0
+        )
+        configure_test_authority(database, member, owner)
+        done = client.post("/api/island/boat/claim", headers=headers, json=claim)
+        assert done.status_code == 200 and done.json()["receipt"]["result"]["coins"] == "24"
+
+
+def test_missing_capability_is_refused_even_when_shared_authority_is_not_installed(database):
+    owner, member, _, _ = setup(database, admitted=True)
+    code = database.execute(
+        "select code from public.islands where player_id=%s", (owner,)
+    ).fetchone()[0]
+    database.execute("drop function public.island_economy_authority(uuid,uuid)")
+    with client_for(database, {"test.member.signature": member}) as client:
+        response = client.get(
+            f"/api/island/boat?code=ISLE-{code}",
+            headers={
+                "Authorization": "Bearer test.member.signature",
+            },
+        )
+        assert response.status_code == 409
+        assert response.json()["error"]["code"] == "economy_context_required"

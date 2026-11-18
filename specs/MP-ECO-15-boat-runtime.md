@@ -83,3 +83,25 @@ provider. They are not provider-issued authenticated runtime acceptance. Real br
 scene/Again checks and the production build follow the application wiring. Actual-provider
 sessions and the canonical shared-context/authority producer remain separate acceptance
 requirements; no fixture result establishes their completion.
+
+
+## Chromium component evidence
+
+`npm test -- --run tests/island/shared-boat-scene.test.js` exercises the actual existing boat
+scene with the shared API/session wrapper in Chromium. It checks that Again waits for a new
+server-bound round, unknown completion retries precede the next attempt, pending completion
+survives disposal without projecting a different island, and a full page reload restores the
+original score/root UID from localStorage. These component tests use injected API replies and
+are distinct from authenticated provider and complete game acceptance.
+
+The Chromium component suite passed **4 tests** (latest captured run: **30.11s**).
+The durable client suite then passed **8 tests**, including a bell-time `wave_running`
+refusal followed by reload and the exact original score/UID retry. A known phase refusal
+keeps the earned score instead of treating it as a completed or discarded operation.
+
+After adding the actual SQL/HTTP phase regression and capability-before-unavailable-authority
+check, `CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q
+server/tests/island_sql/test_boat_runtime_http_pg.py server/tests/test_boat_routes.py`
+passed **14 tests in 23.02s**; backend Ruff passed. These HTTP tests still use injected
+verification responses and real domain SQL, not provider-issued sessions. Historical old
+receipts and pending scores keep their original context throughout these checks.
