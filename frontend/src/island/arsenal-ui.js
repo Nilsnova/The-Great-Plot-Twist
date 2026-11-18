@@ -70,7 +70,7 @@ function rackPart(model, handlers, {button, line}) {
 
 function shopPart(model, handlers, {button}) {
   const box = node('section', 'island-arsenal-shop'); box.setAttribute('aria-label', 'Buy for the crew');
-  box.append(node('h3', 'island-skills-title', 'Buy for the crew (your coins)'));
+  box.append(node('h3', 'island-skills-title', model.shopTitle ?? 'Buy for the crew (your coins)'));
   const list = node('ul', 'island-crew');
   for (const row of model.shop) {
     const item = node('li', `island-crew-row island-arsenal-type${row.locked ? ' is-locked' : ''}`); item.dataset.weapon = row.id;
