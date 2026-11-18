@@ -17,9 +17,10 @@ describe('wall tier identity across canonical artwork and consumers', () => {
       const [x, y, width, height] = frame.rect;
       expect(x + width / 2, id).toBeGreaterThan((level - 1) * 1536 / 5);
       expect(x + width / 2, id).toBeLessThan(level * 1536 / 5);
-      expect([y, height], id).toEqual([[0, 370], [370, 420], [790, 234]][row]);
-      expect(frame.logical, id).toEqual([48, 32, 6]);
-      expect(frame.sourceFoot, id).toEqual([[166, 461, 764, 1064, 1358][level - 1] - x, [350, 364, 192][row]]);
+      expect(y, id).toBeGreaterThanOrEqual([0,370,790][row]);
+      expect(y + height, id).toBeLessThanOrEqual([370,790,1024][row]);
+      expect(frame.logical, id).toEqual([48, 48, 6]);
+      expect(frame.sourceFoot, id).toEqual([[166, 461, 764, 1064, 1358][level - 1] - x, [350,734,982][row]-y]);
       expect(WALL_POST_IDS.filter(value => value === id), id).toHaveLength(1);
       expect(WALL_ATLAS_IDS.filter(value => value === id), id).toHaveLength(1);
     }

@@ -25,25 +25,25 @@ const posts = (layers, art, id) => quads(layers).filter(quad => JSON.stringify(q
 
 describe('connected wall tier detail', () => {
   it.each([
-    [1,1.118,.96,1.138], [2,1.318,1.16,1.338], [3,1.418,1.26,1.438],
-    [4,1.518,1.36,1.538], [5,1.598,1.44,1.618],
+    [1,1.69,1.46,1.71], [2,1.94,1.71,1.96], [3,2.19,1.96,2.21],
+    [4,2.34,2.11,2.36], [5,2.44,2.21,2.46],
   ])('keeps actual projected level %i span and straight-cap vertices below the authored post top', (level, horizontalTop, verticalTop, capTop) => {
     const art=atlas(), maxY=rows=>Math.max(...rows.flatMap(({positions:p})=>p.filter((_,i)=>i%3===1)));
     for(const vertical of [false,true]) {
       const rows=[wall('a',0,0,level),wall('b',vertical?0:2,vertical?2:0,level),wall('c',vertical?0:4,vertical?4:0,level)];
       const links=wallTopology(rows).links;
       const spans=quads(texturedWallBatches([links[0]],[],art));
-      expect(maxY(spans)).toBeLessThanOrEqual(1.625);
+      expect(maxY(spans)).toBeLessThanOrEqual(2.625);
       const layers=draw(rows,art), centreX=vertical?.4:2.6, centreY=vertical?-1.2:0;
       const cap=quads(layers).filter(({positions:p,uvs})=>
         JSON.stringify(uvs)===JSON.stringify(frameUV(art,wallSurfaceFrame(level,'top')))
         && Math.abs((p[0]+p[3]+p[6]+p[9])/4-centreX)<1e-10);
       expect(cap).toHaveLength(1);
-      expect(maxY(cap)-centreY).toBeLessThanOrEqual(1.625);
+      expect(maxY(cap)-centreY).toBeLessThanOrEqual(2.625);
       expect(maxY(spans)).toBeCloseTo(vertical?verticalTop:horizontalTop,10);
       expect(maxY(cap)-centreY).toBeCloseTo(capTop,10);
       const buttress=posts(layers,art,wallFrame(level)).find(({positions:p})=>Math.abs((p[0]+p[3])/2)<1e-10);
-      expect(maxY([buttress])).toBe(1.625);
+      expect(maxY([buttress])).toBe(2.625);
     }
     art.texture.dispose();
   });
@@ -52,7 +52,7 @@ describe('connected wall tier detail', () => {
     const art = atlas(), rows = [wall('a',0,0,level),wall('b',2,0,level),wall('c',4,0,level)];
     const before = structuredClone(rows), layers = draw(rows, art, 'b');
     const actual = posts(layers, art, wallFrame(level)); expect(actual).toHaveLength(1);
-    expect(actual[0].positions).toEqual([1.475,-.375,0,3.725,-.375,0,3.725,1.625,0,1.475,1.625,0].map(value=>expect.closeTo(value,10)));
+    expect(actual[0].positions).toEqual([1.475,-.375,0,3.725,-.375,0,3.725,2.625,0,1.475,2.625,0].map(value=>expect.closeTo(value,10)));
     expect(quads(layers)).toHaveLength(9); expect(rows).toEqual(before);
     expect([...layers.keys()].sort((a,b)=>a-b)).toEqual([99.98,100]); art.texture.dispose();
   });

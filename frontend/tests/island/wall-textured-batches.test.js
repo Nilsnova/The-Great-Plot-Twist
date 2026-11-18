@@ -22,7 +22,7 @@ describe('dimensional wall artwork contract', () => {
       expect(x + w).toBeLessThanOrEqual(sheet.width); expect(y + h).toBeLessThanOrEqual(sheet.height);
       expect(spec.sourceFoot[0]).toBeGreaterThan(0); expect(spec.sourceFoot[0]).toBeLessThan(w);
       expect(spec.sourceFoot[1]).toBeGreaterThan(0); expect(spec.sourceFoot[1]).toBeLessThan(h);
-      expect(spec.logical).toEqual([48, 32, 6]);
+      expect(spec.logical).toEqual([48, 48, 6]);
     }
     const complete = art(); expect(wallAtlasView(complete)).toMatchObject({ownsTexture: false});
     delete complete.rects[wallFrame(5, 'broken')]; expect(wallAtlasView(complete)).toBeNull();
@@ -34,7 +34,7 @@ describe('dimensional wall artwork contract', () => {
     // Foot(4,3) projects to(5.8,−1.8); image width48/16=3 and anchor6/16=.375 stay upright.
     expect(corners.filter((_, i) => i % 3 === 0)).toEqual([4.3,7.3,7.3,4.3].map(x=>expect.closeTo(x,10)));
     expect(corners[1]).toBeCloseTo(-2.175,10); expect(corners[4]).toBeCloseTo(-2.175,10);
-    expect(corners[7]).toBeCloseTo(-.175,10); expect(corners[10]).toBeCloseTo(-.175,10);
+    expect(corners[7]).toBeCloseTo(.825,10); expect(corners[10]).toBeCloseTo(.825,10);
     expect(rows).toEqual(before); expect(batch.indices.slice(-6).map(value => value - batch.positions.length/3 + 4)).toEqual([0, 1, 2, 0, 2, 3]);
     expect(batch.uvs.every(value => value >= 0 && value <= 1)).toBe(true);
   });
@@ -49,24 +49,24 @@ describe('dimensional wall artwork contract', () => {
   // Fixed arithmetic receipts: x'=1.3x+.2z, y'=-.6z+lift. No runtime height/projection helper.
   // The legacy fallback's independent position/hash receipts remain in wall-span-batches.test.js.
   it.each([
-    [1, [1.118, .782, .642, .792], [.95, -.25, .81, -.39, -.24, .96]],
-    [2, [1.318, .982, .842, .992], [1.15, -.05, 1.01, -.19, -.04, 1.16]],
-    [3, [1.418, 1.082, .942, 1.092], [1.25, .05, 1.11, -.09, .06, 1.26]],
-    [4, [1.518, 1.182, 1.042, 1.192], [1.35, .15, 1.21, .01, .16, 1.36]],
-    [5, [1.598, 1.262, 1.122, 1.272], [1.43, .23, 1.29, .09, .24, 1.44]],
+    [1, [1.69,1.21,1.07,1.22], [1.45,.25,1.31,.11,.26,1.46]],
+    [2, [1.94,1.46,1.32,1.47], [1.70,.50,1.56,.36,.51,1.71]],
+    [3, [2.19,1.71,1.57,1.72], [1.95,.75,1.81,.61,.76,1.96]],
+    [4, [2.34,1.86,1.72,1.87], [2.10,.90,1.96,.76,.91,2.11]],
+    [5, [2.44,1.96,1.82,1.97], [2.20,1.00,2.06,.86,1.01,2.21]],
   ])('draws level %i spans with fixed projected feet, tier profile, upright trim and unchanged indices', (level, h, v) => {
     const cases = [
       {end: [2, 0], order: 99.98, points: [
-        [-.056,h[0]],[2.544,h[0]],[2.656,h[1]],[.056,h[1]],
-        [.056,-.168],[2.656,-.168],[2.656,h[1]],[.056,h[1]],
-        [2.544,.168],[2.656,-.168],[2.656,h[1]],[2.544,h[0]],
-        [.056,h[2]],[2.656,h[2]],[2.656,h[3]],[.056,h[3]],
+        [-.08,h[0]],[2.52,h[0]],[2.68,h[1]],[.08,h[1]],
+        [.08,-.24],[2.68,-.24],[2.68,h[1]],[.08,h[1]],
+        [2.52,.24],[2.68,-.24],[2.68,h[1]],[2.52,h[0]],
+        [.08,h[2]],[2.68,h[2]],[2.68,h[3]],[.08,h[3]],
       ]},
       {end: [0, 2], order: 100.98, points: [
-        [-.364,v[0]],[.364,v[0]],[.764,v[1]],[.036,v[1]],
-        [.036,-1.2],[.764,-1.2],[.764,v[1]],[.036,v[1]],
-        [.364,0],[.764,-1.2],[.764,v[1]],[.364,v[0]],
-        [.364,v[2]],[.764,v[3]],[.764,v[4]],[.364,v[5]],
+        [-.52,v[0]],[.52,v[0]],[.92,v[1]],[-.12,v[1]],
+        [-.12,-1.2],[.92,-1.2],[.92,v[1]],[-.12,v[1]],
+        [.52,0],[.92,-1.2],[.92,v[1]],[.52,v[0]],
+        [.52,v[2]],[.92,v[3]],[.92,v[4]],[.52,v[5]],
       ]},
     ];
     for (const {end: [x, z], order, points} of cases) {
@@ -96,14 +96,14 @@ describe('dimensional wall artwork contract', () => {
   });
   it('updates every draft ghost to the registered frame height without moving its ground foot or owning its borrowed texture', () => {
     const root = new THREE.Group(), texture = new THREE.Texture(), textureDisposed = vi.spyOn(texture, 'dispose');
-    const preview = createWallBuilderPreview({root, wall: {texture, size: [48, 48], anchor: 6}});
+    const preview = createWallBuilderPreview({root, wall: {texture, size: [48, 32], anchor: 6}});
     preview.show({cells: [{x: 0, z: 0}, {x: 2, z: 0}], valid: true});
     const ghosts = root.children[0].children.filter(mesh => mesh.name.startsWith('wall-draft:'));
     const original = ghosts[0].geometry, disposed = vi.spyOn(original, 'dispose');
-    preview.setFrame({size: [48, 32], anchor: 6});
+    preview.setFrame({size: [48, 48], anchor: 6});
     expect(ghosts[0].geometry).toBe(ghosts[1].geometry); expect(ghosts[0].geometry).not.toBe(original);
     ghosts[0].geometry.computeBoundingBox(); const bounds = ghosts[0].geometry.boundingBox;
-    expect(bounds.min.y).toBeCloseTo(-.375); expect(bounds.max.y).toBeCloseTo(1.625);
+    expect(bounds.min.y).toBeCloseTo(-.375); expect(bounds.max.y).toBeCloseTo(2.625);
     expect(ghosts.map(mesh => mesh.userData.ground)).toEqual([{x: 0, z: 0}, {x: 2, z: 0}]);
     preview.dispose(); expect(disposed).toHaveBeenCalledOnce(); expect(textureDisposed).not.toHaveBeenCalled();
   });
