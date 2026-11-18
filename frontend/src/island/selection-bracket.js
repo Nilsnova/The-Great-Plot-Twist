@@ -1,9 +1,9 @@
-// Selected tile corners are screen-facing strips, independent of paid Move state and collision.
+// A brass outline on the selected tile's ground plane.
 import * as THREE from 'three';
 import {projectGround} from '../world/projection.js';
 
 function cornerGeometry(padding = 0) {
-  const positions = [], indices = [], half = 1, arm = .64, width = .16;
+  const positions = [], indices = [], half = 1, arm = .56, width = .13;
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
     const x = sx * half, z = sz * half;
     for (const [ax, az, bx, bz] of [[x - sx * arm, z - sz * width, x, z], [x - sx * width, z - sz * arm, x, z]]) {
@@ -23,10 +23,12 @@ function cornerGeometry(padding = 0) {
 
 export function makeSelectionBracket(root) {
   const group = new THREE.Group(); group.name = 'island-selection-bracket'; group.visible = false; root.add(group);
-  const meshes = [[.055, 0x143b20, 200], [0, 0x78ff43, 201]].map(([padding, color, order]) => {
-    const material = new THREE.MeshBasicMaterial({color, depthTest: false, depthWrite: false, toneMapped: false, transparent: true});
+  // Draw before the buildings, so the back corners can tuck behind their bases.
+  const meshes = [[.043, 0x51351d, 94], [0, 0xf9de95, 95]].map(([padding, color, order]) => {
+    const material = new THREE.MeshBasicMaterial({color, depthTest: false, depthWrite: false,
+      toneMapped: false, transparent: true, opacity: padding ? .86 : .98});
     const mesh = new THREE.Mesh(cornerGeometry(padding), material);
-    mesh.name = padding ? 'selection-corner-outline' : 'selection-corner-green';
+    mesh.name = padding ? 'selection-corner-outline' : 'selection-corner-brass';
     mesh.renderOrder = order; mesh.frustumCulled = false; mesh.raycast = () => {}; group.add(mesh); return mesh;
   });
   let disposed = false, lastX = null, lastZ = null;
