@@ -151,6 +151,88 @@ def test_two_participants_produce_one_house_boss_reward_and_separate_receipts(da
     ).fetchone() == (1,)
 
 
+@pytest.mark.parametrize("malformed", [
+    "foreign_receipt", "wrong_amount", "wrong_reference", "wrong_actor",
+    "wrong_action", "missing_repeat", "string_repeat", "repeated_credit",
+])
+def test_inconsistent_credit_success_cannot_close_wave_or_apply_personal_progress(
+    database, malformed,
+):
+    wave = ready_wave(database, played=6, engineer=True)
+    freeze(database, wave)
+    confirm(database, wave, wave.owner)
+    confirm(database, wave, wave.member)
+    before = {
+        player: private(database, "personal_captain_snapshot_locked", player)
+        for player in (wave.owner, wave.member)
+    }
+    as_owner(database)
+    account = keys(wave.treasury)[0]
+    original_money = database.execute(
+        "select balance_coins,committed_coins,revision "
+        "from public.island_economy_accounts where id=%s", (account,),
+    ).fetchone()
+    with database.transaction(force_rollback=True):
+        # Diagnose internal helper-contract failures without replacing any live RPC.
+        # Preserve the real helper in this connection's temporary schema so cases
+        # with a malformed reply still exercise an actual transaction/ledger write.
+        definition = database.execute(
+            "select pg_get_functiondef("
+            "'public.island_treasury_credit(uuid,uuid,uuid,text,text,text,numeric)'::regprocedure)"
+        ).fetchone()[0]
+        database.execute(definition.replace(
+            "FUNCTION public.island_treasury_credit(",
+            "FUNCTION pg_temp.wave_test_credit(", 1,
+        ))
+        database.execute(
+            "create or replace function public.island_treasury_credit("
+            "p_actor_id uuid,p_account_id uuid,p_run_epoch uuid,p_action_uid text,"
+            "p_reason text,p_reference text,p_amount numeric) returns jsonb "
+            "language plpgsql security definer set search_path='' as $$ "
+            "declare v_result jsonb; v_case text := current_setting('wave_test.malformed'); "
+            "begin if v_case='foreign_receipt' then "
+            "return public.island_treasury_result("
+            "current_setting('wave_test.receipt')::uuid,false); end if; "
+            "v_result := pg_temp.wave_test_credit("
+            "case when v_case='wrong_actor' then current_setting('wave_test.actor')::uuid "
+            "else p_actor_id end,p_account_id,p_run_epoch,p_action_uid,p_reason,"
+            "case when v_case='wrong_reference' then p_reference||':wrong' "
+            "else p_reference end,"
+            "case when v_case='wrong_amount' then p_amount+1 else p_amount end); "
+            "if v_case='wrong_action' then return jsonb_set("
+            "v_result,'{receipt,actionUid}','\"another_action\"'::jsonb); "
+            "elsif v_case='missing_repeat' then return v_result-'repeat'; "
+            "elsif v_case='string_repeat' then return jsonb_set("
+            "v_result,'{repeat}','\"false\"'::jsonb); "
+            "elsif v_case='repeated_credit' then return jsonb_set("
+            "v_result,'{repeat}','true'::jsonb); end if; return v_result; end; $$"
+        )
+        database.execute("select set_config('wave_test.malformed',%s,true)", (malformed,))
+        database.execute("select set_config('wave_test.receipt',%s,true)",
+                         (wave.treasury["receipt"]["id"],))
+        database.execute("select set_config('wave_test.actor',%s,true)", (str(wave.outsider),))
+        expect_error(database, "wave_treasury_credit_failed", close, wave)
+        as_owner(database)
+        assert database.execute(
+            "select balance_coins,committed_coins,revision "
+            "from public.island_economy_accounts where id=%s", (account,),
+        ).fetchone() == original_money
+        assert database.execute(
+            "select count(*) from public.island_treasury_transactions "
+            "where account_id=%s and reason='pirate_loot'", (account,),
+        ).fetchone() == (0,)
+        for table in ("island_wave_closures", "island_wave_completion_receipts",
+                      "personal_captain_completion_effects"):
+            assert database.execute(
+                f"select count(*) from public.{table} where wave_id=%s", (wave.id,),
+            ).fetchone() == (0,)
+        for player, profile in before.items():
+            assert private(database, "personal_captain_snapshot_locked", player) == profile
+    # Removing only the synthetic helper fault leaves the original attempt retryable.
+    assert close(database, wave)["repeat"] is False
+    assert close(database, wave)["repeat"] is True
+
+
 def test_freeze_refuses_a_personal_snapshot_for_another_played_wave_atomically(database):
     with pytest.raises(psycopg.Error, match="captain_snapshot_conflict"), database.transaction():
         wave = ready_wave(database, played=5, snapshot_played=6, engineer=True)
