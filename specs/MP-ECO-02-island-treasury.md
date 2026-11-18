@@ -82,3 +82,5 @@ duplicate admission/settlement, cross-island UID conflict rollback and closing-f
 No live database, authenticated browser flow or production shared-mode admission was exercised.
 HTTP/game-route conversion and the explicit reset/deletion/conversion policies remain separate
 integration prerequisites; this foundation alone must not enable existing-save admission.
+
+After integration of the operation registry and current main (`f0c64442`), the combined focused Python suite passed **62 tests in 2.25s**, the three disposable PostgreSQL suites passed **54 tests in 22.36s**, and full Ruff passed. The PostgreSQL checks include 13 isolated first/repeated cutover, admission, nullable-FK, contention rollback and isolation cases; a separate rerun of those 13 also passed. These final focused checks do not replace the qualified earlier full-backend result above.
