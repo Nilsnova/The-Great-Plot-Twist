@@ -1,0 +1,645 @@
+{
+  "coordinatorRunSource": "7fab8866b83e27c6102df6b123ffdf2eb96619d0",
+  "frontendTree": "e191d9290088908ee27e82e03a15847d4a73a38e",
+  "multiplayerCommandResult": {
+    "name": "multiplayer",
+    "command": [
+      "node",
+      "scripts/check-multiplayer.js",
+      "/workspace/reference-village-work/polish-final-checks/multiplayer-captures"
+    ],
+    "exitCode": 1,
+    "seconds": 341.53,
+    "log": "multiplayer.log"
+  },
+  "rawLogSha256": "6cf305b6d529e5035ec293ed3fec4c6f9014d6712d136dc9a0cbdd649a83ea18",
+  "provenFailure": "insufficient compared sample coverage; not a recorded ship/boarder mismatch",
+  "anaMetrics": {
+    "checked": 1,
+    "same": 1,
+    "sameBoarders": 1,
+    "worst": 0,
+    "worstBoarders": 0
+  },
+  "requiredMinimum": 3,
+  "musketPosePassedBeforeFailure": true,
+  "failureSnapshots": {
+    "Nils": {
+      "place": "home_islet",
+      "own": true,
+      "visiting": null,
+      "wave": {
+        "waveId": "fake-wave-2",
+        "wave": 4,
+        "done": false,
+        "pause": false,
+        "ticks": 1694,
+        "phase": "running",
+        "ships": 2
+      },
+      "inBreak": false,
+      "breakPanel": {
+        "hidden": true,
+        "visible": false,
+        "text": "\u00d7Auto next wave"
+      },
+      "waveFinishAnswers": [
+        {
+          "waveId": "fake-wave-1",
+          "loot": 35
+        }
+      ],
+      "reviveInputs": [
+        {
+          "by": "p-0o5w4m5t",
+          "seq": 24,
+          "t": 68.65,
+          "waveId": "fake-wave-1",
+          "targetId": "p-l8nvasdy",
+          "currentTick": 1369,
+          "scheduleLate": 0
+        }
+      ],
+      "revived": [
+        {
+          "captainId": "p-l8nvasdy",
+          "by": "p-0o5w4m5t",
+          "t": 68.65,
+          "hp": 75,
+          "currentTick": 1390,
+          "scheduleLate": 0
+        }
+      ],
+      "lifecycle": [
+        {
+          "at": 13245.20000000298,
+          "type": "state",
+          "phase": null,
+          "inBreak": false
+        },
+        {
+          "at": 118201.59999999404,
+          "type": "state",
+          "phase": {
+            "waveId": "fake-wave-1",
+            "wave": 3,
+            "done": false,
+            "pause": false,
+            "ticks": 0,
+            "phase": "countdown"
+          },
+          "inBreak": false
+        },
+        {
+          "at": 127083.90000000596,
+          "type": "state",
+          "phase": {
+            "waveId": "fake-wave-1",
+            "wave": 3,
+            "done": false,
+            "pause": false,
+            "ticks": 1,
+            "phase": "running"
+          },
+          "inBreak": false
+        },
+        {
+          "at": 212261.59999999404,
+          "type": "wave_finished",
+          "waveId": "fake-wave-1",
+          "survived": true
+        },
+        {
+          "at": 212269,
+          "type": "state",
+          "phase": {
+            "waveId": "fake-wave-1",
+            "wave": 3,
+            "done": true,
+            "pause": true,
+            "ticks": 1693,
+            "phase": "ended"
+          },
+          "inBreak": true
+        },
+        {
+          "at": 212595.79999999702,
+          "type": "wave_finished",
+          "waveId": "fake-wave-1",
+          "survived": true
+        },
+        {
+          "at": 241550.90000000596,
+          "type": "wave_controller_stopped",
+          "waveId": "fake-wave-1"
+        },
+        {
+          "at": 242352.90000000596,
+          "type": "state",
+          "phase": {
+            "waveId": "fake-wave-2",
+            "wave": 4,
+            "done": false,
+            "pause": false,
+            "ticks": 0,
+            "phase": "countdown"
+          },
+          "inBreak": false
+        },
+        {
+          "at": 251822.20000000298,
+          "type": "state",
+          "phase": {
+            "waveId": "fake-wave-2",
+            "wave": 4,
+            "done": false,
+            "pause": false,
+            "ticks": 16,
+            "phase": "running"
+          },
+          "inBreak": false
+        }
+      ],
+      "waveStarted": [
+        {
+          "type": "game_started",
+          "first": true,
+          "code": "K7Q2M"
+        }
+      ],
+      "tailSamples": [
+        {
+          "waveId": "fake-wave-2",
+          "ticks": 1687,
+          "ships": "ship_3,ship_6",
+          "hp": 81,
+          "boarders": "",
+          "landed": 8,
+          "militia": "militia_1@7,-4.4:60:idle",
+          "event": "{\"id\":\"fog_bank\",\"clear\":16,\"watchtowers\":[]}",
+          "heart": 2.5
+        },
+        {
+          "waveId": "fake-wave-2",
+          "ticks": 1691,
+          "ships": "ship_3,ship_6",
+          "hp": 81,
+          "boarders": "",
+          "landed": 8,
+          "militia": "militia_1@7,-4.4:60:idle",
+          "event": "{\"id\":\"fog_bank\",\"clear\":16,\"watchtowers\":[]}",
+          "heart": 2.5
+        },
+        {
+          "waveId": "fake-wave-2",
+          "ticks": 1694,
+          "ships": "ship_3,ship_6",
+          "hp": 81,
+          "boarders": "",
+          "landed": 8,
+          "militia": "militia_1@7,-4.4:60:idle",
+          "event": "{\"id\":\"fog_bank\",\"clear\":16,\"watchtowers\":[]}",
+          "heart": 2.5
+        }
+      ],
+      "dialogs": []
+    },
+    "Ben": {
+      "place": "home_islet",
+      "own": true,
+      "visiting": {
+        "code": "K7Q2M",
+        "waveBest": 3
+      },
+      "wave": {
+        "waveId": "fake-wave-2",
+        "wave": 4,
+        "done": true,
+        "pause": false,
+        "ticks": 1714,
+        "phase": "ended",
+        "ships": 2
+      },
+      "inBreak": false,
+      "breakPanel": {
+        "hidden": true,
+        "visible": false,
+        "text": "\u00d7Auto next wave"
+      },
+      "waveFinishAnswers": [
+        {
+          "waveId": "fake-wave-1",
+          "loot": 35
+        }
+      ],
+      "reviveInputs": [
+        {
+          "by": "p-0o5w4m5t",
+          "seq": 24,
+          "t": 68.65,
+          "waveId": "fake-wave-1",
+          "targetId": "p-l8nvasdy",
+          "currentTick": 1372,
+          "scheduleLate": 0
+        }
+      ],
+      "revived": [
+        {
+          "captainId": "p-l8nvasdy",
+          "by": "p-0o5w4m5t",
+          "t": 68.65,
+          "hp": 75,
+          "currentTick": 1374,
+          "scheduleLate": 0
+        }
+      ],
+      "lifecycle": [
+        {
+          "at": 7597.199999988079,
+          "type": "state",
+          "phase": null,
+          "inBreak": false
+        },
+        {
+          "at": 106682.89999999106,
+          "type": "state",
+          "phase": {
+            "waveId": "fake-wave-1",
+            "wave": 3,
+            "done": false,
+            "pause": false,
+            "ticks": 0,
+            "phase": "countdown"
+          },
+          "inBreak": false
+        },
+        {
+          "at": 113467.5,
+          "type": "state",
+          "phase": {
+            "waveId": "fake-wave-1",
+            "wave": 3,
+            "done": false,
+            "pause": false,
+            "ticks": 1,
+            "phase": "running"
+          },
+          "inBreak": false
+        },
+        {
+          "at": 198022.19999998808,
+          "type": "wave_finished",
+          "waveId": "fake-wave-1",
+          "survived": true
+        },
+        {
+          "at": 198028,
+          "type": "state",
+          "phase": {
+            "waveId": "fake-wave-1",
+            "wave": 3,
+            "done": true,
+            "pause": true,
+            "ticks": 1693,
+            "phase": "ended"
+          },
+          "inBreak": true
+        },
+        {
+          "at": 198628.39999999106,
+          "type": "wave_finished",
+          "waveId": "fake-wave-1",
+          "survived": true
+        },
+        {
+          "at": 228205,
+          "type": "wave_controller_stopped",
+          "waveId": "fake-wave-1"
+        },
+        {
+          "at": 228721.59999999404,
+          "type": "state",
+          "phase": {
+            "waveId": "fake-wave-2",
+            "wave": 4,
+            "done": false,
+            "pause": false,
+            "ticks": 0,
+            "phase": "countdown"
+          },
+          "inBreak": false
+        },
+        {
+          "at": 238187.79999999702,
+          "type": "state",
+          "phase": {
+            "waveId": "fake-wave-2",
+            "wave": 4,
+            "done": false,
+            "pause": false,
+            "ticks": 16,
+            "phase": "running"
+          },
+          "inBreak": false
+        },
+        {
+          "at": 323870.5,
+          "type": "wave_finished",
+          "waveId": "fake-wave-2",
+          "survived": false
+        },
+        {
+          "at": 323883.39999999106,
+          "type": "state",
+          "phase": {
+            "waveId": "fake-wave-2",
+            "wave": 4,
+            "done": true,
+            "pause": false,
+            "ticks": 1714,
+            "phase": "ended"
+          },
+          "inBreak": false
+        }
+      ],
+      "waveStarted": [
+        {
+          "type": "game_started",
+          "first": true,
+          "code": "K7Q2M"
+        }
+      ],
+      "tailSamples": [
+        {
+          "waveId": "fake-wave-2",
+          "ticks": 1666,
+          "ships": "ship_3,ship_6",
+          "hp": 81,
+          "boarders": "",
+          "landed": 8,
+          "militia": "militia_1@7,-4.4:60:idle",
+          "event": "{\"id\":\"fog_bank\",\"clear\":16,\"watchtowers\":[]}",
+          "heart": 4
+        },
+        {
+          "waveId": "fake-wave-2",
+          "ticks": 1687,
+          "ships": "ship_3,ship_6",
+          "hp": 81,
+          "boarders": "",
+          "landed": 8,
+          "militia": "militia_1@7,-4.4:60:idle",
+          "event": "{\"id\":\"fog_bank\",\"clear\":16,\"watchtowers\":[]}",
+          "heart": 2.5
+        },
+        {
+          "waveId": "fake-wave-2",
+          "ticks": 1708,
+          "ships": "ship_3,ship_6",
+          "hp": 81,
+          "boarders": "",
+          "landed": 8,
+          "militia": "militia_1@7,-4.4:60:idle",
+          "event": "{\"id\":\"fog_bank\",\"clear\":16,\"watchtowers\":[]}",
+          "heart": 1
+        }
+      ],
+      "dialogs": []
+    },
+    "Ana": {
+      "place": "home_islet",
+      "own": true,
+      "visiting": {
+        "code": "K7Q2M",
+        "waveBest": 3
+      },
+      "wave": {
+        "waveId": "fake-wave-2",
+        "wave": 4,
+        "done": true,
+        "pause": false,
+        "ticks": 1714,
+        "phase": "ended",
+        "ships": 2
+      },
+      "inBreak": false,
+      "breakPanel": {
+        "hidden": true,
+        "visible": false,
+        "text": "\u00d7Auto next wave"
+      },
+      "waveFinishAnswers": [
+        {
+          "waveId": "fake-wave-2",
+          "loot": 0
+        }
+      ],
+      "reviveInputs": [],
+      "revived": [],
+      "lifecycle": [
+        {
+          "at": 21996,
+          "type": "state",
+          "phase": null,
+          "inBreak": false
+        },
+        {
+          "at": 23701.59999999404,
+          "type": "state",
+          "phase": {
+            "waveId": "fake-wave-2",
+            "wave": 4,
+            "done": false,
+            "pause": false,
+            "ticks": 165,
+            "phase": "running"
+          },
+          "inBreak": false
+        },
+        {
+          "at": 101285.70000000298,
+          "type": "wave_finished",
+          "waveId": "fake-wave-2",
+          "survived": false
+        },
+        {
+          "at": 101301.70000000298,
+          "type": "state",
+          "phase": {
+            "waveId": "fake-wave-2",
+            "wave": 4,
+            "done": true,
+            "pause": false,
+            "ticks": 1714,
+            "phase": "ended"
+          },
+          "inBreak": false
+        },
+        {
+          "at": 101674.20000000298,
+          "type": "wave_finished",
+          "waveId": "fake-wave-2",
+          "survived": false
+        }
+      ],
+      "waveStarted": [],
+      "tailSamples": [
+        {
+          "waveId": "fake-wave-2",
+          "ticks": 1654,
+          "ships": "ship_3,ship_6",
+          "hp": 81,
+          "boarders": "",
+          "landed": 8,
+          "militia": "militia_1@7,-4.4:60:idle",
+          "event": "{\"id\":\"fog_bank\",\"clear\":16,\"watchtowers\":[]}",
+          "heart": 5.5
+        },
+        {
+          "waveId": "fake-wave-2",
+          "ticks": 1676,
+          "ships": "ship_3,ship_6",
+          "hp": 81,
+          "boarders": "",
+          "landed": 8,
+          "militia": "militia_1@7,-4.4:60:idle",
+          "event": "{\"id\":\"fog_bank\",\"clear\":16,\"watchtowers\":[]}",
+          "heart": 2.5
+        },
+        {
+          "waveId": "fake-wave-2",
+          "ticks": 1697,
+          "ships": "ship_3,ship_6",
+          "hp": 81,
+          "boarders": "",
+          "landed": 8,
+          "militia": "militia_1@7,-4.4:60:idle",
+          "event": "{\"id\":\"fog_bank\",\"clear\":16,\"watchtowers\":[]}",
+          "heart": 1
+        }
+      ],
+      "dialogs": []
+    },
+    "Max": {
+      "place": "home_islet",
+      "own": true,
+      "visiting": {
+        "code": "K7Q2M",
+        "waveBest": 3
+      },
+      "wave": {
+        "waveId": "fake-wave-2",
+        "wave": 4,
+        "done": true,
+        "pause": false,
+        "ticks": 1714,
+        "phase": "ended",
+        "ships": 2
+      },
+      "inBreak": false,
+      "breakPanel": {
+        "hidden": true,
+        "visible": false,
+        "text": "\u00d7Auto next wave"
+      },
+      "waveFinishAnswers": [
+        {
+          "waveId": "fake-wave-2",
+          "loot": 0
+        }
+      ],
+      "reviveInputs": [],
+      "revived": [],
+      "lifecycle": [
+        {
+          "at": 26583.09999999404,
+          "type": "state",
+          "phase": null,
+          "inBreak": false
+        },
+        {
+          "at": 28995,
+          "type": "state",
+          "phase": {
+            "waveId": "fake-wave-2",
+            "wave": 4,
+            "done": false,
+            "pause": false,
+            "ticks": 272,
+            "phase": "running"
+          },
+          "inBreak": false
+        },
+        {
+          "at": 101080.09999999404,
+          "type": "wave_finished",
+          "waveId": "fake-wave-2",
+          "survived": false
+        },
+        {
+          "at": 101086.79999999702,
+          "type": "state",
+          "phase": {
+            "waveId": "fake-wave-2",
+            "wave": 4,
+            "done": true,
+            "pause": false,
+            "ticks": 1714,
+            "phase": "ended"
+          },
+          "inBreak": false
+        },
+        {
+          "at": 101516.20000000298,
+          "type": "wave_finished",
+          "waveId": "fake-wave-2",
+          "survived": false
+        }
+      ],
+      "waveStarted": [],
+      "tailSamples": [
+        {
+          "waveId": "fake-wave-2",
+          "ticks": 1711,
+          "ships": "ship_3,ship_6",
+          "hp": 81,
+          "boarders": "",
+          "landed": 8,
+          "militia": "militia_1@7,-4.4:60:idle",
+          "event": "{\"id\":\"fog_bank\",\"clear\":16,\"watchtowers\":[]}",
+          "heart": 1
+        },
+        {
+          "waveId": "fake-wave-2",
+          "ticks": 1712,
+          "ships": "ship_3,ship_6",
+          "hp": 81,
+          "boarders": "",
+          "landed": 8,
+          "militia": "militia_1@7,-4.4:60:idle",
+          "event": "{\"id\":\"fog_bank\",\"clear\":16,\"watchtowers\":[]}",
+          "heart": 1
+        },
+        {
+          "waveId": "fake-wave-2",
+          "ticks": 1713,
+          "ships": "ship_3,ship_6",
+          "hp": 81,
+          "boarders": "",
+          "landed": 8,
+          "militia": "militia_1@7,-4.4:60:idle",
+          "event": "{\"id\":\"fog_bank\",\"clear\":16,\"watchtowers\":[]}",
+          "heart": 1
+        }
+      ],
+      "dialogs": []
+    }
+  },
+  "engineSubtree6c87And7fab": "55e4b9eb873638949f76e5048cca4c8e429425ad",
+  "nativeEntry6c87And7fab": "de90cd6cb7ab59b0955626c510b74b85590cb55b",
+  "limits": [
+    "Full input sample arrays were not archived; actual additional pair coverage cannot be replayed.",
+    "Failure snapshots are sequential and at different ticks; their phase difference alone does not prove state divergence.",
+    "This records the existing failure, not a new native rerun or a passing native gate."
+  ]
+}

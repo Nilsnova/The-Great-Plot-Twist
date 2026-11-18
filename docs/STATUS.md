@@ -14,6 +14,8 @@ Never write keys, tokens, passwords or student numbers in this file. If two pull
 
 ## Right now
 
+**18 Nov / Johannes — VIS60 sample verification:** [Draft #437](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/437) changes QA only to use all collected distinct tick pairs, preferring exact then existing ±1 matches without reusing observations. [Evidence](evidence/VIS-60-distinct-sync-samples/README.md): 186 pure checks / four files passed (1.54 s); all native assertions and exact heart/militia/action/timing/collection blocks remain unchanged. Actual inputs/pairs/metrics are buffered and written at the terminal success/failure boundary. Source7fab's one matching Ana comparison remains an insufficient-coverage failure, not a proven divergence or retrospective pass. Coordinator native/full checks, the separate input timeout and human approval remain open. No product change or merge.
+
 **18 Nov / Johannes — VIS59 verifier:** [Draft #435](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/435) updates only the multiplayer observer to the independently specified five cap heights and sparse post rule. [Evidence](evidence/VIS-59-wall-profile-observer/README.md) preserves both red runs and the 197-pass/seven-file final pure selection (5.13 s); all original test cases and product/native/dependency identities remain unchanged. Coordinator native/full checks and different-human review are pending; the separate native input timeout remains open. No product change or PR merge.
 
 **18 Nov / Johannes — VIS57 review base:** [Draft #426](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/426) preserves main `66d29ea9` beside preview `e636ae75` for the next visual pass. [Evidence](evidence/VIS-57-playtest-base/README.md): 46 incoming paths / 19 overlaps, one renderer conflict; 71 unique migration versions with exact SQL retained; 236 focused frontend and 725 targeted route/unit/real-PostgreSQL checks passed, zero SQL skips, Ruff passed. No browser/full-suite pass is claimed here. Separate foliage/wall presentation branches and coordinator captures follow; keep existing unresolved failures open. No PR merge to main, live migration or rollout.
@@ -273,6 +275,8 @@ Nobody has decided these yet. Until they are decided, the plan in ROADMAP.md sta
 6. **Pick a package.** Take your lane's next package below, or one from "Start today" in ROADMAP.md. Open an issue with the goal, acceptance checks, scope, responsible teammate and likely files. Create your branch from `main` (`git switch main`, `git pull`, then for example `git switch -c feat/l1-live-weather`). Paste the agent brief below and open a draft pull request early.
 
 ## Next steps per lane
+
+**Johannes / VIS60:** freeze the composed QA source and rerun real native multiplayer/full frontend. Keep original failures and use the new exact sample receipts to distinguish insufficient coverage from an actual state mismatch; retain the original minimums/tolerances and current gameplay. [Scope and exact pure evidence](evidence/VIS-60-distinct-sync-samples/README.md).
 
 **Johannes / VIS59:** compose the focused observer/test commits, freeze the new QA source, rerun native multiplayer and the full frontend suite, and retain the old failures. Use [the exact profile-observer evidence](evidence/VIS-59-wall-profile-observer/README.md); this correction changes no game behavior and closes no unrelated timeout.
 
@@ -637,6 +641,8 @@ Report:      Finish with: changed, verified, not verified, remaining, branch/PR.
 ```
 
 ## Log
+
+- **18 Nov / Johannes:** implemented [VIS60](evidence/VIS-60-distinct-sync-samples/README.md) in Draft #437: strict distinct observed tick pairs, exact-first matching and bounded original-input receipts saved only when the journey terminates. Mechanical old-policy fixtures failed 18 cases; final four-file pure selection passed all 186. All 72 native assertions, exact heart/militia checks and product/dependency identities remain unchanged. No actual native/full pass claimed, no merge or rollout.
 
 - **18 Nov / Johannes:** fixed the stale [VIS59 wall-profile observer](evidence/VIS-59-wall-profile-observer/README.md) in Draft #435. Preserved all 31 existing cases unchanged, reproduced the original red and the expanded tests-first red, then passed all 151 observer cases plus the seven-file 197-check selection. Eight observer lines change; product/native/dependency identities remain exact. Coordinator native/full verification and human review remain pending; no merge or rollout.
 
