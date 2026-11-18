@@ -327,7 +327,8 @@ def test_snapshot_preserves_existing_extra_culverin_when_availability_flags_are_
     defense = snapshot["createWave"]["defenses"][0]
     assert defense["id"] == "cannon_8"
     assert defense["kind"] == "culverin"
-    assert defense["tree"] == [1, 0]
+    # Current main preserves bought upgrade paths as the production {a, b} shape.
+    assert defense["tree"] == {"a": 1, "b": 0}
     assert snapshot["createWave"]["defensesV2"] is True
     assert snapshot["structureConfigBySpot"]["cannon_8"]["kind"] == "culverin"
     assert "cannon_8" in snapshot["defaultPositions"]
@@ -441,7 +442,7 @@ def test_snapshot_defenses_have_the_legacy_shape_tree_bonus_and_capstone_rule(mo
         campaign=SimpleNamespace(tiers={"cannon": ResearchTier(3, "long_guns", "broadside")}),
     )
 
-    async def read_view(*_):
+    async def read_view(*_, **__):
         return view
 
     async def read_revision(*_):
