@@ -5,7 +5,9 @@ Implementation and verification handover for Ianno Hollensteiner and the differe
 Responsible teammate: Ianno (`Iannomh123456`), assisted by Codex. Work remains on
 `fix/coop-wave-consistency-review`, [PR #485](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/485).
 The reviewed combined head was `563b62ef`; main `03e660fe` is incorporated by merge commit
-`33ab1176`. PR #490 merged into #486, which merged into #485; their changes now travel together
+`33ab1176`. A final docs-only main update `3482c281` is also incorporated; its economy contract
+changes no runtime or tests, and all 25 runtime hashes remain identical to the tested source.
+PR #490 merged into #486, which merged into #485; their changes now travel together
 through #485 to main. This is a task-branch update, not a merge into main or a live release.
 
 ## Confirmed review findings

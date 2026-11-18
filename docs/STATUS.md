@@ -1222,3 +1222,5 @@ runtime changes. Build/budget/Ruff pass. Same-script desktop/phone captures show
 identically on main before its assertions; no new native full-multiplayer/live/physical-device
 pass is claimed. [Exact handover/evidence](handoff/coop-review-fixes-2026-11-18.md).
 Different human re-review remains pending. No main merge, deployment, live migration or refund.
+
+Ianno / 2026-11-18 — Final #485 reconciliation incorporates main `3482c281` (MP-ECO-01 documentation only). Runtime and test files remain byte-identical to the verified source; all 25 runtime hashes match. Application suites were not repeated for this documentation-only merge. No main merge or live operation.
