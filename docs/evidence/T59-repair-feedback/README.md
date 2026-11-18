@@ -150,6 +150,34 @@ The eight output PNGs were moved unchanged into this evidence directory. For a r
 
 All eight images were visually reviewed. The command also checks the paid action's local intent, absent ETA, shared quota copy, 44-pixel phone repair target, viewport fit, tiny positive fill, disabled loading Upgrade, and retired choices. These are production DOM cards with offline DTO fixtures: no authenticated API request, real payment, live database, game session or second client is demonstrated.
 
+## Wave-end component and integration refresh · 18 Nov
+
+Captured from source `bd1333ea` (app baseline `be8b30d7`, including main `db573347`). The component and production integration scripts now assert the full wave-end helper, no gradual ETA copy, the no-free-repair-through-wave-closure text and shared remaining paid uses. The component script verifies the standalone preview’s three examples. The integration script preserves canonical DTO/request checks, fixed repair price, quota decrement, refusal HP, checkpoint-before-repair, held HTTP response versus journal replay, full-health hiding, tiny-positive fill, mobile view and production styles.
+
+The integrated fixture’s destroyed-wall check was adapted to main’s wall batching: it reads the selected wall’s `wallPosts` entry from `island-wall-connections`, asserts that exact post is marked `broken`, and focuses the camera using that post’s projected coordinates. This keeps the empty health bar, `!` indicator and rendered ruin checks while following the current renderer structure. The fixture still supplies the rate/estimate members required by the current recovery DTO validator; the UI assertions no longer use them to promise gradual healing. No gameplay source changed.
+
+Commands run from `frontend/`:
+
+```sh
+RECOVERY_CAPTURE_DIRECTORY=../docs/evidence/T59-repair-feedback/wave-end-20261118-component npm run test:recovery:component
+RECOVERY_CAPTURE_DIRECTORY=../docs/evidence/T59-repair-feedback/wave-end-20261118-integration node scripts/capture-structure-recovery-integration.js
+./node_modules/.bin/vitest run tests/island/selection-dock.test.js --maxWorkers=1
+```
+
+The component command passed: three cards, exact HP, destroyed marker, tiny-positive visible fill, intent-only button and desktop/phone screenshots. The final integrated capture passed with 72 signed-shape offline adapter requests and no browser errors. All four selection-dock tests passed, including the intentional “Wait until building health has loaded.” expectation. Both capture scripts accept `RECOVERY_CAPTURE_DIRECTORY`; new captures were saved in dated directories below, leaving historical screenshots unchanged. The run used headless Chromium (`/usr/bin/chromium`) with the existing SwiftShader flags for integration.
+
+| Viewport | Scenario | Screenshot |
+|---|---|---|
+| 1440 × 900 / 390 × 844 | Standalone wall, preparation cannon and tiny-positive harpoon; full wave-end helper and shared quota | [Desktop](wave-end-20261118-component/t59-recovery-component-desktop.png) · [Phone](wave-end-20261118-component/t59-recovery-component-phone.png) |
+| 1440 × 900 | Production island wall at 45/60 HP, fixed 10-coin repair and wave-end helper | [Between waves](wave-end-20261118-integration/t59-integrated-between-desktop.png) |
+| 1440 × 900 | Destroyed wall with empty bar, `!` and broken wall post visible | [Zero HP and ruin](wave-end-20261118-integration/t59-integrated-zero-ruin-desktop.png) |
+| 1440 × 900 | Insufficient-funds refusal retains 45/60 HP | [Refusal](wave-end-20261118-integration/t59-integrated-refusal-desktop.png) |
+| 390 × 844 | Preparation offer: wall at 0/60 HP, fixed 10-coin quote and three shared uses before payment | [Offer](wave-end-20261118-integration/t59-integrated-preparation-offer-phone.png) |
+| 390 × 844 | After preparation payment: shared uses decrement from three to two | [Preparation quota](wave-end-20261118-integration/t59-integrated-preparation-phone.png) |
+| 1440 × 900 | Combat repair success held from journal, then applied by replay | [HTTP held](wave-end-20261118-integration/t59-integrated-combat-http-response-held.png) · [Journal applied](wave-end-20261118-integration/t59-integrated-combat-journal-applied.png) |
+
+The integration also captured accepted between-wave repair, partial combat health, tiny-positive phone health and full-health phone state in the same directory. These remain offline fixture captures: they do not demonstrate an authenticated API, real payment, database recovery, actual canonical wave closure or a second client. The first refreshed integration attempt hit the obsolete individual-wall-mesh assertion at the ruin case. The fixture now reads the batch group’s actual visibility and exact selected post look, and camera focus follows that post. The full capture passed. The preparation-offer screenshot resets the card scroll to show health, the fixed quote and the three-use quota together. No live service, migration, deployment or activation was used.
+
 ### Combined current-main verification
 
 Local candidate `35f91e0e` combines the four repair follow-ups with main `db573347`. Its 23-file frontend command passed 232 tests, including the changed policy/card/tutorial/replay cases and the latest village decode/shipping/raster contracts. Production build passed in 1.71 seconds; the spoiler guard checked 245 text files and 12 protected lines. Text lint reported zero errors and eight unchanged report-only findings. This is combined-source evidence, not an isolated-branch full-suite claim.
