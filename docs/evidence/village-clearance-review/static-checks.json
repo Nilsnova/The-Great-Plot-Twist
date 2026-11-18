@@ -1,16 +1,116 @@
 {
   "status": "static_integrity_checked_application_results_recorded_separately",
-  "originalArtifactsByteVerified": 112,
+  "originalArtifactsByteVerified": 143,
   "paidPngsBoundToOriginalCaptureReports": 52,
-  "pngFiles": 94,
+  "pngFiles": 100,
   "comparisonImages": 12,
-  "localLinkTargetsChecked": 74,
+  "localLinkTargetsChecked": 86,
   "jsonParse": "passed",
   "htmlTagBalanceAndLocalReferences": "passed",
   "authoredWhitespace": "passed; untouched original logs inspected separately",
   "originalLogWhitespace": {
     "whitespaceDiagnosticsPresent": true,
     "diagnostics": [
+      "docs/evidence/village-clearance-review/checks/application/frontend.log:4998: new blank line at EOF.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:39: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:40: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:43: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:63: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:87: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:88: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:91: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:111: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:135: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:136: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:139: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:159: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:183: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:184: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:187: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:207: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:231: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:232: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:235: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:255: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:279: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:280: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:283: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:303: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:327: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:328: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:331: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:351: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:375: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:376: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:379: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:399: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:423: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:424: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:427: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:447: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:471: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:472: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:475: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:495: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:519: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:520: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:523: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:543: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:567: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:568: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:571: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:591: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:615: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:616: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:619: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:639: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:663: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:664: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:667: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:687: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:711: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:712: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:715: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:735: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:759: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:760: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:763: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:783: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:807: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:808: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:811: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:831: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:855: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:856: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:859: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:879: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:903: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:904: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:907: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:927: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:951: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:952: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:955: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:975: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:999: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:1000: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:1003: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:1023: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:1051: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:1052: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:1060: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:1122: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:1123: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:1131: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:1189: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:1190: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:1198: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:1273: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:1274: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:1277: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:1297: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:1323: trailing whitespace.",
+      "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log:1344: trailing whitespace.",
       "docs/evidence/village-clearance-review/checks/final-frontend/frontend.log:4998: new blank line at EOF."
     ],
     "perFileNoIndexExitCodes": [
@@ -23,8 +123,68 @@
         "exitCode": 1
       },
       {
+        "path": "docs/evidence/village-clearance-review/checks/application/a11y.log",
+        "exitCode": 1
+      },
+      {
+        "path": "docs/evidence/village-clearance-review/checks/application/budget.log",
+        "exitCode": 1
+      },
+      {
+        "path": "docs/evidence/village-clearance-review/checks/application/build.log",
+        "exitCode": 1
+      },
+      {
+        "path": "docs/evidence/village-clearance-review/checks/application/demo.log",
+        "exitCode": 1
+      },
+      {
+        "path": "docs/evidence/village-clearance-review/checks/application/frontend.log",
+        "exitCode": 3
+      },
+      {
+        "path": "docs/evidence/village-clearance-review/checks/application/multiplayer.log",
+        "exitCode": 1
+      },
+      {
+        "path": "docs/evidence/village-clearance-review/checks/application/overlaps.log",
+        "exitCode": 1
+      },
+      {
+        "path": "docs/evidence/village-clearance-review/checks/application/run.log",
+        "exitCode": 1
+      },
+      {
+        "path": "docs/evidence/village-clearance-review/checks/application/runner.log",
+        "exitCode": 1
+      },
+      {
+        "path": "docs/evidence/village-clearance-review/checks/application/text-lint.log",
+        "exitCode": 1
+      },
+      {
+        "path": "docs/evidence/village-clearance-review/checks/backend-attempt-a76/backend.log",
+        "exitCode": 3
+      },
+      {
+        "path": "docs/evidence/village-clearance-review/checks/backend-attempt-a76/ruff.log",
+        "exitCode": 1
+      },
+      {
+        "path": "docs/evidence/village-clearance-review/checks/backend-final/backend.log",
+        "exitCode": 1
+      },
+      {
+        "path": "docs/evidence/village-clearance-review/checks/backend-final/ruff.log",
+        "exitCode": 1
+      },
+      {
         "path": "docs/evidence/village-clearance-review/checks/final-frontend/frontend.log",
         "exitCode": 3
+      },
+      {
+        "path": "docs/evidence/village-clearance-review/checks/root-final-text-lint.log",
+        "exitCode": 1
       },
       {
         "path": "docs/evidence/village-clearance-review/integration-fixture-checks/fixture-backend.log",
@@ -126,6 +286,14 @@
     },
     {
       "from": "docs/contribute/VILLAGE-CLEARANCE-REVIEW.md",
+      "target": "../evidence/village-clearance-review/source.json"
+    },
+    {
+      "from": "docs/contribute/VILLAGE-CLEARANCE-REVIEW.md",
+      "target": "../evidence/village-clearance-review/README.md"
+    },
+    {
+      "from": "docs/contribute/VILLAGE-CLEARANCE-REVIEW.md",
       "target": "../evidence/village-clearance-review/README.md"
     },
     {
@@ -191,6 +359,46 @@
     {
       "from": "docs/evidence/village-clearance-review/README.md",
       "target": "checks/final-frontend/frontend.log"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/README.md",
+      "target": "checks/application/report.json"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/README.md",
+      "target": "checks/ui-sequence.json"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/README.md",
+      "target": "checks/application/multiplayer.log"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/README.md",
+      "target": "checks/application/multiplayer-captures/sync-samples.json"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/README.md",
+      "target": "checks/backend-final/report.json"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/README.md",
+      "target": "checks/backend-attempt-a76/report.json"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/README.md",
+      "target": "checks/final-source-invariants.json"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/README.md",
+      "target": "checks/root-final-text-lint.log"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/README.md",
+      "target": "inherited-phone-hud/before-wave-standing-375x812.png"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/README.md",
+      "target": "actual-final/wave-standing-375x812.png"
     },
     {
       "from": "docs/evidence/village-clearance-review/comparison.html",

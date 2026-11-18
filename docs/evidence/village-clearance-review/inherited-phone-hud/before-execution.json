@@ -1,0 +1,27 @@
+{
+  "source": "7fab8866b83e27c6102df6b123ffdf2eb96619d0",
+  "frontendTree": "e191d9290088908ee27e82e03a15847d4a73a38e",
+  "publicTree": "9306942db1050d728799cee2fbdc8e8960f14ad2",
+  "backendTree": "3956a73d76f537fd7c85259afa4bf9280a6e0ecd",
+  "supabaseTree": "5dfb7a3d506568b2e344c795360a562580854c33",
+  "helperHead": "12fe7ab781b2223de191485170aa48f664e4b91e",
+  "helperCodeEquivalentTo": "074a4675b99c68a41604bb1658943f5dfb1ee067",
+  "helperHashes": {
+    "capture-village-composition.mjs": "0ffcefb64fd6a32f6348e6c35542bd54887e07b8fe8aed0eb85f904e427dbda8",
+    "perimeter-game-ui.mjs": "8f47d596ea378800b89e88171ab58aa37477faf892658cd7aca7c20f327a8ffb",
+    "perimeter-game-wave.mjs": "9c2f3a1951a1a57154c93e7cc113a33fc3b6dd16eb895126eac5eb5adb7547af"
+  },
+  "started": "2026-11-18T00:30:25.021391+00:00",
+  "command": [
+    "node",
+    "scripts/capture-village-composition.mjs",
+    "/workspace/reference-village-work/polish-runtime-04/frontend",
+    "/workspace/reference-village-work/polish-final-captures",
+    "reference",
+    "--arranged",
+    "--wave"
+  ],
+  "exitCode": 0,
+  "seconds": 192.03,
+  "finished": "2026-11-18T00:33:37.050674+00:00"
+}

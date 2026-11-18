@@ -1,5 +1,5 @@
 {
-  "status": "frontend_native_and_capture_originals_other_command_and_backend_results_pending",
+  "status": "final_original_artifacts_complete_known_application_failures_retained",
   "copiedOriginalArtifacts": [
     {
       "path": "progress-paid-bcf/houses-0-1280x720.png",
@@ -860,8 +860,206 @@
       "origin": "/workspace/reference-village-work/clearance-final-checks/frontend.log",
       "bytes": 688339,
       "sha256": "61ae43d6792a3845aeb9a3d90fd1efc33d11ae0f165359ad917d069fa3b8558e"
+    },
+    {
+      "path": "checks/application/report.json",
+      "origin": "/workspace/reference-village-work/clearance-final-checks/report.json",
+      "bytes": 2165,
+      "sha256": "ccb88c43a1d48f752d8a5a2c46f08ab6f71d6344ce5933865658efa9ce39df60"
+    },
+    {
+      "path": "checks/application/execution.json",
+      "origin": "/workspace/reference-village-work/clearance-final-checks/execution.json",
+      "bytes": 644,
+      "sha256": "fb00e16581085715ebdcc7bbd8bde690955707f945d4cb697d16b3ca0735ad2d"
+    },
+    {
+      "path": "checks/application/run.log",
+      "origin": "/workspace/reference-village-work/clearance-final-checks/run.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "checks/application/runner.log",
+      "origin": "/workspace/reference-village-work/clearance-final-checks/runner.log",
+      "bytes": 1324,
+      "sha256": "b8ad004e81be916809179f3a4adf1cf0433aed862f5ff9c055c10d8b140cbafc"
+    },
+    {
+      "path": "checks/application/frontend.log",
+      "origin": "/workspace/reference-village-work/clearance-final-checks/frontend.log",
+      "bytes": 688339,
+      "sha256": "61ae43d6792a3845aeb9a3d90fd1efc33d11ae0f165359ad917d069fa3b8558e"
+    },
+    {
+      "path": "checks/application/a11y.log",
+      "origin": "/workspace/reference-village-work/clearance-final-checks/a11y.log",
+      "bytes": 818,
+      "sha256": "a966f2a7f04a2795da2f363d4f6fffaf2c78ac4dfa9ad6cb0b6c61e0175945de"
+    },
+    {
+      "path": "checks/application/demo.log",
+      "origin": "/workspace/reference-village-work/clearance-final-checks/demo.log",
+      "bytes": 2692,
+      "sha256": "65bffe08dcf920e36919464037b83cdb0ff3117b7fdea09b56f9e1d6fb1afe51"
+    },
+    {
+      "path": "checks/application/overlaps.log",
+      "origin": "/workspace/reference-village-work/clearance-final-checks/overlaps.log",
+      "bytes": 6129,
+      "sha256": "3e96153410699c462e20e2222bdce3435d4c557f43a6b2022ec01ced9918762d"
+    },
+    {
+      "path": "checks/application/build.log",
+      "origin": "/workspace/reference-village-work/clearance-final-checks/build.log",
+      "bytes": 17478,
+      "sha256": "6ec80de2087397d46df9b5a85b12422a0be639b3480e9229454088979b3596c2"
+    },
+    {
+      "path": "checks/application/budget.log",
+      "origin": "/workspace/reference-village-work/clearance-final-checks/budget.log",
+      "bytes": 83823,
+      "sha256": "7a5ae2997a2882d735f74997e6fcb6ad21bca2a5a9df4d8758ee580ef0ff0d04"
+    },
+    {
+      "path": "checks/application/text-lint.log",
+      "origin": "/workspace/reference-village-work/clearance-final-checks/text-lint.log",
+      "bytes": 1037,
+      "sha256": "81cb125b047cf44dbc9d62ca67770babf11cfc5c54d0fccb9279a4ded2ede1bb"
+    },
+    {
+      "path": "checks/application/multiplayer.log",
+      "origin": "/workspace/reference-village-work/clearance-final-checks/multiplayer.log",
+      "bytes": 14438,
+      "sha256": "65e5b34ef417c209f6953adecb6638efa43b77da919b299c534e4a13bd6b4063"
+    },
+    {
+      "path": "checks/application/demo-captures/journey.json",
+      "origin": "/workspace/reference-village-work/clearance-final-checks/demo-captures/journey.json",
+      "bytes": 2614,
+      "sha256": "5e4bd4e211353bfe67b50cbc442e3a00468017bb3c848b1bb6a5a043dbde7654"
+    },
+    {
+      "path": "checks/application/overlap-captures/report.json",
+      "origin": "/workspace/reference-village-work/clearance-final-checks/overlap-captures/report.json",
+      "bytes": 6282,
+      "sha256": "13a690ca901ae386356927c145e52e4fb10c0a635a6bbab688a48178fb3ac7d7"
+    },
+    {
+      "path": "checks/application/multiplayer-captures/sync-samples.json",
+      "origin": "/workspace/reference-village-work/clearance-final-checks/multiplayer-captures/sync-samples.json",
+      "bytes": 485636,
+      "sha256": "a1d34781501408c456d059b470b6bb5dcaaf528438cab449b904222fa2b30652"
+    },
+    {
+      "path": "checks/application/multiplayer-captures/failure-me.png",
+      "origin": "/workspace/reference-village-work/clearance-final-checks/multiplayer-captures/failure-me.png",
+      "bytes": 521642,
+      "sha256": "bec1c125a2d34ee04eac01848a14601f8a9c58e8bda9891afb888552dba1a2a7",
+      "width": 960,
+      "height": 600
+    },
+    {
+      "path": "checks/application/multiplayer-captures/failure-ben.png",
+      "origin": "/workspace/reference-village-work/clearance-final-checks/multiplayer-captures/failure-ben.png",
+      "bytes": 532174,
+      "sha256": "b47f77c40269d6d2cd62adca2516cdb581a36e06ba31106c39140f59c3f49319",
+      "width": 960,
+      "height": 600
+    },
+    {
+      "path": "checks/application/multiplayer-captures/failure-ana.png",
+      "origin": "/workspace/reference-village-work/clearance-final-checks/multiplayer-captures/failure-ana.png",
+      "bytes": 561928,
+      "sha256": "892edb45265dd2a2e9f57edd04b4af04bfe29ddbb1e03695bf2e4aca619149a3",
+      "width": 960,
+      "height": 600
+    },
+    {
+      "path": "checks/application/multiplayer-captures/failure-max.png",
+      "origin": "/workspace/reference-village-work/clearance-final-checks/multiplayer-captures/failure-max.png",
+      "bytes": 489713,
+      "sha256": "387e33c26dfec5219af70dc52c9bdfdc50c00bf391e4dca7ab69a6159fa2e1dc",
+      "width": 960,
+      "height": 600
+    },
+    {
+      "path": "checks/application/multiplayer-captures/03-wave1-muskets-me.png",
+      "origin": "/workspace/reference-village-work/clearance-final-checks/multiplayer-captures/03-wave1-muskets-me.png",
+      "bytes": 632661,
+      "sha256": "c28b23dc8670c4a0353b7dd30254e64afb652a65dcfac77085e9031d3a6b1108",
+      "width": 960,
+      "height": 600
+    },
+    {
+      "path": "checks/ui-sequence.json",
+      "origin": "/workspace/reference-village-work/clearance-ui-sequence/report.json",
+      "bytes": 2829,
+      "sha256": "e003909c0e3e42f21bc83e291107d6a35eff4e8f4b679e440032fde741db696d"
+    },
+    {
+      "path": "checks/backend-attempt-a76/report.json",
+      "origin": "/workspace/reference-village-work/clearance-backend-checks/report.json",
+      "bytes": 4660,
+      "sha256": "8fd560ceb8e28873cbce5373543b170a9ca9a14eb366eb1683e05ef10c83bc81"
+    },
+    {
+      "path": "checks/backend-attempt-a76/backend.log",
+      "origin": "/workspace/reference-village-work/clearance-backend-checks/backend.log",
+      "bytes": 62220,
+      "sha256": "311942138df43b5006aff79ed3a20c6f1014720d8054b996480c6e20929878cc"
+    },
+    {
+      "path": "checks/backend-attempt-a76/ruff.log",
+      "origin": "/workspace/reference-village-work/clearance-backend-checks/ruff.log",
+      "bytes": 19,
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    {
+      "path": "inherited-phone-hud/before-wave-standing-375x812.png",
+      "origin": "/workspace/reference-village-work/polish-final-captures/wave-standing-375x812.png",
+      "bytes": 252778,
+      "sha256": "3e8d46fbe894e0fd1c7504b3da50c29eb4982f0f8f9b63162048c7ef63101113",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "inherited-phone-hud/before-execution.json",
+      "origin": "/workspace/reference-village-work/polish-final-captures/execution.json",
+      "bytes": 1158,
+      "sha256": "3a5e51a569941fd5311e86ae2d5dfe9bd7bf583e16144ce60764a2da11d4c82b"
+    },
+    {
+      "path": "checks/backend-final/report.json",
+      "origin": "/workspace/reference-village-work/clearance-backend-final-checks/report.json",
+      "bytes": 4735,
+      "sha256": "20ec046ba0feae2e9796919ed3cd75f998aa71116a3a1367d7264bdc15afc2a6"
+    },
+    {
+      "path": "checks/backend-final/backend.log",
+      "origin": "/workspace/reference-village-work/clearance-backend-final-checks/backend.log",
+      "bytes": 2216,
+      "sha256": "acad4fa5cf62449da95eb3c7b377a5c50ccf88596b5590f0fb804e5f59d1c2d7"
+    },
+    {
+      "path": "checks/backend-final/ruff.log",
+      "origin": "/workspace/reference-village-work/clearance-backend-final-checks/ruff.log",
+      "bytes": 19,
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    {
+      "path": "checks/final-source-invariants.json",
+      "origin": "/workspace/reference-village-work/clearance-pass/final-source-invariants.json",
+      "bytes": 1833,
+      "sha256": "1bf6ae0c0e4b03e09db5b6b4175df048bf1e68ca2b0e39c38fe296c881c8bc31"
+    },
+    {
+      "path": "checks/root-final-text-lint.log",
+      "origin": "/workspace/reference-village-work/clearance-pass/text-final.log",
+      "bytes": 1037,
+      "sha256": "81cb125b047cf44dbc9d62ca67770babf11cfc5c54d0fccb9279a4ded2ede1bb"
     }
   ],
-  "pngCount": 94,
-  "boundary": "Final frontend paid source68d is complete; progressbcf is retained separately. Final regular-build backend/SQL authority and broader application results are pending."
+  "pngCount": 100,
+  "boundary": "All supplied coordinator runs are closed. Original intermediate/final/failure artifacts retain distinct sources; no app run was performed by the documentation writer."
 }

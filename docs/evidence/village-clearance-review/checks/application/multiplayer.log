@@ -1,0 +1,83 @@
+Nils is on the island (me)
+Ben is on the island (ben)
+screenshots 01-lobby-two-captains
+screenshots 01b-lobby-role-icons
+screenshots 01-two-captains
+screenshots 02-coop-wall
+screenshots 02b-owner-upgrade
+screenshots 02c-friend-upgrade
+screenshots 02d-tower-skill
+screenshots 02e-research-tiers
+screenshots 03-wave1-muskets
+screenshots 10-revived
+screenshots 04-paused-break
+screenshots 04-break-upgrade
+Ana is on the island (ana)
+Max is on the island (max)
+screenshots 05-four-captains-mid-wave
+
+RESULTS SO FAR
+  lobbies: host Nils (you):online, Ben:online (Start on); friend Nils:online, Ben (you):online (Start off)
+  captain tree: the friend's lobby shows 🩹 Medic on Nils
+  Start: both lobbies closed, game_started true (first) on both pages
+  co-op wall on the owner's island after 512 ms
+  owner upgrade to level 2 on the friend's map and card after 762 ms
+  friend upgrade to level 3 on the owner's map and open card after 228 ms
+  tower skill: the owner's Heavy shot on cannon_1 on the friend's island and card after 968 ms ("Skill: Heavy shot")
+  tower skill: the friend's Rapid on the owner's cannon_1 on the owner's island and card after 762 ms
+  research tier 2: the owner's Long guns on the friend's island after 1001 ms
+  research tier 3: the friend's Grapeshot and cannon_1's pick are the same research and defenses on both pages
+  house role: the owner's Barracks on house_1 on the friend's island, card ("Role: Barracks") and map (island-house-barracks) after 799 ms
+  house role: the friend's Workshop on house_1 on the owner's island and card after 604 ms
+  tear down: the owner's confirmation "Tear down this Wall (level 3)?" You get back 🪙 10. Ben gets back 🪙 25.; the friend's island showed the empty spot after 756 ms, his toast "Nils tore down the Wall. You got back 🪙 25.", his coins 1770 → 1795
+  wave 3 (fake-wave-1) on both pages: 1 / 1 ships
+  research in the wave: 2 towers alike in both sims, cannon_1 {"id":"cannon_1","spec":"grapeshot","bonus":"long_guns","range":32.2}
+  musket shots through the room: 2 reached the owner, 2 reached the friend
+  musket shots: owner's sim 2 from 2 captains, friend's sim 2 from 2 (first by p-twm3hjjp)
+  captain health: the friend fell at sim time 27.5 s on his page, 27.5 s on the owner's
+  revive hold 1280x800: observed 0.7091666666666666 share before release
+  revive hold 390x844: observed 0.8633333333333333 share before release
+  captain health: the owner helped him up for 🪙 35 at sim time 67.9 s (the friend's page 67.9 s), by the owner
+  captain tree: the Medic helped him up after a 1.6 s hold, hp 75 of 100 on both pages
+  captains defended the heart after the revive with 5 and 6 post-revive ship shots
+  break time remaining when the host paused: 8 s
+  Pause: both clients said "Paused by Nils" and stayed in the break past its 8 seconds
+  upgrade in the break: cannon_2 is level 2 / 2 in the wave's drawing on both pages
+  wave 1 loot: Nils 35, Ben 35
+  wave 1 sync owner/friend: 113/113 samples with the same ships at the same tick, worst count gap 0
+  wave 1 boarders owner/friend: 113/113 samples with the same boarders ashore (20 with boarders, 5 landed), worst count gap 0
+  wave 1 militia owner/friend: 84/84 samples at the same tick identical (place, hp, state), 0 fighting
+  wave 1 militia: no boarder came near the Barracks in this wave's samples
+  wave 3 ship fire: owner 72 shots, 71 on the heart; friend 72 shots, 71 on the heart; heart ♥ alike at 84/84 shared ticks
+  wave 3 event: owner [{"wave":3,"event":"storm"}], friend [{"wave":3,"event":"storm"}]
+  both pressed Next wave: one wave 4 (fake-wave-2) on both pages
+  Ana joined wave 4 mid-wave at tick 225
+  Max joined wave 4 mid-wave at tick 289
+  late friends: their lobbies closed by themselves (the room said the game is on)
+  members: Nils, Ben, Ana, Max
+  musket pose: the owner's own body posed at no size, his figure on the friend's page at no size
+  musket pose probe on the friend's page: {"figures":[{"id":"me","x":0.8476726718240485,"z":13.974313973910945,"colour":0}],"party":[{"id":"p-66x6aopp","colour":3,"present":true,"x":0,"z":12},{"id":"p-b28g5at3","colour":1,"present":true,"x":0.61,"z":9.98},{"id":"p-twm3hjjp","colour":0,"present":true,"x":0.85,"z":13.97},{"id":"p-yhssta8r","colour":2,"present":true,"x":0,"z":12}],"mine":"p-b28g5at3"}
+  musket pose failed attempts: [{"size":"1280x720","attempt":0,"try":0,"fired":true,"targetState":{"waveId":"fake-wave-2","ticks":844,"done":false,"target":{"id":"ship_9","hp":24,"boss":false},"actor":{"id":"p-twm3hjjp","hp":100,"down":false}},"ownPose":false,"teammatePose":false,"newShots":[{"by":"p-twm3hjjp","targetId":"ship_9"}]},{"size":"1280x720","attempt":1,"try":0,"fired":true,"targetState":{"waveId":"fake-wave-2","ticks":952,"done":false,"target":{"id":"ship_9","hp":11,"boss":false},"actor":{"id":"p-twm3hjjp","hp":100,"down":false}},"ownPose":false,"teammatePose":false,"newShots":[{"by":"p-twm3hjjp","targetId":"ship_9"}]},{"size":"1280x720","attempt":2,"try":0,"fired":true,"targetState":{"waveId":"fake-wave-2","ticks":1059,"done":false,"target":{"id":"ship_3","hp":60,"boss":false},"actor":{"id":"p-twm3hjjp","hp":100,"down":false}},"ownPose":false,"teammatePose":false,"newShots":[{"by":"p-twm3hjjp","targetId":"ship_3"}]},{"size":"1280x720","attempt":3,"try":0,"fired":true,"targetState":{"waveId":"fake-wave-2","ticks":1163,"done":false,"target":{"id":"ship_3","hp":47,"boss":false},"actor":{"id":"p-twm3hjjp","hp":100,"down":false}},"ownPose":false,"teammatePose":false,"newShots":[{"by":"p-twm3hjjp","targetId":"ship_3"}]},{"size":"375x812","attempt":0,"try":0,"fired":true,"targetState":{"waveId":"fake-wave-2","ticks":1267,"done":false,"target":{"id":"ship_3","hp":34,"boss":false},"actor":{"id":"p-twm3hjjp","hp":100,"down":false}},"ownPose":false,"teammatePose":false,"newShots":[{"by":"p-twm3hjjp","targetId":"ship_3"}]},{"size":"375x812","attempt":1,"try":0,"fired":true,"targetState":{"waveId":"fake-wave-2","ticks":1378,"done":false,"target":{"id":"ship_3","hp":21,"boss":false},"actor":{"id":"p-twm3hjjp","hp":100,"down":false}},"ownPose":false,"teammatePose":false,"newShots":[{"by":"p-twm3hjjp","targetId":"ship_3"}]},{"size":"375x812","attempt":2,"try":0,"fired":true,"targetState":{"waveId":"fake-wave-2","ticks":1483,"done":false,"target":{"id":"ship_3","hp":8,"boss":false},"actor":{"id":"p-twm3hjjp","hp":100,"down":false}},"ownPose":false,"teammatePose":false,"newShots":[{"by":"p-twm3hjjp","targetId":"ship_3"}]},{"size":"375x812","attempt":3,"try":0,"fired":true,"targetState":{"waveId":"fake-wave-2","ticks":1590,"done":false,"target":{"id":"ship_6","hp":60,"boss":false},"actor":{"id":"p-twm3hjjp","hp":100,"down":false}},"ownPose":false,"teammatePose":false,"newShots":[{"by":"p-twm3hjjp","targetId":"ship_6"}]}]
+Nils multiplayer failure diagnostic {"place":"home_islet","own":true,"visiting":null,"wave":{"waveId":"fake-wave-2","wave":4,"done":false,"pause":false,"ticks":1748,"phase":"running","ships":1},"inBreak":false,"breakPanel":{"hidden":true,"visible":false,"text":"×Auto next wave"},"waveFinishAnswers":[{"waveId":"fake-wave-1","loot":35}],"reviveInputs":[{"by":"p-twm3hjjp","seq":23,"t":67.9,"waveId":"fake-wave-1","targetId":"p-b28g5at3","currentTick":1354,"scheduleLate":0}],"revived":[{"captainId":"p-b28g5at3","by":"p-twm3hjjp","t":67.9,"hp":75,"currentTick":1375,"scheduleLate":0}],"lifecycle":[{"at":17325,"type":"state","phase":null,"inBreak":false},{"at":141984.70000000298,"type":"state","phase":{"waveId":"fake-wave-1","wave":3,"done":false,"pause":false,"ticks":0,"phase":"countdown"},"inBreak":false},{"at":151721.70000000298,"type":"state","phase":{"waveId":"fake-wave-1","wave":3,"done":false,"pause":false,"ticks":9,"phase":"running"},"inBreak":false},{"at":236206.40000000596,"type":"wave_finished","waveId":"fake-wave-1","survived":true},{"at":236216.10000000894,"type":"state","phase":{"waveId":"fake-wave-1","wave":3,"done":true,"pause":true,"ticks":1686,"phase":"ended"},"inBreak":true},{"at":236571,"type":"wave_finished","waveId":"fake-wave-1","survived":true},{"at":265757.5,"type":"wave_controller_stopped","waveId":"fake-wave-1"},{"at":266590.3000000119,"type":"state","phase":{"waveId":"fake-wave-2","wave":4,"done":false,"pause":false,"ticks":0,"phase":"countdown"},"inBreak":false},{"at":275953.3000000119,"type":"state","phase":{"waveId":"fake-wave-2","wave":4,"done":false,"pause":false,"ticks":14,"phase":"running"},"inBreak":false}],"waveStarted":[{"type":"game_started","first":true,"code":"K7Q2M"}],"tailSamples":[{"waveId":"fake-wave-2","ticks":1743,"ships":"ship_6","hp":47,"boarders":"","landed":8,"militia":"militia_1@7,-4.4:60:idle","event":"{\"id\":\"fog_bank\",\"clear\":16,\"watchtowers\":[]}","heart":6.25},{"waveId":"fake-wave-2","ticks":1746,"ships":"ship_6","hp":47,"boarders":"","landed":8,"militia":"militia_1@7,-4.4:60:idle","event":"{\"id\":\"fog_bank\",\"clear\":16,\"watchtowers\":[]}","heart":6.25},{"waveId":"fake-wave-2","ticks":1748,"ships":"ship_6","hp":47,"boarders":"","landed":8,"militia":"militia_1@7,-4.4:60:idle","event":"{\"id\":\"fog_bank\",\"clear\":16,\"watchtowers\":[]}","heart":6.25}],"dialogs":[]}
+Ben multiplayer failure diagnostic {"place":"home_islet","own":true,"visiting":{"code":"K7Q2M","waveBest":3},"wave":{"waveId":"fake-wave-2","wave":4,"done":false,"pause":false,"ticks":1800,"phase":"running","ships":1},"inBreak":false,"breakPanel":{"hidden":true,"visible":false,"text":"×Auto next wave"},"waveFinishAnswers":[{"waveId":"fake-wave-1","loot":35}],"reviveInputs":[{"by":"p-twm3hjjp","seq":23,"t":67.9,"waveId":"fake-wave-1","targetId":"p-b28g5at3","currentTick":1358,"scheduleLate":0}],"revived":[{"captainId":"p-b28g5at3","by":"p-twm3hjjp","t":67.9,"hp":75,"currentTick":1359,"scheduleLate":0}],"lifecycle":[{"at":12565.29999999702,"type":"state","phase":null,"inBreak":false},{"at":126868.29999999702,"type":"state","phase":{"waveId":"fake-wave-1","wave":3,"done":false,"pause":false,"ticks":0,"phase":"countdown"},"inBreak":false},{"at":133522.40000000596,"type":"state","phase":{"waveId":"fake-wave-1","wave":3,"done":false,"pause":false,"ticks":1,"phase":"running"},"inBreak":false},{"at":217767,"type":"wave_finished","waveId":"fake-wave-1","survived":true},{"at":217775.20000000298,"type":"state","phase":{"waveId":"fake-wave-1","wave":3,"done":true,"pause":true,"ticks":1686,"phase":"ended"},"inBreak":true},{"at":218567.70000000298,"type":"wave_finished","waveId":"fake-wave-1","survived":true},{"at":248265.79999999702,"type":"wave_controller_stopped","waveId":"fake-wave-1"},{"at":248804.59999999404,"type":"state","phase":{"waveId":"fake-wave-2","wave":4,"done":false,"pause":false,"ticks":0,"phase":"countdown"},"inBreak":false},{"at":258258.09999999404,"type":"state","phase":{"waveId":"fake-wave-2","wave":4,"done":false,"pause":false,"ticks":15,"phase":"running"},"inBreak":false}],"waveStarted":[{"type":"game_started","first":true,"code":"K7Q2M"}],"tailSamples":[{"waveId":"fake-wave-2","ticks":1792,"ships":"ship_6","hp":47,"boarders":"","landed":8,"militia":"militia_1@7,-4.4:60:idle","event":"{\"id\":\"fog_bank\",\"clear\":16,\"watchtowers\":[]}","heart":4.75},{"waveId":"fake-wave-2","ticks":1796,"ships":"ship_6","hp":47,"boarders":"","landed":8,"militia":"militia_1@7,-4.4:60:idle","event":"{\"id\":\"fog_bank\",\"clear\":16,\"watchtowers\":[]}","heart":4.75},{"waveId":"fake-wave-2","ticks":1800,"ships":"ship_6","hp":47,"boarders":"","landed":8,"militia":"militia_1@7,-4.4:60:idle","event":"{\"id\":\"fog_bank\",\"clear\":16,\"watchtowers\":[]}","heart":4.75}],"dialogs":[]}
+Ana multiplayer failure diagnostic {"place":"home_islet","own":true,"visiting":{"code":"K7Q2M","waveBest":3},"wave":{"waveId":"fake-wave-2","wave":4,"done":false,"pause":false,"ticks":1844,"phase":"running","ships":1},"inBreak":false,"breakPanel":{"hidden":true,"visible":false,"text":"×Auto next wave"},"waveFinishAnswers":[],"reviveInputs":[],"revived":[],"lifecycle":[{"at":24900,"type":"state","phase":{"waveId":"fake-wave-2","wave":4,"done":false,"pause":false,"ticks":191,"phase":"running"},"inBreak":false}],"waveStarted":[],"tailSamples":[{"waveId":"fake-wave-2","ticks":1838,"ships":"ship_6","hp":47,"boarders":"","landed":8,"militia":"militia_1@7,-4.4:60:idle","event":"{\"id\":\"fog_bank\",\"clear\":16,\"watchtowers\":[]}","heart":3.25},{"waveId":"fake-wave-2","ticks":1841,"ships":"ship_6","hp":47,"boarders":"","landed":8,"militia":"militia_1@7,-4.4:60:idle","event":"{\"id\":\"fog_bank\",\"clear\":16,\"watchtowers\":[]}","heart":3.25},{"waveId":"fake-wave-2","ticks":1844,"ships":"ship_6","hp":47,"boarders":"","landed":8,"militia":"militia_1@7,-4.4:60:idle","event":"{\"id\":\"fog_bank\",\"clear\":16,\"watchtowers\":[]}","heart":3.25}],"dialogs":[]}
+Max multiplayer failure diagnostic {"place":"home_islet","own":true,"visiting":{"code":"K7Q2M","waveBest":3},"wave":{"waveId":"fake-wave-2","wave":4,"done":false,"pause":false,"ticks":1862,"phase":"running","ships":1},"inBreak":false,"breakPanel":{"hidden":true,"visible":false,"text":"×Auto next wave"},"waveFinishAnswers":[],"reviveInputs":[],"revived":[],"lifecycle":[{"at":27218.79999999702,"type":"state","phase":null,"inBreak":false},{"at":29746.29999999702,"type":"state","phase":{"waveId":"fake-wave-2","wave":4,"done":false,"pause":false,"ticks":289,"phase":"running"},"inBreak":false}],"waveStarted":[],"tailSamples":[{"waveId":"fake-wave-2","ticks":1860,"ships":"ship_6","hp":47,"boarders":"","landed":8,"militia":"militia_1@7,-4.4:60:idle","event":"{\"id\":\"fog_bank\",\"clear\":16,\"watchtowers\":[]}","heart":1},{"waveId":"fake-wave-2","ticks":1861,"ships":"ship_6","hp":47,"boarders":"","landed":8,"militia":"militia_1@7,-4.4:60:idle","event":"{\"id\":\"fog_bank\",\"clear\":16,\"watchtowers\":[]}","heart":1},{"waveId":"fake-wave-2","ticks":1862,"ships":"ship_6","hp":47,"boarders":"","landed":8,"militia":"militia_1@7,-4.4:60:idle","event":"{\"id\":\"fog_bank\",\"clear\":16,\"watchtowers\":[]}","heart":1}],"dialogs":[]}
+errors: []
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: the owner's own character takes the musket pose when he fires (both sizes)
+
+0 !== 2
+
+    at file:///workspace/reference-village-work/clearance-runtime-02/frontend/scripts/check-multiplayer.js:814:12 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 0,
+  expected: 2,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.22.1

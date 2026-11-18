@@ -1,0 +1,26 @@
+{
+  "source": "68d41990615bac98aac3b3ffb2225857c8707a81",
+  "name": "application-checks",
+  "command": [
+    "python",
+    "/workspace/reference-village-work/run-candidate-checks.py",
+    "--repo",
+    "/workspace/reference-village-work/clearance-runtime-02",
+    "--out",
+    "/workspace/reference-village-work/clearance-final-checks",
+    "--checks",
+    "frontend",
+    "a11y",
+    "demo",
+    "overlaps",
+    "build",
+    "budget",
+    "text-lint",
+    "multiplayer",
+    "--continue-on-failure"
+  ],
+  "started": "2026-11-18T10:44:33.807770+00:00",
+  "exitCode": 1,
+  "seconds": 1582.76,
+  "finished": "2026-11-18T11:10:56.571101+00:00"
+}

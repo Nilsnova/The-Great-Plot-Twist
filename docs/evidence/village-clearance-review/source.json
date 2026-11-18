@@ -1,5 +1,5 @@
 {
-  "status": "frontend_and_native_captures_closed_remaining_application_and_backend_checks_pending",
+  "status": "final_review_package_complete_with_documented_application_failures",
   "responsibleHuman": "Johannes Franz Lang",
   "github": "frcola",
   "documentationBase": "bcf8f1bce5458cfb9c5d07e063ea0c2f3d57c44f",
@@ -31,15 +31,16 @@
     "seconds": 335.47,
     "exitCode": 0
   },
-  "boundary": "The named coordinator intermediate paid run is complete and copied unchanged. The later revised final candidate and its complete checks remain pending. Documentation-only commits can change HEAD without changing application trees; built bundle identity is not inferred from matching application trees.",
+  "boundary": "All coordinator UI/native and final targeted backend runs are closed, with two application failures retained. Progressbcf, UI68d and backend456 have distinct source records. Documentation commits may change HEAD/build stamps; matching application trees do not imply built bundles are byte-identical.",
   "layoutMeaning": "New normal paid arrangement, not automatic migration or injected successful walls. Existing saved coordinates and receipt replay remain authoritative.",
   "results": {
     "fullFrontend": "4906passed/one unchanged20secondinputtimeout;435files(434pass/1fail),622.73sVitest/623.58sprocess; overallnotgreen",
     "nativePaidProgression": "Final frontend68d passed28PNG/984upgrades335.84s; distinct interimbcf proof retained",
     "nativeActualJourney": "PASS210.61s20actualPNGs on68d, declared8000funds normalnew102+21layout ends5150coins; selection/Move cancel/unpaidghosts/fire/breach",
     "nativeMatrix": "PASS12.79s22labeledfixture sheets on68d; different from actual gameplay screenshots",
-    "backendTargetedPG": "pending coordinator",
-    "uiChecks": "pending coordinator"
+    "backendTargetedPG": "PASS1792/zero skips76.98spytest78.38process/wholeRuff.22; targeted route+realprivatePG/HTTP, notfullbackend",
+    "uiChecks": "a11y33screens/demo34checks/21measuredlayoutcases passed; inheritedphoneHUDgap remains",
+    "multiplayer": "FAIL371.10s0vs2ownpose;113distinctfirst-wavematchingpairs/84exactheartmilitia, latercomparisons/bossfinisher not reached"
   },
   "documentationWriterChecks": "JSON parse, authored whitespace and local link existence only; no browser/app/DB run.",
   "interimPaidResult": {
@@ -65,16 +66,17 @@
   "beforePaidSource": "7fab8866b83e27c6102df6b123ffdf2eb96619d0",
   "normalBuildFollowup": {
     "issue": 454,
-    "status": "frontend fake parity in68d candidate; final backend/SQL implementation and coordinator private-PG proof pending",
+    "status": "strict transaction-local authority and conditional materialization implemented; final wide1792tests passed, zero skips, wholeRuff passed; Draft455 remains for human review",
     "scope": "Close regular original-wall purchase bypass in addition to explicit Move/positioned-quote clearance. Atomic authority/fake parity and any additive migration remain separate from the interim capture.",
     "draftPR": 455,
-    "strictContextRevision": "Initiale57PG/HTTP41pass+broader182pass does not close the older raw/effective SQL authority gap. D066 requires transaction-local checked authority and old-signature fresh purchases fail closed. Final strict source and PG results pending.",
-    "migration": "20261118060000_wall_single_build_clearance.sql (72nd), written only; human owner applies before corresponding backend deployment; no agent live apply or fallback to old signatures."
+    "strictContextRevision": "Initial e57 PG/HTTP and broader passes did not close the raw/effective SQL gap. Final transaction-local authority and conditional compatibility source456 passed1792targeted checks with zero skips; old-signature fresh purchases fail closed, while original replay/read/upgrade behavior remains.",
+    "migration": "20261118060000_wall_single_build_clearance.sql (72nd), written only; human owner applies before corresponding backend deployment; no agent live apply or fallback to old signatures.",
+    "compatibilityRefinement": "Only materialize a fresh checked XY when it differs from raw/default. Defaultfreshpurchases create no extra row, matching raw metadata stays unchanged, and previous paid reads/upgrades/retries remain authoritative."
   },
   "finalFrontendCandidate": {
     "source": "68d41990615bac98aac3b3ffb2225857c8707a81",
     "runtime": "/workspace/reference-village-work/clearance-runtime-02",
-    "status": "nativepaid/actual/matrix andfullfrontendclosed; remaininga11y/demo/layout/build/budget/text/MPsequencepending",
+    "status": "All UI/native steps closed; overall exit1 from unchangedfrontendinputtimeout and MPownpose0vs2. No retry/skip/relaxation.",
     "includes": "revised water and early local-fake normal-purchase parity; final backend/SQL guard is tested separately after writer completion",
     "sequence": "/workspace/reference-village-work/clearance-ui-sequence/report.json",
     "plannedArtifacts": [
@@ -217,5 +219,550 @@
     "paid": "High retained; normalviewport+1/restore before snapshots establishes density1/DPR1. Work andadditionalrealFit retained separately.",
     "actualJourney": "Existing Low-to-High setting reset before ordinary snapshots, inherited capture method. Recorded snapshots High/density1/DPR1. No sustainedFPS claim.",
     "matrix": "Native compiled-frame/wall-render contact sheets with framebuffernegativecontrol; not actualgameplay or unlock/progression proof."
-  }
+  },
+  "finalUiSequence": {
+    "source": "68d41990615bac98aac3b3ffb2225857c8707a81",
+    "trees": {
+      "frontend/src": "cf4837fbec45e9cace371878fd8459e2dfd9c24b",
+      "frontend/public": "c21b9328134b71786fe733994cd27510d3839cc9",
+      "backend": "cc81737e8e84ede4a6d123b34e1fbfd07d3e57ec",
+      "supabase/migrations": "ae31ac50221be83070e7f46580d66a70eedbad20",
+      "frontend/scripts": "9ed27682388540a029046ce03cac936979fe4018",
+      "frontend/tests": "8d7e5565b6a27a1f45b1881dba063e6ef89326e1"
+    },
+    "started": "2026-11-18T10:35:14.541316+00:00",
+    "boundary": "Final frontend candidate; VIS68 atomic backend/SQL work is separate and pending. No backend/native-live proof inferred.",
+    "steps": [
+      {
+        "name": "paid-final",
+        "command": [
+          "node",
+          "scripts/capture-paid-wall-tiers.mjs",
+          "/workspace/reference-village-work/clearance-runtime-02/frontend",
+          "/workspace/reference-village-work/clearance-paid-final",
+          ".7",
+          "--scenery"
+        ],
+        "started": "2026-11-18T10:35:14.544223+00:00",
+        "exitCode": 0,
+        "seconds": 335.84,
+        "finished": "2026-11-18T10:40:50.382477+00:00"
+      },
+      {
+        "name": "actual-final",
+        "command": [
+          "node",
+          "scripts/capture-village-composition.mjs",
+          "/workspace/reference-village-work/clearance-runtime-02/frontend",
+          "/workspace/reference-village-work/clearance-actual-final",
+          "reference",
+          "--arranged",
+          "--wave",
+          "--scenery"
+        ],
+        "started": "2026-11-18T10:40:50.392872+00:00",
+        "exitCode": 0,
+        "seconds": 210.61,
+        "finished": "2026-11-18T10:44:21.003413+00:00"
+      },
+      {
+        "name": "matrix-final",
+        "command": [
+          "node",
+          "scripts/capture-visual-matrix.mjs",
+          "/workspace/reference-village-work/clearance-runtime-02/frontend",
+          "/workspace/reference-village-work/clearance-native-matrix"
+        ],
+        "started": "2026-11-18T10:44:21.012537+00:00",
+        "exitCode": 0,
+        "seconds": 12.79,
+        "finished": "2026-11-18T10:44:33.803701+00:00"
+      },
+      {
+        "name": "application-checks",
+        "command": [
+          "python",
+          "/workspace/reference-village-work/run-candidate-checks.py",
+          "--repo",
+          "/workspace/reference-village-work/clearance-runtime-02",
+          "--out",
+          "/workspace/reference-village-work/clearance-final-checks",
+          "--checks",
+          "frontend",
+          "a11y",
+          "demo",
+          "overlaps",
+          "build",
+          "budget",
+          "text-lint",
+          "multiplayer",
+          "--continue-on-failure"
+        ],
+        "started": "2026-11-18T10:44:33.807770+00:00",
+        "exitCode": 1,
+        "seconds": 1582.76,
+        "finished": "2026-11-18T11:10:56.571101+00:00"
+      }
+    ],
+    "exitCode": 1,
+    "finished": "2026-11-18T11:10:56.576755+00:00"
+  },
+  "finalApplicationReport": {
+    "started": "2026-11-18T10:44:33.846891+00:00",
+    "source": "68d41990615bac98aac3b3ffb2225857c8707a81",
+    "frontendTree": "cf4837fbec45e9cace371878fd8459e2dfd9c24b",
+    "publicTree": "c21b9328134b71786fe733994cd27510d3839cc9",
+    "backendTree": "cc81737e8e84ede4a6d123b34e1fbfd07d3e57ec",
+    "checks": [
+      {
+        "name": "frontend",
+        "command": [
+          "npm",
+          "test",
+          "--",
+          "--maxWorkers=1",
+          "--reporter=verbose"
+        ],
+        "exitCode": 1,
+        "seconds": 623.58,
+        "log": "frontend.log"
+      },
+      {
+        "name": "a11y",
+        "command": [
+          "npm",
+          "run",
+          "test:a11y"
+        ],
+        "exitCode": 0,
+        "seconds": 407.0,
+        "log": "a11y.log"
+      },
+      {
+        "name": "demo",
+        "command": [
+          "npm",
+          "run",
+          "test:demo"
+        ],
+        "exitCode": 0,
+        "seconds": 86.98,
+        "log": "demo.log"
+      },
+      {
+        "name": "overlaps",
+        "command": [
+          "npm",
+          "run",
+          "test:overlaps",
+          "--",
+          "--shots",
+          "/workspace/reference-village-work/clearance-final-checks/overlap-captures"
+        ],
+        "exitCode": 0,
+        "seconds": 89.37,
+        "log": "overlaps.log"
+      },
+      {
+        "name": "build",
+        "command": [
+          "npm",
+          "run",
+          "build"
+        ],
+        "exitCode": 0,
+        "seconds": 2.32,
+        "log": "build.log"
+      },
+      {
+        "name": "budget",
+        "command": [
+          "node",
+          "scripts/report-budget.js",
+          "--check"
+        ],
+        "exitCode": 0,
+        "seconds": 0.29,
+        "log": "budget.log"
+      },
+      {
+        "name": "text-lint",
+        "command": [
+          "node",
+          "../scripts/text-lint/index.mjs"
+        ],
+        "exitCode": 0,
+        "seconds": 2.01,
+        "log": "text-lint.log"
+      },
+      {
+        "name": "multiplayer",
+        "command": [
+          "node",
+          "scripts/check-multiplayer.js",
+          "/workspace/reference-village-work/clearance-final-checks/multiplayer-captures"
+        ],
+        "exitCode": 1,
+        "seconds": 371.1,
+        "log": "multiplayer.log"
+      }
+    ],
+    "finished": "2026-11-18T11:10:56.545749+00:00",
+    "exitCode": 1
+  },
+  "finalApplicationMetrics": {
+    "frontend": {
+      "passed": 4906,
+      "failed": 1,
+      "files": 435,
+      "vitestSeconds": 622.73,
+      "processSeconds": 623.58,
+      "failure": "unchanged20secondinputtimeout"
+    },
+    "a11y": {
+      "screens": 33,
+      "seconds": 407,
+      "failures": [],
+      "errors": []
+    },
+    "demo": {
+      "checks": 34,
+      "seconds": 86.98,
+      "errors": [],
+      "external": []
+    },
+    "overlaps": {
+      "measuredPasses": 21,
+      "nonapplicableRows": 3,
+      "seconds": 89.37,
+      "scope": "Measuredcases do not prove every battleHUD/transient toast timing is clear; inheritedphonebell/countdownoverlap remains visible."
+    },
+    "build": {
+      "processSeconds": 2.32,
+      "viteSeconds": 1.34,
+      "spoilerGuard": "245textfiles/12protectedlines/no suspecteliminationdata"
+    },
+    "budget": {
+      "seconds": 0.29,
+      "titleJavaScriptBytes": 18959,
+      "titleJavaScriptLimit": 21080,
+      "titleCssBytes": 9410,
+      "titleCssLimit": 12000,
+      "titleImage": null
+    },
+    "textLint": {
+      "seconds": 2.01,
+      "candidateStrings": 4579,
+      "sourceFiles": 535,
+      "errors": 0,
+      "reportOnly": 8
+    },
+    "multiplayer": {
+      "seconds": 371.1,
+      "failure": "ownmusketpose0versus2atcheck-multiplayer.js814",
+      "syncScope": "ONLYfake-wave-1owner/Ben; no later-wavecomparison/boss/finisher proof",
+      "metrics": {
+        "checked": 113,
+        "same": 113,
+        "worst": 0,
+        "sameBoarders": 113,
+        "worstBoarders": 0,
+        "withBoarders": 20,
+        "landed": 5,
+        "militiaChecked": 84,
+        "sameMilitia": 84,
+        "fighting": 0,
+        "heartChecked": 84,
+        "sameHeart": 84
+      },
+      "observations": {
+        "left": 115,
+        "right": 1304
+      },
+      "lateJoins": "Ana/Max lobby closure and membership passed; their later-wave synchronization comparisons were not reached."
+    }
+  },
+  "previousWideBackendAttempt": {
+    "report": {
+      "source": "a76e9cccf128567c1f4f1841babba86ac56a42aa",
+      "backendTree": "372f64f5c8e8291581e7a552307025a7437fa226",
+      "migrationsTree": "41694662564db316a3b7abb24fd61672a6c70641",
+      "started": "2026-11-18T11:04:19.983245+00:00",
+      "scope": "All51islandSQLmodules and relevant island/islet/wall/recovery/wave route+unit files; disposable Unix-socket PostgreSQL only; not complete backend suite.",
+      "selectedUnitFiles": [
+        "server/tests/test_barrel_clearance.py",
+        "server/tests/test_boss_loot.py",
+        "server/tests/test_coop_permissions.py",
+        "server/tests/test_island_layout_rules.py",
+        "server/tests/test_island_leaderboard.py",
+        "server/tests/test_island_move_routes.py",
+        "server/tests/test_island_routes.py",
+        "server/tests/test_island_rules.py",
+        "server/tests/test_islet_matches_migration.py",
+        "server/tests/test_islet_routes.py",
+        "server/tests/test_islet_store.py",
+        "server/tests/test_normal_wall_build_clearance.py",
+        "server/tests/test_owner_wall_policy_routes.py",
+        "server/tests/test_perimeter_start_capability.py",
+        "server/tests/test_perimeter_wall_health_reads.py",
+        "server/tests/test_perimeter_wave_state.py",
+        "server/tests/test_structure_recovery_manifest.py",
+        "server/tests/test_structure_recovery_rate.py",
+        "server/tests/test_structure_recovery_routes.py",
+        "server/tests/test_wall_build_routes.py",
+        "server/tests/test_wall_chain.py",
+        "server/tests/test_wall_cohort.py",
+        "server/tests/test_wall_layout_snapshot.py",
+        "server/tests/test_wall_offer_routes.py",
+        "server/tests/test_wall_policy_layout.py",
+        "server/tests/test_wall_recovery.py",
+        "server/tests/test_wall_scenery_clearance.py",
+        "server/tests/test_wallet.py",
+        "server/tests/test_wallet_matches_migration.py",
+        "server/tests/test_wave_events.py",
+        "server/tests/test_wave_recovery_routes.py",
+        "server/tests/test_wave_recovery_transport.py",
+        "server/tests/test_wave_rescue.py",
+        "server/tests/test_wave_revive_routes.py",
+        "server/tests/test_wave_routes.py",
+        "server/tests/test_wave_rules.py"
+      ],
+      "checks": [
+        {
+          "name": "backend",
+          "command": [
+            "uv",
+            "run",
+            "--frozen",
+            "--no-env-file",
+            "--with",
+            "pgserver",
+            "--with",
+            "psycopg[binary]",
+            "python",
+            "-m",
+            "pytest",
+            "-q",
+            "-rs",
+            "server/tests/test_barrel_clearance.py",
+            "server/tests/test_boss_loot.py",
+            "server/tests/test_coop_permissions.py",
+            "server/tests/test_island_layout_rules.py",
+            "server/tests/test_island_leaderboard.py",
+            "server/tests/test_island_move_routes.py",
+            "server/tests/test_island_routes.py",
+            "server/tests/test_island_rules.py",
+            "server/tests/test_islet_matches_migration.py",
+            "server/tests/test_islet_routes.py",
+            "server/tests/test_islet_store.py",
+            "server/tests/test_normal_wall_build_clearance.py",
+            "server/tests/test_owner_wall_policy_routes.py",
+            "server/tests/test_perimeter_start_capability.py",
+            "server/tests/test_perimeter_wall_health_reads.py",
+            "server/tests/test_perimeter_wave_state.py",
+            "server/tests/test_structure_recovery_manifest.py",
+            "server/tests/test_structure_recovery_rate.py",
+            "server/tests/test_structure_recovery_routes.py",
+            "server/tests/test_wall_build_routes.py",
+            "server/tests/test_wall_chain.py",
+            "server/tests/test_wall_cohort.py",
+            "server/tests/test_wall_layout_snapshot.py",
+            "server/tests/test_wall_offer_routes.py",
+            "server/tests/test_wall_policy_layout.py",
+            "server/tests/test_wall_recovery.py",
+            "server/tests/test_wall_scenery_clearance.py",
+            "server/tests/test_wallet.py",
+            "server/tests/test_wallet_matches_migration.py",
+            "server/tests/test_wave_events.py",
+            "server/tests/test_wave_recovery_routes.py",
+            "server/tests/test_wave_recovery_transport.py",
+            "server/tests/test_wave_rescue.py",
+            "server/tests/test_wave_revive_routes.py",
+            "server/tests/test_wave_routes.py",
+            "server/tests/test_wave_rules.py",
+            "server/tests/island_sql"
+          ],
+          "exitCode": 1,
+          "seconds": 144.3,
+          "log": "backend.log"
+        },
+        {
+          "name": "ruff",
+          "command": [
+            "uv",
+            "run",
+            "--frozen",
+            "--no-env-file",
+            "ruff",
+            "check",
+            "."
+          ],
+          "exitCode": 0,
+          "seconds": 0.55,
+          "log": "ruff.log"
+        }
+      ],
+      "finished": "2026-11-18T11:06:44.839037+00:00",
+      "exitCode": 1
+    },
+    "result": "1758passed/5failed/21setuperrors141.77s; Ruffpassed",
+    "supersededBy": "Final compatibility source456960d0: identical36selectedunit+all51SQLmodules pass1792withzeroskips in76.98s; original failed a76receipt retained."
+  },
+  "renderStackBoundary": "VIS63#444 and VIS64#447 share the changed wall-batching API; inspect and deploy only as a coordinated rendering stack with VIS67#451 and tested assembled preview. No standaloneleafdeployment claim.",
+  "inheritedPhoneHudGap": {
+    "beforeSource": "7fab8866",
+    "beforeImage": "inherited-phone-hud/before-wave-standing-375x812.png",
+    "afterSource": "68d41990",
+    "afterImage": "actual-final/wave-standing-375x812.png",
+    "evidence": "Coordinator visual comparison confirms bell hint/countdown toast overlap existed before this pass. This is a remaining inherited HUD gap;21measured overlap cases do not cover every transienttiming."
+  },
+  "finalBackendReport": {
+    "source": "456960d02169d508a5cb6f6c6d5d316e06cd5d47",
+    "backendTree": "8232794a485d1b8a0dafe65519d9b9415f950090",
+    "migrationsTree": "9b32d17cd66a6a8fcc2844b3fedf30c8461bf2ef",
+    "started": "2026-11-18T11:18:57.090196+00:00",
+    "scope": "All51islandSQLmodules and relevant island/islet/wall/recovery/wave route+unit files; disposable Unix-socket PostgreSQL only; not complete backend suite.",
+    "selectedUnitFiles": [
+      "server/tests/test_barrel_clearance.py",
+      "server/tests/test_boss_loot.py",
+      "server/tests/test_coop_permissions.py",
+      "server/tests/test_island_layout_rules.py",
+      "server/tests/test_island_leaderboard.py",
+      "server/tests/test_island_move_routes.py",
+      "server/tests/test_island_routes.py",
+      "server/tests/test_island_rules.py",
+      "server/tests/test_islet_matches_migration.py",
+      "server/tests/test_islet_routes.py",
+      "server/tests/test_islet_store.py",
+      "server/tests/test_normal_wall_build_clearance.py",
+      "server/tests/test_owner_wall_policy_routes.py",
+      "server/tests/test_perimeter_start_capability.py",
+      "server/tests/test_perimeter_wall_health_reads.py",
+      "server/tests/test_perimeter_wave_state.py",
+      "server/tests/test_structure_recovery_manifest.py",
+      "server/tests/test_structure_recovery_rate.py",
+      "server/tests/test_structure_recovery_routes.py",
+      "server/tests/test_wall_build_routes.py",
+      "server/tests/test_wall_chain.py",
+      "server/tests/test_wall_cohort.py",
+      "server/tests/test_wall_layout_snapshot.py",
+      "server/tests/test_wall_offer_routes.py",
+      "server/tests/test_wall_policy_layout.py",
+      "server/tests/test_wall_recovery.py",
+      "server/tests/test_wall_scenery_clearance.py",
+      "server/tests/test_wallet.py",
+      "server/tests/test_wallet_matches_migration.py",
+      "server/tests/test_wave_events.py",
+      "server/tests/test_wave_recovery_routes.py",
+      "server/tests/test_wave_recovery_transport.py",
+      "server/tests/test_wave_rescue.py",
+      "server/tests/test_wave_revive_routes.py",
+      "server/tests/test_wave_routes.py",
+      "server/tests/test_wave_rules.py"
+    ],
+    "sameCommandAsFailedSource": "a76e9cccf128567c1f4f1841babba86ac56a42aa",
+    "checks": [
+      {
+        "name": "backend",
+        "command": [
+          "uv",
+          "run",
+          "--frozen",
+          "--no-env-file",
+          "--with",
+          "pgserver",
+          "--with",
+          "psycopg[binary]",
+          "python",
+          "-m",
+          "pytest",
+          "-q",
+          "-rs",
+          "server/tests/test_barrel_clearance.py",
+          "server/tests/test_boss_loot.py",
+          "server/tests/test_coop_permissions.py",
+          "server/tests/test_island_layout_rules.py",
+          "server/tests/test_island_leaderboard.py",
+          "server/tests/test_island_move_routes.py",
+          "server/tests/test_island_routes.py",
+          "server/tests/test_island_rules.py",
+          "server/tests/test_islet_matches_migration.py",
+          "server/tests/test_islet_routes.py",
+          "server/tests/test_islet_store.py",
+          "server/tests/test_normal_wall_build_clearance.py",
+          "server/tests/test_owner_wall_policy_routes.py",
+          "server/tests/test_perimeter_start_capability.py",
+          "server/tests/test_perimeter_wall_health_reads.py",
+          "server/tests/test_perimeter_wave_state.py",
+          "server/tests/test_structure_recovery_manifest.py",
+          "server/tests/test_structure_recovery_rate.py",
+          "server/tests/test_structure_recovery_routes.py",
+          "server/tests/test_wall_build_routes.py",
+          "server/tests/test_wall_chain.py",
+          "server/tests/test_wall_cohort.py",
+          "server/tests/test_wall_layout_snapshot.py",
+          "server/tests/test_wall_offer_routes.py",
+          "server/tests/test_wall_policy_layout.py",
+          "server/tests/test_wall_recovery.py",
+          "server/tests/test_wall_scenery_clearance.py",
+          "server/tests/test_wallet.py",
+          "server/tests/test_wallet_matches_migration.py",
+          "server/tests/test_wave_events.py",
+          "server/tests/test_wave_recovery_routes.py",
+          "server/tests/test_wave_recovery_transport.py",
+          "server/tests/test_wave_rescue.py",
+          "server/tests/test_wave_revive_routes.py",
+          "server/tests/test_wave_routes.py",
+          "server/tests/test_wave_rules.py",
+          "server/tests/island_sql"
+        ],
+        "exitCode": 0,
+        "seconds": 78.38,
+        "log": "backend.log"
+      },
+      {
+        "name": "ruff",
+        "command": [
+          "uv",
+          "run",
+          "--frozen",
+          "--no-env-file",
+          "ruff",
+          "check",
+          "."
+        ],
+        "exitCode": 0,
+        "seconds": 0.22,
+        "log": "ruff.log"
+      }
+    ],
+    "finished": "2026-11-18T11:20:15.694986+00:00",
+    "exitCode": 0
+  },
+  "finalBackendResult": {
+    "source": "456960d02169d508a5cb6f6c6d5d316e06cd5d47",
+    "backendTree": "8232794a485d1b8a0dafe65519d9b9415f950090",
+    "migrationsTree": "9b32d17cd66a6a8fcc2844b3fedf30c8461bf2ef",
+    "passed": 1792,
+    "skipped": 0,
+    "pytestSeconds": 76.98,
+    "processSeconds": 78.38,
+    "wholeRuffSeconds": 0.22,
+    "scope": "36selectedroute/unitfiles and all51islandSQLmodules, disposable Unix-socket PostgreSQL/HTTP; not complete backend suite."
+  },
+  "finalVerifiedComposition": {
+    "frontendUiSource": "68d41990615bac98aac3b3ffb2225857c8707a81",
+    "backendSource": "456960d02169d508a5cb6f6c6d5d316e06cd5d47",
+    "frontendTrees": {
+      "frontend/src": "cf4837fbec45e9cace371878fd8459e2dfd9c24b",
+      "frontend/public": "c21b9328134b71786fe733994cd27510d3839cc9",
+      "frontend/scripts": "9ed27682388540a029046ce03cac936979fe4018",
+      "frontend/tests": "8d7e5565b6a27a1f45b1881dba063e6ef89326e1"
+    },
+    "backendTree": "8232794a485d1b8a0dafe65519d9b9415f950090",
+    "migrationsTree": "9b32d17cd66a6a8fcc2844b3fedf30c8461bf2ef",
+    "boundary": "All4frontend/public/script/test trees of the final backend snapshot match the complete UI source. Backend/migration trees match the final targeted PostgreSQL run. Documentation commits can change HEAD/build stamps; built bundle byte identity is not inferred."
+  },
+  "finalSourceInvariants": "checks/final-source-invariants.json copied unchanged;72uniquemigrations, original71SQL/rawassets/fixtures/packages/security/sim/controller/catalogue retained, originalcheckoutee9 clean, main48aee/prior2a ancestors, correctschoolauthor.",
+  "humanGates": "All PRs Draft and unmerged. Human visual acceptance/explain-back/different-human review remain. Migration72 owner-applied before corresponding backend deploy; no live application or production rollout."
 }
