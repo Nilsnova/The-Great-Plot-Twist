@@ -171,17 +171,19 @@ export function createLoading(isl) {
   }
   async function load() {
     const ticket = ++isl.loadTicket;
+    const expectedActor = isl.getActorId();
+    const loadCurrent = () => !isl.disposed && ticket === isl.loadTicket && isl.getActorId() === expectedActor;
     const travelGeneration = isl.coreTravelGeneration;
     let loadedTarget = null;
     if (isl.visitCode && !(await joinFirst(isl.visitCode))) {
-      if (isl.disposed || ticket !== isl.loadTicket) return {ok: false};
+      if (!loadCurrent()) return {ok: false};
       endVisit();
     }
-    if (isl.disposed || ticket !== isl.loadTicket) return {ok: false};
+    if (!loadCurrent()) return {ok: false};
     if (isl.visitCode) {
       const current = reading('visit');
       const answer = await isl.api.visit(isl.visitCode);
-      if (isl.disposed || ticket !== isl.loadTicket) return answer;
+      if (!loadCurrent()) return {ok: false};
       if (answer.ok) {
         if (current() || !isl.visiting) { isl.visiting = {...answer.data, code: islandCode(answer.data.code)}; loadedTarget = shownIsland(); noteCampaign(isl.visiting); }
         showVisit();
@@ -193,13 +195,14 @@ export function createLoading(isl) {
       // Your own island also while visiting: its coins pay for what you build on the friend's island.
       const current = reading('own');
       const answer = await isl.api.getIsland();
-      if (isl.disposed || ticket !== isl.loadTicket) return answer;
+      if (!loadCurrent()) return {ok: false};
       if (answer.ok) {
         if (current()) { setOwnRead(answer.data); if (!isl.visiting) loadedTarget = shownIsland(); }
         isl.ownMessage = ''; isl.ownRetry = false;
       } else { isl.ownMessage = answer.message; isl.ownRetry = mayPass(answer); }
     }
     await readStructureRecovery();
+    if (!loadCurrent()) return {ok: false};
     applyWorld(); refreshCard();
     void syncGame();
     void isl.arsenal.refresh();
@@ -208,7 +211,7 @@ export function createLoading(isl) {
       const answer = await isl.flow.look(where());
       // A retained controller may resume only after this landing confirms its actual server wave.
       // Reject a late load across travel, another load, target change or reset.
-      if (!isl.disposed && ticket === isl.loadTicket && travelGeneration === isl.coreTravelGeneration && loadedTarget !== null && loadedTarget === shownIsland()
+      if (loadCurrent() && travelGeneration === isl.coreTravelGeneration && loadedTarget !== null && loadedTarget === shownIsland()
           && context.key && context.key === syncCoreContext().key && answer?.ok
           && typeof answer.data?.waveId === 'string' && answer.data.waveId
           && isl.flow.current?.wave?.waveId === answer.data.waveId) {
@@ -255,12 +258,16 @@ export function createLoading(isl) {
   };
   async function reloadVisit() {
     if (!isl.visiting) return;
-    const current = reading('visit'), fresh = await isl.api.visit(isl.visiting.code);
-    if (!isl.disposed && fresh.ok && isl.visiting && current()) { isl.visiting = {...isl.visiting, ...fresh.data, code: islandCode(fresh.data.code)}; noteCampaign(isl.visiting); }
+    const expectedActor = isl.getActorId(), code = isl.visiting.code;
+    const current = reading('visit'), fresh = await isl.api.visit(code);
+    if (!isl.disposed && isl.getActorId() === expectedActor && fresh.ok && isl.visiting?.code === code && current()) {
+      isl.visiting = {...isl.visiting, ...fresh.data, code: islandCode(fresh.data.code)}; noteCampaign(isl.visiting);
+    }
   }
   async function reloadOwn() {
+    const expectedActor = isl.getActorId();
     const current = reading('own'), mine = await isl.api.getIsland();
-    if (isl.disposed) return;
+    if (isl.disposed || isl.getActorId() !== expectedActor) return;
     if (mine.ok) { isl.ownRetry = false; isl.ownMessage = ''; if (current()) setOwnRead(mine.data); } else if (!isl.own) { isl.ownMessage = mine.message; isl.ownRetry = mayPass(mine); }
   }
   // The island being defended, read again: after a friend built or upgraded there (island_changed in
