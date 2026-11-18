@@ -1,5 +1,4 @@
 // Illustrated lighthouse, gold lantern glow, night sweep and logical story anchors.
-import * as THREE from 'three';
 import { layout } from '../config.js';
 import { terrainHeight } from './terrain.js';
 import { placeArt } from './art.js';

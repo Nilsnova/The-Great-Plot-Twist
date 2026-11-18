@@ -7,7 +7,6 @@ import * as THREE from 'three';
 import {unprojectGround} from '../world/projection.js';
 import {groundGeometry} from '../world/ground-transform.js';
 import {artSizes, loadArt, placeArt, projectPoint} from '../world/art.js';
-import {pixelSizes} from '../pixel/catalog.js';
 import {ALL_SPOTS as ISLAND_SPOTS, CABIN, BELL, CAMPAIGN_BUILDINGS, ARSENAL, islandZones, placedSpot} from './spots.js';
 import {isExtraSpot} from './extra-spots.js';
 import {makeFootprint, makeWallLanes} from './move-preview.js';
@@ -15,7 +14,7 @@ import {makeSelectionBracket} from './selection-bracket.js';
 import {isOpen, spotWave, waveOf} from '../campaign/index.js';
 import {LOCK_WAVES} from '../art/campaign.js';
 import {SLOT_KINDS} from './td-rules.js';
-import {ROLE_IDS, activeRole, roleRadius} from '../campaign/houses.js';
+import {ROLE_IDS, activeRole} from '../campaign/houses.js';
 import {CULVERIN_ART, HARPOON_ART, SWIVEL_ART, TIER_ART, crewArt, pipRow, pirateLevels} from '../pixel/pirate-catalog.js';
 import {islandFrame} from '../art/registry.js';
 import {frameCanvas, smoothTexture, spriteMaterial} from '../art/textures.js';
@@ -53,13 +52,6 @@ export function structureRecoveryAppearance(answer, row, state) {
   return frame ? {look, frame, suppressPips: look === 'broken' && row.kind !== 'wall'} : null;
 }
 
-// The first id the catalog knows wins; none known means the drawn sprite stays.
-export const ART_CANDIDATES = Object.freeze({
-  wall: ['wall', 'island-wall', 'wall-1'], cannon: ['cannon', 'island-cannon', 'cannon-1'], mortar: ['mortar', 'island-mortar', 'mortar-1'],
-  watchtower: ['watchtower', 'island-watchtower', 'watchtower-1'], house: ['house', 'island-house', 'house-1'],
-  bell: ['harbor-bell', 'island-bell', 'bell'],
-});
-export const catalogArt = (kind, sizes = pixelSizes) => (ART_CANDIDATES[kind] ?? []).find(id => Object.hasOwn(sizes, id)) ?? null;
 // Outside a wave a built spot shows its real kind and level: the art lane's level art (pirateLevels) for
 // walls, cannons, mortars and houses; house levels retain their existing ground box and role signs.
 // Levels 4 and 5 (GAME-V3.md §4.1) have their own drawings, gold trim and the island's banner,

@@ -46,7 +46,6 @@ export const ATLAS_IDS = [...pirateFrames.sloop, ...pirateFrames.brig, ...pirate
   ...pirateLevels.wall.slice(1), ...pirateLevels.cannon.slice(1), ...pirateLevels.mortar.slice(1), ...Object.values(crewArt),
   ...pirateFrames.captain, ...pirateFrames.smoke, ...pirateFrames.fire, ...pirateFrames.explosion, ...pirateFrames.boarder,
   'captain-cutlass', 'fx-musket-flash', 'fx-mortar-shell', 'fx-level-pip', 'pirate-cannonball', 'pirate-wreck'];
-export const WARSHIP_FRAMES = pirateFrames.warship;
 // The gunboat (GAME-V3.md §4.1), cartoon only like the tiers: its own small hull (three bobbing frames), its muzzle
 // flash and the two-frame "jammed" mark over a tower (src/art/fleet.js). A pixel atlas (tests) sails it as a plain
 // sloop and draws no marks.
