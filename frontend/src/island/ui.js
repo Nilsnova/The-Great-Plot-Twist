@@ -48,7 +48,8 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
   // The real wave countdown follows this measured slot, including wrapped text and viewport changes.
   function measureBoatNotice() {
     const height = boatNotice.hidden ? 0 : boatNotice.offsetHeight;
-    document.documentElement?.style.setProperty('--boat-notice-space', height > 0 ? `${height + 10}px` : '0px');
+    // Leave room for the countdown number's existing 1.5x pop and the panel's frame.
+    document.documentElement?.style.setProperty('--boat-notice-space', height > 0 ? `${height + 16}px` : '0px');
   }
   const boatNoticeSize = typeof ResizeObserver === 'function' ? new ResizeObserver(measureBoatNotice) : null;
   boatNoticeSize?.observe(boatNotice);

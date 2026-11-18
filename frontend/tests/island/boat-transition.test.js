@@ -149,7 +149,7 @@ for (const [width,height] of [[320,568],[844,390]]) {
           const box=selector=>document.querySelector(selector).getBoundingClientRect();
           return box('.pirate-boss').top-Math.max(box('.island-boat-notice').bottom,box('.pirate-countdown').bottom);
         });
-        expect(gap).toBeGreaterThanOrEqual(0);expect(gap).toBeLessThanOrEqual(12);
+        expect(gap).toBeGreaterThanOrEqual(0);expect(gap).toBeLessThanOrEqual(18);
       }
       await page.evaluate(()=>{window.waveHud.event(null);window.waveHud.boss(null);});
       await page.setViewportSize(width===320?{width:844,height:390}:{width:320,height:568});
