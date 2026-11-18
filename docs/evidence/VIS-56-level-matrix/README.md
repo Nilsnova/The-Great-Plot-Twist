@@ -30,7 +30,7 @@ The coordinator owns the browser slot. After composing the helper into a frozen 
 CHROME_PATH=/usr/bin/chromium node scripts/capture-visual-matrix.mjs /absolute/candidate/frontend /absolute/review-output
 ```
 
-The command owns a temporary loopback Vite server and browser, loads the specified candidate's own modules, and closes both in `finally`. It captures 22 sheets across 1280×720 and 375×812 viewports. Contact sheets use full-page captures, so their recorded PNG height may exceed the viewport. `report.json` records exact source trees, helper hashes, source bindings, topology, calls/triangles and image dimensions/hashes. A failed assertion remains failed and receives a failure record.
+The command owns a temporary loopback Vite server and browser, loads the specified candidate's own modules, and closes both in `finally`. Before allocating those resources, it verifies that the actually executed capture script matches the candidate's script bytes. It captures 22 sheets across 1280×720 and 375×812 viewports. Contact sheets use full-page captures, so their recorded PNG height may exceed the viewport. `report.json` records exact source trees, candidate helper hashes, the actual executed helper hash, source bindings, topology, calls/triangles and image dimensions/hashes. A failed assertion remains failed and receives a failure record.
 
 **Native run pending at this leaf checkpoint.** No native pass, screenshot acceptance or whole-suite pass is claimed here. The coordinator's full-game proof separately covers real paid placement, upgrades, camera input and combat. Tree positions/colliders and zero/one/two-house progress are covered by VIS54 and the combined actual-game review.
 
