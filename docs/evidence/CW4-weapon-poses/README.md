@@ -1,6 +1,8 @@
 # CW4 weapon pose evidence
 
-**Current revision:** [same-arm underhand bomb toss and clearer pistols, before/after phone and desktop pictures, both phases and ten directions](revision-4/README.md). The [revision-3](revision-3/README.md), [revision-2](revision-2/README.md) and first-pass images below are preserved history; earlier candidates were superseded after visual review.
+**Approved artwork revision:** [same-arm underhand bomb toss and clearer pistols, before/after phone and desktop pictures, both phases and ten directions](revision-4/README.md). The [revision-3](revision-3/README.md), [revision-2](revision-2/README.md) and first-pass images below are preserved history; earlier candidates were superseded after visual review.
+
+**Latest integration checks:** [current-main conflict resolution, fresh desktop/phone screenshots and verification](main-integration/README.md).
 
 Captured on 18 November 2026 from base `48aee0e7` before and after CW4. The fixture uses the **real character and remote presence renderers**, controlled `captain_fired` events and local Chromium. It deliberately replaces the scene with a clear background. These images prove the drawing behavior; they are not screenshots of a complete match or a live account.
 

@@ -22,7 +22,13 @@ Scope: `frontend/src/pirates/poses.js`, `shot-art.js`, `render.js`, the procedur
 - Switching weapons at the same aim yields five different silhouettes; the existing dynamic texture is reused and disposed.
 - Before/after images and explicit fixture limits: [CW4 evidence](../docs/evidence/CW4-weapon-poses/README.md).
 
-## Revision 4 verification · 18 November 2026
+## Current-main conflict resolution · 18 November 2026
+
+Merged main `db573347` into artwork revision `15a59eae`, retaining main's shared projected aiming/facing and bomb hand offset alongside CW4's weapon selection and no-firearm-effects bomb pose. All published STATUS Log paragraphs from both parents are preserved byte-for-byte and in order. Approved artwork, shot texture code and musket fingerprints are unchanged.
+
+Current checks pass **10 files / 95 tests**, **400 browser views / 220 exact musket comparisons**, build/spoiler, budgets, text lint and both-size integrated synthetic bomb wave. [Commands, hashes, screenshots and limits](../docs/evidence/CW4-weapon-poses/main-integration/README.md). Full frontend, a11y, demo and live multiplayer were not rerun for this integration. Earlier results below are historical. Ianno reported owner/peer acceptance for `15a59eae`; the integration is separately reviewable. No merge into main or deployment.
+
+## Revision 4 verification · historical at 15a59eae
 
 [Current comparison and exact commands](../docs/evidence/CW4-weapon-poses/revision-4/README.md) use the published r3 candidate `0706a18c` as before, not live production. Current checks: **6 files / 63 focused tests passed**; full **400-view browser matrix and 220 approved-musket RGBA comparisons passed**; build/spoiler guard, budgets and text lint passed; integrated synthetic bomb-wave captures passed at 1280 × 720 and 375 × 812 with zero browser errors/external requests. Initial JavaScript is **18,899 / 21,080 bytes**, CSS **9,410 / 12,000 bytes**; text lint reports **4,429 candidates / 489 source files, zero errors**, eight existing report-only findings.
 

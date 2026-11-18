@@ -1,6 +1,7 @@
 // Man a cannon, patch or rebuild a wall (lane P4, TOWER-DEFENSE.md §12), as plain rules: what the player
 // standing at (x, z) can do now, and which input a key press or a tap on a ship or a boarder turns into.
 // No DOM here.
+import {projectGround} from '../world/projection.js';
 export const REACH = 2.6;          // world units from a cannon or wall to man or repair it
 export const TAP_RADIUS = 2.4;     // world units around a ship's middle that count as tapping it
 export const BOARDER_TAP = 1.3;    // world units around a boarder's middle that count as tapping it
@@ -82,9 +83,10 @@ export function inputFor(action) {
  */
 export function shipAt(point, state) {
   let best = null, bestDistance = TAP_RADIUS;
+  const tap = projectGround(point.x, point.z);
   for (const ship of state?.ships ?? []) {
-    const middleZ = ship.z - (SHIP_MIDDLE[ship.kind] ?? 1.6) / .72;
-    const d = Math.hypot(ship.x - point.x, (middleZ - point.z) * .72);
+    const at = projectGround(ship.x, ship.z);
+    const d = Math.hypot(at.x - tap.x, at.y + (SHIP_MIDDLE[ship.kind] ?? 1.6) - tap.y);
     if (d <= bestDistance) { best = ship; bestDistance = d; }
   }
   return best;
@@ -93,8 +95,10 @@ export function shipAt(point, state) {
 /** A tap at the logical point (x, z) on land: the boarder drawn there (a figure about 1.5 units tall), or null. */
 export function boarderAt(point, state) {
   let best = null, bestDistance = BOARDER_TAP;
+  const tap = projectGround(point.x, point.z);
   for (const boarder of state?.boarders ?? []) {
-    const d = Math.hypot(boarder.x - point.x, (boarder.z - .9 / .72 - point.z) * .72);
+    const at = projectGround(boarder.x, boarder.z);
+    const d = Math.hypot(at.x - tap.x, at.y + .9 - tap.y);
     if (d <= bestDistance) { best = boarder; bestDistance = d; }
   }
   return best;

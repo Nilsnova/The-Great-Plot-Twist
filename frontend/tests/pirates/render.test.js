@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { CONFIG, coastPoint, createWave } from '../../src/pirates/sim.js';
 import { ATLAS_IDS, BOARDER_BANDS, MUSKET, createWaveRenderer, packAtlas } from '../../src/pirates/render.js';
 import { pirateDimensions } from '../../src/pixel/pirate-catalog.js';
+import {projectGround} from '../../src/world/projection.js';
 
 const at = (id, kind, bearing, radius) => {
   const p = coastPoint(bearing * Math.PI / 180, radius);
@@ -46,7 +47,8 @@ describe('pirate wave renderer', () => {
     for (const seed of [1, 2, 3]) {
       const renderer = createWaveRenderer({ scene, atlas: shared, defenses: DEFENSES, fx: () => null });
       const layers = renderer.root.children.length;
-      expect(layers).toBe(3 + BOARDER_BANDS + 5 + 1); // far sea, near sea, air, the boarders' z bands, one per wall or cannon, fog
+      expect(layers).toBe(3 + BOARDER_BANDS + 5 + 1 + 1); // sea/air, boarder bands, defense posts, fog, owned wall connections
+      expect(renderer.root.children.filter(child => child.name === 'pirates:wall-connections')).toHaveLength(1);
       const run = play(renderer, seed);
       expect(run.state.total).toBe(CONFIG.fleet.max);
       expect(run.peak.ships).toBeGreaterThanOrEqual(6);
@@ -74,8 +76,9 @@ describe('pirate wave renderer', () => {
   });
   it.each([false, true])('throws fire bombs without a muzzle flash or bloom (reduced motion: %s)', reducedMotion => {
     const blooms = [], scene = new THREE.Scene(), shared = atlas();
+    scene.userData.characterScale = 1.4;
     const renderer = createWaveRenderer({scene, atlas: shared, reducedMotion: () => reducedMotion, fx: () => ({bloom: (...args) => blooms.push(args)})});
-    renderer.events([{type: 'captain_fired', weapon: 'fire_bombs', t: 1, impactAt: 2, by: 'me', x: 0, z: 0, toX: 8, toZ: -2}]);
+    renderer.events([{type: 'captain_fired', weapon: 'fire_bombs', t: 1, impactAt: 2, by: 'me', x: 2, z: 3, toX: 8, toZ: -2}]);
     renderer.update({state: {ships: [], walls: [], towers: [], fog: 0, sight: 28}, simTime: 1, dt: .01});
     expect(blooms).toEqual([]);
     const air = renderer.root.children.find(item => item.name === 'pirates:air'), uv = air.geometry.getAttribute('iUv').array;
@@ -83,6 +86,15 @@ describe('pirate wave renderer', () => {
     for (let i = 0; i < air.geometry.instanceCount; i++)
       expect(Math.min(uv[i * 4], uv[i * 4 + 2])).not.toBeCloseTo((flash.x + .01) / shared.width, 6);
     expect(renderer.stats().shells).toBe(1);
+    for (const progress of [0, .5]) {
+      renderer.update({state: {ships: [], walls: [], towers: [], fog: 0, sight: 28}, simTime: 1 + progress, dt: .01});
+      const ball = shared.rects['pirate-cannonball'], positions = air.geometry.getAttribute('iPos').array;
+      const ballIndex = Array.from({length: air.geometry.instanceCount}, (_, i) => i)
+        .find(i => Math.abs(Math.min(uv[i * 4], uv[i * 4 + 2]) - (ball.x + .01) / shared.width) < 1e-6);
+      expect(ballIndex).toBeDefined();
+      // The hand offset is a display distance, added after projecting the logical flight.
+      expect(positions[ballIndex * 4]).toBeCloseTo(projectGround(2 + 6 * progress, 3 - 5 * progress).x + .6 * 1.4 * (1 - progress));
+    }
     renderer.dispose();
   });
 
@@ -158,8 +170,8 @@ describe('pirate wave renderer', () => {
     })();
     expect(flashX()).not.toBeNull();
     expect(xs).toHaveLength(2);
-    expect(xs[0]).toBeGreaterThan(3); expect(xs[0]).toBeLessThan(6);   // your muzzle, beside you at x 3
-    expect(xs[1]).toBeGreaterThan(10); expect(xs[1]).toBeLessThan(13); // Ben's, beside his figure at x 10
+    expect(xs[0]).toBeCloseTo(projectGround(3, 0).x + MUSKET.muzzleX * 1.4 + .3);
+    expect(xs[1]).toBeCloseTo(projectGround(10, 5).x + MUSKET.muzzleX * 1.4 + .3);
     renderer.dispose();
   });
   it("puts the muzzle bloom and the cutlass ring at the shooter's body now, else where the sim had them", () => {
@@ -171,9 +183,9 @@ describe('pirate wave renderer', () => {
       { type: 'captain_struck', t: 1, by: 'ben', x: 0, z: 5, toX: 1, toZ: 5 },
       { type: 'captain_struck', t: 1, by: 'nobody', x: -4, z: 5, toX: -5, toZ: 5 }]);
     const [bloom, benRing, loneRing] = calls;
-    expect(bloom[0]).toBe('bloom'); expect(bloom[1]).toBeGreaterThan(3); expect(bloom[1]).toBeLessThan(6);
-    expect(benRing).toEqual(['ring', 10]);
-    expect(loneRing).toEqual(['ring', -4]); // no figure: the sweep ring round where the sim had the captain, and no body
+    expect(bloom[0]).toBe('bloom'); expect(bloom[1]).toBeCloseTo(projectGround(3, 0).x + MUSKET.muzzleX * 1.4);
+    expect(benRing).toEqual(['ring', projectGround(10, 5).x]);
+    expect(loneRing).toEqual(['ring', projectGround(-4, 5).x]); // no figure: same logical captain, projected feet
     renderer.dispose();
   });
 });

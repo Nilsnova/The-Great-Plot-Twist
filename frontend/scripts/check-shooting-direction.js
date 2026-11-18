@@ -7,6 +7,7 @@ import {mkdir,readFile} from 'node:fs/promises';
 import {openWorldBrowser} from './world-browser-tools.js';
 import {musketPixels} from './weapon-pose-pixels.js';
 import {POSES} from '../src/pirates/poses.js';
+import {projectGroundVector} from '../src/world/projection.js';
 
 const before = process.argv.includes('--before');
 const galleryOnly = process.argv.includes('--gallery-only');
@@ -24,6 +25,7 @@ try {
       const {createCharacter} = await import('/src/player/character.js');
       const {createOtherCaptains} = await import('/src/world/others/index.js');
       const {POSE_IDS, createPoses} = await import('/src/pirates/poses.js');
+      const {unprojectGround} = await import('/src/world/projection.js');
       document.body.replaceChildren(); document.body.style.cssText = 'margin:0;background:#153d46;color:white;font:18px sans-serif';
       const heading = document.createElement('p'); heading.textContent = `CW4 — ${remote ? 'teammate' : 'own captain'} fixture`; document.body.append(heading);
       const renderer = new THREE.WebGLRenderer({alpha:true, preserveDrawingBuffer:true}); document.body.append(renderer.domElement);
@@ -45,7 +47,8 @@ try {
           for(const [i,weapon] of ['musket','pistols','blunderbuss','long_rifle','fire_bombs'].entries()) {
             clock=0;poses.note([{type:'captain_fired',weapon,by:weapon,x:0,z:0,toX:8,toZ:0}]);
             const body=createCharacter(art),x=phone?0:(i-2)*2.5,y=phone?4-i*2.3:-.8;
-            body.setColour(2);gallery.add(body.sprite);body.group.position.set(x,0,-y/.72);body.pose(poses.get(weapon));body.animate(0,0);bodies.push(body);
+            const point=unprojectGround(x,y);
+            body.setColour(2);gallery.add(body.sprite);body.group.position.set(point.x,0,point.z);body.pose(poses.get(weapon));body.animate(0,0);bodies.push(body);
             const label=document.createElement('span');label.textContent=weapon.replaceAll('_',' ');
             label.style.cssText=`position:absolute;left:${phone?12:(x-camera.left)/(camera.right-camera.left)*innerWidth}px;top:${(1-y/half)/2*height+15}px;${phone?'':'transform:translateX(-50%);'}font:16px sans-serif;white-space:nowrap`;
             labels.append(label);
@@ -81,8 +84,9 @@ try {
       assert.equal(visible.length,1,'one visible captain body');
       if(!before) {
         assert.equal(visible[0].frame,`captain-3-${weapon}-${phase==='fire'?2:1}`);
-        assert.ok(Math.abs(visible[0].angle-Math.atan2(toZ*.72,Math.abs(toX)))<1e-10,'exact projected aim');
-        assert.equal(visible[0].flip,toX<0);
+        const direction=projectGroundVector(toX,toZ);
+        assert.ok(Math.abs(visible[0].angle-Math.atan2(-direction.y,Math.abs(direction.x)))<1e-10,'exact projected aim');
+        assert.equal(visible[0].flip,direction.x<0);
       }
       const screenshot=await page.screenshot({path:`${out}/${weapon}-${width}x${height}-${direction}-${phase}-${index?'remote':'own'}.png`});
       if(width===375 && index===0 && weapon==='musket'&&phase==='fire') ownShots.set(direction,screenshot.toString('base64'));

@@ -54,12 +54,13 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
   chips.setAttribute('aria-hidden', 'true'); label.className = 'pirate-bar-text pirate-quiet';
   bar.append(label, goal, chips); bar.hidden = true;
   // The first-wave hint (GOAL_HINT): three big pictures with arrows, gone after a few seconds or a tap.
-  const hint = node('div', 'pirate-goal-hint'); hint.hidden = true; hint.setAttribute('role', 'note');
+  const hint = node('button', 'pirate-goal-hint'); hint.type = 'button'; hint.hidden = true;
+  hint.setAttribute('aria-label', `${GOAL_HINT.map(([, word]) => word).join(', ')}. Dismiss first-wave hint.`);
   GOAL_HINT.forEach(([icon, word], i) => {
     if (i) hint.append(node('span', 'pirate-goal-hint-arrow', '→'));
     const step = node('span', 'pirate-goal-hint-step'); step.append(node('span', 'pirate-goal-hint-icon', icon), node('span', 'pirate-goal-hint-word', word)); hint.append(step);
   });
-  hint.addEventListener('click', () => { hint.hidden = true; });
+  hint.addEventListener('click', () => { hintDismissed = true; updateHint(); });
   const countdown = node('div', 'pirate-countdown'); countdown.setAttribute('aria-live', 'polite'); countdown.hidden = true;
   const countWords = node('span', 'pirate-countdown-words'), countNumber = node('strong', 'pirate-countdown-number');
   countdown.append(countWords, countNumber);
@@ -93,9 +94,11 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
   const extra = node('span', 'pirate-bar-extra'); bar.append(extra, down); extra.append(health, loot);
   // v3 waves: the wave's event under the wave's numbers (wave-events.js): its title and line while the wave
   // starts, then the title alone as a small chip for the rest of the wave.
-  const event = node('div', 'pirate-event'); event.hidden = true;
+  const event = node('details', 'pirate-event'); event.hidden = true;
+  const eventSummary = node('summary', 'pirate-event-summary');
   const eventIcon = node('span', 'pirate-event-icon'), eventTitle = node('strong', 'pirate-event-title'), eventLine = node('span', 'pirate-event-line');
-  eventIcon.setAttribute('aria-hidden', 'true'); event.append(eventIcon, eventTitle, eventLine); bar.append(event);
+  eventIcon.setAttribute('aria-hidden', 'true'); eventSummary.append(eventIcon, eventTitle); event.append(eventSummary, eventLine); bar.append(event);
+  event.addEventListener('toggle', () => measureBar());
   // The captain's musket (§10): a big button, held to keep firing at the nearest ship in range (or F).
   const musket = node('button', 'kit-button pirate-musket'); musket.type = 'button'; musket.hidden = true;
   const musketLabel = node('span', 'pirate-musket-label', musketText(true)), musketMeter = node('span', 'pirate-musket-meter');
@@ -138,21 +141,42 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
   bar.append(hint);
   layer.append(edge, marks, bar, countdown, warning, prompt, musket, banner, pause, mini); container.append(layer);
   const root = document.documentElement;
-  const measureBar = () => { const bottom = bar.hidden || layer.hidden ? 0 : bar.getBoundingClientRect().bottom;
-    if (bottom > 0) root.style.setProperty('--pirate-bar-bottom', `${Math.ceil(bottom) + 10}px`); };
+  let disposed = false;
+  const headers = new Set();
+  const measureBar = () => {
+    if (disposed || bar.hidden || layer.hidden) return;
+    const frame = layer.getBoundingClientRect(), bounds = bar.getBoundingClientRect();
+    let top = frame.width <= 760 ? 72 : 16;
+    for (const header of container.querySelectorAll('.hud-coins, .hud-menu')) {
+      if (!headers.has(header)) { headers.add(header); barSize?.observe(header); }
+      const box = header.getBoundingClientRect();
+      if (box.width > 0 && box.height > 0 && (frame.width <= 900 || (box.left < bounds.right + 12 && box.right > bounds.left - 12))) {
+        top = Math.max(top, box.bottom - frame.top + 12);
+      }
+    }
+    const value = `${Math.ceil(top)}px`;
+    if (bar.style.top !== value) bar.style.top = value;
+    root.style.setProperty('--pirate-bar-bottom', `${Math.ceil(bar.getBoundingClientRect().bottom) + 10}px`);
+  };
   const barSize = typeof ResizeObserver === 'function' ? new ResizeObserver(measureBar) : null;
   barSize?.observe(bar);
+  window.addEventListener('resize', measureBar);
   // The countdown's room (playtest 16 Nov): on laptops the boss warning sits under it, not on it (pirates.css).
   const measureCount = () => { const height = countdown.hidden || layer.hidden ? 0 : countdown.offsetHeight;
     root.style.setProperty('--pirate-count-space', height > 0 ? `${height + 8}px` : '0px'); };
   const countSize = typeof ResizeObserver === 'function' ? new ResizeObserver(measureCount) : null;
   countSize?.observe(countdown);
   let lastBar = '', lastCount = '', lastPrompt = '', lastLoot = '', lastPause = '', lastMusket = '', hurtUntil = 0, hp = null;
-  let lastHealth = '', lastDown = '', ownHp = null, lastEvent = '';
+  let lastHealth = '', lastDown = '', ownHp = null, lastEvent = '', eventIntro = false;
+  let hintRequested = false, hintDismissed = false, waveNumber = null;
+  function updateHint() {
+    const hidden = !hintRequested || waveNumber !== 1 || hintDismissed;
+    if (hint.hidden !== hidden) { hint.hidden = hidden; measureBar(); }
+  }
 
   return {
     element: layer,
-    setVisible(value) { layer.hidden = !value; },
+    setVisible(value) { if (layer.hidden === !value) return; layer.hidden = !value; measureBar(); },
     countdown(seconds, words = 'Pirates in') {
       const text = seconds > 0 ? String(seconds) : '';
       countdown.hidden = !text;
@@ -162,7 +186,9 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
       void countdown.offsetWidth; // restart the pop for every new number
     },
     bar(state) {
-      if (!state) { bar.hidden = true; return; }
+      if (!state) { bar.hidden = true; waveNumber = null; updateHint(); return; }
+      if (waveNumber !== state.wave) { waveNumber = state.wave; hintDismissed = false; }
+      updateHint();
       const text = waveBarText(state);
       if (bar.hidden) { bar.hidden = false; measureBar(); }
       if (hp !== null && state.islandHp < hp) {
@@ -249,17 +275,19 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
       if (text) { loot.setAttribute('aria-label', runLootText(amount)); loot.title = runLootText(amount); }
     },
     // The first-wave hint: true shows the three pictures, false hides them.
-    goalHint(show) { if (hint.hidden === (show !== true)) return; hint.hidden = show !== true; measureBar(); },
+    goalHint(show) { hintRequested = show === true; updateHint(); },
     boss(text) { warning.hidden = !text; warning.textContent = text || ''; },
-    // The wave's event: {id, icon, title, line, open} (open: the line shows too) or null to hide it.
+    // The real intro opens the weather detail once; afterward native disclosure stays under the player's control.
     event(info) {
-      const key = info ? `${info.id}|${info.open === true}` : '';
+      const key = info ? `${info.id}|${info.open === true}|${info.icon}|${info.title}|${info.line}` : '';
       if (key === lastEvent) return;
       lastEvent = key; event.hidden = !info;
-      if (!info) return;
+      if (!info) { eventIntro = false; event.open = false; return; }
+      if (event.dataset.event !== info.id || eventIntro !== (info.open === true)) event.open = info.open === true;
+      eventIntro = info.open === true;
       event.dataset.event = info.id; event.classList.toggle('is-open', info.open === true);
-      eventIcon.textContent = info.icon ?? ''; eventTitle.textContent = info.title; eventLine.textContent = info.open ? info.line : '';
-      eventLine.hidden = !info.open;
+      eventIcon.textContent = info.icon ?? ''; eventTitle.textContent = info.title; eventLine.textContent = info.line ?? '';
+      measureBar();
     },
     // The break: {title, line, seconds, auto, ready, paused, hold: {label, enabled} | null} or null to hide it.
     pause(info) {
@@ -286,6 +314,6 @@ export function createWaveHud({ container, onAction = () => {}, onNext = () => {
       if (line) banner.append(node('span', '', line));
       banner.hidden = false;
     },
-    dispose() { release(); letPromptGo(); barSize?.disconnect(); countSize?.disconnect(); layer.remove(); markPool.clear(); root.style.removeProperty('--pirate-break-bottom'); root.style.removeProperty('--pirate-bar-bottom'); root.style.removeProperty('--pirate-count-space'); },
+    dispose() { disposed = true; release(); letPromptGo(); window.removeEventListener('resize', measureBar); barSize?.disconnect(); countSize?.disconnect(); layer.remove(); markPool.clear(); root.style.removeProperty('--pirate-break-bottom'); root.style.removeProperty('--pirate-bar-bottom'); root.style.removeProperty('--pirate-count-space'); },
   };
 }

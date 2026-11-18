@@ -7,8 +7,9 @@
 //   poseFrame(pose, colour)       -> the art id for {kind, age} in lobby colour 0-9, or null when over
 //   figurePoses(poses, matches)   -> Map(presence figure id -> pose) for the figures of src/pirates/figures.js
 import {WEAPON_IDS, readWeapon} from './captain-ids.js';
+import {projectGroundVector} from '../world/projection.js';
 
-// Musket: the firing frame (flash) for `fire` seconds, then the aiming frame; the cutlass blow one frame.
+// Firearms use a firing frame then an aiming frame; the bomb holds/releases, the cutlass uses one frame.
 export const POSES = Object.freeze({
   musket: Object.freeze({seconds: .6, fire: .25}),
   pistols: Object.freeze({seconds: .32, fire: .12}),
@@ -31,10 +32,12 @@ export function poseOf(event) {
     if (![event.x, event.z, event.toX, event.toZ].every(finite)) return null;
     const dx = event.toX - event.x, dz = event.toZ - event.z;
     if (dx === 0 && dz === 0) return null;
-    // Screen depth is compressed by .72 (world/art.js). The sprite mirrors left shots.
-    return {kind: readWeapon(event.weapon), flip: dx < 0, angle: Math.atan2(dz * .72, Math.abs(dx))};
+    const direction = projectGroundVector(dx, dz);
+    // Sprite-local y points down; displayed ground y points up. Mirror after projection.
+    return {kind: readWeapon(event.weapon), flip: direction.x < 0, angle: Math.atan2(-direction.y, Math.abs(direction.x))};
   }
-  if (event.type === 'captain_struck' && finite(event.x) && finite(event.toX)) return {kind: 'cutlass', flip: event.toX < event.x};
+  if (event.type === 'captain_struck' && [event.x, event.z, event.toX, event.toZ].every(finite))
+    return {kind: 'cutlass', flip: projectGroundVector(event.toX - event.x, event.toZ - event.z).x < 0};
   return null;
 }
 

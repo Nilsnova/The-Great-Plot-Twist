@@ -1,0 +1,319 @@
+{
+  "scope": "lossy WebP shipping transport of the proved masters; frame metadata, masters and authored originals unchanged",
+  "sourceCommit": "840549a58623caa94db4774a408e53953c58db10",
+  "compilerDirtyPaths": "M ../docs/evidence/VIS-30-world-art/README.md\n M scripts/capture-home-island-waves.mjs\n M scripts/unshipped-art.js\n M src/art/village-decode.js\n M src/art/village-families.js\n M src/art/village-raster.js\n M src/art/village/terrain-materials.js\n M tests/art/registered-raster-contract.test.js\n M tests/art/terrain-materials.test.js\n M tests/art/village-activation.test.js\n M tests/art/village-decode.test.js\n M tests/art/village-level-matrix.test.js\n M tests/art/village-shipping.test.js\n?? ../docs/evidence/VIS-30-world-art/ship-report.json\n?? ../docs/evidence/franz-1118/size/\n?? public/village/shipped/\n?? scripts/ship-village-art.mjs\n?? scripts/village-ship-browser.js\n?? src/art/village/shipped.js\n?? tests/art/village-shipped-output.test.js",
+  "bakeReportSha256": "a3bfc70ef5b7f783bf2e24065092e75a1d96ff99068ce0a398127f6f9ff81a1b",
+  "browser": "153.0.8010.12",
+  "encoder": "Chrome canvas toDataURL image/webp",
+  "quality": 0.9,
+  "limits": {
+    "alphaWeightedMeanRgbDelta": 6,
+    "maxAlphaDelta": 0
+  },
+  "sprites": {
+    "files": [
+      {
+        "source": "village/compiled/buildings-4x-1-4cac98be2a82.png",
+        "sourceSha256": "4cac98be2a8227dbc9e4bcccc5408e12c21ff8f858fc0fdc23ca91f4d0e7bf68",
+        "file": "village/shipped/buildings-4x-1-2739a47df6d0.webp",
+        "bytes": 43226,
+        "sha256": "2739a47df6d0b80512a3545113398058ff54eb9a6375d313a29ff002cc1fb892",
+        "width": 392,
+        "height": 392,
+        "proof": {
+          "pixels": 153664,
+          "visiblePixels": 75207,
+          "differingPixels": 73916,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 4.3373012608443595
+        }
+      },
+      {
+        "source": "village/compiled/houses-4x-1-715fc4e23c25.png",
+        "sourceSha256": "715fc4e23c252124d41b58b1d40c9437c6b7cab10019ed087b8ec6d0eaf6446e",
+        "file": "village/shipped/houses-4x-1-98bca75b4c81.webp",
+        "bytes": 350126,
+        "sha256": "98bca75b4c8117928e0625b4d264edd0eea3397b4376e10f90ffdac187987db2",
+        "width": 984,
+        "height": 1408,
+        "proof": {
+          "pixels": 1385472,
+          "visiblePixels": 582810,
+          "differingPixels": 522327,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 3.581299762753054
+        }
+      },
+      {
+        "source": "village/compiled/landmarks-4x-1-110c2841118f.png",
+        "sourceSha256": "110c2841118fb00c0d41b68b4d7aa290211c7d0abd868fb5b39197e3c0f93150",
+        "file": "village/shipped/landmarks-4x-1-2e4a97eac689.webp",
+        "bytes": 152658,
+        "sha256": "2e4a97eac689a976450b2e012c1ecb5b21c1e398880eb131ab82dc6b1cdde36e",
+        "width": 1024,
+        "height": 520,
+        "proof": {
+          "pixels": 532480,
+          "visiblePixels": 240695,
+          "differingPixels": 216748,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 3.511867664983759
+        }
+      },
+      {
+        "source": "village/compiled/services-4x-1-6b01dd508dca.png",
+        "sourceSha256": "6b01dd508dca1e32ab35b684a67d545dd999f8a0fcc1e3b3c93843edf5f032a2",
+        "file": "village/shipped/services-4x-1-1f072aed5570.webp",
+        "bytes": 72008,
+        "sha256": "1f072aed55705aa1beb21aeb1a0b87c39ae637d55d5a3b2c08a6602ff02ff392",
+        "width": 656,
+        "height": 360,
+        "proof": {
+          "pixels": 236160,
+          "visiblePixels": 126112,
+          "differingPixels": 122994,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 4.195342945944599
+        }
+      },
+      {
+        "source": "village/compiled/nature-4x-1-237071b5ed40.png",
+        "sourceSha256": "237071b5ed4024de97ed3fba9c71aa848b74a3345c92449a7252ee0064662d52",
+        "file": "village/shipped/nature-4x-1-6826391b7154.webp",
+        "bytes": 208198,
+        "sha256": "6826391b7154b21d558f81500d9cd47840af3e8959d369639435cafc048d9c16",
+        "width": 984,
+        "height": 880,
+        "proof": {
+          "pixels": 865920,
+          "visiblePixels": 281263,
+          "differingPixels": 239194,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 3.563205609150246
+        }
+      },
+      {
+        "source": "village/compiled/cannons-4x-1-f0a74bf14d40.png",
+        "sourceSha256": "f0a74bf14d40dcabf9582cdaaa1271cb4bd4f306574b83e80ae13af6f4fc7216",
+        "file": "village/shipped/cannons-4x-1-3d73a5433fd9.webp",
+        "bytes": 315380,
+        "sha256": "3d73a5433fd92cdff4e257cd1dc86ea2b5a3c8427508a5654de4fc82e3b1a873",
+        "width": 928,
+        "height": 1000,
+        "proof": {
+          "pixels": 928000,
+          "visiblePixels": 426279,
+          "differingPixels": 326120,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 3.6178276841299386
+        }
+      },
+      {
+        "source": "village/compiled/walls-4x-1-4905aac4841a.png",
+        "sourceSha256": "4905aac4841afcd242d08c34f80c267a424c238033be1a1a1a8d523ae2377402",
+        "file": "village/shipped/walls-4x-1-412ae50cc0b9.webp",
+        "bytes": 163296,
+        "sha256": "412ae50cc0b9dbd82225df063f41fc8f37349861eae7a7828752c0d67f787e72",
+        "width": 1000,
+        "height": 1008,
+        "proof": {
+          "pixels": 1008000,
+          "visiblePixels": 420186,
+          "differingPixels": 403354,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 2.6162388016464826
+        }
+      },
+      {
+        "source": "village/compiled/core-4x-1-5729b2fcc8b4.png",
+        "sourceSha256": "5729b2fcc8b448b029ef810b465c3aeffc1070d2b1e18f9958ba3b08647678db",
+        "file": "village/shipped/core-4x-1-9b19b3a3249f.webp",
+        "bytes": 168614,
+        "sha256": "9b19b3a3249fa448516ab6e554a16e629bca15275e2ea4754a8fad86c69a8225",
+        "width": 520,
+        "height": 1560,
+        "proof": {
+          "pixels": 811200,
+          "visiblePixels": 323832,
+          "differingPixels": 303602,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 3.2758109248081926
+        }
+      },
+      {
+        "source": "village/compiled/progress-4x-1-ee57813737ea.png",
+        "sourceSha256": "ee57813737ea06d0af02fff52487ac035961eede3a4600af72a52c16e2e14e6e",
+        "file": "village/shipped/progress-4x-1-66cb01fae408.webp",
+        "bytes": 65616,
+        "sha256": "66cb01fae4082728e6199750026cc03a03b8f11c3c2b53406394cfb6d0d0420e",
+        "width": 840,
+        "height": 232,
+        "proof": {
+          "pixels": 194880,
+          "visiblePixels": 80784,
+          "differingPixels": 74850,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 4.553643172263661
+        }
+      },
+      {
+        "source": "village/compiled/mortars-4x-1-5be0794d7341.png",
+        "sourceSha256": "5be0794d73416b91ae5162a5f937c98ee9171b146c80b3a8be5e5fdcacf6017a",
+        "file": "village/shipped/mortars-4x-1-5a4a73dc8f34.webp",
+        "bytes": 284250,
+        "sha256": "5a4a73dc8f3471b2aacc3dfe434bf0828d16d02f1a370a0d4f522ec98cf6b182",
+        "width": 928,
+        "height": 1000,
+        "proof": {
+          "pixels": 928000,
+          "visiblePixels": 379301,
+          "differingPixels": 292634,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 3.7541936069133
+        }
+      },
+      {
+        "source": "village/compiled/harpoons-4x-1-54d919207a2e.png",
+        "sourceSha256": "54d919207a2ee8fdeee07af5c948ebf7f9831ec8c0026b97eec1b8c5ac9f2362",
+        "file": "village/shipped/harpoons-4x-1-61b001b9e090.webp",
+        "bytes": 317010,
+        "sha256": "61b001b9e0904e9398fab18c0cd6101900f0e50ed361663d70c63c134b109c4d",
+        "width": 928,
+        "height": 1000,
+        "proof": {
+          "pixels": 928000,
+          "visiblePixels": 351703,
+          "differingPixels": 273494,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 3.6963632778389823
+        }
+      },
+      {
+        "source": "village/compiled/culverins-4x-1-a861813ffd35.png",
+        "sourceSha256": "a861813ffd355534f709b7816683aa50041fe5476df88bc6aeb191463dfeb52d",
+        "file": "village/shipped/culverins-4x-1-934660a5b704.webp",
+        "bytes": 323270,
+        "sha256": "934660a5b704a2fcab6b1f3b3dfa297671483b96eba2f19bd29af8ea39341a96",
+        "width": 928,
+        "height": 1000,
+        "proof": {
+          "pixels": 928000,
+          "visiblePixels": 408346,
+          "differingPixels": 332874,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 4.803658654618785
+        }
+      },
+      {
+        "source": "village/compiled/swivels-4x-1-742154d719cf.png",
+        "sourceSha256": "742154d719cf3f4ec0d3ca369b4a8bb1f25a5b2430c8eb9025b2157815be5777",
+        "file": "village/shipped/swivels-4x-1-1630166c2843.webp",
+        "bytes": 292934,
+        "sha256": "1630166c2843d1b4ed3db0659461324ad242daabd4c06b3eb6d8daf9a5852100",
+        "width": 928,
+        "height": 1000,
+        "proof": {
+          "pixels": 928000,
+          "visiblePixels": 347231,
+          "differingPixels": 308389,
+          "maxVisibleDelta": 255,
+          "maxAlphaDelta": 0,
+          "alphaWeightedMeanRgbDelta": 4.233281360231727
+        }
+      }
+    ],
+    "masterBytes": 10267413,
+    "shippedBytes": 2756586
+  },
+  "terrain": {
+    "source": "village/terrain-materials-v1.png",
+    "sourceSha256": "a4d94dde648a784d106f547df1073903d982573478f1775d914ceb30879ece6f",
+    "file": "village/shipped/terrain-materials-08f3509b9f5e.webp",
+    "bytes": 111844,
+    "sha256": "08f3509b9f5ebcd6198943e1cf0ed210f67a9a6aec6f4648da9f13ea61051391",
+    "width": 628,
+    "height": 628,
+    "proof": {
+      "pixels": 394384,
+      "visiblePixels": 394384,
+      "differingPixels": 392744,
+      "maxVisibleDelta": 49,
+      "maxAlphaDelta": 0,
+      "alphaWeightedMeanRgbDelta": 2.5676312088387627
+    },
+    "sourceBytes": 2683357,
+    "sourceRects": {
+      "grass": [
+        1,
+        1,
+        625,
+        625
+      ],
+      "path": [
+        628,
+        1,
+        625,
+        625
+      ],
+      "rock": [
+        1,
+        628,
+        625,
+        625
+      ],
+      "sand": [
+        628,
+        628,
+        625,
+        625
+      ]
+    },
+    "rects": {
+      "grass": [
+        1,
+        1,
+        312,
+        312
+      ],
+      "path": [
+        315,
+        1,
+        312,
+        312
+      ],
+      "rock": [
+        1,
+        315,
+        312,
+        312
+      ],
+      "sand": [
+        315,
+        315,
+        312,
+        312
+      ]
+    },
+    "maxGroundTexelsPerUnit": 32
+  },
+  "initialTransfer": {
+    "masterPlusTerrainBytes": 12950770,
+    "shippedBytes": 2868430,
+    "targetBytes": 4000000,
+    "targetMet": true
+  },
+  "errors": [],
+  "externalRequests": []
+}

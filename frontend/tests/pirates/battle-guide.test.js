@@ -133,6 +133,15 @@ describe('routes', () => {
     expect(routeKey(landings, walls.map((wall, i) => (i ? wall : { ...wall, x: wall.x + .5 })), 5)).not.toBe(key);
     expect(routeKey(landings, walls, 6)).not.toBe(key);
   });
+  it.each(['wall', 'tower'])('keeps %s band caching but refreshes changed live durability', kind => {
+    const landings = laneLandings(), obstacle = {id: 'piece', x: 1, z: 5, hp: 60, maxHp: 60};
+    const key = item => routeKey(landings, kind === 'wall' ? [item] : [], 8,
+      kind === 'tower' ? [item] : [], kind === 'tower');
+    expect(key({...obstacle, hp: 48})).toBe(key(obstacle));
+    expect(key({...obstacle, hp: 59})).toBe(key({...obstacle, hp: 48}));
+    expect(key({...obstacle, hp: 44})).not.toBe(key(obstacle));
+    expect(key({...obstacle, hp: 69, maxHp: 69})).not.toBe(key(obstacle));
+  });
 });
 
 describe('walls', () => {
@@ -143,6 +152,12 @@ describe('walls', () => {
     expect(walls[0]).toMatchObject({ hp: CONFIG.levels.wall[0].hp / 2, maxHp: CONFIG.levels.wall[0].hp });
     expect(walls[1]).toMatchObject({ hp: CONFIG.levels.wall[1].hp, maxHp: CONFIG.levels.wall[1].hp, level: 2 });
     expect(guideWalls([{ id: 'wall_1', kind: 'wall', x: 1, z: 2 }], [{ id: 'wall_1', hp: 7, maxHp: 70 }])[0]).toMatchObject({ hp: 7, maxHp: 70 });
+  });
+  it.each([{}, {bonus: 'thick_walls'}, {bonus: 'thick_walls', spec: 'stone'},
+    {bonus: 'mason_drill', spec: 'stone'}])('previews the same opening wall durability as the sim for %j', extra => {
+    const defenses = [{id: 'wall_1', kind: 'wall', level: 2, x: -18.5, z: -4, health: 73, ...extra}];
+    const actual = createWave({seed: 1, wave: 1, defenses}).state().walls[0];
+    expect(guideWalls(defenses)[0]).toMatchObject({hp: actual.hp, maxHp: actual.maxHp});
   });
   it('shows a bar on a hurt or hacked wall only: green, yellow, red; none on a broken one', () => {
     expect(wallBar({ hp: 60, maxHp: 60 })).toBeNull();
@@ -180,6 +195,25 @@ describe('drawing', () => {
     expect(withRule.some(id => id.startsWith('cannon_'))).toBe(true);
     guide.dispose();
   });
+  it.each([
+    {name: 'wall level', kind: 'wall', change: {level: 5}},
+    {name: 'wall skill', kind: 'wall', change: {spec: 'stone'}},
+    {name: 'tower level', kind: 'cannon', change: {level: 5}},
+  ])('refreshes a full-health $name change to the fresh guide result', ({kind, change}) => {
+    const defenses = RING.map((wall, i) => ({...wall, kind, id: kind === 'wall' ? wall.id : `cannon_${i}`}));
+    const upgraded = defenses.map((item, i) => i === 2 ? {...item, ...change} : item);
+    const view = {mode: 'preview', defenses, towerObstacles: kind !== 'wall', wave: 8, dt: .016};
+    const guide = createBattleGuide({scene: scene()}), fresh = createBattleGuide({scene: scene()});
+    try {
+      guide.update(view);
+      const before = guide.stats().routes;
+      fresh.update({...view, defenses: upgraded});
+      const expected = fresh.stats().routes;
+      expect(expected).not.toEqual(before); // real breach order/choice changes, not just a different key
+      guide.update({...view, defenses: upgraded});
+      expect(guide.stats().routes).toEqual(expected);
+    } finally { guide.dispose(); fresh.dispose(); }
+  });
   it('between waves draws the wall lanes (D056) under the routes, and in a wave leaves them out', () => {
     const guide = createBattleGuide({ scene: scene() });
     guide.update({ mode: 'preview', defenses: [], wave: 4, dt: .016 });
@@ -189,6 +223,18 @@ describe('drawing', () => {
     expect(guide.stats().lanes).toBe(0);
     guide.update({ mode: 'wave', lanes: null, defenses: [], stateWalls: [], boarders: [], heart: HEART, wave: 4, dt: .016 });
     expect(guide.stats().lanes).toBe(0);
+    guide.dispose();
+  });
+  it('stays quiet during village management and restores live guidance in a wave', () => {
+    const guide = createBattleGuide({scene: scene()});
+    const view = {mode: 'preview', defenses: RING, wave: 4, dt: .016};
+    guide.update(view);
+    expect(guide.stats().ground).toBeGreaterThan(0);
+    guide.update({...view, managing: true});
+    expect(guide.stats()).toMatchObject({ground: 0, air: 0, lanes: 0});
+    guide.update({...view, managing: true, mode: 'wave', stateWalls: [], boarders: [], heart: HEART});
+    expect(guide.stats().ground).toBeGreaterThan(0);
+    expect(guide.stats().air).toBeGreaterThan(0);
     guide.dispose();
   });
   it('previews swivel nests as damageable obstacles and reads their live hp', () => {
