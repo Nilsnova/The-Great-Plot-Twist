@@ -395,6 +395,19 @@ def test_a_repeated_hire_charges_nothing():
     assert world.database.calls("island_hire") == []
 
 
+def test_recovery_v1_refuses_new_carpenters_before_the_paid_rpc_but_answers_retries():
+    world = world_at(9)
+    world.database.recovery_policy_version = 1
+
+    retired = world.post("/api/island/hire", crew="carpenter")
+    assert_error(retired, 409, "recovery_option_retired")
+    assert world.database.calls("island_hire") == []
+
+    world.database.ledger_refs.add(("crew_hire", "crew:click-0001"))
+    assert world.post("/api/island/hire", crew="carpenter").status_code == 200
+    assert world.database.calls("island_hire") == []
+
+
 # --- POST /api/island/captain ---
 
 
