@@ -45,7 +45,7 @@ export const kindOfSpot = spot => (/^(pp_)?wall_/.test(spot) ? 'wall' : /^(canno
 // The slot of a spot: a tower spot accepts a cannon or a mortar (§2), on the island also a harpoon tower (GAME-V3.md §5).
 export const slotOfSpot = spot => (kindOfSpot(spot) === 'cannon' ? 'tower' : kindOfSpot(spot));
 // T43 (D048): the culverin joins the island's tower spots, prices and unlocks (culverin: true; the flag defenses_v2 is
-// retired, always on), as the real server's catalogue_for_flags(); Pirate Point never gets it.
+// retired, always on), as the real server's runtime_catalogue(); Pirate Point never gets it.
 export const V2_KINDS = Object.freeze(['culverin']);
 export const kindsOfSpot = (spot, culverin = false) => [...SLOT_KINDS[slotOfSpot(spot)].filter(kind => (kind !== 'harpoon' && kind !== 'swivel') || !/^pp_/.test(spot)),
   ...(culverin && slotOfSpot(spot) === 'tower' && !/^pp_/.test(spot) ? V2_KINDS : [])];

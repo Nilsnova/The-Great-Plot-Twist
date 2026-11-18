@@ -31,7 +31,7 @@ from server.game.case_service import CaseService, case_or_none
 from server.game.station_lookup import IsletStations, NoStations
 from server.game.world_state import DatabaseWorldStage, relit_check
 from server.host_console_cache import HostConsoleHeaders
-from server.island.catalogue import IslandCatalogue, catalogue_for_flags, island_or_none
+from server.island.catalogue import IslandCatalogue, island_or_none, runtime_catalogue
 from server.lock.limits import PlayerBudget
 from server.lock.places import PlaceSearch
 from server.lock.recovery_budget import TokenBucket
@@ -193,8 +193,8 @@ def create_app(
     if island_catalogue is None:
         island_catalogue = island_or_none()  # None if islands.json is broken
     if island_catalogue is not None:
-        # T43 (D048): the culverin (defenses_v2, always on) and, by flag, the extra tower spots.
-        island_catalogue = catalogue_for_flags(island_catalogue, settings.flags)
+        # T43 (D048) the culverin and D060 the extra tower spots (both flags retired, always on).
+        island_catalogue = runtime_catalogue(island_catalogue)
 
     if case_service is None:
         stations = IsletStations(islet_catalogue) if islet_catalogue is not None else NoStations()

@@ -35,9 +35,8 @@ CAMPAIGN_FILE = CONTENT_FILE.with_name("campaign.json")
 DEFENSES_V2_FILE = CONTENT_FILE.with_name("defenses_v2.json")
 # D055: the upgrade trees of the towers after level 5 (two paths of three tiers each).
 TOWER_TREES_FILE = CONTENT_FILE.with_name("tower_trees.json")
-# D060: the extra tower spots that open with progress (islands.json "extraTowerSpots"). Offered
-# only while this flag is on (the database rule: migrations/20261117010000_more_tower_spots.sql).
-MORE_TOWER_SPOTS_FLAG = "more_tower_spots"
+# D060: the extra tower spots that open with progress (islands.json "extraTowerSpots"); their flag
+# more_tower_spots is retired (always on; the database rule: 20261117010000_more_tower_spots.sql).
 # The tower spot whose kinds every extra tower spot copies (so the culverin comes along too).
 TOWER_SPOT_TEMPLATE = "cannon_1"
 
@@ -443,7 +442,7 @@ class IslandCatalogue:
     # culverin while defenses_v2 is off) is never built, so its tree is never offered.
     trees: tuple[TowerTree, ...] = ()
     # D060: (spot id, unlock wave) of the extra tower spots of islands.json. They join `spots` only
-    # through catalogue_for_flags() while the flag more_tower_spots is on (more_tower_spots True).
+    # through runtime_catalogue() (more_tower_spots True).
     extra_tower_spots: tuple[tuple[str, int], ...] = ()
     more_tower_spots: bool = False
 
@@ -1029,7 +1028,7 @@ def island_or_none() -> IslandCatalogue | None:
 # --- the second wave of defenses (T43, decision D048 proposed) ---
 #
 # defenses_v2.json holds the tower kinds of the second wave of defenses (the flag defenses_v2 is
-# retired: always on). catalogue_for_flags() returns a copy with each new kind added to the kinds,
+# retired: always on). runtime_catalogue() returns a copy with each new kind added to the kinds,
 # to the tower spots it names and to the campaign steps of its levels, so every rule, price and
 # unlock of the existing code (rules.py, service.py) treats it like the harpoon tower.
 # specs/T43-new-defenses.md.
@@ -1130,18 +1129,15 @@ def with_more_tower_spots(catalogue: IslandCatalogue) -> IslandCatalogue:
     return replace(catalogue, spots=catalogue.spots + extra, more_tower_spots=True)
 
 
-def catalogue_for_flags(
-    catalogue: IslandCatalogue, flags: Mapping[str, bool], path: Path = DEFENSES_V2_FILE
-) -> IslandCatalogue:
-    """The catalogue the server runs with: the copy of with_defenses_v2() (the flag defenses_v2
-    is retired, always on). A broken file is logged and the island keeps running without the new
-    kinds. Then, with the flag more_tower_spots on (D060), the extra tower spots join (off:
-    nothing changes)."""
+def runtime_catalogue(catalogue: IslandCatalogue, path: Path = DEFENSES_V2_FILE) -> IslandCatalogue:
+    """The catalogue the server runs with: the copy of with_defenses_v2() and, D060, the extra
+    tower spots (their flags defenses_v2 and more_tower_spots are retired, always on). A broken
+    defenses_v2 file is logged and the island keeps running without the new kinds."""
     try:
         catalogue = with_defenses_v2(catalogue, read_defenses_v2(catalogue, path))
     except IslandFileError as error:
         logger.error("The defenses_v2 defenses cannot start: %s", error)
-    if flags.get(MORE_TOWER_SPOTS_FLAG, False) and catalogue.extra_tower_spots:
+    if catalogue.extra_tower_spots:
         catalogue = with_more_tower_spots(catalogue)
     return catalogue
 

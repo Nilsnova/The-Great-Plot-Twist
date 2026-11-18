@@ -17,11 +17,11 @@ import { createWaveRoutes } from './fake-waves.js';
 export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me', ownerName = 'You',
   now = () => Date.now(), weather = 'calm', code: wantedCode = null, version = 1, unlocking = version === 2, flags = {} } = {}) {
   // unlocking: the server's §9 locks (409 locked). Off by default here; the game's transport and version 2 turn it on.
-  // flags: the server's feature flags this fake follows (wall_recovery, D039; more_tower_spots, D060); all off by default.
+  // flags: the server's feature flags this fake follows (wall_recovery, D039); all off by default.
   const wallsOn = flags?.wall_recovery === true;
-  // D060: the extra tower spots (cannon_8..cannon_11) join the island only while the flag more_tower_spots is on
-  // (?fakeflags=more_tower_spots), as the real server's catalogue_for_flags(); each opens after its won wave.
-  const islandSpots = flags?.more_tower_spots === true ? Object.freeze([...ISLAND_RULES.spots, ...EXTRA_SPOT_IDS]) : ISLAND_RULES.spots;
+  // D060: the extra tower spots (cannon_8..cannon_11) join the island, as the real server's runtime_catalogue() (the flag
+  // more_tower_spots is retired, always on); each opens after its won wave.
+  const islandSpots = Object.freeze([...ISLAND_RULES.spots, ...EXTRA_SPOT_IDS]);
   const v2 = version === 2; // the answers' tower defense extras (boss, nextWave on finish), as the real server sends them
   // A new island, as island_open() makes it (and as a reset leaves it, T53).
   const newIsland = (code, owner, name) => ({ code, owner, ownerName: name, waveBest: 0, flags: 0, built: new Set(),

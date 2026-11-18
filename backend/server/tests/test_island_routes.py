@@ -31,6 +31,7 @@ SPOT_IDS = [
     "cannon_1", "cannon_2", "cannon_3", "cannon_4", "cannon_5", "cannon_6", "cannon_7",
     "tower_1", "house_1", "house_2",
     "wall_7", "wall_8", "wall_9", "wall_10", "wall_11", "wall_12",
+    "cannon_8", "cannon_9", "cannon_10", "cannon_11",  # D060, the extra tower spots
 ]  # fmt: skip
 INSUFFICIENT = httpx.Response(400, json={"code": "P0001", "message": "insufficient_funds"})
 REPEATED = httpx.Response(409, json={"code": "23505", "message": "already_applied"})
@@ -128,7 +129,7 @@ def test_built_spots_show_as_built_and_old_islet_rows_are_left_out():
     spots = world.island().json()["spots"]
 
     assert [spot["id"] for spot in spots if spot["built"]] == ["cannon_1"]
-    assert len(spots) == 22
+    assert len(spots) == 26
 
 
 def test_a_player_without_a_profile_gets_404():
@@ -182,19 +183,6 @@ def test_a_build_pays_the_price_of_the_file_in_coins_only_and_answers_the_island
         "p_starter_timber": 0,
         "p_ref": "island:click-0001",
     }
-
-
-def test_gated_plot_purchases_stay_blocked_after_saved_recovery_v1():
-    world = World(settings=replace(ISLAND_SETTINGS, flags=parse_flags("islands")))
-    world.database.recovery_policy_version = 1
-    before = world.database.balance
-
-    extra_plot = world.build(spot="cannon_8", kind="cannon")
-
-    assert_error(extra_plot, 404, "no_such_spot")
-    assert world.database.calls("islet_build") == []
-    assert world.database.balance == before
-    assert world.database.buildings == {}
 
 
 def test_saved_v1_existing_culverin_on_an_extra_plot_can_upgrade():

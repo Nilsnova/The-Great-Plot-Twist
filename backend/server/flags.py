@@ -46,7 +46,7 @@ FLAG_NAMES = (
     # rule). Retired: always on.
     "ship_fire",
     # D060: extra tower spots that open with progress (cannon_8..cannon_11 after waves 10, 20, 30
-    # and 40). Needs supabase/migrations/20261117010000_more_tower_spots.sql applied first.
+    # and 40). Retired: always on.
     "more_tower_spots",
     # T55/T54: protocol-2 persistent structure HP and recovery state. Keep off until separately
     # reviewed and authorized for activation; adding the registry entry does not enable it.

@@ -33,7 +33,9 @@ describe('fake island API', () => {
       'wall_1:wall:10:false', 'wall_2:wall:10:false', 'wall_3:wall:10:false', 'wall_4:wall:10:false', 'wall_5:wall:10:false', 'wall_6:wall:10:false',
       'cannon_1:cannon:30:false', 'cannon_2:cannon:30:false', 'cannon_3:cannon:30:false', 'cannon_4:cannon:30:false',
       'cannon_5:cannon:30:false', 'cannon_6:cannon:30:false', 'cannon_7:cannon:30:false', 'tower_1:watchtower:40:false', 'house_1:house:50:false', 'house_2:house:50:false', 'wall_7:wall:10:false', 'wall_8:wall:10:false',
-      'wall_9:wall:10:false', 'wall_10:wall:10:false', 'wall_11:wall:10:false', 'wall_12:wall:10:false']);
+      'wall_9:wall:10:false', 'wall_10:wall:10:false', 'wall_11:wall:10:false', 'wall_12:wall:10:false',
+      // D060: the extra tower spots (the flag more_tower_spots is retired, always on)
+      'cannon_8:cannon:30:false', 'cannon_9:cannon:30:false', 'cannon_10:cannon:30:false', 'cannon_11:cannon:30:false']);
     expect((await api.island()).code).toBe(island.code);
   });
 

@@ -20,8 +20,8 @@ from server.island.catalogue import (
     CONTENT_FILE,
     IslandFileError,
     catalogue_for_existing_structures,
-    catalogue_for_flags,
     load_island,
+    runtime_catalogue,
 )
 from server.island.wave_rules import SIM_RULES
 from server.island.waves import SEED_LIMIT
@@ -358,8 +358,12 @@ def test_the_check_rule_allows_the_old_pairs_and_every_island_spot():
 
     old = {(s.plot, s.building_type) for s in load_buildings().spots if not s.stands_from_start}
     new = {(spot.id, kind) for spot in load_island().spots for kind in spot.kinds}
-    flagged = catalogue_for_flags(load_island(), {"defenses_v2": True})
-    flagged_new = {(spot.id, kind) for spot in flagged.spots for kind in spot.kinds}
+    flagged = runtime_catalogue(load_island())
+    # D060: the extra tower spots are allowed by their own migration (test_more_tower_spots.py).
+    extra = dict(flagged.extra_tower_spots)
+    flagged_new = {
+        (spot.id, kind) for spot in flagged.spots if spot.id not in extra for kind in spot.kinds
+    }
     first = check_pairs(migration_text(), "islet_buildings_plot_fits_building")
     before = check_pairs(TOWER_DEFENSE.read_text(), "islet_buildings_plot_fits_building")
     assert newest == old | flagged_new
@@ -372,7 +376,7 @@ def test_the_check_rule_allows_the_old_pairs_and_every_island_spot():
 
 
 def test_existing_recovery_structures_expand_runtime_catalogue_only_for_built_items():
-    purchase_catalogue = catalogue_for_flags(load_island(), {})
+    purchase_catalogue = load_island()  # a catalogue without the culverin and the extra spots
     built = {
         "cannon_8": SimpleNamespace(kind="culverin", level=3),
         "cannon_10": SimpleNamespace(kind="cannon", level=1),
@@ -395,7 +399,7 @@ def test_existing_recovery_structures_expand_runtime_catalogue_only_for_built_it
 
 
 def test_existing_recovery_catalogue_preserves_all_originally_enabled_choices():
-    available = catalogue_for_flags(load_island(), {"defenses_v2": True, "more_tower_spots": True})
+    available = runtime_catalogue(load_island())
 
     runtime = catalogue_for_existing_structures(available, {})
 

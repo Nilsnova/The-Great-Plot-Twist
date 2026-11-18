@@ -1,6 +1,6 @@
 // D060 (more tower spots over time): the browser's table of the extra tower spots equals the server's files, an
-// extra spot shows only while an island answer lists it (the server's flag more_tower_spots), it opens after its won
-// wave, it is a legal place on the build grid, and the fake server follows the flag.
+// extra spot shows only while an island answer lists it, it opens after its won wave, it is a legal place on the
+// build grid, and the fake server offers them (the flag more_tower_spots is retired, always on).
 import {readFileSync} from 'node:fs';
 import {describe, expect, it} from 'vitest';
 import {EXTRA_SPOT_TABLE, extraOpenedBetween, extraSpotWave, offeredExtra} from '../../src/island/extra-spots.js';
@@ -82,23 +82,16 @@ describe('the locked card and the unlock card', () => {
     expect(model.soon).toBe('Opens after wave 30.');
     expect(model.purpose).toMatch(/new tower spot/i);
   });
-  it('"New tower spot!" comes once per wave step, and only while the flag is on', () => {
-    expect(cardById('tower_spot_8')).toMatchObject({wave: 10, flag: 'more_tower_spots', title: 'New tower spot!', where: 'cannon_8'});
-    expect(cardsBetween(9, 10, {more_tower_spots: true}).map(card => card.id)).toContain('tower_spot_8');
-    expect(cardsBetween(9, 10, {}).map(card => card.id)).not.toContain('tower_spot_8');
-    expect(cardsBetween(29, 40, {more_tower_spots: true}).map(card => card.id).filter(id => id.startsWith('tower_spot'))).toEqual(['tower_spot_10', 'tower_spot_11']);
+  it('"New tower spot!" comes once per wave step', () => {
+    expect(cardById('tower_spot_8')).toMatchObject({wave: 10, title: 'New tower spot!', where: 'cannon_8'});
+    expect(cardsBetween(9, 10).map(card => card.id)).toContain('tower_spot_8');
+    expect(cardsBetween(29, 40).map(card => card.id).filter(id => id.startsWith('tower_spot'))).toEqual(['tower_spot_10', 'tower_spot_11']);
   });
 });
 
-describe('the fake server follows the flag', () => {
-  it('off: the 22 spots, and an extra spot does not exist', async () => {
-    const api = createFakeIslandApi({version: 2});
-    expect((await api.island()).spots).toHaveLength(22);
-    const error = await refusal(api.build({spot: 'cannon_8', kind: 'cannon', actionUid: 'more-0001'}));
-    expect([error.status, error.code]).toEqual([404, 'no_such_spot']);
-  });
-  it('on: four more tower spots, locked until their wave, then any tower kind', async () => {
-    const world = createFakeWorld(), api = createFakeIslandApi({world, version: 2, flags: {more_tower_spots: true}});
+describe('the fake server offers the extra spots (the flag more_tower_spots is retired)', () => {
+  it('four more tower spots, locked until their wave, then any tower kind', async () => {
+    const world = createFakeWorld(), api = createFakeIslandApi({world, version: 2});
     const answer = await api.island();
     expect(answer.spots.map(spot => spot.id).slice(22)).toEqual(IDS);
     expect(answer.spots[22].kinds).toEqual(['cannon', 'mortar', 'harpoon', 'swivel', 'culverin']);

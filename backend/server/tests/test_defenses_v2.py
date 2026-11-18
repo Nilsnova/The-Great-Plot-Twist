@@ -1,7 +1,7 @@
 """Tests for the second wave of defenses (T43, decision D048): the culverin, a long gun.
 
 The culverin lives in its own file, backend/content/defenses_v2.json, and joins the island's
-catalogue through catalogue.catalogue_for_flags() (the flag defenses_v2 is retired: always on).
+catalogue through catalogue.runtime_catalogue() (the flag defenses_v2 is retired: always on).
 
 Nothing here uses the network: the API tests use the FakeIslandDatabase of island_helpers.py.
 
@@ -17,9 +17,9 @@ from server.flags import parse_flags
 from server.island.catalogue import (
     DEFENSES_V2_FILE,
     IslandFileError,
-    catalogue_for_flags,
     load_island,
     read_defenses_v2,
+    runtime_catalogue,
 )
 from server.tests.helpers import assert_error
 from server.tests.island_helpers import ISLAND_SETTINGS, World
@@ -77,11 +77,12 @@ def test_a_broken_file_is_refused_with_a_clear_message(tmp_path, change, message
 
 
 def test_the_culverin_joins_the_tower_spots_and_the_campaign():
-    merged = catalogue_for_flags(CATALOGUE, FLAG_ON)
+    merged = runtime_catalogue(CATALOGUE)
     assert [kind.kind for kind in merged.kinds] == [kind.kind for kind in CATALOGUE.kinds] + [
         "culverin"
     ]
-    for before, after in zip(CATALOGUE.spots, merged.spots, strict=True):
+    # The extra tower spots of D060 follow the 22 (test_more_tower_spots.py).
+    for before, after in zip(CATALOGUE.spots, merged.spots[: len(CATALOGUE.spots)], strict=True):
         expected = before.kinds + (("culverin",) if before.id in TOWER_SPOTS else ())
         assert (after.id, after.kinds) == (before.id, expected)
     # Pirate Point keeps cannon or mortar only.
@@ -99,7 +100,7 @@ def test_the_culverin_joins_the_tower_spots_and_the_campaign():
 
 def test_a_broken_file_leaves_the_island_as_it_was(tmp_path, caplog):
     broken = write(tmp_path, lambda d: d["kinds"][0].update(spots=["wall_1"]))
-    assert catalogue_for_flags(CATALOGUE, FLAG_ON, broken) is CATALOGUE
+    assert "culverin" not in {kind.kind for kind in runtime_catalogue(CATALOGUE, broken).kinds}
     assert "defenses_v2" in caplog.text
 
 
