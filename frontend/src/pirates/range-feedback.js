@@ -12,7 +12,8 @@ export function createRangeFeedback() {
       if (!active || !player) { reset(); return null; }
       const age = nowMs - (attempt?.nowMs ?? -Infinity);
       if (!preview && !held && age >= HOLD_MS + FADE_MS) return null;
-      const recent = age < HOLD_MS + FADE_MS, melee = blade || (recent && attempt.blade === true);
+      // A targeted gun attempt takes precedence over the nearby-enemy cutlass hint until it expires.
+      const recent = age < HOLD_MS + FADE_MS, melee = recent ? attempt.blade === true : blade;
       return { x: player.x, z: player.z, radius: melee ? stats.sweepRadius : stats.range,
         alpha: preview || held ? 1 : Math.max(0, Math.min(1, (HOLD_MS + FADE_MS - age) / FADE_MS)),
         label: melee ? 'Cutlass reach' : `${stats.name}${stats.mode === 'area' ? ' throw range' : ' range'}`,

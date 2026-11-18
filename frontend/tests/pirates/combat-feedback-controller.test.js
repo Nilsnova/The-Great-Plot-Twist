@@ -52,6 +52,33 @@ it('preserves firing and impact animation events without written damage feedback
   h.controller.dispose();
 });
 
+it('keeps musket range and aim after targeting a ship beside a boarder', async () => {
+  const h = await setup();
+  try {
+    h.controller.autoBlade = false;
+    let pair = null;
+    for (let t = 0; t < 600 && !pair; t++) {
+      const state = h.controller.state;
+      for (const boarder of state.boarders ?? []) {
+        const ship = state.ships.find(ship => ship.hp > 0 && Math.hypot(ship.x - boarder.x, ship.z - boarder.z) <= 12);
+        if (boarder.hp > 0 && ship) { pair = { boarder, ship }; break; }
+      }
+      if (!pair) await h.advance(50);
+    }
+    expect(pair).toBeTruthy();
+    Object.assign(h.player, { x: pair.boarder.x, z: pair.boarder.z });
+    expect(h.controller.shoot(pair.ship.id)).toBe(true);
+    await h.advance(300);
+    expect(h.controller.state.boarders.some(boarder => boarder.hp > 0
+      && Math.hypot(boarder.x - h.player.x, boarder.z - h.player.z) <= 2.2)).toBe(true);
+    expect(h.events.some(event => event.type === 'captain_fired' && event.by === 'me'
+      && event.targetId === pair.ship.id)).toBe(true);
+    expect(h.range).toMatchObject({ radius: 14, label: 'Musket range', melee: false,
+      point: { x: pair.ship.x, z: pair.ship.z } });
+    expect(h.latest.combatFeedback.range).toMatchObject({ radius: 14, melee: false });
+  } finally { h.controller.dispose(); }
+});
+
 it('handles fire-control preview and queued touch/keyboard attempts, clearing in menus', async () => {
   const h = await setup();
   h.callbacks.onRangePreview(true); await h.advance(50);
