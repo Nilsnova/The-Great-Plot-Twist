@@ -463,7 +463,13 @@ export function decorateIsland(place, ctx = {}) {
       const loaded = await (ctx.loadArt ?? loadArt)(wanted);
       if (disposed) { Object.values(loaded).forEach(material => { material.map?.dispose(); material.dispose(); }); return; }
       art = loaded;
-      for (const mesh of buildings.values()) releaseStandin(mesh);
+      // A frame can be shared by many slots. Retire its map after the last stand-in leaves the scene.
+      const standinMaps = new Set();
+      for (const mesh of buildings.values()) {
+        standinMaps.add(mesh.material.map);
+        releaseStandin(mesh);
+      }
+      for (const map of standinMaps) map.dispose();
       apply(state);
     });
   }
@@ -479,7 +485,10 @@ export function decorateIsland(place, ctx = {}) {
       if (disposed) { if (value.ownsTexture) value.texture.dispose(); return; }
       if (!wallConnections.setArt(value)) { if (value.ownsTexture) value.texture.dispose(); throw new Error('Wall artwork could not be prepared.'); }
       wallArtReady = true;
-      textures.wall.texture.image = wallPreviewCanvas(value); textures.wall.texture.needsUpdate = true;
+      if (!art) {
+        textures.wall.texture.image = wallPreviewCanvas(value);
+        textures.wall.texture.needsUpdate = true;
+      }
       apply(state);
     });
   }
