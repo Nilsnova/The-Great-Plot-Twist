@@ -3,22 +3,26 @@
 What this is: review evidence and a code walkthrough for [task #453](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/453).
 Who uses it: Ianno and the human peer reviewer, before publication and merge.
 
-Branch: `feat/captain-combat-feedback`. Screenshot source: `127e7771`, based on main `48aee0e7`. Subsequent changes
-shorten tutorial copy and update tests/documents; the pictured combat feedback is unchanged.
-No PR has been opened; Ianno's manual review, three explain-back answers and
-explicit publication confirmation are pending.
+Branch: `feat/captain-combat-feedback`. Current screenshot source: `72446cdd`.
+This revision follows Ianno's request for a quieter radius and visual-only shot confirmation.
+The original blue design, its reports and logs remain below as historical evidence.
+Explain-back 1/3 is completed; questions 2/3 and 3/3, manual review and explicit
+publication confirmation remain pending. No PR has been opened.
 
 ## What the player sees
 
 Hover or focus the fire button, hold F, or attempt a shot to reveal the current
-weapon's reach. Refused attempts reveal it too. The display follows the captain,
+weapon's reach. Refused attempts reveal it too. The display uses twelve short parchment arcs with large gaps, following the captain,
 level, weapon and range skills, then fades after 1.2 seconds plus a 0.4-second fade.
 The last manual slash can briefly show cutlass reach. Bomb reach describes throw
 distance; the blast and a rifle's secondary pierce can extend beyond the circle.
 
-The fire panel distinguishes a shot, reload, no target and an out-of-range aim.
-Only fresh, positive own simulation damage produces the Hit confirmation.
-A visible shot or an eligible target alone does not prove damage.
+The fire panel explains reload, no target and out-of-range aims. Written Hit/damage
+confirmation is removed from visible and spoken feedback. The existing bullets and
+impact flashes show successful shots. A short brighter cap marks the true range
+boundary in the last firing direction; it disappears when that attempt expires.
+The cap rotates in logical world coordinates before the 0.72 flat projection,
+so it stays accurate when aiming diagonally or moving the camera.
 
 One warning beneath the wave bar names immediate danger. An arrow beside the
 captain points toward it. Captain/heart critical danger, recent heart damage,
@@ -36,39 +40,54 @@ Automatic slash is disabled in this fixture so waiting for danger remains observ
 The fixture hides the already-seen first-wave teaching hint. No HP, hit, victory,
 clock or simulation result is forced. Screenshots compare the same setup at live
 simulation times recorded in [before-report.json](before-report.json) and
-[after-report.json](after-report.json); they are not identical paused frames.
+[current after-report.json](redesign/after-report.json); they are not identical paused frames.
 These reports also record source, browser, quality/DPR and any dirty files.
 
-| View | Main before | CF1 after |
+| View | Previous blue design | Current parchment design |
 |---|---|---|
-| Range, 1280×720 | [Before](before-range-1280x720.png) | [After](after-range-1280x720.png) |
-| Range, 375×812 | [Before](before-range-375x812.png) | [After](after-range-375x812.png) |
-| Danger, 1280×720 | [Before](before-danger-1280x720.png) | [After](after-danger-1280x720.png) |
-| Danger, 375×812 | [Before](before-danger-375x812.png) | [After](after-danger-375x812.png) |
-| Own damage | — | [Confirmed hit, 1280×720](after-hit-1280x720.png) |
+| Range, 1280×720 | [Previous](after-range-1280x720.png) | [Current](redesign/after-range-1280x720.png) |
+| Range, 375×812 | [Previous](after-range-375x812.png) | [Current](redesign/after-range-375x812.png) |
+| Shot impact, 1280×720 | — | [Current, no damage label](redesign/after-impact-1280x720.png) |
+| Shot impact, 375×812 | — | [Current, no damage label](redesign/after-impact-375x812.png) |
+| Danger, 1280×720 | [Previous](after-danger-1280x720.png) | [Current](redesign/after-danger-1280x720.png) |
+| Danger, 375×812 | [Previous](after-danger-375x812.png) | [Current](redesign/after-danger-375x812.png) |
 
-![Contextual weapon range on desktop](after-range-1280x720.png)
+Original main before this feature: [desktop range](before-range-1280x720.png),
+[phone range](before-range-375x812.png), [desktop danger](before-danger-1280x720.png),
+[phone danger](before-danger-375x812.png). The earlier [written confirmation](after-hit-1280x720.png)
+is retained only as superseded review history; it is absent from the current game.
 
-![Immediate heart warning on a phone](after-danger-375x812.png)
+![Quiet contextual range on desktop](redesign/after-range-1280x720.png)
+
+![Shot feedback on a phone without a written damage confirmation](redesign/after-impact-375x812.png)
 
 ## Code walkthrough
 
-- `range-feedback.js` keeps short-lived intent and own hit messages. Its radius
+- `range-feedback.js` keeps short-lived firing intent and aim direction. Its radius
   always comes from the controller's existing `captainStats()`; it cannot change hits.
 - `danger-feedback.js` reads raw captain/participant IDs, actual boarder targets,
   incoming ship fire and fresh damage. It chooses one warning and limits sound.
 - `controller.js` records attempts at the actual attack paths, including refusals.
-  It reads authoritative damage before predicted cosmetic copies are suppressed.
-  Predicted tracers and flashes cannot confirm hits or trigger danger damage notes.
+  The original firing and impact events still reach the renderer. Only danger
+  damage notes use the fresh authoritative stream, before cosmetic suppression.
 - `hud.js` displays text, reports hover/focus intent and supplies a separate polite
   range status plus an alert for danger. Repeated identical danger frames do not
   rebuild announcement text. Reduced motion preserves static text.
 - `combat-overlay.js` caches four meshes. It uses the game's existing flat projection
-  (`y = -z × 0.72`) for exact world reach and disposes geometry/materials on stop.
+  (`y = -z × 0.72`) for exact world reach, using cached sparse arcs and a directional cap;
+  it disposes all geometry/materials on stop.
 - `audio/pirates.js` plays the alert on the existing effects bus. It does not add
   another caption over the warning or change other audio preferences.
 
-## Verification
+## Verification of the current revision
+
+- [Focused suite](redesign/focused-tests.txt): **100 tests pass across 11 files**. Coverage includes genuine angular gaps, exact outer radius, diagonal/cardinal direction projection, cached resources/disposal, aim expiry, no written damage feedback, preserved firing/impact events, controller behavior, native keyboard/layout, sound and tutorial limits.
+- [Native game check](redesign/native-feedback.txt): **14 checks pass**, with six current screenshots. Existing simulation HP/counters confirm attacks still work, and the fire control contains no confirmation label or damage number.
+- [Overlap audit](redesign/overlaps.txt): **24 state/viewport checks pass**.
+- [Build/spoiler guard](redesign/build.txt), [budget](redesign/budget.json) and [reviewed text](redesign/reviewed-text.txt) pass; text lint has **0 errors and 8 report-only findings**.
+- Independent read-only review found no blocking product issue. No new full-suite or broad accessibility/demo run was performed for this presentation revision; their prior results and limits remain explicit below.
+
+## Earlier verification and known audit limits
 
 - [Final scoped suite](focused-tests.txt): **87 passed across 9 files**, 7.42 seconds. It covers range lifetime/equipment/skills, refusals, own-hit truth, unique target counts, danger priority/expiry/cooldown/mute, renderer pooling/disposal, controller paths, keyboard focus, reduced motion, layout and reviewed text.
 - [Final follow-up run](final-regressions.txt): **14 passed across 4 files**, 27.74 seconds. This checks short tutorial copy, tutorial host, actual-game defense-report input ownership and desktop/phone nearby input with the original time limits.
@@ -100,10 +119,10 @@ recovery, balance or transport rule changed. No deployment or agent merge.
 
 ## Explain-back and next step
 
-Ask these one at a time; all three and manual review precede publication:
+Question 1 is already answered correctly; do not restart it. Ask the remaining questions one at a time, after visual review:
 
 1. If F finds no enemy in reach, why does the ring still appear, and where does its radius come from?
-2. Why does Hit use fresh own simulation damage rather than a tracer or an in-range target?
+2. Why should the range marker move and scale with the island when the captain moves or the camera zooms?
 3. How does the warning choose between captain and heart danger and avoid repeated sound spam?
 
 The prepared [PR request](../../handoff/CF1-PR-request.md) includes these screenshots
