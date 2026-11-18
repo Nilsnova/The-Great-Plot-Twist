@@ -149,6 +149,7 @@ class VisitView:
     crew: dict[str, int]  # the owner's crew: every visitor simulates the same defenses
     campaign: CampaignView
     layout: LayoutInfo = FIXED_LAYOUT
+    recovery_version: int = LEGACY_RECOVERY_VERSION
 
 
 @dataclass(frozen=True)
@@ -1158,6 +1159,7 @@ async def visit(
     progress = await store.read_progress(admin, island.owner)
     research = await store.read_research(admin, island.owner)
     campaign = campaign_of(catalogue, progress.wave_best, research, progress.wreck_paid)
+    recovery_version = await read_recovery_version(admin, island.owner)
     return VisitView(
         shown(island.code),
         owner_name,
@@ -1166,6 +1168,7 @@ async def visit(
         progress.crew,
         campaign,
         layout.info_of(grid, stored),
+        recovery_version,
     )
 
 

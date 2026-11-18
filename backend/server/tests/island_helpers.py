@@ -242,6 +242,7 @@ class FakeIslandDatabase:
         self.paid_replies: dict[str, dict | httpx.Response] = {}
         self.recovery_state_reply: dict | httpx.Response = {"status": "missing"}
         self.recovery_policy_version = 0
+        self.recovery_policy_versions: dict[str, int] = {}
         self.recovery_policy_revision = 0
         self.repair_reply: dict | httpx.Response = {
             "status": "refused",
@@ -452,12 +453,14 @@ class FakeIslandDatabase:
         return httpx.Response(200, json=[row] if row else [])
 
     def read_recovery_state(self, request: httpx.Request) -> httpx.Response:
+        owner = request.url.params.get("island_owner", "").removeprefix("eq.")
+        version = self.recovery_policy_versions.get(owner, self.recovery_policy_version)
         return httpx.Response(
             200,
             json=[
                 {
-                    "recovery_version": self.recovery_policy_version,
-                    "wave_protocol": 2 if self.recovery_policy_version == 1 else 1,
+                    "recovery_version": version,
+                    "wave_protocol": 2 if version == 1 else 1,
                     "revision": self.recovery_policy_revision,
                 }
             ],
