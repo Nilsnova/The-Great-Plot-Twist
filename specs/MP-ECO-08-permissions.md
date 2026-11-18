@@ -72,6 +72,7 @@ Tests were written first and initially failed with two expected import errors fo
 - Full backend command: `uv run --no-sync pytest -q` — **536898 passed, 304 skipped in 461.17s**. This broad run collected the initial isolated policy before the final auto-next, read-bootstrap and personal-profile refinements; the final focused run above verifies those changes and the existing co-op behavior.
 - Final lint command: `uv run --no-sync ruff check .` — **All checks passed**.
 - `git diff --check`: passed.
+- After merging `origin/main` at `f0c64442`, the same focused command passed again: **152 passed in 6.67s**. Targeted Ruff and diff checks passed; the merge changed no permission-policy source.
 
 These commands ran from `backend/` with a writable UV cache and the already installed project environment; `--no-sync` changed no dependencies or lockfile. Persisted authority RPCs, atomic mutation checks, stored-origin settlement and route/UI integration remain unverified and are not activated by this change.
 
@@ -79,5 +80,5 @@ These commands ran from `backend/` with a writable UV cache and the already inst
 
 - **Responsible teammate:** Ianno Hollensteiner (`Iannomh123456`)
 - **Coding agent:** Codex; the responsible teammate remains accountable.
-- **Reviewer:** a different human teammate, to be named before publication.
+- **Reviewer:** a different human teammate before merge, following CONTRIBUTING.md.
 - **Last updated:** 2026-11-18
