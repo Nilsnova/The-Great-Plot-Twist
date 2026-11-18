@@ -193,6 +193,10 @@ declare
   v_result jsonb;
   v_receipt_id uuid;
   v_finance_id uuid;
+  v_finance_uid text;
+  v_finance_kind text;
+  v_finance_reason text;
+  v_finance_reference text;
   v_instance uuid;
   v_commitment uuid;
   v_action text;
@@ -358,17 +362,38 @@ begin
   end if;
   if v_price > 0 then
     if v_action = 'demolish' then
+      v_finance_uid := public.island_economy_effect_uid(v_operation_id,'refund');
+      v_finance_kind := 'credit'; v_finance_reason := 'building_refund';
+      v_finance_reference := 'construction:demolish:'||v_instance::text;
       v_finance := public.island_treasury_credit(p_actor_id,p_account_id,p_run_epoch,
-        public.island_economy_effect_uid(v_operation_id,'refund'),'building_refund','construction:demolish:'||v_instance::text,v_price);
+        v_finance_uid,v_finance_reason,v_finance_reference,v_price);
     else
+      v_finance_uid := public.island_economy_effect_uid(v_operation_id,'charge');
+      v_finance_kind := 'spend'; v_finance_reason := 'building_purchase';
+      v_finance_reference := 'construction:'||v_action||':'||v_instance::text||':'||v_level::text;
       v_finance := public.island_treasury_spend(p_actor_id,p_account_id,p_run_epoch,
-        public.island_economy_effect_uid(v_operation_id,'charge'),'building_purchase','construction:'||v_action||':'||v_instance::text||':'||v_level::text,v_price);
+        v_finance_uid,v_finance_reason,v_finance_reference,v_price);
     end if;
     if v_finance ->> 'status' is distinct from 'done' then
       raise exception '%',v_finance ->> 'reason';
     end if;
-    if (v_finance ->> 'repeat')::boolean then raise exception 'construction_financial_conflict'; end if;
-    v_finance_id := (v_finance #>> '{receipt,id}')::uuid;
+    if v_finance -> 'repeat' is distinct from 'false'::jsonb
+       or jsonb_typeof(v_finance #> '{receipt,id}') is distinct from 'string'
+       or (v_finance #>> '{receipt,id}') !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then
+      raise exception 'construction_financial_conflict';
+    end if;
+    -- An asset or refundable basis requires this exact committed child effect.
+    select id into v_finance_id from public.island_treasury_transactions
+     where id = (v_finance #>> '{receipt,id}')::uuid and account_id = p_account_id
+       and run_epoch = p_run_epoch and actor_id = p_actor_id and action_uid = v_finance_uid
+       and kind = v_finance_kind and reason = v_finance_reason and reference = v_finance_reference
+       and balance_delta = case when v_action = 'demolish' then v_price else -v_price end
+       and committed_delta = 0 and source_reservation_id is null;
+    if not found then raise exception 'construction_financial_conflict'; end if;
+    if v_finance -> 'receipt' is distinct from
+       (public.island_treasury_result(v_finance_id,false) -> 'receipt') then
+      raise exception 'construction_financial_conflict';
+    end if;
   end if;
   v_recovery := public.structure_recovery_mutation_begin(v_account.island_owner);
   if v_action = 'build' then
