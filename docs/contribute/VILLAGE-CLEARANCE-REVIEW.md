@@ -73,8 +73,10 @@ browser's immutable copy of `wallObstacles` from
   unchanged. Towers and houses retain their existing placement rules.
 
 The local fake uses the same client rules. The trusted quote and move paths use
-the Python validator, and construction re-quotes before its atomic snapshot-fenced
-RPC. Static scenery does not require a new migration. An exact paid receipt is
+the Python validator, and positioned construction re-quotes before its atomic
+snapshot-fenced RPC. A separate normal-build follow-up, [VIS68 #454](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/454),
+is being implemented to close the original-wall purchase bypass; its final authority
+and local-fake checks are not established by the intermediate paid capture. Static scenery does not require a new migration. An exact paid receipt is
 reconciled before revalidation: it remains the same receipt rather than charging
 again or reconstructing a demolished/reset piece. See
 [VIS62's authority and tests](../evidence/VIS-62-scenery-clearance/README.md).

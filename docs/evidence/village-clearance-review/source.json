@@ -26,17 +26,46 @@
       ".7",
       "--scenery"
     ],
-    "scope": "Native actual local fake API paid progression on the new obstacle-aware fixtures; not live persistence."
+    "scope": "Native actual local fake API paid progression on the new obstacle-aware fixtures; not live persistence.",
+    "finished": "2026-11-18T10:21:58.969701+00:00",
+    "seconds": 335.47,
+    "exitCode": 0
   },
   "boundary": "Execution began on the named immutable source. Final receipt and complete run outcome are pending; no copied capture is used as a passing result. Documentation-only commits may change HEAD without changing application trees.",
   "layoutMeaning": "New normal paid arrangement, not automatic migration or injected successful walls. Existing saved coordinates and receipt replay remain authoritative.",
   "results": {
     "fullFrontend": "pending coordinator",
-    "nativePaidProgression": "running coordinator",
+    "nativePaidProgression": "INTERIM bcf8 passed; final revised source pending",
     "nativeActualJourney": "pending coordinator",
     "nativeMatrix": "pending coordinator",
     "backendTargetedPG": "pending coordinator",
     "uiChecks": "pending coordinator"
   },
-  "documentationWriterChecks": "JSON parse, authored whitespace and local link existence only; no browser/app/DB run."
+  "documentationWriterChecks": "JSON parse, authored whitespace and local link existence only; no browser/app/DB run.",
+  "interimPaidResult": {
+    "source": "bcf8f1bce5458cfb9c5d07e063ea0c2f3d57c44f",
+    "seconds": 335.47,
+    "exitCode": 0,
+    "pngs": 18,
+    "successfulPaidUpgrades": 984,
+    "coinsFinalEachViewport": 11570,
+    "nativeSizes": [
+      [
+        1280,
+        720
+      ],
+      [
+        375,
+        812
+      ]
+    ],
+    "captureMethod": "Existing High setting; normal viewport+1/restore before snapshots ensures full drawing density1/DPR1. Adaptive before-refresh density can be lower. Not sustained-FPS proof.",
+    "finalCandidateBoundary": "Later normal-build guard and water revisions are pending; this is progress, not final-candidate acceptance."
+  },
+  "beforePaidSource": "7fab8866b83e27c6102df6b123ffdf2eb96619d0",
+  "normalBuildFollowup": {
+    "issue": 454,
+    "status": "pending coordinator implementation",
+    "scope": "Close regular original-wall purchase bypass in addition to explicit Move/positioned-quote clearance. Atomic authority/fake parity and any additive migration remain separate from the interim capture."
+  }
 }

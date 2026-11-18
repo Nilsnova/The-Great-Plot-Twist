@@ -1,0 +1,15 @@
+{
+  "source": "7fab8866b83e27c6102df6b123ffdf2eb96619d0",
+  "name": "paid-hires",
+  "command": [
+    "node",
+    "scripts/capture-paid-wall-tiers.mjs",
+    "/workspace/reference-village-work/polish-runtime-04/frontend",
+    "/workspace/reference-village-work/polish-paid-tiers-hires-02",
+    ".7"
+  ],
+  "started": "2026-11-18T00:25:19.570491+00:00",
+  "exitCode": 0,
+  "seconds": 305.36,
+  "finished": "2026-11-18T00:30:24.929303+00:00"
+}

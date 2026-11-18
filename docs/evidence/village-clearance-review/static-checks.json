@@ -1,9 +1,16 @@
 {
-  "status": "interim_authored_documents_only",
-  "localLinkTargetsChecked": 24,
+  "status": "interim_progress_archive_checked_final_combined_results_pending",
+  "originalArtifactsByteVerified": 29,
+  "beforePngsBoundToOriginalReport": 6,
+  "progressPngsBoundToOriginalReport": 18,
+  "pngFiles": 24,
+  "comparisonImages": 12,
+  "localLinkTargetsChecked": 55,
   "jsonParse": "passed",
+  "htmlTagBalanceAndLocalReferences": "passed",
   "authoredWhitespace": "passed via git diff --check",
-  "applicationChecks": "not run by documentation writer",
+  "nativeComparisonPage": "not run; static page only, no browser launched by documentation writer",
+  "applicationChecks": "not run by documentation writer; completed coordinator progress receipts copied unchanged",
   "links": [
     {
       "from": "docs/contribute/VILLAGE-CLEARANCE-REVIEW.md",
@@ -100,6 +107,130 @@
     {
       "from": "docs/evidence/village-clearance-review/README.md",
       "target": "../VIS-66-barrel-clearance/legacy-limit.json"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/README.md",
+      "target": "progress-paid-bcf/execution.json"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/README.md",
+      "target": "comparison.html"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/comparison.html",
+      "target": "README.md"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/comparison.html",
+      "target": "source.json"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/comparison.html",
+      "target": "originals.json"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/comparison.html",
+      "target": "before-paid/paid-level-1-1280x720.png"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/comparison.html",
+      "target": "before-paid/paid-level-1-1280x720.png"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/comparison.html",
+      "target": "progress-paid-bcf/paid-level-1-1280x720.png"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/comparison.html",
+      "target": "progress-paid-bcf/paid-level-1-1280x720.png"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/comparison.html",
+      "target": "before-paid/paid-level-1-375x812.png"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/comparison.html",
+      "target": "before-paid/paid-level-1-375x812.png"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/comparison.html",
+      "target": "progress-paid-bcf/paid-level-1-375x812.png"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/comparison.html",
+      "target": "progress-paid-bcf/paid-level-1-375x812.png"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/comparison.html",
+      "target": "before-paid/paid-level-3-1280x720.png"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/comparison.html",
+      "target": "before-paid/paid-level-3-1280x720.png"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/comparison.html",
+      "target": "progress-paid-bcf/paid-level-3-1280x720.png"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/comparison.html",
+      "target": "progress-paid-bcf/paid-level-3-1280x720.png"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/comparison.html",
+      "target": "before-paid/paid-level-3-375x812.png"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/comparison.html",
+      "target": "before-paid/paid-level-3-375x812.png"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/comparison.html",
+      "target": "progress-paid-bcf/paid-level-3-375x812.png"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/comparison.html",
+      "target": "progress-paid-bcf/paid-level-3-375x812.png"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/comparison.html",
+      "target": "before-paid/paid-level-5-1280x720.png"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/comparison.html",
+      "target": "before-paid/paid-level-5-1280x720.png"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/comparison.html",
+      "target": "progress-paid-bcf/paid-level-5-1280x720.png"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/comparison.html",
+      "target": "progress-paid-bcf/paid-level-5-1280x720.png"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/comparison.html",
+      "target": "before-paid/paid-level-5-375x812.png"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/comparison.html",
+      "target": "before-paid/paid-level-5-375x812.png"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/comparison.html",
+      "target": "progress-paid-bcf/paid-level-5-375x812.png"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/comparison.html",
+      "target": "progress-paid-bcf/paid-level-5-375x812.png"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/comparison.html",
+      "target": "progress-paid-bcf/paid-selected-level-5-1280x720.png"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/comparison.html",
+      "target": "progress-paid-bcf/paid-selected-level-5-375x812.png"
     }
   ]
 }

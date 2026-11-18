@@ -1,0 +1,143 @@
+{
+  "status": "interim_progress_not_final_candidate",
+  "guideSha256": "95494d2d09d024d585eaaef554fd6fbda40a907ae45ba12fd9a05f5fd08ea2bc",
+  "scope": "Original progress artifacts and static review documents; manifest excludes itself. No final application result claimed.",
+  "files": {
+    "README.md": {
+      "bytes": 3199,
+      "sha256": "1c189f3dc53e1668533f40f93b5eaaccfd73ab3d3783e9d876dd202817fe4bea"
+    },
+    "before-paid/paid-level-1-1280x720.png": {
+      "bytes": 1120341,
+      "sha256": "608d1aa61bce30a9208b7fe4927f2d59521f3b49550ed8fdcbcae2276d9bc240"
+    },
+    "before-paid/paid-level-1-375x812.png": {
+      "bytes": 428531,
+      "sha256": "4ec6d4fc73f589283af0ff50948b7acc9575a8c4d9ef169330de4d2c8b5a196b"
+    },
+    "before-paid/paid-level-3-1280x720.png": {
+      "bytes": 1113194,
+      "sha256": "3d9427c969ecdc458ff0e932241ab6504b04780f675d157f6446d63c0072f564"
+    },
+    "before-paid/paid-level-3-375x812.png": {
+      "bytes": 425879,
+      "sha256": "95cba6a2fefb1b962b83952c8083f29827a152b1215267806fbc4709eddcffbd"
+    },
+    "before-paid/paid-level-5-1280x720.png": {
+      "bytes": 1105846,
+      "sha256": "4aa299b362655da7624a9aa0aa54d42c349faf1b37c855a480af2c291a8a67a5"
+    },
+    "before-paid/paid-level-5-375x812.png": {
+      "bytes": 424644,
+      "sha256": "484c4f6012f013bec27298114b8048bbe676d92284e99dc5d1d05b02e6153efc"
+    },
+    "before-paid/run.log": {
+      "bytes": 176,
+      "sha256": "1ddb6c54c5f19462cd04afdc63e02046fccb28269fd106b51d8bfa721d9b51d2"
+    },
+    "before-paid/wrapper.json": {
+      "bytes": 440,
+      "sha256": "32c070c13b444e6f308b9a7d2b957968858e4225e2056f5fca5318f5ec50418e"
+    },
+    "comparison.html": {
+      "bytes": 7961,
+      "sha256": "68ad4db7d434a6a4927d16cb6323863085f8c0977ca07adb652b68e7cec0841b"
+    },
+    "originals.json": {
+      "bytes": 9596,
+      "sha256": "e82c991eb655a76794e7b029a6cf0e542c28c301f553206f17dba826cd53688a"
+    },
+    "progress-paid-bcf/capture.log": {
+      "bytes": 176,
+      "sha256": "1ddb6c54c5f19462cd04afdc63e02046fccb28269fd106b51d8bfa721d9b51d2"
+    },
+    "progress-paid-bcf/execution.json": {
+      "bytes": 963,
+      "sha256": "459653d3dde8e04c75427e516e338c86f2065f8dfc6d3044919089e3de561aa1"
+    },
+    "progress-paid-bcf/houses-0-1280x720.png": {
+      "bytes": 1129498,
+      "sha256": "83e64a38a794cb15e30368b7bae3c1ef916768983f82b1bfe71d85e18e6e93ea"
+    },
+    "progress-paid-bcf/houses-0-375x812.png": {
+      "bytes": 415888,
+      "sha256": "fae3ec04fd54452326786791a340ef3771c28ed11b377afa3cbcab08ab7397da"
+    },
+    "progress-paid-bcf/houses-1-1280x720.png": {
+      "bytes": 1133317,
+      "sha256": "a60e5f6ac3518282a935a422168fb80a2c1f6508a166d9a433f29126e47992b3"
+    },
+    "progress-paid-bcf/houses-1-375x812.png": {
+      "bytes": 416725,
+      "sha256": "a41df66bfd534180e42640e8b04d95779947a683918a4ea0ccfc2358f69f849f"
+    },
+    "progress-paid-bcf/houses-2-1280x720.png": {
+      "bytes": 1136333,
+      "sha256": "7f4b7184ccf71824f8fad451612591a2304536560a4d19573626a0372c504d89"
+    },
+    "progress-paid-bcf/houses-2-375x812.png": {
+      "bytes": 418795,
+      "sha256": "e63fb82cdd57f9d04afc479747cf87f24f71d9a94d55d9c7afa03f47c0bee34c"
+    },
+    "progress-paid-bcf/paid-level-1-1280x720.png": {
+      "bytes": 1167115,
+      "sha256": "397715f143e19d797a3d1222b9f71fcf0a29006ec30cfc9e1a0ae74a52de4500"
+    },
+    "progress-paid-bcf/paid-level-1-375x812.png": {
+      "bytes": 433423,
+      "sha256": "1efb5756f199484e3c1955ab0c5039caecf89165bf57443f14a39d522e37a977"
+    },
+    "progress-paid-bcf/paid-level-2-1280x720.png": {
+      "bytes": 1148224,
+      "sha256": "c06db85fea6adf4626c4296142ee82b27584c30291d1a43ed286f4e83eaea191"
+    },
+    "progress-paid-bcf/paid-level-2-375x812.png": {
+      "bytes": 428230,
+      "sha256": "93e4eceaeecc810a4a4d9aeaeb90c4ae64dd29c16f243cc2ceba37c6988ecd8c"
+    },
+    "progress-paid-bcf/paid-level-3-1280x720.png": {
+      "bytes": 1151038,
+      "sha256": "33bf2481e3a21b58773bc5999ba04228fcbfc66bb76b28b12e038158543c00a2"
+    },
+    "progress-paid-bcf/paid-level-3-375x812.png": {
+      "bytes": 429819,
+      "sha256": "401a60eeb170875cbdd811446fa41126d9044ef0e61982815492215de6e903e3"
+    },
+    "progress-paid-bcf/paid-level-4-1280x720.png": {
+      "bytes": 1143141,
+      "sha256": "3c5bcf1f23c2c1796925b1652775b2be38a5ba118932a3f82c84db9278a3097c"
+    },
+    "progress-paid-bcf/paid-level-4-375x812.png": {
+      "bytes": 426137,
+      "sha256": "f50bd17049a0336da72ff7fa0f32f45bdac57eb9010288b19ca842e54af2c758"
+    },
+    "progress-paid-bcf/paid-level-5-1280x720.png": {
+      "bytes": 1152356,
+      "sha256": "489dbb19dd87c6cfcc456b21299d4cacfcceb403f93da470e670e7002f5556f3"
+    },
+    "progress-paid-bcf/paid-level-5-375x812.png": {
+      "bytes": 428177,
+      "sha256": "cb21e649297c43a47f4415bf901c7e7aaab18d42e3be97e3380ab674bad2941a"
+    },
+    "progress-paid-bcf/paid-selected-level-5-1280x720.png": {
+      "bytes": 1134875,
+      "sha256": "5b26b9e8df27bcf3e191c0fc4a5bed2b11a18db6f93f58ce95cf4774dfdab9e9"
+    },
+    "progress-paid-bcf/paid-selected-level-5-375x812.png": {
+      "bytes": 315439,
+      "sha256": "7c1d29e7651f498d6b0300954c1734a5f79ab3aefdd95f5205178d7dd1e7dd7d"
+    },
+    "progress-paid-bcf/report.json": {
+      "bytes": 9314179,
+      "sha256": "db3018768c6e042d9fc3c9cc27cee42aebccdf786850577a97b5a2b71ba93a8f"
+    },
+    "source.json": {
+      "bytes": 3318,
+      "sha256": "6fceb38b1ae848737742762df76fa02b76d16f7c959b40eb9751df1fc49f5f9f"
+    },
+    "static-checks.json": {
+      "bytes": 8264,
+      "sha256": "9b3db63e7cf754946d3c5ae59d8538a7d350d29d6c9322726f94c17fa4d666ce"
+    }
+  }
+}
