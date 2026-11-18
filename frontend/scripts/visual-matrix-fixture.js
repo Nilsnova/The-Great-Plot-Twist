@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import {paintIds} from '../src/art/textures.js';
 import {getRasterFrame} from '../src/art/village-raster.js';
 import {loadWallAtlas, wallAtlasView} from '../src/art/wall-atlas.js';
+import {WALL_ATLAS_IDS} from '../src/art/village/walls.js';
 import {makeWallConnections} from '../src/island/wall-connections.js';
 import {projectGround} from '../src/world/projection.js';
 import {defenseCases, buildingCases, wallCases} from './visual-matrix-cases.js';
@@ -63,6 +64,8 @@ function ground(scene) {
 export async function renderWallMatrix(level) {
   const grid = reset(`Wall level ${level}: connected forms and real states`, 'walls');
   const atlas = await loadWallAtlas({quality:'high',density:4}); check(atlas, 'complete wall atlas');
+  const bindings = atlas.texture.userData.villageArt;
+  check(Array.isArray(bindings) && WALL_ATLAS_IDS.every(id => bindings.some(row => row.id === id && row.source === 'png')), 'every wall atlas frame uses compiled PNG artwork');
   const renderer = new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});
   renderer.setPixelRatio(1); renderer.outputColorSpace = THREE.SRGBColorSpace;
   const result = [];
@@ -84,14 +87,21 @@ export async function renderWallMatrix(level) {
         check(row.selected ? selected?.userData.spotId === row.selected : !selected, 'selection uses the actual wall overlay');
         renderer.render(scene,camera); canvas.getContext('2d').drawImage(renderer.domElement,0,0);
         check(renderer.info.render.calls > 0 && renderer.info.render.triangles > 0, 'real WebGL wall geometry rendered');
-        const calls = renderer.info.render.calls, triangles = renderer.info.render.triangles;
+        const calls = renderer.info.render.calls, triangles = renderer.info.render.triangles, gl = renderer.getContext();
+        const drawn = new Uint8Array(width*height*4), absent = new Uint8Array(drawn.length);
+        gl.readPixels(0,0,width,height,gl.RGBA,gl.UNSIGNED_BYTE,drawn);
+        drawing.root.visible = false; if (selected) selected.visible = false; renderer.render(scene,camera);
+        gl.readPixels(0,0,width,height,gl.RGBA,gl.UNSIGNED_BYTE,absent);
+        let visiblePixels = 0;
+        for (let i = 0; i < drawn.length; i += 4) if (drawn[i] !== absent[i] || drawn[i+1] !== absent[i+1] || drawn[i+2] !== absent[i+2]) visiblePixels++;
+        check(visiblePixels > 100, 'walls visibly change the real native framebuffer');
         element('p',`${drawing.posts.length} posts · ${drawing.links.length} links · ${calls} draws`,card);
         result.push({state:row.label,spots:row.spots,links:drawing.links,posts:drawing.posts,
-          selected:row.selected,calls,triangles,framebuffer:[width,height]});
+          selected:row.selected,calls,triangles,visiblePixels,framebuffer:[width,height]});
       } finally {
         drawing.dispose(); scene.traverse(mesh => {mesh.geometry?.dispose();mesh.material?.dispose();});
       }
     }
   } finally {renderer.dispose();atlas.texture.dispose();}
-  await document.fonts.ready; return {fixture:'actual-wall-WebGL-renderer',level,cases:result};
+  await document.fonts.ready; return {fixture:'actual-wall-WebGL-renderer',level,bindings,cases:result};
 }

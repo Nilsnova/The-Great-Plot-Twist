@@ -29,7 +29,8 @@ try {
   browser = await chromium.launch({executablePath:process.env.CHROME_PATH || '/usr/bin/chromium',headless:true});
   for (const [width,height] of [[1280,720],[375,812]]) {
     const context = await browser.newContext({viewport:{width,height}}), page = await context.newPage(); activePage = page;
-    const errors = [], external = []; page.on('pageerror',error=>errors.push(error.message));
+    const errors = [], external = [], consoleErrors = []; page.on('pageerror',error=>errors.push(error.message));
+    page.on('console',message=>{if(message.type()==='error')consoleErrors.push(message.text());});
     await page.route('**/*',route=>new URL(route.request().url()).origin === base ? route.continue() : (external.push(route.request().url()),route.abort()));
     await page.goto(`${base}/__vis56`,{waitUntil:'domcontentloaded'});
     for (const [type,value] of [...['cannon','mortar','harpoon','culverin','swivel','buildings'].map(kind=>['art',kind]), ...[1,2,3,4,5].map(level=>['wall',level])]) {
@@ -39,6 +40,7 @@ try {
       },{type,value});
       await page.evaluate(async()=>{await new Promise(requestAnimationFrame);await new Promise(requestAnimationFrame);});
       assert.deepEqual(errors,[], 'no fixture page errors'); assert.deepEqual(external,[], 'no external resources');
+      assert.deepEqual(consoleErrors,[], 'no fixture console errors');
       const file = `${type}-${value}-${width}x${height}.png`, bytes = await page.screenshot({path:join(out,file),fullPage:true});
       report.checks.push({viewport:[width,height],file,bytes:bytes.length,sha256:hash(bytes),pngSize:[bytes.readUInt32BE(16),bytes.readUInt32BE(20)],data});
       console.log(`PASS ${file}`);
