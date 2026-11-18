@@ -149,7 +149,14 @@ try {
       const bufferHash = sha(JSON.stringify(render.world.meshes.map(row => ({order: row.order, sha256: row.bufferSha256}))));
       if (level > 1) assert.notEqual(bufferHash, levels.at(-1).bufferHash, 'a paid tier changes actual geometry/UV buffers');
       if (level > 1) assert.equal(levels.at(-1).paid.coins - current.coins, 123 * [0, 0, 20, 40, 80, 160][level]);
-      levels.push({level, receipts, paid: current, render, bufferHash, capture: await screenshot(page, `paid-level-${level}-${width}x${height}.png`)});
+      const capture = await screenshot(page, `paid-level-${level}-${width}x${height}.png`);
+      await village(page).getByRole('button', {name: 'Fit village', exact: true}).click();
+      await page.waitForTimeout(900);
+      const fitCapture = await screenshot(page, `paid-fit-level-${level}-${width}x${height}.png`);
+      assert.deepEqual(await wallet(page), current, 'Fit changes no paid positions, levels or coins');
+      await village(page).getByRole('button', {name: 'Working village view', exact: true}).click();
+      await page.waitForTimeout(600);
+      levels.push({level, receipts, paid: current, render, bufferHash, capture, fitCapture});
     }
     assert.equal(levels.at(-1).paid.coins, 11570);
     const max = await page.evaluate(() => window.__island.island.api.upgrade({spot: 'wall_1'}));
