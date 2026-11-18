@@ -4,6 +4,8 @@
 >
 > Last updated: Wed 11 Nov 2026 (task status added to section 4).
 
+**18 Nov planning addition:** [section 7](#7-shared-island-economy-roadmap) sequences the accepted shared-island economy target. Its new tasks are in [OPEN-TODOS section 12](OPEN-TODOS.md#12-shared-island-economy-and-multiplayer-rules). Earlier personal-wallet and gradual-recovery descriptions remain historical baselines; the [new target decision](DECISIONS.md#shared-island-economy-2026-11-18) states the intended changes. This planning update does not implement or release them.
+
 ## 1. Today, step by step
 
 1. **Pick a lane** (section 4) and claim its first task with a draft pull request (`[P1] ...`).
@@ -269,3 +271,38 @@ Documentation-only changes require the documented link/content check ([ENGINEERI
 - Gameplay: meaningful regressions for changed behavior, same-seed replay, early/mid/late balance, solo and multiple active crew sizes; multi-client disagreement, concurrent purchases and reconnect cases where relevant. Existing T3 remains the real-player balance follow-up.
 
 A task finishes with its issue/PR updated, spec and relevant HOW-TO-PLAY/tutorial/WALKTHROUGH/TEST-MAP entries accurate, exact checks and remaining limitations recorded, and a different human reviewer. Link dependencies by task ID and PR; do not mark work live from a local pass. Each contributor keeps their own Git authorship and explains their own changes.
+
+## 7. Shared island economy roadmap
+
+The multiplayer target is one treasury and one persistent inventory per island, with personal Captain progression. The [accepted target and bounded open decisions](DECISIONS.md#shared-island-economy-2026-11-18) govern this follow-up; [OPEN-TODOS section 12](OPEN-TODOS.md#12-shared-island-economy-and-multiplayer-rules) is the only detailed MP-ECO task board. The roadmap defines technical delivery prerequisites; current progress is tracked in [epic #492](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/492).
+
+### Delivery milestones
+
+| Milestone | Tasks | Exit condition |
+|---|---|---|
+| 1. Agree contracts | MP-ECO-01; start the MP-ECO-17 conversion design | Every money/progression path has an owner, payer/recipient and retry rule. Define island economy version, run epoch, member rights, Captain milestones, whole-treasury wagering/escrow, bell-time snapshots, the chosen Engineer one-wave commitment, inventory capacity and conversion choices. Owner-reset recovery is chosen. Open numeric/Carpenter decisions block only affected work. |
+| 2. Establish the treasury | MP-ECO-02, MP-ECO-08, then MP-ECO-03 | Atomic island ledger and server/database permissions work; start capital is once per island/run. A canonical successful wave pays once, while participant progress remains personal. Concurrent spends and finishes cannot duplicate money. |
+| 3. Convert the game systems | MP-ECO-04–07, MP-ECO-09–16, MP-ECO-22, following each dependency | Buildings, refunds, research, crew, Captain progression, arsenal, session lifecycle, combat repairs/revive, Harbor, ship rewards, reset and owner-only recovery agree on ownership. No converted flow silently charges a personal wallet. |
+| 4. Integrate screens and existing saves | MP-ECO-17–18; UI can start against the agreed contract earlier | All screens show the selected island treasury; cross-client updates and late replies respect island/epoch. A repeat-safe dry-run conversion preserves assets/progression and explains every balance change. |
+| 5. Verify play and balance | MP-ECO-19–20 | Evidence covers solo and 2/4/10 active Captains, early/mid/late play, retries, races, defeat, late join, reconnect, host absence, reset and old clients. Record actual prices/loot and remaining limits. |
+| 6. Prepare controlled release | MP-ECO-21 | Reviewable rollout, backup, migration order, compatible clients and a tested pause/recovery plan exist. Already converted islands cannot fall back to personal payouts. Actual application/activation follows a separately approved release action. |
+
+These are dependency milestones, not delivery-date promises. The existing submission dates and freeze remain unchanged; this cross-system change needs explicit scheduling rather than being assumed to fit the remaining pre-submission days. A usable first increment is the treasury, canonical wave income, ordinary purchases/crew and truthful UI in an isolated test mode. Every unconverted coin mutation must stay unavailable in that mode, including old Captain purchase/respec, arsenal, repair/revive, Harbor and ship-reward routes as applicable; undefined repair-rate offers also remain unavailable. An old client or endpoint must not fall back to personal funding. Enable each path only when its own conversion checks pass. Do not admit existing player islands to an incomplete mix of old and new funding rules.
+
+### Component dependencies
+
+| Component | Tasks | Required technical contract |
+|---|---|---|
+| Treasury and persistence | MP-ECO-01–05, MP-ECO-08, MP-ECO-16–17 | Shared account/epoch identity, immutable ledger operations and one consistent transaction lock order. |
+| Captain and combat | MP-ECO-06–07, MP-ECO-12–13, MP-ECO-22 | Personal progression, frozen combat participation, Engineer commitment identity and zero-funds behavior compatible with existing recovery. |
+| Inventory and sessions | MP-ECO-09–11 | Copy ownership/returns, capacity, server-authorized participation and reconnect state; preserve established arsenal and membership invariants. |
+| Harbor and ship | MP-ECO-14–15 | Origin-scoped wager commitments/settlements and island-capped ship rewards, with explicit legacy contexts. |
+| UI and verification | MP-ECO-18–21 | Versioned response/event context, exact money representation and integrated compatibility/migration evidence. |
+
+Implementation specifications define affected files, technical dependencies and acceptance checks. Review and delivery follow [CONTRIBUTING](../CONTRIBUTING.md).
+
+### Choices before affected implementation
+
+MP-ECO-01 records exact Captain milestones/veteran strength; transaction/receipt details for the chosen Engineer one-wave commitment; total arsenal capacity and excess-stock conversion; disconnect grace and deterministic session succession; old-run bet/reset handling; owner account deletion; and personal-balance conversion. Member research reversal/demolition rights, unrestricted treasury-funded wagers, Engineer discount with next-wave role binding, and owner reset as the only additional recovery help are settled product rules. Existing ordinary income remains available. MP-ECO-13 settles Carpenter and repair-rate-only Workshop/research/skills. MP-ECO-22 verifies empty-treasury/owner-reset behavior. MP-ECO-19 measures start capital, loot, prices, multiplayer scaling and ship-reward values; it must not add a separate betting budget, fixed maximum, daily/count cap or reinvestment limit.
+
+Technical acceptance and balance acceptance are separate: a ledger can be correct while progression is too slow. Use the actual catalogue and current migrations, not the older example prices in sections 3/6 or ECONOMY. Update player instructions/tutorial only with behavior that the implementation has actually shipped; keep WALKTHROUGH, TEST-MAP and release evidence precise about local, authenticated multi-client and live checks.
