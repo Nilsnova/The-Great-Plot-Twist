@@ -267,7 +267,7 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
       const fakeTransport=fake?fake.createFakeIslandTransport():null;
       island=module.createIsland({container,emit,on,mode:islandsMode,transport:fakeTransport,
         getTransport:()=>findPanelServices(session)?.request,resetInput:resetControls,reducedMotion,preferences:getPreferences,
-        focus:()=>graphics.renderer.domElement.focus({preventScroll:true}),onCoins:(value,options)=>{hud.setCoinSource('island');hud.setCoins(value,options);},onCaptain:level=>hud.setCaptainLevel(level),
+        focus:()=>graphics.renderer.domElement.focus({preventScroll:true}),onCoins:(value,options)=>{hud.setCoinSource('island');hud.setCoins(value,options);},onCaptain:level=>hud.setCaptainLevel(level),onQuestIsland:value=>hud.setQuestIsland(value),
         // The Harbor building (GAME-V3.md §4) opens the same stalls as the old Harbor overview.
         openHarborStall:id=>void(id==='weather'?harbor.openWeather():id==='market'?openMarket():id==='match'?sportsUi.open().catch(()=>{}):null),
         // The visit chip: the old "Visiting … · Sail home" only where travel applies (src/island/one-island.js).
