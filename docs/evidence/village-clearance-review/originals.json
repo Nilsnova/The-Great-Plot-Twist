@@ -1058,8 +1058,42 @@
       "origin": "/workspace/reference-village-work/clearance-pass/text-final.log",
       "bytes": 1037,
       "sha256": "81cb125b047cf44dbc9d62ca67770babf11cfc5c54d0fccb9279a4ded2ede1bb"
+    },
+    {
+      "path": "comparison-browser/report.json",
+      "origin": "/workspace/reference-village-work/clearance-comparison-native/report.json",
+      "bytes": 9857,
+      "sha256": "7343c7f47de9d31861f6cb46a56c8742bb2b1714b4629392ac2bfd9367e0fb0b"
+    },
+    {
+      "path": "comparison-browser/manifest-used.json",
+      "origin": "/workspace/reference-village-work/clearance-comparison-native/manifest-used.json",
+      "bytes": 24187,
+      "sha256": "c96d8f70c21a5836ab5d60b0e6b28699e03f9de32f3082da9a5c9bc60cc5a919"
+    },
+    {
+      "path": "comparison-browser/comparison-1280x720.png",
+      "origin": "/workspace/reference-village-work/clearance-comparison-native/comparison-1280x720.png",
+      "bytes": 1040815,
+      "sha256": "9d9add43e9e96b0026877d964ddab05c8552a8fdfdaee8d797bbe7c46677fbe0",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "comparison-browser/comparison-375x812.png",
+      "origin": "/workspace/reference-village-work/clearance-comparison-native/comparison-375x812.png",
+      "bytes": 268681,
+      "sha256": "5d05b0e235efe307ea66bb8b6219e3124f36d1d8fb80b1ca14a34cb908cc5780",
+      "width": 375,
+      "height": 812
+    },
+    {
+      "path": "comparison-browser/helper-used.mjs",
+      "origin": "/workspace/reference-village-work/clearance-pass/check-comparison.mjs",
+      "bytes": 4928,
+      "sha256": "ef9671909e07f5101fbd6055ad85ce42923587ed3c649e8d187e39f7217cc2ee"
     }
   ],
-  "pngCount": 100,
-  "boundary": "All supplied coordinator runs are closed. Original intermediate/final/failure artifacts retain distinct sources; no app run was performed by the documentation writer."
+  "pngCount": 102,
+  "boundary": "All coordinator runs are closed. Native game, art fixtures, failures and review-page photos are labeled separately. Existing HTML and all previously copied images remain byte-identical after native comparison verification."
 }
