@@ -65,7 +65,22 @@
   "beforePaidSource": "7fab8866b83e27c6102df6b123ffdf2eb96619d0",
   "normalBuildFollowup": {
     "issue": 454,
-    "status": "pending coordinator implementation",
-    "scope": "Close regular original-wall purchase bypass in addition to explicit Move/positioned-quote clearance. Atomic authority/fake parity and any additive migration remain separate from the interim capture."
+    "status": "frontend fake parity in68d candidate; final backend/SQL implementation and coordinator private-PG proof pending",
+    "scope": "Close regular original-wall purchase bypass in addition to explicit Move/positioned-quote clearance. Atomic authority/fake parity and any additive migration remain separate from the interim capture.",
+    "draftPR": 455
+  },
+  "finalFrontendCandidate": {
+    "source": "68d41990615bac98aac3b3ffb2225857c8707a81",
+    "runtime": "/workspace/reference-village-work/clearance-runtime-02",
+    "status": "coordinator native/full sequence running; no result claimed",
+    "includes": "revised water and early local-fake normal-purchase parity; final backend/SQL guard is tested separately after writer completion",
+    "sequence": "/workspace/reference-village-work/clearance-ui-sequence/report.json",
+    "plannedArtifacts": [
+      "/workspace/reference-village-work/clearance-paid-final",
+      "/workspace/reference-village-work/clearance-actual-final",
+      "/workspace/reference-village-work/clearance-native-matrix",
+      "/workspace/reference-village-work/clearance-final-checks"
+    ],
+    "fitBoundary": "Final paid captures add genuine Fit overviews for each tier in addition to original Work captures; the older before images supply Work only, so Fit views are not falsely paired."
   }
 }

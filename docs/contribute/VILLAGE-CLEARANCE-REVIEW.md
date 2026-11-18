@@ -24,6 +24,7 @@ records the bounded presentation and clearance revision.
 | VIS64: upright wall volume | [#447](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/447) | Do normalized original pixels, tier profiles, health labels and shared world/combat geometry agree? |
 | VIS65: sea material | [#446](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/446) | Are stronger surface/depth colors confined to the existing material and controls? |
 | VIS66: one decorative corridor move | [#450](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/450) | Do the single barrel foot and both prospective reserves move together, with existing saves retained? |
+| VIS68: original-wall normal purchases | [#455](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/455) | Does the ordinary owner/friend purchase guard protect both policies atomically, while preserving retries? Final backend/SQL proof is pending. |
 | VIS67: independent wall observer | [#451](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/451) | Do unchanged negative cases still reject stale/wrong buffers under the revised presentation contract? |
 | VIS61: assembled review | [#445](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/445) | Does the actual combined game match the evidence and retain current-main behavior? |
 | VIS61: documentation | [#452](https://github.com/Nilsnova/The-Great-Plot-Twist/pull/452) | Are original captures, exact sources, failed attempts and limits stated accurately? |
@@ -34,7 +35,8 @@ Issues are [VIS61 #438](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/
 [VIS64 #441](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/441),
 [VIS65 #442](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/442),
 [VIS66 #448](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/448) and
-[VIS67 #449](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/449).
+[VIS67 #449](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/449) and
+[VIS68 #454](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/454).
 
 The aggregate preview contains earlier dependencies and is an inspection branch.
 Review the focused changes rather than treating the aggregate as a blanket merge
@@ -132,7 +134,9 @@ does not close the art budget. See [VIS64's source/compiler evidence](../evidenc
 [`water.js`](../../frontend/src/world/water.js) adds broader crossing reflections,
 deeper blue-green pockets driven by the existing coast field, and restrained
 near-shore caustics. This is artistic shading, not measured water depth or a
-navigation rule. The existing mesh/material, shared coast texture, projection,
+navigation rule. A later refinement removes the visible periodic lattice seen in the intermediate
+L5 capture, retaining warped broken contours with the same noise-sample count.
+The existing mesh/material, shared coast texture, projection,
 clock, weather, low/high detail and reduced-motion paths stay in place. Added
 procedural arithmetic can still cost GPU time; unchanged resources do not prove
 unchanged performance. [VIS65](../evidence/VIS-65-sea-depth/README.md) records the

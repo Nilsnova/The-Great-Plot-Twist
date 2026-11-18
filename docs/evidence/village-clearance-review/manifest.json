@@ -1,6 +1,6 @@
 {
   "status": "interim_progress_not_final_candidate",
-  "guideSha256": "680a4ca2f65a1661e0ef16bf0cadadcdea34302d783b766470781bfb73a6f0a9",
+  "guideSha256": "7c2f733e3ef7e33e69965d2ae543f015700bf8eae72a0f7cb82f3c70d0f5a3f9",
   "scope": "Original progress artifacts and static review documents; manifest excludes itself. No final application result claimed.",
   "files": {
     "README.md": {
@@ -132,8 +132,8 @@
       "sha256": "db3018768c6e042d9fc3c9cc27cee42aebccdf786850577a97b5a2b71ba93a8f"
     },
     "source.json": {
-      "bytes": 3395,
-      "sha256": "f22b3304d91f30e374517be6c5f83c3f7393f3725be454812589bce0680d9b95"
+      "bytes": 4463,
+      "sha256": "27633d98f2f663dd8af933b03a9284e16fd9570ae8d4e8408a54d37f2a248192"
     },
     "static-checks.json": {
       "bytes": 8264,
