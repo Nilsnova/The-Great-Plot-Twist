@@ -34,3 +34,25 @@ body:has(.shell-screen[open]) .hud{visibility:hidden}
 @media(max-width:380px){.shell-screen[data-mode=pause] .shell-menu{grid-template-columns:minmax(0,1fr)}}
 /* Tall phones: the title card sits at the bottom, over the open sea, so the lighthouse island above stays in view. */
 @media(max-width:600px) and (min-height:640px) and (orientation:portrait){.shell-screen[data-mode=title]{margin:auto auto max(14px,env(safe-area-inset-bottom))}}
+
+.shell-screen[data-mode=title] .shell-menu .shell-more { min-height:44px; font-size:16px; margin-top:6px; }
+@media (max-width:600px) {
+  .shell-screen[data-mode=title] .shell-menu .shell-more { margin-top:4px; }
+}
+@media (max-width:600px) and (max-height:639px) and (orientation:portrait), (max-height:420px) and (orientation:landscape) {
+  .shell-screen[data-mode=title] { padding:14px 16px; }
+  .shell-screen[data-mode=title] .kit-modal-header { padding-right:48px; margin-bottom:8px; }
+  .shell-screen[data-mode=title] .kit-heading { font-size:28px; }
+  .shell-screen[data-mode=title] .shell-logo { width:44px; height:44px; top:15px; right:15px; }
+  .shell-screen[data-mode=title] .shell-copy { font-size:16px; line-height:1.4; }
+  .shell-screen[data-mode=title] .shell-menu { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+  .shell-screen[data-mode=title] #play { grid-column:1 / -1; min-height:52px; }
+  .shell-screen[data-mode=title] .shell-menu .kit-button { min-height:44px; font-size:17px; }
+  .shell-screen[data-mode=title] .shell-menu .shell-more { justify-self:stretch; margin-top:0; }
+}
+@media (max-width:600px) and (max-height:639px) and (orientation:portrait) {
+  .shell-screen[data-mode=title] { margin:auto auto max(14px,env(safe-area-inset-bottom)); }
+}
+@media (max-height:420px) and (orientation:landscape) {
+  .shell-screen[data-mode=title] { width:min(300px,calc(100vw - 28px)); margin:auto auto auto max(14px,env(safe-area-inset-left)); }
+}
