@@ -217,3 +217,13 @@ checks in 0.49 seconds**, and backend-wide Ruff passed. The full migration chain
 twice on a disposable database. The substituted helper bodies are confined to rollback-only
 test transactions; no browser or service role gains permission to replace production SQL.
 These checks do not establish live admission, route integration or deployment.
+
+With main `f606412f` and reviewed construction `58a66646` integrated, the five-suite
+PostgreSQL selection recorded above passed **169 tests in 21.67 seconds**: progression,
+both construction modules, personal operations and legacy islands/waves. This includes the
+five progression child-proof regressions and eight construction debit/refund regressions.
+The corresponding six-module Python command above passed **81 tests in 0.51 seconds**.
+All nine component paths remain isolated in the comparison against construction; only the
+charge-proof migration, its tests and this specification change from the published
+progression component. Prices, public signatures, free selections and admission remain
+unchanged.
