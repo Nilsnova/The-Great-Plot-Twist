@@ -42,6 +42,7 @@
 //   point on screen {x, y} in px of the container (the timers over fallen captains)}; every field optional.
 // room: {send(type, payload), on(type, handler) -> unsubscribe}, the island's or Pirate Point's live room.
 import { createPoses } from './poses.js';
+import { createLiveAttackFeedback } from './live-attack-feedback.js';
 import { CONFIG, createWave, hasTavern, revivePrice } from './sim.js';
 import { waveGapMs } from '../net/live-rules.js';
 import { captainStats, readSkills, readWeapon } from './captain-stats.js';
@@ -315,6 +316,20 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
   // No place on screen (null: the front door's open water) is not here; a world without place() always is.
   const here = () => !place || (world.place ? world.place() : place) === place;
   const blocked = () => !!world.isBlocked?.();
+  function clearLiveFeedback(){
+    if(wave){wave.liveFeedback.clear();wave.feedbackReady=false;}
+    poses.clear();
+  }
+  function noteLiveInput(input){
+    if(wave?.feedbackReady&&here()&&globalThis.document?.hidden!==true)wave.liveFeedback.note(input);
+  }
+  if(bus?.on)stops.push(bus.on('travel',clearLiveFeedback));
+  const feedbackDocument=globalThis.document;
+  if(feedbackDocument?.addEventListener){
+    const hidden=()=>{if(feedbackDocument.hidden)clearLiveFeedback();};
+    feedbackDocument.addEventListener('visibilitychange',hidden);
+    stops.push(()=>feedbackDocument.removeEventListener('visibilitychange',hidden));
+  }
 
   // The battle guide (guide: true, the island's controller only): landings, routes, the heart and the walls' bars;
   // faintly between waves on this island, in full during a wave. Drawing only: it reads the state, never the sim.
@@ -415,6 +430,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     const initialRecoveryHealth = recoveryReplay ? sim.recoveryHealthVector() : null;
     const initialRecoverySignature = initialRecoveryHealth ? canonicalJson(initialRecoveryHealth) : null;
     const current = wave = { info, sim, defenses, offset, ticks: 0, seq: 0, schedule: createInputSchedule(), done: false, finished: false,
+      liveFeedback:createLiveAttackFeedback(),feedbackReady:false,
       pause: null, boss: first.boss ? bossText(first.warships) : '', captainAt: -Infinity, bladeAt: -Infinity, handAt: -Infinity,
       result: null, renderer: null, hud: null, shown: false, lampsSent: false, lampsRelit: false, flagshipSunk: false,
       splashesAt: [], lastCount: null, state: sim.state(), action: null, lanes: [], lean: { x: 0, z: 0 },
@@ -486,6 +502,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     }
     const entry = { by: actorId(wave), seq: ++wave.seq, tick: wave.ticks + lead, input };
     wave.schedule.add(entry, wave.ticks);
+    noteLiveInput(input);
     const message = toMessage(input, { ...entry, waveId: wave.info.waveId });
     if (message) try { room?.send?.(message.type, message.payload); } catch (error) { console.error(error); }
     return true;
@@ -909,7 +926,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     const entry = readMessage(type, payload, wave.info.waveId);
     if (!entry || entry.by === actorId(wave)) return;
     if (entry.input.type === 'lamps_lit') wave.lampsSent = true; // somebody else lit them first
-    wave.schedule.add(entry, wave.ticks);
+    if(wave.schedule.add(entry, wave.ticks)!==null)noteLiveInput(entry.input);
   }
 
   // The captain's gun: at a ship or boarder (a tap) or the nearest in range (F), from where the player
@@ -1264,7 +1281,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     else aimAt(point, ship); // not manning a cannon (or out of its reach): your gun
   }
 
-  function handle(events, current, fresh) {
+  function handle(events, current, fresh, liveAttacks=[]) {
     if (current.predicted?.length) {
       fresh = fresh.filter(event => !(PREDICTED_KINDS.has(event.type) && predictedCopy(current, event)));
     }
@@ -1283,7 +1300,11 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       }
       if (event.type === 'ship_sunk' && event.kind === 'flagship') { current.flagshipSunk = true; current.lampsRelit = event.by === 'lamps'; }
     }
-    if (current.shown) { current.renderer?.events(fresh); poses.note(fresh); }
+    if (current.shown) {
+      current.renderer?.events(fresh);
+      const posing=new Set([...fresh,...liveAttacks]);
+      poses.note(events.filter(event=>posing.has(event)));
+    }
     if (current.shown) current.eventArt?.events(fresh);
     // v3 waves, for the narrator: the wave's event (its line the first time in this game) and a boss finisher.
     for (const event of fresh) {
@@ -1333,7 +1354,9 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       emit({ type: 'recovery_combat_changed', waveId: current.info.waveId });
     }
     lastWave = current.info.wave;
-    current.shown = here();
+    const shown=here();
+    if(!shown||!current.shown||globalThis.document?.hidden===true)clearLiveFeedback();
+    current.shown = shown;
     current.renderer?.setVisible(current.shown);
     current.hud?.setVisible(current.shown);
     const elapsed = (now() + current.offset - current.info.startsAtMs) / 1000;
@@ -1345,7 +1368,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
       const playout = current.recoveryReplay ? current.recoveryPlayoutMs / 1000 : 0;
       const due = Math.floor((elapsed - playout) / TICK_SECONDS + 1e-6);
       let budget = MAX_TICKS_PER_FRAME;
-      const events = [], recent = [];
+      const events = [], recent = [], liveAttacks=[];
       // v3 waves: an event is fresh by the tick it came from, not by its sim time (a finisher freezes the
       // sim's clock while real time runs on, so its outcome's t lies seconds behind).
       const lateTicks = Math.round(SHOWN_LATE_SECONDS / TICK_SECONDS);
@@ -1376,13 +1399,16 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
           });
           if (!advanced) break;
         } else {
-          const out = current.sim.step(TICK_SECONDS, current.schedule.take(current.ticks));
+          const inputs=current.schedule.take(current.ticks);
+          const out = current.sim.step(TICK_SECONDS, inputs);
+          liveAttacks.push(...current.liveFeedback.accepted(out,inputs));
           events.push(...out); if (current.ticks >= due - lateTicks) recent.push(...out);
         }
         current.ticks++;
       }
       current.state = current.sim.state();
-      if (events.length) handle(events, current, recent);
+      if(current.shown&&globalThis.document?.hidden!==true&&current.ticks>=due)current.feedbackReady=true;
+      if (events.length) handle(events, current, recent,liveAttacks);
       if (current.sim.done) end(current);
       if (current.recoveryReplay && !current.done) catchUp(current, due - current.ticks);
     }
@@ -1597,7 +1623,7 @@ export function createWaveController({ bus, world = {}, getDefenses = () => [], 
     if (!current) return;
     wave = null; current.finished = true;
     if (world.camera?.userData) { delete world.camera.userData.battleZoom; delete world.camera.userData.battleFocus; }
-    current.renderer?.dispose(); current.hud?.dispose(); current.schedule.clear(); poses.clear();
+    current.renderer?.dispose(); current.hud?.dispose(); current.schedule.clear(); current.liveFeedback.clear(); poses.clear();
     current.eventArt?.dispose(); current.finisher?.scene?.dispose(); current.finisher = null;
     emit({ type: 'wave_controller_stopped', waveId: current.info.waveId, ...(current.recoveryReplay ? { recovery: true } : {}) });
   }

@@ -72,6 +72,13 @@ Command: `cd frontend && npm test` (runs `vitest run`; files `tests/**/*.test.js
 
 Size: 193 test files in [frontend/tests/](../frontend/tests/), about 1,830 `it`/`test` lines (the run before the 11 Nov release reported 2,563 tests, because of `it.each`; one Harbor overview test fails, [OPEN-TODOS.md](OPEN-TODOS.md) section 7).
 
+CW1 adds 15 focused cases in [scattershot-latency.test.js](../frontend/tests/pirates/scattershot-latency.test.js):
+`cd frontend && npm test -- tests/pirates/scattershot-latency.test.js`.
+They cover moving ships and boarders at cone/range boundaries, the existing two-second
+history limit and fallbacks, historical nearest-three ordering, current projectile endpoints
+and deterministic journal replay. They use the real local simulator and replay modules;
+they do not exercise a hosted room or prove deployment. See [the CW1 spec](../specs/CW1-scattershot-latency.md).
+
 | Area | Files (examples) | Tests | What it covers | Does not cover |
 |---|---|---|---|---|
 | Pirate waves | [pirates/](../frontend/tests/pirates/) (`sim`, `td-sim`, `fog-balance`, `multiplayer`, `controller`, `td-flow`, `pirate-point`, `render`, `art`, `fake-api`) | 72 | Same seed and inputs give the same wave at any frame rate; the balance curve (wave 1 with one cannon, the wave 5 boss, wave 10, wave 20, below wave 30 with a full island); mortar, crew, captain musket and bad shots; boss waves; the break, Next wave and Auto next; two captains ringing at once; the single-flight join; re-sent `wave_start` | The real Realtime room; slow phones; drift after late packets |

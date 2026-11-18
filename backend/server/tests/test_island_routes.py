@@ -20,6 +20,7 @@ from server.tests.island_helpers import (
     GUEST,
     GUEST_ID,
     ISLAND_SETTINGS,
+    PLAYER,
     PLAYER_ID,
     World,
     opened,
@@ -173,6 +174,50 @@ def test_a_build_pays_the_price_of_the_file_in_coins_only_and_answers_the_island
         "p_starter_timber": 0,
         "p_ref": "island:click-0001",
     }
+
+
+def test_gated_plot_and_culverin_purchases_stay_blocked_after_saved_recovery_v1():
+    world = World(settings=replace(ISLAND_SETTINGS, flags=parse_flags("islands")))
+    world.database.recovery_policy_version = 1
+    before = world.database.balance
+
+    extra_plot = world.build(spot="cannon_8", kind="cannon")
+    culverin = world.build(spot="cannon_1", kind="culverin")
+
+    assert_error(extra_plot, 404, "no_such_spot")
+    assert_error(culverin, 422, "wrong_kind")
+    assert world.database.calls("islet_build") == []
+    assert world.database.balance == before
+    assert world.database.buildings == {}
+
+
+def test_saved_v1_existing_culverin_can_upgrade_with_defenses_flag_off():
+    world = World(settings=replace(ISLAND_SETTINGS, flags=parse_flags("islands")))
+    world.database.recovery_policy_version = 1
+    world.database.progress.update({"wave_best": 40, "won_wave_best": 40})
+    world.database.buildings[PLAYER_ID] = [
+        {
+            "plot": "cannon_8",
+            "building_type": "culverin",
+            "level": 1,
+            "spec": None,
+            "tree_a": 0,
+            "tree_b": 0,
+        }
+    ]
+
+    response = world.client.post(
+        "/api/island/upgrade",
+        headers=PLAYER,
+        json={"spot": "cannon_8", "actionUid": "culverin-existing-upgrade-01"},
+    )
+
+    assert response.status_code == 200, response.text
+    (call,) = world.database.calls("island_upgrade")
+    assert call["p_plot"] == "cannon_8"
+    assert call["p_prices"] == [80, 160, 320, 640, 1280]
+    returned = {spot["id"]: spot for spot in response.json()["spots"]}
+    assert returned["cannon_8"]["kind"] == "culverin"
 
 
 def test_the_island_is_opened_before_the_first_build_so_the_starting_coins_are_there():
