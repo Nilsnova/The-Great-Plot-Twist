@@ -33,3 +33,19 @@ Write body-validation and old-client refusal tests first, then exercise actual
 canonical routes with the persisted session implementation. Fixture transport
 tests are separate from real authenticated acceptance. No deployment or feature
 activation is authorized by this specification.
+
+The existing `/api/waves/start`, `/join` and `/finish` paths accept strict shared
+bodies alongside their original legacy bodies. Native finish requires the saved
+structure checkpoint. Shared dictionaries retain their full economy/session
+metadata; legacy responses explicitly omit nullable fields as before. Current
+reads resolve mode without creating the caller's own island and accept optional
+paired `sessionId`/`connectionGeneration` assertions. A managed personal Captain
+cannot initialize new legacy control through these routes.
+
+Native input and structure-health posts add the same proof to their original
+protocol-two body. Journal GET uses paired `islandOwner`/`runEpoch` query fields,
+with an optional complete session proof; a current member may spectate without a
+controller lease. Every valid journal request checks deleted-actor status after
+its budget, while malformed queries/bodies and incompatible native clients reach
+no domain transaction. The native adapter still checks origin, membership,
+controller generation and sealed journal state atomically.

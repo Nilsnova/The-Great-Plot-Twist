@@ -276,6 +276,8 @@ class FakeIslandDatabase:
         self.move_replies: list[dict] = []
         self.requests: list[httpx.Request] = []
         self.deleted_players: set[str] = set()
+        # Explicit read-only global Captain discovery for legacy-wave compatibility tests.
+        self.personal_captain_context_reply: dict = {"status": "legacy"}
 
     def __call__(self, request: httpx.Request) -> httpx.Response:
         self.requests.append(request)
@@ -283,6 +285,9 @@ class FakeIslandDatabase:
         handlers = {
             "POST /rpc/island_lifecycle_actor_status": self.actor_status,
             "POST /rpc/island_economy_context": self.economy_context,
+            "POST /rpc/personal_captain_context": lambda _: self.answer(
+                self.personal_captain_context_reply
+            ),
             "POST /rpc/island_open": self.open_island,
             "GET /wallets": self.read_wallet,
             "GET /islet_buildings": self.read_buildings,

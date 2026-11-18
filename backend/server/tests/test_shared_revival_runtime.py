@@ -137,11 +137,9 @@ def test_known_refusal_does_not_invent_paid_fallback(reason, status):
 @pytest.mark.parametrize("header", [None, "2"])
 def test_completion_route_requires_common_capability_before_dispatch(monkeypatch, header):
     from server.island import shared_revival
-    from server.routes.shared_revival import router
     from server.tests.island_helpers import PLAYER, World
 
     world = World()
-    world.app.include_router(router, prefix="/api")
 
     async def unexpected(*_args):
         raise AssertionError("Capability refusal must precede the completion adapter.")
@@ -155,11 +153,9 @@ def test_completion_route_requires_common_capability_before_dispatch(monkeypatch
 def test_completion_route_is_authenticated_and_returns_no_payment_or_current_hp(monkeypatch):
     from server.island import shared_revival
     from server.island.shared_revival_models import SharedRevivalReply
-    from server.routes.shared_revival import router
     from server.tests.island_helpers import PLAYER, PLAYER_ID, World
 
     world = World()
-    world.app.include_router(router, prefix="/api")
     value = reply()
     value["receipt"]["actorId"] = PLAYER_ID
     old_call = world.app.state.admin.call_function
@@ -192,11 +188,9 @@ def test_deleted_cached_actor_is_denied_after_budget_and_before_domain(monkeypat
     from types import SimpleNamespace
 
     from server.island import shared_revival
-    from server.routes.shared_revival import router
     from server.tests.island_helpers import PLAYER, World
 
     world = World()
-    world.app.include_router(router, prefix="/api")
     order = []
     world.app.state.wave_budget = SimpleNamespace(spend=lambda _actor: order.append("budget"))
 
