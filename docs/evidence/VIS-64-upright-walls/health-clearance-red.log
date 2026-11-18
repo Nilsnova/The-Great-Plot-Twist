@@ -1,0 +1,71 @@
+
+ RUN  v5.1.0 /workspace/reference-village-work/clearance-volume/frontend
+
+ ❯ tests/island/wall-health-clearance.test.js (4 tests | 4 failed) 188ms
+   ❯ health labels above upright wall art (4)
+     × clears the actual registered post in preparation and retains hiding, HP and owned cleanup 8ms
+     × clears the registered post in legacy combat at character scale 1 without changing state 128ms
+     × clears the registered post in legacy combat at character scale 1.5 without changing state 37ms
+     × clears the registered post in legacy combat at character scale 2 without changing state 12ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/island/wall-health-clearance.test.js > health labels above upright wall art > clears the actual registered post in preparation and retains hiding, HP and owned cleanup
+AssertionError: expected 2.2 to be close to 3.2, received difference is 1, but expected 5e-13
+ ❯ tests/island/wall-health-clearance.test.js:22:82
+     20|       indicators.setState(state); indicators.update(); expect(root.chi…
+     21|       for (const mesh of root.children.filter(row=>row.name.includes('…
+     22|         expect(mesh.position.x).toBe(ground.x); expect(mesh.position.y…
+       |                                                                                  ^
+     23|         expect(mesh.position.y-ground.y-mesh.geometry.parameters.heigh…
+     24|       }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  tests/island/wall-health-clearance.test.js > health labels above upright wall art > clears the registered post in legacy combat at character scale 1 without changing state
+AssertionError: expected 1.4500000476837158 to be close to 2.9, received difference is 1.449999952316284, but expected 5e-7
+ ❯ tests/island/wall-health-clearance.test.js:45:35
+     43|       expect(bars).toHaveLength(2);
+     44|       for(const i of bars) {
+     45|         expect(positions.getY(i)).toBeCloseTo(2.9*scale,6);
+       |                                   ^
+     46|         expect(positions.getY(i)-sizes.getY(i)/2).toBeGreaterThan(post…
+     47|       }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  tests/island/wall-health-clearance.test.js > health labels above upright wall art > clears the registered post in legacy combat at character scale 1.5 without changing state
+AssertionError: expected 2.174999952316284 to be close to 4.35, received difference is 2.1750000476837155, but expected 5e-7
+ ❯ tests/island/wall-health-clearance.test.js:45:35
+     43|       expect(bars).toHaveLength(2);
+     44|       for(const i of bars) {
+     45|         expect(positions.getY(i)).toBeCloseTo(2.9*scale,6);
+       |                                   ^
+     46|         expect(positions.getY(i)-sizes.getY(i)/2).toBeGreaterThan(post…
+     47|       }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  tests/island/wall-health-clearance.test.js > health labels above upright wall art > clears the registered post in legacy combat at character scale 2 without changing state
+AssertionError: expected 2.9000000953674316 to be close to 5.8, received difference is 2.899999904632568, but expected 5e-7
+ ❯ tests/island/wall-health-clearance.test.js:45:35
+     43|       expect(bars).toHaveLength(2);
+     44|       for(const i of bars) {
+     45|         expect(positions.getY(i)).toBeCloseTo(2.9*scale,6);
+       |                                   ^
+     46|         expect(positions.getY(i)-sizes.getY(i)/2).toBeGreaterThan(post…
+     47|       }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed (4)
+   Start at  10:11:47
+   Duration  975ms (transform 43%, import 31%, tests 25%, worker 1%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice
