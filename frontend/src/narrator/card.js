@@ -5,11 +5,12 @@ import './narrator.css';
 // The E prompt floating over a building (.interact.floating) moves with the world, so the card does not dodge it
 // (the overlap audit: dodging it pushed the card into the wave bar).
 const INSPECTION = '.pirate-hud:not([hidden]):has(.pirate-defense-inspector:not([hidden]))';
-const CONTROLS = '.bottom-bar,.interact:not([hidden]):not(.floating),.pirate-musket:not([hidden])';
+const TOUCH_ACTIONS = '.touch-controls:not([hidden]) .touch-actions button:not([hidden])';
+const CONTROLS = `.bottom-bar,.interact:not([hidden]):not(.floating),.pirate-musket:not([hidden]),${TOUCH_ACTIONS}`;
 const WAVE_BAR = '.pirate-hud:not([hidden]) .pirate-bar:not([hidden])';
 const WARNING = `${WAVE_BAR} .pirate-danger:not([hidden])`;
 const ACTIVE_COMBAT = '.pirate-hud:not([hidden]):has(.pirate-bar:not([hidden])):not(:has(.pirate-countdown:not([hidden]),.pirate-break:not([hidden])))';
-const COMBAT_CONTROLS = [CONTROLS, '.touch-stick-group', '.touch-actions button',
+const DOCK_CONTROLS = [CONTROLS, '.touch-stick-group',
   '.pirate-bar', '.pirate-prompt', '.pirate-point-prompt', '.pirate-boss'].join(',');
 
 export function createNarratorCard(container = document.body, {onSkip = () => {}, large = () => false} = {}) {
@@ -60,13 +61,13 @@ export function createNarratorCard(container = document.body, {onSkip = () => {}
     return suppressed;
   }
 
-  function dockInCombat() {
+  function dockBesideControls() {
     const stick = container.querySelector('.touch-stick-group')?.getBoundingClientRect();
     const left = stick?.width > 0 ? Math.ceil(stick.right) + 8 : 12;
     card.style.setProperty('--narrator-dock-left', `${left}px`);
     card.style.removeProperty('bottom');
     const own = card.getBoundingClientRect();
-    const obstacles = [...container.querySelectorAll(COMBAT_CONTROLS)].map(node => node.getBoundingClientRect())
+    const obstacles = [...container.querySelectorAll(DOCK_CONTROLS)].map(node => node.getBoundingClientRect())
       .filter(rect => rect.width > 0 && rect.height > 0 && rect.left < own.right && rect.right > own.left)
       .sort((a, b) => b.bottom - a.bottom);
     let bottom = own.bottom;
@@ -80,13 +81,13 @@ export function createNarratorCard(container = document.body, {onSkip = () => {}
   function position() {
     if (card.hidden) return;
     const combatHud = container.querySelector(ACTIVE_COMBAT);
-    const dock = !card.classList.contains('is-large') && !!combatHud
+    const dock = !card.classList.contains('is-large') && !!(combatHud || container.querySelector(TOUCH_ACTIONS))
       && getComputedStyle(card).getPropertyValue('--narrator-dock-enabled').trim() === '1';
     // The wave event details can resize the bar without changing any control's hidden flag.
     watchWaveBar(container.querySelector(WAVE_BAR));
     card.classList.toggle('is-combat-docked', dock);
     card.classList.remove('is-combat-fallback');
-    if (!dock || !dockInCombat()) {
+    if (!dock || !dockBesideControls()) {
       card.classList.remove('is-combat-docked');
       card.classList.toggle('is-combat-fallback', dock);
       const own = card.getBoundingClientRect();
