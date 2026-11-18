@@ -61,6 +61,14 @@ it.each([false, true])('explicit management selects remotely, holds captain inpu
     await pickCannon(page);
     expect(await page.locator('.island-card-build[open]').count()).toBe(0); // Explore still needs a walk up.
     await manage(page);
+    const coverage = page.getByRole('combobox', {name: 'Approach coverage'});
+    for (const [target, label] of [['boarders', 'Ground'], ['ships', 'Sea']]) {
+      await coverage.selectOption(target);
+      expect(await page.evaluate(() => window.__island.island.approachCoverage()?.target)).toBe(target);
+      expect(await page.getByRole('group', {name: 'Coverage legend'}).textContent()).toContain(`${label} · Clear weather`);
+    }
+    await coverage.selectOption('');
+    expect(await page.evaluate(() => window.__island.island.approachCoverage())).toBeNull();
     if (!phone) {
       await page.evaluate(() => window.__island.renderer.domElement.focus());
       await page.keyboard.press('KeyE');
