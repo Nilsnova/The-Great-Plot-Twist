@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import {texturedWallBatches, wallVisualRows} from '../../src/island/wall-batches.js';
 import {makeWallConnections, wallTopology} from '../../src/island/wall-connections.js';
 import {makeCombatWallConnections} from '../../src/pirates/wall-connections.js';
-import {WALL_ATLAS_IDS, frames, wallFrame} from '../../src/art/village/walls.js';
+import {WALL_ATLAS_IDS, frames, wallFrame, wallSurfaceFrame} from '../../src/art/village/walls.js';
 const wall = (id, x, z = 0, level = 3) => ({id, x, z, level, kind: 'wall', built: true});
 const atlas = () => ({texture: new THREE.Texture(), width: 512, height: 512, ownsTexture: false,
   rects: Object.fromEntries(WALL_ATLAS_IDS.map((id, i) => [id,
@@ -23,6 +23,30 @@ function frameUV(art, id) {
 const posts = (layers, art, id) => quads(layers).filter(quad => JSON.stringify(quad.uvs) === JSON.stringify(frameUV(art, id)));
 
 describe('connected wall tier detail', () => {
+  it.each([
+    [1,1.118,.96,1.138], [2,1.318,1.16,1.338], [3,1.418,1.26,1.438],
+    [4,1.518,1.36,1.538], [5,1.598,1.44,1.618],
+  ])('keeps actual projected level %i span and straight-cap vertices below the authored post top', (level, horizontalTop, verticalTop, capTop) => {
+    const art=atlas(), maxY=rows=>Math.max(...rows.flatMap(({positions:p})=>p.filter((_,i)=>i%3===1)));
+    for(const vertical of [false,true]) {
+      const rows=[wall('a',0,0,level),wall('b',vertical?0:2,vertical?2:0,level),wall('c',vertical?0:4,vertical?4:0,level)];
+      const links=wallTopology(rows).links;
+      const spans=quads(texturedWallBatches([links[0]],[],art));
+      expect(maxY(spans)).toBeLessThanOrEqual(1.625);
+      const layers=draw(rows,art), centreX=vertical?.4:2.6, centreY=vertical?-1.2:0;
+      const cap=quads(layers).filter(({positions:p,uvs})=>
+        JSON.stringify(uvs)===JSON.stringify(frameUV(art,wallSurfaceFrame(level,'top')))
+        && Math.abs((p[0]+p[3]+p[6]+p[9])/4-centreX)<1e-10);
+      expect(cap).toHaveLength(1);
+      expect(maxY(cap)-centreY).toBeLessThanOrEqual(1.625);
+      expect(maxY(spans)).toBeCloseTo(vertical?verticalTop:horizontalTop,10);
+      expect(maxY(cap)-centreY).toBeCloseTo(capTop,10);
+      const buttress=posts(layers,art,wallFrame(level)).find(({positions:p})=>Math.abs((p[0]+p[3])/2)<1e-10);
+      expect(maxY([buttress])).toBe(1.625);
+    }
+    art.texture.dispose();
+  });
+
   it.each([1,2,3,4,5])('shows the full actual level %i post when selecting a non-buttress straight segment', level => {
     const art = atlas(), rows = [wall('a',0,0,level),wall('b',2,0,level),wall('c',4,0,level)];
     const before = structuredClone(rows), layers = draw(rows, art, 'b');
