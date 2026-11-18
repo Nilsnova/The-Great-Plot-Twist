@@ -113,3 +113,61 @@ it.each([[320, 568], [360, 640], [375, 640]])('keeps every pre-wave guide action
     } finally {await context.close();}
   });
 });
+
+it.each([
+  {device: 'short phone', viewport: {width: 360, height: 640}, isMobile: true, hasTouch: true},
+  {device: 'desktop', viewport: {width: 1280, height: 720}, isMobile: false, hasTouch: false},
+])('restores keyboard focus when the guide closes on $device', async ({device, ...options}) => {
+  await browser.withPage(async page => {
+    await page.evaluate(async () => {
+      const meta = document.createElement('meta');
+      meta.name = 'viewport'; meta.content = 'width=device-width,initial-scale=1'; document.head.append(meta);
+      const {createHud} = await window.g20Import('/src/ui/hud.js');
+      const {createCoach} = await window.g20Import('/src/tutorial/coach.js');
+      const game = document.createElement('main'), canvas = document.createElement('canvas');
+      canvas.tabIndex = 0;
+      game.append(canvas); document.body.append(game);
+      const focus = () => canvas.focus();
+      const hud = createHud(game, {start() {}, focus, menu() {}, hasIsland: () => true});
+      hud.start();
+      let finalStep = false;
+      const coach = createCoach(game, {
+        parent: game.querySelector('.hud-right'), focusGame: focus,
+        onSkipStep() {
+          if (finalStep) coach.hide();
+          else {
+            finalStep = true;
+            coach.show({title: 'Last step', caption: 'Swing the cutlass.'});
+          }
+        },
+        onSkipAll: () => coach.hide(),
+      });
+      window.resetGuide = () => {
+        finalStep = false;
+        coach.show({title: 'First step', caption: 'Walk around.'});
+      };
+      window.hideGuide = () => coach.hide();
+      window.resetGuide();
+    });
+    const canvas = page.locator('canvas');
+    const skip = page.getByRole('button', {name: 'Skip step', exact: true});
+    const done = page.getByRole('button', {name: 'Skip tutorial', exact: true});
+    const menu = page.getByRole('button', {name: 'Menu', exact: true});
+    const focused = locator => locator.evaluate(node => node === document.activeElement);
+
+    await skip.press('Enter');
+    expect(await page.getByRole('heading', {name: 'Last step', exact: true}).isVisible()).toBe(true);
+    expect(await focused(skip)).toBe(true);
+    await skip.press('Enter');
+    expect(await focused(canvas)).toBe(true);
+
+    await page.evaluate(() => window.resetGuide());
+    await done.press('Enter');
+    expect(await focused(canvas)).toBe(true);
+
+    await page.evaluate(() => window.resetGuide());
+    await menu.focus();
+    await page.evaluate(() => window.hideGuide());
+    expect(await focused(menu)).toBe(true);
+  }, options);
+});

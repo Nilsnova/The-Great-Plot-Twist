@@ -170,7 +170,7 @@ export function createCoach(container = document.body, {parent = null, onSkipSte
     placePanel();
   }
   function hide() {
-    const restore = panel.classList.contains('is-combat-guide') && (panel.contains(document.activeElement) || document.activeElement === guide);
+    const restore = panel.contains(document.activeElement) || document.activeElement === guide;
     shown = ''; open = false;
     panel.hidden = true; guide.hidden = true;
     stopWatching();
