@@ -2,8 +2,8 @@ import {expect,it} from 'vitest';
 import {createFakeIslandTransport} from '../../src/pirates/fake-api.js';
 import {createIslandApi} from '../../src/island/api.js';
 import {createWallBuilderApi} from '../../src/island/wall-builder-api.js';
-import ring from '../fixtures/perimeter-ring.json';
-import court from '../fixtures/reference-court.json';
+import ring from '../fixtures/perimeter-scenery-ring.json';
+import court from '../fixtures/scenery-court.json';
 it('validates the proposed arranged view through real local move/quote/payment contracts',async()=>{
  const t=createFakeIslandTransport({coins:8000,version:2,flags:{wall_recovery:true,perimeter_walls:true}});t.dev.setWaveBest(40);
  const api=createIslandApi({transport:t}),walls=createWallBuilderApi({transport:t}),report={moves:[],quotes:[]};let uid=0;

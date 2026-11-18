@@ -13,15 +13,17 @@ import {capturePerimeterWave} from './perimeter-game-wave.mjs';
 import {boot,builder,capture,groundPoint,hitButtons,manage,openBuilder,settleCards,village,villageFrameEvidence,wallet,wallRenderEvidence,workspaceBounds} from './perimeter-game-ui.mjs';
 const root=resolve(process.argv[2]),out=resolve(process.argv[3]),mode=process.argv[4];
 const withWave=process.argv.includes('--wave');
+const scenery=process.argv.includes('--scenery');
+const ringFile=scenery?'perimeter-scenery-ring.json':'perimeter-ring.json',courtFile=scenery?'scenery-court.json':'reference-court.json';
 const withArrangement=process.argv.includes('--arranged');
 assert.ok(!withArrangement||mode==='reference','the arranged fixture extends the reference capture only');
-const court=withArrangement?JSON.parse(await readFile(new URL('../tests/fixtures/reference-court.json',import.meta.url),'utf8')):null;
+const court=withArrangement?JSON.parse(await readFile(join(root,'tests/fixtures',courtFile),'utf8')):null;
 const helperSources={};
 for(const name of ['capture-village-composition.mjs','perimeter-game-ui.mjs','perimeter-game-wave.mjs'])helperSources[name]=createHash('sha256').update(await readFile(new URL(name,import.meta.url))).digest('hex');
 assert.ok(['before','after','materials','reference'].includes(mode));await mkdir(out,{recursive:true});
 const head=()=>execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim(),source=head();
 const sourceTree=execFileSync('git',['rev-parse','HEAD:frontend/src'],{cwd:root,encoding:'utf8'}).trim();
-const fixture=JSON.parse(await readFile(join(root,'tests/fixtures/perimeter-ring.json'),'utf8')).cells.map(([x,z])=>({x,z}));
+const fixture=JSON.parse(await readFile(join(root,'tests/fixtures',ringFile),'utf8')).cells.map(([x,z])=>({x,z}));
 const server=await createServer({root,configFile:false,envDir:false,logLevel:'error',cacheDir:await mkdtemp(join(tmpdir(),'vis33-camera-')),
   define:{__BUILD_STAMP__:JSON.stringify({sha:source,builtAt:new Date().toISOString()})},server:{host:'127.0.0.1',port:0,hmr:false}});
 let browser,activePage=null,activeViewport=null;const checks=[];
@@ -165,7 +167,7 @@ try{
     activePage=null;
   }
   assert.equal(head(),source,'runtime remained frozen');
-  await writeFile(join(out,'report.json'),JSON.stringify({mode,source,sourceTree,helperSources,scope:mode==='reference'?'actual registered paid-fixture PNGs and D064 camera/selection/Move/ghost checkpoint; compiled/raw binding receipts determine source files, not family counts; final visual/device acceptance remains separate':mode==='materials'?'historical cabin/houses/nature/watchtower material checkpoint; other active families are outside this scope':'actual camera regression, not new-look acceptance; explicit focus is a public camera API diagnostic',fixture:'declared8000coins/best40/seven paid buildings/102paid ring/one20coin upgrade leaves6660; reference selected wall level3 upgrade pays40more, leaves6620; optional arranged21innerL3walls costs1470more, leaves5150; canceled previews preserve the save',checks},null,2)+'\n');
+  await writeFile(join(out,'report.json'),JSON.stringify({mode,source,sourceTree,helperSources,fixtureFiles:{ring:ringFile,court:courtFile},scope:mode==='reference'?'actual registered paid-fixture PNGs and D064 camera/selection/Move/ghost checkpoint; compiled/raw binding receipts determine source files, not family counts; final visual/device acceptance remains separate':mode==='materials'?'historical cabin/houses/nature/watchtower material checkpoint; other active families are outside this scope':'actual camera regression, not new-look acceptance; explicit focus is a public camera API diagnostic',fixture:'declared8000coins/best40/seven paid buildings/102paid ring/one20coin upgrade leaves6660; reference selected wall level3 upgrade pays40more, leaves6620; optional arranged21innerL3walls costs1470more, leaves5150; canceled previews preserve the save',checks},null,2)+'\n');
   console.log(`PASS: ${mode} actual-game checkpoint at1280x720/375x812; initial102walls/6660coins verified through camera; selected upgrades/previews and optional wave are separately recorded;0page errors/external`);
 }catch(error){
   let screenshot=null;

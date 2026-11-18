@@ -13,6 +13,9 @@ import {boot, groundPoint, manage, settleCards, village, wallet, wallRenderEvide
 
 const runtime = resolve(process.argv[2]), out = resolve(process.argv[3]);
 const treeBaseline = Number(process.argv[4]);
+const scenery = process.argv.includes('--scenery');
+const ringFile = scenery ? 'perimeter-scenery-ring.json' : 'perimeter-ring.json';
+const courtFile = scenery ? 'scenery-court.json' : 'reference-court.json';
 assert.ok([.7, 1].includes(treeBaseline), 'declare the expected pre/post visual tree baseline');
 const git = value => execFileSync('git', ['rev-parse', value], {cwd: runtime, encoding: 'utf8'}).trim();
 const assertClean = () => assert.equal(execFileSync('git', ['status', '--porcelain', '--untracked-files=all', '--', 'src', 'public', 'tests/fixtures'],
@@ -20,12 +23,12 @@ const assertClean = () => assert.equal(execFileSync('git', ['status', '--porcela
 assertClean();
 const source = git('HEAD'), sourceTree = git('HEAD:frontend/src');
 const treesBefore = [[-15, 6], [-16, 0], [-13, -12], [-9, -17], [9, -17], [15, -8], [16, 2], [14, 11], [-12, 13]];
-const ring = JSON.parse(await readFile(join(runtime, 'tests/fixtures/perimeter-ring.json'), 'utf8')).cells;
-const court = JSON.parse(await readFile(join(runtime, 'tests/fixtures/reference-court.json'), 'utf8'));
+const ring = JSON.parse(await readFile(join(runtime, 'tests/fixtures', ringFile), 'utf8')).cells;
+const court = JSON.parse(await readFile(join(runtime, 'tests/fixtures', courtFile), 'utf8'));
 const sha = value => createHash('sha256').update(value).digest('hex');
 const helperHash = sha(await readFile(new URL(import.meta.url)));
 const fixtureHashes = {};
-for (const file of ['perimeter-ring.json', 'reference-court.json']) fixtureHashes[file] = sha(await readFile(join(runtime, 'tests/fixtures', file)));
+for (const file of [ringFile, courtFile]) fixtureHashes[file] = sha(await readFile(join(runtime, 'tests/fixtures', file)));
 const helperSources = {};
 for (const file of ['api-browser-fixture.js', 'perimeter-game-ui.mjs']) {
   const actual = sha(await readFile(new URL(file, import.meta.url)));

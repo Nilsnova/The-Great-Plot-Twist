@@ -52,7 +52,7 @@ it('freezes, reloads, fights and finishes the paid102-piece ring as an explicitl
   const saved=new Map(),storage={getItem:k=>saved.get(k)??null,setItem:(k,v)=>saved.set(k,v)},shared=createSharedFakeStore('perimeter-demo',{storage,locks:null});
   let clock=Date.parse(INFO.startsAt);const options={shared,version:2,now:()=>clock,flags:{wall_recovery:true,perimeter_walls:true}};
   const t=createFakeIslandTransport({...options,coins:5000});await t.dev.setWaveBest(7);await t.post('/api/island/walls/enable',{});
-  const ring=JSON.parse(readFileSync(new URL('../fixtures/perimeter-ring.json',import.meta.url),'utf8')).cells.map(([x,z])=>({x,z}));
+  const ring=JSON.parse(readFileSync(new URL('../fixtures/perimeter-scenery-ring.json',import.meta.url),'utf8')).cells.map(([x,z])=>({x,z}));
   for(let start=0;start<ring.length;start+=32){const q=(await t.post('/api/island/walls/quote',{cells:ring.slice(start,start+32)})).data;
     expect((await t.post('/api/island/walls/build',{placements:q.placements,quotedTotal:q.totalCost,islandEpoch:q.islandEpoch,actionUid:`ring-${start}-build`})).ok).toBe(true);}
   const started=await t.post('/api/waves/start',{where:'own',actionUid:'ring-wave-1',waveProtocol:2,wallClientVersion:1});expect(started.ok).toBe(true);

@@ -32,7 +32,7 @@ TOKENS = {"owner": str(OWNER), "member": str(MEMBER)}
 HEADERS = {name: {"Authorization": f"Bearer test.{name}.signature"} for name in TOKENS}
 FLAGS = "islands,placement,perimeter_walls,structure_recovery"
 RING = json.loads(
-    (Path(__file__).resolve().parent.parent / "fixtures/perimeter-ring.json").read_text()
+    (Path(__file__).resolve().parent.parent / "fixtures/perimeter-scenery-ring.json").read_text()
 )["cells"]
 
 

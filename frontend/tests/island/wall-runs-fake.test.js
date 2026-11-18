@@ -105,7 +105,7 @@ it('accepts the new wall client capability without pretending to serve V1 recove
 });
 
 it('builds the independently measured 102-piece full perimeter in four bounded paid runs', async () => {
-  const fixture=JSON.parse(readFileSync(new URL('../fixtures/perimeter-ring.json',import.meta.url),'utf8'));
+  const fixture=JSON.parse(readFileSync(new URL('../fixtures/perimeter-scenery-ring.json',import.meta.url),'utf8'));
   const ring=fixture.cells.map(([x,z])=>({x,z})),t=await setup();expect(ring).toHaveLength(102);
   for(let start=0;start<ring.length;start+=32){
     const q=await quote(t,ring.slice(start,start+32));expect(q.ok).toBe(true);

@@ -348,7 +348,7 @@ export function decorateIsland(place, ctx = {}) {
     });
     for (const mark of marks) {
       if (!art[mark.art]) continue;
-      const plate = put(mark.art, where.x + mark.dx, where.z, mark.dy, .015); plate.name = `island-mark:${spot.id}:${mark.part}`; plate.userData.mark = mark.art; meshes.push(plate);
+      const plate = put(mark.art, where.x, where.z, mark.dy, .015); plate.position.x += mark.dx; plate.name = `island-mark:${spot.id}:${mark.part}`; plate.userData.mark = mark.art; meshes.push(plate);
     }
     shown.set(spot.id, {key, meshes});
   }

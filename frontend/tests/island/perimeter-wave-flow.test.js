@@ -27,7 +27,7 @@ describe('frozen perimeter inputs across normal bell events',()=>{
     const options={shared,version:2,now:()=>NOW,flags:{wall_recovery:true,perimeter_walls:true}};
     const transport=createFakeIslandTransport({...options,coins:5000});await transport.dev.setWaveBest(7);
     expect((await transport.post('/api/island/walls/enable',{})).ok).toBe(true);
-    const cells=JSON.parse(readFileSync(new URL('../fixtures/perimeter-ring.json',import.meta.url),'utf8')).cells.map(([x,z])=>({x,z}));
+    const cells=JSON.parse(readFileSync(new URL('../fixtures/perimeter-scenery-ring.json',import.meta.url),'utf8')).cells.map(([x,z])=>({x,z}));
     for(let start=0;start<cells.length;start+=32){
       const q=await transport.post('/api/island/walls/quote',{cells:cells.slice(start,start+32)});expect(q.ok).toBe(true);
       const built=await transport.post('/api/island/walls/build',{placements:q.data.placements,quotedTotal:q.data.totalCost,islandEpoch:q.data.islandEpoch,actionUid:`flow-ring-${start}`});
