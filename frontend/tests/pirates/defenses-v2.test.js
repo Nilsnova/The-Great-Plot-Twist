@@ -185,7 +185,7 @@ describe('the culverin outside the sim', () => {
       ],
     };
     const recovery = (hpUnits, repairWindow = 'between_waves') => ({
-      recoveryVersion: 1, repairWindow, structures: [{spot: 'cannon_11', hpUnits}],
+      recoveryVersion: 1, repairWindow, structures: [{spot: 'cannon_11', level: 4, hpUnits}],
     });
     const card = state => buildCardModel({
       spotId: 'cannon_11', slot: 'tower', spot: islandAnswer.spots[0], coins: 5000,

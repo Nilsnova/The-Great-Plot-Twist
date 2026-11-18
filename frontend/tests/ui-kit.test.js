@@ -1,6 +1,6 @@
 // Presentation helpers are pure: no DOM, game economy or backend state.
 import { expect, it } from 'vitest';
-import { createTypewriter, choiceKey, formatCoins, chartPoints, progressRatio } from '../src/ui/kit/logic.js';
+import { createTypewriter, choiceKey, chartPoints, progressRatio } from '../src/ui/kit/logic.js';
 it('advances whole Unicode characters, skips once and respects reduced motion', () => {
   const line = createTypewriter('A ⚓ coast', { rate: 10 });
   line.tick(.2); expect(line.text).toBe('A '); expect(line.done).toBe(false);
@@ -13,11 +13,6 @@ it('maps numbered choices and wraps arrows without accepting absent choices', ()
   expect(choiceKey('ArrowUp',0,3)).toEqual({ index:2, activate:false });
   expect(choiceKey('Enter',1,3)).toEqual({ index:1, activate:true });
   expect(choiceKey('ArrowDown',0,0)).toBe(null);
-});
-it('formats supplied integer coins without inventing missing balances', () => {
-  expect(formatCoins(0)).toBe('0'); expect(formatCoins(12345)).toBe('12,345');
-  expect(formatCoins(-12)).toBe('-12'); expect(formatCoins(null)).toBe('?');
-  expect(formatCoins(1.2)).toBe('?'); expect(formatCoins(Infinity)).toBe('?');
 });
 it('scales a sparkline to integer bounds, handles flat data and refuses invalid samples', () => {
   expect(chartPoints([10,20,15],100,40,4)).toEqual([[4,36],[50,4],[96,20]]);

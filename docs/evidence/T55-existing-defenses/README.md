@@ -83,3 +83,18 @@ Merged current main `48aee0e7` into this task branch in `f05f98d8`. The source c
 On that merged production source, the complete disposable island SQL command above passed **391 tests in 33.12 seconds**. [Exact output](main48-island-sql.txt) retains the local run output. No live database was used. The focused five-file Python command initially reported **273 passed, 2 failed**: the older gated-culverin fixture expected an array where current main now supplies the production `{a, b}` tree shape, and main's newer snapshot test stub did not accept the task's `include_existing_gated` keyword. These were fixture-integration mismatches, not a reason to revert either production change.
 
 Commit `66b8855b` updates those two fixture boundaries, preserving the tree/bonus/capstone and gated-defense assertions. The affected `test_wave_recovery_transport.py` then passed **19 tests in 1.57 seconds**; changed-file Ruff and format checks passed. The full earlier five-file run is retained as a failed attempt, not relabelled as a complete passing rerun. No production source changed after the 391-test SQL run. Protected instruction files and all historical log entries remain unchanged. No PR, migration application, deployment, activation or merge to main.
+
+
+## Current-main reconciliation · 37eb70fa · 18 Nov 2026
+
+Merged `origin/main` at `37eb70fa` into `fix/recovery-gated-defenses`. The actual three-way merge had one conflict, `docs/STATUS.md`; `/tmp/retain-status-histories.py` retained both committed line histories in order. Main's wall-scenery, visual, projection and simplification changes are present. The recovery-v1 source and HTTP/PostgreSQL regressions remain intact, and no new production gameplay rules or catalogue entries were added.
+
+Current-source disposable island SQL, after stabilizing the shared test ledger query with `ORDER BY id` (the table's generated identity is documented as the change-order key in `20261106000000_foundation.sql`), passed **391 tests in 35.94 seconds**. [Exact output](main37-island-sql.txt) is saved from the local run. An earlier full attempt on this merge reported **388 passed, 3 failed in 87.76 seconds**: `test_between_wave_repair_restores_full_health_and_never_refunds_as_build_contribution`, `test_the_skill_the_tower_has_is_free_and_a_switch_pays_again`, and `test_a_repair_takes_the_missing_share_once_and_makes_the_wall_whole`. The shared test helper selected wallet rows without ordering; those failures were only list-order assertions after their balance, retry, health and skill assertions passed. All three passed individually, and after adding the documented `ORDER BY id`, the trio passed **3 tests in 3.87 seconds** before the complete **391 passed** rerun. A pre-fix full rerun also passed 391; it is not the final verification claim.
+
+The focused Python route/rule/snapshot/capability command from `backend/` passed **275 tests in 47.95 seconds**:
+
+```sh
+UV_CACHE_DIR=/tmp/recovery-gated-uv-cache uv run pytest -q server/tests/test_island_routes.py server/tests/test_island_rules.py server/tests/test_structure_repair_rules.py server/tests/test_wave_recovery_transport.py server/tests/test_wave_routes.py
+```
+
+`UV_CACHE_DIR=/tmp/recovery-gated-uv-cache uv run ruff check .` passed. The pure defense capability suite passed **15 tests** with `./node_modules/.bin/vitest run tests/pirates/defenses-v2.test.js`; its recovery fixture now includes the level returned by the API. No browser test, live database, migration application, feature activation, deployment, new PR or merge to main was performed. Ianno manual review and explicit publication confirmation, followed by Franz's review, remain required before any PR.

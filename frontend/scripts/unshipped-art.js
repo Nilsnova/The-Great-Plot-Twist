@@ -10,6 +10,14 @@ export const UNSHIPPED = Object.freeze([
   'cutscenes/', // the painted title planes (title-*.webp), four painted cutscene frames and their manifest
   'places/title.webp', // the painted title backdrop
   'places/title.png', // its fallback
+  // Original world authoring sheets stay in the repository; runtime uses the proved compiled sources.
+  'village/buildings-hero-v1.png', 'village/houses-v1.png', 'village/landmarks-v1.png',
+  'village/services-v1.png', 'village/nature-v1.png', 'village/cannons-v1.png',
+  'village/walls-posts-v1.png', 'village/walls-surfaces-v1.png',
+  'village/core-v1.png', 'village/progress-v1.png', 'village/mortars-v1.png',
+  'village/harpoons-v1.png', 'village/culverins-v1.png', 'village/swivels-v1.png',
+  // The pre-VIS64 compiled wall sheet: kept only for the transport proof (village-baked-output.test.js).
+  'village/compiled/walls-4x-1-cf3e4db5982f.png',
 ]);
 
 /** True when a path under public/ ('places/title.webp') stays out of the build. */
