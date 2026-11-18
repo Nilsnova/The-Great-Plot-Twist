@@ -464,6 +464,24 @@
       "origin": "/workspace/reference-village-work/clearance-paid-final/run.log",
       "bytes": 176,
       "sha256": "1ddb6c54c5f19462cd04afdc63e02046fccb28269fd106b51d8bfa721d9b51d2"
+    },
+    {
+      "path": "integration-fixture-checks/fixture-frontend.log",
+      "origin": "/workspace/reference-village-work/clearance-pass/fixture-frontend.log",
+      "bytes": 3006,
+      "sha256": "a6ed557ed45980cd45ad851fcb4230703a0edc851896b181ef3758bb12c933d6"
+    },
+    {
+      "path": "integration-fixture-checks/fixture-frontend-corrected.log",
+      "origin": "/workspace/reference-village-work/clearance-pass/fixture-frontend-corrected.log",
+      "bytes": 992,
+      "sha256": "33182034e404d14ccffeca6096c6aaa6ff692047fcc7cfc5fd7315349278d532"
+    },
+    {
+      "path": "integration-fixture-checks/fixture-backend.log",
+      "origin": "/workspace/reference-village-work/clearance-pass/fixture-backend.log",
+      "bytes": 99,
+      "sha256": "d5321c7120d4a46b3aa806d204b8fc89d2425266898c863e7bb19370278806cf"
     }
   ],
   "pngCount": 52,

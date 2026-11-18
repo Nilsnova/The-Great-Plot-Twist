@@ -1,10 +1,10 @@
 {
   "status": "static_integrity_checked_application_results_recorded_separately",
-  "originalArtifactsByteVerified": 60,
+  "originalArtifactsByteVerified": 63,
   "paidPngsBoundToOriginalCaptureReports": 52,
   "pngFiles": 52,
   "comparisonImages": 12,
-  "localLinkTargetsChecked": 68,
+  "localLinkTargetsChecked": 70,
   "jsonParse": "passed",
   "htmlTagBalanceAndLocalReferences": "passed",
   "authoredWhitespace": "passed; untouched original logs inspected separately",
@@ -82,6 +82,10 @@
     },
     {
       "from": "docs/contribute/VILLAGE-CLEARANCE-REVIEW.md",
+      "target": "../evidence/village-clearance-review/integration-fixture-checks/checks.json"
+    },
+    {
+      "from": "docs/contribute/VILLAGE-CLEARANCE-REVIEW.md",
       "target": "../evidence/village-clearance-review/README.md"
     },
     {
@@ -127,6 +131,10 @@
     {
       "from": "docs/evidence/village-clearance-review/README.md",
       "target": "paid-final/report.json"
+    },
+    {
+      "from": "docs/evidence/village-clearance-review/README.md",
+      "target": "integration-fixture-checks/checks.json"
     },
     {
       "from": "docs/evidence/village-clearance-review/comparison.html",
