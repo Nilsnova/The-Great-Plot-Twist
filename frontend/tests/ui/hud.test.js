@@ -166,6 +166,41 @@ it('shows a friendly hint after 20 s standing still, and the place name for 2 s 
   });
 });
 
+it.each([[320,568],[375,812]])('keeps portrait arrival names up by the header at %s×%s',async(width,height)=>{
+  await evaluate.withPage(async page=>{
+    await page.setViewportSize({width,height});
+    await page.emulateMedia({reducedMotion:'reduce'});
+    await mount(page);
+    const result=await page.evaluate(async()=>{
+      const hud=window.testHud;
+      const measure=()=>{
+        const banner=document.querySelector('.hud-arrival');
+        const rect=banner.getBoundingClientRect();
+        const overlaps=['.hud-menu','.hud-coins','.quest-strip'].some(selector=>{
+          const box=document.querySelector(selector).getBoundingClientRect();
+          return box.width>0&&box.height>0&&rect.left<box.right&&rect.right>box.left&&rect.top<box.bottom&&rect.bottom>box.top;
+        });
+        return {top:rect.top,inside:rect.left>=0&&rect.right<=innerWidth,overlaps,pointer:getComputedStyle(banner).pointerEvents,
+          text:banner.innerText.trim(),status:document.querySelector('.hud-play .chapter').textContent};
+      };
+      hud.setCaptain({account:{state:'signed_out'}});hud.arrive('the_teeth');
+      const noPurse=measure();
+      hud.setCoins(100);hud.setManaging(true);hud.arrive('lighthouse_isle');
+      const withPurse=measure();
+      const {createWaveHud}=await window.g20Import('/src/pirates/hud.js');
+      const battle=createWaveHud({container:document.querySelector('#game')});
+      battle.bar({wave:1,shipsLeft:1,boardersLeft:0,islandHp:100,maxIslandHp:100});
+      hud.arrive('lighthouse_isle');const duringWave=measure();
+      battle.dispose();hud.dispose();
+      return {noPurse,withPurse,duringWave};
+    });
+    const clear={inside:true,overlaps:false,pointer:'none'};
+    expect(result.noPurse).toMatchObject({...clear,top:12,text:'The Teeth',status:'The Teeth'});
+    expect(result.withPurse).toMatchObject({...clear,top:64,text:'Lighthouse Isle',status:'Lighthouse Isle'});
+    expect(result.duringWave.top).toBeCloseTo(height*.3,0);
+  });
+});
+
 it('offers the sea chart, controls, How to play and a place, weather, time line in the pause menu',async()=>{
   await evaluate.withPage(async page=>{
     await mount(page);
