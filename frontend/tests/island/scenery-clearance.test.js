@@ -13,7 +13,7 @@ const options = {wallRuleVersion: 1, wallCapacity: 128};
 const positions = placement.positionsOf(EXTRA_SPOTS);
 const check = (x, z, where = positions) => placement.checkMove('wall_13', x, z, where, options);
 const trunks = edgeTrees.home_islet.filter(([x, z]) => x !== -15 || z !== 6);
-const props = [['bench', 4, 13], ['barrel', -12, 7], ['lantern', -3, 12], ['record', -3.5, 2.5], ['statue', 4, 5.5]];
+const props = [...layouts.home_islet.map(({asset, x, z}) => [asset, x, z]), ['record', -3.5, 2.5], ['statue', 4, 5.5]];
 
 describe('prospective wall clearance', () => {
   it.each(trunks)('refuses a paid wall through the tree at %s,%s', (x, z) => {
