@@ -38,6 +38,21 @@ function postAt(drawing, art, id, x, z = 0) {
 }
 
 describe('selected walls retain ordinary painter depth', () => {
+  it('exposes only an existing selected wall through a read-only diagnostic across readiness, clearing and disposal', () => {
+    const root = new THREE.Group(), drawing = makeWallConnections(root), group = drawing.root;
+    drawing.show([wall('a',0),wall('b',2),wall('c',4)]); drawing.select('b');
+    expect(group.wallSelectedId).toBeNull(); drawing.setArt(atlas()); expect(group.wallSelectedId).toBe('b');
+    const descriptor = Object.getOwnPropertyDescriptor(group,'wallSelectedId');
+    expect(descriptor.get).toBeTypeOf('function'); expect(descriptor.set).toBeUndefined(); expect(descriptor.configurable).toBe(false);
+    drawing.select(null); expect(group.wallSelectedId).toBeNull();
+    drawing.select('missing'); expect(group.wallSelectedId).toBeNull();
+    drawing.select('a'); expect(group.wallSelectedId).toBe('a');
+    drawing.show([{...wall('a',0),built:false}]); expect(group.wallSelectedId).toBeNull();
+    drawing.show([wall('a',0)]); expect(group.wallSelectedId).toBe('a');
+    drawing.dispose(); expect(group.wallSelectedId).toBeNull();
+    drawing.select('a'); drawing.show([wall('a',0)]); expect(group.wallSelectedId).toBeNull();
+  });
+
   it('cannot paint copied wall textures over a foreground prop and retains the actual selected post once', () => {
     const root = new THREE.Group(), drawing = makeWallConnections(root), art = atlas(); drawing.setArt(art);
     const rows = [wall('a',0),wall('b',2),wall('c',4),wall('far',20,6,5)], before = structuredClone(rows); drawing.show(rows);

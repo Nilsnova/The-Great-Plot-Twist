@@ -65,6 +65,13 @@ does not own the later VIS64 wall-height or thickness changes. The dependency
 also retains its original focused failure/pass logs; those are separate from
 the VIS63 receipts below.
 
+The normal group also exposes a read-only `wallSelectedId` diagnostic next to
+its existing `wallLinks`/`wallPosts` getters. It returns the selected ID only
+when it is a current visual post and the renderer is alive, otherwise `null`.
+The independent observer can therefore permit a full straight post for that
+one actual selection without guessing from vertices or accepting arbitrary
+unexpected posts. The getter creates no geometry and changes no selection state.
+
 ## Native rendering fixture contract
 
 The contact-sheet fixture previously required the same global opaque overlay.
@@ -98,17 +105,25 @@ npm test -- --maxWorkers=1 tests/island/wall-selection.test.js tests/island/sele
   original owner selection/Move/Close invariants and independently compares each
   transition's zones/colliders immediately before and after selection update.
   No product assertion, timeout or guard was relaxed.
-- Final selection: [raw green log](green-selection.log), **64 passed / seven files**,
+- Initial corrected wrapper: [raw green log](green-selection.log), **64 passed / seven files**,
   **2.92s**. This includes all five selected tiers, non-buttress retention,
   ordinary foreground-prop ordering, repeated selection/show caching, accepted
   tier/damage/position changes, broken gaps, invalid/missing/unbuilt state,
   art-readiness/retry, borrowed/owned disposal and the actual world bracket path.
+- Final diagnostic follow-up: [raw log](green-selection-diagnostic.log),
+  **65 passed / seven files, 4.21s**. Added read-only selected-ID coverage for
+  before/after art readiness, known/unknown selection, clearing, removed/rebuilt
+  posts, disposal and late calls. No geometry changed in this follow-up.
 - `node --check frontend/scripts/visual-matrix-fixture.js` passed.
 - Build, budget and text commands/results are retained unchanged in
   [checks.json](checks.json), [build.log](build.log), [budget.log](budget.log)
   and [text-lint.log](text-lint.log). All exited `0`: build/spoiler guard **2.32s**,
   title budget **0.42s** (**18,959 / 21,080 JS bytes**, **9,410 / 12,000 CSS bytes**,
   no title image), text lint **1.95s** (**0 errors / 8 report-only findings**).
+- After the final getter addition, build/spoiler guard and title budget passed
+  again in **4.82s / 0.46s**; [follow-up report](checks-diagnostic.json),
+  [build](build-diagnostic.log) and [budget](budget-diagnostic.log) retain exact
+  results. No player-facing text changed after the recorded text-lint pass.
 
 These are pure tests using real Three.js geometry with mocked texture loading,
 plus a production build. The prop-order regression checks the actual painter
