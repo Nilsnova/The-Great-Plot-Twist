@@ -182,7 +182,7 @@ def test_committed_replay_survives_departure_but_fresh_claim_does_not(database):
     assert claim(database, member, pending, uid="pending002")["reason"] == "not_member"
 
 
-def test_reset_fences_pending_round_and_keeps_old_receipt(database):
+def test_epoch_switch_fences_pending_round_and_keeps_old_receipt(database):
     owner, member, _, initial = setup(database)
     done = start(database, member, owner, initial)
     pending = start(database, member, owner, initial, uid="pending001")
@@ -455,14 +455,17 @@ def test_concurrent_distinct_claim_ids_cannot_complete_one_round_twice(database,
     reconciles(database, keys(initial)[0])
 
 
-def test_reset_racing_claim_never_moves_old_reward_into_new_account(database, ship_server):
+def test_scoped_account_retirement_racing_claim_keeps_new_account_unfunded(
+    database,
+    ship_server,
+):
     owner, member, _, initial = setup(database)
     opened = start(database, member, owner, initial)
     old_account, _ = keys(initial)
     database.commit()
 
-    def reset_fixture(connection):
-        # TEST ONLY: scoped account retirement exercises the documented reset lock boundary.
+    def retire_account_fixture(connection):
+        # TEST ONLY: exercise the documented scope/account/epoch boundary, not a reset RPC.
         as_owner(connection)
         rpc(connection, "island_treasury_lock_scope", owner)
         connection.execute(
@@ -490,16 +493,16 @@ def test_reset_racing_claim_never_moves_old_reward_into_new_account(database, sh
         return {"new_account": new_account}
 
     results = race(
-        ship_server, [lambda connection: claim(connection, member, opened), reset_fixture]
+        ship_server, [lambda connection: claim(connection, member, opened), retire_account_fixture]
     )
-    reward, reset = results
+    reward, retirement = results
     assert reward["status"] in ("done", "refused")
     if reward["status"] == "refused":
         assert reward["reason"] in ("path_unavailable", "epoch_mismatch")
     assert (
         database.execute(
             "select balance_coins from public.island_economy_accounts where id=%s",
-            (reset["new_account"],),
+            (retirement["new_account"],),
         ).fetchone()[0]
         == 0
     )
