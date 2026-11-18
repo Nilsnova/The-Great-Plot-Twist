@@ -98,6 +98,9 @@ it.each([
       expect(await reader.locator('.narrator-history').textContent()).toBe(line);
       expect(await reader.locator('[role=status]').textContent()).toBe(await page.evaluate(() => nextLine.text));
       if (width === 320 && waveNumber === 1) {
+        // Chrome can blur a retained reader before the resize callback runs.
+        await reader.evaluate(node => node.blur());
+        expect(await page.evaluate(() => document.activeElement.tagName)).toBe('BODY');
         await page.setViewportSize({width: 568, height: 320});
         await expect.poll(() => reader.count()).toBe(0);
         expect(await page.evaluate(() => document.activeElement.tagName)).toBe('CANVAS');
