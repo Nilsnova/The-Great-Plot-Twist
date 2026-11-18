@@ -1,0 +1,110 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run tests/island/wallet-watermark.test.js tests/ui/recovered-rewards.test.js --maxWorkers=1
+
+
+ RUN  v5.1.0 /workspace/wave-review-wallet/frontend
+
+ ❯ tests/island/wallet-watermark.test.js (10 tests | 5 failed) 40ms
+   ❯ the wallet watermark across accepted reads (6)
+     × covers two independently accepted first-load reads, reverse replies=false 19ms
+     × keeps an actual captain purchase and its level when the second older read arrives 6ms
+     × invalidates outstanding old-account reads when wallet recovery resets 2ms
+   ❯ arsenal coin ordering beside a fresh personal wallet (4)
+     × rejects an arsenal reply asked before recovery, own loaded=false 1ms
+     × keeps a newer arsenal balance through an older first island read without replacing island identity 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/island/wallet-watermark.test.js > the wallet watermark across accepted reads > covers two independently accepted first-load reads, reverse replies=false
+AssertionError: expected 100 to be 120 // Object.is equality
+
+- Expected
++ Received
+
+- 120
++ 100
+
+ ❯ tests/island/wallet-watermark.test.js:49:35
+     47|     expect(h.island.island.coins).toBe(120);
+     48|     await h.ownReads[reverse ? 0 : 1].answer(); await loading;
+     49|     expect(h.island.island.coins).toBe(120); expect(h.coins.at(-1)).to…
+       |                                   ^
+     50|   });
+     51|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  tests/island/wallet-watermark.test.js > the wallet watermark across accepted reads > keeps an actual captain purchase and its level when the second older read arrives
+AssertionError: expected 100 to be 1980 // Object.is equality
+
+- Expected
++ Received
+
+- 1980
++ 100
+
+ ❯ tests/island/wallet-watermark.test.js:68:35
+     66|     expect(bought.captain.level).toBe(2); expect(bought.coins).toBeLes…
+     67|     await h.ownReads[1].answer();
+     68|     expect(h.island.island.coins).toBe(bought.coins); expect(h.island.…
+       |                                   ^
+     69|   });
+     70|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  tests/island/wallet-watermark.test.js > the wallet watermark across accepted reads > invalidates outstanding old-account reads when wallet recovery resets
+AssertionError: expected [ 100 ] to not include 100
+ ❯ tests/island/wallet-watermark.test.js:77:39
+     75|     const before = h.coins.length;
+     76|     await h.ownReads[1].answer();
+     77|     expect(h.coins.slice(before)).not.toContain(100);
+       |                                       ^
+     78|     await h.ownReads[2].answer(); await newer; expect(h.island.island.…
+     79|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  tests/island/wallet-watermark.test.js > arsenal coin ordering beside a fresh personal wallet > rejects an arsenal reply asked before recovery, own loaded=false
+AssertionError: expected 100 to be 120 // Object.is equality
+
+- Expected
++ Received
+
+- 120
++ 100
+
+ ❯ tests/island/wallet-watermark.test.js:96:28
+     94|     const refreshing = h.island.arsenal.refresh(); expect(h.arsenalRea…
+     95|     recover(h, 120); await h.arsenalReads[0].answer(); await refreshin…
+     96|     expect(h.coins.at(-1)).toBe(120);
+       |                            ^
+     97|     if (loaded) expect(h.island.island.coins).toBe(120);
+     98|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  tests/island/wallet-watermark.test.js > arsenal coin ordering beside a fresh personal wallet > keeps a newer arsenal balance through an older first island read without replacing island identity
+AssertionError: expected [ 120 ] to not include 120
+ ❯ tests/island/wallet-watermark.test.js:106:39
+    104|     expect(h.coins.at(-1)).toBe(80); const before = h.coins.length;
+    105|     await h.ownReads[0].answer(); await loading;
+    106|     expect(h.coins.slice(before)).not.toContain(120); expect(h.island.…
+       |                                       ^
+    107|   });
+    108|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  5 failed | 13 passed (18)
+   Start at  18:09:28
+   Duration  7.63s (tests 88%, import 9%, transform 3%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice

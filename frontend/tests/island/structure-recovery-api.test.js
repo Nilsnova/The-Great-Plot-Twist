@@ -1,6 +1,8 @@
 // The recovery API client validates the server view and preserves retry-safe repair quotes.
 import {describe, expect, it} from 'vitest';
-import {createIslandApi, isStructureRecovery, isWave, PATHS} from '../../src/island/api.js';
+import {createIslandApi, isJoinableWave, isStructureRecovery, isWave, PATHS} from '../../src/island/api.js';
+import {createWaveFlow} from '../../src/island/wave-flow.js';
+import {WAVE_STARTED} from '../../src/island/wave-hooks.js';
 
 const waveId = '12345678-1234-4234-8234-123456789abc';
 const epoch = '22345678-1234-4234-8234-123456789abc';
@@ -40,6 +42,40 @@ describe('structure recovery API', () => {
     expect(sent[2].path).toBe('/api/waves/current?where=own&waveProtocol=2');
     expect(isWave({...data, participantToken: 'profile-id'})).toBe(false);
     expect(isWave({...data, initialSnapshot: {...data.initialSnapshot, configVersion: 9}})).toBe(false);
+  });
+
+  it('lets a second player find a teammate\'s recovery wave without a token and join it for their own', async () => {
+    const waveId = '82345678-1234-4234-8234-123456789abc';
+    const mine = '8165d60f-14f5-4b9e-96a0-2ed457b4c219';
+    const full = recoveryWave(waveId);
+    const {initialSnapshot: _snapshot, participantToken: _token, lastActorCounter: _counter, ...open} = full;
+    const joinable = {...open, recoveryVersion: 1, waveProtocol: 2};
+    const joinedReply = {...full, initialSnapshot: {...full.initialSnapshot, participants: [
+      ...full.initialSnapshot.participants, {participantToken: mine, captain: {level: 1, skills: [], weapon: 'musket'}}]},
+    participantToken: mine, lastActorCounter: 0};
+    expect(isWave(joinable)).toBe(false);
+    expect(isJoinableWave(joinable)).toBe(true);
+    expect(isJoinableWave({...joinable, participantToken: token})).toBe(false);
+    expect(isJoinableWave({...joinable, recoveryVersion: 0, waveProtocol: 1})).toBe(false);
+    const sent = [];
+    const api = createIslandApi({waveProtocol: where => (where === 'pirate_point' ? 1 : 2), transport: {
+      get: async path => { sent.push({method: 'get', path}); return {ok: true, data: joinable}; },
+      post: async (path, body) => { sent.push({method: 'post', path, body}); return {ok: true, data: joinedReply}; },
+    }});
+    const events = [];
+    const flow = createWaveFlow({api, emit: event => events.push(event), setTimer: () => 0, clearTimer: () => {}});
+    const looked = await flow.look('ISLE-FR3ND');
+    expect(looked.ok).toBe(true);
+    expect(flow.current).toMatchObject({joined: false, wave: {waveId}});
+    expect(events).toEqual([]);
+    const joined = await flow.join('ISLE-FR3ND');
+    expect(joined.ok).toBe(true);
+    expect(sent).toEqual([{method: 'get', path: '/api/waves/current?where=ISLE-FR3ND&waveProtocol=2'},
+      {method: 'post', path: PATHS.join, body: {waveId, waveProtocol: 2}}]);
+    expect(flow.current.joined).toBe(true);
+    expect(events.find(event => event.type === WAVE_STARTED)).toMatchObject({waveId, recoveryVersion: 1, waveProtocol: 2,
+      participantToken: mine, lastActorCounter: 0, initialSnapshot: joinedReply.initialSnapshot});
+    flow.dispose();
   });
 
   it('advertises protocol two for first-wave admission while accepting a frozen legacy reply', async () => {

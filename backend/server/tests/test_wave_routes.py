@@ -9,6 +9,7 @@ weather modifier and every refusal. Nothing uses the network.
 Used by: pytest (cd backend && uv run pytest).
 """
 
+import re
 from dataclasses import replace
 
 import httpx
@@ -59,7 +60,10 @@ def test_the_bell_on_your_own_island_answers_the_wave_of_the_contract():
 
     assert response.status_code == 200
     assert response.headers["cache-control"] == "private, no-store"
-    assert response.json() == {
+    body = response.json()
+    # The server's clock as the answer leaves, UTC with milliseconds (for a browser's wrong clock).
+    assert re.fullmatch(r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z", body.pop("serverNow"))
+    assert body == {
         "waveId": WAVE_ID,
         "wave": 1,
         "seed": 123456789,
@@ -130,6 +134,46 @@ def test_saved_recovery_v1_protocol2_start_builds_snapshot_when_admission_flag_i
     assert call["p_admit_v1"] is False
     assert call["p_snapshot_template"]["expectedRevision"] == 7
     assert call["p_snapshot_template"]["configVersion"] == 1
+
+
+@pytest.mark.parametrize(
+    ("recovery_version", "flags"),
+    [(0, "islands,structure_recovery"), (1, "islands")],
+)
+def test_gated_culverin_start_freezes_rule_with_snapshot_and_response(recovery_version, flags):
+    world = World(settings=replace(ISLAND_SETTINGS, flags=parse_flags(flags)))
+    world.database.recovery_policy_version = recovery_version
+    world.database.recovery_start_as_v1 = True
+    world.database.islands["K7Q2M"] = {
+        "player_id": PLAYER_ID,
+        "code": "K7Q2M",
+        "wave_best": 0,
+        "flags": 0,
+    }
+    world.database.buildings[PLAYER_ID] = [
+        {
+            "plot": "cannon_8",
+            "building_type": "culverin",
+            "level": 2,
+            "spec": None,
+            "tree_a": 1,
+            "tree_b": 0,
+        }
+    ]
+
+    response = world.start(waveProtocol=2)
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+    (call,) = world.database.calls("recovery_wave_start")
+    frozen_rules = body["rules"]
+    assert "defenses_v2" in frozen_rules
+    assert call["p_admit_v1"] is (recovery_version == 0)
+    assert call["p_snapshot_template"]["createWave"]["defensesV2"] is True
+    assert body["initialSnapshot"]["rules"] == frozen_rules
+    assert body["initialSnapshot"]["createWave"]["rules"] == frozen_rules
+    assert body["initialSnapshot"]["createWave"]["defensesV2"] is True
+    assert body["initialSnapshot"]["createWave"]["defenses"][0]["id"] == "cannon_8"
 
 
 @pytest.mark.parametrize(
@@ -298,7 +342,7 @@ def test_a_finished_wave_answers_the_loot_the_coins_the_best_wave_and_the_flags(
         "p_loot_per_house": 10,
         "p_point_loot_base": 40,
         "p_boss_every": 5,
-        "p_boss_multiplier": 2,
+        "p_boss_multiplier": 3,
         "p_restart_back": 2,
     }
 

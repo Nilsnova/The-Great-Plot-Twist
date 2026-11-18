@@ -1,0 +1,36 @@
+........................................................................ [  0%]
+........................................................................ [  1%]
+........................................................................ [  1%]
+........................................................................ [  2%]
+........................................................................ [  2%]
+........................................................................ [  3%]
+........................................................................ [  3%]
+........................................................................ [  4%]
+........................................................................ [  4%]
+............................................F
+=================================== FAILURES ===================================
+________ test_the_database_wallet_reasons_equal_the_exact_python_pairs _________
+
+group3_database = <psycopg.Connection [IDLE] (database=postgres) at 0x7f6626e3d250>
+
+    def test_the_database_wallet_reasons_equal_the_exact_python_pairs(group3_database):
+        database = group3_database
+        rows = database.execute("select reason, direction from public.wallet_reasons").fetchall()
+        assert len(rows) == 17
+>       assert dict(rows) == dict(WALLET_REASONS)
+E       AssertionError: assert {'kit_grant':...: 'earn', ...} == {'kit_grant':...: 'earn', ...}
+E
+E         Omitting 17 identical items, use -vv to show
+E         Right contains 16 more items:
+E         {'boat_game': 'earn'}
+E         {'building_refund': 'earn'}
+E         {'captain_respec': 'spend'}
+E         {'captain_revive': 'spend'}...
+E
+E         ...Full output truncated, use '-vv' to show
+
+server/tests/group3_sql/test_group3_chain.py:42: AssertionError
+=========================== short test summary info ============================
+FAILED server/tests/group3_sql/test_group3_chain.py::test_the_database_wallet_reasons_equal_the_exact_python_pairs
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 692 passed in 42.99s

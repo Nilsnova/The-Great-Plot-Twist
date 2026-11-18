@@ -1,0 +1,48 @@
+
+> the-great-plot-twist@0.1.0 test
+> vitest run tests/battle-sounds.test.js
+
+
+ RUN  v5.1.0 /workspace/captain-combat-feedback/frontend
+
+ ❯ tests/battle-sounds.test.js (19 tests | 1 failed) 174ms
+   ❯ pirate cues with the battle voices (6)
+     × plays danger once per six seconds on the effects bus without a duplicate caption overlay 28ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/battle-sounds.test.js > pirate cues with the battle voices > plays danger once per six seconds on the effects bus without a duplicate caption overlay
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array [
+      "Danger nearby",
+    ]
+
+
+Number of calls: 1
+
+ ❯ tests/battle-sounds.test.js:77:25
+     75|     expect(tone).toHaveBeenCalledTimes(2);
+     76|     expect(tone.mock.calls.every(args => args[0] === effects)).toBe(tr…
+     77|     expect(caption).not.toHaveBeenCalled(); // the existing persistent…
+       |                         ^
+     78|     expect(cue('pirate-danger')).toBe(false);
+     79|     time = 6; expect(cue('pirate-danger')).toBe(true);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 18 passed (19)
+   Start at  11:41:39
+   Duration  681ms (transform 44%, tests 41%, import 9%, worker 6%)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice

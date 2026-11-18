@@ -390,6 +390,7 @@ def test_a_dropped_participant_reconnects_to_the_same_wave():
 
     first = world.join(headers=GUEST).json()
     again = world.join(headers=GUEST).json()
+    first.pop("serverNow"), again.pop("serverNow")  # the server's clock moves on between answers
 
     assert first == again
     assert again["waveId"] == WAVE_ID

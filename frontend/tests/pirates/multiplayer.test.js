@@ -8,6 +8,7 @@ import { createWaveFlow } from '../../src/island/wave-flow.js';
 import { WAVE_STARTED } from '../../src/island/wave-hooks.js';
 import { createFakeIslandApi } from '../island/fake.js';
 import { createFakeIslandTransport, createSharedFakeStore, fakePlayerFor } from '../../src/pirates/fake-api.js';
+import {createCoreState} from '../../src/island/core-state.js';
 
 const START = Date.UTC(2026, 10, 11, 12, 0, 0);
 const info = (id, wave = 1) => ({ waveId: id, wave, seed: 77, startsAt: new Date(START + 10000).toISOString(), weather: { ships: 1, fog: 0 }, flagship: false });
@@ -124,14 +125,46 @@ function wiringHarness({ visiting = null, recoveryTransport = null } = {}) {
     setRecoveryCheckpointHandler(handler) { recoveryCheckpointHandler = handler; }, point: null,
   };
   const world = { current: { id: 'home_islet' } };
-  const waves = wireWaves({ island, on, emit, world, openRoom, loop: false, every: run => { ticks.push(run); return () => {}; },
+  const waves = wireWaves({ island, on, emit, world, openRoom, loop: false, every: run => { ticks.push(run); return () => { const at = ticks.indexOf(run); if (at !== -1) ticks.splice(at, 1); }; },
     later: (run, ms) => { const item = { run, ms }; laters.push(item); return () => { laters.splice(laters.indexOf(item), 1); }; } });
   const tick = () => ticks.forEach(run => run());
   const flush = async () => { while (laters.length) { const item = laters.shift(); item.run(); await Promise.resolve(); } await Promise.resolve(); };
-  return { waves, island, state, rooms, emit, tick, flush, world, recoveryCheckpointHandler: () => recoveryCheckpointHandler };
+  return { waves, island, state, rooms, emit, tick, flush, world, scheduled: () => ticks.length, recoveryCheckpointHandler: () => recoveryCheckpointHandler };
 }
 
 describe('the island room for every defender', () => {
+  it('periodically republishes a retained legacy core after a proven same-wave return without rereading recovery vectors', () => {
+    const h = wiringHarness(), model = createCoreState();
+    let context = {key: 'home:epoch-a:0', epoch: 'epoch-a', islandIdentity: 'home:epoch-a:reset-0'};
+    Object.defineProperty(h.island, 'coreContext', {get: () => context});
+    model.reset(context.key);
+    h.island.setCoreCombatState = vi.fn(snapshot => model.accept(snapshot, {waveId: 'legacy-core', contextKey: context.key, epoch: context.epoch}));
+    h.waves.island.start({...info('legacy-core'), startsAt: new Date(Date.now() + 60000).toISOString()});
+    // This fixture supplies an already-damaged controller snapshot; no fresh combat event drives the publisher.
+    h.waves.island.state.islandHp = 40;
+    const recoveryCalls = h.island.setRecoveryCombatState.mock.calls.length;
+    h.tick(); expect(model.current).toMatchObject({hp: 40, contextKey: context.key});
+    const retained = h.waves.island.wave;
+    h.emit({type: 'travel'});
+    context = {...context, key: 'home:epoch-a:travel-1'}; model.reset(context.key);
+    h.tick(); expect(model.current).toBeNull();
+    context = {...context, rejoin: {contextKey: context.key, waveId: 'legacy-core'}};
+    h.tick(); expect(model.current).toMatchObject({hp: 40, frame: 'island_core_damaged', contextKey: context.key});
+    expect(h.waves.island.wave).toBe(retained);
+    expect(h.island.setRecoveryCombatState).toHaveBeenCalledTimes(recoveryCalls);
+    context = {key: 'friend:epoch-b:1', epoch: 'epoch-b', islandIdentity: 'friend:epoch-b:reset-0',
+      rejoin: {contextKey: 'friend:epoch-b:1', waveId: 'legacy-core'}};
+    model.reset(context.key); h.tick(); expect(model.current).toBeNull();
+    context = {key: 'home:epoch-a:travel-2', epoch: 'epoch-a', islandIdentity: 'home:epoch-a:reset-0',
+      rejoin: {contextKey: 'home:epoch-a:travel-2', waveId: 'different-wave'}};
+    model.reset(context.key); h.tick(); expect(model.current).toBeNull();
+    h.waves.dispose();
+    expect(h.island.setCoreCombatState).toHaveBeenLastCalledWith(null);
+    const publications = h.island.setCoreCombatState.mock.calls.length;
+    expect(h.scheduled()).toBe(0); h.tick();
+    expect(h.island.setCoreCombatState).toHaveBeenCalledTimes(publications);
+  });
+
   it('wires authenticated recovery reads and checkpoints into the mounted island controller', async () => {
     const get = vi.fn(async () => ({headSeq: 0, sealedThroughTick: 0, events: []}));
     const post = vi.fn(async (_path, body) => ({accepted: true, throughTick: body.throughTick,
@@ -173,7 +206,11 @@ describe('the island room for every defender', () => {
       { spot: 'wall_1', instanceId: 'instance-a', hpUnits: 500_000, maxHP: 60, repairSeq: 2 },
     ] };
     Object.defineProperty(h.waves.island, 'recoveryCombatState', { configurable: true, get: () => state });
+    // Driven by the controller while a recovery wave runs (no 250 ms timer): its change event publishes.
+    const before = h.island.setRecoveryCombatState.mock.calls.length;
     h.tick();
+    expect(h.island.setRecoveryCombatState.mock.calls.length).toBe(before);
+    h.emit({ type: 'recovery_combat_changed', waveId: 'wave-a' });
     expect(h.island.setRecoveryCombatState).toHaveBeenLastCalledWith(state);
     h.waves.dispose();
     expect(h.island.setRecoveryCombatState).toHaveBeenLastCalledWith(null);

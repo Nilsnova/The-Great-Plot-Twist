@@ -33,7 +33,7 @@ describe('How to play pages',()=>{
   });
   it('lists the controls as keys on the last page',()=>{
     const controls=TUTORIAL_PAGES.at(-1);
-    expect(controls.keys.map(([key])=>key)).toEqual(['WASD or arrows','E','F','Click','M','Mouse wheel']);
+    expect(controls.keys.map(([key])=>key)).toEqual(['WASD or arrows','E','F','Click','M','Mouse wheel','Hold Tab']);
   });
   it('reuses the cartoon drawings in their own boxes, at scales that fit a 320 px card',async()=>{
     const frames=await drawings();
@@ -96,7 +96,8 @@ describe('versioned recovery help',()=>{
     expect(current.slice(0,FIRST_RUN_PAGES).map(page=>page.id)).toEqual(['island','build','bell','captain']);
     expect(current.map(page=>page.id)).toEqual([...ONE_ISLAND_PAGES.map(page=>page.id),'repair']);
     expect(current.find(page=>page.id==='ashore').text.join(' ')).not.toMatch(/press E.*repair|repair it|rebuild it/i);
-    expect(current.find(page=>page.id==='ashore').text.join(' ')).toContain('mend on their own but stop when you ring the bell');
+    expect(current.find(page=>page.id==='ashore').text.join(' ')).toContain('After the bell, only paid Repair now heals buildings; wave end restores every wall and tower fully.');
+    expect(current.find(page=>page.id==='ashore').text.join(' ')).not.toMatch(/mend on their own|mend between waves|repair rate|ETA/i);
     expect(current.find(page=>page.id==='crew').text.join(' ')).not.toMatch(/saved skills|refund|respec/i);
     expect(current.find(page=>page.id==='crew').text.join(' ')).toContain('Marksman or Brawler');
     expect(current.find(page=>page.id==='crew').text.join(' ')).not.toContain('Shipwright');

@@ -1,0 +1,34 @@
+{
+  "approvedBy": "Johannes Franz Lang (frcola)",
+  "approvedDate": "2026-11-17",
+  "priorRuntime": "9dc1bea505fe3b26bd56d6ad02c21a2db8bd8be9",
+  "images": [
+    {
+      "file": "desktop-overview.png",
+      "source": "exec-4359f2a8-1176-4e6a-9d50-6809e483ed06.png",
+      "width": 1672,
+      "height": 941,
+      "bytes": 3158594,
+      "sha256": "ee2d888b0f3abce2237792a91c2e7f78c179a68c596158c8a791dc07b5de5e74",
+      "classification": "AI-generated approved concept, not implemented gameplay or a tested native viewport"
+    },
+    {
+      "file": "desktop-wall-selected.png",
+      "source": "exec-a07561c7-7dbd-4f08-b8f4-55ebaa15ab65.png",
+      "width": 1672,
+      "height": 941,
+      "bytes": 2854240,
+      "sha256": "820ad9d2324a4fefdc65c493335eb7fc59a11e1c0a1cd249ff6aefbe77f1347c",
+      "classification": "AI-generated approved concept, not implemented gameplay or a tested native viewport"
+    },
+    {
+      "file": "portrait-wall-selected.png",
+      "source": "exec-0d9d7f9d-c8c1-4b02-865b-8bf8932df90f.png",
+      "width": 996,
+      "height": 1579,
+      "bytes": 2702623,
+      "sha256": "2744ad65164617258efac6f60f55cc8732b28a03d441f9990cc9b4e52b92095e",
+      "classification": "AI-generated approved concept, not implemented gameplay or a tested native viewport"
+    }
+  ]
+}

@@ -5,6 +5,8 @@
 import * as THREE from 'three';
 import { pixelGlsl, toScreen } from './pixel-glsl.js';
 import { projectPoint } from './art.js';
+import {groundProjectionGlsl} from './projection.js';
+import {groundShapeMatrix} from './ground-transform.js';
 
 const MAX = 48;
 // Pools per placed sprite: [dx, dz, radius, lift, kind]; kind 0 lies on the ground, 1 is a halo.
@@ -23,12 +25,12 @@ void main(){vec4 world=modelMatrix*instanceMatrix*vec4(position,1.0);vWorld=worl
   vec4 centre=modelMatrix*instanceMatrix*vec4(0.0,0.0,0.0,1.0);vPool=vec4(centre.xy,aPool.xy);vMin=aPool.z;
   gl_Position=projectionMatrix*viewMatrix*world;}`;
 const fragment = /* glsl */`
-${pixelGlsl}
+${pixelGlsl}${groundProjectionGlsl}
 uniform vec3 uColour;uniform float uStrength,uTime;
 varying vec2 vWorld;varying vec4 vPool;varying float vMin;
 void main(){
   vec2 px=(vWorld*16.0),p=(px+.5)/16.0,q=(p-vPool.xy)/vPool.z;
-  if(vPool.w<.5)q.y/=.62;
+  if(vPool.w<.5)q=unprojectGround(q);
   float r=length(q);if(r>1.0)discard;
   float flicker=1.0+.035*sin(uTime*6.3+vPool.x*3.1)+.02*sin(uTime*11.7+vPool.y*5.3);
   float glow=pow(1.0-r,1.1)*max(uStrength,vMin)*flicker;
@@ -52,7 +54,9 @@ export function createLightPools(scene) {
   function rebuild() {
     const pools = [...base, ...[...extras.values()].flat()].slice(0, MAX);
     pools.forEach((pool, i) => {
-      matrix.makeScale(pool.r, pool.r, 1).setPosition(pool.x, pool.y, 0); mesh.setMatrixAt(i, matrix);
+      if ((pool.kind ?? 0) === 0) matrix.copy(groundShapeMatrix()).scale(new THREE.Vector3(pool.r, pool.r, 1));
+      else matrix.makeScale(pool.r, pool.r, 1);
+      matrix.setPosition(pool.x, pool.y, 0); mesh.setMatrixAt(i, matrix);
       attribute.setXYZW(i, pool.r, pool.kind ?? 0, pool.min ?? 0, 0);
     });
     mesh.count = pools.length; mesh.instanceMatrix.needsUpdate = true; attribute.needsUpdate = true;

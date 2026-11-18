@@ -1,6 +1,6 @@
 // The arsenal building in real Chromium with the fake server (T41, D042): walking up and pressing E (the
 // `interact` event) opens its card; buy, return, take and swap; the weapon the wave uses follows the copy you
-// carry; the Captain card loses its Weapons tab. With the flag off nothing of it exists and the old shop stays.
+// carry; the Captain card has no Weapons tab. The arsenal is always on (the old weapon shop is gone).
 import {expect, it} from 'vitest';
 import {browserHarness} from '../g20-browser.js';
 const evaluate = browserHarness();
@@ -14,8 +14,7 @@ it('the arsenal card: buy into your hands, return, take, swap, and the wave load
     on('island_spots_changed', event => changed.push(event.spot));
     const transport = createFakeIslandTransport({coins: 1000});
     transport.dev.setWaveBest(6);
-    const island = createIsland({container: document.body, emit, on, mode: 'fake', transport, storage: null, menu: () => () => {},
-      arsenalOn: () => true});
+    const island = createIsland({container: document.body, emit, on, mode: 'fake', transport, storage: null, menu: () => () => {}});
     await island.load();
     const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
     const card = () => document.querySelector('.island-card[open]');
@@ -50,50 +49,24 @@ it('the arsenal card: buy into your hands, return, take, swap, and the wave load
   expect(result.changed).toEqual(['island_arsenal', 'island_arsenal', 'island_arsenal', 'island_arsenal']);
 });
 
-it('with the flag off there is no arsenal: E does nothing there and the old weapon shop stays', async () => {
-  const result = await evaluate(async () => {
-    const {createIsland} = await window.g20Import('/src/island/index.js');
-    const {createFakeIslandTransport} = await window.g20Import('/src/pirates/fake-api.js');
-    const {on, emit} = await window.g20Import('/src/core/events.js');
-    const island = createIsland({container: document.body, emit, on, mode: 'fake', transport: createFakeIslandTransport(), storage: null, menu: () => () => {}});
-    await island.load();
-    emit({type: 'interact', place: 'home_islet', id: 'island_arsenal'});
-    await new Promise(resolve => setTimeout(resolve, 40));
-    const opened = !!document.querySelector('.island-card[open]');
-    island.openCaptain();
-    const tabs = [...document.querySelectorAll('.island-card[open] .kit-tab')].map(item => item.textContent);
-    const weapon = island.captainLoadout().weapon;
-    island.dispose();
-    return {opened, tabs, weapon};
-  });
-  expect(result).toEqual({opened: false, tabs: ['Captain', 'Skills', 'Weapons'], weapon: 'musket'});
-});
-
-it('draws nothing of the arsenal while the flag is off, and paints it once when it turns on', async () => {
+it('paints the arsenal and its zone once, however often the island is read again', async () => {
   const result = await evaluate(async () => {
     const THREE = await window.g20Import('/node_modules/three/build/three.module.js');
     const {createIsland} = await window.g20Import('/src/island/index.js');
     const {createFakeIslandTransport} = await window.g20Import('/src/pirates/fake-api.js');
     const {on, emit} = await window.g20Import('/src/core/events.js');
-    let flag = false;
     const island = createIsland({container: document.body, mode: 'fake', transport: createFakeIslandTransport(), on, emit, storage: null,
-      menu: () => () => {}, arsenalOn: () => flag});
+      menu: () => () => {}});
     const cleanups = [], place = {group: new THREE.Group(), colliders: [], zones: [], update() {}};
     await island.load(); island.decorate(place, {}, cleanups);
     const count = () => { let n = 0; place.group.traverse(item => { if (item.name === 'island-arsenal') n++; }); return n; };
     const zone = () => place.zones.some(item => item.id === 'island_arsenal');
     try {
       await island.refreshDefended();
-      const off = {meshes: count(), zone: zone()};
-      flag = true; await island.refreshDefended();
       const first = {meshes: count(), zone: zone(), visible: place.group.getObjectByName('island-arsenal').visible};
       await island.refreshDefended(); await island.refreshDefended();
-      const again = count();
-      flag = false; await island.refreshDefended();
-      const hidden = {meshes: count(), zone: zone(), visible: place.group.getObjectByName('island-arsenal').visible};
-      return {off, first, again, hidden};
+      return {first, again: count()};
     } finally { cleanups.forEach(stop => stop()); island.dispose(); }
   });
-  expect(result).toEqual({off: {meshes: 0, zone: false}, first: {meshes: 1, zone: true, visible: true}, again: 1,
-    hidden: {meshes: 1, zone: false, visible: false}});
+  expect(result).toEqual({first: {meshes: 1, zone: true, visible: true}, again: 1});
 });
