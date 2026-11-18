@@ -70,6 +70,48 @@ describe('the real decorative coast field', () => {
   });
 });
 
+describe('the sea outline', () => {
+  // The shader's lookup: bilinear, clamped at the edge, open sea outside the backdrop; land below .02 units.
+  function kept(field, uv) {
+    if (uv.x < 0 || uv.y < 0 || uv.x > 1 || uv.y > 1) return true;
+    const s = uv.x * 256 - .5, t = uv.y * 192 - .5, x = Math.floor(s), y = Math.floor(t), fx = s - x, fy = t - y;
+    const at = (i, j) => field[Math.min(191, Math.max(0, j)) * 256 + Math.min(255, Math.max(0, i))];
+    const value = (at(x, y) * (1 - fx) + at(x + 1, y) * fx) * (1 - fy) + (at(x, y + 1) * (1 - fx) + at(x + 1, y + 1) * fx) * fy;
+    return value / 16 >= .02;
+  }
+  function covered(positions, x, y) {
+    for (let i = 0; i < positions.length; i += 9) {
+      const [ax, ay, , bx, by, , cx, cy] = positions.slice(i, i + 9);
+      const d1 = (x - bx) * (ay - by) - (ax - bx) * (y - by), d2 = (x - cx) * (by - cy) - (bx - cx) * (y - cy), d3 = (x - ax) * (cy - ay) - (cx - ax) * (y - ay);
+      if (!((d1 < 0 || d2 < 0 || d3 < 0) && (d1 > 0 || d2 > 0 || d3 > 0))) return true;
+    }
+    return false;
+  }
+  it('draws every pixel the full plane kept and skips the inland cells', () => {
+    const alpha = new Uint8Array(256 * 192);
+    for (let y = 0; y < 192; y++) for (let x = 0; x < 256; x++) alpha[y * 256 + x] = (x - 128) ** 2 / 90 ** 2 + (y - 96) ** 2 / 70 ** 2 < 1 ? 255 : 0;
+    const field = module.coastField(alpha);
+    const group = new THREE.Group(); group.position.set(3, -2, 0); group.scale.set(1.1, .9, 1);
+    const mesh = legacyBackdrop(new THREE.Mesh(new THREE.PlaneGeometry(64, 48), new THREE.MeshBasicMaterial()));
+    group.add(mesh); group.updateMatrixWorld(true);
+    const positions = module.seaOutline(field, mesh.matrixWorld).attributes.position.array, toUv = coastUvMatrix(mesh.matrixWorld);
+    let inland = 0, skipped = 0;
+    for (let i = 0; i < 6000; i++) {
+      const x = ((i * 0.6180339887) % 1 - .5) * (i < 3000 ? 80 : 398), y = ((i * 0.7548776662) % 1 - .5) * (i < 3000 ? 60 : 298);
+      const uv = new THREE.Vector3(x, y, 1).applyMatrix3(toUv);
+      if (kept(field, uv)) expect(covered(positions, x, y)).toBe(true);
+      else { inland++; if (!covered(positions, x, y)) skipped++; }
+    }
+    expect(skipped).toBeGreaterThan(inland * .7);
+  });
+  it('falls back to the full plane without a coast', () => {
+    const before = water.mesh.geometry.attributes.position.count;
+    water.setCoast(new THREE.Group());
+    expect(water.mesh.geometry.attributes.position.count).toBe(before);
+    expect(water.mesh.geometry.parameters).toMatchObject({width: 400, height: 300});
+  });
+});
+
 describe('sea ownership and existing effect controls', () => {
   it('shares weather/coast/quality/time references with the existing lighthouse beam', async () => {
     const {createBeam} = await import('../../src/world/beam.js');
