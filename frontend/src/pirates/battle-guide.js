@@ -376,7 +376,7 @@ export function createBattleGuide({ scene, reducedMotion = () => false, characte
     }
     const bar = wallBar(wall, attacked);
     if (!bar) return;
-    const w = 1.6 * k, h = .22 * k, top = at.y + 1.45 * k;
+    const w = 1.6 * k, h = .22 * k, top = at.y + 2.9 * k;
     air.push(SHAPE.box, at.x, top, w + .14 * k, h + .14 * k, { ...DARK, a: .9 });
     air.push(SHAPE.box, at.x - w / 2 * (1 - bar.share), top, w * bar.share, h, { ...BAR[bar.level], a: 1 });
   }
