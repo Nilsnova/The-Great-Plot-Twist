@@ -25,8 +25,9 @@ try {
   await page.getByText('Level 2 · 🪙 20').waitFor();
   await page.getByText('45 / 60 HP').waitFor();
   await page.getByRole('button', {name: 'Repair now: pay 10 coins'}).waitFor();
-  await page.getByText('Or wait about 2 min 30 sec for free repair').waitFor();
-  await page.screenshot({path: path.join(captureDirectory, 't59-structure-card-between-desktop.png'), fullPage: true});
+  await page.getByText('All buildings are fully repaired when a wave ends.').waitFor();
+  assert.equal(await page.locator('.recovery-free').count(), 0);
+  await page.screenshot({path: path.join(captureDirectory, 't59-wave-end-20261118-between-desktop.png'), fullPage: true});
   await page.getByRole('button', {name: 'Repair now: pay 10 coins'}).click();
   assert.equal((await page.evaluate(() => window.previewIntent)).expectedRepairSeq, 0);
   await page.getByText('Fixture emitted a repair intent; no API call was made.').waitFor();
@@ -35,11 +36,11 @@ try {
   await page.getByRole('button', {name: 'Upgrade · 🪙 60'}).waitFor();
   await scrollCardToRecovery(page);
   await page.getByText('0 / 80 HP').waitFor();
-  await page.getByText('2 Repair now uses left this wave').waitFor();
+  await page.getByText('2 shared Repair now uses left this wave').waitFor();
   assert.equal(await page.locator('.recovery-free').count(), 0);
   assert.equal(await page.locator('.recovery-marker').textContent(), '!');
   await assertButtonFits(page, 390);
-  await page.screenshot({path: path.join(captureDirectory, 't59-structure-card-preparation-phone.png'), fullPage: true});
+  await page.screenshot({path: path.join(captureDirectory, 't59-wave-end-20261118-preparation-phone.png'), fullPage: true});
 
   await show(page, baseUrl, 'harpoon', {width: 375, height: 812});
   await page.getByRole('button', {name: 'Upgrade · 🪙 80'}).waitFor();
@@ -47,8 +48,33 @@ try {
   await page.getByText('0.00006 / 60 HP').waitFor();
   assert.ok(await page.locator('.health-fill').evaluate(element => element.getBoundingClientRect().width >= 1));
   await assertButtonFits(page, 375);
-  await page.screenshot({path: path.join(captureDirectory, 't59-structure-card-tiny-phone.png'), fullPage: true});
-  console.log('Production island card preview passed: between-wave offer, reserved-wave zero HP/quota, and 1px tiny-positive bar at 1440px, 390px and 375px. Fixture did not call an API.');
+  await page.screenshot({path: path.join(captureDirectory, 't59-wave-end-20261118-tiny-phone.png'), fullPage: true});
+
+  await show(page, baseUrl, 'loading', {width: 390, height: 844});
+  const upgrade = page.getByRole('button', {name: 'Upgrade'});
+  await upgrade.waitFor();
+  assert.equal(await upgrade.isDisabled(), true);
+  await page.getByText('Wait until building health has loaded.').waitFor();
+  await page.screenshot({path: path.join(captureDirectory, 't59-wave-end-20261118-upgrade-health-loading-phone.png'), fullPage: true});
+
+  await show(page, baseUrl, 'house', {width: 1280, height: 800});
+  await page.getByText('This saved Workshop role stays recorded but is inactive').waitFor();
+  assert.equal(await page.locator('[data-focus="spec-workshop"]').count(), 0);
+  await page.screenshot({path: path.join(captureDirectory, 't59-wave-end-20261118-house-roles-desktop.png'), fullPage: true});
+
+  await show(page, baseUrl, 'walltech', {width: 390, height: 844});
+  await page.getByText('This saved choice remains recorded but no longer affects repair.').waitFor();
+  assert.equal(await page.locator('[data-focus="spec-quick_mend"]').count(), 0);
+  await page.screenshot({path: path.join(captureDirectory, 't59-wave-end-20261118-stored-wall-skill-phone.png'), fullPage: true});
+
+  await show(page, baseUrl, 'crew', {width: 390, height: 844});
+  assert.equal(await page.locator('[data-crew="carpenter"]').count(), 0);
+  await page.screenshot({path: path.join(captureDirectory, 't59-wave-end-20261118-crew-phone.png'), fullPage: true});
+
+  await show(page, baseUrl, 'tech', {width: 1280, height: 800});
+  assert.equal(await page.locator('[data-option="mason_drill"]').count(), 0);
+  await page.screenshot({path: path.join(captureDirectory, 't59-wave-end-20261118-tech-desktop.png'), fullPage: true});
+  console.log('Production island card preview passed: wave-end repair, reserved-wave quota, loading upgrade guard and retired v1 choices. Fixtures did not call an API.');
 } finally {
   if (browser) await browser.close();
   await server.close();
@@ -57,7 +83,7 @@ try {
 async function show(page, baseUrl, scenario, viewport) {
   await page.setViewportSize(viewport);
   await page.goto(`${baseUrl}/tests/fixtures/structure-recovery-card-preview.html?case=${scenario}`);
-  await page.locator('.island-card-build[open]').waitFor();
+  await page.locator('dialog[open]').waitFor();
 }
 
 async function assertButtonFits(page, width) {

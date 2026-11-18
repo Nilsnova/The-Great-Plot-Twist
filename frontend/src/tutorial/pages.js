@@ -92,7 +92,7 @@ export const ONE_ISLAND_PAGES = Object.freeze(TUTORIAL_PAGES.map(page => {
 const RECOVERY_COPY = Object.freeze({
   ashore: {
     text: ['Pirates that reach the shore climb out and attack on foot: the heart of the island and any captain nearby.',
-      'Between waves, buildings mend on their own but stop when you ring the bell.',
+      'From the accepted bell through the wave ending, free repairs pause. At wave end every wall and tower returns to full health.',
       'Walk up to a damaged or broken building to see its health and Repair now option.'],
   },
   crew: {
@@ -109,8 +109,8 @@ function recoveryPages(pages) {
     }
     return RECOVERY_COPY[page.id] ? freezePage({...page, ...RECOVERY_COPY[page.id]}) : page;
   });
-  current.push(freezePage({id: 'repair', title: 'Repairs between waves',
-    text: ['Damaged buildings mend between waves but pause when you ring the bell.',
+  current.push(freezePage({id: 'repair', title: 'Wave-end full repair',
+    text: ['Every wall and tower returns to full health as soon as a wave ends.',
       'Repair now restores full health at the catalog price for your current level.',
       'Ring the bell to share up to three successful Repair now uses across the island for that wave.'],
     alt: 'A damaged island wall', art: [art('island-wall-damaged', 48, 48, 2)]}));

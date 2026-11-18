@@ -4,6 +4,7 @@ import {buildCardModel, bellModel, inviteModel, crewModel, captainModel, captain
   harborModel, techModel, wreckModel} from '../../src/island/card-model.js';
 import {unlocksFor, readUnlocks, newUnlocks, lockedWave} from '../../src/island/td-rules.js';
 import {campaignOf} from '../../src/campaign/index.js';
+import {roleLine} from '../../src/campaign/houses.js';
 
 const tower = (built = false, kind = 'cannon', level = built ? 1 : 0) => ({id: 'cannon_1', kind, built, level, cost: 30});
 const wall = (built = false, level = built ? 1 : 0) => ({id: 'wall_1', kind: 'wall', built, level, cost: 10});
@@ -36,6 +37,14 @@ describe('build card (TOWER-DEFENSE.md §2, §9)', () => {
       unlocks: wave3, campaign: atWave(50), treePicked: 'a1',
       recoveryState: recovery('combat', 'reserved_wave', 750_000), recoveryStatus: 'ready'});
     expect(paths.tree.detail).toMatchObject({action: {type: 'tree', path: 'a', tier: 1}, disabled: false});
+  });
+  it.each(['loading', 'error', 'missing'])('keeps Upgrade visible but disabled while recovery health is %s', status => {
+    const state = {recoveryVersion: 1, waveProtocol: 2, displayPhase: 'between_waves', repairWindow: 'between_waves', waveId: null,
+      structures: status === 'missing' ? [] : [{spot: 'wall_1', instanceId: '22345678-1234-4234-8234-123456789abc', kind: 'wall',
+        level: 1, hpUnits: 1_000_000, maxHP: 60, fixedPrice: 10, repairSeq: 0}]};
+    const model = buildCardModel({spotId: 'wall_1', slot: 'wall', spot: wall(true), coins: 1000,
+      recoveryState: state, recoveryStatus: status === 'missing' ? 'ready' : status, recoveryVersion: 1});
+    expect(model).toMatchObject({button: 'Upgrade', disabled: true, reason: 'Wait until building health has loaded.'});
   });
 
   it('an empty tower spot offers the unlocked kinds, one line and price each', () => {
@@ -243,7 +252,7 @@ describe('the campaign buildings (GAME-V3.md §4, §5)', () => {
     expect(late.branches[0].tiers[2].nodes.map(node => [node.id, node.state])).toEqual([['broadside', 'closed'], ['grapeshot', 'chosen']]);
     expect(late.branches[0].tiers[2].nodes[0].button).toMatchObject({disabled: true, reason: 'Not enough 🪙: you need 🪙 630 more.'});
   });
-  it('shows recovery-v1 Mason and Bastion wording only for the persisted new policy', () => {
+  it('hides new Quick Mend and Mason Drill offers while preserving saved choices and Bastion HP', () => {
     const research = {done: ['wall'], tiers: {wall: {tier: 3, tier2: 'mason_drill', tier3: 'bastion'}}};
     const campaign = atWave(25, {research});
     const legacy = techModel({campaign, coins: 5000, recoveryVersion: 0});
@@ -255,8 +264,11 @@ describe('the campaign buildings (GAME-V3.md §4, §5)', () => {
     expect(option(legacy, 2, 'mason_drill').line).toBe('Repairs on every wall go 50% faster.');
     expect(option(legacy, 3, 'bastion').line).toBe('50% more strength, and it mends itself slowly.');
     expect(current.recoveryVersion).toBe(1);
-    expect(option(current, 2, 'mason_drill').line).toBe('Automatic wall repair for this island runs 50% faster.');
-    expect(option(current, 3, 'bastion').line).toBe('Bastion adds 50% more HP and repairs it three times faster between waves when equipped.');
+    expect(option(current, 2, 'mason_drill').line).toBe('Mason Drill remains in saved research but no longer affects repair.');
+    expect(option(current, 3, 'bastion').line).toBe('Bastion adds 50% max HP when equipped.');
+    const noSavedDrill = techModel({campaign: atWave(25, {research: {done: ['wall']}}), coins: 5000, recoveryVersion: 1});
+    expect(wall(noSavedDrill).tiers[1].nodes.map(node => node.id)).toEqual(['thick_walls']);
+    expect(wall(noSavedDrill).tiers[1].fork).toBe(false);
   });
   it('a built tower shows its skills: locked, research first, then a free pick', () => {
     const built = {...tower(true), level: 2};
@@ -297,15 +309,27 @@ describe('the campaign buildings (GAME-V3.md §4, §5)', () => {
     const house = buildCardModel({spotId: 'house_1', slot: 'house', spot: {id: 'house_1', kind: 'house', built: true, level: 2}, coins: 0, campaign: atWave(3)}).skills;
     expect(house.choices.map(choice => [choice.id, choice.price ?? '', choice.disabled])).toEqual([['barracks', '', false], ['tavern', '', false], ['workshop', '', false]]);
   });
-  it('describes the Workshop recovery policy only on recovery-v1 island cards', () => {
+  it('removes Workshop as a recovery-v1 selection without replacing a saved role', () => {
     const house = recoveryVersion => buildCardModel({spotId: 'house_1', slot: 'house',
       spot: {id: 'house_1', kind: 'house', built: true, level: 2, spec: 'workshop'},
       coins: 0, campaign: atWave(3), recoveryVersion}).skills;
 
     expect(house(0).choices.find(choice => choice.id === 'workshop').line)
       .toBe('Walls near it repair and rebuild 30% faster, and a broken one mends by itself.');
-    expect(house(1).choices.find(choice => choice.id === 'workshop').line)
-      .toBe('Walls and towers within 10 units recover 30% faster between waves; Workshops add up to 50%.');
+    expect(house(1).choices.find(choice => choice.id === 'barracks').line)
+      .toBe('Militia walk out each wave and fight boarders near the house: 1 at level 2, 2 at level 3.');
+    expect(house(1).line).toBe('This saved Workshop role stays recorded but is inactive; choose Barracks or Tavern to change it.');
+    expect(house(1).current).toBe('workshop');
+    expect(house(1).choices.map(choice => choice.id)).toEqual(['barracks', 'tavern']);
+    expect(roleLine('workshop', 0)).toBe('Walls near it repair and rebuild 30% faster, and a broken one mends by itself.');
+    expect(roleLine('workshop', 1)).toBe('This saved Workshop role stays recorded but is inactive and no longer affects structure repair.');
+  });
+  it('removes Carpenter from recovery-v1 crew choices but retains legacy crew behavior', () => {
+    const unlocked = unlocksFor(8);
+    expect(crewModel({crew: {carpenter: 1}, coins: 100, unlocks: unlocked}).rows.map(row => row.id)).toContain('carpenter');
+    const current = crewModel({crew: {carpenter: 1}, coins: 100, unlocks: unlocked, recoveryVersion: 1});
+    expect(current.rows.map(row => row.id)).not.toContain('carpenter');
+    expect(current.soon).not.toContain('Carpenter');
   });
   it('the wreck: locked before wave 6, gifts cut to what is left, repaired at 100% and waiting for wave 30', () => {
     expect(wreckModel({campaign: atWave(5)})).toMatchObject({open: false, line: 'Opens after wave 6.', gifts: []});

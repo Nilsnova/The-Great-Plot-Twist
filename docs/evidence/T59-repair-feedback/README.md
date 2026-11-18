@@ -1,5 +1,28 @@
 # T59 repair feedback evidence
 
+**Current UI evidence, 18 Nov 2026.** The new captures below use the approved wave-end rule: repaired structures return to full HP when a wave ends, with no gradual-repair ETA. The earlier capture sections in this file document the preceding design and are historical; their free-repair ETAs and bell-pause copy are superseded.
+
+Captured from the production island card DOM with offline fixture DTOs using `cd frontend && node scripts/capture-structure-recovery-card.js`. Environment: Linux, Node.js `v24.22.1`, Chromium `156.0.8078.79` (`/usr/bin/chromium`). The fixture does not call an API or charge coins. It supplies old rate/ETA fields in sample responses to verify the UI ignores those promises.
+
+| Viewport | Scenario | Screenshot |
+|---|---|---|
+| 1440 × 900 desktop | Damaged wall, exact HP, fixed price, full free restoration when a wave ends | [Wave-end restoration](wave-end-20261118-restoration-desktop.png) |
+| 390 × 844 phone | Destroyed cannon during a reserved wave, paid repair price and two shared uses remaining | [Paid repair quota](wave-end-20261118-paid-quota-phone.png) |
+| 390 × 844 phone | Health loading, visible disabled Upgrade and the helper “Wait until building health has loaded.” | [Upgrade health loading](wave-end-20261118-upgrade-loading-phone.png) |
+| 1280 × 800 desktop browser | Saved Workshop role is recorded but inactive; Barracks and Tavern remain selectable | [Inactive saved Workshop](wave-end-20261118-house-role-inactive-desktop.png) |
+
+The captures verify the Repair button fits the phone viewport and the tiny-positive health sample keeps a one-pixel fill. The house-role view shows the saved Workshop as inactive and the Barracks and Tavern choices. Source logic suppresses the inactive Workshop's selection ring under recovery v1; the standalone card fixture does not render the world scene. These are rendered production UI views with local fixture data; they do not demonstrate a persisted island response, payment, server recovery, multiplayer or deployment.
+
+Verification on 18 Nov 2026 from `frontend/`:
+
+```sh
+node scripts/capture-structure-recovery-card.js
+./node_modules/.bin/vitest run tests/island/structure-recovery-model.test.js tests/island/structure-recovery-card.test.js tests/island/card-model.test.js tests/campaign/captain-repair-policy.test.js tests/tutorial/unlock-cards.test.js tests/tutorial/tutorials.test.js tests/tutorial/host.test.js tests/narrator/narrator.test.js --maxWorkers=1
+npm run build
+```
+
+The capture script passed and emitted the screenshots listed above using offline fixture DTOs. The focused suite passed 8 files and 133 tests. The production build passed; the spoiler guard checked 243 text files with 12 protected lines and found no suspect elimination data. `git diff --check` passed from the repository root.
+
 **All screenshots here use offline fixture data; they do not demonstrate live API, payment, game runtime, or multiplayer.** The standalone component button reports an intent to the preview page; it sends no request and changes no health or coins.
 
 Captured from source commit `10d409c1` with:

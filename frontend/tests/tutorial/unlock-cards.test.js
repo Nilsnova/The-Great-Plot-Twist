@@ -43,6 +43,12 @@ describe('the card table', () => {
     expect(cardById('tech_hub').where).toBe('island_techhub');
     expect(cardById('harpoon').where).toBe('cannon_5');
   });
+  it('keeps the Workshop legacy copy but removes its repair-speed promise in recovery-v1 help', () => {
+    const house = cardById('house_roles');
+    expect(cardText(house).what).toContain('Workshop speeds up wall repairs');
+    expect(cardText(house, 1).what).toBe('A level-2 house picks a job: Barracks sends out militia, and a Tavern heals captains.');
+    expect(cardText(house, 1).what).not.toContain('Workshop');
+  });
 });
 
 describe('which cards a win brings', () => {

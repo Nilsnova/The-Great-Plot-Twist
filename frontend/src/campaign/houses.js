@@ -11,9 +11,9 @@ export const ROLES = Object.freeze({
   workshop: Object.freeze({name: 'Workshop', line: 'Walls near it repair and rebuild 30% faster, and a broken one mends by itself.'}),
 });
 export const ROLE_IDS = Object.freeze(Object.keys(ROLES));
-// Recovery v1 gives every nearby supported structure the same between-wave rate bonus.
+// Recovery v1 keeps a saved Workshop role visible as inactive; it no longer affects structure repair.
 export const roleLine = (id, recoveryVersion = 0) => id === 'workshop' && recoveryVersion === 1
-  ? 'Walls and towers within 10 units recover 30% faster between waves; Workshops add up to 50%.'
+  ? 'This saved Workshop role stays recorded but is inactive and no longer affects structure repair.'
   : ROLES[id]?.line ?? '';
 // How far each role reaches from its house, in world units: the Barracks' guard, the Tavern's healing, the
 // Workshop's walls. The sim reads these (CONFIG.houses); the card's range ring shows them.

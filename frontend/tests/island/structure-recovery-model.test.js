@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildStructureRecoveryView,
-  formatRecoveryDuration,
   isCurrentStructureRecoveryResponse,
 } from '../../src/island/structure-recovery-model.js';
 
@@ -46,9 +45,7 @@ describe('structure recovery presentation', () => {
       maxHP: 200,
       hpLabel: '100 / 200 HP',
       repairLabel: 'Repair now: pay 40 coins',
-      freeRepairLabel: 'Or wait about 5 min for free repair',
-      helperLabel: 'Every building is repaired when a wave ends.',
-      automaticRepairPaused: false,
+      helperLabel: 'All buildings are fully repaired when a wave ends.',
       remainingPaidUses: null,
     });
     expect(view.healthBar).toMatchObject({ visible: true, fill: 0.5, border: 'dark', color: 'gold', destroyed: false });
@@ -112,11 +109,9 @@ describe('structure recovery presentation', () => {
     );
 
     expect(view).toMatchObject({
-      automaticRepairPaused: true,
-      freeRepairLabel: null,
-      statusLabel: 'Repaired for free when the wave ends',
+      statusLabel: 'No free repair during this wave. Full HP is restored when it ends.',
       helperLabel: null,
-      remainingUsesLabel: '2 Repair now uses left this wave',
+      remainingUsesLabel: '2 shared Repair now uses left this wave',
     });
   });
 
@@ -127,30 +122,14 @@ describe('structure recovery presentation', () => {
       damaged,
     );
 
-    expect(view.freeRepairLabel).toBeNull();
-    expect(view.automaticRepairPaused).toBe(true);
-    expect(view.remainingUsesLabel).toBe('No Repair now uses left this wave');
+    expect(view.statusLabel).toBe('No free repair during this wave. Full HP is restored when it ends.');
+    expect(view.remainingUsesLabel).toBe('No shared Repair now uses left this wave');
   });
 
-  it('formats changing free-repair estimates as server seconds', () => {
-    expect(formatRecoveryDuration(1)).toBe('1 sec');
-    expect(formatRecoveryDuration(121)).toBe('2 min 1 sec');
-    expect(formatRecoveryDuration(3600)).toBe('1 hr');
-    expect(formatRecoveryDuration(null)).toBeNull();
-  });
-
-  it('does not invent local ETA when the server has no estimate', () => {
-    const damaged = structure({ estimatedFreeSeconds: null });
-    const view = buildStructureRecoveryView(state({ structures: [damaged] }), damaged);
-
-    expect(view.freeRepairLabel).toBeNull();
-  });
-
-  it('hides invalid ETA and price instead of presenting malformed money or time', () => {
+  it('ignores legacy free-repair rate and ETA fields while keeping valid prices', () => {
     const damaged = structure({ estimatedFreeSeconds: -10, fixedPrice: 1.5 });
     const view = buildStructureRecoveryView(state({ structures: [damaged] }), damaged);
 
-    expect(view.freeRepairLabel).toBeNull();
     expect(view.repairLabel).toBeNull();
     expect(view.quotedPrice).toBeNull();
     expect(view.repairDisabled).toBe(true);
@@ -180,7 +159,7 @@ describe('structure recovery presentation', () => {
     expect(noCoins.errorMessage).toBe('Not enough coins for this repair.');
     expect(noCoins.hpUnits).toBe(500_000);
     expect(exhausted.repairDisabled).toBe(true);
-    expect(exhausted.remainingUsesLabel).toBe('No Repair now uses left this wave');
+    expect(exhausted.remainingUsesLabel).toBe('No shared Repair now uses left this wave');
   });
 
   it('disables a paid action while the caller balance is unknown or too low', () => {

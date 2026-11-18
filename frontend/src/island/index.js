@@ -157,7 +157,9 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       const key = `${code}:${step.wave}`;
       if (campaignTold.has(key)) continue;
       campaignTold.add(key);
-      ui.toast(step.title, 'success', firstTime(`campaign_${step.wave}`) ? step.line : '');
+      const line = answer?.recoveryVersion === 1 && step.ids.includes('crew:carpenter')
+        ? 'Raise the six walls around the heart. All walls and towers fully recover when the wave ends.' : step.line;
+      ui.toast(step.title, 'success', firstTime(`campaign_${step.wave}`) ? line : '');
       emit({type: CAMPAIGN_UNLOCKED, wave: step.wave, ids: step.ids, code: displayIslandCode(code)});
     }
   }
@@ -477,7 +479,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     return withWallRecovery(model, {wall: shown, coins: own?.coins ?? null,
       busy: busySpot === spotId ? busyKind : false, battle: battle && !waveOver});
   }
-  const crew = () => crewModel({crew: own?.crew ?? {}, coins: own?.coins ?? null, unlocks: own ? unlocks() : null, busy: busyCrew, message: cardMessage || (!own ? ownMessage : ''), prices: own?.prices});
+  const crew = () => crewModel({crew: own?.crew ?? {}, coins: own?.coins ?? null, unlocks: own ? unlocks() : null, busy: busyCrew, message: cardMessage || (!own ? ownMessage : ''), prices: own?.prices, recoveryVersion: recoveryModelVersion()});
   const captain = () => {
     const message = cardMessage || (!own ? ownMessage : ''), wonWave = own ? unlocks().wonWave : 0;
     return {tab: captainTab,
@@ -1024,6 +1026,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   function houseRange() {
     if (ui.open !== 'build' || !openSpot) return null;
     const where = placedSpot(openSpot, target()?.spots), role = activeRole((target()?.spots ?? []).find(item => item.id === openSpot));
+    if (recoveryModelVersion() === 1 && role === 'workshop') return null;
     return where && role ? {x: where.x, z: where.z, radius: roleRadius(role), role} : null;
   }
   // GAME-V3.md §5.1: one research step: tier 1 of a branch, or one of the two options of tier 2 or 3 (change:

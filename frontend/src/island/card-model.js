@@ -117,8 +117,9 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
   const recoveryRow = recoveryState?.recoveryVersion === 1
     ? recoveryState.structures?.find(item => item.spot === spotId) : null;
   if (shown === 'wall' && recoveryRow) model.stats = model.stats.replace(/^Strength\b/, 'Base strength');
-  const recoveryUnavailable = recoveryStatus === 'loading' || recoveryStatus === 'error';
-  const upgradeBlockedReason = recoveryUnavailable ? 'Building health is unavailable. Try again.'
+  const recoveryUnavailable = recoveryStatus === 'loading' || recoveryStatus === 'error'
+    || (recoveryVersion === 1 && (recoveryStatus !== 'ready' || !recoveryRow));
+  const upgradeBlockedReason = recoveryUnavailable ? 'Wait until building health has loaded.'
     : recoveryRow && recoveryState.recoveryVersion === 1
     ? recoveryState.repairWindow === 'reserved_wave' ? 'Upgrades are available between waves.'
       : recoveryRow.hpUnits < 1_000_000 ? 'Repair to full before an upgrade.' : ''
@@ -147,13 +148,16 @@ export function buildCardModel({spotId, kind, slot = null, spot = null, coins = 
 // tower has already is free. A choice carries its price ("🪙 150") and, when it cannot be paid, a short reason.
 function skillsOf(kind, spot, campaign, busy, coins = null, prices = null, recoveryVersion = 0) {
   const branch = BRANCH_BY_ID[kind], current = readSpec(kind, spot?.spec);
-  const title = current ? `Skill: ${SPECS[current].name}` : 'Tower skill';
+  const retiredCurrent = recoveryVersion === 1 && current === 'quick_mend';
+  const title = retiredCurrent ? `Stored skill: ${SPECS[current].name}` : current ? `Skill: ${SPECS[current].name}` : 'Tower skill';
   if (!isOpen(campaign, 'tech_hub')) return {title, line: `Tower skills: ${opensText(waveOf('tech_hub'))}.`, choices: [], current};
   if (!campaign.research.done.has(kind)) return {title, line: `Research ${branch.name.toLowerCase()} at the Tech hub first.`, choices: [], current};
   // Tier 3 (GAME-V3.md §5.1): the capstone the island chose is one more pick.
   const capstone = campaign.research.tiers?.[kind]?.tier3 ?? null;
-  return {title, line: current ? 'Switch for the next wave.' : 'Pick one skill.', current,
-    choices: [...branch.specs, ...(capstone ? [capstone] : [])].map(id => skillChoice(kind, id, current, busy, coins, prices, recoveryVersion))};
+  const choices = recoveryVersion === 1 ? branch.specs.filter(id => id !== 'quick_mend') : branch.specs;
+  return {title, line: retiredCurrent ? 'This saved choice remains recorded but no longer affects repair.'
+    : current ? 'Switch for the next wave.' : 'Pick one skill.', current,
+    choices: [...choices, ...(capstone ? [capstone] : [])].map(id => skillChoice(kind, id, current, busy, coins, prices, recoveryVersion))};
 }
 
 // One tower skill on the card: its price, and whether this player can pay it now.
@@ -172,16 +176,24 @@ function skillChoice(kind, id, current, busy, coins, prices, recoveryVersion = 0
 function rolesOf(spot, level, busy, recoveryVersion = 0) {
   const current = level >= HOUSE_ROLE_LEVEL ? readRole('house', spot?.spec) : null;
   const title = current ? `Role: ${HOUSE_ROLES[current].name}` : 'House role';
-  if (level < HOUSE_ROLE_LEVEL) return {title, line: `Level ${HOUSE_ROLE_LEVEL}: choose ${ROLE_IDS.map(id => HOUSE_ROLES[id].name).join(', ').replace(/, (?=[^,]*$)/, ' or ')}.`, choices: [], current, role: true};
-  return {title, line: current ? 'Pick another one for the next wave if you like.' : 'Pick one role for this house. It costs nothing.', current, role: true,
-    choices: ROLE_IDS.map(id => ({id, name: HOUSE_ROLES[id].name, line: roleLine(id, recoveryVersion), active: id === current,
+  if (level < HOUSE_ROLE_LEVEL) {
+    const line = recoveryVersion === 1 ? `Level ${HOUSE_ROLE_LEVEL}: choose Barracks or Tavern.`
+      : `Level ${HOUSE_ROLE_LEVEL}: choose ${ROLE_IDS.map(id => HOUSE_ROLES[id].name).join(', ').replace(/, (?=[^,]*$)/, ' or ')}.`;
+    return {title, line, choices: [], current, role: true};
+  }
+  const choices = recoveryVersion === 1 ? ROLE_IDS.filter(id => id !== 'workshop') : ROLE_IDS;
+  const retiredWorkshop = recoveryVersion === 1 && current === 'workshop';
+  return {title, line: retiredWorkshop ? 'This saved Workshop role stays recorded but is inactive; choose Barracks or Tavern to change it.'
+    : current ? 'Pick another one for the next wave if you like.' : 'Pick one role for this house. It costs nothing.', current, role: true,
+    choices: choices.map(id => ({id, name: HOUSE_ROLES[id].name, line: roleLine(id, recoveryVersion), active: id === current,
       disabled: id === current || busy === `spec:${id}`, busy: busy === `spec:${id}`}))};
 }
 
 // The crew panel (§3): one row per crew member that is unlocked; the locked ones in `soon`.
-export function crewModel({crew = {}, coins = null, unlocks = null, busy = null, message = '', prices = null} = {}) {
+export function crewModel({crew = {}, coins = null, unlocks = null, busy = null, message = '', prices = null, recoveryVersion = 0} = {}) {
   const rows = [], soon = [];
   for (const id of CREW_IDS) {
+    if (recoveryVersion === 1 && id === 'carpenter') continue;
     const sent = prices?.crew?.[id], owned = Number.isSafeInteger(crew?.[id]) ? crew[id] : 0;
     const info = {...CREW[id], ...(Number.isSafeInteger(sent?.max) ? {max: sent.max} : {})};
     const price = Number.isSafeInteger(sent?.price) ? sent.price : info.price;
@@ -418,18 +430,22 @@ export function techModel({campaign = null, coins = null, busy = null, message =
     const tiers = [];
     // Tier 1: the kind's skills.
     const first = tierState(1);
+    const availableSpecs = recoveryVersion === 1 && branch.branch === 'wall'
+      ? branch.specs.filter(id => id !== 'quick_mend') : branch.specs;
     tiers.push({tier: 1, state: first, fork: false, reason: first === 'locked' ? lockText(1) : '',
-      nodes: [{id: `${branch.branch}-1`, name: 'Tower skills', line: branch.specs.map(id => SPECS[id].name).join(' · '),
+      nodes: [{id: `${branch.branch}-1`, name: 'Tower skills', line: availableSpecs.map(id => SPECS[id].name).join(' · '),
         state: first === 'done' ? 'done' : first === 'next' ? 'open' : 'locked',
         note: first === 'done' ? `Every ${kind} here can pick one of them.` : '',
         button: first === 'next' ? act({branch: branch.branch, tier: 1, choice: null, change: false}, 'Research', branch.name) : null}]});
     // Tiers 2 and 3: a fork of two options.
     for (const tier of [2, 3]) {
       const picked = tier === 2 ? state.tier2 : state.tier3, status = tierState(tier);
-      tiers.push({tier, state: status, fork: true, reason: status === 'locked' ? lockText(tier) : '',
-        nodes: optionsOf(branch.branch, tier).map(id => {
+      const choices = optionsOf(branch.branch, tier).filter(id => recoveryVersion !== 1 || id !== 'mason_drill' || picked === id);
+      tiers.push({tier, state: status, fork: choices.length > 1, reason: status === 'locked' ? lockText(tier) : '',
+        nodes: choices.map(id => {
           const name = optionName(id), base = {id, name, line: recoveryTechLine(id, optionLine(id), recoveryVersion)};
-          if (picked === id) return {...base, state: 'chosen', note: tier === 3 ? `Every ${kind} here can pick ${name}.` : 'Your crew chose this.', button: null};
+          if (picked === id) return {...base, state: 'chosen', note: recoveryVersion === 1 && id === 'mason_drill'
+            ? 'Saved choice; it no longer affects repair.' : tier === 3 ? `Every ${kind} here can pick ${name}.` : 'Your crew chose this.', button: null};
           if (picked) return {...base, state: 'closed', note: `Closed: your crew chose ${optionName(picked)}.`,
             button: act({branch: branch.branch, tier, choice: id, change: true}, 'Change to it', name)};
           if (status === 'next') return {...base, state: 'open', note: '', button: act({branch: branch.branch, tier, choice: id, change: false}, 'Pick', name)};
