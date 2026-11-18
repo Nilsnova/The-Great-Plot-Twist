@@ -13,6 +13,7 @@ from server.island.catalogue import catalogue_for_flags, load_island
 from server.island.structure_repair import kind_for_instance
 from server.island.structure_repair_models import RepairRequest, RepairResponse
 from server.island.structure_repair_rules import (
+    catalogue_price_schedule,
     intent_fingerprint,
     repair_price,
     repair_price_from_schedule,
@@ -41,6 +42,13 @@ def test_wave_repair_uses_the_price_schedule_frozen_in_its_snapshot():
     frozen = {"cannon": [30, 60, 120, 240, 480]}
 
     assert repair_price_from_schedule(frozen, "cannon", 2) == 60
+
+
+def test_saved_culverin_repair_keeps_its_price_when_defenses_flag_is_off():
+    catalogue = catalogue_for_flags(load_island(), {})
+
+    assert repair_price(catalogue, "culverin", 4) == 640
+    assert catalogue_price_schedule(catalogue)["culverin"] == [80, 160, 320, 640, 1280]
 
 
 def test_wave_repair_refuses_a_missing_or_invalid_frozen_price_schedule():

@@ -177,7 +177,7 @@ export function startRealtime({
         return;
       }
       lastGoodToken = firstToken;
-      const make = createClient ?? (await import('@supabase/supabase-js')).createClient; // loaded only when needed
+      const make = createClient ?? (await import('./supabase-sdk.js')).createRealtimeClient; // loaded only when needed
       if (stopped) return;
       client = make(supabaseUrl, publishableKey, { accessToken: freshToken });
       places.openWorld();

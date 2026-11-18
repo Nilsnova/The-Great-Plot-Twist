@@ -358,19 +358,18 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
       return focusable ?? done;
     });
   }
-  // Menu › Captain and skills (§10, §14, §15): three tabs. model: {tab, captain, skills, weapons} of
-  // card-model.js (or a lone captainModel); handlers: {upgrade(), tab(id), pick(id), learn(id), buy(id), equip(id)}.
+  // Menu › Captain and skills (§10, §14): two tabs. model: {tab, captain, skills} of card-model.js (or a lone
+  // captainModel); handlers: {upgrade(), tab(id), pick(id), learn(id)}. Weapons are in the arsenal (D042).
   function captainCard(model, handlers) {
     const on = typeof handlers === 'function' ? {upgrade: handlers} : handlers ?? {};
-    const parts = model?.captain ? model : {captain: model, skills: null, weapons: null, tab: 'captain'};
+    const parts = model?.captain ? model : {captain: model, skills: null, tab: 'captain'};
     open('captain', 'Captain and skills', body => {
       let focusable = null;
       const musket = node('div', 'island-captain-musket');
       focusable = musketPart(musket, parts.captain, on);
-      if (!parts.skills && !parts.weapons) { modal.element.classList.remove('island-card-wide'); body.append(...musket.childNodes); return closing(body, focusable); }
+      if (!parts.skills) { modal.element.classList.remove('island-card-wide'); body.append(...musket.childNodes); return closing(body, focusable); }
       const items = [{id: 'captain', label: 'Captain', body: musket}];
       if (parts.skills) items.push({id: 'skills', label: parts.skills.points > 0 ? `Skills (${parts.skills.points})` : 'Skills', body: drawSkills(parts.skills, on, {button, line})});
-      if (parts.weapons) items.push({id: 'weapons', label: 'Weapons', body: weaponsPart(parts.weapons, on)});
       const selected = Math.max(0, items.findIndex(item => item.id === parts.tab));
       // The skill tree takes most of the screen; the other tabs keep the small card.
       const wide = id => modal?.element.classList.toggle('island-card-wide', id === 'skills');
@@ -401,25 +400,6 @@ export function createIslandUi({container, focus = () => {}, resetInput = () => 
     }
     footer(body, model, act);
     return act && !act.disabled ? act : null;
-  }
-  // The weapon shop (§15): buy once, equip one.
-  function weaponsPart(model, on) {
-    const part = node('div', 'island-weapons');
-    const list = node('ul', 'island-crew island-shop');
-    for (const row of model.rows) {
-      const item = node('li', `island-crew-row island-weapon${row.equipped ? ' is-equipped' : ''}`); item.dataset.weapon = row.id;
-      const text = node('div', 'island-crew-text');
-      const head = node('p', 'island-crew-head');
-      head.append(node('strong', '', row.name), node('span', 'island-crew-owned', row.equipped ? 'Equipped' : row.owned ? 'Yours' : row.priceText));
-      text.append(head, node('p', 'island-crew-line', row.line));
-      if (row.reason) text.append(node('p', 'island-crew-reason', row.reason));
-      const act = button(row.button, () => (row.action === 'equip' ? on.equip?.(row.id) : row.action === 'buy' ? on.buy?.(row.id) : null));
-      act.dataset.focus = `weapon-${row.id}`; act.disabled = row.disabled;
-      act.setAttribute('aria-label', `${row.button} ${row.name}`);
-      item.append(text, act); list.append(item);
-    }
-    part.append(line('island-purpose', model.lead), list, line('island-message', model.message, 'alert'), line('island-coins', model.coins));
-    return part;
   }
   function captainsCard(model) {
     open('captains', model.title, body => {
