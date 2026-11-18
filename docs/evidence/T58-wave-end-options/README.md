@@ -33,7 +33,7 @@ All PostgreSQL/authentication data is synthetic and disposable. Backend tests ar
 
 ## Latest-main integration (2026-11-18)
 
-Merged `origin/main` at `37eb70fa` into the task branch with a two-parent merge. The only textual conflict was `docs/STATUS.md`; `/tmp/retain-status-histories.py` resolved it, and an order-preserving subsequence check confirmed all 1,143 lines from the task side and all 1,144 lines from main remain in the merged file. No protected policy files were changed. Main's current layout/scenery, content, test, documentation, frontend refactoring and artwork changes were retained. Existing task-only retirement migration/tests, recovery-version serialization, and evidence remain present.
+Merged `origin/main` at `37eb70fa` into the task branch with a two-parent merge. The only textual conflict was `docs/STATUS.md`; the provided merge-history helper resolved it, and an order-preserving subsequence check confirmed all 1,143 lines from the task side and all 1,144 lines from main remain in the merged file. No protected policy files were changed. Main's current layout/scenery, content, test, documentation, frontend refactoring and artwork changes were retained. Existing task-only retirement migration/tests, recovery-version serialization, and evidence remain present.
 
 From `backend/`, the current merged tree passed the focused recovery/retirement/routes tests (276 passed, 3 skipped):
 
@@ -47,4 +47,4 @@ The complete disposable SQL suite passed on the merged tree (395 passed in 39.76
 CASE_PG_SCRATCH=1 UV_CACHE_DIR=/tmp/wave-end-options-uv-cache uv run --with pgserver --with 'psycopg[binary]' --with pglast pytest -q server/tests/island_sql
 ```
 
-`UV_CACHE_DIR=/tmp/wave-end-options-uv-cache uv run ruff check .` passed. This remains local disposable PostgreSQL evidence; there was no live database, migration application, feature activation, deployment or PR. Manual review and explicit publication approval remain outstanding.
+`UV_CACHE_DIR=/tmp/wave-end-options-uv-cache uv run ruff check .` passed. This remains local disposable PostgreSQL evidence; there was no live database, migration application, feature activation, deployment or PR. The incoming-main-relative whole-tree whitespace scan also reports its existing trailing blank line in `frontend/src/ui/styles.css`; it is unchanged from main. `git -c core.whitespace=-blank-at-eof diff --check origin/main...HEAD` passes for the task delta. Manual review and explicit publication approval remain outstanding.
