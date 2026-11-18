@@ -40,7 +40,8 @@ export function createNarratorCard(container = document.body, {onSkip = () => {}
     if (event.relatedTarget instanceof HTMLElement && !card.contains(event.relatedTarget)) focusOwner = event.relatedTarget;
   });
   function restoreFocus() {
-    const usable = node => node?.isConnected && !node.closest('[hidden],[inert]') && node.getClientRects().length > 0;
+    const usable = node => node?.isConnected && node !== document.body && !node.matches(':disabled')
+      && !node.closest('[hidden],[inert]') && node.getClientRects().length > 0;
     const target = usable(focusOwner) ? focusOwner : container.querySelector('canvas[tabindex="0"]');
     if (usable(target)) target.focus({preventScroll: true});
     focusOwner = null;
@@ -137,7 +138,9 @@ export function createNarratorCard(container = document.body, {onSkip = () => {}
       placed = touchReader;
     }
     card.classList.toggle('is-wave-touch-docked', waveBreak && placed);
-    const focused = wasReader && card.contains(document.activeElement);
+    // A browser may already have dropped the reader's focus as its layout changed.
+    const active = document.activeElement;
+    const focused = wasReader && (card.contains(active) || (active === document.body && focusOwner));
     const wasDormant = card.classList.contains('is-reader-dormant');
     const dormant = retained && !touchReader;
     card.classList.toggle('is-large-touch-reader', !!touchReader);
