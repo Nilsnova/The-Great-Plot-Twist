@@ -3,7 +3,7 @@ import {WALL_ATLAS_IDS, frames, wallFrame, wallSurfaceFrame} from '../src/art/vi
 import {projectGround} from '../src/world/projection.js';
 
 // Independent presentation contract: tier cap heights, not imported renderer implementation values.
-const CAP_HEIGHTS = [1.45, 1.70, 1.95, 2.10, 2.20];
+const CAP_HEIGHTS = [.85, .95, 1.10, 1.20, 1.30];
 // The existing wall atlas uses 256 logical pixels and three pixels of shelf padding.
 const rects = {}; let x = 3, y = 3, shelf = 0;
 for (const id of [...WALL_ATLAS_IDS].sort((a, b) => frames[b].logical[1] - frames[a].logical[1])) {
@@ -51,13 +51,14 @@ function expectedPost(post, group) {
   const buttress = straight && Math.floor((neighbors[0].x === neighbors[1].x ? post.z : post.x) / 2) % 3 === 0;
   if (straight && !buttress && group.wallSelectedId !== post.id) {
     const height = CAP_HEIGHTS[post.level - 1];
-    return {id: wallSurfaceFrame(post.level, 'top'), points: [[-.40,-.40],[.40,-.40],[.40,.40],[-.40,.40]].map(([dx,dz]) => {
+    return {id: wallSurfaceFrame(post.level, 'top'), points: [[-.28,-.28],[.28,-.28],[.28,.28],[-.28,.28]].map(([dx,dz]) => {
       const p = projectGround(post.x + dx, post.z + dz); return [p.x, p.y + height + .02, 0];
     })};
   }
   const id = wallFrame(post.level, post.look), frame = rects[id]; if (!frame) return null;
-  const p = projectGround(post.x, post.z), width = frame.w / 16 * (post.look === 'intact' && neighbors.length ? .75 : 1);
-  const bottom = p.y - frame.anchor / 16, top = bottom + frame.h / 16;
+  // The same post box and real source foot apply to damage, ruins and selection.
+  const p = projectGround(post.x, post.z), width = frame.w / 16 * .60;
+  const bottom = p.y - frame.anchor / 16 * .65, top = bottom + frame.h / 16 * .65;
   return {id, points: [[p.x-width/2,bottom,0],[p.x+width/2,bottom,0],[p.x+width/2,top,0],[p.x-width/2,top,0]]};
 }
 

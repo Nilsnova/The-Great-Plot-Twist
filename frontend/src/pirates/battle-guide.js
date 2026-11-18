@@ -194,8 +194,10 @@ void main(){
   else if(vShape>4.5){// T50: a dashed ring (a landing place, not a target): the ring's band cut into 14 dashes.
     a*=smoothstep(.66,.74,r)*(1.0-smoothstep(.9,1.0,r))*step(0.0,sin(atan(vLocal.y,vLocal.x)*14.0));}
   if(a<.01)discard;
-  gl_FragColor=vec4(rgb*a,a);
+  gl_FragColor=vec4(rgb,a);
   ${toScreen}
+  // Premultiply in the output color space so faint ground guides stay faint.
+  gl_FragColor.rgb*=a;
 }`;
 
 function createInstances(name, capacity, material, renderOrder, owned) {

@@ -244,6 +244,10 @@ Four original additions in `scripts/pixel_art/islet.py`, registered in `src/pixe
 
 The existing cabin, workshop, windmill and greenhouse retain their approved original art. Visibility comes from the latest accepted building event. Build dust is five pooled code-authored pixel points per plot; the storm mast is original flat pixel geometry. These shapes add no external image or font. All materials, textures, geometry and subscriptions belong to their place lifetime. The signal station keeps the same id and artwork through world and finale presentation.
 
+## VIS-24 Home islet mooring
+
+[Home shore painter](src/art/home-shore.js) supplies two original still sprites in the existing Canvas kit. The 32 × 27 bollard includes a line coil on the sand. The 48 × 27 skiff has a navy hull, warm timber seats and a folded blue oilskin. The existing cliff rocks and surf frame both pieces. A short geometry rope meets the painted brass eyes and shares the skiff's battle visibility. The settlement owns the new materials and geometry. The set adds no walkable surface, hotspot or collider.
+
 ## G8 harbor life, signal and original sound
 
 No image, font or audio download is used. `world/ambient/harbor-life.js` draws pooled, native-grid cabin smoke, one steady night window, three greenhouse-roof gull marks (only on a built greenhouse) and three extra harbor gulls in clear weather. `world/hook/index.js` draws a tiny offshore signal from four original meshes; its chart equivalent is an accessible UI marker. Geometry is allocated once, and place/app lifetimes release it. Reduced motion keeps ambient details and the signal still.
