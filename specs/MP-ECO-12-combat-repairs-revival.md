@@ -26,7 +26,8 @@ The existing immutable intent fingerprint is reused; quote cursors are concurren
 The policy produces a repair plan only: it never changes a balance, HP, ledger or event journal.
 
 Revival remains a timed, in-range help action between eligible frozen participants. Its
-policy requires the authoritative uninterrupted hold interval and current target fall. It
+policy requires the authoritative uninterrupted hold interval bound to the helper, target
+and current fall; release, leaving reach or switching targets resets that interval. It
 produces a zero-coin plan and binds repeat detection to actor, UID, wave, target and fall tick.
 It never reads a wallet or treasury, so a zero balance cannot prevent helping a teammate.
 The existing simulation's frozen hold duration, reach and restored-HP rule are supplied by

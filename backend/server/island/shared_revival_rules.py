@@ -27,7 +27,11 @@ class RevivalAttempt:
 
 @dataclass(frozen=True)
 class RevivalState:
-    """Authoritative current journal state and the helper's frozen timing/HP rules."""
+    """Authoritative journal state and the helper's frozen timing/HP rules.
+
+    The hold interval must belong to this helper, target and fall. The adapter resets it on
+    release, leaving reach or switching targets; a start tick alone cannot prove continuity.
+    """
 
     wave_id: UUID
     helper_actor_id: str
