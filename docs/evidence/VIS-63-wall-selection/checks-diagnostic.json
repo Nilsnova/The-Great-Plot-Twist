@@ -1,0 +1,27 @@
+{
+  "scope": "Final read-only wallSelectedId diagnostic follow-up, no geometry or text changes",
+  "checks": [
+    {
+      "name": "build-diagnostic",
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "exitCode": 0,
+      "seconds": 4.82,
+      "log": "build-diagnostic.log"
+    },
+    {
+      "name": "budget-diagnostic",
+      "command": [
+        "node",
+        "scripts/report-budget.js",
+        "--check"
+      ],
+      "exitCode": 0,
+      "seconds": 0.46,
+      "log": "budget-diagnostic.log"
+    }
+  ]
+}
