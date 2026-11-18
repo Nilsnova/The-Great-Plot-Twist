@@ -134,7 +134,7 @@ describe('the culverin in the battle', () => {
     expect(checked).toBeGreaterThan(3);
   });
   it('never rolls a die: fireCulverin and its aim do not call random()', () => {
-    const source = readFileSync(new URL('../../src/pirates/sim.js', import.meta.url), 'utf8');
+    const source = readFileSync(new URL('../../src/pirates/sim-weapons.js', import.meta.url), 'utf8');
     const fire = source.slice(source.indexOf('function fireCulverin'), source.indexOf('const pending = target'));
     const aim = source.slice(source.indexOf("if (tower.kind === 'culverin') {"), source.indexOf('// A cannon takes the boarder nearest'));
     expect(fire.length).toBeGreaterThan(100); expect(aim.length).toBeGreaterThan(100);
