@@ -17,6 +17,8 @@ export const ARSENAL_PATHS = Object.freeze({
   state: code => `/api/island/arsenal${code ? `?code=${encodeURIComponent(code)}` : ''}`,
   buy: '/api/island/arsenal/buy', take: '/api/island/arsenal/take', giveBack: '/api/island/arsenal/return',
 });
+// Authentication/rate-limit refusal says nothing about an earlier unknown attempt.
+const keepPending = answer => outcomeUnknown(answer) || answer.status === 401 || answer.status === 429;
 
 export function createArsenalApi(options = {}) {
   const {transport, makeUid = makeActionUid, getEconomy,
@@ -36,7 +38,7 @@ export function createArsenalApi(options = {}) {
     const actionUid = held.get(key) ?? makeUid();
     held.set(key, actionUid);
     const answer = await ask(() => send(actionUid));
-    if (answer.ok || (!outcomeUnknown(answer) && answer.status !== 429)) held.delete(key);
+    if (answer.ok || !keepPending(answer)) held.delete(key);
     return answer;
   }
   const where = code => (code ? displayIslandCode(code) : '');
@@ -65,7 +67,7 @@ export function createArsenalApi(options = {}) {
       return kind === 'buy' ? effect.weapon === pending.body.weapon : effect.copyId === pending.body.copy
         && BigInt(effect.holderGeneration) === BigInt(pending.body.holderGeneration) + 1n;
     });
-    if (answer.ok || (!outcomeUnknown(answer) && answer.status !== 429)) {
+    if (answer.ok || !keepPending(answer)) {
       try { pendingStore.removeItem(pending.key); } catch { /* A retained UID can only replay its original effect. */ }
     }
     if (!answer.ok) return answer;

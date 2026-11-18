@@ -131,6 +131,33 @@ it('preserves exact original action and scope through unknown outcome, reload an
   expect(store.records.size).toBe(0);
 });
 
+it('keeps the original scoped intent through a 401 and restores it for the same actor', async () => {
+  let actor = ACTOR;
+  const store = storage(), transport = {post: vi.fn(async () => ({ok: false, status: 503}))};
+  const options = {transport, pendingStore: store, getEconomy: () => economy(), getActorId: () => actor};
+  await createArsenalApi({...options, makeUid: () => 'arsenal001'}).buy({weapon: 'pistols'});
+  const original = structuredClone(transport.post.mock.calls[0]);
+  transport.post.mockResolvedValue({ok: false, status: 401, code: 'unauthorized'});
+  const denied = await createArsenalApi({...options, makeUid: () => 'different001'}).buy({weapon: 'pistols'});
+  expect(denied.status).toBe(401);
+  expect(transport.post.mock.calls[1]).toEqual(original);
+  expect(store.records.size).toBe(1);
+
+  actor = id(90);
+  transport.post.mockResolvedValue({ok: false, status: 503});
+  await createArsenalApi({...options, makeUid: () => 'otheractor001'}).buy({weapon: 'pistols'});
+  expect(transport.post.mock.calls[2][1].actionUid).toBe('otheractor001');
+  expect(store.records.size).toBe(2);
+
+  actor = ACTOR;
+  transport.post.mockResolvedValue({ok: true, data: mutation()});
+  const restored = await createArsenalApi({...options, makeUid: () => 'restored001'}).buy({weapon: 'pistols'});
+  expect(restored.ok).toBe(true);
+  expect(transport.post.mock.calls[3]).toEqual(original);
+  expect(store.records.size).toBe(1);
+  expect(JSON.parse([...store.records.values()][0]).actor).toBe(id(90));
+});
+
 it('sends the selected copy tenure and requires durable identity before shared writes', async () => {
   const transport = {post: vi.fn(async () => ({ok: false, status: 503}))};
   const api = createArsenalApi({transport, getEconomy: () => economy(), getActorId: () => ACTOR,
