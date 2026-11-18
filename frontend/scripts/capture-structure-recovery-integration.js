@@ -110,6 +110,7 @@ try {
   await page.getByText('No free repair during this wave. Full HP is restored when it ends.').waitFor();
   await page.getByText('3 shared Repair now uses left this wave').waitFor();
   await page.getByRole('button', {name: 'Repair now: pay 10 coins'}).waitFor();
+  await save('t59-integrated-preparation-offer-phone.png');
   const preparationButton = await page.locator('.recovery-repair').evaluate(element => ({disabled: element.disabled,
     label: element.textContent, card: element.closest('.island-card-build')?.innerText ?? element.parentElement?.parentElement?.innerText ?? '',
     html: element.outerHTML, phase: window.recoveryFixture.getState().phase}));
