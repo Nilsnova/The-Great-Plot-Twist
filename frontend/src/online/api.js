@@ -29,6 +29,7 @@
 import { session } from './session.js';
 
 export const REQUEST_TIMEOUT_MS = 10000; // a call that takes longer is cancelled
+export const ECONOMY_CAPABILITY_HEADERS = Object.freeze({'X-Island-Economy-Version': '1'});
 
 export const MESSAGES = {
   unauthorized: 'Please sign in again.',
@@ -51,6 +52,28 @@ function checkPath(path) {
   if (typeof path !== 'string' || !path.startsWith('/api/') || path.includes('//')) {
     throw new TypeError('api: the path must start with /api/ and must not contain //');
   }
+}
+
+// Feature adapters can negotiate compatibility, but cannot replace auth or other fetch options.
+function requestHeaders(options = {}) {
+  if (!options || typeof options !== 'object'
+      || Object.keys(options).some(key => key !== 'headers')) {
+    throw new TypeError('api request options support only capability headers.');
+  }
+  const extra = options.headers ?? {};
+  if (!extra || typeof extra !== 'object' || Array.isArray(extra)) {
+    throw new TypeError('api capability headers must be an object.');
+  }
+  const headers = {};
+  for (const [name, value] of Object.entries(extra)) {
+    if (name.toLowerCase() !== 'x-island-economy-version'
+        || typeof value !== 'string' || !/^[1-9][0-9]*$/.test(value)
+        || headers['X-Island-Economy-Version'] !== undefined) {
+      throw new TypeError('api accepts only one canonical economy capability header.');
+    }
+    headers['X-Island-Economy-Version'] = value;
+  }
+  return headers;
 }
 
 function failure(status, code, message, extra = {}) {
@@ -104,9 +127,9 @@ export function createApi({ session, fetchImpl = globalThis.fetch, timeoutMs = R
   const limit = Number.isFinite(timeoutMs) && timeoutMs > 0 ? timeoutMs : REQUEST_TIMEOUT_MS;
 
   // The options for fetch. It runs before the call, so a bad path or body throws at once.
-  function prepare(method, path, body) {
+  function prepare(method, path, body, requestOptions) {
     checkPath(path);
-    const headers = {};
+    const headers = requestHeaders(requestOptions);
     const publicRead = method === 'GET'
       && ['/api/config', '/api/market'].includes(path.split('?')[0]);
     const token = publicRead ? null : session.getToken();
@@ -189,10 +212,10 @@ export function createApi({ session, fetchImpl = globalThis.fetch, timeoutMs = R
   }
 
   return {
-    get: path => send(path, prepare('GET', path)),
-    post: (path, body) => send(path, prepare('POST', path, body)),
-    put: (path, body) => send(path, prepare('PUT', path, body)),
-    del: (path, body) => send(path, prepare('DELETE', path, body)),
+    get: (path, options) => send(path, prepare('GET', path, undefined, options)),
+    post: (path, body, options) => send(path, prepare('POST', path, body, options)),
+    put: (path, body, options) => send(path, prepare('PUT', path, body, options)),
+    del: (path, body, options) => send(path, prepare('DELETE', path, body, options)),
   };
 }
 
