@@ -74,13 +74,13 @@
 .island-tags{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:var(--u-2)}
 .island-tag{padding:4px 12px;background:var(--u-parch);color:var(--u-pink);border:2px solid var(--u-brown);font-weight:700}
 @media(max-width:520px){.island-share{flex-direction:column}.island-crew-row{flex-direction:column;align-items:stretch}}
-/* Menu › Captain and skills (docs/TOWER-DEFENSE.md §10, §14, §15): the musket, the skill tree (below) and the
-   weapon shop, in the kit's tabs. The Skills tab makes the card wide (island-card-wide). */
+/* Menu › Captain and skills (docs/TOWER-DEFENSE.md §10, §14): the musket and the skill tree (below), in the
+   kit's tabs. The Skills tab makes the card wide (island-card-wide). */
 .island-card-captain.kit-modal{width:min(480px,calc(100vw - 32px))}
 .island-captain-tabs .kit-tablist{gap:6px;padding-bottom:var(--u-2)}
 .island-captain-tabs .kit-tab{padding:8px 12px;font-size:15px}
 .island-captain-tabs .kit-tabpanel{padding-top:var(--u-3);min-height:0}
-.island-captain-musket,.island-skills,.island-weapons{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--u-3);min-width:0}
+.island-captain-musket,.island-skills{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--u-3);min-width:0}
 .island-card-captain .island-card-body,.island-captain-tabs,.island-captain-tabs .kit-tabpanel{min-width:0;grid-template-columns:minmax(0,1fr)}
 .island-captain-musket>.kit-button{justify-self:start;min-width:160px}
 /* The skill tree and the Tech hub as real trees (skill-tree.js): a big card, round tiles joined by lines from a

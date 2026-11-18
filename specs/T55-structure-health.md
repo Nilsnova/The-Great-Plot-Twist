@@ -4,19 +4,19 @@
 >
 > **Who uses it:** Ianno, the T55 agent and dependent repair-task implementers.
 
-- **Status:** core implementation merged through PR #203. This branch fixes saved-v1 availability compatibility; the two HTTP/PostgreSQL regressions failed on main and pass after the fix. Human review and publication confirmation remain pending.
-- **Branch:** `fix/recovery-gated-defenses`
+- **Status:** core implementation merged through PR #203. Full wave-end restoration is on main as of 18 Nov; saved gated-defense compatibility remains on `fix/recovery-gated-defenses`, pending review.
+- **Current branch:** `fix/recovery-gated-defenses` (original core: `feat/t55-structure-health`)
 - **Issue:** [#121](https://github.com/Nilsnova/The-Great-Plot-Twist/issues/121)
 
 ## Why
 
-Only walls persist damage today; towers start each wave healthy. The approved [T54 contract](T54-recovery-implementation-plan.md) replaces this with actual HP, consistent shared state and between-wave recovery. Ianno authorized T55–T60 assignments after Franz merged the plan; that condition was met on 16 November 2026.
+The original wall-only persistence was replaced by the core structure-health implementation. The current [T54 contract](T54-recovery-implementation-plan.md) replaces this with actual HP, consistent shared state and full free recovery at canonical wave end. Ianno authorized T55–T60 assignments after Franz merged the plan; that condition was met on 16 November 2026.
 
 ## What
 
-- Implement T54's additive, service-only state, versioned configuration, integer HP projection and canonical reservation lifecycle for walls and five tower kinds, including D060 extra plots.
+- Implement T54's additive, service-only state, versioned configuration, integer HP state and canonical reservation/closure lifecycle for walls and five tower kinds, including D060 extra plots.
 - Preserve immutable initial snapshots separately from ordered inputs, health checkpoints, repair segments and quota history. Implement the persistence/API foundation T56 and T57 need.
-- Cover offline settlement, expiry, stale reports, reset/instance fences, legacy compatibility and consistent transaction lock order. Repair pauses at accepted bell, not combat start; no quiet timer exists.
+- Cover canonical expiry/abandonment closure, stale reports, reset/instance fences, legacy compatibility and consistent transaction lock order. No free healing occurs from accepted bell through closure; closure fills current HP while preserving the closed combat vector. No timer or gradual projection is current gameplay.
 
 **Files likely to change:** `backend/server/island/`, wave/recovery routes, additive migrations and focused backend/SQL tests; `docs/INTERFACES.md` and `supabase/README.md`. T55 owns shared task-board updates during this parallel batch.
 
@@ -26,14 +26,14 @@ Paid transactions belong to T56; simulation wiring to T57; Captain/research clea
 
 ## Done when (acceptance checks)
 
-- [ ] Meaningful tests cover all supported kinds, 50→60→50 HP, zero/positive HP, offline time, accepted-bell pause and canonical finish/expiry resumption.
+- [ ] Meaningful tests cover all supported kinds, zero/positive HP, no reserved-window free healing, full restoration on canonical finish/expiry/abandonment and unchanged closed combat HP.
 - [ ] Real disposable PostgreSQL tests cover permissions, additive migration/reapplication, identity/history preservation, lock order, stale/duplicate/reordered checkpoints and finish/reset/upgrade races.
 - [ ] Backend pytest and Ruff, SQL parsing and relevant contract/parity checks pass with exact evidence. Full diff and documentation are reviewed; unresolved integration or trust limits are explicit.
 - [ ] No secrets, private data or generated caches are included; a different human approves the current revision before merge.
 
 ## Tests to write first
 
-Test deterministic HP projection and phase boundaries, then authenticated state/checkpoint APIs and disposable-SQL lifecycle/concurrency. Follow the full acceptance matrix in issue #121 and T54; do not substitute mock-only tests for database guarantees.
+Test normalized HP state and canonical closure boundaries, then authenticated state/checkpoint APIs and disposable-SQL lifecycle/concurrency. Follow the full acceptance matrix in issue #121 and T54; do not substitute mock-only tests for database guarantees.
 
 ## Saved v1 availability compatibility
 
@@ -50,4 +50,4 @@ T54 recovery version 1 / wave protocol 2, `structure_recovery` off-by-default fl
 - **Responsible teammate:** Ianno (@Iannomh123456).
 - **Coding agent:** `gpt-6-luna`, high reasoning.
 - **Human reviewer:** Franz (@frcola), after Ianno's manual review and publication confirmation.
-- **Last updated:** 2026-11-17.
+- **Last updated:** 2026-11-18.
