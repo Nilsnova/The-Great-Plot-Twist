@@ -55,8 +55,11 @@ revalidate discovery under all sorted scope/account locks.
 
 Private `island_shared_arsenal_reset_locked(account, epoch, actor, now)` clears
 only the current owner's matching live copy rows after real authority establishes
-an idle target. Missing authority, pending returns or unclosed shared accounting
-refuse; a closed legacy wave row alone cannot authorize clearing an unfinished
+an idle target. This private asset-disposition hook also serves confirmed owner
+account deletion while admission is paused. It never unpauses the island; public
+reset and its treasury half retain their active-admission checks, and paused bell
+loadout capture still refuses. Missing authority, pending returns or unclosed
+shared accounting refuse; a closed legacy wave row alone cannot authorize clearing an unfinished
 canonical attempt. The result is `{copiesCleared, historicalMovesRetained}` with
 integer counts. Immutable shared receipts/roots/ledger and legacy movement rows
 remain intact; the existing legacy movement foreign key nulls its live-copy
@@ -78,8 +81,10 @@ No hosted migration, admission, publication or deployment is included.
 Three real PostgreSQL regressions first failed on the existing cascade,
 unprepared deletion and unbound loadout fallback. Three further profile-integrity
 regressions failed before adding the replacement live-holder guard. The final
-holder/runtime/shared/legacy arsenal selection passes **94 tests in 23.88s**,
-including **24 new domain cases**. The full 95-file migration chain applies twice
+original holder/runtime/shared/legacy arsenal selection passed **94 tests in
+23.88s**, including **24 new domain cases**. After the paused owner-disposition
+follow-up, the same selection passes **95 tests in 21.99s**, including the new
+paused-disposition, paused bell refusal and unchanged public-reset refusal case. The full 95-file migration chain applies twice
 on disposable Unix-socket PostgreSQL. The grandfathered 24-copy case commits
 physical deletion and then commits exact-wave return settlement without loss.
 Real Captain/accounting hooks verify that closed legacy wave metadata cannot
