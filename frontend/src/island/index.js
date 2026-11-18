@@ -242,6 +242,9 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     asking: coinsAsked, onCoins: (coins, fresh) => arsenalCoins(coins, fresh)});
   const placeholder = mode === 'fake' || new URLSearchParams(search).get('wavedebug') === '1';
   const target = () => visiting ?? own;
+  // Which island is on screen (a visit or your own, and its code), not which answer object: a fresh read of
+  // the same island (a crewmate's change, a finished wave) replaces the object but not the island.
+  const shownIsland = () => (target() ? JSON.stringify([visiting ? 'visit' : 'own', target().code]) : null);
   const recoveryPolicyOn = () => {
     const code = target()?.code;
     if (!code) return false;
@@ -368,7 +371,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       const answer = await api.visit(visitCode);
       if (disposed || ticket !== loadTicket) return answer;
       if (answer.ok) {
-        if (current() || !visiting) { visiting = {...answer.data, code: islandCode(answer.data.code)}; loadedTarget = visiting; noteCampaign(visiting); }
+        if (current() || !visiting) { visiting = {...answer.data, code: islandCode(answer.data.code)}; loadedTarget = shownIsland(); noteCampaign(visiting); }
         showVisit();
       } else {
         endVisit(); ui.toast(answer.message, 'error');
@@ -380,7 +383,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       const answer = await api.getIsland();
       if (disposed || ticket !== loadTicket) return answer;
       if (answer.ok) {
-        if (current()) { setOwn(answer.data); if (!visiting) loadedTarget = own; }
+        if (current()) { setOwn(answer.data); if (!visiting) loadedTarget = shownIsland(); }
         ownMessage = ''; ownRetry = false;
       } else { ownMessage = answer.message; ownRetry = mayPass(answer); }
     }
@@ -393,7 +396,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
       const answer = await flow.look(where());
       // A retained controller may resume only after this landing confirms its actual server wave.
       // Reject a late load across travel, another load, target change or reset.
-      if (!disposed && ticket === loadTicket && travelGeneration === coreTravelGeneration && loadedTarget === target()
+      if (!disposed && ticket === loadTicket && travelGeneration === coreTravelGeneration && loadedTarget !== null && loadedTarget === shownIsland()
           && context.key && context.key === syncCoreContext().key && answer?.ok
           && typeof answer.data?.waveId === 'string' && answer.data.waveId
           && flow.current?.wave?.waveId === answer.data.waveId) {

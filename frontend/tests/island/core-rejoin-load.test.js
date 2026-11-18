@@ -143,4 +143,36 @@ describe('actual returned-island current-wave authority', () => {
       expect(h.coins.at(-1)).toBe(1234);
     });
   });
+
+  describe('other reads of the same island crossing a load', () => {
+    it("keeps the rejoin proof when a crewmate's change reads the own island again during the wave read", async () => {
+      const h = harness(); await h.island.load(); h.travel();
+      const reply = h.defer(), loading = h.island.load(); await reply.asked;
+      await h.island.refreshDefended();
+      const returned = h.island.coreContext;
+      reply.resolve({ok: true, data: INFO}); await loading;
+      expect(h.island.coreContext.rejoin).toEqual({contextKey: returned.key, waveId: INFO.waveId});
+    });
+
+    it("keeps the rejoin proof when a crewmate's change reads the visited island again during the wave read", async () => {
+      const h = harness(); h.island.visit('ISLE-FR3ND'); await h.island.load();
+      h.emit({type: 'travel', to: 'home_islet'}); expect(h.island.coreContext.rejoin).toBeNull(); // the visit stays
+      const reply = h.defer(), loading = h.island.load(); await reply.asked;
+      await h.island.refreshDefended();
+      reply.resolve({ok: true, data: INFO}); await loading;
+      expect(h.island.visiting).not.toBeNull();
+      expect(h.island.coreContext.rejoin).toMatchObject({waveId: INFO.waveId});
+    });
+
+    it('keeps the rejoin proof when a finished wave reads the island again during the wave read', async () => {
+      const h = harness(); await h.island.load(); h.travel();
+      const own = h.hold('/api/island'), reply = h.defer(), loading = h.island.load(); await own.asked;
+      own.resolve(); await reply.asked;
+      const again = h.hold('/api/island'); h.emit({type: 'wave_finished', survived: true, coins: 150}); await again.asked;
+      again.resolve(); await vi.waitFor(() => expect(h.coins.at(-1)).toBe(100));
+      reply.resolve({ok: true, data: INFO}); await loading;
+      expect(h.island.coreContext.rejoin).toMatchObject({waveId: INFO.waveId});
+    });
+
+  });
 });
