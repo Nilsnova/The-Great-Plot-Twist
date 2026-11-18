@@ -47,7 +47,8 @@ it.each([false, true])('a pending island read cannot replace the reconciled wall
     const {createIsland} = await window.g20Import('/src/island/index.js');
     const {createFakeIslandTransport} = await window.g20Import('/src/pirates/fake-api.js');
     const {on, emit} = await window.g20Import('/src/core/events.js');
-    const island = createIsland({container: document.body, emit, on, mode: 'fake', transport: createFakeIslandTransport(),
+    const transport = createFakeIslandTransport();
+    const island = createIsland({container: document.body, emit, on, mode: 'fake', transport,
       storage: null, visitStorage: null, menu: () => () => {}, settings: () => () => {}});
     try {
       const answer = await island.api.getIsland();
@@ -56,7 +57,7 @@ it.each([false, true])('a pending island read cannot replace the reconciled wall
       const reading = new Promise(resolve => { asked = resolve; });
       island.api.getIsland = () => { asked(); return new Promise(resolve => { resolveRead = resolve; }); };
       const pending = island.load(); await reading;
-      island.setWalletCoins(120);
+      transport.dev.setCoins(120); island.setWalletCoins(120);
       resolveRead({...answer, data: {...answer.data, coins: 100}}); await pending;
       return island.island?.coins;
     } finally { island.dispose(); }
@@ -69,11 +70,12 @@ it('a first island read started after wallet recovery keeps its newer balance', 
     const {createIsland} = await window.g20Import('/src/island/index.js');
     const {createFakeIslandTransport} = await window.g20Import('/src/pirates/fake-api.js');
     const {on, emit} = await window.g20Import('/src/core/events.js');
-    const island = createIsland({container: document.body, emit, on, mode: 'fake', transport: createFakeIslandTransport(),
+    const transport = createFakeIslandTransport();
+    const island = createIsland({container: document.body, emit, on, mode: 'fake', transport,
       storage: null, visitStorage: null, menu: () => () => {}, settings: () => () => {}});
     try {
       const answer = await island.api.getIsland(); island.setWalletCoins(120);
-      island.api.getIsland = async () => ({...answer, data: {...answer.data, coins: 80}});
+      transport.dev.setCoins(80); island.api.getIsland = async () => ({...answer, data: {...answer.data, coins: 80}});
       await island.load(); return island.island.coins;
     } finally { island.dispose(); }
   });

@@ -99,7 +99,7 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   // ownRetry: your own island's read failed for a passing reason, so the next reread (the wave wiring's
   // 15 s timer, the bell or a build card) reads it again instead of leaving the island empty for good.
   let disposed = false, own = null, ownMessage = '', ownRetry = false, visiting = null, visitCode = readVisit(visitStorage), busySpot = null, cardMessage = '';
-  let pendingWallet = null;
+  let pendingWallet = null, walletGeneration = 0;
   let world = null, cutscene = null, openSpot = null, loadTicket = 0, battle = false;
   const coreState = createCoreState();
   let coreWorld = null, coreContextKey = null, coreTravelGeneration = 0, coreRejoin = null;
@@ -168,9 +168,12 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     }
   }
   // A fresh island answer: coins and captain to the HUD, and the campaign of your own island (§4).
-  const setOwn = next => {
+  const setOwn = (next, {fromRead = false} = {}) => {
     const before = own;
-    pendingWallet = null;
+    if (!fromRead) {
+      if (pendingWallet) wrote('own');
+      pendingWallet = null; walletGeneration++;
+    }
     if (before?.code !== next?.code || before?.recoveryVersion !== next?.recoveryVersion) {
       recoveryReadId++; recoveryState = null; recoveryIslandCode = next?.code ?? null; recoveryCombat = null; recoveryStatus = next?.code ? 'loading' : 'disabled';
       clearRecoveryError();
@@ -209,11 +212,18 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   const setOwnRead = next => {
     // Only reads already in flight when the fresh account balance arrived may hold older coins.
     if (pendingWallet && turns.own.used <= pendingWallet.through) next = {...next, coins: pendingWallet.coins};
-    setOwn(next);
+    // Consuming the highest covered read fences every smaller ID; earlier reads must keep the guard.
+    if (pendingWallet && turns.own.used >= pendingWallet.through) pendingWallet = null;
+    setOwn(next, {fromRead: true});
   };
   // Coins that another answer carries (the arsenal's): stale once an island read asked later was shown or a
   // write answered. Unlike reading('own') it does not use the turn, so a load's island read still lands.
-  const coinsAsked = () => { const turn = turns.own, asked = turn.asked, wrote = turn.wrote; return () => turn.used <= asked && turn.wrote === wrote; };
+  const coinsAsked = () => {
+    const turn = turns.own, asked = turn.asked, wrote = turn.wrote, wallet = walletGeneration;
+    const fresh = () => turn.used <= asked && turn.wrote === wrote && walletGeneration === wallet;
+    fresh.through = asked;
+    return fresh;
+  };
   // The fake answers at once; the live transport is the signed-in session's, read at every call.
   const live = {get: path => (getTransport()?.get?.(path) ?? notReady()), post: (path, body) => (getTransport()?.post?.(path, body) ?? notReady())};
   const islandTransport = transport ?? live;
@@ -870,7 +880,10 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
   // The arsenal's coins go into the island object as it is: replacing it would make a load still waiting for
   // its wave answer take the island for another one and drop a returning player's rejoin proof.
   const arsenalCoins = (coins, fresh = () => true) => {
-    if (!Number.isSafeInteger(coins) || own?.coins === coins || !fresh()) return;
+    if (!Number.isSafeInteger(coins) || !fresh()) return;
+    // An arsenal read confirms coins after these own reads started, while later own reads stay authoritative.
+    if (fresh.through > turns.own.used) pendingWallet = {coins, through: fresh.through};
+    if (own?.coins === coins) return;
     if (own) own.coins = coins;
     tellCoins(coins);
   };
@@ -1418,9 +1431,10 @@ export function createIsland({container, emit, on, mode = 'live', getTransport =
     setWalletCoins(value) {
       if (disposed || !Number.isSafeInteger(value) || value < 0) return;
       if (own) wrote('own');
+      else walletGeneration++;
       tookCoins(value); refreshCard();
     },
-    resetWalletRecovery() { pendingWallet = null; },
+    resetWalletRecovery() { pendingWallet = null; walletGeneration++; wrote('own'); },
     get recoveryTransport() { return recoveryTransport; },
     get recoveryVersion() { return recoveryModelVersion(); },
     roomPlace: () => islandRoom(visiting?.code ?? visitCode ?? own?.code ?? '') || null,
