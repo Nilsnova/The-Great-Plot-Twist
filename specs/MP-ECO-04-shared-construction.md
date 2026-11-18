@@ -46,7 +46,9 @@ Use `island_treasury_spend`/`island_treasury_credit` within the same SQL transac
 Legacy defaults and route payloads stay unchanged. Additive wrappers guard `island_build`, `island_upgrade`, `island_demolish` and `island_demolish_quote` before any old wallet/island locks. They acquire the same scope guard as admission and refuse every admitted shared mode, including a paused one. Original bodies remain private aliases with no browser or standalone service execute grant. Capture each original only once, then recreate public wrappers on reapplication; this prevents capturing a wrapper and recursing when the complete migration chain is applied twice. No admitted route may fall back to a personal wallet or catalogue-based private refund.
 
 Legacy `island_build` and `island_upgrade` also check the actor's global personal mode,
-even on a target island with legacy accounting. They lock the existing actor wallet before
+even on a target island with legacy accounting. Before any row lock, they acquire the actor
+and target island scopes as distinct signed hash keys in ascending order, matching the
+treasury scope namespace. They then lock the existing actor wallet before
 the personal profile anchor and refuse managed actors with `captain_context_required`
 before delegating to the old body. This prevents old role prices from avoiding the managed
 Engineer commitment. Unadopted actors keep legacy behavior. Unsupported managed-actor
@@ -58,6 +60,10 @@ there is no visiting payer. That generic RPC is not covered by these named islan
 The old Captain/session paths likewise require the global managed-profile guard. Existing
 route refusal mapping and those remaining mutation paths must be integrated before any
 new mode is activated; this package does not register or change route dispatch.
+Entry-kit and demo grants also require their early actor-scope wrapper before their
+existing profile/wallet locks. That matching outer-entry guard is a deployment prerequisite
+for these managed-actor construction wrappers; acquiring an actor scope from a later
+transitive call would invert the order.
 
 The existing building/layout/health schema remains authoritative. Additional perimeter placement rules, if introduced by another accepted version, need a matching trusted manifest/guard before those new offers are enabled; this task does not grant land or invent placement rights.
 
@@ -121,3 +127,11 @@ flags are off, while new builds and same-slot rebuilds remain refused. All actua
 and refund receipts reconcile. The new construction test module registers a module-local
 instance of the existing scratch fixture; a mixed **82-case PostgreSQL** run with legacy
 host-console and fresh-start counts passed, without changing the shared legacy fixture.
+
+After the merged recovery-option cleanup, **141 relevant PostgreSQL checks** passed in
+16.68 seconds and **53 focused Python checks** passed. The new scope-order cases hold an
+actor scope and profile lock, then prove that a visiting build/upgrade waits without taking
+the wallet needed by that actor's grant. A separate real lock interleaving proves the two
+keys are acquired in signed-hash order even when arguments arrive in the opposite order.
+A matching real entry-kit/demo grant interleaving remains a required core-entry integration
+check.

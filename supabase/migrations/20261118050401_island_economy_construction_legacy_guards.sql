@@ -26,6 +26,27 @@ begin
 end;
 $$;
 
+-- A visitor shares its actor scope with grants and its target scope with admission.
+-- Lock distinct signed hash keys in one order before any wallet or personal row.
+create or replace function public.island_construction_lock_legacy_scopes(
+  p_actor_id uuid, p_island_owner uuid
+) returns void language plpgsql volatile security definer set search_path = '' as $$
+declare v_key bigint;
+begin
+  for v_key in
+    select distinct pg_catalog.hashtextextended('island-economy:'||owner_id::text,0) as scope_key
+      from pg_catalog.unnest(array[p_actor_id,p_island_owner]) as scopes(owner_id)
+     where owner_id is not null order by scope_key
+  loop
+    perform pg_catalog.pg_advisory_xact_lock(v_key);
+  end loop;
+end;
+$$;
+comment on function public.island_construction_lock_legacy_scopes(uuid, uuid) is
+  'Private class-zero actor/target guards. Deduplicated signed keys match island_treasury_lock_scope and are acquired ascending, never after wallet/profile/account locks.';
+revoke all on function public.island_construction_lock_legacy_scopes(uuid, uuid)
+  from public, anon, authenticated, service_role;
+
 -- Serialize old construction with global personal adoption/respec. The wallet lock
 -- precedes the personal anchor, and the preserved alias only reenters those locks.
 create or replace function public.island_construction_legacy_actor_allowed_locked(p_actor_id uuid)
@@ -51,7 +72,7 @@ create or replace function public.island_build(
   p_action_uid text, p_price integer
 ) returns jsonb language plpgsql volatile security definer set search_path = '' as $$
 begin
-  perform public.island_treasury_lock_scope(p_island_owner);
+  perform public.island_construction_lock_legacy_scopes(p_player_id,p_island_owner);
   if exists (select 1 from public.island_economy_state where island_owner = p_island_owner) then
     return jsonb_build_object('status','refused','reason','economy_context_required');
   end if;
@@ -71,7 +92,7 @@ create or replace function public.island_upgrade(
   p_prices integer[], p_unlocked_level integer
 ) returns jsonb language plpgsql volatile security definer set search_path = '' as $$
 begin
-  perform public.island_treasury_lock_scope(p_island_owner);
+  perform public.island_construction_lock_legacy_scopes(p_player_id,p_island_owner);
   if exists (select 1 from public.island_economy_state where island_owner = p_island_owner) then
     return jsonb_build_object('status','refused','reason','economy_context_required');
   end if;
