@@ -75,6 +75,7 @@ def test_the_bell_on_your_own_island_answers_the_wave_of_the_contract():
         "recoveryVersion": 0,
         "waveProtocol": 1,
         "rules": list(ALWAYS_ON),  # the rules every new wave plays (wave_rules.py)
+        "walls": {},  # D039: no wall built yet
     }
 
 

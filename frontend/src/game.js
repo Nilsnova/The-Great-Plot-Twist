@@ -273,10 +273,6 @@ export async function startGame({container,shell,audio,captions,adapter,isAppBlo
           view.villageControl(action);
           if(anchor&&action==='work')view.focusVillage(anchor);
         },
-        // D039 (proposed): lasting wall damage and the paid Repair/Rebuild, only while the server's flag is on.
-        // In fake mode (?islands=fake) the fake server's own flags decide (?fakeflags=wall_recovery, fake-api.js).
-        wallRecovery:()=>{if(fakeTransport)return fakeTransport.flags.wall_recovery===true;
-          const services=findPanelServices(session);return services?.isReady()?services.getFlags()?.wall_recovery===true:false;},
         // T55/T59: only show persistent structure recovery once the server enables its versioned rules.
         structureRecoveryOn:()=>{if(fakeTransport)return fakeTransport.flags.structure_recovery===true;
           const services=findPanelServices(session);return services?.isReady()?services.getFlags()?.structure_recovery===true:false;}});

@@ -28,8 +28,7 @@ FLAG_NAMES = (
     "demo",
     "islands",
     "rescue",  # T38 last-chance rescue (D044), a wave rule. Retired: always on
-    # D039 (proposed): wall damage stays after a wave, paid Repair/Rebuild between waves.
-    # Needs supabase/migrations/20261114100000_wall_recovery.sql applied first.
+    # D039: wall damage stays after a wave, paid Repair/Rebuild between waves. Retired: always on.
     "wall_recovery",
     "placement",  # T36 flexible placement: retired, always on (the name is still accepted)
     # T43 (D048): the second wave of defenses, starting with the culverin. Retired: always on.

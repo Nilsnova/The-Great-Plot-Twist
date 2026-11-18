@@ -8,7 +8,7 @@ import { canonicalSpot, kindOfSpot, refuse, invalid, ISLAND_RULES, lockedMessage
   rebuildPrice } from './fake-rules.js';
 
 export function createIslandRoutes(srv, api) {
-  const { world, me, visited, buildOn, islandSpots, islandAllowed, view, visitedView, wallsOn, healthAt, nowMs,
+  const { world, me, visited, buildOn, islandSpots, islandAllowed, view, visitedView, healthAt, nowMs,
     upgradeOn, uid, unlocking, demolishable, playerId, waveGuard, activeOf, newIsland, spots, wallsView, pointView,
     allowed } = srv;
   return {
@@ -22,7 +22,7 @@ export function createIslandRoutes(srv, api) {
       body.spot = canonicalSpot(body.spot);
       const mine = world.islands.get(me().code), island = code === undefined ? mine : visited(code);
       // D039 (T47): a damaged or destroyed wall is repaired first; an upgrade never heals it.
-      if (wallsOn && island.built.has(body.spot) && kindOfSpot(body.spot) === 'wall' && !me().actions.has(`upgrade:${body.actionUid}`)
+      if (island.built.has(body.spot) && kindOfSpot(body.spot) === 'wall' && !me().actions.has(`upgrade:${body.actionUid}`)
         && healthAt(island, body.spot, nowMs()) < 100) refuse(409, 'needs_repair', 'Repair this wall before you upgrade it.');
       upgradeOn(island, islandSpots, body, islandAllowed(island));
       return island === mine ? view() : visitedView(island);
@@ -129,7 +129,6 @@ export function createIslandRoutes(srv, api) {
     },
     // D039 (flag wall_recovery, routes/wall_recovery.py): the walls of your island, or of a game's island with `code`.
     async walls({ code } = {}) {
-      if (!wallsOn) refuse(404, 'feature_off', 'Wall repairs are not open yet.');
       const mine = world.islands.get(me().code), island = code === undefined || code === null ? mine : visited(code);
       return wallsView(island);
     },
@@ -137,7 +136,6 @@ export function createIslandRoutes(srv, api) {
     // actionUid charges nothing and answers the walls as they are; a whole wall is refused intact (island_wall_restore()).
     async repairWall({ spot, actionUid, code } = {}) {
       if (typeof spot !== 'string' || !uid(actionUid)) invalid('Send the spot and an action id.');
-      if (!wallsOn) refuse(404, 'feature_off', 'Wall repairs are not open yet.');
       const player = me(), mine = world.islands.get(player.code), island = code === undefined || code === null ? mine : visited(code);
       if (player.actions.has(`repair:${actionUid}`)) return wallsView(island);
       spot = canonicalSpot(spot);

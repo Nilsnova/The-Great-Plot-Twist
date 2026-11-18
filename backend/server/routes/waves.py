@@ -161,7 +161,7 @@ from server.island.waves import WaveStart
 from server.lock.place import place_from_headers
 from server.routes.island import ACTION_UID_PATTERN, IslandPlayerDep
 from server.routes.weather import WeatherRulesDep, WeatherSourceDep
-from server.settings import Settings, SettingsDep
+from server.settings import SettingsDep
 from server.supabase_admin import AdminDep, SupabaseAdmin
 from server.weather.mapping import format_utc_time
 
@@ -312,13 +312,8 @@ class FinishResponse(BaseModel):
     recovery: RecoveryFinishResponse | None = None
 
 
-async def start_walls(
-    admin: SupabaseAdmin, settings: Settings, wave: WaveStart
-) -> dict[str, int] | None:
-    """D039: the walls a wave starts with, only while the flag wall_recovery is on (it needs
-    the 20261114100000_wall_recovery.sql migration). Off: no "walls" in the answer at all."""
-    if not is_enabled("wall_recovery", settings.flags):
-        return None
+async def start_walls(admin: SupabaseAdmin, wave: WaveStart) -> dict[str, int] | None:
+    """D039: the walls a wave starts with (the flag wall_recovery is retired, always on)."""
     return await wall_repair.walls_for_wave(admin, wave)
 
 
@@ -413,7 +408,7 @@ async def post_start(
         resolved=(place, owner),
         make_seed=lambda _limit: seed,
     )
-    walls = await start_walls(admin, settings, started)
+    walls = await start_walls(admin, started)
     return wave_out(started, walls, await wave_rules.rules_for_wave(admin, settings, started))
 
 
@@ -431,7 +426,7 @@ async def post_join(
         admin, catalogue, player.id, body.waveId, protocol=body.waveProtocol
     )
     require_protocol2(joined, body.waveProtocol)
-    walls = await start_walls(admin, settings, joined)
+    walls = await start_walls(admin, joined)
     return wave_out(joined, walls, await wave_rules.rules_for_wave(admin, settings, joined))
 
 
@@ -452,7 +447,7 @@ async def get_current(
     if running is None:
         return None
     require_protocol2(running, wave_protocol)
-    walls = await start_walls(admin, settings, running)
+    walls = await start_walls(admin, running)
     return wave_out(running, walls, await wave_rules.rules_for_wave(admin, settings, running))
 
 
@@ -510,8 +505,7 @@ async def post_finish(
     # finish above is already paid, so this is best effort: a failure is logged, never a 5xx.
     # The owner's rule (fix/playtest-1117): a finished wave leaves every wall of the island whole;
     # the first finish records them all at 100 % (clearing damage left from before the rule).
-    if is_enabled("wall_recovery", settings.flags):
-        await wall_repair.record_after_finish(admin, player.id, body.waveId, body.walls, whole=True)
+    await wall_repair.record_after_finish(admin, player.id, body.waveId, body.walls, whole=True)
     return FinishResponse(
         loot=finished.loot,
         coins=finished.coins,

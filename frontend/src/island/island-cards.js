@@ -18,7 +18,7 @@ import {preparationModel} from './preparation-model.js';
 
 export function createCards(isl) {
   const {emit, on, focus, resetInput, reducedMotion, preferences, loadBoatScene, openHarborStall, villageCamera,
-    wallRecovery} = isl;
+    } = isl;
   // From the other parts (island-*.js), linked once every part exists.
   let clearRecoveryError, recoveryPolicyOn, recoveryControlsOn, recoveryModelVersion, readStructureRecovery,
     repairStructure, tellCoins, unlocks, islandUnlocks, campaign, target, where, applyWorld, freshOwn, reloadOwn,
@@ -155,7 +155,7 @@ export function createCards(isl) {
     const wave = isl.flow.current, island = target();
     return bellModel({wave: wave?.wave ?? null, joined: wave?.joined === true, countdown: isl.flow.secondsLeft(), busy: isl.flow.busy,
       visitor: !!isl.visiting, ownerName: isl.visiting?.ownerName, waveBest: island?.waveBest ?? 0, nextWave: island?.nextWave,
-      preparation: preparationModel({island, wallRecovery: wallRecovery() && !recoveryControlsOn(),
+      preparation: preparationModel({island, wallRecovery: !recoveryControlsOn(),
         wallState: {code: isl.wallsFor, rows: [...isl.walls.values()]}}), message: isl.cardMessage});
   }
   function refreshCard() {

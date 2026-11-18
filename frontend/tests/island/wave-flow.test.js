@@ -26,7 +26,7 @@ describe('the bell and the wave', () => {
     const started = test.events.find(event => event.type === WAVE_STARTED);
     expect(started).toEqual({type: WAVE_STARTED, waveId: answer.data.waveId, wave: 1, seed: answer.data.seed,
       startsAt: '2026-11-11T10:00:10Z', weather: {kind: 'calm', label: 'Calm sea', ships: 1, fog: 0}, flagship: false,
-      where: 'own', defenses: [{id: 'cannon_1', kind: 'cannon', x: -12.5, z: -14.5}], rules: [...SIM_RULES]});
+      where: 'own', defenses: [{id: 'cannon_1', kind: 'cannon', x: -12.5, z: -14.5}], rules: [...SIM_RULES], walls: {}});
     expect(test.banners.at(-1)).toBe('Pirates in 10 s! Wave 1');
     await vi.advanceTimersByTimeAsync(3000);
     expect(test.banners.at(-1)).toBe('Pirates in 7 s! Wave 1');

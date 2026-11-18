@@ -17,8 +17,7 @@ import { createWaveRoutes } from './fake-waves.js';
 export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me', ownerName = 'You',
   now = () => Date.now(), weather = 'calm', code: wantedCode = null, version = 1, unlocking = version === 2, flags = {} } = {}) {
   // unlocking: the server's §9 locks (409 locked). Off by default here; the game's transport and version 2 turn it on.
-  // flags: the server's feature flags this fake follows (wall_recovery, D039); all off by default.
-  const wallsOn = flags?.wall_recovery === true;
+  // flags: the server's feature flags this fake follows (none changes an answer any more; game.js reads structure_recovery).
   // D060: the extra tower spots (cannon_8..cannon_11) join the island, as the real server's runtime_catalogue() (the flag
   // more_tower_spots is retired, always on); each opens after its won wave.
   const islandSpots = Object.freeze([...ISLAND_RULES.spots, ...EXTRA_SPOT_IDS]);
@@ -205,12 +204,12 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
       repairCost: health < 100 ? restorePrice(rebuildPrice(level), health) : null };
   }) });
   // The walls a wave starts with, worked out at its startsAt (the same for every client); none on Pirate Point.
-  const waveWalls = run => (wallsOn && run.island
+  const waveWalls = run => (run.island
     ? Object.fromEntries(builtWalls(run.island).sort().map(id => [id, healthAt(run.island, id, run.startsAtMs)])) : null);
   // The server's wall record (wall_repair.record, D039): the first finish of the wave keeps the walls, each capped
   // at the health it started the wave with (wall_health.cap_to_start), so a finish can only damage a wall.
   function recordWalls(run, walls) {
-    if (!wallsOn || !run.island || !walls || run.wallsRecorded) return;
+    if (!run.island || !walls || run.wallsRecorded) return;
     const start = waveWalls(run) ?? {}; // read before anything changes: each wall's health at the wave's start
     run.wallsRecorded = true;
     if (!(run.island.walls instanceof Map)) run.island.walls = new Map();
@@ -244,7 +243,7 @@ export function createFakeIslandApi({ world = createFakeWorld(), playerId = 'me'
     waveRunning: island => [...world.waves.values()].some(run => run.place === island.code && running(run)), refuse });
 
   // What the route groups share (fake-island.js, fake-research.js, fake-waves.js).
-  const srv = { world, me, visited, buildOn, islandSpots, islandAllowed, view, visitedView, wallsOn, healthAt, nowMs,
+  const srv = { world, me, visited, buildOn, islandSpots, islandAllowed, view, visitedView, healthAt, nowMs,
     upgradeOn, uid, unlocking, demolishable, playerId, waveGuard, activeOf, newIsland, spots, wallsView, pointView,
     allowed, learnt, skillsOf, BETWEEN_WAVES, weather, enterGame, gameView, gameByCode, membersOf, isMember,
     mustBeMember, nameOf, stamp, shape, placeOf, running, v2, recordWalls };
