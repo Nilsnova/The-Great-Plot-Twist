@@ -43,7 +43,7 @@ Deliver strict envelope validation, an exact-money projection and scoped revisio
 - New `frontend/src/island/economy-view.js` and focused tests: exact values, scope and monetary snapshots.
 - New `frontend/src/island/economy-funding.js` and `economy-captain.js`: pinned funding scope and independent personal progression display.
 - `frontend/src/island/api.js`: additive shared-context handling and validation for ordinary island responses/actions.
-- `frontend/src/island/index.js`: select the defended island as funding source and pass the shared display projection.
+- `frontend/src/island/index.js`: initialize the defended-island funding projection. The split `island-load.js`, `island-actions.js`, `island-cards.js` and `island-game.js` modules own its reads, mutations, cards and travel/reset lifecycle.
 - `frontend/src/island/card-model.js`: ordinary build, research, crew and personal Captain display.
 - `frontend/src/ui/hud.js`, `frontend/src/ui/hud.css`, `frontend/src/game.js`: accessible treasury display behind the new persisted mode.
 - `frontend/src/online/api.js`: the supported read capability header, preserving session authentication and token renewal.
@@ -124,7 +124,7 @@ The broad journey uses the existing local fake server and legacy-money behavior,
 
 ### Verification with current foundations
 
-Main `a195ec35` is integrated. The checked frontend runtime is `7db9222f`. This retains current wallet-recovery watermarks, wall-purchase feedback/replay suppression, recovery-health guards, quest updates and boat transitions alongside the shared treasury projection. All existing legacy checks remain enabled.
+This earlier verification integrated main `a195ec35` at frontend runtime `7db9222f`. The later module-split review below supersedes it for the current branch. This retains current wallet-recovery watermarks, wall-purchase feedback/replay suppression, recovery-health guards, quest updates and boat transitions alongside the shared treasury projection. All existing legacy checks remain enabled.
 
 A delayed successful legacy own-build/upgrade may finish after sailing away. Its payload is ignored; a new guarded own-island GET refreshes the current own state. That GET may adopt a new shared account/epoch, and cannot restore the old receipt's personal balance. Shared mutation replies retain their original selection/run rejection. The first combined run had **358 passing checks and one wall-feedback failure** because the old own mirror stayed stale. The added adoption regression also failed before this reconciliation. The corrected focused cases passed **22 checks across three files**.
 
@@ -176,3 +176,64 @@ npm test -- --maxWorkers=1 \
 npm run build
 MP_ECO_EVIDENCE_DIR=../docs/evidence/MP-ECO-18 npm test -- --maxWorkers=1 tests/island/economy-dom.test.js tests/island/economy-captain-dom.test.js tests/ui/hud.test.js tests/island/captain-card.test.js
 ```
+
+### Review after the island module split
+
+Main `f606412f` is integrated, preserving its extracted island, controller and simulation modules. The assembly module initializes shared funding and negotiates the read capability; island loading owns monetary/personal snapshot ordering, actions own dispatch guards, cards own funding projections, and game lifecycle owns travel/reset state. Existing wallet watermarks, wall feedback, recovery health, quest callbacks and the public island interface remain intact. The component now changes 29 paths: the original 25 plus the four extracted island modules.
+
+A delayed successful legacy own-build or upgrade could restore pre-reset UI coins, buildings and best-wave progress after a successful reset, even though persisted server state was already fresh. The same counterexample reproduced on the published pre-split implementation and split runtime `3909627a`. A mutation now captures the reset generation as well as its selected island/run. A successful reset invalidates the old response; an old successful legacy own purchase reconciles through a fresh GET without its old purchase event. No server payment or reset semantics are changed.
+
+The two real-DOM regressions failed before correction: old replies displayed 90 coins/wall level 1 or 80 coins/wall level 2 and best wave 9, while the reset server and fresh client snapshot held 100 coins, no wall and best wave 0. They now preserve the exact fresh snapshot and emit no old build/upgrade event. The ordering, reset and wall-feedback selection passed **3 files, 12 tests in 21.66 s**. An independently executed actual-reset browser probe and four shared-wallet/reset/missing-envelope probes also passed at final runtime `cf39d84e`.
+
+Current verification at frozen runtime `cf39d84e`:
+
+- Affected frontend selection: **35 files, 364 tests passed in 187.91 s**, including the two reset regressions and main's deterministic simulation fingerprint. No test or timeout was weakened. The initial module-port diagnostic had 350 passing and 12 failing checks due to unqualified travel-state references; those were corrected before this final run.
+- `npm run build`: passed, with **251 text files and 12 protected lines** checked by the spoiler guard.
+- The complete existing fake multiplayer journey passed with **four pages in 434.81 s**, including co-op edits, both upgrade directions, research, revival, pause/resume, sampled synchronization, desktop/phone musket poses and the wave-5 boss finisher. Runtime remained unchanged throughout that run.
+- Screenshot regeneration after the module port passed **4 files, 21 tests in 26.00 s** at runtime `3909627a`; all three visually inspected images are byte-identical to the published evidence. The later reset-response guard does not change their layout or fixture state.
+- Independent source comparison confirmed the extracted module behavior and public interface were preserved; the reset-generation check is the deliberate follow-up. Scoped whitespace and local documentation links passed.
+
+Commands from `frontend/`:
+
+```sh
+npm test -- --maxWorkers=1 \
+  tests/island/economy-view.test.js \
+  tests/island/economy-cards.test.js \
+  tests/island/economy-api.test.js \
+  tests/island/economy-http.test.js \
+  tests/island/card-model.test.js \
+  tests/island/api.test.js \
+  tests/island/tower-tree.test.js \
+  tests/online-api.test.js \
+  tests/island/economy-dom.test.js \
+  tests/island/economy-captain-dom.test.js \
+  tests/island/economy-ordering-dom.test.js \
+  tests/ui/hud.test.js \
+  tests/island/first-read-retry.test.js \
+  tests/island/visit-and-mode.test.js \
+  tests/island/fresh-start-dom.test.js \
+  tests/island/demolish-dom.test.js \
+  tests/island/core-rejoin-load.test.js \
+  tests/island/arsenal-context.test.js \
+  tests/island/arsenal-dom.test.js \
+  tests/island/arsenal.test.js \
+  tests/island/captain-card.test.js \
+  tests/island/weapon-comparison-dom.test.js \
+  tests/pirates/poses.test.js \
+  tests/pirates/render.test.js \
+  tests/pirates/live-attack-feedback.test.js \
+  tests/pirates/scattershot-latency.test.js \
+  tests/redesign-movement.test.js \
+  tests/island/structure-recovery-policy.test.js \
+  tests/island/selection-dock.test.js \
+  tests/island/structure-recovery-upgrade-dom.test.js \
+  tests/island/wallet-watermark.test.js \
+  tests/island/wall-feedback-dom.test.js \
+  tests/island/quest-progress.test.js \
+  tests/island/boat-transition.test.js \
+  tests/pirates/sim-fingerprint.test.js
+npm run build
+env -u TEST_URL npm run test:mp -- /tmp/mp18-final-reviewed-multiplayer
+```
+
+These remain local synthetic/fake compatibility checks. They do not verify authenticated shared quotes/receipts, remaining economic card groups, the canonical multiplayer lifecycle, deployed schema or feature admission. Current-head review by a different human teammate remains required.
