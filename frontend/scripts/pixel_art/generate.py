@@ -5,7 +5,7 @@ from nature import tree, rock, shrub, flowers, undergrowth
 from buildings import cottage, boathouse, lighthouse
 from people import person
 from props import prop
-from ground import ground
+from ground import ground, lighthouse_materials
 from destinations import office, beacon, signal, pier, ship
 from nautical import item
 from settlements import assets as settlement_assets
@@ -40,7 +40,7 @@ assets.update(festival_assets())
 assets.update(pirate_assets())
 for name,image in assets.items():save(image,name,FOLDER)
 terrain=ground(ROOT)
-save(terrain,'ground',FOLDER)
+save(lighthouse_materials(terrain, ROOT),'ground',FOLDER)
 places=ROOT/'public'/'places';places.mkdir(exist_ok=True)
 for id in PATHS:save(place_ground(ROOT,id),id,places)
 save(chart(),'chart',places);save(chart(True),'chart-relit',places)

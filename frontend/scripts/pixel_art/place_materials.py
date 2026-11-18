@@ -2,6 +2,7 @@
 from PIL import Image
 
 REGIONAL_MATERIALS = {
+    'lighthouse_isle': ('sand', .46),
     'saltreach_harbor': ('path', .54),
     'smugglers_cove': ('sand', .50),
     'wreck_point': ('sand', .50),

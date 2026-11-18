@@ -70,7 +70,7 @@ Every row is a distinct original PNG in `public/pixel/`. Dimensions and anchors 
 
 ## Edit, reproduce and inspect
 
-Saltreach Harbor, Smugglers’ Cove, Wreck Point and The Teeth use the original Home Islet grass, sand and paving from `public/village/terrain-materials-v1.png`. `scripts/pixel_art/place_materials.py` tones the materials for each location and bakes them onto the existing ground and path pixels. The indexed PNGs preserve the original 1024 × 768 dimensions and transparency, with no additional runtime textures.
+Lighthouse Isle (Pirate Point), Saltreach Harbor, Smugglers’ Cove, Wreck Point and The Teeth use the original Home Islet grass, sand and paving from `public/village/terrain-materials-v1.png`. `scripts/pixel_art/place_materials.py` tones the materials for each location and bakes them onto the existing ground and path pixels. The indexed PNGs preserve the original 1024 × 768 dimensions and transparency, with no additional runtime textures. The Lighthouse keeps the winding path sandy and applies the treatment to the world backdrop, while the title background still uses its original colour treatment.
 
 From `frontend/`, run `python3 scripts/pixel_art/generate.py`. Pillow is an offline authoring dependency; playing, building and JS testing require no Python. Sources live in `scripts/pixel_art/`: common.py, nature.py, buildings.py, people.py, props.py, ground.py, destinations.py, nautical.py, settlements.py, case_places.py, place_ground.py, chart.py and generate.py. The Node helpers export canonical land masks from terrain.js and places/surfaces.js; visual shorelines and walkability use the same functions.
 
