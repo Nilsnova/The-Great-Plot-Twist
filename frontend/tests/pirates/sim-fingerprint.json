@@ -920,7 +920,7 @@
   "reason": "island_lost"
  },
  "recovery:w11:s1": {
-  "hash": "9068410ea5f60589e857949f",
+  "hash": "1c3a931c00c6440a827756e9",
   "ticks": 669,
   "reason": "all_sunk"
  },
@@ -945,13 +945,13 @@
   "reason": "island_lost"
  },
  "recovery:w16:s1": {
-  "hash": "79d74949e11a5543410441ac",
+  "hash": "418d2bf9f98489632cb367ec",
   "ticks": 3000,
   "reason": "timeout"
  },
  "recovery:w17:s1": {
-  "hash": "0ac3419384d0845d5ec92f58",
-  "ticks": 651,
+  "hash": "377a5600a8794335a24c9990",
+  "ticks": 666,
   "reason": "all_sunk"
  },
  "recovery:w18:s1": {
@@ -970,7 +970,7 @@
   "reason": "island_lost"
  },
  "recovery:w21:s1": {
-  "hash": "e95c5da2ebd3258c92f2d8d3",
+  "hash": "40a8f96a4c1ce1095d6d65b7",
   "ticks": 635,
   "reason": "all_sunk"
  },
@@ -1050,7 +1050,7 @@
   "reason": "all_sunk"
  },
  "recovery:w37:s1": {
-  "hash": "8dda9c88b2576801dcdb7ca5",
+  "hash": "bdf8d78e9725ae78c0975091",
   "ticks": 1161,
   "reason": "all_sunk"
  },
@@ -1120,12 +1120,12 @@
   "reason": "island_lost"
  },
  "recovery:w51:s1": {
-  "hash": "aae2362eb8730a4eae3b2fc1",
+  "hash": "7ae22ffff8ed9cc596997e32",
   "ticks": 866,
   "reason": "island_lost"
  },
  "recovery:w52:s1": {
-  "hash": "1f2df8f13944942b0184cc23",
+  "hash": "c8072d0c541c6f12d39b8a32",
   "ticks": 2157,
   "reason": "island_lost"
  },
@@ -1145,12 +1145,12 @@
   "reason": "captains_fallen"
  },
  "recovery:w56:s1": {
-  "hash": "af0d96bf2a55398326fed8a1",
-  "ticks": 968,
+  "hash": "d7626770d069f48e355de4f7",
+  "ticks": 981,
   "reason": "all_sunk"
  },
  "recovery:w57:s1": {
-  "hash": "6e66cec609767906448a3b30",
+  "hash": "ac7000e6a94d73a1df83e4a3",
   "ticks": 1946,
   "reason": "island_lost"
  },
@@ -1205,27 +1205,27 @@
   "reason": "all_sunk"
  },
  "recovery:w37:s2": {
-  "hash": "ba886397f8dcb68c17302971",
-  "ticks": 811,
+  "hash": "536b5ffa2dcba340756b1d57",
+  "ticks": 831,
   "reason": "all_sunk"
  },
  "recovery:w42:s2": {
-  "hash": "8d873162b572c49b6484fe91",
+  "hash": "c0da0e2d514bc453c66e8ff2",
   "ticks": 2266,
   "reason": "island_lost"
  },
  "recovery:w47:s2": {
-  "hash": "64cb0293236e522c0804a08e",
-  "ticks": 701,
+  "hash": "10d8cf72f29ca1573d6168d2",
+  "ticks": 709,
   "reason": "all_sunk"
  },
  "recovery:w52:s2": {
-  "hash": "67d152f9d7a147e8f815396e",
+  "hash": "a72540034290c1feecf640af",
   "ticks": 2047,
   "reason": "island_lost"
  },
  "recovery:w57:s2": {
-  "hash": "8faa8ed6e29dd91d1afaeb92",
+  "hash": "394054594334665c4f6041d5",
   "ticks": 1681,
   "reason": "island_lost"
  },

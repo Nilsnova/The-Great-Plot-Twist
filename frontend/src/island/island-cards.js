@@ -34,7 +34,8 @@ export function createCards(isl) {
     // On a friend's island you build with your own coins (and your own unlocks); it stays theirs.
     const island = target(), spot = island?.spots.find(item => item.id === spotId) ?? null;
     const recoveryEnabled = recoveryControlsOn() && !!spot?.built && ['wall', 'cannon', 'mortar', 'harpoon', 'culverin', 'swivel'].includes(spot.kind);
-    const recoveryReady = recoveryEnabled && recoveryPolicyOn() && isl.recoveryIslandCode === island?.code && !!isl.recoveryState;
+    const recoveryReady = recoveryEnabled && isl.recoveryStatus === 'ready' && recoveryPolicyOn()
+      && isl.recoveryIslandCode === island?.code && !!isl.recoveryState;
     const recoveryRow = recoveryReady ? isl.recoveryState.structures.find(item => item.spot === spotId) : null;
     const replayActive = !!isl.recoveryCombat && isl.flow.current?.wave?.waveId === isl.recoveryCombat.waveId;
     const live = recoveryReady && replayActive

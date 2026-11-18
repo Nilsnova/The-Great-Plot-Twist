@@ -40,11 +40,12 @@ export function createCaptains(sim) {
       return;
     }
     if (stats.mode === 'cone') {
-      // A spray of shot: the nearest ships or boarders inside the cone towards the aim point, up to stats.targets.
+      // Select the nearest ships or boarders in the cone where the shooter saw them (bounded by seenPlace).
+      // Keep the living target objects: projectiles and damage still resolve at their current positions.
       const heading = Math.atan2(aimed.z - z, aimed.x - x), half = stats.cone / 2 * Math.PI / 180;
       const inCone = [...ships, ...boarders].map(item => {
-        const d = distance(x, z, item.x, item.z);
-        let turn = Math.abs(Math.atan2(item.z - z, item.x - x) - heading);
+        const at = seenPlace(input, item), d = distance(x, z, at.x, at.z);
+        let turn = Math.abs(Math.atan2(at.z - z, at.x - x) - heading);
         if (turn > Math.PI) turn = 2 * Math.PI - turn;
         return { item, d, turn };
       }).filter(entry => entry.d <= stats.range && entry.turn <= half + 1e-9)

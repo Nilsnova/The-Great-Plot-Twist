@@ -78,7 +78,11 @@ export function createRecovery(isl) {
       if (isl.disposed || askedId !== isl.recoveryReadId || askedCode !== target()?.code) return;
       if (!answer.ok) {
         if (answer.code === 'feature_off') {
-          isl.recoveryState = null; isl.recoveryIslandCode = askedCode; isl.recoveryStatus = 'disabled'; clearRecoveryError();
+          const persistedV1 = (isl.recoveryState?.recoveryVersion === 1 && isl.recoveryIslandCode === askedCode)
+            || target()?.recoveryVersion === 1;
+          isl.recoveryIslandCode = askedCode;
+          if (persistedV1) { isl.recoveryStatus = 'error'; setRecoveryReadError(answer.code); }
+          else { isl.recoveryState = null; isl.recoveryStatus = 'disabled'; clearRecoveryError(); }
         } else {
           isl.recoveryIslandCode = askedCode; isl.recoveryStatus = 'error'; setRecoveryReadError(answer.code);
         }
