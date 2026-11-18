@@ -757,7 +757,10 @@ def test_a_visit_shows_the_levels_kinds_and_crew_so_every_visitor_simulates_the_
     assert invite(world).status_code == 200
     body = world.visit("ISLE-K7Q2M", headers=GUEST).json()
 
-    assert list(body) == ["code", "ownerName", "waveBest", "spots", "crew", "campaign", "layout"]
+    assert list(body) == [
+        "code", "ownerName", "waveBest", "recoveryVersion", "spots", "crew", "campaign", "layout"
+    ]  # fmt: skip
+    assert body["recoveryVersion"] == 0
     spot = next(spot for spot in body["spots"] if spot["id"] == "cannon_3")
     assert (spot["kind"], spot["level"], spot["built"]) == ("mortar", 2, True)
     assert body["crew"] == {"gunner": 1, "carpenter": 0, "lookout": 1, "guard": 0}
