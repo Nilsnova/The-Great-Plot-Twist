@@ -115,9 +115,28 @@ export function createNarratorCard(container = document.body, {onSkip = () => {}
     const wasReader = card.classList.contains('is-large-touch-reader');
     const preparing = !enlarged && style.getPropertyValue('--narrator-preparation-reader').trim() === '1'
       && !!container.querySelector('.coach-panel:not([hidden],.is-combat-guide)');
-    if (preparing) card.classList.remove('is-combat-docked');
-    const touchReader = (enlarged || preparing) && style.getPropertyValue('--narrator-reader-enabled').trim() === '1'
-      && dockTouchReader(touchAction);
+    const canRead = style.getPropertyValue('--narrator-reader-enabled').trim() === '1';
+    const keepReading = wasReader && reading && !!combatHud;
+    if (preparing || keepReading) card.classList.remove('is-combat-docked');
+    let touchReader = canRead && (enlarged || preparing || keepReading) && dockTouchReader(touchAction);
+    card.classList.toggle('is-large-touch-reader', !!touchReader);
+    const dock = !touchReader && !enlarged && !!(combatHud || touchAction)
+      && style.getPropertyValue('--narrator-dock-enabled').trim() === '1';
+    const waveBreak = dock && !!touchAction && !!container.querySelector(WAVE_BREAK);
+    // The wave event details can resize the bar without changing any control's hidden flag.
+    watchWaveBar(container.querySelector(WAVE_BAR));
+    card.classList.toggle('is-combat-docked', dock);
+    card.classList.remove('is-combat-fallback');
+    const footer = waveBreak && style.getPropertyValue('--narrator-footer-enabled').trim() === '1' && fitFooter(touchAction);
+    card.classList.toggle('is-wave-footer', footer);
+    let placed = touchReader || footer || (dock && dockBesideControls());
+    // The live wave bar and controls can leave too little room for a full Standard caption.
+    if (!placed && dock && canRead && combatHud) {
+      card.classList.remove('is-combat-docked');
+      touchReader = dockTouchReader(touchAction);
+      placed = touchReader;
+    }
+    card.classList.toggle('is-wave-touch-docked', waveBreak && placed);
     const focused = wasReader && card.contains(document.activeElement);
     const wasDormant = card.classList.contains('is-reader-dormant');
     const dormant = retained && !touchReader;
@@ -144,17 +163,6 @@ export function createNarratorCard(container = document.body, {onSkip = () => {}
       }
       card.classList.remove('has-unread-subtitles');
     }
-    const dock = !touchReader && !enlarged && !!(combatHud || touchAction)
-      && style.getPropertyValue('--narrator-dock-enabled').trim() === '1';
-    const waveBreak = dock && !!touchAction && !!container.querySelector(WAVE_BREAK);
-    // The wave event details can resize the bar without changing any control's hidden flag.
-    watchWaveBar(container.querySelector(WAVE_BAR));
-    card.classList.toggle('is-combat-docked', dock);
-    card.classList.remove('is-combat-fallback');
-    const footer = waveBreak && style.getPropertyValue('--narrator-footer-enabled').trim() === '1' && fitFooter(touchAction);
-    card.classList.toggle('is-wave-footer', footer);
-    const placed = touchReader || footer || (dock && dockBesideControls());
-    card.classList.toggle('is-wave-touch-docked', waveBreak && placed);
     if (!footer && !touchReader) document.documentElement.style.removeProperty('--narrator-sound-bottom');
     if (!touchReader) document.documentElement.style.removeProperty('--narrator-sound-left');
     if (!placed) {

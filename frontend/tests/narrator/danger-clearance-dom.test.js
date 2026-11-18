@@ -184,24 +184,63 @@ it.each([false, true])('gives the actual acute instruction priority over overlap
     await capture(page, `320x568-${large ? 'large' : 'normal'}-warning`);
     const current = await measure(page);
     expect(current, JSON.stringify(current)).toMatchObject({obscured: false, activeLine: true, sameLine: true, skipPresent: true});
-    expect(current).toMatchObject(large ? {drawn: true, inert: false, ariaHidden: null} : {drawn: false, inert: true, ariaHidden: 'true'});
+    expect(current).toMatchObject({drawn: true, inert: false, ariaHidden: null});
+    expect(current.caption.top).toBeGreaterThan(current.danger.bottom);
     expect(current.warning).toContain('Slash nearby pirates or move away.');
     expect(current.font).toBeGreaterThanOrEqual(large ? 22 : 14);
     expect(current, JSON.stringify(current)).toMatchObject({fireClear: true, fireWithin: true, stickClear: true, rangeFits: true});
     expect(await page.locator('.pirate-musket').isEnabled()).toBe(true);
     expect(await page.locator('.touch-stick').isEnabled()).toBe(true);
-    if (large) {
-      const placement = await page.addStyleTag({content: '.pirate-bar{transform:none!important}.pirate-bar>.pirate-danger{position:fixed;inset:auto 6px 8px}'});
-      await page.evaluate(() => dispatchEvent(new Event('resize')));
-      await expect.poll(async () => (await measure(page)).drawn).toBe(false);
-      expect(await measure(page)).toMatchObject({obscured: false, inert: true, ariaHidden: 'true', sameLine: true});
-      await placement.evaluate(node => node.remove());
-    }
+    await page.getByRole('region', {name: 'Narrator subtitles'}).focus();
+    const placement = await page.addStyleTag({content: '.pirate-bar{transform:none!important}.pirate-bar>.pirate-danger{position:fixed;inset:auto 6px 8px}'});
+    await page.evaluate(() => dispatchEvent(new Event('resize')));
+    await expect.poll(async () => (await measure(page)).drawn).toBe(false);
+    expect(await measure(page)).toMatchObject({obscured: false, inert: true, ariaHidden: 'true', sameLine: true});
+    await placement.evaluate(node => node.remove());
     await page.evaluate(() => battle.danger(null));
     await page.waitForTimeout(80);
     expect(await measure(page)).toMatchObject({drawn: true, inert: false, ariaHidden: null, sameLine: true, skipPresent: true});
     expect((await measure(page)).caption.top).toBeGreaterThanOrEqual(0);
     await page.locator('.narrator-skip').click();
+    expect(await page.evaluate(() => skips)).toBe(1);
+  });
+});
+
+it.each([[320, 568, true], [375, 812, false]])('keeps live Fog Bank controls and Standard subtitles apart at %s×%s', async (width, height, usesReader) => {
+  await withPhone(width, height, async page => {
+    await mount(page);
+    await page.evaluate(async () => {
+      const {default: lines} = await window.g20Import('/src/narrator/lines.json');
+      battle.bar({wave: 31, shipsLeft: 30, boardersLeft: 0, islandHp: 100, maxIslandHp: 100});
+      battle.event({id: 'fog_bank', icon: '🌫️', title: 'Fog Bank',
+        line: 'Ships show up late and towers see 30% less. A nearby watchtower clears the fog.', open: true});
+      window.captionLine = lines.lines.find(line => line.id === 'unlock_gunboat');
+      narration.show(captionLine);
+    });
+    const captionFits = () => page.evaluate(() => {
+      const card = narration.element, box = card.getBoundingClientRect();
+      const obstacles = ['.pirate-bar', '.pirate-musket', '.touch-stick-group'];
+      const clear = obstacles.every(sel => {
+        const other = document.querySelector(sel).getBoundingClientRect();
+        return box.left >= other.right || box.right <= other.left || box.bottom <= other.top || box.top >= other.bottom;
+      });
+      return {clear, drawn: getComputedStyle(card).visibility === 'visible',
+        reader: card.classList.contains('is-large-touch-reader'), unchanged: card.querySelector('.narrator-text').textContent === captionLine.text};
+    });
+    const expectCaption = () => expect.poll(captionFits).toEqual({clear: true, drawn: true, reader: usesReader, unchanged: true});
+    await expectCaption();
+    const summary = page.locator('.pirate-event-summary');
+    await summary.tap();
+    await expectCaption();
+    await summary.tap();
+    await expectCaption();
+    if (usesReader) {
+      const reader = page.getByRole('region', {name: 'Narrator subtitles'});
+      await reader.focus();
+      await page.keyboard.press('End');
+      await expect.poll(() => reader.evaluate(node => node.scrollTop)).toBeGreaterThan(0);
+    }
+    await page.getByRole('button', {name: 'Skip the narrator'}).tap();
     expect(await page.evaluate(() => skips)).toBe(1);
   });
 });
