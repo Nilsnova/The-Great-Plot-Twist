@@ -15,6 +15,8 @@ import {progressSummary} from './progression.js';
 import {upgradeOverviewModel} from './upgrade-overview.js';
 import {withWallRecovery} from './wall-recovery.js';
 import {preparationModel} from './preparation-model.js';
+import {launchSharedBoatScene} from './shared-boat-scene.js';
+import {boatOrigin, sameBoatOrigin} from './shared-boat-shapes.js';
 
 export function createCards(isl) {
   const {emit, on, focus, resetInput, reducedMotion, preferences, loadBoatScene, openHarborStall, villageCamera,
@@ -57,7 +59,8 @@ export function createCards(isl) {
       unlocks: isl.own ? islandUnlocks() : null, prices: isl.own?.prices ?? null, campaign: campaign(), battle: isl.battle && !isl.waveOver,
       movable: island?.layout?.movable === true, flags: {defenses_v2: defensesV2On() === true}, treePicked: isl.treePicked.get(spotId) ?? null,
       recoveryState: recoveryView, recoveryStatus: recoveryEnabled ? (recoveryReady ? 'ready' : isl.recoveryStatus) : 'disabled',
-      recoveryError: isl.recoveryError, recoveryPending: isl.recoveryPendingSpot === spotId, recoveryVersion: recoveryModelVersion()});
+      recoveryError: isl.recoveryError, recoveryPending: isl.recoveryPendingSpot === spotId, recoveryVersion: recoveryModelVersion(),
+      ...(isl.mode === 'fake' ? {} : {economy: isl.getEconomy()})});
     if (recoveryEnabled && isl.recoveryState?.displayPhase === 'combat' && !live) {
       model.recovery = {visible: false, status: 'error', message: 'Battle health is still loading.'};
     }
@@ -93,7 +96,7 @@ export function createCards(isl) {
   const tech = () => techModel({campaign: campaign(), coins: isl.own?.coins ?? null, busy: isl.busyResearch, battle: isl.battle && !isl.waveOver,
     message: isl.cardMessage || (!target() ? isl.ownMessage : ''), recoveryVersion: recoveryModelVersion()});
   const wreck = () => wreckModel({campaign: campaign(), coins: isl.own?.coins ?? null, busy: isl.busyGift, message: isl.cardMessage || (!target() ? isl.ownMessage : ''),
-    boat: isl.boatStatus, battle: isl.battle && !isl.waveOver});
+    boat: isl.boatStatus, battle: isl.battle && !isl.waveOver, requireRewardScope: isl.mode !== 'fake'});
   const harborHandlers = {open: id => { isl.ui.close(); try { openHarborStall(id); } catch { /* The stall answers on its own. */ } }};
   const techHandlers = {research: step => void research(step)};
   const wreckHandlers = {give: amount => void giveWreck(amount), sail: game => void sail(game)};
@@ -111,8 +114,14 @@ export function createCards(isl) {
   }
   async function readBoat() {
     if (!isOpen(campaign(), 'ship')) { isl.boatStatus = null; return; }
-    const ticket = ++isl.boatTicket, answer = await isl.api.boatStatus(placeCode());
-    if (isl.disposed || ticket !== isl.boatTicket) return;
+    const ticket = ++isl.boatTicket, code = target()?.code;
+    const economy = boatOrigin(isl.getEconomy()), actorId = isl.getActorId();
+    if (isl.mode !== 'fake') isl.boatStatus = null;
+    const answer = await (isl.mode === 'fake' ? isl.api.boatStatus(placeCode()) : isl.sharedBoatApi.status(placeCode()));
+    if (isl.disposed || ticket !== isl.boatTicket || code !== target()?.code) return;
+    if (isl.mode !== 'fake' && (actorId !== isl.getActorId()
+      || economy && !sameBoatOrigin(economy, isl.getEconomy()))) return;
+    if (isl.getEconomy()?.mode === 'island_shared' && !sameBoatOrigin(answer.data?.economy, isl.getEconomy())) return;
     isl.boatStatus = answer.ok ? answer.data : null;
     if (isl.ui.open === 'wreck') refreshCard();
   }
@@ -121,6 +130,20 @@ export function createCards(isl) {
     isl.boatLoading = true;
     const launch = ++isl.boatLaunch;
     const at = campaign(), code = target()?.code ?? '', where = placeCode();
+    const economy = boatOrigin(isl.getEconomy()), actorId = isl.getActorId();
+    let rewardScope = isl.mode === 'fake' ? 'player' : null;
+    if (isl.mode !== 'fake') {
+      await readBoat();
+      if (isl.disposed || launch !== isl.boatLaunch) return;
+      if (!isl.boatStatus?.open || !['island', 'player'].includes(isl.boatStatus.rewardScope)) {
+        isl.boatLoading = false; isl.ui.toast('Read the current ship rewards before sailing. Try again.', 'info'); return;
+      }
+      rewardScope = isl.boatStatus.rewardScope;
+      if (rewardScope === 'island' && (!sameBoatOrigin(economy, isl.getEconomy())
+        || !sameBoatOrigin(isl.boatStatus.economy, economy))) {
+        isl.boatLoading = false; isl.ui.toast('Read the current island treasury before sailing.', 'info'); return;
+      }
+    }
     let scene;
     try { scene = await loadBoatScene(); } catch {
       if (!isl.disposed && launch === isl.boatLaunch) { isl.boatLoading = false; isl.ui.toast('The boat could not load. Try again.', 'info'); }
@@ -129,7 +152,25 @@ export function createCards(isl) {
     if (isl.disposed || launch !== isl.boatLaunch) return;
     isl.boatLoading = false;
     if (boatBlocked() || code !== target()?.code || at?.wave !== campaign()?.wave) return;
+    if (isl.mode !== 'fake' && (actorId !== isl.getActorId()
+      || ((rewardScope === 'island' || isl.getEconomy()?.mode === 'island_shared')
+        && !sameBoatOrigin(economy, isl.getEconomy())))) {
+      isl.ui.toast('The island or sign-in changed. Read the ship rewards again.', 'info'); return;
+    }
     isl.ui.close();
+    if (rewardScope === 'island') {
+      isl.boatLoading = true;
+      const answer = await launchSharedBoatScene({createBoatGame: scene.createBoatGame, session: isl.sharedBoatSession,
+        game, container: document.body, code, reducedMotion, easy: () => preferences()?.easyFinishers === true,
+        isCurrent: () => !isl.disposed && launch === isl.boatLaunch && !boatBlocked() && code === target()?.code
+          && sameBoatOrigin(economy, isl.getEconomy()) && actorId === isl.getActorId(),
+        onSettled: () => { if (!isl.disposed) void readBoat(); },
+        onClose: () => { isl.boatGame = null; if (!isl.disposed) { focus(); openWreck(); } }});
+      if (isl.disposed || launch !== isl.boatLaunch) { answer.data?.dispose(); return; }
+      isl.boatLoading = false;
+      if (!answer.ok) { isl.ui.toast(answer.message, 'error'); openWreck(); return; }
+      isl.boatGame = answer.data; return;
+    }
     const round = scene.createBoatGame({container: document.body, game, wave: at?.wave ?? 0, code, reducedMotion,
       easy: () => preferences()?.easyFinishers === true,
       onFinish: async ({stars}) => {
