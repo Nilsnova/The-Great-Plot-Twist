@@ -3,7 +3,7 @@ export const TERRAIN_SHEET = Object.freeze({file: 'village/terrain-materials-v1.
 export const TERRAIN_MATERIALS = Object.freeze({
   // One-pixel insets prevent bilinear sampling from bleeding into a neighboring material.
   grass: {rect: [1, 1, 625, 625], period: [8, 5.76], mirror: true},
-  path: {rect: [628, 1, 625, 625], period: [4, 2.88]},
+  path: {rect: [628, 1, 625, 625], period: [5.5, 3.96]},
   rock: {rect: [1, 628, 625, 625], period: [6, 2.8]},
   sand: {rect: [628, 628, 625, 625], period: [8, 5.76], mirror: true},
 });

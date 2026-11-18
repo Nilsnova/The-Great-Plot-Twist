@@ -57,7 +57,8 @@ export function paintGround(id, density = 28, materials = null) {
   c.save(); c.clip(meadow);
   const glow = c.createRadialGradient(-4, -6, 2, 0, 0, s.rx); glow.addColorStop(0, '#93d968'); glow.addColorStop(.6, '#7cc95a'); glow.addColorStop(1, '#5fb24c');
   c.fillStyle = glow; c.fill(meadow);
-  if (materials) paintMaterial(c, materials, 'grass', {alpha: .82});
+  // Let the broad green light lead; fine grass detail should not compete with the buildings.
+  if (materials) paintMaterial(c, materials, 'grass', {alpha: .6});
   c.lineWidth = .7; c.strokeStyle = '#4f9c41'; c.stroke(meadow);
   // Soft patches of darker and lighter grass.
   c.globalAlpha = materials ? .3 : 1;

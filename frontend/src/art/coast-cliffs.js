@@ -52,19 +52,19 @@ export function paintCliffFaces(c, rows, materials = null) {
       }});
       c.globalCompositeOperation = 'multiply';
       c.fillStyle = linear(c, middle.x, middle.y, middle.x, middle.baseY,
-        [[0, '#fff2cb'], [.5, middle.x > 0 ? '#b8b6a5' : '#d5c6a6'], [1, '#756a55']]);
+        [[0, '#fffdf2'], [.28, '#ead9b9'], [.68, middle.x > 0 ? '#a69477' : '#c0ad8b'], [1, '#615440']]);
       c.fill(face); c.restore();
     }
     // Broken vertical seams and ledges make rock strata rather than a uniformly striped retaining wall.
     const seam = side[0], bend = Math.sin(from + 2) * .12;
     stroke(c, line([[seam.x, seam.y + seam.depth * .12], [seam.x + bend, seam.y + seam.depth * .48],
-      [seam.x - bend * .5, seam.y + seam.depth * .84]]), '#685e4b', .045, .8);
+      [seam.x - bend * .5, seam.y + seam.depth * .84]]), materials ? '#5b513f' : '#685e4b', .045, .8);
     if (from % 12 === 0) stroke(c, line([[middle.x - .28, middle.y + middle.depth * .64], [middle.x + .1, middle.y + middle.depth * .69],
-      [middle.x + .38, middle.y + middle.depth * .61]]), '#d2bf98', .035, .7);
+      [middle.x + .38, middle.y + middle.depth * .61]]), materials ? '#e0cfab' : '#d2bf98', .035, .7);
   }
   for (const fraction of [.34, .72]) {
-    stroke(c, path(rows, fraction), '#746850', .055, .65);
-    c.save(); c.translate(0, -.055); stroke(c, path(rows, fraction), '#d5c29a', .04, .65); c.restore();
+    stroke(c, path(rows, fraction), '#746850', .055, materials ? .4 : .65);
+    c.save(); c.translate(0, -.055); stroke(c, path(rows, fraction), '#d5c29a', .04, materials ? .45 : .65); c.restore();
   }
   c.restore();
 }
