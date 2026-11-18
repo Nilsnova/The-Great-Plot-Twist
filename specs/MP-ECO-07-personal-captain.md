@@ -60,6 +60,14 @@ POST requires strict `progressionVersion:1`, canonical decimal-string `expectedR
 
 `20261118050310_personal_captain_revisions.sql` locks global personal state, matches replay identity including original expected revision before phase checks, and compares the revision before a new change. The old unversioned edit capability is revoked from `service_role`; only the private implementation remains callable by its versioned wrapper. A retry returns its immutable original effect with current personal state and cannot repeat an old respec after later changes.
 
+### Global free and paid operation identity
+
+The additive `20261118050320_personal_captain_operations.sql` depends on the [MP-ECO-02 operation registry](MP-ECO-02-operation-identities.md). The versioned free-edit wrapper claims `(authenticated actor, actionUid)` with null account/epoch and server-selected `captain:role`, `captain:learn` or `captain:respec` before taking personal profile locks. The canonical fingerprint includes the action, normalized value and original expected revision. `personal_captain_operations.operation_id` links the complete original domain result to that exact global root.
+
+One UID cannot execute a personal edit and a paid/free island action in either order or concurrently. Exact personal replay returns its immutable original receipt plus fresh personal state before checking mutable revision or assignment. A business refusal runs through a SQL savepoint rollback, removing any newly inserted claim together with its effects. An unexpected receipt/storage failure propagates and rolls back the whole action. No personal action creates a treasury effect.
+
+The personal adapter rejects reserved `fx_`/`sys_` financial namespaces before database access. Registry identity conflicts use the shared public `409 idempotency_conflict`; malformed root identity uses `422 invalid_transaction`. Unregistered prior personal receipt history is preserved with a null operation link and requires an explicit reviewed mapping before replay; this migration invents no historical roots or compensation. Missing personal adoption never leaves a claim. The old four-argument private edit helper remains unavailable to browser and standalone service callers.
+
 ## Retirement and conversion boundaries
 
 Initialization preserves known skill IDs and their genuine point costs; it grants no compensation or fabricated wins. Already retired recovery skills remain acquired history, cannot be newly learned and are filtered from active frozen combat skills by the existing recovery policy. Explicit replacement/point conversion remains MP-ECO-13/17 work; no replacement effect is invented. Ordinary free respec reallocates the same earned points, retaining a bound Engineer role.
@@ -77,10 +85,20 @@ Acquired personal data may be deleted with that player's account; shared canonic
 
 ## Changed files and remaining integration
 
-Owned additions are the personal domain/store modules, new unregistered route module, this spec, additive migrations and focused tests. No existing island service, route, application registration, frontend or INTERFACES is modified. MP-ECO-02 account/context, 03 canonical completion, 04 construction, 08 authority and 11 assignment integrations must be combined and independently reviewed before admission. MP-ECO-13/17 conversion policies remain separate. A different human reviewer is still required.
+Feature additions are the personal domain/store modules, new unregistered route module, this spec, additive migrations and focused tests. No existing island service, route, application registration, frontend or INTERFACES is modified. MP-ECO-02 account/context, 03 canonical completion, 04 construction, 08 authority and 11 assignment integrations must be combined and independently reviewed before admission. MP-ECO-13/17 conversion policies remain separate. A different human reviewer is still required.
 
 ### Foundation checks
 
 - Focused personal/route/legacy Python checks: `uv run pytest -q server/tests/test_personal_captain.py server/tests/test_captain_progression_routes.py server/tests/test_captain_tree_routes.py server/tests/test_captain_skills_routes.py` — **68 passed**.
 - Disposable full-chain SQL checks: `CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql/test_personal_captain_sql.py server/tests/island_sql/test_island_treasury_sql.py server/tests/island_sql/test_captain_tree_sql.py server/tests/island_sql/test_respec_and_wave_guards_sql.py` — **53 passed**, including 22 personal-domain checks, a real legacy-finish/profile-freeze regression and apply/reapply.
 - Ruff passed for the new Python modules/tests. The new migration parses with PostgreSQL's parser; no live database, authentication flow, deployment or physical-client behavior was tested.
+
+### Operation registry follow-up checks
+
+After merging main `f0c64442` and adding the operation registry dependency:
+
+- Personal/domain/route/treasury Python checks: `uv run --no-sync pytest -q server/tests/test_personal_captain.py server/tests/test_captain_progression_routes.py server/tests/test_economy_operations.py server/tests/test_island_treasury.py server/tests/test_island_treasury_store.py` — **108 passed**.
+- Disposable full-chain PostgreSQL checks: `CASE_PG_SCRATCH=1 uv run --with pgserver --with 'psycopg[binary]' pytest -q server/tests/island_sql/test_personal_captain_operations_sql.py server/tests/island_sql/test_personal_captain_sql.py server/tests/island_sql/test_economy_operations_sql.py server/tests/island_sql/test_island_treasury_sql.py` — **78 passed**, including 15 personal-operation cases.
+- The documented pglast parser check parsed **70 migrations**.
+
+The new SQL regressions first reproduced sequential and concurrent cross-domain duplicate execution. They cover refusal rollback, historical mapping refusal, reserved namespaces, exact replay linkage, missing adoption and an injected failure after profile mutation while writing its receipt. Existing Engineer-generation, global assignment and legacy-finish/profile-freeze tests remain in the same SQL run. No router registration, live conversion, production migration or authenticated end-to-end activation is claimed.
