@@ -572,7 +572,7 @@ def test_accepted_bell_member_join_and_paid_repair_match_committed_state(databas
     ).fetchone() == (instance(database),)
 
 
-def test_saved_v1_extra_spots_and_culverin_still_start_with_availability_flags_off(database):
+def test_saved_v1_extra_spots_and_culverin_start_without_legacy_flags(database):
     epoch, _ = seed_recovery(
         database,
         (
@@ -641,7 +641,7 @@ def test_saved_v1_extra_spots_and_culverin_still_start_with_availability_flags_o
             "cannon_11",
         }
         assert island_spots["cannon_11"]["kind"] == "culverin"
-        assert "culverin" not in island_spots["cannon_7"]["kinds"]
+        assert "culverin" in island_spots["cannon_7"]["kinds"]
         assert island_response.json()["unlocks"]["unlocked"]
         assert "culverin:5" in island_response.json()["unlocks"]["unlocked"]
         assert island_spots["cannon_11"]["upgradeCost"] == 160
@@ -678,19 +678,21 @@ def test_saved_v1_extra_spots_and_culverin_still_start_with_availability_flags_o
         )
         assert repaired_culverin["hpUnits"] == 1_000_000
 
-        hidden_plot_build = client.post(
+        occupied_plot_build = client.post(
             "/api/island/build",
             headers=HEADERS["owner"],
             json={"spot": "cannon_9", "kind": "cannon", "actionUid": "gated-new-spot-01"},
         )
-        hidden_kind_build = client.post(
+        wrong_kind_build = client.post(
             "/api/island/build",
             headers=HEADERS["owner"],
-            json={"spot": "cannon_7", "kind": "culverin", "actionUid": "gated-new-kind-01"},
+            json={"spot": "cannon_7", "kind": "wall", "actionUid": "wrong-kind-build-01"},
         )
 
-    assert hidden_plot_build.status_code == 404
-    assert hidden_kind_build.status_code == 422
+    assert occupied_plot_build.status_code == 409
+    assert occupied_plot_build.json()["error"]["code"] == "spot_taken"
+    assert wrong_kind_build.status_code == 422
+    assert wrong_kind_build.json()["error"]["code"] == "wrong_kind"
     assert balance(database, OWNER) == owner_balance
     assert database.execute(
         "select count(*) from public.islet_buildings where player_id=%s", (OWNER,)
@@ -710,10 +712,11 @@ def test_saved_v1_extra_spots_and_culverin_still_start_with_availability_flags_o
     assert {item["id"] for item in snapshot["createWave"]["defenses"]} >= set(by_spot)
 
 
-def test_saved_v1_culverin_between_wave_repair_and_empty_plot_remain_compatible(database):
+def test_saved_v1_culverin_repair_preserves_the_empty_plot_unlock(database):
     epoch, _ = seed_recovery(database, (("cannon_8", "culverin"),))
     as_server(database)
-    database.execute("update public.islands set wave_best=40 where player_id=%s", (OWNER,))
+    # Culverins open at wave 15, and cannon_9 opens at wave 20.
+    database.execute("update public.islands set wave_best=15 where player_id=%s", (OWNER,))
     settings = replace(CONFIGURED_SETTINGS, flags=parse_flags("islands"))
 
     def login(request: httpx.Request) -> httpx.Response:
@@ -735,7 +738,8 @@ def test_saved_v1_culverin_between_wave_repair_and_empty_plot_remain_compatible(
         assert island_response.status_code == 200, island_response.text
         spots = {item["id"]: item for item in island_response.json()["spots"]}
         assert spots["cannon_8"]["kind"] == "culverin"
-        assert "cannon_9" not in spots
+        assert not spots["cannon_9"]["built"]
+        assert "culverin" in spots["cannon_9"]["kinds"]
         assert "culverin:1" in island_response.json()["unlocks"]["unlocked"]
 
         state_response = client.get(
@@ -768,7 +772,10 @@ def test_saved_v1_culverin_between_wave_repair_and_empty_plot_remain_compatible(
             json={"spot": "cannon_9", "kind": "cannon", "actionUid": "empty-gated-plot-01"},
         )
 
-    assert empty_plot_build.status_code == 404
+    assert empty_plot_build.status_code == 409
+    assert empty_plot_build.json()["error"] == {
+        "code": "locked", "message": "Opens after wave 20."
+    }
     assert balance(database, OWNER) == owner_balance
     assert balance(database, MEMBER) == member_balance - 80
     assert database.execute(
