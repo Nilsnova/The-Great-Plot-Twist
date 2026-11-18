@@ -12,20 +12,9 @@ export const OIL_COST = { flash: 2, mirror: 1, shade: 0 };
 export const ROUND_CHOICES = [3, 5];
 export const STAKE_CHOICES = [0, 10, 25, 50, 100]; // 0 is a friendly duel
 export const CUT_PERCENT = 5;
-export const ANSWER_HOURS = 24;
-export const MAX_WAITING = 3;
-export const PAIR_DAILY_LIMIT = 3;
 const OIL_PER_ROUND = 1;
 const MIN_SIGNALS = 3;
 const MAX_SIGNALS = 5;
-
-// The rules block of GET /api/duels, used until the server has answered once.
-export const DEFAULT_RULES = {
-  signals: SIGNALS.map(id => ({ id, cost: OIL_COST[id], beats: BEATS[id] })),
-  roundChoices: ROUND_CHOICES, oilPerRound: OIL_PER_ROUND, stakeChoices: STAKE_CHOICES,
-  cutPercent: CUT_PERCENT, answerHours: ANSWER_HOURS, maxWaiting: MAX_WAITING,
-  pairDailyLimit: PAIR_DAILY_LIMIT, dayStarts: '00:00 Europe/Lisbon',
-};
 
 export const oilFor = rounds => rounds * OIL_PER_ROUND;
 export const sequenceCost = signals => signals.reduce((total, signal) => total + OIL_COST[signal], 0);

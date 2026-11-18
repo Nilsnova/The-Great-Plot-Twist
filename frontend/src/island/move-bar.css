@@ -1,0 +1,36 @@
+/* Only ordinary Move: the paid wall builder keeps its own receipt/status layout. */
+.island-move-bar.island-reference-move {
+  width: min(940px, calc(100vw - 32px)); grid-template-columns: 88px minmax(0, 1fr) auto; gap: 16px; align-items: center;
+  bottom: calc(max(12px, env(safe-area-inset-bottom)) + var(--narrator-card-height, 0px) + 12px);
+  padding: 14px 18px; border: 3px solid #b98238; border-radius: 16px;
+  background: linear-gradient(115deg, #fff0c9, #edcc91); color: #382817;
+  box-shadow: inset 0 0 0 2px #fff2be, 0 3px 0 #48301b, 0 8px 22px #142d35aa;
+}
+.island-reference-move .island-move-portrait { width: 88px; height: 108px; display: grid; place-items: center; font-size: 48px; color: #76613c; }
+.island-reference-move .island-move-portrait canvas { width: 100%; height: 100%; object-fit: contain; }
+.island-reference-move .island-move-copy { min-width: 0; max-height: 180px; overflow: auto; overflow-wrap: anywhere; }
+.island-reference-move .island-move-copy:focus-visible { outline: 3px solid #15414a; outline-offset: 3px; }
+.island-reference-move .island-move-title { display: block; color: #49301d; }
+.island-reference-move .island-move-line { margin: 6px 0; }
+.island-reference-move .island-move-status { color: #24582e; }
+.island-reference-move.is-refused .island-move-status { color: #8d291b; }
+.island-reference-move .island-move-controls { display: flex; align-items: center; gap: 18px; }
+.island-reference-move .island-move-pad { display: grid; grid-template: repeat(3, 44px) / repeat(3, 44px); gap: 3px; flex: none; }
+.island-reference-move [data-direction="north"] { grid-area: 1 / 2; }
+.island-reference-move [data-direction="west"] { grid-area: 2 / 1; }
+.island-reference-move [data-direction="east"] { grid-area: 2 / 3; }
+.island-reference-move [data-direction="south"] { grid-area: 3 / 2; }
+.island-reference-move .kit-button { box-sizing: border-box; min-width: 44px; min-height: 44px; border: 2px solid #846131; border-radius: 11px; box-shadow: inset 0 1px 1px #ffffff88, 0 2px 0 #533e22; }
+.island-reference-move .kit-quiet { background: linear-gradient(#28626a, #15414a); color: #fff4d7; }
+.island-reference-move .island-move-place { background: linear-gradient(#ffdf87, #e8ab40); color: #402a13; }
+.island-reference-move .island-move-actions { flex-direction: column; gap: 12px; }
+.island-reference-move .island-move-actions .kit-button { width: 132px; padding: 10px 12px; white-space: normal; }
+@media (max-width: 620px) {
+  .island-move-bar.island-reference-move { width: calc(100vw - 24px); padding: 10px 12px; grid-template-columns: 64px minmax(0, 1fr); gap: 8px 10px; }
+  .island-reference-move .island-move-portrait { width: 64px; height: 88px; }
+  .island-reference-move .island-move-copy { max-height: 168px; }
+  .island-reference-move .island-move-title { font-size: 19px; }
+  .island-reference-move .island-move-controls { grid-column: 1 / -1; justify-content: space-between; gap: 8px; }
+  .island-reference-move .island-move-actions { flex: 1; min-width: 0; align-items: end; }
+  .island-reference-move .island-move-actions .kit-button { width: 132px; max-width: 100%; flex: none; }
+}

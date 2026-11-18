@@ -1,7 +1,7 @@
 // Preference boundaries and UI helpers that protect accessible presentation.
 import { describe, expect, it } from 'vitest';
 import { defaults, normalizePreferences, loadPreferences, savePreferences, PREFERENCES_KEY } from '../src/settings/logic.js';
-import { createTypewriter, choiceKey, formatCoins, chartPoints, progressRatio } from '../src/ui/kit/logic.js';
+import { createTypewriter, choiceKey, chartPoints, progressRatio } from '../src/ui/kit/logic.js';
 
 describe('G20 preference boundaries', () => {
   it.each([0, 24, 36, 60])('round trips text speed %s and explicit falsy preferences', textSpeed => {
@@ -40,7 +40,6 @@ describe('G20 UI kit boundaries', () => {
     expect(choiceKey(key, current, 0)).toBeNull();
   });
   it('rejects unsafe balances and non-finite progress and handles descending charts', () => {
-    for (const value of [Number.MAX_SAFE_INTEGER + 1, '100', NaN, undefined]) expect(formatCoins(value)).toBe('?');
     expect(chartPoints([30, 20, 10], 100, 40, 4)).toEqual([[4, 4], [50, 20], [96, 36]]);
     for (const pair of [[NaN, 10], [1, Infinity], [2, -1]]) expect(progressRatio(...pair)).toBe(0);
   });

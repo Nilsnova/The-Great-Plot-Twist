@@ -1,0 +1,57 @@
+{
+  "tool": "OpenAI image_gen.imagegen",
+  "date": "2026-11-17",
+  "transparent_background": true,
+  "original_pixels_modified_offline": false,
+  "requests": [
+    {
+      "request": 1,
+      "input": null,
+      "output": "exec-0d63d64e-d537-4811-af26-42f731f8e719.png",
+      "status": "rejected: alpha haze and rightmost muzzle crop",
+      "prompt": "Create an ORIGINAL transparent game sprite atlas of PIRATE CULVERINS: long-barreled coastal guns, visibly longer and slimmer than a regular cannon, never mortars. Polished richly shaded 3D miniature strategy-game art, three-quarter front-left view, barrel pointing diagonally up-right, warm upper-left lighting, dark iron and blue steel, warm timber, brass/gold hardware, slate navy anchor panels, gray stone foundations; rounded bevels and readable material depth. Landscape1536x1024, exactly FIVE columns and FOUR rows,20 independent cutouts. Each cell about307x256. Every sprite including flash/rubble must remain inside cellX+24..cellX+282, cellY+28..cellY+230 with at least45 fully transparent pixels between rows and24 between columns. Same hardware scale and ground anchor within each tier. Five columns are upgrades level1 simple iron long gun on compact wooden wheeled carriage; level2 brass trunnion and a powder barrel; level3 reinforced long gun on low stone platform; level4 navy armored carriage with gold anchor badge and brass bands; level5 imposing brass-capped long steel barrel, navy panels and gold-trim reinforced stone platform. Four rows: row1 intact ready; row2 exact intact hardware firing with a SMALL compact muzzle flash at the open barrel mouth, no smoke rising beyond the safe cell; row3 same gun standing damaged with cracks/scorch/chipped hardware, no firing; row4 broken long barrel and carriage collapsed with low rubble confined to same foundation and ground anchor. Every tier/state retains visible long barrel identity. EXACT fully transparent alpha0 background, corners, and gutters: absolutely no white/gray/checkerboard rectangles, atmospheric haze, shadows outside the cutout, glow, floor, scene or overall background. Only hardware, attached foundations, small firing flash and collapsed fragments. Clean opaque painted hardware with antialiased silhouette. No labels, numbers, text, dividers, frame border, watermark, UI, people or extra objects. All20 sprites fully separate and uncropped, production sprite sheet."
+    },
+    {
+      "request": 2,
+      "input": "exec-0d63d64e-d537-4811-af26-42f731f8e719.png",
+      "output": "exec-dd3e900e-3da0-4cc7-b524-cbbbe5a600a2.png",
+      "status": "rejected: alpha haze and edge crop remain",
+      "prompt": "Repair this exact culverin sprite sheet into a production transparent atlas. Preserve all20 long-gun designs, five upgrade columns, four state rows, the detailed shaded art and three-quarter view, but fix TWO defects: (1) the whole canvas currently has faint alpha1 haze and the hardware is only alpha252. Remove ALL background/haze/shadow/glow, use exact fully transparent alpha0 for every corner and gutter, and fully opaque alpha255 inside solid hardware; retain antialiasing only at actual object edges. No painted background or checkerboard. (2) rightmost tier5 barrel is cropped at the right canvas edge. Uniformly reduce/reposition each complete tier's4state sprites into strict separate cells on1536x1024:5columns307px,4rows256px. Every sprite's ENTIRE bounds including muzzle flash and rubble inside its cellX+26..cellX+278 andcellY+22..cellY+232. At least48px clear between rows and30px clear between columns. All states percolumn samehardware scale and foundationfoot atcellcenterX/cellY+224; broken lowerheight but same scale, not enlarged. Keep long slender culverin barrels, compact muzzle flash, the navy/brass/wood/stone tier identities. No extra labels, lines, people or objects. Retain all20 separate cutouts, no omissions or overlaps. Exact clean alpha0 around each cutout is critical; do not leave faint translucent background color anywhere."
+    },
+    {
+      "request": 3,
+      "input": "exec-dd3e900e-3da0-4cc7-b524-cbbbe5a600a2.png",
+      "output": "exec-61380080-8093-4203-8b7f-ca4eefe536ce.png",
+      "status": "rejected: tier5 barrel contacts image edge",
+      "prompt": "Remove the brown gray background completely from this image. Return a TRUE transparent PNG with only the20 culverin guns and their compact flash/rubble. ALL brown/gray pixels between sprites and around them must become completely clear alpha0, no haze or shadows. The previous edit still left a brown fog background. This is background removal, do not repaint a scene. Also keep the last column fully inside the canvas with24pixels clear padding on its right. Preserve the20 distinct long-barreled guns and their artwork, five columns four rows. Keep transparent clean gutters and no labels. Solid hardware should remain opaque. Transparent background."
+    },
+    {
+      "request": 4,
+      "input": "exec-61380080-8093-4203-8b7f-ca4eefe536ce.png",
+      "output": "exec-4e0527e7-c123-4efd-9caf-2b90595fdc35.png",
+      "status": "rejected alternative: relayout mixed tier identities and reintroduced haze",
+      "prompt": "Re-layout this exact original set of20long-gun cutouts into FOUR COLUMNS and FIVE ROWS, not the current5columns4rows. Keep1536x1024 transparent canvas. Long culverins need WIDER cells so the rightmost barrel is never cut off. Each newcell is384wide by204high. Rows now represent LEVEL1,2,3,4,5 fromtop tobottom. Columns now represent INTACT,FIRING,DAMAGED,BROKEN lefttoright. Precisely20 sprites. Reduce every complete gun to fit maximum300pixelswide and150pixelshigh centered in its384x204cell, with groundfoot atcellY+174 andcenterX=cellX+192. ALL muzzle flashes, barrel tips and rubble must be inside each cell withatleast36transparentpixelsleft/right and22above/below. Fully transparent alpha0background andgutters, no haze or castshadow. Keep the same navy/brass/wood/graystone art, longbarrels, exacttier/state identities. No labels orlines. This is a layout correction; preserve all20designs but change grid to4columns5rows. Nothing may reach ANYcanvas edge. Do not retain theold5-column arrangement."
+    },
+    {
+      "request": 5,
+      "input": "exec-61380080-8093-4203-8b7f-ca4eefe536ce.png",
+      "output": "exec-5deead17-ebb9-4472-a1cc-026a6adcbf6d.png",
+      "status": "rejected: rectangular firing crops include neighboring tier edges",
+      "prompt": "Keep this exact5-column4-row sheet and its20existing sprite designs. Fix ONLY the fifth/rightmost column: its long barrel tips and firing flash touch the right edge. SHORTEN the level5 barrel by20percent in every one of its4states, keeping it clearly a long culverin and retaining the existing base, position, tier and foot. This leaves at least30pixels fully transparent padding to the right of every sprite. The first4columns must stay unchanged. Remove all brown/gray background haze to exacttransparentalpha0 around sprites, corners and gutters. No crop or new layout. Allhardware, state identity and highqualityshadingpreserved. No addedlabels, peopleorobjects. Cleantransparentcutouts."
+    },
+    {
+      "request": 6,
+      "input": "exec-5deead17-ebb9-4472-a1cc-026a6adcbf6d.png",
+      "output": "exec-43675fc6-a467-44b8-9896-69eee109073a.png",
+      "status": "rejected: remaining background haze/corner alpha1",
+      "prompt": "Production atlas separation repair, preserve this5column4row composition. SHORTEN EVERY culverin barrel by another20percent in ALL20sprites, keeping the long-gun identity and allfive distinct tiers, with the existing bases and exactgroundfeet. Make ALL sprites including barrel flashes and rubble fit inside their307x256cells with20pixels clear onallfoursides. In particular firing tier2currentlyextendsinto tier3's rectangle and firingtier4extendsinto tier5's rectangle. These must have fullyclear RECTANGULAR crop gutters, notjustobjectgapsatdifferentheights. Constrain complete sprites to x=cellX+22..cellX+285 and y=cellY+20..cellY+238. The broken row fragments mustalsostayintheircell. No parts from neighboring sprites mayenteranothercell'srectangle. Exacttransparentalpha0background/gutters, remove any remaining tinyhaze. Preservehighqualitynavy/brass/wood/stonepaintingandconsistenthardwareacrossallstates. No newlabels or objects, no other layout."
+    },
+    {
+      "request": 7,
+      "input": "exec-43675fc6-a467-44b8-9896-69eee109073a.png",
+      "output": "exec-cd71b547-8787-4388-943c-8f237df9a922.png",
+      "status": "accepted source; actual composed GPU comparison pending",
+      "prompt": "Background removal only: make every background area, allfourcorners, allgaps between the20sprites completely transparent alpha0. Preserve the exact existing20culverin cutouts, theirpositions, sizes, layout, proportions and allpaintedhardware/flashes/rubble. Remove allbrown/gray haze, diffuseglows and castshadows behind objects. Do not change the objects or add anything. Clean production PNG transparency."
+    }
+  ]
+}

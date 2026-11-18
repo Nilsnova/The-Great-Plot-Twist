@@ -5,9 +5,10 @@
 import * as THREE from 'three';
 import {projectPoint} from '../world/art.js';
 import {LOCK_SPOT, LAMP_SPOTS} from './harbor.js';
+import {places} from '../world/places/registry.js';
 
 const UNIT = 16; // pixels per world unit, like the pixel art
-const BEAM = {x: 9, y: -1.6675}; // the harbor light's lamp (registry.js beamOrigin)
+const BEAM = places.saltreach_harbor.lights.find(light => light.id === 'harbor_light').beamOrigin;
 
 function canvasTexture(width, height, paint) {
   const canvas = document.createElement('canvas');canvas.width = width;canvas.height = height;

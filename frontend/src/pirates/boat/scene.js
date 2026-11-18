@@ -8,12 +8,12 @@
 //     onFinish: async ({game, stars, score, max}) => ({line, coins}), onClose});
 //   game.update(dt) is called by its own animation frame (autoplay) or by a test; game.dispose().
 import './boat.css';
+import { node as el } from '../../ui/kit/dom.js';
 import { BOAT, GAME_TEXT, boatDifficulty, boatSalt, coinsFor, enemyX, fallOf, itemsOf, passAt, passesOf, scoreOf, shotAt, starsOf } from './rules.js';
 
 export { GAME_TEXT, starText };
 const OUTLINE = '#1f2622';
 const SEA_TOP = '#2c5d73', SEA_DEEP = '#173a4d', FOAM = 'rgba(214,240,236,.35)';
-const el = (tag, className, text) => { const node = document.createElement(tag); if (className) node.className = className; if (text !== undefined) node.textContent = text; return node; };
 const button = (className, text, label) => { const node = el('button', `kit-button ${className}`, text); node.type = 'button'; if (label) node.setAttribute('aria-label', label); return node; };
 const starText = n => '★'.repeat(n) + '☆'.repeat(BOAT.stars - n);
 // Three stars, the won ones lit (the meter's marks and the result card).
